@@ -12,6 +12,12 @@ Project-owned notes. Agents and humans both put findings here.
 | [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md) | PLAN §8 step 2, the load-bearing experiment. **Passed** 2026-09-18: PSX names transfer onto the PC binary, and global blocks keep their internal layout at a per-block constant delta. |
 | [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) | The successor probe, on a subsystem with no pre-existing landmarks. **Passed** 2026-09-18: the transfer scales, PSX *overlay* functions transfer, and value-sequence search on constant tables is a second anchor that needs no seed. |
 
+Plus [`prior-art/`](prior-art/) — notes on four projects that have already hit
+walls we are walking toward (OpenRCT2, devilution/DevilutionX, TR1X, Diaphora).
+Start at its [`README`](prior-art/README.md): the cross-cutting findings are
+worth more than any single note, and one of them (nobody kept a regression
+oracle, all of them paid) bears directly on [`DIVERGENCE.md`](DIVERGENCE.md).
+
 Outside `docs/`, two artifacts came out of that probe:
 [`../symbols.toml`](../symbols.toml), the PC-side symbol map (same shape as the
 sibling's, plus `psx` and `status` fields), and [`../tools/`](../tools) —

@@ -57,6 +57,18 @@ linkers then placed those runs in different orders. The internal layout is
 preserved because it was decided by the source, and the ordering differs because
 it was decided by the linker.
 
+**An independent count, from a completely different source.** `BOF3.exe`'s MSVC
+Rich header survived (link.exe records every tool that contributed an object
+file). `python tools/pe_rich.py` reports **1,009 object contributions** across 11
+tool records, of which 110 are import thunks and 16 unmarked — so roughly **883
+real object files** went into the link. That is a direct estimate of the
+translation-unit count, arrived at without looking at a single global, and it is
+the number any clustering has to land near. It also shows several distinct
+compiler builds contributed, so the port was not built with one uniform
+toolchain. (The exact product versions are **not** established: the public Rich
+build-number tables consulted 2026-09-18 did not cover these build numbers, and a
+guess does not belong in this file.)
+
 **Consequence worth designing around:** clustering the PC binary's globals into
 blocks, and matching those blocks to PSX blocks, is a route to recovering the
 original **source file decomposition** — which `.c` file each function and global
