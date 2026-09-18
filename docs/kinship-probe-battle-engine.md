@@ -8,9 +8,13 @@ subsystem that was already well cross-referenced and lived entirely in the PSX
 **boot EXE**. Two things were still open:
 
 1. **Does it scale to a subsystem with no pre-existing landmarks?**
-2. **Do *overlay* functions transfer?** This is the one that decides the size of
-   the prize: 29,036 of the 30,062 mapped PSX functions are overlay-resident, and
-   the PC port has no overlay structure at all — it is one flat `.text`.
+2. **Do *overlay* functions transfer?** Most of the PSX corpus is
+   overlay-resident, and the PC port has no overlay structure at all — it is one
+   flat `.text`. If the method only worked on boot-EXE functions it would be of
+   limited use. *(How large that corpus actually is was re-measured after this
+   probe and is much smaller than assumed — see
+   [`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md). It does
+   not affect this probe, which tests the method.)*
 
 ## Result
 
@@ -217,10 +221,13 @@ would be exactly the silent-hypothesis-promotion the tiering exists to prevent.
 
 ## What this changes
 
-- **The overlay corpus is in play.** This was the open question from the text
-  engine probe and it is now answered: 29,036 overlay functions are transferable
-  in principle, not just the 1,026 boot-EXE ones. That is the difference between
-  a partially annotated PC binary and a substantially annotated one.
+- **Overlay functions transfer.** This was the open question from the text
+  engine probe and it is answered: the technique does not care whether the PSX
+  function was boot-resident. *(What it is worth is a separate question — the
+  overlay corpus turns out to hold 121 named functions, not the 29,036 an
+  earlier revision claimed; see
+  [`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md). The
+  finding here stands: it is about the method, not the corpus size.)*
 - **There are two independent anchoring techniques, not one.** Delta propagation
   needs a seed and then spreads cheaply; value-sequence search needs no seed but
   only works where a constant table exists. Used together they cross-check, and

@@ -81,10 +81,15 @@ predictable for our pair:
   not.
 - **Rarity is computed per database.** `Same rare MD Index` fires when the index
   appears once or twice **in both databases**. Ours are 2,952 PC functions
-  against 30,062 PSX ones, so an index rare among 2,952 is far more likely to be
-  non-rare among 30,062 and the heuristic silently under-fires in a way it does
-  not for a normal two-version diff. Compute rarity against the *subset* being
-  searched, not the whole PSX corpus.
+  against a PSX corpus several times larger once overlays are indexed
+  (estimated 12–13k Ghidra-discovered functions), so an index rare among 2,952
+  is far more likely to be non-rare on the PSX side, and the heuristic silently
+  under-fires in a way it does not for a normal two-version diff. Compute rarity
+  against the *subset* being searched, not the whole PSX corpus.
+  *(Corrected 2026-09-18: this paragraph originally said 30,062, a figure with
+  no artifact behind it — see
+  [`../overlay-transfer-feasibility.md`](../overlay-transfer-feasibility.md).
+  The argument is unaffected; only the magnitude changes.)*
 
 Practical note we should copy verbatim: the SCC heuristic is restricted to
 functions with **more than 10 basic blocks** in the default set; the same
@@ -294,9 +299,8 @@ whether a *human verified it on the PC side*. Do not let a matcher write
 `evidence`.
 
 **The failure mode our corpus makes worse.** Diaphora's design assumes two
-comparable programs. We have one flat 2,952-function PC image against 1,026
-boot-EXE plus 29,036 overlay functions spread across many overlay images, not
-even extracted on this machine
+comparable programs. We have one flat 2,952-function PC image against a PSX side
+split across a boot EXE and 406 separate overlay images
 ([battle-engine probe, Open](../kinship-probe-battle-engine.md)). A 1-vs-N
 problem inflates the false-positive rate of every rarity-based heuristic, because
 "rare" was defined over the wrong population (§2.2). Any tool we adopt or build

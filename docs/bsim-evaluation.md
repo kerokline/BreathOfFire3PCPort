@@ -150,11 +150,15 @@ ranks a mild *over*-estimate of BSim's performance, not an under-estimate.
   interaction between `medium_nosize`, self-significance bounds and very large
   functions was not investigated. Worth understanding before relying on BSim for
   the big battle functions.
-- **The overlay corpus is still untested.** Everything here is boot-EXE against
-  `.text`. 29,036 of 30,062 mapped PSX functions live in overlays, and the
-  overlays load *over* the boot EXE's address range, so each needs importing as
-  its own program. This is the same open item both kinship probes flagged and it
-  is now the main thing standing between this result and a phase-1 plan.
+- **The overlay corpus is still untested, and indexing it is now known to be
+  risky rather than simply pending.** Everything here is boot-EXE against
+  `.text`. Importing all 406 overlays would grow the candidate pool roughly 17x
+  (749 to an estimated 12–13k) and, if the boot EXE is seeded into each overlay
+  program as the sibling's tooling does, would commit hundreds of thousands of
+  near-duplicate signatures — flattening BSim's rarity scoring and **degrading
+  the ranks measured above, silently**. Any overlay indexing must be done on a
+  database copy with these nine pairs re-scored before and after. See
+  [`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md).
 - **Size floors are not yet chosen.** The data says tiny wrappers are unreliable;
   it does not say where the cutoff is. Nine pairs is too few to fit one.
 - Whether BSim's **callgraph** option (the database was built with it enabled by

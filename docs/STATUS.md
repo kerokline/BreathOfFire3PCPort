@@ -60,16 +60,27 @@ Chosen deliberately as the first real piece of work, for four reasons:
 
 ### 2. The overlay corpus
 
-The one thing blocking phase 1 from reaching its real size. 29,036 of 30,062
-mapped PSX functions are overlay-resident and none of them are in play yet.
+**Demoted 2026-09-18, and worth less than believed.** Investigated in
+[`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md):
 
-Note this is a **PSX-side problem only**: overlays are a 2 MB-RAM technique, and
-the PC port is one flat image with every function resident. It matters because
-the name corpus is keyed by overlay and a bare PSX address is ambiguous without
-knowing which overlay was loaded.
+- The corpus is **121 named overlay functions across 8 of 406 overlays**, not
+  the 29,036 repeated across five documents. That figure had no artifact behind
+  it. What the overlays really offer is **5,805 statically discovered function
+  entries** — structure, not names — and a human role for 216 of 406 overlays.
+- Indexing them is **actively risky**, not merely pending: it grows the BSim
+  candidate pool ~17x and, done the way the sibling's tooling seeds the boot EXE
+  into every overlay program, would flatten BSim's rarity scoring and silently
+  degrade the boot-EXE ranks already published.
+- The images are already extracted and complete on disk (406/406 verified), and
+  the machine time is about an hour. Cheap to do, easy to do wrong.
 
-Feasibility under investigation — see `overlay-transfer-feasibility.md` when it
-lands.
+This is a **PSX-side problem only**: overlays are a 2 MB-RAM technique, and the
+PC port is one flat image with every function resident. It matters because the
+name corpus is keyed by overlay and a bare PSX address is ambiguous without
+knowing which was loaded.
+
+Consequence: this drops below save interchange and phase 0. When it is done, it
+must be on a database copy with the nine BSim pairs re-scored before and after.
 
 ### 3. Phase 0 proper
 

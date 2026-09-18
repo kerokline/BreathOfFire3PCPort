@@ -251,10 +251,14 @@ For [`PLAN.md`](PLAN.md) §3 and phase 1:
   because the algorithms are identical, so `evidence`-tier naming does not
   require a decompile of both sides — a disassembly read is enough. That makes
   the honest-count exit test of phase 1 much cheaper than budgeted.
-- **The 29,036 overlay functions are still the prize and are not yet in play.**
-  Everything above is boot-EXE against `.text`. The overlays are not extracted on
-  this machine and the PC port has no overlay structure at all — it is one flat
-  image — so overlay-side transfer needs its own probe before phase 1 is scoped.
+- **The overlay corpus is not yet in play, and is smaller than assumed.**
+  Everything above is boot-EXE against `.text`. Overlays are a PSX-side memory
+  technique — the PC port is one flat image with every function resident — and
+  the name corpus is keyed by overlay, so a bare PSX address is ambiguous
+  without knowing which was loaded. Measured 2026-09-18: **121 named overlay
+  functions across 8 of 406 overlays**, not the 29,036 an earlier revision of
+  this document claimed. See
+  [`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md).
 
 ## Open
 

@@ -149,9 +149,9 @@ touching instruction encoding, plus names, strings and imports.
 
 Two traps it flags for us specifically:
 
-- **Rarity is computed per database.** Our 2,952-vs-30,062 function asymmetry
+- **Rarity is computed per database.** Our PC-vs-PSX function-count asymmetry
   makes "rare" heuristics silently under-fire. Any rarity measure we build must
-  be normalised across both sides, not within one.
+  be normalised against the subset being searched, not within one side.
 - **Every demoted heuristic in Diaphora is a good signal applied without a size
   or complexity floor.** The same signal is rated "good" with a floor and
   "unreliable" without. Our delta propagation needs floors before it scales.

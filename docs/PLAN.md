@@ -180,12 +180,29 @@ tractable, using signals that survive recompilation across architectures:
 - string/table reference patterns into known data (the `names/*.toml` corpus)
 - leaf-function fingerprints (arithmetic identities are architecture-neutral)
 
-You have **1,026 named boot-EXE functions plus 29,036 overlay functions**
-already mapped on the PSX side, with `names/functions.toml`,
-`names/overlays.toml`, `symbols.toml`, and `tools/name_map.py` to manage them. A
-matcher that transfers even 30% of those names onto the PC binary turns a
-nameless 3,000-function blob into a *substantially annotated* one on day one —
-and that is the single biggest determinant of how fast decompilation goes.
+The PSX side has a name corpus to transfer from, managed with
+`names/functions.toml`, `names/overlays.toml`, `symbols.toml` and
+`tools/name_map.py`. **Counted 2026-09-18** (see
+[`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md)):
+
+| | count |
+|---|---|
+| Named boot-EXE functions (`symbols.toml`) | **556** |
+| Named overlay functions (`names/functions.toml`) | **121**, across 8 of 406 overlays |
+| Statically discovered overlay function entries | **5,805** — structure, not names |
+| Overlays with a human role (`names/overlays.toml`) | 216 of 406 |
+
+An earlier revision of this section said "1,026 named boot-EXE functions plus
+29,036 overlay functions". **Both figures were wrong**, inherited from one prose
+sentence in the sibling's `PC_PORT_CROSS_REFERENCE.md` that no artifact on disk
+supports. The corpus is roughly 677 names, not 30,000 — which does not
+invalidate the matcher (the probes measured the *method*, and it works), but it
+does mean name transfer annotates a useful fraction of the PC binary rather than
+most of it, and that structure — which overlay a function lived in, and what
+that overlay does — may be worth more than the names.
+
+This is also the evidence rule doing its job: the number survived five documents
+because it was repeated rather than counted.
 
 This is the part of the plan that is genuinely novel and that only you are
 positioned to do. It should be built early, because everything downstream gets
@@ -531,8 +548,9 @@ plan does not technically need them yet. A living project has to stay alive.
    transfers** — was run the same day on the battle engine and also passed
    ([`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md)). Every
    function matched there is PSX overlay-resident, from two different overlays,
-   so the 29,036-function overlay corpus is in play and not just the 1,026
-   boot-EXE names. It also found a **second anchor needing no seed**: constant
+   so the method does not care whether a PSX function was boot-resident. (What
+   the overlay corpus is *worth* is a separate question, and smaller than this
+   section once assumed — see above.) It also found a **second anchor needing no seed**: constant
    data tables transfer by value (width-agnostically), so searching for a known
    PSX table names the PC functions that reference it.
 
