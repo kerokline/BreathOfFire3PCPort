@@ -1,0 +1,38 @@
+#!/bin/sh
+# Append the DCO Signed-off-by trailer, so `git commit` behaves like
+# `git commit -s`. See CONTRIBUTING.md for what the sign-off certifies.
+#
+# Opt in per clone (hooks are never installed automatically, by design):
+#
+#     git config core.hooksPath .githooks
+#
+# Note this replaces .git/hooks entirely for this repository — if you keep
+# your own hooks there, merge them in rather than switching blind.
+#
+# $1 = path to the commit message file
+# $2 = source: message | template | merge | squash | commit (amend/-C), or empty
+
+set -e
+
+# Nothing to certify on a merge, and our CI skips merge commits anyway.
+[ "$2" = "merge" ] && exit 0
+
+name=$(git config user.name  || true)
+email=$(git config user.email || true)
+if [ -z "$name" ] || [ -z "$email" ]; then
+    echo "prepare-commit-msg: user.name / user.email unset; cannot sign off." >&2
+    echo "  git config user.name  \"Your Name\"" >&2
+    echo "  git config user.email \"you@example.com\"" >&2
+    exit 1
+fi
+
+sob="Signed-off-by: $name <$email>"
+
+# Already present (e.g. `git commit -s`, or amending a signed commit)? Leave it.
+if grep -qsF "$sob" "$1"; then
+    exit 0
+fi
+
+# interpret-trailers places it in the trailer block rather than blindly
+# appending, so it lands with Co-Authored-By et al. and after the body.
+git interpret-trailers --in-place --trailer "$sob" "$1"

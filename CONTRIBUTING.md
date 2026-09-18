@@ -45,6 +45,30 @@ rebase with `git rebase --signoff <base>` and force-push your own branch.
 
 A CI check enforces this on every pull request.
 
+### Signing off automatically
+
+Git has no `commit.signoff` setting — deliberately, since the sign-off is meant
+to be an affirmative act. (`format.signOff` exists but only affects
+`git format-patch`, and `commit.gpgSign` is cryptographic signing, a different
+thing.) The usual answer is a hook, and this repository ships one:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`.githooks/prepare-commit-msg` then adds the trailer to every commit, using
+`git interpret-trailers` so it lands in the trailer block alongside
+`Co-Authored-By:` rather than being appended blindly. It skips merge commits,
+does not duplicate a trailer you added with `-s`, and fails loudly if
+`user.name` / `user.email` are unset.
+
+Two things to know before enabling it. It **replaces `.git/hooks` entirely** for
+this repository, so merge in any hooks you already keep there rather than
+switching blind. And it makes the certification automatic — which is fine for
+commits whose provenance you know, and is worth a thought in a repository where
+some commits are tool-assisted. The sign-off is still your assertion that you
+reviewed and understood the change; a hook adds the line, not the review.
+
 ### What you are certifying
 
 The sign-off is your agreement to the
