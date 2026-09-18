@@ -90,12 +90,50 @@ bind each name once, an `enable` flag for free A/B) and
 [`prior-art/openrct2.md`](prior-art/openrct2.md) (the interop layer in both
 directions).
 
+## A stated goal worth recording now
+
+**Selectable localisations, built from the original releases' own assets.**
+Japanese, English, German, French and Chinese all shipped officially. This is a
+phase-5 target, not near-term work, but two findings make it worth writing down
+while the groundwork is being laid:
+
+- **There is no machinery to inherit.** Each PlayStation language was a separate
+  compiled build on its own SKU — no language subdirectories, no language
+  strings in any executable, and the regional executables are not
+  address-compatible with each other
+  ([`regional-builds.md`](../../BreathOfFire3Recomp/docs/regional-builds.md)).
+  Language switching is something this project would *build*, and it is
+  therefore a divergence in the ledger sense, not a port of existing behaviour.
+- **The asset side is enumerable and already surveyed.** Exactly **37 image
+  sections** carry language, and 36 of 37 hash as four distinct images across
+  the five releases — JP, US+EU sharing, France, Germany. The glyph atlas is a
+  32 KB *texture* (not code), duplicated into every module that draws menus;
+  plus the ending/kanji font and ~11 areas with text baked into scenery art.
+  Every one of those sections is readable from a donor disc.
+
+The design constraint that follows: **the player supplies the discs, the engine
+reads the sections.** Shipping extracted glyph atlases would be distributing
+Capcom's assets and would break the engine/data split that
+[`LICENSING.md`](LICENSING.md) §3 says is not negotiable. Same model as
+DevilutionX and OpenRCT2.
+
+[`fixtures.toml`](../fixtures.toml) already carries all five PSX SKUs for this
+reason — four as eventual localisation donors, Europe/English catalogued only so
+an unrecognised disc can be named rather than guessed at.
+
 ## Open decisions
 
-- **How to CI an oracle that needs undistributable game data.** The prior-art
-  survey's loudest lesson is that an oracle you do not run is not an oracle, so
-  the differential harness has to be automated from day one — but CI cannot hold
-  `BOF3.exe`, `DAT/` or the PSX disc. Being designed now rather than retrofitted.
+- **How to CI an oracle that needs undistributable game data.** *Decided
+  2026-09-18, partially.* Contributors are expected to supply their own copies
+  — having both sides locally for side-by-side comparison is the workflow
+  anyway, so validation is a formalisation of it rather than new infrastructure.
+  The shared contract is hashes, not artifacts: [`fixtures.toml`](../fixtures.toml)
+  catalogues known builds and `tools/verify_fixtures.py` checks a local install
+  against it, so two people can confirm like-for-like without anyone hosting a
+  runner. That also removes the self-hosted-runner question and its fork-PR
+  attack surface entirely. **Still open:** the receipt format, and whether a
+  stale receipt fails CI or only warns (inclination: warn always, fail when the
+  diff touches `src/`).
 - **Size floors for the matcher.** [`bsim-evaluation.md`](bsim-evaluation.md)
   shows tiny wrappers and very large functions are unreliable; nine pairs is too
   few to fit a cutoff.

@@ -1,0 +1,117 @@
+# fixtures.toml — the builds this project compares against.
+#
+# No game data lives in this repository (CLAUDE.md rule 1). This file records
+# *which* artifacts a result was produced against, by hash, so two people can
+# confirm they are comparing like for like without anyone hosting anything.
+# The pattern is the archival sibling's: see its `catalog_identity.json`
+# (`rom_identity`) and `disc-receipt.json`.
+#
+# Why it is a table and not two hashes: there are five PlayStation releases,
+# one language each, and they are NOT interchangeable — the executables are not
+# address-compatible across regions and 37 image sections differ by language
+# (BreathOfFire3Recomp/docs/regional-builds.md). A receipt that does not name
+# the build is not evidence of anything.
+#
+#   status = "verified"   hashes measured locally on this machine
+#            "known"      identity established from an external source; we do
+#                         not have the artifact and have measured nothing
+#
+#   tools/verify_fixtures.py checks a local install against this table.
+#
+# Adding a row for an artifact you have: measure it, cite how, set verified.
+# An unrecognised hash is not necessarily wrong — it may be a build nobody has
+# catalogued. Open an issue rather than editing a row to match what you have.
+
+[meta]
+updated = 2026-09-18
+note = "JP disc + Chinese PC port are the working pair; the rest are targets."
+
+# ---------------------------------------------------------------------------
+# The PC port — this project's subject
+# ---------------------------------------------------------------------------
+
+[[build]]
+id = "pc-zh"
+role = "pc-port"
+language = "Chinese"
+description = "Chinese PC port, 2001-04-18"
+status = "verified"
+[build.artifacts.exe]
+name = "BOF3.exe"
+size = 2584576
+sha256 = "15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb"
+md5 = "0ebf48d81d43463aeadbc730660f1a73"
+measured = "2026-09-18, tools/pe_funcs.py and hashlib on this machine"
+
+# ---------------------------------------------------------------------------
+# PlayStation releases
+#
+# Five SKUs, one language each — there is no runtime language support in any of
+# them (regional-builds.md, "There is no runtime language support"). Four are
+# worth keeping: the two English SKUs ship identical language-bearing artwork
+# in 36 of 37 sections, so Europe/English is redundant with USA for our
+# purposes and is catalogued here only so an unrecognised disc can be named.
+# ---------------------------------------------------------------------------
+
+[[build]]
+id = "psx-jp"
+role = "psx-disc"
+language = "Japanese"
+serial = "SLPS-00990"
+built = 1997-07-16
+description = "Japanese release. The archival sibling's baseline, and therefore the default comparison target for differential work here."
+status = "verified"
+default_compare = true
+[build.artifacts.data_track]
+name = "Breath of Fire III (Japan).bin"
+size = 479812704
+sha1 = "ee7b20316590b61352868ca4d76f0a5f95c990de"
+md5 = "cb8d17ce72fc697fed6ddee7b3fde10b"
+measured = "BreathOfFire3Recomp/disc/*.disc-receipt.json, schema psxrecomp-disc-preparation-v1"
+[build.artifacts.boot_exe]
+name = "SLPS_009.90"
+size = 1458176
+sha256 = "61ade0b310f0fde2847c7678f231c893ad202e0421cb96c83dfdd3c8ee846252"
+md5 = "1d7add4a3a52d737883ba4e05a7b6550"
+load_address = 0x80093800
+header_size = 0x800
+measured = "2026-09-18, hashlib on this machine"
+
+[[build]]
+id = "psx-us"
+role = "psx-disc"
+language = "English"
+serial = "SLUS-00422"
+built = 1998-03-26
+description = "USA release. Localisation donor for English glyphs and language-bearing artwork."
+status = "known"
+note = "Identity from regional-builds.md. Not held; nothing measured."
+
+[[build]]
+id = "psx-fr"
+role = "psx-disc"
+language = "French"
+serial = "SLES-01319"
+description = "France release. Localisation donor for French glyphs and artwork."
+status = "known"
+note = "Identity from regional-builds.md. Not held; nothing measured."
+
+[[build]]
+id = "psx-de"
+role = "psx-disc"
+language = "German"
+serial = "SLES-01320"
+description = "Germany release. Localisation donor for German glyphs and artwork."
+status = "known"
+note = "Identity from regional-builds.md. Not held; nothing measured."
+
+[[build]]
+id = "psx-eu-en"
+role = "psx-disc"
+language = "English"
+serial = "SLES-01304"
+built = 1998-07-23
+description = "Europe (English), Infogrames Europe. Catalogued for identification only."
+status = "known"
+redundant_with = "psx-us"
+note = "36 of 37 language-bearing image sections are identical to psx-us (regional-builds.md). The exception is DEMO.EMI section 5, where this release ships the *Japanese* asset — unexplained, flagged there, not diagnosed. Not a localisation donor; kept so an unrecognised disc can be named rather than guessed at."
