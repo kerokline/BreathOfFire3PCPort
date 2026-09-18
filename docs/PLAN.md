@@ -2,6 +2,14 @@
 
 **Status:** DRAFT (2026-09-18). Scoping document, no code yet.
 
+**Update 2026-09-18:** §8 step 2 — the load-bearing experiment — has been run and
+**passed**, twice (text engine, then battle engine). See [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md).
+It also changes the shape of §3: the strongest matching signal is not call-graph
+isomorphism but *global block layout*, which the port preserves exactly at a
+per-block constant delta. Eight text-engine functions are named in
+[`../symbols.toml`](../symbols.toml) as a result, and the probe answered the
+sibling repo's open `0x0C` question from the PC side.
+
 **Goal, as stated:** a **living game**, not an archival one. A *renovation* of
 the 2001 Chinese PC port — fix its bugs, modernise its platform, and be able to
 **change and extend game logic**. The sibling project
@@ -182,6 +190,15 @@ and that is the single biggest determinant of how fast decompilation goes.
 This is the part of the plan that is genuinely novel and that only you are
 positioned to do. It should be built early, because everything downstream gets
 cheaper.
+
+**Established 2026-09-18** ([`SHARED_SOURCE.md`](SHARED_SOURCE.md)): the kinship
+is not a hypothesis any more, and it reaches further than this section assumed.
+Globals keep their layout *within* a block and are reordered *between* blocks —
+the signature of per-translation-unit static allocation. So the source's **file
+decomposition** survived into both binaries, and clustering PC globals into
+blocks is a route to recovering which `.c` file each function belonged to. For a
+project whose deliverable is maintainable source, starting from Capcom's own file
+boundaries beats inventing our own; make it an explicit phase-1 output.
 
 ### Reciprocity
 
@@ -505,12 +522,21 @@ plan does not technically need them yet. A living project has to stay alive.
    on anything, since the plan vendors nothing (§4); worth doing early anyway,
    because the exchange of reverse-engineering knowledge is the part where both
    projects genuinely gain.
-2. **Prototype the §3 matcher on one subsystem** — the text engine is ideal,
-   because the cross-reference doc has already established three matched
-   landmarks there and both sides are well documented. If name transfer works on
-   the text engine, phase 1 is real; if it does not, the plan needs rethinking
-   before any code is written.
+2. ~~**Prototype the §3 matcher on one subsystem**~~ — **done 2026-09-18, and it
+   passed** ([`kinship-probe-text-engine.md`](kinship-probe-text-engine.md)).
+   Eight functions, four global blocks, and a correction to how §3 should work:
+   propagate block deltas, then use call-graph shape as the check.
+
+   The successor probe — **whether it scales, and whether the overlay corpus
+   transfers** — was run the same day on the battle engine and also passed
+   ([`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md)). Every
+   function matched there is PSX overlay-resident, from two different overlays,
+   so the 29,036-function overlay corpus is in play and not just the 1,026
+   boot-EXE names. It also found a **second anchor needing no seed**: constant
+   data tables transfer by value (width-agnostically), so searching for a known
+   PSX table names the PC functions that reference it.
 3. **Write the `DAT/` container parser** (§4). Small, self-contained, needed by
    everything downstream, and testable against the 742 files today.
 
-Step 2 is the load-bearing experiment. Do it before committing to phases 0–2.
+Step 2 was the load-bearing experiment. It passed, so phases 0–2 are committed
+to. Step 3 is now the critical path.

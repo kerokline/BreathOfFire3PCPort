@@ -8,6 +8,15 @@ Project-owned notes. Agents and humans both put findings here.
 |---|---|
 | [`PLAN.md`](PLAN.md) | The scoping document. Target analysis, architecture options and the reasoning that selected one, the phased path, constraints. **Right now this is the entire project.** |
 | [`DIVERGENCE.md`](DIVERGENCE.md) | The ledger of intentional behavioural changes. Read before changing game behaviour; append when you do. |
+| [`SHARED_SOURCE.md`](SHARED_SOURCE.md) | Why the two binaries are compilations of one source tree, what that licenses, and the catalogue of changes the *porting house* made. Read before treating a PSX finding as a PC fact. |
+| [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md) | PLAN §8 step 2, the load-bearing experiment. **Passed** 2026-09-18: PSX names transfer onto the PC binary, and global blocks keep their internal layout at a per-block constant delta. |
+| [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) | The successor probe, on a subsystem with no pre-existing landmarks. **Passed** 2026-09-18: the transfer scales, PSX *overlay* functions transfer, and value-sequence search on constant tables is a second anchor that needs no seed. |
+
+Outside `docs/`, two artifacts came out of that probe:
+[`../symbols.toml`](../symbols.toml), the PC-side symbol map (same shape as the
+sibling's, plus `psx` and `status` fields), and [`../tools/`](../tools) —
+`pe_funcs.py`, `pe_disasm.py`, `pe_xref.py`. Their output goes to `analysis/`,
+which is gitignored because it is derived from copyrighted game code.
 
 `STATUS.md` will appear when there is status to track — in-flight work and
 blockers, in the style of the sibling repo. Until phase 0 starts, `PLAN.md`
