@@ -50,13 +50,15 @@ may be exactly right here — **provided it is in the ledger.**
 4. **No stubs.** A reimplemented function is fully implemented or it aborts
    loudly. `return 0;`, `// TODO`, `// for now` in a function that has replaced
    original code is a silent behavioural fork that will cost weeks to find.
-5. **Nothing from `bof3ext` is vendored until its licence file exists.** That
-   repo ships no `LICENSE`, so the legal default is all-rights-reserved — but
-   TheRealBiggs licenses his other repos **MIT**, so this reads as an oversight
-   rather than a restriction. The ask is small ("add the licence you meant to"),
-   and MIT is permissive enough for everything this plan needs. Until the file
-   exists: read freely, copy nothing. Once it does, vendored code keeps its MIT
-   notice in `THIRD_PARTY.md`. See PLAN §7.
+5. **`bof3ext` is a peer project, not a base.** The foundation of this project
+   is Capcom's binary; `bof3ext` is an independent derivative of that same
+   binary with a different goal, and this project is another. Read it freely and
+   cite it — its findings are *facts about Capcom's binary* that we rediscover
+   and, per the evidence rule, verify independently anyway. Do not vendor its
+   code, do not inherit its architecture, and do not describe this project as
+   built on it. (It also ships no `LICENSE`; its author licenses his other work
+   MIT, so that reads as an oversight — but the plan vendors nothing, so it
+   gates nothing.) See PLAN §4 and §7.
 6. **Keep "what it was" and "what it should be" separately answerable.** The
    PSX disc decides what the original behaviour *was*. This project decides what
    the game *should do*. The second answer must never quietly overwrite the
@@ -67,7 +69,7 @@ may be exactly right here — **provided it is in the ledger.**
 | Path | What it is |
 |---|---|
 | `../BreathOfFire3Recomp` | The archival sibling. Source of ~30k mapped functions, `names/*.toml`, `symbols.toml`, and `docs/PC_PORT_CROSS_REFERENCE.md` — read that one early. |
-| `../bof3ext` | TheRealBiggs' hook layer. `src/bof3/*.ixx` is a partial symbol table for our binary; `docs/` is unusually good. Reference only (rule 5). |
+| `../bof3ext` | TheRealBiggs' hook layer — a **peer** derivative of the same Capcom binary. `src/bof3/*.ixx` cross-checks our symbol table; `docs/` is unusually good. Reference only (rule 5). |
 | `../bof3ext_resources` | 360 files of translated text, fonts, HD textures. Reference only (rule 5). |
 
 ## Environment notes (this machine)

@@ -125,7 +125,15 @@ of project (an x86 PC game of this era, renovated into maintainable source):
 
 ### Recommendation
 
-**C, on the substrate of A, with B as an optional accelerator.**
+**C, with B as an optional accelerator. A is a peer approach, not our base** —
+see §4.
+
+Option C needs a way to get our code into the process and redirect individual
+addresses to our reimplementations. That mechanism is a loader plus a detour
+library — a few hundred lines over MinHook — and it is *scaffolding we erect in
+order to dismantle it*. Every function we land makes it matter less, and the
+endpoint of this project is a build where none of it exists. Do not confuse
+needing that mechanism with building on someone else's implementation of it.
 
 The accelerator idea is worth stating explicitly: a *crude* x86→C lifter is far
 easier than a good one, because in model C it never has to be pretty — only
@@ -189,45 +197,109 @@ The flow is not one-way, and the PC port is the better source for some things:
 
 ---
 
-## 4. What transfers from `bof3ext`, and what does not
+## 4. `bof3ext` is a peer project, not a base
 
-Read `bof3ext/CLAUDE.md` and `bof3ext/docs/` first; it is unusually well
-documented for a hook project.
+The foundation of this project is **Capcom's binary**. Everything else in the
+picture is an independent derivative of one of two Capcom artifacts:
 
-**Take directly:**
+```
+   BOF3.exe (Capcom, 2001, x86)          SLPS-00990 (Capcom, 1997, MIPS)
+        /              \                              |
+   bof3ext        THIS PROJECT                BreathOfFire3Recomp
+  (hook and         (replace                      (archival
+   translate         entirely)                 recompilation)
+   in place)
+```
 
-| Asset | Where | Note |
-|---|---|---|
-| The address corpus | `bof3ext/src/bof3/*.ixx` | ~11 modules of pure declarations: `Func<0x497740, …>`, struct layouts, global accessors. This *is* a partial symbol table for the PC binary. First thing to import. |
-| Hook primitives | `src/helpers.ixx` | `Func`/`Accessor` templates with compile-time signature checking, `WriteProtectedMemory`, `WriteCall`, `WriteNops` |
-| The injection substrate | `loader/` | Proxy `ddraw.dll` → `loader.cfg` → your DLL. Works, ships, uninstalls by deleting one file. |
-| OpenGL PSX-packet renderer | `src/renderer.ixx`, `res/psx_shader.*.glsl` | 4bpp/8bpp texture pages + CLUT in the fragment shader. Solves the hardest graphics problem for you. |
-| Text / glyph pipeline | `text_manager.ixx`, `glyph_manager.ixx` + `bof3ext_resources` | FreeType at `renderScale`×240p, the `{{TAG}}` control-code markup, 360 resource files |
-| The caller-finding trick | `DrawStringHook` in `render_hooks.ixx` | `std::stacktrace::current()` on untranslated text to find the responsible function. Generalises into a superb decompilation work-queue generator. |
+`bof3ext` and this project are **siblings**, not a stack. They share an
+upstream, not a lineage. And their goals diverge at the root: `bof3ext` exists
+to make the shipped executable better, and this project exists to make the
+shipped executable *unnecessary*. Its whole value proposition is the thing we
+intend to delete.
 
-**Do not take:**
+That is not a criticism of it — it is very good at what it does, and its
+`docs/` is unusually thorough for a hook project. Read all of it. But read it as
+**prior art from a peer**, which is a different relationship from a dependency,
+and it has practical consequences in three places:
 
-- **C++23 named modules (`.ixx`, `import std;`).** MSVC-only by construction,
-  and the whole point of this project is to *leave* MSVC-only. `bof3ext`'s own
-  `docs/building.md` says adding a non-MSVC path "is a real project". For a
-  portability-targeted renovation, start on CMake + plain C++20 and pay that
-  cost on day one instead of at the end.
-- **`bof3ext`'s deliberate 32-bit assumptions** where they are cosmetic —
-  though note the *load-bearing* ones (casting pointers through `uint32_t`) stay
-  true until the original `.exe` is fully replaced.
+### What is actually valuable is knowledge, not code
 
-**Explicitly does not transfer from the PSX side** (per the cross-reference
-doc, already investigated — do not re-litigate):
+| | |
+|---|---|
+| **The address corpus** (`src/bof3/*.ixx`) | ~11 modules of pure declarations — `Func<0x497740, …>`, struct layouts, global accessors. The genuinely valuable thing in the repo for us. |
+| **The control-code table** (`docs/translation.md`) | An independent derivation of the message vocabulary; already produced two corrections to the sibling repo's `TEXT_ENGINE.md`. |
+| **The caller-finding technique** | `DrawStringHook` takes `std::stacktrace::current()` on untranslated text to find which function is responsible. A *technique*, not code — and it generalises into an excellent decompilation work-queue generator. |
 
-- **The `DAT/` archives are repacked.** 742 `.DAT` files whose names echo the
-  `.EMI` families, but `AREA000.DAT` has a `(offset,size)` TOC at `0x198`, no
-  `MATH_TBL` magic, and subfile 0 is a **RIFF WAVE** — the port decompressed the
-  PSX audio and re-containered everything. `tools/emi.py` will not read these.
-  You need a new container parser, and it is a small, well-defined job.
-- **The Chinese script is not economically harvestable** — port-specific
-  encoding (`((c|0x8000)>>8) | ((c&0xFF)<<8)`), resolved through a PC-only index
-  split. And it is a translation of a translation; the official US script is
-  better and already aligned slot-for-slot.
+Note what these have in common: they are **facts about Capcom's binary**, which
+that team discovered and we can rediscover. `GetText` is at `0x497740` because
+Capcom's linker put it there, not because anyone invented it. Ghidra plus the
+matcher in §3 gets us the same table.
+
+And our own evidence rule means we would verify every one of those addresses
+independently regardless of where we first read it — which is exactly the
+discipline the sibling repo's `PC_PORT_CROSS_REFERENCE.md` already applies:
+*the port is corroboration, never authority.* The right posture toward
+`bof3ext`'s findings is the one already established for them. Cite them, credit
+them, verify them.
+
+### What we would have taken, and now would not
+
+- **The OpenGL PSX-packet renderer** (`src/renderer.ixx`, `psx_shader.*.glsl`).
+  Impressive work — 4bpp/8bpp texture pages and CLUT lookups in a fragment
+  shader. But it exists to *replay GPU packets that the original code builds*.
+  The moment we reimplement the graphics layer, we stop building those packets
+  and draw directly. It is a crutch with a guaranteed expiry date, and adopting
+  it would mean inheriting the packet model we are trying to escape.
+- **The `ddraw.dll` proxy shape.** Proxying DirectDraw is how you inject into a
+  game you do not control. We intend to control it. That shape is a constraint
+  inherited from their goal, not ours.
+- **C++23 named modules.** MSVC-only by construction, and the point of this
+  project is to *leave* MSVC-only. `bof3ext`'s own `docs/building.md` says
+  adding a non-MSVC path "is a real project" — so pay that cost on day one
+  rather than at the end.
+- **The translated script.** A translation of a Chinese translation. The
+  official US script the sibling repo has aligned slot-for-slot is better.
+  (`bof3ext_resources`' **menu and name text** is a different matter — see §3.)
+
+### Which makes licensing much less load-bearing than §7 originally implied
+
+If we are not vendoring their code, the MIT question stops gating the project.
+It still matters — for anything we *do* vendor, and as a plain courtesy to
+someone whose documentation saved us real time. But it moves from prerequisite
+to good manners plus a narrow legal check, and §7 has been rewritten to say so.
+
+### Where this leaves the relationship
+
+Peer projects with a shared upstream and non-overlapping endpoints, which is a
+good position for exchange rather than an awkward one. We have ~30k mapped
+functions on the PSX side and a matcher that may name large parts of the PC
+binary (§3); they have years of accumulated knowledge of that binary's
+behaviour. Neither needs to adopt the other's architecture to trade findings,
+and neither is obliged to. That is worth saying out loud when making contact:
+this is not a fork of their work and does not compete with it.
+
+---
+
+## 4a. What does not transfer from the PSX side
+
+**The archives are repacked — there is no byte-level asset path.** `DAT/` holds
+742 `.DAT` files whose names echo our `.EMI` families, but the containers do
+not match. Parsed `AREA000.DAT` 2026-09-18: a `(offset, size)` TOC at `0x198`,
+no `MATH_TBL` magic, and subfile 0 at `0x380` is a **RIFF WAVE** — the port
+decompressed the PSX audio and re-containered everything. `tools/emi.py` will
+not read these and should not be taught to. A new container parser is needed,
+and it is a small, well-defined job.
+
+**The Chinese script is not economically harvestable.** Port-specific encoding
+(`((c|0x8000)>>8) | ((c&0xFF)<<8)`), resolved at runtime through `GetText`
+`0x497740` with a PC-only index split that has no PSX counterpart. Extracting
+it means writing both a container parser and a decoder to obtain a JP→ZH
+translation, when the official US script is already aligned slot-for-slot
+([`LOCALIZATION_APPLY.md`](../../BreathOfFire3Recomp/docs/LOCALIZATION_APPLY.md)).
+
+**The rendering work is inapplicable in both directions.** The sibling emulates
+the GPU properly; `bof3ext` re-emulates texture pages in a shader because the
+port replays packets through DirectDraw. This project ends up doing neither.
 
 ---
 
@@ -236,12 +308,18 @@ doc, already investigated — do not re-litigate):
 Each phase ends with something playable and something proven. Nothing here is
 speculative about phase N+1 succeeding.
 
-### Phase 0 — Substrate (weeks)
-Fork or re-found the injection layer on portable toolchain. CMake, clang-cl and
-MSVC both green, no C++ modules. Import `bof3ext`'s `src/bof3/*.ixx` address
-corpus as plain headers. Get the game launching under your own DLL with the
-existing renderer and text pipeline intact. **Exit test:** a build that is
-byte-behaviour-identical to a `bof3ext` release, built by a non-MSVC compiler.
+### Phase 0 — Our own scaffolding (weeks)
+Write a minimal loader and detour layer of our own: get code into the process,
+redirect one address to one of our functions, call the original. CMake, clang-cl
+and MSVC both green, plain C++20, no modules. Deliberately thin — this is
+scaffolding built to be dismantled (§2), and every hour spent making it elegant
+is an hour spent on something with a guaranteed expiry date.
+
+Build our own symbol header from Ghidra output rather than importing anyone's
+(§4). `bof3ext`'s corpus is a cross-check on ours, not its source.
+
+**Exit test:** one function of Capcom's binary replaced by one function of ours,
+under a non-MSVC compiler, with the game still running.
 
 ### Phase 1 — Symbol foundation (weeks)
 Ghidra headless on `BOF3.exe`. Export functions, jump tables, and
@@ -384,9 +462,20 @@ plan does not technically need them yet. A living project has to stay alive.
   a more restrictively licensed project as long as its notice is retained), so
   vendored material would carry its MIT notice in a `THIRD_PARTY.md`.
 
-  Still a phase-0 prerequisite, not an afterthought — and collaboration remains
-  the obviously better outcome, since the author's stated roadmap (finish
-  widescreen, fix fullscreen, modding API) is a subset of this plan.
+  **This is much less load-bearing than it first appeared** (§4). The plan does
+  not vendor their code — the valuable material is *facts about Capcom's
+  binary*, which we rediscover with Ghidra and must verify independently under
+  our own evidence rule regardless of where we first read them. So licensing
+  gates only what we would actually copy, and the current answer is "nothing".
+
+  What remains is narrower and mostly a matter of conduct: credit their prior
+  work where it corroborates ours, ask about the missing licence file before
+  vendoring anything, and be clear when making contact that this is **not a
+  fork of `bof3ext` and does not compete with it** — different endpoint,
+  different architecture, shared upstream. Their roadmap (finish widescreen,
+  fix fullscreen, modding API) overlaps this plan's *goals* while sharing none
+  of its *code*, which makes exchange of findings easy and obligation-free in
+  both directions.
 - **Never commit game data.** `BOF3.exe`, `DAT/`, `BGM/`, `SND/`, the disc
   image, the AVIs. Same rule as both existing repos, and it covers pastes into
   docs and commit messages, not just files.
@@ -411,10 +500,11 @@ plan does not technically need them yet. A living project has to stay alive.
 
 ## 8. Immediate next steps
 
-1. **Contact TheRealBiggs** (§7) — ask him to add the `LICENSE` file that is
-   missing from `bof3ext`, and open the collaboration conversation. Gating for
-   anything vendored, and likely a short conversation given his other repos are
-   already MIT.
+1. **Contact TheRealBiggs** (§7) — as a peer, not a downstream. Credit the
+   prior work, flag the missing `LICENSE` file, offer findings back. Not gating
+   on anything, since the plan vendors nothing (§4); worth doing early anyway,
+   because the exchange of reverse-engineering knowledge is the part where both
+   projects genuinely gain.
 2. **Prototype the §3 matcher on one subsystem** — the text engine is ideal,
    because the cross-reference doc has already established three matched
    landmarks there and both sides are well documented. If name transfer works on

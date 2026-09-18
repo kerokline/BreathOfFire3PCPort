@@ -41,21 +41,26 @@ a time with readable C++, delete original code paths as subsystems complete. The
 game stays playable at every commit; when the last function is replaced, the
 original binary is no longer needed.
 
-## Prior art this builds on
+## Related work
 
 - [**bof3ext**](https://github.com/TheRealBiggs/bof3ext) by TheRealBiggs — a
-  replacement `ddraw.dll` that already translates most of the game to English,
-  fixes bugs, and replaces the renderer with OpenGL. It is the injection
-  substrate this project starts from, and its `src/bof3/*.ixx` files are a
-  partial symbol table for the PC binary.
-  That repo currently ships no `LICENSE` file, though its author licenses his
-  other work MIT — see [`docs/PLAN.md`](docs/PLAN.md) §7. Nothing from it is
-  vendored here until the file exists.
+  replacement `ddraw.dll` that translates most of the game to English, fixes
+  bugs, and replaces the renderer with OpenGL. A **peer project, not a base**:
+  it derives from the same Capcom binary this one does, with the opposite
+  endpoint — it makes the shipped executable better, we make it unnecessary.
+  Nothing from it is vendored here; its documented findings are cited and
+  independently verified, the same way this project treats any other source.
+  See [`docs/PLAN.md`](docs/PLAN.md) §4.
 - [**bof3ext_resources**](https://github.com/TheRealBiggs/bof3ext_resources) —
   360 files of translated text, fonts, and HD textures.
 - [**BreathOfFire3Recomp**](https://github.com/kerokline/BreathOfFire3Recomp) —
-  the archival sibling, and the source of ~30k mapped functions plus the
-  reverse-engineering corpus that this project hopes to transfer names from.
+  the archival sibling, built from the *PlayStation* release. Source of ~30k
+  mapped functions and the reverse-engineering corpus this project hopes to
+  transfer names from, and the regression oracle the divergence ledger depends
+  on.
+
+All three are independent derivatives of Capcom's work — two of the 2001 PC
+port, one of the 1997 PlayStation release. None is built on another.
 
 ## Legal
 
