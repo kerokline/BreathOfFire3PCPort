@@ -131,9 +131,22 @@ an unrecognised disc can be named rather than guessed at.
   catalogues known builds and `tools/verify_fixtures.py` checks a local install
   against it, so two people can confirm like-for-like without anyone hosting a
   runner. That also removes the self-hosted-runner question and its fork-PR
-  attack surface entirely. **Still open:** the receipt format, and whether a
-  stale receipt fails CI or only warns (inclination: warn always, fail when the
-  diff touches `src/`).
+  attack surface entirely.
+
+  **Staleness policy, decided 2026-09-18: warn always, fail when the diff
+  touches `src/`.** A documentation or tooling change should not be blocked on a
+  differential run it cannot affect; a change to the game code should not merge
+  on an assertion nobody re-checked. The warning is the part that matters — it
+  is what stops the harness dying quietly the way OpenRCT2's did
+  ([`prior-art/README.md`](prior-art/README.md) §1).
+
+  **Receipt shape** (to build when there is something to verify, not before):
+  a committed file recording the git SHA it ran against, the date, the
+  `fixtures.toml` build ids on both sides, what was covered, the result, and the
+  hashes of the vectors used. CI validates structure and freshness only — it
+  never needs a byte of game data. Deliberately *not* built yet: there is no
+  `src/` and no harness, and speculative verification infrastructure is exactly
+  what rots.
 - **Size floors for the matcher.** [`bsim-evaluation.md`](bsim-evaluation.md)
   shows tiny wrappers and very large functions are unreliable; nine pairs is too
   few to fit a cutoff.
