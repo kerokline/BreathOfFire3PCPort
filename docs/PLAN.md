@@ -2,6 +2,14 @@
 
 **Status:** DRAFT (2026-09-18). Scoping document, no code yet.
 
+**Update 2026-09-18:** §8 step 2 — the load-bearing experiment — has been run and
+**passed**, twice (text engine, then battle engine). See [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md).
+It also changes the shape of §3: the strongest matching signal is not call-graph
+isomorphism but *global block layout*, which the port preserves exactly at a
+per-block constant delta. Eight text-engine functions are named in
+[`../symbols.toml`](../symbols.toml) as a result, and the probe answered the
+sibling repo's open `0x0C` question from the PC side.
+
 **Goal, as stated:** a **living game**, not an archival one. A *renovation* of
 the 2001 Chinese PC port — fix its bugs, modernise its platform, and be able to
 **change and extend game logic**. The sibling project
@@ -172,16 +180,42 @@ tractable, using signals that survive recompilation across architectures:
 - string/table reference patterns into known data (the `names/*.toml` corpus)
 - leaf-function fingerprints (arithmetic identities are architecture-neutral)
 
-You have **1,026 named boot-EXE functions plus 29,036 overlay functions**
-already mapped on the PSX side, with `names/functions.toml`,
-`names/overlays.toml`, `symbols.toml`, and `tools/name_map.py` to manage them. A
-matcher that transfers even 30% of those names onto the PC binary turns a
-nameless 3,000-function blob into a *substantially annotated* one on day one —
-and that is the single biggest determinant of how fast decompilation goes.
+The PSX side has a name corpus to transfer from, managed with
+`names/functions.toml`, `names/overlays.toml`, `symbols.toml` and
+`tools/name_map.py`. **Counted 2026-09-18** (see
+[`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md)):
+
+| | count |
+|---|---|
+| Named boot-EXE functions (`symbols.toml`) | **556** |
+| Named overlay functions (`names/functions.toml`) | **121**, across 8 of 406 overlays |
+| Statically discovered overlay function entries | **5,805** — structure, not names |
+| Overlays with a human role (`names/overlays.toml`) | 216 of 406 |
+
+An earlier revision of this section said "1,026 named boot-EXE functions plus
+29,036 overlay functions". **Both figures were wrong**, inherited from one prose
+sentence in the sibling's `PC_PORT_CROSS_REFERENCE.md` that no artifact on disk
+supports. The corpus is roughly 677 names, not 30,000 — which does not
+invalidate the matcher (the probes measured the *method*, and it works), but it
+does mean name transfer annotates a useful fraction of the PC binary rather than
+most of it, and that structure — which overlay a function lived in, and what
+that overlay does — may be worth more than the names.
+
+This is also the evidence rule doing its job: the number survived five documents
+because it was repeated rather than counted.
 
 This is the part of the plan that is genuinely novel and that only you are
 positioned to do. It should be built early, because everything downstream gets
 cheaper.
+
+**Established 2026-09-18** ([`SHARED_SOURCE.md`](SHARED_SOURCE.md)): the kinship
+is not a hypothesis any more, and it reaches further than this section assumed.
+Globals keep their layout *within* a block and are reordered *between* blocks —
+the signature of per-translation-unit static allocation. So the source's **file
+decomposition** survived into both binaries, and clustering PC globals into
+blocks is a route to recovering which `.c` file each function belonged to. For a
+project whose deliverable is maintainable source, starting from Capcom's own file
+boundaries beats inventing our own; make it an explicit phase-1 output.
 
 ### Reciprocity
 
@@ -505,12 +539,32 @@ plan does not technically need them yet. A living project has to stay alive.
    on anything, since the plan vendors nothing (§4); worth doing early anyway,
    because the exchange of reverse-engineering knowledge is the part where both
    projects genuinely gain.
-2. **Prototype the §3 matcher on one subsystem** — the text engine is ideal,
-   because the cross-reference doc has already established three matched
-   landmarks there and both sides are well documented. If name transfer works on
-   the text engine, phase 1 is real; if it does not, the plan needs rethinking
-   before any code is written.
+2. ~~**Prototype the §3 matcher on one subsystem**~~ — **done 2026-09-18, and it
+   passed** ([`kinship-probe-text-engine.md`](kinship-probe-text-engine.md)).
+   Eight functions, four global blocks, and a correction to how §3 should work:
+   propagate block deltas, then use call-graph shape as the check.
+
+   The successor probe — **whether it scales, and whether the overlay corpus
+   transfers** — was run the same day on the battle engine and also passed
+   ([`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md)). Every
+   function matched there is PSX overlay-resident, from two different overlays,
+   so the method does not care whether a PSX function was boot-resident. (What
+   the overlay corpus is *worth* is a separate question, and smaller than this
+   section once assumed — see above.) It also found a **second anchor needing no seed**: constant
+   data tables transfer by value (width-agnostically), so searching for a known
+   PSX table names the PC functions that reference it.
+
+   **Ghidra BSim was then measured against those same pairs**
+   ([`bsim-evaluation.md`](bsim-evaluation.md)): it matches across MIPS→x86
+   (4 of 8 true pairs at rank 1, `MsgBox_Reset` at a perfect 1.000, and a
+   negative control that correctly failed), but it misses tiny wrappers and very
+   large functions, and it produced one *high-confidence wrong* answer. So phase
+   1's matcher is **BSim proposes, block deltas dispose** — BSim needs no seed
+   and gets us into a subsystem cold, delta propagation then names a whole block
+   at once, and each checks the other. Neither is trusted alone, and no
+   BSim-derived name exceeds `hypothesis` tier without a PC-side read.
 3. **Write the `DAT/` container parser** (§4). Small, self-contained, needed by
    everything downstream, and testable against the 742 files today.
 
-Step 2 is the load-bearing experiment. Do it before committing to phases 0–2.
+Step 2 was the load-bearing experiment. It passed, so phases 0–2 are committed
+to. Step 3 is now the critical path.

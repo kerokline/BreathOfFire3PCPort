@@ -41,6 +41,22 @@ reimplemented to be byte-equivalent, performance work, build system, renderer
 changes that produce the same image at the same time, or anything in tooling and
 docs.
 
+### What belongs somewhere else
+
+There are **three** kinds of difference in this project and only one of them is
+ledgered here:
+
+| Category | What it is | Where it goes |
+|---|---|---|
+| **Port divergence** | The porting house changed it between the 1997 PlayStation release and the 2001 PC port. Not ours — history, not a decision. | [`SHARED_SOURCE.md`](SHARED_SOURCE.md) §3 |
+| **Our divergence** | We changed it, deliberately. | **Here** |
+| **Regression** | It changed and nobody meant it to. | A bug |
+
+The first two must not be conflated. In five years, "why does this differ from
+the PlayStation version?" needs to distinguish *Capcom's porting house did that
+in 2001* from *we did that on purpose* — the first is an observation to record,
+only the second is a decision to justify. This ledger is for the second.
+
 The boundary case is worth naming, because it will come up constantly:
 **a port bug fix is still a divergence.** The fullscreen fallback to 640×480 is
 a defect, and fixing it is obviously correct — and it still gets an entry,
@@ -74,8 +90,16 @@ value.
 ## Differential testing
 
 Where an algorithm exists in both binaries — damage formulas, encounter tables,
-script control-code handling, RNG sequences — it can be run head-to-head against
-the archival build. These are the same algorithms compiled for two
+script control-code handling — it can be run head-to-head against the archival
+build.
+
+**One exception, established 2026-09-18: RNG sequences cannot.** The PSX calls
+the BIOS `A0:2F` `rand()`; the PC port calls the MSVC6 CRT `rand()`. Same role,
+different generator, different sequence
+([`SHARED_SOURCE.md`](SHARED_SOURCE.md) §5). Everything downstream of a random
+draw is still comparable, but only with the draw **injected rather than
+generated** — otherwise the comparison is noise and the first differential test
+fails for the wrong reason. These are the same algorithms compiled for two
 architectures ([`PLAN.md`](PLAN.md) §3), so a mismatch is real signal rather
 than noise.
 

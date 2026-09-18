@@ -37,7 +37,10 @@ may be exactly right here — **provided it is in the ledger.**
 1. **Never commit game data.** `BOF3.exe`, `DAT/`, `BGM/`, `SND/`, disc images,
    the AVIs, and anything extracted or dumped out of them. `.gitignore` covers
    the files; it does not cover a paste into a doc, an issue, or a commit
-   message.
+   message. This rule is also load-bearing for the licensing path — the
+   engine/data split is what keeps a commercial handoff possible
+   ([`docs/LICENSING.md`](docs/LICENSING.md) §3), so it is not relaxable for
+   convenience.
 2. **Unledgered divergence is a bug.** Every intentional behavioural change gets
    a [`docs/DIVERGENCE.md`](docs/DIVERGENCE.md) entry: what the original did,
    what this does, why. This is cheap now and very expensive to retrofit — it is
@@ -59,6 +62,11 @@ may be exactly right here — **provided it is in the ledger.**
    built on it. (It also ships no `LICENSE`; its author licenses his other work
    MIT, so that reads as an oversight — but the plan vendors nothing, so it
    gates nothing.) See PLAN §4 and §7.
+
+   **Vendoring copyleft would end the commercial path**, since we cannot grant
+   terms we do not hold — and for GPL specifically there is no workaround, not
+   merely a permission to seek ([`docs/LICENSING.md`](docs/LICENSING.md) §4).
+   Reading, citing and reimplementing from a description stay fine.
 6. **Keep "what it was" and "what it should be" separately answerable.** The
    PSX disc decides what the original behaviour *was*. This project decides what
    the game *should do*. The second answer must never quietly overwrite the

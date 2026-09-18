@@ -1,0 +1,238 @@
+# BreathOfFire3PCPort — symbol map for the Chinese PC port's BOF3.exe
+#
+#   BOF3.exe, 2,584,576 bytes, 2001-04-18,
+#   sha256 15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb
+#   image base 0x400000 (/FIXED, no .reloc — every address here is stable)
+#
+# Shape follows ../BreathOfFire3Recomp/symbols.toml so the same tooling reads
+# both sides. Two fields are new and exist because this table is downstream of
+# that one (docs/PLAN.md section 3):
+#
+#   psx     the PSX address this name was transferred from, or absent if the
+#           name was derived on the PC side first.
+#   status  unnamed | hypothesis | evidence | verified — the tier the claim is
+#           entitled to (docs/README.md). A name transferred by address-delta
+#           propagation alone is a hypothesis until a body or a field read
+#           confirms it. It never inherits "confirmed" from the PSX side.
+#
+# Addresses are load-bearing constants (CLAUDE.md rule 3).
+
+[meta]
+image_base = 0x400000
+text_va = 0x401000
+text_size = 1844840
+
+# ---------------------------------------------------------------------------
+# Global blocks
+#
+# Related globals occupy one contiguous block in both binaries with identical
+# internal offsets, at a per-block constant delta: pc = psx + delta. The linker
+# reordered the blocks; it did not reorder their contents. Measured 2026-09-18,
+# docs/kinship-probe-text-engine.md section 5. This is the unit that transfers.
+# ---------------------------------------------------------------------------
+
+[[block]]
+name = "MsgBoxState"
+pc = 0x7DEE40
+psx = 0x8014909C
+delta = 0x80695DA4
+status = "evidence"
+evidence = "12 fields verified field-for-field against MsgBox_Reset 0x8015042C's confirmed note by disassembling PC MsgBox_Reset 0x497770 (2026-09-18): the four zeroed state bytes 9C..9F, the and-0x40 on the flag word A0, the delay counter A2, message index A4, A6, box string base A8, stepper pointer AC, the zeroed B4..B7 run, box origin BC/BE, C4, and the 0x0C argument CA. No exceptions."
+
+[[block]]
+name = "WindowRecords"
+pc = 0x803160
+psx = 0x8014832C
+delta = 0x806BAE34
+status = "evidence"
+evidence = "PC Window_Alloc 0x59E2D0 indexes slot*0x24 off 0x803160 and sets byte 0 = 1, +1 = kind, +2/+3 = 0, returns 0xFF when taken — byte for byte the PSX Window_Alloc 0x80159874 note, including the 0x24 stride. Corroborated by MsgBox_FrameTask 0x4977F0 reading x/y at +4/+6 (0x803164/66) exactly as PSX 0x80148330/32 (2026-09-18)."
+note = "Record stride 0x24, same as PSX. +0/+1/+2/+3 = in-use/kind/../.., +4/+6 = x/y in 12.4 fixed, +0x10/+0x12 = w/h."
+
+[[block]]
+name = "MessagePools"
+pc = 0x803580
+psx = 0x80010000
+delta = 0x807F3580
+status = "evidence"
+evidence = "Script pool base 0x803580 read by Msg_OpenScript 0x4976D0 as ptr = base + u16[base + 2*id]; system pool base 0x807580 read by Msg_SystemPtr 0x497740. The two pools sit 0x4000 apart in both binaries (PSX 0x80010000 / 0x80014000), so one delta covers both (2026-09-18)."
+
+[[block]]
+name = "CharacterRecords"
+pc = 0x64B390
+psx = 0x80144964
+delta = 0x80506A2C
+status = "hypothesis"
+evidence = "Stride 164 = 0xA4 in both, from BreathOfFire3Recomp/docs/PC_PORT_CROSS_REFERENCE.md section 1. Not re-derived on this side yet — the delta is arithmetic on someone else's landmark, so it stays a hypothesis until a field read confirms it here."
+
+# ---------------------------------------------------------------------------
+# Text engine — dialogue box
+#
+# All eight established by the kinship probe, 2026-09-18.
+# docs/kinship-probe-text-engine.md
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4976D0
+psx = 0x8015034C
+name = "Msg_OpenScript"
+status = "evidence"
+evidence = "disasm 2026-09-18: (u16 id) ptr = 0x803580 + u16[0x803580 + 2*id]; writes ptr to the box string base 0x7DEE4C and stepper pointer 0x7DEE50, calls MsgBox_Reset 0x497770, then stores id to the message index 0x7DEE48. Same three writes as PSX Msg_OpenScript's confirmed note (0x801490A8 / AC / A4), at the MsgBoxState delta. 418 callers — the script-side entry point."
+
+[[func]]
+pc = 0x497710
+psx = 0x801503AC
+name = "Msg_OpenSystem"
+status = "evidence"
+evidence = "disasm 2026-09-18: (u16 id) ptr = Msg_SystemPtr(id); 0x7DEE4C = 0x7DEE50 = ptr; 0x7DEE48 = id; MsgBox_Reset(). Operation for operation the PSX Msg_OpenSystem note. Twin of Msg_OpenScript for the system/UI/item pool."
+
+[[func]]
+pc = 0x497740
+psx = 0x801503F8
+name = "Msg_SystemPtr"
+status = "evidence"
+evidence = "disasm 2026-09-18: (u16 id) block = 0x807580 + u32[0x807580 + (id >> 14)*4], returns block + u16[block + 2*(id & 0x3FFF)]. PSX computes the same selector as (id >> 12) & 0xC off 0x80014000 — identical algorithm, identical masks. 128 callers."
+note = "bof3ext calls this GetText and splits the id the same way (fileNum = index >> 14, index &= 0x3FFF); independent rediscovery, cited not copied (CLAUDE.md rule 5)."
+
+[[func]]
+pc = 0x497770
+psx = 0x8015042C
+name = "MsgBox_Reset"
+status = "evidence"
+evidence = "disasm 2026-09-18: zeroes 0x7DEE40..43, ands the flag word 0x7DEE44 with 0x40, zeroes 0x7DEE46/4A/58/59/5A/5B/68, eats a leading 0x0C and stores its argument to 0x7DEE6E (else 0), calls Window_Alloc 0x59E2D0 as (0, 0), sets 0x80316F = 2. Every one of those matches the PSX MsgBox_Reset confirmed note at the MsgBoxState delta."
+
+[[func]]
+pc = 0x4977F0
+psx = 0x80150508
+name = "MsgBox_FrameTask"
+status = "evidence"
+evidence = "disasm 2026-09-18: box origin 0x7DEE60/62 = (window x >> 4) + 10, (window y >> 4) + 6 from window record 0 at 0x803164/66 — verbatim the PSX MsgBox_FrameTask note, constants included. Then calls 0x497AD0, 0x4984E0 and (when flag 4 of 0x7DEE44 is clear) MsgBox_Step 0x497840; returns the inverse of flag 2."
+
+[[func]]
+pc = 0x497840
+psx = 0x8015096C
+name = "MsgBox_Step"
+status = "evidence"
+evidence = "disasm 2026-09-18: the control-code stepper. cmp 0x16 / ja default / jmp [eax*4 + 0x497A70], a 23-entry table over codes 0x00..0x16 — the same vocabulary bound as PSX. Contains xor word [0x7DEE44], 0x10 at 0x497D97, the PC copy of the DAT_801490a0 ^= 0x10 toggle shared by codes 0x10 and 0x11 (instant print, PC_PORT_CROSS_REFERENCE.md section 2.1). 789 instructions, second jump table at 0x497E34."
+
+[[func]]
+pc = 0x59E2D0
+psx = 0x80159874
+name = "Window_Alloc"
+status = "evidence"
+evidence = "disasm 2026-09-18: (slot, kind) claims 0x803160 + slot*0x24 if byte 0 is free (sets 1, +1 = kind, +2/+3 = 0), returns slot or 0xFF. Byte for byte the PSX Window_Alloc note, stride and sentinel included."
+
+[[func]]
+pc = 0x595450
+psx = 0x80159F00
+name = "Window_Task"
+status = "hypothesis"
+evidence = "disasm 2026-09-18: calls MsgBox_FrameTask 0x4977F0 and drives window record 0 through the pointer at 0x905B84, which is what PSX Window_Task does. But it is 613 instructions against a small PSX function, so it is more likely a window/menu driver with Window_Task inlined. It also holds the only two readers of 0x7DEE6E (0x595B88 / 0x595BA2) — the 0x0C placement lookup."
+note = "Resolving this needs the PSX Window_DrawFrame 0x8015A58C counterpart located inside it, or ruled out."
+
+# ---------------------------------------------------------------------------
+# Data tables
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x66AE10
+name = "MsgBox_PlacementTable"
+status = "evidence"
+evidence = "disasm 2026-09-18: indexed by the 0x0C control-code argument (0x7DEE6E) with a 4-byte stride — u16 x at +0, u16 y at +2 — then (x + 0x23) << 4 and (y + 0x10) << 4 into window record +4/+6. This is what 0x0C nn selects: the dialogue box's on-screen position. Answers PC_PORT_CROSS_REFERENCE.md section 2.2's open question from the PC side; the PSX reader of 0x801490CA is an overlay and is still unlocated."
+note = "Extent not yet measured — the census in PC_PORT_CROSS_REFERENCE.md section 2.2 found 15 distinct head arguments and a wider mid-message set through 0x80+, so the table is at least 0x15 entries and the high arguments may not index it at all."
+
+[[data]]
+pc = 0x497A70
+name = "MsgBox_Step_CodeTable"
+status = "evidence"
+evidence = "disasm 2026-09-18: 23-entry jump table for control codes 0x00..0x16, dispatched from 0x4978B2. Lives inside .text as a data island, immediately after MsgBox_Step's body."
+
+# ---------------------------------------------------------------------------
+# Battle engine
+#
+# Established by the battle-engine probe, 2026-09-18.
+# docs/kinship-probe-battle-engine.md
+#
+# Every function in this section is PSX OVERLAY-resident, which is what the
+# probe was run to test. The `psx` addresses are inside BATTLE.EMI#3
+# (load 0x801D0C00) and BATTLE.EMI#15 (load 0x80093800), not the boot EXE.
+# ---------------------------------------------------------------------------
+
+[[block]]
+name = "EnemyWorkingRecords"
+pc = 0x93B9E0
+psx = 0x801EB620
+field_shift = 0x10
+pc_stride = 0x128
+psx_stride = 0x118
+status = "evidence"
+evidence = "Stride read off PC 0x44A960 (sub 3 / x9 / x37 / x8 = 296 = 0x128) against the PSX 0x118 in BATTLE_RAM.md. At field_shift 0x10, 21 of 26 documented PSX fields land on an address referenced as an absolute operand in .text, baseline 17.2%, binomial P = 2.46e-12 (2026-09-18). Corroborated structurally: the nine consecutive resistance-grid bytes PSX +0x2F..+0x37 land on PC 0x93BA1F..0x93BA27 and all nine are referenced, split between 0x44EE80 (first six) and 0x44F030 (last four) exactly as the PSX split between Battle_ElementAffinity and 0x8009FD08."
+note = "The PC record is 0x10 longer because a 16-byte name is prepended (0x44A960 copies 12 bytes of it out). So every field sits 0x10 later than its PSX counterpart. Misses in the field test — +0x04 zenny, +0x1C/+0x1E drop 2, +0x22 max AP, +0x94 charge multiplier — are fields no instruction happens to reach at a constant offset off record 0, not evidence against the shift."
+
+[[block]]
+name = "PartyWorkingRecords"
+pc = 0x802D50
+psx = 0x80145E8C
+field_shift = 0x0
+pc_stride = 0x14C
+psx_stride = 0x140
+status = "evidence"
+evidence = "Stride read off PC Battle_ElementAffinity's party branch (x5 / x41 / x83 / x4 = 332 = 0x14C). 19 of 21 documented PSX fields land on a referenced PC address at shift 0, baseline 26.8%, binomial P = 1.60e-09 (2026-09-18). Corroborated: PC party HP 0x802DD8 and PC enemy HP 0x93BA04 share six referencing functions (0x437CC0, 0x43B130, 0x44B9F0, 0x44FCE0, 0x49D680, 0x596A90) — the damage path touches both sides."
+note = "The record grew 0xC but every documented field keeps its offset, so the growth is past +0x13C, beyond what BATTLE_RAM.md covers. Carries a copy of the persistent character record at +0x74; that record did not change size (164 bytes in both)."
+
+[[block]]
+name = "DamageScratch"
+pc = 0x903850
+psx = 0x1F800000
+status = "hypothesis"
+evidence = "Battle_ScaleDamage 0x446430 reads the weapon/element byte from 0x903850 and tests it for 0x1F then 0x20, exactly where PSX Battle_ScaleDamage reads scratchpad 0x1F800000 (names/functions.toml)."
+note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown."
+
+[[func]]
+pc = 0x446430
+psx = 0x801DCD18
+psx_overlay = "BATTLE.EMI#3"
+name = "Battle_ScaleDamage"
+args = ["attacker", "target", "base"]
+status = "evidence"
+evidence = "disasm 2026-09-18, term for term against the PSX evidence note: base << 8 into 8.8 fixed, the multiplier clamped to at least 0xCD (= 205/256), rand() & 7 indexing an eight-entry variance table at 0x64E38C, /256; then if the weapon byte at 0x903850 & 0x1F, multiply by Battle_ElementAffinity 0x44EE80 and divide by 100 (magic 0x51EB851F, sar 5); then if & 0x20, multiply by s16 0x64E3AC[affinity class] and divide by 100. Both tables hold the PSX values exactly."
+
+[[func]]
+pc = 0x44EE80
+psx = 0x8009FA78
+psx_overlay = "BATTLE.EMI#15"
+name = "Battle_ElementAffinity"
+args = ["target", "element_mask"]
+status = "evidence"
+evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 on the weapon byte & 0x1F, and reads the five element-affinity class bytes at enemy record +0x3F..+0x43 (0x93BA1F..0x93BA23) — the PSX fire/ice/lightning/earth/wind block at enemy +0x2F..+0x33 (BATTLE_RAM.md, The resistance grid) at the EnemyWorkingRecords shift."
+
+[[func]]
+pc = 0x44F030
+psx = 0x8009FD08
+psx_overlay = "BATTLE.EMI#15"
+name = "Battle_PsiStatusDeathAffinity"
+args = ["target", "mask"]
+status = "hypothesis"
+evidence = "disasm 2026-09-18: branches on actor <= 2 into party records (0x802D50, stride 0x14C) or enemy records (0x93B9E0, stride 0x128), and under mask bits 0x40 / 0x80 / 0x100 reads record +0xA5/+0xA6/+0xA7 (party) or +0x45/+0x46/+0x47 (enemy), indexing s16 table 0x64E97C. That is unambiguously the psionic / status / death affinity lookup."
+note = "hypothesis, not evidence, for the identification: BATTLE_RAM.md lists a sibling 0x8009FE88 on the same three fields with its own table (0x800B189C vs 0x800B188C) and nothing yet separates the two. PC 0x44F770 is a near-duplicate of this function and is the other candidate; both are left as one named and one unnamed rather than guessing the pairing."
+
+[[func]]
+pc = 0x5B93D2
+psx = 0x8017ED4C
+name = "Rand"
+status = "evidence"
+evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 with the result masked & 7 to index the damage-variance table, which is the PSX Rand 0x8017ED4C call site term for term. On the PC this is the MSVC6 CRT rand(), not a BIOS thunk — same role, different implementation, so RNG sequences will NOT match between the two binaries."
+
+[[data]]
+pc = 0x64E38C
+psx = 0x801EAF50
+name = "Battle_DamageVarianceTable"
+status = "evidence"
+evidence = "Read from .data 2026-09-18: u32 x8 = 218, 230, 243, 256, 269, 282, 294, 307 — the PSX table's values exactly (0xDA, 0xE6, 0xF3, 0x100, 0x10D, 0x11A, 0x126, 0x133, /256 = 0.85..1.20). Sole reference is Battle_ScaleDamage 0x446430."
+note = "u32 on the PC, u16 on the PSX. Same values, different element width — a width-agnostic value search is required or the table reads as absent, which is what a u16-only first attempt reported."
+
+[[data]]
+pc = 0x64E3AC
+psx = 0x801EAF70
+name = "Battle_HolyAffinityTable"
+status = "evidence"
+evidence = "Read from .data 2026-09-18: s16 x8 = 300, 200, 200, 150, 125, 100, 50, 0 — byte-identical to the PSX table. Sole reference is Battle_ScaleDamage 0x446430, matching the PSX side where the holy lookup is inlined into that function. Adjacent to Battle_DamageVarianceTable in both binaries, in the same order."

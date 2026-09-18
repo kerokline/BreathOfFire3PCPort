@@ -7,11 +7,30 @@ Project-owned notes. Agents and humans both put findings here.
 | Doc | What it is |
 |---|---|
 | [`PLAN.md`](PLAN.md) | The scoping document. Target analysis, architecture options and the reasoning that selected one, the phased path, constraints. **Right now this is the entire project.** |
+| [`STATUS.md`](STATUS.md) | Where the project is right now: order of work, open decisions, outstanding obligations. Start here. |
 | [`DIVERGENCE.md`](DIVERGENCE.md) | The ledger of intentional behavioural changes. Read before changing game behaviour; append when you do. |
+| [`LICENSING.md`](LICENSING.md) | Why the repo is licensed the way it is, and the constraints that follow from wanting a commercial handoff to be possible. Read before vendoring anything or relaxing rule 1. |
+| [`SHARED_SOURCE.md`](SHARED_SOURCE.md) | Why the two binaries are compilations of one source tree, what that licenses, and the catalogue of changes the *porting house* made. Read before treating a PSX finding as a PC fact. |
+| [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md) | PLAN §8 step 2, the load-bearing experiment. **Passed** 2026-09-18: PSX names transfer onto the PC binary, and global blocks keep their internal layout at a per-block constant delta. |
+| [`bsim-evaluation.md`](bsim-evaluation.md) | Ghidra BSim measured against our own hand-verified pairs. Works cross-ISA (4 of 8 at rank 1, one perfect match), but it is a seed generator, not an oracle — and it produced one confident wrong answer. |
+| [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) | The successor probe, on a subsystem with no pre-existing landmarks. **Passed** 2026-09-18: the transfer scales, PSX *overlay* functions transfer, and value-sequence search on constant tables is a second anchor that needs no seed. |
 
-`STATUS.md` will appear when there is status to track — in-flight work and
-blockers, in the style of the sibling repo. Until phase 0 starts, `PLAN.md`
-carries that weight.
+Plus [`prior-art/`](prior-art/) — notes on four projects that have already hit
+walls we are walking toward (OpenRCT2, devilution/DevilutionX, TR1X, Diaphora).
+Start at its [`README`](prior-art/README.md): the cross-cutting findings are
+worth more than any single note, and one of them (nobody kept a regression
+oracle, all of them paid) bears directly on [`DIVERGENCE.md`](DIVERGENCE.md).
+
+Outside `docs/`, two artifacts came out of that probe:
+[`../symbols.toml`](../symbols.toml), the PC-side symbol map (same shape as the
+sibling's, plus `psx` and `status` fields), and [`../tools/`](../tools) —
+`pe_funcs.py`, `pe_disasm.py`, `pe_xref.py`. Their output goes to `analysis/`,
+which is gitignored because it is derived from copyrighted game code.
+
+[`STATUS.md`](STATUS.md) is where the project actually is — the order of work,
+open decisions, outstanding obligations, and known gaps in the record. `PLAN.md`
+says what we intend and why; `STATUS.md` says what is true today. **When they
+disagree, `STATUS.md` is right and `PLAN.md` needs updating.**
 
 ## Naming
 
