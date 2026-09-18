@@ -535,6 +535,16 @@ plan does not technically need them yet. A living project has to stay alive.
    boot-EXE names. It also found a **second anchor needing no seed**: constant
    data tables transfer by value (width-agnostically), so searching for a known
    PSX table names the PC functions that reference it.
+
+   **Ghidra BSim was then measured against those same pairs**
+   ([`bsim-evaluation.md`](bsim-evaluation.md)): it matches across MIPS→x86
+   (4 of 8 true pairs at rank 1, `MsgBox_Reset` at a perfect 1.000, and a
+   negative control that correctly failed), but it misses tiny wrappers and very
+   large functions, and it produced one *high-confidence wrong* answer. So phase
+   1's matcher is **BSim proposes, block deltas dispose** — BSim needs no seed
+   and gets us into a subsystem cold, delta propagation then names a whole block
+   at once, and each checks the other. Neither is trusted alone, and no
+   BSim-derived name exceeds `hypothesis` tier without a PC-side read.
 3. **Write the `DAT/` container parser** (§4). Small, self-contained, needed by
    everything downstream, and testable against the 742 files today.
 

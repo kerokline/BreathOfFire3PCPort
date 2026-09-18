@@ -160,6 +160,13 @@ And one independent argument for BSim that was not on our list: Diaphora and
 BinDiff both assume a **two-program diff**. Our shape is one PC image against a
 *corpus* of PSX overlays — 1-vs-N, which is BSim's native shape.
 
+**BSim was then measured** ([`../bsim-evaluation.md`](../bsim-evaluation.md)),
+and Diaphora's warning transferred to it intact: BSim's two worst results were a
+tiny wrapper whose true match was *out-ranked by a false one*, and a very large
+function whose single wrong answer carried the highest significance score in the
+run. Good signals without a size floor, exactly as documented. The floor has to
+come from us.
+
 ## 6. A third route to the translation units
 
 [`SHARED_SOURCE.md`](../SHARED_SOURCE.md) §2 argues the source's file

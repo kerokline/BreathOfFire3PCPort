@@ -11,6 +11,7 @@ Project-owned notes. Agents and humans both put findings here.
 | [`LICENSING.md`](LICENSING.md) | Why the repo is licensed the way it is, and the constraints that follow from wanting a commercial handoff to be possible. Read before vendoring anything or relaxing rule 1. |
 | [`SHARED_SOURCE.md`](SHARED_SOURCE.md) | Why the two binaries are compilations of one source tree, what that licenses, and the catalogue of changes the *porting house* made. Read before treating a PSX finding as a PC fact. |
 | [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md) | PLAN §8 step 2, the load-bearing experiment. **Passed** 2026-09-18: PSX names transfer onto the PC binary, and global blocks keep their internal layout at a per-block constant delta. |
+| [`bsim-evaluation.md`](bsim-evaluation.md) | Ghidra BSim measured against our own hand-verified pairs. Works cross-ISA (4 of 8 at rank 1, one perfect match), but it is a seed generator, not an oracle — and it produced one confident wrong answer. |
 | [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) | The successor probe, on a subsystem with no pre-existing landmarks. **Passed** 2026-09-18: the transfer scales, PSX *overlay* functions transfer, and value-sequence search on constant tables is a second anchor that needs no seed. |
 
 Plus [`prior-art/`](prior-art/) — notes on four projects that have already hit

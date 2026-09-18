@@ -31,8 +31,12 @@ CONFIG = "medium_nosize"      # size-insensitive: the port's functions are not t
 
 
 def run(cmd, **kw):
+    # bsim.bat is a cmd batch file: angle brackets in any argument are parsed as
+    # redirection before the JVM ever sees them, and it ends with a `pause` on
+    # error, so stdin must be closed or it hangs waiting for a keypress.
     print("+ " + " ".join(cmd), flush=True)
-    p = subprocess.run(cmd, text=True, encoding="utf-8", errors="replace", **kw)
+    p = subprocess.run(cmd, text=True, encoding="utf-8", errors="replace",
+                       stdin=subprocess.DEVNULL, **kw)
     return p.returncode
 
 
@@ -54,7 +58,7 @@ def pairs():
 def cmd_build():
     os.makedirs(os.path.dirname(SIGDIR), exist_ok=True)
     run([BSIM, "createdatabase", DB, CONFIG, "-n", "BoF3 PSX boot EXE",
-         "-d", "SLPS-00990 boot EXE signatures for PSX<->PC matching"])
+         "-d", "SLPS-00990 boot EXE signatures for PSX to PC matching"])
     return run([BSIM, "generatesigs", ghidra_url(PSX_PROG), SIGDIR,
                 "--bsim", DB, "--commit", "--overwrite"])
 
@@ -69,13 +73,18 @@ def cmd_query():
 
 
 def cmd_score():
-    res = {r["addr"].lower(): r for r in json.load(open(OUT))["results"]}
+    # bsim_query.py writes the base address as "0x<decimal>" (Java Address
+    # formatted through %s yields its offset, not a hex string). Normalise.
+    res = {}
+    for r in json.load(open(OUT))["results"]:
+        body = r["addr"][2:] if r["addr"].startswith("0x") else r["addr"]
+        res[int(body, 10) if not set(body) - set("0123456789") else int(body, 16)] = r
     hit = 0
     scored = [p for p in pairs() if not p["overlay"]]
     print("%-28s %-10s %-10s %-6s %-9s %s" %
           ("name", "pc", "psx", "rank", "similar", "top match"))
     for p in scored:
-        r = res.get("0x%08x" % p["pc"]) or res.get(hex(p["pc"]))
+        r = res.get(p["pc"])
         if r is None:
             print("%-28s %-10s %-10s  -- no BSim result --" % (p["name"], hex(p["pc"]), hex(p["psx"])))
             continue
