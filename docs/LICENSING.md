@@ -42,7 +42,11 @@ impossible to retrofit — the same argument [`DIVERGENCE.md`](DIVERGENCE.md) ma
 about the ledger, and it fails the same way: silently, and only visibly at the
 moment it matters most.
 
-This is **not yet done** — see §7.
+**The DCO half is done** (2026-09-18): [`CONTRIBUTING.md`](../CONTRIBUTING.md)
+requires a sign-off and `.github/workflows/dco.yml` enforces it on every pull
+request. That establishes provenance, which is needed regardless — but it is
+explicitly the half that does *not* unlock relicensing. The CLA half is still
+open; see §7.
 
 ## 2. The licence: PolyForm Noncommercial, and why
 
@@ -153,12 +157,22 @@ pays beyond engineering.
 
 ## 7. Open, and not yet decided
 
-- **No contributor agreement exists yet.** §1 says one is required before the
-  first outside contribution is merged. Nothing has been drafted — this needs a
-  real CLA text (or a reviewed relicensing clause), not an invented one.
-- **No `CONTRIBUTING.md` exists.** It is where the above belongs, alongside the
-  evidence rule and the divergence rule, so a first-time contributor meets all
-  three at once.
+- **No CLA exists yet.** §1 says one is required before the first outside
+  contribution is merged. The DCO is in place and is not a substitute: it
+  certifies provenance and grants no relicensing right. This needs real CLA text
+  (or a reviewed relicensing clause), not an invented one — drafting legal
+  language here would be worse than recording the gap.
+  [`CONTRIBUTING.md`](../CONTRIBUTING.md) discloses the intent to remain
+  relicensable up front, so a contributor is not surprised later, but disclosure
+  is not a grant.
+- ~~**No `CONTRIBUTING.md` exists.**~~ Written 2026-09-18, carrying the three
+  repository rules, the DCO, the no-vendoring rule and the licensing disclosure.
+- **The DCO text says "open source license"**, and PolyForm Noncommercial is
+  source-available rather than OSI open source. Non-OSI projects commonly use
+  the DCO regardless, since what it certifies is provenance, and the text is
+  reproduced unmodified on purpose — its value is being the *same* document
+  everyone else uses. The mismatch is noted rather than papered over, and is one
+  of the things a legal review should confirm.
 - **Whether the handoff licence is proprietary or Apache-2.0** is a decision for
   the deal, not for now. The point of §2 is that it stays a choice.
 - **No legal review has happened.** §5 says one should, before commitment.

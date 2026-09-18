@@ -9,10 +9,22 @@ release whose correctness criterion is "matches original hardware". The two
 projects have deliberately opposite invariants, and that is what makes them good
 collaborators rather than competitors. See [`docs/PLAN.md`](docs/PLAN.md) §6.
 
-> **Status: scoping.** There is no code yet. [`docs/PLAN.md`](docs/PLAN.md) is
-> the whole project right now — target analysis, architecture options, and a
-> phased path. The load-bearing experiment (a PSX↔PC function matcher) has not
-> been run, and the plan is contingent on it.
+> **Status: scoping, with the load-bearing experiment run and passed.**
+> There is no game code yet — [`docs/PLAN.md`](docs/PLAN.md) is still the whole
+> project. But the bet the plan rested on (that PSX names can be transferred
+> onto the PC binary) has been tested and holds: the two binaries are
+> compilations of one C source tree, and the transfer works for overlay
+> functions as well as boot-EXE ones.
+>
+> - [`docs/SHARED_SOURCE.md`](docs/SHARED_SOURCE.md) — why that is established
+>   rather than assumed, and what the porting house changed
+> - [`docs/kinship-probe-text-engine.md`](docs/kinship-probe-text-engine.md) and
+>   [`docs/kinship-probe-battle-engine.md`](docs/kinship-probe-battle-engine.md)
+>   — the measurements
+> - [`docs/bsim-evaluation.md`](docs/bsim-evaluation.md) — Ghidra BSim scored
+>   against those results
+> - [`docs/prior-art/`](docs/prior-art/) — what four comparable projects learned
+>   the hard way
 
 ## What the target is
 
@@ -70,3 +82,12 @@ distributed here and none may be committed** — see [`.gitignore`](.gitignore).
 This repository is licensed under [PolyForm Noncommercial 1.0.0](LICENSE).
 It is an independent interoperability and preservation effort, not affiliated
 with or endorsed by Capcom.
+
+[`docs/LICENSING.md`](docs/LICENSING.md) explains why that licence and what
+follows from it — including why no third-party source is vendored here.
+
+## Contributing
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Three rules matter most: never commit game
+data, ledger every intentional behavioural change, and cite the measurement
+behind every claim. Commits must be signed off (`git commit -s`); CI checks it.

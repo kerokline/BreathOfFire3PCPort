@@ -1,0 +1,63 @@
+# Enforce the DCO sign-off on every commit in a pull request.
+#
+# Deliberately a workflow rather than the github.com/apps/dco GitHub App: the
+# app is the more common route and works fine, but it needs write access to
+# checks on the repository, and this is twenty lines that need nothing. Either
+# is valid — see CONTRIBUTING.md.
+name: DCO
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check-sign-off:
+    name: Check Signed-off-by
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need the PR's commits and the base to diff against.
+          fetch-depth: 0
+
+      - name: Verify every commit is signed off
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -u
+          fail=0
+          # %H commit, %an author name, %ae author email, %(trailers...) sign-offs
+          while read -r sha; do
+            subject=$(git log -1 --format='%s' "$sha")
+            author=$(git log -1 --format='%an <%ae>' "$sha")
+            # Merge commits carry no authored content of their own.
+            if [ "$(git rev-list --parents -n 1 "$sha" | wc -w)" -gt 2 ]; then
+              echo "skip   $sha (merge) $subject"
+              continue
+            fi
+            if git log -1 --format='%B' "$sha" \
+                 | grep -qiE "^Signed-off-by: .+ <.+@.+>[[:space:]]*$"; then
+              echo "ok     $sha $subject"
+            else
+              echo "MISSING Signed-off-by: $sha  $subject"
+              echo "        author: $author"
+              fail=1
+            fi
+          done < <(git rev-list "$BASE_SHA".."$HEAD_SHA")
+
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "One or more commits are missing a Signed-off-by line."
+            echo ""
+            echo "Sign new commits with:       git commit -s"
+            echo "Fix an existing branch with: git rebase --signoff <base>"
+            echo "                             git push --force-with-lease"
+            echo ""
+            echo "What the sign-off certifies, and why this project requires"
+            echo "it, is in CONTRIBUTING.md."
+            exit 1
+          fi
