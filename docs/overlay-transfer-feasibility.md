@@ -48,6 +48,43 @@ figure is a separate task and is not done here.**
 
 *(Done 2026-09-18, immediately after this document landed: `PLAN.md` §3, `STATUS.md`, both kinship probes, `bsim-evaluation.md`, `prior-art/README.md` and `prior-art/diaphora.md` corrected, each marking the correction rather than silently editing the number.)*
 
+### Provenance of the bad number, and a caveat on the good one
+
+**Where 29,036 came from: nowhere.** `git log -S'29,036' --all` in the sibling
+returns a single commit — `837e981`, *"PC_PORT_CROSS_REFERENCE: record the third
+derivative"*, the commit that added the §6 section describing *this* project. The
+figure never existed in any data file. Candidate multiplex aggregates over
+`analysis/overlay_catalog.json` do not reproduce it either: `sum(static_total ×
+band_occupant_count)` = 455,221 and `sum(jal × band_occupant_count)` = 199,761.
+
+The **1,026 does have an origin**: `analysis/analysis.json` carries
+`stats.total_functions = 1026`, the boot EXE's *discovered* count. That sentence
+took a real number and labelled it "named" (the named count is 556).
+
+**And 5,805 is softer than it looks.** It is `roots.static_total`, the union of
+`jal` targets and prologue-pattern matches:
+
+| | count |
+|---|---|
+| `jal` targets | 2,680 |
+| prologue matches | 4,797 |
+| both | 1,672 |
+| union (`static_total`) | **5,805** |
+| distinct PCs observed at runtime, all bands (`counts.observed_pcs`) | 3,345 |
+
+So **only 2,680 of 5,805 are actually called from anywhere**; the remaining 3,125
+are prologue-shaped bytes with no caller. Static discovery over-approximates, and
+the count falls as overlay residency becomes knowable — which means **any
+overlay-derived function count is a moving target and must be dated when
+cited**, this one included (2026-09-18).
+
+Consequence for §5's effort estimate: the "12–13k Ghidra functions" projection
+rests on a 2.2x ratio over static discovery, so soft roots **compound** rather
+than cancel. An overlay BSim database would be not just ~17x larger than the
+boot-EXE-only pool but also noisier, indexing prologue-guessed boundaries that
+are not functions. A second, independent reason the import must happen on a
+database copy with the nine published pairs re-scored before and after.
+
 ## 1. What already exists on disk
 
 All paths relative to `../BreathOfFire3Recomp` (read-only to us).
