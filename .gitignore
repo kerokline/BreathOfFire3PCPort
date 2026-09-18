@@ -1,0 +1,107 @@
+# ---------------------------------------------------------------------------
+# GAME DATA — NEVER COMMIT
+#
+# The Chinese PC port is commercial, copyrighted software. Nothing that ships
+# with it, is extracted from it, or is dumped out of it belongs in this repo.
+# This list covers files; it does not cover a paste into a doc, an issue, or a
+# commit message. That rule is on you.
+# ---------------------------------------------------------------------------
+
+# A local install of the game, however it is laid out
+/game/
+/bof3/
+/BoF3/
+
+# The shipped executables and their data
+BOF3.exe
+START.EXE
+SETUP.EXE
+*.DAT
+*.dat
+DATA.TAG
+layout.bin
+
+# Archives, disc images, media shipped with the game
+/DAT/
+/BGM/
+/SND/
+/CDImage/
+*.mdf
+*.mds
+*.iso
+*.bin
+*.cue
+*.chd
+*.avi
+*.cab
+*.EX_
+
+# Extracted or dumped assets — textures, audio, script, fonts pulled out of
+# the game's own containers. Derived from copyrighted data, same rule.
+/extracted/
+/dumps/
+/textures_dump/
+
+# ---------------------------------------------------------------------------
+# Analysis scratch
+# ---------------------------------------------------------------------------
+
+# Ghidra projects contain a full copy of the analysed binary.
+/ghidra/
+*.gpr
+*.rep/
+*.gzf
+
+# Local analysis output: traces, coverage harvests, disassembly, matcher
+# intermediates. Large, machine-specific, and frequently binary-derived.
+/analysis/
+
+# Symbol/name data IS tracked — it is our own work product, not game data.
+!/names/
+!/symbols.toml
+
+# ---------------------------------------------------------------------------
+# Build
+# ---------------------------------------------------------------------------
+/build/
+/build-*/
+/out/
+/cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+*.obj
+*.o
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.idb
+*.dll
+*.exe
+compile_commands.json
+
+# MSVC / Visual Studio
+.vs/
+*.user
+*.suo
+*.vcxproj.user
+/Debug/
+/Release/
+/x64/
+/Win32/
+
+# ---------------------------------------------------------------------------
+# Editors, OS, Python
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*~
+Thumbs.db
+Desktop.ini
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
