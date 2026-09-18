@@ -7,6 +7,7 @@ Project-owned notes. Agents and humans both put findings here.
 | Doc | What it is |
 |---|---|
 | [`PLAN.md`](PLAN.md) | The scoping document. Target analysis, architecture options and the reasoning that selected one, the phased path, constraints. **Right now this is the entire project.** |
+| [`STATUS.md`](STATUS.md) | Where the project is right now: order of work, open decisions, outstanding obligations. Start here. |
 | [`DIVERGENCE.md`](DIVERGENCE.md) | The ledger of intentional behavioural changes. Read before changing game behaviour; append when you do. |
 | [`LICENSING.md`](LICENSING.md) | Why the repo is licensed the way it is, and the constraints that follow from wanting a commercial handoff to be possible. Read before vendoring anything or relaxing rule 1. |
 | [`SHARED_SOURCE.md`](SHARED_SOURCE.md) | Why the two binaries are compilations of one source tree, what that licenses, and the catalogue of changes the *porting house* made. Read before treating a PSX finding as a PC fact. |
@@ -26,9 +27,10 @@ sibling's, plus `psx` and `status` fields), and [`../tools/`](../tools) —
 `pe_funcs.py`, `pe_disasm.py`, `pe_xref.py`. Their output goes to `analysis/`,
 which is gitignored because it is derived from copyrighted game code.
 
-`STATUS.md` will appear when there is status to track — in-flight work and
-blockers, in the style of the sibling repo. Until phase 0 starts, `PLAN.md`
-carries that weight.
+[`STATUS.md`](STATUS.md) is where the project actually is — the order of work,
+open decisions, outstanding obligations, and known gaps in the record. `PLAN.md`
+says what we intend and why; `STATUS.md` says what is true today. **When they
+disagree, `STATUS.md` is right and `PLAN.md` needs updating.**
 
 ## Naming
 
