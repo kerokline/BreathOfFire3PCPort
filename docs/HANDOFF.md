@@ -59,7 +59,8 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
    540 calls in the same order (one audio-timed call moves by a frame, §4).
    A per-frame hash of every logic call is identical across two launches
    (§6), and original-vs-ours passes it with all ten functions ours (§7).
-   A negative control fails it as it should. Next: make `mem_dump.py` wait for the upload queues to drain (§6), and write the first
+   A negative control fails it as it should. `mem_dump.py` now waits for the
+   upload queues to drain before it snapshots (§6). Next: write the first
    receipt. What else the data is good for: [`IDEAS.md`](IDEAS.md) I10. **Run it before merging anything that
    touches `src/`.**
 5. A CI job that at least *compiles* `src/` (needs no game data), and the
@@ -143,9 +144,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; Everything through DIV-0004 is committed (2026-09-19); **not pushed** since
-`8347b0c`. No PR open yet. The `src/` changes passed the attract oracle and the
-frame-hash A/B with eleven functions ours.
+Phase 0 merged to `main` as PR #3 (`cee66ad`, 2026-09-19). Branch
+`phase-3/gfx-loadimage` is cut from it for the `Gfx_LoadImage` /
+`Font_SetGlyphData` takeovers; so far it holds only the `mem_dump.py` drain
+wait and its notes — **uncommitted**, no `src/` change yet.
 
 Owed in game, all listed in [`USER_CHECKS.md`](USER_CHECKS.md): the converted
 saves, the file layer's write/seek, DIV-0003's failing case, DIV-0002's A/B.
