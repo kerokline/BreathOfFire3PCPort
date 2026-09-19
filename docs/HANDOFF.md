@@ -14,9 +14,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, ten
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, eleven
 functions are ours (`LoadDatFile`; the whole eight-function file layer, with DIV-0003 in
-`File_OpenWrite`; `Save_WriteFile` with DIV-0002), the A/B switch works, and a
+`File_OpenWrite`; `Save_WriteFile` with DIV-0002; `Gfx_BeginFrame` with DIV-0004, a
+crash fix), the A/B switch works, a call tracer and a crash reporter run in-process, and a
 deterministic attract-mode regression check passes original-vs-ours. See
 [`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
 
@@ -52,14 +53,20 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
 4. **Grow the attract oracle** ([`attract-mode.md`](attract-mode.md) §6-7). It
    works today as an external sampler: the port is deterministic from launch,
    to the frame and to the `Rand` call, and original-vs-ours compares
-   identical. Next: log from inside the DLL (exact frame counter, richer state
-   hash), and write the first receipt. **Run it before merging anything that
+   identical. An in-process first-call tracer now exists
+   ([`call-trace.md`](call-trace.md)): 540 of 2,936 functions reached, exact
+   frame counter, it does not perturb the run, and two launches give the same
+   540 calls in the same order (one audio-timed call moves by a frame, §4).
+   A per-frame hash of every logic call is identical across two launches
+   (§6), and original-vs-ours passes it with all ten functions ours (§7).
+   A negative control fails it as it should. Next: make `mem_dump.py` wait for the upload queues to drain (§6), and write the first
+   receipt. What else the data is good for: [`IDEAS.md`](IDEAS.md) I10. **Run it before merging anything that
    touches `src/`.**
 5. A CI job that at least *compiles* `src/` (needs no game data), and the
    receipt format ([`STATUS.md`](STATUS.md) open decisions).
-6. A written note of the known defects (fullscreen fallback, resolution; the
-   window title is GBK bytes passed to `CreateWindowExA`, so it is mojibake on
-   a non-Chinese system locale — seen in the owner's screenshots 2026-09-19).
+6. [`known-defects.md`](known-defects.md) exists (2026-09-19). D1, clipped stat
+   numerals on the equipment screen, wants its A/B run and the draw path read;
+   D3, fullscreen fallback, is still unreproduced.
 
 [`IDEAS.md`](IDEAS.md) **I1, save interchange**, is under way: format solved,
 `tools/save_convert.py` converts both ways, in-game load pending (item 1).
@@ -93,6 +100,9 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
+- **After a crash:** `CRASH` lines in `build/bof3x.log`, then
+  `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
+- **Call trace:** [`call-trace.md`](call-trace.md) §8.
 - DAT containers: `python tools/dat.py survey ../bof3ext/bof3/DAT` (expect
   742 clean); `list` / `extract --out analysis/dat/<name>` / `compare <DAT> <EMI>`
 - Fixtures check: `python tools/verify_fixtures.py`
@@ -115,6 +125,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
 - The game freezes whenever its window is not the foreground window, then
   replays the missed time unrendered ([`windowed-mode.md`](windowed-mode.md)).
   Any unattended observation must foreground it first; `attract_run.py` does.
+- `attract_run.py` re-takes the foreground for the whole run, so **anything the
+  owner types goes into the game** and one keypress ends the attract sequence.
+  An oracle or hash run needs the keyboard and mouse left alone entirely, not
+  just the game window (lost a run to this 2026-09-19).
 - A rebuild fails at link with "Permission denied" while a game launched
   through the launcher is running — it holds `bof3x.dll` open. Close the game.
 - `pe_xref.py` answers "who touches this *data* address". It does not index
@@ -129,7 +143,12 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; nothing uncommitted. No PR open yet.
+Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; No PR open yet. **Uncommitted:** the call tracer — `src/hook/calltrace.*`,
+`tools/calltrace.py`, `docs/call-trace.md`, `IsOwned` in the detour layer; the
+crash reporter — `src/hook/crash.*`, `tools/crash_report.py`,
+`docs/crash-reporter.md`; `docs/known-defects.md`; two `symbols.toml` entries.
+The `src/` changes passed the attract oracle 2026-09-19 (tracer off, crash
+reporter armed, ten functions ours, identical to `orig_a.tsv` over 7,478 frames).
 
 Owed in game, all listed in [`USER_CHECKS.md`](USER_CHECKS.md): the converted
 saves, the file layer's write/seek, DIV-0003's failing case, DIV-0002's A/B.

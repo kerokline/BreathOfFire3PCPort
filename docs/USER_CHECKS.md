@@ -18,17 +18,17 @@ Launch for all of these: `build/bof3x-launcher.exe --game bof3`; log in
 *Why:* [`save-interchange.md`](save-interchange.md) — the converter is
 self-consistent but nothing it made has been loaded by a game.
 
-- [ ] Load screen: slot **2** should be the JP save (12:48, Lv 11, party of
+- [X] Load screen: slot **2** should be the JP save (12:48, Lv 11, party of
       three), slot **3** the US save (42:37, Lv 38, solo adult Ryu). Do the
       summaries show, with sane names, times and levels?
-- [ ] Load each. Right place (US: the area the sibling's import landed in)?
+- [X] Load each. Right place (US: the area the sibling's import landed in)?
       Party, inventory, equipment, abilities and zenny intact? Character names
       readable in the status menu (they are borrowed from PC slot 0)?
-- [ ] Walk around, open menus, fight one battle, save to a new slot.
-- [ ] US save only: it carries 20 five-byte names in US text encoding for
+- [X] Walk around, open menus, fight one battle, save to a new slot.
+- [] US save only: it carries 20 five-byte names in US text encoding for
       the 60-member facility above. If you can get to where those names
       are shown, what does the PC game draw for them?
-- [ ] Note the confirm/cancel buttons after loading the US save — the sibling
+- [X] Note the confirm/cancel buttons after loading the US save — the sibling
       saw US button config ride along in the save block.
 - Anything odd, however small, is the finding. Result goes to:
   [`save-interchange.md`](save-interchange.md) §4.

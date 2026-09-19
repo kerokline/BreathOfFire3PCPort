@@ -15,15 +15,20 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Ten functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**Eleven functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
-lacks (DIV-0003, not yet exercised in game) — and `Save_WriteFile`, which
+lacks (DIV-0003, not yet exercised in game) — `Save_WriteFile`, which
 carries the project's first *code* divergence: a fix for saves vanishing from
 the save menu ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0002,
 [`save-files.md`](save-files.md)), found, traced, fixed and verified in game
-on 2026-09-19.
+on 2026-09-19 — and `Gfx_BeginFrame` `0x4FD230`, which carries the second: the
+first **crash** fixed. Queued image uploads pile up over unrendered frames
+(window unfocused, title bar held) until one flush overruns its scratch buffer
+into the draw structures; reproduced on all-original code, fixed by draining on
+unrendered frames, confirmed in game the same day (DIV-0004,
+[`known-defects.md`](known-defects.md) D4).
 
 What is established:
 
@@ -66,12 +71,24 @@ What is established:
   the PSX `0x10B0`-byte game block from file offset 0, same checksum rule, same
   field offsets, with the character-record name widened 5→9 bytes and later
   record fields +4. `tools/save_convert.py` converts both ways; round trip is
-  byte-identical and the sibling's verifier accepts a PC save. **Not yet loaded
-  in either game.**
-- 45 functions, 8 global blocks and 14 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 29 functions carry signatures and
-  are callable from our code, 10 of them ours (counted 2026-09-19 from the
+  byte-identical and the sibling's verifier accepts a PC save. **Both
+  converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
+  is still static only.
+- 49 functions, 8 global blocks and 26 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 33 functions carry signatures and
+  are callable from our code, 11 of them ours (counted 2026-09-19 from the
   file, not from memory).
+- **An in-process call tracer and a crash reporter** live in the injected DLL.
+  The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
+  reaches (540 of 2,936 in the attract sequence), call counts and edges, a
+  per-frame call hash that is identical across launches and passes
+  original-vs-ours, and a takeover work queue. The reporter
+  ([`crash-reporter.md`](crash-reporter.md)) is always on and caught its first
+  real crash the day it was built.
+- **Known defects are written down** ([`known-defects.md`](known-defects.md)):
+  clipped stat numerals (draw-time, cause unread), the mojibake title, the
+  crash above, and a frame deadline kept in a 32-bit float, which makes game
+  speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 

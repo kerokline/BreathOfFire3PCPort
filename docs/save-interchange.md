@@ -1,7 +1,8 @@
 # Save interchange: the PC save is the PSX game block, with one field widened
 
 **Status:** IN PROGRESS (2026-09-19) — format established and converter written;
-statically verified both ways; **not yet loaded in either game.**
+statically verified both ways; **both converted saves load and play on PC**
+(owner, 2026-09-19, §4). The PC→PSX direction is still only static.
 
 [`IDEAS.md`](IDEAS.md) I1. Tool: [`tools/save_convert.py`](../tools/save_convert.py).
 Save files are game-derived data: none is committed, and nothing here quotes
@@ -161,17 +162,47 @@ Run 2026-09-19 on scratch copies; the originals were not touched.
   whose checksum verifies and whose decoded state matches the source line for
   line.
 
-## 4. What is not established
+## 4. In game: both converted saves load, play and re-save (owner, 2026-09-19)
 
-- **Nothing has been loaded in a game.** The converted JP and US saves are in
-  `bof3/BISLPS02.DAT` and `BISLPS03.DAT` for the owner to try
-  ([`USER_CHECKS.md`](USER_CHECKS.md)). Until then this is a format finding
-  and a tool that is self-consistent, not a working feature.
+Launched through `bof3x-launcher` with all ten functions ours, so this is also
+the first in-game save through the fully-ours file layer.
+
+- **JP save (slot 2).** Loads with the right party of three, levels,
+  equipment, zenny (7,914) and time (12:52 on screen against 12:48 converted).
+  A battle "went fine". Re-saved to slot 4: `BISLPS04.DAT` verifies
+  (`save_convert.py info`: checksum OK, 12:55:18, zenny 7,994) and differs from
+  slot 2 in **32 bytes in 14 short runs** — the game re-wrote the converted
+  block without reshaping it.
+- **US save (slot 3).** "Loaded fine, same spot as before" — the place the
+  sibling's import landed in, area 141 — solo Ryu. A battle, then re-saved to
+  slot 5: checksum OK, 42:39:19, zenny 52,216, area 141, party `[7, 255, 255]`.
+  This is the first evidence that **ids mean the same on PC as on the JP/US
+  discs**, at least for area, party and what one battle touches.
+- **Names are readable because they are borrowed**, not because the game
+  hardcodes them: `psx2pc` was run with `--names-from bof3/BISLPS00.DAT`, which
+  copies the nine-byte Chinese names out of the owner's own save (docstring of
+  `tools/save_convert.py`). The owner's comparison case — a garbled
+  half-glyph, half-letter name going English → Japanese in the sibling — is
+  what keeping the source bytes looks like. Whether the PC game would also
+  fall back to a built-in name is untested.
+- **The control scheme came with the US save** ("changed to the US default",
+  owner). That confirms the PC port *reads* the option bytes §2 left open. The
+  eight bytes at `+0x78` in the four saves on hand: PC-made `01 00 00 00 00 00
+  00 00`, JP `02 00 00 03 00 00 01 00`, US `00 00 00 00 00 00 01 00`; slot 5
+  (US, re-saved by the PC game) keeps the US bytes. `+0x78` itself takes three
+  values across three origins — the control-scheme byte is a guess, not
+  checked against the options menu.
+
+Not yet seen: the 20 five-byte facility names of the US save, abilities and
+inventory checked item by item, and a load of the re-saved slots 4 and 5.
+
+## 5. What is not established
+
 - Whether ids — items, abilities, flags, area numbers — mean the same thing on
   PC as on the JP disc. The sibling proved US = JP; PC = JP is the expectation
   (the port derives from the JP release, and `AREANNN.DAT` numbering matches
-  `AREA<n>.EMI`), but the first real evidence will be the US save loading into
-  area 141 with its inventory intact.
+  `AREA<n>.EMI`). §4 is the first real evidence; inventory and abilities have
+  not been checked item by item.
 - The PC-side code that builds and checks the block (`0x5806F0` by position).
 - The other direction in a real PSX runtime: `pc2psx` output has only been
   checked statically.

@@ -48,12 +48,14 @@ rule ([`README.md`](README.md)) here too.
 | I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | open — first pick once the game runs |
 | I2 | Selectable localisations from original discs | game behaviour | LOW | open |
 | I3 | Crude x86→C lifter as portability accelerator | engine | LOW | open |
-| I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | open |
+| I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | open |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
 | I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | open |
 | I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | open |
 | I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | open |
+| I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7 |
+| I11 | In-process crash reporter | tooling | HIGH | **built 2026-09-19** — [`crash-reporter.md`](crash-reporter.md) |
 
 ---
 
@@ -360,3 +362,72 @@ list which functions own them. Output: a note sizing the second half honestly.
 
 ### Outcome
 _(open)_
+
+## I10 — Uses for the call-trace data
+
+**Ask (2026-09-19):** owner, after [`call-trace.md`](call-trace.md) produced
+per-function counts, call edges and a per-frame call hash identical across
+launches: what can be done with it? **Kind:** tooling. Ranked by value.
+
+1. **Regression check for takeovers.** Run the frame hash original-vs-ours: a
+   faithful reimplementation makes the same calls into still-original code, in
+   the same order. Catches a wrong loop count or early-out that leaves `Rand`,
+   message and area intact, at the frame it happens. Wrinkle: a return address
+   inside our DLL differs from the original's, so callers inside an owned
+   function must be mapped to that function's identity.
+   **State:** passed 2026-09-19 for all ten owned functions —
+   [`call-trace.md`](call-trace.md) §7. Negative control fails as it should.
+2. **Takeover work queue (I4 proper).** The reached functions are the ones
+   testable today. Order leaves-first by call edges, weight by call count. The
+   never-reached remainder is the honest "cannot verify yet" set. **State:** built 2026-09-19,
+   `calltrace.py queue` — call-trace §9.
+3. **Logic/presentation seam for I8.** The speed-dependent functions plus
+   everything called only from them are a measured first cut of the
+   presentation layer; the edges from logic into that set are the interface a
+   replacement renderer implements. One query over `callcounts.tsv`. **State:** measured
+   2026-09-19, seven functions — call-trace §6.
+4. **Subsystem map.** Cluster by first-call frame and caller (the area-load
+   burst, the message-box group, per-task callees) and cross-check against the
+   source-file boundaries of [`SHARED_SOURCE.md`](SHARED_SOURCE.md) — evidence
+   for I5 from a second direction.
+5. **Name-transfer features.** Call frequency and edge shape ("once per frame",
+   "8 per frame beside `Rand`") as matcher features; if the sibling can trace
+   its PSX attract run the same way, a third transfer technique. **Unknown:**
+   what tracing the sibling has.
+6. **Two reads the data points at.** (First one done 2026-09-19: frame
+   skipping, call-trace §6.) What gates `0x461FC0`'s image upload
+   (call-trace §6 — it sits in front of the `Gfx_LoadImage` takeover), and the
+   four hottest unnamed functions `0x5A7BF0`, `0x5A8380`, `0x5B3760`,
+   `0x5A8340` — what they are is unread; do not guess.
+7. **Scripted input.** The in-process frame counter makes input on an exact
+   logic frame possible: title menu, save load, a battle — coverage past the
+   attract sequence's 18%. Biggest item. How the game takes input and what the
+   first scripted path should be: ask the owner, do not assume.
+
+**Suggested order:** 1, then the `0x461FC0` read, then 2.
+
+## I11 — In-process crash reporter
+
+**Ask (2026-09-19):** owner, after the first crash seen in play
+([`known-defects.md`](known-defects.md) D4): "we should probably get a crash
+detection / logging tool". **Kind:** tooling. **Feasibility:** HIGH — the
+call tracer already installs a vectored exception handler in the game
+(`src/hook/calltrace.cpp`); this is the same mechanism pointed at faults.
+
+**What it would do:** on an unhandled access violation (or any fatal
+exception) write to `bof3x.log`: exception code and address, the faulting
+address resolved to a `symbols.toml` name or nearest function entry, all
+registers, a stack scan for return addresses inside `BOF3.exe` and
+`bof3x.dll`, the logic frame, the area word, which functions were ours in this
+run, and the last few files opened; then write a minidump next to the log
+(`MiniDumpWriteDump`). A companion `tools/crash_report.py` to read a dump
+offline — D4 was diagnosed with exactly such a throwaway script.
+
+**Constraints:** the handler runs on whatever stack faulted, possibly a 16 KB
+task stack, possibly a corrupted one: static buffers, no allocation, and the
+dump written from a separate pre-created thread. Dumps are game-derived and
+never committed (CLAUDE.md rule 1).
+
+**Found along the way:** WER already leaves full dumps in
+`%LOCALAPPDATA%\CrashDumps` on this machine, and the Application event log
+has the fault offset — enough to diagnose D4 without any tool of ours.
