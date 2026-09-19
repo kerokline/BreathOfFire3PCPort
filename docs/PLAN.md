@@ -1,6 +1,6 @@
 # Breath of Fire III — Chinese PC Port: renovation & uplift plan
 
-**Status:** DRAFT (2026-09-18). Scoping document, no code yet.
+**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19). Scoping document.
 
 **Update 2026-09-18:** §8 step 2 — the load-bearing experiment — has been run and
 **passed**, twice (text engine, then battle engine). See [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md).
@@ -163,7 +163,7 @@ through DirectDraw). The doc proves kinship at three independent points:
 
 | Thing | PSX | PC port |
 |---|---|---|
-| Character record stride | `0x80144964 + 0xA4·n` | `0x64B390 + 164·n` — **the same 164 bytes** |
+| Character record stride | `0x80144964 + 0xA4·n` | live records `0x903A70 + 164·n` — the same 164-byte *stride*, but the name field is 9 bytes not 5 and later fields are +4 ([`save-interchange.md`](save-interchange.md) §2, 2026-09-19). `0x64B390`, given here originally, is most likely the initial-record templates |
 | Current area number | `0x80143F00` | `0x904EFC` |
 | Message open → box re-point | `Msg_OpenScript` → `MsgBox_Reset` | `0x4976D0` → `0x7DEE4C` → `0x497770` |
 
@@ -344,8 +344,10 @@ speculative about phase N+1 succeeding.
 
 ### Phase 0 — Our own scaffolding (weeks)
 Write a minimal loader and detour layer of our own: get code into the process,
-redirect one address to one of our functions, call the original. CMake, clang-cl
-and MSVC both green, plain C++20, no modules. Deliberately thin — this is
+redirect one address to one of our functions, call the original. CMake, **one
+non-MSVC toolchain (llvm-mingw, i686)**, plain C++20, no modules — an earlier
+revision said "clang-cl and MSVC both green"; [`prior-art/tr1x.md`](prior-art/tr1x.md)
+§2.8 is why that changed. Deliberately thin — this is
 scaffolding built to be dismantled (§2), and every hour spent making it elegant
 is an hour spent on something with a guaranteed expiry date.
 
@@ -353,7 +355,8 @@ Build our own symbol header from Ghidra output rather than importing anyone's
 (§4). `bof3ext`'s corpus is a cross-check on ours, not its source.
 
 **Exit test:** one function of Capcom's binary replaced by one function of ours,
-under a non-MSVC compiler, with the game still running.
+under a non-MSVC compiler, with the game still running. **Passed 2026-09-19**
+with `File_Read` `0x5A7470` — [`SCAFFOLDING.md`](SCAFFOLDING.md) §5.
 
 ### Phase 1 — Symbol foundation (weeks)
 Ghidra headless on `BOF3.exe`. Export functions, jump tables, and

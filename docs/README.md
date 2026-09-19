@@ -6,7 +6,7 @@ Project-owned notes. Agents and humans both put findings here.
 
 | Doc | What it is |
 |---|---|
-| [`PLAN.md`](PLAN.md) | The scoping document. Target analysis, architecture options and the reasoning that selected one, the phased path, constraints. **Right now this is the entire project.** |
+| [`PLAN.md`](PLAN.md) | The scoping document. Target analysis, architecture options and the reasoning that selected one, the phased path, constraints. |
 | [`STATUS.md`](STATUS.md) | Where the project is right now: order of work, open decisions, outstanding obligations. Start here. |
 | [`HANDOFF.md`](HANDOFF.md) | What the next session picks up, how, and the traps already paid for. Rewritten, not appended to. |
 | [`IDEAS.md`](IDEAS.md) | Intake for unscheduled proposals, each with a feasibility rating and a first step. |
@@ -16,8 +16,19 @@ Project-owned notes. Agents and humans both put findings here.
 | [`DAT_CONTAINER.md`](DAT_CONTAINER.md) | The `DAT/*.DAT` format: a chunk stream mirroring the PSX `.EMI` section list, unencrypted. Audio re-encoded to WAV, overlay code dropped, most other sections byte-identical to the JP disc. |
 | [`media-stack-survey.md`](media-stack-survey.md) | What the port uses to draw, play and decode, and which of it still exists on Windows 11. DirectDraw + `IDirect3D3`, DirectSound 1, DirectInput 3, MCI/VFW for FMV, a statically-linked MP3 decoder. One thing is actually broken: the Indeo 5 logo video. |
 | [`replacing-mci.md`](replacing-mci.md) | What replacing the MCI/VFW FMV path with a bundled decoder would take. Anatomy of `Fmv_Play` `0x59E360` — one function, two call sites, modal and blocking — plus the codec licensing table. Costed, not scheduled (`IDEAS.md` I7). |
+| [`SCAFFOLDING.md`](SCAFFOLDING.md) | Phase 0: the launcher, the five-byte detour, the `BOF3X_ORIGINAL` A/B switch, and how `symbols.toml` generates the one binding of every name. **Read before taking over a function** — §3 is the procedure. |
+| [`asset-loading-path.md`](asset-loading-path.md) | The 16-slot file layer and `LoadDatFile`'s four chunk kinds, read from the exe. Kind-0 chunks land in one arena at `0x803580 + tag` — the port's repacked image of PSX RAM. In progress. |
+| [`windowed-mode.md`](windowed-mode.md) | The port has a built-in windowed mode: a two-line `BOF3.CFG`, or F8 at runtime. Not a patch. Also skips the FMV exclusive mode-set. |
+| [`save-interchange.md`](save-interchange.md) | The PC save is the PSX `0x10B0` game block from offset 0 — same checksum, same offsets — with the character name widened 5→9 bytes. `tools/save_convert.py` converts both ways; statically verified, not yet loaded in game. |
+| [`crash-reporter.md`](crash-reporter.md) | Always-on fault logging in the injected DLL (`CRASH n:` lines in `bof3x.log`, a minidump beside it) and `tools/crash_report.py` to read dumps, WER's included. Observes, never handles. |
+| [`known-defects.md`](known-defects.md) | What the 2001 port does wrong on a current machine, as observed: who saw it, in which configuration, what is established about the cause. Observations, not decisions to fix. |
+| [`call-trace.md`](call-trace.md) | The in-process call tracer: which functions a run reaches, counts and edges, a per-frame call hash identical across launches and passing original-vs-ours, the frame-skip finding, and the takeover work queue. |
+| [`USER_CHECKS.md`](USER_CHECKS.md) | Checks only the owner can do, in game. Agents add; the owner ticks and reports. |
+| [`save-files.md`](save-files.md) | Saves are `BISLPS0?.DAT`, 4,784 bytes, sixteen slots; the four save-path functions; and an open defect — a fresh save vanishes from the reopened menu although the file is on disk. In progress. |
+| [`attract-mode.md`](attract-mode.md) | The attract sequence exists on PC and runs the real engine. Also: the game's **four-coroutine task system** (hand-written `esp` swap, 16 KB stacks), and why `Rand` is deterministic — seed 1, no `srand` in the binary, no clock reachable from game logic. Groundwork for a regression oracle. In progress. |
 | [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md) | PLAN §8 step 2, the load-bearing experiment. **Passed** 2026-09-18: PSX names transfer onto the PC binary, and global blocks keep their internal layout at a per-block constant delta. |
 | [`bsim-evaluation.md`](bsim-evaluation.md) | Ghidra BSim measured against our own hand-verified pairs. Works cross-ISA (4 of 8 at rank 1, one perfect match), but it is a seed generator, not an oracle — and it produced one confident wrong answer. |
+| [`overlay-transfer-feasibility.md`](overlay-transfer-feasibility.md) | What the PSX overlay name corpus is actually worth: 121 named overlay functions, not 29,036, and why indexing them into BSim must be done on a copy. |
 | [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) | The successor probe, on a subsystem with no pre-existing landmarks. **Passed** 2026-09-18: the transfer scales, PSX *overlay* functions transfer, and value-sequence search on constant tables is a second anchor that needs no seed. |
 
 Plus [`prior-art/`](prior-art/) — notes on four projects that have already hit
@@ -29,7 +40,9 @@ oracle, all of them paid) bears directly on [`DIVERGENCE.md`](DIVERGENCE.md).
 Outside `docs/`, two artifacts came out of that probe:
 [`../symbols.toml`](../symbols.toml), the PC-side symbol map (same shape as the
 sibling's, plus `psx` and `status` fields), and [`../tools/`](../tools) —
-`pe_funcs.py`, `pe_disasm.py`, `pe_xref.py`. Their output goes to `analysis/`,
+`pe_funcs.py`, `pe_disasm.py`, `pe_xref.py` — and, since phase 0, `gen_symbols.py`,
+which turns `symbols.toml` into the C++ header the code in [`../src/`](../src)
+builds against. Their output goes to `analysis/`,
 which is gitignored because it is derived from copyrighted game code.
 
 Four documents, four questions — keep them from bleeding into each other:

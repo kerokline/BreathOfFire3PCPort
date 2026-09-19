@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 1 entry, DIV-0001)
+**Status:** IN PROGRESS (opened 2026-09-18; 3 entries, DIV-0001..0003)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -174,3 +174,141 @@ designed in rather than bolted on.
 
   The output hash is tied to that encoder version; a different ffmpeg may
   produce a different — and equally valid — file.
+
+### Refresh the save directory after writing a save
+
+- **ID:** DIV-0002
+- **Date:** 2026-09-19
+- **Subsystem:** menu
+- **Original behaviour:** a save written to a slot that had no file when the
+  save directory was last listed **does not appear in the save menu** until the
+  game is restarted; the file itself is written correctly. Reported by the
+  owner 2026-09-19 (slots 0 and F, a New Game session with no prior saves) and
+  traced the same day ([`save-files.md`](save-files.md) §3): the menu's state 0
+  (`0x57FDE0`) calls `Save_ReadSummaries` `0x588DC0`, which rebuilds all sixteen
+  slot summaries from the table `Save_Directory` `0x929F40` — but only
+  `Save_ListFiles` `0x4548B0` fills that table, and its two call sites
+  (`0x587E6B`, `0x588156`) are both outside the save flow. Measured on the
+  running game by read-only `ReadProcessMemory`: both files on disk at 4,784
+  bytes, `Save_Directory` entirely zero. After a restart both saves listed and
+  one loaded (owner, original exe, no DLL).
+  *Not yet established:* a reproduction of the vanishing save under
+  `BOF3X_ORIGINAL=*`. The first observation was made with `File_Read` ours; the
+  mechanism above is entirely in Capcom's code and upstream of any read, but
+  the clean A/B has not been run.
+- **New behaviour:** our `Save_WriteFile` (`src/game/save_io.cpp`, replacing
+  `0x454870`) does exactly what the original does and then calls
+  `Save_ListFiles` before returning, so the table the menu reads is current.
+  Nothing else changes: same file, same bytes, same return values.
+  **Verified 2026-09-19:** owner saved to a new slot (1) in a session launched
+  through `bof3x-launcher`, reopened the menu, and the slot was listed at once.
+  `bof3x.log` for that run: `inject ON Save_WriteFile original 0x00454870`,
+  then `first call Save_WriteFile(BISLPS01.DAT, 4784)`; the file is on disk at
+  4,784 bytes.
+- **Rationale:** a bug, not a design choice — the player is shown an empty slot
+  where they have just saved, and the natural response (save again, or assume
+  saving is broken and stop playing) is harmful either way. The repair is the
+  smallest available: one call to the game's own lister at the one place the
+  directory changes. Costs: each call leaks one search handle, because
+  `Save_ListFiles` never calls `_findclose` (original defect, unfixed) — one
+  per save, negligible. Deliberately *not* fixed here: `File_OpenWrite`
+  `0x5A7420` reporting a failed `fopen` as success (since fixed, DIV-0003), and
+  `Save_ListFiles` not bounding its table at 16 — a separate entry when it is
+  touched.
+- **Also in the PSX version?** Unknown. The listing and the per-slot files are
+  porting-house code — the PlayStation reads the memory card's directory —
+  so a port bug is the likelier reading, but nobody has checked whether the
+  PSX menu refreshes after a write. Sibling-side question.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Save_WriteFile` runs Capcom's function
+  instead ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle; there is
+  no config system yet.
+
+### Report a failed save-file open instead of crashing
+
+- **ID:** DIV-0003
+- **Date:** 2026-09-19
+- **Subsystem:** platform
+- **Original behaviour:** `File_OpenWrite` `0x5A7420` stores the `fopen(path,
+  "wb")` result into `File_Slots[slot]` and returns the slot index **without
+  testing the result** (disasm 2026-09-19: `call 0x5B9B6D` at `0x5A7457`, then
+  `mov [esi*4 + 0x7DE3E4], eax` / `mov eax, esi` / `ret`, no `test`). It
+  returns -1 only when all sixteen slots are taken. So when the save file
+  cannot be created — a read-only game directory, e.g. an install under
+  `Program Files` — its sole caller `Save_WriteFile` `0x454870` sees success
+  and calls `File_Write`, which passes the null stream to `Crt_fwrite`
+  `0x5B9E65`. That begins with the stream lock `0x5BCBD3`, which for any
+  pointer outside the CRT's static stream table calls `EnterCriticalSection`
+  (import slot `0x5C40FC`) on `stream + 0x20` — address `0x20` for a null
+  stream. *Established by reading, not by reproduction:* nobody has yet run the
+  original against a read-only directory and watched it fault.
+- **New behaviour:** our `File_OpenWrite` (`src/game/file_io.cpp`) returns -1
+  when the open fails and claims no slot, which is what `File_Open` `0x5A7380`
+  already does on the read side. `Save_WriteFile` already returns -1 for a -1
+  handle, and both of its call sites (`0x580074`, `0x5809FF`) already compare
+  the result with -1 and skip their slot-summary update — at `0x580074` the
+  branch target `0x5800C0` is a bare `ret`. A successful open is unchanged:
+  same slot scan, same mode, same return value. *Not yet verified in game:*
+  the failing case needs a save attempted with the game directory read-only;
+  what the menu then shows the player has not been observed.
+- **Rationale:** a bug, not a design choice — the function's read-side twin
+  checks, its caller checks for the only failure it can currently report, and
+  the callers' callers check too; the chain of -1 handling exists and this one
+  link drops it. The repair adds no new behaviour of our own: it routes the
+  failure into the path Capcom's code already has. Deliberately *not* done
+  here: telling the player the save failed. If the existing -1 path is silent,
+  that is its own entry.
+- **Also in the PSX version?** No counterpart. The file layer is porting-house
+  code ([`asset-loading-path.md`](asset-loading-path.md) §1); the PlayStation
+  saves to a memory card through the BIOS.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=File_OpenWrite`
+  ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
+
+### Drain queued image uploads on frames that are not rendered
+
+- **ID:** DIV-0004
+- **Date:** 2026-09-19
+- **Subsystem:** platform
+- **Original behaviour:** game logic queues image uploads (sprite animation
+  frames, through `0x5894D0`: `queue[count] = ...; count++`, no bound), and the
+  queue is drained by `Gfx_FlushUploadQueue` `0x461F00` **only in the branch of
+  WinMain's loop that renders**, taken when `GetTickCount` is still below the
+  frame deadline ([`call-trace.md`](call-trace.md) §6). After any stretch of
+  logic frames without rendering the queue holds them all. The arrays have 20
+  slots; the flush unpacks every entry into a bump-allocated scratch buffer
+  with about 127 KB below the next globals. Past either limit it overwrites
+  the draw structures, its own loop bound among them, and the draw that
+  follows faults. **Seen three times 2026-09-19**, the last with
+  `BOF3X_ORIGINAL=*` (crash at `0x59F24F` reading `0x00080000`, caller
+  `0x4FCE74`, identical to the first): leave the game unfocused for about two
+  and a half minutes at a spot with idle animations and click back — the game
+  freezes while unfocused and replays the missed frames unrendered
+  ([`windowed-mode.md`](windowed-mode.md)). Holding the window's title bar does
+  the same with the game focused (queue 6 after 57 s; not taken to the crash).
+  Full record: [`known-defects.md`](known-defects.md) D4.
+- **New behaviour:** our `Gfx_BeginFrame` (`src/game/gfx_frame.cpp`, original
+  `0x4FD230`, WinMain's once-per-logic-frame set-up, otherwise reimplemented
+  faithfully) first calls `Gfx_FlushUploadQueue` if the queue is not empty. On
+  a rendered pass the queue is already empty there and nothing changes. On an
+  unrendered pass the uploads are applied then instead of accumulating: the
+  same uploads, in the same order, by Capcom's own flush, and — as in the
+  original — before the next frame's logic. What can differ is *when* an
+  upload reaches the VRAM shadow relative to wall-clock time, which was
+  already not a function of the frame count.
+- **Rationale:** a bug, not a design choice: nothing in the design wants
+  uploads to wait for a rendered frame, it is simply where the call was put,
+  on a platform where every frame was expected to render. Draining was chosen
+  over bounding the queue (owner, 2026-09-19): a bound has to drop or refuse
+  uploads, draining loses nothing.
+- **Not fixed by this:** the replay of missed time itself (the fast-forward on
+  refocus), the pause on focus loss, the stalled audio while a title bar is
+  held, and the float deadline ([`known-defects.md`](known-defects.md) D5).
+  Each is its own entry if it is changed.
+- **Verification:** attract oracle identical to the all-original reference
+  (7,478 frames); and the reproduction survives — 665 s unfocused, then
+  refocus, queue never above 1, `DIV-0004` logged, no crash (owner,
+  2026-09-19). Runs are listed in [`known-defects.md`](known-defects.md) D4.
+- **Also in the PSX version?** Not applicable as such — the PlayStation cannot
+  lose focus and its `LoadImage` is queued to the GPU. Whether the PSX code
+  has the same unbounded queue is a sibling-side question.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Gfx_BeginFrame`
+  ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
