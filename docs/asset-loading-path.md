@@ -77,6 +77,34 @@ CRT identifications rest on body reads, not position: `0x5B9D4E` is `fread`
 `0x5C3660` returns `FILE+0x10` (`_fileno`); `0x5C35D6` validates the fd then
 `lseek` CUR / END / restore (`_filelength`).
 
+## 1a. The BGM loader, and what the `N` suffix means
+
+Read 2026-09-19, prompted by `open … FAILED  BGM\141.DAT` appearing twice in
+every attract run.
+
+`0x587A20` `(track)` formats **both** names up front — `BGM\%03d.DAT`
+(`0x666FB8`) and `BGM\%03dN.DAT` (`0x666FA8`) — sets a flag at `0x6BDE4C` to 1
+and opens the plain name; if that fails it opens the `N` name and sets the flag
+to 0; if both fail it gives up. Then: free the previous track's buffer
+(`0x6BDE50`), `File_Size`, allocate, `File_Read` the whole file, `File_Close`.
+So a failed open of the plain name is **the designed test for which kind of
+track this is**, not an error. The install has 166 files in `BGM\`, 9 of them
+`N`-suffixed (004, 009, 028, 042, 058, 096, 105, 141, 150).
+
+The flag is the third argument of the music start `0x5A6CC0(buffer, size,
+flag)`, called from `0x587B2D`, which stores it at `0x7DE3DC`. Its one reader
+is the decode-and-fill routine `0x5A6F30`: when the MP3 decoder `0x5AFC40`
+returns `0xFFFFFDFE` (end of stream) it tests the flag — **non-zero: call
+`0x5AEBA0(decoder, 0)` and keep decoding, i.e. rewind and loop; zero: zero-fill
+the rest of the buffer and set the finished flag `0x7DE3E0`.** Plain `NNN.DAT`
+loops; `NNNN.DAT` plays once. Track 141 is the attract/logo music, which fits.
+The DirectSound buffer itself is always started looping (`Play(0, 0, 1)`
+through vtable `+0x30` at `0x5A6D47`) — it is a streaming ring, and looping the
+*music* is done by the decoder rewind.
+
+Whether the PSX marks one-shot tracks the same way, or the porting house
+invented the filename convention, is a sibling-side question.
+
 ## 2. `LoadDatFile` `0x454590`
 
 `void LoadDatFile(int file_index)` — 477 bytes, 32 callers.
@@ -155,16 +183,14 @@ bytes: the first call observed was `File_Read(handle=0, size=1176679)`, and
 
 ## 4. Still unread
 
-- `0x454770`, `0x454820`, `0x454870` — `LoadDatFile`'s siblings (`0x454770` also
-  formats a `DAT` path; `0x454820` opens and reads without calling `File_Size`;
-  `0x454870` is the sole caller of the second opener and of `File_Write` — a
-  save path would fit, but that is a guess from the call graph)..
-- `0x587910`, `0x587A20` and the `SND\%s.DAT` / `BGM\%03d.DAT` / `BGM\%03dN.DAT`
-  strings — settles the `SND/NNN_KK` and `BGM/` numbering questions
-  ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §5).
+- `0x454770` — `LoadDatFile`'s sibling, also formats a `DAT` path. (`0x454820`
+  and `0x454870` turned out to be `Save_ReadFile` / `Save_WriteFile`,
+  [`save-files.md`](save-files.md).)
+- `0x587910` and the `SND\%s.DAT` string — settles the `SND/NNN_KK` numbering
+  question ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §5). The BGM half is §1a.
 - `0x587CD0` (kind 2), `0x5A6800` (kind 3), `0x59EA70` (kind-1 upload).
-- Who writes the drive root at `0x66BC2C` — it ships as `C:\` and `Fmv_Play`
-  also uses it, so something at startup must set it to the CD drive.
+- `0x4FCB00`, the caller of the drive-root probe `0x5A72C0` (§1) — what path
+  it probes with, and when.
 - The value-sequence search for the dropped non-code PSX sections
   ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
 - The 32 callers of `LoadDatFile` — which index each passes is the map from

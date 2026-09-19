@@ -256,7 +256,9 @@ Also settled by this log:
   exist in the install and the open fails; the game then opens `141N.DAT`.
   Tracks 006 and 002 exist plain and no `N` variant is tried. So the `N` name
   is a **fallback**, which answers half of [`DAT_CONTAINER.md`](DAT_CONTAINER.md)
-  §5's numbering question; what `N` stands for is still open.
+  §5's numbering question. **`N` = no loop, read 2026-09-19**
+  ([`asset-loading-path.md`](asset-loading-path.md) §1a): the failed open is
+  the designed probe for which kind of track this is, not a missing file.
 - A failed open costs nothing visible — but note the original reports it only
   as -1, and the two callers in the sound module evidently handle that.
 
