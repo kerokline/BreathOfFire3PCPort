@@ -16,11 +16,28 @@
 #           confirms it. It never inherits "confirmed" from the PSX side.
 #
 # Addresses are load-bearing constants (CLAUDE.md rule 3).
+#
+# Fields that drive code generation (tools/gen_symbols.py -> bof3/symbols.gen.h):
+#
+#   ret / params   the C signature. A [[func]] without `ret` gets an address
+#                  constant only — it cannot be called from our code until
+#                  someone has read it well enough to type it.
+#   cc             calling convention, default "__cdecl".
+#   impl           path of OUR source file that replaces this function. Present
+#                  = the name binds to our prototype and the detour is
+#                  installed; absent = the name binds to the original address.
+#                  Call sites are identical either way (docs/SCAFFOLDING.md).
+#   ctype / count  on [[data]]: element type, and element count for arrays.
 
 [meta]
 image_base = 0x400000
 text_va = 0x401000
 text_size = 1844840
+# PE header identity, checked by the injected DLL before it patches anything:
+# every address below is only meaningful inside this exact image.
+pe_timestamp = 0x3ADD0C06
+size_of_image = 0x53F000
+sha256 = "15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb"
 
 # ---------------------------------------------------------------------------
 # Global blocks
@@ -273,3 +290,255 @@ name = "Fmv_Playing"
 status = "evidence"
 evidence = "Byte. Cleared at Fmv_Play 0x59E360 entry, set to 1 immediately after 'play vfw window from 0 notify', and the sole loop condition of the modal message pump. Cleared by Fmv_WndProc 0x59E570 on key or click (2026-09-19)."
 note = "Adjacent to Fmv_SavedStyle 0x6BE1C4 and Fmv_DDraw 0x6BE1CC; the three look like one small state block."
+
+# ---------------------------------------------------------------------------
+# File layer
+#
+# One small translation unit, 0x5A7370..0x5A75F0: a 16-slot table of CRT FILE*
+# addressed by slot index, which is the "handle" every asset loader passes
+# around. Porting-house code — the PSX side reads sectors through the CD
+# subsystem, so nothing here has a `psx` counterpart. Established 2026-09-19,
+# docs/asset-loading-path.md.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x7DE3E4
+name = "File_Slots"
+ctype = "void *"
+count = 16
+status = "evidence"
+evidence = "disasm 2026-09-19: File_Open 0x5A7380 scans dwords from 0x7DE3E4 up to the bound 0x7DE424 (= 16 slots) for a zero entry, returns -1 when it counts 0x10 taken, and stores the fopen result at slot*4 + 0x7DE3E4. File_Read/File_Write/File_Seek/File_Size/File_Close all index the same base by their first argument; File_Close zeroes the slot after fclose."
+note = "Elements are FILE* belonging to the MSVC6 CRT statically linked into BOF3.exe. They are opaque to us: a FILE* from our own CRT must never be stored here, nor one of these passed to ours."
+
+[[func]]
+pc = 0x5A7370
+name = "File_CdRoot"
+ret = "char *"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-19: mov eax, 0x66BC2C; ret. Returns the drive-root prefix buffer (initialised to the three characters C, colon, backslash) that File_Open 0x5A7380 and Fmv_Play 0x59E360 prepend when a bare open fails."
+
+[[func]]
+pc = 0x5A7380
+name = "File_Open"
+ret = "int"
+params = "const char *path, int unused1, int unused2"
+impl = "src/game/file_io.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: finds the first free File_Slots entry (-1 if all 16 taken); Crt_fopen(path, 'rb'); on failure sprintf(buf[0x50], '%s%s', 0x66BC2C, path) and retries; stores the FILE* in the slot and returns the slot index, or -1. Reads only its first stack argument — LoadDatFile 0x454590 pushes two further zeros that are never touched. 5 callers (pc_funcs.json): 0x454590, 0x454770, 0x454820, 0x587910, 0x587A20."
+
+[[func]]
+pc = 0x5A7470
+name = "File_Read"
+ret = "unsigned"
+params = "int handle, void *dst, unsigned size"
+impl = "src/game/file_io.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19, 11 instructions: return Crt_fread(dst, 1, size, File_Slots[handle]). No bounds check on handle, no null check on the slot. 5 callers (pc_funcs.json): 0x454590, 0x454770, 0x454820, 0x587910, 0x587A20 — every asset loader."
+note = "Phase 0 exit-test target: first function of Capcom's binary replaced by ours."
+
+[[func]]
+pc = 0x5A74A0
+name = "File_Write"
+ret = "unsigned"
+params = "int handle, const void *src, unsigned size"
+status = "evidence"
+evidence = "disasm 2026-09-19: instruction-for-instruction the shape of File_Read 0x5A7470 with the CRT callee 0x5B9E65 in place of fread; sole caller Save_WriteFile 0x454870. 0x5B9E65 is the same lock 0x5BCBD3 / inner / unlock 0x5BCC25 wrapper as Crt_fread with a different inner routine, and the observed effect is a write: two saves produced files of exactly the requested 0x12B0 bytes (2026-09-19)."
+
+[[func]]
+pc = 0x5A74D0
+name = "File_Size"
+ret = "int"
+params = "int handle"
+status = "evidence"
+evidence = "disasm 2026-09-19: Crt_filelength(Crt_fileno(File_Slots[handle])). 0x5C3660 returns FILE+0x10 (MSVC6 _file); 0x5C35D6 validates the fd against the ioinfo table then lseek(fd,0,CUR) / lseek(fd,0,END) / restore — _filelength."
+
+[[func]]
+pc = 0x5A74F0
+name = "File_Seek"
+ret = "int"
+params = "int handle, int offset"
+status = "hypothesis"
+evidence = "disasm 2026-09-19: calls 0x5B9F9E as (File_Slots[handle], offset, 0) — the fseek(stream, offset, SEEK_SET) argument shape. 0x5B9F9E itself not read."
+
+[[func]]
+pc = 0x5A7510
+name = "File_Close"
+ret = "void"
+params = "int handle"
+status = "evidence"
+evidence = "disasm 2026-09-19: calls 0x5B9993 on File_Slots[handle], then stores 0 to the slot. 6 callers — the five openers' callers plus 0x454870."
+
+[[func]]
+pc = 0x5B9D4E
+name = "Crt_fread"
+ret = "unsigned"
+params = "void *dst, unsigned size, unsigned count, void *stream"
+status = "evidence"
+evidence = "disasm 2026-09-19: lock(stream) 0x5BCBD3 / inner 0x5B9D7D / unlock 0x5BCC25 — the MSVC6 multithread-CRT wrapper shape; the inner routine computes size*count, returns 0 when that is zero, and tests FILE+0x0C (_flag) against 0x10C (_IOMYBUF|_IONBF|_IOYOURBUF) to choose the buffer size from FILE+0x18 (_bufsiz) or 0x1000. That is MSVC6 fread.c."
+
+[[func]]
+pc = 0x454590
+name = "LoadDatFile"
+ret = "void"
+params = "int file_index"
+status = "hypothesis"
+evidence = "disasm 2026-09-19: name = u32[0x64F368 + 4*index], return if null; sprintf(path, the DAT-directory format string at 0x652894, name); File_Open; File_Size; buffer = 0x5B9660(size); File_Read whole file; File_Close; then walks 16-byte chunk headers — s8 kind at +0, u32 at +4, u32 size at +8, payload at +0x10 — dispatching kind 0..3 through the jump table at 0x454758. Matches the container DAT_CONTAINER.md derived from the files alone. 32 callers."
+note = "Name from bof3ext (cited, CLAUDE.md rule 5). hypothesis only for the return type and the full chunk-kind semantics, which docs/asset-loading-path.md is still reading; the address and the role are solid."
+
+# ---------------------------------------------------------------------------
+# Startup configuration and display mode
+#
+# Porting-house code, no PSX counterpart. Established 2026-09-19,
+# docs/windowed-mode.md.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4FD030
+name = "Cfg_Load"
+status = "evidence"
+evidence = "disasm 2026-09-19: fopen of the BOF3.CFG literal at 0x65DAD8 in text mode; fgets 0x14 bytes per line; line 0 -> atoi -> 0x65DA44, line 1 -> atoi -> 0x65DA48, each later line sscanf'd with a two-integer format into consecutive byte pairs of a stack array; with more than two lines read the array goes to 0x5A9860, otherwise 0x5A9880 runs instead. If the file is missing both globals are set to 1. Sole reference to the filename string (pe_xref.py)."
+
+[[data]]
+pc = 0x65DA44
+name = "Cfg_Fullscreen"
+ctype = "int"
+status = "evidence"
+evidence = "Initialised 1. WinMain 0x4FCB00: forced to 1 when the desktop is exactly 640x480; when 0, AdjustWindowRect with style 0xCA0000 and the window is centred on the desktop, else created at 0,0; then passed as the third argument of both Fmv_Play calls. WndProc 0x4FC6A0 on WM_KEYDOWN 0x77 (F8), only if the desktop exceeds 640x480: xor 1, SetWindowPos, and re-initialises the display through 0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0). Observed 2026-09-19: BOF3.CFG with first line 0 gives a 646x509 window, style 0x14CA0000, centred on a 3440x1440 desktop."
+
+[[data]]
+pc = 0x65DA48
+name = "Cfg_RenderMode"
+ctype = "int"
+status = "hypothesis"
+evidence = "Second line of BOF3.CFG, initialised 1, passed by address to the display initialiser 0x5A5160 alongside Cfg_Fullscreen; WM_KEYDOWN 0x76 (F7) re-runs 0x5A5160 with it and then calls 0x5A6690 with its value. 0x5A5160 holds the only reference to the 'Software Render' string. So: hardware/software renderer select, by association - which value means which is not read."
+
+# ---------------------------------------------------------------------------
+# Save files
+#
+# Established 2026-09-19, docs/save-files.md. Porting-house code: the PSX side
+# talks to the memory card, so no `psx` fields.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5A7420
+name = "File_OpenWrite"
+ret = "int"
+params = "const char *path"
+status = "evidence"
+evidence = "disasm 2026-09-19: the same free-slot scan as File_Open 0x5A7380 (-1 when 16 are taken), then Crt_fopen(path, the two-byte mode string wb at 0x66BC3C), stores the result in File_Slots[slot] and returns slot. Sole caller Save_WriteFile 0x454870."
+note = "ORIGINAL DEFECT: the fopen result is stored and the slot index returned WITHOUT a null check, so a failed open (read-only directory, e.g. an install under Program Files) is reported as success and the following File_Write passes a null stream to fwrite. No CD-root fallback, unlike File_Open."
+
+[[func]]
+pc = 0x454820
+name = "Save_ReadFile"
+ret = "int"
+params = "const char *path, int offset, unsigned size"
+status = "evidence"
+evidence = "disasm 2026-09-19: File_Open(path, 0, 0), -1 on failure; File_Seek(h, offset); File_Read(h, Save_Staging, size); File_Close; returns 0. Two call sites (E8 scan): 0x58841E and 0x588E3C."
+
+[[func]]
+pc = 0x454870
+name = "Save_WriteFile"
+ret = "int"
+params = "const char *path, unsigned size"
+impl = "src/game/save_io.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19, 17 instructions: h = File_OpenWrite(path); if h == -1 return -1; File_Write(h, Save_Staging, size); File_Close(h); return 0. The File_Write result is discarded. Two call sites (E8 scan): 0x580074 (save menu) and 0x5809FF, both passing 0x12B0."
+note = "Ours since 2026-09-19 WITH a deliberate behavioural change - DIV-0002."
+
+[[func]]
+pc = 0x4548B0
+name = "Save_ListFiles"
+ret = "int"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-19: zeroes 0x60 dwords at Save_Directory 0x929F40; _findfirst 0x5B979A on the pattern at 0x65289C, returning 0 if none; per match copies the name to entry +0 and the size to entry +0x14 (stride 0x18), counts, _findnext 0x5B9867 until it fails; returns the count. Two call sites (E8 scan): 0x587E6B and 0x588156. Observed working 2026-09-19: both saves listed on the load screen after a restart."
+note = "ORIGINAL DEFECTS: never calls _findclose (one search handle leaks per call), and the table is not bounded - a 17th matching file writes past the 16 entries."
+
+[[func]]
+pc = 0x588DC0
+name = "Save_ReadSummaries"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-19: writes 0xFF to +0x15 of each of 16 records (stride 0x1C) from 0x905BC0; for slot 0..15 scans Save_Directory for an entry whose name byte 7 parses (0-9, A-F, a-f) to the slot number, and on a match Save_ReadFile(name, 0x1C, 0xCA0), copies 0x1C bytes of Save_Staging into the record and stores the directory index at +0x15. Two call sites (E8 scan): 0x58815F, straight after Save_ListFiles; and 0x57FDE0, state 0 of the in-game save menu, with no listing before it."
+
+[[data]]
+pc = 0x92A0E0
+name = "Save_Staging"
+ctype = "unsigned char"
+count = 4784
+status = "evidence"
+evidence = "The one buffer Save_WriteFile 0x454870 writes from and Save_ReadFile 0x454820 reads into (both push the literal). 5 references (pe_xref.py): those two, 0x5806F0, and two inside the save-menu code."
+note = "count is the size of a save file, 0x12B0 - a lower bound on the buffer, not a measured extent."
+
+[[data]]
+pc = 0x929F40
+name = "Save_Directory"
+status = "evidence"
+evidence = "16 entries of 0x18 bytes: file name at +0, file size at +0x14. Filled only by Save_ListFiles 0x4548B0, read only by Save_ReadSummaries 0x588DC0 (pe_xref.py: two references)."
+
+# ---------------------------------------------------------------------------
+# Task system - cooperative coroutines
+#
+# Hand-written assembly, not compiler output (pushes and pops of a fixed
+# register set around a raw esp swap). The PC counterpart of the PSX task
+# system. Established 2026-09-19, docs/attract-mode.md section 2.
+# ---------------------------------------------------------------------------
+
+[[block]]
+name = "Task_Records"
+pc = 0x66C7D0
+status = "evidence"
+evidence = "disasm 2026-09-19 of 0x5A98A0 / 0x5A9914 / 0x5A9949: four records of 0x20 bytes (the scheduler walks edx = 0, 0x20 .. < 0x80). +0 u16 state (0 free, 1 sleeping, 2 runnable), +2 u16 frames left to sleep, +4 saved esp, +8..+0x1F task-private words (0x5A99F4 zeroes +8..+0x17 of the current task). The current task's record offset is at 0x66C850, the scheduler's own esp at 0x66C854, the top of the stack arena at 0x66C858."
+note = "Task 0's private words at +0x18/+0x1A are 0x66C7E8 / 0x66C7EA - the top-level mode and sub-step words that 0x588E88 dispatches on through the table at 0x667294."
+
+[[func]]
+pc = 0x5A98A0
+name = "Task_RunAll"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-19: saves ebx/ecx/esi/edi/ebp and esp to 0x66C854; for each of four records: skip if state 0; if state 1, decrement the sleep count and skip unless it reached 0, then mark 2; load esp from the record, pop ebp/edi/esi/edx/ecx/ebx, ret - resuming the task where it yielded. Tasks return here by jumping to 0x5A98F0, which restores the scheduler esp and continues the walk. Called once per logic frame from WinMain's loop (0x4FCF82) unless the F9 pause byte 0x6BC63A is set."
+
+[[func]]
+pc = 0x5A9914
+name = "Task_Create"
+ret = "void"
+params = "int slot, void *entry"
+status = "evidence"
+evidence = "disasm 2026-09-19: record = Task_Records + slot*0x20; state = 2; saved esp = [0x66C858] - slot*0x4000 - 0x1C; writes entry at saved esp + 0x18, i.e. as the return address the scheduler's six pops and ret will reach. So each task owns a 0x4000-byte stack carved downward from 0x66C858. WinMain creates task 0 with entry 0x496B60."
+
+[[func]]
+pc = 0x5A9949
+name = "Task_Sleep"
+ret = "void"
+params = "int frames"
+status = "evidence"
+evidence = "disasm 2026-09-19: current record state = 1, sleep count = frames (16 bits); pushes ebx/ecx/<return address juggled through eax>/esi/edi/ebp in the order Task_RunAll pops them, stores esp in the record, jumps to 0x5A98F0. The ubiquitous Task_Sleep(1) in wait loops (e.g. 0x588EC6) is 'yield until next frame'."
+note = "Siblings, same shape, unnamed: 0x5A9976 restarts the current task at a new entry point (state 2, fresh stack, entry = argument); 0x5A99AD kills the current task (zeroes the record)."
+
+[[func]]
+pc = 0x5B9B6D
+name = "Crt_fopen"
+ret = "void *"
+params = "const char *path, const char *mode"
+status = "evidence"
+evidence = "disasm 2026-09-19, 6 instructions: pushes 0x40 (_SH_DENYNO) and its own two arguments and calls 0x5B9B3C - MSVC6 fopen as a wrapper over _fsopen. Used by File_Open 0x5A7380 (mode rb), File_OpenWrite 0x5A7420 (wb) and Cfg_Load 0x4FD030 (rt), each storing the result where fread / fwrite / fgets later take a stream."
+
+[[func]]
+pc = 0x5B9380
+name = "Crt_sprintf"
+ret = "int"
+params = "char *dst, const char *fmt, ..."
+status = "evidence"
+evidence = "disasm 2026-09-19: builds a FILE on the stack with _ptr = _base = dst, _flag = 0x42 (_IOWRT|_IOSTRG), _cnt = 0x7FFFFFFF, and hands it with fmt and the address of the variadic arguments to the formatter - MSVC6 sprintf.c. Call sites pass printf-style format strings (the DAT-directory format in LoadDatFile 0x454590, the two-string format in File_Open 0x5A7380)."
+
+[[data]]
+pc = 0x904EFC
+psx = 0x80143F00
+name = "Game_AreaNumber"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "PC address from BreathOfFire3Recomp/docs/PC_PORT_CROSS_REFERENCE.md; confirmed on this side 2026-09-19 by correlating two independent observations of one attract run: the word read 4, then 0x1F, then 2 (tools/attract_watch.py), while our File_Open logged AREA004.DAT, AREA031.DAT and AREA002.DAT being opened in that order (analysis/attract/ours_d_fileopen.log). It is the decimal NNN of the AREANNN.DAT in play. Reads 0xFFFF for one logic frame while an area load is in progress."

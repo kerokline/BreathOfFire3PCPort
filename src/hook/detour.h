@@ -1,0 +1,42 @@
+// The detour layer: redirect one original function to one of ours.
+//
+// Scaffolding, built to be dismantled (docs/PLAN.md section 2). It is a
+// five-byte near jmp and nothing else - no trampoline, no disassembler -
+// which is sound only because of two commitments made elsewhere:
+//
+//   * BOF3.exe is /FIXED at 0x400000 with no .reloc, so a literal address is
+//     the function, every run (docs/PLAN.md section 1).
+//   * A replaced function is replaced WHOLE. We never resume into the original
+//     body, so the prologue bytes the jmp destroys never execute again
+//     (CLAUDE.md rule 4 - no stubs, and no wrappers either).
+//
+// Technique as described in docs/prior-art/tr1x.md section 2.1; implemented
+// from that description, not from their source.
+#pragma once
+
+#include <cstdint>
+
+namespace bof3 {
+
+// Refuses to continue unless the main module is the exact BOF3.exe that
+// symbols.toml describes. Call once, before any Inject.
+void VerifyImage();
+
+// enabled:  original -> ours. Every caller in the game reaches our function.
+// disabled: ours -> original. Every caller, including our own code, reaches
+//           Capcom's function - original behaviour, same process, same loader.
+//
+// A function is disabled by listing its name in the BOF3X_ORIGINAL environment
+// variable (comma separated), or all of them with BOF3X_ORIGINAL=*.
+void Inject(const char* name, std::uint32_t original, void* ours);
+
+// Summary line for the log once every module has registered.
+void InjectReport();
+
+}  // namespace bof3
+
+// `name` is bound in bof3/symbols.gen.h: bof3::addr::name is the address,
+// ::name is our function. Keep each line next to the code it installs, so an
+// address and its implementation are reviewed in one diff (CLAUDE.md rule 3).
+#define BOF3_INJECT(name) \
+    ::bof3::Inject(#name, ::bof3::addr::name, reinterpret_cast<void*>(&::name))

@@ -1,0 +1,59 @@
+cmake_minimum_required(VERSION 3.25)
+project(bof3x LANGUAGES CXX)
+
+# Phase 0 scaffolding (docs/SCAFFOLDING.md): a launcher that starts the player's
+# own BOF3.exe suspended and loads our DLL into it, and the DLL, which redirects
+# individual original functions to our reimplementations.
+#
+# No game data is read at build time and none is produced.
+
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+  message(FATAL_ERROR
+    "bof3x must be built 32-bit: it is loaded into BOF3.exe, an i386 image. "
+    "Configure with --preset i686 (cmake/i686-llvm-mingw.cmake).")
+endif()
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# -falign-functions: the OFF direction of a detour writes five bytes over the
+# start of OUR function, so none of ours may be shorter than that before the
+# next one begins.
+add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16)
+# The DLL is injected by path into a process whose DLL search order we do not
+# control, so it may not depend on libc++.dll / libunwind.dll sitting nearby.
+add_link_options(-static)
+
+# --- symbols.toml -> bof3/symbols.gen.h -------------------------------------
+# Anaconda's `python` on this machine; any 3.11+ works (tomllib).
+find_program(BOF3X_PYTHON NAMES python python3 REQUIRED)
+set(_gen_dir "${CMAKE_BINARY_DIR}/gen")
+set(_gen_hdr "${_gen_dir}/bof3/symbols.gen.h")
+add_custom_command(
+  OUTPUT "${_gen_hdr}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/gen_symbols.py"
+          --toml "${CMAKE_SOURCE_DIR}/symbols.toml" --out "${_gen_hdr}"
+  DEPENDS "${CMAKE_SOURCE_DIR}/symbols.toml"
+          "${CMAKE_SOURCE_DIR}/tools/gen_symbols.py"
+  COMMENT "Generating bof3/symbols.gen.h from symbols.toml"
+  VERBATIM)
+add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}")
+
+# --- the injected DLL --------------------------------------------------------
+add_library(bof3x SHARED
+  src/hook/dllmain.cpp
+  src/hook/detour.cpp
+  src/hook/log.cpp
+  src/hook/inject_all.cpp
+  src/game/file_io.cpp
+  src/game/save_io.cpp)
+add_dependencies(bof3x bof3x_symbols)
+target_include_directories(bof3x PRIVATE src "${_gen_dir}")
+set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
+
+# --- the launcher ------------------------------------------------------------
+add_executable(bof3x_launcher src/launcher/launcher.cpp)
+target_link_libraries(bof3x_launcher PRIVATE bcrypt)
+target_link_options(bof3x_launcher PRIVATE -municode)
+set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
