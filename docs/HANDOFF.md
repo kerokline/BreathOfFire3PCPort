@@ -32,16 +32,14 @@ The single next action, concrete enough to start without asking anyone.
    Whatever the converted saves do on load decides the next step of I1: if
    they load clean, read the PC block builder `0x5806F0` and the options bytes
    at block `+0x78`; if not, the symptom says which assumption was wrong.
-2. **The byte-level check `LoadDatFile` still owes**, then onward. `LoadDatFile`
-   `0x454590` is ours and attract-checked, and its three sinks are read
-   ([`asset-loading-path.md`](asset-loading-path.md) §2): kind 1 into a PSX-VRAM
-   shadow at `0x6C9F44` behind a texture cache, kind 2 into six sound-bank
-   slots, kind 3 the Chinese font. Owed: dump the arena `0x803580` (and now the
-   VRAM shadow, 1 MiB at `0x6C9F44`) after a load, ours vs
-   `BOF3X_ORIGINAL=LoadDatFile`, and diff. The VRAM shadow is also the best
-   thing yet for the attract oracle to hash — it is the picture, minus the
-   renderer. After that the natural takeovers are `Gfx_LoadImage` `0x59EA70`
-   and `Font_SetGlyphData` `0x5A6800`, both small and fully read.
+2. **Take over `Gfx_LoadImage` `0x59EA70` and `Font_SetGlyphData` `0x5A6800`.**
+   Both are small and fully read ([`asset-loading-path.md`](asset-loading-path.md)
+   §2), and `tools/mem_dump.py` now checks the first in bytes: it dumps the DAT
+   arena and the 1 MiB PSX-VRAM shadow at a fixed point of the attract sequence
+   and compares runs. `LoadDatFile` passed it 2026-09-19, with an
+   original-vs-original noise floor of zero. Next after those: `0x59E700`, the
+   texture-cache invalidation — the first function of the presentation layer
+   proper ([`IDEAS.md`](IDEAS.md) I8).
 
 ## Then
 
@@ -90,6 +88,11 @@ _Commands a fresh session needs, verified on the date above._
   `pc2psx` — usage in the file's docstring. In Git Bash pass Windows-style
   paths (`cygpath -m`): a `/c/...` path inside a `CARD:SLOT` argument is not
   translated.
+- **Byte-level check of a loader:** start `python tools/attract_run.py --out
+  analysis/attract/tmp.tsv --minutes 2.4` (add `--original NAME` for the
+  reference), and within a few seconds `python tools/mem_dump.py --label X`;
+  then `python tools/mem_dump.py --compare A B`. Always take two reference
+  runs — the pair is the noise floor.
 - DAT containers: `python tools/dat.py survey ../bof3ext/bof3/DAT` (expect
   742 clean); `list` / `extract --out analysis/dat/<name>` / `compare <DAT> <EMI>`
 - Fixtures check: `python tools/verify_fixtures.py`

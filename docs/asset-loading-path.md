@@ -112,6 +112,18 @@ invented the filename convention, is a sibling-side question.
 missing checks; its three callees for kinds 1-3 are bound as originals with
 signatures taken from these call sites only (hypothesis tier).
 
+**Verified in bytes, 2026-09-19** (`tools/mem_dump.py`): three fresh hands-off
+launches, each suspended 300 logic frames after the area word first reads 4
+(the attract sequence's first field scene — after `FIRST`, `DEMO`, `PL27A` and
+`AREA004` have loaded) and dumped. Two runs with `BOF3X_ORIGINAL=LoadDatFile`
+and one with ours gave the **same SHA-256 for the arena** (`0x803580`,
+`0xE0C4C` bytes; `011447acff87b4a1…`) **and for the VRAM shadow** (`0x6C9F44`,
+1 MiB; `c481fa48b33f9847…`) in all three. The original-vs-original pair is the
+noise floor, and it is zero — the port's determinism reaches memory contents,
+not just the `Rand` count. What this does not cover: kinds 2 and 3 land outside
+both regions (checked only by the game sounding and reading right), and only
+the files that scene loads were exercised.
+
 1. `name = u32[0x64F368 + 4*index]`; return if null. (`0x64F368`, file offset `0x24F368`,
    is a table of `char*`: **799 entries, 57 of them null**, every other one
    pointing into `0x64FFE4`..`0x652888`, and the table ends exactly where the
