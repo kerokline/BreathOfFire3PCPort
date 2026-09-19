@@ -163,7 +163,7 @@ through DirectDraw). The doc proves kinship at three independent points:
 
 | Thing | PSX | PC port |
 |---|---|---|
-| Character record stride | `0x80144964 + 0xA4·n` | `0x64B390 + 164·n` — **the same 164 bytes** |
+| Character record stride | `0x80144964 + 0xA4·n` | live records `0x903A70 + 164·n` — the same 164-byte *stride*, but the name field is 9 bytes not 5 and later fields are +4 ([`save-interchange.md`](save-interchange.md) §2, 2026-09-19). `0x64B390`, given here originally, is most likely the initial-record templates |
 | Current area number | `0x80143F00` | `0x904EFC` |
 | Message open → box re-point | `Msg_OpenScript` → `MsgBox_Reset` | `0x4976D0` → `0x7DEE4C` → `0x497770` |
 
