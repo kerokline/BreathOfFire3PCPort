@@ -620,24 +620,26 @@ pc = 0x59EA70
 name = "Gfx_LoadImage"
 ret = "void"
 params = "const short *rect, const void *pixels"
-status = "hypothesis"
-evidence = "Signature from its call site in LoadDatFile 0x4546B9 only: first argument the address of four s16 (x, y, 0x20, 0x20), second a pointer to 0x800 bytes of payload - the shape of the PSX LoadImage(RECT*, u_long*). Body unread; return value unknown and ignored by this caller."
+status = "evidence"
+evidence = "disasm 2026-09-19: rect is four s16 (x, y, w, h). Does nothing at all if x + w > 0x400 or y + h > 0x200. Otherwise copies h rows of w*2 bytes from pixels into a 16-bit 1024 x 512 buffer at 0x6C9F44, row stride 0x800 bytes, destination (y*1024 + x)*2 - a shadow of PSX VRAM - then calls 0x59E700(rect, 0). The PC counterpart of the PSX LoadImage(RECT*, u_long*). Its neighbour 0x59EB00 is the same with a row-by-row compare first."
+note = "0x59E700(rect, mode) walks the 32 PSX-style texture pages (64 x 256 each, 16 across, 2 down), IntersectRect (USER32, import slot 0x5C4168) against the rect, and for each touched page visits 32 cache entries of 0x18 bytes in a table at 0x6C3F40 (32 pages x 32 = 1024 entries, ending 4 bytes short of the VRAM shadow): mode 0 calls Release (vtable +8) on the two COM pointers at entry +0x10 and +0x14 and zeroes the entry; mode non-zero only turns state 1 into state 2. So textures are built lazily from the VRAM shadow and thrown away when the VRAM under them changes."
 
 [[func]]
 pc = 0x587CD0
-name = "Snd_LoadBankChunk"
+name = "Snd_LoadBank"
 ret = "void"
-params = "unsigned tag, const void *payload, unsigned size"
-status = "hypothesis"
-evidence = "Signature from its call site in LoadDatFile 0x454704 only (kind-2 chunks: tag, payload pointer, payload size). Body unread; return value unknown and ignored by this caller."
+params = "unsigned bank, const void *payload, unsigned size"
+status = "evidence"
+evidence = "disasm 2026-09-19: slot = 0x6BC928 + (bank - 1)*0x384. If the slot already owns sample data (pointer at slot +0x380) it frees it, and for each of its 64 voice entries (8 bytes each from slot +0x180: sample pointer, buffer handle) releases the handle through 0x5A6C90 and clears any of the 23 dwords at 0x6BC8C8..0x6BC924 equal to it. Then: copies the first 0x380 bytes of the payload into the slot, mallocs size - 0x380 and copies the rest there, and for each voice entry whose offset is non-zero rewrites it to data + offset - 0x380 and stores the result of 0x5A69C0(that pointer) beside it. Shipped data uses banks 1..6 only (census of all 742 DAT files 2026-09-19: 210, 244, 63, 74, 70, 240 chunks). bank 0 would index before the table; nothing checks."
 
 [[func]]
 pc = 0x5A6800
-name = "Dat_Kind3Sink"
+name = "Font_SetGlyphData"
 ret = "void"
-params = "void *owned_copy, unsigned size"
-status = "hypothesis"
-evidence = "Signature from its call site in LoadDatFile 0x45472B only: a freshly malloc'd copy of a kind-3 payload and its size (the size is the dword pushed for malloc and left on the stack). LoadDatFile never frees the copy, so ownership passes here. Body unread."
+params = "void *owned_glyphs, unsigned size_unused"
+status = "evidence"
+evidence = "disasm 2026-09-19, 10 instructions: frees the pointer at 0x7CC35C if non-null, then stores its first argument there. The second argument is never read. The pointer's only other reader is 0x5A2CA0, which addresses it as base + index*0x120 with 0x18 / 0x18 constants alongside: 288-byte glyphs, 24 x 24 at 4 bits per pixel. Exactly one kind-3 chunk exists in the shipped data - FIRST.DAT, 705,888 bytes = 2,451 glyphs of 288 (census 2026-09-19)."
+note = "The port's Chinese font, loaded once at boot. The pixel format (4 bpp) is inferred from 288 = 24*24/2 and is the one part of this not read from code."
 
 [[func]]
 pc = 0x5B9380

@@ -32,15 +32,16 @@ The single next action, concrete enough to start without asking anyone.
    Whatever the converted saves do on load decides the next step of I1: if
    they load clean, read the PC block builder `0x5806F0` and the options bytes
    at block `+0x78`; if not, the symptom says which assumption was wrong.
-2. **Below `LoadDatFile`: its three sinks.** `LoadDatFile` `0x454590` is ours
-   and attract-checked (2026-09-19). Its callees are bound from their call
-   sites only — `Gfx_LoadImage` `0x59EA70`, `Snd_LoadBankChunk` `0x587CD0`,
-   `Dat_Kind3Sink` `0x5A6800`, all hypothesis tier. Reading `0x59EA70` is the
-   first step into the DirectDraw presentation layer
-   ([`IDEAS.md`](IDEAS.md) I8); `0x5A6800` settles what kind 3 *is*. Not yet
-   done for `LoadDatFile`: the byte-level arena diff (dump `0x803580` after a
-   load, ours vs `BOF3X_ORIGINAL=LoadDatFile`). The attract check plus two
-   screenshots passed, but neither compares arena bytes.
+2. **The byte-level check `LoadDatFile` still owes**, then onward. `LoadDatFile`
+   `0x454590` is ours and attract-checked, and its three sinks are read
+   ([`asset-loading-path.md`](asset-loading-path.md) §2): kind 1 into a PSX-VRAM
+   shadow at `0x6C9F44` behind a texture cache, kind 2 into six sound-bank
+   slots, kind 3 the Chinese font. Owed: dump the arena `0x803580` (and now the
+   VRAM shadow, 1 MiB at `0x6C9F44`) after a load, ours vs
+   `BOF3X_ORIGINAL=LoadDatFile`, and diff. The VRAM shadow is also the best
+   thing yet for the attract oracle to hash — it is the picture, minus the
+   renderer. After that the natural takeovers are `Gfx_LoadImage` `0x59EA70`
+   and `Font_SetGlyphData` `0x5A6800`, both small and fully read.
 
 ## Then
 

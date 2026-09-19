@@ -139,8 +139,36 @@ loader never reads +0xC.
 |---|---|
 | **0 data** | `memcpy(0x803580 + tag, payload, size)`. Before copying: if byte `0x9035A0` is set **and** `tag == 0x10000`, clear it. |
 | **1 image** | Splits the payload into **0x800-byte tiles** (32×32 px at 16 bpp) and uploads `size >> 11` of them through `0x59EA70(rect*, pixels*)`. `rect = {x, y, 32, 32}` with `x = (tag >> 24) * 32`, `y = ((tag >> 16) & 0xFF) * 32`; after each tile `x += 32`, and when `x` reaches `x0 + ((tag >> 8) & 0xFF) * 32` it wraps to `x0` and `y += 32`. (The code computes these as `(tag >> 19) & 0x1FE0` etc. — same thing.) |
-| **2 audio bank** | `0x587CD0(tag, payload, size)` — into the sound module. Unread. |
-| **3** | `buf = malloc(size); memcpy(buf, payload, size); 0x5A6800(buf, size)`. The buffer is *not* freed here — ownership passes to `0x5A6800`. Unread. |
+| **2 audio bank** | `Snd_LoadBank` `0x587CD0(bank, payload, size)`: the tag is a **bank number, 1..6** in the shipped data. Slot = `0x6BC928 + (bank-1)*0x384`: the payload's first `0x380` bytes are a header kept in the slot (64 voice entries of 8 bytes at `+0x180`), the rest is sample data copied to a fresh `malloc`; each voice entry's offset becomes a pointer and gets a sound buffer from `0x5A69C0`. Reloading a bank frees the old data and releases its 64 buffers first. Read 2026-09-19. |
+| **3 font** | `buf = malloc(size); memcpy(buf, payload, size); Font_SetGlyphData(buf, size)` `0x5A6800`. The buffer is not freed here — the callee owns it, and frees the previous one. Read 2026-09-19, below. |
+
+### Below the loader: where the three non-data kinds go
+
+Read 2026-09-19; per-function evidence is in `symbols.toml`.
+
+**Kind 1 lands in a shadow of PSX VRAM.** `Gfx_LoadImage` `0x59EA70` is the PC
+counterpart of the PSX `LoadImage(RECT*, u_long*)`: it copies the pixels into a
+**16-bit 1024 x 512 buffer at `0x6C9F44`** (1 MiB, row stride `0x800`) and then
+invalidates. A rect that crosses the right or bottom edge is dropped whole, not
+clipped. Invalidation is `0x59E700(rect, 0)`: it walks the 32 PSX-style texture
+pages (64 x 256), intersects each with the rect (`IntersectRect`), and for every
+touched page releases and zeroes that page's 32 entries in a **1,024-entry
+texture cache at `0x6C3F40`** (`0x18` bytes each, two COM pointers at `+0x10` /
+`+0x14`). So the renderer keeps PSX VRAM as the source of truth and builds
+Direct3D textures from it lazily, per page and per one-of-32 variants —
+presumably per CLUT. **This is the seam [`IDEAS.md`](IDEAS.md) I8 wants:** a
+replacement presentation layer can keep the VRAM shadow and the `LoadImage`
+interface and replace only what sits between the cache and the screen.
+
+**Kind 3 is the Chinese font, and there is exactly one.** `Font_SetGlyphData`
+`0x5A6800` stores the copy in one global, `0x7CC35C`, freeing any previous one.
+Its only reader, `0x5A2CA0`, indexes it as `base + glyph*0x120` beside `0x18`
+constants: 24 x 24 glyphs, 288 bytes each. The census finds a single kind-3
+chunk in all 742 files — `FIRST.DAT`, 705,888 bytes = **2,451 glyphs**. That
+answers [`DAT_CONTAINER.md`](DAT_CONTAINER.md)'s "what is kind 3", and it is the
+port's one wholly new asset class: the PSX releases keep their glyphs in VRAM
+textures. For [`STATUS.md`](STATUS.md)'s localisation goal it means the PC text
+path draws from this table, not from the 32 KB atlas the PSX builds use.
 
 ### Kind 0 answers the open question: one arena
 
@@ -193,7 +221,9 @@ bytes: the first call observed was `File_Read(handle=0, size=1176679)`, and
   [`save-files.md`](save-files.md).)
 - `0x587910` and the `SND\%s.DAT` string — settles the `SND/NNN_KK` numbering
   question ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §5). The BGM half is §1a.
-- `0x587CD0` (kind 2), `0x5A6800` (kind 3), `0x59EA70` (kind-1 upload).
+- Below the sinks: `0x5A69C0` / `0x5A6C90` (sound buffer create / release),
+  `0x5A2CA0` (glyph draw), and the texture-cache builder that reads the VRAM
+  shadow at `0x6C9F44`.
 - `0x4FCB00`, the caller of the drive-root probe `0x5A72C0` (§1) — what path
   it probes with, and when.
 - The value-sequence search for the dropped non-code PSX sections

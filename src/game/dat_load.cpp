@@ -72,7 +72,8 @@ void LoadImageChunk(std::uint32_t tag, const std::uint8_t* payload, std::int32_t
 //     rejected;
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
-//   - the kind-3 copy is never freed here: Dat_Kind3Sink owns it.
+//   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
+//     frees the previous one).
 extern "C" void __cdecl LoadDatFile(int file_index) {
     const char* name = Dat_FileNames[file_index];
     if (!name) return;
@@ -101,12 +102,12 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
             LoadImageChunk(h.tag, payload, h.size);
             break;
         case 2:
-            Snd_LoadBankChunk(h.tag, payload, h.size);
+            Snd_LoadBank(h.tag, payload, h.size);
             break;
         case 3: {
             void* copy = Crt_malloc(h.size);
             std::memcpy(copy, payload, static_cast<std::uint32_t>(h.size));
-            Dat_Kind3Sink(copy, h.size);
+            Font_SetGlyphData(copy, h.size);
             break;
         }
         default:

@@ -167,7 +167,9 @@ tag and size as `FIRST.DAT` chunk 9.
 - **Bank descriptor area** (`0x000–0x188`). First bytes look like
   `{u8, u8, u16 sample rate}` records (`0xAC44`, `0x5622` appear in FIRST);
   unverified.
-- **The kind-3 chunk** in `FIRST.DAT`.
+- ~~**The kind-3 chunk** in `FIRST.DAT`~~ — **answered 2026-09-19:** the port's
+  Chinese font, 2,451 glyphs of 24 x 24 at 288 bytes
+  ([`asset-loading-path.md`](asset-loading-path.md) §2).
 - **Hash the `DAT/` tree into `fixtures.toml`** so these counts are tied to a
   build.
 
