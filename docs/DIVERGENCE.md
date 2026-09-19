@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 1 entry, DIV-0001)
+**Status:** IN PROGRESS (opened 2026-09-18; 2 entries, DIV-0001..0002)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -174,3 +174,50 @@ designed in rather than bolted on.
 
   The output hash is tied to that encoder version; a different ffmpeg may
   produce a different — and equally valid — file.
+
+### Refresh the save directory after writing a save
+
+- **ID:** DIV-0002
+- **Date:** 2026-09-19
+- **Subsystem:** menu
+- **Original behaviour:** a save written to a slot that had no file when the
+  save directory was last listed **does not appear in the save menu** until the
+  game is restarted; the file itself is written correctly. Reported by the
+  owner 2026-09-19 (slots 0 and F, a New Game session with no prior saves) and
+  traced the same day ([`save-files.md`](save-files.md) §3): the menu's state 0
+  (`0x57FDE0`) calls `Save_ReadSummaries` `0x588DC0`, which rebuilds all sixteen
+  slot summaries from the table `Save_Directory` `0x929F40` — but only
+  `Save_ListFiles` `0x4548B0` fills that table, and its two call sites
+  (`0x587E6B`, `0x588156`) are both outside the save flow. Measured on the
+  running game by read-only `ReadProcessMemory`: both files on disk at 4,784
+  bytes, `Save_Directory` entirely zero. After a restart both saves listed and
+  one loaded (owner, original exe, no DLL).
+  *Not yet established:* a reproduction of the vanishing save under
+  `BOF3X_ORIGINAL=*`. The first observation was made with `File_Read` ours; the
+  mechanism above is entirely in Capcom's code and upstream of any read, but
+  the clean A/B has not been run.
+- **New behaviour:** our `Save_WriteFile` (`src/game/save_io.cpp`, replacing
+  `0x454870`) does exactly what the original does and then calls
+  `Save_ListFiles` before returning, so the table the menu reads is current.
+  Nothing else changes: same file, same bytes, same return values.
+  **Verified 2026-09-19:** owner saved to a new slot (1) in a session launched
+  through `bof3x-launcher`, reopened the menu, and the slot was listed at once.
+  `bof3x.log` for that run: `inject ON Save_WriteFile original 0x00454870`,
+  then `first call Save_WriteFile(BISLPS01.DAT, 4784)`; the file is on disk at
+  4,784 bytes.
+- **Rationale:** a bug, not a design choice — the player is shown an empty slot
+  where they have just saved, and the natural response (save again, or assume
+  saving is broken and stop playing) is harmful either way. The repair is the
+  smallest available: one call to the game's own lister at the one place the
+  directory changes. Costs: each call leaks one search handle, because
+  `Save_ListFiles` never calls `_findclose` (original defect, unfixed) — one
+  per save, negligible. Deliberately *not* fixed here: `File_OpenWrite`
+  `0x5A7420` reporting a failed `fopen` as success, and `Save_ListFiles` not
+  bounding its table at 16. Those are separate entries when they are touched.
+- **Also in the PSX version?** Unknown. The listing and the per-slot files are
+  porting-house code — the PlayStation reads the memory card's directory —
+  so a port bug is the likelier reading, but nobody has checked whether the
+  PSX menu refreshes after a write. Sibling-side question.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Save_WriteFile` runs Capcom's function
+  instead ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle; there is
+  no config system yet.
