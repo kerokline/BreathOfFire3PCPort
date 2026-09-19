@@ -167,7 +167,13 @@ constants: 24 x 24 glyphs, 288 bytes each. The census finds a single kind-3
 chunk in all 742 files — `FIRST.DAT`, 705,888 bytes = **2,451 glyphs**. That
 answers [`DAT_CONTAINER.md`](DAT_CONTAINER.md)'s "what is kind 3", and it is the
 port's one wholly new asset class: the PSX releases keep their glyphs in VRAM
-textures. For [`STATUS.md`](STATUS.md)'s localisation goal it means the PC text
+textures. **The cell is exactly double the PSX one** (owner, 2026-09-19): the
+JP build draws 12 px glyph cells at a flat 12 px advance
+(`../BreathOfFire3Recomp/docs/TEXT_ENGINE.md`), and the port renders 640 x 480
+against the PSX's 320 x 240, so 24 x 24 keeps text the same size on screen at
+twice the resolution. Whether the glyphs were drawn at 24 px or scaled up from
+something is not known; nor is the pixel format read from code (`0x5A2CA0`).
+For [`STATUS.md`](STATUS.md)'s localisation goal it means the PC text
 path draws from this table, not from the 32 KB atlas the PSX builds use.
 
 ### Kind 0 answers the open question: one arena
