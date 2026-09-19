@@ -143,12 +143,9 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; No PR open yet. **Uncommitted:** the call tracer — `src/hook/calltrace.*`,
-`tools/calltrace.py`, `docs/call-trace.md`, `IsOwned` in the detour layer; the
-crash reporter — `src/hook/crash.*`, `tools/crash_report.py`,
-`docs/crash-reporter.md`; `docs/known-defects.md`; two `symbols.toml` entries.
-The `src/` changes passed the attract oracle 2026-09-19 (tracer off, crash
-reporter armed, ten functions ours, identical to `orig_a.tsv` over 7,478 frames).
+Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; Everything through DIV-0004 is committed (2026-09-19); **not pushed** since
+`8347b0c`. No PR open yet. The `src/` changes passed the attract oracle and the
+frame-hash A/B with eleven functions ours.
 
 Owed in game, all listed in [`USER_CHECKS.md`](USER_CHECKS.md): the converted
 saves, the file layer's write/seek, DIV-0003's failing case, DIV-0002's A/B.
