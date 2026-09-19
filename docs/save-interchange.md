@@ -81,9 +81,38 @@ prompt is either gone or moved later (the meeting with Rei and Teepo is the
 owner's candidate; unchecked — [`USER_CHECKS.md`](USER_CHECKS.md) item 4). This is a *port divergence* in the ledger's sense (theirs, not
 ours). Consequence for conversion, *if naming is gone*: PSX→PC loses only a custom Ryu name, which
 the PC game could not have produced anyway, and any PC save is a complete name
-donor. PC→PSX gives the donor's names. *Not established:* whether the
-name-entry code survives unreachable in the exe, and whether any later point
-in the game can rename a character.
+donor. PC→PSX gives the donor's names. See §2a.
+
+### 2a. Name-editing code exists in the exe, and is statically reachable
+
+Read 2026-09-19 at the owner's prompt. **The live game block is at `0x9039E0`**
+(`0x5806F0`, the block builder, stores the area word to `0x903A04` = block
+`+0x24` and zeroes the checksum at `0x903A50` = `+0x70`), so the **live
+character records are at `0x903A70`**, stride `0xA4` — PSX `0x80144964` plus
+`0x807BF10C`, the same delta as the block base.
+
+Of the functions that take a pointer to a record, one writes the name:
+**`0x45F1A0`**. It picks the record of the *n*-th joined character (`0x45F020`
+walks the eight records counting those with bit 0 of record `+0x0B` set; *n* is
+a cursor byte at `0x675F8C`), saves that record's nine name bytes to
+`0x904CE0`, then copies **eight bytes from an edit buffer at `0x675F98`** into
+name bytes 0..7 (`0x45F616`..`0x45F61C`). Eight bytes is four two-byte
+characters — it fits the widened field, not the PSX one, so this is code the
+port touched, not a fossil.
+
+It is not dead by construction: six direct calls reach it from `0x45CEA0`
+(1,949 instructions, two near-mirror halves both using the edit buffer), and
+the call chain runs `0x45CEA0` ← `0x45C850` ← `0x45B5F0` ← `0x459EE0` ←
+`0x456E40` ← `0x456AF0` ← `0x4563B0` ← `0x4561A0` ← `0x455450` ← `0x428F50`
+← `0x4287E0` ← `0x56E4E0` ← `0x56D750`, which has four callers. A cursor over
+*joined party members* is not what a New-Game "name the hero" prompt needs; it
+reads as a menu facility that can rename whoever is in the party.
+
+**Not established:** what screen this is, what in the game opens it, and
+whether a run-time condition ever lets control through — "statically
+reachable" is a statement about call instructions, not about play. The new
+start-screen options entry and the in-game menu are the places to look
+([`USER_CHECKS.md`](USER_CHECKS.md) item 4).
 
 **Carried verbatim, not understood:** the eight bytes at `+0x78..+0x7F` differ
 between the JP, US and PC saves compared and are the likely home of the option

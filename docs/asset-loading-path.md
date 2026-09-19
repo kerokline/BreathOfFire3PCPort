@@ -44,8 +44,10 @@ layer entirely and are unaffected: `0x5A72C0` below and `Cfg_Load` `0x4FD030`.
 overwrites byte 0 of `0x66BC2C`, and where `GetDriveTypeA` (import slot
 `0x5C4088`) returns 5 (`DRIVE_CDROM`) retries the open with the root
 prepended, returning 1 on the first success and 0 if none. The find-the-disc
-probe. `pe_xref` finds no reference to it, so its caller is unidentified —
-an indirect call, or dead code.
+probe. One caller: `0x4FCB50`, in the function at `0x4FCB00` (E8 rel32 scan of
+`.text`) — startup-side code beside the window procedure, unread. *(An
+earlier revision said "no caller": that came from `pe_xref.py`, which indexes
+data addresses only and never sees a call. Corrected 2026-09-19.)*
 
 Observations that matter later:
 

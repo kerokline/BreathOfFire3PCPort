@@ -44,8 +44,7 @@ The single next action, concrete enough to start without asking anyone.
 Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
 
 3. Finish reading the asset path: the `SND\`/`BGM\` loaders `0x587910` /
-   `0x587A20`, who *calls* the drive-root probe `0x5A72C0` (no direct
-   reference found), the 32 callers of
+   `0x587A20`, the drive-root probe `0x5A72C0`'s caller `0x4FCB50`, the 32 callers of
    `LoadDatFile`, and the value-sequence search for the dropped PSX sections
    ([`asset-loading-path.md`](asset-loading-path.md) §4).
 4. **Grow the attract oracle** ([`attract-mode.md`](attract-mode.md) §6-7). It
@@ -111,6 +110,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
   Any unattended observation must foreground it first; `attract_run.py` does.
 - A rebuild fails at link with "Permission denied" while a game launched
   through the launcher is running — it holds `bof3x.dll` open. Close the game.
+- `pe_xref.py` answers "who touches this *data* address". It does not index
+  calls: "(no references)" for a function means nothing. For callers use
+  `callees` in `analysis/pc_funcs.json`, or scan `.text` for E8/E9 rel32. Cost
+  one wrong "no caller" claim, caught the same day.
 - Pairing EMI sections to DAT chunks by order or by address mis-pairs 47
   files; use `dat_census.align` ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
 

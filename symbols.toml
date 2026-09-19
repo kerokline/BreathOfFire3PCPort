@@ -75,11 +75,12 @@ evidence = "Script pool base 0x803580 read by Msg_OpenScript 0x4976D0 as ptr = b
 
 [[block]]
 name = "CharacterRecords"
-pc = 0x64B390
+pc = 0x903A70
 psx = 0x80144964
-delta = 0x80506A2C
-status = "hypothesis"
-evidence = "Stride 164 = 0xA4 in both, from BreathOfFire3Recomp/docs/PC_PORT_CROSS_REFERENCE.md section 1. Not re-derived on this side yet — the delta is arithmetic on someone else's landmark, so it stays a hypothesis until a field read confirms it here."
+delta = 0x807BF10C
+status = "evidence"
+evidence = "disasm 2026-09-19: the save block builder 0x5806F0 shows the live game block at 0x9039E0 (area word stored to 0x903A04 = block+0x24, checksum zeroed at 0x903A50 = block+0x70, both the PSX block offsets), which puts the records at block+0x90 = 0x903A70; 89 code references index it as lea reg, [idx*4 + 0x903A70] with idx = n*0x29, i.e. stride 0xA4. Same delta as the block base (PSX 0x801448D4). SUPERSEDES the earlier hypothesis pc = 0x64B390, which is a table in initialised data: 0x437820 copies 0x29 dwords from 0x64B80C = 0x64B390 + 7*0xA4 into a live record, so that address is most likely the eight initial-record templates."
+note = "INTERNAL OFFSETS DIFFER FROM PSX: the name field is 9 bytes, not 5, and every later record field is +4 (docs/save-interchange.md section 2). The block-delta rule covers the record base and stride only."
 
 # ---------------------------------------------------------------------------
 # Text engine — dialogue box

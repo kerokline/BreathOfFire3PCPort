@@ -79,6 +79,11 @@ Decides how much name conversion matters
 
 - [ ] Play on through the meeting with Rei and Teepo. Does a name-entry screen
       appear there, or anywhere?
+- [ ] Look through the in-game menu and the start screen's options entry for
+      anything that renames a character. The exe has name-editing code that
+      works on *whoever is in the party*, reached from a large menu module
+      ([`save-interchange.md`](save-interchange.md) §2a) — it smells like a
+      menu option, not a story prompt.
 - [ ] If it does: how many characters does it allow, and what does the
       save-menu summary show for a name longer than two characters? (The
       summary's name field is still 5 bytes.)
