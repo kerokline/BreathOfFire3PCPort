@@ -22,14 +22,30 @@ statically linked MSVC6 CRT's stdio behind a **16-slot table of `FILE*` at
 
 | VA | Name | Reads as | Tier |
 |---|---|---|---|
-| `0x5A7370` | `File_CdRoot` | `return (char*)0x66BC2C` — the drive-root prefix | evidence |
+| `0x5A7370` | `File_CdRoot` | `return (char*)0x66BC2C` — the drive-root prefix, a 4-byte buffer | evidence — **ours** |
 | `0x5A7380` | `File_Open` | first free slot (−1 if 16 taken); `fopen(path, "rb")`; on failure retry with the drive root prepended via `sprintf("%s%s")` into a 0x50-byte stack buffer; returns slot or −1 | evidence — **ours since 2026-09-19**, with a log line per open; regression-checked against the attract oracle ([`attract-mode.md`](attract-mode.md) §7) |
-| `0x5A7420` | *(unnamed)* | second opener, same slot scan; sole caller `0x454870` | unread |
+| `0x5A7420` | `File_OpenWrite` | the write-side opener: same slot scan, `fopen(path, "wb")`, no drive-root retry, **no null check on the result**; sole caller `Save_WriteFile` `0x454870` | evidence — **ours, with the null check added: [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0003** |
 | `0x5A7470` | `File_Read` | `fread(dst, 1, size, slot[h])` | evidence — **ours since 2026-09-19** |
-| `0x5A74A0` | `File_Write` | same shape, CRT callee `0x5B9E65` | hypothesis |
-| `0x5A74D0` | `File_Size` | `_filelength(_fileno(slot[h]))` | evidence |
-| `0x5A74F0` | `File_Seek` | `0x5B9F9E(slot[h], offset, 0)` — `fseek(…, SEEK_SET)` shape | hypothesis |
-| `0x5A7510` | `File_Close` | `fclose(slot[h]); slot[h] = 0` | evidence |
+| `0x5A74A0` | `File_Write` | `fwrite(src, 1, size, slot[h])` | evidence — **ours** |
+| `0x5A74D0` | `File_Size` | `_filelength(_fileno(slot[h]))` | evidence — **ours** |
+| `0x5A74F0` | `File_Seek` | `fseek(slot[h], offset, SEEK_SET)` — callee `0x5B9F9E` read 2026-09-19 and is MSVC6 `fseek.c` step for step | evidence — **ours** |
+| `0x5A7510` | `File_Close` | `fclose(slot[h]); slot[h] = 0` | evidence — **ours** |
+
+**The whole layer is ours since 2026-09-19** (`src/game/file_io.cpp`; CRT
+evidence per callee in `symbols.toml`). All 13 references to `File_Slots`
+(`pe_xref 0x7DE3E4`) are inside these seven functions, so the table's contents
+are now private to our code: a slot no longer has to hold the exe's `FILE*`.
+Nothing uses that yet. Two other users of the exe's CRT streams bypass the
+layer entirely and are unaffected: `0x5A72C0` below and `Cfg_Load` `0x4FD030`.
+
+**Who sets the drive root: `0x5A72C0`, read 2026-09-19.** `(path)`: tries
+`fopen(path, "rb")` bare, and on success closes it, **empties the root**
+(stores 0 to byte 0 of `0x66BC2C`) and returns 1; failing that, for each of ten letters from `C` it
+overwrites byte 0 of `0x66BC2C`, and where `GetDriveTypeA` (import slot
+`0x5C4088`) returns 5 (`DRIVE_CDROM`) retries the open with the root
+prepended, returning 1 on the first success and 0 if none. The find-the-disc
+probe. `pe_xref` finds no reference to it, so its caller is unidentified —
+an indirect call, or dead code.
 
 Observations that matter later:
 

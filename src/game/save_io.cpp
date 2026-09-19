@@ -14,10 +14,10 @@
 // original a save to a slot that had no file when the table was last filled
 // disappears from the menu until the game is restarted.
 //
-// Faithfully kept: File_OpenWrite reports a failed fopen as success (it only
-// returns -1 when all 16 slots are taken), and the File_Write result is
-// discarded. Both are original defects, recorded in symbols.toml, not fixed
-// here.
+// Faithfully kept: the File_Write result is discarded, an original defect.
+// The -1 test below was nearly dead code in the original, where File_OpenWrite
+// reported a failed fopen as success; since DIV-0003 (file_io.cpp) it is the
+// path a read-only game directory takes.
 extern "C" int __cdecl Save_WriteFile(const char* path, unsigned size) {
     BOF3_LOG_FIRST_CALL("Save_WriteFile(%s, %u)", path, size);
     int handle = File_OpenWrite(path);

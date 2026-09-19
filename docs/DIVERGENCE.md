@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 2 entries, DIV-0001..0002)
+**Status:** IN PROGRESS (opened 2026-09-18; 3 entries, DIV-0001..0003)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -212,8 +212,9 @@ designed in rather than bolted on.
   directory changes. Costs: each call leaks one search handle, because
   `Save_ListFiles` never calls `_findclose` (original defect, unfixed) — one
   per save, negligible. Deliberately *not* fixed here: `File_OpenWrite`
-  `0x5A7420` reporting a failed `fopen` as success, and `Save_ListFiles` not
-  bounding its table at 16. Those are separate entries when they are touched.
+  `0x5A7420` reporting a failed `fopen` as success (since fixed, DIV-0003), and
+  `Save_ListFiles` not bounding its table at 16 — a separate entry when it is
+  touched.
 - **Also in the PSX version?** Unknown. The listing and the per-slot files are
   porting-house code — the PlayStation reads the memory card's directory —
   so a port bug is the likelier reading, but nobody has checked whether the
@@ -221,3 +222,43 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Save_WriteFile` runs Capcom's function
   instead ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle; there is
   no config system yet.
+
+### Report a failed save-file open instead of crashing
+
+- **ID:** DIV-0003
+- **Date:** 2026-09-19
+- **Subsystem:** platform
+- **Original behaviour:** `File_OpenWrite` `0x5A7420` stores the `fopen(path,
+  "wb")` result into `File_Slots[slot]` and returns the slot index **without
+  testing the result** (disasm 2026-09-19: `call 0x5B9B6D` at `0x5A7457`, then
+  `mov [esi*4 + 0x7DE3E4], eax` / `mov eax, esi` / `ret`, no `test`). It
+  returns -1 only when all sixteen slots are taken. So when the save file
+  cannot be created — a read-only game directory, e.g. an install under
+  `Program Files` — its sole caller `Save_WriteFile` `0x454870` sees success
+  and calls `File_Write`, which passes the null stream to `Crt_fwrite`
+  `0x5B9E65`. That begins with the stream lock `0x5BCBD3`, which for any
+  pointer outside the CRT's static stream table calls `EnterCriticalSection`
+  (import slot `0x5C40FC`) on `stream + 0x20` — address `0x20` for a null
+  stream. *Established by reading, not by reproduction:* nobody has yet run the
+  original against a read-only directory and watched it fault.
+- **New behaviour:** our `File_OpenWrite` (`src/game/file_io.cpp`) returns -1
+  when the open fails and claims no slot, which is what `File_Open` `0x5A7380`
+  already does on the read side. `Save_WriteFile` already returns -1 for a -1
+  handle, and both of its call sites (`0x580074`, `0x5809FF`) already compare
+  the result with -1 and skip their slot-summary update — at `0x580074` the
+  branch target `0x5800C0` is a bare `ret`. A successful open is unchanged:
+  same slot scan, same mode, same return value. *Not yet verified in game:*
+  the failing case needs a save attempted with the game directory read-only;
+  what the menu then shows the player has not been observed.
+- **Rationale:** a bug, not a design choice — the function's read-side twin
+  checks, its caller checks for the only failure it can currently report, and
+  the callers' callers check too; the chain of -1 handling exists and this one
+  link drops it. The repair adds no new behaviour of our own: it routes the
+  failure into the path Capcom's code already has. Deliberately *not* done
+  here: telling the player the save failed. If the existing -1 path is silent,
+  that is its own entry.
+- **Also in the PSX version?** No counterpart. The file layer is porting-house
+  code ([`asset-loading-path.md`](asset-loading-path.md) §1); the PlayStation
+  saves to a memory card through the BIOS.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=File_OpenWrite`
+  ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.

@@ -15,12 +15,14 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Three functions of ~2,952 are ours** — `File_Read` and `File_Open`,
-faithful, and
-`Save_WriteFile`, which carries the project's first *code* divergence: a fix
-for saves vanishing from the save menu ([`DIVERGENCE.md`](DIVERGENCE.md)
-DIV-0002, [`save-files.md`](save-files.md)), found, traced, fixed and verified
-in game on 2026-09-19.
+**Nine functions of ~2,952 are ours**: the whole file layer
+`0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
+§1) — seven faithful, and `File_OpenWrite` with a null check the original
+lacks (DIV-0003, not yet exercised in game) — and `Save_WriteFile`, which
+carries the project's first *code* divergence: a fix for saves vanishing from
+the save menu ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0002,
+[`save-files.md`](save-files.md)), found, traced, fixed and verified in game
+on 2026-09-19.
 
 What is established:
 
@@ -59,9 +61,9 @@ What is established:
   Original-vs-ours already compares identical
   ([`attract-mode.md`](attract-mode.md)). Reach is two field scenes; no battle
   or menu yet.
-- 35 functions, 8 global blocks and 11 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 19 functions carry signatures and
-  are callable from our code, 3 of them ours (counted 2026-09-19 from the
+- 40 functions, 8 global blocks and 12 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 24 functions carry signatures and
+  are callable from our code, 9 of them ours (counted 2026-09-19 from the
   file, not from memory).
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).

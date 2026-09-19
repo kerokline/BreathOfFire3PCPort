@@ -14,30 +14,28 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, three
-functions are ours (`File_Read`, `File_Open`; `Save_WriteFile` with DIV-0002),
-the A/B switch works, and a deterministic attract-mode regression check passes
-original-vs-ours. See [`STATUS.md`](STATUS.md) — do not expand this paragraph
-into a second copy.
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, nine
+functions are ours (the whole eight-function file layer, with DIV-0003 in
+`File_OpenWrite`; `Save_WriteFile` with DIV-0002), the A/B switch works, and a
+deterministic attract-mode regression check passes original-vs-ours. See
+[`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-1. **Finish taking over the file layer**, `0x5A7370`..`0x5A75F0`
-   ([`asset-loading-path.md`](asset-loading-path.md) §1). `File_Open` and
-   `File_Read` are ours; left are `File_CdRoot`, `File_OpenWrite` `0x5A7420`,
-   `File_Write`, `File_Size`, `File_Seek`, `File_Close` — all read, all small,
-   all with signatures in `symbols.toml`. `File_Seek`'s CRT callee `0x5B9F9E`
-   is still identified by argument shape only; read it first. The payoff comes
-   when the *whole* layer is ours: only then can `File_Slots` hold something
-   other than the exe's CRT `FILE*`. Procedure: [`SCAFFOLDING.md`](SCAFFOLDING.md)
-   §3. Faithful replacements need no ledger entry; fixing `File_OpenWrite`'s
-   missing null check (a crash on a read-only install) would — it is the
-   obvious DIV-0003. **Verify with the attract check** (below) — it exercises
-   open/read/size/close on every scene load, and not write or seek, which need
-   a manual save and load.
-2. **Then `LoadDatFile` `0x454590` itself** — it is fully read for kinds 0 and
+1. **Owner, in game: one save and one load through the launcher.** The file
+   layer is all ours ([`asset-loading-path.md`](asset-loading-path.md) §1) and
+   the attract check covers open/read/size/close, but `File_Write` and
+   `File_Seek` are only reached by saving and loading. Expect
+   `first call File_Write(handle=…, size=4784)` and `first call File_Seek` in
+   `build/bof3x.log`, a 4,784-byte file, and the save loading back. Same
+   session, if convenient: **DIV-0003's failing case** — set the read-only
+   attribute on an existing `BISLPS0?.DAT` (simplest way to make `fopen "wb"`
+   fail on Windows; a read-only *directory* attribute does not), save over
+   that slot, and note what the menu shows; then the same
+   under `BOF3X_ORIGINAL=File_OpenWrite`, which by reading should fault.
+2. **`LoadDatFile` `0x454590` itself** — it is fully read for kinds 0 and
    1, and blocked on `0x587CD0` (kind 2), `0x5A6800` (kind 3) and `0x59EA70`
    (image upload) only for their *signatures*, which can be bound as originals.
    Its output is checkable in bytes: dump the arena at `0x803580` after a load
@@ -49,7 +47,8 @@ The single next action, concrete enough to start without asking anyone.
 Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
 
 3. Finish reading the asset path: the `SND\`/`BGM\` loaders `0x587910` /
-   `0x587A20`, who sets the drive root `0x66BC2C`, the 32 callers of
+   `0x587A20`, who *calls* the drive-root probe `0x5A72C0` (no direct
+   reference found), the 32 callers of
    `LoadDatFile`, and the value-sequence search for the dropped PSX sections
    ([`asset-loading-path.md`](asset-loading-path.md) §4).
 4. **Grow the attract oracle** ([`attract-mode.md`](attract-mode.md) §6-7). It
@@ -120,22 +119,14 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-0/scaffolding-and-asset-loading-path`, **all of it uncommitted**
-at the end of the 2026-09-19 session (the owner had not yet asked for commits).
-A natural four-way split:
-
-1. Scaffolding — `src/hook/`, `src/launcher/`, `src/game/file_io.*`, `cmake/`,
-   `CMakeLists.txt`, `CMakePresets.json`, `tools/gen_symbols.py`,
-   `docs/SCAFFOLDING.md`, the file-layer and CRT symbols.
-2. Exe reading — `docs/asset-loading-path.md`, `docs/windowed-mode.md`,
-   `IDEAS` I9, the config symbols, the `DAT_CONTAINER` / `PLAN` touch-ups.
-3. The save fix — `src/game/save_io.*`, `docs/save-files.md`, DIV-0002, the
-   save symbols.
-4. The attract oracle — `tools/attract_watch.py`, `attract_run.py`,
-   `attract_diff.py`, `attract_opens.py`, `docs/attract-mode.md`, the task-system
-   and `Game_AreaNumber` symbols, `IDEAS` I6.
+Branch `phase-0/scaffolding-and-asset-loading-path`, pushed through `6f91e29`
+(four commits: scaffolding, exe reading, the save fix, the attract oracle).
+**Uncommitted on top:** the rest of the file layer — `src/game/file_io.cpp`,
+the `save_io.cpp` comment, five CRT symbols and `File_CdRootBuf` in
+`symbols.toml`, DIV-0003, and the doc updates. One commit.
 
 Owed on DIV-0002: reproduce the vanishing save under `BOF3X_ORIGINAL=*`.
+Owed on DIV-0003: the failing case has never been run, original or ours.
 
 Local only, gitignored, worth keeping: `bof3/BOF3.CFG` (windowed mode); three
 saves `bof3/BISLPS00/01/0F.DAT` — the first PC saves we have, the raw material
