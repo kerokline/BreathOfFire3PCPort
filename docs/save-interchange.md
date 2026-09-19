@@ -73,12 +73,13 @@ PC stores two-byte codes. The converter therefore takes names from a **donor
 save of the destination format**, record for record — every save carries all
 eight records with default names from a new game on. A renamed Ryu becomes the
 donor's Ryu.
-**The PC port has no name entry at New Game (owner, 2026-09-19).** On the PSX,
+**The PC port has no name entry *at New Game* (owner, 2026-09-19).** On the PSX,
 New Game prompts for Ryu's name, then for UI/control options, then starts the
 Dauna mines scene. On the PC, New Game goes straight to the Dauna mines; the
 options screen was moved to a new entry on the start screen, and the naming
-prompt is gone. This is a *port divergence* in the ledger's sense (theirs, not
-ours). Consequence for conversion: PSX→PC loses only a custom Ryu name, which
+prompt is either gone or moved later (the meeting with Rei and Teepo is the
+owner's candidate; unchecked — [`USER_CHECKS.md`](USER_CHECKS.md) item 4). This is a *port divergence* in the ledger's sense (theirs, not
+ours). Consequence for conversion, *if naming is gone*: PSX→PC loses only a custom Ryu name, which
 the PC game could not have produced anyway, and any PC save is a complete name
 donor. PC→PSX gives the donor's names. *Not established:* whether the
 name-entry code survives unreachable in the exe, and whether any later point

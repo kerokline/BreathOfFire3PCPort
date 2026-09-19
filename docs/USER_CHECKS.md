@@ -68,3 +68,18 @@ run, original or ours ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0003).
 - [ ] Corollary, same session: save over a slot that *did* have a file at
       launch. Expect it to display correctly.
 - Result goes to: DIV-0002 and [`save-files.md`](save-files.md) §3.
+
+### 4. Does the PC port ever ask you to name Ryu?
+
+*Why:* on the PSX, New Game prompts for Ryu's name before the Dauna mines
+scene; on the PC it does not (owner, 2026-09-19). The port may have dropped
+naming, or moved it — the meeting with Rei and Teepo is the natural place.
+Decides how much name conversion matters
+([`save-interchange.md`](save-interchange.md) §2).
+
+- [ ] Play on through the meeting with Rei and Teepo. Does a name-entry screen
+      appear there, or anywhere?
+- [ ] If it does: how many characters does it allow, and what does the
+      save-menu summary show for a name longer than two characters? (The
+      summary's name field is still 5 bytes.)
+- Result goes to: [`save-interchange.md`](save-interchange.md) §2.
