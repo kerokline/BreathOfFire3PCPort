@@ -8,8 +8,19 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**Scoping is over: the load-bearing experiment passed, the game runs on this
-machine, and phase 0 is the next thing to build.** No game code yet.
+**Phase 0 is done: our code runs inside the game.** A launcher starts the
+player's own `BOF3.exe` suspended and loads `bof3x.dll` into it; a five-byte
+detour hands one original function at a time to a reimplementation; and
+`symbols.toml` generates the header that makes taking over a function a
+four-line change with no edits to its callers
+([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
+`File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
+**Three functions of ~2,952 are ours** — `File_Read` and `File_Open`,
+faithful, and
+`Save_WriteFile`, which carries the project's first *code* divergence: a fix
+for saves vanishing from the save menu ([`DIVERGENCE.md`](DIVERGENCE.md)
+DIV-0002, [`save-files.md`](save-files.md)), found, traced, fixed and verified
+in game on 2026-09-19.
 
 What is established:
 
@@ -35,8 +46,23 @@ What is established:
   is fully read ([`replacing-mci.md`](replacing-mci.md)); the DirectDraw
   presentation layer is the long-term liability, is **not** read yet, and is
   [`IDEAS.md`](IDEAS.md) I8 against phase 3.
-- 15 functions, 7 global blocks and 5 data tables named in
-  [`symbols.toml`](../symbols.toml), tiered.
+- **The asset-loading path is partly read** ([`asset-loading-path.md`](asset-loading-path.md)):
+  a 16-slot `FILE*` file layer at `0x5A7370`..`0x5A75F0`, and `LoadDatFile`'s
+  four chunk kinds. Kind-0 data lands in **one arena at `0x803580 + tag`** — the
+  port's repacked image of PSX RAM from `0x80010000`, which closes
+  `DAT_CONTAINER.md`'s open question.
+- **There is a regression oracle.** The port is deterministic from launch
+  through its attract sequence — identical `Rand` call count, message index and
+  area word at every one of 7,478 frames across fresh launches — because the
+  seed is fixed at 1, the binary has no `srand`, game logic cannot reach a
+  clock, and all of it runs on one thread inside a four-coroutine task system.
+  Original-vs-ours already compares identical
+  ([`attract-mode.md`](attract-mode.md)). Reach is two field scenes; no battle
+  or menu yet.
+- 35 functions, 8 global blocks and 11 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 19 functions carry signatures and
+  are callable from our code, 3 of them ours (counted 2026-09-19 from the
+  file, not from memory).
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 
@@ -60,11 +86,17 @@ What this test did **not** cover, carried forward rather than blocking:
   battle, menu, save/load or long-session stability check.
 - The known defects (fullscreen fallback, resolution handling) have not been
   reproduced and recorded.
-- **Whether there is an attract/demo mode** is still unanswered. It matters out
-  of proportion to its size: TR1X used demo playback as a determinism oracle,
-  and if BoF3 has one it is the cheapest regression harness available to us
-  ([`prior-art/tr1x.md`](prior-art/tr1x.md)). Check it the next time the game is
-  left idle on the title screen.
+- **There is an attract sequence — answered by the owner, 2026-09-19.** Left
+  idle, the start screen plays through several areas with story text on screen.
+  It is **not FMV**: on the PSX it ran through the overlays and the ordinary
+  area code, so it is the real engine being driven, which is exactly the
+  property that made TR1X's demos a determinism oracle
+  ([`prior-art/tr1x.md`](prior-art/tr1x.md) §2.5). It is "not a full attract
+  mode" — no recorded gameplay input is known — so what it can police is area
+  load, scripting, text and rendering, not battle. **Not yet established:** what
+  drives it (a script, a timer table, recorded input), whether it is
+  deterministic run to run, and whether it touches `Rand`. That is
+  [`IDEAS.md`](IDEAS.md) I6.
 
 ### 1. Read the exe, starting with asset loading
 
@@ -104,17 +136,16 @@ knowing which was loaded.
 Consequence: this drops below exe reading and phase 0. When it is done, it
 must be on a database copy with the nine BSim pairs re-scored before and after.
 
-### 3. Phase 0 proper — **unblocked, next**
+### 3. Phase 0 proper — **done 2026-09-19**
 
-Unblocked by step 0 on 2026-09-19. Numbered 3 for history; in practice it runs
-now, alongside step 1, with a function from the asset-loading path as the
-exit-test target.
+Launcher, detour layer, generated symbol header, one toolchain. Described in
+[`SCAFFOLDING.md`](SCAFFOLDING.md); exit test in its §5. Numbered 3 for history.
 
-Loader, detour layer, build system. See [`PLAN.md`](PLAN.md) phase 0, now
-informed by [`prior-art/tr1x.md`](prior-art/tr1x.md) (launcher-based injection,
-bind each name once, an `enable` flag for free A/B) and
-[`prior-art/openrct2.md`](prior-art/openrct2.md) (the interop layer in both
-directions).
+What phase 0 deliberately did not build: register-argument thunks for
+non-standard MSVC6 conventions (wait for the first real case), a progress
+report, the Ghidra round-trip (phase 1), and any CI — there is still no
+workflow that compiles `src/`, and the receipt policy below now has something
+to bite on.
 
 ## A stated goal worth recording now
 
@@ -164,7 +195,9 @@ an unrecognised disc can be named rather than guessed at.
   differential run it cannot affect; a change to the game code should not merge
   on an assertion nobody re-checked. The warning is the part that matters — it
   is what stops the harness dying quietly the way OpenRCT2's did
-  ([`prior-art/README.md`](prior-art/README.md) §1).
+  ([`prior-art/README.md`](prior-art/README.md) §1). **As of 2026-09-19 `src/`
+  exists**, so the "fail" half of this policy is no longer hypothetical, and the
+  receipt below is the next piece of infrastructure owed.
 
   **Receipt shape** (to build when there is something to verify, not before):
   a committed file recording the git SHA it ran against, the date, the
