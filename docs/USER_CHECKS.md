@@ -68,17 +68,3 @@ run, original or ours ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0003).
 - [ ] Corollary, same session: save over a slot that *did* have a file at
       launch. Expect it to display correctly.
 - Result goes to: DIV-0002 and [`save-files.md`](save-files.md) §3.
-
-### 4. Does the PC port let you name Ryu?
-
-*Why:* owner's observation 2026-09-19 — no name prompt at game start. The PSX
-does not ask at the start either; it asks in the early scene where Rei and
-Teepo take Ryu in. If the port dropped naming, every PC save carries the same
-eight default names and name conversion is a non-problem
-([`save-interchange.md`](save-interchange.md) §2).
-
-- [ ] Play on to that scene. Does a name-entry screen appear? If so: how many
-      characters does it allow, and what does the save-menu summary show for a
-      name longer than two characters?
-- Result goes to: [`save-interchange.md`](save-interchange.md) §2, "Names do
-  not convert".

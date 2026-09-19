@@ -73,9 +73,16 @@ PC stores two-byte codes. The converter therefore takes names from a **donor
 save of the destination format**, record for record — every save carries all
 eight records with default names from a new game on. A renamed Ryu becomes the
 donor's Ryu.
-*Open (owner, 2026-09-19):* the PC port may not offer name entry at all — no
-prompt has appeared 19 minutes in, though the PSX does not ask that early
-either. Unverified either way ([`USER_CHECKS.md`](USER_CHECKS.md) item 4).
+**The PC port has no name entry at New Game (owner, 2026-09-19).** On the PSX,
+New Game prompts for Ryu's name, then for UI/control options, then starts the
+Dauna mines scene. On the PC, New Game goes straight to the Dauna mines; the
+options screen was moved to a new entry on the start screen, and the naming
+prompt is gone. This is a *port divergence* in the ledger's sense (theirs, not
+ours). Consequence for conversion: PSX→PC loses only a custom Ryu name, which
+the PC game could not have produced anyway, and any PC save is a complete name
+donor. PC→PSX gives the donor's names. *Not established:* whether the
+name-entry code survives unreachable in the exe, and whether any later point
+in the game can rename a character.
 
 **Carried verbatim, not understood:** the eight bytes at `+0x78..+0x7F` differ
 between the JP, US and PC saves compared and are the likely home of the option
