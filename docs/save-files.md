@@ -20,17 +20,19 @@ memory-card convention (`BI` + product code `SLPS`), kept as a filename.
 Each file is **`0x12B0` = 4,784 bytes**, written in binary mode (`"wb"`,
 `0x66BC3C`). Observed: two saves, slots 0 and F, both exactly that size. A PSX
 memory-card block is 8,192 bytes, so this is **not** a raw card block — whether
-it is the PSX save payload with the card header stripped is the first question
-for I1, and needs a JP-disc save to compare against.
+it is the PSX save payload with the card header stripped was the first question
+for I1. **Answered 2026-09-19: yes** — the 0x10B0-byte PSX game block from
+offset 0, zero-padded, with one widened field
+([`save-interchange.md`](save-interchange.md)).
 
 ## 2. The code
 
 | VA | Role | Tier |
 |---|---|---|
 | `0x454870` | `Save_WriteFile(path, size)`: second opener `0x5A7420` (`"wb"`), `File_Write` `size` bytes from the **fixed staging buffer `0x92A0E0`**, `File_Close`; 0 or -1 | evidence |
-| `0x454820` | `Save_ReadFile(path, offset, size)`: `File_Open`, `File_Seek(offset)`, `File_Read` into `0x92A0E0`, close; 0 or -1 | evidence |
+| `0x454820` | `Save_ReadFile(path, size, offset)` (argument order corrected 2026-09-19): `File_Open`, `File_Seek(offset)`, `File_Read` into `0x92A0E0`, close; 0 or -1 | evidence |
 | `0x4548B0` | `Save_ListFiles()`: zeroes a 16 x `0x18` table at `0x929F40`, then `_findfirst` / `_findnext` over the pattern at `0x65289C` (`BISLPS??.DAT`), copying each name to entry +0 and its size to +0x14; returns the count | evidence |
-| `0x588DC0` | `Save_ReadSummaries()`: marks all 16 summaries empty (`0xFF` at +0x15 of each `0x1C`-byte record from `0x905BC0`); for each slot, finds the directory entry whose **name[7]** parses as that hex digit, reads `0xCA0` bytes at file offset `0x1C`, copies the first `0x1C` bytes of the buffer into the summary, and stores the directory index at +0x15 | evidence |
+| `0x588DC0` | `Save_ReadSummaries()`: marks all 16 summaries empty (`0xFF` at +0x15 of each `0x1C`-byte record from `0x905BC0`); for each slot, finds the directory entry whose **name[7]** parses as that hex digit, reads `0x1C` bytes at file offset `0xCA0` (corrected 2026-09-19 — first read had the two swapped; `0xCA0` is the PSX slot-summary offset too) and copies them into the summary, and stores the directory index at +0x15 | evidence |
 | `0x5806F0` | fills the staging buffer before a write (by position: called immediately before both `Save_WriteFile` calls) | hypothesis |
 | `0x5809C0` | formats the slot filename (`0x664068`, slot from `0x9036D4`), calls `0x5806F0`, writes `0x12B0` bytes. **Called from the window procedure `0x4FC6A0`** — a save triggered by a window message or key, not by the menu. Unread | hypothesis |
 

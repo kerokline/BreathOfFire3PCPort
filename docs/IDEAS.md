@@ -62,10 +62,15 @@ rule ([`README.md`](README.md)) here too.
 **PC side read 2026-09-19 ([`save-files.md`](save-files.md)):** one file per
 slot, `BISLPS0<X>.DAT` (`X` = hex 0-F — the PSX memory-card filename convention
 kept as a filename), each exactly `0x12B0` = 4,784 bytes, staged through one
-buffer at `0x92A0E0`; the slot summary is `0x1C` bytes at file offset `0x1C`.
-Not a raw 8,192-byte card block. Three real PC saves now exist locally. **Next
-step:** put a JP-disc save from the sibling beside one and diff — is the PC
-file the PSX payload minus the card header?
+buffer at `0x92A0E0`; the slot summary is `0x1C` bytes at file offset `0xCA0`.
+
+**Format solved and converter written 2026-09-19
+([`save-interchange.md`](save-interchange.md), `tools/save_convert.py`):** the
+PC file is the PSX `0x10B0`-byte game block from offset 0, same checksum rule,
+same offsets, with the character-record name field widened 5→9 bytes. Both
+directions round-trip byte-identically and the sibling's verifier accepts a PC
+save. **Next step:** the owner loads the converted JP and US saves
+([`USER_CHECKS.md`](USER_CHECKS.md)).
 
 **Ask (2026-09-18, moved here from the order of work 2026-09-19):** convert a
 save between the PlayStation release and the PC port, in at least one direction.
@@ -95,7 +100,7 @@ Make a PC save, locate the 164-byte records in it by value, diff against the
 sibling's documented PSX layout.
 
 ### Outcome
-_open_
+_open — tool exists, in-game load pending._
 
 ## I2 — Selectable localisations from original discs
 

@@ -24,17 +24,14 @@ deterministic attract-mode regression check passes original-vs-ours. See
 
 The single next action, concrete enough to start without asking anyone.
 
-1. **Owner, in game: one save and one load through the launcher.** The file
-   layer is all ours ([`asset-loading-path.md`](asset-loading-path.md) §1) and
-   the attract check covers open/read/size/close, but `File_Write` and
-   `File_Seek` are only reached by saving and loading. Expect
-   `first call File_Write(handle=…, size=4784)` and `first call File_Seek` in
-   `build/bof3x.log`, a 4,784-byte file, and the save loading back. Same
-   session, if convenient: **DIV-0003's failing case** — set the read-only
-   attribute on an existing `BISLPS0?.DAT` (simplest way to make `fopen "wb"`
-   fail on Windows; a read-only *directory* attribute does not), save over
-   that slot, and note what the menu shows; then the same
-   under `BOF3X_ORIGINAL=File_OpenWrite`, which by reading should fault.
+1. **Owner, in game: [`USER_CHECKS.md`](USER_CHECKS.md).** Four checks only a
+   player can run, most valuable first: load the two converted PlayStation
+   saves (`bof3/BISLPS02.DAT` JP, `03` US —
+   [`save-interchange.md`](save-interchange.md)); a save and load through the
+   now fully-ours file layer; DIV-0003's failing case; DIV-0002's clean A/B.
+   Whatever the converted saves do on load decides the next step of I1: if
+   they load clean, read the PC block builder `0x5806F0` and the options bytes
+   at block `+0x78`; if not, the symptom says which assumption was wrong.
 2. **`LoadDatFile` `0x454590` itself** — it is fully read for kinds 0 and
    1, and blocked on `0x587CD0` (kind 2), `0x5A6800` (kind 3) and `0x59EA70`
    (image upload) only for their *signatures*, which can be bound as originals.
@@ -63,9 +60,8 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
    window title is GBK bytes passed to `CreateWindowExA`, so it is mojibake on
    a non-Chinese system locale — seen in the owner's screenshots 2026-09-19).
 
-The game runs, so [`IDEAS.md`](IDEAS.md) **I1, save interchange**, is available
-whenever a visible win is wanted — and `0x454870`, the file layer's only
-writer, is probably where it starts.
+[`IDEAS.md`](IDEAS.md) **I1, save interchange**, is under way: format solved,
+`tools/save_convert.py` converts both ways, in-game load pending (item 1).
 
 ## How to run things
 
@@ -87,6 +83,10 @@ _Commands a fresh session needs, verified on the date above._
   `python tools/attract_diff.py ref.tsv new.tsv` — exit 0 means identical
   `Rand` count, message and area at every frame
   ([`attract-mode.md`](attract-mode.md) §6).
+- Saves: `python tools/save_convert.py list CARD.mcr` / `info` / `psx2pc` /
+  `pc2psx` — usage in the file's docstring. In Git Bash pass Windows-style
+  paths (`cygpath -m`): a `/c/...` path inside a `CARD:SLOT` argument is not
+  translated.
 - DAT containers: `python tools/dat.py survey ../bof3ext/bof3/DAT` (expect
   742 clean); `list` / `extract --out analysis/dat/<name>` / `compare <DAT> <EMI>`
 - Fixtures check: `python tools/verify_fixtures.py`
@@ -121,12 +121,12 @@ keeping. "Nothing" is a valid entry._
 
 Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; nothing uncommitted. No PR open yet.
 
-Owed on DIV-0002: reproduce the vanishing save under `BOF3X_ORIGINAL=*`.
-Owed on DIV-0003: the failing case has never been run, original or ours.
+Owed in game, all listed in [`USER_CHECKS.md`](USER_CHECKS.md): the converted
+saves, the file layer's write/seek, DIV-0003's failing case, DIV-0002's A/B.
 
 Local only, gitignored, worth keeping: `bof3/BOF3.CFG` (windowed mode); three
-saves `bof3/BISLPS00/01/0F.DAT` — the first PC saves we have, the raw material
-for [`IDEAS.md`](IDEAS.md) I1; and `analysis/attract/` — `orig_a.tsv` is a
+saves `bof3/BISLPS00/01/0F.DAT` — the owner's own PC saves — plus `02` (JP)
+and `03` (US), converted from the sibling's cards by `save_convert.py`; and `analysis/attract/` — `orig_a.tsv` is a
 valid all-original reference recording for `attract_diff.py`, and
 `ours_d_fileopen.log` is the file-open log behind
 [`attract-mode.md`](attract-mode.md) §7.

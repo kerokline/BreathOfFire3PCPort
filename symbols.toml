@@ -439,9 +439,9 @@ note = "Ours since 2026-09-19 WITH A FIX, docs/DIVERGENCE.md DIV-0003: a failed 
 pc = 0x454820
 name = "Save_ReadFile"
 ret = "int"
-params = "const char *path, int offset, unsigned size"
+params = "const char *path, unsigned size, int offset"
 status = "evidence"
-evidence = "disasm 2026-09-19: File_Open(path, 0, 0), -1 on failure; File_Seek(h, offset); File_Read(h, Save_Staging, size); File_Close; returns 0. Two call sites (E8 scan): 0x58841E and 0x588E3C."
+evidence = "disasm 2026-09-19: File_Open(path, 0, 0), -1 on failure; File_Seek(h, offset); File_Read(h, Save_Staging, size); File_Close; returns 0. ARGUMENT ORDER IS (path, size, offset): after its one push esi the seek takes [esp+0x10], the third argument, and the read - two uncleaned pushes later - takes [esp+0x14], the second. Corrected 2026-09-19; the first reading had them swapped. Confirmed by data: Save_ReadSummaries pushes 0xCA0 then 0x1C, and 0xCA0 is where the 0x1C-byte slot summary sits in every save on hand. Two call sites (E8 scan): 0x58841E and 0x588E3C."
 
 [[func]]
 pc = 0x454870

@@ -61,6 +61,12 @@ What is established:
   Original-vs-ours already compares identical
   ([`attract-mode.md`](attract-mode.md)). Reach is two field scenes; no battle
   or menu yet.
+- **The PC save format is solved** ([`save-interchange.md`](save-interchange.md)):
+  the PSX `0x10B0`-byte game block from file offset 0, same checksum rule, same
+  field offsets, with the character-record name widened 5→9 bytes and later
+  record fields +4. `tools/save_convert.py` converts both ways; round trip is
+  byte-identical and the sibling's verifier accepts a PC save. **Not yet loaded
+  in either game.**
 - 40 functions, 8 global blocks and 12 data items named in
   [`symbols.toml`](../symbols.toml), tiered; 24 functions carry signatures and
   are callable from our code, 9 of them ours (counted 2026-09-19 from the
