@@ -639,7 +639,7 @@ ret = "void"
 params = "void *owned_glyphs, unsigned size_unused"
 status = "evidence"
 evidence = "disasm 2026-09-19, 10 instructions: frees the pointer at 0x7CC35C if non-null, then stores its first argument there. The second argument is never read. The pointer's only other reader is 0x5A2CA0, which addresses it as base + index*0x120 with 0x18 / 0x18 constants alongside: 288-byte glyphs, 24 x 24 at 4 bits per pixel. Exactly one kind-3 chunk exists in the shipped data - FIRST.DAT, 705,888 bytes = 2,451 glyphs of 288 (census 2026-09-19)."
-note = "The port's Chinese font, loaded once at boot. The pixel format (4 bpp) is inferred from 288 = 24*24/2 and is the one part of this not read from code."
+note = "The port's Chinese font, loaded once at boot. 4 bits per pixel confirmed from the unpacker 0x5A9E1E (disasm 2026-09-19): lodsd, then eight nibbles low first, each written through a 16-entry table of 16-bit colours; row counter 0x18, column counter 0x18."
 
 [[func]]
 pc = 0x5B9380

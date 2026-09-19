@@ -171,8 +171,16 @@ textures. **The cell is exactly double the PSX one** (owner, 2026-09-19): the
 JP build draws 12 px glyph cells at a flat 12 px advance
 (`../BreathOfFire3Recomp/docs/TEXT_ENGINE.md`), and the port renders 640 x 480
 against the PSX's 320 x 240, so 24 x 24 keeps text the same size on screen at
-twice the resolution. Whether the glyphs were drawn at 24 px or scaled up from
-something is not known; nor is the pixel format read from code (`0x5A2CA0`).
+twice the resolution. **The pixel format is 4 bits per pixel, read from code 2026-09-19:** the glyph
+draw `0x5A2CA0` locks a DirectDraw surface (vtable `+0x64`), calls the unpacker
+`0x5A9E1E(dst, glyph, palette, pitch)`, unlocks (`+0x80`) and blits (`+0x14`).
+The unpacker takes the glyph a dword at a time — eight pixels, **low nibble
+first** — and writes each nibble through a **16-entry table of 16-bit colours**;
+24 pixels a row (three dwords), 24 rows: 288 bytes. Sixteen levels means the
+glyphs can carry anti-aliasing, where the PSX's are palette-indexed texture
+cells. A second code path, taken when byte `0x7DED63` is 4, is unread
+(by position: a 32-bit display). Whether the glyph art was drawn at 24 px or
+scaled up from something is not known.
 For [`STATUS.md`](STATUS.md)'s localisation goal it means the PC text
 path draws from this table, not from the 32 KB atlas the PSX builds use.
 
