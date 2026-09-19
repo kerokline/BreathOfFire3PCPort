@@ -42,6 +42,10 @@ void LogClose() {
     g_log = INVALID_HANDLE_VALUE;
 }
 
+void LogFlush() {
+    if (g_log != INVALID_HANDLE_VALUE) FlushFileBuffers(g_log);
+}
+
 void Log(const char* fmt, ...) {
     char buf[1024];
     va_list ap;
