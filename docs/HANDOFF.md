@@ -14,8 +14,8 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, nine
-functions are ours (the whole eight-function file layer, with DIV-0003 in
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, ten
+functions are ours (`LoadDatFile`; the whole eight-function file layer, with DIV-0003 in
 `File_OpenWrite`; `Save_WriteFile` with DIV-0002), the A/B switch works, and a
 deterministic attract-mode regression check passes original-vs-ours. See
 [`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
@@ -32,12 +32,15 @@ The single next action, concrete enough to start without asking anyone.
    Whatever the converted saves do on load decides the next step of I1: if
    they load clean, read the PC block builder `0x5806F0` and the options bytes
    at block `+0x78`; if not, the symptom says which assumption was wrong.
-2. **`LoadDatFile` `0x454590` itself** — it is fully read for kinds 0 and
-   1, and blocked on `0x587CD0` (kind 2), `0x5A6800` (kind 3) and `0x59EA70`
-   (image upload) only for their *signatures*, which can be bound as originals.
-   Its output is checkable in bytes: dump the arena at `0x803580` after a load
-   with ours and with `BOF3X_ORIGINAL=LoadDatFile` and diff. Mind the 16 KB
-   coroutine stack ([`SCAFFOLDING.md`](SCAFFOLDING.md) §3, "Hazard").
+2. **Below `LoadDatFile`: its three sinks.** `LoadDatFile` `0x454590` is ours
+   and attract-checked (2026-09-19). Its callees are bound from their call
+   sites only — `Gfx_LoadImage` `0x59EA70`, `Snd_LoadBankChunk` `0x587CD0`,
+   `Dat_Kind3Sink` `0x5A6800`, all hypothesis tier. Reading `0x59EA70` is the
+   first step into the DirectDraw presentation layer
+   ([`IDEAS.md`](IDEAS.md) I8); `0x5A6800` settles what kind 3 *is*. Not yet
+   done for `LoadDatFile`: the byte-level arena diff (dump `0x803580` after a
+   load, ours vs `BOF3X_ORIGINAL=LoadDatFile`). The attract check plus two
+   screenshots passed, but neither compares arena bytes.
 
 ## Then
 

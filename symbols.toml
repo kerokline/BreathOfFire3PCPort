@@ -72,6 +72,7 @@ psx = 0x80010000
 delta = 0x807F3580
 status = "evidence"
 evidence = "Script pool base 0x803580 read by Msg_OpenScript 0x4976D0 as ptr = base + u16[base + 2*id]; system pool base 0x807580 read by Msg_SystemPtr 0x497740. The two pools sit 0x4000 apart in both binaries (PSX 0x80010000 / 0x80014000), so one delta covers both (2026-09-18)."
+note = "Also the base of the DAT arena: LoadDatFile 0x454590 copies every kind-0 payload to 0x803580 + tag (disasm 2026-09-19), so this block is the port's image of PSX RAM from 0x80010000, of which the message pools are the first part. The arena's size is unread; the highest tag + size over every kind-0 chunk in the 742 shipped DAT files is 0xE0C4C (MAGIC134.DAT, measured 2026-09-19). One address, one symbol: src/game/dat_load.cpp addresses the arena through this constant."
 
 [[block]]
 name = "CharacterRecords"
@@ -388,6 +389,7 @@ pc = 0x454590
 name = "LoadDatFile"
 ret = "void"
 params = "int file_index"
+impl = "src/game/dat_load.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-19: name = u32[0x64F368 + 4*index], return if null; sprintf(path, the DAT-directory format string at 0x652894, name); File_Open; File_Size; buffer = 0x5B9660(size); File_Read whole file; File_Close; then walks 16-byte chunk headers — s8 kind at +0, u32 at +4, u32 size at +8, payload at +0x10 — dispatching kind 0..3 through the jump table at 0x454758. Matches the container DAT_CONTAINER.md derived from the files alone. 32 callers."
 note = "Name from bof3ext (cited, CLAUDE.md rule 5). hypothesis only for the return type and the full chunk-kind semantics, which docs/asset-loading-path.md is still reading; the address and the role are solid."
@@ -581,6 +583,61 @@ ctype = "char"
 count = 4
 status = "evidence"
 evidence = "bytes 2026-09-19: 43 3A 5C 00 (C, colon, backslash, NUL) at 0x66BC2C, immediately followed at 0x66BC30 by the two-string format File_Open uses, so the buffer is 4 bytes. 6 references (pe_xref): File_CdRoot 0x5A7370 returns it, File_Open 0x5A7380 prepends it, and 0x5A72C0 is its only writer - it overwrites byte 0 with each letter C..L in turn looking for a CD-ROM drive (GetDriveTypeA == 5) on which its path argument opens, or stores 0 there when the path opens bare."
+
+[[data]]
+pc = 0x64F368
+name = "Dat_FileNames"
+ctype = "const char *"
+count = 799
+status = "evidence"
+evidence = "bytes 2026-09-19: 799 dwords from 0x64F368, each either 0 (57 of them) or a pointer into 0x64FFE4..0x652888; the table ends exactly where the first pointed-to string begins (0x64FFE4). LoadDatFile 0x454590 indexes it by its argument and returns at once on a null entry."
+
+[[data]]
+pc = 0x9035A0
+name = "Dat_ClearedByTag10000"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-19: LoadDatFile kind 0 zeroes this byte when it is non-zero and the chunk tag is exactly 0x10000, before copying. 15 references in 5 functions (pe_xref): 0x416020, 0x454590, 0x461F00, 0x4A29C0, 0x5894D0. Meaning unread; named for the one behaviour that is."
+
+[[func]]
+pc = 0x5B9660
+name = "Crt_malloc"
+ret = "void *"
+params = "unsigned size"
+status = "evidence"
+evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode)."
+
+[[func]]
+pc = 0x5B9577
+name = "Crt_free"
+ret = "void"
+params = "void *ptr"
+status = "evidence"
+evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc."
+
+[[func]]
+pc = 0x59EA70
+name = "Gfx_LoadImage"
+ret = "void"
+params = "const short *rect, const void *pixels"
+status = "hypothesis"
+evidence = "Signature from its call site in LoadDatFile 0x4546B9 only: first argument the address of four s16 (x, y, 0x20, 0x20), second a pointer to 0x800 bytes of payload - the shape of the PSX LoadImage(RECT*, u_long*). Body unread; return value unknown and ignored by this caller."
+
+[[func]]
+pc = 0x587CD0
+name = "Snd_LoadBankChunk"
+ret = "void"
+params = "unsigned tag, const void *payload, unsigned size"
+status = "hypothesis"
+evidence = "Signature from its call site in LoadDatFile 0x454704 only (kind-2 chunks: tag, payload pointer, payload size). Body unread; return value unknown and ignored by this caller."
+
+[[func]]
+pc = 0x5A6800
+name = "Dat_Kind3Sink"
+ret = "void"
+params = "void *owned_copy, unsigned size"
+status = "hypothesis"
+evidence = "Signature from its call site in LoadDatFile 0x45472B only: a freshly malloc'd copy of a kind-3 payload and its size (the size is the dword pushed for malloc and left on the stack). LoadDatFile never frees the copy, so ownership passes here. Body unread."
 
 [[func]]
 pc = 0x5B9380

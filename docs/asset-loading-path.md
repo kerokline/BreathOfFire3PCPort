@@ -107,15 +107,20 @@ invented the filename convention, is a sibling-side question.
 
 ## 2. `LoadDatFile` `0x454590`
 
-`void LoadDatFile(int file_index)` — 477 bytes, 32 callers.
+`void LoadDatFile(int file_index)` — 477 bytes, 32 callers. **Ours since
+2026-09-19** (`src/game/dat_load.cpp`), faithful, including the original's
+missing checks; its three callees for kinds 1-3 are bound as originals with
+signatures taken from these call sites only (hypothesis tier).
 
 1. `name = u32[0x64F368 + 4*index]`; return if null. (`0x64F368`, file offset `0x24F368`,
-   is a table of `char*`; the name strings [`HANDOFF.md`](HANDOFF.md) located at
-   file offset `0x24FFE4` sit just after it and are presumably what it points
-   into — not yet checked entry by entry.)
+   is a table of `char*`: **799 entries, 57 of them null**, every other one
+   pointing into `0x64FFE4`..`0x652888`, and the table ends exactly where the
+   first string begins — checked entry by entry 2026-09-19. The path buffer
+   is 0x28 bytes on the stack, unchecked.)
 2. `sprintf(path, <DAT-directory format at 0x652894>, name)`.
 3. `File_Open`; return on −1. `File_Size`; allocate that many bytes
-   (`0x5B9660`, CRT `malloc` by role — unread); `File_Read` **the whole file**;
+   (`0x5B9660`, MSVC6 `malloc` — read 2026-09-19, `symbols.toml`; the result
+   is not null-checked); `File_Read` **the whole file**;
    `File_Close`.
 4. Walk chunks until the offset reaches the file size. Header fields used:
    `s8 kind` at +0 (sign-extended, compared unsigned against 3), `u32 tag` at

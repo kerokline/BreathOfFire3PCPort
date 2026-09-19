@@ -15,7 +15,8 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Nine functions of ~2,952 are ours**: the whole file layer
+**Ten functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
 lacks (DIV-0003, not yet exercised in game) — and `Save_WriteFile`, which
@@ -67,9 +68,9 @@ What is established:
   record fields +4. `tools/save_convert.py` converts both ways; round trip is
   byte-identical and the sibling's verifier accepts a PC save. **Not yet loaded
   in either game.**
-- 40 functions, 8 global blocks and 12 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 24 functions carry signatures and
-  are callable from our code, 9 of them ours (counted 2026-09-19 from the
+- 45 functions, 8 global blocks and 14 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 29 functions carry signatures and
+  are callable from our code, 10 of them ours (counted 2026-09-19 from the
   file, not from memory).
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
