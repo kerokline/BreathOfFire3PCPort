@@ -7,15 +7,16 @@ reach source that can be changed and extended.
 **Read at session start:**
 
 1. This file.
-2. [`docs/PLAN.md`](docs/PLAN.md) — the whole project right now. Target
-   analysis, the three candidate architectures and why C won, the phased path.
-3. [`docs/DIVERGENCE.md`](docs/DIVERGENCE.md) — the ledger. Read before changing
+2. [`docs/STATUS.md`](docs/STATUS.md) — what is true today, and
+   [`docs/HANDOFF.md`](docs/HANDOFF.md) — what to pick up next.
+3. [`docs/PLAN.md`](docs/PLAN.md) — what we intend and why. Target analysis, the
+   three candidate architectures and why C won, the phased path.
+4. [`docs/DIVERGENCE.md`](docs/DIVERGENCE.md) — the ledger. Read before changing
    any game behaviour.
-4. [`docs/README.md`](docs/README.md) — where notes you produce go.
+5. [`docs/README.md`](docs/README.md) — where notes you produce go.
 
-**Status: scoping. There is no code yet.** The plan is contingent on an
-experiment that has not been run (PLAN §8 step 2). Do not start phase 0 work on
-the assumption that phase 1 will succeed.
+Status is deliberately **not** restated here — it went stale within a day the
+one time it was. `STATUS.md` is authoritative.
 
 ## The one distinction that governs everything
 
@@ -76,7 +77,7 @@ may be exactly right here — **provided it is in the ledger.**
 
 | Path | What it is |
 |---|---|
-| `../BreathOfFire3Recomp` | The archival sibling. Source of ~30k mapped functions, `names/*.toml`, `symbols.toml`, and `docs/PC_PORT_CROSS_REFERENCE.md` — read that one early. |
+| `../BreathOfFire3Recomp` | The archival sibling. Source of the PSX name corpus (~677 names, counted in `docs/overlay-transfer-feasibility.md`), `names/*.toml`, `symbols.toml`, and `docs/PC_PORT_CROSS_REFERENCE.md` — read that one early. |
 | `../bof3ext` | TheRealBiggs' hook layer — a **peer** derivative of the same Capcom binary. `src/bof3/*.ixx` cross-checks our symbol table; `docs/` is unusually good. Reference only (rule 5). |
 | `../bof3ext_resources` | 360 files of translated text, fonts, HD textures. Reference only (rule 5). |
 
@@ -91,13 +92,17 @@ may be exactly right here — **provided it is in the ledger.**
   packages. Run Python tooling *before* prepending, or call Anaconda by absolute
   path. (Learned the hard way in the sibling repo.)
 
+- Ghidra is at `D:\Utilities\ghidra_12.1.3_PUBLIC`, projects in
+  `D:\Utilities\GhidraProjects` (project `BoF3PC`, kept separate from the
+  sibling's `BoF3`). Override with `PC_GHIDRA_DIR` / `PC_GHIDRA_PROJECT_DIR`.
+
 ## Conventions for agents
 
 - Findings go in `docs/` — see [`docs/README.md`](docs/README.md) for naming,
   status headers, and the evidence rule.
-- Project status lives in `docs/PLAN.md` (and `docs/STATUS.md` once there is
-  status to track). This file changes only when the *rules or shape* of the repo
-  change.
+- Project status lives in `docs/STATUS.md`; next actions in `docs/HANDOFF.md`;
+  unscheduled proposals in `docs/IDEAS.md`. This file changes only when the
+  *rules or shape* of the repo change.
 - **Evidence over assertion.** A claim about the binary cites the measurement
   that produced it. This is inherited from the sibling and survives the
   archival/living split intact — the living project still needs to know what is

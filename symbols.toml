@@ -236,3 +236,40 @@ psx = 0x801EAF70
 name = "Battle_HolyAffinityTable"
 status = "evidence"
 evidence = "Read from .data 2026-09-18: s16 x8 = 300, 200, 200, 150, 125, 100, 50, 0 — byte-identical to the PSX table. Sole reference is Battle_ScaleDamage 0x446430, matching the PSX side where the holy lookup is inlined into that function. Adjacent to Battle_DamageVarianceTable in both binaries, in the same order."
+
+# ---------------------------------------------------------------------------
+# FMV playback
+#
+# Porting-house code: the PlayStation release has no AVI (its FMV is STR
+# through the MDEC), so nothing here transfers from the PSX side and no `psx`
+# field is possible. Established 2026-09-19, docs/replacing-mci.md.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x59E360
+name = "Fmv_Play"
+args = ["filename", "hwnd", "fullscreen"]
+status = "evidence"
+evidence = "disasm 2026-09-19: sprintf + mciSendStringA 'open avivideo!%s alias vfw', retrying with the CD-root prefix from 0x5A7370 on failure; Fmv_EnterFullscreen 0x59E4F0; SetWindowLongA(hwnd, GWL_WNDPROC, Fmv_WndProc 0x59E570); 'window vfw handle %d'; 'put vfw destination at 0 0 640 480'; 'play vfw window from 0 notify'; sets 0x6BE1C8 = 1; blocking GetMessageA/TranslateMessage/DispatchMessage loop until 0x6BE1C8 clears; 'stop vfw wait'; 'close vfw wait'; restores the WndProc, Releases the FMV DirectDraw object at 0x6BE1CC, SetWindowPos, restores GWL_STYLE from 0x6BE1C4. Sole holder of all seven MCI command strings (pe_xref.py: one reference each, all inside this function)."
+note = "The only MCI caller in the binary. Two call sites, both in 0x4FCB00 (CAPCOM.AVI at 0x4FCD0F, LOGOS.AVI at 0x4FCD26). Modal and blocking — the game's main loop does not run during playback."
+
+[[func]]
+pc = 0x59E4F0
+name = "Fmv_EnterFullscreen"
+args = ["hwnd"]
+status = "evidence"
+evidence = "disasm 2026-09-19: SetWindowLongA(hwnd, GWL_STYLE, WS_POPUP) saving the old style to 0x6BE1C4; DirectDrawCreate(NULL, &0x6BE1CC, NULL) via 0x5ACBB0; vtable +0x50 SetCooperativeLevel(hwnd, 0x11 = DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN); vtable +0x54 SetDisplayMode(0x280, 0x1E0, 0x10); SetWindowPos(0, 0, 640, 480, SWP_SHOWWINDOW). Returns 1 on success, 0 on any failure."
+note = "Creates a SECOND DirectDraw object, separate from the game's — FMV does not composite with the renderer. The exclusive-fullscreen 640x480x16 mode-set here is the most fragile operation in the program on a compositing desktop, and it runs twice before the title screen (docs/replacing-mci.md section 6)."
+
+[[func]]
+pc = 0x59E570
+name = "Fmv_WndProc"
+status = "evidence"
+evidence = "disasm 2026-09-19: WM_KEYDOWN (0x100) and WM_LBUTTONDOWN (0x201) clear the playing flag 0x6BE1C8 — the skip path; WM_ACTIVATEAPP (0x1C) with wParam != 0 calls SetFocus(hwnd) then mciSendStringA('resume vfw'); WM_DESTROY (0x2) handled; everything else falls through to the saved procedure. Installed and removed by Fmv_Play 0x59E360."
+
+[[data]]
+pc = 0x6BE1C8
+name = "Fmv_Playing"
+status = "evidence"
+evidence = "Byte. Cleared at Fmv_Play 0x59E360 entry, set to 1 immediately after 'play vfw window from 0 notify', and the sole loop condition of the modal message pump. Cleared by Fmv_WndProc 0x59E570 on key or click (2026-09-19)."
+note = "Adjacent to Fmv_SavedStyle 0x6BE1C4 and Fmv_DDraw 0x6BE1CC; the three look like one small state block."
