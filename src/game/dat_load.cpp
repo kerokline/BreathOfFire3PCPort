@@ -95,7 +95,7 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
 
         switch (h.kind) {
         case 0:
-            if (Dat_ClearedByTag10000 && h.tag == 0x10000) Dat_ClearedByTag10000 = 0;
+            if (Gfx_UploadQueueCount && h.tag == 0x10000) Gfx_UploadQueueCount = 0;
             std::memcpy(Arena() + h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         case 1:

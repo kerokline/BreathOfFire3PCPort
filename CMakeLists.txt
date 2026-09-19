@@ -50,7 +50,8 @@ add_library(bof3x SHARED
   src/hook/inject_all.cpp
   src/game/file_io.cpp
   src/game/save_io.cpp
-  src/game/dat_load.cpp)
+  src/game/dat_load.cpp
+  src/game/gfx_frame.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

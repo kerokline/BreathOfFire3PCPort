@@ -592,13 +592,6 @@ count = 799
 status = "evidence"
 evidence = "bytes 2026-09-19: 799 dwords from 0x64F368, each either 0 (57 of them) or a pointer into 0x64FFE4..0x652888; the table ends exactly where the first pointed-to string begins (0x64FFE4). LoadDatFile 0x454590 indexes it by its argument and returns at once on a null entry."
 
-[[data]]
-pc = 0x9035A0
-name = "Dat_ClearedByTag10000"
-ctype = "unsigned char"
-status = "evidence"
-evidence = "disasm 2026-09-19: LoadDatFile kind 0 zeroes this byte when it is non-zero and the chunk tag is exactly 0x10000, before copying. 15 references in 5 functions (pe_xref): 0x416020, 0x454590, 0x461F00, 0x4A29C0, 0x5894D0. Meaning unread; named for the one behaviour that is."
-
 [[func]]
 pc = 0x5B9660
 name = "Crt_malloc"
@@ -623,6 +616,142 @@ params = "const short *rect, const void *pixels"
 status = "evidence"
 evidence = "disasm 2026-09-19: rect is four s16 (x, y, w, h). Does nothing at all if x + w > 0x400 or y + h > 0x200. Otherwise copies h rows of w*2 bytes from pixels into a 16-bit 1024 x 512 buffer at 0x6C9F44, row stride 0x800 bytes, destination (y*1024 + x)*2 - a shadow of PSX VRAM - then calls 0x59E700(rect, 0). The PC counterpart of the PSX LoadImage(RECT*, u_long*). Its neighbour 0x59EB00 is the same with a row-by-row compare first."
 note = "0x59E700(rect, mode) walks the 32 PSX-style texture pages (64 x 256 each, 16 across, 2 down), IntersectRect (USER32, import slot 0x5C4168) against the rect, and for each touched page visits 32 cache entries of 0x18 bytes in a table at 0x6C3F40 (32 pages x 32 = 1024 entries, ending 4 bytes short of the VRAM shadow): mode 0 calls Release (vtable +8) on the two COM pointers at entry +0x10 and +0x14 and zeroes the entry; mode non-zero only turns state 1 into state 2. So textures are built lazily from the VRAM shadow and thrown away when the VRAM under them changes."
+
+[[data]]
+pc = 0x9035A0
+name = "Gfx_UploadQueueCount"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-19: the loop bound of Gfx_FlushUploadQueue 0x461F00, zeroed by it after draining; incremented with no comparison by the two enqueuers 0x5894D0 and 0x416020; decremented by 0x4A29C0 to cancel an entry; zeroed by LoadDatFile at 0x454634 when it is non-zero and the chunk tag is exactly 0x10000 (this byte was first named Dat_ClearedByTag10000, for that one behaviour, before the queue was read). pe_xref.py lists 15 references in those five functions and no others."
+note = "0x1F020 bytes above the unpack scratch base 0x8E4580, so an overrunning flush overwrites its own loop bound (docs/known-defects.md D4)."
+
+[[data]]
+pc = 0x903680
+name = "Gfx_UploadQueueX"
+ctype = "unsigned short"
+count = 20
+status = "evidence"
+evidence = "disasm 2026-09-19: word array indexed by the queue count in 0x5894D0, 0x416020, 0x4A29C0 and read by Gfx_FlushUploadQueue as the rect x. The count of 20 is the distance to Gfx_UploadQueueY, 40 bytes on; no code checks it."
+
+[[data]]
+pc = 0x9036A8
+name = "Gfx_UploadQueueY"
+ctype = "unsigned short"
+count = 20
+status = "evidence"
+evidence = "disasm 2026-09-19: as Gfx_UploadQueueX, the rect y. Length assumed equal to X's; what follows it is unread."
+
+[[data]]
+pc = 0x92BF20
+name = "Gfx_UploadQueueRecord"
+ctype = "const unsigned char *"
+count = 20
+status = "evidence"
+evidence = "disasm 2026-09-19: dword array indexed by the queue count in the same functions; Gfx_FlushUploadQueue reads w, h (s16) and a kind dword from the record, pixels from +8. Length assumed equal to X's."
+
+[[data]]
+pc = 0x937F88
+name = "Sprite_Current"
+ctype = "unsigned char *"
+status = "hypothesis"
+evidence = "disasm 2026-09-19: pointer loaded by 0x5894D0 and 0x4A29C0 as the object being animated. Fields used by 0x5894D0: +0x00 flags (bit 1 = no upload), +0x25 texture slot, +0x26 y, +0x2A a byte from the frame entry, +0x4C pointer to the sprite's animation data, +0x50 a pointer into that data. What the object is beyond that is unread - hence hypothesis for the name."
+
+[[data]]
+pc = 0x905B89
+name = "Gfx_BufferIndex"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-19: WinMain flips it once per logic frame (xor al, 1 at 0x4FCF47) and Gfx_BeginFrame 0x4FD230 indexes three per-buffer tables by it. It is the byte tools/attract_watch.py counts frames by."
+
+[[data]]
+pc = 0x7E0670
+name = "Gfx_PacketNext"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_BeginFrame sets it to 0x7E1C00 + (Gfx_BufferIndex << 16) - the start of this buffer's 64 KB primitive pool. PSX idiom: the GPU packet bump pointer."
+
+[[data]]
+pc = 0x7E1C00
+name = "Gfx_PacketPools"
+ctype = "unsigned char"
+count = 0x20000
+status = "evidence"
+evidence = "disasm 2026-09-19: base of the two 0x10000-byte pools Gfx_BeginFrame selects between. Extent is 2 x the shift, not measured."
+
+[[data]]
+pc = 0x929EA0
+name = "Gfx_OtPointers"
+ctype = "unsigned long *"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_BeginFrame fills dwords 0x929EA0..0x929EBC with 0x9037C0 + (Gfx_BufferIndex << 5) + 4k, k = 0..7."
+
+[[data]]
+pc = 0x9037C0
+name = "Gfx_OtHeads"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "disasm 2026-09-19: the 2 x 8 dwords Gfx_OtPointers is aimed at. Inside the range D4's overrun destroys."
+
+[[data]]
+pc = 0x8022C0
+name = "Gfx_FrameNodes"
+ctype = "unsigned long"
+status = "hypothesis"
+evidence = "disasm 2026-09-19: Gfx_BeginFrame walks 0x38 records of 0x30 bytes from 0x8022C0 + Gfx_BufferIndex*8, storing 0 at +0 and the record's own address at +4. What the records are is unread; the name says only where they are reset."
+
+[[data]]
+pc = 0x929EDC
+name = "Gfx_UnpackNext"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "disasm 2026-09-19: bump pointer of the image-unpack scratch. Reset to 0x8E4580 by Gfx_BeginFrame; read and advanced by the unpackers 0x461FC0 and 0x462070 only (pe_xref.py, 9 references in those three functions)."
+
+[[data]]
+pc = 0x8E4580
+name = "Gfx_UnpackScratch"
+ctype = "unsigned char"
+count = 0x1F020
+status = "evidence"
+evidence = "disasm 2026-09-19: the constant Gfx_BeginFrame stores to Gfx_UnpackNext; 0x416020 also builds an upload record here. The count is the distance to Gfx_UploadQueueCount 0x9035A0, the first known global above it, not a size read from code - no code checks it (docs/known-defects.md D4)."
+
+[[func]]
+pc = 0x4FD230
+name = "Gfx_BeginFrame"
+ret = "void"
+params = "void"
+impl = "src/game/gfx_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19, whole function 0x4FD230..0x4FD28B: b = Gfx_BufferIndex; Gfx_PacketNext = 0x7E1C00 + (b << 16); the eight Gfx_OtPointers = 0x9037C0 + (b << 5) + 4k; 0x38 records of 0x30 bytes from 0x8022C0 + 8b get {0, own address}; Gfx_UnpackNext = 0x8E4580. Callers: WinMain at 0x4FCF70, once per logic frame immediately before the pause test and Task_RunAll, and the initialiser 0x4FD110. Call trace: 4,098 calls in 4,096 frames."
+note = "Ours carries DIV-0004: it drains a non-empty upload queue first. Name is descriptive, not recovered."
+
+[[func]]
+pc = 0x461F00
+name = "Gfx_FlushUploadQueue"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-19: for i in 0..byte[0x9035A0]: x = s16[0x903680 + 2i], y = s16[0x9036A8 + 2i], p = dword[0x92BF20 + 4i]; reads w, h (two s16) and a kind dword from p, builds the rect {x, y, w, h} on the stack and calls 0x461FC0(p + 8, rect) for kind 1, 0x462070 for kind 2, a third path otherwise; then zeroes the count byte. 0x461FC0 unpacks dwords of six 5-bit fields into the buffer at [0x929EDC] and calls Gfx_LoadImage (return address 0x462047, call trace). Sole caller 0x4FCE5F, in WinMain's loop, inside the branch taken only when GetTickCount is still below the frame deadline at 0x6BC628 - the same branch that calls the draw 0x59EE50. Call trace 2026-09-19: 1200 calls in 3072 logic frames, identical to 0x59EE50's count, 1158 in a slower run."
+note = "So an image upload queued by game logic reaches the VRAM shadow on the next RENDERED frame, and which logic frame that is depends on wall-clock time (docs/call-trace.md section 6). Compare the VRAM shadow only when the count byte 0x9035A0 and the flag 0x937F90 are both zero."
+
+[[func]]
+pc = 0x5894D0
+name = "Sprite_SetFrameQueueUpload"
+ret = "unsigned char *"
+params = "unsigned frame"
+status = "evidence"
+evidence = "disasm 2026-09-19, whole function 0x5894D0..0x58958C: obj = Sprite_Current, data = dword[obj+0x4C]; images = data + dword[data], table8 = data + dword[data+8], entry = data + dword[data+0xC] + 3*(frame & 0xFF). Unless byte[obj] & 2: slot = byte[obj+0x25]; x = (slot > 0x10 ? slot - 0x10 : slot) << 6 and y = byte[obj+0x26] (+ 0x100 when slot > 0x10), stored at the queue count's index with record = images + dword[images + 4*entry[0]]; count++ with no bound. Always: byte[obj+0x2A] = entry[2]; dword[obj+0x50] = table8 + word[table8 + 2*entry[1]], which is also what is left in eax. Callers 0x589160 and 0x589200 (pc_funcs callees); the call trace saw it only from 0x5892EB."
+note = "Still Capcom's. Name is descriptive, not recovered. The unbounded count++ here is the feed side of docs/known-defects.md D4; the fix, DIV-0004, is on the drain side in Gfx_BeginFrame."
+
+[[func]]
+pc = 0x454960
+name = "Gfx_FlushDirtyStrip"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-19: if byte[0x937F90] is set, calls 0x59EB00 (the compare-first sibling of Gfx_LoadImage) with rect {0, 0x1E0, 0x100, 0x20} and pixels 0x80F580, then clears the byte. Sole caller 0x4FCE5A, the call before Gfx_FlushUploadQueue in the same rendered-frames-only branch of WinMain's loop; same call counts (1200 / 1158)."
+note = "0x80F580 is inside the DAT arena (MessagePools + 0xC000). What the 256 x 32 strip at y = 480 holds is unread."
 
 [[func]]
 pc = 0x587CD0

@@ -262,3 +262,53 @@ designed in rather than bolted on.
   saves to a memory card through the BIOS.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=File_OpenWrite`
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
+
+### Drain queued image uploads on frames that are not rendered
+
+- **ID:** DIV-0004
+- **Date:** 2026-09-19
+- **Subsystem:** platform
+- **Original behaviour:** game logic queues image uploads (sprite animation
+  frames, through `0x5894D0`: `queue[count] = ...; count++`, no bound), and the
+  queue is drained by `Gfx_FlushUploadQueue` `0x461F00` **only in the branch of
+  WinMain's loop that renders**, taken when `GetTickCount` is still below the
+  frame deadline ([`call-trace.md`](call-trace.md) §6). After any stretch of
+  logic frames without rendering the queue holds them all. The arrays have 20
+  slots; the flush unpacks every entry into a bump-allocated scratch buffer
+  with about 127 KB below the next globals. Past either limit it overwrites
+  the draw structures, its own loop bound among them, and the draw that
+  follows faults. **Seen three times 2026-09-19**, the last with
+  `BOF3X_ORIGINAL=*` (crash at `0x59F24F` reading `0x00080000`, caller
+  `0x4FCE74`, identical to the first): leave the game unfocused for about two
+  and a half minutes at a spot with idle animations and click back — the game
+  freezes while unfocused and replays the missed frames unrendered
+  ([`windowed-mode.md`](windowed-mode.md)). Holding the window's title bar does
+  the same with the game focused (queue 6 after 57 s; not taken to the crash).
+  Full record: [`known-defects.md`](known-defects.md) D4.
+- **New behaviour:** our `Gfx_BeginFrame` (`src/game/gfx_frame.cpp`, original
+  `0x4FD230`, WinMain's once-per-logic-frame set-up, otherwise reimplemented
+  faithfully) first calls `Gfx_FlushUploadQueue` if the queue is not empty. On
+  a rendered pass the queue is already empty there and nothing changes. On an
+  unrendered pass the uploads are applied then instead of accumulating: the
+  same uploads, in the same order, by Capcom's own flush, and — as in the
+  original — before the next frame's logic. What can differ is *when* an
+  upload reaches the VRAM shadow relative to wall-clock time, which was
+  already not a function of the frame count.
+- **Rationale:** a bug, not a design choice: nothing in the design wants
+  uploads to wait for a rendered frame, it is simply where the call was put,
+  on a platform where every frame was expected to render. Draining was chosen
+  over bounding the queue (owner, 2026-09-19): a bound has to drop or refuse
+  uploads, draining loses nothing.
+- **Not fixed by this:** the replay of missed time itself (the fast-forward on
+  refocus), the pause on focus loss, the stalled audio while a title bar is
+  held, and the float deadline ([`known-defects.md`](known-defects.md) D5).
+  Each is its own entry if it is changed.
+- **Verification:** attract oracle identical to the all-original reference
+  (7,478 frames); and the reproduction survives — 665 s unfocused, then
+  refocus, queue never above 1, `DIV-0004` logged, no crash (owner,
+  2026-09-19). Runs are listed in [`known-defects.md`](known-defects.md) D4.
+- **Also in the PSX version?** Not applicable as such — the PlayStation cannot
+  lose focus and its `LoadImage` is queued to the GPU. Whether the PSX code
+  has the same unbounded queue is a sibling-side question.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Gfx_BeginFrame`
+  ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
