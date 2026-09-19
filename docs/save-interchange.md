@@ -121,8 +121,9 @@ when the area word changes, walks the entries, and calls `Rand`; it special-
 cases area `0xB6`. A 60-member population with per-member state and names,
 absent early and populated by 42 hours, simulated as the player moves between
 areas — the owner will recognise it faster than the disassembly can name it.
-*(Agent's guess, from memory of the game and therefore worth little: the
-Faerie Village.)* The practical point for the owner's check: **the name-entry
+*(Agent's guess from memory: the Faerie Village. **The owner concurs,
+2026-09-19** — recalls a name changer in the Faerie Village on the PSX. Two
+recollections, not a measurement; the check is to reach it on PC.)* The practical point for the owner's check: **the name-entry
 screen belongs to that mid-game facility, not to New Game and not obviously to
 the ordinary menu**, so not finding it in the first hours means nothing.
 

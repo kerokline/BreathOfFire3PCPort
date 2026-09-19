@@ -85,7 +85,8 @@ Decides how much name conversion matters
 - [ ] The exe's name-entry screen belongs to a **mid-game facility that keeps
       up to 60 named members in the save** (empty in all early saves, 20 in
       the 42-hour US save) and can also rename a party member
-      ([`save-interchange.md`](save-interchange.md) §2a). You will know what
-      that is. When you reach it: does it offer naming, for members and for
+      ([`save-interchange.md`](save-interchange.md) §2a). Owner's and agent's
+      recollection: the **Faerie Village** and its name changer. When you
+      reach it: does it offer naming, for members and for
       party characters, and how many characters does each allow?
 - Result goes to: [`save-interchange.md`](save-interchange.md) §2.
