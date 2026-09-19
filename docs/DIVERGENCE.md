@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; no entries yet — there is no code)
+**Status:** IN PROGRESS (opened 2026-09-18; 1 entry, DIV-0001)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -118,4 +118,59 @@ designed in rather than bolted on.
 
 ## Entries
 
-*None yet.*
+### Re-encode `capcom.avi` from Indeo 5 to Cinepak
+
+- **ID:** DIV-0001
+- **Date:** 2026-09-19
+- **Subsystem:** platform
+- **Original behaviour:** the port plays `capcom.avi` through MCI — `open
+  avivideo!%s alias vfw`, `play vfw window from 0 notify`, `stop vfw wait`
+  (strings in `.rdata`; `WINMM.mciSendStringA` is the only `winmm` import).
+  The file is Indeo Video 5 (`IV50`, 640x480, 15 fps, 113 frames) with a PCM
+  22.05 kHz stereo track. **On Windows Vista and later there is no Indeo
+  decoder**: `ir50_32.dll` is absent and `HKLM\SOFTWARE\WOW6432Node\Microsoft\
+  Windows NT\CurrentVersion\Drivers32` has no `vidc.iv50` entry, Indeo having
+  been dropped after XP and blocked by Microsoft security advisory 954157.
+  The result is *not* an error — driving the game's exact MCI sequence from a
+  32-bit host, every command returns success and the position advances to 113
+  on schedule, while `mciavi32` draws its own placeholder: a hatched white field
+  captioned "Video not available, cannot find 'vids:iv50' decompressor."
+  Measured 2026-09-19; full method and screenshots in
+  [`media-stack-survey.md`](media-stack-survey.md) §2.
+- **New behaviour:** `capcom.avi` is the same video re-encoded to Cinepak
+  (`cvid`), whose decoder `iccvid.dll` is registered as `vidc.cvid` and still
+  ships with Windows. The audio stream is copied, not re-encoded, so it is
+  bit-identical. Playback path, command sequence and timing are unchanged —
+  **no code changes.** Verified playing through the same harness.
+- **Rationale:** the alternative is a black-box error caption where the Capcom
+  logo belongs, on every launch, on every supported version of Windows. This is
+  the cheapest possible repair: a data substitution inside the port's own
+  playback path, with no new dependency and nothing to maintain. Cinepak was
+  chosen over Microsoft Video 1 on measurement — SSIM 0.9898 vs 0.9576 against
+  the original ([`media-stack-survey.md`](media-stack-survey.md) §6).
+  It is ledgered, rather than treated as a silent repair, because the player
+  genuinely sees a different (lossily re-compressed) image, and because
+  "why is the logo video not the shipped file?" deserves an answer.
+- **Also in the PSX version?** No — not applicable. The PlayStation release has
+  no AVI; its FMV is PSX `STR` streams decoded by the console's MDEC. This is a
+  defect of the 2001 PC port's platform choices, not of the game.
+- **Reversible?** Yes, by file substitution — the shipped original is kept
+  alongside as `capcom.avi.indeo5`. Not behind a config toggle; there is no
+  config system yet, and restoring the original restores a broken video.
+
+  Identities, so the substitution is provable (`sha256`, 2026-09-19):
+
+  | File | Size | SHA-256 |
+  |---|---|---|
+  | `capcom.avi` as shipped (now `capcom.avi.indeo5`) | 2,262,824 | `65ca9b150945e9973cd86492388f574d884603ce894300d6813f828e32df118a` |
+  | `capcom.avi` as installed (Cinepak) | 4,609,908 | `460d25ce731c40d653286087b43655aca88aa661f2e3423b1c78590dc318f4f6` |
+
+  Reproduce with ffmpeg 9.0.1:
+
+  ```bash
+  ffmpeg -i capcom.avi.indeo5 -c:v cinepak -c:a copy \
+         -fflags +bitexact -flags:v +bitexact capcom.avi
+  ```
+
+  The output hash is tied to that encoder version; a different ffmpeg may
+  produce a different — and equally valid — file.

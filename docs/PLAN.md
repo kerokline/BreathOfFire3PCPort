@@ -305,8 +305,8 @@ to good manners plus a narrow legal check, and §7 has been rewritten to say so.
 ### Where this leaves the relationship
 
 Peer projects with a shared upstream and non-overlapping endpoints, which is a
-good position for exchange rather than an awkward one. We have ~30k mapped
-functions on the PSX side and a matcher that may name large parts of the PC
+good position for exchange rather than an awkward one. We have a ~677-name
+corpus on the PSX side (§3) and a matcher that may name large parts of the PC
 binary (§3); they have years of accumulated knowledge of that binary's
 behaviour. Neither needs to adopt the other's architecture to trade findings,
 and neither is obliged to. That is worth saying out loud when making contact:
@@ -316,13 +316,13 @@ this is not a fork of their work and does not compete with it.
 
 ## 4a. What does not transfer from the PSX side
 
-**The archives are repacked — there is no byte-level asset path.** `DAT/` holds
-742 `.DAT` files whose names echo our `.EMI` families, but the containers do
-not match. Parsed `AREA000.DAT` 2026-09-18: a `(offset, size)` TOC at `0x198`,
-no `MATH_TBL` magic, and subfile 0 at `0x380` is a **RIFF WAVE** — the port
-decompressed the PSX audio and re-containered everything. `tools/emi.py` will
-not read these and should not be taught to. A new container parser is needed,
-and it is a small, well-defined job.
+**The archives are re-containered, and only the audio is re-encoded.** `DAT/`
+holds 742 `.DAT` files, one per `.EMI`. Parsed 2026-09-19
+([`DAT_CONTAINER.md`](DAT_CONTAINER.md), `tools/dat.py`): a flat stream of
+16-byte-header chunks, unencrypted; PSX audio groups became banks of RIFF WAVs
+and the MIPS overlay section was dropped, but images and most data sections are
+**byte-identical to the JP disc** (2,120 of 2,680 paired sections, full census). So a byte-level asset path *does* exist for everything but audio —
+an earlier revision of this paragraph said otherwise from one file's header.
 
 **The Chinese script is not economically harvestable.** Port-specific encoding
 (`((c|0x8000)>>8) | ((c&0xFF)<<8)`), resolved at runtime through `GetText`
@@ -432,7 +432,7 @@ unusually good collaborators:
 | Correctness criterion | Matches original hardware | Matches *intent*, deliberately chosen |
 | Divergence | A defect to be root-caused | The deliverable |
 | Owns | What the game **was** — data truth, script alignment, field semantics | What the game **becomes** — editable source |
-| Code shape | Lifted MIPS C, unreadable by design, 30k functions mapped | Path to readable C++ |
+| Code shape | Lifted MIPS C, unreadable by design, ~677 functions named (§3) | Path to readable C++ |
 | Role to the other | Reference implementation and name donor | Independent corroboration, field names, English menu corpus |
 
 ### The consequence worth designing around
@@ -563,8 +563,9 @@ plan does not technically need them yet. A living project has to stay alive.
    and gets us into a subsystem cold, delta propagation then names a whole block
    at once, and each checks the other. Neither is trusted alone, and no
    BSim-derived name exceeds `hypothesis` tier without a PC-side read.
-3. **Write the `DAT/` container parser** (§4). Small, self-contained, needed by
-   everything downstream, and testable against the 742 files today.
+3. ~~**Write the `DAT/` container parser**~~ — **done 2026-09-19**
+   ([`DAT_CONTAINER.md`](DAT_CONTAINER.md)); 742 of 742 files parse. The
+   follow-on is the full EMI↔DAT census.
 
 Step 2 was the load-bearing experiment. It passed, so phases 0–2 are committed
-to. Step 3 is now the critical path.
+to. The current order of work is in [`STATUS.md`](STATUS.md).

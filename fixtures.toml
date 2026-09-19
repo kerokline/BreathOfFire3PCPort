@@ -23,7 +23,7 @@
 # catalogued. Open an issue rather than editing a row to match what you have.
 
 [meta]
-updated = 2026-09-18
+updated = 2026-09-19
 note = "JP disc + Chinese PC port are the working pair; the rest are targets."
 
 # ---------------------------------------------------------------------------
@@ -42,6 +42,35 @@ size = 2584576
 sha256 = "15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb"
 md5 = "0ebf48d81d43463aeadbc730660f1a73"
 measured = "2026-09-18, tools/pe_funcs.py and hashlib on this machine"
+
+# The two FMV files, as shipped. Recorded because DIV-0001 replaces one of them:
+# a substitution is only provable against a known original.
+[build.artifacts.capcom_avi]
+name = "capcom.avi"
+size = 2262824
+sha256 = "65ca9b150945e9973cd86492388f574d884603ce894300d6813f828e32df118a"
+md5 = "8278fe7cf33dd763c1928c2a739a9da6"
+codec = "IV50 (Indeo Video 5), 640x480 15fps + PCM 22050 stereo"
+measured = "2026-09-19, sha256sum/md5sum on this machine"
+note = "Undecodable on Vista+; replaced by DIV-0001. Kept as capcom.avi.indeo5."
+
+[build.artifacts.logos_avi]
+name = "logos.avi"
+size = 3899442
+sha256 = "a06536fe0ce92803587c8b8e0694360b89f1fd77dc5cbef3647ac5393b034564"
+md5 = "a0a5a582ee5de3ffd4f9c6bdafbad6f0"
+codec = "CRAM (Microsoft Video 1), 640x480 14.98fps, no audio"
+measured = "2026-09-19, sha256sum/md5sum on this machine"
+
+# Not an original: the DIV-0001 replacement, recorded so an install can be
+# identified as patched rather than corrupt.
+[build.artifacts.capcom_avi_cinepak]
+name = "capcom.avi (DIV-0001, Cinepak)"
+size = 4609908
+sha256 = "460d25ce731c40d653286087b43655aca88aa661f2e3423b1c78590dc318f4f6"
+codec = "cvid (Cinepak), 640x480 15fps + PCM 22050 stereo (stream-copied)"
+measured = "2026-09-19, ffmpeg 9.0.1 on this machine; see docs/DIVERGENCE.md DIV-0001"
+note = "Encoder-version dependent — a different ffmpeg gives a different, equally valid file."
 
 # ---------------------------------------------------------------------------
 # PlayStation releases

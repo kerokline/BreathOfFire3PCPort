@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-18)
+**Status:** IN PROGRESS (2026-09-19)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,7 +8,8 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**Scoping, with the load-bearing experiment run and passed.** No game code yet.
+**Scoping is over: the load-bearing experiment passed, the game runs on this
+machine, and phase 0 is the next thing to build.** No game code yet.
 
 What is established:
 
@@ -20,43 +21,64 @@ What is established:
   [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md)).
 - **Ghidra BSim works cross-ISA** and is a seed generator rather than an oracle
   ([`bsim-evaluation.md`](bsim-evaluation.md)).
-- 12 functions, 7 global blocks and 4 data tables named in
+- **The `DAT/` container is parsed** — 742 of 742 files, unencrypted, and most
+  non-audio sections are byte-identical to the JP disc's `.EMI`s (2,120 of
+  2,680, full census; the 560 differences reduce to a handful of causes) ([`DAT_CONTAINER.md`](DAT_CONTAINER.md), `tools/dat.py`). Done
+  ahead of step 0 at the owner's direction, 2026-09-19.
+- **The media stack is surveyed, and the first divergence has shipped.**
+  `BOF3.exe` is DirectDraw + `IDirect3D3`, DirectSound 1, DirectInput 3, MCI/VFW
+  for FMV, and a statically-linked MP3 decoder. Exactly one thing was broken —
+  `capcom.avi` is Indeo 5, which Windows has not decoded since XP — and it is
+  now fixed by re-encoding to Cinepak, the ledger's first entry
+  ([`media-stack-survey.md`](media-stack-survey.md),
+  [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0001). Audio needs nothing. The FMV path
+  is fully read ([`replacing-mci.md`](replacing-mci.md)); the DirectDraw
+  presentation layer is the long-term liability, is **not** read yet, and is
+  [`IDEAS.md`](IDEAS.md) I8 against phase 3.
+- 15 functions, 7 global blocks and 5 data tables named in
   [`symbols.toml`](../symbols.toml), tiered.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 
 ## The immediate order of work
 
-### 0. Verify launch and stability
+### 0. Verify launch and stability — **passed 2026-09-19, enough to proceed**
 
-Nothing else is real until the game runs here and we know what "working" looks
-like. Establish a baseline: does it launch, what does it do on this machine,
-where are the known defects (the fullscreen fallback, resolution handling), and
-**is there an attract/demo mode**. That last one matters out of proportion to its
-size — TR1X used demo playback as a determinism oracle, and if BoF3 has one it is
-the cheapest regression harness available to us
-([`prior-art/tr1x.md`](prior-art/tr1x.md)).
+Owner-tested on this machine, 2026-09-19: the launcher starts the game, the
+intro FMVs play, the start screen works, and play continues **into the first
+area**. That is the gate this step existed for — the game runs here — so
+**phase 0 proper is unblocked** and is now the next piece of building work.
 
-### 1. PSX ↔ PC save file interchange — **priority 1 after step 0**
+It also settles what was an open worry: the legacy DirectDraw display path,
+including the exclusive-fullscreen `SetDisplayMode(640, 480, 16)` that FMV
+performs before the title screen, works on Windows 11 today. Replacing it is
+[`IDEAS.md`](IDEAS.md) I8, deliberate phase-3 work, not an emergency.
 
-Convert a save between the PlayStation release and the PC port, in at least one
-direction.
+What this test did **not** cover, carried forward rather than blocking:
 
-Chosen deliberately as the first real piece of work, for four reasons:
+- No written baseline of what "working" looks like beyond the first area — no
+  battle, menu, save/load or long-session stability check.
+- The known defects (fullscreen fallback, resolution handling) have not been
+  reproduced and recorded.
+- **Whether there is an attract/demo mode** is still unanswered. It matters out
+  of proportion to its size: TR1X used demo playback as a determinism oracle,
+  and if BoF3 has one it is the cheapest regression harness available to us
+  ([`prior-art/tr1x.md`](prior-art/tr1x.md)). Check it the next time the game is
+  left idle on the title screen.
 
-- **It is a visible win.** [`PLAN.md`](PLAN.md) §6 names the risk that phases 0–2
-  deliver nothing a player can see and the project stalls on enthusiasm alone.
-  This is something a person can actually use, early.
-- **It tests the central finding on real data.** The persistent character record
-  is 164 bytes in *both* binaries, and block-delta propagation says the fields
-  should line up. A save converter either works or it exposes exactly where the
-  model is wrong — on data, where errors are cheap and visible, rather than in
-  reimplemented code where they are neither.
-- **The sibling already did half of it** — `SAVE_IMPORT.md`, `tools/save_tool.py`,
-  `tools/save_import.py`. Reference, not vendored.
-- **It needs the `DAT/` container work anyway** ([`PLAN.md`](PLAN.md) §8 step 3),
-  which is already critical path, and OpenRCT2's experience says formats gate
-  everything ([`prior-art/README.md`](prior-art/README.md) §2).
+### 1. Read the exe, starting with asset loading
+
+Set 2026-09-19. The `DAT/` work ([`DAT_CONTAINER.md`](DAT_CONTAINER.md)) left
+concrete anchors — `LoadDatFile` `0x454590`, the filename table, the `SND\`/`BGM\`
+name strings — in a subsystem whose inputs and outputs we can now parse and
+diff, which also makes it the natural first replacement target for phase 0.
+Steps are in [`HANDOFF.md`](HANDOFF.md). Overlaps phase 0 and does not gate it.
+
+**Save file interchange was priority 1 here until 2026-09-19.** It is now
+[`IDEAS.md`](IDEAS.md) I1: still the first visible win to go for, but only once
+the game is up and running, since a converted save cannot be verified without
+loading it. Step 0 has now cleared that gate; it is available to pick up
+whenever a visible win is wanted.
 
 ### 2. The overlay corpus
 
@@ -79,10 +101,14 @@ PC port is one flat image with every function resident. It matters because the
 name corpus is keyed by overlay and a bare PSX address is ambiguous without
 knowing which was loaded.
 
-Consequence: this drops below save interchange and phase 0. When it is done, it
+Consequence: this drops below exe reading and phase 0. When it is done, it
 must be on a database copy with the nine BSim pairs re-scored before and after.
 
-### 3. Phase 0 proper
+### 3. Phase 0 proper — **unblocked, next**
+
+Unblocked by step 0 on 2026-09-19. Numbered 3 for history; in practice it runs
+now, alongside step 1, with a function from the asset-loading path as the
+exit-test target.
 
 Loader, detour layer, build system. See [`PLAN.md`](PLAN.md) phase 0, now
 informed by [`prior-art/tr1x.md`](prior-art/tr1x.md) (launcher-based injection,

@@ -14,17 +14,11 @@ collaborators rather than competitors. See [`docs/PLAN.md`](docs/PLAN.md) §6.
 > project. But the bet the plan rested on (that PSX names can be transferred
 > onto the PC binary) has been tested and holds: the two binaries are
 > compilations of one C source tree, and the transfer works for overlay
-> functions as well as boot-EXE ones.
+> functions as well as boot-EXE ones
+> ([`docs/SHARED_SOURCE.md`](docs/SHARED_SOURCE.md)).
 >
-> - [`docs/SHARED_SOURCE.md`](docs/SHARED_SOURCE.md) — why that is established
->   rather than assumed, and what the porting house changed
-> - [`docs/kinship-probe-text-engine.md`](docs/kinship-probe-text-engine.md) and
->   [`docs/kinship-probe-battle-engine.md`](docs/kinship-probe-battle-engine.md)
->   — the measurements
-> - [`docs/bsim-evaluation.md`](docs/bsim-evaluation.md) — Ghidra BSim scored
->   against those results
-> - [`docs/prior-art/`](docs/prior-art/) — what four comparable projects learned
->   the hard way
+> Current state is in [`docs/STATUS.md`](docs/STATUS.md); every document is
+> indexed in [`docs/README.md`](docs/README.md).
 
 ## What the target is
 
@@ -66,10 +60,9 @@ original binary is no longer needed.
 - [**bof3ext_resources**](https://github.com/TheRealBiggs/bof3ext_resources) —
   360 files of translated text, fonts, and HD textures.
 - [**BreathOfFire3Recomp**](https://github.com/kerokline/BreathOfFire3Recomp) —
-  the archival sibling, built from the *PlayStation* release. Source of ~30k
-  mapped functions and the reverse-engineering corpus this project hopes to
-  transfer names from, and the regression oracle the divergence ledger depends
-  on.
+  the archival sibling, built from the *PlayStation* release. Source of the
+  reverse-engineering corpus this project transfers names from (~677 named
+  functions), and the regression oracle the divergence ledger depends on.
 
 All three are independent derivatives of Capcom's work — two of the 2001 PC
 port, one of the 1997 PlayStation release. None is built on another.
