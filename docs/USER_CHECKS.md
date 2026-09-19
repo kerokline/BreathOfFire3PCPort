@@ -25,6 +25,9 @@ self-consistent but nothing it made has been loaded by a game.
       Party, inventory, equipment, abilities and zenny intact? Character names
       readable in the status menu (they are borrowed from PC slot 0)?
 - [ ] Walk around, open menus, fight one battle, save to a new slot.
+- [ ] US save only: it carries 20 five-byte names in US text encoding for
+      the 60-member facility above. If you can get to where those names
+      are shown, what does the PC game draw for them?
 - [ ] Note the confirm/cancel buttons after loading the US save — the sibling
       saw US button config ride along in the save block.
 - Anything odd, however small, is the finding. Result goes to:
@@ -79,12 +82,10 @@ Decides how much name conversion matters
 
 - [ ] Play on through the meeting with Rei and Teepo. Does a name-entry screen
       appear there, or anywhere?
-- [ ] Look through the in-game menu and the start screen's options entry for
-      anything that renames a character. The exe has name-editing code that
-      works on *whoever is in the party*, reached from a large menu module
-      ([`save-interchange.md`](save-interchange.md) §2a) — it smells like a
-      menu option, not a story prompt.
-- [ ] If it does: how many characters does it allow, and what does the
-      save-menu summary show for a name longer than two characters? (The
-      summary's name field is still 5 bytes.)
+- [ ] The exe's name-entry screen belongs to a **mid-game facility that keeps
+      up to 60 named members in the save** (empty in all early saves, 20 in
+      the 42-hour US save) and can also rename a party member
+      ([`save-interchange.md`](save-interchange.md) §2a). You will know what
+      that is. When you reach it: does it offer naming, for members and for
+      party characters, and how many characters does each allow?
 - Result goes to: [`save-interchange.md`](save-interchange.md) §2.

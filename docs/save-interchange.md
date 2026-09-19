@@ -85,34 +85,59 @@ donor. PC→PSX gives the donor's names. See §2a.
 
 ### 2a. Name-editing code exists in the exe, and is statically reachable
 
-Read 2026-09-19 at the owner's prompt. **The live game block is at `0x9039E0`**
-(`0x5806F0`, the block builder, stores the area word to `0x903A04` = block
-`+0x24` and zeroes the checksum at `0x903A50` = `+0x70`), so the **live
-character records are at `0x903A70`**, stride `0xA4` — PSX `0x80144964` plus
-`0x807BF10C`, the same delta as the block base.
+Read 2026-09-19 at the owner's prompt, in two passes; the second corrected the
+first's reading of the scratch buffer `0x904CE0` as a "backup".
 
-Of the functions that take a pointer to a record, one writes the name:
-**`0x45F1A0`**. It picks the record of the *n*-th joined character (`0x45F020`
-walks the eight records counting those with bit 0 of record `+0x0B` set; *n* is
-a cursor byte at `0x675F8C`), saves that record's nine name bytes to
-`0x904CE0`, then copies **eight bytes from an edit buffer at `0x675F98`** into
-name bytes 0..7 (`0x45F616`..`0x45F61C`). Eight bytes is four two-byte
-characters — it fits the widened field, not the PSX one, so this is code the
-port touched, not a fossil.
+**The live game block is at `0x9039E0`** (`0x5806F0`, the block builder, stores
+the area word to `0x903A04` = block `+0x24` and zeroes the checksum at
+`0x903A50` = `+0x70`), so the **live character records are at `0x903A70`**,
+stride `0xA4` — PSX `0x80144964` plus `0x807BF10C`, the same delta as the block
+base.
 
-It is not dead by construction: six direct calls reach it from `0x45CEA0`
-(1,949 instructions, two near-mirror halves both using the edit buffer), and
-the call chain runs `0x45CEA0` ← `0x45C850` ← `0x45B5F0` ← `0x459EE0` ←
-`0x456E40` ← `0x456AF0` ← `0x4563B0` ← `0x4561A0` ← `0x455450` ← `0x428F50`
-← `0x4287E0` ← `0x56E4E0` ← `0x56D750`, which has four callers. A cursor over
-*joined party members* is not what a New-Game "name the hero" prompt needs; it
-reads as a menu facility that can rename whoever is in the party.
+There is one name-entry facility with **two commit paths**, side by side, both
+reading an edit buffer at `0x675F98` and a cursor byte at `0x675F8C`, and both
+ending by opening script message `0xF5` (`Msg_OpenScript` `0x4976D0`) and
+setting the same three state bytes (`0x66C7D8` = 2, `0x939A3E` = 3,
+`0x939A40` = 0):
 
-**Not established:** what screen this is, what in the game opens it, and
-whether a run-time condition ever lets control through — "statically
-reachable" is a statement about call instructions, not about play. The new
-start-screen options entry and the in-game menu are the places to look
-([`USER_CHECKS.md`](USER_CHECKS.md) item 4).
+| Commit | Cursor counts | Writes |
+|---|---|---|
+| `0x45F5A0`..`0x45F64F` | the eight character records with bit 0 of record `+0x0B` set (`0x45F020`) | **8 bytes** into that record's name, `0x903A70 + n*0xA4 + 0..7`, after copying the old nine name bytes to the text scratch buffer `0x904CE0` |
+| `0x45F650`..`0x45F746` | the entries of a **60-entry table of 8-byte records at `0x9046D0`** (block `+0xCF0`) whose byte 0 is non-zero (`0x45E6D0`) | **5 bytes** into a parallel **60 x 5-byte name table at `0x9048F0`** (block `+0xF10`), space-padded, trailing spaces trimmed when read back |
+
+Eight bytes is four two-byte characters: the character path fits the widened
+PC field, not the PSX one, so the port touched this code — it is not a fossil.
+
+**The 60-entry table is real save data on both platforms.** Decoded at those
+block offsets, the US 42:37 save has 20 entries in use and exactly 20 name
+slots holding text; the PC 0:19 and JP 0:28 / 12:48 saves have none of either.
+The name table ends at block `+0x103C`, which is the last non-zero byte of the
+US save and the "lengths from `0x103C` up all sum alike" boundary the sibling
+noted without explaining (`SAVE_IMPORT.md`). Unlike the character name, this
+name field did **not** widen: 5 bytes on both.
+
+**What the module is.** The code that owns the table (`0x455450` and below) runs
+when the area word changes, walks the entries, and calls `Rand`; it special-
+cases area `0xB6`. A 60-member population with per-member state and names,
+absent early and populated by 42 hours, simulated as the player moves between
+areas — the owner will recognise it faster than the disassembly can name it.
+*(Agent's guess, from memory of the game and therefore worth little: the
+Faerie Village.)* The practical point for the owner's check: **the name-entry
+screen belongs to that mid-game facility, not to New Game and not obviously to
+the ordinary menu**, so not finding it in the first hours means nothing.
+
+**Not established:** what opens the character-rename path as opposed to the
+60-entry one; whether any run-time condition blocks either; what message
+`0xF5` says (it comes from whichever area's script pool is loaded).
+
+**Consequence for the converter — a second name problem.** The 60 x 5-byte
+names are text in each release's own encoding and `save_convert.py` copies them
+verbatim. A save with entries in use (the US one has 20) will carry names the
+destination game cannot draw correctly. They cannot be borrowed from a donor
+the way character names are — they are the player's, or the game's, per entry.
+The tool now warns when it sees any. What the PC game does with ASCII bytes in
+those slots is part of the US-save check ([`USER_CHECKS.md`](USER_CHECKS.md)
+item 0).
 
 **Carried verbatim, not understood:** the eight bytes at `+0x78..+0x7F` differ
 between the JP, US and PC saves compared and are the likely home of the option

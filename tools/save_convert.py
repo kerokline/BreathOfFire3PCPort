@@ -56,6 +56,9 @@ SHIFT = PC_NAME - PSX_NAME
 PSX_REC_USED = REC_STRIDE - SHIFT   # PSX bytes that have a home in a PC record
 SUMMARY = 0xCA0           # slot summary: 5-byte leader name, then char id at +5
 SUMMARY_NAME = 5
+MEMBERS = 0xCF0           # 60 x 8-byte records; byte 0 non-zero = in use
+MEMBER_NAMES = 0xF10      # 60 x 5-byte names, NOT widened on PC, never converted
+MEMBER_COUNT = 60
 
 
 def die(msg):
@@ -166,6 +169,12 @@ def convert(game, to_pc, donor):
             if rec[id_at] == lead:
                 out[SUMMARY:SUMMARY + SUMMARY_NAME] = fit_name(rec[:dst_w], SUMMARY_NAME)
                 break
+    named = sum(1 for i in range(MEMBER_COUNT) if game[MEMBERS + 8 * i])
+    if named:
+        print(f'save_convert: warning - {named} entries of the 60-member table are in use; '
+              f'their 5-byte names are copied as they are, in the text encoding of the source release, '
+              f'and will probably not display correctly '
+              f'(docs/save-interchange.md section 2a)', file=sys.stderr)
     seal(out)
     return out
 
