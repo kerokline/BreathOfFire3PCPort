@@ -44,6 +44,7 @@ add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}")
 add_library(bof3x SHARED
   src/hook/dllmain.cpp
   src/hook/detour.cpp
+  src/hook/calltrace.cpp
   src/hook/log.cpp
   src/hook/inject_all.cpp
   src/game/file_io.cpp

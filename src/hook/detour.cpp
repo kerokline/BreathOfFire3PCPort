@@ -15,6 +15,9 @@ constexpr unsigned kJmpLen = 5;
 int g_enabled = 0;
 int g_disabled = 0;
 
+constexpr int kMaxOwned = 4096;
+std::uint32_t g_owned[kMaxOwned];
+
 bool NameListed(const char* list, const char* name) {
     size_t len = std::strlen(name);
     for (const char* p = list; *p;) {
@@ -72,6 +75,8 @@ void VerifyImage() {
 void Inject(const char* name, std::uint32_t original, void* ours) {
     auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(original));
     auto* mine = static_cast<std::uint8_t*>(ours);
+    if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
+    g_owned[g_enabled + g_disabled] = original;
     if (WantsOriginal(name)) {
         WriteJmp(name, mine, orig);
         ++g_disabled;
@@ -81,6 +86,12 @@ void Inject(const char* name, std::uint32_t original, void* ours) {
         ++g_enabled;
         Log("inject  ON   %-24s original 0x%08X -> ours %p", name, (unsigned)original, ours);
     }
+}
+
+bool IsOwned(std::uint32_t original) {
+    for (int i = 0; i < g_enabled + g_disabled; ++i)
+        if (g_owned[i] == original) return true;
+    return false;
 }
 
 void InjectReport() {

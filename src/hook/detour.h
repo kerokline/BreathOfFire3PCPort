@@ -30,6 +30,11 @@ void VerifyImage();
 // variable (comma separated), or all of them with BOF3X_ORIGINAL=*.
 void Inject(const char* name, std::uint32_t original, void* ours);
 
+// True if this original address has been passed to Inject - in either
+// direction, so the answer is the same with and without BOF3X_ORIGINAL. For
+// tooling that must treat "a function we own" alike in both configurations.
+bool IsOwned(std::uint32_t original);
+
 // Summary line for the log once every module has registered.
 void InjectReport();
 

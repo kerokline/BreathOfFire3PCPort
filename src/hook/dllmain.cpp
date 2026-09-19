@@ -3,6 +3,7 @@
 // point 0x5BA057 and no game thread can be inside a function we patch.
 #include <windows.h>
 
+#include "hook/calltrace.h"
 #include "hook/detour.h"
 #include "hook/inject_all.h"
 #include "hook/log.h"
@@ -14,6 +15,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::Log("bof3x attached to process %lu", GetCurrentProcessId());
         bof3::VerifyImage();
         bof3::InjectAll();
+        bof3::CallTrace_Start(module);
     } else if (reason == DLL_PROCESS_DETACH) {
         bof3::Log("bof3x detaching");
         bof3::LogClose();
