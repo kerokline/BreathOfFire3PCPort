@@ -73,6 +73,9 @@ PC stores two-byte codes. The converter therefore takes names from a **donor
 save of the destination format**, record for record — every save carries all
 eight records with default names from a new game on. A renamed Ryu becomes the
 donor's Ryu.
+*Open (owner, 2026-09-19):* the PC port may not offer name entry at all — no
+prompt has appeared 19 minutes in, though the PSX does not ask that early
+either. Unverified either way ([`USER_CHECKS.md`](USER_CHECKS.md) item 4).
 
 **Carried verbatim, not understood:** the eight bytes at `+0x78..+0x7F` differ
 between the JP, US and PC saves compared and are the likely home of the option
