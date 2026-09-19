@@ -161,7 +161,9 @@ tag and size as `FIRST.DAT` chunk 9.
 - **The non-code dropped sections** (§2) — search `BOF3.exe` for their values.
 - **A type-1 decompressor**, to turn 65 "differ" into identical-or-not.
 - **The dropped SEQ groups** in 38 files, and the RYUD byte.
-- **Kind-0 tag semantics** — read `0x454590`.
+- ~~**Kind-0 tag semantics**~~ — **answered 2026-09-19:** one arena, payload
+  copied to `0x803580 + tag` ([`asset-loading-path.md`](asset-loading-path.md)
+  §2). Follow-on: generate the PSX-region → tag table from the census.
 - **Bank descriptor area** (`0x000–0x188`). First bytes look like
   `{u8, u8, u16 sample rate}` records (`0xAC44`, `0x5622` appear in FIRST);
   unverified.
