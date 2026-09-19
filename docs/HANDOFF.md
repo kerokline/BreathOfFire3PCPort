@@ -119,11 +119,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-0/scaffolding-and-asset-loading-path`, pushed through `6f91e29`
-(four commits: scaffolding, exe reading, the save fix, the attract oracle).
-**Uncommitted on top:** the rest of the file layer — `src/game/file_io.cpp`,
-the `save_io.cpp` comment, five CRT symbols and `File_CdRootBuf` in
-`symbols.toml`, DIV-0003, and the doc updates. One commit.
+Branch `phase-0/scaffolding-and-asset-loading-path`, pushed; nothing uncommitted. No PR open yet.
 
 Owed on DIV-0002: reproduce the vanishing save under `BOF3X_ORIGINAL=*`.
 Owed on DIV-0003: the failing case has never been run, original or ours.
