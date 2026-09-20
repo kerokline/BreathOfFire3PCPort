@@ -33,8 +33,9 @@ produced that address as a call target. Not chased. `0x593060` (`sub esp,
 
 ## 2. What `0x593060` does
 
-Read to its `ret` at `0x59352A`; the callees named below are **not** read, so
+Read to its `ret` at `0x59352A`; the callees named below were **not** read when this was written, so
 what they are for is inference from how they are called, and is marked so.
+Sections 8 and 10 say what they turned out to be.
 
 **Pass 1, `0x593063`..`0x59312A` - order the list.** A bubble sort of
 `Sprite_DrawList[0 .. Sprite_DrawListCount)`, pointers to sprite objects (the
@@ -353,7 +354,30 @@ difference is doubled into it, so the bits in question cannot reach it. The
 behaviour; both now say it is unobservable. A negative control that is *not*
 refused is information about the claim, not only about the fuzz.
 
-## 8. Live checks, 2026-09-20
+## 8. Two of the pass's own callees - taken over
+
+`src/game/draw_emit.cpp`, 2026-09-20.
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Gfx_CommitPrim` | `0x461E50` | 640,316 | `(slot, size)`, both bytes: the primitive just built at `Gfx_PacketNext` is linked onto ordering-table slot `slot` and the packet pointer moves on by `size` - **if the pool has room, and silently not at all if it has not.** Room is `Gfx_PacketNext + size` below `0x7F1BAC + (Gfx_BufferIndex << 16)`, the pool's end less `0x54`. The slot is not checked against the eight there are |
+| `DrawLayer_Close` | `0x56FE80` | 403,315 | what section 2 calls `0x56FE80(layer)`: a draw-mode primitive (texture page `0x95`) committed to slot 6, then the layer's **second** list - each layer's `0x30` bytes are three (first, last) pairs per buffer - appended to the slot `Draw_OtSlot` `0x92BF19` names |
+
+So the two lines section 2 left unread after pass 1 -
+`0x5A77C0(dword [0x7E0670], 0, 0, 0x95, 0)` and `0x461E50(6, 0xC)` - are
+"build a draw-mode primitive at the packet pointer, commit its 12 bytes to
+slot 6".
+
+Start-up fuzz, `BOF3X_SHADOW=draw_emit`: 12,000 rounds, the clones' calls
+re-aimed at clones of `Gpu_LinkPrim`, `Gpu_SetDrawMode` and each other; the
+packet pointer kept inside the real pool - the room test compares addresses -
+and half the time within `0x100` bytes of the limit (3,323 rounds with no
+room); 5,538 closes that linked something; **0 mismatches**. Negative
+controls, each refused: the room test strict the other way (11), the size not
+masked to a byte (4,067), the draw mode not committed (4,633), the tail not
+moved to the list's end (3,924), the first list for the second (6,000).
+
+## 9. Live checks, 2026-09-20
 
 All hands-off runs from a fresh launch, everything ours, against the
 all-original references of 2026-09-19.
@@ -365,6 +389,7 @@ all-original references of 2026-09-19.
 | 34 (plus `Field_CopyInput`) | identical, 7,478 frames | identical | identical, 4,530 frames (`ab6_orig` / `ab6_ours`) |
 | 41 (plus section 6) | identical, 7,478 frames | identical | identical, 4,604 frames (`ab7_orig` / `ab7_ours`) |
 | 44 (plus section 7) | identical, 7,478 frames | identical | identical, 4,609 frames (`ab8_orig` / `ab8_ours`) |
+| 108 (the library layer's x87 and transform functions, then section 8) | identical, 7,478 frames | identical | identical, 7,937 frames, with original against original identical beside it (`ab13_orig` / `ab13_origb` / `ab13_ours`) |
 
 The frame hash needs its all-original side re-recorded whenever a *logic*
 function changes hands, because owned functions are left unarmed in both
@@ -378,7 +403,7 @@ and no input, so `Field_CopyInput`'s exchange rests on the fuzz alone, as does
 any `Sprite_FindNearby` hit in the extra four. Whether the others' edge cases
 occur in the attract run was not measured.
 
-## 9. Not done
+## 10. Not done
 
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it
@@ -393,8 +418,25 @@ occur in the attract run was not measured.
   search is dead code in the source too, or the port lost a `return`. **The PSX side can
   say which**; not looked up. It should not be taken over before that is
   known - not because it is hard, but because it may be a defect to record.
-- `0x593060` itself. Its unread callees: `0x56FD20`, `0x56FE80`, `0x57BAE0`,
-  `0x5935B0` (683 bytes, the sprite draw), `0x5A7560`, `0x5A77C0`, `0x461E50`.
-  It is checkable without Direct3D if `0x5A7560` is what it looks like: the
-  linked list it builds is memory, which is [`IDEAS.md`](IDEAS.md) I14 level 1.
+- `0x593060` itself. Of its callees, `Gpu_LinkPrim`, `Gpu_SetDrawMode`,
+  `Gfx_CommitPrim` and `DrawLayer_Close` are ours now. What is left, read
+  far enough on 2026-09-20 to say what each is:
+  - **`0x56FD20(layer)`**, 403,315 calls: appends the layer's *first* list to
+    slot 6 (`0x929EB8` directly), then walks a window of the word table
+    `0x904F20` - 28 columns, wrapping, rows offset by the words at `0x929F20`
+    and `0x929F24` - and for each non-zero word a run of 4-byte records under
+    `0x8CB580`, each handed to a handler chosen by its top byte through the
+    table **`0x663008`**. By its place the map's cells; what the records are
+    was not read. An indirect call per record: no clone, check it live.
+  - **`0x57BAE0(record)`**, 7,824 calls, `0x3E1` bytes: not read. Its call
+    tree (`0x57BED0`, `0x57BFF0`, `0x57C070`) is matrix work through the GTE
+    and one `Gpu_SetPolyFT4`; every library call in it is ours except the
+    matrix product `0x5A7D70`
+    ([`psx-library-layer.md`](psx-library-layer.md) section 4 says why not).
+  - **`0x5935B0`**, 33,850 calls, 683 bytes, and `0x593860` under it, 2,644
+    bytes with two indirect calls: the sprite draw itself. Also calls
+    `0x5A6790`, the 8-byte record append.
+  The pass is still checkable as memory - the linked list it builds - which
+  is [`IDEAS.md`](IDEAS.md) I14 level 1; with `Gfx_CommitPrim` ours, every
+  link it makes now goes through our code.
 - Whether the PSX side has a name for any of this. Not looked up.

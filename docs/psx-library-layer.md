@@ -8,7 +8,8 @@ libgpu's and libgte's entry points - `SetPolyFT4`, `getTPage`, `ClearOTagR`,
 `ApplyMatrix`, `PushMatrix` - working on globals where the PlayStation had a
 coprocessor. It is where the attract run spends its calls: the takeover
 queue's 38 hottest layer-0 logic functions are in it, all but one
-(`python tools/calltrace.py queue ...`, 2026-09-20).
+(`python tools/calltrace.py queue ...`, 2026-09-20). Sixty-two of its
+functions are ours.
 
 This matters beyond the call counts. It is the seam
 [`PLAN.md`](PLAN.md) wants: game logic above it is PSX-shaped and can stay so;
@@ -46,8 +47,8 @@ Two things the port changed, both visible here:
 - **A primitive is not the PSX struct.** The setters store the float `0.01`
   (`0x3C23D70A`) at `+0x10` and every `0x10` after it for a four-vertex
   primitive, `+0x10` and `+0x1C` for a line. The PSX primitives have no room
-  there. By the look of it a per-vertex depth or reciprocal-w for Direct3D;
-  unread.
+  there. It is the vertex's depth, `sz / 16384` - section 3 - and `0.01` is
+  what a primitive nobody transformed gets.
 - **Every list link carries bit 31.** `ClearOTagR` sets it on each link and
   `AddPrim` preserves it from the primitive's own first dword. On the PSX the
   top byte of a tag is the primitive's length; what bit 31 means here is
@@ -75,7 +76,7 @@ the PSX's `PushMatrix` had room for one; three 8-byte vertices at `0x7DE468`;
 three screen points at `0x7DE4C8`, a pair of dwords each where the register
 was two `s16`.
 
-Fifteen integer functions, ours, `src/game/psx_gte.cpp`:
+Fifteen integer functions, ours, `src/game/psx_gte.cpp` (the x87 ones are section 3):
 
 | Function | Address | Calls | What |
 |---|---|---|---|
@@ -90,7 +91,7 @@ Fifteen integer functions, ours, `src/game/psx_gte.cpp`:
 | `Gte_PushMatrix` | `0x5A7B90` | 12,721 | silent when the stack of 20 is full |
 | `Gte_PopMatrix` | `0x5A7BC0` | 12,721 | silent when it is empty |
 | `Gte_TransMatrix` | `0x5A8100` | 9,878 | libgte `TransMatrix`: a `MATRIX`'s translation from a `VECTOR` |
-| `Gte_SetMatrix2` | `0x5A8DA0` | 2,843 | 8 dwords to a second matrix at `0x7DE4E0`; which one is unread |
+| `Gte_SetMatrix2` | `0x5A8DA0` | 2,843 | 8 dwords to a second matrix at `0x7DE4E0` - the light matrix: `Gte_NormalColor` puts the normal through it first (section 4) |
 | `Gte_ApplyMatrixLV` | `0x5A7CF0` | 69,415 | libgte `ApplyMatrixLV`: `ApplyMatrix` instruction for instruction, with 32-bit vector components, so the products wrap |
 | `Gte_RotTrans` | `0x5A8200` | 12,721 | `ApplyMatrix` with the current matrix, then its translation added; libgte `RotTrans` without the flag argument. Its one call is to `Gte_ApplyMatrix`; the clone's goes to that function's clone |
 | `Gte_TransposeMatrix` | `0x5A81B0` | 2,843 | libgte `TransposeMatrix`, nine `s16` read and stored one at a time - in place it does **not** transpose, and ours keeps the order |
@@ -121,15 +122,160 @@ With the flag the same wrong build fails 307 of 24,000 rounds. All 25
 start-up self-tests were re-run under the new flag (`BOF3X_SHADOW=*`), 0
 mismatches in each.
 
-**Not taken over, deliberately:** the functions that go through x87 -
-`0x5A8340` (a clamp-and-scale ending in `_ftol`), `0x5A8380` (2,543,047
-calls, 32 floating-point instructions: the perspective transform, by its
-place), `0x5A9110`, `0x5A9130`, `0x5A9290`. Being faithful there means
-reproducing x87 rounding and the precision-control word the game runs under,
-not just the arithmetic; that wants its own session and a fuzz that compares
-bit patterns.
+## 3. The functions that go through x87 - nineteen, ours
 
-## 3. Live checks
+`src/game/psx_gte_float.cpp`. What an x87 instruction computes depends on the
+precision-control field of the control word - each `fmul`, `fdiv` and `fiadd`
+rounds to 24, 53 or 64 bits before the next begins - so "faithful" here needed
+a measurement before it needed code.
+
+**The measurement.** `BOF3X_SHADOW=psx_gte_float` reads the control word
+(`fnstcw`) on every live call of the two functions below that depend on it. A
+hands-off attract run of 8,872 logic frames (`analysis/attract/ab12_shadow.log`,
+2026-09-20): **`0x027F` on all 11,272,192 calls** - 53-bit precision, round to
+nearest, every exception masked - the value the C runtime starts a process
+with. Whatever Direct3D does with the FPU inside its own calls, the game's
+code does not run at 24 bits.
+
+**The decision about `long double`: not needed.** At 53 bits every x87
+operation on operands this size *is* the IEEE double operation - same inputs,
+same correctly rounded result; the extended exponent range never comes into
+it - so the functions are written in `double`, which this toolchain compiles
+to SSE2, where the rounding does not depend on the x87 control word at all.
+The square root is `sqrtsd` by intrinsic rather than a libm call. Had the
+word been `0x007F` this would have needed exact 24-bit rounding of 56-bit
+products, which `double` cannot give.
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Gte_Perspective` | `0x5A8380` | 10,965,378 | the perspective division: `Gte_Transformed` to a screen position **in floats** and a depth. Three branches: in front of the near plane, `x * h / z + offset` with the product an integer one that wraps; at or behind the eye, the same over the near plane's depth, depth out 0; between, all in floating point by way of `z / near`, y's product passing through a 32-bit float on the stack |
+| `Gte_DepthRamp` | `0x5A8340` | 6,345,796 | where a depth lies between `Gte_RampNear` and `Gte_RampFar`, 0 to `0x1000`, truncated by `_ftol` - the GTE's depth-cue factor by shape |
+| `Gte_PrimDepths4_10` | `0x5A9290` | 1,971,642 | four depths, each `/ 16384` as a float, into a primitive at `+0x10`, `+0x20`, `+0x30`, `+0x40` |
+| `Gte_StoreDepthF` | `0x5A9110` | 754,272 | the newest depth `/ 16384` through a pointer |
+| `Gte_StoreDepthF3`, `F4` | `0x5A9130`, `0x5A9170` | 283,535 / 28,128 | the newest three, or all four, oldest first |
+| nine more `Gte_PrimDepths*` | `0x5A91C0`..`0x5A9460` | 0 | the same for other primitive layouts - strides `0x0C`, `0x10`, `0x14`, three or four vertices, or one depth at all four. Several are byte for byte the same function at a second and third address |
+| `Gte_InitGeom`, `Gte_SetGeomOffset`, `Gte_SetGeomScreen` | `0x5A7AA0`, `0x5A7AE0`, `0x5A7B00` | 1 / 10 / 10 | integer: what the above read, set. Near plane at half the projection distance; the ramp's ends `scale * h / 1000` |
+
+This answers section 1's open question: **the float at `+0x10` of every
+primitive vertex is its depth, `sz / 16384`** - the setters' `0.01` is a
+placeholder the transform overwrites. The GTE's depth FIFO is `0x7DE7A0`,
+`0x7DE79C`, `0x7DE798`, `Gte_Depth` `0x7DE7A4`, oldest first.
+
+**Checks.** Start-up fuzz against clones: 48,000 rounds, a third under each
+of `0x027F`, `0x007F`, `0x037F`, the clone run under that word. Under the
+game's word, **0 mismatches**; and the depth stores match under all three, as
+the arithmetic says they must (an `s32` times a power of two is exact at any
+precision, and the store rounds once). Under the other two words the two
+precision-dependent functions differ from ours in 253 of 3,369 rounds - which
+is *expected*, is logged, and is the standing proof that this fuzz can see a
+rounding difference; if that count is ever 0 the self-test refuses to go on.
+`CloneOriginal` learned to re-aim a tail `jmp` for this (`Gte_DepthRamp` ends
+in one, to `_ftol`).
+
+Live, the same switch compares every call of the two bit for bit against the
+clone: 4,161,663 + 7,110,529 calls, **0 mismatches** - all 7.1 million of
+`Gte_Perspective`'s in the first branch. **The attract run never puts a
+vertex behind the near plane**, so the other two branches rest on the fuzz
+alone: 612 and 567 rounds, a third of each under the game's word.
+
+Negative controls, each refused: the ramp rounded rather than truncated
+(154), `0 / 0` giving `0x1000` (61), depth `z` rather than 0 behind the eye
+(221), x's product without the 32-bit wrap (217), y's product not through a
+float (38), the sum done in `float` (46), four depths in natural order
+(2,869), near plane `h >> 1` (303), ramp ends without the wrap (1,475), init
+leaving the matrix stack alone (2,526).
+
+Four controls were **not** refused at first, and each said something:
+
+- *The ramp's quotient through a 24-bit float* passed - the fuzz could not
+  see precision in `Gte_DepthRamp` at all, because the truncated result only
+  moves when the quotient is within 2^-25 of a 4096th. Seeded with wide ramps
+  and values one either side of a 4096th: refused, 158.
+- *`sy` divided by a z read once* passed, because no out pointer was ever
+  aimed at a global the function reads. One round in eight now aims one
+  there: refused - by 2 rounds, so this edge is thinly covered.
+- *One depth at four vertices, all stored from the register* passed, and is
+  unobservable: the original reads the first store back as an integer and
+  copies that, the same dword either way. Ours is the simple form and the
+  comment says so.
+- *`(float)depth * 2^-14f`* passed: the same value by the argument above. Not
+  a claimed quirk.
+
+A trap on the way: a division by zero inside the start-up fuzz does not
+crash, it **hangs** the game at start-up with nothing in the log after the
+`cloned` lines. Why it hangs rather than reaching the crash reporter was not
+looked into; the fuzz runs inside the DLL's load, which is the likely reason.
+
+## 4. The transforms over them - fourteen, ours
+
+`src/game/psx_gte_transform.cpp`.
+
+With the division ours, the functions that call it are integer work over it,
+plus two vector normalisations and a lighting function that are x87 again.
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Gte_Rtps` | `0x5A8E90` | 4,019,785 | the GTE command by shape: V0 through the matrix, translation added, both FIFOs moved up, the division, and the depth-cue factor to `Gte_Ir0` `0x7DE464` |
+| `Gte_Rtpt` | `0x5A8F60` | 2,230,333 | V0, V1, V2: the newest depth copied to the oldest slot, the results stored straight to the three screen points and the three newest depths - in effect three RTPS (see the controls) |
+| `Gte_VectorNormal`, `Gte_VectorNormalS` | `0x5A8B60`, `0x5A8C00` | 377,136 / 188,568 | a `VECTOR` to length 4096, out as `s32` or `s16`; returns the squared length. x and y pass through 32-bit floats first and z does not; the sum is z, y, x in that order; a zero length divides by 1; every result through `_ftol` |
+| `Math_Cos` | `0x5A7A50` | 145,824 | `Math_Sin(angle + 0x400)` |
+| `Gte_RotTransPers4` | `0x5A85F0` | 52,972 | libgte's by shape. The screen points go to the caller **as floats and not through the FIFO**; the depths do go to the depth registers |
+| `Gte_RotTransPers` | `0x5A8250` | 42,706 | `Gte_Rtps` with the vertex an argument; the point and the factor handed back; returns depth `>> 2`. The flag argument libgte has is never read |
+| `Gte_RotTransPers3`, `Gte_RotAverage3`, `Gte_RotAverage4`, `Gte_ScaleMatrix` | `0x5A84A0`, `0x5A87A0`, `0x5A8950`, `0x5A8120` | 0 | not reached by the attract run. The averages' outs are 12 bytes - x, y, depth `/ 16384` - and `Gte_Otz` `0x7DE794` is a sum over 12 toward zero for three, a sum `>> 4` for four |
+| `Gte_NormalColor` | `0x5A8CA0` | 188,568 | libgte's by shape: a normal through the light matrix `Gte_Matrix2`, normalised, through `Gte_ColorMatrix` `0x7DE430`, normalised, `Gte_BackColor` added, times the colour in `/ 4096` - **and then the colour in is copied over the result** (`0x5A8D84`..`0x5A8D91`). As shipped, this lighting does nothing. The arithmetic is kept because an out a byte or two below the in can see it |
+| `Gte_SetColorMatrix`, `Gte_SetBackColor` | `0x5A8DC0`, `0x5A7B60` | 9 / 9 | 8 dwords to `Gte_ColorMatrix`; three components `<< 4` as words to `Gte_BackColor` `0x7DE458` |
+
+This settles the note on `Gte_Vertices`: **the vertex registers in memory
+order are V1, V0, V2** - `Gte_Rtps` takes the middle slot, `Gte_Rtpt` the
+middle, the first, the last.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=psx_gte_transform`: 36,000 rounds
+over the fourteen, the clones run under `0x027F` with every call of theirs
+re-aimed at a clone of what it calls - `Gte_ApplyMatrix`, `Gte_ApplyMatrixLV`,
+`Gte_Perspective`, `Gte_DepthRamp`, `Math_Sin`, `Gte_VectorNormal` - and
+`_ftol` left the C runtime's; 4,586 rounds with overlapping arguments, 2,251
+with an all-zero scratch, 663 with the two colours a few bytes apart; every
+register block, the arguments and the results compared; **0 mismatches**. A
+function can only be cloned before its entry is patched, so this module's
+`Inject` runs *before* the ones that own its callees
+(`src/hook/inject_all.cpp`). All 28 start-up self-tests re-run together
+(`BOF3X_SHADOW=*`), 0 mismatches in each.
+
+Negative controls, each refused: RTPS without the depth FIFO moving (5,137),
+the vertex registers in memory order (5,115), `RotTransPers` storing the point
+before the factor (38), depth `/ 4` for `>> 2` (127), `RotAverage3` as
+`>> 2` then `/ 3` (62), `RotAverage4` as `/ 16` (217), the normal's z through
+a float too (7), its x not through one (16), the returned square not through
+one (4,540), `_ftol` out of range giving -1 (75), `ScaleMatrix` reading all
+nine first (2,118), the cosine a quarter turn back (2,571), `NormalColor` with
+only the copy (267), with the lit colour kept (2,235), without the background
+colour (105), the background colour not `<< 4` (2,497).
+
+Three were **not** refused, and each corrected a comment that had claimed a
+quirk:
+
+- *`Gte_Rtpt` as three `Gte_Rtps`.* They leave every register the same: three
+  pushes through a four-deep depth FIFO end where the original's
+  copy-then-store ends. The difference is one of form; ours keeps the
+  original's.
+- *The normal's sum in the other order*, and *a zero length left to divide.*
+  Neither can be seen: a sum large enough to round differently is a squared
+  length the `_ftol` of a float hides, and a zero length means a zero vector,
+  whose components are 0 either way - `_ftol` of a NaN is 0 too. Both kept as
+  the original has them, and the comment now says they are unobservable.
+
+**Not taken over, and why: `0x5A7D70`**, the matrix product (153,648 calls;
+`0x5A7F10`, `0x5A7F80`, `0x5A7FF0`, `0x5A8060` and `0x57C070` sit on it). It
+builds the nine `s16` of the result on the stack and then copies **five
+dwords** to the out - 20 bytes for an 18-byte result. Bytes 18 and 19 of the
+out, the `MATRIX`'s padding, receive whatever the stack held at `esp + 0x3E`,
+which the function never writes. That cannot be reproduced, only replaced -
+by zeros, or by leaving the out's padding alone - and either is a divergence
+for the ledger, small as it is. The owner's call; the arena dump may well be
+able to see those two bytes.
+
+
+## 5. Live checks
 
 All hands-off from a fresh launch, everything ours, against the all-original
 references of 2026-09-19; the frame hash with both sides re-recorded
@@ -140,6 +286,8 @@ references of 2026-09-19; the frame hash with both sides re-recorded
 | 58 (plus section 1) | identical, 7,478 frames | arena, vram, clut identical | identical, 4,738 frames (`ab9`) |
 | 70 (plus twelve of section 2) | identical | identical | **29 of 7,428 frames differed - and so did original against original**: see below |
 | 73 (all of section 2) | identical, 7,478 frames | identical | identical, 7,428 frames, with original against original identical beside it (`ab11`) |
+| 92 (plus section 3) | identical, 7,478 frames | identical | identical, 7,936 frames, original against original identical beside it (`ab12`); and section 3's live shadow |
+| 108 (plus section 4, and [`sprite-draw-order.md`](sprite-draw-order.md) §8) | identical, 7,478 frames | identical | identical, 7,937 frames, original against original identical beside it (`ab13`) |
 
 **The frame hash needed repair before it could be read.** Taking over this
 layer removed several million trapped calls a run, the traced game sped up
