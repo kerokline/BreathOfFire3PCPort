@@ -100,9 +100,9 @@ The attract sequence never gets there, so this path has only been fuzzed, and
 what the state *is* has not been established; an agent's memory of the game
 does not count.
 
-- [ ] Question first, no playing needed: is there something in BoF3 that
-      reverses your movement on the field map - a status, a place, an item?
-- [ ] If you can get into that state: do the controls reverse the same way
+- Answered by the owner, 2026-09-20: yes - a field confusion status reverses
+  inputs, left for right and up for down. Recorded in the doc below.
+- [ ] When you next have a confused party member on the field: do the controls reverse the same way
       with ours as with `BOF3X_ORIGINAL=Field_CopyInput` set? Both directions
       pairs, and does anything else stop responding while it lasts (the
       exchanged word also drops two other button bits)?

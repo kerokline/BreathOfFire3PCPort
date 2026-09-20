@@ -201,9 +201,12 @@ a skip bit at `+3`. `pe_xref.py`: 160 references to `0x7DEE80` in 53 functions,
   four data names are `hypothesis`. Bit 0 of `0x905BA2` chooses between "any
   member" and "the first". *On a PSX pad bits 12-15 are the four directions,
   which would make this "controls reversed while someone is in state 0x20" -
-  but neither the bit layout nor the state is established on this side, and
-  what reverses the controls on the field is the owner's to say, not a model's
-  to remember.* `Input_Held` itself is on firmer ground: `0x461EB0` is an
+  but neither the bit layout nor the state is established from the binary.*
+  **Owner, 2026-09-20: there is a field confusion status that reverses
+  inputs - left is right, up is down.** That is what this function does to
+  the word, so bit `0x20` is very probably that status and the members are
+  the party on the field; it stays inference until seen in game with ours
+  and with the original ([`USER_CHECKS.md`](USER_CHECKS.md) item 5). `Input_Held` itself is on firmer ground: `0x461EB0` is an
   auto-repeat on it, 12 frames and then every 3.
 
 Start-up fuzz against clones,
