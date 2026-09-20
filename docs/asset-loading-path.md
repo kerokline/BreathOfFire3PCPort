@@ -280,6 +280,28 @@ differently on every call; the original disagrees with *itself*. A valid
 stream never does that, and the fuzz now writes valid ones. It matters for the
 takeover: those 18 bytes have no defined value to be faithful to.
 
+**The two unpackers are ours (2026-09-19)** - `src/game/gfx_unpack.cpp`.
+`Gfx_UploadPacked5` `0x461FC0` is faithful to the last quirk: whole dwords are
+unpacked, so up to four bytes past the total are written, and a negative total
+moves `Gfx_UnpackNext` *back*. `Gfx_UploadLzss` `0x462070` is faithful wherever
+the original defines a result - a match is copied whole past the total, a
+negative total never ends - and **zeroes the 18 window bytes the original
+leaves uninitialised**. That is not in the ledger: a valid stream cannot tell,
+and there is no original behaviour to differ from. If shipped data is ever
+found that reads those bytes before writing them, it becomes an entry.
+
+| check | result |
+|---|---|
+| start-up differential fuzz (`BOF3X_SHADOW=gfx_unpack`), 2,000 rounds each; the LZSS streams valid by construction, 242,974 literals and 122,178 matches, 35,503 of them overlapping their own output; for the 5-bit form 150 rounds with a negative total | **0 mismatches** - shadow rows, unpack scratch, `Gfx_UnpackNext` |
+| negative controls: a 5 for the 6-bit shift; match length one short | 1,777 and 1,867 rounds flagged, DLL refuses to run |
+| `mem_dump.py` and attract oracle, twenty-one ours | three regions identical; 7,478 frames identical; no crash |
+
+**The attract sequence never queues an LZSS record** (`analysis/calltrace/queue.csv`
+lists `0x461FC0` and not `0x462070`), so `Gfx_UploadLzss` has been checked by
+the fuzz only - the first takeover with no live coverage at all. Wherever the
+game does use it is a place to play through with `BOF3X_SHADOW` unset and
+eyes open.
+
 `Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
 the one kind-3 chunk — so its store is exercised and its free-the-previous
 branch never is, in this run or by any shipped data.
