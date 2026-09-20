@@ -260,6 +260,56 @@ queues. What `0x437CC0` and `0x5A6AF0` are is unread.
 Limit: "observed edges" means edges seen in one attract run with the full list
 armed. A scene that reaches new draw code needs a new full-list run first.
 
+### The list was too short, and speed is what showed it (2026-09-20)
+
+With 70 functions ours the A/B pair `ab10` **differed on 29 of 7,428 frames**,
+scattered over 3602-3644, 3946-3998 and a few later ones, call counts swapping
+by about 185 between neighbouring frames. Every earlier pair, `ab3` to `ab9`,
+had been identical over the same frames. It was not the takeovers, and the
+record of how that was settled is the point of this section.
+
+1. **`BOF3X_CALLTRACE_DETAIL=3600-3616`, both sides** (`det10_orig`,
+   `det10_ours`). Frames 3601-3616 - several of which had differed in `ab10` -
+   were now identical call for call, in order; only 3600 differed, by 184
+   calls, all made **from inside the draw `0x59EE50`**: `0x5A0C40` from
+   `0x59F0D9` x180, `0x5A2EB0` from `0x59F1C7` x2, `0x5A3160` from `0x5A2F07`
+   x2. The differences move between launches.
+2. **The noise floor, from runs already on disk.** `ab10_orig` against
+   `det10_orig` - original against original - differs on **17 of 4,440
+   frames**, in the same two windows; ours against ours on 24. Frames 0-3599
+   agree in every pairing.
+3. **Why now.** None of the three functions was called even once in `all_a`
+   or in any pair up to `ab9`. They hang off the draw's *second* primitive
+   dispatcher (jump table `0x59F3D8`; the first is `0x59F2A0`), which no slow
+   run entered - not even `all_b`, a full-list run of 12,813 frames in which
+   the draw ran 1,247 times. `ab10` was the first fast one: taking over the
+   library layer removed several million trapped calls a run, and the traced
+   game went from about 17 logic frames a second to about 27 (4,738 frames in
+   270 s, then 7,428). What makes the draw take its second dispatcher is
+   unread; that it depends on how fast the game is running is measured.
+
+So "reachable by observed edges" was the wrong rule for the draw: a wall-clock
+function's branches need not all run in the launch that was traced, and a
+frame hash that gets *faster* as functions are taken over will keep finding
+new ones. **`calltrace.py wallclock --static LO-HI[,LO-HI]`** now also follows
+the disassembly's call targets from everything reached, into the given
+address ranges only. With the renderer's, `59E000-5A6000,5A9600-5AB000`: 155
+functions dropped where there were 91, the 64 new ones all primitive handlers
+and unpackers of the draw, the three above among them; 2,782 entries armed.
+Unrestricted, the same walk reaches the C runtime through `sprintf` and takes
+555 functions, most of them logic's too - hence the ranges.
+
+Edges from two runs are merged for it (`all_a` + `all_b`, concatenated): a
+wall-clock root that is *ours* is unarmed and so absent from a recent run's
+counts, and present in `all_a`, recorded when almost nothing was owned.
+
+**Validated the same day** with 73 functions ours, three fresh launches under the new list (`ab11_orig`, `ab11_origb`, `ab11_ours`): original against original **identical on all 7,428 frames**, and original against ours identical on all 7,428 - the frame hash's longest run yet, the whole attract cycle and into its repeat.
+
+The general lesson, for the receipt policy too ([`STATUS.md`](STATUS.md) open
+decisions): **an A/B check needs an A/A check beside it.** The pair of
+originals is the noise floor; without it a difference cannot be read at all,
+and this one would have cost the takeovers a day of suspicion.
+
 ## 7. Original vs ours under the frame hash — passed 2026-09-19
 
 [`IDEAS.md`](IDEAS.md) I10 item 1. Two rules make the two configurations
