@@ -88,6 +88,27 @@ void Inject(const char* name, std::uint32_t original, void* ours) {
     }
 }
 
+void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours) {
+    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
+    std::int32_t rel;
+    std::memcpy(&rel, at + 1, sizeof rel);
+    if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
+        Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
+    if (WantsOriginal(name)) {
+        Log("retarget OFF %-24s call at 0x%08X left on 0x%08X", name, (unsigned)site, (unsigned)expected);
+        return;
+    }
+    DWORD old = 0;
+    if (!VirtualProtect(at, kJmpLen, PAGE_EXECUTE_READWRITE, &old))
+        Fatal("%s: VirtualProtect(%p) failed, error %lu", name, (void*)at, GetLastError());
+    rel = static_cast<std::int32_t>(static_cast<std::uint8_t*>(ours) - (at + kJmpLen));
+    std::memcpy(at + 1, &rel, sizeof rel);
+    DWORD ignored = 0;
+    VirtualProtect(at, kJmpLen, old, &ignored);
+    FlushInstructionCache(GetCurrentProcess(), at, kJmpLen);
+    Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p", name, (unsigned)site, (unsigned)expected, ours);
+}
+
 void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
                     const CloneCall* calls, int n_calls) {
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));

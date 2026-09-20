@@ -30,6 +30,12 @@ void VerifyImage();
 // variable (comma separated), or all of them with BOF3X_ORIGINAL=*.
 void Inject(const char* name, std::uint32_t original, void* ours);
 
+// Re-aims ONE relative call inside an original function at ours, leaving the
+// callee and its other callers alone: for a divergence that belongs to one
+// call site of a function with many. Refuses unless `site` holds a CALL to
+// `expected`. BOF3X_ORIGINAL=<name> leaves the site untouched.
+void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours);
+
 // A runnable byte-copy of an original function, for shadow-checking our
 // replacement against it in the same process (BOF3X_SHADOW). Not a trampoline:
 // nothing resumes into the original body. Sound only for a function whose
