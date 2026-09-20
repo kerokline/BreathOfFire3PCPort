@@ -10,6 +10,7 @@
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
+#include "game/sprite_order.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -25,6 +26,7 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
+    SpriteOrder_Inject();
     InjectReport();
 }
 

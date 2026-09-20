@@ -949,3 +949,42 @@ name = "Game_AreaNumber"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "PC address from BreathOfFire3Recomp/docs/PC_PORT_CROSS_REFERENCE.md; confirmed on this side 2026-09-19 by correlating two independent observations of one attract run: the word read 4, then 0x1F, then 2 (tools/attract_watch.py), while our File_Open logged AREA004.DAT, AREA031.DAT and AREA002.DAT being opened in that order (analysis/attract/ours_d_fileopen.log). It is the decimal NNN of the AREANNN.DAT in play. Reads 0xFFFF for one logic frame while an area load is in progress."
+
+# ---------------------------------------------------------------------------
+# The sprite draw list and its order (0x593060). Takeover queue, layer 0,
+# the two hottest logic functions of the attract run (2026-09-20).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x9036E0
+name = "Sprite_DrawList"
+ctype = "unsigned char *"
+count = 40
+status = "evidence"
+evidence = "disasm 2026-09-20: array of pointers indexed by the count byte 0x8034F0. pe_xref.py: three writers (0x510E26, 0x57BA47, 0x5890C3), each storing a sprite object and doing count++ only when count < 0x28, two of them storing Sprite_Current; 0x593060 sorts it by the objects' u16 at +0x32, then the signed sum of the dwords at +0x34 and +0x38, then the signed dword at +0x3C, and walks it. Length 40 from the writers' bound; Sprite_DrawListSwap itself does not check."
+
+[[data]]
+pc = 0x8034F0
+name = "Sprite_DrawListCount"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-20: the byte the three writers of Sprite_DrawList compare with 0x28, index by and increment, and the loop bound of both passes of 0x593060."
+
+[[func]]
+pc = 0x593530
+name = "Sprite_DrawListSwap"
+ret = "void"
+params = "unsigned i, unsigned j"
+impl = "src/game/sprite_order.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 13 instructions, cdecl, no calls, no jumps: masks both arguments to their low byte and exchanges Sprite_DrawList[i] and Sprite_DrawList[j] - both read before either is written. No bound beyond the byte mask. One caller, 0x5930E9 in 0x593060 (callees of analysis/pc_funcs.json), which pushes registers whose upper 24 bits are whatever they were - the mask is load-bearing. Call trace all_a 2026-09-19: 16,444 calls in one attract run."
+
+[[func]]
+pc = 0x593570
+name = "Sprite_DrawRecordSwap"
+ret = "void"
+params = "unsigned long *a, unsigned long *b"
+impl = "src/game/sprite_order.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 25 instructions, cdecl, no calls, no jumps: exchanges two records of three dwords. Order as written: the three dwords of b are read first; then a[k] is read and stored to b[k] for k = 0, 1, 2 in turn; then the saved three are stored to a. One caller, 0x59344E in 0x593060, with a = a 12-byte record at 0x7E01C0 + n * 12 and b = the record before it, inside a bubble sort on the signed 16-bit word at record +4. Call trace all_a 2026-09-19: 421,058 calls in one attract run, the most of any unnamed logic function."
+note = "The record, from 0x5933D1..0x5933EE: +0 a sprite object, +4 the object's dword +0x60 with bit 31 set. The other producer, 0x57BAE0, is unread, and so is +8."
