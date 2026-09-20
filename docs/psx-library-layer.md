@@ -271,9 +271,37 @@ dwords** to the out - 20 bytes for an 18-byte result. Bytes 18 and 19 of the
 out, the `MATRIX`'s padding, receive whatever the stack held at `esp + 0x3E`,
 which the function never writes. That cannot be reproduced, only replaced -
 by zeros, or by leaving the out's padding alone - and either is a divergence
-for the ledger, small as it is. The owner's call; the arena dump may well be
-able to see those two bytes.
+for the ledger, small as it is. The owner's call.
 
+**What the two bytes are, measured 2026-09-20** (the experiment is parked in
+`analysis/experiments/experiment_mulmatrix.cpp`; `BOF3X_MATRIX_PAD=observe`
+runs the original's copy and tallies, `=FFFF` runs a product of ours - 20,000
+fuzz rounds, 0 mismatches outside the padding - and forces the word):
+
+- They are the alignment hole of a PSX `MATRIX`: nine `s16`, then three `s32`
+  that must start on a multiple of four. Nothing is *stored* there on
+  purpose; the five-dword copy is a cheap way to move 18 bytes.
+- What the original leaves in them over an attract run, 98,305 calls: twelve
+  distinct values - `0000` 76,199 times, `000E` 8,535, `6322` 7,964, `0E7F`
+  3,402, `FFFF` 1,003, and seven rarer ones. Stale stack, as read; it changed
+  what was there on 39,462 of the calls.
+- Where they go: into the caller's matrix (the three rotation builders multiply
+  in place), and from there `Gte_SetRotMatrix` copies five dwords into
+  `Gte_Matrix`, padding included - where **no instruction in the image names
+  the address** (`pe_xref` on `0x7DE4B0`..`B3`, and on the same two bytes of
+  `Gte_Matrix2` and `Gte_ColorMatrix`: no references), and `Gte_ApplyMatrix`
+  reads nine words and stops.
+- Forcing them to `FFFF` on every call changes nothing the checks can see:
+  `attract_diff.py` identical over 7,478 frames, arena, vram and clut dumps
+  identical - to the observe run *and* to the all-original reference. The
+  identical arena also says no such matrix is sitting in the arena at the
+  dump point. The frame hash differed on single frames (614, 5524, 5788), and
+  so did **two runs of the same configuration** (`padh_ffff` against
+  `padd_FFFF`, frame 5524): same-configuration noise, not the padding.
+
+What this does not cover: an indexed read - `[reg + 0x12]`, or a dword at
+`+0x10` whose top half is used - in code the attract run does not reach. None
+was looked for beyond the GTE's own globals.
 
 ## 5. Live checks
 
