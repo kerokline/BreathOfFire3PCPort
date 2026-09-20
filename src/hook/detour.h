@@ -38,8 +38,8 @@ void Inject(const char* name, std::uint32_t original, void* ours);
 // have established from the disassembly. Call BEFORE Inject, which destroys
 // the first five bytes. The copy lives in process memory only.
 //
-// A relative CALL that does leave the range is named in `calls`: the offset of
-// its E8 byte, and where the copy should call instead - null for "where the
+// A relative CALL - or a tail JMP - that does leave the range is named in
+// `calls`: the offset of its E8 or E9 byte, and where the copy should call instead - null for "where the
 // original called", or another clone, so that a cloned caller reaches the
 // cloned callee and never ours.
 struct CloneCall {

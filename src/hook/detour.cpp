@@ -101,8 +101,9 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     std::memcpy(copy, orig, size);
     for (int i = 0; i < n_calls; ++i) {
         const std::uint32_t at = calls[i].offset;
-        if (at + kJmpLen > size || orig[at] != 0xE8)
-            Fatal("%s: no relative call at +0x%X to re-aim", name, (unsigned)at);
+        // E8 call or E9 tail jump: the same rel32, re-aimed the same way.
+        if (at + kJmpLen > size || (orig[at] != 0xE8 && orig[at] != 0xE9))
+            Fatal("%s: no relative call or jmp at +0x%X to re-aim", name, (unsigned)at);
         std::int32_t rel;
         std::memcpy(&rel, orig + at + 1, sizeof rel);
         const std::uint8_t* target = calls[i].target

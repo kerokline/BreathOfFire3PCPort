@@ -73,7 +73,8 @@ add_library(bof3x SHARED
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
   src/game/psx_gpu.cpp
-  src/game/psx_gte.cpp)
+  src/game/psx_gte.cpp
+  src/game/psx_gte_float.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
