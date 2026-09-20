@@ -304,7 +304,7 @@ _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
 Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b`: pushed, and
-**PR_PLACEHOLDER** open against `main` - eighty-four takeovers (`src/game/`
+**[PR 5](https://github.com/kerokline/BreathOfFire3PCPort/pull/5)** open against `main` - eighty-four takeovers (`src/game/`
 from `sprite_order.cpp` to `draw_pass.cpp`), `-fno-strict-aliasing`,
 `calltrace.py wallclock --static`, `CloneOriginal` re-aiming a tail `jmp`, and
 the docs. Cut the stage-2 branch from `main` once it merges.
