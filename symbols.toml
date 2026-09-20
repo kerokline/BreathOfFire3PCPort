@@ -988,3 +988,53 @@ impl = "src/game/sprite_order.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 25 instructions, cdecl, no calls, no jumps: exchanges two records of three dwords. Order as written: the three dwords of b are read first; then a[k] is read and stored to b[k] for k = 0, 1, 2 in turn; then the saved three are stored to a. One caller, 0x59344E in 0x593060, with a = a 12-byte record at 0x7E01C0 + n * 12 and b = the record before it, inside a bubble sort on the signed 16-bit word at record +4. Call trace all_a 2026-09-19: 421,058 calls in one attract run, the most of any unnamed logic function."
 note = "The record, from 0x5933D1..0x5933EE: +0 a sprite object, +4 the object's dword +0x60 with bit 31 set. The other producer, 0x57BAE0, is unread, and so is +8."
+
+# ---------------------------------------------------------------------------
+# The draw-item index pool (2026-09-20): takeover queue, layer 0.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x7E09E0
+name = "DrawItemPool_Free"
+ctype = "unsigned short"
+count = 1024
+status = "evidence"
+evidence = "disasm 2026-09-20: 0x56F8BF..0x56F8D1 fills 0x7E09E0 up to 0x7E11E0 with the words 0, 1, 2, ... (1,024 of them) and sets the word 0x9039D4 to 1; DrawItemPool_Alloc reads the word at index 0x9039D4 and DrawItemPool_Release stores one there. pe_xref.py 0x7E09E0: four references - those two functions and two initialisers, 0x4B5350 and 0x56F670."
+note = "What the indices are of: 0x56FC00 releases the low 12 bits of a word, then the words at 0x905E80 + index * 0x90 + 0x7E and + 0x8E - so they index the 0x90-byte items at 0x905E80, the table 0x593060 merges with the sprite list (docs/sprite-draw-order.md). 'DrawItem' rests on that reading of 0x593060, which is inference."
+
+[[data]]
+pc = 0x9039D4
+name = "DrawItemPool_Top"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-20: index into DrawItemPool_Free of the next free index; 0 means none left, and index 0 is never handed out (initialised to 1). pe_xref.py: 10 references in five functions; 0x510780 saves and restores it and compares it with 0x400."
+
+[[func]]
+pc = 0x56FBD0
+name = "DrawItemPool_Alloc"
+ret = "unsigned short"
+params = "void"
+impl = "src/game/draw_pool.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 12 instructions, cdecl, no arguments, no calls, one forward jump: if DrawItemPool_Top is 0 returns 0 in ax; otherwise returns DrawItemPool_Free[Top] and stores (Top + 1) & 0x3FF. Only ax is set on the empty path; the caller at 0x56EEA8 stores ax and masks eax to 16 bits before using it. Four callers (E8 scan of .text): 0x509916, 0x56EEA3, 0x56EEF4, 0x56EF40. Call trace all_a 2026-09-19: 3,887 calls."
+note = "Top wraps from 0x3FF to 0 - which reads as 'none left' from then on, until a release. So the last index in the array can be handed out, and after it the pool is empty; consistent."
+
+[[func]]
+pc = 0x56FC70
+name = "DrawItemPool_Release"
+ret = "unsigned"
+params = "unsigned short index"
+impl = "src/game/draw_pool.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 9 instructions, cdecl, no calls, no jumps: Top = (Top - 1) & 0x3FF, DrawItemPool_Free[Top] = the argument's low word. Leaves the new Top in eax, upper bits clear. Four callers (E8 scan), all in 0x56FA00..0x56FC6D; the three read (0x56FAB6, 0x56FC13, 0x56FC39) do not use eax. Call trace all_a: 2,937 calls."
+note = "No check for a full pool: releasing with Top == 1 stores at index 0, and with Top == 0 at index 0x3FF. Returning Top is kept because it costs nothing, not because a use of it was seen."
+
+[[func]]
+pc = 0x462A70
+name = "Prim_SetShade"
+ret = "void"
+params = "unsigned char *prim, unsigned char level"
+impl = "src/game/prim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 6 instructions, cdecl, no calls, no jumps: stores the low byte of its second argument to bytes +4, +5 and +6 of its first. Nine callers (E8 scan), all in 0x462850..0x462A66. Call trace all_a: 6,474 calls."
+note = "Bytes +4..+6 of a PSX GPU primitive are r0, g0, b0 (libgpu setRGB0); that the first argument IS such a primitive is by position only - the callers are unread - hence the name is the weakest part of this entry."

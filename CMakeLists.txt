@@ -58,7 +58,9 @@ add_library(bof3x SHARED
   src/game/gfx_flush.cpp
   src/game/gfx_unpack.cpp
   src/game/gfx_vram_ops.cpp
-  src/game/sprite_order.cpp)
+  src/game/sprite_order.cpp
+  src/game/draw_pool.cpp
+  src/game/prim.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

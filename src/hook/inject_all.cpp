@@ -11,6 +11,8 @@
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
 #include "game/sprite_order.h"
+#include "game/draw_pool.h"
+#include "game/prim.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -27,6 +29,8 @@ void InjectAll() {
     GfxUnpack_Inject();
     GfxVramOps_Inject();
     SpriteOrder_Inject();
+    DrawPool_Inject();
+    Prim_Inject();
     InjectReport();
 }
 

@@ -116,10 +116,54 @@ identical for records that do not overlap - 1,505 mismatch, all from the
 overlapping rounds, and it refuses to run. So the overlap rounds are what pins
 the order, and nothing the game does would have.
 
-## 4. Not done
+## 4. The draw-item index pool, and a primitive writer - taken over
 
-- **Live checks of the two helpers** - `attract_diff.py` against
-  `orig_a.tsv`, `mem_dump.py --compare`. Both are logic functions in
+Next in the queue, same day; `symbols.toml` has the instruction-level evidence.
+
+**`DrawItemPool_Alloc` `0x56FBD0`, `DrawItemPool_Release` `0x56FC70`**
+(`src/game/draw_pool.cpp`; 3,887 and 2,937 calls in `all_a`). A stack of free
+indices: 1,024 words at `0x7E09E0`, initialised to 0, 1, 2, ... by
+`0x56F8BF`..`0x56F8D1`, and a top-of-stack word `0x9039D4` initialised to 1, so
+index 0 is never handed out and 0 can mean "none". Top wraps at `0x3FF`, and a
+top of 0 reads as an empty pool. Release checks nothing.
+
+What the indices are of: `0x56FC00` releases the low 12 bits of a word at
+`+2` of its argument, then the words at `0x905E80 + index * 0x90 + 0x7E` and
+`+ 0x8E`. So they index the 0x90-byte items at `0x905E80` - two 0x48-byte
+halves chosen by `Gfx_BufferIndex`, the table section 2's pass 2 merges with
+the sprite list. That is what ties this pool to the draw order, and the
+"DrawItem" in the names rests on it.
+
+**`Prim_SetShade` `0x462A70`** (`src/game/prim.cpp`; 6,474 calls): one byte
+to `+4`, `+5`, `+6` of its first argument. Its nine call sites are all in
+`0x462820`, `0x462930` and `0x462A00`, which pass it the return value of
+`0x462560(0x106, 0x82, 1, 1)`-style calls; unread. Bytes `+4`..`+6` are
+`r0 g0 b0` of a PSX GPU primitive, which is the whole basis of the name.
+
+Start-up fuzz against clones, `BOF3X_SHADOW=draw_pool,prim`, 2026-09-20:
+
+| Check | Rounds | Of which | Mismatches |
+|---|---|---|---|
+| pool | 6,000 | 2,989 allocs (168 from an empty pool), 3,011 releases, 1,467 with top at 0, 1, `0x3FE` or `0x3FF`; array, top and result compared | 0 |
+| `Prim_SetShade` | 256 | every level, random bits above the low byte of the argument | 0 |
+
+Negative controls: alloc with top + 1 unmasked, 188 of 6,000 mismatch; shade
+without byte `+6`, 254 of 256 (the other two are levels the random buffer
+already held). Both refuse to run.
+
+## 5. Not done
+
+- **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
+  argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it
+  walks 30 records of `0xA4` bytes looking for the `(c & 0x3F)`-th whose byte
+  at `0x7DEE86 + n * 0xA4` is `0x0A` - and then returns `c & 0x3F` in `al`
+  whatever it found: the loop's index lives in `dl` and never reaches `al`.
+  Both callers (`0x5192AC`, `0x58977F`) read `al`. Either the search is dead
+  code in the source too, or the port lost a `return`. **The PSX side can
+  say which**; not looked up. It should not be taken over before that is
+  known - not because it is hard, but because it may be a defect to record.
+- **Live checks of all five takeovers** - `attract_diff.py` against
+  `orig_a.tsv`, `mem_dump.py --compare`. All five are logic functions in
   `entries_logic.txt`, and owned functions are left unarmed, so **the
   frame-hash reference `analysis/calltrace/ab3_orig/` must be re-recorded**
   before the next frame-hash A/B ([`HANDOFF.md`](HANDOFF.md)).
