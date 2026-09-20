@@ -2136,3 +2136,56 @@ params = "int layer"
 impl = "src/game/draw_emit.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 0x7C bytes, three calls, one jump, internal: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0); Gfx_CommitPrim(6, 0xC); then with cell = 0x8022B0 + (Gfx_BufferIndex + layer * 6) * 8 - the second (first, last) pair of the layer's 0x30 bytes - if the dword at cell is non-zero: Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], it), and Gfx_OtPointers[Draw_OtSlot] = the dword at cell + 4, the index read again. Called by the draw-order pass 0x593060 after each layer when bit 2 of 0x7E0918 is set. cdecl. Call trace all_b 2026-09-20: 403,315 calls."
+
+# ---------------------------------------------------------------------------
+# The draw-order pass itself (2026-09-20). docs/sprite-draw-order.md section 2.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x7E01C0
+name = "Sprite_DrawRecords"
+ctype = "unsigned long"
+count = 300
+status = "evidence"
+evidence = "disasm 2026-09-20: Sprite_DrawPass 0x593060 gathers 12-byte records here - an object and its dword +0x60 with bit 31 set, or whatever 0x57BAE0 writes - indexes them by a signed byte, sorts them on the s16 at +4 and walks them. pe_xref: no other function names the address."
+note = "The count is NOT measured: 100 records is this file's working figure for the fuzz. The index is a signed byte, so the pass itself stops at 127."
+
+[[data]]
+pc = 0x7E0918
+name = "Draw_PassFlags"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-20: Sprite_DrawPass 0x593060 tests bit 1 before drawing a sprite, bit 2 before DrawLayer_Open / DrawLayer_Close and before linking a draw-table item, bit 3 before linking a record's primitive, bit 4 before appending a layer's third list. pe_xref: 513 references across the image - the name says only what this pass uses it for."
+
+[[func]]
+pc = 0x593060
+name = "Sprite_DrawPass"
+ret = "void"
+params = "void"
+impl = "src/game/draw_pass.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x4CB bytes, eleven calls, every jump internal; read to the ret at 0x59352A - docs/sprite-draw-order.md section 2 is the account. Bubble sort of Sprite_DrawList on the u16 +0x32, then the sum of dwords +0x34 and +0x38, then dword +0x3C; Gpu_SetDrawMode / Gfx_CommitPrim(6, 0xC); then 0x37 layers, each merging the list with DrawTable, gathering sprites into Sprite_DrawRecords (count a signed byte at esp + 0x11), sorting those descending on the s16 +4, and drawing or linking each. Call trace all_b 2026-09-20: 8,846 calls."
+
+[[func]]
+pc = 0x56FD20
+name = "DrawLayer_Open"
+ret = "void"
+params = "int layer"
+status = "hypothesis"
+evidence = "disasm 2026-09-20, read in part: appends the layer's first (first, last) pair to ordering-table slot 6 as DrawLayer_Close 0x56FE80 appends the second, then walks a window of the word table 0x904F20 and hands 4-byte records under 0x8CB580 to handlers through the table 0x663008 (one indirect call). Called by Sprite_DrawPass before each layer. The name is from that pairing; what the records are is unread. cdecl. Call trace all_b: 403,315 calls."
+
+[[func]]
+pc = 0x57BAE0
+name = "Sprite_AddDrawRecords"
+ret = "unsigned"
+params = "unsigned long *record"
+status = "hypothesis"
+evidence = "disasm 2026-09-20 of its one caller only: Sprite_DrawPass 0x593060 calls it, for an object with bit 0x40 of byte +0x24, with the address of the next free 12-byte record, and adds al of the result to its record count. The function itself (0x3E1 bytes) is unread. cdecl. Call trace all_b: 7,824 calls."
+
+[[func]]
+pc = 0x5935B0
+name = "Sprite_Draw"
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-20 of its caller only: Sprite_DrawPass 0x593060 sets Sprite_Current to a record's object and calls it, under bit 1 of Draw_PassFlags. The function itself (683 bytes, and 0x593860 under it) is unread. cdecl. Call trace all_b: 33,850 calls."

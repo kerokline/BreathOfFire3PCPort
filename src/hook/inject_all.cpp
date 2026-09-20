@@ -24,6 +24,7 @@
 #include "game/psx_gte_float.h"
 #include "game/psx_gte_transform.h"
 #include "game/draw_emit.h"
+#include "game/draw_pass.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -39,6 +40,7 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
+    DrawPass_Inject();          // before what it calls: it clones their originals
     SpriteOrder_Inject();
     DrawPool_Inject();
     Prim_Inject();
