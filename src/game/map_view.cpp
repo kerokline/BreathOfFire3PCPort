@@ -1,6 +1,7 @@
 #include "game/map_view.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -78,6 +79,42 @@ void SelfTest(CellToMapFn theirs) {
     if (bad) bof3::Fatal("MapView_CellToMap differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
+// The same for AreaMap_ByteAt: a random plane with AreaMap_Bytes pointed at
+// its middle, so that negative coordinates are in bounds; random width byte;
+// x and y over all 16 bits, with noise above bit 15 of both arguments, which
+// the original sign-extends away.
+using ByteAtFn = unsigned char (__cdecl*)(unsigned, unsigned);
+
+void SelfTestByteAt(ByteAtFn theirs) {
+    constexpr unsigned kRounds = 8000;
+    constexpr int kHalf = 0x820000;   // |x + y * width| <= 0x8000 + 0x8000 * 255 < kHalf
+    // 17 MB, so from the heap and given back, not a static the DLL carries.
+    auto* const plane = static_cast<unsigned char*>(std::malloc(2 * kHalf));
+    if (!plane) { bof3::Log("shadow      AreaMap_ByteAt self-test SKIPPED: no memory"); return; }
+    for (int i = 0; i < 2 * kHalf; ++i) plane[i] = static_cast<unsigned char>(Rng());
+    const unsigned char* const saved = AreaMap_Bytes;
+    const unsigned char saved_width = AreaMap_Header[0];
+    AreaMap_Bytes = plane + kHalf;
+
+    unsigned bad = 0, negative = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        AreaMap_Header[0] = static_cast<unsigned char>(Rng());
+        const unsigned x = Rng(), y = Rng();
+        if ((x | y) & 0x8000u) ++negative;
+        const unsigned char their_result = theirs(x, y);
+        const unsigned char our_result = reinterpret_cast<ByteAtFn>(reinterpret_cast<void*>(&AreaMap_ByteAt))(x, y);
+        if (their_result != our_result && ++bad <= 8)
+            bof3::Log("shadow      AreaMap_ByteAt self-test MISMATCH round %u: x 0x%08X y 0x%08X width %u: %u vs ours %u",
+                      round, x, y, AreaMap_Header[0], their_result, our_result);
+    }
+    AreaMap_Bytes = saved;
+    AreaMap_Header[0] = saved_width;
+    std::free(plane);
+    bof3::Log("shadow      AreaMap_ByteAt self-test: %u rounds (%u with a negative coordinate), %u MISMATCHES",
+              kRounds, negative, bad);
+    if (bad) bof3::Fatal("AreaMap_ByteAt differs from the original in %u of %u self-test rounds", bad, kRounds);
+}
+
 }  // namespace
 
 // original 0x56F910. Which map cell the view's cell (row, col) shows, as two
@@ -107,10 +144,21 @@ extern "C" void __cdecl MapView_CellToMap(int row, int col, unsigned char* out) 
     out[1] = 0;
 }
 
+// original 0x536700. The area map's byte for a cell. No bounds check; the
+// arguments are 16 bits, signed.
+extern "C" unsigned char __cdecl AreaMap_ByteAt(short x, short y) {
+    return AreaMap_Bytes[x + y * static_cast<int>(AreaMap_Header[0])];
+}
+
 void MapView_Inject() {
-    // 0x56F910..0x56F9A0: no calls, every jump internal (disasm 2026-09-20).
-    if (bof3::WantsShadow("map_view"))
+    // 0x56F910..0x56F9A0: no calls, every jump internal. 0x536700..0x536722:
+    // no calls, no jumps (disasm 2026-09-20).
+    if (bof3::WantsShadow("map_view")) {
         SelfTest(reinterpret_cast<CellToMapFn>(
             bof3::CloneOriginal("MapView_CellToMap", bof3::addr::MapView_CellToMap, 0x91)));
+        SelfTestByteAt(reinterpret_cast<ByteAtFn>(
+            bof3::CloneOriginal("AreaMap_ByteAt", bof3::addr::AreaMap_ByteAt, 0x23)));
+    }
     BOF3_INJECT(MapView_CellToMap);
+    BOF3_INJECT(AreaMap_ByteAt);
 }

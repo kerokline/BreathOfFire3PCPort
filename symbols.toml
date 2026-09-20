@@ -1078,7 +1078,7 @@ params = "void"
 impl = "src/game/sprite_anim.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, one forward jump, 0x60 bytes. For the object at Sprite_Current: if the pointer at +0x50 is null, nothing. Otherwise byte +0x4A = script[pos], pos = the u16 at +0x58; pos is incremented in place as 16 bits; n = script[pos] with script re-read from +0x50; pos incremented again; the u16 at +0x5A = the n-th u16 of the table the pointer at +0x54 names. Sprite_Current is re-read from 0x937F88 before each store. Call trace all_a 2026-09-19: 2,920 calls."
-note = "A two-byte step of a byte script: a value, then an index into a word table. What +0x4A and +0x5A mean is unread, so the name says only that. docs/known-defects.md D4 has +0x50 as 'a pointer into the animation data'."
+note = "A two-byte step of a byte script: a hold in ticks (+0x4A is counted down by Sprite_ScriptTick), then the number of a frame word (+0x5A). What the frame word encodes is unread. docs/known-defects.md D4 has +0x50 as 'a pointer into the animation data'."
 
 [[data]]
 pc = 0x7DEE80
@@ -1165,3 +1165,102 @@ impl = "src/game/field_input.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x9A bytes. Decides a flag: with bit 0 of Field_InputFlags set, whether ANY of the Field_MemberCount records at Field_Members (none if the count is 0) has bit 0x20 in the Field_ActorStates byte its byte +0 indexes - the loop does not stop at the first; with bit 0 clear, whether the first record has. Flag clear: Field_InputHeld = Input_Held. Flag set: Field_InputHeld = the low word of ((held & 0xF000) << 2) | ((held >> 2) & 0x3000) | (held & 0x9FF) - bits 12 and 13 move to 14 and 15 and back, bits 9 and 10 are dropped, bit 11 and bits 0-8 pass. Call trace all_a 2026-09-19: 2,779 calls."
 note = "On a PSX pad bits 12-15 are up, right, down, left, which would make this 'reverse the directions while someone has state 0x20' - but neither the bit layout nor what state 0x20 is has been established from the binary. Owner, 2026-09-20: the game has a field confusion status that reverses inputs, left for right and up for down. That fits this function exactly; that bit 0x20 IS that status is still inference until the in-game A/B of docs/USER_CHECKS.md item 5."
+
+[[func]]
+pc = 0x589350
+name = "Sprite_ScriptStart"
+ret = "void"
+params = "unsigned short position"
+impl = "src/game/sprite_anim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, one argument read as a word, 0x42 bytes ending in a jmp to Sprite_ScriptStep 0x589470. For the object at Sprite_Current: byte +0x49 = byte 1 of the script at +0x50; +0x50 += 2; u16 +0x58 = the argument; +0x54 = the new +0x50 plus byte +0x49 times 2; then the step. No null check. Five callers (E8/E9 scan), all in 0x589130..0x589330. Call trace all_a 2026-09-19: 240 calls."
+note = "This is what makes +0x54 'the frame words behind the last step' and +0x49 the step count."
+
+[[func]]
+pc = 0x5893A0
+name = "Sprite_ScriptTick"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/sprite_anim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, 0x65 bytes, two calls, both to Sprite_ScriptStep. Decrements byte +0x4A of the object at Sprite_Current and returns 0 in al unless it reached 0. Then, with pos the u16 at +0x58: if pos >> 1 (16-bit) equals byte +0x49, stores 0 to +0x58, steps, returns 1. Otherwise if the script byte at pos is >= 0x80, stores twice the next byte to +0x58 and returns 1 after the step, else returns 0 after it. Callers: a dozen and more in 0x408990..0x433290 (E8 scan). Call trace all_a: 11,899 calls."
+
+[[func]]
+pc = 0x589410
+name = "Sprite_ScriptTickOnce"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/sprite_anim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, 0x60 bytes, one call, to Sprite_ScriptStep. Identical to Sprite_ScriptTick except where pos >> 1 equals byte +0x49: there it stores 1 to byte +0x4A and returns 1 without a step, so the next tick arrives at the same place. Callers: a dozen and more in 0x433430..0x43D063 (E8 scan). Call trace all_a: 4,311 calls."
+
+[[data]]
+pc = 0x905E80
+name = "DrawItems"
+ctype = "unsigned char"
+count = 0x24000
+status = "evidence"
+evidence = "disasm 2026-09-20: DrawItemPool_ReleaseCell 0x56FC00 addresses it as 0x905E80 + index * 0x90 and 0x593060 as 0x905E80 + (Gfx_BufferIndex + index * 2) * 0x48 - one 0x90-byte item per index, two 0x48-byte halves, one per display buffer. Length from the pool: 1,024 indices of 0x90 bytes = 0x24000, ending at 0x929E80, 0x20 bytes below the slot table 0x929EA0. The u16 at item +0x7E and +0x8E are further pool indices the item owns. pe_xref.py: 14 references in 8 functions."
+
+[[func]]
+pc = 0x56FC00
+name = "DrawItemPool_ReleaseCell"
+ret = "void"
+params = "unsigned char *cell"
+impl = "src/game/draw_pool.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, 0x70 bytes, three calls, all to DrawItemPool_Release (E8 at +0x13, +0x39, +0x5C), every jump internal. index = the u16 at cell +2, low 12 bits; 0: nothing. Otherwise releases index, zeroes the u16 at cell +2 (all 16 bits), and for the u16 at DrawItems + index * 0x90 + 0x7E and then + 0x8E: if non-zero, releases it and zeroes it. Call trace all_a 2026-09-19: 863,659 calls - the most of any function in the queue, the view's 56 x 28 cells (0x937FA0) every time the view is rebuilt."
+note = "The mask is 12 bits where the pool has 10: an index of 0x400..0xFFF would address past DrawItems. Not seen to happen; kept."
+
+[[data]]
+pc = 0x905D94
+name = "AreaMap_Bytes"
+ctype = "const unsigned char *"
+status = "evidence"
+evidence = "disasm 2026-09-20: AreaMap_ByteAt 0x536700 reads the byte at [0x905D94] + x + width * y. pe_xref.py: 50 references in 27 functions, nearly all loads of the pointer."
+note = "A per-cell byte plane of the area map, beside the word plane AreaMap_Header leads to. What the byte means is unread."
+
+[[func]]
+pc = 0x536700
+name = "AreaMap_ByteAt"
+ret = "unsigned char"
+params = "short x, short y"
+impl = "src/game/map_view.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 9 instructions, cdecl, no calls, no jumps: both arguments sign-extended from 16 bits; returns in al the byte at AreaMap_Bytes + x + y * width, width the low byte of the dword at AreaMap_Header. No bounds check. Call trace all_a 2026-09-19: 619 calls."
+
+[[func]]
+pc = 0x531C70
+name = "Sprite_PointInReach"
+ret = "unsigned char"
+params = "int x, int y, short z, int margin, const unsigned char *object"
+impl = "src/game/sprite_find.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, five arguments, no calls, every jump internal, 0x80 bytes. r = byte +0x70 of the object + margin + 2. Returns 0 in al if |s16 object +0x3E - s16 z| > r << 7; with k = byte +9, if |x - dword +0xC * k - dword +0x34| >= r << 15; or the same for y with +0x10 and +0x38; else 1. The products and differences wrap in 32 bits and each absolute value is cdq / xor / sub, so 0x80000000 stays negative and passes. At least ten callers (E8 scan) in 0x51C705..0x531F54. Call trace all_a 2026-09-19: 2,450 calls."
+note = "+0x34 / +0x38 / +0x3E are the position Sprite_FindNearby uses; +0xC and +0x10 scaled by byte +9 read as a velocity times a step count - the position about to be, not the one it has - but that is inference. Note z is inclusive where x and y are exclusive."
+
+[[data]]
+pc = 0x80B580
+name = "Gfx_ClutStripSource"
+ctype = "unsigned short"
+count = 0x2000
+status = "evidence"
+evidence = "disasm 2026-09-20: Sprite_RestoreClut 0x534E50 copies words from 0x80B580 + n * 2 to Gfx_ClutStrip + n * 2, n = clut * 32 + 1..31 with clut a byte - the same 0x2000 words, 0x4000 bytes below the strip, at MessagePools + 0x8000 in the DAT arena."
+note = "The strip as loaded; Gfx_ClutStrip is the copy the game changes and uploads."
+
+[[data]]
+pc = 0x905D98
+name = "Field_State"
+ctype = "unsigned char *"
+status = "hypothesis"
+evidence = "disasm 2026-09-20: Sprite_RestoreClut loads the pointer and tests, then clears, bit 3 of the byte at +0x138 of what it points at. Nothing else about the block is read, hence hypothesis for the name."
+
+[[func]]
+pc = 0x534E50
+name = "Sprite_RestoreClut"
+ret = "void"
+params = "void"
+impl = "src/game/sprite_clut.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x68 bytes. If bit 3 of byte +0x138 of the block at Field_State is clear, nothing. Otherwise, with clut = byte +0x27 of the object at Sprite_Current (re-read each time round), copies words clut * 32 + n for n = 1..31 from Gfx_ClutStripSource to Gfx_ClutStrip - the index is built as (clut % 8) + (clut / 8) * 8, which is clut - sets Gfx_ClutStripDirty to 1 and clears the bit. Two callers (E8 scan): 0x51AC50, 0x52D8F0. Call trace all_a 2026-09-19: 2,779 calls."
+note = "Entry 0 of the CLUT is left as it is. 32 words per CLUT where a PSX CLUT is 16: two CLUTs a row, or one of 32 - unread."

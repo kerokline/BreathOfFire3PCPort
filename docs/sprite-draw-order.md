@@ -6,8 +6,8 @@ What the regenerated takeover queue ([`call-trace.md`](call-trace.md) §9) put
 first, and where it led: its two hottest layer-0 logic functions are the
 exchange helpers of the pass that decides the order field sprites are drawn
 in, and the next half-dozen all touch the same structures - the sprite object
-arrays, the view's cell grid, the draw-item pool. Nine functions are ours
-(sections 3 to 5); the pass itself is read but not taken over.
+arrays, the view's cell grid, the draw-item pool, the animation script.
+Sixteen functions are ours (sections 3 to 6); the pass itself is read but not taken over.
 
 All addresses are `BOF3.exe` (`symbols.toml` `[meta]`). Disassembly by
 `python tools/pe_disasm.py`, 2026-09-20.
@@ -225,7 +225,82 @@ Negative controls, each refusing to run: the map's `x < width - 1` as
 2,383 of 8,000, and with z `< 0x300`, 2,822; the input copy keeping bits 9 and
 10, 1,883 of 8,000, and letting the last member decide, 1,155.
 
-## 6. Live checks, 2026-09-20
+## 6. Seven more, second pass of the queue - taken over
+
+Naming section 4's pool made its caller a leaf, and the regenerated queue put
+it first. `symbols.toml` has the instruction-level evidence for all seven.
+
+**The animation script, complete** (`src/game/sprite_anim.cpp`). Four
+contiguous functions, `0x589350`..`0x5894CF`, that only ever transfer among
+themselves - so one byte-copy of the block holds runnable copies of all four:
+
+| | |
+|---|---|
+| header | 2 bytes; byte 1 is the number of steps |
+| steps | 2 bytes each: ticks to hold, then a frame number - or, where a step would start, a byte `>= 0x80` and the number of the step to go to |
+| frames | `u16` each, straight after the last step |
+
+- `Sprite_ScriptStart(position)` `0x589350` (240 calls): step count to object
+  `+0x49`, `+0x50` past the header, `+0x54` to the frame words, first step.
+- `Sprite_ScriptTick` `0x5893A0` (11,899): counts `+0x4A` down; at 0 takes
+  the next step, wrapping to the top after the last; returns 1 when it wrapped
+  or followed a jump.
+- `Sprite_ScriptTickOnce` `0x589410` (4,311): the same, but past the last step
+  it sets the hold back to 1 and returns 1 - a script that plays once and then
+  reports "finished" every tick.
+- `Sprite_ScriptStep` (section 5) is what all three end in. This also
+  bears on section 5: `+0x54` is the frame-word table, so - if the type-`0x0A`
+  objects' `+0x54` is set this way too, which was not checked - the "record"
+  whose bytes `+2` and `+3` `Sprite_FindNearby` reads is frame word 1.
+
+**`DrawItemPool_ReleaseCell`** `0x56FC00` (`draw_pool.cpp`, **863,659 calls,
+the most in the queue**): gives back what a view cell holds - the item named
+by the low 12 bits of the cell's word `+2`, and the two further indices that
+item may own at `+0x7E` and `+0x8E`. `DrawItems` `0x905E80` is 1,024 items of
+`0x90` bytes, ending `0x20` below the slot table `0x929EA0`. The count is the
+view's 1,568 cells all being put through it whenever the view is rebuilt.
+Its three calls are all to `DrawItemPool_Release`; the clone's are pointed at
+the clone of that (`bof3::CloneCall`), the first use of that feature here.
+
+**`AreaMap_ByteAt(x, y)`** `0x536700` (`map_view.cpp`, 619 calls): the byte at
+`AreaMap_Bytes` `[0x905D94]` `+ x + y * width` - a per-cell byte plane beside
+the word plane. Signed 16-bit arguments, no bounds check.
+
+**`Sprite_PointInReach`** `0x531C70` (`sprite_find.cpp`, 2,450 calls): whether
+a point is within an object's reach (byte `+0x70`, plus a margin, plus 2) of
+the object's position less dword `+0xC` / `+0x10` times byte `+9` - read as
+"where it is about to be", which is inference. z inclusive, x and y exclusive.
+
+**`Sprite_RestoreClut`** `0x534E50` (`sprite_clut.cpp`, 2,779 calls): if bit 3
+of byte `+0x138` of the block at `[0x905D98]` is set, copies entries 1-31 of
+CLUT number `Sprite_Current[+0x27]` from `Gfx_ClutStripSource` `0x80B580` to
+`Gfx_ClutStrip`, sets `Gfx_ClutStripDirty`, clears the bit. **This answers
+part of what [`call-trace.md`](call-trace.md) §10 left open about the strip:**
+it is the game's CLUTs, 32 words to a number, kept twice in the DAT arena - as
+loaded at `+0x8000`, and the working copy the game recolours and uploads at
+`+0xC000`.
+
+Start-up fuzz against clones,
+`BOF3X_SHADOW=sprite_anim,draw_pool,map_view,sprite_find,sprite_clut`:
+
+| Check | Rounds | Of which | Mismatches |
+|---|---|---|---|
+| script block, four functions | 12,000 | about 3,000 each; of the ticks 3,909 fired, 825 at the script's end, 1,566 followed a jump; a quarter of script bytes exactly `0x7F` or `0x80` | 0 |
+| `DrawItemPool_ReleaseCell` | 6,000 | 1,215 with nothing to release; 1,227 / 2,332 / 1,226 releasing one, two, three indices | 0 |
+| `AreaMap_ByteAt` | 8,000 | 6,033 with a negative coordinate; noise above bit 15 of both arguments | 0 |
+| `Sprite_PointInReach` | 20,000 | 1,773 within reach; offsets at the reach, one either side, `0x80000000` away | 0 |
+| `Sprite_RestoreClut` | 3,000 | 2,013 with the bit set; every CLUT byte | 0 |
+
+Negative controls, each refusing to run: a jump threshold of `> 0x80`, 341 of
+12,000 (4 of 12,000 before the script was seeded with threshold bytes - **a
+fuzz of random bytes barely tests a byte comparison**); `TickOnce` not
+resetting the hold, 447; `ReleaseCell` keeping the cell word's top bits, 4,466
+of 6,000; `PointInReach` with x inclusive, 907 of 20,000; `RestoreClut` copying
+entry 0 too, 2,013 of 3,000. `AreaMap_ByteAt` with y unsigned logged
+mismatches from round 2 and then faulted reading outside the test plane,
+before its refusal line.
+
+## 7. Live checks, 2026-09-20
 
 All hands-off runs from a fresh launch, everything ours, against the
 all-original references of 2026-09-19.
@@ -235,18 +310,22 @@ all-original references of 2026-09-19.
 | 30 (sections 3, 4) | identical, 7,478 frames | arena, vram, clut identical | - |
 | 33 (plus section 5's first three) | identical, 7,478 frames | identical | identical, 4,528 frames (`ab5_orig` / `ab5_ours`) |
 | 34 (plus `Field_CopyInput`) | identical, 7,478 frames | identical | identical, 4,530 frames (`ab6_orig` / `ab6_ours`) |
+| 41 (plus section 6) | identical, 7,478 frames | identical | identical, 4,604 frames (`ab7_orig` / `ab7_ours`) |
 
 The frame hash needs its all-original side re-recorded whenever a *logic*
 function changes hands, because owned functions are left unarmed in both
-configurations ([`call-trace.md`](call-trace.md) §7); `ab5` and `ab6` are
-those pairs, each side's `inject:` line checked in its saved `bof3x.log`.
+configurations ([`call-trace.md`](call-trace.md) §7); `ab5`, `ab6` and `ab7`
+are those pairs, each side's `inject:` line checked in its saved `bof3x.log`.
+
+With 41 the identical arena is a stronger statement than before:
+`Sprite_RestoreClut` writes `Gfx_ClutStrip`, which is inside it.
 
 What none of this reached: the attract sequence has nobody in state `0x20`
 and no input, so `Field_CopyInput`'s exchange rests on the fuzz alone, as does
 any `Sprite_FindNearby` hit in the extra four. Whether the others' edge cases
 occur in the attract run was not measured.
 
-## 7. Not done
+## 8. Not done
 
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it

@@ -64,7 +64,8 @@ add_library(bof3x SHARED
   src/game/map_view.cpp
   src/game/sprite_anim.cpp
   src/game/sprite_find.cpp
-  src/game/field_input.cpp)
+  src/game/field_input.cpp
+  src/game/sprite_clut.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

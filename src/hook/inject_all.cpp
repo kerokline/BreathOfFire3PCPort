@@ -17,6 +17,7 @@
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/field_input.h"
+#include "game/sprite_clut.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -39,6 +40,7 @@ void InjectAll() {
     SpriteAnim_Inject();
     SpriteFind_Inject();
     FieldInput_Inject();
+    SpriteClut_Inject();
     InjectReport();
 }
 

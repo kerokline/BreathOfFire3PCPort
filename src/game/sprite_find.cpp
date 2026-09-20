@@ -146,6 +146,55 @@ void SelfTest(FindFn theirs) {
     if (bad) bof3::Fatal("Sprite_FindNearby differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
+// The same for Sprite_PointInReach, on a fake object. The point is aimed at
+// the object's centre plus an offset chosen against the reach: well inside,
+// exactly at it, one short of it, one past it, 0x80000000 away, or anywhere;
+// the same for z against reach << 7. Margins small, negative (so that the
+// reach goes to zero and below), or anything. z carries noise above bit 15.
+using PointFn = unsigned char (__cdecl*)(int, int, unsigned, int, const unsigned char*);
+
+void SelfTestPointInReach(PointFn theirs) {
+    constexpr unsigned kRounds = 20000;
+    unsigned bad = 0, inside = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        unsigned char object[kObjectSize];
+        for (auto& b : object) b = static_cast<unsigned char>(Rng());
+        if (Rng() % 2) object[0x09] = static_cast<unsigned char>(Rng() % 4);
+        if (Rng() % 2) { Put<std::int32_t>(object, 0x0C, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000);
+                         Put<std::int32_t>(object, 0x10, static_cast<std::int32_t>(Rng() % 0x20000) - 0x10000); }
+        const int margin = Rng() % 8 == 0 ? static_cast<int>(Rng()) : static_cast<int>(Rng() % 300) - 280;
+        const std::uint32_t reach = object[0x70] + static_cast<std::uint32_t>(margin) + 2u;
+        auto offset = [&](unsigned shift) -> std::uint32_t {
+            const std::uint32_t limit = reach << shift;
+            switch (Rng() % 8) {
+                case 0: return limit;
+                case 1: return limit - 1u;
+                case 2: return limit + 1u;
+                case 3: return 0u - limit;
+                case 4: return 0x80000000u;
+                case 5: return Rng();
+                default: return limit ? Rng() % limit : 0u;
+            }
+        };
+        const std::uint32_t steps = object[0x09];
+        const int x = static_cast<int>(Get<std::uint32_t>(object, kX) + Get<std::uint32_t>(object, 0x0C) * steps + offset(15));
+        const int y = static_cast<int>(Get<std::uint32_t>(object, kY) + Get<std::uint32_t>(object, 0x10) * steps + offset(15));
+        const unsigned z = (Rng() & 0xFFFF0000u) |
+            static_cast<std::uint16_t>(Get<std::uint16_t>(object, kZ) + (Rng() % 3 ? offset(7) % 0x4000 : offset(7)));
+
+        const unsigned char their_result = theirs(x, y, z, margin, object);
+        const unsigned char our_result =
+            reinterpret_cast<PointFn>(reinterpret_cast<void*>(&Sprite_PointInReach))(x, y, z, margin, object);
+        if (our_result) ++inside;
+        if (their_result != our_result && ++bad <= 8)
+            bof3::Log("shadow      Sprite_PointInReach self-test MISMATCH round %u: reach 0x%X: %u vs ours %u",
+                      round, reach, their_result, our_result);
+    }
+    bof3::Log("shadow      Sprite_PointInReach self-test: %u rounds (%u within reach), %u MISMATCHES",
+              kRounds, inside, bad);
+    if (bad) bof3::Fatal("Sprite_PointInReach differs from the original in %u of %u self-test rounds", bad, kRounds);
+}
+
 }  // namespace
 
 // original 0x589660. The number of the first sprite object of type 0x0A, other
@@ -166,10 +215,35 @@ extern "C" unsigned char __cdecl Sprite_FindNearby(void) {
     return 0xFF;
 }
 
+// original 0x531C70. Whether the point (x, y, z) is within the object's reach -
+// byte +0x70, widened by `margin` and 2 - of where the object is about to be:
+// its position less dword +0xC (and +0x10) times byte +9.
+//
+// As the original has it: z is compared inclusively and x and y exclusively;
+// everything wraps in 32 bits, and an absolute difference of 0x80000000 counts
+// as within any reach.
+extern "C" unsigned char __cdecl Sprite_PointInReach(int x, int y, short z, int margin, const unsigned char* object) {
+    const std::uint32_t reach = static_cast<std::uint32_t>(object[0x70]) + static_cast<std::uint32_t>(margin) + 2u;
+    const int dz = Get<std::int16_t>(object, kZ) - z;
+    if ((dz < 0 ? -dz : dz) > static_cast<std::int32_t>(reach << 7)) return 0;
+    const std::uint32_t steps = object[0x09];
+    const std::int32_t limit = static_cast<std::int32_t>(reach << 15);
+    const std::uint32_t ax = static_cast<std::uint32_t>(x) - Get<std::uint32_t>(object, 0x0C) * steps;
+    if (WrappingDistance(static_cast<std::int32_t>(ax), Get<std::int32_t>(object, kX)) >= limit) return 0;
+    const std::uint32_t ay = static_cast<std::uint32_t>(y) - Get<std::uint32_t>(object, 0x10) * steps;
+    if (WrappingDistance(static_cast<std::int32_t>(ay), Get<std::int32_t>(object, kY)) >= limit) return 0;
+    return 1;
+}
+
 void SpriteFind_Inject() {
-    // 0x589660..0x589769: no calls, every jump internal (disasm 2026-09-20).
-    if (bof3::WantsShadow("sprite_find"))
+    // 0x589660..0x589769 and 0x531C70..0x531CEF: no calls, every jump internal
+    // (disasm 2026-09-20).
+    if (bof3::WantsShadow("sprite_find")) {
         SelfTest(reinterpret_cast<FindFn>(
             bof3::CloneOriginal("Sprite_FindNearby", bof3::addr::Sprite_FindNearby, 0x10A)));
+        SelfTestPointInReach(reinterpret_cast<PointFn>(
+            bof3::CloneOriginal("Sprite_PointInReach", bof3::addr::Sprite_PointInReach, 0x80)));
+    }
     BOF3_INJECT(Sprite_FindNearby);
+    BOF3_INJECT(Sprite_PointInReach);
 }

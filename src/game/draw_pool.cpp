@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
@@ -71,6 +72,66 @@ void SelfTest(AllocFn their_alloc, ReleaseFn their_release) {
     if (bad) bof3::Fatal("the draw-item pool differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
+using ReleaseCellFn = void (__cdecl*)(unsigned char*);
+
+// The same for DrawItemPool_ReleaseCell, whose copy calls the copy of Release.
+// The fuzz owns the pool, its top and all of DrawItems. The cell's index is
+// zero one round in five; the four bits above the index mask are noise; the
+// item's two owned words are zero or not, independently. Pool, top, cell and
+// the whole item compared.
+void SelfTestReleaseCell(ReleaseCellFn theirs) {
+    constexpr unsigned kRounds = 6000;
+    static unsigned short saved_pool[DrawItemPool_Free_count], input_pool[DrawItemPool_Free_count],
+        their_pool[DrawItemPool_Free_count];
+    static unsigned char saved_items[DrawItems_count];
+    std::memcpy(saved_pool, DrawItemPool_Free, sizeof saved_pool);
+    std::memcpy(saved_items, DrawItems, sizeof saved_items);
+    const unsigned short saved_top = DrawItemPool_Top;
+
+    unsigned bad = 0, nothing = 0, released[4] = {};
+    for (unsigned round = 0; round < kRounds; ++round) {
+        for (auto& w : input_pool) w = static_cast<unsigned short>(Rng());
+        const unsigned short top = static_cast<unsigned short>(Rng() % 8 == 0 ? Rng() % 4 : Rng() & kMask);
+        const unsigned index = Rng() % 5 == 0 ? 0 : 1 + Rng() % kMask;
+        unsigned char cell_in[4], item_in[0x90];
+        for (auto& b : cell_in) b = static_cast<unsigned char>(Rng());
+        for (auto& b : item_in) b = static_cast<unsigned char>(Rng());
+        const std::uint16_t word = static_cast<std::uint16_t>((Rng() & 0xF000u) | index);
+        std::memcpy(cell_in + 2, &word, 2);
+        unsigned owned = 0;
+        for (const unsigned at : {0x7Eu, 0x8Eu}) {
+            if (Rng() % 2) std::memset(item_in + at, 0, 2);
+            else if (item_in[at] | item_in[at + 1]) ++owned;
+        }
+
+        unsigned char cell[2][4], item[2][0x90];
+        unsigned short top_after[2];
+        for (int pass = 0; pass < 2; ++pass) {
+            std::memcpy(DrawItemPool_Free, input_pool, sizeof input_pool);
+            DrawItemPool_Top = top;
+            std::memcpy(DrawItems + index * 0x90, item_in, sizeof item_in);
+            std::memcpy(cell[pass], cell_in, sizeof cell_in);
+            if (pass) DrawItemPool_ReleaseCell(cell[pass]); else theirs(cell[pass]);
+            top_after[pass] = DrawItemPool_Top;
+            std::memcpy(item[pass], DrawItems + index * 0x90, sizeof item_in);
+            if (pass == 0) std::memcpy(their_pool, DrawItemPool_Free, sizeof their_pool);
+        }
+        if (index == 0) ++nothing; else ++released[1 + owned];
+        if ((top_after[0] != top_after[1] || std::memcmp(cell[0], cell[1], 4) != 0 ||
+             std::memcmp(item[0], item[1], 0x90) != 0 ||
+             std::memcmp(their_pool, DrawItemPool_Free, sizeof their_pool) != 0) && ++bad <= 8)
+            bof3::Log("shadow      DrawItemPool_ReleaseCell self-test MISMATCH round %u: index 0x%X, top 0x%X: "
+                      "top after 0x%X vs ours 0x%X", round, index, top, top_after[0], top_after[1]);
+    }
+    std::memcpy(DrawItemPool_Free, saved_pool, sizeof saved_pool);
+    std::memcpy(DrawItems, saved_items, sizeof saved_items);
+    DrawItemPool_Top = saved_top;
+    bof3::Log("shadow      DrawItemPool_ReleaseCell self-test: %u rounds (%u with nothing to release, %u / %u / %u "
+              "releasing one, two, three indices), %u MISMATCHES; pool, top, cell and item compared",
+              kRounds, nothing, released[1], released[2], released[3], bad);
+    if (bad) bof3::Fatal("DrawItemPool_ReleaseCell differs from the original in %u of %u self-test rounds", bad, kRounds);
+}
+
 }  // namespace
 
 // original 0x56FBD0. The next free draw-item index, or 0 for none: index 0 is
@@ -99,14 +160,49 @@ extern "C" unsigned __cdecl DrawItemPool_Release(unsigned short index) {
     return top;
 }
 
+// original 0x56FC00. Gives back everything a cell of the view holds: its own
+// draw item, and the two further items that one may own (the words at +0x7E
+// and +0x8E of it). The hottest function of the attract run - 863,659 calls -
+// because the view's 1,568 cells are all put through it whenever the view is
+// rebuilt, nearly all of them holding nothing.
+//
+// As the original has it: the index is taken as 12 bits of the cell's word
+// though the pool has 10, and the word is then zeroed whole.
+extern "C" void __cdecl DrawItemPool_ReleaseCell(unsigned char* cell) {
+    std::uint16_t word;
+    std::memcpy(&word, cell + 2, sizeof word);
+    const unsigned index = word & 0xFFFu;
+    if (index == 0) return;
+    DrawItemPool_Release(static_cast<unsigned short>(index));
+    std::memset(cell + 2, 0, 2);
+    unsigned char* const item = DrawItems + index * 0x90;
+    for (const unsigned at : {0x7Eu, 0x8Eu}) {
+        std::uint16_t owned;
+        std::memcpy(&owned, item + at, sizeof owned);
+        if (owned == 0) continue;
+        DrawItemPool_Release(owned);
+        std::memset(item + at, 0, 2);
+    }
+}
+
 void DrawPool_Inject() {
     // 0x56FBD0..0x56FBFC: one jump, internal. 0x56FC70..0x56FC95: none. Neither
-    // calls anything (disasm 2026-09-20).
-    if (bof3::WantsShadow("draw_pool"))
-        SelfTest(reinterpret_cast<AllocFn>(
-                     bof3::CloneOriginal("DrawItemPool_Alloc", bof3::addr::DrawItemPool_Alloc, 0x2D)),
-                 reinterpret_cast<ReleaseFn>(
-                     bof3::CloneOriginal("DrawItemPool_Release", bof3::addr::DrawItemPool_Release, 0x26)));
+    // calls anything. 0x56FC00..0x56FC6F: every jump internal, and three
+    // calls, all to 0x56FC70, which the copy makes to the copy (disasm
+    // 2026-09-20).
+    if (bof3::WantsShadow("draw_pool")) {
+        const auto their_alloc = reinterpret_cast<AllocFn>(
+            bof3::CloneOriginal("DrawItemPool_Alloc", bof3::addr::DrawItemPool_Alloc, 0x2D));
+        const auto their_release = reinterpret_cast<ReleaseFn>(
+            bof3::CloneOriginal("DrawItemPool_Release", bof3::addr::DrawItemPool_Release, 0x26));
+        const void* const release_copy = reinterpret_cast<const void*>(their_release);
+        const bof3::CloneCall calls[] = {{0x13, release_copy}, {0x39, release_copy}, {0x5C, release_copy}};
+        const auto their_release_cell = reinterpret_cast<ReleaseCellFn>(bof3::CloneOriginal(
+            "DrawItemPool_ReleaseCell", bof3::addr::DrawItemPool_ReleaseCell, 0x70, calls, 3));
+        SelfTest(their_alloc, their_release);
+        SelfTestReleaseCell(their_release_cell);
+    }
     BOF3_INJECT(DrawItemPool_Alloc);
     BOF3_INJECT(DrawItemPool_Release);
+    BOF3_INJECT(DrawItemPool_ReleaseCell);
 }
