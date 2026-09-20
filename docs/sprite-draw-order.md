@@ -6,8 +6,8 @@ What the regenerated takeover queue ([`call-trace.md`](call-trace.md) §9) put
 first, and where it led: its two hottest layer-0 logic functions are the
 exchange helpers of the pass that decides the order field sprites are drawn
 in, and the next half-dozen all touch the same structures - the sprite object
-arrays, the view's cell grid, the draw-item pool, the animation script.
-Sixteen functions are ours (sections 3 to 6); the pass itself is read but not taken over.
+arrays, the view's cell grid, the draw-item pool, the animation script, the
+per-layer draw lists. Nineteen functions are ours (sections 3 to 7); the pass itself is read but not taken over.
 
 All addresses are `BOF3.exe` (`symbols.toml` `[meta]`). Disassembly by
 `python tools/pe_disasm.py`, 2026-09-20.
@@ -62,7 +62,7 @@ under the flag byte `0x7E0918`:
   slot = byte `0x92BF19`, and the neighbouring dword at `0x8022C4 + ...` is
   then stored to that slot. *Inference:* `0x5A7560(tail, item)` followed by
   `tail = item` is the shape of appending to a linked draw list - the PSX
-  ordering table, kept by the port.
+  ordering table, kept by the port. *(Read since, and so it is: section 7.)*
 
 Within a layer it merges two ordered sources. A sprite belongs to the layer
 when the high byte of its `+0x32` word equals the layer - so that word is
@@ -300,7 +300,60 @@ entry 0 too, 2,013 of 3,000. `AreaMap_ByteAt` with y unsigned logged
 mismatches from round 2 and then faulted reading outside the test plane,
 before its refusal line.
 
-## 7. Live checks, 2026-09-20
+## 7. Three more: the layer lists, the draw table, the elevation - taken over
+
+The two structures section 2 could only describe from the outside now have
+their writers (`src/game/draw_layers.cpp`):
+
+- **`DrawLayers_Reset`** `0x56F5B0` (1,272 calls). `DrawLayers` `0x8022A0` is
+  0x38 layers of `0x30` bytes; a layer is three pairs of 8-byte list heads,
+  one of each pair per display buffer. A head is `{first, last}` and is
+  emptied as `first = 0, last = the head's own address`. **Section 2's
+  inference is now a reading:** `0x5A7560(tail, item)` is three instructions,
+  `*tail = item` (disasm 2026-09-20), and its callers then make the item the
+  new tail - an append to a singly linked list whose link is the item's first
+  dword, as in a PSX ordering table. With `last` pointing at the head, the
+  first append and every later one are the same store. Not yet taken over.
+  Reset empties the pairs at `+0` and `+0x10`; the pair at `+0x20` is the one
+  pass 2 reads (`0x8022C0`), and it is left alone. Kept:
+  0x38 layers where the pass walks 0x37, and `Gfx_BufferIndex` used as a
+  whole byte.
+- **`DrawTable_Sort`** `0x56F5F0` (1,272 calls). `DrawTable` `0x801C00`, 256
+  dwords, count byte `0x905BA0` - the second source of pass 2's merge - sorted
+  ascending on the high 16 bits, layer then key. An exchange sort, each entry
+  against every later one, so **not stable**. Kept, and the reason it is
+  worth a line: every exchange also stores the value it moved to
+  `Scratch_Swap` `0x90385C`, a global with **505 references** - the source's
+  all-purpose swap temporary, by the look of it, written all over the game
+  and meaningfully read nowhere yet seen. A reimplementation that swapped
+  through a local would differ in memory and nowhere else.
+- **`MapView_SetElevation`** `0x5725F0` (`map_view.cpp`, 1,168 calls): stores
+  a value to `0x929F1C`, moves the word `0x92BEE2` by twice the change unless
+  the area header's word `+0x1E` is set, and sets byte `0x905E69` to 2 (the
+  view's initialiser sets it to 3). The three data names are `hypothesis`.
+
+Start-up fuzz against clones, `BOF3X_SHADOW=draw_layers,map_view`:
+
+| Function | Rounds | Of which | Mismatches |
+|---|---|---|---|
+| `DrawLayers_Reset` | 600 | 155 with a buffer index above 1; `0x1278` bytes compared | 0 |
+| `DrawTable_Sort` | 3,000 | 92 empty, 1,166 certain to hold equal keys; the table and `Scratch_Swap` compared | 0 |
+| `MapView_SetElevation` | 8,000 | 2,716 with the offset switched off, 4,086 with an argument wider than 16 bits | 0 |
+
+Negative controls, each refusing to run: the sort leaving the *other* value
+in `Scratch_Swap`, 2,724 of 3,000; comparing whole entries instead of the
+high half, 1,325; Reset emptying the third list too, 600 of 600; the
+elevation change not doubled, 5,284 of 8,000.
+
+**One control passed, and was right to.** The original takes the elevation
+difference from all 32 bits of its argument; a build taking it from 16 sailed
+through the fuzz - because the offset it feeds is a 16-bit word and the
+difference is doubled into it, so the bits in question cannot reach it. The
+"quirk" had been written into the source comment and `symbols.toml` as kept
+behaviour; both now say it is unobservable. A negative control that is *not*
+refused is information about the claim, not only about the fuzz.
+
+## 8. Live checks, 2026-09-20
 
 All hands-off runs from a fresh launch, everything ours, against the
 all-original references of 2026-09-19.
@@ -311,11 +364,11 @@ all-original references of 2026-09-19.
 | 33 (plus section 5's first three) | identical, 7,478 frames | identical | identical, 4,528 frames (`ab5_orig` / `ab5_ours`) |
 | 34 (plus `Field_CopyInput`) | identical, 7,478 frames | identical | identical, 4,530 frames (`ab6_orig` / `ab6_ours`) |
 | 41 (plus section 6) | identical, 7,478 frames | identical | identical, 4,604 frames (`ab7_orig` / `ab7_ours`) |
+| 44 (plus section 7) | identical, 7,478 frames | identical | identical, 4,609 frames (`ab8_orig` / `ab8_ours`) |
 
 The frame hash needs its all-original side re-recorded whenever a *logic*
 function changes hands, because owned functions are left unarmed in both
-configurations ([`call-trace.md`](call-trace.md) §7); `ab5`, `ab6` and `ab7`
-are those pairs, each side's `inject:` line checked in its saved `bof3x.log`.
+configurations ([`call-trace.md`](call-trace.md) §7); `ab5` to `ab8` are those pairs, each side's `inject:` line checked in its saved `bof3x.log`.
 
 With 41 the identical arena is a stronger statement than before:
 `Sprite_RestoreClut` writes `Gfx_ClutStrip`, which is inside it.
@@ -325,7 +378,7 @@ and no input, so `Field_CopyInput`'s exchange rests on the fuzz alone, as does
 any `Sprite_FindNearby` hit in the extra four. Whether the others' edge cases
 occur in the attract run was not measured.
 
-## 8. Not done
+## 9. Not done
 
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it

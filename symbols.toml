@@ -1264,3 +1264,89 @@ impl = "src/game/sprite_clut.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x68 bytes. If bit 3 of byte +0x138 of the block at Field_State is clear, nothing. Otherwise, with clut = byte +0x27 of the object at Sprite_Current (re-read each time round), copies words clut * 32 + n for n = 1..31 from Gfx_ClutStripSource to Gfx_ClutStrip - the index is built as (clut % 8) + (clut / 8) * 8, which is clut - sets Gfx_ClutStripDirty to 1 and clears the bit. Two callers (E8 scan): 0x51AC50, 0x52D8F0. Call trace all_a 2026-09-19: 2,779 calls."
 note = "Entry 0 of the CLUT is left as it is. 32 words per CLUT where a PSX CLUT is 16: two CLUTs a row, or one of 32 - unread."
+
+# ---------------------------------------------------------------------------
+# The per-layer draw lists and the second source of 0x593060 (2026-09-20).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x8022A0
+name = "DrawLayers"
+ctype = "unsigned long"
+count = 0x2A0
+status = "evidence"
+evidence = "disasm 2026-09-20: DrawLayers_Reset 0x56F5B0 walks 0x38 layers of 0x30 bytes from 0x8022A0 + Gfx_BufferIndex * 8 - 0x38 * 0x30 = 0xA80 bytes = 0x2A0 dwords, ending at 0x802D20. A layer is three pairs of 8-byte list heads, one of each pair per display buffer: Reset empties the pairs at +0 and +0x10, and 0x593060 reads the pair at +0x20 (its 0x8022C0 + (Gfx_BufferIndex + layer * 6) * 8). pe_xref.py 0x8022A0: three references, in 0x510780, 0x56F5B0 and 0x56FD20."
+note = "A head is {first, last}: emptied as first = 0, last = the head's own address, so that appending to an empty list and to a non-empty one are the same store through last. 0x593060 walks 0x37 layers where this resets 0x38."
+
+[[func]]
+pc = 0x56F5B0
+name = "DrawLayers_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/draw_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x32 bytes: for each of 0x38 layers from DrawLayers + Gfx_BufferIndex * 8 bytes, stride 0x30, and for the two heads at +0 and +0x10 of it: dword 0 = 0, dword +4 = the head's address. Gfx_BufferIndex is used as a whole byte, not as 0 or 1. Call trace all_a 2026-09-19: 1,272 calls."
+
+[[data]]
+pc = 0x801C00
+name = "DrawTable"
+ctype = "unsigned long"
+count = 256
+status = "evidence"
+evidence = "disasm 2026-09-20: DrawTable_Sort 0x56F5F0 sorts the first DrawTable_Count dwords on their high 16 bits; 0x593060 reads the same dwords as layer (top byte), 16-bit key (bits 16-31) and a 12-bit DrawItems index. Length from the count being a byte and the table ending at Sprite_ObjectsExtra 0x802000: 256 dwords."
+
+[[data]]
+pc = 0x905BA0
+name = "DrawTable_Count"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-20: DrawTable_Sort's bound, and the bound 0x593060 compares its DrawTable index with."
+
+[[data]]
+pc = 0x90385C
+name = "Scratch_Swap"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-20: DrawTable_Sort stores the value it moves up here on every exchange (0x56F639) and never reads it back. pe_xref.py: 505 references in well over a hundred functions."
+note = "A global the source used as its swap temporary, by the look of it - which makes it written, never meaningfully read, all over the game. Kept written, because a memory comparison would see it."
+
+[[func]]
+pc = 0x56F5F0
+name = "DrawTable_Sort"
+ret = "void"
+params = "void"
+impl = "src/game/draw_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x76 bytes. n = DrawTable_Count; nothing if 0. For i = 0 .. n - 1, for j = i + 1 .. n - 1: if (DrawTable[i] & 0xFFFF0000) > (DrawTable[j] & 0xFFFF0000), unsigned, exchanges them, storing the old DrawTable[i] to Scratch_Swap as well; DrawTable[i] is re-read for every j. Call trace all_a 2026-09-19: 1,272 calls."
+note = "An exchange sort, ascending on layer then key, not stable: equal keys keep their order only by accident of the exchanges."
+
+[[data]]
+pc = 0x929F1C
+name = "MapView_Elevation"
+ctype = "long"
+status = "hypothesis"
+evidence = "disasm 2026-09-20: MapView_SetElevation 0x5725F0 stores its argument here, sign-extended from 16 bits, and moves the word 0x92BEE2 by twice the change. pe_xref.py: 44 references in 30-odd functions. 'Elevation' is a reading of 'a value whose change moves something by two units each' and nothing more."
+
+[[data]]
+pc = 0x92BEE2
+name = "MapView_ElevationOffset"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-20: MapView_SetElevation adds (old - new) * 2 to it as 16 bits. pe_xref.py: 20 references in five functions. Named after the function; what it offsets is unread."
+
+[[data]]
+pc = 0x905E69
+name = "MapView_Redraw"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-20: MapView_SetElevation sets it to 2; the view's initialiser sets it to 3 (0x56F88E) just before filling the 56 x 28 cell grid. pe_xref.py: 154 references. That it requests a redraw, and what the levels mean, is inference."
+
+[[func]]
+pc = 0x5725F0
+name = "MapView_SetElevation"
+ret = "void"
+params = "int value"
+impl = "src/game/map_view.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, one argument, no calls, one forward jump, 0x30 bytes. If the word at 0x8CB59E - AreaMap_Header + 0x1E - is zero: adds the low word of (MapView_Elevation - value) * 2 to MapView_ElevationOffset, using all 32 bits of value. Then, either way: MapView_Elevation = value sign-extended from its low 16 bits, MapView_Redraw = 2. Call trace all_a 2026-09-19: 1,168 calls."
+note = "The subtraction sees 32 bits of the argument and the store 16 - but the offset is a 16-bit word, so nothing can tell: a build that took the difference from 16 bits passed the differential fuzz (2026-09-20)."

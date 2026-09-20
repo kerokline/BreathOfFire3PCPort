@@ -115,6 +115,58 @@ void SelfTestByteAt(ByteAtFn theirs) {
     if (bad) bof3::Fatal("AreaMap_ByteAt differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
+// The same for MapView_SetElevation: random elevation, offset and argument -
+// the argument a clean s16 half the time and any 32 bits the other half - with
+// the header word that switches the offset off set one round in three. The
+// header bytes +0x1E, +0x1F are outside what AreaMap_Header declares; the
+// fuzz saves and restores them with the rest.
+using SetElevationFn = void (__cdecl*)(int);
+
+void SelfTestSetElevation(SetElevationFn theirs) {
+    constexpr unsigned kRounds = 8000;
+    unsigned char saved_fixed[2];
+    std::memcpy(saved_fixed, AreaMap_Header + 0x1E, 2);
+    const long saved_elevation = MapView_Elevation;
+    const unsigned short saved_offset = MapView_ElevationOffset;
+    const unsigned char saved_redraw = MapView_Redraw;
+
+    unsigned bad = 0, fixed_rounds = 0, wide = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        const bool fixed = Rng() % 3 == 0;
+        const std::uint16_t fixed_word = fixed ? static_cast<std::uint16_t>(Rng() | 1u) : 0;
+        std::memcpy(AreaMap_Header + 0x1E, &fixed_word, 2);
+        const long elevation_in = static_cast<long>(Rng() % 2 ? static_cast<short>(Rng()) : static_cast<std::int32_t>(Rng()));
+        const unsigned short offset_in = static_cast<unsigned short>(Rng());
+        const int value = Rng() % 2 ? static_cast<short>(Rng()) : static_cast<int>(Rng());
+        fixed_rounds += fixed;
+        if (value != static_cast<short>(value)) ++wide;
+
+        long elevation[2];
+        unsigned short offset[2];
+        unsigned char redraw[2];
+        for (int pass = 0; pass < 2; ++pass) {
+            MapView_Elevation = elevation_in;
+            MapView_ElevationOffset = offset_in;
+            MapView_Redraw = static_cast<unsigned char>(0xA5);
+            if (pass) MapView_SetElevation(value); else theirs(value);
+            elevation[pass] = MapView_Elevation;
+            offset[pass] = MapView_ElevationOffset;
+            redraw[pass] = MapView_Redraw;
+        }
+        if ((elevation[0] != elevation[1] || offset[0] != offset[1] || redraw[0] != redraw[1]) && ++bad <= 8)
+            bof3::Log("shadow      MapView_SetElevation self-test MISMATCH round %u: value 0x%08X: elevation %ld vs %ld, "
+                      "offset 0x%04X vs 0x%04X", round, static_cast<unsigned>(value), elevation[0], elevation[1],
+                      offset[0], offset[1]);
+    }
+    std::memcpy(AreaMap_Header + 0x1E, saved_fixed, 2);
+    MapView_Elevation = saved_elevation;
+    MapView_ElevationOffset = saved_offset;
+    MapView_Redraw = saved_redraw;
+    bof3::Log("shadow      MapView_SetElevation self-test: %u rounds (%u with the offset switched off, %u with an "
+              "argument wider than 16 bits), %u MISMATCHES", kRounds, fixed_rounds, wide, bad);
+    if (bad) bof3::Fatal("MapView_SetElevation differs from the original in %u of %u self-test rounds", bad, kRounds);
+}
+
 }  // namespace
 
 // original 0x56F910. Which map cell the view's cell (row, col) shows, as two
@@ -150,15 +202,37 @@ extern "C" unsigned char __cdecl AreaMap_ByteAt(short x, short y) {
     return AreaMap_Bytes[x + y * static_cast<int>(AreaMap_Header[0])];
 }
 
+// original 0x5725F0. Sets the view's elevation and asks for a redraw; unless
+// the area's header word +0x1E is set, the offset moves by two for every unit
+// the elevation changed.
+//
+// The original takes the difference from all 32 bits of the argument and the
+// stored elevation from its low 16; since the offset is itself 16 bits the
+// first cannot show, and a build that differed there passed the fuzz.
+extern "C" void __cdecl MapView_SetElevation(int value) {
+    std::uint16_t fixed;
+    std::memcpy(&fixed, AreaMap_Header + 0x1E, sizeof fixed);
+    if (fixed == 0) {
+        const std::uint32_t moved = (static_cast<std::uint32_t>(MapView_Elevation) - static_cast<std::uint32_t>(value)) << 1;
+        MapView_ElevationOffset = static_cast<unsigned short>(MapView_ElevationOffset + moved);
+    }
+    MapView_Elevation = static_cast<short>(value);
+    MapView_Redraw = 2;
+}
+
 void MapView_Inject() {
     // 0x56F910..0x56F9A0: no calls, every jump internal. 0x536700..0x536722:
-    // no calls, no jumps (disasm 2026-09-20).
+    // no calls, no jumps. 0x5725F0..0x57261F: no calls, one jump, internal
+    // (disasm 2026-09-20).
     if (bof3::WantsShadow("map_view")) {
         SelfTest(reinterpret_cast<CellToMapFn>(
             bof3::CloneOriginal("MapView_CellToMap", bof3::addr::MapView_CellToMap, 0x91)));
         SelfTestByteAt(reinterpret_cast<ByteAtFn>(
             bof3::CloneOriginal("AreaMap_ByteAt", bof3::addr::AreaMap_ByteAt, 0x23)));
+        SelfTestSetElevation(reinterpret_cast<SetElevationFn>(
+            bof3::CloneOriginal("MapView_SetElevation", bof3::addr::MapView_SetElevation, 0x30)));
     }
     BOF3_INJECT(MapView_CellToMap);
     BOF3_INJECT(AreaMap_ByteAt);
+    BOF3_INJECT(MapView_SetElevation);
 }
