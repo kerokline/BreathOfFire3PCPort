@@ -462,3 +462,62 @@ deterministic from launch, and the existing oracle is the test. It changes
 behaviour, so it is a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built, and
 it sits next to the unclamped-debt fix that file's "Focus loss" section
 already calls obviously wanted.
+
+## I13 — Save states: snapshot the running game, restore it, in ours and in the original
+
+**Ask (2026-09-19):** owner: "state saving … would be a big help when we've
+finished getting all we can out of the attract mode. If we could find a way to
+inject states into the original for comparison sake, even better, but even
+just in our exe it would be helpful." **Kind:** tooling - the oracle for
+everything the attract sequence cannot reach (stage 2 and 3 of the order of
+work in [`STATUS.md`](STATUS.md): menus, the system text pool, combat).
+**Feasibility:** untried; the reasoning below says MEDIUM, and that the
+"original too" half is not much harder than the "ours" half.
+
+**Why this game is a good candidate.** Nothing here is measured for this
+purpose yet; each point is an existing finding read with a save state in mind.
+
+- **It is one flat image at a fixed base** (`/FIXED`, no `.reloc`), and game
+  state lives in its `.data`/`.bss`: the DAT arena, the VRAM shadow, the queues.
+- **The coroutine stacks are in that image too.** The four tasks run on
+  0x4000-byte stacks carved from a static arena ([`SCAFFOLDING.md`](SCAFFOLDING.md)
+  §3, [`attract-mode.md`](attract-mode.md) §2), so a snapshot taken *between*
+  logic frames, in WinMain's loop, captures every task's suspended stack as
+  plain data, and needs no thread context at all - the main thread is at a
+  known place with nothing of interest on its stack.
+- **The port is deterministic from launch** and logic cannot reach a clock, so
+  a restored state should replay identically - which is also the test that a
+  restore was complete: restore twice, compare frame hashes.
+- **Most of what is NOT plain memory is rebuilt on demand.** Direct3D textures
+  are built lazily from the VRAM shadow and the texture cache can be emptied
+  (`Gfx_InvalidateTextures` over the whole shadow); the converted palette rows
+  are regenerated from the shadow (`Gfx_ConvertRow`). Both are ours now.
+
+**The hard parts, as far as can be seen from here.**
+
+- **The CRT heap.** Glyph data, sound banks, palette-row buffers and whatever
+  else is `malloc`ed hold state, and `.data` holds pointers into them. Within
+  one process a restore can copy the heap blocks back in place. Across
+  processes the addresses move. The way through is probably to **own
+  `Crt_malloc` / `Crt_free`** with an arena at a fixed address - then the heap
+  is one more region to snapshot, and its addresses are the same in every
+  launch.
+- **Sound.** DirectSound buffers and the streaming MP3 decoder's position are
+  outside the image. For a logic oracle they may not need restoring at all;
+  for a state a person plays from, they do, or the music restarts.
+- **Open files and the file layer's 16 slots** - ours already, so inspectable.
+- **Anything in DirectInput or the window** - probably nothing that matters
+  between frames.
+
+**The original, for comparison.** The injected DLL is present in an
+all-original run too (`BOF3X_ORIGINAL=*`), and a state loader is tooling in
+the DLL, not a game function - so the same restore can run with every game
+function Capcom's. The one catch is the heap: if stable addresses need our
+allocator, then "original" means original except `malloc`, and that has to be
+said wherever such a comparison is reported.
+
+**First experiment, when this is picked up:** in one process, at the
+between-frames point, copy `.data`/`.bss` and the heap blocks aside, run 300
+frames recording the frame hash, copy everything back, run 300 again. Equal
+hashes says the state is complete for logic; the first difference says what
+was missed.
