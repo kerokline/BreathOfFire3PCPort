@@ -88,7 +88,8 @@ void Inject(const char* name, std::uint32_t original, void* ours) {
     }
 }
 
-void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size) {
+void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
+                    const CloneCall* calls, int n_calls) {
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
     if (IsOwned(original)) Fatal("%s: CloneOriginal after Inject - the entry is already a jmp", name);
     // A tracer or debugger patch at the entry would be copied as a relative
@@ -98,6 +99,17 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     void* copy = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!copy) Fatal("%s: VirtualAlloc(%u) failed, error %lu", name, (unsigned)size, GetLastError());
     std::memcpy(copy, orig, size);
+    for (int i = 0; i < n_calls; ++i) {
+        const std::uint32_t at = calls[i].offset;
+        if (at + kJmpLen > size || orig[at] != 0xE8)
+            Fatal("%s: no relative call at +0x%X to re-aim", name, (unsigned)at);
+        std::int32_t rel;
+        std::memcpy(&rel, orig + at + 1, sizeof rel);
+        const std::uint8_t* target = calls[i].target
+            ? static_cast<const std::uint8_t*>(calls[i].target) : orig + at + kJmpLen + rel;
+        rel = static_cast<std::int32_t>(target - (static_cast<std::uint8_t*>(copy) + at + kJmpLen));
+        std::memcpy(static_cast<std::uint8_t*>(copy) + at + 1, &rel, sizeof rel);
+    }
     FlushInstructionCache(GetCurrentProcess(), copy, size);
     Log("shadow      %-24s original 0x%08X cloned to %p, %u bytes", name, (unsigned)original, copy, (unsigned)size);
     return copy;

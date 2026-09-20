@@ -221,6 +221,41 @@ reaches neither. Not covered by anything: a cached texture's *lifetime* under
 real play beyond the attract sequence — an owner session with the variable set
 would be the check, `shadow` lines in `build/bof3x.log`.
 
+**The converted-palette cache is ours: three functions, faithful
+(2026-09-19)** — `src/game/gfx_clut.cpp`. The PSX game keeps its CLUTs as rows
+of cells in VRAM, and the port keeps a table at `0x6C2A40`, one entry per VRAM
+row: a generation counter and a lazily malloc'd 0x1000-byte buffer holding that
+row in the *display's* pixel format.
+
+- `Gfx_ConvertRow` `0x59EBB0` fills `w` cells of a row's buffer from the
+  shadow through the shifts and masks at `0x7DED60`, and bumps the generation.
+  Cell 0 stays 0 — transparent, as on the PSX — and any other cell the display
+  format would round to 0 is forced to 1 so it stays opaque.
+- `Gfx_LoadImageIfChanged` `0x59EB00`, the "compare-first sibling": copies a
+  row into the shadow only if it differs, and converts just those rows. It has
+  **no bounds check at all** and never invalidates a texture. Its one caller is
+  `Gfx_FlushDirtyStrip`, with rows 480..511 x 256 cells — the CLUT area. So a
+  palette animation costs a row conversion, not a texture rebuild.
+- `Gfx_ClutPixels` `0x5A04C0` turns a PSX CLUT id into a pointer into a row's
+  buffer, converting the row's first 256 cells if it has never been wanted.
+
+All unchecked edges are kept (`symbols.toml`). Verification, 2026-09-19:
+
+| check | result |
+|---|---|
+| start-up differential fuzz against clones (`BOF3X_SHADOW=gfx_clut`), 3,000 rounds over 565, 1555 and 8888 formats: shadow rows, row buffers, generations, returned pointers | **0 mismatches**; 897 rows copied and 1,246 skipped by the compare |
+| negative control: the forced-to-1 rule removed | 840 rounds flagged, DLL refuses to run |
+| `mem_dump.py`, new region `clut` (generation, has-buffer, first 256 converted cells of every row): all-original pair, then original against seventeen ours | identical both ways, with `arena` and `vram`; 20 rows had buffers, generations 1 or 2 |
+| attract oracle, seventeen ours | identical over 7,478 frames; no crash |
+
+The fuzz runs before the game's heap exists, so it gives every row a buffer
+first: **a row's first conversion, the `Crt_malloc` path, is checked only
+live** (the 20 rows above). The `clut` region was first dumped as whole 0x1000
+buffers; the all-original pair differed in 53 bytes, every one past byte 1,032
+— malloc memory nothing writes — so it was narrowed to the 0x400 bytes that
+are written, and the three dumps re-sliced rather than re-run. The display
+here is 32-bit; on a 16-bit one the fuzz is the only check of that branch.
+
 `Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
 the one kind-3 chunk — so its store is exercised and its free-the-previous
 branch never is, in this run or by any shipped data.

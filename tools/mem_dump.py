@@ -33,6 +33,15 @@ Regions:
          the extent the shipped data can write (symbols.toml, MessagePools).
   vram   0x6C9F44, 0x100000 bytes - the 16-bit 1024x512 shadow of PSX VRAM
          that kind-1 chunks land in (Gfx_LoadImage).
+  clut   derived from Gfx_ClutRows 0x6C2A40: for each of the 512 VRAM rows its
+         generation counter, whether it has a buffer, and the buffer's first
+         0x400 bytes (zeros if none) - the rows converted to the display's
+         pixel format (Gfx_ConvertRow). 0x400 is the 256 cells, at 4 bytes,
+         that both of its callers convert; the buffers are 0x1000 bytes of
+         malloc and the rest is never written - two all-original runs differed
+         only there (2026-09-19). On a 16-bit display the second half of the
+         0x400 is that same noise. Offsets in a report are row * 0x405 + 5 +
+         byte.
 
 Output goes to analysis/memdump/, which is game-derived and gitignored.
 """
@@ -51,6 +60,7 @@ A_FLIP, A_AREA = 0x905B89, 0x904EFC
 # only after its flush has finished (0x461FA7, 0x45499A), so both zero means
 # nothing is queued and no flush is half done.
 A_QCOUNT, A_STRIP = 0x9035A0, 0x937F90
+A_CLUTROWS, N_CLUTROWS, CLUT_BUF = 0x6C2A40, 512, 0x400
 
 
 def read(h, addr, size):
@@ -59,6 +69,15 @@ def read(h, addr, size):
     if not k.ReadProcessMemory(h, ctypes.c_void_p(addr), buf, size, ctypes.byref(got)) or got.value != size:
         sys.exit(f'ReadProcessMemory {addr:#x}+{size:#x} failed: {ctypes.get_last_error()}')
     return buf.raw
+
+
+def read_clut(h):
+    table = read(h, A_CLUTROWS, N_CLUTROWS * 8)
+    out = bytearray()
+    for y in range(N_CLUTROWS):
+        gen, ptr = table[y * 8:y * 8 + 4], int.from_bytes(table[y * 8 + 4:y * 8 + 8], 'little')
+        out += gen + bytes([1 if ptr else 0]) + (read(h, ptr, CLUT_BUF) if ptr else bytes(CLUT_BUF))
+    return bytes(out)
 
 
 def dump(a):
@@ -89,6 +108,7 @@ def dump(a):
                 first = pending
             if pending == (0, 0) or a.no_drain:
                 data = {name: read(h, addr, size) for name, (addr, size) in REGIONS.items()}
+                data['clut'] = read_clut(h)
                 area = int.from_bytes(read(h, A_AREA, 2), 'little')
         finally:
             ntdll.NtResumeProcess(h)
@@ -129,7 +149,10 @@ def compare(x, y):
         for lab, m in zip((x, y), metas):
             if any(m['pending_at_dump'].values()):
                 print(f'WARNING: {lab} was dumped with uploads pending - its vram region is not comparable')
-    for name, (addr, _) in REGIONS.items():
+    for name, (addr, _) in list(REGIONS.items()) + [('clut', (0, 0))]:
+        if not all(os.path.exists(os.path.join(OUT, f'{lab}_clut.bin')) for lab in (x, y)) and name == 'clut':
+            print('clut: not in both dumps, skipped')
+            continue
         bx = open(os.path.join(OUT, f'{x}_{name}.bin'), 'rb').read()
         by = open(os.path.join(OUT, f'{y}_{name}.bin'), 'rb').read()
         diffs = [i for i in range(len(bx)) if bx[i] != by[i]]
@@ -144,6 +167,10 @@ def compare(x, y):
             prev = i
         runs.append((start, prev))
         print(f'{name}: {len(diffs)} bytes differ in {len(runs)} runs')
+        if name == 'clut':
+            rows = sorted({i // (CLUT_BUF + 5) for i in diffs})
+            head = sum(1 for i in diffs if i % (CLUT_BUF + 5) < 5)
+            print(f'    rows {rows[:24]}{" ..." if len(rows) > 24 else ""}; {head} of the bytes are generation/has-buffer')
         for s, e in runs[:20]:
             print(f'    {addr + s:#x}..{addr + e:#x}  (offset {s:#x}, {e - s + 1} bytes)')
     return 0 if same else 1

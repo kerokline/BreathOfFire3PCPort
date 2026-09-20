@@ -95,6 +95,11 @@ without the variable never makes the copy. It is sound only for a function
 whose every relative jump and call stays inside the copied range — calls
 through absolute slots or registers are fine — and that has to be established
 from the disassembly, per function, and said where `CloneOriginal` is called.
+A relative *call* that does leave can be named and re-aimed (`CloneCall`), at
+the original callee or at another clone, so that cloned callers reach cloned
+callees and never ours — `src/game/gfx_clut.cpp` clones three that way.
+`BOF3X_SHADOW` takes the names each file asks for (`Gfx_InvalidateTextures`,
+`gfx_clut`) or `*`.
 The copy exists in process memory only; nothing of Capcom's is written to disk.
 
 ## 3. One name, bound once

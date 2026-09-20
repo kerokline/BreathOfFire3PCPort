@@ -37,7 +37,17 @@ void Inject(const char* name, std::uint32_t original, void* ours);
 // through absolute or register addresses are fine - which the caller must
 // have established from the disassembly. Call BEFORE Inject, which destroys
 // the first five bytes. The copy lives in process memory only.
-void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size);
+//
+// A relative CALL that does leave the range is named in `calls`: the offset of
+// its E8 byte, and where the copy should call instead - null for "where the
+// original called", or another clone, so that a cloned caller reaches the
+// cloned callee and never ours.
+struct CloneCall {
+    std::uint32_t offset;
+    const void* target;
+};
+void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
+                    const CloneCall* calls = nullptr, int n_calls = 0);
 
 // True if `name` is listed in the BOF3X_SHADOW environment variable.
 bool WantsShadow(const char* name);
