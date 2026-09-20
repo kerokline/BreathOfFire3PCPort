@@ -1350,3 +1350,348 @@ impl = "src/game/map_view.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, one argument, no calls, one forward jump, 0x30 bytes. If the word at 0x8CB59E - AreaMap_Header + 0x1E - is zero: adds the low word of (MapView_Elevation - value) * 2 to MapView_ElevationOffset, using all 32 bits of value. Then, either way: MapView_Elevation = value sign-extended from its low 16 bits, MapView_Redraw = 2. Call trace all_a 2026-09-19: 1,168 calls."
 note = "The subtraction sees 32 bits of the argument and the store 16 - but the offset is a 16-bit word, so nothing can tell: a build that took the difference from 16 bits passed the differential fuzz (2026-09-20)."
+
+# ---------------------------------------------------------------------------
+# The port's PSX library layer (2026-09-20): the hottest leaves of the attract
+# run. Names are libgpu's where the code byte or the bit layout identifies the
+# function outright; a primitive here is NOT the PSX struct - the setters store
+# a float 0.01 at +0x10 and on, which the PSX primitives have no room for.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x66BC58
+name = "Math_SinTable"
+ctype = "const unsigned short"
+count = 1025
+status = "evidence"
+evidence = "disasm 2026-09-20: Math_Sin 0x5A7A00 indexes it with 0..0x3FF directly and with 0x800 - a for a = 0x400..0x7FF, so entries 0..0x400: 1,025 words, to 0x66C45A. In the exe's read-only data; referenced by address, never copied."
+
+[[data]]
+pc = 0x66BC40
+name = "Gpu_OtTerminator"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-20: Gpu_ClearOTagR 0x5A7960 stores its address, | 0x80000000, as the last link of an ordering table; pe_xref.py has that as its only reference."
+
+[[func]]
+pc = 0x5A7540
+name = "Gpu_AddPrim"
+ret = "void"
+params = "unsigned long *ot, unsigned long *prim, unsigned long *link_out"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 14 instructions, no calls, no jumps: reads the dword at prim and the dword at ot, then stores the old *ot to link_out and (*prim & 0x80000000) | prim to ot, in that order. cdecl. Call trace all_a 2026-09-19: 32,768 calls."
+
+[[func]]
+pc = 0x5A7560
+name = "Gpu_LinkPrim"
+ret = "void"
+params = "unsigned long *tail, unsigned long item"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 4 instructions: *tail = item. 0x593060 calls it as (the slot's tail, the item) and then makes the item the slot's tail - an append to a list linked through each item's first dword. cdecl. Call trace all_a 2026-09-19: 892,889 calls."
+
+[[func]]
+pc = 0x5A75D0
+name = "Gpu_SetPolyFT4"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 8 instructions: byte +7 = 0x2C, the PSX GPU code of POLY_FT4, and the dword 0x3C23D70A - the float 0.01 - to +0x10, +0x20, +0x30, +0x40. cdecl. Call trace all_a 2026-09-19: 75,728 calls."
+
+[[func]]
+pc = 0x5A7650
+name = "Gpu_SetLineF2"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 6 instructions: byte +7 = 0x40, the PSX GPU code of LINE_F2, and the float 0.01 to +0x10 and +0x1C. cdecl. Call trace all_a 2026-09-19: 4,273 calls."
+
+[[func]]
+pc = 0x5A7710
+name = "Gpu_SetSprt"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 4 instructions: byte +7 = 0x64, the PSX GPU code of SPRT, and the float 0.01 to +0x10. cdecl. Call trace all_a 2026-09-19: 10,863 calls."
+
+[[func]]
+pc = 0x5A7760
+name = "Gpu_SetCode6C"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 3 instructions: byte +7 = 0x6C. Not a code libgpu has a primitive for; named by the code. cdecl. Call trace all_a 2026-09-19: 22,268 calls."
+
+[[func]]
+pc = 0x5A7770
+name = "Gpu_SetCode84"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 3 instructions: byte +7 = 0x84. Not a code libgpu has a primitive for; named by the code. cdecl. Call trace all_a 2026-09-19: 7,064 calls."
+
+[[func]]
+pc = 0x5A7780
+name = "Gpu_SetSemiTrans"
+ret = "void"
+params = "unsigned char *prim, unsigned abe"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 10 instructions, one jump, internal: bit 0 of the low byte of the second argument set: byte +7 |= 2; clear: byte +7 &= 0xFD. Bit 1 of the code is the PSX GPU's semi-transparency bit, and this is libgpu SetSemiTrans. cdecl. Call trace all_a 2026-09-19: 117,292 calls."
+
+[[func]]
+pc = 0x5A77A0
+name = "Gpu_SetShadeTex"
+ret = "void"
+params = "unsigned char *prim, unsigned tge"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 9 instructions, one jump, internal: bit 0 of the low byte of the second argument set: byte +7 |= 1; clear: byte +7 &= 0xFE. Bit 0 of the code is the PSX GPU's raw-texture bit, and this is libgpu SetShadeTex. cdecl. Call trace all_a 2026-09-19: 9,156 calls."
+
+[[func]]
+pc = 0x5A77C0
+name = "Gpu_SetDrawMode"
+ret = "void"
+params = "unsigned char *prim, int dfe, int dtd, unsigned tpage, unsigned long tw"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, no calls, every jump internal: dword +4 = 0xE8000000, then the low word of the fourth argument to word +4; first argument after prim non-zero: byte +6 |= 1; the next non-zero: byte +6 |= 2; the fifth argument to dword +8 on both paths. The argument order of libgpu SetDrawMode(p, dfe, dtd, tpage, tw); 0x593060 calls it with (prim, 0, 0, 0x95, 0). cdecl. Call trace all_a 2026-09-19: 137,406 calls."
+
+[[func]]
+pc = 0x5A7960
+name = "Gpu_ClearOTagR"
+ret = "void"
+params = "unsigned long *ot, int n"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, no calls, one loop: for k = n - 1 down to 1, ot[k] = the address of ot[k - 1], | 0x80000000; then the entry it stopped at - ot[0], or ot[n - 1] when n < 2 - = 0x66BC40 | 0x80000000. A reverse-linked ordering table, libgpu ClearOTagR, with bit 31 set on every link. pe_xref.py 0x66BC40: this is its only reference - the list terminator. cdecl. Call trace all_a 2026-09-19: 4,099 calls."
+
+[[func]]
+pc = 0x5A79A0
+name = "Gpu_GetTPage"
+ret = "unsigned"
+params = "unsigned tp, unsigned abr, int x, int y"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, no calls, no jumps: ((tp & 3) << 7) | ((abr & 3) << 5) | ((y & 0x200) << 2) | ((x >> 6) & 0xF) | ((y >> 4) & 0x10), tp and abr read as bytes, the shifts of x and y arithmetic. Bit for bit libgpu getTPage. cdecl. Call trace all_a 2026-09-19: 3,937 calls."
+
+[[func]]
+pc = 0x5A79E0
+name = "Gpu_GetClut"
+ret = "unsigned"
+params = "int x, int y"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 7 instructions: ((x >> 4) & 0x3F) | (y << 6), the shift of x arithmetic, y unmasked. libgpu getClut. cdecl. Call trace all_a 2026-09-19: 67,410 calls."
+
+[[func]]
+pc = 0x5A7A00
+name = "Math_Sin"
+ret = "int"
+params = "int angle"
+impl = "src/game/psx_gpu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, no calls, one jump, internal: sign = -1 if angle & 0x800 else 1; a = angle & 0x7FF; a < 0x400: the u16 at 0x66BC58 + a * 2, times sign; otherwise the u16 at 0x66CC58 - a * 2 - entry 0x800 - a of the same table - times sign. A 4096-step circle from a quarter-wave table of 1,025 words; libgte rsin by shape. cdecl. Call trace all_a 2026-09-19: 110,034 calls."
+
+# ---------------------------------------------------------------------------
+# The PSX library layer, GTE half (2026-09-20): the coprocessor's registers
+# are globals at 0x7DE4xx. Integer functions only; the ones that go through
+# x87 (0x5A8340, 0x5A8380, 0x5A9110, 0x5A9130, 0x5A9290) are not taken over.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x7DE4A0
+name = "Gte_Matrix"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_SetRotMatrix 0x5A8DE0 copies 5 dwords here and Gte_SetTransMatrix 0x5A8E00 copies the 3 dwords at +0x14 of its argument to 0x7DE4B4; Gte_PushMatrix / Gte_PopMatrix move all 8 dwords. 0x20 bytes: the PSX MATRIX - nine s16 of rotation, two bytes of padding, three s32 of translation."
+
+[[data]]
+pc = 0x7DE4E0
+name = "Gte_Matrix2"
+ctype = "unsigned long"
+count = 8
+status = "hypothesis"
+evidence = "disasm 2026-09-20: Gte_SetMatrix2 0x5A8DA0 copies 8 dwords here. Which of the GTE's other matrices it stands for - light, colour - is unread; the name says only that it is the second."
+
+[[data]]
+pc = 0x7DE500
+name = "Gte_MatrixStack"
+ctype = "unsigned long"
+count = 160
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_PushMatrix 0x5A7B90 copies Gte_Matrix to 0x7DE500 + depth * 0x20 while depth < 0x14, and Gte_PopMatrix 0x5A7BC0 copies it back: 20 matrices of 8 dwords."
+
+[[data]]
+pc = 0x7DE450
+name = "Gte_MatrixDepth"
+ctype = "long"
+status = "evidence"
+evidence = "disasm 2026-09-20: the index Gte_PushMatrix compares with 0x14 (signed) and increments, and Gte_PopMatrix tests for > 0 and decrements."
+
+[[data]]
+pc = 0x7DE468
+name = "Gte_Vertices"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_LoadVertices3 0x5A8E50 copies six dwords of its argument to 0x7DE470, 0x7DE474, 0x7DE468, 0x7DE46C, 0x7DE478, 0x7DE47C in that order - the first 8-byte vertex to the middle slot, the second to the first, the third to the last - and Gte_LoadVertex 0x5A8E30 copies one to 0x7DE470."
+note = "An 8-byte vertex is a PSX SVECTOR. Why the first of three lands in the middle slot is unread; whichever slot the transform treats as vertex 0 would say."
+
+[[data]]
+pc = 0x7DE4C8
+name = "Gte_ScreenXY"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_StoreScreenXY3 0x5A90D0 copies the dword pairs at 0x7DE4C8, 0x7DE4D0 and 0x7DE4D8 to its three arguments, and Gte_StoreScreenXY 0x5A90B0 the pair at 0x7DE4D8 - the last of the three, as the GTE's SXY2 is the newest."
+note = "A pair of dwords per point, where the PSX register is two s16 in one dword."
+
+[[data]]
+pc = 0x7DE7A4
+name = "Gte_Depth"
+ctype = "long"
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_StoreDepthQuarter 0x5A94B0 stores it, arithmetically shifted right by 2, through its argument; 0x5A9110 stores it times a float constant."
+
+[[func]]
+pc = 0x5A7BF0
+name = "Gte_ApplyMatrix"
+ret = "void"
+params = "const short *matrix, const short *vector, long *out"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, no calls, no jumps, 0x7B bytes: with x, y, z the three s16 of vector and m the nine s16 of matrix, out[r] = (m[3r] * x + m[3r + 1] * y + m[3r + 2] * z) >> 12, arithmetic, for r = 0, 1, 2 - all nine products and sums in 32 bits, all reads before the three stores. libgte ApplyMatrix(MATRIX *, SVECTOR *, VECTOR *). The most-called function of the attract run. cdecl. Call trace all_a 2026-09-19: 2,625,115 calls."
+
+[[func]]
+pc = 0x5A8DE0
+name = "Gte_SetRotMatrix"
+ret = "void"
+params = "const unsigned long *matrix"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, rep movsd of 5 dwords from the argument to Gte_Matrix: the rotation part of a PSX MATRIX and its padding. libgte SetRotMatrix. cdecl. Call trace all_a 2026-09-19: 18,339 calls."
+
+[[func]]
+pc = 0x5A8E00
+name = "Gte_SetTransMatrix"
+ret = "void"
+params = "const unsigned long *matrix"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 9 instructions: the three dwords at +0x14 of the argument to 0x7DE4B4 - Gte_Matrix + 0x14. libgte SetTransMatrix. cdecl. Call trace all_a 2026-09-19: 18,339 calls."
+
+[[func]]
+pc = 0x5A8DA0
+name = "Gte_SetMatrix2"
+ret = "void"
+params = "const unsigned long *matrix"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, rep movsd of 8 dwords from the argument to Gte_Matrix2. cdecl. Call trace all_a 2026-09-19: 2,843 calls."
+
+[[func]]
+pc = 0x5A8100
+name = "Gte_TransMatrix"
+ret = "void"
+params = "unsigned long *matrix, const unsigned long *vector"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 9 instructions: the three dwords of vector to +0x14, +0x18, +0x1C of matrix, read and stored one at a time. libgte TransMatrix(MATRIX *, VECTOR *). cdecl. Call trace all_a 2026-09-19: 9,878 calls."
+
+[[func]]
+pc = 0x5A7B90
+name = "Gte_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, one jump, internal: if Gte_MatrixDepth < 0x14 (signed), copies the 8 dwords of Gte_Matrix to Gte_MatrixStack + depth * 0x20 and increments the depth; otherwise nothing. libgte PushMatrix, with a stack of 20 where the PSX has 1. cdecl. Call trace all_a 2026-09-19: 12,721 calls."
+
+[[func]]
+pc = 0x5A7BC0
+name = "Gte_PopMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, one jump, internal: if Gte_MatrixDepth > 0, decrements it and copies 8 dwords from Gte_MatrixStack + depth * 0x20 to Gte_Matrix; otherwise nothing. cdecl. Call trace all_a 2026-09-19: 12,721 calls."
+
+[[func]]
+pc = 0x5A8E30
+name = "Gte_LoadVertex"
+ret = "void"
+params = "const unsigned long *vertex"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 6 instructions: two dwords of the argument to 0x7DE470 and 0x7DE474 - Gte_Vertices[2], [3]. cdecl. Call trace all_a 2026-09-19: 1,066,958 calls."
+
+[[func]]
+pc = 0x5A8E50
+name = "Gte_LoadVertices3"
+ret = "void"
+params = "const unsigned long *vertices"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 13 instructions: six dwords of the argument to Gte_Vertices[2], [3], [0], [1], [4], [5] in that order. cdecl. Call trace all_a 2026-09-19: 487,822 calls."
+
+[[func]]
+pc = 0x5A90B0
+name = "Gte_StoreScreenXY"
+ret = "void"
+params = "unsigned long *out"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 6 instructions: the dwords at 0x7DE4D8 and 0x7DE4DC - Gte_ScreenXY[4], [5] - to out[0], out[1]. cdecl. Call trace all_a 2026-09-19: 1,066,958 calls."
+
+[[func]]
+pc = 0x5A90D0
+name = "Gte_StoreScreenXY3"
+ret = "void"
+params = "unsigned long *out0, unsigned long *out1, unsigned long *out2"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 16 instructions: Gte_ScreenXY[0], [1] to out0, [2], [3] to out1, [4], [5] to out2, a dword at a time in that order. cdecl. Call trace all_a 2026-09-19: 487,822 calls."
+
+[[func]]
+pc = 0x5A94B0
+name = "Gte_StoreDepthQuarter"
+ret = "void"
+params = "long *out"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 5 instructions: *out = Gte_Depth >> 2, arithmetic. cdecl. Call trace all_a 2026-09-19: 270,659 calls."
+
+[[func]]
+pc = 0x5A7CF0
+name = "Gte_ApplyMatrixLV"
+ret = "void"
+params = "const short *matrix, const long *vector, long *out"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, no calls, no jumps, 0x78 bytes: Gte_ApplyMatrix 0x5A7BF0 instruction for instruction, except that the three vector components are read as 32-bit (mov, not movsx word) - so the products wrap in 32 bits. libgte ApplyMatrixLV(MATRIX *, VECTOR *, VECTOR *). cdecl. Call trace all_a 2026-09-19: 69,415 calls."
+
+[[func]]
+pc = 0x5A81B0
+name = "Gte_TransposeMatrix"
+ret = "void"
+params = "const short *in, short *out"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 21 instructions, no calls, no jumps: nine s16 copied one at a time, read then stored, out[0..8] = in[0], in[3], in[6], in[1], in[4], in[7], in[2], in[5], in[8] in that order. libgte TransposeMatrix. In place it does not transpose: the early stores are read back by the later reads. cdecl. Call trace all_a 2026-09-19: 2,843 calls."
+
+[[func]]
+pc = 0x5A8200
+name = "Gte_RotTrans"
+ret = "void"
+params = "const short *vector, long *out"
+impl = "src/game/psx_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x41 bytes, one call: Gte_ApplyMatrix(Gte_Matrix, vector, out) (E8 at +0x10), then the three dwords at Gte_Matrix + 0x14 added to out[0], out[1], out[2] - out[0..2] all read before the first store. libgte RotTrans without its flag argument. cdecl. Call trace all_a 2026-09-19: 12,721 calls."

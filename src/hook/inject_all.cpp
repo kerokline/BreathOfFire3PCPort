@@ -19,6 +19,8 @@
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
+#include "game/psx_gpu.h"
+#include "game/psx_gte.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -43,6 +45,8 @@ void InjectAll() {
     FieldInput_Inject();
     SpriteClut_Inject();
     DrawLayers_Inject();
+    PsxGpu_Inject();
+    PsxGte_Inject();
     InjectReport();
 }
 
