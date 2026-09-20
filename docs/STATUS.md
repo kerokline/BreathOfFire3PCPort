@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Twenty-one functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**Twenty-four functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -43,7 +43,10 @@ compare, live and under a start-up fuzz ([`SCAFFOLDING.md`](SCAFFOLDING.md)
 converted-palette cache: `Gfx_ConvertRow`, `Gfx_LoadImageIfChanged` and
 `Gfx_ClutPixels`; then the two rendered-frame flushes, `Gfx_FlushDirtyStrip`
 and `Gfx_FlushUploadQueue`, and the unpackers they dispatch to,
-`Gfx_UploadPacked5` and `Gfx_UploadLzss`.
+`Gfx_UploadPacked5` and `Gfx_UploadLzss`; then `Gfx_ClearImage`,
+`Gfx_MoveImage` and `Gfx_MoveCells`. Three of the twenty-four
+(`Gfx_UploadLzss`, `Gfx_MoveImage`, `Gfx_MoveCells`) are beyond the attract
+sequence's reach and rest on the differential fuzz alone.
 
 What is established:
 
@@ -89,9 +92,9 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 55 functions, 8 global blocks and 33 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 39 functions carry signatures and
-  are callable from our code, 21 of them ours (counted 2026-09-19 by
+- 58 functions, 8 global blocks and 33 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 42 functions carry signatures and
+  are callable from our code, 24 of them ours (counted 2026-09-19 by
   `gen_symbols.py`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
@@ -114,8 +117,11 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). Twenty-one are ours, not
+   with the takeover queue already layered (§9 there). Twenty-four are ours, not
    all of them among the 540.
+   The attract sequence's text boxes are the in-game dialogue engine
+   ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
+   check from stage 1.
 2. **Then the text swap**, so that the owner can make headway through the game
    itself — and with that, reach code the attract sequence never runs. What
    this means in detail is the owner's to say; the asset side of selectable

@@ -810,6 +810,34 @@ evidence = "disasm 2026-09-19: cdecl, two stack arguments ([esp+0x3C] and [esp+0
 note = "Read to the end 2026-09-19. The rect is built inclusive (x + w - 1, y + h - 1) and so is each page (x + 0x3F, y + 0xFF), but IntersectRect treats right and bottom as exclusive: a rect one cell wide or high invalidates nothing, and the last column and row of a page do not count. When the page index is not a multiple of 16, a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's entries that have byte +1 set: mode 0 releases them and closes the gap - memmove of the (31 - i) entries above, zero the page's last entry at 0x6C4228 + (page - 1) * 0x300, re-examine slot i - stopping at the first state-0 entry; mode non-zero turns state 1 into 2 for all 32. Byte +1 presumably marks a texture that reaches into the next page; inferred from this use only. Three callers: 0x59EAE7 (Gfx_LoadImage) and 0x59E6EA with mode 0, 0x59EA5C with mode 1 (E8 scan of .text)."
 
 [[func]]
+pc = 0x59E650
+name = "Gfx_ClearImage"
+ret = "void"
+params = "const short *rect, unsigned char red, unsigned char green"
+impl = "src/game/gfx_vram_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl; reads the low byte of its second and third arguments at entry and then reuses all three argument slots as locals. value = ((arg3 & 0xF) << 2) | (arg2 >> 3), masked to 16 bits, of which only the low byte is used: bh = bl, the word doubled to a dword, rep stosd / rep stosb over w*2 bytes per row from Gfx_VramShadow + ((y << 10) + x) * 2, stride 0x800, for h rows with h re-read from the rect each row; no bounds check. Then Gfx_InvalidateTextures(rect, 0) at +0x9A - also when h <= 0. Every jump internal. One caller, 0x461E46, pushing (rect, 0, 0); call trace 2026-09-19: reached in the attract sequence, from 0x461E10."
+note = "Parameter names by position against the PSX ClearImage(rect, r, g, b); there is no fourth argument here, and the arithmetic is not a 15-bit colour. With the only arguments seen, 0 and 0, none of that shows."
+
+[[func]]
+pc = 0x59E9A0
+name = "Gfx_MoveImage"
+ret = "void"
+params = "short *rect, int to_x, int to_y"
+impl = "src/game/gfx_vram_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl. Returns at once if rect w or h is 0. x < 0: w += x, x = 0, to_x += x(old); else if x + w > 0x400: w = 0x400 - x. The same for y, h, to_y against 0x200. All written back into the caller's rect as 16 bits. Then 0x5AA5D6(0x6C9F44, rect, to_x, to_y) at +0xAD; then rect x, y are overwritten with the low words of to_x, to_y and Gfx_InvalidateTextures(rect, 1) is called at +0xBC - its only mode-1 caller. The destination is never clipped. Every jump internal. Two callers (analysis/pc_funcs.json); not reached in the attract sequence (analysis/calltrace/queue.csv)."
+
+[[func]]
+pc = 0x5AA5D6
+name = "Gfx_MoveCells"
+ret = "void"
+params = "void *base, const short *rect, int to_x, int to_y"
+impl = "src/game/gfx_vram_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: ebp-framed hand assembly, 0x4E bytes to the ret at 0x5AA623 (analysis/pc_funcs.json runs it on into the next routine, which has no call target of its own). src = base + (u16 y << 11) + u16 x * 2; dst = base + (to_y << 11) + to_x * 2; per row rep movsd of (u16 w) >> 1 dwords, then both pointers advance by (0x400 - w) * 2 - so an odd w drops its last cell and every later row starts 2 bytes further left. The row counter is ebx after mov ebx, to_x / mov bx, h, decremented as 32 bits until zero. No calls. One caller, Gfx_MoveImage."
+
+[[func]]
 pc = 0x59EB00
 name = "Gfx_LoadImageIfChanged"
 ret = "void"

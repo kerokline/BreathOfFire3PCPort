@@ -302,6 +302,35 @@ the fuzz only - the first takeover with no live coverage at all. Wherever the
 game does use it is a place to play through with `BOF3X_SHADOW` unset and
 eyes open.
 
+**`ClearImage` and `MoveImage` are ours, faithful (2026-09-19)** -
+`src/game/gfx_vram_ops.cpp`: `Gfx_ClearImage` `0x59E650`, `Gfx_MoveImage`
+`0x59E9A0` and its hand-assembled row copier `Gfx_MoveCells` `0x5AA5D6`. With
+them every caller of `Gfx_InvalidateTextures` is ours. Kept as found:
+
+- `Gfx_ClearImage` takes two colour arguments where the PSX call has three,
+  makes `((g & 0xF) << 2) | (r >> 3)` of them, and fills with that one *byte*.
+  Its one caller passes 0, 0, where none of it shows. No bounds check.
+- `Gfx_MoveImage` clips the source **in the caller's rect**, shifts the
+  destination by what it clipped off the left or top, never clips the
+  destination, then rewrites the rect as the destination and marks textures
+  stale (mode 1) instead of dropping them.
+- `Gfx_MoveCells` copies `w / 2` dwords a row and steps by the full `w`: an
+  odd width loses its last cell and **every later row starts two bytes further
+  left**. Always forward, whatever the overlap. Its row counter shares a
+  register with the high half of the destination x.
+
+| check | result |
+|---|---|
+| start-up differential fuzz (`BOF3X_SHADOW=gfx_vram_ops`), 900 rounds over the three; moves: 63 clipped, 282 of odd width, 240 overlapping; a texture-cache table seeded so that mode 1 shows which rect was passed | **0 mismatches** - the whole shadow, the texture cache, the caller's rect |
+| negative control: the odd cell copied | 279 rounds flagged, DLL refuses to run |
+| `mem_dump.py`, twenty-four ours | three regions identical |
+| attract oracle, twenty-four ours | first run: **one frame of 7,478 disagreed** - message index 1 against 2 at +2693; second run identical. A torn sample, not a difference: the sampler read the message word 28 ms after its previous sample, after the game had written it and before it advanced the frame byte ([`attract-mode.md`](attract-mode.md) §6) |
+| frame-hash A/B ([`call-trace.md`](call-trace.md) §7), all-original against twenty-four ours, 2,829 entries armed | calls and hash identical on all 4,472 frames |
+
+The attract sequence reaches `Gfx_ClearImage` and neither of the other two
+(`analysis/calltrace/queue.csv`): **`Gfx_MoveImage` and `Gfx_MoveCells` are
+checked by the fuzz only**, like `Gfx_UploadLzss`.
+
 `Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
 the one kind-3 chunk — so its store is exercised and its free-the-previous
 branch never is, in this run or by any shipped data.

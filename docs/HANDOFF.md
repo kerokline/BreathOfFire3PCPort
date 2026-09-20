@@ -14,12 +14,13 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, twenty-one
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, twenty-four
 functions are ours (`LoadDatFile`; the whole eight-function file layer, with DIV-0003 in
 `File_OpenWrite`; `Save_WriteFile` with DIV-0002; `Gfx_BeginFrame` with DIV-0004, a
-crash fix; and ten on the image path, faithful — `Gfx_LoadImage`, `Font_SetGlyphData`,
+crash fix; and thirteen on the image path, faithful — `Gfx_LoadImage`, `Font_SetGlyphData`,
 `Gfx_InvalidateTextures`, `Gfx_ConvertRow`, `Gfx_LoadImageIfChanged`, `Gfx_ClutPixels`,
-`Gfx_FlushDirtyStrip`, `Gfx_FlushUploadQueue`, `Gfx_UploadPacked5`, `Gfx_UploadLzss`), the A/B switch works, a call tracer and a crash reporter run in-process, and a
+`Gfx_FlushDirtyStrip`, `Gfx_FlushUploadQueue`, `Gfx_UploadPacked5`, `Gfx_UploadLzss`,
+`Gfx_ClearImage`, `Gfx_MoveImage`, `Gfx_MoveCells`), the A/B switch works, a call tracer and a crash reporter run in-process, and a
 deterministic attract-mode regression check passes original-vs-ours. See
 [`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
 
@@ -37,10 +38,8 @@ The single next action, concrete enough to start without asking anyone.
 2. **Replace what the attract sequence reaches** — stage 1 of the owner's
    order of work ([`STATUS.md`](STATUS.md)). The image path is ours from the
    rendered-frame flushes down to the texture-cache invalidation
-   ([`asset-loading-path.md`](asset-loading-path.md) §2). Next, smallest first:
-   the two other callers of
-   `Gfx_InvalidateTextures`, `0x59E6EA` (a fill of the shadow) and `0x59EA5C`
-   (mode 1, after `0x5AA5D6`); then where cache entries are *built* —
+   ([`asset-loading-path.md`](asset-loading-path.md) §2), `ClearImage` and
+   `MoveImage` included. Next: where cache entries are *built* —
    `0x5A3CC0` / `0x5A5160` for the texture cache, and the readers of the
    palette generations `0x5A2BC0` / `0x5A3160` — which is where bytes +2..+0xF
    of a texture-cache entry get their meaning. The shadow check
@@ -111,7 +110,7 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack` or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops` or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
@@ -150,6 +149,13 @@ _One line each, with a pointer. Add when something costs more than an hour._
   calls: "(no references)" for a function means nothing. For callers use
   `callees` in `analysis/pc_funcs.json`, or scan `.text` for E8/E9 rel32. Cost
   one wrong "no caller" claim, caught the same day.
+- One disagreeing frame from `attract_diff.py`, at a state change, is a torn
+  sample until a re-run says otherwise; the frame hash is the arbiter
+  ([`attract-mode.md`](attract-mode.md) §6).
+- `--original "*"` inside an unquoted `$(...)` or an `echo` is glob-expanded:
+  `attract_run.py` dies on the file names, and the `cp` after it then saves the
+  PREVIOUS run's `build/bof3x.callframes.tsv` as this run's. Check the
+  `inject:` line of `build/bof3x.log` says what the run was meant to be.
 - Pairing EMI sections to DAT chunks by order or by address mis-pairs 47
   files; use `dat_census.align` ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
 
@@ -164,8 +170,8 @@ Phase 0 merged to `main` as PR #3 (`cee66ad`, 2026-09-19). Branch
 `src/game/gfx_image.cpp`, `Gfx_InvalidateTextures` in
 `src/game/gfx_texcache.cpp` with the shadow check, then the palette cache's
 three in `src/game/gfx_clut.cpp`, the two flushes in
-`src/game/gfx_flush.cpp`, then the unpackers in `src/game/gfx_unpack.cpp`.
-Each passed its byte-level or shadow check, a
+`src/game/gfx_flush.cpp`, the unpackers in `src/game/gfx_unpack.cpp`, then
+`ClearImage` / `MoveImage` in `src/game/gfx_vram_ops.cpp`. Each passed its byte-level or shadow check, a
 negative control, and the attract oracle. Not pushed; PR planned for the end
 of the 2026-09-19 session.
 
