@@ -293,8 +293,31 @@ def cmd_wallclock(a):
                 reach.add(e)
                 stack.append(e)
     reach |= {int(x, 16) for x in a.also.split(',') if x}
+    observed = len(reach)
+    if a.static:
+        # A wall-clock function's branches need not all run in the traced
+        # launch: the draw 0x59EE50 has a second primitive dispatcher that no
+        # slow (traced) run entered and a fast one did (docs/call-trace.md
+        # section 6). So follow the disassembly's call targets as well, until
+        # nothing new turns up. Over-inclusive on purpose: a helper shared with
+        # logic drops out of the frame hash, which costs coverage and never a
+        # false alarm.
+        # Only into the renderer's own code, though: followed everywhere, the
+        # walk reaches the C runtime through sprintf and takes 555 functions,
+        # most of them logic's too.
+        spans = [tuple(int(x, 16) for x in r.split('-')) for r in a.static.split(',')]
+        callees = {f['entry']: [t for t in f['callees'] if any(lo_ <= t < hi_ for lo_, hi_ in spans)]
+                   for f in d['functions']}
+        stack = list(reach)
+        while stack:
+            e = stack.pop()
+            for t in list(callees.get(e, ())) + list(down.get(e, ())):
+                if t not in reach:
+                    reach.add(t)
+                    stack.append(t)
     name = names(a.symbols)
-    print(f'{len(roots)} roots, {len(reach)} functions reachable from wall-clock-timed call sites')
+    print(f'{len(roots)} roots, {len(reach)} functions reachable from wall-clock-timed call sites'
+          + (f' ({observed} by observed edges, {len(reach) - observed} more by static calls)' if a.static else ''))
     if a.check:
         old = {int(l.split()[0], 16) for l in open(a.entries) if l.strip() and l[0] != '#'} - \
               {int(l.split()[0], 16) for l in open(a.check) if l.strip() and l[0] != '#'}
@@ -357,6 +380,9 @@ def main():
     w.add_argument('--out', default='analysis/calltrace/entries_logic.txt')
     w.add_argument('--check', help='an older reduced entry list to compare against')
     w.add_argument('--also', default='', help='comma-separated hex entries to drop as well')
+    w.add_argument('--static', default='', metavar='LO-HI[,LO-HI]',
+                   help="also follow the disassembly's call targets, from every function reached, "
+                        "into these address ranges (hex) - the renderer's: 59E000-5A6000,5A9600-5AB000")
     fr = sub.add_parser('frames')
     fr.add_argument('a')
     fr.add_argument('b')

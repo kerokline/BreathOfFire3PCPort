@@ -20,7 +20,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # -falign-functions: the OFF direction of a detour writes five bytes over the
 # start of OUR function, so none of ours may be shorter than that before the
 # next one begins.
-add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16)
+# -fno-strict-aliasing: the game's memory is read and written through whatever
+# type the 2001 source liked, and a reimplementation has to alias the same way.
+# Without it the optimiser may reorder a short* read past a long* write to the
+# same bytes - which hid a deliberately wrong Gte_ApplyMatrix from its own
+# differential fuzz (docs/psx-library-layer.md section 2).
+add_compile_options(-Wall -Wextra -Werror=return-type -falign-functions=16 -fno-strict-aliasing)
 # The DLL is injected by path into a process whose DLL search order we do not
 # control, so it may not depend on libc++.dll / libunwind.dll sitting nearby.
 add_link_options(-static)
@@ -57,7 +62,22 @@ add_library(bof3x SHARED
   src/game/gfx_clut.cpp
   src/game/gfx_flush.cpp
   src/game/gfx_unpack.cpp
-  src/game/gfx_vram_ops.cpp)
+  src/game/gfx_vram_ops.cpp
+  src/game/sprite_order.cpp
+  src/game/draw_pool.cpp
+  src/game/prim.cpp
+  src/game/map_view.cpp
+  src/game/sprite_anim.cpp
+  src/game/sprite_find.cpp
+  src/game/field_input.cpp
+  src/game/sprite_clut.cpp
+  src/game/draw_layers.cpp
+  src/game/psx_gpu.cpp
+  src/game/psx_gte.cpp
+  src/game/psx_gte_float.cpp
+  src/game/psx_gte_transform.cpp
+  src/game/draw_emit.cpp
+  src/game/draw_pass.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

@@ -10,6 +10,21 @@
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
+#include "game/sprite_order.h"
+#include "game/draw_pool.h"
+#include "game/prim.h"
+#include "game/map_view.h"
+#include "game/sprite_anim.h"
+#include "game/sprite_find.h"
+#include "game/field_input.h"
+#include "game/sprite_clut.h"
+#include "game/draw_layers.h"
+#include "game/psx_gpu.h"
+#include "game/psx_gte.h"
+#include "game/psx_gte_float.h"
+#include "game/psx_gte_transform.h"
+#include "game/draw_emit.h"
+#include "game/draw_pass.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -25,6 +40,21 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
+    DrawPass_Inject();          // before what it calls: it clones their originals
+    SpriteOrder_Inject();
+    DrawPool_Inject();
+    Prim_Inject();
+    MapView_Inject();
+    SpriteAnim_Inject();
+    SpriteFind_Inject();
+    FieldInput_Inject();
+    SpriteClut_Inject();
+    DrawLayers_Inject();
+    DrawEmit_Inject();          // likewise
+    PsxGteTransform_Inject();   // before what it calls: it clones their originals
+    PsxGpu_Inject();
+    PsxGte_Inject();
+    PsxGteFloat_Inject();
     InjectReport();
 }
 
