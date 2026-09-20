@@ -2106,3 +2106,33 @@ params = "long r, long g, long b"
 impl = "src/game/psx_gte_transform.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 10 instructions: each of three arguments shl 4, stored as a word to 0x7DE458, 0x7DE45A, 0x7DE45C. libgte SetBackColor by shape. cdecl."
+
+# ---------------------------------------------------------------------------
+# Committing primitives, and the draw-order pass's layer close (2026-09-20).
+# docs/sprite-draw-order.md section 8.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x92BF19
+name = "Draw_OtSlot"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-20: DrawLayer_Close 0x56FE80 and the draw-order pass 0x593060 index Gfx_OtPointers by it when appending a layer's list. pe_xref: 49 refs in 23 functions; the immediate stores are all 4 or 6 (0x495750, 0x496AD0, 0x559930)."
+
+[[func]]
+pc = 0x461E50
+name = "Gfx_CommitPrim"
+ret = "void"
+params = "unsigned slot, unsigned size"
+impl = "src/game/draw_emit.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x5D bytes, one call, one jump, internal: with next = Gfx_PacketNext and both arguments masked to a byte, if (Gfx_BufferIndex << 16) + 0x7F1BAC is above next + size (unsigned; jbe skips): Gpu_LinkPrim(Gfx_OtPointers[slot], next), Gfx_OtPointers[slot] = Gfx_PacketNext read again, Gfx_PacketNext += size. 0x7F1BAC is Gfx_PacketPools + 0x10000 - 0x54. No bound on slot. cdecl. Call trace all_b 2026-09-20: 640,316 calls."
+
+[[func]]
+pc = 0x56FE80
+name = "DrawLayer_Close"
+ret = "void"
+params = "int layer"
+impl = "src/game/draw_emit.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x7C bytes, three calls, one jump, internal: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0); Gfx_CommitPrim(6, 0xC); then with cell = 0x8022B0 + (Gfx_BufferIndex + layer * 6) * 8 - the second (first, last) pair of the layer's 0x30 bytes - if the dword at cell is non-zero: Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], it), and Gfx_OtPointers[Draw_OtSlot] = the dword at cell + 4, the index read again. Called by the draw-order pass 0x593060 after each layer when bit 2 of 0x7E0918 is set. cdecl. Call trace all_b 2026-09-20: 403,315 calls."
