@@ -36,6 +36,17 @@ into a second copy.
 
 The single next action, concrete enough to start without asking anyone.
 
+0. **Stage 2 has a plan: [`dialogue-localisation.md`](dialogue-localisation.md).**
+   The owner set it on 2026-09-20 and wants it picked up next, in a fresh
+   session: per-language overlay `DAT`s built locally from the player's discs,
+   and the donor's glyph atlases upscaled into the port's global 24 px table.
+   Start with its §4: **read the character draw `0x516B30`** (code to glyph
+   index, the single-byte range, the advance - static, an hour), then dump both
+   fonts to PNG and look, then the gibberish test - our glyphs under the
+   Chinese text - which shows format, nibble mapping and advance at once. The
+   owner's two PSP discs are in `CDImage/` (gitignored; `fixtures.toml`
+   `psp-jp`, `psp-eu`) and are PSX-format EMIs: the EU one is the English donor
+   on hand. The takeover queue below stays open beside it.
 1. **Keep working the queue** - regenerate it first (`python
    tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv` -
    the argument is the *counts* file. `all_b`, 2026-09-20, is a full-list run of
@@ -48,9 +59,14 @@ The single next action, concrete enough to start without asking anyone.
      `0x5A7F10`, `0x5A7F80`, `0x5A7FF0` (a rotation about one axis each, by
      their shape), `0x5A8060`, `0x57C070`. Read; **blocked on a decision, not
      on work**: it copies 20 bytes for an 18-byte result, so the out's two
-     padding bytes get stale stack. Zeros, or leave them alone - either is a
-     ledger entry ([`psx-library-layer.md`](psx-library-layer.md) §4). Ask
-     the owner, then it is an hour.
+     padding bytes get stale stack. The owner asked what the bytes are for
+     before deciding, and that is now measured
+     ([`psx-library-layer.md`](psx-library-layer.md) §4): a `MATRIX`'s
+     alignment hole, twelve stale values in 98,305 calls, named by no
+     instruction once in the GTE, and forcing `FFFF` changes no check. The
+     recommendation is zeros - what the original leaves 77% of the time - with
+     a ledger entry; **still the owner's to confirm**. The product itself is
+     written and fuzzed, parked in `analysis/experiments/experiment_mulmatrix.cpp`.
    - Library leaves still unread: `0x5A9700` (341 bytes, five indirect
      calls), `0x5A7C70` (the `s16`-out `ApplyMatrix`, unreached), `0x5A6790` /
      `0x5A6780` (an 8-byte record appended to a table at `0x6BEA18`, count
@@ -114,11 +130,11 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
    the owner because every check tonight took the PC away for minutes. The
    mechanism is read (app-active byte `0x6BC63B`); it is a divergence when
    built. Worth doing early: it makes everything in item 1 cheaper.
-6. **Prepare stage 2, the text swap.** The attract sequence's text boxes run
+6. **Stage 2's regression check.** The attract sequence's text boxes run
    the in-game dialogue engine ([`attract-mode.md`](attract-mode.md) §6), so
-   there is already a regression check. Unmeasured: which of `MsgBox_Step`'s
-   23 control codes those eight messages use (tracer detail mode), and
-   nothing covers `Msg_OpenSystem`. What the swap *is* is the owner's to say.
+   item 0 inherits one. Unmeasured: which of `MsgBox_Step`'s 23 control codes
+   those eight messages use (tracer detail mode), and nothing covers
+   `Msg_OpenSystem`.
 7. **[`IDEAS.md`](IDEAS.md) I13 - save states**, the oracle for what the
    attract sequence cannot reach (menus, system text, combat - stage 3). First
    experiment is written there.
@@ -287,14 +303,11 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b` (PR #4
-merged). Committed locally, **not pushed, no PR**: eighty-four takeovers in
-`src/game/sprite_order.cpp`, `draw_pool.cpp`, `prim.cpp`, `map_view.cpp`,
-`sprite_anim.cpp`, `sprite_find.cpp`, `field_input.cpp`, `sprite_clut.cpp`,
-`draw_layers.cpp`, `psx_gpu.cpp`, `psx_gte.cpp`, `psx_gte_float.cpp`,
-`psx_gte_transform.cpp`, `draw_emit.cpp` and `draw_pass.cpp`; `-fno-strict-aliasing`;
-`calltrace.py wallclock --static`; `CloneOriginal` re-aiming a tail `jmp`;
-and `docs/sprite-draw-order.md`, `docs/psx-library-layer.md`.
+Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b`: pushed, and
+**PR_PLACEHOLDER** open against `main` - eighty-four takeovers (`src/game/`
+from `sprite_order.cpp` to `draw_pass.cpp`), `-fno-strict-aliasing`,
+`calltrace.py wallclock --static`, `CloneOriginal` re-aiming a tail `jmp`, and
+the docs. Cut the stage-2 branch from `main` once it merges.
 
 Local only, gitignored, worth keeping:
 
@@ -318,6 +331,10 @@ Local only, gitignored, worth keeping:
   was not in `entries_logic.txt` to begin with (`Gfx_TexCacheFind` is
   render-timed and was not). Taking over a *logic* function changes every
   frame's hash; re-record then, about five minutes.
+- `CDImage/` - the owner's two PSP disc images (`psp-jp`, `psp-eu` in
+  `fixtures.toml`). Never commit; extract to scratch, not into the tree.
+- `analysis/experiments/experiment_mulmatrix.cpp` and `analysis/attract/pad_*`,
+  `analysis/calltrace/padh_*` / `padd_*` - the matrix-padding experiment.
 - `analysis/attract/ab12_shadow.log` - the run the x87 control word was
   measured in: 11 million calls, all `0x027F`.
 - `analysis/memdump/slowref_*` - an all-original dump taken under the tracer,

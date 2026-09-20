@@ -144,3 +144,35 @@ description = "Europe (English), Infogrames Europe. Catalogued for identificatio
 status = "known"
 redundant_with = "psx-us"
 note = "36 of 37 language-bearing image sections are identical to psx-us (regional-builds.md). The exception is DEMO.EMI section 5, where this release ships the *Japanese* asset — unexplained, flagged there, not diagnosed. Not a localisation donor; kept so an unrecognised disc can be named rather than guessed at."
+
+# ---------------------------------------------------------------------------
+# PSP re-releases (2026-09-20). PSX-format EMIs under PSP_GAME/USRDIR/<region>/,
+# not the PC port's DAT: docs/dialogue-localisation.md section 2. Dialogue
+# donors; for the system message pool prefer a PSX disc until the two are diffed.
+# ---------------------------------------------------------------------------
+
+[[build]]
+id = "psp-jp"
+role = "psp-disc"
+language = "Japanese"
+serial = "ULJM-05029"
+description = "Japanese PSP release, disc version 1.02. AREA000's text section is byte-identical to psx-jp's."
+status = "verified"
+[build.artifacts.iso]
+name = "Breath of Fire III (Japan).iso"
+size = 403963904
+sha256 = "861c0209a0e2702928a7dece3c0351c4a9675135aa94bb473a6abad24462dcd6"
+measured = "2026-09-20, sha256sum and PARAM.SFO DISC_ID on this machine (CDImage/, gitignored)"
+
+[[build]]
+id = "psp-eu"
+role = "psp-disc"
+language = "English"
+serial = "ULES-00193"
+description = "European PSP release, disc version 1.00; data under USRDIR/USA. The English dialogue donor on hand."
+status = "verified"
+[build.artifacts.iso]
+name = "Breath of Fire III (Europe).iso"
+size = 403374080
+sha256 = "216ac26c76874fe91ed3c46941552720021834c3d9b45fd6d5f657de241e1c82"
+measured = "2026-09-20, sha256sum and PARAM.SFO DISC_ID on this machine (CDImage/, gitignored)"

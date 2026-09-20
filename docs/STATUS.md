@@ -163,7 +163,10 @@ What is established:
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.
-2. **Then the text swap**, so that the owner can make headway through the game
+2. **Then the text swap** - planned 2026-09-20 in
+   [`dialogue-localisation.md`](dialogue-localisation.md): overlay `DAT`s and
+   an upscaled font table, both built locally from the player's discs - so
+   that the owner can make headway through the game
    itself — and with that, reach code the attract sequence never runs. What
    this means in detail is the owner's to say; the asset side of selectable
    languages is surveyed below ("A stated goal worth recording now"), and any
