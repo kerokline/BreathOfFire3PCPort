@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Seventeen functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**Nineteen functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -41,7 +41,8 @@ check: run a byte-copy of the original beside ours in the same process and
 compare, live and under a start-up fuzz ([`SCAFFOLDING.md`](SCAFFOLDING.md)
 §2, the shadow check). Three more followed it the same day, the
 converted-palette cache: `Gfx_ConvertRow`, `Gfx_LoadImageIfChanged` and
-`Gfx_ClutPixels`.
+`Gfx_ClutPixels`; then the two rendered-frame flushes, `Gfx_FlushDirtyStrip`
+and `Gfx_FlushUploadQueue`.
 
 What is established:
 
@@ -87,9 +88,9 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 53 functions, 8 global blocks and 31 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 37 functions carry signatures and
-  are callable from our code, 17 of them ours (counted 2026-09-19 by
+- 55 functions, 8 global blocks and 33 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 39 functions carry signatures and
+  are callable from our code, 19 of them ours (counted 2026-09-19 by
   `gen_symbols.py`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
@@ -106,6 +107,25 @@ What is established:
   ([`prior-art/`](prior-art/)).
 
 ## The immediate order of work
+
+**Direction set by the owner, 2026-09-19** — three stages, in this order:
+
+1. **Replace every function the attract sequence reaches.** It is the part of
+   the game with a regression oracle today: 540 of 2,936 functions
+   ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
+   with the takeover queue already layered (§9 there). Nineteen are ours, not
+   all of them among the 540.
+2. **Then the text swap**, so that the owner can make headway through the game
+   itself — and with that, reach code the attract sequence never runs. What
+   this means in detail is the owner's to say; the asset side of selectable
+   languages is surveyed below ("A stated goal worth recording now"), and any
+   swap is a divergence in the ledger sense.
+3. **Then the combat module**, which the attract sequence does not enter at
+   all, and which therefore needs stage 2's reach — and an oracle of its own —
+   before it can be replaced with the same confidence.
+
+The numbered steps below are the history of how the project got here; this is
+what orders new work.
 
 ### 0. Verify launch and stability — **passed 2026-09-19, enough to proceed**
 

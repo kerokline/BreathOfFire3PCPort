@@ -256,6 +256,30 @@ buffers; the all-original pair differed in 53 bytes, every one past byte 1,032
 are written, and the three dumps re-sliced rather than re-run. The display
 here is 32-bit; on a 16-bit one the fuzz is the only check of that branch.
 
+**The two rendered-frame flushes are ours, faithful (2026-09-19)** —
+`src/game/gfx_flush.cpp`: `Gfx_FlushDirtyStrip` `0x454960` and
+`Gfx_FlushUploadQueue` `0x461F00`, what WinMain's loop does to VRAM before a
+draw ([`call-trace.md`](call-trace.md) §6). The queue flush keeps its byte
+index, its re-read of the count after every record, and its lack of any bound
+(D4; DIV-0004 lives in `Gfx_BeginFrame`). Its two unpackers are now named and
+read but still Capcom's: `Gfx_UploadPacked5` `0x461FC0` and `Gfx_UploadLzss`
+`0x462070`.
+
+| check | result |
+|---|---|
+| start-up differential fuzz against clones (`BOF3X_SHADOW=gfx_flush`): 1,500 queues of 0..20 records of every kind, some past the shadow's edge; 300 strips | **0 mismatches** - shadow rows, unpack scratch, `Gfx_UnpackNext`, count; converted rows, generations, flag |
+| negative control: kind 2 sent down the raw path | 1,099 rounds flagged, DLL refuses to run |
+| `mem_dump.py`, nineteen ours against all-original | `arena`, `vram`, `clut` identical |
+| attract oracle, nineteen ours | identical over 7,478 frames against `orig_a.tsv`; no crash |
+
+**A finding about the original, from the fuzz's first run:** it failed 13 of
+1,500 rounds, every one on a kind-2 record. `Gfx_UploadLzss` zeroes `0x1EE` of
+its 512 window bytes and leaves the last 18 - one maximum match - as whatever
+the stack held, so a stream that reads them before writing them decodes
+differently on every call; the original disagrees with *itself*. A valid
+stream never does that, and the fuzz now writes valid ones. It matters for the
+takeover: those 18 bytes have no defined value to be faithful to.
+
 `Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
 the one kind-3 chunk — so its store is exercised and its free-the-previous
 branch never is, in this run or by any shipped data.

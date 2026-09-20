@@ -14,11 +14,12 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, seventeen
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, nineteen
 functions are ours (`LoadDatFile`; the whole eight-function file layer, with DIV-0003 in
 `File_OpenWrite`; `Save_WriteFile` with DIV-0002; `Gfx_BeginFrame` with DIV-0004, a
-crash fix; and six faithful ones on the image path — `Gfx_LoadImage`, `Font_SetGlyphData`,
-`Gfx_InvalidateTextures`, `Gfx_ConvertRow`, `Gfx_LoadImageIfChanged`, `Gfx_ClutPixels`), the A/B switch works, a call tracer and a crash reporter run in-process, and a
+crash fix; and eight faithful ones on the image path — `Gfx_LoadImage`, `Font_SetGlyphData`,
+`Gfx_InvalidateTextures`, `Gfx_ConvertRow`, `Gfx_LoadImageIfChanged`, `Gfx_ClutPixels`,
+`Gfx_FlushDirtyStrip`, `Gfx_FlushUploadQueue`), the A/B switch works, a call tracer and a crash reporter run in-process, and a
 deterministic attract-mode regression check passes original-vs-ours. See
 [`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
 
@@ -33,11 +34,14 @@ The single next action, concrete enough to start without asking anyone.
    case, DIV-0002's clean A/B. Since the saves loaded clean, the next step of
    I1 is reading the PC block builder `0x5806F0` and the options bytes at
    block `+0x78`.
-2. **Keep going up the presentation layer.** The texture cache's invalidation
-   and the converted-palette cache are ours
+2. **Replace what the attract sequence reaches** — stage 1 of the owner's
+   order of work ([`STATUS.md`](STATUS.md)). The image path is ours from the
+   rendered-frame flushes down to the texture-cache invalidation
    ([`asset-loading-path.md`](asset-loading-path.md) §2). Next, smallest first:
-   `Gfx_FlushDirtyStrip` `0x454960` and `Gfx_FlushUploadQueue` `0x461F00`,
-   both fully read already; the two other callers of
+   the two unpackers the queue flush dispatches to, `Gfx_UploadPacked5`
+   `0x461FC0` and `Gfx_UploadLzss` `0x462070`, both read (`symbols.toml`) — the
+   second has 18 window bytes the original never initialises, so a faithful
+   version must choose a value and say so; the two other callers of
    `Gfx_InvalidateTextures`, `0x59E6EA` (a fill of the shadow) and `0x59EA5C`
    (mode 1, after `0x5AA5D6`); then where cache entries are *built* —
    `0x5A3CC0` / `0x5A5160` for the texture cache, and the readers of the
@@ -110,7 +114,7 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=gfx_clut` or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=gfx_clut`, `=gfx_flush` or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
@@ -162,7 +166,8 @@ Phase 0 merged to `main` as PR #3 (`cee66ad`, 2026-09-19). Branch
 `Font_SetGlyphData` takeovers: the `mem_dump.py` drain wait, those two in
 `src/game/gfx_image.cpp`, `Gfx_InvalidateTextures` in
 `src/game/gfx_texcache.cpp` with the shadow check, then the palette cache's
-three in `src/game/gfx_clut.cpp`. Each passed its byte-level or shadow check, a
+three in `src/game/gfx_clut.cpp`, then the two flushes in
+`src/game/gfx_flush.cpp`. Each passed its byte-level or shadow check, a
 negative control, and the attract oracle. Not pushed; PR planned for the end
 of the 2026-09-19 session.
 
