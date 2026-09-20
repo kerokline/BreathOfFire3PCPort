@@ -23,12 +23,15 @@ struct ComObject {
 // 2 down, as PSX VRAM), 32 entries a page, filled from slot 0 with no holes.
 // Only the fields this file touches are named.
 struct TexCacheEntry {
-    std::uint8_t state;   // 0 free - and the end of the page's list; 1 built; 2 stale
-    std::uint8_t spans;   // non-zero: also dropped when the NEXT page changes - so,
-                          // by inference, a texture that reaches into it
-    std::uint8_t unread[14];
-    ComObject* a;         // +0x10
-    ComObject* b;         // +0x14
+    std::uint8_t state;        // 0 free - and the end of the page's list; 1 built; 2 stale
+    std::uint8_t mode;         // +1: PSX colour mode, (tpage >> 7) & 3: 0 4-bit, 1 8-bit, 2 15-bit.
+                               //     Non-zero is wider than a page in VRAM, which is why such
+                               //     an entry is also dropped when the NEXT page changes.
+    std::uint16_t clut;        // +2: PSX CLUT id the texture was built with
+    std::uint32_t generation;  // +4: that CLUT row's generation at the time (Gfx_ClutRows)
+    std::uint32_t key[2];      // +8: Gfx_TexCacheKey at the time
+    ComObject* a;              // +0x10
+    ComObject* b;              // +0x14
 };
 static_assert(sizeof(TexCacheEntry) == 0x18);
 
@@ -85,8 +88,8 @@ Tally Invalidate(TexCacheEntry* table, const short* rect, int mode, Release rele
                 ++tally.dropped;
             }
 
-            // Then the page to the left, for textures that reach into this
-            // one - not for the first page of a row. Here a dropped entry is
+            // Then the page to the left, for its 8- and 15-bit textures, which
+            // reach into this one - not for the first page of a row. Here a dropped entry is
             // closed up rather than left as a hole, because a hole would end
             // that page's list for the loop above.
             if ((page & 0xF) == 0) continue;
@@ -94,12 +97,12 @@ Tally Invalidate(TexCacheEntry* table, const short* rect, int mode, Release rele
             for (int i = 0; i < kPerPage;) {
                 TexCacheEntry& e = left[i];
                 if (mode != 0) {
-                    if (e.state == 1 && e.spans != 0) { e.state = 2; ++tally.staled; }
+                    if (e.state == 1 && e.mode != 0) { e.state = 2; ++tally.staled; }
                     ++i;
                     continue;
                 }
                 if (e.state == 0) break;
-                if (e.spans == 0) { ++i; continue; }
+                if (e.mode == 0) { ++i; continue; }
                 if (e.b) release(e.b);
                 if (e.a) release(e.a);
                 std::memmove(&e, &e + 1, sizeof e * static_cast<unsigned>(kPerPage - 1 - i));
@@ -220,9 +223,12 @@ void SelfTest() {
             const int used = Rng() % 4 == 0 ? kPerPage : RngIn(0, 12);
             for (int i = 0; i < used; ++i) {
                 TexCacheEntry& e = g_input[page * kPerPage + i];
-                for (auto& b : e.unread) b = static_cast<std::uint8_t>(Rng());
+                e.clut = static_cast<std::uint16_t>(Rng());
+                e.generation = Rng();
+                e.key[0] = Rng();
+                e.key[1] = Rng();
                 e.state = holes && Rng() % 6 == 0 ? 0 : static_cast<std::uint8_t>(RngIn(1, 2));
-                e.spans = Rng() % 3 == 0 ? static_cast<std::uint8_t>(RngIn(1, 255)) : 0;
+                e.mode = Rng() % 3 == 0 ? static_cast<std::uint8_t>(RngIn(1, 255)) : 0;
                 const unsigned slot = static_cast<unsigned>(page * kPerPage + i);
                 e.a = Rng() % 5 ? reinterpret_cast<ComObject*>(&g_fakes[2 * slot]) : nullptr;
                 e.b = Rng() % 5 ? reinterpret_cast<ComObject*>(&g_fakes[2 * slot + 1]) : nullptr;
@@ -267,7 +273,88 @@ void SelfTest() {
     if (bad) bof3::Fatal("Gfx_InvalidateTextures differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
+// The fuzz for Gfx_TexCacheFind, same switch. Few distinct CLUTs, keys and
+// generations, so that hits, misses and stale hits all happen.
+using FindFn = int (__cdecl*)(int, int, int);
+TexCacheEntry g_find_in[kEntries], g_find_theirs[kEntries];
+
+void SelfTestFind(FindFn theirs) {
+    constexpr unsigned kRounds = 6000;
+    struct Row { std::uint32_t generation; void* pixels; };
+    auto* rows = reinterpret_cast<Row*>(Gfx_ClutRows);
+    unsigned bad = 0, hits = 0, misses = 0, staled = 0, direct = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        if (round % 50 == 0) {
+            std::memset(g_find_in, 0, sizeof g_find_in);
+            for (int page = 0; page < 32; ++page)
+                for (int i = 0, used = Rng() % 5 == 0 ? kPerPage : RngIn(0, 10); i < used; ++i) {
+                    TexCacheEntry& e = g_find_in[page * kPerPage + i];
+                    e.state = static_cast<std::uint8_t>(RngIn(1, 2));
+                    e.mode = static_cast<std::uint8_t>(RngIn(0, 2));
+                    e.clut = static_cast<std::uint16_t>((RngIn(480, 483) << 6) | RngIn(0, 3));
+                    e.generation = static_cast<std::uint32_t>(RngIn(0, 1));
+                    e.key[0] = static_cast<std::uint32_t>(RngIn(0, 2));
+                    e.key[1] = static_cast<std::uint32_t>(RngIn(0, 1));
+                }
+            for (int y = 480; y < 484; ++y) rows[y].generation = static_cast<std::uint32_t>(RngIn(0, 1));
+        }
+        Gfx_TexCacheKey[0] = static_cast<unsigned long>(RngIn(0, 2));
+        Gfx_TexCacheKey[1] = static_cast<unsigned long>(RngIn(0, 1));
+        const int page = RngIn(0, 31), mode = Rng() % 8 == 0 ? RngIn(3, 255) : RngIn(0, 2);
+        // one in ten with high bits set, which the original compares too
+        const int clut = ((RngIn(480, 483) << 6) | RngIn(0, 3)) | (Rng() % 10 == 0 ? 0x10000 : 0);
+        int result[2];
+        for (int pass = 0; pass < 2; ++pass) {
+            std::memcpy(Table(), g_find_in, sizeof g_find_in);
+            result[pass] = (pass ? &Gfx_TexCacheFind : theirs)(page, clut, mode);
+            if (pass == 0) std::memcpy(g_find_theirs, Table(), sizeof g_find_theirs);
+        }
+        if (result[1] == kPerPage) ++misses; else ++hits;
+        if (mode & 2) ++direct;
+        if (std::memcmp(g_find_in, Table(), sizeof g_find_in) != 0) ++staled;
+        if ((result[0] != result[1] || std::memcmp(g_find_theirs, Table(), sizeof g_find_theirs) != 0) && ++bad <= 8)
+            bof3::Log("shadow      Gfx_TexCacheFind self-test MISMATCH round %u: page %d clut 0x%X mode %d: %d vs ours %d",
+                      round, page, clut, mode, result[0], result[1]);
+    }
+    std::memset(Table(), 0, sizeof g_find_in);
+    for (int y = 480; y < 484; ++y) rows[y].generation = 0;
+    Gfx_TexCacheKey[0] = Gfx_TexCacheKey[1] = 0;
+    bof3::Log("shadow      Gfx_TexCacheFind self-test: %u rounds (%u hits, %u misses, %u in 15-bit mode, %u that marked "
+              "an entry stale), %u MISMATCHES; results and tables compared", kRounds, hits, misses, direct, staled, bad);
+    if (bad) bof3::Fatal("Gfx_TexCacheFind differs from the original in %u of %u self-test rounds", bad, kRounds);
+}
+
 }  // namespace
+
+// original 0x5A0830. The slot, 0..31, of the page's entry for this texture, or
+// 32 if it has none. A texture is identified by Gfx_TexCacheKey - eight bytes
+// the draw sets first - and, unless it is 15-bit, by its CLUT id.
+//
+// It is also where a palette change reaches a texture: a hit whose CLUT row
+// has been converted again since the entry was built (Gfx_ClutRows generation)
+// is marked stale on the way out. Not for 15-bit textures, which have no CLUT.
+//
+// As the original has it: only bit 1 of mode is looked at, so 3 is 15-bit too;
+// 4-bit and 8-bit entries are not told apart; the CLUT id is compared as 32
+// bits against a 16-bit field, so an id with high bits set never hits; and
+// clut >> 6 indexes Gfx_ClutRows unchecked, up to row 1,023 of 512.
+extern "C" int __cdecl Gfx_TexCacheFind(int page, int clut, int mode) {
+    TexCacheEntry* own = Table() + page * kPerPage;
+    for (int i = 0; i < kPerPage; ++i) {
+        TexCacheEntry& e = own[i];
+        if (e.state == 0) return kPerPage;
+        if (std::memcmp(e.key, Gfx_TexCacheKey, sizeof e.key) != 0) continue;
+        if (mode & 2) {
+            if (e.mode == 2) return i;
+            continue;
+        }
+        if (static_cast<int>(e.clut) != clut) continue;
+        struct Row { std::uint32_t generation; void* pixels; };
+        if (e.generation != reinterpret_cast<const Row*>(Gfx_ClutRows)[clut >> 6].generation) e.state = 2;
+        return i;
+    }
+    return kPerPage;
+}
 
 // original 0x59E700. Throws away (mode 0) or marks stale (mode non-zero) every
 // cached texture built from the VRAM cells under rect: four s16, x y w h.
@@ -290,4 +377,11 @@ void GfxTexCache_Inject() {
             "Gfx_InvalidateTextures", bof3::addr::Gfx_InvalidateTextures, 0x226));
     if (g_original_clone) SelfTest();
     BOF3_INJECT(Gfx_InvalidateTextures);
+
+    // 0x5A0830..0x5A0901: every jump stays inside, and it calls nothing
+    // (disasm 2026-09-19).
+    if (bof3::WantsShadow("Gfx_TexCacheFind"))
+        SelfTestFind(reinterpret_cast<FindFn>(
+            bof3::CloneOriginal("Gfx_TexCacheFind", bof3::addr::Gfx_TexCacheFind, 0xD2)));
+    BOF3_INJECT(Gfx_TexCacheFind);
 }

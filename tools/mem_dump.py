@@ -41,7 +41,10 @@ Regions:
          malloc and the rest is never written - two all-original runs differed
          only there (2026-09-19). On a 16-bit display the second half of the
          0x400 is that same noise. Offsets in a report are row * 0x405 + 5 +
-         byte.
+         byte. This region depends on how fast the game runs - which
+         conversion a row last received is a rendered-frame matter - so
+         compare it only between runs of the same speed: never a run under
+         BOF3X_CALLTRACE_MODE=all against one without (2026-09-19).
 
 Output goes to analysis/memdump/, which is game-derived and gitignored.
 """

@@ -807,7 +807,7 @@ params = "const short *rect, int mode"
 impl = "src/game/gfx_texcache.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: cdecl, two stack arguments ([esp+0x3C] and [esp+0x50] after sub esp 0x38 and four pushes), plain ret; Gfx_LoadImage pushes 0 then rect and cleans 8 bytes (0x59EAE4..0x59EAEC). Reads rect as four s16 and walks 32 pages of 64 x 256 (x step 0x40 to 0x400, y step 0x100 to 0x200), IntersectRect (import slot 0x5C4168) on each; for a touched page visits 32 entries of 0x18 bytes at 0x6C3F40: mode 0 releases the COM pointers at entry +0x14 and +0x10 (vtable +8) and zeroes the entry, stopping at the first entry whose state byte is 0; mode non-zero turns state 1 into 2. It overwrites its own first-argument slot with the page counter, which cdecl allows."
-note = "Read to the end 2026-09-19. The rect is built inclusive (x + w - 1, y + h - 1) and so is each page (x + 0x3F, y + 0xFF), but IntersectRect treats right and bottom as exclusive: a rect one cell wide or high invalidates nothing, and the last column and row of a page do not count. When the page index is not a multiple of 16, a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's entries that have byte +1 set: mode 0 releases them and closes the gap - memmove of the (31 - i) entries above, zero the page's last entry at 0x6C4228 + (page - 1) * 0x300, re-examine slot i - stopping at the first state-0 entry; mode non-zero turns state 1 into 2 for all 32. Byte +1 presumably marks a texture that reaches into the next page; inferred from this use only. Three callers: 0x59EAE7 (Gfx_LoadImage) and 0x59E6EA with mode 0, 0x59EA5C with mode 1 (E8 scan of .text)."
+note = "Read to the end 2026-09-19. The rect is built inclusive (x + w - 1, y + h - 1) and so is each page (x + 0x3F, y + 0xFF), but IntersectRect treats right and bottom as exclusive: a rect one cell wide or high invalidates nothing, and the last column and row of a page do not count. When the page index is not a multiple of 16, a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's entries that have byte +1 set: mode 0 releases them and closes the gap - memmove of the (31 - i) entries above, zero the page's last entry at 0x6C4228 + (page - 1) * 0x300, re-examine slot i - stopping at the first state-0 entry; mode non-zero turns state 1 into 2 for all 32. Byte +1 is the PSX colour mode (Gfx_TexCacheFind): non-zero is 8- or 15-bit, stored two or four times as wide in VRAM as a 4-bit page, hence reaching into the next. Three callers: 0x59EAE7 (Gfx_LoadImage) and 0x59E6EA with mode 0, 0x59EA5C with mode 1 (E8 scan of .text)."
 
 [[func]]
 pc = 0x59E650
@@ -882,14 +882,32 @@ count = 8
 status = "evidence"
 evidence = "disasm 2026-09-19, fields as Gfx_ConvertRow reads them: byte +3 bytes per pixel (compared with 2; 0x5A60E0 stores 4 at 0x5A6176), +4 / +8 / +0xC right-shifts for red / green / blue after each 5-bit channel has been moved to bits 19..23, +0x10 / +0x14 / +0x18 their masks, +0x1C bits ORed into every opaque pixel. 0x5A60E0 fills and copies the block (0x7DED60 <-> 0x7DEDA0); its extent beyond +0x1C is not read here."
 
+[[func]]
+pc = 0x5A0830
+name = "Gfx_TexCacheFind"
+ret = "int"
+params = "int page, int clut, int mode"
+impl = "src/game/gfx_texcache.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, no calls, every jump internal, 0xD2 bytes. Walks the 32 entries of Gfx_TexCache page `page`, returning 0x20 at the first whose state byte is 0 or after all 32. If mode & 2: a hit is entry byte +1 == 2 and the 8 bytes at entry +8 equal to the 8 at 0x7DED0C (repe cmpsd, 2 dwords); returns the slot. Otherwise: a hit is the u16 at entry +2, zero-extended, equal to the 32-bit clut argument, and the same 8-byte compare; on a hit it reads the dword at 0x6C2A40 + (clut sar 6) * 8 - the Gfx_ClutRows generation - and if it differs from the dword at entry +4 sets the state byte to 2; returns the slot. Caller 0x5A3CE3 passes (tpage & 0x1F, clut, (tpage >> 7) & 3) - the PSX texture-page fields - which is what makes byte +1 the PSX colour mode. Two callers (analysis/pc_funcs.json)."
+note = "0x5A3CC0, its caller: Find; if 0x20, build through 0x5A0080; else if state 2, refresh through 0x5A0510; then store entry +0x10 to the caller's pointer and call its vtable +0x64 with a 0x7C-byte struct - IDirectDrawSurface4::Lock by slot number and DDSURFACEDESC2 by size - returning the dword at +0x24 of it. Unread beyond that."
+
+[[data]]
+pc = 0x7DED0C
+name = "Gfx_TexCacheKey"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "disasm 2026-09-19: the 8 bytes Gfx_TexCacheFind compares with entry +8 of each cache entry. pe_xref.py: written as a dword at four places in the draw 0x59EE50, and read as three s16 and a dword in the entry builder 0x5A0080 - so, four s16, by inference a rect within the texture page. Only ever compared here."
+
 [[data]]
 pc = 0x6C3F40
 name = "Gfx_TexCache"
 ctype = "unsigned char"
 count = 0x6000
 status = "evidence"
-evidence = "disasm 2026-09-19: Gfx_InvalidateTextures 0x59E700 indexes it as 0x6C3F40 + (page * 32 + slot) * 0x18, pages 0..31 and slots 0..31: 1,024 entries of 0x18 bytes = 0x6000, ending at 0x6C9F40, 4 bytes below Gfx_VramShadow. Entry byte +0 is a state (0 ends a page's list, 1, 2), byte +1 a flag, +0x10 and +0x14 COM pointers released through vtable +8. pe_xref.py: the only other functions that name the table are 0x5A3CC0 (compares a state with 2) and 0x5A5160."
-note = "Declared as bytes because the generated header has no struct types; src/game/gfx_texcache.cpp carries the entry layout. Bytes +2..+0xF are unread."
+evidence = "disasm 2026-09-19: Gfx_InvalidateTextures 0x59E700 indexes it as 0x6C3F40 + (page * 32 + slot) * 0x18, pages 0..31 and slots 0..31: 1,024 entries of 0x18 bytes = 0x6000, ending at 0x6C9F40, 4 bytes below Gfx_VramShadow. Entry byte +0 is a state (0 ends a page's list, 1, 2), byte +1 the PSX colour mode, +2 the CLUT id (u16), +4 the CLUT row generation it was built from, +8 eight bytes of key (all four from Gfx_TexCacheFind 0x5A0830), +0x10 and +0x14 COM pointers released through vtable +8. pe_xref.py: the only other functions that name the table are 0x5A3CC0 (compares a state with 2) and 0x5A5160."
+note = "Declared as bytes because the generated header has no struct types; src/game/gfx_texcache.cpp carries the entry layout, now complete."
 
 [[data]]
 pc = 0x6C9F44

@@ -331,6 +331,57 @@ The attract sequence reaches `Gfx_ClearImage` and neither of the other two
 (`analysis/calltrace/queue.csv`): **`Gfx_MoveImage` and `Gfx_MoveCells` are
 checked by the fuzz only**, like `Gfx_UploadLzss`.
 
+**The texture cache's lookup is ours, faithful, and its entry layout is now
+complete (2026-09-19)** - `Gfx_TexCacheFind` `0x5A0830`, in
+`src/game/gfx_texcache.cpp`. A texture is found by the eight bytes the draw
+leaves in `Gfx_TexCacheKey` `0x7DED0C` and, unless it is 15-bit, by its PSX
+CLUT id. An entry is: state, **PSX colour mode** (+1), CLUT id (+2), the CLUT
+row's generation when it was built (+4), the key (+8), two COM pointers
+(+0x10). Two things follow:
+
+- **This is how a palette change reaches a texture.** A hit whose CLUT row has
+  been converted again since (`Gfx_ClutRows` generation) is marked stale on the
+  way out, and the caller `0x5A3CC0` then refreshes it through `0x5A0510`.
+  With `Gfx_LoadImageIfChanged` bumping the generation, the chain from a
+  palette animation in game logic to a rebuilt texture is read end to end.
+- **Byte +1 was mis-inferred above as "reaches into the next page".** It is the
+  colour mode; 8- and 15-bit textures are two and four times as wide in VRAM
+  as a 4-bit page, which is *why* `Gfx_InvalidateTextures` drops them when the
+  next page changes. The code and `symbols.toml` are corrected.
+
+Kept as found: only bit 1 of the mode is looked at; 4- and 8-bit entries are
+not told apart; the CLUT id is compared as 32 bits against a 16-bit field;
+`clut >> 6` indexes the rows unchecked.
+
+| check | result |
+|---|---|
+| start-up differential fuzz (`BOF3X_SHADOW=Gfx_TexCacheFind`), 6,000 rounds: 1,089 hits, 2,078 in 15-bit mode, 97 that marked an entry stale | **0 mismatches** - result and table |
+| negative control: the stale mark left off | 168 rounds flagged, DLL refuses to run |
+| twenty-five ours, full speed: `mem_dump.py` three regions, attract oracle | identical; 7,478 frames identical; no crash |
+| frame hash against the all-original reference, 2,829 entries armed | identical on all 4,472 frames |
+
+Not taken: its caller `0x5A3CC0` (locks a DirectDraw surface and returns its
+pixels), the builders `0x5A0080` / `0x5A0510` (ten COM calls each), and the
+renderer's 3.7 KB set-up `0x5A5160` with 63. They are where the project first
+has to decide how a function that talks to Direct3D gets checked - a clone can
+run them, but what they produce is a surface, not memory we can compare.
+
+**Two things learned about the checks themselves, the same evening.** Running
+the dump and the oracle under the call tracer (`BOF3X_CALLTRACE_MODE=all`, about
+half speed) made both "fail" - and both fail the same way with every function
+Capcom's:
+
+- The `clut` region **depends on how fast the game runs.** All-original under
+  the tracer against all-original at full speed differs in rows 482 and 483
+  (cells 240-247, and 128) while `arena` and `vram` are identical. So which
+  conversion a palette row last received is a rendered-frame matter, as image
+  uploads are ([`call-trace.md`](call-trace.md) §6). Why the converted row can
+  lag a shadow that is up to date is unread. **Compare dumps only between runs
+  of the same speed.**
+- The external sampler behind `attract_diff.py` **miscounts frames under the
+  tracer**; two recordings made that way disagree by whole frames. Under the
+  tracer the frame hash is the check, and it needs nothing else.
+
 `Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
 the one kind-3 chunk — so its store is exercised and its free-the-previous
 branch never is, in this run or by any shipped data.
