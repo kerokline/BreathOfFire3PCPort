@@ -1945,3 +1945,164 @@ params = "long h"
 impl = "src/game/psx_gte_float.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 0x57 bytes, no calls, no jumps: Gte_ProjDistance = h; Gte_NearZ = (h - (h >> 31)) >> 1, h / 2 toward zero; Gte_RampNear = (imul Gte_RampNearScale, h) / 1000 and Gte_RampFar likewise from Gte_RampFarScale - the division the magic multiply 0x10624DD3, sar 6, plus the sign bit: signed, toward zero. libgte SetGeomScreen by shape. cdecl. Call trace all_b 2026-09-20: 10 calls."
+
+# ---------------------------------------------------------------------------
+# The PSX library layer, GTE half: the transform commands and libgte's
+# functions over them (2026-09-20). docs/psx-library-layer.md section 4.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x7DE464
+name = "Gte_Ir0"
+ctype = "long"
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_Rtps 0x5A8E90 and Gte_Rtpt 0x5A8F60 store Gte_DepthRamp(Gte_Depth) here as their last act - the depth-cue factor the GTE leaves in IR0."
+
+[[data]]
+pc = 0x7DE794
+name = "Gte_Otz"
+ctype = "long"
+status = "evidence"
+evidence = "disasm 2026-09-20: Gte_RotAverage3 0x5A87A0 and Gte_RotAverage4 0x5A8950 store a quarter of the average of the depths here and return it - the GTE's OTZ."
+
+[[func]]
+pc = 0x5A8E90
+name = "Gte_Rtps"
+ret = "void"
+params = "void"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0xC6 bytes, three calls, no jumps. Each vertex: Gte_ApplyMatrix(Gte_Matrix, vertex, Gte_Transformed), the three dwords at Gte_Matrix + 0x14 added, Gte_Perspective(x out, y out, depth out). The vertex is the register at 0x7DE470; before the division the depths move 0x7DE79C -> 0x7DE7A0, 0x7DE798 -> 0x7DE79C, Gte_Depth -> 0x7DE798 and the screen points 0x7DE4D0 -> 0x7DE4C8, 0x7DE4D8 -> 0x7DE4D0; the outs are 0x7DE4D8, 0x7DE4DC, Gte_Depth; then Gte_Ir0 = Gte_DepthRamp(Gte_Depth). The GTE command RTPS by shape, not matched. Call trace all_b 2026-09-20: 4,019,785 calls."
+
+[[func]]
+pc = 0x5A8F60
+name = "Gte_Rtpt"
+ret = "void"
+params = "void"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x145 bytes, seven calls, no jumps: 0x7DE7A0 = Gte_Depth first; then the vertex registers 0x7DE470, 0x7DE468, 0x7DE478 in that order to the screen points 0x7DE4C8, 0x7DE4D0, 0x7DE4D8 and the depths 0x7DE79C, 0x7DE798, Gte_Depth; then Gte_Ir0 = Gte_DepthRamp(Gte_Depth). Each vertex: Gte_ApplyMatrix(Gte_Matrix, vertex, Gte_Transformed), the three dwords at Gte_Matrix + 0x14 added, Gte_Perspective(x out, y out, depth out). RTPT by shape. Call trace all_b 2026-09-20: 2,230,333 calls."
+
+[[func]]
+pc = 0x5A8250
+name = "Gte_RotTransPers"
+ret = "long"
+params = "const short *vertex, unsigned long *sxy, long *p"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0xE4 bytes, three calls, no jumps: Gte_Rtps 0x5A8E90 with the vertex its first argument; *p (third argument) = Gte_DepthRamp(Gte_Depth), then the two dwords of the newest screen point to the second argument; returns Gte_Depth >> 2. libgte RotTransPers by shape; a fourth argument, the flag, is never read. cdecl. Call trace all_b 2026-09-20: 42,706 calls."
+
+[[func]]
+pc = 0x5A84A0
+name = "Gte_RotTransPers3"
+ret = "long"
+params = "const short *v0, const short *v1, const short *v2, float *sxy0, float *sxy1, float *sxy2, long *p"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x14B bytes, seven calls, no jumps: 0x7DE7A0 = Gte_Depth; the three vertices in order, x and y out to sxyN and sxyN + 4 - not to the screen-point registers - depths to 0x7DE79C, 0x7DE798, Gte_Depth; *p = Gte_DepthRamp(Gte_Depth); returns Gte_Depth >> 2. Argument slots worked out from the esp offsets between pushes. Each vertex: Gte_ApplyMatrix(Gte_Matrix, vertex, Gte_Transformed), the three dwords at Gte_Matrix + 0x14 added, Gte_Perspective(x out, y out, depth out). libgte RotTransPers3 by shape. cdecl."
+
+[[func]]
+pc = 0x5A85F0
+name = "Gte_RotTransPers4"
+ret = "long"
+params = "const short *v0, const short *v1, const short *v2, const short *v3, float *sxy0, float *sxy1, float *sxy2, float *sxy3, long *p"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x1A7 bytes, nine calls, no jumps: as Gte_RotTransPers3 for four, depths to 0x7DE7A0, 0x7DE79C, 0x7DE798, Gte_Depth, and no copy of Gte_Depth first. libgte RotTransPers4 by shape. cdecl. Call trace all_b 2026-09-20: 52,972 calls."
+
+[[func]]
+pc = 0x5A87A0
+name = "Gte_RotAverage3"
+ret = "long"
+params = "const short *v0, const short *v1, const short *v2, float *out0, float *out1, float *out2, long *p"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x1A6 bytes, seven calls, no jumps: Gte_RotTransPers3, then fild / fmul 2^-14 / fstp of 0x7DE79C, 0x7DE798, Gte_Depth to +8 of the three outs, *p = Gte_DepthRamp(Gte_Depth), and Gte_Otz = (0x7DE798 + 0x7DE79C + Gte_Depth) / 12 - imul 0x2AAAAAAB, sar 1, plus the sign bit: signed, toward zero - which it returns. libgte RotAverage3 by shape, with 12-byte outs. cdecl."
+
+[[func]]
+pc = 0x5A8950
+name = "Gte_RotAverage4"
+ret = "long"
+params = "const short *v0, const short *v1, const short *v2, const short *v3, float *out0, float *out1, float *out2, float *out3, long *p"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x208 bytes, nine calls, no jumps: Gte_RotTransPers4, the four depths times 2^-14 to +8 of the four outs, *p = Gte_DepthRamp(Gte_Depth), Gte_Otz = the sum of the four depths sar 4, returned. libgte RotAverage4 by shape. cdecl."
+
+[[func]]
+pc = 0x5A8B60
+name = "Gte_VectorNormal"
+ret = "long"
+params = "const long *in, long *out"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x9C bytes, four calls to _ftol, one jump, internal: fild in[0] and in[1] each stored to a 32-bit float on the stack, in[2] kept on the x87 stack; sum = z*z + y*y + x*x in that order, fst to a float; fsqrt; fcom 0.0 and C3 set: 1.0 instead; then x * 4096.0 (a double) / length, y likewise, z likewise, each through _ftol 0x5B9550; returns _ftol of the float sum. All reads before the first store. Rounds at the control word's precision. Three dword stores. libgte VectorNormal by shape. cdecl. Call trace all_b 2026-09-20: 377,136 calls."
+
+[[func]]
+pc = 0x5A8C00
+name = "Gte_VectorNormalS"
+ret = "long"
+params = "const long *in, short *out"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x9F bytes: Gte_VectorNormal 0x5A8B60 with three word stores. libgte VectorNormalS by shape. cdecl. Call trace all_b 2026-09-20: 188,568 calls."
+
+[[func]]
+pc = 0x5A8120
+name = "Gte_ScaleMatrix"
+ret = "short *"
+params = "short *matrix, const long *scale"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x8B bytes, no calls, no jumps: for i = 0..8 in order, matrix[i] = (movsx matrix[i] imul scale[i mod 3]) sar 12, stored as a word before the next is read; eax is left holding matrix. libgte ScaleMatrix by shape. cdecl; not reached by the attract run (all_b)."
+
+[[func]]
+pc = 0x5A7A50
+name = "Math_Cos"
+ret = "int"
+params = "int angle"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 6 instructions: Math_Sin(angle + 0x400). cdecl. Call trace all_b 2026-09-20: 145,824 calls."
+
+[[data]]
+pc = 0x7DE430
+name = "Gte_ColorMatrix"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-20, two refs (pe_xref): Gte_SetColorMatrix 0x5A8DC0 copies 8 dwords here, and Gte_NormalColor 0x5A8CA0 hands it to Gte_ApplyMatrixLV as the matrix."
+
+[[data]]
+pc = 0x7DE458
+name = "Gte_BackColor"
+ctype = "short"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-20, two refs (pe_xref): Gte_SetBackColor 0x5A7B60 stores its three arguments << 4 as words at 0x7DE458, 0x7DE45A, 0x7DE45C; Gte_NormalColor 0x5A8CA0 adds them, sign-extended, to the lit colour."
+
+[[func]]
+pc = 0x5A8CA0
+name = "Gte_NormalColor"
+ret = "void"
+params = "const short *normal, const unsigned char *in, unsigned char *out"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0xFA bytes, seven calls, no jumps: with L three dwords on the stack, Gte_ApplyMatrix(Gte_Matrix2, normal, L); Gte_VectorNormal(L, L); Gte_ApplyMatrixLV(Gte_ColorMatrix, L, L); Gte_VectorNormal(L, L); L[i] += movsx Gte_BackColor[i]; out[i] = the low byte of _ftol(fild L[i] * the double 2^-12 at 0x5C4660 * in[i]) for i = 0, 1, 2, each out[i] stored before in[i + 1] is read; THEN out[0] = in[0], out[1] = in[1], out[2] = in[2], read and stored one at a time (0x5A8D84..0x5A8D91). The lit colour is overwritten with the colour in. libgte NormalColor by shape. cdecl. Call trace all_b 2026-09-20: 188,568 calls."
+
+[[func]]
+pc = 0x5A8DC0
+name = "Gte_SetColorMatrix"
+ret = "void"
+params = "const unsigned long *matrix"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20: rep movsd of 8 dwords from the argument to 0x7DE430. libgte SetColorMatrix by shape. cdecl."
+
+[[func]]
+pc = 0x5A7B60
+name = "Gte_SetBackColor"
+ret = "void"
+params = "long r, long g, long b"
+impl = "src/game/psx_gte_transform.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 10 instructions: each of three arguments shl 4, stored as a word to 0x7DE458, 0x7DE45A, 0x7DE45C. libgte SetBackColor by shape. cdecl."

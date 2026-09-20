@@ -22,6 +22,7 @@
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
 #include "game/psx_gte_float.h"
+#include "game/psx_gte_transform.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -46,6 +47,7 @@ void InjectAll() {
     FieldInput_Inject();
     SpriteClut_Inject();
     DrawLayers_Inject();
+    PsxGteTransform_Inject();   // before what it calls: it clones their originals
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();
