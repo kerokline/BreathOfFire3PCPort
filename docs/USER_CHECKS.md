@@ -1,6 +1,6 @@
 # User checks — things only the owner can do in game
 
-**Status:** IN PROGRESS (2026-09-19)
+**Status:** IN PROGRESS (2026-09-20)
 
 Checks that need a person at the keyboard playing the game. Agents add items
 here instead of burying them in [`HANDOFF.md`](HANDOFF.md); the owner ticks
@@ -90,3 +90,21 @@ Decides how much name conversion matters
       reach it: does it offer naming, for members and for
       party characters, and how many characters does each allow?
 - Result goes to: [`save-interchange.md`](save-interchange.md) §2.
+
+### 5. What reverses the controls on the field?
+
+*Why:* `Field_CopyInput` is ours ([`sprite-draw-order.md`](sprite-draw-order.md)
+§5). It exchanges two pairs of button bits - by the PSX pad layout, up with
+down and left with right - while a party member's state byte has bit `0x20`.
+The attract sequence never gets there, so this path has only been fuzzed, and
+what the state *is* has not been established; an agent's memory of the game
+does not count.
+
+- [ ] Question first, no playing needed: is there something in BoF3 that
+      reverses your movement on the field map - a status, a place, an item?
+- [ ] If you can get into that state: do the controls reverse the same way
+      with ours as with `BOF3X_ORIGINAL=Field_CopyInput` set? Both directions
+      pairs, and does anything else stop responding while it lasts (the
+      exchanged word also drops two other button bits)?
+- Result goes to: [`sprite-draw-order.md`](sprite-draw-order.md) §5, and the
+  `symbols.toml` note on `Field_CopyInput`.

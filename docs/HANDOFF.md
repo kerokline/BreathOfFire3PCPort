@@ -16,39 +16,47 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 Phase 0 is done and stage 1 of the owner's order of work
 ([`STATUS.md`](STATUS.md)) is under way: a launcher injects our DLL into the
-player's `BOF3.exe` and **thirty functions are ours** - `LoadDatFile`, the
+player's `BOF3.exe` and **thirty-four functions are ours** - `LoadDatFile`, the
 eight-function file layer (DIV-0003), `Save_WriteFile` (DIV-0002),
 `Gfx_BeginFrame` (DIV-0004, a crash fix), fourteen faithful ones that make
 up the image path from the rendered-frame flushes down to the texture-cache
-invalidation (`src/game/gfx_*.cpp`), and the first five *logic* functions off
-the takeover queue, all around the sprite draw-order pass
+invalidation (`src/game/gfx_*.cpp`), and the first nine *logic* functions off
+the takeover queue, all around the field's sprite structures
 ([`sprite-draw-order.md`](sprite-draw-order.md)). The A/B switch, a call tracer, a crash
 reporter and a shadow check against clones of the originals run in-process;
 the attract oracle, three memory-dump regions and the frame hash all pass
-original-vs-ours **with twenty-five; the newest five have passed only their
-start-up fuzz**. See [`STATUS.md`](STATUS.md) - do not expand this paragraph
+original-vs-ours with all thirty-four (2026-09-20). See [`STATUS.md`](STATUS.md) - do not expand this paragraph
 into a second copy.
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-1. **Give the five newest takeovers their live run**, about fifteen minutes
-   hands off: `attract_run.py` all ours to `analysis/attract/X.tsv`, then
-   `attract_diff.py orig_a.tsv X.tsv`, and `mem_dump.py --compare clutref_a X`.
-   Then **re-record the frame-hash reference** `analysis/calltrace/ab3_orig/`
-   (all five are in `entries_logic.txt`, and owned functions are left unarmed,
-   so every frame's hash changed) and run the ours side against it.
-2. **Keep working the queue** - `analysis/calltrace/queue.csv`, regenerated
-   2026-09-20 (`python tools/calltrace.py queue
+1. **Keep working the queue** - `analysis/calltrace/queue.csv`; regenerate
+   it first, it predates today's nine (`python tools/calltrace.py queue
    analysis/calltrace/all_a/bof3x.callcounts.tsv` - the argument is the
-   *counts* file). Next by call count: `0x57C0A0` - **read, deliberately left,
-   ask the PSX side first** ([`sprite-draw-order.md`](sprite-draw-order.md)
-   §5) - then `0x56F910`, `0x589660`, `0x589470`, `0x531BD0`, `0x534E50`.
-   `0x454810` is `return 1` with 152 callers; it wants a caller read before a
-   name. The pass `0x593060` itself is the prize in this corner: it looks
-   checkable as memory, the linked draw list it builds, which is
-   [`IDEAS.md`](IDEAS.md) I14 level 1.
+   *counts* file). Read ahead on 2026-09-20, not taken over:
+   - `0x536700`, 9 instructions: `(s16 x, s16 y)` -> the byte at
+     `[0x905D94] + x + width * y`, width = `AreaMap_Header[0]`. Trivial.
+   - `0x531C70`: `(x, y, s16 z, radius, object)` -> 1 if the point is inside
+     a box round the sprite object (object `+0x70`, `+9`, `+0xC`, `+0x10`,
+     `+0x34`, `+0x38`, `+0x3E`); the tail past `0x531CEB` is unread. Clonable.
+   - `0x494030`: runs **20 objects of `0x80` bytes at `0x7E11E0`** - a second
+     object kind - through the handler table `0x655350` by byte `+5`, setting
+     `Sprite_Current` for each. Indirect calls, so no clone; check it live.
+   - `0x56D690`: `call [[0x662C80 + s8 [0x8034E0] * 4]]`, then a tail jump to
+     `0x56D8B0`. A mode dispatcher; needs the detour to cope with the `jmp`.
+   - `0x454810` is `return 1` with 152 callers; read a caller before naming.
+   - `0x57C0A0`: **read, deliberately left** - its search result never
+     reaches the return register. Ask the PSX side which way the source had
+     it ([`sprite-draw-order.md`](sprite-draw-order.md) §7).
+2. **The pass `0x593060` itself** is the prize in this corner: read to the
+   end (§2 there), and it looks checkable as memory - the linked draw list it
+   builds - which is [`IDEAS.md`](IDEAS.md) I14 level 1. Its unread callees
+   come first: `0x56FD20`, `0x56FE80`, `0x57BAE0`, `0x5935B0`, `0x5A7560`.
+   Worth doing alongside: **a struct for the sprite object.** Four files now
+   address it by offset; `symbols.toml` has no struct types, so it would be a
+   hand-written header, and the offsets are collected in §5 there.
 3. **The Direct3D end of the image path** is where it was: the lock wrapper
    `0x5A3CC0`, the entry builders `0x5A0080` / `0x5A0510` (ten COM calls each),
    the glyph-texture lookup `0x5A2BC0` (128 entries of 0x14 bytes at
@@ -59,7 +67,9 @@ The single next action, concrete enough to start without asking anyone.
    ([`IDEAS.md`](IDEAS.md) I14).
 4. **Owner, in game: [`USER_CHECKS.md`](USER_CHECKS.md).** The converted saves
    are done bar one item. Still owed: a save and load through the fully-ours
-   file layer, DIV-0003's failing case, DIV-0002's clean A/B. New and optional:
+   file layer, DIV-0003's failing case, DIV-0002's clean A/B. Item 5 there
+   opens with a question that needs no playing: what reverses the controls on
+   the field (`Field_CopyInput`). New and optional:
    play with `BOF3X_SHADOW=Gfx_InvalidateTextures` set and look for `MISMATCH`
    in `build/bof3x.log`; and anywhere the game scrolls or copies VRAM, or
    shows a compressed picture, is the only live test there is of
@@ -125,17 +135,19 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim` (comma-separated lists work) or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input` (comma-separated lists work) or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
-- **Takeover recipe** (each of the eighteen so far): read the function to its
+- **Takeover recipe** (each of the twenty-two so far): read the function to its
   last instruction, quirks included; `symbols.toml` entry with the evidence
   and `impl`; implement, keeping every unchecked edge and saying so in the
   comment; if every jump stays inside it, clone it and fuzz ours against the
   clone at start-up under `BOF3X_SHADOW`, then break ours on purpose and see
   the fuzz refuse to run; live, all ours: `mem_dump.py --compare clutref_a X`,
-  `attract_diff.py orig_a.tsv X.tsv`, and the frame hash before a merge; say
+  `attract_diff.py orig_a.tsv X.tsv`, and the frame hash before a merge (one
+  background command can run the oracle and then the hash pair, about 16
+  minutes, with `mem_dump.py` started beside it); say
   in the doc what none of that reached; one commit per file of functions.
 - **After a crash:** `CRASH` lines in `build/bof3x.log`, then
   `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
@@ -193,8 +205,9 @@ _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
 Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b` (PR #4
-merged). Committed locally, **not pushed, no PR**: the five takeovers in
-`src/game/sprite_order.cpp`, `draw_pool.cpp` and `prim.cpp`, and
+merged). Committed locally, **not pushed, no PR**: nine takeovers in
+`src/game/sprite_order.cpp`, `draw_pool.cpp`, `prim.cpp`, `map_view.cpp`,
+`sprite_anim.cpp`, `sprite_find.cpp` and `field_input.cpp`, and
 `docs/sprite-draw-order.md`.
 
 Local only, gitignored, worth keeping:
@@ -208,8 +221,8 @@ Local only, gitignored, worth keeping:
   pair for `mem_dump.py --compare`, all three regions (`drain_a` / `drain_b`
   are the same without `clut`).
 - `analysis/calltrace/ab3_orig/` - the all-original frame-hash reference,
-  recorded with twenty-four owned and still identical with twenty-five, **stale
-  with thirty** (item 1): owned
+  recorded with twenty-four owned, **stale since 2026-09-20**; the current one
+  is `analysis/calltrace/ab6_orig/`, recorded with thirty-four. Owned
   functions are left unarmed, so it survives a takeover only when the function
   was not in `entries_logic.txt` to begin with (`Gfx_TexCacheFind` is
   render-timed and was not). Taking over a *logic* function changes every
