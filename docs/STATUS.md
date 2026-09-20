@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-19)
+**Status:** IN PROGRESS (2026-09-20)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Twenty-five functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**Thirty functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -45,10 +45,14 @@ converted-palette cache: `Gfx_ConvertRow`, `Gfx_LoadImageIfChanged` and
 and `Gfx_FlushUploadQueue`, and the unpackers they dispatch to,
 `Gfx_UploadPacked5` and `Gfx_UploadLzss`; then `Gfx_ClearImage`,
 `Gfx_MoveImage` and `Gfx_MoveCells`; and the texture cache's lookup,
-`Gfx_TexCacheFind`, which completed the cache entry's layout. Three of the
-twenty-five
-(`Gfx_UploadLzss`, `Gfx_MoveImage`, `Gfx_MoveCells`) are beyond the attract
-sequence's reach and rest on the differential fuzz alone.
+`Gfx_TexCacheFind`, which completed the cache entry's layout. On 2026-09-20
+the regenerated takeover queue gave the first five **logic** functions, all
+small and all from the pass that orders field sprites for drawing
+([`sprite-draw-order.md`](sprite-draw-order.md)): its two exchange helpers, the
+draw-item index pool's alloc and release, and `Prim_SetShade`. Three of the
+thirty (`Gfx_UploadLzss`, `Gfx_MoveImage`, `Gfx_MoveCells`) are beyond the
+attract sequence's reach and rest on the differential fuzz alone; the five
+newest have passed their fuzz but **not yet a live run**.
 
 What is established:
 
@@ -94,10 +98,10 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 59 functions, 8 global blocks and 34 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 43 functions carry signatures and
-  are callable from our code, 25 of them ours (counted 2026-09-19 by
-  `gen_symbols.py`, not from memory).
+- 64 functions, 8 global blocks and 38 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 48 functions carry signatures and
+  are callable from our code, 30 of them ours (counted 2026-09-20 by
+  `gen_symbols.py` and `grep`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
   reaches (540 of 2,936 in the attract sequence), call counts and edges, a
@@ -119,7 +123,7 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). Twenty-five are ours, not
+   with the takeover queue already layered (§9 there). Thirty are ours, not
    all of them among the 540.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
