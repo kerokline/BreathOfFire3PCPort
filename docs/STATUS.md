@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Thirteen functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**Fourteen functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -33,6 +33,13 @@ unrendered frames, confirmed in game the same day (DIV-0004,
 `Font_SetGlyphData` `0x5A6800` — the first takeover checked in *bytes*, the
 1 MiB shadow identical to an all-original run, with a deliberately wrong build
 failing the same check ([`asset-loading-path.md`](asset-loading-path.md) §2).
+The fourteenth is `Gfx_InvalidateTextures` `0x59E700`, the texture-cache
+invalidation and **the first function of the presentation layer**
+([`IDEAS.md`](IDEAS.md) I8), faithful down to an off-by-one at every page
+edge. Nothing external can see what it does, so it brought a new kind of
+check: run a byte-copy of the original beside ours in the same process and
+compare, live and under a start-up fuzz ([`SCAFFOLDING.md`](SCAFFOLDING.md)
+§2, the shadow check).
 
 What is established:
 
@@ -78,9 +85,9 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 50 functions, 8 global blocks and 28 data items named in
+- 50 functions, 8 global blocks and 29 data items named in
   [`symbols.toml`](../symbols.toml), tiered; 34 functions carry signatures and
-  are callable from our code, 13 of them ours (counted 2026-09-19 by
+  are callable from our code, 14 of them ours (counted 2026-09-19 by
   `gen_symbols.py`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run

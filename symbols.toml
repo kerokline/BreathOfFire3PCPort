@@ -767,9 +767,19 @@ pc = 0x59E700
 name = "Gfx_InvalidateTextures"
 ret = "void"
 params = "const short *rect, int mode"
+impl = "src/game/gfx_texcache.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: cdecl, two stack arguments ([esp+0x3C] and [esp+0x50] after sub esp 0x38 and four pushes), plain ret; Gfx_LoadImage pushes 0 then rect and cleans 8 bytes (0x59EAE4..0x59EAEC). Reads rect as four s16 and walks 32 pages of 64 x 256 (x step 0x40 to 0x400, y step 0x100 to 0x200), IntersectRect (import slot 0x5C4168) on each; for a touched page visits 32 entries of 0x18 bytes at 0x6C3F40: mode 0 releases the COM pointers at entry +0x14 and +0x10 (vtable +8) and zeroes the entry, stopping at the first entry whose state byte is 0; mode non-zero turns state 1 into 2. It overwrites its own first-argument slot with the page counter, which cdecl allows."
-note = "Not fully read: when the page index is not a multiple of 16 a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's 32 entries, only those with byte +1 set, and in mode 0 closes the gap with a memmove of the entries above. Presumably textures wider than one page; unconfirmed. Still Capcom's - the first function of the presentation layer proper (docs/IDEAS.md I8)."
+note = "Read to the end 2026-09-19. The rect is built inclusive (x + w - 1, y + h - 1) and so is each page (x + 0x3F, y + 0xFF), but IntersectRect treats right and bottom as exclusive: a rect one cell wide or high invalidates nothing, and the last column and row of a page do not count. When the page index is not a multiple of 16, a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's entries that have byte +1 set: mode 0 releases them and closes the gap - memmove of the (31 - i) entries above, zero the page's last entry at 0x6C4228 + (page - 1) * 0x300, re-examine slot i - stopping at the first state-0 entry; mode non-zero turns state 1 into 2 for all 32. Byte +1 presumably marks a texture that reaches into the next page; inferred from this use only. Three callers: 0x59EAE7 (Gfx_LoadImage) and 0x59E6EA with mode 0, 0x59EA5C with mode 1 (E8 scan of .text)."
+
+[[data]]
+pc = 0x6C3F40
+name = "Gfx_TexCache"
+ctype = "unsigned char"
+count = 0x6000
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_InvalidateTextures 0x59E700 indexes it as 0x6C3F40 + (page * 32 + slot) * 0x18, pages 0..31 and slots 0..31: 1,024 entries of 0x18 bytes = 0x6000, ending at 0x6C9F40, 4 bytes below Gfx_VramShadow. Entry byte +0 is a state (0 ends a page's list, 1, 2), byte +1 a flag, +0x10 and +0x14 COM pointers released through vtable +8. pe_xref.py: the only other functions that name the table are 0x5A3CC0 (compares a state with 2) and 0x5A5160."
+note = "Declared as bytes because the generated header has no struct types; src/game/gfx_texcache.cpp carries the entry layout. Bytes +2..+0xF are unread."
 
 [[data]]
 pc = 0x6C9F44

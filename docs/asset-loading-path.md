@@ -188,7 +188,40 @@ The attract oracle passed on the same `img_ours` run, 7,478 frames against
 `orig_a.tsv`. What none of this covers: anything the attract sequence does not
 upload, and the invalidation's effect on the texture cache.
 
-`Font_SetGlyphData` went over in the same change. It runs once per launch —
+**`Gfx_InvalidateTextures` `0x59E700` is ours too, faithful (2026-09-19)** —
+`src/game/gfx_texcache.cpp`, the first function of the presentation layer. Read
+to the end, it does two things the paragraph above leaves out
+(`symbols.toml` has the instruction-level evidence):
+
+- **An off-by-one at every edge.** The dirty rect and each page are built
+  inclusive (`x + w - 1`, page `x + 0x3F`) and handed to `IntersectRect`, whose
+  right and bottom are exclusive. A rect one cell wide or high invalidates
+  nothing; a page's last column and row do not count. Kept as it is — whether
+  it ever shows on screen is not known, and changing it would be a ledger
+  entry.
+- **A second pass over the page to the left**, skipped for the first page of a
+  row: entries with byte `+1` set — by inference, textures that reach into the
+  next page — are dropped too, and the gap is closed up so the page's list
+  stays hole-free, since state 0 ends it. Mode non-zero marks state 1 as 2
+  instead of dropping; its one caller is `0x59EA5C`.
+
+Its effect is invisible to the VRAM dump and to the logic frame hash, so it
+got its own check, the **shadow check** ([`SCAFFOLDING.md`](SCAFFOLDING.md)
+§2): `BOF3X_SHADOW=Gfx_InvalidateTextures`. Results, all 2026-09-19:
+
+| check | result |
+|---|---|
+| live, every call of a 5-minute attract run: our planned table against what the original's clone did | 1,536+ calls, **0 mismatches** — but all mode 0, 41 entries dropped, the second pass never closed anything |
+| start-up differential fuzz, 4,000 random tables and rects, fake COM objects logging `Release` | **0 mismatches** in table or `Release` order; 2,025 mode 0 / 1,975 non-zero, 61,478 drops, 5,791 close-ups, 34,546 stale-markings |
+| negative control: the two `Release`s of the first pass swapped | 1,250 of 4,000 rounds flagged, and the DLL refuses to run |
+| unshadowed run, fourteen ours, the real `Release`s ours | VRAM and arena identical to `drain_a`; attract oracle identical over 7,478 frames against `orig_a.tsv`; no crash |
+
+The fuzz is what covers mode non-zero and the close-up; the attract sequence
+reaches neither. Not covered by anything: a cached texture's *lifetime* under
+real play beyond the attract sequence — an owner session with the variable set
+would be the check, `shadow` lines in `build/bof3x.log`.
+
+`Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
 the one kind-3 chunk — so its store is exercised and its free-the-previous
 branch never is, in this run or by any shipped data.
 

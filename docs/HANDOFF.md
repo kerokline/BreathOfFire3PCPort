@@ -14,10 +14,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, thirteen
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, fourteen
 functions are ours (`LoadDatFile`; the whole eight-function file layer, with DIV-0003 in
 `File_OpenWrite`; `Save_WriteFile` with DIV-0002; `Gfx_BeginFrame` with DIV-0004, a
-crash fix; `Gfx_LoadImage` and `Font_SetGlyphData`, both faithful), the A/B switch works, a call tracer and a crash reporter run in-process, and a
+crash fix; `Gfx_LoadImage`, `Font_SetGlyphData` and `Gfx_InvalidateTextures`, all faithful), the A/B switch works, a call tracer and a crash reporter run in-process, and a
 deterministic attract-mode regression check passes original-vs-ours. See
 [`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
 
@@ -32,16 +32,21 @@ The single next action, concrete enough to start without asking anyone.
    case, DIV-0002's clean A/B. Since the saves loaded clean, the next step of
    I1 is reading the PC block builder `0x5806F0` and the options bytes at
    block `+0x78`.
-2. **Read `Gfx_InvalidateTextures` `0x59E700` to the end, then take it over.**
-   It is the texture-cache invalidation `Gfx_LoadImage` ends with, and the
-   first function of the presentation layer proper ([`IDEAS.md`](IDEAS.md) I8).
-   Its first pass is read; the second pass over the *previous* page
-   (`0x59E7FC`..`0x59E8CE`, entries with byte +1 set, compacted by a memmove) is
-   not, and neither is the 0x18-byte cache entry's layout (`symbols.toml`). It
-   releases COM textures, so neither the VRAM dump nor the logic frame hash
-   sees its effect — deciding what *does* check it is part of the job. Then
-   `Gfx_LoadImage`'s compare-first sibling `0x59EB00` and its callee
-   `0x59EBB0`, which the VRAM dump does cover.
+2. **Keep going up the presentation layer from the texture cache.** Next:
+   `Gfx_LoadImage`'s compare-first sibling `0x59EB00` (one caller,
+   `Gfx_FlushDirtyStrip`; the VRAM dump covers it) and its callee `0x59EBB0`,
+   which converts a row of the shadow to the display's pixel format into a
+   per-row buffer at `0x6C2A44` and is also called from `0x5A04EB` — read it
+   before naming it. Then the two other callers of `Gfx_InvalidateTextures`,
+   `0x59E6EA` (a fill) and `0x59EA5C` (mode 1), and the cache's other users
+   `0x5A3CC0` / `0x5A5160`, which is where entries are *built* and where bytes
+   +2..+0xF of an entry get their meaning. The shadow check
+   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2) is there for any of these that is
+   self-contained; `0x59EBB0` is not (it calls `0x5B9660`).
+   **Owner, optional:** a play session with
+   `BOF3X_SHADOW=Gfx_InvalidateTextures` set would check the invalidation
+   against the original on every call outside the attract sequence — look for
+   `MISMATCH` in `build/bof3x.log`.
 
 ## Then
 
@@ -103,6 +108,10 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures` before the launcher
+  or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
+  self-test line, then a running tally every 256 calls
+  ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
 - **After a crash:** `CRASH` lines in `build/bof3x.log`, then
   `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
 - **Call trace:** [`call-trace.md`](call-trace.md) §8.
@@ -148,9 +157,11 @@ keeping. "Nothing" is a valid entry._
 
 Phase 0 merged to `main` as PR #3 (`cee66ad`, 2026-09-19). Branch
 `phase-3/gfx-loadimage` is cut from it for the `Gfx_LoadImage` /
-`Font_SetGlyphData` takeovers: the `mem_dump.py` drain wait, then both
-takeovers in `src/game/gfx_image.cpp`, which passed the byte-level VRAM check,
-its negative control and the attract oracle. Not pushed; no PR yet.
+`Font_SetGlyphData` takeovers: the `mem_dump.py` drain wait, those two in
+`src/game/gfx_image.cpp`, then `Gfx_InvalidateTextures` in
+`src/game/gfx_texcache.cpp` with the shadow check. Each passed its byte-level
+or shadow check, a negative control, and the attract oracle. Not pushed; no PR
+yet.
 
 Owed in game, all listed in [`USER_CHECKS.md`](USER_CHECKS.md): the converted
 saves, the file layer's write/seek, DIV-0003's failing case, DIV-0002's A/B.
