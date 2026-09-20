@@ -431,3 +431,148 @@ never committed (CLAUDE.md rule 1).
 **Found along the way:** WER already leaves full dumps in
 `%LOCALAPPDATA%\CrashDumps` on this machine, and the Application event log
 has the fault offset — enough to diagnose D4 without any tool of ours.
+
+## I12 — Let the game run while its window is not in front
+
+**Ask (2026-09-19):** owner, after an evening of attract-oracle and memory-dump
+runs that each took the PC away for two to five minutes: "It would be nice if
+the game ran without requiring being in focus … just to be able to do these
+comparisons without blocking me from the pc." **Kind:** tooling first, a
+player-facing option second. **Feasibility:** looks HIGH for windowed mode —
+the mechanism is already read — but untried.
+
+**What is known** ([`windowed-mode.md`](windowed-mode.md), "Focus loss"):
+WinMain's loop does nothing at all while the app-active byte `0x6BC63B` is 0;
+`WM_ACTIVATEAPP` clears it and pauses sound (`0x587C30`), sets it and resumes
+(`0x587B90`). On return the missed time is replayed unrendered, because
+nothing clamps the frame deadline's debt. `tools/attract_run.py` works around
+all of it by holding the foreground for the whole run, which is why a run
+eats the keyboard ([`HANDOFF.md`](HANDOFF.md), traps).
+
+**What it would take:** a switch (an environment variable for tooling, later
+perhaps a setting) under which deactivation does not clear the byte. Open
+questions, each a reason this is a session and not a one-liner: whether
+DirectInput's cooperative level lets the game read anything, or needs to,
+while in the background — for an attract run it must read *nothing*, which is
+the point; whether DirectDraw presents to an unfocused or covered window in
+windowed mode, and what exclusive fullscreen does (probably: out of scope);
+whether sound should keep playing; and whether `attract_run.py`, `mem_dump.py`
+and the call tracer then agree with a focused run — the logic should, being
+deterministic from launch, and the existing oracle is the test. It changes
+behaviour, so it is a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built, and
+it sits next to the unclamped-debt fix that file's "Focus loss" section
+already calls obviously wanted.
+
+## I13 — Save states: snapshot the running game, restore it, in ours and in the original
+
+**Ask (2026-09-19):** owner: "state saving … would be a big help when we've
+finished getting all we can out of the attract mode. If we could find a way to
+inject states into the original for comparison sake, even better, but even
+just in our exe it would be helpful." **Kind:** tooling - the oracle for
+everything the attract sequence cannot reach (stage 2 and 3 of the order of
+work in [`STATUS.md`](STATUS.md): menus, the system text pool, combat).
+**Feasibility:** untried; the reasoning below says MEDIUM, and that the
+"original too" half is not much harder than the "ours" half.
+
+**Why this game is a good candidate.** Nothing here is measured for this
+purpose yet; each point is an existing finding read with a save state in mind.
+
+- **It is one flat image at a fixed base** (`/FIXED`, no `.reloc`), and game
+  state lives in its `.data`/`.bss`: the DAT arena, the VRAM shadow, the queues.
+- **The coroutine stacks are in that image too.** The four tasks run on
+  0x4000-byte stacks carved from a static arena ([`SCAFFOLDING.md`](SCAFFOLDING.md)
+  §3, [`attract-mode.md`](attract-mode.md) §2), so a snapshot taken *between*
+  logic frames, in WinMain's loop, captures every task's suspended stack as
+  plain data, and needs no thread context at all - the main thread is at a
+  known place with nothing of interest on its stack.
+- **The port is deterministic from launch** and logic cannot reach a clock, so
+  a restored state should replay identically - which is also the test that a
+  restore was complete: restore twice, compare frame hashes.
+- **Most of what is NOT plain memory is rebuilt on demand.** Direct3D textures
+  are built lazily from the VRAM shadow and the texture cache can be emptied
+  (`Gfx_InvalidateTextures` over the whole shadow); the converted palette rows
+  are regenerated from the shadow (`Gfx_ConvertRow`). Both are ours now.
+
+**The hard parts, as far as can be seen from here.**
+
+- **The CRT heap.** Glyph data, sound banks, palette-row buffers and whatever
+  else is `malloc`ed hold state, and `.data` holds pointers into them. Within
+  one process a restore can copy the heap blocks back in place. Across
+  processes the addresses move. The way through is probably to **own
+  `Crt_malloc` / `Crt_free`** with an arena at a fixed address - then the heap
+  is one more region to snapshot, and its addresses are the same in every
+  launch.
+- **Sound.** DirectSound buffers and the streaming MP3 decoder's position are
+  outside the image. For a logic oracle they may not need restoring at all;
+  for a state a person plays from, they do, or the music restarts.
+- **Open files and the file layer's 16 slots** - ours already, so inspectable.
+- **Anything in DirectInput or the window** - probably nothing that matters
+  between frames.
+
+**The original, for comparison.** The injected DLL is present in an
+all-original run too (`BOF3X_ORIGINAL=*`), and a state loader is tooling in
+the DLL, not a game function - so the same restore can run with every game
+function Capcom's. The one catch is the heap: if stable addresses need our
+allocator, then "original" means original except `malloc`, and that has to be
+said wherever such a comparison is reported.
+
+**First experiment, when this is picked up:** in one process, at the
+between-frames point, copy `.data`/`.bss` and the heap blocks aside, run 300
+frames recording the frame hash, copy everything back, run 300 again. Equal
+hashes says the state is complete for logic; the first difference says what
+was missed.
+
+## I14 — Compare what is drawn: display-list hash, texture hash, back-buffer hash
+
+**Ask (2026-09-19):** owner, when the image path's takeovers reached functions
+whose product is a Direct3D surface: "Could we hash screenshots, or compare
+them some other way? That would allow us to compare specific frames (post
+certain calls, or just at random) for any delta." **Kind:** tooling - an
+oracle for rendering, and the regression check the text swap wants.
+**Feasibility:** level 1 HIGH, levels 2-3 untried.
+
+Three levels, cheapest and most deterministic first:
+
+1. **The display list.** Each logic frame, game logic builds a PSX-style
+   ordering table and packet pool (`Gfx_OtHeads`, `Gfx_PacketPools`,
+   `Gfx_BeginFrame`). It is plain memory built by deterministic logic: hash it
+   in-process at the frame boundary, next to - or inside - the call tracer's
+   frame hash ([`call-trace.md`](call-trace.md) §6). It catches any change in
+   *what* is drawn - which glyph, where, from which texture page and CLUT -
+   and is indifferent to whether that frame was rendered, so the wall-clock
+   problem does not reach it. OpenRCT2's lesson
+   ([`prior-art/openrct2.md`](prior-art/openrct2.md) §2.3): compare the paint
+   calls, not the pixels - a structured difference says what broke. It says
+   nothing about the renderer itself. Needs the packet formats read far enough
+   to walk a list (the draw `0x59EE50` is the reader).
+2. **Textures.** After a cache entry is built or refreshed (`0x5A0080`,
+   `0x5A0510`), lock the surface and hash its pixels. This is the check that
+   lets those builders be taken over. Deterministic given the VRAM shadow, the
+   CLUT row and the key - for one display pixel format.
+3. **The final frame.** Hash the back buffer in-process, after the draw
+   returns and before the flip `0x5A66B0` - not a screenshot from outside,
+   which adds capture timing and the window manager. Rendering happens only on
+   frames the wall clock allows ([`call-trace.md`](call-trace.md) §6), so two
+   runs render different sets of frames: **key each hash by logic frame and
+   compare the frames both runs rendered.** Whether DirectDraw / Direct3D
+   output is bit-exact from run to run on one machine is unknown - an
+   original-vs-original pair is the noise floor, as for every other check
+   here. On a mismatch, write both frames and a difference image; the point of
+   an image check is that a person can look. Perceptual hashes are the wrong
+   tool: they exist to ignore small differences, and a glyph one pixel off is
+   the difference being looked for.
+
+"After certain calls, or at random" works at all three, the hook being
+in-process; random frames have to be chosen by logic frame from a fixed seed,
+so that both runs choose the same ones.
+
+**What this grows into:** a VRAM-shadow snapshot plus one frame's display list
+is this game's equivalent of an emulator's GPU dump - replayable through the
+draw path alone, original and ours on the same input, no game logic, no focus,
+no minutes of attract sequence. That is the test harness [I8](#i8--replace-the-directdraw--idirect3d3-presentation-layer)
+needs, and a near relation of I13.
+
+How other projects do it, beyond OpenRCT2, is from general knowledge and not
+surveyed for [`prior-art/`](prior-art/): emulator CI that replays recorded GPU
+command streams and hashes the frames (Dolphin's FifoCI, PCSX2's GS dumps),
+and exact-hash sets of accepted images triaged by people (Skia Gold).

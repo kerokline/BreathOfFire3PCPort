@@ -613,6 +613,7 @@ pc = 0x59EA70
 name = "Gfx_LoadImage"
 ret = "void"
 params = "const short *rect, const void *pixels"
+impl = "src/game/gfx_image.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: rect is four s16 (x, y, w, h). Does nothing at all if x + w > 0x400 or y + h > 0x200. Otherwise copies h rows of w*2 bytes from pixels into a 16-bit 1024 x 512 buffer at 0x6C9F44, row stride 0x800 bytes, destination (y*1024 + x)*2 - a shadow of PSX VRAM - then calls 0x59E700(rect, 0). The PC counterpart of the PSX LoadImage(RECT*, u_long*). Its neighbour 0x59EB00 is the same with a row-by-row compare first."
 note = "0x59E700(rect, mode) walks the 32 PSX-style texture pages (64 x 256 each, 16 across, 2 down), IntersectRect (USER32, import slot 0x5C4168) against the rect, and for each touched page visits 32 cache entries of 0x18 bytes in a table at 0x6C3F40 (32 pages x 32 = 1024 entries, ending 4 bytes short of the VRAM shadow): mode 0 calls Release (vtable +8) on the two COM pointers at entry +0x10 and +0x14 and zeroes the entry; mode non-zero only turns state 1 into state 2. So textures are built lazily from the VRAM shadow and thrown away when the VRAM under them changes."
@@ -731,6 +732,7 @@ pc = 0x461F00
 name = "Gfx_FlushUploadQueue"
 ret = "void"
 params = "void"
+impl = "src/game/gfx_flush.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: for i in 0..byte[0x9035A0]: x = s16[0x903680 + 2i], y = s16[0x9036A8 + 2i], p = dword[0x92BF20 + 4i]; reads w, h (two s16) and a kind dword from p, builds the rect {x, y, w, h} on the stack and calls 0x461FC0(p + 8, rect) for kind 1, 0x462070 for kind 2, a third path otherwise; then zeroes the count byte. 0x461FC0 unpacks dwords of six 5-bit fields into the buffer at [0x929EDC] and calls Gfx_LoadImage (return address 0x462047, call trace). Sole caller 0x4FCE5F, in WinMain's loop, inside the branch taken only when GetTickCount is still below the frame deadline at 0x6BC628 - the same branch that calls the draw 0x59EE50. Call trace 2026-09-19: 1200 calls in 3072 logic frames, identical to 0x59EE50's count, 1158 in a slower run."
 note = "So an image upload queued by game logic reaches the VRAM shadow on the next RENDERED frame, and which logic frame that is depends on wall-clock time (docs/call-trace.md section 6). Compare the VRAM shadow only when the count byte 0x9035A0 and the flag 0x937F90 are both zero."
@@ -745,10 +747,46 @@ evidence = "disasm 2026-09-19, whole function 0x5894D0..0x58958C: obj = Sprite_C
 note = "Still Capcom's. Name is descriptive, not recovered. The unbounded count++ here is the feed side of docs/known-defects.md D4; the fix, DIV-0004, is on the drain side in Gfx_BeginFrame."
 
 [[func]]
+pc = 0x461FC0
+name = "Gfx_UploadPacked5"
+ret = "void"
+params = "const void *packed, const short *rect"
+impl = "src/game/gfx_unpack.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, packed at [esp+4], rect at [esp+8]. total = w * h * 2 bytes; for ceil(total / 6) dwords of packed, writes six bytes to the scratch at [0x929EDC] (Gfx_UnpackNext), each a 5-bit field: shifts 5, 5, 6, 5, 5 - so bit 15 of the dword is skipped. Then Gfx_LoadImage(rect, scratch) (0x462042) and advances Gfx_UnpackNext by total rounded up to 4. Called only by Gfx_FlushUploadQueue for record kind 1."
+note = "Bytes of 0..31 handed to Gfx_LoadImage as 16-bit cells, two to a cell: whatever draws from these reads them as 8-bit indices, not as colours. Unconfirmed."
+
+[[func]]
+pc = 0x462070
+name = "Gfx_UploadLzss"
+ret = "void"
+params = "const void *packed, const short *rect"
+impl = "src/game/gfx_unpack.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, same arguments as Gfx_UploadPacked5, 0x410 bytes of locals. total = w * h * 2. An LZSS decoder: a 512-byte window on the stack, zeroed, write position starting at 0x1EE; input from packed + 4; flag bytes read low bit first, 1 = literal byte, 0 = two bytes b0, b1 giving a window offset b0 | (b1 & 0xF0) << 4, masked to 0x1FF as it is used, and a length of (b1 & 0x0F) + 3. Output goes to the scratch at Gfx_UnpackNext until total bytes are out - a match may overrun total. Then Gfx_LoadImage(rect, scratch) (0x462189) and Gfx_UnpackNext advances by total rounded up to 4. Called only by Gfx_FlushUploadQueue for record kind 2."
+note = "The window is only partly initialised: rep stosd of 0x7B dwords plus one stosw zeroes 0x1EE bytes (0x462093..0x4620BE), and the last 18 - one maximum match - keep whatever the stack held. A valid stream never reads them before writing them; random data does, and then the original disagrees with itself from call to call (differential fuzz 2026-09-19, 13 of 1,500 rounds, every one a kind-2 record). A reimplementation has to pick a value for those bytes, which the original does not define. 0x410 bytes of stack on a path reached from WinMain's loop and, under DIV-0004, from Gfx_BeginFrame - both on the main stack, not a 16 KB task stack."
+
+[[data]]
+pc = 0x937F90
+name = "Gfx_ClutStripDirty"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_FlushDirtyStrip 0x454960 tests it, uploads the strip if it is set, and clears it after the upload returns (0x45499A)."
+
+[[data]]
+pc = 0x80F580
+name = "Gfx_ClutStrip"
+ctype = "unsigned short"
+count = 0x2000
+status = "evidence"
+evidence = "disasm 2026-09-19: the pixels Gfx_FlushDirtyStrip hands to Gfx_LoadImageIfChanged with rect {0, 0x1E0, 0x100, 0x20}: 256 x 32 cells for VRAM rows 480..511. Inside the DAT arena, at MessagePools + 0xC000. That these rows are the game's CLUTs: Gfx_ClutPixels maps a CLUT id to a row, and in a live dump (tools/mem_dump.py region clut, 2026-09-19) the only rows with converted buffers were 480..498 and 506."
+
+[[func]]
 pc = 0x454960
 name = "Gfx_FlushDirtyStrip"
 ret = "void"
 params = "void"
+impl = "src/game/gfx_flush.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: if byte[0x937F90] is set, calls 0x59EB00 (the compare-first sibling of Gfx_LoadImage) with rect {0, 0x1E0, 0x100, 0x20} and pixels 0x80F580, then clears the byte. Sole caller 0x4FCE5A, the call before Gfx_FlushUploadQueue in the same rendered-frames-only branch of WinMain's loop; same call counts (1200 / 1158)."
 note = "0x80F580 is inside the DAT arena (MessagePools + 0xC000). What the 256 x 32 strip at y = 480 holds is unread."
@@ -762,10 +800,136 @@ status = "evidence"
 evidence = "disasm 2026-09-19: slot = 0x6BC928 + (bank - 1)*0x384. If the slot already owns sample data (pointer at slot +0x380) it frees it, and for each of its 64 voice entries (8 bytes each from slot +0x180: sample pointer, buffer handle) releases the handle through 0x5A6C90 and clears any of the 23 dwords at 0x6BC8C8..0x6BC924 equal to it. Then: copies the first 0x380 bytes of the payload into the slot, mallocs size - 0x380 and copies the rest there, and for each voice entry whose offset is non-zero rewrites it to data + offset - 0x380 and stores the result of 0x5A69C0(that pointer) beside it. Shipped data uses banks 1..6 only (census of all 742 DAT files 2026-09-19: 210, 244, 63, 74, 70, 240 chunks). bank 0 would index before the table; nothing checks."
 
 [[func]]
+pc = 0x59E700
+name = "Gfx_InvalidateTextures"
+ret = "void"
+params = "const short *rect, int mode"
+impl = "src/game/gfx_texcache.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, two stack arguments ([esp+0x3C] and [esp+0x50] after sub esp 0x38 and four pushes), plain ret; Gfx_LoadImage pushes 0 then rect and cleans 8 bytes (0x59EAE4..0x59EAEC). Reads rect as four s16 and walks 32 pages of 64 x 256 (x step 0x40 to 0x400, y step 0x100 to 0x200), IntersectRect (import slot 0x5C4168) on each; for a touched page visits 32 entries of 0x18 bytes at 0x6C3F40: mode 0 releases the COM pointers at entry +0x14 and +0x10 (vtable +8) and zeroes the entry, stopping at the first entry whose state byte is 0; mode non-zero turns state 1 into 2. It overwrites its own first-argument slot with the page counter, which cdecl allows."
+note = "Read to the end 2026-09-19. The rect is built inclusive (x + w - 1, y + h - 1) and so is each page (x + 0x3F, y + 0xFF), but IntersectRect treats right and bottom as exclusive: a rect one cell wide or high invalidates nothing, and the last column and row of a page do not count. When the page index is not a multiple of 16, a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's entries that have byte +1 set: mode 0 releases them and closes the gap - memmove of the (31 - i) entries above, zero the page's last entry at 0x6C4228 + (page - 1) * 0x300, re-examine slot i - stopping at the first state-0 entry; mode non-zero turns state 1 into 2 for all 32. Byte +1 is the PSX colour mode (Gfx_TexCacheFind): non-zero is 8- or 15-bit, stored two or four times as wide in VRAM as a 4-bit page, hence reaching into the next. Three callers: 0x59EAE7 (Gfx_LoadImage) and 0x59E6EA with mode 0, 0x59EA5C with mode 1 (E8 scan of .text)."
+
+[[func]]
+pc = 0x59E650
+name = "Gfx_ClearImage"
+ret = "void"
+params = "const short *rect, unsigned char red, unsigned char green"
+impl = "src/game/gfx_vram_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl; reads the low byte of its second and third arguments at entry and then reuses all three argument slots as locals. value = ((arg3 & 0xF) << 2) | (arg2 >> 3), masked to 16 bits, of which only the low byte is used: bh = bl, the word doubled to a dword, rep stosd / rep stosb over w*2 bytes per row from Gfx_VramShadow + ((y << 10) + x) * 2, stride 0x800, for h rows with h re-read from the rect each row; no bounds check. Then Gfx_InvalidateTextures(rect, 0) at +0x9A - also when h <= 0. Every jump internal. One caller, 0x461E46, pushing (rect, 0, 0); call trace 2026-09-19: reached in the attract sequence, from 0x461E10."
+note = "Parameter names by position against the PSX ClearImage(rect, r, g, b); there is no fourth argument here, and the arithmetic is not a 15-bit colour. With the only arguments seen, 0 and 0, none of that shows."
+
+[[func]]
+pc = 0x59E9A0
+name = "Gfx_MoveImage"
+ret = "void"
+params = "short *rect, int to_x, int to_y"
+impl = "src/game/gfx_vram_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl. Returns at once if rect w or h is 0. x < 0: w += x, x = 0, to_x += x(old); else if x + w > 0x400: w = 0x400 - x. The same for y, h, to_y against 0x200. All written back into the caller's rect as 16 bits. Then 0x5AA5D6(0x6C9F44, rect, to_x, to_y) at +0xAD; then rect x, y are overwritten with the low words of to_x, to_y and Gfx_InvalidateTextures(rect, 1) is called at +0xBC - its only mode-1 caller. The destination is never clipped. Every jump internal. Two callers (analysis/pc_funcs.json); not reached in the attract sequence (analysis/calltrace/queue.csv)."
+
+[[func]]
+pc = 0x5AA5D6
+name = "Gfx_MoveCells"
+ret = "void"
+params = "void *base, const short *rect, int to_x, int to_y"
+impl = "src/game/gfx_vram_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: ebp-framed hand assembly, 0x4E bytes to the ret at 0x5AA623 (analysis/pc_funcs.json runs it on into the next routine, which has no call target of its own). src = base + (u16 y << 11) + u16 x * 2; dst = base + (to_y << 11) + to_x * 2; per row rep movsd of (u16 w) >> 1 dwords, then both pointers advance by (0x400 - w) * 2 - so an odd w drops its last cell and every later row starts 2 bytes further left. The row counter is ebx after mov ebx, to_x / mov bx, h, decremented as 32 bits until zero. No calls. One caller, Gfx_MoveImage."
+
+[[func]]
+pc = 0x59EB00
+name = "Gfx_LoadImageIfChanged"
+ret = "void"
+params = "const short *rect, const void *pixels"
+impl = "src/game/gfx_clut.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: rect is four s16 (x, y, w, h), destination Gfx_VramShadow + ((y << 10) + x) * 2, stride 0x800, as Gfx_LoadImage - but with NO bounds check. For each row y..y+h-1: repe cmpsb of w*2 bytes against the shadow; only if they differ, copy the row and call 0x59EBB0(x, row, w) with x and w re-read from the rect. The row bound y + h is re-read from the rect every iteration; w*2 is computed once. It never calls Gfx_InvalidateTextures. Every jump is internal; one relative call, at +0x64. Sole caller 0x454992, Gfx_FlushDirtyStrip, with rect {0, 0x1E0, 0x100, 0x20} (E8 scan of .text)."
+note = "The strip it serves is rows 480..511 of VRAM, 256 cells wide - where the PSX game keeps its CLUTs - so this is how a palette change reaches the converted palettes below without throwing away a texture."
+
+[[func]]
+pc = 0x59EBB0
+name = "Gfx_ConvertRow"
+ret = "void"
+params = "int x, int y, int w"
+impl = "src/game/gfx_clut.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: entry = 0x6C2A40 + y*8, a counter dword and a pointer dword. If the pointer is null, it becomes Crt_malloc(0x1000). out = pointer + (x << (byte[0x7DED63] >> 1)); src = Gfx_VramShadow + ((y << 10) + x) * 2. For each of w cells v: r = ((v & 0x1F) << 19) >> [0x7DED64] & [0x7DED70]; g = ((v & 0x3E0) << 14) >> [0x7DED68] & [0x7DED74]; b = ((v & 0x7C00) << 9) >> [0x7DED6C] & [0x7DED78]; p = r | g | b; if p is non-zero, p |= [0x7DED7C]; else if v is non-zero, p = 1 | [0x7DED7C]; else p stays 0. Written as 16 bits if byte[0x7DED63] == 2, else 32. Then the counter is incremented - also when w <= 0 (second tail at 0x59ECBF). Every jump is internal; one relative call, at +0x16, to Crt_malloc. Callers 0x59EB64 and 0x5A04EB (E8 scan)."
+note = "PSX semantics carried over: cell 0x0000 is transparent and stays 0; any other cell that would round to 0 in the display format is forced to 1 so it stays opaque."
+
+[[func]]
+pc = 0x5A04C0
+name = "Gfx_ClutPixels"
+ret = "void *"
+params = "unsigned clut_id"
+impl = "src/game/gfx_clut.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: id &= 0xFFFF; y = id >> 6; x = (id & 0x3F) << 4 - the PSX CLUT id encoding. If the pointer at 0x6C2A44 + y*8 is null, calls Gfx_ConvertRow(0, y, 0x100). Returns that pointer + (x << (byte[0x7DED63] >> 1)). y can reach 1023 and nothing checks it. Every jump is internal; one relative call, at +0x2B."
+
+[[data]]
+pc = 0x6C2A40
+name = "Gfx_ClutRows"
+ctype = "unsigned long"
+count = 0x400
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_ConvertRow indexes it as 0x6C2A40 + y*8 (counter) and 0x6C2A44 + y*8 (pointer to 0x1000 bytes = 1,024 cells of 32 bits). The count is 512 rows of two dwords, from the height of Gfx_VramShadow, not from a bound in code - none checks it. pe_xref.py: ten functions read the counters (0x5A2BC0 and 0x5A3160 compare one with a register - a texture remembering the palette generation it was built from, by inference); 0x5A64B0 walks the pointers."
+
+[[data]]
+pc = 0x7DED60
+name = "Gfx_PixelFormat"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-19, fields as Gfx_ConvertRow reads them: byte +3 bytes per pixel (compared with 2; 0x5A60E0 stores 4 at 0x5A6176), +4 / +8 / +0xC right-shifts for red / green / blue after each 5-bit channel has been moved to bits 19..23, +0x10 / +0x14 / +0x18 their masks, +0x1C bits ORed into every opaque pixel. 0x5A60E0 fills and copies the block (0x7DED60 <-> 0x7DEDA0); its extent beyond +0x1C is not read here."
+
+[[func]]
+pc = 0x5A0830
+name = "Gfx_TexCacheFind"
+ret = "int"
+params = "int page, int clut, int mode"
+impl = "src/game/gfx_texcache.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, no calls, every jump internal, 0xD2 bytes. Walks the 32 entries of Gfx_TexCache page `page`, returning 0x20 at the first whose state byte is 0 or after all 32. If mode & 2: a hit is entry byte +1 == 2 and the 8 bytes at entry +8 equal to the 8 at 0x7DED0C (repe cmpsd, 2 dwords); returns the slot. Otherwise: a hit is the u16 at entry +2, zero-extended, equal to the 32-bit clut argument, and the same 8-byte compare; on a hit it reads the dword at 0x6C2A40 + (clut sar 6) * 8 - the Gfx_ClutRows generation - and if it differs from the dword at entry +4 sets the state byte to 2; returns the slot. Caller 0x5A3CE3 passes (tpage & 0x1F, clut, (tpage >> 7) & 3) - the PSX texture-page fields - which is what makes byte +1 the PSX colour mode. Two callers (analysis/pc_funcs.json)."
+note = "0x5A3CC0, its caller: Find; if 0x20, build through 0x5A0080; else if state 2, refresh through 0x5A0510; then store entry +0x10 to the caller's pointer and call its vtable +0x64 with a 0x7C-byte struct - IDirectDrawSurface4::Lock by slot number and DDSURFACEDESC2 by size - returning the dword at +0x24 of it. Unread beyond that."
+
+[[data]]
+pc = 0x7DED0C
+name = "Gfx_TexCacheKey"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "disasm 2026-09-19: the 8 bytes Gfx_TexCacheFind compares with entry +8 of each cache entry. pe_xref.py: written as a dword at four places in the draw 0x59EE50, and read as three s16 and a dword in the entry builder 0x5A0080 - so, four s16, by inference a rect within the texture page. Only ever compared here."
+
+[[data]]
+pc = 0x6C3F40
+name = "Gfx_TexCache"
+ctype = "unsigned char"
+count = 0x6000
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_InvalidateTextures 0x59E700 indexes it as 0x6C3F40 + (page * 32 + slot) * 0x18, pages 0..31 and slots 0..31: 1,024 entries of 0x18 bytes = 0x6000, ending at 0x6C9F40, 4 bytes below Gfx_VramShadow. Entry byte +0 is a state (0 ends a page's list, 1, 2), byte +1 the PSX colour mode, +2 the CLUT id (u16), +4 the CLUT row generation it was built from, +8 eight bytes of key (all four from Gfx_TexCacheFind 0x5A0830), +0x10 and +0x14 COM pointers released through vtable +8. pe_xref.py: the only other functions that name the table are 0x5A3CC0 (compares a state with 2) and 0x5A5160."
+note = "Declared as bytes because the generated header has no struct types; src/game/gfx_texcache.cpp carries the entry layout, now complete."
+
+[[data]]
+pc = 0x6C9F44
+name = "Gfx_VramShadow"
+ctype = "unsigned short"
+count = 0x80000
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_LoadImage 0x59EA70 and its sibling 0x59EB00 address it as 0x6C9F44 + ((y << 10) + x) * 2 and step 0x800 bytes per row, after rejecting x + w > 0x400 and y + h > 0x200: 1024 x 512 cells of 16 bits, 1 MiB, the size and shape of PSX VRAM. tools/mem_dump.py dumps it as region vram."
+
+[[data]]
+pc = 0x7CC35C
+name = "Font_GlyphData"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-19: Font_SetGlyphData 0x5A6800 frees it if non-null and stores its argument here; the glyph unpacker's caller 0x5A2CA0 reads it as base + index * 0x120."
+
+[[func]]
 pc = 0x5A6800
 name = "Font_SetGlyphData"
 ret = "void"
 params = "void *owned_glyphs, unsigned size_unused"
+impl = "src/game/gfx_image.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19, 10 instructions: frees the pointer at 0x7CC35C if non-null, then stores its first argument there. The second argument is never read. The pointer's only other reader is 0x5A2CA0, which addresses it as base + index*0x120 with 0x18 / 0x18 constants alongside: 288-byte glyphs, 24 x 24 at 4 bits per pixel. Exactly one kind-3 chunk exists in the shipped data - FIRST.DAT, 705,888 bytes = 2,451 glyphs of 288 (census 2026-09-19)."
 note = "The port's Chinese font, loaded once at boot. 4 bits per pixel confirmed from the unpacker 0x5A9E1E (disasm 2026-09-19): lodsd, then eight nibbles low first, each written through a 16-entry table of 16-bit colours; row counter 0x18, column counter 0x18."

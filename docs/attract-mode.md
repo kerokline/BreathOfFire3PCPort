@@ -212,6 +212,35 @@ be re-recorded deliberately and the ledger entry cited as the reason — never
 regenerated to make a failure go away
 ([`prior-art/openrct2.md`](prior-art/openrct2.md) §2.5).
 
+### A torn sample, seen once (2026-09-19)
+
+`attract_diff.py` reported one disagreeing frame of 7,478 - message index 1
+against 2 at +2693 - in a run with twenty-four functions ours; the same build
+passed on the next run, and passed the in-process frame hash
+([`call-trace.md`](call-trace.md) §7). The recording shows why: that sample was
+taken 28 ms after the one before it instead of 33, and caught the message word
+already written while the frame byte `0x905B89` had not yet flipped. The
+sampler reads the two from outside, not atomically. So **one disagreeing frame
+at a state change is a reason to re-run, and the frame hash is the arbiter**;
+`--slack` does not help here - it compares the order of observed states, and
+a sampler that skips a frame sees a different order of `Rand` counts.
+
+### It is a regression check for dialogue text (2026-09-19)
+
+Asked by the owner: are the attract sequence's text boxes the in-game ones?
+**Yes, by the calls.** In the all-calls trace (`analysis/calltrace/all_a`, to
+frame 4,096) `Msg_OpenScript` `0x4976D0` is called 8 times - from `0x517EEB`
+(6), `0x56BD2B` and `0x56BCEC` - and it is the script-side entry with 418
+callers in the exe, not something attract-specific; `MsgBox_FrameTask`
+`0x4977F0` runs 880 times and the control-code stepper `MsgBox_Step`
+`0x497840` 831. The glyph rasteriser `0x5A2CA0`, which reads `Font_GlyphData`,
+runs too ([`call-trace.md`](call-trace.md) §6). So message lookup, the
+control-code interpreter, box placement and glyph drawing are all under the
+oracle. **Not covered:** `Msg_OpenSystem` `0x497710` - the system pool: menus,
+items, battle - has no call in the attract run. **Not yet measured:** which of
+the 23 control codes those eight messages use; the tracer's detail mode can
+say, and a localisation check wants to know.
+
 ## 7. What it loads: three area files, four locations
 
 The owner remembered more locations than the two area numbers in §5 (2026-09-19)

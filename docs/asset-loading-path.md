@@ -172,6 +172,220 @@ presumably per CLUT. **This is the seam [`IDEAS.md`](IDEAS.md) I8 wants:** a
 replacement presentation layer can keep the VRAM shadow and the `LoadImage`
 interface and replace only what sits between the cache and the screen.
 
+**`Gfx_LoadImage` is ours, faithful, and checked in bytes (2026-09-19).**
+`src/game/gfx_image.cpp` keeps what the original does at its edges: only the
+upper bounds are checked, a failing rect is dropped with no invalidation, `h`
+is re-read from the rect every row, and `h <= 0` still invalidates. The
+invalidation itself, now named `Gfx_InvalidateTextures`, is still Capcom's and
+does more than the paragraph above says — a second pass over the previous
+page, not yet read (`symbols.toml`). Verification, `tools/mem_dump.py` at the
+default point with the upload queues empty in every run: the all-original pair
+`drain_a` / `drain_b` identical in both regions (noise floor zero); `img_ours`,
+thirteen functions ours, identical to `drain_a` in both; `img_neg`, the same
+build with the destination moved one cell, arena identical and **vram
+different in 357,615 bytes**, exit 1 — so the check does see this function.
+The attract oracle passed on the same `img_ours` run, 7,478 frames against
+`orig_a.tsv`. What none of this covers: anything the attract sequence does not
+upload, and the invalidation's effect on the texture cache.
+
+**`Gfx_InvalidateTextures` `0x59E700` is ours too, faithful (2026-09-19)** —
+`src/game/gfx_texcache.cpp`, the first function of the presentation layer. Read
+to the end, it does two things the paragraph above leaves out
+(`symbols.toml` has the instruction-level evidence):
+
+- **An off-by-one at every edge.** The dirty rect and each page are built
+  inclusive (`x + w - 1`, page `x + 0x3F`) and handed to `IntersectRect`, whose
+  right and bottom are exclusive. A rect one cell wide or high invalidates
+  nothing; a page's last column and row do not count. Kept as it is — whether
+  it ever shows on screen is not known, and changing it would be a ledger
+  entry.
+- **A second pass over the page to the left**, skipped for the first page of a
+  row: entries with byte `+1` set — by inference, textures that reach into the
+  next page — are dropped too, and the gap is closed up so the page's list
+  stays hole-free, since state 0 ends it. Mode non-zero marks state 1 as 2
+  instead of dropping; its one caller is `0x59EA5C`.
+
+Its effect is invisible to the VRAM dump and to the logic frame hash, so it
+got its own check, the **shadow check** ([`SCAFFOLDING.md`](SCAFFOLDING.md)
+§2): `BOF3X_SHADOW=Gfx_InvalidateTextures`. Results, all 2026-09-19:
+
+| check | result |
+|---|---|
+| live, every call of a 5-minute attract run: our planned table against what the original's clone did | 1,536+ calls, **0 mismatches** — but all mode 0, 41 entries dropped, the second pass never closed anything |
+| start-up differential fuzz, 4,000 random tables and rects, fake COM objects logging `Release` | **0 mismatches** in table or `Release` order; 2,025 mode 0 / 1,975 non-zero, 61,478 drops, 5,791 close-ups, 34,546 stale-markings |
+| negative control: the two `Release`s of the first pass swapped | 1,250 of 4,000 rounds flagged, and the DLL refuses to run |
+| unshadowed run, fourteen ours, the real `Release`s ours | VRAM and arena identical to `drain_a`; attract oracle identical over 7,478 frames against `orig_a.tsv`; no crash |
+
+The fuzz is what covers mode non-zero and the close-up; the attract sequence
+reaches neither. Not covered by anything: a cached texture's *lifetime* under
+real play beyond the attract sequence — an owner session with the variable set
+would be the check, `shadow` lines in `build/bof3x.log`.
+
+**The converted-palette cache is ours: three functions, faithful
+(2026-09-19)** — `src/game/gfx_clut.cpp`. The PSX game keeps its CLUTs as rows
+of cells in VRAM, and the port keeps a table at `0x6C2A40`, one entry per VRAM
+row: a generation counter and a lazily malloc'd 0x1000-byte buffer holding that
+row in the *display's* pixel format.
+
+- `Gfx_ConvertRow` `0x59EBB0` fills `w` cells of a row's buffer from the
+  shadow through the shifts and masks at `0x7DED60`, and bumps the generation.
+  Cell 0 stays 0 — transparent, as on the PSX — and any other cell the display
+  format would round to 0 is forced to 1 so it stays opaque.
+- `Gfx_LoadImageIfChanged` `0x59EB00`, the "compare-first sibling": copies a
+  row into the shadow only if it differs, and converts just those rows. It has
+  **no bounds check at all** and never invalidates a texture. Its one caller is
+  `Gfx_FlushDirtyStrip`, with rows 480..511 x 256 cells — the CLUT area. So a
+  palette animation costs a row conversion, not a texture rebuild.
+- `Gfx_ClutPixels` `0x5A04C0` turns a PSX CLUT id into a pointer into a row's
+  buffer, converting the row's first 256 cells if it has never been wanted.
+
+All unchecked edges are kept (`symbols.toml`). Verification, 2026-09-19:
+
+| check | result |
+|---|---|
+| start-up differential fuzz against clones (`BOF3X_SHADOW=gfx_clut`), 3,000 rounds over 565, 1555 and 8888 formats: shadow rows, row buffers, generations, returned pointers | **0 mismatches**; 897 rows copied and 1,246 skipped by the compare |
+| negative control: the forced-to-1 rule removed | 840 rounds flagged, DLL refuses to run |
+| `mem_dump.py`, new region `clut` (generation, has-buffer, first 256 converted cells of every row): all-original pair, then original against seventeen ours | identical both ways, with `arena` and `vram`; 20 rows had buffers, generations 1 or 2 |
+| attract oracle, seventeen ours | identical over 7,478 frames; no crash |
+
+The fuzz runs before the game's heap exists, so it gives every row a buffer
+first: **a row's first conversion, the `Crt_malloc` path, is checked only
+live** (the 20 rows above). The `clut` region was first dumped as whole 0x1000
+buffers; the all-original pair differed in 53 bytes, every one past byte 1,032
+— malloc memory nothing writes — so it was narrowed to the 0x400 bytes that
+are written, and the three dumps re-sliced rather than re-run. The display
+here is 32-bit; on a 16-bit one the fuzz is the only check of that branch.
+
+**The two rendered-frame flushes are ours, faithful (2026-09-19)** —
+`src/game/gfx_flush.cpp`: `Gfx_FlushDirtyStrip` `0x454960` and
+`Gfx_FlushUploadQueue` `0x461F00`, what WinMain's loop does to VRAM before a
+draw ([`call-trace.md`](call-trace.md) §6). The queue flush keeps its byte
+index, its re-read of the count after every record, and its lack of any bound
+(D4; DIV-0004 lives in `Gfx_BeginFrame`). Its two unpackers are now named and
+read but still Capcom's: `Gfx_UploadPacked5` `0x461FC0` and `Gfx_UploadLzss`
+`0x462070`.
+
+| check | result |
+|---|---|
+| start-up differential fuzz against clones (`BOF3X_SHADOW=gfx_flush`): 1,500 queues of 0..20 records of every kind, some past the shadow's edge; 300 strips | **0 mismatches** - shadow rows, unpack scratch, `Gfx_UnpackNext`, count; converted rows, generations, flag |
+| negative control: kind 2 sent down the raw path | 1,099 rounds flagged, DLL refuses to run |
+| `mem_dump.py`, nineteen ours against all-original | `arena`, `vram`, `clut` identical |
+| attract oracle, nineteen ours | identical over 7,478 frames against `orig_a.tsv`; no crash |
+
+**A finding about the original, from the fuzz's first run:** it failed 13 of
+1,500 rounds, every one on a kind-2 record. `Gfx_UploadLzss` zeroes `0x1EE` of
+its 512 window bytes and leaves the last 18 - one maximum match - as whatever
+the stack held, so a stream that reads them before writing them decodes
+differently on every call; the original disagrees with *itself*. A valid
+stream never does that, and the fuzz now writes valid ones. It matters for the
+takeover: those 18 bytes have no defined value to be faithful to.
+
+**The two unpackers are ours (2026-09-19)** - `src/game/gfx_unpack.cpp`.
+`Gfx_UploadPacked5` `0x461FC0` is faithful to the last quirk: whole dwords are
+unpacked, so up to four bytes past the total are written, and a negative total
+moves `Gfx_UnpackNext` *back*. `Gfx_UploadLzss` `0x462070` is faithful wherever
+the original defines a result - a match is copied whole past the total, a
+negative total never ends - and **zeroes the 18 window bytes the original
+leaves uninitialised**. That is not in the ledger: a valid stream cannot tell,
+and there is no original behaviour to differ from. If shipped data is ever
+found that reads those bytes before writing them, it becomes an entry.
+
+| check | result |
+|---|---|
+| start-up differential fuzz (`BOF3X_SHADOW=gfx_unpack`), 2,000 rounds each; the LZSS streams valid by construction, 242,974 literals and 122,178 matches, 35,503 of them overlapping their own output; for the 5-bit form 150 rounds with a negative total | **0 mismatches** - shadow rows, unpack scratch, `Gfx_UnpackNext` |
+| negative controls: a 5 for the 6-bit shift; match length one short | 1,777 and 1,867 rounds flagged, DLL refuses to run |
+| `mem_dump.py` and attract oracle, twenty-one ours | three regions identical; 7,478 frames identical; no crash |
+
+**The attract sequence never queues an LZSS record** (`analysis/calltrace/queue.csv`
+lists `0x461FC0` and not `0x462070`), so `Gfx_UploadLzss` has been checked by
+the fuzz only - the first takeover with no live coverage at all. Wherever the
+game does use it is a place to play through with `BOF3X_SHADOW` unset and
+eyes open.
+
+**`ClearImage` and `MoveImage` are ours, faithful (2026-09-19)** -
+`src/game/gfx_vram_ops.cpp`: `Gfx_ClearImage` `0x59E650`, `Gfx_MoveImage`
+`0x59E9A0` and its hand-assembled row copier `Gfx_MoveCells` `0x5AA5D6`. With
+them every caller of `Gfx_InvalidateTextures` is ours. Kept as found:
+
+- `Gfx_ClearImage` takes two colour arguments where the PSX call has three,
+  makes `((g & 0xF) << 2) | (r >> 3)` of them, and fills with that one *byte*.
+  Its one caller passes 0, 0, where none of it shows. No bounds check.
+- `Gfx_MoveImage` clips the source **in the caller's rect**, shifts the
+  destination by what it clipped off the left or top, never clips the
+  destination, then rewrites the rect as the destination and marks textures
+  stale (mode 1) instead of dropping them.
+- `Gfx_MoveCells` copies `w / 2` dwords a row and steps by the full `w`: an
+  odd width loses its last cell and **every later row starts two bytes further
+  left**. Always forward, whatever the overlap. Its row counter shares a
+  register with the high half of the destination x.
+
+| check | result |
+|---|---|
+| start-up differential fuzz (`BOF3X_SHADOW=gfx_vram_ops`), 900 rounds over the three; moves: 63 clipped, 282 of odd width, 240 overlapping; a texture-cache table seeded so that mode 1 shows which rect was passed | **0 mismatches** - the whole shadow, the texture cache, the caller's rect |
+| negative control: the odd cell copied | 279 rounds flagged, DLL refuses to run |
+| `mem_dump.py`, twenty-four ours | three regions identical |
+| attract oracle, twenty-four ours | first run: **one frame of 7,478 disagreed** - message index 1 against 2 at +2693; second run identical. A torn sample, not a difference: the sampler read the message word 28 ms after its previous sample, after the game had written it and before it advanced the frame byte ([`attract-mode.md`](attract-mode.md) §6) |
+| frame-hash A/B ([`call-trace.md`](call-trace.md) §7), all-original against twenty-four ours, 2,829 entries armed | calls and hash identical on all 4,472 frames |
+
+The attract sequence reaches `Gfx_ClearImage` and neither of the other two
+(`analysis/calltrace/queue.csv`): **`Gfx_MoveImage` and `Gfx_MoveCells` are
+checked by the fuzz only**, like `Gfx_UploadLzss`.
+
+**The texture cache's lookup is ours, faithful, and its entry layout is now
+complete (2026-09-19)** - `Gfx_TexCacheFind` `0x5A0830`, in
+`src/game/gfx_texcache.cpp`. A texture is found by the eight bytes the draw
+leaves in `Gfx_TexCacheKey` `0x7DED0C` and, unless it is 15-bit, by its PSX
+CLUT id. An entry is: state, **PSX colour mode** (+1), CLUT id (+2), the CLUT
+row's generation when it was built (+4), the key (+8), two COM pointers
+(+0x10). Two things follow:
+
+- **This is how a palette change reaches a texture.** A hit whose CLUT row has
+  been converted again since (`Gfx_ClutRows` generation) is marked stale on the
+  way out, and the caller `0x5A3CC0` then refreshes it through `0x5A0510`.
+  With `Gfx_LoadImageIfChanged` bumping the generation, the chain from a
+  palette animation in game logic to a rebuilt texture is read end to end.
+- **Byte +1 was mis-inferred above as "reaches into the next page".** It is the
+  colour mode; 8- and 15-bit textures are two and four times as wide in VRAM
+  as a 4-bit page, which is *why* `Gfx_InvalidateTextures` drops them when the
+  next page changes. The code and `symbols.toml` are corrected.
+
+Kept as found: only bit 1 of the mode is looked at; 4- and 8-bit entries are
+not told apart; the CLUT id is compared as 32 bits against a 16-bit field;
+`clut >> 6` indexes the rows unchecked.
+
+| check | result |
+|---|---|
+| start-up differential fuzz (`BOF3X_SHADOW=Gfx_TexCacheFind`), 6,000 rounds: 1,089 hits, 2,078 in 15-bit mode, 97 that marked an entry stale | **0 mismatches** - result and table |
+| negative control: the stale mark left off | 168 rounds flagged, DLL refuses to run |
+| twenty-five ours, full speed: `mem_dump.py` three regions, attract oracle | identical; 7,478 frames identical; no crash |
+| frame hash against the all-original reference, 2,829 entries armed | identical on all 4,472 frames |
+
+Not taken: its caller `0x5A3CC0` (locks a DirectDraw surface and returns its
+pixels), the builders `0x5A0080` / `0x5A0510` (ten COM calls each), and the
+renderer's 3.7 KB set-up `0x5A5160` with 63. They are where the project first
+has to decide how a function that talks to Direct3D gets checked - a clone can
+run them, but what they produce is a surface, not memory we can compare.
+
+**Two things learned about the checks themselves, the same evening.** Running
+the dump and the oracle under the call tracer (`BOF3X_CALLTRACE_MODE=all`, about
+half speed) made both "fail" - and both fail the same way with every function
+Capcom's:
+
+- The `clut` region **depends on how fast the game runs.** All-original under
+  the tracer against all-original at full speed differs in rows 482 and 483
+  (cells 240-247, and 128) while `arena` and `vram` are identical. So which
+  conversion a palette row last received is a rendered-frame matter, as image
+  uploads are ([`call-trace.md`](call-trace.md) §6). Why the converted row can
+  lag a shadow that is up to date is unread. **Compare dumps only between runs
+  of the same speed.**
+- The external sampler behind `attract_diff.py` **miscounts frames under the
+  tracer**; two recordings made that way disagree by whole frames. Under the
+  tracer the frame hash is the check, and it needs nothing else.
+
+`Font_SetGlyphData` went over in the same change as `Gfx_LoadImage`. It runs once per launch —
+the one kind-3 chunk — so its store is exercised and its free-the-previous
+branch never is, in this run or by any shipped data.
+
 **Kind 3 is the Chinese font, and there is exactly one.** `Font_SetGlyphData`
 `0x5A6800` stores the copy in one global, `0x7CC35C`, freeing any previous one.
 Its only reader, `0x5A2CA0`, indexes it as `base + glyph*0x120` beside `0x18`

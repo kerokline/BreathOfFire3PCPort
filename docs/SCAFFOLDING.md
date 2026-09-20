@@ -77,6 +77,31 @@ and it is the run configuration any replay-style regression oracle must use
 this direction: none of our functions may be shorter than five bytes before the
 next begins.
 
+### The shadow check
+
+The A/B switch compares two *runs*. `BOF3X_SHADOW=Name` compares the two
+*functions*, in one process, on the same input — for a function whose effect no
+external check can see. `bof3::CloneOriginal` (`hook/detour.h`) byte-copies the
+original into executable memory before `Inject` destroys its entry; the owning
+file then plans its own result on a copy of the state, lets the clone do the
+real work, and compares — and, at start-up, can fuzz the pair on synthetic
+input. First and so far only user: `Gfx_InvalidateTextures`
+(`src/game/gfx_texcache.cpp`, [`asset-loading-path.md`](asset-loading-path.md)
+§2).
+
+It is **not a trampoline** and does not soften the rule that a replaced
+function is replaced whole: nothing resumes into the original body, and a build
+without the variable never makes the copy. It is sound only for a function
+whose every relative jump and call stays inside the copied range — calls
+through absolute slots or registers are fine — and that has to be established
+from the disassembly, per function, and said where `CloneOriginal` is called.
+A relative *call* that does leave can be named and re-aimed (`CloneCall`), at
+the original callee or at another clone, so that cloned callers reach cloned
+callees and never ours — `src/game/gfx_clut.cpp` clones three that way.
+`BOF3X_SHADOW` takes the names each file asks for (`Gfx_InvalidateTextures`,
+`gfx_clut`) or `*`.
+The copy exists in process memory only; nothing of Capcom's is written to disk.
+
 ## 3. One name, bound once
 
 For every function in `symbols.toml` that has a signature, the bare name is

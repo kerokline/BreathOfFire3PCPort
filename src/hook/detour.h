@@ -30,6 +30,28 @@ void VerifyImage();
 // variable (comma separated), or all of them with BOF3X_ORIGINAL=*.
 void Inject(const char* name, std::uint32_t original, void* ours);
 
+// A runnable byte-copy of an original function, for shadow-checking our
+// replacement against it in the same process (BOF3X_SHADOW). Not a trampoline:
+// nothing resumes into the original body. Sound only for a function whose
+// every relative transfer stays inside [original, original + size) - calls
+// through absolute or register addresses are fine - which the caller must
+// have established from the disassembly. Call BEFORE Inject, which destroys
+// the first five bytes. The copy lives in process memory only.
+//
+// A relative CALL that does leave the range is named in `calls`: the offset of
+// its E8 byte, and where the copy should call instead - null for "where the
+// original called", or another clone, so that a cloned caller reaches the
+// cloned callee and never ours.
+struct CloneCall {
+    std::uint32_t offset;
+    const void* target;
+};
+void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
+                    const CloneCall* calls = nullptr, int n_calls = 0);
+
+// True if `name` is listed in the BOF3X_SHADOW environment variable.
+bool WantsShadow(const char* name);
+
 // True if this original address has been passed to Inject - in either
 // direction, so the answer is the same with and without BOF3X_ORIGINAL. For
 // tooling that must treat "a function we own" alike in both configurations.

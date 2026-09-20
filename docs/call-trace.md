@@ -203,8 +203,20 @@ reads depends on it, which is why the oracle never saw it. Two consequences:
 - **For the `Gfx_LoadImage` takeover:** its calls have no fixed logic frame,
   and `tools/mem_dump.py`'s VRAM-shadow comparison is only sound at a moment
   when nothing is pending — count byte `0x9035A0` and flag `0x937F90` both
-  zero. It passed for `LoadDatFile` at its fixed dump point; whether that was
-  luck or a quiet moment has not been checked.
+  zero. **`mem_dump.py` now waits for that** (2026-09-19): at the target frame
+  it reads both under suspension and snapshots only when both are zero,
+  recording what was pending and how many logic frames the wait cost in
+  `<label>_meta.json`. Both are cleared only *after* their flush finishes
+  (`0x461FA7`, `0x45499A`), so zero under suspension also means no flush is
+  half done. The `LoadDatFile` pass was a quiet moment, and a likely one
+  rather than a certain one: two all-original runs (`drain_a` / `drain_b`)
+  found count 0 and flag 0 at the default point and dumped identical bytes in
+  both regions, while 60 s of sampling one of them (8.9 M reads, areas 4, 31
+  and 2) saw the flag set in 2,945 reads and the count non-zero in 81, never
+  above 1. The wait path itself has only run against a simulated process —
+  no live dump has yet landed on a pending moment. Not covered: a suspension
+  that lands inside a *direct* `Gfx_LoadImage` call from `LoadDatFile`, which
+  bypasses the queue; the original-vs-original pair is the guard for that.
 - **This is the presentation seam, found from the other side**
   ([`IDEAS.md`](IDEAS.md) I8, I10 item 3): the rendered-frame branch at
   `0x4FCE3F`..`0x4FCEB8` is where deferred work crosses from logic to display,
