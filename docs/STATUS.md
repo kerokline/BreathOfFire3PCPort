@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**One hundred and nine functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**One hundred and twelve functions of ~2,952 are ours** (a hundred and nine from stage 1, three from the text path, below): `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -81,7 +81,19 @@ when the optimiser repaired a deliberately wrong build; and the frame hash's
 exclusion list was rebuilt (`calltrace.py wallclock --static`) after the
 faster traced game exposed wall-clock draw code no slow run had entered -
 settled by comparing original against original
-([`call-trace.md`](call-trace.md) §6). Sixteen of the hundred and nine are beyond
+([`call-trace.md`](call-trace.md) §6). **Stage 2 began on 2026-09-20 and the game is
+playable in English the same day** ([`dialogue-localisation.md`](dialogue-localisation.md)):
+overlay `DAT`s built on the player's machine from the player's US disc carry
+every area's dialogue, the system pools, the item and ability names and the
+US font, and `BOF3X_LANG=en` loads them - five ledger entries, DIV-0005 to
+DIV-0009. What was learned on the way: the port's text code IS the glyph
+index; English on the PlayStation is monospaced at 8 px, so there was no width
+table to port; Capcom made room for English by moving the system pool, and so
+did we, because it has one reader against the script's forty-one; and the
+Chinese port's name fields are 16 bytes where the US disc's are 12. Three
+functions of the text path are ours - `Msg_SystemPtr`, `Text_DrawString`,
+`Text_DrawImmediate` - each fuzzed against a clone; the last one's fuzz found
+a slip of Capcom's the read had missed. Sixteen of the hundred and nine from stage 1 are beyond
 the attract sequence's reach and rest on the differential fuzz alone -
 `Gfx_UploadLzss`, `Gfx_MoveImage`, `Gfx_MoveCells`, nine of the depth stores,
 `Gte_RotTransPers3`, the two `RotAverage`s and `Gte_ScaleMatrix` - as do
@@ -133,9 +145,9 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 146 functions, 8 global blocks and 85 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 130 functions carry signatures and
-  are callable from our code, 109 of them ours (counted 2026-09-20 by
+- 150 functions, 8 global blocks and 99 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 135 functions carry signatures and
+  are callable from our code, 112 of them ours (counted 2026-09-20 by
   `gen_symbols.py` and `tomllib`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
@@ -158,14 +170,17 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). A hundred and nine are ours, not
+   with the takeover queue already layered (§9 there). A hundred and twelve are ours, not
    all of them among the 540.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.
-2. **Then the text swap** - planned 2026-09-20 in
-   [`dialogue-localisation.md`](dialogue-localisation.md): overlay `DAT`s and
-   an upscaled font table, both built locally from the player's discs - so
+2. **Then the text swap** - [`dialogue-localisation.md`](dialogue-localisation.md):
+   overlay `DAT`s and an upscaled font table, both built locally from the
+   player's discs. **Begun 2026-09-20: English dialogue draws in the attract
+   sequence**, and by the evening the owner was playing it: dialogue,
+   narration, menus, item and ability names (DIV-0005..0009). Enemy, character
+   and place names and text in artwork are still Chinese - so
    that the owner can make headway through the game
    itself — and with that, reach code the attract sequence never runs. What
    this means in detail is the owner's to say; the asset side of selectable

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 3 entries, DIV-0001..0003)
+**Status:** IN PROGRESS (opened 2026-09-18; 9 entries, DIV-0001..0009)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -312,3 +312,224 @@ designed in rather than bolted on.
   has the same unbounded queue is a sibling-side question.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Gfx_BeginFrame`
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). No config toggle.
+
+### Walk a language overlay after each `DAT` file
+
+- **ID:** DIV-0005
+- **Date:** 2026-09-20
+- **Subsystem:** assets / localisation
+- **Original behaviour:** `LoadDatFile` `0x454590` reads `DAT\<name>` and walks
+  its chunks; that is all. There is one language, compiled in with the data
+  ([`dialogue-localisation.md`](dialogue-localisation.md) §2).
+- **New behaviour:** with the environment variable `BOF3X_LANG=xx` set, our
+  `LoadDatFile` (`src/game/dat_load.cpp`) walks `DAT\xx.<name>` after
+  `DAT\<name>` when that file exists, with the same chunk walker. An overlay
+  holds only the chunks that differ, and they land on top: a kind-0 chunk over
+  the same arena bytes, a kind-3 chunk through `Font_SetGlyphData`, which frees
+  the shipped table - the branch no shipped data had ever run. Without the
+  variable, or without the file, nothing changes (one `GetFileAttributesA` per
+  load when the variable is set). The overlays are built on the player's
+  machine from the player's disc by `tools/loc_build.py`; none is shipped or
+  committed (CLAUDE.md rule 1).
+- **Rationale:** stage 2 of the owner's order of work - playable text for
+  the owner, and the groundwork for selectable languages
+  ([`STATUS.md`](STATUS.md)). A design choice, not a bug fix.
+- **Known and accepted:** anything that stored glyph codes under one language
+  and draws them under another is scrambled - character names in a save, for
+  one. Sixteen areas' English text does not fit below the system pool and gets
+  no overlay yet ([`dialogue-localisation.md`](dialogue-localisation.md) §6).
+- **Verification:** attract run with `BOF3X_LANG=en`, 2026-09-20: the log
+  shows `DAT\en.FIRST.DAT` and `DAT\en.AREA004.DAT` opened after their
+  originals, and the area caption and dialogue draw in English in the donor's
+  glyphs (screenshots, `analysis/font/shots/`). *Not run:* the oracle with the
+  variable unset after this change - the path is unchanged by reading, but
+  that is reading.
+- **Also in the PSX version?** No. Each PlayStation language is its own build.
+- **Reversible?** Yes: unset `BOF3X_LANG`, or `BOF3X_ORIGINAL=LoadDatFile`.
+
+### Advance the dialogue pen by the glyph's width
+
+- **ID:** DIV-0006
+- **Date:** 2026-09-20
+- **Subsystem:** text
+- **Original behaviour:** `MsgBox_Step` `0x497840` draws one character through
+  `Text_DrawAt` `0x516B30` (call at `0x497A22`) and then adds a flat 12 to its
+  pen, `MsgBox_PenX` `0x7DEE5C` (`add bp, 0xC` at `0x497A44`) - the PSX JP
+  engine's advance, right for 12 px cells. The Western PlayStation builds use
+  a font of 8 x 12 cells and their stepper adds 8 (`SLUS_004.22`,
+  `addiu v0, v0, 8` at `0x80150770`, read 2026-09-20): monospaced, not
+  proportional.
+- **New behaviour:** a `DAT` chunk of **kind 4**, which is ours - the original
+  walker skips any kind above 3, and no shipped file has one (census of 742) -
+  carries one byte a glyph, the advance in PSX pixels; its tag is the advance
+  of the space `0x20`. `src/game/text_advance.cpp` re-aims the one call at
+  `0x497A22` (`bof3::RetargetCall`; `Text_DrawAt` and its 340 other callers
+  are untouched), makes the same call, then moves `MsgBox_PenX` by
+  `advance - 12`, so the stepper's own `+ 12` lands the pen by the glyph's
+  advance. With no kind-4 chunk loaded the adjustment is zero. The table is
+  data, so a proportional font needs no further engine change.
+- **Extended the same day to the string draw itself.** `Text_DrawString`
+  `0x516B70` is ours (`src/game/text_draw.cpp`), faithful in everything but
+  its two `+ 12`s - after a glyph and after a `0x20` - which take the same
+  table. That is the pen of every caller of `Text_DrawAt` that is not the
+  dialogue box: the narration, the boxes that read the script block themselves
+  ([`dialogue-localisation.md`](dialogue-localisation.md) §6), the menus. With
+  no table loaded both are 12. Callers that centre or right-align text by
+  counting characters at 12 px are NOT adjusted; none has been seen wrong yet.
+- **And to the window text draw.** `Text_DrawImmediate` `0x5961C0` is ours
+  (`src/game/text_immediate.cpp`): the choice lists - yes / no, the camp
+  menu - which the owner saw still spaced at 12 px on 2026-09-20. It keeps
+  its pen in a register and adds 12 itself, so nothing short of the function
+  reaches it. Faithful but for that `+ 12`, including a quirk the fuzz found
+  and the read had missed: control `0x08` starts the inserted message at its
+  second byte.
+- **The hang.** `MsgBox_Step` pulls a first byte `0x2A` or `0x3C` 12 px into
+  the margin at the start of a line; the US stepper does it for its double
+  quote, by 8. `loc_build.py` gives the quote byte `0x2A`, and
+  `MsgBox_DrawChar` draws a hung character at line start minus *its advance*
+  and leaves the pen for the stepper to bring back to the line start.
+- **The data is not the US release's in one respect:** the apostrophe and the
+  comma advance 5, not 8. That is its own entry, DIV-0009.
+- **Not covered:** the stepper's other draw, `0x4987E0` (flag 8 of
+  `0x7DEE44`; unread).
+- **Rationale:** English at a 12 px advance overflows the box on the first
+  line (seen 2026-09-20); the donor script's line breaks are authored for 8.
+- **Verification:** attract run, 2026-09-20: `retarget ON MsgBox_DrawChar` and
+  `DIV-0006: advance table, 2551 glyphs, space 8 px` in the log; dialogue
+  fits its box (`analysis/font/shots/_boxes2.png`). `Text_DrawString`:
+  start-up fuzz against a clone with its jump table relocated
+  (`BOF3X_SHADOW=text_draw`), 6,000 strings, 78,029 glyphs through a
+  recording stand-in for `Text_EmitGlyph`, 0 mismatches; builds with the
+  remembered colour, the count-out return and the once-read clip pair each
+  changed are refused (2,119 / 2,437 / 2,949 rounds), and ones with the glyph
+  bias or the limit changed hang in the trap instruction. Attract oracle with
+  `BOF3X_LANG` unset and all 111 ours: identical to the all-original reference
+  at every one of 1,734 compared frames. In English the narration draws at
+  8 px (`analysis/font/shots/_narr.png`). `Text_DrawImmediate`: the same kind
+  of fuzz (`BOF3X_SHADOW=text_immediate`), 6,000 strings, 279,360 characters,
+  0 mismatches - after 3,896 before the `0x08` quirk was matched; builds with
+  the line height, the count-out resume, the `0x08` start and the name count
+  changed are all refused. Oracle with 112 ours and no language: identical,
+  1,734 frames. Hang and tight punctuation seen in the attract dialogue
+  (`analysis/font/shots/_boxes5.png`). Owner, in game: the dialogue, the
+  narration and the menus seen and "looks great" (2026-09-20); the choice
+  lists at 8 px are owed a second look.
+- **Also in the PSX version?** The Western builds, yes, as a constant.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=MsgBox_DrawChar`, or load no kind-4 chunk.
+
+### Move the system message pool out of the area script's way
+
+- **ID:** DIV-0007
+- **Date:** 2026-09-20
+- **Subsystem:** text / assets
+- **Original behaviour:** the area script loads at arena offset 0 and the
+  system pool at `0x4000` (PSX `0x80010000` / `0x80014000`, the Japanese
+  layout), so an area's text has 16 KiB. The largest shipped block is `0x39CB`.
+  `Msg_SystemPtr` `0x497740` reads the pool at the constant `0x807580`.
+- **What Capcom did about it:** the US release moved the pool, not the script -
+  44 sections go from `0x80014000` to `0x8001A000`, and `0x80010000` "does not
+  move in any of the five releases" (sibling `regional-builds.md`). The
+  Chinese port was made from the Japanese layout and never needed to.
+- **New behaviour:** with `BOF3X_LANG` set, `MsgPool_Relocate`
+  (`src/game/msg_pool.cpp`) gives the pool a 16 KiB buffer of its own; our
+  `LoadDatFile` copies a kind-0 chunk of tag `0x4000` there instead of into the
+  arena; and our `Msg_SystemPtr` reads a variable base. The area script may
+  then run to `0x8000`, where the CLUT strip begins; the largest English block
+  is `0x5559`, and all 200 areas now get an overlay. Without the variable the
+  base is the original's constant and nothing differs.
+- **Why this side:** measured 2026-09-20 over every operand of every function
+  in `analysis/pc_funcs.json` - the script window has 177 references from 41
+  functions; the pool window has **two, both in `Msg_SystemPtr`**. And over
+  every shipped `DAT`: exactly 44 chunks land in `0x4000`..`0x8000`, all at tag
+  `0x4000`, all pools (first dword 8), none straddling either edge.
+- **Not ruled out:** a reader that reaches the pool through a computed
+  address. None is known; one would read English text bytes instead of pool
+  bytes, in the sixteen long areas only.
+- **Verification:** start-up fuzz against a clone of the original
+  (`BOF3X_SHADOW=msg_pool`): 20,000 ids, in place and relocated, 0 mismatches;
+  a build with the index mask narrowed to `0x1FFF` is refused - after the
+  first version of the fuzz, blind to it, was not. Attract run with
+  `BOF3X_LANG=en`: `Rand` count identical to the all-original reference at
+  every compared frame; 5 of 1,715 sampled frames differ in *message index*
+  only, each at a message change - English messages are longer and the box
+  moves on when it has finished printing. That difference is the language's,
+  not this entry's. Owner, in game, in a long area and in a menu: owed.
+- **Also in the PSX version?** The Western builds, as a different constant.
+- **Reversible?** Yes: unset `BOF3X_LANG`; `BOF3X_ORIGINAL=Msg_SystemPtr`
+  alone is NOT safe with it set (the original would read an arena the pool
+  was never copied to).
+
+### Item and ability names, and the system pool, from a language overlay
+
+- **ID:** DIV-0008
+- **Date:** 2026-09-20
+- **Subsystem:** text / assets
+- **Original behaviour:** the names the menus draw are compiled into
+  `BOF3.exe`: six fixed-stride record tables in `.data` (`symbols.toml`
+  `NameTable_*`), the PSX `GAME.EMI` tables with the name field widened.
+  Measured 2026-09-20 against the sibling's `names/*.toml`: **name[16] in all
+  six**, where the JP disc has name[8] and the US disc name[12] (strides
+  22 / 20 / 28 / 26 / 24 / 24 against JP 14 / 12 / 20 / 18 / 16 / 16), and the
+  numeric fields equal to the JP disc's in 534 of 534 records. Descriptions
+  and menu strings are in the system pool, `FIRST.DAT` and 43 other files at
+  arena tag `0x4000`: two blocks of the area script's shape, 309 and 455
+  slots - the same two counts as the US disc's pool at `0x8001A000`.
+- **New behaviour:** a `DAT` chunk of **kind 5**, ours, carries one table's
+  names, 16 bytes each; its tag is the address of record 0's name field.
+  `NameTables_Apply` (`src/game/name_tables.cpp`) accepts the six known
+  addresses with exactly `count * 16` bytes and aborts on anything else, and
+  writes the name fields only. The pool needs no new mechanism: a kind-0
+  chunk at tag `0x4000` in an overlay goes where the shipped one goes
+  (DIV-0005, DIV-0007). The relocated pool's buffer is `0x8000` bytes: the US
+  `FIRST` pool is `0x41E8`, which is the reason Capcom moved it.
+- **The data:** `tools/loc_build.py all` finds each donor table in `GAME.EMI`
+  section 0 *by the PC table's numeric bytes* at the donor's stride - no donor
+  address is assumed, and a disc whose numbers differ is refused - and
+  re-encodes the names as it does dialogue: 538 of 538 names, 44 of 44 pools,
+  no slot kept as shipped. Capcom's US strings, verbatim: `BallockKnife`,
+  `Lgt.Clothing`. The 16-byte field would hold longer spellings; using it is
+  a separate decision, and on screen the budget is unmeasured (eight Chinese
+  glyphs are 96 px, twelve letters at 8 px).
+- **Not covered:** enemy names (12-byte fields in battle data,
+  [`DAT_CONTAINER.md`](DAT_CONTAINER.md)), character names, place names,
+  anything drawn as artwork, and whatever strings are in `.text`/`.data`
+  outside these tables.
+- **Verification:** attract run with `BOF3X_LANG=en`, 2026-09-20: six
+  `DIV-0008` lines, no crash, oracle identical to the English run before it.
+  **Nothing here is visible in the attract sequence.** Owner, in a menu: owed.
+  Unread: who reads the tables, and whether a name is drawn to a NUL or to a
+  count - the tool keeps every name under 16 bytes so that either works.
+- **Also in the PSX version?** Each language is its own build with its own
+  tables.
+- **Reversible?** Yes: unset `BOF3X_LANG`. The write is to process memory.
+
+### Tighten the apostrophe and the comma in the English font
+
+- **ID:** DIV-0009
+- **Date:** 2026-09-20
+- **Subsystem:** text / localisation data
+- **What this diverges from:** not the Chinese PC port, which has no English,
+  but **the US PlayStation release**, which is where the English comes from
+  and what "as it was" means for it (CLAUDE.md rule 6).
+- **Original behaviour (US release):** the dialogue font is monospaced. Every
+  cell is 8 x 12 and the stepper adds 8 after every character, with no
+  exception for any glyph (`SLUS_004.22`, `addiu v0, v0, 8` at `0x80150770`;
+  its one special case is the hung double quote, `0x80150680`). The
+  apostrophe's and the comma's ink is columns 1..3 of their cells, so each is
+  followed by four empty pixels: `you' ll`, and a comma and a space together
+  make a gap of twelve. **Confirmed on the original by the owner, 2026-09-20,
+  on an emulated PSX build**: "you'll be needing some supplies, eh?" shows
+  both.
+- **New behaviour:** `tools/loc_build.py` writes the advance table
+  (DIV-0006) with 5 for those two glyphs and 8 for the rest. The rule, not a
+  list: a glyph whose ink ends by column 3 advances to two past it. Measured
+  over the donor's 100 cells it takes exactly the apostrophe and the comma;
+  the stop, the colon and the exclamation mark are centred in their cells and
+  keep 8. No engine code is involved - the engine advances by whatever the
+  table says.
+- **Rationale:** the owner's, having seen both: it reads better. A line can
+  only get shorter, so text authored for 8 px still fits its box.
+- **What it costs:** text the US script centres or aligns with spaces, on the
+  assumption that every character is 8 px wide, shifts left by 3 px for each
+  apostrophe or comma before the point in question. None seen wrong.
+- **Reversible?** Yes: build the overlays with `--mono`.
