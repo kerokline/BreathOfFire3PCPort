@@ -16,7 +16,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 Phase 0 is done and stage 1 of the owner's order of work
 ([`STATUS.md`](STATUS.md)) is under way: a launcher injects our DLL into the
-player's `BOF3.exe` and **a hundred and eight functions are ours** - `LoadDatFile`, the
+player's `BOF3.exe` and **a hundred and nine functions are ours** - `LoadDatFile`, the
 eight-function file layer (DIV-0003), `Save_WriteFile` (DIV-0002),
 `Gfx_BeginFrame` (DIV-0004, a crash fix), fourteen faithful ones that make
 up the image path from the rendered-frame flushes down to the texture-cache
@@ -25,10 +25,10 @@ the takeover queue, all around the field's sprite structures
 ([`sprite-draw-order.md`](sprite-draw-order.md)), sixty-two of the port's own
 PSX library layer ([`psx-library-layer.md`](psx-library-layer.md)) - the x87
 ones included, written in `double` once the control word was measured - and
-the draw-order pass's primitive commit and layer close. The A/B switch, a call tracer, a crash
+the draw-order pass with its primitive commit and layer close. The A/B switch, a call tracer, a crash
 reporter and a shadow check against clones of the originals run in-process;
 the attract oracle, three memory-dump regions and the frame hash all pass
-original-vs-ours with all hundred and eight (2026-09-20), the frame hash
+original-vs-ours with all hundred and nine (2026-09-20), the frame hash
 with an original-vs-original pair beside it. See [`STATUS.md`](STATUS.md) - do not expand this paragraph
 into a second copy.
 
@@ -68,23 +68,21 @@ The single next action, concrete enough to start without asking anyone.
    - `0x454810` is `return 1` with 152 callers; read a caller before naming.
    - `0x57C0A0`: **read, deliberately left** - its search result never
      reaches the return register. Ask the PSX side which way the source had
-     it ([`sprite-draw-order.md`](sprite-draw-order.md) §10).
+     it ([`sprite-draw-order.md`](sprite-draw-order.md) §11).
    Bigger leaves still unread: `0x454AD0` (491 bytes), `0x496870` (399),
    `0x5720C0` (523), `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431),
    `0x572A00` (1,225 bytes, 43 x87 instructions, 89,972 calls - the x87
    recipe in [`psx-library-layer.md`](psx-library-layer.md) §3 applies).
-2. **The pass `0x593060` itself** is the prize in this corner: read to the
-   end, and checkable as memory - the linked draw list it builds - which is
-   [`IDEAS.md`](IDEAS.md) I14 level 1. Four of its callees are ours now
-   (`Gpu_LinkPrim`, `Gpu_SetDrawMode`, `Gfx_CommitPrim`, `DrawLayer_Close`);
-   three are not, and [`sprite-draw-order.md`](sprite-draw-order.md) §10 says
-   what each is: `0x56FD20` (the layer's map records through the handler
-   table `0x663008` - indirect calls, so live checks only), `0x57BAE0`
-   (waits on the matrix product above) and `0x5935B0` / `0x593860`, the
-   sprite draw, 3.3 KB between them. The pass can be taken over *before*
-   those: it only calls them. A start-up fuzz of it would have to stand in
-   for them, though, so expect the live checks - and I14's list comparison,
-   if built - to carry it.
+2. **Under the draw-order pass.** `Sprite_DrawPass` `0x593060` is ours
+   ([`sprite-draw-order.md`](sprite-draw-order.md) §9); its three callees that
+   are not, §11 there: `DrawLayer_Open` `0x56FD20` (the layer's map records
+   through the handler table `0x663008` - indirect calls, so live checks
+   only), `Sprite_AddDrawRecords` `0x57BAE0` (waits on the matrix product
+   above) and `Sprite_Draw` `0x5935B0` / `0x593860`, 3.3 KB between them. The
+   pass's fuzz shows the way for all three: **recording stand-ins** for the
+   callees that cannot be cloned, for the original's copy and ours alike.
+   What the pass still lacks is a check of the list it builds in the real
+   game - [`IDEAS.md`](IDEAS.md) I14 level 1.
    Worth doing alongside: **a struct for the sprite object.** Five files now
    address it by offset; `symbols.toml` has no struct types, so it would be a
    hand-written header, and the offsets are collected in §5 and §6 there.
@@ -167,11 +165,11 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit` (comma-separated lists work) or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass` (comma-separated lists work) or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
-- **Takeover recipe** (each of the ninety-six so far): read the function to its
+- **Takeover recipe** (each of the ninety-seven so far): read the function to its
   last instruction, quirks included; `symbols.toml` entry with the evidence
   and `impl`; implement, keeping every unchecked edge and saying so in the
   comment; if every jump stays inside it, clone it and fuzz ours against the
@@ -181,7 +179,9 @@ _Commands a fresh session needs, verified on the date above._
   `Inject` patches it, so such a module goes EARLIER in `inject_all.cpp`, as
   `psx_gte_transform.cpp` does; functions that only call each
   other clone as one block, as `sprite_anim.cpp` does; x87 code: set the
-  control word `0x027F` around the clone's call), then break ours on purpose and see
+  control word `0x027F` around the clone's call; a callee that cannot be
+  cloned - indirect calls, or simply not read yet - gets a recording stand-in,
+  for the clone and for ours alike, as `draw_pass.cpp` does), then break ours on purpose and see
   the fuzz refuse to run; live, all ours: `mem_dump.py --compare clutref_a X`,
   `attract_diff.py orig_a.tsv X.tsv`, and the frame hash before a merge - **with
   an original-vs-original run beside it**, the noise floor (one
@@ -266,6 +266,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
 - A fault inside a start-up self-test - a division by zero in the fuzz's own
   arithmetic did it - does not crash: the game **hangs at start-up** with
   nothing in the log after the `cloned` lines.
+- A fault during a start-up self-test and a hang look the same from outside;
+  `Get-Process BOF3 | select CPU` tells them apart (near zero is a fault). A
+  harness that restores a block too far can make the *original's copy* fault:
+  the layers' block plus 2 KB reaches `Sprite_DrawListCount`.
 - A quirk a comment claims may be unobservable, and only the negative control
   says so: three more on 2026-09-20 (`Gte_Rtpt` "is not three RTPS" - it is;
   [`psx-library-layer.md`](psx-library-layer.md) §4). And a control can pass
@@ -284,11 +288,11 @@ _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
 Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b` (PR #4
-merged). Committed locally, **not pushed, no PR**: eighty-three takeovers in
+merged). Committed locally, **not pushed, no PR**: eighty-four takeovers in
 `src/game/sprite_order.cpp`, `draw_pool.cpp`, `prim.cpp`, `map_view.cpp`,
 `sprite_anim.cpp`, `sprite_find.cpp`, `field_input.cpp`, `sprite_clut.cpp`,
 `draw_layers.cpp`, `psx_gpu.cpp`, `psx_gte.cpp`, `psx_gte_float.cpp`,
-`psx_gte_transform.cpp` and `draw_emit.cpp`; `-fno-strict-aliasing`;
+`psx_gte_transform.cpp`, `draw_emit.cpp` and `draw_pass.cpp`; `-fno-strict-aliasing`;
 `calltrace.py wallclock --static`; `CloneOriginal` re-aiming a tail `jmp`;
 and `docs/sprite-draw-order.md`, `docs/psx-library-layer.md`.
 
@@ -307,8 +311,8 @@ Local only, gitignored, worth keeping:
   concatenated, which the exclusion list was rebuilt from.
 - `analysis/calltrace/ab3_orig/` - the all-original frame-hash reference,
   recorded with twenty-four owned, **stale since 2026-09-20**; the current one
-  is `analysis/calltrace/ab13_orig/` (and `ab13_origb`, its noise-floor twin),
-  recorded with a hundred and eight under the rebuilt `entries_logic.txt`
+  is `analysis/calltrace/ab14_orig/` (and `ab14_origb`, its noise-floor twin),
+  recorded with a hundred and nine under the rebuilt `entries_logic.txt`
   (`entries_logic_0919.txt` is the old list). Owned
   functions are left unarmed, so it survives a takeover only when the function
   was not in `entries_logic.txt` to begin with (`Gfx_TexCacheFind` is

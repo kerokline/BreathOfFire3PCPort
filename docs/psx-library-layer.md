@@ -288,6 +288,7 @@ references of 2026-09-19; the frame hash with both sides re-recorded
 | 73 (all of section 2) | identical, 7,478 frames | identical | identical, 7,428 frames, with original against original identical beside it (`ab11`) |
 | 92 (plus section 3) | identical, 7,478 frames | identical | identical, 7,936 frames, original against original identical beside it (`ab12`); and section 3's live shadow |
 | 108 (plus section 4, and [`sprite-draw-order.md`](sprite-draw-order.md) §8) | identical, 7,478 frames | identical | identical, 7,937 frames, original against original identical beside it (`ab13`) |
+| 109 (plus the draw-order pass, [`sprite-draw-order.md`](sprite-draw-order.md) §9) | identical, 7,478 frames | identical | identical, 7,936 frames, likewise (`ab14`) |
 
 **The frame hash needed repair before it could be read.** Taking over this
 layer removed several million trapped calls a run, the traced game sped up

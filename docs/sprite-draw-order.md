@@ -35,7 +35,7 @@ produced that address as a call target. Not chased. `0x593060` (`sub esp,
 
 Read to its `ret` at `0x59352A`; the callees named below were **not** read when this was written, so
 what they are for is inference from how they are called, and is marked so.
-Sections 8 and 10 say what they turned out to be.
+Sections 8, 9 and 11 say what they turned out to be.
 
 **Pass 1, `0x593063`..`0x59312A` - order the list.** A bubble sort of
 `Sprite_DrawList[0 .. Sprite_DrawListCount)`, pointers to sprite objects (the
@@ -377,7 +377,59 @@ controls, each refused: the room test strict the other way (11), the size not
 masked to a byte (4,067), the draw mode not committed (4,633), the tail not
 moved to the list's end (3,924), the first list for the second (6,000).
 
-## 9. Live checks, 2026-09-20
+## 9. The pass itself - taken over
+
+`Sprite_DrawPass`, `src/game/draw_pass.cpp`, 2026-09-20; 8,846 calls in
+`all_b`. Section 2 is still the account of what it does. Reading it again to
+write it added four things:
+
+- **Every index is a byte and the record count is a signed byte** (`movsx`
+  at `0x5933AB`, `0x59340A`): the pass stops making sense at 128 records.
+  The draw list holds 40, so only `Sprite_AddDrawRecords` could get it there.
+- **A tie between a sprite and a table item goes to the table** (`ja` at
+  `0x59327F`), and a gather stops at a sprite whose key is not below the next
+  table item's - *unless the table is used up*, tested as index `==` count,
+  not `>=` (`0x593371`).
+- After emitting one table item the code falls straight into the sprite
+  gather; it does not go round the merge loop first.
+- **Two inputs it never returns from**, by reading, not by test: a slot byte
+  `Draw_OtSlot` other than 4 or 6 while a layer has a sprite, and a draw table
+  out of order. Either leaves the merge loop with a sprite it will not gather
+  and a table item it will not emit, and nothing moves. `DrawTable_Sort` and
+  the slot's only immediate stores (4, 6) are what keep the game out of both.
+
+Three callees are not ours - `DrawLayer_Open` `0x56FD20`,
+`Sprite_AddDrawRecords` `0x57BAE0`, `Sprite_Draw` `0x5935B0`, all three named
+from how the pass calls them (`hypothesis` in `symbols.toml`) - so the start-up
+fuzz stands **recording stand-ins** in for them, for the original's copy (its
+three calls re-aimed) and for ours (three function pointers) alike. The
+stand-in for `Sprite_AddDrawRecords` adds none, one or two records by a hash,
+some to draw and some to link, and returns the count in `al` under noise. The
+copy's other eight calls go to copies of functions that are ours.
+`BOF3X_SHADOW=draw_pass`: 3,000 rounds - 22,930 sprites with 9,424 equal-key
+neighbours after the sort, 13,494 table items, 169,705 stand-in calls; the
+list, the records, the ordering-table tails, the packet pool's head, the
+layers, `DrawItems` and the stand-ins' log compared - **0 mismatches**.
+
+Negative controls, each refused: the list sort not stable on its third key
+(33), its second key summed without the 32-bit wrap (124), slot 4 gathering as
+slot 6 does (903), the records sorted ascending (2,100), or on an unsigned
+word (1,684), a linked record not moving the tail (1,720), `Sprite_Current`
+not set before a draw (1,933), the third list appended under another flag bit
+(183), a table item linked under another (161), `0x38` layers (2,759), no
+draw mode committed first (2,218). **Three did not get as far as a verdict -
+the broken build hung or faulted at start-up**: a tie going to the sprite, the
+gather not ignoring a used-up table, and all of `eax` counted from
+`Sprite_AddDrawRecords`. The first two are the never-returns case above,
+reached from the other side; they are evidence for the reading, not a
+comparison passed.
+
+A trap in the harness, not the function: the layers' block restored 2 KB too
+far runs over `Sprite_DrawListCount`, and the *original's copy* then walks a
+list as long as a random byte says, of garbage pointers, and faults during the DLL's load - which looks exactly
+like a hang. Process CPU time told them apart.
+
+## 10. Live checks, 2026-09-20
 
 All hands-off runs from a fresh launch, everything ours, against the
 all-original references of 2026-09-19.
@@ -390,6 +442,7 @@ all-original references of 2026-09-19.
 | 41 (plus section 6) | identical, 7,478 frames | identical | identical, 4,604 frames (`ab7_orig` / `ab7_ours`) |
 | 44 (plus section 7) | identical, 7,478 frames | identical | identical, 4,609 frames (`ab8_orig` / `ab8_ours`) |
 | 108 (the library layer's x87 and transform functions, then section 8) | identical, 7,478 frames | identical | identical, 7,937 frames, with original against original identical beside it (`ab13_orig` / `ab13_origb` / `ab13_ours`) |
+| 109 (plus section 9, the pass itself) | identical, 7,478 frames | identical | identical, 7,936 frames, with original against original identical beside it (`ab14`) |
 
 The frame hash needs its all-original side re-recorded whenever a *logic*
 function changes hands, because owned functions are left unarmed in both
@@ -403,7 +456,7 @@ and no input, so `Field_CopyInput`'s exchange rests on the fuzz alone, as does
 any `Sprite_FindNearby` hit in the extra four. Whether the others' edge cases
 occur in the attract run was not measured.
 
-## 10. Not done
+## 11. Not done
 
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it
@@ -418,9 +471,8 @@ occur in the attract run was not measured.
   search is dead code in the source too, or the port lost a `return`. **The PSX side can
   say which**; not looked up. It should not be taken over before that is
   known - not because it is hard, but because it may be a defect to record.
-- `0x593060` itself. Of its callees, `Gpu_LinkPrim`, `Gpu_SetDrawMode`,
-  `Gfx_CommitPrim` and `DrawLayer_Close` are ours now. What is left, read
-  far enough on 2026-09-20 to say what each is:
+- The pass's three callees that are not ours. It was taken over before them
+  (section 9): it only calls them.
   - **`0x56FD20(layer)`**, 403,315 calls: appends the layer's *first* list to
     slot 6 (`0x929EB8` directly), then walks a window of the word table
     `0x904F20` - 28 columns, wrapping, rows offset by the words at `0x929F20`
@@ -437,6 +489,6 @@ occur in the attract run was not measured.
     bytes with two indirect calls: the sprite draw itself. Also calls
     `0x5A6790`, the 8-byte record append.
   The pass is still checkable as memory - the linked list it builds - which
-  is [`IDEAS.md`](IDEAS.md) I14 level 1; with `Gfx_CommitPrim` ours, every
-  link it makes now goes through our code.
+  is [`IDEAS.md`](IDEAS.md) I14 level 1, and would be the first check of it
+  that is not the fuzz's stand-ins or an identical frame hash.
 - Whether the PSX side has a name for any of this. Not looked up.
