@@ -56,6 +56,11 @@ add_library(bof3x SHARED
   src/game/file_io.cpp
   src/game/save_io.cpp
   src/game/dat_load.cpp
+  src/game/text_advance.cpp
+  src/game/text_draw.cpp
+  src/game/text_immediate.cpp
+  src/game/msg_pool.cpp
+  src/game/name_tables.cpp
   src/game/gfx_frame.cpp
   src/game/gfx_image.cpp
   src/game/gfx_texcache.cpp

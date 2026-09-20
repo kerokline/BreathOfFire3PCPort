@@ -108,6 +108,9 @@ evidence = "disasm 2026-09-18: (u16 id) ptr = Msg_SystemPtr(id); 0x7DEE4C = 0x7D
 pc = 0x497740
 psx = 0x801503F8
 name = "Msg_SystemPtr"
+ret = "const unsigned char *"
+params = "unsigned id"
+impl = "src/game/msg_pool.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-18: (u16 id) block = 0x807580 + u32[0x807580 + (id >> 14)*4], returns block + u16[block + 2*(id & 0x3FFF)]. PSX computes the same selector as (id >> 12) & 0xC off 0x80014000 — identical algorithm, identical masks. 128 callers."
 note = "bof3ext calls this GetText and splits the id the same way (fileNum = index >> 14, index &= 0x3FFF); independent rediscovery, cited not copied (CLAUDE.md rule 5)."
@@ -151,6 +154,140 @@ note = "Resolving this needs the PSX Window_DrawFrame 0x8015A58C counterpart loc
 # ---------------------------------------------------------------------------
 # Data tables
 # ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x516B30
+name = "Text_DrawAt"
+ret = "const unsigned char *"
+params = "int x, int y, int color, int count, const unsigned char *text"
+status = "evidence"
+evidence = "disasm 2026-09-20, 12 instructions: stores word x to 0x8034F4 (pen x) and 0x7E1BE4 (line start x), word y + 1 to 0x8034F2, then calls the string draw 0x516B70 as (color, count, text) and returns what it returns - the pointer one past the last byte consumed. 341 relative callers (E8/E9 scan of .text): the general text draw, not the dialogue box's own. 0x516B70, read the same day: draws up to `count` characters or to a NUL; a byte <= 0x20 goes through the byte table 0x516D24 into the 7-entry jump table 0x516D08 (0x01 newline: y += 12, x = line start; 0x05 nn set colour; 0x06 restore colour; 0x07 nn draw the 32-byte record 0x904CE0 + nn * 32 by recursion; 0x20 advance without drawing; the rest fall into the glyph path); a byte with bit 7 set is a two-byte code, glyph = ((b0 & 0x7F) << 8) + b1; any other byte is glyph = b - 0x26. A glyph above 0xA00 executes `in al, dx` (a privileged instruction - a trap). The glyph index is written to word +0x16 of the primitive at [0x7E0670] - the tpage field of a POLY_FT4 - and the CLUT id 0x7800 | colour to +0x0E by 0x516D50, which builds a 12 x 12 quad. Then pen x += 12, flat."
+note = "MsgBox_Step 0x497840 calls it at 0x497A22 with count 1 and keeps its own pen: reloads word 0x7DEE5C after the call and adds 12 (0x497A44), skipping a second text byte when the first has bit 7 set (0x497A2A). DIV-0006 re-aims that one call site."
+
+[[func]]
+pc = 0x516B70
+name = "Text_DrawString"
+ret = "const unsigned char *"
+params = "unsigned color, unsigned count, const unsigned char *text"
+impl = "src/game/text_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x516B70..0x516D06, read to the last instruction (the control flow is in Text_DrawAt's entry). Two relative callers: Text_DrawAt 0x516B5C and itself, 0x516C61, for control 0x07. color: low nibble = CLUT (0x7800 | n), high nibble * 2 indexes the byte pairs at 0x65F588 into (u, v), read once at entry and NOT again when 0x05 changes the colour. count is a byte. Jump table 0x516D08 (7 dwords) and byte table 0x516D24 (33 bytes) follow the body."
+
+[[func]]
+pc = 0x5961C0
+name = "Text_DrawImmediate"
+ret = "const unsigned char *"
+params = "int x, int y, const unsigned char *text"
+impl = "src/game/text_immediate.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x5961C0..0x5962F8 and its ten-entry jump table 0x5962FC, read to the last instruction; the control codes are in the comment on ours. One Text_DrawAt call a character (0x5962C0, count 1), the pen in ebp, add ebp, 0xC at 0x5962E5, newline y += 0xD - the PSX immediate draw's constant (sibling TEXT_ENGINE.md). Two callers. Found 2026-09-20 from the owner's screenshots: the yes / no choice list and the camp menu were still spaced at 12 px after Text_DrawString and the dialogue stepper advanced by the table."
+
+[[data]]
+pc = 0x802DC0
+name = "Text_CurrentName"
+status = "evidence"
+evidence = "disasm 2026-09-20: control 0x03 of Text_DrawImmediate substitutes the string here, up to 9 characters (mov esi, 0x802DBF / inc esi at 0x596232). The PSX 0x03 row is 'insert current-character name'."
+
+[[func]]
+pc = 0x516D50
+name = "Text_EmitGlyph"
+ret = "void"
+params = "int x, int y, int w, int h, int u, int v, int clut"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x516D50..0x516E6A: fills the POLY_FT4-shaped primitive at Gfx_PacketNext - shade 0x80 x3, clut word at +0x0E, corners from x, y + v, w and h, texture coordinates from u, v, 12 - and hands it on through 0x5A7760, 0x5A7780 (prim, 1) and 0x461E50 (1, 0x28). Sole caller Text_DrawString 0x516CD6, as (pen x, pen y, 12, 12 - v, u, v, clut), having stored the glyph index to word +0x16 of the same primitive first."
+note = "Not ours. Read for its arguments only; its three callees are unread."
+
+[[data]]
+pc = 0x656B28
+psx = 0x801C995C
+name = "NameTable_Consumables"
+status = "evidence"
+evidence = "measured 2026-09-20: 92 records of 22 bytes - name[16], u16 flags, u16 ref, u16 price - found by the JP disc's price sequence and then compared whole: the six numeric bytes equal the JP record's (sibling names/items.toml `raw`) in 91 of 91 records past the empty first. The JP record is name[8] + the same six bytes (stride 14), the US one name[12] (18): sibling TEXT_TABLES.md. Names are glyph codes, two bytes a character, NUL padded. In .data, which is writable."
+note = "The five item tables chain: consumables + 92 * 22 = key items; + 16 * 20 = weapons; + 83 * 28 + 4 = armour; + 68 * 26 = accessories. Who reads them, and whether a name is drawn to a NUL or to a count, is unread."
+
+[[data]]
+pc = 0x657310
+psx = 0x801C9E64
+name = "NameTable_KeyItems"
+status = "evidence"
+evidence = "measured 2026-09-20: 16 records of 20 bytes - name[16], u16 ref, u16; numeric bytes equal to JP in 15 of 15."
+
+[[data]]
+pc = 0x657450
+psx = 0x801C9F24
+name = "NameTable_Weapons"
+status = "evidence"
+evidence = "measured 2026-09-20: 83 records of 28 bytes - name[16] and the JP record's twelve numeric bytes (power, ref, price among them); equal to JP in 82 of 82."
+
+[[data]]
+pc = 0x657D68
+psx = 0x801CA5A0
+name = "NameTable_Armour"
+status = "evidence"
+evidence = "measured 2026-09-20: 68 records of 26 bytes - name[16] and ten numeric bytes; equal to JP in 67 of 67. Armour, shields and helmets."
+
+[[data]]
+pc = 0x658450
+psx = 0x801CAA68
+name = "NameTable_Accessories"
+status = "evidence"
+evidence = "measured 2026-09-20: 52 records of 24 bytes - name[16] and eight numeric bytes; equal to JP in 51 of 51."
+
+[[data]]
+pc = 0x65C4D8
+psx = 0x801CB230
+name = "NameTable_Abilities"
+status = "evidence"
+evidence = "measured 2026-09-20: 227 records of 24 bytes - eight parameter bytes, then name[16]; the parameter bytes equal the JP disc's (sibling names/abilities.toml `raw`) in 226 of 226. JP stride 16, US 20."
+
+[[data]]
+pc = 0x8034F4
+name = "Text_PenX"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-20: Text_DrawAt stores its x here; Text_DrawString passes it to Text_EmitGlyph and adds 12 after each glyph and each 0x20 (0x516CDE), and reloads it from Text_LineX on 0x01."
+
+[[data]]
+pc = 0x8034F2
+name = "Text_PenY"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-20: Text_DrawAt stores its y + 1 here; Text_DrawString adds 12 on 0x01 (0x516C39)."
+
+[[data]]
+pc = 0x7E1BE4
+name = "Text_LineX"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-20: Text_DrawAt stores its x here as well as to Text_PenX; Text_DrawString copies it back to Text_PenX on 0x01 (0x516C32)."
+
+[[data]]
+pc = 0x65F588
+name = "Text_ClipPairs"
+status = "evidence"
+evidence = "read from .data 2026-09-20: 16 byte pairs (u, v), indexed by the high nibble of Text_DrawString's colour byte: 0..6 = (0, 0) (0, 2) .. (0, 12), 7 = (0, 0), 8..14 = (0, 0) (2, 2) .. (12, 12), 15 = (0, 0). v shortens the quad (h = 12 - v) and offsets it: a glyph shown in part."
+
+[[data]]
+pc = 0x904CE0
+name = "Text_Records"
+status = "evidence"
+evidence = "disasm 2026-09-20: control 0x07 nn in Text_DrawString draws the string at 0x904CE0 + nn * 32 by recursion, with count 0x20. The PSX 0x07 row of TEXT_ENGINE.md has the same 32-byte stride."
+
+[[data]]
+pc = 0x7DEE60
+psx = 0x801490BC
+name = "MsgBox_LineX"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-20: MsgBox_Step compares the pen with it before a first byte 0x2A or 0x3C (cmp bp, [0x7DEE60] at 0x4979AB) and on equality subtracts 12 from the pen - hanging punctuation at the start of a line. MsgBox_FrameTask's entry has it as the box origin x. The US stepper does the same for 0x90, by 8 (SLUS-00422 0x80150680..0x801506A4)."
+
+[[data]]
+pc = 0x7DEE5C
+psx = 0x801490B8
+name = "MsgBox_PenX"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-20: MsgBox_Step 0x497840 passes it (plus the signed byte 0x7DEE5A) as x to Text_DrawAt at 0x497A22, and after the call reloads it, adds 12 and stores it back (0x497A34..0x497A4C); at line start a first byte 0x2A or 0x3C subtracts 12 from it (0x4979A0..0x4979B9, compared against the line start word 0x7DEE60). Inside the MsgBoxState block."
 
 [[data]]
 pc = 0x66AE10

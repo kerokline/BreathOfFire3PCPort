@@ -25,13 +25,21 @@
 #include "game/psx_gte_transform.h"
 #include "game/draw_emit.h"
 #include "game/draw_pass.h"
+#include "game/msg_pool.h"
+#include "game/text_advance.h"
+#include "game/text_draw.h"
+#include "game/text_immediate.h"
 #include "hook/detour.h"
 
 namespace bof3 {
 
 void InjectAll() {
     FileIo_Inject();
+    MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
     DatLoad_Inject();
+    TextAdvance_Inject();
+    TextDraw_Inject();
+    TextImmediate_Inject();
     SaveIo_Inject();
     GfxFrame_Inject();
     GfxImage_Inject();
