@@ -35,9 +35,13 @@ into a second copy.
 The single next action, concrete enough to start without asking anyone.
 
 1. **Keep working the queue** - regenerate it first (`python
-   tools/calltrace.py queue analysis/calltrace/all_a/bof3x.callcounts.tsv` -
-   the argument is the *counts* file; drop the `< 0x5A6000` habit, the library
-   layer above it is where the calls are). Known and not taken over:
+   tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv` -
+   the argument is the *counts* file. `all_b`, 2026-09-20, is a full-list run of
+   12,813 frames, a whole attract cycle, where `all_a` stopped at 3,072; what
+   is ours is unarmed in it, which a queue of what is *not* ours does not
+   mind. Every call count quoted in the docs so far is `all_a`'s. And drop the
+   `< 0x5A6000` habit: the library layer above it is where the calls are).
+   Known and not taken over:
    - **The library layer's x87 functions** - `0x5A8380` (2.5 M calls, the
      perspective transform by its place), `0x5A8340`, `0x5A9110`, `0x5A9130`,
      `0x5A9290`. They need the x87 control word the game runs under, a fuzz
@@ -77,9 +81,10 @@ The single next action, concrete enough to start without asking anyone.
    ([`IDEAS.md`](IDEAS.md) I14).
 4. **Owner, in game: [`USER_CHECKS.md`](USER_CHECKS.md).** The converted saves
    are done bar one item. Still owed: a save and load through the fully-ours
-   file layer, DIV-0003's failing case, DIV-0002's clean A/B. Item 5 there
-   opens with a question that needs no playing: what reverses the controls on
-   the field (`Field_CopyInput`). New and optional:
+   file layer, DIV-0003's failing case, DIV-0002's clean A/B; and item 5, the
+   next time a party member is confused on the field: do the controls reverse
+   the same with ours as with `BOF3X_ORIGINAL=Field_CopyInput`? (The owner has
+   confirmed the status exists and reverses inputs.) New and optional:
    play with `BOF3X_SHADOW=Gfx_InvalidateTextures` set and look for `MISMATCH`
    in `build/bof3x.log`; and anywhere the game scrolls or copies VRAM, or
    shows a compressed picture, is the only live test there is of
@@ -162,6 +167,14 @@ _Commands a fresh session needs, verified on the date above._
   background command can run the oracle and then the hash pair, about 16
   minutes, with `mem_dump.py` started beside it); say
   in the doc what none of that reached; one commit per file of functions.
+- **Rebuilding the frame hash's exclusion list** (when an original-vs-original
+  pair differs): a full-list all-original run - `BOF3X_CALLTRACE=<abs
+  path>/entries.txt BOF3X_CALLTRACE_MODE=all`, `attract_run.py --original "*"
+  --minutes 9` - its `callcounts` concatenated after `all_a`'s, then `python
+  tools/calltrace.py wallclock <merged> --static 59E000-5A6000,5A9600-5AB000
+  --also 5BC8E0,5BDA20 --check <old list>`. To see which calls a differing
+  frame holds, `BOF3X_CALLTRACE_DETAIL=lo-hi` on both sides and diff
+  `build/bof3x.calldetail.tsv` per frame ([`call-trace.md`](call-trace.md) §6).
 - **After a crash:** `CRASH` lines in `build/bof3x.log`, then
   `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
 - **Call trace:** [`call-trace.md`](call-trace.md) §8.
@@ -258,6 +271,9 @@ Local only, gitignored, worth keeping:
 - `analysis/memdump/clutref_a_*` and `clutref_b_*` - the all-original reference
   pair for `mem_dump.py --compare`, all three regions (`drain_a` / `drain_b`
   are the same without `clut`).
+- `analysis/calltrace/all_b/` - the full-list all-original run of a whole
+  attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
+  concatenated, which the exclusion list was rebuilt from.
 - `analysis/calltrace/ab3_orig/` - the all-original frame-hash reference,
   recorded with twenty-four owned, **stale since 2026-09-20**; the current one
   is `analysis/calltrace/ab11_orig/` (and `ab11_origb`, its noise-floor twin),
