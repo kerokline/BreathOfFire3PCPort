@@ -172,6 +172,26 @@ presumably per CLUT. **This is the seam [`IDEAS.md`](IDEAS.md) I8 wants:** a
 replacement presentation layer can keep the VRAM shadow and the `LoadImage`
 interface and replace only what sits between the cache and the screen.
 
+**`Gfx_LoadImage` is ours, faithful, and checked in bytes (2026-09-19).**
+`src/game/gfx_image.cpp` keeps what the original does at its edges: only the
+upper bounds are checked, a failing rect is dropped with no invalidation, `h`
+is re-read from the rect every row, and `h <= 0` still invalidates. The
+invalidation itself, now named `Gfx_InvalidateTextures`, is still Capcom's and
+does more than the paragraph above says — a second pass over the previous
+page, not yet read (`symbols.toml`). Verification, `tools/mem_dump.py` at the
+default point with the upload queues empty in every run: the all-original pair
+`drain_a` / `drain_b` identical in both regions (noise floor zero); `img_ours`,
+thirteen functions ours, identical to `drain_a` in both; `img_neg`, the same
+build with the destination moved one cell, arena identical and **vram
+different in 357,615 bytes**, exit 1 — so the check does see this function.
+The attract oracle passed on the same `img_ours` run, 7,478 frames against
+`orig_a.tsv`. What none of this covers: anything the attract sequence does not
+upload, and the invalidation's effect on the texture cache.
+
+`Font_SetGlyphData` went over in the same change. It runs once per launch —
+the one kind-3 chunk — so its store is exercised and its free-the-previous
+branch never is, in this run or by any shipped data.
+
 **Kind 3 is the Chinese font, and there is exactly one.** `Font_SetGlyphData`
 `0x5A6800` stores the copy in one global, `0x7CC35C`, freeing any previous one.
 Its only reader, `0x5A2CA0`, indexes it as `base + glyph*0x120` beside `0x18`

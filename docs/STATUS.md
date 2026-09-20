@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Eleven functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
+**Thirteen functions of ~2,952 are ours**: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -28,7 +28,11 @@ first **crash** fixed. Queued image uploads pile up over unrendered frames
 (window unfocused, title bar held) until one flush overruns its scratch buffer
 into the draw structures; reproduced on all-original code, fixed by draining on
 unrendered frames, confirmed in game the same day (DIV-0004,
-[`known-defects.md`](known-defects.md) D4).
+[`known-defects.md`](known-defects.md) D4). The newest two are faithful:
+`Gfx_LoadImage` `0x59EA70`, which writes the PSX-VRAM shadow, and
+`Font_SetGlyphData` `0x5A6800` — the first takeover checked in *bytes*, the
+1 MiB shadow identical to an all-original run, with a deliberately wrong build
+failing the same check ([`asset-loading-path.md`](asset-loading-path.md) §2).
 
 What is established:
 
@@ -74,10 +78,10 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 49 functions, 8 global blocks and 26 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 33 functions carry signatures and
-  are callable from our code, 11 of them ours (counted 2026-09-19 from the
-  file, not from memory).
+- 50 functions, 8 global blocks and 28 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 34 functions carry signatures and
+  are callable from our code, 13 of them ours (counted 2026-09-19 by
+  `gen_symbols.py`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
   reaches (540 of 2,936 in the attract sequence), call counts and edges, a

@@ -14,10 +14,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, eleven
+Phase 0 is done: a launcher injects our DLL into the player's `BOF3.exe`, thirteen
 functions are ours (`LoadDatFile`; the whole eight-function file layer, with DIV-0003 in
 `File_OpenWrite`; `Save_WriteFile` with DIV-0002; `Gfx_BeginFrame` with DIV-0004, a
-crash fix), the A/B switch works, a call tracer and a crash reporter run in-process, and a
+crash fix; `Gfx_LoadImage` and `Font_SetGlyphData`, both faithful), the A/B switch works, a call tracer and a crash reporter run in-process, and a
 deterministic attract-mode regression check passes original-vs-ours. See
 [`STATUS.md`](STATUS.md) — do not expand this paragraph into a second copy.
 
@@ -25,22 +25,23 @@ deterministic attract-mode regression check passes original-vs-ours. See
 
 The single next action, concrete enough to start without asking anyone.
 
-1. **Owner, in game: [`USER_CHECKS.md`](USER_CHECKS.md).** Four checks only a
-   player can run, most valuable first: load the two converted PlayStation
-   saves (`bof3/BISLPS02.DAT` JP, `03` US —
-   [`save-interchange.md`](save-interchange.md)); a save and load through the
-   now fully-ours file layer; DIV-0003's failing case; DIV-0002's clean A/B.
-   Whatever the converted saves do on load decides the next step of I1: if
-   they load clean, read the PC block builder `0x5806F0` and the options bytes
-   at block `+0x78`; if not, the symptom says which assumption was wrong.
-2. **Take over `Gfx_LoadImage` `0x59EA70` and `Font_SetGlyphData` `0x5A6800`.**
-   Both are small and fully read ([`asset-loading-path.md`](asset-loading-path.md)
-   §2), and `tools/mem_dump.py` now checks the first in bytes: it dumps the DAT
-   arena and the 1 MiB PSX-VRAM shadow at a fixed point of the attract sequence
-   and compares runs. `LoadDatFile` passed it 2026-09-19, with an
-   original-vs-original noise floor of zero. Next after those: `0x59E700`, the
-   texture-cache invalidation — the first function of the presentation layer
-   proper ([`IDEAS.md`](IDEAS.md) I8).
+1. **Owner, in game: [`USER_CHECKS.md`](USER_CHECKS.md).** The first check is
+   done — both converted PlayStation saves load, play and re-save
+   ([`STATUS.md`](STATUS.md)). That file says which of the rest are still owed:
+   a save and load through the now fully-ours file layer, DIV-0003's failing
+   case, DIV-0002's clean A/B. Since the saves loaded clean, the next step of
+   I1 is reading the PC block builder `0x5806F0` and the options bytes at
+   block `+0x78`.
+2. **Read `Gfx_InvalidateTextures` `0x59E700` to the end, then take it over.**
+   It is the texture-cache invalidation `Gfx_LoadImage` ends with, and the
+   first function of the presentation layer proper ([`IDEAS.md`](IDEAS.md) I8).
+   Its first pass is read; the second pass over the *previous* page
+   (`0x59E7FC`..`0x59E8CE`, entries with byte +1 set, compacted by a memmove) is
+   not, and neither is the 0x18-byte cache entry's layout (`symbols.toml`). It
+   releases COM textures, so neither the VRAM dump nor the logic frame hash
+   sees its effect — deciding what *does* check it is part of the job. Then
+   `Gfx_LoadImage`'s compare-first sibling `0x59EB00` and its callee
+   `0x59EBB0`, which the VRAM dump does cover.
 
 ## Then
 
@@ -70,7 +71,8 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
    D3, fullscreen fallback, is still unreproduced.
 
 [`IDEAS.md`](IDEAS.md) **I1, save interchange**, is under way: format solved,
-`tools/save_convert.py` converts both ways, in-game load pending (item 1).
+`tools/save_convert.py` converts both ways, and both converted saves work in
+game; PC→PSX is still static only.
 
 ## How to run things
 
@@ -146,8 +148,9 @@ keeping. "Nothing" is a valid entry._
 
 Phase 0 merged to `main` as PR #3 (`cee66ad`, 2026-09-19). Branch
 `phase-3/gfx-loadimage` is cut from it for the `Gfx_LoadImage` /
-`Font_SetGlyphData` takeovers; so far it holds only the `mem_dump.py` drain
-wait and its notes — **uncommitted**, no `src/` change yet.
+`Font_SetGlyphData` takeovers: the `mem_dump.py` drain wait, then both
+takeovers in `src/game/gfx_image.cpp`, which passed the byte-level VRAM check,
+its negative control and the attract oracle. Not pushed; no PR yet.
 
 Owed in game, all listed in [`USER_CHECKS.md`](USER_CHECKS.md): the converted
 saves, the file layer's write/seek, DIV-0003's failing case, DIV-0002's A/B.

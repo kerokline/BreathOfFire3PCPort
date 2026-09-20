@@ -613,6 +613,7 @@ pc = 0x59EA70
 name = "Gfx_LoadImage"
 ret = "void"
 params = "const short *rect, const void *pixels"
+impl = "src/game/gfx_image.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: rect is four s16 (x, y, w, h). Does nothing at all if x + w > 0x400 or y + h > 0x200. Otherwise copies h rows of w*2 bytes from pixels into a 16-bit 1024 x 512 buffer at 0x6C9F44, row stride 0x800 bytes, destination (y*1024 + x)*2 - a shadow of PSX VRAM - then calls 0x59E700(rect, 0). The PC counterpart of the PSX LoadImage(RECT*, u_long*). Its neighbour 0x59EB00 is the same with a row-by-row compare first."
 note = "0x59E700(rect, mode) walks the 32 PSX-style texture pages (64 x 256 each, 16 across, 2 down), IntersectRect (USER32, import slot 0x5C4168) against the rect, and for each touched page visits 32 cache entries of 0x18 bytes in a table at 0x6C3F40 (32 pages x 32 = 1024 entries, ending 4 bytes short of the VRAM shadow): mode 0 calls Release (vtable +8) on the two COM pointers at entry +0x10 and +0x14 and zeroes the entry; mode non-zero only turns state 1 into state 2. So textures are built lazily from the VRAM shadow and thrown away when the VRAM under them changes."
@@ -762,10 +763,35 @@ status = "evidence"
 evidence = "disasm 2026-09-19: slot = 0x6BC928 + (bank - 1)*0x384. If the slot already owns sample data (pointer at slot +0x380) it frees it, and for each of its 64 voice entries (8 bytes each from slot +0x180: sample pointer, buffer handle) releases the handle through 0x5A6C90 and clears any of the 23 dwords at 0x6BC8C8..0x6BC924 equal to it. Then: copies the first 0x380 bytes of the payload into the slot, mallocs size - 0x380 and copies the rest there, and for each voice entry whose offset is non-zero rewrites it to data + offset - 0x380 and stores the result of 0x5A69C0(that pointer) beside it. Shipped data uses banks 1..6 only (census of all 742 DAT files 2026-09-19: 210, 244, 63, 74, 70, 240 chunks). bank 0 would index before the table; nothing checks."
 
 [[func]]
+pc = 0x59E700
+name = "Gfx_InvalidateTextures"
+ret = "void"
+params = "const short *rect, int mode"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, two stack arguments ([esp+0x3C] and [esp+0x50] after sub esp 0x38 and four pushes), plain ret; Gfx_LoadImage pushes 0 then rect and cleans 8 bytes (0x59EAE4..0x59EAEC). Reads rect as four s16 and walks 32 pages of 64 x 256 (x step 0x40 to 0x400, y step 0x100 to 0x200), IntersectRect (import slot 0x5C4168) on each; for a touched page visits 32 entries of 0x18 bytes at 0x6C3F40: mode 0 releases the COM pointers at entry +0x14 and +0x10 (vtable +8) and zeroes the entry, stopping at the first entry whose state byte is 0; mode non-zero turns state 1 into 2. It overwrites its own first-argument slot with the page counter, which cdecl allows."
+note = "Not fully read: when the page index is not a multiple of 16 a second pass (0x59E7FC..0x59E8CE) visits the PREVIOUS page's 32 entries, only those with byte +1 set, and in mode 0 closes the gap with a memmove of the entries above. Presumably textures wider than one page; unconfirmed. Still Capcom's - the first function of the presentation layer proper (docs/IDEAS.md I8)."
+
+[[data]]
+pc = 0x6C9F44
+name = "Gfx_VramShadow"
+ctype = "unsigned short"
+count = 0x80000
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_LoadImage 0x59EA70 and its sibling 0x59EB00 address it as 0x6C9F44 + ((y << 10) + x) * 2 and step 0x800 bytes per row, after rejecting x + w > 0x400 and y + h > 0x200: 1024 x 512 cells of 16 bits, 1 MiB, the size and shape of PSX VRAM. tools/mem_dump.py dumps it as region vram."
+
+[[data]]
+pc = 0x7CC35C
+name = "Font_GlyphData"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-19: Font_SetGlyphData 0x5A6800 frees it if non-null and stores its argument here; the glyph unpacker's caller 0x5A2CA0 reads it as base + index * 0x120."
+
+[[func]]
 pc = 0x5A6800
 name = "Font_SetGlyphData"
 ret = "void"
 params = "void *owned_glyphs, unsigned size_unused"
+impl = "src/game/gfx_image.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19, 10 instructions: frees the pointer at 0x7CC35C if non-null, then stores its first argument there. The second argument is never read. The pointer's only other reader is 0x5A2CA0, which addresses it as base + index*0x120 with 0x18 / 0x18 constants alongside: 288-byte glyphs, 24 x 24 at 4 bits per pixel. Exactly one kind-3 chunk exists in the shipped data - FIRST.DAT, 705,888 bytes = 2,451 glyphs of 288 (census 2026-09-19)."
 note = "The port's Chinese font, loaded once at boot. 4 bits per pixel confirmed from the unpacker 0x5A9E1E (disasm 2026-09-19): lodsd, then eight nibbles low first, each written through a 16-entry table of 16-bit colours; row counter 0x18, column counter 0x18."

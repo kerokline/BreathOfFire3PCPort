@@ -4,6 +4,7 @@
 #include "game/file_io.h"
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
+#include "game/gfx_image.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -13,6 +14,7 @@ void InjectAll() {
     DatLoad_Inject();
     SaveIo_Inject();
     GfxFrame_Inject();
+    GfxImage_Inject();
     InjectReport();
 }
 
