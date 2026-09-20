@@ -732,6 +732,7 @@ pc = 0x461F00
 name = "Gfx_FlushUploadQueue"
 ret = "void"
 params = "void"
+impl = "src/game/gfx_flush.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: for i in 0..byte[0x9035A0]: x = s16[0x903680 + 2i], y = s16[0x9036A8 + 2i], p = dword[0x92BF20 + 4i]; reads w, h (two s16) and a kind dword from p, builds the rect {x, y, w, h} on the stack and calls 0x461FC0(p + 8, rect) for kind 1, 0x462070 for kind 2, a third path otherwise; then zeroes the count byte. 0x461FC0 unpacks dwords of six 5-bit fields into the buffer at [0x929EDC] and calls Gfx_LoadImage (return address 0x462047, call trace). Sole caller 0x4FCE5F, in WinMain's loop, inside the branch taken only when GetTickCount is still below the frame deadline at 0x6BC628 - the same branch that calls the draw 0x59EE50. Call trace 2026-09-19: 1200 calls in 3072 logic frames, identical to 0x59EE50's count, 1158 in a slower run."
 note = "So an image upload queued by game logic reaches the VRAM shadow on the next RENDERED frame, and which logic frame that is depends on wall-clock time (docs/call-trace.md section 6). Compare the VRAM shadow only when the count byte 0x9035A0 and the flag 0x937F90 are both zero."
@@ -746,10 +747,44 @@ evidence = "disasm 2026-09-19, whole function 0x5894D0..0x58958C: obj = Sprite_C
 note = "Still Capcom's. Name is descriptive, not recovered. The unbounded count++ here is the feed side of docs/known-defects.md D4; the fix, DIV-0004, is on the drain side in Gfx_BeginFrame."
 
 [[func]]
+pc = 0x461FC0
+name = "Gfx_UploadPacked5"
+ret = "void"
+params = "const void *packed, const short *rect"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, packed at [esp+4], rect at [esp+8]. total = w * h * 2 bytes; for ceil(total / 6) dwords of packed, writes six bytes to the scratch at [0x929EDC] (Gfx_UnpackNext), each a 5-bit field: shifts 5, 5, 6, 5, 5 - so bit 15 of the dword is skipped. Then Gfx_LoadImage(rect, scratch) (0x462042) and advances Gfx_UnpackNext by total rounded up to 4. Called only by Gfx_FlushUploadQueue for record kind 1."
+note = "Bytes of 0..31 handed to Gfx_LoadImage as 16-bit cells, two to a cell: whatever draws from these reads them as 8-bit indices, not as colours. Unconfirmed."
+
+[[func]]
+pc = 0x462070
+name = "Gfx_UploadLzss"
+ret = "void"
+params = "const void *packed, const short *rect"
+status = "evidence"
+evidence = "disasm 2026-09-19: cdecl, same arguments as Gfx_UploadPacked5, 0x410 bytes of locals. total = w * h * 2. An LZSS decoder: a 512-byte window on the stack, zeroed, write position starting at 0x1EE; input from packed + 4; flag bytes read low bit first, 1 = literal byte, 0 = two bytes b0, b1 giving a window offset b0 | (b1 & 0xF0) << 4, masked to 0x1FF as it is used, and a length of (b1 & 0x0F) + 3. Output goes to the scratch at Gfx_UnpackNext until total bytes are out - a match may overrun total. Then Gfx_LoadImage(rect, scratch) (0x462189) and Gfx_UnpackNext advances by total rounded up to 4. Called only by Gfx_FlushUploadQueue for record kind 2."
+note = "The window is only partly initialised: rep stosd of 0x7B dwords plus one stosw zeroes 0x1EE bytes (0x462093..0x4620BE), and the last 18 - one maximum match - keep whatever the stack held. A valid stream never reads them before writing them; random data does, and then the original disagrees with itself from call to call (differential fuzz 2026-09-19, 13 of 1,500 rounds, every one a kind-2 record). A reimplementation has to pick a value for those bytes, which the original does not define. 0x410 bytes of stack on a path reached from WinMain's loop and, under DIV-0004, from Gfx_BeginFrame - both on the main stack, not a 16 KB task stack."
+
+[[data]]
+pc = 0x937F90
+name = "Gfx_ClutStripDirty"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-19: Gfx_FlushDirtyStrip 0x454960 tests it, uploads the strip if it is set, and clears it after the upload returns (0x45499A)."
+
+[[data]]
+pc = 0x80F580
+name = "Gfx_ClutStrip"
+ctype = "unsigned short"
+count = 0x2000
+status = "evidence"
+evidence = "disasm 2026-09-19: the pixels Gfx_FlushDirtyStrip hands to Gfx_LoadImageIfChanged with rect {0, 0x1E0, 0x100, 0x20}: 256 x 32 cells for VRAM rows 480..511. Inside the DAT arena, at MessagePools + 0xC000. That these rows are the game's CLUTs: Gfx_ClutPixels maps a CLUT id to a row, and in a live dump (tools/mem_dump.py region clut, 2026-09-19) the only rows with converted buffers were 480..498 and 506."
+
+[[func]]
 pc = 0x454960
 name = "Gfx_FlushDirtyStrip"
 ret = "void"
 params = "void"
+impl = "src/game/gfx_flush.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: if byte[0x937F90] is set, calls 0x59EB00 (the compare-first sibling of Gfx_LoadImage) with rect {0, 0x1E0, 0x100, 0x20} and pixels 0x80F580, then clears the byte. Sole caller 0x4FCE5A, the call before Gfx_FlushUploadQueue in the same rendered-frames-only branch of WinMain's loop; same call counts (1200 / 1158)."
 note = "0x80F580 is inside the DAT arena (MessagePools + 0xC000). What the 256 x 32 strip at y = 480 holds is unread."

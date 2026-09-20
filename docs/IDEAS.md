@@ -431,3 +431,34 @@ never committed (CLAUDE.md rule 1).
 **Found along the way:** WER already leaves full dumps in
 `%LOCALAPPDATA%\CrashDumps` on this machine, and the Application event log
 has the fault offset — enough to diagnose D4 without any tool of ours.
+
+## I12 — Let the game run while its window is not in front
+
+**Ask (2026-09-19):** owner, after an evening of attract-oracle and memory-dump
+runs that each took the PC away for two to five minutes: "It would be nice if
+the game ran without requiring being in focus … just to be able to do these
+comparisons without blocking me from the pc." **Kind:** tooling first, a
+player-facing option second. **Feasibility:** looks HIGH for windowed mode —
+the mechanism is already read — but untried.
+
+**What is known** ([`windowed-mode.md`](windowed-mode.md), "Focus loss"):
+WinMain's loop does nothing at all while the app-active byte `0x6BC63B` is 0;
+`WM_ACTIVATEAPP` clears it and pauses sound (`0x587C30`), sets it and resumes
+(`0x587B90`). On return the missed time is replayed unrendered, because
+nothing clamps the frame deadline's debt. `tools/attract_run.py` works around
+all of it by holding the foreground for the whole run, which is why a run
+eats the keyboard ([`HANDOFF.md`](HANDOFF.md), traps).
+
+**What it would take:** a switch (an environment variable for tooling, later
+perhaps a setting) under which deactivation does not clear the byte. Open
+questions, each a reason this is a session and not a one-liner: whether
+DirectInput's cooperative level lets the game read anything, or needs to,
+while in the background — for an attract run it must read *nothing*, which is
+the point; whether DirectDraw presents to an unfocused or covered window in
+windowed mode, and what exclusive fullscreen does (probably: out of scope);
+whether sound should keep playing; and whether `attract_run.py`, `mem_dump.py`
+and the call tracer then agree with a focused run — the logic should, being
+deterministic from launch, and the existing oracle is the test. It changes
+behaviour, so it is a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built, and
+it sits next to the unclamped-debt fix that file's "Focus loss" section
+already calls obviously wanted.

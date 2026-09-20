@@ -7,6 +7,7 @@
 #include "game/gfx_image.h"
 #include "game/gfx_texcache.h"
 #include "game/gfx_clut.h"
+#include "game/gfx_flush.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -19,6 +20,7 @@ void InjectAll() {
     GfxImage_Inject();
     GfxTexCache_Inject();
     GfxClut_Inject();
+    GfxFlush_Inject();
     InjectReport();
 }
 
