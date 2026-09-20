@@ -38,7 +38,9 @@ The single next action, concrete enough to start without asking anyone.
    `0x5A2BC0` (128 entries of 0x14 bytes at `0x7C9F50`, keyed by glyph and CLUT,
    same generation trick), and the 3.7 KB set-up `0x5A5160`. **Decide first how
    such a function gets checked** - a clone can run it, but its product is a
-   surface, not memory; reading a locked surface back is the obvious candidate.
+   surface, not memory; reading a locked surface back is the obvious candidate. [`IDEAS.md`](IDEAS.md) I14 lays out
+   three levels of image check; its level 1, a display-list hash, is small,
+   needs no Direct3D, and is also what the text swap wants.
    That decision is the real next piece of work on this path. The cheaper
    alternative is to leave the path here and turn to logic: regenerate the takeover queue (`python tools/calltrace.py queue`,
    [`call-trace.md`](call-trace.md) §9 - it predates tonight's thirteen) and

@@ -521,3 +521,58 @@ between-frames point, copy `.data`/`.bss` and the heap blocks aside, run 300
 frames recording the frame hash, copy everything back, run 300 again. Equal
 hashes says the state is complete for logic; the first difference says what
 was missed.
+
+## I14 — Compare what is drawn: display-list hash, texture hash, back-buffer hash
+
+**Ask (2026-09-19):** owner, when the image path's takeovers reached functions
+whose product is a Direct3D surface: "Could we hash screenshots, or compare
+them some other way? That would allow us to compare specific frames (post
+certain calls, or just at random) for any delta." **Kind:** tooling - an
+oracle for rendering, and the regression check the text swap wants.
+**Feasibility:** level 1 HIGH, levels 2-3 untried.
+
+Three levels, cheapest and most deterministic first:
+
+1. **The display list.** Each logic frame, game logic builds a PSX-style
+   ordering table and packet pool (`Gfx_OtHeads`, `Gfx_PacketPools`,
+   `Gfx_BeginFrame`). It is plain memory built by deterministic logic: hash it
+   in-process at the frame boundary, next to - or inside - the call tracer's
+   frame hash ([`call-trace.md`](call-trace.md) §6). It catches any change in
+   *what* is drawn - which glyph, where, from which texture page and CLUT -
+   and is indifferent to whether that frame was rendered, so the wall-clock
+   problem does not reach it. OpenRCT2's lesson
+   ([`prior-art/openrct2.md`](prior-art/openrct2.md) §2.3): compare the paint
+   calls, not the pixels - a structured difference says what broke. It says
+   nothing about the renderer itself. Needs the packet formats read far enough
+   to walk a list (the draw `0x59EE50` is the reader).
+2. **Textures.** After a cache entry is built or refreshed (`0x5A0080`,
+   `0x5A0510`), lock the surface and hash its pixels. This is the check that
+   lets those builders be taken over. Deterministic given the VRAM shadow, the
+   CLUT row and the key - for one display pixel format.
+3. **The final frame.** Hash the back buffer in-process, after the draw
+   returns and before the flip `0x5A66B0` - not a screenshot from outside,
+   which adds capture timing and the window manager. Rendering happens only on
+   frames the wall clock allows ([`call-trace.md`](call-trace.md) §6), so two
+   runs render different sets of frames: **key each hash by logic frame and
+   compare the frames both runs rendered.** Whether DirectDraw / Direct3D
+   output is bit-exact from run to run on one machine is unknown - an
+   original-vs-original pair is the noise floor, as for every other check
+   here. On a mismatch, write both frames and a difference image; the point of
+   an image check is that a person can look. Perceptual hashes are the wrong
+   tool: they exist to ignore small differences, and a glyph one pixel off is
+   the difference being looked for.
+
+"After certain calls, or at random" works at all three, the hook being
+in-process; random frames have to be chosen by logic frame from a fixed seed,
+so that both runs choose the same ones.
+
+**What this grows into:** a VRAM-shadow snapshot plus one frame's display list
+is this game's equivalent of an emulator's GPU dump - replayable through the
+draw path alone, original and ours on the same input, no game logic, no focus,
+no minutes of attract sequence. That is the test harness [I8](#i8--replace-the-directdraw--idirect3d3-presentation-layer)
+needs, and a near relation of I13.
+
+How other projects do it, beyond OpenRCT2, is from general knowledge and not
+surveyed for [`prior-art/`](prior-art/): emulator CI that replays recorded GPU
+command streams and hashes the frames (Dolphin's FifoCI, PCSX2's GS dumps),
+and exact-hash sets of accepted images triaged by people (Skia Gold).
