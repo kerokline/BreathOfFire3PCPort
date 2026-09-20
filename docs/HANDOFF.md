@@ -16,16 +16,16 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 Phase 0 is done and stage 1 of the owner's order of work
 ([`STATUS.md`](STATUS.md)) is under way: a launcher injects our DLL into the
-player's `BOF3.exe` and **forty-one functions are ours** - `LoadDatFile`, the
+player's `BOF3.exe` and **forty-four functions are ours** - `LoadDatFile`, the
 eight-function file layer (DIV-0003), `Save_WriteFile` (DIV-0002),
 `Gfx_BeginFrame` (DIV-0004, a crash fix), fourteen faithful ones that make
 up the image path from the rendered-frame flushes down to the texture-cache
-invalidation (`src/game/gfx_*.cpp`), and the first sixteen *logic* functions off
+invalidation (`src/game/gfx_*.cpp`), and the first nineteen *logic* functions off
 the takeover queue, all around the field's sprite structures
 ([`sprite-draw-order.md`](sprite-draw-order.md)). The A/B switch, a call tracer, a crash
 reporter and a shadow check against clones of the originals run in-process;
 the attract oracle, three memory-dump regions and the frame hash all pass
-original-vs-ours with all forty-one (2026-09-20). See [`STATUS.md`](STATUS.md) - do not expand this paragraph
+original-vs-ours with all forty-four (2026-09-20). See [`STATUS.md`](STATUS.md) - do not expand this paragraph
 into a second copy.
 
 ## Pick up here
@@ -33,21 +33,14 @@ into a second copy.
 The single next action, concrete enough to start without asking anyone.
 
 1. **Keep working the queue** - `analysis/calltrace/queue.csv`, regenerated
-   2026-09-20 with thirty-four owned; regenerate it again first (`python
+   2026-09-20 with forty-one owned; regenerate it again first (`python
    tools/calltrace.py queue analysis/calltrace/all_a/bof3x.callcounts.tsv` -
    the argument is the *counts* file; naming a function can turn its callers
    into leaves, which is how `DrawItemPool_ReleaseCell` surfaced). Read ahead
    on 2026-09-20, not taken over, all leaves with internal jumps only:
-   - `0x56F5B0`: for 0x38 layers from `0x8022A0 + Gfx_BufferIndex * 8`, stride
-     `0x30`, two list heads `0x10` apart: dword 0 = 0, dword +4 = its own
-     address. The per-layer draw lists of `0x593060`, emptied.
-   - `0x56F5F0`: sorts the dwords at `0x801C00` (count byte `0x905BA0`)
-     ascending on their high 16 bits, unsigned - an exchange sort, first
-     against each later one; the value swapped out is also left at `0x90385C`.
-     The second source of `0x593060`'s merge.
-   - `0x5725F0`: `(s16 v)`: if the word `0x8CB59E` is 0, adds
-     `([0x929F1C] - v) * 2` to the word `0x92BEE2`; then `[0x929F1C]` = v
-     sign-extended, byte `0x905E69` = 2. A scroll setter, by the look of it.
+   - `0x5A7560`, three instructions: `(tail, item)`, `*tail = item` - the
+     draw-list append 0x593060 and others call. Above `0x5A6000`, so the
+     queue's game-code filter hides it; trivial.
    - `0x494030`: runs **20 objects of `0x80` bytes at `0x7E11E0`** - a second
      object kind - through the handler table `0x655350` by byte `+5`, setting
      `Sprite_Current` for each. Indirect calls, so no clone; check it live.
@@ -56,13 +49,15 @@ The single next action, concrete enough to start without asking anyone.
    - `0x454810` is `return 1` with 152 callers; read a caller before naming.
    - `0x57C0A0`: **read, deliberately left** - its search result never
      reaches the return register. Ask the PSX side which way the source had
-     it ([`sprite-draw-order.md`](sprite-draw-order.md) §8).
+     it ([`sprite-draw-order.md`](sprite-draw-order.md) §9).
    Bigger leaves still unread: `0x454AD0` (491 bytes), `0x496870` (399),
    `0x5720C0` (523), `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431).
 2. **The pass `0x593060` itself** is the prize in this corner: read to the
    end (§2 there), and it looks checkable as memory - the linked draw list it
    builds - which is [`IDEAS.md`](IDEAS.md) I14 level 1. Its unread callees
-   come first: `0x56FD20`, `0x56FE80`, `0x57BAE0`, `0x5935B0`, `0x5A7560`.
+   come first: `0x56FD20`, `0x56FE80`, `0x57BAE0`, `0x5935B0` (`0x5A7560` is
+   read: `*tail = item`). Its inputs are all ours now - the sprite list's
+   helpers, `DrawTable_Sort`, `DrawLayers_Reset`, the item pool.
    Worth doing alongside: **a struct for the sprite object.** Five files now
    address it by offset; `symbols.toml` has no struct types, so it would be a
    hand-written header, and the offsets are collected in §5 and §6 there.
@@ -144,11 +139,11 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut` (comma-separated lists work) or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers` (comma-separated lists work) or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
-- **Takeover recipe** (each of the twenty-nine so far): read the function to its
+- **Takeover recipe** (each of the thirty-two so far): read the function to its
   last instruction, quirks included; `symbols.toml` entry with the evidence
   and `impl`; implement, keeping every unchecked edge and saying so in the
   comment; if every jump stays inside it, clone it and fuzz ours against the
@@ -212,6 +207,11 @@ _One line each, with a pointer. Add when something costs more than an hour._
   the input was seeded with `0x7F` and `0x80`, then in 341. Seed the
   boundaries, and let the negative control say whether you did
   ([`sprite-draw-order.md`](sprite-draw-order.md) §6).
+- A negative control that is NOT refused is information about the claim:
+  a "kept quirk" of `MapView_SetElevation` turned out to be unobservable, and
+  had already been written down as behaviour
+  ([`sprite-draw-order.md`](sprite-draw-order.md) §7). Run the control for
+  every quirk a comment claims.
 - A bash heredoc holding Python triple quotes or C++ with apostrophes dies
   with "unexpected EOF" in this tool. Write the patch script with the editor
   tool and run it.
@@ -224,9 +224,10 @@ _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
 Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b` (PR #4
-merged). Committed locally, **not pushed, no PR**: sixteen takeovers in
+merged). Committed locally, **not pushed, no PR**: nineteen takeovers in
 `src/game/sprite_order.cpp`, `draw_pool.cpp`, `prim.cpp`, `map_view.cpp`,
-`sprite_anim.cpp`, `sprite_find.cpp`, `field_input.cpp` and `sprite_clut.cpp`, and
+`sprite_anim.cpp`, `sprite_find.cpp`, `field_input.cpp`, `sprite_clut.cpp` and
+`draw_layers.cpp`, and
 `docs/sprite-draw-order.md`.
 
 Local only, gitignored, worth keeping:
@@ -241,7 +242,7 @@ Local only, gitignored, worth keeping:
   are the same without `clut`).
 - `analysis/calltrace/ab3_orig/` - the all-original frame-hash reference,
   recorded with twenty-four owned, **stale since 2026-09-20**; the current one
-  is `analysis/calltrace/ab7_orig/`, recorded with forty-one. Owned
+  is `analysis/calltrace/ab8_orig/`, recorded with forty-four. Owned
   functions are left unarmed, so it survives a takeover only when the function
   was not in `entries_logic.txt` to begin with (`Gfx_TexCacheFind` is
   render-timed and was not). Taking over a *logic* function changes every
