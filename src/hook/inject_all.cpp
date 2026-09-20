@@ -13,6 +13,10 @@
 #include "game/sprite_order.h"
 #include "game/draw_pool.h"
 #include "game/prim.h"
+#include "game/map_view.h"
+#include "game/sprite_anim.h"
+#include "game/sprite_find.h"
+#include "game/field_input.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -31,6 +35,10 @@ void InjectAll() {
     SpriteOrder_Inject();
     DrawPool_Inject();
     Prim_Inject();
+    MapView_Inject();
+    SpriteAnim_Inject();
+    SpriteFind_Inject();
+    FieldInput_Inject();
     InjectReport();
 }
 

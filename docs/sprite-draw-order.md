@@ -3,9 +3,11 @@
 **Status:** IN PROGRESS (2026-09-20)
 
 What the regenerated takeover queue ([`call-trace.md`](call-trace.md) §9) put
-first: its two hottest layer-0 logic functions are the exchange helpers of one
-sort, and that sort is the pass that decides the order field sprites are drawn
-in. The helpers are ours; the pass itself is read but not taken over.
+first, and where it led: its two hottest layer-0 logic functions are the
+exchange helpers of the pass that decides the order field sprites are drawn
+in, and the next half-dozen all touch the same structures - the sprite object
+arrays, the view's cell grid, the draw-item pool. Nine functions are ours
+(sections 3 to 5); the pass itself is read but not taken over.
 
 All addresses are `BOF3.exe` (`symbols.toml` `[meta]`). Disassembly by
 `python tools/pe_disasm.py`, 2026-09-20.
@@ -151,22 +153,111 @@ Negative controls: alloc with top + 1 unmasked, 188 of 6,000 mismatch; shade
 without byte `+6`, 254 of 256 (the other two are levels the random buffer
 already held). Both refuse to run.
 
-## 5. Not done
+## 5. Four more from the same corner - taken over
+
+Same day, same recipe. They are here because each turned out to touch the
+structures above; `symbols.toml` has the instruction-level evidence.
+
+**The sprite objects have an address and a size.** `Sprite_FindNearby`
+`0x589660` walks **30 objects of `0xA4` bytes at `0x7DEE80`**
+(`Sprite_Objects`, ending `0x7E01B8`, 8 bytes below section 2's draw records)
+and then **4 more at `0x802000`** (`Sprite_ObjectsExtra`), numbering them 0-29
+and 30-33. Fields it fixes: `+0` bit 0 in use, `+6` a type byte, `+0x24` bit
+`0x40`, `+0x34` / `+0x38` signed position dwords (pass 1 sorts on their sum),
+`+0x3E` an s16, `+0x54` a pointer to a record with a signed reach at `+2` and
+a skip bit at `+3`. `pe_xref.py`: 160 references to `0x7DEE80` in 53 functions,
+17 to `0x802000` in 15 - this is the array most of the field code is about.
+
+- **`Sprite_FindNearby`** (`src/game/sprite_find.cpp`, 8,919 calls): the
+  number of the first type-`0x0A` object, not the current one, that has the
+  current one within its reach (x and y, `reach << 15`) and within `0x300` in
+  z; `0xFF` for none. Kept: the x and y differences wrap in 32 bits and the
+  absolute value leaves `0x80000000` negative, so that difference is within
+  any reach.
+- **`MapView_CellToMap`** `0x56F910` (`src/game/map_view.cpp`, 13,664 calls):
+  which cell of the area map a cell of the view shows. The view is a grid of
+  56 rows by 28 columns of 4-byte cells at `0x937FA0` (caller `0x56F8A5`):
+  map x, map y, and at `+2` the **draw-item index** that section 4's pool hands
+  out and `0x56FC00` takes back. The arithmetic is isometric - x = origin +
+  col + (row + 1) / 2, y = origin + row / 2 - col. The map is loaded data:
+  `AreaMap_Header` `0x8CB580` is `LoadDatFile`'s arena plus `0xC8000`, a chunk
+  tag [`asset-loading-path.md`](asset-loading-path.md) already lists. Kept:
+  the map's outermost ring never shows, and "none" is written as cell (0, 0).
+- **`Sprite_ScriptStep`** `0x589470` (`src/game/sprite_anim.cpp`, 2,920
+  calls): two bytes of the current object's byte script (`+0x50`, position
+  u16 `+0x58`): the first to `+0x4A`, the second an index into the word table
+  at `+0x54`, the word to `+0x5A`. Kept: the position wraps at 16 bits between
+  the two reads. Note `+0x54` is the same pointer `Sprite_FindNearby` reads a
+  reach and a flag from - one record, a header and then a word table; unread
+  beyond that.
+
+- **`Field_CopyInput`** `0x531BD0` (`src/game/field_input.cpp`, 2,779 calls):
+  copies the held-buttons word `Input_Held` `0x7E1BE8` to the field's own
+  `0x905BA6` - exchanging bit pairs 12-13 and 14-15, and dropping bits 9 and
+  10, while a member's state byte has bit `0x20`. The member records are
+  `0x14C` bytes at `0x802E88`, count byte `0x929EC0`; byte `+0` of each indexes
+  state records at `0x903A80` whose stride is `0xA4` - **the sprite object's
+  size again, so possibly a third array of them**; not established, and those
+  four data names are `hypothesis`. Bit 0 of `0x905BA2` chooses between "any
+  member" and "the first". *On a PSX pad bits 12-15 are the four directions,
+  which would make this "controls reversed while someone is in state 0x20" -
+  but neither the bit layout nor the state is established on this side, and
+  what reverses the controls on the field is the owner's to say, not a model's
+  to remember.* `Input_Held` itself is on firmer ground: `0x461EB0` is an
+  auto-repeat on it, 12 frames and then every 3.
+
+Start-up fuzz against clones,
+`BOF3X_SHADOW=map_view,sprite_anim,sprite_find,field_input`:
+
+| Function | Rounds | Of which | Mismatches |
+|---|---|---|---|
+| `MapView_CellToMap` | 20,000 | 4,726 on a cell, 2,379 on an empty cell, 12,895 outside; a quarter aimed at x or y of 0, 1, size - 2, size - 1 | 0 |
+| `Sprite_ScriptStep` | 4,000 | 415 with no script, 460 with the position at `0xFFFE` / `0xFFFF` | 0 |
+| `Sprite_FindNearby` | 8,000 | 7,015 found in the 30, 89 in the extra 4, 896 none; positions at the wrap, at the reach and one past it | 0 |
+| `Field_CopyInput` | 8,000 | 4,034 looking at every member, in 1,226 of which the first alone would have answered otherwise; 2,362 changed the word | 0 |
+
+Negative controls, each refusing to run: the map's `x < width - 1` as
+`x < width`, 326 of 20,000; the script's second read not wrapping, 243 of
+4,000; the search with an absolute value that treats `0x80000000` as far,
+2,383 of 8,000, and with z `< 0x300`, 2,822; the input copy keeping bits 9 and
+10, 1,883 of 8,000, and letting the last member decide, 1,155.
+
+## 6. Live checks, 2026-09-20
+
+All hands-off runs from a fresh launch, everything ours, against the
+all-original references of 2026-09-19.
+
+| Owned | `attract_diff.py orig_a.tsv` | `mem_dump.py --compare clutref_a` | Frame hash, original vs ours |
+|---|---|---|---|
+| 30 (sections 3, 4) | identical, 7,478 frames | arena, vram, clut identical | - |
+| 33 (plus section 5's first three) | identical, 7,478 frames | identical | identical, 4,528 frames (`ab5_orig` / `ab5_ours`) |
+| 34 (plus `Field_CopyInput`) | identical, 7,478 frames | identical | identical, 4,530 frames (`ab6_orig` / `ab6_ours`) |
+
+The frame hash needs its all-original side re-recorded whenever a *logic*
+function changes hands, because owned functions are left unarmed in both
+configurations ([`call-trace.md`](call-trace.md) §7); `ab5` and `ab6` are
+those pairs, each side's `inject:` line checked in its saved `bof3x.log`.
+
+What none of this reached: the attract sequence has nobody in state `0x20`
+and no input, so `Field_CopyInput`'s exchange rests on the fuzz alone, as does
+any `Sprite_FindNearby` hit in the extra four. Whether the others' edge cases
+occur in the attract run was not measured.
+
+## 7. Not done
 
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it
   walks 30 records of `0xA4` bytes looking for the `(c & 0x3F)`-th whose byte
   at `0x7DEE86 + n * 0xA4` is `0x0A` - and then returns `c & 0x3F` in `al`
   whatever it found: the loop's index lives in `dl` and never reaches `al`.
-  Both callers (`0x5192AC`, `0x58977F`) read `al`. Either the search is dead
-  code in the source too, or the port lost a `return`. **The PSX side can
+  Both callers (`0x5192AC`, `0x58977F`) read `al`. Section 5 says what it is
+  for: the records are `Sprite_Objects`, the byte is the type, and the result
+  is an object number - `+ 0x1E` being `Sprite_ObjectsExtra`. So a handle with
+  bit 7 means "the n-th type-`0x0A` object" and comes back as plain `n`, which
+  is only right while those objects are the first in the array. Either the
+  search is dead code in the source too, or the port lost a `return`. **The PSX side can
   say which**; not looked up. It should not be taken over before that is
   known - not because it is hard, but because it may be a defect to record.
-- **Live checks of all five takeovers** - `attract_diff.py` against
-  `orig_a.tsv`, `mem_dump.py --compare`. All five are logic functions in
-  `entries_logic.txt`, and owned functions are left unarmed, so **the
-  frame-hash reference `analysis/calltrace/ab3_orig/` must be re-recorded**
-  before the next frame-hash A/B ([`HANDOFF.md`](HANDOFF.md)).
 - `0x593060` itself. Its unread callees: `0x56FD20`, `0x56FE80`, `0x57BAE0`,
   `0x5935B0` (683 bytes, the sprite draw), `0x5A7560`, `0x5A77C0`, `0x461E50`.
   It is checkable without Direct3D if `0x5A7560` is what it looks like: the

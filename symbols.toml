@@ -1038,3 +1038,130 @@ impl = "src/game/prim.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 6 instructions, cdecl, no calls, no jumps: stores the low byte of its second argument to bytes +4, +5 and +6 of its first. Nine callers (E8 scan), all in 0x462850..0x462A66. Call trace all_a: 6,474 calls."
 note = "Bytes +4..+6 of a PSX GPU primitive are r0, g0, b0 (libgpu setRGB0); that the first argument IS such a primitive is by position only - the callers are unread - hence the name is the weakest part of this entry."
+
+# ---------------------------------------------------------------------------
+# The field view's cell grid (2026-09-20): takeover queue, layer 0.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x8CB580
+name = "AreaMap_Header"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "disasm 2026-09-20: MapView_CellToMap 0x56F910 reads byte +0 as a width, byte +1 as a height, the u16 at +2 as an offset, and then tests the u16 at 0x8CB580 + (x + width * y + offset * 2) * 2. 0x8CB580 is LoadDatFile's arena 0x803580 + 0xC8000, so this is loaded area data, not a table of the exe. pe_xref.py: 165 references in 60-odd functions, many indexing it as dwords."
+note = "Only the four header bytes are declared; what follows them is as long as the area makes it. Every other field of the block is unread."
+
+[[data]]
+pc = 0x7E0688
+name = "MapView_Origin"
+ctype = "short"
+count = 2
+status = "evidence"
+evidence = "disasm 2026-09-20: MapView_CellToMap adds the s16 at 0x7E0688 into the map x it computes and the s16 at 0x7E068A into the map y."
+
+[[func]]
+pc = 0x56F910
+name = "MapView_CellToMap"
+ret = "void"
+params = "int row, int col, unsigned char *out"
+impl = "src/game/map_view.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no calls, every jump internal, 0x91 bytes: x = MapView_Origin[0] + col + (row + 1) / 2 and y = MapView_Origin[1] + row / 2 - col, both divisions C's (cdq, sub, sar 1). If 0 < x < width - 1 and 0 < y < height - 1 (signed; width, height the first two bytes of AreaMap_Header) and the u16 at AreaMap_Header + (x + width * y + offset * 2) * 2 is non-zero, stores the low bytes of x and y to out[0], out[1]; otherwise stores 0, 0. Seven callers (E8 scan of .text); the one read, 0x56F8A5, calls it for row 0..55 and col 0..27 over 4-byte cells from 0x937FA0 to 0x939820, zeroing the word at cell +2 first. Call trace all_a 2026-09-19: 13,664 calls."
+note = "The staggered x and y - row halves going one way, col the other - is an isometric view's screen cell to map cell. Word +2 of the same 4-byte cell is the draw-item index that 0x56FC00 releases (docs/sprite-draw-order.md section 4). Row and col by that one caller's loop shape."
+
+[[func]]
+pc = 0x589470
+name = "Sprite_ScriptStep"
+ret = "void"
+params = "void"
+impl = "src/game/sprite_anim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, one forward jump, 0x60 bytes. For the object at Sprite_Current: if the pointer at +0x50 is null, nothing. Otherwise byte +0x4A = script[pos], pos = the u16 at +0x58; pos is incremented in place as 16 bits; n = script[pos] with script re-read from +0x50; pos incremented again; the u16 at +0x5A = the n-th u16 of the table the pointer at +0x54 names. Sprite_Current is re-read from 0x937F88 before each store. Call trace all_a 2026-09-19: 2,920 calls."
+note = "A two-byte step of a byte script: a value, then an index into a word table. What +0x4A and +0x5A mean is unread, so the name says only that. docs/known-defects.md D4 has +0x50 as 'a pointer into the animation data'."
+
+[[data]]
+pc = 0x7DEE80
+name = "Sprite_Objects"
+ctype = "unsigned char"
+count = 0x1338
+status = "evidence"
+evidence = "disasm 2026-09-20: Sprite_FindNearby 0x589660 walks it from 0x7DEE80 in steps of 0xA4 while below 0x7E01B8 - 30 objects of 0xA4 bytes = 0x1338 - counting an index as it goes; 0x57C0A0 tests the byte at 0x7DEE86 + n * 0xA4 for n < 0x1E, the same objects' byte +6. Fields seen there: +0 flags (bit 0 in use), +6 a type byte (0x0A is the only value tested), +0x24 flags (bit 0x40), +0x34 and +0x38 signed dwords (position; 0x593060 sorts on their sum), +0x3E an s16, +0x54 a pointer to a record whose byte +2 is a signed reach and byte +3 bit 0x10 a skip flag."
+note = "Declared as bytes because the generated header has no struct types. The draw records of 0x593060 start at 0x7E01C0, 8 bytes after the last object."
+
+[[data]]
+pc = 0x802000
+name = "Sprite_ObjectsExtra"
+ctype = "unsigned char"
+count = 0x290
+status = "evidence"
+evidence = "disasm 2026-09-20: Sprite_FindNearby walks it the same way from 0x802000 while below 0x802290 - 4 objects of 0xA4 - and reports a hit as its index + 0x1E, continuing the numbering of Sprite_Objects. 0x57C0A0 returns (handle & 0x3F) + 0x1E for a handle without bit 7, the same numbering."
+
+[[func]]
+pc = 0x589660
+name = "Sprite_FindNearby"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/sprite_find.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x10A bytes. Two copies of one loop, over Sprite_Objects (30) and Sprite_ObjectsExtra (4). An object qualifies if byte +0 has bit 0, byte +0x24 has bit 0x40, byte +6 is 0x0A, it is not Sprite_Current, byte +3 of the record at its +0x54 lacks bit 0x10, and with reach = (s8 at that record +2) << 15: |current.+0x34 - object.+0x34| <= reach, the same for +0x38, and |s16 current.+0x3E - s16 object.+0x3E| <= 0x300. Each absolute value is cdq / xor / sub on a 32-bit difference, so a difference of 0x80000000 stays negative and passes. Returns in al the index of the first that qualifies - 0..29, or 30..33 for the second array - or 0xFF. Call trace all_a 2026-09-19: 8,919 calls."
+note = "A negative reach makes every comparison fail unless the difference is 0x80000000. Sprite_Current need not be in either array; it is compared by address only."
+
+# ---------------------------------------------------------------------------
+# Field input (2026-09-20): takeover queue, layer 0.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x7E1BE8
+name = "Input_Held"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-20: 0x461EB0 is an auto-repeat on it - on a first press it stores the word to 0x7E01B8 and a countdown of 0xC to 0x7E1BE0; while the same bits stay set it counts down and re-fires with a countdown of 3. pe_xref.py: 60 references; written as a word at 0x405A5D, 0x41F870, 0x427173, 0x4FC6AC and zeroed at 0x42E9F8; most readers test single bits."
+note = "Which bit is which button is not established on this side. Field_CopyInput reads it as a dword and uses the low 16 bits."
+
+[[data]]
+pc = 0x905BA6
+name = "Field_InputHeld"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-20: Field_CopyInput 0x531BD0 is its only writer in that function's two exits - Input_Held as it is, or with bits 12-13 and 14-15 exchanged. pe_xref.py: 20 references in 15 functions, all of them in 0x414FC0..0x42AE30 and 0x52D8F0..0x536B60."
+
+[[data]]
+pc = 0x905BA2
+name = "Field_InputFlags"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-20: Field_CopyInput tests bit 0 - set, it looks at every member record; clear, at the first only. Nothing else about the byte is read, hence hypothesis for the name."
+
+[[data]]
+pc = 0x929EC0
+name = "Field_MemberCount"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-20: Field_CopyInput's loop count over the 0x14C-byte records at 0x802E88. 'Member' is a guess at what the records are."
+
+[[data]]
+pc = 0x802E88
+name = "Field_Members"
+ctype = "unsigned char"
+count = 0x14C
+status = "hypothesis"
+evidence = "disasm 2026-09-20: Field_CopyInput reads byte +0 of records 0x14C apart from 0x802E88, Field_MemberCount of them, as an index into Field_ActorStates. One record declared: how many there are is not established."
+
+[[data]]
+pc = 0x903A80
+name = "Field_ActorStates"
+ctype = "unsigned char"
+count = 0xA4
+status = "hypothesis"
+evidence = "disasm 2026-09-20: Field_CopyInput tests bit 0x20 of the byte at 0x903A80 + index * 0xA4, index a byte. The stride is the sprite object's size (Sprite_Objects), so this may be a third array of them; pe_xref.py has 26 references in 19 functions. One record declared: the length is not established."
+
+[[func]]
+pc = 0x531BD0
+name = "Field_CopyInput"
+ret = "void"
+params = "void"
+impl = "src/game/field_input.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x9A bytes. Decides a flag: with bit 0 of Field_InputFlags set, whether ANY of the Field_MemberCount records at Field_Members (none if the count is 0) has bit 0x20 in the Field_ActorStates byte its byte +0 indexes - the loop does not stop at the first; with bit 0 clear, whether the first record has. Flag clear: Field_InputHeld = Input_Held. Flag set: Field_InputHeld = the low word of ((held & 0xF000) << 2) | ((held >> 2) & 0x3000) | (held & 0x9FF) - bits 12 and 13 move to 14 and 15 and back, bits 9 and 10 are dropped, bit 11 and bits 0-8 pass. Call trace all_a 2026-09-19: 2,779 calls."
+note = "On a PSX pad bits 12-15 are up, right, down, left, which would make this 'reverse the directions while someone has state 0x20' - but neither the bit layout nor what state 0x20 is has been established on this side. Ask the owner what reverses the controls on the field."
