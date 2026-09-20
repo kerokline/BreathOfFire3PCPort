@@ -182,8 +182,9 @@ _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
 Branch `phase-3/gfx-loadimage`, cut from `main` at `cee66ad` (PR #3, phase 0).
-Everything is committed; **nothing is pushed**; the PR is planned for the end
-of the 2026-09-19 session. It holds the `mem_dump.py` drain wait and `clut`
+Everything is committed and pushed, and a PR against `main` was opened at the
+end of the 2026-09-19 session; if it has merged, start the next branch from
+`main`. It holds the `mem_dump.py` drain wait and `clut`
 region, the shadow check (`bof3::CloneOriginal`, `BOF3X_SHADOW`), thirteen
 takeovers (fourteen with `Gfx_TexCacheFind`) in `src/game/gfx_image.cpp`, `gfx_texcache.cpp`, `gfx_clut.cpp`,
 `gfx_flush.cpp`, `gfx_unpack.cpp` and `gfx_vram_ops.cpp`, and IDEAS I12 / I13.
