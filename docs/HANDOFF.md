@@ -81,6 +81,34 @@ The single next action, concrete enough to start without asking anyone.
    the clock - a workaround for this machine, not a fix, and the owner's
    call.
 
+   **What the clock is for (read 2026-09-21).** `GetTickCount` is the exe's
+   only clock import (no `timeGetTime`, no `QueryPerformanceCounter`), and
+   its IAT slot `0x5C407C` is read once, into `esi`, at `0x4FCD90` in WinMain.
+   `esi` is called three times, all in WinMain's loop: at `0x4FCDB0` to set the
+   first deadline (now + 33.34); at `0x4FCE24` for the choice between
+   rendering (now < deadline) and skipping; and at `0x4FCEC1` in the spin
+   until the deadline, which pumps `0x587C70` on every pass. The spin's
+   result also drives a once-a-second branch at `0x4FCEE2` that `sprintf`s
+   a counter into a local string (a leftover FPS readout by the look;
+   whether it reaches the screen is unread). That branch uses unsigned
+   differences, so it does not care what the clock's origin is. Nothing else
+   in the exe reads time; DirectSound and the AVI player keep their own.
+
+   **The owner's idea (2026-09-21): make the clock "ms since game start".**
+   Point the IAT slot at a function returning `GetTickCount64() - start`,
+   with `start` taken at injection. That touches no game code, and only
+   WinMain reads the slot. The deadline float then holds small numbers,
+   which puts the game back in the conditions the 2001 code was written
+   for: a machine booted that day. What remains is float rounding over one
+   long session. +33.334 rounds to 33.25 below 2^22 ms (1.2 hours, 30.1 a
+   second), to 33.5 up to 2^23 (2.3 hours, 29.85), to 33 up to 2^24 (4.7
+   hours, 30.3), to 34 up to 2^25 (9.3 hours, 29.4), then 32 (31.25) until
+   2^29 - half speed only after 6.2 days of one continuous session. So it
+   fixes what players meet, cheaply. The deadline in a double (step 3) is
+   exact forever, but it has to take over part of WinMain's loop. The
+   likely order: the clock origin first, as its own ledger entry, and the
+   double as a second if exact pacing over long sessions is wanted.
+
    The work, in order:
    1. **Every reader and writer of `0x6BC628`** (`python tools/pe_xref.py
       0x6BC628`), and the loop around them: the start at `0x4FCDC4` (now +
