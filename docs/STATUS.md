@@ -180,7 +180,11 @@ What is established:
 - **Known defects are written down** ([`known-defects.md`](known-defects.md)):
   clipped stat numerals (draw-time, cause unread), the mojibake title, the
   crash above, and a frame deadline kept in a 32-bit float, which makes game
-  speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured.
+  speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured,
+  and **half speed past 6.2 days, observed 2026-09-21** (every run that day,
+  original included; D5). With Fast Startup that "uptime" survives nightly
+  shutdowns, so players meet it within a week; past 12.4 days it should stop
+  drawing. Fixing it is the next session's first job ([`HANDOFF.md`](HANDOFF.md)).
 - **The launcher has a settings dialog** (2026-09-20,
   [`launcher-settings.md`](launcher-settings.md)): language, texture filter,
   display and renderer, in a plain Win32 `DIALOGEX` with nothing vendored.

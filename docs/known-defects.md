@@ -244,6 +244,35 @@ rounds to nothing, so the deadline stops advancing, the loop is always
 never taken — no drawing, and D4's queue never drained. Below 4.7 hours it is
 exact. A fresh boot is the cheap way to check the low end.
 
+**Observed, 2026-09-21: the half-speed band.** Every recorded attract run
+on this machine (`analysis/attract/*.runlog`, `done:` lines) ran at 29.4-29.6
+logic frames a second through 2026-09-20 13:41, and at 14.2-15.2 from the
+first run of 2026-09-21 (12:12) on - original and ours alike, traced or not.
+`GetTickCount` read 557,794,953 (6.456 days) that afternoon, so it passed
+2^29 ms (6.2 days) at about 11:27 - between the two. The prediction above
+was 15.6; the measured 15.2 is that less the loop's own overhead, as 29.6
+was of 31.25. Frame hashes and oracles stayed identical throughout, as they
+must: only wall-clock speed changed. For a day this was written up as an
+unexplained regression of ours ([`HANDOFF.md`](HANDOFF.md)).
+
+**"Uptime" is not how long the PC has been on.** The owner switches the PC
+off every night and on every morning - and the clock still read 6.46 days.
+Windows' **Fast Startup** (on by default since Windows 8; here
+`HiberbootEnabled = 1`, and the System log's Kernel-Boot event 27 says "boot
+type 0x1" every morning) makes Shut down hibernate the kernel session, so
+power-on resumes it and `GetTickCount`, which counts time spent in
+hibernation too, carries on from the last *full* boot (2026-09-15 06:19
+here). The unbiased interrupt time, which leaves hibernation out, read 4.72
+days. So an ordinary player who shuts down every night reaches the
+half-speed band about a week after their last Restart, and the no-drawing
+band about two weeks after - this is a defect players meet, not a corner
+case. A **Restart** (or Shift + Shut down) resets the clock.
+
+**Next on this machine,** without a Restart: 2^30 ms at about 2026-09-27
+16:35 - from then, by the arithmetic, the deadline stops advancing and
+nothing is drawn. The fix is the first item of [`HANDOFF.md`](HANDOFF.md)
+"Pick up here".
+
 Original by construction — nothing of ours is in WinMain's loop. Logic is
 still a pure function of the frame count, so the oracle is unaffected; only
 wall-clock speed changes. A fix (keep the deadline in an integer or a double)
