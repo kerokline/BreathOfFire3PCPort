@@ -66,6 +66,7 @@ add_library(bof3x SHARED
   src/game/msg_pool.cpp
   src/game/name_tables.cpp
   src/game/config_text.cpp
+  src/game/menu_verbs.cpp
   src/game/title_menu.cpp
   src/game/gfx_frame.cpp
   src/game/gfx_image.cpp

@@ -1285,6 +1285,20 @@ status = "evidence"
 evidence = "disasm 2026-09-21: 0x41C0A0 and 0x42B400 test Input_Pressed against it and, unless bit 0x40 of 0x9039A2 is set, play sound 0x105 and set the field request byte 0x66C7D8 to 1, which the field's mode-2 handler 0x4959F0 turns into mode 3, the menu. Measured 2026-09-21 by input recipe: 0x80 (square) with save 5 loaded, and pressing square opened the menu. Its neighbours 0x903580..0x903588 held 0x43, 0x20, -, 0x08, 0x04."
 note = "Owner, 2026-09-21: the four shape buttons are assigned per save file, and save 5 was converted from a US save, whose assignment differs from saves 0-3. So the word is save data; which neighbour is which action is unread."
 
+[[data]]
+pc = 0x90358E
+name = "Field_ConfirmButtons"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: the Config screen tests Input_Pressed against it OR 0xA000 (0x4612F1) to change an option. Measured 2026-09-21 by input recipe with save 5 loaded: 0x43, and cross (0x40) entered each menu screen where circle did not. Save data like Field_MenuButton; 'confirm' is inferred from that one use and that one measurement."
+
+[[data]]
+pc = 0x903590
+name = "Field_CancelButtons"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: the Config screen tests Input_Pressed against it OR 0x0800 (start) to leave (0x461369, 0x461036). Measured 2026-09-21 with save 5 loaded: 0x10, and triangle left each menu screen where cross did not."
+
 [[func]]
 pc = 0x5A9700
 name = "Pad_Read"
@@ -2401,3 +2415,48 @@ ret = "void"
 params = "int x, int y, unsigned id, unsigned flags"
 status = "evidence"
 evidence = "disasm 2026-09-20, 0x57D860..0x57D90F, read to the last instruction: rect = 0x57D830(id, flags & 1) - four bytes (u, v, w, h) from the table 0x663B94, or 0x663C8C with bit 0 of flags; one SPRT at Gfx_PacketNext, Gpu_SetSemiTrans(p, 0), x and y (s16) as floats at +8 / +0xC, clut Gpu_GetClut(0xB0, 0x1E1), or (0x80, 0x1E2) with bit 1 of flags, colour 0x80; Gfx_CommitPrim(1, 0x1C). Sets no draw mode. cdecl. The PSX counterpart by its use in the frame draw 0x801DF56C (STATUS.EMI): 0x801B02A0(x, y, id, 1)."
+
+# ---------------------------------------------------------------------------
+# The menu's button rows (2026-09-21, DIV-0018, docs/config-screen.md section 8).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x66383C
+name = "Menu_ButtonSets"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "disasm 2026-09-21: Menu_DrawButtonRow reads byte +0 of the record at 0x66383C + 5 * set as the button count and +1.. as verb indices. Nine sets: 0 Items, 1 Equipment, 2 Ability, 6 Config, 7 Tactics seen by input recipe; 3, 4, 5, 8 unseen. Byte-identical to the US disc's records for sets 0-7 (STATUS.EMI 0x1C6DC); set 8 differs in its second verb."
+
+[[data]]
+pc = 0x6637E4
+name = "Menu_VerbPointers"
+ctype = "unsigned int"
+count = 22
+status = "evidence"
+evidence = "disasm 2026-09-21: Menu_DrawButtonRow 0x574965 loads the string for a verb index from here. 22 entries, each 0x66A228 + 8 * i."
+
+[[data]]
+pc = 0x66A228
+name = "Menu_Verbs"
+ctype = "char"
+count = 0xB0
+status = "evidence"
+evidence = "read 2026-09-21: 22 NUL-padded 8-byte slots of two-byte Chinese codes; verbs 11 and 14 are the Config screen's two buttons. 0x59E198 pushes the first slot directly. The US disc's counterpart is 23 packed strings behind a pointer table (Use Sort Drop Eqip Opti Abil Buy Sell Chng Read Vtal Quit Form Bttn Init Note Fast Pool Ally Gene Knd Look End)."
+
+[[func]]
+pc = 0x574890
+name = "Menu_DrawButtonRow"
+ret = "void"
+params = "int x, int y, int set, int arg4, int arg5"
+status = "evidence"
+evidence = "disasm 2026-09-21: for each of Menu_ButtonSets[set].count buttons, a frame at (x + 48 * i, y, 0x2D, 0x14) through 0x57CF60, then the verb Menu_Verbs[index] through Text_DrawAt at (x + 0x16 + 48 * i - 6 * n, y + 3), count 0x10, n from Text_CharCount - so centred at 12 units a character. The colour is 0 or 7 (greyed): with a byte argument below the count, every button but that one is 7; verb 0x12 is 7 unless 0x905BA2 bit 0; verb 8 is 7 when 0x5918E0(0xF) and 0x5919B0(0, 0x58, 0) are both zero. Then 0x57D910 with 0x663440 or 0x663428 by comparing i with an argument - the selected frame. Callers: 0x461707 (Config, set 6), 0x5965FB, 0x59A66B, 0x59B33B (set from a window record's +0xA)."
+note = "Which stack argument is which past x, y and set is not pinned down; the Config caller passes the window colour 0x903A5A last."
+
+[[func]]
+pc = 0x57D800
+name = "Text_CharCount"
+ret = "unsigned char"
+params = "const unsigned char *text"
+status = "evidence"
+evidence = "disasm 2026-09-21: counts characters to a NUL, a byte with bit 7 and the byte after it as one, looking at no more than 16 bytes. 47 callers."

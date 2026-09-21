@@ -39,20 +39,25 @@ now pair with PC ones at scale - 3,330 pairs through the tables both builds
 kept ([`attract-remaining.md`](attract-remaining.md) §3, §5). **Later the
 same day an agent can walk the game unattended**: `BOF3X_INPUT` plays a recipe
 of pad presses in the game's own frames and `tools/input_run.py` captures the
-window at each `shot` ([`input-script.md`](input-script.md)). First harvest:
-the title menu and every Config row in game, save 5's field menu, and the
-DIV-0010 A/B.
+window at each `shot` ([`input-script.md`](input-script.md)). The owner judged
+the first captures: DIV-0010's numerals "look good", DIV-0014's title menu
+"looks perfect". Then **DIV-0018**: the menu's button verbs from the US disc -
+Config's `Quit` / `Init` and the rows of Items, Ability, Equipment and
+Tactics - captured in game.
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-000. **Owner: look at the first harvest** ([`input-script.md`](input-script.md)
-   §5): `analysis/shots/div0010_ab_x3.png` (DIV-0010, Capcom's handlers on
-   top, ours below), `config/title_menu.png` (DIV-0014's glow question),
-   `config/config_row1..7.png`. Then say which screens to harvest next - the
-   agent can now reach anything a fixed sequence of presses reaches, and the
-   obvious ones are the Items and Ability lists (clipping) and Status.
+000. **The stat labels** (攻击 / 防御 / 智力 / 速度 on Status and Equipment,
+   seen 2026-09-21): the US disc has them right before the verb table
+   DIV-0018 took (`Int`, `Agl`, ... - [`config-screen.md`](config-screen.md)
+   §8). Find the PC's draw the way the verbs were found - the Status screen's
+   handler `0x58A4C0` down to its `Text_DrawAt` calls - then a converter
+   beside `convert_verbs` and a capture with `tools/recipes/menu_screens.txt`.
+   After that, the list headers (`物品`, `治疗`). Then battle: the US
+   `BATE.EMI` carries the same verb table, which says battle shares at least
+   the strings; reaching a fight needs a recipe that walks into an encounter.
 
 00. **The PSX pairing, step 1 of [`attract-remaining.md`](attract-remaining.md)
    §5.1's list: draw the divergence map.** `python tools/psx_pair.py areas &&
@@ -87,11 +92,9 @@ The single next action, concrete enough to start without asking anyone.
      lettering is DIV-0017, seen and confirmed 2026-09-21. **The 8-unit quad scales a whole 24 x 24 glyph to 16 x 16** rather
      than cropping it - the fact that decides which cells any UI string wants.
      `0x516E70` is now read (same glyph table, 8 x 8 quads, flat 8 advance,
-     (u, v) from `0x65F5A8`), so the list below is one shorter. Still Chinese
-     on that screen: the two buttons above the panel, which come from a
-     23-entry table of short menu verbs (`Use`, `Sort`, `Quit`, `Init`, ...)
-     shared by the whole menu - the obvious next piece, and it would reach
-     more than this screen.
+     (u, v) from `0x65F5A8`), so the list below is one shorter. The two
+     buttons above the panel are DIV-0018 (`Quit` / `Init`), which also
+     translated the button rows of Items, Ability, Equipment and Tactics.
    - **The next "still 12 px" report** will be one of seven unread functions
      that call `Text_DrawAt` a character at a time: `0x45B490`, `0x45B5F0`,
      `0x460730`, `0x460920`, `0x466260`, `0x4B1090`, `0x4B11F0`. Three pens
@@ -99,12 +102,11 @@ The single next action, concrete enough to start without asking anyone.
      `bof3::RetargetCall`), `Text_DrawImmediate`'s. Also still 12: the
      stepper's effect draw `0x4987E0` and the small 8 px UI font `0x516E70`
      (its own glyph arithmetic, unread).
-   - **The title menu is English and unseen in game** (DIV-0014,
-     [`title-menu.md`](title-menu.md)): NEW GAME / LOAD GAME from the disc,
-     CONFIG cut from their letters, the row widths through a kind-6 chunk.
-     The owner liked the offline preview; [`USER_CHECKS.md`](USER_CHECKS.md) 6
-     is the look in game - the glow pass on thin lettering is the open
-     question. The options and load screens behind it are not looked at.
+   - **The title menu is English and confirmed in game** (DIV-0014,
+     [`title-menu.md`](title-menu.md)): the owner judged a recipe's capture
+     "perfect", 2026-09-21. Still open from [`USER_CHECKS.md`](USER_CHECKS.md)
+     6: the two-row layout. The load screen behind it reads "Load game?" /
+     "Loading complete" in English already.
    - **Still Chinese:** enemy names (12-byte fields in battle data), character
      and place names, text baked into artwork, and any string in the
      executable outside the six name tables. Enemy names are the obvious
@@ -121,10 +123,8 @@ The single next action, concrete enough to start without asking anyone.
      unread and only 10 glyph slots are free past the 100 English ones.
 0a. **The menu's defects** ([`menu-screens.md`](menu-screens.md) section 3), all
    present in the 2001 release and all the owner's to look at in game:
-   - **DIV-0010 has its A/B in the menu** (2026-09-21, by recipe,
-     [`input-script.md`](input-script.md) §5): Capcom's handlers cut the
-     bottom row off every HP / AP numeral, ours draw them whole. The owner's
-     judgement of the capture is what is left.
+   - **DIV-0010 is confirmed** by the owner off an in-menu A/B capture
+     (2026-09-21, [`input-script.md`](input-script.md) §5).
    - **DIV-0011**: Config's panel frame (owner: "looks right") and the
      reserve list's on "change party members" (seen in the owner's session,
      `analysis/d1/point/s009.png`; the owner has not commented) - drawn as

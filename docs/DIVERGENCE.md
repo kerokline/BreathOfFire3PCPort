@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 9 entries, DIV-0001..0009)
+**Status:** IN PROGRESS (opened 2026-09-18; 18 entries, DIV-0001..0018)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -570,8 +570,11 @@ designed in rather than bolted on.
 - **Checked:** attract run, no crash, oracle unaffected (render only);
   screenshots original against ours in `analysis/d1/`: no seams, sprites
   drawn at a true 2x where the original stretched w - 1 texels over w pixels
-  (the title's (R) mark is a pixel shorter). **Not yet seen: the menu numerals
-  themselves** - the attract sequence draws none; owner to look.
+  (the title's (R) mark is a pixel shorter). **The menu numerals, A/B, by
+  input recipe 2026-09-21** ([`input-script.md`](input-script.md) §5): with
+  Capcom's handlers the bottom row of every HP / AP numeral is cut off and
+  the portrait frame has a seam under it; with ours both are whole. **The
+  owner judged the capture: "numerals look good".**
 
 ### Draw the Config panel's frame, which the PC build compiled to nothing
 
@@ -698,8 +701,11 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
   rows are then cut off - for A/B only).
 - **Checked:** an offline composition through CLUT 0 at the draw's positions,
-  seen by the owner ("perfect"). **Not yet seen in game**
-  ([`USER_CHECKS.md`](USER_CHECKS.md) 6): nothing unattended reaches the menu.
+  seen by the owner ("perfect"). **In game, 2026-09-21**: captured by input
+  recipe ([`input-script.md`](input-script.md) §5; the cursor starts on LOAD
+  GAME when saves exist) and judged by the owner: "the title menu looks
+  perfect". The two-row layout and each row's destination are still open
+  ([`USER_CHECKS.md`](USER_CHECKS.md) 6).
 
 
 ### The in-game Config screen in the overlay's language
@@ -868,3 +874,47 @@ designed in rather than bolted on.
   validated against the original bytes at start-up. **Seen in game by the
   owner, 2026-09-21: "looks perfect"** - the lowercase `g` is what shows the
   large form is a different font and not a magnified one.
+
+### The menu's short verbs - the buttons above a panel - in the overlay's language
+
+- **ID:** DIV-0018
+- **Date:** 2026-09-21
+- **Subsystem:** menu (only with a language overlay)
+- **Original behaviour:** the buttons above a menu panel - Config's two, and
+  the rows of Items, Ability, Equipment and Tactics - are drawn by `0x574890`
+  from a set number: 5-byte records at `0x66383C` (a count and up to four
+  verb indices) select from 22 NUL-padded 8-byte strings at `0x66A228`,
+  through the pointer table `0x6637E4`. Each label goes through `Text_DrawAt`
+  at `0x57499B`, centred in its button as `x0 + 0x16 + 48 * i - 6 * n`, `n`
+  being its character count from `0x57D800` - half of 12 units a character.
+  The strings are Chinese (Config's are `终了` / `预设值`) and live in the
+  exe, not in any `DAT`. Read 2026-09-21 ([`config-screen.md`](config-screen.md) §8).
+- **New behaviour:** a kind-8 chunk in the English `FIRST.DAT` carries the US
+  disc's verbs - `Use`, `Sort`, `Drop`, `Eqip`, `Opti`, `Abil`, `Buy`,
+  `Sell`, `Chng`, `Read`, `Vtal`, `Quit`, `Form`, `Bttn`, `Init`, `Note`,
+  `Fast`, `Pool`, `Ally`, `Gene`, `Knd`, `Look` - read from the player's
+  `START.EMI` and written into the 22 slots in place, one byte a character in
+  the dialogue font's single-byte slots. And the one label draw at
+  `0x57499B` is re-aimed at `MenuVerbs_DrawLabel`, which moves the label by
+  `6 * n - width / 2`, the width being what the pen will really cover
+  (DIV-0006's advances) - zero for 12-unit glyphs, so Chinese text is placed
+  exactly as before.
+- **Rationale:** the stage-2 text swap (DIV-0005). The US disc has the same
+  table, the same 5-byte set records byte for byte for sets 0 to 7, and a
+  23rd verb, `End`, that its last set uses where the PC's uses `Quit` again;
+  so the verbs pair by index and the PC's own sets are the anchor
+  `loc_build.py` finds the donor's by. The re-centring is DIV-0017's problem
+  again: English advances 8 where the draw reckons 12, which would put every
+  label two units a character left of centre.
+- **Also in the PSX version?** Yes - these are the PlayStation's strings; the
+  US verbs are abbreviated to fit its buttons.
+- **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuVerbs` keeps
+  the original centring (for A/B only - the English labels then sit left).
+- **Checked:** the chunk's 22 slots are validated against the pointer table
+  before any write; captured by input recipe 2026-09-21 on the Config screen
+  (`Quit`, `Init`) and on Items, Ability, Equipment and Tactics
+  (`analysis/shots/menu_screens/`), each label centred in its button - sets
+  6, 0, 2, 1 and 7. Not seen: sets 3 (`Buy` / `Sell`), 4 (`Look` / `Chng`),
+  5 (`Read` / `Sort` / `Drop`) and 8 (`Knd` / `Quit`), whose screens are
+  unidentified, and anything in battle.
+

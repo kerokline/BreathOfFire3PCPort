@@ -18,6 +18,7 @@
 #include "game/prim.h"
 #include "game/map_view.h"
 #include "game/menu_frame.h"
+#include "game/menu_verbs.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/field_input.h"
@@ -41,6 +42,7 @@ void InjectAll() {
     FileIo_Inject();
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
     ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT
+    MenuVerbs_Inject();         // likewise
     DatLoad_Inject();
     TextAdvance_Inject();
     TextDraw_Inject();

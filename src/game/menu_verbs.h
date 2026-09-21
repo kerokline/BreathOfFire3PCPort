@@ -1,0 +1,16 @@
+#pragma once
+
+#include <cstdint>
+
+// DIVERGENCE DIV-0018: the menu's short verbs - the buttons above a menu panel
+// ("Quit", "Init", "Use", "Sort", ...) - from a language overlay. See
+// src/game/menu_verbs.cpp and docs/config-screen.md section 8.
+
+// Applies a kind-8 chunk: a count of 22, then 22 NUL-terminated strings, each
+// written into its 8-byte slot in BOF3.exe's .data. Aborts loudly on anything
+// else.
+void MenuVerbs_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
+
+// Re-centres the button row's labels by their real width. Only with
+// BOF3X_LANG set.
+void MenuVerbs_Inject();
