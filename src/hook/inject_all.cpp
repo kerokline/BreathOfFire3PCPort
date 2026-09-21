@@ -14,6 +14,7 @@
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
 #include "game/sprite_order.h"
+#include "game/sprite_records.h"
 #include "game/draw_pool.h"
 #include "game/prim.h"
 #include "game/map_view.h"
@@ -40,6 +41,7 @@
 namespace bof3 {
 
 void InjectAll() {
+    SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     FileIo_Inject();
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
     ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT

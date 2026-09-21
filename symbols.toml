@@ -1124,7 +1124,7 @@ params = "unsigned long *a, unsigned long *b"
 impl = "src/game/sprite_order.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 25 instructions, cdecl, no calls, no jumps: exchanges two records of three dwords. Order as written: the three dwords of b are read first; then a[k] is read and stored to b[k] for k = 0, 1, 2 in turn; then the saved three are stored to a. One caller, 0x59344E in 0x593060, with a = a 12-byte record at 0x7E01C0 + n * 12 and b = the record before it, inside a bubble sort on the signed 16-bit word at record +4. Call trace all_a 2026-09-19: 421,058 calls in one attract run, the most of any unnamed logic function."
-note = "The record, from 0x5933D1..0x5933EE: +0 a sprite object, +4 the object's dword +0x60 with bit 31 set. The other producer, 0x57BAE0, is unread, and so is +8."
+note = "The record, from 0x5933D1..0x5933EE: +0 a sprite object, +4 the object's dword +0x60 with bit 31 set. The other producer, Sprite_AddDrawRecords 0x57BAE0 (read 2026-09-21), writes +0 a POLY_FT4, +4 the largest depth / 4 as a u16, +6 the first, +8 the object - so the s16 sort key is that u16."
 
 # ---------------------------------------------------------------------------
 # The draw-item index pool (2026-09-20): takeover queue, layer 0.
@@ -2459,8 +2459,59 @@ pc = 0x57BAE0
 name = "Sprite_AddDrawRecords"
 ret = "unsigned"
 params = "unsigned long *record"
+impl = "src/game/sprite_records.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x3E1 bytes, 35 calls, no jump leaves: pushes the GTE matrix; builds the current object's matrix (Sprite_ObjectMatrix), loads it, scales it by the dword +0x40 unless byte +0x48 is set, sets the light direction (Light_ObjectDirection into Light_Matrix), loads a copy composed with the camera (Camera_LoadMatrix) and Light_Matrix as the second matrix. Then (s8) of byte 0 of the object's +0x54 data, as a u16, is the quad count: if count * 0x48 bytes from Gfx_PacketNext would pass (Gfx_BufferIndex << 16) + 0x7F1BAC it returns 0 WITHOUT popping the matrix. Otherwise per quad (0x28 bytes from +0x50): a POLY_FT4 of 0x48 bytes, its four vertices through Prim_VertexScratch, Gte_Rtps and the screen and float depth stores, colour from +0x5D..+0x5F, lit through Gte_NormalColor when bit 7 of byte 3 of the +0x54 data is set, tpage for abr (bit 6 of that byte ? the byte : 2) & 3 at (0x2C0, 0x100), CLUT at (quad word 0 << 4, 0x1E3), semi-transparency bit 6; and a 12-byte record: the primitive, the largest depth / 4 as a u16 (compared zero-extended against the full long), the first, the object. Gfx_PacketNext advances; the matrix is popped; al is the low byte of the count. cdecl. Call trace all_b: 7,824 calls, all from Sprite_DrawPass, which keeps al only."
+
+[[func]]
+pc = 0x57BFF0
+name = "Sprite_ObjectMatrix"
+ret = "short *"
+params = "short *matrix"
+impl = "src/game/sprite_records.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x80 bytes: of Sprite_Current, the position ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(s16 +0x3E / 2) toward zero) through Gte_RotTrans into the matrix's translation, then Gte_RotMatrix of the low words of +0x64, +0x68, +0x6C into its rotation. RotTrans's flag argument is the address of this function's own argument slot; ours has no flag. Returns what Gte_RotMatrix returns, the matrix. cdecl. Call trace all_b: 7,824 calls, all from Sprite_AddDrawRecords."
+
+[[func]]
+pc = 0x57BED0
+name = "Light_ObjectDirection"
+ret = "void"
+params = "short *out, const long *angles"
+impl = "src/game/sprite_records.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-20 of its one caller only: Sprite_DrawPass 0x593060 calls it, for an object with bit 0x40 of byte +0x24, with the address of the next free 12-byte record, and adds al of the result to its record count. The function itself (0x3E1 bytes) is unread. cdecl. Call trace all_b: 7,824 calls."
+evidence = "disasm 2026-09-21, 0x11D bytes: copies Light_Angles' three words to Light_AnglesCopy; pushes the GTE matrix; loads Gte_RotMatrix(Light_AnglesCopy) with a zero translation; (0, 0, Light_Angles[3]) through Gte_RotTrans; the low words of angles[0..2] through Gte_RotMatrix, Gte_TransposeMatrix IN PLACE (which is not a transpose: the upper triangle is lost) and Gte_ApplyMatrixLV in place; the three results as s16 to out[0..2]; pops. So the first row of a light matrix, a direction turned into the object's frame - hence the names, from use. cdecl. Call trace all_b: 7,824 calls, all from Sprite_AddDrawRecords, with Light_Matrix and the object's +0x64."
+
+[[data]]
+pc = 0x903598
+name = "Light_Angles"
+ctype = "short"
+count = 4
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Light_ObjectDirection copies words 0..2 to Light_AnglesCopy as a rotation's angles and uses word 3 as the length of the (0, 0, z) vector turned by it. Also read by 0x57C5A0 and 0x594E60, unread."
+
+[[data]]
+pc = 0x7E0680
+name = "Light_AnglesCopy"
+ctype = "short"
+count = 3
+status = "hypothesis"
+evidence = "disasm 2026-09-21: written by Light_ObjectDirection from Light_Angles and handed to Gte_RotMatrix. Also referenced by 0x496A00, 0x496AD0 and 0x57C5A0, unread."
+
+[[data]]
+pc = 0x803560
+name = "Light_Matrix"
+ctype = "unsigned long"
+count = 8
+status = "hypothesis"
+evidence = "pe_xref 2026-09-21: two references, both in Sprite_AddDrawRecords - Light_ObjectDirection writes its first row, Gte_SetMatrix2 loads it whole into Gte_Matrix2, which Gte_NormalColor multiplies a normal by. Where its other rows come from is unread."
+
+[[data]]
+pc = 0x9037A0
+name = "Prim_VertexScratch"
+ctype = "short"
+count = 16
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Sprite_AddDrawRecords writes a quad's four SVECTORs here (x, y, z at 0, 8, 16, 24 bytes) and hands each to Gte_LoadVertex, then the normal to Gte_NormalColor from here. pe_xref: 652 references in some 250 functions - a scratch every primitive builder shares, by that count."
 
 [[func]]
 pc = 0x5935B0

@@ -480,7 +480,8 @@ occur in the attract run was not measured.
     `0x8CB580`, each handed to a handler chosen by its top byte through the
     table **`0x663008`**. By its place the map's cells; what the records are
     was not read. An indirect call per record: no clone, check it live.
-  - **`0x57BAE0(record)`**, 7,824 calls, `0x3E1` bytes: not read. Its call
+  - **`0x57BAE0(record)`**, 7,824 calls, `0x3E1` bytes: **ours since
+    2026-09-21, section 12.** Was: not read. Its call
     tree (`0x57BED0`, `0x57BFF0`, `0x57C070`) is matrix work through the GTE
     and one `Gpu_SetPolyFT4`; every library call in it is ours except the
     matrix product `0x5A7D70`
@@ -492,3 +493,87 @@ occur in the attract run was not measured.
   is [`IDEAS.md`](IDEAS.md) I14 level 1, and would be the first check of it
   that is not the fuzz's stand-ins or an identical frame hash.
 - Whether the PSX side has a name for any of this. Not looked up.
+
+## 12. A 3D object's quads - taken over (2026-09-21)
+
+`src/game/sprite_records.cpp`. `Sprite_AddDrawRecords` `0x57BAE0` was the
+pass's second callee still Capcom's (section 11). It waited on the matrix
+product, and with that ours (DIV-0021) its whole call tree is ours.
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Sprite_AddDrawRecords` | `0x57BAE0` | 7,824 | The current object's quads as `POLY_FT4`s of 0x48 bytes in the packet pool, and one 12-byte record per quad for the pass to sort |
+| `Sprite_ObjectMatrix` | `0x57BFF0` | 7,824 | The object's matrix. The position is `(+0x34 >> 9) - 0x4000`, `(+0x38 >> 9) - 0x4000`, and `-(s16 +0x3E / 2)` rounded toward zero, taken through the current GTE matrix into the translation. The low words of `+0x64` / `+0x68` / `+0x6C` are the rotation's angles |
+| `Light_ObjectDirection` | `0x57BED0` | 7,824 | The first row of `Light_Matrix` `0x803560`. `(0, 0, Light_Angles[3])` is turned by the light's angles `0x903598`, then by the object's rotation run through `Gte_TransposeMatrix` in place |
+
+What the main function does:
+
+1. Pushes the GTE matrix.
+2. Builds and loads the object's matrix, scaled by the dword at `+0x40`
+   unless byte `+0x48` is set.
+3. Sets the light direction, loads a copy composed with the camera
+   (`Camera_LoadMatrix`), and loads `Light_Matrix` as the second matrix.
+4. Takes the count: the `s8` at byte 0 of the object's `+0x54` data, widened
+   to a `u16`. If `count * 0x48` bytes from `Gfx_PacketNext` would pass the
+   buffer's limit, it **returns 0 without popping**.
+5. For each 0x28-byte quad under `+0x50`:
+   - its four vertices go through `Prim_VertexScratch` `0x9037A0` and
+     `Gte_Rtps` into the primitive's screen points and float depths;
+   - the colour comes from `+0x5D..+0x5F`, lit through `Gte_NormalColor` when
+     bit 7 of byte 3 of the data is set;
+   - the tpage is for abr `(bit 6 ? that byte : 2) & 3` at `(0x2C0, 0x100)`,
+     the CLUT is at `(quad word 0 << 4, 0x1E3)`, and semi-transparency is
+     bit 6;
+   - the record is: the primitive, the largest depth / 4, the first depth
+     / 4, and the object.
+6. Advances `Gfx_PacketNext`, pops, and returns the count's low byte, which
+   the pass adds to its record count.
+
+Quirks kept, each in the code's comment:
+
+- A negative count is some 65,000 quads, which the room check then refuses.
+- When there is no room, the matrix stays pushed.
+- The record's depth is a `u16`, compared zero-extended against the whole
+  long. **The pass then sorts on it as an `s16`** (section 2), so a depth
+  past 0x7FFF sorts nearest.
+- `Gte_TransposeMatrix` in place is not a transpose. The upper triangle is
+  lost, so the light direction is not the one intended. Nothing shows it,
+  because `Gte_NormalColor` as shipped copies the unlit colour over the lit
+  one ([`psx-library-layer.md`](psx-library-layer.md) §4).
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=sprite_records`. This module
+injects *first*, so while it runs every one of the three originals' ~25
+callees is still Capcom's. The clones' calls go where the originals went, and
+Capcom's whole call tree runs against ours; the two helpers' clones stand in
+for the helpers.
+
+Each round randomises a fake object with its quads and data, the GTE's
+globals (`0x7DE428..0x7DE7A8`), the light and scratch globals, the camera,
+`Gfx_PacketNext`, `Gfx_BufferIndex`, `Sprite_Current` and a 0x300-byte
+window of the packet pool. All of that and the result's low byte are
+compared. Half the rounds are a scene rather than noise, with depths around
+0..0xFFFF. A matrix's padding word is compared apart (DIV-0021).
+
+Result: 12,000 rounds, 32,476 quads, 3,925 with no room, 1,206 empty, 772
+negative counts, 5,101 lit, 7,998 unscaled, 5,947 scenes: **0 mismatches**.
+The padding differed in 2,121 rounds.
+
+Negative controls, each refused:
+
+| Control | Mismatches |
+|---|--:|
+| The depth compared as `s16` | 217 (scenes only) |
+| A pop before the no-room return | 3,728 |
+| A true transpose | 11,999 |
+| Semi-transparency from bit 5 | 1,827 |
+| The count as a `u8` | 417 |
+| z by `>> 1` for `/ 2` | 2,983 |
+| The CLUT row `0x1E2` | 7,243 |
+
+Live: the attract oracle is identical with all 125 ours, over the 1,202
+frames a 3-minute run compares (2026-09-21, pinned to the original
+language); then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).

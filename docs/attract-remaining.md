@@ -523,15 +523,15 @@ instructions, the heaviest logic function left
 
 `Sprite_AddDrawRecords` and `Sprite_Draw` with what hangs under them - the
 three callees of `Sprite_DrawPass` that are not ours
-([`sprite-draw-order.md`](sprite-draw-order.md) §11). `0x57C070` waits on the
-matrix product (4.11).
+([`sprite-draw-order.md`](sprite-draw-order.md) §11). `0x57C070` is ours
+since 2026-09-21, with the matrix product (4.11).
 
 | Entry | Name | Calls | Bytes | Found as | Main callers |
 |---|---|--:|--:|---|---|
-| `0x57BAE0` | `Sprite_AddDrawRecords` | 10,812 | 993 |  | ours |
-| `0x57BED0` |  | 10,812 | 285 |  | `0x57BAE0` |
-| `0x57BFF0` |  | 10,812 | 128 |  | `0x57BAE0` |
-| `0x57C070` |  | 10,812 | 34 |  | `0x57BAE0` |
+| `0x57BAE0` | `Sprite_AddDrawRecords`, **ours** 2026-09-21 | 10,812 | 993 |  | ours |
+| `0x57BED0` | `Light_ObjectDirection`, **ours** | 10,812 | 285 |  | `0x57BAE0` |
+| `0x57BFF0` | `Sprite_ObjectMatrix`, **ours** | 10,812 | 128 |  | `0x57BAE0` |
+| `0x57C070` | `Camera_LoadMatrix`, **ours** 2026-09-21 | 10,812 | 34 |  | `0x57BAE0` |
 | `0x5935B0` | `Sprite_Draw` | 45,858 | 683 |  | ours |
 | `0x593860` |  | 32,720 | 256 |  | `0x5935B0` |
 
