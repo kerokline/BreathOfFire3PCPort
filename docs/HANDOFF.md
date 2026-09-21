@@ -39,44 +39,35 @@ now pair with PC ones at scale - 3,330 pairs through the tables both builds
 kept ([`attract-remaining.md`](attract-remaining.md) §3, §5). **Later the
 same day an agent can walk the game unattended**: `BOF3X_INPUT` plays a recipe
 of pad presses in the game's own frames and `tools/input_run.py` captures the
-window at each `shot` ([`input-script.md`](input-script.md)). The owner judged
-the first captures: DIV-0010's numerals "look good", DIV-0014's title menu
-"looks perfect". Then **DIV-0018**: the menu's button verbs from the US disc -
-Config's `Quit` / `Init` and the rows of Items, Ability, Equipment and
-Tactics - captured in game.
+window at each `shot` ([`input-script.md`](input-script.md)) - the menus, the
+Config screen, a loaded save's field, and, through a new game, the opening's
+scripted battle. The owner judged the first captures: DIV-0010's numerals
+"look good", DIV-0014's title menu "looks perfect". Then three more pieces of
+the exe's own text went English from the US disc - the menu's button verbs
+(DIV-0018), the battle's command labels (DIV-0019), New Game's names and the
+fish merchant's (DIV-0020) - all but the merchant captured in game
+([`dialogue-localisation.md`](dialogue-localisation.md) §8).
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-000. **The stat labels** (攻击 / 防御 / 智力 / 速度 on Status and Equipment,
-   seen 2026-09-21): the US disc has them right before the verb table
-   DIV-0018 took (`Int`, `Agl`, ... - [`config-screen.md`](config-screen.md)
-   §8). Find the PC's draw the way the verbs were found - the Status screen's
-   handler `0x58A4C0` down to its `Text_DrawAt` calls - then a converter
-   beside `convert_verbs` and a capture with `tools/recipes/menu_screens.txt`.
-   After that, the list headers (`物品`, `治疗`, and battle's `龙技`). **Battle
-   is reachable now**: `tools/recipes/battle_commands.txt` plays a new game
-   into the opening's scripted fight and captures every command of the cross
-   ([`input-script.md`](input-script.md) §4). Still Chinese there: the five
-   command labels (`攻击` `观看` `防御` `道具` `特能`), the combatants' names,
-   the skill list's header. Help lines and skill names are English already.
-   A real encounter needs a deterministic boss or save states (owner,
-   2026-09-21: walking on save 5 meets one, but not repeatably).
-   **DIV-0020 gives New Game the US names** (Ryu ... Peco, Whelp) from
-   `START.EMI`'s default records, and names Manillo the fish merchant;
-   saves keep theirs - **decided by the owner**: gibberish across a language
-   switch is acceptable until a language-independent name system exists
-   (a future piece of work, not scheduled).
-      **DIV-0019 put the command cross's labels in English** (`Atk` ... `Esc`,
-   from the US `BATTLE.EMI`, captured in the fight). Still Chinese there: the
-   target-select banner, the combatants' names, and the skill list's header
-   `龙技` at `0x66A220`. Also found on the way: the stat labels at `0x669CF0`
-   (Attack / Defense / Int / Agility; US `Pwr Def Int Agl` before the verb
-   table) and the turn-counter pair 残留 / 回合 at `0x669D10` / `0x669D18`
-   via `0x669D20`. **`BOF3X_TEXTLOG=1`** logs each string drawn and its
-   address - the fastest way to a string's table: search `.data` for a
-   pointer to it.
+000. **The rest of the exe's labels, the same way**
+   ([`dialogue-localisation.md`](dialogue-localisation.md) §8 has the method
+   and the table of chunk kinds). Found and waiting: the **stat labels** at
+   `0x669CF0` (攻击 / 防御 / 智力 / 速度 on Status and Equipment; the US
+   `Pwr` `Def` `Int` `Agl` stand before the verb table in `STATUS.EMI`) - the
+   draw is unread, so first check whether `Pwr` fits the box; the skill
+   list's header `龙技` at `0x66A220` and the item list's `物品`; the battle's
+   target banner (seen as `攻 击` after choosing Attack); the turn counter's
+   残留 / 回合 at `0x669D10` / `0x669D18`. `BOF3X_TEXTLOG=1` gives each one's
+   address. Captures: `tools/recipes/menu_screens.txt`,
+   `battle_commands.txt`. Still Chinese beyond those: enemy names (battle
+   data, 12-byte fields; the sibling's `names/enemies.toml` has the JP side)
+   and place names. **A real encounter** needs a deterministic boss fight or
+   save states (owner, 2026-09-21: walking on save 5 meets one, but not
+   repeatably). **Saved names** stay as they are - the owner's decision; a
+   language-independent name system is future work, not scheduled.
 
 00. **The PSX pairing, step 1 of [`attract-remaining.md`](attract-remaining.md)
    §5.1's list: draw the divergence map.** `python tools/psx_pair.py areas &&
@@ -126,8 +117,9 @@ The single next action, concrete enough to start without asking anyone.
      "perfect", 2026-09-21. Still open from [`USER_CHECKS.md`](USER_CHECKS.md)
      6: the two-row layout. The load screen behind it reads "Load game?" /
      "Loading complete" in English already.
-   - **Still Chinese:** enemy names (12-byte fields in battle data), character
-     and place names, text baked into artwork, and any string in the
+   - **Still Chinese:** enemy names (12-byte fields in battle data), place
+     names (character names are DIV-0020's, for a new game), text baked
+     into artwork, and any string in the
      executable outside the six name tables. Enemy names are the obvious
      next converter: the sibling's `names/enemies.toml` has the JP side.
    - **Longer names.** The port's name fields are 16 bytes against the US
@@ -355,6 +347,10 @@ _Commands a fresh session needs, verified on the date above._
   `tools/recipes/`, the language in [`input-script.md`](input-script.md) §3.
   Keyboard and mouse off for the run. The field menu button is per save:
   `press @0x903584`, not a shape.
+- **Where does this on-screen string live?** `--env BOF3X_TEXTLOG=1` on
+  `input_run.py` (or the variable before the launcher): `textlog` lines in
+  `build/bof3x.log`, each string's address once; then search `.data` for a
+  pointer to it ([`dialogue-localisation.md`](dialogue-localisation.md) §8).
 - **After a crash:** `CRASH` lines in `build/bof3x.log`, then
   `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
 - **Call trace:** [`call-trace.md`](call-trace.md) §8.
@@ -456,48 +452,43 @@ _One line each, with a pointer. Add when something costs more than an hour._
   comparison.
 - Pairing EMI sections to DAT chunks by order or by address mis-pairs 47
   files; use `dat_census.align` ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
+- A recipe's `shot NAME 10` backs out of a screen before the driver's grab
+  (0.4 s later): four captures of a menu mid-slide. Keep the default 30 on
+  anything that changes ([`input-script.md`](input-script.md) §3).
+- The field's buttons are save data: menu, confirm and cancel are
+  `0x903584` / `0x90358E` / `0x903590`, and save 5's differ from saves 0-3.
+  Press `@0x903584`, not a shape; the menu's top-bar cursor is remembered -
+  `seek` it ([`input-script.md`](input-script.md) §4).
+- The backslash trap again, 2026-09-21: ` ` in a Python heredoc became two
+  NUL bytes in `loc_build.py` ("source code cannot contain null bytes").
+  Edit Python with the editor tool.
 
 ## In flight / uncommitted
 
-Branch `phase-3/intro-takeover`, **committed locally 2026-09-21, not pushed**:
-scripted input - `src/hook/input_script.cpp`, `tools/input_run.py`,
-`tools/recipes/`, [`input-script.md`](input-script.md), six new
-`symbols.toml` entries (`Input_Latch`, `Pad_Read`, `Input_Previous`,
-`Input_Pressed`, `Frame_Counter`, `Field_MenuButton`). Local, gitignored:
-`analysis/shots/` - the captures.
-
-Before that, on the same branch, **committed and pushed 2026-09-21, no PR**:
-[`attract-remaining.md`](attract-remaining.md), `tools/pe_hidden.py`,
-`tools/attract_catalog.py`, `tools/psx_pair.py` (`areas`, `tables`, `fill`,
-`propagate`), and the WndProc correction (`0x4FC6F0`) in `windowed-mode.md`,
-`save-files.md` and `symbols.toml`. Local, gitignored, behind it:
-`analysis/calltrace/hidden_a/` (first call over the hidden entries) and
-`hidden_b/` (all calls over `entries_plus_hidden.txt`);
-`analysis/pc_hidden*.json`, `area_pairs*.json`, `pairs_propagated.json`,
-`table_matches.json`, `attract_catalog.md` - all regenerable by the tools.
+Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
+the attract catalogue and the PSX pairing ([`attract-remaining.md`](attract-remaining.md),
+`tools/pe_hidden.py`, `tools/attract_catalog.py`, `tools/psx_pair.py`, the
+WndProc correction), then scripted input (`src/hook/input_script.cpp`,
+`tools/input_run.py`, `tools/recipes/`, [`input-script.md`](input-script.md))
+and DIV-0018..0020 (`src/game/menu_verbs.cpp`, `src/game/char_names.cpp`,
+kinds 8-11 in `dat_load.cpp`, `tools/dat.py` and `tools/loc_build.py`), with
+`BOF3X_TEXTLOG` in `src/game/text_draw.cpp`. Nothing uncommitted.
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `localization/script-font-upscale`, cut from `main` after PR 5 merged:
-**committed and pushed 2026-09-20, no PR** - the owner has not asked for one.
-It holds DIV-0005..0013: the language overlays and three text takeovers
-(`Msg_SystemPtr`, `Text_DrawString`, `Text_DrawImmediate`),
-`bof3::RetargetCall` and `bof3::PatchBytes`, `tools/loc_build.py`,
-`tools/psx_disc.py`, `tools/font_pc.py`; and the menu evening - DIV-0010
-(`src/game/gfx_sprite_uv.cpp`), DIV-0011 (`src/game/menu_frame.cpp`),
-DIV-0012 (`src/game/gfx_filter.cpp`), DIV-0013 (in `loc_build.py`),
-`tools/task_stacks.py`, `tools/mem_watch.py`,
-[`menu-screens.md`](menu-screens.md). **Committed locally, not pushed, and
-still waiting on the owner's look in game:** DIV-0014, the title menu - `src/game/title_menu.cpp`, kind 6
-in `dat_load.cpp` and `tools/dat.py`, `build_title` in `tools/loc_build.py`,
-[`title-menu.md`](title-menu.md).
+`localization/script-font-upscale` (DIV-0005..0017) is merged into `main`
+(PR 6); `phase-3/intro-takeover` was cut after it.
 
 Local only, gitignored, worth keeping:
 
 - `bof3/BOF3.CFG` (windowed mode) and `build/bof3x.ini` (launcher settings);
-  the owner's PC saves `bof3/BISLPS00/01/0F.DAT`
-  and the two converted ones, `02` (JP) and `03` (US).
+  the owner's PC saves `bof3/BISLPS00`..`05` and `0F.DAT`. Slots 0 and 1 are
+  from before the menu exists, 2 is at camp, **5 is adult Ryu, Lv 38 - the
+  one the menu recipes load** (converted from a US save, so its shape
+  buttons are a US layout: menu square, confirm cross, cancel triangle).
+- `analysis/shots/` - every recipe capture, including the A/Bs and sheets
+  sent to the owner.
 - `analysis/attract/orig_a.tsv` - the all-original reference for
   `attract_diff.py`; `ours_d_fileopen.log`, behind
   [`attract-mode.md`](attract-mode.md) §7.

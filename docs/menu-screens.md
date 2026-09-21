@@ -42,6 +42,15 @@ Tactics), `+4` open/close countdown, `+5` the current cursor (top-bar slot,
 counted from 0; Config reuses it for its row and restores it), `+6` the
 character shown by Status. List cursors are elsewhere, unfound.
 
+Since 2026-09-21 an input recipe walks all of this unattended
+([`input-script.md`](input-script.md), `tools/recipes/menu_screens.txt`).
+Measured on the way: the top-bar cursor `+5` survives closing and reopening
+the menu, so a recipe seeks it rather than counting presses; the menu opens
+on `Field_MenuButton` `0x903584` and screens are entered and left on the
+save's own confirm and cancel words, `0x90358E` / `0x903590` - all three
+per save (save 5: square, cross, triangle). The buttons above each screen's
+panel are DIV-0018 ([`config-screen.md`](config-screen.md) §8).
+
 ## 2. Pieces named by what they were seen or read to do
 
 - `0x575690 (u8 kind)`: the menu backdrop - SPRTs tiled 240 wide in rows 32

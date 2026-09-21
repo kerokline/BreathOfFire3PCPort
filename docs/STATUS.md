@@ -111,8 +111,8 @@ toggle the owner wants - [`IDEAS.md`](IDEAS.md) I15) and a white text palette
 the PC team brightened (**DIV-0013**, restored from the disc by the English
 overlay). Later the same evening the title menu, which is artwork and not
 text, was rebuilt from the disc - NEW GAME, LOAD GAME, and a CONFIG cut from
-their letters (**DIV-0014**, [`title-menu.md`](title-menu.md); built, unseen
-in game). The frame hash was re-recorded with all of it up to DIV-0013
+their letters (**DIV-0014**, [`title-menu.md`](title-menu.md); confirmed in
+game by the owner off a recipe capture, 2026-09-21). The frame hash was re-recorded with all of it up to DIV-0013
 (`ab15_*`, recorded with DIV-0010 in and before DIV-0011..0013, none of
 which touches a traced function): identical over 7,936 frames. Sixteen of the hundred and nine from stage 1 are beyond
 the attract sequence's reach and rest on the differential fuzz alone -
@@ -225,6 +225,21 @@ What is established:
   the PlayStation's bit layout, and the input latch runs more often than
   frames, so the recipe keys on `Frame_Counter` `0x937F94`. It reached the
   Config screen, a save's field menu, and the first in-menu A/B of DIV-0010.
+- **More of the exe's own text is English** (2026-09-21,
+  [`dialogue-localisation.md`](dialogue-localisation.md) §8): the menu's
+  button verbs on Config, Items, Ability, Equipment and Tactics (DIV-0018),
+  the battle's command labels (DIV-0019), and New Game's default names -
+  Ryu ... Peco, the Whelp - and Manillo the fish merchant's (DIV-0020). Each
+  is a slot table in `.data` whose US twin sits beside data the PC kept byte
+  for byte, which is how the build finds it on the player's disc. All but
+  Manillo's are captured in game. Saves keep their names; the owner accepted
+  gibberish across a language switch until a language-independent name
+  system exists.
+- **The first battle is reachable unattended**: a new game plays into the
+  opening's scripted fight (field mode 5), and its command cross -
+  hold-to-choose - is captured command by command
+  ([`input-script.md`](input-script.md) §4). DIV-0010 and DIV-0014 were
+  confirmed by the owner off recipe captures the same day.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 
@@ -244,8 +259,10 @@ What is established:
    overlay `DAT`s and an upscaled font table, both built locally from the
    player's discs. **Begun 2026-09-20: English dialogue draws in the attract
    sequence**, and by the evening the owner was playing it: dialogue,
-   narration, menus, item and ability names (DIV-0005..0009). Enemy, character
-   and place names and text in artwork are still Chinese - so
+   narration, menus, item and ability names (DIV-0005..0009); on 2026-09-21
+   the menu's buttons, the battle's command labels and New Game's names
+   (DIV-0018..0020). Enemy and place names, some labels and headers, and text
+   in artwork are still Chinese - so
    that the owner can make headway through the game
    itself — and with that, reach code the attract sequence never runs. What
    this means in detail is the owner's to say; the asset side of selectable
