@@ -705,6 +705,41 @@ def convert_verbs(game, donor):
     return [(KIND_VERBS, 0, bytes(payload))]
 
 
+# The characters' default names (DIV-0020): New Game copies eight 0xA4-byte
+# records from CHAR_RECORDS (0x437820), each starting with a 9-byte name. The
+# US START.EMI has the same eight records with a 5-byte name: every byte after
+# the name equals the PC's, four places earlier (measured 2026-09-21, 155 of
+# 155 in all eight - the widening docs/save-interchange.md describes). Record
+# 0's tail is the anchor, and every record's tail is checked.
+KIND_CHAR_NAMES = 10
+CHAR_RECORDS, CHAR_STRIDE, CHAR_COUNT, CHAR_NAME_PC, CHAR_NAME_US = 0x64B390, 0xA4, 8, 9, 5
+
+
+def convert_char_names(game, donor):
+    """[(kind, tag, payload)] for the default names, or [] if `donor` (START.EMI) has none."""
+    pc = exe_bytes(game, CHAR_RECORDS, CHAR_COUNT * CHAR_STRIDE)
+    tail_len = CHAR_STRIDE - CHAR_NAME_PC
+    at = donor.find(pc[CHAR_NAME_PC:CHAR_STRIDE])
+    if at < CHAR_NAME_US:
+        return []
+    base = at - CHAR_NAME_US
+    payload = bytearray([CHAR_COUNT])
+    for k in range(CHAR_COUNT):
+        us = donor[base + k * CHAR_STRIDE:base + k * CHAR_STRIDE + CHAR_NAME_US + tail_len]
+        if us[CHAR_NAME_US:] != pc[k * CHAR_STRIDE + CHAR_NAME_PC:(k + 1) * CHAR_STRIDE]:
+            raise SystemExit("names: character record %d differs from the PC's past its name" % k)
+        raw = us[:CHAR_NAME_US].split(b"\x00")[0]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("names: character %d holds a code English does not have: %s" % (k, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > CHAR_NAME_PC:
+            raise SystemExit("names: character %d encodes to %d bytes, the field holds %d"
+                             % (k, len(out) + 1, CHAR_NAME_PC))
+        payload += out + b"\x00"
+    return [(KIND_CHAR_NAMES, 0, bytes(payload))]
+
+
 # The battle's command labels (DIV-0019): seven 8-byte slots at BATTLE_SLOTS,
 # drawn left-aligned in a box beside the command cross by 0x4439A0, the box
 # placed from BATTLE_BOXES, four s16 a command. The US BATTLE.EMI has the same
@@ -964,6 +999,9 @@ def cmd_all(args):
         verbs = convert_verbs(args.game, disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += verbs
         print("menu verbs: " + ("%d" % VERB_COUNT if verbs else "not found on this disc"))
+        chars = convert_char_names(args.game, disc.read(start_emi[0]))
+        overlays["FIRST.DAT"] += chars
+        print("character names: " + ("%d" % CHAR_COUNT if chars else "not found on this disc"))
     battle_emi = disc.find("BATTLE.EMI")
     if battle_emi and not args.only:
         cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))

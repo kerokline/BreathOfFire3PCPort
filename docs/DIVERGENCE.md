@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 19 entries, DIV-0001..0019)
+**Status:** IN PROGRESS (opened 2026-09-18; 20 entries, DIV-0001..0020)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -949,4 +949,39 @@ designed in rather than bolted on.
   same fight: the target-select banner (`攻 击`, seen when L2 confirmed
   Attack), the combatants' names, the skill list's header `龙技`
   (`0x66A220`).
+
+### The characters' default names in the overlay's language
+
+- **ID:** DIV-0020
+- **Date:** 2026-09-21
+- **Subsystem:** text / New Game (only with a language overlay)
+- **Original behaviour:** the port has no name entry. New Game (`0x437820`)
+  copies seven 0xA4-byte default character records from `0x64B390` into the
+  live table `0x903A70` and the whelp's, the eighth, from `0x64B80C` into
+  slot 7 (`0x669736`); each begins with a 9-byte name - 龙 妮娜 加兰多 带波
+  雷伊 小桃 培克洛 巴比 (glyphs rendered from the port's font). One more
+  copy of the whelp's name, the 8-byte slot `0x669CE0`, is copied five bytes
+  into character 7's name at `0x42E09D`, a reset at some event.
+- **New behaviour:** a kind-10 chunk in the English `FIRST.DAT` carries the US
+  disc's eight default names - Ryu, Nina, Garr, Teepo, Rei, Momo, Peco,
+  Whelp - read from `START.EMI`'s own default records, and the DLL writes
+  them into the eight name fields and the whelp's name into `0x669CE0`, after
+  checking the three instructions that read those addresses. New Game hands
+  them on as it always did.
+- **Rationale:** stage 2 (DIV-0005); the owner asked for the names New Game
+  gives. The US records equal the PC's in every byte past the name, four
+  places earlier (155 of 155 in all eight), which is how `loc_build.py`
+  finds and checks them.
+- **Also in the PSX version?** Yes - the PlayStation's default names; the
+  PlayStation also asks for Ryu's, which the port does not
+  ([`save-interchange.md`](save-interchange.md) §2).
+- **Reversible?** play without `BOF3X_LANG`.
+- **Checked:** captured 2026-09-21 in the new game's battle: "Whelp" in the
+  turn banner and the status bar. **Not changed: saves.** A loaded save
+  carries its own names, so a game begun without the overlay keeps its
+  Chinese ones, and a game begun with it writes English names into its save -
+  which then draw as whatever glyphs the single-byte codes name when played
+  *without* the overlay. Not touched either: `0x669CD8`, 马尼洛, a combatant
+  name the battle copies for id `0x16` (`0x52D1EC`) and seven field
+  functions load - its US counterpart is unfound.
 

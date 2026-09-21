@@ -2489,3 +2489,30 @@ count = 28
 status = "evidence"
 evidence = "disasm 2026-09-21: 0x4439A0 reads s16 +0 and +2 of the record at 0x64E2C8 + 8 * command as the label box's x and y (0x443A06, 0x4439FE). +4 and +6 not read here. Byte-identical to the US BATTLE.EMI's table after its labels."
 
+# ---------------------------------------------------------------------------
+# New Game's characters (2026-09-21, DIV-0020).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x64B390
+name = "Char_DefaultRecords"
+ctype = "unsigned char"
+count = 0xA4
+status = "evidence"
+evidence = "disasm 2026-09-21: NewGame_InitCharacters 0x437820 copies 0x29 dwords from 0x64B390 + n * 0xA4 to 0x903A70 + n * 0xA4 for n = 0..6, then the record at 0x64B80C (n = 7) into slot Char_WhelpSlot. Each starts with a 9-byte name; the US START.EMI's eight records equal these past the name, four bytes earlier (155 of 155 each)."
+
+[[data]]
+pc = 0x669736
+name = "Char_WhelpSlot"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-21: NewGame_InitCharacters copies the eighth default record into slot 0x903A70 + this * 0xA4; holds 7."
+
+[[func]]
+pc = 0x437820
+name = "NewGame_InitCharacters"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x437820..0x4378AA: seven default records copied, one byte derived per character from its byte +0x0A and a table at 0x64B8B0 (shl 4, idiv, add) stored at +0xAA, +0x78, +0x8A of the previous record's offset arithmetic, then the whelp's record into slot Char_WhelpSlot. The name is a guess from what it copies."
+

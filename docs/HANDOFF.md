@@ -63,7 +63,12 @@ The single next action, concrete enough to start without asking anyone.
    the skill list's header. Help lines and skill names are English already.
    A real encounter needs a deterministic boss or save states (owner,
    2026-09-21: walking on save 5 meets one, but not repeatably).
-   **DIV-0019 put the command cross's labels in English** (`Atk` ... `Esc`,
+   **DIV-0020 gives New Game the US names** (Ryu ... Peco, Whelp) from
+   `START.EMI`'s default records; saves keep theirs. Open: whether the
+   overlay should also rename a *loaded* save's characters whose names are
+   still the Chinese defaults - the owner's idea; it writes English into the
+   save, which then reads wrong without the overlay, so it wants a decision.
+      **DIV-0019 put the command cross's labels in English** (`Atk` ... `Esc`,
    from the US `BATTLE.EMI`, captured in the fight). Still Chinese there: the
    target-select banner, the combatants' names, and the skill list's header
    `龙技` at `0x66A220`. Also found on the way: the stat labels at `0x669CF0`
