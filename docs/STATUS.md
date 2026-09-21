@@ -93,7 +93,25 @@ did we, because it has one reader against the script's forty-one; and the
 Chinese port's name fields are 16 bytes where the US disc's are 12. Three
 functions of the text path are ours - `Msg_SystemPtr`, `Text_DrawString`,
 `Text_DrawImmediate` - each fuzzed against a clone; the last one's fuzz found
-a slip of Capcom's the read had missed. Sixteen of the hundred and nine from stage 1 are beyond
+a slip of Capcom's the read had missed. The same evening the owner walked the field menu while
+it was sampled read-only ([`menu-screens.md`](menu-screens.md)): its state
+machine is mapped, and the first of four defects of the 2001 menu is fixed -
+**DIV-0010**, the Direct3D sprite handlers' far texture edge, which cut the
+bottom off every menu numeral ([`known-defects.md`](known-defects.md) D1).
+That one is not a reimplementation: the log's "115 ours" counts three copies
+of Capcom's own handlers with two operands re-aimed, because a drawn surface
+cannot be checked yet. **DIV-0011** followed: the Config panel's frame, whose
+draw the PC build compiled to an empty function, drawn again from a read of
+the PlayStation's, found by searching the owner's disc for the call's
+arguments; the reserve list on "change party members" had the same empty
+call and got the same frame. The owner's next report, a glow round PC text,
+turned out to be two things: bilinear filtering under a low alpha test
+(**DIV-0012**, an opt-in `BOF3X_FILTER=point`, the first half of a look
+toggle the owner wants - [`IDEAS.md`](IDEAS.md) I15) and a white text palette
+the PC team brightened (**DIV-0013**, restored from the disc by the English
+overlay). The frame hash was re-recorded with all of it
+(`ab15_*`, recorded with DIV-0010 in and before DIV-0011..0013, none of
+which touches a traced function): identical over 7,936 frames. Sixteen of the hundred and nine from stage 1 are beyond
 the attract sequence's reach and rest on the differential fuzz alone -
 `Gfx_UploadLzss`, `Gfx_MoveImage`, `Gfx_MoveCells`, nine of the depth stores,
 `Gte_RotTransPers3`, the two `RotAverage`s and `Gte_ScaleMatrix` - as do

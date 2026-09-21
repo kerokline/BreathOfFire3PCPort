@@ -533,3 +533,137 @@ designed in rather than bolted on.
   assumption that every character is 8 px wide, shifts left by 3 px for each
   apostrophe or comma before the point in question. None seen wrong.
 - **Reversible?** Yes: build the overlays with `--mono`.
+
+### Give a sprite's last texel row and column their share of the screen
+
+- **ID:** DIV-0010
+- **Date:** 2026-09-20
+- **Subsystem:** render
+- **Original behaviour:** the three Direct3D sprite handlers (`D3d_DrawSprt`
+  `0x5A2300`, `D3d_DrawSprt8` `0x5A2520`, `D3d_DrawSprt16` `0x5A2710`) take the
+  quad's texture edges from the float table `0x7CA9E0`, read live as
+  `(i + 0.512) / 256`: near edge `tc[u]`, far edge `tc[u + w - 1]`, with the
+  quad the full `w` pixels. The values are right for bilinear filtering of a
+  cell in a shared page - the centres of the first and last texel - but a
+  vertex value is reached one pixel PAST the last pixel drawn, so at 2x the
+  last pixel of an 8 pixel sprite samples `u + 7.07`, not `u + 7.5`: the last
+  texel row gets about 0.7 of a screen row where the first gets 1.6. Seen by
+  the owner as menu numerals cut off at the bottom
+  ([`known-defects.md`](known-defects.md) D1); the 8 px digits' bottom stroke
+  is the last row of their cell (VRAM shadow read live).
+- **New behaviour:** the far vertex value is `u + w - 1/30 + 0.012` texels, so
+  that the last PIXEL samples the centre of the last texel (exact for w = 8 at
+  scale 2, within 0.03 of a texel otherwise, and never past the centre for
+  w >= 8). The near edge and the table `0x7CA9E0` are untouched. Implemented
+  as the original handlers' own bytes, copied, with the two far-edge operands
+  re-aimed at our table (`src/game/gfx_sprite_uv.cpp`) - not a
+  reimplementation; the handlers end in COM calls and a drawn surface cannot
+  be checked yet.
+- **Rationale:** a bug, not a choice: the first and last texel are treated
+  differently for no reason a design would have, and it cuts the base off every
+  `2`. The obvious fix (far edge `u + w`) was built first and is wrong - it
+  blends in the neighbouring cell and drew seams through the title logo
+  (`analysis/d1/fix1`, 2026-09-20).
+- **Also in the PSX version?** no - the PlayStation GPU does not filter and
+  copies a sprite texel for texel.
+- **Reversible?** `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16`.
+- **Checked:** attract run, no crash, oracle unaffected (render only);
+  screenshots original against ours in `analysis/d1/`: no seams, sprites
+  drawn at a true 2x where the original stretched w - 1 texels over w pixels
+  (the title's (R) mark is a pixel shorter). **Not yet seen: the menu numerals
+  themselves** - the attract sequence draws none; owner to look.
+
+### Draw the Config panel's frame, which the PC build compiled to nothing
+
+- **ID:** DIV-0011
+- **Date:** 2026-09-20
+- **Subsystem:** menu
+- **Original behaviour:** the Config screen's panel draw `0x461710` and its
+  controller sub-panel `0x461A50` each begin with a call `(x, y, w, h)` -
+  `(.., 0x21, 0x0D)` and `(.., 0x0C, 0x0F)` - to `0x4DF820`, a bare `ret` with
+  25 call sites of 0, 1 and 4 arguments (several empty functions folded into
+  one). The rows are drawn with no panel behind them; seen by the owner
+  against the PlayStation game, 2026-09-20.
+  **Extended the same day to the reserve list of "change party members"**,
+  which the owner showed unframed: the PlayStation's `0x801EA99C` frames it
+  `0x12` by `0x15` cells with the same function, and the PC has that call
+  twice, `0x581313` (in `0x581300(x, y)`) and `0x59AA98` (in `0x59AA80(obj)`),
+  both to the empty function. Config's frame was confirmed right by the owner
+  in game.
+- **New behaviour:** those call sites - four now (`bof3::RetargetCall`; the
+  other 21 are untouched) reach `Menu_DrawFrame` in `src/game/menu_frame.cpp`, which
+  draws what the PlayStation's function draws, piece for piece and in its
+  order: four edge strips and a fill of 8 x 8 tiles, then four 16 x 16
+  corners, all through the PC's own `Menu_DrawPiece` `0x57D860`.
+- **Rationale:** a port defect. The PlayStation function is `0x801DF56C` in
+  `STATUS.EMI`, called from the same function with the same arguments (read
+  from the owner's Japanese disc, 2026-09-20; the decode is the comment on
+  ours). It repeats each tile across one sprite with the GPU's texture window,
+  which the port's renderer does not have - the likely reason the body was
+  left empty (not established). The PC executable still carries all nine
+  pieces in `Menu_DrawPiece`'s rectangle table `0x663C8C`, the tiles at
+  exactly the PlayStation's window origins, so nothing is invented: ours
+  places one piece a tile where the PlayStation placed one sprite a strip.
+- **Also in the PSX version?** no - the PlayStation draws the frame.
+- **Reversible?** `BOF3X_ORIGINAL=Menu_DrawFrame`.
+- **Checked:** start-up validates both call sites (`retarget ON` lines), and
+  an attract run is unaffected. **Not yet seen in game** - the attract
+  sequence opens no menu; owner to look at Config, and at the controller
+  sub-panel. 421 and 172 sprites a frame: watch for anything else on the
+  screen going missing, which is what a full packet pool would look like.
+
+### Offer point sampling as a choice of look
+
+- **ID:** DIV-0012
+- **Date:** 2026-09-20
+- **Subsystem:** render
+- **Original behaviour:** the renderer's set-up `0x5A5160` sets stage 0's
+  filters once - `SetTextureStageState(0, D3DTSS_MINFILTER 0x11, 2)` at
+  `0x5A5B28` and `(0, D3DTSS_MAGFILTER 0x10, 2)` at `0x5A5B3B`, 2 being LINEAR
+  - and alpha testing as GREATER than 8 of 255. Everything is drawn
+  bilinearly at 2x, and a glyph's edge, blended towards the transparent
+  colour key, is drawn as a grey fringe: part of the "glow" the owner saw
+  round PC text (the other part is DIV-0013).
+- **New behaviour:** with `BOF3X_FILTER=point` in the environment, the two
+  pushed 2s become 1 (POINT) - `bof3::PatchBytes`, new in the hook layer,
+  which refuses unless the bytes are the expected ones. Unset, or `linear`,
+  nothing is touched: **the default is the original's.**
+- **Rationale:** the owner's wish, 2026-09-20: a "clean / sharp" look beside
+  the port's soft one, as a toggle. This is the clean half, as a launch-time
+  switch; a live toggle waits on the game's input being read
+  ([`IDEAS.md`](IDEAS.md) I15). With DIV-0010 a point-sampled sprite is an
+  exact 2x.
+- **Also in the PSX version?** the PlayStation does not filter: point
+  sampling is its look.
+- **Reversible?** opt-in; and `BOF3X_ORIGINAL=Gfx_FilterPoint`.
+- **Checked:** the owner played a session launched this way, 2026-09-20
+  (`analysis/d1/point/`): menu, numerals, portraits and the reserve list's
+  frame all crisp, nothing missing.
+
+### White text in the disc's shades when the text is the disc's
+
+- **ID:** DIV-0013
+- **Date:** 2026-09-20
+- **Subsystem:** text
+- **Original behaviour:** `FIRST.DAT`'s CLUT strip (kind 0, tag `0x8000`)
+  differs from the PlayStation's (`FIRST.EMI`, section for `0x80033800`; US
+  and JP discs alike) in **row 0 alone**, white text: indices 1-7 are 28, 27,
+  25, 24, 21, 17, 12 and index 8 (0, 0, 6), where the discs have 25, 23, 20,
+  17, 13, 8, 4 and (0, 0, 1). Brightened, presumably for the port's
+  anti-aliased Chinese glyphs. Measured 2026-09-20 from the files, and the
+  port's row read back from live VRAM at (0, 480).
+- **New behaviour:** `tools/loc_build.py all` puts the strip into
+  `en.FIRST.DAT` with row 0 taken from the player's disc; the other rows are
+  the port's, which already match. `--pc-white` leaves it out. Only under
+  `BOF3X_LANG`: with no language set nothing changes.
+- **Rationale:** the donor font's cells carry their drop shadow at index 7
+  (1,812 of 9,600 pixels over the 100 cells). On the port's row that is
+  mid-grey, and the owner saw it: a grey shadow where the PlayStation's is
+  black. The cells were drawn for the disc's row, so they get it.
+- **Side effect, accepted:** Chinese glyphs still on screen under
+  `BOF3X_LANG=en` (names not yet converted) are drawn with the darker ramp.
+- **Also in the PSX version?** this restores the PSX values.
+- **Reversible?** rebuild with `--pc-white`, or play without `BOF3X_LANG`.
+- **Checked:** live VRAM row 0 reads the disc's values in an attract run;
+  dialogue before and after in `analysis/d1/cmp_white.png` - dark shadow.
+

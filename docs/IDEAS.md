@@ -576,3 +576,24 @@ How other projects do it, beyond OpenRCT2, is from general knowledge and not
 surveyed for [`prior-art/`](prior-art/): emulator CI that replays recorded GPU
 command streams and hashes the frames (Dolphin's FifoCI, PCSX2's GS dumps),
 and exact-hash sets of accepted images triaged by people (Skia Gold).
+
+## I15 — A look toggle: clean / sharp against soft / CRT-like
+
+**Asked for by the owner, 2026-09-20**, after seeing what the port's bilinear
+filter does to text. Two looks, switchable in game:
+
+- **Clean**: point sampling (DIV-0012 already does it at launch,
+  `BOF3X_FILTER=point`), exact 2x sprites (DIV-0010).
+- **Soft**: the port's bilinear look - or better, something that is actually
+  CRT-like (scanlines, a slight bloom) rather than merely blurred. That half
+  is a post-process and belongs with the presentation layer's replacement
+  (I8); under DirectDraw / `IDirect3D3` there is nowhere to put it.
+
+What a LIVE toggle needs: the two `SetTextureStageState` calls made again on
+the device at `[0x7CC350]` (vtable `+0xA0`, stage 0, states `0x10` / `0x11`,
+value 1 or 2) - safe from the render thread between frames; `Gfx_BeginFrame`
+is ours and is the obvious place. And a key: **the game's input path is
+unread**, which the owner expects to come with a controller-mapping pass. F8
+(windowed) shows the port does read function keys somewhere; that reader is
+the place to start.
+

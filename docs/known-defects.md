@@ -29,12 +29,32 @@ fault (consistent with `LoadDatFile` and `Gfx_LoadImage` comparing
 byte-identical, [`asset-loading-path.md`](asset-loading-path.md)); **the
 clipping happens at draw time.**
 
-**Not established:** which draw path, and why. Hypothesis only: a source
-rectangle or quad height that is short by a row or two once the PSX 320x240
-coordinates are doubled. The draw path for these numerals is unread.
+**Cause read, 2026-09-20 - every sprite's far texture edge is one texel
+short.** The owner's menu screenshots show it on every menu numeral, not only
+Equipment. The menu's numerals are `0x517090` (the 8x8 font: `SPRT_8`, u =
+`((c - 0x20) % 32) * 8`, v likewise `/ 32`, page (960, 0)) and `0x516F60` (the
+12x12 font, 21 to a row, same page). In the live VRAM shadow the 8 px digits
+fill rows 1-7 of their cell and the 12 px ones rows 1-11: the last row of the
+sprite is the glyph's bottom stroke. The D3D sprite handlers - `0x5A2300`
+(`SPRT`), `0x5A2520` (`SPRT_8`), `0x5A2710` (`SPRT_16`), reached through the
+draw `0x59EE50`'s second jump table `0x59F3D8` - take texture coordinates from
+a float table at `0x7CA9E0`, read live as `tc[i] = (i + 0.512) / 256`. The
+near edge is `tc[u]`; the far edge is **`tc[u + 7]`** (table base `0x7CA9FC`),
+`tc[u + 15]` (`0x7CAA1C`) and `tc[u + w - 1]` (`0x7CA9DC`), while the quad is
+the full 8, 16 or w pixels wide (`+ 8.0` from `0x5C41CC`, times the scale
+`0x7C9F4C` / `0x7C9F48`, both 2.0 here). So w - 1 texels are stretched over w
+pixels: at 2x the last texel row gets one screen row of sixteen instead of
+two, and the rows before it are unevenly doubled. Glyphs that touch the bottom
+of their cell show it; everything drawn as a sprite has it.
 
-**Next:** the A/B run; then find the numeral draw call for this screen
-(`0x59EE50`'s packet walk) and compare the height it uses with the glyph's.
+**Correction to the paragraph above, same day:** the port filters
+bilinearly, and the inset is what keeps a cell's neighbours out - the values
+are right and the slip is that the far value is reached one pixel past the
+last one drawn. **Fixed as DIV-0010** ([`DIVERGENCE.md`](DIVERGENCE.md)); the
+owner has not yet looked at the menu numerals with it.
+
+**Not established:** the same for the `POLY_FT4` handlers, which use the same
+table; the A/B run.
 
 ## D2 — The window title is mojibake on a non-Chinese system locale
 

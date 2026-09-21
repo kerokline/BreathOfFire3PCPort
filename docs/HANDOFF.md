@@ -26,8 +26,12 @@ two reports (choice lists at 12 px, a gap after the apostrophe) were fixed the
 same day. Three of the hundred and twelve are the text path's:
 `Msg_SystemPtr`, `Text_DrawString` and `Text_DrawImmediate`, each fuzzed
 against a clone of the original. The attract oracle passes original-vs-ours
-with all hundred and twelve and no language set. **The frame hash reference is
-stale** - see "Pick up here" 1. Details: [`dialogue-localisation.md`](dialogue-localisation.md);
+with all hundred and twelve and no language set, and **the frame hash was
+re-recorded the same evening** (`ab15_*`, "Pick up here" 1). Then the owner
+walked the field menu while it was sampled read-only: the menu's state
+machine is mapped, four defects of the 2001 menu are written down and the
+first is fixed - DIV-0010, the sprite handlers' far texture edge
+([`menu-screens.md`](menu-screens.md)). Details: [`dialogue-localisation.md`](dialogue-localisation.md);
 do not expand this paragraph into a second copy.
 
 ## Pick up here
@@ -64,12 +68,39 @@ The single next action, concrete enough to start without asking anyone.
      the ramp's grey - worth a look when redrawing.
    - German and French: the discs are in `CDImage/`; their accented cells are
      unread and only 10 glyph slots are free past the 100 English ones.
-1. **Re-record the frame hash reference before any other takeover work.**
-   `Msg_SystemPtr` `0x497740`, `Text_DrawString` `0x516B70` and
-   `Text_DrawImmediate` `0x5961C0` are all in `entries_logic.txt`, owned
-   functions are left unarmed, so `analysis/calltrace/ab14_orig` no longer
-   describes an all-ours run. About sixteen minutes hands-off with its
-   original-vs-original twin (recipe under "How to run things").
+0a. **The menu's defects** ([`menu-screens.md`](menu-screens.md) section 3), all
+   present in the 2001 release and all the owner's to look at in game:
+   - **DIV-0010 is built and unseen where it matters**: the owner looks at
+     the HP / AP numerals in the menu, with and without
+     `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16`.
+   - **DIV-0011**: Config's panel frame (owner: "looks right") and the
+     reserve list's on "change party members" (seen in the owner's session,
+     `analysis/d1/point/s009.png`; the owner has not commented) - drawn as
+     the PlayStation drew them
+     (`src/game/menu_frame.cpp`; off with `BOF3X_ORIGINAL=Menu_DrawFrame`).
+     It costs some 590 sprites a frame - if anything else on that screen
+     goes missing, the packet pool is full.
+   - **The text "glow" is two things, both answered.** Bilinear filtering
+     with a low alpha test (DIV-0012: `BOF3X_FILTER=point` is the clean look,
+     opt-in, played by the owner), and a white text CLUT the PC team
+     brightened (DIV-0013: the English overlay restores the disc's row, so
+     the drop shadow is dark again - **rebuild the overlays**, `loc_build.py
+     all`). A live toggle is [`IDEAS.md`](IDEAS.md) I15 and waits on input.
+   - The screen title's box and centring are still unread; `0x574AB0` (a box
+     out of semi-transparent `POLY_FT4`s) is the lead. The way in that worked
+     for the frames: search the PSX disc's `STATUS.EMI` for the call's
+     constant arguments, read the PlayStation function, then look for what
+     the PC kept of it.
+   - Ability (state 3) was only seen closing, and the list cursors of Items
+     and Equipment are unfound: one more walk under
+     `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
+1. **The frame hash reference is `analysis/calltrace/ab15_orig`** (twin
+   `ab15_origb`), recorded 2026-09-20 with a hundred and fifteen owned, all
+   7,936 frames identical original-vs-original and original-vs-ours.
+   **Frame 5524 is same-configuration noise**: one of two all-ours runs had
+   342 calls there against 346, the other matched the reference - the same
+   frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
+   differing frame at 5524 wants a re-run, not a hunt.
    **Then keep working the queue** - regenerate it first (`python
    tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv` -
    the argument is the *counts* file. `all_b`, 2026-09-20, is a full-list run of
@@ -343,10 +374,15 @@ _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
 Branch `localization/script-font-upscale`, cut from `main` after PR 5 merged:
-committed 2026-09-20, **not pushed, no PR** - the owner has not asked. It
-holds DIV-0005..0009, three takeovers (`Msg_SystemPtr`, `Text_DrawString`,
-`Text_DrawImmediate`), `bof3::RetargetCall`, `tools/loc_build.py`,
-`tools/psx_disc.py`, `tools/font_pc.py`, and the docs.
+**committed and pushed 2026-09-20, no PR** - the owner has not asked for one.
+It holds DIV-0005..0013: the language overlays and three text takeovers
+(`Msg_SystemPtr`, `Text_DrawString`, `Text_DrawImmediate`),
+`bof3::RetargetCall` and `bof3::PatchBytes`, `tools/loc_build.py`,
+`tools/psx_disc.py`, `tools/font_pc.py`; and the menu evening - DIV-0010
+(`src/game/gfx_sprite_uv.cpp`), DIV-0011 (`src/game/menu_frame.cpp`),
+DIV-0012 (`src/game/gfx_filter.cpp`), DIV-0013 (in `loc_build.py`),
+`tools/task_stacks.py`, `tools/mem_watch.py`,
+[`menu-screens.md`](menu-screens.md). Nothing uncommitted.
 
 Local only, gitignored, worth keeping:
 
@@ -361,11 +397,11 @@ Local only, gitignored, worth keeping:
 - `analysis/calltrace/all_b/` - the full-list all-original run of a whole
   attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
   concatenated, which the exclusion list was rebuilt from.
-- `analysis/calltrace/ab3_orig/` - the all-original frame-hash reference,
-  recorded with twenty-four owned, **stale since 2026-09-20**; the current one
-  is `analysis/calltrace/ab14_orig/` (and `ab14_origb`, its noise-floor twin),
-  recorded with a hundred and nine under the rebuilt `entries_logic.txt`
-  (`entries_logic_0919.txt` is the old list). Owned
+- `analysis/calltrace/ab15_orig/` - the all-original frame-hash reference
+  (and `ab15_origb`, its noise-floor twin; `ab15_ours`, `ab15_oursb`),
+  recorded 2026-09-20 with a hundred and fifteen owned under
+  `entries_logic.txt` (`entries_logic_0919.txt` is the old list). `ab14_*`
+  and `ab3_*` are stale. Owned
   functions are left unarmed, so it survives a takeover only when the function
   was not in `entries_logic.txt` to begin with (`Gfx_TexCacheFind` is
   render-timed and was not). Taking over a *logic* function changes every
@@ -375,6 +411,9 @@ Local only, gitignored, worth keeping:
   cells, and `shots/`, the attract screenshots behind DIV-0005/0006.
 - `CDImage/` - the owner's PSX discs (USA, Japan, Germany, France) and two PSP disc images (`psp-jp`, `psp-eu` in
   `fixtures.toml`). Never commit; extract to scratch, not into the tree.
+- `analysis/memwatch/menu_state.tsv` - the owner's menu walk, state bytes
+  against time; `analysis/d1/` - screenshots original against DIV-0010
+  (`fix1` is the first, wrong, attempt with its seams).
 - `analysis/experiments/experiment_mulmatrix.cpp` and `analysis/attract/pad_*`,
   `analysis/calltrace/padh_*` / `padd_*` - the matrix-padding experiment.
 - `analysis/attract/ab12_shadow.log` - the run the x87 control word was
