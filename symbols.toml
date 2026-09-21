@@ -2326,3 +2326,33 @@ ret = "void"
 params = "void"
 status = "hypothesis"
 evidence = "disasm 2026-09-20 of its caller only: Sprite_DrawPass 0x593060 sets Sprite_Current to a record's object and calls it, under bit 1 of Draw_PassFlags. The function itself (683 bytes, and 0x593860 under it) is unread. cdecl. Call trace all_b: 33,850 calls."
+
+# --- The Direct3D end: sprite handlers (docs/known-defects.md D1, DIV-0010) ---
+
+[[func]]
+pc = 0x5A2300
+name = "D3d_DrawSprt"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x5A2300..0x5A2511, straight-line: the draw 0x59EE50's second jump table 0x59F3D8 (byte index table 0x59F440, code byte [prim + 7] & 0xFC) sends code 0x64 here. Four 0x20-byte vertices at 0x7CA958 (x, y, z, rhw, diffuse, specular, u, v), positions prim floats +8 / +0xC times the scale 0x7C9F4C / 0x7C9F48, w and h from +0x18 / +0x1A, texture edges from the float table 0x7CA9E0: near tc[u], far tc[u + w - 1] (operand 0x7CA9DC). Ends in a COM call, device [0x7CC350] vtable +0x70, (5, 0x1C4, verts, 4, 0). Not reimplemented: DIV-0010 runs a copy with the table operands re-aimed (src/game/gfx_sprite_uv.cpp)."
+
+[[func]]
+pc = 0x5A2520
+name = "D3d_DrawSprt8"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x5A2520..0x5A270B, read to the last instruction: code 0x74. As D3d_DrawSprt with the size fixed: + 8.0 (0x5C41CC) on both axes, far texture edge tc[u + 7] (operand 0x7CA9FC). The table read live from the owner's game: tc[i] = (i + 0.512) / 256."
+
+[[func]]
+pc = 0x5A2710
+name = "D3d_DrawSprt16"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x5A2710..0x5A28FB: code 0x7C. As D3d_DrawSprt8 with + 16.0 (0x5C41D0) and far texture edge tc[u + 15] (operand 0x7CAA1C). Both constants read from the image: 0x5C41CC = 8.0, 0x5C41D0 = 16.0."
+
+# --- The field menu's panel pieces (docs/menu-screens.md, DIV-0011) ---
+
+[[func]]
+pc = 0x57D860
+name = "Menu_DrawPiece"
+ret = "void"
+params = "int x, int y, unsigned id, unsigned flags"
+status = "evidence"
+evidence = "disasm 2026-09-20, 0x57D860..0x57D90F, read to the last instruction: rect = 0x57D830(id, flags & 1) - four bytes (u, v, w, h) from the table 0x663B94, or 0x663C8C with bit 0 of flags; one SPRT at Gfx_PacketNext, Gpu_SetSemiTrans(p, 0), x and y (s16) as floats at +8 / +0xC, clut Gpu_GetClut(0xB0, 0x1E1), or (0x80, 0x1E2) with bit 1 of flags, colour 0x80; Gfx_CommitPrim(1, 0x1C). Sets no draw mode. cdecl. The PSX counterpart by its use in the frame draw 0x801DF56C (STATUS.EMI): 0x801B02A0(x, y, id, 1)."

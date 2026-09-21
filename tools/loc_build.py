@@ -492,10 +492,37 @@ def build_font(args, disc):
     return [(3, 0, table), (4, CELL_W, advances)]
 
 
+# The strip is kind-0 tag 0x8000 in FIRST.DAT and the 0x200-byte section for
+# 0x80033800 in FIRST.EMI (measured 2026-09-20; 0x8200 / 0x8400 pair with
+# 0x80033A00 / 0x80033C00 the same way).
+CLUT_TAG, CLUT_DEST, CLUT_ROW = 0x8000, 0x33800, 32
+
+
+def build_white_clut(args, disc):
+    """DIV-0013. FIRST's CLUT strip with row 0 - white text - as the donor has it.
+
+    Measured 2026-09-20: the strips differ in that row alone. The discs (US and
+    JP alike) have 25, 23, 20, 17, 13, 8, 4 for indices 1-7 and (0, 0, 1) at 8;
+    the port has 28, 27, 25, 24, 21, 17, 12 and (0, 0, 6) - brightened for its
+    anti-aliased Chinese glyphs. The donor's cells put their drop shadow at
+    index 7, which the port's row draws mid-grey. Every other row is the
+    port's own, untouched."""
+    blob, chunks = dat.load(os.path.join(dat_dir(args.game), "FIRST.DAT"))
+    base = [c for c in chunks if c.kind == 0 and c.tag == CLUT_TAG]
+    donor = [s for dest, s in emi_sections(disc.read(disc.find("FIRST.EMI")[0])) if dest & 0x7FFFFFFF == CLUT_DEST]
+    if len(base) != 1 or len(donor) != 1 or len(donor[0]) < CLUT_ROW:
+        raise SystemExit("FIRST: no CLUT strip to take the white row from")
+    strip = bytearray(blob[base[0].offset:base[0].offset + base[0].size])
+    strip[:CLUT_ROW] = donor[0][:CLUT_ROW]
+    return [(0, CLUT_TAG, bytes(strip))]
+
+
 def cmd_all(args):
     """Every overlay, in one pass, one file written per shipped DAT that needs one."""
     disc, d = psx_disc.Disc(args.disc), dat_dir(args.game)
     overlays = {"FIRST.DAT": build_font(args, disc)}
+    if not args.pc_white:
+        overlays["FIRST.DAT"] += build_white_clut(args, disc)
     texts = pools = kept_text = kept_pool = 0
     for name in sorted(os.listdir(d)):
         stem, ext = os.path.splitext(name)
@@ -574,6 +601,7 @@ def main():
             s.add_argument("--glyphs", help="an upscaled sheet to use instead of doubling the donor's cells")
             s.add_argument("--upscaler", help="a command that upscales {in} by {scale} (to {out}, or to one new PNG)")
             s.add_argument("--mono", action="store_true", help="every glyph advances 8, as the US release; default tightens ' and ,")
+            s.add_argument("--pc-white", action="store_true", help="keep the port's brightened white text palette; default restores the disc's (DIV-0013)")
         if name in ("sheet", "export"):
             s.add_argument("--out", required=True)
         else:

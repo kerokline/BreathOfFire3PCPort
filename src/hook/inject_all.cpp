@@ -5,8 +5,10 @@
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
 #include "game/gfx_image.h"
+#include "game/gfx_sprite_uv.h"
 #include "game/gfx_texcache.h"
 #include "game/gfx_clut.h"
+#include "game/gfx_filter.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
@@ -14,6 +16,7 @@
 #include "game/draw_pool.h"
 #include "game/prim.h"
 #include "game/map_view.h"
+#include "game/menu_frame.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/field_input.h"
@@ -48,6 +51,9 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
+    GfxSpriteUv_Inject();
+    GfxFilter_Inject();
+    MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
     SpriteOrder_Inject();
     DrawPool_Inject();
