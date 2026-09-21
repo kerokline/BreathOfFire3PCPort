@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-20)
+**Status:** IN PROGRESS (2026-09-21)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -32,11 +32,29 @@ walked the field menu while it was sampled read-only: the menu's state
 machine is mapped, four defects of the 2001 menu are written down and the
 first is fixed - DIV-0010, the sprite handlers' far texture edge
 ([`menu-screens.md`](menu-screens.md)). Details: [`dialogue-localisation.md`](dialogue-localisation.md);
-do not expand this paragraph into a second copy.
+do not expand this paragraph into a second copy. **2026-09-21:** what the
+attract sequence still runs of Capcom's code is catalogued, the function list
+turned out to miss every pointer-reached function (~7,300), and PSX functions
+now pair with PC ones at scale - 3,330 pairs through the tables both builds
+kept ([`attract-remaining.md`](attract-remaining.md) §3, §5).
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
+
+00. **The PSX pairing, step 1 of [`attract-remaining.md`](attract-remaining.md)
+   §5.1's list: draw the divergence map.** `python tools/psx_pair.py areas &&
+   python tools/psx_pair.py fill && python tools/psx_pair.py propagate`
+   (five minutes; reads `../BreathOfFire3Recomp`, writes
+   `analysis/pairs_propagated.json`) rebuilds the 3,330 pairs. Unpaired PSX
+   runs inside paired neighbourhoods, and PC functions with no twin inside
+   paired blocks, should mark where the port was rewritten - the owner
+   expects the text path and the dropped naming / options screens there.
+   Treat the `callers` and `table-anchored` tiers as a few points less sure
+   than the rest (the table in §5.1), and never use `call-disputed`. Then
+   scenario overlays, the name import (as `hypothesis`), and seeding
+   `pe_funcs.py` from the pairs - which changes the frame hash's content, so
+   re-record the reference with it.
 
 0. **Stage 2: what is left of the text swap.**
    [`dialogue-localisation.md`](dialogue-localisation.md) has the whole state;
@@ -404,13 +422,15 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## In flight / uncommitted
 
-Branch `phase-3/intro-takeover`, 2026-09-21: [`attract-remaining.md`](attract-remaining.md),
-`tools/pe_hidden.py`, `tools/attract_catalog.py`, `tools/psx_pair.py`, and the
-WndProc correction (`0x4FC6F0`) in `windowed-mode.md`, `save-files.md` and
-`symbols.toml`. Local runs behind it: `analysis/calltrace/hidden_a/` (first
-call over the hidden entries) and `hidden_b/` (all calls over
-`entries_plus_hidden.txt`); `analysis/pc_hidden*.json`, `area_pairs.json`,
-`table_matches.json`, `attract_catalog.md`.
+Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
+[`attract-remaining.md`](attract-remaining.md), `tools/pe_hidden.py`,
+`tools/attract_catalog.py`, `tools/psx_pair.py` (`areas`, `tables`, `fill`,
+`propagate`), and the WndProc correction (`0x4FC6F0`) in `windowed-mode.md`,
+`save-files.md` and `symbols.toml`. Local, gitignored, behind it:
+`analysis/calltrace/hidden_a/` (first call over the hidden entries) and
+`hidden_b/` (all calls over `entries_plus_hidden.txt`);
+`analysis/pc_hidden*.json`, `area_pairs*.json`, `pairs_propagated.json`,
+`table_matches.json`, `attract_catalog.md` - all regenerable by the tools.
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._

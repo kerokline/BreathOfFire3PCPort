@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-20)
+**Status:** IN PROGRESS (2026-09-21)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -209,6 +209,15 @@ What is established:
   in the 8 x 12 dialogue font on the same 8 advance, as the disc does, instead
   of the UI glyph blown up and thrown left (DIV-0017). All of it confirmed in game by the owner, 2026-09-21. The font table is no longer
   capped by anything but that guard, which is in our own `Text_DrawString`.
+- **PSX functions pair with PC ones at scale** (2026-09-21,
+  [`attract-remaining.md`](attract-remaining.md) §5): the PSX area descriptor
+  table has a PC twin at `0x667590` (198 of 200 areas agree), and from its 728
+  pairs `tools/psx_pair.py` grows 3,330 through call lists, size-checked
+  position, shared tables and callers - 433 of them boot EXE functions - each
+  method measured against call edges it was not chosen on. The same day's
+  catalogue found that `pe_funcs.py` misses every function reached only
+  through a pointer, some 7,300 (§3 there), and that the WndProc is
+  `0x4FC6F0`.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 
