@@ -1093,3 +1093,37 @@ designed in rather than bolted on.
   does not see the clock.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
   Windows' clock. No config toggle.
+
+
+### Zeros in a map cell's vertex padding
+
+- **ID:** DIV-0023
+- **Date:** 2026-09-21
+- **Subsystem:** platform (PSX library layer, as DIV-0021)
+- **Original behaviour:** the map-cell handler `MapCell_DrawQuads` `0x570020`
+  builds each quad's vertices as 8-byte PSX `SVECTOR`s in its own stack
+  frame and writes x, y and z but never the fourth word. `Gte_LoadVertex` and
+  `Gte_LoadVertices3` copy whole dwords, so the stale stack there lands in
+  the top halves of `Gte_Vertices[1]`, `[3]` and `[5]`. It is never written by
+  the function, so it cannot be reproduced, only replaced. Every reference to
+  `0x7DE468..0x7DE47F` in the image is a whole-dword store by those two
+  loaders or an address `Gte_Rtps` / `Gte_Rtpt` hand to the projection, which
+  reads x, y and z (`pe_xref --range`, 2026-09-21).
+- **New behaviour:** ours writes `0000` there. Every other byte is unchanged.
+- **Rationale:** the same choice as DIV-0021, for the same class of word -
+  the owner chose zeros there (2026-09-21). No instruction reads the two
+  bytes, so nothing a player sees changes. It is still a difference, so it is
+  ledgered. **To confirm with the owner:** applied by analogy with DIV-0021,
+  not decided for this case.
+- **Not covered:** a read of those halves by code outside the image (none
+  exists in ours).
+- **Also in the PSX version?** Unknown; not looked up.
+- **Verification:** start-up fuzz against the original's whole call tree,
+  `BOF3X_SHADOW=map_cells`: 24,000 rounds, 0 mismatches outside the padding,
+  which differed 16,740 times with ours zero every time
+  ([`sprite-draw-order.md`](sprite-draw-order.md) section 16); a control with
+  ours writing `0001` is refused (11,290 mismatches). Live, a 7-minute attract
+  run comparing every call against a clone: 8,192 calls, 0 mismatches, the
+  pad word differing 16,095 times; then the batch check of 2026-09-21 -
+  oracle, memory dump and frame hash identical (`ab18_*`).
+- **Reversible?** Yes: `BOF3X_ORIGINAL=MapCell_DrawQuads`. No config toggle.

@@ -375,6 +375,8 @@ note = "hypothesis, not evidence, for the identification: BATTLE_RAM.md lists a 
 pc = 0x5B93D2
 psx = 0x8017ED4C
 name = "Rand"
+ret = "int"
+params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 with the result masked & 7 to index the damage-variance table, which is the PSX Rand 0x8017ED4C call site term for term. On the PC this is the MSVC6 CRT rand(), not a BIOS thunk — same role, different implementation, so RNG sequences will NOT match between the two binaries."
 
@@ -2768,4 +2770,142 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-21, 0x437820..0x4378AA: seven default records copied, one byte derived per character from its byte +0x0A and a table at 0x64B8B0 (shl 4, idiv, add) stored at +0xAA, +0x78, +0x8A of the previous record's offset arithmetic, then the whelp's record into slot Char_WhelpSlot. The name is a guess from what it copies."
+
+# ---------------------------------------------------------------------------
+# Two map-cell handlers, their condition test and the ground's elevation
+# (2026-09-21, docs/sprite-draw-order.md section 16).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x570020
+name = "MapCell_DrawQuads"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_cells.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x570020..0x57020F, cdecl, twelve calls, every jump internal: MapCell_Handlers entry. Unless Area_TestCondition(u16 +0) says no, or byte +2 is 1, walks (byte +2 - 1) / 5 subrecords of five dwords from +4 - four vertices (s8 x, s8 y at bytes 3 and 2, doubled, about (b1 - 0x80) * 128 and (b0 - 0x80) * 128; s16 z the low word) and a Prim_SetTexture word. The first vertex through Gte_Rtps culls the quad to -100 < x < 420, -150 < y < 300 in float screen space; a kept one is a POLY_FT4 committed to slot 4 / 7 (bit 14 of the word, then bit 30) or 6 / Draw_OtSlot. Call trace hidden_b: 12,183 calls a whole attract cycle."
+note = "The name says what it does; which map features it draws is unread."
+
+[[func]]
+pc = 0x570660
+name = "MapCell_DrawRising"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_cells.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x570660..0x57086F, cdecl, eight calls, every jump internal: MapCell_Handlers entry. Never reads the record. Eight POLY_FT4s a call, one Rand each: flat squares in the plane of the first two coordinates, stacked from -(AreaMap_Elevation(b1 - 1, b0) / 2) along the third, 64 apart and moving 8 a frame (Frame_Counter & 7, so the stack repeats every 8 frames); each half-side is 32 more than the last plus a random 0..3, the centre offset by a sway from (Frame_Counter >> 8) & 0x1F; texture word 0xBA009124 with a shade (Prim_SetTexture bits 19..22) of (0x3F - 8i - (Frame_Counter & 7)) / 4, 15 down to 0 along the stack. Call trace hidden_b: 5,098 calls a whole attract cycle."
+note = "What it looks like in game is not established - the name describes the geometry only."
+
+[[func]]
+pc = 0x56FF00
+name = "Area_TestCondition"
+ret = "unsigned char"
+params = "unsigned long code"
+impl = "src/game/map_cells.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x56FF00..0x570017, cdecl, two calls (Flags_Test), every jump internal: high byte of the u16 is the kind - 0x00..0x1F a bit of Cond_Flags + 8 * kind, 0x20..0x3F its complement, 0xFA..0xFF comparisons against six globals, anything else bit 0. Only the low 16 bits are read; callers push ax with stale upper bits. Thirteen call sites (E8 scan): 0x4CDDC0 four times and seven map-cell handlers; eleven test al, two widen it with movsx - and the 0xFF kind returns (code & 1) XOR a whole byte, so al is kept exactly."
+
+[[func]]
+pc = 0x5720C0
+name = "AreaMap_Elevation"
+ret = "long"
+params = "long x, long y"
+impl = "src/game/map_cells.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x5720C0..0x5722CB, cdecl, no calls, every jump internal, writes nothing but its own argument slots: x and y 16.16, the cell their high words name in the grid of AreaMap_Header bytes +0 x +1; outside it, 0 in ax and the header's top half above. Inside, a height byte at AreaMap_Header + AreaMap_HeightBase * 4 + cell times MapView_HeightScale, plus corner bytes of the cell's dword at AreaMap_Corners, one formula per half-cell quadrant (bit 15 of x and of y) - full precision in the first, byte arithmetic in the others, the largest of two sums (<< 4) or of four values (<< 5). About 190 callers (pc_funcs.json)."
+note = "Elevation by its use: MapCell_DrawRising stacks its quads on -(result / 2). The sibling 0x5722D0 is the same with a store to 0x903850; not read further."
+
+[[func]]
+pc = 0x57C140
+name = "Flags_Test"
+ret = "unsigned char"
+params = "const unsigned char *bits, unsigned index"
+status = "evidence"
+evidence = "disasm 2026-09-21, 8 instructions: bit (index & 7) of bits[(index & 0xFF) >> 3], as 0 or 1. About 170 callers (pc_funcs.json)."
+
+[[func]]
+pc = 0x5BAD64
+name = "Crt_GetPtd"
+ret = "unsigned char *"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21: Rand 0x5B93D2 calls it and keeps its seed at +0x14 of the result (imul 0x343FD, add 0x269EC3) - the MSVC CRT's _getptd and per-thread holdrand. Used only by the map_cells live check, in game: at start-up the exe's C runtime has not run and calling it ends the process."
+
+[[data]]
+pc = 0x929F22
+name = "MapView_HeightScale"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: AreaMap_Elevation multiplies every height byte by it. pe_xref: 24 references in 9 functions."
+
+[[data]]
+pc = 0x8CB5AA
+name = "AreaMap_HeightBase"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: AreaMap_Elevation finds the height bytes at AreaMap_Header + this * 4, one per cell. Part of the loaded area block."
+
+[[data]]
+pc = 0x8CB5B0
+name = "AreaMap_Corners"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-21: AreaMap_Elevation reads the dword of cell n at 0x8CB5B0 + 4n and adds its bytes to heights as a cell's corners. Part of the loaded area block; as long as the area makes it."
+
+[[data]]
+pc = 0x903F90
+name = "Cond_Flags"
+ctype = "unsigned char"
+count = 0x108
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kinds 0x00..0x3F test bit (low byte) of Cond_Flags + 8 * (kind & 0x1F) - rows 8 bytes apart, each reaching 32, so the rows overlap and the last ends at +0x107. pe_xref: 10 references in 7 functions."
+
+[[data]]
+pc = 0x7E1BE2
+name = "Cond_ByteFF"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFF returns (code & 1) XOR this byte. Named for the kind; what it holds is unread. pe_xref: 12 references in 8 functions."
+
+[[data]]
+pc = 0x905E20
+name = "Cond_ByteFE"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFE is true when the code's low byte equals it. Named for the kind. pe_xref: 140 references."
+
+[[data]]
+pc = 0x8034F1
+name = "Cond_ByteFD"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFD is true when the code's low byte differs from it. Named for the kind. pe_xref: 197 references."
+
+[[data]]
+pc = 0x929ECC
+name = "Cond_AngleFB"
+ctype = "unsigned long"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFB tests ((this - 0x200) & 0xFFF) <= 0x800 - half of a 4096-step circle. Named for the kind. pe_xref: 125 references."
+
+[[data]]
+pc = 0x8034E0
+name = "Cond_ByteFA"
+ctype = "signed char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFA compares the code's low byte, zero-extended, with this byte sign-extended - so it matches only below 0x80. The s8 index of the dispatcher 0x56D690 (docs/menu-screens.md). pe_xref: 51 references."
+
+[[data]]
+pc = 0x66C7E8
+name = "Game_Mode"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "Task 0's private word +0x18 (Task_Records): the top-level mode 0x588E88 dispatches on - 2 field, 3 menu, 5 battle (docs/menu-screens.md section 1, docs/input-script.md). Area_TestCondition kind 0xFC tests it for 7."
+
+[[data]]
+pc = 0x66C7D8
+name = "Field_Request"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "Task 0's private byte +8: the field request byte that the menu button sets to 1 (see Field_MenuButton). Area_TestCondition kind 0xFC tests it for 4."
 

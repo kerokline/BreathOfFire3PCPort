@@ -14,6 +14,7 @@
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
+#include "game/map_cells.h"
 #include "game/sprite_order.h"
 #include "game/sprite_records.h"
 #include "game/sprite_draw.h"
@@ -44,6 +45,7 @@ namespace bof3 {
 
 void InjectAll() {
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
+    MapCells_Inject();          // likewise
     FileIo_Inject();
     GameClock_Inject();         // DIV-0022: before WinMain first reads the clock
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool

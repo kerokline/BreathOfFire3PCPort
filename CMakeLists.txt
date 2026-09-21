@@ -79,6 +79,7 @@ add_library(bof3x SHARED
   src/game/gfx_vram_ops.cpp
   src/game/sprite_order.cpp
   src/game/sprite_records.cpp
+  src/game/map_cells.cpp
   src/game/sprite_draw.cpp
   src/game/draw_pool.cpp
   src/game/prim.cpp
