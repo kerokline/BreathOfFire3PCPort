@@ -16,17 +16,17 @@ press @0x903584   # the save's menu button (square in save 5)
 until 0x66C7E8 u16 == 3 timeout 300
 wait 60
 peek 0x929F00 u8 menu_state
-shot menu_top0 10
+shot menu_top0
 press right
-shot menu_top1 10
+shot menu_top1
 press right
-shot menu_top2 10
+shot menu_top2
 press right
-shot menu_top3 10
+shot menu_top3
 press right
-shot menu_top4 10
+shot menu_top4
 press right
-shot menu_top5 10
+shot menu_top5
 press right
-shot menu_top6 10
+shot menu_top6
 end

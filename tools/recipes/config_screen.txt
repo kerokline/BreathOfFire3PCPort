@@ -4,21 +4,21 @@
 wait 480
 press start
 wait 40
-shot title_menu 10
+shot title_menu
 press down
 press circle
 wait 60
-shot config_row1 20
+shot config_row1
 press down
-shot config_row2 20
+shot config_row2
 press down
-shot config_row3 20
+shot config_row3
 press down
-shot config_row4 20
+shot config_row4
 press down
-shot config_row5 20
+shot config_row5
 press down
-shot config_row6 20
+shot config_row6
 press down
-shot config_row7 20
+shot config_row7
 end

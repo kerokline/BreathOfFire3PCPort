@@ -34,6 +34,7 @@ Recipes in `tools/recipes/`:
 | `title_timeline.txt` | no input; a shot every 60 frames from launch | 601 |
 | `config_screen.txt` | title menu, then Config with the cursor on each of its seven rows | 838 |
 | `field_menu.txt` | save 5 loaded, the field, the menu, each top-bar slot | ~1,400 |
+| `menu_screens.txt` | save 5, into Items, Ability, Equipment, Tactics and Status and out again, each checked on the menu state | ~1,700 |
 
 ## 2. How it works
 
@@ -85,8 +86,9 @@ One step per line; `#` starts a comment; buttons join with `+`
 | `wait N` | N frames, nothing held |
 | `press BUTTONS [xK]` | K times: hold, then release |
 | `hold BUTTONS N` | N frames held, no release after |
+| `seek BUTTONS ADDR TYPE OP VALUE [max K]` | press BUTTONS until the condition holds, checking before each press; K presses (default 16) without it FAILS the recipe. For cursors that remember where they were: `seek right 0x929F05 u8 == 0` |
 | `until ADDR TYPE OP VALUE [timeout N]` | nothing held until true, checked once a frame. TYPE `u8`/`u16`/`u32`; OP `==` `!=` `&` (any bit) `!&` (no bit). A timeout (default 3,600) FAILS the recipe and hands the pad back |
-| `shot NAME [N]` | log the shot and hold nothing for N frames (default 30) while the driver captures |
+| `shot NAME [N]` | log the shot and hold nothing for N frames (default 30) while the driver captures. **Keep N at the default on any screen that changes**: the driver grabs `--delay` (0.4 s) after the log line, and `shot X 10` let the recipe back out of a screen before the grab - four captures of a menu mid-slide, 2026-09-21 |
 | `peek ADDR TYPE [LABEL]` | log a value |
 | `mark TEXT` | log a line |
 | `end` | stop |
@@ -105,6 +107,8 @@ as good as the load time it was measured against. The ones known so far:
 |---|---|---|
 | `0x66C7E8` | u16 | field task mode: 2 field, 3 menu, 4 seen during a talk, 11 after Start in save 5's area ([`menu-screens.md`](menu-screens.md) §1) |
 | `0x929F00` | u8 | menu state, 1 = top bar ([`menu-screens.md`](menu-screens.md) §1) |
+| `0x929F05` | u8 | the menu's top-bar cursor, from 0: Items, Ability, Equipment, Tactics, Status, Config, Camp. **Remembered between openings** - seek it, do not count presses |
+| `0x903584` / `0x90358E` / `0x903590` | u16 | the save's menu button / confirm buttons / cancel buttons - use as `@ADDR` |
 | `0x937F94` | u32 | `Frame_Counter` |
 
 ## 4. What the game was measured to do with it
@@ -128,6 +132,11 @@ owner's saves, not claims about Breath of Fire III in general:
   menu (clear in save 5).
 - In save 5's area Start put the field in mode 11 through `0x536B60`, a
   handler of its own, and did not open the menu.
+- **Confirm and cancel are save data too**: with save 5 loaded
+  `Field_ConfirmButtons` `0x90358E` held `0x43` (cross, L2, R2) and
+  `Field_CancelButtons` `0x903590` `0x10` (triangle) - a US layout, where the
+  title and load screens, before any save is loaded, confirm with circle.
+  Cross entered each menu screen and triangle left it; circle did not enter.
 
 ## 5. The first harvest
 

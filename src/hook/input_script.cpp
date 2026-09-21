@@ -26,6 +26,10 @@
 //                           once a frame; TYPE u8|u16|u32, OP == != & !&
 //                           (& = any of VALUE's bits set). A timeout (default
 //                           3600 frames) FAILS the recipe.
+//   seek BUTTONS ADDR TYPE OP VALUE [max K]
+//                           press BUTTONS (hold, then release) until the
+//                           condition is true, checking before each press; K
+//                           presses (default 16) without it FAILS the recipe.
 //   shot NAME [N]           log "input       shot NAME" and hold nothing for N
 //                           frames (default 30) while tools/input_run.py
 //                           captures the window
@@ -46,7 +50,7 @@
 namespace bof3 {
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Shot, Peek, Mark, End };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Mark, End };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -153,6 +157,18 @@ void SetButtons(Step& st, const std::string& tok) {
     else st.buttons = Buttons(st.line, tok);
 }
 
+// ADDR TYPE OP VALUE, starting at t[i].
+void Condition(Step& st, const std::vector<std::string>& t, std::size_t i) {
+    st.width = Width(st.line, t[i + 1]);
+    st.addr = Address(st.line, t[i], st.width);
+    if (t[i + 2] == "==") st.op = Op::Eq;
+    else if (t[i + 2] == "!=") st.op = Op::Ne;
+    else if (t[i + 2] == "&") st.op = Op::Any;
+    else if (t[i + 2] == "!&") st.op = Op::None;
+    else ParseError(st.line, "operator is == != & or !&, not", t[i + 2]);
+    st.value = Number(st.line, t[i + 3]);
+}
+
 void Load(const char* path) {
     FILE* f = std::fopen(path, "rb");
     if (!f) Fatal("BOF3X_INPUT: cannot open %s", path);
@@ -202,19 +218,24 @@ void Load(const char* path) {
         } else if (w == "until") {
             if (t.size() != 5 && t.size() != 7) ParseError(line, "until ADDR TYPE OP VALUE [timeout N], got", s);
             st.kind = Kind::Until;
-            st.width = Width(line, t[2]);
-            st.addr = Address(line, t[1], st.width);
-            if (t[3] == "==") st.op = Op::Eq;
-            else if (t[3] == "!=") st.op = Op::Ne;
-            else if (t[3] == "&") st.op = Op::Any;
-            else if (t[3] == "!&") st.op = Op::None;
-            else ParseError(line, "operator is == != & or !&, not", t[3]);
-            st.value = Number(line, t[4]);
+            Condition(st, t, 1);
             st.n = 3600;
             if (t.size() == 7) {
                 if (t[5] != "timeout") ParseError(line, "expected timeout, got", t[5]);
                 st.n = Number(line, t[6]);
             }
+        } else if (w == "seek") {
+            if (t.size() != 6 && t.size() != 8) ParseError(line, "seek BUTTONS ADDR TYPE OP VALUE [max K], got", s);
+            st.kind = Kind::Seek;
+            SetButtons(st, t[1]);
+            Condition(st, t, 2);
+            st.n = 16;
+            if (t.size() == 8) {
+                if (t[6] != "max") ParseError(line, "expected max, got", t[6]);
+                st.n = Number(line, t[7]);
+            }
+            st.hold = hold;
+            st.gap = gap;
         } else if (w == "shot") {
             need(2, 3);
             st.kind = Kind::Shot;
@@ -317,6 +338,30 @@ unsigned short NextWord() {
             }
             ++g_t;
             return 0;
+        case Kind::Seek: {
+            // g_t counts frames; a press is hold + gap of them, and the
+            // condition is looked at only between presses.
+            const unsigned per = s.hold + s.gap;
+            const unsigned phase = g_t % per;
+            if (phase == 0) {
+                if (Holds(s)) {
+                    Log("input       line %d: seek met after %u presses (value 0x%X), recipe frame %u", s.line,
+                        g_t / per, (unsigned)Read(s.addr, s.width), g_frame);
+                    Advance();
+                    continue;
+                }
+                if (g_t / per >= s.n) {
+                    Log("input       line %d: seek 0x%08X gave up after %u presses, value 0x%X", s.line,
+                        (unsigned)s.addr, s.n, (unsigned)Read(s.addr, s.width));
+                    Finish("FAILED");
+                    return 0;
+                }
+            }
+            // StepButtons reads @ADDR when g_t is 0, i.e. once for the step.
+            const unsigned short b = StepButtons(s);
+            ++g_t;
+            return phase < s.hold ? b : 0;
+        }
         case Kind::Shot:
             if (g_t == 0) {
                 Log("input       shot %s recipe frame %u", s.text.c_str(), g_frame);

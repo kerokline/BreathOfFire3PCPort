@@ -1,0 +1,64 @@
+# Save 5 -> field menu -> into each top-bar screen and back out.
+# 0x929F00 is the menu state (2 Items .. 6 Status), 0x929F05 the top-bar
+# cursor (docs/menu-screens.md section 1). Cancel is the save's own word at
+# 0x903590 and confirm the cross bit of 0x90358E (0x43 in save 5, a US
+# layout; read from the Config screen's code, 2026-09-21).
+wait 480
+press start
+wait 40
+press circle
+wait 60
+press down x5
+press circle
+wait 40
+press circle
+wait 60
+press circle
+until 0x66C7E8 u16 == 2 timeout 1200
+wait 300
+press @0x903584          # the save's menu button
+until 0x929F00 u8 == 1 timeout 300
+wait 40
+peek 0x90358E u16 confirm_word
+peek 0x903590 u16 cancel_word
+seek right 0x929F05 u8 == 0
+press cross
+until 0x929F00 u8 == 2 timeout 120
+wait 40
+shot items
+press @0x903590
+until 0x929F00 u8 == 1 timeout 240
+wait 20
+seek right 0x929F05 u8 == 1
+press cross
+until 0x929F00 u8 == 3 timeout 120
+wait 40
+shot ability
+press @0x903590
+until 0x929F00 u8 == 1 timeout 240
+wait 20
+seek right 0x929F05 u8 == 2
+press cross
+until 0x929F00 u8 == 4 timeout 120
+wait 40
+shot equip
+press @0x903590
+until 0x929F00 u8 == 1 timeout 240
+wait 20
+seek right 0x929F05 u8 == 3
+press cross
+until 0x929F00 u8 == 5 timeout 120
+wait 40
+shot tactics
+press @0x903590
+until 0x929F00 u8 == 1 timeout 240
+wait 20
+seek right 0x929F05 u8 == 4
+press cross
+until 0x929F00 u8 == 6 timeout 120
+wait 40
+shot status
+press @0x903590
+until 0x929F00 u8 == 1 timeout 240
+wait 20
+end
