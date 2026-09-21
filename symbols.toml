@@ -2460,3 +2460,32 @@ ret = "unsigned char"
 params = "const unsigned char *text"
 status = "evidence"
 evidence = "disasm 2026-09-21: counts characters to a NUL, a byte with bit 7 and the byte after it as one, looking at no more than 16 bytes. 47 callers."
+
+# ---------------------------------------------------------------------------
+# The battle's command cross (2026-09-21, DIV-0019).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x669D28
+name = "Battle_CommandLabels"
+ctype = "char"
+count = 0x38
+status = "evidence"
+evidence = "measured 2026-09-21: BOF3X_TEXTLOG in the new game's battle logged the label drawn for each held direction at 0x669D28 + 8 * i, and the port's font renders the seven as Attack, Skill, Item, Watch, Defend, Charge, Escape. The US BATTLE.EMI's Atk Abl Use Exa Def Chg Esc are in the same order, immediately before a copy of Battle_CommandBoxes."
+
+[[data]]
+pc = 0x669D60
+name = "Battle_CommandLabelPointers"
+ctype = "unsigned int"
+count = 7
+status = "evidence"
+evidence = "disasm 2026-09-21: 0x4439A0 loads the label for command ebx from here (0x443AE0); entries 0x669D28 + 8 * i."
+
+[[data]]
+pc = 0x64E2C8
+name = "Battle_CommandBoxes"
+ctype = "short"
+count = 28
+status = "evidence"
+evidence = "disasm 2026-09-21: 0x4439A0 reads s16 +0 and +2 of the record at 0x64E2C8 + 8 * command as the label box's x and y (0x443A06, 0x4439FE). +4 and +6 not read here. Byte-identical to the US BATTLE.EMI's table after its labels."
+

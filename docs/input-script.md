@@ -140,6 +140,9 @@ owner's saves, not claims about Breath of Fire III in general:
   a direction shows its command only while held - left Watch, right Defend,
   down Item, up Skill - and release snaps back to Attack, so a command is
   chosen with `hold up+circle`. Circle on Attack goes to target selection.
+  L1 shows Charge and R1 Escape (owner: Escape is selectable but the intro
+  fight cannot be fled); **L2 and R2 confirm**, like circle - holding L2
+  chose Attack.
 - **Confirm and cancel are save data too**: with save 5 loaded
   `Field_ConfirmButtons` `0x90358E` held `0x43` (cross, L2, R2) and
   `Field_CancelButtons` `0x903590` `0x10` (triangle) - a US layout, where the

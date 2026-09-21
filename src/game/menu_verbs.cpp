@@ -62,33 +62,67 @@ extern "C" const unsigned char* __cdecl MenuVerbs_DrawLabel(int x, int y, int co
 
 }  // namespace
 
-void MenuVerbs_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
-    if (tag != 0) bof3::Fatal("verb chunk tag is 0x%X, expected 0", (unsigned)tag);
+namespace {
+
+// A table of fixed-size string slots in BOF3.exe's .data, reached through a
+// pointer table - the shape both the menu verbs and the battle's command
+// labels have. Every address here was read, not guessed; a chunk may only
+// write the slots of a table listed in this file.
+struct SlotTable {
+    const char* what;
+    const char* div;
+    std::uint32_t pointers, slots, count, room;
+};
+
+constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", kPointers, kSlots, kVerbs, kSlotRoom};
+
+// DIVERGENCE DIV-0019: the battle's command labels - the box beside the
+// command cross, 2026-09-21. Seven 8-byte slots at 0x669D28 behind the
+// pointer table 0x669D60, drawn by 0x4439A0 (0x443AF5) as
+// Text_DrawAt(box_x + 8, y, 0, 8, label), left-aligned, in a frame whose
+// right edge is box_x + 0x25 - room for two 12-unit characters, which is
+// exactly three of the US disc's 8-unit ones: "Atk", "Abl", "Use", "Exa",
+// "Def", "Chg", "Esc". So the strings go in and nothing about the layout
+// changes.
+constexpr SlotTable kBattleTable = {"battle commands", "DIV-0019", 0x669D60, 0x669D28, 7, 8};
+
+void ApplySlots(const SlotTable& t, std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
+    if (tag != 0) bof3::Fatal("%s chunk tag is 0x%X, expected 0", t.what, (unsigned)tag);
     const std::uint8_t* p = payload;
     const std::uint8_t* const end = payload + size;
-    if (p >= end || *p++ != kVerbs) bof3::Fatal("verb chunk: count is not %u", (unsigned)kVerbs);
-    for (std::uint32_t i = 0; i < kVerbs; ++i) {
+    if (p >= end || *p++ != t.count) bof3::Fatal("%s chunk: count is not %u", t.what, (unsigned)t.count);
+    for (std::uint32_t i = 0; i < t.count; ++i) {
         const auto* s = reinterpret_cast<const char*>(p);
         while (p < end && *p) ++p;
-        if (p >= end) bof3::Fatal("verb chunk: ran out inside verb %u", (unsigned)i);
+        if (p >= end) bof3::Fatal("%s chunk: ran out inside string %u", t.what, (unsigned)i);
         ++p;
         const std::size_t len = std::strlen(s);
-        if (len == 0 || len + 1 > kSlotRoom)
-            bof3::Fatal("verb chunk: verb %u is %u bytes, the slot holds %u", (unsigned)i, (unsigned)len + 1,
-                        (unsigned)kSlotRoom);
+        if (len == 0 || len + 1 > t.room)
+            bof3::Fatal("%s chunk: string %u is %u bytes, the slot holds %u", t.what, (unsigned)i,
+                        (unsigned)len + 1, (unsigned)t.room);
         // Every write is into BOF3.exe's .data, so check first that the slot
         // is the one the pointer table names.
         const auto* entry = reinterpret_cast<const std::uint32_t*>(
-            static_cast<std::uintptr_t>(kPointers + i * sizeof(std::uint32_t)));
-        if (*entry != kSlots + i * kSlotRoom)
-            bof3::Fatal("verbs: pointer %u holds 0x%08X, expected 0x%08X", (unsigned)i, (unsigned)*entry,
-                        (unsigned)(kSlots + i * kSlotRoom));
-        auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(kSlots + i * kSlotRoom));
-        std::memset(slot, 0, kSlotRoom);
+            static_cast<std::uintptr_t>(t.pointers + i * sizeof(std::uint32_t)));
+        if (*entry != t.slots + i * t.room)
+            bof3::Fatal("%s: pointer %u holds 0x%08X, expected 0x%08X", t.what, (unsigned)i, (unsigned)*entry,
+                        (unsigned)(t.slots + i * t.room));
+        auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(t.slots + i * t.room));
+        std::memset(slot, 0, t.room);
         std::memcpy(slot, s, len);
     }
-    if (p != end) bof3::Fatal("verb chunk: %u bytes left over", (unsigned)(end - p));
-    bof3::Log("DIV-0018: %u menu verbs", (unsigned)kVerbs);
+    if (p != end) bof3::Fatal("%s chunk: %u bytes left over", t.what, (unsigned)(end - p));
+    bof3::Log("%s: %u %s", t.div, (unsigned)t.count, t.what);
+}
+
+}  // namespace
+
+void MenuVerbs_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
+    ApplySlots(kVerbTable, tag, payload, size);
+}
+
+void BattleCommands_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
+    ApplySlots(kBattleTable, tag, payload, size);
 }
 
 void MenuVerbs_Inject() {

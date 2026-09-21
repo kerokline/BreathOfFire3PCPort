@@ -43,7 +43,8 @@ import sys
 KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3", 4: "advances (ours, DIV-0006)",
          5: "names (ours, DIV-0008)", 6: "title menu widths (ours, DIV-0014)",
          7: "config screen text (ours, DIV-0015)",
-         8: "menu verbs (ours, DIV-0018)"}
+         8: "menu verbs (ours, DIV-0018)",
+         9: "battle command labels (ours, DIV-0019)"}
 BANK_TOC = 0x188
 BANK_SLOTS = 61
 BANK_DATA = 0x380

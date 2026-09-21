@@ -92,8 +92,8 @@ void WalkDatFile(const char* path);
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 8, which are ours (DIV-0006, DIV-0008,
-//     DIV-0014, DIV-0015, DIV-0018);
+//     rejected - except kinds 4 to 9, which are ours (DIV-0006, DIV-0008,
+//     DIV-0014, DIV-0015, DIV-0018, DIV-0019);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -161,6 +161,9 @@ void WalkDatFile(const char* path) {
             break;
         case 8:  // DIV-0018: ours.
             MenuVerbs_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 9:  // DIV-0019: ours.
+            BattleCommands_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;

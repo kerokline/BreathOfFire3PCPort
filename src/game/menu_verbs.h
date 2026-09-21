@@ -11,6 +11,10 @@
 // else.
 void MenuVerbs_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
 
+// DIVERGENCE DIV-0019: applies a kind-9 chunk - a count of 7, then the battle
+// command cross's seven labels, each into its 8-byte slot at 0x669D28.
+void BattleCommands_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
+
 // Re-centres the button row's labels by their real width. Only with
 // BOF3X_LANG set.
 void MenuVerbs_Inject();

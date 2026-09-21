@@ -3,7 +3,9 @@
 # field mode 0x66C7E8 is 5 in battle (from about recipe frame 2,824). The
 # cross shows a command only while its direction is held, and snaps back to
 # Attack on release - so each shot holds its direction, and a command other
-# than Attack is chosen by confirming with the direction still held.
+# than Attack is chosen by confirming with the direction still held. The
+# shoulder buttons show Charge (L1) and Escape (R1) (owner, 2026-09-21); L2
+# and R2 confirm, like circle - pressing them here chose Attack.
 wait 480
 press start
 wait 40
@@ -71,6 +73,13 @@ shot cmd_down 30 down
 wait 20
 hold up 20
 shot cmd_up 30 up
+hold l1 20
+shot cmd_l1 30 l1
+wait 20
+hold r1 20
+shot cmd_r1 30 r1
+wait 20
+hold up 20
 hold up+circle 4         # confirm with up still held
 hold up 10
 wait 40

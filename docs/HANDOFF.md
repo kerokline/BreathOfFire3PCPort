@@ -63,6 +63,15 @@ The single next action, concrete enough to start without asking anyone.
    the skill list's header. Help lines and skill names are English already.
    A real encounter needs a deterministic boss or save states (owner,
    2026-09-21: walking on save 5 meets one, but not repeatably).
+   **DIV-0019 put the command cross's labels in English** (`Atk` ... `Esc`,
+   from the US `BATTLE.EMI`, captured in the fight). Still Chinese there: the
+   target-select banner, the combatants' names, and the skill list's header
+   `龙技` at `0x66A220`. Also found on the way: the stat labels at `0x669CF0`
+   (Attack / Defense / Int / Agility; US `Pwr Def Int Agl` before the verb
+   table) and the turn-counter pair 残留 / 回合 at `0x669D10` / `0x669D18`
+   via `0x669D20`. **`BOF3X_TEXTLOG=1`** logs each string drawn and its
+   address - the fastest way to a string's table: search `.data` for a
+   pointer to it.
 
 00. **The PSX pairing, step 1 of [`attract-remaining.md`](attract-remaining.md)
    §5.1's list: draw the divergence map.** `python tools/psx_pair.py areas &&

@@ -1,5 +1,7 @@
 #include "game/text_draw.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 
@@ -35,6 +37,43 @@ const std::uint8_t* Records() { return reinterpret_cast<const std::uint8_t*>(bof
 void GlyphTrap() { __asm__ volatile("mov $0x1000, %%dx\n\tin %%dx, %%al" : : : "eax", "edx"); }
 
 unsigned ClutOf(unsigned color) { return 0x7800u | (color & 0xFu); }
+
+// --- BOF3X_TEXTLOG: which string is drawn from where ----------------------------
+// Diagnostic only, off unless the variable is set: each distinct (caller,
+// string address) pair is logged once, with the string's first bytes - the
+// way to find where a piece of on-screen text lives: the string's address
+// leads to its table by a search for pointers to it (docs/HANDOFF.md, the
+// battle labels). The caller logged is our own return address, so anything
+// drawn through Text_DrawAt shows 0x516B61. Reading Text_DrawAt's caller off
+// the stack, three slots above our first argument, was tried on 2026-09-21
+// and came back wrong as built; unfixed, so not claimed.
+bool g_textlog = false;
+constexpr unsigned kTextLogSlots = 4096;
+std::uint64_t g_textlog_seen[kTextLogSlots];
+unsigned g_textlog_count = 0;
+
+void TextLog(std::uint32_t caller, const unsigned char* text) {
+    const std::uint64_t key = (static_cast<std::uint64_t>(caller) << 32) | reinterpret_cast<std::uintptr_t>(text);
+    unsigned h = static_cast<unsigned>((key * 0x9E3779B97F4A7C15ull) >> 52) % kTextLogSlots;
+    for (unsigned probe = 0; probe < kTextLogSlots; ++probe, h = (h + 1) % kTextLogSlots) {
+        if (g_textlog_seen[h] == key) return;
+        if (g_textlog_seen[h] == 0) {
+            if (g_textlog_count + 1 >= kTextLogSlots) return;   // full: stop logging, keep drawing
+            g_textlog_seen[h] = key;
+            ++g_textlog_count;
+            char hex[3 * 16 + 1] = {};
+            for (unsigned i = 0; i < 16 && text[i]; ++i) {
+                static const char digits[] = "0123456789ABCDEF";
+                hex[i * 3] = digits[text[i] >> 4];
+                hex[i * 3 + 1] = digits[text[i] & 0xF];
+                hex[i * 3 + 2] = ' ';
+            }
+            bof3::Log("textlog     caller 0x%08X text 0x%08X frame %u: %s", (unsigned)caller,
+                      (unsigned)reinterpret_cast<std::uintptr_t>(text), (unsigned)Frame_Counter, hex);
+            return;
+        }
+    }
+}
 
 // --- BOF3X_SHADOW=text_draw ----------------------------------------------------
 // The clone: 0x516B70..0x516D50, body, jump table and byte table. The jump
@@ -204,6 +243,9 @@ void SelfTest(void* clone) {
 // every shipped file - TextAdvance_Of is 12 and this is the original.
 extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsigned count_arg,
                                                         const unsigned char* text) {
+    if (g_textlog) {
+        TextLog(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))), text);
+    }
     unsigned color = color_arg;                     // only the low byte is ever read
     auto count = static_cast<std::uint8_t>(count_arg);
     unsigned clut = ClutOf(color);
@@ -277,4 +319,7 @@ void TextDraw_Inject() {
         SelfTest(bof3::CloneOriginal("Text_DrawString", bof3::addr::Text_DrawString, kSize, calls, 1));
     }
     BOF3_INJECT(Text_DrawString);
+    char flag[8];
+    g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
+    if (g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
 }

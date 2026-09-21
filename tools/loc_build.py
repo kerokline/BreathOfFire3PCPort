@@ -705,6 +705,36 @@ def convert_verbs(game, donor):
     return [(KIND_VERBS, 0, bytes(payload))]
 
 
+# The battle's command labels (DIV-0019): seven 8-byte slots at BATTLE_SLOTS,
+# drawn left-aligned in a box beside the command cross by 0x4439A0, the box
+# placed from BATTLE_BOXES, four s16 a command. The US BATTLE.EMI has the same
+# seven slots - "Atk" "Abl" "Use" "Exa" "Def" "Chg" "Esc", the owner's
+# screenshots of the PlayStation show the first and last - immediately
+# followed by the same box table, byte for byte. The box table is the anchor.
+KIND_BATTLE = 9
+BATTLE_SLOTS, BATTLE_BOXES, BATTLE_COUNT, BATTLE_ROOM = 0x669D28, 0x64E2C8, 7, 8
+
+
+def convert_battle_commands(game, donor):
+    """[(kind, tag, payload)] for the command labels, or [] if `donor` (BATTLE.EMI) has none."""
+    boxes = exe_bytes(game, BATTLE_BOXES, BATTLE_COUNT * 8)
+    at = donor.find(boxes)
+    if at < BATTLE_COUNT * BATTLE_ROOM:
+        return []
+    payload = bytearray([BATTLE_COUNT])
+    for i in range(BATTLE_COUNT):
+        slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
+        raw = slot.split(b"\0")[0]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("battle: label %d holds a code English does not have: %s" % (i, slot.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > BATTLE_ROOM:
+            raise SystemExit("battle: label %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, BATTLE_ROOM))
+        payload += out + b"\0"
+    return [(KIND_BATTLE, 0, bytes(payload))]
+
+
 def build_font(args, disc):
     rows = donor_sheet(disc)
     base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
@@ -934,6 +964,11 @@ def cmd_all(args):
         verbs = convert_verbs(args.game, disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += verbs
         print("menu verbs: " + ("%d" % VERB_COUNT if verbs else "not found on this disc"))
+    battle_emi = disc.find("BATTLE.EMI")
+    if battle_emi and not args.only:
+        cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))
+        overlays["FIRST.DAT"] += cmds
+        print("battle commands: " + ("%d" % BATTLE_COUNT if cmds else "not found on this disc"))
 
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:

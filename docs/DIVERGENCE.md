@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 18 entries, DIV-0001..0018)
+**Status:** IN PROGRESS (opened 2026-09-18; 19 entries, DIV-0001..0019)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -917,4 +917,36 @@ designed in rather than bolted on.
   6, 0, 2, 1 and 7. Not seen: sets 3 (`Buy` / `Sell`), 4 (`Look` / `Chng`),
   5 (`Read` / `Sort` / `Drop`) and 8 (`Knd` / `Quit`), whose screens are
   unidentified, and anything in battle.
+
+### The battle's command labels in the overlay's language
+
+- **ID:** DIV-0019
+- **Date:** 2026-09-21
+- **Subsystem:** battle (only with a language overlay)
+- **Original behaviour:** holding a direction or shoulder button on the
+  battle's command cross shows the command's name in a box beside it:
+  seven 8-byte slots at `0x669D28` behind the pointer table `0x669D60` -
+  攻击, 特能, 道具, 观看, 防御, 突击, 逃走 (Attack, Skill, Item, Watch,
+  Defend, Charge, Escape; glyphs rendered from the port's own font) - drawn
+  by `0x4439A0` as `Text_DrawAt(box_x + 8, y, 0, 8, label)` (`0x443AF5`),
+  left-aligned in a frame whose right edge is `box_x + 0x25`, box positions
+  per command at `0x64E2C8`. Found 2026-09-21 by `BOF3X_TEXTLOG` during the
+  new game's scripted battle.
+- **New behaviour:** a kind-9 chunk in the English `FIRST.DAT` carries the US
+  disc's labels, `Atk` `Abl` `Use` `Exa` `Def` `Chg` `Esc`, written into the
+  seven slots after each is checked against the pointer table. Nothing about
+  the layout changes: three 8-unit characters are exactly as wide as two
+  12-unit ones.
+- **Rationale:** stage 2 (DIV-0005). The owner's screenshots of the US
+  PlayStation show `Atk` and `Esc` in these boxes; the US `BATTLE.EMI` has
+  the seven slots immediately before a box table byte-identical to the PC's
+  `0x64E2C8`, which is how `loc_build.py` finds them. The owner chose the
+  disc's wording over authored English.
+- **Also in the PSX version?** Yes - the PlayStation's strings.
+- **Reversible?** play without `BOF3X_LANG`.
+- **Checked:** captured by `tools/recipes/battle_commands.txt`, 2026-09-21:
+  all seven, each in its box, Chg on L1 and Esc on R1. Still Chinese in the
+  same fight: the target-select banner (`攻 击`, seen when L2 confirmed
+  Attack), the combatants' names, the skill list's header `龙技`
+  (`0x66A220`).
 
