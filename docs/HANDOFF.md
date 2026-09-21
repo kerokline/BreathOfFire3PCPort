@@ -122,6 +122,15 @@ The single next action, concrete enough to start without asking anyone.
    342 calls there against 346, the other matched the reference - the same
    frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
    differing frame at 5524 wants a re-run, not a hunt.
+   **What is left is catalogued** in [`attract-remaining.md`](attract-remaining.md)
+   (2026-09-21): 541 reached functions not ours, 364 of them outside the MP3
+   decoder and the CRT, grouped with counts and callers - and 89 of them
+   *hidden*, reached only through pointers and invisible to `entries.txt`
+   until `tools/pe_hidden.py`. Its §5 is the owner's follow-up question
+   answered: the PSX area descriptor table has a PC twin at `0x667590`, and
+   area overlays sit in the PC exe as ordered blocks (`tools/psx_pair.py`); the
+   next steps are listed there. **Fixing `pe_funcs.py` to seed pointer-reached
+   entries changes the frame hash's content - re-record the reference with it.**
    **Then keep working the queue** - regenerate it first (`python
    tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv` -
    the argument is the *counts* file. `all_b`, 2026-09-20, is a full-list run of
@@ -394,6 +403,14 @@ _One line each, with a pointer. Add when something costs more than an hour._
   files; use `dat_census.align` ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
 
 ## In flight / uncommitted
+
+Branch `phase-3/intro-takeover`, 2026-09-21: [`attract-remaining.md`](attract-remaining.md),
+`tools/pe_hidden.py`, `tools/attract_catalog.py`, `tools/psx_pair.py`, and the
+WndProc correction (`0x4FC6F0`) in `windowed-mode.md`, `save-files.md` and
+`symbols.toml`. Local runs behind it: `analysis/calltrace/hidden_a/` (first
+call over the hidden entries) and `hidden_b/` (all calls over
+`entries_plus_hidden.txt`); `analysis/pc_hidden*.json`, `area_pairs.json`,
+`table_matches.json`, `attract_catalog.md`.
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._

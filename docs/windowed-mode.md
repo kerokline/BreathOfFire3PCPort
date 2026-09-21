@@ -46,7 +46,7 @@ window creation), `0x4fc7b4:42` and `0x4fc836:12` (WndProc key handling);
   (defaults, by role).
 - WinMain `0x4FCB00`: a 640x480 desktop forces fullscreen; otherwise flag 0 →
   `AdjustWindowRect(style 0xCA0000)` and centre.
-- WndProc `0x4FC6A0`, `WM_KEYDOWN`: `0x77` F8 → `Cfg_Fullscreen ^= 1`,
+- WndProc `0x4FC6F0` (`lpfnWndProc`, stored at `0x4FCB98`; corrected 2026-09-21 from `0x4FC6A0`, the function before it - [`attract-remaining.md`](attract-remaining.md) §3), `WM_KEYDOWN`: `0x77` F8 → `Cfg_Fullscreen ^= 1`,
   `SetWindowPos`, `0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0)`. `0x76` F7 →
   the same re-init, then `0x5A6690(value)`. `0x78` F9 toggles byte `0x6BC63A`
   around calls into the sound module (`0x587B90` / `0x587C30`) — a pause, by

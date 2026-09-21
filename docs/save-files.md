@@ -34,7 +34,7 @@ offset 0, zero-padded, with one widened field
 | `0x4548B0` | `Save_ListFiles()`: zeroes a 16 x `0x18` table at `0x929F40`, then `_findfirst` / `_findnext` over the pattern at `0x65289C` (`BISLPS??.DAT`), copying each name to entry +0 and its size to +0x14; returns the count | evidence |
 | `0x588DC0` | `Save_ReadSummaries()`: marks all 16 summaries empty (`0xFF` at +0x15 of each `0x1C`-byte record from `0x905BC0`); for each slot, finds the directory entry whose **name[7]** parses as that hex digit, reads `0x1C` bytes at file offset `0xCA0` (corrected 2026-09-19 — first read had the two swapped; `0xCA0` is the PSX slot-summary offset too) and copies them into the summary, and stores the directory index at +0x15 | evidence |
 | `0x5806F0` | fills the staging buffer before a write (by position: called immediately before both `Save_WriteFile` calls) | hypothesis |
-| `0x5809C0` | formats the slot filename (`0x664068`, slot from `0x9036D4`), calls `0x5806F0`, writes `0x12B0` bytes. **Called from the window procedure `0x4FC6A0`** — a save triggered by a window message or key, not by the menu. Unread | hypothesis |
+| `0x5809C0` | formats the slot filename (`0x664068`, slot from `0x9036D4`), calls `0x5806F0`, writes `0x12B0` bytes. **Called from the window procedure `0x4FC6F0`** (the call at `0x4FC9A1`; this row said `0x4FC6A0` until 2026-09-21) — a save triggered by a window message or key, not by the menu. Unread | hypothesis |
 
 Two original-code defects, noted, not fixed: `Save_ListFiles` **never calls
 `_findclose`** (a search handle leaks per call), and it **does not bound the

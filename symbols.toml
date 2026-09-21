@@ -549,7 +549,7 @@ pc = 0x65DA44
 name = "Cfg_Fullscreen"
 ctype = "int"
 status = "evidence"
-evidence = "Initialised 1. WinMain 0x4FCB00: forced to 1 when the desktop is exactly 640x480; when 0, AdjustWindowRect with style 0xCA0000 and the window is centred on the desktop, else created at 0,0; then passed as the third argument of both Fmv_Play calls. WndProc 0x4FC6A0 on WM_KEYDOWN 0x77 (F8), only if the desktop exceeds 640x480: xor 1, SetWindowPos, and re-initialises the display through 0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0). Observed 2026-09-19: BOF3.CFG with first line 0 gives a 646x509 window, style 0x14CA0000, centred on a 3440x1440 desktop."
+evidence = "Initialised 1. WinMain 0x4FCB00: forced to 1 when the desktop is exactly 640x480; when 0, AdjustWindowRect with style 0xCA0000 and the window is centred on the desktop, else created at 0,0; then passed as the third argument of both Fmv_Play calls. WndProc 0x4FC6F0 (lpfnWndProc, set at 0x4FCB98; corrected 2026-09-21 from 0x4FC6A0) on WM_KEYDOWN 0x77 (F8), only if the desktop exceeds 640x480: xor 1, SetWindowPos, and re-initialises the display through 0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0). Observed 2026-09-19: BOF3.CFG with first line 0 gives a 646x509 window, style 0x14CA0000, centred on a 3440x1440 desktop."
 
 [[data]]
 pc = 0x65DA48
