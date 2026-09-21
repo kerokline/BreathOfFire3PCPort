@@ -100,8 +100,8 @@ The single next action, concrete enough to start without asking anyone.
    WinMain reads the slot. The deadline float then holds small numbers,
    which puts the game back in the conditions the 2001 code was written
    for: a machine booted that day. What remains is float rounding over one
-   long session. +33.334 rounds to 33.25 below 2^22 ms (1.2 hours, 30.1 a
-   second), to 33.5 up to 2^23 (2.3 hours, 29.85), to 33 up to 2^24 (4.7
+   long session. +33.334 rounds to within 0.1 ms below 2^21 ms (35 minutes), to 33.25
+   up to 2^22 (1.2 hours, 30.1 a second), to 33.5 up to 2^23 (2.3 hours, 29.85), to 33 up to 2^24 (4.7
    hours, 30.3), to 34 up to 2^25 (9.3 hours, 29.4), then 32 (31.25) until
    2^29 - half speed only after 6.2 days of one continuous session. So it
    fixes what players meet, cheaply. The deadline in a double (step 3) is
