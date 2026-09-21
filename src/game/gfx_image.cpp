@@ -1,5 +1,7 @@
 #include "game/gfx_image.h"
 
+#include "game/text_draw.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -38,9 +40,12 @@ extern "C" void __cdecl Gfx_LoadImage(const short* rect, const void* pixels) {
 // original 0x5A6800. Takes ownership of a malloc'd glyph table - the port's
 // Chinese font, 288 bytes a glyph - and frees the one it replaces. The size is
 // passed by LoadDatFile and never read.
-extern "C" void __cdecl Font_SetGlyphData(void* owned_glyphs, unsigned /*size_unused*/) {
+extern "C" void __cdecl Font_SetGlyphData(void* owned_glyphs, unsigned size) {
     if (Font_GlyphData != nullptr) Crt_free(Font_GlyphData);
     Font_GlyphData = owned_glyphs;
+    // DIV-0016: the original never reads the size. We do, and only to keep the
+    // string draw's glyph-index guard in step with the table it now holds.
+    TextDraw_SetGlyphCount(size / 0x120);
 }
 
 void GfxImage_Inject() {

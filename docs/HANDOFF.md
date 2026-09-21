@@ -14,40 +14,115 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-Phase 0 is done and stage 1 of the owner's order of work
-([`STATUS.md`](STATUS.md)) is under way: a launcher injects our DLL into the
-player's `BOF3.exe` and **a hundred and nine functions are ours** - `LoadDatFile`, the
-eight-function file layer (DIV-0003), `Save_WriteFile` (DIV-0002),
-`Gfx_BeginFrame` (DIV-0004, a crash fix), fourteen faithful ones that make
-up the image path from the rendered-frame flushes down to the texture-cache
-invalidation (`src/game/gfx_*.cpp`), and the first nineteen *logic* functions off
-the takeover queue, all around the field's sprite structures
-([`sprite-draw-order.md`](sprite-draw-order.md)), sixty-two of the port's own
-PSX library layer ([`psx-library-layer.md`](psx-library-layer.md)) - the x87
-ones included, written in `double` once the control word was measured - and
-the draw-order pass with its primitive commit and layer close. The A/B switch, a call tracer, a crash
-reporter and a shadow check against clones of the originals run in-process;
-the attract oracle, three memory-dump regions and the frame hash all pass
-original-vs-ours with all hundred and nine (2026-09-20), the frame hash
-with an original-vs-original pair beside it. See [`STATUS.md`](STATUS.md) - do not expand this paragraph
-into a second copy.
+Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
+- replace what the attract sequence reaches - stands at **a hundred and twelve
+functions ours**; and **stage 2, the text swap, went from a plan to a playable
+English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
+overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
+pools, the item and ability names, and the US font doubled into the port's
+glyph table - and `BOF3X_LANG=en` loads them (DIV-0005..0009). The owner has
+played it: dialogue, narration and menus read in English and "look great";
+two reports (choice lists at 12 px, a gap after the apostrophe) were fixed the
+same day. Three of the hundred and twelve are the text path's:
+`Msg_SystemPtr`, `Text_DrawString` and `Text_DrawImmediate`, each fuzzed
+against a clone of the original. The attract oracle passes original-vs-ours
+with all hundred and twelve and no language set, and **the frame hash was
+re-recorded the same evening** (`ab15_*`, "Pick up here" 1). Then the owner
+walked the field menu while it was sampled read-only: the menu's state
+machine is mapped, four defects of the 2001 menu are written down and the
+first is fixed - DIV-0010, the sprite handlers' far texture edge
+([`menu-screens.md`](menu-screens.md)). Details: [`dialogue-localisation.md`](dialogue-localisation.md);
+do not expand this paragraph into a second copy.
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-0. **Stage 2 has a plan: [`dialogue-localisation.md`](dialogue-localisation.md).**
-   The owner set it on 2026-09-20 and wants it picked up next, in a fresh
-   session: per-language overlay `DAT`s built locally from the player's discs,
-   and the donor's glyph atlases upscaled into the port's global 24 px table.
-   Start with its §4: **read the character draw `0x516B30`** (code to glyph
-   index, the single-byte range, the advance - static, an hour), then dump both
-   fonts to PNG and look, then the gibberish test - our glyphs under the
-   Chinese text - which shows format, nibble mapping and advance at once. The
-   owner's two PSP discs are in `CDImage/` (gitignored; `fixtures.toml`
-   `psp-jp`, `psp-eu`) and are PSX-format EMIs: the EU one is the English donor
-   on hand. The takeover queue below stays open beside it.
-1. **Keep working the queue** - regenerate it first (`python
+0. **Stage 2: what is left of the text swap.**
+   [`dialogue-localisation.md`](dialogue-localisation.md) has the whole state;
+   §6 is the open list. In the order the owner will meet them:
+   - **The owner plays with `BOF3X_LANG=en` and sends screenshots** - that is
+     how both of the session's engine bugs were found, and it is faster than
+     reading. Owed a look: the choice lists at 8 px (fixed after the last
+     screenshot, unseen since), item and ability menus for clipping, a
+     pick-up, the masters' talk, a long area (`AREA090`, `175`-`185`: the ones
+     that only fit since the system pool moved, DIV-0007).
+   - **The Config screen is English and confirmed in game** (DIV-0015 /
+     DIV-0016, [`config-screen.md`](config-screen.md)): six labels, seventeen
+     options and six controller names from the disc's `START.EMI` through a
+     kind-7 chunk, drawn from the donor's 8 x 8 UI cells, tripled, named two
+     bytes at a time. The owner saw it ("much closer") and found the text
+     two pixels low; the earlier two-pixel drop is removed and that build is
+     the next thing they look at - seen, right. The selected row's large
+     lettering is DIV-0017, seen and confirmed 2026-09-21. **The 8-unit quad scales a whole 24 x 24 glyph to 16 x 16** rather
+     than cropping it - the fact that decides which cells any UI string wants.
+     `0x516E70` is now read (same glyph table, 8 x 8 quads, flat 8 advance,
+     (u, v) from `0x65F5A8`), so the list below is one shorter. Still Chinese
+     on that screen: the two buttons above the panel, which come from a
+     23-entry table of short menu verbs (`Use`, `Sort`, `Quit`, `Init`, ...)
+     shared by the whole menu - the obvious next piece, and it would reach
+     more than this screen.
+   - **The next "still 12 px" report** will be one of seven unread functions
+     that call `Text_DrawAt` a character at a time: `0x45B490`, `0x45B5F0`,
+     `0x460730`, `0x460920`, `0x466260`, `0x4B1090`, `0x4B11F0`. Three pens
+     are done: `Text_DrawString`'s, `MsgBox_Step`'s (a re-aimed call site,
+     `bof3::RetargetCall`), `Text_DrawImmediate`'s. Also still 12: the
+     stepper's effect draw `0x4987E0` and the small 8 px UI font `0x516E70`
+     (its own glyph arithmetic, unread).
+   - **The title menu is English and unseen in game** (DIV-0014,
+     [`title-menu.md`](title-menu.md)): NEW GAME / LOAD GAME from the disc,
+     CONFIG cut from their letters, the row widths through a kind-6 chunk.
+     The owner liked the offline preview; [`USER_CHECKS.md`](USER_CHECKS.md) 6
+     is the look in game - the glow pass on thin lettering is the open
+     question. The options and load screens behind it are not looked at.
+   - **Still Chinese:** enemy names (12-byte fields in battle data), character
+     and place names, text baked into artwork, and any string in the
+     executable outside the six name tables. Enemy names are the obvious
+     next converter: the sibling's `names/enemies.toml` has the JP side.
+   - **Longer names.** The port's name fields are 16 bytes against the US
+     disc's 12 (DIV-0008), so `BallockKnife` could be `Ballock Knife` - if the
+     menu column has the pixels. Owner's call, in game; a new ledger entry.
+   - **A better upscale.** The font is the US cells doubled. `loc_build.py
+     export` / `all --glyphs PNG` / `all --upscaler CMD` are the round trip;
+     no image is committed and the table's SHA-256 is printed for comparing
+     builds. The PSX draws nibble 7 as a dark drop shadow; ours copies it as
+     the ramp's grey - worth a look when redrawing.
+   - German and French: the discs are in `CDImage/`; their accented cells are
+     unread and only 10 glyph slots are free past the 100 English ones.
+0a. **The menu's defects** ([`menu-screens.md`](menu-screens.md) section 3), all
+   present in the 2001 release and all the owner's to look at in game:
+   - **DIV-0010 is built and unseen where it matters**: the owner looks at
+     the HP / AP numerals in the menu, with and without
+     `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16`.
+   - **DIV-0011**: Config's panel frame (owner: "looks right") and the
+     reserve list's on "change party members" (seen in the owner's session,
+     `analysis/d1/point/s009.png`; the owner has not commented) - drawn as
+     the PlayStation drew them
+     (`src/game/menu_frame.cpp`; off with `BOF3X_ORIGINAL=Menu_DrawFrame`).
+     It costs some 590 sprites a frame - if anything else on that screen
+     goes missing, the packet pool is full.
+   - **The text "glow" is two things, both answered.** Bilinear filtering
+     with a low alpha test (DIV-0012: `BOF3X_FILTER=point` is the clean look,
+     opt-in, played by the owner), and a white text CLUT the PC team
+     brightened (DIV-0013: the English overlay restores the disc's row, so
+     the drop shadow is dark again - **rebuild the overlays**, `loc_build.py
+     all`). A live toggle is [`IDEAS.md`](IDEAS.md) I15 and waits on input.
+   - The screen title's box and centring are still unread; `0x574AB0` (a box
+     out of semi-transparent `POLY_FT4`s) is the lead. The way in that worked
+     for the frames: search the PSX disc's `STATUS.EMI` for the call's
+     constant arguments, read the PlayStation function, then look for what
+     the PC kept of it.
+   - Ability (state 3) was only seen closing, and the list cursors of Items
+     and Equipment are unfound: one more walk under
+     `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
+1. **The frame hash reference is `analysis/calltrace/ab15_orig`** (twin
+   `ab15_origb`), recorded 2026-09-20 with a hundred and fifteen owned, all
+   7,936 frames identical original-vs-original and original-vs-ours.
+   **Frame 5524 is same-configuration noise**: one of two all-ours runs had
+   342 calls there against 346, the other matched the reference - the same
+   frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
+   differing frame at 5524 wants a re-run, not a hunt.
+   **Then keep working the queue** - regenerate it first (`python
    tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv` -
    the argument is the *counts* file. `all_b`, 2026-09-20, is a full-list run of
    12,813 frames, a whole attract cycle, where `all_a` stopped at 3,072; what
@@ -160,10 +235,14 @@ _Commands a fresh session needs, verified on the date above._
   `i686-w64-mingw32-clang++` is already on `PATH` on this machine (the
   `retcomm` toolchain under `~/.local/share`), **not** the MSYS2 one.
 - **Run:** `build/bof3x-launcher.exe --game bof3`; log in `build/bof3x.log`.
+  This now opens the settings dialog first — **pass `--no-config` from a script
+  or an agent session**, which skips it
+  ([`launcher-settings.md`](launcher-settings.md) §4).
   Original behaviour for one function or all: `BOF3X_ORIGINAL=File_Read` / `=*`.
-  **Windowed:** put a two-line `BOF3.CFG` (`0`, then `1`) in the game
-  directory, or press F8 in game ([`windowed-mode.md`](windowed-mode.md)) —
-  recommended for agent sessions, since it avoids the display mode-set.
+  **Windowed:** the dialog's Display box, or a two-line `BOF3.CFG` (`0`, then
+  `1`) in the game directory, or F8 in game
+  ([`windowed-mode.md`](windowed-mode.md)) — recommended for agent sessions,
+  since it avoids the display mode-set.
   Without it the game mode-sets to exclusive fullscreen for the FMVs; from an agent
   session, end it with `taskkill //F //IM BOF3.exe`.
 - **Regression check (10 min, hands off the game window):**
@@ -181,7 +260,7 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass` (comma-separated lists work) or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass`, `=msg_pool`, `=text_draw`, `=text_immediate` (comma-separated lists work) or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
@@ -215,6 +294,9 @@ _Commands a fresh session needs, verified on the date above._
 - **After a crash:** `CRASH` lines in `build/bof3x.log`, then
   `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
 - **Call trace:** [`call-trace.md`](call-trace.md) §8.
+- **English overlays:** `python tools/loc_build.py all --disc "CDImage/Breath of Fire III (USA).cue" --game bof3`
+  (about a minute, 244 files), then `BOF3X_LANG=en` before the launcher or
+  `attract_run.py` ([`dialogue-localisation.md`](dialogue-localisation.md) §1).
 - DAT containers: `python tools/dat.py survey ../bof3ext/bof3/DAT` (expect
   742 clean); `list` / `extract --out analysis/dat/<name>` / `compare <DAT> <EMI>`
 - Fixtures check: `python tools/verify_fixtures.py`
@@ -295,6 +377,19 @@ _One line each, with a pointer. Add when something costs more than an hour._
 - A bash heredoc holding Python triple quotes or C++ with apostrophes dies
   with "unexpected EOF" in this tool. Write the patch script with the editor
   tool and run it.
+- `pe_xref.py` indexes memory operands only: `add eax, 0x803580` is invisible
+  to it, and a raw byte scan for an address drowns in `push 0x80` and
+  `[reg + 0x80]` encodings. For "who uses this address at all", walk the
+  `imms` / `offs` / `globals_` lists in `analysis/pc_funcs.json`
+  ([`dialogue-localisation.md`](dialogue-localisation.md) §6, DIV-0007).
+- A clone of a function with a jump table runs its cases in the ORIGINAL
+  body - the table holds absolute addresses. Relocate the entries and the
+  `jmp [reg*4 + table]` operand in the copy, as `text_draw.cpp` does.
+- A fuzz can generate the original's own trap: `Text_DrawString` executes
+  `in al, dx` for a glyph above `0xA00`, and a seed nudged to `0xA01` hung the
+  start-up test with nothing in the log. And a control that is refused by a
+  HANG proves less than one refused by a count - write controls that fail by
+  comparison.
 - Pairing EMI sections to DAT chunks by order or by address mis-pairs 47
   files; use `dat_census.align` ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
 
@@ -303,15 +398,24 @@ _One line each, with a pointer. Add when something costs more than an hour._
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
 
-Branch `phase-3/attract-takeovers`, cut from `main` at `c63636b`: pushed, and
-**[PR 5](https://github.com/kerokline/BreathOfFire3PCPort/pull/5)** open against `main` - eighty-four takeovers (`src/game/`
-from `sprite_order.cpp` to `draw_pass.cpp`), `-fno-strict-aliasing`,
-`calltrace.py wallclock --static`, `CloneOriginal` re-aiming a tail `jmp`, and
-the docs. Cut the stage-2 branch from `main` once it merges.
+Branch `localization/script-font-upscale`, cut from `main` after PR 5 merged:
+**committed and pushed 2026-09-20, no PR** - the owner has not asked for one.
+It holds DIV-0005..0013: the language overlays and three text takeovers
+(`Msg_SystemPtr`, `Text_DrawString`, `Text_DrawImmediate`),
+`bof3::RetargetCall` and `bof3::PatchBytes`, `tools/loc_build.py`,
+`tools/psx_disc.py`, `tools/font_pc.py`; and the menu evening - DIV-0010
+(`src/game/gfx_sprite_uv.cpp`), DIV-0011 (`src/game/menu_frame.cpp`),
+DIV-0012 (`src/game/gfx_filter.cpp`), DIV-0013 (in `loc_build.py`),
+`tools/task_stacks.py`, `tools/mem_watch.py`,
+[`menu-screens.md`](menu-screens.md). **Committed locally, not pushed, and
+still waiting on the owner's look in game:** DIV-0014, the title menu - `src/game/title_menu.cpp`, kind 6
+in `dat_load.cpp` and `tools/dat.py`, `build_title` in `tools/loc_build.py`,
+[`title-menu.md`](title-menu.md).
 
 Local only, gitignored, worth keeping:
 
-- `bof3/BOF3.CFG` (windowed mode); the owner's PC saves `bof3/BISLPS00/01/0F.DAT`
+- `bof3/BOF3.CFG` (windowed mode) and `build/bof3x.ini` (launcher settings);
+  the owner's PC saves `bof3/BISLPS00/01/0F.DAT`
   and the two converted ones, `02` (JP) and `03` (US).
 - `analysis/attract/orig_a.tsv` - the all-original reference for
   `attract_diff.py`; `ours_d_fileopen.log`, behind
@@ -322,17 +426,23 @@ Local only, gitignored, worth keeping:
 - `analysis/calltrace/all_b/` - the full-list all-original run of a whole
   attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
   concatenated, which the exclusion list was rebuilt from.
-- `analysis/calltrace/ab3_orig/` - the all-original frame-hash reference,
-  recorded with twenty-four owned, **stale since 2026-09-20**; the current one
-  is `analysis/calltrace/ab14_orig/` (and `ab14_origb`, its noise-floor twin),
-  recorded with a hundred and nine under the rebuilt `entries_logic.txt`
-  (`entries_logic_0919.txt` is the old list). Owned
+- `analysis/calltrace/ab15_orig/` - the all-original frame-hash reference
+  (and `ab15_origb`, its noise-floor twin; `ab15_ours`, `ab15_oursb`),
+  recorded 2026-09-20 with a hundred and fifteen owned under
+  `entries_logic.txt` (`entries_logic_0919.txt` is the old list). `ab14_*`
+  and `ab3_*` are stale. Owned
   functions are left unarmed, so it survives a takeover only when the function
   was not in `entries_logic.txt` to begin with (`Gfx_TexCacheFind` is
   render-timed and was not). Taking over a *logic* function changes every
   frame's hash; re-record then, about five minutes.
-- `CDImage/` - the owner's two PSP disc images (`psp-jp`, `psp-eu` in
+- `bof3/DAT/en.*.DAT` - the English overlays, 244 files; rebuilt by
+  `loc_build.py` in under a minute. `analysis/font/` - sheets, the exported
+  cells, and `shots/`, the attract screenshots behind DIV-0005/0006.
+- `CDImage/` - the owner's PSX discs (USA, Japan, Germany, France) and two PSP disc images (`psp-jp`, `psp-eu` in
   `fixtures.toml`). Never commit; extract to scratch, not into the tree.
+- `analysis/memwatch/menu_state.tsv` - the owner's menu walk, state bytes
+  against time; `analysis/d1/` - screenshots original against DIV-0010
+  (`fix1` is the first, wrong, attempt with its seams).
 - `analysis/experiments/experiment_mulmatrix.cpp` and `analysis/attract/pad_*`,
   `analysis/calltrace/padh_*` / `padd_*` - the matrix-padding experiment.
 - `analysis/attract/ab12_shadow.log` - the run the x87 control word was

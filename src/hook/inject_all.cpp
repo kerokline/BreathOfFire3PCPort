@@ -1,12 +1,15 @@
 #include "hook/inject_all.h"
 
+#include "game/config_text.h"
 #include "game/dat_load.h"
 #include "game/file_io.h"
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
 #include "game/gfx_image.h"
+#include "game/gfx_sprite_uv.h"
 #include "game/gfx_texcache.h"
 #include "game/gfx_clut.h"
+#include "game/gfx_filter.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
@@ -14,6 +17,7 @@
 #include "game/draw_pool.h"
 #include "game/prim.h"
 #include "game/map_view.h"
+#include "game/menu_frame.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/field_input.h"
@@ -25,13 +29,22 @@
 #include "game/psx_gte_transform.h"
 #include "game/draw_emit.h"
 #include "game/draw_pass.h"
+#include "game/msg_pool.h"
+#include "game/text_advance.h"
+#include "game/text_draw.h"
+#include "game/text_immediate.h"
 #include "hook/detour.h"
 
 namespace bof3 {
 
 void InjectAll() {
     FileIo_Inject();
+    MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
+    ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT
     DatLoad_Inject();
+    TextAdvance_Inject();
+    TextDraw_Inject();
+    TextImmediate_Inject();
     SaveIo_Inject();
     GfxFrame_Inject();
     GfxImage_Inject();
@@ -40,6 +53,9 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
+    GfxSpriteUv_Inject();
+    GfxFilter_Inject();
+    MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
     SpriteOrder_Inject();
     DrawPool_Inject();

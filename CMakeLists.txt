@@ -56,6 +56,16 @@ add_library(bof3x SHARED
   src/game/file_io.cpp
   src/game/save_io.cpp
   src/game/dat_load.cpp
+  src/game/text_advance.cpp
+  src/game/gfx_sprite_uv.cpp
+  src/game/gfx_filter.cpp
+  src/game/menu_frame.cpp
+  src/game/text_draw.cpp
+  src/game/text_immediate.cpp
+  src/game/msg_pool.cpp
+  src/game/name_tables.cpp
+  src/game/config_text.cpp
+  src/game/title_menu.cpp
   src/game/gfx_frame.cpp
   src/game/gfx_image.cpp
   src/game/gfx_texcache.cpp
@@ -83,7 +93,16 @@ target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 
 # --- the launcher ------------------------------------------------------------
-add_executable(bof3x_launcher src/launcher/launcher.cpp)
-target_link_libraries(bof3x_launcher PRIVATE bcrypt)
+# The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:
+# no toolkit, nothing vendored, so the launcher stays one dependency-free exe
+# (docs/launcher-settings.md section 2).
+enable_language(RC)
+add_executable(bof3x_launcher
+  src/launcher/launcher.cpp
+  src/launcher/config.cpp
+  src/launcher/config_dialog.cpp
+  src/launcher/launcher.rc)
+target_include_directories(bof3x_launcher PRIVATE src)
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")

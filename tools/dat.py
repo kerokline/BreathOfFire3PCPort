@@ -5,7 +5,11 @@ Format (docs/DAT_CONTAINER.md; measured on all 742 files, 2026-09-19):
 
     A .DAT is a flat stream of chunks, no file header, no trailer.
     chunk header (16 bytes)
-        0x00 u32  kind   0 data, 1 image, 2 audio bank, 3 (one instance)
+        0x00 u32  kind   0 data, 1 image, 2 audio bank, 3 (one instance);
+                         4 is OURS, never in a shipped file: glyph advances,
+                         in language overlays only (DIVERGENCE.md DIV-0006);
+                         5 is OURS too: item / ability names, tag = the
+                         table's address in BOF3.exe (DIV-0008)
         0x04 u32  tag    kind 0: PC-side buffer offset
                          kind 1: the PSX EMI `RAM destination` word, verbatim
                          kind 2: small integer 1..6
@@ -36,7 +40,9 @@ import os
 import struct
 import sys
 
-KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3"}
+KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3", 4: "advances (ours, DIV-0006)",
+         5: "names (ours, DIV-0008)", 6: "title menu widths (ours, DIV-0014)",
+         7: "config screen text (ours, DIV-0015)"}
 BANK_TOC = 0x188
 BANK_SLOTS = 61
 BANK_DATA = 0x380

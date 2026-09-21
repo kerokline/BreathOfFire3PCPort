@@ -1,123 +1,297 @@
-# Dialogue-box localisation - the plan, and what it rests on
+# Dialogue-box localisation - what is built, and what it rests on
 
-**Status:** DRAFT (2026-09-20) - a plan; nothing built. Measurements below are dated;
-everything else is marked as intent or as a guess.
+**Status:** IN PROGRESS (2026-09-20) - English dialogue draws in the attract
+sequence, in the donor's glyphs, at the donor's advance. Measurements below are
+dated; everything else is marked as intent or as a guess.
 
 Stage 2 of the owner's order of work ([`STATUS.md`](STATUS.md)) is "the text
 swap". This is what that means for the dialogue box, agreed with the owner on
 2026-09-20, and the facts it stands on. Menus, system text and text baked into
 artwork are **out of scope here**; they go through other paths.
 
-## 1. The idea
+## 1. The idea, as built
 
 Per-language overlay files, built **locally from the player's own discs** and
 never committed or shipped (CLAUDE.md rule 1, [`LICENSING.md`](LICENSING.md)
-§3):
+§3). An overlay `DAT\<lang>.<NAME>.DAT` is an ordinary `DAT` container holding
+only the chunks that differ; with `BOF3X_LANG=<lang>` set, `LoadDatFile` walks
+it after the shipped file, so its chunks land on top
+([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0005).
 
-- **Text.** For each `DAT` file that carries dialogue, a sibling such as
-  `en.AREA000.DAT` whose text chunk is the donor disc's message block
-  re-encoded for the PC engine. `LoadDatFile` is ours already; "try the
-  language-prefixed file, else the original" is a small divergence for the
-  ledger.
-- **Font.** The donor's glyph atlases rendered, upscaled 12 px to 24 px, and
-  re-encoded in the format of the port's global glyph table; swapped in with
-  the text.
+- **Text.** `en.AREA000.DAT`: one kind-0 chunk, tag 0 - the donor disc's
+  message block re-encoded for the PC engine (§4).
+- **Font.** `en.FIRST.DAT`: a kind-3 chunk - the shipped glyph table, whole,
+  with the donor's glyphs added (§3) - and a **kind-4** chunk, which is ours: a
+  pen advance for every glyph (DIV-0006, §5).
 - Known and accepted: switching language between loads scrambles anything that
   stored glyph codes - character names in a save, for one.
 
-## 2. What is measured
+```
+python tools/loc_build.py all --disc "CDImage/Breath of Fire III (USA).cue" --game bof3
+BOF3X_LANG=en build/bof3x-launcher.exe --game bof3
+```
 
-**The port has one font, and it is global** ([`asset-loading-path.md`](asset-loading-path.md)
-§2): a single kind-3 chunk in `FIRST.DAT`, 2,451 glyphs of 24 x 24 at 4 bits a
-pixel, low nibble first, 288 bytes each, each nibble through a 16-entry table
-of 16-bit colours. `Font_SetGlyphData` `0x5A6800` (ours) takes a buffer and a
-size and frees the previous one - a branch no shipped data has ever run. One
-reader, `0x5A2CA0`, `base + glyph * 0x120`. The PSX builds keep glyphs as
-32 KB atlas textures inside the EMIs instead.
+One pass, 244 overlay files: 200 area texts, 44 system pools, and `en.FIRST.DAT`
+with the font, the advances, its pool and the six name tables.
 
-**The script is glyph codes, not readable text, and the engine is the PSX
-one.** `MsgBox_Step` `0x497840`, read 2026-09-20: a byte `<= 0x16` goes
-through the 23-entry jump table `0x497A70` - the PSX control codes; anything
-else is a character, handed by pointer to the draw `0x516B30`, after which
-`test byte [esi], 0x80` (`0x497A2A`) skips a second byte when the first has its
-high bit set. So: one- or two-byte characters, two-byte ones flagged by the
-high bit. A GBK scan finds nothing; the census has the area text at 2,264
-distinct codes, all `<= 0x0FFF`, against a 2,451-glyph font
-([`DAT_CONTAINER.md`](DAT_CONTAINER.md)). That the code **is** the font index is
-still a hypothesis: `0x516B30` is unread.
+`tools/psx_disc.py` reads the ISO9660 tree of a `.cue`, a raw `.bin` or a
+cooked `.iso`, so the PSX and the PSP discs are the same kind of donor.
 
-In that branch, bytes `0x2A` and `0x3C` pull the pen 12 px left when they start
-a line. Those are `*` and `<` in ASCII. *Guess:* single-byte codes may be
-near-ASCII in this font. Two constants, nothing more.
+## 2. The PC engine, measured
 
-**The message slots line up across languages.** `AREA000`, text block at arena
-offset 0 (PSX `0x80010000`), 2026-09-20:
+**One font, global** ([`asset-loading-path.md`](asset-loading-path.md) §2): a
+single kind-3 chunk in `FIRST.DAT`, 2,451 glyphs of 24 x 24 at 4 bits a pixel,
+low nibble first, 288 bytes each. `Font_SetGlyphData` `0x5A6800` (ours) frees
+the previous table - a branch that ran for the first time on 2026-09-20, under
+an overlay. `tools/font_pc.py sheet` draws the table.
 
-| Build | Block bytes | Offset-table entries | Bytes `>= 0x80` after the table |
-|---|---|---|---|
-| PSX-JP = PSP-JP (byte-identical section) | 5,041 | 256 | 32% |
-| PSP-EU, English | 9,170 | 256 | 16% |
-| PC, Chinese | 5,732 | 256 | 63% |
+**The code is the glyph index** - hypothesis closed, 2026-09-20, by reading
+the string draw `0x516B70` behind `Text_DrawAt` `0x516B30` (`symbols.toml` has
+the full read):
 
-One area, not a census. The sibling's `LOCALIZATION_APPLY.md` says the US
-script is aligned slot for slot with JP; not re-measured here.
+| first byte | what it is |
+|---|---|
+| `0x00` | end |
+| `0x01`, `0x05 nn`, `0x06`, `0x07 nn` | newline (y += 12), set colour, restore colour, draw the 32-byte record `0x904CE0 + nn * 32` |
+| `0x20` | advance, draw nothing |
+| other `<= 0x20` | falls into the glyph path with a negative index - see the trap |
+| `0x21`..`0x7F` | glyph `b - 0x26` |
+| `>= 0x80` | two bytes: glyph `((b0 & 0x7F) << 8) + b1` |
+
+A glyph index above `0xA00` executes `in al, dx` - a privileged instruction, so
+a crash, presumably a debug trap. **`0x993`..`0xA00` is therefore free**: 110
+glyphs past the shipped 2,451, reachable as `0x89 0x93`..`0x8A 0x00`.
+*Since DIV-0016 that bound is not a constant: it follows the loaded table
+(`max(0xA00, glyphs - 1)`), which is the original's number for every shipped
+file and lets an overlay's table be any size. The PC has no limit on the
+table itself - `Font_SetGlyphData` takes a pointer and a size - so the only
+ceiling was this comparison, in a function that is ours.* The
+single-byte range is near-ASCII - `(` `)` digits, full-width capitals at
+`0x41`, `「` at `0x2A`, no lowercase (the slots from `0x5B` up hold symbols and
+circled numbers). The glyph index travels to the renderer in the *tpage* field
+of a `POLY_FT4` (`+0x16` of the primitive at `[0x7E0670]`), the CLUT id
+`0x7800 | colour` in the usual field; the quad is 12 x 12 PSX pixels.
+
+`Text_DrawAt` has **341 callers** - it is the port's general text draw.
+`MsgBox_Step` `0x497840` calls it at `0x497A22` for one character at a time and
+keeps its own pen: `MsgBox_PenX` `0x7DEE5C` `+= 12` at `0x497A44`. Both
+advances are flat 12; they do not share the constant.
+
+**The nibbles are CLUT indices into a grey ramp.** `FIRST.DAT` kind-0 tag
+`0x8000` is the CLUT strip as loaded; CLUT 0, read 2026-09-20: 1 = 224 grey,
+then 216, 200, 192, 168, 136, 7 = 96; 8 = `(0, 0, 48)`. The PC font uses 1 for
+the body, 2-7 to anti-alias and 8 as a full outline; the PSX font uses 1 for
+the body, 2-6 to anti-alias and 7 as a drop shadow to the right and below, and
+never 8. **A straight nibble copy is right**, and was right on the first try
+in game. Other colours are the same ramp shape in other hues.
+
+## 3. The donor font, measured (US disc, `SLUS_004.22`, 2026-09-20)
+
+`BIN/ETC/ENDKANJI.EMI` section 0 is the 256 x 512 atlas the sibling's
+`font_sheet.py` describes. Beside the JP-style 12 px capitals it carries, from
+y = 72, **the Western dialogue font: cells of 8 x 12, 31 to a row, in script
+code order from `0x30`** - cell = code - `0x30`, 100 cells to `0x93`:
+
+| codes | glyphs |
+|---|---|
+| `0x30`-`0x39` | `0`-`9` |
+| `0x3A`-`0x40` | `(` `)` `,` `-` `.` `/` `=` |
+| `0x41`-`0x5A` | `A`-`Z` |
+| `0x5B`-`0x60` | `‥` `?` `!` heart, note, sigma |
+| `0x61`-`0x7A` | `a`-`z` |
+| `0x7B`-`0x8C` | arrows, shapes, symbols |
+| `0x8D`-`0x93` | `&` `'` `:` `"` `;` `·` `%` |
+| `0xFF` | space (no cell) |
+
+This agrees with the code list the sibling read off the script
+(`LOCALIZATION_APPLY.md`), which it could not tie to a sheet position.
+
+**How English does upper and lower case, and uneven letters: it does not do
+anything.** Upper and lower case are different codes with different cells. The
+font is **monospaced**: every cell is 8 px, `i` and `m` alike, and the US
+stepper adds a flat 8 to its pen after every character - `addiu v0, v0, 8` at
+`0x80150770`, the twin of the JP engine's `addiu 0xC` and of the PC's
+`add bp, 0xC`. Corroborated from the data: over AREA000 the longest line is 24
+characters and the mode 19-21, which is a 192 px box at 8 px. There is no width
+table in the US build to port.
+
+**There are two Latin sets on the donor, and we now take both** (owner,
+2026-09-20). Beside the 8 x 12 dialogue set at y=72 the atlas carries the
+same 100 characters again at **8 x 8, rows 120..151**, same 31 to a row and
+the same code order. That is the set the 8 px UI draw `0x516E70` is for. Its
+quad is 8 units where `Text_DrawString`'s is 12, but it samples the **whole**
+24 x 24 glyph into that quad, so the cells are stored tripled and land at
+16 x 16 on screen. Appended at glyph `0xA00` (DIV-0016). The `--glyphs` /
+`--upscaler` path still covers **only the 12 px set**; the UI set is plain
+tripling.
+
+`tools/loc_build.py font` keeps the whole shipped table (so untouched Chinese
+text still draws), appends the 100 cells at glyph `0x993 + (code - 0x30)`,
+doubled to 16 x 24 at the left of the 24 x 24 glyph, and paints the same glyph
+over the single-byte slot of each of the 74 characters that has an ASCII byte
+the engine treats as plain (`>= 0x26`, not `0x2A` or `0x3C`, which hang at
+line start) - so ordinary text stays one byte a character.
+
+**Better upscales.** `loc_build.py export` writes the 100 cells as a 160 x 60
+RGBA sheet (8 x 12 cells, 20 to a row, the game's own greys, clear
+background); `font --glyphs sheet.png` takes a sheet of the same layout back
+at any cell size up to 24 x 24 - 320 x 120 for the 2x the 8 px advance
+assumes - and quantises it: alpha under half is clear, otherwise the nearest
+grey of the ramp, and anything much darker than the ramp becomes 8, the PC
+outline. Checked: the export doubled nearest-neighbour rebuilds the default
+table byte for byte.
+
+**Replicating a build exactly, with no image checked in.** `font` and `all`
+take `--upscaler "CMD {in} {scale}"`: the cells are exported to a temporary
+directory, the player's own upscaler is run there, and its output - `{out}`
+if the command uses it, else the one new PNG it left - is read back; an
+output without alpha is accepted, exact black being clear. The SHA-256 of the
+font overlay is printed, which is what two people compare (it depends on the
+disc, the shipped `FIRST.DAT` and the upscaler, nothing else). Written with
+[cole8888/Nearest-Neighbour-Upscale](https://github.com/cole8888/Nearest-Neighbour-Upscale)
+in mind (MIT, C, `make`; its driver writes a fixed file name into the working
+directory, and keeps alpha only when built with `CHANNELS_PER_PIXEL` 4 - both
+handled). *Not yet run with that tool itself:* checked 2026-09-20 with a
+stand-in of the same behaviour (`analysis/font/nn_like.py`), which gives the
+same hash as the built-in doubling, `967e0d4c...5c50` on the owner's US disc -
+as it must, since integer nearest-neighbour is what both compute. The hook
+earns its keep with a *different* upscaler; the hash then names the result.
+
+## 4. The text
+
+**The message slots line up across languages**, and the US block is all
+messages. Census of the US disc's 200 area scripts, 2026-09-20: 256 slots in
+every file; walking every slot control-aware covers each block to within four
+bytes of its end, so there is no "script half" to lose by swapping the chunk.
+Controls used: `01 02 03 04 05 06 07 0A 0B 0C 0D 0E 0F 10 11 14 16`, the set
+the sibling counted. Real English uses only the codes of §3; everything else
+in the US blocks is the untranslated JP leftovers the sibling describes.
+
+`loc_build.py text` rebuilds each block: every distinct donor message is
+re-encoded - one byte where the character has an ASCII slot, else the two-byte
+code of its appended glyph; `0xFF` becomes `0x20`; controls, their arguments
+and the `0x14` choice block pass through - and a message holding any code
+English lacks **keeps the PC file's own message for that slot**, which still
+draws because the Chinese table is intact. 200 of 200 areas built (since
+DIV-0007), 496 slots kept as shipped.
+
+`AREA000`, text block, for scale: PSX-JP 5,041 bytes; PSP-EU 9,170; PC 5,732;
+the English overlay 9,533.
 
 **The PSP discs are PSX data, renamed very little** (owner's discs,
-`fixtures.toml` `psp-jp` / `psp-eu`, 2026-09-20). 885 `.EMI` files in the PSX
-container - `MATH_TBL` header, same section types and tags - not the PC's
-`.DAT`. `AREA000`: 14 sections in PSX-JP, PSP-JP and PSP-EU alike; 9 of 14
-byte-identical PSX-JP to PSP-JP, the differences being the three sound
-sections and one image page; load addresses lose bit 31. The font is still
-32 KB atlas sections at the PSX's VRAM tags: **no 24 px table - that is the
-Chinese port's own.** PSP `FIRST.EMI` has two sections the PSX lacks
-(`0x596000`, `0x600000`; unread) and a system message pool of a different size
-(`0x3660` against `0x3628`), and ships `libfont.prx`, use unknown.
+`fixtures.toml` `psp-jp` / `psp-eu`): 885 `.EMI` files in the PSX container,
+the font still 32 KB atlas sections at the PSX's VRAM tags. A PSP EU disc
+should be as good a donor as a PSX US one; not yet run through `loc_build.py`.
+The owner's PSX discs for USA, Japan, Germany and France are in `CDImage/` too.
 
-Consequence: **a PSP EU disc is as good an English dialogue donor as a PSX US
-one** - same format, same atlas font - and the converter should read EMIs
-without caring which. For the *system* pool prefer a PSX disc until the PSP
-pool is diffed against it.
+## 5. The advance (DIV-0006)
 
-## 3. What is not known, in the order it bites
+A kind-4 chunk: one byte a glyph, the advance in PSX pixels, the chunk's tag
+the advance of the space. The engine re-aims `MsgBox_Step`'s one call of
+`Text_DrawAt` and corrects `MsgBox_PenX` by `advance - 12` after it; nothing
+of the stepper is replaced. 8 for the donor's glyphs, 12 for the rest. Because
+it is a table, a proportional font is a data change.
 
-1. **What `0x516B30` does**: code to glyph index, the single-byte range, and
-   above all the **advance**. JP draws a flat 12 px advance; if the PC advances
-   a flat 24 px, upscaled English renders correctly and reads like a
-   typewriter, and line lengths authored for the US engine will not fit. A
-   narrower or proportional advance is an engine divergence with its own
-   ledger entry. The English build's cell width and advance are not known here
-   - ask the owner, or read the sibling's `TEXT_ENGINE.md`.
-2. **What a nibble means on each side.** PC: an index into a 16-entry colour
-   table (which table, filled by whom - unread). PSX: a CLUT index, which may
-   be body / outline / shadow rather than intensity. Straight copy or remap is
-   decided by reading both.
-3. Whether the donor block's **script half** - the bytes the offset table does
-   not point at, if any - differs between regions. The plan swaps a whole
-   chunk; that is only safe if the block is all messages or the rest is equal.
-4. The port widened name fields (enemy names 8 to 12 bytes, character names 5
-   to 9: [`DAT_CONTAINER.md`](DAT_CONTAINER.md), [`save-interchange.md`](save-interchange.md)).
-   Dialogue that embeds a name goes through control codes, not these fields -
-   *believed*, not checked.
-5. Which of the 23 control codes the dialogue actually uses; the attract
-   sequence's eight messages are the regression check that exists
-   ([`attract-mode.md`](attract-mode.md) §6).
+### What the owner saw, 2026-09-20, and what it turned out to be
+
+- *The camp menu and the yes / no box are still at 12 px.* A third pen:
+  `Text_DrawImmediate` `0x5961C0`, the PSX immediate draw's twin, one
+  `Text_DrawAt` call a character with the pen in `ebp`. Ours now. **Three
+  pens in all** - `Text_DrawString`'s, `MsgBox_Step`'s, this one - and nine
+  functions call `Text_DrawAt` with a count of 1; the other seven
+  (`0x45B490`, `0x45B5F0`, `0x460730`, `0x460920`, `0x466260`, `0x4B1090`,
+  `0x4B11F0`) place single characters without a `+ 12` beside the call and
+  are unread - where the next "still 12 px" report will come from.
+- *The apostrophe has padding it should not.* It is the US release's: every
+  cell advances 8 and the apostrophe's ink is columns 1..3 of its cell. The
+  US stepper's only special case is the double quote, hung 8 px into the
+  margin at the start of a line (`0x80150680`). Both are now done: the hang
+  faithfully, the apostrophe and comma tightened to 5 by the tool unless
+  `--mono` - a divergence from the US release, DIV-0009, which the owner
+  confirmed against an emulated PSX build the same day (`you' ll`, and a
+  twelve-pixel gap after a comma) and prefers ours to.
+
+## 6. Open, in the order it bites
+
+1. ~~**Sixteen areas do not fit.**~~ **Closed 2026-09-20, DIV-0007.** The
+   English blocks of `AREA039`, `090`, `094`, `153`, `154` and `175`-`185` run
+   `0x467D`-`0x5559`, past the system pool at arena `0x4000`. The sibling's
+   `regional-builds.md` had the answer: the US release moved the *pool*
+   (`0x80014000` to `0x8001A000`) and left the script where it is. Here the
+   pool has one reader, `Msg_SystemPtr`, against 41 functions that read the
+   script in place - so the pool moved, to a buffer of its own, and all 200
+   areas build.
+1a. **The boxes that are not the dialogue box** (owner's recollection,
+   2026-09-20: zenny pick-up, item pick-up, the masters' talk - not yet
+   matched to addresses). 35 functions read the script block at `0x803580`
+   themselves and draw through `Text_DrawAt` without `MsgBox_Step`
+   (`analysis/pc_funcs.json` operand census; `0x458D70`, `0x45E820`,
+   `0x52D560`, `0x468560`, `0x5869A0` are the table-lookup shape, and
+   `0x498280` is by position the PSX `MsgBox_Replay`). Because the script did
+   not move they find the English text. They advance inside the string draw
+   `0x516B70`, **which is ours since 2026-09-20** (`Text_DrawString`,
+   `src/game/text_draw.cpp`) and takes the advance table too - seen on the
+   attract narration, which is one of these paths. Still open here: several
+   of the 35 read fixed offsets (`+0x6E`..`+0xE0`, `+0x200`, `+0x3E0`), which
+   no area script has - other files put other things at arena 0, unread; and
+   a caller that centres text by counting characters at 12 px would now sit
+   left of centre. The narration does not: the US script centres with spaces.
+2. **Owner, in game.** Only the attract sequence has been seen: a caption and
+   two speakers. Choice menus, name inserts (`0x03` `0x04` `0x07`), colour,
+   the instant-print spans and page breaks are converted by rule and unseen.
+3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), still
+   advances 12. Unread; by position it is the PSX grow/shrink text effect.
+4. **Menus: built 2026-09-20, unseen** (DIV-0008, §7). Left in Chinese:
+   enemy, character and place names, and any string outside the pool and the
+   six tables.
+5. The port widened name fields (enemy names 8 to 12 bytes, character names 5
+   to 9). Dialogue that embeds a name goes through control codes, not these
+   fields - *believed*, not checked; what a JP/US-length name record looks
+   like under the PC's 9-byte walk is unread.
+6. German and French: their discs are on hand; their cells for the accented
+   letters are unread, and may need more than the 110 free glyphs leave.
+7. ~~The regression check with `BOF3X_LANG` unset.~~ Run 2026-09-20 with all
+   111 ours, DIV-0005..0007 in: identical to the all-original reference at
+   1,734 of 1,734 frames (a 1.9-minute run, not the whole cycle). The frame
+   hash has NOT been re-recorded: `Text_DrawString` and `Msg_SystemPtr` are
+   logic functions, so `ab14_orig` is stale if either is in `entries_logic.txt`.
+
+## 7. Menu text: the system pool and the name tables (DIV-0008)
+
+The owner's recollection, 2026-09-20 - that the Japanese and English item and
+armour names differ in length, and would the Chinese port have kept that -
+was right, and the answer is better than either. Sibling `TEXT_TABLES.md`: the
+JP disc's item and ability records carry `name[8]`; the US build widened
+every one to `name[12]`, numbers untouched. **The Chinese port has
+`name[16]`**, in `BOF3.exe`'s `.data`, numbers equal to JP's in 534 of 534
+records (`symbols.toml`, `NameTable_*`). A Chinese name is two bytes a glyph,
+so 16 bytes is the JP field's eight characters; an English one is a byte a
+letter, so every US name fits with four bytes over.
+
+| table | JP | US | PC | records |
+|---|---|---|---|---|
+| consumables | 14 | 18 | 22 | 92 |
+| key items | 12 | 16 | 20 | 16 |
+| weapons | 20 | 24 | 28 | 83 |
+| armour | 18 | 22 | 26 | 68 |
+| accessories | 16 | 20 | 24 | 52 |
+| abilities | 16 | 20 | 24 | 227 |
+
+(strides in bytes; name = stride minus the JP record's numeric bytes.)
+
+The US name bytes are the dialogue font's codes - `0xFF` the space, `0x8E`
+the apostrophe, `0x3D` and `0x3E` the hyphen and the stop the sibling saw as
+`=` and `>` - so the dialogue encoder converts them unchanged. The donor's
+tables are found by the PC table's own numeric bytes, not by address.
+
+The system pool - descriptions, menu strings, the pick-up messages - has the
+same two-block shape and the same slot counts, 309 and 455, on the PC and on
+the US disc, and converts slot for slot with the area-script converter.
+
+**Room on screen is the open question, not room in memory.** Eight Chinese
+glyphs are 96 px; at 8 px a letter that is twelve letters - the US field
+exactly. Whether a column has slack for the 13 to 15 letters the field would
+hold (`Ballock Knife`, `Leather Armor`) is for the owner to see in game.
 
 `bof3ext` put English into this port by hooking the draw. Its `docs/` are worth
 reading for which problems it met - cited, not copied (CLAUDE.md rule 5).
-
-## 4. First steps
-
-1. **Read `0x516B30`** and its path to `0x5A2CA0`. Settles §3.1 and the
-   code-is-index hypothesis in one sitting. Static.
-2. **Look at both fonts.** A scratch tool that dumps the PC table and one PSX
-   atlas page to PNG (output to `analysis/`, gitignored). Settles §3.2 by eye.
-3. **The gibberish test.** Build a table from the PSP-EU atlas - nearest-
-   neighbour 2x, glyph N = atlas cell N, the PSX page lead bytes (`0x13`
-   `+0x100`, `0x15` `+0x5B`: sibling `TEXT_ENGINE.md`) folded into the index -
-   and load it in place of the Chinese one with the text untouched. The
-   dialogue will be nonsense in our glyphs at 24 px: format, nibble mapping and
-   advance, all visible at once. Owner in game, or the attract sequence.
-4. Census: the offset-table entry count of every area, JP / EU / PC
-   (`tools/dat.py` has both parsers). Turns §2's one row into 199.
-5. Then the converter (`tools/`, EMI text block to PC chunk), the overlay
-   lookup in `LoadDatFile`, and their `DIVERGENCE.md` entries.

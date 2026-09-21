@@ -12,6 +12,13 @@ Tool: [`tools/dat.py`](../tools/dat.py) (`list`, `survey`, `extract`, `compare`)
 Measured against the `pc-zh` build in [`fixtures.toml`](../fixtures.toml); the
 `DAT/` tree itself is not yet hashed there (open item below).
 
+> **Kinds 4 and 5 are ours (2026-09-20).** No shipped file has them and the
+> original loader skips any kind above 3. They occur only in the language
+> overlays `tools/loc_build.py` writes: kind 4 is a pen advance for every
+> glyph, tag = the space's advance (DIV-0006); kind 5 is one name table's
+> 16-byte names, tag = the table's address in `BOF3.exe` (DIV-0008). See
+> [`dialogue-localisation.md`](dialogue-localisation.md).
+
 ## 1. Format
 
 A `.DAT` is a flat stream of chunks. No file header, no trailer, no alignment.
