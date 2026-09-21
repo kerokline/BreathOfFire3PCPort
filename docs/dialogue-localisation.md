@@ -60,7 +60,12 @@ the full read):
 
 A glyph index above `0xA00` executes `in al, dx` - a privileged instruction, so
 a crash, presumably a debug trap. **`0x993`..`0xA00` is therefore free**: 110
-glyphs past the shipped 2,451, reachable as `0x89 0x93`..`0x8A 0x00`. The
+glyphs past the shipped 2,451, reachable as `0x89 0x93`..`0x8A 0x00`.
+*Since DIV-0016 that bound is not a constant: it follows the loaded table
+(`max(0xA00, glyphs - 1)`), which is the original's number for every shipped
+file and lets an overlay's table be any size. The PC has no limit on the
+table itself - `Font_SetGlyphData` takes a pointer and a size - so the only
+ceiling was this comparison, in a function that is ours.* The
 single-byte range is near-ASCII - `(` `)` digits, full-width capitals at
 `0x41`, `「` at `0x2A`, no lowercase (the slots from `0x5B` up hold symbols and
 circled numbers). The glyph index travels to the renderer in the *tpage* field
@@ -109,6 +114,16 @@ stepper adds a flat 8 to its pen after every character - `addiu v0, v0, 8` at
 `add bp, 0xC`. Corroborated from the data: over AREA000 the longest line is 24
 characters and the mode 19-21, which is a 192 px box at 8 px. There is no width
 table in the US build to port.
+
+**There are two Latin sets on the donor, and we now take both** (owner,
+2026-09-20). Beside the 8 x 12 dialogue set at y=72 the atlas carries the
+same 100 characters again at **8 x 8, rows 120..151**, same 31 to a row and
+the same code order. That is the set the 8 px UI draw `0x516E70` is for. Its
+quad is 8 units where `Text_DrawString`'s is 12, but it samples the **whole**
+24 x 24 glyph into that quad, so the cells are stored tripled and land at
+16 x 16 on screen. Appended at glyph `0xA00` (DIV-0016). The `--glyphs` /
+`--upscaler` path still covers **only the 12 px set**; the UI set is plain
+tripling.
 
 `tools/loc_build.py font` keeps the whole shipped table (so untouched Chinese
 text still draws), appends the 100 cells at glyph `0x993 + (code - 0x30)`,

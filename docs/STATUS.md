@@ -193,6 +193,22 @@ What is established:
   InstallShield 5, and neither has anything to do with game configuration —
   `BOF3.CFG` is the only config filename in the exe. **Scripted runs now need
   `--no-config`.**
+- **The in-game Config screen is translated** (2026-09-20, DIV-0015,
+  [`config-screen.md`](config-screen.md)). Its text is in `BOF3.exe`, not in
+  any `DAT`: six label addresses built into the row draw, seventeen 16-byte
+  option records, six controller names. The US disc's `START.EMI` holds the
+  same structures with the same two row tables **byte for byte**, so the
+  strings come from the player's own disc through a kind-7 chunk, counts and x
+  offsets included - quirks and two unused records and all. **Confirmed in game by the owner, 2026-09-21.**
+  The donor's **second** Latin set came with it: the same 100 characters at
+  8 x 8, appended at glyph `0xA00` and stored **tripled**, because the 8-unit
+  quad scales a whole 24 x 24 glyph down to 16 x 16 rather than cropping one.
+  This screen draws with it - and a
+  glyph-index guard that now follows the loaded table instead
+  of the original's flat `0xA00` (DIV-0016). The row under the cursor is drawn
+  in the 8 x 12 dialogue font on the same 8 advance, as the disc does, instead
+  of the UI glyph blown up and thrown left (DIV-0017). All of it confirmed in game by the owner, 2026-09-21. The font table is no longer
+  capped by anything but that guard, which is in our own `Text_DrawString`.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 

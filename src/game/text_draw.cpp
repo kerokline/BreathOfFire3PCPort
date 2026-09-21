@@ -10,7 +10,11 @@
 
 namespace {
 
-constexpr unsigned kGlyphLimit = 0xA00;  // 0x516C94: cmp cx, 0xA00 / jbe
+// 0x516C94: cmp cx, 0xA00 / jbe. Not constant any more - DIV-0016, see
+// text_draw.h. Starts at the original's value, so a run with no overlay
+// never sees a different number.
+constexpr unsigned kOriginalGlyphLimit = 0xA00;
+unsigned g_glyph_limit = kOriginalGlyphLimit;
 constexpr int kCell = 12;
 constexpr int kRecordBytes = 0x20;
 
@@ -105,7 +109,7 @@ void SelfTest(void* clone) {
         if (r == 4) { out[0] = 0x20; return 1; }
         if (r < 8) {
             static const unsigned kSeeds[] = {0x000, 0x001, 0x0FF, 0x100, 0x992, 0x993, 0x9FF, 0xA00};
-            unsigned g = (next() & 1) ? kSeeds[next() % 8] : next() % (kGlyphLimit + 1);
+            unsigned g = (next() & 1) ? kSeeds[next() % 8] : next() % (g_glyph_limit + 1);
             // A zero second byte is left in: the glyph is drawn and the loop's
             // look-ahead then ends the string, the same on both sides. (Forcing
             // it non-zero once turned the seed 0xA00 into 0xA01 - the trap.)
@@ -251,7 +255,7 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
             } else {
                 index = static_cast<std::uint16_t>(c - 0x26);
             }
-            if (index > kGlyphLimit) GlyphTrap();
+            if (index > g_glyph_limit) GlyphTrap();
             std::memcpy(Gfx_PacketNext + 0x16, &index, sizeof index);
             g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
                    kCell - v, u, v, static_cast<int>(clut));
@@ -261,6 +265,10 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
         --count;
     } while (text[0] != 0);
     return text + 1;
+}
+
+void TextDraw_SetGlyphCount(unsigned glyphs) {
+    g_glyph_limit = glyphs > kOriginalGlyphLimit + 1 ? glyphs - 1 : kOriginalGlyphLimit;
 }
 
 void TextDraw_Inject() {

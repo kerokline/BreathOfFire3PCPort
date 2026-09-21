@@ -47,6 +47,21 @@ The single next action, concrete enough to start without asking anyone.
      screenshot, unseen since), item and ability menus for clipping, a
      pick-up, the masters' talk, a long area (`AREA090`, `175`-`185`: the ones
      that only fit since the system pool moved, DIV-0007).
+   - **The Config screen is English and confirmed in game** (DIV-0015 /
+     DIV-0016, [`config-screen.md`](config-screen.md)): six labels, seventeen
+     options and six controller names from the disc's `START.EMI` through a
+     kind-7 chunk, drawn from the donor's 8 x 8 UI cells, tripled, named two
+     bytes at a time. The owner saw it ("much closer") and found the text
+     two pixels low; the earlier two-pixel drop is removed and that build is
+     the next thing they look at - seen, right. The selected row's large
+     lettering is DIV-0017, seen and confirmed 2026-09-21. **The 8-unit quad scales a whole 24 x 24 glyph to 16 x 16** rather
+     than cropping it - the fact that decides which cells any UI string wants.
+     `0x516E70` is now read (same glyph table, 8 x 8 quads, flat 8 advance,
+     (u, v) from `0x65F5A8`), so the list below is one shorter. Still Chinese
+     on that screen: the two buttons above the panel, which come from a
+     23-entry table of short menu verbs (`Use`, `Sort`, `Quit`, `Init`, ...)
+     shared by the whole menu - the obvious next piece, and it would reach
+     more than this screen.
    - **The next "still 12 px" report** will be one of seven unread functions
      that call `Text_DrawAt` a character at a time: `0x45B490`, `0x45B5F0`,
      `0x460730`, `0x460920`, `0x466260`, `0x4B1090`, `0x4B11F0`. Three pens

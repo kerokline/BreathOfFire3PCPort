@@ -89,7 +89,15 @@ FONT_EMI = "BIN/ETC/ENDKANJI.EMI"
 CELL_W, CELL_H, CELLS_PER_ROW, CELLS_Y0 = 8, 12, 31, 72
 FIRST_CODE, LAST_CODE = 0x30, 0x93
 APPEND_AT = 0x993                # first glyph past the shipped table
-GLYPH_LIMIT = 0xA00              # 0x516C94: cmp cx, 0xA00 / jbe
+# The donor carries the SAME 100 characters a second time at 8 x 8, rows
+# 120..151, same 31 to a row and same code order (owner 2026-09-20, grid
+# render). That is the set the 8 px UI draw 0x516E70 uses. Its quad is 8
+# units where Text_DrawString's is 12, but it samples the whole 24 x 24 glyph
+# into it, so these cells are stored tripled (pc_glyph).
+SMALL_CELL_H, SMALL_CELLS_Y0 = 8, 120
+SMALL_APPEND_AT = 0xA00          # the 8 x 8 set, on the round boundary past the 12 px one
+SMALL_SPACE = SMALL_APPEND_AT + (0x93 - 0x30 + 1)   # a blank cell after it; see config_encode
+GLYPH_LIMIT = 0x1000             # ours, DIV-0016; the original 0x516C94 was cmp cx, 0xA00
 PC_ADVANCE = 12                  # 0x497A44, 0x516CDE
 TEXT_ROOM = 0x8000               # the CLUT strip as loaded starts here; the system pool at
                                  # 0x4000 is moved out of the way by the engine (DIV-0007)
@@ -140,18 +148,28 @@ def donor_sheet(disc):
     return rows
 
 
-def donor_cell(rows, code):
+def donor_cell(rows, code, y_first=CELLS_Y0, cell_h=CELL_H):
     i = code - FIRST_CODE
-    x0, y0 = CELL_W * (i % CELLS_PER_ROW), CELLS_Y0 + CELL_H * (i // CELLS_PER_ROW)
-    return [rows[y0 + y][x0:x0 + CELL_W] for y in range(CELL_H)]
+    x0, y0 = CELL_W * (i % CELLS_PER_ROW), y_first + cell_h * (i // CELLS_PER_ROW)
+    return [rows[y0 + y][x0:x0 + CELL_W] for y in range(cell_h)]
 
 
-def pc_glyph(cell):
-    """8 x 12 nibbles -> one 288-byte PC glyph, doubled, left-aligned."""
+def pc_glyph(cell, scale=2):
+    """8 x H nibbles -> one 288-byte PC glyph, scaled, top-left-aligned.
+
+    The 8 x 12 dialogue set is doubled: 16 x 24 of the 24 x 24 glyph, drawn
+    1:1 by Text_DrawString's 12-unit quad. The 8 x 8 UI set is TRIPLED, which
+    fills the glyph exactly: the 8-unit draw 0x516E70 shows the whole
+    24 x 24 cell at 16 x 16 (its emitter 0x516D50 fixes the texture extent at
+    0xC units whatever the quad), so a tripled cell lands at the
+    PlayStation's doubled 8 x 8 - texel for texel under a point filter.
+    """
     out = bytearray()
+    scaled_h = scale * len(cell)
     for y in range(font_pc.GLYPH):
-        src = cell[y // 2]
-        row = [src[x // 2] if x < 2 * CELL_W else 0 for x in range(font_pc.GLYPH)]
+        src = cell[y // scale] if y < scaled_h else None
+        row = [src[x // scale] if (src is not None and x < scale * CELL_W) else 0
+               for x in range(font_pc.GLYPH)]
         for x in range(0, font_pc.GLYPH, 2):
             out.append(row[x] | (row[x + 1] << 4))
     return bytes(out)
@@ -186,7 +204,27 @@ def build_table(base_table, rows, redrawn=None, mono=False):
             slot = ASCII_OF[code] - 0x26
             table[slot * font_pc.GLYPH_BYTES:(slot + 1) * font_pc.GLYPH_BYTES] = g
             advances[slot] = advance
-    assert len(table) // font_pc.GLYPH_BYTES - 1 <= GLYPH_LIMIT
+    # The 8 x 8 UI set, at its own base. The gap between the two blocks is
+    # blank glyphs: SMALL_APPEND_AT is a round number, not a tight packing.
+    blank = bytes(font_pc.GLYPH_BYTES)
+    while len(table) // font_pc.GLYPH_BYTES < SMALL_APPEND_AT:
+        table += blank
+        advances.append(PC_ADVANCE)
+    for code in range(FIRST_CODE, LAST_CODE + 1):
+        cell = donor_cell(rows, code, SMALL_CELLS_Y0, SMALL_CELL_H)
+        table += pc_glyph(cell, 3)
+        # The UI draw advances a flat 8 of its own and never reads this table;
+        # the value is here for the ordinary draw, should anything reach these
+        # glyphs through it.
+        advances.append(CELL_W)
+    # One blank glyph for the space, so that every character of a UI string is
+    # two bytes and `4 * len` is exactly its width.
+    table += blank
+    advances.append(CELL_W)
+
+    glyphs = len(table) // font_pc.GLYPH_BYTES
+    if glyphs - 1 > GLYPH_LIMIT:
+        raise SystemExit("table would hold %d glyphs, the limit is 0x%X" % (glyphs, GLYPH_LIMIT))
     return bytes(table), bytes(advances)
 
 
@@ -474,6 +512,140 @@ def convert_names(game, donor):
     return chunks, report
 
 
+# ---------------------------------------------------- the Config screen
+
+# Ours (see docs/config-screen.md): the in-game Config screen's text, which is
+# in BOF3.exe's .data and in no DAT, so it cannot ride the ordinary chunk
+# paths. Tag 0, one chunk, carried by FIRST.DAT.
+KIND_CONFIG = 7
+
+CONFIG_LABELS = 6       # Msg Speed .. Controller, drawn by 0x461800
+CONFIG_RECORDS = 17     # the option strings at 0x6536F8, 16 bytes each
+CONFIG_CTRL = 6         # the controller panel's function names at 0x66A338
+CTRL_STRIDE = 21        # on the donor: a count byte, then 20 for the string
+
+# The row -> first record and row -> option count tables, which the PC build
+# and every PSX build carry identically (read 2026-09-20 from BOF3.exe
+# 0x653808 / 0x653810 and from the US disc's START.EMI). Finding them is what
+# locates the records: the last 12 bytes of that pair are a unique anchor.
+CONFIG_TABLES = bytes([0, 3, 7, 11, 13, 15, 0, 0, 3, 4, 4, 2, 2, 0])
+# Between the labels and the controller names sits this seven-byte table; it
+# also occurs in the records area, so the match is taken only where a plausible
+# record follows (a small count, then a printable code).
+CONFIG_GAP = bytes([1, 6, 2, 3, 4, 0, 0])
+
+
+def config_trim(token):
+    """The text at the end of a NUL-terminated token.
+
+    The six labels sit immediately after a table of pointers, which carries no
+    NUL of its own, so the first token comes back with that table glued to its
+    front. Keep the longest run of script codes at the end that begins with a
+    letter or a digit.
+    """
+    i = len(token)
+    while i > 0 and (0x2A <= token[i - 1] <= 0x93 or token[i - 1] == SPACE_IN):
+        i -= 1
+    while i < len(token) and not (0x30 <= token[i] <= 0x5A or 0x61 <= token[i] <= 0x7A):
+        i += 1
+    return token[i:]
+
+
+def small_char(code):
+    """One donor code -> the two-byte PC code of the glyph a UI string wants.
+
+    The 8 x 8 UI cells at SMALL_APPEND_AT, which is the set the PlayStation
+    draws this screen with: measured off the owner's screenshot with the panel
+    as the ruler, label ink is 8 rows on an 8 advance under a 12-row banner.
+
+    Two bytes even where a single-byte slot exists, because the screen's width
+    arithmetic wants the byte length to be exactly twice the character count.
+    """
+    if code == SPACE_IN:
+        g = SMALL_SPACE          # the blank cell; a space has no glyph either way
+    elif FIRST_CODE <= code <= LAST_CODE:
+        g = SMALL_APPEND_AT + code - FIRST_CODE
+    else:
+        return None
+    return bytes([0x80 | (g >> 8), g & 0xFF])
+
+
+def config_encode(raw, what, room):
+    """Donor script codes -> PC codes for the 8 x 8 UI set, with the room the
+    engine's slot has.
+
+    Not `encode_char`: the Config screen is drawn by 0x516E70, whose quad is 8
+    units against the ordinary draw's 12 - 16 screen pixels a character against
+    24 (measured off the owner's screenshot, docs/config-screen.md section 4).
+    The single-byte slots hold the 12 px cells, so UI text must name the 8 x 8
+    glyphs explicitly, two bytes each. That also keeps the byte length exactly
+    twice the character count, which is what the screen's own centring and
+    right-alignment arithmetic assumes.
+    """
+    enc = [small_char(c) for c in raw]
+    if not raw or any(e is None for e in enc):
+        raise SystemExit("config: %s holds a code English does not have: %s" % (what, raw.hex(" ")))
+    out = b"".join(enc)
+    if len(out) + 1 > room:
+        raise SystemExit("config: %s encodes to %d bytes, the slot holds %d" % (what, len(out) + 1, room))
+    return out
+
+
+def convert_config(donor):
+    """[(kind, tag, payload)] for the Config screen, or [] if the donor has none.
+
+    `donor` is the whole START.EMI. The three blocks are found by structure,
+    not by English words, so a German or French disc reaches the same code.
+    """
+    at = donor.find(CONFIG_TABLES[1:])
+    if at < 1 or donor[at - 1] != 0:
+        return []
+    records = at - 1 - CONFIG_RECORDS * 8
+    if records < 0:
+        return []
+
+    # The labels are the six NUL-terminated strings before the gap table, and
+    # the controller names the six 16-byte records after it.
+    gap, seen = -1, donor.find(CONFIG_GAP)
+    while seen >= 0:
+        nxt = donor[seen + len(CONFIG_GAP):seen + len(CONFIG_GAP) + 2]
+        if len(nxt) == 2 and 1 <= nxt[0] <= 14 and 0x21 <= nxt[1] <= 0x7E:
+            gap = seen
+            break
+        seen = donor.find(CONFIG_GAP, seen + 1)
+    if gap < 0:
+        return []
+
+    labels = [config_trim(t) for t in donor[max(0, gap - 160):gap].split(b"\0")]
+    labels = [t for t in labels if t]
+    if len(labels) < CONFIG_LABELS:
+        raise SystemExit("config: %d label strings before the gap table, wanted %d"
+                         % (len(labels), CONFIG_LABELS))
+    labels = labels[-CONFIG_LABELS:]
+
+    payload = bytearray([CONFIG_LABELS])
+    for i, raw in enumerate(labels):
+        # Repointed, not written in place, so the only limit is ours.
+        payload += config_encode(raw, "label %d" % i, 32) + b"\0"
+
+    payload.append(CONFIG_RECORDS)
+    for i in range(CONFIG_RECORDS):
+        rec = donor[records + i * 8:records + i * 8 + 8]
+        raw = rec[2:].split(b"\0")[0]
+        # count and x are the donor's own, verbatim: they are what puts the
+        # options where the disc puts them. The PC record holds 14 bytes of
+        # string after them.
+        payload += bytes([rec[0], rec[1]]) + config_encode(raw, "option %d" % i, 14) + b"\0"
+
+    payload.append(CONFIG_CTRL)
+    ctrl = gap + len(CONFIG_GAP)
+    for i in range(CONFIG_CTRL):
+        raw = donor[ctrl + i * CTRL_STRIDE + 1:ctrl + (i + 1) * CTRL_STRIDE].split(b"\0")[0]
+        payload += config_encode(raw, "controller %d" % i, 64) + b"\0"
+
+    return [(KIND_CONFIG, 0, bytes(payload))]
+
+
 def build_font(args, disc):
     rows = donor_sheet(disc)
     base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
@@ -485,9 +657,11 @@ def build_font(args, disc):
     elif args.upscaler:
         redrawn = run_upscaler(args.upscaler, rows)
     table, advances = build_table(base, rows, redrawn, args.mono)
-    print("font: %d glyphs (%d appended at 0x%X, %d single-byte slots repainted), sha256 %s"
-          % (len(table) // font_pc.GLYPH_BYTES, LAST_CODE - FIRST_CODE + 1, APPEND_AT, len(ASCII_OF),
-             hashlib.sha256(table).hexdigest()))
+    n_cells = LAST_CODE - FIRST_CODE + 1
+    print("font: %d glyphs (%d dialogue cells at 0x%X, %d UI cells at 0x%X, "
+          "%d single-byte slots repainted), sha256 %s"
+          % (len(table) // font_pc.GLYPH_BYTES, n_cells, APPEND_AT, n_cells, SMALL_APPEND_AT,
+             len(ASCII_OF), hashlib.sha256(table).hexdigest()))
     # kind 4 is ours (DIV-0006): a pen advance a glyph; the tag is the space's.
     return [(3, 0, table), (4, CELL_W, advances)]
 
@@ -693,6 +867,12 @@ def cmd_all(args):
                 print("  SKIP %s tag %X: %s" % (name, c.tag, e))
                 continue
             overlays.setdefault(name, []).append((0, c.tag, block))
+    start_emi = disc.find("START.EMI")
+    if start_emi and not args.only:
+        cfg = convert_config(disc.read(start_emi[0]))
+        overlays["FIRST.DAT"] += cfg
+        print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
+
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:
         names, report = convert_names(args.game, emi_sections(disc.read(game_emi[0]))[0][1])

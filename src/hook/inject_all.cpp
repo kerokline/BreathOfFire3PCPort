@@ -1,5 +1,6 @@
 #include "hook/inject_all.h"
 
+#include "game/config_text.h"
 #include "game/dat_load.h"
 #include "game/file_io.h"
 #include "game/save_io.h"
@@ -39,6 +40,7 @@ namespace bof3 {
 void InjectAll() {
     FileIo_Inject();
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
+    ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT
     DatLoad_Inject();
     TextAdvance_Inject();
     TextDraw_Inject();

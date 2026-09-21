@@ -700,3 +700,171 @@ designed in rather than bolted on.
 - **Checked:** an offline composition through CLUT 0 at the draw's positions,
   seen by the owner ("perfect"). **Not yet seen in game**
   ([`USER_CHECKS.md`](USER_CHECKS.md) 6): nothing unattended reaches the menu.
+
+
+### The in-game Config screen in the overlay's language
+
+- **ID:** DIV-0015
+- **Date:** 2026-09-20
+- **Subsystem:** menu / text
+- **Original behaviour:** the Config screen's text is not in any `DAT`. It is
+  in `BOF3.exe`, in three shapes, read 2026-09-20
+  ([`config-screen.md`](config-screen.md)): six row labels as address operands
+  in the row draw `0x461800` (`0x669F0C`, `0x669F18`, `0x669F24`, `0x669F2C`,
+  `0x669F34`, `0x669F3C`); seventeen option strings in 16-byte records at
+  `0x6536F8`, each a count, a signed x and the string, reached through the
+  row-to-record and row-to-count tables at `0x653808` / `0x653810`; and six
+  controller-panel names at `0x66A338` behind the pointer table `0x66A368`.
+  The screen reads 讯息速度 / 视窗颜色 / 背景 / 音效 / 冲刺 / 控制.
+- **New behaviour:** under `BOF3X_LANG`, a chunk of kind 7 - ours - in
+  `en.FIRST.DAT` carries the donor disc's own strings for all twenty-nine,
+  extracted by `tools/loc_build.py` from `BIN/ETC/START.EMI` and re-encoded
+  for the PC's glyph table. `src/game/config_text.cpp` writes the option
+  records in place, with **the donor's own count and x bytes**, and re-points
+  the six label operands and the six entries of the controller pointer table
+  `0x66A368` at buffers of its own - a UI string is two bytes a character, so
+  "Background" needs 21 where the Chinese string has 4, and "Change" 13 where
+  the slot holds 8.
+
+  Every string names the donor's **8 x 8 UI cells** (glyph `0xA00` up,
+  DIV-0016) two bytes at a time, even where a single-byte slot for the
+  character exists. Two reasons. The 8-unit quad this screen draws with shows
+  the *whole* 24 x 24 cell scaled to 16 x 16 on screen - the emitter
+  `0x516D50` fixes the texture extent at `0xC` units whatever the quad, which
+  is why a full-width Chinese label renders legibly there - so the 8 x 8 cell,
+  stored **tripled** to fill its slot, arrives as the PlayStation's doubled
+  8 x 8. And because every
+  character is two bytes, a string's byte length is exactly twice its
+  character count - which is what the screen's own `4 * len` right-alignment
+  and `4 * count` centring already assume, so **the width arithmetic is left
+  alone**.
+
+  Latin words are longer than the two to four Chinese characters the screen
+  was laid out for, and two one-byte operands move it to suit them, found by
+  the owner looking at the result: the label column's right edge from 168 to
+  205 (`0x3A` -> `0x5F` at `0x46189D` and `0x4618ED`, both branches of the row
+  draw). The rows' y is the original's: an earlier build dropped every string
+  two pixels, which suited cells that sat in the top of their slot and left
+  the tripled 8 x 8 sitting on the row's floor (owner, in game, 2026-09-20),
+  so it was removed. With no language set none of this is applied.
+- **Rationale:** the owner's request, 2026-09-20, with a screenshot of the
+  PlayStation screen. Everything drawn comes from the player's own disc; no
+  English string is in this repository.
+- **Also in the PSX version?** this *is* the PlayStation version's text, down
+  to its quirks: "Off" carries the count 6 it inherited from "Stereo", so it
+  hangs where "Stereo" hangs, and the two unused records 15 and 16
+  ("Manual" / "Auto") are left as the disc leaves them. Two rows say something
+  different from the Chinese port rather than translating it: row 1 and row 2
+  are `1 2 3 4` where the port names the colours and the patterns, and row 4
+  is **Autorun Off / On** where the port has 冲刺 (dash) 手动 / 自动
+  (manual / auto). Both are the US release's own wording, kept deliberately;
+  the port's naming is arguably the better of the two and is a candidate for a
+  later, separate divergence.
+- **Reversible?** play without `BOF3X_LANG`, or delete `en.FIRST.DAT`;
+  `BOF3X_ORIGINAL=ConfigText` leaves all thirteen operands alone - the six
+  label pointers and the seven layout numbers - so the labels stay Chinese and
+  the layout is the original's, while the options and controller names, which
+  are data writes rather than patches, are English. For A/B only.
+- **Checked:** the extractor reproduces the owner's screenshot of the
+  PlayStation screen string for string (2026-09-20), and a read-only
+  `ReadProcessMemory` sample of the running game decodes all twenty-nine
+  strings back to that text.
+  **The layout is confirmed in game by the owner, 2026-09-20**: the label
+  column's right edge, over three rounds. **The tripled 8 x 8 lettering was
+  seen by the owner the same day** - "much closer" - with the text two pixels
+  low, which was the earlier drop and is removed; seen again without it and
+  confirmed, 2026-09-21.
+  Two cell choices were seen and rejected by the
+  owner: a doubled 8 x 8 (two thirds of the disc's size) and a doubled 8 x 12
+  (the right height but two thirds of the width - thin letters, wide gaps).
+  The PlayStation screenshot, measured with the panel as the ruler, has label
+  ink 8 rows tall on an 8 advance under a 12-row banner: the 8 x 8 set, as the
+  owner held throughout. 
+- **An earlier build of this entry got it wrong**, and it is worth recording
+  why. It encoded the strings as ordinary single-byte codes - which reach the
+  12 px cells - and then patched three half-width computations to compensate.
+  The owner's screenshot of the Chinese screen settled it: the rows are
+  16 pixels a character against the banner's 24, and the labels are
+  right-aligned on a common edge, both of which the original arithmetic
+  already produces. Wrong glyphs, then code changed to hide it. The three
+  patches are gone.
+
+
+### The donor's 8 x 8 UI font, and a glyph guard that follows the table
+
+- **ID:** DIV-0016
+- **Date:** 2026-09-20
+- **Subsystem:** text / font
+- **Original behaviour:** the string draw `Text_DrawString` `0x516B70`
+  compares a glyph index against a flat `0xA00` (`cmp cx, 0xA00 / jbe` at
+  `0x516C94`) and runs `mov dx, 0x1000 / in al, dx` above it - a privileged
+  instruction, so a debug trap. The shipped table holds `0x993` glyphs, so the
+  bound was already 109 past the end of the data it guards.
+- **New behaviour:** two things, both only reachable with a language overlay.
+  (1) `tools/loc_build.py` now imports the donor's **second** Latin set - the
+  same 100 characters at 8 x 8, atlas rows 120..151, same 31 to a row and the
+  same code order (found by the owner, 2026-09-20) - **tripled to 24 x 24**
+  and appended at glyph `0xA00`, beside the 8 x 12 dialogue set at `0x993`.
+  This is the set the 8 px UI draw `0x516E70` wants. Tripled, not doubled:
+  that draw's quad is 8 units but it samples the whole 24 x 24 glyph into it
+  (`0x516D50` writes u = 0..`0xC` regardless of the quad's size), so a cell
+  that fills the glyph lands at 16 x 16 - the PlayStation's doubled 8 x 8.
+  (2) the guard is no longer a constant. `Font_SetGlyphData` passes the
+  table's glyph count - a size the original takes and never reads - and the
+  bound becomes `max(0xA00, glyphs - 1)`. With every shipped file that is
+  `0xA00`, the original's own number.
+- **Rationale:** the owner asked for the 8 x 8 set in the English font
+  (2026-09-20) after spotting it in the atlas. It cannot go anywhere below
+  `0xA00` - the 8 x 12 set holds `0x993`..`0x9F6` and only ten slots remain
+  under the old bound - and the bound is in a function that is already ours,
+  so moving it is a change to our own code rather than a patch.
+- **Also in the PSX version?** the 8 x 8 cells are the PlayStation's own, at
+  the size it draws them. The guard has no PSX counterpart in evidence.
+- **Reversible?** play without `BOF3X_LANG`: the table is the shipped one, the
+  count is `0x993` and the bound is the original's `0xA00`.
+- **Checked:** the table builds at 2,661 glyphs (`0xA65`, the last a blank
+  for the space), the advance chunk follows it, and the game loaded the
+  doubled build of both with no trap and no crash
+  (2026-09-20, `bof3x.log`). The imported block was rendered and read back:
+  digits, punctuation, `A`-`Z`, `a`-`z` and the symbol tail, in the same code
+  order as the dialogue set. **The Config screen draws with it** (DIV-0015).
+  It was first stored doubled, which the 8-unit quad shrank to two thirds of
+  the disc's size; the screen was then moved to the 8 x 12 cells, which came
+  out the right height and two thirds of the width. Both were the same
+  mistake about scale, not about which font - corrected 2026-09-20 by
+  tripling. The tripled table is rendered and read back, and **confirmed in
+  game by the owner, 2026-09-21.** Anything else that draws at 8 units goes through the same
+  two-thirds scaling and wants these cells as they now are.
+
+### The Config screen's selected row, in the dialogue font at its own advance
+
+- **ID:** DIV-0017
+- **Date:** 2026-09-21
+- **Subsystem:** menu / Config screen (only with a language overlay)
+- **Original behaviour:** the row under the cursor is drawn large. `0x461800`
+  (label) and `0x461970` (options) each branch on the row being selected and
+  draw through `Text_DrawAt` `0x516B30` - the 12-unit quad - instead of the
+  8-unit draw `0x516E70`, reckoning the string's width at 12 units a
+  character (`len * 6` at `0x461894`, `count * 12` at `0x4619E1`) where the
+  small branch reckons 8. Same string, same glyphs: in Chinese the large form
+  is the same character at full size.
+- **New behaviour:** at those two call sites only, `ConfigText_DrawSelected`
+  stands in for `Text_DrawAt` and redraws the string with every 8 x 8 UI glyph
+  (`0xA00`..`0xA63`) swapped for the 8 x 12 dialogue glyph of the same
+  character (`0x993`..`0x9F6`; the two sets share a code order, so it is a
+  constant offset). And the two width computations become `len * 4` and
+  `count * 8` - the numbers the small branches already use - because the
+  dialogue glyphs advance 8 (DIV-0006), not 12.
+- **Rationale:** on the PlayStation the large form is a different *font*, not
+  a bigger copy: the 8 x 12 dialogue cells on the same 8 advance, so a row does
+  not move or widen when the cursor lands on it (owner's screenshots of both
+  releases, 2026-09-21). With DIV-0015's strings the original code drew a
+  tripled 8 x 8 at full size on an 8 advance - crowded - and placed it as if it
+  were 12 a character, four units a character too far left: "Background"
+  began off the panel's edge, under the cursor.
+- **Also in the PSX version?** Yes - this is the PlayStation's behaviour.
+- **Reversible?** play without `BOF3X_LANG`, or `BOF3X_ORIGINAL=ConfigText`.
+- **Checked:** builds and links; the two call sites and both byte patches are
+  validated against the original bytes at start-up. **Seen in game by the
+  owner, 2026-09-21: "looks perfect"** - the lowercase `g` is what shows the
+  large form is a different font and not a magnified one.

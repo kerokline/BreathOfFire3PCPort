@@ -5,6 +5,8 @@
 // locals here.
 #include "game/dat_load.h"
 
+#include "game/config_text.h"
+
 #include <windows.h>
 
 #include <cstdint>
@@ -152,6 +154,9 @@ void WalkDatFile(const char* path) {
             break;
         case 6:  // DIV-0014: ours.
             TitleMenu_SetWidths(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 7:  // DIV-0015: ours.
+            ConfigText_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;
