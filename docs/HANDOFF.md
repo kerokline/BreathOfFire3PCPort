@@ -388,8 +388,8 @@ It holds DIV-0005..0013: the language overlays and three text takeovers
 (`src/game/gfx_sprite_uv.cpp`), DIV-0011 (`src/game/menu_frame.cpp`),
 DIV-0012 (`src/game/gfx_filter.cpp`), DIV-0013 (in `loc_build.py`),
 `tools/task_stacks.py`, `tools/mem_watch.py`,
-[`menu-screens.md`](menu-screens.md). **Uncommitted, waiting on the owner's
-look in game:** DIV-0014, the title menu - `src/game/title_menu.cpp`, kind 6
+[`menu-screens.md`](menu-screens.md). **Committed locally, not pushed, and
+still waiting on the owner's look in game:** DIV-0014, the title menu - `src/game/title_menu.cpp`, kind 6
 in `dat_load.cpp` and `tools/dat.py`, `build_title` in `tools/loc_build.py`,
 [`title-menu.md`](title-menu.md).
 
