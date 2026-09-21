@@ -1254,7 +1254,52 @@ name = "Input_Held"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "disasm 2026-09-20: 0x461EB0 is an auto-repeat on it - on a first press it stores the word to 0x7E01B8 and a countdown of 0xC to 0x7E1BE0; while the same bits stay set it counts down and re-fires with a countdown of 3. pe_xref.py: 60 references; written as a word at 0x405A5D, 0x41F870, 0x427173, 0x4FC6AC and zeroed at 0x42E9F8; most readers test single bits."
-note = "Which bit is which button is not established on this side. Field_CopyInput reads it as a dword and uses the low 16 bits."
+note = "Bit layout established 2026-09-21 from Pad_Read and the default key table 0x66C648 - the PlayStation pad's: 0x1 L2, 0x2 R2, 0x4 L1, 0x8 R1, 0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square, 0x100 select, 0x800 start, 0x1000 up, 0x2000 right, 0x4000 down, 0x8000 left. Written once a frame by Input_Latch. Field_CopyInput reads it as a dword and uses the low 16 bits."
+
+[[data]]
+pc = 0x7E1BEA
+name = "Input_Previous"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: Input_Latch 0x4FC6A0 stores the old Input_Held here before writing the new one."
+
+[[data]]
+pc = 0x7E1BEC
+name = "Input_Pressed"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: Input_Latch 0x4FC6A0 stores (old ^ new) & new here - the buttons that went down this frame. The same three words for a second pad follow at 0x7E1BF0 / 0x7E1BF2 / 0x7E1BF4, from the high word of Pad_Read's result, which Pad_Read never sets."
+
+[[data]]
+pc = 0x937F94
+name = "Frame_Counter"
+ctype = "unsigned int"
+status = "evidence"
+evidence = "disasm 2026-09-21: WinMain 0x4FCB00 increments it at 0x4FCFE5, at the end of every pass through the frame path - after Task_RunAll or, with the F9 pause byte 0x6BC63A set, instead of it. Passes that find the window inactive loop back at 0x4FCE16 before reaching it."
+
+[[data]]
+pc = 0x903584
+name = "Field_MenuButton"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: 0x41C0A0 and 0x42B400 test Input_Pressed against it and, unless bit 0x40 of 0x9039A2 is set, play sound 0x105 and set the field request byte 0x66C7D8 to 1, which the field's mode-2 handler 0x4959F0 turns into mode 3, the menu. Measured 2026-09-21 by input recipe: 0x80 (square) with save 5 loaded, and pressing square opened the menu. Its neighbours 0x903580..0x903588 held 0x43, 0x20, -, 0x08, 0x04."
+note = "Owner, 2026-09-21: the four shape buttons are assigned per save file, and save 5 was converted from a US save, whose assignment differs from saves 0-3. So the word is save data; which neighbour is which action is unread."
+
+[[func]]
+pc = 0x5A9700
+name = "Pad_Read"
+ret = "unsigned int"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21, 341 bytes: with a joystick device (0x7DE930) polls it (vtable +0x64) and reads 0x50 bytes of state (+0x24, re-acquiring on 0x8007001E); axis x > 500 gives 0x2000, < -500 0x8000, y > 500 0x4000, < -500 0x1000; buttons 0-3 give 0x40, 0x80, 0x10, 0x20 and, when 0x7DE938 is 1, buttons 5-9 give 0x2, 0x4, 0x8, 0x800, 0x100. Then with a keyboard device (0x7DE92C) reads 256 key bytes to 0x7DE828 and ORs in the word of every entry of the 32-entry (u16 key, u16 bits) table at 0x7DE7A8 whose key is down; a key of 0 ends the table. The table is BOF3.CFG's key lines (0x5A9860) or the default at 0x66C648 (0x5A9880): arrows the directions, Z/X/C/V triangle/cross/square/circle, Esc cross, Space circle, Enter start, right Shift select, Q/W/A/S L2/R2/L1/R1, numeric keypad the directions and diagonals. High word always 0. Sole caller Input_Latch."
+
+[[func]]
+pc = 0x4FC6A0
+name = "Input_Latch"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21, 78 bytes: calls Pad_Read; for pad 1 Input_Previous = Input_Held, Input_Held = low word, Input_Pressed = (old ^ new) & new; the same for pad 2 at 0x7E1BF0.. from the high word. Sole caller WinMain at 0x4FCDDE, once per pass of the message loop unless the F9 pause byte 0x6BC63A is set - so once a frame while the window is active, and repeatedly while it is not (the loop spins there without running a frame)."
 
 [[data]]
 pc = 0x905BA6
@@ -1301,7 +1346,7 @@ params = "void"
 impl = "src/game/field_input.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x9A bytes. Decides a flag: with bit 0 of Field_InputFlags set, whether ANY of the Field_MemberCount records at Field_Members (none if the count is 0) has bit 0x20 in the Field_ActorStates byte its byte +0 indexes - the loop does not stop at the first; with bit 0 clear, whether the first record has. Flag clear: Field_InputHeld = Input_Held. Flag set: Field_InputHeld = the low word of ((held & 0xF000) << 2) | ((held >> 2) & 0x3000) | (held & 0x9FF) - bits 12 and 13 move to 14 and 15 and back, bits 9 and 10 are dropped, bit 11 and bits 0-8 pass. Call trace all_a 2026-09-19: 2,779 calls."
-note = "On a PSX pad bits 12-15 are up, right, down, left, which would make this 'reverse the directions while someone has state 0x20' - but neither the bit layout nor what state 0x20 is has been established from the binary. Owner, 2026-09-20: the game has a field confusion status that reverses inputs, left for right and up for down. That fits this function exactly; that bit 0x20 IS that status is still inference until the in-game A/B of docs/USER_CHECKS.md item 5."
+note = "Bits 12-15 are up, right, down, left - established 2026-09-21 from Pad_Read (see Input_Held) - so this reverses the directions while someone has state 0x20; what state 0x20 is has not been established from the binary. Owner, 2026-09-20: the game has a field confusion status that reverses inputs, left for right and up for down. That fits this function exactly; that bit 0x20 IS that status is still inference until the in-game A/B of docs/USER_CHECKS.md item 5."
 
 [[func]]
 pc = 0x589350

@@ -218,6 +218,13 @@ What is established:
   catalogue found that `pe_funcs.py` misses every function reached only
   through a pointer, some 7,300 (§3 there), and that the WndProc is
   `0x4FC6F0`.
+- **An agent can walk the game unattended** (2026-09-21,
+  [`input-script.md`](input-script.md)): recipes of pad presses played inside
+  the game, counted in its own frames and so repeatable from launch, with the
+  window captured at each `shot`. Built on two measured facts: the pad word is
+  the PlayStation's bit layout, and the input latch runs more often than
+  frames, so the recipe keys on `Frame_Counter` `0x937F94`. It reached the
+  Config screen, a save's field menu, and the first in-menu A/B of DIV-0010.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 

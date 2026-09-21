@@ -1,0 +1,24 @@
+# Title -> CONFIG, then every row of the Config screen under the cursor.
+# Measured 2026-09-21: title takes Start by frame 480; the title menu's cursor
+# starts on LOAD GAME; circle confirms.
+wait 480
+press start
+wait 40
+shot title_menu 10
+press down
+press circle
+wait 60
+shot config_row1 20
+press down
+shot config_row2 20
+press down
+shot config_row3 20
+press down
+shot config_row4 20
+press down
+shot config_row5 20
+press down
+shot config_row6 20
+press down
+shot config_row7 20
+end

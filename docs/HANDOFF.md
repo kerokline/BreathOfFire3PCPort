@@ -36,11 +36,23 @@ do not expand this paragraph into a second copy. **2026-09-21:** what the
 attract sequence still runs of Capcom's code is catalogued, the function list
 turned out to miss every pointer-reached function (~7,300), and PSX functions
 now pair with PC ones at scale - 3,330 pairs through the tables both builds
-kept ([`attract-remaining.md`](attract-remaining.md) §3, §5).
+kept ([`attract-remaining.md`](attract-remaining.md) §3, §5). **Later the
+same day an agent can walk the game unattended**: `BOF3X_INPUT` plays a recipe
+of pad presses in the game's own frames and `tools/input_run.py` captures the
+window at each `shot` ([`input-script.md`](input-script.md)). First harvest:
+the title menu and every Config row in game, save 5's field menu, and the
+DIV-0010 A/B.
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
+
+000. **Owner: look at the first harvest** ([`input-script.md`](input-script.md)
+   §5): `analysis/shots/div0010_ab_x3.png` (DIV-0010, Capcom's handlers on
+   top, ours below), `config/title_menu.png` (DIV-0014's glow question),
+   `config/config_row1..7.png`. Then say which screens to harvest next - the
+   agent can now reach anything a fixed sequence of presses reaches, and the
+   obvious ones are the Items and Ability lists (clipping) and Status.
 
 00. **The PSX pairing, step 1 of [`attract-remaining.md`](attract-remaining.md)
    §5.1's list: draw the divergence map.** `python tools/psx_pair.py areas &&
@@ -109,9 +121,10 @@ The single next action, concrete enough to start without asking anyone.
      unread and only 10 glyph slots are free past the 100 English ones.
 0a. **The menu's defects** ([`menu-screens.md`](menu-screens.md) section 3), all
    present in the 2001 release and all the owner's to look at in game:
-   - **DIV-0010 is built and unseen where it matters**: the owner looks at
-     the HP / AP numerals in the menu, with and without
-     `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16`.
+   - **DIV-0010 has its A/B in the menu** (2026-09-21, by recipe,
+     [`input-script.md`](input-script.md) §5): Capcom's handlers cut the
+     bottom row off every HP / AP numeral, ours draw them whole. The owner's
+     judgement of the capture is what is left.
    - **DIV-0011**: Config's panel frame (owner: "looks right") and the
      reserve list's on "change party members" (seen in the owner's session,
      `analysis/d1/point/s009.png`; the owner has not commented) - drawn as
@@ -318,6 +331,11 @@ _Commands a fresh session needs, verified on the date above._
   --also 5BC8E0,5BDA20 --check <old list>`. To see which calls a differing
   frame holds, `BOF3X_CALLTRACE_DETAIL=lo-hi` on both sides and diff
   `build/bof3x.calldetail.tsv` per frame ([`call-trace.md`](call-trace.md) §6).
+- **Scripted input and captures:** `python tools/input_run.py
+  tools/recipes/field_menu.txt --out analysis/shots/X --lang en` - recipes in
+  `tools/recipes/`, the language in [`input-script.md`](input-script.md) §3.
+  Keyboard and mouse off for the run. The field menu button is per save:
+  `press @0x903584`, not a shape.
 - **After a crash:** `CRASH` lines in `build/bof3x.log`, then
   `python tools/crash_report.py` ([`crash-reporter.md`](crash-reporter.md)).
 - **Call trace:** [`call-trace.md`](call-trace.md) §8.
@@ -422,7 +440,14 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## In flight / uncommitted
 
-Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
+Branch `phase-3/intro-takeover`, **committed locally 2026-09-21, not pushed**:
+scripted input - `src/hook/input_script.cpp`, `tools/input_run.py`,
+`tools/recipes/`, [`input-script.md`](input-script.md), six new
+`symbols.toml` entries (`Input_Latch`, `Pad_Read`, `Input_Previous`,
+`Input_Pressed`, `Frame_Counter`, `Field_MenuButton`). Local, gitignored:
+`analysis/shots/` - the captures.
+
+Before that, on the same branch, **committed and pushed 2026-09-21, no PR**:
 [`attract-remaining.md`](attract-remaining.md), `tools/pe_hidden.py`,
 `tools/attract_catalog.py`, `tools/psx_pair.py` (`areas`, `tables`, `fill`,
 `propagate`), and the WndProc correction (`0x4FC6F0`) in `windowed-mode.md`,
