@@ -34,6 +34,7 @@ Recipes in `tools/recipes/`:
 | `title_timeline.txt` | no input; a shot every 60 frames from launch | 601 |
 | `config_screen.txt` | title menu, then Config with the cursor on each of its seven rows | 838 |
 | `field_menu.txt` | save 5 loaded, the field, the menu, each top-bar slot | ~1,400 |
+| `battle_commands.txt` | NEW GAME, the opening scene's dialogue, its scripted battle; each command of the cross held, the skill list opened, the skill used | ~3,200 |
 | `menu_screens.txt` | save 5, into Items, Ability, Equipment, Tactics and Status and out again, each checked on the menu state | ~1,700 |
 
 ## 2. How it works
@@ -88,7 +89,7 @@ One step per line; `#` starts a comment; buttons join with `+`
 | `hold BUTTONS N` | N frames held, no release after |
 | `seek BUTTONS ADDR TYPE OP VALUE [max K]` | press BUTTONS until the condition holds, checking before each press; K presses (default 16) without it FAILS the recipe. For cursors that remember where they were: `seek right 0x929F05 u8 == 0` |
 | `until ADDR TYPE OP VALUE [timeout N]` | nothing held until true, checked once a frame. TYPE `u8`/`u16`/`u32`; OP `==` `!=` `&` (any bit) `!&` (no bit). A timeout (default 3,600) FAILS the recipe and hands the pad back |
-| `shot NAME [N]` | log the shot and hold nothing for N frames (default 30) while the driver captures. **Keep N at the default on any screen that changes**: the driver grabs `--delay` (0.4 s) after the log line, and `shot X 10` let the recipe back out of a screen before the grab - four captures of a menu mid-slide, 2026-09-21 |
+| `shot NAME [N [BUTTONS]]` | log the shot and hold BUTTONS (default nothing) for N frames (default 30) while the driver captures - the battle's command cross shows a command only while its direction is held. **Keep N at the default on any screen that changes**: the driver grabs `--delay` (0.4 s) after the log line, and `shot X 10` let the recipe back out of a screen before the grab - four captures of a menu mid-slide, 2026-09-21 |
 | `peek ADDR TYPE [LABEL]` | log a value |
 | `mark TEXT` | log a line |
 | `end` | stop |
@@ -105,7 +106,7 @@ as good as the load time it was measured against. The ones known so far:
 
 | Address | Type | Meaning |
 |---|---|---|
-| `0x66C7E8` | u16 | field task mode: 2 field, 3 menu, 4 seen during a talk, 11 after Start in save 5's area ([`menu-screens.md`](menu-screens.md) §1) |
+| `0x66C7E8` | u16 | field task mode: 2 field, 3 menu, 4 seen during a talk, **5 battle**, 11 after Start in save 5's area ([`menu-screens.md`](menu-screens.md) §1; mode 5 is what the mode-2 handler's request 3 sets, `0x495A4A`, and what the new game's battle showed) |
 | `0x929F00` | u8 | menu state, 1 = top bar ([`menu-screens.md`](menu-screens.md) §1) |
 | `0x929F05` | u8 | the menu's top-bar cursor, from 0: Items, Ability, Equipment, Tactics, Status, Config, Camp. **Remembered between openings** - seek it, do not count presses |
 | `0x903584` / `0x90358E` / `0x903590` | u16 | the save's menu button / confirm buttons / cancel buttons - use as `@ADDR` |
@@ -132,6 +133,13 @@ owner's saves, not claims about Breath of Fire III in general:
   menu (clear in save 5).
 - In save 5's area Start put the field in mode 11 through `0x536B60`, a
   handler of its own, and did not open the menu.
+- **A new game reaches a battle deterministically** (owner's suggestion): up
+  from LOAD GAME is NEW GAME; circle advances the opening scene's dialogue;
+  the scripted battle begins at recipe frame 2,824 on every run so far
+  (`seek circle 0x66C7E8 u16 == 5`). **The command cross is hold-to-choose**:
+  a direction shows its command only while held - left Watch, right Defend,
+  down Item, up Skill - and release snaps back to Attack, so a command is
+  chosen with `hold up+circle`. Circle on Attack goes to target selection.
 - **Confirm and cancel are save data too**: with save 5 loaded
   `Field_ConfirmButtons` `0x90358E` held `0x43` (cross, L2, R2) and
   `Field_CancelButtons` `0x903590` `0x10` (triangle) - a US layout, where the

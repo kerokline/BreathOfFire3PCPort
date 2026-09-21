@@ -30,9 +30,11 @@
 //                           press BUTTONS (hold, then release) until the
 //                           condition is true, checking before each press; K
 //                           presses (default 16) without it FAILS the recipe.
-//   shot NAME [N]           log "input       shot NAME" and hold nothing for N
-//                           frames (default 30) while tools/input_run.py
-//                           captures the window
+//   shot NAME [N [BUTTONS]] log "input       shot NAME" and hold BUTTONS
+//                           (default nothing) for N frames (default 30)
+//                           while tools/input_run.py captures the window -
+//                           the battle's command cross shows a command only
+//                           while its direction is held
 //   peek ADDR TYPE [LABEL]  log the value
 //   mark TEXT               log the text
 //   end                     stop here
@@ -237,10 +239,11 @@ void Load(const char* path) {
             st.hold = hold;
             st.gap = gap;
         } else if (w == "shot") {
-            need(2, 3);
+            need(2, 4);
             st.kind = Kind::Shot;
             st.text = t[1];
-            st.n = t.size() == 3 ? Number(line, t[2]) : 30;
+            st.n = t.size() >= 3 ? Number(line, t[2]) : 30;
+            if (t.size() == 4) SetButtons(st, t[3]);
         } else if (w == "peek") {
             need(3, 4);
             st.kind = Kind::Peek;
@@ -367,7 +370,7 @@ unsigned short NextWord() {
                 Log("input       shot %s recipe frame %u", s.text.c_str(), g_frame);
                 LogFlush();
             }
-            if (g_t < s.n) { ++g_t; return 0; }
+            if (g_t < s.n) { const unsigned short b = StepButtons(s); ++g_t; return b; }
             Advance();
             continue;
         case Kind::Peek:

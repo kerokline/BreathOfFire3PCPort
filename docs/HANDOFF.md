@@ -55,9 +55,14 @@ The single next action, concrete enough to start without asking anyone.
    §8). Find the PC's draw the way the verbs were found - the Status screen's
    handler `0x58A4C0` down to its `Text_DrawAt` calls - then a converter
    beside `convert_verbs` and a capture with `tools/recipes/menu_screens.txt`.
-   After that, the list headers (`物品`, `治疗`). Then battle: the US
-   `BATE.EMI` carries the same verb table, which says battle shares at least
-   the strings; reaching a fight needs a recipe that walks into an encounter.
+   After that, the list headers (`物品`, `治疗`, and battle's `龙技`). **Battle
+   is reachable now**: `tools/recipes/battle_commands.txt` plays a new game
+   into the opening's scripted fight and captures every command of the cross
+   ([`input-script.md`](input-script.md) §4). Still Chinese there: the five
+   command labels (`攻击` `观看` `防御` `道具` `特能`), the combatants' names,
+   the skill list's header. Help lines and skill names are English already.
+   A real encounter needs a deterministic boss or save states (owner,
+   2026-09-21: walking on save 5 meets one, but not repeatably).
 
 00. **The PSX pairing, step 1 of [`attract-remaining.md`](attract-remaining.md)
    §5.1's list: draw the divergence map.** `python tools/psx_pair.py areas &&
