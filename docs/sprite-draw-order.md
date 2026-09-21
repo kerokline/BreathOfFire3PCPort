@@ -577,3 +577,84 @@ the full-cycle oracle identical over 7,478 frames; the memory dump identical
 in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
 frames, original against original and original against ours (`ab17_*`,
 now the reference).
+
+## 13. The texture word - taken over (2026-09-21)
+
+`src/game/prim.cpp`, next to `Prim_SetShade`. `Prim_SetTexture` `0x572A00`
+(1,225 bytes, 123,820 calls in `all_b`, 91 call sites) textures a run of
+`count` `POLY_FT4`s of 0x48 bytes from one packed word. Three of its callers
+are `0x56F9B0`, `0x570660` and `0x571500`, near the map view. It was the
+queue's biggest x87 leaf; the float work turned out to be exact (below).
+
+The word, bit by bit:
+
+| Bits | What |
+|---|---|
+| 0..11 | where the four `(u, v)` come from - below |
+| 12, 13 | the semi-transparency mode, into the tpage |
+| 15 | semi-transparency on (`Gpu_SetSemiTrans`) |
+| 16 / 17 / 18 | mirror left to right / top to bottom / a quarter turn |
+| 19..23 | the shade, `r = g = b = (word >> 16) & 0xF8` |
+| 24..27 | the palette: a 4-bit texture's CLUT column `16n`, an 8-bit one's row `0x1E3 + n` |
+| 28, 29 | the texture page, `x = 320 + 128n`, `y = 256` |
+| 31 | set: 4-bit texture; clear: 8-bit |
+
+The corners, in `POLY_FT4` order (top left, top right, bottom left, bottom
+right), come from one of three sources:
+
+- **bits 8..11 clear**: a 16-texel cell of a 16 x 16 grid. Bits 0..3 are its
+  column and 4..7 its row; the corners are 15 apart.
+- **bit 11 set**: two dwords of the area block `AreaMap_Header` `0x8CB580`,
+  at dword `u16[+6 + 4n] + 2 * (bits 0..10)`, the four corners a byte each.
+- **otherwise**: one dword at dword `u16[+4 + 4n] + bits 0..7` - the top
+  left's `u` and `v`, then a width and a height.
+
+The quarter turn is applied first (corners 0..3 take old 2, 0, 3, 1), then
+the two mirrors. A count of 0 or less draws nothing.
+
+**Why integers, not x87.** The original loads each coordinate into x87 as a
+float, does one float add for the rectangle's far edges, and converts each
+back through `_ftol`. Every value is an integer of magnitude under 400, so
+each step is exact at any precision and in any rounding mode, and `_ftol`
+truncates. Integer arithmetic gives the same result; section 3's
+`long double` question of [`psx-library-layer.md`](psx-library-layer.md)
+does not arise. The function also swaps four float locals it never writes,
+along with the corners - stale stack that never reaches the primitive.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=prim`, against a clone whose nine
+calls (`_ftol` x 8, `Gpu_SetSemiTrans`) still go to Capcom's code
+(`Prim_Inject` runs before `PsxGpu_Inject`). Each round sets a random word,
+biased a third to each source, a random run of up to five primitives plus a
+guard, and random area tables. The clone runs a quarter of the rounds under
+each of the x87 control words `027F` (the game's), `007F`, `037F` and `0F7F`
+(round toward zero).
+
+Result: 64,000 rounds - 21,330 from the grid, 21,337 four-corner, 21,333
+rectangles; 31,971 turned, 47,974 flipped, 19,676 empty, 132,945 primitives
+drawn - **0 mismatches** under all four words.
+
+Negative controls:
+
+| Control | Mismatches |
+|---|--:|
+| The turn the other way | 22,131 |
+| Grid corners 16 apart | 14,680 |
+| An 8-bit CLUT row by `\|` not `+` | 16,585 |
+| The shade keeping the flip bits | 38,734 |
+| The mirrors before the turn | 11,053 |
+| The tpage's x from `0x100` | 44,324 |
+| The four-corner `u0` unsigned | **0** |
+| The rectangle's `u` unsigned | **0** |
+
+The last two are not refused, and cannot be: only a coordinate's low byte
+reaches the primitive, and the sign does not change it, with or without the
+width added. Ours keeps the sign only so that it reads like the original; the
+code's comment says so.
+
+Live: the attract oracle is identical with all 126 ours over the 1,202
+frames a 3-minute run compares (2026-09-21, `analysis/attract/ab18_smoke.tsv`);
+then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).

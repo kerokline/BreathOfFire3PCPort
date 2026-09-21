@@ -1176,6 +1176,16 @@ status = "evidence"
 evidence = "disasm 2026-09-20, 6 instructions, cdecl, no calls, no jumps: stores the low byte of its second argument to bytes +4, +5 and +6 of its first. Nine callers (E8 scan), all in 0x462850..0x462A66. Call trace all_a: 6,474 calls."
 note = "Bytes +4..+6 of a PSX GPU primitive are r0, g0, b0 (libgpu setRGB0); that the first argument IS such a primitive is by position only - the callers are unread - hence the name is the weakest part of this entry."
 
+[[func]]
+pc = 0x572A00
+name = "Prim_SetTexture"
+ret = "void"
+params = "unsigned long texture, unsigned char *prim, int count"
+impl = "src/game/prim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 1,225 bytes, cdecl, calls _ftol 0x5B9550 eight times and Gpu_SetSemiTrans 0x5A7780 once, no jump leaves it: for count (signed, > 0) primitives of 0x48 bytes writes the semi-transparency bit (word bit 15), r = g = b = (word >> 16) & 0xF8, a CLUT word at +0x16 and a tpage at +0x26 shaped as libgpu getClut / getTPage (x 320 + 128 * bits 28..29, 4-bit when bit 31 is set), and four (u, v) at +0x14 + 0x10k from one of three sources - a 16 x 16 grid when bits 8..11 are clear, else two or one dwords of AreaMap_Header through u16 offsets at +4 / +6 - turned by bit 18 and mirrored by 16 and 17. E8 scan: 91 call sites. Call trace all_b: 123,820 calls."
+note = "Named for the fields it writes. That the table is the area block's texture cells, and the call sites' packed word a map cell's texture, is a reading of the address only; most call sites are unread."
+
 # ---------------------------------------------------------------------------
 # The field view's cell grid (2026-09-20): takeover queue, layer 0.
 # ---------------------------------------------------------------------------
