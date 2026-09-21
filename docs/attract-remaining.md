@@ -164,6 +164,14 @@ Three consequences:
   ranges, and so changes the frame hash's content (calls from the hidden
   functions get real callers): **the reference must be re-recorded with it**,
   about five minutes. Not done here.
+- **A case `pe_hidden.py` misses (2026-09-21).** A function with an inline
+  jump table: `0x593860` is 213 bytes, then its table at `0x593938`, then
+  a dispatcher at `0x593950` and the ten or so handlers of the table at
+  `0x66A470` - all folded into `0x593860`'s recorded 2,644 bytes. The scan's
+  rule wants a `ret` or `jmp` before the padding, and here the table's data
+  comes first; past it, the linear sweep is out of step. Seeding from
+  pointers in data, as in the item above, would find them - `0x66A470`
+  names them. [`sprite-draw-order.md`](sprite-draw-order.md) section 14.
 
 ## 4. The catalogue
 

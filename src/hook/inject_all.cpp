@@ -15,6 +15,7 @@
 #include "game/gfx_vram_ops.h"
 #include "game/sprite_order.h"
 #include "game/sprite_records.h"
+#include "game/sprite_draw.h"
 #include "game/draw_pool.h"
 #include "game/prim.h"
 #include "game/map_view.h"
@@ -62,6 +63,7 @@ void InjectAll() {
     GfxFilter_Inject();
     MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
+    SpriteDraw_Inject();        // likewise: before PsxGpu_Inject and DrawEmit_Inject
     SpriteOrder_Inject();
     DrawPool_Inject();
     Prim_Inject();

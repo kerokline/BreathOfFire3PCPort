@@ -2528,8 +2528,62 @@ pc = 0x5935B0
 name = "Sprite_Draw"
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-20 of its caller only: Sprite_DrawPass 0x593060 sets Sprite_Current to a record's object and calls it, under bit 1 of Draw_PassFlags. The function itself (683 bytes, and 0x593860 under it) is unread. cdecl. Call trace all_b: 33,850 calls."
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 683 bytes, cdecl, calls Gpu_SetCode84 0x5A7770, Sprite_ClutWord 0x593860, SpriteCell_Add 0x5A6790 (once per piece), Gpu_SetSemiTrans 0x5A7780 and Gfx_CommitPrim 0x461E50 (slot +0x29, 0x20): culls the current object by its s16 position (+0x2E in -0x40..0x180, +0x30 in -0x40..0x130; bit 7 of byte 0 records the result), sets the scale +0x40 / +0x44 to (0x4650000 / +0x60) & ~0xFF when +0x48 == 1, and builds a 0x20-byte code-0x84 primitive at Gfx_PacketNext from the frame at +0x54's data + u16 +0x5A (a count, then 5-byte pieces). Called by Sprite_DrawPass 0x593060 (two sites) with Sprite_Current set, under bit 1 of Draw_PassFlags. Call trace all_b: 33,850 calls."
+note = "The name was given from the caller; the body bears it out - the object's one primitive, of the port's own code 0x84, which the Direct3D end draws from the cell records."
+
+[[func]]
+pc = 0x593860
+name = "Sprite_ClutWord"
+ret = "void"
+params = "unsigned short *out"
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0xD5 bytes and a four-entry jump table at 0x593938 (pe_funcs.py sized it 0xA54, swallowing the functions after the table): *out = ((((+0x24 & 4) | 0x78) << 2) + (+0x27 >> s)) << 6 | ((+0x27 & (2^s - 1)) << (8 - s)) >> 4 of Sprite_Current, s = 4, 0, 3, 2 by +0x28 = 0..3 and 1 above - a libgpu getClut word, 2^s palettes to a CLUT row from row 0x1E0 or 0x1F0. Sole caller Sprite_Draw. Call trace all_b: 23,950 calls."
+
+[[func]]
+pc = 0x5A6790
+name = "SpriteCell_Add"
+ret = "unsigned long"
+params = "unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v, unsigned w, unsigned h"
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x61 bytes, cdecl, no calls: writes the 8-byte record SpriteCell_Table[SpriteCell_Count] = (u16 x, u8 y, u8 ((h & 0xF8) << 1 | w >> 3), u16 flags, u8 u, u8 v), increments the count and returns its old value. No bound. Sole caller Sprite_Draw, one record per piece of a sprite's frame, w and h from SpriteCell_Sizes. Call trace all_b: 109,000 calls."
+note = "The fields' names are from Sprite_Draw's arguments: x and y the piece's signed offsets, u and v its texel position. The one reader, 0x5A32B0 in the Direct3D end, is unread."
+
+[[func]]
+pc = 0x5A6780
+name = "SpriteCell_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 2 instructions: SpriteCell_Count = 0. Sole caller WinMain's loop at 0x4FCF75. Call trace all_b: 12,801 calls - once a logic frame."
+
+[[data]]
+pc = 0x6BEA18
+name = "SpriteCell_Table"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-21: SpriteCell_Add writes 8-byte records at 0x6BEA18 + SpriteCell_Count * 8; pe_xref: the only other reference is 0x5A32B0 (lea of an entry), in the Direct3D end."
+note = "One record declared; the table has no bound in the code. Its real extent is unmeasured."
+
+[[data]]
+pc = 0x7CC374
+name = "SpriteCell_Count"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-21: SpriteCell_Add's index and SpriteCell_Reset's zero; pe_xref: no other references."
+
+[[data]]
+pc = 0x66A450
+name = "SpriteCell_Sizes"
+ctype = "unsigned char"
+count = 32
+status = "evidence"
+evidence = "disasm 2026-09-21: Sprite_Draw reads bytes 2n and 2n + 1 for n = the low nibble of a piece's first byte, as the width and height it passes to SpriteCell_Add. Contents in the exe: (8 + 8 * (n % 4), 8 + 8 * (n / 4)) - the sixteen sizes 8..32 by 8..32."
 
 # --- The Direct3D end: sprite handlers (docs/known-defects.md D1, DIV-0010) ---
 

@@ -486,9 +486,9 @@ occur in the attract run was not measured.
     and one `Gpu_SetPolyFT4`; every library call in it is ours except the
     matrix product `0x5A7D70`
     ([`psx-library-layer.md`](psx-library-layer.md) section 4 says why not).
-  - **`0x5935B0`**, 33,850 calls, 683 bytes, and `0x593860` under it, 2,644
-    bytes with two indirect calls: the sprite draw itself. Also calls
-    `0x5A6790`, the 8-byte record append.
+  - **`0x5935B0`**, 33,850 calls: **ours since 2026-09-21, section 14.**
+    `0x593860` under it turned out to be 213 bytes, not 2,644; the rest was
+    other functions.
   The pass is still checkable as memory - the linked list it builds - which
   is [`IDEAS.md`](IDEAS.md) I14 level 1, and would be the first check of it
   that is not the fuzz's stand-ins or an identical frame hash.
@@ -654,6 +654,118 @@ code's comment says so.
 Live: the attract oracle is identical with all 126 ours over the 1,202
 frames a 3-minute run compares (2026-09-21, `analysis/attract/ab18_smoke.tsv`);
 then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
+
+## 14. The sprite draw - taken over (2026-09-21)
+
+`src/game/sprite_draw.cpp`. `Sprite_Draw` `0x5935B0` was the pass's last
+callee still Capcom's apart from `DrawLayer_Open` (section 11). It had been
+filed as 3.3 KB with the 2,644-byte `0x593860` under it. **`0x593860` is 213
+bytes.** A four-entry jump table follows it at `0x593938`, and `pe_funcs.py`
+ran on through the table into some ten functions reached only through
+pointers (the next paragraph). So the whole branch was about 900 bytes, and
+four functions:
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Sprite_Draw` | `0x5935B0` | 33,850 | The current object as one primitive of the port's own - GPU code `0x84`, 0x20 bytes - and one cell record per piece of its frame |
+| `Sprite_ClutWord` | `0x593860` | 23,950 | The object's CLUT word: palette `+0x27`, 2^s palettes to a row with s = 4, 0, 3, 2 for `+0x28` = 0..3 and 1 above, from row `0x1E0` (`0x1F0` with bit 2 of `+0x24`) |
+| `SpriteCell_Add` | `0x5A6790` | 109,000 | An 8-byte record at `SpriteCell_Table` `0x6BEA18` [`SpriteCell_Count` `0x7CC374`]: u16 x, u8 y, u8 size `((h & 0xF8) << 1) \| w >> 3`, u16 flags, u8 u, u8 v; returns its index. No bound |
+| `SpriteCell_Reset` | `0x5A6780` | 12,801 | The count to 0, once a logic frame (WinMain, `0x4FCF75`) |
+
+What `Sprite_Draw` does:
+
+1. Bit 6 of byte 0 set: returns.
+2. Bit 7 of `+0x24` clear and `+0x48 == 1`: the scale `+0x40` = `+0x44` =
+   `(0x4650000 / +0x60) & ~0xFF` - 1125 over a depth, in 16.16. A depth of 0
+   stores 0 to both and returns before the cull.
+3. The cull: the s16 position `+0x2E` outside `-0x40..0x180`, or `+0x30`
+   outside `-0x40..0x130`, sets bit 7 of byte 0 and returns; inside, clears it.
+4. The frame: a count byte at `+0x54`'s data plus the u16 `+0x5A`, then that
+   many 5-byte pieces. A count of 0 returns.
+5. At `Gfx_PacketNext`: code `0x84`, the CLUT word at `+0x1C`, then per piece
+   a `SpriteCell_Add` - signed x and y offsets, flags
+   `((piece bit 7 | wide << 5) << 2) | +0x25`, u, `+0x26` + v, and a size from
+   `SpriteCell_Sizes` `0x66A450` by the piece's low nibble (8..32 by 8..32).
+   The first index goes to `+0x18` and the count to `+0x1A`. Then a mode word
+   `((+0x5C | wide << 2) << 5) | +0x25`, `| 0x400` with `+0x2A`, at `+0x1E`;
+   the dwords `+0x74` / `+0x78` at `+8` / `+0xC`; the scale as floats (x87,
+   an integer times 2^-16 - exact) at `+0x10` / `+0x14`, 1.0 when `+0x48` is
+   0; the shade `+0x5D..+0x5F` each plus `0x80`; semi-transparency from bit 5
+   of byte 0. "Wide" is `+0x28` non-zero.
+6. `Gfx_CommitPrim(+0x29, 0x20)`.
+
+So the PC port does not build a sprite from `SPRT`s or `POLY_FT4`s at all: it
+emits one code-`0x84` primitive and a run of cell records, and the Direct3D
+end (`0x5A32B0`, the table's one reader, unread) draws the cells.
+
+**Hidden functions found on the way.** The bytes `pe_funcs.py` gave to
+`0x593860` hold a dispatcher at `0x593950` - `jmp [0x66A470 + byte
+0x93985C * 4]` - and the handlers its tables name, `0x593960`..`0x594240`,
+about ten. `tools/pe_hidden.py` missed them too. Its rule wants a hidden
+entry to follow a `ret` or `jmp` and padding, and the first one follows the
+jump table's data. After that, a linear sweep through the table's bytes falls
+out of step. None of them is in `entries.txt`, so no call trace has counted
+them. [`attract-remaining.md`](attract-remaining.md) section 3's hidden count is
+short by these at least, and any function with an inline jump table may hide
+more the same way.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=sprite_draw`, against clones. The
+module injects before `PsxGpu_Inject` and `DrawEmit_Inject`, so the clone's
+calls to `Gpu_SetCode84`, `Gpu_SetSemiTrans` and `Gfx_CommitPrim` still run
+Capcom's code. Its calls to the other two go to their clones. The clone of
+`Sprite_ClutWord` jumps through the original's table into the original's
+body - Capcom's bytes either way, since nothing is patched yet.
+
+Each round randomises an object and its frame. The position is biased to the
+cull's edges and the depth to 0, ±1 and small values. The packet pointer sits
+inside the real pool, a quarter of the time at the room test's limit. The
+ordering-table pointers are aimed at a scratch row of tails, and the cell
+count is under 0x200 with a random window of the table. One round in sixteen
+is `SpriteCell_Reset`. Compared: the object, its frame, the cell window and
+count, the packet pointer and 0x40 bytes at it, the ordering-table pointers
+and their tails.
+
+Result: 24,000 rounds - 2,797 hidden, 239 at depth 0, 12,780 culled, 624
+empty frames, 6,043 drawn with 237,190 cells (4,461 scaled, 1,884 with no
+room in the pool), 1,517 resets - **0 mismatches**. `Sprite_ClutWord` alone,
+65,536 rounds, and `SpriteCell_Add` alone with whole random dwords, 65,536
+rounds: **0** each.
+
+Negative controls, each refused:
+
+| Control | Mismatches |
+|---|--:|
+| Cull x above `0x17F` | 925 |
+| The scale keeping its low byte | 3,423 |
+| Depth 0 going on to the cull | 157 |
+| The cull leaving bit 7 set | 3,352 |
+| The first index from every piece | 5,401 |
+| A piece's x zero-extended | 5,425 |
+| The shade plus `0x7F` | 6,043 |
+| "Wide" from bit 0 of `+0x28` | 1,524 |
+| The CLUT's shift 0 above mode 3 | 5,923 (and 32,341 of the CLUT rounds) |
+| The cell height masked with `0xF0` | 5,462 (and 16,597 of the add rounds) |
+| Reset to 1 | 1,517 |
+
+Two tries at controls that said nothing, for the record: letting depth 0 fall
+through to the division hangs the game at start-up (the trap of
+[`psx-library-layer.md`](psx-library-layer.md) section 3), and
+`(h >> 3) << 4` is `(h & 0xF8) << 1` written differently.
+
+**Live.** With the switch set, every call in game runs the clone, puts back
+what it wrote, runs ours, and compares the object, the primitive, the packet
+pointer, the cell records and count, and the ordering-table slot with its
+tail. 2026-09-21: a 6-minute attract run, 8,192 calls compared (5,570 drawn
+with 25,174 cells; the report then came every 8,192 calls, so the run's
+last few thousand went unlogged - it is every 1,024 now), and save 5's field
+through a recipe, 1,024 calls (341 drawn, 1,304 cells): **0 mismatches**.
+The attract oracle was identical with the check on, over 3,926 frames
+(`analysis/attract/ab18_live.tsv`), and a capture of the field
+(`analysis/shots/sprite_field/`) shows Ryu drawn as he should be. Then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
 the full-cycle oracle identical over 7,478 frames; the memory dump identical
 in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
 frames, original against original and original against ours (`ab17_*`,
