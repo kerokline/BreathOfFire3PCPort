@@ -1191,6 +1191,50 @@ note = "Named for the fields it writes. That the table is the area block's textu
 # ---------------------------------------------------------------------------
 
 [[data]]
+pc = 0x8CB5A4
+name = "AreaMap_CellBase"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open 0x56FD20 adds the low 16 bits to a MapView_Cells word to index the dwords of AreaMap_Header, the start of a cell's record run. At AreaMap_Header + 0x24: part of the loaded area block."
+
+[[data]]
+pc = 0x904F20
+name = "MapView_Cells"
+ctype = "unsigned short"
+count = 1568
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open reads word (row * 28 + column), row 0..0x37 and column 0..0x1B, and treats a non-zero one as an index into AreaMap_Header's cell runs. pe_xref: 9 references in 7 functions. 0x38 x 28 words is DrawLayer_Open's wrap, not a measured extent."
+
+[[data]]
+pc = 0x905D80
+name = "MapView_Inset"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: DrawLayer_Open draws (14 - inset) * 2 columns starting inset further in, the inset less 2 (not below 0) when bit 0 of Field_InputFlags is set. pe_xref: also read by 0x56EC00. Named for that one use."
+
+[[data]]
+pc = 0x929F20
+name = "MapView_Column"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open's first column of MapView_Cells, before the inset, mod 0x1C. pe_xref: 20 references in 16 functions, always beside MapView_Row."
+
+[[data]]
+pc = 0x929F24
+name = "MapView_Row"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open's row of MapView_Cells is (this + layer + 1) mod 0x38. pe_xref: 20 references in 16 functions, always beside MapView_Column."
+
+[[data]]
+pc = 0x663008
+name = "MapCell_Handlers"
+ctype = "unsigned long"
+count = 77
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open calls [0x663008 + (record >> 24) * 4] with (record, byte 1, byte 0 of the run's head). In the exe: 77 .text addresses, then data - handlers 0x570020, 0x570210, 0x570530, 0x570660, 0x570870, 0x570A00, 0x437CC0, ... pe_xref: DrawLayer_Open is the only reader. Stored as dwords; call through a cast."
+
+[[data]]
 pc = 0x8CB580
 name = "AreaMap_Header"
 ctype = "unsigned char"
@@ -2461,8 +2505,10 @@ pc = 0x56FD20
 name = "DrawLayer_Open"
 ret = "void"
 params = "int layer"
-status = "hypothesis"
-evidence = "disasm 2026-09-20, read in part: appends the layer's first (first, last) pair to ordering-table slot 6 as DrawLayer_Close 0x56FE80 appends the second, then walks a window of the word table 0x904F20 and hands 4-byte records under 0x8CB580 to handlers through the table 0x663008 (one indirect call). Called by Sprite_DrawPass before each layer. The name is from that pairing; what the records are is unread. cdecl. Call trace all_b: 403,315 calls."
+impl = "src/game/draw_emit.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x159 bytes, cdecl, one call (Gpu_LinkPrim 0x5A7560) and one indirect call per record, every jump internal: appends the layer's first (first, last) pair at DrawLayers + (layer * 6 + Gfx_BufferIndex) * 8 to ordering-table slot 6 as DrawLayer_Close 0x56FE80 appends the second; then row (MapView_Row + layer + 1) mod 0x38 of MapView_Cells, (14 - inset) * 2 columns from (MapView_Column + inset + (row even)) mod 0x1C, each advanced first and wrapping 0x1B -> 0, inset MapView_Inset less 2 (floor 0) with bit 0 of Field_InputFlags; each non-zero cell word w names a run at dword w + (AreaMap_CellBase & 0xFFFF) of AreaMap_Header, headed by the dword before it (count + 1 in the high half, two bytes below), whose 4-byte records go to MapCell_Handlers[record >> 24](record, byte 1, byte 0) and advance by record byte 2 dwords, read after the call. Called by Sprite_DrawPass before each layer. Call trace all_b: 403,315 calls."
+note = "The name pairs it with DrawLayer_Close. What the records are is the handlers' business: the first handler read for this, 0x570660, draws through Prim_SetTexture - a map cell's textured quads, by that one example."
 
 [[func]]
 pc = 0x57BAE0

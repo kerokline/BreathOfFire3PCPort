@@ -473,7 +473,8 @@ occur in the attract run was not measured.
   known - not because it is hard, but because it may be a defect to record.
 - The pass's three callees that are not ours. It was taken over before them
   (section 9): it only calls them.
-  - **`0x56FD20(layer)`**, 403,315 calls: appends the layer's *first* list to
+  - **`0x56FD20(layer)`**, 403,315 calls: **ours since 2026-09-21, section
+    15.** Was: appends the layer's *first* list to
     slot 6 (`0x929EB8` directly), then walks a window of the word table
     `0x904F20` - 28 columns, wrapping, rows offset by the words at `0x929F20`
     and `0x929F24` - and for each non-zero word a run of 4-byte records under
@@ -766,6 +767,83 @@ through a recipe, 1,024 calls (341 drawn, 1,304 cells): **0 mismatches**.
 The attract oracle was identical with the check on, over 3,926 frames
 (`analysis/attract/ab18_live.tsv`), and a capture of the field
 (`analysis/shots/sprite_field/`) shows Ryu drawn as he should be. Then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
+
+## 15. The layer's map cells - taken over (2026-09-21)
+
+`src/game/draw_emit.cpp`, beside `DrawLayer_Close`. `DrawLayer_Open`
+`0x56FD20` (0x159 bytes, 403,315 calls in `all_b`) was the draw pass's last
+callee still Capcom's. With it ours, **every function the pass calls is
+ours**; what those handlers call is not.
+
+What it does, per layer:
+
+1. The layer's first list - the (first, last) pair at
+   `DrawLayers + (layer * 6 + Gfx_BufferIndex) * 8` - if non-empty, is
+   appended to ordering-table slot 6 through `Gpu_LinkPrim`, and its last
+   becomes slot 6's tail. The index is read again after the call, as in
+   `DrawLayer_Close`.
+2. One row of the field's map cells. The row is `(MapView_Row` `0x929F24` `+
+   layer + 1) mod 0x38` of `MapView_Cells` `0x904F20`, 28 words wide. The
+   inset is `MapView_Inset` `0x905D80`, less 2 (not below 0) with bit 0 of
+   `Field_InputFlags`. From `(MapView_Column` `0x929F20` `+ inset + (1 if
+   the row is even)) mod 0x1C` it takes `(14 - inset) * 2` columns, each
+   advanced before it is read, wrapping `0x1B` to 0. The half-column shift on
+   even rows is the diamond grid of an isometric map.
+3. A non-zero cell word `w` names a run at dword `w + (AreaMap_CellBase &
+   0xFFFF)` (`0x8CB5A4`) of the area block. The dword before the run heads
+   it: the run's length in dwords plus one in its high half, and two bytes
+   every handler is given. Each 4-byte record goes to
+   `MapCell_Handlers[top byte]` (`0x663008`, 77 handlers) as `(record, byte
+   1, byte 0)`, and the walk moves on by the record's byte `+2` in dwords,
+   **read after the call**.
+
+Kept as the original has it: each "mod" is one subtraction; the record's top
+byte is not checked against the 77; a step of 0, or steps that pass the run's
+end, never stop. Handler `0x570660`, the one read so far, draws through
+`Prim_SetTexture` (section 13) - so a record is a piece of a cell's picture,
+by that one example.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=draw_emit`, against a clone whose
+`Gpu_LinkPrim` call is Capcom's. The clone reads `MapCell_Handlers` just as
+ours does, so for the fuzz the table's 77 entries become four recording
+stand-ins, put back afterwards. Each round randomises the layers, the buffer
+byte (0..5), the view's row, column and inset, the input flag, and a row of
+cells naming up to 24 record runs laid out in the area block. In half the
+rounds every record is one dword and a stand-in lengthens a third of the
+records it is handed to two, where the run has room - so a walk that read
+the step before the call would go astray. Compared: the stand-ins' log (which
+one, which record, both bytes), the layers, the area window, the cells, slot 6
+and its tails.
+
+Result: 12,000 rounds - 7,926 linked the first list, 11,012 walked cells with
+219,759 handler calls, 5,907 with lengthened steps, 499 with no columns, 6,065
+rows wrapped - **0 mismatches**. The draw pass's own fuzz, which stands in
+for this function, still passes.
+
+Negative controls:
+
+| Control | Mismatches |
+|---|--:|
+| The step read before the call | 5,262 |
+| The column read before it advances | 3,348 |
+| Odd rows shifted instead of even | 3,293 |
+| The inset not floored at 0 | 1,187 |
+| Half the columns | 10,200 |
+| Wrap after `0x1C` | 3,475 |
+| The two bytes swapped | 11,007 |
+| Row wrap at `0x37` | 5,855 |
+| The first list to slot 7 | crashed at start-up - slot 7's pointer is still null then; not a clean refusal |
+
+**Live.** The handlers draw, so a call cannot be run twice and compared the
+way section 14's is. Instead: save 5's field through a recipe, once with the
+whole draw path original (117 functions; only file, save, text and input
+ours) and once all ours - **the four captures identical pixel for pixel**
+across the frame (2026-09-21, `analysis/shots/sprite_field_orig/`,
+`sprite_field_ours/`). Then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
 the full-cycle oracle identical over 7,478 frames; the memory dump identical
 in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
 frames, original against original and original against ours (`ab17_*`,
