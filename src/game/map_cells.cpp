@@ -33,7 +33,8 @@ int (__cdecl* g_rand)(void) = Rand;
 // each doubled, about the cell's origin; the low word is the third coordinate.
 // The sums are the original's 32-bit ones, stored as words.
 //
-// DIV-0023: the fourth word is 0. The original builds these on its stack and
+// DIV-0023: the fourth word is 0, as DIV-0021 zeros the matrix product's
+// padding (the owner's call). The original builds these on its stack and
 // never writes that word, so Gte_LoadVertex and Gte_LoadVertices3 carry stale
 // stack into the top halves of Gte_Vertices[1], [3] and [5], which no
 // instruction in the image reads.

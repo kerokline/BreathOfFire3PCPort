@@ -1110,11 +1110,10 @@ designed in rather than bolted on.
   loaders or an address `Gte_Rtps` / `Gte_Rtpt` hand to the projection, which
   reads x, y and z (`pe_xref --range`, 2026-09-21).
 - **New behaviour:** ours writes `0000` there. Every other byte is unchanged.
-- **Rationale:** the same choice as DIV-0021, for the same class of word -
-  the owner chose zeros there (2026-09-21). No instruction reads the two
-  bytes, so nothing a player sees changes. It is still a difference, so it is
-  ledgered. **To confirm with the owner:** applied by analogy with DIV-0021,
-  not decided for this case.
+- **Rationale:** the same choice as DIV-0021, for the same class of word.
+  No instruction reads the two bytes, so nothing a player sees changes. It is
+  still a difference, so it is ledgered. Owner's call, 2026-09-21: zeros, to
+  match the matrix product.
 - **Not covered:** a read of those halves by code outside the image (none
   exists in ours).
 - **Also in the PSX version?** Unknown; not looked up.

@@ -60,8 +60,8 @@ the owner's nightly shutdowns. The owner's short-term fix, DIV-0022, starts
 the game's clock with the game: 30.00 logic frames a second (item 00000).
 **Then the map cells:** two of `DrawLayer_Open`'s handlers and the two
 functions under them - the record condition and the ground's elevation - are
-ours, with DIV-0023 (zeros in a vertex's padding, by analogy with DIV-0021 -
-owed the owner's confirmation) ([`sprite-draw-order.md`](sprite-draw-order.md) §16).
+ours, with DIV-0023 (zeros in a vertex's padding, as DIV-0021 - the owner's
+call) ([`sprite-draw-order.md`](sprite-draw-order.md) §16).
 
 ## Pick up here
 
@@ -94,8 +94,7 @@ The single next action, concrete enough to start without asking anyone.
    party and enemy HP; a general function that is also a table entry
    ([`sprite-draw-order.md`](sprite-draw-order.md) §16). The table's other
    eight handlers never run in attract: take them only with a recipe that
-   reaches them, or they get no live check. **Owed the owner:** DIV-0023 was
-   applied by analogy with their DIV-0021 call - confirm zeros. Next: regenerate
+   reaches them, or they get no live check. Next: regenerate
    the queue (`python tools/calltrace.py queue
    analysis/calltrace/all_b/bof3x.callcounts.tsv`, 397 unnamed reached on
    2026-09-21; the two hottest are `0x5B3760` and `0x5B9550`, 4.2M and 3.7M
