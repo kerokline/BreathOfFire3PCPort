@@ -459,7 +459,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
   `0x903584` / `0x90358E` / `0x903590`, and save 5's differ from saves 0-3.
   Press `@0x903584`, not a shape; the menu's top-bar cursor is remembered -
   `seek` it ([`input-script.md`](input-script.md) §4).
-- The backslash trap again, 2026-09-21: ` ` in a Python heredoc became two
+- The backslash trap again, 2026-09-21: `\0` in a Python heredoc became two
   NUL bytes in `loc_build.py` ("source code cannot contain null bytes").
   Edit Python with the editor tool.
 
