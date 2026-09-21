@@ -175,8 +175,13 @@ an i386 process until the last original instruction is gone
 ```
 cmake --preset i686
 cmake --build build
-build/bof3x-launcher.exe --game bof3
+build/bof3x-launcher.exe --game bof3              # settings dialog, then the game
+build/bof3x-launcher.exe --game bof3 --no-config  # straight to the game
 ```
+
+The launcher shows a settings dialog before starting the game
+([`launcher-settings.md`](launcher-settings.md)); `--no-config` skips it, which
+is what scripted and agent runs want.
 
 Needs `i686-w64-mingw32-clang++`, `cmake` ≥ 3.25, `ninja` and `python` ≥ 3.11 on
 `PATH` (or `LLVM_MINGW_ROOT` set). Verified with llvm-mingw 20260616 / clang

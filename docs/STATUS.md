@@ -181,6 +181,18 @@ What is established:
   clipped stat numerals (draw-time, cause unread), the mojibake title, the
   crash above, and a frame deadline kept in a 32-bit float, which makes game
   speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured.
+- **The launcher has a settings dialog** (2026-09-20,
+  [`launcher-settings.md`](launcher-settings.md)): language, texture filter,
+  display and renderer, in a plain Win32 `DIALOGEX` with nothing vendored.
+  Language and filter go to the environment the game inherits, so the DLL did
+  not change; display and renderer are written into the game's own `BOF3.CFG`,
+  which is the original's input, not a patch — no ledger entry. Resolution is
+  shown disabled: 640x480 is welded into the presentation layer
+  ([`IDEAS.md`](IDEAS.md) I8). Also established there: the disc's `START.EXE` is
+  an autorun shell reached through `WinExec` and the registry, `SETUP.EXE` is
+  InstallShield 5, and neither has anything to do with game configuration —
+  `BOF3.CFG` is the only config filename in the exe. **Scripted runs now need
+  `--no-config`.**
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 

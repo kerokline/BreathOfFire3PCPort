@@ -220,10 +220,14 @@ _Commands a fresh session needs, verified on the date above._
   `i686-w64-mingw32-clang++` is already on `PATH` on this machine (the
   `retcomm` toolchain under `~/.local/share`), **not** the MSYS2 one.
 - **Run:** `build/bof3x-launcher.exe --game bof3`; log in `build/bof3x.log`.
+  This now opens the settings dialog first — **pass `--no-config` from a script
+  or an agent session**, which skips it
+  ([`launcher-settings.md`](launcher-settings.md) §4).
   Original behaviour for one function or all: `BOF3X_ORIGINAL=File_Read` / `=*`.
-  **Windowed:** put a two-line `BOF3.CFG` (`0`, then `1`) in the game
-  directory, or press F8 in game ([`windowed-mode.md`](windowed-mode.md)) —
-  recommended for agent sessions, since it avoids the display mode-set.
+  **Windowed:** the dialog's Display box, or a two-line `BOF3.CFG` (`0`, then
+  `1`) in the game directory, or F8 in game
+  ([`windowed-mode.md`](windowed-mode.md)) — recommended for agent sessions,
+  since it avoids the display mode-set.
   Without it the game mode-sets to exclusive fullscreen for the FMVs; from an agent
   session, end it with `taskkill //F //IM BOF3.exe`.
 - **Regression check (10 min, hands off the game window):**
@@ -395,7 +399,8 @@ in `dat_load.cpp` and `tools/dat.py`, `build_title` in `tools/loc_build.py`,
 
 Local only, gitignored, worth keeping:
 
-- `bof3/BOF3.CFG` (windowed mode); the owner's PC saves `bof3/BISLPS00/01/0F.DAT`
+- `bof3/BOF3.CFG` (windowed mode) and `build/bof3x.ini` (launcher settings);
+  the owner's PC saves `bof3/BISLPS00/01/0F.DAT`
   and the two converted ones, `02` (JP) and `03` (US).
 - `analysis/attract/orig_a.tsv` - the all-original reference for
   `attract_diff.py`; `ours_d_fileopen.log`, behind

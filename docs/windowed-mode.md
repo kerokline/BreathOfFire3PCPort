@@ -18,7 +18,9 @@ original program's own behaviour, reached through its own inputs.
 
   The file does not ship and nothing in the exe writes it under that name
   (one reference to the filename string, in the reader). Without it both flags
-  default to 1.
+  default to 1. Since 2026-09-20 `bof3x-launcher` writes lines 1-2 of this file
+  from its settings dialog, preserving every later line
+  ([`launcher-settings.md`](launcher-settings.md) section 3).
 - **At runtime:** **F8** toggles fullscreen/windowed, provided the desktop is
   larger than 640x480. **F7** re-initialises the display with the second flag
   (renderer select — see below).

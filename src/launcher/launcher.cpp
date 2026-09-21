@@ -1,6 +1,7 @@
 // bof3x-launcher: start the player's own BOF3.exe with bof3x.dll loaded.
 //
-//   bof3x-launcher [--game <dir containing BOF3.exe>] [-- <args for the game>]
+//   bof3x-launcher [--game <dir containing BOF3.exe>] [--config|--no-config]
+//                  [-- <args for the game>]
 //
 // The game directory is, in order: --game, the BOF3_GAME_DIR environment
 // variable, the current directory, then ./bof3.
@@ -17,6 +18,9 @@
 #include <windows.h>
 
 #include <bcrypt.h>
+
+#include "launcher/config.h"
+#include "launcher/config_dialog.h"
 
 #include <cstdio>
 #include <cwchar>
@@ -130,10 +134,19 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
 int wmain(int argc, wchar_t** argv) {
     std::wstring game_dir;
     std::wstring game_args;
+    // Neither flag given: the settings file decides, and its default is to
+    // show the dialog. --config forces it (the way back after "Show this
+    // window every time" is unticked); --no-config suppresses it, which is
+    // what the scripted runs in docs/HANDOFF.md want.
+    int want_dialog = -1;
     for (int i = 1; i < argc; ++i) {
         std::wstring arg = argv[i];
         if (arg == L"--game" && i + 1 < argc) {
             game_dir = argv[++i];
+        } else if (arg == L"--config") {
+            want_dialog = 1;
+        } else if (arg == L"--no-config") {
+            want_dialog = 0;
         } else if (arg == L"--") {
             for (++i; i < argc; ++i) {
                 game_args += L" \"";
@@ -141,7 +154,8 @@ int wmain(int argc, wchar_t** argv) {
                 game_args += L"\"";
             }
         } else {
-            Die(L"unknown argument: %ls\nusage: bof3x-launcher [--game <dir>] [-- <game args>]",
+            Die(L"unknown argument: %ls\nusage: bof3x-launcher [--game <dir>] "
+                L"[--config|--no-config] [-- <game args>]",
                 arg.c_str());
         }
     }
@@ -168,6 +182,26 @@ int wmain(int argc, wchar_t** argv) {
             L"Every address bof3x patches is specific to that one file; refusing to start. "
             L"If this is an uncatalogued release, see fixtures.toml.",
             exe.c_str(), sha.c_str(), kExpectedSha256);
+
+    // Settings. The file lives next to the launcher, not in the game directory,
+    // which stays the player's own (CLAUDE.md rule 1) apart from BOF3.CFG -
+    // and that one is the original program's own documented input, not a patch.
+    const std::wstring ini = OwnDirectory() + L"\\bof3x.ini";
+    bof3x::Config cfg;
+    if (!bof3x::ConfigLoad(ini, cfg)) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
+
+    if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
+        if (!bof3x::ConfigDialogRun(game_dir, cfg)) return 0;   // closed: start nothing
+        if (!bof3x::ConfigSave(ini, cfg))
+            std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
+                          ini.c_str());
+    }
+
+    std::wstring cfg_error;
+    if (!bof3x::ConfigApplyGameCfg(game_dir, cfg, cfg_error))
+        Die(L"%ls\n\nDisplay and renderer are set through that file, which is the game's "
+            L"own input. Check that the game directory is writable.", cfg_error.c_str());
+    bof3x::ConfigApplyEnvironment(cfg);
 
     std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
     STARTUPINFOW si{};

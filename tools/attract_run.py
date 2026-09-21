@@ -81,7 +81,10 @@ def main():
     if a.original:
         env['BOF3X_ORIGINAL'] = a.original
     launcher = os.path.join(ROOT, 'build', 'bof3x-launcher.exe')
-    if subprocess.run([launcher, '--game', a.game], env=env).returncode != 0:
+    # --no-config: an oracle run must not stop on the settings dialog, and must
+    # take the settings file's values without a human touching them
+    # (docs/launcher-settings.md section 4).
+    if subprocess.run([launcher, '--game', a.game, '--no-config'], env=env).returncode != 0:
         sys.exit('launcher failed')
 
     stop = threading.Event()

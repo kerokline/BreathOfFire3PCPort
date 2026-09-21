@@ -9,7 +9,9 @@ named on each item. **Rewrite, do not append:** a finished item is deleted once
 its result is recorded where it belongs.
 
 Launch for all of these: `build/bof3x-launcher.exe --game bof3`; log in
-`build/bof3x.log`.
+`build/bof3x.log`. The settings dialog opens first
+([`launcher-settings.md`](launcher-settings.md)) - press Play, or pass
+`--no-config` to skip it.
 
 ## Open
 
