@@ -108,3 +108,25 @@ does not count.
       exchanged word also drops two other button bits)?
 - Result goes to: [`sprite-draw-order.md`](sprite-draw-order.md) §5, and the
   `symbols.toml` note on `Field_CopyInput`.
+
+### 6. The title menu in English
+
+*Why:* DIV-0014 ([`title-menu.md`](title-menu.md)). `START.DAT` loads only
+when a key takes the logo to the menu, so no unattended run reaches it; what
+exists is an offline preview.
+
+Launch with `BOF3X_LANG=en` after `python tools/loc_build.py all ...`
+([`HANDOFF.md`](HANDOFF.md) "How to run things").
+
+- [ ] Three rows: NEW GAME, LOAD GAME, CONFIG - whole, centred, nothing cut
+      off at the right, no stray pixels beside them?
+- [ ] Move the cursor over each: is the selected row's glow right for thin
+      lettering? It was drawn for thick Chinese strokes.
+- [ ] `build/bof3x.log` has `DIV-0014: title menu rows 130, 140, 96 wide`.
+- [ ] The draw has a two-row layout, rows 0 and 2, on a byte nobody has read -
+      a guess is "no save files present". If you know when the port shows two
+      rows, say; if moving the `BISLPS0?.DAT` files away does it, is it NEW
+      GAME and CONFIG?
+- [ ] Each row still goes where it went.
+- Result goes to: [`title-menu.md`](title-menu.md) section 3, and DIV-0014's
+  "Checked".

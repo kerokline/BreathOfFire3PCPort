@@ -517,12 +517,149 @@ def build_white_clut(args, disc):
     return [(0, CLUT_TAG, bytes(strip))]
 
 
+# ---------------------------------------------------------------- the title menu
+
+# DIV-0014. The title menu is artwork, not text (docs/title-menu.md): image
+# chunk 0x1C000200 of START.DAT, a 256 x 256 4bpp page at VRAM (896, 0), and
+# the section of the same tag in the discs' START.EMI. The port's draw
+# 0x5888D0 takes row i from (0, 32 i), 32 tall, as wide as a table in its code
+# says; the discs keep NEW GAME at (0, 0) and LOAD GAME at (0, 16), 16 tall.
+# Both are drawn through the CLUTs of kind-0 tag 0x8600, identical on PC and
+# disc, so the disc's nibbles can be used as they are.
+TITLE_TAG, TITLE_KIND, TITLE_BAND, TITLE_CAP = 0x1C000200, 6, 32, 16
+# The sheet the boxes below were measured on, 2026-09-20: US and JP alike.
+TITLE_DONOR_SHA256 = "e06a47cfcb16a858"     # first 16 hex digits
+TITLE_NEW, TITLE_LOAD = (0, 0, 130), (0, 16, 140)       # x, y, width of the two strings
+# Letter boxes (x0, x1 inclusive, y of the 16-row band) the third row is cut from.
+TITLE_LETTER = {"N": (1, 16, 0), "E": (19, 32, 0), "G": (64, 79, 0), "L": (1, 15, 16), "O": (16, 32, 16)}
+TITLE_SHADOW = 15
+
+
+def tiles_to_rows(data, tiles_w):
+    """A kind-1 payload - 0x800-byte tiles of 32 x 32 words, row-major - as rows of 4bpp texels."""
+    count = len(data) // 0x800
+    rows = [[0] * (tiles_w * 128) for _ in range(count // tiles_w * 32)]
+    for t in range(count):
+        tx, ty = t % tiles_w, t // tiles_w
+        for y in range(32):
+            line = rows[ty * 32 + y]
+            for i, b in enumerate(data[t * 0x800 + y * 64:t * 0x800 + (y + 1) * 64]):
+                line[tx * 128 + 2 * i], line[tx * 128 + 2 * i + 1] = b & 0xF, b >> 4
+    return rows
+
+
+def rows_to_tiles(rows, tiles_w):
+    out = bytearray()
+    for ty in range(len(rows) // 32):
+        for tx in range(tiles_w):
+            for y in range(32):
+                line = rows[ty * 32 + y][tx * 128:(tx + 1) * 128]
+                out += bytes(line[i] | (line[i + 1] << 4) for i in range(0, 128, 2))
+    return bytes(out)
+
+
+def title_letter(sheet, name):
+    x0, x1, y0 = TITLE_LETTER[name]
+    cell = [sheet[y][x0:x1 + 1] for y in range(y0, y0 + TITLE_CAP)]
+    if name == "O":     # its shadow column is also where the D's lower serif starts
+        cell[14][-1] = cell[15][-1] = 0
+    return cell
+
+
+def title_shadow(cell, fresh):
+    """The lettering's drop shadow is one down and one right (it predicts 83% of the
+    donor's own shadow pixels; the rest is the artist's touching up)."""
+    for x, y in fresh:
+        if y + 1 < len(cell) and x + 1 < len(cell[0]) and cell[y + 1][x + 1] == 0:
+            cell[y + 1][x + 1] = TITLE_SHADOW
+
+
+def title_stem(sheet):
+    """I: the L with its foot cut off after the stem's own serif, and the cut closed."""
+    cell = [row[:8] for row in title_letter(sheet, "L")]
+    cell[13][7] = 0                 # the foot's upturned tip does not reach here; be sure
+    cell[14][7] = TITLE_SHADOW      # where the foot went on: the serif's shadow instead
+    return cell
+
+
+def title_f(sheet):
+    """F: the E down to its middle arm, standing on the I's lower stem and serif."""
+    e, stem = title_letter(sheet, "E"), title_stem(sheet)
+    # E's stem is columns 1-4 of its box and L's 2-5 of its own, L's box having
+    # a column for the tip of its lower serif: F's box gets that column too.
+    cell = [[0] + row for row in e[:10]] + [[0] * (len(e[0]) + 1) for _ in range(6)]
+    for y in range(10, TITLE_CAP):
+        cell[y][:8] = stem[y]
+    return cell
+
+
+def title_c(sheet):
+    """C: the G without its spur, its lower terminal the upper one turned over.
+
+    The upper terminal hangs three rows below the top stroke, 3, 2 and 1 pixels
+    wide (box columns 11-13, rows 2-4). Turned over it stands on the end of the
+    bottom stroke in rows 12-10, same columns. The lettering is shaded by row - greys 1-5 at the
+    top, blues 7-11 at the bottom, the same five steps - so a top pixel of
+    step n becomes 6 + n."""
+    cell = title_letter(sheet, "G")
+    for y in range(9, 13):
+        for x in range(8, len(cell[0])):
+            cell[y][x] = 0
+    fresh = []
+    for src, dst in ((2, 12), (3, 11), (4, 10)):
+        for x in range(11, 14):
+            v = title_letter(sheet, "G")[src][x]
+            if 1 <= v <= 5:
+                cell[dst][x] = 6 + v
+                fresh.append((x, dst))
+    title_shadow(cell, fresh)
+    return cell
+
+
+def build_title(args, disc):
+    """NEW GAME and LOAD GAME as the disc has them, and CONFIG cut from their letters."""
+    found = disc.find("START.EMI")
+    base_blob, base_chunks = dat.load(os.path.join(dat_dir(args.game), "START.DAT"))
+    base = [c for c in base_chunks if c.kind == 1 and c.tag == TITLE_TAG]
+    donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == TITLE_TAG] if found else []
+    if len(base) != 1 or len(donor) != 1 or len(donor[0]) != base[0].size:
+        raise SystemExit("START: no title menu sheet to rebuild")
+    if not hashlib.sha256(donor[0]).hexdigest().startswith(TITLE_DONOR_SHA256):
+        print("title menu: this disc's sheet is not the one the letters were measured on; left as shipped")
+        return []
+    sheet = tiles_to_rows(donor[0], 2)
+    page = [[0] * 256 for _ in range(256)]
+    top = (TITLE_BAND - TITLE_CAP) // 2     # the port's rows are 32 tall about the same centre
+    widths = []
+    for i, (x0, y0, w) in enumerate((TITLE_NEW, TITLE_LOAD)):
+        for y in range(TITLE_CAP):
+            page[TITLE_BAND * i + top + y][:w] = sheet[y0 + y][x0:x0 + w]
+        widths.append(w)
+    # CONFIG. Gaps in columns, by eye against NEW GAME's own spacing.
+    word = ((title_c(sheet), 1), (title_letter(sheet, "O"), 1), (title_letter(sheet, "N"), 2),
+            (title_f(sheet), 0), (title_stem(sheet), 2), (title_letter(sheet, "G"), 0))
+    pen = 1
+    for cell, gap in word:
+        for y, row in enumerate(cell):
+            line = page[TITLE_BAND * 2 + top + y]
+            for x, v in enumerate(row):
+                if v and (line[pen + x] in (0, TITLE_SHADOW)):
+                    line[pen + x] = v
+        pen += len(cell[0]) + gap
+    widths.append(pen + (pen & 1))          # even, so that 160 - w / 2 centres it
+    # kind 6 is ours (DIV-0014): the three row widths the draw's code holds.
+    return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
+
+
 def cmd_all(args):
     """Every overlay, in one pass, one file written per shipped DAT that needs one."""
     disc, d = psx_disc.Disc(args.disc), dat_dir(args.game)
     overlays = {"FIRST.DAT": build_font(args, disc)}
     if not args.pc_white:
         overlays["FIRST.DAT"] += build_white_clut(args, disc)
+    title = build_title(args, disc)
+    if title:
+        overlays["START.DAT"] = title
     texts = pools = kept_text = kept_pool = 0
     for name in sorted(os.listdir(d)):
         stem, ext = os.path.splitext(name)

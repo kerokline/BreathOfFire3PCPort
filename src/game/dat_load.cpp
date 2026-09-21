@@ -13,6 +13,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/msg_pool.h"
 #include "game/name_tables.h"
+#include "game/title_menu.h"
 #include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -88,7 +89,8 @@ void WalkDatFile(const char* path);
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 and 5, which are ours (DIV-0006, DIV-0008);
+//     rejected - except kinds 4, 5 and 6, which are ours (DIV-0006, DIV-0008,
+//     DIV-0014);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -147,6 +149,9 @@ void WalkDatFile(const char* path) {
             break;
         case 5:  // DIV-0008: ours.
             NameTables_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 6:  // DIV-0014: ours.
+            TitleMenu_SetWidths(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;

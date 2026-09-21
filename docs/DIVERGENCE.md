@@ -667,3 +667,36 @@ designed in rather than bolted on.
 - **Checked:** live VRAM row 0 reads the disc's values in an attract run;
   dialogue before and after in `analysis/d1/cmp_white.png` - dark shadow.
 
+
+### The title menu in the overlay's language, its third row cut from the disc's letters
+
+- **ID:** DIV-0014
+- **Date:** 2026-09-20
+- **Subsystem:** menu / text
+- **Original behaviour:** the title menu is artwork - image chunk
+  `0x1C000200` of `START.DAT`, three rows of 32 px Chinese characters (new
+  game, load game, options) - drawn by `0x5888D0` one `SPRT` a row, centred,
+  with the row widths 96, 128 and 64 as immediates at `0x5888E4`,
+  `0x5888E9`, `0x5888EE`. Measured 2026-09-20: `dat.py compare` against the
+  JP `START.EMI`, the de-tiled page, the disassembly
+  ([`title-menu.md`](title-menu.md)).
+- **New behaviour:** under `BOF3X_LANG`, `en.START.DAT` (built by
+  `tools/loc_build.py all` from the player's disc) replaces the page: NEW GAME
+  and LOAD GAME exactly as the disc's `START.EMI` has them, and **CONFIG**, a
+  word no disc has, assembled from their letters - C from G, F from E and L, I
+  from L. A chunk of kind 6, ours, carries the three widths (130, 140, 96) and
+  `src/game/title_menu.cpp` writes them into the immediates. The draw itself
+  stays the original's. With no language set nothing changes.
+- **Rationale:** the owner's request, 2026-09-20. The word for the third row
+  was the owner's choice among CONFIG, OPTIONS and OPTION: CONFIG needs no
+  letter drawn by us, so everything on the screen derives from the player's
+  disc, and it is the US release's own word for that screen in the field menu.
+- **Also in the PSX version?** the first two rows restore the PlayStation's
+  lettering (US and JP pages are byte-identical). The third row does not exist
+  there: the PlayStation title has two.
+- **Reversible?** play without `BOF3X_LANG`, or delete `en.START.DAT`;
+  `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
+  rows are then cut off - for A/B only).
+- **Checked:** an offline composition through CLUT 0 at the draw's positions,
+  seen by the owner ("perfect"). **Not yet seen in game**
+  ([`USER_CHECKS.md`](USER_CHECKS.md) 6): nothing unattended reaches the menu.

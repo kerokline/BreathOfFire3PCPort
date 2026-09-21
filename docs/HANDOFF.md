@@ -54,6 +54,12 @@ The single next action, concrete enough to start without asking anyone.
      `bof3::RetargetCall`), `Text_DrawImmediate`'s. Also still 12: the
      stepper's effect draw `0x4987E0` and the small 8 px UI font `0x516E70`
      (its own glyph arithmetic, unread).
+   - **The title menu is English and unseen in game** (DIV-0014,
+     [`title-menu.md`](title-menu.md)): NEW GAME / LOAD GAME from the disc,
+     CONFIG cut from their letters, the row widths through a kind-6 chunk.
+     The owner liked the offline preview; [`USER_CHECKS.md`](USER_CHECKS.md) 6
+     is the look in game - the glow pass on thin lettering is the open
+     question. The options and load screens behind it are not looked at.
    - **Still Chinese:** enemy names (12-byte fields in battle data), character
      and place names, text baked into artwork, and any string in the
      executable outside the six name tables. Enemy names are the obvious
@@ -382,7 +388,10 @@ It holds DIV-0005..0013: the language overlays and three text takeovers
 (`src/game/gfx_sprite_uv.cpp`), DIV-0011 (`src/game/menu_frame.cpp`),
 DIV-0012 (`src/game/gfx_filter.cpp`), DIV-0013 (in `loc_build.py`),
 `tools/task_stacks.py`, `tools/mem_watch.py`,
-[`menu-screens.md`](menu-screens.md). Nothing uncommitted.
+[`menu-screens.md`](menu-screens.md). **Uncommitted, waiting on the owner's
+look in game:** DIV-0014, the title menu - `src/game/title_menu.cpp`, kind 6
+in `dat_load.cpp` and `tools/dat.py`, `build_title` in `tools/loc_build.py`,
+[`title-menu.md`](title-menu.md).
 
 Local only, gitignored, worth keeping:
 

@@ -109,7 +109,10 @@ turned out to be two things: bilinear filtering under a low alpha test
 (**DIV-0012**, an opt-in `BOF3X_FILTER=point`, the first half of a look
 toggle the owner wants - [`IDEAS.md`](IDEAS.md) I15) and a white text palette
 the PC team brightened (**DIV-0013**, restored from the disc by the English
-overlay). The frame hash was re-recorded with all of it
+overlay). Later the same evening the title menu, which is artwork and not
+text, was rebuilt from the disc - NEW GAME, LOAD GAME, and a CONFIG cut from
+their letters (**DIV-0014**, [`title-menu.md`](title-menu.md); built, unseen
+in game). The frame hash was re-recorded with all of it up to DIV-0013
 (`ab15_*`, recorded with DIV-0010 in and before DIV-0011..0013, none of
 which touches a traced function): identical over 7,936 frames. Sixteen of the hundred and nine from stage 1 are beyond
 the attract sequence's reach and rest on the differential fuzz alone -
