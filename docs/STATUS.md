@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**One hundred and twelve functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and nine from stage 1, three from the text path, below): `LoadDatFile` `0x454590`, the DAT
+**One hundred and twenty-eight functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and twenty-five from stage 1, three from the text path, below; the newest sixteen, 2026-09-21, through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding): `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -62,7 +62,7 @@ hash. The same day the queue's hottest entries turned out to be one thing:
 **the port's own implementation of Sony's libraries**
 ([`psx-library-layer.md`](psx-library-layer.md)) - libgpu primitive setters
 and ordering-table links, `getTPage`, `getClut`, a sine, and a GTE whose
-registers are globals. Sixty-two of its functions are ours, `ApplyMatrix`
+registers are globals. Sixty-eight of its functions are ours, `ApplyMatrix`
 at 2.6 million calls a run among them - and, since the same day, the ones that
 go through x87. What x87 computes depends on the control word, so that was
 measured first: **`0x027F`, 53-bit precision, on every one of 11 million live
@@ -166,9 +166,9 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 150 functions, 8 global blocks and 99 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 135 functions carry signatures and
-  are callable from our code, 112 of them ours (counted 2026-09-20 by
+- 168 functions, 8 global blocks and 119 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 150 functions carry signatures and
+  are callable from our code, 122 of them ours (counted 2026-09-21 by
   `gen_symbols.py` and `tomllib`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
@@ -250,7 +250,7 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). A hundred and twelve are ours, not
+   with the takeover queue already layered (§9 there). A hundred and twenty-eight are ours, not
    all of them among the 540.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression

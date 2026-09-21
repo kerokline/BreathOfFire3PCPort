@@ -15,18 +15,19 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
-- replace what the attract sequence reaches - stands at **a hundred and twelve
-functions ours**; and **stage 2, the text swap, went from a plan to a playable
+- replace what the attract sequence reaches - stands at **a hundred and twenty-eight
+functions ours**, every one through the full live check (the last sixteen
+on 2026-09-21, `ab17_*`); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
 pools, the item and ability names, and the US font doubled into the port's
 glyph table - and `BOF3X_LANG=en` loads them (DIV-0005..0009). The owner has
 played it: dialogue, narration and menus read in English and "look great";
 two reports (choice lists at 12 px, a gap after the apostrophe) were fixed the
-same day. Three of the hundred and twelve are the text path's:
+same day. Three of them are the text path's:
 `Msg_SystemPtr`, `Text_DrawString` and `Text_DrawImmediate`, each fuzzed
 against a clone of the original. The attract oracle passes original-vs-ours
-with all hundred and twelve and no language set, and **the frame hash was
+with all of them (then a hundred and twelve) and no language set, and **the frame hash was
 re-recorded the same evening** (`ab15_*`, "Pick up here" 1). Then the owner
 walked the field menu while it was sampled read-only: the menu's state
 machine is mapped, four defects of the 2001 menu are written down and the
@@ -46,11 +47,45 @@ scripted battle. The owner judged the first captures: DIV-0010's numerals
 the exe's own text went English from the US disc - the menu's button verbs
 (DIV-0018), the battle's command labels (DIV-0019), New Game's names and the
 fish merchant's (DIV-0020) - all but the merchant captured in game
-([`dialogue-localisation.md`](dialogue-localisation.md) §8).
+([`dialogue-localisation.md`](dialogue-localisation.md) §8). **Last, the
+matrix product was taken over with zeros in its padding (the owner's call,
+DIV-0021), then everything the draw-order pass calls** - `Sprite_AddDrawRecords`,
+`Sprite_Draw` with its CLUT and cell helpers, `DrawLayer_Open`, and
+`Prim_SetTexture` under the map cells ([`sprite-draw-order.md`](sprite-draw-order.md)
+§12-15); an oracle failure on the way turned out to be the harness inheriting
+the owner's `language=en`, now pinned.
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
+
+0000. **Keep taking over what the attract sequence reaches (the owner's
+   order, 2026-09-21), batching the live check.** The draw-order pass and
+   every function it calls are ours and checked
+   ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15, batch 2026-09-21:
+   oracle over 7,478 frames, memory dump, frame hash on all 10,062 frames -
+   all identical). The natural next layer is **the map-cell handlers**
+   under `DrawLayer_Open`: `MapCell_Handlers` `0x663008`, 77 entries of
+   some dozen distinct functions (`0x570020`, `0x570210`, `0x570530`,
+   `0x570660`, `0x570870`, `0x570A00`, `0x570BC0`, `0x570DE0`, `0x571090`,
+   `0x5710D0`, `0x5712E0`, `0x437CC0`, ...). `0x570660` draws through
+   `Prim_SetTexture`. They draw, so a live compare needs the field A/B of
+   §15 (a recipe, draw path original against ours, pixel for pixel - the
+   list of names must stay under 2,048 bytes, and `--original "*"` also
+   switches off the input script) or a clone-run-restore compare where the
+   handler's writes can be bounded. Regenerate the queue first
+   (`python tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv`).
+   Adding to a batch: `analysis/validate_ab17.sh` (local) is the script -
+   rename it for the next batch and put its runs under a new prefix.
+
+   Two things found on the way, not yet acted on: **`pe_hidden.py` misses
+   the functions after an inline jump table** - ten or so at
+   `0x593950`..`0x594240`, none in `entries.txt`
+   ([`attract-remaining.md`](attract-remaining.md) §3); fixing the seeding
+   changes the frame hash's content, so re-record the reference with it.
+   And **the game still runs at about half the speed of 2026-09-20** -
+   10,062 logic frames in 11 minutes (15 a second) against 8,872 in 5 -
+   in every configuration, original included; cause unknown.
 
 000. **The rest of the exe's labels, the same way**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §8 has the method
@@ -157,9 +192,11 @@ The single next action, concrete enough to start without asking anyone.
    - Ability (state 3) was only seen closing, and the list cursors of Items
      and Equipment are unfound: one more walk under
      `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
-1. **The frame hash reference is `analysis/calltrace/ab15_orig`** (twin
-   `ab15_origb`), recorded 2026-09-20 with a hundred and fifteen owned, all
-   7,936 frames identical original-vs-original and original-vs-ours.
+1. **The frame hash reference is `analysis/calltrace/ab17_orig`** (twin
+   `ab17_origb`), recorded all-original 2026-09-21: all 10,062 frames
+   identical original-vs-original and original-vs-ours with all 131 injects
+   on (`ab15_orig` before it, 2026-09-20: 7,936 frames, a hundred and fifteen
+   owned).
    **Frame 5524 is same-configuration noise**: one of two all-ours runs had
    342 calls there against 346, the other matched the reference - the same
    frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
@@ -181,18 +218,9 @@ The single next action, concrete enough to start without asking anyone.
    mind. Call counts in the docs are `all_a`'s up to the integer library layer and `all_b`'s from the x87 batch on; each says which. And drop the
    `< 0x5A6000` habit: the library layer above it is where the calls are).
    Known and not taken over:
-   - **The matrix product `0x5A7D70`** (153,648 calls) and what sits on it:
-     `0x5A7F10`, `0x5A7F80`, `0x5A7FF0` (a rotation about one axis each, by
-     their shape), `0x5A8060`, `0x57C070`. Read; **blocked on a decision, not
-     on work**: it copies 20 bytes for an 18-byte result, so the out's two
-     padding bytes get stale stack. The owner asked what the bytes are for
-     before deciding, and that is now measured
-     ([`psx-library-layer.md`](psx-library-layer.md) §4): a `MATRIX`'s
-     alignment hole, twelve stale values in 98,305 calls, named by no
-     instruction once in the GTE, and forcing `FFFF` changes no check. The
-     recommendation is zeros - what the original leaves 77% of the time - with
-     a ledger entry; **still the owner's to confirm**. The product itself is
-     written and fuzzed, parked in `analysis/experiments/experiment_mulmatrix.cpp`.
+   - **The matrix product `0x5A7D70`** and the rotations on it: ours,
+     2026-09-21 (item 0000; DIV-0021). The product itself is no longer
+     parked; `analysis/experiments/experiment_mulmatrix.cpp` is history.
    - Library leaves still unread: `0x5A9700` (341 bytes, five indirect
      calls), `0x5A7C70` (the `s16`-out `ApplyMatrix`, unreached), `0x5A6790` /
      `0x5A6780` (an 8-byte record appended to a table at `0x6BEA18`, count
@@ -212,18 +240,14 @@ The single next action, concrete enough to start without asking anyone.
      reaches the return register. Ask the PSX side which way the source had
      it ([`sprite-draw-order.md`](sprite-draw-order.md) §11).
    Bigger leaves still unread: `0x454AD0` (491 bytes), `0x496870` (399),
-   `0x5720C0` (523), `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431),
-   `0x572A00` (1,225 bytes, 43 x87 instructions, 89,972 calls - the x87
-   recipe in [`psx-library-layer.md`](psx-library-layer.md) §3 applies).
-2. **Under the draw-order pass.** `Sprite_DrawPass` `0x593060` is ours
-   ([`sprite-draw-order.md`](sprite-draw-order.md) §9); its three callees that
-   are not, §11 there: `DrawLayer_Open` `0x56FD20` (the layer's map records
-   through the handler table `0x663008` - indirect calls, so live checks
-   only), `Sprite_AddDrawRecords` `0x57BAE0` (waits on the matrix product
-   above) and `Sprite_Draw` `0x5935B0` / `0x593860`, 3.3 KB between them. The
-   pass's fuzz shows the way for all three: **recording stand-ins** for the
-   callees that cannot be cloned, for the original's copy and ours alike.
-   What the pass still lacks is a check of the list it builds in the real
+   `0x5720C0` (523), `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431).
+   (`0x572A00` is ours: `Prim_SetTexture`, 2026-09-21.)
+2. **Under the draw-order pass.** `Sprite_DrawPass` `0x593060` and all
+   three of its callees are ours ([`sprite-draw-order.md`](sprite-draw-order.md)
+   §9, §12, §14, §15): `Sprite_AddDrawRecords`, `Sprite_Draw` (with
+   `0x593860` 213 bytes, not 2,644) and `DrawLayer_Open`, whose fuzz swaps
+   the handler table for **recording stand-ins** - the pattern for anything
+   that calls through a table. What the pass still lacks is a check of the list it builds in the real
    game - [`IDEAS.md`](IDEAS.md) I14 level 1.
    Worth doing alongside: **a struct for the sprite object.** Five files now
    address it by offset; `symbols.toml` has no struct types, so it would be a
@@ -315,7 +339,7 @@ _Commands a fresh session needs, verified on the date above._
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
-- **Takeover recipe** (each of the ninety-seven so far): read the function to its
+- **Takeover recipe** (each takeover since the first): read the function to its
   last instruction, quirks included; `symbols.toml` entry with the evidence
   and `impl`; implement, keeping every unchecked edge and saying so in the
   comment; if every jump stays inside it, clone it and fuzz ours against the
@@ -327,7 +351,11 @@ _Commands a fresh session needs, verified on the date above._
   other clone as one block, as `sprite_anim.cpp` does; x87 code: set the
   control word `0x027F` around the clone's call; a callee that cannot be
   cloned - indirect calls, or simply not read yet - gets a recording stand-in,
-  for the clone and for ours alike, as `draw_pass.cpp` does), then break ours on purpose and see
+  for the clone and for ours alike, as `draw_pass.cpp` does; a function whose
+  whole call tree is already ours can instead inject FIRST, so its clone's
+  calls reach Capcom's unpatched originals and the fuzz compares the whole
+  tree, as `sprite_records.cpp` does - and when the tree reaches the matrix
+  product, compare a MATRIX's padding word apart, DIV-0021), then break ours on purpose and see
   the fuzz refuse to run; live, all ours: `mem_dump.py --compare clutref_a X`,
   `attract_diff.py orig_a.tsv X.tsv`, and the frame hash before a merge - **with
   an original-vs-original run beside it**, the noise floor (one
@@ -378,6 +406,13 @@ _One line each, with a pointer. Add when something costs more than an hour._
   basic strings treat them as escapes).
 - The game freezes whenever its window is not the foreground window, then
   replays the missed time unrendered ([`windowed-mode.md`](windowed-mode.md)).
+- A scripted run takes the language and the filter from the owner's
+  `build/bof3x.ini` unless the environment sets them. An English attract run
+  against the Chinese reference looks exactly like a regression in
+  `LoadDatFile` - an afternoon, 2026-09-21. `attract_run.py` now pins
+  `BOF3X_LANG=original` and `BOF3X_FILTER=linear`
+  ([`launcher-settings.md`](launcher-settings.md) section 4). Check the recording's
+  second `#` line before believing a diff.
   Any unattended observation must foreground it first; `attract_run.py` does.
 - `attract_run.py` re-takes the foreground for the whole run, so **anything the
   owner types goes into the game** and one keypress ends the attract sequence.
@@ -472,7 +507,11 @@ WndProc correction), then scripted input (`src/hook/input_script.cpp`,
 `tools/input_run.py`, `tools/recipes/`, [`input-script.md`](input-script.md))
 and DIV-0018..0020 (`src/game/menu_verbs.cpp`, `src/game/char_names.cpp`,
 kinds 8-11 in `dat_load.cpp`, `tools/dat.py` and `tools/loc_build.py`), with
-`BOF3X_TEXTLOG` in `src/game/text_draw.cpp`. Nothing uncommitted.
+`BOF3X_TEXTLOG` in `src/game/text_draw.cpp`. **Then, committed locally and
+not pushed (2026-09-21, the owner away):** the harness fix, the matrix
+takeover (DIV-0021), `Sprite_AddDrawRecords`, `Prim_SetTexture`, the sprite
+draw and `DrawLayer_Open` - one commit each, after the batch check passed -
+and these docs. The validation script is `analysis/validate_ab17.sh` (local).
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
@@ -498,7 +537,10 @@ Local only, gitignored, worth keeping:
 - `analysis/calltrace/all_b/` - the full-list all-original run of a whole
   attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
   concatenated, which the exclusion list was rebuilt from.
-- `analysis/calltrace/ab15_orig/` - the all-original frame-hash reference
+- `analysis/calltrace/ab17_orig/` - **the all-original frame-hash reference
+  since 2026-09-21** (`ab17_origb` its noise-floor twin, `ab17_ours`), with
+  `analysis/attract/ab17_*` the oracle, memory-dump and run logs of the batch.
+- `analysis/calltrace/ab15_orig/` - the reference before it
   (and `ab15_origb`, its noise-floor twin; `ab15_ours`, `ab15_oursb`),
   recorded 2026-09-20 with a hundred and fifteen owned under
   `entries_logic.txt` (`entries_logic_0919.txt` is the old list). `ab14_*`

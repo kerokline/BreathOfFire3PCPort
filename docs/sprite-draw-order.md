@@ -494,6 +494,15 @@ occur in the attract run was not measured.
   is [`IDEAS.md`](IDEAS.md) I14 level 1, and would be the first check of it
   that is not the fuzz's stand-ins or an identical frame hash.
 - Whether the PSX side has a name for any of this. Not looked up.
+- **Floor over a sprite's foot.** On save 5's field (`analysis/shots/sprite_field_ours/field2.png`)
+  the owner saw the floor drawn over Ryu's left foot (2026-09-21). The same
+  frames with the whole draw path original (116 functions; only file, save,
+  text and input left ours) are identical pixel for pixel, so it predates
+  this project's takeovers. The owner has seen several texture-ordering
+  oddities in the game and would not be surprised if the PlayStation did
+  this too. Unchecked against the disc: the question is whether this is the
+  port's defect or the original design, and it would take a look at the
+  same spot on the PSX.
 
 ## 12. A 3D object's quads - taken over (2026-09-21)
 
