@@ -36,6 +36,13 @@ void Inject(const char* name, std::uint32_t original, void* ours);
 // `expected`. BOF3X_ORIGINAL=<name> leaves the site untouched.
 void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours);
 
+// Replaces `count` bytes of original code or data in place: for a divergence
+// that is an operand - a constant the original pushes - and nothing else.
+// Refuses unless the bytes there are `expected`. BOF3X_ORIGINAL=<name> leaves
+// them alone.
+void PatchBytes(const char* name, std::uint32_t at, const std::uint8_t* expected,
+                const std::uint8_t* replacement, std::uint32_t count);
+
 // A runnable byte-copy of an original function, for shadow-checking our
 // replacement against it in the same process (BOF3X_SHADOW). Not a trampoline:
 // nothing resumes into the original body. Sound only for a function whose

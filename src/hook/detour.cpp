@@ -109,6 +109,25 @@ void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
     Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p", name, (unsigned)site, (unsigned)expected, ours);
 }
 
+void PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* expected,
+                const std::uint8_t* replacement, std::uint32_t count) {
+    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
+    if (std::memcmp(at, expected, count) != 0)
+        Fatal("%s: the %u bytes at 0x%08X are not the ones expected", name, (unsigned)count, (unsigned)address);
+    if (WantsOriginal(name)) {
+        Log("patch   OFF  %-24s %u bytes at 0x%08X left alone", name, (unsigned)count, (unsigned)address);
+        return;
+    }
+    DWORD old = 0;
+    if (!VirtualProtect(at, count, PAGE_EXECUTE_READWRITE, &old))
+        Fatal("%s: VirtualProtect(%p) failed, error %lu", name, (void*)at, GetLastError());
+    std::memcpy(at, replacement, count);
+    DWORD ignored = 0;
+    VirtualProtect(at, count, old, &ignored);
+    FlushInstructionCache(GetCurrentProcess(), at, count);
+    Log("patch   ON   %-24s %u bytes at 0x%08X", name, (unsigned)count, (unsigned)address);
+}
+
 void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
                     const CloneCall* calls, int n_calls) {
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
