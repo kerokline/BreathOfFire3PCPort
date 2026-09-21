@@ -71,8 +71,8 @@ The single next action, concrete enough to start without asking anyone.
    fix: the exe's `GetTickCount` import slot (`0x5C407C`, read only by
    WinMain) now points at a clock that starts with the game
    (`src/game/game_clock.cpp`). Measured, steady state: **30.00** logic
-   frames a second, the attract oracle identical, and a frame hash against
-   `ab17_orig` (below). `BOF3X_TICK_BASE=N` starts that clock at N ms and put
+   frames a second, the attract oracle identical, and the frame hash
+   identical to `ab17_orig` on all 10,062 frames (`analysis/calltrace/clk_hash`). `BOF3X_TICK_BASE=N` starts that clock at N ms and put
    the original's pacing in each of D5's bands on demand: 31.25 at 2^28,
    and at 2^30 91.7 unthrottled - D5's "nothing drawn" by the code, not
    yet looked at on screen. **Owed:** the owner plays a few minutes and says
