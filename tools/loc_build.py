@@ -740,6 +740,36 @@ def convert_char_names(game, donor):
     return [(KIND_CHAR_NAMES, 0, bytes(payload))]
 
 
+# Manillo, the fish merchant (DIV-0020 too; the owner named him, 2026-09-21):
+# the PC keeps his name once, in the 8-byte slot MERCHANT_NAME, which the
+# battle and seven field functions copy 16 bytes from. On the PSX it lives in
+# the fishing module each fishing area carries, as a 12-byte slot right after
+# twelve bytes the PC still has at MERCHANT_ANCHOR (the PC moved the name).
+KIND_MERCHANT = 11
+MERCHANT_NAME, MERCHANT_ROOM, MERCHANT_ANCHOR, MERCHANT_US_SLOT = 0x669CD8, 8, 0x6608CC, 12
+
+
+def convert_merchant(game, disc):
+    """[(kind, tag, payload)] for the merchant's name, or [] if no area on `disc` has it."""
+    anchor = exe_bytes(game, MERCHANT_ANCHOR, 12)
+    for name in sorted(disc.files):
+        if "/WORLD" not in name or not name.endswith(".EMI"):
+            continue
+        blob = disc.read(name)
+        at = blob.find(anchor)
+        if at < 0:
+            continue
+        raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("merchant: %s holds a code English does not have: %s" % (name, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > MERCHANT_ROOM:
+            raise SystemExit("merchant: the name encodes to %d bytes, the slot holds %d" % (len(out) + 1, MERCHANT_ROOM))
+        return [(KIND_MERCHANT, 0, out + b"\x00")]
+    return []
+
+
 # The battle's command labels (DIV-0019): seven 8-byte slots at BATTLE_SLOTS,
 # drawn left-aligned in a box beside the command cross by 0x4439A0, the box
 # placed from BATTLE_BOXES, four s16 a command. The US BATTLE.EMI has the same
@@ -1002,6 +1032,9 @@ def cmd_all(args):
         chars = convert_char_names(args.game, disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += chars
         print("character names: " + ("%d" % CHAR_COUNT if chars else "not found on this disc"))
+        merchant = convert_merchant(args.game, disc)
+        overlays["FIRST.DAT"] += merchant
+        print("merchant name: " + ("found" if merchant else "not found on this disc"))
     battle_emi = disc.find("BATTLE.EMI")
     if battle_emi and not args.only:
         cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))

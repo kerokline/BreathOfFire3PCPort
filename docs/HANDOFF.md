@@ -64,10 +64,10 @@ The single next action, concrete enough to start without asking anyone.
    A real encounter needs a deterministic boss or save states (owner,
    2026-09-21: walking on save 5 meets one, but not repeatably).
    **DIV-0020 gives New Game the US names** (Ryu ... Peco, Whelp) from
-   `START.EMI`'s default records; saves keep theirs. Open: whether the
-   overlay should also rename a *loaded* save's characters whose names are
-   still the Chinese defaults - the owner's idea; it writes English into the
-   save, which then reads wrong without the overlay, so it wants a decision.
+   `START.EMI`'s default records, and names Manillo the fish merchant;
+   saves keep theirs - **decided by the owner**: gibberish across a language
+   switch is acceptable until a language-independent name system exists
+   (a future piece of work, not scheduled).
       **DIV-0019 put the command cross's labels in English** (`Atk` ... `Esc`,
    from the US `BATTLE.EMI`, captured in the fight). Still Chinese there: the
    target-select banner, the combatants' names, and the skill list's header

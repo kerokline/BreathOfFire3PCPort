@@ -981,7 +981,16 @@ designed in rather than bolted on.
   carries its own names, so a game begun without the overlay keeps its
   Chinese ones, and a game begun with it writes English names into its save -
   which then draw as whatever glyphs the single-byte codes name when played
-  *without* the overlay. Not touched either: `0x669CD8`, 马尼洛, a combatant
-  name the battle copies for id `0x16` (`0x52D1EC`) and seven field
-  functions load - its US counterpart is unfound.
+  *without* the overlay. **Decided by the owner, 2026-09-21:** that is
+  acceptable - saves stay as they are and show gibberish across a language
+  switch until a language-independent name system exists.
+- **Also: Manillo, the fish merchant** (identified by the owner). The PC
+  keeps his name once, 马尼洛 in the 8-byte slot `0x669CD8`, which the
+  battle (`0x52D1EC`, combatant `0x16`) and seven field functions copy 16
+  bytes from; a kind-11 chunk writes "Manillo", exactly 8 bytes with its NUL,
+  after checking the battle's read. On the US disc the name lives in the
+  fishing module every fishing area carries (AREA030, 089, 129, ...), in a
+  12-byte slot right after twelve bytes the PC still has at `0x6608CC` -
+  the anchor `loc_build.py` finds it by. Applied at start-up, logged;
+  not yet seen on screen.
 

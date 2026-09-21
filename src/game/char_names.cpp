@@ -20,7 +20,16 @@
 // record leaves them.
 //
 // Not touched: saves. A loaded save brings its own names, so a game begun
-// before the overlay keeps the Chinese ones.
+// before the overlay keeps the Chinese ones - and one begun with it shows
+// gibberish without it. Decided by the owner, 2026-09-21: acceptable until a
+// language-independent name system exists.
+//
+// Also here: Manillo, the fish merchant (the owner's identification), whose
+// name the PC keeps once in the 8-byte slot 0x669CD8. The battle copies 16
+// bytes from it (0x52D1EC, combatant 0x16) and seven field functions do the
+// same (0x401C88 and six more, `mov eax, 0x669CD8`), so the slot is read as a
+// 16-byte name that ends at its NUL: "Manillo" and its NUL are exactly the
+// 8 bytes, and what follows - the whelp's reset copy - is never reached.
 #include "game/char_names.h"
 
 #include <cstring>
@@ -80,4 +89,20 @@ void CharNames_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
     }
     if (p != end) bof3::Fatal("character name chunk: %u bytes left over", (unsigned)(end - p));
     bof3::Log("DIV-0020: %u default character names", (unsigned)kCount);
+}
+
+void CharNames_ApplyMerchant(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
+    constexpr std::uint32_t kSlot = 0x669CD8, kRoom = 8;
+    // mov ecx, dword ptr [0x669CD8] in the battle's copy
+    static const std::uint8_t kBattleCopy[] = {0x8B, 0x0D, 0xD8, 0x9C, 0x66, 0x00};
+    if (tag != 0) bof3::Fatal("merchant name chunk tag is 0x%X, expected 0", (unsigned)tag);
+    if (!CodeReads(0x52D1EC, kBattleCopy, sizeof kBattleCopy))
+        bof3::Fatal("merchant name: the battle does not read the slot this build expects");
+    if (size < 2 || size > kRoom || payload[size - 1] != 0 || std::strlen(reinterpret_cast<const char*>(payload)) != size - 1)
+        bof3::Fatal("merchant name chunk: %u bytes is not one name of at most %u with its NUL", (unsigned)size,
+                    (unsigned)kRoom);
+    auto* slot = reinterpret_cast<char*>(static_cast<std::uintptr_t>(kSlot));
+    std::memset(slot, 0, kRoom);
+    std::memcpy(slot, payload, size - 1);
+    bof3::Log("DIV-0020: the merchant's name");
 }
