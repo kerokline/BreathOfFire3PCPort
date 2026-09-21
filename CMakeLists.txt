@@ -88,6 +88,7 @@ add_library(bof3x SHARED
   src/game/psx_gpu.cpp
   src/game/psx_gte.cpp
   src/game/psx_gte_float.cpp
+  src/game/psx_gte_matrix.cpp
   src/game/psx_gte_transform.cpp
   src/game/draw_emit.cpp
   src/game/draw_pass.cpp)

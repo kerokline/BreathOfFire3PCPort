@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 20 entries, DIV-0001..0020)
+**Status:** IN PROGRESS (opened 2026-09-18; 21 entries, DIV-0001..0021)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -994,3 +994,45 @@ designed in rather than bolted on.
   the anchor `loc_build.py` finds it by. Applied at start-up, logged;
   not yet seen on screen.
 
+
+### Zeros in the matrix product's padding bytes
+
+- **ID:** DIV-0021
+- **Date:** 2026-09-21
+- **Subsystem:** platform (PSX library layer)
+- **Original behaviour:** the matrix product `Gte_MulMatrix0` `0x5A7D70`
+  builds its nine `s16` results on the stack and copies **five dwords** to
+  the out, 20 bytes for an 18-byte result. So bytes 18 and 19 of every out, a
+  PSX `MATRIX`'s alignment hole, get the stale stack at `esp + 0x3E`. That
+  word is never written by the function, so it can't be reproduced, only
+  replaced. Measured 2026-09-20 over an attract run of 98,305 calls
+  ([`psx-library-layer.md`](psx-library-layer.md) §4): twelve distinct values,
+  `0000` 76,199 times, `000E` 8,535, `6322` 7,964, and others. The three
+  rotation builders multiply in place, so the word lands in the caller's
+  matrix. From there `Gte_SetRotMatrix` carries it into `Gte_Matrix`, where
+  no instruction in the image names those two bytes (`pe_xref`).
+- **New behaviour:** ours writes `0000` there, which is what the original
+  leaves three calls in four. The nine results and the translation are
+  unchanged. The same zeros reach `Gte_Matrix` through `Camera_LoadMatrix`
+  `0x57C070`, and each caller's matrix through the rotations.
+- **Rationale:** the only alternatives are to copy stale stack in from
+  somewhere else, or to leave the out's two bytes alone. Zeros make the
+  product deterministic. Forcing the word to `FFFF` on every call changed
+  nothing any check could see: the oracle was identical over 7,478 frames,
+  arena, VRAM and CLUT dumps were identical, and the frame hash differed only
+  at same-configuration noise. So the choice is not visible in play. It is
+  still a difference, so it is ledgered. Owner's call, 2026-09-21: zeros.
+- **Not covered:** an indexed read of `+0x12`, or a dword read at `+0x10`
+  whose top half is used, in code the attract run does not reach. None was
+  looked for beyond the GTE's own globals.
+- **Also in the PSX version?** Unknown; not looked up. libgte's `MulMatrix0`
+  by its documented shape stores nine halfwords and leaves the padding
+  alone, which would make both the 2001 port's stale word and our zero
+  divergences from it.
+- **Verification:** start-up fuzz against the original, 29,856 rounds, 0
+  mismatches outside the padding and ours zero in it every time
+  ([`psx-library-layer.md`](psx-library-layer.md) §4.1); a 3-minute oracle
+  identical. The full oracle and frame hash are owed
+  ([`HANDOFF.md`](HANDOFF.md) "Pick up here" 0000).
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Gte_MulMatrix0`. That puts back the
+  original product, and every caller of ours reaches it. No config toggle.

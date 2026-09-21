@@ -8,8 +8,9 @@ libgpu's and libgte's entry points - `SetPolyFT4`, `getTPage`, `ClearOTagR`,
 `ApplyMatrix`, `PushMatrix` - working on globals where the PlayStation had a
 coprocessor. It is where the attract run spends its calls: the takeover
 queue's 38 hottest layer-0 logic functions are in it, all but one
-(`python tools/calltrace.py queue ...`, 2026-09-20). Sixty-two of its
-functions are ours.
+(`python tools/calltrace.py queue ...`, 2026-09-20). Sixty-eight of its
+functions are ours - six of them since 2026-09-21 (§4.1, which also has the
+game-side `Camera_LoadMatrix` over them).
 
 This matters beyond the call counts. It is the seam
 [`PLAN.md`](PLAN.md) wants: game logic above it is PSX-shaped and can stay so;
@@ -264,7 +265,7 @@ quirk:
   whose components are 0 either way - `_ftol` of a NaN is 0 too. Both kept as
   the original has them, and the comment now says they are unobservable.
 
-**Not taken over, and why: `0x5A7D70`**, the matrix product (153,648 calls;
+**Why `0x5A7D70` waited, until §4.1:**, the matrix product (153,648 calls;
 `0x5A7F10`, `0x5A7F80`, `0x5A7FF0`, `0x5A8060` and `0x57C070` sit on it). It
 builds the nine `s16` of the result on the stack and then copies **five
 dwords** to the out - 20 bytes for an 18-byte result. Bytes 18 and 19 of the
@@ -302,6 +303,54 @@ fuzz rounds, 0 mismatches outside the padding - and forces the word):
 What this does not cover: an indexed read - `[reg + 0x12]`, or a dword at
 `+0x10` whose top half is used - in code the attract run does not reach. None
 was looked for beyond the GTE's own globals.
+
+### 4.1 The matrix product and the rotations - seven, ours (2026-09-21)
+
+`src/game/psx_gte_matrix.cpp`. Taken over once the owner chose zeros for the
+padding (DIV-0021, 2026-09-21).
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Gte_MulMatrix0` | `0x5A7D70` | 153,648 | `out = a * b`: each element three `s16` products summed in 32 bits, `>> 12`; everything read before anything is stored; returns out. **Bytes 18 and 19 of the out are zero** (DIV-0021); the original's are stale stack |
+| `Gte_RotMatrixX`, `Y`, `Z` | `0x5A7F10`, `0x5A7F80`, `0x5A7FF0` | 48,608 each | `Math_Cos`, then `Math_Sin`, into a stack matrix, then `matrix = R * matrix` through the product; return matrix |
+| `Gte_RotMatrix` | `0x5A8060` | 48,608 | five dwords of `Gte_IdentityRotation` `0x66BC44` into the matrix, then Z, Y, X: `Rx Ry Rz`. Each angle is read just before its rotation, after the matrix has been written |
+| `Gte_RotMatrixYXZ` | `0x5A80B0` | 0 | the same with Z, X, Y: `Ry Rx Rz`. Named by that product (hypothesis) |
+| `Camera_LoadMatrix` | `0x57C070` | 7,824 | `matrix = Camera_Matrix * matrix` in place, then `Gte_SetRotMatrix` and `Gte_SetTransMatrix` on it. `Camera_Matrix` `0x905E40` is the left operand of the product at all 60 of its references, so the name is a hypothesis from that use. Returns nothing: none of the five call sites reads `eax` |
+
+All `all_b` calls to the product come from the three rotations and from
+`Camera_LoadMatrix`. Its 55 other call sites in the image were not reached.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=psx_gte_matrix`: 30,000 rounds over
+the seven, against clones whose calls are re-aimed at clones of `Math_Sin`,
+`Math_Cos`, `Gte_SetRotMatrix`, `Gte_SetTransMatrix` and of each other. The
+scratch, `Camera_Matrix`, `Gte_Matrix` and the results were compared. The
+two padding bytes were compared separately: theirs had to be taken for the
+rest of the comparison, and ours had to be zero. Result: 29,856 rounds run,
+7,299 with overlapping arguments, **0 mismatches**, ours non-zero in 0, the
+original's non-zero in 12,694. 144 rounds were skipped: in those an angle
+of `RotMatrix` lay in the matrix's own padding, so it is read after the
+first rotation has written that padding - DIV-0021 itself. The module
+injects before `psx_gte_transform` and `psx_gpu`, because they own the sine,
+the cosine and the two loads it clones.
+
+Negative controls, each refused:
+
+- the composition in X, Y, Z order (4,026 mismatches)
+- `RotMatrixY` with the sine's signs swapped (12,335)
+- `RotMatrix` reading all three angles first (212 - only overlap can see it)
+- `Camera_LoadMatrix` without the translation load (4,285)
+
+One was **not** refused: the product's `>> 12` as a logical shift. That
+cannot be seen, because signed and unsigned shifts differ only in bits 20
+and up, and the cast to `s16` drops them. Ours keeps the arithmetic shift
+the original has.
+
+**Live checks.** A 3-minute attract oracle with all 125 ours was identical
+over 1,202 frames (2026-09-21, language pinned to the original); then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
 
 ## 5. Live checks
 

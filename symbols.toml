@@ -2260,6 +2260,90 @@ impl = "src/game/psx_gte_transform.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 6 instructions: Math_Sin(angle + 0x400). cdecl. Call trace all_b 2026-09-20: 145,824 calls."
 
+# ---------------------------------------------------------------------------
+# The matrix product and the rotations over it (2026-09-21): taken over once
+# the owner chose zeros for the product's two padding bytes (DIV-0021).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5A7D70
+name = "Gte_MulMatrix0"
+ret = "short *"
+params = "const short *a, const short *b, short *out"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20/21, 0x193 bytes, no calls, no jumps: out[r][c] = (a[r][0] * b[0][c] + a[r][1] * b[1][c] + a[r][2] * b[2][c]) sar 12, 32-bit imul and add, every s16 of a and b read before anything is stored; the nine results built on the stack and copied to out by rep movsd of FIVE dwords, so out + 18 and + 19 get the stack's stale esp + 0x3E (docs/psx-library-layer.md section 4). Returns out. libgte MulMatrix0 by shape. cdecl. Call trace all_b 2026-09-20: 153,648 calls."
+
+[[func]]
+pc = 0x5A7F10
+name = "Gte_RotMatrixX"
+ret = "short *"
+params = "int angle, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x67 bytes: Math_Cos(angle) then Math_Sin(angle), a stack matrix {0x1000,0,0, 0,c,-s, 0,s,c} (its padding unwritten; the product does not read it), then Gte_MulMatrix0(that, matrix, matrix). Returns matrix. libgte RotMatrixX by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls, all from Gte_RotMatrix."
+
+[[func]]
+pc = 0x5A7F80
+name = "Gte_RotMatrixY"
+ret = "short *"
+params = "int angle, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x65 bytes: as Gte_RotMatrixX with {c,0,s, 0,0x1000,0, -s,0,c}. libgte RotMatrixY by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls, all from Gte_RotMatrix."
+
+[[func]]
+pc = 0x5A7FF0
+name = "Gte_RotMatrixZ"
+ret = "short *"
+params = "int angle, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x67 bytes: as Gte_RotMatrixX with {c,-s,0, s,c,0, 0,0,0x1000}. libgte RotMatrixZ by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls, all from Gte_RotMatrix."
+
+[[func]]
+pc = 0x5A8060
+name = "Gte_RotMatrix"
+ret = "short *"
+params = "const short *angles, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x42 bytes: five dwords of Gte_IdentityRotation to matrix (translation untouched), then Gte_RotMatrixZ(angles[2]), Gte_RotMatrixY(angles[1]), Gte_RotMatrixX(angles[0]) on it, each angle read just before its call: matrix = Rx Ry Rz. Returns matrix. libgte RotMatrix by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls from 0x56E8F1, 0x578EE7, 0x57BF22, 0x57BF9C, 0x57C068; 65 call sites in the image."
+
+[[func]]
+pc = 0x5A80B0
+name = "Gte_RotMatrixYXZ"
+ret = "short *"
+params = "const short *angles, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x42 bytes: as Gte_RotMatrix but Z, then X, then Y: matrix = Ry Rx Rz. The name is libgte's by that product and unconfirmed. cdecl. Not reached by the attract run (all_b)."
+
+[[func]]
+pc = 0x57C070
+name = "Camera_LoadMatrix"
+ret = "void"
+params = "short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x22 bytes: Gte_MulMatrix0(Camera_Matrix, matrix, matrix), Gte_SetRotMatrix(matrix), Gte_SetTransMatrix(matrix) - the rotation composed with the camera's, the translation matrix's own. eax is left as Gte_SetTransMatrix leaves it, and none of the five call sites (0x463C96, 0x463E35, 0x46EC7A, 0x57BB71, 0x57EF9E) reads it: void. The name says what it does; what calls it is unread. cdecl. Call trace all_b 2026-09-20: 7,824 calls, all from Sprite_AddDrawRecords."
+
+[[data]]
+pc = 0x66BC44
+name = "Gte_IdentityRotation"
+ctype = "unsigned short"
+count = 10
+status = "evidence"
+evidence = "bytes 2026-09-21: 1000 0 0 0 1000 0 0 0 1000 and a zero padding word, in read-only data just below Math_SinTable. Gte_RotMatrix and Gte_RotMatrixYXZ copy its five dwords."
+
+[[data]]
+pc = 0x905E40
+name = "Camera_Matrix"
+ctype = "short"
+count = 9
+status = "hypothesis"
+evidence = "pe_xref 2026-09-21: 60 references in 55 functions, pushed as the first operand of Gte_MulMatrix0 wherever seen, Camera_LoadMatrix among them. A rotation every object's is composed with: the view's, by that use. Only the nine s16 the product reads are claimed; what lies past them is unread."
+
 [[data]]
 pc = 0x7DE430
 name = "Gte_ColorMatrix"

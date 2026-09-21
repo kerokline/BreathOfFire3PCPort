@@ -27,6 +27,7 @@
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
 #include "game/psx_gte_float.h"
+#include "game/psx_gte_matrix.h"
 #include "game/psx_gte_transform.h"
 #include "game/draw_emit.h"
 #include "game/draw_pass.h"
@@ -69,7 +70,8 @@ void InjectAll() {
     SpriteClut_Inject();
     DrawLayers_Inject();
     DrawEmit_Inject();          // likewise
-    PsxGteTransform_Inject();   // before what it calls: it clones their originals
+    PsxGteMatrix_Inject();      // before what it calls: it clones their originals
+    PsxGteTransform_Inject();   // likewise
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();

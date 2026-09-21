@@ -621,8 +621,10 @@ takeover here is checked is still the open question
 ### 4.11 PSX library layer
 
 What is left of [`psx-library-layer.md`](psx-library-layer.md): the matrix
-product `0x5A7D70` and the four rotations on it (waiting on the owner's
-decision about the padding bytes), the draw-record append `0x5A6790` and its
+product `0x5A7D70` and the four rotations on it - **taken over 2026-09-21**,
+with zeros in the padding bytes (the owner's call, DIV-0021), and marked in
+the table rather than removed so the counts above still add up - the
+draw-record append `0x5A6790` and its
 reset `0x5A6780`, three primitive setters `0x5A7630` / `0x5A7690` / `0x5A7740`
 used by the window code, and one-off set-up.
 
@@ -643,11 +645,11 @@ used by the window code, and one-off set-up.
 | `0x5A78E0` |  | 2 | 40 |  | `0x4FD110` |
 | `0x5A7910` |  | 2 | 74 |  | `0x4FD110` |
 | `0x5A7A70` |  | 438 | 27 |  | `0x5190A0` |
-| `0x5A7D70` |  | 207,930 | 403 |  | `0x5A7F80`, `0x5A7F10`, `0x5A7FF0` |
-| `0x5A7F10` |  | 65,706 | 103 |  | `0x5A8060` |
-| `0x5A7F80` |  | 65,706 | 101 |  | `0x5A8060` |
-| `0x5A7FF0` |  | 65,706 | 103 |  | `0x5A8060` |
-| `0x5A8060` |  | 65,706 | 66 |  | `0x57BED0`, `0x578EB0`, `0x56E6C0` |
+| `0x5A7D70` | `Gte_MulMatrix0`, **ours** 2026-09-21 | 207,930 | 403 |  | `0x5A7F80`, `0x5A7F10`, `0x5A7FF0` |
+| `0x5A7F10` | `Gte_RotMatrixX`, **ours** | 65,706 | 103 |  | `0x5A8060` |
+| `0x5A7F80` | `Gte_RotMatrixY`, **ours** | 65,706 | 101 |  | `0x5A8060` |
+| `0x5A7FF0` | `Gte_RotMatrixZ`, **ours** | 65,706 | 103 |  | `0x5A8060` |
+| `0x5A8060` | `Gte_RotMatrix`, **ours** | 65,706 | 66 |  | `0x57BED0`, `0x578EB0`, `0x56E6C0` |
 | `0x5A94C0` |  | 1 | 352 |  | `0x4FD110` |
 
 ### 4.12 Sound
