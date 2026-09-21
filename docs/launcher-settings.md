@@ -123,6 +123,18 @@ The dialog's **"Show this window every time"** box clears `show_launcher`;
 `--config` is the way back, and the dialog says so on its face. Closing the
 dialog, or pressing Exit, starts nothing and saves nothing.
 
+**Scripted runs inherit the settings file.** The launcher fills in
+`BOF3X_LANG` and `BOF3X_FILTER` from `bof3x.ini` only when the variable is
+unset or empty; a value already in the environment wins. So a harness that
+must run a particular configuration sets both variables explicitly. The DLL
+reads `BOF3X_LANG=original` as no overlay, and `BOF3X_FILTER=linear` is the
+port's own filter. `tools/attract_run.py` pins both by default (`--lang`,
+`--filter` to change them) and writes them into the recording's header.
+Found 2026-09-21: with the owner's `language=en`, every all-ours oracle run
+played the attract sequence in English, and the longer messages made the
+message index lag the Chinese reference by up to 52 frames. The bisection
+blamed `LoadDatFile`, because that is where the overlay walk lives.
+
 The English entry is offered only when `DAT\en.*` exists; otherwise the dialog
 says to build the overlays with `tools/loc_build.py` rather than offering an
 option that cannot work.

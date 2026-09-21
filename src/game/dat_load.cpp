@@ -71,7 +71,10 @@ void LoadImageChunk(std::uint32_t tag, const std::uint8_t* payload, std::int32_t
 
 // DIV-0005. The language whose overlays are wanted: BOF3X_LANG, read once at
 // injection because LoadDatFile runs on a coroutine stack. Empty = none, and
-// then LoadDatFile does exactly what the original does.
+// then LoadDatFile does exactly what the original does. "original" is also
+// none: the launcher only fills in an EMPTY variable from its settings file,
+// so a harness that must not inherit the owner's language sets this
+// (docs/launcher-settings.md section 4).
 char g_lang[8];
 
 void WalkDatFile(const char* path);
@@ -184,7 +187,7 @@ void WalkDatFile(const char* path) {
 
 void DatLoad_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", g_lang, sizeof g_lang);
-    if (n == 0 || n >= sizeof g_lang) g_lang[0] = 0;
+    if (n == 0 || n >= sizeof g_lang || std::strcmp(g_lang, "original") == 0) g_lang[0] = 0;
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     BOF3_INJECT(LoadDatFile);

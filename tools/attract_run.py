@@ -17,6 +17,12 @@ attract_watch for --minutes, then ends the game.
 
 --original sets BOF3X_ORIGINAL for the run: "*" is Capcom's code throughout,
 the configuration a regression oracle compares against (docs/SCAFFOLDING.md).
+
+--lang and --filter pin BOF3X_LANG and BOF3X_FILTER, default "original" and
+"linear": the launcher fills an unset variable in from its settings file, so
+without them the run inherits whatever the owner last chose in the dialog -
+2026-09-21, an English attract run compared against a Chinese reference
+looked like a regression in LoadDatFile for an afternoon.
 """
 import argparse, ctypes, ctypes.wintypes as w, os, subprocess, sys, threading, time
 
@@ -68,6 +74,10 @@ def main():
     ap.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
     ap.add_argument('--original', default=None, metavar='LIST',
                     help='value for BOF3X_ORIGINAL, e.g. "*" or "File_Read"')
+    ap.add_argument('--lang', default='original',
+                    help='value for BOF3X_LANG: "original" (default) or "en"')
+    ap.add_argument('--filter', default='linear',
+                    help="value for BOF3X_FILTER: \"linear\" (default, the port's own) or \"point\"")
     ap.add_argument('--no-kill', action='store_true')
     a = ap.parse_args()
 
@@ -80,6 +90,8 @@ def main():
     env.pop('BOF3X_ORIGINAL', None)
     if a.original:
         env['BOF3X_ORIGINAL'] = a.original
+    env['BOF3X_LANG'] = a.lang
+    env['BOF3X_FILTER'] = a.filter
     launcher = os.path.join(ROOT, 'build', 'bof3x-launcher.exe')
     # --no-config: an oracle run must not stop on the settings dialog, and must
     # take the settings file's values without a human touching them
@@ -98,6 +110,7 @@ def main():
         kill_game()
     with open(a.out, 'a', encoding='utf-8', newline='\n') as f:
         f.write(f'# BOF3X_ORIGINAL={a.original or ""}\n')
+        f.write(f'# BOF3X_LANG={a.lang} BOF3X_FILTER={a.filter}\n')
 
 
 if __name__ == '__main__':
