@@ -764,8 +764,67 @@ that are one on the PC turn distinct slots into a repeat and change the shape.
 A tolerant score is the next step - or, simpler, the area block alignment
 above, which does not need shapes at all.
 
-**Next, in order:** (1) extend `psx_pair.py areas` from anchors to every start
-in an equal gap, and write the pairs out; (2) the same for SCENARIO (the
+### 5.1 Growing the pairs (`psx_pair.py fill`, `propagate`)
+
+Done 2026-09-21, the first of the next steps below. Filling the area overlays'
+equal gaps alone adds only 57 pairs - an area's handlers mostly sit next to
+each other - so `propagate` grows the pairs to a fixed point with four
+methods, each tried only when the ones before it add nothing:
+
+1. **Calls.** A paired function's PSX `jal` list and its twin's PC `call`
+   list, when equal in length, pair position by position; refused when any
+   position contradicts a pair already made.
+2. **Gaps**, in every address space, the boot EXE included - refused when any
+   pair in the gap is more than 2x off the typical PC/PSX size ratio (x0.59,
+   measured on the area-table pairs). Without that filter the positional
+   pairs were about 85% right; a misplaced start shifts everything after it,
+   and the size of the pair shows it (below).
+3. **Tables.** A PSX pointer table (or window) that agrees with a PC one on
+   two slots already paired, contradicts none, and is the only such window,
+   pairs every other slot. No shape match needed, so it works where the PC
+   build folded functions.
+4. **Callers.** An unpaired PSX function whose paired callees - two or more -
+   are all called by exactly one PC function pairs with it.
+
+**Result: 3,330 pairs, 433 of them boot EXE functions**, after about a
+hundred rounds (five minutes). 63 pairs are left tagged `call-disputed`: an alignment usable
+at the end contradicts them; they are kept for the record and excluded from
+every use.
+
+**How right they are**, measured without trusting any method on itself:
+
+| Method | Pairs | PSX calls the PC twin also makes | Baseline (twin's PC neighbour) | Calls *into* the pair found |
+|---|--:|--:|--:|--:|
+| area table (independent, the reference) | 728 | 96.1% | 29.6% | - |
+| gap, area overlays | 57 | 89.1% | 29.1% | 94.4% |
+| calls | 200 | 95.0% | 19.2% | 97.2% |
+| calls, anchored | 451 | 95.1% | 17.4% | 95.0% |
+| gaps, later rounds (size-filtered) | 540 | 94.7% | 30.1% | 93.6% |
+| tables, anchored | 738 | 90.5% | 28.4% | 80.0% (5 edges) |
+| callers | 541 | 97.6% - biased, chosen on these edges | 14.4% | 93.1% |
+
+A true pair does not reach 100%: the PC build inlines and folds. Reading the
+columns against the reference, the call and gap pairs are at the reference's
+level, the anchored tables and the callers a few points under it. Leave-one-out
+against the independent pairs, the call alignments are **262 right and 0
+wrong**; the nine `psx` fields `symbols.toml` already had all agree.
+
+**Coverage.** 70 of the sibling's 556 named boot functions and 46 of its 121
+named overlay functions now have a PC twin; of the attract catalogue's 544
+entries, 180 have a PSX twin and 24 a sibling name. The named boot functions
+are thin because the sibling named what it studied - the text engine, battle,
+files - and the text path is exactly where the port was rewritten.
+
+**What does not pair is information too** (owner, 2026-09-21: the port
+dropped the naming and options screens at start-up and redid text
+rendering). Every method needs positive evidence, so a rewritten function
+fails to pair rather than pairing wrongly - except through the callers method,
+the one most able to pick a PC rewrite that calls the same helpers. Once the
+pairs stop growing, **unpaired runs inside paired neighbourhoods are a map of
+where the port diverged**; not drawn yet.
+
+**Next, in order:** (1) draw that map - unpaired PSX runs between paired
+neighbours, and PC functions with no PSX twin in paired blocks; (2) the same for SCENARIO (the
 sibling's 20-entry `0x801C944C`, fully proven there) and the other loader
 record kinds; (3) import `names/functions.toml`'s overlay names through the
 pairs, as `hypothesis` in `symbols.toml` until a PC-side read confirms each
