@@ -577,7 +577,7 @@ surveyed for [`prior-art/`](prior-art/): emulator CI that replays recorded GPU
 command streams and hashes the frames (Dolphin's FifoCI, PCSX2's GS dumps),
 and exact-hash sets of accepted images triaged by people (Skia Gold).
 
-## I15 — A look toggle: clean / sharp against soft / CRT-like
+## I15 â€” A look toggle: clean / sharp against soft / CRT-like
 
 **Asked for by the owner, 2026-09-20**, after seeing what the port's bilinear
 filter does to text. Two looks, switchable in game:
@@ -631,6 +631,22 @@ second, what the code says) or the PlayStation's NTSC 29.97; and whether to
 clamp the deadline's debt at the same time. That debt is the fast-forward
 after focus loss ([`windowed-mode.md`](windowed-mode.md), I12, DIV-0004's
 "not fixed by this"), and would be its own ledger entry.
+
+**29.97 needs this first (checked 2026-09-21).** The frame period is the
+double 33.334 at `0x5C4218`, read once (`0x4FCF15`, the advance), and the
+first deadline's 33.34 at `0x5C4220` once (`0x4FCDBE`); nothing else in the
+exe reads either, and logic counts frames, so changing the period breaks no
+logic. But through the float deadline it changes almost nothing: simulating
+the x87 sequence (float + double, stored as float) over 3,000 frames,
+33.334 and 1001/30 (29.97) give 29.994 against 29.966 in the first four
+minutes, and **the same rate** from about 20 minutes on (29.963, 30.075,
+30.303, 29.412, 31.25 at 20 minutes, 1, 3, 6 and 12 hours) - the 0.033 ms
+between them is below the float's spacing. With the deadline in a double
+(or frames times the period) the rate is one constant. What else runs on
+wall-clock time and would notice the 0.1%: the music (DirectSound, fed from
+the spin by `0x587C70`) and the AVIs (their own clock) - both already
+independent of the frame count. Whether an in-game play-time counter
+assumes 30 frames a second is unread.
 
 **Why not now:** DIV-0022 fixes what players meet (Windows' uptime, which
 Fast Startup carries across shutdowns) with four bytes and no game code
