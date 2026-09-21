@@ -36,6 +36,8 @@ Recipes in `tools/recipes/`:
 | `field_menu.txt` | save 5 loaded, the field, the menu, each top-bar slot | ~1,400 |
 | `battle_commands.txt` | NEW GAME, the opening scene's dialogue, its scripted battle; each command of the cross held, the skill list opened, the skill used | ~3,200 |
 | `menu_screens.txt` | save 5, into Items, Ability, Equipment, Tactics and Status and out again, each checked on the menu state | ~1,700 |
+| `field_view.txt` | save 5 loaded to its field; four shots of the view, 45 frames apart | 1,400 |
+| `attract_cycle.txt` | no input; the attract sequence, a shot every 200 frames from 1,500 to 12,300. Not frame-exact between runs (wall-clock animation): compare only beside an original-vs-original pair | 14,150 |
 
 ## 2. How it works
 

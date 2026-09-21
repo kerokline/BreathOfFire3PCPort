@@ -857,3 +857,216 @@ the full-cycle oracle identical over 7,478 frames; the memory dump identical
 in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
 frames, original against original and original against ours (`ab17_*`,
 now the reference).
+
+## 16. Two map-cell handlers, their condition and the elevation - taken over (2026-09-21)
+
+`src/game/map_cells.cpp`. `MapCell_Handlers` has a dozen distinct functions
+(section 15), and only three of them run in a whole attract cycle, counted in
+`hidden_b` ([`attract-remaining.md`](attract-remaining.md) section 3). `all_b`
+never armed them, because they are pointer-reached. The three are `0x570020`
+(12,183 calls), `0x570660` (5,098) and `0x437CC0` (29,716).
+
+`0x437CC0` is left alone. It is 6 KB and sits in a call cycle with 15 callees
+no trace reaches. It has about ten other call sites and reads party and enemy
+HP, so it is a general function that happens to be in the table.
+
+The first two are ours now, along with the two functions under them that were
+still Capcom's:
+
+| Function | Address | Size | What |
+|---|---|--:|---|
+| `MapCell_DrawQuads` | `0x570020` | 0x1EF | Unless the record's condition says no: five-dword subrecords, each four vertices and a `Prim_SetTexture` word, as culled `POLY_FT4`s |
+| `MapCell_DrawRising` | `0x570660` | 0x20F | Eight flat squares stacked on the cell, redrawn each frame with one `Rand` each; the record is not read |
+| `Area_TestCondition` | `0x56FF00` | 0x118 | A record's u16 condition: a flag bit, its complement, or one of six comparisons |
+| `AreaMap_Elevation` | `0x5720C0` | 0x20B | The ground's elevation at a 16.16 point, from a height byte per cell and a corner dword per cell |
+
+`pe_funcs.py` had given `0x56FF00` 0xBA6 bytes, running on through the
+handlers after it. This is section 14's problem again, because those handlers
+are pointer-reached. The function is 0x118 bytes, and the frame hash's entry
+list now says so (below).
+
+**`MapCell_DrawQuads`.**
+
+- **Origin.** The cell's origin is `((b1 - 0x80) * 128, (b0 - 0x80) * 128)`,
+  from the two bytes `DrawLayer_Open` hands over.
+- **Vertices.** A vertex dword holds an s8 at byte 3 and another at byte 2,
+  each doubled about the origin. The low word is the third coordinate.
+- **Cull.** Only the first vertex goes through `Gte_Rtps`. Its screen point is
+  written to the primitive before the cull, so a culled quad still leaves it
+  there. The quad is kept only inside `-100 < x < 420`, `-150 < y < 300`,
+  compared as floats because that is how the port's GTE stores them.
+- **Slot.** When bit 14 of the texture word is set, the quad goes to slot 4,
+  or to slot 7 if bit 30 is also set. Otherwise it goes to `Draw_OtSlot`, or
+  to slot 6 if bit 30 is set.
+- **End of the walk.** A count starts at 1 and adds 5 per subrecord. The walk
+  ends when it equals the record's byte `+2`, so any other length never ends.
+  That is read from the code, not run: the fuzz only builds lengths of `1 + 5n`.
+
+**`MapCell_DrawRising`.** Each call draws eight squares, `i` = 0..7. With
+`f = Frame_Counter & 7`:
+
+| Quantity | Value |
+|---|---|
+| Half-side | `0x20 + 0x20 i + 4f + (Rand() & 3)` |
+| Centre sway | `\|16 - ((Frame_Counter >> 8) & 0x1F)\| * (f + 8i) / 10` |
+| Third coordinate | `-(elevation / 2) - 8 (f + 8i)` |
+| Texture word | `0xBA009124`, with shade `(0x3F - 8i - f) / 4` |
+
+The elevation is taken at cell `(b1 - 1, b0)` and halved as an s16. What
+this looks like in game is not established; the name describes the geometry
+only.
+
+**`Area_TestCondition`.** The high byte of the u16 is the kind:
+
+| Kind | True when |
+|---|---|
+| `0x00..0x1F` | bit (low byte) of `Cond_Flags + 8 * kind` - rows 8 bytes apart, each reaching 32, so they overlap |
+| `0x20..0x3F` | the same bit of row `kind & 0x1F` is clear |
+| `0xFF` | `(code & 1) XOR Cond_ByteFF` - the whole byte, so `al` can be anything |
+| `0xFE` / `0xFD` | low byte `==` `Cond_ByteFE` / `!=` `Cond_ByteFD` |
+| `0xFC` | `(Game_Mode == 7 or Field_Request == 4) XOR (code & 1)` |
+| `0xFB` | `((Cond_AngleFB - 0x200) & 0xFFF) <= 0x800`, XOR `(code & 1)` |
+| `0xFA` | low byte `==` `Cond_ByteFA` sign-extended - never at `0x80` and up |
+| anything else | bit 0 |
+
+An E8 scan finds thirteen call sites: four in `0x4CDDC0` and the rest in
+seven map-cell handlers. Two of them widen `al` with `movsx`, so ours returns
+the whole byte. The callers push `ax` with stale bits above it, and only the
+low 16 bits are read. The `Cond_*` names say which kind reads each global,
+not what the global holds.
+
+**`AreaMap_Elevation`.** `x` and `y` are 16.16, and their high words name a
+cell of the grid that is `AreaMap_Header` bytes 0 by 1.
+
+- **Outside the grid**, the answer is 0 in `ax` with the header's top half
+  above it. That is kept, for any caller that reads `eax`.
+- **Inside the grid**, the function reads the height byte at
+  `AreaMap_Header + AreaMap_HeightBase * 4 + cell` and multiplies it by
+  `MapView_HeightScale`. It adds the result to corner bytes of the cell's
+  dword at `AreaMap_Corners` (`0x8CB5B0`), with a different formula for each
+  quadrant of the cell (chosen by bit 15 of `x` and of `y`):
+  - **First quadrant:** full precision, result `<< 4`.
+  - **Next two:** the product's low byte and byte sums widened as signed;
+    the larger of two sums, `<< 4`.
+  - **Last:** the largest of four values, `<< 5`.
+
+The comment in the code has the formulas. About 190 functions call it.
+
+**Checks.** The start-up fuzz, `BOF3X_SHADOW=map_cells`, runs ours against
+clones. The module injects second, right after `sprite_records`, so the
+handlers' clones call Capcom's whole tree: the GTE, the GPU setters,
+`Prim_SetTexture` and `Gfx_CommitPrim`. Their calls to the two helpers go to
+the helpers' clones.
+
+`Rand` cannot run in the fuzz. The launcher loads us into a suspended
+process, before `BOF3.exe`'s C runtime has started. `Rand` calls the
+runtime's `_getptd`, which ended the process there, and the launcher reported
+it as "could not load the dll". So both sides draw from the same stand-in:
+MSVC's generator, on a seed the fuzz owns. Ours reaches `Rand` through a
+pointer, and everywhere outside the fuzz that pointer is Capcom's `Rand`.
+
+- **`Area_TestCondition`**: 65,536 rounds. Codes are aimed at each kind, and
+  half the time the operand equals the byte it is compared with. Upper bits
+  are stale. The globals are redrawn every 16 rounds: `Game_Mode` is 7 and
+  `Field_Request` is 4 a quarter of the time each, and the angle is one step
+  from either end a third of the time. That gave 14,415 rounds of kinds
+  `FA..FF`, 31,383 flag kinds, 19,738 others and 2,327 answers above 1.
+  **0 mismatches**, comparing `al`.
+- **`AreaMap_Elevation`**: 131,072 rounds, over areas up to 40 x 40 laid out
+  in the block's first 8 KB and redrawn every 256 rounds. Coordinates are
+  mostly within two cells either side of the grid. 77,161 fell outside, and
+  about 13,450 inside each quadrant. **0 mismatches**, comparing `eax`.
+- **The handlers**: 24,000 rounds, a third of them `MapCell_DrawRising`.
+  Everything either handler touches is state: the GTE's globals, the packet
+  window and pointer, the ordering table and its tails, the vertex scratch,
+  the frame counter, the seed, a small area grid, the record and the
+  conditions. Half the rounds are a scene rather than noise: a near-identity
+  rotation, a translation in front, and screen-sized offsets, so that points
+  land around the cull's bounds. `MapCell_DrawQuads` was refused by its
+  condition or length 4,710 times and walked 11,290 times, committing 13,506
+  quads and culling or finding no room for 26,017. **0 mismatches**. A vertex
+  pad word differed 16,740 times, with ours zero every time (DIV-0023, below).
+
+**DIV-0023.** `MapCell_DrawQuads` builds its vertices on its stack and never
+writes their fourth word, so the loaders carry stale stack into the top
+halves of `Gte_Vertices[1]`, `[3]` and `[5]`. No instruction in the image
+reads them. Ours writes zeros, as DIV-0021 does for the matrix product's
+padding. Where the two differ in those bytes, the fuzz accepts theirs only if
+ours is zero.
+
+**Negative controls.** Each control is a rebuild and a start-up run. With the
+module in, all 16 other self-tests still pass (40 lines, `BOF3X_SHADOW=*`).
+
+| Control | Mismatches |
+|---|--:|
+| `0xFA` compared zero-extended | 626 |
+| `0xFF`'s answer cut to 0 / 1 | 2,327 |
+| Complement rows by `& 0x3F` | 6,975 |
+| `0xFB` tested `< 0x800` | 149 |
+| Off-grid answer 0 | 77,161 |
+| First quadrant in bytes | 10,716 |
+| Both halves `<< 4` | 3,445 |
+| `x` half from byte 5 of the corners | 8,251 |
+| Cull `y` below 310 | 29 |
+| Slots 7 and 4 swapped | 3,304 |
+| Vertex pad written 1 | 11,290 |
+| A culled quad leaves no screen point | 5,955 |
+| The sway rounded | 5,758 |
+| The shade without the frame phase | 4,094 |
+| The elevation halved as a long | 3,993 |
+| One `Rand` a call, not a square | 8,000 |
+| The elevation halved toward minus infinity | **0** |
+
+The last control is not refused, and cannot be. Every elevation is a
+multiple of 16, so halving it is exact whichever way it rounds. An earlier
+draft of the comment claimed "toward zero" as a kept quirk, and that claim is
+gone. Three other claims were removed the same way before the controls ran,
+because nothing can observe them: the order of ties among equal maxima, and
+two orders of calls that write disjoint memory.
+
+**Live.** The handlers draw, so the check that counts is the live one. With
+`BOF3X_SHADOW=map_cells`, after the fuzz, every call in game runs a clone
+first. Then it puts back everything the clone wrote and runs ours, and
+compares the two: the GTE's globals, the vertex scratch, the packet pointer
+and 4 KB of pool after it, the ordering-table pointers and the tail words they
+pointed at, and `Rand`'s seed. The seed is at `Crt_GetPtd() + 0x14`; the C
+runtime is up by the time the game draws. The rising squares' live clone
+calls Capcom's `Rand`.
+
+A 7-minute attract run on 2026-09-21 (`analysis/attract/ab18_live.*`)
+compared 8,192 calls of `MapCell_DrawQuads` (11,565 primitives committed)
+and 3,072 of `MapCell_DrawRising` (24,576). The report comes every 1,024 calls,
+so the last few hundred went unlogged. **0 mismatches** in both. The pad
+word differed 16,095 times, which shows the comparison sees the GTE. The
+attract oracle was identical with the check on, over 7,478 frames.
+
+Then the batch check, all 135 ours (`analysis/attract/ab18_cycle.log`,
+`analysis/validate_ab18.sh`):
+
+- **Oracle:** the full-cycle oracle was identical over 7,478 frames.
+- **Memory dump:** identical in the arena, VRAM and the CLUT.
+- **Frame hash:** identical on all 6,312 frames, original against original and
+  original against ours (`ab18_*`, now the reference).
+
+The frame hash was re-recorded under a corrected list.
+`entries_logic.txt` gives `0x56FF00` its true 0x118 bytes and lists the two
+handlers, so that calls from inside them count as owned on both sides. The
+old list is `entries_logic_0921.txt`. The hash runs were 7 minutes at the
+traced pace, so they end at frame 6,312. The handlers' first calls come at
+frames 3,856 and 4,305, so the hash covers only the stretch after that, not
+the whole cycle.
+
+Two capture A/Bs said nothing, and are recorded so that nobody leans on
+them:
+
+- **Save 5's field** (`tools/recipes/field_view.txt`, the four original
+  against ours) was identical once Windows 11's rounded bottom window corners,
+  which blend in whatever is behind the window, were masked. But the same
+  four frames are also identical with both handlers returning at once. They
+  do not draw there.
+- **The attract cycle** (`tools/recipes/attract_cycle.txt`, 55 shots) differed
+  in 34 shots. The pairs looked at are timing, not drawing: the mine-cart
+  scene's camera one step apart, and the title's "press start" at another
+  point of its blink. The attract sequence runs on wall-clock time and the
+  grab lands a moment after the shot line. Without an original-against-original
+  pair it cannot be read, and none was taken.

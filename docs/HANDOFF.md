@@ -15,9 +15,9 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
-- replace what the attract sequence reaches - stands at **a hundred and twenty-eight
-functions ours**, every one through the full live check (the last sixteen
-on 2026-09-21, `ab17_*`); and **stage 2, the text swap, went from a plan to a playable
+- replace what the attract sequence reaches - stands at **a hundred and thirty-two
+functions ours**, every one through the full live check (the last four
+on 2026-09-21, `ab18_*`); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
 pools, the item and ability names, and the US font doubled into the port's
@@ -58,6 +58,10 @@ be D5** - the float frame deadline, predicted from the code on 2026-09-19 -
 because `GetTickCount` passed 6.2 days: Fast Startup keeps it running across
 the owner's nightly shutdowns. The owner's short-term fix, DIV-0022, starts
 the game's clock with the game: 30.00 logic frames a second (item 00000).
+**Then the map cells:** two of `DrawLayer_Open`'s handlers and the two
+functions under them - the record condition and the ground's elevation - are
+ours, with DIV-0023 (zeros in a vertex's padding, by analogy with DIV-0021 -
+owed the owner's confirmation) ([`sprite-draw-order.md`](sprite-draw-order.md) §16).
 
 ## Pick up here
 
@@ -79,34 +83,35 @@ The single next action, concrete enough to start without asking anyone.
    whether the speed looks right. It is the first time they have seen the
    game at its true 30, not 31.25. The complete fix, the deadline in a
    double, is [`IDEAS.md`](IDEAS.md) I16, not scheduled. **Pace figures
-   before 2026-09-21 are the 31.25 band**, and the batch script's `MIN=11`
-   was sized for 15 a second: halve it.
+   before 2026-09-21 are the 31.25 band**. The batch's untraced oracle needs
+   only 7 minutes at 30 a second, but the traced hash runs are far slower:
+   `ab18` at 7 minutes reached 6,312 frames against `ab17`'s 10,062 at 11.
+   Keep the hash runs at 11 or more.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
-   order, 2026-09-21), batching the live check.** The draw-order pass and
-   every function it calls are ours and checked
-   ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15, batch 2026-09-21:
-   oracle over 7,478 frames, memory dump, frame hash on all 10,062 frames -
-   all identical). The natural next layer is **the map-cell handlers**
-   under `DrawLayer_Open`: `MapCell_Handlers` `0x663008`, 77 entries of
-   some dozen distinct functions (`0x570020`, `0x570210`, `0x570530`,
-   `0x570660`, `0x570870`, `0x570A00`, `0x570BC0`, `0x570DE0`, `0x571090`,
-   `0x5710D0`, `0x5712E0`, `0x437CC0`, ...). `0x570660` draws through
-   `Prim_SetTexture`. They draw, so a live compare needs the field A/B of
-   §15 (a recipe, draw path original against ours, pixel for pixel - the
-   list of names must stay under 2,048 bytes, and `--original "*"` also
-   switches off the input script) or a clone-run-restore compare where the
-   handler's writes can be bounded. Regenerate the queue first
-   (`python tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv`).
-   Adding to a batch: `analysis/validate_ab17.sh` (local) is the script -
-   rename it for the next batch and put its runs under a new prefix.
+   order, 2026-09-21), batching the live check.** The map cells the attract
+   cycle reaches are ours except `0x437CC0` - 6 KB, in a call cycle, reads
+   party and enemy HP; a general function that is also a table entry
+   ([`sprite-draw-order.md`](sprite-draw-order.md) §16). The table's other
+   eight handlers never run in attract: take them only with a recipe that
+   reaches them, or they get no live check. **Owed the owner:** DIV-0023 was
+   applied by analogy with their DIV-0021 call - confirm zeros. Next: regenerate
+   the queue (`python tools/calltrace.py queue
+   analysis/calltrace/all_b/bof3x.callcounts.tsv`, 397 unnamed reached on
+   2026-09-21; the two hottest are `0x5B3760` and `0x5B9550`, 4.2M and 3.7M
+   calls). For a function that draws, the live shadow of §14 / §16 (clone,
+   put back, ours, compare) is the check that counts: capture A/Bs of the
+   field showed nothing (the handlers do not draw there) and of the attract
+   sequence are timing noise without an original-vs-original pair. Batch
+   script: `analysis/validate_ab18.sh` (local) - rename it for the next batch.
 
-   Two things found on the way, not yet acted on: **`pe_hidden.py` misses
-   the functions after an inline jump table** - ten or so at
-   `0x593950`..`0x594240`, none in `entries.txt`
-   ([`attract-remaining.md`](attract-remaining.md) §3); fixing the seeding
-   changes the frame hash's content, so re-record the reference with it.
-   (The half speed of 2026-09-21 was D5, fixed by DIV-0022 - item 00000.)
+   Found on the way, not yet acted on: **`pe_hidden.py` misses the functions
+   after an inline jump table** - ten or so at `0x593950`..`0x594240`, none in
+   `entries.txt` ([`attract-remaining.md`](attract-remaining.md) §3); and
+   `pe_funcs.py` sizes run on through pointer-reached neighbours (`0x56FF00`
+   was 0xBA6 bytes, really 0x118 - fixed by hand in `entries_logic.txt`).
+   Fixing the seeding changes the frame hash's content, so re-record the
+   reference with it.
 
 000. **The rest of the exe's labels, the same way**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §8 has the method
@@ -213,11 +218,11 @@ The single next action, concrete enough to start without asking anyone.
    - Ability (state 3) was only seen closing, and the list cursors of Items
      and Equipment are unfound: one more walk under
      `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
-1. **The frame hash reference is `analysis/calltrace/ab17_orig`** (twin
-   `ab17_origb`), recorded all-original 2026-09-21: all 10,062 frames
-   identical original-vs-original and original-vs-ours with all 131 injects
-   on (`ab15_orig` before it, 2026-09-20: 7,936 frames, a hundred and fifteen
-   owned).
+1. **The frame hash reference is `analysis/calltrace/ab18_orig`** (twin
+   `ab18_origb`), recorded all-original 2026-09-21 under the corrected
+   `entries_logic.txt`: all 6,312 frames identical original-vs-original and
+   original-vs-ours with all 135 injects on (`ab17_orig` before it, the same
+   day: 10,062 frames, 131 injects, the old list).
    **Frame 5524 is same-configuration noise**: one of two all-ours runs had
    342 calls there against 346, the other matched the reference - the same
    frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
@@ -516,6 +521,15 @@ _One line each, with a pointer. Add when something costs more than an hour._
   `0x903584` / `0x90358E` / `0x903590`, and save 5's differ from saves 0-3.
   Press `@0x903584`, not a shape; the menu's top-bar cursor is remembered -
   `seek` it ([`input-script.md`](input-script.md) §4).
+- **A start-up self-test runs before `BOF3.exe`'s C runtime.** The launcher
+  loads us into a suspended process, so anything that reaches the CRT's
+  `_getptd` - `Rand` does - ends the process, and the launcher says only
+  "could not load the dll" in a dialog. Give the fuzz a stand-in
+  ([`sprite-draw-order.md`](sprite-draw-order.md) §16). In game the CRT is up.
+- Window captures include Windows 11's rounded bottom corners, which blend
+  what is behind the window: mask 8 x 8 at each before comparing pixels. And
+  attract-sequence captures are not frame-exact between runs - wall-clock
+  animation - so an attract A/B needs an original-vs-original pair beside it.
 - The backslash trap again, 2026-09-21: `\0` in a Python heredoc became two
   NUL bytes in `loc_build.py` ("source code cannot contain null bytes").
   Edit Python with the editor tool.
@@ -534,6 +548,9 @@ not pushed (2026-09-21, the owner away):** the harness fix, the matrix
 takeover (DIV-0021), `Sprite_AddDrawRecords`, `Prim_SetTexture`, the sprite
 draw and `DrawLayer_Open` - one commit each, after the batch check passed -
 and these docs. The validation script is `analysis/validate_ab17.sh` (local).
+**Then, also local and not pushed:** the map cells (`src/game/map_cells.cpp`,
+DIV-0023, the two recipes `field_view.txt` and `attract_cycle.txt`), batch
+`analysis/validate_ab18.sh`.
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
@@ -559,9 +576,14 @@ Local only, gitignored, worth keeping:
 - `analysis/calltrace/all_b/` - the full-list all-original run of a whole
   attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
   concatenated, which the exclusion list was rebuilt from.
-- `analysis/calltrace/ab17_orig/` - **the all-original frame-hash reference
-  since 2026-09-21** (`ab17_origb` its noise-floor twin, `ab17_ours`), with
-  `analysis/attract/ab17_*` the oracle, memory-dump and run logs of the batch.
+- `analysis/calltrace/ab18_orig/` - **the all-original frame-hash reference
+  since the map cells, 2026-09-21** (`ab18_origb` its noise-floor twin,
+  `ab18_ours`), recorded under the corrected `entries_logic.txt`
+  (`entries_logic_0921.txt` is the list before it); 6,312 frames, the traced
+  pace at 7 minutes. `analysis/attract/ab18_*` the oracle, memory-dump, live
+  shadow and run logs of the batch; `analysis/shots/cells_*` its captures.
+- `analysis/calltrace/ab17_orig/` - the reference before it (`ab17_origb`,
+  `ab17_ours`), under the old list.
 - `analysis/calltrace/ab15_orig/` - the reference before it
   (and `ab15_origb`, its noise-floor twin; `ab15_ours`, `ab15_oursb`),
   recorded 2026-09-20 with a hundred and fifteen owned under
