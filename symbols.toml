@@ -1191,6 +1191,14 @@ note = "Named for the fields it writes. That the table is the area block's textu
 # ---------------------------------------------------------------------------
 
 [[data]]
+pc = 0x5C407C
+name = "Imp_GetTickCount"
+ctype = "void *"
+status = "evidence"
+evidence = "PE import table, 2026-09-21: KERNEL32.dll GetTickCount's IAT slot, the exe's only clock import (no timeGetTime, QueryPerformanceCounter or GetSystemTime*). Read once, at 0x4FCD90 in WinMain, into esi, which is called at 0x4FCDB0 (the first frame deadline), 0x4FCE24 (render or skip) and 0x4FCEC1 (the spin to the deadline, whose result also feeds a once-a-second sprintf at 0x4FCEE2). No other reference in .text."
+note = "DIV-0022 points it at a clock that starts with the game (src/game/game_clock.cpp; docs/known-defects.md D5)."
+
+[[data]]
 pc = 0x8CB5A4
 name = "AreaMap_CellBase"
 ctype = "unsigned long"

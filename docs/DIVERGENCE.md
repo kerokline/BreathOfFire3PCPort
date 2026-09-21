@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 21 entries, DIV-0001..0021)
+**Status:** IN PROGRESS (opened 2026-09-18; 22 entries, DIV-0001..0022)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1032,7 +1032,64 @@ designed in rather than bolted on.
 - **Verification:** start-up fuzz against the original, 29,856 rounds, 0
   mismatches outside the padding and ours zero in it every time
   ([`psx-library-layer.md`](psx-library-layer.md) §4.1); a 3-minute oracle
-  identical. The full oracle and frame hash are owed
-  ([`HANDOFF.md`](HANDOFF.md) "Pick up here" 0000).
+  identical; then the batch check of 2026-09-21 - full-cycle oracle over
+  7,478 frames, arena, VRAM and CLUT dumps, and the frame hash on all 10,062
+  frames, all identical to the original (`ab17_*`).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Gte_MulMatrix0`. That puts back the
   original product, and every caller of ours reaches it. No config toggle.
+
+
+### The game's clock starts with the game
+
+- **ID:** DIV-0022
+- **Date:** 2026-09-21
+- **Subsystem:** platform (frame pacing)
+- **Original behaviour:** WinMain paces logic frames against a deadline kept
+  in a **32-bit float** at `0x6BC628`: a `GetTickCount` value in
+  milliseconds, advanced by 33.334 a frame. `GetTickCount` counts from the
+  last full boot of Windows, and past 2^24 ms a float cannot hold every
+  millisecond, so the pace depends on how long Windows has been up
+  ([`known-defects.md`](known-defects.md) D5). Measured on this machine,
+  steady state after 30 s: 31.25 logic frames a second between 2^28 and 2^29
+  ms (every run of 2026-09-20), 15.62 past 2^29 (every run of 2026-09-21),
+  and past 2^30, reproduced with the switch below, 91.7 a second - the
+  spin never waits, and DIV-0004's drain fired, which it does only after an
+  unrendered frame: consistent with D5's "nothing drawn", not looked at on
+  screen. **Fast Startup**, on by default, makes Shut down a hibernate that
+  `GetTickCount` counts through, so a player who shuts down every night
+  reaches half speed about a week after their last Restart.
+- **New behaviour:** the exe's import slot for `GetTickCount`
+  (`Imp_GetTickCount` `0x5C407C`, read once, by WinMain) points at a clock of
+  ours: milliseconds since the DLL was injected, from `GetTickCount64`.
+  WinMain is `GetTickCount`'s only caller in the exe (three calls, all its
+  pacing and a once-a-second counter that only takes differences), so
+  nothing else sees the change. The float code is untouched; it now sees the
+  small numbers it was written for, as on a machine booted that day. Measured:
+  **30.00** logic frames a second after 30 s.
+- **Rationale:** a bug of the platform, not a design choice - the code
+  assumes a tick count small enough for a float, which a 2001 machine booted
+  that morning had and a 2026 one with Fast Startup does not. This is the
+  owner's short-term fix (2026-09-21): four bytes, no game code changed. The
+  complete one, the deadline in a double, is [`IDEAS.md`](IDEAS.md) I16.
+- **Not covered:** one unbroken session still drifts through the float's
+  bands - 30.0 under 35 minutes, 29.85-30.3 up to 4.7 hours, 29.4 to 9.3
+  hours, 31.25 from there to 6.2 days, then half speed (I16 has the table).
+  The fast-forward after focus loss is untouched (I12). Other processes and
+  DLLs reading `GetTickCount` are unaffected: only the exe's own slot is
+  changed.
+- **Also in the PSX version?** Not applicable: the PlayStation paces by
+  vertical blank, not by a clock.
+- **Tooling that comes with it:** `BOF3X_TICK_BASE=N` (decimal or `0x`)
+  starts our clock at N ms instead of 0, which puts the original's pacing
+  code in any band of D5 on demand - how the three bands above were measured
+  (`analysis/attract/clk_*`).
+- **Verification:** steady-state pace from the recordings, 30 s on: 30.00
+  with the fix, 31.25 at base 2^28, 91.7 at base 2^30 (a run at base 2^29 never reached the attract
+  sequence in its 90 s; that band is the real clock's, 15.62, `ab17_*`); the
+  attract oracle
+  identical over 3,607 frames with the fix (`clk_fix.tsv`). And a 6-minute traced run with
+  the fix against the all-original reference: calls and hash identical on all
+  10,062 frames of `ab17_orig` (`analysis/calltrace/clk_hash`) - the logic
+  does not see the clock.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
+  Windows' clock. No config toggle.

@@ -183,8 +183,10 @@ What is established:
   speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured,
   and **half speed past 6.2 days, observed 2026-09-21** (every run that day,
   original included; D5). With Fast Startup that "uptime" survives nightly
-  shutdowns, so players meet it within a week; past 12.4 days it should stop
-  drawing. Fixing it is the next session's first job ([`HANDOFF.md`](HANDOFF.md)).
+  shutdowns, so players meet it within a week; past 12.4 days the game runs
+  unthrottled and, by the code, draws nothing. **Fixed short term by
+  DIV-0022** (the game's clock starts with the game: 30.00 logic frames a
+  second); the complete fix is [`IDEAS.md`](IDEAS.md) I16.
 - **The launcher has a settings dialog** (2026-09-20,
   [`launcher-settings.md`](launcher-settings.md)): language, texture filter,
   display and renderer, in a plain Win32 `DIALOGEX` with nothing vendored.

@@ -597,3 +597,41 @@ unread**, which the owner expects to come with a controller-mapping pass. F8
 (windowed) shows the port does read function keys somewhere; that reader is
 the place to start.
 
+
+## I16 — Exact frame pacing: the deadline in a double
+
+**Ask (2026-09-21):** the owner, choosing DIV-0022 (the game's clock starts
+with the game) as the short-term fix for [`known-defects.md`](known-defects.md)
+D5, asked for the complete fix to be kept as a long-term idea.
+**Kind:** platform   **Feasibility:** MEDIUM   **Gated on:** nobody - it
+means owning part of WinMain's loop, which nothing does yet.
+
+**What DIV-0022 leaves.** The frame deadline at `0x6BC628` is still a 32-bit
+float. Counting from the game's start keeps it small, but not exact: each
+frame's +33.334 ms rounds to the float's spacing, so one long session drifts
+through bands - within 0.1 ms under 35 minutes, then 30.1, 29.85, 30.3 and
+29.4 logic frames a second up to 9.3 hours, 31.25 (4% fast) from there to
+6.2 days, then half speed, and past 12.4 days of one unbroken session no
+drawing at all. The 2^32 wrap path (the float at `0x5C4214`) is unreachable
+under DIV-0022 and was broken before it: near 2^32 the float's spacing is
+512 ms.
+
+**The fix.** Keep the deadline where its precision does not depend on its
+size: a double, or 64-bit integer milliseconds (or `QueryPerformanceCounter`
+ticks), advanced by exactly 33.334 ms - or a count of frames times the
+period, which cannot drift at all. The four places in WinMain that touch it
+are known ([`HANDOFF.md`](HANDOFF.md), the D5 item): the first deadline at
+`0x4FCDB0`..`0x4FCDC4`, the render-or-skip compare at `0x4FCE24`..`0x4FCE3D`,
+the spin at `0x4FCEBC`..`0x4FCEDC`, and the advance and wrap at
+`0x4FCF0F`..`0x4FCF3A`. Either take over WinMain's loop, or re-aim those
+four stretches at helpers of ours, keeping the float's slot unused.
+
+**Decisions it brings, the owner's:** the rate - 33.334 ms (29.9994 a
+second, what the code says) or the PlayStation's NTSC 29.97; and whether to
+clamp the deadline's debt at the same time. That debt is the fast-forward
+after focus loss ([`windowed-mode.md`](windowed-mode.md), I12, DIV-0004's
+"not fixed by this"), and would be its own ledger entry.
+
+**Why not now:** DIV-0022 fixes what players meet (Windows' uptime, which
+Fast Startup carries across shutdowns) with four bytes and no game code
+touched; the rest needs a session of six-plus hours to show.

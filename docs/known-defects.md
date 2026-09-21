@@ -268,10 +268,20 @@ half-speed band about a week after their last Restart, and the no-drawing
 band about two weeks after - this is a defect players meet, not a corner
 case. A **Restart** (or Shift + Shut down) resets the clock.
 
-**Next on this machine,** without a Restart: 2^30 ms at about 2026-09-27
-16:35 - from then, by the arithmetic, the deadline stops advancing and
-nothing is drawn. The fix is the first item of [`HANDOFF.md`](HANDOFF.md)
-"Pick up here".
+**Measured on demand, 2026-09-21** (DIV-0022's `BOF3X_TICK_BASE` starts the
+game's clock at any value, so the original pacing code can be put in any
+band): steady state after 30 s, **31.25** at 2^28, **15.62** at 2^29 (the real
+clock that day), and at 2^30 **91.7** logic frames a second - the spin never
+waits, and DIV-0004's drain fired, which it does only after an unrendered
+frame. So past 12.4 days the game fast-forwards, and by the code draws
+nothing; the screen itself was not looked at.
+
+**Fixed for players, short term: DIV-0022** (2026-09-21). The game's
+`GetTickCount` import now counts from the game's start, so the float sees
+small numbers again: **30.00** logic frames a second. One unbroken session
+still drifts through the bands (31.25 past 9.3 hours, half speed past 6.2
+days); the complete fix, the deadline in a double, is
+[`IDEAS.md`](IDEAS.md) I16.
 
 Original by construction — nothing of ours is in WinMain's loop. Logic is
 still a pure function of the frame count, so the oracle is unaffected; only

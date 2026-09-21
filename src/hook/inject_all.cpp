@@ -3,6 +3,7 @@
 #include "game/config_text.h"
 #include "game/dat_load.h"
 #include "game/file_io.h"
+#include "game/game_clock.h"
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
 #include "game/gfx_image.h"
@@ -44,6 +45,7 @@ namespace bof3 {
 void InjectAll() {
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     FileIo_Inject();
+    GameClock_Inject();         // DIV-0022: before WinMain first reads the clock
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
     ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT
     MenuVerbs_Inject();         // likewise

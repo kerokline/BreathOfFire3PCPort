@@ -56,91 +56,31 @@ DIV-0021), then everything the draw-order pass calls** - `Sprite_AddDrawRecords`
 the owner's `language=en`, now pinned. **The day's half speed turned out to
 be D5** - the float frame deadline, predicted from the code on 2026-09-19 -
 because `GetTickCount` passed 6.2 days: Fast Startup keeps it running across
-the owner's nightly shutdowns. Fixing it is first (item 00000).
+the owner's nightly shutdowns. The owner's short-term fix, DIV-0022, starts
+the game's clock with the game: 30.00 logic frames a second (item 00000).
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-00000. **FIRST: fix the game's pace - D5, the float frame deadline (the
-   owner's priority, 2026-09-21: "go much further").** Every run on
-   2026-09-21 went at half speed, 15 logic frames a second against 29.6 the
-   day before, original and ours alike. It is not a regression of ours: it
-   is [`known-defects.md`](known-defects.md) D5 arriving on schedule. WinMain
-   keeps the frame deadline, a `GetTickCount` value in milliseconds, in a
-   32-bit float at `0x6BC628`, advancing it by 33.334 a frame. Past 2^29 ms
-   adjacent floats are 64 ms apart, so each frame's +33.334 rounds to +64.
-   `GetTickCount` passed that at about 11:27 on 2026-09-21, between the last
-   fast run (09-20 13:41) and the first slow one (09-21 12:12). **The owner
-   powers the PC off every night, and it still counts**: Fast Startup makes
-   Shut down a hibernate, and `GetTickCount` runs on from the last full boot
-   (2026-09-15) - D5 has the evidence. So players meet this within a week.
-   **Without a Restart it gets worse at about 2026-09-27 16:35** (2^30 ms):
-   the +33.334 then rounds to nothing and, by the arithmetic, the game never
-   takes the rendering branch again. A Restart (or Shift + Shut down) resets
-   the clock - a workaround for this machine, not a fix, and the owner's
-   call.
-
-   **What the clock is for (read 2026-09-21).** `GetTickCount` is the exe's
-   only clock import (no `timeGetTime`, no `QueryPerformanceCounter`), and
-   its IAT slot `0x5C407C` is read once, into `esi`, at `0x4FCD90` in WinMain.
-   `esi` is called three times, all in WinMain's loop: at `0x4FCDB0` to set the
-   first deadline (now + 33.34); at `0x4FCE24` for the choice between
-   rendering (now < deadline) and skipping; and at `0x4FCEC1` in the spin
-   until the deadline, which pumps `0x587C70` on every pass. The spin's
-   result also drives a once-a-second branch at `0x4FCEE2` that `sprintf`s
-   a counter into a local string (a leftover FPS readout by the look;
-   whether it reaches the screen is unread). That branch uses unsigned
-   differences, so it does not care what the clock's origin is. Nothing else
-   in the exe reads time; DirectSound and the AVI player keep their own.
-
-   **The owner's idea (2026-09-21): make the clock "ms since game start".**
-   Point the IAT slot at a function returning `GetTickCount64() - start`,
-   with `start` taken at injection. That touches no game code, and only
-   WinMain reads the slot. The deadline float then holds small numbers,
-   which puts the game back in the conditions the 2001 code was written
-   for: a machine booted that day. What remains is float rounding over one
-   long session. +33.334 rounds to within 0.1 ms below 2^21 ms (35 minutes), to 33.25
-   up to 2^22 (1.2 hours, 30.1 a second), to 33.5 up to 2^23 (2.3 hours, 29.85), to 33 up to 2^24 (4.7
-   hours, 30.3), to 34 up to 2^25 (9.3 hours, 29.4), then 32 (31.25) until
-   2^29 - half speed only after 6.2 days of one continuous session. So it
-   fixes what players meet, cheaply. The deadline in a double (step 3) is
-   exact forever, but it has to take over part of WinMain's loop. The
-   likely order: the clock origin first, as its own ledger entry, and the
-   double as a second if exact pacing over long sessions is wanted.
-
-   The work, in order:
-   1. **Every reader and writer of `0x6BC628`** (`python tools/pe_xref.py
-      0x6BC628`), and the loop around them: the start at `0x4FCDC4` (now +
-      33.34, `fstp dword`), the advance at `0x4FCF0F`..`0x4FCF1B` (the double
-      33.334 at `0x5C4218`, `fst dword`), the 2^32 wrap (the float at
-      `0x5C4214`), the compare that picks the rendering branch
-      ([`windowed-mode.md`](windowed-mode.md) steps 2-3), and the spin.
-      Also every other `GetTickCount` user: anything else that keeps ticks
-      in a float has the same defect.
-   2. **A way to test without waiting for the clock:** a switch that adds an
-      offset to what the game's `GetTickCount` returns (its import, or each
-      call site in the loop), e.g. `BOF3X_TICK_OFFSET`. With it, reproduce
-      every band on demand - 0 (exact), 2^28 (31.25), 2^29 (15.6), 2^30 (no
-      drawing), and just under 2^32 (the wrap) - on the original first, to
-      confirm D5's predictions, the 2^30 one above all.
-   3. **The fix, a ledger entry (DIV-0022):** keep the deadline where
-      precision does not depend on the clock's value - a double, or 64-bit
-      integer milliseconds from `GetTickCount64` or `QueryPerformanceCounter`.
-      The original's intent is one logic frame per 33.334 ms; that is the
-      behaviour to keep. For the owner, not to decide alone: which clock;
-      whether the rate stays 33.334 ms (29.9994 a second) or becomes the
-      PlayStation's NTSC 29.97; and whether to clamp the deadline's debt at
-      the same time - that is the fast-forward after focus loss, a separate
-      defect ([`IDEAS.md`](IDEAS.md), DIV-0004's "not fixed by this"), so a
-      separate entry if done.
-   4. **Acceptance:** `attract_run.py` pace at every offset of step 2 at the
-      exact band's rate (about 29.9 a second, less the loop's overhead); the
-      oracle and frame hash still identical to `ab17_orig` (logic is a
-      function of the frame count, so pace must not touch them); the owner
-      plays a few minutes and confirms the speed looks right.
-   Then correct what assumed a pace: the batch script's `MIN=11` was sized
-   for 15 a second, and 29.6 was itself the 31.25 band, not the true rate.
+00000. **The game's pace: fixed short term (DIV-0022), owed the owner's
+   play check.** The half speed of 2026-09-21 was
+   [`known-defects.md`](known-defects.md) D5, the float frame deadline, not
+   ours: `GetTickCount` had passed 2^29 ms, and Fast Startup keeps it running
+   across the owner's nightly shutdowns (D5 has the evidence). The owner's
+   fix: the exe's `GetTickCount` import slot (`0x5C407C`, read only by
+   WinMain) now points at a clock that starts with the game
+   (`src/game/game_clock.cpp`). Measured, steady state: **30.00** logic
+   frames a second, the attract oracle identical, and a frame hash against
+   `ab17_orig` (below). `BOF3X_TICK_BASE=N` starts that clock at N ms and put
+   the original's pacing in each of D5's bands on demand: 31.25 at 2^28,
+   and at 2^30 91.7 unthrottled - D5's "nothing drawn" by the code, not
+   yet looked at on screen. **Owed:** the owner plays a few minutes and says
+   whether the speed looks right. It is the first time they have seen the
+   game at its true 30, not 31.25. The complete fix, the deadline in a
+   double, is [`IDEAS.md`](IDEAS.md) I16, not scheduled. **Pace figures
+   before 2026-09-21 are the 31.25 band**, and the batch script's `MIN=11`
+   was sized for 15 a second: halve it.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
    order, 2026-09-21), batching the live check.** The draw-order pass and
@@ -166,7 +106,7 @@ The single next action, concrete enough to start without asking anyone.
    `0x593950`..`0x594240`, none in `entries.txt`
    ([`attract-remaining.md`](attract-remaining.md) §3); fixing the seeding
    changes the frame hash's content, so re-record the reference with it.
-   (The half speed of 2026-09-21 is D5 - item 00000, not ours.)
+   (The half speed of 2026-09-21 was D5, fixed by DIV-0022 - item 00000.)
 
 000. **The rest of the exe's labels, the same way**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §8 has the method
@@ -381,7 +321,8 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
    block `+0x78`; PC-to-PSX is still static only.
 10. [`known-defects.md`](known-defects.md): D1, clipped stat numerals, wants its
    A/B run and the draw path read; D3, fullscreen fallback, is unreproduced;
-   the frame deadline kept in a 32-bit float is item 00000.
+   the frame deadline kept in a 32-bit float is DIV-0022 (item 00000) and
+   [`IDEAS.md`](IDEAS.md) I16.
 
 ## How to run things
 
