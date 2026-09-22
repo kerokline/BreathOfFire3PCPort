@@ -54,6 +54,7 @@
 #include "game/field_frame.h"
 #include "game/title_states.h"
 #include "game/frame_callees.h"
+#include "game/field_event.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -113,6 +114,7 @@ void InjectAll() {
     FrameCallees_Inject();      // every call of its clones re-aimed: order does not matter
     FieldModes_Inject();        // every call of its clones re-aimed, every table it reads swapped: order does not matter
     MapScroll_Inject();         // likewise: every call of its clones re-aimed at a recorder
+    FieldEvent_Inject();        // every call of its clones re-aimed at a recorder: any slot will do
     InjectReport();
 }
 

@@ -113,7 +113,9 @@ add_library(bof3x SHARED
   src/game/draw_emit.cpp
   src/game/draw_pass.cpp
   src/game/field_modes.cpp
-  src/game/field_modes_fuzz.cpp)
+  src/game/field_modes_fuzz.cpp
+  src/game/field_event.cpp
+  src/game/field_event_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
