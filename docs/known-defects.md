@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-21 — six entries; D4 fixed by DIV-0004 and confirmed in game; D6 latent)
+**Status:** IN PROGRESS (2026-09-22 — seven entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6 and D7 latent)
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -278,7 +278,8 @@ nothing; the screen itself was not looked at.
 
 **Fixed for players, short term: DIV-0022** (2026-09-21). The game's
 `GetTickCount` import now counts from the game's start, so the float sees
-small numbers again: **30.00** logic frames a second. One unbroken session
+small numbers again: **30.00** logic frames a second, and the owner confirmed
+the speed recovered in game (2026-09-22). One unbroken session
 still drifts through the bands (31.25 past 9.3 hours, half speed past 6.2
 days); the complete fix, the deadline in a double, is
 [`IDEAS.md`](IDEAS.md) I16.
@@ -333,13 +334,62 @@ times, `0x01` 58, `0x02` 28, `0x03` 7 - the four extra objects - and four
 more are the pointers `0x5E07F8`, `0x6207F8`, `0x6407F8`, `0x6507F8` in
 pointer tables (`python tools/movement_scan.py --all`). [`movement-script.md`](movement-script.md) has the method.
 
-**Left open:** the scan is a superset only if every script pointer points
-into the exe. The descriptor arrays carry no length; `movement_scan.py`
-walks 1,688 script starts in 168 areas and all do, but each walk stops at the
-first word that is not a pointer - the tool's bound, not the game's.
+**The exact list, 2026-09-22.** With the op-length table found
+(`MoveScript_OpLengths` `0x6639FC`, byte for byte the PSX's), `python
+tools/movement_scan.py --decode` follows every script's control flow from
+its start: 3,633 starts in 171 areas, now including the descriptor's `+0x18`
+array, which op `86` hands to the third caller. It reaches **230
+attachments - handle `00` x137, `01` x58, `02` x28, `03` x7 - and none with
+bit 7**; they are exactly the raw scan's real-handle triples, and no path
+reaches the bit-7 byte. ([`movement-script.md`](movement-script.md) §4.)
+
+**Left open, and narrowed:** ten array entries in four areas (4, 9, 16, 17)
+point into `0x6758E0..0x675960`, which is zero in the file. A read-only watch
+through three visits to area 4 in the attract cycle, 2026-09-22, saw it stay
+zero: placeholders, not scripts written later (a zero script cannot run; the
+flow pass loops on `00`). Areas 9, 16 and 17 are not in the attract cycle
+and have not been watched.
 
 **Kept as Capcom had it** by the takeover (`src/game/sprite_find.cpp`,
 2026-09-21). Returning the slot found instead would be a divergence; the
 start-up fuzz shows it is observable (1,308 of 16,384 calls differ), but no
 shipped data would ever show it, so there is nothing to decide unless new
 content uses bit-7 handles.
+
+Both readers of the handle are ours since 2026-09-22 - `Field_ObjectFollow`
+`0x5192A0` and `Sprite_InheritDrawKey` `0x589770` - and both faithful.
+
+Op `84` is a second reader of handles (2026-09-22): `MoveCmd_HandlePosition`
+`0x578DC0` tests bit 7 and counts type-`0x0A` objects the same way. No
+shipped script uses op `84` (`movement_scan.py --decode`), so it adds nothing
+to D6 today; new content using it would meet the same search.
+
+## D7 — The movement script's length table says `C1` is 5 bytes; it is 4 (latent)
+
+**Found:** reading the `0xC0` group for the takeover, 2026-09-22. Nobody has
+seen it; by the data below, nobody can in the shipped game. **Latent, in
+Capcom's data on both platforms.**
+
+**The defect.** `MoveScript_FindLabel` `0x579450` finds a label by walking
+the script from its start, stepping over each op by its length in
+`MoveScript_OpLengths` `0x6639FC`. That table gives `C1` 5 bytes. The op's
+handler (`MoveScript_GroupC`, PC `0x578010`; PSX `FUN_801abb00`, whose `C1`
+and `C2` share the same `+3`) advances by 3 and the step by 1: `C1` is 4
+bytes as executed, as `C2` is - the table has `C2` right. The table is the
+PSX's byte for byte ([`movement-script.md`](movement-script.md) §4), so the
+error is Capcom's. A label search that crosses a `C1` lands one byte into
+the op after it, and from there reads the script out of step - it may find
+the wrong `0A`, none, or run through padding and never return.
+
+**Evidence that 4 is what the scripts mean.** `python
+tools/movement_scan.py --decode`, which follows control flow, reaches 106
+`C1`s. Stepping them by 5 left 90 paths running into a length-0 byte and 137
+ops past the next script's start; stepping them by 4 leaves 31 and 36 - the
+29 paths that ran on from an op `20` were all out of step after a `C1`.
+
+**Why it never shows.** The decoder resolves every label twice, with the
+table's length and with the executed one: **no shipped label search crosses
+a `C1` and ends differently.** Kept as Capcom had it by the takeover
+(`src/game/move_groups.cpp`): the label search is not ours yet, and fixing
+the table would be a divergence with nothing in the shipped data to show it.
+New content with a `C1` before a label would meet it.

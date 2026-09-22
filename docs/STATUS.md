@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-21)
+**Status:** IN PROGRESS (2026-09-22)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**One hundred and thirty-four functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and thirty-one from stage 1, three from the text path, below; sixteen on 2026-09-21 through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding; the newest four, later that day, the map-cell handlers `0x570020` and `0x570660` with the condition test and the ground's elevation under them - fuzzed with 17 controls, every in-game call shadowed against a clone over a 7-minute attract run, and through the batch check (§16, `ab18_*`); DIV-0023, zeros in a vertex's padding as in DIV-0021, the owner's call; the newest two, that night, the attachment handle `0x57C0A0` and the inherited draw key `0x589770`, kept faithful to a search Capcom's code discards - latent, no shipped script asks for it ([`known-defects.md`](known-defects.md) D6, [`movement-script.md`](movement-script.md)) - through the batch check with a live shadow in three scenes (§17, `ab19_*`)): `LoadDatFile` `0x454590`, the DAT
+**One hundred and fifty-five functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and thirty-one from stage 1, three from the text path, below; sixteen on 2026-09-21 through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding; the newest four, later that day, the map-cell handlers `0x570020` and `0x570660` with the condition test and the ground's elevation under them - fuzzed with 17 controls, every in-game call shadowed against a clone over a 7-minute attract run, and through the batch check (§16, `ab18_*`); DIV-0023, zeros in a vertex's padding as in DIV-0021, the owner's call; the newest two, that night, the attachment handle `0x57C0A0` and the inherited draw key `0x589770`, kept faithful to a search Capcom's code discards - latent, no shipped script asks for it ([`known-defects.md`](known-defects.md) D6, [`movement-script.md`](movement-script.md)) - through the batch check with a live shadow in three scenes (§17, `ab19_*`); **the newest twenty-one, 2026-09-22, the whole movement-script interpreter** - the step `0x576B50`, its flow pass `0x576E00` and all eight group handlers - **the field object update that runs it**, `0x517BF0` with its three helpers, the sprite's screen update `0x588F20` with its overlay queue, the attached object's update `0x5192A0` with its offset, and the three counter ops ([`movement-script.md`](movement-script.md) §1-1c) - each fuzzed against a clone with negative controls, and **through the batch check the same day** - captures 4 / 9 / 55 of 4 / 9 / 55 in three scenes, oracle, memory dump, and the frame hash identical on all 10,062 frames ([`movement-script.md`](movement-script.md) §1d, `ab20_*`)): `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -186,7 +186,8 @@ What is established:
   shutdowns, so players meet it within a week; past 12.4 days the game runs
   unthrottled and, by the code, draws nothing. **Fixed short term by
   DIV-0022** (the game's clock starts with the game: 30.00 logic frames a
-  second); the complete fix is [`IDEAS.md`](IDEAS.md) I16.
+  second; the owner confirmed the speed in game, 2026-09-22); the complete
+  fix is [`IDEAS.md`](IDEAS.md) I16.
 - **The launcher has a settings dialog** (2026-09-20,
   [`launcher-settings.md`](launcher-settings.md)): language, texture filter,
   display and renderer, in a plain Win32 `DIALOGEX` with nothing vendored.
@@ -256,7 +257,7 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). A hundred and thirty-four are ours, not
+   with the takeover queue already layered (§9 there). A hundred and fifty-five are ours, not
    all of them among the 540.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression

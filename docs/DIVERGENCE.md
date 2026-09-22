@@ -1094,7 +1094,8 @@ designed in rather than bolted on.
   identical over 3,607 frames with the fix (`clk_fix.tsv`). And a 6-minute traced run with
   the fix against the all-original reference: calls and hash identical on all
   10,062 frames of `ab17_orig` (`analysis/calltrace/clk_hash`) - the logic
-  does not see the clock.
+  does not see the clock. **Confirmed in game by the owner, 2026-09-22:** the
+  game's speed is recovered.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
   Windows' clock. No config toggle.
 
