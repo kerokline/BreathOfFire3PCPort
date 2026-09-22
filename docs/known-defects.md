@@ -543,3 +543,25 @@ same, uninitialised fourth dword of its result included.
 
 **Why it never shows:** the shipped attachments use handles 0..3 only
 (D6's count), where the two agree.
+## DK1 — The camera's swing back ends only on one exact distance (latent)
+
+**Found:** reading `Transition_Kind11` `0x4952D0` and `Transition_Kind18`
+`0x4954B0` for the takeover, 2026-09-22 ([`mode-flow.md`](mode-flow.md) §2,
+§7). **Latent, Capcom's** (group K of the third round; the number is
+provisional, the merger renumbers).
+
+**The defect.** Transition kinds 11 and 18 turn the camera back and add 50 to
+`Camera_Distance` every frame until it **equals** `0x5DC`, compared as 16
+bits, and only then end the transition task. Their partners, kinds 10 and 17,
+take off 50 on each frame their fade is not yet done (31 frames for kind 10, 63 for kind 17), so a
+swing away followed by its swing back lands on `0x5DC` again. Entered with any
+other distance, the loop circles: an even difference from `0x5DC` comes round
+after up to 32,768 frames (18 minutes at 30 a second), an odd one never, and
+the transition's wait word holds whatever waits on it meanwhile. Ours loops
+the same way (the fuzz's controls K23 and K25 pin the test and its place).
+
+**Why it never shows:** which scripts start kinds 10, 11, 17 and 18, and with
+what distance, was not measured; the attract sequence starts only kinds 0 and
+1. Kind 12 puts the distance at `0x5DC` outright, which suggests the
+designers kept it there. A fix is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry.

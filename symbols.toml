@@ -4472,30 +4472,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22, 6 instructions: zeroes the dwords at +8, +0xC, +0x10 and +0x14 of the current task's record (offset at 0x66C850). Called on entry by Title_Task and the field task 0x495800. PSX 0x8014B8F8."
 
 [[func]]
-pc = 0x454810
-name = "File_LoadDone"
-ret = "int"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-22: mov eax, 1; ret. Where the PSX polls File_LoadDone 0x801636F0 after a CD load (the sibling's name) - the PC's loads are synchronous, so this always says done. 152 callers (docs/HANDOFF.md). Title_CheckStart and 0x462370 test it."
-
-[[func]]
-pc = 0x495040
-name = "Transition_Start"
-ret = "void"
-params = "unsigned char kind"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 11 instructions: unless MoveScript_WaitWordDA is set, the word 0x66C828 = kind (the byte, zero-extended) and Task_Create(2, 0x495070), a task that calls one of 21 handlers by that word (a local table 0x495130..0x4955A0), the two seen wait on 0x495750 through 0x495620. A screen transition by its callers: the menu (2), the title (0) and the area change. PSX 0x8014EB68."
-
-[[func]]
-pc = 0x4967F0
-name = "Field_WaitTransition"
-ret = "void"
-params = "unsigned char run"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x3A bytes: Task_Sleep(1); then while MoveScript_WaitWordDA is set, or on the first pass when run is non-zero, the field frame 0x517200 and Task_Sleep(1); otherwise one more Task_Sleep(1). The word is the one Transition_Start refuses to start under. PSX 0x80199BC4 (call-disputed pairing)."
-
-[[func]]
 pc = 0x4624B0
 name = "Title_FadeMusic"
 psx = 0x801D1134
@@ -4947,15 +4923,6 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x47 bytes: zeroes the current task's 0x18-byte record (offset 0x66C850) and jumps into the scheduler 0x5A98F0, which reloads its own esp from 0x66C854 - it never returns. Title_StateMenu tail-jumps to it."
-
-[[func]]
-pc = 0x4549B0
-name = "Gfx_ClutStripRestore"
-psx = 0x8014E178
-ret = "void"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x34 bytes: zeroes 0x800 bytes at 0x80ED80 and copies Gfx_ClutStripSource to Gfx_ClutStrip, 32 rows of 0x200 bytes; does not set Gfx_ClutStripDirty (its one-row sibling 0x4549F0 does). Callers Title_StateLoad, 0x594E60, 0x496B60."
 
 [[func]]
 pc = 0x517290
@@ -7019,3 +6986,409 @@ params = "void"
 status = "evidence"
 impl = "src/game/move_cmds.cpp"
 evidence = "disasm 2026-09-22, 0x519890..0x5198E6 (0x57 bytes, whole), no arguments read: PartySet_Load(0xA, 0xFF, 0xFF, 0); then the byte 0x904061 | 7 read, the six bytes 0x904062..0x904067 (both party lists) 0xFF, 0x904061 written, Field_MemberCount 0; Party_Join(0xA), whose al it returns. Entry 0 of chapter 16's call table (Scenario_CallA(0) from Scena16_Start; the table's two raw pointer hits), no direct caller. No PSX twin paired. Call trace hidden_b: 3 calls (docs/takeover-queue-round3.md)."
+
+# --- 2026-09-22 (third round) group K: the top-level task flow
+# (src/game/mode_flow.cpp, docs/mode-flow.md). Four entries moved here from
+# above with `impl` added: File_LoadDone 0x454810, Gfx_ClutStripRestore
+# 0x4549B0, Transition_Start 0x495040, Field_WaitTransition 0x4967F0. Sizes
+# are each body to its last instruction (capstone, 2026-09-22); call counts
+# are analysis/calltrace/hidden_b.
+
+[[data]]
+pc = 0x656A44
+name = "GameMode_Handlers"
+psx = 0x801C8B0C
+ctype = "void *"
+count = 12
+status = "evidence"
+evidence = "disasm 2026-09-22: Field_Task 0x495800 calls [0x656A44 + 4 * Game_Mode] every frame, unchecked. Twelve code pointers 0x495840 (mode 0, GameMode_Start), 0x495900 (1, GameMode_Enter), 0x4959F0 (2, GameMode_Field), 0x495BB0, 0x495E60, 0x495E90, 0x496230, 0x496290, 0x496430, 0x4965C0, 0x4966E0, 0x496780; the words after them are other tables. The PSX task body 0x80198068 calls the same way through 0x801D0000 - 0x74F4."
+
+[[func]]
+pc = 0x495040
+name = "Transition_Start"
+psx = 0x8014EB68
+ret = "void"
+params = "unsigned char kind"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x495040..0x495066 (0x26 bytes): unless MoveScript_WaitWordDA is set, the word 0x66C828 = kind (movzx of the byte) and Task_Create(2, 0x495070) - Transition_Task. PSX 0x8014EB68 the same, kind to 0x80143C90, task entry 0x8014EC28. 170 call sites, some pushing whole registers: ours reads the byte from its stack slot. docs/mode-flow.md section 2."
+
+[[func]]
+pc = 0x495070
+name = "Transition_Task"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x495070..0x49512D (0xBD bytes): task 2's body. 21 handler addresses 0x495130..0x4955A0 stored on its own stack (mov [esp + k], imm32) and call [esp + 4 * u16 0x66C828], unchecked - index 21 would call its own return address; ours aborts. Call trace hidden_b: 54 calls (kinds 0 and 1 only)."
+
+[[func]]
+pc = 0x495130
+name = "Transition_Kind00"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(0x800, 1, 0) - 16 frames to black. Transition_Task's entry 0. hidden_b: 28 calls (the title's and the menu's Transition_Start(0))."
+
+[[func]]
+pc = 0x495150
+name = "Transition_Kind01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(-0x800, 1, 0) - 16 frames in from black. Entry 1. hidden_b: 26 calls."
+
+[[func]]
+pc = 0x495170
+name = "Transition_Kind02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(0x2000, 1, 0), 4 frames. Entry 2. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495190
+name = "Transition_Kind03"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(-0x2000, 1, 0). Entry 3. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4951B0
+name = "Transition_Kind04"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(0x400, 1, 0), 32 frames. Entry 4. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4951D0
+name = "Transition_Kind05"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(-0x400, 1, 0). Entry 5. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4951F0
+name = "Transition_Kind06"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(0x800, 1, 2) - into ordering-table slot 2. Entry 6. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495210
+name = "Transition_Kind07"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(-0x800, 1, 2). Entry 7. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495230
+name = "Transition_Kind08"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeAdd(0x800, 1, 0) - 16 frames to white. Entry 8. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495250
+name = "Transition_Kind09"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeAdd(-0x800, 1, 0). Entry 9. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495270
+name = "Transition_Kind10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x5C bytes: a fade to black (Transition_DrawTile(level from 0, 0x400, 1, 0, 2)) during which, each frame it is not done, Camera_Angles[0] and the low word of Cond_AngleFB + 11, Camera_Distance - 50, MapView_Redraw 2; then Task_Exit. Entry 10. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4952D0
+name = "Transition_Kind11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0xC9 bytes: yaw 0xFEAB, angle 0x355, redraw; five frames of fade in (step -0x400) regardless; then each frame yaw and angle - 11 and Camera_Distance + 50 until it equals 0x5DC (16-bit compare), the tile drawn until done; then yaw 0xFD56, angle 0x200, Task_Exit. Entry 11. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4953A0
+name = "Transition_Kind12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x22 bytes: Camera_Distance 0x5DC and MapView_Redraw 2, then Transition_FadeSub(-0x800, 1, 0). Entry 12. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4953D0
+name = "Transition_Kind13"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(0x200, 1, 0), 64 frames. Entry 13. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4953F0
+name = "Transition_Kind14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(-0x200, 1, 0). Entry 14. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495410
+name = "Transition_Kind15"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeAdd(0x200, 1, 0). Entry 15. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495430
+name = "Transition_Kind16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeAdd(-0x200, 1, 0). Entry 16. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495450
+name = "Transition_Kind17"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x5C bytes: kind 10 with step 0x200. Entry 17. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4954B0
+name = "Transition_Kind18"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0xC9 bytes: byte for byte kind 11's body (only the rel32s differ). Entry 18. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495580
+name = "Transition_Kind19"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x12 bytes: Transition_FadeSub(0x100, 1, 0), 128 frames. Entry 19. Not reached by hidden_b."
+
+[[func]]
+pc = 0x4955A0
+name = "Transition_Kind20"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x71 bytes: a 16-frame fade to black (DrawTile step 0x800) while the low word of Cond_AngleFB = (its dword + 0x20) & 0xFFF each frame; then the six fade-hold bytes 0, Task_Exit. Entry 20. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495620
+name = "Transition_FadeSub"
+ret = "void"
+params = "int step, unsigned semi, unsigned slot"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x7E bytes: level (kept in the step's argument slot) 0 for a positive s16 step, 0x7FFF otherwise; Transition_DrawTile(&level, step, semi, slot, 2) then Task_Sleep(1) until it answers non-zero; after a positive step the bytes 0x90393D..3F and 0x9038AD..AF zeroed; Task_Exit. Blend mode 2 is the PSX's subtractive one. hidden_b: 54 calls."
+
+[[func]]
+pc = 0x4956A0
+name = "Transition_FadeAdd"
+ret = "void"
+params = "int step, unsigned semi, unsigned slot"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0xA2 bytes: as Transition_FadeSub with blend mode 1 (additive); the six hold bytes zeroed BEFORE a non-positive step's loop and set to 0xFF after a positive one; a tail jump to Task_Exit. Not reached by hidden_b."
+
+[[func]]
+pc = 0x495750
+name = "Transition_DrawTile"
+ret = "unsigned char"
+params = "short *level, int step, unsigned semi, unsigned slot, unsigned abr"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0xAD bytes: Gpu_SetDrawMode(cursor, 0, 0, Gpu_GetTPage(1, abr, 0x140, 0), 0) committed to slot at 0xC; a TILE at the cursor: Gpu_SetTile, colour (s16 level >> 7) in all three bytes, x y 0.0, w h 320.0 240.0, Gpu_SetSemiTrans(semi), committed at 0x1C; then level += step (word); returns (s16) level < 0. hidden_b: 864 calls."
+
+[[func]]
+pc = 0x495800
+name = "Field_Task"
+psx = 0x80198068
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x3A bytes: task 0's body for the demo and every game (Title_StateStartDemo's Task_Create(0, 0x495800)). Game_Mode and Game_Step 0, Task_ClearPrivate, Window_ResetAll; then for ever GameMode_Handlers[Game_Mode], Game_ClockTick, Task_Sleep(1). PSX 0x80198068 call for call (callers pairing). hidden_b: 3 entries."
+
+[[func]]
+pc = 0x495840
+name = "GameMode_Start"
+psx = 0x801980EC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0xBB bytes: Game_Mode 0. Draw_PassFlags 0x1F, Draw_OtSlot 6, Field_PartyLoad(0); the saved position (area word 0x903A04, flags byte 0x903A07, x 0x903A08, z 0x903A0C); Field_ScriptFlags2 |= 0x4040; eight bytes zeroed and Game_AreaNumber 0xFFFF; Field_ChangeArea(area, x, z, flags); with the play clock not zero 0x904CD0 = the track 0x904131; the track 0xFF; mode 1. hidden_b: 3 calls."
+
+[[func]]
+pc = 0x495900
+name = "GameMode_Enter"
+psx = 0x801981E8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0xE1 bytes: Game_Mode 1. Field_ScriptFlags2 bit 3 off, Area_Enter(pending area, x, z, flags); input bit 8: mode 8; else the pending kind 0x937F98 - 0xFF nothing, 0xFE Draw_PassFlags 0, else Transition_Start(kind), Field_WaitTransition(1) and with input bit 1 the entry list 0x5951D0(Kind2 x, z); then 0x904EE0 = 0xA (input bit 1), 0x14 (area 0xBD) or 0; Field_ZoneCounterRoll(1) unless area 0xBD; bit 0x40 off, Field_Request 0, mode 2. hidden_b: 12 calls."
+
+[[func]]
+pc = 0x4967F0
+name = "Field_WaitTransition"
+ret = "void"
+params = "unsigned char run"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x3A bytes: loop { Task_Sleep(1); if the wait word MoveScript_WaitWordDA is 0 and run is 0: Task_Sleep(1), return; Field_Frame; if the wait word is 0 return }. run is tested every pass, so with run set it returns only after a field frame. Four callers, all pushing constants. psx_pair's 0x80199BC4 is call-disputed, so no psx. hidden_b: 18 calls."
+
+[[func]]
+pc = 0x496870
+name = "Game_ClockTick"
+psx = 0x80199CAC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x18F bytes, no calls: unless Field_Request is 9, the play clock 0x9040C8..CB (hours, minutes, seconds, frames at 30) ticks and stops at 99:59:59; then the two countdowns 0x90465C and 0x904660 (hours, minutes, seconds, frames) tick down, each byte tested as s8, and at hour 0 end on 0:00:00 with the frames reloaded - so never all zero again. PSX 0x80199CAC the same (gap pairing). hidden_b: 11,901 calls."
+
+[[func]]
+pc = 0x594E60
+name = "Area_Enter"
+psx = 0x801A0AA8
+ret = "void"
+params = "unsigned area, int x, int z, unsigned flags"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x2FD bytes: the area set-up GameMode_Enter calls once per area change - effects and tints cleared, the previous area and Kind2 position kept, the area's music, its DAT (area + 3) when it changed and Field_Request is 5, Field_InputFlags from descriptor +0x32, the CLUT strip; Field_PartySetUp, Cond_ByteFD from Area_ZoneIdAt, Field_ViewReset, the colour matrix and light (descriptor +0x38 or defaults), the scenario chapter step on Field_StatusBits bit 7, Area_RunPlacement(descriptor +0), call descriptor +0x40 if set, Flags_Clear(story flags, 0x1C), Field_ModeDispatch, Field_PartyFirstFrame; then the entry walk or the drop-in placement by Field_ScriptFlags2's bits. docs/mode-flow.md section 4. hidden_b: 12 calls."
+
+[[func]]
+pc = 0x595160
+name = "Area_EntryWalk"
+psx = 0x801A0F90
+ret = "void"
+params = "unsigned direction, int x, int z"
+status = "hypothesis"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x67 bytes, no calls: 0x904EF0 = 1, direction byte to 0x904EF1, 0x904EF2 = 0, x and z to 0x904EF4 / 0x904EF8, bit 3 of Field_ScriptFlags2 when direction is not 0; for each of Field_MemberCount members byte 0x802E77 + 0x14C i = pose table 0x66ADBC[direction] and the next byte | 2. Called only by Area_Enter, directions 0..3. That it walks the party in is by its caller and the name of the flag, not read further."
+
+[[func]]
+pc = 0x59E330
+name = "Window_ResetAll"
+psx = 0x8015990C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x26 bytes, no calls: bytes +0, +1, +2, +3 and +0xF of all 22 window records 0x803160 zeroed, and the pass byte 0x802D20. 22 call sites, among them Field_Task and Boot_Task. hidden_b: 4 calls."
+
+[[func]]
+pc = 0x496B60
+name = "Boot_Task"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x127 bytes: task 0's first body, created by WinMain. Gfx_ClearRect(0, 0, 0x400, 0x200); Port_DroppedCall(0); LoadDatFile(0x225) and its wait; 0x42C dwords from 0x9039E0 zeroed; the 18-byte button map 0x903580 from 0x656AEC; 0x90412C 0xFF; Field_ScriptFlags and Field_ScriptFlags2 0; 0x903A58 1 and 0x903A59..5E 0; Window_ResetAll, MoveScript_TintReset, Field_SlotsReleaseAll; Draw_PassFlags 0x1F, Draw_OtSlot 6, 0x9039D8 = 0x8B3580, 0x7E0880 = 0x8C3584; Gfx_ClutStripRestore, Gfx_ClutStripDirty + 1; Task_Create(1, 0x496C90); Task_Exit. psx_pair callers gives two PSX candidates (0x8014E974, 0x8014EBA8), so no psx. hidden_b: 1 call."
+
+[[func]]
+pc = 0x496C90
+name = "Title_LoadTask"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x2E bytes: task 1's first body - LoadDatFile(0x226), wait for File_LoadDone, a tail jump to Title_Task. hidden_b: 1 call."
+
+[[func]]
+pc = 0x454810
+name = "File_LoadDone"
+ret = "int"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22: mov eax, 1; ret (6 bytes). Where the PSX polls File_LoadDone 0x801636F0 after a CD load (the sibling's name) - the PC's loads are synchronous, so this always says done. 152 callers (docs/HANDOFF.md). hidden_b: 12,224 calls."
+
+[[func]]
+pc = 0x4549B0
+name = "Gfx_ClutStripRestore"
+psx = 0x8014E178
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x34 bytes: zeroes the 0x800 bytes at 0x80ED80 - the last four rows of Gfx_ClutStripSource - then copies Gfx_ClutStripSource to Gfx_ClutStrip, 32 rows of 0x200 bytes, so the strip's rows 28..31 come out zero; does not set Gfx_ClutStripDirty (its one-row sibling 0x4549F0 does). The PSX 0x8014E178 zeroes rows 0x1C..0x1F of 0x8002B800 first too. Callers Title_StateLoad, Area_Enter, Boot_Task and three more. hidden_b: 13 calls."
+
+[[func]]
+pc = 0x454A20
+name = "MoveScript_TintReset"
+psx = 0x8014E2E8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x25 bytes, no calls: byte +0 of each of the 32 MoveScript_TintRecords (12-byte stride) zeroed, then 16 dwords from 0x7E06A0 set to -1. PSX 0x8014E2E8 zeroes the same records' first byte (gap pairing). Callers Area_Enter, Boot_Task. hidden_b: 13 calls."
+
+[[func]]
+pc = 0x454A50
+name = "Field_SlotRelease"
+psx = 0x8014E378
+ret = "void"
+params = "unsigned slot"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x21 bytes, no calls: byte +0 of Field_Slots + 16 * (slot & 0xFF) zeroed if its bit 0 is set; the index unchecked. Callers Field_SlotsReleaseAll and 0x454A93. hidden_b: 8 calls."
+
+[[func]]
+pc = 0x454AB0
+name = "Field_SlotsReleaseAll"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x14 bytes: Field_SlotRelease(i) for i 0..7. Caller Boot_Task. hidden_b: 1 call."
+
+[[func]]
+pc = 0x461E10
+name = "Gfx_ClearRect"
+psx = 0x8014E458
+ret = "void"
+params = "int x, int y, int w, int h"
+status = "evidence"
+impl = "src/game/mode_flow.cpp"
+evidence = "disasm 2026-09-22, 0x3F bytes: a RECT of the four arguments' low words on the stack and Gfx_ClearImage(&rect, 0, 0) - a third 0 is pushed that Gfx_ClearImage does not read. Eight callers (Boot_Task, battle and menu code). hidden_b: 1 call."
