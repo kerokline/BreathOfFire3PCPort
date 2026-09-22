@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — seven entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6 and D7 latent)
+**Status:** IN PROGRESS (2026-09-22 — eleven entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9 and D11 latent; D8 and D10 unchecked in game)
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -393,3 +393,73 @@ a `C1` and ends differently.** Kept as Capcom had it by the takeover
 (`src/game/move_groups.cpp`): the label search is not ours yet, and fixing
 the table would be a divergence with nothing in the shipped data to show it.
 New content with a `C1` before a label would meet it.
+
+## D8 — The scenario fade swaps red and blue (unchecked in game)
+
+**Found:** reading `ClutStrip_FadeTo` `0x56C0A0` for the takeover of the
+attract demo's scenario, 2026-09-22 ([`field-modes.md`](field-modes.md) §7).
+**Configuration: Capcom's on both platforms** — the PSX twin shifts the same
+way. Nobody has looked at it in game yet.
+
+**The defect.** The fade builds each of 16 colours by taking the source's
+channels from bit 0 upward and shifting each one in from the bottom, so the
+source's bits 0-4 (red) land in 10-14 (blue) and 10-14 land in 0-4.
+`ClutStrip_Restore` `0x56C110` copies straight back. Unless the sixteen
+colours happen to be grey (R = B), whatever draws with that CLUT is red/blue
+swapped for the length of the fade and snaps back when it ends.
+
+**What is not established:** which sixteen colours these are in the demo, what
+draws with them, and whether the swap is visible at the speed the fade runs.
+Captures of scene 3's and scene 4's fades would say. The fuzz would catch a
+change here (control C31), so ours fades exactly as Capcom's does.
+
+## D9 — The event script's switch reads its condition index signed and unmasked (latent)
+
+**Found:** reading `EventScript_Switch` `0x579B00` for the takeover,
+2026-09-22 ([`event-script.md`](event-script.md) §5). **Latent, Capcom's on
+both platforms.**
+
+**The defect.** The `if` ops mask the condition index to five bits before
+indexing `EventScript_Conditions` `0x663B30` (17 entries). The switch does not
+mask it at all, and reads it signed. Indices 17..31 run off the end into
+`MoveScript_CounterOps` `0x663B74`, then the `E9` handlers, then data words —
+called with the script position where those expect other arguments. A negative
+index reads whatever lies before the table.
+
+**Why it never shows:** `tools/event_scan.py` decodes all 200 shipped
+placement scripts, and none asks for an index outside 0..16. New content
+would meet it. Kept as Capcom had it.
+
+## D10 — The zone counter's arithmetic is 8-bit (candidate)
+
+**Found:** reading `Field_ZoneCounterRoll` `0x52FEB0` for the takeover,
+2026-09-22 ([`field-event.md`](field-event.md) §5). **Capcom's**; unverified
+in game, and what the counter counts is itself a reading, not a measurement.
+
+**The defect.** The counter is a byte: `base + min(Rand() & 0x1F, the zone's
+cap)`, then doubled for one accessory and halved for another, all in 8 bits.
+Zone 1's base is 120, so a roll of 31 gives 151, and the doubling accessory
+turns that into 46 rather than 302 — the opposite of what doubling should do.
+
+**What is not established:** that the counter is the steps to the next random
+encounter. Its callers are the field's step code and the two accessories
+double and halve it, which is what that reading rests on. A player with the
+doubling accessory in a high-rate zone is exactly the case that would meet it,
+so this one is worth an in-game check before it is called a defect.
+
+## D11 — A large tint on a bright component gives black, not white (latent)
+
+**Found:** reading `MoveScript_TintFrame` `0x454AD0` for the takeover,
+2026-09-22 ([`frame-callees.md`](frame-callees.md) §4). **Latent, Capcom's on
+both platforms.**
+
+**The defect.** A tint record recolours a CLUT every frame by adding a signed
+offset to each 5-bit component **in 8 bits**, then clamping: below zero to 0,
+above 31 to 31. A component of 31 with a tint of `0x61` or more sums past 127,
+which as a signed byte is negative — so it clamps to 0 (black) where the
+arithmetic means 31 (white).
+
+**Why it never shows:** the ops that step a tint (`C1` / `C2`) and the field
+fades move the three tints toward 0 or 31 in small steps, so no shipped script
+reaches an offset that large. Kept: the fuzz seeds `0x60`, `0x61`, `0x7F`,
+`0x80` and `0x81` exactly to hold the wrap in place (controls 28, 29, 45).
