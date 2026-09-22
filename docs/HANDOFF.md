@@ -90,28 +90,63 @@ The single next action, concrete enough to start without asking anyone.
    minutes or more.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
-   order, 2026-09-21), batching the live check.** The field objects' script
-   is done (§4.5 of [`attract-remaining.md`](attract-remaining.md) less
-   twenty-one; the catalogue, regenerated with `python tools/attract_catalog.py
+   order, 2026-09-21), batching the live check.** What is left, regenerated
+   2026-09-22 after the movement script (`python tools/attract_catalog.py
    analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also
-   analysis/calltrace/all_a/bof3x.callcounts.tsv,analysis/calltrace/all_b/bof3x.callcounts.tsv`,
-   says 310 functions / ~68 KB outside audio, the MP3 decoder and the CRT;
-   `0x576CD0` and `0x577B80` in it are pieces of functions now ours). **Next,
-   agreed with the owner: the field-object frame loop** - `0x517490` (432
-   bytes, walks the objects and calls the update and `Field_ObjectFollow`)
-   and the per-frame pieces beside it, `0x517350`, `0x5173E0` (calls
-   `Sprite_UpdateScreen`), `0x573080`, `0x57B780` / `0x57B7B0`, 12,165 calls
-   each; then `0x57B830` (554 bytes, 20,793). `MoveCmd_Move` `0x578C10` is not
-   reached by the attract sequence at all - only the new game's opening would
-   test it. The pattern that worked, for each: read it against its PSX twin
-   (the sibling's `GAME_EMI0` or `SLPS_009.90` decompile), type every callee
-   in `symbols.toml`, clone the original with every call re-aimed at a
-   recording stand-in (`StubFor` tables in `move_groups.cpp` /
+   analysis/calltrace/all_a/bof3x.callcounts.tsv,analysis/calltrace/all_b/bof3x.callcounts.tsv`):
+   **305 functions, ~67 KB** outside audio, the MP3 decoder and the CRT -
+   renderer 45 / 17.4 KB, field objects 85 / 15.1 KB, event script 52 / 9.0 KB,
+   map and draw layers 18 / 7.0 KB, top-level modes 31 / 6.1 KB, text and
+   windows 27 / 5.6 KB, the rest under 4 KB each. (`0x576CD0`, `0x577800`
+   and `0x577B80` in the list are pieces of functions now ours - a catalogue
+   artefact, not work.) **The next highest-value targets, in order:**
+
+   1. **The field-object frame loop** (agreed with the owner 2026-09-22): the
+      per-frame entries `0x517200` / `0x517240` reach `0x517490` (432 bytes,
+      walks the objects into `Field_ObjectUpdate` / `Field_ObjectFollow`),
+      `0x517350` (139), `0x5173E0` (96, calls `Sprite_UpdateScreen`),
+      `0x573080` / `0x573090` (the kind-2 object's script runner, 544 bytes,
+      the interpreter's second caller), `0x57B780` / `0x57B7B0` / `0x57B830`
+      (554 bytes, 20,793 calls) and `0x592F00` / `0x592F20` - 12,165 calls a
+      cycle each, once a frame. With them, from the field's frame down to the
+      draw list is ours. Also in the group: `0x5722D0` (672 bytes, the
+      elevation's sibling with a store, called by `MoveCmd_Move`) and
+      `MoveCmd_Move` `0x578C10` itself - **not reached by the attract cycle**;
+      the batch's new-game capture is its only test.
+   2. **The map and draw layers**, 7 KB: `0x56E6C0` (730 bytes, called from
+      the field's frame) into `0x56EC00` (2,465), `0x56F9B0` (283 bytes,
+      28,357 calls), and the pointer-reached handlers `0x571500` (543, 33,550)
+      and `0x571B40` (160, 29,701). Everything here feeds the draw, so the
+      frozen-shot A/B checks it pixel for pixel; read `0x56E6C0` first for the
+      handler table.
+   3. **The top-level mode tasks**: `0x4621C0`'s state machine - `0x462420`,
+      `0x462600`, `0x462740` (16,127 calls each) and `0x462560` (36,109) - and
+      the field's mode-2 handler `0x4959F0` (2,139 bytes; it turns
+      `Field_Request` 1 into the menu). Small, hot, and the oracle's own
+      territory (mode and area changes).
+   4. **The event script**, 52 functions / 9 KB (`attract-remaining.md` §4.6):
+      the area script the attract's text boxes run - `0x52DA70`, the
+      dispatcher `0x56D690` and `0x56B5D0`. The other interpreter of the game,
+      and the one a living game most wants to extend; start from its op
+      table and its PSX twin, as the movement script did.
+   5. **`MsgBox_Step` `0x497840`** (752 bytes) - after measuring which of its
+      23 control codes the attract's eight messages use ("Then" item 6),
+      since the oracle sees only those.
+   6. Not per-function work yet: **the renderer** (45 / 17.4 KB) waits on a
+      way to check a surface (item 3 below, [`IDEAS.md`](IDEAS.md) I14);
+      `0x437CC0` is a bare `ret` with 4.6 million calls - nothing to gain.
+
+   The pattern that worked on 2026-09-22, for each: read it against its PSX
+   twin (the sibling's `GAME_EMI0` or `SLPS_009.90` Ghidra output), type
+   every callee in `symbols.toml`, clone the original with every call
+   re-aimed at a recording stand-in (`StubFor` in `move_groups.cpp` /
    `field_objects.cpp`), fuzz from random state with each branch's
-   boundaries seeded, then plant bugs until each is refused; list the clone's
-   calls and jump tables with capstone rather than by eye. The batch script
-   is `analysis/validate_ab20.sh` (local; with `analysis/shots_compare.py`):
-   copy it for the next batch and put the new functions in `THREE`.
+   boundaries seeded, then plant bugs until each behaviour-changing one is
+   refused (Traps: a quiet stand-in, a change that changes nothing); list a
+   clone's calls and jump tables with capstone rather than by eye. The batch
+   is `analysis/validate_ab20.sh` (local, with `analysis/shots_compare.py`):
+   copy it, put the new functions in `THREE`, and note that the frame hash's
+   reference is now `ab20_orig`.
 
    Found on the way, not yet acted on: **`pe_hidden.py` misses the functions
    after an inline jump table** - ten or so at `0x593950`..`0x594240`, none in
