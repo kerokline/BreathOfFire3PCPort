@@ -56,6 +56,7 @@
 #include "game/frame_callees.h"
 #include "game/field_event.h"
 #include "game/event_script.h"
+#include "game/window_task.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -117,6 +118,8 @@ void InjectAll() {
     MapScroll_Inject();         // likewise: every call of its clones re-aimed at a recorder
     FieldEvent_Inject();        // every call of its clones re-aimed at a recorder: any slot will do
     EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
+    WindowTask_Inject();        // last: every call of its clones is re-aimed at a recorder and every
+                                // stack-built table re-aimed in the copy, so order does not matter
     InjectReport();
 }
 
