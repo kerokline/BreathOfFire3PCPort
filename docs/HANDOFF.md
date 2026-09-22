@@ -89,10 +89,9 @@ The single next action, concrete enough to start without asking anyone.
    Keep the hash runs at 11 or more.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
-   order, 2026-09-21), batching the live check.** The map cells the attract
-   cycle reaches are ours except `0x437CC0` - 6 KB, in a call cycle, reads
-   party and enemy HP; a general function that is also a table entry
-   ([`sprite-draw-order.md`](sprite-draw-order.md) §16). The table's other
+   order, 2026-09-21), batching the live check.** Every map-cell handler the
+   attract cycle reaches is ours; the table's `0x437CC0` is a bare `ret`, the
+   null handler ([`sprite-draw-order.md`](sprite-draw-order.md) §16). The table's other
    eight handlers never run in attract: take them only with a recipe that
    reaches them, or they get no live check. Next: regenerate
    the queue (`python tools/calltrace.py queue
@@ -267,7 +266,9 @@ The single next action, concrete enough to start without asking anyone.
      reaches the return register. Ask the PSX side which way the source had
      it ([`sprite-draw-order.md`](sprite-draw-order.md) §11).
    Bigger leaves still unread: `0x454AD0` (491 bytes), `0x496870` (399),
-   `0x5720C0` (523), `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431).
+   `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431). (`0x5720C0` is ours:
+   `AreaMap_Elevation`, 2026-09-21; `0x5722D0` is its sibling with a store to
+   `0x903850`.)
    (`0x572A00` is ours: `Prim_SetTexture`, 2026-09-21.)
 2. **Under the draw-order pass.** `Sprite_DrawPass` `0x593060` and all
    three of its callees are ours ([`sprite-draw-order.md`](sprite-draw-order.md)
@@ -363,7 +364,7 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass`, `=msg_pool`, `=text_draw`, `=text_immediate` (comma-separated lists work) or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass`, `=msg_pool`, `=text_draw`, `=text_immediate`, `=map_cells` (which also shadows every in-game call of the two handlers) (comma-separated lists work) or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
@@ -546,14 +547,13 @@ WndProc correction), then scripted input (`src/hook/input_script.cpp`,
 `tools/input_run.py`, `tools/recipes/`, [`input-script.md`](input-script.md))
 and DIV-0018..0020 (`src/game/menu_verbs.cpp`, `src/game/char_names.cpp`,
 kinds 8-11 in `dat_load.cpp`, `tools/dat.py` and `tools/loc_build.py`), with
-`BOF3X_TEXTLOG` in `src/game/text_draw.cpp`. **Then, committed locally and
-not pushed (2026-09-21, the owner away):** the harness fix, the matrix
+`BOF3X_TEXTLOG` in `src/game/text_draw.cpp`. Then the harness fix, the matrix
 takeover (DIV-0021), `Sprite_AddDrawRecords`, `Prim_SetTexture`, the sprite
 draw and `DrawLayer_Open` - one commit each, after the batch check passed -
 and these docs. The validation script is `analysis/validate_ab17.sh` (local).
-**Then, also local and not pushed:** the map cells (`src/game/map_cells.cpp`,
-DIV-0023, the two recipes `field_view.txt` and `attract_cycle.txt`), batch
-`analysis/validate_ab18.sh`.
+Then the map cells (`src/game/map_cells.cpp`, DIV-0023, the two recipes
+`field_view.txt` and `attract_cycle.txt`, batch `analysis/validate_ab18.sh`)
+and frozen shots. **All of it pushed 2026-09-21, no PR.**
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._

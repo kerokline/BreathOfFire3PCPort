@@ -860,17 +860,17 @@ now the reference).
 
 ## 16. Two map-cell handlers, their condition and the elevation - taken over (2026-09-21)
 
-`src/game/map_cells.cpp`. `MapCell_Handlers` has a dozen distinct functions
-(section 15), and only three of them run in a whole attract cycle, counted in
-`hidden_b` ([`attract-remaining.md`](attract-remaining.md) section 3). `all_b`
-never armed them, because they are pointer-reached. The three are `0x570020`
-(12,183 calls), `0x570660` (5,098) and `0x437CC0` (29,716).
+`src/game/map_cells.cpp`. `MapCell_Handlers` has a dozen distinct entries
+(section 15). Two of the handlers run in a whole attract cycle, counted in
+`hidden_b` ([`attract-remaining.md`](attract-remaining.md) section 3):
+`0x570020` (12,183 calls) and `0x570660` (5,098). `all_b` never armed them,
+because they are pointer-reached. A third entry, `0x437CC0`, is a bare `ret`,
+the table's null handler ([`attract-remaining.md`](attract-remaining.md)
+section 4.9). `pe_funcs.py` had merged it with 6 KB of the code after it, and
+this section's first draft took that size, and that code's reads of party
+and enemy HP, for the entry's own. The disassembly says `ret`.
 
-`0x437CC0` is left alone. It is 6 KB and sits in a call cycle with 15 callees
-no trace reaches. It has about ten other call sites and reads party and enemy
-HP, so it is a general function that happens to be in the table.
-
-The first two are ours now, along with the two functions under them that were
+Both handlers are ours now, along with the two functions under them that were
 still Capcom's:
 
 | Function | Address | Size | What |
