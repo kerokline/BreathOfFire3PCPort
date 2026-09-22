@@ -25,6 +25,7 @@
 #include "game/menu_frame.h"
 #include "game/menu_verbs.h"
 #include "game/mode_tasks.h"
+#include "game/field_modes.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/move_script.h"
@@ -103,6 +104,7 @@ void InjectAll() {
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
     ObjectKinds_Inject();
     MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
+    FieldModes_Inject();        // every call of its clones re-aimed, every table it reads swapped: order does not matter
     InjectReport();
 }
 
