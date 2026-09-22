@@ -43,6 +43,7 @@
 #include "game/text_advance.h"
 #include "game/text_draw.h"
 #include "game/text_immediate.h"
+#include "game/field_frame.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -91,6 +92,7 @@ void InjectAll() {
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();
+    FieldFrame_Inject();
     InjectReport();
 }
 
