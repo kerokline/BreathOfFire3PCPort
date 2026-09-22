@@ -6,7 +6,7 @@ instruction and against its PSX twin where one is paired, fuzzed against
 Capcom's at start-up (`BOF3X_SHADOW=move_cmds`, 0 mismatches) with 76
 negative controls, 74 refused by a count and 2 that change nothing. **Not yet
 through the live batch.** No divergence; two latent defects written down
-([`known-defects.md`](known-defects.md) DL1, DL2).
+([`known-defects.md`](known-defects.md) D14, D15).
 
 The third parallel round's group L ([`takeover-queue-round3.md`](takeover-queue-round3.md)):
 the movement script's callees that were still Capcom's after
@@ -96,7 +96,7 @@ entry, like every other takeover.
 - **`MoveCmd_Attach`**: for the object kind 1 it detaches when `+2` is 1 (not
   7) and marks the attachment by `+2 = 1`; `+1` is read back after the store.
 - **`MoveCmd_AttachMove`** divides by the count SIGN-extended (`movsx`, the
-  PSX's `(int)(char)` too): DL1. It reads the position through the pointer
+  PSX's `(int)(char)` too): D14. It reads the position through the pointer
   `MoveCmd_HandlePosition` returns.
 - **`MoveScript_FindLabel`**: 16-bit positions; no bound (a missing label or
   an op of length 0 on the way never returns).
@@ -279,7 +279,7 @@ All still self-test with `BOF3X_SHADOW='*'` (exit 0).
   what stands behind the rest.
 - Not reached by any check but the fuzz: `MoveCmd_HandlePosition` with bit 7
   (no shipped script, D6), `MoveCmd_AttachMove` with a count of `0x80` or more
-  (none shipped, DL1), and the object kinds other than 0..3 in
+  (none shipped, D14), and the object kinds other than 0..3 in
   `MoveScript_ObjectKind`.
 
 ## 7. For `analysis/calltrace/entries_logic.txt`

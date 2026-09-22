@@ -503,12 +503,11 @@ row past the strip's; what it did there was not read.
 not measured. The fuzz seeds the whole reachable span (`0x10FF0` words) and
 restores it, on both sides, so ours matches the original there.
 
-## DL1 — An attachment's move over 128 frames or more goes the wrong way (latent)
+## D14 — An attachment's move over 128 frames or more goes the wrong way (latent)
 
 **Found:** reading `MoveCmd_AttachMove` `0x5793B0` for the takeover,
 2026-09-22 ([`move-cmds.md`](move-cmds.md) §2, control M1). **Latent,
-Capcom's on both platforms.** (Group L of the third round; the merger
-renumbers.)
+Capcom's on both platforms.** (Group L of the third round.)
 
 **The defect.** Op `F8 07 h s t` with the context's `+4` set moves the sprite
 to where the attachment puts it over `t` frames (0 taken as 1): the velocity
@@ -524,11 +523,11 @@ divides by -1, which faults on a distance of exactly `0x80000000`.
 `0x80`, `0x81`, `0xFE` and `0xFF`. A fix is the owner's call and a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry.
 
-## DL2 — The attachment's move and its follow read a handle differently (latent)
+## D15 — The attachment's move and its follow read a handle differently (latent)
 
 **Found:** reading `MoveCmd_HandlePosition` `0x578DC0` for the takeover,
 2026-09-22 ([`move-cmds.md`](move-cmds.md) §2). **Latent, Capcom's on both
-platforms.** (Group L; the merger renumbers.)
+platforms.** (Group L of the third round.)
 
 **The defect.** An attached object first moves to its handle's object
 (`MoveCmd_AttachMove` through `MoveCmd_HandlePosition`), then follows it
@@ -543,12 +542,11 @@ same, uninitialised fourth dword of its result included.
 
 **Why it never shows:** the shipped attachments use handles 0..3 only
 (D6's count), where the two agree.
-## DK1 — The camera's swing back ends only on one exact distance (latent)
+## D16 — The camera's swing back ends only on one exact distance (latent)
 
 **Found:** reading `Transition_Kind11` `0x4952D0` and `Transition_Kind18`
 `0x4954B0` for the takeover, 2026-09-22 ([`mode-flow.md`](mode-flow.md) §2,
-§7). **Latent, Capcom's** (group K of the third round; the number is
-provisional, the merger renumbers).
+§7). **Latent, Capcom's** (group K of the third round).
 
 **The defect.** Transition kinds 11 and 18 turn the camera back and add 50 to
 `Camera_Distance` every frame until it **equals** `0x5DC`, compared as 16

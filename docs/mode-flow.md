@@ -438,9 +438,9 @@ the angle - `& 0xFFF` keeps only bits a word read has too.
 ## 7. Found on the way
 
 No divergence, and one entry for [`known-defects.md`](known-defects.md)
-(provisional `DK1`); the rest are Capcom's on both platforms or unreachable:
+(`D16`); the rest are Capcom's on both platforms or unreachable:
 
-- **DK1** - the swing back (kinds 11 and 18) ends only when
+- **D16** - the swing back (kinds 11 and 18) ends only when
   `Camera_Distance` comes to exactly `0x5DC` in steps of 50, as 16 bits. Paired
   with its swing away (kind 10 takes 50 off on each of the 31 frames its fade
   is not done, kind 17 on 63) it does; entered with any other distance it
