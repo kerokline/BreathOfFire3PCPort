@@ -1,0 +1,26 @@
+# Title timeline: no input, a shot every 60 frames. Measured 2026-09-21: logo
+# by frame 420, PRESS START BUTTON by 480.
+mark start
+shot f0000 1
+wait 59
+shot f0060 1
+wait 59
+shot f0120 1
+wait 59
+shot f0180 1
+wait 59
+shot f0240 1
+wait 59
+shot f0300 1
+wait 59
+shot f0360 1
+wait 59
+shot f0420 1
+wait 59
+shot f0480 1
+wait 59
+shot f0540 1
+wait 59
+shot f0600 1
+peek 0x937F94 u32 Frame_Counter
+end

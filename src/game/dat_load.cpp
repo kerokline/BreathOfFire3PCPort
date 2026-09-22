@@ -5,7 +5,9 @@
 // locals here.
 #include "game/dat_load.h"
 
+#include "game/char_names.h"
 #include "game/config_text.h"
+#include "game/menu_verbs.h"
 
 #include <windows.h>
 
@@ -69,7 +71,10 @@ void LoadImageChunk(std::uint32_t tag, const std::uint8_t* payload, std::int32_t
 
 // DIV-0005. The language whose overlays are wanted: BOF3X_LANG, read once at
 // injection because LoadDatFile runs on a coroutine stack. Empty = none, and
-// then LoadDatFile does exactly what the original does.
+// then LoadDatFile does exactly what the original does. "original" is also
+// none: the launcher only fills in an EMPTY variable from its settings file,
+// so a harness that must not inherit the owner's language sets this
+// (docs/launcher-settings.md section 4).
 char g_lang[8];
 
 void WalkDatFile(const char* path);
@@ -91,8 +96,8 @@ void WalkDatFile(const char* path);
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4, 5 and 6, which are ours (DIV-0006, DIV-0008,
-//     DIV-0014);
+//     rejected - except kinds 4 to 11, which are ours (DIV-0006, DIV-0008,
+//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -158,6 +163,18 @@ void WalkDatFile(const char* path) {
         case 7:  // DIV-0015: ours.
             ConfigText_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
+        case 8:  // DIV-0018: ours.
+            MenuVerbs_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 9:  // DIV-0019: ours.
+            BattleCommands_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 10:  // DIV-0020: ours.
+            CharNames_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 11:  // DIV-0020: ours.
+            CharNames_ApplyMerchant(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
         default:
             break;
         }
@@ -170,7 +187,7 @@ void WalkDatFile(const char* path) {
 
 void DatLoad_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", g_lang, sizeof g_lang);
-    if (n == 0 || n >= sizeof g_lang) g_lang[0] = 0;
+    if (n == 0 || n >= sizeof g_lang || std::strcmp(g_lang, "original") == 0) g_lang[0] = 0;
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     BOF3_INJECT(LoadDatFile);

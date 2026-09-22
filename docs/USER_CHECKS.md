@@ -120,10 +120,12 @@ exists is an offline preview.
 Launch with `BOF3X_LANG=en` after `python tools/loc_build.py all ...`
 ([`HANDOFF.md`](HANDOFF.md) "How to run things").
 
-- [ ] Three rows: NEW GAME, LOAD GAME, CONFIG - whole, centred, nothing cut
-      off at the right, no stray pixels beside them?
-- [ ] Move the cursor over each: is the selected row's glow right for thin
-      lettering? It was drawn for thick Chinese strokes.
+- [x] Three rows: NEW GAME, LOAD GAME, CONFIG - whole, centred, nothing cut
+      off at the right, no stray pixels beside them? *Owner, 2026-09-21, off
+      an input-recipe capture: "looks perfect".*
+- [x] Move the cursor over each: is the selected row's glow right for thin
+      lettering? It was drawn for thick Chinese strokes. *Same capture and
+      verdict.*
 - [ ] `build/bof3x.log` has `DIV-0014: title menu rows 130, 140, 96 wide`.
 - [ ] The draw has a two-row layout, rows 0 and 2, on a byte nobody has read -
       a guess is "no save files present". If you know when the port shows two

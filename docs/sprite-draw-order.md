@@ -458,6 +458,10 @@ occur in the attract run was not measured.
 
 ## 11. Not done
 
+- **`0x57C0A0`: answered and taken over, 2026-09-21 - section 17.** The PSX
+  twin discards the search the same way, and no shipped script asks for it
+  ([`known-defects.md`](known-defects.md) D6). The paragraph below is the
+  question as it stood.
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it
   walks 30 records of `0xA4` bytes looking for the `(c & 0x3F)`-th whose byte
@@ -473,22 +477,710 @@ occur in the attract run was not measured.
   known - not because it is hard, but because it may be a defect to record.
 - The pass's three callees that are not ours. It was taken over before them
   (section 9): it only calls them.
-  - **`0x56FD20(layer)`**, 403,315 calls: appends the layer's *first* list to
+  - **`0x56FD20(layer)`**, 403,315 calls: **ours since 2026-09-21, section
+    15.** Was: appends the layer's *first* list to
     slot 6 (`0x929EB8` directly), then walks a window of the word table
     `0x904F20` - 28 columns, wrapping, rows offset by the words at `0x929F20`
     and `0x929F24` - and for each non-zero word a run of 4-byte records under
     `0x8CB580`, each handed to a handler chosen by its top byte through the
     table **`0x663008`**. By its place the map's cells; what the records are
     was not read. An indirect call per record: no clone, check it live.
-  - **`0x57BAE0(record)`**, 7,824 calls, `0x3E1` bytes: not read. Its call
+  - **`0x57BAE0(record)`**, 7,824 calls, `0x3E1` bytes: **ours since
+    2026-09-21, section 12.** Was: not read. Its call
     tree (`0x57BED0`, `0x57BFF0`, `0x57C070`) is matrix work through the GTE
     and one `Gpu_SetPolyFT4`; every library call in it is ours except the
     matrix product `0x5A7D70`
     ([`psx-library-layer.md`](psx-library-layer.md) section 4 says why not).
-  - **`0x5935B0`**, 33,850 calls, 683 bytes, and `0x593860` under it, 2,644
-    bytes with two indirect calls: the sprite draw itself. Also calls
-    `0x5A6790`, the 8-byte record append.
+  - **`0x5935B0`**, 33,850 calls: **ours since 2026-09-21, section 14.**
+    `0x593860` under it turned out to be 213 bytes, not 2,644; the rest was
+    other functions.
   The pass is still checkable as memory - the linked list it builds - which
   is [`IDEAS.md`](IDEAS.md) I14 level 1, and would be the first check of it
   that is not the fuzz's stand-ins or an identical frame hash.
 - Whether the PSX side has a name for any of this. Not looked up.
+- **Floor over a sprite's foot.** On save 5's field (`analysis/shots/sprite_field_ours/field2.png`)
+  the owner saw the floor drawn over Ryu's left foot (2026-09-21). The same
+  frames with the whole draw path original (116 functions; only file, save,
+  text and input left ours) are identical pixel for pixel, so it predates
+  this project's takeovers. The owner has seen several texture-ordering
+  oddities in the game and would not be surprised if the PlayStation did
+  this too. Unchecked against the disc: the question is whether this is the
+  port's defect or the original design, and it would take a look at the
+  same spot on the PSX.
+
+## 12. A 3D object's quads - taken over (2026-09-21)
+
+`src/game/sprite_records.cpp`. `Sprite_AddDrawRecords` `0x57BAE0` was the
+pass's second callee still Capcom's (section 11). It waited on the matrix
+product, and with that ours (DIV-0021) its whole call tree is ours.
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Sprite_AddDrawRecords` | `0x57BAE0` | 7,824 | The current object's quads as `POLY_FT4`s of 0x48 bytes in the packet pool, and one 12-byte record per quad for the pass to sort |
+| `Sprite_ObjectMatrix` | `0x57BFF0` | 7,824 | The object's matrix. The position is `(+0x34 >> 9) - 0x4000`, `(+0x38 >> 9) - 0x4000`, and `-(s16 +0x3E / 2)` rounded toward zero, taken through the current GTE matrix into the translation. The low words of `+0x64` / `+0x68` / `+0x6C` are the rotation's angles |
+| `Light_ObjectDirection` | `0x57BED0` | 7,824 | The first row of `Light_Matrix` `0x803560`. `(0, 0, Light_Angles[3])` is turned by the light's angles `0x903598`, then by the object's rotation run through `Gte_TransposeMatrix` in place |
+
+What the main function does:
+
+1. Pushes the GTE matrix.
+2. Builds and loads the object's matrix, scaled by the dword at `+0x40`
+   unless byte `+0x48` is set.
+3. Sets the light direction, loads a copy composed with the camera
+   (`Camera_LoadMatrix`), and loads `Light_Matrix` as the second matrix.
+4. Takes the count: the `s8` at byte 0 of the object's `+0x54` data, widened
+   to a `u16`. If `count * 0x48` bytes from `Gfx_PacketNext` would pass the
+   buffer's limit, it **returns 0 without popping**.
+5. For each 0x28-byte quad under `+0x50`:
+   - its four vertices go through `Prim_VertexScratch` `0x9037A0` and
+     `Gte_Rtps` into the primitive's screen points and float depths;
+   - the colour comes from `+0x5D..+0x5F`, lit through `Gte_NormalColor` when
+     bit 7 of byte 3 of the data is set;
+   - the tpage is for abr `(bit 6 ? that byte : 2) & 3` at `(0x2C0, 0x100)`,
+     the CLUT is at `(quad word 0 << 4, 0x1E3)`, and semi-transparency is
+     bit 6;
+   - the record is: the primitive, the largest depth / 4, the first depth
+     / 4, and the object.
+6. Advances `Gfx_PacketNext`, pops, and returns the count's low byte, which
+   the pass adds to its record count.
+
+Quirks kept, each in the code's comment:
+
+- A negative count is some 65,000 quads, which the room check then refuses.
+- When there is no room, the matrix stays pushed.
+- The record's depth is a `u16`, compared zero-extended against the whole
+  long. **The pass then sorts on it as an `s16`** (section 2), so a depth
+  past 0x7FFF sorts nearest.
+- `Gte_TransposeMatrix` in place is not a transpose. The upper triangle is
+  lost, so the light direction is not the one intended. Nothing shows it,
+  because `Gte_NormalColor` as shipped copies the unlit colour over the lit
+  one ([`psx-library-layer.md`](psx-library-layer.md) §4).
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=sprite_records`. This module
+injects *first*, so while it runs every one of the three originals' ~25
+callees is still Capcom's. The clones' calls go where the originals went, and
+Capcom's whole call tree runs against ours; the two helpers' clones stand in
+for the helpers.
+
+Each round randomises a fake object with its quads and data, the GTE's
+globals (`0x7DE428..0x7DE7A8`), the light and scratch globals, the camera,
+`Gfx_PacketNext`, `Gfx_BufferIndex`, `Sprite_Current` and a 0x300-byte
+window of the packet pool. All of that and the result's low byte are
+compared. Half the rounds are a scene rather than noise, with depths around
+0..0xFFFF. A matrix's padding word is compared apart (DIV-0021).
+
+Result: 12,000 rounds, 32,476 quads, 3,925 with no room, 1,206 empty, 772
+negative counts, 5,101 lit, 7,998 unscaled, 5,947 scenes: **0 mismatches**.
+The padding differed in 2,121 rounds.
+
+Negative controls, each refused:
+
+| Control | Mismatches |
+|---|--:|
+| The depth compared as `s16` | 217 (scenes only) |
+| A pop before the no-room return | 3,728 |
+| A true transpose | 11,999 |
+| Semi-transparency from bit 5 | 1,827 |
+| The count as a `u8` | 417 |
+| z by `>> 1` for `/ 2` | 2,983 |
+| The CLUT row `0x1E2` | 7,243 |
+
+Live: the attract oracle is identical with all 125 ours, over the 1,202
+frames a 3-minute run compares (2026-09-21, pinned to the original
+language); then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
+
+## 13. The texture word - taken over (2026-09-21)
+
+`src/game/prim.cpp`, next to `Prim_SetShade`. `Prim_SetTexture` `0x572A00`
+(1,225 bytes, 123,820 calls in `all_b`, 91 call sites) textures a run of
+`count` `POLY_FT4`s of 0x48 bytes from one packed word. Three of its callers
+are `0x56F9B0`, `0x570660` and `0x571500`, near the map view. It was the
+queue's biggest x87 leaf; the float work turned out to be exact (below).
+
+The word, bit by bit:
+
+| Bits | What |
+|---|---|
+| 0..11 | where the four `(u, v)` come from - below |
+| 12, 13 | the semi-transparency mode, into the tpage |
+| 15 | semi-transparency on (`Gpu_SetSemiTrans`) |
+| 16 / 17 / 18 | mirror left to right / top to bottom / a quarter turn |
+| 19..23 | the shade, `r = g = b = (word >> 16) & 0xF8` |
+| 24..27 | the palette: a 4-bit texture's CLUT column `16n`, an 8-bit one's row `0x1E3 + n` |
+| 28, 29 | the texture page, `x = 320 + 128n`, `y = 256` |
+| 31 | set: 4-bit texture; clear: 8-bit |
+
+The corners, in `POLY_FT4` order (top left, top right, bottom left, bottom
+right), come from one of three sources:
+
+- **bits 8..11 clear**: a 16-texel cell of a 16 x 16 grid. Bits 0..3 are its
+  column and 4..7 its row; the corners are 15 apart.
+- **bit 11 set**: two dwords of the area block `AreaMap_Header` `0x8CB580`,
+  at dword `u16[+6 + 4n] + 2 * (bits 0..10)`, the four corners a byte each.
+- **otherwise**: one dword at dword `u16[+4 + 4n] + bits 0..7` - the top
+  left's `u` and `v`, then a width and a height.
+
+The quarter turn is applied first (corners 0..3 take old 2, 0, 3, 1), then
+the two mirrors. A count of 0 or less draws nothing.
+
+**Why integers, not x87.** The original loads each coordinate into x87 as a
+float, does one float add for the rectangle's far edges, and converts each
+back through `_ftol`. Every value is an integer of magnitude under 400, so
+each step is exact at any precision and in any rounding mode, and `_ftol`
+truncates. Integer arithmetic gives the same result; section 3's
+`long double` question of [`psx-library-layer.md`](psx-library-layer.md)
+does not arise. The function also swaps four float locals it never writes,
+along with the corners - stale stack that never reaches the primitive.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=prim`, against a clone whose nine
+calls (`_ftol` x 8, `Gpu_SetSemiTrans`) still go to Capcom's code
+(`Prim_Inject` runs before `PsxGpu_Inject`). Each round sets a random word,
+biased a third to each source, a random run of up to five primitives plus a
+guard, and random area tables. The clone runs a quarter of the rounds under
+each of the x87 control words `027F` (the game's), `007F`, `037F` and `0F7F`
+(round toward zero).
+
+Result: 64,000 rounds - 21,330 from the grid, 21,337 four-corner, 21,333
+rectangles; 31,971 turned, 47,974 flipped, 19,676 empty, 132,945 primitives
+drawn - **0 mismatches** under all four words.
+
+Negative controls:
+
+| Control | Mismatches |
+|---|--:|
+| The turn the other way | 22,131 |
+| Grid corners 16 apart | 14,680 |
+| An 8-bit CLUT row by `\|` not `+` | 16,585 |
+| The shade keeping the flip bits | 38,734 |
+| The mirrors before the turn | 11,053 |
+| The tpage's x from `0x100` | 44,324 |
+| The four-corner `u0` unsigned | **0** |
+| The rectangle's `u` unsigned | **0** |
+
+The last two are not refused, and cannot be: only a coordinate's low byte
+reaches the primitive, and the sign does not change it, with or without the
+width added. Ours keeps the sign only so that it reads like the original; the
+code's comment says so.
+
+Live: the attract oracle is identical with all 126 ours over the 1,202
+frames a 3-minute run compares (2026-09-21, `analysis/attract/ab18_smoke.tsv`);
+then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
+
+## 14. The sprite draw - taken over (2026-09-21)
+
+`src/game/sprite_draw.cpp`. `Sprite_Draw` `0x5935B0` was the pass's last
+callee still Capcom's apart from `DrawLayer_Open` (section 11). It had been
+filed as 3.3 KB with the 2,644-byte `0x593860` under it. **`0x593860` is 213
+bytes.** A four-entry jump table follows it at `0x593938`, and `pe_funcs.py`
+ran on through the table into some ten functions reached only through
+pointers (the next paragraph). So the whole branch was about 900 bytes, and
+four functions:
+
+| Function | Address | Calls (`all_b`) | What |
+|---|---|---|---|
+| `Sprite_Draw` | `0x5935B0` | 33,850 | The current object as one primitive of the port's own - GPU code `0x84`, 0x20 bytes - and one cell record per piece of its frame |
+| `Sprite_ClutWord` | `0x593860` | 23,950 | The object's CLUT word: palette `+0x27`, 2^s palettes to a row with s = 4, 0, 3, 2 for `+0x28` = 0..3 and 1 above, from row `0x1E0` (`0x1F0` with bit 2 of `+0x24`) |
+| `SpriteCell_Add` | `0x5A6790` | 109,000 | An 8-byte record at `SpriteCell_Table` `0x6BEA18` [`SpriteCell_Count` `0x7CC374`]: u16 x, u8 y, u8 size `((h & 0xF8) << 1) \| w >> 3`, u16 flags, u8 u, u8 v; returns its index. No bound |
+| `SpriteCell_Reset` | `0x5A6780` | 12,801 | The count to 0, once a logic frame (WinMain, `0x4FCF75`) |
+
+What `Sprite_Draw` does:
+
+1. Bit 6 of byte 0 set: returns.
+2. Bit 7 of `+0x24` clear and `+0x48 == 1`: the scale `+0x40` = `+0x44` =
+   `(0x4650000 / +0x60) & ~0xFF` - 1125 over a depth, in 16.16. A depth of 0
+   stores 0 to both and returns before the cull.
+3. The cull: the s16 position `+0x2E` outside `-0x40..0x180`, or `+0x30`
+   outside `-0x40..0x130`, sets bit 7 of byte 0 and returns; inside, clears it.
+4. The frame: a count byte at `+0x54`'s data plus the u16 `+0x5A`, then that
+   many 5-byte pieces. A count of 0 returns.
+5. At `Gfx_PacketNext`: code `0x84`, the CLUT word at `+0x1C`, then per piece
+   a `SpriteCell_Add` - signed x and y offsets, flags
+   `((piece bit 7 | wide << 5) << 2) | +0x25`, u, `+0x26` + v, and a size from
+   `SpriteCell_Sizes` `0x66A450` by the piece's low nibble (8..32 by 8..32).
+   The first index goes to `+0x18` and the count to `+0x1A`. Then a mode word
+   `((+0x5C | wide << 2) << 5) | +0x25`, `| 0x400` with `+0x2A`, at `+0x1E`;
+   the dwords `+0x74` / `+0x78` at `+8` / `+0xC`; the scale as floats (x87,
+   an integer times 2^-16 - exact) at `+0x10` / `+0x14`, 1.0 when `+0x48` is
+   0; the shade `+0x5D..+0x5F` each plus `0x80`; semi-transparency from bit 5
+   of byte 0. "Wide" is `+0x28` non-zero.
+6. `Gfx_CommitPrim(+0x29, 0x20)`.
+
+So the PC port does not build a sprite from `SPRT`s or `POLY_FT4`s at all: it
+emits one code-`0x84` primitive and a run of cell records, and the Direct3D
+end (`0x5A32B0`, the table's one reader, unread) draws the cells.
+
+**Hidden functions found on the way.** The bytes `pe_funcs.py` gave to
+`0x593860` hold a dispatcher at `0x593950` - `jmp [0x66A470 + byte
+0x93985C * 4]` - and the handlers its tables name, `0x593960`..`0x594240`,
+about ten. `tools/pe_hidden.py` missed them too. Its rule wants a hidden
+entry to follow a `ret` or `jmp` and padding, and the first one follows the
+jump table's data. After that, a linear sweep through the table's bytes falls
+out of step. None of them is in `entries.txt`, so no call trace has counted
+them. [`attract-remaining.md`](attract-remaining.md) section 3's hidden count is
+short by these at least, and any function with an inline jump table may hide
+more the same way.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=sprite_draw`, against clones. The
+module injects before `PsxGpu_Inject` and `DrawEmit_Inject`, so the clone's
+calls to `Gpu_SetCode84`, `Gpu_SetSemiTrans` and `Gfx_CommitPrim` still run
+Capcom's code. Its calls to the other two go to their clones. The clone of
+`Sprite_ClutWord` jumps through the original's table into the original's
+body - Capcom's bytes either way, since nothing is patched yet.
+
+Each round randomises an object and its frame. The position is biased to the
+cull's edges and the depth to 0, ±1 and small values. The packet pointer sits
+inside the real pool, a quarter of the time at the room test's limit. The
+ordering-table pointers are aimed at a scratch row of tails, and the cell
+count is under 0x200 with a random window of the table. One round in sixteen
+is `SpriteCell_Reset`. Compared: the object, its frame, the cell window and
+count, the packet pointer and 0x40 bytes at it, the ordering-table pointers
+and their tails.
+
+Result: 24,000 rounds - 2,797 hidden, 239 at depth 0, 12,780 culled, 624
+empty frames, 6,043 drawn with 237,190 cells (4,461 scaled, 1,884 with no
+room in the pool), 1,517 resets - **0 mismatches**. `Sprite_ClutWord` alone,
+65,536 rounds, and `SpriteCell_Add` alone with whole random dwords, 65,536
+rounds: **0** each.
+
+Negative controls, each refused:
+
+| Control | Mismatches |
+|---|--:|
+| Cull x above `0x17F` | 925 |
+| The scale keeping its low byte | 3,423 |
+| Depth 0 going on to the cull | 157 |
+| The cull leaving bit 7 set | 3,352 |
+| The first index from every piece | 5,401 |
+| A piece's x zero-extended | 5,425 |
+| The shade plus `0x7F` | 6,043 |
+| "Wide" from bit 0 of `+0x28` | 1,524 |
+| The CLUT's shift 0 above mode 3 | 5,923 (and 32,341 of the CLUT rounds) |
+| The cell height masked with `0xF0` | 5,462 (and 16,597 of the add rounds) |
+| Reset to 1 | 1,517 |
+
+Two tries at controls that said nothing, for the record: letting depth 0 fall
+through to the division hangs the game at start-up (the trap of
+[`psx-library-layer.md`](psx-library-layer.md) section 3), and
+`(h >> 3) << 4` is `(h & 0xF8) << 1` written differently.
+
+**Live.** With the switch set, every call in game runs the clone, puts back
+what it wrote, runs ours, and compares the object, the primitive, the packet
+pointer, the cell records and count, and the ordering-table slot with its
+tail. 2026-09-21: a 6-minute attract run, 8,192 calls compared (5,570 drawn
+with 25,174 cells; the report then came every 8,192 calls, so the run's
+last few thousand went unlogged - it is every 1,024 now), and save 5's field
+through a recipe, 1,024 calls (341 drawn, 1,304 cells): **0 mismatches**.
+The attract oracle was identical with the check on, over 3,926 frames
+(`analysis/attract/ab18_live.tsv`), and a capture of the field
+(`analysis/shots/sprite_field/`) shows Ryu drawn as he should be. Then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
+
+## 15. The layer's map cells - taken over (2026-09-21)
+
+`src/game/draw_emit.cpp`, beside `DrawLayer_Close`. `DrawLayer_Open`
+`0x56FD20` (0x159 bytes, 403,315 calls in `all_b`) was the draw pass's last
+callee still Capcom's. With it ours, **every function the pass calls is
+ours**; what those handlers call is not.
+
+What it does, per layer:
+
+1. The layer's first list - the (first, last) pair at
+   `DrawLayers + (layer * 6 + Gfx_BufferIndex) * 8` - if non-empty, is
+   appended to ordering-table slot 6 through `Gpu_LinkPrim`, and its last
+   becomes slot 6's tail. The index is read again after the call, as in
+   `DrawLayer_Close`.
+2. One row of the field's map cells. The row is `(MapView_Row` `0x929F24` `+
+   layer + 1) mod 0x38` of `MapView_Cells` `0x904F20`, 28 words wide. The
+   inset is `MapView_Inset` `0x905D80`, less 2 (not below 0) with bit 0 of
+   `Field_InputFlags`. From `(MapView_Column` `0x929F20` `+ inset + (1 if
+   the row is even)) mod 0x1C` it takes `(14 - inset) * 2` columns, each
+   advanced before it is read, wrapping `0x1B` to 0. The half-column shift on
+   even rows is the diamond grid of an isometric map.
+3. A non-zero cell word `w` names a run at dword `w + (AreaMap_CellBase &
+   0xFFFF)` (`0x8CB5A4`) of the area block. The dword before the run heads
+   it: the run's length in dwords plus one in its high half, and two bytes
+   every handler is given. Each 4-byte record goes to
+   `MapCell_Handlers[top byte]` (`0x663008`, 77 handlers) as `(record, byte
+   1, byte 0)`, and the walk moves on by the record's byte `+2` in dwords,
+   **read after the call**.
+
+Kept as the original has it: each "mod" is one subtraction; the record's top
+byte is not checked against the 77; a step of 0, or steps that pass the run's
+end, never stop. Handler `0x570660`, the one read so far, draws through
+`Prim_SetTexture` (section 13) - so a record is a piece of a cell's picture,
+by that one example.
+
+**Checks.** Start-up fuzz, `BOF3X_SHADOW=draw_emit`, against a clone whose
+`Gpu_LinkPrim` call is Capcom's. The clone reads `MapCell_Handlers` just as
+ours does, so for the fuzz the table's 77 entries become four recording
+stand-ins, put back afterwards. Each round randomises the layers, the buffer
+byte (0..5), the view's row, column and inset, the input flag, and a row of
+cells naming up to 24 record runs laid out in the area block. In half the
+rounds every record is one dword and a stand-in lengthens a third of the
+records it is handed to two, where the run has room - so a walk that read
+the step before the call would go astray. Compared: the stand-ins' log (which
+one, which record, both bytes), the layers, the area window, the cells, slot 6
+and its tails.
+
+Result: 12,000 rounds - 7,926 linked the first list, 11,012 walked cells with
+219,759 handler calls, 5,907 with lengthened steps, 499 with no columns, 6,065
+rows wrapped - **0 mismatches**. The draw pass's own fuzz, which stands in
+for this function, still passes.
+
+Negative controls:
+
+| Control | Mismatches |
+|---|--:|
+| The step read before the call | 5,262 |
+| The column read before it advances | 3,348 |
+| Odd rows shifted instead of even | 3,293 |
+| The inset not floored at 0 | 1,187 |
+| Half the columns | 10,200 |
+| Wrap after `0x1C` | 3,475 |
+| The two bytes swapped | 11,007 |
+| Row wrap at `0x37` | 5,855 |
+| The first list to slot 7 | crashed at start-up - slot 7's pointer is still null then; not a clean refusal |
+
+**Live.** The handlers draw, so a call cannot be run twice and compared the
+way section 14's is. Instead: save 5's field through a recipe, once with the
+whole draw path original (117 functions; only file, save, text and input
+ours) and once all ours - **the four captures identical pixel for pixel**
+across the frame (2026-09-21, `analysis/shots/sprite_field_orig/`,
+`sprite_field_ours/`). Then the batch check, 2026-09-21, all 131 ours (`analysis/attract/ab17_cycle.log`):
+the full-cycle oracle identical over 7,478 frames; the memory dump identical
+in the arena, VRAM and the CLUT; the frame hash identical on all 10,062
+frames, original against original and original against ours (`ab17_*`,
+now the reference).
+
+## 16. Two map-cell handlers, their condition and the elevation - taken over (2026-09-21)
+
+`src/game/map_cells.cpp`. `MapCell_Handlers` has a dozen distinct entries
+(section 15). Two of the handlers run in a whole attract cycle, counted in
+`hidden_b` ([`attract-remaining.md`](attract-remaining.md) section 3):
+`0x570020` (12,183 calls) and `0x570660` (5,098). `all_b` never armed them,
+because they are pointer-reached. A third entry, `0x437CC0`, is a bare `ret`,
+the table's null handler ([`attract-remaining.md`](attract-remaining.md)
+section 4.9). `pe_funcs.py` had merged it with 6 KB of the code after it, and
+this section's first draft took that size, and that code's reads of party
+and enemy HP, for the entry's own. The disassembly says `ret`.
+
+Both handlers are ours now, along with the two functions under them that were
+still Capcom's:
+
+| Function | Address | Size | What |
+|---|---|--:|---|
+| `MapCell_DrawQuads` | `0x570020` | 0x1EF | Unless the record's condition says no: five-dword subrecords, each four vertices and a `Prim_SetTexture` word, as culled `POLY_FT4`s |
+| `MapCell_DrawRising` | `0x570660` | 0x20F | Eight flat squares stacked on the cell, redrawn each frame with one `Rand` each; the record is not read |
+| `Area_TestCondition` | `0x56FF00` | 0x118 | A record's u16 condition: a flag bit, its complement, or one of six comparisons |
+| `AreaMap_Elevation` | `0x5720C0` | 0x20B | The ground's elevation at a 16.16 point, from a height byte per cell and a corner dword per cell |
+
+`pe_funcs.py` had given `0x56FF00` 0xBA6 bytes, running on through the
+handlers after it. This is section 14's problem again, because those handlers
+are pointer-reached. The function is 0x118 bytes, and the frame hash's entry
+list now says so (below).
+
+**`MapCell_DrawQuads`.**
+
+- **Origin.** The cell's origin is `((b1 - 0x80) * 128, (b0 - 0x80) * 128)`,
+  from the two bytes `DrawLayer_Open` hands over.
+- **Vertices.** A vertex dword holds an s8 at byte 3 and another at byte 2,
+  each doubled about the origin. The low word is the third coordinate.
+- **Cull.** Only the first vertex goes through `Gte_Rtps`. Its screen point is
+  written to the primitive before the cull, so a culled quad still leaves it
+  there. The quad is kept only inside `-100 < x < 420`, `-150 < y < 300`,
+  compared as floats because that is how the port's GTE stores them.
+- **Slot.** When bit 14 of the texture word is set, the quad goes to slot 4,
+  or to slot 7 if bit 30 is also set. Otherwise it goes to `Draw_OtSlot`, or
+  to slot 6 if bit 30 is set.
+- **End of the walk.** A count starts at 1 and adds 5 per subrecord. The walk
+  ends when it equals the record's byte `+2`, so any other length never ends.
+  That is read from the code, not run: the fuzz only builds lengths of `1 + 5n`.
+
+**`MapCell_DrawRising`.** Each call draws eight squares, `i` = 0..7. With
+`f = Frame_Counter & 7`:
+
+| Quantity | Value |
+|---|---|
+| Half-side | `0x20 + 0x20 i + 4f + (Rand() & 3)` |
+| Centre sway | `\|16 - ((Frame_Counter >> 8) & 0x1F)\| * (f + 8i) / 10` |
+| Third coordinate | `-(elevation / 2) - 8 (f + 8i)` |
+| Texture word | `0xBA009124`, with shade `(0x3F - 8i - f) / 4` |
+
+The elevation is taken at cell `(b1 - 1, b0)` and halved as an s16. What
+this looks like in game is not established; the name describes the geometry
+only.
+
+**`Area_TestCondition`.** The high byte of the u16 is the kind:
+
+| Kind | True when |
+|---|---|
+| `0x00..0x1F` | bit (low byte) of `Cond_Flags + 8 * kind` - rows 8 bytes apart, each reaching 32, so they overlap |
+| `0x20..0x3F` | the same bit of row `kind & 0x1F` is clear |
+| `0xFF` | `(code & 1) XOR Cond_ByteFF` - the whole byte, so `al` can be anything |
+| `0xFE` / `0xFD` | low byte `==` `Cond_ByteFE` / `!=` `Cond_ByteFD` |
+| `0xFC` | `(Game_Mode == 7 or Field_Request == 4) XOR (code & 1)` |
+| `0xFB` | `((Cond_AngleFB - 0x200) & 0xFFF) <= 0x800`, XOR `(code & 1)` |
+| `0xFA` | low byte `==` `Cond_ByteFA` sign-extended - never at `0x80` and up |
+| anything else | bit 0 |
+
+An E8 scan finds thirteen call sites: four in `0x4CDDC0` and the rest in
+seven map-cell handlers. Two of them widen `al` with `movsx`, so ours returns
+the whole byte. The callers push `ax` with stale bits above it, and only the
+low 16 bits are read. The `Cond_*` names say which kind reads each global,
+not what the global holds.
+
+**`AreaMap_Elevation`.** `x` and `y` are 16.16, and their high words name a
+cell of the grid that is `AreaMap_Header` bytes 0 by 1.
+
+- **Outside the grid**, the answer is 0 in `ax` with the header's top half
+  above it. That is kept, for any caller that reads `eax`.
+- **Inside the grid**, the function reads the height byte at
+  `AreaMap_Header + AreaMap_HeightBase * 4 + cell` and multiplies it by
+  `MapView_HeightScale`. It adds the result to corner bytes of the cell's
+  dword at `AreaMap_Corners` (`0x8CB5B0`), with a different formula for each
+  quadrant of the cell (chosen by bit 15 of `x` and of `y`):
+  - **First quadrant:** full precision, result `<< 4`.
+  - **Next two:** the product's low byte and byte sums widened as signed;
+    the larger of two sums, `<< 4`.
+  - **Last:** the largest of four values, `<< 5`.
+
+The comment in the code has the formulas. About 190 functions call it.
+
+**Checks.** The start-up fuzz, `BOF3X_SHADOW=map_cells`, runs ours against
+clones. The module injects second, right after `sprite_records`, so the
+handlers' clones call Capcom's whole tree: the GTE, the GPU setters,
+`Prim_SetTexture` and `Gfx_CommitPrim`. Their calls to the two helpers go to
+the helpers' clones.
+
+`Rand` cannot run in the fuzz. The launcher loads us into a suspended
+process, before `BOF3.exe`'s C runtime has started. `Rand` calls the
+runtime's `_getptd`, which ended the process there, and the launcher reported
+it as "could not load the dll". So both sides draw from the same stand-in:
+MSVC's generator, on a seed the fuzz owns. Ours reaches `Rand` through a
+pointer, and everywhere outside the fuzz that pointer is Capcom's `Rand`.
+
+- **`Area_TestCondition`**: 65,536 rounds. Codes are aimed at each kind, and
+  half the time the operand equals the byte it is compared with. Upper bits
+  are stale. The globals are redrawn every 16 rounds: `Game_Mode` is 7 and
+  `Field_Request` is 4 a quarter of the time each, and the angle is one step
+  from either end a third of the time. That gave 14,415 rounds of kinds
+  `FA..FF`, 31,383 flag kinds, 19,738 others and 2,327 answers above 1.
+  **0 mismatches**, comparing `al`.
+- **`AreaMap_Elevation`**: 131,072 rounds, over areas up to 40 x 40 laid out
+  in the block's first 8 KB and redrawn every 256 rounds. Coordinates are
+  mostly within two cells either side of the grid. 77,161 fell outside, and
+  about 13,450 inside each quadrant. **0 mismatches**, comparing `eax`.
+- **The handlers**: 24,000 rounds, a third of them `MapCell_DrawRising`.
+  Everything either handler touches is state: the GTE's globals, the packet
+  window and pointer, the ordering table and its tails, the vertex scratch,
+  the frame counter, the seed, a small area grid, the record and the
+  conditions. Half the rounds are a scene rather than noise: a near-identity
+  rotation, a translation in front, and screen-sized offsets, so that points
+  land around the cull's bounds. `MapCell_DrawQuads` was refused by its
+  condition or length 4,710 times and walked 11,290 times, committing 13,506
+  quads and culling or finding no room for 26,017. **0 mismatches**. A vertex
+  pad word differed 16,740 times, with ours zero every time (DIV-0023, below).
+
+**DIV-0023.** `MapCell_DrawQuads` builds its vertices on its stack and never
+writes their fourth word, so the loaders carry stale stack into the top
+halves of `Gte_Vertices[1]`, `[3]` and `[5]`. No instruction in the image
+reads them. Ours writes zeros, as DIV-0021 does for the matrix product's
+padding. Where the two differ in those bytes, the fuzz accepts theirs only if
+ours is zero.
+
+**Negative controls.** Each control is a rebuild and a start-up run. With the
+module in, all 16 other self-tests still pass (40 lines, `BOF3X_SHADOW=*`).
+
+| Control | Mismatches |
+|---|--:|
+| `0xFA` compared zero-extended | 626 |
+| `0xFF`'s answer cut to 0 / 1 | 2,327 |
+| Complement rows by `& 0x3F` | 6,975 |
+| `0xFB` tested `< 0x800` | 149 |
+| Off-grid answer 0 | 77,161 |
+| First quadrant in bytes | 10,716 |
+| Both halves `<< 4` | 3,445 |
+| `x` half from byte 5 of the corners | 8,251 |
+| Cull `y` below 310 | 29 |
+| Slots 7 and 4 swapped | 3,304 |
+| Vertex pad written 1 | 11,290 |
+| A culled quad leaves no screen point | 5,955 |
+| The sway rounded | 5,758 |
+| The shade without the frame phase | 4,094 |
+| The elevation halved as a long | 3,993 |
+| One `Rand` a call, not a square | 8,000 |
+| The elevation halved toward minus infinity | **0** |
+
+The last control is not refused, and cannot be. Every elevation is a
+multiple of 16, so halving it is exact whichever way it rounds. An earlier
+draft of the comment claimed "toward zero" as a kept quirk, and that claim is
+gone. Three other claims were removed the same way before the controls ran,
+because nothing can observe them: the order of ties among equal maxima, and
+two orders of calls that write disjoint memory.
+
+**Live.** The handlers draw, so the check that counts is the live one. With
+`BOF3X_SHADOW=map_cells`, after the fuzz, every call in game runs a clone
+first. Then it puts back everything the clone wrote and runs ours, and
+compares the two: the GTE's globals, the vertex scratch, the packet pointer
+and 4 KB of pool after it, the ordering-table pointers and the tail words they
+pointed at, and `Rand`'s seed. The seed is at `Crt_GetPtd() + 0x14`; the C
+runtime is up by the time the game draws. The rising squares' live clone
+calls Capcom's `Rand`.
+
+A 7-minute attract run on 2026-09-21 (`analysis/attract/ab18_live.*`)
+compared 8,192 calls of `MapCell_DrawQuads` (11,565 primitives committed)
+and 3,072 of `MapCell_DrawRising` (24,576). The report comes every 1,024 calls,
+so the last few hundred went unlogged. **0 mismatches** in both. The pad
+word differed 16,095 times, which shows the comparison sees the GTE. The
+attract oracle was identical with the check on, over 7,478 frames.
+
+Then the batch check, all 135 ours (`analysis/attract/ab18_cycle.log`,
+`analysis/validate_ab18.sh`):
+
+- **Oracle:** the full-cycle oracle was identical over 7,478 frames.
+- **Memory dump:** identical in the arena, VRAM and the CLUT.
+- **Frame hash:** identical on all 6,312 frames, original against original and
+  original against ours (`ab18_*`, now the reference).
+
+The frame hash was re-recorded under a corrected list.
+`entries_logic.txt` gives `0x56FF00` its true 0x118 bytes and lists the two
+handlers, so that calls from inside them count as owned on both sides. The
+old list is `entries_logic_0921.txt`. The hash runs were 7 minutes at the
+traced pace, so they end at frame 6,312. The handlers' first calls come at
+frames 3,856 and 4,305, so the hash covers only the stretch after that, not
+the whole cycle.
+
+**Capture A/B, frame-exact** (`tools/recipes/attract_cycle.txt`, 55 shots
+over the cycle). Shots now freeze the game until they are grabbed
+([`input-script.md`](input-script.md) section 3). Before that the grab landed
+wherever the game had run to, and two identical runs differed in 34 of 55
+shots.
+
+| Run pair | Identical |
+|---|--:|
+| All ours, twice (the noise floor) | **55 of 55** |
+| The four original against ours | **55 of 55** |
+| Ours against both handlers returning at once | 41 of 55 |
+
+The third row is the coverage: in the other 14 shots the handlers draw, by up
+to 41,769 pixels (`analysis/shots/frozen_*`). In `a14` that is a translucent
+column of pale squares rising from below a walkway, `MapCell_DrawRising`'s
+stack, and a grey beam across a mound. In `a25` a character stands
+differently, because with the handler gone its eight `Rand` calls a frame
+stop and the game's random sequence shifts. So the A/B matched on 14 frames
+the handlers draw, pixel for pixel. Bottom corners are masked, 8 x 8 each:
+Windows 11 rounds them, and they blend in whatever is behind the window.
+
+Save 5's field (`tools/recipes/field_view.txt`) says nothing about these
+two. Its four shots are identical with both handlers off, so they do not
+draw there.
+
+## 17. The attachment handle and the inherited draw key - taken over (2026-09-21)
+
+`src/game/sprite_find.cpp`. Both were in the queue under the field objects
+([`attract-remaining.md`](attract-remaining.md) §4.5): `0x589770` was its
+hottest entry at 74,397 calls, and it calls `0x57C0A0` - section 11's parked
+function - for every attached object.
+
+| Function | Address | Size | What |
+|---|---|--:|---|
+| `Sprite_ObjectByHandle` | `0x57C0A0` | 0x4A | An attachment handle to an object number: without bit 7 `(h & 0x3F) + 30`, with it `h & 0x3F` |
+| `Sprite_InheritDrawKey` | `0x589770` | 0x98 | The current object takes the `+0x32` draw key (section 1) of the object it is attached to, or else of the first type-`0x0A` object it is near |
+
+**Where the handle comes from.** The movement-script command `F8 07 h s`
+stores it at object `+0x18` ([`movement-script.md`](movement-script.md) §2).
+Section 11's question - whether the discarded search is Capcom's or the
+port's - is answered by the PSX twin `0x8015BEE4`: it returns the count of
+matches, which equals the number sought, so the search is dead there too. And
+no shipped script uses a bit-7 handle, so it is never asked
+([`known-defects.md`](known-defects.md) D6). Ours returns `h & 0x3F` without
+the walk: the walk's only other effect is a store into its own argument slot,
+which both callers discard.
+
+**`Sprite_InheritDrawKey`**, as the original has it: the number is compared
+signed against 30, the attached path does not test `0xFF`, and a number past
+33 reads past `Sprite_ObjectsExtra`. None of it can arise from
+`Sprite_ObjectByHandle`'s results (0..`0x5D`) or `Sprite_FindNearby`'s.
+
+**Checks**, `BOF3X_SHADOW=sprite_find` (with the module's two earlier
+self-tests, unchanged):
+
+- **`Sprite_ObjectByHandle`**: every handle against 64 layouts of type bytes,
+  from none of type `0x0A` to most, with noise above the argument byte:
+  16,384 calls, **0 mismatches**.
+- **`Sprite_InheritDrawKey`**: 8,000 rounds against a clone whose two calls
+  reach the clones of `Sprite_ObjectByHandle` and `Sprite_FindNearby`.
+  Objects are filled as for `Sprite_FindNearby`'s own fuzz, the attached bit
+  is random, and the handles are seeded at the edges of both numberings,
+  folded so that every number stays inside the 34 objects. Both arrays and
+  the object outside them are compared whole. 3,920 attached, 3,632 near an
+  object, 448 neither: **0 mismatches**.
+
+| Negative control | Mismatches |
+|---|--:|
+| A bit-7 handle returns the slot the search finds (the "fix") | 1,308 of 16,384 |
+| Object 30 counted in the first array (`>` for `>=`) | 727 of 8,000 |
+| Attached tested on bit `0x40` instead of `0x20` | 3,954 of 8,000 |
+
+The first row is worth keeping in mind for D6: the fix is observable to the
+fuzz, just never to the shipped data.
+
+**Live.** After the fuzz, `BOF3X_SHADOW=sprite_find` leaves both clones in
+place: every call in game runs Capcom's first, then ours from the same state -
+for the draw key, the current object's `+0x32` is put back in between - and
+the two are compared. Three scenes on 2026-09-21 (`analysis/probe/ab19_probe_*`,
+with a temporary probe on the attach command beside it):
+
+| Scene | `Sprite_InheritDrawKey` | `Sprite_ObjectByHandle` | Attachments made (mode 7) |
+|---|--:|--:|---|
+| Attract cycle, 9 minutes, 15,714 frames | 69,632+ | 20,480+ | 6, all in area 4, handle `01` |
+| New game to its scripted battle | 40,960+ | | 3, in area `0x18` |
+| Save 5's field, four shots | 1 | | none |
+
+The counts are the last report line, which comes every 4,096 calls. **0
+mismatches, and no bit-7 handle**, in all three. The attract figure matches
+the catalogue's 12 calls of the attach command a cycle: six are mode 7 and
+store a handle, six are mode 4 and store none.
+
+Then the batch check, all 137 ours (`analysis/validate_ab19.sh`, local):
+
+- **Capture A/B**: the attract cycle's 55 frozen shots **55 of 55
+  identical**, the two original against ours - and 55 of 55 against the
+  previous batch's `frozen_a`; save 5's field, 4 of 4.
+- **Oracle**: identical over 7,478 frames.
+- **Frame hash**: identical on all 10,062 frames, original against original
+  and original against ours (`ab19_*`, 11 minutes, now the reference).
+  Against `ab18_orig` it has 40,323 fewer calls over the shared 6,312 frames
+  and more in none - exactly the two functions' calls in `ab18_orig`, which
+  the hash stops counting once they are owned.
+
+**Coverage** (`analysis/validate_ab19b.sh`): the attract capture again, on a
+temporary build whose `Sprite_InheritDrawKey` returns at once, against ours -
+**40 of 55 identical**. The other 15 differ by 700 to 2,806 pixels, all in
+one box around (310..406, 210..273): two figures standing on a wheeled
+platform on rails (`a00`), which without the inherited key draws over them
+instead of under them. Slots 0 and 1 are the objects area 4 attaches, with
+handle `01` - object 31 - so the platform being object 31 is the reading
+of the picture, not a memory read. So the capture A/B above matched 15
+frames this function decides, pixel for pixel.
+
+**Memory dump, and the `clut` region's noise.** Arena and VRAM identical to
+the reference in every run. The `clut` region, against `clutref_a`
+(2026-09-19), was off by a single palette row in eight of nine dumps that
+night, in every configuration: all ours, row 482 in four of five and
+identical in the fifth; the two functions original, row 482; all original,
+row 506 in three of three (`analysis/attract/ab19_*.memdump.log`). So it does
+not follow these two. The reference pair `clutref_a` / `clutref_b` still
+agree with each other; they predate DIV-0022's clock, which is a candidate
+cause, not a tested one. [`asset-loading-path.md`](asset-loading-path.md)
+§2 already has rows 482 and 483 moving with run speed.

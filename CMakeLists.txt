@@ -50,10 +50,12 @@ add_library(bof3x SHARED
   src/hook/dllmain.cpp
   src/hook/detour.cpp
   src/hook/calltrace.cpp
+  src/hook/input_script.cpp
   src/hook/crash.cpp
   src/hook/log.cpp
   src/hook/inject_all.cpp
   src/game/file_io.cpp
+  src/game/game_clock.cpp
   src/game/save_io.cpp
   src/game/dat_load.cpp
   src/game/text_advance.cpp
@@ -65,6 +67,8 @@ add_library(bof3x SHARED
   src/game/msg_pool.cpp
   src/game/name_tables.cpp
   src/game/config_text.cpp
+  src/game/menu_verbs.cpp
+  src/game/char_names.cpp
   src/game/title_menu.cpp
   src/game/gfx_frame.cpp
   src/game/gfx_image.cpp
@@ -74,6 +78,9 @@ add_library(bof3x SHARED
   src/game/gfx_unpack.cpp
   src/game/gfx_vram_ops.cpp
   src/game/sprite_order.cpp
+  src/game/sprite_records.cpp
+  src/game/map_cells.cpp
+  src/game/sprite_draw.cpp
   src/game/draw_pool.cpp
   src/game/prim.cpp
   src/game/map_view.cpp
@@ -85,6 +92,7 @@ add_library(bof3x SHARED
   src/game/psx_gpu.cpp
   src/game/psx_gte.cpp
   src/game/psx_gte_float.cpp
+  src/game/psx_gte_matrix.cpp
   src/game/psx_gte_transform.cpp
   src/game/draw_emit.cpp
   src/game/draw_pass.cpp)

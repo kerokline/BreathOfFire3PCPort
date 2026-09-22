@@ -7,6 +7,7 @@
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/inject_all.h"
+#include "hook/input_script.h"
 #include "hook/log.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
@@ -18,6 +19,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::Crash_Start(module);
         bof3::InjectAll();
         bof3::CallTrace_Start(module);
+        bof3::InputScript_Start();
     } else if (reason == DLL_PROCESS_DETACH) {
         bof3::Log("bof3x detaching");
         bof3::LogClose();

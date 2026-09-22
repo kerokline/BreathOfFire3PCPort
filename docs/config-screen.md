@@ -1,7 +1,7 @@
 # The in-game Config screen: where its text lives, and how it was translated
 
 **Status:** CONFIRMED in game by the owner (2026-09-21) — layout, lettering
-and the selected row. The buttons and caption above the panel are open (§8).
+and the selected row. The buttons above the panel are DIV-0018 (§8).
 
 The Config screen is menu state 7, `0x5902E0`
 ([`menu-screens.md`](menu-screens.md) §1), whose code sits at
@@ -256,10 +256,25 @@ and turns the two width computations into the small branch's own (`len * 4`,
 
 ## 8. Open
 
-- **"Close Config", "Quit", "Init"** — the caption and the two buttons in the
-  owner's screenshot. `Quit` and `Init` are in an 8-byte table of short menu
-  verbs on the disc (`Use`, `Sort`, `Drop`, `Eqip`, …, 23 of them) that serves
-  the whole menu, not just this screen; the PC's counterpart is unfound. The
-  caption is not a literal on the disc at all. Neither is in DIV-0015.
+- **The caption** ("Close Config", "Set message speed", ...) turned out to be
+  English already: it is a system-pool message (`0x497740(0xBC + row)`,
+  drawn at `0x460E5B`), so DIV-0007's pool carries it.
+- **The two buttons are DIV-0018** (2026-09-21), and they are not this
+  screen's: the menu's button-row draw `0x574890` takes a set number, the
+  sets are 5-byte records at `0x66383C` (count, up to four verb indices), and
+  the verbs are 22 NUL-padded 8-byte slots at `0x66A228` behind the pointer
+  table `0x6637E4`. Config is set 6, verbs 11 and 14 (`终了` / `预设值`, the
+  US `Quit` / `Init`). Its other callers, `0x5965FB`, `0x59A66B` and
+  `0x59B33B`, take the set from a window record's `+0xA`; they draw Items
+  (set 0), Equipment (1), Ability (2) and Tactics (7). The US disc has the
+  same table in `START.EMI`, `STATUS.EMI` and `BATE.EMI`, with set records
+  byte-identical for sets 0 to 7 and a 23rd verb, `End`. One direct use
+  besides: `0x59E198` draws verb 0 (`Use`) left-aligned. The labels are
+  centred as `6 * n` - the Chinese advance - which is why DIV-0018 also
+  re-centres them.
+- **Next door on the disc, the stat labels:** the US table is preceded by
+  `Int`, `Agl` and their neighbours - the labels Status and Equipment still
+  draw in Chinese (攻击 / 防御 / 智力 / 速度, seen 2026-09-21). The obvious
+  next converter.
 - **Names for these functions in `symbols.toml`.** The four are still
   addresses here.

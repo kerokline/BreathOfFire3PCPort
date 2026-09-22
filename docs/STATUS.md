@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-20)
+**Status:** IN PROGRESS (2026-09-21)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**One hundred and twelve functions of ~2,952 are ours** (a hundred and nine from stage 1, three from the text path, below): `LoadDatFile` `0x454590`, the DAT
+**One hundred and thirty-four functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and thirty-one from stage 1, three from the text path, below; sixteen on 2026-09-21 through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding; the newest four, later that day, the map-cell handlers `0x570020` and `0x570660` with the condition test and the ground's elevation under them - fuzzed with 17 controls, every in-game call shadowed against a clone over a 7-minute attract run, and through the batch check (§16, `ab18_*`); DIV-0023, zeros in a vertex's padding as in DIV-0021, the owner's call; the newest two, that night, the attachment handle `0x57C0A0` and the inherited draw key `0x589770`, kept faithful to a search Capcom's code discards - latent, no shipped script asks for it ([`known-defects.md`](known-defects.md) D6, [`movement-script.md`](movement-script.md)) - through the batch check with a live shadow in three scenes (§17, `ab19_*`)): `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -62,7 +62,7 @@ hash. The same day the queue's hottest entries turned out to be one thing:
 **the port's own implementation of Sony's libraries**
 ([`psx-library-layer.md`](psx-library-layer.md)) - libgpu primitive setters
 and ordering-table links, `getTPage`, `getClut`, a sine, and a GTE whose
-registers are globals. Sixty-two of its functions are ours, `ApplyMatrix`
+registers are globals. Sixty-eight of its functions are ours, `ApplyMatrix`
 at 2.6 million calls a run among them - and, since the same day, the ones that
 go through x87. What x87 computes depends on the control word, so that was
 measured first: **`0x027F`, 53-bit precision, on every one of 11 million live
@@ -111,8 +111,8 @@ toggle the owner wants - [`IDEAS.md`](IDEAS.md) I15) and a white text palette
 the PC team brightened (**DIV-0013**, restored from the disc by the English
 overlay). Later the same evening the title menu, which is artwork and not
 text, was rebuilt from the disc - NEW GAME, LOAD GAME, and a CONFIG cut from
-their letters (**DIV-0014**, [`title-menu.md`](title-menu.md); built, unseen
-in game). The frame hash was re-recorded with all of it up to DIV-0013
+their letters (**DIV-0014**, [`title-menu.md`](title-menu.md); confirmed in
+game by the owner off a recipe capture, 2026-09-21). The frame hash was re-recorded with all of it up to DIV-0013
 (`ab15_*`, recorded with DIV-0010 in and before DIV-0011..0013, none of
 which touches a traced function): identical over 7,936 frames. Sixteen of the hundred and nine from stage 1 are beyond
 the attract sequence's reach and rest on the differential fuzz alone -
@@ -166,9 +166,9 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 150 functions, 8 global blocks and 99 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 135 functions carry signatures and
-  are callable from our code, 112 of them ours (counted 2026-09-20 by
+- 168 functions, 8 global blocks and 119 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 150 functions carry signatures and
+  are callable from our code, 122 of them ours (counted 2026-09-21 by
   `gen_symbols.py` and `tomllib`, not from memory).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
@@ -180,7 +180,13 @@ What is established:
 - **Known defects are written down** ([`known-defects.md`](known-defects.md)):
   clipped stat numerals (draw-time, cause unread), the mojibake title, the
   crash above, and a frame deadline kept in a 32-bit float, which makes game
-  speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured.
+  speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured,
+  and **half speed past 6.2 days, observed 2026-09-21** (every run that day,
+  original included; D5). With Fast Startup that "uptime" survives nightly
+  shutdowns, so players meet it within a week; past 12.4 days the game runs
+  unthrottled and, by the code, draws nothing. **Fixed short term by
+  DIV-0022** (the game's clock starts with the game: 30.00 logic frames a
+  second); the complete fix is [`IDEAS.md`](IDEAS.md) I16.
 - **The launcher has a settings dialog** (2026-09-20,
   [`launcher-settings.md`](launcher-settings.md)): language, texture filter,
   display and renderer, in a plain Win32 `DIALOGEX` with nothing vendored.
@@ -209,6 +215,37 @@ What is established:
   in the 8 x 12 dialogue font on the same 8 advance, as the disc does, instead
   of the UI glyph blown up and thrown left (DIV-0017). All of it confirmed in game by the owner, 2026-09-21. The font table is no longer
   capped by anything but that guard, which is in our own `Text_DrawString`.
+- **PSX functions pair with PC ones at scale** (2026-09-21,
+  [`attract-remaining.md`](attract-remaining.md) §5): the PSX area descriptor
+  table has a PC twin at `0x667590` (198 of 200 areas agree), and from its 728
+  pairs `tools/psx_pair.py` grows 3,330 through call lists, size-checked
+  position, shared tables and callers - 433 of them boot EXE functions - each
+  method measured against call edges it was not chosen on. The same day's
+  catalogue found that `pe_funcs.py` misses every function reached only
+  through a pointer, some 7,300 (§3 there), and that the WndProc is
+  `0x4FC6F0`.
+- **An agent can walk the game unattended** (2026-09-21,
+  [`input-script.md`](input-script.md)): recipes of pad presses played inside
+  the game, counted in its own frames and so repeatable from launch, with the
+  window captured at each `shot`. Built on two measured facts: the pad word is
+  the PlayStation's bit layout, and the input latch runs more often than
+  frames, so the recipe keys on `Frame_Counter` `0x937F94`. It reached the
+  Config screen, a save's field menu, and the first in-menu A/B of DIV-0010.
+- **More of the exe's own text is English** (2026-09-21,
+  [`dialogue-localisation.md`](dialogue-localisation.md) §8): the menu's
+  button verbs on Config, Items, Ability, Equipment and Tactics (DIV-0018),
+  the battle's command labels (DIV-0019), and New Game's default names -
+  Ryu ... Peco, the Whelp - and Manillo the fish merchant's (DIV-0020). Each
+  is a slot table in `.data` whose US twin sits beside data the PC kept byte
+  for byte, which is how the build finds it on the player's disc. All but
+  Manillo's are captured in game. Saves keep their names; the owner accepted
+  gibberish across a language switch until a language-independent name
+  system exists.
+- **The first battle is reachable unattended**: a new game plays into the
+  opening's scripted fight (field mode 5), and its command cross -
+  hold-to-choose - is captured command by command
+  ([`input-script.md`](input-script.md) §4). DIV-0010 and DIV-0014 were
+  confirmed by the owner off recipe captures the same day.
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 
@@ -219,7 +256,7 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). A hundred and twelve are ours, not
+   with the takeover queue already layered (§9 there). A hundred and thirty-four are ours, not
    all of them among the 540.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
@@ -228,8 +265,10 @@ What is established:
    overlay `DAT`s and an upscaled font table, both built locally from the
    player's discs. **Begun 2026-09-20: English dialogue draws in the attract
    sequence**, and by the evening the owner was playing it: dialogue,
-   narration, menus, item and ability names (DIV-0005..0009). Enemy, character
-   and place names and text in artwork are still Chinese - so
+   narration, menus, item and ability names (DIV-0005..0009); on 2026-09-21
+   the menu's buttons, the battle's command labels and New Game's names
+   (DIV-0018..0020). Enemy and place names, some labels and headers, and text
+   in artwork are still Chinese - so
    that the owner can make headway through the game
    itself — and with that, reach code the attract sequence never runs. What
    this means in detail is the owner's to say; the asset side of selectable

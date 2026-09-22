@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 9 entries, DIV-0001..0009)
+**Status:** IN PROGRESS (opened 2026-09-18; 22 entries, DIV-0001..0022)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -570,8 +570,11 @@ designed in rather than bolted on.
 - **Checked:** attract run, no crash, oracle unaffected (render only);
   screenshots original against ours in `analysis/d1/`: no seams, sprites
   drawn at a true 2x where the original stretched w - 1 texels over w pixels
-  (the title's (R) mark is a pixel shorter). **Not yet seen: the menu numerals
-  themselves** - the attract sequence draws none; owner to look.
+  (the title's (R) mark is a pixel shorter). **The menu numerals, A/B, by
+  input recipe 2026-09-21** ([`input-script.md`](input-script.md) §5): with
+  Capcom's handlers the bottom row of every HP / AP numeral is cut off and
+  the portrait frame has a seam under it; with ours both are whole. **The
+  owner judged the capture: "numerals look good".**
 
 ### Draw the Config panel's frame, which the PC build compiled to nothing
 
@@ -698,8 +701,11 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
   rows are then cut off - for A/B only).
 - **Checked:** an offline composition through CLUT 0 at the draw's positions,
-  seen by the owner ("perfect"). **Not yet seen in game**
-  ([`USER_CHECKS.md`](USER_CHECKS.md) 6): nothing unattended reaches the menu.
+  seen by the owner ("perfect"). **In game, 2026-09-21**: captured by input
+  recipe ([`input-script.md`](input-script.md) §5; the cursor starts on LOAD
+  GAME when saves exist) and judged by the owner: "the title menu looks
+  perfect". The two-row layout and each row's destination are still open
+  ([`USER_CHECKS.md`](USER_CHECKS.md) 6).
 
 
 ### The in-game Config screen in the overlay's language
@@ -868,3 +874,259 @@ designed in rather than bolted on.
   validated against the original bytes at start-up. **Seen in game by the
   owner, 2026-09-21: "looks perfect"** - the lowercase `g` is what shows the
   large form is a different font and not a magnified one.
+
+### The menu's short verbs - the buttons above a panel - in the overlay's language
+
+- **ID:** DIV-0018
+- **Date:** 2026-09-21
+- **Subsystem:** menu (only with a language overlay)
+- **Original behaviour:** the buttons above a menu panel - Config's two, and
+  the rows of Items, Ability, Equipment and Tactics - are drawn by `0x574890`
+  from a set number: 5-byte records at `0x66383C` (a count and up to four
+  verb indices) select from 22 NUL-padded 8-byte strings at `0x66A228`,
+  through the pointer table `0x6637E4`. Each label goes through `Text_DrawAt`
+  at `0x57499B`, centred in its button as `x0 + 0x16 + 48 * i - 6 * n`, `n`
+  being its character count from `0x57D800` - half of 12 units a character.
+  The strings are Chinese (Config's are `终了` / `预设值`) and live in the
+  exe, not in any `DAT`. Read 2026-09-21 ([`config-screen.md`](config-screen.md) §8).
+- **New behaviour:** a kind-8 chunk in the English `FIRST.DAT` carries the US
+  disc's verbs - `Use`, `Sort`, `Drop`, `Eqip`, `Opti`, `Abil`, `Buy`,
+  `Sell`, `Chng`, `Read`, `Vtal`, `Quit`, `Form`, `Bttn`, `Init`, `Note`,
+  `Fast`, `Pool`, `Ally`, `Gene`, `Knd`, `Look` - read from the player's
+  `START.EMI` and written into the 22 slots in place, one byte a character in
+  the dialogue font's single-byte slots. And the one label draw at
+  `0x57499B` is re-aimed at `MenuVerbs_DrawLabel`, which moves the label by
+  `6 * n - width / 2`, the width being what the pen will really cover
+  (DIV-0006's advances) - zero for 12-unit glyphs, so Chinese text is placed
+  exactly as before.
+- **Rationale:** the stage-2 text swap (DIV-0005). The US disc has the same
+  table, the same 5-byte set records byte for byte for sets 0 to 7, and a
+  23rd verb, `End`, that its last set uses where the PC's uses `Quit` again;
+  so the verbs pair by index and the PC's own sets are the anchor
+  `loc_build.py` finds the donor's by. The re-centring is DIV-0017's problem
+  again: English advances 8 where the draw reckons 12, which would put every
+  label two units a character left of centre.
+- **Also in the PSX version?** Yes - these are the PlayStation's strings; the
+  US verbs are abbreviated to fit its buttons.
+- **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuVerbs` keeps
+  the original centring (for A/B only - the English labels then sit left).
+- **Checked:** the chunk's 22 slots are validated against the pointer table
+  before any write; captured by input recipe 2026-09-21 on the Config screen
+  (`Quit`, `Init`) and on Items, Ability, Equipment and Tactics
+  (`analysis/shots/menu_screens/`), each label centred in its button - sets
+  6, 0, 2, 1 and 7. Not seen: sets 3 (`Buy` / `Sell`), 4 (`Look` / `Chng`),
+  5 (`Read` / `Sort` / `Drop`) and 8 (`Knd` / `Quit`), whose screens are
+  unidentified, and anything in battle.
+
+### The battle's command labels in the overlay's language
+
+- **ID:** DIV-0019
+- **Date:** 2026-09-21
+- **Subsystem:** battle (only with a language overlay)
+- **Original behaviour:** holding a direction or shoulder button on the
+  battle's command cross shows the command's name in a box beside it:
+  seven 8-byte slots at `0x669D28` behind the pointer table `0x669D60` -
+  攻击, 特能, 道具, 观看, 防御, 突击, 逃走 (Attack, Skill, Item, Watch,
+  Defend, Charge, Escape; glyphs rendered from the port's own font) - drawn
+  by `0x4439A0` as `Text_DrawAt(box_x + 8, y, 0, 8, label)` (`0x443AF5`),
+  left-aligned in a frame whose right edge is `box_x + 0x25`, box positions
+  per command at `0x64E2C8`. Found 2026-09-21 by `BOF3X_TEXTLOG` during the
+  new game's scripted battle.
+- **New behaviour:** a kind-9 chunk in the English `FIRST.DAT` carries the US
+  disc's labels, `Atk` `Abl` `Use` `Exa` `Def` `Chg` `Esc`, written into the
+  seven slots after each is checked against the pointer table. Nothing about
+  the layout changes: three 8-unit characters are exactly as wide as two
+  12-unit ones.
+- **Rationale:** stage 2 (DIV-0005). The owner's screenshots of the US
+  PlayStation show `Atk` and `Esc` in these boxes; the US `BATTLE.EMI` has
+  the seven slots immediately before a box table byte-identical to the PC's
+  `0x64E2C8`, which is how `loc_build.py` finds them. The owner chose the
+  disc's wording over authored English.
+- **Also in the PSX version?** Yes - the PlayStation's strings.
+- **Reversible?** play without `BOF3X_LANG`.
+- **Checked:** captured by `tools/recipes/battle_commands.txt`, 2026-09-21:
+  all seven, each in its box, Chg on L1 and Esc on R1. Still Chinese in the
+  same fight: the target-select banner (`攻 击`, seen when L2 confirmed
+  Attack), the combatants' names, the skill list's header `龙技`
+  (`0x66A220`).
+
+### The characters' default names in the overlay's language
+
+- **ID:** DIV-0020
+- **Date:** 2026-09-21
+- **Subsystem:** text / New Game (only with a language overlay)
+- **Original behaviour:** the port has no name entry. New Game (`0x437820`)
+  copies seven 0xA4-byte default character records from `0x64B390` into the
+  live table `0x903A70` and the whelp's, the eighth, from `0x64B80C` into
+  slot 7 (`0x669736`); each begins with a 9-byte name - 龙 妮娜 加兰多 带波
+  雷伊 小桃 培克洛 巴比 (glyphs rendered from the port's font). One more
+  copy of the whelp's name, the 8-byte slot `0x669CE0`, is copied five bytes
+  into character 7's name at `0x42E09D`, a reset at some event.
+- **New behaviour:** a kind-10 chunk in the English `FIRST.DAT` carries the US
+  disc's eight default names - Ryu, Nina, Garr, Teepo, Rei, Momo, Peco,
+  Whelp - read from `START.EMI`'s own default records, and the DLL writes
+  them into the eight name fields and the whelp's name into `0x669CE0`, after
+  checking the three instructions that read those addresses. New Game hands
+  them on as it always did.
+- **Rationale:** stage 2 (DIV-0005); the owner asked for the names New Game
+  gives. The US records equal the PC's in every byte past the name, four
+  places earlier (155 of 155 in all eight), which is how `loc_build.py`
+  finds and checks them.
+- **Also in the PSX version?** Yes - the PlayStation's default names; the
+  PlayStation also asks for Ryu's, which the port does not
+  ([`save-interchange.md`](save-interchange.md) §2).
+- **Reversible?** play without `BOF3X_LANG`.
+- **Checked:** captured 2026-09-21 in the new game's battle: "Whelp" in the
+  turn banner and the status bar. **Not changed: saves.** A loaded save
+  carries its own names, so a game begun without the overlay keeps its
+  Chinese ones, and a game begun with it writes English names into its save -
+  which then draw as whatever glyphs the single-byte codes name when played
+  *without* the overlay. **Decided by the owner, 2026-09-21:** that is
+  acceptable - saves stay as they are and show gibberish across a language
+  switch until a language-independent name system exists.
+- **Also: Manillo, the fish merchant** (identified by the owner). The PC
+  keeps his name once, 马尼洛 in the 8-byte slot `0x669CD8`, which the
+  battle (`0x52D1EC`, combatant `0x16`) and seven field functions copy 16
+  bytes from; a kind-11 chunk writes "Manillo", exactly 8 bytes with its NUL,
+  after checking the battle's read. On the US disc the name lives in the
+  fishing module every fishing area carries (AREA030, 089, 129, ...), in a
+  12-byte slot right after twelve bytes the PC still has at `0x6608CC` -
+  the anchor `loc_build.py` finds it by. Applied at start-up, logged;
+  not yet seen on screen.
+
+
+### Zeros in the matrix product's padding bytes
+
+- **ID:** DIV-0021
+- **Date:** 2026-09-21
+- **Subsystem:** platform (PSX library layer)
+- **Original behaviour:** the matrix product `Gte_MulMatrix0` `0x5A7D70`
+  builds its nine `s16` results on the stack and copies **five dwords** to
+  the out, 20 bytes for an 18-byte result. So bytes 18 and 19 of every out, a
+  PSX `MATRIX`'s alignment hole, get the stale stack at `esp + 0x3E`. That
+  word is never written by the function, so it can't be reproduced, only
+  replaced. Measured 2026-09-20 over an attract run of 98,305 calls
+  ([`psx-library-layer.md`](psx-library-layer.md) §4): twelve distinct values,
+  `0000` 76,199 times, `000E` 8,535, `6322` 7,964, and others. The three
+  rotation builders multiply in place, so the word lands in the caller's
+  matrix. From there `Gte_SetRotMatrix` carries it into `Gte_Matrix`, where
+  no instruction in the image names those two bytes (`pe_xref`).
+- **New behaviour:** ours writes `0000` there, which is what the original
+  leaves three calls in four. The nine results and the translation are
+  unchanged. The same zeros reach `Gte_Matrix` through `Camera_LoadMatrix`
+  `0x57C070`, and each caller's matrix through the rotations.
+- **Rationale:** the only alternatives are to copy stale stack in from
+  somewhere else, or to leave the out's two bytes alone. Zeros make the
+  product deterministic. Forcing the word to `FFFF` on every call changed
+  nothing any check could see: the oracle was identical over 7,478 frames,
+  arena, VRAM and CLUT dumps were identical, and the frame hash differed only
+  at same-configuration noise. So the choice is not visible in play. It is
+  still a difference, so it is ledgered. Owner's call, 2026-09-21: zeros.
+- **Not covered:** an indexed read of `+0x12`, or a dword read at `+0x10`
+  whose top half is used, in code the attract run does not reach. None was
+  looked for beyond the GTE's own globals.
+- **Also in the PSX version?** Unknown; not looked up. libgte's `MulMatrix0`
+  by its documented shape stores nine halfwords and leaves the padding
+  alone, which would make both the 2001 port's stale word and our zero
+  divergences from it.
+- **Verification:** start-up fuzz against the original, 29,856 rounds, 0
+  mismatches outside the padding and ours zero in it every time
+  ([`psx-library-layer.md`](psx-library-layer.md) §4.1); a 3-minute oracle
+  identical; then the batch check of 2026-09-21 - full-cycle oracle over
+  7,478 frames, arena, VRAM and CLUT dumps, and the frame hash on all 10,062
+  frames, all identical to the original (`ab17_*`).
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Gte_MulMatrix0`. That puts back the
+  original product, and every caller of ours reaches it. No config toggle.
+
+
+### The game's clock starts with the game
+
+- **ID:** DIV-0022
+- **Date:** 2026-09-21
+- **Subsystem:** platform (frame pacing)
+- **Original behaviour:** WinMain paces logic frames against a deadline kept
+  in a **32-bit float** at `0x6BC628`: a `GetTickCount` value in
+  milliseconds, advanced by 33.334 a frame. `GetTickCount` counts from the
+  last full boot of Windows, and past 2^24 ms a float cannot hold every
+  millisecond, so the pace depends on how long Windows has been up
+  ([`known-defects.md`](known-defects.md) D5). Measured on this machine,
+  steady state after 30 s: 31.25 logic frames a second between 2^28 and 2^29
+  ms (every run of 2026-09-20), 15.62 past 2^29 (every run of 2026-09-21),
+  and past 2^30, reproduced with the switch below, 91.7 a second - the
+  spin never waits, and DIV-0004's drain fired, which it does only after an
+  unrendered frame: consistent with D5's "nothing drawn", not looked at on
+  screen. **Fast Startup**, on by default, makes Shut down a hibernate that
+  `GetTickCount` counts through, so a player who shuts down every night
+  reaches half speed about a week after their last Restart.
+- **New behaviour:** the exe's import slot for `GetTickCount`
+  (`Imp_GetTickCount` `0x5C407C`, read once, by WinMain) points at a clock of
+  ours: milliseconds since the DLL was injected, from `GetTickCount64`.
+  WinMain is `GetTickCount`'s only caller in the exe (three calls, all its
+  pacing and a once-a-second counter that only takes differences), so
+  nothing else sees the change. The float code is untouched; it now sees the
+  small numbers it was written for, as on a machine booted that day. Measured:
+  **30.00** logic frames a second after 30 s.
+- **Rationale:** a bug of the platform, not a design choice - the code
+  assumes a tick count small enough for a float, which a 2001 machine booted
+  that morning had and a 2026 one with Fast Startup does not. This is the
+  owner's short-term fix (2026-09-21): four bytes, no game code changed. The
+  complete one, the deadline in a double, is [`IDEAS.md`](IDEAS.md) I16.
+- **Not covered:** one unbroken session still drifts through the float's
+  bands - 30.0 under 35 minutes, 29.85-30.3 up to 4.7 hours, 29.4 to 9.3
+  hours, 31.25 from there to 6.2 days, then half speed (I16 has the table).
+  The fast-forward after focus loss is untouched (I12). Other processes and
+  DLLs reading `GetTickCount` are unaffected: only the exe's own slot is
+  changed.
+- **Also in the PSX version?** Not applicable: the PlayStation paces by
+  vertical blank, not by a clock.
+- **Tooling that comes with it:** `BOF3X_TICK_BASE=N` (decimal or `0x`)
+  starts our clock at N ms instead of 0, which puts the original's pacing
+  code in any band of D5 on demand - how the three bands above were measured
+  (`analysis/attract/clk_*`). `GameClock_Pause` / `GameClock_Resume` stop it
+  while a recipe's frozen `shot` holds the game thread
+  ([`input-script.md`](input-script.md) section 3), so the deadline has no
+  debt to replay; only with `BOF3X_SHOT_WAIT` set, which only `input_run.py`
+  sets.
+- **Verification:** steady-state pace from the recordings, 30 s on: 30.00
+  with the fix, 31.25 at base 2^28, 91.7 at base 2^30 (a run at base 2^29 never reached the attract
+  sequence in its 90 s; that band is the real clock's, 15.62, `ab17_*`); the
+  attract oracle
+  identical over 3,607 frames with the fix (`clk_fix.tsv`). And a 6-minute traced run with
+  the fix against the all-original reference: calls and hash identical on all
+  10,062 frames of `ab17_orig` (`analysis/calltrace/clk_hash`) - the logic
+  does not see the clock.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
+  Windows' clock. No config toggle.
+
+
+### Zeros in a map cell's vertex padding
+
+- **ID:** DIV-0023
+- **Date:** 2026-09-21
+- **Subsystem:** platform (PSX library layer, as DIV-0021)
+- **Original behaviour:** the map-cell handler `MapCell_DrawQuads` `0x570020`
+  builds each quad's vertices as 8-byte PSX `SVECTOR`s in its own stack
+  frame and writes x, y and z but never the fourth word. `Gte_LoadVertex` and
+  `Gte_LoadVertices3` copy whole dwords, so the stale stack there lands in
+  the top halves of `Gte_Vertices[1]`, `[3]` and `[5]`. It is never written by
+  the function, so it cannot be reproduced, only replaced. Every reference to
+  `0x7DE468..0x7DE47F` in the image is a whole-dword store by those two
+  loaders or an address `Gte_Rtps` / `Gte_Rtpt` hand to the projection, which
+  reads x, y and z (`pe_xref --range`, 2026-09-21).
+- **New behaviour:** ours writes `0000` there. Every other byte is unchanged.
+- **Rationale:** the same choice as DIV-0021, for the same class of word.
+  No instruction reads the two bytes, so nothing a player sees changes. It is
+  still a difference, so it is ledgered. Owner's call, 2026-09-21: zeros, to
+  match the matrix product.
+- **Not covered:** a read of those halves by code outside the image (none
+  exists in ours).
+- **Also in the PSX version?** Unknown; not looked up.
+- **Verification:** start-up fuzz against the original's whole call tree,
+  `BOF3X_SHADOW=map_cells`: 24,000 rounds, 0 mismatches outside the padding,
+  which differed 16,740 times with ours zero every time
+  ([`sprite-draw-order.md`](sprite-draw-order.md) section 16); a control with
+  ours writing `0001` is refused (11,290 mismatches). Live, a 7-minute attract
+  run comparing every call against a clone: 8,192 calls, 0 mismatches, the
+  pad word differing 16,095 times; then the batch check of 2026-09-21 -
+  oracle, memory dump and frame hash identical (`ab18_*`).
+- **Reversible?** Yes: `BOF3X_ORIGINAL=MapCell_DrawQuads`. No config toggle.

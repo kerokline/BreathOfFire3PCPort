@@ -3,6 +3,7 @@
 #include "game/config_text.h"
 #include "game/dat_load.h"
 #include "game/file_io.h"
+#include "game/game_clock.h"
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
 #include "game/gfx_image.h"
@@ -13,11 +14,15 @@
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
+#include "game/map_cells.h"
 #include "game/sprite_order.h"
+#include "game/sprite_records.h"
+#include "game/sprite_draw.h"
 #include "game/draw_pool.h"
 #include "game/prim.h"
 #include "game/map_view.h"
 #include "game/menu_frame.h"
+#include "game/menu_verbs.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/field_input.h"
@@ -26,6 +31,7 @@
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
 #include "game/psx_gte_float.h"
+#include "game/psx_gte_matrix.h"
 #include "game/psx_gte_transform.h"
 #include "game/draw_emit.h"
 #include "game/draw_pass.h"
@@ -38,9 +44,13 @@
 namespace bof3 {
 
 void InjectAll() {
+    SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
+    MapCells_Inject();          // likewise
     FileIo_Inject();
+    GameClock_Inject();         // DIV-0022: before WinMain first reads the clock
     MsgPool_Inject();           // before DatLoad_Inject, which may relocate the pool
     ConfigText_Inject();        // layout only; the text arrives with FIRST.DAT
+    MenuVerbs_Inject();         // likewise
     DatLoad_Inject();
     TextAdvance_Inject();
     TextDraw_Inject();
@@ -57,6 +67,7 @@ void InjectAll() {
     GfxFilter_Inject();
     MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
+    SpriteDraw_Inject();        // likewise: before PsxGpu_Inject and DrawEmit_Inject
     SpriteOrder_Inject();
     DrawPool_Inject();
     Prim_Inject();
@@ -67,7 +78,8 @@ void InjectAll() {
     SpriteClut_Inject();
     DrawLayers_Inject();
     DrawEmit_Inject();          // likewise
-    PsxGteTransform_Inject();   // before what it calls: it clones their originals
+    PsxGteMatrix_Inject();      // before what it calls: it clones their originals
+    PsxGteTransform_Inject();   // likewise
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();

@@ -1,0 +1,23 @@
+# Save 5 (adult Ryu, Lv 38) loaded to its field, then four shots of the view
+# 45 frames apart - the field A/B of docs/sprite-draw-order.md sections 15-16.
+wait 480
+press start
+wait 40
+press circle
+wait 60
+press down x5
+press circle
+wait 40
+press circle
+wait 60
+press circle
+until 0x66C7E8 u16 == 2 timeout 1200
+wait 300
+shot field0
+wait 45
+shot field1
+wait 45
+shot field2
+wait 45
+shot field3
+wait 45

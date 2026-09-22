@@ -577,7 +577,7 @@ surveyed for [`prior-art/`](prior-art/): emulator CI that replays recorded GPU
 command streams and hashes the frames (Dolphin's FifoCI, PCSX2's GS dumps),
 and exact-hash sets of accepted images triaged by people (Skia Gold).
 
-## I15 � A look toggle: clean / sharp against soft / CRT-like
+## I15 — A look toggle: clean / sharp against soft / CRT-like
 
 **Asked for by the owner, 2026-09-20**, after seeing what the port's bilinear
 filter does to text. Two looks, switchable in game:
@@ -597,3 +597,110 @@ unread**, which the owner expects to come with a controller-mapping pass. F8
 (windowed) shows the port does read function keys somewhere; that reader is
 the place to start.
 
+
+## I16 — Exact frame pacing: the deadline in a double
+
+**Ask (2026-09-21):** the owner, choosing DIV-0022 (the game's clock starts
+with the game) as the short-term fix for [`known-defects.md`](known-defects.md)
+D5, asked for the complete fix to be kept as a long-term idea.
+**Kind:** platform   **Feasibility:** MEDIUM   **Gated on:** nobody - it
+means owning part of WinMain's loop, which nothing does yet.
+
+**What DIV-0022 leaves.** The frame deadline at `0x6BC628` is still a 32-bit
+float. Counting from the game's start keeps it small, but not exact: each
+frame's +33.334 ms rounds to the float's spacing, so one long session drifts
+through bands - within 0.1 ms under 35 minutes, then 30.1, 29.85, 30.3 and
+29.4 logic frames a second up to 9.3 hours, 31.25 (4% fast) from there to
+6.2 days, then half speed, and past 12.4 days of one unbroken session no
+drawing at all. The 2^32 wrap path (the float at `0x5C4214`) is unreachable
+under DIV-0022 and was broken before it: near 2^32 the float's spacing is
+512 ms.
+
+**The fix.** Keep the deadline where its precision does not depend on its
+size: a double, or 64-bit integer milliseconds (or `QueryPerformanceCounter`
+ticks), advanced by exactly 33.334 ms - or a count of frames times the
+period, which cannot drift at all. The four places in WinMain that touch it
+are known ([`HANDOFF.md`](HANDOFF.md), the D5 item): the first deadline at
+`0x4FCDB0`..`0x4FCDC4`, the render-or-skip compare at `0x4FCE24`..`0x4FCE3D`,
+the spin at `0x4FCEBC`..`0x4FCEDC`, and the advance and wrap at
+`0x4FCF0F`..`0x4FCF3A`. Either take over WinMain's loop, or re-aim those
+four stretches at helpers of ours, keeping the float's slot unused.
+
+**Decisions it brings, the owner's:** the rate - 33.334 ms (29.9994 a
+second, what the code says) or the PlayStation's NTSC 29.97; and whether to
+clamp the deadline's debt at the same time. That debt is the fast-forward
+after focus loss ([`windowed-mode.md`](windowed-mode.md), I12, DIV-0004's
+"not fixed by this"), and would be its own ledger entry.
+
+**29.97 needs this first (checked 2026-09-21).** The frame period is the
+double 33.334 at `0x5C4218`, read once (`0x4FCF15`, the advance), and the
+first deadline's 33.34 at `0x5C4220` once (`0x4FCDBE`); nothing else in the
+exe reads either, and logic counts frames, so changing the period breaks no
+logic. But through the float deadline it changes almost nothing: simulating
+the x87 sequence (float + double, stored as float) over 3,000 frames,
+33.334 and 1001/30 (29.97) give 29.994 against 29.966 in the first four
+minutes, and **the same rate** from about 20 minutes on (29.963, 30.075,
+30.303, 29.412, 31.25 at 20 minutes, 1, 3, 6 and 12 hours) - the 0.033 ms
+between them is below the float's spacing. With the deadline in a double
+(or frames times the period) the rate is one constant. What else runs on
+wall-clock time and would notice the 0.1%: the music (DirectSound, fed from
+the spin by `0x587C70`) and the AVIs (their own clock) - both already
+independent of the frame count. Whether an in-game play-time counter
+assumes 30 frames a second is unread.
+
+**Why not now:** DIV-0022 fixes what players meet (Windows' uptime, which
+Fast Startup carries across shutdowns) with four bytes and no game code
+touched; the rest needs a session of six-plus hours to show.
+
+## I17 — Fast-forward: a shorter frame period while a key is held
+
+**Ask (2026-09-21):** the owner asked whether a 2x / 4x fast-forward is best
+done by cutting the frame period, or whether that is a bad mechanism.
+**Kind:** game behaviour (opt-in)   **Feasibility:** MEDIUM   **Gated on:**
+an input reader for the key (the game's keyboard path is unread, as for
+I15); exact rates want I16.
+
+**The mechanism: yes, cut the period** - 16.667 ms for 2x, 8.333 ms for 4x.
+Why it suits this game (read 2026-09-21, WinMain's loop):
+
+- **Logic never sees it.** Logic counts frames and reads no clock, so a
+  shorter period only changes how many logic frames run per second of wall
+  time. Saves, the RNG, scripted events: identical to 1x. The oracle and the
+  frame hash would not change.
+- **The frame skip already exists.** When the loop is late for its deadline
+  it runs the next logic frame without drawing - the same path the game takes
+  catching up after focus loss. At 4x, when drawing cannot keep up, draws are
+  skipped on their own. DIV-0004 drains the upload queue after unrendered
+  frames. Seen working 2026-09-21: the D5 run at base 2^30 went at 91.7
+  logic frames a second (DIV-0022's `analysis/attract/clk_1073741824*`).
+- **Music keeps being fed.** The spin to the deadline starts with a call to
+  `0x587C70`, the stream pump. A late frame still passes through it once,
+  so it is serviced at every speed.
+- **It can be one runtime write.** The step is `fadd qword [0x5C4218]` every
+  frame, read from memory (the double 33.334, one reader; I16). Code of ours
+  that runs once a logic frame (`Gfx_BeginFrame`) can poll the key and
+  rewrite that double - no takeover of WinMain. After I16 the step is ours
+  anyway.
+
+**Caveats:**
+
+- **Rounding.** The float deadline rounds 16.667 and 8.333 as it rounds
+  33.334. Under DIV-0022 that is small for the first hours, e.g. 17 or 16 ms.
+  With I16 it is exact.
+- **Sound.** Effects fire per logic frame, so at 4x they come four times
+  as often. Music and the AVIs keep their own clocks and do not speed up.
+  Muting effects while fast-forwarding is an option to decide.
+- **Menus.** Cursor repeat and the like are per frame, so they run fast too.
+  Held-to-fast-forward mostly avoids it.
+- **Unrendered frames at high rates.** DIV-0004 covers the upload queue.
+  Anything else that assumes a draw per frame is unknown, but the refocus
+  catch-up has exercised the same path for years.
+
+**The alternative:** own the loop and run N logic steps per drawn frame.
+Steadier draw cadence, but it needs the WinMain takeover I16 starts.
+Revisit only if the skipped-draw cadence looks poor.
+
+**First concrete step:** find the keyboard reader (or poll
+`GetAsyncKeyState` from `Gfx_BeginFrame`), write the double on a held key,
+and measure pace with `attract_run.py` as for DIV-0022. It gets its own
+ledger entry.

@@ -646,6 +646,160 @@ def convert_config(donor):
     return [(KIND_CONFIG, 0, bytes(payload))]
 
 
+# The menu's short verbs - the buttons above a menu panel (DIV-0018,
+# docs/config-screen.md section 8). On the PC: 22 NUL-padded 8-byte slots at
+# VERB_SLOTS behind the pointer table VERB_POINTERS, and the button rows at
+# VERB_SETS, 5-byte records of a count and up to four verb indices, read by
+# the row draw 0x574890. The US disc has the same three things in START.EMI
+# (and STATUS.EMI, BATE.EMI): its strings packed and 4-byte aligned, a table of
+# 23 pointers, and set records byte-identical to the PC's for sets 0-7 - the
+# ninth ends in a 23rd verb the PC does not have. So the sets are the anchor
+# and the verbs pair by index.
+KIND_VERBS = 8
+VERB_POINTERS, VERB_SLOTS, VERB_SETS = 0x6637E4, 0x66A228, 0x66383C
+VERB_COUNT, VERB_ROOM, VERB_SHARED_SETS = 22, 8, 8
+
+
+def convert_verbs(game, donor):
+    """[(kind, tag, payload)] for the menu verbs, or [] if the donor has none.
+
+    `donor` is the whole START.EMI. Found by structure: the PC's own set
+    records, read out of the player's BOF3.exe, locate the donor's, the
+    pointer table ends where they begin, and the strings are placed by
+    requiring every one of them to start just after a NUL.
+    """
+    anchor = exe_bytes(game, VERB_SETS, VERB_SHARED_SETS * 5)
+    table_end = donor.find(anchor)
+    if table_end < 0:
+        return []
+    ptrs = []
+    while table_end - 4 * (len(ptrs) + 1) >= 0:
+        v = struct.unpack_from("<I", donor, table_end - 4 * (len(ptrs) + 1))[0]
+        if not 0x80000000 <= v < 0x80200000:
+            break
+        ptrs.insert(0, v)
+    if len(ptrs) < VERB_COUNT or any(b <= a for a, b in zip(ptrs, ptrs[1:])):
+        raise SystemExit("verbs: %d ascending pointers before the set records, wanted %d"
+                         % (len(ptrs), VERB_COUNT))
+    table = table_end - 4 * len(ptrs)
+    span = ptrs[-1] - ptrs[0]
+    for tail in range(2, 17):            # the last string, its NUL and any alignment
+        first = table - tail - span
+        starts = [first + p - ptrs[0] for p in ptrs]
+        if first > 0 and all(donor[s - 1] == 0 and donor[s] != 0 for s in starts) \
+                and donor.find(b"\0", starts[-1]) < table:
+            break
+    else:
+        raise SystemExit("verbs: no placement of the strings fits the pointer table")
+
+    payload = bytearray([VERB_COUNT])
+    for i in range(VERB_COUNT):
+        raw = donor[starts[i]:donor.index(b"\0", starts[i])]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > VERB_ROOM:
+            raise SystemExit("verbs: verb %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, VERB_ROOM))
+        payload += out + b"\0"
+    return [(KIND_VERBS, 0, bytes(payload))]
+
+
+# The characters' default names (DIV-0020): New Game copies eight 0xA4-byte
+# records from CHAR_RECORDS (0x437820), each starting with a 9-byte name. The
+# US START.EMI has the same eight records with a 5-byte name: every byte after
+# the name equals the PC's, four places earlier (measured 2026-09-21, 155 of
+# 155 in all eight - the widening docs/save-interchange.md describes). Record
+# 0's tail is the anchor, and every record's tail is checked.
+KIND_CHAR_NAMES = 10
+CHAR_RECORDS, CHAR_STRIDE, CHAR_COUNT, CHAR_NAME_PC, CHAR_NAME_US = 0x64B390, 0xA4, 8, 9, 5
+
+
+def convert_char_names(game, donor):
+    """[(kind, tag, payload)] for the default names, or [] if `donor` (START.EMI) has none."""
+    pc = exe_bytes(game, CHAR_RECORDS, CHAR_COUNT * CHAR_STRIDE)
+    tail_len = CHAR_STRIDE - CHAR_NAME_PC
+    at = donor.find(pc[CHAR_NAME_PC:CHAR_STRIDE])
+    if at < CHAR_NAME_US:
+        return []
+    base = at - CHAR_NAME_US
+    payload = bytearray([CHAR_COUNT])
+    for k in range(CHAR_COUNT):
+        us = donor[base + k * CHAR_STRIDE:base + k * CHAR_STRIDE + CHAR_NAME_US + tail_len]
+        if us[CHAR_NAME_US:] != pc[k * CHAR_STRIDE + CHAR_NAME_PC:(k + 1) * CHAR_STRIDE]:
+            raise SystemExit("names: character record %d differs from the PC's past its name" % k)
+        raw = us[:CHAR_NAME_US].split(b"\x00")[0]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("names: character %d holds a code English does not have: %s" % (k, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > CHAR_NAME_PC:
+            raise SystemExit("names: character %d encodes to %d bytes, the field holds %d"
+                             % (k, len(out) + 1, CHAR_NAME_PC))
+        payload += out + b"\x00"
+    return [(KIND_CHAR_NAMES, 0, bytes(payload))]
+
+
+# Manillo, the fish merchant (DIV-0020 too; the owner named him, 2026-09-21):
+# the PC keeps his name once, in the 8-byte slot MERCHANT_NAME, which the
+# battle and seven field functions copy 16 bytes from. On the PSX it lives in
+# the fishing module each fishing area carries, as a 12-byte slot right after
+# twelve bytes the PC still has at MERCHANT_ANCHOR (the PC moved the name).
+KIND_MERCHANT = 11
+MERCHANT_NAME, MERCHANT_ROOM, MERCHANT_ANCHOR, MERCHANT_US_SLOT = 0x669CD8, 8, 0x6608CC, 12
+
+
+def convert_merchant(game, disc):
+    """[(kind, tag, payload)] for the merchant's name, or [] if no area on `disc` has it."""
+    anchor = exe_bytes(game, MERCHANT_ANCHOR, 12)
+    for name in sorted(disc.files):
+        if "/WORLD" not in name or not name.endswith(".EMI"):
+            continue
+        blob = disc.read(name)
+        at = blob.find(anchor)
+        if at < 0:
+            continue
+        raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("merchant: %s holds a code English does not have: %s" % (name, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > MERCHANT_ROOM:
+            raise SystemExit("merchant: the name encodes to %d bytes, the slot holds %d" % (len(out) + 1, MERCHANT_ROOM))
+        return [(KIND_MERCHANT, 0, out + b"\x00")]
+    return []
+
+
+# The battle's command labels (DIV-0019): seven 8-byte slots at BATTLE_SLOTS,
+# drawn left-aligned in a box beside the command cross by 0x4439A0, the box
+# placed from BATTLE_BOXES, four s16 a command. The US BATTLE.EMI has the same
+# seven slots - "Atk" "Abl" "Use" "Exa" "Def" "Chg" "Esc", the owner's
+# screenshots of the PlayStation show the first and last - immediately
+# followed by the same box table, byte for byte. The box table is the anchor.
+KIND_BATTLE = 9
+BATTLE_SLOTS, BATTLE_BOXES, BATTLE_COUNT, BATTLE_ROOM = 0x669D28, 0x64E2C8, 7, 8
+
+
+def convert_battle_commands(game, donor):
+    """[(kind, tag, payload)] for the command labels, or [] if `donor` (BATTLE.EMI) has none."""
+    boxes = exe_bytes(game, BATTLE_BOXES, BATTLE_COUNT * 8)
+    at = donor.find(boxes)
+    if at < BATTLE_COUNT * BATTLE_ROOM:
+        return []
+    payload = bytearray([BATTLE_COUNT])
+    for i in range(BATTLE_COUNT):
+        slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
+        raw = slot.split(b"\0")[0]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("battle: label %d holds a code English does not have: %s" % (i, slot.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > BATTLE_ROOM:
+            raise SystemExit("battle: label %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, BATTLE_ROOM))
+        payload += out + b"\0"
+    return [(KIND_BATTLE, 0, bytes(payload))]
+
+
 def build_font(args, disc):
     rows = donor_sheet(disc)
     base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
@@ -872,6 +1026,20 @@ def cmd_all(args):
         cfg = convert_config(disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += cfg
         print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
+        verbs = convert_verbs(args.game, disc.read(start_emi[0]))
+        overlays["FIRST.DAT"] += verbs
+        print("menu verbs: " + ("%d" % VERB_COUNT if verbs else "not found on this disc"))
+        chars = convert_char_names(args.game, disc.read(start_emi[0]))
+        overlays["FIRST.DAT"] += chars
+        print("character names: " + ("%d" % CHAR_COUNT if chars else "not found on this disc"))
+        merchant = convert_merchant(args.game, disc)
+        overlays["FIRST.DAT"] += merchant
+        print("merchant name: " + ("found" if merchant else "not found on this disc"))
+    battle_emi = disc.find("BATTLE.EMI")
+    if battle_emi and not args.only:
+        cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))
+        overlays["FIRST.DAT"] += cmds
+        print("battle commands: " + ("%d" % BATTLE_COUNT if cmds else "not found on this disc"))
 
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:

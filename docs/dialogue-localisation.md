@@ -1,7 +1,9 @@
 # Dialogue-box localisation - what is built, and what it rests on
 
-**Status:** IN PROGRESS (2026-09-20) - English dialogue draws in the attract
-sequence, in the donor's glyphs, at the donor's advance. Measurements below are
+**Status:** IN PROGRESS (2026-09-21) - English dialogue draws in the attract
+sequence and in play, in the donor's glyphs, at the donor's advance; menus,
+Config, the menu's buttons, the battle's command labels and New Game's names
+are English too (§8). Measurements below are
 dated; everything else is marked as intent or as a guess.
 
 Stage 2 of the owner's order of work ([`STATUS.md`](STATUS.md)) is "the text
@@ -241,9 +243,10 @@ it is a table, a proportional font is a data change.
    the instant-print spans and page breaks are converted by rule and unseen.
 3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), still
    advances 12. Unread; by position it is the PSX grow/shrink text effect.
-4. **Menus: built 2026-09-20, unseen** (DIV-0008, §7). Left in Chinese:
-   enemy, character and place names, and any string outside the pool and the
-   six tables.
+4. **Menus: built 2026-09-20, seen 2026-09-21** (DIV-0008, §7; captured by
+   input recipe on every menu screen). Left in Chinese: enemy and place
+   names, the stat labels, the list headers, the battle's target banner, and
+   any string outside what §8 lists.
 5. The port widened name fields (enemy names 8 to 12 bytes, character names 5
    to 9). Dialogue that embeds a name goes through control codes, not these
    fields - *believed*, not checked; what a JP/US-length name record looks
@@ -295,3 +298,43 @@ hold (`Ballock Knife`, `Leather Armor`) is for the owner to see in game.
 
 `bof3ext` put English into this port by hooking the draw. Its `docs/` are worth
 reading for which problems it met - cited, not copied (CLAUDE.md rule 5).
+
+## 8. Strings in the executable: slot tables, one chunk kind each (2026-09-21)
+
+Much of the menu and battle text is not in any `DAT` but in `BOF3.exe`'s
+`.data`, in fixed slots. Each piece so far had the same shape on both sides:
+the US disc carries the same table beside data the PC still has byte for byte,
+so `loc_build.py` finds the donor's strings by the PC's own bytes and writes
+them into an overlay chunk of a kind of ours, and the DLL writes the slots at
+start-up after checking the pointer table or the instructions that read them.
+All of them load with `FIRST.DAT`.
+
+| Kind | What | PC slots | Found on the US disc by | Entry |
+|--:|---|---|---|---|
+| 4 | per-glyph pen advance | - | the font | DIV-0006 |
+| 5 | item and ability names | six record tables | the records' numeric bytes | DIV-0008 |
+| 6 | title menu row widths | code operands | - | DIV-0014 |
+| 7 | Config labels, options, controller names | `0x6536F8`, operands, `0x66A368` | the two row tables (`START.EMI`) | DIV-0015 |
+| 8 | the menu's button verbs (Quit, Init, Use, Sort, ...) | 22 x 8 at `0x66A228` via `0x6637E4` | the button-set records `0x66383C` (`START.EMI`) | DIV-0018 |
+| 9 | the battle's command labels (Atk ... Esc) | 7 x 8 at `0x669D28` via `0x669D60` | the box table `0x64E2C8` (`BATTLE.EMI`) | DIV-0019 |
+| 10 | New Game's default names (Ryu ... Whelp) | name fields of 8 records at `0x64B390` | the records past the name, 4 bytes earlier (`START.EMI`) | DIV-0020 |
+| 11 | Manillo, the fish merchant | 8 bytes at `0x669CD8` | twelve bytes at `0x6608CC` (the fishing areas) | DIV-0020 |
+
+What makes this cheap: the US abbreviations were made to fit the PlayStation's
+boxes, and the PC's boxes were made for two 12-unit Chinese glyphs - which are
+three 8-unit English letters wide. Only the verbs needed a layout change
+(re-centring on the real width, DIV-0018).
+
+**Finding the next one:** `BOF3X_TEXTLOG=1` logs every string drawn and its
+address; a search of `.data` for a pointer to that address finds its table,
+and the port's own font renders the Chinese glyphs so the table can be read
+(`tools/font_pc.py`'s `glyph_pixels`). Found and not yet converted: the stat
+labels at `0x669CF0` (Attack / Defense / Int / Agility - the US `Pwr` `Def`
+`Int` `Agl` stand before the verb table in `STATUS.EMI`), the turn counter's
+残留 / 回合 at `0x669D10` / `0x669D18`, and the skill list's header 龙技 at
+`0x66A220`.
+
+**Names in saves** are the save's: a save keeps the names it was begun with,
+and shows gibberish across a language switch. The owner accepted that on
+2026-09-21 until a language-independent name system exists.
+

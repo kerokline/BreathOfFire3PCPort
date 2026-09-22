@@ -395,6 +395,8 @@ note = "hypothesis, not evidence, for the identification: BATTLE_RAM.md lists a 
 pc = 0x5B93D2
 psx = 0x8017ED4C
 name = "Rand"
+ret = "int"
+params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 with the result masked & 7 to index the damage-variance table, which is the PSX Rand 0x8017ED4C call site term for term. On the PC this is the MSVC6 CRT rand(), not a BIOS thunk — same role, different implementation, so RNG sequences will NOT match between the two binaries."
 
@@ -569,7 +571,7 @@ pc = 0x65DA44
 name = "Cfg_Fullscreen"
 ctype = "int"
 status = "evidence"
-evidence = "Initialised 1. WinMain 0x4FCB00: forced to 1 when the desktop is exactly 640x480; when 0, AdjustWindowRect with style 0xCA0000 and the window is centred on the desktop, else created at 0,0; then passed as the third argument of both Fmv_Play calls. WndProc 0x4FC6A0 on WM_KEYDOWN 0x77 (F8), only if the desktop exceeds 640x480: xor 1, SetWindowPos, and re-initialises the display through 0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0). Observed 2026-09-19: BOF3.CFG with first line 0 gives a 646x509 window, style 0x14CA0000, centred on a 3440x1440 desktop."
+evidence = "Initialised 1. WinMain 0x4FCB00: forced to 1 when the desktop is exactly 640x480; when 0, AdjustWindowRect with style 0xCA0000 and the window is centred on the desktop, else created at 0,0; then passed as the third argument of both Fmv_Play calls. WndProc 0x4FC6F0 (lpfnWndProc, set at 0x4FCB98; corrected 2026-09-21 from 0x4FC6A0) on WM_KEYDOWN 0x77 (F8), only if the desktop exceeds 640x480: xor 1, SetWindowPos, and re-initialises the display through 0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0). Observed 2026-09-19: BOF3.CFG with first line 0 gives a 646x509 window, style 0x14CA0000, centred on a 3440x1440 desktop."
 
 [[data]]
 pc = 0x65DA48
@@ -1144,7 +1146,7 @@ params = "unsigned long *a, unsigned long *b"
 impl = "src/game/sprite_order.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 25 instructions, cdecl, no calls, no jumps: exchanges two records of three dwords. Order as written: the three dwords of b are read first; then a[k] is read and stored to b[k] for k = 0, 1, 2 in turn; then the saved three are stored to a. One caller, 0x59344E in 0x593060, with a = a 12-byte record at 0x7E01C0 + n * 12 and b = the record before it, inside a bubble sort on the signed 16-bit word at record +4. Call trace all_a 2026-09-19: 421,058 calls in one attract run, the most of any unnamed logic function."
-note = "The record, from 0x5933D1..0x5933EE: +0 a sprite object, +4 the object's dword +0x60 with bit 31 set. The other producer, 0x57BAE0, is unread, and so is +8."
+note = "The record, from 0x5933D1..0x5933EE: +0 a sprite object, +4 the object's dword +0x60 with bit 31 set. The other producer, Sprite_AddDrawRecords 0x57BAE0 (read 2026-09-21), writes +0 a POLY_FT4, +4 the largest depth / 4 as a u16, +6 the first, +8 the object - so the s16 sort key is that u16."
 
 # ---------------------------------------------------------------------------
 # The draw-item index pool (2026-09-20): takeover queue, layer 0.
@@ -1196,9 +1198,71 @@ status = "evidence"
 evidence = "disasm 2026-09-20, 6 instructions, cdecl, no calls, no jumps: stores the low byte of its second argument to bytes +4, +5 and +6 of its first. Nine callers (E8 scan), all in 0x462850..0x462A66. Call trace all_a: 6,474 calls."
 note = "Bytes +4..+6 of a PSX GPU primitive are r0, g0, b0 (libgpu setRGB0); that the first argument IS such a primitive is by position only - the callers are unread - hence the name is the weakest part of this entry."
 
+[[func]]
+pc = 0x572A00
+name = "Prim_SetTexture"
+ret = "void"
+params = "unsigned long texture, unsigned char *prim, int count"
+impl = "src/game/prim.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 1,225 bytes, cdecl, calls _ftol 0x5B9550 eight times and Gpu_SetSemiTrans 0x5A7780 once, no jump leaves it: for count (signed, > 0) primitives of 0x48 bytes writes the semi-transparency bit (word bit 15), r = g = b = (word >> 16) & 0xF8, a CLUT word at +0x16 and a tpage at +0x26 shaped as libgpu getClut / getTPage (x 320 + 128 * bits 28..29, 4-bit when bit 31 is set), and four (u, v) at +0x14 + 0x10k from one of three sources - a 16 x 16 grid when bits 8..11 are clear, else two or one dwords of AreaMap_Header through u16 offsets at +4 / +6 - turned by bit 18 and mirrored by 16 and 17. E8 scan: 91 call sites. Call trace all_b: 123,820 calls."
+note = "Named for the fields it writes. That the table is the area block's texture cells, and the call sites' packed word a map cell's texture, is a reading of the address only; most call sites are unread."
+
 # ---------------------------------------------------------------------------
 # The field view's cell grid (2026-09-20): takeover queue, layer 0.
 # ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x5C407C
+name = "Imp_GetTickCount"
+ctype = "void *"
+status = "evidence"
+evidence = "PE import table, 2026-09-21: KERNEL32.dll GetTickCount's IAT slot, the exe's only clock import (no timeGetTime, QueryPerformanceCounter or GetSystemTime*). Read once, at 0x4FCD90 in WinMain, into esi, which is called at 0x4FCDB0 (the first frame deadline), 0x4FCE24 (render or skip) and 0x4FCEC1 (the spin to the deadline, whose result also feeds a once-a-second sprintf at 0x4FCEE2). No other reference in .text."
+note = "DIV-0022 points it at a clock that starts with the game (src/game/game_clock.cpp; docs/known-defects.md D5)."
+
+[[data]]
+pc = 0x8CB5A4
+name = "AreaMap_CellBase"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open 0x56FD20 adds the low 16 bits to a MapView_Cells word to index the dwords of AreaMap_Header, the start of a cell's record run. At AreaMap_Header + 0x24: part of the loaded area block."
+
+[[data]]
+pc = 0x904F20
+name = "MapView_Cells"
+ctype = "unsigned short"
+count = 1568
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open reads word (row * 28 + column), row 0..0x37 and column 0..0x1B, and treats a non-zero one as an index into AreaMap_Header's cell runs. pe_xref: 9 references in 7 functions. 0x38 x 28 words is DrawLayer_Open's wrap, not a measured extent."
+
+[[data]]
+pc = 0x905D80
+name = "MapView_Inset"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: DrawLayer_Open draws (14 - inset) * 2 columns starting inset further in, the inset less 2 (not below 0) when bit 0 of Field_InputFlags is set. pe_xref: also read by 0x56EC00. Named for that one use."
+
+[[data]]
+pc = 0x929F20
+name = "MapView_Column"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open's first column of MapView_Cells, before the inset, mod 0x1C. pe_xref: 20 references in 16 functions, always beside MapView_Row."
+
+[[data]]
+pc = 0x929F24
+name = "MapView_Row"
+ctype = "short"
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open's row of MapView_Cells is (this + layer + 1) mod 0x38. pe_xref: 20 references in 16 functions, always beside MapView_Column."
+
+[[data]]
+pc = 0x663008
+name = "MapCell_Handlers"
+ctype = "unsigned long"
+count = 77
+status = "evidence"
+evidence = "disasm 2026-09-21: DrawLayer_Open calls [0x663008 + (record >> 24) * 4] with (record, byte 1, byte 0 of the run's head). In the exe: 77 .text addresses, then data - handlers 0x570020, 0x570210, 0x570530, 0x570660, 0x570870, 0x570A00, 0x437CC0, ... pe_xref: DrawLayer_Open is the only reader. Stored as dwords; call through a cast."
 
 [[data]]
 pc = 0x8CB580
@@ -1264,6 +1328,26 @@ status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x10A bytes. Two copies of one loop, over Sprite_Objects (30) and Sprite_ObjectsExtra (4). An object qualifies if byte +0 has bit 0, byte +0x24 has bit 0x40, byte +6 is 0x0A, it is not Sprite_Current, byte +3 of the record at its +0x54 lacks bit 0x10, and with reach = (s8 at that record +2) << 15: |current.+0x34 - object.+0x34| <= reach, the same for +0x38, and |s16 current.+0x3E - s16 object.+0x3E| <= 0x300. Each absolute value is cdq / xor / sub on a 32-bit difference, so a difference of 0x80000000 stays negative and passes. Returns in al the index of the first that qualifies - 0..29, or 30..33 for the second array - or 0xFF. Call trace all_a 2026-09-19: 8,919 calls."
 note = "A negative reach makes every comparison fail unless the difference is 0x80000000. Sprite_Current need not be in either array; it is compared by address only."
 
+[[func]]
+pc = 0x57C0A0
+name = "Sprite_ObjectByHandle"
+ret = "unsigned char"
+params = "unsigned char handle"
+impl = "src/game/sprite_find.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20 and 2026-09-21, cdecl, one byte argument, no calls, every jump internal, 0x4A bytes. al = handle & 0x3F; without bit 7 returns al + 0x1E. With bit 7: dl walks 0..0x1D, stored each time into the argument's own stack slot, and bl counts objects whose byte at 0x7DEE86 + dl * 0xA4 (Sprite_Objects +6) is 0x0A, stopping when bl equals al at such an object; then returns - al unchanged. The handle comes from the movement-script command F8 07 (0x5792A0), which stores its byte at object +0x18. Callers 0x5192AC, 0x58977F read al only. Call trace all_b: 42,936 calls."
+note = "PSX twin 0x8015BEE4 in the boot EXE (psx_pair call-anchored; read 2026-09-21 in the sibling's recompiled output): the same arithmetic, and on a match it returns the count of matches, which equals the number sought - so the discarded search is Capcom's, not the port's. No shipped script attaches with a bit-7 handle: docs/known-defects.md D6."
+
+[[func]]
+pc = 0x589770
+name = "Sprite_InheritDrawKey"
+ret = "void"
+params = "void"
+impl = "src/game/sprite_find.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, cdecl, no arguments, 0x98 bytes, every jump internal. If byte +0x24 of Sprite_Current has bit 0x20: n = Sprite_ObjectByHandle(byte +0x18). Otherwise n = Sprite_FindNearby(), and 0xFF returns at once. Then n compared signed with 0x1E: below, the u16 at 0x7DEEB2 + n * 0xA4 (Sprite_Objects +0x32); else at 0x802032 + (n - 0x1E) * 0xA4 (Sprite_ObjectsExtra +0x32) - stored to Sprite_Current +0x32. The attached path does not test for 0xFF. Callers 0x588F20, 0x57B830. Call trace all_b: 74,397 calls."
+note = "+0x32 is the draw key that Sprite_DrawPass sorts and layers on (docs/sprite-draw-order.md section 1), so an attached object, or one near a type-0x0A object, draws with that object."
+
 # ---------------------------------------------------------------------------
 # Field input (2026-09-20): takeover queue, layer 0.
 # ---------------------------------------------------------------------------
@@ -1274,7 +1358,66 @@ name = "Input_Held"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "disasm 2026-09-20: 0x461EB0 is an auto-repeat on it - on a first press it stores the word to 0x7E01B8 and a countdown of 0xC to 0x7E1BE0; while the same bits stay set it counts down and re-fires with a countdown of 3. pe_xref.py: 60 references; written as a word at 0x405A5D, 0x41F870, 0x427173, 0x4FC6AC and zeroed at 0x42E9F8; most readers test single bits."
-note = "Which bit is which button is not established on this side. Field_CopyInput reads it as a dword and uses the low 16 bits."
+note = "Bit layout established 2026-09-21 from Pad_Read and the default key table 0x66C648 - the PlayStation pad's: 0x1 L2, 0x2 R2, 0x4 L1, 0x8 R1, 0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square, 0x100 select, 0x800 start, 0x1000 up, 0x2000 right, 0x4000 down, 0x8000 left. Written once a frame by Input_Latch. Field_CopyInput reads it as a dword and uses the low 16 bits."
+
+[[data]]
+pc = 0x7E1BEA
+name = "Input_Previous"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: Input_Latch 0x4FC6A0 stores the old Input_Held here before writing the new one."
+
+[[data]]
+pc = 0x7E1BEC
+name = "Input_Pressed"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: Input_Latch 0x4FC6A0 stores (old ^ new) & new here - the buttons that went down this frame. The same three words for a second pad follow at 0x7E1BF0 / 0x7E1BF2 / 0x7E1BF4, from the high word of Pad_Read's result, which Pad_Read never sets."
+
+[[data]]
+pc = 0x937F94
+name = "Frame_Counter"
+ctype = "unsigned int"
+status = "evidence"
+evidence = "disasm 2026-09-21: WinMain 0x4FCB00 increments it at 0x4FCFE5, at the end of every pass through the frame path - after Task_RunAll or, with the F9 pause byte 0x6BC63A set, instead of it. Passes that find the window inactive loop back at 0x4FCE16 before reaching it."
+
+[[data]]
+pc = 0x903584
+name = "Field_MenuButton"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: 0x41C0A0 and 0x42B400 test Input_Pressed against it and, unless bit 0x40 of 0x9039A2 is set, play sound 0x105 and set the field request byte 0x66C7D8 to 1, which the field's mode-2 handler 0x4959F0 turns into mode 3, the menu. Measured 2026-09-21 by input recipe: 0x80 (square) with save 5 loaded, and pressing square opened the menu. Its neighbours 0x903580..0x903588 held 0x43, 0x20, -, 0x08, 0x04."
+note = "Owner, 2026-09-21: the four shape buttons are assigned per save file, and save 5 was converted from a US save, whose assignment differs from saves 0-3. So the word is save data; which neighbour is which action is unread."
+
+[[data]]
+pc = 0x90358E
+name = "Field_ConfirmButtons"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: the Config screen tests Input_Pressed against it OR 0xA000 (0x4612F1) to change an option. Measured 2026-09-21 by input recipe with save 5 loaded: 0x43, and cross (0x40) entered each menu screen where circle did not. Save data like Field_MenuButton; 'confirm' is inferred from that one use and that one measurement."
+
+[[data]]
+pc = 0x903590
+name = "Field_CancelButtons"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: the Config screen tests Input_Pressed against it OR 0x0800 (start) to leave (0x461369, 0x461036). Measured 2026-09-21 with save 5 loaded: 0x10, and triangle left each menu screen where cross did not."
+
+[[func]]
+pc = 0x5A9700
+name = "Pad_Read"
+ret = "unsigned int"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21, 341 bytes: with a joystick device (0x7DE930) polls it (vtable +0x64) and reads 0x50 bytes of state (+0x24, re-acquiring on 0x8007001E); axis x > 500 gives 0x2000, < -500 0x8000, y > 500 0x4000, < -500 0x1000; buttons 0-3 give 0x40, 0x80, 0x10, 0x20 and, when 0x7DE938 is 1, buttons 5-9 give 0x2, 0x4, 0x8, 0x800, 0x100. Then with a keyboard device (0x7DE92C) reads 256 key bytes to 0x7DE828 and ORs in the word of every entry of the 32-entry (u16 key, u16 bits) table at 0x7DE7A8 whose key is down; a key of 0 ends the table. The table is BOF3.CFG's key lines (0x5A9860) or the default at 0x66C648 (0x5A9880): arrows the directions, Z/X/C/V triangle/cross/square/circle, Esc cross, Space circle, Enter start, right Shift select, Q/W/A/S L2/R2/L1/R1, numeric keypad the directions and diagonals. High word always 0. Sole caller Input_Latch."
+
+[[func]]
+pc = 0x4FC6A0
+name = "Input_Latch"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21, 78 bytes: calls Pad_Read; for pad 1 Input_Previous = Input_Held, Input_Held = low word, Input_Pressed = (old ^ new) & new; the same for pad 2 at 0x7E1BF0.. from the high word. Sole caller WinMain at 0x4FCDDE, once per pass of the message loop unless the F9 pause byte 0x6BC63A is set - so once a frame while the window is active, and repeatedly while it is not (the loop spins there without running a frame)."
 
 [[data]]
 pc = 0x905BA6
@@ -1321,7 +1464,7 @@ params = "void"
 impl = "src/game/field_input.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x9A bytes. Decides a flag: with bit 0 of Field_InputFlags set, whether ANY of the Field_MemberCount records at Field_Members (none if the count is 0) has bit 0x20 in the Field_ActorStates byte its byte +0 indexes - the loop does not stop at the first; with bit 0 clear, whether the first record has. Flag clear: Field_InputHeld = Input_Held. Flag set: Field_InputHeld = the low word of ((held & 0xF000) << 2) | ((held >> 2) & 0x3000) | (held & 0x9FF) - bits 12 and 13 move to 14 and 15 and back, bits 9 and 10 are dropped, bit 11 and bits 0-8 pass. Call trace all_a 2026-09-19: 2,779 calls."
-note = "On a PSX pad bits 12-15 are up, right, down, left, which would make this 'reverse the directions while someone has state 0x20' - but neither the bit layout nor what state 0x20 is has been established from the binary. Owner, 2026-09-20: the game has a field confusion status that reverses inputs, left for right and up for down. That fits this function exactly; that bit 0x20 IS that status is still inference until the in-game A/B of docs/USER_CHECKS.md item 5."
+note = "Bits 12-15 are up, right, down, left - established 2026-09-21 from Pad_Read (see Input_Held) - so this reverses the directions while someone has state 0x20; what state 0x20 is has not been established from the binary. Owner, 2026-09-20: the game has a field confusion status that reverses inputs, left for right and up for down. That fits this function exactly; that bit 0x20 IS that status is still inference until the in-game A/B of docs/USER_CHECKS.md item 5."
 
 [[func]]
 pc = 0x589350
@@ -2221,6 +2364,90 @@ impl = "src/game/psx_gte_transform.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 6 instructions: Math_Sin(angle + 0x400). cdecl. Call trace all_b 2026-09-20: 145,824 calls."
 
+# ---------------------------------------------------------------------------
+# The matrix product and the rotations over it (2026-09-21): taken over once
+# the owner chose zeros for the product's two padding bytes (DIV-0021).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5A7D70
+name = "Gte_MulMatrix0"
+ret = "short *"
+params = "const short *a, const short *b, short *out"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20/21, 0x193 bytes, no calls, no jumps: out[r][c] = (a[r][0] * b[0][c] + a[r][1] * b[1][c] + a[r][2] * b[2][c]) sar 12, 32-bit imul and add, every s16 of a and b read before anything is stored; the nine results built on the stack and copied to out by rep movsd of FIVE dwords, so out + 18 and + 19 get the stack's stale esp + 0x3E (docs/psx-library-layer.md section 4). Returns out. libgte MulMatrix0 by shape. cdecl. Call trace all_b 2026-09-20: 153,648 calls."
+
+[[func]]
+pc = 0x5A7F10
+name = "Gte_RotMatrixX"
+ret = "short *"
+params = "int angle, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x67 bytes: Math_Cos(angle) then Math_Sin(angle), a stack matrix {0x1000,0,0, 0,c,-s, 0,s,c} (its padding unwritten; the product does not read it), then Gte_MulMatrix0(that, matrix, matrix). Returns matrix. libgte RotMatrixX by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls, all from Gte_RotMatrix."
+
+[[func]]
+pc = 0x5A7F80
+name = "Gte_RotMatrixY"
+ret = "short *"
+params = "int angle, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x65 bytes: as Gte_RotMatrixX with {c,0,s, 0,0x1000,0, -s,0,c}. libgte RotMatrixY by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls, all from Gte_RotMatrix."
+
+[[func]]
+pc = 0x5A7FF0
+name = "Gte_RotMatrixZ"
+ret = "short *"
+params = "int angle, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x67 bytes: as Gte_RotMatrixX with {c,-s,0, s,c,0, 0,0,0x1000}. libgte RotMatrixZ by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls, all from Gte_RotMatrix."
+
+[[func]]
+pc = 0x5A8060
+name = "Gte_RotMatrix"
+ret = "short *"
+params = "const short *angles, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x42 bytes: five dwords of Gte_IdentityRotation to matrix (translation untouched), then Gte_RotMatrixZ(angles[2]), Gte_RotMatrixY(angles[1]), Gte_RotMatrixX(angles[0]) on it, each angle read just before its call: matrix = Rx Ry Rz. Returns matrix. libgte RotMatrix by shape. cdecl. Call trace all_b 2026-09-20: 48,608 calls from 0x56E8F1, 0x578EE7, 0x57BF22, 0x57BF9C, 0x57C068; 65 call sites in the image."
+
+[[func]]
+pc = 0x5A80B0
+name = "Gte_RotMatrixYXZ"
+ret = "short *"
+params = "const short *angles, short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x42 bytes: as Gte_RotMatrix but Z, then X, then Y: matrix = Ry Rx Rz. The name is libgte's by that product and unconfirmed. cdecl. Not reached by the attract run (all_b)."
+
+[[func]]
+pc = 0x57C070
+name = "Camera_LoadMatrix"
+ret = "void"
+params = "short *matrix"
+impl = "src/game/psx_gte_matrix.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x22 bytes: Gte_MulMatrix0(Camera_Matrix, matrix, matrix), Gte_SetRotMatrix(matrix), Gte_SetTransMatrix(matrix) - the rotation composed with the camera's, the translation matrix's own. eax is left as Gte_SetTransMatrix leaves it, and none of the five call sites (0x463C96, 0x463E35, 0x46EC7A, 0x57BB71, 0x57EF9E) reads it: void. The name says what it does; what calls it is unread. cdecl. Call trace all_b 2026-09-20: 7,824 calls, all from Sprite_AddDrawRecords."
+
+[[data]]
+pc = 0x66BC44
+name = "Gte_IdentityRotation"
+ctype = "unsigned short"
+count = 10
+status = "evidence"
+evidence = "bytes 2026-09-21: 1000 0 0 0 1000 0 0 0 1000 and a zero padding word, in read-only data just below Math_SinTable. Gte_RotMatrix and Gte_RotMatrixYXZ copy its five dwords."
+
+[[data]]
+pc = 0x905E40
+name = "Camera_Matrix"
+ctype = "short"
+count = 9
+status = "hypothesis"
+evidence = "pe_xref 2026-09-21: 60 references in 55 functions, pushed as the first operand of Gte_MulMatrix0 wherever seen, Camera_LoadMatrix among them. A rotation every object's is composed with: the view's, by that use. Only the nine s16 the product reads are claimed; what lies past them is unread."
+
 [[data]]
 pc = 0x7DE430
 name = "Gte_ColorMatrix"
@@ -2328,24 +2555,131 @@ pc = 0x56FD20
 name = "DrawLayer_Open"
 ret = "void"
 params = "int layer"
-status = "hypothesis"
-evidence = "disasm 2026-09-20, read in part: appends the layer's first (first, last) pair to ordering-table slot 6 as DrawLayer_Close 0x56FE80 appends the second, then walks a window of the word table 0x904F20 and hands 4-byte records under 0x8CB580 to handlers through the table 0x663008 (one indirect call). Called by Sprite_DrawPass before each layer. The name is from that pairing; what the records are is unread. cdecl. Call trace all_b: 403,315 calls."
+impl = "src/game/draw_emit.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x159 bytes, cdecl, one call (Gpu_LinkPrim 0x5A7560) and one indirect call per record, every jump internal: appends the layer's first (first, last) pair at DrawLayers + (layer * 6 + Gfx_BufferIndex) * 8 to ordering-table slot 6 as DrawLayer_Close 0x56FE80 appends the second; then row (MapView_Row + layer + 1) mod 0x38 of MapView_Cells, (14 - inset) * 2 columns from (MapView_Column + inset + (row even)) mod 0x1C, each advanced first and wrapping 0x1B -> 0, inset MapView_Inset less 2 (floor 0) with bit 0 of Field_InputFlags; each non-zero cell word w names a run at dword w + (AreaMap_CellBase & 0xFFFF) of AreaMap_Header, headed by the dword before it (count + 1 in the high half, two bytes below), whose 4-byte records go to MapCell_Handlers[record >> 24](record, byte 1, byte 0) and advance by record byte 2 dwords, read after the call. Called by Sprite_DrawPass before each layer. Call trace all_b: 403,315 calls."
+note = "The name pairs it with DrawLayer_Close. What the records are is the handlers' business: the first handler read for this, 0x570660, draws through Prim_SetTexture - a map cell's textured quads, by that one example."
 
 [[func]]
 pc = 0x57BAE0
 name = "Sprite_AddDrawRecords"
 ret = "unsigned"
 params = "unsigned long *record"
+impl = "src/game/sprite_records.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x3E1 bytes, 35 calls, no jump leaves: pushes the GTE matrix; builds the current object's matrix (Sprite_ObjectMatrix), loads it, scales it by the dword +0x40 unless byte +0x48 is set, sets the light direction (Light_ObjectDirection into Light_Matrix), loads a copy composed with the camera (Camera_LoadMatrix) and Light_Matrix as the second matrix. Then (s8) of byte 0 of the object's +0x54 data, as a u16, is the quad count: if count * 0x48 bytes from Gfx_PacketNext would pass (Gfx_BufferIndex << 16) + 0x7F1BAC it returns 0 WITHOUT popping the matrix. Otherwise per quad (0x28 bytes from +0x50): a POLY_FT4 of 0x48 bytes, its four vertices through Prim_VertexScratch, Gte_Rtps and the screen and float depth stores, colour from +0x5D..+0x5F, lit through Gte_NormalColor when bit 7 of byte 3 of the +0x54 data is set, tpage for abr (bit 6 of that byte ? the byte : 2) & 3 at (0x2C0, 0x100), CLUT at (quad word 0 << 4, 0x1E3), semi-transparency bit 6; and a 12-byte record: the primitive, the largest depth / 4 as a u16 (compared zero-extended against the full long), the first, the object. Gfx_PacketNext advances; the matrix is popped; al is the low byte of the count. cdecl. Call trace all_b: 7,824 calls, all from Sprite_DrawPass, which keeps al only."
+
+[[func]]
+pc = 0x57BFF0
+name = "Sprite_ObjectMatrix"
+ret = "short *"
+params = "short *matrix"
+impl = "src/game/sprite_records.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x80 bytes: of Sprite_Current, the position ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(s16 +0x3E / 2) toward zero) through Gte_RotTrans into the matrix's translation, then Gte_RotMatrix of the low words of +0x64, +0x68, +0x6C into its rotation. RotTrans's flag argument is the address of this function's own argument slot; ours has no flag. Returns what Gte_RotMatrix returns, the matrix. cdecl. Call trace all_b: 7,824 calls, all from Sprite_AddDrawRecords."
+
+[[func]]
+pc = 0x57BED0
+name = "Light_ObjectDirection"
+ret = "void"
+params = "short *out, const long *angles"
+impl = "src/game/sprite_records.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-20 of its one caller only: Sprite_DrawPass 0x593060 calls it, for an object with bit 0x40 of byte +0x24, with the address of the next free 12-byte record, and adds al of the result to its record count. The function itself (0x3E1 bytes) is unread. cdecl. Call trace all_b: 7,824 calls."
+evidence = "disasm 2026-09-21, 0x11D bytes: copies Light_Angles' three words to Light_AnglesCopy; pushes the GTE matrix; loads Gte_RotMatrix(Light_AnglesCopy) with a zero translation; (0, 0, Light_Angles[3]) through Gte_RotTrans; the low words of angles[0..2] through Gte_RotMatrix, Gte_TransposeMatrix IN PLACE (which is not a transpose: the upper triangle is lost) and Gte_ApplyMatrixLV in place; the three results as s16 to out[0..2]; pops. So the first row of a light matrix, a direction turned into the object's frame - hence the names, from use. cdecl. Call trace all_b: 7,824 calls, all from Sprite_AddDrawRecords, with Light_Matrix and the object's +0x64."
+
+[[data]]
+pc = 0x903598
+name = "Light_Angles"
+ctype = "short"
+count = 4
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Light_ObjectDirection copies words 0..2 to Light_AnglesCopy as a rotation's angles and uses word 3 as the length of the (0, 0, z) vector turned by it. Also read by 0x57C5A0 and 0x594E60, unread."
+
+[[data]]
+pc = 0x7E0680
+name = "Light_AnglesCopy"
+ctype = "short"
+count = 3
+status = "hypothesis"
+evidence = "disasm 2026-09-21: written by Light_ObjectDirection from Light_Angles and handed to Gte_RotMatrix. Also referenced by 0x496A00, 0x496AD0 and 0x57C5A0, unread."
+
+[[data]]
+pc = 0x803560
+name = "Light_Matrix"
+ctype = "unsigned long"
+count = 8
+status = "hypothesis"
+evidence = "pe_xref 2026-09-21: two references, both in Sprite_AddDrawRecords - Light_ObjectDirection writes its first row, Gte_SetMatrix2 loads it whole into Gte_Matrix2, which Gte_NormalColor multiplies a normal by. Where its other rows come from is unread."
+
+[[data]]
+pc = 0x9037A0
+name = "Prim_VertexScratch"
+ctype = "short"
+count = 16
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Sprite_AddDrawRecords writes a quad's four SVECTORs here (x, y, z at 0, 8, 16, 24 bytes) and hands each to Gte_LoadVertex, then the normal to Gte_NormalColor from here. pe_xref: 652 references in some 250 functions - a scratch every primitive builder shares, by that count."
 
 [[func]]
 pc = 0x5935B0
 name = "Sprite_Draw"
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-20 of its caller only: Sprite_DrawPass 0x593060 sets Sprite_Current to a record's object and calls it, under bit 1 of Draw_PassFlags. The function itself (683 bytes, and 0x593860 under it) is unread. cdecl. Call trace all_b: 33,850 calls."
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 683 bytes, cdecl, calls Gpu_SetCode84 0x5A7770, Sprite_ClutWord 0x593860, SpriteCell_Add 0x5A6790 (once per piece), Gpu_SetSemiTrans 0x5A7780 and Gfx_CommitPrim 0x461E50 (slot +0x29, 0x20): culls the current object by its s16 position (+0x2E in -0x40..0x180, +0x30 in -0x40..0x130; bit 7 of byte 0 records the result), sets the scale +0x40 / +0x44 to (0x4650000 / +0x60) & ~0xFF when +0x48 == 1, and builds a 0x20-byte code-0x84 primitive at Gfx_PacketNext from the frame at +0x54's data + u16 +0x5A (a count, then 5-byte pieces). Called by Sprite_DrawPass 0x593060 (two sites) with Sprite_Current set, under bit 1 of Draw_PassFlags. Call trace all_b: 33,850 calls."
+note = "The name was given from the caller; the body bears it out - the object's one primitive, of the port's own code 0x84, which the Direct3D end draws from the cell records."
+
+[[func]]
+pc = 0x593860
+name = "Sprite_ClutWord"
+ret = "void"
+params = "unsigned short *out"
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0xD5 bytes and a four-entry jump table at 0x593938 (pe_funcs.py sized it 0xA54, swallowing the functions after the table): *out = ((((+0x24 & 4) | 0x78) << 2) + (+0x27 >> s)) << 6 | ((+0x27 & (2^s - 1)) << (8 - s)) >> 4 of Sprite_Current, s = 4, 0, 3, 2 by +0x28 = 0..3 and 1 above - a libgpu getClut word, 2^s palettes to a CLUT row from row 0x1E0 or 0x1F0. Sole caller Sprite_Draw. Call trace all_b: 23,950 calls."
+
+[[func]]
+pc = 0x5A6790
+name = "SpriteCell_Add"
+ret = "unsigned long"
+params = "unsigned x, unsigned y, unsigned flags, unsigned u, unsigned v, unsigned w, unsigned h"
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x61 bytes, cdecl, no calls: writes the 8-byte record SpriteCell_Table[SpriteCell_Count] = (u16 x, u8 y, u8 ((h & 0xF8) << 1 | w >> 3), u16 flags, u8 u, u8 v), increments the count and returns its old value. No bound. Sole caller Sprite_Draw, one record per piece of a sprite's frame, w and h from SpriteCell_Sizes. Call trace all_b: 109,000 calls."
+note = "The fields' names are from Sprite_Draw's arguments: x and y the piece's signed offsets, u and v its texel position. The one reader, 0x5A32B0 in the Direct3D end, is unread."
+
+[[func]]
+pc = 0x5A6780
+name = "SpriteCell_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/sprite_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 2 instructions: SpriteCell_Count = 0. Sole caller WinMain's loop at 0x4FCF75. Call trace all_b: 12,801 calls - once a logic frame."
+
+[[data]]
+pc = 0x6BEA18
+name = "SpriteCell_Table"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-21: SpriteCell_Add writes 8-byte records at 0x6BEA18 + SpriteCell_Count * 8; pe_xref: the only other reference is 0x5A32B0 (lea of an entry), in the Direct3D end."
+note = "One record declared; the table has no bound in the code. Its real extent is unmeasured."
+
+[[data]]
+pc = 0x7CC374
+name = "SpriteCell_Count"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-21: SpriteCell_Add's index and SpriteCell_Reset's zero; pe_xref: no other references."
+
+[[data]]
+pc = 0x66A450
+name = "SpriteCell_Sizes"
+ctype = "unsigned char"
+count = 32
+status = "evidence"
+evidence = "disasm 2026-09-21: Sprite_Draw reads bytes 2n and 2n + 1 for n = the low nibble of a piece's first byte, as the width and height it passes to SpriteCell_Add. Contents in the exe: (8 + 8 * (n % 4), 8 + 8 * (n / 4)) - the sixteen sizes 8..32 by 8..32."
 
 # --- The Direct3D end: sprite handlers (docs/known-defects.md D1, DIV-0010) ---
 
@@ -2376,3 +2710,242 @@ ret = "void"
 params = "int x, int y, unsigned id, unsigned flags"
 status = "evidence"
 evidence = "disasm 2026-09-20, 0x57D860..0x57D90F, read to the last instruction: rect = 0x57D830(id, flags & 1) - four bytes (u, v, w, h) from the table 0x663B94, or 0x663C8C with bit 0 of flags; one SPRT at Gfx_PacketNext, Gpu_SetSemiTrans(p, 0), x and y (s16) as floats at +8 / +0xC, clut Gpu_GetClut(0xB0, 0x1E1), or (0x80, 0x1E2) with bit 1 of flags, colour 0x80; Gfx_CommitPrim(1, 0x1C). Sets no draw mode. cdecl. The PSX counterpart by its use in the frame draw 0x801DF56C (STATUS.EMI): 0x801B02A0(x, y, id, 1)."
+
+# ---------------------------------------------------------------------------
+# The menu's button rows (2026-09-21, DIV-0018, docs/config-screen.md section 8).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x66383C
+name = "Menu_ButtonSets"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "disasm 2026-09-21: Menu_DrawButtonRow reads byte +0 of the record at 0x66383C + 5 * set as the button count and +1.. as verb indices. Nine sets: 0 Items, 1 Equipment, 2 Ability, 6 Config, 7 Tactics seen by input recipe; 3, 4, 5, 8 unseen. Byte-identical to the US disc's records for sets 0-7 (STATUS.EMI 0x1C6DC); set 8 differs in its second verb."
+
+[[data]]
+pc = 0x6637E4
+name = "Menu_VerbPointers"
+ctype = "unsigned int"
+count = 22
+status = "evidence"
+evidence = "disasm 2026-09-21: Menu_DrawButtonRow 0x574965 loads the string for a verb index from here. 22 entries, each 0x66A228 + 8 * i."
+
+[[data]]
+pc = 0x66A228
+name = "Menu_Verbs"
+ctype = "char"
+count = 0xB0
+status = "evidence"
+evidence = "read 2026-09-21: 22 NUL-padded 8-byte slots of two-byte Chinese codes; verbs 11 and 14 are the Config screen's two buttons. 0x59E198 pushes the first slot directly. The US disc's counterpart is 23 packed strings behind a pointer table (Use Sort Drop Eqip Opti Abil Buy Sell Chng Read Vtal Quit Form Bttn Init Note Fast Pool Ally Gene Knd Look End)."
+
+[[func]]
+pc = 0x574890
+name = "Menu_DrawButtonRow"
+ret = "void"
+params = "int x, int y, int set, int arg4, int arg5"
+status = "evidence"
+evidence = "disasm 2026-09-21: for each of Menu_ButtonSets[set].count buttons, a frame at (x + 48 * i, y, 0x2D, 0x14) through 0x57CF60, then the verb Menu_Verbs[index] through Text_DrawAt at (x + 0x16 + 48 * i - 6 * n, y + 3), count 0x10, n from Text_CharCount - so centred at 12 units a character. The colour is 0 or 7 (greyed): with a byte argument below the count, every button but that one is 7; verb 0x12 is 7 unless 0x905BA2 bit 0; verb 8 is 7 when 0x5918E0(0xF) and 0x5919B0(0, 0x58, 0) are both zero. Then 0x57D910 with 0x663440 or 0x663428 by comparing i with an argument - the selected frame. Callers: 0x461707 (Config, set 6), 0x5965FB, 0x59A66B, 0x59B33B (set from a window record's +0xA)."
+note = "Which stack argument is which past x, y and set is not pinned down; the Config caller passes the window colour 0x903A5A last."
+
+[[func]]
+pc = 0x57D800
+name = "Text_CharCount"
+ret = "unsigned char"
+params = "const unsigned char *text"
+status = "evidence"
+evidence = "disasm 2026-09-21: counts characters to a NUL, a byte with bit 7 and the byte after it as one, looking at no more than 16 bytes. 47 callers."
+
+# ---------------------------------------------------------------------------
+# The battle's command cross (2026-09-21, DIV-0019).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x669D28
+name = "Battle_CommandLabels"
+ctype = "char"
+count = 0x38
+status = "evidence"
+evidence = "measured 2026-09-21: BOF3X_TEXTLOG in the new game's battle logged the label drawn for each held direction at 0x669D28 + 8 * i, and the port's font renders the seven as Attack, Skill, Item, Watch, Defend, Charge, Escape. The US BATTLE.EMI's Atk Abl Use Exa Def Chg Esc are in the same order, immediately before a copy of Battle_CommandBoxes."
+
+[[data]]
+pc = 0x669D60
+name = "Battle_CommandLabelPointers"
+ctype = "unsigned int"
+count = 7
+status = "evidence"
+evidence = "disasm 2026-09-21: 0x4439A0 loads the label for command ebx from here (0x443AE0); entries 0x669D28 + 8 * i."
+
+[[data]]
+pc = 0x64E2C8
+name = "Battle_CommandBoxes"
+ctype = "short"
+count = 28
+status = "evidence"
+evidence = "disasm 2026-09-21: 0x4439A0 reads s16 +0 and +2 of the record at 0x64E2C8 + 8 * command as the label box's x and y (0x443A06, 0x4439FE). +4 and +6 not read here. Byte-identical to the US BATTLE.EMI's table after its labels."
+
+# ---------------------------------------------------------------------------
+# New Game's characters (2026-09-21, DIV-0020).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x64B390
+name = "Char_DefaultRecords"
+ctype = "unsigned char"
+count = 0xA4
+status = "evidence"
+evidence = "disasm 2026-09-21: NewGame_InitCharacters 0x437820 copies 0x29 dwords from 0x64B390 + n * 0xA4 to 0x903A70 + n * 0xA4 for n = 0..6, then the record at 0x64B80C (n = 7) into slot Char_WhelpSlot. Each starts with a 9-byte name; the US START.EMI's eight records equal these past the name, four bytes earlier (155 of 155 each)."
+
+[[data]]
+pc = 0x669736
+name = "Char_WhelpSlot"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-21: NewGame_InitCharacters copies the eighth default record into slot 0x903A70 + this * 0xA4; holds 7."
+
+[[func]]
+pc = 0x437820
+name = "NewGame_InitCharacters"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x437820..0x4378AA: seven default records copied, one byte derived per character from its byte +0x0A and a table at 0x64B8B0 (shl 4, idiv, add) stored at +0xAA, +0x78, +0x8A of the previous record's offset arithmetic, then the whelp's record into slot Char_WhelpSlot. The name is a guess from what it copies."
+
+# ---------------------------------------------------------------------------
+# Two map-cell handlers, their condition test and the ground's elevation
+# (2026-09-21, docs/sprite-draw-order.md section 16).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x570020
+name = "MapCell_DrawQuads"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_cells.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x570020..0x57020F, cdecl, twelve calls, every jump internal: MapCell_Handlers entry. Unless Area_TestCondition(u16 +0) says no, or byte +2 is 1, walks (byte +2 - 1) / 5 subrecords of five dwords from +4 - four vertices (s8 x, s8 y at bytes 3 and 2, doubled, about (b1 - 0x80) * 128 and (b0 - 0x80) * 128; s16 z the low word) and a Prim_SetTexture word. The first vertex through Gte_Rtps culls the quad to -100 < x < 420, -150 < y < 300 in float screen space; a kept one is a POLY_FT4 committed to slot 4 / 7 (bit 14 of the word, then bit 30) or 6 / Draw_OtSlot. Call trace hidden_b: 12,183 calls a whole attract cycle."
+note = "The name says what it does; which map features it draws is unread."
+
+[[func]]
+pc = 0x570660
+name = "MapCell_DrawRising"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_cells.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x570660..0x57086F, cdecl, eight calls, every jump internal: MapCell_Handlers entry. Never reads the record. Eight POLY_FT4s a call, one Rand each: flat squares in the plane of the first two coordinates, stacked from -(AreaMap_Elevation(b1 - 1, b0) / 2) along the third, 64 apart and moving 8 a frame (Frame_Counter & 7, so the stack repeats every 8 frames); each half-side is 32 more than the last plus a random 0..3, the centre offset by a sway from (Frame_Counter >> 8) & 0x1F; texture word 0xBA009124 with a shade (Prim_SetTexture bits 19..22) of (0x3F - 8i - (Frame_Counter & 7)) / 4, 15 down to 0 along the stack. Call trace hidden_b: 5,098 calls a whole attract cycle."
+note = "What it looks like in game is not established - the name describes the geometry only."
+
+[[func]]
+pc = 0x56FF00
+name = "Area_TestCondition"
+ret = "unsigned char"
+params = "unsigned long code"
+impl = "src/game/map_cells.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, 0x56FF00..0x570017, cdecl, two calls (Flags_Test), every jump internal: high byte of the u16 is the kind - 0x00..0x1F a bit of Cond_Flags + 8 * kind, 0x20..0x3F its complement, 0xFA..0xFF comparisons against six globals, anything else bit 0. Only the low 16 bits are read; callers push ax with stale upper bits. Thirteen call sites (E8 scan): 0x4CDDC0 four times and seven map-cell handlers; eleven test al, two widen it with movsx - and the 0xFF kind returns (code & 1) XOR a whole byte, so al is kept exactly."
+
+[[func]]
+pc = 0x5720C0
+name = "AreaMap_Elevation"
+ret = "long"
+params = "long x, long y"
+impl = "src/game/map_cells.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-21, 0x5720C0..0x5722CB, cdecl, no calls, every jump internal, writes nothing but its own argument slots: x and y 16.16, the cell their high words name in the grid of AreaMap_Header bytes +0 x +1; outside it, 0 in ax and the header's top half above. Inside, a height byte at AreaMap_Header + AreaMap_HeightBase * 4 + cell times MapView_HeightScale, plus corner bytes of the cell's dword at AreaMap_Corners, one formula per half-cell quadrant (bit 15 of x and of y) - full precision in the first, byte arithmetic in the others, the largest of two sums (<< 4) or of four values (<< 5). About 190 callers (pc_funcs.json)."
+note = "Elevation by its use: MapCell_DrawRising stacks its quads on -(result / 2). The sibling 0x5722D0 is the same with a store to 0x903850; not read further."
+
+[[func]]
+pc = 0x57C140
+name = "Flags_Test"
+ret = "unsigned char"
+params = "const unsigned char *bits, unsigned index"
+status = "evidence"
+evidence = "disasm 2026-09-21, 8 instructions: bit (index & 7) of bits[(index & 0xFF) >> 3], as 0 or 1. About 170 callers (pc_funcs.json)."
+
+[[func]]
+pc = 0x5BAD64
+name = "Crt_GetPtd"
+ret = "unsigned char *"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-21: Rand 0x5B93D2 calls it and keeps its seed at +0x14 of the result (imul 0x343FD, add 0x269EC3) - the MSVC CRT's _getptd and per-thread holdrand. Used only by the map_cells live check, in game: at start-up the exe's C runtime has not run and calling it ends the process."
+
+[[data]]
+pc = 0x929F22
+name = "MapView_HeightScale"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: AreaMap_Elevation multiplies every height byte by it. pe_xref: 24 references in 9 functions."
+
+[[data]]
+pc = 0x8CB5AA
+name = "AreaMap_HeightBase"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-21: AreaMap_Elevation finds the height bytes at AreaMap_Header + this * 4, one per cell. Part of the loaded area block."
+
+[[data]]
+pc = 0x8CB5B0
+name = "AreaMap_Corners"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-21: AreaMap_Elevation reads the dword of cell n at 0x8CB5B0 + 4n and adds its bytes to heights as a cell's corners. Part of the loaded area block; as long as the area makes it."
+
+[[data]]
+pc = 0x903F90
+name = "Cond_Flags"
+ctype = "unsigned char"
+count = 0x108
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kinds 0x00..0x3F test bit (low byte) of Cond_Flags + 8 * (kind & 0x1F) - rows 8 bytes apart, each reaching 32, so the rows overlap and the last ends at +0x107. pe_xref: 10 references in 7 functions."
+
+[[data]]
+pc = 0x7E1BE2
+name = "Cond_ByteFF"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFF returns (code & 1) XOR this byte. Named for the kind; what it holds is unread. pe_xref: 12 references in 8 functions."
+
+[[data]]
+pc = 0x905E20
+name = "Cond_ByteFE"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFE is true when the code's low byte equals it. Named for the kind. pe_xref: 140 references."
+
+[[data]]
+pc = 0x8034F1
+name = "Cond_ByteFD"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFD is true when the code's low byte differs from it. Named for the kind. pe_xref: 197 references."
+
+[[data]]
+pc = 0x929ECC
+name = "Cond_AngleFB"
+ctype = "unsigned long"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFB tests ((this - 0x200) & 0xFFF) <= 0x800 - half of a 4096-step circle. Named for the kind. pe_xref: 125 references."
+
+[[data]]
+pc = 0x8034E0
+name = "Cond_ByteFA"
+ctype = "signed char"
+status = "hypothesis"
+evidence = "disasm 2026-09-21: Area_TestCondition kind 0xFA compares the code's low byte, zero-extended, with this byte sign-extended - so it matches only below 0x80. The s8 index of the dispatcher 0x56D690 (docs/menu-screens.md). pe_xref: 51 references."
+
+[[data]]
+pc = 0x66C7E8
+name = "Game_Mode"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "Task 0's private word +0x18 (Task_Records): the top-level mode 0x588E88 dispatches on - 2 field, 3 menu, 5 battle (docs/menu-screens.md section 1, docs/input-script.md). Area_TestCondition kind 0xFC tests it for 7."
+
+[[data]]
+pc = 0x66C7D8
+name = "Field_Request"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "Task 0's private byte +8: the field request byte that the menu button sets to 1 (see Field_MenuButton). Area_TestCondition kind 0xFC tests it for 4."
+
