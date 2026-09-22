@@ -119,7 +119,9 @@ add_library(bof3x SHARED
   src/game/event_script.cpp
   src/game/event_script_fuzz.cpp
   src/game/msgbox.cpp
-  src/game/msgbox_fuzz.cpp)
+  src/game/msgbox_fuzz.cpp
+  src/game/window_task.cpp
+  src/game/window_task_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

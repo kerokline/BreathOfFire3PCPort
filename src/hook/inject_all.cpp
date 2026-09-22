@@ -57,6 +57,7 @@
 #include "game/field_event.h"
 #include "game/event_script.h"
 #include "game/msgbox.h"
+#include "game/window_task.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -120,6 +121,8 @@ void InjectAll() {
     EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
     MsgBox_Inject();            // every call of its clones re-aimed at a recorder, and every stack-built
                                 // dispatch table's immediates too: order does not matter
+    WindowTask_Inject();        // last: every call of its clones is re-aimed at a recorder and every
+                                // stack-built table re-aimed in the copy, so order does not matter
     InjectReport();
 }
 

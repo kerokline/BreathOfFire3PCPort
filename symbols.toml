@@ -160,13 +160,11 @@ status = "evidence"
 note = "The answer is the argument DWORD, not a byte: on success eax is the slot as the caller pushed it, on failure the same with its low byte forced to 0xFF (or al, 0xFF at 0x59E30C). Its three callers - MsgBox_Reset, MsgBox_ChoiceOpen and MsgBox_MenuOpen - all discard it (2026-09-22)."
 evidence = "disasm 2026-09-18: (slot, kind) claims 0x803160 + slot*0x24 if byte 0 is free (sets 1, +1 = kind, +2/+3 = 0), returns slot or 0xFF. Byte for byte the PSX Window_Alloc note, stride and sentinel included."
 
-[[func]]
-pc = 0x595450
-psx = 0x80159F00
-name = "Window_Task"
-status = "hypothesis"
-evidence = "disasm 2026-09-18: calls MsgBox_FrameTask 0x4977F0 and drives window record 0 through the pointer at 0x905B84, which is what PSX Window_Task does. But it is 613 instructions against a small PSX function, so it is more likely a window/menu driver with Window_Task inlined. It also holds the only two readers of 0x7DEE6E (0x595B88 / 0x595BA2) — the 0x0C placement lookup."
-note = "Resolving this needs the PSX Window_DrawFrame 0x8015A58C counterpart located inside it, or ruled out."
+# 0x595450 was "Window_Task" (hypothesis, 2026-09-18) until 2026-09-22. It is
+# not: the 613 instructions that guess rested on were fourteen pointer-reached
+# functions pe_funcs.py had folded into one 0x7F9-byte body. The address itself
+# is an 83-byte zone lookup; its real entry is below, in group J's block, with
+# the fourteen. docs/window-task.md section 1.
 
 # ---------------------------------------------------------------------------
 # Data tables
@@ -4435,8 +4433,9 @@ name = "Field_RunTaskRecords"
 psx = 0x8015973C
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x59E230..0x59E2C4: from the pass in the byte at 0x802D20 up to 2, each of the 22 records of 0x24 bytes at 0x803160 with byte 0 non-zero and byte +0xF equal to the pass, as the dword at 0x905B84, through a local table of nine handlers by byte +1. The PSX twin by its place in FUN_8019A230 (2nd call)."
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x59E230..0x59E2C4 (0x94 bytes, whole): from the pass in the byte at 0x802D20 up to 2, each of the 22 records of 0x24 bytes at 0x803160 with byte 0 non-zero and byte +0xF equal to the pass, as the dword at 0x905B84, through a local table of nine handlers by byte +1 - built on its own stack, so the copy the fuzz runs has to have its nine immediates re-aimed. The starting pass and the record walk are registers, so a handler that writes 0x802D20 or 0x905B84 changes neither. No bound on byte +1: index 9 is the function's own return address. The PSX twin by its place in FUN_8019A230 (2nd call). Group J, docs/window-task.md."
 # ---------------------------------------------------------------------------
 # The top-level mode tasks (2026-09-22, group E, docs/mode-tasks.md): task 1's
 # title sequence - its body, its per-frame helpers and their data - and the
@@ -6289,6 +6288,7 @@ name = "Gpu_SetPolyGT4"
 ret = "void"
 params = "unsigned char *prim"
 status = "evidence"
+impl = "src/game/psx_gpu.cpp"
 evidence = "disasm 2026-09-22, 8 instructions: byte +7 = 0x3C, the PSX GPU code of POLY_GT4, and the float 0.01 (0x3C23D70A) to +0x10, +0x24, +0x38, +0x4C - the four vertices of a shaded, textured quad in the port's record. cdecl, as its siblings Gpu_SetPolyFT4 0x5A75D0 and Gpu_SetLineF2 0x5A7650. Called by the window layer 0x595C50 (hidden_b: 2,637 calls)."
 
 [[func]]
@@ -6297,6 +6297,7 @@ name = "Gpu_SetLineF4"
 ret = "void"
 params = "unsigned char *prim"
 status = "evidence"
+impl = "src/game/psx_gpu.cpp"
 evidence = "disasm 2026-09-22, 8 instructions: byte +7 = 0x4C, the PSX GPU code of LINE_F4, and the float 0.01 to +0x10, +0x1C, +0x28, +0x34 - four vertices at the LINE_F2 stride. cdecl. Called by the window layer 0x595C50 and 0x595F60 (hidden_b: 2,901 calls)."
 
 [[func]]
@@ -6305,6 +6306,7 @@ name = "Gpu_SetTile"
 ret = "void"
 params = "unsigned char *prim"
 status = "evidence"
+impl = "src/game/psx_gpu.cpp"
 evidence = "disasm 2026-09-22, 4 instructions: byte +7 = 0x60, the PSX GPU code of TILE, and the float 0.01 to +0x10. cdecl, the shape of Gpu_SetSprt 0x5A7710. Called by the window layer 0x595C50 and the mode task's 0x495750 (hidden_b: 3,501 calls)."
 
 [[data]]
@@ -6681,3 +6683,227 @@ params = "void"
 impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x4987A0..0x4987D7 (56 bytes), no calls. Adds the speed to the accumulator every frame and the accumulator's HIGH byte - taken before the add - to the y offset; once the y offset is no longer negative it and the kind are cleared. The high byte is taken with sar edx, 8 on a register whose upper half is stale, which cannot reach dl."
+# ---------------------------------------------------------------------------
+# --- 2026-09-22 (third round), group J: the window/task layer and the
+# area-change funnel above it in the image (src/game/window_task.cpp,
+# docs/window-task.md). Fourteen of these were invisible to every list:
+# pe_funcs.py folded 0x595450..0x595C48 into one 0x7F9-byte "function", which
+# is where the withdrawn Window_Task hypothesis at 0x595450 came from.
+# Sizes below are each body's measured extent, not the catalogue's run-ons.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x594E00
+name = "Field_ChangeArea"
+psx = 0x801A0A30
+ret = "void"
+params = "unsigned area, int x, int z, unsigned flags"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x594E00..0x594E52 (0x52 bytes, whole), cdecl: area as a word to 0x937F82, x and z as dwords to 0x903860 and 0x90384C, flags as a byte to 0x905B88, then Area_ClassifyPending, Area_PickMusic(x >> 16, z >> 16, the word read back out of 0x937F82) and Field_Request = 5. The PSX twin is the single area-change funnel the sibling names Field_ChangeArea 0x801A0A30 (its docs/loader_records/AREA.md section 4: the same four cells, in one block at 0x80143F10..1C, and game mode 5 where the port sets Field_Request). 60 callers (callees in analysis/pc_funcs.json). Call trace hidden_b: 15 calls."
+
+[[func]]
+pc = 0x595350
+name = "Area_ClassifyPending"
+psx = 0x801A12F0
+ret = "void"
+params = "void"
+status = "hypothesis"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595350..0x595383 (0x33 bytes, whole), no calls: byte 0x937F98 = 0xB when the pending area word 0x937F82 is one of the eleven at 0x66ADC0 (0x10 0x21 0x2D 0x41 0x57 0x58 0x68 0x73 0x79 0x97 0x98, read with tools/pe_data.py) and 1 when it is not - the second store sits under a cmp against 11 that the loop can only leave true. Twenty-two functions touch 0x937F98 (globals_ in analysis/pc_funcs.json), all of them area set-ups; what READS it is not established, so the name is by the shape of what it writes, not by its use. PSX 0x80143F1D per docs/field-modes.md section 4. Sole caller Field_ChangeArea."
+
+[[func]]
+pc = 0x595390
+name = "Area_ZoneIdAt"
+psx = 0x801A1350
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595390..0x5953AD (0x1D bytes, whole): Area_ZoneAtIn(x, z, Game_AreaNumber) and byte +5 of the record it returns. The result is al alone - the rest of eax is the record's address - and its one caller 0x594E60 (the mode-5 area step, still Capcom's) reads al. Call trace hidden_b: 12 calls."
+
+[[func]]
+pc = 0x5953B0
+name = "Area_PickMusic"
+psx = 0x801A1388
+ret = "void"
+params = "unsigned x, unsigned z, unsigned area"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x5953B0..0x595448 (0x98 bytes, whole): writes the track byte 0x904CD0 that GameMode_Field's mode-5 step hands to Music_Play unless it is 0xFF (src/game/mode_tasks.cpp kAreaTrack, PSX 0x80143F1F; 0x594E60 at 0x594EB5 is the reader that pins it). With bit 0x80 of Field_ScriptFlags' low byte set it copies the current track 0x904131 instead. Otherwise Area_ZoneAtIn(x, z, area): byte +7 zero means byte +6 IS the track; else +6 indexes the 8-byte records at 0x669A48 (a pointer to count 3-byte entries at +0, the count at +4; twelve records, counts 1..3) and the track is the first entry whose Flags_Test(Cond_Flags + row * 8, bit) holds, or the byte after the list when none does. The count is stashed in the caller's third argument slot as a byte and read back as a dword, then masked. Sole caller Field_ChangeArea. Call trace hidden_b: 15 calls."
+
+[[func]]
+pc = 0x595450
+name = "Area_ZoneAtIn"
+psx = 0x801A1498
+ret = "const unsigned char *"
+params = "unsigned x, unsigned z, unsigned area"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595450..0x5954A3 (0x53 bytes, whole; entries_logic.txt and entries.txt list it as 0x7F9, pe_funcs.py running on through the fourteen pointer-reached functions after it): Area_ZoneAt 0x52FFD0 with the area as an argument instead of Game_AreaNumber, instruction for instruction otherwise - the first of the 8-byte records at [0x668D80 + (area and 0xFFFF) * 4] whose box [r0, r2] x [r1, r3] holds (x and 0xFF, z and 0xFF), with no end test. Callers Area_ZoneIdAt and Area_PickMusic. Call trace hidden_b: 14 calls. This address carried the withdrawn Window_Task hypothesis until 2026-09-22."
+
+[[func]]
+pc = 0x5954B0
+name = "Window_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x5954B0..0x5954DE (0x2E bytes, whole; the catalogue's 48 counts the alignment padding): handler 0 of Field_RunTaskRecords' nine, jumped to from 0x59E2A9. Builds a three-entry call table on its own stack - 0x5954E0, 0x595AA0, 0x595B40 - and calls entry (byte +2 of the current record 0x905B84). No bound. In no entries list until this round. Call trace hidden_b: 2,973 calls."
+
+[[func]]
+pc = 0x5954E0
+name = "Window_Kind0States"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x5954E0..0x59551E (0x3E bytes, whole): kind 0 of Window_Run's three. A five-entry stack table - 0x595520, 0x595670, 0x595820, 0x595860, 0x595A80 - called by byte +3 of the current record, no bound. Kind 0 is the message box: three of its five states reach MsgBox_FrameTask. Call trace hidden_b: 2,973 calls (every call of Window_Run in the attract sequence, so no other kind is reached there)."
+
+[[func]]
+pc = 0x595AA0
+name = "Window_Kind1States"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595AA0..0x595ADE (0x3E bytes, whole): kind 1 of Window_Run's three, the same stack table with 0x595AE0, 0x595670, 0x595AF0, 0x595860, 0x595B30 - states 1 and 3 shared with kind 0. Reached by no call of the attract sequence (hidden_b: 0)."
+
+[[func]]
+pc = 0x595B40
+name = "Window_Kind2States"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595B40..0x595B7E (0x3E bytes, whole): kind 2 of Window_Run's three - 0x595B80, 0x595670, 0x595C10, 0x595860, 0x595B30. Reached by no call of the attract sequence (hidden_b: 0)."
+
+[[func]]
+pc = 0x595520
+name = "Window_Kind0Open"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595520..0x59566D (0x14D bytes, whole; the catalogue's 336 counts the padding), no calls: kind 0's state 0. Clears the record's flag byte +0xD, then takes bit 7 of the 0x0C placement code 0x7DEE6E into flag 1 and bit 6 into flag 2, writing the code back masked each time. Flag 2 gives a 0x78 x 0x36 box centred at (0x66ADE8[code * 2] + 0x3C, 0x66ADE9[code * 2] + 0x1B) << 4; otherwise 0xC8 x 0x36 at (0x66ADD8[code * 2] + 0x64, ... + 0x1B) << 4. Current size 0, step (half-size << 4) / 5 in each axis - the box opens over five frames - then byte +3 on by one. Call trace hidden_b: 24 calls."
+
+[[func]]
+pc = 0x595670
+name = "Window_Grow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595670..0x595813 (0x1A3 bytes, whole; the catalogue's 432 counts the padding): state 1 of all three kinds. Each axis grows by its step word (+0x14 / +0x16) while its centre (+4 / +6) moves back half a step, truncated toward zero; when (s16) (size >> 4) passes the half-size byte (+0xA / +0xB) the centre snaps to the settled place - kind 0 from 0x66ADD8 or 0x66ADE8 by flag 2, kind 1 from the record's own +0x18 / +0x1A, kind 2 and above from MsgBox_PlacementTable 0x66AE10 - and the size to half-size << 4. With flag 1 clear Window_DrawOutline is called with the size this frame reached; when both axes settled this frame byte +3 goes on by one, after the draw. Call trace hidden_b: 144 calls."
+
+[[func]]
+pc = 0x595820
+name = "Window_Kind0Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595820..0x59585A (0x3A bytes, whole; the catalogue's 64 counts the padding): kind 0's state 2, the open message box. Window_DrawFrame(centre and size, each an arithmetic shift of the 12.4 word) unless flag 1 is set, then a tail jmp at 0x595855 into MsgBox_FrameTask 0x4977F0 (group H's). Its caller is the kind dispatcher's call through the stack table, which reads no result. Call trace hidden_b: 2,637 calls - the hottest thing in this family."
+
+[[func]]
+pc = 0x595860
+name = "Window_Shrink"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595860..0x595A73 (0x213 bytes, whole; the catalogue's 544 counts the padding): state 3 of all three kinds, the mirror of Window_Grow. Each axis loses its step while the centre moves forward half a step; when the size goes negative - the test is (s16) (size and 0xFFF0) < 0, and the mask cannot reach the sign bit - the centre snaps to the settled place PLUS half the half-size (an unsigned byte shift, not the signed halving the drift uses) and the size to zero. Kind 1 takes its settled place from the 8-byte records at 0x66ADFC by 0x7DEE65, where the grow takes it from the record. When both axes are done byte +3 goes on and nothing else happens; otherwise the outline is drawn (flag 1 clear) and, for kind 0 alone, a tail jmp at 0x595A6E into MsgBox_FrameTask. Call trace hidden_b: 144 calls."
+
+[[func]]
+pc = 0x595A80
+name = "Window_Kind0Close"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595A80..0x595A94 (0x14 bytes, whole; the catalogue's 32 counts the padding): kind 0's state 4. Calls MsgBox_FrameTask first thing; while it answers non-zero nothing happens, and on zero the record pass byte 0x802D20 takes that same zero and a tail jmp frees the record. Call trace hidden_b: 24 calls."
+
+[[func]]
+pc = 0x595AE0
+name = "Window_Kind1Open"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595AE0..0x595AEE (0x0E bytes, whole): kind 1's state 0 - the unread set-up 0x596330, then byte +3 on by one. Reached by no call of the attract sequence (hidden_b: 0); what would reach it is a choice list, which needs a button press."
+
+[[func]]
+pc = 0x595AF0
+name = "Window_Kind1Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595AF0..0x595B29 (0x39 bytes, whole): kind 1's state 2. Window_DrawFrame with the record's centre and size - flag 1 is NOT consulted here, where kind 0's state 2 consults it - then the unread list draw 0x596090 (which walks 0x7DEE66 + 1 items, each at x 0x3A and y 0x7DEE6F[i], through the text draw 0x5961C0) and a tail jmp to the unread cursor draw 0x596120. Reached by no call of the attract sequence (hidden_b: 0)."
+
+[[func]]
+pc = 0x595B30
+name = "Window_FreeState"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595B30..0x595B35 (5 bytes, whole): state 4 of kinds 1 and 2 - a bare tail jmp to Window_FreeCurrent, with none of kind 0's wait on the message box. Reached by no call of the attract sequence (hidden_b: 0)."
+
+[[func]]
+pc = 0x595B80
+name = "Window_Kind2Open"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595B80..0x595C09 (0x89 bytes, whole), no calls: kind 2's state 0. A fixed 0x47 x 0x20 box at (MsgBox_PlacementTable[code].x + 0x23, .y + 0x10) << 4 - the same arithmetic that entry's own note records - current size 0, steps 0xE3 and 0x66, byte +3 on by one. It touches neither the flag byte +0xD nor the placement code's two high bits, which kind 0's state 0 consumes. Reached by no call of the attract sequence (hidden_b: 0)."
+
+[[func]]
+pc = 0x595C10
+name = "Window_Kind2Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595C10..0x595C49 (0x39 bytes, whole): kind 2's state 2 - Window_DrawFrame, the unread window-relative list draw 0x596020 (items at the window's own centre plus 0x66AE2C[set] with a per-item stride), and a tail jmp to the unread cursor draw 0x5960D0. Reached by no call of the attract sequence (hidden_b: 0)."
+
+[[func]]
+pc = 0x595C50
+name = "Window_DrawFrame"
+psx = 0x8015A58C
+ret = "void"
+params = "int x, int y, int w, int h"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595C50..0x595F52 (0x302 bytes, whole), cdecl: six primitives for an open window - a black semi-transparent TILE of (w + 1, h + 1) at (x, y) under texture page 0xF; an 8-byte primitive (0, 0xF0, 0x10, 0x10) whose ADDRESS becomes the next draw mode's texture window; a POLY_GT4 of the same corners, 0xFF at every vertex, (u, v) (0, 0)..(w, h), page Gpu_GetTPage(0, 0, 0x3C0, 0) and CLUT Gpu_GetClut((s8) 0x903A5A * 32 + 0x10, 0x1E1); a second 8-byte primitive (0, 0, 0x100, 0x100) likewise; a 0xC8C8C8 LINE_F4 round (x - 1, y - 1)..(x + w + 1, y + h + 1), which is three sides; then five LINE_F2s - the missing left side in 0xC8 and a 0x8C border two pixels out on all four. x and y are the low 16 bits sign-extended, w and h the low byte, so the stale upper halves its callers push reach nothing. The PSX twin is the Window_DrawFrame the sibling measures a box's width from (docs/FURIGANA.md). Callers Window_Kind0Frame, Window_Kind1Frame, Window_Kind2Frame and three of the battle's (0x47DAC0, 0x47F2D0, 0x47F9E0). Call trace hidden_b: 2,637 calls."
+
+[[func]]
+pc = 0x595F60
+name = "Window_DrawOutline"
+psx = 0x8015A990
+ret = "void"
+params = "int x, int y, int w, int h"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x595F60..0x59601E (0xBE bytes, whole), cdecl: the growing or shrinking box - Window_DrawFrame's outline alone, at the same corners, in 0x787878, as a LINE_F4 of three sides and one LINE_F2 for the fourth. No tile, no quad, no draw mode of its own, so it draws under whatever mode the frame before it left. Callers Window_Grow and Window_Shrink. Call trace hidden_b: 264 calls."
+
+[[func]]
+pc = 0x596150
+name = "Window_DrawLine"
+psx = 0x8015ABA0
+ret = "void"
+params = "int x0, int y0, int x1, int y1, unsigned colour"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x596150..0x5961B8 (0x68 bytes, whole), cdecl: one LINE_F2 at the packet cursor, the colour byte in all three channels, the four ends taken as s16 and converted to singles, committed to ordering-table slot 1 at 0x20 bytes. The colour is read before the primitive is built, and the four conversions then use the caller's fifth argument slot as their scratch. Callers Window_DrawFrame (five sites) and Window_DrawOutline. Call trace hidden_b: 13,449 calls - the hottest function of the family."
+
+[[func]]
+pc = 0x59E310
+name = "Window_FreeCurrent"
+psx = 0x801598DC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/window_task.cpp"
+evidence = "disasm 2026-09-22, 0x59E310..0x59E32D (0x1D bytes, whole), no calls: byte 0, the kind byte +2 and the state byte +3 of the current record 0x905B84 to zero, the pointer re-read for each store. Byte +1, the handler Field_RunTaskRecords dispatches on, is left as it was - so a freed slot keeps its record kind for the next Window_Alloc that takes it. The neighbour 0x59E330 zeroes slot 0's four bytes outright. Callers Window_Kind0Close and Window_FreeState (both tail jumps), 0x41EFA0 and 0x449FE0. psx_pair gap44. Call trace hidden_b: 24 calls."

@@ -135,12 +135,14 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     // A tracer or debugger patch at the entry would be copied as a relative
     // jmp or a breakpoint, and run wrong from the new address. A function
     // whose first instruction is its own call (0x517200 is a list of calls)
-    // starts with E8 legitimately: allowed when `calls` re-aims offset 0, which
-    // says the caller read it as the original's call - the copy then holds a
-    // call to the new target either way.
+    // starts with E8 legitimately, and one whose whole body is a tail jump
+    // (0x595B30, five bytes, is Window_FreeState) starts with E9: both are
+    // allowed when `calls` re-aims offset 0, which says the caller read that
+    // byte in the disassembly as the original's own transfer - the copy then
+    // holds a call or a jmp to the new target either way.
     bool entry_call_named = false;
     for (int i = 0; i < n_calls; ++i) entry_call_named = entry_call_named || calls[i].offset == 0;
-    if (orig[0] == 0xE9 || (orig[0] == 0xE8 && !entry_call_named) || orig[0] == 0xCC)
+    if (((orig[0] == 0xE9 || orig[0] == 0xE8) && !entry_call_named) || orig[0] == 0xCC)
         Fatal("%s: entry 0x%08X is already patched (%02X), cannot clone", name, (unsigned)original, orig[0]);
     void* copy = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!copy) Fatal("%s: VirtualAlloc(%u) failed, error %lu", name, (unsigned)size, GetLastError());
