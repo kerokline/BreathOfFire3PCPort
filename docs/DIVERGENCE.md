@@ -1131,3 +1131,10 @@ designed in rather than bolted on.
   pad word differing 16,095 times; then the batch check of 2026-09-21 -
   oracle, memory dump and frame hash identical (`ab18_*`).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MapCell_DrawQuads`. No config toggle.
+- **Also, 2026-09-22: `Sprite_ProjectA` `0x57B860`** (the party objects'
+  screen update, [`field-frame.md`](field-frame.md) section 4) builds one
+  vertex the same way and never writes its fourth word; `Gte_LoadVertex`
+  carries the stale stack into the top half of `Gte_Vertices[3]`. Ours writes
+  `0000`, under the same ruling - the same word, the same reader. Its fuzz
+  compares x, y and z and leaves the pad out, so the zero there is by
+  construction, not measured. `BOF3X_ORIGINAL=Sprite_ProjectA` restores it.
