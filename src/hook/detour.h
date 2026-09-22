@@ -54,7 +54,8 @@ void PatchBytes(const char* name, std::uint32_t at, const std::uint8_t* expected
 // A relative CALL - or a tail JMP - that does leave the range is named in
 // `calls`: the offset of its E8 or E9 byte, and where the copy should call instead - null for "where the
 // original called", or another clone, so that a cloned caller reaches the
-// cloned callee and never ours.
+// cloned callee and never ours. An entry that is itself a CALL (E8 at offset
+// 0) is refused as a patch unless `calls` names offset 0.
 struct CloneCall {
     std::uint32_t offset;
     const void* target;

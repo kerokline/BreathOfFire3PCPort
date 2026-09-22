@@ -133,8 +133,14 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
     if (IsOwned(original)) Fatal("%s: CloneOriginal after Inject - the entry is already a jmp", name);
     // A tracer or debugger patch at the entry would be copied as a relative
-    // jmp or a breakpoint, and run wrong from the new address.
-    if (orig[0] == 0xE9 || orig[0] == 0xE8 || orig[0] == 0xCC)
+    // jmp or a breakpoint, and run wrong from the new address. A function
+    // whose first instruction is its own call (0x517200 is a list of calls)
+    // starts with E8 legitimately: allowed when `calls` re-aims offset 0, which
+    // says the caller read it as the original's call - the copy then holds a
+    // call to the new target either way.
+    bool entry_call_named = false;
+    for (int i = 0; i < n_calls; ++i) entry_call_named = entry_call_named || calls[i].offset == 0;
+    if (orig[0] == 0xE9 || (orig[0] == 0xE8 && !entry_call_named) || orig[0] == 0xCC)
         Fatal("%s: entry 0x%08X is already patched (%02X), cannot clone", name, (unsigned)original, orig[0]);
     void* copy = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!copy) Fatal("%s: VirtualAlloc(%u) failed, error %lu", name, (unsigned)size, GetLastError());
