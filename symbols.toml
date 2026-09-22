@@ -2949,3 +2949,790 @@ ctype = "unsigned char"
 status = "evidence"
 evidence = "Task 0's private byte +8: the field request byte that the menu button sets to 1 (see Field_MenuButton). Area_TestCondition kind 0xFC tests it for 4."
 
+# ---------------------------------------------------------------------------
+# The field objects' movement script (2026-09-22): the interpreter's step, its
+# flow-control pass and the 0xF0 group, and the callees they need typed
+# (docs/movement-script.md). PSX twins from analysis/pairs_propagated.json.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x576B50
+name = "MoveScript_Step"
+psx = 0x801A9D38
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script"
+impl = "src/game/move_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x576B50..0x576CF0 then an 11-entry jump table at 0x576CF0 and a byte table at 0x576D1C indexed by (op & 0xF0) - 0x10, cdecl, two arguments. Stores the object to MoveScript_Object, runs MoveScript_Flow(object, script, Sprite_Current[8]), then dispatches the byte at script[u16 object +0xA] on its high nibble: 0x10-0x40 move by (op - 0x10) >> 3 with op & 7 to object +7; 0x50 op & 0xF to +1; 0x60, 0x80, 0x90, 0xC0, 0xD0, 0xE0, 0xF0 to the group handlers; 0xA0 stays; then position + 1. Returns al only; the three callers 0x517C7A, 0x5730E6, 0x5254CF read al. The same shape as PSX FUN_801A9D38 (psx_pair call-anchored), read in the sibling's GAME_EMI0 decompile. Call trace hidden_b: 57,758 calls."
+
+[[func]]
+pc = 0x576E00
+name = "MoveScript_Flow"
+psx = 0x801A9F94
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+impl = "src/game/move_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x576E00..0x577237 then a 15-entry jump table at 0x577238, cdecl. Loops over the script's flow-control bytes until one whose high nibble is not 0x00, 0xA0 or 0xB0, and returns value in al - or Sprite_Current[8] after an 03, 0xFF after a kind-2 0D. 01 jump or label; 02 counted loop on object +2; 03 area handler descriptor +0x3C[b1]; 04-09 compare a constant or MoveScript_Variable with MoveScript_Variable (equal, less, and) and go to a label; 0A skip; 0B restart; 0C ObjTrio bit 0x40; 0D place and ground; 0E / 0F animation; A0-A3 through MoveScript_CounterOps; B0 MoveScript_GroupB. Byte 00 is not a case and loops for ever. The same as PSX FUN_801A9F94 (psx_pair callers) case for case."
+
+[[func]]
+pc = 0x577760
+name = "MoveScript_GroupF"
+psx = 0x801AADE8
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+impl = "src/game/move_script.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x577760..0x577B8C then a 16-entry jump table at 0x577B90 (F0..FF), cdecl, called only by MoveScript_Step. Position advances (with the step's + 1): F0 F1 F5 FB FC 1, F2 FE 3, F3 FA 5, F4 4, F6 2, F7 7, F8 2 + what MoveCmd_Attach adds, F9 3 or repeat, FD 1 or repeat, FF repeat - the lengths the PSX FUN_801AADE8 has (docs/movement-script.md section 1). Hypothesis because the PSX twin is by position only: psx_pair has no pair for 0x577760."
+
+[[func]]
+pc = 0x57C840
+name = "MoveScript_ObjectKind"
+psx = 0x8015CB38
+ret = "int"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (the first 20 instructions): tests Sprite_Current - 2 for Sprite_Kind2 0x7E0940; the three ObjTrio objects 0x802D40, 0x802E8C, 0x802FD8 and a range from 0x802000 follow; 0 for Sprite_Objects 0x7DEE80..0x7E01B8. Not read to its end: the kinds other than 2 are unread. psx_pair call."
+
+[[func]]
+pc = 0x578C10
+name = "MoveCmd_Move"
+psx = 0x801ACBA8
+ret = "void"
+params = "unsigned char *object, unsigned char direction"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (prologue): the object and a byte - ebx is the second argument, compared with 2 and 6, and masked 0xFF before use. Sets Sprite_Current[9] to 0x10, or 0x20 for 2 and 6, then divides it by a byte of 0x6697F0[object +4]. Called by MoveScript_Step (ops 0x10-0x4F) and MoveScript_GroupF (F2, F3, FA) when the object is not kind 2. psx_pair call."
+
+[[func]]
+pc = 0x573400
+name = "MoveCmd_MoveKind2"
+psx = 0x801C6DF4
+ret = "void"
+params = "unsigned char direction"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (prologue): one byte argument, compared with 2 and 6 and masked 0xFF; reads 0x7E09C4 (Sprite_Kind2 +0x84). The kind-2 twin of MoveCmd_Move at every call site. psx_pair call."
+
+[[func]]
+pc = 0x578B00
+name = "MoveScript_Group6"
+psx = 0x801ACA24
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x578B00..0x578BF4 then a 7-entry jump table, cdecl. 61..64 animation (Sprite_Current[8] & 7) + 0x14 / 0x1C / 0x24 / 0x2C; 65, 66 ((+8 >> 1) & 3) + 0x34 / 0x10 with +8 = (+8 & 6) + 1; 60 and the rest +8 & 7. Then context bit 0x40, Sprite_Current[7] bit 8, Sprite_SetAnimation, and returns Sprite_Current[8] read again. Every op 1 byte. Case for case the PSX FUN_801ACA24."
+
+[[func]]
+pc = 0x5786C0
+name = "MoveScript_Group8"
+psx = 0x801AC458
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5786C0..0x5789C8 then a 13-entry jump table (80..8C), cdecl. 80 / 81 bit 8 of the word 0x9039A2; 82 / 83 context bits 2 / 4; 84 h b the three coordinates MoveCmd_HandlePosition returns; 85 the kind-2 object toward ObjTrio 0's position (0x802D74 / 0x802D78), with its height step to MoveScript_FAWord; 86 n a +0x18 script to Field_State +0x130 (kind 1) or n to context +3, then position 0xFFFF - the script restarts; 87, 88 calls; 89 hi lo Sound_LoadStream; 8A skips 2; 8B waits on Sound_StreamDone; 8C an Effect_SpawnAt. The PSX FUN_801AC458 case for case except 8A, whose PSX call (0x80164A10) the port dropped: on the PC 8A only advances."
+
+[[func]]
+pc = 0x578A00
+name = "MoveScript_Group9"
+psx = 0x801AC8B0
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x578A00..0x578AD8 then a 4-entry jump table picked through a 16-byte index table at 0x578AE8, cdecl. 90..95 a b: Effect_Spawn(op - 0x90, a, b, Sprite_Current +0x2E, +0x30) to Sprite_Current[0xB]; 98..9D a b: Effect_SpawnAt with the three coordinates; 9F waits while bit 0 of Effect_Objects[Sprite_Current[0xB]] is set. The PSX FUN_801AC8B0 case for case; the PC's records are 0x80 bytes where the PSX's are 0x74."
+
+[[func]]
+pc = 0x578010
+name = "MoveScript_GroupC"
+psx = 0x801ABB00
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x578010..0x578678 then a 15-entry jump table (C0..CE), cdecl. C0 a Sprite_SetTint record to Field_State +0x149 (kind 1) or Field_ActiveMember +0x9F; C1 / C2 add / subtract three bytes to that record of MoveScript_TintRecords; C3 / C4 / C7 add or subtract 8.8 operands to Sprite_Current +0x40 +0x44 (+0x34 +0x38 +0x3C); C5, C6, C9, CA single fields; C8 / CE turn Sprite_Current[8] one step toward a direction; CB an animation bank; CC waits on context bits; CD Sprite_ReleaseTint. The PSX FUN_801ABB00 case for case. C1 is 4 bytes as executed on both platforms, where MoveScript_OpLengths says 5 (docs/movement-script.md section 4)."
+
+[[func]]
+pc = 0x577BD0
+name = "MoveScript_GroupD"
+psx = 0x801AB470
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x577BD0..0x577FC8 then a 16-entry jump table (D0..DF), cdecl. D0 places Sprite_Kind2 at 0x905E64 / 0x905E60 and grounds it; D1 a sound when the sprite's script reaches an operand; D2 / D3 Sprite_Current[7] bits; D4..D6 the party slot's record in MoveScript_PartyRecords (slot from Field_ActiveMember, 0xA4-byte objects from 0x802000, clamped to 4); D7 context +6; D8 ends the script (context bit 8); D9 / DA / DF wait on Field_Request / 0x66C810; DB / DC / DD ground tests; DE the area's handler, returning Sprite_Current[8]. The PSX FUN_801AB470 case for case. pe_hidden.py folded it into 0x577B80, which is only the FF case of MoveScript_GroupF."
+
+[[func]]
+pc = 0x577420
+name = "MoveScript_GroupE"
+psx = 0x801AA944
+ret = "unsigned char"
+params = "unsigned char *object, const unsigned char *script, unsigned char value"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x577420..0x577714 then a 16-entry jump table (E0..EF), cdecl. E0..E3 facing and a wait target to context +8 through 0x517E90; E4 E5 E6 flags (E6 clears the sprite's flag byte); E7 0x518B20; E8 context +4; E9 MoveCmd_OpE9, repeating while it returns non-zero; EA a tint (the sprite's own +0x5D..+0x5F when its type byte is 0x0A); EB..EE flip sprite bits; EF ends the script (context bit 8). The PSX FUN_801AA944 case for case (the PC's E0 has a compiler-made test that can never be taken)."
+
+[[func]]
+pc = 0x577280
+name = "MoveScript_GroupB"
+psx = 0x801AA6E4
+ret = "void"
+params = "unsigned char *object, const unsigned char *script"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x577280..0x5773DC then a 15-entry jump table (B0..BE), cdecl: the sound and music group, which the PC port rewrote. B0..B3 Sound_PlayEffect(b1 + 0x100 * (op - 0xB0)); B4 and BE Music_Play(b1, 8); B5 Music_FadeOutStop(8), B9 (10); BA / BB fade over b4; BC / BD Sound_PlayById(b1:b2) - BC pushes two more operands, BD one, and neither is read; B8 Port_DroppedCall, a bare ret; B6 B7 nothing. The PSX FUN_801AA6E4 calls a different function in every case, with more operands. Lengths as MoveScript_OpLengths."
+
+[[func]]
+pc = 0x579450
+name = "MoveScript_FindLabel"
+psx = 0x801AD8F0
+ret = "unsigned short"
+params = "unsigned char *object, unsigned char label, const unsigned char *script"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x579450..0x5794C7, cdecl, no calls. Unless bit 0x4000 of the object's position is set it returns that position unchanged; otherwise it walks the script from 0 until 0A label (the label byte read as al) and returns that position in ax, stepping F8 07 by 5, other F8 by 2, 0E / 0F by 5 when bit 2 of their fourth byte is set and 4 otherwise, every other op by MoveScript_OpLengths. No bound: a label that is not there, or an op of length 0 before it, never returns. The same as PSX FUN_801AD8F0 in the sibling's GAME_EMI0 decompile, branch for branch."
+note = "tools/movement_scan.py --decode resolves labels with this walk (docs/movement-script.md section 4)."
+
+[[func]]
+pc = 0x57C310
+name = "MoveScript_Variable"
+psx = 0x8015C260
+ret = "int"
+params = "unsigned char index"
+status = "evidence"
+evidence = "disasm 2026-09-22: index & 0xFF above 0xE returns 0xFF; otherwise a 15-entry jump table at 0x57C3A4 of one-line reads - 0 Cond_ByteFA (s8), 1 Game_AreaNumber, 2 [[0x929ED0]], 3..6 the bytes 0x903848..0x90384B, 7 MoveScript_Var7 (s8), 8 byte 0x8034F1, 9 bit 0 of 0x8034E1, 10 Sprite_Current +0x58, 11 byte 0x802DC9, 12 dword 0x904030, 13 and 14 read from the table's entries past 12 (unread). Used by flow ops 05, 07, 09."
+
+[[func]]
+pc = 0x57C7E0
+name = "ObjTrio_ClearBit40"
+psx = 0x8015CAA8
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 12 instructions: clears bit 0x40 of the bytes 0x802D40, 0x802E8C, 0x802FD8 - three objects 0x14C apart. Flow op 0C with a non-zero operand."
+
+[[func]]
+pc = 0x57C810
+name = "ObjTrio_SetBit40"
+psx = 0x8015CAF0
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 12 instructions: sets bit 0x40 of the same three bytes as ObjTrio_ClearBit40. Flow op 0C with a zero operand."
+
+[[func]]
+pc = 0x5891F0
+name = "Sprite_SetAnimation"
+psx = 0x8014D5AC
+ret = "void"
+params = "unsigned char animation"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 6 instructions: Sprite_SetAnimationAt(animation, 0). Flow ops 0E / 0F without bit 2 of their flags byte. psx_pair call."
+
+[[func]]
+pc = 0x589200
+name = "Sprite_SetAnimationAt"
+psx = 0x8014D5D0
+ret = "void"
+params = "unsigned char animation, unsigned char start"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its argument reads): the first argument read as dl, the second as a byte at the end; stores into Sprite_Current +0x24 and +0x4B. Flow ops 0E / 0F with bit 2 of their flags byte, the fifth operand as start. psx_pair call. The body is not read through."
+
+[[func]]
+pc = 0x57C7A0
+name = "ScriptFlags_Clear40"
+psx = 0x8015CA48
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 6 instructions: clears bit 0x40 of byte 0x8034E1 and bit 8 of the word 0x9039A2 (the blocking flags Field_MenuButton's callers test, docs/menu-screens.md). Op F0."
+
+[[func]]
+pc = 0x57C7C0
+name = "ScriptFlags_Set40"
+psx = 0x8015CA78
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 6 instructions: sets the two bits ScriptFlags_Clear40 clears. Op F1."
+
+[[func]]
+pc = 0x578FA0
+name = "MoveScript_WaitTest"
+psx = 0x801AD33C
+ret = "int"
+params = "unsigned char a, unsigned char b"
+status = "hypothesis"
+evidence = "call site 0x57798A in MoveScript_GroupF, 2026-09-22: op F9 b1 b2 calls it (b1, b2) and repeats while eax is non-zero. The body stores its arguments' low bytes into its own frame; not read further. psx_pair callers."
+
+[[func]]
+pc = 0x57CDC0
+name = "Sprite_ScriptPeek"
+psx = 0x8015D48C
+ret = "unsigned short"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (the first 20 instructions): for Sprite_Current, when the tick byte +0x4A is 1, the position that Sprite_ScriptTick would move to - 2 if pos >> 1 equals byte +0x49, else from the script byte at +0x50 + pos; otherwise the u16 +0x58. Op FE compares it with an operand and with +0x58. Not read to its end."
+
+[[func]]
+pc = 0x587740
+name = "Sound_PlayEffect"
+ret = "void"
+params = "unsigned short id"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (prologue): the argument masked to 16 bits; bits 8-11 minus 1 select one of a set of 0x384-byte records at 0x6BC928, the low byte an entry of 16 bytes in it. Called with 0x103 by ops FB / FC and 0x200 + b1 by op FE; 148 calls in hidden_b (docs/attract-remaining.md section 4.12). Named for those uses; the DirectSound end is unread."
+
+[[func]]
+pc = 0x578D10
+name = "MoveCmd_OpF7"
+psx = 0x801ACD68
+ret = "void"
+params = "long x, long z, unsigned char c, unsigned char *object"
+status = "hypothesis"
+evidence = "call site 0x577AE5 in MoveScript_GroupF, 2026-09-22: op F7 b1..b6 calls it ((b1 << 8 | b2) << 8, (b3 << 8 | b4) << 8, b5, object) - two 16.16 coordinates from 8.8 operands - then b6 is the op's result and, for an object of kind 1, 1 goes to object +7. The body is unread. psx_pair call."
+
+[[func]]
+pc = 0x5792A0
+name = "MoveCmd_Attach"
+psx = 0x801AD768
+ret = "void"
+params = "unsigned char *object, unsigned char mode, unsigned char handle, unsigned char s, unsigned char t"
+status = "hypothesis"
+evidence = "disasm 2026-09-21 and 2026-09-22 (docs/movement-script.md section 2): op F8 m h s t; mode to Sprite_Current +1, and for mode 7 the handle and s as dwords at +0x18 / +0x1C, each masked 0xFF. Called only by MoveScript_GroupF. psx_pair call."
+
+[[func]]
+pc = 0x572650
+name = "MoveCmd_TestFB"
+psx = 0x80155B38
+ret = "unsigned char"
+params = "short x, short z"
+status = "hypothesis"
+evidence = "call site 0x577B49 in MoveScript_GroupF, 2026-09-22: op FB calls it with the words Sprite_Current +0x36 and +0x3A (the high halves of the 16.16 position) and plays sound 0x103 when al is non-zero. The body reads both as words; not read further."
+
+[[func]]
+pc = 0x572790
+name = "MoveCmd_TestFC"
+psx = 0x80155CD4
+ret = "unsigned char"
+params = "short x, short z"
+status = "hypothesis"
+evidence = "call site 0x577B5F in MoveScript_GroupF, 2026-09-22: op FC, the same as MoveCmd_TestFB with this function. Not read further."
+
+[[data]]
+pc = 0x929E80
+name = "MoveScript_Object"
+psx = 0x8014820C
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "disasm 2026-09-22: MoveScript_Step stores its first argument here before anything else, as PSX FUN_801A9D38 stores to 0x8014820C."
+
+[[data]]
+pc = 0x667590
+name = "Area_Descriptors"
+psx = 0x801802EC
+ctype = "unsigned char *"
+count = 200
+status = "evidence"
+evidence = "docs/attract-remaining.md section 5: 200 pointers to area descriptors, the PSX table's twin; indexed by Game_AreaNumber in MoveScript_Flow op 03 (+0x3C, the handler array) and in the interpreter's callers (+0x10, +0x1C, docs/movement-script.md section 3)."
+
+[[func]]
+pc = 0x57C460
+name = "MoveScript_CounterSet"
+psx = 0x8015C41C
+ret = "signed char"
+params = "const unsigned char *op"
+impl = "src/game/move_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 8 instructions: counter (op >> 2) & 3 of the four bytes 0x903848 set to op[1]; returns 1. Flow ops A0 A4 A8 AC, through MoveScript_CounterOps. Call trace hidden_b: 33 calls."
+
+[[func]]
+pc = 0x57C480
+name = "MoveScript_CounterTest"
+psx = 0x8015C440
+ret = "signed char"
+params = "const unsigned char *op"
+impl = "src/game/move_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 9 instructions: 1 when counter (op >> 2) & 3 equals op[1], else -1 (sub; neg; sbb; and 0xFE; inc). Flow ops A1 A5 A9 AD: -1 stops the flow pass there, so the step stays on the op until the counter matches. Call trace hidden_b: 27,757 calls."
+
+[[func]]
+pc = 0x57C4A0
+name = "MoveScript_CounterStep"
+psx = 0x8015C474
+ret = "signed char"
+params = "const unsigned char *op"
+impl = "src/game/move_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 8 instructions: counter (op >> 2) & 3 incremented; returns 0. Flow ops A2 A6 AA AE. Call trace hidden_b: 39 calls."
+
+[[data]]
+pc = 0x663B74
+name = "MoveScript_CounterOps"
+ctype = "void *"
+count = 4
+status = "evidence"
+evidence = "disasm 2026-09-22: MoveScript_Flow calls entry op & 3 for ops A0-A3 with the op's address, and takes a negative signed al as stop, else skips al + 1 bytes. Entries: 0x57C460 sets byte 0x903848 + ((op >> 2) & 3) to b1 and returns 1; 0x57C480 returns 1 if that byte equals b1, else -1; 0x57C4A0 increments it and returns 0; 0x43C9F0 returns 0."
+
+[[data]]
+pc = 0x6639FC
+name = "MoveScript_OpLengths"
+psx = 0x801C97F4
+ctype = "unsigned char"
+count = 256
+status = "evidence"
+evidence = "disasm 2026-09-22: MoveScript_FindLabel steps over every op but F8, 0E and 0F by its entry here. Byte for byte the PSX GAME.EMI table at 0x801C97F4, all 256 entries (compared 2026-09-22). All 107 lengths read from the code the same day agree - the flow ops, 0x10-0x5F, F0-FF. 36 entries are 0: 00, 67-7F and nine more - no op."
+
+[[data]]
+pc = 0x6639D8
+name = "MoveScript_AnimByState"
+ctype = "unsigned char"
+count = 36
+status = "hypothesis"
+evidence = "disasm 2026-09-22: flow op 0F takes its animation from byte b1 * 11 + Field_State[0x89] here. The count is only the distance to MoveScript_OpLengths; how many rows scripts use is unread. Byte for byte the PSX GAME.EMI bytes at 0x801C97D0 (compared 2026-09-22), the address its FUN_801A9F94 indexes."
+
+[[data]]
+pc = 0x7E0940
+name = "Sprite_Kind2"
+ctype = "unsigned char"
+count = 164
+status = "hypothesis"
+evidence = "disasm 2026-09-22: the one object MoveScript_ObjectKind calls kind 2. MoveScript_Flow op 0D writes its +0x34..+0x3E directly (0x7E0974..0x7E097E) where other kinds go through Sprite_Current, and op F3 its +0x14 (0x7E0954) and reads +0x87 (0x7E09C7). 0x5730E6 runs a script with 0x7E09C0 (its +0x80) as the script context. What it is in the game is unread; 164 = 0xA4, the sprite object size."
+
+[[data]]
+pc = 0x937F8C
+name = "MoveScript_F3Divisor"
+ctype = "short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op F3 on the kind-2 path divides 0x80 by this s16 - the word after Sprite_Current. Its writers are unread; named by that one use."
+
+[[data]]
+pc = 0x904EFE
+name = "MoveScript_FAWord"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op FA on the kind-2 path stores 0 here - the word after Game_AreaNumber. Its readers are unread; named by that one use."
+
+[[data]]
+pc = 0x8034E4
+name = "MoveScript_Var7"
+ctype = "signed char"
+status = "evidence"
+evidence = "disasm 2026-09-22: op F6 b1 stores b1 here, and MoveScript_Variable index 7 reads it sign-extended."
+
+# --- What the six group handlers and MoveScript_GroupB call (2026-09-22). ---
+# Typed from their call sites and argument reads; every byte argument below is
+# read as a byte (or masked) by the callee, which is what lets our handlers pass
+# them clean where the original's words carry leftover upper bytes.
+
+[[func]]
+pc = 0x57CE10
+name = "Effect_Spawn"
+psx = 0x8015D508
+ret = "unsigned char"
+params = "unsigned char kind, signed char a, signed char b, short x, short z"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops 90..95 call it (op - 0x90, b1, b2, Sprite_Current +0x2E, +0x30) and store al to Sprite_Current[0xB], whose Effect_Objects record op 9F waits on. Its arguments read as a byte, two signed bytes and two words. Named by that use."
+
+[[func]]
+pc = 0x57CE80
+name = "Effect_SpawnAt"
+psx = 0x8015D5F0
+ret = "unsigned char"
+params = "unsigned char kind, signed char a, signed char b, long x, long y, long z"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops 98..9D and 8C call it with the sprite's three 16.16 coordinates; the rest as Effect_Spawn."
+
+[[data]]
+pc = 0x7E11E0
+name = "Effect_Objects"
+psx = 0x80143FC4
+ctype = "unsigned char"
+count = 0xA00
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op 9F tests bit 0 of byte 0x7E11E0 + Sprite_Current[0xB] * 0x80 (PSX 0x80143FC4 + n * 0x74). 0x494030 runs 20 objects of 0x80 bytes here (docs/HANDOFF.md). 20 x 0x80."
+
+[[func]]
+pc = 0x578DC0
+name = "MoveCmd_HandlePosition"
+psx = 0x801ACF30
+ret = "long *"
+params = "long *out, unsigned char handle, unsigned char b"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 20 instructions): op 84 h b calls it with a 16-byte buffer and copies the first three dwords of what it returns to Sprite_Current +0x34..+0x3C. It stores Sprite_Current to 0x92A0C0 and tests bit 7 of the handle, then counts type-0x0A objects as Sprite_ObjectByHandle does. No shipped script uses op 84 (tools/movement_scan.py --decode)."
+
+[[func]]
+pc = 0x5795F0
+name = "MoveCmd_Op87"
+psx = 0x801ADBC4
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "call site 0x5788F5, 2026-09-22: op 87, no arguments. Calls 0x454CC0. Unread."
+
+[[func]]
+pc = 0x5794D0
+name = "MoveCmd_Op88"
+psx = 0x801AD9D0
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "call site 0x578906, 2026-09-22: op 88, no arguments. Calls 0x454CC0. Unread."
+
+[[func]]
+pc = 0x587910
+name = "Sound_LoadStream"
+ret = "void"
+params = "unsigned short id"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op 89 hi lo calls it with hi:lo; id >> 12 picks a table at 0x6653B0 and id & 0xFFF an entry whose string it formats through 0x666F9C and opens as a file (0x5A7380). PSX op 89 calls 0x80164090(id, 1). Named by the file it opens."
+
+[[func]]
+pc = 0x587A00
+name = "Sound_StreamDone"
+ret = "int"
+params = "void"
+status = "hypothesis"
+evidence = "call site 0x57894C, 2026-09-22: op 8B repeats while it returns 0 (test eax, the whole register). Unread."
+
+[[func]]
+pc = 0x57C4C0
+name = "Sprite_FaceDirection"
+psx = 0x8015C4B4
+ret = "void"
+params = "unsigned char direction"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (to its first ret): unless Sprite_Current's type byte +6 is 8 or more, or 6, it masks the argument to a byte, sets Sprite_Current +0x2A from 0x65F5BD[2 * d] and, unless the pair's animation is already +0x4B, calls Sprite_SetAnimation with 0x65F5BC[2 * d]. Called with a direction by ops E0 E1 C8 CE."
+
+[[func]]
+pc = 0x517E90
+name = "MoveScript_SetTurnTarget"
+psx = 0x801A27A8
+ret = "void"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "call sites in MoveScript_GroupE, 2026-09-22: ops E0 E1 E3 store an operand to context +8 and call it with the context. Unread."
+
+[[func]]
+pc = 0x518B20
+name = "MoveCmd_OpE7"
+psx = 0x801A3790
+ret = "void"
+params = "unsigned char n"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 7 instructions: calls entry n & 0xFF of the table at 0x65F5F8 with [0x9035A4] (Field_ActiveMember). Op E7."
+
+[[func]]
+pc = 0x57C8E0
+name = "MoveCmd_OpE9"
+psx = 0x8015CC54
+ret = "unsigned char"
+params = "unsigned char *object, signed char a, signed char b, unsigned short c, unsigned short d, unsigned char e, unsigned char f"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: forwards its seven arguments to entry Sprite_Current[4] of the four-handler table 0x663B84 (0x57C920, 0x57CA80, 0x57CBB0, 0x57CCE0), which read a and b as signed bytes, c and d as words and f as a byte. Op E9 repeats while al is non-zero."
+
+[[func]]
+pc = 0x454CC0
+name = "Sprite_SetTint"
+psx = 0x8019751C
+ret = "unsigned char"
+params = "unsigned char *sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a"
+status = "hypothesis"
+evidence = "call sites 2026-09-22: op EA calls it (Sprite_Current, b1..b4) except for a type-0x0A sprite, whose +0x5D..+0x5F take b1..b3 directly; op C0 stores its al as an index into MoveScript_TintRecords, three bytes of which ops C1 / C2 then add to or subtract from. Its four byte arguments read as bytes. Named as a colour by those uses."
+
+[[func]]
+pc = 0x454DC0
+name = "Sprite_ReleaseTint"
+psx = 0x80197718
+ret = "void"
+params = "unsigned char *sprite"
+status = "hypothesis"
+evidence = "call site 0x5785EC, 2026-09-22: op CD calls it with Sprite_Current. Unread past its first instructions."
+
+[[func]]
+pc = 0x589590
+name = "Sprite_SetAnimationBank"
+psx = 0x8014DC30
+ret = "void"
+params = "unsigned short bank"
+status = "hypothesis"
+evidence = "call site 0x57858C, 2026-09-22: op CB hi lo a f calls it with hi:lo, then Sprite_SetAnimation(a), then stores f & 1 to Sprite_Current +0x2A. Unread."
+
+[[func]]
+pc = 0x57CD40
+name = "MoveCmd_OpDB"
+psx = 0x8015D3BC
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "call site 0x577F20, 2026-09-22: op DB, then the sprite is grounded and tested as op DC. Unread."
+
+[[func]]
+pc = 0x587900
+name = "Sound_PlayById"
+ret = "void"
+params = "unsigned short id"
+status = "evidence"
+evidence = "disasm 2026-09-22, 4 instructions: Sound_PlayEffect(its first argument). Ops BC and BD call it with three and two arguments, D1 with two; only the first is read."
+
+[[func]]
+pc = 0x587AE0
+name = "Music_Play"
+ret = "void"
+params = "unsigned int track, int unknown"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 16 instructions): nothing if track equals the byte 0x904131, else stores it there and (re)starts playback through 0x587A20 and 0x5A6FB0. Ops B4 and BE call it (b1, 8); whether the 8 is read is unread. PSX B4 and BE call two different functions, 0x80162610 and 0x80162514."
+
+[[func]]
+pc = 0x587B40
+name = "Music_FadeOutStop"
+ret = "void"
+params = "int frames"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 16 instructions: flag 0x6BDE58 = 1, 0x6BDE54 = frames, and the float step 0x6BDE60 = -(0x6BDE5C / frames) - a ramp from the current volume to nothing over `frames`, with a flag the other ramps clear. Ops B5 (8) and B9 (10)."
+
+[[func]]
+pc = 0x587BA0
+name = "Music_FadeIn"
+ret = "void"
+params = "int frames"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 14 instructions: flag 0x6BDE58 = 0, 0x6BDE54 = frames, the step (float 0x5C427C - 0x6BDE5C) / frames. Op BA, over b4."
+
+[[func]]
+pc = 0x587BE0
+name = "Music_FadeOut"
+ret = "void"
+params = "int frames"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 14 instructions: as Music_FadeOutStop with the flag 0x6BDE58 cleared. Op BB, over b4."
+
+[[func]]
+pc = 0x4DF820
+name = "Port_DroppedCall"
+ret = "void"
+params = "unsigned char b"
+status = "evidence"
+evidence = "disasm 2026-09-22: a bare ret, where the port left calls the PSX made and dropped what they did. Op B8 b1 b2 b3 calls it with b2 (PSX 0x8015DCF0(b1, b2, b3, b3)); Sprite_UpdateScreen and Sprite_QueueOverlay call it with nothing for a sprite with flag bit 8 (PSX 0x80161E44)."
+
+[[data]]
+pc = 0x9035A4
+name = "Field_ActiveMember"
+psx = 0x80146880
+ctype = "unsigned char *"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops D4..D6 divide (this - 0x802000) by 0xA4 for an index 0..4 - a slot of Sprite_ObjectsExtra, the four party objects - and ops C0 C1 C2 CA use its +0x9F / +0xA0; 0x57C4C0 and 0x518B20 read it too. The PSX's twin by the same uses."
+
+[[data]]
+pc = 0x7E0700
+name = "MoveScript_TintRecords"
+psx = 0x80145BD0
+ctype = "unsigned char"
+count = 0xC00
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops C1 / C2 add or subtract b1 b2 b3 to bytes +2 +3 +4 of the 12-byte record 0x7E0700 + n * 12, n the index op C0 stored (Field_State +0x149 or Field_ActiveMember +0x9F). PSX 0x80145BD0 + n * 12. The count is 256 records rounded out: n is a byte and unchecked."
+
+[[data]]
+pc = 0x803480
+name = "MoveScript_PartyRecords"
+psx = 0x80147CB4
+ctype = "unsigned char"
+count = 0x80
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops D4..D6 use the 16-byte record 0x803480 + slot * 16, slot 0..4 from Field_ActiveMember: +0 bit 0 (D6 flips it), +1 and +2 a signed count (D4 sets both, D5 waits while their sum is non-zero), +4 +8 +0xC a velocity from D4's 8.8 operands divided by the count. The count of bytes is D6's reach: its slot is clamped only when negative, so 0x7F * 16 is possible in principle; 0x80 covers slots 0..7."
+
+[[data]]
+pc = 0x905E60
+name = "Field_Kind2Z"
+psx = 0x80149308
+ctype = "long"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops D0 and 85 take this as the kind-2 object's z (the elevation's second argument) and 0x905E64 as its x; op 85 copies ObjTrio 0's +0x38 here. The PSX keeps x at 0x80149304 and z at 0x80149308: the PC has the two in the other order in memory, used consistently."
+
+[[data]]
+pc = 0x905E64
+name = "Field_Kind2X"
+psx = 0x80149304
+ctype = "long"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: see Field_Kind2Z; op 85 copies ObjTrio 0's +0x34 here."
+
+[[data]]
+pc = 0x802D40
+name = "ObjTrio"
+ctype = "unsigned char"
+count = 0x3E4
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ObjTrio_ClearBit40 / SetBit40 touch the bytes 0x802D40, 0x802E8C, 0x802FD8 - three objects 0x14C apart. Ops E0 and CE read the first one's +8 (a direction), op 85 its +0x34 / +0x38 (a position). 3 x 0x14C."
+
+[[data]]
+pc = 0x929F12
+name = "Field_Kind2Hold"
+psx = 0x8014932E
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op 85, when the kind-2 object is at ObjTrio 0's position, repeats while this byte is non-zero and otherwise sets the elevation. Named by that one use."
+
+[[data]]
+pc = 0x66C810
+name = "MoveScript_WaitWordDA"
+psx = 0x80143C40
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op DA repeats while this word is non-zero. Named by that one use."
+
+[[data]]
+pc = 0x9039A2
+name = "Field_ScriptFlags"
+psx = 0x80146254
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: ops 80 / 81 set and clear bit 8, E5 clears bit 8, D8 bit 3; ScriptFlags_Clear40 / Set40 bit 8 too. Field_MenuButton's callers test bit 0x40 of its low byte before opening the menu (docs/menu-screens.md)."
+
+[[data]]
+pc = 0x66972C
+name = "MoveScript_EffectState"
+ctype = "unsigned char"
+count = 24
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op 8C indexes it by Field_State[0x89] and the byte found indexes MoveScript_EffectArg. The count is the distance to that table."
+
+[[func]]
+pc = 0x517BF0
+name = "Field_ObjectUpdate"
+psx = 0x801A238C
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517BF0..0x517E8C, cdecl, every jump internal. The object's script context is object +0x80 (the PSX's +0x74: every field is 0xC further on the PC). Unless Sprite_Current[9] (a timed move's frames) is running: with no steps left in +0x87 and a speed +0x84, one MoveScript_Step of script Area_Descriptors[area] +0x10 [+0x83] - 0xFF returns at once, else the result becomes Sprite_Current[8]; with steps left, a step of the move unless Field_ObjectBlocked - a move blocked on its first step undoes the script step too, putting back the context's position (+0xA) and loop counter (+2); then Field_ObjectSettle; always Field_ObjectMotion, except on the three early returns. 16 is divided by Field_MoveSpeeds[+0x84]. The PSX FUN_801A238C branch for branch. Call trace hidden_b: 69,494 calls."
+
+[[func]]
+pc = 0x518980
+name = "Field_ObjectMotion"
+psx = 0x801A3544
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518980..0x518AB6, cdecl. While Sprite_Current[9] runs: position +0x34 / +0x38 += the velocity +0xC / +0x10, height +0x3E += +0x14's low word, [9] - 1; when it reaches 0, grounded (unless context bit 0x80), object +0x9C = 0, and for a Sprite_Current[2] of 1..3 a wait of 30 x ([2] & 3) frames in object +0x81 with Sprite_SetPoseWait, the direction settled and +0xA1 set. Then Party_ApplyRecord, and unless Field_Request is 2, context bit 0x10 from [9] <= [0xA]. The PSX FUN_801A3544. Call trace hidden_b: 71,816 calls."
+
+[[func]]
+pc = 0x5197F0
+name = "Party_ApplyRecord"
+psx = 0x801A4D24
+ret = "void"
+params = "unsigned char *context"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5197F0..0x519883, cdecl, the argument unused. For a type-0x0A sprite: the MoveScript_PartyRecords record of Field_ActiveMember's slot (a negative slot as 4) - while its count +1 runs, Sprite_Current +0x64 / +0x68 += +4 / +8; while +2 runs, +0x6C += +0xC; each count - 1. The reader of what op D4 writes. The PSX FUN_801A4D24 (psx_pair call-anchored). Call trace hidden_b: 71,816 calls."
+
+[[func]]
+pc = 0x518D10
+name = "Field_ObjectSettle"
+psx = 0x801A3AEC
+ret = "void"
+params = "unsigned char *object, unsigned char direction"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518D10..0x518DCE, cdecl. For a type-0x0A sprite in a timed move with Field_ActiveMember's context bit 8: Party_MoveMember(object, direction & 7), then context bit 8 cleared. Otherwise, unless Sprite_Current[7] bit 8 (which just clears it): context bit 8 set, Sprite_Current[8] bit 8 while moving (else & 7); scratch byte 3 of 0xFF (op E4) is consumed to 0; else the bit is cleared again when the direction equals `direction`, the one Field_ObjectUpdate saw on entry. The PSX FUN_801A3AEC. Call trace hidden_b: 58,332 calls."
+
+[[func]]
+pc = 0x518B00
+name = "Sprite_SetPoseWait"
+psx = 0x801A3764
+ret = "void"
+params = "unsigned char *context"
+status = "evidence"
+evidence = "disasm 2026-09-22, 6 instructions, the argument unused: Sprite_Current[3] = [1], then [1] = 5 - a pose kept while context +1 counts down (0x518AC0 restores [1] from [3] when it reaches 0)."
+
+[[func]]
+pc = 0x519670
+name = "Field_ObjectBlocked"
+psx = 0x801A4AD0
+ret = "unsigned char"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 14 instructions): the position +0x34 / +0x38 of the sprite plus the 8-byte offset 0x6697B0[direction & 7], then tests from Sprite_Current +0x70. Field_ObjectUpdate stops a timed move when al is non-zero. Named by that use."
+
+[[func]]
+pc = 0x5190A0
+name = "Party_MoveMember"
+psx = 0x801A4088
+ret = "void"
+params = "unsigned char *object, unsigned char direction"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 12 instructions): divides (object - 0x802000) by 0xA4 for a party slot and reads Sprite_Current +0x64 / +0x68. Called by Field_ObjectSettle for a type-0x0A sprite. Unread further."
+
+[[data]]
+pc = 0x6697F0
+name = "Field_MoveSpeeds"
+psx = 0x8018254C
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "disasm 2026-09-22: Field_ObjectUpdate divides 16 by entry [object +0x84] for Sprite_Current[0xA], and MoveCmd_Move divides Sprite_Current[9] by entry [context +4]. Read 2026-09-22: 0, 1, 2, 4, 8, 16, then other data. Entry 0 is a speed of none: an object with it and steps left would divide by zero, on both platforms (the PSX's trap(0x1C00) is the compiler's divide check)."
+
+[[func]]
+pc = 0x588F20
+name = "Sprite_UpdateScreen"
+psx = 0x8014D184
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x588F20..0x5890E0, cdecl, no arguments; for Sprite_Current. With +0x24 bit 7, Sprite_QueueOverlay and nothing else. Otherwise the draw key +0x32: the map cell's words +0x36 + +0x3A less MapView_Origin, plus Sprite_KeyAdjust[+0x2B * 3 + (x frac 0) + (z frac 0)] and one for each non-zero fraction; a key outside 0..0x36 sets flag bit 7 and stops; else key << 8 with a low byte of x >> 15 or z >> 15 (Draw_OtSlot 4, by Draw_SortOnX) or ((height >> 5) & 0xFF) ^ 0x80. Then Sprite_InheritDrawKey; Gte_RotTransPers of (x >> 9 - 0x4000, z >> 9 - 0x4000, -height / 2) - the depth to +0x60, the float screen x / y to +0x74 / +0x78 and truncated (the CRT's _ftol 0x5B9550) to +0x2E / +0x30; and, while there is room, onto Sprite_DrawList, calling Port_DroppedCall for flag bit 8. The PSX FUN_8014D184 (the sibling's Actor_UpdateScreenPos) term for term, with the PC's GTE in float. Call trace hidden_b: 67,101 calls."
+
+[[func]]
+pc = 0x5890E0
+name = "Sprite_QueueOverlay"
+psx = 0x8014D3D4
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5890E0..0x58910F, cdecl, no arguments: while Sprite_OverlayListCount is below 30, Sprite_Current onto Sprite_OverlayList, and a tail jump to Port_DroppedCall for flag bit 8. Called by Sprite_UpdateScreen for a sprite with +0x24 bit 7."
+
+[[func]]
+pc = 0x5192A0
+name = "Field_ObjectFollow"
+psx = 0x801A4418
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5192A0..0x5193AF, cdecl, reached through a pointer (pe_hidden.py; main caller 0x517490). The update of an attached object: n = Sprite_ObjectByHandle(Sprite_Current +0x18) names the object it follows - Sprite_Objects[n], or Sprite_ObjectsExtra[n - 0x1E] from 0x1E on. Unless a timed move runs: +0x24 bit 5, the other's position +0x34..+0x3C copied, and for a sprite not of type 0x0A its angles +0x64..+0x6C; then MoveCmd_AttachOffset(offset, +0x1C) added to x, z and the height's word. Then Field_ObjectUpdate, and Sprite_Current[8] & 7. The PSX ov_entry_801A4418, whose objects are one array of 0x98 bytes where the PC's are two of 0xA4. Call trace hidden_b: 21,189 calls."
+
+[[func]]
+pc = 0x578EB0
+name = "MoveCmd_AttachOffset"
+psx = 0x801AD1DC
+ret = "void"
+params = "long *out, unsigned char index"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x578EB0..0x578F9B, cdecl: the attachment's offset - vector index of the area descriptor's +0x0C table (three shorts, 6 bytes each) turned by Sprite_Current's angles +0x64 / +0x68 / +0x6C: Gte_PushMatrix, Gte_RotMatrix, Gte_TransMatrix with a zero vector, Gte_SetRotMatrix, Gte_SetTransMatrix, Gte_RotTrans, Gte_PopMatrix; out = (x << 9, y << 9, -z * 2). The PSX FUN_801AD1DC step for step. Callers Field_ObjectFollow and MoveCmd_HandlePosition. Call trace hidden_b: 21,105 calls."
+
+[[data]]
+pc = 0x66729C
+name = "Sprite_KeyAdjust"
+psx = 0x8017FED4
+ctype = "signed char"
+count = 0x300
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Sprite_UpdateScreen adds the signed byte [+0x2B * 3 + (x fraction 0) + (z fraction 0)] to the draw key - three per sprite class. The count is the reach of a byte class, 256 x 3; how many classes exist is unread."
+
+[[data]]
+pc = 0x905BA8
+name = "Draw_SortOnX"
+psx = 0x8014933B
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: with Draw_OtSlot 4, Sprite_UpdateScreen takes the draw key's low byte from x >> 15 when this is non-zero, else from z >> 15. Named by that use."
+
+[[data]]
+pc = 0x7E08A0
+name = "Sprite_OverlayList"
+ctype = "unsigned char *"
+count = 30
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Sprite_QueueOverlay appends Sprite_Current here while Sprite_OverlayListCount is below 30 - the sprites with +0x24 bit 7, which Sprite_UpdateScreen keeps off Sprite_DrawList. Its readers are unread; named by the flag it holds."
+
+[[data]]
+pc = 0x905D81
+name = "Sprite_OverlayListCount"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Sprite_OverlayList's count, below 30."
+
+[[data]]
+pc = 0x669744
+name = "MoveScript_EffectArg"
+ctype = "signed char"
+count = 24
+status = "hypothesis"
+evidence = "disasm 2026-09-22: op 8C passes the byte here as Effect_SpawnAt's third argument. PSX 0x801824A0, after 0x80182488. The count is a guess: the index is a byte of MoveScript_EffectState."
+

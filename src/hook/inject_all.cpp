@@ -25,6 +25,7 @@
 #include "game/menu_verbs.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
+#include "game/move_script.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
@@ -74,6 +75,7 @@ void InjectAll() {
     MapView_Inject();
     SpriteAnim_Inject();
     SpriteFind_Inject();
+    MoveScript_Inject();
     FieldInput_Inject();
     SpriteClut_Inject();
     DrawLayers_Inject();
