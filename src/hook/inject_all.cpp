@@ -34,6 +34,7 @@
 #include "game/sprite_screen.h"
 #include "game/kind2_object.h"
 #include "game/area_slope.h"
+#include "game/field_blocked.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
@@ -103,6 +104,7 @@ void InjectAll() {
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
     ObjectKinds_Inject();
     MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
+    FieldBlocked_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
     InjectReport();
 }
 
