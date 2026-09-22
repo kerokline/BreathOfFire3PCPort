@@ -4390,8 +4390,9 @@ name = "Field_ModeDispatch"
 psx = 0x801A8834
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: call [[0x662C80 + Cond_ByteFA (s8) * 4]], then a tail jmp to 0x56D8B0 (docs/HANDOFF.md: a mode dispatcher). First call of Field_FrameScripted."
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 21 bytes): call [[0x662C80 + Cond_ByteFA (s8) * 4]] - slot 0 of the scenario chapter's vtable - then a tail jmp to Field_ModeTail. 0x662C80 is the PSX's SCENARIO vtable table 0x801C944C (20 chapters, the sibling's docs/LOADER_RECORDS.md), and this the PSX thunk 0x801A8834, which calls slot 0 and then 0x801A8BF8. Callers GameMode_Field, 0x517240, 0x5172F0, 0x595056, and the tail of 0x56D5E0. docs/field-modes.md."
 
 [[func]]
 pc = 0x59E230
@@ -4895,3 +4896,169 @@ ret = "void"
 params = "unsigned char arg"
 status = "hypothesis"
 evidence = "disasm 2026-09-22, 25 instructions: resets the script context at Sprite_Kind2 +0x80 through 0x5322B0, sets +0x85 bit 0x80, +0x83 = arg, +0x84 = 3, copies Field_Kind2X / Field_Kind2Z into +0x34 / +0x38, grounds it with AreaMap_Elevation and MapView_SetElevation, then +1 = 1, +2 = +3 = 0. Called by the mode handler 0x56B450 and the interpreter's 0x57B4E0. No group takes it this round."
+
+
+# --- 2026-09-22 (second round), group A: the field's mode handlers - the tail
+# dispatchers after Field_ModeDispatch, scenario 16 (the attract sequence's
+# demo, PSX SCENA16.EMI), the CLUT strip fade under it and the chapter call
+# table's thunk. Each read against its PSX twin; docs/field-modes.md.
+
+[[func]]
+pc = 0x56D8B0
+name = "Field_ModeTail"
+psx = 0x801A8BF8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 14 bytes): jmp [0x662CD0 + s8 byte 0x9039F2 * 4] - two entries, 0x56D8C0 (a set-up that sets the byte to 1) and Field_ModeTailRun. The PSX 0x801A8BF8 calls through 0x801D949C on 0x801448E6, the same shape. Reached only as Field_ModeDispatch's tail jump. docs/field-modes.md."
+
+[[func]]
+pc = 0x56D920
+name = "Field_ModeTailRun"
+psx = 0x801A8CB4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 14 bytes): jmp [0x662CE8 + s8 byte 0x9039F3 * 4]; entry 0 is 0x437CC0 (a bare ret), then 0x403570, 0x403660, 0x4092D0, 0x56D930 and more. Field_ModeTail's entry 1. PSX 0x801A8CB4 on 0x801448E7. docs/field-modes.md."
+
+[[func]]
+pc = 0x5341A0
+name = "Scenario_CallA"
+psx = 0x801C2DE8
+ret = "void"
+params = "unsigned n"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 27 bytes): jmp [[0x660B84 + Cond_ByteFA (s8) * 4] + (n & 0xFF) * 4] - entry n of the chapter's call table, reached with the caller's arguments in place. The sibling's Scenario_CallA through 0x801CDC4C (docs/LOADER_RECORDS.md); pairs_propagated.json call-anchored. 153 call sites (rel32 scan of .text); none reads eax after the call. Chapter 16's table: 0x519890, 0x437CC0 (PSX 0x801F8498, a jr ra). Kept a naked tail jump. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B2A0
+name = "Scena16_Frame"
+psx = 0x801F6C90
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 14 bytes): jmp [0x6619FC + s8 byte 0x8034E2 * 4] - scenario 16's state: 0 Scena16_Start, 1 Scena16_EnterArea, 2 Scena16_Run. Slot 0 of chapter 16's vtable 0x6619E8 (PSX 0x801F8524, SCENA16.EMI; slot 1 is 0x56C080, PSX 0x801F8344). docs/field-modes.md."
+
+[[func]]
+pc = 0x56B2B0
+name = "Scena16_Start"
+psx = 0x801F6CCC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 134 bytes): Scenario_CallA(0), pass flags 0x1F, 0x594E00(4, 0x1A0000, 0x88000, 5) and the same into 0x903A04.., script flags 0x240, 0x587A20(6), Task_Sleep(1) until File_LoadDone, counters 0, state 1. The PSX 0x801F6CCC call for call (Field_ChangeArea 0x801A0A30). Call trace all_b: 3 calls. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B340
+name = "Scena16_EnterArea"
+psx = 0x801F6D90
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 87 bytes): on Game_AreaNumber 0x1F, 4, 2 the set-ups 0x56B3A0 / 0x56B400 / 0x56B450 with the demo badge 0x66C7F8 0 / 1 / 1; state 2 for any area. PSX 0x801F6D90 case for case. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B3A0
+name = "Scena16_Area1F"
+psx = 0x801F6E30
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 90 bytes): camera angles 0x100, 0, 0 and distance 0x100, ObjTrio_SetBit40; once on flag 1 of [0x929ED0]: pass flags 0, the flag set, MoveScript_Var7 3. PSX 0x801F6E30. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B400
+name = "Scena16_Area04"
+psx = 0x801F6EB0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 76 bytes): once on flag 0: pass flags 0, the flag set, ScriptFlags_Set40, MoveScript_Var7 2; then with Cond_ByteFD 2 pass flags 0x1F and ObjTrio_SetBit40 (tail jump). PSX 0x801F6EB0. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B450
+name = "Scena16_Area02"
+psx = 0x801F6F30
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 264 bytes): once on flag 2: counters 0, MapView_SetElevation(0x300), Kind2_Place(0), angle 0 + 0xAA, an effect (0x589810) of mode 0x40, ObjTrio_SetBit40, 0x802D74 / 78 = 0x330000 / 0x400000, flag 2 set; else once on flag 10: the flag set, 0x531F90(0), Field_Kind2X / Z = 0x260000 / 0x1B8000. PSX 0x801F6F30. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B560
+name = "Scena16_Run"
+psx = 0x801F7144
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 14 bytes): jmp [0x661A08 + MoveScript_Var7 (s8) * 4] - 0 0x437CC0 (ret), 1 Scena16_End, 2..4 Scena16_Scene2..4, 5 0x43C9F0. The table is 0x6619FC's words from +0xC (PSX 0x801F8544). docs/field-modes.md."
+
+[[func]]
+pc = 0x56B570
+name = "Scena16_End"
+psx = 0x801F7188
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 81 bytes): once the wait word 0x66C810 is 0: badge and pass flags 0, ClutStrip_Restore, Sound_PlayEffect 0x213 and 0x214, Music_FadeOutStop(10) unless the track 0x904131 is 0xFF (then 0xFF), and a tail jump to 0x5A99AD (the task ends). PSX 0x801F7188, which restarts the music from its table instead. docs/field-modes.md."
+
+[[func]]
+pc = 0x56B5D0
+name = "Scena16_Scene2"
+psx = 0x801F7230
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22, 0x56B5D0..0x56B94C (892 bytes: code, 2 bytes of padding, the 12-entry jump table 0x56B91C): steps 0..11 on byte 0x8034E5. 0x56B730 (a hidden start in pc_hidden.json) is its case 4, not a function. PSX 0x801F7230 (12 steps, table 0x801F6C04). docs/field-modes.md."
+
+[[func]]
+pc = 0x56B950
+name = "Scena16_Scene3"
+psx = 0x801F7790
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22, 0x56B950..0x56BCB4 (868 bytes: code, padding, the 10-entry jump table 0x56BC8C): steps 0..9, every one ending in a view shift test on MapView_FocusZ 0x4400 that tail-jumps to 0x56FCA0. 0x56B990 (a hidden start, 1,807 bytes by pe_hidden) is its case 1. Missing from pc_hidden.json although 0x661A14 points at it. PSX 0x801F7790. docs/field-modes.md."
+
+[[func]]
+pc = 0x56BCC0
+name = "Scena16_Scene4"
+psx = 0x801F7CC4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22, 0x56BCC0..0x56C078 (952 bytes: code, padding, the 13-entry jump table 0x56C044): steps 0..12 - script messages 1 and 2, a 0x130-frame caption with the CLUT fade and a camera pull, two effects, a 0x200-frame zoom, a closing caption, then run 1. Missing from pc_hidden.json although 0x661A18 points at it; all_b calls from inside it (0x56BD9A, 0x56BFA0, 0x56C040). PSX 0x801F7CC4. docs/field-modes.md."
+
+[[func]]
+pc = 0x56C0A0
+name = "ClutStrip_FadeTo"
+psx = 0x801F839C
+ret = "void"
+params = "unsigned level"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 104 bytes): the first 16 colours of Gfx_ClutStrip from Gfx_ClutStripSource with each 5-bit channel clamped to the byte level, channels shifted in from the bottom (red and blue swap places - both platforms), bit 15 set when not 0; Gfx_ClutStripDirty + 1. Also called by 0x563F90 / 0x563FC9. PSX 0x801F839C, the same loop. docs/field-modes.md."
+
+[[func]]
+pc = 0x56C110
+name = "ClutStrip_Restore"
+psx = 0x801F8448
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/field_modes.cpp"
+evidence = "disasm 2026-09-22 (whole, 32 bytes): the first 16 colours of Gfx_ClutStrip copied from Gfx_ClutStripSource, Gfx_ClutStripDirty + 1. Also tail-jumped to by 0x563F9B / 0x563FD4. PSX 0x801F8448. docs/field-modes.md."
