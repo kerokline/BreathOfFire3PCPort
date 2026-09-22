@@ -51,6 +51,7 @@
 #include "game/text_immediate.h"
 #include "game/field_frame.h"
 #include "game/title_states.h"
+#include "game/frame_callees.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -107,6 +108,7 @@ void InjectAll() {
     MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
     TitleStates_Inject();       // every call of its clones re-aimed: order does not matter
     FieldBlocked_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    FrameCallees_Inject();      // every call of its clones re-aimed: order does not matter
     InjectReport();
 }
 

@@ -94,6 +94,7 @@ add_library(bof3x SHARED
   src/game/object_kinds.cpp
   src/game/sprite_screen.cpp
   src/game/field_frame.cpp
+  src/game/frame_callees.cpp
   src/game/kind2_object.cpp
   src/game/area_slope.cpp
   src/game/mode_tasks.cpp
