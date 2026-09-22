@@ -29,6 +29,7 @@
 #include "game/move_groups.h"
 #include "game/field_objects.h"
 #include "game/sprite_screen.h"
+#include "game/kind2_object.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
@@ -91,6 +92,7 @@ void InjectAll() {
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();
+    Kind2Object_Inject();
     InjectReport();
 }
 
