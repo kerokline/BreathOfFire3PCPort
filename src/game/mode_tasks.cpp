@@ -57,9 +57,9 @@ struct Callees {
     unsigned char* (__cdecl* sprite)(int, int, unsigned, unsigned, unsigned);
     void (__cdecl* set_sprt)(unsigned char*);
     void (__cdecl* semi_trans)(unsigned char*, unsigned);
-    void (__cdecl* set_a)(unsigned char, unsigned char);
-    void (__cdecl* set_b)(int, int, unsigned char, unsigned char);
-    void (__cdecl* set_c)(int, int, unsigned char, unsigned char);
+    void (__cdecl* set_a)(unsigned, unsigned);
+    void (__cdecl* set_b)(int, int, unsigned, unsigned);
+    void (__cdecl* set_c)(int, int, unsigned, unsigned);
     void (__cdecl* event_dispatch)();
     void (__cdecl* field_frame)();
     void (__cdecl* wait_transition)(unsigned char);
@@ -474,13 +474,14 @@ void __cdecl StubSetSprt(unsigned char* prim) {
     for (unsigned i = 4; i < 0x1C; ++i) prim[i] = static_cast<unsigned char>(Hash() >> (i % 24));
 }
 void __cdecl StubSemiTrans(unsigned char* prim, unsigned abe) { Record(24, Id(prim), abe); prim[7] ^= 2; }
-void __cdecl StubSetA(unsigned char flag, unsigned char shade) { Record(25, flag, shade); DisturbTitle(); }
-void __cdecl StubSetB(int x, int y, unsigned char flag, unsigned char shade) {
-    Record(26, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), flag, shade);
+// The sets read only the low byte of flag and shade (docs/title-states.md).
+void __cdecl StubSetA(unsigned flag, unsigned shade) { Record(25, flag & 0xFF, shade & 0xFF); DisturbTitle(); }
+void __cdecl StubSetB(int x, int y, unsigned flag, unsigned shade) {
+    Record(26, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), flag & 0xFF, shade & 0xFF);
     DisturbTitle();
 }
-void __cdecl StubSetC(int x, int y, unsigned char flag, unsigned char shade) {
-    Record(27, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), flag, shade);
+void __cdecl StubSetC(int x, int y, unsigned flag, unsigned shade) {
+    Record(27, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), flag & 0xFF, shade & 0xFF);
     DisturbTitle();
 }
 void __cdecl StubEventDispatch() { Record(30, Field_Request); DisturbField(); }
