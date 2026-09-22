@@ -82,6 +82,8 @@ add_library(bof3x SHARED
   src/game/map_cells.cpp
   src/game/map_layers.cpp
   src/game/map_layers_fuzz.cpp
+  src/game/map_scroll.cpp
+  src/game/map_scroll_fuzz.cpp
   src/game/sprite_draw.cpp
   src/game/draw_pool.cpp
   src/game/prim.cpp

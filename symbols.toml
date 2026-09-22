@@ -3094,6 +3094,7 @@ name = "Field_ViewReset"
 psx = 0x801548A4
 ret = "void"
 params = ""
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x56F670..0x56F900, 0x291 bytes, every jump internal; capstone, group F): GTE screen 0x3E8, offset (0xA0, 0x78), back colour 0x78; each of DrawItems' 2,048 quads through Gpu_SetPolyFT4 and Gpu_SetShadeTex(q, 0), its words +0x36 and +0x46 zeroed; Camera_Angles to (0xFD56, 0, 0x200), both dwords copied to Camera_AnglesDrawn; item 0's eight screen points zeroed; MapView_FocusX / Z = 0x7FFF / 0x8000 - Field_Kind2X / Z sar 8, MapView_Origin = (Kind2X hi - 0x18, Kind2Z hi + 3); the camera's distance and shifts 0; MapView_Elevation = AreaMap_Elevation(Kind2X, Kind2Z) as an s16 unless Field_InputFlags bit 3 (then 0); MapView_BuildFlags = InputFlags << 7; MapView_ElevationOffset = AreaMap_Word1E, or -2 x the elevation when that is 0; AreaMap_Bytes from AreaMap_BytesBase; scroll, the two move-script words, MapView_HeightScale and Cond_ByteFE 0, MapView_Redraw 3; the 56 x 28 cell ring zeroed and refilled through MapView_CellToMap(row, col); the draw-item pool reset; MapView_Column 0x1B, MapView_Row 0x37; then AreaMap_BakePatches, AreaMap_SetupEntries, MapView_PlaceRuns. The PSX func_0x801548A4, called at the same point of FUN_801C686C. 44 E8 callers (a .text scan), Kind2_Script's at 0x573231 among them. Call trace hidden_b: 12 calls, all from 0x594F7B."
 
@@ -4806,6 +4807,7 @@ name = "MapView_ShiftColumnNext"
 psx = 0x80153858
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x56EA30..0x56EAA0, 0x71 bytes; group F): the new column c = MapView_Column + 1 (0x1B wraps to 0), then for i = 0..0x37 the row r = MapView_Row + 1 + i mod 0x38 (0x37 wraps to 0), MapView_CellItems cell (r, c) released (DrawItemPool_ReleaseCell) and refilled by MapView_CellToMap(i, 0x1C, cell); MapView_Origin x + 1, y - 1; MapView_Column = c. PSX FUN_80153858 has the same shape (read with capstone). Callers: AreaMap_Frame 0x56E822. Call trace all_b 44 calls, hidden_b 66."
 
@@ -4815,6 +4817,7 @@ name = "MapView_ShiftColumnPrev"
 psx = 0x80153758
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x56E9A0..0x56EA22, 0x83 bytes; group F): for i = 0..0x37 the row r = MapView_Row + 1 + i mod 0x38, MapView_CellItems cell (r, MapView_Column - re-read every cell) released and refilled by MapView_CellToMap(i, -1, cell); then MapView_Column - 1 (0 wraps to 0x1B), MapView_Origin x - 1, y + 1. PSX FUN_80153758 has the same shape (read with capstone). Callers: AreaMap_Frame 0x56E843. Call trace all_b 150 calls, hidden_b 196."
 
@@ -4824,6 +4827,7 @@ name = "MapView_ShiftRowsNext"
 psx = 0x80153A6C
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x56EB50..0x56EBF0, 0xA1 bytes; group F): twice, k = 0, 1: the row r = MapView_Row + 1 (0x37 wraps to 0; the row read from memory the first time only), its 28 cells from MapView_Column + 1 (each advanced before use, 0x1B wraps to 0) released and refilled by MapView_CellToMap(0x38 + k, j, cell), then MapView_Row = r; then MapView_Origin x + 1, y + 1. PSX FUN_80153A6C has the same shape (read with capstone). E8 callers: AreaMap_Frame 0x56E864 and 0x4B53E9 (in the other view initialiser, 0x4B5350's function). Call trace all_b 92 calls, hidden_b 117."
 
@@ -4833,6 +4837,7 @@ name = "MapView_ShiftRowsPrev"
 psx = 0x80153950
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x56EAB0..0x56EB4C, 0x9D bytes; group F): twice, k = 0, 1: 28 cells of row MapView_Row (re-read every cell) from MapView_Column + 1 (each advanced before use, 0x1B wraps to 0) released and refilled by MapView_CellToMap(-2 - k, j, cell), then MapView_Row - 1 (0 wraps to 0x37); then MapView_Origin x - 1, y - 1. PSX FUN_80153950 has the same shape (read with capstone). E8 callers: AreaMap_Frame 0x56E885 and 0x4B540A. Call trace all_b 115 calls, hidden_b 164."
 
@@ -4842,6 +4847,7 @@ name = "MapView_PlaceRuns"
 psx = 0x801595E0
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x571FF0..0x5720BD, 0xCE bytes, no calls; group F): zeroes MapView_Cells (0x310 dwords), then walks the dword runs of AreaMap_Header from dword AreaMap_CellBase (low word) until a zero dword, each headed by map y in byte 0, map x in byte 1 and its length in dwords in the high half (the step; 0 never ends). With x' = x - MapView_Origin x, y' = y - MapView_Origin y, s = x' + y' and d = x' - y' both in 0..0x37, the run's dword offset from the list start + 1 goes to MapView_Cells word (row, col), row = s + MapView_Row + 1 and col = d / 2 + MapView_Column + 1, each wrapped once (0x38, 0x1C) - the inverse of MapView_CellToMap. PSX FUN_801595E0 (call-anchored). E8 callers: AreaMap_Frame 0x56E89E, Field_ViewReset 0x56F8F8, 0x56FD0C (the end of an unnamed function at 0x56FCA0 that refills the whole ring through MapView_CellToMap), 0x4B414E, 0x4B451D. Call trace all_b 402 calls, hidden_b 543."
 
@@ -4909,6 +4915,7 @@ name = "AreaMap_BakePatches"
 psx = 0x80154EF4
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x56FAD0..0x56FBC7, 0xF8 bytes, no calls, every jump internal): walks the patch list from dword AreaMap_PatchBase of AreaMap_Header - entries of a header dword (low word an Area_TestCondition code, high word a length n) and n dwords, the next entry n + 1 dwords on, until a zero dword. An entry whose code is 0x8001 (kind 0x80, bit 0: always true) gets bit 0 cleared (always false) and, when its first record's top byte is below 2, its 3-dword records written into the area's texture run: dword (h x w + 1) / 2 + offset + tile + ((r >> 16) & 0xF) of the block, tile the cell word at map (x = byte 1, y = byte 0) as MapView_CellTextures reads it, gets the record's second dword. The length is re-read after each record. Called once per area set-up, by Field_ViewReset 0x56F8EE and 0x4B549E. PSX FUN_80154EF4 (call-anchored). Call trace hidden_b: 12 calls."
 
@@ -4918,6 +4925,7 @@ name = "AreaMap_SetupEntries"
 psx = 0x80158A54
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x571720..0x5717A2, 0x83 bytes): Cond_ByteFF = Cond_ByteFFSource & 1; the set-up list from dword AreaMap_SetupBase of AreaMap_Header, each entry passed to AreaMap_SetupHandlers[(e >> 24) & 0x3F] and stepped by its byte +2 in dwords (read after the call) until a zero dword; then AreaMap_ClutCycleStart; then every entry of the patch list from dword AreaMap_PatchBase to AreaMap_ApplyPatch, stepped by its high word + 1 dwords (read after the call). PSX FUN_80158A54 has the same shape (read with capstone; its table is 0x80180268). E8 callers: Field_ViewReset 0x56F8F3, 0x53A1ED, 0x543CD9, and a tail jmp at 0x4B54A3. Call trace hidden_b: 12 calls; no set-up handler and no AreaMap_ApplyPatch call in it, so every attract area's two lists are empty."
 
@@ -4927,6 +4935,7 @@ name = "AreaMap_ClutCycleStart"
 psx = 0x80158B60
 ret = "void"
 params = "void"
+impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x5717B0..0x571875, 0xC6 bytes, no calls; the catalogue's 208 bytes include 10 of padding): walks the area header's entries from AreaMap_EntryBase as AreaMap_HeaderPass does (step byte +2, until a zero dword); for each whose top byte is exactly 0x80 (a palette cycle, AreaMap_ClutCycle's kind with bit 7), f = Frame_Counter mod (low byte) + 1, the first dword after the entry whose top byte is f or above is taken - no condition, no exact match, unlike AreaMap_ClutCycle - and its 16-colour row (d >> 12) & 0xFFF of Gfx_ClutStrip copied over row d & 0xFFF, Gfx_ClutStripDirty set. A period byte of 0 divides by zero. PSX FUN_80158B60 has the same shape (read with capstone, same >= scan). Callers: AreaMap_SetupEntries 0x571766, a tail jmp at 0x573072. Call trace hidden_b: 12 calls."
 

@@ -16,6 +16,7 @@
 #include "game/gfx_vram_ops.h"
 #include "game/map_cells.h"
 #include "game/map_layers.h"
+#include "game/map_scroll.h"
 #include "game/sprite_order.h"
 #include "game/sprite_records.h"
 #include "game/sprite_draw.h"
@@ -103,6 +104,7 @@ void InjectAll() {
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
     ObjectKinds_Inject();
     MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
+    MapScroll_Inject();         // likewise: every call of its clones re-aimed at a recorder
     InjectReport();
 }
 
