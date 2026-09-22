@@ -16,6 +16,7 @@
 #include "game/gfx_vram_ops.h"
 #include "game/map_cells.h"
 #include "game/map_layers.h"
+#include "game/map_scroll.h"
 #include "game/sprite_order.h"
 #include "game/sprite_records.h"
 #include "game/sprite_draw.h"
@@ -111,6 +112,7 @@ void InjectAll() {
     FieldBlocked_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
     FrameCallees_Inject();      // every call of its clones re-aimed: order does not matter
     FieldModes_Inject();        // every call of its clones re-aimed, every table it reads swapped: order does not matter
+    MapScroll_Inject();         // likewise: every call of its clones re-aimed at a recorder
     InjectReport();
 }
 

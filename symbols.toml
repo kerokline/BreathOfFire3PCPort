@@ -1233,7 +1233,7 @@ name = "MapView_Cells"
 ctype = "unsigned short"
 count = 1568
 status = "evidence"
-evidence = "disasm 2026-09-21: DrawLayer_Open reads word (row * 28 + column), row 0..0x37 and column 0..0x1B, and treats a non-zero one as an index into AreaMap_Header's cell runs. pe_xref: 9 references in 7 functions. 0x38 x 28 words is DrawLayer_Open's wrap, not a measured extent."
+evidence = "disasm 2026-09-21: DrawLayer_Open reads word (row * 28 + column), row 0..0x37 and column 0..0x1B, and treats a non-zero one as an index into AreaMap_Header's cell runs. pe_xref: 9 references in 7 functions. 0x38 x 28 words is DrawLayer_Open's wrap, not a measured extent. 2026-09-22 (group F): MapView_PlaceRuns zeroes exactly these 0x310 dwords and writes a run's dword offset + 1 at the ring position (row, col) of its map cell - the same ring as MapView_CellItems, one word per cell."
 
 [[data]]
 pc = 0x905D80
@@ -1247,14 +1247,14 @@ pc = 0x929F20
 name = "MapView_Column"
 ctype = "short"
 status = "evidence"
-evidence = "disasm 2026-09-21: DrawLayer_Open's first column of MapView_Cells, before the inset, mod 0x1C. pe_xref: 20 references in 16 functions, always beside MapView_Row."
+evidence = "disasm 2026-09-21: DrawLayer_Open's first column of MapView_Cells, before the inset, mod 0x1C. pe_xref: 20 references in 16 functions, always beside MapView_Row. 2026-09-22 (group F): the head of the cell ring's columns - the ring slot just before view column 0. MapView_ShiftColumnNext advances it (0x1B wraps to 0) after refilling the new slot, MapView_ShiftColumnPrev refills this slot and then steps it back (0 wraps to 0x1B); Field_ViewReset starts it at 0x1B."
 
 [[data]]
 pc = 0x929F24
 name = "MapView_Row"
 ctype = "short"
 status = "evidence"
-evidence = "disasm 2026-09-21: DrawLayer_Open's row of MapView_Cells is (this + layer + 1) mod 0x38. pe_xref: 20 references in 16 functions, always beside MapView_Column."
+evidence = "disasm 2026-09-21: DrawLayer_Open's row of MapView_Cells is (this + layer + 1) mod 0x38. pe_xref: 20 references in 16 functions, always beside MapView_Column. 2026-09-22 (group F): the head of the cell ring's rows - the slot just before view row 0. MapView_ShiftRowsNext advances it twice (0x37 wraps to 0), refilling each new slot, MapView_ShiftRowsPrev refills it and steps it back twice (0 wraps to 0x37); Field_ViewReset starts it at 0x37."
 
 [[data]]
 pc = 0x663008
@@ -3094,8 +3094,9 @@ name = "Field_ViewReset"
 psx = 0x801548A4
 ret = "void"
 params = ""
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (read to 0x56F805, not to its end): GTE screen 0x3E8, offset (0xA0, 0x78), back colour 0x78; every DrawItems entry to POLY_FT4 without shading; MapView_Origin from Field_Kind2X / Z (high words - 0x18 and + 3); 0x929F14 / 0x929F18 from them; further on the draw-item index pool's fill at 0x56F8BF (the 0x7E09E0 entry's evidence). 44 E8 callers (a .text scan), Kind2_Script's at 0x573231 among them, so it stays Capcom's behind a stand-in. The PSX func_0x801548A4, called at the same point of FUN_801C686C. Call trace hidden_b: 12 calls, all from 0x594F7B."
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x56F670..0x56F900, 0x291 bytes, every jump internal; capstone, group F): GTE screen 0x3E8, offset (0xA0, 0x78), back colour 0x78; each of DrawItems' 2,048 quads through Gpu_SetPolyFT4 and Gpu_SetShadeTex(q, 0), its words +0x36 and +0x46 zeroed; Camera_Angles to (0xFD56, 0, 0x200), both dwords copied to Camera_AnglesDrawn; item 0's eight screen points zeroed; MapView_FocusX / Z = 0x7FFF / 0x8000 - Field_Kind2X / Z sar 8, MapView_Origin = (Kind2X hi - 0x18, Kind2Z hi + 3); the camera's distance and shifts 0; MapView_Elevation = AreaMap_Elevation(Kind2X, Kind2Z) as an s16 unless Field_InputFlags bit 3 (then 0); MapView_BuildFlags = InputFlags << 7; MapView_ElevationOffset = AreaMap_Word1E, or -2 x the elevation when that is 0; AreaMap_Bytes from AreaMap_BytesBase; scroll, the two move-script words, MapView_HeightScale and Cond_ByteFE 0, MapView_Redraw 3; the 56 x 28 cell ring zeroed and refilled through MapView_CellToMap(row, col); the draw-item pool reset; MapView_Column 0x1B, MapView_Row 0x37; then AreaMap_BakePatches, AreaMap_SetupEntries, MapView_PlaceRuns. The PSX func_0x801548A4, called at the same point of FUN_801C686C. 44 E8 callers (a .text scan), Kind2_Script's at 0x573231 among them. Call trace hidden_b: 12 calls, all from 0x594F7B."
 
 [[data]]
 pc = 0x6632AC
@@ -4780,7 +4781,7 @@ name = "MapView_CellItems"
 ctype = "unsigned char"
 count = 6272
 status = "evidence"
-evidence = "disasm 2026-09-20 / 2026-09-22: 56 rows of 28 4-byte cells: map x, map y (MapView_CellToMap's out) and a word whose low 12 bits are the cell's draw item and whose bits 15..12 MapView_Build ORs in from MapView_CellTextures. Filled by 0x56F8A5, the shift functions and MapView_Build."
+evidence = "disasm 2026-09-20 / 2026-09-22: 56 rows of 28 4-byte cells: map x, map y (MapView_CellToMap's out) and a word whose low 12 bits are the cell's draw item and whose bits 15..12 MapView_Build ORs in from MapView_CellTextures. Filled by 0x56F8A5, the shift functions and MapView_Build. 2026-09-22 (group F): a ring buffer of the view, 0x38 rows x 0x1C columns, headed by MapView_Row / MapView_Column: a scroll never moves a cell, it releases and refills one ring column (MapView_ShiftColumnNext / Prev, 56 cells) or two ring rows (MapView_ShiftRowsNext / Prev, 2 x 28) through MapView_CellToMap and moves the head and MapView_Origin by one map cell."
 
 [[data]]
 pc = 0x92A0C0
@@ -4821,8 +4822,9 @@ name = "MapView_ShiftColumnNext"
 psx = 0x80153858
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: MapView_Column + 1 (0x1B wraps to 0), its 56 cells released and refilled through MapView_CellToMap(row, 0x1C), MapView_Origin x + 1, y - 1. AreaMap_Frame calls it when MapView_ScrollX reaches 0x200. Call trace all_b: 44 calls."
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x56EA30..0x56EAA0, 0x71 bytes; group F): the new column c = MapView_Column + 1 (0x1B wraps to 0), then for i = 0..0x37 the row r = MapView_Row + 1 + i mod 0x38 (0x37 wraps to 0), MapView_CellItems cell (r, c) released (DrawItemPool_ReleaseCell) and refilled by MapView_CellToMap(i, 0x1C, cell); MapView_Origin x + 1, y - 1; MapView_Column = c. PSX FUN_80153858 has the same shape (read with capstone). Callers: AreaMap_Frame 0x56E822. Call trace all_b 44 calls, hidden_b 66."
 
 [[func]]
 pc = 0x56E9A0
@@ -4830,8 +4832,9 @@ name = "MapView_ShiftColumnPrev"
 psx = 0x80153758
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: MapView_Column's 56 cells released and refilled through MapView_CellToMap(row, -1), then the column - 1 (0 wraps to 0x1B), MapView_Origin x - 1, y + 1. AreaMap_Frame calls it when MapView_ScrollX reaches -0x200. Call trace all_b: 150 calls."
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x56E9A0..0x56EA22, 0x83 bytes; group F): for i = 0..0x37 the row r = MapView_Row + 1 + i mod 0x38, MapView_CellItems cell (r, MapView_Column - re-read every cell) released and refilled by MapView_CellToMap(i, -1, cell); then MapView_Column - 1 (0 wraps to 0x1B), MapView_Origin x - 1, y + 1. PSX FUN_80153758 has the same shape (read with capstone). Callers: AreaMap_Frame 0x56E843. Call trace all_b 150 calls, hidden_b 196."
 
 [[func]]
 pc = 0x56EB50
@@ -4839,8 +4842,9 @@ name = "MapView_ShiftRowsNext"
 psx = 0x80153A6C
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: twice, MapView_Row + 1 (0x37 wraps to 0) and its 28 cells released and refilled through MapView_CellToMap(0x38, then 0x39, col); then MapView_Origin x + 1, y + 1. AreaMap_Frame calls it when MapView_ElevationOffset reaches 0x200. Call trace all_b: 92 calls."
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x56EB50..0x56EBF0, 0xA1 bytes; group F): twice, k = 0, 1: the row r = MapView_Row + 1 (0x37 wraps to 0; the row read from memory the first time only), its 28 cells from MapView_Column + 1 (each advanced before use, 0x1B wraps to 0) released and refilled by MapView_CellToMap(0x38 + k, j, cell), then MapView_Row = r; then MapView_Origin x + 1, y + 1. PSX FUN_80153A6C has the same shape (read with capstone). E8 callers: AreaMap_Frame 0x56E864 and 0x4B53E9 (in the other view initialiser, 0x4B5350's function). Call trace all_b 92 calls, hidden_b 117."
 
 [[func]]
 pc = 0x56EAB0
@@ -4848,8 +4852,9 @@ name = "MapView_ShiftRowsPrev"
 psx = 0x80153950
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: twice, MapView_Row's 28 cells released and refilled through MapView_CellToMap(-2, then -3, col), then the row - 1 (0 wraps to 0x37); then MapView_Origin x - 1, y - 1. AreaMap_Frame calls it when MapView_ElevationOffset reaches -0x200. Call trace all_b: 115 calls."
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x56EAB0..0x56EB4C, 0x9D bytes; group F): twice, k = 0, 1: 28 cells of row MapView_Row (re-read every cell) from MapView_Column + 1 (each advanced before use, 0x1B wraps to 0) released and refilled by MapView_CellToMap(-2 - k, j, cell), then MapView_Row - 1 (0 wraps to 0x37); then MapView_Origin x - 1, y - 1. PSX FUN_80153950 has the same shape (read with capstone). E8 callers: AreaMap_Frame 0x56E885 and 0x4B540A. Call trace all_b 115 calls, hidden_b 164."
 
 [[func]]
 pc = 0x571FF0
@@ -4857,8 +4862,9 @@ name = "MapView_PlaceRuns"
 psx = 0x801595E0
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: zeroes MapView_Cells, then walks AreaMap_Header's dword runs from AreaMap_CellBase (each headed by map x, y in its low bytes and its length in its high half) and stores each run's index + 1 at the view cell its map position falls on, if inside 0x38 x 0x38. AreaMap_Frame calls it after any shift. Call trace all_b: 402 calls."
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x571FF0..0x5720BD, 0xCE bytes, no calls; group F): zeroes MapView_Cells (0x310 dwords), then walks the dword runs of AreaMap_Header from dword AreaMap_CellBase (low word) until a zero dword, each headed by map y in byte 0, map x in byte 1 and its length in dwords in the high half (the step; 0 never ends). With x' = x - MapView_Origin x, y' = y - MapView_Origin y, s = x' + y' and d = x' - y' both in 0..0x37, the run's dword offset from the list start + 1 goes to MapView_Cells word (row, col), row = s + MapView_Row + 1 and col = d / 2 + MapView_Column + 1, each wrapped once (0x38, 0x1C) - the inverse of MapView_CellToMap. PSX FUN_801595E0 (call-anchored). E8 callers: AreaMap_Frame 0x56E89E, Field_ViewReset 0x56F8F8, 0x56FD0C (the end of an unnamed function at 0x56FCA0 that refills the whole ring through MapView_CellToMap), 0x4B414E, 0x4B451D. Call trace all_b 402 calls, hidden_b 543."
 
 [[func]]
 pc = 0x571BE0
@@ -5304,7 +5310,7 @@ name = "Field_StatusBits"
 psx = 0x8014686D
 ctype = "unsigned char"
 status = "hypothesis"
-evidence = "disasm 2026-09-22: bit 5 set by CameraTurn_Start and cleared by CameraTurn_End - the camera is turning; bit 6 holds Field_ObjectIdle's turn and ObjTrio_ClearBit40 clears it; bit 0 is MoveScript_Variable's variable 9. The PSX 0x8014686D (FUN_8019B90C / FUN_8019BB04). A byte of several unrelated bits; named for that."
+evidence = "disasm 2026-09-22: bit 5 set by CameraTurn_Start and cleared by CameraTurn_End - the camera is turning; bit 6 holds Field_ObjectIdle's turn and ObjTrio_ClearBit40 clears it; bit 0 is MoveScript_Variable's variable 9, and AreaMap_SetupEntries copies bit 0 into Cond_ByteFF at every area set-up (group F). The PSX 0x8014686D (FUN_8019B90C / FUN_8019BB04). A byte of several unrelated bits; named for that."
 
 [[data]]
 pc = 0x9035C0
@@ -5507,3 +5513,79 @@ params = "void"
 status = "evidence"
 impl = "src/game/field_modes.cpp"
 evidence = "disasm 2026-09-22 (whole, 32 bytes): the first 16 colours of Gfx_ClutStrip copied from Gfx_ClutStripSource, Gfx_ClutStripDirty + 1. Also tail-jumped to by 0x563F9B / 0x563FD4. PSX 0x801F8448. docs/field-modes.md."
+
+
+# --- 2026-09-22 (second round), group F: the map view's scrolling and reset
+# (src/game/map_scroll.cpp, docs/map-scroll.md). Field_ViewReset's three
+# callees, the one callee of theirs that stays Capcom's, and the data they
+# read. Sizes, reads and PSX shapes by capstone; the pairs are
+# analysis/pairs_propagated.json's (call-anchored / call).
+
+[[func]]
+pc = 0x56FAD0
+name = "AreaMap_BakePatches"
+psx = 0x80154EF4
+ret = "void"
+params = "void"
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x56FAD0..0x56FBC7, 0xF8 bytes, no calls, every jump internal): walks the patch list from dword AreaMap_PatchBase of AreaMap_Header - entries of a header dword (low word an Area_TestCondition code, high word a length n) and n dwords, the next entry n + 1 dwords on, until a zero dword. An entry whose code is 0x8001 (kind 0x80, bit 0: always true) gets bit 0 cleared (always false) and, when its first record's top byte is below 2, its 3-dword records written into the area's texture run: dword (h x w + 1) / 2 + offset + tile + ((r >> 16) & 0xF) of the block, tile the cell word at map (x = byte 1, y = byte 0) as MapView_CellTextures reads it, gets the record's second dword. The length is re-read after each record. Called once per area set-up, by Field_ViewReset 0x56F8EE and 0x4B549E. PSX FUN_80154EF4 (call-anchored). Call trace hidden_b: 12 calls."
+
+[[func]]
+pc = 0x571720
+name = "AreaMap_SetupEntries"
+psx = 0x80158A54
+ret = "void"
+params = "void"
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x571720..0x5717A2, 0x83 bytes): Cond_ByteFF = Cond_ByteFFSource & 1; the set-up list from dword AreaMap_SetupBase of AreaMap_Header, each entry passed to AreaMap_SetupHandlers[(e >> 24) & 0x3F] and stepped by its byte +2 in dwords (read after the call) until a zero dword; then AreaMap_ClutCycleStart; then every entry of the patch list from dword AreaMap_PatchBase to AreaMap_ApplyPatch, stepped by its high word + 1 dwords (read after the call). PSX FUN_80158A54 has the same shape (read with capstone; its table is 0x80180268). E8 callers: Field_ViewReset 0x56F8F3, 0x53A1ED, 0x543CD9, and a tail jmp at 0x4B54A3. Call trace hidden_b: 12 calls; no set-up handler and no AreaMap_ApplyPatch call in it, so every attract area's two lists are empty."
+
+[[func]]
+pc = 0x5717B0
+name = "AreaMap_ClutCycleStart"
+psx = 0x80158B60
+ret = "void"
+params = "void"
+impl = "src/game/map_scroll.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, read to its end (0x5717B0..0x571875, 0xC6 bytes, no calls; the catalogue's 208 bytes include 10 of padding): walks the area header's entries from AreaMap_EntryBase as AreaMap_HeaderPass does (step byte +2, until a zero dword); for each whose top byte is exactly 0x80 (a palette cycle, AreaMap_ClutCycle's kind with bit 7), f = Frame_Counter mod (low byte) + 1, the first dword after the entry whose top byte is f or above is taken - no condition, no exact match, unlike AreaMap_ClutCycle - and its 16-colour row (d >> 12) & 0xFFF of Gfx_ClutStrip copied over row d & 0xFFF, Gfx_ClutStripDirty set. A period byte of 0 divides by zero. PSX FUN_80158B60 has the same shape (read with capstone, same >= scan). Callers: AreaMap_SetupEntries 0x571766, a tail jmp at 0x573072. Call trace hidden_b: 12 calls."
+
+[[func]]
+pc = 0x571110
+name = "AreaMap_ApplyPatch"
+psx = 0x801581B8
+ret = "void"
+params = "const unsigned char *entry"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (read, not taken over; 0x1CC bytes): one patch-list entry - Area_TestCondition of its low word picks dword +4 or +8 of each record; by the record's top byte, kind 0 writes it into the texture run (as AreaMap_BakePatches does) and sets a live cell draw item's texture through 0x572ED0 and Prim_SetTexture, kind 1 the draw item only, kind 2 a corner dword of AreaMap_Corners (and MapView_Redraw 2), others a byte of AreaMap_Bytes. E8 callers 0x413593, 0x41CC43, 0x5710BD, 0x5710FD, AreaMap_SetupEntries 0x571788. Not called in the attract cycle (hidden_b, entries_plus_hidden)."
+
+[[data]]
+pc = 0x663290
+name = "AreaMap_SetupHandlers"
+psx = 0x80180268
+ctype = "unsigned long"
+count = 64
+status = "evidence"
+evidence = "disasm 2026-09-22: AreaMap_SetupEntries calls [0x663290 + ((e >> 24) & 0x3F) * 4]. In the exe: 0x571880, 0x571A30, 0x571A70 (pointer-reached, none called in hidden_b), then AreaMap_EntryHandlers from entry 3, Kind2_RunTable from 11, and data - the count is the mask's reach, as for AreaMap_EntryHandlers. MapCell_WallTextures indexes into its first two entries for kinds 0x4B / 0x4C (docs/map-layers.md)."
+
+[[data]]
+pc = 0x8CB5A0
+name = "AreaMap_SetupBase"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: AreaMap_Header + 0x20; AreaMap_SetupEntries starts its set-up list at this dword index of the block (read as a dword, low word kept; the PSX twin loads a halfword). One reference in the exe (a byte scan)."
+
+[[data]]
+pc = 0x8CB5A8
+name = "AreaMap_PatchBase"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: AreaMap_Header + 0x28; AreaMap_BakePatches and AreaMap_SetupEntries walk the patch list from this dword index of the block (low word of a dword read). Nine occurrences of the address in the image (a byte scan), among them 0x5710A4 / 0x5710E4 beside the two other AreaMap_ApplyPatch callers."
+
+[[data]]
+pc = 0x8CB594
+name = "AreaMap_BytesBase"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: AreaMap_Header + 0x14; Field_ViewReset points AreaMap_Bytes at dword (this low word) of the block."
