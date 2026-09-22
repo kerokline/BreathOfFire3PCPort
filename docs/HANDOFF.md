@@ -16,7 +16,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
 - replace what the attract sequence reaches - stands at **three hundred and
-twenty-nine functions ours**, every one through the full live check (the last two
+twenty-six functions ours**, every one through the full live check (the last two
 on 2026-09-21, `ab19_*`); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
@@ -78,7 +78,7 @@ makes D6's list exact, D7 (the table's wrong length for `C1`, latent), the
 port's rewritten sound ops and three PSX calls it dropped (§1a, §1c). **Then,
 the same day, the handoff's five targets in parallel** - five agents in
 worktrees, 52 functions, 210 ours, one batch check, all identical. **Then a second
-parallel round the same day: seven agents, 119 functions, 329 ours** - the
+parallel round the same day: seven agents, 119 functions, 326 ours** - the
 field's mode handlers with the attract demo's scenario 16, the event script's
 field side, the event script interpreter and the flag helpers, the frame
 loop's remaining callees, the title's state handlers and the new-game start,
@@ -103,7 +103,7 @@ The single next action, concrete enough to start without asking anyone.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
    order, 2026-09-21), in parallel groups, batching the live check.**
-   **2026-09-22, the second round: seven agents, 119 functions, 329 ours** -
+   **2026-09-22, the second round: seven agents, 119 functions, 326 ours** -
    the field's mode handlers and the attract demo's scenario 16 (A,
    [`field-modes.md`](field-modes.md)), the event script's field side (B,
    [`field-event.md`](field-event.md)), the event script interpreter and the
@@ -307,7 +307,7 @@ The single next action, concrete enough to start without asking anyone.
    `ab22b_origb`), recorded all-original 2026-09-22 at 11 minutes under
    `entries_logic.txt` with the second round's 119 functions added: all
    10,060 frames identical original-vs-original and original-vs-ours with all
-   329 injects on. The list change alone moves the hash's content, so
+   326 injects on. The list change alone moves the hash's content, so
    `ab21b_orig` and everything before it compare as 9,262 differing frames -
    that is the re-recording, not a regression. **The
    trace list must name every owned function with its size** - an owned
@@ -664,7 +664,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
 - **Our own scaffolding has ceilings, and they fail like hangs** (2026-09-22,
   the second parallel round): the `BOF3X_ORIGINAL` / `BOF3X_SHADOW` name lists
   held 2,048 characters and a round's 119 names is 2,061; the tracer held 256
-  owned functions and 329 are ours. Both end in a `Fatal` before the game
+  owned functions and 326 are ours. Both end in a `Fatal` before the game
   window opens, which from outside is a process sitting at near-zero CPU with
   nothing in the log after the inject lines - 90 minutes lost before anyone
   looked at `build/bof3x.log`. Both limits are raised; **read the log when a

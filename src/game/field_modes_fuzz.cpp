@@ -411,7 +411,7 @@ void SelfTest() {
         const Clone& c = kClones[k];
         bof3::CloneCall calls[20];
         if (c.n_calls > 20) bof3::Fatal("field_modes: %s has %d calls", c.name, c.n_calls);
-        for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target)};
+        for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target), c.calls[i].target};
         theirs[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
     }
     move_script::Relocate(theirs[kScene2], kClones[kScene2].base, kClones[kScene2].size, kScene2Table);

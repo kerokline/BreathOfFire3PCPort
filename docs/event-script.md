@@ -206,7 +206,10 @@ Candidate defects, written down and left alone: the four above (each needs a
 script that asks for it, and none does); and the port's own `EventOp_Bx`,
 which stores the entry byte at sprite `+0x70` as a byte where the PSX stores a
 word (`FUN_801A7CA0`) - the field is read as a byte everywhere we have looked,
-so nothing observed depends on it.
+so nothing observed depends on it. One more, the table's own: `EventScript_Conditions`
+`0x663B30` holds a null at index 10 on the PC as on the PSX (`0x663B30 + 0x28`
+is 0), so an `if` or `switch` naming condition 10 calls address 0; the decoder
+(section 4) finds no shipped script that does.
 
 No `DIVERGENCE.md` entry: nothing here changes behaviour.
 

@@ -98,6 +98,12 @@ from the disassembly, per function, and said where `CloneOriginal` is called.
 A relative *call* that does leave can be named and re-aimed (`CloneCall`), at
 the original callee or at another clone, so that cloned callers reach cloned
 callees and never ours — `src/game/gfx_clut.cpp` clones three that way.
+A `CloneCall` can also carry `expected`, the callee the disassembly showed:
+the copy is refused if the site now reaches anything else, which catches a
+call the tracer or a `RetargetCall` has already re-aimed (2026-09-22). A
+"where the original called" site that lands on an entry an earlier module
+has taken over is logged, not refused - that callee is checked against its
+own copy and runs on both sides of the comparison.
 `BOF3X_SHADOW` takes the names each file asks for (`Gfx_InvalidateTextures`,
 `gfx_clut`) or `*`.
 The copy exists in process memory only; nothing of Capcom's is written to disk.

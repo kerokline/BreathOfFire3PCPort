@@ -636,7 +636,7 @@ void FieldBlocked_Inject() {
         for (unsigned k = 0; k < kCount; ++k) {
             const Clone& c = kClones[k];
             bof3::CloneCall calls[22];
-            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target)};
+            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target), c.calls[i].target};
             clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         }
         Relocate(clones[kWide], 0x518180, 0x234, {0x50, 0x218, 7});

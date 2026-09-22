@@ -315,6 +315,10 @@ rarely. A third of them now do; 106.
   unmeasured (`tools/movement_scan.py` could list C1 operands).
 - The tint depths 5..7 divide by zero, and `CameraTurn_Start` with a frame
   count of 0; both are the original's, both platforms.
+- The tint copy's row is a whole byte, and the strip has 32 rows: a CLUT
+  number whose row is 32 or more reads and writes the DAT arena after the
+  strip (section 5's `0x1DFE0` bytes). D13 in
+  [`known-defects.md`](known-defects.md).
 - `Party_UpdateScreens` walks past `ObjTrio`'s three members for a count
   above 3, as `Field_MembersFrame` does not (it stops at 3,
   [`field-frame.md`](field-frame.md) section 2). Nothing seen makes the count

@@ -348,7 +348,7 @@ constexpr Call kClutCalls[] = {{0x21, 0x56FF00}};
 template <unsigned N>
 void* Clone(const char* name, std::uint32_t base, std::uint32_t size, const Call (&calls)[N]) {
     bof3::CloneCall re_aimed[N];
-    for (unsigned i = 0; i < N; ++i) re_aimed[i] = {calls[i].offset, StubFor(calls[i].target)};
+    for (unsigned i = 0; i < N; ++i) re_aimed[i] = {calls[i].offset, StubFor(calls[i].target), calls[i].target};
     return bof3::CloneOriginal(name, base, size, re_aimed, static_cast<int>(N));
 }
 

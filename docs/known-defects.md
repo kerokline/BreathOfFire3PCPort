@@ -433,7 +433,7 @@ would meet it. Kept as Capcom had it.
 ## D10 — The zone counter's arithmetic is 8-bit (candidate)
 
 **Found:** reading `Field_ZoneCounterRoll` `0x52FEB0` for the takeover,
-2026-09-22 ([`field-event.md`](field-event.md) §5). **Capcom's**; unverified
+2026-09-22 ([`field-event.md`](field-event.md) §4). **Capcom's**; unverified
 in game, and what the counter counts is itself a reading, not a measurement.
 
 **The defect.** The counter is a byte: `base + min(Rand() & 0x1F, the zone's
@@ -463,3 +463,42 @@ arithmetic means 31 (white).
 fades move the three tints toward 0 or 31 in small steps, so no shipped script
 reaches an offset that large. Kept: the fuzz seeds `0x60`, `0x61`, `0x7F`,
 `0x80` and `0x81` exactly to hold the wrap in place (controls 28, 29, 45).
+
+## D12 — The kind-2 glide divides by zero within half a unit of its target (latent)
+
+**Found:** reading `Kind2_Script` `0x573080` for the takeover, 2026-09-22
+([`kind2-object.md`](kind2-object.md) §5, K1). **Latent, Capcom's on both
+platforms.**
+
+**The defect.** The glide state counts its frames as the signed high word of
+twice the distance and divides the distance by them. A distance of
+1..`0x7FFF` — under half a unit on the larger axis — makes the count 0, and
+the second `idiv` faults. A speed index whose speed byte is 0 — index 0, and
+6 and 7 past `Field_MoveSpeeds`' six bytes — faults the first. The PSX has the
+same arithmetic with its compiled-in `break` traps (`trap(0x1c00)` in the
+decompilation), so it is the source's, not the port's.
+
+**Why it never shows:** whether any shipped kind-2 script glides from within
+half a unit, or sets such a speed, was not measured. Ours faults at the same
+instruction of the same computation (`Idiv`, an inline `idiv`, not a C++
+division); the fuzz seeds the faulting inputs on neither side. A fix is the
+owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D13 — A tint record whose CLUT row is 32 or more writes past the CLUT strip (latent)
+
+**Found:** reading `MoveScript_TintFrame` `0x454AD0` for the takeover,
+2026-09-22 ([`frame-callees.md`](frame-callees.md) §5, §7). **Latent,
+Capcom's.**
+
+**The defect.** The tint copies a CLUT's words from
+`Gfx_ClutStrip[(clut / per-row) << 8 + column]` to the target's, and the row
+— the quotient — is a whole byte. The strip is 32 rows of 256 words
+(`0x2000`, VRAM rows 480..511, inside the DAT arena). A CLUT number whose row
+is 32 or more — 32 times the depth's per-row count and up; row 255 at depth
+1 — reads and writes up to word `0x10FEE`, `0x1DFE0` bytes of the arena after
+the strip, on the original as on ours. On the PSX the same index named a VRAM
+row past the strip's; what it did there was not read.
+
+**Why it never shows:** the CLUT numbers the shipped tints and fades use were
+not measured. The fuzz seeds the whole reachable span (`0x10FF0` words) and
+restores it, on both sides, so ours matches the original there.

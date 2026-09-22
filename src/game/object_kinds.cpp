@@ -958,7 +958,7 @@ void ObjectKinds_Inject() {
                 continue;
             }
             bof3::CloneCall calls[7];
-            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target)};
+            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target), c.calls[i].target};
             clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
             for (int i = 0; i < c.n_pace; ++i) Patch32(clones[k], c.pace[i], kPaceTable, Address(g_pace_stubs), c.name);
         }

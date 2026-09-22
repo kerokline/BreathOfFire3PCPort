@@ -988,7 +988,7 @@ void MoveGroups_Inject() {
             const Group& grp = kGroups[k];
             bof3::CloneCall calls[16];
             if (grp.n_calls > 16) bof3::Fatal("move_groups: %s has %d calls", grp.name, grp.n_calls);
-            for (int i = 0; i < grp.n_calls; ++i) calls[i] = {grp.calls[i].offset, StubFor(grp.calls[i].target)};
+            for (int i = 0; i < grp.n_calls; ++i) calls[i] = {grp.calls[i].offset, StubFor(grp.calls[i].target), grp.calls[i].target};
             clones[k] = bof3::CloneOriginal(grp.name, grp.base, grp.size, calls, grp.n_calls);
             Relocate(clones[k], grp.base, grp.size, grp.table);
         }

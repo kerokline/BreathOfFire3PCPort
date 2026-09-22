@@ -279,11 +279,14 @@ byte, 256 bytes of palette and their twins, the 32 tint records, a scratch
 object and the zone record the stand-in returns.
 
 The stand-ins give back what the caller reads (a count, a zone record, the
-ground, a party set, `File_LoadDone`) and one time in 24 disturb something the
+ground, a party set, `File_LoadDone`) and on 18 of every 24 calls disturb something the
 caller reads again after the call - `Sprite_Current`, `Field_State`, the
 member count, either flags word, the input, a party list byte, the current
 set, an actor record, the area, an object's byte, a tint record. That is what
-makes the "read again" quirks above testable.
+makes the "read again" quirks above testable. One bound: the count the
+party-count stand-in returns never exceeds the real ids at the front of the
+list, since `Field_PartySetUp` indexes the 24-entry `MoveScript_EffectState`
+by them and an `0xFF` would read past it (review, 2026-09-22).
 
 **Not generated**, because the original would fault or write outside the
 compared state: a `Sprite_Current` / `Field_State` outside the five objects, a

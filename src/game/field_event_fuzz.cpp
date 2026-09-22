@@ -207,7 +207,19 @@ int __cdecl StubRand() {
     if (Hash(191) % 4 == 0) g_zone_record[4] = static_cast<unsigned char>(Hash(192) % 16);
     return static_cast<int>(Hash(190));
 }
-int __cdecl StubPartyCount(unsigned slot) { Record(20, slot & 0xFF); Disturb(20); return static_cast<int>(Hash(200) % 4); }
+int __cdecl StubPartyCount(unsigned slot) {
+    Record(20, slot & 0xFF);
+    Disturb(20);
+    // Field_PartySetUp's leader-alone loop indexes MoveScript_EffectState (24
+    // entries) by the first `count` ids of the party list, and an id of 0xFF
+    // there reads the byte past the table (0x66982B, image data) and writes
+    // the actor record it names - inside the eight compared records only while
+    // that byte is 0. Keep the count within the ids that are real.
+    const unsigned char* const list = At(at::kPartyLists);
+    unsigned count = Hash(200) % 4;
+    while (count > 0 && list[count - 1] == 0xFF) --count;
+    return static_cast<int>(count);
+}
 unsigned char __cdecl StubHasItem(unsigned member, unsigned kind, unsigned item) {
     Record(21, member & 0xFF, kind & 0xFF, item & 0xFF);
     Disturb(21);

@@ -38,10 +38,12 @@ constexpr std::uint32_t kMode11Bytes = 0x905DA0;     // five bytes set entering 
 
 // Every callee, through pointers so that the start-up fuzz can stand
 // recording functions in for them - for the originals' copies and for ours
-// alike. Four of them are ours (Title_CheckStart, Title_DrawBackdrop,
+// alike. Four of them are this file's (Title_CheckStart, Title_DrawBackdrop,
 // Title_DrawLogo and Title_Sprite), called through here all the same so that
-// each function is tested alone; Gpu_SetSprt, Gpu_SetSemiTrans,
-// Gpu_SetDrawMode and Gfx_CommitPrim are other files'.
+// each function is tested alone; Title_FadeMusic, Title_DrawSetA/B/C,
+// Field_ModeDispatch and Field_Frame are ours in other files (title_states,
+// field_modes, field_frame); Gpu_SetSprt, Gpu_SetSemiTrans, Gpu_SetDrawMode
+// and Gfx_CommitPrim are other files'.
 struct Callees {
     void (__cdecl* clear_private)();
     void (__cdecl* sleep)(int);
@@ -789,7 +791,7 @@ void ModeTasks_Inject() {
             const Clone& c = kClones[k];
             bof3::CloneCall calls[8];
             if (c.n_calls > 8) bof3::Fatal("mode_tasks: %s has %d calls", c.name, c.n_calls);
-            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target)};
+            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target), c.calls[i].target};
             clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         }
         move_script::Relocate(clones[kField], kClones[kField].base, kClones[kField].size, kFieldTable);

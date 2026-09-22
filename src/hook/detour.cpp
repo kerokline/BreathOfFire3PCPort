@@ -154,8 +154,29 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
             Fatal("%s: no relative call or jmp at +0x%X to re-aim", name, (unsigned)at);
         std::int32_t rel;
         std::memcpy(&rel, orig + at + 1, sizeof rel);
-        const std::uint8_t* target = calls[i].target
-            ? static_cast<const std::uint8_t*>(calls[i].target) : orig + at + kJmpLen + rel;
+        // Where the site reaches now. A site already re-aimed - by the tracer,
+        // or by a RetargetCall that moved it to ours - would be copied as a
+        // call to that code, so it is refused: against `expected` when the
+        // caller says what the original called, and for "where the original
+        // called" when it leaves the image. An entry Inject has patched (an
+        // E9 there is ours; a BOF3X_ORIGINAL entry is not patched) is only
+        // noted: it is an earlier module's function, already checked against
+        // its own copy, and the same code on both sides of this comparison -
+        // a module's own functions are not injected until its fuzz has run.
+        const std::uint8_t* const callee = orig + at + kJmpLen + rel;
+        const auto callee_va = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(callee));
+        if (calls[i].expected != 0 && callee_va != calls[i].expected)
+            Fatal("%s: the call at +0x%X reaches 0x%08X, not 0x%08X: the site is re-aimed already, cannot clone", name,
+                  (unsigned)at, (unsigned)callee_va, (unsigned)calls[i].expected);
+        if (!calls[i].target) {
+            if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
+                Fatal("%s: the call at +0x%X leaves the image (0x%08X): re-aimed already, cannot clone", name,
+                      (unsigned)at, (unsigned)callee_va);
+            if (IsOwned(callee_va) && callee[0] == 0xE9)
+                Log("shadow      %-24s the call at +0x%X reaches 0x%08X, which is ours: the same code on both sides",
+                      name, (unsigned)at, (unsigned)callee_va);
+        }
+        const std::uint8_t* target = calls[i].target ? static_cast<const std::uint8_t*>(calls[i].target) : callee;
         rel = static_cast<std::int32_t>(target - (static_cast<std::uint8_t*>(copy) + at + kJmpLen));
         std::memcpy(static_cast<std::uint8_t*>(copy) + at + 1, &rel, sizeof rel);
     }
