@@ -4871,3 +4871,27 @@ ret = "void"
 params = "const unsigned char *entry"
 status = "hypothesis"
 evidence = "disasm 2026-09-22 (calls only): AreaMap_EntryHandlers entry 3; reads Draw_OtSlot and the globals at 0x905DD4 / 0x905DD8 / 0x905DAB. Not reached by the attract cycle (hidden_b)."
+
+
+# --- 2026-09-22 (second round): boundary callees, registered before the
+# parallel takeover of the field's mode handlers (group A), the event script's
+# field side (B), the event script interpreter (C), the frame loop's callees
+# (D), the title's state handlers (E), the map view's scrolling (F) and the
+# blocked-ahead test (G). Names provisional; the owning group, if any, is named
+# in the evidence.
+
+[[func]]
+pc = 0x57C0F0
+name = "Flags_Set"
+ret = "void"
+params = "unsigned char *bits, unsigned index"
+status = "evidence"
+evidence = "disasm 2026-09-22, 11 instructions: sets bit (index & 7) of bits[(index & 0xFF) >> 3]; Flags_Test's writer. Called by the field mode handlers 0x56B3A0 / 0x56B400 / 0x56B450. Group C."
+
+[[func]]
+pc = 0x5734F0
+name = "Kind2_Place"
+ret = "void"
+params = "unsigned char arg"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 25 instructions: resets the script context at Sprite_Kind2 +0x80 through 0x5322B0, sets +0x85 bit 0x80, +0x83 = arg, +0x84 = 3, copies Field_Kind2X / Field_Kind2Z into +0x34 / +0x38, grounds it with AreaMap_Elevation and MapView_SetElevation, then +1 = 1, +2 = +3 = 0. Called by the mode handler 0x56B450 and the interpreter's 0x57B4E0. No group takes it this round."
