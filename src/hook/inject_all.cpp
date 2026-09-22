@@ -27,6 +27,7 @@
 #include "game/sprite_find.h"
 #include "game/move_script.h"
 #include "game/move_groups.h"
+#include "game/field_objects.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
@@ -78,6 +79,7 @@ void InjectAll() {
     SpriteFind_Inject();
     MoveScript_Inject();
     MoveGroups_Inject();
+    FieldObjects_Inject();
     FieldInput_Inject();
     SpriteClut_Inject();
     DrawLayers_Inject();

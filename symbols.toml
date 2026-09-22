@@ -3601,6 +3601,7 @@ name = "Field_ObjectUpdate"
 psx = 0x801A238C
 ret = "void"
 params = "unsigned char *object"
+impl = "src/game/field_objects.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x517BF0..0x517E8C, cdecl, every jump internal. The object's script context is object +0x80 (the PSX's +0x74: every field is 0xC further on the PC). Unless Sprite_Current[9] (a timed move's frames) is running: with no steps left in +0x87 and a speed +0x84, one MoveScript_Step of script Area_Descriptors[area] +0x10 [+0x83] - 0xFF returns at once, else the result becomes Sprite_Current[8]; with steps left, a step of the move unless Field_ObjectBlocked - a move blocked on its first step undoes the script step too, putting back the context's position (+0xA) and loop counter (+2); then Field_ObjectSettle; always Field_ObjectMotion, except on the three early returns. 16 is divided by Field_MoveSpeeds[+0x84]. The PSX FUN_801A238C branch for branch. Call trace hidden_b: 69,494 calls."
 
@@ -3610,6 +3611,7 @@ name = "Field_ObjectMotion"
 psx = 0x801A3544
 ret = "void"
 params = "unsigned char *object"
+impl = "src/game/field_objects.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x518980..0x518AB6, cdecl. While Sprite_Current[9] runs: position +0x34 / +0x38 += the velocity +0xC / +0x10, height +0x3E += +0x14's low word, [9] - 1; when it reaches 0, grounded (unless context bit 0x80), object +0x9C = 0, and for a Sprite_Current[2] of 1..3 a wait of 30 x ([2] & 3) frames in object +0x81 with Sprite_SetPoseWait, the direction settled and +0xA1 set. Then Party_ApplyRecord, and unless Field_Request is 2, context bit 0x10 from [9] <= [0xA]. The PSX FUN_801A3544. Call trace hidden_b: 71,816 calls."
 
@@ -3619,6 +3621,7 @@ name = "Party_ApplyRecord"
 psx = 0x801A4D24
 ret = "void"
 params = "unsigned char *context"
+impl = "src/game/field_objects.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5197F0..0x519883, cdecl, the argument unused. For a type-0x0A sprite: the MoveScript_PartyRecords record of Field_ActiveMember's slot (a negative slot as 4) - while its count +1 runs, Sprite_Current +0x64 / +0x68 += +4 / +8; while +2 runs, +0x6C += +0xC; each count - 1. The reader of what op D4 writes. The PSX FUN_801A4D24 (psx_pair call-anchored). Call trace hidden_b: 71,816 calls."
 
@@ -3628,6 +3631,7 @@ name = "Field_ObjectSettle"
 psx = 0x801A3AEC
 ret = "void"
 params = "unsigned char *object, unsigned char direction"
+impl = "src/game/field_objects.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x518D10..0x518DCE, cdecl. For a type-0x0A sprite in a timed move with Field_ActiveMember's context bit 8: Party_MoveMember(object, direction & 7), then context bit 8 cleared. Otherwise, unless Sprite_Current[7] bit 8 (which just clears it): context bit 8 set, Sprite_Current[8] bit 8 while moving (else & 7); scratch byte 3 of 0xFF (op E4) is consumed to 0; else the bit is cleared again when the direction equals `direction`, the one Field_ObjectUpdate saw on entry. The PSX FUN_801A3AEC. Call trace hidden_b: 58,332 calls."
 
@@ -3691,6 +3695,7 @@ name = "Field_ObjectFollow"
 psx = 0x801A4418
 ret = "void"
 params = "unsigned char *object"
+impl = "src/game/field_objects.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5192A0..0x5193AF, cdecl, reached through a pointer (pe_hidden.py; main caller 0x517490). The update of an attached object: n = Sprite_ObjectByHandle(Sprite_Current +0x18) names the object it follows - Sprite_Objects[n], or Sprite_ObjectsExtra[n - 0x1E] from 0x1E on. Unless a timed move runs: +0x24 bit 5, the other's position +0x34..+0x3C copied, and for a sprite not of type 0x0A its angles +0x64..+0x6C; then MoveCmd_AttachOffset(offset, +0x1C) added to x, z and the height's word. Then Field_ObjectUpdate, and Sprite_Current[8] & 7. The PSX ov_entry_801A4418, whose objects are one array of 0x98 bytes where the PC's are two of 0xA4. Call trace hidden_b: 21,189 calls."
 
@@ -3700,6 +3705,7 @@ name = "MoveCmd_AttachOffset"
 psx = 0x801AD1DC
 ret = "void"
 params = "long *out, unsigned char index"
+impl = "src/game/field_objects.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x578EB0..0x578F9B, cdecl: the attachment's offset - vector index of the area descriptor's +0x0C table (three shorts, 6 bytes each) turned by Sprite_Current's angles +0x64 / +0x68 / +0x6C: Gte_PushMatrix, Gte_RotMatrix, Gte_TransMatrix with a zero vector, Gte_SetRotMatrix, Gte_SetTransMatrix, Gte_RotTrans, Gte_PopMatrix; out = (x << 9, y << 9, -z * 2). The PSX FUN_801AD1DC step for step. Callers Field_ObjectFollow and MoveCmd_HandlePosition. Call trace hidden_b: 21,105 calls."
 
