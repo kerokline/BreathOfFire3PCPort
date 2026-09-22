@@ -2858,10 +2858,12 @@ note = "Elevation by its use: MapCell_DrawRising stacks its quads on -(result / 
 [[func]]
 pc = 0x57C140
 name = "Flags_Test"
+psx = 0x8015BFC4
 ret = "unsigned char"
 params = "const unsigned char *bits, unsigned index"
+impl = "src/game/event_script.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-21, 8 instructions: bit (index & 7) of bits[(index & 0xFF) >> 3], as 0 or 1. About 170 callers (pc_funcs.json)."
+evidence = "disasm 2026-09-21, 8 instructions: bit (index & 7) of bits[(index & 0xFF) >> 3], as 0 or 1 - setne al over eax = (index & 0xFF) >> 3, so all of eax is 0 or 1. The PSX 0x8015BFC4 (shift and mask). 844 call sites (E8 scan, 2026-09-22): 833 read al, 7 and eax with 0xFF, 4 tail returns. Group C, docs/event-script.md."
 
 [[func]]
 pc = 0x5BAD64
@@ -3219,8 +3221,9 @@ name = "ObjTrio_SetBit40"
 psx = 0x8015CAF0
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 12 instructions: sets bit 0x40 of the same three bytes as ObjTrio_ClearBit40. Flow op 0C with a zero operand."
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 12 instructions: sets bit 0x40 of the bytes 0x802D40, 0x802E8C, 0x802FD8 in that order (ObjTrio +0, +0x14C, +0x298). The PSX 0x8015CAF0, objects 0x140 apart. Flow op 0C with a zero operand; the field mode handlers. Group C, docs/event-script.md."
 
 [[func]]
 pc = 0x5891F0
@@ -3255,8 +3258,9 @@ name = "ScriptFlags_Set40"
 psx = 0x8015CA78
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 6 instructions: sets the two bits ScriptFlags_Clear40 clears. Op F1."
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 6 instructions: byte 0x8034E1 |= 0x40 (read before, stored after) and byte 0x9039A3 |= 1 - bit 8 of the word Field_ScriptFlags. The PSX 0x8015CA78 does the same with a halfword or. Op F1. Group C, docs/event-script.md."
 
 [[func]]
 pc = 0x578FA0
@@ -4157,8 +4161,9 @@ name = "EventScript_Run"
 psx = 0x801A4F44
 ret = "void"
 params = "const unsigned char *script"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its first 12 instructions): Cond_ByteFA to the word 0x7DEE20, then steps a byte stream until 0xFF, through 0x579F30 below 0xF0 and 0x579800 from it. Called by MoveScript_SetTurnTarget with an entry of the area descriptor's +4 table."
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole (0x5797C0..0x5797F5, 54 bytes), read against the PSX FUN_801A4F44: EventScript_FlagBank = (s16) Cond_ByteFA, then while the byte is not 0xFF, EventScript_Op below 0xF0 and EventScript_Control from it, each returning the next position. Callers: Area_RunPlacement with the area descriptor +0 script, MoveScript_SetTurnTarget 0x517E90 and 0x52F6A4 with an entry of the descriptor +4 table (a talk script by object +8). No caller reads eax. docs/event-script.md."
 
 # --- group A: the field-object frame loop (docs/field-frame.md) -------------
 
@@ -4883,10 +4888,12 @@ evidence = "disasm 2026-09-22 (calls only): AreaMap_EntryHandlers entry 3; reads
 [[func]]
 pc = 0x57C0F0
 name = "Flags_Set"
+psx = 0x8015BF70
 ret = "void"
 params = "unsigned char *bits, unsigned index"
+impl = "src/game/event_script.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 11 instructions: sets bit (index & 7) of bits[(index & 0xFF) >> 3]; Flags_Test's writer. Called by the field mode handlers 0x56B3A0 / 0x56B400 / 0x56B450. Group C."
+evidence = "disasm 2026-09-22, 11 instructions: sets bit (index & 7) of bits[(index & 0xFF) >> 3]; Flags_Test is its reader, Flags_Clear 0x57C110 its opposite. The PSX 0x8015BF70 instruction for instruction (gap4 pair). 763 call sites (E8 scan). Group C, docs/event-script.md."
 
 [[func]]
 pc = 0x5734F0
@@ -4895,3 +4902,401 @@ ret = "void"
 params = "unsigned char arg"
 status = "hypothesis"
 evidence = "disasm 2026-09-22, 25 instructions: resets the script context at Sprite_Kind2 +0x80 through 0x5322B0, sets +0x85 bit 0x80, +0x83 = arg, +0x84 = 3, copies Field_Kind2X / Field_Kind2Z into +0x34 / +0x38, grounds it with AreaMap_Elevation and MapView_SetElevation, then +1 = 1, +2 = +3 = 0. Called by the mode handler 0x56B450 and the interpreter's 0x57B4E0. No group takes it this round."
+
+# --- 2026-09-22 (second round), group C: the event script interpreter and the
+# flag helpers (docs/event-script.md, src/game/event_script.cpp). Every PSX
+# address is GAME.EMI section 0 (0x80196800) or the boot EXE, read with
+# capstone against the sibling's Ghidra output; pairs from psx_pair.py agree
+# where they exist. The unreached handlers and skips are typed for the calls
+# ours make and stay Capcom's.
+
+[[func]]
+pc = 0x579740
+name = "Area_RunPlacement"
+psx = 0x801A4E58
+ret = "void"
+params = "const unsigned char *script"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole (0x579740..0x5797B7, 120 bytes), branch for branch the PSX FUN_801A4E58: the object count (the word at DamageScratch, PSX 0x1F800000) = 0, byte 0 of the four Sprite_ObjectsExtra cleared, the word after it = 4, EventScript_Run(script), then byte 0 of every Sprite_Objects entry from the count to 29 cleared and the count set to 30. Called by 0x594E60 (area entry) and 0x580535 with the area descriptor +0 - the area's placement script, in the exe's .data."
+
+[[func]]
+pc = 0x579800
+name = "EventScript_Control"
+psx = 0x801A5408
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole with its jump table 0x579864 (6 entries) and byte index 0x57987C (11), 135 bytes: F0 EventScript_If(at + 1), F1 EventScript_IfNot(at + 1), F4 EventScript_Switch(at + 1), F9 EventScript_FlagBank = at[1] and at + 2, FA EventScript_FlagBank = (s16) Cond_ByteFA and at + 1; every other byte returns at unchanged. The PSX FUN_801A5408 case for case."
+
+[[func]]
+pc = 0x579890
+name = "EventScript_If"
+psx = 0x801A4FC8
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 187 bytes: at is past the F0. Condition EventScript_Conditions[at[0] & 0x1F](&position) with position at + 1 (the operand), then one byte on; a depth byte of 1 and an else byte of 0 on its stack. Until depth 0 meets FE: EventScript_IfRunStep while the else byte is 0 and EventScript_IfSkipStep after - the other way round when the condition is false. Returns past the FE. The PSX FUN_801A4FC8."
+
+[[func]]
+pc = 0x579950
+name = "EventScript_IfNot"
+psx = 0x801A5160
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 187 bytes: EventScript_If with the condition's sense inverted (op F1). The PSX FUN_801A5160."
+
+[[func]]
+pc = 0x579A10
+name = "EventScript_IfRunStep"
+psx = 0x801A52F8
+ret = "const unsigned char *"
+params = "const unsigned char *at, unsigned char *else_seen, unsigned char *depth"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 62 bytes: one step of an arm that runs - EventScript_Op below F0, EventScript_Control below FD, FE decrements the depth (position unchanged), FD sets the else byte, FD and FF step one. The PSX FUN_801A52F8."
+
+[[func]]
+pc = 0x579A50
+name = "EventScript_IfSkipStep"
+psx = 0x801A537C
+ret = "const unsigned char *"
+params = "const unsigned char *at, unsigned char *else_seen, unsigned char *depth"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 72 bytes: one step of an arm that is skipped - an op by EventScript_OpLengths, F0..FC through EventScript_SkipControl, FE and FD as EventScript_IfRunStep. The PSX FUN_801A537C."
+
+[[func]]
+pc = 0x579AA0
+name = "EventScript_SkipControl"
+psx = 0x801A54AC
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole with its jump table 0x579ADC (5) and byte index 0x579AF0 (11), 91 bytes: F0 / F1 EventScript_SkipIf(at), F4 EventScript_SkipSwitch(at), F9 at + 2, FA at + 1, anything else at. The PSX FUN_801A54AC."
+
+[[func]]
+pc = 0x579B00
+name = "EventScript_Switch"
+psx = 0x801A5520
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 156 bytes: at[0] names the condition, indexed SIGNED and unmasked in EventScript_Conditions. Loops over F6 x (a case: the condition on x while no case has run; true runs its body by EventScript_CaseRun past the byte after x, else EventScript_CaseSkip), F7 (the default: runs if none has) and F5 (the end, returned past). Any other byte between cases loops for ever. The PSX FUN_801A5520."
+
+[[func]]
+pc = 0x579BA0
+name = "EventScript_CaseRun"
+psx = 0x801A5648
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole with its jump table 0x579BE8 (11), 116 bytes: ops through EventScript_Op, F0 F1 F4 F9 FA through EventScript_Control, F6 steps 2 and F7 1 (further labels of the same body), F8 ends past itself; F2 F3 F5 and FB..FF loop for ever. The PSX FUN_801A5648."
+
+[[func]]
+pc = 0x579C20
+name = "EventScript_CaseSkip"
+psx = 0x801A56F0
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole with its jump table 0x579C70 (11), 124 bytes: ops by EventScript_OpLengths, F0 F1 F4 F9 FA through EventScript_SkipControl, F7 steps 1, F8 ends past itself, F6 returns AT itself (the next case to test); F2 F3 F5 and FB..FF loop for ever. The PSX FUN_801A56F0."
+
+[[func]]
+pc = 0x579CA0
+name = "EventScript_SkipIf"
+psx = 0x801A57A0
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 72 bytes, not taken over): at is ON the F0 / F1; steps 3, then to the FE of its depth by lengths and EventScript_SkipControl, past an FD. Never reached by the attract cycle. psx_pair call."
+
+[[func]]
+pc = 0x579CF0
+name = "EventScript_SkipSwitch"
+psx = 0x801A584C
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole with its jump table 0x579D40, not taken over): at is ON the F4; steps 2, then to past its F5 - F6 steps 2, F7 F8 1, ops by length, F0 F1 F4 F9 FA through EventScript_SkipControl. Never reached by the attract cycle. psx_pair call."
+
+[[func]]
+pc = 0x579D70
+name = "EventObj_Face"
+psx = 0x801A591C
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 60 bytes, not taken over): Sprite_Current +0x4B = 0xFF; with +7 bit 3, +0x2A = bit 4 of +7 and Sprite_SetAnimation(+8), else Sprite_FaceDirection(+8). The last call of EventOp_1x / 2x. psx_pair call-anchored."
+
+[[func]]
+pc = 0x579DB0
+name = "EventObj_SetFlags"
+psx = 0x801A5998
+ret = "void"
+params = "const unsigned char *flags"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 122 bytes: Sprite_Current +7 = flags[0]; bit 0 sets +0 bit 0x40; bit 2 clears Field_ActiveMember +0x80 bit 0x20; bit 6 makes +0x48 0, else 1; with Field_ActiveMember +0x84 (the speed index) non-zero, +0xA = 16 / Field_MoveSpeeds[index] by idiv - a zero divisor, a divide fault, for indices 6, 7, 9, 10, 11, 13 and others past the six (the PSX traps there too). flags[0] is read again for each test. The PSX FUN_801A5998. 13 call sites, 12 of them EventScript_Op's handlers."
+
+[[func]]
+pc = 0x579E30
+name = "EventObj_Reset"
+psx = 0x801A5AB0
+ret = "void"
+params = "void"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 197 bytes: Sprite_Current +4 +3 +0x24 +0xA +9 = 0, +0x44 = +0x40 = 0x10000, +0x6C +0x68 +0x64 = 0; Field_ActiveMember +0x80 +0x81 +0x82 +0x85 = 0, +0x86 = 0xFF, +0x87 = 0, words +0x8A +0x9C = 0 (the script context, PSX +0x74). The PSX FUN_801A5AB0. 13 call sites."
+
+[[func]]
+pc = 0x579F30
+name = "EventScript_Op"
+psx = 0x801A5C00
+ret = "const unsigned char *"
+params = "const unsigned char *at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole with its jump table 0x579FD8 (14 entries), 224 bytes: the handler by the high nibble of at[0] - 1x..Ex their own, 0x and Fx 0x57A010 - then at + EventScript_OpLengths[at[0] >> 4], the byte read again after the handler. The PSX FUN_801A5C00, the fourteen handlers in the same order."
+
+[[func]]
+pc = 0x57A010
+name = "EventOp_0x"
+psx = 0x801A5D5C
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 0x57A010..0x57A1D1, not taken over): EventOp_1x's placement with object +0x83 = op[0x10] (17 bytes). The default of EventScript_Op's jump table. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57A1E0
+name = "EventOp_1x"
+psx = 0x801A60C8
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 442 bytes: places Sprite_Objects[count] while the count is below 30 - Sprite_Current and Field_ActiveMember to it, EventObj_Reset, Sprite_SetAnimationBank(op[1]:op[2]), x and z from op[6..9] (a byte whole, 0x8000 if the byte before is non-zero), AreaMap_Elevation, +1 +2 +8 +6 from op, object +0x98 +0x9A +0x88 +0x84 +0xA0, EventObj_SetFlags(op + 0xD), +0 bit 0x20 by op[3] bit 7, +0x5C..+0x5F, EventObj_Face, count + 1. 16 bytes. The PSX FUN_801A60C8 field for field (objects 0x98 there, every offset past +0x74 0xC on)."
+
+[[func]]
+pc = 0x57A3A0
+name = "EventOp_8x"
+psx = 0x801A6408
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 8x (12 bytes): EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, Sprite_SetAnimation, then 0x579F00 four times (a byte into the AreaMap_Bytes grid). Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57A5E0
+name = "EventOp_2x"
+psx = 0x801A67F8
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 478 bytes: EventOp_1x with +0x18 = op[0x11] and +0x1C = op[0x12] as dwords and object +0x83 = op[0x10]; 19 bytes. The PSX FUN_801A67F8."
+
+[[func]]
+pc = 0x57A7C0
+name = "EventOp_3x"
+psx = 0x801A6B80
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 3x (18 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57A990
+name = "EventOp_4x"
+psx = 0x801A6F04
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 4x (17 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57AB50
+name = "EventOp_7x"
+psx = 0x801A7244
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 7x (17 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57AD10
+name = "EventOp_6x"
+psx = 0x801A75A8
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 6x (16 bytes): EventOp_1x's calls with 0x533BA0 where the bank is set. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57AEC0
+name = "EventOp_Ax"
+psx = 0x801A78C8
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for Ax (14 bytes): EventObj_Reset, Sprite_InitFromEntry, PartyRecord_Clear, AreaMap_Elevation, EventObj_SetFlags, 0x579F00 four times - EventOp_Bx's kind of placement. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57B100
+name = "PartyRecord_Clear"
+psx = 0x801A5B88
+ret = "void"
+params = "unsigned index"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 39 bytes: bytes +1 +2 +3 +0 of MoveScript_PartyRecords[(index & 0xFF) * 16] = 0. Its callers push the index byte with whatever the register's upper bits held. The PSX FUN_801A5B88."
+
+[[func]]
+pc = 0x57B130
+name = "EventOp_Bx"
+psx = 0x801A7CA0
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 476 bytes: places Sprite_ObjectsExtra[op[0xB]] (unchecked) - Sprite_Current and Field_ActiveMember to it, direction op[0] & 0xF, EventObj_Reset, PartyRecord_Clear, Sprite_InitFromEntry(area descriptor +8 + op[9] * 8), x and z from op[1..4], AreaMap_Elevation, +1 +2, kind (op[0] >> 4) - 1, +0x18..+0x20 = 0, +0x70 = entry byte 2, object +0x8C..+0x94 = 0, +0x83 +0x84 +0x88 +0xA0, EventObj_SetFlags(op + 8), +0x5C..+0x5F. 14 bytes. The PSX FUN_801A7CA0; its +0x70 is a word store, the PC's a byte."
+
+[[func]]
+pc = 0x57B310
+name = "EventOp_5x"
+psx = 0x801A7F60
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 5x (18 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57B4E0
+name = "EventOp_Cx"
+psx = 0x801A82B8
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 26 bytes: Sprite_Kind2 +6 (its kind) = op[0] >> 4, then Kind2_Place(op[1]). 2 bytes. The PSX FUN_801A82B8 (0x80143F4A, FUN_801C7014)."
+
+[[func]]
+pc = 0x57B500
+name = "EventOp_Dx"
+psx = 0x801A82F0
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 48 bytes, not taken over): with op[1], Field_ActiveMember +0x86 = op[3]; else its word +0x88 = op[2]:op[3]. 4 bytes. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57B530
+name = "EventOp_9x"
+psx = 0x801A8338
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 9x (13 bytes): EventOp_1x's first four calls, 0x579F00, Sprite_SetAnimation twice. Never reached by the attract cycle."
+
+[[func]]
+pc = 0x57BA60
+name = "Sprite_InitFromEntry"
+psx = 0x8015B67C
+ret = "void"
+params = "unsigned char *entry"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 120 bytes: Sprite_Current +0 = 1, +0x24 = 0x40, +0x48 = 1, +0x40 = +0x44 = 0x1000, +0x50 = entry's dword +4, +0x54 = entry, +0x68 = +0x64 = 0, +0x6C = Sprite_DirectionAngles[+8] zero-extended - the index a whole byte. The PSX 0x8015B67C. Called by EventOp_Ax / Bx with an entry of the area descriptor +8 table, and by 0x4157C6, 0x41C1D6, 0x46BB80."
+
+[[func]]
+pc = 0x57C110
+name = "Flags_Clear"
+psx = 0x8015BF98
+ret = "void"
+params = "unsigned char *bits, unsigned index"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 13 instructions: clears bit (index & 7) of bits[(index & 0xFF) >> 3]. The PSX 0x8015BF98 (gap4 pair). 338 call sites (E8 scan); 0x594E60 clears bit 0x1C of the set at 0x904030."
+
+[[func]]
+pc = 0x57C180
+name = "EventCond_ByteFA"
+psx = 0x8015C00C
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 6 instructions: EventScript_Conditions entry 0 - **at equals Cond_ByteFA, in al (sete; the rest of eax is the pointer's). The position is not advanced. The PSX 0x8015C00C."
+
+[[func]]
+pc = 0x57C1C0
+name = "EventCond_Flag"
+psx = 0x8015C05C
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 14 instructions: EventScript_Conditions entry 2 - Flags_Test(Cond_Flags + (low byte of EventScript_FlagBank) * 8, **at), its eax returned. The position is not advanced. The PSX 0x8015C05C (flags 0x80144E84, bank 0x80148208)."
+
+[[func]]
+pc = 0x57C210
+name = "EventCond_ByteFD"
+psx = 0x8015C0C0
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/event_script.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 6 instructions: EventScript_Conditions entry 8 - **at equals Cond_ByteFD, in al. The position is not advanced. The PSX 0x8015C0C0 (0x80143F03)."
+
+[[func]]
+pc = 0x5898D0
+name = "EventOp_Ex"
+psx = 0x8019715C
+ret = "void"
+params = "const unsigned char *op"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first instructions, not taken over): EventScript_Op's handler for Ex (7 bytes); takes an effect slot from 0x589810 and fills Effect_Objects. Never reached by the attract cycle."
+
+[[data]]
+pc = 0x7DEE20
+name = "EventScript_FlagBank"
+psx = 0x80148208
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: written by EventScript_Run and op FA ((s16) Cond_ByteFA) and op F9 (its byte); read, low byte only, by EventCond_Flag as the row of Cond_Flags. Its only four users (a scan of .text for the address)."
+
+[[data]]
+pc = 0x663B0C
+name = "EventScript_OpLengths"
+psx = 0x801C943C
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "disasm 2026-09-22: EventScript_Op, IfSkipStep, CaseSkip and the two skips step an op below F0 by entry [op >> 4]. 11 10 13 12 11 12 10 11 0C 0D 0E 0E 02 04 07 00: entries 0..14 byte for byte the PSX GAME.EMI 0x801C943C; entry 15 (never used: F0 and above are not ops) is 0x2E on the PSX."
+
+[[data]]
+pc = 0x663B30
+name = "EventScript_Conditions"
+psx = 0x80182AF4
+ctype = "void *"
+count = 17
+status = "evidence"
+evidence = "disasm 2026-09-22: EventScript_If / IfNot call entry (c & 0x1F), EventScript_Switch entry (s8) c, with the address of the script position. 17 entries take one (0..16; entry 10 null); MoveScript_CounterOps follows at 0x663B74 and the E9 handlers at 0x663B84, which take other arguments. The PSX boot table 0x80182AF4 has the same shape (25 code pointers, the null at 10)."
+
+[[data]]
+pc = 0x65F644
+name = "Sprite_DirectionAngles"
+psx = 0x801C941C
+ctype = "unsigned short"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-22: Sprite_InitFromEntry sets Sprite_Current +0x6C to entry [+8]; 0x600 0x800 0xA00 0xC00 0xE00 0 0x200 0x400, a direction as a 4096ths angle. The same 16 bytes on the PSX (GAME.EMI 0x801C941C); what follows differs (code pointers). Also read at 0x51922E..0x519286, inside 0x5190A0."
