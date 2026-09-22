@@ -332,7 +332,7 @@ field_shift = 0x0
 pc_stride = 0x14C
 psx_stride = 0x140
 status = "evidence"
-evidence = "Stride read off PC Battle_ElementAffinity's party branch (x5 / x41 / x83 / x4 = 332 = 0x14C). 19 of 21 documented PSX fields land on a referenced PC address at shift 0, baseline 26.8%, binomial P = 1.60e-09 (2026-09-18). Corroborated: PC party HP 0x802DD8 and PC enemy HP 0x93BA04 share six referencing functions (0x437CC0, 0x43B130, 0x44B9F0, 0x44FCE0, 0x49D680, 0x596A90) — the damage path touches both sides."
+evidence = "Stride read off PC Battle_ElementAffinity's party branch (x5 / x41 / x83 / x4 = 332 = 0x14C). 19 of 21 documented PSX fields land on a referenced PC address at shift 0, baseline 26.8%, binomial P = 1.60e-09 (2026-09-18). Corroborated: PC party HP 0x802DD8 and PC enemy HP 0x93BA04 are both referenced by fourteen functions — the damage path touches both sides. The functions are 0x44FCE0 (direct call); 0x49E1C0 (stored at 0x49E013); 0x438450, 0x438670 and 0x4388D0 (stored into 0x904B6C at 0x438444 / 0x438664 / 0x4388C4); and 0x44BF70, 0x44D770, 0x44D7E0, 0x44D8B0, 0x44DCC0, 0x44DD60, 0x44DFD0, 0x44E4B0 and 0x44E5D0, which are slots of the 0x64E73C handler table called at 0x44BAF8 / 0x44BB23. Every pe_xref reference in the old list's extents was attributed to its real entry on 2026-09-21, by disassembly (pe_disasm) and by recursive descent through the jump tables. 0x437CC0 is a bare ret. 0x4384E0, 0x438700 and 0x438960 are case 5 of the switches whose tables are at 0x438538 / 0x438758 / 0x4389B8, and 0x438D30 is a case in the 0x438DA8 table; none of the four is an entry. 0x44D8B0 is missing from pc_hidden.json. The fourteen are a lower bound: pe_xref does not index base+displacement operands, so it misses Battle_ApplyDamage 0x445A30 ([esi + 0x802DD8], [esi + 0x93BA04]). The full attribution and the sibling match are in docs/kinship-probe-battle-engine.md section 2."
 note = "The record grew 0xC but every documented field keeps its offset, so the growth is past +0x13C, beyond what BATTLE_RAM.md covers. Carries a copy of the persistent character record at +0x74; that record did not change size (164 bytes in both)."
 
 [[block]]
@@ -344,6 +344,16 @@ evidence = "Battle_ScaleDamage 0x446430 reads the weapon/element byte from 0x903
 note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown."
 
 [[func]]
+pc = 0x445A30
+psx = 0x801DBB40
+psx_overlay = "BATTLE.EMI#3"
+name = "Battle_ApplyDamage"
+args = ["attacker", "target"]
+status = "evidence"
+evidence = "disasm 2026-09-21, term for term against the PSX evidence note (sibling names/functions.toml): calls 0x445CF0(attacker, target, 0xFFFF) at 0x445A79 and takes the signed return (movsx at 0x445A86); 0x445CF0 -> 0x4462B0 -> Battle_ScaleDamage 0x446430. Target <= 2 uses party HP [esi + 0x802DD8] with max HP at +8 (0x802DE0), target >= 3 uses enemy HP [esi + 0x93BA04] with max HP at +0xC (0x93BA10) and status +0x68 |= 4 on the clamp (0x445C38). A negative amount heals, clamped at max. A kill sets HP 0 with a survive check against the byte at HP +4 (0x445B03). Enemy HP 0xFFFF is skipped (0x445B89). Then weapon element chars 'J'/'L'/'O' at party +0x82 (0x802DD2) roll through 0x44FA70 and inflict through 0x44F1D0(target, 0x40 / 8 / 0x20) (0x445C6C..0x445CD2). Returns the amount (0x445CDA)."
+note = "pe_xref.py does not see its HP accesses: it indexes only operands with no base register (docs/kinship-probe-battle-engine.md section 2)."
+
+[[func]]
 pc = 0x446430
 psx = 0x801DCD18
 psx_overlay = "BATTLE.EMI#3"
@@ -351,6 +361,16 @@ name = "Battle_ScaleDamage"
 args = ["attacker", "target", "base"]
 status = "evidence"
 evidence = "disasm 2026-09-18, term for term against the PSX evidence note: base << 8 into 8.8 fixed, the multiplier clamped to at least 0xCD (= 205/256), rand() & 7 indexing an eight-entry variance table at 0x64E38C, /256; then if the weapon byte at 0x903850 & 0x1F, multiply by Battle_ElementAffinity 0x44EE80 and divide by 100 (magic 0x51EB851F, sar 5); then if & 0x20, multiply by s16 0x64E3AC[affinity class] and divide by 100. Both tables hold the PSX values exactly."
+
+[[func]]
+pc = 0x44B9F0
+psx = 0x8009A160
+psx_overlay = "BATTLE.EMI#15"
+name = "Effect_ApplyResult"
+args = []
+status = "evidence"
+evidence = "disasm 2026-09-21 against the PSX evidence note (sibling names/functions.toml). Actor status |= 0x31 on both sides (0x44BA07 party, 0x44BA1F enemy). kind == 4 selects a skill (0x44BA35). Charge flag 0x80 multiplies by the power word 0x939FEA (0x44BA5E, 0x44BA77). The effect handler is call [0x64E73C + 4 * 0x64E540[id]] (0x44BAF2, 0x44BAF8), or for an item [0x64E73C + 4 * 0x64E72C[category][id]] (0x44BB17, 0x44BB23); on both platforms the category table sits 0x10 below the handler table (PSX 0x800B164C / 0x800B165C). The handlers fill the result record at *0x904B60, HP delta at +4. Deltas are clamped to +-9999 (0x270F at 0x44BB90, -9999 at 0x44BBAA), the kill flag is |= 4 (0x44BC2E), and HP 0xFFFF is immune (0x44BCC3)."
+note = "No stack argument on PC: the actor comes from the global 0x904B54 (0x44B9F0), where PSX passes it. The pe_funcs.py extent (13,079 bytes) is not this function's size: it runs to 0x44BEC6 and the rest is the 0x64E73C handlers, which are pointer-reached (docs/kinship-probe-battle-engine.md section 2). Do not take a size from that extent."
 
 [[func]]
 pc = 0x44EE80
