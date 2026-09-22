@@ -56,9 +56,18 @@ void PatchBytes(const char* name, std::uint32_t at, const std::uint8_t* expected
 // original called", or another clone, so that a cloned caller reaches the
 // cloned callee and never ours. An entry that is itself a CALL (E8 at offset
 // 0) is refused as a patch unless `calls` names offset 0.
+//
+// `expected` is what the original calls there - the callee's address in the
+// image - when the caller knows it: the copy is refused if the site reaches
+// anything else, which is how a site the tracer or a RetargetCall has already
+// re-aimed is caught instead of copied. 0 leaves it unchecked; a null target
+// is then still refused if the site leaves the image. A null target that
+// lands on an entry Inject has patched is logged, not refused: that callee is
+// an earlier module's, checked against its own copy, and runs on both sides.
 struct CloneCall {
     std::uint32_t offset;
     const void* target;
+    std::uint32_t expected = 0;
 };
 void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
                     const CloneCall* calls = nullptr, int n_calls = 0);

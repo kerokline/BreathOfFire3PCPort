@@ -159,7 +159,8 @@ Kept, each commented in the source and each with a control (section 6):
   (`trap(0x1c00)` in the decompilation), so it is the source's, not the
   port's. Latent: whether a shipped kind-2 script ever glides from within
   half a unit, or sets such a speed, was not measured. Ours faults at the
-  same instruction of the same computation (`Idiv`, inline `idiv`).
+  same instruction of the same computation (`Idiv`, inline `idiv`). D12 in
+  [`known-defects.md`](known-defects.md).
 - **K2. A glide of 0x4000 units or more** (distance `>= 0x40000000`) counts
   negative frames and the slope's sign flips. Unreachable on any map this
   size; noted for completeness.

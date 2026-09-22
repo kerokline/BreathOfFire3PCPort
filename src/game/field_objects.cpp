@@ -571,7 +571,7 @@ void FieldObjects_Inject() {
             const Clone& c = kClones[k];
             bof3::CloneCall calls[8];
             if (c.n_calls > 8) bof3::Fatal("field_objects: %s has %d calls", c.name, c.n_calls);
-            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target)};
+            for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target), c.calls[i].target};
             clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         }
         SelfTest(clones);

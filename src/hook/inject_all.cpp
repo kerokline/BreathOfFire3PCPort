@@ -104,11 +104,11 @@ void InjectAll() {
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();
-    FieldFrame_Inject();
-    Kind2Object_Inject();
-    AreaSlope_Inject();
+    FieldFrame_Inject();        // every call of its clones re-aimed, the handler table swapped: order does not matter
+    Kind2Object_Inject();       // likewise, its jump tables re-aimed
+    AreaSlope_Inject();         // no calls out
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
-    ObjectKinds_Inject();
+    ObjectKinds_Inject();       // every call of its clones re-aimed, the pace and fade tables swapped: order does not matter
     MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
     TitleStates_Inject();       // every call of its clones re-aimed: order does not matter
     FieldBlocked_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
