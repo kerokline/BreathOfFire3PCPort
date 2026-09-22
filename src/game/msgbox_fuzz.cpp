@@ -158,8 +158,14 @@ unsigned __cdecl StubRepeat(unsigned pad) {
     static const std::uint32_t kAnswers[] = {0, 0x1000, 0x4000, 0x5000, 0x1080, 0xFFFF, 0x4001};
     return kAnswers[h % 7] | (h & 0xFFFF0000u);
 }
+// MsgBox_StatePrint reloads BOTH pointers from memory after this call and
+// from nowhere else, so the stand-in always moves them: a quieter one hid
+// the reload entirely (0 of 1,000 rounds refused dropping it).
 void __cdecl StubSound(unsigned short id) {
+    const std::uint32_t h = Hash();
     Record(0x587740, id);
+    SetPtr(kAt, g_msg + (h & 0xFF));
+    SetPtr(kResume, g_msg + ((h >> 8) & 0xFF));
     Disturb();
 }
 const unsigned char* __cdecl StubDrawString(unsigned color, unsigned count, const unsigned char* text) {
@@ -442,9 +448,30 @@ void BuildMessage() {
 // The pool the two 0x08 substitutions and the two openers read: sixty-four
 // u16 offsets at the front, all landing inside the block, and zeros after
 // them - so a substitution that runs on reads code 0x00 and returns.
+//
+// The 0x20 bytes BELOW the pool are seeded too, and differently: without
+// them, Msg_OpenScript's sign-extended index and MsgBox_Reopen's unsigned
+// one both read an untouched zero word, and dropping either extension was
+// refused by none of 1,000 rounds - the harness blind, not the code.
+constexpr std::uint32_t kPoolLow = kScriptPool - 0x20;
+constexpr unsigned kPoolBytes = 0x2A0;
 void BuildPool() {
-    std::memset(At(kScriptPool), 0, 0x280);
+    std::memset(At(kPoolLow), 0, kPoolBytes);
+    for (unsigned i = 0; i < 16; ++i) SetW(kPoolLow + 2 * i, 0x100 + 8 * i);
     for (unsigned i = 0; i < 64; ++i) SetW(kScriptPool + 2 * i, 0x80 + 4 * i);
+}
+
+// What the four substitutions read: the character records 0x903A70 + n * 164
+// and the 32-byte text records 0x904CE0 + n * 32, in one block. Left as the
+// zeros they are at start-up, every substitution meets code 0x00 on its first
+// character and returns at once - so the counts 9, 0x21 and 0x11 were
+// unobservable (changing 9 to 10 was refused by none of 1,000 rounds).
+// Plain glyphs make them run.
+constexpr std::uint32_t kRecordsLow = 0x903A60;
+constexpr unsigned kRecordBytes = 0x13A0;   // to 0x904E00: past Text_Records + 8 * 32
+void BuildRecords() {
+    for (unsigned i = 0; i < kRecordBytes; ++i)
+        At(kRecordsLow)[i] = static_cast<unsigned char>(0x30 + (Next() & 0x3F));
 }
 
 struct Coverage {
@@ -467,7 +494,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     SetB(kEffectKind, Next() % 6);
     SetB(kEffectPhase, Next() % 2);
     SetB(kNameIndex, Next() % 8);
-    SetW(kMessage, Often() ? Next() % 64 : (Next() % 2 ? 0xFFFF : Next() & 0xFFFF));
+    SetW(kMessage, Often() ? Next() % 64 : (Next() % 2 ? 0xFFF8 + Next() % 8 : Next() & 0xFFFF));
     SetL(kPoolSelector, (Next() % 3) * 0x20);
     if (Often()) SetW(kEffectTimer, Next() % 3 == 0 ? 0xFFFF : Next() % 4);
     if (Often()) SetB(kDelay, Next() % 2 ? Next() % 3 : Next() & 0xFF);
@@ -479,8 +506,10 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
 
     switch (k) {
     case kOpenScript: {
-        static const std::uint32_t kIds[] = {0, 1, 0x3F, 0x40, 0x7FFF, 0x8000, 0xFFFF};
-        args[0] = Often() ? kIds[Next() % 7] : Next();
+        // 0xFFF8 and 0xFFFF are ids the sign extension turns into -8 and -1,
+        // which read the seeded words BELOW the pool.
+        static const std::uint32_t kIds[] = {0, 1, 0x3F, 0x40, 0x7FFF, 0x8000, 0xFFF8, 0xFFFF};
+        args[0] = Often() ? kIds[Next() % 8] : Next();
         break;
     }
     case kReset:
@@ -491,7 +520,9 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
         }
         break;
     case kStep:
-        SetB(kStepCount, Next() % 4 == 0 ? 0 : 1 + Next() % 8);
+        // Up to 20: a substitution's own count (8, 16 or 32 characters) is
+        // only observable once the step count outlasts it.
+        SetB(kStepCount, Next() % 4 == 0 ? 0 : 1 + Next() % 20);
         if (Often()) MsgBox_LineX = static_cast<short>(Next() % 0x200);
         if (Often()) SetW(kOriginY, Next() % 0x200);
         if (Often()) SetB(kFlags, (B(kFlags) & ~8u) | (Next() % 2 ? 8 : 0));
@@ -728,10 +759,11 @@ void SelfTest() {
     };
 
     // Everything the rounds write, put back at the end.
-    static unsigned char saved_block[kRegionBytes], saved_pool[0x280];
+    static unsigned char saved_block[kRegionBytes], saved_pool[kPoolBytes], saved_records[kRecordBytes];
     unsigned at = 0;
     for (const Region& r : kRegions) { std::memcpy(saved_block + at, At(r.at), r.size); at += r.size; }
-    std::memcpy(saved_pool, At(kScriptPool), sizeof saved_pool);
+    std::memcpy(saved_pool, At(kPoolLow), sizeof saved_pool);
+    std::memcpy(saved_records, At(kRecordsLow), sizeof saved_records);
     const unsigned char saved_name = B(kNameIndex), saved_speed = B(kTextSpeed);
     const std::uint16_t saved_held = Input_Held,
                         saved_confirm = Field_ConfirmButtons,
@@ -740,6 +772,7 @@ void SelfTest() {
     const std::uint32_t saved_selector = L(kPoolSelector);
     Gfx_PacketNext = g_prim;
     BuildPool();
+    BuildRecords();
     g = s;
 
     static State input, their_out, our_out;
@@ -779,7 +812,8 @@ void SelfTest() {
     g = saved_callees;
     at = 0;
     for (const Region& r : kRegions) { std::memcpy(At(r.at), saved_block + at, r.size); at += r.size; }
-    std::memcpy(At(kScriptPool), saved_pool, sizeof saved_pool);
+    std::memcpy(At(kPoolLow), saved_pool, sizeof saved_pool);
+    std::memcpy(At(kRecordsLow), saved_records, sizeof saved_records);
     SetB(kNameIndex, saved_name);
     SetB(kTextSpeed, saved_speed);
     Input_Held = static_cast<unsigned short>(saved_held);
