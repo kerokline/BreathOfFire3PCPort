@@ -39,7 +39,7 @@ struct Callees {
     Handler handlers[16];
     // the placements
     void (__cdecl* reset)();                        // EventObj_Reset
-    void (__cdecl* set_bank)(unsigned short);       // Sprite_SetAnimationBank
+    unsigned char (__cdecl* set_bank)(unsigned short);   // Sprite_SetAnimationBank
     long (__cdecl* elevation)(long, long);          // AreaMap_Elevation
     void (__cdecl* set_flags)(const unsigned char*);  // EventObj_SetFlags
     void (__cdecl* face)();                         // EventObj_Face (Capcom's)

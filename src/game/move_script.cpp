@@ -37,7 +37,7 @@ struct Callees {
     void (__cdecl* trio_set)();
     long (__cdecl* elevation)(long, long);
     void (__cdecl* set_animation)(unsigned char);
-    void (__cdecl* set_animation_at)(unsigned char, unsigned char);
+    void (__cdecl* set_animation_at)(unsigned char, unsigned short);
     void (__cdecl* flags_clear)();
     void (__cdecl* flags_set)();
     int (__cdecl* wait_test)(unsigned char, unsigned char);
@@ -496,7 +496,7 @@ long __cdecl StubElevation(long x, long y) {
     return static_cast<long>(Hash());
 }
 void __cdecl StubSetAnimation(unsigned char a) { Record(26, a); }
-void __cdecl StubSetAnimationAt(unsigned char a, unsigned char s) { Record(27, a, s); }
+void __cdecl StubSetAnimationAt(unsigned char a, unsigned short s) { Record(27, a, s); }
 void __cdecl StubFlagsClear() { Record(28); }
 void __cdecl StubFlagsSet() { Record(29); }
 int __cdecl StubWaitTest(unsigned char a, unsigned char b) {

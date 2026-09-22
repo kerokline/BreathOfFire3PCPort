@@ -228,9 +228,10 @@ void __cdecl StubReset() {
 }
 // Sprite_SetAnimationBank: the low 16 bits are what the original pushes as a
 // word (its register's other bits are whatever they were).
-void __cdecl StubSetBank(unsigned short bank) {
+unsigned char __cdecl StubSetBank(unsigned short bank) {   // the ops ignore the result
     Record(0x131, bank);
     Disturb(11);
+    return 0;
 }
 long __cdecl StubElevation(long x, long z) {
     Record(0x132, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
