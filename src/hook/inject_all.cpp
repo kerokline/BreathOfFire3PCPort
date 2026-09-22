@@ -58,6 +58,7 @@
 #include "game/event_script.h"
 #include "game/msgbox.h"
 #include "game/window_task.h"
+#include "game/move_cmds.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -123,6 +124,8 @@ void InjectAll() {
                                 // dispatch table's immediates too: order does not matter
     WindowTask_Inject();        // last: every call of its clones is re-aimed at a recorder and every
                                 // stack-built table re-aimed in the copy, so order does not matter
+    MoveCmds_Inject();          // every call of its clones re-aimed at a recorder, its jump table
+                                // relocated in the copy: order does not matter
     InjectReport();
 }
 
