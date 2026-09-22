@@ -1308,6 +1308,26 @@ status = "evidence"
 evidence = "disasm 2026-09-20, cdecl, no arguments, no calls, every jump internal, 0x10A bytes. Two copies of one loop, over Sprite_Objects (30) and Sprite_ObjectsExtra (4). An object qualifies if byte +0 has bit 0, byte +0x24 has bit 0x40, byte +6 is 0x0A, it is not Sprite_Current, byte +3 of the record at its +0x54 lacks bit 0x10, and with reach = (s8 at that record +2) << 15: |current.+0x34 - object.+0x34| <= reach, the same for +0x38, and |s16 current.+0x3E - s16 object.+0x3E| <= 0x300. Each absolute value is cdq / xor / sub on a 32-bit difference, so a difference of 0x80000000 stays negative and passes. Returns in al the index of the first that qualifies - 0..29, or 30..33 for the second array - or 0xFF. Call trace all_a 2026-09-19: 8,919 calls."
 note = "A negative reach makes every comparison fail unless the difference is 0x80000000. Sprite_Current need not be in either array; it is compared by address only."
 
+[[func]]
+pc = 0x57C0A0
+name = "Sprite_ObjectByHandle"
+ret = "unsigned char"
+params = "unsigned char handle"
+impl = "src/game/sprite_find.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20 and 2026-09-21, cdecl, one byte argument, no calls, every jump internal, 0x4A bytes. al = handle & 0x3F; without bit 7 returns al + 0x1E. With bit 7: dl walks 0..0x1D, stored each time into the argument's own stack slot, and bl counts objects whose byte at 0x7DEE86 + dl * 0xA4 (Sprite_Objects +6) is 0x0A, stopping when bl equals al at such an object; then returns - al unchanged. The handle comes from the movement-script command F8 07 (0x5792A0), which stores its byte at object +0x18. Callers 0x5192AC, 0x58977F read al only. Call trace all_b: 42,936 calls."
+note = "PSX twin 0x8015BEE4 in the boot EXE (psx_pair call-anchored; read 2026-09-21 in the sibling's recompiled output): the same arithmetic, and on a match it returns the count of matches, which equals the number sought - so the discarded search is Capcom's, not the port's. No shipped script attaches with a bit-7 handle: docs/known-defects.md D6."
+
+[[func]]
+pc = 0x589770
+name = "Sprite_InheritDrawKey"
+ret = "void"
+params = "void"
+impl = "src/game/sprite_find.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21, cdecl, no arguments, 0x98 bytes, every jump internal. If byte +0x24 of Sprite_Current has bit 0x20: n = Sprite_ObjectByHandle(byte +0x18). Otherwise n = Sprite_FindNearby(), and 0xFF returns at once. Then n compared signed with 0x1E: below, the u16 at 0x7DEEB2 + n * 0xA4 (Sprite_Objects +0x32); else at 0x802032 + (n - 0x1E) * 0xA4 (Sprite_ObjectsExtra +0x32) - stored to Sprite_Current +0x32. The attached path does not test for 0xFF. Callers 0x588F20, 0x57B830. Call trace all_b: 74,397 calls."
+note = "+0x32 is the draw key that Sprite_DrawPass sorts and layers on (docs/sprite-draw-order.md section 1), so an attached object, or one near a type-0x0A object, draws with that object."
+
 # ---------------------------------------------------------------------------
 # Field input (2026-09-20): takeover queue, layer 0.
 # ---------------------------------------------------------------------------
