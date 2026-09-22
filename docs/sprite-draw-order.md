@@ -1056,17 +1056,27 @@ traced pace, so they end at frame 6,312. The handlers' first calls come at
 frames 3,856 and 4,305, so the hash covers only the stretch after that, not
 the whole cycle.
 
-Two capture A/Bs said nothing, and are recorded so that nobody leans on
-them:
+**Capture A/B, frame-exact** (`tools/recipes/attract_cycle.txt`, 55 shots
+over the cycle). Shots now freeze the game until they are grabbed
+([`input-script.md`](input-script.md) section 3). Before that the grab landed
+wherever the game had run to, and two identical runs differed in 34 of 55
+shots.
 
-- **Save 5's field** (`tools/recipes/field_view.txt`, the four original
-  against ours) was identical once Windows 11's rounded bottom window corners,
-  which blend in whatever is behind the window, were masked. But the same
-  four frames are also identical with both handlers returning at once. They
-  do not draw there.
-- **The attract cycle** (`tools/recipes/attract_cycle.txt`, 55 shots) differed
-  in 34 shots. The pairs looked at are timing, not drawing: the mine-cart
-  scene's camera one step apart, and the title's "press start" at another
-  point of its blink. The attract sequence runs on wall-clock time and the
-  grab lands a moment after the shot line. Without an original-against-original
-  pair it cannot be read, and none was taken.
+| Run pair | Identical |
+|---|--:|
+| All ours, twice (the noise floor) | **55 of 55** |
+| The four original against ours | **55 of 55** |
+| Ours against both handlers returning at once | 41 of 55 |
+
+The third row is the coverage: in the other 14 shots the handlers draw, by up
+to 41,769 pixels (`analysis/shots/frozen_*`). In `a14` that is a translucent
+column of pale squares rising from below a walkway, `MapCell_DrawRising`'s
+stack, and a grey beam across a mound. In `a25` a character stands
+differently, because with the handler gone its eight `Rand` calls a frame
+stop and the game's random sequence shifts. So the A/B matched on 14 frames
+the handlers draw, pixel for pixel. Bottom corners are masked, 8 x 8 each:
+Windows 11 rounds them, and they blend in whatever is behind the window.
+
+Save 5's field (`tools/recipes/field_view.txt`) says nothing about these
+two. Its four shots are identical with both handlers off, so they do not
+draw there.

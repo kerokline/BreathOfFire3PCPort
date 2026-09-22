@@ -1082,7 +1082,11 @@ designed in rather than bolted on.
 - **Tooling that comes with it:** `BOF3X_TICK_BASE=N` (decimal or `0x`)
   starts our clock at N ms instead of 0, which puts the original's pacing
   code in any band of D5 on demand - how the three bands above were measured
-  (`analysis/attract/clk_*`).
+  (`analysis/attract/clk_*`). `GameClock_Pause` / `GameClock_Resume` stop it
+  while a recipe's frozen `shot` holds the game thread
+  ([`input-script.md`](input-script.md) section 3), so the deadline has no
+  debt to replay; only with `BOF3X_SHOT_WAIT` set, which only `input_run.py`
+  sets.
 - **Verification:** steady-state pace from the recordings, 30 s on: 30.00
   with the fix, 31.25 at base 2^28, 91.7 at base 2^30 (a run at base 2^29 never reached the attract
   sequence in its 90 s; that band is the real clock's, 15.62, `ab17_*`); the

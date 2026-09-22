@@ -98,11 +98,13 @@ The single next action, concrete enough to start without asking anyone.
    the queue (`python tools/calltrace.py queue
    analysis/calltrace/all_b/bof3x.callcounts.tsv`, 397 unnamed reached on
    2026-09-21; the two hottest are `0x5B3760` and `0x5B9550`, 4.2M and 3.7M
-   calls). For a function that draws, the live shadow of §14 / §16 (clone,
-   put back, ours, compare) is the check that counts: capture A/Bs of the
-   field showed nothing (the handlers do not draw there) and of the attract
-   sequence are timing noise without an original-vs-original pair. Batch
-   script: `analysis/validate_ab18.sh` (local) - rename it for the next batch.
+   calls). For a function that draws, two checks count: the live shadow of
+   §14 / §16 (clone, put back, ours, compare), and a frame-exact capture A/B -
+   `input_run.py tools/recipes/attract_cycle.txt` with `--original` the new
+   functions, against ours, plus one run with them disabled to show which
+   shots they draw in (§16: 55 of 55 identical, 14 covered). Batch script:
+   `analysis/validate_ab18.sh` (local) - rename it for the next batch and add
+   the capture A/B to it.
 
    Found on the way, not yet acted on: **`pe_hidden.py` misses the functions
    after an inline jump table** - ten or so at `0x593950`..`0x594240`, none in
@@ -526,9 +528,11 @@ _One line each, with a pointer. Add when something costs more than an hour._
   "could not load the dll" in a dialog. Give the fuzz a stand-in
   ([`sprite-draw-order.md`](sprite-draw-order.md) §16). In game the CRT is up.
 - Window captures include Windows 11's rounded bottom corners, which blend
-  what is behind the window: mask 8 x 8 at each before comparing pixels. And
-  attract-sequence captures are not frame-exact between runs - wall-clock
-  animation - so an attract A/B needs an original-vs-original pair beside it.
+  what is behind the window: mask 8 x 8 at each before comparing pixels.
+  Captures used to land wherever the game had run to 0.4 s after the shot
+  line - 34 of 55 attract shots differed between identical runs. Shots now
+  freeze the game until grabbed ([`input-script.md`](input-script.md) section 3): 55 of 55
+  identical. A run that is not through `input_run.py` does not freeze.
 - The backslash trap again, 2026-09-21: `\0` in a Python heredoc became two
   NUL bytes in `loc_build.py` ("source code cannot contain null bytes").
   Edit Python with the editor tool.

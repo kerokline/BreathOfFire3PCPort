@@ -37,7 +37,7 @@ Recipes in `tools/recipes/`:
 | `battle_commands.txt` | NEW GAME, the opening scene's dialogue, its scripted battle; each command of the cross held, the skill list opened, the skill used | ~3,200 |
 | `menu_screens.txt` | save 5, into Items, Ability, Equipment, Tactics and Status and out again, each checked on the menu state | ~1,700 |
 | `field_view.txt` | save 5 loaded to its field; four shots of the view, 45 frames apart | 1,400 |
-| `attract_cycle.txt` | no input; the attract sequence, a shot every 200 frames from 1,500 to 12,300. Not frame-exact between runs (wall-clock animation): compare only beside an original-vs-original pair | 14,150 |
+| `attract_cycle.txt` | no input; the attract sequence, a shot every 200 frames from 1,530 to 12,330 (each shot holds 30 frames) | 14,150 |
 
 ## 2. How it works
 
@@ -91,10 +91,27 @@ One step per line; `#` starts a comment; buttons join with `+`
 | `hold BUTTONS N` | N frames held, no release after |
 | `seek BUTTONS ADDR TYPE OP VALUE [max K]` | press BUTTONS until the condition holds, checking before each press; K presses (default 16) without it FAILS the recipe. For cursors that remember where they were: `seek right 0x929F05 u8 == 0` |
 | `until ADDR TYPE OP VALUE [timeout N]` | nothing held until true, checked once a frame. TYPE `u8`/`u16`/`u32`; OP `==` `!=` `&` (any bit) `!&` (no bit). A timeout (default 3,600) FAILS the recipe and hands the pad back |
-| `shot NAME [N [BUTTONS]]` | log the shot and hold BUTTONS (default nothing) for N frames (default 30) while the driver captures - the battle's command cross shows a command only while its direction is held. **Keep N at the default on any screen that changes**: the driver grabs `--delay` (0.4 s) after the log line, and `shot X 10` let the recipe back out of a screen before the grab - four captures of a menu mid-slide, 2026-09-21 |
+| `shot NAME [N [BUTTONS]]` | hold BUTTONS (default nothing) for N frames (default 30) - the battle's command cross shows a command only while its direction is held - then **freeze** the game until the driver has the picture (below). The picture is the frame presented as the hold ends: one exact frame, the same on every run |
 | `peek ADDR TYPE [LABEL]` | log a value |
 | `mark TEXT` | log a line |
 | `end` | stop |
+
+**Frozen shots** (2026-09-21). `input_run.py` sets `BOF3X_SHOT_WAIT`. At the
+end of a shot's hold the latch - the top of WinMain's loop, where the last
+frame built has just been presented and the next has not begun - logs `input
+shot NAME recipe frame F frozen` and waits on the event
+`Local\bof3x_shot_<pid>` until the driver has grabbed the window and set it (3 s
+at most: Windows ghosts a window that pumps nothing for 5). The DIV-0022 clock
+stops meanwhile (`GameClock_Pause`), so the frame deadline has no debt to
+replay and the frames after a shot are presented as any others. Before this,
+the driver grabbed 0.4 s after the log line while the game ran on: two runs
+of `attract_cycle.txt` then differed in 34 of 55 shots, the mine-cart scene a
+camera step apart and the title's prompt at another point of its blink.
+Frozen, two runs of all ours agree in **55 of 55** (`analysis/shots/frozen_a`,
+`frozen_b`). Without `BOF3X_SHOT_WAIT` - a recipe run by hand - a shot is
+logged as its hold starts and nothing waits. With `BOF3X_ORIGINAL=Game_Clock`
+the freeze still works, but the pause is replayed unrendered afterwards, and
+the log says so.
 
 BUTTONS is a PSX button name (`up down left right cross circle square triangle
 l1 l2 r1 r2 start select`) or **`@ADDR`**, the u16 at that address when the
