@@ -3751,3 +3751,56 @@ count = 24
 status = "hypothesis"
 evidence = "disasm 2026-09-22: op 8C passes the byte here as Effect_SpawnAt's third argument. PSX 0x801824A0, after 0x80182488. The count is a guess: the index is a byte of MoveScript_EffectState."
 
+
+# --- 2026-09-22: boundary callees, registered before the parallel takeover of
+# the field frame loop (group A), the kind-2 object (B), the object kind
+# handlers (C) and the map layers (D). Names provisional; each is owned by the
+# group named in its evidence, which reads and takes it over.
+
+[[func]]
+pc = 0x573080
+name = "Kind2_Run"
+ret = "void"
+params = ""
+status = "hypothesis"
+evidence = "disasm 2026-09-22: jmp [0x6632AC + Sprite_Kind2[1] * 4]; entry 0 is 0x437CC0, a bare ret, entry 1 0x573090, which dispatches again on Sprite_Kind2[2] through 0x6632B4. First call of the field frame entries 0x517200 / 0x517240. Group B."
+
+[[func]]
+pc = 0x56E6C0
+name = "AreaMap_Frame"
+ret = "void"
+params = ""
+status = "hypothesis"
+evidence = "disasm 2026-09-22: called with no arguments from the field frame entries 0x517200 / 0x517240; area 0xBD calls 0x510630 instead; reads Field_Kind2X / Field_Kind2Z and the words at 0x929F14 / 0x929F18. Group D."
+
+[[func]]
+pc = 0x571AF0
+name = "AreaMap_HeaderPass"
+ret = "void"
+params = ""
+status = "hypothesis"
+evidence = "disasm 2026-09-22: with Draw_PassFlags bit 2, walks the entries of AreaMap_Header from the index at 0x8CB5A2, calling [0x66329C + ((entry >> 24) & 0x7F) * 4](entry address) and stepping by byte +2 words until a zero entry. First call of 0x592F00. Group D."
+
+[[func]]
+pc = 0x517F30
+name = "Field_ObjectIdle"
+ret = "void"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: called by the field object loops 0x517490 / 0x57B7B0 for an object with no timed move whose +0x80 has bit 5 and not bit 4 (with bit 4 they call MoveScript_SetTurnTarget); returns at once when Field_Request is 2, calls 0x56D6B0(object) when +0x86 is not 0xFF. Group C."
+
+[[func]]
+pc = 0x519600
+name = "Field_ObjectLinked"
+ret = "void"
+params = ""
+status = "hypothesis"
+evidence = "disasm 2026-09-22: called with no arguments by the field object loops 0x517490 / 0x57B7B0 for an object whose +0x80 has bit 0, instead of the kind handler; reads Sprite_Current and Field_ActiveMember, calls 0x537540. Group C."
+
+[[func]]
+pc = 0x518B40
+name = "Field_ObjectIdleLong"
+ret = "void"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: called by the field object loop 0x517490 instead of the kind handler when the word at object +0x9C is above 0x1E and Sprite_Current[9] is 0 (no timed move); clears +0x9C first. Group C."
