@@ -3768,18 +3768,22 @@ evidence = "disasm 2026-09-22: jmp [0x6632AC + Sprite_Kind2[1] * 4]; entry 0 is 
 [[func]]
 pc = 0x56E6C0
 name = "AreaMap_Frame"
+psx = 0x801532A0
 ret = "void"
 params = ""
-status = "hypothesis"
-evidence = "disasm 2026-09-22: called with no arguments from the field frame entries 0x517200 / 0x517240; area 0xBD calls 0x510630 instead; reads Field_Kind2X / Field_Kind2Z and the words at 0x929F14 / 0x929F18. Group D."
+impl = "src/game/map_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x56E6C0..0x56E999 (0x2DA bytes), cdecl, eleven calls, every jump internal: the view's frame. Area 0xBD: AreaMap_FrameAreaBD and nothing else. Otherwise MapView_FocusX / MapView_FocusZ step by MoveScript_F3Divisor toward Field_Kind2X / Field_Kind2Z (as (0x7FFF - x) << 8 and (0x8000 - z) << 8 against the kind-2 object's position rounded down to 0x8000), each step moving MapView_ScrollX and MapView_ElevationOffset, with Field_Kind2Hold set while either differs; while held, MoveScript_FAWord is added to MapView_Elevation (and twice it taken from the offset unless AreaMap_Word1E) and MapView_Redraw is 2. A scroll word at 0x200 or beyond either way shifts the view a column (MapView_ShiftColumnNext / Prev) or two rows (MapView_ShiftRowsNext / Prev), then MapView_PlaceRuns. Camera_Angles changed since Camera_AnglesDrawn: MapView_Redraw 3. Then Camera_Matrix from the angles, its translation Camera_Matrix x (focus x, focus z, elevation) / 2 plus Camera_ShiftX / ShiftY / Camera_Distance + 0x1194, both loaded into the GTE; and while MapView_Redraw is non-zero, MapView_Build and one less. PSX FUN_801532A0 (call-anchored pair; the same eleven callees). Call trace all_b: 8,846 calls (6,709 from 0x517219, 2,137 from 0x517263); hidden_b 12,165."
 
 [[func]]
 pc = 0x571AF0
 name = "AreaMap_HeaderPass"
+psx = 0x80158F60
 ret = "void"
 params = ""
-status = "hypothesis"
-evidence = "disasm 2026-09-22: with Draw_PassFlags bit 2, walks the entries of AreaMap_Header from the index at 0x8CB5A2, calling [0x66329C + ((entry >> 24) & 0x7F) * 4](entry address) and stepping by byte +2 words until a zero entry. First call of 0x592F00. Group D."
+impl = "src/game/map_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x571AF0..0x571B35 (0x46 bytes), cdecl, one indirect call, every jump internal: with Draw_PassFlags bit 2, walks the dword entries of AreaMap_Header from AreaMap_EntryBase, calling AreaMap_EntryHandlers[(entry >> 24) & 0x7F](entry address) and stepping by entry byte +2 dwords, read after the call, until a zero dword. No bound on the kind but the mask, none on the walk. PSX FUN_80158F60 (gap4 pair). First call of 0x592F00. Call trace all_b: 8,846 calls; hidden_b 12,165."
 
 [[func]]
 pc = 0x517F30
@@ -3804,3 +3808,248 @@ ret = "void"
 params = "unsigned char *object"
 status = "hypothesis"
 evidence = "disasm 2026-09-22: called by the field object loop 0x517490 instead of the kind handler when the word at object +0x9C is above 0x1E and Sprite_Current[9] is 0 (no timed move); clears +0x9C first. Group C."
+
+# --- 2026-09-22, group D: the map and draw layers (docs/map-layers.md). The
+# four functions under AreaMap_Frame and AreaMap_HeaderPass taken over, then
+# the data they read and write that had no name.
+
+[[func]]
+pc = 0x56EC00
+name = "MapView_Build"
+psx = 0x80153B8C
+ret = "void"
+params = "void"
+impl = "src/game/map_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x56EC00..0x56F5A0 (0x9A1 bytes), cdecl, 29 calls, every jump internal, x87 compares: rebuilds the view's cell draw items. DrawLayers_Reset, DrawTable_Count 0, bit 0 of MapView_BuildFlags cleared; the inset ((0x160 - abs(s16 Cond_AngleFB - 0x200)) / 50 less 1, floor 0, less Camera_Distance / 650 or 0; less 2 with Field_InputFlags bit 0, floor 0; 0 when Cond_ByteFE is 0x23) to Scratch_Swap and MapView_Inset. For 0x37 rows from MapView_Row + 1 and (14 - inset) * 2 columns from MapView_Column + inset, over the 4-byte cells of MapView_CellItems: a cell whose map x or y is 0 is released (DrawItemPool_ReleaseCell) and flags bit 0; else its first corner through Gte_Rtps into MapView_ScreenXY, released unless -50 <= x <= 370 and -200 <= y <= 290; else its draw item (the cell word's low 12 bits, or DrawItemPool_Alloc with up to two side items for lower neighbours, and MapView_CellTextures) gets its quad and is linked into a layer list (by cell word bits 15 / 14) or, bit 14 with Draw_OtSlot 6, or 4 past a row threshold, into DrawTable keyed by row and the lowest corner; the side items become triangles in the layer's lists by bits 13 / 12. Then DrawTable_Sort. PSX FUN_80153B8C (callers pair). Call trace all_b: 5,007 calls, all from AreaMap_Frame; hidden_b 6,839."
+
+[[func]]
+pc = 0x56F9B0
+name = "MapView_CellTextures"
+psx = 0x80154D50
+ret = "unsigned"
+params = "unsigned x, unsigned y, unsigned char *item, unsigned buffer"
+impl = "src/game/map_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x56F9B0..0x56FACA (0x11B bytes), cdecl, four calls, every jump internal: the tile word of map cell (x, y) - AreaMap_Header word x + width * y + offset * 2, offset the header's u16 +2 - or 0 for none. Else texture dwords from AreaMap_Header dword (height * width + 1) / 2 + offset + tile on: the item's quad in buffer `buffer` through Prim_SetTexture, then the +0x8E side item's, then the +0x7E side item's - a zero dword for that one releases it (DrawItemPool_Release) and clears the word. Returns bit 30 of each as 0x8000, 0x1000, 0x2000, with the first's 0x4000. PSX FUN_80154D50 (gap4 pair). Call trace all_b: 21,435 calls (10,736 and 10,699 from MapView_Build's two sites); hidden_b 28,357."
+
+[[func]]
+pc = 0x571500
+name = "MapCell_DrawWalls"
+psx = 0x801587A0
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x571500..0x57171E (0x21F bytes), cdecl, six calls, every jump internal: MapCell_Handlers entries 0x3F..0x4C (all fourteen). With n = (kind - 0x3F) >> 1: one quad of MapCell_WallTextures[n] for n below 4, else two of [2n - 8] and the next. Each a POLY_FT4 128 high below a cell edge - the top edge for an even texture index, the left for an odd - at the heights of whichever of the cell's own corners or the neighbour's across that edge stand higher, through Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture and Gfx_CommitPrim to Draw_OtSlot. PSX FUN_801587A0 (gap4 pair). Call trace hidden_b: 33,550 calls, all from DrawLayer_Open's handler call."
+
+[[func]]
+pc = 0x571B40
+name = "AreaMap_ClutCycle"
+psx = 0x8015900C
+ret = "void"
+params = "const unsigned char *entry"
+impl = "src/game/map_layers.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x571B40..0x571BD7 (0x98 bytes of code, padded to 0x571BE0), cdecl, one call, every jump internal: AreaMap_EntryHandlers entry 0. With f = Frame_Counter mod (entry low word) + 1, and Area_TestCondition(the next word) true, scans the dwords after it for top byte == f (stopping at one above f): its 16-colour row (d >> 12) & 0xFFF of Gfx_ClutStrip copied over row d & 0xFFF, and Gfx_ClutStripDirty set. PSX FUN_8015900C (gap4 pair). Call trace hidden_b: 29,701 calls, all from AreaMap_HeaderPass."
+
+[[data]]
+pc = 0x929F14
+name = "MapView_FocusX"
+ctype = "long"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame steps it by MoveScript_F3Divisor until (0x7FFF - this) << 8 is Field_Kind2X rounded down to 0x8000, and puts half of it into the camera's translation. Named by that use."
+
+[[data]]
+pc = 0x929F18
+name = "MapView_FocusZ"
+ctype = "long"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: MapView_FocusX's twin against Field_Kind2Z, with 0x8000 for 0x7FFF."
+
+[[data]]
+pc = 0x92BEE0
+name = "MapView_ScrollX"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame takes each focus x step from it and adds each z step to it (MapView_ElevationOffset takes both); at s16 0x200 or beyond it shifts the view a column. The screen-x half of the fine scroll, by that use."
+
+[[data]]
+pc = 0x929EC8
+name = "Camera_Angles"
+ctype = "short"
+count = 3
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame hands it to Gte_RotMatrix for Camera_Matrix and compares its three words with Camera_AnglesDrawn. The third word is Cond_AngleFB's low half; MapView_Build narrows the view by it."
+
+[[data]]
+pc = 0x905D88
+name = "Camera_AnglesDrawn"
+ctype = "unsigned short"
+count = 4
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame sets MapView_Redraw to 3 when a word of Camera_Angles differs from words 0..2 here, then copies both of Camera_Angles's dwords (so word 3 too)."
+
+[[data]]
+pc = 0x903800
+name = "Camera_ShiftX"
+ctype = "short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame adds it, sign-extended, to the camera translation's x. Its writers are unread."
+
+[[data]]
+pc = 0x903802
+name = "Camera_ShiftY"
+ctype = "short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: as Camera_ShiftX, for y."
+
+[[data]]
+pc = 0x903840
+name = "Camera_Distance"
+ctype = "short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame adds it and 0x1194 to the camera translation's z; MapView_Build narrows the view by a column per 650 of it."
+
+[[data]]
+pc = 0x8CB59E
+name = "AreaMap_Word1E"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-20 / 2026-09-22: AreaMap_Header + 0x1E; when zero, MapView_SetElevation and AreaMap_Frame move MapView_ElevationOffset with the elevation. Named by offset: what it means for an area is unread."
+
+[[data]]
+pc = 0x8CB5A2
+name = "AreaMap_EntryBase"
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Header + 0x22; AreaMap_HeaderPass starts its walk at this dword index of the block."
+
+[[data]]
+pc = 0x66329C
+name = "AreaMap_EntryHandlers"
+ctype = "unsigned long"
+count = 128
+status = "evidence"
+evidence = "disasm 2026-09-22: AreaMap_HeaderPass calls [0x66329C + ((entry >> 24) & 0x7F) * 4]. In the exe: 0x571B40 (AreaMap_ClutCycle), 0x571BE0, 0x571D30, 0x571E20, then Kind2_Run's table at 0x6632AC. The count is the mask's reach, not the table's: only entries 0..3 are this pass's."
+
+[[data]]
+pc = 0x663280
+name = "MapCell_WallTextures"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "disasm 2026-09-22: MapCell_DrawWalls's Prim_SetTexture words: 0xB1800007, 0xB1810007, 0xBD800006, 0xBD810006. Kinds 0x4B / 0x4C index 4 and 5, past them, into the three code addresses at 0x663290 (docs/map-layers.md, defects)."
+
+[[data]]
+pc = 0x937FA0
+name = "MapView_CellItems"
+ctype = "unsigned char"
+count = 6272
+status = "evidence"
+evidence = "disasm 2026-09-20 / 2026-09-22: 56 rows of 28 4-byte cells: map x, map y (MapView_CellToMap's out) and a word whose low 12 bits are the cell's draw item and whose bits 15..12 MapView_Build ORs in from MapView_CellTextures. Filled by 0x56F8A5, the shift functions and MapView_Build."
+
+[[data]]
+pc = 0x92A0C0
+name = "MapView_CornerPtr"
+ctype = "unsigned char *"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: MapView_Build keeps the AreaMap_Corners dword of the cell it is drawing here, and re-reads it after each DrawItemPool_Alloc. A global because the port made it one; nothing else read so far reads it."
+
+[[data]]
+pc = 0x903820
+name = "MapView_ScreenXY"
+ctype = "float"
+count = 2
+status = "hypothesis"
+evidence = "disasm 2026-09-22: MapView_Build's Gte_StoreScreenXY out, culled at -50 / 370 and -200 / 290 and copied to the item's quad; also the third, discarded, out of the side triangles' Gte_StoreScreenXY3."
+
+[[data]]
+pc = 0x929ED8
+name = "MapView_BuildFlags"
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: MapView_Build clears bit 0 and sets it for any cell whose map x or y is 0; 0x571BE0 reads the byte. Other bits unread."
+
+# group D callees
+
+[[func]]
+pc = 0x510630
+name = "AreaMap_FrameAreaBD"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: AreaMap_Frame's whole work in area 0xBD - MapView_FocusX / Z from Field_Kind2X / Z directly ((0x800000 - x) >> 8), the angle check, Gte_RotMatrix, a translation. Not reached by the attract cycle (no calls in all_b or hidden_b)."
+
+[[func]]
+pc = 0x56EA30
+name = "MapView_ShiftColumnNext"
+psx = 0x80153858
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: MapView_Column + 1 (0x1B wraps to 0), its 56 cells released and refilled through MapView_CellToMap(row, 0x1C), MapView_Origin x + 1, y - 1. AreaMap_Frame calls it when MapView_ScrollX reaches 0x200. Call trace all_b: 44 calls."
+
+[[func]]
+pc = 0x56E9A0
+name = "MapView_ShiftColumnPrev"
+psx = 0x80153758
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: MapView_Column's 56 cells released and refilled through MapView_CellToMap(row, -1), then the column - 1 (0 wraps to 0x1B), MapView_Origin x - 1, y + 1. AreaMap_Frame calls it when MapView_ScrollX reaches -0x200. Call trace all_b: 150 calls."
+
+[[func]]
+pc = 0x56EB50
+name = "MapView_ShiftRowsNext"
+psx = 0x80153A6C
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: twice, MapView_Row + 1 (0x37 wraps to 0) and its 28 cells released and refilled through MapView_CellToMap(0x38, then 0x39, col); then MapView_Origin x + 1, y + 1. AreaMap_Frame calls it when MapView_ElevationOffset reaches 0x200. Call trace all_b: 92 calls."
+
+[[func]]
+pc = 0x56EAB0
+name = "MapView_ShiftRowsPrev"
+psx = 0x80153950
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: twice, MapView_Row's 28 cells released and refilled through MapView_CellToMap(-2, then -3, col), then the row - 1 (0 wraps to 0x37); then MapView_Origin x - 1, y - 1. AreaMap_Frame calls it when MapView_ElevationOffset reaches -0x200. Call trace all_b: 115 calls."
+
+[[func]]
+pc = 0x571FF0
+name = "MapView_PlaceRuns"
+psx = 0x801595E0
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: zeroes MapView_Cells, then walks AreaMap_Header's dword runs from AreaMap_CellBase (each headed by map x, y in its low bytes and its length in its high half) and stores each run's index + 1 at the view cell its map position falls on, if inside 0x38 x 0x38. AreaMap_Frame calls it after any shift. Call trace all_b: 402 calls."
+
+[[func]]
+pc = 0x571BE0
+name = "AreaMap_EntryKind1"
+psx = 0x80159108
+ret = "void"
+params = "const unsigned char *entry"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only): AreaMap_EntryHandlers entry 1; reads MapView_BuildFlags, MapView_FocusX / Z, draws through Gpu_SetDrawMode, Gpu_SetSemiTrans and Gfx_CommitPrim. Not reached by the attract cycle (hidden_b)."
+
+[[func]]
+pc = 0x571D30
+name = "AreaMap_EntryKind2"
+psx = 0x801592EC
+ret = "void"
+params = "const unsigned char *entry"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only): AreaMap_EntryHandlers entry 2; Area_TestCondition, Frame_Counter, Gfx_CommitPrim. Not reached by the attract cycle (hidden_b)."
+
+[[func]]
+pc = 0x571E20
+name = "AreaMap_EntryKind3"
+psx = 0x801593FC
+ret = "void"
+params = "const unsigned char *entry"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only): AreaMap_EntryHandlers entry 3; reads Draw_OtSlot and the globals at 0x905DD4 / 0x905DD8 / 0x905DAB. Not reached by the attract cycle (hidden_b)."
