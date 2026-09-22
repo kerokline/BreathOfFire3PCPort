@@ -23,6 +23,7 @@
 #include "game/map_view.h"
 #include "game/menu_frame.h"
 #include "game/menu_verbs.h"
+#include "game/mode_tasks.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
 #include "game/move_script.h"
@@ -97,6 +98,7 @@ void InjectAll() {
     FieldFrame_Inject();
     Kind2Object_Inject();
     AreaSlope_Inject();
+    ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
     InjectReport();
 }
 
