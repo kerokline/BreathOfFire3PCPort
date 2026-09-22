@@ -1161,8 +1161,9 @@ designed in rather than bolted on.
   0 and 1.
 - **Not covered:** a sub-state set to 4 or more by code outside the two
   functions - unmeasured in game.
-- **Also in the PSX version?** The PSX twins `0x801A459C` / `0x801A47DC`
-  have the same unbounded dispatch (object-kinds.md).
+- **Also in the PSX version?** Unknown: the pairing names `0x801A459C` /
+  `0x801A47DC` as the twins, but the sibling's Ghidra output has no function
+  there and neither body was read (object-kinds.md section 1).
 - **Verification:** the start-up fuzz, `BOF3X_SHADOW=object_kinds`, seeds
   sub-states 0..3 only; controls in object-kinds.md.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn`.
