@@ -700,8 +700,7 @@ locally that night and not pushed: `Sprite_ObjectByHandle` and
 (batches `analysis/validate_ab19.sh`, `validate_ab19b.sh`). That was
 merged as PR 8.
 
-Branch `phase-3/further-mining-attract`, **2026-09-22, committed locally,
-not pushed**: the movement script and what surrounds it (batch `ab20`), then
+Branch `phase-3/further-mining-attract`, **2026-09-22, pushed, no PR**: the movement script and what surrounds it (batch `ab20`), then
 `BOF3X_SELFTEST_ONLY`, the six boundary callees, and the five parallel
 groups merged one by one - `field_frame.cpp`, `kind2_object.cpp` +
 `area_slope.cpp`, `object_kinds.cpp`, `map_layers.cpp` (+ `_fuzz.cpp`,
@@ -715,8 +714,9 @@ by one - `title_states.cpp`, `field_blocked.cpp`, `frame_callees.cpp`,
 `event_script.cpp` (+ `_fuzz.cpp`) - a doc each, `tools/event_scan.py`, the
 two raised ceilings (`detour.cpp`, `calltrace.cpp`) and `known-defects.md`
 D8..D11. All through the batch (`ab22` + `ab22b`). No new DIV entry.
-The agents' branches `worktree-agent-*` and their worktrees under
-`.claude/worktrees/` are merged and can be removed (both rounds').
+Both rounds' agent branches and worktrees are merged and removed, as are the
+two older ones (`claude/silly-bhabha-776856`, and the detached
+`epic-chandrasekhar-cc0704`); `.claude/worktrees/` is empty.
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
