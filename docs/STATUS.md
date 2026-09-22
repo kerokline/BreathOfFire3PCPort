@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**One hundred and thirty-two functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and twenty-nine from stage 1, three from the text path, below; sixteen on 2026-09-21 through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding; the newest four, later that day, the map-cell handlers `0x570020` and `0x570660` with the condition test and the ground's elevation under them - fuzzed with 17 controls, every in-game call shadowed against a clone over a 7-minute attract run, and through the batch check (§16, `ab18_*`); DIV-0023, zeros in a vertex's padding as in DIV-0021, the owner's call): `LoadDatFile` `0x454590`, the DAT
+**One hundred and thirty-four functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and thirty-one from stage 1, three from the text path, below; sixteen on 2026-09-21 through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding; the newest four, later that day, the map-cell handlers `0x570020` and `0x570660` with the condition test and the ground's elevation under them - fuzzed with 17 controls, every in-game call shadowed against a clone over a 7-minute attract run, and through the batch check (§16, `ab18_*`); DIV-0023, zeros in a vertex's padding as in DIV-0021, the owner's call; the newest two, that night, the attachment handle `0x57C0A0` and the inherited draw key `0x589770`, kept faithful to a search Capcom's code discards - latent, no shipped script asks for it ([`known-defects.md`](known-defects.md) D6, [`movement-script.md`](movement-script.md)) - through the batch check with a live shadow in three scenes (§17, `ab19_*`)): `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -256,7 +256,7 @@ What is established:
 1. **Replace every function the attract sequence reaches.** It is the part of
    the game with a regression oracle today: 540 of 2,936 functions
    ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). A hundred and thirty-two are ours, not
+   with the takeover queue already layered (§9 there). A hundred and thirty-four are ours, not
    all of them among the 540.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression

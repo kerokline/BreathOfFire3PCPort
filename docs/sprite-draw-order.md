@@ -458,6 +458,10 @@ occur in the attract run was not measured.
 
 ## 11. Not done
 
+- **`0x57C0A0`: answered and taken over, 2026-09-21 - section 17.** The PSX
+  twin discards the search the same way, and no shipped script asks for it
+  ([`known-defects.md`](known-defects.md) D6). The paragraph below is the
+  question as it stood.
 - **`0x57C0A0`** (14,312 calls, third in the queue) was read and left. For an
   argument byte `c` without bit 7 it returns `(c & 0x3F) + 0x1E`. With bit 7 it
   walks 30 records of `0xA4` bytes looking for the `(c & 0x3F)`-th whose byte
@@ -1080,3 +1084,103 @@ Windows 11 rounds them, and they blend in whatever is behind the window.
 Save 5's field (`tools/recipes/field_view.txt`) says nothing about these
 two. Its four shots are identical with both handlers off, so they do not
 draw there.
+
+## 17. The attachment handle and the inherited draw key - taken over (2026-09-21)
+
+`src/game/sprite_find.cpp`. Both were in the queue under the field objects
+([`attract-remaining.md`](attract-remaining.md) §4.5): `0x589770` was its
+hottest entry at 74,397 calls, and it calls `0x57C0A0` - section 11's parked
+function - for every attached object.
+
+| Function | Address | Size | What |
+|---|---|--:|---|
+| `Sprite_ObjectByHandle` | `0x57C0A0` | 0x4A | An attachment handle to an object number: without bit 7 `(h & 0x3F) + 30`, with it `h & 0x3F` |
+| `Sprite_InheritDrawKey` | `0x589770` | 0x98 | The current object takes the `+0x32` draw key (section 1) of the object it is attached to, or else of the first type-`0x0A` object it is near |
+
+**Where the handle comes from.** The movement-script command `F8 07 h s`
+stores it at object `+0x18` ([`movement-script.md`](movement-script.md) §2).
+Section 11's question - whether the discarded search is Capcom's or the
+port's - is answered by the PSX twin `0x8015BEE4`: it returns the count of
+matches, which equals the number sought, so the search is dead there too. And
+no shipped script uses a bit-7 handle, so it is never asked
+([`known-defects.md`](known-defects.md) D6). Ours returns `h & 0x3F` without
+the walk: the walk's only other effect is a store into its own argument slot,
+which both callers discard.
+
+**`Sprite_InheritDrawKey`**, as the original has it: the number is compared
+signed against 30, the attached path does not test `0xFF`, and a number past
+33 reads past `Sprite_ObjectsExtra`. None of it can arise from
+`Sprite_ObjectByHandle`'s results (0..`0x5D`) or `Sprite_FindNearby`'s.
+
+**Checks**, `BOF3X_SHADOW=sprite_find` (with the module's two earlier
+self-tests, unchanged):
+
+- **`Sprite_ObjectByHandle`**: every handle against 64 layouts of type bytes,
+  from none of type `0x0A` to most, with noise above the argument byte:
+  16,384 calls, **0 mismatches**.
+- **`Sprite_InheritDrawKey`**: 8,000 rounds against a clone whose two calls
+  reach the clones of `Sprite_ObjectByHandle` and `Sprite_FindNearby`.
+  Objects are filled as for `Sprite_FindNearby`'s own fuzz, the attached bit
+  is random, and the handles are seeded at the edges of both numberings,
+  folded so that every number stays inside the 34 objects. Both arrays and
+  the object outside them are compared whole. 3,920 attached, 3,632 near an
+  object, 448 neither: **0 mismatches**.
+
+| Negative control | Mismatches |
+|---|--:|
+| A bit-7 handle returns the slot the search finds (the "fix") | 1,308 of 16,384 |
+| Object 30 counted in the first array (`>` for `>=`) | 727 of 8,000 |
+| Attached tested on bit `0x40` instead of `0x20` | 3,954 of 8,000 |
+
+The first row is worth keeping in mind for D6: the fix is observable to the
+fuzz, just never to the shipped data.
+
+**Live.** After the fuzz, `BOF3X_SHADOW=sprite_find` leaves both clones in
+place: every call in game runs Capcom's first, then ours from the same state -
+for the draw key, the current object's `+0x32` is put back in between - and
+the two are compared. Three scenes on 2026-09-21 (`analysis/probe/ab19_probe_*`,
+with a temporary probe on the attach command beside it):
+
+| Scene | `Sprite_InheritDrawKey` | `Sprite_ObjectByHandle` | Attachments made (mode 7) |
+|---|--:|--:|---|
+| Attract cycle, 9 minutes, 15,714 frames | 69,632+ | 20,480+ | 6, all in area 4, handle `01` |
+| New game to its scripted battle | 40,960+ | | 3, in area `0x18` |
+| Save 5's field, four shots | 1 | | none |
+
+The counts are the last report line, which comes every 4,096 calls. **0
+mismatches, and no bit-7 handle**, in all three. The attract figure matches
+the catalogue's 12 calls of the attach command a cycle: six are mode 7 and
+store a handle, six are mode 4 and store none.
+
+Then the batch check, all 137 ours (`analysis/validate_ab19.sh`, local):
+
+- **Capture A/B**: the attract cycle's 55 frozen shots **55 of 55
+  identical**, the two original against ours - and 55 of 55 against the
+  previous batch's `frozen_a`; save 5's field, 4 of 4.
+- **Oracle**: identical over 7,478 frames.
+- **Frame hash**: identical on all 10,062 frames, original against original
+  and original against ours (`ab19_*`, 11 minutes, now the reference).
+  Against `ab18_orig` it has 40,323 fewer calls over the shared 6,312 frames
+  and more in none - exactly the two functions' calls in `ab18_orig`, which
+  the hash stops counting once they are owned.
+
+**Coverage** (`analysis/validate_ab19b.sh`): the attract capture again, on a
+temporary build whose `Sprite_InheritDrawKey` returns at once, against ours -
+**40 of 55 identical**. The other 15 differ by 700 to 2,806 pixels, all in
+one box around (310..406, 210..273): two figures standing on a wheeled
+platform on rails (`a00`), which without the inherited key draws over them
+instead of under them. Slots 0 and 1 are the objects area 4 attaches, with
+handle `01` - object 31 - so the platform being object 31 is the reading
+of the picture, not a memory read. So the capture A/B above matched 15
+frames this function decides, pixel for pixel.
+
+**Memory dump, and the `clut` region's noise.** Arena and VRAM identical to
+the reference in every run. The `clut` region, against `clutref_a`
+(2026-09-19), was off by a single palette row in eight of nine dumps that
+night, in every configuration: all ours, row 482 in four of five and
+identical in the fifth; the two functions original, row 482; all original,
+row 506 in three of three (`analysis/attract/ab19_*.memdump.log`). So it does
+not follow these two. The reference pair `clutref_a` / `clutref_b` still
+agree with each other; they predate DIV-0022's clock, which is a candidate
+cause, not a tested one. [`asset-loading-path.md`](asset-loading-path.md)
+§2 already has rows 482 and 483 moving with run speed.

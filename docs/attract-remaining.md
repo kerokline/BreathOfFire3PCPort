@@ -315,6 +315,9 @@ entries reached by a jump through a pointer. The `0x579740`..`0x57BA60` run is
 entered only a few dozen times, from `0x594E60` (12 calls, from the mode task
 `0x495900`; what it sets up is unread), and
 `0x5894D0` is the unbounded queue append of [`known-defects.md`](known-defects.md).
+**`0x576B50` is the movement-script interpreter** and `0x517BF0` the object
+update that runs it; `0x5792A0` is its attach command
+([`movement-script.md`](movement-script.md), 2026-09-21).
 The hottest are `0x589770` (74 k), `0x518980` / `0x5197F0` (72 k each),
 `0x517BF0` (69 k), `0x588F20` (67 k), `0x518D10` (58 k) and `0x576B50` /
 `0x576E00` (58 k).
@@ -394,7 +397,7 @@ The hottest are `0x589770` (74 k), `0x518980` / `0x5197F0` (72 k each),
 | `0x57B7B0` |  | 12,165 | 123 |  | `0x517200`, `0x517240` |
 | `0x57B830` |  | 20,793 | 554 |  | `0x57B780` |
 | `0x57BA60` |  | 21 | 120 |  | `0x57B130` |
-| `0x57C0A0` |  | 42,936 | 74 |  | `0x589770`, `0x5192A0` |
+| `0x57C0A0` | `Sprite_ObjectByHandle` | 42,936 | 74 |  | `0x589770`, `0x5192A0` |
 | `0x57C0F0` |  | 9 | 31 |  | `0x56B3A0`, `0x56B450`, `0x56B400` |
 | `0x57C110` |  | 12 | 37 |  | `0x594E60` |
 | `0x57C140` |  | 20 | 32 |  | `0x57C1C0`, `0x56B400`, `0x56B3A0` |
@@ -416,7 +419,7 @@ The hottest are `0x589770` (74 k), `0x518980` / `0x5197F0` (72 k each),
 | `0x589330` |  | 12 | 30 |  | `0x5305B0` |
 | `0x5894D0` | `Sprite_SetFrameQueueUpload` | 12 | 189 |  | `0x589200` |
 | `0x589590` |  | 63 | 206 |  | `0x57A5E0`, `0x579F30`, `0x57A1E0` |
-| `0x589770` |  | 74,397 | 152 |  | `0x588F20`, `0x57B830` |
+| `0x589770` | `Sprite_InheritDrawKey` | 74,397 | 152 |  | `0x588F20`, `0x57B830` |
 | `0x589810` |  | 15 | 44 |  | `0x56B990`, `0x56B450`, `0x56B730` |
 | `0x589840` |  | 12 | 47 |  | `0x469E30` |
 | `0x589870` |  | 300 | 45 |  | `0x5898A0` |

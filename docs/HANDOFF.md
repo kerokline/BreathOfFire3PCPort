@@ -15,9 +15,9 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
-- replace what the attract sequence reaches - stands at **a hundred and thirty-two
-functions ours**, every one through the full live check (the last four
-on 2026-09-21, `ab18_*`); and **stage 2, the text swap, went from a plan to a playable
+- replace what the attract sequence reaches - stands at **a hundred and thirty-four
+functions ours**, every one through the full live check (the last two
+on 2026-09-21, `ab19_*`); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
 pools, the item and ability names, and the US font doubled into the port's
@@ -61,7 +61,12 @@ the game's clock with the game: 30.00 logic frames a second (item 00000).
 **Then the map cells:** two of `DrawLayer_Open`'s handlers and the two
 functions under them - the record condition and the ground's elevation - are
 ours, with DIV-0023 (zeros in a vertex's padding, as DIV-0021 - the owner's
-call) ([`sprite-draw-order.md`](sprite-draw-order.md) §16).
+call) ([`sprite-draw-order.md`](sprite-draw-order.md) §16). **That night,
+section 11's parked function:** `0x57C0A0`'s discarded search turned out to be
+Capcom's on both platforms and asked by no shipped script - a latent defect,
+D6 - so it and its hottest caller `0x589770` are ours, faithful (§17); the
+handle it reads led to the field objects' movement script
+([`movement-script.md`](movement-script.md)).
 
 ## Pick up here
 
@@ -89,21 +94,29 @@ The single next action, concrete enough to start without asking anyone.
    Keep the hash runs at 11 or more.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
-   order, 2026-09-21), batching the live check.** Every map-cell handler the
-   attract cycle reaches is ours; the table's `0x437CC0` is a bare `ret`, the
-   null handler ([`sprite-draw-order.md`](sprite-draw-order.md) §16). The table's other
-   eight handlers never run in attract: take them only with a recipe that
-   reaches them, or they get no live check. Next: regenerate
-   the queue (`python tools/calltrace.py queue
-   analysis/calltrace/all_b/bof3x.callcounts.tsv`, 397 unnamed reached on
-   2026-09-21; the two hottest are `0x5B3760` and `0x5B9550`, 4.2M and 3.7M
-   calls). For a function that draws, two checks count: the live shadow of
-   §14 / §16 (clone, put back, ours, compare), and a frame-exact capture A/B -
-   `input_run.py tools/recipes/attract_cycle.txt` with `--original` the new
-   functions, against ours, plus one run with them disabled to show which
-   shots they draw in (§16: 55 of 55 identical, 14 covered). Batch script:
-   `analysis/validate_ab18.sh` (local) - rename it for the next batch and add
-   the capture A/B to it.
+   order, 2026-09-21), batching the live check.** The queue (`python
+   tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv`, 391
+   unnamed after 2026-09-21) opens with things that are not per-function
+   targets: `0x5B3760` and the rest of `0x5AB000`..`0x5B9380` are the MP3
+   decoder, `0x5B9550` the C runtime, `0x587C70` / `0x5A7230` WinMain's pump
+   spin ([`attract-remaining.md`](attract-remaining.md) §4.12-4.13). **The
+   first real group is the field objects, §4.5, and at its centre is the
+   movement-script interpreter** `0x576B50` (57,758 calls) and the object
+   update `0x517BF0` (69,494) that runs it
+   ([`movement-script.md`](movement-script.md)). Read the six group handlers'
+   operand lengths first (PSX `FUN_801ac458`, `801aca24`, `801ac8b0`,
+   `801abb00`, `801ab470`, `801aa944` - the sibling's `GAME_EMI0` decompile has
+   them); that is also what turns D6's raw-byte scan into an exact list. Other
+   hot entries of §4.5, unread: `0x518980` / `0x5197F0` (71,816 each),
+   `0x588F20` (67,101, calls `Sprite_InheritDrawKey`), `0x518D10` (58,332).
+   For anything that feeds the draw, the checks that count are a live shadow
+   (clone, put back, ours, compare: `sprite_find.cpp` and `map_cells.cpp` have
+   it) and the frame-exact capture A/B with a coverage run - the function
+   returning at once - to show which shots it decides (§17: 15 of 55). Batch
+   scripts: `analysis/validate_ab19.sh` and `validate_ab19b.sh` (local);
+   rename for the next batch. `analysis/probe/` holds the attach probe of
+   2026-09-21 (`probe_handles.cpp`, uncommitted by design): drop it into the
+   build to log every attachment a script makes.
 
    Found on the way, not yet acted on: **`pe_hidden.py` misses the functions
    after an inline jump table** - ten or so at `0x593950`..`0x594240`, none in
@@ -218,11 +231,11 @@ The single next action, concrete enough to start without asking anyone.
    - Ability (state 3) was only seen closing, and the list cursors of Items
      and Equipment are unfound: one more walk under
      `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
-1. **The frame hash reference is `analysis/calltrace/ab18_orig`** (twin
-   `ab18_origb`), recorded all-original 2026-09-21 under the corrected
-   `entries_logic.txt`: all 6,312 frames identical original-vs-original and
-   original-vs-ours with all 135 injects on (`ab17_orig` before it, the same
-   day: 10,062 frames, 131 injects, the old list).
+1. **The frame hash reference is `analysis/calltrace/ab19_orig`** (twin
+   `ab19_origb`), recorded all-original 2026-09-21 at 11 minutes: all 10,062
+   frames identical original-vs-original and original-vs-ours with all 137
+   injects on. It differs from `ab18_orig` (6,312 frames, 135) by exactly the
+   calls of the two functions taken over, which the hash stops counting.
    **Frame 5524 is same-configuration noise**: one of two all-ours runs had
    342 calls there against 346, the other matched the reference - the same
    frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
@@ -262,9 +275,8 @@ The single next action, concrete enough to start without asking anyone.
      since 2026-09-20; the *detour* side of a function that ends in one needs
      nothing special.)
    - `0x454810` is `return 1` with 152 callers; read a caller before naming.
-   - `0x57C0A0`: **read, deliberately left** - its search result never
-     reaches the return register. Ask the PSX side which way the source had
-     it ([`sprite-draw-order.md`](sprite-draw-order.md) §11).
+   - `0x57C0A0`: ours since 2026-09-21 (`Sprite_ObjectByHandle`, §17); the
+     PSX side had the same dead search ([`known-defects.md`](known-defects.md) D6).
    Bigger leaves still unread: `0x454AD0` (491 bytes), `0x496870` (399),
    `0x5722D0` (672), `0x5187C0` (433), `0x57C310` (431). (`0x5720C0` is ours:
    `AreaMap_Elevation`, 2026-09-21; `0x5722D0` is its sibling with a store to
@@ -453,6 +465,13 @@ _One line each, with a pointer. Add when something costs more than an hour._
   calls: "(no references)" for a function means nothing. For callers use
   `callees` in `analysis/pc_funcs.json`, or scan `.text` for E8/E9 rel32. Cost
   one wrong "no caller" claim, caught the same day.
+- **The `clut` region was off by one palette row in 8 of 9 dumps on
+  2026-09-21 night, all-original included** (row 506 all original, 482 ours,
+  sometimes identical): its reference `clutref_a` predates DIV-0022's clock.
+  Until it is re-recorded, a one-row `clut` difference with arena and VRAM
+  identical is that, not a regression - check it against an all-original
+  dump of the same evening ([`sprite-draw-order.md`](sprite-draw-order.md)
+  §17). Re-recording the pair is cheap: two all-original dumps.
 - `mem_dump.py`'s `clut` region and `attract_diff.py` are both unreliable
   under `BOF3X_CALLTRACE_MODE=all` - the first depends on run speed, the second
   miscounts frames at half speed - and both "fail" with every function
@@ -534,6 +553,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
   line - 34 of 55 attract shots differed between identical runs. Shots now
   freeze the game until grabbed ([`input-script.md`](input-script.md) section 3): 55 of 55
   identical. A run that is not through `input_run.py` does not freeze.
+- A raw byte scan of the `DAT`s for a script pattern drowns in audio (5,552
+  "hits" for `F8 07 [80..FF]`, nearly all in kind-2 banks); walk the chunks and
+  keep kind 0. And the movement scripts are not in the `DAT`s at all - they
+  are in `BOF3.exe`'s `.data` ([`movement-script.md`](movement-script.md) §3).
 - The backslash trap again, 2026-09-21: `\0` in a Python heredoc became two
   NUL bytes in `loc_build.py` ("source code cannot contain null bytes").
   Edit Python with the editor tool.
@@ -553,7 +576,11 @@ draw and `DrawLayer_Open` - one commit each, after the batch check passed -
 and these docs. The validation script is `analysis/validate_ab17.sh` (local).
 Then the map cells (`src/game/map_cells.cpp`, DIV-0023, the two recipes
 `field_view.txt` and `attract_cycle.txt`, batch `analysis/validate_ab18.sh`)
-and frozen shots. **All of it pushed 2026-09-21, no PR.**
+and frozen shots. **All of it pushed 2026-09-21, no PR.** Then, committed
+locally that night and not pushed: `Sprite_ObjectByHandle` and
+`Sprite_InheritDrawKey` in `src/game/sprite_find.cpp`, D6,
+[`movement-script.md`](movement-script.md) and `tools/movement_scan.py`
+(batches `analysis/validate_ab19.sh`, `validate_ab19b.sh`).
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
@@ -579,8 +606,14 @@ Local only, gitignored, worth keeping:
 - `analysis/calltrace/all_b/` - the full-list all-original run of a whole
   attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
   concatenated, which the exclusion list was rebuilt from.
-- `analysis/calltrace/ab18_orig/` - **the all-original frame-hash reference
-  since the map cells, 2026-09-21** (`ab18_origb` its noise-floor twin,
+- `analysis/calltrace/ab19_orig/` - **the all-original frame-hash reference
+  since the attachment handle, 2026-09-21 night** (`ab19_origb`, `ab19_ours`),
+  10,062 frames at 11 minutes. `analysis/attract/ab19_*` the batch's runs,
+  `analysis/probe/ab19_probe_*` the live shadow and attach probe in three
+  scenes, `analysis/shots/ab19_*` the captures (`ab19_attract_nokey` the
+  coverage run).
+- `analysis/calltrace/ab18_orig/` - the reference before it, since the map
+  cells, 2026-09-21 (`ab18_origb` its noise-floor twin,
   `ab18_ours`), recorded under the corrected `entries_logic.txt`
   (`entries_logic_0921.txt` is the list before it); 6,312 frames, the traced
   pace at 7 minutes. `analysis/attract/ab18_*` the oracle, memory-dump, live

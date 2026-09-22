@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-19 — five entries; D4 fixed by DIV-0004 and confirmed in game)
+**Status:** IN PROGRESS (2026-09-21 — six entries; D4 fixed by DIV-0004 and confirmed in game; D6 latent)
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -287,3 +287,59 @@ Original by construction — nothing of ours is in WinMain's loop. Logic is
 still a pure function of the frame count, so the oracle is unaffected; only
 wall-clock speed changes. A fix (keep the deadline in an integer or a double)
 is a divergence and wants a ledger entry.
+
+## D6 — An attachment handle with bit 7 names the wrong object (latent)
+
+**Found:** reading `Sprite_ObjectByHandle` `0x57C0A0` for the takeover queue,
+2026-09-20; its PSX twin and the shipped data checked 2026-09-21. Nobody has
+seen it on screen, and by the data below nobody can: **latent, in Capcom's
+code on both platforms, reached by no shipped script.**
+
+**The code.** A movement-script command, `F8 07 h s`, attaches the current
+sprite object to another: it stores the byte `h` at the object's `+0x18`
+(PC `0x5792A0`, PSX `FUN_801ad768` in `GAME.EMI`). Two readers turn the
+handle into an object number through `0x57C0A0`: `0x5192A0`, which puts the
+object where the other one is, and `Sprite_InheritDrawKey` `0x589770`, which
+gives it the other's draw key. Without bit 7 the handle means extra object
+`h & 0x3F` (number `+ 30`). **With bit 7 it is meant as "the n-th object of
+type `0x0A`"**, n = `h & 0x3F`: the function walks the 30 objects counting
+type-`0x0A` ones and stops at the n-th - and then returns `n`, not the slot it
+stopped at (the index is in `dl`, the result in `al`). The PlayStation's
+`0x8015BEE4` does the same by a different route: it returns the count of
+matches, which equals `n` (sibling's recompiled output, 2026-09-21). So a
+bit-7 handle names slot `n`, which is the object meant only while the
+type-`0x0A` objects fill the first slots; otherwise the attached object
+follows, and draws with, the wrong one.
+
+**Why it never shows.** Every handle is a literal byte in an area's movement
+scripts, and on the PC those are compiled into `BOF3.exe`'s `.data` with the
+rest of the area section (the `DAT`s drop it, [`DAT_CONTAINER.md`](DAT_CONTAINER.md)
+§2). The interpreter (`0x576B50`, PSX `0x801A9D38`) has three callers on both
+builds. Two of the PC's read the area descriptor table `0x667590`, indexed
+by `Game_AreaNumber`, directly (arrays `+0x10` and `+0x1C`); the third reads
+a pointer kept at `+0x130` of a struct, which on the PSX is filled from the
+descriptor's `+0x18` array by script opcode `0x86` (the PC's store is
+unread). A scan of every byte of `.data` for `F8 07 xx`: 235
+triples, **one** with bit 7 - at `0x61A4C3`, inside the block at `0x61A42C`
+that area 100's descriptor `+0x08` names (one 8-byte entry, `0x8000002A` and
+that pointer). `+0x08` is what a newly spawned object is given
+(PSX `FUN_801a78c8` passes entry `[n]` to `0x8015B67C`), and the block is
+repeating records of a count and signed 16-bit offsets: the `F8` is the high
+byte of one 16-bit field (the record before has `0x079F` in the same place),
+not a command. Nothing else in the exe points into the block.
+The `DAT` hits are audio, images, geometry and the event-script block, none
+of which the interpreter reads. The other triples carry handles `0x00` 137
+times, `0x01` 58, `0x02` 28, `0x03` 7 - the four extra objects - and four
+more are the pointers `0x5E07F8`, `0x6207F8`, `0x6407F8`, `0x6507F8` in
+pointer tables (`python tools/movement_scan.py --all`). [`movement-script.md`](movement-script.md) has the method.
+
+**Left open:** the scan is a superset only if every script pointer points
+into the exe. The descriptor arrays carry no length; `movement_scan.py`
+walks 1,688 script starts in 168 areas and all do, but each walk stops at the
+first word that is not a pointer - the tool's bound, not the game's.
+
+**Kept as Capcom had it** by the takeover (`src/game/sprite_find.cpp`,
+2026-09-21). Returning the slot found instead would be a divergence; the
+start-up fuzz shows it is observable (1,308 of 16,384 calls differ), but no
+shipped data would ever show it, so there is nothing to decide unless new
+content uses bit-7 handles.
