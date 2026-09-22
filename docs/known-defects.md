@@ -502,3 +502,44 @@ row past the strip's; what it did there was not read.
 **Why it never shows:** the CLUT numbers the shipped tints and fades use were
 not measured. The fuzz seeds the whole reachable span (`0x10FF0` words) and
 restores it, on both sides, so ours matches the original there.
+
+## DL1 — An attachment's move over 128 frames or more goes the wrong way (latent)
+
+**Found:** reading `MoveCmd_AttachMove` `0x5793B0` for the takeover,
+2026-09-22 ([`move-cmds.md`](move-cmds.md) §2, control M1). **Latent,
+Capcom's on both platforms.** (Group L of the third round; the merger
+renumbers.)
+
+**The defect.** Op `F8 07 h s t` with the context's `+4` set moves the sprite
+to where the attachment puts it over `t` frames (0 taken as 1): the velocity
+is the distance divided by `t` - but `t` is sign-extended (`movsx`; the PSX
+passes `(int)(char)t` to `FUN_801AD0A0`), while `+9`, the frame count the
+motion runs for, gets the byte unsigned. So a `t` of `0x80..0xFF` gives a
+velocity pointing away from the target, run for 128..255 frames; `0xFF`
+divides by -1, which faults on a distance of exactly `0x80000000`.
+
+**Why it never shows:** the 230 attachments the shipped scripts reach
+(`tools/movement_scan.py --decode`) use `t` of 0, 1, 4, 8, 16 and 32 only
+(counted 2026-09-22). Ours divides the same way; the fuzz seeds `0x7F`,
+`0x80`, `0x81`, `0xFE` and `0xFF`. A fix is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## DL2 — The attachment's move and its follow read a handle differently (latent)
+
+**Found:** reading `MoveCmd_HandlePosition` `0x578DC0` for the takeover,
+2026-09-22 ([`move-cmds.md`](move-cmds.md) §2). **Latent, Capcom's on both
+platforms.** (Group L; the merger renumbers.)
+
+**The defect.** An attached object first moves to its handle's object
+(`MoveCmd_AttachMove` through `MoveCmd_HandlePosition`), then follows it
+every frame (`Field_ObjectFollow` through `Sprite_ObjectByHandle`). Without
+bit 7 the move takes the extra object `handle` - all seven bits - and the
+follow takes `handle & 0x3F`: they disagree for `0x40..0x7F` (both are past
+the four extra objects there anyway). With bit 7, when the type-`0x0A` object
+asked for does not exist, the move goes to `Sprite_Objects[count of type-0x0A
+objects]` and the follow to `Sprite_Objects[handle & 0x3F]`. When it does
+exist both name slot `handle & 0x3F` - D6. The PSX's `FUN_801ACF30` is the
+same, uninitialised fourth dword of its result included.
+
+**Why it never shows:** the shipped attachments use handles 0..3 only
+(D6's count), where the two agree.
