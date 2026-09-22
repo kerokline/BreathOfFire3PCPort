@@ -89,6 +89,7 @@ add_library(bof3x SHARED
   src/game/move_script.cpp
   src/game/move_groups.cpp
   src/game/field_objects.cpp
+  src/game/sprite_screen.cpp
   src/game/field_input.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp

@@ -3677,6 +3677,7 @@ name = "Sprite_UpdateScreen"
 psx = 0x8014D184
 ret = "void"
 params = "void"
+impl = "src/game/sprite_screen.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x588F20..0x5890E0, cdecl, no arguments; for Sprite_Current. With +0x24 bit 7, Sprite_QueueOverlay and nothing else. Otherwise the draw key +0x32: the map cell's words +0x36 + +0x3A less MapView_Origin, plus Sprite_KeyAdjust[+0x2B * 3 + (x frac 0) + (z frac 0)] and one for each non-zero fraction; a key outside 0..0x36 sets flag bit 7 and stops; else key << 8 with a low byte of x >> 15 or z >> 15 (Draw_OtSlot 4, by Draw_SortOnX) or ((height >> 5) & 0xFF) ^ 0x80. Then Sprite_InheritDrawKey; Gte_RotTransPers of (x >> 9 - 0x4000, z >> 9 - 0x4000, -height / 2) - the depth to +0x60, the float screen x / y to +0x74 / +0x78 and truncated (the CRT's _ftol 0x5B9550) to +0x2E / +0x30; and, while there is room, onto Sprite_DrawList, calling Port_DroppedCall for flag bit 8. The PSX FUN_8014D184 (the sibling's Actor_UpdateScreenPos) term for term, with the PC's GTE in float. Call trace hidden_b: 67,101 calls."
 
@@ -3686,6 +3687,7 @@ name = "Sprite_QueueOverlay"
 psx = 0x8014D3D4
 ret = "void"
 params = "void"
+impl = "src/game/sprite_screen.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5890E0..0x58910F, cdecl, no arguments: while Sprite_OverlayListCount is below 30, Sprite_Current onto Sprite_OverlayList, and a tail jump to Port_DroppedCall for flag bit 8. Called by Sprite_UpdateScreen for a sprite with +0x24 bit 7."
 
