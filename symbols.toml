@@ -3509,10 +3509,11 @@ evidence = "disasm 2026-09-22 (to its first ret): unless Sprite_Current's type b
 pc = 0x517E90
 name = "MoveScript_SetTurnTarget"
 psx = 0x801A27A8
-ret = "void"
-params = "unsigned char *object"
-status = "hypothesis"
-evidence = "call sites in MoveScript_GroupE, 2026-09-22: ops E0 E1 E3 store an operand to context +8 and call it with the context. Unread."
+ret = "unsigned char"
+params = "unsigned char *context"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517E90..0x517F25 (149 bytes), cdecl, every jump internal. Its argument is a script context (object +0x80): ops E0 E1 E3 store an operand to context +8 and call it, and the field object loops call it for an object whose +0x80 has bits 5 and 4. Clears context bit 4; a word +8 of 0xFFFF returns 0. Bit 15: EventScript_Run(the descriptor +4 table [w & 0xFFF]); then, unless the word (read again) has bit 15: Msg_OpenSystem(w & 0xFFF) with bit 13, else Msg_OpenScript(w), and Field_Request = 2. Puts the word back, clears context bit 5 when sprite bit 7.2, stores Field_ActiveMember to 0x903804, returns 1 - the object's talk, not a turn (rename proposed: Field_ObjectTalk). The PSX FUN_801A27A8 branch for branch. Call trace hidden_b: 18 calls, all from MoveScript_GroupE (0x5774FD), all_b 14; the loops' call site never. docs/object-kinds.md."
 
 [[func]]
 pc = 0x518B20
@@ -3889,26 +3890,271 @@ evidence = "disasm 2026-09-22: with Draw_PassFlags bit 2, walks the entries of A
 [[func]]
 pc = 0x517F30
 name = "Field_ObjectIdle"
+psx = 0x801A28D0
 ret = "void"
 params = "unsigned char *object"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: called by the field object loops 0x517490 / 0x57B7B0 for an object with no timed move whose +0x80 has bit 5 and not bit 4 (with bit 4 they call MoveScript_SetTurnTarget); returns at once when Field_Request is 2, calls 0x56D6B0(object) when +0x86 is not 0xFF. Group C."
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517F30..0x517FD7 (167 bytes), cdecl, every jump internal. Called by the field object loops 0x517490 / 0x57B7B0 for an object with no timed move whose +0x80 has bit 5 and not bit 4 (with bit 4 they call MoveScript_SetTurnTarget). Returns when Field_Request is 2; Field_ObjectTrigger(object) when +0x86 is not 0xFF; returns if that made Field_Request 2. A sprite of type 5 then sets bytes 0x929F00 / 0x929F01 to 0, Game_Mode to 7 and byte 0x929F0C to (object - Sprite_Objects) / 0xA4 (signed); any other, unless bit 6 of byte 0x8034E1: the direction +0x85 to Sprite_Current[8] with context bit 3 (unless sprite bit 7.3), and bit 8 of the word Field_ScriptFlags cleared; then context bit 5 cleared. The PSX FUN_801A28D0 branch for branch (call-anchored pair). Call trace hidden_b: 2,181 calls (all from 0x517490), all_b 1,593; the trigger call never. docs/object-kinds.md."
 
 [[func]]
 pc = 0x519600
 name = "Field_ObjectLinked"
+psx = 0x801A4A10
 ret = "void"
 params = ""
-status = "hypothesis"
-evidence = "disasm 2026-09-22: called with no arguments by the field object loops 0x517490 / 0x57B7B0 for an object whose +0x80 has bit 0, instead of the kind handler; reads Sprite_Current and Field_ActiveMember, calls 0x537540. Group C."
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x519600..0x51966F (111 bytes), no arguments, every jump internal. Called by the field object loops 0x517490 / 0x57B7B0 for an object whose +0x80 has bit 0, instead of the kind handler. Calls Area_ObjectHandler(byte 0x802DC9) - unless (with sprite bit 0.6 clear) the sprite type +6 is none of 1, 3, 4 or (with it set) is not 4, and Field_ActiveMember +0xA0 & 0x7F is 0x7F, which clears Field_ActiveMember's context bit 0 instead. The PSX FUN_801A4A10 branch for branch. Call trace: never in all_b or hidden_b. docs/object-kinds.md."
 
 [[func]]
 pc = 0x518B40
 name = "Field_ObjectIdleLong"
+psx = 0x801A37CC
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518B40..0x518C9A (346 bytes), cdecl, every jump internal. Called by the field object loop 0x517490 instead of the kind handler when the word at object +0x9C is above 0x1E and Sprite_Current[9] is 0 (no timed move). Clears +0x9C; with a speed +0x84 and neither pose [1] 6 or 4 nor [3] 4: Field_Pace0(object, Field_MoveSpeeds[+0x84], 2), then up to four directions from the 4-byte row of 0x65F624 for the leader's direction (byte 0x802D48 & 7), the first not Field_ObjectBlockedAhead (and, for pose 3 in [1] or [3], Field_ObjectInHome) - a step aside, through MoveCmd_Move(context, direction), unless the sprite's timed move is 0 or a wait (+0x81) is running in pose 4. None: the entry direction & 7 and Sprite_Current[9] = 0. The PSX FUN_801A37CC branch for branch. Call trace: never in all_b or hidden_b. docs/object-kinds.md."
+
+# --- group C, 2026-09-22: the field objects' kind handlers - the table at
+# 0x65F5F8 by the sprite's pose byte +1 (entries 4 and 7 are Field_ObjectUpdate
+# and Field_ObjectFollow) and the pace table at 0x65F5DC by its byte +2.
+# docs/object-kinds.md. Counts: hidden_b (pointer-reached entries show only
+# there), all_b in brackets.
+
+[[func]]
+pc = 0x517640
+name = "Field_ObjectWander"
+psx = 0x801A1AEC
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517640..0x51778F (335 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 0. The pace [Sprite_Current[2]](object, 0, 1); unless a timed move runs: with no steps left (+0x87) and a speed (+0x84), the pace (object, Field_MoveSpeeds[+0x84], 2) and, when it returns non-zero, Field_ObjectRandomTurn and, if that left a timed move, (Rand & 3) + 3 steps; with steps left, the pace's second call and one step fewer. Then Field_ObjectOpenDirection: a direction, with a timed move, becomes +0x85 in pose 10 (Field_ObjectTurn; returns while pose 10); else the move is cancelled. Field_ObjectSettle, Field_ObjectMotion. Field_ObjectWanderHome without the home test. The PSX FUN_801A1AEC (gap pair) branch for branch. Call trace: never in all_b or hidden_b."
+
+[[func]]
+pc = 0x517790
+name = "Field_ObjectApproach"
+psx = 0x801A1D04
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517790..0x5178FA (362 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 1. As Field_ObjectWander, but the direction is Field_ObjectApproachDirection (no steps left) or Field_ObjectBestDirection(object, 1) (steps left), and with no steps left and no speed it returns before the settle and the motion. The PSX FUN_801A1D04 (gap pair) branch for branch, the early return included. Call trace: never in all_b or hidden_b."
+
+[[func]]
+pc = 0x517900
+name = "Field_ObjectAvoid"
+psx = 0x801A1F2C
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517900..0x517A6A (362 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 2. Field_ObjectApproach byte for byte but for Field_ObjectAvoidDirection and Field_ObjectBestDirection(object, 0). PSX FUN_801A1F2C (gap pair). Call trace: never in all_b or hidden_b."
+
+[[func]]
+pc = 0x517A70
+name = "Field_ObjectWanderHome"
+psx = 0x801A2154
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517A70..0x517BE3 (371 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 3. Field_ObjectWander plus Field_ObjectInHome: a direction whose next step leaves the home box is refused like a blocked one. The pace's second call with steps left is not guarded against speed 0: Field_Pace0 then divides by zero (both platforms, latent). The PSX FUN_801A2154 (gap pair) branch for branch. Call trace hidden_b: 2,381 calls, all from 0x517490 (all_b: none, pointer-reached)."
+
+[[func]]
+pc = 0x518AC0
+name = "Field_ObjectWait"
+psx = 0x801A3724
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518AC0..0x518AF1 (49 bytes), cdecl. Handler table 0x65F5F8 entry 5, the pose Sprite_SetPoseWait sets: while +0x81 counts down, context bit 4; at 0, the pose Sprite_Current[1] back from [3]. PSX 0x801A3724 (gap pair, not in the Ghidra output). Call trace hidden_b: 742 calls (637 from 0x517490, 105 from 0x57B7B0)."
+
+[[func]]
+pc = 0x517FE0
+name = "Field_ObjectStill"
+psx = 0x801A2A2C
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517FE0..0x517FF7 (23 bytes), cdecl. Handler table 0x65F5F8 entry 6: context bit 4, unless the sprite type +6 is 8. PSX 0x801A2A2C (gap pair, not in the Ghidra output). Call trace hidden_b: 12,468 calls (9,126 from 0x517490, 3,342 from 0x57B7B0) - the hottest kind."
+
+[[func]]
+pc = 0x5193B0
+name = "Field_ObjectFadeOut"
+psx = 0x801A459C
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5193B0..0x5194D6 (294 bytes), argument unused, a jump table at 0x65F654 by Sprite_Current[4] with no bound. Handler table 0x65F5F8 entry 8, the pose Field_ObjectUpdate gives context bit 1 (mask 2). Case 0: Sprite_SetTint(Sprite_Current, 31, 31, 31, 1) to Field_ActiveMember +0x9F, sprite bit 0.6 cleared, case 1 next. Case 1: bytes +2 +3 +4 of that MoveScript_TintRecords record each down by one to 0; at a signed sum of 0, Tint_Release, context bit 1 cleared, the pose back from [3], case 0 next. Indexes 2 and 3 run Field_ObjectFadeIn's cases (the tables are adjacent), 4 and up another function's. PSX 0x801A459C (gap pair). Call trace: never in all_b or hidden_b."
+
+[[func]]
+pc = 0x5194E0
+name = "Field_ObjectFadeIn"
+psx = 0x801A47DC
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5194E0..0x5195F9 (281 bytes), argument unused, a jump table at 0x65F65C by Sprite_Current[4] with no bound. Handler table 0x65F5F8 entry 9, the pose for context bit 2 (mask 4, Field_ObjectUpdate). Case 0: Sprite_SetTint(Sprite_Current, 0, 0, 0, 1) to Field_ActiveMember +0x9F, case 1 next. Case 1: the three bytes up by one while below 31 (signed), at a signed sum of 93 Tint_Release, context bit 2 cleared, the pose back, case 0 next. Indexes 2 and up jump into the table 0x65F664's cases. PSX 0x801A47DC (gap pair). Call trace: never in all_b or hidden_b."
+
+[[func]]
+pc = 0x5196E0
+name = "Field_ObjectTurn"
+psx = 0x801A4B84
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5196E0..0x5197E3 (259 bytes), cdecl, every jump internal. Handler table 0x65F5F8 entry 10, the pose the wander kinds set: a sprite with bit 7.3 faces +0x85 at once; Sprite_Current[0xA] counts frames; at 0 and facing +0x85, the pose back from [3] and one step (MoveCmd_Move(context, Sprite_Current[8])) unless Field_ObjectBlockedAhead (with sprite bit 7.7 clear), [0xA] = [9] / 2; not facing it, one eighth turn the short way ((target - direction) & 7 below 4 turns +1), [0xC] and [0x10] zeroed, [0xA] = 3. The PSX FUN_801A4B84 branch for branch. Call trace hidden_b: 905 calls (640 from 0x517490, 265 from Field_ObjectWanderHome); the step never (MoveCmd_Move has no call from here in the trace)."
+
+[[func]]
+pc = 0x5187C0
+name = "Field_Pace0"
+psx = 0x801A3264
+ret = "unsigned char"
+params = "unsigned char *object, unsigned speed, unsigned flags"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5187C0..0x5187F2 (50 bytes), cdecl. Pace table 0x65F5DC entries 0..3 (by Sprite_Current[2]); called (object, 0, 1) then (object, speed, 2) by the wander kinds. With flags bit 1: Sprite_Current[9] = 0x20 / (speed & 0xFF) (idiv, unchecked: speed 0 faults, as the PSX's trap(0x1C00)), [0xA] = [9] / 2. Returns 1. The PSX FUN_801A3264. Call trace hidden_b: 2,872 calls, all from Field_ObjectWanderHome (all_b 2,336). pc_funcs.json sizes it 433 bytes: it runs on through entries 4..6."
+
+[[func]]
+pc = 0x518800
+name = "Field_Pace4"
+psx = 0x801A32D4
+ret = "unsigned char"
+params = "unsigned char *object, unsigned speed, unsigned flags"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518800..0x518871 (113 bytes), cdecl. Pace table 0x65F5DC entry 4. Flags bit 0 on a pass where bit 0 of byte 0x905B80 (the counter) differs from byte 0x8034E8 (its value at the last object pass): +0x87 up by one below 0xFA, returns 1. Else flags bit 1 with steps left: Sprite_Current[9] = 0x20 / speed, [0xA] = [9] / 2. Returns 0. PSX 0x801A32D4 (gap pair). Call trace: never."
+
+[[func]]
+pc = 0x518880
+name = "Field_Pace5"
+psx = 0x801A33A4
+ret = "unsigned char"
+params = "unsigned char *object, unsigned speed, unsigned flags"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518880..0x5188F1 (113 bytes), cdecl. Pace table 0x65F5DC entry 5: Field_Pace4 but +0x87 up by two below 0xFA (so 0xF9 reaches 0xFB). PSX 0x801A33A4 (gap pair). Call trace: never."
+
+[[func]]
+pc = 0x518900
+name = "Field_Pace6"
+psx = 0x801A3474
+ret = "unsigned char"
+params = "unsigned char *object, unsigned speed, unsigned flags"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518900..0x518971 (113 bytes), cdecl. Pace table 0x65F5DC entry 6: Field_Pace4 on bit 1 of the counters instead of bit 0. PSX 0x801A3474 (gap pair). Call trace: never."
+
+[[func]]
+pc = 0x518CA0
+name = "Field_ObjectOpenDirection"
+psx = 0x801A3A0C
+ret = "unsigned char"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518CA0..0x518D0A (106 bytes), cdecl, every jump internal. Up to four quarter turns (+2 & 7) of Sprite_Current[8] while Field_ObjectBlockedAhead(object); context bit 3 when the direction differs from the entry's & 7 (so a moving entry direction, bit 3 set, counts as changed); returns the direction & 7, or 0xFF after four. The PSX FUN_801A3A0C, the same comparison. Call trace hidden_b: 491 calls (all_b 387), all from Field_ObjectWanderHome."
+
+[[func]]
+pc = 0x518DD0
+name = "Field_ObjectRandomTurn"
+psx = 0x801A3C18
+ret = "unsigned char"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518DD0..0x518E14 (68 bytes), cdecl. (Rand & 6) | 1 - one of the odd directions - to Sprite_Current[8] with context bit 3 unless it is already the direction & 7; returns Sprite_Current[8]. Pushes 0x80 for Rand, which ignores it (the PSX passes it too). The PSX FUN_801A3C18. Call trace hidden_b: 94 calls (all_b 74), from Field_ObjectWanderHome."
+
+[[func]]
+pc = 0x518000
+name = "Field_ObjectInHome"
+psx = 0x801A2A60
+ret = "unsigned char"
+params = "unsigned char *object"
+impl = "src/game/object_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x518000..0x518071 (113 bytes), cdecl, no calls. Everything from its argument, not Sprite_Current: the position +0x34 / +0x38 plus the step 0x6697B0[direction & 7], its high words against the home +0x8E / +0x92 - both distances within the half-widths +0x98 / +0x9A (signed words). The PSX FUN_801A2A60. Call trace hidden_b: 491 calls (all_b 387), from Field_ObjectWanderHome; Field_ObjectIdleLong calls it too."
+
+# group C callees - not taken over: reached from outside the group, or
+# unreached and larger than the group's own.
+
+[[func]]
+pc = 0x518080
+name = "Field_ObjectBlockedAhead"
+psx = 0x801A2AEC
+ret = "unsigned char"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 122 bytes): the position +0x34 / +0x38 of its argument plus the step 0x6697B0[direction & 7], then 0x518100(object), 0x531CF0 and 0x531F10 (x, z, Sprite_Current +0x70 & 0xFF) - non-zero if any finds something (0xFF is none for the last two). Callers include 0x40C2B0 and 0x41F790, outside the object kinds."
+
+[[func]]
+pc = 0x518E20
+name = "Field_ObjectApproachDirection"
+psx = 0x801A3C9C
+ret = "unsigned char"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 163 bytes): within the half-widths +0x98 / +0x9A of the leader (ObjTrio +0x34 / +0x38), Field_ObjectBestDirection(object, 1), 0xFF ending the timed move; otherwise Field_ObjectRandomTurn then Field_ObjectOpenDirection. Unreached by the attract cycle."
+
+[[func]]
+pc = 0x518ED0
+name = "Field_ObjectAvoidDirection"
+psx = 0x801A3DBC
+ret = "unsigned char"
+params = "unsigned char *object"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 165 bytes): Field_ObjectApproachDirection with Field_ObjectBestDirection(object, 0). Unreached by the attract cycle."
+
+[[func]]
+pc = 0x518F80
+name = "Field_ObjectBestDirection"
+psx = 0x801A3EDC
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char toward"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 60 instructions): the leader's position plus its facing step (ObjTrio +9, +0xC, +0x10), four quarter turns of Sprite_Current[8] from an odd direction, keeping the unblocked one nearest (toward 1) or farthest (0) by the sum of the two distances in object +0x94. Read a byte of its second argument. Unreached by the attract cycle."
+
+[[func]]
+pc = 0x454D60
+name = "Tint_Release"
+ret = "void"
+params = "unsigned char index"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 12 instructions): record index & 0xFF of MoveScript_TintRecords; with its bit 0 set, clears it (and bit 2 of the sprite at record +8 +0x24 when bit 7). Called by Field_ObjectFadeOut / Field_ObjectFadeIn when the fade is done."
+
+[[func]]
+pc = 0x537540
+name = "Area_ObjectHandler"
+psx = 0x801ADE10
+ret = "void"
+params = "unsigned short n"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (whole, 58 bytes): a tail-jump dispatcher - to the area descriptor +0x3C table [Field_ActiveMember +0xA0 & 0x7F], or, when that is 0x7F, to 0x660CA0[s16 n]. Reads its argument as a signed word. Called by Field_ObjectLinked."
+
+[[func]]
+pc = 0x56D6B0
+name = "Field_ObjectTrigger"
 ret = "void"
 params = "unsigned char *object"
 status = "hypothesis"
-evidence = "disasm 2026-09-22: called by the field object loop 0x517490 instead of the kind handler when the word at object +0x9C is above 0x1E and Sprite_Current[9] is 0 (no timed move); clears +0x9C first. Group C."
+evidence = "disasm 2026-09-22 (whole, 62 bytes): with object +0x89 bit 6, 0x56E020(object); else [0x662C80 + Cond_ByteFA * 4] +4 (object); then +0x86 = 0xFF. Called by Field_ObjectIdle when +0x86 is not 0xFF; never in the attract trace."
+
+[[func]]
+pc = 0x5797C0
+name = "EventScript_Run"
+psx = 0x801A4F44
+ret = "void"
+params = "const unsigned char *script"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its first 12 instructions): Cond_ByteFA to the word 0x7DEE20, then steps a byte stream until 0xFF, through 0x579F30 below 0xF0 and 0x579800 from it. Called by MoveScript_SetTurnTarget with an entry of the area descriptor's +4 table."
 
 # --- group A: the field-object frame loop (docs/field-frame.md) -------------
 

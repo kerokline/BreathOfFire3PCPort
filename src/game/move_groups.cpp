@@ -30,7 +30,7 @@ std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t
 struct Callees {
     int (__cdecl* kind)();
     void (__cdecl* face)(unsigned char);
-    void (__cdecl* turn_target)(unsigned char*);
+    unsigned char (__cdecl* turn_target)(unsigned char*);   // its result unread by group E
     void (__cdecl* op_e7)(unsigned char);
     unsigned char (__cdecl* op_e9)(unsigned char*, signed char, signed char, unsigned short, unsigned short, unsigned char, unsigned char);
     unsigned char (__cdecl* tint)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
@@ -644,7 +644,7 @@ unsigned char Byte() { return static_cast<unsigned char>(Hash() >> 7); }
 
 int __cdecl StubKind() { Record(1); return static_cast<int>(Hash() % 4); }
 void __cdecl StubFace(unsigned char d) { Record(2, d); Disturb(); }
-void __cdecl StubTurnTarget(unsigned char* o) { Record(3, Id(o)); Disturb(); }
+unsigned char __cdecl StubTurnTarget(unsigned char* o) { Record(3, Id(o)); Disturb(); return static_cast<unsigned char>(Hash()); }
 void __cdecl StubOpE7(unsigned char n) { Record(4, n); }
 unsigned char __cdecl StubOpE9(unsigned char* o, signed char a, signed char b, unsigned short c, unsigned short d,
                                unsigned char e, unsigned char f) {

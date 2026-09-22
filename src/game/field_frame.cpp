@@ -89,15 +89,14 @@ struct Callees {
     void (__cdecl* sprite_draw)();
 };
 // MoveScript_SetTurnTarget returns 0 or 1 in al (0x517EAA, 0x517F21), which
-// Field_ObjectsFrame tests; symbols.toml still types it void, and
-// move_groups.cpp calls it so. Read here with the type the body has.
+// Field_ObjectsFrame tests.
 const Callees kOriginals = {
     Field_ModeDispatch, Field_RunTaskRecords, Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame,
     AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_RunSlots,
     MoveScript_TintFrame, Field_DrawFrame,
     Field_PendingJump, Field_LeaderFrame, Field_MemberFrame,
     Sprite_UpdateScreenA, Sprite_UpdateScreen, Sprite_ProjectA,
-    Cast<unsigned char (__cdecl*)(unsigned char*)>(MoveScript_SetTurnTarget),
+    MoveScript_SetTurnTarget,
     Sprite_FaceDirection, Field_ObjectIdle, Field_ObjectLinked, Field_ObjectIdleLong, Sprite_ScriptTick,
     Sprite_ScriptTickOnce,
     Sprite_InheritDrawKey, Gte_LoadVertex, Gte_Rtps, Gte_StoreScreenXY, Gte_StoreDepthQuarter,

@@ -29,6 +29,7 @@
 #include "game/move_script.h"
 #include "game/move_groups.h"
 #include "game/field_objects.h"
+#include "game/object_kinds.h"
 #include "game/sprite_screen.h"
 #include "game/kind2_object.h"
 #include "game/area_slope.h"
@@ -99,6 +100,7 @@ void InjectAll() {
     Kind2Object_Inject();
     AreaSlope_Inject();
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
+    ObjectKinds_Inject();
     InjectReport();
 }
 

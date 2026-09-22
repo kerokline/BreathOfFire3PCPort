@@ -1138,3 +1138,31 @@ designed in rather than bolted on.
   `0000`, under the same ruling - the same word, the same reader. Its fuzz
   compares x, y and z and leaves the pad out, so the zero there is by
   construction, not measured. `BOF3X_ORIGINAL=Sprite_ProjectA` restores it.
+
+
+### A field fade past its jump table stops instead of jumping
+
+- **ID:** DIV-0024
+- **Date:** 2026-09-22
+- **Subsystem:** field objects (the kind handlers, [`object-kinds.md`](object-kinds.md))
+- **Original behaviour:** `Field_ObjectFadeOut` `0x5193B0` and
+  `Field_ObjectFadeIn` `0x5194E0` dispatch on the sprite's sub-state byte
+  `+4` through jump tables with no bound (`0x65F654`, `0x65F65C`, adjacent).
+  Fade-out's 2 and 3 land in fade-in's cases; fade-out from 4 and fade-in
+  from 2 land in the cases of another function (`0x65F664`'s, at `0x5198xx`),
+  run in the wrong frame.
+- **New behaviour:** ours runs fade-out's 2 and 3 as the original does, and
+  past them calls `Fatal`, naming the function and the sub-state.
+- **Rationale:** what the original does there is a jump into the middle of
+  another function's body with this one's stack frame; it cannot be
+  reproduced, only imitated wrongly, and CLAUDE.md rule 4 says a
+  reimplementation that cannot do the original's thing aborts loudly.
+  Nothing is known to reach it: these two functions only ever set `+4` to
+  0 and 1.
+- **Not covered:** a sub-state set to 4 or more by code outside the two
+  functions - unmeasured in game.
+- **Also in the PSX version?** The PSX twins `0x801A459C` / `0x801A47DC`
+  have the same unbounded dispatch (object-kinds.md).
+- **Verification:** the start-up fuzz, `BOF3X_SHADOW=object_kinds`, seeds
+  sub-states 0..3 only; controls in object-kinds.md.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn`.

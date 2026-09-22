@@ -89,6 +89,7 @@ add_library(bof3x SHARED
   src/game/move_script.cpp
   src/game/move_groups.cpp
   src/game/field_objects.cpp
+  src/game/object_kinds.cpp
   src/game/sprite_screen.cpp
   src/game/field_frame.cpp
   src/game/kind2_object.cpp
