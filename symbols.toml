@@ -6907,3 +6907,19 @@ params = "void"
 status = "evidence"
 impl = "src/game/window_task.cpp"
 evidence = "disasm 2026-09-22, 0x59E310..0x59E32D (0x1D bytes, whole), no calls: byte 0, the kind byte +2 and the state byte +3 of the current record 0x905B84 to zero, the pointer re-read for each store. Byte +1, the handler Field_RunTaskRecords dispatches on, is left as it was - so a freed slot keeps its record kind for the next Window_Alloc that takes it. The neighbour 0x59E330 zeroes slot 0's four bytes outright. Callers Window_Kind0Close and Window_FreeState (both tail jumps), 0x41EFA0 and 0x449FE0. psx_pair gap44. Call trace hidden_b: 24 calls."
+
+
+# --- 2026-09-22 (third round, K/L/M), boundary callees registered before the
+# groups were spawned. Only one call crosses between the three groups: K's
+# area-entry hub 0x594E60 calls Effect_ClearAll 0x5898A0, which group M
+# (src/game/sprite_pose.cpp) owns - K calls it by its existing name and does
+# not bind it. Group L (src/game/move_cmds.cpp) owns 0x5A7A70 below, named
+# here so that no other group binds it first.
+
+[[func]]
+pc = 0x5A7A70
+name = "Math_Ratan2"
+ret = "int"
+params = "float y, float x"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A7A70..0x5A7A8B (27 bytes), cdecl: fld arg0, fld arg1, fpatan (atan of arg0 / arg1 by quadrant), fmul the double 2048.0 at 0x5C4658, fmul the double 0.3184713375796178 (1 / 3.14) at 0x5C4650, then a tail jmp to the CRT's _ftol 0x5B9550 - an angle in 4096ths of a turn, the unit of libgte ratan2, with pi taken as 3.14. Called by Party_MoveMember 0x5190A0."
