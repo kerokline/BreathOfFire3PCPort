@@ -121,6 +121,28 @@ The single next action, concrete enough to start without asking anyone.
    compared frame, memory dump identical in all three regions, and the frame
    hash identical on all 10,060 frames beside an original-vs-original pair.
    No new divergence; four defects written down (D8..D11), none fixed.
+   **The third round, 2026-09-22 evening: groups H and J are merged and
+   self-tested but NOT yet through the live batch.** H
+   ([`msgbox.md`](msgbox.md), `src/game/msgbox.cpp`): the message box - 43
+   functions, all eight states including the six the attract never reaches,
+   the box-effect task, `Text_DrawAt`, `Text_EmitGlyph`, `Window_Alloc`;
+   43,000 fuzz rounds, 48 of 51 controls refused by count; two left Capcom's
+   (`0x4981C0`, `0x4983C0`: an indirect call through the area descriptors).
+   J ([`window-task.md`](window-task.md), `src/game/window_task.cpp` + three
+   `Gpu_Set*` in `psx_gpu.cpp`): 27 functions - `Window_Task` was a wrong
+   name on `Area_ZoneAt`, and its "body" was fourteen functions in no list.
+   Both found the same catalogue blind spot: **call tables built on the
+   stack** (`mov [esp+k], imm32` ... `call [esp+eax*4]`; 255 in `.text`,
+   [`attract-remaining.md`](attract-remaining.md) §3). `inject: 399 ours`;
+   every self-test 0 mismatches after the review merge (`11dbc4a`).
+   `entries_logic.txt` has all 70 ranges (four sizes replaced). **Run
+   `analysis/validate_ab23.sh` next** (~95 min, hands off; `THREE` is filled
+   in; it adds a `menu_screens` A/B, a watch on `0x7DEE40`, and an English
+   attract A/B for DIV-0006 through our `MsgBox_Step`), then rewrite this
+   item. The rest of the round's queue - K the top-level task flow (18, with
+   `0x594E60`), L the movement commands and party (15), M sprite animation
+   and effects (10) - is [`takeover-queue-round3.md`](takeover-queue-round3.md);
+   its boundary callees are not registered yet.
    **Next:**
 
    1. **Regenerate the queue** (`python tools/attract_catalog.py
