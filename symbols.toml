@@ -3804,3 +3804,245 @@ ret = "void"
 params = "unsigned char *object"
 status = "hypothesis"
 evidence = "disasm 2026-09-22: called by the field object loop 0x517490 instead of the kind handler when the word at object +0x9C is above 0x1E and Sprite_Current[9] is 0 (no timed move); clears +0x9C first. Group C."
+
+# --- group A: the field-object frame loop (docs/field-frame.md) -------------
+
+[[func]]
+pc = 0x517200
+name = "Field_Frame"
+psx = 0x8019A1B8
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517200..0x51723C (60 bytes), cdecl, no arguments: eleven calls and a tail jmp, nothing else - Kind2_Run, Party_ExtraFrame, Field_MembersFrame, Field_ObjectsFrame, AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_RunSlots, MoveScript_TintFrame, then jmp Field_DrawFrame. The PSX FUN_8019A1B8 call for call (GAME_EMI0). Six callers, two of them tail jumps (0x496420, 0x4966CE). Call trace all_b 6,709, hidden_b 9,168 calls."
+
+[[func]]
+pc = 0x517240
+name = "Field_FrameScripted"
+psx = 0x8019A230
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517240..0x517286 (70 bytes), cdecl, no arguments: Field_ModeDispatch and Field_RunTaskRecords, then Field_Frame's twelve in its order, the last a tail jmp to Field_DrawFrame. The PSX FUN_8019A230 call for call. One caller, the tail jmp at 0x495E83. Call trace hidden_b 2,997 calls (all_b did not trace it)."
+
+[[func]]
+pc = 0x517350
+name = "Field_MembersFrame"
+psx = 0x8019A440
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517350..0x5173DB (139 bytes), cdecl, no arguments: Field_PendingJump; then for ObjTrio's three members - the first unless bit 0 of the low bytes of Field_ScriptFlags2 OR Field_ScriptFlags, the second (only when Field_MemberCount is above 1) unless bit 1, the third (only when the count is 3) unless bit 2 - Field_State and Sprite_Current set to the member and Field_LeaderFrame (first) or Field_MemberFrame (the others; the third a tail jmp). Flags and count re-read after each call. The PSX FUN_8019A440 term for term. Six callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x5173E0
+name = "Field_ObjectsScreen"
+psx = 0x801A151C
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5173E0..0x517440 (96 bytes), cdecl, no arguments: Sprite_Current to each of the 30 Sprite_Objects in turn; for one with flag bit 0: type +6 9 is skipped when Draw_OtSlot is 4 and otherwise keeps its slot byte +0x29; any other type gets +0x29 = 4 with +0x24 bit 4, else Draw_OtSlot; then Sprite_UpdateScreenA for Sprite_Current type 0x0A, else Sprite_UpdateScreen. The PSX FUN_801A151C term for term. Six callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x517490
+name = "Field_ObjectsFrame"
+psx = 0x801A16E0
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x517490..0x517633 (419 bytes), cdecl, no arguments, one indirect call (Field_ObjectHandlers by object byte +1), every jump internal. Nothing with Field_ScriptFlags2 bit 10. Else each of the 30 Sprite_Objects with flag bit 0, as Sprite_Current and Field_ActiveMember, scratch byte 3 cleared: with no timed move (+9) and context +0x80 bit 5 - bit 4 set, MoveScript_SetTurnTarget and, when it returns non-zero and Sprite_Current +7 lacks bit 3, +0x85 = direction, a turn to face ObjTrio (+7 bit 1 clear) and Sprite_FaceDirection, +0x85 bit 0 for Sprite_Current +1 0x0A; bit 4 clear, Field_ObjectIdle. Otherwise context bit 0 Field_ObjectLinked (and nothing after); +0x9C above 0x1E with no timed move Field_ObjectIdleLong; else the handler. Then, for Sprite_Current not type 0x0A: context bit 6 a tick (Sprite_ScriptTick with flag bit 4, else Sprite_ScriptTickOnce) unless +7 bit 5; bit 3 Sprite_FaceDirection and the bit cleared; else, unless +7 bit 5, max(+0x84 - 2, 0) + 1 Sprite_ScriptTick. Finally Field_EdgeBitsPrev = Field_EdgeBits. The PSX FUN_801A16E0 term for term. Nine callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x57B780
+name = "Party_ExtraScreens"
+psx = 0x8015B148
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x57B780..0x57B7AD (45 bytes), cdecl, no arguments: Sprite_Current to each of the 4 Sprite_ObjectsExtra; Sprite_UpdateScreenA for one with flag bit 0 and not bit 6. The PSX twin by its place in FUN_8019A1B8 (6th call); unpaired by tools/psx_pair.py. Six callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x57B7B0
+name = "Party_ExtraFrame"
+psx = 0x8015B1D8
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x57B7B0..0x57B82B (123 bytes), cdecl, no arguments, one indirect call: for the 4 Sprite_ObjectsExtra as Sprite_Current and Field_ActiveMember, with flag bit 0: no timed move and context +0x80 bit 5 - MoveScript_SetTurnTarget (bit 4, result unused) or Field_ObjectIdle; else context bit 0 Field_ObjectLinked, else Field_ObjectHandlers by +1. Field_ObjectsFrame's first half with no idle-long, no scratch byte and no ticks. The PSX twin by its place in FUN_8019A1B8 (2nd call). Two callers. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x57B830
+name = "Sprite_UpdateScreenA"
+psx = 0x8015B334
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x57B830..0x57B85E (46 bytes), cdecl, no arguments: Sprite_Current +0x29 = 4 with +0x24 bit 4, else 6 when byte 3 of the record at +0x54 has bit 5, else Draw_OtSlot; then a tail jmp to Sprite_ProjectA. The screen update of a type-0x0A sprite, called where Sprite_UpdateScreen is for the others. Ten call sites, two of them tail jumps. Call trace all_b 14,890, hidden_b 20,793 calls."
+
+[[func]]
+pc = 0x57B860
+name = "Sprite_ProjectA"
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x57B860..0x57BA5A (506 bytes), cdecl, no arguments. Reached only by Sprite_UpdateScreenA's tail jmp (rel32 scan of the image, no pointer to it), so never traced as an entry. Sprite_UpdateScreen's key without its table and its range test: 16-bit (z whole + x whole - frac tests + record byte 1 s8 - MapView_Origin + 2), then only its low byte, shifted up, with the same low byte (x or z >> 15 for Draw_OtSlot 4, else height). Sprite_InheritDrawKey unless record byte 3 bit 4; Gte_LoadVertex / Gte_Rtps / Gte_StoreScreenXY / Gte_StoreDepthQuarter (to +0x60) of (x >> 9 - 0x4000, z >> 9 - 0x4000, -height / 2); the float screen x / y to +0x74 / +0x78 and through the CRT's _ftol 0x5B9550 to +0x2E / +0x30; flag bit 7 set when the point is outside 0x140 / 0xF0 widened by Sprite_ScreenMargins (entry 0 or 1 by record byte 3 bit 3), else cleared and appended to Sprite_DrawList while there is room."
+
+[[func]]
+pc = 0x592F00
+name = "Field_DrawFrame"
+psx = 0x8014B948
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x592F00..0x592F1C (28 bytes), cdecl, no arguments: AreaMap_HeaderPass, Sprite_DrawOverlays, Sprite_DrawPass, then Sprite_OverlayListCount and Sprite_DrawListCount to 0. Paired call-anchored with the PSX FUN_8014B948, the last call of FUN_8019A1B8. Ten call sites, seven of them tail jumps. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x592F20
+name = "Sprite_DrawOverlays"
+ret = "void"
+params = "void"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x592F20..0x59301E (254 bytes), cdecl, no arguments. Nothing without Draw_PassFlags bit 0. Else a bubble sort of Sprite_OverlayList by the s16 at +0x3E, ascending and stable (Sprite_SwapOverlays for each out-of-order neighbour, the count re-read after each), then for each entry Sprite_Current, +0x74 / +0x78 = the float of the s16 +0x2E / +0x30, and Sprite_Draw, the count re-read after each. Unpaired. One caller, Field_DrawFrame. Call trace all_b 8,846, hidden_b 12,165 calls."
+
+[[func]]
+pc = 0x593020
+name = "Sprite_SwapOverlays"
+ret = "void"
+params = "unsigned long a, unsigned long b"
+impl = "src/game/field_frame.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x593020..0x593056 (54 bytes), cdecl: exchanges Sprite_OverlayList[a & 0xFF] and [b & 0xFF]. Its caller pushes whole registers whose upper bytes are stale, so the arguments are typed as dwords and masked. One caller, Sprite_DrawOverlays at 0x592F81; not in the traced entries."
+
+[[data]]
+pc = 0x65F5F8
+name = "Field_ObjectHandlers"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "disasm 2026-09-22: Field_ObjectsFrame and Party_ExtraFrame call [0x65F5F8 + object byte +1 * 4](object). In the exe: 11 .text addresses - 0x517640, 0x517790, 0x517900, 0x517A70, Field_ObjectUpdate, 0x518AC0, 0x517FE0, Field_ObjectFollow, 0x5193B0, 0x5194E0, 0x5196E0 - then data. The PSX PTR_FUN_801C93D0. Stored as dwords; call through a cast."
+
+[[data]]
+pc = 0x663B28
+name = "Sprite_ScreenMargins"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-22: Sprite_ProjectA culls a type-0x0A sprite at x above 0x140 + [0], below -[1], y above 0xF0 + [2], below -[3] of entry (record byte 3 bit 3) - two entries of four bytes, 80 80 80 80 and 100 100 160 100. Only reader."
+
+[[data]]
+pc = 0x905BA4
+name = "Field_ScriptFlags2"
+psx = 0x80146256
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Field_MembersFrame ORs its low byte with Field_ScriptFlags' and tests bits 0..2 per member, as the PSX FUN_8019A440 ORs the halfwords 0x80146254 and 0x80146256; Field_ObjectsFrame does nothing with bit 10, as FUN_801A16E0 tests 0x80146256 & 0x400. 83 functions use it (pc_funcs globals)."
+
+[[data]]
+pc = 0x905B80
+name = "Field_EdgeBits"
+psx = 0x80143F22
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Field_ObjectsFrame copies it to Field_EdgeBitsPrev after the objects, as FUN_801A16E0 copies 0x80143F22 to 0x80146874; 0x5187C0 XORs the low bytes of the two and tests single bits - a change since the last pass. 16 functions use it."
+
+[[data]]
+pc = 0x8034E8
+name = "Field_EdgeBitsPrev"
+psx = 0x80146874
+ctype = "unsigned short"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: written by Field_ObjectsFrame from Field_EdgeBits once per pass; read by 0x5187C0 against it. 5 functions use it."
+
+# group A callees
+
+[[func]]
+pc = 0x533760
+name = "Field_PendingJump"
+psx = 0x801C1A60
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 7 instructions: when the byte at 0x904EF0 is non-zero, jmp [0x660B60 + byte 0x904EF1 * 4]; else ret. First call of Field_MembersFrame. Named by its shape."
+
+[[func]]
+pc = 0x52D8F0
+name = "Field_LeaderFrame"
+psx = 0x801B10F0
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, the byte at 0x905B82 counted down to 0, Field_CopyInput, then jmp [0x660918 + Sprite_Current +1 * 4]. Field_MembersFrame calls it for ObjTrio's first member only."
+
+[[func]]
+pc = 0x51AC50
+name = "Field_MemberFrame"
+psx = 0x801BCE40
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, then jmp [0x65F960 + Sprite_Current +1 * 4]. Field_MembersFrame calls it for ObjTrio's second and third members."
+
+[[func]]
+pc = 0x531B60
+name = "Party_UpdateScreens"
+psx = 0x801BEAB0
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x531B60..0x531BAB: for ObjTrio's members from the last (Field_MemberCount - 1) down, skipping flag bit 6, Sprite_Current to each and 0x588F00 when Field_Request is 3, else Sprite_UpdateScreen."
+
+[[func]]
+pc = 0x494030
+name = "Effect_RunObjects"
+psx = 0x8019B0EC
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x494030..0x49405F: for the 20 Effect_Objects of 0x80 bytes with byte 0 non-zero, Sprite_Current to it and call [0x655350 + byte +5 * 4]. The PSX twin by its place in FUN_8019A1B8 (9th call)."
+
+[[func]]
+pc = 0x455250
+name = "Field_RunSlots"
+psx = 0x80197C8C
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x455250..0x455282: for the 8 records of 0x10 bytes at 0x9035C0 with bit 0 of byte 0, 0x455300(index). What the records are is unread. The PSX twin by its place in FUN_8019A1B8 (10th call)."
+
+[[func]]
+pc = 0x454AD0
+name = "MoveScript_TintFrame"
+psx = 0x8019725C
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its head): walks MoveScript_TintRecords from 0x7E0700, skipping records without bit 0, dividing by tables at 0x6528AC..0x6528BC. 491 bytes, unread past that. The PSX twin by its place in FUN_8019A1B8 (11th call)."
+
+[[func]]
+pc = 0x56D690
+name = "Field_ModeDispatch"
+psx = 0x801A8834
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: call [[0x662C80 + Cond_ByteFA (s8) * 4]], then a tail jmp to 0x56D8B0 (docs/HANDOFF.md: a mode dispatcher). First call of Field_FrameScripted."
+
+[[func]]
+pc = 0x59E230
+name = "Field_RunTaskRecords"
+psx = 0x8015973C
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x59E230..0x59E2C4: from the pass in the byte at 0x802D20 up to 2, each of the 22 records of 0x24 bytes at 0x803160 with byte 0 non-zero and byte +0xF equal to the pass, as the dword at 0x905B84, through a local table of nine handlers by byte +1. The PSX twin by its place in FUN_8019A230 (2nd call)."
