@@ -336,7 +336,11 @@ void SeedRound() {
         for (unsigned i = 0; i < 24; ++i) g_anim[k][kEntries + Next() % 0x300] = static_cast<unsigned char>(Next());
     // The effect pool's in-use bytes: often all taken, the first free anywhere.
     for (unsigned i = 0; i < 0x40; ++i) Effect_Objects[i * 0x80] = static_cast<unsigned char>(Next() % 4 ? Next() | 1 : 0);
-    if (Often()) for (unsigned i = 0; i < 20; ++i) Effect_Objects[i * 0x80] = static_cast<unsigned char>(Next() | 0x10);
+    if (Half()) {
+        for (unsigned i = 0; i < 20; ++i) Effect_Objects[i * 0x80] = static_cast<unsigned char>(Next() | 0x10);
+        static const unsigned kOnlyFree[] = {0, 1, 18, 19};   // or none free at all
+        if (Half()) Effect_Objects[(Half() ? Pick(kOnlyFree) : Next() % 20) * 0x80] = 0;
+    }
     static const unsigned char kCounts[] = {0, 1, 0x13, 0x14, 0x27, 0x28, 0x7F, 0xFE, 0xFF};
     Gfx_UploadQueueCount = Half() ? Pick(kCounts) : static_cast<unsigned char>(Next());
     Sprite_Current = Sprite(Next());
