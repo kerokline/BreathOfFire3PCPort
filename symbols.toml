@@ -4598,34 +4598,42 @@ evidence = "disasm 2026-09-22, 0x3A bytes: Task_Sleep(1); then while MoveScript_
 [[func]]
 pc = 0x4624B0
 name = "Title_FadeMusic"
+psx = 0x801D1134
 ret = "void"
 params = "void"
+impl = "src/game/title_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 5 instructions: unless the music track byte 0x904131 is 0xFF, Music_FadeOut(0x10). Its sibling 0x4624D0 is Music_FadeOutStop(10) and the track set to 0xFF. PSX 0x801D1134."
+evidence = "disasm 2026-09-22, 0x12 bytes: unless the music track byte 0x904131 is 0xFF, Music_FadeOut(0x10). Its sibling 0x4624D0 is Title_StopMusic. PSX 0x801D1134 fades through a per-track table (0x80182832) where the port passes only the frames. Callers Title_CheckStart and Title_StateLogo. Call trace hidden_b: 3 calls."
 
 [[func]]
 pc = 0x462820
 name = "Title_DrawSetA"
+psx = 0x801D12CC
 ret = "void"
-params = "unsigned char flag, unsigned char shade"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x105 bytes: title sprites 1, 8 and 9 through Title_Sprite with flag as the semi-transparency and shade through Prim_SetShade; with Title_Fade 0 and Title_LogoState 2, sprite 7 blinking on the counter 0x66C806, else the counter zeroed. Both arguments are read as bytes (the semi one masked, the shade one stored). Called only by Title_DrawLogo. PSX 0x801D12CC."
+params = "unsigned flag, unsigned shade"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x105 bytes, cdecl, every jump internal: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x2F, 0), Gfx_CommitPrim(1, 0xC), Title_Sprite(0x106, 0x82, 1, 1, flag) shaded; tpage 0xBD, commit (2, 0xC), sprites 8 at (0x14, 0xD0) and 9 at (0xA4, 0xD0), slot 2, each shaded; then with Title_Fade 0 and Title_LogoState 2 sprite 7 at (0x30, 0xB8) opaque (2,559 frames of 2,748 in hidden_b), the word Title_BlinkCount + 1 and the sprite's rgb its low byte's (b & 0x1F) * 4, or 0x80 minus that when bit 0x20 is set; otherwise Title_BlinkCount = 0. Both arguments are dwords whose low byte alone is read (Title_Sprite masks the semi, Prim_SetShade stores a byte). Called only by Title_DrawLogo. PSX 0x801D12CC (its tpage asks a video-mode function, the port takes one branch). Call trace hidden_b: 2,748 calls (all_b the same)."
 
 [[func]]
 pc = 0x462A00
 name = "Title_DrawSetB"
+psx = 0x801D1664
 ret = "void"
-params = "int x, int y, unsigned char flag, unsigned char shade"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x6D bytes: title sprites 2 at (x, y) and 3 at (x + 0xF0, y + 0x70), flag as the semi-transparency, shade through Prim_SetShade. Called only by Title_DrawLogo. PSX 0x801D1664."
+params = "int x, int y, unsigned flag, unsigned shade"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x6D bytes, cdecl, every jump internal: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xBB, 0), Gfx_CommitPrim(2, 0xC), title sprites 2 at (x, y) and 3 at (x + 0xF0, y + 0x70), slot 2, flag as the semi-transparency, each shaded through Prim_SetShade. Called only by Title_DrawLogo. PSX 0x801D1664. Call trace hidden_b: 2,748 calls (all_b the same)."
 
 [[func]]
 pc = 0x462930
 name = "Title_DrawSetC"
+psx = 0x801D1494
 ret = "void"
-params = "int x, int y, unsigned char flag, unsigned char shade"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0xC2 bytes: when flag, title sprites 0xF and 0x10 semi-transparent at x and x + 0xE0; always sprites 4 and 5 there with flag as the semi-transparency; shade through Prim_SetShade. Called only by Title_DrawLogo. PSX 0x801D1494."
+params = "int x, int y, unsigned flag, unsigned shade"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0xC2 bytes, cdecl, every jump internal: when the flag's low byte is set, tpage 0xD9 and title sprites 0xF and 0x10 semi-transparent at x and x + 0xE0; always tpage 0xB9 and sprites 4 and 5 there with the flag dword as the semi-transparency (Title_Sprite masks it); each shaded through Prim_SetShade, commits (2, 0xC). Called only by Title_DrawLogo. PSX 0x801D1494. Call trace hidden_b: 2,748 calls (all_b the same)."
 
 # --- 2026-09-22, group D: the map and draw layers (docs/map-layers.md). The
 # four functions under AreaMap_Frame and AreaMap_HeaderPass taken over, then
@@ -4895,3 +4903,190 @@ ret = "void"
 params = "unsigned char arg"
 status = "hypothesis"
 evidence = "disasm 2026-09-22, 25 instructions: resets the script context at Sprite_Kind2 +0x80 through 0x5322B0, sets +0x85 bit 0x80, +0x83 = arg, +0x84 = 3, copies Field_Kind2X / Field_Kind2Z into +0x34 / +0x38, grounds it with AreaMap_Elevation and MapView_SetElevation, then +1 = 1, +2 = +3 = 0. Called by the mode handler 0x56B450 and the interpreter's 0x57B4E0. No group takes it this round."
+
+
+# --- 2026-09-22 (second round), group E: the title's state handlers and the
+# new-game start (docs/title-states.md). The eight handlers of Title_States,
+# the title's music stop and corner badge, the scenario start the demo goes
+# through, and the callees they reach that had no name.
+
+[[func]]
+pc = 0x462200
+name = "Title_StateLoad"
+psx = 0x801D0C90
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x8A bytes, cdecl, every jump internal. Title_States entry 0: Port_DroppedCall(2), LoadDatFile(0x136), while File_LoadDone is 0 Task_Sleep(1); Gfx_ClutStripRestore; Gfx_ClutStripDirty + 1; Music_Play(0x8D, 8); Title_State + 1; Title_Fade 1, Title_Scroll 0xC8, Title_Bright, Title_LogoState, both shades 0, Title_StartArmed 1. PSX 0x801D0C90 call for call (DAT 0x25F there, Music_Play with a third argument). Call trace hidden_b: 3 calls."
+
+[[func]]
+pc = 0x462290
+name = "Title_StateFadeIn"
+psx = 0x801D0D5C
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x1A bytes, no calls. Title_States entry 1: when Title_Fade is 2 (the backdrop faded in), Title_State + 1 and Title_Timer 0x168. PSX 0x801D0D5C. Call trace hidden_b: 96 calls."
+
+[[func]]
+pc = 0x4622B0
+name = "Title_StateBackdrop"
+psx = 0x801D0D94
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x28 bytes, no calls. Title_States entry 2: Title_Timer - 1 (u16); at 0 Title_State + 1, Title_Fade 3, Title_LogoState 1, Title_Timer 0x384. PSX 0x801D0D94. Call trace hidden_b: 1,080 calls."
+
+[[func]]
+pc = 0x4622E0
+name = "Title_StateLogo"
+psx = 0x801D0DF0
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x20 bytes. Title_States entry 3: Title_Timer - 1 (u16); at 0 Transition_Start(0), Title_FadeMusic, Title_State + 1 (read after the calls). PSX 0x801D0DF0. Call trace hidden_b: 2,700 calls."
+
+[[func]]
+pc = 0x462300
+name = "Title_StateStartDemo"
+psx = 0x801D0E54
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x6A bytes. Title_States entry 4: once MoveScript_WaitWordDA is 0, Title_Fade, Title_LogoState, Title_StartArmed 0; Title_StopMusic; Port_DroppedCall(0); Effect_ClearAll; the play clock bytes 0x9040C8..0x9040CB and Draw_PassFlags 0; Scenario_Start(0x10); Task_Create(0, 0x495800) - the demo; Title_State + 1. PSX 0x801D0E54 call for call (clock 0x80144FBC, flags 0x8014832A). Call trace hidden_b: 48 calls."
+
+[[func]]
+pc = 0x462370
+name = "Title_StateDemo"
+psx = 0x801D0F00
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x55 bytes. Title_States entry 5: task 0 gone (Task_Records +0 is 0): Title_State 0 and return. Else with File_LoadDone, MoveScript_WaitWordDA 0 and Input_Pressed bit 0x800: MoveScript_Var7 1, Transition_Start(4), Music_FadeOutStop(8), Title_State + 1. Then a tail jump to Title_DrawBadge. PSX 0x801D0F00. Call trace hidden_b: 12,200 calls."
+
+[[func]]
+pc = 0x4623D0
+name = "Title_StateDemoEnd"
+psx = 0x801D0FB8
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x20 bytes. Title_States entry 6: task 0 gone: the byte 0x90412C (PSX 0x80145020, the party combination) 0xFF and Title_State 0; else a tail jump to Title_DrawBadge. PSX 0x801D0FB8. Reached only by Start during the demo; not in hidden_b."
+
+[[func]]
+pc = 0x4623F0
+name = "Title_StateMenu"
+psx = 0x801D1000
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x2B bytes. Title_States entry 7: once MoveScript_WaitWordDA is 0, Title_StopMusic, Port_DroppedCall(0), Task_Create(0, 0x588E70) - the title menu - and a tail jump to Task_Exit, which ends task 1. PSX 0x801D1000. Reached only by Start on the title; not in hidden_b."
+
+[[func]]
+pc = 0x4624D0
+name = "Title_StopMusic"
+psx = 0x801D1184
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x1B bytes: unless the music track byte 0x904131 is 0xFF, Music_FadeOutStop(0xA) and the track 0xFF. PSX 0x801D1184 stops through a per-track table. Callers Title_StateStartDemo and Title_StateMenu. Call trace hidden_b: 3 calls."
+
+[[func]]
+pc = 0x4624F0
+name = "Title_DrawBadge"
+psx = 0x801D11E4
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x6B bytes. With Field_Request 5, Game_Mode 2 and MoveScript_WaitWordDA 0, Title_BadgeOn 0. Then with Draw_PassFlags and Title_BadgeOn both set: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x9D, 0), Gfx_CommitPrim(2, 0xC), Title_Sprite(0xC0, 4, 0xA, 2, 0) (9,562 draws in hidden_b). The demo's corner badge. Tail of Title_StateDemo and Title_StateDemoEnd. PSX 0x801D11E4 (its tpage from a video-mode test). Call trace hidden_b: 12,198 calls."
+
+[[func]]
+pc = 0x56D5E0
+name = "Scenario_Start"
+psx = 0x801A870C
+ret = "void"
+params = "int chapter"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x82 bytes, cdecl. Cond_ByteFA (the scenario chapter, PSX 0x8014686C) = the argument's byte; 0x8034E1..0x8034E9 zeroed (bytes E1..E5, words E6 and E8); the dword at Cond_Flags + 8 * chapter (sign-extended) zeroed and its address to 0x929ED0; Scenario_Load; while File_LoadDone is 0: Field_LoadingFrame unless Game_AreaNumber is 0xFFFF or Field_Request is 5, Task_Sleep(1); then a tail jump to Field_ModeDispatch. PSX 0x801A870C call for call. Title_StateStartDemo's call with 0x10 is the demo's. Call trace hidden_b: 3 calls."
+
+[[func]]
+pc = 0x56D670
+name = "Scenario_Load"
+psx = 0x801A880C
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x14 bytes: LoadDatFile(Cond_ByteFA sign-extended + 0x306). The PSX loads 0x295 + chapter, SCENA<chapter>.EMI (the sibling's names/scenario_records.toml). Call trace hidden_b: 3 calls."
+
+[[func]]
+pc = 0x56D8C0
+name = "Scenario_SubInit"
+psx = 0x801A8C34
+ret = "void"
+params = "void"
+impl = "src/game/title_states.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x5B bytes, no calls. Entry 0 of the table 0x662CD0 that 0x56D8B0 dispatches on the byte 0x9039F2: that byte 1, bytes 0x9039F0 / F1 / F3 / F4 / F5 and words 0x9039F6 / F8 zeroed, and the 16 bytes at 0x662CD8 copied to 0x904030 (Cond_Flags + 0xA0; PSX 0x80144F24, the story flags). PSX 0x801A8C34 (a byte loop there). Reached once in hidden_b, through Scenario_Start's tail."
+
+[[func]]
+pc = 0x5A99AD
+name = "Task_Exit"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x47 bytes: zeroes the current task's 0x18-byte record (offset 0x66C850) and jumps into the scheduler 0x5A98F0, which reloads its own esp from 0x66C854 - it never returns. Title_StateMenu tail-jumps to it."
+
+[[func]]
+pc = 0x4549B0
+name = "Gfx_ClutStripRestore"
+psx = 0x8014E178
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x34 bytes: zeroes 0x800 bytes at 0x80ED80 and copies Gfx_ClutStripSource to Gfx_ClutStrip, 32 rows of 0x200 bytes; does not set Gfx_ClutStripDirty (its one-row sibling 0x4549F0 does). Callers Title_StateLoad, 0x594E60, 0x496B60."
+
+[[func]]
+pc = 0x5898A0
+name = "Effect_ClearAll"
+psx = 0x8019711C
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x23 bytes: 0x589870(i) for i 0..0x13, which zeroes bytes +0..+4 of Effect_Objects + 0x80 * i. Callers Title_StateStartDemo, 0x594E60."
+
+[[func]]
+pc = 0x517290
+name = "Field_LoadingFrame"
+psx = 0x8019A2B8
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (calls only): 0x56E6C0, 0x57B780, Party_UpdateScreens, 0x5173E0, Effect_RunObjects, MoveScript_TintFrame, then a tail jump to 0x592F00 - a field frame without the event script, run by Scenario_Start while its scenario loads. PSX 0x8019A2B8."
+
+[[data]]
+pc = 0x66C7F8
+name = "Title_BadgeOn"
+psx = 0x80143C30
+ctype = "unsigned char"
+status = "evidence"
+evidence = "Task 1's private byte +8: Title_DrawBadge draws the demo's corner badge while it is set and clears it once the field runs (Field_Request 5, Game_Mode 2, no wait). Also written at 0x56B368..0x56B57C (the field's mode handlers)."
+
+[[data]]
+pc = 0x66C806
+name = "Title_BlinkCount"
+psx = 0x80143C2A
+ctype = "unsigned short"
+status = "evidence"
+evidence = "Task 1's private word +0x16: Title_DrawSetA counts it up a frame while the logo is shown and the backdrop gone, and shades sprite 7 by its low byte (a 64-frame triangle); zeroed otherwise."
