@@ -6580,7 +6580,7 @@ ret = "void"
 params = "void"
 impl = "src/game/msgbox.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x4984A0..0x4984D3 (52 bytes) - NOT the 1,896 the round's catalogue carried. Counts code 0x16's argument down in 0x7DEE46; at zero window 0's state byte is counted up, the hold flag 4 set and the sub-state counted on. The delay is tested BEFORE the decrement, so a 0 does the work and leaves 0xFF."
+evidence = "disasm 2026-09-22, 0x4984A0..0x4984D3 (52 bytes). Counts code 0x16's argument down in 0x7DEE46; at zero window 0's state byte is counted up, the hold flag 4 set and the sub-state counted on. The delay is tested BEFORE the decrement, so a 0 does the work and leaves 0xFF."
 
 [[func]]
 pc = 0x4984E0
@@ -6590,7 +6590,7 @@ ret = "void"
 params = "void"
 impl = "src/game/msgbox.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x4984E0..0x49851E (63 bytes). The box's effect, one frame: a SIX-entry stack table on byte 0x7DEE42 - 0x437CC0 (a bare ret), 0x498520, 0x4985A0 twice (entries 2 and 3 share one handler, loaded into eax once at 0x4984E3), 0x498670, 0x498740 - not the four the round's catalogue carried. Code 0x0F of MsgBox_StatePrint sets the byte from the 4-byte records at 0x658E98, which is an unbounded index: the records shipped hold kinds 1, 2 and 3. Called once a frame by MsgBox_FrameTask (2,781 times in hidden_b); only entry 0 is ever reached by the attract sequence."
+evidence = "disasm 2026-09-22, 0x4984E0..0x49851E (63 bytes). The box's effect, one frame: a SIX-entry stack table on byte 0x7DEE42 - 0x437CC0 (a bare ret), 0x498520, 0x4985A0 twice (entries 2 and 3 share one handler, loaded into eax once at 0x4984E3), 0x498670, 0x498740 - not the four the round's task list named, which missed the shared 0x4985A0. entries_logic.txt gives this function 0x2F8 bytes, which swallows every handler below it; it is 63. Code 0x0F of MsgBox_StatePrint sets the byte from the 4-byte records at 0x658E98, which is an unbounded index: the records shipped hold kinds 1, 2 and 3. Called once a frame by MsgBox_FrameTask (2,781 times in hidden_b); only entry 0 is ever reached by the attract sequence."
 
 [[func]]
 pc = 0x498520

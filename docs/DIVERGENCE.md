@@ -390,6 +390,17 @@ designed in rather than bolted on.
   and leaves the pen for the stepper to bring back to the line start.
 - **The data is not the US release's in one respect:** the apostrophe and the
   comma advance 5, not 8. That is its own entry, DIV-0009.
+- **2026-09-22: the stepper itself is ours.** `MsgBox_Step` `0x497840` is
+  reimplemented in `src/game/msgbox.cpp` ([`msgbox.md`](msgbox.md)), so the
+  rule no longer reaches it through a patched byte: ours *calls*
+  `MsgBox_DrawChar` where the original called `Text_DrawAt`, and the rule
+  still lives in `src/game/text_advance.cpp`, unchanged. The `RetargetCall`
+  at `0x497A22` stays exactly where it was - it is what keeps this entry
+  alive when the owner runs `BOF3X_ORIGINAL=MsgBox_Step` and Capcom's body
+  executes. No behavioural change: with no advance table loaded
+  `MsgBox_DrawChar` is `Text_DrawAt`, and the fuzz compares ours against a
+  clone with both sides calling the same stand-in. `Text_DrawAt` `0x516B30`
+  itself is now ours too, faithful.
 - **Not covered:** the stepper's other draw, `0x4987E0` (flag 8 of
   `0x7DEE44`; unread).
 - **Rationale:** English at a 12 px advance overflows the box on the first
