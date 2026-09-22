@@ -150,12 +150,21 @@ void __cdecl StubSleep(int frames) {
 void __cdecl StubTaskExit() { Record(2); Disturb(); }
 void __cdecl StubTaskCreate(int slot, void* entry) { Record(3, static_cast<std::uint32_t>(slot), Address(entry)); Disturb(); }
 void __cdecl StubClearPrivate() { Record(4); Disturb(); }
+// The camera bytes kind 12 stores before its fade: the fade's frames run the
+// field, which moves them, so a store moved after the call shows.
+void DisturbCamera() {
+    if (Hash() % 2 == 0) return;
+    Camera_Distance = static_cast<short>(Hash() >> 16);
+    MapView_Redraw = static_cast<unsigned char>(Hash() >> 5);
+}
 void __cdecl StubFadeSub(int step, unsigned semi, unsigned slot) {
     Record(5, static_cast<std::uint32_t>(step), semi, slot);
+    DisturbCamera();
     Disturb();
 }
 void __cdecl StubFadeAdd(int step, unsigned semi, unsigned slot) {
     Record(6, static_cast<std::uint32_t>(step), semi, slot);
+    DisturbCamera();
     Disturb();
 }
 // The real one reads and adds to the level's low word, reads the step's low
@@ -175,18 +184,29 @@ void __cdecl StubTransition(unsigned char kind) {
     Record(10, *reinterpret_cast<const volatile unsigned char*>(&kind));
     Disturb();
 }
+// The field frames it runs may change the input flags GameMode_Enter reads
+// after it (bit 0, the entry list).
 void __cdecl StubWaitTransition(unsigned char run) {
     Record(11, *reinterpret_cast<const volatile unsigned char*>(&run));
+    if (Hash() % 2) Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ 1);
     Disturb();
 }
 // Area_Enter keeps the area's low word; the flags' low byte is what GameMode_Enter
 // has (docs/mode-flow.md section 3: its eax above the byte is Field_Task's 1).
+// The real one sets bit 3 of Field_ScriptFlags2 (through Area_EntryWalk),
+// which GameMode_Enter clears BEFORE calling it.
 void __cdecl StubAreaEnter(unsigned area, int x, int z, unsigned flags) {
     Record(12, area & 0xFFFF, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags & 0xFF);
+    if (Hash() % 2) At(0x905BA4)[0] = static_cast<unsigned char>(At(0x905BA4)[0] | 8);
     Disturb();
 }
+// What Area_Enter tests again after the direction-0 walk: bit 11 of
+// Field_ScriptFlags and bit 15 of Field_ScriptFlags2.
 void __cdecl StubEntryWalk(unsigned dir, int x, int z) {
     Record(13, dir, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
+    const std::uint32_t h = Hash();
+    if (h % 3 == 0) At(0x905BA5)[0] = static_cast<unsigned char>(At(0x905BA5)[0] ^ 0x80);
+    else if (h % 3 == 1) At(0x9039A3)[0] = static_cast<unsigned char>(At(0x9039A3)[0] ^ 8);
     Disturb();
 }
 void __cdecl StubTintReset() { Record(14); Disturb(); }
@@ -234,7 +254,12 @@ void __cdecl StubSetTile(unsigned char* prim) {
     SetLong(prim + 0x10, static_cast<std::int32_t>(kPointZeroOne));
 }
 void __cdecl StubSetSemi(unsigned char* prim, unsigned abe) { Record(24, Id(prim), abe); prim[7] ^= 2; }
-void __cdecl StubPartyLoad(unsigned slot) { Record(25, slot); Disturb(); }
+// GameMode_Start reads the saved position after it.
+void __cdecl StubPartyLoad(unsigned slot) {
+    Record(25, slot);
+    if (Hash() % 2) At(at::kStartArea + (Hash() >> 8) % 12)[0] = static_cast<unsigned char>(Hash() >> 16);
+    Disturb();
+}
 void __cdecl StubChangeArea(unsigned area, int x, int z, unsigned flags) {
     Record(26, area & 0xFFFF, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), flags & 0xFF);
     Disturb();
@@ -255,7 +280,13 @@ unsigned char __cdecl StubZoneId(unsigned x, unsigned z) {
     return static_cast<unsigned char>(Hash() >> 8);
 }
 void __cdecl StubViewReset() { Record(35); Disturb(); }
-void __cdecl StubColourMatrix(const unsigned long* m) { Record(36, Id(m)); Disturb(); }
+// Area_Enter re-reads the descriptor after it: move the area, among those
+// with a colour matrix of their own (see Disturb), half the time.
+void __cdecl StubColourMatrix(const unsigned long* m) {
+    Record(36, Id(m));
+    if (!g_area_wild && Hash() % 2) Game_AreaNumber = static_cast<std::uint16_t>((Hash() >> 8) % 3);
+    Disturb();
+}
 void __cdecl StubScenarioStart(int chapter) { Record(37, static_cast<std::uint32_t>(chapter) & 0xFF); Disturb(); }
 void __cdecl StubRunPlacement(const unsigned char* script) { Record(38, Id(script)); Disturb(); }
 void __cdecl StubFlagsClear(unsigned char* bits, unsigned index) { Record(39, Id(bits), index & 0xFF); Disturb(); }
@@ -584,6 +615,8 @@ Args Seed(unsigned k) {
         args.a[2] = Half() ? 1 : Next();
         args.a[3] = Half() ? Next() % 3 : Next();
         args.a[4] = Half() ? 1 + Next() % 2 : Next();
+        // a level the step brings to exactly 0: not below zero
+        if (Next() % 4 == 0) g_level = static_cast<std::int32_t>(Garbage(0xFFFF, (0x10000u - (args.a[1] & 0xFFFFu)) & 0xFFFFu));
         break;
     case kKind0 + 11:
     case kKind0 + 18:
@@ -618,6 +651,14 @@ Args Seed(unsigned k) {
         if (Often()) c[1] = kSixty[Next() % 7];
         if (Often()) c[2] = Half() ? c[1] : kSixty[Next() % 7];
         if (Often()) c[3] = kFrames[Next() % 7];
+        // a quarter of the rounds at the stop: 99:59, the seconds and frames
+        // either side of their rollovers
+        if (Next() % 4 == 0) {
+            c[0] = 0x63;
+            c[1] = 0x3B;
+            c[2] = static_cast<unsigned char>(0x3A + Next() % 3);
+            c[3] = static_cast<unsigned char>(0x1C + Next() % 2);
+        }
         for (std::uint32_t t : {at::kCountdownA, at::kCountdownB}) {
             unsigned char* const d = At(t);
             if (Half()) { d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 0; }
