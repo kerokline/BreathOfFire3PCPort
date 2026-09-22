@@ -2853,7 +2853,7 @@ params = "long x, long y"
 impl = "src/game/map_cells.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-21, 0x5720C0..0x5722CB, cdecl, no calls, every jump internal, writes nothing but its own argument slots: x and y 16.16, the cell their high words name in the grid of AreaMap_Header bytes +0 x +1; outside it, 0 in ax and the header's top half above. Inside, a height byte at AreaMap_Header + AreaMap_HeightBase * 4 + cell times MapView_HeightScale, plus corner bytes of the cell's dword at AreaMap_Corners, one formula per half-cell quadrant (bit 15 of x and of y) - full precision in the first, byte arithmetic in the others, the largest of two sums (<< 4) or of four values (<< 5). About 190 callers (pc_funcs.json)."
-note = "Elevation by its use: MapCell_DrawRising stacks its quads on -(result / 2). The sibling 0x5722D0 is the same with a store to 0x903850; not read further."
+note = "Elevation by its use: MapCell_DrawRising stacks its quads on -(result / 2). The sibling 0x5722D0 is not the same with a store: read 2026-09-22 it is AreaMap_Slope, which shares the grid lookup and the corner sums but returns their difference."
 
 [[func]]
 pc = 0x57C140
@@ -3075,6 +3075,16 @@ params = ""
 impl = "src/game/kind2_object.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5733B0..0x5733F5 (0x46 bytes). State 4: for kind2 +9 frames the elevation word +0x3E += the low word of +0x14 and MapView_SetElevation; then state 0 and context bit 0x80 cleared. The PSX FUN_801C6D60 (the same 16-bit sum). Call trace hidden_b: 195 calls."
+
+[[func]]
+pc = 0x5722D0
+name = "AreaMap_Slope"
+psx = 0x80155578
+ret = "long"
+params = "long x, long y, unsigned long direction"
+impl = "src/game/area_slope.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5722D0..0x57256F (0x2A0 bytes), cdecl, no calls, every jump internal. AreaMap_Elevation's grid and cell lookup; scratch byte 0x903850 (DamageScratch) 0 for flat or outside, 1 for sloped, tested by the callers read (0x46B611, 0x518784, MoveCmd_Move 0x578CC3) straight after. Whole cell: the elevation formula. One half: the edge sums a+b, d+e - flat when b == e and a == d, else the absolute difference << 4. Both halves: four corners, flat when equal (p0 << 5), else by the direction byte n, i = n >> 1, the absolute difference of p[i] (the larger of p[i], p[(i+1)&3] for odd n) and p[(i-2)&3], << 5; p[i] unmasked, reading past the four for n >= 8. Uses its caller's x and y slots as scratch. psx from psx_pair (call-anchored); the PSX body is not in the sibling's boot decompilation and was not read. E8 callers: 0x46B611, 0x46B66B, 0x51877F, 0x5725D4, 0x578CBE. Call trace hidden_b: 4,612 calls (2,481 from 0x518784, 2,131 from 0x578CC3) - reached by the attract cycle."
 
 # group B callees
 

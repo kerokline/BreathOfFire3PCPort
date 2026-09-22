@@ -91,6 +91,7 @@ add_library(bof3x SHARED
   src/game/field_objects.cpp
   src/game/sprite_screen.cpp
   src/game/kind2_object.cpp
+  src/game/area_slope.cpp
   src/game/field_input.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp

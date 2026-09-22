@@ -30,6 +30,7 @@
 #include "game/field_objects.h"
 #include "game/sprite_screen.h"
 #include "game/kind2_object.h"
+#include "game/area_slope.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
@@ -93,6 +94,7 @@ void InjectAll() {
     PsxGte_Inject();
     PsxGteFloat_Inject();
     Kind2Object_Inject();
+    AreaSlope_Inject();
     InjectReport();
 }
 
