@@ -49,6 +49,7 @@
 #include "game/text_draw.h"
 #include "game/text_immediate.h"
 #include "game/field_frame.h"
+#include "game/frame_callees.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -103,6 +104,7 @@ void InjectAll() {
     ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
     ObjectKinds_Inject();
     MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
+    FrameCallees_Inject();      // every call of its clones re-aimed: order does not matter
     InjectReport();
 }
 

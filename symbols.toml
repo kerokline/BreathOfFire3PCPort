@@ -3451,7 +3451,7 @@ psx = 0x80143FC4
 ctype = "unsigned char"
 count = 0xA00
 status = "hypothesis"
-evidence = "disasm 2026-09-22: op 9F tests bit 0 of byte 0x7E11E0 + Sprite_Current[0xB] * 0x80 (PSX 0x80143FC4 + n * 0x74). 0x494030 runs 20 objects of 0x80 bytes here (docs/HANDOFF.md). 20 x 0x80."
+evidence = "disasm 2026-09-22: op 9F tests bit 0 of byte 0x7E11E0 + Sprite_Current[0xB] * 0x80 (PSX 0x80143FC4 + n * 0x74). Effect_RunObjects runs 20 objects of 0x80 bytes here: +0 in use, +1 the kind handler state, +5 the kind (Effect_KindHandlers), +9 a frame count, +0x64 +0x68 +0x6C three dwords (kind 0x13 its target angles). Effect_FindFree 0x589810 hands out the first free of the 20, Effect_Release clears bytes 0..4. A general pool of short-lived field objects (a scan of .text finds 266 immediate stores to byte +5 of a record, 98 different kinds, the highest 0xB0, and 9 stores of a register), of which the attract cycle runs only kind 0x13, the camera turn. docs/frame-callees.md. 20 x 0x80."
 
 [[func]]
 pc = 0x578DC0
@@ -4354,8 +4354,9 @@ name = "Party_UpdateScreens"
 psx = 0x801BEAB0
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x531B60..0x531BAB: for ObjTrio's members from the last (Field_MemberCount - 1) down, skipping flag bit 6, Sprite_Current to each and 0x588F00 when Field_Request is 3, else Sprite_UpdateScreen."
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x531B60..0x531BAA (75 bytes), cdecl, no arguments: Field_MemberCount read once; for ObjTrio members n = count - 1 down to 0 (none for a count of 0; a count above 3 walks past the three at 0x14C a step) whose byte +0 lacks bit 6: Sprite_Current to the member, then Sprite_UpdateScreenSlot when Field_Request is 3 (re-read per member), else Sprite_UpdateScreen. The PSX FUN_801BEAB0 term for term (0x8014D154 / 0x8014D184, records 0x140 apart there). Call trace all_b 8,846, hidden_b 12,165 calls. docs/frame-callees.md."
 
 [[func]]
 pc = 0x494030
@@ -4363,8 +4364,9 @@ name = "Effect_RunObjects"
 psx = 0x8019B0EC
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x494030..0x49405F: for the 20 Effect_Objects of 0x80 bytes with byte 0 non-zero, Sprite_Current to it and call [0x655350 + byte +5 * 4]. The PSX twin by its place in FUN_8019A1B8 (9th call)."
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x494030..0x49405E (47 bytes), cdecl, no arguments: for the 20 Effect_Objects of 0x80 bytes, each whose byte +0 is non-zero (read afresh each turn), Sprite_Current to it and call [Effect_KindHandlers + byte +5 * 4], with no bound on the kind. The PSX FUN_8019B0EC term for term (records 0x74 there, table PTR_FUN_801C8C68, the current pointer at scratchpad 0x1F800044). Call trace hidden_b 12,165 calls. docs/frame-callees.md."
 
 [[func]]
 pc = 0x455250
@@ -4372,8 +4374,9 @@ name = "Field_RunSlots"
 psx = 0x80197C8C
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x455250..0x455282: for the 8 records of 0x10 bytes at 0x9035C0 with bit 0 of byte 0, 0x455300(index). What the records are is unread. The PSX twin by its place in FUN_8019A1B8 (10th call)."
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x455250..0x455281 (50 bytes), cdecl, no arguments: for the 8 Field_Slots records of 0x10 bytes whose byte +0 has bit 0 (read afresh each turn), Field_RunSlot(index). The index is pushed as a whole dword of which only the low byte was stored (the upper three are the caller ecx); Field_RunSlot masks it. The PSX FUN_80197C8C term for term (callee FUN_80197D84). Call trace hidden_b 12,165 calls. docs/frame-callees.md."
 
 [[func]]
 pc = 0x454AD0
@@ -4381,8 +4384,9 @@ name = "MoveScript_TintFrame"
 psx = 0x8019725C
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its head): walks MoveScript_TintRecords from 0x7E0700, skipping records without bit 0, dividing by tables at 0x6528AC..0x6528BC. 491 bytes, unread past that. The PSX twin by its place in FUN_8019A1B8 (11th call)."
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x454AD0..0x454CBA (491 bytes), cdecl, no arguments, no calls: for the 32 MoveScript_TintRecords of 12 bytes with bit 0 of byte +0: a CLUT depth d = byte +5 indexes Clut_Sixteens, Clut_PerRow, Clut_Stride (no bound; entries 5..7 are 0 and divide by zero); CLUT number byte +1 (source) and +6 (target) each become row n / per_row and column (n % per_row) * stride & 0xFF of Gfx_ClutStrip; each of the sixteens * 16 words is copied source to target with bytes +2 +3 +4 added to its red, green, blue in 8 bits and clamped (a signed-8 result below 0 is 0, above 31 is 31), bit 15 forced by bit 1 of byte +0 else kept, and the target first word written 0. Then Gfx_ClutStripDirty = 1; with bit 6 of +0 it is cleared, the sprite at dword +8 gets byte +6 as its CLUT number +0x27, and with bit 7 its +0x24 bit 2. The PSX FUN_8019725C term for term. Call trace hidden_b 12,165 calls. docs/frame-callees.md."
 
 [[func]]
 pc = 0x56D690
@@ -4895,3 +4899,155 @@ ret = "void"
 params = "unsigned char arg"
 status = "hypothesis"
 evidence = "disasm 2026-09-22, 25 instructions: resets the script context at Sprite_Kind2 +0x80 through 0x5322B0, sets +0x85 bit 0x80, +0x83 = arg, +0x84 = 3, copies Field_Kind2X / Field_Kind2Z into +0x34 / +0x38, grounds it with AreaMap_Elevation and MapView_SetElevation, then +1 = 1, +2 = +3 = 0. Called by the mode handler 0x56B450 and the interpreter's 0x57B4E0. No group takes it this round."
+
+# --- 2026-09-22 (second round), group D: the field frame loop's unread
+# callees - the effect objects' runner and the camera turn (kind 0x13), the
+# slot records, the tint frame and the members' screen updates, with the
+# callees and data they read. docs/frame-callees.md.
+
+[[func]]
+pc = 0x469E30
+name = "Effect_CameraTurn"
+psx = 0x8019BC3C
+ret = "void"
+params = "void"
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x469E30..0x469E49 (26 bytes), cdecl, no arguments: call [CameraTurn_States + Sprite_Current +1 * 4], no bound, then MapView_Redraw = 2. Effect_KindHandlers entry 0x13, reached only through it (pe_hidden). The PSX FUN_8019BC3C (jalr through 0x801C90E4, then 0x8014932F = 2). Spawned by 0x406B56 / 0x406BE3 with +9 = 16 and targets (-770 or -682, Camera_Angles 1, Camera_Angles 2). Call trace hidden_b 1,662 calls."
+
+[[func]]
+pc = 0x469E50
+name = "CameraTurn_Start"
+psx = 0x8019B90C
+ret = "void"
+params = "void"
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x469E50..0x469EE8 (153 bytes), cdecl, no arguments, no calls: CameraTurn_Angles = the three s16 Camera_Angles << 16; CameraTurn_Steps n = ((dword +0x64 + 4n - angle n) << 16) / byte +9, signed (a +9 of 0 divides by zero, as on the PSX); MapView_Redraw = +9; Field_StatusBits bit 5 set; +1 = 1. CameraTurn_States entry 0. The PSX FUN_8019B90C term for term. Call trace hidden_b 15 calls."
+
+[[func]]
+pc = 0x469EF0
+name = "CameraTurn_Step"
+psx = 0x8019BA4C
+ret = "void"
+params = "void"
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x469EF0..0x469F66 (119 bytes), cdecl, no arguments, no calls: with byte +9 of Sprite_Current 0, +1 = 2; otherwise each CameraTurn_Angles dword plus its CameraTurn_Steps, its high half to Camera_Angles, and +9 one less. CameraTurn_States entry 1. The PSX FUN_8019BA4C term for term. Call trace hidden_b 1,635 calls."
+
+[[func]]
+pc = 0x469F70
+name = "CameraTurn_End"
+psx = 0x8019BB04
+ret = "void"
+params = "void"
+impl = "src/game/frame_callees.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x469F70..0x469FA5 (54 bytes), cdecl, no arguments: Camera_Angles = the low words of dwords +0x64 +0x68 +0x6C of Sprite_Current, Field_StatusBits bit 5 cleared, tail jmp Effect_Release. CameraTurn_States entry 2, reached only through it (pe_hidden). The PSX FUN_8019BB04 term for term (FUN_80197070). Call trace hidden_b 12 calls."
+
+[[func]]
+pc = 0x455300
+name = "Field_RunSlot"
+psx = 0x80197D84
+ret = "void"
+params = "unsigned char index"
+status = "hypothesis"
+evidence = "disasm 2026-09-22 (its head): masks its argument to a byte, record Field_Slots + index * 0x10, compares byte +0x4B of the pointer at +0xC with byte +2. Field_RunSlots calls it for each record with bit 0. Not reached by the attract cycle (hidden_b). Unread past its head."
+
+[[func]]
+pc = 0x588F00
+name = "Sprite_UpdateScreenSlot"
+psx = 0x8014D154
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 4 instructions: Sprite_Current +0x29 = Draw_OtSlot, then jmp Sprite_UpdateScreen. Party_UpdateScreens calls it when Field_Request is 3, where the PSX FUN_801BEAB0 calls 0x8014D154. Not reached by the attract cycle (hidden_b)."
+
+[[func]]
+pc = 0x589840
+name = "Effect_Release"
+psx = 0x80197070
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x589840..0x58986E: bytes 0..4 of Sprite_Current to 0, the pointer re-read before each store. CameraTurn_End tail-jumps to it, as the PSX FUN_8019BB04 calls FUN_80197070. Its neighbour 0x589870 does the same by index, 0x589810 finds the first free of the 20 Effect_Objects (0xFF when none)."
+
+[[data]]
+pc = 0x655350
+name = "Effect_KindHandlers"
+psx = 0x801C8C68
+ctype = "unsigned long"
+count = 187
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Effect_RunObjects calls [0x655350 + Effect_Objects byte +5 * 4]. Entry 0x13 is Effect_CameraTurn. 187 dwords from here point into .text before the first that does not; the highest kind stored by an immediate is 0xB0 (docs/frame-callees.md), so where this table ends and another begins is not established - the count is the upper bound. Stored as dwords; call through a cast."
+
+[[data]]
+pc = 0x653F18
+name = "CameraTurn_States"
+psx = 0x801C90E4
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-22: Effect_CameraTurn calls [0x653F18 + Sprite_Current +1 * 4]; entries 0..2 are CameraTurn_Start, CameraTurn_Step, CameraTurn_End, which set +1 to 1, 2 and release the object. Seven more .text addresses follow (0x46A040 first) - another kind's states, whose PSX twin 0x8019BC8C calls CameraTurn_Start's."
+
+[[data]]
+pc = 0x905B90
+name = "CameraTurn_Angles"
+psx = 0x801481E4
+ctype = "long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-22: CameraTurn_Start stores the three Camera_Angles here as 16.16, CameraTurn_Step adds CameraTurn_Steps and stores the high halves back to Camera_Angles. The PSX 0x801481E4 / E8 / EC."
+
+[[data]]
+pc = 0x905B70
+name = "CameraTurn_Steps"
+psx = 0x801481F4
+ctype = "long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-22: CameraTurn_Start stores ((target - angle) << 16) / frames here for each angle; CameraTurn_Step adds them to CameraTurn_Angles. The PSX 0x801481F4 / F8 / FC."
+
+[[data]]
+pc = 0x8034E1
+name = "Field_StatusBits"
+psx = 0x8014686D
+ctype = "unsigned char"
+status = "hypothesis"
+evidence = "disasm 2026-09-22: bit 5 set by CameraTurn_Start and cleared by CameraTurn_End - the camera is turning; bit 6 holds Field_ObjectIdle's turn and ObjTrio_ClearBit40 clears it; bit 0 is MoveScript_Variable's variable 9. The PSX 0x8014686D (FUN_8019B90C / FUN_8019BB04). A byte of several unrelated bits; named for that."
+
+[[data]]
+pc = 0x9035C0
+name = "Field_Slots"
+psx = 0x80145D90
+ctype = "unsigned char"
+count = 0x80
+status = "hypothesis"
+evidence = "disasm 2026-09-22: Field_RunSlots tests bit 0 of byte +0 of 8 records of 0x10 here and runs Field_RunSlot for each; Field_RunSlot reads +2, +4 and a pointer at +0xC. What a slot is, is unread. The PSX 0x80145D90 (FUN_80197C8C's -0x7FEBA270)."
+
+[[data]]
+pc = 0x6528AC
+name = "Clut_Sixteens"
+psx = 0x801C8AB8
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "bytes and disasm 2026-09-22: 1, 16, 2, 4, 8, 0, 0, 0 - MoveScript_TintFrame copies this times 16 colours for a CLUT depth (tint record byte +5): 16, 256, 32, 64, 128. The PSX DAT_801C8AB8."
+
+[[data]]
+pc = 0x6528B4
+name = "Clut_PerRow"
+psx = 0x801C8AC0
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "bytes and disasm 2026-09-22: 16, 1, 8, 4, 2, 0, 0, 0 - how many CLUTs of a depth share a 256-colour row of Gfx_ClutStrip; MoveScript_TintFrame divides a CLUT number by it (row) and keeps the remainder (column). Depths 5..7 divide by zero. The PSX DAT_801C8AC0."
+
+[[data]]
+pc = 0x6528BC
+name = "Clut_Stride"
+psx = 0x801C8AC8
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "bytes and disasm 2026-09-22: 16, 0, 32, 64, 128, 0, 0, 0 - a CLUT's width in colours; MoveScript_TintFrame multiplies the column by it, in 8 bits. The PSX DAT_801C8AC8."
