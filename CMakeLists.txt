@@ -106,7 +106,9 @@ add_library(bof3x SHARED
   src/game/psx_gte_matrix.cpp
   src/game/psx_gte_transform.cpp
   src/game/draw_emit.cpp
-  src/game/draw_pass.cpp)
+  src/game/draw_pass.cpp
+  src/game/event_script.cpp
+  src/game/event_script_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
