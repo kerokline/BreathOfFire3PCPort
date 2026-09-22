@@ -32,7 +32,7 @@ bool NameListed(const char* list, const char* name) {
 }
 
 bool WantsOriginal(const char* name) {
-    char list[2048];
+    char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
     DWORD n = GetEnvironmentVariableA("BOF3X_ORIGINAL", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_ORIGINAL is longer than %u bytes", (unsigned)sizeof list);
@@ -163,7 +163,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
 }
 
 bool WantsShadow(const char* name) {
-    char list[2048];
+    char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
     DWORD n = GetEnvironmentVariableA("BOF3X_SHADOW", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_SHADOW is longer than %u bytes", (unsigned)sizeof list);
