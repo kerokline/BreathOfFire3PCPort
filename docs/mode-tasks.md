@@ -71,6 +71,8 @@ The eight states (`Title_States` `0x653830`, PSX `0x801D1BD4`), read
 So the attract cycle is states 0-5 round and round: backdrop, logo, demo,
 backdrop. The title menu is state 7, reached only through Start.
 
+Since taken over, with the badge, the logo sets and the scenario start: [`title-states.md`](title-states.md).
+
 ### 2.1 `Title_CheckStart` `0x462420`
 
 0x8E bytes; PSX `FUN_801D104C` branch for branch. Returns unless
