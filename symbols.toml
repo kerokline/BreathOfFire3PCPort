@@ -6246,6 +6246,45 @@ params = "const unsigned char *op"
 status = "hypothesis"
 evidence = "disasm 2026-09-22 (its first instructions, not taken over): EventScript_Op's handler for Ex (7 bytes); takes an effect slot from 0x589810 and fills Effect_Objects. Never reached by the attract cycle."
 
+
+# --- 2026-09-22 (third round), boundary callees registered before the groups
+# were spawned, so that no two groups bind one address. Group H (the message
+# box and the two pens, src/game/msgbox.cpp) owns 0x497AD0; group J (the
+# window/task layer, src/game/window_task.cpp) owns the three Gpu_Set*
+# leaves, which belong beside their siblings in src/game/psx_gpu.cpp.
+
+[[func]]
+pc = 0x497AD0
+name = "MsgBox_StateDispatch"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x497AD0..0x497B24 (85 bytes; the 23-entry jump table of MsgBox_Step at 0x497A70 precedes it, so pe_funcs.py folded it into MsgBox_Step's 752 bytes and pe_hidden.py, wanting padding before a start, never listed it). Builds an 8-entry call table on the stack - 0x497B30, 0x497E90, 0x497EB0, 0x497F40, 0x498050, 0x4982C0, 0x498450, 0x498470 - and calls entry (byte MsgBoxState 0x7DEE40). Called once a frame by MsgBox_FrameTask at 0x497818 (2,781 times in hidden_b, the count of its caller); the attract sequence reaches only states 0 and 7 (hidden_a, a first-hit trace of every hidden start, never hit 1..6). In no entries list until this round."
+
+[[func]]
+pc = 0x5A7630
+name = "Gpu_SetPolyGT4"
+ret = "void"
+params = "unsigned char *prim"
+status = "evidence"
+evidence = "disasm 2026-09-22, 8 instructions: byte +7 = 0x3C, the PSX GPU code of POLY_GT4, and the float 0.01 (0x3C23D70A) to +0x10, +0x24, +0x38, +0x4C - the four vertices of a shaded, textured quad in the port's record. cdecl, as its siblings Gpu_SetPolyFT4 0x5A75D0 and Gpu_SetLineF2 0x5A7650. Called by the window layer 0x595C50 (hidden_b: 2,637 calls)."
+
+[[func]]
+pc = 0x5A7690
+name = "Gpu_SetLineF4"
+ret = "void"
+params = "unsigned char *prim"
+status = "evidence"
+evidence = "disasm 2026-09-22, 8 instructions: byte +7 = 0x4C, the PSX GPU code of LINE_F4, and the float 0.01 to +0x10, +0x1C, +0x28, +0x34 - four vertices at the LINE_F2 stride. cdecl. Called by the window layer 0x595C50 and 0x595F60 (hidden_b: 2,901 calls)."
+
+[[func]]
+pc = 0x5A7740
+name = "Gpu_SetTile"
+ret = "void"
+params = "unsigned char *prim"
+status = "evidence"
+evidence = "disasm 2026-09-22, 4 instructions: byte +7 = 0x60, the PSX GPU code of TILE, and the float 0.01 to +0x10. cdecl, the shape of Gpu_SetSprt 0x5A7710. Called by the window layer 0x595C50 and the mode task's 0x495750 (hidden_b: 3,501 calls)."
+
 [[data]]
 pc = 0x7DEE20
 name = "EventScript_FlagBank"
