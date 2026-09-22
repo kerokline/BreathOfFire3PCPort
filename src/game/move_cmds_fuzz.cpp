@@ -290,19 +290,34 @@ std::uint32_t KindPointer() {
     return seeds[Next() % (sizeof seeds / sizeof seeds[0])];
 }
 
+// A byte the walk may land on without stopping or finding a label: any op of
+// non-zero length but 0A.
+unsigned char SafeOp() {
+    unsigned char op;
+    do op = static_cast<unsigned char>(Next());
+    while (op == 0x0A || MoveScript_OpLengths[op] == 0);
+    return op;
+}
 // A script the label search walks to its label: ops of every step size, other
 // labels, F8 with and without 07, 0E / 0F with and without mask 2 - and never
-// an op of length 0 where the walk lands.
+// an op of length 0 where the walk lands. Every operand byte is itself an op
+// of non-zero length, and the label is followed by a sled of the same label,
+// so that a walk put out of step (a negative control) still ends - on another
+// position, a mismatch the fuzz counts, rather than a hang. So the label byte
+// is an op of ODD length: a walk that lands on one in the sled steps to the
+// other parity, onto a 0A (an even length would keep it on the label bytes,
+// past the sled). The compare itself takes any byte; 0A is 2 bytes, so the
+// label is never 0A.
 void BuildScript(unsigned char label) {
     unsigned at = 0;
     const unsigned ops = Next() % 3 ? Next() % 24 : 0;
     for (unsigned i = 0; i < ops; ++i) {
         unsigned char* const p = g_script + at;
-        for (unsigned j = 0; j < 6; ++j) p[j] = static_cast<unsigned char>(Next());
+        for (unsigned j = 0; j < 6; ++j) p[j] = SafeOp();
         switch (Next() % 6) {
         case 0:   // another label
             p[0] = 0x0A;
-            if (p[1] == label) p[1] = static_cast<unsigned char>(label + 1);
+            if (p[1] == label) p[1] = static_cast<unsigned char>(label == 0x0B ? 0x0C : 0x0B);
             at += MoveScript_OpLengths[0x0A];
             break;
         case 1:
@@ -314,18 +329,16 @@ void BuildScript(unsigned char label) {
             p[0] = static_cast<unsigned char>(0x0E + Next() % 2);
             at += (p[3] & 2) ? 5 : 4;
             break;
-        default: {
-            unsigned char op;
-            do op = static_cast<unsigned char>(Next());
-            while (op == 0x0A || op == 0xF8 || op == 0x0E || op == 0x0F || MoveScript_OpLengths[op] == 0);
-            p[0] = op;
-            at += MoveScript_OpLengths[op];
+        default:
+            p[0] = SafeOp();
+            at += MoveScript_OpLengths[p[0]];
             break;
         }
-        }
     }
-    g_script[at] = 0x0A;
-    g_script[at + 1] = label;
+    for (unsigned i = 0; i < 24; ++i) {
+        g_script[at + 2 * i] = 0x0A;
+        g_script[at + 2 * i + 1] = label;
+    }
 }
 
 using Fn0 = std::uint32_t (__cdecl*)();
@@ -403,6 +416,9 @@ Args Generate(unsigned k, State& input) {
     case kMoveKind2: {
         Sprite_Kind2[kK2Speed] = static_cast<unsigned char>(1 + Next() % 5);
         Sprite_Kind2[kK2Steps] = static_cast<unsigned char>(Pick({1, 2, 0x7F, 0x80, 0xFF}) | 1);
+        // A stale divisor that divides: a store of it dropped then shows as a
+        // count, not a fault.
+        MoveScript_F3Divisor = static_cast<short>(1 + Next() % 0x80);
         const unsigned char direction = Pick({0, 1, 2, 3, 4, 5, 6, 7, 2, 6, 25});
         x.a[0] = Stale(direction);
         break;
@@ -442,7 +458,9 @@ Args Generate(unsigned k, State& input) {
         x.a[0] = Stale(Pick({0, 1, 2, 0x7F, 0x80, 0x81, 0xFE, 0xFF}));
         break;
     case kFindLabel: {
-        const unsigned char label = static_cast<unsigned char>(Next());
+        unsigned char label;
+        do label = static_cast<unsigned char>(Next());
+        while (MoveScript_OpLengths[label] % 2 == 0);
         BuildScript(label);
         std::uint16_t position = static_cast<std::uint16_t>(Next());
         position = static_cast<std::uint16_t>(Next() % 4 ? position | 0x4000 : position & ~0x4000u);
