@@ -36,6 +36,13 @@ constexpr char kExpectedSha256[] =
 // The suspended game process, while there is one that has not been resumed.
 HANDLE g_child = nullptr;
 
+// BOF3X_SELFTEST_ONLY: the DLL ends the process once every inject and
+// start-up self-test has run, before the game's main thread is resumed - no
+// window, no dialogs; the launcher's exit code is the game process's (0 all
+// passed, 3 a Fatal). Lets several checkouts self-test at once
+// (docs/SCAFFOLDING.md section 2).
+bool SelfTestOnly() { return GetEnvironmentVariableW(L"BOF3X_SELFTEST_ONLY", nullptr, 0) > 0; }
+
 [[noreturn]] void Die(const wchar_t* fmt, ...) {
     if (g_child) TerminateProcess(g_child, 1);
     wchar_t buf[1024];
@@ -117,6 +124,13 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
     HANDLE thread = CreateRemoteThread(process, nullptr, 0, start, remote, 0, nullptr);
     if (!thread) Die(L"CreateRemoteThread failed (%lu)", GetLastError());
     WaitForSingleObject(thread, INFINITE);
+    if (SelfTestOnly()) {   // the DLL has ended the process: report how
+        WaitForSingleObject(process, INFINITE);
+        DWORD code = 1;
+        GetExitCodeProcess(process, &code);
+        std::fwprintf(stderr, L"bof3x-launcher: self-test only, game process exit code %lu\n", code);
+        ExitProcess(code);
+    }
 
     // The thread's exit code is LoadLibraryW's return value: the module handle,
     // or 0. A process ended by the DLL's own Fatal() also lands here.
@@ -198,7 +212,7 @@ int wmain(int argc, wchar_t** argv) {
     }
 
     std::wstring cfg_error;
-    if (!bof3x::ConfigApplyGameCfg(game_dir, cfg, cfg_error))
+    if (!SelfTestOnly() && !bof3x::ConfigApplyGameCfg(game_dir, cfg, cfg_error))
         Die(L"%ls\n\nDisplay and renderer are set through that file, which is the game's "
             L"own input. Check that the game directory is writable.", cfg_error.c_str());
     bof3x::ConfigApplyEnvironment(cfg);
@@ -216,6 +230,10 @@ int wmain(int argc, wchar_t** argv) {
     // From here on a failure must not leave a suspended game process behind;
     // Die() ends it.
     g_child = pi.hProcess;
+    if (SelfTestOnly()) {   // a hung self-test is killed by this pid, not by image name
+        std::fwprintf(stderr, L"bof3x-launcher: self-test only, game pid %lu\n", pi.dwProcessId);
+        std::fflush(stderr);
+    }
 
     LoadDllInto(pi.hProcess, dll);
 

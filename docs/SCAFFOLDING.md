@@ -102,6 +102,21 @@ callees and never ours — `src/game/gfx_clut.cpp` clones three that way.
 `gfx_clut`) or `*`.
 The copy exists in process memory only; nothing of Capcom's is written to disk.
 
+**Self-tests without the game** (2026-09-22): with `BOF3X_SELFTEST_ONLY=1`
+the DLL ends the process right after `InjectAll` - every inject done, every
+start-up self-test run - before the game's main thread is ever resumed. No
+window, no foreground grab, no dialog (neither `Fatal`'s nor the launcher's),
+and the launcher does not write `BOF3.CFG`. It prints the game's pid and exits
+with the game process's code: 0 when everything passed, 3 on a `Fatal`. About
+half a second:
+
+    BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config
+
+Because nothing is shared but the read-only `BOF3.exe`, several checkouts
+(worktrees) can self-test at once, each logging to its own `build/bof3x.log`.
+A self-test that *hangs* still hangs: kill it by the printed pid, never by
+image name, which would end every other checkout's run too.
+
 ## 3. One name, bound once
 
 For every function in `symbols.toml` that has a signature, the bare name is
