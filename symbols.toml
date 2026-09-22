@@ -3549,7 +3549,8 @@ psx = 0x80197718
 ret = "void"
 params = "unsigned char *sprite"
 status = "hypothesis"
-evidence = "call site 0x5785EC, 2026-09-22: op CD calls it with Sprite_Current. Unread past its first instructions."
+evidence = "call site 0x5785EC, 2026-09-22: op CD calls it with Sprite_Current. Read whole 2026-09-22 (group B, 0x2B bytes): Tint_Release(i) for each of the 32 MoveScript_TintRecords whose dword +8 equals sprite, i ascending. 98 call sites."
+impl = "src/game/field_event.cpp"
 
 [[func]]
 pc = 0x589590
@@ -4328,7 +4329,8 @@ psx = 0x801C1A60
 ret = "void"
 params = "void"
 status = "hypothesis"
-evidence = "disasm 2026-09-22, 7 instructions: when the byte at 0x904EF0 is non-zero, jmp [0x660B60 + byte 0x904EF1 * 4]; else ret. First call of Field_MembersFrame. Named by its shape."
+evidence = "disasm 2026-09-22, 7 instructions: when the byte at 0x904EF0 is non-zero, jmp [0x660B60 + byte 0x904EF1 * 4]; else ret. First call of Field_MembersFrame. Named by its shape. 0x18 bytes; the table's four entries 0x533780 / 0x5338B0 / 0x5338F0 / 0x533900 are separate, unread functions (group B, docs/field-event.md)."
+impl = "src/game/field_event.cpp"
 
 [[func]]
 pc = 0x52D8F0
@@ -4337,7 +4339,8 @@ psx = 0x801B10F0
 ret = "void"
 params = "void"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, the byte at 0x905B82 counted down to 0, Field_CopyInput, then jmp [0x660918 + Sprite_Current +1 * 4]. Field_MembersFrame calls it for ObjTrio's first member only."
+evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, the byte at 0x905B82 counted down to 0, Field_CopyInput, then jmp [0x660918 + Sprite_Current +1 * 4]. Field_MembersFrame calls it for ObjTrio's first member only. Read whole 2026-09-22 (group B, 0x2C bytes): the table at 0x660918 is 15 states (0 Field_LeaderStart, 1 Field_LeaderControl, 2..14 unread), indexed by the whole byte unchecked; also called by Field_PartyFirstFrame."
+impl = "src/game/field_event.cpp"
 
 [[func]]
 pc = 0x51AC50
@@ -4895,3 +4898,286 @@ ret = "void"
 params = "unsigned char arg"
 status = "hypothesis"
 evidence = "disasm 2026-09-22, 25 instructions: resets the script context at Sprite_Kind2 +0x80 through 0x5322B0, sets +0x85 bit 0x80, +0x83 = arg, +0x84 = 3, copies Field_Kind2X / Field_Kind2Z into +0x34 / +0x38, grounds it with AreaMap_Elevation and MapView_SetElevation, then +1 = 1, +2 = +3 = 0. Called by the mode handler 0x56B450 and the interpreter's 0x57B4E0. No group takes it this round."
+
+
+# --- 2026-09-22 (second round), group B: the event script's field side - the
+# party leader's frame and its first two states, the area set-up that places
+# the party, the party-set loader and their small helpers (docs/field-event.md).
+# All read whole by capstone against the true extent; psx = the pairing of
+# tools/psx_pair.py (analysis/pairs_propagated.json), not read instruction by
+# instruction. Field_LeaderFrame, Field_PendingJump and Sprite_ReleaseTint are
+# earlier entries, given impl in place.
+
+[[func]]
+pc = 0x52D920
+name = "Field_LeaderStart"
+psx = 0x801B1164
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x124 bytes: state 0 of Field_LeaderFrame's table 0x660918. Sprite_ClearSteps; Sprite_Current +0x18 +0x1C +0x20 = 0 and +9 +0xA +6 +7 +0xB = 0; +0x3E = MapView_GroundAt(+0x34, +0x38); Field_State +0x128 = 3, +0x136..+0x138 = 0; +0x4B = 0xFF; then with Field_InputFlags bit 0x20 state 0xC, in area 0xBD state 0xD (both with +0 bit 0x40), else Field_LeaderAnimation(+8) and state + 1. psx_pair gap20."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x52DA50
+name = "Field_LeaderControl"
+psx = 0x801B1318
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x17 bytes: state 1 of Field_LeaderFrame's table. call [0x660954 + Sprite_Current +2 * 4] (three sub-states: Field_LeaderStand, 0x52DB90, 0x52E110), then a tail jmp to Sprite_ScriptTick, whose al it returns (no caller reads it). psx_pair gap20."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x52DA70
+name = "Field_LeaderStand"
+psx = 0x801B1364
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x118 bytes: sub-state 0 of Field_LeaderControl. Returns at once on Field_ScriptFlags bit 0x100, Field_ScriptFlags2 bit 0x40, Field_Request 5, or 0x535120(1) / 0x535240(1) true; 0x5301F0 true clears Field_State +0x136; with Field_InputHeld and actor record Field_State +0x148 bit 0x20 clear, clears it too; then seven tests 0x531950 0x530920 0x5302C0 0x530380 0x530800 0x5303E0 0x530430, any true returns; with Field_InputHeld, 0x530480, +7 = 0, +0xA = 2, +0xB = 0, Field_LeaderAnimation(+8), sub-state 1. Also the tail of a jmp at 0x52F55D. psx_pair gap20."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x52FEB0
+name = "Field_ZoneCounterRoll"
+psx = 0x801B4CC4
+ret = "void"
+params = "unsigned keep"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x120 bytes: the word at 0x802E74 (ObjTrio +0x134) from the zone Area_ZoneAt(leader x, z) finds: 0 with Field_ScriptFlags bit 0x20 or a zone whose byte 0x660A24[zone * 2] is 0; kept when keep and it is non-zero and below that base; else base + min(Rand() & 0x1F, 0x660A25[zone * 2]), doubled if a member has accessory 0x15 and halved if one has 0x14 (0x535310(id, 3, n)), in 8 bits. What the counter counts is a guess (steps to an encounter?), unchecked in game. Callers 0x41F8E0 0x4959BF 0x4961EA 0x52DD8D. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x52FFD0
+name = "Area_ZoneAt"
+psx = 0x801B4C34
+ret = "const unsigned char *"
+params = "unsigned x, unsigned z"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x52 bytes: walks the 8-byte records at [0x668D80 + Game_AreaNumber * 4] until x in [r0, r2] and z in [r1, r3] and returns that record; no end test (a record that matches nothing loops forever). Its byte +4 is the zone Field_ZoneCounterRoll indexes by. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5305B0
+name = "Field_LeaderAnimation"
+psx = 0x801B6BD4
+ret = "unsigned char"
+params = "unsigned animation"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x43 bytes: without Field_InputFlags bit 1, 0x589330(animation); with it, 0x589330(0x6608D8[animation * 2]) and Sprite_Current +0x2A = 0x6608D9[animation * 2]. Returns 0x589330's al. 21 call sites. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x531BB0
+name = "Party_Count"
+psx = 0x801BEB74
+ret = "int"
+params = "unsigned slot"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x20 bytes: the number of entries of the 3-byte list at 0x904062 + slot * 3 before the first 0xFF, at most 3. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5322B0
+name = "ScriptContext_Reset"
+psx = 0x801BF708
+ret = "void"
+params = "unsigned char *context"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x20 bytes: context +0xA (the script position word) = 0, +7 +2 +5 +0 +1 +3 = 0, +4 = 3 (the speed index Kind2_Script resets to). Callers Kind2_Place and 0x53225A. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x533110
+name = "Field_PartySetUp"
+psx = 0x801C0F94
+ret = "void"
+params = "long x, long z, unsigned flags"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x388 bytes: the area set-up's party placement, called once by 0x594E60. Clears Field_ScriptFlags bit 0x1000; unless Field_ScriptFlags2 bit 0x8000, and on Field_InputFlags bits 9, areas 0xBD / 0xBB, or bit 0x40 with flag 0x77 of 0x904030 clear, sets up the leader alone (actor record 0 copied, an animation bank, Field_MemberSprite or area 0xBD's reset); otherwise Party_Count(0) members through Field_PartyLoad(0) or, with bit 0x8000, member by member. Then Field_Kind2X / Z: fixed with Field_InputFlags bit 8, (x, z) with flags bit 0x80, else the leader's after Field_PartyPosition (or 0x533690 with Field_ScriptFlags bit 0x800). psx_pair callers."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5334A0
+name = "Field_PartyFirstFrame"
+psx = 0x801C15A4
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0xD3 bytes: called by 0x594E60 after Field_PartySetUp. With Field_ScriptFlags2 bit 0x8000 clears bit 0x40 of each member; else Party_ClearActive, the leader's state 9 (Field_InputFlags bit 8) or each member's +0x29 = 6, and one Field_LeaderFrame / Field_MemberFrame per member not masked by Field_ScriptFlags bit i. Clears Field_ScriptFlags2 bit 0x4000. psx_pair gap15."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x533580
+name = "Field_PartyPosition"
+psx = 0x801C1750
+ret = "void"
+params = "long x, long z, unsigned direction"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x102 bytes: each member at (x, z), or offset from it by the 8-byte pair 0x660B40[(direction >> 1) * 8] (subtracted with Field_ScriptFlags2 bit 0x4000) when its +0x70 byte is non-zero; +8 = direction; +0x3E = MapView_GroundAt; bit 0x40 set on members 1 and 2, cleared on the leader. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x533BA0
+name = "Field_MemberSprite"
+psx = 0x801C224C
+ret = "void"
+params = "unsigned member, unsigned slot"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x134 bytes: sets up Sprite_Current as party member `member` in slot `slot`: Sprite_ReleaseTint; +0x2C = the member's column in the party-set row 0x669750 + (0x90412C & 0x7F) * 3 (3 if absent); +0x4C = 0x813580 + [0x813580 + that * 4]; +0x24 = 1, +0x27 = slot + 0x78, +0x28 = 2, +0x25 = 5, +0x26 = slot * 0x50, +0x2B = 0x669738[member], +0x70 low byte = (+0x2B != 0), +0x29 = Draw_OtSlot, +0x5C..+0x5F = 0; Sprite_LoadPalette(0x80D380 + slot * 64, 0). 18 call sites. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x533CE0
+name = "Field_PartyLoad"
+psx = 0x801C23F8
+ret = "void"
+params = "unsigned slot"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x120 bytes: unless Field_Request 6, Party_ClearAll; then for each of Field_MemberCount members: Field_State = Sprite_Current = the member, +0 = 1, +5 = i, Field_MemberSprite(list[slot * 3 + i], i), +0x48 = 0, +0x40 = +0x44 = 0x10000, +0x148 = MoveScript_EffectState[id], its actor record copied to +0x80, +0x138 bit 0 cleared; slot non-zero and actor bit 0x80: Sprite_SetTint(-4, -8, 0, 0); slot 0: Field_MemberTimers. 34 call sites. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x533EF0
+name = "Party_Join"
+psx = 0x801C2874
+ret = "unsigned char"
+params = "unsigned member"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x11A bytes: Party_JoinReset; actor record MoveScript_EffectState[member] +0xB bit 0 set; with Field_MemberCount 3 or more, Field_Request = 6 and 1; else the member into both party lists at 0x904062 / 0x904065, ObjTrio slot n +0 = 1, Member_ClearState(n), Field_MemberSprite(member, n), its actor record copied, +5 = n, +0x4B = 0xFF, Field_MemberCount + 1, +0x148 = the actor index, and 0. psx_pair callers."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x534010
+name = "Party_JoinReset"
+psx = 0x801C2838
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x12 bytes: the dwords 0x9045FC, 0x904600 and the byte 0x904604 = 0. Callers Party_Join and 0x534032. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x534EC0
+name = "Field_MemberTimers"
+psx = 0x801C41FC
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x4B bytes: actor record Field_State +0x148: bit 0x80 sets Field_State +0x124 = 10, bit 0x20 sets +0x125 = 0x28. What they time is unread. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x536650
+name = "Sprite_ClearSteps"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x1E bytes: the dwords Sprite_Current +0xC, +0x10, +0x14 = 0 (eax 0 on return, read by no caller checked). 14 call sites. psx_pair call-disputed, so no psx."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5366A0
+name = "Sprite_LoadPalette"
+ret = "void"
+params = "unsigned short *dst, unsigned index"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x55 bytes: 32 words from palette `index` of Sprite_Current's bank (+0x4C; its dword +4 an offset to a table of offsets) to dst and to the same place in Gfx_ClutStrip (0x80F580 + ((dst - Gfx_ClutStripSource) >> 1) * 2), then Gfx_ClutStripDirty = 1. 21 call sites. psx_pair call-disputed, so no psx."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x536730
+name = "Member_ClearState"
+psx = 0x80167664
+ret = "void"
+params = "unsigned member"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x30 bytes: bytes +1..+4 of ObjTrio member `member` (stride 0x14C, unchecked) = 0. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x536760
+name = "Party_ClearAll"
+psx = 0x801676AC
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x33 bytes: for the three ObjTrio members, +0 = 0 and Member_ClearState. psx_pair gap20."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5367A0
+name = "Party_ClearActive"
+psx = 0x80167704
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x35 bytes: Member_ClearState for each of the three ObjTrio members whose +0 is non-zero. psx_pair call."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5367E0
+name = "PartySet_Load"
+ret = "void"
+params = "unsigned a, unsigned b, unsigned c, unsigned mode"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x6C bytes: mode 0 first PartySet_LoadFirst(a, b, c) and a wait (Task_Sleep(1) until File_LoadDone); then PartySet_LoadSecond(a, b, c, mode) and the same wait. 63 call sites, most in 0x519890's script ops. Unpaired."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x536850
+name = "PartySet_LoadFirst"
+ret = "void"
+params = "unsigned a, unsigned b, unsigned c"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x38 bytes: PartySet_Select(PartySet_Find(a, b, c), 3) unless that is already 0x90412C & 0x7F. Unpaired."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x536890
+name = "PartySet_LoadSecond"
+ret = "void"
+params = "unsigned a, unsigned b, unsigned c, unsigned mode"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x54 bytes: set = PartySet_Find(a, b, c); PartySet_Select(set, mode) unless 0x90412C already holds set (mode non-zero) or set | 0x80 (mode 0). Unpaired."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x5368F0
+name = "PartySet_Find"
+ret = "unsigned char"
+params = "unsigned a, unsigned b, unsigned c"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x16B bytes: a, b, c to 0x903850; the current set 0x90412C & 0x7F if it is not 0xFF and holds every one that is not 0xFF; else the three sorted and looked up column by column in the 19 sorted 3-byte rows at 0x669750, the row returned; none found calls 0x536A60 (which prints and never returns) and gives 0xFF. Unpaired."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x536AC0
+name = "PartySet_Select"
+psx = 0x80167C04
+ret = "void"
+params = "unsigned set, unsigned mode"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x94 bytes with its inline 4-entry jump table at 0x536B44: 0x90412C = set | 0x80 (mode 0) or set (1, 2), untouched for 3; then LoadDatFile(set + 0x2C2 / 0xFC / 0x10F / 0x2D5) for mode 0 / 1 / 2 / 3, nothing above. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x572570
+name = "MapView_GroundAt"
+psx = 0x801559E4
+ret = "long"
+params = "long x, long z"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x1F bytes: MapView_CheckHeightScale, AreaMap_Elevation(x, z), MapView_HeightScale = 0, the elevation returned. psx_pair call."
+impl = "src/game/field_event.cpp"
+
+[[func]]
+pc = 0x572590
+name = "MapView_CheckHeightScale"
+psx = 0x8015598C
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x2E bytes: MapView_HeightScale = 1 when Sprite_Current is the object at 0x905DA0 with its +0xB bit 0, or otherwise Field_State +0x138 bit 0; else untouched. Callers MapView_GroundAt and 0x5725C0. psx_pair call-anchored."
+impl = "src/game/field_event.cpp"
