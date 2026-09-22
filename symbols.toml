@@ -94,6 +94,9 @@ note = "INTERNAL OFFSETS DIFFER FROM PSX: the name field is 9 bytes, not 5, and 
 pc = 0x4976D0
 psx = 0x8015034C
 name = "Msg_OpenScript"
+ret = "void"
+params = "unsigned short id"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-18: (u16 id) ptr = 0x803580 + u16[0x803580 + 2*id]; writes ptr to the box string base 0x7DEE4C and stepper pointer 0x7DEE50, calls MsgBox_Reset 0x497770, then stores id to the message index 0x7DEE48. Same three writes as PSX Msg_OpenScript's confirmed note (0x801490A8 / AC / A4), at the MsgBoxState delta. 418 callers — the script-side entry point."
 
@@ -119,6 +122,9 @@ note = "bof3ext calls this GetText and splits the id the same way (fileNum = ind
 pc = 0x497770
 psx = 0x8015042C
 name = "MsgBox_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-18: zeroes 0x7DEE40..43, ands the flag word 0x7DEE44 with 0x40, zeroes 0x7DEE46/4A/58/59/5A/5B/68, eats a leading 0x0C and stores its argument to 0x7DEE6E (else 0), calls Window_Alloc 0x59E2D0 as (0, 0), sets 0x80316F = 2. Every one of those matches the PSX MsgBox_Reset confirmed note at the MsgBoxState delta."
 
@@ -126,21 +132,32 @@ evidence = "disasm 2026-09-18: zeroes 0x7DEE40..43, ands the flag word 0x7DEE44 
 pc = 0x4977F0
 psx = 0x80150508
 name = "MsgBox_FrameTask"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-18: box origin 0x7DEE60/62 = (window x >> 4) + 10, (window y >> 4) + 6 from window record 0 at 0x803164/66 — verbatim the PSX MsgBox_FrameTask note, constants included. Then calls 0x497AD0, 0x4984E0 and (when flag 4 of 0x7DEE44 is clear) MsgBox_Step 0x497840; returns the inverse of flag 2."
 
 [[func]]
 pc = 0x497840
-psx = 0x8015096C
+psx = 0x80150598
 name = "MsgBox_Step"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-18: the control-code stepper. cmp 0x16 / ja default / jmp [eax*4 + 0x497A70], a 23-entry table over codes 0x00..0x16 — the same vocabulary bound as PSX. Contains xor word [0x7DEE44], 0x10 at 0x497D97, the PC copy of the DAT_801490a0 ^= 0x10 toggle shared by codes 0x10 and 0x11 (instant print, PC_PORT_CROSS_REFERENCE.md section 2.1). 789 instructions, second jump table at 0x497E34."
+evidence = "disasm 2026-09-22, 0x497840..0x497A6C (557 bytes) with its 23-entry jump table at 0x497A70 (92 bytes, dispatched by jmp [eax*4 + 0x497A70] at 0x4978B2) - NOT the 752 bytes pe_funcs.py reports, which run on through the table into MsgBox_StateDispatch. One frame of the printer: the pen is reset to the box origin and the message re-walked from the top until the drawn count EQUALS 0x7DEE59. Codes 0x12 0x13 0x15 and everything above 0x16 draw; 0x03 0x04 0x07 0x08 substitute (8, 8, 32 and 16 characters); 0x01 is a newline of 14 px; 0x0D / 0x0E turn the offset pen on and off. The PSX twin is 0x80150598 (lw 0x801490A8 into the walk register, the two pen words from 0x801490BC/BE, the count byte 0x801490B5 - the MsgBoxState block at the same offsets), instruction for instruction; the newline's 0xE and the 0x2A hang are the PSX's (0x80150690, 0x801507A8). The 0x8015096C this entry used to carry is MsgBox_StatePrint's twin, not this one."
+note = "The one call of Text_DrawAt, at 0x497A22, is DIV-0006's: ours calls MsgBox_DrawChar there (src/game/text_advance.cpp), which is what the RetargetCall puts into Capcom's body for BOF3X_ORIGINAL=MsgBox_Step. It also calls 0x4987E0, the effect draw, which is unread and still 12 px."
 
 [[func]]
 pc = 0x59E2D0
 psx = 0x80159874
 name = "Window_Alloc"
+ret = "unsigned"
+params = "unsigned slot, unsigned kind"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
+note = "The answer is the argument DWORD, not a byte: on success eax is the slot as the caller pushed it, on failure the same with its low byte forced to 0xFF (or al, 0xFF at 0x59E30C). Its three callers - MsgBox_Reset, MsgBox_ChoiceOpen and MsgBox_MenuOpen - all discard it (2026-09-22)."
 evidence = "disasm 2026-09-18: (slot, kind) claims 0x803160 + slot*0x24 if byte 0 is free (sets 1, +1 = kind, +2/+3 = 0), returns slot or 0xFF. Byte for byte the PSX Window_Alloc note, stride and sentinel included."
 
 [[func]]
@@ -157,9 +174,11 @@ note = "Resolving this needs the PSX Window_DrawFrame 0x8015A58C counterpart loc
 
 [[func]]
 pc = 0x516B30
+psx = 0x8014F6BC
 name = "Text_DrawAt"
 ret = "const unsigned char *"
 params = "int x, int y, int color, int count, const unsigned char *text"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-20, 12 instructions: stores word x to 0x8034F4 (pen x) and 0x7E1BE4 (line start x), word y + 1 to 0x8034F2, then calls the string draw 0x516B70 as (color, count, text) and returns what it returns - the pointer one past the last byte consumed. 341 relative callers (E8/E9 scan of .text): the general text draw, not the dialogue box's own. 0x516B70, read the same day: draws up to `count` characters or to a NUL; a byte <= 0x20 goes through the byte table 0x516D24 into the 7-entry jump table 0x516D08 (0x01 newline: y += 12, x = line start; 0x05 nn set colour; 0x06 restore colour; 0x07 nn draw the 32-byte record 0x904CE0 + nn * 32 by recursion; 0x20 advance without drawing; the rest fall into the glyph path); a byte with bit 7 set is a two-byte code, glyph = ((b0 & 0x7F) << 8) + b1; any other byte is glyph = b - 0x26. A glyph above 0xA00 executes `in al, dx` (a privileged instruction - a trap). The glyph index is written to word +0x16 of the primitive at [0x7E0670] - the tpage field of a POLY_FT4 - and the CLUT id 0x7800 | colour to +0x0E by 0x516D50, which builds a 12 x 12 quad. Then pen x += 12, flat."
 note = "MsgBox_Step 0x497840 calls it at 0x497A22 with count 1 and keeps its own pen: reloads word 0x7DEE5C after the call and adds 12 (0x497A44), skipping a second text byte when the first has bit 7 set (0x497A2A). DIV-0006 re-aims that one call site."
@@ -193,9 +212,10 @@ pc = 0x516D50
 name = "Text_EmitGlyph"
 ret = "void"
 params = "int x, int y, int w, int h, int u, int v, int clut"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-20, 0x516D50..0x516E6A: fills the POLY_FT4-shaped primitive at Gfx_PacketNext - shade 0x80 x3, clut word at +0x0E, corners from x, y + v, w and h, texture coordinates from u, v, 12 - and hands it on through 0x5A7760, 0x5A7780 (prim, 1) and 0x461E50 (1, 0x28). Sole caller Text_DrawString 0x516CD6, as (pen x, pen y, 12, 12 - v, u, v, clut), having stored the glyph index to word +0x16 of the same primitive first."
-note = "Not ours. Read for its arguments only; its three callees are unread."
+evidence = "disasm 2026-09-20, re-read to the last instruction 2026-09-22: 0x516D50..0x516E6A (283 bytes). Fills the POLY_FT4-shaped primitive at Gfx_PacketNext - shade 0x80 in +4/+5/+6, the clut word at +0x0E, the four corners (x, y + u), (x + w, y + u), (x, y + h + u), (x + w, y + h + u) as words at +8/+0x10/+0x18/+0x20, and the four texture pairs (0, u), (0xC, u), (0, u - v + 12), (0xC, u - v + 12) as BYTES at +0x0C/+0x14/+0x1C/+0x24 - and hands it on through Gpu_SetCode6C 0x5A7760, Gpu_SetSemiTrans 0x5A7780 (prim, 1) and Gfx_CommitPrim 0x461E50 (1, 0x28). Sole caller Text_DrawString 0x516CD6, as (pen x, pen y, 12, 12 - v, u, v, clut), having stored the glyph index to word +0x16 of the same primitive first. The primitive pointer is re-read from Gfx_PacketNext before every one of the twenty stores, and nothing between them can change it."
+note = "Faithful, no divergence. The texture window is a flat 12 units wide whatever the quad's width - the fact DIV-0010 turns on, but DIV-0010 itself is the config screen's own stand-in for Text_DrawAt (src/game/config_text.cpp), not a change here."
 
 [[data]]
 pc = 0x656B28
@@ -6255,9 +6275,11 @@ evidence = "disasm 2026-09-22 (its first instructions, not taken over): EventScr
 
 [[func]]
 pc = 0x497AD0
+psx = 0x801508EC
 name = "MsgBox_StateDispatch"
 ret = "void"
 params = "void"
+impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x497AD0..0x497B24 (85 bytes; the 23-entry jump table of MsgBox_Step at 0x497A70 precedes it, so pe_funcs.py folded it into MsgBox_Step's 752 bytes and pe_hidden.py, wanting padding before a start, never listed it). Builds an 8-entry call table on the stack - 0x497B30, 0x497E90, 0x497EB0, 0x497F40, 0x498050, 0x4982C0, 0x498450, 0x498470 - and calls entry (byte MsgBoxState 0x7DEE40). Called once a frame by MsgBox_FrameTask at 0x497818 (2,781 times in hidden_b, the count of its caller); the attract sequence reaches only states 0 and 7 (hidden_a, a first-hit trace of every hidden start, never hit 1..6). In no entries list until this round."
 
@@ -6319,3 +6341,343 @@ ctype = "unsigned short"
 count = 8
 status = "evidence"
 evidence = "disasm 2026-09-22: Sprite_InitFromEntry sets Sprite_Current +0x6C to entry [+8]; 0x600 0x800 0xA00 0xC00 0xE00 0 0x200 0x400, a direction as a 4096ths angle. The same 16 bytes on the PSX (GAME.EMI 0x801C941C); what follows differs (code pointers). Also read at 0x51922E..0x519286, inside 0x5190A0."
+
+
+# ---------------------------------------------------------------------------
+# --- 2026-09-22 (third round), group H: the message box and the two pens
+#
+# src/game/msgbox.cpp, docs/msgbox.md. Thirty-five new entries; the eight that
+# already existed (Msg_OpenScript, MsgBox_Reset, MsgBox_FrameTask,
+# MsgBox_Step, MsgBox_StateDispatch, Window_Alloc, Text_DrawAt,
+# Text_EmitGlyph) only gained a signature and impl where they stand.
+#
+# Every size below is the body's real extent, measured to the ret with
+# capstone on 2026-09-22 - not pe_funcs.py's, which was wrong for five of
+# these (docs/msgbox.md section 6). Six of the functions dispatch through a
+# table built on the stack out of mov dword [esp+k], imm32; the entries are
+# listed in each evidence string, because nothing else in the tree records
+# them.
+#
+# 0x4981C0 (state 4 entry 5) and 0x4983C0 (state 5 entry 3) are deliberately
+# NOT here: both call through Area_Descriptors +0x34 by area number and into
+# the unread 0x498A30, so neither can be cloned or read clean. They stay
+# Capcom's and ours calls them by address.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x497B30
+psx = 0x8015096C
+name = "MsgBox_StatePrint"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x497B30..0x497E30 (769 bytes) with its OWN 23-entry jump table at 0x497E34 (92 bytes, dispatched by jmp [ecx*4 + 0x497E34] at 0x497B95) - pe_funcs.py calls the whole run one 256-byte function. State 0, the code consumer ahead of the printer: it loops while a keep-going flag is set, and every code but 0x05 0x08 0x0A 0x0C 0x0F 0x10 0x11 and the no-ops clears it, so one frame normally eats one code. A glyph sets the per-character delay from the two-column table at 0x658E94 (column by bit 5 of Input_Held, row by the signed speed byte 0x903A58), counts 0x7DEE59 up and leaves for state 0 or 1; under the instant-print flag 0x10 it only counts up and the tail sets the flag again, so the whole span between the 0x10 and the 0x11 that toggles it back is eaten in one frame. Codes 0x00 0x02 0x0B 0x14 0x16 set the next state (2, 3, 1, 4-or-5, 7). The PSX twin 0x8015096C branches on the same codes with a compare chain instead of a table; its 0x801490A0 block is this one at the MsgBoxState delta."
+note = "The two tests against 0x100 at 0x497B80 and 0x497B86 are DEAD - the code is a byte, zero-extended at 0x497B78 - so the flag-word bit 8 that 0x497DA1 would set is never set here. Bit 8 is still read at 0x497DE5, where it forces delay 3 and state 1; only something outside this function can set it."
+
+[[func]]
+pc = 0x497E90
+name = "MsgBox_StateDelay"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x497E90..0x497EA5 (22 bytes), 6 instructions, no calls. State 1: the per-character delay byte 0x7DEE46 is decremented and, at zero, the state goes back to 0 for the next character. As the original has it the byte is decremented BEFORE the test, so a delay of 0 wraps to 0xFF and waits 255 frames more."
+
+[[func]]
+pc = 0x497EB0
+name = "MsgBox_State2"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x497EB0..0x497ED1 (34 bytes). State 2, the wait at the end of a message: sub esp, 8, two immediates 0x497EE0 and 0x497F20 written to the stack, call [esp + eax*4] on byte 0x7DEE41. One of the 255 stack-built dispatchers the round's scan found; no bound on the index."
+
+[[func]]
+pc = 0x497EE0
+name = "MsgBox_State2Press"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x497EE0..0x497F12 (51 bytes), no calls. Any button in Input_Pressed - or either kept flag 0x40 / 0x80 still set - counts window 0's state byte 0x803163 up, counts the sub-state up and sets the hold flag 4, which stops MsgBox_FrameTask calling the stepper. Named for what it waits on; what window 0's state byte means is the window layer's (group J)."
+
+[[func]]
+pc = 0x497F20
+name = "MsgBox_State2Closed"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x497F20..0x497F30 (17 bytes), 4 instructions, no calls. Shared by state 2 (entry 1) and state 7 (entry 1): once window 0's state byte reads 4, flag 2 is set - which is exactly the bit MsgBox_FrameTask returns inverted, so this is what tells the caller the box is finished."
+
+[[func]]
+pc = 0x497F40
+name = "MsgBox_State3"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x497F40..0x497F61 (34 bytes). State 3, a page break: a two-entry stack table, 0x497F70 and 0x497FD0, on byte 0x7DEE41."
+
+[[func]]
+pc = 0x497F70
+name = "MsgBox_State3Arrow"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x497F70..0x497FC6 (87 bytes). Shared by state 3 (entry 0) and state 4 (entry 0). Calls 0x498D20 every frame at ((window 0's byte 0x80316A >> 1) + MsgBox_LineX - 14, the effect offset + the pen y + 12); 0x498D20 draws a small sprite there only while bit 5 of Frame_Counter is set, so it blinks - the 'there is more' arrow, by where and when it appears. A button in Input_Pressed, or the kept flag 0x40, zeroes the colour nibble 0x7DEE58 and moves the sub-state on. Both arguments reach 0x498D20 through movsx ecx, word ptr (0x498D7C), so only 16 bits of each are observable."
+
+[[func]]
+pc = 0x497FD0
+name = "MsgBox_State3Step"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x497FD0..0x498045 (118 bytes) including a tail jmp 0x498280 at 0x498041. Shared by state 3 (entry 1) and state 5 (entry 5). Every frame the delay expires it counts 0x7DEE58 up and puts the delay back to 1; at 7 it either re-opens the message (states 4 and 5, through MsgBox_Reopen) or restarts the printer on what is left: flags 4 and 8 cleared, sub-state 0, state 1, delay 8, the message base taken from the read position, the effect offset and both counters zeroed. Seven steps of a scroll, by the count and the restart. As the original has it the delay is tested BEFORE the decrement, so a delay of 0 does the work and leaves 0xFF."
+
+[[func]]
+pc = 0x498050
+name = "MsgBox_State4"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498050..0x4980A1 (82 bytes). State 4, a choice list in window 1 (code 0x14 with a non-zero high nibble): an eight-entry stack table on byte 0x7DEE41 - 0x497F70, 0x4980B0, 0x4980F0, 0x498110, 0x4981A0, 0x4981C0, 0x498230, 0x498250."
+
+[[func]]
+pc = 0x4980B0
+name = "MsgBox_ChoiceOpen"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x4980B0..0x4980E4 (53 bytes). Zeroes the cursor, calls Window_Alloc(1, 0), sets window 1's kind byte 0x803186 to 1, window 0's state to 3, the hold flag 4, and counts the sub-state up."
+
+[[func]]
+pc = 0x4980F0
+name = "MsgBox_ChoiceWaitOpen"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x4980F0..0x498108 (25 bytes), no calls. Counts the sub-state up once window 1's state byte 0x803187 reads 2 and window 0's 0x803163 reads 4."
+
+[[func]]
+pc = 0x498110
+name = "MsgBox_ChoiceInput"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498110..0x498191 (130 bytes). Field_CancelButtons closes the list (window 1 to 3, window 0 to 1, sub-state + 1); Field_ConfirmButtons jumps the sub-state on by TWO; otherwise the whole pad word goes to the auto-repeat 0x461EB0 and bits 0x10 and 0x40 of its answer's high byte move the cursor 0x7DEE67 up and down, wrapping at 0 and at 0x7DEE66. The bottom test is signed (jle) and the top one on the sign of the decremented byte, so a cursor of 0x80 will not move down."
+
+[[func]]
+pc = 0x4981A0
+name = "MsgBox_ChoiceWaitShut"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x4981A0..0x4981B8 (25 bytes), no calls. Once window 0's state reads 2 the hold flag 4 is TOGGLED (xor, not cleared) and the sub-state goes back to 0."
+
+[[func]]
+pc = 0x498230
+name = "MsgBox_ChoiceReopen"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498230..0x49824D (30 bytes). Once window 0's state reads 2: delay 0x10, MsgBox_Reopen, and the hold flag toggled."
+
+[[func]]
+pc = 0x498250
+name = "MsgBox_ChoiceDone"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498250..0x498276 (39 bytes), no calls. Once window 1's state reads 4: flag 0x80 set, window 0's state to 4, state 2 sub-state 1 - the wait for window 0 to shut."
+
+[[func]]
+pc = 0x498280
+name = "MsgBox_Reopen"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498280..0x4982BF (64 bytes), no calls. Re-opens the message 0x7DEE48 names from the top: the same pool lookup as Msg_OpenScript but with the id taken UNSIGNED (and eax, 0xFFFF) where Msg_OpenScript sign-extends it, and without MsgBox_Reset - only delay 8, state 1, the two pointers, and the step count and sub-state zeroed. Three call sites: MsgBox_State3Step (a tail jmp at 0x498041), MsgBox_ChoiceReopen, and state 5 through the same tail."
+
+[[func]]
+pc = 0x4982C0
+name = "MsgBox_State5"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x4982C0..0x498301 (66 bytes). State 5, the same list drawn as a menu (code 0x14 with a zero high nibble): a six-entry stack table - 0x498310, 0x498340, 0x498350, 0x4983C0, 0x498410 and state 3's scroll 0x497FD0."
+
+[[func]]
+pc = 0x498310
+name = "MsgBox_MenuOpen"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498310..0x498336 (39 bytes). Zeroes the cursor, Window_Alloc(1, 0), window 1's kind byte to 2, sub-state up. Unlike the choice list's opener it touches neither window 0 nor the hold flag."
+
+[[func]]
+pc = 0x498340
+name = "MsgBox_MenuWaitOpen"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498340..0x49834F (16 bytes), no calls. Counts the sub-state up once window 1's state reads 2."
+
+[[func]]
+pc = 0x498350
+name = "MsgBox_MenuInput"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498350..0x4983B0 (97 bytes). Field_ConfirmButtons counts the sub-state up; the cursor moves on the auto-repeat of the pad MASKED TO 0x5000 (0x498365) - up and down only, where the choice list's copy at 0x498110 hands 0x461EB0 the whole word, so a left or right press restarts the repeat timer there and not here. The cursor arithmetic is the same, instruction for instruction."
+
+[[func]]
+pc = 0x498410
+name = "MsgBox_MenuDone"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498410..0x498440 (49 bytes), no calls. Once window 1's state reads 4: a message id of 0xFFFF means there is nothing more to say - flag 0x80, state 2, sub-state 0 - and anything else counts the sub-state on into state 3's scroll."
+
+[[func]]
+pc = 0x498450
+name = "MsgBox_State6"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498450..0x498460 (17 bytes), 4 instructions, no calls. State 6: back to state 0 once window 0's state reads 2. Nothing in the family writes 6 to 0x7DEE40 - every writer is enumerated in docs/msgbox.md section 2 - so it is reached only from outside, if at all."
+
+[[func]]
+pc = 0x498470
+name = "MsgBox_State7"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498470..0x498491 (34 bytes). State 7, the wait code 0x16 asks for: a two-entry stack table, 0x4984A0 and state 2's 0x497F20."
+
+[[func]]
+pc = 0x4984A0
+name = "MsgBox_State7Delay"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x4984A0..0x4984D3 (52 bytes). Counts code 0x16's argument down in 0x7DEE46; at zero window 0's state byte is counted up, the hold flag 4 set and the sub-state counted on. The delay is tested BEFORE the decrement, so a 0 does the work and leaves 0xFF."
+
+[[func]]
+pc = 0x4984E0
+psx = 0x80151A1C
+name = "MsgBox_EffectTask"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x4984E0..0x49851E (63 bytes). The box's effect, one frame: a SIX-entry stack table on byte 0x7DEE42 - 0x437CC0 (a bare ret), 0x498520, 0x4985A0 twice (entries 2 and 3 share one handler, loaded into eax once at 0x4984E3), 0x498670, 0x498740 - not the four the round's task list named, which missed the shared 0x4985A0. entries_logic.txt gives this function 0x2F8 bytes, which swallows every handler below it; it is 63. Code 0x0F of MsgBox_StatePrint sets the byte from the 4-byte records at 0x658E98, which is an unbounded index: the records shipped hold kinds 1, 2 and 3. Called once a frame by MsgBox_FrameTask (2,781 times in hidden_b); only entry 0 is ever reached by the attract sequence."
+
+[[func]]
+pc = 0x498520
+name = "MsgBox_EffectShake"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498520..0x49855F (64 bytes). Effect 1: a two-entry stack table on 0x7DEE43 rocks the pen x offset 0x7DEE5A between -2 and +2, two units a frame; then the timer 0x7DEE4A down unless it is 0xFFFF (forever), and at zero the kind is cleared. A horizontal shake, by the offset it moves."
+
+[[func]]
+pc = 0x498560
+name = "MsgBox_ShakeOut"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498560..0x498579 (26 bytes), no calls. Adds -2 to the pen x offset, or, at -2 exactly, counts the effect phase up."
+
+[[func]]
+pc = 0x498580
+name = "MsgBox_ShakeBack"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498580..0x498599 (26 bytes), no calls. Adds +2 to the pen x offset, or, at +2 exactly, counts the effect phase down."
+
+[[func]]
+pc = 0x4985A0
+name = "MsgBox_EffectGrow"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x4985A0..0x4985D3 (52 bytes). Effects 2 and 3 share it: a two-entry stack table at 0x4985BA on 0x7DEE43 (0x4985E0, 0x498610), then the timer down unless it is 0xFFFF. It drives 0x7DEE68, which is the only thing 0x4987E0 - the stepper's own glyph draw, taken under flag 8 - reads besides the character (cmp word [0x7DEE68], 0xC at 0x498809)."
+
+[[func]]
+pc = 0x4985E0
+name = "MsgBox_GrowStart"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x4985E0..0x498606 (39 bytes), no calls. Turns flag 8 on - which sends MsgBox_Step's draw through 0x4987E0 - and, once the timer reads zero, puts it to 1 and counts the phase up."
+
+[[func]]
+pc = 0x498610
+name = "MsgBox_GrowStep"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498610..0x498664 (85 bytes), no calls. Only when the timer reads zero: kind 2 adds -2 to 0x7DEE68 and stops when the result is negative (jns), every other kind adds +2 and stops when it is positive (jle); stopping clears flag 8, the offset and the kind. Either way the timer is put back to 1, so it runs every frame."
+
+[[func]]
+pc = 0x498670
+name = "MsgBox_EffectWander"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498670..0x498739 (202 bytes), no calls. Effect 4: the pen x offset walks between -3 and +3 a unit at a time on the phase byte, and each time the wait counter 0x7DEE6A is spent the y offset takes a step of 0x7DEE68's low byte - a y of 0xF6 turns the step around (offset 1, wait 15), a y of 0 counts one repetition off the timer and at the last one clears the kind and both offsets, anything else waits 3. The x offset is stored BEFORE the wait counter is tested, so a frame that only counts the wait down still moves it."
+
+[[func]]
+pc = 0x498740
+name = "MsgBox_EffectRise"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, 0x498740..0x498761 (34 bytes). Effect 5: a two-entry stack table on 0x7DEE43 - a set-up 0x498770 and a per-frame integration 0x4987A0."
+
+[[func]]
+pc = 0x498770
+name = "MsgBox_RiseStart"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x498770..0x498790 (33 bytes), no calls. The record's frame count becomes the accumulator 0x7DEE6A's starting value and the record's offset is scaled by 16 - an 8.8 fixed-point speed in 0x7DEE68 - then the phase counts up."
+
+[[func]]
+pc = 0x4987A0
+name = "MsgBox_RiseStep"
+ret = "void"
+params = "void"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x4987A0..0x4987D7 (56 bytes), no calls. Adds the speed to the accumulator every frame and the accumulator's HIGH byte - taken before the add - to the y offset; once the y offset is no longer negative it and the kind are cleared. The high byte is taken with sar edx, 8 on a register whose upper half is stale, which cannot reach dl."
