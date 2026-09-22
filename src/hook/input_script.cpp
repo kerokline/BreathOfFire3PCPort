@@ -4,12 +4,14 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cwchar>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/game_clock.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -30,11 +32,15 @@
 //                           press BUTTONS (hold, then release) until the
 //                           condition is true, checking before each press; K
 //                           presses (default 16) without it FAILS the recipe.
-//   shot NAME [N [BUTTONS]] log "input       shot NAME" and hold BUTTONS
-//                           (default nothing) for N frames (default 30)
-//                           while tools/input_run.py captures the window -
-//                           the battle's command cross shows a command only
-//                           while its direction is held
+//   shot NAME [N [BUTTONS]] hold BUTTONS (default nothing) for N frames
+//                           (default 30) - the battle's command cross shows a
+//                           command only while its direction is held - for
+//                           tools/input_run.py to capture the window. With
+//                           BOF3X_SHOT_WAIT set (input_run.py sets it) the
+//                           game then FREEZES - clock and all - until the
+//                           driver has grabbed the frame: frame-exact. Without
+//                           it the shot is logged as the hold starts and the
+//                           grab lands wherever the game has got to.
 //   peek ADDR TYPE [LABEL]  log the value
 //   mark TEXT               log the text
 //   end                     stop here
@@ -77,6 +83,8 @@ bool g_seen_frame = false;
 std::uint32_t g_last_frame = 0;    // Frame_Counter at the last new frame
 unsigned g_frame = 0;              // frames the recipe has played
 unsigned short g_prev = 0, g_cur = 0;
+HANDLE g_release = nullptr;         // BOF3X_SHOT_WAIT: set by the driver after each grab
+constexpr DWORD kFreezeMs = 3000;   // Windows ghosts a window that pumps nothing for 5 s
 
 struct Button { const char* name; unsigned short bit; };
 constexpr Button kButtons[] = {
@@ -283,6 +291,22 @@ void Finish(const char* how) {
     LogFlush();
 }
 
+// A frozen shot. Called from the latch at the top of WinMain's loop, where the
+// last frame built has just been presented and the next has not begun: the
+// window holds one whole frame, and holds it until the driver says it has it.
+// The game clock stops meanwhile, so the frame deadline has no debt to replay
+// and the frames after the shot are presented as any others.
+void Freeze(const Step& s) {
+    const bool clock = GameClock_Pause();
+    ResetEvent(g_release);
+    Log("input       shot %s recipe frame %u frozen%s", s.text.c_str(), g_frame,
+        clock ? "" : " (clock not ours: the pause will be replayed)");
+    LogFlush();
+    if (WaitForSingleObject(g_release, kFreezeMs) != WAIT_OBJECT_0)
+        Log("input       shot %s: no release from the driver in %lu ms; going on", s.text.c_str(), kFreezeMs);
+    GameClock_Resume();
+}
+
 unsigned short g_step_buttons = 0;   // the current Press/Hold step's, read as it starts
 
 void Advance() {
@@ -366,11 +390,12 @@ unsigned short NextWord() {
             return phase < s.hold ? b : 0;
         }
         case Kind::Shot:
-            if (g_t == 0) {
+            if (!g_release && g_t == 0) {
                 Log("input       shot %s recipe frame %u", s.text.c_str(), g_frame);
                 LogFlush();
             }
             if (g_t < s.n) { const unsigned short b = StepButtons(s); ++g_t; return b; }
+            if (g_release) Freeze(s);
             Advance();
             continue;
         case Kind::Peek:
@@ -424,6 +449,15 @@ void InputScript_Start() {
     if (n == 0 || n >= sizeof path) return;
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
+    char wait[8];
+    if (GetEnvironmentVariableA("BOF3X_SHOT_WAIT", wait, sizeof wait)) {
+        // Named for the process, so the driver can find it by pid.
+        wchar_t name[64];
+        std::swprintf(name, 64, L"Local\\bof3x_shot_%lu", GetCurrentProcessId());
+        g_release = CreateEventW(nullptr, FALSE, FALSE, name);
+        if (!g_release) Fatal("BOF3X_SHOT_WAIT: CreateEvent failed, error %lu", GetLastError());
+        Log("input       shots freeze the game until released (BOF3X_SHOT_WAIT)");
+    }
     // Not an Inject: nothing of Capcom's is replaced, and BOF3X_ORIGINAL has
     // no say - the variable being set is the switch.
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch

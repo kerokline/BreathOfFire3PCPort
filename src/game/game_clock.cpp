@@ -28,10 +28,31 @@ namespace {
 
 ULONGLONG g_start;
 DWORD g_base;
+ULONGLONG g_paused_at;   // 0: running
 
-DWORD WINAPI SessionTickCount() { return g_base + static_cast<DWORD>(GetTickCount64() - g_start); }
+// Time spent paused is taken out by moving the start forward, so the clock
+// resumes from where it stopped.
+DWORD WINAPI SessionTickCount() {
+    const ULONGLONG now = g_paused_at ? g_paused_at : GetTickCount64();
+    return g_base + static_cast<DWORD>(now - g_start);
+}
+
+bool g_ours;
 
 }  // namespace
+
+bool GameClock_Pause() {
+    if (!g_ours || g_paused_at) return false;
+    g_paused_at = GetTickCount64();
+    if (g_paused_at == 0) g_paused_at = 1;
+    return true;
+}
+
+void GameClock_Resume() {
+    if (!g_paused_at) return;
+    g_start += GetTickCount64() - g_paused_at;
+    g_paused_at = 0;
+}
 
 void GameClock_Inject() {
     char text[32];
@@ -49,6 +70,7 @@ void GameClock_Inject() {
     std::memcpy(replacement, &ours, 4);
     const auto slot = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Imp_GetTickCount));
     bof3::PatchBytes("Game_Clock", slot, expected, replacement, 4);
-    if (reinterpret_cast<std::uintptr_t>(Imp_GetTickCount) == ours)
+    g_ours = reinterpret_cast<std::uintptr_t>(Imp_GetTickCount) == ours;
+    if (g_ours)
         bof3::Log("DIV-0022    game clock: milliseconds since the game started, from %lu", g_base);
 }
