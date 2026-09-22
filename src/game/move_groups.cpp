@@ -36,7 +36,7 @@ struct Callees {
     unsigned char (__cdecl* tint)(unsigned char*, unsigned char, unsigned char, unsigned char, unsigned char);
     void (__cdecl* tint_release)(unsigned char*);
     void (__cdecl* set_animation)(unsigned char);
-    void (__cdecl* animation_bank)(unsigned short);
+    unsigned char (__cdecl* animation_bank)(unsigned short);
     long (__cdecl* elevation)(long, long);
     void (__cdecl* set_elevation)(int);
     unsigned short (__cdecl* peek)();
@@ -659,7 +659,7 @@ unsigned char __cdecl StubTint(unsigned char* s, unsigned char r, unsigned char 
 }
 void __cdecl StubTintRelease(unsigned char* s) { Record(7, Id(s)); }
 void __cdecl StubSetAnimation(unsigned char a) { Record(8, a); Disturb(); }
-void __cdecl StubAnimationBank(unsigned short b) { Record(9, b); Disturb(); }
+unsigned char __cdecl StubAnimationBank(unsigned short b) { Record(9, b); Disturb(); return 0; }   // op CB ignores the result
 long __cdecl StubElevation(long x, long z) { Record(10, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z)); return static_cast<long>(Hash()); }
 void __cdecl StubSetElevation(int v) { Record(11, static_cast<std::uint32_t>(v)); }
 unsigned short __cdecl StubPeek() {

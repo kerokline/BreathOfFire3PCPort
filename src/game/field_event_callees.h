@@ -70,7 +70,7 @@ struct Callees {
     unsigned char (__cdecl* set_animation)(unsigned);   // 0x589330
     // Field_PartySetUp
     unsigned char (__cdecl* flags_test)(const unsigned char*, unsigned);
-    void (__cdecl* set_bank)(unsigned short);
+    unsigned char (__cdecl* set_bank)(unsigned short);
     void (__cdecl* member_sprite)(unsigned, unsigned);
     void (__cdecl* party_load)(unsigned);
     void (__cdecl* release_tint)(unsigned char*);

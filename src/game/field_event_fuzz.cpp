@@ -342,7 +342,7 @@ Callees Stubs() {
     s.has_item = StubHasItem;
     s.set_animation = StubSetAnimation;
     s.flags_test = StubFlagsTest;
-    s.set_bank = Cast<void (__cdecl*)(unsigned short)>(&StubSetBank);
+    s.set_bank = Cast<unsigned char (__cdecl*)(unsigned short)>(&StubSetBank);
     s.member_sprite = StubMemberSprite;
     s.party_load = StubPartyLoad;
     s.release_tint = StubReleaseTint;

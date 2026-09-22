@@ -915,15 +915,6 @@ evidence = "disasm 2026-09-19: for i in 0..byte[0x9035A0]: x = s16[0x903680 + 2i
 note = "So an image upload queued by game logic reaches the VRAM shadow on the next RENDERED frame, and which logic frame that is depends on wall-clock time (docs/call-trace.md section 6). Compare the VRAM shadow only when the count byte 0x9035A0 and the flag 0x937F90 are both zero."
 
 [[func]]
-pc = 0x5894D0
-name = "Sprite_SetFrameQueueUpload"
-ret = "unsigned char *"
-params = "unsigned frame"
-status = "evidence"
-evidence = "disasm 2026-09-19, whole function 0x5894D0..0x58958C: obj = Sprite_Current, data = dword[obj+0x4C]; images = data + dword[data], table8 = data + dword[data+8], entry = data + dword[data+0xC] + 3*(frame & 0xFF). Unless byte[obj] & 2: slot = byte[obj+0x25]; x = (slot > 0x10 ? slot - 0x10 : slot) << 6 and y = byte[obj+0x26] (+ 0x100 when slot > 0x10), stored at the queue count's index with record = images + dword[images + 4*entry[0]]; count++ with no bound. Always: byte[obj+0x2A] = entry[2]; dword[obj+0x50] = table8 + word[table8 + 2*entry[1]], which is also what is left in eax. Callers 0x589160 and 0x589200 (pc_funcs callees); the call trace saw it only from 0x5892EB."
-note = "Still Capcom's. Name is descriptive, not recovered. The unbounded count++ here is the feed side of docs/known-defects.md D4; the fix, DIV-0004, is on the drain side in Gfx_BeginFrame."
-
-[[func]]
 pc = 0x461FC0
 name = "Gfx_UploadPacked5"
 ret = "void"
@@ -3245,24 +3236,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22, 12 instructions: sets bit 0x40 of the bytes 0x802D40, 0x802E8C, 0x802FD8 in that order (ObjTrio +0, +0x14C, +0x298). The PSX 0x8015CAF0, objects 0x140 apart. Flow op 0C with a zero operand; the field mode handlers. Group C, docs/event-script.md."
 
 [[func]]
-pc = 0x5891F0
-name = "Sprite_SetAnimation"
-psx = 0x8014D5AC
-ret = "void"
-params = "unsigned char animation"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 6 instructions: Sprite_SetAnimationAt(animation, 0). Flow ops 0E / 0F without bit 2 of their flags byte. psx_pair call."
-
-[[func]]
-pc = 0x589200
-name = "Sprite_SetAnimationAt"
-psx = 0x8014D5D0
-ret = "void"
-params = "unsigned char animation, unsigned char start"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its argument reads): the first argument read as dl, the second as a byte at the end; stores into Sprite_Current +0x24 and +0x4B. Flow ops 0E / 0F with bit 2 of their flags byte, the fifth operand as start. psx_pair call. The body is not read through."
-
-[[func]]
 pc = 0x57C7A0
 name = "ScriptFlags_Clear40"
 psx = 0x8015CA48
@@ -3520,15 +3493,6 @@ status = "hypothesis"
 evidence = "call site 0x57894C, 2026-09-22: op 8B repeats while it returns 0 (test eax, the whole register). Unread."
 
 [[func]]
-pc = 0x57C4C0
-name = "Sprite_FaceDirection"
-psx = 0x8015C4B4
-ret = "void"
-params = "unsigned char direction"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (to its first ret): unless Sprite_Current's type byte +6 is 8 or more, or 6, it masks the argument to a byte, sets Sprite_Current +0x2A from 0x65F5BD[2 * d] and, unless the pair's animation is already +0x4B, calls Sprite_SetAnimation with 0x65F5BC[2 * d]. Called with a direction by ops E0 E1 C8 CE."
-
-[[func]]
 pc = 0x517E90
 name = "MoveScript_SetTurnTarget"
 psx = 0x801A27A8
@@ -3574,15 +3538,6 @@ params = "unsigned char *sprite"
 status = "evidence"
 evidence = "call site 0x5785EC, 2026-09-22: op CD calls it with Sprite_Current. Read whole 2026-09-22 (group B, 0x2B bytes): Tint_Release(i) for each of the 32 MoveScript_TintRecords whose dword +8 equals sprite, i ascending. 98 call sites."
 impl = "src/game/field_event.cpp"
-
-[[func]]
-pc = 0x589590
-name = "Sprite_SetAnimationBank"
-psx = 0x8014DC30
-ret = "void"
-params = "unsigned short bank"
-status = "hypothesis"
-evidence = "call site 0x57858C, 2026-09-22: op CB hi lo a f calls it with hi:lo, then Sprite_SetAnimation(a), then stores f & 1 to Sprite_Current +0x2A. Unread."
 
 [[func]]
 pc = 0x57CD40
@@ -5100,15 +5055,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22, 0x34 bytes: zeroes 0x800 bytes at 0x80ED80 and copies Gfx_ClutStripSource to Gfx_ClutStrip, 32 rows of 0x200 bytes; does not set Gfx_ClutStripDirty (its one-row sibling 0x4549F0 does). Callers Title_StateLoad, 0x594E60, 0x496B60."
 
 [[func]]
-pc = 0x5898A0
-name = "Effect_ClearAll"
-psx = 0x8019711C
-ret = "void"
-params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 0x23 bytes: 0x589870(i) for i 0..0x13, which zeroes bytes +0..+4 of Effect_Objects + 0x80 * i. Callers Title_StateStartDemo, 0x594E60."
-
-[[func]]
 pc = 0x517290
 name = "Field_LoadingFrame"
 psx = 0x8019A2B8
@@ -5287,15 +5233,6 @@ ret = "void"
 params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 4 instructions: Sprite_Current +0x29 = Draw_OtSlot, then jmp Sprite_UpdateScreen. Party_UpdateScreens calls it when Field_Request is 3, where the PSX FUN_801BEAB0 calls 0x8014D154. Not reached by the attract cycle (hidden_b)."
-
-[[func]]
-pc = 0x589840
-name = "Effect_Release"
-psx = 0x80197070
-ret = "void"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x589840..0x58986E: bytes 0..4 of Sprite_Current to 0, the pointer re-read before each store. CameraTurn_End tail-jumps to it, as the PSX FUN_8019BB04 calls FUN_80197070. Its neighbour 0x589870 does the same by index, 0x589810 finds the first free of the 20 Effect_Objects (0xFF when none)."
 
 [[data]]
 pc = 0x655350
@@ -6923,3 +6860,111 @@ ret = "int"
 params = "float y, float x"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5A7A70..0x5A7A8B (27 bytes), cdecl: fld arg0, fld arg1, fpatan (atan of arg0 / arg1 by quadrant), fmul the double 2048.0 at 0x5C4658, fmul the double 0.3184713375796178 (1 / 3.14) at 0x5C4650, then a tail jmp to the CRT's _ftol 0x5B9550 - an angle in 4096ths of a turn, the unit of libgte ratan2, with pi taken as 3.14. Called by Party_MoveMember 0x5190A0."
+
+# --- 2026-09-22 (third round) group M: sprite animation and effects,
+# src/game/sprite_pose.cpp, docs/sprite-pose.md. Seven entries moved here from
+# where they were (0x5894D0, 0x5891F0, 0x589200, 0x57C4C0, 0x589590, 0x5898A0,
+# 0x589840) with impl added and the evidence re-read; three are new (0x589330,
+# 0x589810, 0x589870). Sprite_SetAnimationAt's start is now a word and
+# Sprite_SetAnimationBank returns its al, as the disassembly shows.
+
+[[func]]
+pc = 0x5891F0
+name = "Sprite_SetAnimation"
+psx = 0x8014D5AC
+ret = "void"
+params = "unsigned char animation"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5891F0..0x5891FF (16 bytes): pushes 0 and its whole argument dword, calls Sprite_SetAnimationAt, returns what that left in eax (no caller reads it as a number: an E8 scan of all 311 call sites finds none that reads eax before writing it, 102 that return it on, not chased). The PSX 0x8014D5AC masks the argument to a byte and passes 0. 311 call sites."
+
+[[func]]
+pc = 0x589200
+name = "Sprite_SetAnimationAt"
+psx = 0x8014D5D0
+ret = "void"
+params = "unsigned char animation, unsigned short start"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 0x589200..0x58932E (0x12F bytes), the PSX 0x8014D5D0 branch for branch. Bit 7 of the animation (read as dl): unless Sprite_Current +0x24 bit 1, +0x64 = the party-set row byte 0x669750 + (0x90412C & 0x7F) * 3 + u16 +0x2C, +0x68 = +0x26, +0x24 xor 3; then the 4-byte record [0x669884 + +0x64 * 4] + (animation & 0x7F) * 4: Sprite_SetAnimationBank(its u16), +0x4B = its byte 2, +0x2A = byte 3. Without bit 7: with +0x24 bit 1, Field_MemberSprite(byte +0x64, +0x68 / 80 signed) and +0x24 |= its old value & 0xFC; +0x4B = the animation. Then with +0x24 bit 0 Sprite_SetFrameQueueUpload(+0x4B); else +0x50 = t + u16[t + +0x4B * 2], t = [0x9039D8] + dword[[0x9039D8] + u16 +0x2C * 4]. Last, Sprite_ScriptStart(the second argument dword, of which it reads 16 bits). Sprite_Current re-read after each call and most stores. 22 call sites."
+
+[[func]]
+pc = 0x589330
+name = "Sprite_EnsureAnimation"
+psx = 0x8014D7C8
+ret = "unsigned char"
+params = "unsigned char animation"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x589330..0x58934D (0x1E bytes): al 1 if Sprite_Current +0x4B equals the argument's low byte; else Sprite_SetAnimation(the argument dword) and al 0. The PSX 0x8014D7C8 term for term. 241 call sites (E8 scan); one reads eax past al (0x52E7D5, which overwrites ax first and passes it to Field_ChangeArea, which reads a word); 59 return it on, not chased. Field_LeaderAnimation (ours) calls it by address."
+
+[[func]]
+pc = 0x5894D0
+name = "Sprite_SetFrameQueueUpload"
+psx = 0x8014DAFC
+ret = "unsigned char *"
+params = "unsigned frame"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19, re-read whole 2026-09-22 (0x5894D0..0x58958C, 0xBD bytes; the PSX 0x8014DAFC term for term): obj = Sprite_Current, data = dword[obj+0x4C]; images = data + dword[data], table8 = data + dword[data+8], entry = data + dword[data+0xC] + 3*(frame & 0xFF). Unless byte[obj] & 2: slot = byte[obj+0x25]; x = (slot > 0x10 ? slot - 0x10 : slot) << 6 and y = byte[obj+0x26] (+ 0x100 when slot > 0x10), stored at the queue count's index with record = images + dword[images + 4*entry[0]]; the count re-read and incremented with no bound. Always: byte[obj+0x2A] = entry[2] (obj as read on entry); dword[Sprite_Current+0x50] = table8 + word[table8 + 2*entry[1]], which is also what is left in eax. Callers 0x589160 and 0x589200 (E8 scan), neither reads the result."
+note = "Name is descriptive, not recovered. The unbounded count++ here is the feed side of docs/known-defects.md D4, kept faithfully; the fix, DIV-0004, is on the drain side in Gfx_BeginFrame."
+
+[[func]]
+pc = 0x589590
+name = "Sprite_SetAnimationBank"
+psx = 0x8014DC30
+ret = "unsigned char"
+params = "unsigned short bank"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 0x589590..0x58965D (0xCE bytes): count = dword [0x8C3580] & 0xFF (read once); the first of the 8-byte records at [0x7E0880] whose u16 equals the bank: Sprite_Current +0x25 = its +4, +0x26 = +5, +0x27 = +2, +0x28 = +6, u16 +0x2C = +7, dword +0x70 &= 0xFFFFFF00 then its low byte |= 0x6690A0[bank * 2], +0x2B = 0x6690A1[bank * 2]; al 0. None: al 1, nothing stored. Table pointer and Sprite_Current re-read for each store. The PSX 0x8014DC30 re-reads the count each turn and overwrites the whole of +0x70 with the byte. 114 call sites; two test al (0x46C857, 0x46CE02), none reads more (E8 scan)."
+
+[[func]]
+pc = 0x57C4C0
+name = "Sprite_FaceDirection"
+psx = 0x8015C4B4
+ret = "void"
+params = "unsigned char direction"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, whole, 0x57C4C0..0x57C543 (0x84 bytes), the PSX 0x8015C4B4 branch for branch (its active-member byte +0x95): nothing for Sprite_Current type byte +6 >= 8; type 6: Sprite_EnsureAnimation(the argument). Else, d = the argument's byte: +0x2A = 0x65F5BD[2d]; with byte +0xA1 of Field_ActiveMember 0xFF, Sprite_EnsureAnimation(0x65F5BC[2d]); else nothing when +0x4B already equals 0x65F5BC[2d], Sprite_SetAnimationAt(it, that +0xA1 byte) for animations 5 and 6, Sprite_SetAnimation(it) otherwise. 25 call sites."
+
+[[func]]
+pc = 0x589810
+name = "Effect_FindFree"
+psx = 0x8019701C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x589810..0x58983B (0x2C bytes): al = the first i of 0..19 whose byte Effect_Objects + i * 0x80 is 0, else 0xFF; the rest of eax is the caller's. The PSX 0x8019701C (records 0x74 there). 404 call sites (E8 scan): 398 read al, six mask eax to its byte, none reads more."
+
+[[func]]
+pc = 0x589840
+name = "Effect_Release"
+psx = 0x80197070
+ret = "void"
+params = "void"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x589840..0x58986E: bytes 0..4 of Sprite_Current to 0, the pointer re-read before each store. CameraTurn_End tail-jumps to it, as the PSX FUN_8019BB04 calls FUN_80197070. 209 call sites (E8 / E9 scan), most of them tail jumps."
+
+[[func]]
+pc = 0x589870
+name = "Effect_ReleaseAt"
+psx = 0x801970C0
+ret = "void"
+params = "unsigned char index"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x589870..0x58989C (0x2D bytes): bytes 0..4 of Effect_Objects + (index & 0xFF) * 0x80 to 0, the index not checked against the 20. The PSX 0x801970C0. Two call sites: Effect_ClearAll and 0x52CE45."
+
+[[func]]
+pc = 0x5898A0
+name = "Effect_ClearAll"
+psx = 0x8019711C
+ret = "void"
+params = "void"
+impl = "src/game/sprite_pose.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5898A0..0x5898C2 (0x23 bytes): Effect_ReleaseAt(i) for i 0..0x13 (pushed as a stack dword whose low byte is i). The PSX 0x8019711C. Callers Title_StateStartDemo (0x462329), 0x594E60."
