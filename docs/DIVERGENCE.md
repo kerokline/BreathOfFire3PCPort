@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 22 entries, DIV-0001..0022)
+**Status:** IN PROGRESS (opened 2026-09-18; 28 entries, DIV-0001..0028)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1275,3 +1275,38 @@ designed in rather than bolted on.
   four prompts change together.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
+
+### Music fades step once per logic frame
+
+- **ID:** DIV-0028
+- **Date:** 2026-09-22
+- **Subsystem:** sound (`Sound_Tick` `0x587C70`, [`sound.md`](sound.md))
+- **Original behaviour:** the fades (`Music_FadeIn` / `FadeOut` /
+  `FadeOutStop`, `Music_Play`'s fade in, the event ops `B4` `B5` `B9`..`BB`)
+  take a count in frames - op `B4 tt 08` is an 8-frame fade in - and
+  `Sound_Tick` takes one step per call. Its only caller is WinMain's wait for
+  the next frame (`0x4FCEBC`), which calls it on every spin: some 416 a frame
+  in a traced run, more at full speed. So every fade is over within a
+  fraction of one frame: music starts at full volume and fade-outs are cuts
+  ([`known-defects.md`](known-defects.md) D26).
+- **New behaviour:** a step is taken only on the first `Sound_Tick` after
+  the frame deadline `0x6BC628` has moved - once per logic frame, replayed
+  frames included - so an 8-frame fade lasts 8 logic frames, about 0.27 s
+  at the port's 30 a second. The first step of a new fade is at once. The
+  steps, the volume arithmetic, the stop at the end and the pump are the
+  original's.
+- **Rationale:** the owner remembers the PlayStation fading music in and
+  out, and asked for the fix on 2026-09-22 ("8 frames is like a quarter
+  second? That sounds pretty close to how I remember it"), to judge in play.
+- **Also in the PSX version?** No - the PSX counts the same fades in frames
+  and they are audible (owner's recollection); the per-spin step is the
+  PC port's.
+- **Verification:** `BOF3X_SHADOW=sound`: the takeover's fuzz runs the
+  original per-call path (0 mismatches, 46,000 rounds); then an 8-frame
+  stopping fade through `Sound_Tick` with counting stand-ins takes exactly
+  one step per frame over 8 frames of 5 spins and stops once. Negative
+  control: with the deadline test removed the self-test is refused (8 steps
+  in the first frame, a Fatal). **Not yet heard in game.**
+- **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
+  Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
+  function).

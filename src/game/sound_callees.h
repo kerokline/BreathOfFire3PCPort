@@ -19,6 +19,9 @@ namespace sound {
 constexpr std::uint32_t kImportCreateEvent = 0x5C4080;   // KERNEL32 CreateEventA
 constexpr std::uint32_t kImportCloseHandle = 0x5C4084;   // KERNEL32 CloseHandle
 constexpr std::uint32_t kImportMsgWait = 0x5C4164;       // USER32 MsgWaitForMultipleObjects
+// WinMain's frame deadline, a float in milliseconds, advanced once per logic
+// frame at 0x4FCF0F (known-defects D5, DIV-0022). Read by DIV-0028.
+constexpr std::uint32_t kFrameDeadline = 0x6BC628;
 // IID_IDirectSoundNotify {B0210783-89CD-11D0-AF08-00A0C925CD16}, 16 bytes.
 constexpr std::uint32_t kIidNotify = 0x5C45B8;
 // The floats the music volume is built from: 1 / 127 (0x3C010204), 10000.0

@@ -20,6 +20,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/sound_callees.h"
 #include "hook/detour.h"
+#include "hook/log.h"
 
 namespace sound {
 namespace {
@@ -248,9 +249,27 @@ int Music_FadeOutEax(int frames) {
 // lasts `frames` spins of the wait loop, near instant (known-defects D26,
 // docs/sound.md section 3); the count is
 // read again after Music_SetVolume.
+//
+// DIV-0028: unless BOF3X_ORIGINAL=MusicFadePerFrame, a step is taken only on
+// the first call after the frame deadline has moved. WinMain's loop advances
+// the float deadline at 0x6BC628 once per logic frame (0x4FCF0F..0x4FCF3A,
+// after the wait), and reaches this at least once in every logic frame -
+// once from 0x4FCEBC when the frame is late, replayed frames included - so a
+// fade lasts `frames` logic frames, as on the PlayStation. The first call of
+// a new fade steps at once (the remembered deadline is an older frame's).
+namespace sound {
+std::uint32_t g_fade_per_frame = 0;  // 1 through PatchBytes("MusicFadePerFrame")
+std::uint32_t g_fade_deadline = 0;   // the deadline's bits at the last step
+}  // namespace sound
+
 extern "C" void __cdecl Sound_Tick(void) {
     g.music_pump();
     if (Music_FadeCount == 0) return;
+    if (sound::g_fade_per_frame) {
+        const std::uint32_t deadline = Dword(kFrameDeadline);
+        if (deadline == sound::g_fade_deadline) return;
+        sound::g_fade_deadline = deadline;
+    }
     __asm__ volatile(
         "flds %[step]\n\t"
         "fadds %[volume]\n\t"
@@ -596,6 +615,71 @@ extern "C" void __cdecl Music_Pump(void) {
     g.sndbuf_write(Music_Buffer, Music_Staging, signalled != 0 ? 0 : kHalf, kHalf);
 }
 
+// DIV-0028's switch and its check. Under BOF3X_SHADOW=sound (after the fuzz,
+// which ran the per-call path the original has): an 8-frame stopping fade
+// driven through Sound_Tick with counting stand-ins - five calls within one
+// frame take one step, then each of seven new deadlines takes one more, and
+// the eighth step stops the music. Everything it touches is put back.
+namespace {
+
+int g_fpf_volume_calls, g_fpf_stop_calls;
+void __cdecl FpfPump() {}
+void __cdecl FpfSetVolume(float) { ++g_fpf_volume_calls; }
+void __cdecl FpfStop() { ++g_fpf_stop_calls; }
+
+void FadePerFrame_SelfTest() {
+    const Callees saved_g = g;
+    const auto count = Music_FadeCount;
+    const auto stops = Music_FadeStops;
+    const auto volume = Music_Volume;
+    const auto step = Music_FadeStep;
+    const auto track = Music_Track;
+    const std::uint32_t deadline = Dword(kFrameDeadline);
+    const std::uint32_t remembered = sound::g_fade_deadline;
+
+    g.music_pump = FpfPump;
+    g.music_set_volume = FpfSetVolume;
+    g.music_stop = FpfStop;
+    g_fpf_volume_calls = g_fpf_stop_calls = 0;
+    sound::g_fade_per_frame = 1;
+    Music_Volume = 127.0f;
+    Music_FadeOutStopEax(8);
+    bool ok = true;
+    std::uint32_t frame = 0x45000000;  // 2048.0f, any bits unlike the remembered ones
+    sound::g_fade_deadline = 0;
+    for (int f = 0; f < 8; ++f) {
+        SetDword(kFrameDeadline, frame + static_cast<std::uint32_t>(f) * 0x100);
+        for (int spin = 0; spin < 5; ++spin) Sound_Tick();
+        ok = ok && g_fpf_volume_calls == f + 1 && static_cast<int>(Music_FadeCount) == 7 - f;
+    }
+    ok = ok && g_fpf_stop_calls == 1 && Music_Track == 0xFF;
+    for (int spin = 0; spin < 5; ++spin) Sound_Tick();  // a finished fade takes no more steps
+    ok = ok && g_fpf_volume_calls == 8 && g_fpf_stop_calls == 1;
+
+    sound::g_fade_per_frame = 0;
+    g = saved_g;
+    Music_FadeCount = count;
+    Music_FadeStops = stops;
+    Music_Volume = volume;
+    Music_FadeStep = step;
+    Music_Track = track;
+    SetDword(kFrameDeadline, deadline);
+    sound::g_fade_deadline = remembered;
+    if (!ok)
+        bof3::Fatal("DIV-0028 self-test: %d volume steps, %d stops for an 8-frame fade over 8 frames of 5 spins",
+                    g_fpf_volume_calls, g_fpf_stop_calls);
+    bof3::Log("shadow      DIV-0028 self-test: an 8-frame fade took 8 steps over 8 frames of 5 spins, stopped once");
+}
+
+void FadePerFrame_Inject() {
+    if (bof3::WantsShadow("sound")) FadePerFrame_SelfTest();
+    const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+    bof3::PatchBytes("MusicFadePerFrame", Address(&sound::g_fade_per_frame), was, is, 4);
+    bof3::Log("DIV-0028    music fades step once per logic frame (on unless the line above says OFF)");
+}
+
+}  // namespace
+
 void Sound_Inject() {
     if (bof3::WantsShadow("sound")) sound::SelfTest();
     BOF3_INJECT(Sound_PlayEffect);
@@ -621,4 +705,5 @@ void Sound_Inject() {
     BOF3_INJECT(Music_Stop);
     BOF3_INJECT(Music_Release);
     BOF3_INJECT(Music_Pump);
+    FadePerFrame_Inject();
 }

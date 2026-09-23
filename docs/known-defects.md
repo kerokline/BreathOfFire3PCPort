@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — twenty-four entries, D19 and D20 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (not yet seen in game); D18 and D21..D25 latent; D26, the music fades, affects every fade and is the owner's to hear)
+**Status:** IN PROGRESS (2026-09-22 — twenty-four entries, D19 and D20 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (not yet seen in game); D18 and D21..D25 latent; D26, the music fades, fixed by DIV-0028 (not yet heard in game))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -782,6 +782,6 @@ music fading in and out"; an imperceptible fade on the PC "would be a
 divergence from the psx game"). So if the batch's listen confirms the cut,
 the PC has lost something the release had.
 
-**Fix proposed, not built:** step the fade once per logic frame (a counter
+**Fixed as DIV-0028** (2026-09-22, owner's request; not yet heard in game). The fix, as proposed: step the fade once per logic frame (a counter
 the frame loop already keeps), a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
 The takeover keeps the per-spin step.

@@ -139,8 +139,10 @@ frames. That is fine for the pump (it asks DirectSound, without waiting,
 which half is free), and why nothing here may log or allocate. But the fade
 step is in the same function: a fade of `frames` is `frames` spins, a few
 hundredths of one frame, where the PSX counted frames - fades are near
-instant on the PC. Kept (it is what the port does), written down as D26 with
-a fix proposed and not built.
+instant on the PC. The takeover keeps it (it is what the port does), written
+down as D26; **the fix is DIV-0028** (2026-09-22, the owner's request): one
+step per logic frame, gated on the frame deadline `0x6BC628` moving, off with
+`BOF3X_ORIGINAL=MusicFadePerFrame`.
 
 ## 4. The fuzz
 
@@ -281,11 +283,12 @@ heard or not. What the owner should listen for, ours against
 1. **The logo / attract music** (track 141, the once-only `N` file) starts
    with the logos and plays once, not looping; the title music after it.
 2. **Pressing Start on the title** (`Title_FadeMusic`, `Music_FadeOut(16)`):
-   the music fades or cuts exactly as the original does - D26 says both cut
-   within a frame; if the original audibly fades and ours does not, that is
-   ours.
+   with DIV-0028 (the default) a 16-frame fade, about half a second;
+   `BOF3X_ORIGINAL=MusicFadePerFrame` and all-original should both cut
+   within a frame (D26). Listen three ways.
 3. **An area change with new music**: the old track stops, the new one
-   starts from its beginning, at full volume at once (D26 again).
+   starts from its beginning - fading in over 8 frames with DIV-0028, at
+   full volume at once without it (D26).
 4. **A track looping** - stay in one area past the end of its music: the
    loop is seamless and the same as the original's (the decoder rewinds; a
    gap or a stutter at the loop point that the original does not have is
