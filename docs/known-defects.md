@@ -882,3 +882,33 @@ the texture's `QueryInterface`) in a third of its rounds, and the controls
 refused ([`tex-page.md`](tex-page.md) §6). A fix - release the surfaces on
 the failure path, and have the refresh set its state only on success - is the
 owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D-NEW-X — A save that fails its checksum is loaded into the live game block anyway (candidate, latent)
+
+**Found:** reading `LoadMenu_Read` `0x5883C0` for the sixth round's group X,
+2026-09-23 ([`save-menu.md`](save-menu.md) section 2). **Latent, Capcom's**;
+the PSX loads from the memory card by other code, not compared.
+
+**The defect.** The load menu reads the chosen `BISLPS0<n>.DAT` into
+`Save_Staging`, zeroes the checksum word (`+0x70`) and then copies the
+`0x10B0`-byte block into the live game block `0x9039E0` **while** summing it;
+only after the copy does it compare the sum with the stored checksum
+(`0x588462`). On a mismatch it plays the refusal sound, shows "could not
+load" (error 2) and goes back to choosing a slot - with the game block
+already overwritten by the rejected file, and `Field_ScriptFlags` set from
+its byte `+0x74D`. A failed *read* (`Save_ReadFile` -1) copies nothing.
+
+**Why it may never show:** from there the player can only load another save
+(which overwrites the block again) or cancel to the title and start a New
+Game. `TitleFlow_NewGame` `0x5880E0` resets the character records
+(`NewGame_InitCharacters`), half of `Cond_Flags` (the first dword of each
+8-byte record) and the area; whatever else of the block it does not reset -
+the inventory, the story flags from `Cond_Flags + 0xA0`, the gold, by their
+offsets unread here - would come from the corrupt file. Unchecked in game:
+it needs a save file with a wrong checksum.
+
+**Ours does the same** (control "the checksum compared as dwords" and
+"`Field_ScriptFlags` only on a good sum" are refused,
+[`save-menu.md`](save-menu.md) section 4). A fix - sum `Save_Staging` first
+and copy only on a match - is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry.

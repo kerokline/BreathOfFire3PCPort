@@ -116,7 +116,7 @@ void DefineRegions() {
     g_regions[rChoice] = {0x6BC880, 0x40};
     g_regions[rMusicBuf] = {0x7DE3C0, 0xC};
     g_regions[rDatNames] = {at::kDatNames, 0x40};
-    g_regions[rStreamTables] = {at::kStreamTables, 0x10};
+    g_regions[rStreamTables] = {at::kStreamTables, 0x50};
     g_regions[rPacketNext] = {at::kPacketNext, 4};
     g_regions[rPrim] = {Addr(g_prim), kPrimBytes};
     g_regions[rHeap] = {Addr(g_heap), kHeapBytes};
@@ -155,6 +155,7 @@ unsigned g_kind;
 U g_load_done_after;    // File_LoadDone answers 0 this many times, then 1
 U g_find_left;          // _findnext succeeds this many more times
 U g_file_size;          // what File_Size answers
+U g_equip_target;       // the slot byte Shop_Equip will read back this round
 
 // A stand-in's effect on the state byte and the counter its caller reads
 // after it - one call in four.
@@ -306,9 +307,10 @@ unsigned char __cdecl StubShopFlag(unsigned a) {
 }
 unsigned char __cdecl StubInvRemove(unsigned kind, unsigned item, unsigned count, unsigned zero) {
     Record(0x1A, kind, item, count, zero);
-    // The slot byte read after it.
+    // The slot byte Shop_Equip reads after it - that one half the time.
     const U h = Hash(0x1AA);
-    if (h % 3 == 0) PutByte(at::kCharRecords + (h >> 8) % 16 * at::kCharStride + 0x12 + (h >> 16) % 6, h >> 24);
+    if (h % 2 == 0) PutByte(g_equip_target != 0 ? g_equip_target : at::kCharRecords + 0x12, h >> 24);
+    else if (h % 3 == 0) PutByte(at::kCharRecords + (h >> 8) % 16 * at::kCharStride + 0x12 + (h >> 16) % 6, h >> 24);
     return static_cast<unsigned char>(h);
 }
 unsigned char __cdecl StubInvAdd(unsigned kind, unsigned item, unsigned count, unsigned zero) {
@@ -850,7 +852,8 @@ void Sane() {
     PutLong(at::kPacketNext, Addr(g_prim) + (Next() % 0x30) * 4);
     PutWord(at::kWaitWord, Next() % 2 ? 0 : Next());
     PutLong(at::kSlot, Next() % 4 ? Next() % 17 : Next() % 0x100);
-    PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 0x100);
+    // The first slot shown: its upper bytes reach 0x576960's slot argument.
+    PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
 }
 
 Args Generate(unsigned k) {
@@ -861,8 +864,10 @@ Args Generate(unsigned k) {
     x.ecx = Next();
     g_load_done_after = Next() % 4 == 0 ? Next() % 4 : 0;
     g_find_left = Next() % 20;
-    g_file_size = Next() % 5 == 0 ? static_cast<U>(-static_cast<int>(Next() % 8)) : Next() % 0x1800;
+    g_file_size = Next() % 5 == 0 ? static_cast<U>(-static_cast<int>(Next() % 8))
+                  : Next() % 4 == 0 ? Next() % 0x30 : Next() % 0x1800;
     g_party = Next() % 5;
+    g_equip_target = 0;
     // The step and the state index tables that hold recorders; keep them inside.
     PutWord(at::kGameStep, Next() % 6);
     PutByte(at::kFlowState, Next() % 15);
@@ -923,10 +928,13 @@ Args Generate(unsigned k) {
         x.a[1] = Wide(Pick({0x2A, 0x2B, 0x30, 0x36, 0x37, Next()}), Next() % 2 ? 0xFFFFFFFF : 0xFF);
         x.a[2] = Pick({0, 1, 0x100, Next()});
         break;
-    case kEquip:
+    case kEquip: {
         x.a[0] = Wide(Next() % 16, 0xFF);
         x.a[1] = Wide(Next() % 8, 0xFF);
+        const U slot = x.a[1] & 0xFF;
+        g_equip_target = at::kCharRecords + (x.a[0] & 0xFF) * at::kCharStride + (slot >= 1 && slot <= 5 ? 0x12 + slot : 0x12);
         break;
+    }
     case kDrawRows:
         x.a[0] = Pick({0, 1, 0x100, Next()});
         break;
@@ -972,9 +980,10 @@ Args Generate(unsigned k) {
         break;
     }
     case kLoadStream: {
-        const U kind = Next() % 4;
+        // Kinds up to 19: ids above 0xFFFF, as 0x446E8B can push.
+        const U kind = Next() % 3 ? Next() % 4 : Next() % 20;
         x.a[0] = (kind << 12) | (Next() % 0x100);
-        for (U i = 0; i < 4; ++i) PutLong(at::kStreamTables + i * 4, Addr(g_names));
+        for (U i = 0; i < 20; ++i) PutLong(at::kStreamTables + i * 4, Addr(g_names));
         PutLong(at::kStreamData, Next() % 3 == 0 ? 0 : Next());
         PutLong(at::kFadeCount, Next() % 2 ? 0 : Next());
         break;
