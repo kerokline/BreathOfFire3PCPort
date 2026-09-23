@@ -634,7 +634,13 @@ extern "C" void __cdecl Window_ResetAll(void) {
 // As the original has it: Port_DroppedCall(0) where the PSX called something
 // (its argument left on the stack under LoadDatFile's); File_LoadDone asked
 // before the first sleep; Gfx_ClutStripDirty counted up, not set.
-extern "C" void __cdecl Boot_Task(void) {
+//
+// Task_Exit is a `call` in the original, not a tail jump, and this is a task's
+// top frame: a tail jump would leave the task stack's 0 as Task_Exit's return
+// address where the original leaves one inside this function. Nothing reads
+// it in game, but the frame hash does - batch ab24's one differing frame,
+// frame 1 - so the compiler's tail call is turned off here.
+extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     g.clear_rect(0, 0, 0x400, 0x200);
     g.dropped(0);
     g.load_dat(0x225);
