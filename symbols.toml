@@ -4186,15 +4186,6 @@ evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, the byte at 0x90
 impl = "src/game/field_event.cpp"
 
 [[func]]
-pc = 0x51AC50
-name = "Field_MemberFrame"
-psx = 0x801BCE40
-ret = "void"
-params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (to its jmp): Sprite_RestoreClut, then jmp [0x65F960 + Sprite_Current +1 * 4]. Field_MembersFrame calls it for ObjTrio's second and third members."
-
-[[func]]
 pc = 0x531B60
 name = "Party_UpdateScreens"
 psx = 0x801BEAB0
@@ -9505,3 +9496,205 @@ params = "unsigned category, unsigned item"
 impl = "src/game/char_stats.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x591C20..0x591CAA plus its 4-entry jump table to 0x591CBB (0x9C bytes): the word of weapons + 0x18, armour + 0x16, accessories + 0x14, key items + 0x10, consumables + 0x12 (eax whole, the word zero-extended). The shop screens call it 523 times on the owner's shop route (0x581C70, 0x58281C) - the price, by that use (the NameTable_Consumables note has the price at + 0x14, which this does not read). 15 call sites."
+# --- round six, group Z: the party members' sprites (src/game/member_sprites.cpp, docs/member-sprites.md) ---
+
+[[func]]
+pc = 0x51AC50
+name = "Field_MemberFrame"
+psx = 0x801BCE40
+ret = "void"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51AC50..0x51AC66 (0x17 bytes): Sprite_RestoreClut, then jmp [0x65F960 + Sprite_Current +1 * 4], the whole byte unchecked - 9 states (0 Member_Start, 1 Member_Control, 2..8 unread: 0x525370 0x51BA60 0x51BA80 0x437CC0 0x51BAA0 0x51BBD0 0x51BCF0), then zeros. PSX 0x801BCE40 the same (jalr). Callers Field_MembersFrame (0x5173A9, 0x5173D5) and Field_PartyFirstFrame (0x533520)."
+
+[[func]]
+pc = 0x51AC70
+name = "Member_Start"
+psx = 0x801BCE90
+ret = "void"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51AC70..0x51AD34 (0xC5 bytes), pointer-reached only (0x65F960 entry 0): Sprite_ClearSteps, +0x18 +0x1C +0x20 cleared, +6 = +5 less 1, +7 = 0, +0x3E the ground, +0x5D..0x5F = 0, +0x5C = 2, Field_State +0x128 = 3, +0x137 = +0x136 = 0, Sprite_SetAnimation(+8), +1 on, +2 = 0. PSX 0x801BCE90 store for store (its Field_State offsets 0x11C 0x12B 0x12A)."
+
+[[func]]
+pc = 0x51AD40
+name = "Member_Control"
+psx = 0x801BCFAC
+ret = "void"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51AD40..0x51AD56 (0x17 bytes), pointer-reached only (0x65F960 entry 1): call [0x65F99C + Sprite_Current +2 * 4] (2 sub-states, Member_Follow and Member_Walk; the byte unchecked), then jmp Sprite_ScriptTick. PSX 0x801BCFAC the same."
+
+[[func]]
+pc = 0x51AD60
+name = "Member_Follow"
+psx = 0x801BCFF8
+ret = "void"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51AD60..0x51AFA3 and its 7-entry jump table 0x51AFA4..0x51AFBF (0x260 bytes): sub-state 0 of state 1. Field_Request 9 to state 0xE; Field_ScriptFlags2 bit 0x1000 to state 5, bits 0xC00 nothing; 0x535120(1), 0x535240(1); ObjTrio +1 of 0xA to state 7; Member_Idle; then Member_FollowStep's answer 0 walk (0x531DF0, the actor bit 0x20 clears Field_State +0x136, 0x534610, 0x535F50, animation +8, the ground at the step's end fetched and discarded when Field_State +0x89 is 2, +9 less 1, 0x52E140, sub-state 1), 1..4 stand, 5 state 2 sub 3, 6 state 8. PSX 0x801BCFF8 test for test. Callers 0x51AD40 (table 0x65F99C), Member_WalkEnd 0x51B02A, a jmp at 0x51BBBF (in state 6, 0x51BAA0)."
+
+[[func]]
+pc = 0x51AFC0
+name = "Member_Walk"
+psx = 0x801BD3B0
+ret = "void"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51AFC0..0x51AFDB (0x1C bytes), pointer-reached only (0x65F99C entry 1): +9 zero, jmp Member_WalkEnd; else +9 less 1 and jmp 0x52E140. PSX 0x801BD3B0 the same."
+
+[[func]]
+pc = 0x51AFE0
+name = "Member_WalkEnd"
+psx = 0x801BD3F8
+ret = "void"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51AFE0..0x51B04C (0x6D bytes), reached only by Member_Walk's jmp at 0x51AFCD: 0x535270 0x5350C0 0x534F10 0x534A00; 0x535120(0), 0x535240(0) and 0x534920 may take the frame; Sprite_ClearSteps, Field_State +0x128 = 3, Member_Follow; with +0xC and +0x10 zero and +1 still 1, +2 = 0. PSX 0x801BD3F8 the same."
+
+[[func]]
+pc = 0x51B050
+name = "Member_FollowStep"
+psx = 0x801BD758
+ret = "unsigned char"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51B050..0x51B42C (0x3DD bytes): whom to follow (+6: 0 the leader, 1, or 2 - by member +5 and the distances, unless member +5 xor 3 has +0x137 of 9), 1 if within 0x18000 (0x20000 raised) of where its step ends; else Member_CatchUp to two half-cells behind that, Field_State +0x128 from the distance clamped 3..5, Field_DirectionTo into +8, Member_StepAhead's answer (1 also when the aim point is no nearer, facing restored); with bit 0x80 and the flags clear, a jump onto the leader's next half-cell when 0x535610 finds it free (Field_State the leader's for the test), 0xFF. Caller Member_Follow."
+
+[[func]]
+pc = 0x51B430
+name = "Member_StepAhead"
+psx = 0x801BD4C8
+ret = "unsigned char"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51B430..0x51B5A7 and its 8-entry jump table 0x51B5A8..0x51B5C7 (0x198 bytes): +9 = 0x10 (0x20 facing 2 or 6) idiv Field_MoveSpeeds[Field_State +0x128] (unchecked; a speed of 0 faults), the aim point +0x34/+0x38 plus the 0x6696DC unit times frames times speed (doubled when +0x70) into 0x903858 / 0x90385C; Field_CellAhead's 0 2 4 5 answer 1, 1 answers 0, 6 and 7 answer 5 and 6, 3 asks 0x5725C0 (an object over 0x40 high: facing restored, 1; else the aim point's ground fetched, 0). PSX 0x801BD4C8 (divu). Caller Member_FollowStep."
+
+[[func]]
+pc = 0x51B5D0
+name = "Member_CatchUp"
+psx = 0x801BDD58
+ret = "void"
+params = "long x, long z"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51B5D0..0x51B9C7 (0x3F8 bytes): with sprite bit 0x80, flags bit 0 and the leader +0x138 bit 0 clear, n tries toward (x, z) from the larger distance (1 below 0x100000, less the ground difference over 256), each k double half-cells along Field_DirectionTo, then growing side tries on x and z; a free place (0x535610 zero) is kept only more than 6 cells from the leader and where 0x592890 answers non-zero (direction, Draw_OtSlot, Field_State +0x138 bit 0 cleared), else the start; cut to the half-cell, grounded. The direction byte is stack garbage when (x, z) is the sprite, unreachable from the caller. Caller Member_FollowStep."
+
+[[func]]
+pc = 0x51B9D0
+name = "Field_DirectionTo"
+psx = 0x801BE288
+ret = "void"
+params = "long x, long z, unsigned char *direction"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51B9D0..0x51BA5D (0x8E bytes; entries_logic had 0x3CD, running into states 2..8): the octant of (x, z) from Sprite_Current +0x34/+0x38, 0 (-,-) round to 7 (-,0), stored as a byte; nothing stored when both differences are 0. PSX 0x801BE288 branch for branch. Callers Member_FollowStep 0x51B29E, Member_CatchUp 0x51B6B7."
+
+[[func]]
+pc = 0x51BDA0
+name = "Member_Idle"
+psx = 0x801BE930
+ret = "unsigned char"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x51BDA0..0x51BE85 (0xE6 bytes; entries_logic had 0x4CB): unless the leader +0x137 is 8, a Field_Request, or the actor bit 0x20, Field_State +0x136 counts up; past 0xF0 it is reset, and unless the leader or the other member (+5 xor 3) has +0x137 of 9, the member whose +5 is Rand bit 0 plus 1 gets Field_State +0x137 = 9, its animation, +9 = 2, state 6: al 1. Caller Member_Follow."
+
+[[func]]
+pc = 0x526DB0
+name = "Field_CellAhead"
+psx = 0x801BA590
+ret = "unsigned char"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x526DB0..0x526DC5 (0x16 bytes; the catalogue's 1717 ran on through Field_CellAheadFlat): Sprite_Current +0x70 non-zero jmp 0x527640 (the raised version, unread, not reached by the shop route), else jmp Field_CellAheadFlat. Callers Member_StepAhead, 0x52E16F (the leader), 0x52655E 0x52656F 0x526C99."
+
+[[func]]
+pc = 0x526DD0
+name = "Field_CellAheadFlat"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x526DD0..0x527464 (0x695 bytes), reached only by Field_CellAhead's jmp: Field_ScriptFlags bit 0x400 or both fractions non-zero 1; Field_ReadCells for the cell ahead (0x66971C by facing); then by facing and fractions, Field_CellClass of cells 1..5 into cells 8..10, Field_TurnUnless / Field_CellPairTurn turns, Field_CellSlope for 0xA_ slopes, 0x5725C0 at the half-cell points - 0 stop, 1 go, 3 free, 6 / 7 state changes."
+
+[[func]]
+pc = 0x527470
+name = "Field_CellClass"
+ret = "unsigned char"
+params = "unsigned a, unsigned b, unsigned c"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x527470..0x527630 (0x1C1 bytes): the list a, b, c of cell indices to its first 0, each mapped through the bytes at 0x903850; two 0x70 is 0x70, any 0x70 or 0xFF 0x10, all 0xB0 (or none) 0xB0; odd lists 0x10 on 0xA0 / 0xA3 / 0xA2 (straight facing), one cell a 0xA_ as it is; pairs by 0xA2 / 0xA3 / 0xA_ rules (0xA2 0xA3 0xA1 0x10); two different 0x2_ 0x20; else 0. 14 call sites, 0x526DD0 and 0x527640."
+
+[[func]]
+pc = 0x528070
+name = "Field_CellSlope"
+ret = "unsigned char"
+params = "unsigned cell"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x528070..0x528095 (0x26 bytes): the low nibble of the byte at 0x903850 + cell - 1 or 0xF answer 2, 2 answers 5, else 4. 16 call sites in 0x526DD0 and 0x527640."
+
+[[func]]
+pc = 0x5280F0
+name = "Field_TurnUnless"
+ret = "void"
+params = "unsigned a, unsigned b, unsigned to"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5280F0..0x52811A (0x2B bytes): a diagonal facing (+8 bit 0) untouched; else +8 = to when it is a or b, to xor 4 otherwise. al left as a byte of the facing, no caller reads it. 29 call sites."
+
+[[func]]
+pc = 0x528120
+name = "Field_CellPairTurn"
+ret = "unsigned char"
+params = "unsigned a, unsigned b, unsigned to, unsigned value"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x528120..0x528187 (0x68 bytes): 1 when cells a and b both equal value; only a, +8 = to; only b, +8 = to xor 4; 0. 18 call sites."
+
+[[func]]
+pc = 0x5282C0
+name = "Field_ReadCells"
+ret = "void"
+params = "unsigned x, unsigned z"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5282C0..0x528361 (0xA2 bytes): cells 1..5 at 0x903851 = Field_CellKind of (x, z), (cx, z), (x, cz), (cx+1, z) and (x, cz+1) - cx, cz the sprite's cell (+0x36, +0x3A, 16-bit) - each from (cx, cz), (cx, cz), (cx, cz), (cx+1, cz), (cx, cz+1). Caller 0x526DD0."
+
+[[func]]
+pc = 0x528370
+name = "Field_CellKind"
+ret = "unsigned char"
+params = "unsigned x, unsigned z, unsigned from_x, unsigned from_z"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x528370..0x528614 and its tables (a byte index by high nibble 0x52863C, 9 dword targets 0x528618; 0x3BD bytes): AreaMap_ByteAt of (x, z) and (from_x, from_z), 16-bit; by the first's high nibble the cell's kind - 0xFF walls, 0xB0 a way out Field_CellFacing says it faces, the byte, or 0 / 0xA1 / 0x2_ and 0xF1 - with Field_ObjectAhead at the 16.16 midpoint or the cell by the sprite's fractions and +0x70; 0x11 by the 0x905DA0 object's +0xB or Field_State +0x138 bit 0. Callers Field_ReadCells (5) and 0x5287B0 (7)."
+
+[[func]]
+pc = 0x528730
+name = "Field_CellFacing"
+ret = "unsigned char"
+params = "unsigned cell"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x528730..0x52876B (0x3C bytes): 1 when the byte is 0xB_ and its low nibble (under 6) is the facing +8, or 8 with facing 3 or 5; else 0. Caller Field_CellKind."
+
+[[func]]
+pc = 0x528770
+name = "Field_ObjectAhead"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/member_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x528770..0x5287A0 (0x31 bytes): 0x5725C0(x, z, facing +8); 1 when the byte at 0x903850 is then non-zero and the answer's low word is over 0x40 signed, else 0. Field_CellKind's five calls."

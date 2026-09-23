@@ -72,6 +72,7 @@
 #include "game/tex_cells.h"
 #include "game/event_objs.h"
 #include "game/char_stats.h"
+#include "game/member_sprites.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -162,6 +163,8 @@ void InjectAll() {
     EventObjs_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
     CharStats_Inject();         // every call of its clones re-aimed at a recorder, its seven jump tables
                                 // relocated in the copies, the trait lists swapped: order does not matter
+    MemberSprites_Inject();     // every call of its clones re-aimed at a recorder, its two dispatch tables
+                                // swapped and three jump tables relocated in the copies: order does not matter
     InjectReport();
 }
 
