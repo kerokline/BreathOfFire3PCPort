@@ -13,7 +13,10 @@
 //     pitch the fuzz chooses, and fills the descriptor the way DirectDraw does
 //     (and refuses one whose dwSize is not 0x7C, as DirectDraw does); Unlock
 //     (+0x80); Blt (+0x14), which copies pixels when the two rectangles are the
-//     same size and the surfaces the same depth; BltFast (+0x1C); SetColorKey
+//     same size and the surfaces the same depth, and fills the destination
+//     rectangle with DDBLTFX's dwFillColor (+0x50) under DDBLT_COLORFILL
+//     (0x400) - its DDBLTFX recorded by content (an FNV-1a hash of its 0x64
+//     bytes, 0 for none), not by address; BltFast (+0x1C); SetColorKey
 //     (+0x74); GetSurfaceDesc (+0x58); Flip (+0x2C), IsLost (+0x60), Restore
 //     (+0x6C); QueryInterface (+0) for IID_IDirect3DTexture2; AddRef, Release;
 //   - the fake IDirect3DTexture2 behind each surface: QueryInterface, AddRef,
@@ -82,7 +85,7 @@ struct Call {
     U what;
     U a[12];
 };
-constexpr unsigned kMaxCalls = 40;
+constexpr unsigned kMaxCalls = 128;   // 40 for tex_page; 128 since group U (a cell texture of up to ~100 cells)
 constexpr unsigned kDescBytes = 0x7C;
 constexpr unsigned kMaxDescs = 4;
 
@@ -163,6 +166,12 @@ unsigned char* Pixels(unsigned index);
 
 // Surfaces made so far this pass, MakeSurface's and CreateSurface's.
 unsigned SurfaceCount();
+
+// The fake IDirect3DTexture2 behind a surface MakeSurface or CreateSurface
+// made (what its QueryInterface would answer), without recording a call - for a
+// fuzz that puts a surface and its texture in game memory before the call
+// under test. Null if `surface` is not a fake surface.
+void* TextureOf(const void* surface);
 
 // Puts `value` in the dword at `address` for its lifetime, and back after -
 // the fake IDirectDraw4 in Dd_DirectDraw, a staging surface in

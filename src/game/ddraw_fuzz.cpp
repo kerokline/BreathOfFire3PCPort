@@ -256,19 +256,44 @@ U __stdcall SRelease(Surface* s) {
     After(kSurfaceCall + kRelease);
     return 0;
 }
+// A DDBLTFX (0x64 bytes) as the log records it: by content, not address - an
+// FNV-1a hash of its bytes, 0 for none. The address is a stack slot, which
+// differs between a copy of Capcom's function and ours.
+constexpr U kBltFxBytes = 0x64;
+constexpr U kBltColorFill = 0x400;   // DDBLT_COLORFILL
+U FxArg(const void* fx) {
+    if (!fx) return 0;
+    U h = 0x811C9DC5u;
+    for (U i = 0; i < kBltFxBytes; ++i) h = (h ^ static_cast<const unsigned char*>(fx)[i]) * 0x01000193u;
+    return h | 1;   // never 0
+}
+
+// DDBLT_COLORFILL: the rectangle of `s` filled with `color`, its low bytes per
+// texel.
+void Fill(const Surface& s, const Rect& r, U color) {
+    for (int y = r.t; y < r.b; ++y) {
+        unsigned char* row = Buffer(s.index, g_pass) + static_cast<U>(y) * s.pitch + static_cast<U>(r.l) * s.bpp;
+        for (int x = r.l; x < r.r; ++x, row += s.bpp) std::memcpy(row, &color, s.bpp > 4 ? 4 : s.bpp);
+    }
+}
+
 long __stdcall SBlt(Surface* s, const void* to_rect, void* from, const void* from_rect, U flags, void* fx) {
     U a[4], b[4];
     RectArgs(to_rect, a);
     RectArgs(from_rect, b);
-    Record(kSurfaceCall + kBlt, Id(s), a[0], a[1], a[2], a[3], Id(from), b[0], b[1], b[2], b[3], flags,
-           static_cast<U>(reinterpret_cast<std::uintptr_t>(fx)));
+    Record(kSurfaceCall + kBlt, Id(s), a[0], a[1], a[2], a[3], Id(from), b[0], b[1], b[2], b[3], flags, FxArg(fx));
     U hr = kOk;
     if (!Planned(kSurfaceCall + kBlt, &hr)) {
         const Surface* src = AsSurface(from);
         Rect rt, rf;
         if (s->locked || (src && src->locked)) hr = kSurfaceBusy;
-        else if (src && RectOn(*s, to_rect, &rt) && RectOn(*src, from_rect, &rf) && rt.r - rt.l == rf.r - rf.l &&
-                 rt.b - rt.t == rf.b - rf.t && s->bpp == src->bpp)
+        else if (flags & kBltColorFill) {
+            // As DirectDraw: a DDBLTFX of the right size, the destination
+            // rectangle (the whole surface for none) filled.
+            if (!fx || Get(fx, 0) != kBltFxBytes || !RectOn(*s, to_rect, &rt)) hr = kInvalidParams;
+            else Fill(*s, rt, Get(fx, 0x50));
+        } else if (src && RectOn(*s, to_rect, &rt) && RectOn(*src, from_rect, &rf) && rt.r - rt.l == rf.r - rf.l &&
+                   rt.b - rt.t == rf.b - rf.t && s->bpp == src->bpp)
             Copy(*s, rt.l, rt.t, *src, rf);
     }
     After(kSurfaceCall + kBlt);
@@ -601,6 +626,11 @@ bool Locate(const void* p, U* surface, U* offset) {
 unsigned char* Pixels(unsigned index) { return Buffer(index, g_pass); }
 
 unsigned SurfaceCount() { return g_count; }
+
+void* TextureOf(const void* surface) {
+    const Surface* s = AsSurface(surface);
+    return s ? &g_textures[s->index] : nullptr;
+}
 
 GlobalSwap::GlobalSwap(U address, const void* value) : address_(address) {
     auto* slot = reinterpret_cast<U*>(static_cast<std::uintptr_t>(address));
