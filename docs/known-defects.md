@@ -951,4 +951,32 @@ has been measured.
 one round in sixteen, where they spill across rows and past row 256 (inside
 the fake's buffer), and compares both. A fix - clip each piece to the stage,
 or refuse the sprite - is the owner's call and a
+## D-NEW-V2 — A jump's speed index can count down to a division by zero (latent)
+
+**Found:** reading `Field_JumpSetUp` `0x534610` and `Field_JumpCheckHeight`
+`0x535F50` for the takeover, 2026-09-23 ([`event-objs.md`](event-objs.md)
+sections 2 and 5). **Latent, Capcom's** (group V2 of the sixth round); the
+PSX twins `0x801C3530` / `0x801C5C40` do the same (`break 7` on the zero
+divisor).
+
+**The defect.** `Field_JumpSetUp` divides the jump's frames (0x10, or 0x20
+for directions 2 and 6) by `Field_MoveSpeeds[Field_State +0x128]` - a whole
+byte into a table of six, `0, 1, 2, 4, 8, 16`, with zeros at 6 and 7 after
+it - and then the rise by those frames, both with `idiv`. Index 0, 6 or 7
+faults on the first division; a speed above 0x20 (index 8 reads 64) leaves
+0 frames and faults on the second. `Field_JumpCheckHeight` lowers the index
+by one, with no bound, whenever the ground at the landing point is 0x80 or
+more above the object, and starts the jump again. The landing point does not
+depend on the speed (the distance is 16 steps whatever it is), so the same
+ledge is found too high again at the next index.
+
+**Why it may never show:** each check lowers the index once, and whether
+anything puts it back between attempts is unread - `Field_LeaderStart`
+`0x52D920` sets 3 on the leader's state 0, and the unreached `0x535FE0` sets
+`+0x70 + 2`. Three too-high landings without a reset in between would reach
+index 0. Not seen in any run.
+
+**Ours does the same** (both divisions are an inline `idiv`; the fuzz draws
+only the speeds that divide, since a fault would end the start-up test).
+Bounding the index is the owner's call and a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry.
