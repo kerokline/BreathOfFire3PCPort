@@ -882,3 +882,57 @@ the texture's `QueryInterface`) in a third of its rounds, and the controls
 refused ([`tex-page.md`](tex-page.md) §6). A fix - release the surfaces on
 the failure path, and have the refresh set its state only on success - is the
 owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D-NEW-W1 — Inventory_Add searches the 32-byte key-item list 128 long (latent)
+
+**Found:** reading `Inventory_Add` `0x590BB0`, 2026-09-23
+([`char-stats.md`](char-stats.md) section 4). **By reading, the PC's own**:
+the PSX `Inventory_Add` `0x80165AA4` has no category-4 branch at all.
+
+**The defect.** For category 4 the PC adds the item to the first id byte of
+0 in the list `0x656B00[4]` = `0x904554`, and the loop runs 128 bytes, as
+for the other categories. The key-item list is 32 bytes (`KeyItem_Has`
+`0x5918E0` and `Inventory_CountUsed` `0x591A80` both stop there; the list
+`0x590C90` fills starts at `0x904574`, right after it). With all 32 key-item
+bytes set, a 33rd key item is written into that next list's first zero byte
+and the answer is 1. **Why it may never show:** whether the game ever holds
+32 key items at once is the owner's to say; the PSX's key items are 16
+records (`NameTable_KeyItems`), so probably not.
+
+**Ours does the same**; the fuzz searches category 4 with full lists and
+the control "stacks searched in category 4 too" is refused (by a fault, the
+null count list - see D-NEW-W2 - with a counting twin).
+
+## D-NEW-W2 — Inventory_Count of a key item that is held reads address 0 + i (latent)
+
+**Found:** reading `Inventory_Count` `0x5919B0`, 2026-09-23
+([`char-stats.md`](char-stats.md) section 4). **By reading, Capcom's** on the
+PC; the PSX pointer tables are filled at run time and were not read.
+
+**The defect.** With `equipped` 0 the function looks the item up in the id
+list `0x656B00[category]` and answers the byte at the same index of the
+count list `0x656B14[category]`. For category 4 that count pointer is 0, so a
+key item that is in the list reads address `i` (0..31) - an access
+violation. **Why it may never show:** nothing is known to ask for a key
+item's count; the 40 call sites are unread. **Ours does the same** (a
+volatile read of the same address), and the fuzz does not ask it.
+
+## D-NEW-W3 — Menu_DrawIcon's CLUT table has 21 entries and no bound (latent)
+
+**Found:** reading `Menu_DrawIcon` `0x5903F0`, 2026-09-23
+([`char-stats.md`](char-stats.md) section 5). **By reading, Capcom's on both
+platforms**: the PSX `0x80164EC8` builds the same 21-byte table on its stack
+and indexes it the same way.
+
+**The defect.** The icon's CLUT row comes from a 21-byte table on the stack,
+indexed by the icon's low byte without a bound: icon 21 and up takes a byte
+of the frame instead - three stack bytes never written (21..23), the return
+address, the first argument's slot holding a float temporary, the other
+arguments, the last argument's slot holding `y + h`, then the caller's
+frame. Icons 20 and up already draw the one fixed cell, so only the palette
+would be wrong. **Why it may never show:** the icons of the seven callers
+come from a loop bound or a table (`0x6672AC`) not read here.
+
+**Ours does the same** for icons 24 and up (read from the same stack, the
+detour being a `jmp`; the fuzz compares 24..91), and not for 21..23, which
+are undefined in the original.
