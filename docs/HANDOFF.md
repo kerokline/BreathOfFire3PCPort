@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-23, evening)
+**Status:** IN PROGRESS (2026-09-23, night)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -123,7 +123,15 @@ and the FMV player ours** (796; [`window-modes.md`](window-modes.md),
 DIV-0032..0035) - a resizable or borderless window with no mode-set
 anywhere, the game running unfocused with the pads zeroed (I12 built), the
 frame debt clamped, the FMVs into the window - checked by `wm1` with the
-window never in front ("Pick up here" 000000).
+window never in front ("Pick up here" 000000). **That evening a review
+session** fixed the tracer's `pushfd` exit, re-recorded the frame hash
+(`wm1b`), routed WinMain's calls so each `BOF3X_ORIGINAL` switch holds, and
+built step 4, integer scaling (DIV-0036), and step 5, the CRT look (DIV-0037,
+our own shaders - the model was GPL); then the pause lines and the window
+title in English and F7 / F11 gone (DIV-0038..0040), F12's quick save read
+and kept for now (I18). The owner checked it all in game. All pushed on
+`phase-3/UI-overhaul`. **Next: widescreen, 426 x 240, planned in
+[`widescreen.md`](widescreen.md).**
 
 ## Pick up here
 
