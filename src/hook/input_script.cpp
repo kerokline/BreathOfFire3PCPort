@@ -539,7 +539,7 @@ void RecordStart(const char* path) {
     Log("input       recording the pad to %s (F12 = shot)", path);
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
     constexpr std::uint32_t kInputLatch = 0x4FC6A0;
-    RetargetCall("InputRecord", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch));
+    RetargetCall("InputRecord", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
 }
 
 }  // namespace
@@ -570,7 +570,7 @@ void InputScript_Start() {
     // no say - the variable being set is the switch.
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
     constexpr std::uint32_t kInputLatch = 0x4FC6A0;  // Input_Latch; symbols.gen.h binds the name as a macro
-    RetargetCall("InputScript", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch));
+    RetargetCall("InputScript", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
     g_active = true;
 }
 

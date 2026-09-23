@@ -92,13 +92,13 @@ void Inject(const char* name, std::uint32_t original, void* ours) {
     }
 }
 
-void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours) {
+void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours, bool instrument) {
     auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
     std::int32_t rel;
     std::memcpy(&rel, at + 1, sizeof rel);
     if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
         Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
-    if (WantsOriginal(name)) {
+    if (!instrument && WantsOriginal(name)) {
         Log("retarget OFF %-24s call at 0x%08X left on 0x%08X", name, (unsigned)site, (unsigned)expected);
         return;
     }
