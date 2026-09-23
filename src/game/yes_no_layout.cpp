@@ -141,4 +141,20 @@ void YesNoLayout_Inject() {
     static const std::uint8_t shift_is[] = {0x90, 0x90, 0x90};
     bof3::PatchBytes("YesNoLayout", 0x5747FC, shift_was, shift_is, 3);
     bof3::Log("DIV-0027    Yes / No: %u spaces into the gap, hand stops 218 and 274 (on unless the lines above say OFF)", kMoved);
+
+    // DIV-0029: the save / load slot's name two units further in. The slot
+    // panel 0x576960 draws the name - five bytes of the save header copied to
+    // 0x904BA0 - through Text_DrawAt at x + 0x13 (`lea eax, [ebp + 0x13]` at
+    // 0x576A46; the one call site, found live 2026-09-22 by a probe on
+    // Text_DrawAt). On screen the glyph's first two pixel columns are lost
+    // (at x 135 of 640 in slot 1): a Chinese glyph's are blank, but the Latin
+    // cells start at column 0, so an R loses its stem (owner's screenshot).
+    // What cuts them is not established (the draw mode the panel sends first
+    // takes its texture window from the caller's ebx). 0x15 puts the whole
+    // glyph past the cut with a pixel to spare; five Latin letters still end
+    // well inside the name box.
+    static const std::uint8_t name_was[] = {0x8D, 0x45, 0x13};
+    static const std::uint8_t name_is[] = {0x8D, 0x45, 0x15};
+    bof3::PatchBytes("SaveNameInset", 0x576A46, name_was, name_is, 3);
+    bof3::Log("DIV-0029    save slot names at x + 0x15 (on unless the line above says OFF)");
 }

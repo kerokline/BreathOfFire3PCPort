@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 28 entries, DIV-0001..0028)
+**Status:** IN PROGRESS (opened 2026-09-18; 29 entries, DIV-0001..0029)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1310,3 +1310,34 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
   Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
   function).
+
+### The save / load slot's name two units further in
+
+- **ID:** DIV-0029
+- **Date:** 2026-09-22
+- **Subsystem:** menus (the save / load slot panel `0x576960`)
+- **Original behaviour:** the panel draws the slot's name - five bytes of
+  the save header, copied to `0x904BA0` - through `Text_DrawAt` at the
+  panel's x + `0x13` (`lea eax, [ebp + 0x13]` at `0x576A46`, the one call
+  site, found live with a probe on `Text_DrawAt`). On screen the glyph's
+  first two pixel columns are lost - at x 135 of 640 for slot 1. The
+  Chinese glyphs have blank columns there; the English cells (the US
+  8 x 12 letters doubled, DIV-0005) start at column 0, so an `R` loses its
+  stem (owner's screenshot, and `analysis/shots/load_names`). What does the
+  cutting is not established: the draw mode the panel sends first takes its
+  texture window from whatever the caller left in `ebx`.
+- **New behaviour:** x + `0x15`: the name two PSX units (four pixels)
+  further in, the whole glyph past the cut with a pixel to spare. Five
+  Latin letters (80 pixels) still end well inside the name box.
+- **Rationale:** the owner's request, 2026-09-22 - the only such hard cut
+  they have seen, so the fix is local to this screen rather than a margin
+  for every Latin cell.
+- **Also in the PSX version?** No cut there to fix; the PSX draws its own
+  font.
+- **Verification:** `tools/recipes/load_list.txt`, English, point filter:
+  slot 1's `Ryu` whole (`analysis/shots/load_names3`), against the cut `R`
+  before it (`load_names`). The save screen shares the panel and was not
+  captured.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
+  language overlay, not with `BOF3X_LANG=original` (it rides in
+  `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
