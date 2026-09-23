@@ -2682,26 +2682,6 @@ count = 32
 status = "evidence"
 evidence = "disasm 2026-09-21: Sprite_Draw reads bytes 2n and 2n + 1 for n = the low nibble of a piece's first byte, as the width and height it passes to SpriteCell_Add. Contents in the exe: (8 + 8 * (n % 4), 8 + 8 * (n / 4)) - the sixteen sizes 8..32 by 8..32."
 
-# --- The Direct3D end: sprite handlers (docs/known-defects.md D1, DIV-0010) ---
-
-[[func]]
-pc = 0x5A2300
-name = "D3d_DrawSprt"
-status = "evidence"
-evidence = "disasm 2026-09-20, 0x5A2300..0x5A2511, straight-line: the draw 0x59EE50's second jump table 0x59F3D8 (byte index table 0x59F440, code byte [prim + 7] & 0xFC) sends code 0x64 here. Four 0x20-byte vertices at 0x7CA958 (x, y, z, rhw, diffuse, specular, u, v), positions prim floats +8 / +0xC times the scale 0x7C9F4C / 0x7C9F48, w and h from +0x18 / +0x1A, texture edges from the float table 0x7CA9E0: near tc[u], far tc[u + w - 1] (operand 0x7CA9DC). Ends in a COM call, device [0x7CC350] vtable +0x70, (5, 0x1C4, verts, 4, 0). Not reimplemented: DIV-0010 runs a copy with the table operands re-aimed (src/game/gfx_sprite_uv.cpp)."
-
-[[func]]
-pc = 0x5A2520
-name = "D3d_DrawSprt8"
-status = "evidence"
-evidence = "disasm 2026-09-20, 0x5A2520..0x5A270B, read to the last instruction: code 0x74. As D3d_DrawSprt with the size fixed: + 8.0 (0x5C41CC) on both axes, far texture edge tc[u + 7] (operand 0x7CA9FC). The table read live from the owner's game: tc[i] = (i + 0.512) / 256."
-
-[[func]]
-pc = 0x5A2710
-name = "D3d_DrawSprt16"
-status = "evidence"
-evidence = "disasm 2026-09-20, 0x5A2710..0x5A28FB: code 0x7C. As D3d_DrawSprt8 with + 16.0 (0x5C41D0) and far texture edge tc[u + 15] (operand 0x7CAA1C). Both constants read from the image: 0x5C41CC = 8.0, 0x5C41D0 = 16.0."
-
 # --- The field menu's panel pieces (docs/menu-screens.md, DIV-0011) ---
 
 [[func]]
@@ -9698,3 +9678,32 @@ params = "long x, long z"
 impl = "src/game/member_sprites.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x528770..0x5287A0 (0x31 bytes): 0x5725C0(x, z, facing +8); 1 when the byte at 0x903850 is then non-zero and the answer's low word is over 0x40 signed, else 0. Field_CellKind's five calls."
+
+# --- Group D of the sixth round: the Direct3D sprite handlers, DIV-0010 inside (docs/sprt-draw.md) ---
+
+[[func]]
+pc = 0x5A2300
+name = "D3d_DrawSprt"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/sprt_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A2300..0x5A2510 (0x211 bytes), straight-line: the draw 0x59EE50's second jump table 0x59F3D8 (byte index table 0x59F440, code byte [prim + 7] and 0xFC) sends code 0x64 (SPRT) here. D3d_PrimColor(r, g, b, code, Gfx_DrawTpage and 0xFFFF, &diffuse, &specular); float x +8, y +0xC, z +0x10, u8 u +0x14, v +0x15, u16 w +0x18, h +0x1A: corners (x, y), (x + w, y), (x, y + h), (x + w, y + h) times D3d_ScaleX / D3d_ScaleY, the far edges fild w, fadd x, fmul scale on the x87; sz = z through fld / fst, rhw = 0.1 (0x5C4610) / z, the colour pair; texture near tc[u], tc[v] from D3d_TexCoords 0x7CA9E0, far [0x7CA9DC + 4 * (u + w)] = tc[u + w - 1], likewise v + h, unbounded (a u16 w reads past the 256 entries); D3d_BindTexture(Gfx_DrawTpage re-read, CLUT u16 +0x16); 0x437CC0(1) twice; D3d_SetBlend(code re-read, Gfx_DrawTpage re-read); D3d_SetShadeMode(1); device [0x7CC350] DrawPrimitive (vtable +0x70) (5, 0x1C4, D3d_Vertices, 4, 0), its result returned. Six E8s at +0x38, +0x1BB, +0x1C2, +0x1C9, +0x1E1, +0x1E8; the far operands' disp32 at +0xD2 and +0x130. DIV-0010 re-aims the far base (SpriteFarEdge)."
+
+[[func]]
+pc = 0x5A2520
+name = "D3d_DrawSprt8"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/sprt_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A2520..0x5A270A (0x1EB bytes), straight-line: code 0x74 (SPRT_8). As D3d_DrawSprt with the size fixed: the far corners fld x, fadd 8.0 (0x5C41CC), fmul scale on both axes, far texture edge [0x7CA9FC + 4 * u] = tc[u + 7]; no w or h read. Six E8s at +0x35, +0x198, +0x19F, +0x1A6, +0x1BE, +0x1C5; the far operands' disp32 at +0xBD and +0x11D. The table read live from the owner's game, 2026-09-20: tc[i] = (i + 0.512) / 256."
+
+[[func]]
+pc = 0x5A2710
+name = "D3d_DrawSprt16"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/sprt_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A2710..0x5A28FA (0x1EB bytes), straight-line: code 0x7C (SPRT_16). The same bytes as D3d_DrawSprt8 but for the size 16.0 (0x5C41D0) and the far texture edge [0x7CAA1C + 4 * u] = tc[u + 15]. Both constants read from the image: 0x5C41CC = 8.0, 0x5C41D0 = 16.0."

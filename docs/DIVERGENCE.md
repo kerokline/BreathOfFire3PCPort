@@ -565,11 +565,18 @@ designed in rather than bolted on.
 - **New behaviour:** the far vertex value is `u + w - 1/30 + 0.012` texels, so
   that the last PIXEL samples the centre of the last texel (exact for w = 8 at
   scale 2, within 0.03 of a texel otherwise, and never past the centre for
-  w >= 8). The near edge and the table `0x7CA9E0` are untouched. Implemented
-  as the original handlers' own bytes, copied, with the two far-edge operands
-  re-aimed at our table (`src/game/gfx_sprite_uv.cpp`) - not a
-  reimplementation; the handlers end in COM calls and a drawn surface cannot
-  be checked yet.
+  w >= 8). The near edge and the table `0x7CA9E0` are untouched. From
+  2026-09-20 implemented as the original handlers' own bytes, copied, with
+  the two far-edge operands re-aimed at our table (`gfx_sprite_uv.cpp`, gone);
+  **since 2026-09-23 inside our reimplementation of the three**
+  (`src/game/sprt_draw.cpp`, [`sprt-draw.md`](sprt-draw.md)): the handlers
+  read the far edge at a base of ours, `4 * (u + w)` on - Capcom's
+  `0x7CA9DC` or our table - with the same texture coordinates as the copies
+  (checked against re-aimed copies of Capcom's bytes, and the table's values
+  pinned by hash). One difference from the copies, where neither was
+  Capcom's: our table had 1,024 entries and SPRT's unchecked index read past
+  it into our dll's memory for `u + w` of 1,024 and up; it now has an entry
+  for every index a `u8 + u16` can make, the same line continued.
 - **Rationale:** a bug, not a choice: the first and last texel are treated
   differently for no reason a design would have, and it cuts the base off every
   `2`. The obvious fix (far edge `u + w`) was built first and is wrong - it
@@ -577,7 +584,16 @@ designed in rather than bolted on.
   (`analysis/d1/fix1`, 2026-09-20).
 - **Also in the PSX version?** no - the PlayStation GPU does not filter and
   copies a sprite texel for texel.
-- **Reversible?** `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16`.
+- **Reversible?** Yes, two ways, since 2026-09-23 (the owner's names of
+  2026-09-20 still work):
+  `BOF3X_ORIGINAL=SpriteFarEdge` runs our three handlers with Capcom's far
+  edge, `tc[u + w - 1]` - the divergence alone off, everything else ours;
+  `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16` runs Capcom's
+  handlers themselves, so DIV-0010 is off with them (one name per handler -
+  `D3d_DrawSprt8` alone switches off the 8 x 8 font's fix and nothing
+  else). With both, the handlers are Capcom's. Either gives exactly
+  Capcom's texture coordinates: `BOF3X_SHADOW=sprt_draw` checks ours with
+  `SpriteFarEdge` off byte for byte against copies of Capcom's bytes.
 - **Checked:** attract run, no crash, oracle unaffected (render only);
   screenshots original against ours in `analysis/d1/`: no seams, sprites
   drawn at a true 2x where the original stretched w - 1 texels over w pixels
