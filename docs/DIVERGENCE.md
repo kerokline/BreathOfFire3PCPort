@@ -1271,8 +1271,8 @@ designed in rather than bolted on.
 - **Also in the PSX version?** The US disc moved the stops too (the recomp's
   hand tips at about 246 and 277 units); its code is unread.
 - **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
-  both line shapes); nothing on screen - no recipe reaches a save point. All
-  four prompts change together.
+  both line shapes). **Confirmed in game by the owner, 2026-09-23**, at an
+  inn's save: "looked right". All four prompts change together.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
 
