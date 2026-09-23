@@ -7392,3 +7392,56 @@ params = "int x, int y, int w, int h"
 status = "evidence"
 impl = "src/game/mode_flow.cpp"
 evidence = "disasm 2026-09-22, 0x3F bytes: a RECT of the four arguments' low words on the stack and Gfx_ClearImage(&rect, 0, 0) - a third 0 is pushed that Gfx_ClearImage does not read. Eight callers (Boot_Task, battle and menu code). hidden_b: 1 call."
+
+# --- Group O of the fourth parallel round (2026-09-22): the area's link list
+# and the drop-in party placement, src/game/area_entry.cpp, docs/area-entry.md.
+
+[[func]]
+pc = 0x5951D0
+name = "Area_LinkAt"
+psx = 0x801A1050
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/area_entry.cpp"
+evidence = "disasm 2026-09-22, 0x5951D0..0x595346 (0x177 bytes, whole); the PSX FUN_801A1050 (gap pairing; read, the same). The descriptor +0x20 list of 12-byte links (+0x30 the last index), each a run of +9 cells from (+0, +1) along z (+8 set) or x, searched from the last link down: the first holding (x & 0xFF, z & 0xFF) gives area +2, x +4, z +6, flags +0xA, or with area 0xFFFF a list (+0x24 / +0x28 at word +4) of 10-byte alternatives chosen by Flags_Test. Written where Field_ChangeArea writes the pending change (flags & 0x8F; bits 4-6 to 0x903851), then Area_ClassifyPending and Area_PickMusic - no Field_Request. al 0 found, 1 not. 12 call sites (E8 scan): six test al, six (GameMode_Enter among them) ignore it. Not in any attract trace."
+
+[[func]]
+pc = 0x531F90
+name = "Party_DropIn"
+psx = 0x801BF1A8
+ret = "unsigned"
+params = "unsigned entry"
+status = "evidence"
+impl = "src/game/area_entry.cpp"
+evidence = "disasm 2026-09-22, 0x531F90..0x5321B6 (0x227 bytes, whole); the PSX FUN_801BF1A8 (call-anchored; read, the same). Entry (entry & 0xFF) of the descriptor +0x14 table: header N | 0x20 flag | 0x30 kind-2 | kind in bits 6-7. Kind 0: exactly N members, records matched to the wanted list (0x80 any), the party list 0x904062 rewritten and the records sorted by Party_SwapMembers; kind 0x80: at least N; then Party_SetUpMembers, Kind2_Place, Field_ScriptFlags |= 0x100, Field_ScriptFlags2 |= 0x8000. 393 call sites (E8 scan), none reads the argument slot the function overwrites. Not in any attract trace."
+
+[[func]]
+pc = 0x5321C0
+name = "Party_SetUpMembers"
+psx = 0x801BF56C
+ret = "void"
+params = "unsigned count, const unsigned char *list"
+status = "evidence"
+impl = "src/game/area_entry.cpp"
+evidence = "disasm 2026-09-22, 0x5321C0..0x5322A5 (0xE6 bytes, whole); the PSX FUN_801BF56C (callers pairing; read, the same). For each of (count & 0xFF) ObjTrio records: Sprite_Current, +0 bit 5 off, +0x5C..+0x5F, Member_ClearState(i), +1 / +7 / +9, script +0x130 from descriptor +0x18 at list[i], ScriptContext_Reset(+0x124), Sprite_LoadPalette(0x80D380 + +5 * 64, 0); then Field_ScriptFlags2 &= 0xFFF8. Sole caller Party_DropIn."
+
+[[func]]
+pc = 0x5322D0
+name = "Party_SwapMembers"
+psx = 0x801BF730
+ret = "void"
+params = "unsigned a, unsigned b, unsigned keep"
+status = "evidence"
+impl = "src/game/area_entry.cpp"
+evidence = "disasm 2026-09-22, 0x5322D0..0x5323DB (0x10C bytes, whole); the PSX FUN_801BF730 (call-anchored; read, the same). ObjTrio_SwapFields(a, b, keep), then for a and b: Field_State = Sprite_Current = the record, Field_MemberSprite(+0x89, slot), 0xA4 bytes to +0x80 from 0x903A70 + MoveScript_EffectState[+0x89] * 0xA4, +0x148 = MoveScript_EffectState[+0x89] read after that copy. Sole caller Party_DropIn."
+
+[[func]]
+pc = 0x5323E0
+name = "ObjTrio_SwapFields"
+psx = 0x801BF918
+ret = "void"
+params = "unsigned a, unsigned b, unsigned keep"
+status = "evidence"
+impl = "src/game/area_entry.cpp"
+evidence = "disasm 2026-09-22, 0x5323E0..0x532549 (0x16A bytes, whole), no calls; the PSX FUN_801BF918 (call-anchored; read, the same). Records (a & 0xFF) and (b & 0xFF) of ObjTrio exchange +0x89; unless keep's low byte, +0x08 +0x29 +0x138 and dwords +0x34 +0x38 +0x3C; always dwords +0x0C +0x10 +0x14 and bytes +0x125 +0x124; +0x4B of both 0xFF. Callers Party_SwapMembers and two at 0x52EE98 / 0x52EECF."
