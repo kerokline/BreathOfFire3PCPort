@@ -146,7 +146,9 @@ add_library(bof3x SHARED
   src/game/display_env_fuzz.cpp
   src/game/ddraw_fuzz.cpp
   src/game/tex_page.cpp
-  src/game/tex_page_fuzz.cpp)
+  src/game/tex_page_fuzz.cpp
+  src/game/tex_cells.cpp
+  src/game/tex_cells_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
