@@ -137,7 +137,15 @@ The single next action, concrete enough to start without asking anyone.
       analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also
       analysis/calltrace/all_a/bof3x.callcounts.tsv,analysis/calltrace/all_b/bof3x.callcounts.tsv
       --out analysis/attract_catalog.md`) and pick the next groups the same
-      way. Named by this round and not taken: **`0x5951D0`** (the area's
+      way. **Staged for round four by the owner (2026-09-22): the glyph
+      draw `0x5A2900` as its own group, with the fix** - D17
+      ([`known-defects.md`](known-defects.md)): glyphs sample exactly on
+      texel edges (no half-texel offset, `tu = 2u / 32`), the owner's
+      "wobbly" English text under point filtering and the soft text under
+      bilinear. Take it over faithful, fuzz the vertex block `0x7CA958`
+      against a clone, then the fix `(2u + 0.5) / 32` as the next DIV entry,
+      switchable off with `BOF3X_ORIGINAL`; the owner judges it against the
+      recomp's text in game. Named by this round and not taken: **`0x5951D0`** (the area's
       entry list, which `GameMode_Enter` walks) and **`0x531F90`** (the
       drop-in party placement `Area_Enter` calls, 94 call sites), both large
       with callers nobody has read - K's suggestion for the next group

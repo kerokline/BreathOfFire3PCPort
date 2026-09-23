@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — eleven entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9 and D11 latent; D8 and D10 unchecked in game)
+**Status:** IN PROGRESS (2026-09-22 — seventeen entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, staged for a fix)
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -563,3 +563,57 @@ what distance, was not measured; the attract sequence starts only kinds 0 and
 1. Kind 12 puts the distance at `0x5DC` outright, which suggests the
 designers kept it there. A fix is the owner's call and a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D17 — Glyphs sample on texel boundaries: "wobbly" text under point, soft under bilinear
+
+**Seen:** owner, 2026-09-22, in play with `BOF3X_LANG=en`, `filter=point`,
+windowed, renderer 1 (`build/bof3x.ini`): Mogu's "OK, explosives are set!"
+against the same line in the sibling's recompiled PSX build - ours "wobbly",
+the recomp's even. **Capcom's, by reading** (below); the A/B with
+`BOF3X_ORIGINAL=*` has not been made, but nothing of ours is on this path. It
+is not English-only: every glyph the port draws goes through it, Chinese
+included.
+
+**Measured on the owner's screenshot.** The font texture is clean:
+`tools/font_pc.py`'s `glyph_pixels` on `en.FIRST.DAT` gives `O K e x p l`
+as exact 2 x 2 blocks, every texel doubled. On screen the same strokes come
+out one, two or three pixels wide - the top of the `O` three rows tall, its
+left stroke three columns - and the `l` of "explosives", one column of the
+texture from top to bottom, narrows from two pixels to one at glyph row 16,
+which is where the quad's diagonal crosses that column: the two triangles of
+the quad round differently. Our own English captures under the default
+bilinear filter (`analysis/shots/ab24_attract_en_ours/a07.png`) show the same
+fault as every stroke pixel paired with a half-bright one.
+
+**Cause, read 2026-09-22.** `Text_EmitGlyph` builds glyphs as primitive code
+`0x6C` (`Gpu_SetCode6C`); the draw `0x59EE50` sends `0x6C` (`(code & 0xFC) -
+0x20` = `0x4C`, byte table `0x59F440` -> entry 17 of `0x59F3D8`, the call at
+`0x59F1B4`) to **`0x5A2900`**, beside the three `SPRT` handlers of D1. It
+fills the four `D3DTLVERTEX`s at `0x7CA958` with:
+
+- `sx, sy` = the primitive's x, y times the scale `0x7C9F4C` / `0x7C9F48`
+  (2.0), no half-pixel offset - every edge on a whole pixel;
+- `tu, tv` = the byte `u`, `v` times 2, times `0x5C4618` (a double,
+  1/32) - the glyph's 24 texels in a 32 x 32 surface
+  (`0x5A2BC0` fetches it by glyph and CLUT), no half-texel offset.
+
+A 12-unit quad is 24 pixels showing 24 texels, 1:1. Direct3D 6 puts a pixel's
+sample point at its integer coordinate, so **every pixel samples exactly on the
+edge between two texels**: under point filtering which texel wins is float
+rounding in the interpolator, and differs per triangle; under bilinear every
+pixel is a 50 / 50 blend of two texels. The sprite handlers do not have this -
+their coordinate table `0x7CA9E0` is `(i + 0.512) / 256`, a deliberate
+half-texel inset (D1) - the glyph handler never got one.
+
+The software renderer's glyph path (`0x5A4900`, first jump table, the call at
+`0x59EFC9`) copies a 24 x 24 glyph to the back buffer directly when the quad
+is 24 x 24 and so should not show this; not checked.
+
+**Fix proposed (owner, 2026-09-22: "stage this as part of the next wave"):**
+sample texel centres, `(2u + 0.5) / 32` on both axes, keeping the 1:1
+scale - a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built. Taking
+`0x5A2900` (`0x5A2900..0x5A2BB3`) over is the way in: straight-line code,
+two COM calls (device `+0x58` render state `0x1B`, `+0x70` DrawPrimitive)
+and five callees (`0x59FBA0`, `0x5A2BC0`, `0x437CC0` a bare `ret`,
+`0x59FCA0`, `0x59FD80`), fuzzable on the vertex block at `0x7CA958` against a clone with
+stand-ins for `0x5A2BC0` and the device.
