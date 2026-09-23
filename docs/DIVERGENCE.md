@@ -1208,8 +1208,8 @@ designed in rather than bolted on.
   checked to change exactly the eight `tu` / `tv` floats by exactly `1/64`
   against Capcom's copy, and nothing else; 20,000 with the fix off checked
   byte for byte. 39 negative controls, all refused
-  ([`glyph-draw.md`](glyph-draw.md) §5). **Not yet seen in game**: the
-  owner judges it against the recomp's text in the batch.
+  ([`glyph-draw.md`](glyph-draw.md) §5). **Confirmed in game by the owner,
+  2026-09-23**, English, point filter: "the text looks straight now".
 - **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
   Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
 
@@ -1306,7 +1306,8 @@ designed in rather than bolted on.
   stopping fade through `Sound_Tick` with counting stand-ins takes exactly
   one step per frame over 8 frames of 5 spins and stops once. Negative
   control: with the deadline test removed the self-test is refused (8 steps
-  in the first frame, a Fatal). **Not yet heard in game.**
+  in the first frame, a Fatal). **Confirmed in game by the owner,
+  2026-09-23**: "the fade sounds great".
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
   Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
   function).
