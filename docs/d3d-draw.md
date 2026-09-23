@@ -63,8 +63,10 @@ fifteen Direct3D handlers and all twenty-one software ones, and `0x437CC0`
 
 1. Nothing at all unless `Gfx_DrawEnable` `0x7DED17` (byte). The only
    instruction in `.text` that names it (a raw scan) is the walk's own
-   draw-mode case below, so a draw mode with bit 0 clear
-   turns off the *next* draw.
+   draw-mode case below - but it is the dfe byte of the draw environment
+   `Gpu_PutDrawEnv` copies to `0x7DED00` every rendered frame before this
+   walk, so a draw mode with bit 0 clear does **not** turn off the next
+   frame's draw ([`display-env.md`](display-env.md) section 1, 2026-09-23).
 2. `D3d_AfterDrawRequest` `0x7CADEA` (u16) cleared if set.
 3. `Gfx_RenderFlags` bit 0, read once: the software surfaces' table; else
    device `BeginScene`, the Direct3D table, `EndScene` after the walk.
