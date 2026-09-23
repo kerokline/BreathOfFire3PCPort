@@ -73,6 +73,7 @@
 #include "game/char_stats.h"
 #include "game/member_sprites.h"
 #include "game/sprt_draw.h"
+#include "game/field_misc.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -167,6 +168,8 @@ void InjectAll() {
     SprtDraw_Inject();          // its copies are of Capcom's bytes, which nothing but its own Inject
                                 // patches; every call of them re-aimed at a recorder, the device a
                                 // fake: order does not matter
+    FieldMisc_Inject();         // every call of its clones re-aimed at a recorder, its jump table
+                                // relocated in the copy, the device a fake: order does not matter
     InjectReport();
 }
 
