@@ -55,7 +55,7 @@ struct Callees {
     long* (__cdecl* handle_position)(long*, unsigned char, unsigned char);
     void (__cdecl* op_87)();
     void (__cdecl* op_88)();
-    void (__cdecl* load_stream)(unsigned short);
+    void (__cdecl* load_stream)(unsigned);   // Sound_LoadStream reads the whole dword (save_menu.cpp)
     int (__cdecl* stream_done)();
 };
 const Callees kOriginals = {
@@ -703,7 +703,7 @@ long* __cdecl StubHandlePosition(long* out, unsigned char h, unsigned char b) {
 }
 void __cdecl StubOp87() { Record(26); }
 void __cdecl StubOp88() { Record(27); }
-void __cdecl StubLoadStream(unsigned short id) { Record(28, id); }
+void __cdecl StubLoadStream(unsigned id) { Record(28, id); }
 int __cdecl StubStreamDone() { Record(29); return Hash() % 2 ? static_cast<int>(Hash() | 0x100u) : 0; }
 template <unsigned I>
 void __cdecl StubArea() {

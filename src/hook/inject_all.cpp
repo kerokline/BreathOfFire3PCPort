@@ -74,6 +74,7 @@
 #include "game/member_sprites.h"
 #include "game/sprt_draw.h"
 #include "game/field_misc.h"
+#include "game/save_menu.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -170,6 +171,8 @@ void InjectAll() {
                                 // fake: order does not matter
     FieldMisc_Inject();         // every call of its clones re-aimed at a recorder, its jump table
                                 // relocated in the copy, the device a fake: order does not matter
+    SaveMenu_Inject();          // every call of its clones re-aimed at a recorder, its jump tables swapped
+                                // for recorders and Shop_Equip's relocated in the copy: order does not matter
     InjectReport();
 }
 
