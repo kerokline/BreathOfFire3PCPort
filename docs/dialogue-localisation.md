@@ -258,29 +258,29 @@ it is a table, a proportional font is a data change.
    1,734 of 1,734 frames (a 1.9-minute run, not the whole cycle). The frame
    hash has NOT been re-recorded: `Text_DrawString` and `Msg_SystemPtr` are
    logic functions, so `ab14_orig` is stale if either is in `entries_logic.txt`.
-8. **The save screen's Yes / No hand is in the wrong place, and moves the
-   wrong way** (owner's screenshots, 2026-09-22, English, at an inn: "OK to
+8. **The save screen's Yes / No hand sits about 25 units left of its
+   words** (owner's screenshots, 2026-09-22, English, at an inn: "OK to
    overwrite?" over the three slots, against the same prompt in the
    sibling's recompiled US build). Measured at 640 wide (the recomp's
    captures scaled from 1,539), the hand's tip and the text:
 
    | | hand on Yes | hand on No | "Yes" starts | "No" starts |
    |---|---|---|---|---|
-   | ours | ~505 | ~437 | ~490 | ~548 |
+   | ours | ~437 | ~505 | ~490 | ~548 |
    | US PSX (recomp) | ~493 | ~555 | ~495 | ~557 |
 
-   On the PlayStation the hand sits just left of each word and steps
-   **right** to No; ours overlaps the `Y` on Yes and steps **left**, to well
-   before "Yes", on No. The text itself sits where the recomp has it. So
-   the hand's x is reckoned by something that did not follow the text into
-   English - the same family as the Config screen's controller panel
-   ([`config-screen.md`](config-screen.md) §8: a Chinese width, `len * 6`, on
-   two-byte strings that advance 8), but a leftward step is not explained by
-   a width that is merely too wide, so the placement is unread and may count
-   from the right edge. Where the prompt and its options come from (system
-   pool, DIV-0007, or a table in the exe) and who positions the hand are
-   the first two reads. No recipe reaches a save point yet; save 5's
-   position is not at one.
+   On the PlayStation the tip touches each word; ours is 50-56 px (25-28 PSX
+   units) short on both, so on No it covers the `Y` of "Yes". The step
+   between the two is about the same (68 against 62 px), and the text sits
+   where the recomp has it. So the hand's x is reckoned by something that
+   did not follow the text into English - the same family as the Config
+   screen's controller panel ([`config-screen.md`](config-screen.md) §8: a
+   Chinese width, `len * 6`, on two-byte strings that advance 8) - most
+   likely the options right-aligned by their English width while the hand
+   is placed from the Chinese one (是 / 否, 24 units each). Unread: where the
+   prompt and its options come from (system pool, DIV-0007, or a table in
+   the exe) and who positions the hand are the first two reads. No recipe
+   reaches a save point yet; save 5's position is not at one.
 
 ## 7. Menu text: the system pool and the name tables (DIV-0008)
 

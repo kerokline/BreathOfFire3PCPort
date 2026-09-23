@@ -152,8 +152,8 @@ The single next action, concrete enough to start without asking anyone.
       and its large draw). DIV-0017's pair of patches on that function, then
       the right edge in game; `tools/recipes/config_controller.txt` reaches
       the panel (not yet run) and shows D17 too, so one capture judges
-      both. **And the save screen's Yes / No hand** - off to the left and
-      stepping left on No where the PSX steps right
+      both. **And the save screen's Yes / No hand** - some 25 units left of its
+      words on both options
       ([`dialogue-localisation.md`](dialogue-localisation.md) §6 item 8,
       measured against the recomp); unread, so read first, and it needs a
       way to a save point (a recipe or an owner capture). Named by this
