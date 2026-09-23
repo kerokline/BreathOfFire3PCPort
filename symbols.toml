@@ -3219,24 +3219,6 @@ params = "unsigned char a, unsigned char b"
 status = "hypothesis"
 evidence = "call site 0x57798A in MoveScript_GroupF, 2026-09-22: op F9 b1 b2 calls it (b1, b2) and repeats while eax is non-zero. The body stores its arguments' low bytes into its own frame; not read further. psx_pair callers."
 
-[[func]]
-pc = 0x572650
-name = "MoveCmd_TestFB"
-psx = 0x80155B38
-ret = "unsigned char"
-params = "short x, short z"
-status = "hypothesis"
-evidence = "call site 0x577B49 in MoveScript_GroupF, 2026-09-22: op FB calls it with the words Sprite_Current +0x36 and +0x3A (the high halves of the 16.16 position) and plays sound 0x103 when al is non-zero. The body reads both as words; not read further."
-
-[[func]]
-pc = 0x572790
-name = "MoveCmd_TestFC"
-psx = 0x80155CD4
-ret = "unsigned char"
-params = "short x, short z"
-status = "hypothesis"
-evidence = "call site 0x577B5F in MoveScript_GroupF, 2026-09-22: op FC, the same as MoveCmd_TestFB with this function. Not read further."
-
 [[data]]
 pc = 0x929E80
 name = "MoveScript_Object"
@@ -4927,15 +4909,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22 (whole: code 0x518180..0x518397, 0x218 bytes, then its 7-entry jump table 0x518398..0x5183B3; cdecl): direction & 0xFF not 1, 3, 5 or 7 is blocked (1). Odd directions test the cells of the leading edge with AreaMap_CellBlocked - two, or three when the point sits on a cell boundary (its fraction 0) - and AreaMap_TooSteep at the point and half a cell either side across the direction; blocked when the byte sum of the six results is non-zero. 1 and 5 test a row (5 the row ahead when y has a fraction), 3 and 7 a column (3 the column ahead when x has a fraction). The PSX FUN_801A2C64 has the same cases in the same order; psx_pair.py had this pair and 0x5183C0 the other way round (call tier), corrected here by reading both. Only caller Field_MapBlockedAhead. Call trace hidden_b: 827 calls."
 
 [[func]]
-pc = 0x5183C0
-name = "AreaMap_BlockedNarrow"
-psx = 0x801A2EE0
-ret = "unsigned char"
-params = "long x, long y, unsigned direction"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its first 11 instructions, the calls and the PSX twin): Field_MapBlockedAhead's test for a sprite whose +0x70 is 0 - direction & 0xFF through the 7-entry jump table 0x518600, not 1, 3, 5, 7 blocked; AreaMap_CellBlocked and 0x5187A0 (a wrapper of AreaMap_TooSteep) on the points masked to whole cells. Code 0x5183C0..0x5185FF. Not reached by the attract cycle (hidden_b); stays Capcom's - group G's fuzz stands a recorder in for it."
-
-[[func]]
 pc = 0x518620
 name = "AreaMap_CellBlocked"
 psx = 0x801A3100
@@ -5338,15 +5311,6 @@ params = "void"
 impl = "src/game/map_scroll.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, read to its end (0x5717B0..0x571875, 0xC6 bytes, no calls; the catalogue's 208 bytes include 10 of padding): walks the area header's entries from AreaMap_EntryBase as AreaMap_HeaderPass does (step byte +2, until a zero dword); for each whose top byte is exactly 0x80 (a palette cycle, AreaMap_ClutCycle's kind with bit 7), f = Frame_Counter mod (low byte) + 1, the first dword after the entry whose top byte is f or above is taken - no condition, no exact match, unlike AreaMap_ClutCycle - and its 16-colour row (d >> 12) & 0xFFF of Gfx_ClutStrip copied over row d & 0xFFF, Gfx_ClutStripDirty set. A period byte of 0 divides by zero. PSX FUN_80158B60 has the same shape (read with capstone, same >= scan). Callers: AreaMap_SetupEntries 0x571766, a tail jmp at 0x573072. Call trace hidden_b: 12 calls."
-
-[[func]]
-pc = 0x571110
-name = "AreaMap_ApplyPatch"
-psx = 0x801581B8
-ret = "void"
-params = "const unsigned char *entry"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (read, not taken over; 0x1CC bytes): one patch-list entry - Area_TestCondition of its low word picks dword +4 or +8 of each record; by the record's top byte, kind 0 writes it into the texture run (as AreaMap_BakePatches does) and sets a live cell draw item's texture through 0x572ED0 and Prim_SetTexture, kind 1 the draw item only, kind 2 a corner dword of AreaMap_Corners (and MapView_Redraw 2), others a byte of AreaMap_Bytes. E8 callers 0x413593, 0x41CC43, 0x5710BD, 0x5710FD, AreaMap_SetupEntries 0x571788. Not called in the attract cycle (hidden_b, entries_plus_hidden)."
 
 [[data]]
 pc = 0x663290
@@ -9006,3 +8970,161 @@ name = "Dd_StageSurface"
 ctype = "void *"
 status = "evidence"
 evidence = "disasm 2026-09-23: made by the Direct3D set-up 0x5A5160 at 0x5A5886 as Dd_CreatePlainSurface(0x140, 0x100, 0x7CC344, 0); the page builders and D3d_RefreshPageTexture lock it, convert into it, unlock it and Blt {0,0,256,256} from it into a texture; 0x5A2CA0, 0x5A32B0 and 0x5A37D0 use it too (28 instructions name it, a raw scan)."
+
+# --- Group M of the sixth takeover round (docs/field-misc.md): map patches, move tests, three draw handlers, four setters ---
+
+[[func]]
+pc = 0x5183C0
+name = "AreaMap_BlockedNarrow"
+psx = 0x801A2EE0
+ret = "unsigned char"
+params = "long x, long y, unsigned direction"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, whole: code 0x5183C0..0x5185FF (0x240) and its 7-entry jump table 0x518600 (0x25C with it), cdecl, every jump internal. direction & 0xFF: 1 cell (X, Y), and if x has a fraction (X+1, Y) and AreaMap_TooSteepAt at (x & 0xFFFF0000, y), (x + 0x8000, y); 7 the same along y; 5 row Y+1 if y has a fraction else Y, then as 1; 3 column X+1 if x has a fraction else X, then as 7; each then AreaMap_TooSteep(x, y); the results summed as a byte, al = sum != 0. Any other direction: 1, nothing called. Matches the PSX FUN_801A2EE0 branch for branch. One caller, Field_MapBlockedAhead 0x51816D (E8 scan), which reads al. Shop route: 112 calls."
+
+[[func]]
+pc = 0x5187A0
+name = "AreaMap_TooSteepAt"
+psx = 0x801A3244
+ret = "unsigned char"
+params = "long x, long y"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5187A0..0x5187B2 (0x13 bytes), cdecl: AreaMap_TooSteep(x, y), its eax passed on. The PSX FUN_801A3244 is the same wrapper. Called only by AreaMap_BlockedNarrow (ten E8 sites, 0x51841A..0x5185D8), which adds al. Not in the catalogue: taken with its only caller."
+
+[[func]]
+pc = 0x570AB0
+name = "MapCell_FlatOverlay"
+ret = "void"
+params = "int faces, unsigned item"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x570AB0..0x570BBF (0x110 bytes), cdecl, two calls, every jump internal: for each of faces bits 1, 2, 4 set, a POLY_F4 at Gfx_PacketNext through Gpu_SetPolyF4, its corners x and y copied from the POLY_FT4 half (DrawItems + (Gfx_BufferIndex + i * 2) * 0x48) of the item (bit 1), the item word at its +0x8E (bit 2) or +0x7E (bit 4), colour the 15-bit word at 0x8CB59A + (faces sar 3) * 2 (area header +0x1A), then Gfx_CommitPrim(Draw_OtSlot, 0x38). One caller, the map-cell handler 0x570A00 (MapCell_Handlers kinds 0x11..0x17 and 0x19..0x1F; 0x18 is a bare ret), with faces = kind - 0x10 and the cell's draw item. No PSX twin paired."
+
+[[func]]
+pc = 0x571110
+name = "AreaMap_ApplyPatch"
+psx = 0x801581B8
+ret = "void"
+params = "const unsigned char *entry"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, whole: 0x571110..0x5712DB (0x1CC bytes), cdecl, three calls, every jump internal: c = Area_TestCondition(entry word) as a signed byte; n = entry high word, read after; records until n dwords are used (signed): kind 0 (3 dwords) dword +4 + 4c into the texture run at (h * w + 1) / 2 + offset + tile + bits 16-19, then kind 1; kind 1 (2 dwords) the face (bits 20-23) of MapView_ItemAt(x, y) given dword +4 + 4c by Prim_SetTexture(tex, half, 1); kind 2 (3 dwords) that dword to AreaMap_Corners[w * y + x], MapView_Redraw 2; other kinds (2 dwords) the low byte of dword +4 shr ((c shl 4) and 31) to AreaMap_Bytes[w * y + x]. Stores c over its argument slot; callers 0x413593, 0x41CC43, 0x571788 kill eax and do not read the slot, 0x5710BD / 0x5710FD pop it into ecx and return to DrawLayer_Open, which reloads ecx. PSX FUN_801581B8 the same (its record pointer recomputed from the count used). Shop route: 60 calls."
+
+[[func]]
+pc = 0x5718F0
+name = "Gfx_ClutAdjust"
+psx = 0x80158CE8
+ret = "long"
+params = "int columns, int rows, int red, int green, int blue"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5718F0..0x571A2E (0x13F bytes), cdecl, no calls, every jump internal: CLUT rows 3..14 whose bit of rows is set (halved per row, signed), each of 16 CLUTs (on row 3 only those whose bit of columns is set; columns halved per CLUT of every processed row) copied from Gfx_ClutStripSource to Gfx_ClutStrip (+0x4000) with each non-zero 5-bit channel plus red / green / blue clamped to 1..0x1F, bit 15 kept; then Gfx_ClutStripDirty = 1. eax on return is rows after its twelve halvings. The PSX FUN_80158CE8 (gap4 pair) does the same at 0x8002BE00 / 0x8002FE00. Callers 0x42270A, 0x5111A0, 0x5718CA, 0x5718E2, 0x57306A (E8 scan)."
+
+[[func]]
+pc = 0x5725C0
+name = "MapView_SlopeAt"
+psx = 0x80155A34
+ret = "long"
+params = "long x, long y, unsigned long direction"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5725C0..0x5725E3 (0x24 bytes), cdecl: MapView_CheckHeightScale, AreaMap_Slope(x, y, direction) with the three dwords as passed, MapView_HeightScale = 0, AreaMap_Slope's eax returned. The PSX FUN_80155A34 is the same and sign-extends the result's low half. 97 E8 call sites (0x51B552..0x535F78). Shop route: 1,277 calls."
+
+[[func]]
+pc = 0x572650
+name = "MoveCmd_TestFB"
+psx = 0x80155B38
+ret = "unsigned char"
+params = "short x, short z"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x572650..0x572789 (0x13A bytes), cdecl, no calls, every jump internal: map cell (x, z) less MapView_Origin in 16 bits, on the view ring (rows (x + z + MapView_Row + 1) mod 0x38, columns ((x - z) / 2 + MapView_Column + 1) mod 0x1C, one subtraction each; 0 when x + z or x - z is outside 0..0x37); the MapView_Cells word, 0 for none; its run at AreaMap_Header + (word + AreaMap_CellBase low half) * 4, the count in the dword before; each record of kind 0x23 made 0x24 and the patch entry at (its low word + AreaMap_PatchBase) switched from 0x8000 to 0x8001 under mask 0xF001; step byte +2 dwords until exactly the last dword. al 1 when one was switched. 60 E8 call sites; the whole eax kept (field-misc.md section 2). PSX FUN_80155B38 the same. Shop route: 10 calls."
+
+[[func]]
+pc = 0x572790
+name = "MoveCmd_TestFC"
+psx = 0x80155CD4
+ret = "unsigned char"
+params = "short x, short z"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x572790..0x5728C9 (0x13A bytes): MoveCmd_TestFB byte for byte except the entry test 0x8001 and bit 0 cleared (and al, 0xFE); kind 0x23 records still made 0x24. 8 E8 call sites. PSX FUN_80155CD4 (gap4 pair). Shop route: 7 calls."
+
+[[func]]
+pc = 0x572ED0
+name = "MapView_ItemAt"
+psx = 0x801563AC
+ret = "unsigned long"
+params = "long x, long y"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x572ED0..0x572F67 (0x98 bytes), cdecl, no calls, every jump internal: the view-ring cell of map (x, y) as MoveCmd_TestFB finds it, but less MapView_Origin sign-extended in 32 bits; returns the MapView_CellItems slot word +2 and 0xFFF (its draw item), or 0 outside. Callers: AreaMap_ApplyPatch and 9 more (E8 scan: 0x405F34, 0x486EA7, 0x5098D6, 0x512415, 0x5125E6, 0x5139AD, 0x513B82, 0x513C2C, 0x572F7A). The cell handler 0x570A00 inlines it. Shop route: 120 calls."
+
+[[func]]
+pc = 0x5A0AB0
+name = "D3d_DrawPolyF4"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A0AB0..0x5A0C34 (0x185 bytes), Gfx_DrawOTag Direct3D table entry 2 (code 0x28, called at 0x59F0C6): D3d_PrimColor(r, g, b, code, Gfx_DrawTpage low word, the argument slot as diffuse, no specular); four corners of 0xC from +8 to D3d_Vertices (x87 scale products, sz by mov, rhw = 0.1 / z, diffuse); SetTexture(0, NULL); 0x437CC0(0) twice; D3d_SetBlend(code, mode re-read); D3d_SetShadeMode(1); DrawPrimitive(TRIANGLESTRIP, 0x1C4, D3d_Vertices, 4, 0), its result returned. Shop route: 2,368 calls."
+
+[[func]]
+pc = 0x5A1290
+name = "D3d_DrawPolyG4"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A1290..0x5A14BE (0x22F bytes), table entry 6 (code 0x38, called at 0x59F0FE): four D3d_PrimColor calls (colours +4, +0x14, +0x24, +0x34, the code byte and mode re-read each) into locals, then four corners of 0x10 from +8, SetTexture(0, NULL), 0x437CC0(0) twice, blend, D3d_SetShadeMode(2), a 4-vertex strip. Shop route: 188 calls."
+
+[[func]]
+pc = 0x5A1A00
+name = "D3d_DrawLineF3"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A1A00..0x5A1B4B (0x14C bytes), table entry 9 (code 0x48, called at 0x59F128): D3d_DrawPolyF4 with three corners, 0x437CC0(0) then (1), DrawPrimitive(LINESTRIP, 0x1C4, D3d_Vertices, 3, 0). Shop route: 219 calls."
+
+[[func]]
+pc = 0x5A75B0
+name = "Gpu_SetPolyF4"
+psx = 0x8017B31C
+ret = "unsigned char *"
+params = "unsigned char *prim"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A75B0..0x5A75C9 (0x1A bytes): byte +7 = 0x28 (POLY_F4) and the float 0.01 (0x3C23D70A) to +0x10, +0x1C, +0x28, +0x34; eax is the argument. The PSX SetPolyF4 writes len 5 and code 0x28. 34 E8 call sites. Shop route: 3,032 calls."
+
+[[func]]
+pc = 0x5A7610
+name = "Gpu_SetPolyG4"
+psx = 0x8017B344
+ret = "unsigned char *"
+params = "unsigned char *prim"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7610..0x5A7629 (0x1A bytes): byte +7 = 0x38 (POLY_G4), 0.01 to +0x10, +0x20, +0x30, +0x40; eax is the argument. PSX SetPolyG4 (len 8, code 0x38). 211 E8 call sites. Shop route: 241 calls."
+
+[[func]]
+pc = 0x5A7670
+name = "Gpu_SetLineF3"
+psx = 0x8017B420
+ret = "unsigned char *"
+params = "unsigned char *prim"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7670..0x5A7686 (0x17 bytes): byte +7 = 0x48 (LINE_F3), 0.01 to +0x10, +0x1C, +0x28; eax is the argument. The PSX SetLineF3 also writes the terminator 0x55555555 at +0x14; the PC has its third corner there. 8 E8 call sites. Shop route: 234 calls."
+
+[[func]]
+pc = 0x5A7810
+name = "Gpu_SetDrawMove"
+psx = 0x8017B554
+ret = "unsigned char *"
+params = "unsigned char *prim, const unsigned char *rect, unsigned long x, unsigned long y"
+impl = "src/game/field_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7810..0x5A7838 (0x29 bytes): +4 = 0xEC000000, +8 and +0xC the rect dwords (read after the code is stored), +0x10 = x, +0x14 = y; eax is the argument. Gfx_DrawOTag hands code 0xEC to Gfx_MoveImage(prim + 8, +0x10, +0x14). The PSX SetDrawMove packs x, y into one word and makes an empty rect a no-op. 17 E8 call sites. Shop route: 2,733 calls."
