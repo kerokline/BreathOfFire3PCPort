@@ -475,7 +475,7 @@ extern "C" void __cdecl Equip_PreviewSet(unsigned id, const unsigned char* set, 
 // 4, count 0 - takes the item (and the count), DamageScratch 1, answer 1; no
 // slot, 0. The category's low byte indexes the list pointers unbounded, and
 // category 4 (the key items, 32 bytes) is searched 128 long like the others,
-// as on the PSX (D-NEW-W1).
+// as on the PSX (D34).
 extern "C" unsigned char __cdecl Inventory_Add(unsigned category, unsigned item, unsigned count) {
     const auto id = static_cast<unsigned char>(item);
     if (id == 0) return 0;
@@ -520,7 +520,7 @@ extern "C" unsigned char __cdecl Inventory_Add(unsigned category, unsigned item,
 // original 0x5919B0 (PSX 0x80166C1C): with `equipped`'s low byte 0, the
 // count of the first stack of the item in the category's list (0 if none) -
 // category 4's count list is null, so a key item found there reads address
-// i, as in the original (D-NEW-W2). Otherwise how many of the eight records
+// i, as in the original (D35). Otherwise how many of the eight records
 // with bit 0 of +0x0B wear it: category 1 the weapon, 2 the three armour
 // bytes, 3 the two accessory bytes, any other none; category 3 also counts
 // the byte 0x904130 once and adds 0x90412F when 0x90412E is the item. The

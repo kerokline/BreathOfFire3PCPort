@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-23 — thirty entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28, D30, D31, D32 and D-NEW-D (the sixth round's group D, number at merge) latent; D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
+**Status:** IN PROGRESS (2026-09-23 — forty entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -951,7 +951,7 @@ has been measured.
 one round in sixteen, where they spill across rows and past row 256 (inside
 the fake's buffer), and compares both. A fix - clip each piece to the stage,
 or refuse the sprite - is the owner's call and a
-## D-NEW-V2 — A jump's speed index can count down to a division by zero (latent)
+## D33 — A jump's speed index can count down to a division by zero (latent)
 
 **Found:** reading `Field_JumpSetUp` `0x534610` and `Field_JumpCheckHeight`
 `0x535F50` for the takeover, 2026-09-23 ([`event-objs.md`](event-objs.md)
@@ -980,7 +980,7 @@ index 0. Not seen in any run.
 only the speeds that divide, since a fault would end the start-up test).
 Bounding the index is the owner's call and a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry.
-## D-NEW-W1 — Inventory_Add searches the 32-byte key-item list 128 long (latent)
+## D34 — Inventory_Add searches the 32-byte key-item list 128 long (latent)
 
 **Found:** reading `Inventory_Add` `0x590BB0`, 2026-09-23
 ([`char-stats.md`](char-stats.md) section 4). **By reading, the PC's own**:
@@ -998,9 +998,9 @@ records (`NameTable_KeyItems`), so probably not.
 
 **Ours does the same**; the fuzz searches category 4 with full lists and
 the control "stacks searched in category 4 too" is refused (by a fault, the
-null count list - see D-NEW-W2 - with a counting twin).
+null count list - see D35 - with a counting twin).
 
-## D-NEW-W2 — Inventory_Count of a key item that is held reads address 0 + i (latent)
+## D35 — Inventory_Count of a key item that is held reads address 0 + i (latent)
 
 **Found:** reading `Inventory_Count` `0x5919B0`, 2026-09-23
 ([`char-stats.md`](char-stats.md) section 4). **By reading, Capcom's** on the
@@ -1014,7 +1014,7 @@ violation. **Why it may never show:** nothing is known to ask for a key
 item's count; the 40 call sites are unread. **Ours does the same** (a
 volatile read of the same address), and the fuzz does not ask it.
 
-## D-NEW-W3 — Menu_DrawIcon's CLUT table has 21 entries and no bound (latent)
+## D36 — Menu_DrawIcon's CLUT table has 21 entries and no bound (latent)
 
 **Found:** reading `Menu_DrawIcon` `0x5903F0`, 2026-09-23
 ([`char-stats.md`](char-stats.md) section 5). **By reading, Capcom's on both
@@ -1034,7 +1034,7 @@ come from a loop bound or a table (`0x6672AC`) not read here.
 detour being a `jmp`; the fuzz compares 24..91), and not for 21..23, which
 are undefined in the original.
 
-## D-NEW-D — A sprite's far texture edge is read past the coordinate table when u + w passes 256 (latent)
+## D37 — A sprite's far texture edge is read past the coordinate table when u + w passes 256 (latent)
 
 **Found:** reading the three Direct3D sprite handlers for the takeover,
 2026-09-23 ([`sprt-draw.md`](sprt-draw.md) §2). **Latent, Capcom's** (group D
@@ -1071,7 +1071,7 @@ page's edge - so the sprite takes texels as the device's texture addressing
 wraps or clamps them, not garbage. That is a side effect of DIV-0010, not a
 fix of this: a fix (wrap `u + w` at 256 as the PSX did, or clamp) is the
 owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
-## D-NEW-X — A save that fails its checksum is loaded into the live game block anyway (candidate, latent)
+## D38 — A save that fails its checksum is loaded into the live game block anyway (candidate, latent)
 
 **Found:** reading `LoadMenu_Read` `0x5883C0` for the sixth round's group X,
 2026-09-23 ([`save-menu.md`](save-menu.md) section 2). **Latent, Capcom's**;
@@ -1100,7 +1100,7 @@ it needs a save file with a wrong checksum.
 [`save-menu.md`](save-menu.md) section 4). A fix - sum `Save_Staging` first
 and copy only on a match - is the owner's call and a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry.
-## D-NEW-Y-a — The menu box's middle takes its bottom texture row from h, not y + h (latent, unseen)
+## D39 — The menu box's middle takes its bottom texture row from h, not y + h (latent, unseen)
 
 **Read, not seen:** group Y of the sixth round, 2026-09-23
 ([`menu-windows.md`](menu-windows.md) section 2). `Menu_DrawBox` `0x57CF60`
@@ -1121,7 +1121,7 @@ PlayStation's `0x801AF3F0` (an overlay, unread) nor in game.
 **Ours does the same**; the control "the middle's v from y + h" is refused
 in 1,883 rounds of 2,000.
 
-## D-NEW-Y-b — Four bounds the menu draws never check (latent)
+## D40 — Four bounds the menu draws never check (latent)
 
 **Read, not seen:** group Y, 2026-09-23 ([`menu-windows.md`](menu-windows.md)
 section 3). None is known to be reached by any caller:

@@ -5,7 +5,7 @@
 faithful, fuzzed against Capcom's at start-up (`BOF3X_SHADOW=save_menu`,
 66,000 rounds, 0 mismatches) and controlled headless (63 controls, 61
 refused by comparison, 2 changes that change nothing); no divergence, one
-candidate defect (D-NEW-X). Not yet run live - the shop A/B after the merge
+candidate defect (D38). Not yet run live - the shop A/B after the merge
 is the first check)
 
 The sixth round's queue ([`takeover-queue-round6.md`](takeover-queue-round6.md))
@@ -176,7 +176,7 @@ the obvious:
   `Cond_Flags` (`0x903F90..0x90402F`) - `0x929ED0` is `Cond_Flags + 8 n` too.
 - **`LoadMenu_Read`** zeroes `0x1C00` bytes of `Save_Staging`, reads the whole
   file, zeroes the checksum word, and **copies the block into the live game
-  block while summing it** - before it knows the sum is right. See D-NEW-X.
+  block while summing it** - before it knows the sum is right. See D38.
 - **The dispatchers jump.** `TitleFlow_Step`, `TitleFlow_Menu` and
   `TitleFlow_Load` end in `[[clang::musttail]]`: the built object has
   `jmpl *0x6671f4(,%eax,4)` and the two like it, the original's own

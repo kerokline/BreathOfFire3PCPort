@@ -9,7 +9,7 @@ controls, 46 refused by a count and 4 that change nothing.
 **Not yet through the live batch** - the sixth round's shop A/B runs
 centrally after the merge ([`takeover-queue-round6.md`](takeover-queue-round6.md)).
 No divergence; one latent defect written down
-([`known-defects.md`](known-defects.md) D-NEW-V2).
+([`known-defects.md`](known-defects.md) D33).
 
 The sixth parallel round's group V2: the functions around `0x534590`..
 `0x536670` that the owner's shop route reaches and the attract sequence does
@@ -156,7 +156,7 @@ Each is said in a comment where it is implemented.
 - **Both divisions of `Field_JumpSetUp` fault on 0** (an `idiv`, not a C++
   `/`): the speed is `Field_MoveSpeeds[Field_State +0x128]`, a whole byte into
   six entries with zeros at 0, 6 and 7; a speed above `0x20` (index 8: 64)
-  leaves the frames 0 and the second division faults. See D-NEW-V2.
+  leaves the frames 0 and the second division faults. See D33.
 - **Arguments pushed with stale upper bytes.** `Field_FloorDamage` pushes its
   table index and kind from registers whose upper bytes are left over;
   `Field_JumpSetUp` / `Field_JumpCheckHeight` push the direction in `eax`

@@ -9199,7 +9199,7 @@ ret = "unsigned char"
 params = "unsigned category, unsigned item, unsigned count"
 impl = "src/game/char_stats.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22 and 2026-09-23, 0x590BB0..0x590C8D (0xDE bytes), no calls: 0 for item or count 0 (low bytes); DamageScratch 0; the id list 0x656B00[category] and count list 0x656B14[category] (the category's low byte, unbounded), 128 slots; outside category 4 an existing stack adds count, capped at 99 (answer 0 then, 1 otherwise); else the first slot with id 0 - or count 0, outside category 4 - takes it and DamageScratch is 1; category 4 (the key items 0x904554, 32 bytes) is searched 128 long, D-NEW-W1. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites."
+evidence = "disasm 2026-09-22 and 2026-09-23, 0x590BB0..0x590C8D (0xDE bytes), no calls: 0 for item or count 0 (low bytes); DamageScratch 0; the id list 0x656B00[category] and count list 0x656B14[category] (the category's low byte, unbounded), 128 slots; outside category 4 an existing stack adds count, capped at 99 (answer 0 then, 1 otherwise); else the first slot with id 0 - or count 0, outside category 4 - takes it and DamageScratch is 1; category 4 (the key items 0x904554, 32 bytes) is searched 128 long, D34. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites."
 
 [[func]]
 pc = 0x590EE0
@@ -9309,7 +9309,7 @@ ret = "unsigned short"
 params = "unsigned category, unsigned item, unsigned equipped"
 impl = "src/game/char_stats.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x5919B0..0x591A74 (0xC5 bytes): equipped's low byte 0 - the count byte of the item's first stack in the category's lists (the count list of category 4 is null, D-NEW-W2), 0 if none; else how many of the eight persistent records with bit 0 of + 0x0B wear it (category 1 + 0x12, 2 + 0x13..+ 0x15, 3 + 0x16..+ 0x17), category 3 adding 1 for the byte 0x904130 and the byte 0x90412F when 0x90412E is the item. The answer is ax. 40 call sites."
+evidence = "disasm 2026-09-23, 0x5919B0..0x591A74 (0xC5 bytes): equipped's low byte 0 - the count byte of the item's first stack in the category's lists (the count list of category 4 is null, D35), 0 if none; else how many of the eight persistent records with bit 0 of + 0x0B wear it (category 1 + 0x12, 2 + 0x13..+ 0x15, 3 + 0x16..+ 0x17), category 3 adding 1 for the byte 0x904130 and the byte 0x90412F when 0x90412E is the item. The answer is ax. 40 call sites."
 
 [[func]]
 pc = 0x591A80
@@ -10706,7 +10706,7 @@ ret = "void"
 params = "int x, int y, int w, int h, int flags, int colour"
 impl = "src/game/menu_windows.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x57CF60..0x57D357 (0x3F8 bytes, 12 calls, every jump internal): the menu box. A RECT (0, 0xF0, 16, 16) in the packet pool as texture window; POLY_FT4s - a 4-wide left end, a middle (two, split at w / 2, when u16 w is 0x100 or more), a 4-wide right end - each after the first a rep movsd copy of the one before at +0x48, not at Gfx_PacketNext; shade 0x48 for flags and 0xF equal 1, else 0xAC; kind 2 semi-transparent with the CLUT at colour * 32 + 16, else colour * 32, row 0x1E1; flag bits 0x80 / 0x20 inset the left end's top / bottom 4, 0x40 / 0x10 the right end's; u v from x y's low bytes, the middles' bottom v from h's low byte, not (y + h)'s (D-NEW-Y); then the window (0, 0, 256, 256). Pair tier call-anchored."
+evidence = "disasm 2026-09-23, 0x57CF60..0x57D357 (0x3F8 bytes, 12 calls, every jump internal): the menu box. A RECT (0, 0xF0, 16, 16) in the packet pool as texture window; POLY_FT4s - a 4-wide left end, a middle (two, split at w / 2, when u16 w is 0x100 or more), a 4-wide right end - each after the first a rep movsd copy of the one before at +0x48, not at Gfx_PacketNext; shade 0x48 for flags and 0xF equal 1, else 0xAC; kind 2 semi-transparent with the CLUT at colour * 32 + 16, else colour * 32, row 0x1E1; flag bits 0x80 / 0x20 inset the left end's top / bottom 4, 0x40 / 0x10 the right end's; u v from x y's low bytes, the middles' bottom v from h's low byte, not (y + h)'s (D39); then the window (0, 0, 256, 256). Pair tier call-anchored."
 
 [[func]]
 pc = 0x57D360

@@ -65,7 +65,7 @@ In order:
      SPRT (the index `u8 + u16` in a register, the disp32 at `+0xD2` and
      `+0x130`), `[0x7CA9FC + 4u]` = `tc[u + 7]` and `[0x7CAA1C + 4u]` =
      `tc[u + 15]` in the others (disp32 at `+0xBD`, `+0x11D`). Unbounded:
-     D-NEW-D.
+     D37.
    - the repeats (the second corner's `sy` and `tv`, the third's `sx` and `tu`,
      the fourth's `sx`, `tu`, `tv`) are either `fst`s of the same x87 register
      or `mov`s of the dword just stored: the same bits.
@@ -161,7 +161,7 @@ call.
 
 **Last run** (`BOF3X_SHADOW=sprt_draw`, and inside `BOF3X_SHADOW='*'` with
 all 128 self-test lines passing): 0 mismatches. Of SPRT's 60,000 rounds,
-39,742 had `u + w` past 256 (D-NEW-D's reads), 1,932 had `u + w = 0` (the
+39,742 had `u + w` past 256 (D37's reads), 1,932 had `u + w = 0` (the
 gap dword before the table), 9,664 a `w` of `0x8000` or more; SPRT_8
 7,453 past 256, SPRT_16 14,837. Also passing with
 `BOF3X_ORIGINAL=SpriteFarEdge`, with
@@ -214,7 +214,7 @@ the sum is inexact in float - the seeds are what make them visible.
 
 ## 5. Defect
 
-**D-NEW-D** ([`known-defects.md`](known-defects.md), to be numbered at the
+**D37** ([`known-defects.md`](known-defects.md), to be numbered at the
 merge): the far index `u + w - 1` (`u + 7`, `u + 15`) is not bounded, so a
 sprite whose texels run past column 255 of its page reads its far coordinate
 from whatever follows `D3d_TexCoords`. Latent, Capcom's, kept with DIV-0010
@@ -238,4 +238,4 @@ off; with it on, our table continues the line instead.
   loads interleave, ours reads every input before it stores; they differ only
   if a primitive lay inside `D3d_Vertices`, which the packet pool never puts
   there. Not fuzzed.
-- `D-NEW-D` in game: whether any sprite has `u + w` past 256.
+- `D37` in game: whether any sprite has `u + w` past 256.

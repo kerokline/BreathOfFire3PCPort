@@ -73,7 +73,7 @@ const unsigned short kControlWords[] = {0x027F, 0x007F, 0x037F};
 
 // The vertex block, the 8 bytes after it (Capcom's far index 0 reads the
 // second dword), the texture table and the 0x800 bytes after it (Capcom's far
-// indexes 256..767 land there: D-NEW-D), the scales, Gfx_DrawTpage, and the
+// indexes 256..767 land there: D37), the scales, Gfx_DrawTpage, and the
 // first 512 entries of our table.
 constexpr U kBlock = kVertices;
 constexpr U kBlockBytes = 0x80 + 8 + 0x400 + 0x800;
@@ -313,7 +313,7 @@ void RandomPrim(const Handler& h, unsigned char* p) {
     if (Next() % 2) PutWord(p + 0x16, Pick(kWords, 16));
     if (h.sized) {
         // Mostly so that u + w stays inside the seeded 768 entries; now and
-        // then wide (D-NEW-D reaches unseeded memory, equal on both sides).
+        // then wide (D37 reaches unseeded memory, equal on both sides).
         for (U off : {0x18u, 0x1Au}) {
             const U texel = p[off == 0x18 ? 0x14 : 0x15];
             switch (Next() % 4) {

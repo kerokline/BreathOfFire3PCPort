@@ -187,10 +187,10 @@ followed by the 128-byte list `0x590C90` fills (the sibling's
   and the answer 0, else 1; otherwise the first slot with id 0 (or, outside
   category 4, count 0) takes the item and count, `DamageScratch` 1, answer
   1; no free slot, 0. **The category-4 branch is the PC's own**: the PSX
-  `0x80165AA4` has none and treats every category alike. D-NEW-W1.
+  `0x80165AA4` has none and treats every category alike. D34.
 - `Inventory_Count(category, item, equipped)` `0x5919B0` answers a word:
   with `equipped`'s low byte 0, the count of the item's first stack (0 if
-  none) - D-NEW-W2 for category 4; otherwise how many of the eight records
+  none) - D35 for category 4; otherwise how many of the eight records
   with bit 0 of `+0x0B` wear it (category 1 the weapon, 2 the armour, 3 the
   accessories, any other none), category 3 also counting the byte
   `0x904130` once and adding the byte `0x90412F` when `0x90412E` is the
@@ -238,7 +238,7 @@ icon 12 wraps to 4) at `v = 0x64`, both 16 x 16, any other the 15 x 15 cell
 21-entry table the function builds on its stack. The PSX twin draws its
 icons from other cells with a 21-byte table too; the PC re-laid the texture.
 
-**Icon 21 and up read past that table** (D-NEW-W3): `mov dl, [esp + ebx +
+**Icon 21 and up read past that table** (D36): `mov dl, [esp + ebx +
 0x10]` with no bound. Ours reproduces what the original reads there (the
 function is entered at the same `ESP`, the detour being a `jmp`), from
 `__builtin_frame_address`: icon 24..27 the return address, 28..31 the first
@@ -364,7 +364,7 @@ counting twin. None was a change that changes nothing.
 | W54 | Recalc: roster for any record | 1,836 |
 
 W39 is refused by a fault: in category 4 the stack search reads the null
-count list (D-NEW-W2's pointer), exit `0xC0000005`, which proves less than
+count list (D35's pointer), exit `0xC0000005`, which proves less than
 a count (Traps); W39b, the same condition moved to category 0, is its
 counting twin. The thinnest by count are W21 (24 rounds: a stand-in must
 move the weapon byte between the two stat calls and onto another case),
@@ -392,14 +392,14 @@ member who wears one - `0x58884F` recomputes all eight records, eight calls
 on the route; what that caller is was not read);
 `Equip_PreviewSet` whatever calls `0x57502D` / `0x59D7CF` (unread - an
 "optimise" or a whole-set screen by the shape). Icons above 20 and the
-null count list of D-NEW-W2 only if a caller asks for them.
+null count list of D35 only if a caller asks for them.
 
 For the batch check: all twenty on the `--original` list, and each on the
 trace list with the sizes in section 1.
 
 ## 8. Found on the way
 
-- D-NEW-W1, D-NEW-W2, D-NEW-W3 ([`known-defects.md`](known-defects.md)),
+- D34, D35, D36 ([`known-defects.md`](known-defects.md)),
   latent.
 - `Item_Price`'s offsets contradict the `NameTable_Consumables` note's
   "u16 price" at `+0x14` (section 4); not re-measured here.

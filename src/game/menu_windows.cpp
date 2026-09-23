@@ -325,7 +325,7 @@ extern "C" void __cdecl Window_Kind2List() {
 //
 // As the original has it: the middle quads' bottom v is h's low byte where
 // the ends' is (y + h)'s - the texture's rows are out of phase with the ends
-// when y is not a multiple of 16 (D-NEW-Y, docs/known-defects.md).
+// when y is not a multiple of 16 (D39, docs/known-defects.md).
 extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int colour) {
     const auto kind = static_cast<unsigned char>(flags & 0xF);
     const unsigned char shade = kind == 1 ? 0x48 : 0xAC;

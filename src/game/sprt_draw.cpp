@@ -61,7 +61,7 @@
 //
 // An edge the original never defined: its table has 256 entries and SPRT
 // indexes it with u + w - 1, a 16-bit w, unchecked - past 255 it reads
-// whatever follows (docs/known-defects.md D-NEW-D, kept). Until 2026-09-23 ours
+// whatever follows (docs/known-defects.md D37, kept). Until 2026-09-23 ours
 // was a table of 1,024 read the same way, unchecked, so past 1,024 it read our
 // own dll's memory; g_far now has an entry for every index u + w can make.
 #include "game/sprt_draw.h"
@@ -216,7 +216,7 @@ long DrawSprite(const unsigned char* prim, U size_at, U extent) {
         far_j_v = v + extent;
     }
     // The far edge: Capcom's tc[j - 1], or DIV-0010's g_far[j]. Not bounded,
-    // in either (D-NEW-D): the address is 32-bit arithmetic, as the original's
+    // in either (D37): the address is 32-bit arithmetic, as the original's
     // [reg * 4 + disp32].
     const U base = g_far_base;
     const float far_u = X87Pass(FloatAt(base + far_j_u * 4));

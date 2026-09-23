@@ -131,13 +131,13 @@ in `menu_windows.cpp` is the full read; the points that matter:
   uses it for the scale after - fixed before any commit).
 - **Kept quirks** (each named in the comment on ours): the fonts' newline
   indent and next-byte end test (the PlayStation's too, section 1);
-  `Menu_DrawBox`'s middle quads' bottom v (D-NEW-Y-a); `Menu_DrawBox` places
+  `Menu_DrawBox`'s middle quads' bottom v (D39); `Menu_DrawBox` places
   its quads at 0x48-byte steps from the first, each a byte copy of the one
   before; `Shop_DrawMemberStats` shows `0x590960`'s outputs 0, 1 and 3, not 2;
   `Menu_DrawExpBar`'s arithmetic is unsigned and wraps; `Menu_DrawPanel`'s
   byte counter (never ends for w >= 251), `Menu_DrawScrollBar`'s divide by a
   total of 0 (ours faults the same way, through the same `idiv`),
-  `Menu_DrawItemList`'s row counter and null key-item counts (D-NEW-Y-b).
+  `Menu_DrawItemList`'s row counter and null key-item counts (D40).
 
 ## 3. Not as the original
 
@@ -191,7 +191,7 @@ answer our strings, `Text_DrawImmediate` answers where the next item starts,
 the scroll step writes its outputs (moving 0, 1 or 2), `0x590960` writes its
 eight outputs; and most disturb a cell some caller reads again after the
 call - the colour, the selection, the pad, the window fields (a category
-stays 0..4, and a 4 stays a 4: D-NEW-Y-b), the list count, the current
+stays 0..4, and a 4 stays a 4: D40), the list count, the current
 record, the inventory, the gold, `0x905BA2`, `Cond_ByteFA`.
 
 Results (`build/bof3x.log`): 74,000 rounds, 3,646,663 stand-in calls, 0
@@ -226,7 +226,7 @@ all removed):
 | 20 | item list mark shift on +0x12's low byte only | 170 |
 | 21 | item list second mark row's category not re-read | 3 |
 | 22 | border's last corner 0x2E | 2,000 |
-| 23 | box middle's v from y + h (D-NEW-Y-a "fixed") | 1,883 |
+| 23 | box middle's v from y + h (D39 "fixed") | 1,883 |
 | 24 | box wide from 0x101 | 290 |
 | 25 | icon 15 not special | 163 |
 | 26 | outline's top edge under the other abr | 2,000 |
