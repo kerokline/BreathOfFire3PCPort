@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — twenty-seven entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30 latent; D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
+**Status:** IN PROGRESS (2026-09-23 — twenty-nine entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28, D30, D31 and D32 latent; D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -882,3 +882,73 @@ the texture's `QueryInterface`) in a third of its rounds, and the controls
 refused ([`tex-page.md`](tex-page.md) §6). A fix - release the surfaces on
 the failure path, and have the refresh set its state only on success - is the
 owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D31 — A cell texture whose texture surface cannot be made ends the scene for the frame, and its entry looks built (latent)
+
+**Found:** reading `D3d_BuildCellTexture` `0x5A32B0` for the takeover,
+2026-09-23 ([`tex-cells.md`](tex-cells.md) §3). **Latent, Capcom's** (group U
+of the fifth round). Unmeasured in game. The number may need renumbering at
+the merge if another group of the round took D31 too.
+
+**The defect.** On the Direct3D path the build ends the device's scene
+(`EndScene`, `0x5A3696`) before it makes the texture, and begins it again
+(`BeginScene`, `0x5A377D`) only at the very end. When
+`Dd_CreateTextureSurface` fails (`0x5A36DF`, `je 0x5A3780`) it returns
+between the two: the scene the draw walk `Gfx_DrawOTag` began stays ended for
+the rest of the frame, so every primitive after this cell sprite is drawn
+outside a scene (Direct3D 6 refuses `DrawPrimitive` there) and the walk's own
+`EndScene` fails. And the entry is already filled - `D3d_FreeCellTexture`
+emptied it, then the extent, used size, CLUT, count, checksum and generation
+were stored (`0x5A355F..0x5A35EC`) - with no surface or texture (`+0x20` 0,
+unless DirectDraw wrote something there on failure, `+0x24` 0). The first
+dword is non-zero, so `D3d_CellTexture` counts it as built: the next draw of
+the same cells hits it (count, CLUT and checksum match) and binds texture 0
+- the sprite untextured - until the entry is evicted. If its CLUT row's
+generation moves first, `D3d_RefreshCellTexture` Blts into `+0x20` without
+testing it (`0x5A3A23..0x5A3A43`): a call through a null pointer.
+
+The software path has the same shape without the scene: a failed
+`Dd_CreatePlainSurface` (`0x5A362F`) leaves the filled entry with no surface
+and `+4` / `+6` 0. A failed `Lock` of the staging surface returns before the
+entry is touched (`0x5A336F`), so the victim keeps its old texture and
+`D3d_CellTexture` binds that for this draw - the wrong cells for one frame.
+
+**Why it may never show:** `Dd_CreateTextureSurface` asks for a managed
+texture (caps2 `DDSCAPS2_TEXTUREMANAGE`) no larger than the device's maximum
+(`D3d_FitTextureSize`); it fails on out of memory or a lost device.
+
+**Ours does the same**; the fuzz fails `CreateSurface` in a sixth of its
+rounds, and the control that calls `BeginScene` on that path - the fix - is
+refused ([`tex-cells.md`](tex-cells.md) §6). A fix - `BeginScene` and an
+emptied entry on the failure path, and a refresh that tests `+0x20` - is the
+owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D32 — The cell builders write sprite pieces wherever their offsets say, past the staging surface (latent)
+
+**Found:** reading `D3d_BuildCellTexture` `0x5A32B0` and
+`D3d_RefreshCellTexture` `0x5A37D0`, 2026-09-23 ([`tex-cells.md`](tex-cells.md)
+§3). **Latent, Capcom's.** Unmeasured: whether any sprite of the game has a
+piece that far out is not known.
+
+**The defect.** Each SpriteCell record is unpacked to `lpSurface + (x + 160)
+* bytes-per-pixel + (y + 128) * lPitch` of the locked 320 x 256 staging
+surface (`0x5A3434..0x5A3458`), x the record's s16 and y its s8, the piece `w`
+and `h` texels (8..120 each). Nothing bounds it. A piece with `x + 160 + w`
+beyond 320 runs into the next row; one with `y + 128 + h` beyond 256 - any
+piece more than `128 - h` below the sprite's origin, which an s8 allows -
+writes past the surface's last row into whatever DirectDraw put after it in
+system memory; one with `x < -160` writes before the row. And the extent kept
+from those offsets becomes the source rectangle of the `Blt` into the texture,
+which DirectDraw refuses when it leaves the surface - the texture keeps
+whatever it had.
+
+**Why it may never show:** the pieces are a sprite's frame layout
+(`Sprite_Draw` `0x5935B0`, `SpriteCell_Add`); a sprite whose pieces fit inside
+320 x 256 around its origin never reaches it. None of the attract sequence's
+has been measured.
+
+**Ours does the same**; the fuzz keeps its pieces inside the stage except in
+one round in sixteen, where they spill across rows and past row 256 (inside
+the fake's buffer), and compares both. A fix - clip each piece to the stage,
+or refuse the sprite - is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry.
