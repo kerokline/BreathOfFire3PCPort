@@ -60,6 +60,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('counts')
     ap.add_argument('--also', default='')
+    ap.add_argument('--minus', default='',
+                    help='runs whose reach is taken away: what COUNTS reaches that these do not '
+                         '(a recipe against the attract sequence)')
     ap.add_argument('--funcs', default='analysis/pc_funcs.json')
     ap.add_argument('--symbols', default='symbols.toml')
     ap.add_argument('--entries', default='analysis/calltrace/entries_plus_hidden.txt')
@@ -101,6 +104,13 @@ def main():
         for line in open(path):
             if line[0] != '#' and int(line.split()[1], 16) == 0:
                 reach.add(int(line.split()[0], 16))
+
+    if a.minus:
+        reach -= set(hidden)   # pc_hidden_reached.json is the attract sequence's
+        for path in a.minus.split(','):
+            for line in open(path):
+                if line[0] != '#' and int(line.split()[1], 16) == 0:
+                    reach.discard(int(line.split()[0], 16))
 
     groups = collections.defaultdict(list)
     for e in sorted(reach - ours):
