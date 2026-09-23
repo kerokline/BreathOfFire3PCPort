@@ -1,7 +1,7 @@
 # The fourth round's queue: what is left, and the owner's display fixes
 
-**Status:** IN PROGRESS (2026-09-22) - N, O, P and Q spawned together; R
-after N is merged (the owner's order); one batched live check for all five
+**Status:** DONE (2026-09-23) - all five groups merged; oracle, memory dump and
+frame hash through `ab25` (the capture A/Bs owed, `analysis/validate_ab25b.sh`)
 
 Drawn from the regenerated catalogue (`python tools/attract_catalog.py
 analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also ...`: 276 reached

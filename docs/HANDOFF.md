@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-22)
+**Status:** IN PROGRESS (2026-09-23)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -15,9 +15,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
-- replace what the attract sequence reaches - stands at **four hundred and
-sixty-six functions ours**, every one through the full live check (the last
-hundred and forty on 2026-09-22, `ab24_*`); and **stage 2, the text swap, went from a plan to a playable
+- replace what the attract sequence reaches - stands at **five hundred and
+sixty-seven functions ours**, every one through the oracle, memory dump and
+frame hash (the last hundred and one on 2026-09-23, `ab25_*`; their capture
+A/Bs are owed, "Pick up here" 0000); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
 pools, the item and ability names, and the US font doubled into the port's
@@ -88,14 +89,21 @@ ceilings in our own scaffolding fell over on the way: the `BOF3X_ORIGINAL` and
 `BOF3X_SHADOW` name lists held 2,048 characters and a whole round is more than
 that, and the tracer held 256 owned functions - the second cost 90 minutes,
 because a Fatal at start-up looks exactly like a hang. **That evening, a
-third round in five groups: 140 functions, 466 ours** - the message box and
-the last two text pens (H), the window/task layer (J), the top-level task
-flow with all 21 transitions (K), the movement commands and the party (L),
-sprite animation and the effect pool (M) - merged one by one and through one
-batch (`ab24`): every capture pair, the English attract, the oracle, the
-memory dump and the frame hash identical, after one fix: our `Boot_Task`'s
-last call had compiled to a tail jump (Traps). D14..D16 written down, no new
-divergence.
+third round in five groups: 140 functions, 466 ours** (`ab24`, after one
+fix - our `Boot_Task`'s last call had compiled to a tail jump, Traps).
+**That night, the fourth: 101 functions, 567 ours** - the area's links and
+the drop-in party (O), the field menu's item use (P, the "title cluster"
+turned out to be the 33 item handlers), sound (Q), the glyph draw (N) and
+the Direct3D draw handlers with the list walk (R, built on N's vertex-block
+fuzz) - through one batch (`ab25`): oracle, memory dump and frame hash
+identical, the last after one fix to our own fade divergence (Traps). Five
+divergences on the way, all the owner's requests and all confirmed by the
+owner in game on 2026-09-23: DIV-0025 glyphs sample texel centres (D17, the
+"wobbly" English text), DIV-0026 the Config controller panel, DIV-0027 the
+Yes / No layout, DIV-0028 music fades per frame (D26: the PC's fades were
+near instant), DIV-0029 the save slot's name clear of a cut. D18..D28
+written down. The batch's capture A/Bs came back black - the owner's screen
+cover - and are owed ("Pick up here" 0000).
 
 ## Pick up here
 
@@ -111,67 +119,50 @@ The single next action, concrete enough to start without asking anyone.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
    order, 2026-09-21), in parallel groups, batching the live check.**
-   **2026-09-22 evening, the third round: five groups, 140 functions, 466
-   ours, all through one batch.** H, the message box and the last two text
-   pens ([`msgbox.md`](msgbox.md)); J, the window/task layer and the area
-   change above it ([`window-task.md`](window-task.md)); K, the top-level
-   task flow - boot, the field task, `Area_Enter` `0x594E60`, all 21
-   transitions (the queue said 12) ([`mode-flow.md`](mode-flow.md)); L, the
-   movement commands, `Party_MoveMember` and `Math_Ratan2`
-   ([`move-cmds.md`](move-cmds.md)); M, sprite animation, facing and the
-   effect pool ([`sprite-pose.md`](sprite-pose.md)). The batch
-   (`analysis/validate_ab24.sh`, log `analysis/attract/ab24_batch.log`):
-   field, new game, field menu and menu screens A/Bs identical, the 9-minute
-   attract 55 / 55 (and 55 / 55 against `ab22`'s ours), the English attract
-   55 / 55 (DIV-0006 through our `MsgBox_Step`), oracle identical at all
-   7,478 compared frames, memory dump identical, and the frame hash
-   identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`) beside an
-   original-vs-original pair. The first all-ours hash run, `ab24_ours`,
-   differed on frame 1 only - a compiled tail call (Traps); fixed in
-   `f199624` and re-run. D14..D16 written down (latent, Capcom's), no new
-   divergence. The two rounds before it: [`field-modes.md`](field-modes.md)
-   and its six siblings (`ab22`), and the five of `ab21`.
+   **2026-09-22 night, the fourth round: five groups, 101 functions, 567
+   ours** ([`takeover-queue-round4.md`](takeover-queue-round4.md)). O, the
+   area's links and the drop-in party ([`area-entry.md`](area-entry.md));
+   P, the field menu's item use - the 33 pointer-reached functions after
+   `Title_LoadTask`, with the stat helpers, the two message-box commits and
+   the 16 system-choice cases ([`item-use.md`](item-use.md)); Q, the sound
+   layer over DirectSound ([`sound.md`](sound.md)); N, the glyph draw and
+   the reusable Direct3D vertex-block fuzz, `src/game/d3d_fuzz.*`
+   ([`glyph-draw.md`](glyph-draw.md)); R, after N, the six D3D handlers,
+   their helpers and the ordering-table walk `Gfx_DrawOTag`
+   ([`d3d-draw.md`](d3d-draw.md)). The batch (`analysis/validate_ab25.sh`,
+   log `analysis/attract/ab25_batch.log`): self-tests 250 modules at 0
+   mismatches, oracle identical at all 7,478 compared frames, memory dump
+   identical in all three regions, frame hash identical original-vs-original
+   on all 10,062 frames and ours-vs-original on all 10,062 once DIV-0028 was
+   corrected (`ab25_orig` / `ab25_oursc`; the first run, `ab25_ours`,
+   differed at frames 3439 and 8961 - Traps). DIV-0025..0029 and D18..D28;
+   every DIV confirmed in game by the owner. The rounds before:
+   [`takeover-queue-round3.md`](takeover-queue-round3.md) (`ab24`), and
+   `ab22`, `ab21`.
    **Next:**
 
+   0. **The batch's captures are owed**: every capture of `ab25` from 00:04
+      on was solid black on both sides (the owner's night-time screen
+      cover), so its A/B "identical" results mean nothing. Run
+      `bash analysis/validate_ab25b.sh` (steps 1 and 4 only, about an hour)
+      with the game window visible; check the captures are not black before
+      believing a pair. What it judges that nothing else has: R's and N's
+      renderer takeovers on every pixel of eight scenes.
    1. **Regenerate the queue** (`python tools/attract_catalog.py
       analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also
       analysis/calltrace/all_a/bof3x.callcounts.tsv,analysis/calltrace/all_b/bof3x.callcounts.tsv
-      --out analysis/attract_catalog.md`) and pick the next groups the same
-      way. **Staged for round four by the owner (2026-09-22): the glyph
-      draw `0x5A2900` as its own group, with the fix** - D17
-      ([`known-defects.md`](known-defects.md)): glyphs sample exactly on
-      texel edges (no half-texel offset, `tu = 2u / 32`), the owner's
-      "wobbly" English text under point filtering and the soft text under
-      bilinear. Take it over faithful, fuzz the vertex block `0x7CA958`
-      against a clone, then the fix `(2u + 0.5) / 32` as the next DIV entry,
-      switchable off with `BOF3X_ORIGINAL`; the owner judges it against the
-      recomp's text in game. **Staged with it, same group: the Config
-      screen's controller panel** - its English names start too far left,
-      ragged and oversized ([`config-screen.md`](config-screen.md) §8: our
-      DIV-0015/0016 strings through `0x461AF0`'s Chinese width `len * 6`
-      and its large draw). DIV-0017's pair of patches on that function, then
-      the right edge in game; `tools/recipes/config_controller.txt` reaches
-      the panel (not yet run) and shows D17 too, so one capture judges
-      both. **And the save screen's Yes / No hand** - some 25 units left of its
-      words on both options
-      ([`dialogue-localisation.md`](dialogue-localisation.md) §6 item 8,
-      measured against the recomp); unread, so read first, and it needs a
-      way to a save point (a recipe or an owner capture). Named by this
-      round and not taken: **`0x5951D0`** (the area's
-      entry list, which `GameMode_Enter` walks) and **`0x531F90`** (the
-      drop-in party placement `Area_Enter` calls, 94 call sites), both large
-      with callers nobody has read - K's suggestion for the next group
-      ([`mode-flow.md`](mode-flow.md) §1);
-      `0x4981C0` / `0x4983C0`, H's two left behind an indirect call through
-      the area descriptors ([`msgbox.md`](msgbox.md) §4); and **the 33
-      pointer-reached functions at `0x496CC0`..`0x497680`**, after
-      `Title_LoadTask`, that `pe_funcs.py` folded into `0x496AD0`'s 0xBAA
-      bytes (its own body is 0x88) - in no list, so no queue has seen them.
-      Beyond those: the rest of §4.9, the renderer (45 / 17.4 KB, waits on a
-      way to check a surface - item 3 below, [`IDEAS.md`](IDEAS.md) I14),
-      sound (23) and the PSX library layer (14). Left out on purpose: the
-      Windows shell and the task scheduler
-      ([`takeover-queue-round3.md`](takeover-queue-round3.md), last section).
+      --out analysis/attract_catalog.md`). **The attract sequence's game
+      logic is nearly exhausted**: after round four what it reaches and is
+      not ours is the rest of the renderer (texture builders `0x5A0080` /
+      `0x5A0510` / `0x5A32B0` / `0x5A37D0` / `0x5A2CA0`, all DirectDraw
+      surfaces - they want surface read-back, [`IDEAS.md`](IDEAS.md) I14),
+      the PSX library layer's 10 (start-up and shell glue), the Windows shell
+      and task system (left out on purpose), the MP3 decoder and the CRT.
+      Named by the round and not taken: `Char_RecalcStats` `0x590660` (0x1A0,
+      five unowned callees - a group of its own), `Inventory_Add` `0x590BB0`
+      (80 call sites), `MsgBox_SystemChoice` `0x498A30` (D22 - no faithful
+      C++ for ids 0x90 and up), `Snd_LoadBank` `0x587CD0` (named, never
+      ours). **So the next queue is item 2's**: what only input reaches.
    2. **An input-reached queue** (the owner's question, 2026-09-22): the
       attract sequence presses nothing, so what only a button reaches is
       invisible to it - the camera turn on R1 + a direction, walking, the
@@ -336,14 +327,14 @@ The single next action, concrete enough to start without asking anyone.
    - Ability (state 3) was only seen closing, and the list cursors of Items
      and Equipment are unfound: one more walk under
      `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
-1. **The frame hash reference is `analysis/calltrace/ab24_orig`** (twin
-   `ab24_origb`), recorded all-original 2026-09-22 at 11 minutes under
-   `entries_logic.txt` with the third round's functions added
-   (`entries_logic_0922c.txt` is the list before): all 10,062 frames
-   identical original-vs-original, and 10,063 original-vs-ours with all 466
-   injects on (`ab24_oursb`). The list change alone moves the hash's content,
-   so `ab22b_orig` and everything before it compare as 7,476 differing
-   frames - that is the re-recording, not a regression. **An all-ours traced
+1. **The frame hash reference is `analysis/calltrace/ab25_orig`** (twin
+   `ab25_origb`), recorded all-original 2026-09-22/23 at 11 minutes under
+   `entries_logic.txt` with the fourth round's 71 unlisted functions added
+   (`entries_logic_0922d.txt` is the list before): all 10,062 frames
+   identical original-vs-original, and original-vs-ours with all 567 injects
+   and every DIV on (`ab25_oursc`). The list change alone moves the hash's
+   content, so `ab24_orig` and everything before it compare as 117
+   differing frames - that is the re-recording, not a regression. **An all-ours traced
    run is now twice as fast as an all-original one** (19,318 frames in 11
    minutes against 10,062: owned functions are not traced), so the pair is
    compared over the shorter run's frames. **The
@@ -731,7 +722,22 @@ _One line each, with a pointer. Add when something costs more than an hour._
   less the entries the incoming group moved, plus its block verbatim,
   then a three-way check keyed on `pc` against the merge base (the
   groups were told to put every change in one block at the end).
-
+- **A black screen cover makes every capture black and every A/B "identical"**
+  (2026-09-23, `ab25`): the owner covers the screen at night; captures came
+  back solid black on both sides from 00:04 on, and `shots_compare.py`
+  passed them. Check that captures are not black before believing a pair.
+  The memory checks (oracle, dump, hash) are unaffected.
+- **A divergence that stretches time must not stretch what the game sees**
+  (2026-09-23, DIV-0028): fades spread over frames left `Music_Track` naming
+  a fading track, so a `Music_Play` of it was ignored and the fade then
+  stopped the music - silence at attract frame 3439 that the frame hash
+  caught in one frame. Keep the logical state on the original's schedule
+  and let only the audible part linger; the traced hash with the DIV on is
+  the check.
+- **Check a patch's expected bytes against the image, not the disassembly
+  in your head** (2026-09-23): `push 0xC` at `0x461A61` is followed by
+  `xor bl, bl` (`32`), not a `push ebp` (`55`); `PatchBytes` would have
+  refused at start-up. Dump the three bytes first.
 ## In flight / uncommitted
 
 Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
@@ -768,13 +774,21 @@ by one - `title_states.cpp`, `field_blocked.cpp`, `frame_callees.cpp`,
 `event_script.cpp` (+ `_fuzz.cpp`) - a doc each, `tools/event_scan.py`, the
 two raised ceilings (`detour.cpp`, `calltrace.cpp`) and `known-defects.md`
 D8..D11. All through the batch (`ab22` + `ab22b`). No new DIV entry.
-**Then the third round that evening, committed locally and not pushed**:
+**Then the third round that evening**:
 H and J merged (`11dbc4a`), `Math_Ratan2` registered (`c966c21`), then M, L
 and K merged one by one - `sprite_pose.cpp`, `move_cmds.cpp`,
 `mode_flow.cpp` (each + `_fuzz.cpp`), a doc each, D14..D16, and the
 `Boot_Task` call fix (`f199624`). All through the batch (`ab24`). No new DIV
-entry.
-All three rounds' agent branches and worktrees are merged and removed, as are the
+entry. **Then the fourth round that night, and the owner's display fixes**:
+the round's queue (`afe0ec2`), O, N, P, Q and R merged one by one -
+`area_entry.cpp`, `glyph_draw.cpp` + `d3d_fuzz.cpp` + `yes_no_layout.cpp`,
+`item_use.cpp`, `sound.cpp`, `d3d_draw.cpp` + `d3d_list.cpp` (each with its
+`_fuzz.cpp`), a doc each - DIV-0025..0029, D17..D28, the DIV-0028
+correction (`9d62125`), `tools/recipes/config_controller.txt` and
+`load_list.txt`. Oracle, memory dump and frame hash through `ab25`; the
+capture A/Bs owed (`analysis/validate_ab25b.sh`, local). **Pushed
+2026-09-23, PR opened for the owner to merge.**
+All four rounds' agent branches and worktrees are merged and removed, as are the
 two older ones (`claude/silly-bhabha-776856`, and the detached
 `epic-chandrasekhar-cc0704`); `.claude/worktrees/` is empty.
 
