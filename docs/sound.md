@@ -142,7 +142,16 @@ hundredths of one frame, where the PSX counted frames - fades are near
 instant on the PC. The takeover keeps it (it is what the port does), written
 down as D26; **the fix is DIV-0028** (2026-09-22, the owner's request): one
 step per logic frame, gated on the frame deadline `0x6BC628` moving, off with
-`BOF3X_ORIGINAL=MusicFadePerFrame`.
+`BOF3X_ORIGINAL=MusicFadePerFrame`. What the game sees does not move: the
+first tick after a stopping fade starts marks the music stopped
+(`Music_Track` 0xFF), as the instant fade did, and a later music command
+completes the stop first. The first build of it did not, and the `ab25`
+frame hash caught it - frame 3439 (and 8961, a cycle on), where the original
+restarts a track with `Music_Play` and ours, still fading the same track,
+ignored the call and then stopped the music. With DIV-0028 switched off the
+hash was identical on all 5,375 frames of that run; with it corrected and
+on, identical on all 10,062 (`analysis/calltrace/ab25_oursc` against
+`ab25_orig`, 2026-09-23).
 
 ## 4. The fuzz
 

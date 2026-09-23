@@ -1294,7 +1294,14 @@ designed in rather than bolted on.
   frames included - so an 8-frame fade lasts 8 logic frames, about 0.27 s
   at the port's 30 a second. The first step of a new fade is at once. The
   steps, the volume arithmetic, the stop at the end and the pump are the
-  original's.
+  original's. **What the game sees does not change** (corrected 2026-09-23,
+  after the `ab25` frame hash): a stopping fade still marks the music
+  stopped (`Music_Track` 0xFF) at the first `Sound_Tick` after it starts, as
+  the original's instant fade did, and a music command after that tick
+  (`Music_Play`, another fade) completes the stop first. The first build
+  let `Music_Play` of the same track inside the fade do nothing and then
+  stopped the music - silence where the original restarts a track, frame
+  3439 of the attract sequence.
 - **Rationale:** the owner remembers the PlayStation fading music in and
   out, and asked for the fix on 2026-09-22 ("8 frames is like a quarter
   second? That sounds pretty close to how I remember it"), to judge in play.
@@ -1306,7 +1313,11 @@ designed in rather than bolted on.
   stopping fade through `Sound_Tick` with counting stand-ins takes exactly
   one step per frame over 8 frames of 5 spins and stops once. Negative
   control: with the deadline test removed the self-test is refused (8 steps
-  in the first frame, a Fatal). **Confirmed in game by the owner,
+  in the first frame, a Fatal). A second case: `Music_Play` of the fading
+  track is ignored in the asking frame and restarts the track after the
+  first tick; both controls (no completion, no marking) are refused. Frame
+  hash, all ours with the fix on against all original: see
+  [`sound.md`](sound.md). **Confirmed in game by the owner,
   2026-09-23**: "the fade sounds great".
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
   Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
