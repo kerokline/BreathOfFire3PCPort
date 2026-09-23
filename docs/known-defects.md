@@ -777,6 +777,11 @@ hundredths of one frame: music starts at full volume and fade-outs are cuts,
 at any machine speed faster than one spin a frame. A fade-out-and-stop
 still stops the music; only the ramp is lost.
 
+**The PlayStation fades audibly** (owner, 2026-09-22: "I do remember the
+music fading in and out"; an imperceptible fade on the PC "would be a
+divergence from the psx game"). So if the batch's listen confirms the cut,
+the PC has lost something the release had.
+
 **Fix proposed, not built:** step the fade once per logic frame (a counter
 the frame loop already keeps), a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
 The takeover keeps the per-spin step.
