@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-23)
+**Status:** IN PROGRESS (2026-09-23, evening)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -106,11 +106,54 @@ written down. **2026-09-23: rounds five and six, 222 functions, 789 ours** -
 the attract sequence's last (the display calls, the texture builders, the
 DIV-0010 sprite handlers rewritten) and all the owner's recorded shop route
 reaches; the pad recorder (`BOF3X_RECORD`); DIV-0030; D30..D40; one batch,
-`ab26` ("Pick up here" 0000).
+`ab26` ("Pick up here" 0000). **Then the owner turned to the UI overhaul**
+([`display-overhaul.md`](display-overhaul.md): window modes without a
+mode-set, integer scaling, a shader present pass, widescreen) and its first
+step is built: **a Direct3D 11 backend behind DirectX 6's own objects**
+([`render-backend.md`](render-backend.md), DIV-0031) - one function taken
+over, `Display_Setup` `0x5A5160` (790 ours), no draw handler changed; the
+attract A/B against Capcom's DirectDraw path 28 of 55 identical and the
+rest 1..12 pixels apart on tile edges, the frame hash, oracle and memory
+dump unchanged (`rb1`). The frame hash reference is re-recorded without
+the CRT's `sscanf` (`ab27`, identical both ways). The PSP release's 16:9
+is being read in a parallel session ([`display-overhaul.md`](display-overhaul.md) §4d).
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
+
+000000. **The UI overhaul, step 2 done: the Direct3D 11 backend runs the game
+   at `k = 2`, windowed** ([`render-backend.md`](render-backend.md),
+   `analysis/validate_rb1.sh`, log `analysis/attract/rb1_batch.log`,
+   2026-09-23): self-tests 0 mismatches; the 55-shot attract A/B against
+   `--original Display_Setup` (Capcom's set-up, DirectDraw and Direct3D 3
+   end to end) at point filter **28 of 55 identical, the other 27 between 1
+   and 12 pixels apart** - single texels on tile edges, the same spots frame
+   after frame (box 175,163..320,361 recurs) - the two rasterisers' edge
+   rules at a texel boundary; frame hash all-ours against `ab27_orig` differs on frame 0 alone (the set-up's 153 start-up calls - `0x5A5160`, `0x5A5FF0`, `0x5A6050`, `0x5A60E0`, `0x5A62C0`, two import thunks, three CRT routines - now unmade) and is identical on the other 10,318;
+   oracle identical (`attract_diff` exit 0, 12,126 frames); memory dump identical in all three regions. **Next, in the plan's order** ([`display-overhaul.md`](display-overhaul.md) §5):
+   0. **Owner's eye**: play with the backend (it is on by default now;
+      `BOF3X_ORIGINAL=Display_Setup` is the old path) and say whether
+      anything looks wrong. `display=fullscreen` in the launcher is
+      **untested with the backend**: WinMain still makes its fullscreen-style
+      window, the backend presents into whatever client area it has.
+   1. The edge pixels: try the present's pixel-centre offset at `0.5 - 1/512`
+      (the trick D3D8-to-9 wrappers use) against the 27 differing captures;
+      `render_d3d11.cpp`'s vertex shader, one constant.
+   2. **Window modes and I12** (§4a): WinMain `0x4FCB00`, WndProc
+      `0x4FC6F0`, DirectInput `0x5A94C0`, FMV into the window - then
+      `BOF3X_SCALE=3..8` already rasterises at `k` (the target is `320k x 240k`
+      and the present centres it at the largest integer that fits), so a
+      bigger window is the only missing piece of 4b; audit `sprt_draw.cpp`'s
+      far-edge table (derived for scale 2) before calling `k = 3` right.
+   3. Presets (§4c): decide the shader contract with the owner first.
+   4. Widescreen (§4d) once the PSP session reports.
+   Not built, loud if reached: a `Lock` of the primary or back buffer
+   (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` now logs the
+   first request), sub-rectangle locks, depth / fog / lighting. The set-up's
+   constants (pixel formats 1-5-5-5 / 5-5-5 / X-8-8-8, caps `0xCCD`) are what
+   this machine's HAL reported; another machine's may differ, and the
+   backend takes any RGB masks.
 
 00000. **The game's pace is done short term: DIV-0022, confirmed in game by
    the owner 2026-09-22.** The complete fix, the deadline in a double, is
@@ -166,16 +209,15 @@ The single next action, concrete enough to start without asking anyone.
    owner's call); D30..D40 latent.
    **Next:**
 
-   0. **Re-record the frame hash without the `sscanf` engine**: take
-      `0x5BCF64` and its callees (`0x5BD989`, `0x5BD9C0`, `0x5BD9DA`,
-      `0x5BD9F1`, `0x5C1005`, `0x5C104F`, `0x5BDA9B`) out of
-      `analysis/calltrace/entries_logic.txt` and run step 4 of
-      `validate_ab26.sh` again - now with the reference sides at
-      `--original "*,-Game_Clock"` and 6 minutes a run (item 00000; about 20
-      minutes for the three, was 33): original-vs-original and ours should
-      then both be identical. **Unverified yet**: the first run with the clock
-      kept on the reference is this one - check its original-vs-original pair
-      before trusting the change.
+   0. **Done (`ab27`, 2026-09-23): the frame hash reference is
+      `analysis/calltrace/ab27_orig`** (twin `ab27_origb`, ours `ab27_ours`),
+      recorded with the CRT's `sscanf` engine (`0x5BCF64` and seven callees)
+      out of `entries_logic.txt` (`entries_logic_0923b.txt` is the list
+      before), the reference sides at `--original "*,-Game_Clock"`, 6 minutes
+      a run: 10,259 / 10,310 / 10,316 logic frames, original-vs-original
+      identical on 10,312, original-vs-ours identical on 10,318. The clock
+      kept on the reference is now verified. Then `0x5A5160`'s size in the
+      list was corrected to `0xA55` when it became ours (`rb1`).
    1. **More recorded routes** - the owner plays with `BOF3X_RECORD` (F12 for
       a shot), then the route is A/B'd and traced once all original, less the
       attract reach (`attract_catalog.py --minus`, the command in
@@ -412,14 +454,13 @@ The single next action, concrete enough to start without asking anyone.
    Worth doing alongside: **a struct for the sprite object.** Five files now
    address it by offset; `symbols.toml` has no struct types, so it would be a
    hand-written header, and the offsets are collected in §5 and §6 there.
-3. **The Direct3D end of the image path** is where it was: the lock wrapper
-   `0x5A3CC0`, the entry builders `0x5A0080` / `0x5A0510` (ten COM calls each),
-   the glyph-texture lookup `0x5A2BC0` (128 entries of 0x14 bytes at
-   `0x7C9F50`, keyed by glyph and CLUT, same generation trick), and the 3.7 KB
-   set-up `0x5A5160` ([`asset-loading-path.md`](asset-loading-path.md) §2).
-   **Decide first how such a function gets checked** - its product is a
-   surface, not memory; reading a locked surface back is the obvious candidate
-   ([`IDEAS.md`](IDEAS.md) I14).
+3. **The Direct3D end of the image path is ours** as of rounds four and
+   five and the backend: the builders `0x5A0080` / `0x5A0510`, the glyph
+   lookup `0x5A2BC0`, the set-up `0x5A5160` (DIV-0031). Left: the software
+   path's lock wrapper `0x5A3CC0` (only the software renderer reaches it,
+   which the backend retired), the teardown `0x5A6380` and the
+   enumeration callbacks (retired with it, still Capcom's bytes;
+   [`display-setup.md`](display-setup.md)).
 4. **Owner, in game: [`USER_CHECKS.md`](USER_CHECKS.md).** The converted saves
    are done bar one item. Still owed: a save and load through the fully-ours
    file layer, DIV-0003's failing case, DIV-0002's clean A/B; and item 5, the
@@ -776,11 +817,36 @@ _One line each, with a pointer. Add when something costs more than an hour._
   all-original pair agrees; ours sits the heap differently. A difference
   whose extra calls are `0x5BCF64`'s (`0x5BD989` / `0x5BD9C0` pairs) under
   `0x5B9AA6` is this; exclude them from the list at the next re-record.
+- **The game's task stacks lie inside the main thread's stack, and the
+  present runs on one** (2026-09-23, the backend): a check of esp against
+  the TEB's bounds passes on a 16 KB task stack, and DXGI's `Present` ran
+  off the end of it into the scheduler's records - the game then returned
+  into garbage (`ret` to `0x1FD`, `0`, `0xFE`) a few calls later, with
+  nothing of ours on the stack. Bisected by replacing the present with a
+  20 ms `Sleep` (fine) and with a non-waiting `Present` (crashes). Anything
+  heavier than a few hundred bytes of stack runs on a fiber of its own
+  (`render_d3d11.cpp`, `RunOnFiber`). Three hours.
+- `DrawState` is a Win32 macro and `pass` an HLSL keyword (2026-09-23).
+- **The crash reporter's stack scan misses the faulting frame**: the dump's
+  thread context is the handler's, not the fault's; the exception stream's
+  context has the real esp (the scratch script `dumpstack.py` did it; worth
+  folding into `tools/crash_report.py`).
 - **Group names collide across parallel groups** (2026-09-23): W and Y both
   named an `Item_Price` and a `Menu_DrawIcon`, Z and V1 a
   `Field_ObjectAhead`; the merge's tomllib check caught all three. Rename the
   later group's in its own files only.
 ## In flight / uncommitted
+
+Branch `phase-3/UI-overhaul` (from `main` at PR 10), **2026-09-23, uncommitted
+at the time of writing**: [`display-overhaul.md`](display-overhaul.md),
+[`display-setup.md`](display-setup.md), [`render-backend.md`](render-backend.md);
+`src/render/render_shim.{h,cpp}`, `src/render/render_d3d11.{h,cpp}`,
+`src/game/display_setup.{h,cpp}`; DIV-0031; `symbols.toml` (`Display_Setup`,
+`Cfg_RenderMode`'s evidence); `entries_logic.txt` (`ab27`, `0x5A5160`'s
+size); `analysis/validate_ab27.sh`, `validate_rb1.sh`; the docs index,
+STATUS, this file. The eleven merged agent worktrees of rounds five and six
+are removed; `.claude/worktrees/vibrant-wilbur-f9676a` is the PSP session's.
+The round-four PR is merged (PR 10).
 
 Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
 the attract catalogue and the PSX pairing ([`attract-remaining.md`](attract-remaining.md),

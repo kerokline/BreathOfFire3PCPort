@@ -77,6 +77,7 @@
 #include "game/save_menu.h"
 #include "game/event_ops.h"
 #include "game/menu_windows.h"
+#include "game/display_setup.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -180,6 +181,7 @@ void InjectAll() {
     MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
                                 // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
                                 // tables relocated in the copies
+    DisplaySetup_Inject();      // after GfxFilter, whose patch of the original set-up's bytes serves the BOF3X_ORIGINAL path
     InjectReport();
 }
 

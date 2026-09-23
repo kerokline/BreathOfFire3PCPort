@@ -263,6 +263,13 @@ What is established:
    platform set-up, all left for [`IDEAS.md`](IDEAS.md) I8 / I12 by the
    owner's choice. The input-reached queue carries it on: routes the owner
    records, each A/B'd and traced ([`HANDOFF.md`](HANDOFF.md) 0000).
+   **Ahead of more routes, by the owner's direction of 2026-09-23: the UI
+   overhaul** ([`display-overhaul.md`](display-overhaul.md)) - window modes
+   without an exclusive mode-set, integer scaling, a shader present pass,
+   and widescreen. Its first step, a Direct3D 11 backend behind DirectX 6's
+   own objects, runs the game as of 2026-09-23
+   ([`render-backend.md`](render-backend.md), DIV-0031); the PSP release's
+   16:9 is being mined in parallel for how Capcom did it.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.

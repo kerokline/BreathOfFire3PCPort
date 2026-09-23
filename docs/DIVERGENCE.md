@@ -1418,3 +1418,57 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Menu_DrawBackdrop` (Capcom's function,
   stack read and all).
 
+### Draw through Direct3D 11 behind DirectX 6's objects, with no exclusive display mode
+
+- **ID:** DIV-0031
+- **Date:** 2026-09-23
+- **Subsystem:** display (`Display_Setup` `0x5A5160`, [`display-setup.md`](display-setup.md); the backend, [`render-backend.md`](render-backend.md))
+- **Original behaviour:** the set-up enumerates DirectDraw drivers and their
+  modes, keeps a synthetic "Software Render" device as record 0
+  (`Cfg_RenderMode` `0x65DA48` = 0 selects it: the port's own rasterisers into
+  system-memory surfaces), makes an `IDirectDraw4`, an `IDirect3D3` and a HAL
+  `IDirect3DDevice3` on the device's smallest mode of at least 640 x 480 x 16
+  - fullscreen an exclusive `SetDisplayMode` and a flip chain, windowed a
+  fixed 640 x 480 window with a clipper - and, when the HAL device refuses
+  the windowed back buffer, flips `Cfg_Fullscreen` to 1 for the rest of the
+  process and repeats the set-up fullscreen. Every draw then goes through
+  the `IDirect3DDevice3`, every texture through DirectDraw surfaces, and the
+  frame is shown by `Blt` (windowed) or `Flip`. The FMVs take the screen
+  through a second DirectDraw in exclusive mode.
+- **New behaviour:** the seven object slots hold this project's own
+  DirectDraw- and Direct3D-shaped objects (`src/render/render_shim.cpp`);
+  they record the frame and a Direct3D 11 device draws it into a target of
+  the logical picture's size times an integer scale (640 x 480 at the
+  default `BOF3X_SCALE=2`) and presents it centred on the window at the
+  largest integer scale the client area holds, black around it, through a
+  point or bilinear sampler (`BOF3X_FILTER`). No display mode is ever set,
+  `Cfg_Fullscreen` is never forced, and the software renderer is gone:
+  `Cfg_RenderMode` 0 and 1 both take the hardware path (F7 still cycles
+  the two names). The pixel-format records, the device caps and the scale
+  are what the HAL device reported on the owner's machine on 2026-09-23, so
+  the texture builders make the same texels. The GPU work runs on a fiber
+  with a 1 MB stack, because the game calls the present from a 16 KB task
+  stack.
+- **Rationale:** the owner's UI overhaul ([`display-overhaul.md`](display-overhaul.md)):
+  borderless and windowed modes without an exclusive mode-set, integer
+  scaling, and a shader present pass all need the picture in a render
+  target of our own. Route 2 there: one function taken over, no draw handler
+  changed, since every handler already reaches DirectX only through these
+  objects' vtables.
+- **Not covered:** the FMVs still take their own DirectDraw and exclusive
+  mode (`Fmv_Play` `0x59E360`, skipped when windowed); the software
+  rasterisers, `D3d_AfterDraw`'s read-back of the back buffer (never seen
+  requested; it ends the process loudly if it is), a `Lock` of the primary
+  or back buffer, sub-rectangle locks, depth, fog and lighting states (none
+  set by the game), texture formats other than RGB with masks.
+- **Also in the PSX version?** No: the PlayStation's GPU. This is the port's
+  layer.
+- **Verification:** `analysis/validate_rb1.sh` (2026-09-23): the four-shot
+  title and attract captures against Capcom's set-up and DirectDraw, point
+  filter - the title and narration screens pixel-identical, the two field
+  scenes 13 and 3 pixels apart, single texels on tile edges where the two
+  rasterisers' edge rules differ; the 55-shot attract A/B, the frame hash,
+  the oracle and the memory dump - results in [`render-backend.md`](render-backend.md) §5.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Display_Setup` runs Capcom's set-up,
+  and with it Capcom's DirectDraw, Direct3D 3 and every path above,
+  untouched (`gfx_filter.cpp`'s patch of its filter bytes serves that path).

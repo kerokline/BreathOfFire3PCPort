@@ -589,7 +589,7 @@ pc = 0x65DA48
 name = "Cfg_RenderMode"
 ctype = "int"
 status = "hypothesis"
-evidence = "Second line of BOF3.CFG, initialised 1, passed by address to the display initialiser 0x5A5160 alongside Cfg_Fullscreen; WM_KEYDOWN 0x76 (F7) re-runs 0x5A5160 with it and then calls 0x5A6690 with its value. 0x5A5160 holds the only reference to the 'Software Render' string. So: hardware/software renderer select, by association - which value means which is not read."
+evidence = "Second line of BOF3.CFG, initialised 1, passed by address to the display initialiser 0x5A5160 alongside Cfg_Fullscreen; WM_KEYDOWN 0x76 (F7) re-runs 0x5A5160 with it and then calls 0x5A6690 with its value. 0x5A5160 holds the only reference to the 'Software Render' string. So: hardware/software renderer select, by association. Read 2026-09-23 (docs/display-setup.md section 2.4-2.5): an index into the 0x13C-byte device records at 0x6C3A50 - record 0 the synthetic Software Render (Gfx_RenderFlags bit 0), records 1.. the DirectDrawEnumerateA drivers; a value past the last record wraps to 0. With Display_Setup ours (DIV-0031) every value takes the hardware path."
 
 # ---------------------------------------------------------------------------
 # Save files
@@ -10851,3 +10851,12 @@ params = "unsigned char *prim"
 impl = "src/game/menu_windows.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5A7720..0x5A772F (0x10 bytes): byte +7 = 0x74, the PSX GPU code of SPRT_8, and the float 0.01 to +0x10. The sibling's SetSprt8 (confirmed). Callers Text_DrawFont8, Menu_DrawIcon8."
+
+[[func]]
+pc = 0x5A5160
+name = "Display_Setup"
+ret = "int"
+params = "void *hwnd, int *fullscreen, int *device, int *mode"
+impl = "src/game/display_setup.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23 (docs/display-setup.md), 0x5A5160..0x5A5BB4 (0xA55 bytes, 778 instructions, every jump internal), cdecl: the DirectDraw / Direct3D set-up. Callers WinMain 0x4FCD52, WndProc F8 0x4FC901 and F7 0x4FC94B, all (hwnd, &Cfg_Fullscreen, &Cfg_RenderMode, 0); a non-zero return WinMain maps through the error-string table 0x66B6A8. Desktop caps to 0x7C9F44 / 0x6C9F40 / 0x6BE1E0; zeroes Gfx_TexCache, Gfx_ClutRows, Font_TexCache (words 0xFFFF), 0x6BE9F8, 0x7CADE8, D3d_CellTexCache, Gfx_PixelFormat, Gfx_RenderFlags, 0x6C3A48, D3d_ShadeModeCache; D3d_TexCoords (i / 256 + 0.002); DirectDrawEnumerateA into device records 0x6C3A50 (0x13C each, record 0 the synthetic Software Render); IDirectDraw4, IDirect3D3, the HAL IDirect3DDevice3 only (on failure windowed: Cfg_Fullscreen = 1, teardown 0x5A6380, and the set-up repeats fullscreen); mode = the device's smallest of at least 640 x 480 x 16, D3d_ScaleX/Y = width / 320, height / 240; windowed: DDSCL_NORMAL, primary 0x200, back 0x2040, a clipper, Gfx_RenderFlags |= 0x200; fullscreen: 0x813, SetDisplayMode, flip chain 0x2218, |= 0x100; 0x5A60E0 for the three pixel-format records; Dd_CreatePlainSurface(320, 256, &Dd_StageSurface, 0); the back buffer's pitch to 0x7DED5C; viewport, black material, ten SetTextureStageState (MODULATE both, filters LINEAR at 0x5A5B20 / 0x5A5B33) and seven SetRenderState (alpha test GREATER 8, cull none, perspective, no specular, no fog). Ours: DIV-0031, the Direct3D 11 backend."

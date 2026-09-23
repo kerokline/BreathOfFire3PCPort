@@ -64,7 +64,9 @@ WinMain's loop (`python tools/pe_disasm.py 0x4fcd90:95 0x4fcede:75`):
    no logic, no render. `WM_ACTIVATEAPP` (`0x1C`) clears it and calls
    `0x587C30`, sets it and calls `0x587B90` (sound pause/resume, by role).
 2. If `GetTickCount()` is still **before** the frame deadline (float at
-   `0x6BC628`): build and present the frame (`0x59EE50`, flip `0x5A66B0`).
+   `0x6BC628`): build and present the frame (`0x59EE50`; the present is
+   `Gfx_Present` `0x59EDF0` under `Gpu_PutDispEnv` - `0x5A66B0` is GDI
+   `TextOut` of the device's name on the back buffer, [`display-setup.md`](display-setup.md) §5.2).
    **If the deadline has already passed, presentation is skipped** — frame
    skip.
 3. Spin until the deadline, then `deadline += 33.334 ms` (double at `0x5C4218`;
