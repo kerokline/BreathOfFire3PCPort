@@ -62,6 +62,8 @@
 #include "game/move_cmds.h"
 #include "game/mode_flow.h"
 #include "game/area_entry.h"
+#include "game/glyph_draw.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -134,6 +136,9 @@ void InjectAll() {
     ModeFlow_Inject();          // every call of its clones re-aimed at a recorder, its stack-built table
                                 // re-aimed in the copy, the mode table swapped: order does not matter
     AreaEntry_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
+    GlyphDraw_Inject();         // every call of its clones re-aimed at a recorder, the device a fake:
+                                // order does not matter
+    YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
     InjectReport();
 }
 

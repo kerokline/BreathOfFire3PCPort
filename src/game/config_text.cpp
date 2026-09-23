@@ -106,7 +106,8 @@ const char* TakeString(const std::uint8_t*& p, const std::uint8_t* end) {
 // the branch reckons 12 units a character where the pen moves 8 - thrown left
 // by four units a character.
 //
-// So this stands in for Text_DrawAt at those two call sites only, and redraws
+// So this stands in for Text_DrawAt at those two call sites only (and, since
+// DIV-0026, at the controller panel's one, 0x461B43), and redraws
 // the string with each UI glyph swapped for the dialogue glyph of the same
 // character. The two sets are in the same code order, 100 cells each
 // (tools/loc_build.py), so the swap is a constant offset. The blank after the
@@ -114,6 +115,7 @@ const char* TakeString(const std::uint8_t*& p, const std::uint8_t* end) {
 constexpr std::uint32_t kUiGlyphs = 0xA00, kDialogueGlyphs = 0x993, kSetCells = 100;
 constexpr std::uint32_t kTextDrawAt = 0x516B30;   // its name is a macro here
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
+constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // 0x461AF0's one draw (DIV-0026)
 
 extern "C" const unsigned char* __cdecl ConfigText_DrawSelected(int x, int y, int color, int count,
                                                                 const unsigned char* text) {
@@ -255,6 +257,29 @@ void ConfigText_Inject() {
     static const std::uint8_t option_was[] = {0x8D, 0x04, 0x40};
     static const std::uint8_t option_is[] = {0xD1, 0xE0, 0x90};
     bof3::PatchBytes("ConfigText", 0x4619E1, option_was, option_is, 3);
+
+    // --- the controller panel (DIV-0026) ------------------------------------
+    // 0x461AF0 draws each of the six names through the large Text_DrawAt at
+    // x = row x + 0x20 - width, the width reckoned `len * 6` - 12 units a
+    // Chinese character of two bytes:
+    //   0x461B36  lea eax,[ecx+ecx*2]   (then mov ecx,ebp / shl eax,1)
+    // Ours are two bytes a character too but advance 8, so each name began 4
+    // units a character left of its right edge, and in the large quad the
+    // tripled 8 x 8 cells crowded (the owner's screenshot, 2026-09-22). The
+    // same pair as the selected row: the SIB byte made `[ecx+ecx]`, so the
+    // `shl eax,1` after it gives len * 4, and the call re-aimed at the glyph
+    // swap. The right edge, row x + 0x20, is the original's (the doc says why
+    // it is not enough: docs/config-screen.md section 9). Not under
+    // BOF3X_LANG=original, which DatLoad_Inject reads as no overlay: the
+    // Chinese names advance 12 and want the original's width. (The patches
+    // above this one do not make that exception; docs/glyph-draw.md section 8.)
+    if (std::strcmp(lang, "original") != 0) {
+        bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt,
+                           reinterpret_cast<void*>(&ConfigText_DrawSelected));
+        static const std::uint8_t ctrl_was[] = {0x8D, 0x04, 0x49};
+        static const std::uint8_t ctrl_is[] = {0x8D, 0x04, 0x09};
+        bof3::PatchBytes("ConfigController", 0x461B36, ctrl_was, ctrl_is, 3);
+    }
 
     // The rows' y is the original's. An earlier build lowered every string on
     // this screen by two (five displacements in 0x461800, 0x461970 and

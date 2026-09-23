@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — seventeen entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, staged for a fix)
+**Status:** IN PROGRESS (2026-09-22 — eighteen entries; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (not yet seen in game); D18 latent)
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -609,6 +609,8 @@ The software renderer's glyph path (`0x5A4900`, first jump table, the call at
 `0x59EFC9`) copies a 24 x 24 glyph to the back buffer directly when the quad
 is 24 x 24 and so should not show this; not checked.
 
+**Fixed as DIV-0025 (2026-09-22, group N; not yet seen in game)** - [`glyph-draw.md`](glyph-draw.md) §6. The proposal as it stood:
+
 **Fix proposed (owner, 2026-09-22: "stage this as part of the next wave"):**
 sample texel centres, `(2u + 0.5) / 32` on both axes, keeping the 1:1
 scale - a [`DIVERGENCE.md`](DIVERGENCE.md) entry when built. Taking
@@ -617,3 +619,33 @@ two COM calls (device `+0x58` render state `0x1B`, `+0x70` DrawPrimitive)
 and five callees (`0x59FBA0`, `0x5A2BC0`, `0x437CC0` a bare `ret`,
 `0x59FCA0`, `0x59FD80`), fuzzable on the vertex block at `0x7CA958` against a clone with
 stand-ins for `0x5A2BC0` and the device.
+
+## D18 — The glyph texture cache overruns into the vertex block when full (latent)
+
+**Found:** reading `Font_GlyphTexture` `0x5A2BC0` for the takeover,
+2026-09-22 ([`glyph-draw.md`](glyph-draw.md) §3). **Latent, Capcom's**
+(group N of the fourth round). Unmeasured in game.
+
+**The defect.** The glyph textures live in a 128-entry cache
+(`Font_TexCache` `0x7C9F50`, `0x14` bytes an entry), and an entry is free for
+reuse only when it has not been used this frame (the draw clears the flags
+after each `EndScene`). When all 128 are used in one frame and the glyph
+asked for is none of them, the lookup's index is left at 128, one past the
+table - and the table ends 8 bytes before `D3d_Vertices` `0x7CA958`, so entry
+128 is those 8 bytes and the start of vertex 0. Under Direct3D it then calls
+`SetTexture(0, ...)` with the bits of vertex 0's `sy` as a texture pointer,
+and writes its in-use word over the low half of vertex 0's `sz` (the handler
+has already filled the vertices, so the glyph is drawn at z 0.98829 instead
+of 0.99). A float's bits handed to `SetTexture` as an interface pointer is
+most likely a crash. Under the software surfaces (flag bit 0) there is no
+`SetTexture`; the software glyph path `0x5A4900` gets the index 128 back, and
+what it does with it was not read.
+
+**Why it may never show:** it needs 128 distinct (glyph, CLUT) pairs in one
+frame. A dense Chinese screen (an item or skill list) is the likeliest
+place; no capture has counted them.
+
+**Ours does the same** (the addresses are the original's arithmetic); the
+fuzz seeds a full cache in a quarter of its rounds, and a control that
+clamps the index to 127 is refused. A fix - evict an entry, or draw without
+caching - is the owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
