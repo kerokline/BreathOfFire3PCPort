@@ -668,8 +668,10 @@ but the member's HP is now 1. Ours keeps the order (control P26, D21
 only when bit 0 of its flags is set, and Ammonia's flags byte is `0x46`
 (every field heal has bit 0: `0xC7`, `0xD7`); so the menu never calls the
 handler. Only a caller that skips that gate would reach it - none is known
-(`ItemUse_Dispatch` has two callers, both in `0x58AAB0` after the gate). A
-fix would test the status first; it is the owner's call and a
+(`ItemUse_Dispatch` has two callers, both in `0x58AAB0` after the gate).
+The gate is by design (owner, 2026-09-22): Ammonia is a battle item, and a
+fallen member is revived on leaving combat, so there is nothing for it to do
+on the field. A fix would test the status first; it is the owner's call and a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry if ever wanted.
 
 ## D22 — The system choice dispatch is unbounded: ids 0x90 and up call the stack (latent)
@@ -705,4 +707,7 @@ takes one from the stack it was used from. `Inventory_Add` caps a stack at
 changes nothing and the menu's decrement leaves 98; from 98 and below the
 count is unchanged. **Why it barely matters:** whether a stack of 99 tiaras
 can be had in play is not known here (game facts are the owner's), and the
-loss is one, once.
+loss is one, once. **It cannot happen in play** (owner, 2026-09-22): there
+is only one Faerie Tiara, a key item - having it is what lets the party into
+the fairy rings on the world map, and it is not meant to be used up. So the
+stack is always 1 and the handler's give-back keeps it at 1.
