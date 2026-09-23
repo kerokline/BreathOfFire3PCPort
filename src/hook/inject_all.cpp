@@ -61,6 +61,7 @@
 #include "game/sprite_pose.h"
 #include "game/move_cmds.h"
 #include "game/mode_flow.h"
+#include "game/item_use.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -132,6 +133,8 @@ void InjectAll() {
                                 // relocated in the copy: order does not matter
     ModeFlow_Inject();          // every call of its clones re-aimed at a recorder, its stack-built table
                                 // re-aimed in the copy, the mode table swapped: order does not matter
+    ItemUse_Inject();           // every call of its clones re-aimed at a recorder, the handler table and
+                                // four area descriptors swapped: order does not matter
     InjectReport();
 }
 

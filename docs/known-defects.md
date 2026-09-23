@@ -617,3 +617,61 @@ two COM calls (device `+0x58` render state `0x1B`, `+0x70` DrawPrimitive)
 and five callees (`0x59FBA0`, `0x5A2BC0`, `0x437CC0` a bare `ret`,
 `0x59FCA0`, `0x59FD80`), fuzzable on the vertex block at `0x7CA958` against a clone with
 stand-ins for `0x5A2BC0` and the device.
+
+## D21 — Ammonia sets a living member's HP to 1, then is refused (latent)
+
+**Found:** reading `ItemUse_Revive` `0x496F50` for the takeover, 2026-09-22
+([`item-use.md`](item-use.md) section 2). **Latent, Capcom's** (group P of
+the fourth round); the PSX twin `0x801E81F0` (START.EMI) does the same, in
+the same order.
+
+**The defect.** The handler of item table entry 13 (Ammonia, consumable
+`0x0E` by the US disc's table) stores 1 into the record's HP word *first*
+and only then calls `Char_ClearStatus(id, 0x4000, battle)`. On a member
+without the `0x4000` bit the clear answers 0, the handler answers 3 ("no
+effect"), and the field menu plays the refusal sound and keeps the item -
+but the member's HP is now 1. Ours keeps the order (control P26, D21
+"fixed", is refused in 1,000 rounds of 2,000).
+
+**Why it never shows:** the field menu's gate `0x57D9A0` offers a consumable
+only when bit 0 of its flags is set, and Ammonia's flags byte is `0x46`
+(every field heal has bit 0: `0xC7`, `0xD7`); so the menu never calls the
+handler. Only a caller that skips that gate would reach it - none is known
+(`ItemUse_Dispatch` has two callers, both in `0x58AAB0` after the gate). A
+fix would test the status first; it is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry if ever wanted.
+
+## D22 — The system choice dispatch is unbounded: ids 0x90 and up call the stack (latent)
+
+**Found:** reading `MsgBox_SystemChoice` `0x498A30` for group P,
+2026-09-22 ([`item-use.md`](item-use.md) section 5). **Latent, Capcom's**;
+the PSX `0x80152DB4` indexes the same way.
+
+**The defect.** For a message-box choice id of `0x80` or more,
+`MsgBox_ChoiceCommit` / `MsgBox_MenuCommit` call `0x498A30`, which stores
+sixteen handler addresses on its stack (ids `0x80..0x8F`) and calls
+`[esp + 4 * id - 0x200]` with no bound. Id `0x90` calls the word above the
+table - `0x498A30`'s own return address, so the commit's tail runs twice
+and the sub-state advances by two; `0x91` and up call further stack words
+(the commit's return address into the state dispatcher, then saved
+registers and the caller's frame), which unbalances the stack.
+
+**Why it never shows:** which ids the scripts give code `0x14` was not
+measured; only a script with a choice id of `0x90` or more reaches it. It is
+why `0x498A30` stays Capcom's: no faithful C++ reproduces a call through an
+arbitrary stack word, and bounding it is a divergence.
+
+## D23 — A stack of 99 Faerie Tiaras loses one when used (latent)
+
+**Found:** reading `ItemUse_FaerieTiara` `0x4975F0` and `Inventory_Add`
+`0x590BB0`, 2026-09-22 ([`item-use.md`](item-use.md) section 3). **By
+reading, Capcom's** (PSX `0x801E8B20` the same); not observed.
+
+**The defect.** The tiara's handler gives the item back -
+`Inventory_Add(0, 0x57, 1)` - and answers 0, after which the field menu
+takes one from the stack it was used from. `Inventory_Add` caps a stack at
+99 (it stores 99 and answers 0 when the sum passes it), so from 99 the add
+changes nothing and the menu's decrement leaves 98; from 98 and below the
+count is unchanged. **Why it barely matters:** whether a stack of 99 tiaras
+can be had in play is not known here (game facts are the owner's), and the
+loss is one, once.

@@ -201,6 +201,11 @@ for `Text_DrawAt` (`src/game/config_text.cpp`) and is not a change here.
   cloned (the copy's indirect call reaches the real table) and neither can be
   read clean without the area descriptors. Rule 4: not touched, not stubbed.
   Ours calls both by address.
+  **Taken over in the fourth round** (group P, 2026-09-22) as
+  `MsgBox_ChoiceCommit` / `MsgBox_MenuCommit`, with the sixteen targets of
+  `0x498A30`, which stays Capcom's: [`item-use.md`](item-use.md) section 5. The
+  call is `[[descriptor + 0x34] + 4 * id]` - the descriptor's +0x34 holds a
+  pointer to the area's table of choice handlers.
 - **`0x4987E0`**, the stepper's effect draw. Unread, 12 px, named in
   `src/game/text_advance.cpp` as the last unconverted pen of the dialogue
   path. Its argument handling is now settled (above) but its body is not

@@ -7392,3 +7392,650 @@ params = "int x, int y, int w, int h"
 status = "evidence"
 impl = "src/game/mode_flow.cpp"
 evidence = "disasm 2026-09-22, 0x3F bytes: a RECT of the four arguments' low words on the stack and Gfx_ClearImage(&rect, 0, 0) - a third 0 is pushed that Gfx_ClearImage does not read. Eight callers (Boot_Task, battle and menu code). hidden_b: 1 call."
+
+# ---------------------------------------------------------------------------
+# Group P of the fourth round (2026-09-22): the field menu's item effects -
+# the 33 pointer-reached handlers at 0x496CC0..0x49767A that pe_funcs.py
+# folded into 0x496AD0's 0xBAA bytes (they are ItemUse_Handlers' entries, not
+# title tasks), their dispatcher, the character-stat helpers under them, the
+# message box's two commits behind the area descriptors, the sixteen system
+# choice handlers, and the pad auto-repeat. docs/item-use.md.
+# Record offsets: the persistent record CharacterRecords + 0xA4 * id, or the
+# working copy 0x802DC0 + 0x14C * id (battle flag set) - both are the PSX
+# record's offsets + 4 (the PC name field is 9 bytes, not 5).
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x658DB0
+name = "ItemUse_Handlers"
+psx = 0x801ED1C8
+ctype = "void *"
+count = 34
+status = "evidence"
+evidence = "disasm 2026-09-22: ItemUse_Dispatch 0x497680 calls [0x658DB0 + 4 * ItemUse_HandlerIndex[item]](id, battle). 34 code pointers 0x496CC0..0x497670, 33 distinct: entries 24 and 30 are both 0x4975B0, where the PSX table (START.EMI, 0x801ED1C8, read by 0x801E8C1C) has two functions 0x801E8860 and 0x801E8AB8 of the same body. The dword after entry 33 is ItemUse_HandlerIndex."
+
+[[data]]
+pc = 0x658E38
+name = "ItemUse_HandlerIndex"
+psx = 0x801ED250
+ctype = "unsigned char"
+count = 0x5C
+status = "evidence"
+evidence = "disasm 2026-09-22: ItemUse_Dispatch reads byte [0x658E38 + item] as the index into ItemUse_Handlers. One byte per consumable id (92, NameTable_Consumables' count); the dispatcher reads any u8 index unchecked. Entries 24 and 29 are named by no consumable id 0..0x5B."
+
+[[func]]
+pc = 0x497680
+name = "ItemUse_Dispatch"
+psx = 0x801E8C1C
+ret = "unsigned char"
+params = "unsigned id, unsigned item, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x44 bytes: 2 if the flags byte NameTable_Consumables + 22 * (item & 0xFF) + 0x10 is 0; else ItemUse_Handlers[ItemUse_HandlerIndex[item & 0xFF]](id, battle), both dwords as pushed, and its al. The PSX 0x801E8C1C (START.EMI) the same over 14-byte records. Two callers, both in the field menu 0x58AAB0 (0x58B039 a party-wide item, 0x58B9C3 one member), battle 0 at both; each treats 0 and 4 as used (sound 0x104, the count decremented) and anything else as refused (sound 0x107). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496CC0
+name = "ItemUse_None"
+psx = 0x801E7E34
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 3 bytes: mov al, 2; ret. ItemUse_Handlers entry 0, the handler of every consumable without a field effect (45 of the 92 ids by ItemUse_HandlerIndex - Nothing, Dynamite, Weather Vane and 42 more; names from the sibling's names/items.toml, US disc). PSX 0x801E7E34 (table-anchored). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496CD0
+name = "ItemUse_HealHp20"
+psx = 0x801E7E3C
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 0x14, battle), then 0 if it answered non-zero, else 3 (neg / sbb / and 0xFD / add 3). Entry 1: Green Apple, Bread, Cheese, Pirana, Flying Fish. PSX 0x801E7E3C. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496CF0
+name = "ItemUse_HealHp40"
+psx = 0x801E7E70
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 0x28, battle), 0 or 3. Entry 2: Healing Herb, Trout. PSX 0x801E7E70. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496D10
+name = "ItemUse_HealHp100"
+psx = 0x801E7EA4
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 0x64, battle), 0 or 3. Entry 3: Vitamin, Beef Jerky, Rakda Meat. PSX 0x801E7EA4. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496D30
+name = "ItemUse_HealHpFull"
+psx = 0x801E7ED8
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 0, battle) - an amount of 0 is a full heal - 0 or 3. Entry 4: MultiVitamin. PSX 0x801E7ED8. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496D50
+name = "ItemUse_PartyHealHp100"
+psx = 0x801E7F0C
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x7B bytes: for i from 0 while i < Party_Count(0) (asked again after each member, compared as bytes): Char_HealHp(0x66972C[0x904062[i]], 0x64, battle), the answers ORed; 0 or 3. The member's id is written into the low byte of the id argument's own stack slot and that dword is pushed, so its upper bytes are the caller's. Entry 5: Vitamins. PSX 0x801E7F0C. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496DD0
+name = "ItemUse_HealAp20"
+psx = 0x801E7FA0
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealAp(id, 0x14, battle), 0 or 3. Entry 6: Wisdom Seed, Black Porgy. PSX 0x801E7FA0. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496DF0
+name = "ItemUse_HealAp100"
+psx = 0x801E7FD4
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealAp(id, 0x64, battle), 0 or 3. Entry 7: Wisdom Fruit. PSX 0x801E7FD4. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496E10
+name = "ItemUse_HealHp5Cure"
+psx = 0x801E8008
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x88 bytes: r = Char_HealHp(id, 5, battle); then with the record's status byte +0x10 (read after that call) having a bit of 0xA0: r |= 1 and, if Rand() % 100 < 30 (signed idiv), Char_ClearStatus(id, 0xA0, battle); 0 or 3. So the item counts as used on a member with 0xA0 whether or not the 30 percent cure happened. Entry 8: Croc Tear, Vinegar. PSX 0x801E8008. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496EA0
+name = "ItemUse_Cure80"
+psx = 0x801E8120
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x21 bytes: Char_ClearStatus(id, 0x80, battle), 0 or 3. Entry 9: Antidote. PSX 0x801E8120. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496ED0
+name = "ItemUse_Cure08"
+psx = 0x801E8154
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_ClearStatus(id, 8, battle), 0 or 3. Entry 10: Eye Drops. PSX 0x801E8154. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496EF0
+name = "ItemUse_Cure100"
+psx = 0x801E8188
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x21 bytes: Char_ClearStatus(id, 0x100, battle), 0 or 3. Entry 11: THE MOCHI. PSX 0x801E8188. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496F20
+name = "ItemUse_CureA0"
+psx = 0x801E81BC
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x21 bytes: Char_ClearStatus(id, 0xA0, battle), 0 or 3. Entry 12: Panacea. PSX 0x801E81BC. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496F50
+name = "ItemUse_Revive"
+psx = 0x801E81F0
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x58 bytes: the record's HP word +0x18 set to 1 FIRST, then Char_ClearStatus(id, 0x4000, battle), 0 or 3 - on a member without 0x4000 the HP is 1 and the item is refused (docs/known-defects.md D21; the field menu keeps it out by the item's flag bit 0, 0x57D9A0). Entry 13: Ammonia. PSX 0x801E81F0 the same order. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x496FB0
+name = "ItemUse_PartyRestore"
+psx = 0x801E8278
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x81 bytes: for each member as ItemUse_PartyHealHp100 walks them: Char_ClearStatus(m, 0xA0, battle) then Char_HealHp(m, 0, battle), every answer ORed; 0 or 3. Entry 14: Moon Tears, Whale. PSX 0x801E8278. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497040
+name = "ItemUse_MaxHpUp"
+psx = 0x801E832C
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddCap999(record + 0x40, 1) then (record + 0x20, 1) - the base and the effective max HP; 0 if either answered non-zero, else 4. Both count as used to the field menu. Entry 15: Life Shard. PSX 0x801E832C. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4970B0
+name = "ItemUse_MaxApUp"
+psx = 0x801E83C8
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddCap999 on +0x42 then +0x22, 0 or 4. Entry 16: Magic Shard. PSX 0x801E83C8. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497120
+name = "ItemUse_AtkUp"
+psx = 0x801E8464
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddClamped(record + 0x44, 1) then (+0x24, 1), each answer's low byte kept; 0 if either is non-zero, else 4. Stat_AddClamped answers 0 unless it clamped, so this is 4 for any stat below 999: used either way. Entry 17: Power Food. PSX 0x801E8464 (the sibling's +0x40 / +0x20 ATK). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497190
+name = "ItemUse_DefUp"
+psx = 0x801E8500
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddClamped on +0x46 then +0x26, 0 or 4 as ItemUse_AtkUp. Entry 18: Protein. PSX 0x801E8500. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497200
+name = "ItemUse_AgiUp"
+psx = 0x801E859C
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddClamped on +0x48 then +0x28, 0 or 4 as ItemUse_AtkUp. Entry 19: Swallow Eye. PSX 0x801E859C. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497270
+name = "ItemUse_IntUp"
+psx = 0x801E8638
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddClamped on +0x4A then +0x2A, 0 or 4 as ItemUse_AtkUp. Entry 20: Fish=head. PSX 0x801E8638. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4972E0
+name = "ItemUse_Stat2EUp"
+psx = 0x801E86D4
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x62 bytes: Stat_AddCap99 on the bytes +0x4E then +0x2E (the first of the byte-stat block and its base copy, PSX +0x4A / +0x2A), 0 or 4. Which stat the byte is, is not read here. Entry 21: Moxa. PSX 0x801E86D4. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497350
+name = "ItemUse_HpScaleUp"
+psx = 0x801E8770
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x75 bytes: 3 if HP +0x18 equals max HP +0x20; else if the byte +0x1E (Char_RecalcStats' max-HP scale, PSX +0x1A) is below 9: it + 1, Char_RecalcStats(record), HP = the max HP read again, 0; else HP below max: HP = max, 0; else 3. Entry 22: Mandrake. PSX 0x801E8770. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4973D0
+name = "ItemUse_HealHp1"
+psx = 0x801E882C
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 1, battle), 0 or 3. Entry 23: Jellyfish, Man=o=War. PSX 0x801E882C. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4973F0
+name = "ItemUse_HealHp80"
+psx = 0x801E8894
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 0x50, battle), 0 or 3. Entry 25: Bass, Sea Bass. PSX 0x801E8894. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497410
+name = "ItemUse_PartyHealHp80"
+psx = 0x801E88C8
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x7B bytes: ItemUse_PartyHealHp100 with 0x50. Entry 26: Black Bass. PSX 0x801E88C8. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497490
+name = "ItemUse_PartyHealHp240"
+psx = 0x801E895C
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x7E bytes: ItemUse_PartyHealHp100 with 0xF0. Entry 27: Barandy, Spearfish. PSX 0x801E895C. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497510
+name = "ItemUse_PartyCure80"
+psx = 0x801E89F0
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x7E bytes: the party walk of ItemUse_PartyHealHp100 with Char_ClearStatus(m, 0x80, battle). Entry 28: Blowfish. PSX 0x801E89F0. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497590
+name = "ItemUse_HealAp40"
+psx = 0x801E8A84
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealAp(id, 0x28, battle), 0 or 3. Entry 29, which no consumable id 0..0x5B names. PSX 0x801E8A84. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4975B0
+name = "ItemUse_HealAp5"
+psx = 0x801E8AB8
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealAp(id, 5, battle), 0 or 3. Entries 24 and 30 (the PSX has 0x801E8860 and 0x801E8AB8, one body; the PC linker kept one): RainbowTrout, Sea Bream. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4975D0
+name = "ItemUse_HealHp5"
+psx = 0x801E8AEC
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1E bytes: Char_HealHp(id, 5, battle), 0 or 3. Entry 31: Shaly Seed, Berries, Horseradish. PSX 0x801E8AEC. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4975F0
+name = "ItemUse_FaerieTiara"
+psx = 0x801E8B20
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x7C bytes, arguments unread: Inventory_Add(0, 0x57, 1, 0) - the item gives itself back - Game_Step + 1, byte 0x929F01 = 0xA, byte 0x905B61 = 0xB9 less one for each story flag 0xFF, 0xFE, .. 0xF6 that Flags_Test(0x904030, f) finds clear before the first set one (0xAF when all ten are clear); the dwords 0x802D74 / 0x802D78 (the leader's x and z) to 0x904148 / 0x90414C and Game_AreaNumber to 0x904150; 0. Entry 32: Faerie Tiara (id 0x57, the item it adds). The field menu offers it only where 0x536700(x, z) is not 0xAE (0x57D9A0). PSX 0x801E8B20 the same, its three stores in another order with no call between. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x497670
+name = "ItemUse_WaterJug"
+psx = 0x801E8C08
+ret = "unsigned char"
+params = "unsigned id, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0xA bytes: byte 0x90405F = 0xF0; 0. Entry 33: Water Jug. PSX 0x801E8C08. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590CE0
+name = "Char_HealHp"
+psx = 0x80165C70
+ret = "unsigned char"
+params = "unsigned id, unsigned amount, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x89 bytes: record = battle's low byte 0 ? CharacterRecords + 0xA4 * (id & 0xFF) : 0x802DC0 + 0x14C * (id & 0xFF). 0 if HP +0x18 equals max HP +0x20. Else HP += amount's low word (wrapping at 16 bits); HP = max when it is above max or the amount is 0; then Char_ClearStatus(id, 0x2000, battle) unless max / 4 is above HP; 1. PSX 0x80165C70 the same (call-anchored). 19 call sites. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590D70
+name = "Char_HealAp"
+psx = 0x80165D3C
+ret = "unsigned char"
+params = "unsigned id, unsigned amount, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x64 bytes, no calls: Char_HealHp on AP +0x1A and max AP +0x22, without the status. PSX 0x80165D3C. 5 call sites. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590DE0
+name = "Stat_AddCap999"
+psx = 0x80165E5C
+ret = "unsigned char"
+params = "unsigned short *stat, unsigned amount"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x27 bytes, no calls: 0 if the word is 999; else += amount's low word (wrapping), 999 if above, and 1. PSX 0x80165E5C. 6 call sites. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590E10
+name = "Stat_AddCap99"
+psx = 0x80165EA0
+ret = "unsigned char"
+params = "unsigned char *stat, unsigned amount"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x1D bytes, no calls: 0 if the byte is 99; else += amount's low byte (wrapping), 99 if above, and 1. PSX 0x80165EA0. 3 call sites. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590E30
+name = "Stat_AddClamped"
+psx = 0x80165EE4
+ret = "short"
+params = "unsigned short *stat, unsigned delta"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x4F bytes, no calls, delta as s16: positive - 0 if the word is 999, else add, and if the sum is above 999 (unsigned) store 999 and answer 999 - old; negative - 0 if the word is 0, else add, and if the sum is negative (s16) store 0 and answer -old; 0 for a delta of 0 and whenever nothing was clamped. Only ax is defined (the upper half is the pointer's or the caller's ecx). PSX 0x80165EE4, the sibling's Stat_AddClamped, the same. 38 call sites, none reading above ax. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590F60
+name = "Char_ClearStatus"
+psx = 0x801660DC
+ret = "unsigned char"
+params = "unsigned id, unsigned mask, unsigned battle"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x56 bytes, no calls: the record as Char_HealHp picks it; if the status word +0x10 has a bit of mask's low word, status &= ~mask and 1, else 0. PSX 0x801660DC (status +0x0C there). 14 call sites. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x590660
+name = "Char_RecalcStats"
+psx = 0x80165434
+ret = "void"
+params = "unsigned char *record"
+status = "evidence"
+evidence = "disasm 2026-09-22 (first 0x40 bytes only): copies the 32 bytes from record + 0x40 to record + 0x20, then 0x590FC0, 0x591190, 0x591490, 0x590800 on the record and a max-HP scale from the byte +0x1E. The sibling's Char_RecalcStats 0x80165434 (call-anchored). 0x1A0 bytes and five unowned callees: a recording stand-in in docs/item-use.md, not taken over. 24 call sites."
+
+[[func]]
+pc = 0x590BB0
+name = "Inventory_Add"
+psx = 0x80165AA4
+ret = "unsigned char"
+params = "unsigned category, unsigned item, unsigned count"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0xDE bytes, no calls: 0 for item or count 0; the id list 0x656B00[category] and count list 0x656B14[category], 128 slots; an existing stack adds count, capped at 99 (0 then, 1 otherwise); else the first slot with id 0 or count 0 takes it and the byte 0x903850 is 1; category 4 an id-only list. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites: a recording stand-in, not taken over (docs/item-use.md)."
+
+[[func]]
+pc = 0x4981C0
+name = "MsgBox_ChoiceCommit"
+psx = 0x80151494
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x6D bytes: with the choice id 0x7DEE64 below 0x80, call [[Area_Descriptors[Game_AreaNumber] + 0x34] + 4 * id]; else MsgBox_SystemChoice. Then window 1's state 0x803187 = 3, and with the message word 0x7DEE48 not 0xFFFF window 0's state 0x803163 = 1, 0x7DEE58 = 0 and the sub-state 0x7DEE41 + 1, else the sub-state 7 and 0x7DEE58 = 0. MsgBox_State4's entry 5 (docs/msgbox.md section 4). PSX 0x80151494 the same (scan of the boot EXE for lw 0x34 then jalr after sltiu 0x80). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x4983C0
+name = "MsgBox_MenuCommit"
+psx = 0x80151838
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x4C bytes: the same call as MsgBox_ChoiceCommit, then 0x7DEE58 = 0, window 1's state 3 and the sub-state 0x7DEE41 + 1 (read after the call). MsgBox_State5's entry 3. PSX 0x80151838. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498A30
+name = "MsgBox_SystemChoice"
+psx = 0x80152DB4
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x98 bytes: sixteen handler addresses 0x498AD0..0x498D00 stored on its own stack, then call [esp + 4 * id - 0x200] for the choice id 0x7DEE64 - unbounded: an id of 0x90 or more calls a stack word above the table (docs/known-defects.md D22). The PSX 0x80152DB4 copies the same sixteen from 0x80149ACC and indexes the same way. Left Capcom's (docs/item-use.md): no faithful C++ for the out-of-range ids. hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498AD0
+name = "MsgBox_SysChoice80"
+psx = 0x80152E2C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x2E bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x80. The message word 0x7DEE48 = the u16 at 0x658F08 + 2 * the cursor 0x7DEE67 read as s8, and with the cursor 0 the byte 0x929F0B = 1, with 1 = 0 (PSX 0x80148657). PSX 0x80152E2C (the PSX table 0x80149ACC entry 0). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498B00
+name = "MsgBox_SysChoice81"
+psx = 0x80152E8C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x2E bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x81. The message word 0x7DEE48 = the u16 at 0x658F0C + 2 * the cursor 0x7DEE67 read as s8, and with the cursor 0 the byte 0x903848 (MoveScript variable 3) = 0x1E, with 1 = 0x28. PSX 0x80152E8C (the PSX table 0x80149ACC entry 1). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498B30
+name = "MsgBox_SysChoice82"
+psx = 0x80152EDC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x2E bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x82. The message word 0x7DEE48 = the u16 at 0x658F10 + 2 * the cursor 0x7DEE67 read as s8, and with the cursor 0 the byte 0x903848 = 0x1E, with 1 = 0x32. PSX 0x80152EDC (the PSX table 0x80149ACC entry 2). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498B60
+name = "MsgBox_SysChoice83"
+psx = 0x80152F2C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x2E bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x83. The message word 0x7DEE48 = the u16 at 0x658F14 + 2 * the cursor 0x7DEE67 read as s8, and with the cursor 0 the byte 0x903848 = 0x3C, with 1 = 0x46. PSX 0x80152F2C (the PSX table 0x80149ACC entry 3). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498B90
+name = "MsgBox_SysChoice84"
+psx = 0x80152F7C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x2E bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x84. The message word 0x7DEE48 = the u16 at 0x658F18 + 2 * the cursor 0x7DEE67 read as s8, and with the cursor 0 the byte 0x903848 = 0x1E, with 1 = 0x32. PSX 0x80152F7C (the PSX table 0x80149ACC entry 4). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498BC0
+name = "MsgBox_SysChoice85"
+psx = 0x80152FCC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x85. The message word 0x7DEE48 = the u16 at 0x658F1C + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80152FCC (the PSX table 0x80149ACC entry 5). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498BE0
+name = "MsgBox_SysChoice86"
+psx = 0x80152FF8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x86. The message word 0x7DEE48 = the u16 at 0x658F20 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80152FF8 (the PSX table 0x80149ACC entry 6). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498C00
+name = "MsgBox_SysChoice87"
+psx = 0x80153024
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x87. The message word 0x7DEE48 = the u16 at 0x658F24 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80153024 (the PSX table 0x80149ACC entry 7). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498C20
+name = "MsgBox_SysChoice88"
+psx = 0x80153050
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x88. The message word 0x7DEE48 = the u16 at 0x658F28 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80153050 (the PSX table 0x80149ACC entry 8). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498C40
+name = "MsgBox_SysChoice89"
+psx = 0x8015307C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x89. The message word 0x7DEE48 = the u16 at 0x658F2C + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x8015307C (the PSX table 0x80149ACC entry 9). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498C60
+name = "MsgBox_SysChoice8A"
+psx = 0x801530A8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x8A. The message word 0x7DEE48 = the u16 at 0x658F30 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x801530A8 (the PSX table 0x80149ACC entry 10). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498C80
+name = "MsgBox_SysChoice8B"
+psx = 0x801530D4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x8B. The message word 0x7DEE48 = the u16 at 0x658F34 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x801530D4 (the PSX table 0x80149ACC entry 11). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498CA0
+name = "MsgBox_SysChoice8C"
+psx = 0x80153100
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x8C. The message word 0x7DEE48 = the u16 at 0x658F38 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80153100 (the PSX table 0x80149ACC entry 12). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498CC0
+name = "MsgBox_SysChoice8D"
+psx = 0x8015312C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x8D. The message word 0x7DEE48 = the u16 at 0x658F3C + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x8015312C (the PSX table 0x80149ACC entry 13). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498CE0
+name = "MsgBox_SysChoice8E"
+psx = 0x80153158
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x8E. The message word 0x7DEE48 = the u16 at 0x658F40 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80153158 (the PSX table 0x80149ACC entry 14). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x498D00
+name = "MsgBox_SysChoice8F"
+psx = 0x80153184
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x17 bytes, no calls: MsgBox_SystemChoice's entry for the choice id 0x8F. The message word 0x7DEE48 = the u16 at 0x658F44 + 2 * the cursor 0x7DEE67 read as s8, nothing else. PSX 0x80153184 (the PSX table 0x80149ACC entry 15). hidden_b: 0 calls."
+
+[[func]]
+pc = 0x461EB0
+name = "Input_AutoRepeat"
+psx = 0x8014E534
+ret = "unsigned"
+params = "unsigned pressed"
+status = "evidence"
+impl = "src/game/item_use.cpp"
+evidence = "disasm 2026-09-22, 0x48 bytes, no calls: with the argument's low word non-zero (callers pass Input_Pressed masked to the directions they want), the countdown word 0x7E1BE0 = 0xC, the latch word 0x7E01B8 = Input_Held, and the answer is the dword at Input_Held (Input_Previous above it); else, if the latch shares a bit with Input_Held and the countdown reaches 0 on its decrement, the countdown 3, the latch Input_Held and the same dword; otherwise that dword with its low word 0. PSX 0x8014E534 (call-anchored). 104 call sites (E8 scan), among them MsgBox_ChoiceInput and MsgBox_MenuInput; several keep the whole eax (mov esi, eax) and test bits of the low word only. hidden_b: 0 calls."
