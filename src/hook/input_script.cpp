@@ -441,11 +441,117 @@ void __cdecl ScriptedLatch() {
     Input_Pressed = static_cast<unsigned short>((g_prev ^ g_cur) & g_cur);
 }
 
+// --- Recording (BOF3X_RECORD) -------------------------------------------
+//
+// The same latch, the other way round: the player plays, and each frame's pad
+// word is written out as a recipe. The word is sampled once, at the first
+// latch of a new frame, and then held for the rest of that frame exactly as
+// playback holds a recipe's word - so what the game saw while recording is
+// what it will see when the recipe is played back, edge for edge. A tap
+// shorter than the gap between two frames' first latches is not seen by the
+// game either; that is the price of the guarantee. Runs of one word become
+// `hold BUTTONS N` or `wait N`; F12 writes `shot recN 1 [BUTTONS]` in place of
+// its frame, so the shot costs no frame and the recipe keeps its timing.
+
+FILE* g_rec = nullptr;
+unsigned short g_run_word = 0;
+unsigned g_run = 0;
+unsigned g_shots = 0;
+bool g_f12 = false;
+
+void WriteButtons(unsigned short word) {
+    bool first = true;
+    for (const Button& b : kButtons)
+        if (word & b.bit) {
+            std::fprintf(g_rec, "%s%s", first ? "" : "+", b.name);
+            first = false;
+        }
+}
+
+void FlushRun() {
+    if (g_run == 0) return;
+    if (g_run_word == 0) {
+        std::fprintf(g_rec, "wait %u\n", g_run);
+    } else {
+        std::fprintf(g_rec, "hold ");
+        WriteButtons(g_run_word);
+        std::fprintf(g_rec, " %u\n", g_run);
+    }
+    std::fflush(g_rec);
+    g_run = 0;
+}
+
+void Record(unsigned short word) {
+    // F12 counts only while the game's own window is in front.
+    DWORD fg_pid = 0;
+    if (HWND fg = GetForegroundWindow()) GetWindowThreadProcessId(fg, &fg_pid);
+    const bool f12 = fg_pid == GetCurrentProcessId() && (GetAsyncKeyState(VK_F12) & 0x8000) != 0;
+    const bool shot = f12 && !g_f12;
+    g_f12 = f12;
+    if (shot) {
+        FlushRun();
+        std::fprintf(g_rec, "shot rec%u 1", ++g_shots);
+        if (word) {
+            std::fprintf(g_rec, " ");
+            WriteButtons(word);
+        }
+        std::fprintf(g_rec, "   # recipe frame %u\n", g_frame);
+        std::fflush(g_rec);
+        Log("input       record: shot rec%u at recipe frame %u", g_shots, g_frame);
+        LogFlush();
+        return;
+    }
+    if (g_run && word != g_run_word) FlushRun();
+    g_run_word = word;
+    ++g_run;
+}
+
+void __cdecl RecordingLatch() {
+    Input_Latch();
+    const std::uint32_t frame = Frame_Counter;
+    if (!g_seen_frame || frame != g_last_frame) {
+        g_seen_frame = true;
+        g_last_frame = frame;
+        g_prev = g_cur;
+        g_cur = Input_Held;   // the player's word, as Capcom's latch just read it
+        Record(g_cur);
+        ++g_frame;
+    }
+    Input_Held = g_cur;
+    Input_Previous = g_prev;
+    Input_Pressed = static_cast<unsigned short>((g_prev ^ g_cur) & g_cur);
+}
+
+void RecordStart(const char* path) {
+    g_rec = std::fopen(path, "w");
+    if (!g_rec) Fatal("BOF3X_RECORD: cannot open %s for writing", path);
+    char lang[16] = "(unset)", filter[16] = "(unset)";
+    GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    GetEnvironmentVariableA("BOF3X_FILTER", filter, sizeof filter);
+    std::fprintf(g_rec,
+                 "# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from\n"
+                 "# recipe frame 0. BOF3X_LANG=%s BOF3X_FILTER=%s - play it back with the same\n"
+                 "# language, since text timing differs between them. F12 wrote the shots.\n",
+                 lang, filter);
+    std::fflush(g_rec);
+    Log("input       recording the pad to %s (F12 = shot)", path);
+    constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
+    constexpr std::uint32_t kInputLatch = 0x4FC6A0;
+    RetargetCall("InputRecord", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch));
+}
+
 }  // namespace
 
 void InputScript_Start() {
     char path[MAX_PATH];
+    char rec[MAX_PATH];
+    const DWORD r = GetEnvironmentVariableA("BOF3X_RECORD", rec, sizeof rec);
     const DWORD n = GetEnvironmentVariableA("BOF3X_INPUT", path, sizeof path);
+    if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
+    if (r > 0 && r < sizeof rec) {
+        RecordStart(rec);
+        return;
+    }
     if (n == 0 || n >= sizeof path) return;
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
