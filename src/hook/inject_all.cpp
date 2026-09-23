@@ -64,6 +64,7 @@
 #include "game/area_entry.h"
 #include "game/glyph_draw.h"
 #include "game/yes_no_layout.h"
+#include "game/item_use.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -139,6 +140,8 @@ void InjectAll() {
     GlyphDraw_Inject();         // every call of its clones re-aimed at a recorder, the device a fake:
                                 // order does not matter
     YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
+    ItemUse_Inject();           // every call of its clones re-aimed at a recorder, the handler table and
+                                // four area descriptors swapped: order does not matter
     InjectReport();
 }
 
