@@ -26,6 +26,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/sprt_draw.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "render/render_d3d11.h"
@@ -61,6 +62,7 @@ constexpr U kModeLists = 0x6BE1E8, kModeListsBytes = 0x810;
 constexpr U kDirectDraw = 0x7CC334, kDirect3D = 0x7CC34C, kClipper = 0x7CC348, kZBuffer = 0x7CC340;
 constexpr U kScreenRight = 0x66B710, kScreenBottom = 0x66B714, kModeBpp = 0x7CADE0;
 constexpr U kScaleX = 0x7C9F4C, kScaleY = 0x7C9F48;
+constexpr U kMaxScale = 8;   // BOF3X_SCALE's range since the backend (render-backend.md)
 constexpr U kDeviceDesc = 0x7CC238, kDeviceDescBytes = 0xFC;
 constexpr U kPrimary = 0x7CC338, kBackBuffer = 0x7CC33C, kStage = 0x7CC344;
 constexpr U kDevice = 0x7CC350, kViewport = 0x7CC354, kMaterial = 0x7CC358, kMaterialHandle = 0x6C3A40;
@@ -127,16 +129,32 @@ void FillFormat(U record, const Format& f, U rank) {
 
 bool g_backend_up;
 
-render::Options ReadOptions(HWND hwnd) {
+// The largest k in 1..kMaxScale whose 320k x 240k fits cw x ch; 1 if none.
+U FitScale(U cw, U ch) {
+    U k = kMaxScale;
+    while (k > 1 && (320 * k > cw || 240 * k > ch)) --k;
+    return k;
+}
+
+// DIVERGENCE DIV-0036: the render target is 320k x 240k, k chosen once at
+// set-up (display-overhaul.md 4b; the owner's rule, 2026-09-23): a borderless
+// window takes the largest k whose target fits its client - the monitor - and
+// a window takes the launcher's size, BOF3X_SCALE, 2 when unset. A resize or
+// F8 later changes only the present's integer scale of that target.
+render::Options ReadOptions(HWND hwnd, bool borderless) {
     render::Options o = {};
     o.hwnd = hwnd;
     o.scale = 1;
     char text[32];
-    U k = 2;
-    if (GetEnvironmentVariableA("BOF3X_SCALE", text, sizeof text) > 0) {
-        k = 0;
-        for (const char* p = text; *p >= '0' && *p <= '9'; ++p) k = k * 10 + static_cast<U>(*p - '0');
-        if (k < 1 || k > 8) bof3::Fatal("BOF3X_SCALE=%s: an integer 1..8", text);
+    U k = DisplaySetup_WindowedScale();
+    if (borderless) {
+        RECT client = {};
+        GetClientRect(hwnd, &client);
+        k = FitScale(static_cast<U>(client.right - client.left), static_cast<U>(client.bottom - client.top));
+        bof3::Log("DIV-0036    scale %u: the largest that fits the borderless client %ld x %ld", k,
+                  client.right - client.left, client.bottom - client.top);
+    } else if (k != 2) {
+        bof3::Log("DIV-0036    scale %u: the window's size setting (BOF3X_SCALE)", k);
     }
     o.logical_w = 320 * k;
     o.logical_h = 240 * k;
@@ -197,7 +215,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     PutLong(kRenderFlags, 2);   // bit 1: the device allows windowed
 
     // 2.6 the mode and the scale: the logical picture is the target's size
-    const render::Options options = ReadOptions(hwnd);
+    const render::Options options = ReadOptions(hwnd, *fullscreen != 0);
     if (!g_backend_up) {
         render::InitShim(256 * 1024, 32 * 1024, 8 * 1024 * 1024);
         render::InitD3d11(options);
@@ -209,6 +227,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     PutLong(kModeBpp, kModeBits);
     PutFloat(kScaleX, static_cast<float>(width / 320.0));
     PutFloat(kScaleY, static_cast<float>(height / 240.0));
+    SprtDraw_SetScale(width / 320);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
     Zero(kDeviceDesc, kDeviceDescBytes);
     PutLong(kDeviceDesc + kDescTextureCaps, kTextureCaps);
     PutLong(kDeviceDesc + kDescMinW, kMinTexture);
@@ -267,5 +286,16 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
               options.point_filter ? "point" : "linear", *device);
     return 0;
 }
+
+unsigned DisplaySetup_WindowedScale() {
+    char text[32];
+    if (GetEnvironmentVariableA("BOF3X_SCALE", text, sizeof text) == 0) return 2;
+    U k = 0;
+    for (const char* p = text; *p >= '0' && *p <= '9'; ++p) k = k * 10 + static_cast<U>(*p - '0');
+    if (k < 1 || k > kMaxScale) bof3::Fatal("BOF3X_SCALE=%s: an integer 1..%u", text, kMaxScale);
+    return k;
+}
+
+unsigned DisplaySetup_TargetScale() { return g_backend_up ? render::TargetWidth() / 320 : 0; }
 
 void DisplaySetup_Inject() { BOF3_INJECT(Display_Setup); }

@@ -98,6 +98,14 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         } else if (key == "show_launcher") {
             if (value == "0") cfg.show_launcher = false;
             else if (value == "1") cfg.show_launcher = true;
+        } else if (key == "background") {
+            if (value == "0") cfg.background = false;
+            else if (value == "1") cfg.background = true;
+        } else if (key == "screen") {
+            if (value == "crt") cfg.crt = true;
+            else if (value == "clean") cfg.crt = false;
+        } else if (key == "scale") {
+            if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') cfg.scale = value[0] - '0';
         }
         // An unknown key is left alone rather than rejected: a newer build's
         // file must not stop an older launcher.
@@ -116,9 +124,15 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
            "\r\n";
     out += "# linear (the port's own) | point (DIV-0012)\r\n";
     out += std::string("filter=") + (cfg.filter == Filter::kPoint ? "point" : "linear") + "\r\n";
-    out += "# fullscreen | windowed   -> line 1 of the game's BOF3.CFG\r\n";
+    out += "# clean | crt (scanlines, mask and glow, DIV-0037)\r\n";
+    out += std::string("screen=") + (cfg.crt ? "crt" : "clean") + "\r\n";
+    out += "# fullscreen (a borderless window, DIV-0032) | windowed   -> line 1 of the game's BOF3.CFG\r\n";
     out += std::string("display=") + (cfg.display == Display::kWindowed ? "windowed" : "fullscreen") +
            "\r\n";
+    out += "# 2..8: the window's picture, 320 x 240 times this (DIV-0036); fullscreen takes the largest that fits\r\n";
+    out += "scale=" + std::to_string(cfg.scale) + "\r\n";
+    out += "# 1 keeps the game running while its window is not in front (DIV-0033) | 0 the original's freeze\r\n";
+    out += std::string("background=") + (cfg.background ? "1" : "0") + "\r\n";
     out += "# 1 (shipped default) | 0 -> line 2 of the game's BOF3.CFG\r\n";
     out += std::string("renderer=") + (cfg.renderer ? "1" : "0") + "\r\n";
     out += "# 0 hides this launcher's dialog and starts the game straight away\r\n";
@@ -136,6 +150,17 @@ void ConfigApplyEnvironment(const Config& cfg) {
     if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
         cfg.filter == Filter::kPoint)
         SetEnvironmentVariableW(L"BOF3X_FILTER", L"point");
+
+    if (GetEnvironmentVariableW(L"BOF3X_BACKGROUND", existing, 64) == 0 && !cfg.background)
+        SetEnvironmentVariableW(L"BOF3X_BACKGROUND", L"0");
+
+    if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && cfg.crt)
+        SetEnvironmentVariableW(L"BOF3X_PRESENT", L"crt");
+
+    if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale != 2) {
+        const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};
+        SetEnvironmentVariableW(L"BOF3X_SCALE", k);
+    }
 
     // Neither is set for its default value: an unset variable is exactly what
     // the DLL treats as "the original's behaviour", and leaving it unset keeps

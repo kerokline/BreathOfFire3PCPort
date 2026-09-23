@@ -48,17 +48,24 @@ void Populate(HWND dlg, const DialogState& state) {
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
-    Select(dlg, IDC_FILTER, cfg.filter == Filter::kPoint ? 1 : 0);
+    AddItem(dlg, IDC_FILTER, L"CRT - scanlines and glow");
+    Select(dlg, IDC_FILTER, cfg.crt ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
 
-    AddItem(dlg, IDC_DISPLAY, L"Fullscreen");
-    AddItem(dlg, IDC_DISPLAY, L"Windowed");
+    AddItem(dlg, IDC_DISPLAY, L"Fullscreen - borderless window");
+    AddItem(dlg, IDC_DISPLAY, L"Windowed - resizable, F8 toggles");
     Select(dlg, IDC_DISPLAY, cfg.display == Display::kWindowed ? 1 : 0);
+    CheckDlgButton(dlg, IDC_BACKGROUND, cfg.background ? BST_CHECKED : BST_UNCHECKED);
 
-    AddItem(dlg, IDC_RESOLUTION, L"640 x 480");
-    Select(dlg, IDC_RESOLUTION, 0);
+    // DIV-0036: item i is scale i + 2.
+    for (int k = 2; k <= 8; ++k) {
+        wchar_t item[48];
+        swprintf(item, 48, L"%d x %d (%dx)%ls", 320 * k, 240 * k, k, k == 2 ? L" - original" : L"");
+        AddItem(dlg, IDC_RESOLUTION, item);
+    }
+    Select(dlg, IDC_RESOLUTION, cfg.scale - 2);
 
-    AddItem(dlg, IDC_RENDERER, L"Default");
-    AddItem(dlg, IDC_RENDERER, L"Alternate");
+    AddItem(dlg, IDC_RENDERER, L"Direct3D (default)");
+    AddItem(dlg, IDC_RENDERER, L"Software");
     Select(dlg, IDC_RENDERER, cfg.renderer ? 0 : 1);
 
     CheckDlgButton(dlg, IDC_SHOW, cfg.show_launcher ? BST_CHECKED : BST_UNCHECKED);
@@ -66,9 +73,14 @@ void Populate(HWND dlg, const DialogState& state) {
 
 void ReadBack(HWND dlg, Config& cfg) {
     cfg.language = Selected(dlg, IDC_LANGUAGE) == 1 ? Language::kEnglish : Language::kOriginal;
-    cfg.filter = Selected(dlg, IDC_FILTER) == 1 ? Filter::kPoint : Filter::kLinear;
+    const int look = Selected(dlg, IDC_FILTER);
+    cfg.filter = look >= 1 ? Filter::kPoint : Filter::kLinear;
+    cfg.crt = look == 2;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
     cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
+    const int scale = Selected(dlg, IDC_RESOLUTION) + 2;
+    if (scale >= 2 && scale <= 8) cfg.scale = scale;
+    cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
     cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;
 }
 

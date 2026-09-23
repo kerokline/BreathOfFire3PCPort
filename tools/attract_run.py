@@ -79,7 +79,20 @@ def main():
     ap.add_argument('--filter', default='linear',
                     help="value for BOF3X_FILTER: \"linear\" (default, the port's own) or \"point\"")
     ap.add_argument('--no-kill', action='store_true')
+    ap.add_argument('--no-front', action='store_true',
+                    help='do not keep the game window in front: DIV-0033 runs it unfocused, '
+                         'and the oracle reads memory, not pixels')
+    ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
+                    help='another copy of the launcher, with its own bof3x.ini and bof3x.dll beside it')
     a = ap.parse_args()
+
+    # DIV-0033 lives in our WndProc: under Capcom's the loop freezes the moment
+    # the window is not in front, and an unfocused run records 0 logic frames
+    # (HANDOFF Traps, wm1).
+    names = (a.original or '').split(',')
+    capcom_wndproc = 'Game_WndProc' in names or ('*' in names and '-Game_WndProc' not in names)
+    if a.no_front and capcom_wndproc:
+        sys.exit('--no-front with Capcom\'s WndProc: the game freezes unfocused; hold the foreground instead')
 
     if game_pid():
         if a.no_kill:
@@ -92,7 +105,8 @@ def main():
         env['BOF3X_ORIGINAL'] = a.original
     env['BOF3X_LANG'] = a.lang
     env['BOF3X_FILTER'] = a.filter
-    launcher = os.path.join(ROOT, 'build', 'bof3x-launcher.exe')
+    env['BOF3X_PRESENT'] = 'clean'   # not the owner's screen=crt (DIV-0037)
+    launcher = a.launcher
     # --no-config: an oracle run must not stop on the settings dialog, and must
     # take the settings file's values without a human touching them
     # (docs/launcher-settings.md section 4).
@@ -100,8 +114,9 @@ def main():
         sys.exit('launcher failed')
 
     stop = threading.Event()
-    front = threading.Thread(target=keep_in_front, args=(stop,), daemon=True)
-    front.start()
+    if not a.no_front:
+        front = threading.Thread(target=keep_in_front, args=(stop,), daemon=True)
+        front.start()
     try:
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'attract_watch.py'),
                         '--minutes', str(a.minutes), '--wait', '30', '--out', a.out], check=True)

@@ -16,21 +16,22 @@ BEGIN
     COMBOBOX        IDC_LANGUAGE, 84, 22, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "", IDC_LANGNOTE, 84, 37, 186, 9
 
-    LTEXT           "&Texture filter:", -1, 16, 52, 62, 9
+    LTEXT           "&Look:", -1, 16, 52, 62, 9
     COMBOBOX        IDC_FILTER, 84, 50, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     LTEXT           "&Display:", -1, 16, 70, 62, 9
     COMBOBOX        IDC_DISPLAY, 84, 68, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Resolution:", -1, 16, 88, 62, 9
-    COMBOBOX        IDC_RESOLUTION, 84, 86, 186, 80,
-                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT           "Fixed at 640x480 for now - see docs/IDEAS.md I8.", -1, 84, 101, 196, 9
+    LTEXT           "&Window size:", -1, 16, 88, 62, 9
+    COMBOBOX        IDC_RESOLUTION, 84, 86, 186, 100, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Windowed only; fullscreen takes the largest that fits.", -1, 84, 101, 196, 9
 
     LTEXT           "Re&nderer:", -1, 16, 118, 62, 9
     COMBOBOX        IDC_RENDERER, 84, 116, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Which mode is which is not established; change only to test.",
-                    -1, 84, 131, 186, 9
+    LTEXT           "Only Capcom's set-up reads it; bof3x always draws with Direct3D 11.",
+                    -1, 84, 131, 196, 9
+
+    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 14, 142, 250, 10
 
     AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 162, 200, 10
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",

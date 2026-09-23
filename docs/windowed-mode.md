@@ -1,6 +1,12 @@
 # Windowed mode — it is built in
 
-**Status:** STABLE (verified 2026-09-19)
+**Status:** STABLE (verified 2026-09-19). **Superseded in part 2026-09-23:**
+WinMain, WndProc and `Fmv_Play` are ours ([`window-modes.md`](window-modes.md)),
+so what follows describes Capcom's window - which still runs under
+`BOF3X_ORIGINAL=Game_WinMain,Game_WndProc,Fmv_Play`. The mechanisms
+(`BOF3.CFG`, F8, `Cfg_Fullscreen`) are kept; "fullscreen" is now a
+borderless window (DIV-0032), the freeze below is off by default
+(DIV-0033), and its replay is bounded (DIV-0034).
 
 The port launches exclusive-fullscreen by default, but it ships a windowed mode
 and a runtime toggle. Nothing here is a patch or a divergence: it is the
@@ -49,8 +55,12 @@ window creation), `0x4fc7b4:42` and `0x4fc836:12` (WndProc key handling);
 - WndProc `0x4FC6F0` (`lpfnWndProc`, stored at `0x4FCB98`; corrected 2026-09-21 from `0x4FC6A0`, the function before it - [`attract-remaining.md`](attract-remaining.md) §3), `WM_KEYDOWN`: `0x77` F8 → `Cfg_Fullscreen ^= 1`,
   `SetWindowPos`, `0x5A5160(hwnd, &Cfg_Fullscreen, &0x65DA48, 0)`. `0x76` F7 →
   the same re-init, then `0x5A6690(value)`. `0x78` F9 toggles byte `0x6BC63A`
-  around calls into the sound module (`0x587B90` / `0x587C30`) — a pause, by
-  shape; unread.
+  around calls into the sound module (`0x587B90` / `0x587C30`) — a pause.
+  Read 2026-09-23 (`Game_WndProc` in `symbols.toml`): F9 pauses (the loop
+  draws two text lines instead of running the tasks); any key resumes; a
+  second F9 while paused quits to the title in game and quits the program
+  on the title. F11 toggles a frame-rate overlay, F12 writes a save
+  (`Save_QuickWrite` `0x5809C0`) and shows "Save OK".
 
 ## Focus loss: the engine stops too — and then fast-forwards
 

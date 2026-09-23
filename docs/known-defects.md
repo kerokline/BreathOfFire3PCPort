@@ -66,7 +66,10 @@ behaviour by construction — our code does not touch window creation.
 
 Carried from [`STATUS.md`](STATUS.md) step 0: reported, **not yet reproduced
 or recorded.** The exclusive-fullscreen `SetDisplayMode(640, 480, 16)` for FMV
-does work on this machine.
+does work on this machine. **Moot since 2026-09-23:** no exclusive mode is
+set anywhere - the display's by DIV-0031, the FMV's by DIV-0035 - and the
+set-up's windowed-to-fullscreen fallback is gone with `Display_Setup`. It
+can only recur under `BOF3X_ORIGINAL=Display_Setup` or `=Fmv_Play`.
 
 ## D4 — Crash: the image-unpack buffer overflows into the draw structures
 

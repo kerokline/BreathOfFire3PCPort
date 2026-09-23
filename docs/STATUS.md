@@ -269,7 +269,23 @@ What is established:
    and widescreen. Its first step, a Direct3D 11 backend behind DirectX 6's
    own objects, runs the game as of 2026-09-23
    ([`render-backend.md`](render-backend.md), DIV-0031); the PSP release's
-   16:9 is being mined in parallel for how Capcom did it.
+   16:9 was mined in parallel for how Capcom did it
+   ([`psp-widescreen.md`](psp-widescreen.md)). **Its second step landed the
+   same afternoon: WinMain, WndProc and the FMV player are ours** (796 ours;
+   [`window-modes.md`](window-modes.md)) - a resizable window or a
+   borderless one the size of the monitor with no mode-set anywhere
+   (DIV-0032), the game running while unfocused with the pads zeroed
+   (DIV-0033, the owner's I12), the frame debt clamped (DIV-0034), the FMVs
+   through MCI into the window at an integer scale (DIV-0035, the owner's
+   choice over a bundled decoder); the oracle and memory dump through the
+   batch `wm1` with the window never in front, the frame hash's new
+   reference after a review the same evening found why every traced
+   all-original run had ended 16 s in (the tracer's single step saved by
+   a `pushfd` on Capcom's software-renderer set-up; `wm1b`: original-vs-original identical on all 10,313 frames, original-vs-ours on every logic frame).
+   **Step 4, integer scaling, that evening** (DIV-0036): a window's picture
+   is the launcher's "Window size" (2x..8x of 320 x 240), a borderless
+   window takes the largest multiple that fits the monitor. The owner's eye
+   on the borderless window and the new sizes is owed.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.

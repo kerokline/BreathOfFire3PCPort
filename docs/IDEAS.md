@@ -434,6 +434,13 @@ has the fault offset — enough to diagnose D4 without any tool of ours.
 
 ## I12 — Let the game run while its window is not in front
 
+**Built 2026-09-23 as DIV-0033** with the WinMain / WndProc takeover
+([`window-modes.md`](window-modes.md)): on by default, the pads read zero
+while the window is not in front, `BOF3X_BACKGROUND=0` or the launcher's box
+restores the freeze; the debt clamp beside it is DIV-0034. The harness's
+`attract_run.py --no-front` uses it. What is below is the ask and the
+reading it was built from.
+
 **Ask (2026-09-19):** owner, after an evening of attract-oracle and memory-dump
 runs that each took the PC away for two to five minutes: "It would be nice if
 the game ran without requiring being in focus … just to be able to do these
@@ -704,3 +711,32 @@ Revisit only if the skipped-draw cadence looks poor.
 `GetAsyncKeyState` from `Gfx_BeginFrame`), write the double on a held key,
 and measure pace with `attract_run.py` as for DIV-0022. It gets its own
 ledger entry.
+
+## I18 — F12 before shipping: disable it, or make it a true quicksave
+
+**Ask (2026-09-23):** the owner, having tried F12: "I kind of like the
+function. for now, lets leave it in, but probably disable it / replace it
+with a true quicksave before shipping".
+**Kind:** game behaviour   **Feasibility:** HIGH to disable, MEDIUM to
+replace   **Gated on:** I13 for the true quicksave.
+
+**What F12 is** (`Save_QuickWrite` `0x5809C0`, [`save-files.md`](save-files.md)):
+the PC port's hidden key for an ordinary save, written anywhere, always to
+slot 0 (`BISLPS00.DAT`), with no confirmation. Tested by the owner: pressed
+in a battle, the save loads in the field where the party stood, out of
+combat - the save block has no battle state, so it doubles as an escape.
+Overwrites slot 0 silently (and the input recorder's F12 shot writes one).
+
+**Before shipping, one of:**
+
+- **Disable it** - a line in our WndProc (`src/game/win_main.cpp`), a
+  ledger entry.
+- **A true quicksave** - F12 takes a snapshot of the running game and a
+  second key restores it, battles and events included. That is I13's save
+  state offered to players: memory regions plus the display and sound
+  state, restored between logic frames. Its own slot, never the player's
+  save files.
+
+In between, cheaper steps if the owner wants them: refuse it in battle
+and events, give it a slot of its own, draw "Save OK" on screen (it only
+reaches the log since DIV-0032).

@@ -17,6 +17,7 @@
 #include <cstring>
 
 #include "hook/log.h"
+#include "render/crt.h"
 
 namespace render {
 namespace {
@@ -50,6 +51,7 @@ ID3D11SamplerState* g_sampler_present_point;
 ID3D11SamplerState* g_sampler_present_linear;
 ID3D11RasterizerState* g_raster;
 ID3D11BlendState* g_blend_off;
+bool g_crt;   // DIV-0037: the present draws through crt.cpp
 
 struct BlendEntry {
     U src, dst;
@@ -111,7 +113,7 @@ struct PSIn { float4 pos : SV_Position; float4 diffuse : COLOR0; float4 specular
 PSIn VS(VSIn i) {
     PSIn o;
     float w = i.pos.w > 0.0 ? 1.0 / i.pos.w : 1.0;
-    float2 ndc = float2((i.pos.x + 0.5) / target_size.x * 2.0 - 1.0, 1.0 - (i.pos.y + 0.5) / target_size.y * 2.0);
+    float2 ndc = float2((i.pos.x + PIXEL_OFFSET) / target_size.x * 2.0 - 1.0, 1.0 - (i.pos.y + PIXEL_OFFSET) / target_size.y * 2.0);
     o.pos = float4(ndc * w, saturate(i.pos.z) * w, w);
     o.diffuse = i.diffuse;
     o.specular = i.specular;
@@ -157,10 +159,30 @@ PSIn VS(uint id : SV_VertexID) {
 float4 PS(PSIn i) : SV_Target { return float4(tex.Sample(smp, i.uv).rgb, 1.0); }
 )";
 
+// The scene shader's pixel-centre offset: 0.5, Direct3D 6's integer centres on
+// Direct3D 11's half-integer ones. BOF3X_PIXEL_OFFSET replaces it for an
+// experiment - HANDOFF's edge-pixel A/B tries 0.498046875 (0.5 - 1/512, the
+// D3D8-to-9 wrappers' value) against rb1's 27 captures that differ at edges.
+// Digits, one point and a sign only; anything else is refused.
+char g_pixel_offset[24] = "0.5";
+
+void ReadPixelOffset() {
+    char text[24];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_PIXEL_OFFSET", text, sizeof text);
+    if (n == 0) return;
+    if (n >= sizeof text) bof3::Fatal("BOF3X_PIXEL_OFFSET: too long");
+    for (const char* p = text; *p; ++p)
+        if (!((*p >= '0' && *p <= '9') || *p == '.' || (*p == '-' && p == text)))
+            bof3::Fatal("BOF3X_PIXEL_OFFSET=%s: a decimal number", text);
+    std::memcpy(g_pixel_offset, text, sizeof text);
+    bof3::Log("render: scene pixel-centre offset %s (BOF3X_PIXEL_OFFSET)", g_pixel_offset);
+}
+
 ID3DBlob* Compile(const char* source, const char* entry, const char* profile) {
     ID3DBlob* code = nullptr;
     ID3DBlob* errors = nullptr;
-    const HRESULT hr = D3DCompile(source, std::strlen(source), nullptr, nullptr, nullptr, entry, profile,
+    const D3D_SHADER_MACRO macros[] = {{"PIXEL_OFFSET", g_pixel_offset}, {nullptr, nullptr}};
+    const HRESULT hr = D3DCompile(source, std::strlen(source), nullptr, macros, nullptr, entry, profile,
                                   D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
     if (FAILED(hr)) {
         const char* text = errors ? static_cast<const char*>(errors->GetBufferPointer()) : "(no message)";
@@ -461,17 +483,37 @@ void Show() {
         g_window_w = cw;
         g_window_h = ch;
     }
-    // Integer scale of the target on the window, centred, black borders.
+    // Integer scale of the target on the window, centred, black borders. A
+    // client smaller than the target - a window dragged small, or F8 back to
+    // a window from a borderless start whose target was sized to the monitor
+    // (DIV-0036) - gets the largest fit of the target's shape instead, where
+    // before it was shown at 1x from the top-left corner and cropped.
     const U kx = cw / g_target_w, ky = ch / g_target_h;
-    U k = kx < ky ? kx : ky;
-    if (k < 1) k = 1;
-    const U w = g_target_w * k, h = g_target_h * k;
+    const U k = kx < ky ? kx : ky;
+    U w = g_target_w * k, h = g_target_h * k;
+    if (k == 0) {
+        if (static_cast<std::uint64_t>(cw) * g_target_h >= static_cast<std::uint64_t>(ch) * g_target_w) {
+            h = ch;
+            w = static_cast<U>(static_cast<std::uint64_t>(ch) * g_target_w / g_target_h);
+        } else {
+            w = cw;
+            h = static_cast<U>(static_cast<std::uint64_t>(cw) * g_target_h / g_target_w);
+        }
+    }
     const float black[4] = {0, 0, 0, 1};
     g_ctx->ClearRenderTargetView(g_window_rtv, black);
     g_ctx->OMSetRenderTargets(1, &g_window_rtv, nullptr);
     D3D11_VIEWPORT vp = {static_cast<float>((cw > w ? cw - w : 0) / 2), static_cast<float>((ch > h ? ch - h : 0) / 2),
                          static_cast<float>(w), static_cast<float>(h), 0, 1};
     g_ctx->RSSetViewports(1, &vp);
+    const float factor[4] = {0, 0, 0, 0};
+    g_ctx->OMSetBlendState(g_blend_off, factor, 0xFFFFFFFF);
+    if (g_crt) {
+        CrtDraw(g_ctx, g_target_srv, g_window_rtv, vp);
+        const HRESULT hr = g_swap->Present(g_opt.vsync ? 1 : 0, 0);
+        if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) Check(hr, "Present");
+        return;
+    }
     g_ctx->IASetInputLayout(nullptr);
     g_ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     g_ctx->VSSetShader(g_present_vs, nullptr, 0);
@@ -479,8 +521,6 @@ void Show() {
     g_ctx->PSSetShaderResources(0, 1, &g_target_srv);
     ID3D11SamplerState* sampler = g_opt.point_filter ? g_sampler_present_point : g_sampler_present_linear;
     g_ctx->PSSetSamplers(0, 1, &sampler);
-    const float factor[4] = {0, 0, 0, 0};
-    g_ctx->OMSetBlendState(g_blend_off, factor, 0xFFFFFFFF);
     g_ctx->Draw(4, 0);
     ID3D11ShaderResourceView* none = nullptr;
     g_ctx->PSSetShaderResources(0, 1, &none);
@@ -539,6 +579,7 @@ void InitOnFiber(const Options& options) {
     g_window_h = static_cast<U>(client.bottom - client.top);
     MakeWindowTarget();
     MakeTarget(options.logical_w * options.scale, options.logical_h * options.scale);
+    ReadPixelOffset();
 
     ID3DBlob* vs = Compile(kSceneShader, "VS", "vs_4_0");
     ID3DBlob* ps = Compile(kSceneShader, "PS", "ps_4_0");
@@ -582,6 +623,8 @@ void InitOnFiber(const Options& options) {
     D3D11_BLEND_DESC off = {};
     off.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     Check(g_device->CreateBlendState(&off, &g_blend_off), "CreateBlendState (off)");
+    g_crt = CrtWanted();
+    if (g_crt) CrtInit(g_device, g_target_w, g_target_h);
 
     bof3::Log("render: Direct3D 11 feature level 0x%X, window %u x %u, target %u x %u, present %s", got, g_window_w,
               g_window_h, g_target_w, g_target_h, options.point_filter ? "point" : "linear");

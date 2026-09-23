@@ -3,3 +3,11 @@
 #pragma once
 
 void DisplaySetup_Inject();
+
+// DIV-0036: the scale k of a windowed render target, 320k x 240k - the
+// launcher's window size, BOF3X_SCALE, 2 when unset. A borderless window
+// instead takes the largest k that fits it, at set-up.
+unsigned DisplaySetup_WindowedScale();
+
+// The render target's scale once our set-up has run, else 0.
+unsigned DisplaySetup_TargetScale();

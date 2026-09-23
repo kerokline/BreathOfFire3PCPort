@@ -108,6 +108,9 @@ def main():
         env.pop(k, None)
     env['BOF3X_INPUT'] = recipe
     env['BOF3X_SHOT_WAIT'] = '1'
+    # the owner's screen=crt (DIV-0037) must not reach an A/B's captures;
+    # --env BOF3X_PRESENT=crt asks for it
+    env['BOF3X_PRESENT'] = 'clean'
     if a.lang:
         env['BOF3X_LANG'] = a.lang
     if a.original:

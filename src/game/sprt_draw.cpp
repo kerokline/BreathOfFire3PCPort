@@ -109,6 +109,18 @@ void FillFarTable() {
     if (hash != 0xF06E2C4Bu) bof3::Fatal("DIV-0010: the far-edge table is not the one of 2026-09-20 (FNV %08X)", hash);
 }
 
+// The same derivation at scale k (display-overhaul.md 4b): for the 8 pixel
+// sprite the far vertex value is j - 0.488 + 7 / (8k - 1), an inset of
+// 0.012 - (8k - 15) / (2 (8k - 1)) - at k = 2 exactly the pinned 0.012 - 1/30,
+// so k = 2 keeps FillFarTable's table and its checks. Wider sprites stay short
+// of their last texel's centre by under 0.03 of a texel at every k, as at 2.
+void SetFarTableScale(U k) {
+    if (k == 2) return FillFarTable();
+    const float inset = static_cast<float>(0.012 - (8.0 * k - 15.0) / (2.0 * (8.0 * k - 1.0)));
+    for (U j = 0; j < kFarEntries; ++j) g_far[j] = (static_cast<float>(j) + inset) / 256.0f;
+    bof3::Log("DIV-0010    far texture edge for scale %u: inset %.6f", k, static_cast<double>(inset));
+}
+
 namespace {
 
 unsigned char* At(U address) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(address)); }
@@ -263,6 +275,8 @@ long D3d_DrawSprt8(const unsigned char* prim) { return sprt_draw::DrawSprite(pri
 
 // 0x5A2710, code 0x7C (SPRT_16): a 16 x 16 sprite - x + 16.0 from 0x5C41D0.
 long D3d_DrawSprt16(const unsigned char* prim) { return sprt_draw::DrawSprite(prim, sprt_draw::kSixteen, 16); }
+
+void SprtDraw_SetScale(unsigned k) { sprt_draw::SetFarTableScale(k); }
 
 void SprtDraw_Inject() {
     using namespace sprt_draw;

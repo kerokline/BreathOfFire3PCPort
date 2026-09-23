@@ -118,51 +118,102 @@ dump unchanged (`rb1`). The frame hash reference is re-recorded without
 the CRT's `sscanf` (`ab27`, identical both ways). The PSP release's 16:9
 was read in a parallel session ([`psp-widescreen.md`](psp-widescreen.md)): Capcom
 widened the view by 32 columns a side and cropped 12 rows, and re-authored
-four things to suit.
+four things to suit. **Then step 3, the same afternoon: WinMain, WndProc
+and the FMV player ours** (796; [`window-modes.md`](window-modes.md),
+DIV-0032..0035) - a resizable or borderless window with no mode-set
+anywhere, the game running unfocused with the pads zeroed (I12 built), the
+frame debt clamped, the FMVs into the window - checked by `wm1` with the
+window never in front ("Pick up here" 000000).
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-000000. **The UI overhaul, step 2 done: the Direct3D 11 backend runs the game
-   at `k = 2`, windowed** ([`render-backend.md`](render-backend.md),
-   `analysis/validate_rb1.sh`, log `analysis/attract/rb1_batch.log`,
-   2026-09-23): self-tests 0 mismatches; the 55-shot attract A/B against
-   `--original Display_Setup` (Capcom's set-up, DirectDraw and Direct3D 3
-   end to end) at point filter **28 of 55 identical, the other 27 between 1
-   and 12 pixels apart** - single texels on tile edges, the same spots frame
-   after frame (box 175,163..320,361 recurs) - the two rasterisers' edge
-   rules at a texel boundary; frame hash all-ours against `ab27_orig` differs on frame 0 alone (the set-up's 153 start-up calls - `0x5A5160`, `0x5A5FF0`, `0x5A6050`, `0x5A60E0`, `0x5A62C0`, two import thunks, three CRT routines - now unmade) and is identical on the other 10,318;
-   oracle identical (`attract_diff` exit 0, 12,126 frames); memory dump identical in all three regions. **Next, in the plan's order** ([`display-overhaul.md`](display-overhaul.md) §5):
-   0. **Owner's eye**: play with the backend (it is on by default now;
-      `BOF3X_ORIGINAL=Display_Setup` is the old path) and say whether
-      anything looks wrong. `display=fullscreen` in the launcher is
-      **untested with the backend**: WinMain still makes its fullscreen-style
-      window, the backend presents into whatever client area it has.
-   1. The edge pixels: try the present's pixel-centre offset at `0.5 - 1/512`
-      (the trick D3D8-to-9 wrappers use) against the 27 differing captures;
-      `render_d3d11.cpp`'s vertex shader, one constant.
-   2. **Window modes and I12** (§4a): WinMain `0x4FCB00`, WndProc
-      `0x4FC6F0`, DirectInput `0x5A94C0`, FMV into the window - then
-      `BOF3X_SCALE=3..8` already rasterises at `k` (the target is `320k x 240k`
-      and the present centres it at the largest integer that fits), so a
-      bigger window is the only missing piece of 4b; audit `sprt_draw.cpp`'s
-      far-edge table (derived for scale 2) before calling `k = 3` right.
-   3. Presets (§4c): decide the shader contract with the owner first.
-   4. Widescreen (§4d): **the PSP session has reported**
-      ([`psp-widescreen.md`](psp-widescreen.md), PR 11): Capcom widened by
-      32 columns a side and cropped 12 rows top and bottom (384 x 216 at
-      1.25x), re-authored the terrain cull, the area-map frame pass's
-      ranges, the message box's side placements and the full-frame fills,
-      and left the sprite and object culls alone. Its §5 is the spec; its
-      open items are the PC twins of the UI positions in code and what
-      the handheld shows during the boot splash versus in play (owner).
+000000. **The UI overhaul, steps 3 and 4 built: the window, the loop, the
+   FMV player (DIV-0032..0035) and integer scaling (DIV-0036)**
+   ([`window-modes.md`](window-modes.md), [`display-overhaul.md`](display-overhaul.md)
+   §5; 796 ours). Step 3, 2026-09-23 afternoon: WinMain `0x4FCB00`, WndProc
+   `0x4FC6F0`, `Cursor_Sync`, `Display_WindowMoved`, `Display_DeviceName`
+   and `Fmv_Play` `0x59E360`, read whole, written call for call - a
+   resizable window or a borderless one the size of the monitor, no
+   mode-set anywhere, the game running unfocused with the pads zeroed (I12),
+   the frame debt clamped at 500 ms, the FMVs into the window; batch `wm1`
+   with the window never in front: oracle identical, memory dump identical
+   (`clut` row 482, the known artefact). **Reviewed the same evening** in a
+   separate session (the owner's request), which fixed three things
+   (`window-modes.md` §4a, §5): (a) **the traced all-original runs that
+   ended 16 s in** - not `Display_Setup`'s failure paths but the tracer's
+   own single step over the MMX probe `0x5A9A30`'s `pushfd`, reached only on
+   Capcom's software-renderer set-up, which `renderer=0` in the ini selects;
+   the CRT's `__except` turned the stray step into `_exit(0x80000004)`.
+   `calltrace.cpp` now clears the saved trap flag after a stepped `pushfd`
+   and makes any stray step a `Fatal`; `BOF3X_EXITTRACE` logs the exit code
+   and unhandled steps. (b) Our WinMain called `Display_Setup`, `Fmv_Play`
+   and registered `Game_WndProc` directly, so their `BOF3X_ORIGINAL`
+   switches did nothing under it (DIV-0031's way back to Capcom's
+   DirectDraw included); it reaches them through Capcom's addresses now,
+   checked live. (c) A quit during the FMVs tore down a display never set
+   up; it returns at once, as `0x4FCD3A` does. Also `attract_run.py` refuses
+   `--no-front` with Capcom's WndProc (the 0-frame trap). **The frame hash
+   reference is re-recorded, `wm1b`**: `analysis/calltrace/wm1b_orig` (twin `wm1b_origb`,
+   `analysis/validate_wm1b.sh`, log `analysis/attract/wm1b_batch.log`):
+   original-vs-original identical on all 10,313 frames, original-vs-ours
+   identical on every logic frame - only frame 0, the set-up, differs, as it
+   has since `rb1` made `Display_Setup` ours (next time, compare from frame
+   1 or say so). The afternoon's `wm1_ours` fell three frames behind at
+   3418 and stayed there (all 263 differing frames equal the reference
+   three later) - timing, seen once, not chased.
+   Step 4 the same evening, to the owner's rule ("windowed options should
+   be the available fixed k values, fullscreen uses largest k that will
+   fit", at start-up only): the launcher's Resolution box is now "Window
+   size", 2x..8x (`scale=` in `bof3x.ini`, `BOF3X_SCALE`); a borderless
+   window takes the largest k that fits the monitor (6 on 3440 x 1440); the
+   window opens at its target's size; DIV-0010's far-edge table follows k;
+   a client smaller than the target is fitted, not cropped. k = 3 run:
+   target 960 x 720, the far edge at the exact value. The launcher's
+   renderer box is settled: 0 is Capcom's software renderer, 1 the HAL,
+   read only by Capcom's set-up.
+   **Next, in the plan's order** ([`display-overhaul.md`](display-overhaul.md) §5):
+   0. **Owner's eye: done 2026-09-23 evening** - fullscreen, F8, a 3x
+      window, resizing, the FMVs at 2x and 4x, running unfocused with keys
+      elsewhere not reaching the game, the CRT look. F9's pause was Chinese:
+      now English, DIV-0038 ([`window-modes.md`](window-modes.md) §6). Left:
+      the title-bar drag (only matters under `BOF3X_BACKGROUND=0`), and
+      sprite edges at k = 3 / 6 looked at closely.
+   1. The edge pixels of `rb1`: `BOF3X_PIXEL_OFFSET=0.498046875` (0.5 - 1/512,
+      new, no rebuild) against the 27 differing captures of the 55-shot
+      attract A/B against Capcom's DirectDraw (`validate_rb1.sh` has the
+      set-up); needs the window visible and uncovered, about 25 minutes.
+   2. Presets (§4c): **decided and the first built** - looks come
+      pre-packaged in the dll, no loader (the owner). The CRT look
+      ([`crt-look.md`](crt-look.md), DIV-0037, `BOF3X_PRESENT=crt`, the
+      launcher's Look box): our own four passes, since the model named,
+      `crt-easymode-halation`, is GPL. Owed: the owner tunes it in game
+      with `BOF3X_CRT` (defaults are a first guess), best at k = 6
+      borderless. Then maybe a live toggle key.
+   3. Widescreen (§4d): [`psp-widescreen.md`](psp-widescreen.md) §5 is the
+      spec - Capcom widened by 32 columns a side and cropped 12 rows
+      (384 x 216 at 1.25x), re-authored the terrain cull, the area-map
+      frame pass's ranges, the message box's side placements and the
+      full-frame fills, and left the sprite and object culls alone; its
+      open items are the PC twins of the UI positions in code and what the
+      handheld shows during the boot splash versus in play (owner). The
+      owner: k's rule "will get re-evaluated" with widescreen.
    Not built, loud if reached: a `Lock` of the primary or back buffer
-   (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` now logs the
-   first request), sub-rectangle locks, depth / fog / lighting. The set-up's
-   constants (pixel formats 1-5-5-5 / 5-5-5 / X-8-8-8, caps `0xCCD`) are what
-   this machine's HAL reported; another machine's may differ, and the
-   backend takes any RGB masks.
+   (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` logs the first
+   request), sub-rectangle locks, depth / fog / lighting, the back buffer's
+   `GetDC` (which is why the overlays are logged). The set-up's constants
+   (pixel formats 1-5-5-5 / 5-5-5 / X-8-8-8, caps `0xCCD`) are what this
+   machine's HAL reported; another machine's may differ, and the backend
+   takes any RGB masks. Left as Capcom's in the WinMain group, typed:
+   `Game_Init` `0x4FD110`, `Gfx_LinkOTags` `0x4FD290`, `DInput_Init`
+   `0x5A94C0` (keyboard `DISCL_BACKGROUND`), the three shutdowns, the sound
+   pause pair, `Save_QuickWrite` `0x5809C0` (F12 writes a normal save to
+   slot 0 from anywhere, battles included - the owner keeps it for now and
+   wants it disabled or a true quicksave before shipping, [`IDEAS.md`](IDEAS.md)
+   I18; the recorder's F12 shot lands on top of it), `Disc_Probe` `0x5A72C0`.
+   F7 and F11 do nothing since DIV-0040; the window title is English,
+   DIV-0039 - built, self-tests 0 mismatches; the owner's eye owed.
 
 00000. **The game's pace is done short term: DIV-0022, confirmed in game by
    the owner 2026-09-22.** The complete fix, the deadline in a double, is
@@ -218,7 +269,12 @@ The single next action, concrete enough to start without asking anyone.
    owner's call); D30..D40 latent.
    **Next:**
 
-   0. **Done (`ab27`, 2026-09-23): the frame hash reference is
+   0. **The frame hash reference is `analysis/calltrace/wm1b_orig` since
+      the WinMain takeover** (twin `wm1b_origb`, ours `wm1b_ours`; item
+      000000), recorded from a scratch launcher (`renderer=1`, windowed)
+      with the foreground held under the `wm1` list. `wm1_orig` /
+      `wm1_origb` are the 0-frame artefacts of the unfocused first attempt.
+      Before it, `ab27` (2026-09-23): the reference was
       `analysis/calltrace/ab27_orig`** (twin `ab27_origb`, ours `ab27_ours`),
       recorded with the CRT's `sscanf` engine (`0x5BCF64` and seven callees)
       out of `entries_logic.txt` (`entries_logic_0923b.txt` is the list
@@ -529,8 +585,14 @@ _Commands a fresh session needs, verified on the date above._
   `1`) in the game directory, or F8 in game
   ([`windowed-mode.md`](windowed-mode.md)) — recommended for agent sessions,
   since it avoids the display mode-set.
-  Without it the game mode-sets to exclusive fullscreen for the FMVs; from an agent
-  session, end it with `taskkill //F //IM BOF3.exe`.
+  Since 2026-09-23 (DIV-0032, DIV-0035) nothing mode-sets: `display=fullscreen`
+  is a borderless window the size of the monitor, and the FMVs play into
+  the window. From an agent session, end a run with `taskkill //F //IM BOF3.exe`.
+  **The game runs while not in front** (DIV-0033; `BOF3X_BACKGROUND=0` is the
+  original's freeze), so `attract_run.py --no-front` leaves the desktop
+  alone for the oracle and the hash, and `--launcher DIR/bof3x-launcher.exe`
+  runs a copy with its own `bof3x.ini` (a windowed one, for a batch on the
+  owner's machine: `analysis/validate_wm1.sh` shows the set-up).
 - **Every start-up self-test, headless (half a second, no window):**
   `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config`
   - exit 0 passed, 3 a Fatal ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
@@ -840,22 +902,70 @@ _One line each, with a pointer. Add when something costs more than an hour._
   thread context is the handler's, not the fault's; the exception stream's
   context has the real esp (the scratch script `dumpstack.py` did it; worth
   folding into `tools/crash_report.py`).
+- **`attract_run.py --no-front` on an all-original side makes 0 logic
+  frames** (2026-09-23, `wm1`): DIV-0033 lives in our WndProc, so under
+  `--original "*"` Capcom's WndProc clears `App_Active` the moment the
+  window is not in front and the loop pumps messages for the whole run -
+  `done: 0 logic frames in 16 s`. Reference sides of the frame hash keep
+  the foreground hold; only all-ours runs can go unfocused.
 - **Group names collide across parallel groups** (2026-09-23): W and Y both
   named an `Item_Price` and a `Menu_DrawIcon`, Z and V1 a
   `Field_ObjectAhead`; the merge's tomllib check caught all three. Rename the
   later group's in its own files only.
+- **The tracer's single step is visible to `pushfd`** (2026-09-23, `wm1`):
+  a traced entry whose first instruction saves the flags saved TF = 1, a
+  `popfd` later put it back, and the stray step went unhandled to the
+  CRT's `__except` in `WinMainCRTStartup` (`0x5BA154`), which ends the
+  process with `_exit(exception code)` - no dialog, no CRASH line (the
+  reporter skips signals). It looked like a clean exit "inside
+  `Display_Setup`" for an afternoon. `calltrace.cpp` handles `pushfd` now
+  and fails loudly on any other stray step. **A silent exit whose stack
+  holds `0x5BA15F` is an unhandled exception**: `BOF3X_EXITTRACE=1` logs
+  its code and address.
+- **`renderer=` in `bof3x.ini` picks Capcom's software renderer at 0**
+  (2026-09-23): harmless to ours (DIV-0031 ignores it) but every
+  all-original run draws through a different set-up path. Reference runs
+  pin it with their own scratch `bof3x.ini` (`renderer=1`, as `wm1b`).
+- **Our code calls ours directly**: a C++ call to a taken-over name binds
+  our function, not Capcom's address, so `BOF3X_ORIGINAL=NAME` switches only
+  what Capcom's code calls. Where a switch matters from our side (WinMain's
+  set-up, player and WndProc), call through `bof3::orig::NAME` - the
+  address, detoured or not (2026-09-23 review).
 ## In flight / uncommitted
 
-Branch `phase-3/UI-overhaul` (from `main` at PR 10), **2026-09-23, uncommitted
-at the time of writing**: [`display-overhaul.md`](display-overhaul.md),
-[`display-setup.md`](display-setup.md), [`render-backend.md`](render-backend.md);
+Branch `phase-3/UI-overhaul` (from `main` at PR 10). **Committed and pushed
+2026-09-23** (`340d373`, merged with PR 11's PSP findings in `5c168ed`): the
+backend - [`display-overhaul.md`](display-overhaul.md),
+[`display-setup.md`](display-setup.md), [`render-backend.md`](render-backend.md),
 `src/render/render_shim.{h,cpp}`, `src/render/render_d3d11.{h,cpp}`,
-`src/game/display_setup.{h,cpp}`; DIV-0031; `symbols.toml` (`Display_Setup`,
-`Cfg_RenderMode`'s evidence); `entries_logic.txt` (`ab27`, `0x5A5160`'s
-size); `analysis/validate_ab27.sh`, `validate_rb1.sh`; the docs index,
-STATUS, this file. The eleven merged agent worktrees of rounds five and six
-are removed; `.claude/worktrees/vibrant-wilbur-f9676a` is the PSP session's.
-The round-four PR is merged (PR 10).
+`src/game/display_setup.{h,cpp}`, DIV-0031, `validate_ab27.sh`,
+`validate_rb1.sh`. **Uncommitted at the time of writing, the afternoon of
+2026-09-23:** step 3 - `src/game/win_main.{h,cpp}`, `src/game/fmv_play.{h,cpp}`,
+`src/hook/input_script.{h,cpp}` (`InputScript_Latch`, `DeviceLatch`),
+`src/hook/inject_all.cpp`, `CMakeLists.txt` (`winmm`), the launcher's
+`background` setting (five files), `tools/attract_run.py` (`--no-front`,
+`--launcher`), `symbols.toml` (the block at the end: the six taken over,
+thirteen typed callees, the loop's globals; `Cfg_Load` and `Fmv_Play`
+typed; `Fmv_Playing`'s ctype), `analysis/calltrace/entries_logic.txt`
+(`wm1`: two run-on sizes fixed, `entries_logic_0923c.txt` the list before),
+`analysis/validate_wm1.sh`; DIV-0032..0035; [`window-modes.md`](window-modes.md);
+the docs index, `windowed-mode.md`, `IDEAS.md` I12, `known-defects.md` D3,
+`display-overhaul.md` §5, STATUS, this file. **Then the review session,
+the same evening, also uncommitted**: `src/hook/calltrace.cpp` (the `pushfd`
+step, the loud stray step), `src/game/win_main.cpp` (the exit trace's code
+and unhandled-step logger, the calls through Capcom's addresses, the FMV
+quit return, DIV-0036's window size), `src/game/display_setup.{h,cpp}`
+(DIV-0036's k), `src/game/sprt_draw.{h,cpp}` (`SprtDraw_SetScale`),
+`src/render/render_d3d11.cpp` (the fit-down present, `BOF3X_PIXEL_OFFSET`),
+the launcher's Window size and renderer labels (`config.{h,cpp}`,
+`config_dialog.cpp`, `launcher.rc`), `tools/attract_run.py` (the
+`--no-front` guard; both harnesses pin `BOF3X_PRESENT=clean`), the CRT look
+(`src/render/crt.{h,cpp}`, `crt-look.md`, DIV-0037, the launcher's Look box), the English pause lines (`src/game/pause_text.{h,cpp}`,
+DIV-0038, `window-modes.md` §6), `analysis/validate_wm1b.sh`; DIV-0036 and notes on
+DIV-0010 / DIV-0035; `window-modes.md` §4a, `launcher-settings.md` §3 / §5,
+`display-overhaul.md` §4b / §5. The eleven merged agent
+worktrees of rounds five and six are removed; `.claude/worktrees/vibrant-wilbur-f9676a`
+was the PSP session's. The round-four PR is merged (PR 10).
 
 Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
 the attract catalogue and the PSX pairing ([`attract-remaining.md`](attract-remaining.md),

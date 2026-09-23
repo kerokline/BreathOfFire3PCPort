@@ -10,9 +10,8 @@
 //    0x4FD030 out of a two-line BOF3.CFG in the game directory
 //    (docs/windowed-mode.md). We write that file rather than patch anything:
 //    it is the port's own documented input, so this is not a divergence.
-//  - Resolution has no mechanism yet. 640x480 is welded into the presentation
-//    layer (docs/IDEAS.md I8); the dialog shows the control disabled rather
-//    than pretending otherwise.
+//  - The window size is ours too since the Direct3D 11 backend: BOF3X_SCALE,
+//    the render target's integer scale of 320 x 240 in a window (DIV-0036).
 #pragma once
 
 #include <string>
@@ -27,11 +26,24 @@ struct Config {
     Language language = Language::kOriginal;
     Filter filter = Filter::kLinear;
     Display display = Display::kFullscreen;
-    // BOF3.CFG line 2. Renderer select by association - 0x5A5160 holds the only
-    // reference to the "Software Render" string - but which value is which is
-    // not established, so it is offered as the shipped default and "the other
-    // one" and labelled that way.
+    // BOF3.CFG line 2, Cfg_RenderMode: Capcom's set-up's device index. 0 is
+    // the synthetic "Software Render" record - its set-up takes 0x5A60E0's
+    // software branch through 0x5AA671 and the MMX probe 0x5A9A30 - and 1 the
+    // Direct3D HAL (traced 2026-09-23, docs/window-modes.md 4a). Only Capcom's
+    // set-up reads it (BOF3X_ORIGINAL=Display_Setup): ours draws with
+    // Direct3D 11 whatever it says (DIV-0031).
     int renderer = 1;
+    // DIV-0033: the game keeps running while its window is not in front.
+    // Off, the original's freeze and replay. BOF3X_BACKGROUND=0 in the
+    // environment is the same switch for scripts.
+    bool background = true;
+    // DIV-0036: a window's render target is 320 x 240 times this, 2..8
+    // (BOF3X_SCALE). A borderless window ignores it and takes the largest
+    // that fits the monitor.
+    int scale = 2;
+    // DIV-0037: the CRT look in the present (BOF3X_PRESENT=crt). The dialog
+    // offers it as the filter box's third entry, over the point filter.
+    bool crt = false;
     // Cleared by the dialog's "Show this window every time" box. --config
     // brings the dialog back whatever this says.
     bool show_launcher = true;

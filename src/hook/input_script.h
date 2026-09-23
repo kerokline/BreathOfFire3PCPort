@@ -13,4 +13,11 @@ namespace bof3 {
 // BOF3X_INPUT names a recipe file. Call after InjectAll.
 void InputScript_Start();
 
+// The latch our WinMain calls once per pass of its loop where Capcom's called
+// Input_Latch (0x4FCDDE): the recipe's or the recorder's latch when one is
+// on, else Input_Latch itself - and, in every case, DIV-0033's zeroing of the
+// device words while the window is not in front. Capcom's WinMain
+// (BOF3X_ORIGINAL=Game_WinMain) keeps its RetargetCall'd site instead.
+void InputScript_Latch();
+
 }  // namespace bof3

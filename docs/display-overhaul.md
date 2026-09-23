@@ -190,7 +190,8 @@ target at `320k x 240k`; the present pass centres it. Our code's compiled-in
 
 - `sprt_draw.cpp:44-52` — DIV-0010's far-edge table is derived for scale 2;
   generalise it to `k` (the derivation is written out there) or the sprite
-  edges drift at `k = 3`.
+  edges drift at `k = 3`. **Done 2026-09-23**: inset
+  `0.012 - (8k - 15) / (2 (8k - 1))`, the pinned table kept at k = 2.
 - `glyph_draw.cpp:120` — the `2.0` is the glyph texture's 2 x 2 texel layout,
   not the screen scale; correct as it is. At `k > 2` glyphs are point-scaled
   from 640-res textures. A `k`-res glyph texture is a later, separate
@@ -205,6 +206,12 @@ Ledger: one entry, default on, "the picture is scaled by an integer and
 centred; borders are black". Reversible with `k = 2` and a 640 x 480 window.
 
 ### 4c. Shaders and filtering
+
+**Decided 2026-09-23** (the owner): no preset loader - a pre-packaged look
+built into the dll. The first is the CRT look ([`crt-look.md`](crt-look.md),
+DIV-0037): our own shaders, since the model the owner named
+(`crt-easymode-halation`) is GPL. The rest of this section is the plan as it
+stood before the decision.
 
 The present pass takes a preset: a pixel shader file under a directory the
 launcher knows (`shaders/`), compiled at start-up with `D3DCompile`, with the
@@ -310,9 +317,20 @@ build of the same tree). Half a day for the answer.
    §3). Takes over `0x5A5160`, `0x5A5130`, the mode enumeration (retired),
    and the present's live run. Everything after stands on this.
 3. **Window modes and I12** (4a): WinMain, WndProc, DirectInput's set-up,
-   FMV into the window. The owner plays borderless.
+   FMV into the window. The owner plays borderless. **Built 2026-09-23**
+   ([`window-modes.md`](window-modes.md), DIV-0032..0035): WinMain, WndProc
+   and `Fmv_Play` ours, MCI into the window (the owner's choice over I7);
+   DirectInput's set-up read and left as it is - its keyboard is
+   `DISCL_BACKGROUND`, which DIV-0033 answers by zeroing the pads while
+   unfocused. Owner's eye owed.
 4. **Integer scaling** (4b) — small once 2 exists; the `sprt_draw.cpp` table
-   is the only real work.
+   is the only real work. **Built 2026-09-23 evening** (DIV-0036), to the
+   owner's rule: a window's k is the launcher's "Window size" (2..8,
+   `BOF3X_SCALE`), a borderless window takes the largest k that fits the
+   monitor, both chosen once at set-up; the far-edge table follows k
+   (`SprtDraw_SetScale`); a client smaller than the target gets a fit, not
+   a crop. Owner's eye owed (k = 6 borderless, k = 3 windowed). "If we do
+   widescreen eventually, this will get re-evaluated" (the owner).
 5. **Presets** (4c): the contract decided with the owner, nearest / bilinear
    / one CRT, the hotkey, the launcher box.
 6. **Widescreen** (4d): the PSP answer first (a survey, half a day), then the
@@ -328,6 +346,8 @@ that differs from the original's is a ledger entry; the oracle runs stay at
 
 - Preset contract (4c): single-pass HLSL of our own, or a slang-compatible
   loader? The first is days, the second weeks, and they are not both.
+  **Answered 2026-09-23: neither loader nor files - looks built into the
+  dll ([`crt-look.md`](crt-look.md)).**
 - FMV (4a): MCI into the window for now, or straight to I7?
 - Widescreen's default once it works: the PSP's choice, if the ELF shows
   Capcom made one, is a reasonable default to copy; otherwise off.
