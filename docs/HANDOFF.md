@@ -191,14 +191,12 @@ The single next action, concrete enough to start without asking anyone.
       `crt-easymode-halation`, is GPL. Owed: the owner tunes it in game
       with `BOF3X_CRT` (defaults are a first guess), best at k = 6
       borderless. Then maybe a live toggle key.
-   3. Widescreen (§4d): [`psp-widescreen.md`](psp-widescreen.md) §5 is the
-      spec - Capcom widened by 32 columns a side and cropped 12 rows
-      (384 x 216 at 1.25x), re-authored the terrain cull, the area-map
-      frame pass's ranges, the message box's side placements and the
-      full-frame fills, and left the sprite and object culls alone; its
-      open items are the PC twins of the UI positions in code and what the
-      handheld shows during the boot splash versus in play (owner). The
-      owner: k's rule "will get re-evaluated" with widescreen.
+   3. **Widescreen - the next session, planned in [`widescreen.md`](widescreen.md)**
+      (2026-09-23). The owner decided 426 x 240 with no crop, a 21:9 monitor
+      pillarboxed. The approach is the PSP's: every primitive shifted +53,
+      then the culls, full-frame fills and edge-anchored UI fixed. 53
+      columns outrun three culls Capcom left alone (§3b there). Start with
+      §3e's survey build behind `BOF3X_WIDE=1`.
    Not built, loud if reached: a `Lock` of the primary or back buffer
    (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` logs the first
    request), sub-rectangle locks, depth / fog / lighting, the back buffer's

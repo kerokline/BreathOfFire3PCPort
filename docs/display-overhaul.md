@@ -351,5 +351,8 @@ that differs from the original's is a ledger entry; the oracle runs stay at
 - FMV (4a): MCI into the window for now, or straight to I7?
 - Widescreen's default once it works: the PSP's choice, if the ELF shows
   Capcom made one, is a reasonable default to copy; otherwise off.
+  **The shape is decided (2026-09-23):** 426 x 240, no crop, the monitor's
+  spare width pillarboxed - not the PSP's 384 x 216 (HANDOFF "Pick up here"
+  000000, next 3).
 - The saved 640 x 480 window vs a remembered size and position in
   `bof3x.ini`.
