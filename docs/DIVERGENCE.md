@@ -1178,3 +1178,100 @@ designed in rather than bolted on.
 - **Verification:** the start-up fuzz, `BOF3X_SHADOW=object_kinds`, seeds
   sub-states 0..3 only; controls in object-kinds.md.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn`.
+
+### Glyphs sample texel centres
+
+- **ID:** DIV-0025
+- **Date:** 2026-09-22
+- **Subsystem:** renderer (the glyph handler, [`glyph-draw.md`](glyph-draw.md))
+- **Original behaviour:** `D3d_DrawGlyph` `0x5A2900`, the Direct3D draw of
+  every glyph (primitive code `0x6C`), sets each corner's texture coordinate
+  to `2u / 32`, `2v / 32` - the glyph's 24 texels on a 24-pixel quad, 1:1,
+  with no half-texel offset. Every pixel's sample point then falls exactly
+  on the edge between two texels: under point filtering the winner is the
+  interpolator's rounding, different in each of the quad's two triangles;
+  under bilinear every pixel is a 50 / 50 blend
+  ([`known-defects.md`](known-defects.md) D17). Seen by the owner in English,
+  point filter: strokes one, two or three pixels wide, an `l` narrowing where
+  the quad's diagonal crosses it; soft text under the default bilinear.
+- **New behaviour:** `(2u + 0.5) / 32` and `(2v + 0.5) / 32` on every corner:
+  both edges move half a texel, the scale stays 1:1, and pixel k of the quad
+  samples the centre of texel k. Positions, colours, the draw and every call
+  are the original's. All Chinese and Latin text alike.
+- **Rationale:** the owner asked for it, 2026-09-22, after comparing the
+  same line against the sibling's recompiled PSX build ("wobbly" against
+  even). The sprite handlers already have a deliberate texel inset
+  (`0x7CA9E0`, `(i + 0.512) / 256`); the glyph handler never got one.
+- **Also in the PSX version?** No: the PlayStation's GPU samples texels by
+  integer coordinates and has no such edge.
+- **Verification:** `BOF3X_SHADOW=glyph_draw`: 20,000 rounds with the fix
+  checked to change exactly the eight `tu` / `tv` floats by exactly `1/64`
+  against Capcom's copy, and nothing else; 20,000 with the fix off checked
+  byte for byte. 39 negative controls, all refused
+  ([`glyph-draw.md`](glyph-draw.md) §5). **Not yet seen in game**: the
+  owner judges it against the recomp's text in the batch.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
+  Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
+
+### The Config screen's controller names at their own width, in the dialogue font
+
+- **ID:** DIV-0026
+- **Date:** 2026-09-22
+- **Subsystem:** menu (Config, [`config-screen.md`](config-screen.md) §8)
+- **Original behaviour:** the controller panel's row draw `0x461AF0` places
+  each name at `row x + 0x20 - len * 6` and draws it through the large
+  `Text_DrawAt` - right-aligned for Chinese, two bytes and 12 units a
+  character. With DIV-0015/0016's names (two bytes a character, advance 8)
+  every name started 4 units a character too far left, ragged, and in the
+  large quad the tripled 8 x 8 cells crowded (the owner's screenshot,
+  2026-09-22: 4 letters at 315 px, 5 at 292, 6 at 268).
+- **New behaviour:** width `len * 4` (`0x461B36`: `lea eax, [ecx+ecx*2]` ->
+  `[ecx+ecx]`, the `shl eax, 1` after it kept) and the draw re-aimed at
+  `ConfigText_DrawSelected` (`0x461B43`), which swaps the UI cells for the
+  dialogue font's - the pair DIV-0017 applied to the selected row. The right
+  edge stays at `row x + 0x20`.
+- **Rationale:** the owner's report; the same fix as DIV-0017, which the
+  owner judged right in game.
+- **Not covered:** the right edge. On paper the 6-letter names still start 11
+  units left of the panel's frame and "Speak" 3 units; moving the edge to
+  `row x + 0x3C` (`0x461B3F` `83 C1 20` -> `83 C1 3C`) is proposed in
+  [`glyph-draw.md`](glyph-draw.md) §8 and not built - the owner's call off the
+  batch's capture.
+- **Also in the PSX version?** Not applicable: the text is the overlay's.
+- **Verification:** none in game yet; `tools/recipes/config_controller.txt`
+  reaches the panel.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=ConfigController`. Only under a
+  language overlay, not with `BOF3X_LANG=original`.
+
+### The Yes / No chooser laid out for Latin text
+
+- **ID:** DIV-0027
+- **Date:** 2026-09-22
+- **Subsystem:** menu (the chooser `Menu_YesNo` `0x5747D0`,
+  [`glyph-draw.md`](glyph-draw.md) §7)
+- **Original behaviour:** the chooser under "OK to overwrite?" (and "Do you
+  want to save?", "Load game?", "Is this what you want?") draws system
+  message `0xF` at x `0x1C` and the pointing hand at `0xFE - 36 * selection`.
+  The words' places are the line's own spaces; the hand's stops, 218 and 254,
+  were fitted to the Chinese line's words at 220 and 256. The English line
+  (27 spaces, `Yes`, 1 space, `No`, 8 units a character) puts them at 244
+  and 276, so the hand stops 22 to 25 units short of each and on No covers
+  the `Y` (the owner's screenshots at an inn, 2026-09-22).
+- **New behaviour:** the owner's layout
+  ([`dialogue-localisation.md`](dialogue-localisation.md) §6 item 8): the line
+  with three spaces moved from its lead into its gap, so `Yes` starts at 220
+  (3 units right of the left hand's tip) and `No` stays at 276; the hand at
+  `0x112 - 56 * selection` - 218 on Yes as before, 274 on No, its tip 3 units
+  before `No` (`0x5747F0` `mov ecx, 0x112`, `0x5747F7` `imul eax, eax, 56`,
+  `0x5747FC` three `nop`s; `Msg_SystemPtr`'s call at `0x5747D2` re-aimed at
+  the re-spacing).
+- **Rationale:** the owner's mockup, 2026-09-22: not the PlayStation's
+  layout (whose hand on No covers "es"), but the Chinese build's look - the
+  hand beside each word, touching neither.
+- **Also in the PSX version?** The US disc moved the stops too (the recomp's
+  hand tips at about 246 and 277 units); its code is unread.
+- **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
+  both line shapes); nothing on screen - no recipe reaches a save point. All
+  four prompts change together.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
+  overlay, not with `BOF3X_LANG=original`.

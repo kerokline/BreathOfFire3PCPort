@@ -299,3 +299,9 @@ and turns the two width computations into the small branch's own (`len * 4`,
   unread. Reached by `tools/recipes/config_controller.txt` (written
   2026-09-22, not yet run), which also shows D17's uneven glyphs
   ([`known-defects.md`](known-defects.md)).
+  **Built as DIV-0026 (2026-09-22, group N)**: the width by one SIB byte
+  (`8D 04 49` -> `8D 04 09`; the five bytes proposed above would have
+  overwritten the `mov ecx, ebp` between the two), the call re-aimed. On
+  paper the 6-letter names still start 11 units left of the panel frame;
+  an anchor of `row x + 0x3C` is proposed, not built -
+  [`glyph-draw.md`](glyph-draw.md) §8.

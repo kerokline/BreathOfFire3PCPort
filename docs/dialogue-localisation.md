@@ -301,6 +301,13 @@ it is a table, a proportional font is a data change.
    numbers follow from the code once read, and the owner judges the result
    off a capture against this mockup.
 
+   **Read and built as DIV-0027 (2026-09-22, group N):** the chooser is
+   `Menu_YesNo` `0x5747D0`, shared by four prompts; the words sit where the
+   line's own spaces put them (27 in the lead, 1 between) and the hand at
+   `0xFE - 36 * selection`, fitted to the Chinese line. Ours moves three
+   spaces into the gap and the No stop to 274 -
+   [`glyph-draw.md`](glyph-draw.md) §7. Not yet seen in game.
+
 ## 7. Menu text: the system pool and the name tables (DIV-0008)
 
 The owner's recollection, 2026-09-20 - that the Japanese and English item and
