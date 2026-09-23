@@ -116,7 +116,9 @@ attract A/B against Capcom's DirectDraw path 28 of 55 identical and the
 rest 1..12 pixels apart on tile edges, the frame hash, oracle and memory
 dump unchanged (`rb1`). The frame hash reference is re-recorded without
 the CRT's `sscanf` (`ab27`, identical both ways). The PSP release's 16:9
-is being read in a parallel session ([`display-overhaul.md`](display-overhaul.md) §4d).
+was read in a parallel session ([`psp-widescreen.md`](psp-widescreen.md)): Capcom
+widened the view by 32 columns a side and cropped 12 rows, and re-authored
+four things to suit.
 
 ## Pick up here
 
@@ -147,7 +149,14 @@ The single next action, concrete enough to start without asking anyone.
       bigger window is the only missing piece of 4b; audit `sprt_draw.cpp`'s
       far-edge table (derived for scale 2) before calling `k = 3` right.
    3. Presets (§4c): decide the shader contract with the owner first.
-   4. Widescreen (§4d) once the PSP session reports.
+   4. Widescreen (§4d): **the PSP session has reported**
+      ([`psp-widescreen.md`](psp-widescreen.md), PR 11): Capcom widened by
+      32 columns a side and cropped 12 rows top and bottom (384 x 216 at
+      1.25x), re-authored the terrain cull, the area-map frame pass's
+      ranges, the message box's side placements and the full-frame fills,
+      and left the sprite and object culls alone. Its §5 is the spec; its
+      open items are the PC twins of the UI positions in code and what
+      the handheld shows during the boot splash versus in play (owner).
    Not built, loud if reached: a `Lock` of the primary or back buffer
    (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` now logs the
    first request), sub-rectangle locks, depth / fog / lighting. The set-up's

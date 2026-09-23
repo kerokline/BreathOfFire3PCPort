@@ -283,7 +283,18 @@ floats through `lui`/`ori` immediates as often as from `.rodata`, so this
 is a lead, not a finding. What the PSP actually does on screen is the
 owner's to say from playing it; the ELF says how.
 
-First step: `python tools/ghidra_pc.py`-style import of `BOOT.BIN` into the
+**Answered 2026-09-23** ([`psp-widescreen.md`](psp-widescreen.md)): the
+PSP *widens*, by 32 logical columns each side into a 384 x 240 frame, and
+presents rows 12..228 of it at 1.25x - a 16:9 logical window of 384 x 216,
+one uniform scale, the projection centre and draw environment untouched.
+Capcom re-authored only the terrain cull (`[-50, 370]` to `[-96, 416]`),
+the area-map frame pass's two x ranges (widened by 31 a side), the
+message box's side placements (kept at their distance from the screen
+edge) and the full-frame fills; sprite and object culls were left alone.
+No aspect option exists. §5 there lists the choices in this section's
+terms: items 1..3 above have Capcom's own answers to copy.
+
+The first step, as it was planned: `python tools/ghidra_pc.py`-style import of `BOOT.BIN` into the
 `BoF3PC` project (language `MIPS:LE:32:default`, Allegrex is MIPS II plus
 VFPU — Ghidra's stock MIPS decodes everything but the VFPU ops), then find
 the placement table twin by its PSX bytes and the cull sites by the
