@@ -29,6 +29,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/d3d_draw_callees.h"
+#include "game/d3d_list_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -495,7 +496,11 @@ used:
 }
 
 void D3dDraw_Inject() {
-    if (bof3::WantsShadow("d3d_draw")) d3d_draw::SelfTest();
+    if (bof3::WantsShadow("d3d_draw")) {
+        d3d_draw::SelfTest();
+        d3d_list::SelfTest();
+    }
+    BOF3_INJECT(Gfx_DrawOTag);
     BOF3_INJECT(D3d_PrimColor);
     BOF3_INJECT(D3d_SetBlend);
     BOF3_INJECT(D3d_SetShadeMode);

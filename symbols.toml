@@ -7703,3 +7703,42 @@ ctype = "unsigned char"
 count = 0x1400
 status = "evidence"
 evidence = "disasm 2026-09-22: D3d_CellTexture walks 128 entries of 0x28 bytes from here (loop pointer 0x7CAE4A to 0x7CC24A); the draw 0x59EE50 zeroes every +0x14 (0x7CAE4C, step 0x28, to 0x7CC24C) after EndScene; D3d_BuildCellTexture fills the rest. Layout in docs/d3d-draw.md section 3."
+
+[[func]]
+pc = 0x59EE50
+name = "Gfx_DrawOTag"
+ret = "void"
+params = "unsigned long *ot"
+impl = "src/game/d3d_list.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59EE50..0x59F29F (0x450 bytes) and its tables to 0x59F518: the jump table 0x59F2A0 (25 entries) with byte index table 0x59F304 (0xD1 bytes) for Gfx_RenderFlags bit 0, the jump table 0x59F3D8 (26 entries) with byte index table 0x59F440 (0xD5 bytes) for Direct3D, both on (code & 0xFC) - 0x20 unsigned. Nothing unless Gfx_DrawEnable; D3d_AfterDrawRequest cleared on entry; the Direct3D walk between BeginScene and EndScene. Walk: while the link word is not -1, follow it; a link with its top byte set is masked to 24 bits and the node it reaches is not dispatched; a dispatched node's link is read after its handler. Entries 0..20 of each table call a handler with the primitive (42 call sites), 21 the draw mode (Gfx_DrawEnable, 0x7DED16, Gfx_DrawTpage, Gfx_TexCacheKey from a non-null +8), 22 Gfx_MoveImage(prim + 8, +0x10, +0x14), 23 Gfx_TexCacheKey from +8 unchecked, Direct3D 24 D3d_SetAlphaModulate(byte +8 ^ 1). Then Font_TexCache +0x10 and D3d_CellTexCache +0x14 cleared, all 128 of each, and a tail jmp to D3d_AfterDraw if D3d_AfterDrawRequest. Sole caller WinMain 0x4FCE6F with an ordering table; the return is not read. pe_funcs.py's size for it, 208, is wrong."
+
+[[func]]
+pc = 0x59F520
+name = "D3d_SetAlphaModulate"
+ret = "void"
+params = "unsigned on"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59F520..0x59F572, not taken over (group R's stand-in): on non-zero and the cache 0x66B720 zero - device +0xA0 SetTextureStageState(0, 4 ALPHAOP, 4 MODULATE), cache 1; on zero and the cache set - (0, 4, 3 SELECTARG2), cache 0. Called by Gfx_DrawOTag for codes 0xF4..0xF7 with byte +8 ^ 1."
+
+[[func]]
+pc = 0x59F580
+name = "D3d_AfterDraw"
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, read only as far as its frame, not taken over (group R's stand-in): Gfx_DrawOTag tail-jumps here when D3d_AfterDrawRequest is set. It reads no stack argument (its frame is 0xA8 bytes of locals and four saved registers; nothing at or above its return address is addressed); returns early under Gfx_RenderFlags bit 0; creates a 0x140 x 0x140 surface at 0x7CADF8 on first use. What it draws is unread - the name says only when it runs."
+
+[[data]]
+pc = 0x7DED17
+name = "Gfx_DrawEnable"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-22: Gfx_DrawOTag returns at once when it is 0, and its draw-mode case (codes 0xE0..0xE3, 0xE8..0xEB) stores byte +6 bit 0 of the primitive here and bit 1 at 0x7DED16 - so a draw mode with bit 0 clear turns off the NEXT draw. A raw scan of .text finds its address only in Gfx_DrawOTag (0x59EE51, 0x59EFE6, 0x59F1D7)."
+
+[[data]]
+pc = 0x7CADEA
+name = "D3d_AfterDrawRequest"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: Gfx_DrawOTag clears it on entry and tail-jumps to D3d_AfterDraw when it is non-zero after the walk; a raw scan of .text finds its address in no other instruction (0x59EE60, 0x59EE6A, 0x59F293 only), so whatever sets it does so through another base; not found."

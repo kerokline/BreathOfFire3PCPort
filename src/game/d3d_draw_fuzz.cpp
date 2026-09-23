@@ -620,7 +620,8 @@ unsigned FuzzCell(CellFn theirs, unsigned rounds, CellCover& cover) {
         const U first = Next() % 0x300;
         const U count = Next() % 2 ? Pick(counts, 11) : Next() % (kCellCountMax + 1);
         U clut = Next() % 4 ? Next() & 0x7FFF : Pick(kWords, 16);
-        if (Next() % 16 == 0) clut |= 0x10000u << (Next() % 16);
+        // wide, but so that a wrong 16-bit compare reads Gfx_ClutRows inside the image, not a fault
+        if (Next() % 16 == 0) clut |= 0x10000u << (Next() % 4);
         const U flags = Next() % 2 ? Next() & 0xFFFF : Next();
 
         for (U i = 0; i < kCellsBytes; ++i) At(kCells)[i] = static_cast<unsigned char>(Next());
@@ -630,16 +631,18 @@ unsigned FuzzCell(CellFn theirs, unsigned rounds, CellCover& cover) {
         const U row = (clut >> 6) < 512 ? (clut >> 6) : 0;
         PutLong(At(kClutRows + row * 8), Next() % 2 ? Next() : Next() % 4);
         const U generation = GetLong(At(kClutRows + ((clut >> 6) & 0x1FF) * 8));
-        const U pattern = Next() % 6;   // 0: all in use (D27); 1: none empty; 2: none empty, no key: a victim
+        // 0: all in use (D27); 1: none empty; 2: none empty, no key (a victim); 3: as 2 with every
+        // free entry at the counter ceiling 0xFFFF (D27 again); else mixed
+        const U pattern = Next() % 7;
         for (U i = 0; i < kCellEntries; ++i) {
             unsigned char* e = At(kCellCache + i * kCellEntry);
-            if (pattern > 2 && Next() % 24 == 0) PutLong(e, 0);
+            if (pattern > 3 && Next() % 24 == 0) PutLong(e, 0);
             else if (GetLong(e) == 0) PutLong(e, 1);
             U in_use = pattern == 0 ? (Next() % 2 ? 1 : Next() | 1) : (Next() % 3 == 0 ? 0 : Next() & 0xFFFF);
             if (pattern == 0 && (in_use & 0xFFFF) == 0) in_use = 1;
             PutWord(e + 0x14, in_use);
-            PutWord(e + 0x16, Next() % 2 ? Pick(counters, 7) : Next() % 8);
-            if (pattern != 2 && Next() % 6 == 0) {   // a key match, the sum right or wrong, the generation fresh or stale
+            PutWord(e + 0x16, pattern == 3 && GetWord(e + 0x14) == 0 ? 0xFFFF : Next() % 2 ? Pick(counters, 7) : Next() % 8);
+            if (pattern != 2 && pattern != 3 && Next() % 6 == 0) {   // a key match, the sum right or wrong, the generation fresh or stale
                 PutWord(e + 0x10, Next() % 8 ? clut : clut ^ 1);
                 PutWord(e + 0x12, Next() % 8 ? count : count + 1);
                 PutLong(e + 0x18, Next() % 4 ? sum : sum + 1);
@@ -662,7 +665,7 @@ unsigned FuzzCell(CellFn theirs, unsigned rounds, CellCover& cover) {
 
         const d3d_fuzz::Call* c0 = g_theirs.n ? &g_theirs.calls[0] : nullptr;
         if (c0 && c0->what == 10 && c0->a[0] == count && ret_theirs == static_cast<int>(count) &&
-            (pattern == 0 || count >= kCellEntries))
+            (pattern == 0 || pattern == 3 || count >= kCellEntries))
             ++cover.d27;
         else if (c0 && c0->what == 10 && GetLong(g_start.bytes + (kStateBytes - kCellRegionBytes) +
                                                   c0->a[0] * kCellEntry) == 0)

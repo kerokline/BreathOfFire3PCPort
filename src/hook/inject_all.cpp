@@ -140,7 +140,7 @@ void InjectAll() {
     GlyphDraw_Inject();         // every call of its clones re-aimed at a recorder, the device a fake:
                                 // order does not matter
     YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
-    D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its two jump tables
+    D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its four jump tables
                                 // relocated in the copies, the device a fake: order does not matter
     InjectReport();
 }
