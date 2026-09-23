@@ -482,10 +482,12 @@ void FlushRun() {
 }
 
 void Record(unsigned short word) {
-    // F12 counts only while the game's own window is in front.
-    DWORD fg_pid = 0;
-    if (HWND fg = GetForegroundWindow()) GetWindowThreadProcessId(fg, &fg_pid);
-    const bool f12 = fg_pid == GetCurrentProcessId() && (GetAsyncKeyState(VK_F12) & 0x8000) != 0;
+    // F12 from the game's own keyboard state: Pad_Read reads DirectInput's 256
+    // key bytes to 0x7DE828 each latch (symbols.toml Pad_Read), and DIK_F12 is
+    // 0x58. GetAsyncKeyState saw nothing on the first recording, 2026-09-23 -
+    // the game's DirectInput keyboard keeps the key from it.
+    constexpr std::uint32_t kKeyState = 0x7DE828, kDikF12 = 0x58;
+    const bool f12 = (Read(kKeyState + kDikF12, 1) & 0x80) != 0;
     const bool shot = f12 && !g_f12;
     g_f12 = f12;
     if (shot) {
