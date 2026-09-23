@@ -161,7 +161,9 @@ add_library(bof3x SHARED
   src/game/save_menu.cpp
   src/game/save_menu_fuzz.cpp
   src/game/event_ops.cpp
-  src/game/event_ops_fuzz.cpp)
+  src/game/event_ops_fuzz.cpp
+  src/game/menu_windows.cpp
+  src/game/menu_windows_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

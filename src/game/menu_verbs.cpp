@@ -130,3 +130,18 @@ void MenuVerbs_Inject() {
     if (GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang) == 0) return;
     bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt, reinterpret_cast<void*>(&MenuVerbs_DrawLabel));
 }
+
+// Menu_DrawButtonRow 0x574890 is ours since the sixth round
+// (src/game/menu_windows.cpp): it asks here which label draw the patched
+// original would call - read back from the call site itself, so it is
+// whatever RetargetCall did, BOF3X_ORIGINAL=MenuVerbs included.
+MenuVerbs_LabelFn MenuVerbs_ActiveLabel() {
+    const auto* site = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kRowLabelCall));
+    std::int32_t rel;
+    std::memcpy(&rel, site + 1, sizeof rel);
+    const std::uint32_t target = kRowLabelCall + 5 + static_cast<std::uint32_t>(rel);
+    const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MenuVerbs_DrawLabel));
+    if (site[0] != 0xE8 || (target != kTextDrawAt && target != ours))
+        bof3::Fatal("MenuVerbs: 0x%08X is not a call to Text_DrawAt or to ours", (unsigned)kRowLabelCall);
+    return target == ours ? &MenuVerbs_DrawLabel : nullptr;
+}

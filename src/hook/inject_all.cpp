@@ -76,6 +76,7 @@
 #include "game/field_misc.h"
 #include "game/save_menu.h"
 #include "game/event_ops.h"
+#include "game/menu_windows.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -176,6 +177,9 @@ void InjectAll() {
                                 // for recorders and Shop_Equip's relocated in the copy: order does not matter
     EventOps_Inject();          // every call of its clones re-aimed at a recorder, three jump tables relocated
                                 // and the chapter table operand moved in the copies: order does not matter
+    MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
+                                // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
+                                // tables relocated in the copies
     InjectReport();
 }
 
