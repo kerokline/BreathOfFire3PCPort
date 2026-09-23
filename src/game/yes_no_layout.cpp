@@ -158,3 +158,28 @@ void YesNoLayout_Inject() {
     bof3::PatchBytes("SaveNameInset", 0x576A46, name_was, name_is, 3);
     bof3::Log("DIV-0029    save slot names at x + 0x15 (on unless the line above says OFF)");
 }
+
+// Menu_YesNo 0x5747D0 is ours since the sixth round (src/game/menu_windows.cpp):
+// it asks here what YesNoLayout_Inject put into Capcom's body - read back from
+// the bytes themselves, so it is whatever went in, BOF3X_ORIGINAL=YesNoLayout
+// and the language included.
+YesNoLayout_LineFn YesNoLayout_ActiveLine() {
+    const auto* site = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kLineCall));
+    std::int32_t rel;
+    std::memcpy(&rel, site + 1, sizeof rel);
+    const std::uint32_t target = kLineCall + 5 + static_cast<std::uint32_t>(rel);
+    const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&YesNo_Line));
+    if (site[0] != 0xE8 || (target != kMsgSystemPtr && target != ours))
+        bof3::Fatal("YesNoLayout: 0x%08X is not a call to Msg_SystemPtr or to ours", (unsigned)kLineCall);
+    return target == ours ? &YesNo_Line : nullptr;
+}
+
+bool YesNoLayout_StopsMoved() {
+    const auto* at = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(0x5747F0));
+    static const std::uint8_t moved[] = {0xB9, 0x12, 0x01, 0x00, 0x00, 0x6A, 0x00, 0x6B, 0xC0, 0x38, 0x6A, 0x18, 0x90, 0x90, 0x90};
+    static const std::uint8_t original[] = {0xB9, 0xFE, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x8D, 0x04, 0xC0, 0x6A, 0x18, 0xC1, 0xE0, 0x02};
+    if (std::memcmp(at, moved, sizeof moved) == 0) return true;
+    if (std::memcmp(at, original, sizeof original) == 0) return false;
+    bof3::Fatal("YesNoLayout: the hand's stops at 0x5747F0 are neither the original's nor DIV-0027's");
+    return false;
+}

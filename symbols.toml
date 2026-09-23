@@ -101,13 +101,6 @@ status = "evidence"
 evidence = "disasm 2026-09-18: (u16 id) ptr = 0x803580 + u16[0x803580 + 2*id]; writes ptr to the box string base 0x7DEE4C and stepper pointer 0x7DEE50, calls MsgBox_Reset 0x497770, then stores id to the message index 0x7DEE48. Same three writes as PSX Msg_OpenScript's confirmed note (0x801490A8 / AC / A4), at the MsgBoxState delta. 418 callers — the script-side entry point."
 
 [[func]]
-pc = 0x497710
-psx = 0x801503AC
-name = "Msg_OpenSystem"
-status = "evidence"
-evidence = "disasm 2026-09-18: (u16 id) ptr = Msg_SystemPtr(id); 0x7DEE4C = 0x7DEE50 = ptr; 0x7DEE48 = id; MsgBox_Reset(). Operation for operation the PSX Msg_OpenSystem note. Twin of Msg_OpenScript for the system/UI/item pool."
-
-[[func]]
 pc = 0x497740
 psx = 0x801503F8
 name = "Msg_SystemPtr"
@@ -2704,14 +2697,6 @@ evidence = "disasm 2026-09-20, 0x5A2710..0x5A28FB: code 0x7C. As D3d_DrawSprt8 w
 
 # --- The field menu's panel pieces (docs/menu-screens.md, DIV-0011) ---
 
-[[func]]
-pc = 0x57D860
-name = "Menu_DrawPiece"
-ret = "void"
-params = "int x, int y, unsigned id, unsigned flags"
-status = "evidence"
-evidence = "disasm 2026-09-20, 0x57D860..0x57D90F, read to the last instruction: rect = 0x57D830(id, flags & 1) - four bytes (u, v, w, h) from the table 0x663B94, or 0x663C8C with bit 0 of flags; one SPRT at Gfx_PacketNext, Gpu_SetSemiTrans(p, 0), x and y (s16) as floats at +8 / +0xC, clut Gpu_GetClut(0xB0, 0x1E1), or (0x80, 0x1E2) with bit 1 of flags, colour 0x80; Gfx_CommitPrim(1, 0x1C). Sets no draw mode. cdecl. The PSX counterpart by its use in the frame draw 0x801DF56C (STATUS.EMI): 0x801B02A0(x, y, id, 1)."
-
 # ---------------------------------------------------------------------------
 # The menu's button rows (2026-09-21, DIV-0018, docs/config-screen.md section 8).
 # ---------------------------------------------------------------------------
@@ -2739,23 +2724,6 @@ ctype = "char"
 count = 0xB0
 status = "evidence"
 evidence = "read 2026-09-21: 22 NUL-padded 8-byte slots of two-byte Chinese codes; verbs 11 and 14 are the Config screen's two buttons. 0x59E198 pushes the first slot directly. The US disc's counterpart is 23 packed strings behind a pointer table (Use Sort Drop Eqip Opti Abil Buy Sell Chng Read Vtal Quit Form Bttn Init Note Fast Pool Ally Gene Knd Look End)."
-
-[[func]]
-pc = 0x574890
-name = "Menu_DrawButtonRow"
-ret = "void"
-params = "int x, int y, int set, int arg4, int arg5"
-status = "evidence"
-evidence = "disasm 2026-09-21: for each of Menu_ButtonSets[set].count buttons, a frame at (x + 48 * i, y, 0x2D, 0x14) through 0x57CF60, then the verb Menu_Verbs[index] through Text_DrawAt at (x + 0x16 + 48 * i - 6 * n, y + 3), count 0x10, n from Text_CharCount - so centred at 12 units a character. The colour is 0 or 7 (greyed): with a byte argument below the count, every button but that one is 7; verb 0x12 is 7 unless 0x905BA2 bit 0; verb 8 is 7 when 0x5918E0(0xF) and 0x5919B0(0, 0x58, 0) are both zero. Then 0x57D910 with 0x663440 or 0x663428 by comparing i with an argument - the selected frame. Callers: 0x461707 (Config, set 6), 0x5965FB, 0x59A66B, 0x59B33B (set from a window record's +0xA)."
-note = "Which stack argument is which past x, y and set is not pinned down; the Config caller passes the window colour 0x903A5A last."
-
-[[func]]
-pc = 0x57D800
-name = "Text_CharCount"
-ret = "unsigned char"
-params = "const unsigned char *text"
-status = "evidence"
-evidence = "disasm 2026-09-21: counts characters to a NUL, a byte with bit 7 and the byte after it as one, looking at no more than 16 bytes. 47 callers."
 
 # ---------------------------------------------------------------------------
 # The battle's command cross (2026-09-21, DIV-0019).
@@ -7481,14 +7449,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22: D3d_SetShadeMode compares its argument with it and stores it after SetRenderState(9, mode)."
 
 [[func]]
-pc = 0x5747D0
-name = "Menu_YesNo"
-ret = "unsigned char"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x5747D0..0x574881 (0xB2 bytes), read to the last ret, not taken over: the options line Msg_SystemPtr(0xF) through Text_DrawAt at (0x1C, 0x16), then the hand Menu_DrawHand(0xFE - 36 * s8 byte 0x929F0B, 0x18, 0) - 1 is Yes (left, x 218), 0 is No (x 254). Then the buttons: cancel (0x903590) plays 0x106, sets the byte to 0 and returns 1; confirm (0x90358E) plays 0x104 for Yes or 0x106 for No and returns 1; left or right (bits 0xA000 of the pad word) plays 0x101 and flips the byte; otherwise returns 0. The hand's stops were fitted to the Chinese line, whose words start at 220 and 256 (16 spaces and 2 at 12 units); the English line's start at 244 and 276. Callers 0x57FD6D (Do you want to save?), 0x57FFBF (OK to overwrite?), 0x58838B (Load game?), 0x583C42 (Is this what you want?). DIV-0027 patches it."
-
-[[func]]
 pc = 0x5905D0
 name = "Menu_DrawHand"
 ret = "void"
@@ -9006,3 +8966,373 @@ name = "Dd_StageSurface"
 ctype = "void *"
 status = "evidence"
 evidence = "disasm 2026-09-23: made by the Direct3D set-up 0x5A5160 at 0x5A5886 as Dd_CreatePlainSurface(0x140, 0x100, 0x7CC344, 0); the page builders and D3d_RefreshPageTexture lock it, convert into it, unlock it and Blt {0,0,256,256} from it into a texture; 0x5A2CA0, 0x5A32B0 and 0x5A37D0 use it too (28 instructions name it, a raw scan)."
+
+# ---------------------------------------------------------------------------
+# The menu and shop windows - the sixth round's group Y (2026-09-23,
+# docs/menu-windows.md, src/game/menu_windows.cpp). Five entries moved here
+# from above (Msg_OpenSystem, Menu_DrawPiece, Menu_DrawButtonRow,
+# Text_CharCount, Menu_YesNo); the rest new. Extents measured by recursive
+# descent from each entry; the PSX twins are analysis/pairs_propagated.json's.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x497710
+psx = 0x801503AC
+name = "Msg_OpenSystem"
+ret = "void"
+params = "unsigned id"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-18 and read again 2026-09-23, 0x497710..0x497735 (0x26 bytes, two calls): ptr = Msg_SystemPtr(id pushed whole); 0x7DEE4C = 0x7DEE50 = ptr; the u16 0x7DEE48 = id; MsgBox_Reset(). Operation for operation the PSX Msg_OpenSystem note. Twin of Msg_OpenScript for the system/UI/item pool."
+
+[[func]]
+pc = 0x498D20
+name = "MsgBox_DrawArrow"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x498D20..0x498DD5 (0xB6 bytes, 7 calls, every jump internal): nothing unless the low byte of Frame_Counter has bit 5 - so it blinks, 32 frames on and 32 off; then a draw mode of GetTPage(0, 1, 0x3C0, 0) and an 8 x 8 SPRT at (s16 x, s16 y) of (u 0xD0, v 0xF8), CLUT GetClut(0xC0, 0x1E0), shade 0x80, semi-transparent. Called by MsgBox_State3Arrow 0x497F70 (the message box's more arrow)."
+
+[[func]]
+pc = 0x516F60
+psx = 0x8015002C
+name = "Text_DrawFont12"
+ret = "void"
+params = "int x, int y, int colour, const unsigned char *text"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x516F60..0x517082 (0x123 bytes, 5 calls, every jump internal): a string in the 12 x 12 font of page 0x2F, 21 cells a row (u (c mod 21) * 12, v (c / 21) * 12, bytes), CLUT word 0x7800 or (colour and 0x3F), semi-transparent SPRTs at (s16 x, s16 y + 1); 0x0A a newline (y + 12, x back), 0x20 and 0 skipped, every byte moves the pen 12 - so the character after a newline is 12 right of x - and the loop ends on the byte after the one handled. The menus' 12 px numerals (known-defects.md D1). Pair tier call-anchored."
+
+[[func]]
+pc = 0x517090
+psx = 0x801501C0
+name = "Text_DrawFont8"
+ret = "void"
+params = "int x, int y, int colour, const unsigned char *text"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x517090..0x517192 (0x103 bytes, 5 calls, every jump internal): Text_DrawFont12's shape in the 8 x 8 font, SPRT_8 through Gpu_SetSprt8 0x5A7720, 32 cells a row from 0x20 (u ((c - 0x20) mod 32) * 8, v ((c - 0x20) / 32) * 8, C division, bytes), y as given, newline y + 8, pen 8 a byte. Every number of the menus and shops goes through it (the sprintf buffer 0x904BA0). 0x536A60 loops it for ever as an error message. Pair tier call-anchored."
+
+[[func]]
+pc = 0x596020
+psx = 0x8015AA88
+name = "Window_Kind2List"
+ret = "void"
+params = "void"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x596020..0x596089 (0x6A bytes, one call): window kind 2's list - items 0 to the s8 at 0x7DEE66 inclusive through Text_DrawImmediate at ((s16 record +4) sar 4 + set x, (s16 record +6) sar 4 + set y + i * set stride), 16-bit, the set's 6-byte record at 0x66AE2C by the byte 0x7DEE65, the record the dword 0x905B84, all read again for each item; the first text the dword 0x7DEE50, each next where Text_DrawImmediate stopped. Called by Window_Kind2Frame 0x595C10. Pair tier gap47."
+
+[[func]]
+pc = 0x573A80
+psx = 0x801D8A10
+name = "Menu_DrawEquipPanel"
+ret = "void"
+params = "int x, int y, unsigned member"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x573A80..0x573BEA (0x16B bytes, 6 calls, every jump internal): Menu_DrawPanel(x, y, 9, 0xA), EQUIP (0x663668) at (x + 0x26, y + 7), 0x5903F0(0, x + 7, y + 5, 0x10, 0x10, 0x80), then six rows 13 apart: the icon 0x663660[i] through Menu_DrawIcon8 at (x + 5, y + 0x1C + 13 i) and the name of CharacterRecords[member] byte +0x12 (weapon, 0x657450 stride 28), +0x13..+0x15 (armour, 0x657D68 stride 26), +0x16 / +0x17 (accessories, 0x658450 stride 24) through Text_DrawAt at (x + 0x11, y + 0x1A + 13 i), count Text_CharCount. The six names are looked up once, after the stat icon."
+
+[[func]]
+pc = 0x573CE0
+psx = 0x801D8E08
+name = "Menu_DrawCursorBox"
+ret = "void"
+params = "int x, int y, int w, int h, int blink, int flags"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x573CE0..0x573E42 (0x163 bytes, 4 calls, every jump internal): a LINE_F3 through 0x5A7670 (x + 4, y) (x, y + 4) (x, y + h - 1) and a LINE_F4 (x + 4, y) (x + w - 1, y) (x + w - 1, y + h - 1) (x, y + h - 1), x y w h as u16; the colour the shade in the channels flags bits 2, 1, 0 name (r, g, b) - 0xFF, or while blink's low byte is set ((Frame_Counter and 6) shl 5) + 0x3F, of its complement when bit 3 is clear. Writes its colour bytes into its own argument slot."
+
+[[func]]
+pc = 0x573E50
+psx = 0x801D8F9C
+name = "Menu_DrawIcon"
+ret = "void"
+params = "int x, int y, int icon, int shade"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x573E50..0x573F2D (0xDE bytes, 4 calls, every jump internal): draw mode (0, 1, page 0x1E); a 0x28 x 0x30 SPRT at (u16 x, u16 y) of the 4-byte record 0x66367C + icon * 4 (u, v, then the CLUT word ((b3 + 0x1E0) shl 6) or (b2 shr 4)), shade 0x80 for 0, 0x30 for 1, else (0x40, 0x40, 0x80)."
+
+[[func]]
+pc = 0x573F30
+psx = 0x801D90E8
+name = "Menu_DrawItemIcon"
+ret = "void"
+params = "int x, int y, int icon, int shade"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x573F30..0x573F61 (0x32 bytes, one call): Menu_DrawIcon, with the icon byte 4 replaced by 0xB in its own argument slot when the s8 Cond_ByteFA 0x8034E0 is 8 or more. Called by Shop_DrawMemberStats with the record's +9."
+
+[[func]]
+pc = 0x574530
+psx = 0x801DA18C
+name = "Menu_DrawExpBar"
+ret = "void"
+params = "int x, int y, unsigned member, unsigned level, unsigned exp"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x574530..0x574603 (0xD4 bytes, 5 calls, every jump internal): an opaque red LINE_F2 from (u16 x, u16 y) to (x + 57 (exp - need) / (next - need), y), need and next Char_ExpForLevel(member, level) and (member, level + 1 as a byte), the arithmetic 32-bit unsigned (the product wraps, div not idiv), the end converted by fild qword of (0, end); next equal to need: the end is x. Callers 0x573882, 0x576AE4 (not reached by the shop route)."
+
+[[func]]
+pc = 0x574610
+psx = 0x801DA2A8
+name = "Menu_DrawMoneyBox"
+ret = "void"
+params = "int x, int y, int unused, unsigned value"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x574610..0x5746BC (0xAD bytes, 7 calls, every jump internal): Menu_DrawBox(x + 3, y + 3, 0x65, 0x10, 0, the window colour), sprintf(0x904BA0, %7d at 0x64ADDC, value), Text_DrawFont12(x + 4, y + 4, 0, it), Text_DrawAt(x + 0x58, y + 4, 0, 0xFF, 0x66A31C), then Menu_DrawPieces(x, y, 0x6633A8), eleven of 0x6633B4 8 apart and 0x6633C0. The third argument is not read; five callers pass (0x62, 0x28, 0, Gold 0x904058), two a window's x and y."
+
+[[func]]
+pc = 0x5747D0
+psx = 0x801DA628
+name = "Menu_YesNo"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 and 2026-09-23, 0x5747D0..0x574881 (0xB2 bytes, 7 calls, every jump internal): the options line Msg_SystemPtr(0xF) through Text_DrawAt at (0x1C, 0x16), then the hand Menu_DrawHand(0xFE - 36 * s8 byte 0x929F0B, 0x18, 0) - 1 is Yes (left, x 218), 0 is No (x 254). Then the buttons: cancel (0x903590) plays 0x106, sets the byte to 0 and returns 1; confirm (0x90358E) plays 0x104 for Yes or 0x106 for No and returns 1; left or right (bits 0xA000 of the pad word) plays 0x101 and flips the byte; otherwise returns 0. Callers 0x57FD6D (Do you want to save?), 0x57FFBF (OK to overwrite?), 0x58838B (Load game?), 0x583C42 (Is this what you want?). DIV-0027 patches its line call and hand stops; ours asks yes_no_layout.cpp what went in."
+
+[[func]]
+pc = 0x574890
+psx = 0x801DA738
+name = "Menu_DrawButtonRow"
+ret = "void"
+params = "int x, int y, int set, int sel, int unused"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21 and 2026-09-23, 0x574890..0x5749E5 (0x156 bytes, 6 calls, every jump internal): for each of Menu_ButtonSets[set].count buttons (the count read again after each), Menu_DrawBox(x + 48 i, y, 0x2D, 0x14, 0, the window colour), then the verb Menu_Verbs[index] through Text_DrawAt at (x + 0x16 + 48 i - 6 n, y + 3), count 0x10, n from Text_CharCount. The colour is 0 or 7: with sel below the count every button but sel is 7; verb 0x12 is 7 unless 0x905BA2 bit 0; verb 8 is 7 when 0x5918E0(0xF) and 0x5919B0(0, 0x58, 0) are both zero; it is kept in the set argument's own slot. Then Menu_DrawPieces with 0x663440 on sel, 0x663428 on the rest. The fifth argument is not read. Callers: 0x461707 (Config, set 6), 0x5965FB, 0x59A66B, 0x59B33B. DIV-0018 re-aims its label call 0x57499B; ours asks menu_verbs.cpp what went in."
+
+[[func]]
+pc = 0x5749F0
+psx = 0x801DA988
+name = "Item_Price"
+ret = "unsigned"
+params = "unsigned category, unsigned id"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5749F0..0x574A5D (0x6E bytes, no calls): the u16 at 0x65746A + 28 id for category 1 (weapons), 0x657D80 + 26 id for 2 (armour), 0x658466 + 24 id for 3 (accessories), 0x656B3C + 22 id for any other (consumables) - each record's price field, both arguments bytes, the answer zero-extended."
+
+[[func]]
+pc = 0x574A60
+psx = 0x801DAA30
+name = "Char_ExpForLevel"
+ret = "int"
+params = "unsigned member, unsigned level"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x574A60..0x574AA4 (0x45 bytes, no calls): -1 for a level byte above 0x63; else the sum of the first level u16s of 0x658F48 + member * 0x318 at stride 8 - the experience a level needs. Called twice by Menu_DrawExpBar."
+
+[[func]]
+pc = 0x574AB0
+psx = 0x801DAB48
+name = "Menu_DrawTitleBox"
+ret = "void"
+params = "int x, int y, int w, int h, int colour"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x574AB0..0x574EB3 (0x404 bytes, 21 calls, every jump internal): a RECT (0, 0xF0, 16, 16) in the packet pool as the texture window, four semi-transparent POLY_FT4s of shade 0xAC and CLUT GetClut(colour * 32 + 16, 0x1E1) - a 2-wide left end with slanted corners, two middles of ((w + 1) - 4) sar 1, the second one wider for odd w + 1, a 2-wide right end - spanning (w + 1) x (h + 1) at (u16 x, u16 y); the window back to (0, 0, 256, 256); Menu_DrawOutline(x + 2, y + 2, w - 4, h - 4, 0). The screen title's box (docs/menu-screens.md section 3)."
+
+[[func]]
+pc = 0x575430
+psx = 0x801DB988
+name = "Shop_DrawMemberStats"
+ret = "void"
+params = "int x, int y, unsigned member, unsigned slot, unsigned item"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x575430..0x57568E (0x25F bytes: code to 0x575671, the 4-entry jump table 0x575674 and the 11-byte index 0x575684; 16 calls, every jump internal): slot to a category (1 weapons, 2..4 armour, 5, 10, 11 accessories, else 0), 0x5917A0(category, item) the equip mask; Menu_DrawBox(x + 3, y + 3, 0x6C, 0x30, cannot, colour); can: 0x590960(member, slot - 1, item, 4 colour bytes, 4 u16s) and its outputs 0, 1 and 3 in %3d through Text_DrawFont8 at (x + 0x2C, y + 8 + 15 i) in their colours; cannot: record u16s +0x24, +0x26, +0x28 in colour 7; Menu_DrawItemIcon(x + 0x46, y + 2, record +9, cannot); the labels 0x66A0F8, 0x66A100, 0x66A110 at (x + 5, y + 6 + 15 i) in 0 or 7; Menu_DrawPieces(x, y, 0x663528, 0). The weapon shop's member panel."
+
+[[func]]
+pc = 0x575690
+psx = 0x801DBCBC
+name = "Menu_DrawBackdrop"
+ret = "void"
+params = "unsigned kind"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x575690..0x575824 (0x195 bytes, 10 calls, every jump internal): page (0x340, 0x100); four CLUTs (0x30 / 0x50 / 0x40 / 0x60, 0x1E2) on its stack, kind picks one - read past the four for kind 4 or more (ours aborts there); ten columns 0x20 apart of opaque SPRTs tiled down to 0xF0 from the rectangles 0x663874 in the order of the pattern 0x663920 from kind's start 0x66396C, the pattern carrying on across each pair of columns. kind is Config's Background byte 0x903A5B, kept in 0..3 by 0x461239 / 0x46126D."
+
+[[func]]
+pc = 0x575830
+psx = 0x801DBEB0
+name = "Menu_DrawPanel"
+ret = "void"
+params = "int x, int y, int w, int h"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x575830..0x5759BB (0x18C bytes, 13 calls, every jump internal): Menu_DrawBox(x + 3, y + 3, w * 8 + 0x2D, h * 8 + 0x18, 0, colour), then page (0x340, 0x100) and Menu_DrawPiece pieces 0..8 with flag 1: 0 at (x, y), w of 1 from x + 0x20, 2 and 3 at the top right, w + 5 of 6 along the bottom, 4 and 8 down the sides h deep, 5 and 7 the bottom corners. w and h bytes; the bottom's byte counter never reaches w + 5 for a w of 251 or more (a hang no caller meets)."
+
+[[func]]
+pc = 0x5759C0
+name = "Menu_DrawItemList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5759C0..0x575F4B (0x58C bytes, 27 calls, every jump internal): the item list window (record +4 / +6 x y, +8 mode, +9 greyed, +0xA category, +0xB top, +0xC mark, +0xD cursor, +0x10 arrows and countdown, +0x12 scroll state). Menu_ListScroll into two locals - the offset in the low byte of its own argument slot - then 9 rows (10 while scrolling) 13 apart through Menu_DrawItemRow, greyed or Item_CanUse-refused rows colour 7 and dim, the cursor colour 2, cursor and mark rows 2 higher over a colour-7 shadow; the footer, the category's label 0x663970 centred, %3d/%3d of 0x591A80(category) and its room (0x20 key items, 0x80), the arrows 0x66349C / 0x663484 and 0x6634A8 / 0x663490 by +0x10 bits 1 and 0, +0x10 stepped down 0x10 or zeroed, the frame pieces, Menu_DrawScrollBar. Called by 0x59BB60 (pointer-reached, not in entries.txt). No PSX pair."
+
+[[func]]
+pc = 0x5762D0
+psx = 0x801DD304
+name = "Menu_DrawBorder"
+ret = "void"
+params = "int x, int y, int w, int h"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5762D0..0x5763EC (0x11D bytes, 11 calls, every jump internal): page (0x380, 0x100), then Menu_DrawPiece with flags 0: w of 0x29 along the top and 0x2E along y + 8 h + 8, h of 0x2B and 0x2C down x and x + 8 w + 8, corners 0x28 0x2A 0x2D 0x2F. w and h bytes. Shop_DrawBuyList's frame."
+
+[[func]]
+pc = 0x57CF60
+psx = 0x801AF3F0
+name = "Menu_DrawBox"
+ret = "void"
+params = "int x, int y, int w, int h, int flags, int colour"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57CF60..0x57D357 (0x3F8 bytes, 12 calls, every jump internal): the menu box. A RECT (0, 0xF0, 16, 16) in the packet pool as texture window; POLY_FT4s - a 4-wide left end, a middle (two, split at w / 2, when u16 w is 0x100 or more), a 4-wide right end - each after the first a rep movsd copy of the one before at +0x48, not at Gfx_PacketNext; shade 0x48 for flags and 0xF equal 1, else 0xAC; kind 2 semi-transparent with the CLUT at colour * 32 + 16, else colour * 32, row 0x1E1; flag bits 0x80 / 0x20 inset the left end's top / bottom 4, 0x40 / 0x10 the right end's; u v from x y's low bytes, the middles' bottom v from h's low byte, not (y + h)'s (D-NEW-Y); then the window (0, 0, 256, 256). Pair tier call-anchored."
+
+[[func]]
+pc = 0x57D360
+psx = 0x801AFA80
+name = "Menu_DrawIcon8"
+ret = "void"
+params = "int x, int y, int icon, int dim"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57D360..0x57D417 (0xB8 bytes, 5 calls, every jump internal): draw mode page 0xF; an SPRT_8 (Gpu_SetSprt8) at (u16 x, u16 y) of u ((icon + 7) shl 3) as a byte, v 0xF8, CLUT word 0x780E for icons 1, 3 and 15 else 0x780C, shade 0x40 with dim, 0x80 without. An item kind's icon."
+
+[[func]]
+pc = 0x57D420
+name = "Menu_DrawOutline"
+ret = "void"
+params = "int x, int y, int w, int h, int flags"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57D420..0x57D51E (0xFF bytes, 4 calls): four Menu_DrawLines in the colour of entry 0 of CLUT row s8 0x903A5A in the shadow 0x80B7A8 (5-bit channels shl 3): the left edge (x, y)-(x, y + h - 1) and the top (x + w, y)-(x + 1, y) under abr 2 with flag bit 0, else 1; the bottom (x, y + h)-(x + w - 1, y + h) and the right (x + w, y + h)-(x + w, y + 1) under the other. No PSX pair."
+
+[[func]]
+pc = 0x57D760
+name = "Menu_DrawLine"
+ret = "void"
+params = "int x0, int y0, int x1, int y1, int r, int g, int b, int abr"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57D760..0x57D7FF (0xA0 bytes, 5 calls): draw mode page ((abr and 3) shl 5) or 0x1E; a semi-transparent LINE_F2 from (s16 x0, s16 y0) to (s16 x1, s16 y1) in (r, g, b). Menu_DrawOutline's four edges. No PSX pair."
+
+[[func]]
+pc = 0x57D800
+psx = 0x801B020C
+name = "Text_CharCount"
+ret = "unsigned char"
+params = "const unsigned char *text"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21 and 2026-09-23, 0x57D800..0x57D826 (0x27 bytes): counts characters to a NUL, a byte with bit 7 and the byte after it as one, looking at no more than 16 bytes (the byte count may step 15 to 17). 47 callers."
+
+[[func]]
+pc = 0x57D830
+name = "Menu_PieceRect"
+ret = "const unsigned char *"
+params = "unsigned id, unsigned flags"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57D830..0x57D85A (0x2B bytes): 0x663B94 + id * 4 when the flags byte is 0, else 0x663C8C + id * 4, id a byte - Menu_DrawPiece's rectangle (u, v, w, h). No PSX pair."
+
+[[func]]
+pc = 0x57D860
+psx = 0x801B02A0
+name = "Menu_DrawPiece"
+ret = "void"
+params = "int x, int y, unsigned id, unsigned flags"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20 and 2026-09-23, 0x57D860..0x57D90E (0xAF bytes, 5 calls, every jump internal): rect = Menu_PieceRect(id, flags and 1) - four bytes (u, v, w, h) from the table 0x663B94, or 0x663C8C with bit 0 of flags; one SPRT at Gfx_PacketNext, Gpu_SetSemiTrans(p, 0), x and y (s16) as floats at +8 / +0xC, clut Gpu_GetClut(0xB0, 0x1E1), or (0x80, 0x1E2) with bit 1 of flags, colour 0x80; Gfx_CommitPrim(1, 0x1C). Sets no draw mode. cdecl. The PSX counterpart by its use in the frame draw 0x801DF56C (STATUS.EMI): 0x801B02A0(x, y, id, 1)."
+
+[[func]]
+pc = 0x57D910
+psx = 0x801B0390
+name = "Menu_DrawPieces"
+ret = "void"
+params = "int x, int y, const unsigned char *list, int flags"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57D910..0x57D99A (0x8B bytes, 4 calls, every jump internal): draw mode of GetTPage(0, 0, 0x380, 0x100), or 0x340 with flag bit 0; then 3-byte records (s8 column, s8 row, id) to an id of 0xFF, each Menu_DrawPiece(x + 8 column, y + 8 row, id, flags). Pair tier call-anchored."
+
+[[func]]
+pc = 0x57D9A0
+psx = 0x801B0494
+name = "Item_CanUse"
+ret = "unsigned char"
+params = "unsigned mode, unsigned member, unsigned category, unsigned item"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57D9A0..0x57DA6B (0xCC bytes: code to 0x57DA58, the 4-entry jump table 0x57DA5C; 4 calls): item 0 no; mode 1 a consumable (category 0) with flags bit 0 (0x656B38 stride 22), the Faerie Tiara 0x57 only where AreaMap_ByteAt(0x802D76, 0x802D7A) is 0xAE; mode 2 0x591810 bit 1; mode 3 not 0x591810 bit 3; mode 4 the member's bit of 0x5917A0; other modes yes; all four arguments bytes. item-use.md's field menu gate. Pair tier callers."
+
+[[func]]
+pc = 0x57DBF0
+name = "Menu_DrawItemRow"
+ret = "void"
+params = "int x, int y, int colour, unsigned category, unsigned id, unsigned count, int dim"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57DBF0..0x57DC88 (0x99 bytes, 7 calls): Menu_DrawIcon8(x, y + 2, 0x663D60[0x591720(category, id)], dim), the name 0x591680(category, id) through Text_DrawAt at (x + 10, y) in colour, and for a count byte above 1 *%2d (0x653EC0) through Text_DrawFont8 at (x + 0x6D, y + 2). No PSX pair."
+
+[[func]]
+pc = 0x57DD10
+psx = 0x801B0A14
+name = "Menu_DrawScrollBar"
+ret = "void"
+params = "const unsigned char *items, unsigned top, int x, int y, unsigned rows, unsigned total, unsigned height"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57DD10..0x57DEF1 (0x1E2 bytes, 6 calls, every jump internal): for each of total entries not 0, a red TILE 3 wide at s16 x + 4 over its share (i - 1) height / total to i height / total of the bar from s16 y + 3; then the thumb POLY_FT4 8 wide of (0x58..0x60, 0x98..0x9F), page GetTPage(0, 0, 0x340, 0x100), CLUT (0xB0, 0x1E1), from (total + 2 top height) / (2 total) (a byte) for rows height / total. Counts bytes, idiv - a total of 0 divides by zero. Pair tier call-anchored."
+
+[[func]]
+pc = 0x57DF00
+name = "Menu_ListScroll"
+ret = "unsigned char"
+params = "unsigned char *top, unsigned char *offset, unsigned char *moving, unsigned char *state"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57DF00..0x57DFEC (0xED bytes, no calls): a list's scroll step on its state byte - 0x1n down (top + 1 at phase 0, offset -((n + 4) mod 12), moving 1, the answer top - 1; or done), 0xFn up (top - 1 and phase 8 at phase 0, else offset -(n - 4) as a byte; done at phase 4), any other state offset and moving 0 and the state kept; answers the top as read after its stores. No PSX pair."
+
+[[func]]
+pc = 0x59B580
+psx = 0x801E2DBC
+name = "Shop_DrawBuyList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59B580..0x59B7A9 (0x22A bytes, 15 calls, every jump internal; entries_logic.txt had 0x29D): a shop's buy list - Menu_DrawBox(x + 3, y + 3, 0xAD, 0x9F, record +0xA, colour); for each (category, id) of the list at dword +0x20 (count re-read): the price 0x5830D0(Item_Price, +0xB), %6dZ, the icon 0x66B29C[0x591720] through Menu_DrawIcon8, the name, colour 7 and dim when +0xA or the price above Gold 0x904058; the cursor row +0xC 2 higher over a colour-7 shadow when affordable; rows 13 apart; Menu_DrawBorder(x, y, 0x14, 0x13). Pair tier callers."
+
+[[func]]
+pc = 0x59B820
+psx = 0x801E313C
+name = "Shop_DrawBuyDetail"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59B820..0x59BB54 (0x335 bytes, 33 calls, every jump internal; entries_logic.txt had 0x39D): the entry +0xB of the list at dword +0x20 - Menu_DrawBox(x + 3, y + 3, 0xAA, 0x3C, 0, colour), icon, name, %7dZ of quantity +0xC times 0x5830D0(price, +0xA), *%2d quantity, system messages 0x27 / 0x28 with *%2d of 0x5919B0(category, id, 0) and (.., 1), then its frame (page 0x380: 0x29 / 0x3B, 0x2B / 0x2C 6 deep, corners 0x28 0x2A 0x3A 0x3C). Pair tier callers."
+
+[[func]]
+pc = 0x59BBC0
+name = "Shop_DrawSellDetail"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59BBC0..0x59BE41 (0x282 bytes, 24 calls, every jump internal; entries_logic.txt had 0x34D): item (+0xA category, +0xB id) - the unit price 0x583100(category, id, +0xD), Menu_DrawBox(x + 3, y + 3, 0xAA, 0x1C, 0, colour), icon 0x66B2C8[kind], name, %6dZ unit, %7dZ unit times +0xC, *%2d of +0xC, then its frame 2 deep. No PSX pair."
+
+[[func]]
+pc = 0x5A7720
+psx = 0x8017B36C
+name = "Gpu_SetSprt8"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/menu_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7720..0x5A772F (0x10 bytes): byte +7 = 0x74, the PSX GPU code of SPRT_8, and the float 0.01 to +0x10. The sibling's SetSprt8 (confirmed). Callers Text_DrawFont8, Menu_DrawIcon8."

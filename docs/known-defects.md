@@ -882,3 +882,46 @@ the texture's `QueryInterface`) in a third of its rounds, and the controls
 refused ([`tex-page.md`](tex-page.md) §6). A fix - release the surfaces on
 the failure path, and have the refresh set its state only on success - is the
 owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D-NEW-Y-a — The menu box's middle takes its bottom texture row from h, not y + h (latent, unseen)
+
+**Read, not seen:** group Y of the sixth round, 2026-09-23
+([`menu-windows.md`](menu-windows.md) section 2). `Menu_DrawBox` `0x57CF60`
+draws the menu box as three or four `POLY_FT4`s of one 16 x 16 tile repeated
+through a texture window. Each quad's `v` coordinates are the screen `y` and
+`y + h` as bytes - so the tile's rows line up with the screen - for the left
+end (`0x57D065` stores `(h + y)` low byte at `+0x35` / `+0x45`) and the right
+end (`0x57D2C8` reloads that byte from the argument slot where `0x57D075`
+kept it). The middle quad(s) take their bottom `v` from `[esp + 0x40]`,
+which there is `h`'s own slot (`0x57D155` and `0x57D1C8`): `h`'s low byte,
+not `(y + h)`'s. The middle's texture is therefore stretched or squeezed by
+`y` mod 16 rows against the ends whenever `y` is not a multiple of 16.
+
+**Why it may never show:** if the tile's rows are uniform, or every caller's
+`y` is 16-aligned after its `+ 3`, nothing differs. Not checked against the
+PlayStation's `0x801AF3F0` (an overlay, unread) nor in game.
+
+**Ours does the same**; the control "the middle's v from y + h" is refused
+in 1,883 rounds of 2,000.
+
+## D-NEW-Y-b — Four bounds the menu draws never check (latent)
+
+**Read, not seen:** group Y, 2026-09-23 ([`menu-windows.md`](menu-windows.md)
+section 3). None is known to be reached by any caller:
+
+- `Menu_DrawPanel` `0x575830`: the bottom edge's counter is a byte compared
+  with `w + 5`, so a `w` of 251 or more never ends (callers pass constants of
+  9 and so).
+- `Menu_DrawScrollBar` `0x57DD10`: `idiv` by `2 * total` and by `total`, so a
+  total of 0 is a divide fault (its callers pass 0x20, 0x80 or a list's size).
+- `Menu_DrawItemList` `0x5759C0`: its row counter is a byte compared with
+  `moving + 9`; `Menu_ListScroll` only answers 0 or 1, so it is safe as
+  shipped. The list takes its item and count arrays from the category once
+  but tests the category again per row, and key items (category 4) have no
+  count array (`0x656B24` is 0): a category changed to non-4 while drawing
+  would read through the null pointer. Nothing changes it mid-draw.
+- `Menu_DrawBackdrop` `0x575690`: `kind` indexes four CLUT words on its own
+  stack with no bound; 4 and up read its stack frame and its caller's. Config
+  keeps the byte `0x903A5B` in 0..3; only a corrupted save reaches it. **Ours
+  aborts loudly there instead** (CLAUDE.md rule 4 - the stack read cannot be
+  reproduced); the other three are kept as the original has them.
