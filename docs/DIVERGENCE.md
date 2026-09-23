@@ -1389,23 +1389,32 @@ designed in rather than bolted on.
   (`tools/recipes/backdrop_kinds.txt`, save 3's field menu,
   `analysis/shots/backdrop_kinds`): kinds 4, 5, 6, 7, 8, 16, 64 and 255 all
   showed **no backdrop** - the menu's windows on black - with no crash and
-  no hang. Why is not read; a CLUT word that lands on a row of zeros, which
-  the PlayStation's convention draws transparent, would do it.
+  no hang. A second run (`ab26b`, linear filter, the pixel DIVs off) agreed
+  for every kind but **5, which drew speckled white tiles** over the whole
+  backdrop: kind 5 reads the return address's high word, a fixed CLUT word
+  `0x0057` - VRAM row 1, x `0x170`, inside the display framebuffer on the
+  PlayStation's layout - so its "palette" is whatever pixels were there, and
+  differs run to run. Kinds 4 and 6..255 were black both times (a CLUT that
+  lands on zeros, which the PlayStation's convention draws transparent, would
+  do it; not read).
 - **New behaviour:** for a kind of 4 or more ours makes the same draw-mode
   and CLUT calls and then draws no tiles. Kinds 0..3 are Capcom's, faithful
   (the fuzz; the shop route's A/B is owed with the next batch).
 - **Rationale:** the stack read cannot be reproduced in C++; the takeover
   first aborted there (CLAUDE.md rule 4), which turned what a player of the
-  original sees - a black backdrop - into a crash. Drawing nothing copies
-  what was seen, not the mechanism. The owner, 2026-09-23: only four entries
+  original sees - a black backdrop, or at kind 5 speckle that varies from
+  run to run - into a crash. Drawing nothing copies what was seen at every
+  kind but 5, not the mechanism; at 5 it replaces run-dependent noise with
+  the same black. The owner, 2026-09-23: only four entries
   are valid, and past them the original turned black.
 - **Not covered:** the packet pool: the original commits its garbage tiles
   (and a pattern of zero-height rectangles would commit more than a real
   kind); ours commits none, so the frame's packet use differs for such a
   save. Every kind past 8 but 16, 64 and 255 is unseen.
 - **Also in the PSX version?** The twin `0x801DBCBC` was not read.
-- **Verification:** the recipe above, Capcom's side; ours at kinds past 3 is
-  not yet captured (owed with the next batch).
+- **Verification:** `analysis/validate_ab26b.sh` step 2, Capcom's function
+  against ours with the pixel DIVs off on both sides: kinds 0..4 and 6..255
+  identical, 5 not (the speckle above).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Menu_DrawBackdrop` (Capcom's function,
   stack read and all).
 
