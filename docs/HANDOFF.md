@@ -152,7 +152,12 @@ The single next action, concrete enough to start without asking anyone.
       and its large draw). DIV-0017's pair of patches on that function, then
       the right edge in game; `tools/recipes/config_controller.txt` reaches
       the panel (not yet run) and shows D17 too, so one capture judges
-      both. Named by this round and not taken: **`0x5951D0`** (the area's
+      both. **And the save screen's Yes / No hand** - off to the left and
+      stepping left on No where the PSX steps right
+      ([`dialogue-localisation.md`](dialogue-localisation.md) §6 item 8,
+      measured against the recomp); unread, so read first, and it needs a
+      way to a save point (a recipe or an owner capture). Named by this
+      round and not taken: **`0x5951D0`** (the area's
       entry list, which `GameMode_Enter` walks) and **`0x531F90`** (the
       drop-in party placement `Area_Enter` calls, 94 call sites), both large
       with callers nobody has read - K's suggestion for the next group
