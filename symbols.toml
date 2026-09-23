@@ -960,14 +960,6 @@ evidence = "disasm 2026-09-19: if byte[0x937F90] is set, calls 0x59EB00 (the com
 note = "0x80F580 is inside the DAT arena (MessagePools + 0xC000). What the 256 x 32 strip at y = 480 holds is unread."
 
 [[func]]
-pc = 0x587CD0
-name = "Snd_LoadBank"
-ret = "void"
-params = "unsigned bank, const void *payload, unsigned size"
-status = "evidence"
-evidence = "disasm 2026-09-19: slot = 0x6BC928 + (bank - 1)*0x384. If the slot already owns sample data (pointer at slot +0x380) it frees it, and for each of its 64 voice entries (8 bytes each from slot +0x180: sample pointer, buffer handle) releases the handle through 0x5A6C90 and clears any of the 23 dwords at 0x6BC8C8..0x6BC924 equal to it. Then: copies the first 0x380 bytes of the payload into the slot, mallocs size - 0x380 and copies the rest there, and for each voice entry whose offset is non-zero rewrites it to data + offset - 0x380 and stores the result of 0x5A69C0(that pointer) beside it. Shipped data uses banks 1..6 only (census of all 742 DAT files 2026-09-19: 210, 244, 63, 74, 70, 240 chunks). bank 0 would index before the table; nothing checks."
-
-[[func]]
 pc = 0x59E700
 name = "Gfx_InvalidateTextures"
 ret = "void"
@@ -8783,15 +8775,157 @@ status = "hypothesis"
 evidence = "disasm 2026-09-22, read only as far as its frame, not taken over (group R's stand-in): Gfx_DrawOTag tail-jumps here when D3d_AfterDrawRequest is set. It reads no stack argument (its frame is 0xA8 bytes of locals and four saved registers; nothing at or above its return address is addressed); returns early under Gfx_RenderFlags bit 0; creates a 0x140 x 0x140 surface at 0x7CADF8 on first use. What it draws is unread - the name says only when it runs."
 
 [[data]]
-pc = 0x7DED17
-name = "Gfx_DrawEnable"
-ctype = "unsigned char"
-status = "evidence"
-evidence = "disasm 2026-09-22: Gfx_DrawOTag returns at once when it is 0, and its draw-mode case (codes 0xE0..0xE3, 0xE8..0xEB) stores byte +6 bit 0 of the primitive here and bit 1 at 0x7DED16 - so a draw mode with bit 0 clear turns off the NEXT draw. A raw scan of .text finds its address only in Gfx_DrawOTag (0x59EE51, 0x59EFE6, 0x59F1D7)."
-
-[[data]]
 pc = 0x7CADEA
 name = "D3d_AfterDrawRequest"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "disasm 2026-09-22: Gfx_DrawOTag clears it on entry and tail-jumps to D3d_AfterDraw when it is non-zero after the walk; a raw scan of .text finds its address in no other instruction (0x59EE60, 0x59EE6A, 0x59F293 only), so whatever sets it does so through another base; not found."
+
+# --- Group S, fifth round (2026-09-23): the display environments, the present, the bank load. docs/display-env.md ---
+
+[[func]]
+pc = 0x5A7860
+name = "Gpu_PutDispEnv"
+ret = "void"
+params = "const unsigned char *env"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7860..0x5A7885 (0x26 bytes, whole), cdecl: if the word at 0x7DECE2 differs from env +2 (a 16-bit compare), Gfx_Present (0x5A7872); then rep movsd of 5 dwords from env to Gpu_DispEnv. PutDispEnv by shape - the libgpu call the PSX main loop makes here (sibling symbols.toml 0x8017C610). Sole caller WinMain 0x4FCE46, with [0x937F84], the current double-buffer block; the eax it leaves is not read there (0x4FCE4B loads edx). attract-remaining.md: 10,860 calls."
+
+[[func]]
+pc = 0x5A7890
+name = "Gpu_PutDrawEnv"
+ret = "void"
+params = "const unsigned char *env"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7890..0x5A78DC (0x4D bytes, whole), cdecl: env bytes +0x19, +0x1A, +0x1B against 0x7DED19..0x7DED1B in that order, stopping at the first difference; on one, D3d_SetBackColor(r, g, b) (0x5A78C6) with each byte in a dword whose upper bits are the caller's registers; then rep movsd of 0x17 dwords from env to Gpu_DrawEnv. PutDrawEnv by shape (sibling 0x8017C3B8). Sole caller WinMain 0x4FCE55 with [0x937F84] + 0x14; eax not read there. 10,860 calls."
+
+[[func]]
+pc = 0x5A78E0
+name = "Gpu_SetDefDispEnv"
+ret = "unsigned char *"
+params = "unsigned char *env, int x, int y, int w, int h"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A78E0..0x5A7907 (0x28 bytes, whole), cdecl, no calls: the four arguments' low words to env +0, +2, +4, +6; returns env. SetDefDispEnv by shape; the PSX library's (SLPS 0x8017AF5C, sibling tools/disasm_exe.py) also zeroes +8..+0x13, this one does not. Callers the set-up 0x4FD110 only: (0x903880, 0, 0xF0, 0x140, 0xF0) and (0x903910, 0, 0, 0x140, 0xF0)."
+
+[[func]]
+pc = 0x5A7910
+name = "Gpu_SetDefDrawEnv"
+ret = "unsigned char *"
+params = "unsigned char *env, int x, int y, int w, int h"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7910..0x5A7959 (0x4A bytes, whole), cdecl, no calls: words +0 x, +2 y, +4 w, +6 h; +0xC and +0xE 0, +0x10 and +0x12 0x100; bytes +0x16 and +0x17 1; the dword +0x18 0; returns env. +8..+0xB (the draw offset) and +0x14 (tpage) are not written, where the PSX library's (SLPS 0x8017AE8C) sets the offset to (x, y), tpage 0xA, the window to zeros and dfe by the height. Callers the set-up 0x4FD110 only: (0x903894, 0, 0, 0x140, 0xF0) and (0x903924, 0, 0xF0, 0x140, 0xF0)."
+
+[[func]]
+pc = 0x59EDF0
+name = "Gfx_Present"
+ret = "void"
+params = "void"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59EDF0..0x59EE4F (0x60 bytes, whole): with the dword Gfx_RenderFlags bit 0x200 (windowed, set at 0x5A5643 after SetCooperativeLevel DDSCL_NORMAL) DDraw_Primary Blt (+0x14) of DDraw_BackBuffer from Gfx_ScreenRect to Gfx_WindowRect, DDBLT_WAIT, no DDBLTFX; else Flip (+0x2C) of the primary with the back buffer, DDFLIP_WAIT. On DDERR_SURFACELOST 0x887601C2 Restore (+0x6C) of the primary, read again. Then if byte 0x7DED18 (Gpu_DrawEnv +0x18, isbg) is set, Gfx_ClearPresent(1) (0x59EE49). Sole caller Gpu_PutDispEnv (0x5A7872). 9,466 calls in attract-remaining.md."
+
+[[func]]
+pc = 0x59ECE0
+name = "Gfx_ClearPresent"
+ret = "void"
+params = "unsigned flags"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59ECE0..0x59EDE6 (0x107 bytes, whole, three rets), cdecl, the low byte of flags only: bit 0 clears the back buffer - Gfx_RenderFlags bit 0 a DDBLT_COLORFILL | DDBLT_WAIT Blt on DDraw_BackBuffer with a zeroed 0x64-byte DDBLTFX (dwSize 0x64, fill 0), else D3d_Viewport Clear (+0x30) (1, Gfx_ScreenRect, D3DCLEAR_TARGET); bit 1 presents as Gfx_Present does, windowed the Blt and return, else the Flip and the same clear again (the flag byte re-read). Six indirect calls, no relative ones, no result tested. Sole caller Gfx_Present, with 1. 9,465 calls."
+
+[[func]]
+pc = 0x5A5050
+name = "D3d_SetBackColor"
+ret = "void"
+params = "unsigned r, unsigned g, unsigned b"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A5050..0x5A512F (0xE0 bytes, whole), cdecl: nothing unless D3d_BackMaterial and D3d_Viewport are both non-null. A zeroed D3DMATERIAL on the stack: dwSize 0x50, diffuse and ambient (r, g, b, 1.0f) each channel fild (c and 0xFF) fmul the float 1/255 at 0x5C4620 fstp to a float, dwRampSize 0x20; D3d_BackMaterial SetMaterial (+0xC) - the pointer read at entry - then D3d_Viewport, read again, SetBackground (+0x20) with D3d_BackMaterialHandle. Matches the material the set-up builds black at 0x5A59E7..0x5A5A80. Sole caller Gpu_PutDrawEnv."
+note = "Named by what it sets: the viewport's background, which Gfx_ClearPresent's Clear fills with."
+
+[[func]]
+pc = 0x587CD0
+name = "Snd_LoadBank"
+ret = "void"
+params = "unsigned bank, const void *payload, unsigned size"
+impl = "src/game/display_env.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19 and 2026-09-23, 0x587CD0..0x587DAD (0xDE bytes, whole; pe_funcs.py said 0xBA9): record = 0x6BC928 + (bank - 1)*0x384. If the record's data pointer (+0x380) is set: Crt_free of it (0x587CEF), then for each of the 64 voice entries (8 bytes from +0x180: sample, buffer) with a buffer, SndBuf_Release (0x587D09) and each of the 23 Sound_Channels dwords equal to the buffer as read again after the call cleared. Then rep movsd of 0xE0 dwords of the payload over the record, Crt_malloc(size - 0x380) (0x587D51, not tested) stored at +0x380, the rest of the payload copied there (dwords, then bytes), and for each voice entry with a non-zero first dword: it becomes [+0x380] + it - 0x380, and SndBuf_FromWave of that (0x587D99) is the buffer beside it. Callers LoadDatFile 0x454704 and 0x4547E9, both chunk kind 2; eax not read. Shipped data uses banks 1..6 only (census of all 742 DAT files 2026-09-19: 210, 244, 63, 74, 70, 240 chunks). Nothing checks the bank or the size."
+
+[[data]]
+pc = 0x7DECE0
+name = "Gpu_DispEnv"
+ctype = "unsigned char"
+count = 0x14
+status = "evidence"
+evidence = "disasm 2026-09-23: Gpu_PutDispEnv compares the word at +2 (0x7DECE2) with the new DISPENV's y and copies the 0x14 bytes here after presenting."
+
+[[data]]
+pc = 0x7DED00
+name = "Gpu_DrawEnv"
+ctype = "unsigned char"
+count = 0x5C
+status = "evidence"
+evidence = "disasm 2026-09-23: Gpu_PutDrawEnv copies the 0x5C-byte DRAWENV here every rendered frame, after comparing +0x19..+0x1B (the clear colour). Inside it at PSX DRAWENV offsets: Gfx_TexCacheKey +0xC (tw), Gfx_DrawTpage +0x14 (tpage), 0x7DED16 (dtd), Gfx_DrawEnable +0x17 (dfe), and +0x18 (isbg), which Gfx_Present reads to clear the back buffer after a present. The draw-mode primitives of Gfx_DrawOTag overwrite the first four during a frame; the next Gpu_PutDrawEnv puts the environment's values back."
+
+[[data]]
+pc = 0x7DED17
+name = "Gfx_DrawEnable"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-22 and 2026-09-23: Gfx_DrawOTag returns at once when it is 0, and its draw-mode case (codes 0xE0..0xE3, 0xE8..0xEB) stores byte +6 bit 0 of the primitive here and bit 1 at 0x7DED16. A raw scan of .text finds its address only in Gfx_DrawOTag (0x59EE51, 0x59EFE6, 0x59F1D7) - but it is the dfe byte of Gpu_DrawEnv, and Gpu_PutDrawEnv's dword copy (0x5A78D8) sets it from the environment every rendered frame before WinMain's Gfx_DrawOTag (0x4FCE55 before 0x4FCE6F). Gpu_SetDefDrawEnv puts 1 in both environments and no instruction names their +0x17 (pe_xref 0x9038AB, 0x90393B), so a draw mode with bit 0 clear turns off the rest of the frame's walk only if it is a later draw of the same frame; the next frame's draw is enabled again."
+
+[[data]]
+pc = 0x7CC338
+name = "DDraw_Primary"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-23: the set-up's CreateSurface (+0x18) out at 0x5A557C (caps 0x200, primary, windowed) and 0x5A56D7 (caps 0x2218, a flip chain with one back buffer, fullscreen). Gfx_Present and Gfx_ClearPresent Blt onto it or Flip it; Restore on DDERR_SURFACELOST."
+
+[[data]]
+pc = 0x7CC33C
+name = "DDraw_BackBuffer"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-23: windowed, its own CreateSurface at 0x5A55E2 (the Gfx_ScreenRect size); fullscreen, GetAttachedSurface (+0x30) of DDraw_Primary with caps 4 (back buffer) at 0x5A5710. What the frame is drawn into; Gfx_Present shows it, Gfx_ClearPresent clears it."
+
+[[data]]
+pc = 0x7CC354
+name = "D3d_Viewport"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-23: CreateViewport (+0x18) of the IDirect3D at 0x7CC34C into it at 0x5A58D7, added to D3d_Device at 0x5A5905; skipped under Gfx_RenderFlags bit 0 (0x5A58CA). Gfx_ClearPresent's Clear (+0x30), D3d_SetBackColor's SetBackground (+0x20)."
+
+[[data]]
+pc = 0x7CC358
+name = "D3d_BackMaterial"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-23: CreateMaterial (+0x14) of the IDirect3D into it at 0x5A59C8, set black (0x5A5A57), its handle (+0x14 GetHandle) to D3d_BackMaterialHandle and that to the viewport's SetBackground (0x5A5A80). D3d_SetBackColor sets its colour."
+
+[[data]]
+pc = 0x6C3A40
+name = "D3d_BackMaterialHandle"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-23: GetHandle (+0x14) of D3d_BackMaterial writes it at 0x5A5A65; D3d_SetBackColor hands it to SetBackground."
+
+[[data]]
+pc = 0x66B708
+name = "Gfx_ScreenRect"
+ctype = "long"
+count = 4
+status = "evidence"
+evidence = "image 2026-09-23: {0, 0, 0x280, 0x1E0} in .data. The set-up sizes the windowed back buffer from +8 and +0xC (0x5A5594, 0x5A559C); the source rect of Gfx_Present's windowed Blt and the rect of Gfx_ClearPresent's viewport Clear."
+
+[[data]]
+pc = 0x6BE1D0
+name = "Gfx_WindowRect"
+ctype = "long"
+count = 4
+status = "evidence"
+evidence = "disasm 2026-09-23: 0x5A5130(x, y) stores {x, y, x + Gfx_ScreenRect.right, y + Gfx_ScreenRect.bottom} here - the game window's client area on the desktop, by its use: the destination of Gfx_Present's windowed Blt onto the primary."

@@ -67,6 +67,7 @@
 #include "game/item_use.h"
 #include "game/sound.h"
 #include "game/d3d_draw.h"
+#include "game/display_env.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -148,6 +149,8 @@ void InjectAll() {
                                 // operands moved onto recorders in the copies: order does not matter
     D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its four jump tables
                                 // relocated in the copies, the device a fake: order does not matter
+    DisplayEnv_Inject();        // every call of its clones re-aimed at a recorder or at another of its
+                                // clones, the surfaces, viewport and material fakes: order does not matter
     InjectReport();
 }
 
