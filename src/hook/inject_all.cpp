@@ -65,6 +65,7 @@
 #include "game/glyph_draw.h"
 #include "game/yes_no_layout.h"
 #include "game/item_use.h"
+#include "game/sound.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -142,6 +143,8 @@ void InjectAll() {
     YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
     ItemUse_Inject();           // every call of its clones re-aimed at a recorder, the handler table and
                                 // four area descriptors swapped: order does not matter
+    Sound_Inject();             // every call of its clones re-aimed at a recorder, its three Win32 import
+                                // operands moved onto recorders in the copies: order does not matter
     InjectReport();
 }
 

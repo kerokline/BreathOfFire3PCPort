@@ -3228,14 +3228,6 @@ status = "hypothesis"
 evidence = "call site 0x57798A in MoveScript_GroupF, 2026-09-22: op F9 b1 b2 calls it (b1, b2) and repeats while eax is non-zero. The body stores its arguments' low bytes into its own frame; not read further. psx_pair callers."
 
 [[func]]
-pc = 0x587740
-name = "Sound_PlayEffect"
-ret = "void"
-params = "unsigned short id"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (prologue): the argument masked to 16 bits; bits 8-11 minus 1 select one of a set of 0x384-byte records at 0x6BC928, the low byte an entry of 16 bytes in it. Called with 0x103 by ops FB / FC and 0x200 + b1 by op FE; 148 calls in hidden_b (docs/attract-remaining.md section 4.12). Named for those uses; the DirectSound end is unread."
-
-[[func]]
 pc = 0x572650
 name = "MoveCmd_TestFB"
 psx = 0x80155B38
@@ -3483,38 +3475,6 @@ ret = "void"
 params = "unsigned short id"
 status = "evidence"
 evidence = "disasm 2026-09-22, 4 instructions: Sound_PlayEffect(its first argument). Ops BC and BD call it with three and two arguments, D1 with two; only the first is read."
-
-[[func]]
-pc = 0x587AE0
-name = "Music_Play"
-ret = "void"
-params = "unsigned int track, int unknown"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its first 16 instructions): nothing if track equals the byte 0x904131, else stores it there and (re)starts playback through 0x587A20 and 0x5A6FB0. Ops B4 and BE call it (b1, 8); whether the 8 is read is unread. PSX B4 and BE call two different functions, 0x80162610 and 0x80162514."
-
-[[func]]
-pc = 0x587B40
-name = "Music_FadeOutStop"
-ret = "void"
-params = "int frames"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 16 instructions: flag 0x6BDE58 = 1, 0x6BDE54 = frames, and the float step 0x6BDE60 = -(0x6BDE5C / frames) - a ramp from the current volume to nothing over `frames`, with a flag the other ramps clear. Ops B5 (8) and B9 (10)."
-
-[[func]]
-pc = 0x587BA0
-name = "Music_FadeIn"
-ret = "void"
-params = "int frames"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 14 instructions: flag 0x6BDE58 = 0, 0x6BDE54 = frames, the step (float 0x5C427C - 0x6BDE5C) / frames. Op BA, over b4."
-
-[[func]]
-pc = 0x587BE0
-name = "Music_FadeOut"
-ret = "void"
-params = "int frames"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 14 instructions: as Music_FadeOutStop with the flag 0x6BDE58 cleared. Op BB, over b4."
 
 [[func]]
 pc = 0x4DF820
@@ -8213,3 +8173,451 @@ params = "unsigned pressed"
 status = "evidence"
 impl = "src/game/item_use.cpp"
 evidence = "disasm 2026-09-22, 0x48 bytes, no calls: with the argument's low word non-zero (callers pass Input_Pressed masked to the directions they want), the countdown word 0x7E1BE0 = 0xC, the latch word 0x7E01B8 = Input_Held, and the answer is the dword at Input_Held (Input_Previous above it); else, if the latch shares a bit with Input_Held and the countdown reaches 0 on its decrement, the countdown 3, the latch Input_Held and the same dword; otherwise that dword with its low word 0. PSX 0x8014E534 (call-anchored). 104 call sites (E8 scan), among them MsgBox_ChoiceInput and MsgBox_MenuInput; several keep the whole eax (mov esi, eax) and test bits of the low word only. hidden_b: 0 calls."
+# --- Group Q of the fourth parallel round (2026-09-22): the sound layer, src/game/sound.cpp, docs/sound.md.
+# Sound_PlayEffect, Music_Play and the three fades were moved here from their earlier places. Every body read
+# to its last instruction by capstone 2026-09-22; the sizes are the true extents (pe_funcs.py had 0x5A6FB0 as
+# 0x40 and 0x5A7050 as 0x30, each running into a pointer-reached twin after it). No PSX twin for any body: the
+# PC port rewrote the sound driver over DirectSound (PSX SE_Play 0x8015E908 keys SPU voices; see docs/sound.md).
+
+[[func]]
+pc = 0x587740
+name = "Sound_PlayEffect"
+ret = "void"
+params = "unsigned short id"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587740..0x587858 (0x119 bytes, whole), cdecl. id & 0xFFFF; bank = bits 8-11, cue = the low byte; the cue is four dwords at Sound_Banks + (bank - 1) * 0x384 + cue * 16 - the PSX SE_Play cue of up to four chord voices, bank:id alike. For each non-zero word: channel = bits 8-12, less 23 when 23 or more, into Sound_Channels; voice = the low byte. Voice 0xFF stops and forgets the channel's buffer (SndBuf_Stop). Otherwise the channel's buffer is stopped, and SndBuf_Play(the voice entry's sample pointer OR bit 15 moved to bit 31, the entry's buffer, the word's high half as the frequency); the channel keeps the entry's buffer (read again after the call) when bit 15 is set, else 0. Returns eax 0 always (its loop counter). 1,234 call sites (rel32 scan); hidden_b 148 calls."
+note = "Bank 0 indexes 0x384 bytes before the table and a cue past 23 reads into the voice entries: nothing checks either (docs/sound.md section 2). The PSX SE_Play takes banks 0..6."
+
+[[func]]
+pc = 0x587A20
+name = "Music_LoadFile"
+ret = "int"
+params = "unsigned track"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587A20..0x587AD7 (0xB8 bytes, whole), cdecl. Crt_sprintf both names into 0x28-byte locals (the looping name at 0x666FB8, BGM backslash %03d.DAT; the once name at 0x666FA8, the same with N), Music_FileLoops = 1, File_Open the looping name; on -1 File_Open the once name, on -1 again return -1 (Music_FileLoops left 1, nothing else changed), else Music_FileLoops = 0. Then Crt_free(Music_File) if set, Music_FileSize = File_Size, Music_File = Crt_malloc(size), File_Read of the whole file, File_Close, Music_LoadedTrack = track. docs/asset-loading-path.md section 1a. hidden_b 9 calls (Music_Play 6, 0x56B2B0 3); 30 call sites."
+note = "The success eax is whatever File_Close left (ours returns 0; File_Close is ours and void). When neither file opens, Music_Play goes on to start the previous file, looping: docs/known-defects.md D24."
+
+[[func]]
+pc = 0x587AE0
+name = "Music_Play"
+ret = "void"
+params = "unsigned int track, int frames"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587AE0..0x587B3F (0x60 bytes, whole), cdecl. Nothing if track (the whole dword) equals the byte Music_Track, and eax is track. Else Music_Track = its low byte; Music_LoadFile(track) unless track equals Music_LoadedTrack; Music_Volume = 0 and Music_SetVolume(0.0); Music_Start(Music_File, Music_FileSize, Music_FileLoops); Music_FadeIn(frames), whose eax (frames) it returns. Ops B4 and BE call it (b1, 8): the 8 is the fade-in in frames. 122 call sites; hidden_b 18 calls."
+
+[[func]]
+pc = 0x587B40
+name = "Music_FadeOutStop"
+ret = "void"
+params = "int frames"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587B40..0x587B77 (0x38 bytes, whole), cdecl, x87: Music_FadeStops = 1, Music_FadeCount = frames, Music_FadeStep = -(Music_Volume / frames) with frames loaded as a 64-bit integer whose high half is 0 (fild qword), so unsigned. Returns eax frames. Sound_Tick steps the volume and stops the music when the count reaches 0. Ops B5 (8) and B9 (10). 131 call sites; hidden_b 8 calls."
+
+[[func]]
+pc = 0x587BA0
+name = "Music_FadeIn"
+ret = "void"
+params = "int frames"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587BA0..0x587BD5 (0x36 bytes, whole), cdecl, x87: Music_FadeStep = (127.0 at 0x5C427C - Music_Volume) / frames with frames as a signed dword (fidiv), Music_FadeStops = 0, Music_FadeCount = frames. Returns eax frames. Op BA over b4 and Music_Play. hidden_b 12 calls."
+
+[[func]]
+pc = 0x587BE0
+name = "Music_FadeOut"
+ret = "void"
+params = "int frames"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587BE0..0x587C11 (0x32 bytes, whole), cdecl: Music_FadeOutStop with Music_FadeStops = 0 - the volume goes to nothing and the music keeps playing. Returns eax frames. Op BB over b4, Title_FadeMusic. 31 call sites; hidden_b 3 calls."
+
+[[func]]
+pc = 0x587C70
+name = "Sound_Tick"
+ret = "void"
+params = "void"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x587C70..0x587CC0 (0x51 bytes, whole), cdecl, begins with a call: Music_Pump; then while Music_FadeCount is not 0, Music_Volume += Music_FadeStep (x87, stored as a float), Music_SetVolume(Music_Volume), Music_FadeCount - 1, and at 0 with Music_FadeStops Music_Stop and Music_Track = 0xFF. Sole caller WinMain 0x4FCEBC, in the loop that waits out the frame (docs/call-trace.md section 4): 6,710,895 calls in hidden_b, one per spin; eax is overwritten by the next call there."
+note = "A fade's frames are therefore spins of the wait loop, not frames: docs/known-defects.md D26."
+
+[[func]]
+pc = 0x5A69C0
+name = "SndBuf_FromWave"
+ret = "void *"
+params = "const unsigned char *wave"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A69C0..0x5A69D9 (0x1A bytes, whole): 0 without Snd_Device, else SndBuf_CreateFromWave(wave). Sole caller Snd_LoadBank (0x587D99), which keeps the result as the voice entry's buffer. hidden_b 176 calls."
+
+[[func]]
+pc = 0x5A69E0
+name = "SndBuf_CreateFromWave"
+ret = "void *"
+params = "const unsigned char *wave"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A69E0..0x5A6A9B (0xBC bytes, whole), cdecl: the 16 bytes at wave + 0x14 (a RIFF WAVE's fmt chunk body) to Snd_WaveFormat, cbSize 0; size = Wave_FindData(wave, &data); Snd_BufferDesc zeroed, then dwSize 0x24, flags 0x180E2 (STATIC, CTRLFREQUENCY, CTRLPAN, CTRLVOLUME, GLOBALFOCUS, GETCURRENTPOSITION2), bytes = size, format = Snd_WaveFormat; Snd_Device CreateSoundBuffer (vtable +0xC) into its own argument slot; 0 on failure, else SndBuf_Write(buffer, data, 0, size) and the buffer. Callers SndBuf_FromWave and 0x5A7140. hidden_b 176 calls."
+
+[[func]]
+pc = 0x5A6AA0
+name = "Wave_FindData"
+ret = "unsigned"
+params = "const unsigned char *wave, const unsigned char **data"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6AA0..0x5A6AE3 (0x44 bytes, whole), cdecl, no calls: from offset 0x14 + the dword at +0x10 (past the fmt chunk) walks chunks by their size + 8 until the four bytes d a t a, stores the chunk body's address through data when data is not null, and returns the chunk size. No end test: a wave without a data chunk walks off. Callers SndBuf_CreateFromWave, SndBuf_Play, 0x5A7140. hidden_b 176 calls."
+
+[[func]]
+pc = 0x5A6AF0
+name = "SndBuf_Write"
+ret = "long"
+params = "void *buffer, const void *src, unsigned offset, unsigned size"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6AF0..0x5A6BAA (0xBB bytes, whole), cdecl: Lock(offset, size, flags 0) (vtable +0x2C) into its own argument slots; on DSERR_BUFFERLOST Restore (+0x50) and Lock again; any other failure returns its HRESULT. Copies n1 bytes to the first region, and n2 bytes from src + n1 to the second only when n1 differs from size; returns Unlock's (+0x4C) HRESULT. Callers SndBuf_CreateFromWave, SndBuf_Play, Music_CreateBuffer, Music_Pump, 0x5A7140. hidden_b 1,328 calls (1,140 from Music_Pump)."
+
+[[func]]
+pc = 0x5A6BB0
+name = "SndBuf_Play"
+ret = "void"
+params = "unsigned sample, void *buffer, unsigned frequency"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6BB0..0x5A6C24 (0x75 bytes, whole), cdecl: nothing for a null buffer; SetCurrentPosition(0) (+0x34), SetFrequency(frequency) (+0x44), Play(0, 0, bit 31 of sample) (+0x30); on DSERR_BUFFERLOST the data is written again - Wave_FindData(sample and 0x7FFFFFFF, into its own first argument slot), SndBuf_Write(buffer, data, 0, size) - and played again. Sole caller Sound_PlayEffect. hidden_b 12 calls."
+
+[[func]]
+pc = 0x5A6C30
+name = "SndBuf_Stop"
+ret = "void"
+params = "void *buffer"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6C30..0x5A6C52 (0x23 bytes, whole), cdecl: for a buffer, GetStatus (+0x24) into its own argument slot and Stop (+0x48) when bit 0 (DSBSTATUS_PLAYING) is set. Callers Sound_PlayEffect (two sites), 0x587860, 0x587C30. Not in the hidden_b trace list (no entry of its own there)."
+
+[[func]]
+pc = 0x5A6C90
+name = "SndBuf_Release"
+ret = "void"
+params = "void *buffer"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6C90..0x5A6CB8 (0x29 bytes, whole), cdecl: SndBuf_Stop's body, then Release (+8). Sole caller Snd_LoadBank (0x587D09), for each voice of a bank it reloads. hidden_b 153 calls."
+
+[[func]]
+pc = 0x5A6CC0
+name = "Music_Start"
+ret = "void"
+params = "const void *file, unsigned size, int loops"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6CC0..0x5A6D5E (0x9F bytes, whole), cdecl: nothing without Snd_Device. Music_Release if Music_Data is set; Music_Data = Crt_malloc(size) and the file copied into it; Music_Decoder = Music_OpenDecoder(Music_Data, size); Music_Buffer = Music_CreateBuffer(); with a buffer, Music_SetNotify(it) and Play(0, 0, 1) (+0x30, looping: a streaming ring). Then Music_Finished = 0 and Music_Loops = loops - after the first half was decoded. Callers Music_Play and Sound_LoadStream. hidden_b 12 calls."
+note = "A decoder that does not open leaves Music_Decoder 0, and the buffer is still made and played from whatever Music_Staging holds: docs/known-defects.md D25."
+
+[[func]]
+pc = 0x5A6D60
+name = "Music_OpenDecoder"
+ret = "void *"
+params = "const void *file, unsigned size"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6D60..0x5A6DE0 (0x81 bytes, whole), cdecl, every decoder call stdcall (the stack balances with no add esp after them, and each callee ends ret 4 / 8 / 0xC): Mp3_Create(&decoder), 0 on failure; Mp3_MemoryIo(io) fills a 0x2C-byte local; Mp3_SetIo(decoder, io); Crt_sprintf(name, the format at 0x66BC24 %X@%X, size, file); Mp3_Open(decoder, name, -1), 0 on failure (the decoder is not destroyed); Mp3_Start(decoder); the decoder when that returned 0, else 0. Sole caller Music_Start. hidden_b 12 calls."
+
+[[func]]
+pc = 0x5A6DF0
+name = "Music_SetNotify"
+ret = "long"
+params = "void *buffer"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6DF0..0x5A6E5F (0x70 bytes, whole), cdecl: QueryInterface (+0) for IID_IDirectSoundNotify (0x5C45B8) into Music_Notify, unchecked; two CreateEventA(0, 0, 0, 0) through the import slot 0x5C4080 into Music_Events; SetNotificationPositions (+0xC) of 2: offset 0 with the first event, 0x12000 with the second. Returns that HRESULT; its caller ignores it. Sole caller Music_Start. hidden_b 12 calls."
+
+[[func]]
+pc = 0x5A6E60
+name = "Music_CreateBuffer"
+ret = "void *"
+params = "void"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6E60..0x5A6F2B (0xCC bytes, whole), cdecl, reads no argument (Music_Start pushes Music_Data anyway): Snd_BufferDesc zeroed; Snd_WaveFormat PCM, 2 channels, 44,100 Hz, 0x2B110 bytes a second, block 4, 16 bits; flags 0x181E0 (CTRLFREQUENCY, CTRLPAN, CTRLVOLUME, CTRLPOSITIONNOTIFY, GLOBALFOCUS, GETCURRENTPOSITION2), 0x24000 bytes; CreateSoundBuffer, 0 on failure; else Music_Decode(Music_Staging, 0x12000) and SndBuf_Write(buffer, Music_Staging, 0, 0x12000) - the first half - and the buffer. Sole caller Music_Start. hidden_b 12 calls."
+
+[[func]]
+pc = 0x5A6F30
+name = "Music_Decode"
+ret = "void"
+params = "unsigned char *dst, int size"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6F30..0x5A6FA8 (0x79 bytes, whole), cdecl: nothing without Music_Decoder. Loop: Mp3_Decode(decoder, dst + filled); filled += the dword at [[decoder + 0x14] + 8] (the frame's bytes); on 0xFFFFFDFE (end of stream) with Music_Loops, Mp3_Seek(decoder, 0) and go on; without, zero the rest of dst, Music_Finished = 1 and return; stop once filled >= size (signed). docs/asset-loading-path.md section 1a. Callers Music_Pump, Music_CreateBuffer. hidden_b 1,152 calls."
+
+[[func]]
+pc = 0x5A6FB0
+name = "Music_SetVolume"
+ret = "void"
+params = "float volume"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A6FB0..0x5A6FE0 (0x31 bytes, whole; pe_funcs.py says 0x40, running into 0x5A6FF0), cdecl, x87: for Music_Buffer, SetVolume (+0x3C) of _ftol(volume * (1 / 127.0) * 10000.0 - 10000.0) - the floats at 0x5C464C and 0x5C4648 - so 0..127 maps linearly onto -10000..0 hundredths of a decibel. Callers Music_Play, Sound_Tick, Sound_LoadStream. hidden_b 514 calls."
+
+[[func]]
+pc = 0x5A7050
+name = "Music_Stop"
+ret = "void"
+params = "void"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A7050..0x5A7078 (0x29 bytes, whole; pe_funcs.py says 0x30): for Music_Buffer, GetStatus into a local and Stop when playing. Byte for byte the same as 0x5A6FF0 (the target of 0x587B80 and 0x587C30), which is not taken. Callers Sound_Tick, Music_Pump, Sound_LoadStream. hidden_b 11 calls."
+
+[[func]]
+pc = 0x5A70A0
+name = "Music_Release"
+ret = "void"
+params = "void"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A70A0..0x5A7138 (0x99 bytes, whole), cdecl: Music_Buffer stopped if playing, Released (+8) and cleared; Crt_free(Music_Data) and cleared; Music_Notify Released and cleared, then CloseHandle of both Music_Events (through the import slot 0x5C4084; the handles are not cleared); Mp3_Destroy(Music_Decoder) and cleared. Sole caller Music_Start. hidden_b 11 calls."
+
+[[func]]
+pc = 0x5A7230
+name = "Music_Pump"
+ret = "void"
+params = "void"
+impl = "src/game/sound.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A7230..0x5A72B3 (0x84 bytes, whole), cdecl: with Music_Decoder and Music_Buffer, MsgWaitForMultipleObjects(2, Music_Events, FALSE, 0, 0xFF) through the import slot 0x5C4164; 2 or more (nothing signalled) returns. With Music_Finished, Music_Stop and Music_Finished = 0. Else Music_Decode(Music_Staging, 0x12000) and SndBuf_Write of it into the half the play cursor has just left: event 0 (the start) signalled fills 0x12000, event 1 fills 0. Sole caller Sound_Tick. hidden_b 6,710,895 calls."
+
+[[func]]
+pc = 0x5ADF00
+name = "Mp3_Create"
+cc = "__stdcall"
+ret = "int"
+params = "void **decoder"
+status = "hypothesis"
+evidence = "call site 0x5A6D68 (Music_OpenDecoder), 2026-09-22: stdcall (ret 4 at 0x5AE142), writes the handle through its argument; non-zero is failure. The MP3 decoder (0x5AB000..0x5B9380, unidentified library) is out of scope; named by the use."
+
+[[func]]
+pc = 0x5AE160
+name = "Mp3_SetIo"
+cc = "__stdcall"
+ret = "int"
+params = "void *decoder, void *io"
+status = "hypothesis"
+evidence = "call site 0x5A6D8B, 2026-09-22: stdcall (ret 8); tests entries +8..+0x18 of the table and copies it into a Crt_malloc of 0x38 bytes (0x5AE231), so the caller's local may die. Named by the use."
+
+[[func]]
+pc = 0x5AE6A0
+name = "Mp3_Open"
+cc = "__stdcall"
+ret = "int"
+params = "void *decoder, const char *name, int mode"
+status = "hypothesis"
+evidence = "call site 0x5A6DB8, 2026-09-22: stdcall (ret 0xC), (decoder, the name size@address, -1); non-zero is failure. The memory table's open 0x5B0DB0 parses the name back with sscanf. Named by the use."
+
+[[func]]
+pc = 0x5AE820
+name = "Mp3_Start"
+cc = "__stdcall"
+ret = "int"
+params = "void *decoder"
+status = "hypothesis"
+evidence = "call site 0x5A6DCC, 2026-09-22: stdcall (ret 4); 0 is success. Named by the use."
+
+[[func]]
+pc = 0x5AEBA0
+name = "Mp3_Seek"
+cc = "__stdcall"
+ret = "int"
+params = "void *decoder, int position"
+status = "hypothesis"
+evidence = "call site 0x5A6F73 (Music_Decode), 2026-09-22: stdcall (ret 8), (decoder, 0) at the end of a looping track; decoding then carries on from the start (docs/asset-loading-path.md section 1a). Named by the use."
+
+[[func]]
+pc = 0x5AFC40
+name = "Mp3_Decode"
+cc = "__stdcall"
+ret = "int"
+params = "void *decoder, void *out"
+status = "hypothesis"
+evidence = "call site 0x5A6F4D (Music_Decode), 2026-09-22: stdcall (ret 8); decodes a frame to out, whose size the caller reads at [[decoder + 0x14] + 8]; 0xFFFFFDFE is end of stream. Named by the use."
+
+[[func]]
+pc = 0x5B0630
+name = "Mp3_Destroy"
+cc = "__stdcall"
+ret = "int"
+params = "void *decoder"
+status = "hypothesis"
+evidence = "call site 0x5A712B (Music_Release), 2026-09-22: stdcall (ret 4 at 0x5B07F4); the result is not read. Named by the use."
+
+[[func]]
+pc = 0x5B0D50
+name = "Mp3_MemoryIo"
+cc = "__stdcall"
+ret = "int"
+params = "void *io"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5B0D50..0x5B0DA2 (whole): stdcall (ret 4), writes ten function pointers 0x5B0DB0..0x5B1160 and a 0 - exactly 0x2C bytes - and returns 0. The first, 0x5B0DB0, sscanfs a name; with Music_OpenDecoder's size@address name, a table that reads the stream from memory."
+
+[[data]]
+pc = 0x6BC8C8
+name = "Sound_Channels"
+ctype = "std::uint32_t"
+count = 23
+status = "evidence"
+evidence = "disasm 2026-09-22: Sound_PlayEffect indexes it by a cue word's bits 8-12 less 23 when 23 or more, and keeps a looping voice's buffer there to stop it by; 0x587860 and 0x587C30 walk it from 0x6BC8C8 to below 0x6BC924; Snd_LoadBank clears the entries equal to a buffer it releases."
+
+[[data]]
+pc = 0x6BC928
+name = "Sound_Banks"
+ctype = "unsigned char"
+count = 0x1518
+status = "evidence"
+evidence = "disasm 2026-09-19 and 2026-09-22: six records of 0x384 bytes, banks 1..6 (Snd_LoadBank): 24 cues of 16 bytes (four voice words each) at +0, 64 voice entries of 8 bytes (sample pointer, buffer) at +0x180, the sample data pointer at +0x380. Sound_PlayEffect reads it."
+
+[[data]]
+pc = 0x6BDE48
+name = "Music_FileSize"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_LoadFile stores File_Size here and reads it back for File_Read; Music_Play hands it to Music_Start."
+
+[[data]]
+pc = 0x6BDE4C
+name = "Music_FileLoops"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_LoadFile sets 1 before opening the plain name and 0 when only the N name opens; Music_Play hands it to Music_Start as loops (docs/asset-loading-path.md section 1a)."
+
+[[data]]
+pc = 0x6BDE50
+name = "Music_File"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_LoadFile frees the previous and stores the Crt_malloc buffer it reads the BGM file into; Music_Play hands it to Music_Start."
+
+[[data]]
+pc = 0x6BDE54
+name = "Music_FadeCount"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-22: the three fades store their frames here; Sound_Tick steps the volume while it is not 0 and decrements it."
+
+[[data]]
+pc = 0x6BDE58
+name = "Music_FadeStops"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_FadeOutStop sets 1, Music_FadeIn and Music_FadeOut 0; Sound_Tick stops the music at the fade's end when it is set."
+
+[[data]]
+pc = 0x6BDE5C
+name = "Music_Volume"
+ctype = "float"
+status = "evidence"
+evidence = "disasm 2026-09-22: a float, 0..127: Music_Play zeroes it, Sound_Tick adds Music_FadeStep and hands it to Music_SetVolume, the fades divide from it."
+
+[[data]]
+pc = 0x6BDE60
+name = "Music_FadeStep"
+ctype = "float"
+status = "evidence"
+evidence = "disasm 2026-09-22: the per-frame volume step the fades store and Sound_Tick adds."
+
+[[data]]
+pc = 0x6653BC
+name = "Music_LoadedTrack"
+ctype = "int"
+status = "evidence"
+evidence = "bytes and disasm 2026-09-22: initialised 0xFFFFFFFF; Music_LoadFile stores the track whose file Music_File holds, and Music_Play skips the load when the track equals it. It is also the fourth dword of Sound_LoadStream's table at 0x6653B0 (three pointers, then this): a stream id of 0x3000..0x3FFF would read it as a table."
+
+[[data]]
+pc = 0x904131
+name = "Music_Track"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_Play returns at once when its track equals this byte and stores the track here; Sound_Tick sets 0xFF when a stopping fade ends. Read by Title_FadeMusic, Title_StopMusic, Area_PickMusic and the mode code (kMusicTrack in several of our files) as the track playing, 0xFF none."
+
+[[data]]
+pc = 0x7CC378
+name = "Music_Staging"
+ctype = "unsigned char"
+count = 0x12000
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_CreateBuffer and Music_Pump decode half a buffer (0x12000 bytes) here with Music_Decode and copy it into Music_Buffer with SndBuf_Write. It ends where Snd_BufferDesc begins."
+
+[[data]]
+pc = 0x7DE378
+name = "Snd_BufferDesc"
+ctype = "unsigned char"
+count = 0x24
+status = "evidence"
+evidence = "disasm 2026-09-22: a DSBUFFERDESC (dwSize 0x24, flags, bytes, reserved, format pointer) SndBuf_CreateFromWave, Music_CreateBuffer and 0x5A7140 zero and fill for CreateSoundBuffer."
+
+[[data]]
+pc = 0x7DE3A0
+name = "Snd_WaveFormat"
+ctype = "unsigned char"
+count = 0x12
+status = "evidence"
+evidence = "disasm 2026-09-22: the WAVEFORMATEX Snd_BufferDesc points at: a wave's fmt chunk (SndBuf_CreateFromWave) or 44,100 Hz 16-bit stereo PCM (Music_CreateBuffer), cbSize 0."
+
+[[data]]
+pc = 0x7DE3B4
+name = "Music_Events"
+ctype = "void *"
+count = 2
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_SetNotify creates the two events for the streaming buffer's two halves, Music_Pump waits on them, Music_Release closes them."
+
+[[data]]
+pc = 0x7DE3BC
+name = "Snd_Device"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: the IDirectSound every CreateSoundBuffer goes through (vtable +0xC); SndBuf_FromWave, Music_Start and 0x5A7140 do nothing without it. Set elsewhere (unread)."
+
+[[data]]
+pc = 0x7DE3C4
+name = "Music_Buffer"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: the streaming IDirectSoundBuffer Music_Start makes and Music_Release releases; Music_SetVolume, Music_Stop and Music_Pump use it."
+
+[[data]]
+pc = 0x7DE3CC
+name = "Music_Notify"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: the IDirectSoundNotify Music_SetNotify queries from Music_Buffer; Music_Release releases it."
+
+[[data]]
+pc = 0x7DE3D0
+name = "Music_Decoder"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_Start stores Music_OpenDecoder's handle; Music_Decode and Music_Pump need it; Music_Release destroys it."
+
+[[data]]
+pc = 0x7DE3D4
+name = "Music_Data"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_Start's Crt_malloc copy of the BGM file, which the decoder reads from memory; Music_Release frees it."
+
+[[data]]
+pc = 0x7DE3DC
+name = "Music_Loops"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_Start stores its loops argument; Music_Decode rewinds at the end of the stream when it is set (docs/asset-loading-path.md section 1a)."
+
+[[data]]
+pc = 0x7DE3E0
+name = "Music_Finished"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-22: Music_Decode sets it when a track that does not loop ends; Music_Pump then stops the music at the next notification and clears it; Music_Start clears it."
