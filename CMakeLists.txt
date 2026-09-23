@@ -127,7 +127,10 @@ add_library(bof3x SHARED
   src/game/move_cmds.cpp
   src/game/move_cmds_fuzz.cpp
   src/game/mode_flow.cpp
-  src/game/mode_flow_fuzz.cpp)
+  src/game/mode_flow_fuzz.cpp
+  src/game/d3d_fuzz.cpp
+  src/game/glyph_draw.cpp
+  src/game/glyph_draw_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

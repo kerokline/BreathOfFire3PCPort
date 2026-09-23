@@ -7392,3 +7392,126 @@ params = "int x, int y, int w, int h"
 status = "evidence"
 impl = "src/game/mode_flow.cpp"
 evidence = "disasm 2026-09-22, 0x3F bytes: a RECT of the four arguments' low words on the stack and Gfx_ClearImage(&rect, 0, 0) - a third 0 is pushed that Gfx_ClearImage does not read. Eight callers (Boot_Task, battle and menu code). hidden_b: 1 call."
+
+# ---------------------------------------------------------------------------
+# Round four, group N (2026-09-22): the glyph draw and its helpers,
+# src/game/glyph_draw.cpp, docs/glyph-draw.md. Every entry of this group is in
+# this one block.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5A2900
+name = "D3d_DrawGlyph"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/glyph_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A2900..0x5A2BB3 (0x2B4 bytes), straight-line, read to the last instruction: the draw 0x59EE50's second jump table entry 17 (byte table 0x59F440 maps only (code & 0xFC) = 0x6C to it; the call at 0x59F1B4) for primitive code 0x6C. D3d_PrimColor(r, g, b, code, 0, &diffuse, &specular); four D3DTLVERTEX at D3d_Vertices: sx, sy = s16 corner x, y times D3d_ScaleX / D3d_ScaleY, sz 0.99 and rhw 0.1 as immediates, the colour pair, tu, tv = 2u, 2v times the double 1/32 at 0x5C4618 (no half-texel offset - D17); Font_GlyphTexture(u16 +0x16, u16 +0xE); 0x437CC0(1) twice (a bare ret); D3d_SetBlend(code re-read, 0); D3d_SetShadeMode(1); device +0x58 SetRenderState(0x1B ALPHABLENDENABLE, 0); device +0x70 DrawPrimitive(5 TRIANGLESTRIP, 0x1C4 TLVERTEX, 0x7CA958, 4, 0), whose result it returns. The device pointer is re-read before each COM call. Sole caller 0x59EE50. No PSX twin (the PSX drew these on the GPU). DIV-0025 is in ours."
+
+[[func]]
+pc = 0x5A2BC0
+name = "Font_GlyphTexture"
+ret = "int"
+params = "unsigned glyph, unsigned clut"
+impl = "src/game/glyph_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A2BC0..0x5A2C96 (0xD7 bytes), read to the last instruction: walks Font_TexCache's 128 entries for glyph and clut equal to its arguments (compared as 32 bits against zero-extended words) with the generation dword at +4 equal to Gfx_ClutRows[clut >> 6], noting the first entry whose in-use word +0x10 is 0. No hit and a free entry: Font_BuildGlyphTexture(free, glyph, clut) - between device EndScene (+0x28) and BeginScene (+0x24) unless Gfx_RenderFlags bit 0. Then, unless bit 0, device +0x98 SetTexture(0, entry +0xC); in-use word = 1; returns the index. With all 128 in use and no hit the index is 128, one past the table (D-N1). Callers D3d_DrawGlyph and the software glyph path 0x5A4900."
+
+[[func]]
+pc = 0x5A2CA0
+name = "Font_BuildGlyphTexture"
+ret = "void"
+params = "int slot, unsigned glyph, unsigned clut"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A2CA0..0x5A2E68 (0x1C9 bytes), read to its ret but not taken over: the glyph's 16 colours from Gfx_ClutPixels(clut), the 288-byte 4-bit glyph at Font_GlyphData + glyph * 0x120; with Gfx_RenderFlags bit 0 a 32 x 32 plain surface (0x59F860) locked (+0x64) and the glyph unpacked into it by 0x5A9E1E, else a 32 x 32 texture (0x59F900; colour key through +0x74 under flag bit 0x20) filled by a Blt (+0x14) from the staging surface 0x7CC344, locked and unpacked the same way. On success stores glyph, clut and the CLUT row's generation at entry +0 / +2 / +4 of Font_TexCache; the surface at +8, the texture at +0xC. Six callees, three of them DirectDraw surface creation. Sole caller Font_GlyphTexture (two sites)."
+
+[[func]]
+pc = 0x59FBA0
+name = "D3d_PrimColor"
+ret = "void"
+params = "unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long *diffuse, unsigned long *specular"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FBA0..0x59FC83, read to its ret (provisional name, group R inherits it): a primitive's PSX colour as a Direct3D diffuse / specular pair. Alpha: 0xFF unless code bit 1 (semi-transparent), then by (mode >> 5) & 3 through the table 0x59FC84 - 0x80, 0xFF, 0xFF, 0x40. Colour: code bit 2 clear (untextured) - r, g, b as given; bit 2 and bit 0 (raw texture) - 0xFF each; bit 2 alone (modulated) - each doubled, clamped to 0xFF, the excess (low byte of the doubled value) going to the specular. diffuse = a r g b; specular = 0 r g b of the excess, written only if the pointer is non-null. r, g, b are compared as whole dwords. 21 callers: every Direct3D draw handler."
+
+[[func]]
+pc = 0x59FCA0
+name = "D3d_SetBlend"
+ret = "void"
+params = "unsigned code, unsigned mode"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FCA0..0x59FD68, read to its last ret (provisional name, group R inherits it): device +0x58 SetRenderState three times - ALPHABLENDENABLE (0x1B) 1, SRCBLEND (0x13), DESTBLEND (0x14). Code bit 1 clear: 5, 6 (SRCALPHA, INVSRCALPHA). Bit 1 set, by (mode >> 5) & 3 through the table 0x59FD6C: 0 - 5, 6; 1 - 2, 2 (ONE, ONE); 2 - 1, 4 (ZERO, INVSRCCOLOR); 3 - 5, 2 (SRCALPHA, ONE). The PSX semi-transparency modes. 21 callers."
+
+[[func]]
+pc = 0x59FD80
+name = "D3d_SetShadeMode"
+ret = "void"
+params = "unsigned mode"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FD80..0x59FDA3 (provisional name, group R inherits it): if mode differs from D3d_ShadeModeCache, device +0x58 SetRenderState(9 SHADEMODE, mode) and the cache = mode. 21 callers."
+
+[[data]]
+pc = 0x7CC350
+name = "D3d_Device"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-22: every Direct3D draw handler loads it and calls through its vtable - +0x24 BeginScene, +0x28 EndScene, +0x58 SetRenderState, +0x70 DrawPrimitive, +0x98 SetTexture - the IDirect3DDevice3 method order (d3d.h). Re-read before every call."
+
+[[data]]
+pc = 0x7CA958
+name = "D3d_Vertices"
+ctype = "unsigned long"
+count = 0x20
+status = "evidence"
+evidence = "disasm 2026-09-22: four 0x20-byte D3DTLVERTEX (sx, sy, sz, rhw, diffuse, specular, tu, tv) the Direct3D handlers fill and hand to DrawPrimitive with FVF 0x1C4 (pc_funcs.json: 23 functions name addresses in 0x7CA958..0x7CA9D4). Font_TexCache ends 8 bytes before it, so the cache's entry 128, 0x7CA950..0x7CA963, overlaps vertex 0 (D-N1)."
+
+[[data]]
+pc = 0x7C9F48
+name = "D3d_ScaleY"
+ctype = "float"
+status = "evidence"
+evidence = "disasm 2026-09-22: D3d_DrawGlyph and D3d_DrawSprt multiply every y by it before DrawPrimitive; 2.0 in every mode seen (docs/known-defects.md D17)."
+
+[[data]]
+pc = 0x7C9F4C
+name = "D3d_ScaleX"
+ctype = "float"
+status = "evidence"
+evidence = "disasm 2026-09-22: D3d_DrawGlyph and D3d_DrawSprt multiply every x by it before DrawPrimitive; 2.0 in every mode seen (docs/known-defects.md D17)."
+
+[[data]]
+pc = 0x7C9F50
+name = "Font_TexCache"
+ctype = "unsigned char"
+count = 0xA00
+status = "evidence"
+evidence = "disasm 2026-09-22: Font_GlyphTexture walks 128 entries of 0x14 bytes from here (loop bound 0x7CA952 on a pointer to +2): u16 glyph +0, u16 clut +2, the CLUT row generation +4, surface +8 (0x7C9F58), texture +0xC (0x7C9F5C), u16 in use this frame +0x10 (0x7C9F60). The draw 0x59EE50 zeroes every +0x10 after EndScene (0x59F267..0x59F27A); Font_BuildGlyphTexture fills +0..+0xC."
+
+[[data]]
+pc = 0x6C3A4C
+name = "Gfx_RenderFlags"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-22: bit 0 - Font_GlyphTexture sets no Direct3D texture and builds without leaving the scene, and 0x59F860 creates plain system-memory surfaces (caps 0x840) instead of textures (0x1800): the software renderer, by inference (its glyph path 0x5A4900 calls Font_GlyphTexture too). Bit 0x20 - Font_BuildGlyphTexture sets a colour key. The byte sits in the row 0x201 slot of Gfx_ClutRows' 1024-row reach."
+
+[[data]]
+pc = 0x6C3A44
+name = "D3d_ShadeModeCache"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-22: D3d_SetShadeMode compares its argument with it and stores it after SetRenderState(9, mode)."
+
+[[func]]
+pc = 0x5747D0
+name = "Menu_YesNo"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5747D0..0x574881 (0xB2 bytes), read to the last ret, not taken over: the options line Msg_SystemPtr(0xF) through Text_DrawAt at (0x1C, 0x16), then the hand Menu_DrawHand(0xFE - 36 * s8 byte 0x929F0B, 0x18, 0) - 1 is Yes (left, x 218), 0 is No (x 254). Then the buttons: cancel (0x903590) plays 0x106, sets the byte to 0 and returns 1; confirm (0x90358E) plays 0x104 for Yes or 0x106 for No and returns 1; left or right (bits 0xA000 of the pad word) plays 0x101 and flips the byte; otherwise returns 0. The hand's stops were fitted to the Chinese line, whose words start at 220 and 256 (16 spaces and 2 at 12 units); the English line's start at 244 and 276. Callers 0x57FD6D (Do you want to save?), 0x57FFBF (OK to overwrite?), 0x58838B (Load game?), 0x583C42 (Is this what you want?). DIV-0027 patches it."
+
+[[func]]
+pc = 0x5905D0
+name = "Menu_DrawHand"
+ret = "void"
+params = "int x, int y, int unused"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5905D0..0x59065B, read to its ret: a draw mode primitive, then a code-0x64 SPRT at (u16 x - 0x16, u16 y + 2), 0x18 x 0xC, texture u 0xCC v 0x9C, the word 0x7802 at +0x16, shade 0x80 - the pointing hand, its visible tip one unit left of x (the owner's measurements, docs/dialogue-localisation.md section 6 item 8). The third argument is not read. 45 call sites (E8 scan)."
