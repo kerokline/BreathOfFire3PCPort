@@ -9006,3 +9006,231 @@ name = "Dd_StageSurface"
 ctype = "void *"
 status = "evidence"
 evidence = "disasm 2026-09-23: made by the Direct3D set-up 0x5A5160 at 0x5A5886 as Dd_CreatePlainSurface(0x140, 0x100, 0x7CC344, 0); the page builders and D3d_RefreshPageTexture lock it, convert into it, unlock it and Blt {0,0,256,256} from it into a texture; 0x5A2CA0, 0x5A32B0 and 0x5A37D0 use it too (28 instructions name it, a raw scan)."
+
+# ---------------------------------------------------------------------------
+# 2026-09-23, round 6 group V2: the event script's object ops
+# (src/game/event_objs.cpp, docs/event-objs.md). 22 functions, each read to
+# its last instruction against its PSX twin in GAME.EMI section 0 (capture
+# 9d00fd19) and fuzzed against a copy of Capcom's with every call re-aimed at
+# a recorder. Names are hypotheses about purpose; the evidence is the body.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x534590
+name = "Sprite_ShadeFadeBegin"
+psx = 0x801C3430
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534590..0x5345DB (0x4C bytes), no calls: bit 15 set on words 0..30 of row 15 of Gfx_ClutStrip at Sprite_Current +5 (0x811380 + clut * 64), Sprite_Current +0 bit 0x20 (semi-transparency), Gfx_ClutStripDirty = 1, word 31 of that CLUT 0. The PSX 0x801C3430 term for term (lhu / ori 0x8000 / sh). Caller 0x5258D0 (a leader state, table 0x660158) then sets +0x5D..+0x5F to 0x80. Shop route 14 calls."
+
+[[func]]
+pc = 0x5345E0
+name = "Field_JumpStart"
+psx = 0x801C34C8
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5345E0..0x534609 (0x2A bytes): Field_JumpSetUp; then, if Sprite_Current +5 is 0 and bit 3 of the low bytes of Field_ScriptFlags2 or Field_ScriptFlags is clear, a tail jmp to Field_JumpCamera. PSX 0x801C34C8 the same (a jal there). Callers 0x52DCFA, 0x52E880, Field_JumpCheckHeight. Shop route 100 calls."
+
+[[func]]
+pc = 0x534610
+name = "Field_JumpSetUp"
+psx = 0x801C3530
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534610..0x534705 (0xF6 bytes): speed = Field_MoveSpeeds[Field_State +0x128]; Sprite_Current +9 = 0x20 for direction (+8) 2 or 6, else 0x10, divided by the speed (idiv, a zero speed faults), doubled if Field_ScriptFlags bit 12; +0xC / +0x10 = the direction's step pair at 0x6696DC times the speed; the landing (x, z) = step * +9 + (+0x34, +0x38); 0x5725C0(x, z, direction) and, when it leaves DamageScratch's byte non-zero, MapView_GroundAt(x, z) instead; +0x14 = (s16 ground - s16 +0x3E) / +9 (idiv, faults on 0). The PSX 0x801C3530 the same (divu / div, break 7). Callers Field_JumpStart, 0x51AE66, 0x535FF7. Shop route 179 calls."
+
+[[func]]
+pc = 0x534710
+name = "Field_JumpCamera"
+psx = 0x801C3708
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534710..0x534788 (0x79 bytes), no calls, Sprite_Current read once: MoveScript_F3Divisor = 4 for direction 2 or 6, else 8, then that times Field_MoveSpeeds[Field_State +0x128] (16-bit imul); Field_Kind2X / Field_Kind2Z = the landing point (+0xC / +0x10 times +9 plus +0x34 / +0x38); MoveScript_FAWord = word +0x14. The PSX 0x801C3708 the same. Reached only by Field_JumpStart's tail jmp (100 calls)."
+
+[[func]]
+pc = 0x534790
+name = "Sprite_ShadeFadeStep"
+psx = 0x801C37D8
+ret = "unsigned char"
+params = "unsigned step"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534790..0x5347F6 (0x67 bytes): Sprite_ShadeRaise(step); if that answers 1, Sprite_LoadPalette(0x80D380 + Sprite_Current +5 * 64, 0), +0 bit 0x20 cleared, +0x5D +0x5E +0x5F +0x5C = 0, al 1; else al 0. The PSX 0x801C37D8 the same. Callers read al only. Caller 0x525920 (push 8). Shop route 112 calls."
+
+[[func]]
+pc = 0x534800
+name = "Sprite_ShadeRaise"
+psx = 0x801C388C
+ret = "unsigned char"
+params = "unsigned step"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534800..0x53487D (0x7E bytes), no calls: for each of Sprite_Current +0x5D, +0x5E, +0x5F that is non-zero, add the step's low byte and, if the result is above -64 signed, make it 0xC0; al 1 when all three are 0xC0. The PSX 0x801C388C the same (slti -0x3F; the three compared as the word +0x5C with its low byte masked). Callers read al only. Shop route 112 calls, all from Sprite_ShadeFadeStep. Its neighbour 0x534880 is the mirror (towards 0x80), unreached and not taken."
+
+[[func]]
+pc = 0x534920
+name = "Field_TileD0"
+psx = 0x801C3AA4
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534920..0x534981 (0x62 bytes): al 0 if Field_ScriptFlags bit 10; else AreaMap_CellsAll(+0x34, +0x38, +0x70 low byte, 0xD0, 0) and, when it answers, Sprite_Current +1 = 2, +2 = 6, +3 = +4 = 0 and al 1. The PSX 0x801C3AA4 the same. Callers 0x51B010, 0x52E5F7 read al. Shop route 181 calls."
+
+[[func]]
+pc = 0x534990
+name = "Field_TileA4"
+psx = 0x801C3B44
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534990..0x5349F1 (0x62 bytes): Field_TileD0's body with cell code 0xA4 and +2 = 7. The PSX 0x801C3B44 the same. Caller 0x52E604 reads al. Shop route 103 calls."
+
+[[func]]
+pc = 0x534A00
+name = "Field_FloorDamage"
+psx = 0x801C3BE4
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534A00..0x534C1F (0x220 bytes): nothing if Field_ScriptFlags bit 10; else the first cell code 0x80..0x88 AreaMap_CellsAll(+0x34, +0x38, +0x70 low byte, code, 0) answers for, n = code - 0x80, then 0x534C20(n) and 0x534DB0(kind[n]) with kind a 9-byte table on the stack, 0 0 0 0 1 2 3 3 3 (PSX 0x80196FEC). Both callee arguments are pushed with stale upper bytes; both callees mask them. The PSX 0x801C3BE4 the same. Callers 0x51AFEF, 0x52E5CE. Shop route 181 calls."
+
+[[func]]
+pc = 0x534F10
+name = "Field_Bit80Tick"
+psx = 0x801C4294
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534F10..0x5350B3 (0x1A4 bytes): with Field_InputFlags bit 0, any of the Party_Count(0) members of the list at 0x904062 whose actor record (by MoveScript_EffectState) has bit 0x80 at +0x10; else the leader's record (Field_State +0x148). Then Field_State +0x124 counts down; at 0 it is 10 again, 0x534DB0(1), and 0x537480(1, member) for each such member (or for Field_State +0x89); if any took HP, an Effect_FindFree object gets kind 0x41 at the leader's +0x2E / +0x30. PSX 0x801C4294 the same. Callers 0x51AFEA, 0x52E967. Shop route 178 calls."
+
+[[func]]
+pc = 0x5350C0
+name = "Field_Bit20Tick"
+psx = 0x801C4590
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5350C0..0x535115 (0x56 bytes), no calls: if the leader's actor record (Field_State +0x148) has bit 0x20 at +0x10, Field_State +0x125 counts down, and at 0 the bit is cleared (and word 0xFFDF). The PSX 0x801C4590 the same (psx_pair did not pair it; the body did). Callers 0x51AFE5, 0x52E5C9. Shop route 181 calls."
+
+[[func]]
+pc = 0x535120
+name = "Field_Tile89"
+psx = 0x801C4788
+ret = "unsigned char"
+params = "unsigned turn"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535120..0x535146 (0x27 bytes): al 0 if Field_ScriptFlags bit 10, else Field_TileTurn(0x89, 2, turn) != 0 (setne). PSX 0x801C4788 the same. Callers read al (0x51ADAD, 0x51AFF6, 0x52E5D5). Shop route 1,816 calls."
+
+[[func]]
+pc = 0x535150
+name = "Field_TileTurn"
+psx = 0x801C4644
+ret = "unsigned char"
+params = "unsigned code, unsigned value, unsigned turn"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535150..0x535236 (0xE7 bytes): al 0 if AreaMap_CellsNone(+0x34, +0x38, +0x70 low byte, code, 0) answers; else, with the turn byte set, up to eight directions from the opposite of +8 round, each probed by 0x535610(x + step x * 2, z + step z * 2, 0, word +0x3E) with Field_DirectionSteps, stopping at the first the probe does not refuse, and +8 = that direction xor 4; then +1 = 2, +2 = 8, +3 = +4 = 0, +0xB = value, al 1. PSX 0x801C4644 the same (xori 4 for xor 0xFC). Shop route 3,632 calls."
+
+[[func]]
+pc = 0x535240
+name = "Field_Tile8A"
+psx = 0x801C47D4
+ret = "unsigned char"
+params = "unsigned turn"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535240..0x535266 (0x27 bytes): Field_Tile89 with Field_TileTurn(0x8A, 1, turn). PSX 0x801C47D4 the same. Callers read al (0x51ADBB, 0x51B004, 0x52E5E7). Shop route 1,816 calls."
+
+[[func]]
+pc = 0x535270
+name = "Field_EquipTick"
+psx = 0x801C4820
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535270..0x53530A (0x9B bytes): three times Actor_EquipCount(Field_State +0x148, kind, value) for (3, 0x16), (3, 0x17), (2, 0x1F), each followed when non-zero by 0x5373F0(1, Field_State +0x89); Field_State re-read for every call. PSX 0x801C4820 the same. Callers 0x51AFE0, 0x52E5C2. Shop route 181 calls."
+
+[[func]]
+pc = 0x535310
+name = "Actor_EquipCount"
+psx = 0x801C48EC
+ret = "unsigned char"
+params = "unsigned member, unsigned kind, unsigned value"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535310..0x535388 (0x79 bytes), no calls: the record 0x903A70 + MoveScript_EffectState[member byte] * 0xA4; kind byte 1: al = +0x12 == value; 2: how many of +0x13..+0x15; 3: how many of +0x16, +0x17; any other: 0. al only (the rest of eax is the caller's). PSX 0x801C48EC the same (its record base 4 lower). Callers Field_EquipTick, 0x534D6C, and Field_ZoneCounterRoll (docs/field-event.md). Shop route 561 calls."
+
+[[func]]
+pc = 0x535390
+name = "AreaMap_CellsAll"
+psx = 0x801C49D0
+ret = "unsigned char"
+params = "long x, long z, unsigned wide, unsigned code, unsigned mask"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535390..0x5353D1 (0x42 bytes): wide (the whole dword) 0: AreaMap_CellsAll4(x, z, code, mask); else 0x535490(x, z, code, mask); the callee's eax returned. PSX 0x801C49D0 the same. Shop route 2,016 calls."
+
+[[func]]
+pc = 0x5353E0
+name = "AreaMap_CellsAll4"
+psx = 0x801C4A10
+ret = "unsigned char"
+params = "long x, long z, unsigned code, unsigned mask"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5353E0..0x535481 (0xA2 bytes): the four cells AreaMap_ByteAt (x >> 16, z >> 16), (+1, 0), (0, +1), (+1, +1) in that order, each and 0xF0 when the mask byte is set; al 1 when the first equals the code byte and so do the second if x has a fraction, the third if z has one, the fourth if both. PSX twin 0x801C4A10 by the body - psx_pair's call tier has it and 0x535490 swapped (0x801C4B70). Shop route 2,016 calls."
+
+[[func]]
+pc = 0x535C50
+name = "AreaMap_CellsNone"
+psx = 0x801C5724
+ret = "unsigned char"
+params = "long x, long z, unsigned wide, unsigned code, unsigned mask"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535C50..0x535C91 (0x42 bytes): AreaMap_CellsAll's shape over AreaMap_CellsNone4 and 0x535D60. PSX 0x801C5724 the same. Callers Field_TileTurn, 0x52E825. Shop route 3,735 calls."
+
+[[func]]
+pc = 0x535CA0
+name = "AreaMap_CellsNone4"
+psx = 0x801C5764
+ret = "unsigned char"
+params = "long x, long z, unsigned code, unsigned mask"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535CA0..0x535D5D (0xBE bytes): AreaMap_CellsAll4's four cells, each 0x2n made 0x2n and 0x21, then and 0xF0 with the mask; al 0 when the first, or the second with an x fraction, the third with a z fraction or the fourth with both, equals the code; else 1. PSX twin 0x801C5764 by the body - psx_pair has it and 0x535D60 swapped (0x801C58F4). Shop route 3,735 calls."
+
+[[func]]
+pc = 0x535F50
+name = "Field_JumpCheckHeight"
+psx = 0x801C5C40
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x535F50..0x535FBC (0x6D bytes): the landing point (Field_JumpSetUp's), 0x5725C0 on it; if that leaves DamageScratch's byte 0, MapView_GroundAt there, and if the ground is 0x80 or more above word +0x3E, Field_State +0x128 one less and Field_JumpStart again. PSX 0x801C5C40 the same. Callers 0x51AE6B, 0x52DCFF. Shop route 176 calls."
+
+[[func]]
+pc = 0x536670
+name = "Sprite_ApplyVelocity"
+psx = 0x801C67AC
+ret = "void"
+params = "void"
+impl = "src/game/event_objs.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x536670..0x53669D (0x2E bytes), no calls: Sprite_Current +0x34 += +0xC, +0x38 += +0x10, word +0x3E += word +0x14. PSX 0x801C67AC the same (psx_pair call-disputed; the body agrees). Caller 0x52E140 and three unreached neighbours. Shop route 520 calls."
