@@ -17,7 +17,7 @@ constexpr std::uint32_t kLinkFlag = 0x80000000u;
 void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v); }
 
 // --- BOF3X_SHADOW=psx_gpu: differential fuzzes, once at start-up ---------------
-// Fourteen leaves with no calls and only internal jumps: a byte-copy of each
+// Seventeen leaves with no calls and only internal jumps: a byte-copy of each
 // runs anywhere. Ours is always called through the signature the game's
 // callers assume - whole dwords, noise above whatever the original reads.
 
@@ -128,6 +128,21 @@ extern "C" void __cdecl Gpu_SetPolyFT4(unsigned char* prim) {
     prim[7] = 0x2C;
     for (unsigned at = 0x10; at <= 0x40; at += 0x10) PutDword(prim + at, kPointZeroOne);
 }
+// originals 0x5A7630, 0x5A7690, 0x5A7740 - the three the window layer wants
+// (docs/window-task.md): a shaded textured quad at a 0x14-byte vertex stride,
+// a four-point line at 0xC, and a tile with one vertex.
+extern "C" void __cdecl Gpu_SetPolyGT4(unsigned char* prim) {
+    prim[7] = 0x3C;
+    for (unsigned at = 0x10; at <= 0x4C; at += 0x14) PutDword(prim + at, kPointZeroOne);
+}
+extern "C" void __cdecl Gpu_SetLineF4(unsigned char* prim) {
+    prim[7] = 0x4C;
+    for (unsigned at = 0x10; at <= 0x34; at += 0xC) PutDword(prim + at, kPointZeroOne);
+}
+extern "C" void __cdecl Gpu_SetTile(unsigned char* prim) {
+    prim[7] = 0x60;
+    PutDword(prim + 0x10, kPointZeroOne);
+}
 extern "C" void __cdecl Gpu_SetLineF2(unsigned char* prim) {
     prim[7] = 0x40;
     PutDword(prim + 0x10, kPointZeroOne);
@@ -198,6 +213,9 @@ void PsxGpu_Inject() {
 #define PRIM(name, size, rounds) \
         FuzzPrim(#name, Clone<PrimFn>(#name, bof3::addr::name, size), AsGameCalls<PrimFn>(&name), rounds)
         PRIM(Gpu_SetPolyFT4, 0x1A, 200);
+        PRIM(Gpu_SetPolyGT4, 0x1A, 200);
+        PRIM(Gpu_SetLineF4, 0x1A, 200);
+        PRIM(Gpu_SetTile, 0x10, 200);
         PRIM(Gpu_SetLineF2, 0x14, 200);
         PRIM(Gpu_SetSprt, 0x10, 200);
         PRIM(Gpu_SetCode6C, 0x9, 200);
@@ -215,12 +233,15 @@ void PsxGpu_Inject() {
                   AsGameCalls<ValueFn>(&Math_Sin), 0x4000, true);
         FuzzAddPrim(Clone<AddFn>("Gpu_AddPrim", bof3::addr::Gpu_AddPrim, 0x20), &Gpu_AddPrim);
         FuzzClearOTagR(Clone<ClearFn>("Gpu_ClearOTagR", bof3::addr::Gpu_ClearOTagR, 0x31), &Gpu_ClearOTagR);
-        bof3::Log("shadow      psx_gpu self-test: 14 functions, %u rounds in all, %u MISMATCHES", g_rounds, g_bad);
+        bof3::Log("shadow      psx_gpu self-test: 17 functions, %u rounds in all, %u MISMATCHES", g_rounds, g_bad);
         if (g_bad) bof3::Fatal("the PSX library layer differs from the originals in %u of %u self-test rounds", g_bad, g_rounds);
     }
     BOF3_INJECT(Gpu_AddPrim);
     BOF3_INJECT(Gpu_LinkPrim);
     BOF3_INJECT(Gpu_SetPolyFT4);
+    BOF3_INJECT(Gpu_SetPolyGT4);
+    BOF3_INJECT(Gpu_SetLineF4);
+    BOF3_INJECT(Gpu_SetTile);
     BOF3_INJECT(Gpu_SetLineF2);
     BOF3_INJECT(Gpu_SetSprt);
     BOF3_INJECT(Gpu_SetCode6C);

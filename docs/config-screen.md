@@ -278,3 +278,33 @@ and turns the two width computations into the small branch's own (`len * 4`,
   next converter.
 - **Names for these functions in `symbols.toml`.** The four are still
   addresses here.
+- **The controller panel's names sit too far left, ragged and oversized**
+  (owner's screenshot, 2026-09-22, English, point filter: "Speak", "Move",
+  "Action", "Menu", "View", "Change" start from x = 268 to 315 of 640 and run
+  out past the panel's left edge, their right ends staggered). Ours, a
+  consequence of DIV-0015/0016, not the 2001 port's. `0x461AF0` places a
+  name at `x = anchor - len * 6 + 0x20` (`lea eax, [ecx + ecx*2]` /
+  `shl eax, 1` at `0x461B36`) and draws it through the large `Text_DrawAt`
+  (`0x461B43`) - a right edge at `anchor + 0x20` for Chinese, two bytes and
+  12 units a character. Ours are two bytes a character too, but advance 8
+  (DIV-0006), so each starts 4 units a character left of where the edge wants
+  it: 16 px a letter apart, as measured (4 letters at 315, 5 at 292, 6 at
+  268). And the large quad shows the tripled 8 x 8 cell at 24 px on a 16 px
+  advance, the crowding DIV-0017 fixed for the selected row. The obvious
+  repair is DIV-0017's pair on this function - width `len * 4` at `0x461B36`
+  (`89 C8 C1 E0 02`: `mov eax, ecx` / `shl eax, 2`) and the call at
+  `0x461B43` re-aimed at `ConfigText_DrawSelected` - then check the right
+  edge `anchor + 0x20` against the panel in game: "Change" at 16 px a letter
+  may still not fit left of it, and where the US disc puts these names is
+  unread. Reached by `tools/recipes/config_controller.txt` (written
+  2026-09-22, not yet run), which also shows D17's uneven glyphs
+  ([`known-defects.md`](known-defects.md)).
+  **Built as DIV-0026 (2026-09-22, group N)**: the width by one SIB byte
+  (`8D 04 49` -> `8D 04 09`; the five bytes proposed above would have
+  overwritten the `mov ecx, ebp` between the two), the call re-aimed. On
+  paper the 6-letter names still start 11 units left of the panel frame;
+  an anchor of `row x + 0x3C` is proposed, not built -
+  [`glyph-draw.md`](glyph-draw.md) §8.
+  **Fixed as DIV-0026** (2026-09-22/23): width and font as DIV-0017, the
+  names' right edge at `row x + 0x36` and the frame 0xF cells wide - both
+  settled in game with the owner; confirmed 2026-09-23.

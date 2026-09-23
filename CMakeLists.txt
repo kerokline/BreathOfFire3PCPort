@@ -80,12 +80,28 @@ add_library(bof3x SHARED
   src/game/sprite_order.cpp
   src/game/sprite_records.cpp
   src/game/map_cells.cpp
+  src/game/map_layers.cpp
+  src/game/map_layers_fuzz.cpp
+  src/game/map_scroll.cpp
+  src/game/map_scroll_fuzz.cpp
   src/game/sprite_draw.cpp
   src/game/draw_pool.cpp
   src/game/prim.cpp
   src/game/map_view.cpp
   src/game/sprite_anim.cpp
   src/game/sprite_find.cpp
+  src/game/move_script.cpp
+  src/game/move_groups.cpp
+  src/game/field_objects.cpp
+  src/game/object_kinds.cpp
+  src/game/sprite_screen.cpp
+  src/game/field_frame.cpp
+  src/game/frame_callees.cpp
+  src/game/kind2_object.cpp
+  src/game/area_slope.cpp
+  src/game/mode_tasks.cpp
+  src/game/title_states.cpp
+  src/game/field_blocked.cpp
   src/game/field_input.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
@@ -95,7 +111,37 @@ add_library(bof3x SHARED
   src/game/psx_gte_matrix.cpp
   src/game/psx_gte_transform.cpp
   src/game/draw_emit.cpp
-  src/game/draw_pass.cpp)
+  src/game/draw_pass.cpp
+  src/game/field_modes.cpp
+  src/game/field_modes_fuzz.cpp
+  src/game/field_event.cpp
+  src/game/field_event_fuzz.cpp
+  src/game/event_script.cpp
+  src/game/event_script_fuzz.cpp
+  src/game/msgbox.cpp
+  src/game/msgbox_fuzz.cpp
+  src/game/window_task.cpp
+  src/game/window_task_fuzz.cpp
+  src/game/sprite_pose.cpp
+  src/game/sprite_pose_fuzz.cpp
+  src/game/move_cmds.cpp
+  src/game/move_cmds_fuzz.cpp
+  src/game/mode_flow.cpp
+  src/game/mode_flow_fuzz.cpp
+  src/game/area_entry.cpp
+  src/game/area_entry_fuzz.cpp
+  src/game/d3d_fuzz.cpp
+  src/game/glyph_draw.cpp
+  src/game/glyph_draw_fuzz.cpp
+  src/game/yes_no_layout.cpp
+  src/game/item_use.cpp
+  src/game/item_use_fuzz.cpp
+  src/game/sound.cpp
+  src/game/sound_fuzz.cpp
+  src/game/d3d_draw.cpp
+  src/game/d3d_draw_fuzz.cpp
+  src/game/d3d_list.cpp
+  src/game/d3d_list_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

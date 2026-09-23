@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-21)
+**Status:** IN PROGRESS (2026-09-23)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -15,9 +15,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
-- replace what the attract sequence reaches - stands at **a hundred and thirty-four
-functions ours**, every one through the full live check (the last two
-on 2026-09-21, `ab19_*`); and **stage 2, the text swap, went from a plan to a playable
+- replace what the attract sequence reaches - stands at **five hundred and
+sixty-seven functions ours**, every one through the oracle, memory dump and
+frame hash (the last hundred and one on 2026-09-23, `ab25_*`; their capture
+A/Bs are owed, "Pick up here" 0000); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
 pools, the item and ability names, and the US font doubled into the port's
@@ -66,57 +67,152 @@ section 11's parked function:** `0x57C0A0`'s discarded search turned out to be
 Capcom's on both platforms and asked by no shipped script - a latent defect,
 D6 - so it and its hottest caller `0x589770` are ours, faithful (§17); the
 handle it reads led to the field objects' movement script
-([`movement-script.md`](movement-script.md)).
+([`movement-script.md`](movement-script.md)). **2026-09-22: the movement
+script is ours** - the step, the flow pass, all eight group handlers and the
+counter ops, the object update around it, the attached object's update and
+the sprite's screen update, twenty-one functions (155 ours), each fuzzed
+against a clone with negative controls and all through one batch check in
+game: captures 4 / 9 / 55 of 4 / 9 / 55 in three scenes, oracle, memory
+dump, frame hash identical ([`movement-script.md`](movement-script.md) §1d).
+On the way: the op-length table (the PSX's byte for byte), a decoder that
+makes D6's list exact, D7 (the table's wrong length for `C1`, latent), the
+port's rewritten sound ops and three PSX calls it dropped (§1a, §1c). **Then,
+the same day, the handoff's five targets in parallel** - five agents in
+worktrees, 52 functions, 210 ours, one batch check, all identical. **Then a second
+parallel round the same day: seven agents, 119 functions, 326 ours** - the
+field's mode handlers with the attract demo's scenario 16, the event script's
+field side, the event script interpreter and the flag helpers, the frame
+loop's remaining callees, the title's state handlers and the new-game start,
+the map view's scrolling and reset, and the blocked-ahead test - 300 negative
+controls, one batch check, everything identical ("Pick up here" 0000). Two
+ceilings in our own scaffolding fell over on the way: the `BOF3X_ORIGINAL` and
+`BOF3X_SHADOW` name lists held 2,048 characters and a whole round is more than
+that, and the tracer held 256 owned functions - the second cost 90 minutes,
+because a Fatal at start-up looks exactly like a hang. **That evening, a
+third round in five groups: 140 functions, 466 ours** (`ab24`, after one
+fix - our `Boot_Task`'s last call had compiled to a tail jump, Traps).
+**That night, the fourth: 101 functions, 567 ours** - the area's links and
+the drop-in party (O), the field menu's item use (P, the "title cluster"
+turned out to be the 33 item handlers), sound (Q), the glyph draw (N) and
+the Direct3D draw handlers with the list walk (R, built on N's vertex-block
+fuzz) - through one batch (`ab25`): oracle, memory dump and frame hash
+identical, the last after one fix to our own fade divergence (Traps). Five
+divergences on the way, all the owner's requests and all confirmed by the
+owner in game on 2026-09-23: DIV-0025 glyphs sample texel centres (D17, the
+"wobbly" English text), DIV-0026 the Config controller panel, DIV-0027 the
+Yes / No layout, DIV-0028 music fades per frame (D26: the PC's fades were
+near instant), DIV-0029 the save slot's name clear of a cut. D18..D28
+written down. The batch's capture A/Bs came back black - the owner's screen
+cover - and are owed ("Pick up here" 0000).
 
 ## Pick up here
 
 The single next action, concrete enough to start without asking anyone.
 
-00000. **The game's pace: fixed short term (DIV-0022), owed the owner's
-   play check.** The half speed of 2026-09-21 was
-   [`known-defects.md`](known-defects.md) D5, the float frame deadline, not
-   ours: `GetTickCount` had passed 2^29 ms, and Fast Startup keeps it running
-   across the owner's nightly shutdowns (D5 has the evidence). The owner's
-   fix: the exe's `GetTickCount` import slot (`0x5C407C`, read only by
-   WinMain) now points at a clock that starts with the game
-   (`src/game/game_clock.cpp`). Measured, steady state: **30.00** logic
-   frames a second, the attract oracle identical, and the frame hash
-   identical to `ab17_orig` on all 10,062 frames (`analysis/calltrace/clk_hash`). `BOF3X_TICK_BASE=N` starts that clock at N ms and put
-   the original's pacing in each of D5's bands on demand: 31.25 at 2^28,
-   and at 2^30 91.7 unthrottled - D5's "nothing drawn" by the code, not
-   yet looked at on screen. **Owed:** the owner plays a few minutes and says
-   whether the speed looks right. It is the first time they have seen the
-   game at its true 30, not 31.25. The complete fix, the deadline in a
-   double, is [`IDEAS.md`](IDEAS.md) I16, not scheduled. **Pace figures
-   before 2026-09-21 are the 31.25 band**. The batch's untraced oracle needs
-   only 7 minutes at 30 a second, but the traced hash runs are far slower:
-   `ab18` at 7 minutes reached 6,312 frames against `ab17`'s 10,062 at 11.
-   Keep the hash runs at 11 or more.
+00000. **The game's pace is done short term: DIV-0022, confirmed in game by
+   the owner 2026-09-22.** The complete fix, the deadline in a double, is
+   [`IDEAS.md`](IDEAS.md) I16, not scheduled. **Pace figures before
+   2026-09-21 are the 31.25 band.** The untraced oracle needs only 7 minutes
+   at 30 a second, but traced hash runs are far slower (`ab18` at 7 minutes
+   reached 6,312 frames against `ab17`'s 10,062 at 11): keep hash runs at 11
+   minutes or more.
 
 0000. **Keep taking over what the attract sequence reaches (the owner's
-   order, 2026-09-21), batching the live check.** The queue (`python
-   tools/calltrace.py queue analysis/calltrace/all_b/bof3x.callcounts.tsv`, 391
-   unnamed after 2026-09-21) opens with things that are not per-function
-   targets: `0x5B3760` and the rest of `0x5AB000`..`0x5B9380` are the MP3
-   decoder, `0x5B9550` the C runtime, `0x587C70` / `0x5A7230` WinMain's pump
-   spin ([`attract-remaining.md`](attract-remaining.md) §4.12-4.13). **The
-   first real group is the field objects, §4.5, and at its centre is the
-   movement-script interpreter** `0x576B50` (57,758 calls) and the object
-   update `0x517BF0` (69,494) that runs it
-   ([`movement-script.md`](movement-script.md)). Read the six group handlers'
-   operand lengths first (PSX `FUN_801ac458`, `801aca24`, `801ac8b0`,
-   `801abb00`, `801ab470`, `801aa944` - the sibling's `GAME_EMI0` decompile has
-   them); that is also what turns D6's raw-byte scan into an exact list. Other
-   hot entries of §4.5, unread: `0x518980` / `0x5197F0` (71,816 each),
-   `0x588F20` (67,101, calls `Sprite_InheritDrawKey`), `0x518D10` (58,332).
-   For anything that feeds the draw, the checks that count are a live shadow
-   (clone, put back, ours, compare: `sprite_find.cpp` and `map_cells.cpp` have
-   it) and the frame-exact capture A/B with a coverage run - the function
-   returning at once - to show which shots it decides (§17: 15 of 55). Batch
-   scripts: `analysis/validate_ab19.sh` and `validate_ab19b.sh` (local);
-   rename for the next batch. `analysis/probe/` holds the attach probe of
-   2026-09-21 (`probe_handles.cpp`, uncommitted by design): drop it into the
-   build to log every attachment a script makes.
+   order, 2026-09-21), in parallel groups, batching the live check.**
+   **2026-09-22 night, the fourth round: five groups, 101 functions, 567
+   ours** ([`takeover-queue-round4.md`](takeover-queue-round4.md)). O, the
+   area's links and the drop-in party ([`area-entry.md`](area-entry.md));
+   P, the field menu's item use - the 33 pointer-reached functions after
+   `Title_LoadTask`, with the stat helpers, the two message-box commits and
+   the 16 system-choice cases ([`item-use.md`](item-use.md)); Q, the sound
+   layer over DirectSound ([`sound.md`](sound.md)); N, the glyph draw and
+   the reusable Direct3D vertex-block fuzz, `src/game/d3d_fuzz.*`
+   ([`glyph-draw.md`](glyph-draw.md)); R, after N, the six D3D handlers,
+   their helpers and the ordering-table walk `Gfx_DrawOTag`
+   ([`d3d-draw.md`](d3d-draw.md)). The batch (`analysis/validate_ab25.sh`,
+   log `analysis/attract/ab25_batch.log`): self-tests 250 modules at 0
+   mismatches, oracle identical at all 7,478 compared frames, memory dump
+   identical in all three regions, frame hash identical original-vs-original
+   on all 10,062 frames and ours-vs-original on all 10,062 once DIV-0028 was
+   corrected (`ab25_orig` / `ab25_oursc`; the first run, `ab25_ours`,
+   differed at frames 3439 and 8961 - Traps). DIV-0025..0029 and D18..D28;
+   every DIV confirmed in game by the owner. The rounds before:
+   [`takeover-queue-round3.md`](takeover-queue-round3.md) (`ab24`), and
+   `ab22`, `ab21`.
+   **Next:**
+
+   0. **The batch's captures are owed**: every capture of `ab25` from 00:04
+      on was solid black on both sides (the owner's night-time screen
+      cover), so its A/B "identical" results mean nothing. Run
+      `bash analysis/validate_ab25b.sh` (steps 1 and 4 only, about an hour)
+      with the game window visible; check the captures are not black before
+      believing a pair. What it judges that nothing else has: R's and N's
+      renderer takeovers on every pixel of eight scenes.
+   1. **Regenerate the queue** (`python tools/attract_catalog.py
+      analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also
+      analysis/calltrace/all_a/bof3x.callcounts.tsv,analysis/calltrace/all_b/bof3x.callcounts.tsv
+      --out analysis/attract_catalog.md`). **The attract sequence's game
+      logic is nearly exhausted**: after round four what it reaches and is
+      not ours is the rest of the renderer (texture builders `0x5A0080` /
+      `0x5A0510` / `0x5A32B0` / `0x5A37D0` / `0x5A2CA0`, all DirectDraw
+      surfaces - they want surface read-back, [`IDEAS.md`](IDEAS.md) I14),
+      the PSX library layer's 10 (start-up and shell glue), the Windows shell
+      and task system (left out on purpose), the MP3 decoder and the CRT.
+      Named by the round and not taken: `Char_RecalcStats` `0x590660` (0x1A0,
+      five unowned callees - a group of its own), `Inventory_Add` `0x590BB0`
+      (80 call sites), `MsgBox_SystemChoice` `0x498A30` (D22 - no faithful
+      C++ for ids 0x90 and up), `Snd_LoadBank` `0x587CD0` (named, never
+      ours). **So the next queue is item 2's**: what only input reaches.
+   2. **An input-reached queue** (the owner's question, 2026-09-22): the
+      attract sequence presses nothing, so what only a button reaches is
+      invisible to it - the camera turn on R1 + a direction, walking, the
+      menu, battle. A trace of each recipe (`field_view`, `field_menu`,
+      `battle_commands`, `camera_rotate`) against the attract counts would
+      list it. Owner: deferred for now; the recipes stay as visual checks.
+   3. **Not reached by any check yet**, fuzz only: half of group C of the
+      first round (kinds 0-2, the fades, `Field_ObjectLinked`,
+      `Field_ObjectIdleLong`), the kind-2 states 2 and 3,
+      `Sprite_SwapOverlays`, area 0xBD's map path and header kinds 1-3, most
+      of `GameMode_Field`'s requests; and from this round: the title's states
+      6 and 7 and every load-wait loop (`File_LoadDone` is always 1 on the
+      PC), thirteen of the fifteen leader states and all four pending jumps,
+      the area set-up and patch lists (empty in every attract area), the ten
+      event-script op handlers still Capcom's, `AreaMap_BlockedNarrow` (every
+      attract sprite has a size), and the effect kinds other than the camera
+      turn. Each doc lists what would reach its own.
+   4. **`pe_hidden.py`'s blind spot bit again** (2026-09-22): two of group
+      A's "functions" were case labels of a switch (`0x56B730`, `0x56B990`),
+      and two real functions the table at `0x661A08` points at were missing
+      (`0x56B950`, `0x56BCC0`). Expect one or two of each per group, and
+      check the catalogue's sizes - fourteen were wrong this round, `0x56B450`
+      by a factor of thirty.
+
+   **The parallel method** (worked twice on 2026-09-22; seven groups in 18
+   to 42 minutes of agent time each, then about 2 hours of merge and batch):
+   - Split by *file*: each group a new `src/game/*.cpp`, its own shadow
+     name, its call at the end of `inject_all.cpp`. Every call out of a
+     clone re-aimed at a recorder, so inject order does not matter.
+   - **Before spawning, commit, and register the boundary callees** - a
+     function one group calls and another takes over - in `symbols.toml`
+     with provisional names, so no two groups bind one address
+     (`gen_symbols.py` refuses that).
+   - Agents self-test headless: `BOF3X_SELFTEST_ONLY=1` (SCAFFOLDING §2),
+     never the game window, never `taskkill //IM`. The live batch runs once,
+     after the merge.
+   - Merge one branch at a time, the build and `BOF3X_SHADOW='*'` after
+     each - and read the build's output, not just the self-test's exit code:
+     a failed build leaves the previous `bof3x.dll` in place and the
+     self-tests pass on it. Resolve `symbols.toml` entry by entry, never by
+     text (the scratchpad's `merge_symbols.py` did it three-way this round,
+     keyed on each entry's `pc`); `CMakeLists.txt` and `inject_all.cpp`
+     conflict every time and want both sides, but the source list's closing
+     paren has to end up on the last line only. Traps below: the worktree
+     base, `symbols.toml`, the trace list, and our own ceilings.
+   The per-function pattern inside a group is unchanged: read it against
+   its PSX twin, type every callee, clone with every call re-aimed at a
+   recording stand-in, fuzz from random state with each branch's
+   boundaries seeded, then plant bugs until each behaviour-changing one is
+   refused (Traps: a quiet stand-in, a change that changes nothing).
 
    Found on the way, not yet acted on: **`pe_hidden.py` misses the functions
    after an inline jump table** - ten or so at `0x593950`..`0x594240`, none in
@@ -231,11 +327,23 @@ The single next action, concrete enough to start without asking anyone.
    - Ability (state 3) was only seen closing, and the list cursors of Items
      and Equipment are unfound: one more walk under
      `python tools/mem_watch.py --seconds 600 929F00:16` and a wider range.
-1. **The frame hash reference is `analysis/calltrace/ab19_orig`** (twin
-   `ab19_origb`), recorded all-original 2026-09-21 at 11 minutes: all 10,062
-   frames identical original-vs-original and original-vs-ours with all 137
-   injects on. It differs from `ab18_orig` (6,312 frames, 135) by exactly the
-   calls of the two functions taken over, which the hash stops counting.
+1. **The frame hash reference is `analysis/calltrace/ab25_orig`** (twin
+   `ab25_origb`), recorded all-original 2026-09-22/23 at 11 minutes under
+   `entries_logic.txt` with the fourth round's 71 unlisted functions added
+   (`entries_logic_0922d.txt` is the list before): all 10,062 frames
+   identical original-vs-original, and original-vs-ours with all 567 injects
+   and every DIV on (`ab25_oursc`). The list change alone moves the hash's
+   content, so `ab24_orig` and everything before it compare as 117
+   differing frames - that is the re-recording, not a regression. **An all-ours traced
+   run is now twice as fast as an all-original one** (19,318 frames in 11
+   minutes against 10,062: owned functions are not traced), so the pair is
+   compared over the shorter run's frames. **The
+   trace list must name every owned function with its size** - an owned
+   function missing from it keeps its callers' return addresses in the
+   all-original run but not in ours, and the hash differs on thousands of
+   frames with every count equal (`ab21_*`: 5,236 frames, 23 functions
+   missing; the list before is `entries_logic_0922.txt`). Add each takeover's
+   functions to the list before its batch.
    **Frame 5524 is same-configuration noise**: one of two all-ours runs had
    342 calls there against 346, the other matched the reference - the same
    frame [`psx-library-layer.md`](psx-library-layer.md) section 4 met. One
@@ -361,6 +469,9 @@ _Commands a fresh session needs, verified on the date above._
   since it avoids the display mode-set.
   Without it the game mode-sets to exclusive fullscreen for the FMVs; from an agent
   session, end it with `taskkill //F //IM BOF3.exe`.
+- **Every start-up self-test, headless (half a second, no window):**
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config`
+  - exit 0 passed, 3 a Fatal ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
 - **Regression check (10 min, hands off the game window):**
   `python tools/attract_run.py --out analysis/attract/ref.tsv --original "*"`,
   the same without `--original` to `new.tsv`, then
@@ -376,7 +487,7 @@ _Commands a fresh session needs, verified on the date above._
   reference), and within a few seconds `python tools/mem_dump.py --label X`;
   then `python tools/mem_dump.py --compare A B`. Always take two reference
   runs — the pair is the noise floor.
-- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass`, `=msg_pool`, `=text_draw`, `=text_immediate`, `=map_cells` (which also shadows every in-game call of the two handlers) (comma-separated lists work) or `=*` before the launcher
+- **Shadow check:** `BOF3X_SHADOW=Gfx_InvalidateTextures`, `=Gfx_TexCacheFind`, `=gfx_clut`, `=gfx_flush`, `=gfx_unpack`, `=gfx_vram_ops`, `=sprite_order`, `=draw_pool`, `=prim`, `=map_view`, `=sprite_anim`, `=sprite_find`, `=field_input`, `=sprite_clut`, `=draw_layers`, `=psx_gpu`, `=psx_gte`, `=psx_gte_float` (which also compares every live call of the two precision-dependent functions and counts the x87 control word), `=psx_gte_transform`, `=draw_emit`, `=draw_pass`, `=msg_pool`, `=text_draw`, `=text_immediate`, `=map_cells` (which also shadows every in-game call of the two handlers), `=title_states`, `=field_blocked`, `=frame_callees`, `=field_modes`, `=map_scroll`, `=field_event`, `=event_script` (comma-separated lists work) or `=*` before the launcher
   or `attract_run.py`; `shadow` lines in `build/bof3x.log` — a start-up
   self-test line, then a running tally every 256 calls
   ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2).
@@ -557,10 +668,76 @@ _One line each, with a pointer. Add when something costs more than an hour._
   "hits" for `F8 07 [80..FF]`, nearly all in kind-2 banks); walk the chunks and
   keep kind 0. And the movement scripts are not in the `DAT`s at all - they
   are in `BOF3.exe`'s `.data` ([`movement-script.md`](movement-script.md) §3).
+- **A stand-in quieter than the real callee hides what the caller undoes**,
+  2026-09-22: `Field_ObjectUpdate` puts back the script position a step moved,
+  and a step stand-in that moved nothing made dropping that restore invisible.
+  Give a stand-in the side effects the caller reads or reverts
+  ([`movement-script.md`](movement-script.md) §1b).
+- **A control that is not refused may be a change that changes nothing**:
+  six of 2026-09-22's were (`& 0xDF` against `& 0xCF` with the bit already
+  clear, a clamp to 4 of a value of 4). Before calling the fuzz blind, ask
+  whether any input could tell the two apart; if one can, seed it.
 - The backslash trap again, 2026-09-21: `\0` in a Python heredoc became two
   NUL bytes in `loc_build.py` ("source code cannot contain null bytes").
   Edit Python with the editor tool.
-
+- **Agent worktrees start from `main`, not the current branch**
+  (2026-09-22): all five of the parallel round's did. Commit first, and tell
+  each agent to check `git merge-base --is-ancestor <commit> HEAD` and reset
+  or rebase onto it before starting.
+- **`symbols.toml` does not merge by text** (2026-09-22): git aligned two
+  groups' appended blocks on a coincidentally equal entry, twice, and a
+  keep-both resolver would have deleted repeated lines like `ret = "void"`.
+  Resolve it by hand, then check with `tomllib` that no address or name is
+  bound twice. Better: give each group its own fragment to append at merge.
+- **Our own scaffolding has ceilings, and they fail like hangs** (2026-09-22,
+  the second parallel round): the `BOF3X_ORIGINAL` / `BOF3X_SHADOW` name lists
+  held 2,048 characters and a round's 119 names is 2,061; the tracer held 256
+  owned functions and 326 are ours. Both end in a `Fatal` before the game
+  window opens, which from outside is a process sitting at near-zero CPU with
+  nothing in the log after the inject lines - 90 minutes lost before anyone
+  looked at `build/bof3x.log`. Both limits are raised; **read the log when a
+  run is slow, and check `Get-Process BOF3 | select CPU` first.**
+- **A failed build leaves the previous `bof3x.dll` in place**, and the
+  self-tests then pass on the old one (2026-09-22, twice during the merges:
+  a CMake source list with a paren in the middle, and a symbol renamed out
+  from under another group's source). Read the build's own output, not only
+  the self-test's exit code.
+- **An owned function missing from `entries_logic.txt` breaks the frame
+  hash** without changing a count (2026-09-22, 23 functions, 5,236 frames):
+  see "Pick up here" 1. Check the list before a batch. The tracer reads a
+  size only for an *owned* entry (`calltrace.cpp`, the owned ranges); an
+  unowned entry's size is ignored, so the over-long `pe_funcs.py` sizes
+  still in the list only matter once their function is taken over.
+- **The compiler's tail call at a task's top frame shows in the frame
+  hash** (2026-09-22, `ab24`): our `Boot_Task` ended `jmp [Task_Exit]` where
+  Capcom's has `call`, so `Task_Exit` saw the fresh task stack's 0 as its
+  caller - one differing frame, frame 1, every count equal. Found in two
+  minutes with `BOF3X_CALLTRACE_DETAIL=1-1` on both sides and a `diff`;
+  fixed with `__attribute__((disable_tail_calls))`. Deeper tail calls are
+  harmless (their caller is our dll either way); a task body's last call
+  to a traced function is not.
+- **`symbols.toml` spliced again at merge** (2026-09-22, third round): git
+  attached one group's edit of an entry to the end of another group's
+  block. Rebuilding the file by entry worked every time: the current file
+  less the entries the incoming group moved, plus its block verbatim,
+  then a three-way check keyed on `pc` against the merge base (the
+  groups were told to put every change in one block at the end).
+- **A black screen cover makes every capture black and every A/B "identical"**
+  (2026-09-23, `ab25`): the owner covers the screen at night; captures came
+  back solid black on both sides from 00:04 on, and `shots_compare.py`
+  passed them. Check that captures are not black before believing a pair.
+  The memory checks (oracle, dump, hash) are unaffected.
+- **A divergence that stretches time must not stretch what the game sees**
+  (2026-09-23, DIV-0028): fades spread over frames left `Music_Track` naming
+  a fading track, so a `Music_Play` of it was ignored and the fade then
+  stopped the music - silence at attract frame 3439 that the frame hash
+  caught in one frame. Keep the logical state on the original's schedule
+  and let only the audible part linger; the traced hash with the DIV on is
+  the check.
+- **Check a patch's expected bytes against the image, not the disassembly
+  in your head** (2026-09-23): `push 0xC` at `0x461A61` is followed by
+  `xor bl, bl` (`32`), not a `push ebp` (`55`); `PatchBytes` would have
+  refused at start-up. Dump the three bytes first.
 ## In flight / uncommitted
 
 Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
@@ -580,7 +757,40 @@ and frozen shots. **All of it pushed 2026-09-21, no PR.** Then, committed
 locally that night and not pushed: `Sprite_ObjectByHandle` and
 `Sprite_InheritDrawKey` in `src/game/sprite_find.cpp`, D6,
 [`movement-script.md`](movement-script.md) and `tools/movement_scan.py`
-(batches `analysis/validate_ab19.sh`, `validate_ab19b.sh`).
+(batches `analysis/validate_ab19.sh`, `validate_ab19b.sh`). That was
+merged as PR 8.
+
+Branch `phase-3/further-mining-attract`, **2026-09-22, pushed, no PR**: the movement script and what surrounds it (batch `ab20`), then
+`BOF3X_SELFTEST_ONLY`, the six boundary callees, and the five parallel
+groups merged one by one - `field_frame.cpp`, `kind2_object.cpp` +
+`area_slope.cpp`, `object_kinds.cpp`, `map_layers.cpp` (+ `_fuzz.cpp`,
+`_callees.h`), `mode_tasks.cpp`, with a doc each, DIV-0023's extension,
+DIV-0024, and `tools/recipes/camera_rotate.txt`. All through the batch
+(`ab21` + `ab21b`). **Then the second parallel round the same day**: two
+boundary callees (`Flags_Set`, `Kind2_Place`), then seven groups merged one
+by one - `title_states.cpp`, `field_blocked.cpp`, `frame_callees.cpp`,
+`field_modes.cpp` (+ `_fuzz.cpp`, `_callees.h`), `map_scroll.cpp`
+(+ `_fuzz.cpp`), `field_event.cpp` (+ `_fuzz.cpp`, `_callees.h`),
+`event_script.cpp` (+ `_fuzz.cpp`) - a doc each, `tools/event_scan.py`, the
+two raised ceilings (`detour.cpp`, `calltrace.cpp`) and `known-defects.md`
+D8..D11. All through the batch (`ab22` + `ab22b`). No new DIV entry.
+**Then the third round that evening**:
+H and J merged (`11dbc4a`), `Math_Ratan2` registered (`c966c21`), then M, L
+and K merged one by one - `sprite_pose.cpp`, `move_cmds.cpp`,
+`mode_flow.cpp` (each + `_fuzz.cpp`), a doc each, D14..D16, and the
+`Boot_Task` call fix (`f199624`). All through the batch (`ab24`). No new DIV
+entry. **Then the fourth round that night, and the owner's display fixes**:
+the round's queue (`afe0ec2`), O, N, P, Q and R merged one by one -
+`area_entry.cpp`, `glyph_draw.cpp` + `d3d_fuzz.cpp` + `yes_no_layout.cpp`,
+`item_use.cpp`, `sound.cpp`, `d3d_draw.cpp` + `d3d_list.cpp` (each with its
+`_fuzz.cpp`), a doc each - DIV-0025..0029, D17..D28, the DIV-0028
+correction (`9d62125`), `tools/recipes/config_controller.txt` and
+`load_list.txt`. Oracle, memory dump and frame hash through `ab25`; the
+capture A/Bs owed (`analysis/validate_ab25b.sh`, local). **Pushed
+2026-09-23, PR opened for the owner to merge.**
+All four rounds' agent branches and worktrees are merged and removed, as are the
+two older ones (`claude/silly-bhabha-776856`, and the detached
+`epic-chandrasekhar-cc0704`); `.claude/worktrees/` is empty.
 
 _Branches, open PRs, half-finished experiments, files in `analysis/` worth
 keeping. "Nothing" is a valid entry._
@@ -606,8 +816,35 @@ Local only, gitignored, worth keeping:
 - `analysis/calltrace/all_b/` - the full-list all-original run of a whole
   attract cycle, and `all_ab.callcounts.tsv`, `all_a`'s and its counts
   concatenated, which the exclusion list was rebuilt from.
-- `analysis/calltrace/ab19_orig/` - **the all-original frame-hash reference
-  since the attachment handle, 2026-09-21 night** (`ab19_origb`, `ab19_ours`),
+- `analysis/calltrace/ab24_orig/` - **the all-original frame-hash reference
+  since the third parallel round, 2026-09-22** (`ab24_origb`, and
+  `ab24_oursb` the all-ours match), under `entries_logic.txt` with the
+  round's functions added (`entries_logic_0922c.txt` is the list before it);
+  10,062 frames. `ab24_ours` is the first all-ours run, one frame off (the
+  `Boot_Task` tail call); `ab24_f1_orig` / `ab24_f1_ours` the frame-1 call
+  detail that found it. `analysis/attract/ab24_*` the batch's runs and logs
+  (`ab24_msgbox_watch.log` the watch of `0x7DEE40` and window record 0),
+  `analysis/shots/ab24_*` its six A/B capture pairs.
+- `analysis/calltrace/ab22b_orig/` - the reference before it, **since the
+  second parallel round, 2026-09-22** (`ab22b_origb`, `ab22b_ours`),
+  under `entries_logic.txt` with the round's 119 functions added
+  (`entries_logic_0922b.txt` is the list before it); 10,060 frames.
+  `analysis/attract/ab22_*` the batch's runs, captures and logs,
+  `analysis/shots/ab22_*` its five A/B capture pairs. `ab22_orig` is the
+  aborted first hash run (the 256-owned-function Fatal), kept as the artefact.
+- `analysis/calltrace/ab21b_orig/` - the reference before it, **from the first
+  parallel round, 2026-09-22** (`ab21b_origb`, `ab21b_ours`), under
+  `entries_logic.txt` with the 23 added ranges. `ab21_*` the batch's first
+  hash trio, under the old list (the artefact). `analysis/attract/ab21_*`,
+  `analysis/shots/ab21_*` the batch's runs and captures;
+  `analysis/shots/camera_ours`, `camera_orig` the first camera A/B.
+- `analysis/calltrace/ab20_orig/` - the reference before it
+  since the movement script, 2026-09-22** (`ab20_origb`, `ab20_ours`).
+  `analysis/attract/ab20_*` the batch's runs and log, `analysis/shots/ab20_*`
+  the captures, `analysis/memwatch/ab20_runtime_scripts.tsv` the watch of
+  `0x6758E0`.
+- `analysis/calltrace/ab19_orig/` - the reference before it, **since the
+  attachment handle, 2026-09-21 night** (`ab19_origb`, `ab19_ours`),
   10,062 frames at 11 minutes. `analysis/attract/ab19_*` the batch's runs,
   `analysis/probe/ab19_probe_*` the live shadow and attach probe in three
   scenes, `analysis/shots/ab19_*` the captures (`ab19_attract_nokey` the

@@ -14,4 +14,13 @@ void TextAdvance_Set(const std::uint8_t* advances, std::uint32_t count, std::uin
 // loaded or the byte is not a glyph.
 int TextAdvance_Of(const std::uint8_t* text);
 
+// DIV-0006 for the dialogue box's own pen: Text_DrawAt, then MsgBox_PenX
+// moved by (advance - 12) so that the stepper's `+ 12` lands the pen by the
+// glyph's advance. Identical to Text_DrawAt with no advance table loaded.
+// MsgBox_Step (src/game/msgbox.cpp) calls this where the original called
+// Text_DrawAt; the RetargetCall below puts the same call into Capcom's body,
+// which is what BOF3X_ORIGINAL=MsgBox_Step runs.
+extern "C" const unsigned char* __cdecl MsgBox_DrawChar(int x, int y, int color, int count,
+                                                        const unsigned char* text);
+
 void TextAdvance_Inject();

@@ -98,9 +98,30 @@ from the disassembly, per function, and said where `CloneOriginal` is called.
 A relative *call* that does leave can be named and re-aimed (`CloneCall`), at
 the original callee or at another clone, so that cloned callers reach cloned
 callees and never ours — `src/game/gfx_clut.cpp` clones three that way.
+A `CloneCall` can also carry `expected`, the callee the disassembly showed:
+the copy is refused if the site now reaches anything else, which catches a
+call the tracer or a `RetargetCall` has already re-aimed (2026-09-22). A
+"where the original called" site that lands on an entry an earlier module
+has taken over is logged, not refused - that callee is checked against its
+own copy and runs on both sides of the comparison.
 `BOF3X_SHADOW` takes the names each file asks for (`Gfx_InvalidateTextures`,
 `gfx_clut`) or `*`.
 The copy exists in process memory only; nothing of Capcom's is written to disk.
+
+**Self-tests without the game** (2026-09-22): with `BOF3X_SELFTEST_ONLY=1`
+the DLL ends the process right after `InjectAll` - every inject done, every
+start-up self-test run - before the game's main thread is ever resumed. No
+window, no foreground grab, no dialog (neither `Fatal`'s nor the launcher's),
+and the launcher does not write `BOF3.CFG`. It prints the game's pid and exits
+with the game process's code: 0 when everything passed, 3 on a `Fatal`. About
+half a second:
+
+    BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config
+
+Because nothing is shared but the read-only `BOF3.exe`, several checkouts
+(worktrees) can self-test at once, each logging to its own `build/bof3x.log`.
+A self-test that *hangs* still hangs: kill it by the printed pid, never by
+image name, which would end every other checkout's run too.
 
 ## 3. One name, bound once
 

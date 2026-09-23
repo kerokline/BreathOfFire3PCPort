@@ -18,6 +18,12 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::VerifyImage();
         bof3::Crash_Start(module);
         bof3::InjectAll();
+        if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) {
+            // Every inject and start-up self-test has run; the game never starts.
+            bof3::Log("self-test only: done, ending the process");
+            bof3::LogClose();
+            TerminateProcess(GetCurrentProcess(), 0);
+        }
         bof3::CallTrace_Start(module);
         bof3::InputScript_Start();
     } else if (reason == DLL_PROCESS_DETACH) {

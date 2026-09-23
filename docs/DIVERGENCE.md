@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 22 entries, DIV-0001..0022)
+**Status:** IN PROGRESS (opened 2026-09-18; 29 entries, DIV-0001..0029)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -390,6 +390,17 @@ designed in rather than bolted on.
   and leaves the pen for the stepper to bring back to the line start.
 - **The data is not the US release's in one respect:** the apostrophe and the
   comma advance 5, not 8. That is its own entry, DIV-0009.
+- **2026-09-22: the stepper itself is ours.** `MsgBox_Step` `0x497840` is
+  reimplemented in `src/game/msgbox.cpp` ([`msgbox.md`](msgbox.md)), so the
+  rule no longer reaches it through a patched byte: ours *calls*
+  `MsgBox_DrawChar` where the original called `Text_DrawAt`, and the rule
+  still lives in `src/game/text_advance.cpp`, unchanged. The `RetargetCall`
+  at `0x497A22` stays exactly where it was - it is what keeps this entry
+  alive when the owner runs `BOF3X_ORIGINAL=MsgBox_Step` and Capcom's body
+  executes. No behavioural change: with no advance table loaded
+  `MsgBox_DrawChar` is `Text_DrawAt`, and the fuzz compares ours against a
+  clone with both sides calling the same stand-in. `Text_DrawAt` `0x516B30`
+  itself is now ours too, faithful.
 - **Not covered:** the stepper's other draw, `0x4987E0` (flag 8 of
   `0x7DEE44`; unread).
 - **Rationale:** English at a 12 px advance overflows the box on the first
@@ -1094,7 +1105,8 @@ designed in rather than bolted on.
   identical over 3,607 frames with the fix (`clk_fix.tsv`). And a 6-minute traced run with
   the fix against the all-original reference: calls and hash identical on all
   10,062 frames of `ab17_orig` (`analysis/calltrace/clk_hash`) - the logic
-  does not see the clock.
+  does not see the clock. **Confirmed in game by the owner, 2026-09-22:** the
+  game's speed is recovered.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Game_Clock` leaves the slot on
   Windows' clock. No config toggle.
 
@@ -1130,3 +1142,217 @@ designed in rather than bolted on.
   pad word differing 16,095 times; then the batch check of 2026-09-21 -
   oracle, memory dump and frame hash identical (`ab18_*`).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MapCell_DrawQuads`. No config toggle.
+- **Also, 2026-09-22: `Sprite_ProjectA` `0x57B860`** (the party objects'
+  screen update, [`field-frame.md`](field-frame.md) section 4) builds one
+  vertex the same way and never writes its fourth word; `Gte_LoadVertex`
+  carries the stale stack into the top half of `Gte_Vertices[3]`. Ours writes
+  `0000`, under the same ruling - the same word, the same reader. Its fuzz
+  compares x, y and z and leaves the pad out, so the zero there is by
+  construction, not measured. `BOF3X_ORIGINAL=Sprite_ProjectA` restores it.
+
+
+### A field fade past its jump table stops instead of jumping
+
+- **ID:** DIV-0024
+- **Date:** 2026-09-22
+- **Subsystem:** field objects (the kind handlers, [`object-kinds.md`](object-kinds.md))
+- **Original behaviour:** `Field_ObjectFadeOut` `0x5193B0` and
+  `Field_ObjectFadeIn` `0x5194E0` dispatch on the sprite's sub-state byte
+  `+4` through jump tables with no bound (`0x65F654`, `0x65F65C`, adjacent).
+  Fade-out's 2 and 3 land in fade-in's cases; fade-out from 4 and fade-in
+  from 2 land in the cases of another function (`0x65F664`'s, at `0x5198xx`),
+  run in the wrong frame.
+- **New behaviour:** ours runs fade-out's 2 and 3 as the original does, and
+  past them calls `Fatal`, naming the function and the sub-state.
+- **Rationale:** what the original does there is a jump into the middle of
+  another function's body with this one's stack frame; it cannot be
+  reproduced, only imitated wrongly, and CLAUDE.md rule 4 says a
+  reimplementation that cannot do the original's thing aborts loudly.
+  Nothing is known to reach it: these two functions only ever set `+4` to
+  0 and 1.
+- **Not covered:** a sub-state set to 4 or more by code outside the two
+  functions - unmeasured in game.
+- **Also in the PSX version?** Unknown: the pairing names `0x801A459C` /
+  `0x801A47DC` as the twins, but the sibling's Ghidra output has no function
+  there and neither body was read (object-kinds.md section 1).
+- **Verification:** the start-up fuzz, `BOF3X_SHADOW=object_kinds`, seeds
+  sub-states 0..3 only; controls in object-kinds.md.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Field_ObjectFadeOut,Field_ObjectFadeIn`.
+
+### Glyphs sample texel centres
+
+- **ID:** DIV-0025
+- **Date:** 2026-09-22
+- **Subsystem:** renderer (the glyph handler, [`glyph-draw.md`](glyph-draw.md))
+- **Original behaviour:** `D3d_DrawGlyph` `0x5A2900`, the Direct3D draw of
+  every glyph (primitive code `0x6C`), sets each corner's texture coordinate
+  to `2u / 32`, `2v / 32` - the glyph's 24 texels on a 24-pixel quad, 1:1,
+  with no half-texel offset. Every pixel's sample point then falls exactly
+  on the edge between two texels: under point filtering the winner is the
+  interpolator's rounding, different in each of the quad's two triangles;
+  under bilinear every pixel is a 50 / 50 blend
+  ([`known-defects.md`](known-defects.md) D17). Seen by the owner in English,
+  point filter: strokes one, two or three pixels wide, an `l` narrowing where
+  the quad's diagonal crosses it; soft text under the default bilinear.
+- **New behaviour:** `(2u + 0.5) / 32` and `(2v + 0.5) / 32` on every corner:
+  both edges move half a texel, the scale stays 1:1, and pixel k of the quad
+  samples the centre of texel k. Positions, colours, the draw and every call
+  are the original's. All Chinese and Latin text alike.
+- **Rationale:** the owner asked for it, 2026-09-22, after comparing the
+  same line against the sibling's recompiled PSX build ("wobbly" against
+  even). The sprite handlers already have a deliberate texel inset
+  (`0x7CA9E0`, `(i + 0.512) / 256`); the glyph handler never got one.
+- **Also in the PSX version?** No: the PlayStation's GPU samples texels by
+  integer coordinates and has no such edge.
+- **Verification:** `BOF3X_SHADOW=glyph_draw`: 20,000 rounds with the fix
+  checked to change exactly the eight `tu` / `tv` floats by exactly `1/64`
+  against Capcom's copy, and nothing else; 20,000 with the fix off checked
+  byte for byte. 39 negative controls, all refused
+  ([`glyph-draw.md`](glyph-draw.md) §5). **Confirmed in game by the owner,
+  2026-09-23**, English, point filter: "the text looks straight now".
+- **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
+  Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
+
+### The Config screen's controller panel: names at their own width, in the dialogue font, inside a wider frame
+
+- **ID:** DIV-0026
+- **Date:** 2026-09-22
+- **Subsystem:** menu (Config, [`config-screen.md`](config-screen.md) §8)
+- **Original behaviour:** the controller panel's row draw `0x461AF0` places
+  each name at `row x + 0x20 - len * 6` and draws it through the large
+  `Text_DrawAt` - right-aligned for Chinese, two bytes and 12 units a
+  character. With DIV-0015/0016's names (two bytes a character, advance 8)
+  every name started 4 units a character too far left, ragged, and in the
+  large quad the tripled 8 x 8 cells crowded (the owner's screenshot,
+  2026-09-22: 4 letters at 315 px, 5 at 292, 6 at 268).
+- **New behaviour:** width `len * 4` (`0x461B36`: `lea eax, [ecx+ecx*2]` ->
+  `[ecx+ecx]`, the `shl eax, 1` after it kept) and the draw re-aimed at
+  `ConfigText_DrawSelected` (`0x461B43`), which swaps the UI cells for the
+  dialogue font's - the pair DIV-0017 applied to the selected row. Then,
+  after the owner's look in game (2026-09-23: "Change" and "Action" still
+  began left of the frame, the rows ran past its right side): the right
+  edge from `row x + 0x20` to `row x + 0x36` (`0x461B3F`: `83 C1 20` ->
+  `83 C1 36`, 22 units in, every name still left of the separator at
+  `x + 0x3F`), and the panel's frame (DIV-0011's `Menu_DrawFrame`, the call
+  at `0x461A84`) from 0xC cells to 0xF (`0x461A61`: `push 0xC` ->
+  `push 0xF`; 0xE, the first try, still left the rows' boxes past it).
+- **Rationale:** the owner's report; the same fix as DIV-0017, which the
+  owner judged right in game; the edge and the frame at the owner's request.
+- **Also in the PSX version?** Not applicable: the text is the overlay's.
+- **Verification:** `tools/recipes/config_controller.txt` (six downs reach
+  Controller), English, point filter: `analysis/shots/ctrl_fix2`.
+  **Confirmed in game by the owner, 2026-09-23**: the words "look right
+  now", the frame "Perfect!".
+- **Reversible?** Yes: `BOF3X_ORIGINAL=ConfigController`. Only under a
+  language overlay, not with `BOF3X_LANG=original`.
+
+### The Yes / No chooser laid out for Latin text
+
+- **ID:** DIV-0027
+- **Date:** 2026-09-22
+- **Subsystem:** menu (the chooser `Menu_YesNo` `0x5747D0`,
+  [`glyph-draw.md`](glyph-draw.md) §7)
+- **Original behaviour:** the chooser under "OK to overwrite?" (and "Do you
+  want to save?", "Load game?", "Is this what you want?") draws system
+  message `0xF` at x `0x1C` and the pointing hand at `0xFE - 36 * selection`.
+  The words' places are the line's own spaces; the hand's stops, 218 and 254,
+  were fitted to the Chinese line's words at 220 and 256. The English line
+  (27 spaces, `Yes`, 1 space, `No`, 8 units a character) puts them at 244
+  and 276, so the hand stops 22 to 25 units short of each and on No covers
+  the `Y` (the owner's screenshots at an inn, 2026-09-22).
+- **New behaviour:** the owner's layout
+  ([`dialogue-localisation.md`](dialogue-localisation.md) §6 item 8): the line
+  with three spaces moved from its lead into its gap, so `Yes` starts at 220
+  (3 units right of the left hand's tip) and `No` stays at 276; the hand at
+  `0x112 - 56 * selection` - 218 on Yes as before, 274 on No, its tip 3 units
+  before `No` (`0x5747F0` `mov ecx, 0x112`, `0x5747F7` `imul eax, eax, 56`,
+  `0x5747FC` three `nop`s; `Msg_SystemPtr`'s call at `0x5747D2` re-aimed at
+  the re-spacing).
+- **Rationale:** the owner's mockup, 2026-09-22: not the PlayStation's
+  layout (whose hand on No covers "es"), but the Chinese build's look - the
+  hand beside each word, touching neither.
+- **Also in the PSX version?** The US disc moved the stops too (the recomp's
+  hand tips at about 246 and 277 units); its code is unread.
+- **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
+  both line shapes). **Confirmed in game by the owner, 2026-09-23**, at an
+  inn's save: "looked right". All four prompts change together.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
+  overlay, not with `BOF3X_LANG=original`.
+
+### Music fades step once per logic frame
+
+- **ID:** DIV-0028
+- **Date:** 2026-09-22
+- **Subsystem:** sound (`Sound_Tick` `0x587C70`, [`sound.md`](sound.md))
+- **Original behaviour:** the fades (`Music_FadeIn` / `FadeOut` /
+  `FadeOutStop`, `Music_Play`'s fade in, the event ops `B4` `B5` `B9`..`BB`)
+  take a count in frames - op `B4 tt 08` is an 8-frame fade in - and
+  `Sound_Tick` takes one step per call. Its only caller is WinMain's wait for
+  the next frame (`0x4FCEBC`), which calls it on every spin: some 416 a frame
+  in a traced run, more at full speed. So every fade is over within a
+  fraction of one frame: music starts at full volume and fade-outs are cuts
+  ([`known-defects.md`](known-defects.md) D26).
+- **New behaviour:** a step is taken only on the first `Sound_Tick` after
+  the frame deadline `0x6BC628` has moved - once per logic frame, replayed
+  frames included - so an 8-frame fade lasts 8 logic frames, about 0.27 s
+  at the port's 30 a second. The first step of a new fade is at once. The
+  steps, the volume arithmetic, the stop at the end and the pump are the
+  original's. **What the game sees does not change** (corrected 2026-09-23,
+  after the `ab25` frame hash): a stopping fade still marks the music
+  stopped (`Music_Track` 0xFF) at the first `Sound_Tick` after it starts, as
+  the original's instant fade did, and a music command after that tick
+  (`Music_Play`, another fade) completes the stop first. The first build
+  let `Music_Play` of the same track inside the fade do nothing and then
+  stopped the music - silence where the original restarts a track, frame
+  3439 of the attract sequence.
+- **Rationale:** the owner remembers the PlayStation fading music in and
+  out, and asked for the fix on 2026-09-22 ("8 frames is like a quarter
+  second? That sounds pretty close to how I remember it"), to judge in play.
+- **Also in the PSX version?** No - the PSX counts the same fades in frames
+  and they are audible (owner's recollection); the per-spin step is the
+  PC port's.
+- **Verification:** `BOF3X_SHADOW=sound`: the takeover's fuzz runs the
+  original per-call path (0 mismatches, 46,000 rounds); then an 8-frame
+  stopping fade through `Sound_Tick` with counting stand-ins takes exactly
+  one step per frame over 8 frames of 5 spins and stops once. Negative
+  control: with the deadline test removed the self-test is refused (8 steps
+  in the first frame, a Fatal). A second case: `Music_Play` of the fading
+  track is ignored in the asking frame and restarts the track after the
+  first tick; both controls (no completion, no marking) are refused. Frame
+  hash, all ours with the fix on against all original: see
+  [`sound.md`](sound.md). **Confirmed in game by the owner,
+  2026-09-23**: "the fade sounds great".
+- **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
+  Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
+  function).
+
+### The save / load slot's name two units further in
+
+- **ID:** DIV-0029
+- **Date:** 2026-09-22
+- **Subsystem:** menus (the save / load slot panel `0x576960`)
+- **Original behaviour:** the panel draws the slot's name - five bytes of
+  the save header, copied to `0x904BA0` - through `Text_DrawAt` at the
+  panel's x + `0x13` (`lea eax, [ebp + 0x13]` at `0x576A46`, the one call
+  site, found live with a probe on `Text_DrawAt`). On screen the glyph's
+  first two pixel columns are lost - at x 135 of 640 for slot 1. The
+  Chinese glyphs have blank columns there; the English cells (the US
+  8 x 12 letters doubled, DIV-0005) start at column 0, so an `R` loses its
+  stem (owner's screenshot, and `analysis/shots/load_names`). What does the
+  cutting is not established: the draw mode the panel sends first takes its
+  texture window from whatever the caller left in `ebx`.
+- **New behaviour:** x + `0x15`: the name two PSX units (four pixels)
+  further in, the whole glyph past the cut with a pixel to spare. Five
+  Latin letters (80 pixels) still end well inside the name box.
+- **Rationale:** the owner's request, 2026-09-22 - the only such hard cut
+  they have seen, so the fix is local to this screen rather than a margin
+  for every Latin cell.
+- **Also in the PSX version?** No cut there to fix; the PSX draws its own
+  font.
+- **Verification:** `tools/recipes/load_list.txt`, English, point filter:
+  slot 1's `Ryu` whole (`analysis/shots/load_names3`), against the cut `R`
+  before it (`load_names`). The save screen shares the panel and was not
+  captured.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
+  language overlay, not with `BOF3X_LANG=original` (it rides in
+  `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).

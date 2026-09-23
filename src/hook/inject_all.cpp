@@ -15,6 +15,8 @@
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
 #include "game/map_cells.h"
+#include "game/map_layers.h"
+#include "game/map_scroll.h"
 #include "game/sprite_order.h"
 #include "game/sprite_records.h"
 #include "game/sprite_draw.h"
@@ -23,8 +25,18 @@
 #include "game/map_view.h"
 #include "game/menu_frame.h"
 #include "game/menu_verbs.h"
+#include "game/mode_tasks.h"
+#include "game/field_modes.h"
 #include "game/sprite_anim.h"
 #include "game/sprite_find.h"
+#include "game/move_script.h"
+#include "game/move_groups.h"
+#include "game/field_objects.h"
+#include "game/object_kinds.h"
+#include "game/sprite_screen.h"
+#include "game/kind2_object.h"
+#include "game/area_slope.h"
+#include "game/field_blocked.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
 #include "game/draw_layers.h"
@@ -39,6 +51,22 @@
 #include "game/text_advance.h"
 #include "game/text_draw.h"
 #include "game/text_immediate.h"
+#include "game/field_frame.h"
+#include "game/title_states.h"
+#include "game/frame_callees.h"
+#include "game/field_event.h"
+#include "game/event_script.h"
+#include "game/msgbox.h"
+#include "game/window_task.h"
+#include "game/sprite_pose.h"
+#include "game/move_cmds.h"
+#include "game/mode_flow.h"
+#include "game/area_entry.h"
+#include "game/glyph_draw.h"
+#include "game/yes_no_layout.h"
+#include "game/item_use.h"
+#include "game/sound.h"
+#include "game/d3d_draw.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -74,6 +102,10 @@ void InjectAll() {
     MapView_Inject();
     SpriteAnim_Inject();
     SpriteFind_Inject();
+    MoveScript_Inject();
+    MoveGroups_Inject();
+    FieldObjects_Inject();
+    SpriteScreen_Inject();
     FieldInput_Inject();
     SpriteClut_Inject();
     DrawLayers_Inject();
@@ -83,6 +115,39 @@ void InjectAll() {
     PsxGpu_Inject();
     PsxGte_Inject();
     PsxGteFloat_Inject();
+    FieldFrame_Inject();        // every call of its clones re-aimed, the handler table swapped: order does not matter
+    Kind2Object_Inject();       // likewise, its jump tables re-aimed
+    AreaSlope_Inject();         // no calls out
+    ModeTasks_Inject();         // every call of its clones re-aimed: order does not matter
+    ObjectKinds_Inject();       // every call of its clones re-aimed, the pace and fade tables swapped: order does not matter
+    MapLayers_Inject();         // its fuzz stands recorders in for every callee, so any slot will do
+    TitleStates_Inject();       // every call of its clones re-aimed: order does not matter
+    FieldBlocked_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    FrameCallees_Inject();      // every call of its clones re-aimed: order does not matter
+    FieldModes_Inject();        // every call of its clones re-aimed, every table it reads swapped: order does not matter
+    MapScroll_Inject();         // likewise: every call of its clones re-aimed at a recorder
+    FieldEvent_Inject();        // every call of its clones re-aimed at a recorder: any slot will do
+    EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
+    MsgBox_Inject();            // every call of its clones re-aimed at a recorder, and every stack-built
+                                // dispatch table's immediates too: order does not matter
+    WindowTask_Inject();        // last: every call of its clones is re-aimed at a recorder and every
+                                // stack-built table re-aimed in the copy, so order does not matter
+    SpritePose_Inject();        // every call of its clones re-aimed at a recorder or at another of its
+                                // own clones: order does not matter
+    MoveCmds_Inject();          // every call of its clones re-aimed at a recorder, its jump table
+                                // relocated in the copy: order does not matter
+    ModeFlow_Inject();          // every call of its clones re-aimed at a recorder, its stack-built table
+                                // re-aimed in the copy, the mode table swapped: order does not matter
+    AreaEntry_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
+    GlyphDraw_Inject();         // every call of its clones re-aimed at a recorder, the device a fake:
+                                // order does not matter
+    YesNoLayout_Inject();       // patches only (DIV-0027): order does not matter
+    ItemUse_Inject();           // every call of its clones re-aimed at a recorder, the handler table and
+                                // four area descriptors swapped: order does not matter
+    Sound_Inject();             // every call of its clones re-aimed at a recorder, its three Win32 import
+                                // operands moved onto recorders in the copies: order does not matter
+    D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its four jump tables
+                                // relocated in the copies, the device a fake: order does not matter
     InjectReport();
 }
 

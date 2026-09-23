@@ -1,0 +1,34 @@
+# Save 5 (adult Ryu, Lv 38) loaded to its field, then R1 held with a direction:
+# does the view rotate? (Owner's question, 2026-09-22.) Each shot holds its
+# buttons for 60 frames and captures the frame the hold ends on; the plain
+# direction and R1 alone are the controls.
+wait 480
+press start
+wait 40
+press circle
+wait 60
+press down x5
+press circle
+wait 40
+press circle
+wait 60
+press circle
+until 0x66C7E8 u16 == 2 timeout 1200
+wait 300
+shot base
+wait 30
+shot r1_left 60 r1+left
+wait 60
+shot after_r1_left
+wait 30
+shot r1_right 60 r1+right
+wait 60
+shot after_r1_right
+wait 30
+shot r1_alone 60 r1
+wait 30
+shot left_alone 60 left
+wait 30
+shot l1_left 60 l1+left
+wait 60
+shot after_l1_left

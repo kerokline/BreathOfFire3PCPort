@@ -1,0 +1,25 @@
+# Title -> CONFIG -> the Controller row -> the controller panel.
+# The panel's names (config-screen.md section 8) and D17's glyph sampling.
+# Config opens with the cursor on the button row (Quit / Init), so six downs
+# reach Controller - checked 2026-09-23 (five stopped on Autorun).
+wait 480
+press start
+wait 40
+press down
+press circle
+wait 60
+press down
+press down
+press down
+press down
+press down
+press down
+shot config_row6
+press circle
+wait 30
+shot controller_panel
+press down
+shot controller_row2
+press down
+shot controller_row3
+end

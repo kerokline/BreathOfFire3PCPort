@@ -32,7 +32,7 @@ bool NameListed(const char* list, const char* name) {
 }
 
 bool WantsOriginal(const char* name) {
-    char list[2048];
+    char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
     DWORD n = GetEnvironmentVariableA("BOF3X_ORIGINAL", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_ORIGINAL is longer than %u bytes", (unsigned)sizeof list);
@@ -133,8 +133,16 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
     if (IsOwned(original)) Fatal("%s: CloneOriginal after Inject - the entry is already a jmp", name);
     // A tracer or debugger patch at the entry would be copied as a relative
-    // jmp or a breakpoint, and run wrong from the new address.
-    if (orig[0] == 0xE9 || orig[0] == 0xE8 || orig[0] == 0xCC)
+    // jmp or a breakpoint, and run wrong from the new address. A function
+    // whose first instruction is its own call (0x517200 is a list of calls)
+    // starts with E8 legitimately, and one whose whole body is a tail jump
+    // (0x595B30, five bytes, is Window_FreeState) starts with E9: both are
+    // allowed when `calls` re-aims offset 0, which says the caller read that
+    // byte in the disassembly as the original's own transfer - the copy then
+    // holds a call or a jmp to the new target either way.
+    bool entry_call_named = false;
+    for (int i = 0; i < n_calls; ++i) entry_call_named = entry_call_named || calls[i].offset == 0;
+    if (((orig[0] == 0xE9 || orig[0] == 0xE8) && !entry_call_named) || orig[0] == 0xCC)
         Fatal("%s: entry 0x%08X is already patched (%02X), cannot clone", name, (unsigned)original, orig[0]);
     void* copy = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (!copy) Fatal("%s: VirtualAlloc(%u) failed, error %lu", name, (unsigned)size, GetLastError());
@@ -146,8 +154,29 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
             Fatal("%s: no relative call or jmp at +0x%X to re-aim", name, (unsigned)at);
         std::int32_t rel;
         std::memcpy(&rel, orig + at + 1, sizeof rel);
-        const std::uint8_t* target = calls[i].target
-            ? static_cast<const std::uint8_t*>(calls[i].target) : orig + at + kJmpLen + rel;
+        // Where the site reaches now. A site already re-aimed - by the tracer,
+        // or by a RetargetCall that moved it to ours - would be copied as a
+        // call to that code, so it is refused: against `expected` when the
+        // caller says what the original called, and for "where the original
+        // called" when it leaves the image. An entry Inject has patched (an
+        // E9 there is ours; a BOF3X_ORIGINAL entry is not patched) is only
+        // noted: it is an earlier module's function, already checked against
+        // its own copy, and the same code on both sides of this comparison -
+        // a module's own functions are not injected until its fuzz has run.
+        const std::uint8_t* const callee = orig + at + kJmpLen + rel;
+        const auto callee_va = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(callee));
+        if (calls[i].expected != 0 && callee_va != calls[i].expected)
+            Fatal("%s: the call at +0x%X reaches 0x%08X, not 0x%08X: the site is re-aimed already, cannot clone", name,
+                  (unsigned)at, (unsigned)callee_va, (unsigned)calls[i].expected);
+        if (!calls[i].target) {
+            if (callee_va < image::kBase || callee_va >= image::kBase + image::kSizeOfImage)
+                Fatal("%s: the call at +0x%X leaves the image (0x%08X): re-aimed already, cannot clone", name,
+                      (unsigned)at, (unsigned)callee_va);
+            if (IsOwned(callee_va) && callee[0] == 0xE9)
+                Log("shadow      %-24s the call at +0x%X reaches 0x%08X, which is ours: the same code on both sides",
+                      name, (unsigned)at, (unsigned)callee_va);
+        }
+        const std::uint8_t* target = calls[i].target ? static_cast<const std::uint8_t*>(calls[i].target) : callee;
         rel = static_cast<std::int32_t>(target - (static_cast<std::uint8_t*>(copy) + at + kJmpLen));
         std::memcpy(static_cast<std::uint8_t*>(copy) + at + 1, &rel, sizeof rel);
     }
@@ -157,7 +186,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
 }
 
 bool WantsShadow(const char* name) {
-    char list[2048];
+    char list[8192];  // a whole round of takeovers fits: 119 names is 2,061 characters
     DWORD n = GetEnvironmentVariableA("BOF3X_SHADOW", list, sizeof list);
     if (n == 0) return false;
     if (n >= sizeof list) Fatal("BOF3X_SHADOW is longer than %u bytes", (unsigned)sizeof list);

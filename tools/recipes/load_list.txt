@@ -1,0 +1,9 @@
+# Title -> LOAD GAME: the slot list (names, DIV-0029). Written 2026-09-22, run the same
+# night: the title takes Start by frame 480, its cursor starts on LOAD GAME.
+wait 480
+press start
+wait 40
+press circle
+wait 90
+shot load_list
+end

@@ -258,6 +258,55 @@ it is a table, a proportional font is a data change.
    1,734 of 1,734 frames (a 1.9-minute run, not the whole cycle). The frame
    hash has NOT been re-recorded: `Text_DrawString` and `Msg_SystemPtr` are
    logic functions, so `ab14_orig` is stale if either is in `entries_logic.txt`.
+8. **The save screen's Yes / No hand sits about 25 units left of its
+   words** (owner's screenshots, 2026-09-22, English, at an inn: "OK to
+   overwrite?" over the three slots, against the same prompt in the
+   sibling's recompiled US build). Measured at 640 wide (the recomp's
+   captures scaled from 1,539), the hand's tip and the text:
+
+   | | hand on Yes | hand on No | "Yes" starts | "No" starts |
+   |---|---|---|---|---|
+   | ours | ~437 | ~505 | ~490 | ~548 |
+   | US PSX (recomp) | ~493 | ~555 | ~495 | ~557 |
+
+   On the PlayStation the tip touches each word; ours is 50-56 px (25-28 PSX
+   units) short on both, so on No it covers the `Y` of "Yes". The step
+   between the two is about the same (68 against 62 px), and the text sits
+   where the recomp has it. So the hand's x is reckoned by something that
+   did not follow the text into English - the same family as the Config
+   screen's controller panel ([`config-screen.md`](config-screen.md) §8: a
+   Chinese width, `len * 6`, on two-byte strings that advance 8) - most
+   likely the options right-aligned by their English width while the hand
+   is placed from the Chinese one (是 / 否, 24 units each). Unread: where the
+   prompt and its options come from (system pool, DIV-0007, or a table in
+   the exe) and who positions the hand are the first two reads. No recipe
+   reaches a save point yet; save 5's position is not at one.
+
+   **The target, the owner's (2026-09-22, a mockup over our capture):** not
+   the PlayStation's layout, where the hand on No covers "es" too, but the
+   Chinese build's look - the hand beside each word, touching neither.
+   The hand is about 44 px wide, "Yes" 48, and the two stops are 68 apart
+   today, so moving only the words cannot clear "Yes"; the mockup moves one
+   word and one stop:
+
+   | | left hand | Yes | right hand | No |
+   |---|---|---|---|---|
+   | today (px) | 394-437 | 490-536 | 464-506 | 552-584 |
+   | target (px) | 394-437, kept | ~442-491 | ~501-546 | 552-584, kept |
+
+   In PSX units (half): "Yes" starts some 2-3 units right of the left
+   hand's tip, the right hand's tip ends some 3 units before "No", and the
+   two stops are about 55 units apart instead of 34. A
+   [`DIVERGENCE.md`](DIVERGENCE.md) entry (layout, owner's call); the exact
+   numbers follow from the code once read, and the owner judges the result
+   off a capture against this mockup.
+
+   **Read and built as DIV-0027 (2026-09-22, group N):** the chooser is
+   `Menu_YesNo` `0x5747D0`, shared by four prompts; the words sit where the
+   line's own spaces put them (27 in the lead, 1 between) and the hand at
+   `0xFE - 36 * selection`, fitted to the Chinese line. Ours moves three
+   spaces into the gap and the No stop to 274 -
+   [`glyph-draw.md`](glyph-draw.md) §7. Not yet seen in game.
 
 ## 7. Menu text: the system pool and the name tables (DIV-0008)
 

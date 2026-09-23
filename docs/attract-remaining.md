@@ -1,6 +1,6 @@
 # What the attract sequence still runs of Capcom's code
 
-**Status:** IN PROGRESS (verified 2026-09-21)
+**Status:** IN PROGRESS (verified 2026-09-22)
 
 Stage 1 of the order of work ([`STATUS.md`](STATUS.md)) is "replace every
 function the attract sequence reaches". This is the list of what is left:
@@ -172,6 +172,24 @@ Three consequences:
   comes first; past it, the linear sweep is out of step. Seeding from
   pointers in data, as in the item above, would find them - `0x66A470`
   names them. [`sprite-draw-order.md`](sprite-draw-order.md) section 14.
+- **The same case, in the message box (2026-09-22, the third round's
+  queue).** `MsgBox_Step` `0x497840` ends at `0x497A6C`; its 23-entry jump
+  table follows at `0x497A70`, and after the table `0x497AD0` is a function
+  in no list at all - `MsgBox_StateDispatch`, which `MsgBox_FrameTask` calls
+  once a frame (2,781 in `hidden_b`, its caller's count). It dispatches
+  through **a call table built on the stack** - `mov [esp+k], imm32` eight
+  times, then `call [esp + eax*4]` - a shape `pe_hidden.py` cannot seed from
+  data because the pointers are immediates in code. A scan of `.text` for
+  it (capstone, `mov dword ptr [esp+k], imm` runs before a
+  `call dword ptr [esp + reg*4]`) finds **255 such dispatchers naming 776
+  targets**; 766 of the targets are in `entries_hidden.txt` by the padding
+  rule already, so the tables are not a second blind spot at scale - but a
+  target that follows a jump table's data, as `0x497AD0` does, is missed by
+  both rules. The `hidden_a` first-hit trace shows the attract sequence
+  reaching only states 0 and 7 of the dispatcher's eight (`0x497B30`,
+  `0x498470`); `0x497B30` is about 864 bytes, not the 256 recorded, with a
+  second 23-entry table at `0x497E34` inside it. Group H of the third round
+  takes the family ([`msgbox.md`](msgbox.md)).
 
 ## 4. The catalogue
 
@@ -317,7 +335,12 @@ entered only a few dozen times, from `0x594E60` (12 calls, from the mode task
 `0x5894D0` is the unbounded queue append of [`known-defects.md`](known-defects.md).
 **`0x576B50` is the movement-script interpreter** and `0x517BF0` the object
 update that runs it; `0x5792A0` is its attach command
-([`movement-script.md`](movement-script.md), 2026-09-21).
+([`movement-script.md`](movement-script.md), 2026-09-21). **Three rows below
+are not functions** (2026-09-22): `0x576CD0` is the case block of
+`MoveScript_Step` (`0x576B50`..`0x576CF0`, then its jump table), and
+`0x577800` / `0x577B80` are cases of `MoveScript_GroupF` (`0x577760`..
+`0x577B8C`) - all ours since the movement script; their counts are from
+before that and their "outside exe" caller is the jump table's owner.
 The hottest are `0x589770` (74 k), `0x518980` / `0x5197F0` (72 k each),
 `0x517BF0` (69 k), `0x588F20` (67 k), `0x518D10` (58 k) and `0x576B50` /
 `0x576E00` (58 k).
@@ -437,7 +460,10 @@ points at it and at three sibling tables - eight of the handlers hidden,
 `0x56B990` at 1,807 bytes the largest - plus the `0x52D8F0`..`0x536AC0` block
 the area set-up and the field frame call into. **This is where the PSX side
 should be able to help most**: an opcode handler table has a PSX twin with the
-same order (§5).
+same order (§5). **`0x56B730` and `0x56B990` are not functions** (2026-09-22):
+case 4 of `Scena16_Scene2`'s switch and case 1 of `Scena16_Scene3`'s, both
+ours since the second round ([`field-modes.md`](field-modes.md) §3); the
+regenerated catalogue's "§4.6, 2 functions" is those two.
 
 | Entry | Name | Calls | Bytes | Found as | Main callers |
 |---|---|--:|--:|---|---|
