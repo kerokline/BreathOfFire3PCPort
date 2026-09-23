@@ -7480,13 +7480,6 @@ params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5747D0..0x574881 (0xB2 bytes), read to the last ret, not taken over: the options line Msg_SystemPtr(0xF) through Text_DrawAt at (0x1C, 0x16), then the hand Menu_DrawHand(0xFE - 36 * s8 byte 0x929F0B, 0x18, 0) - 1 is Yes (left, x 218), 0 is No (x 254). Then the buttons: cancel (0x903590) plays 0x106, sets the byte to 0 and returns 1; confirm (0x90358E) plays 0x104 for Yes or 0x106 for No and returns 1; left or right (bits 0xA000 of the pad word) plays 0x101 and flips the byte; otherwise returns 0. The hand's stops were fitted to the Chinese line, whose words start at 220 and 256 (16 spaces and 2 at 12 units); the English line's start at 244 and 276. Callers 0x57FD6D (Do you want to save?), 0x57FFBF (OK to overwrite?), 0x58838B (Load game?), 0x583C42 (Is this what you want?). DIV-0027 patches it."
 
-[[func]]
-pc = 0x5905D0
-name = "Menu_DrawHand"
-ret = "void"
-params = "int x, int y, int unused"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x5905D0..0x59065B, read to its ret: a draw mode primitive, then a code-0x64 SPRT at (u16 x - 0x16, u16 y + 2), 0x18 x 0xC, texture u 0xCC v 0x9C, the word 0x7802 at +0x16, shade 0x80 - the pointing hand, its visible tip one unit left of x (the owner's measurements, docs/dialogue-localisation.md section 6 item 8). The third argument is not read. 45 call sites (E8 scan)."
 # ---------------------------------------------------------------------------
 # Group P of the fourth round (2026-09-22): the field menu's item effects -
 # the 33 pointer-reached handlers at 0x496CC0..0x49767A that pe_funcs.py
@@ -7916,24 +7909,6 @@ params = "unsigned id, unsigned mask, unsigned battle"
 status = "evidence"
 impl = "src/game/item_use.cpp"
 evidence = "disasm 2026-09-22, 0x56 bytes, no calls: the record as Char_HealHp picks it; if the status word +0x10 has a bit of mask's low word, status &= ~mask and 1, else 0. PSX 0x801660DC (status +0x0C there). 14 call sites. hidden_b: 0 calls."
-
-[[func]]
-pc = 0x590660
-name = "Char_RecalcStats"
-psx = 0x80165434
-ret = "void"
-params = "unsigned char *record"
-status = "evidence"
-evidence = "disasm 2026-09-22 (first 0x40 bytes only): copies the 32 bytes from record + 0x40 to record + 0x20, then 0x590FC0, 0x591190, 0x591490, 0x590800 on the record and a max-HP scale from the byte +0x1E. The sibling's Char_RecalcStats 0x80165434 (call-anchored). 0x1A0 bytes and five unowned callees: a recording stand-in in docs/item-use.md, not taken over. 24 call sites."
-
-[[func]]
-pc = 0x590BB0
-name = "Inventory_Add"
-psx = 0x80165AA4
-ret = "unsigned char"
-params = "unsigned category, unsigned item, unsigned count"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0xDE bytes, no calls: 0 for item or count 0; the id list 0x656B00[category] and count list 0x656B14[category], 128 slots; an existing stack adds count, capped at 99 (0 then, 1 otherwise); else the first slot with id 0 or count 0 takes it and the byte 0x903850 is 1; category 4 an id-only list. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites: a recording stand-in, not taken over (docs/item-use.md)."
 
 [[func]]
 pc = 0x4981C0
@@ -9325,3 +9300,208 @@ params = "void"
 impl = "src/game/event_objs.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x536670..0x53669D (0x2E bytes), no calls: Sprite_Current +0x34 += +0xC, +0x38 += +0x10, word +0x3E += word +0x14. PSX 0x801C67AC the same (psx_pair call-disputed; the body agrees). Caller 0x52E140 and three unreached neighbours. Shop route 520 calls."
+# ---------------------------------------------------------------------------
+# Group W of the sixth round (2026-09-23): stats and inventory - the stat
+# recompute and its four passes, the two byte steps under them, the
+# equipment previews, the inventory's add and counts, the item-table
+# getters, a text record's copy and two menu draws, 0x5903F0..0x591CAB.
+# docs/char-stats.md. Record offsets are the persistent record's
+# (CharacterRecords + 0xA4 * id): the PSX record's + 4.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5903F0
+name = "Menu_DrawIcon"
+psx = 0x80164EC8
+ret = "void"
+params = "unsigned icon, unsigned x, unsigned y, unsigned w, unsigned h, unsigned shade"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5903F0..0x5905C1 (0x1D2 bytes), read to its ret: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xF below icon 12 else 0x1E, 0), Gfx_CommitPrim(1, 0xC), then a POLY_FT4 at the new Gfx_PacketNext - corners (x, y), (x + w, y), (x, y + h), (x + w, y + h) as floats, x and y low words, w and h low bytes; shade the last argument's byte; icons 0..11 u 20 * icon v 0x50 on page 0xF, 12..19 u 20 * icon + 16 (a byte) v 0x64, the rest the cell (0xA8, 0xF0) 15 x 15, pages 0x1E; the CLUT word 0x7800 or a byte of a 21-byte table built on the stack, indexed without a bound (icon 21 and up read the stack). Gfx_CommitPrim(1, 0x48). The PSX twin (call-anchored) draws the same quad from other cells. Seven call sites (E8 scan): the status screen 0x573ADC (icon 0), the field menu's top bar 0x599EEB (icon from 0x6672AC), 0x42EE79, 0x443371, 0x4433F5, 0x59710C, 0x599F4F."
+
+[[func]]
+pc = 0x5905D0
+name = "Menu_DrawHand"
+psx = 0x801651B4
+ret = "void"
+params = "int x, int y, int unused"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 and 2026-09-23, 0x5905D0..0x59065B (0x8C bytes), read to its ret: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xF, 0), Gfx_CommitPrim(0, 0xC), then a code-0x64 SPRT at (u16 x - 0x16, u16 y + 2), 0x18 x 0xC, texture u 0xCC v 0x9C, the word 0x7802 at +0x16, shade 0x80, Gfx_CommitPrim(0, 0x1C) - the pointing hand, its visible tip one unit left of x (the owner's measurements, docs/dialogue-localisation.md section 6 item 8). The third argument is not read. PSX 0x801651B4 read side by side, the same fields (the pairing tier is call-disputed). 45 call sites (E8 scan)."
+
+[[func]]
+pc = 0x590660
+name = "Char_RecalcStats"
+psx = 0x80165434
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x590660..0x5907FF (0x1A0 bytes), read to its ret against the PSX 0x80165434 (the sibling's Char_RecalcStats): the 32 bytes at record + 0x40 copied to + 0x20; Char_ApplyWeapon, Char_ApplyArmour, Char_ApplyAccessories, Char_ApplyTraits on the record; max HP + 0x20 plus (scale byte + 0x1E * base max HP + 0x40 + 5) / -10 (the imul 0x99999999 idiom; the PSX subtracts / 10) and HP + 0x18 cut to it; Stat_AddResist(+0x2F, +0x30, +0x31, +0x32, +0x33, +0x35, +0x36, +0x37, 2) for bits 0..7 of + 0x1D; for the persistent record among the eight (no break), Stat_AddCap100(+0x38 + j, byte 0x903640 + 5 * i + j) for each non-zero byte + 0x38 + j. 24 call sites (E8 scan)."
+
+[[func]]
+pc = 0x590800
+name = "Char_ApplyTraits"
+psx = 0x80165290
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/char_stats.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x590800..0x59091B plus its 14-entry jump table to 0x590953 (0x154 bytes), against the PSX 0x80165290: the byte + 0x1F (0xFF none) indexes the pointer table 0x667548 (null none) of (kind, amount) byte pairs ended by kind 0xE; kinds 0..8 Stat_AddResist(record + 0x2F + kind, amount), 9..13 Stat_AddCap100(the same), above 13 skipped. Called only by Char_RecalcStats. The name is a guess at what the per-character lists are."
+
+[[func]]
+pc = 0x590960
+name = "Equip_PreviewSlot"
+ret = "void"
+params = "unsigned id, unsigned slot, unsigned item, unsigned char *marks, unsigned short *values"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x590960..0x590A8B plus its 6-entry jump table to 0x590AA3 (0x144 bytes), no PSX twin in the pairs: persistent record (id low byte) copied to the stack, equipment byte + 0x12 + slot (slot low byte, 0..5; above 5 none) set to the item's low byte, Char_RecalcStats on the copy, then for ATK, DEF, INT, AGI (+0x24, +0x26, +0x2A, +0x28) marks[k] 0, values[k] the copy's word, marks[k] 3 when the record's is lower, 2 when higher. One call site, 0x5754FD (the equipment screen, 1,407 calls on the shop route)."
+
+[[func]]
+pc = 0x590AB0
+name = "Equip_PreviewSet"
+ret = "void"
+params = "unsigned id, const unsigned char *set, unsigned char *marks, unsigned short *values"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x590AB0..0x590BA7 (0xF8 bytes): Equip_PreviewSlot's twin with all six equipment bytes + 0x12..+ 0x17 from set[0..5]. Two call sites, 0x57502D and 0x59D7CF; not reached by the shop route, taken as the twin."
+
+[[func]]
+pc = 0x590BB0
+name = "Inventory_Add"
+psx = 0x80165AA4
+ret = "unsigned char"
+params = "unsigned category, unsigned item, unsigned count"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 and 2026-09-23, 0x590BB0..0x590C8D (0xDE bytes), no calls: 0 for item or count 0 (low bytes); DamageScratch 0; the id list 0x656B00[category] and count list 0x656B14[category] (the category's low byte, unbounded), 128 slots; outside category 4 an existing stack adds count, capped at 99 (answer 0 then, 1 otherwise); else the first slot with id 0 - or count 0, outside category 4 - takes it and DamageScratch is 1; category 4 (the key items 0x904554, 32 bytes) is searched 128 long, D-NEW-W1. ItemUse_FaerieTiara pushes a fourth 0 it does not read. The sibling's Inventory_Add 0x80165AA4. 80 call sites."
+
+[[func]]
+pc = 0x590EE0
+name = "Stat_AddResist"
+psx = 0x80165FE4
+ret = "unsigned char"
+params = "unsigned char *level, unsigned step"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x590EE0..0x590F29 (0x4A bytes), against the PSX 0x80165FE4: the step's low byte as s8; up: 0 at 6 or more, else add, cap 6, 1; down: 0 at 6 or more, else add, floor 0 as s8, 1; 0: 0 at 7 or more, else 7, 1. Its 60 call sites (E8 scan) are all in the four passes and Char_RecalcStats, on the nine bytes + 0x2F..+ 0x37 - resistances by the shape (hypothesis). Not on the queue (the shop route never calls it); taken with its callers."
+
+[[func]]
+pc = 0x590F30
+name = "Stat_AddCap100"
+psx = 0x80166084
+ret = "unsigned char"
+params = "unsigned char *value, unsigned amount"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x590F30..0x590F52 (0x23 bytes), against the PSX 0x80166084: 0 at 100; else the byte plus the amount's low byte, 0 if that is negative as s8, 100 if above 100; 1. 14 call sites (E8 scan): the passes on + 0x38..+ 0x3C, and 0x453C56."
+
+[[func]]
+pc = 0x590FC0
+name = "Char_ApplyWeapon"
+psx = 0x80166150
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x590FC0..0x59111A plus its 11-entry jump table and 65-byte index table to 0x591188 (0x1C9 bytes), against the PSX 0x80166150: the weapon + 0x12 in NameTable_Weapons (stride 0x1C): Stat_AddClamped(ATK + 0x24, byte + 0x16), Stat_AddClamped(AGI + 0x28, -byte + 0x14), then by id 0xD..0x4D: ten effect bodies (docs/char-stats.md section 3). Called only by Char_RecalcStats."
+
+[[func]]
+pc = 0x591190
+name = "Char_ApplyArmour"
+psx = 0x801662CC
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x591190..0x5913F8 plus its 21-entry jump table and 55-byte index table to 0x591486 (0x2F7 bytes), against the PSX 0x801662CC: the three armour bytes + 0x13..+ 0x15 copied first; each in NameTable_Armour (stride 0x1A): Stat_AddClamped(DEF + 0x26, byte + 0x14), Stat_AddClamped(AGI, -byte + 0x13), then by id 0xC..0x42 (docs/char-stats.md section 3). Called only by Char_RecalcStats."
+
+[[func]]
+pc = 0x591490
+name = "Char_ApplyAccessories"
+psx = 0x8016651C
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x591490..0x59161B plus its 23-entry jump table to 0x591677 (0x1E8 bytes), against the PSX 0x8016651C: the two accessory bytes + 0x16, + 0x17 copied first; each in NameTable_Accessories (stride 0x18): Stat_AddClamped(AGI, -byte + 0x13), then by id 1..0x17 (docs/char-stats.md section 3). Called only by Char_RecalcStats."
+
+[[func]]
+pc = 0x591680
+name = "Item_NamePtr"
+psx = 0x80166720
+ret = "unsigned char *"
+params = "unsigned category, unsigned item"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x591680..0x591705 plus its 4-entry jump table to 0x591717 (0x98 bytes): by category's low byte 1 weapons, 2 armour, 3 accessories, 4 key items, any other consumables, the record of the item's low byte (NameTable_*, whose first 16 bytes are the name). The sibling's Item_NamePtr 0x80166720. 77 call sites."
+
+[[func]]
+pc = 0x591720
+name = "Item_IconKind"
+psx = 0x801667D4
+ret = "unsigned"
+params = "unsigned category, unsigned item"
+impl = "src/game/char_stats.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x591720..0x591795 (0x76 bytes): the low nibble of the equipment record's byte + 0x12 (categories 1..3) or the consumable's + 0x11 (every other category, key items included). The caller 0x57DC0A indexes the byte table 0x663D60 with it and draws through 0x57D360 before the item's name - an icon, by that use. 14 call sites."
+
+[[func]]
+pc = 0x5917A0
+name = "Item_EquipMask"
+psx = 0x80166880
+ret = "unsigned"
+params = "unsigned category, unsigned item"
+impl = "src/game/char_stats.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5917A0..0x5917FD plus its 4-entry jump table to 0x59180F (0x70 bytes): the equipment record's byte + 0x10 (categories 1..3; for armour loaded into al over the id * 13 of the address arithmetic, so eax's upper bytes are that); otherwise eax = (category's low byte - 1) or 0xFF. The caller 0x5754A3 tests a bit 1 shl n of it - who may equip, by that use. 12 call sites."
+
+[[func]]
+pc = 0x5918E0
+name = "KeyItem_Has"
+psx = 0x80166AD0
+ret = "unsigned char"
+params = "unsigned item"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5918E0..0x5918FC (0x1D bytes): 1 if the item's low byte is among the 32 bytes at 0x904554, else 0. 0x904554 is Inventory_Add's category-4 id list, the PSX key items 0x80145448 (the sibling's BATTLE_RAM.md). 22 call sites."
+
+[[func]]
+pc = 0x591940
+name = "TextRecord_Set"
+psx = 0x80166B9C
+ret = "void"
+params = "unsigned slot, unsigned length, const unsigned char *text"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x591940..0x5919A8 (0x69 bytes): length's low byte, 32 and up cut to 31, bytes copied forwards one at a time into Text_Records + 32 * slot's low byte, then a NUL after them. 20 call sites."
+
+[[func]]
+pc = 0x5919B0
+name = "Inventory_Count"
+psx = 0x80166C1C
+ret = "unsigned short"
+params = "unsigned category, unsigned item, unsigned equipped"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5919B0..0x591A74 (0xC5 bytes): equipped's low byte 0 - the count byte of the item's first stack in the category's lists (the count list of category 4 is null, D-NEW-W2), 0 if none; else how many of the eight persistent records with bit 0 of + 0x0B wear it (category 1 + 0x12, 2 + 0x13..+ 0x15, 3 + 0x16..+ 0x17), category 3 adding 1 for the byte 0x904130 and the byte 0x90412F when 0x90412E is the item. The answer is ax. 40 call sites."
+
+[[func]]
+pc = 0x591A80
+name = "Inventory_CountUsed"
+ret = "unsigned char"
+params = "unsigned category"
+impl = "src/game/char_stats.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x591A80..0x591ABB (0x3C bytes), no PSX pair recorded: the non-zero bytes of the category's id list, 128 long for a category byte below 4, else 32. Four call sites."
+
+[[func]]
+pc = 0x591C20
+name = "Item_Price"
+psx = 0x80167058
+ret = "unsigned"
+params = "unsigned category, unsigned item"
+impl = "src/game/char_stats.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x591C20..0x591CAA plus its 4-entry jump table to 0x591CBB (0x9C bytes): the word of weapons + 0x18, armour + 0x16, accessories + 0x14, key items + 0x10, consumables + 0x12 (eax whole, the word zero-extended). The shop screens call it 523 times on the owner's shop route (0x581C70, 0x58281C) - the price, by that use (the NameTable_Consumables note has the price at + 0x14, which this does not read). 15 call sites."

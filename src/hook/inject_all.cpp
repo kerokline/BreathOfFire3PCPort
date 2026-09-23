@@ -71,6 +71,7 @@
 #include "game/tex_page.h"
 #include "game/tex_cells.h"
 #include "game/event_objs.h"
+#include "game/char_stats.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -159,6 +160,8 @@ void InjectAll() {
     TexCells_Inject();          // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper copies, DirectDraw and the device fakes: order does not matter
     EventObjs_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
+    CharStats_Inject();         // every call of its clones re-aimed at a recorder, its seven jump tables
+                                // relocated in the copies, the trait lists swapped: order does not matter
     InjectReport();
 }
 
