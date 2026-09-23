@@ -7,7 +7,6 @@
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
 #include "game/gfx_image.h"
-#include "game/gfx_sprite_uv.h"
 #include "game/gfx_texcache.h"
 #include "game/gfx_clut.h"
 #include "game/gfx_filter.h"
@@ -70,6 +69,7 @@
 #include "game/display_env.h"
 #include "game/tex_page.h"
 #include "game/tex_cells.h"
+#include "game/sprt_draw.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -94,7 +94,6 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
-    GfxSpriteUv_Inject();
     GfxFilter_Inject();
     MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
@@ -157,6 +156,9 @@ void InjectAll() {
                                 // helper and converter copies, DirectDraw a fake: order does not matter
     TexCells_Inject();          // every call of its builder copies re-aimed at a recorder or at its own
                                 // helper copies, DirectDraw and the device fakes: order does not matter
+    SprtDraw_Inject();          // its copies are of Capcom's bytes, which nothing but its own Inject
+                                // patches; every call of them re-aimed at a recorder, the device a
+                                // fake: order does not matter
     InjectReport();
 }
 

@@ -15,7 +15,6 @@ import argparse, bisect, collections, json, tomllib
 
 OWNED_CALLER = 0xFFFFFFFF  # a call made from inside an owned function (calltrace.cpp)
 TASK_RUNALL = 0x5A98A0     # counted by the tracer as the frame, not as a call
-DIV0010_COPIES = {0x5A2300, 0x5A2520, 0x5A2710}  # Capcom's handlers, re-aimed; unarmed
 
 # (section, title, test) - first match wins. docs/attract-remaining.md section 4.
 SHELL = {0x4FCB00, 0x4FC6A0, 0x4FC6F0, 0x4FCAC0, 0x4FD030, 0x4FD110, 0x4FD200, 0x4FD290,
@@ -144,8 +143,6 @@ def main():
             name = f'`{r["name"]}`' if r['name'] else ''
             if r['entry'] == TASK_RUNALL:
                 calls = f'{frames:,} (frames)'
-            if r['entry'] in DIV0010_COPIES:
-                calls, name = 'unarmed', name + ' (DIV-0010 copy)'
             found = f'hidden, {r["how"]}' if r['how'] else ''
             out.append(f'| `0x{r["entry"]:06X}` | {name} | {calls} | {r["size"]} | {found} | {r["callers"]} |')
         out.append('')

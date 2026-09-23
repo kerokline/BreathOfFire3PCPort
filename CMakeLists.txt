@@ -59,7 +59,6 @@ add_library(bof3x SHARED
   src/game/save_io.cpp
   src/game/dat_load.cpp
   src/game/text_advance.cpp
-  src/game/gfx_sprite_uv.cpp
   src/game/gfx_filter.cpp
   src/game/menu_frame.cpp
   src/game/text_draw.cpp
@@ -148,7 +147,9 @@ add_library(bof3x SHARED
   src/game/tex_page.cpp
   src/game/tex_page_fuzz.cpp
   src/game/tex_cells.cpp
-  src/game/tex_cells_fuzz.cpp)
+  src/game/tex_cells_fuzz.cpp
+  src/game/sprt_draw.cpp
+  src/game/sprt_draw_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
