@@ -68,6 +68,7 @@
 #include "game/sound.h"
 #include "game/d3d_draw.h"
 #include "game/display_env.h"
+#include "game/tex_page.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -151,6 +152,8 @@ void InjectAll() {
                                 // relocated in the copies, the device a fake: order does not matter
     DisplayEnv_Inject();        // every call of its clones re-aimed at a recorder or at another of its
                                 // clones, the surfaces, viewport and material fakes: order does not matter
+    TexPage_Inject();           // every call of its builder copies re-aimed at a recorder or at its own
+                                // helper and converter copies, DirectDraw a fake: order does not matter
     InjectReport();
 }
 
