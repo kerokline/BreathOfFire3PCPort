@@ -1,6 +1,6 @@
 # The fifth round's queue: the last of what the attract sequence reaches
 
-**Status:** IN PROGRESS (2026-09-23)
+**Status:** MERGED (2026-09-23) - S, T, U in, 594 ours, every self-test at 0 mismatches; the live batch `ab26` is owed
 
 Drawn from the catalogue regenerated 2026-09-23 after round four
 (`python tools/attract_catalog.py analysis/calltrace/hidden_b/bof3x.callcounts.tsv
@@ -59,3 +59,16 @@ under them `0x5A2E70`, `0x5A3790`, `0x59F9B0`, `0x5AA03E`, `0x5AA1E0`,
 original-vs-original pair, and the capture A/Bs - which for this round are
 the check that matters, since every function here ends in pixels. Run it
 with the screen uncovered, after `ab25b`.
+
+## After the merge
+
+S (8, [`display-env.md`](display-env.md)), T (8, [`tex-page.md`](tex-page.md))
+and U (11, [`tex-cells.md`](tex-cells.md)) are ours: **594**. Three latent
+defects of Capcom's written down and kept faithful, D30..D32. The regenerated
+catalogue: 218 reached and not ours, **1 in scope** - `D3d_DrawSprt`
+`0x5A2300`, which is Capcom's own handler copied with two operands re-aimed
+for DIV-0010 (its 8- and 16-bit siblings `0x5A2520` / `0x5A2710` are the same
+and unreached by the attract sequence). A reimplementation of the three, with
+DIV-0010 inside and switchable, is what closes the attract queue to zero.
+The shop route (35 of 35 identical, [`input-script.md`](input-script.md) §5a)
+already ran with S and T in; U's first live check is `ab26`.
