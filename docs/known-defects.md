@@ -1139,6 +1139,7 @@ section 3). None is known to be reached by any caller:
   would read through the null pointer. Nothing changes it mid-draw.
 - `Menu_DrawBackdrop` `0x575690`: `kind` indexes four CLUT words on its own
   stack with no bound; 4 and up read its stack frame and its caller's. Config
-  keeps the byte `0x903A5B` in 0..3; only a corrupted save reaches it. **Ours
-  aborts loudly there instead** (CLAUDE.md rule 4 - the stack read cannot be
-  reproduced); the other three are kept as the original has them.
+  keeps the byte `0x903A5B` in 0..3; only a corrupted save reaches it. Seen
+  poked (`tools/recipes/backdrop_kinds.txt`): Capcom's code draws no backdrop
+  at 4..8, 16, 64 and 255, the menu on black. **Ours draws none**
+  (DIV-0030); the other three are kept as the original has them.

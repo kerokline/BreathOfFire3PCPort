@@ -1195,10 +1195,14 @@ extern "C" void __cdecl Shop_DrawMemberStats(int x, int y, unsigned member, unsi
 // 0x100). kind is Config's "Background" byte 0x903A5B, which Config keeps in
 // 0..3 (0x461239 / 0x46126D).
 //
-// Not as the original: a kind of 4 or more reads the four CLUTs' array past
-// its end - into the original's own stack frame and its caller's - which C++
-// cannot reproduce; ours aborts loudly there (CLAUDE.md rule 4). Only a save
-// with that byte corrupted would reach it.
+// Not as the original (DIV-0030): a kind of 4 or more reads the four CLUTs'
+// array past its end - the return address, the argument, then the caller's
+// frame - and the start table 0x66396C past its four entries. C++ cannot
+// reproduce the stack read; drawn by Capcom's code, every such kind tried
+// (4..8, 16, 64, 255) showed no backdrop at all, the menu on black
+// (tools/recipes/backdrop_kinds.txt). Ours draws none: the same draw mode and
+// CLUT lookups, then no tiles. Config keeps the byte in 0..3; only a corrupted
+// save reaches this.
 extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
     PiecePage(0x340);
     std::uint16_t cluts[4];
@@ -1207,10 +1211,7 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
     cluts[2] = static_cast<std::uint16_t>(g.get_clut(0x40, 0x1E2));
     cluts[3] = static_cast<std::uint16_t>(g.get_clut(0x60, 0x1E2));
     const unsigned k = kind & 0xFF;
-    if (k >= 4)
-        bof3::Fatal("Menu_DrawBackdrop: kind %u - the original reads its stack past the four CLUTs here "
-                    "(Config keeps 0x903A5B in 0..3)",
-                    k);
+    if (k >= 4) return;   // DIV-0030
     const std::uint16_t clut = cluts[k];
     std::int32_t column = 0;
     for (int outer = 0; outer < 5; ++outer) {

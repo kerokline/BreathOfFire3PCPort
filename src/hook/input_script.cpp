@@ -42,6 +42,10 @@
 //                           it the shot is logged as the hold starts and the
 //                           grab lands wherever the game has got to.
 //   peek ADDR TYPE [LABEL]  log the value
+//   poke ADDR TYPE VALUE    write the value - to put the game in a state no
+//                           input reaches (a corrupted save's byte, say). An
+//                           experiment's tool: a recipe with a poke is not a
+//                           player's route, and says so in its log.
 //   mark TEXT               log the text
 //   end                     stop here
 //
@@ -58,7 +62,7 @@
 namespace bof3 {
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Mark, End };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Mark, End };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -258,6 +262,16 @@ void Load(const char* path) {
             st.width = Width(line, t[2]);
             st.addr = Address(line, t[1], st.width);
             st.text = t.size() == 4 ? t[3] : t[1];
+        } else if (w == "poke") {
+            need(4, 4);
+            st.kind = Kind::Poke;
+            st.width = Width(line, t[2]);
+            st.addr = Address(line, t[1], st.width);
+            st.value = Number(line, t[3]);
+            MEMORY_BASIC_INFORMATION mi{};
+            VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(st.addr)), &mi, sizeof mi);
+            if (!(mi.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
+                ParseError(line, "address not writable", t[1]);
         } else if (w == "mark") {
             st.kind = Kind::Mark;
             const std::size_t at = s.find_first_not_of(" \t", s.find("mark") + 4);
@@ -403,6 +417,16 @@ unsigned short NextWord() {
                 (unsigned)Read(s.addr, s.width), g_frame);
             Advance();
             continue;
+        case Kind::Poke: {
+            void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(s.addr));
+            if (s.width == 1) *static_cast<volatile std::uint8_t*>(p) = static_cast<std::uint8_t>(s.value);
+            else if (s.width == 2) *static_cast<volatile std::uint16_t*>(p) = static_cast<std::uint16_t>(s.value);
+            else *static_cast<volatile std::uint32_t*>(p) = s.value;
+            Log("input       POKE 0x%08X = 0x%X (u%u) recipe frame %u", (unsigned)s.addr, (unsigned)s.value,
+                s.width * 8, g_frame);
+            Advance();
+            continue;
+        }
         case Kind::Mark:
             Log("input       mark %s recipe frame %u", s.text.c_str(), g_frame);
             Advance();

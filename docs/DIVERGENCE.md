@@ -1372,3 +1372,40 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
   language overlay, not with `BOF3X_LANG=original` (it rides in
   `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
+
+### The menu backdrop past Config's four draws nothing
+
+- **ID:** DIV-0030
+- **Date:** 2026-09-23
+- **Subsystem:** menus (`Menu_DrawBackdrop` `0x575690`, [`menu-windows.md`](menu-windows.md) §3)
+- **Original behaviour:** the backdrop's kind is Config's "Background" byte
+  `0x903A5B`, which the Config screen keeps in 0..3 (`0x461239` /
+  `0x46126D`) - four patterns. The function picks its CLUT from four words on
+  its own stack by that byte with no bound (`mov cx, [esp + eax*2 + 0x24]` at
+  `0x575729`), and its tile pattern's start from `0x66396C[kind]`, a table of
+  four. A kind of 4 or more reads the return address, the argument, then the
+  caller's frame for the CLUT, and `.data` past the table for the pattern.
+  Poked into a running game with Capcom's function in place
+  (`tools/recipes/backdrop_kinds.txt`, save 3's field menu,
+  `analysis/shots/backdrop_kinds`): kinds 4, 5, 6, 7, 8, 16, 64 and 255 all
+  showed **no backdrop** - the menu's windows on black - with no crash and
+  no hang. Why is not read; a CLUT word that lands on a row of zeros, which
+  the PlayStation's convention draws transparent, would do it.
+- **New behaviour:** for a kind of 4 or more ours makes the same draw-mode
+  and CLUT calls and then draws no tiles. Kinds 0..3 are Capcom's, faithful
+  (the fuzz; the shop route's A/B is owed with the next batch).
+- **Rationale:** the stack read cannot be reproduced in C++; the takeover
+  first aborted there (CLAUDE.md rule 4), which turned what a player of the
+  original sees - a black backdrop - into a crash. Drawing nothing copies
+  what was seen, not the mechanism. The owner, 2026-09-23: only four entries
+  are valid, and past them the original turned black.
+- **Not covered:** the packet pool: the original commits its garbage tiles
+  (and a pattern of zero-height rectangles would commit more than a real
+  kind); ours commits none, so the frame's packet use differs for such a
+  save. Every kind past 8 but 16, 64 and 255 is unseen.
+- **Also in the PSX version?** The twin `0x801DBCBC` was not read.
+- **Verification:** the recipe above, Capcom's side; ours at kinds past 3 is
+  not yet captured (owed with the next batch).
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Menu_DrawBackdrop` (Capcom's function,
+  stack read and all).
+

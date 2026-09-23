@@ -142,12 +142,13 @@ in `menu_windows.cpp` is the full read; the points that matter:
 ## 3. Not as the original
 
 `Menu_DrawBackdrop` with a `kind` of 4 or more: the original reads its four
-CLUT words past their end, into its own frame and its caller's; ours aborts
-through `bof3::Fatal` (CLAUDE.md rule 4 - the read cannot be reproduced).
-Config keeps `0x903A5B` in 0..3 (`0x461239` / `0x46126D`), so only a corrupted
-save reaches it. **This is a loud abort for an unreachable input, not a
-ledgered divergence**; whether it wants a DIVERGENCE entry is the owner's
-call.
+CLUT words past their end, into its own frame and its caller's. Config keeps
+`0x903A5B` in 0..3 (`0x461239` / `0x46126D`), so only a corrupted save reaches
+it. Drawn by Capcom's code in game, every such kind tried (4..8, 16, 64, 255)
+showed no backdrop - the menu on black (`tools/recipes/backdrop_kinds.txt`,
+2026-09-23). Ours draws none there: **DIV-0030**, the owner's call. (It first
+aborted through `bof3::Fatal`; seeing the original's picture turned that into
+a crash where the original showed black.)
 
 ## 4. The divergences whose patch sites are inside these bodies
 
@@ -266,7 +267,7 @@ draw's call.
 lookups against the stat icon (control 41 dropped the call rather than
 moving the reads); reads of `.data` tables the fuzz does not disturb
 (`Menu_ButtonSets`'s count, re-read per button, the piece and icon tables);
-`Menu_DrawBackdrop`'s abort (kind >= 4 never seeded).
+`Menu_DrawBackdrop`'s kind >= 4 (DIV-0030; never seeded - ours draws nothing there by construction).
 
 ## 6. What nothing reached yet
 
@@ -276,6 +277,6 @@ catalogue's counts (`analysis/shop_catalog.md`: from 4 calls of
 merge is the check of the whole. Nothing here has been seen drawn by ours
 yet. Within the functions, what the route cannot reach: `Menu_DrawBox`'s
 wide path (no box of 0x100 or more is known), the fonts' newline, the
-backdrop's abort, the scroll bar's divide fault, the panel's hang, and
+backdrop's kinds past 3 (DIV-0030, seen only poked), the scroll bar's divide fault, the panel's hang, and
 `Item_CanUse`'s Faerie Tiara test unless the route opens the item list on
 the tiara.
