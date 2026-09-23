@@ -1,6 +1,6 @@
 # The sixth round's queue: what the shop route reaches
 
-**Status:** IN PROGRESS (2026-09-23)
+**Status:** DONE (2026-09-23) - eight groups merged, 789 ours; through `ab26` (shop A/B 35 of 35, frame hash one explained frame off - HANDOFF 0000)
 
 The first input-reached queue (HANDOFF "Pick up here" 0000 item 2). The owner
 recorded a route from save 3 - the item shop (buy, sell), a found item, the

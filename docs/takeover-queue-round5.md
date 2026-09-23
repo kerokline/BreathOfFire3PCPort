@@ -1,6 +1,6 @@
 # The fifth round's queue: the last of what the attract sequence reaches
 
-**Status:** MERGED (2026-09-23) - S, T, U in, 594 ours, every self-test at 0 mismatches; the live batch `ab26` is owed
+**Status:** DONE (2026-09-23) - S, T, U merged; through `ab26` with round six (attract captures 55 of 55, oracle and dump identical)
 
 Drawn from the catalogue regenerated 2026-09-23 after round four
 (`python tools/attract_catalog.py analysis/calltrace/hidden_b/bof3x.callcounts.tsv
