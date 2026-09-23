@@ -279,6 +279,22 @@ void ConfigText_Inject() {
         static const std::uint8_t ctrl_was[] = {0x8D, 0x04, 0x49};
         static const std::uint8_t ctrl_is[] = {0x8D, 0x04, 0x09};
         bof3::PatchBytes("ConfigController", 0x461B36, ctrl_was, ctrl_is, 3);
+
+        // The owner's second look, 2026-09-23 (in game, English): "Change"
+        // and "Action" still began left of the panel's frame, and the rows ran
+        // past its right side. The names' right edge from row x + 0x20 to
+        // x + 0x36 (`add ecx, 0x20` at 0x461B3F): 22 units in, "Change" inside
+        // the frame with a margin, every name still left of the separator at
+        // x + 0x3F. The frame (DIV-0011's Menu_DrawFrame through the call at
+        // 0x461A84) from 0xC cells to 0xF (`push 0xC` at 0x461A61): 0xE, the
+        // first try, still left the rows' dark boxes poking past its right side
+        // in game, so one cell more (owner, 2026-09-23).
+        static const std::uint8_t edge_was[] = {0x83, 0xC1, 0x20};
+        static const std::uint8_t edge_is[] = {0x83, 0xC1, 0x36};
+        bof3::PatchBytes("ConfigController", 0x461B3F, edge_was, edge_is, 3);
+        static const std::uint8_t frame_was[] = {0x6A, 0x0C, 0x32};
+        static const std::uint8_t frame_is[] = {0x6A, 0x0F, 0x32};
+        bof3::PatchBytes("ConfigController", 0x461A61, frame_was, frame_is, 3);
     }
 
     // The rows' y is the original's. An earlier build lowered every string on

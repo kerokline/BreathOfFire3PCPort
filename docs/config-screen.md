@@ -305,3 +305,6 @@ and turns the two width computations into the small branch's own (`len * 4`,
   paper the 6-letter names still start 11 units left of the panel frame;
   an anchor of `row x + 0x3C` is proposed, not built -
   [`glyph-draw.md`](glyph-draw.md) §8.
+  **Fixed as DIV-0026** (2026-09-22/23): width and font as DIV-0017, the
+  names' right edge at `row x + 0x36` and the frame 0xF cells wide - both
+  settled in game with the owner; confirmed 2026-09-23.

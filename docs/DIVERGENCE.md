@@ -1213,7 +1213,7 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
   Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
 
-### The Config screen's controller names at their own width, in the dialogue font
+### The Config screen's controller panel: names at their own width, in the dialogue font, inside a wider frame
 
 - **ID:** DIV-0026
 - **Date:** 2026-09-22
@@ -1228,18 +1228,21 @@ designed in rather than bolted on.
 - **New behaviour:** width `len * 4` (`0x461B36`: `lea eax, [ecx+ecx*2]` ->
   `[ecx+ecx]`, the `shl eax, 1` after it kept) and the draw re-aimed at
   `ConfigText_DrawSelected` (`0x461B43`), which swaps the UI cells for the
-  dialogue font's - the pair DIV-0017 applied to the selected row. The right
-  edge stays at `row x + 0x20`.
+  dialogue font's - the pair DIV-0017 applied to the selected row. Then,
+  after the owner's look in game (2026-09-23: "Change" and "Action" still
+  began left of the frame, the rows ran past its right side): the right
+  edge from `row x + 0x20` to `row x + 0x36` (`0x461B3F`: `83 C1 20` ->
+  `83 C1 36`, 22 units in, every name still left of the separator at
+  `x + 0x3F`), and the panel's frame (DIV-0011's `Menu_DrawFrame`, the call
+  at `0x461A84`) from 0xC cells to 0xF (`0x461A61`: `push 0xC` ->
+  `push 0xF`; 0xE, the first try, still left the rows' boxes past it).
 - **Rationale:** the owner's report; the same fix as DIV-0017, which the
-  owner judged right in game.
-- **Not covered:** the right edge. On paper the 6-letter names still start 11
-  units left of the panel's frame and "Speak" 3 units; moving the edge to
-  `row x + 0x3C` (`0x461B3F` `83 C1 20` -> `83 C1 3C`) is proposed in
-  [`glyph-draw.md`](glyph-draw.md) §8 and not built - the owner's call off the
-  batch's capture.
+  owner judged right in game; the edge and the frame at the owner's request.
 - **Also in the PSX version?** Not applicable: the text is the overlay's.
-- **Verification:** none in game yet; `tools/recipes/config_controller.txt`
-  reaches the panel.
+- **Verification:** `tools/recipes/config_controller.txt` (six downs reach
+  Controller), English, point filter: `analysis/shots/ctrl_fix2`.
+  **Confirmed in game by the owner, 2026-09-23**: the words "look right
+  now", the frame "Perfect!".
 - **Reversible?** Yes: `BOF3X_ORIGINAL=ConfigController`. Only under a
   language overlay, not with `BOF3X_LANG=original`.
 
