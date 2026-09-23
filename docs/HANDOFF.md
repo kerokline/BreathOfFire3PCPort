@@ -145,7 +145,14 @@ The single next action, concrete enough to start without asking anyone.
       bilinear. Take it over faithful, fuzz the vertex block `0x7CA958`
       against a clone, then the fix `(2u + 0.5) / 32` as the next DIV entry,
       switchable off with `BOF3X_ORIGINAL`; the owner judges it against the
-      recomp's text in game. Named by this round and not taken: **`0x5951D0`** (the area's
+      recomp's text in game. **Staged with it, same group: the Config
+      screen's controller panel** - its English names start too far left,
+      ragged and oversized ([`config-screen.md`](config-screen.md) §8: our
+      DIV-0015/0016 strings through `0x461AF0`'s Chinese width `len * 6`
+      and its large draw). DIV-0017's pair of patches on that function, then
+      the right edge in game; `tools/recipes/config_controller.txt` reaches
+      the panel (not yet run) and shows D17 too, so one capture judges
+      both. Named by this round and not taken: **`0x5951D0`** (the area's
       entry list, which `GameMode_Enter` walks) and **`0x531F90`** (the
       drop-in party placement `Area_Enter` calls, 94 call sites), both large
       with callers nobody has read - K's suggestion for the next group
