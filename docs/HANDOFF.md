@@ -170,8 +170,12 @@ The single next action, concrete enough to start without asking anyone.
       `0x5BCF64` and its callees (`0x5BD989`, `0x5BD9C0`, `0x5BD9DA`,
       `0x5BD9F1`, `0x5C1005`, `0x5C104F`, `0x5BDA9B`) out of
       `analysis/calltrace/entries_logic.txt` and run step 4 of
-      `validate_ab26.sh` again (33 minutes): original-vs-original and ours
-      should then both be identical.
+      `validate_ab26.sh` again - now with the reference sides at
+      `--original "*,-Game_Clock"` and 6 minutes a run (item 00000; about 20
+      minutes for the three, was 33): original-vs-original and ours should
+      then both be identical. **Unverified yet**: the first run with the clock
+      kept on the reference is this one - check its original-vs-original pair
+      before trusting the change.
    1. **More recorded routes** - the owner plays with `BOF3X_RECORD` (F12 for
       a shot), then the route is A/B'd and traced once all original, less the
       attract reach (`attract_catalog.py --minus`, the command in
@@ -518,7 +522,9 @@ _Commands a fresh session needs, verified on the date above._
   product, compare a MATRIX's padding word apart, DIV-0021), then break ours on purpose and see
   the fuzz refuse to run; live, all ours: `mem_dump.py --compare clutref_a X`,
   `attract_diff.py orig_a.tsv X.tsv`, and the frame hash before a merge - **with
-  an original-vs-original run beside it**, the noise floor (one
+  an original-vs-original run beside it**, the noise floor, its reference
+  sides `--original "*,-Game_Clock"` so D5 does not hold them to half speed
+  (item 00000) (one
   background command can run the oracle and then the hash pair, about 16
   minutes, with `mem_dump.py` started beside it); say
   in the doc what none of that reached; one commit per file of functions.
