@@ -10,7 +10,7 @@
 // the device is the harness's fake.
 //
 // Font_GlyphTexture: a random cache with hits, stale hits, near-misses and
-// used / free entries seeded, sometimes all 128 used (the D-N1 overrun), a
+// used / free entries seeded, sometimes all 128 used (the D18 overrun), a
 // random render flag; Capcom's copy, then ours; the cache, the vertex block the
 // overrun reaches, the log and the result compared. Its callee
 // Font_BuildGlyphTexture is a recording stand-in that fills the entry the way
@@ -99,7 +99,7 @@ void __cdecl StubPrimColor(unsigned r, unsigned gg, unsigned b, unsigned code, u
 int __cdecl StubGlyphTexture(unsigned glyph, unsigned clut) {
     Record(2, glyph, clut);
     const U h = Mix(3);
-    if (h % 5 == 0) PutWord(At(0x7CA960), 1);                       // the D-N1 overrun's store
+    if (h % 5 == 0) PutWord(At(0x7CA960), 1);                       // the D18 overrun's store
     if (h % 7 == 0 && g_prim) g_prim[7] = static_cast<unsigned char>(h >> 8);
     return static_cast<int>(h >> 20);
 }

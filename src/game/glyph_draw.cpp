@@ -170,7 +170,7 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
             reinterpret_cast<Com1>(Method(device, 0x24))(device);   // BeginScene
         }
     }
-    // Kept, and D-N1 in docs/known-defects.md: with all 128 entries used this
+    // Kept, and D18 in docs/known-defects.md: with all 128 entries used this
     // frame and none a hit, i is 128 here - one entry past the table, which is
     // the vertex block. SetTexture is handed the bits of vertex 0's sy
     // (0x7CA95C) as a texture, and the in-use word lands on the low half of
