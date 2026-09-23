@@ -115,10 +115,19 @@ The single next action, concrete enough to start without asking anyone.
 00000. **The game's pace is done short term: DIV-0022, confirmed in game by
    the owner 2026-09-22.** The complete fix, the deadline in a double, is
    [`IDEAS.md`](IDEAS.md) I16, not scheduled. **Pace figures before
-   2026-09-21 are the 31.25 band.** The untraced oracle needs only 7 minutes
-   at 30 a second, but traced hash runs are far slower (`ab18` at 7 minutes
-   reached 6,312 frames against `ab17`'s 10,062 at 11): keep hash runs at 11
-   minutes or more.
+   2026-09-21 are the 31.25 band.** **The all-original runs are at half
+   speed because of D5, not the tracer** (measured 2026-09-23): every
+   `--original "*"` run turns DIV-0022 off with the rest, and Windows' tick
+   count stood at 8.2 days - D5's half-speed band - so the hash's reference
+   runs made 15.2 logic frames a second (`ab22b`..`ab26`) where ours, traced
+   the same, made 29.3, and the untraced oracle 28.9. The hash compares
+   logic frames, so its verdicts stand. **Past 12.4 days of uptime (about
+   2026-09-27 at this rate; Fast Startup keeps it counting, only a Restart
+   resets it) the original clock stops pacing and, by the code, draws
+   nothing - every all-original reference run would break.** Run reference
+   sides with `*,-Game_Clock` (the A/Bs already do: the clock changes pace,
+   never logic), which also halves the hash step; until then keep hash runs
+   at 11 minutes or more.
 
 0000. **Stage 1's attract queue is closed; the input-reached queue is open.**
    **2026-09-23, rounds five and six: 222 functions, 789 ours**
