@@ -7437,30 +7437,6 @@ params = "int slot, unsigned glyph, unsigned clut"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5A2CA0..0x5A2E68 (0x1C9 bytes), read to its ret but not taken over: the glyph's 16 colours from Gfx_ClutPixels(clut), the 288-byte 4-bit glyph at Font_GlyphData + glyph * 0x120; with Gfx_RenderFlags bit 0 a 32 x 32 plain surface (0x59F860) locked (+0x64) and the glyph unpacked into it by 0x5A9E1E, else a 32 x 32 texture (0x59F900; colour key through +0x74 under flag bit 0x20) filled by a Blt (+0x14) from the staging surface 0x7CC344, locked and unpacked the same way. On success stores glyph, clut and the CLUT row's generation at entry +0 / +2 / +4 of Font_TexCache; the surface at +8, the texture at +0xC. Six callees, three of them DirectDraw surface creation. Sole caller Font_GlyphTexture (two sites)."
 
-[[func]]
-pc = 0x59FBA0
-name = "D3d_PrimColor"
-ret = "void"
-params = "unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long *diffuse, unsigned long *specular"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x59FBA0..0x59FC83, read to its ret (provisional name, group R inherits it): a primitive's PSX colour as a Direct3D diffuse / specular pair. Alpha: 0xFF unless code bit 1 (semi-transparent), then by (mode >> 5) & 3 through the table 0x59FC84 - 0x80, 0xFF, 0xFF, 0x40. Colour: code bit 2 clear (untextured) - r, g, b as given; bit 2 and bit 0 (raw texture) - 0xFF each; bit 2 alone (modulated) - each doubled, clamped to 0xFF, the excess (low byte of the doubled value) going to the specular. diffuse = a r g b; specular = 0 r g b of the excess, written only if the pointer is non-null. r, g, b are compared as whole dwords. 21 callers: every Direct3D draw handler."
-
-[[func]]
-pc = 0x59FCA0
-name = "D3d_SetBlend"
-ret = "void"
-params = "unsigned code, unsigned mode"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x59FCA0..0x59FD68, read to its last ret (provisional name, group R inherits it): device +0x58 SetRenderState three times - ALPHABLENDENABLE (0x1B) 1, SRCBLEND (0x13), DESTBLEND (0x14). Code bit 1 clear: 5, 6 (SRCALPHA, INVSRCALPHA). Bit 1 set, by (mode >> 5) & 3 through the table 0x59FD6C: 0 - 5, 6; 1 - 2, 2 (ONE, ONE); 2 - 1, 4 (ZERO, INVSRCCOLOR); 3 - 5, 2 (SRCALPHA, ONE). The PSX semi-transparency modes. 21 callers."
-
-[[func]]
-pc = 0x59FD80
-name = "D3d_SetShadeMode"
-ret = "void"
-params = "unsigned mode"
-status = "evidence"
-evidence = "disasm 2026-09-22, 0x59FD80..0x59FDA3 (provisional name, group R inherits it): if mode differs from D3d_ShadeModeCache, device +0x58 SetRenderState(9 SHADEMODE, mode) and the cache = mode. 21 callers."
-
 [[data]]
 pc = 0x7CC350
 name = "D3d_Device"
@@ -8621,3 +8597,201 @@ name = "Music_Finished"
 ctype = "int"
 status = "evidence"
 evidence = "disasm 2026-09-22: Music_Decode sets it when a track that does not loop ends; Music_Pump then stops the music at the next notification and clears it; Music_Start clears it."
+# Round four, group R (2026-09-22): the Direct3D draw handlers, their helpers
+# and the two texture lookups, src/game/d3d_draw.cpp, docs/d3d-draw.md. Every
+# entry of this group is in this one block; the three helpers group N named
+# provisionally (D3d_PrimColor, D3d_SetBlend, D3d_SetShadeMode) moved here.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x59FBA0
+name = "D3d_PrimColor"
+ret = "void"
+params = "unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode, unsigned long *diffuse, unsigned long *specular"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FBA0..0x59FC83 (0xE4 bytes) and its jump table 0x59FC84 (4 entries), read to the ret: a primitive's PSX colour as a Direct3D diffuse / specular pair. Only the low byte of code is tested. Alpha 0xFF unless code bit 1, then by (mode >> 5) & 3 - 0x80, 0xFF, 0xFF, 0x40. Colour: bit 2 clear - r, g, b as given (whole dwords OR-ed in); bits 2 and 0 - 0xFF each; bit 2 alone - each doubled (32-bit), above 0xFF clamped with the low byte of the doubled value to the specular. diffuse = a r g b; specular = 0 r g b of the excess, written after the diffuse and only through a non-null pointer. 37 call sites (E8 scan); no caller reads eax after it (a scan of every site). Named provisionally by group N."
+
+[[func]]
+pc = 0x59FCA0
+name = "D3d_SetBlend"
+ret = "void"
+params = "unsigned code, unsigned mode"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FCA0..0x59FD68 (0xC9 bytes) and its jump table 0x59FD6C (4 entries): device +0x58 SetRenderState three times, each with the device re-read - ALPHABLENDENABLE (0x1B) 1, SRCBLEND (0x13), DESTBLEND (0x14). Code bit 1 (low byte) clear: 5, 6. Set, by (mode >> 5) & 3: 5, 6 / 2, 2 / 1, 4 / 5, 2 - the PSX semi-transparency modes. 21 call sites; none reads eax after it. Named provisionally by group N."
+
+[[func]]
+pc = 0x59FD80
+name = "D3d_SetShadeMode"
+ret = "void"
+params = "unsigned mode"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FD80..0x59FDA3 (0x24 bytes): if mode differs from D3d_ShadeModeCache, device +0x58 SetRenderState(9 SHADEMODE, mode), then the cache = mode. 21 call sites; none reads eax after it. Named provisionally by group N."
+
+[[func]]
+pc = 0x59FFE0
+name = "D3d_BindTexture"
+ret = "long"
+params = "unsigned tpage, unsigned clut"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59FFE0..0x5A0076 (0x97 bytes): page = tpage & 0x1F, mode = (tpage >> 7) & 3; slot = Gfx_TexCacheFind(page, clut, mode). Slot 0x20: device EndScene, texture = D3d_BuildPageTexture(page, clut, mode), BeginScene. Otherwise the Gfx_TexCache entry (page * 32 + slot) * 0x18: texture = its +0x14, read before a state-2 entry is refreshed by D3d_RefreshPageTexture(page, slot) between EndScene and BeginScene. Then device +0x98 SetTexture(0, texture), whose result it returns. 7 call sites, the textured Direct3D handlers; no caller uses the result (0x59FF65 masks a re-loaded ax)."
+
+[[func]]
+pc = 0x5A0080
+name = "D3d_BuildPageTexture"
+ret = "unsigned long"
+params = "int page, int clut, int mode"
+status = "evidence"
+evidence = "disasm 2026-09-22, not taken over (group R's stand-in): builds a Gfx_TexCache entry of a PSX texture page through DirectDraw surfaces (0x59F840, 0x59F860, 0x59F900, Lock +0x64) and returns the texture D3d_BindTexture sets (its caller keeps eax in edi for SetTexture). Three arguments, as D3d_BindTexture pushes them."
+
+[[func]]
+pc = 0x5A0510
+name = "D3d_RefreshPageTexture"
+ret = "void"
+params = "int page, int slot"
+status = "evidence"
+evidence = "disasm 2026-09-22, not taken over (group R's stand-in): D3d_BindTexture calls it for a Gfx_TexCache entry in state 2 (its CLUT changed), between EndScene and BeginScene, with (page, slot); the return is not read."
+
+[[func]]
+pc = 0x5A0C40
+name = "D3d_DrawPolyFT4"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A0C40..0x5A0E7C (0x23D bytes), straight-line: the draw 0x59EE50's second jump table entry 3 (byte table 0x59F440 at offset 0x0C: code 0x2C, Gpu_SetPolyFT4; the call at 0x59F0D4). D3d_PrimColor(r, g, b, code, tpage +0x26, &diffuse, &specular); four corners of 0x10 bytes from +8 (float x, y, z; u, v bytes at +0xC): sx, sy = D3d_ScaleX / D3d_ScaleY times x, y (x87), sz = z (mov), rhw = 0.1 (0x5C4610) / z, the colour pair, tu, tv = D3d_TexCoords[u], [v]; D3d_BindTexture(tpage, clut +0x16); 0x437CC0(tpage & 0x400) and (tpage & 0x800); D3d_SetBlend(code, tpage); D3d_SetShadeMode(1); DrawPrimitive(5, 0x1C4, D3d_Vertices, 4, 0), its result returned. 2.2 million calls in the hidden_b trace (the round's queue)."
+
+[[func]]
+pc = 0x5A14C0
+name = "D3d_DrawPolyGT4"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A14C0..0x5A1793 (0x2D4 bytes), straight-line: the draw 0x59EE50's second jump table entry 7 (code 0x3C, Gpu_SetPolyGT4; the call at 0x59F10C). Four corners of 0x14 bytes from +4 (r, g, b, pad, float x, y, z, u, v); D3d_PrimColor per corner (code +7, tpage +0x2A) into eight locals, all four before any vertex; vertices as D3d_DrawPolyFT4's; D3d_BindTexture(tpage, clut +0x16); 0x437CC0(0) twice; D3d_SetBlend(code, tpage); D3d_SetShadeMode(2); DrawPrimitive(5, 0x1C4, D3d_Vertices, 4, 0)."
+
+[[func]]
+pc = 0x5A17A0
+name = "D3d_DrawLineF2"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A17A0..0x5A18AE (0x10F bytes), straight-line: the draw 0x59EE50's second jump table entry 8 (code 0x40, Gpu_SetLineF2; the call at 0x59F11A). mode = Gfx_DrawTpage & 0xFFFF; D3d_PrimColor(r, g, b, code, mode, &diffuse, NULL); two corners of 0xC bytes from +8 (float x, y, z): sx, sy, sz, rhw, diffuse - specular, tu, tv not written; device SetTexture(0, 0); 0x437CC0(0), 0x437CC0(1); D3d_SetBlend(code, Gfx_DrawTpage re-read); D3d_SetShadeMode(1); DrawPrimitive(3 LINESTRIP, 0x1C4, D3d_Vertices, 2, 0)."
+
+[[func]]
+pc = 0x5A1D10
+name = "D3d_DrawLineF4"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A1D10..0x5A1E94 (0x185 bytes), straight-line: the draw 0x59EE50's second jump table entry 10 (code 0x4C, Gpu_SetLineF4; the call at 0x59F136). As D3d_DrawLineF2 with four corners (+8, +0x14, +0x20, +0x2C) and DrawPrimitive(3 LINESTRIP, ..., 4, 0)."
+
+[[func]]
+pc = 0x5A20D0
+name = "D3d_DrawTile"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A20D0..0x5A2219 (0x14A bytes), straight-line: the draw 0x59EE50's second jump table entry 14 (code 0x60, Gpu_SetTile; the call at 0x59F16E). mode = Gfx_DrawTpage & 0xFFFF; D3d_PrimColor(r, g, b, code, mode, &diffuse, NULL); float x +8, y +0xC, z +0x10, w +0x14, h +0x18: corners (x, y), (x + w, y), (x, y + h), (x + w, y + h), the far edges summed then scaled on the x87; sz = z through fld / fst, rhw = 0.1 / z, the diffuse; device SetTexture(0, 0); 0x437CC0(1) twice; D3d_SetBlend(code, Gfx_DrawTpage re-read); D3d_SetShadeMode(1); DrawPrimitive(5, 0x1C4, D3d_Vertices, 4, 0)."
+
+[[func]]
+pc = 0x5A2EB0
+name = "D3d_DrawCellSprite"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A2EB0..0x5A3159 (0x2AA bytes), straight-line but for the flip branch: the draw 0x59EE50's second jump table entry 20 (code 0x84, Gpu_SetCode84 - no PSX GPU code; the call at 0x59F1C2). D3d_PrimColor(r, g, b, code, flags +0x1E, &diffuse, &specular); index = D3d_CellTexture(u16 +0x18, +0x1A, +0x1C, +0x1E); from D3d_CellTexCache entry index: corners x + e * scale x (x - e * scale x when byte +0x1F bit 2), e = s16 +8 / +0xA, and y + e * scale y, e = s16 +0xC / +0xE, times D3d_ScaleX / D3d_ScaleY; tu 0.5 / w and (used w - 0.5) / w, tv likewise (u16 +0, +2 used, +4, +6 full); sz 0.99, rhw 0.1 as immediates, the colour pair; 0x437CC0(1); D3d_SetBlend(code, flags); D3d_SetShadeMode(1); DrawPrimitive(5, 0x1C4, D3d_Vertices, 4, 0)."
+
+[[func]]
+pc = 0x5A3160
+name = "D3d_CellTexture"
+ret = "int"
+params = "unsigned first, unsigned count, unsigned clut, unsigned flags"
+impl = "src/game/d3d_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x5A3160..0x5A32A3 (0x144 bytes): walks D3d_CellTexCache's 128 entries. First dword 0: D3d_BuildCellTexture(i, first, count, clut, flags & 0x800) and use it. A hit: u16 +0x12 == count and u16 +0x10 == clut (32-bit compares) and the dword +0x18 == the 32-bit sum of the 2 * count dwords at SpriteCell_Table + first * 8; its generation +0x1C against Gfx_ClutRows[clut >> 6], refreshed by D3d_RefreshCellTexture(i, first, count, clut) when stale and u16 +0x14 is 0. The victim: not used this frame (+0x14 == 0) with the smallest counter +0x16 below 0xFFFF, first on a tie; its index lives in the count argument's stack slot, so with no candidate it is count (D27). Then counter +0x16 += 1, +0x14 = 1, and unless Gfx_RenderFlags bit 0 device SetTexture(0, +0x24); returns the index. Callers D3d_DrawCellSprite and the software path 0x5A4C40 (both read eax)."
+
+[[func]]
+pc = 0x5A32B0
+name = "D3d_BuildCellTexture"
+ret = "void"
+params = "int slot, unsigned first, unsigned count, unsigned clut, unsigned flip"
+status = "evidence"
+evidence = "disasm 2026-09-22, read for its stores only, not taken over (group R's stand-in): composes count SpriteCell records from first into a DirectDraw surface and texture (0x59F840, 0x59F860, 0x59F900, 0x5A2E70, Blt +0x14, Lock +0x64) and fills D3d_CellTexCache entry slot - extent +8..+0xE, sizes +0, +2, +4, +6, clut +0x10, count +0x12, checksum +0x18, generation +0x1C, surface +0x20, texture +0x24. Five arguments as D3d_CellTexture pushes them; the return is not read."
+
+[[func]]
+pc = 0x5A37D0
+name = "D3d_RefreshCellTexture"
+ret = "void"
+params = "int slot, unsigned first, unsigned count, unsigned clut"
+status = "evidence"
+evidence = "disasm 2026-09-22, not taken over (group R's stand-in): D3d_CellTexture calls it for a hit whose CLUT row changed and that is not in use this frame, with (slot, first, count, clut); the return is not read."
+
+[[data]]
+pc = 0x7CA9E0
+name = "D3d_TexCoords"
+ctype = "float"
+count = 256
+status = "evidence"
+evidence = "disasm 2026-09-22: D3d_DrawPolyFT4 and D3d_DrawPolyGT4 read tu, tv as this table indexed by the primitive's u, v bytes; the sprite handlers too (D1, DIV-0010). Read live 2026-09-20 as tc[i] = (i + 0.512) / 256 (docs/known-defects.md D1)."
+
+[[data]]
+pc = 0x7DED14
+name = "Gfx_DrawTpage"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: the draw 0x59EE50's codes 0xE0..0xE3 and 0xE8..0xEB store the primitive's word +4 here (0x59EFFA and 0x59F1EB), beside flags at 0x7DED16 / 0x7DED17 from its byte +6; D3d_DrawLineF2, D3d_DrawLineF4 and D3d_DrawTile read it, masked to 16 bits, as the blend mode of an untextured primitive - the PSX draw mode's tpage."
+
+[[data]]
+pc = 0x7CAE38
+name = "D3d_CellTexCache"
+ctype = "unsigned char"
+count = 0x1400
+status = "evidence"
+evidence = "disasm 2026-09-22: D3d_CellTexture walks 128 entries of 0x28 bytes from here (loop pointer 0x7CAE4A to 0x7CC24A); the draw 0x59EE50 zeroes every +0x14 (0x7CAE4C, step 0x28, to 0x7CC24C) after EndScene; D3d_BuildCellTexture fills the rest. Layout in docs/d3d-draw.md section 3."
+
+[[func]]
+pc = 0x59EE50
+name = "Gfx_DrawOTag"
+ret = "void"
+params = "unsigned long *ot"
+impl = "src/game/d3d_list.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59EE50..0x59F29F (0x450 bytes) and its tables to 0x59F518: the jump table 0x59F2A0 (25 entries) with byte index table 0x59F304 (0xD1 bytes) for Gfx_RenderFlags bit 0, the jump table 0x59F3D8 (26 entries) with byte index table 0x59F440 (0xD5 bytes) for Direct3D, both on (code & 0xFC) - 0x20 unsigned. Nothing unless Gfx_DrawEnable; D3d_AfterDrawRequest cleared on entry; the Direct3D walk between BeginScene and EndScene. Walk: while the link word is not -1, follow it; a link with its top byte set is masked to 24 bits and the node it reaches is not dispatched; a dispatched node's link is read after its handler. Entries 0..20 of each table call a handler with the primitive (42 call sites), 21 the draw mode (Gfx_DrawEnable, 0x7DED16, Gfx_DrawTpage, Gfx_TexCacheKey from a non-null +8), 22 Gfx_MoveImage(prim + 8, +0x10, +0x14), 23 Gfx_TexCacheKey from +8 unchecked, Direct3D 24 D3d_SetAlphaModulate(byte +8 ^ 1). Then Font_TexCache +0x10 and D3d_CellTexCache +0x14 cleared, all 128 of each, and a tail jmp to D3d_AfterDraw if D3d_AfterDrawRequest. Sole caller WinMain 0x4FCE6F with an ordering table; the return is not read. pe_funcs.py's size for it, 208, is wrong."
+
+[[func]]
+pc = 0x59F520
+name = "D3d_SetAlphaModulate"
+ret = "void"
+params = "unsigned on"
+status = "evidence"
+evidence = "disasm 2026-09-22, 0x59F520..0x59F572, not taken over (group R's stand-in): on non-zero and the cache 0x66B720 zero - device +0xA0 SetTextureStageState(0, 4 ALPHAOP, 4 MODULATE), cache 1; on zero and the cache set - (0, 4, 3 SELECTARG2), cache 0. Called by Gfx_DrawOTag for codes 0xF4..0xF7 with byte +8 ^ 1."
+
+[[func]]
+pc = 0x59F580
+name = "D3d_AfterDraw"
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-09-22, read only as far as its frame, not taken over (group R's stand-in): Gfx_DrawOTag tail-jumps here when D3d_AfterDrawRequest is set. It reads no stack argument (its frame is 0xA8 bytes of locals and four saved registers; nothing at or above its return address is addressed); returns early under Gfx_RenderFlags bit 0; creates a 0x140 x 0x140 surface at 0x7CADF8 on first use. What it draws is unread - the name says only when it runs."
+
+[[data]]
+pc = 0x7DED17
+name = "Gfx_DrawEnable"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "disasm 2026-09-22: Gfx_DrawOTag returns at once when it is 0, and its draw-mode case (codes 0xE0..0xE3, 0xE8..0xEB) stores byte +6 bit 0 of the primitive here and bit 1 at 0x7DED16 - so a draw mode with bit 0 clear turns off the NEXT draw. A raw scan of .text finds its address only in Gfx_DrawOTag (0x59EE51, 0x59EFE6, 0x59F1D7)."
+
+[[data]]
+pc = 0x7CADEA
+name = "D3d_AfterDrawRequest"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-09-22: Gfx_DrawOTag clears it on entry and tail-jumps to D3d_AfterDraw when it is non-zero after the walk; a raw scan of .text finds its address in no other instruction (0x59EE60, 0x59EE6A, 0x59F293 only), so whatever sets it does so through another base; not found."

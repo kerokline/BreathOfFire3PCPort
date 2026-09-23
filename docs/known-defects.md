@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — twenty-four entries, D19 and D20 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (not yet seen in game); D18 and D21..D25 latent; D26, the music fades, fixed by DIV-0028 (not yet heard in game))
+**Status:** IN PROGRESS (2026-09-22 — twenty-six entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (not yet seen in game); D18, D21..D25, D27 and D28 latent; D26, the music fades, fixed by DIV-0028 (not yet heard in game))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -785,3 +785,56 @@ the PC has lost something the release had.
 **Fixed as DIV-0028** (2026-09-22, owner's request; not yet heard in game). The fix, as proposed: step the fade once per logic frame (a counter
 the frame loop already keeps), a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
 The takeover keeps the per-spin step.
+
+## D27 — The cell-texture cache's victim is the cell count when no entry is free (latent)
+
+**Found:** reading `D3d_CellTexture` `0x5A3160` for the takeover, 2026-09-22
+([`d3d-draw.md`](d3d-draw.md) §3). **Latent, Capcom's** (group R of the fourth
+round). Unmeasured in game.
+
+**The defect.** The cell sprites' textures (code `0x84`, the field's sprites)
+live in a 128-entry cache, `D3d_CellTexCache` `0x7CAE38`, `0x28` bytes an entry.
+On a miss the lookup evicts the entry not used this frame with the smallest use
+counter below `0xFFFF`. It keeps that index in the stack slot of its own `count`
+argument (`[esp + 0x1C]` at `0x5A31D9` and `0x5A324B`), so when no entry
+qualifies - all 128 used this frame, or every unused one with its counter at
+`0xFFFF` - the index it builds into, marks and hands to `SetTexture` is `count`,
+the number of cells in the sprite being drawn. A sprite of `n` cells evicts
+entry `n`: when all are in use, one whose texture earlier draws of the same
+frame were already given. A count of 128 or more writes the whole entry
+(`D3d_BuildCellTexture`), the counter and the in-use word past the table, up to
+`0x7CAE38 + 0xFFFF * 0x28`, and passes whatever is at `+0x24` there to
+`SetTexture`.
+
+**Why it may never show:** it needs 128 distinct cell sprites in one frame (the
+counters only wrap after 65,536 uses, so the second condition is rarer still).
+
+**Ours does the same**; the fuzz seeds both conditions, and a control that
+starts the victim at 0 is refused. A fix - pick any entry, or draw without
+caching - is the owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D28 — Cell sprites map texel centre to texel centre: the last row and column get half their pixels (latent)
+
+**Found:** reading `D3d_DrawCellSprite` `0x5A2EB0`, 2026-09-22
+([`d3d-draw.md`](d3d-draw.md) §3, §6). **Capcom's, by reading**; not yet seen
+or looked for in a capture.
+
+**The arithmetic.** The texture coordinates of a cell sprite run from
+`0.5 / W` to `(used - 0.5) / W` (`0x5A3051..0x5A3113`: `fld 0.5; fdiv`, `fild
+used; fsub 0.5; fdiv`, the constant `0x5C41D8`), across a quad as wide as the
+sprite's extent. At its own size that spreads `used - 1` texels over `used`
+texels' width. At 2x with point sampling (Direct3D 6 samples at each pixel's
+integer coordinate), pixel `k` samples `u = 0.5 + k (used - 1) / (2 used)`;
+for `used` = 16, 24 and 32 every texel gets 2 pixels except one in the middle
+(3) and the last (1). It is D1's far-edge slip - which DIV-0010 fixed for the
+`SPRT` handlers - on the field's sprites, whose one builder is `Sprite_Draw`
+`0x5935B0` (`Gpu_SetCode84` at `0x59366A`). Under the default bilinear filter it
+is a soft one-texel squeeze instead.
+
+**Proposed, not built:** DIV-0010's rule - keep the near value and move the far
+one so the last pixel samples the last texel's centre: far = `0.5 + (used - 1)
+N / (N - 1)` texels for an `N`-pixel span (at 2x, 15.984 for 16 texels, 31.992
+for 32 - every texel exactly two pixels). Exact only at the sprite's natural
+size. What a capture would show: the bottom row and the right-hand column of a
+standing character (the left-hand column when it faces the other way, x
+flipped) one screen pixel thin under `BOF3X_FILTER=point`.
