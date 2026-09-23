@@ -282,6 +282,25 @@ it is a table, a proportional font is a data change.
    the exe) and who positions the hand are the first two reads. No recipe
    reaches a save point yet; save 5's position is not at one.
 
+   **The target, the owner's (2026-09-22, a mockup over our capture):** not
+   the PlayStation's layout, where the hand on No covers "es" too, but the
+   Chinese build's look - the hand beside each word, touching neither.
+   The hand is about 44 px wide, "Yes" 48, and the two stops are 68 apart
+   today, so moving only the words cannot clear "Yes"; the mockup moves one
+   word and one stop:
+
+   | | left hand | Yes | right hand | No |
+   |---|---|---|---|---|
+   | today (px) | 394-437 | 490-536 | 464-506 | 552-584 |
+   | target (px) | 394-437, kept | ~442-491 | ~501-546 | 552-584, kept |
+
+   In PSX units (half): "Yes" starts some 2-3 units right of the left
+   hand's tip, the right hand's tip ends some 3 units before "No", and the
+   two stops are about 55 units apart instead of 34. A
+   [`DIVERGENCE.md`](DIVERGENCE.md) entry (layout, owner's call); the exact
+   numbers follow from the code once read, and the owner judges the result
+   off a capture against this mockup.
+
 ## 7. Menu text: the system pool and the name tables (DIV-0008)
 
 The owner's recollection, 2026-09-20 - that the Japanese and English item and
