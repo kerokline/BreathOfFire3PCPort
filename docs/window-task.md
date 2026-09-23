@@ -1,7 +1,9 @@
 # The window/task layer, and the area change above it
 
 **Status:** IN PROGRESS (2026-09-22 — twenty-seven functions ours, fuzzed
-headless; no live check yet, the coordinator's batch owes one)
+headless; through the live batch `ab24`)
+
+**The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062).
 
 The layer that drives every window record a frame: `Field_RunTaskRecords`
 `0x59E230` walks the 22 records at `0x803160` in three passes, and the first

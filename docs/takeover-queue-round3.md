@@ -1,6 +1,6 @@
 # The third round's queue: what is left after groups H and J
 
-**Status:** IN PROGRESS (2026-09-22)
+**Status:** DONE (2026-09-22) - all three groups merged and through the live batch `ab24`
 
 Drawn from the regenerated catalogue (`python tools/attract_catalog.py
 analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also ...`, 353 reached and

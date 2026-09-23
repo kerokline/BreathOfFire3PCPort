@@ -2,8 +2,10 @@
 
 **Status:** IN PROGRESS (2026-09-22) - forty-two functions ours
 (`src/game/mode_flow.cpp`), fuzzed headless against copies of Capcom's with
-every call re-aimed at a recorder; 95 negative controls, 94 refused by a count and the other one unobservable. **Not yet through the
-live batch check** - that runs centrally after the merge (section 8).
+every call re-aimed at a recorder; 95 negative controls, 94 refused by a count and the other one unobservable. **Through the
+live batch check `ab24`**, with one fix (below).
+
+**The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062). The first all-ours hash run differed on one frame, frame 1: `Boot_Task`'s last call was compiled as a tail jump, so `Task_Exit` saw the task stack's 0 as its caller. Now a `call`, as Capcom's (`disable_tail_calls`, commit `f199624`); nothing in game reads it.
 
 Group K of the third parallel round
 ([`takeover-queue-round3.md`](takeover-queue-round3.md)). Everything here is a
