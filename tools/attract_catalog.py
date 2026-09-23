@@ -20,8 +20,18 @@ DIV0010_COPIES = {0x5A2300, 0x5A2520, 0x5A2710}  # Capcom's handlers, re-aimed; 
 # (section, title, test) - first match wins. docs/attract-remaining.md section 4.
 SHELL = {0x4FCB00, 0x4FC6A0, 0x4FC6F0, 0x4FCAC0, 0x4FD030, 0x4FD110, 0x4FD200, 0x4FD290,
          0x5A9700, 0x5A9880, 0x5A9907, 0x5A72C0}
+# Reached entries that are not functions: case blocks of functions already ours
+# (docs/takeover-queue-round4.md), a bare `ret` and the empty Port_DroppedCall.
+NOT_FUNCTIONS = {0x576CD0, 0x577800, 0x577B80, 0x56B730, 0x56B990, 0x437CC0, 0x4DF820}
+# Run-once platform set-up that IDEAS.md I8 / I12 replace rather than port - the
+# owner's scope for stage 1, 2026-09-23 (docs/takeover-queue-round5.md).
+PLATFORM_SETUP = {0x5A5130, 0x5A5160, 0x5A5BC0, 0x5A5E40, 0x5A5EA0, 0x5A5F90, 0x5A5FF0,
+                  0x5A6050, 0x5A60E0, 0x5A6230, 0x5A62C0, 0x5A6830, 0x5A94C0,
+                  0x59E360, 0x59E570}
 GROUPS = [
+    ('4.0', 'Not functions', lambda e: e in NOT_FUNCTIONS),
     ('4.1', 'Windows shell', lambda e: e in SHELL),
+    ('4.14', 'Platform set-up', lambda e: e in PLATFORM_SETUP),
     ('4.2', 'Task system', lambda e: 0x5A98A0 <= e < 0x5A9A00),
     ('4.13', 'MSVC CRT', lambda e: e >= 0x5B9380),
     ('4.13', 'MP3 decoder', lambda e: 0x5AB000 <= e < 0x5B9380),
@@ -40,6 +50,10 @@ GROUPS = [
     ('4.9', 'Miscellaneous game code', lambda e: True),
 ]
 LISTED = {'MSVC CRT', 'MP3 decoder'}  # one line each, not a table
+# Not stage 1's to take over (docs/takeover-queue-round5.md): what is left beside
+# these is the queue.
+OUT_OF_SCOPE = {'Not functions', 'Windows shell', 'Task system', 'MSVC CRT', 'MP3 decoder',
+                'Platform set-up'}
 
 
 def main():
@@ -126,7 +140,9 @@ def main():
             out.append(f'| `0x{r["entry"]:06X}` | {name} | {calls} | {r["size"]} | {found} | {r["callers"]} |')
         out.append('')
     open(a.out, 'w', encoding='utf-8', newline='\n').write('\n'.join(out))
-    print(f'{n} reached and not ours ({len(reach & ours)} reached and ours) -> {a.out}')
+    queue = sum(len(v) for k, v in groups.items() if k[1] not in OUT_OF_SCOPE)
+    print(f'{n} reached and not ours ({len(reach & ours)} reached and ours), '
+          f'{queue} of them in scope -> {a.out}')
 
 
 if __name__ == '__main__':
