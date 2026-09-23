@@ -8640,22 +8640,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22, 0x59FFE0..0x5A0076 (0x97 bytes): page = tpage & 0x1F, mode = (tpage >> 7) & 3; slot = Gfx_TexCacheFind(page, clut, mode). Slot 0x20: device EndScene, texture = D3d_BuildPageTexture(page, clut, mode), BeginScene. Otherwise the Gfx_TexCache entry (page * 32 + slot) * 0x18: texture = its +0x14, read before a state-2 entry is refreshed by D3d_RefreshPageTexture(page, slot) between EndScene and BeginScene. Then device +0x98 SetTexture(0, texture), whose result it returns. 7 call sites, the textured Direct3D handlers; no caller uses the result (0x59FF65 masks a re-loaded ax)."
 
 [[func]]
-pc = 0x5A0080
-name = "D3d_BuildPageTexture"
-ret = "unsigned long"
-params = "int page, int clut, int mode"
-status = "evidence"
-evidence = "disasm 2026-09-22, not taken over (group R's stand-in): builds a Gfx_TexCache entry of a PSX texture page through DirectDraw surfaces (0x59F840, 0x59F860, 0x59F900, Lock +0x64) and returns the texture D3d_BindTexture sets (its caller keeps eax in edi for SetTexture). Three arguments, as D3d_BindTexture pushes them."
-
-[[func]]
-pc = 0x5A0510
-name = "D3d_RefreshPageTexture"
-ret = "void"
-params = "int page, int slot"
-status = "evidence"
-evidence = "disasm 2026-09-22, not taken over (group R's stand-in): D3d_BindTexture calls it for a Gfx_TexCache entry in state 2 (its CLUT changed), between EndScene and BeginScene, with (page, slot); the return is not read."
-
-[[func]]
 pc = 0x5A0C40
 name = "D3d_DrawPolyFT4"
 ret = "long"
@@ -8795,3 +8779,97 @@ name = "D3d_AfterDrawRequest"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "disasm 2026-09-22: Gfx_DrawOTag clears it on entry and tail-jumps to D3d_AfterDraw when it is non-zero after the walk; a raw scan of .text finds its address in no other instruction (0x59EE60, 0x59EE6A, 0x59F293 only), so whatever sets it does so through another base; not found."
+
+# --- group T of the fifth round (2026-09-23): the page textures and the surface helpers, docs/tex-page.md ---
+
+[[func]]
+pc = 0x59F840
+name = "Dd_InitSurfaceDesc"
+ret = "void"
+params = "void *desc"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59F840..0x59F85E (0x1F bytes): rep stosd of 0x1F zero dwords over desc, then dwSize (+0) = 0x7C and the pixel format's dwSize (+0x48) = 0x20 - a DDSURFACEDESC2. Leaves eax 0; no caller reads it. Nine callers (E8 scan): the two surface helpers below, both page-texture builders (three sites), 0x59F6BA, 0x5A2CEC, 0x5A3351, 0x5A37FA, 0x5A5509."
+
+[[func]]
+pc = 0x59F860
+name = "Dd_CreatePlainSurface"
+ret = "int"
+params = "unsigned width, unsigned height, void **surface, unsigned format"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59F860..0x59F8FF (0xA0 bytes): a DDSURFACEDESC2 on the stack, Dd_InitSurfaceDesc; dwWidth = (width + 3) and not 3, dwHeight = (height + 3) and not 3, dwFlags 0x1007, ddsCaps 0x840 under Gfx_RenderFlags bit 0 else 0x1800 (neg / sbb / and 0xFFFFF040 / add 0x1800), dwCaps2 0; the 0x20-byte pixel format from 0x7DED80 + format * 0x40 (shl 6). Then Dd_DirectDraw vtable +0x18 CreateSurface(desc, surface, 0); returns 1 if it returned 0, else 0 (neg / sbb / inc). Callers 0x59F5D3 (D3d_AfterDraw), 0x5A0161, 0x5A2D20, 0x5A3625, 0x5A5886 (Dd_StageSurface, 0x140 x 0x100)."
+
+[[func]]
+pc = 0x59F900
+name = "Dd_CreateTextureSurface"
+ret = "int"
+params = "unsigned width, unsigned height, void **surface, void **texture, unsigned format"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x59F900..0x59F9AA (0xAB bytes): as Dd_CreatePlainSurface but width and height unrounded, dwFlags 0x101007 (with DDSD_TEXTURESTAGE), dwCaps 0x1000 (TEXTURE), dwCaps2 0x10 (TEXTUREMANAGE), dwTextureStage 0. CreateSurface failing returns 0; otherwise *surface vtable +0 QueryInterface(0x5C4488, texture) - the 16 bytes there are IID_IDirect3DTexture2 93281502-8CF8-11D0-89AB-00A0C9054129 - and returns 1 whatever it answers. Callers 0x59F629, 0x5A02EA, 0x5A2DA3, 0x5A36D5."
+
+[[func]]
+pc = 0x5A0080
+name = "D3d_BuildPageTexture"
+ret = "unsigned long"
+params = "int page, int clut, int mode"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A0080..0x5A04B3 (0x434 bytes, every jump internal, 11 relative calls): the first Gfx_TexCache entry of page with state byte 0, none of 32 returns 0. Source Gfx_VramShadow + (((page and 0x10) shl 4) + key y) shl 11 + ((page and 0xF) shl 7) + key x sar 1 / x / 2x for mode 0 / 1 / 2, none else (Gfx_TexCacheKey, s16). Gfx_RenderFlags bit 0: Dd_CreatePlainSurface(256, 256, entry+0x10, 0), Lock that surface; else Dd_CreateTextureSurface(256, 256, entry+0x10, entry+0x14, 0), SetColorKey(8, {0, 0}) under bit 5, Lock Dd_StageSurface. Unless mode test al 2: Gfx_ClutPixels(clut) first, then Tex_Convert8 if the mode dword is non-zero else Tex_Convert4; else Tex_Convert16; each (lpSurface, source, [clut,] key w, key h, lPitch). Unlock; unless direct +2 = clut word, +4 = Gfx_ClutRows[(clut sar 6) * 2]; Direct3D: Blt {0,0,256,256} from the stage, DDBLT_WAIT, and returns +0x14; software: +0x14 = 0, returns the slot. Then +0 = 1, +1 = mode byte, +8 = the key's 8 bytes. A failed create or Lock returns 0 with the entry free (D30). Callers D3d_BindTexture 0x5A0017, 0x5A3CF5."
+
+[[func]]
+pc = 0x5A0510
+name = "D3d_RefreshPageTexture"
+ret = "void"
+params = "int page, int slot"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A0510..0x5A0820 (0x311 bytes, every jump internal, 9 relative calls): entry (page * 32 + slot) * 0x18 of Gfx_TexCache; state byte = 1 first; source as the build with the entry's own mode byte (zero-extended) and key (+8 x, +0xA y, +0xC w, +0xE h). Mode byte bit 1: Dd_InitSurfaceDesc; software Lock the entry's +0x10, Tex_Convert16, Unlock; Direct3D Lock Dd_StageSurface, convert, Unlock, Blt {0,0,256,256} into +0x10. Otherwise Gfx_ClutPixels(word +2, pushed with ecx's upper half left over), Dd_InitSurfaceDesc, Lock as above, Tex_Convert8 if the mode byte (re-read) is non-zero else Tex_Convert4, Unlock, Blt on Direct3D, then +4 = Gfx_ClutRows[(word +2 shr 6) * 2]. A failed Lock returns with nothing more done. Callers D3d_BindTexture 0x5A004E, 0x5A3D17."
+
+[[func]]
+pc = 0x5A9A59
+name = "Tex_Convert4"
+ret = "void"
+params = "void *dst, const void *src, const void *clut, int w, int h, int pitch"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A9A59..0x5A9BF9 (0x1A1 bytes), hand-written (ebp frame, shld): tiles the w x h block of 4-bit texels at src (rows 0x800 bytes apart) over 256 x 256 destination texels at pitch - the row repeated across until a count from 0x100 less w reaches exactly 0, rows down likewise with h - each dword eight texels low nibble first through clut, 16-bit entries or 32-bit when byte 0x7DED63 is 4 (read once on entry). The texel loop steps 8 and stops only at exactly 0: w must divide 256 and be a multiple of 8, h divide 256. It overwrites its own clut and dst argument slots as counters. Callers: the two page-texture builders (four sites)."
+
+[[func]]
+pc = 0x5A9BFA
+name = "Tex_Convert8"
+ret = "void"
+params = "void *dst, const void *src, const void *clut, int w, int h, int pitch"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A9BFA..0x5A9D2E (0x135 bytes), hand-written: Tex_Convert4's shape with 8-bit texels, four to a dword low byte first, the texel loop stepping 4 (w a multiple of 4 dividing 256). Callers: the two page-texture builders (four sites)."
+
+[[func]]
+pc = 0x5A9D2F
+name = "Tex_Convert16"
+ret = "void"
+params = "void *dst, const void *src, int w, int h, int pitch"
+impl = "src/game/tex_page.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A9D2F..0x5A9E1D (0xEF bytes), hand-written: the same tiling of 15-bit direct texels, the texel loop a loop instruction (stops at exactly 0); per texel red bits 0..4 shl 19, green bits 5..9 shl 14, blue bits 10..14 shl 9 into eax, ebx, edx and a call of Gfx_PackRgb 0x5AA79C, whose ecx is stored as 16 bits, or 32 when byte 0x7DED63 is 4. Bit 15 dropped; a cell of 0 packed like any other. Callers: the two page-texture builders (four sites)."
+
+[[func]]
+pc = 0x5AA79C
+name = "Gfx_PackRgb"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5AA79C..0x5AA7D2 (0x37 bytes), register convention - no stack arguments, not callable from C: ecx = ((eax shr [0x7DED64]) and [0x7DED70]) or ((ebx shr [0x7DED68]) and [0x7DED74]) or ((edx shr [0x7DED6C]) and [0x7DED78]), the shifts by cl; eax, ebx and edx preserved. Callers 0x5A9D82 and 0x5A9DEE (Tex_Convert16), 0x5AAA09, 0x5AC1D5 (E8 scan). Not taken over: Tex_Convert16 does its arithmetic inline, the tex_page fuzz runs Capcom's under the converter copies."
+
+[[data]]
+pc = 0x7CC334
+name = "Dd_DirectDraw"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-23: Dd_CreatePlainSurface and Dd_CreateTextureSurface call vtable +0x18 of the object here with a 0x7C-byte DDSURFACEDESC2 (CreateSurface of IDirectDraw4, DirectX 6); set up by 0x5A5160 (16 instructions in .text name it, a raw scan)."
+
+[[data]]
+pc = 0x7CC344
+name = "Dd_StageSurface"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-23: made by the Direct3D set-up 0x5A5160 at 0x5A5886 as Dd_CreatePlainSurface(0x140, 0x100, 0x7CC344, 0); the page builders and D3d_RefreshPageTexture lock it, convert into it, unlock it and Blt {0,0,256,256} from it into a texture; 0x5A2CA0, 0x5A32B0 and 0x5A37D0 use it too (28 instructions name it, a raw scan)."

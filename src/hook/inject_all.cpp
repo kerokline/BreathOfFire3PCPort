@@ -67,6 +67,7 @@
 #include "game/item_use.h"
 #include "game/sound.h"
 #include "game/d3d_draw.h"
+#include "game/tex_page.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -148,6 +149,8 @@ void InjectAll() {
                                 // operands moved onto recorders in the copies: order does not matter
     D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its four jump tables
                                 // relocated in the copies, the device a fake: order does not matter
+    TexPage_Inject();           // every call of its builder copies re-aimed at a recorder or at its own
+                                // helper and converter copies, DirectDraw a fake: order does not matter
     InjectReport();
 }
 

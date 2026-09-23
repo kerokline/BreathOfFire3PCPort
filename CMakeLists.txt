@@ -141,7 +141,10 @@ add_library(bof3x SHARED
   src/game/d3d_draw.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
-  src/game/d3d_list_fuzz.cpp)
+  src/game/d3d_list_fuzz.cpp
+  src/game/ddraw_fuzz.cpp
+  src/game/tex_page.cpp
+  src/game/tex_page_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
