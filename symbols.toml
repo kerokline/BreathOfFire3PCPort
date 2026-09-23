@@ -5929,15 +5929,6 @@ status = "evidence"
 evidence = "disasm 2026-09-22, whole, 476 bytes: places Sprite_ObjectsExtra[op[0xB]] (unchecked) - Sprite_Current and Field_ActiveMember to it, direction op[0] & 0xF, EventObj_Reset, PartyRecord_Clear, Sprite_InitFromEntry(area descriptor +8 + op[9] * 8), x and z from op[1..4], AreaMap_Elevation, +1 +2, kind (op[0] >> 4) - 1, +0x18..+0x20 = 0, +0x70 = entry byte 2, object +0x8C..+0x94 = 0, +0x83 +0x84 +0x88 +0xA0, EventObj_SetFlags(op + 8), +0x5C..+0x5F. 14 bytes. The PSX FUN_801A7CA0; its +0x70 is a word store, the PC's a byte."
 
 [[func]]
-pc = 0x57B310
-name = "EventOp_5x"
-psx = 0x801A7F60
-ret = "void"
-params = "const unsigned char *op"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 5x (18 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
-
-[[func]]
 pc = 0x57B4E0
 name = "EventOp_Cx"
 psx = 0x801A82B8
@@ -5946,24 +5937,6 @@ params = "const unsigned char *op"
 impl = "src/game/event_script.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, whole, 26 bytes: Sprite_Kind2 +6 (its kind) = op[0] >> 4, then Kind2_Place(op[1]). 2 bytes. The PSX FUN_801A82B8 (0x80143F4A, FUN_801C7014)."
-
-[[func]]
-pc = 0x57B500
-name = "EventOp_Dx"
-psx = 0x801A82F0
-ret = "void"
-params = "const unsigned char *op"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 48 bytes, not taken over): with op[1], Field_ActiveMember +0x86 = op[3]; else its word +0x88 = op[2]:op[3]. 4 bytes. Never reached by the attract cycle."
-
-[[func]]
-pc = 0x57B530
-name = "EventOp_9x"
-psx = 0x801A8338
-ret = "void"
-params = "const unsigned char *op"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 9x (13 bytes): EventOp_1x's first four calls, 0x579F00, Sprite_SetAnimation twice. Never reached by the attract cycle."
 
 [[func]]
 pc = 0x57BA60
@@ -9006,3 +8979,347 @@ name = "Dd_StageSurface"
 ctype = "void *"
 status = "evidence"
 evidence = "disasm 2026-09-23: made by the Direct3D set-up 0x5A5160 at 0x5A5886 as Dd_CreatePlainSurface(0x140, 0x100, 0x7CC344, 0); the page builders and D3d_RefreshPageTexture lock it, convert into it, unlock it and Blt {0,0,256,256} from it into a texture; 0x5A2CA0, 0x5A32B0 and 0x5A37D0 use it too (28 instructions name it, a raw scan)."
+
+# --- 2026-09-23, the sixth round, group V1: the event script's shop and scene ops (src/game/event_ops.cpp, docs/event-ops.md) ---
+
+[[func]]
+pc = 0x57B310
+name = "EventOp_5x"
+psx = 0x801A7F60
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57B310..0x57B4D8 (0x1C9 bytes), cdecl, every jump internal. EventScript_Op's handler for 5x (18 bytes): places Sprite_Objects[count] - bank op[1]:op[2], EventObj_Reset, Sprite_SetAnimationBank, x and z op[5..8], AreaMap_Elevation, +1 op[9], +2 op[0xB], direction and kind from op[0], +0x18 / +0x1C op[0x10] / op[0x11], object +0x98 / +0x9A op[3] / op[4], +0x88 op[0xD]:op[0xE], +0x83 op[0xF], +0x84 op[0xA], EventObj_SetFlags(op + 0xC), +0x5C = 2, EventObj_Face, the count up. The PSX FUN_801A7F60 store for store. Shop route: 21 calls."
+
+[[func]]
+pc = 0x57B500
+name = "EventOp_Dx"
+psx = 0x801A82F0
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, whole, 0x30 bytes: with op[1], Field_ActiveMember +0x86 = op[3]; else its word +0x88 = op[2]:op[3]. 4 bytes. Shop route: 3 calls."
+
+[[func]]
+pc = 0x57B530
+name = "EventOp_9x"
+psx = 0x801A8338
+ret = "void"
+params = "const unsigned char *op"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x57B530..0x57B77B (0x24C bytes), cdecl, every jump internal. Handler for 9x (13 bytes): a placement of state 6 - +5 op[8], +0x18 op[9]:op[0xA], +0xB op[0xC], +0x2A bit 4 of +7; by bit +5 of the bits at 0x9040CC: clear, Sprite_SetAnimation(0); set with op[0xC] bit 0, +0 = 0 and the count not advanced; else 0x579F00 stamps 0x10 at a whole cell, Sprite_SetAnimation(1). The PSX FUN_801A8338 store for store. Also called directly by 0x406F0A and 0x41E47E. Shop route: 7 calls."
+
+[[func]]
+pc = 0x52DB90
+name = "Field_LeaderWalk"
+psx = 0x801B1560
+ret = "void"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x52DB90..0x52E037 then a 7-entry jump table to 0x52E054 (0x4C4 bytes), cdecl. The leader's sub-state 1 (table 0x660954 entry 1): the six button tests in Field_LeaderStand's order, the frame count +0xA, Field_LeaderDirection, Field_LeaderStepTarget's answer 0 (step or push), 1, 2, 3, 5, 6, 0xFF (4 and 7..0xFE nothing). The PSX FUN_801B1560 branch for branch. Shop route: 253 calls."
+
+[[func]]
+pc = 0x52E060
+name = "Field_LeaderSetPace"
+psx = 0x801B1C80
+ret = "void"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x52E060..0x52E107 (0xA8 bytes), cdecl. Field_State +0x128: 3 if a member of the first party list has bit 7 of its record +0x10, unchanged under Field_ScriptFlags bit 9, 3 when (button 0x903582 held) equals the byte 0x903A5E or Field_ScriptFlags2 bit 5, else 4. Shop route: 97 calls."
+
+[[func]]
+pc = 0x52E140
+name = "Field_LeaderStepTick"
+psx = 0x801B1DF4
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x52E140..0x52E158 (0x19 bytes): 0x536670 (the step, group V2), then a tail jump to Sprite_ScriptTick when the pace Field_State +0x128 is 4 or more. 41 E8/E9 sites (0x409706..0x536E87: area scripts, the member frames, 0x52E580) and the table 0x65F99C. Shop route: 520 calls."
+
+[[func]]
+pc = 0x52E160
+name = "Field_LeaderStepTarget"
+psx = 0x801B1E3C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x52E160..0x52E4EB then an 8-entry jump table to 0x52E50C (0x3AC bytes; the catalogue's 0x420 ran into Field_LeaderStepCell). +9 = 0x20 or 0x10 over Field_MoveSpeeds[pace] (idiv), the target 0x903858 / 0x90385C, Scenario_StepHook unless Field_Request 9, then by 0x526DB0's code: 0 -> 1, 1 -> 0, 2 slope (0x5725C0, links, MoveCmd_TestFB, sound by 0x660960), 3, 4 -> 2, 5 -> 3, 6 -> 5, 7 -> 6, 0xFF when the hook took it in state 2. Shop route: 148 calls."
+
+[[func]]
+pc = 0x52E510
+name = "Field_LeaderStepCell"
+ret = "void"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x52E510..0x52E574 (0x65 bytes), no calls: the words 0x903854 / 0x903856 = the whole parts of 0x903858 / 0x90385C, one more where the fraction is non-zero and the direction's unit 0x6696DC is positive. Pointer-less and in no list (inside the catalogue's 0x52E160); called only by Field_LeaderStepTarget, three sites. Taken with its caller."
+
+[[func]]
+pc = 0x530030
+name = "Field_EncounterDue"
+psx = 0x801B4EA8
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530030..0x5301E2 (0x1B3 bytes), cdecl. The zone (Area_ZoneAt) +4, the counter ObjTrio +0x134 against Field_EdgeBits (times 7/10 walking), ObjTrio +0x138 bit 0, the word 0x929EE0, member bit 6; on foot the cell +9 steps on is 0, else 0x591F30(4, 0) with Sprite_Current put back and 0x535C50 per member. Named by its caller: Field_LeaderWalk then sets up 0x5317F0 and the exit 0x190000. Shop route: 94 calls."
+
+[[func]]
+pc = 0x5301F0
+name = "Field_LeaderIdleTest"
+psx = 0x801B6444
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5301F0..0x5302B5 (0xC6 bytes). Field_State +0x136 counts past 0xF0 (not on foot, not record bit 5), then unless a member is in state 9, Rand bit 0: +0x137 = 9, Sprite_EnsureAnimation, +9 = 2, state 6. Called by Field_LeaderStand. Shop route: 120 calls."
+
+[[func]]
+pc = 0x5302C0
+name = "Field_LeaderSwapTest"
+psx = 0x801B667C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5302C0..0x53031D (0x5E bytes): two members or more, bit 4 of neither flags byte, button 0x903588 pressed, Party_CanSwap - state 3, Field_ScriptFlags2 bit 10. Shop route: 318 calls."
+
+[[func]]
+pc = 0x530320
+name = "Party_CanSwap"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530320..0x53037C (0x5D bytes), no calls: not under bits 0..2 of either flags byte, and no member after the leader in state 2 whose +2 is none of 0x660A34's three bytes. Pointer-less and in no list; called only by Field_LeaderSwapTest. Taken with its caller."
+
+[[func]]
+pc = 0x530380
+name = "Field_LeaderMenuTest"
+psx = 0x801B6750
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530380..0x5303D3 (0x54 bytes): Field_MenuButton pressed, Field_ScriptFlags bit 6 clear - sound 0x105, Field_ScriptFlags2 bit 11, the pose, state 4. Shop route: 318 calls."
+
+[[func]]
+pc = 0x5303E0
+name = "Field_LeaderRequest4Test"
+psx = 0x801B687C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5303E0..0x53042A (0x4B bytes): button 0x903586 held, Field_ScriptFlags bit 13 clear - Field_Request 4, the pose, state 1 sub-state 0. Shop route: 318 calls."
+
+[[func]]
+pc = 0x530430
+name = "Field_LeaderRequest9Test"
+psx = 0x801B6908
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530430..0x53047D (0x4E bytes): Input_Pressed 0x800, Field_ScriptFlags bit 13 and Field_InputFlags 0x69 clear - the pose, Field_Request 9, state 0xE. Shop route: 318 calls."
+
+[[func]]
+pc = 0x530480
+name = "Field_LeaderDirection"
+psx = 0x801B69AC
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530480..0x53052D (0xAE bytes), no calls: Field_InputHeld and 0xF000 to Sprite_Current +8 - 0x1000 0, 0x2000 2, 0x3000 1, 0x4000 4, 0x6000 3, 0x8000 6, 0x9000 7, 0xC000 5 - answer 1; else 0. Shop route: 180 calls."
+
+[[func]]
+pc = 0x530530
+name = "Field_EffectAhead"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530530..0x5305A2 (0x73 bytes): the first of Effect_Objects' 20 records in use of kind 0x17 (+5) that the point one Field_DirectionSteps ahead is in reach of (Sprite_PointInReach, margin 0) - its index, or 0xFF. Pointer-less and in no list; called by Field_LeaderEffectTest and ten other sites 0x51D32E..0x524A9E (E8 scan). Taken with its caller."
+
+[[func]]
+pc = 0x530600
+name = "Area_PassageAhead"
+psx = 0x801B6C4C
+ret = "const unsigned char *"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530600..0x5307B1 (0x1B2 bytes), no calls: the area descriptor's +0x2C list (+0x31 the last index) of 8-byte runs - entry[3] cells from entry[0], entry[1] along z when entry[2] bit 7, else along x - against the one or two cells ahead; the entry, or null. The PSX FUN_801B6C4C test for test. Called by Field_LeaderTalkTest and 0x52F607 / 0x52F76E. Shop route: 3 calls."
+
+[[func]]
+pc = 0x530800
+name = "Field_LeaderCheckTest"
+psx = 0x801B6EB4
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530800..0x53085B (0x5C bytes): Field_State +0x89 none of 2, 4, 9, 0xA, button 0x90358C pressed, not on foot - state 0xA, +0x137 = 8. Shop route: 318 calls."
+
+[[func]]
+pc = 0x530860
+name = "Field_LeaderEffectTest"
+psx = 0x801B6F60
+ret = "unsigned char"
+params = "unsigned pace"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530860..0x5308C7 (0x68 bytes): Field_State +0x89 3 or 6, an odd direction, the argument's low byte 4, Field_EffectAhead - +0x137 = 8, +0xB the effect, state 0xA sub-state 1. The PSX FUN_801B6F60 is FUN_801B1560's call at the same place. Shop route: 148 calls."
+
+[[func]]
+pc = 0x5308D0
+name = "Field_LeaderPushCount"
+psx = 0x801B703C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5308D0..0x53091C (0x4D bytes): Field_State +0x89 2 and an odd direction - +0xB up; at 0x10 state 0xA, +0x137 = 8. The PSX FUN_801B703C is FUN_801B1560's call at the same place. Shop route: 48 calls."
+
+[[func]]
+pc = 0x530920
+name = "Field_LeaderTalkTest"
+psx = 0x801B7250
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530920..0x530A4D (0x12E bytes): confirm pressed unless byte 0x905B82 - Field_FacingObject (twice) then Field_LeaderTalkTo; else a 0x51 cell and 0x56D7A0; else a 0x50 / 0x53 / 0x55 / 0x52 cell and Area_PassageAhead - state 7. The PSX FUN_801B7250 call for call; the PC tests the passage for null where the PSX does not. Shop route: 322 calls."
+
+[[func]]
+pc = 0x530A50
+name = "Field_FacingObject"
+psx = 0x801B5148
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530A50..0x530BEA (0x19B bytes): the object faced - even directions try the odd neighbours first (turning), odd ones look +0x70 + 2 steps ahead and, unless that cell is 0x30, one; each through Field_ObjectAhead. Shop route: 11 calls."
+
+[[func]]
+pc = 0x530BF0
+name = "Field_ObjectAhead"
+psx = 0x801B53C8
+ret = "unsigned char"
+params = "long x, long z, unsigned direction"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530BF0..0x530C87 (0x98 bytes): Sprite_ObjectAt(x, z, +0x70); 0xFF for none, kind 8, word +0x88 0xFFFF or a height more than 0x100 off. The index compared signed with 30. The third argument is not read. Shop route: 11 calls."
+
+[[func]]
+pc = 0x530C90
+name = "Field_CellAround"
+psx = 0x801B548C
+ret = "unsigned char"
+params = "unsigned cell"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530C90..0x530CB7 (0x28 bytes): Field_CellAroundNear, or 0x531120 for a sprite with +0x70. Shop route: 24 calls."
+
+[[func]]
+pc = 0x530CC0
+name = "Field_CellAroundNear"
+psx = 0x801B5D74
+ret = "unsigned char"
+params = "unsigned cell"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x530CC0..0x53111D (0x45E bytes), calls AreaMap_ByteAt only: a cell of the argument's byte around the leader, the found cell's words to 0x903850 / 0x903852, turning the leader to the diagonal it lies on (section 3 of the doc). Shop route: 24 calls."
+
+[[func]]
+pc = 0x531660
+name = "Field_LeaderTalkTo"
+psx = 0x801B70D4
+ret = "void"
+params = "unsigned index"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x531660..0x5317E2 (0x183 bytes): object n (below 30 Sprite_Objects, else Sprite_ObjectsExtra, unbounded) - not kind 9: its +0x80 bit 5, the pose, Field_ScriptFlags bit 8; kind 9: the facing pose by 0x660A38, Field_State +0x139 = n, state 0xB. Shop route: 3 calls."
+
+[[func]]
+pc = 0x531950
+name = "Field_LeaderCellEvent"
+psx = 0x801B766C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x531950..0x531AE7 (0x198 bytes), on foot: confirm on 0xAE (0x9039F3 = 0x37) or a 0xAx cell (0x531AF0, Field_ChangeArea); pad 0x100 cycles 0x9045FA; pad 0x800 with 0x531820 (the return point 0x904148, Field_ChangeArea); button 0x90358C on 0xA0 / 0xA1 (0x9039F3 = 0x1B). Called by Field_LeaderStand. Shop route: 120 calls."
+
+[[func]]
+pc = 0x531DF0
+name = "Field_LeaderPushObjects"
+psx = 0x801BEF00
+ret = "unsigned char"
+params = "void"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x531DF0..0x531F07 (0x118 bytes): the point one (two under Field_ScriptFlags bit 12) Field_DirectionSteps ahead at MapView_GroundAt's height (the leader's if more than 0x100 off); every object in use without +7 bit 7 in reach has word +0x9C counted; if any, pace 3, +9 = 0. Also called by 0x51AE1C, 0x526CB4 and area scripts. Shop route: 176 calls."
+
+[[func]]
+pc = 0x539AC0
+name = "Scenario_NoHook"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 3 bytes: xor al, al / ret. Thirteen .data references (chapter records and hook tables 0x660CDC..0x662C64) and Area_StepHook's case for area 0xAE. The catalogue's 16 bytes and eleven calls ran on into 0x539AD0. Shop route: 100 calls, all from Scenario_ArriveHook."
+
+[[func]]
+pc = 0x56D700
+name = "Scenario_StepHook"
+ret = "int"
+params = "long x, long z"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x56D700..0x56D741 (0x42 bytes): the chapter record 0x662C80[Cond_ByteFA sign-extended] +8 (x, z), sign-extended; if 0, Area_StepHook; Sprite_Current put back. Called by Field_LeaderStepTarget. Shop route: 148 calls."
+
+[[func]]
+pc = 0x56D750
+name = "Scenario_ArriveHook"
+ret = "int"
+params = "long x, long z"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x56D750..0x56D791 (0x42 bytes): Scenario_StepHook with the record's +0xC and Area_ArriveHook. Called by 0x52E957 (inside 0x52E580) and area scripts 0x4155D2, 0x41C032, 0x42B05F. Shop route: 100 calls."
+
+[[func]]
+pc = 0x56E050
+name = "Area_StepHook"
+ret = "int"
+params = "long x, long z"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x56E050..0x56E2F5, a 39-entry jump table at 0x56E2F8 and a 0xA2-byte index table at 0x56E394 by area - 0x24 (0x3E6 bytes): Area_ReturnGate, then one of 38 areas' handlers (x, z) sign-extended, else 0. Area 0x4C's handler 0x40EB90 is called with nothing pushed. Shop route: 148 calls."
+
+[[func]]
+pc = 0x56E440
+name = "Area_ReturnGate"
+psx = 0x801A9A98
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x56E440..0x56E4D5 (0x96 bytes): not area 0xBB, Field_InputFlags 0x40, Cond_ByteFD 1, cell 0xA1 at (x, z rounded), z at least 0x108000, story flag 0x77 - the flag cleared and Field_ChangeArea to the return point 0x904148 with 4. The PSX FUN_801A9A98 test for test. Shop route: 148 calls."
+
+[[func]]
+pc = 0x56E4E0
+name = "Area_ArriveHook"
+ret = "int"
+params = "long x, long z"
+impl = "src/game/event_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x56E4E0..0x56E5B7, a 9-entry jump table at 0x56E5B8 and a 0x86-byte index table at 0x56E5DC by area - 0x28 (0x182 bytes): one of 8 areas' handlers (x, z) sign-extended, else 0. Shop route: 100 calls."
