@@ -7,7 +7,7 @@
 // display_env::g. Then the two chains as trees: a copy of Gpu_PutDispEnv whose
 // call reaches a copy of Gfx_Present whose call reaches a copy of
 // Gfx_ClearPresent, against ours calling ours; Gpu_PutDrawEnv over
-// D3d_SetBackColor likewise. DirectDraw and Direct3D are six fake COM objects
+// D3d_SetBackColor likewise. DirectDraw and Direct3D are eight fake COM objects
 // (surfaces, a viewport, a material) whose methods record their arguments -
 // the stack-built DDBLTFX and D3DMATERIAL by their bytes - and answer with a
 // chosen HRESULT, DDERR_SURFACELOST and its neighbours included; any other
@@ -136,7 +136,7 @@ U Bytes(const void* p, unsigned n) {
 
 // --- The COM objects, faked ---------------------------------------------------
 struct Fake { const void* const* vtable; U id; };
-constexpr unsigned kFakes = 6;   // 0..2 surfaces, 3 and 4 viewports, 5 materials - any may stand anywhere
+constexpr unsigned kFakes = 6;   // 0..2 stand as surfaces, 3 and 4 as viewports; 5 is spare
 Fake g_fakes[kFakes];
 Fake g_materials[2];
 

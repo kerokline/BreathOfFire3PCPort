@@ -157,7 +157,7 @@ each of ten kinds - the eight alone, then two trees - against byte-copies:
   `Gfx_Present` whose call reaches a copy of `Gfx_ClearPresent`, against ours
   calling ours; `Gpu_PutDrawEnv` over `D3d_SetBackColor` likewise.
 - **Fake COM objects**, written locally (group T's `ddraw_fuzz.*` was being
-  written in parallel): six objects on one vtable - surface `Blt` `+0x14`,
+  written in parallel): eight objects on one vtable - surface `Blt` `+0x14`,
   `Flip` `+0x2C`, `Restore` `+0x6C`, viewport `SetBackground` `+0x20`, `Clear`
   `+0x30`, material `SetMaterial` `+0x0C`; every other slot ends the process
   naming itself. Each records the object and its arguments - the `DDBLTFX` and
