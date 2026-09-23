@@ -708,6 +708,7 @@ changes nothing and the menu's decrement leaves 98; from 98 and below the
 count is unchanged. **Why it barely matters:** whether a stack of 99 tiaras
 can be had in play is not known here (game facts are the owner's), and the
 loss is one, once. **It cannot happen in play** (owner, 2026-09-22): there
-is only one Faerie Tiara, a key item - having it is what lets the party into
-the fairy rings on the world map, and it is not meant to be used up. So the
-stack is always 1 and the handler's give-back keeps it at 1.
+is only one Faerie Tiara in the game, and having it is what lets the party
+into the fairy rings on the world map; the owner thinks it cannot be used
+from the menu at all. So the stack is at most 1, and the 99 cap is never
+met.
