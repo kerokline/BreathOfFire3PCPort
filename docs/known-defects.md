@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — twenty-six entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27 and D28 latent; D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
+**Status:** IN PROGRESS (2026-09-22 — twenty-seven entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30 latent; D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -838,3 +838,47 @@ for 32 - every texel exactly two pixels). Exact only at the sprite's natural
 size. What a capture would show: the bottom row and the right-hand column of a
 standing character (the left-hand column when it faces the other way, x
 flipped) one screen pixel thin under `BOF3X_FILTER=point`.
+
+## D30 — A page texture whose Lock fails leaks its surface and draws untextured (latent)
+
+**Found:** reading `D3d_BuildPageTexture` `0x5A0080` and
+`D3d_RefreshPageTexture` `0x5A0510` for the takeover, 2026-09-23
+([`tex-page.md`](tex-page.md) §2, §3). **Latent, Capcom's** (group T of the
+fifth round). Unmeasured in game. The number may need renumbering at the merge
+if another group of the round took D30 too.
+
+**The defect.** The build makes the entry's surfaces first - a texture surface
+and its `IDirect3DTexture2` into the `Gfx_TexCache` entry's `+0x10` / `+0x14`
+(`0x5A02EA`), or a plain surface into `+0x10` (`0x5A0161`) - and only then
+locks the staging surface (`0x5A0350`, `0x5A03C1`) or the new surface
+(`0x5A01A2`, `0x5A021E`). When that `Lock` fails it returns 0 at once
+(`0x5A0357`, `0x5A03C8`, `0x5A01A9`, `0x5A0225`): the entry's state byte is
+never set, so the entry stays free with the new surface and texture in it,
+never released - the next build of that page takes the same entry and
+overwrites both pointers (`Gfx_InvalidateTextures` `0x59E700` releases only up
+to the first free entry, so it never reaches them). And `D3d_BindTexture`
+hands the 0 to `SetTexture`, so the primitive draws untextured this frame.
+Under the software surfaces the same 0 is also the index of slot 0, so the
+caller `0x5A3CC0` cannot tell a failure from a build into slot 0 (what it
+then does with the entry is unread). A failed `CreateSurface` returns 0 the
+same way, leaking nothing.
+
+The refresh sets the state byte to 1 **before** its `Lock` (`0x5A0559`); a
+failed `Lock` returns with the texels and the palette generation unchanged
+(`0x5A05E9`, `0x5A0645`, `0x5A06EE`, `0x5A0773`). A palettized entry is
+caught again - `Gfx_TexCacheFind` compares the generation and sets state 2
+next time - but a direct-colour (15-bit) entry stays stale until its VRAM is
+written again.
+
+**Why it may never show:** every `Lock` is `DDLOCK_WAIT` on a system-memory
+surface (`Dd_CreatePlainSurface` caps `0x840` / `0x1800`, both
+`DDSCAPS_SYSTEMMEMORY`), which fails only on `DDERR_SURFACELOST` - a lost
+display mode, e.g. a fullscreen alt-tab - or out of memory. One leak of 128 KB
+or 256 KB per failure.
+
+**Ours does the same**; the fuzz fails the `Lock` (and the `CreateSurface`, and
+the texture's `QueryInterface`) in a third of its rounds, and the controls
+"a failed Lock returns the slot" and "a failed Lock marks the entry" are
+refused ([`tex-page.md`](tex-page.md) §6). A fix - release the surfaces on
+the failure path, and have the refresh set its state only on success - is the
+owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
