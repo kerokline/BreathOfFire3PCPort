@@ -616,14 +616,6 @@ evidence = "disasm 2026-09-19: the same free-slot scan as File_Open 0x5A7380 (-1
 note = "Ours since 2026-09-19 WITH A FIX, docs/DIVERGENCE.md DIV-0003: a failed open returns -1. ORIGINAL DEFECT: the fopen result is stored and the slot index returned WITHOUT a null check, so a failed open (read-only directory, e.g. an install under Program Files) is reported as success and the following File_Write passes a null stream to fwrite. No CD-root fallback, unlike File_Open."
 
 [[func]]
-pc = 0x454820
-name = "Save_ReadFile"
-ret = "int"
-params = "const char *path, unsigned size, int offset"
-status = "evidence"
-evidence = "disasm 2026-09-19: File_Open(path, 0, 0), -1 on failure; File_Seek(h, offset); File_Read(h, Save_Staging, size); File_Close; returns 0. ARGUMENT ORDER IS (path, size, offset): after its one push esi the seek takes [esp+0x10], the third argument, and the read - two uncleaned pushes later - takes [esp+0x14], the second. Corrected 2026-09-19; the first reading had them swapped. Confirmed by data: Save_ReadSummaries pushes 0xCA0 then 0x1C, and 0xCA0 is where the 0x1C-byte slot summary sits in every save on hand. Two call sites (E8 scan): 0x58841E and 0x588E3C."
-
-[[func]]
 pc = 0x454870
 name = "Save_WriteFile"
 ret = "int"
@@ -632,23 +624,6 @@ impl = "src/game/save_io.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19, 17 instructions: h = File_OpenWrite(path); if h == -1 return -1; File_Write(h, Save_Staging, size); File_Close(h); return 0. The File_Write result is discarded. Two call sites (E8 scan): 0x580074 (save menu) and 0x5809FF, both passing 0x12B0."
 note = "Ours since 2026-09-19 WITH a deliberate behavioural change - DIV-0002."
-
-[[func]]
-pc = 0x4548B0
-name = "Save_ListFiles"
-ret = "int"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-19: zeroes 0x60 dwords at Save_Directory 0x929F40; _findfirst 0x5B979A on the pattern at 0x65289C, returning 0 if none; per match copies the name to entry +0 and the size to entry +0x14 (stride 0x18), counts, _findnext 0x5B9867 until it fails; returns the count. Two call sites (E8 scan): 0x587E6B and 0x588156. Observed working 2026-09-19: both saves listed on the load screen after a restart."
-note = "ORIGINAL DEFECTS: never calls _findclose (one search handle leaks per call), and the table is not bounded - a 17th matching file writes past the 16 entries."
-
-[[func]]
-pc = 0x588DC0
-name = "Save_ReadSummaries"
-ret = "void"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-19: writes 0xFF to +0x15 of each of 16 records (stride 0x1C) from 0x905BC0; for slot 0..15 scans Save_Directory for an entry whose name byte 7 parses (0-9, A-F, a-f) to the slot number, and on a match Save_ReadFile(name, 0x1C, 0xCA0), copies 0x1C bytes of Save_Staging into the record and stores the directory index at +0x15. Two call sites (E8 scan): 0x58815F, straight after Save_ListFiles; and 0x57FDE0, state 0 of the in-game save menu, with no listing before it."
 
 [[data]]
 pc = 0x92A0E0
@@ -3387,22 +3362,6 @@ ret = "void"
 params = "void"
 status = "hypothesis"
 evidence = "call site 0x578906, 2026-09-22: op 88, no arguments. Calls 0x454CC0. Unread."
-
-[[func]]
-pc = 0x587910
-name = "Sound_LoadStream"
-ret = "void"
-params = "unsigned short id"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: op 89 hi lo calls it with hi:lo; id >> 12 picks a table at 0x6653B0 and id & 0xFFF an entry whose string it formats through 0x666F9C and opens as a file (0x5A7380). PSX op 89 calls 0x80164090(id, 1). Named by the file it opens."
-
-[[func]]
-pc = 0x587A00
-name = "Sound_StreamDone"
-ret = "int"
-params = "void"
-status = "hypothesis"
-evidence = "call site 0x57894C, 2026-09-22: op 8B repeats while it returns 0 (test eax, the whole register). Unread."
 
 [[func]]
 pc = 0x517E90
@@ -9006,3 +8965,425 @@ name = "Dd_StageSurface"
 ctype = "void *"
 status = "evidence"
 evidence = "disasm 2026-09-23: made by the Direct3D set-up 0x5A5160 at 0x5A5886 as Dd_CreatePlainSurface(0x140, 0x100, 0x7CC344, 0); the page builders and D3d_RefreshPageTexture lock it, convert into it, unlock it and Blt {0,0,256,256} from it into a texture; 0x5A2CA0, 0x5A32B0 and 0x5A37D0 use it too (28 instructions name it, a raw scan)."
+
+# ---------------------------------------------------------------------------
+# Group X of the sixth takeover round: save, load, the inn and the sound
+# stream (docs/save-menu.md, src/game/save_menu.cpp). Read whole with capstone
+# 2026-09-23; sizes are the extents read, not pe_funcs.py's. Five entries moved
+# here from above with impl added: Save_ReadFile, Save_ListFiles,
+# Save_ReadSummaries, Sound_LoadStream (params widened to the dword it reads),
+# Sound_StreamDone. Twenty-one functions of the title and load flow were in
+# no list: pointer-reached through 0x6671F4 / 0x66720C / 0x667228, folded by
+# the catalogue into Snd_LoadBank 0x587CD0's extent.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x454770
+name = "Snd_LoadBankFile"
+ret = "void"
+params = "unsigned index"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x454770..0x454809 (0x9A bytes, every jump internal): Dat_FileNames[index] (the whole dword, unchecked), return if null; Crt_sprintf into a 0x28-byte local with the DAT directory format 0x652894; File_Open, return on -1; File_Size, Crt_malloc, File_Read of the whole file, File_Close; then the 16-byte chunk walk of LoadDatFile 0x454590 (kind byte +0, tag +4, size +8, payload +0x10, the offset signed against the size) handing only kind 2 to Snd_LoadBank(tag, payload, size); Crt_free. 8 call sites (0x431725 .. 0x56D9A1). Shop route: 2 calls, from 0x4963AA."
+
+[[func]]
+pc = 0x454820
+name = "Save_ReadFile"
+ret = "int"
+params = "const char *path, unsigned size, int offset"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19 and 2026-09-23, 0x454820..0x454864 (0x45 bytes): File_Open(path, 0, 0), -1 on failure; File_Seek(h, offset); File_Read(h, Save_Staging, size); File_Close; returns 0. ARGUMENT ORDER IS (path, size, offset): after its one push esi the seek takes [esp+0x10], the third argument, and the read - two uncleaned pushes later - takes [esp+0x14], the second. Confirmed by data: Save_ReadSummaries pushes 0xCA0 then 0x1C, and 0xCA0 is where the 0x1C-byte slot summary sits in every save on hand. Two call sites (E8 scan): 0x58841E (LoadMenu_Read) and 0x588E3C (Save_ReadSummaries). Shop route: 15 calls."
+
+[[func]]
+pc = 0x4548B0
+name = "Save_ListFiles"
+ret = "int"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19 and 2026-09-23, 0x4548B0..0x454950 (0xA1 bytes): zeroes 0x60 dwords at Save_Directory 0x929F40; _findfirst 0x5B979A on the pattern at 0x65289C into a _finddata_t on the stack (size +0x10, name +0x14), returning 0 if none; per match copies the name (strlen + 1 bytes) to entry +0 and the size to entry +0x14 (stride 0x18), counts, _findnext 0x5B9867 until it answers non-zero; returns the count. Three call sites (E8 scan): 0x587E6B (TitleFlow_Begin), 0x588156 (LoadMenu_List), and ours Save_WriteFile (DIV-0002). Observed working 2026-09-19: both saves listed on the load screen after a restart. Shop route: 2 calls."
+note = "ORIGINAL DEFECTS, kept: never calls _findclose (one search handle leaks per call), and the table is not bounded - a 17th matching file writes past the 16 entries."
+
+[[func]]
+pc = 0x4549F0
+name = "Gfx_ClutStripCopyRow"
+psx = 0x8014E294
+ret = "void"
+params = "unsigned row"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4549F0..0x454A1D (0x2E bytes, no calls): the 0x100 words of CLUT strip row (row and 0xFF) copied from 0x4000 bytes below (Gfx_ClutStrip - 0x4000), then Gfx_ClutStripDirty = 1; the row is not bounded. Its sibling Gfx_ClutStripRestore 0x4549B0 copies all 32 rows and leaves the flag. PSX pair call-anchored. 20 call sites (E8 scan). Shop route: 6 calls, from 0x496250."
+
+[[func]]
+pc = 0x580630
+name = "Party_RestoreAll"
+psx = 0x801D68E0
+ret = "void"
+params = "unsigned full"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x580630..0x5806E0 (0xB1 bytes): for each of the 8 CharacterRecords (0x903A70, stride 0xA4): with the full byte, +0x1E = 0, Char_ClearStatus(i, 0xA0, 0), +0x1C = +0x2E; +0x1D = 0; Char_RecalcStats(record); HP +0x18 = +0x20, AP +0x1A = +0x22; +0x1D = 0; Char_ClearStatus(i, 0x2000, 0). Then with Flags_Test(0x904654, 4) and not Flags_Test(0x904657, 4), byte 0x9045FB cleared if below 0x1E. The PSX 0x801D68E0 (START overlay 62002f85) the same with the record offsets 4 lower. Callers 0x57FCD5 (the inn, 1) and 0x5805DC (0). Shop route: 1 call (the inn)."
+
+[[func]]
+pc = 0x5808E0
+name = "SaveMenu_DrawChoices"
+psx = 0x801D6D7C
+ret = "void"
+params = "int x, int y"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5808E0..0x580967 (0x88 bytes): 0x57CF60(x + 4, y + 4, 0x52, 0x48, 0, byte 0x903A5A), 0x5762D0(x, y, 9, 8); Text_DrawAt(x + 0xC, y + 20 row + 0xB, 0, 0xFF, Msg_SystemPtr(0xD2 + row)) for rows 0..2, the row register being movzx si over x (so x's upper half enters y); Menu_DrawHand(x + 0xC, y + 20 cursor + 0xD, 0) with the byte 0x6BC881 by movzx ax over the last Text_DrawAt result. 4 call sites in the save menu 0x57F340. Shop route: 134 calls."
+
+[[func]]
+pc = 0x580970
+name = "Menu_DrawBlackScreen"
+psx = 0x801DF800
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x580970..0x5809B2 (0x43 bytes): at Gfx_PacketNext Gpu_SetTile, Gpu_SetSemiTrans(0), then x y 0 as dwords, 320.0 and 240.0 as floats at +0x14 / +0x18, colour 0, and Gfx_CommitPrim(1, 0x1C). 9 call sites (the inn's night among them). Shop route: 207 calls."
+
+[[func]]
+pc = 0x583020
+name = "Shop_PriceRate"
+psx = 0x801D3570
+ret = "void"
+params = "unsigned short *rate"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x583020..0x5830C2 (0xA3 bytes): *rate = 100; for each party member (Party_Count(0) asked again each step, compared as bytes) whose record (byte Field_Members + 0x14C i) holds item 0x1B at +0x16 or +0x17, 80 and stop; then 0x5918E0(1) non-zero with byte 0x929EC3 6 or 7, 70. The loop byte lives in the argument's own stack slot. The PSX 0x801D3570 the same (offsets 4 lower, 0x80166AD0 for 0x5918E0). Callers 0x581949 and 0x581961 (the shop 0x581720), pointer 0x6BC8B4. Shop route: 2 calls."
+
+[[func]]
+pc = 0x5830D0
+name = "Shop_ScalePrice"
+psx = 0x801D3664
+ret = "unsigned"
+params = "unsigned price, unsigned rate"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5830D0..0x5830F2 (0x23 bytes): (rate and 0xFFFF) times price, 32 bits, divided by 100 unsigned (mul 0x51EB851F, shr 5 of the high half), 1 in place of 0. Callers 0x581D93, 0x59B61B, 0x59B85F. Shop route: 8,007 calls."
+
+[[func]]
+pc = 0x583100
+name = "Shop_SellPrice"
+ret = "unsigned"
+params = "unsigned kind, unsigned item, unsigned flag"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x583100..0x58313F (0x40 bytes): 0x5749F0(kind, item) and 0xFFFF; with the flag byte, kind byte 0 and item byte 0x2B..0x36, times 50; otherwise halved. Callers 0x582AF7, 0x59BBE5. Shop route: 116 calls."
+
+[[func]]
+pc = 0x583140
+name = "Shop_InitWindows"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x583140..0x58320A (0xCB bytes, no calls, no jumps): 29 constant byte and word stores into the window records at 0x803160, 0x803184, 0x8031A8, 0x8031B2, 0x803430 and 0x803454. Sole caller 0x5818D3. Shop route: 2 calls."
+
+[[func]]
+pc = 0x583210
+name = "Shop_Equip"
+ret = "void"
+params = "unsigned record, unsigned slot, unsigned item"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x583210..0x583331 (0x122 bytes of code) and its five-entry jump table 0x583334..0x583347 (whole extent 0x138): record (a byte) of CharacterRecords; slot byte - 1 over the table: 1..3 bytes +0x13..+0x15 kind 2, 4..5 +0x16..+0x17 kind 3, anything else +0x12 kind 1; each 0x591B60(kind, item, 1, 0), Inventory_Add(kind, the old byte read after it, 1, 0), then the item byte stored. Sole caller 0x5825DF. pe_funcs.py said 0x150 (it ran into the padding). Shop route: 1 call."
+
+[[func]]
+pc = 0x588880
+name = "TitleMenu_DrawRows"
+ret = "void"
+params = "unsigned glow"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20 and 2026-09-23, 0x588880..0x5888CC (0x4D bytes): with byte 0x6BDF8E TitleMenu_DrawRow(0x50, 0, glow), (0x70, 1, glow), (0x90, 2, glow); else (0x60, 0, glow), (0x80, 2, glow). docs/title-menu.md section 2. 4 call sites in the title menu's states. Shop route: 39 calls."
+
+[[func]]
+pc = 0x5888D0
+name = "TitleMenu_DrawRow"
+ret = "void"
+params = "int y, unsigned row, unsigned glow"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-20 and 2026-09-23, 0x5888D0..0x588AB1 (0x1E2 bytes, 14 relative calls): widths 0x60 0x80 0x40 built on the stack by three movs (0x5888E4, patched by DIV-0014); with the glow byte a first SPRT - draw mode Gpu_GetTPage(0, 2, 0x380, 0), commit (1, 0xC), CLUT (0, 0x1EB), colour 2x the row's brightness 0x6BDF90[row]; then the row's SPRT - tpage (0, 1, 0x380, 0), CLUT (0x20, 0x1E3), the brightness as is; x 0xA0 - w/2, y s16, u 0, v row shl 5, h 32; both Gpu_SetSemiTrans(glow byte) and Gfx_CommitPrim(1, 0x1C). docs/title-menu.md section 2. Callers TitleMenu_DrawRows. Shop route: 117 calls."
+note = "Ours reads the widths from the image's immediates, so DIV-0014's PatchBytes keeps its effect."
+
+[[func]]
+pc = 0x588AC0
+name = "NewGame_RollGrowth"
+psx = 0x801E7190
+ret = "void"
+params = "unsigned member"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588AC0..0x588B9D (0xDE bytes): lo, hi, n from 0x667248 + 3 member (a byte); five NewGame_RollSum(lo, hi, n), the first four mapped through 0x667260 into 0x903640 + 5 member + 0..3; then all five bytes cleared. The PSX 0x801E7190 (overlay b8cc1561) the same, the fifth stored and cleared too. Sole caller TitleFlow_EnterGame. Shop route: 8 calls."
+
+[[func]]
+pc = 0x588BA0
+name = "NewGame_RollSum"
+psx = 0x801E70DC
+ret = "unsigned char"
+params = "unsigned lo, unsigned hi, unsigned n"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588BA0..0x588BF5 (0x56 bytes): the byte sum of n (a byte) values Rand() mod (hi byte - lo byte + 1), signed idiv, plus lo; no check of the divisor. The PSX 0x801E70DC the same (its break 7 on a zero divisor). Caller NewGame_RollGrowth. Shop route: 40 calls."
+
+[[func]]
+pc = 0x588C00
+name = "TitleMenu_DrawFrame"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588C00..0x588C82 (0x83 bytes): Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xBB, 0), Gfx_CommitPrim(2, 0xC), TitleMenu_DrawPiece(0x1A, 0x18, 0, 2), (0x10A, 0x88, 1, 2); draw mode 0xB9, commit, pieces (-6, 0x1C, 2, 2), (0xDA, 0x1C, 3, 2). 8 call sites in the title menu's states. Shop route: 43 calls."
+
+[[func]]
+pc = 0x588C90
+name = "TitleMenu_DrawPiece"
+ret = "void"
+params = "int x, int y, unsigned index, unsigned slot"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588C90..0x588D1D (0x8E bytes): at Gfx_PacketNext Gpu_SetSprt, colour 0x20 x 3, s16 x and y as floats, u v w h from the 10-byte record (index byte) of 0x66726C (u and v as bytes), CLUT its word +8 shl 6, Gfx_CommitPrim(slot, 0x1C). Caller TitleMenu_DrawFrame. Shop route: 172 calls."
+
+[[func]]
+pc = 0x588D20
+name = "SaveMenu_DrawSlots"
+ret = "void"
+params = "int x, int y, unsigned highlight"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588D20..0x588DBC (0x9D bytes): for i 0..2, 0x576960(first slot with its low byte + i, x + 0x10, y + 56 i + 6, the summary 0x905BC0 + 0x1C n or 0 when its +0x15 is 0xFF), first = dword 0x8034D0 read each time; then 0x573CE0(x + 0x10, y + 6 + 56 (cursor 0x9036D4 - first), 0xD1, 0x34, highlight, 6). Paired call-anchored with two PSX functions (0x801D67C0, 0x801DDF6C), so no psx field. 12 call sites: the save menu and the load menu. Shop route: 190 calls."
+
+[[func]]
+pc = 0x588DC0
+name = "Save_ReadSummaries"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-19 and 2026-09-23, 0x588DC0..0x588E6F (0xB0 bytes): writes 0xFF to +0x15 of each of 16 records (stride 0x1C) from 0x905BC0; for slot 0..15 scans Save_Directory for an entry whose name byte 7 parses (0-9, A-F, a-f) to the slot number, and on a match Save_ReadFile(name, 0x1C, 0xCA0) - result not tested - copies 0x1C bytes of Save_Staging into the record and stores the directory index at +0x15. Two call sites (E8 scan): 0x58815F, straight after Save_ListFiles (LoadMenu_List); and 0x57FDE0, state 0 of the in-game save menu, with no listing before it. Shop route: 2 calls."
+
+[[func]]
+pc = 0x587910
+name = "Sound_LoadStream"
+ret = "void"
+params = "unsigned id"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 and 2026-09-23, 0x587910..0x5879F2 (0xE3 bytes): kind = id shr 12 of the whole dword, stored to 0x6BDE40; name = entry id and 0xFFF of table [0x6653B0 + 4 kind], neither checked; Crt_sprintf with the SND directory format 0x666F9C; File_Open, return on -1; Crt_free of the previous buffer 0x6BDE44; File_Size, Crt_malloc stored to 0x6BDE44, File_Read, File_Close. Kind non-zero: 0x5A7140(buffer). Kind 0: a Music_FadeCount dropped (0, Music_Stop, Music_Track 0xFF), then Music_Start(buffer, size, 0) and Music_SetVolume(127.0). PSX op 89 calls 0x80164090(id, 1), a CD stream - the port's is its own. One caller (0x446E8B) pushes (ecx and 0xFFFF) + 0x1000, hence the dword. 58 call sites (E8 scan). Shop route: 1 call (the inn)."
+
+[[func]]
+pc = 0x587A00
+name = "Sound_StreamDone"
+psx = 0x80164890
+ret = "int"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587A00..0x587A1A (0x1B bytes): dword 0x6BDE40 non-zero - 0x5A7200() xor 1, else Music_IsPlaying() xor 1, on the whole register. Op 8B repeats while it returns 0; the inn waits on it. The PSX 0x80164890 answers from its stream byte. 54 call sites (E8 scan). Shop route: 56 calls."
+
+[[func]]
+pc = 0x5A7020
+name = "Music_IsPlaying"
+ret = "int"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7020..0x5A7049 (0x2A bytes): 0 without Music_Buffer; else its GetStatus (vtable +0x24) into the uninitialised slot of the entry's push ecx, and 1 if bit 0 of that slot's low byte is set. Callers Sound_StreamDone and the tail jmp at 0x587C20. Shop route: 56 calls."
+note = "Ours enters naked to pass the caller's ecx on, for a GetStatus that fails without writing."
+
+[[func]]
+pc = 0x587DB0
+name = "TitleFlow_Step"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587DB0..0x587DBE (0xF bytes): jmp [0x6671F4 + 4 Game_Step], the word unchecked - steps TitleFlow_Begin, TitleFlow_Menu, TitleFlow_NewGame, TitleFlow_Load, 0x460CB0 (config), TitleFlow_EnterGame. Task 0's mode 1: 0x588E88 calls it through 0x667294[1]. Not traced before (no entry list held it); the shop route reaches it from the title."
+note = "Ours jumps too ([[clang::musttail]]), so the step function returns to task 0's loop as in the original."
+
+[[func]]
+pc = 0x587DC0
+name = "TitleFlow_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587DC0..0x587E93 (0xD4 bytes), pointer-reached (0x6671F4[0]): both script flag words and byte 0x90412C cleared; Field_State and Sprite_Current = ObjTrio 0x802D40; Field_MemberSprite(0, 0); sprite +0 1, Field_State +0x89 0, +0x2E 0x10A, +0x30 0x51, +0x29 0, +0x48 0, +9 1, +0x24 0x81, +6 4, +9 0; Sprite_SetAnimation(+6 + 8); 0x90412C 0xFF; Save_ListFiles; Game_Step + 1; 0x9039D6 and 0x6BDF86 0; its answer non-zero into 0x6BDF8E and 0x6BDF85."
+
+[[func]]
+pc = 0x587EA0
+name = "TitleFlow_Menu"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587EA0..0x587EAD (0xE bytes), pointer-reached (0x6671F4[1]): jmp [0x66720C + 4 byte 0x6BDF86], unchecked - the title menu's states 0..6, the table running on into the load menu's."
+
+[[func]]
+pc = 0x587EB0
+name = "TitleMenu_Open"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587EB0..0x587EC8 (0x19 bytes), pointer-reached (0x66720C[0]): TitleMenu_DrawFrame, byte 0x929F04 = 2, state + 1."
+
+[[func]]
+pc = 0x587ED0
+name = "TitleMenu_OpenWait"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587ED0..0x587EE9 (0x1A bytes), pointer-reached (0x66720C[1]): TitleMenu_DrawFrame; 0x929F04 - 1, and state + 1 when it reaches 0."
+
+[[func]]
+pc = 0x587EF0
+name = "TitleMenu_FrameUp"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587EF0..0x587F08 (0x19 bytes), pointer-reached (0x66720C[2]): TitleMenu_DrawFrame, byte 0x7DEE44 or 2, state + 1."
+
+[[func]]
+pc = 0x587F10
+name = "TitleMenu_RowsStart"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587F10..0x587F37 (0x28 bytes), pointer-reached (0x66720C[3]): 0x929F04 = 0 and the dword 0x6BDF90 = 0; TitleMenu_DrawFrame, TitleMenu_DrawRows(1), state + 1."
+
+[[func]]
+pc = 0x587F40
+name = "TitleMenu_RowsFadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587F40..0x587F98 (0x59 bytes), pointer-reached (0x66720C[4]): TitleMenu_DrawFrame, TitleMenu_DrawRows(1); 0x929F04 + 0x10; each of the three row brightnesses 0x6BDF90 + 8, held at 0x40 (unsigned) unless it is the cursor's (0x6BDF85 signed); state + 1 when 0x929F04 comes round to 0."
+
+[[func]]
+pc = 0x587FA0
+name = "TitleMenu_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587FA0..0x588095 (0xF6 bytes), pointer-reached (0x66720C[5]): TitleMenu_DrawFrame, TitleMenu_DrawRows(0); nothing more without bit 1 of 0x7DEE44. With 0x6BDF8E up 0x1000 and down 0x4000 of the dword Input_Pressed move the cursor over 0..2 wrapping (signed tests), else 0x5000 toggles it 0 / 2; the cursor's row + 8 to at most 0x80, the others - 8 to at least 0x40; confirm or 0x800: Transition_Start(0), state + 1, Sound_PlayEffect(0x105)."
+
+[[func]]
+pc = 0x5880A0
+name = "TitleMenu_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5880A0..0x5880D0 (0x31 bytes), pointer-reached (0x66720C[6]): with the wait word 0x66C810 zero, Game_Step = the signed cursor + 2 and state 0; otherwise TitleMenu_DrawFrame and TitleMenu_DrawRows(0)."
+
+[[func]]
+pc = 0x5880E0
+name = "TitleFlow_NewGame"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5880E0..0x588127 (0x48 bytes), pointer-reached (0x6671F4[2]): NewGame_InitCharacters; 0x9039F2 = 0; Game_AreaNumber 0xFFFF; Scenario_Start(0); the first dword of every 8 bytes of Cond_Flags up to 0x904030 zeroed (20 dwords, half the range); Transition_Start(0); Game_Step 5."
+
+[[func]]
+pc = 0x588130
+name = "TitleFlow_Load"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588130..0x58813D (0xE bytes), pointer-reached (0x6671F4[3]): jmp [0x667228 + 4 byte 0x6BDF86], unchecked - the load menu's states 0..7 (0x66720C's entries 7..14)."
+
+[[func]]
+pc = 0x588140
+name = "LoadMenu_List"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588140..0x588189 (0x4A bytes), pointer-reached (0x667228[0]): Transition_Start(1); dwords 0x9036D4 and 0x8034D0 zeroed; Save_ListFiles non-zero - Save_ReadSummaries, state + 1; zero - Sound_PlayEffect(0x107), 0x929ED4 = 1, state 5."
+
+[[func]]
+pc = 0x588190
+name = "LoadMenu_Open"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588190..0x5881EB (0x5C bytes), pointer-reached (0x667228[1]): 0x575690(byte 0x903A5B), 0x574AB0(0x14, 0x12, 0x118, 0x13, byte 0x903A5A), Text_DrawAt(0x1C, 0x15, 0, 0xFF, Msg_SystemPtr(0xAC)), SaveMenu_DrawSlots(0x20, 0x30, 1); state + 1 once the wait word 0x66C810 is 0."
+
+[[func]]
+pc = 0x5881F0
+name = "LoadMenu_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5881F0..0x588338 (0x149 bytes), pointer-reached (0x667228[2]): LoadMenu_Open's draws; Input_AutoRepeat(Input_Pressed and 0x5000); 0x1000 with the slot 0x9036D4 non-zero - slot - 1, the first shown 0x8034D0 following (signed); else 0x4000 with slot below 15 - slot + 1, the first shown + 1 past first + 2; Sound_PlayEffect(0x101) when the slot differs from its old low byte; confirm - a present summary 0x104, 0x929F0B = 1, state + 1, an empty one 0x107; else cancel - 0x106, state 0, Game_Step 1."
+
+[[func]]
+pc = 0x588340
+name = "LoadMenu_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588340..0x5883B1 (0x72 bytes), pointer-reached (0x667228[3]): the windows, message 0xB9, SaveMenu_DrawSlots(0x20, 0x30, 0); Menu_YesNo non-zero - state + 1 with 0x929F0B, else - 1."
+
+[[func]]
+pc = 0x5883C0
+name = "LoadMenu_Read"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5883C0..0x588496 (0xD7 bytes), pointer-reached (0x667228[4]): the windows and slots; 0x700 dwords of Save_Staging zeroed; Crt_sprintf(0x904BA0, 0x664068, slot); Save_ReadFile(0x904BA0, 0x12B0, 0) - -1: 0x929ED4 = 2, state 5. Else the checksum dword Save_Staging + 0x70 taken and its word zeroed, 0x10B0 bytes copied to the game block 0x9039E0 and summed, Field_ScriptFlags = byte 0x90412D; the sum's word equal to the checksum's - state 6, else Sound_PlayEffect(0x107), 0x929ED4 = 2, state 5. The PSX block and checksum rule of docs/save-interchange.md."
+
+[[func]]
+pc = 0x5884A0
+name = "LoadMenu_Error"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5884A0..0x588552 (0xB3 bytes), pointer-reached (0x667228[5]): the windows; 0x929ED4 1 - byte 0x6BDF84 = 0x11, targets state 0 / Game_Step 1; 2 - 0x12, state 2 / Game_Step 3; else both from the high byte of the entry's push ecx, never set; Text_DrawAt of Msg_SystemPtr(0x6BDF84 + 0xA6); confirm - Sound_PlayEffect(0x104) and the two stores."
+note = "Ours enters naked to pass the caller's ecx on, for the never-stored error values."
+
+[[func]]
+pc = 0x588560
+name = "LoadMenu_Loaded"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588560..0x5885C5 (0x66 bytes), pointer-reached (0x667228[6]): the windows, the slots, message 0xB1; Transition_Start(0); byte 0x6BDF94 = 0x1E; state + 1."
+
+[[func]]
+pc = 0x5885D0
+name = "LoadMenu_Apply"
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5885D0..0x5887F1 (0x222 bytes, 19 relative calls), pointer-reached (0x667228[7]): 0x6BDF94 decremented; when it was 0 - the pad map 0x90469C..0x9046AD to 0x903580 (or the defaults with byte 0x6BDF96), Field_MemberCount = Party_Count(0), PartySet_Select(0x90412C and 0x7F, 3), the File_LoadDone / Task_Sleep(1) wait, PartySet_Select(.., 0), the wait, Field_PartyLoad(0), the block's first 16 bytes to 0x8034E0, 0x929ED0 = Cond_Flags + 8 (signed first byte), counters 0x903848..B from block +0x20, Scenario_Load, the wait, Game_Step 5, state 0. Then while 0x66C810: Input_Held 0x800 sets 0x6BDF96, and the windows, slots and message 0xB1."
+
+[[func]]
+pc = 0x588800
+name = "TitleFlow_EnterGame"
+psx = 0x801E6228
+ret = "void"
+params = "void"
+impl = "src/game/save_menu.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x588800..0x588878 (0x79 bytes), pointer-reached (0x6671F4[5]): nothing while 0x66C810; bytes 0x929F02, 0x929F03, 0x929F05 cleared; cursor 2 - state 0, Game_Step 1; else NewGame_RollGrowth(i) and Char_RecalcStats(record i) for the 8 characters, and 0x5A9976(0x495800), the task restart that does not return. PSX pair by callers."
