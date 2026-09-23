@@ -617,3 +617,72 @@ two COM calls (device `+0x58` render state `0x1B`, `+0x70` DrawPrimitive)
 and five callees (`0x59FBA0`, `0x5A2BC0`, `0x437CC0` a bare `ret`,
 `0x59FCA0`, `0x59FD80`), fuzzable on the vertex block at `0x7CA958` against a clone with
 stand-ins for `0x5A2BC0` and the device.
+
+## D24 — A BGM file that does not open restarts the previous track, looping (latent)
+
+**Found:** reading `Music_LoadFile` `0x587A20` and `Music_Play` `0x587AE0`
+for the takeover, 2026-09-22 ([`sound.md`](sound.md) §2). **Latent,
+Capcom's (PC only - the PSX streams from the disc).** (Group Q of the fourth
+round.)
+
+**The defect.** `Music_Play(track)` stores `track` as the one playing and,
+unless the file already loaded is that track's, calls `Music_LoadFile`, which
+sets `Music_FileLoops = 1`, tries `BGM\NNN.DAT` and then `BGM\NNNN.DAT`, and
+when neither opens returns -1 having changed nothing else. `Music_Play` does
+not look at the result: it zeroes the volume and starts `Music_File` - still
+the *previous* track's file - from the top, with `Music_FileLoops` now 1, so
+a one-shot track comes back looping. `Music_LoadedTrack` still names the old
+track, so the next `Music_Play` of the old track loads nothing and restarts
+it. With no file ever loaded, `Music_Start(0, 0, 1)` copies nothing and the
+decoder has nothing to open: D25.
+
+**Why it never shows:** every track the game asks for has a file in the
+shipped `BGM` (166 files; the plain name failing for the nine `N` tracks is
+the designed test, [`asset-loading-path.md`](asset-loading-path.md) §1a). It
+shows with a damaged or incomplete install, or a track number past the set.
+Ours keeps it. A fix (skip the start when the load fails) is the owner's
+call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D25 — A track the decoder cannot open plays a fragment of the last one, for ever (latent)
+
+**Found:** reading `Music_Start` `0x5A6CC0`, `Music_CreateBuffer` `0x5A6E60`
+and `Music_Pump` `0x5A7230`, 2026-09-22 ([`sound.md`](sound.md) §2).
+**Latent, Capcom's.**
+
+**The defect.** `Music_Start` stores `Music_OpenDecoder`'s result without a
+test, then makes the streaming buffer anyway. `Music_CreateBuffer` fills the
+buffer's first half through `Music_Decode`, which does nothing without a
+decoder - so the half is whatever `Music_Staging` (`0x7CC378`, 0x12000
+bytes) still holds: the last half-buffer of the previous track, about 0.42 s.
+The buffer is played looping, and `Music_Pump` never refills it (it returns
+at once without a decoder), so that fragment and the buffer's untouched
+second half repeat until the next `Music_Play`. The decoder that did get made
+but not opened is also never destroyed (a leak).
+
+**Why it never shows:** the shipped files all decode. It needs a file that is
+not MP3 the decoder accepts - or D24's case with no previous file, where the
+staging block is still all zero and the result is silence.
+
+## D26 — Music fades count spins of the frame wait, not frames: they are near instant
+
+**Found:** reading `Sound_Tick` `0x587C70` and its one caller, 2026-09-22
+([`sound.md`](sound.md) §3). **Capcom's, PC only; every fade in the game is
+affected. Not yet heard by the owner** - it is the first thing on the live
+check's list.
+
+**The defect.** The fades (`Music_FadeIn` / `FadeOut` / `FadeOutStop`, the
+event ops `B5`, `B9`..`BB`, `Music_Play`'s fade in) take a count the PSX
+counts in frames (op `B4 tt 08` is an 8-frame fade in). `Sound_Tick` steps
+the volume once per call and ends the fade when the count runs out - and its
+only caller is WinMain's wait for the next frame, `0x4FCEBC`..`0x4FCEDC`,
+which calls it on every spin of the loop (`call Sound_Tick; call
+timeGetTime; compare; loop`). In `hidden_b` (a traced run, so slow) that was
+6,710,895 calls in 16,128 frames, about 416 a frame; the 23 fades started
+there took 502 steps in all. So an 8-frame fade is over within a few
+hundredths of one frame: music starts at full volume and fade-outs are cuts,
+at any machine speed faster than one spin a frame. A fade-out-and-stop
+still stops the music; only the ramp is lost.
+
+**Fix proposed, not built:** step the fade once per logic frame (a counter
+the frame loop already keeps), a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+The takeover keeps the per-spin step.
