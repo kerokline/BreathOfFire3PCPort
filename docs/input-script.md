@@ -188,6 +188,37 @@ From `analysis/shots/`, all local:
 - A save-point diary's English prompt ("Do you want to make a record of your
   journey so far?"), met by accident in save 0.
 
+## 5a. Recording a recipe by playing (2026-09-23)
+
+`BOF3X_RECORD=<path>` before the launcher turns the same latch round: the
+player plays, and each frame's pad word is written to `<path>` as `hold` /
+`wait` lines. The word is sampled at the first latch of a new frame and held
+for the rest of that frame, as playback holds a recipe's - so the game sees
+the same inputs recording and playing back, edge for edge; a tap shorter than
+a frame is lost to both. F12 (read from the game's own DirectInput key bytes
+at `0x7DE828`, DIK `0x58` - `GetAsyncKeyState` saw nothing on the first
+recording) writes a one-frame `shot` in place of its frame.
+`tools/recipe_shots.py` adds shots every N frames to a recording after the
+fact, again without moving a frame. Record in the language you will play back
+in: text timing differs.
+
+The first recording is the owner's `shop.txt`, from save 3: the item shop
+(buy, sell), a found Molotov, the weapon shop with equipping, walking and
+running, the inn's Rest and the save menu (not saved - no file written), 3,157
+frames. `analysis/validate_shop.sh` plays `shop_ab.txt` (35 shots) in English
+twice: the original side `BOF3X_ORIGINAL=*` less the language machinery
+(`LoadDatFile`, `MsgBox_DrawChar`, `Msg_SystemPtr`, `ConfigText`,
+`MenuVerbs`, `TitleMenu_Widths`, `Text_DrawString`, `Text_DrawImmediate`),
+the DIV-0022 clock and the DIV-0004 fix; our side with every pixel-changing
+divergence off. **35 of 35 captures identical, none black**, with 583 ours
+(rounds one to four and groups S and T of the fifth). Two things learned on
+the way: `BOF3X_ORIGINAL` now takes `-NAME` to exclude one name from `*`,
+and `*` no longer switches off the input hook itself - it did, and the
+all-original side sat in the attract sequence with no input. And
+`Text_DrawImmediate` belongs in the language set: without it the inn's Yes /
+No is spaced at Capcom's 12 px, DIV-0006's rule, the one capture that
+differed before it was added.
+
 ## 6. Limits and next steps
 
 - **No branching.** A recipe cannot choose on a value; `until` and `@ADDR` are

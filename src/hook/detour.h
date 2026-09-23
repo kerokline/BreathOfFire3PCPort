@@ -33,8 +33,12 @@ void Inject(const char* name, std::uint32_t original, void* ours);
 // Re-aims ONE relative call inside an original function at ours, leaving the
 // callee and its other callers alone: for a divergence that belongs to one
 // call site of a function with many. Refuses unless `site` holds a CALL to
-// `expected`. BOF3X_ORIGINAL=<name> leaves the site untouched.
-void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours);
+// `expected`. BOF3X_ORIGINAL=<name> leaves the site untouched - unless
+// `instrument`: a probe that replaces nothing of Capcom's (the input recipe
+// and recorder) is not game code, and `*` must not switch it off. It did,
+// 2026-09-23: an all-original recipe run got no input at all.
+void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours,
+                  bool instrument = false);
 
 // Replaces `count` bytes of original code or data in place: for a divergence
 // that is an operand - a constant the original pushes - and nothing else.

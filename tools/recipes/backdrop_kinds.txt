@@ -1,0 +1,67 @@
+# The menu backdrop at every kind Config can set (0..3) and at kinds a corrupted
+# save could hold (4..255), for Menu_DrawBackdrop 0x575690 (docs/menu-windows.md).
+# The first 360 frames of shop.txt load save 3 into the inn; then the field menu,
+# and 0x903A5B (Config "Background") poked. Run with BOF3X_ORIGINAL=Menu_DrawBackdrop
+# so that Capcom's code draws the kinds ours refuses. Riskiest kinds last.
+wait 61
+hold start 4
+wait 79
+hold start 5
+wait 42
+hold r2 4
+wait 37
+hold down 2
+wait 3
+hold down 3
+wait 2
+hold down 4
+wait 14
+hold r2 5
+wait 19
+hold r2 2
+wait 46
+hold square 10
+hold square+down 1
+hold square+right+down 17
+until 0x66C7E8 u16 == 2 timeout 600
+wait 60
+peek 0x903A5B u8 background_at_start
+press @0x903584
+until 0x66C7E8 u16 == 3 timeout 300
+wait 60
+poke 0x903A5B u8 0
+wait 10
+shot kind000
+poke 0x903A5B u8 1
+wait 10
+shot kind001
+poke 0x903A5B u8 2
+wait 10
+shot kind002
+poke 0x903A5B u8 3
+wait 10
+shot kind003
+poke 0x903A5B u8 4
+wait 10
+shot kind004
+poke 0x903A5B u8 5
+wait 10
+shot kind005
+poke 0x903A5B u8 6
+wait 10
+shot kind006
+poke 0x903A5B u8 7
+wait 10
+shot kind007
+poke 0x903A5B u8 8
+wait 10
+shot kind008
+poke 0x903A5B u8 16
+wait 10
+shot kind016
+poke 0x903A5B u8 64
+wait 10
+shot kind064
+poke 0x903A5B u8 255
+wait 10
+shot kind255

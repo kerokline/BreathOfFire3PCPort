@@ -15,10 +15,10 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 Phase 0 is done; stage 1 of the owner's order of work ([`STATUS.md`](STATUS.md))
-- replace what the attract sequence reaches - stands at **five hundred and
-sixty-seven functions ours**, every one through the oracle, memory dump and
-frame hash (the last hundred and one on 2026-09-23, `ab25_*`; their capture
-A/Bs are owed, "Pick up here" 0000); and **stage 2, the text swap, went from a plan to a playable
+- replace what the attract sequence reaches - is **closed: the attract
+queue is 0 in scope, 789 functions ours** (2026-09-23, rounds five and six,
+`ab26`); the input-reached queue has begun from a route the owner recorded
+("Pick up here" 0000); and **stage 2, the text swap, went from a plan to a playable
 English game in one session (2026-09-20)**: `tools/loc_build.py` builds 244
 overlay `DAT`s from the owner's US disc - every area's dialogue, the 44 system
 pools, the item and ability names, and the US font doubled into the port's
@@ -102,8 +102,11 @@ owner in game on 2026-09-23: DIV-0025 glyphs sample texel centres (D17, the
 "wobbly" English text), DIV-0026 the Config controller panel, DIV-0027 the
 Yes / No layout, DIV-0028 music fades per frame (D26: the PC's fades were
 near instant), DIV-0029 the save slot's name clear of a cut. D18..D28
-written down. The batch's capture A/Bs came back black - the owner's screen
-cover - and are owed ("Pick up here" 0000).
+written down. **2026-09-23: rounds five and six, 222 functions, 789 ours** -
+the attract sequence's last (the display calls, the texture builders, the
+DIV-0010 sprite handlers rewritten) and all the owner's recorded shop route
+reaches; the pad recorder (`BOF3X_RECORD`); DIV-0030; D30..D40; one batch,
+`ab26` ("Pick up here" 0000).
 
 ## Pick up here
 
@@ -112,80 +115,89 @@ The single next action, concrete enough to start without asking anyone.
 00000. **The game's pace is done short term: DIV-0022, confirmed in game by
    the owner 2026-09-22.** The complete fix, the deadline in a double, is
    [`IDEAS.md`](IDEAS.md) I16, not scheduled. **Pace figures before
-   2026-09-21 are the 31.25 band.** The untraced oracle needs only 7 minutes
-   at 30 a second, but traced hash runs are far slower (`ab18` at 7 minutes
-   reached 6,312 frames against `ab17`'s 10,062 at 11): keep hash runs at 11
-   minutes or more.
+   2026-09-21 are the 31.25 band.** **The all-original runs are at half
+   speed because of D5, not the tracer** (measured 2026-09-23): every
+   `--original "*"` run turns DIV-0022 off with the rest, and Windows' tick
+   count stood at 8.2 days - D5's half-speed band - so the hash's reference
+   runs made 15.2 logic frames a second (`ab22b`..`ab26`) where ours, traced
+   the same, made 29.3, and the untraced oracle 28.9. The hash compares
+   logic frames, so its verdicts stand. **Past 12.4 days of uptime (about
+   2026-09-27 at this rate; Fast Startup keeps it counting, only a Restart
+   resets it) the original clock stops pacing and, by the code, draws
+   nothing - every all-original reference run would break.** Run reference
+   sides with `*,-Game_Clock` (the A/Bs already do: the clock changes pace,
+   never logic), which also halves the hash step; until then keep hash runs
+   at 11 minutes or more.
 
-0000. **Keep taking over what the attract sequence reaches (the owner's
-   order, 2026-09-21), in parallel groups, batching the live check.**
-   **2026-09-22 night, the fourth round: five groups, 101 functions, 567
-   ours** ([`takeover-queue-round4.md`](takeover-queue-round4.md)). O, the
-   area's links and the drop-in party ([`area-entry.md`](area-entry.md));
-   P, the field menu's item use - the 33 pointer-reached functions after
-   `Title_LoadTask`, with the stat helpers, the two message-box commits and
-   the 16 system-choice cases ([`item-use.md`](item-use.md)); Q, the sound
-   layer over DirectSound ([`sound.md`](sound.md)); N, the glyph draw and
-   the reusable Direct3D vertex-block fuzz, `src/game/d3d_fuzz.*`
-   ([`glyph-draw.md`](glyph-draw.md)); R, after N, the six D3D handlers,
-   their helpers and the ordering-table walk `Gfx_DrawOTag`
-   ([`d3d-draw.md`](d3d-draw.md)). The batch (`analysis/validate_ab25.sh`,
-   log `analysis/attract/ab25_batch.log`): self-tests 250 modules at 0
-   mismatches, oracle identical at all 7,478 compared frames, memory dump
-   identical in all three regions, frame hash identical original-vs-original
-   on all 10,062 frames and ours-vs-original on all 10,062 once DIV-0028 was
-   corrected (`ab25_orig` / `ab25_oursc`; the first run, `ab25_ours`,
-   differed at frames 3439 and 8961 - Traps). DIV-0025..0029 and D18..D28;
-   every DIV confirmed in game by the owner. The rounds before:
-   [`takeover-queue-round3.md`](takeover-queue-round3.md) (`ab24`), and
-   `ab22`, `ab21`.
+0000. **Stage 1's attract queue is closed; the input-reached queue is open.**
+   **2026-09-23, rounds five and six: 222 functions, 789 ours**
+   ([`takeover-queue-round5.md`](takeover-queue-round5.md),
+   [`takeover-queue-round6.md`](takeover-queue-round6.md)). Five: S the
+   display environments and `Snd_LoadBank` ([`display-env.md`](display-env.md)),
+   T the page textures and the fake DirectDraw `src/game/ddraw_fuzz.*`
+   ([`tex-page.md`](tex-page.md)), U the glyph and cell textures
+   ([`tex-cells.md`](tex-cells.md)). Six, the first input-reached queue - what
+   the owner's recorded shop route (`tools/recipes/shop.txt`, save 3,
+   [`input-script.md`](input-script.md) §5a) reaches and the attract
+   sequence does not: V1 the leader's walk and the event script's placement
+   ops ([`event-ops.md`](event-ops.md)), V2 the event script's object ops
+   ([`event-objs.md`](event-objs.md)), W stats and inventory
+   ([`char-stats.md`](char-stats.md)), X save / load / the inn and the title
+   flow ([`save-menu.md`](save-menu.md)), Y the menu and shop windows
+   ([`menu-windows.md`](menu-windows.md)), Z the party members' follow
+   ([`member-sprites.md`](member-sprites.md)), M map patches and three D3D
+   handlers ([`field-misc.md`](field-misc.md)), and D the DIV-0010 sprite
+   handlers rewritten with the divergence inside (`SpriteFarEdge`,
+   [`sprt-draw.md`](sprt-draw.md)). `python tools/attract_catalog.py ...`
+   (item 1's command) now prints **0 in scope**: what the attract sequence
+   still runs of Capcom's is the CRT, the MP3 decoder, the Windows shell,
+   the task system, fifteen functions of run-once platform set-up (the
+   owner's scope - [`IDEAS.md`](IDEAS.md) I8 / I12 replace them) and seven
+   entries that are not functions. **The batch** (`analysis/validate_ab26.sh`,
+   log `analysis/attract/ab26_batch.log`; then `validate_ab26b.sh`): self-tests
+   at 0 mismatches in both languages; the shop route A/B 35 of 35; the
+   attract captures all-Capcom against all-ours 55 of 55; oracle identical at
+   7,478 frames; memory dump identical in all three regions; frame hash
+   original-vs-original identical on 10,063 frames, ours one frame off -
+   5524, the `sscanf` of the music buffer's address (Traps), reproduced
+   and explained, not game logic; the backdrop A/B 11 of 12 (kind 5, DIV-0030);
+   and `ab25b`, round four's owed captures, every pair identical and none
+   black. DIV-0030 (the menu backdrop past Config's four draws nothing - the
+   owner's call); D30..D40 latent.
    **Next:**
 
-   0. **The batch's captures are owed**: every capture of `ab25` from 00:04
-      on was solid black on both sides (the owner's night-time screen
-      cover), so its A/B "identical" results mean nothing. Run
-      `bash analysis/validate_ab25b.sh` (steps 1 and 4 only, about an hour)
-      with the game window visible; check the captures are not black before
-      believing a pair. What it judges that nothing else has: R's and N's
-      renderer takeovers on every pixel of eight scenes.
-   1. **Regenerate the queue** (`python tools/attract_catalog.py
-      analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also
-      analysis/calltrace/all_a/bof3x.callcounts.tsv,analysis/calltrace/all_b/bof3x.callcounts.tsv
-      --out analysis/attract_catalog.md`). **The attract sequence's game
-      logic is nearly exhausted**: after round four what it reaches and is
-      not ours is the rest of the renderer (texture builders `0x5A0080` /
-      `0x5A0510` / `0x5A32B0` / `0x5A37D0` / `0x5A2CA0`, all DirectDraw
-      surfaces - they want surface read-back, [`IDEAS.md`](IDEAS.md) I14),
-      the PSX library layer's 10 (start-up and shell glue), the Windows shell
-      and task system (left out on purpose), the MP3 decoder and the CRT.
-      Named by the round and not taken: `Char_RecalcStats` `0x590660` (0x1A0,
-      five unowned callees - a group of its own), `Inventory_Add` `0x590BB0`
-      (80 call sites), `MsgBox_SystemChoice` `0x498A30` (D22 - no faithful
-      C++ for ids 0x90 and up), `Snd_LoadBank` `0x587CD0` (named, never
-      ours). **So the next queue is item 2's**: what only input reaches.
-   2. **An input-reached queue** (the owner's question, 2026-09-22): the
-      attract sequence presses nothing, so what only a button reaches is
-      invisible to it - the camera turn on R1 + a direction, walking, the
-      menu, battle. A trace of each recipe (`field_view`, `field_menu`,
-      `battle_commands`, `camera_rotate`) against the attract counts would
-      list it. Owner: deferred for now; the recipes stay as visual checks.
-   3. **Not reached by any check yet**, fuzz only: half of group C of the
-      first round (kinds 0-2, the fades, `Field_ObjectLinked`,
-      `Field_ObjectIdleLong`), the kind-2 states 2 and 3,
-      `Sprite_SwapOverlays`, area 0xBD's map path and header kinds 1-3, most
-      of `GameMode_Field`'s requests; and from this round: the title's states
-      6 and 7 and every load-wait loop (`File_LoadDone` is always 1 on the
-      PC), thirteen of the fifteen leader states and all four pending jumps,
-      the area set-up and patch lists (empty in every attract area), the ten
-      event-script op handlers still Capcom's, `AreaMap_BlockedNarrow` (every
-      attract sprite has a size), and the effect kinds other than the camera
-      turn. Each doc lists what would reach its own.
-   4. **`pe_hidden.py`'s blind spot bit again** (2026-09-22): two of group
-      A's "functions" were case labels of a switch (`0x56B730`, `0x56B990`),
-      and two real functions the table at `0x661A08` points at were missing
-      (`0x56B950`, `0x56BCC0`). Expect one or two of each per group, and
-      check the catalogue's sizes - fourteen were wrong this round, `0x56B450`
-      by a factor of thirty.
+   0. **Re-record the frame hash without the `sscanf` engine**: take
+      `0x5BCF64` and its callees (`0x5BD989`, `0x5BD9C0`, `0x5BD9DA`,
+      `0x5BD9F1`, `0x5C1005`, `0x5C104F`, `0x5BDA9B`) out of
+      `analysis/calltrace/entries_logic.txt` and run step 4 of
+      `validate_ab26.sh` again - now with the reference sides at
+      `--original "*,-Game_Clock"` and 6 minutes a run (item 00000; about 20
+      minutes for the three, was 33): original-vs-original and ours should
+      then both be identical. **Unverified yet**: the first run with the clock
+      kept on the reference is this one - check its original-vs-original pair
+      before trusting the change.
+   1. **More recorded routes** - the owner plays with `BOF3X_RECORD` (F12 for
+      a shot), then the route is A/B'd and traced once all original, less the
+      attract reach (`attract_catalog.py --minus`, the command in
+      `takeover-queue-round6.md`), and that is the next round's queue.
+      Battle waits (the owner, 2026-09-23): it wants a save-state system or a
+      deterministic way to start a fight first.
+   2. **Named on the way and not taken**: nine pointer-reached window-task
+      handlers `0x59B7B0`..`0x59BEA0` (Y); the leader's sub-state 2
+      `0x52E110` and where a step lands `0x52E580` (V1); the member's states
+      2..8 and `0x527640` (Z); the save block builder `0x5806F0` and the
+      writer `0x5809C0` (X); `0x591810`, `0x591B60` (`Inventory_Remove`),
+      `0x591CC0` (W, missing from every entry list); `MsgBox_SystemChoice`
+      (D22).
+   3. **Not reached by any check yet**, fuzz only: each round's doc lists its
+      own - the rounds before, group C's kinds 0-2 and fades, the title's
+      states 6 and 7, and so on; this round, the software-surface and
+      direct-colour texture paths (T, U), step codes 2..7 and an encounter
+      firing (V1), the floor-damage kinds (V2), `Stat_AddResist` and
+      `Equip_PreviewSet` (W), `TitleFlow_NewGame` (X).
+   4. **`pe_hidden.py`'s blind spot, again**: round six found ~40 functions
+      the queue missed (X's title flow after `Snd_LoadBank`, Z's follow states,
+      V1's three) and a dozen wrong sizes. Expect it per group.
 
    **The parallel method** (worked twice on 2026-09-22; seven groups in 18
    to 42 minutes of agent time each, then about 2 hours of merge and batch):
@@ -510,7 +522,9 @@ _Commands a fresh session needs, verified on the date above._
   product, compare a MATRIX's padding word apart, DIV-0021), then break ours on purpose and see
   the fuzz refuse to run; live, all ours: `mem_dump.py --compare clutref_a X`,
   `attract_diff.py orig_a.tsv X.tsv`, and the frame hash before a merge - **with
-  an original-vs-original run beside it**, the noise floor (one
+  an original-vs-original run beside it**, the noise floor, its reference
+  sides `--original "*,-Game_Clock"` so D5 does not hold them to half speed
+  (item 00000) (one
   background command can run the oracle and then the hash pair, about 16
   minutes, with `mem_dump.py` started beside it); say
   in the doc what none of that reached; one commit per file of functions.
@@ -738,6 +752,34 @@ _One line each, with a pointer. Add when something costs more than an hour._
   in your head** (2026-09-23): `push 0xC` at `0x461A61` is followed by
   `xor bl, bl` (`32`), not a `push ebp` (`55`); `PatchBytes` would have
   refused at start-up. Dump the three bytes first.
+- **clang 22.1.8 miscompiles a pointer's high bits merged with a byte read
+  through it** (2026-09-23, group V1, reproduced independently):
+  `(a & 0xFFFFFF00) | ((unsigned char*)a)[8]` compiles at -O2 to
+  `movzbl 8(%eax), %eax` - the pointer gone - with or without
+  `-fno-strict-aliasing`. The originals do this often (`mov al, [eax+8];
+  push eax`: a direction in a pointer's low byte). Write it as inline asm, as
+  `event_ops.cpp`'s `DirectionInPointer` does; no other instance was in the
+  tree ([`event-ops.md`](event-ops.md) §8).
+- **`BOF3X_ORIGINAL=*` switched off the input recipe itself** (2026-09-23):
+  the recipe's latch hook went through `RetargetCall`, which honours the
+  list, and an all-original recipe run sat in the attract sequence with no
+  input. Instruments now pass `instrument = true`. And `*,-NAME` excludes one
+  name - an English A/B's original side keeps the language machinery ours
+  (`analysis/validate_shop.sh` has the list; `Text_DrawImmediate` is in it).
+- **An A/B's two sides need the same divergences** (2026-09-23): the first
+  backdrop A/B switched off `Menu_DrawBackdrop` alone on Capcom's side and
+  every pixel DIV on ours - all 12 captures "differed", by sub-pixel sampling.
+- **The frame hash counts the CRT's `sscanf` by characters** (2026-09-23,
+  `ab26`): `Mp3_MemoryIo` scans `"%lx@%lx"` - the music buffer's address in
+  hex - so a buffer one hex digit shorter in one run is four fewer calls at
+  that frame (5524, reproduced, `ab26b`), with nothing else different. An
+  all-original pair agrees; ours sits the heap differently. A difference
+  whose extra calls are `0x5BCF64`'s (`0x5BD989` / `0x5BD9C0` pairs) under
+  `0x5B9AA6` is this; exclude them from the list at the next re-record.
+- **Group names collide across parallel groups** (2026-09-23): W and Y both
+  named an `Item_Price` and a `Menu_DrawIcon`, Z and V1 a
+  `Field_ObjectAhead`; the merge's tomllib check caught all three. Rename the
+  later group's in its own files only.
 ## In flight / uncommitted
 
 Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:

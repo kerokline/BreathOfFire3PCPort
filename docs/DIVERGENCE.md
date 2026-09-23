@@ -565,11 +565,18 @@ designed in rather than bolted on.
 - **New behaviour:** the far vertex value is `u + w - 1/30 + 0.012` texels, so
   that the last PIXEL samples the centre of the last texel (exact for w = 8 at
   scale 2, within 0.03 of a texel otherwise, and never past the centre for
-  w >= 8). The near edge and the table `0x7CA9E0` are untouched. Implemented
-  as the original handlers' own bytes, copied, with the two far-edge operands
-  re-aimed at our table (`src/game/gfx_sprite_uv.cpp`) - not a
-  reimplementation; the handlers end in COM calls and a drawn surface cannot
-  be checked yet.
+  w >= 8). The near edge and the table `0x7CA9E0` are untouched. From
+  2026-09-20 implemented as the original handlers' own bytes, copied, with
+  the two far-edge operands re-aimed at our table (`gfx_sprite_uv.cpp`, gone);
+  **since 2026-09-23 inside our reimplementation of the three**
+  (`src/game/sprt_draw.cpp`, [`sprt-draw.md`](sprt-draw.md)): the handlers
+  read the far edge at a base of ours, `4 * (u + w)` on - Capcom's
+  `0x7CA9DC` or our table - with the same texture coordinates as the copies
+  (checked against re-aimed copies of Capcom's bytes, and the table's values
+  pinned by hash). One difference from the copies, where neither was
+  Capcom's: our table had 1,024 entries and SPRT's unchecked index read past
+  it into our dll's memory for `u + w` of 1,024 and up; it now has an entry
+  for every index a `u8 + u16` can make, the same line continued.
 - **Rationale:** a bug, not a choice: the first and last texel are treated
   differently for no reason a design would have, and it cuts the base off every
   `2`. The obvious fix (far edge `u + w`) was built first and is wrong - it
@@ -577,7 +584,16 @@ designed in rather than bolted on.
   (`analysis/d1/fix1`, 2026-09-20).
 - **Also in the PSX version?** no - the PlayStation GPU does not filter and
   copies a sprite texel for texel.
-- **Reversible?** `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16`.
+- **Reversible?** Yes, two ways, since 2026-09-23 (the owner's names of
+  2026-09-20 still work):
+  `BOF3X_ORIGINAL=SpriteFarEdge` runs our three handlers with Capcom's far
+  edge, `tc[u + w - 1]` - the divergence alone off, everything else ours;
+  `BOF3X_ORIGINAL=D3d_DrawSprt,D3d_DrawSprt8,D3d_DrawSprt16` runs Capcom's
+  handlers themselves, so DIV-0010 is off with them (one name per handler -
+  `D3d_DrawSprt8` alone switches off the 8 x 8 font's fix and nothing
+  else). With both, the handlers are Capcom's. Either gives exactly
+  Capcom's texture coordinates: `BOF3X_SHADOW=sprt_draw` checks ours with
+  `SpriteFarEdge` off byte for byte against copies of Capcom's bytes.
 - **Checked:** attract run, no crash, oracle unaffected (render only);
   screenshots original against ours in `analysis/d1/`: no seams, sprites
   drawn at a true 2x where the original stretched w - 1 texels over w pixels
@@ -1356,3 +1372,49 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
   language overlay, not with `BOF3X_LANG=original` (it rides in
   `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
+
+### The menu backdrop past Config's four draws nothing
+
+- **ID:** DIV-0030
+- **Date:** 2026-09-23
+- **Subsystem:** menus (`Menu_DrawBackdrop` `0x575690`, [`menu-windows.md`](menu-windows.md) §3)
+- **Original behaviour:** the backdrop's kind is Config's "Background" byte
+  `0x903A5B`, which the Config screen keeps in 0..3 (`0x461239` /
+  `0x46126D`) - four patterns. The function picks its CLUT from four words on
+  its own stack by that byte with no bound (`mov cx, [esp + eax*2 + 0x24]` at
+  `0x575729`), and its tile pattern's start from `0x66396C[kind]`, a table of
+  four. A kind of 4 or more reads the return address, the argument, then the
+  caller's frame for the CLUT, and `.data` past the table for the pattern.
+  Poked into a running game with Capcom's function in place
+  (`tools/recipes/backdrop_kinds.txt`, save 3's field menu,
+  `analysis/shots/backdrop_kinds`): kinds 4, 5, 6, 7, 8, 16, 64 and 255 all
+  showed **no backdrop** - the menu's windows on black - with no crash and
+  no hang. A second run (`ab26b`, linear filter, the pixel DIVs off) agreed
+  for every kind but **5, which drew speckled white tiles** over the whole
+  backdrop: kind 5 reads the return address's high word, a fixed CLUT word
+  `0x0057` - VRAM row 1, x `0x170`, inside the display framebuffer on the
+  PlayStation's layout - so its "palette" is whatever pixels were there, and
+  differs run to run. Kinds 4 and 6..255 were black both times (a CLUT that
+  lands on zeros, which the PlayStation's convention draws transparent, would
+  do it; not read).
+- **New behaviour:** for a kind of 4 or more ours makes the same draw-mode
+  and CLUT calls and then draws no tiles. Kinds 0..3 are Capcom's, faithful
+  (the fuzz; the shop route's A/B is owed with the next batch).
+- **Rationale:** the stack read cannot be reproduced in C++; the takeover
+  first aborted there (CLAUDE.md rule 4), which turned what a player of the
+  original sees - a black backdrop, or at kind 5 speckle that varies from
+  run to run - into a crash. Drawing nothing copies what was seen at every
+  kind but 5, not the mechanism; at 5 it replaces run-dependent noise with
+  the same black. The owner, 2026-09-23: only four entries
+  are valid, and past them the original turned black.
+- **Not covered:** the packet pool: the original commits its garbage tiles
+  (and a pattern of zero-height rectangles would commit more than a real
+  kind); ours commits none, so the frame's packet use differs for such a
+  save. Every kind past 8 but 16, 64 and 255 is unseen.
+- **Also in the PSX version?** The twin `0x801DBCBC` was not read.
+- **Verification:** `analysis/validate_ab26b.sh` step 2, Capcom's function
+  against ours with the pixel DIVs off on both sides: kinds 0..4 and 6..255
+  identical, 5 not (the speckle above).
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Menu_DrawBackdrop` (Capcom's function,
+  stack read and all).
+

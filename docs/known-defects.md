@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-22 — twenty-six entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27 and D28 latent; D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
+**Status:** IN PROGRESS (2026-09-23 — forty entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -838,3 +838,308 @@ for 32 - every texel exactly two pixels). Exact only at the sprite's natural
 size. What a capture would show: the bottom row and the right-hand column of a
 standing character (the left-hand column when it faces the other way, x
 flipped) one screen pixel thin under `BOF3X_FILTER=point`.
+
+## D30 — A page texture whose Lock fails leaks its surface and draws untextured (latent)
+
+**Found:** reading `D3d_BuildPageTexture` `0x5A0080` and
+`D3d_RefreshPageTexture` `0x5A0510` for the takeover, 2026-09-23
+([`tex-page.md`](tex-page.md) §2, §3). **Latent, Capcom's** (group T of the
+fifth round). Unmeasured in game. The number may need renumbering at the merge
+if another group of the round took D30 too.
+
+**The defect.** The build makes the entry's surfaces first - a texture surface
+and its `IDirect3DTexture2` into the `Gfx_TexCache` entry's `+0x10` / `+0x14`
+(`0x5A02EA`), or a plain surface into `+0x10` (`0x5A0161`) - and only then
+locks the staging surface (`0x5A0350`, `0x5A03C1`) or the new surface
+(`0x5A01A2`, `0x5A021E`). When that `Lock` fails it returns 0 at once
+(`0x5A0357`, `0x5A03C8`, `0x5A01A9`, `0x5A0225`): the entry's state byte is
+never set, so the entry stays free with the new surface and texture in it,
+never released - the next build of that page takes the same entry and
+overwrites both pointers (`Gfx_InvalidateTextures` `0x59E700` releases only up
+to the first free entry, so it never reaches them). And `D3d_BindTexture`
+hands the 0 to `SetTexture`, so the primitive draws untextured this frame.
+Under the software surfaces the same 0 is also the index of slot 0, so the
+caller `0x5A3CC0` cannot tell a failure from a build into slot 0 (what it
+then does with the entry is unread). A failed `CreateSurface` returns 0 the
+same way, leaking nothing.
+
+The refresh sets the state byte to 1 **before** its `Lock` (`0x5A0559`); a
+failed `Lock` returns with the texels and the palette generation unchanged
+(`0x5A05E9`, `0x5A0645`, `0x5A06EE`, `0x5A0773`). A palettized entry is
+caught again - `Gfx_TexCacheFind` compares the generation and sets state 2
+next time - but a direct-colour (15-bit) entry stays stale until its VRAM is
+written again.
+
+**Why it may never show:** every `Lock` is `DDLOCK_WAIT` on a system-memory
+surface (`Dd_CreatePlainSurface` caps `0x840` / `0x1800`, both
+`DDSCAPS_SYSTEMMEMORY`), which fails only on `DDERR_SURFACELOST` - a lost
+display mode, e.g. a fullscreen alt-tab - or out of memory. One leak of 128 KB
+or 256 KB per failure.
+
+**Ours does the same**; the fuzz fails the `Lock` (and the `CreateSurface`, and
+the texture's `QueryInterface`) in a third of its rounds, and the controls
+"a failed Lock returns the slot" and "a failed Lock marks the entry" are
+refused ([`tex-page.md`](tex-page.md) §6). A fix - release the surfaces on
+the failure path, and have the refresh set its state only on success - is the
+owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D31 — A cell texture whose texture surface cannot be made ends the scene for the frame, and its entry looks built (latent)
+
+**Found:** reading `D3d_BuildCellTexture` `0x5A32B0` for the takeover,
+2026-09-23 ([`tex-cells.md`](tex-cells.md) §3). **Latent, Capcom's** (group U
+of the fifth round). Unmeasured in game. The number may need renumbering at
+the merge if another group of the round took D31 too.
+
+**The defect.** On the Direct3D path the build ends the device's scene
+(`EndScene`, `0x5A3696`) before it makes the texture, and begins it again
+(`BeginScene`, `0x5A377D`) only at the very end. When
+`Dd_CreateTextureSurface` fails (`0x5A36DF`, `je 0x5A3780`) it returns
+between the two: the scene the draw walk `Gfx_DrawOTag` began stays ended for
+the rest of the frame, so every primitive after this cell sprite is drawn
+outside a scene (Direct3D 6 refuses `DrawPrimitive` there) and the walk's own
+`EndScene` fails. And the entry is already filled - `D3d_FreeCellTexture`
+emptied it, then the extent, used size, CLUT, count, checksum and generation
+were stored (`0x5A355F..0x5A35EC`) - with no surface or texture (`+0x20` 0,
+unless DirectDraw wrote something there on failure, `+0x24` 0). The first
+dword is non-zero, so `D3d_CellTexture` counts it as built: the next draw of
+the same cells hits it (count, CLUT and checksum match) and binds texture 0
+- the sprite untextured - until the entry is evicted. If its CLUT row's
+generation moves first, `D3d_RefreshCellTexture` Blts into `+0x20` without
+testing it (`0x5A3A23..0x5A3A43`): a call through a null pointer.
+
+The software path has the same shape without the scene: a failed
+`Dd_CreatePlainSurface` (`0x5A362F`) leaves the filled entry with no surface
+and `+4` / `+6` 0. A failed `Lock` of the staging surface returns before the
+entry is touched (`0x5A336F`), so the victim keeps its old texture and
+`D3d_CellTexture` binds that for this draw - the wrong cells for one frame.
+
+**Why it may never show:** `Dd_CreateTextureSurface` asks for a managed
+texture (caps2 `DDSCAPS2_TEXTUREMANAGE`) no larger than the device's maximum
+(`D3d_FitTextureSize`); it fails on out of memory or a lost device.
+
+**Ours does the same**; the fuzz fails `CreateSurface` in a sixth of its
+rounds, and the control that calls `BeginScene` on that path - the fix - is
+refused ([`tex-cells.md`](tex-cells.md) §6). A fix - `BeginScene` and an
+emptied entry on the failure path, and a refresh that tests `+0x20` - is the
+owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+
+## D32 — The cell builders write sprite pieces wherever their offsets say, past the staging surface (latent)
+
+**Found:** reading `D3d_BuildCellTexture` `0x5A32B0` and
+`D3d_RefreshCellTexture` `0x5A37D0`, 2026-09-23 ([`tex-cells.md`](tex-cells.md)
+§3). **Latent, Capcom's.** Unmeasured: whether any sprite of the game has a
+piece that far out is not known.
+
+**The defect.** Each SpriteCell record is unpacked to `lpSurface + (x + 160)
+* bytes-per-pixel + (y + 128) * lPitch` of the locked 320 x 256 staging
+surface (`0x5A3434..0x5A3458`), x the record's s16 and y its s8, the piece `w`
+and `h` texels (8..120 each). Nothing bounds it. A piece with `x + 160 + w`
+beyond 320 runs into the next row; one with `y + 128 + h` beyond 256 - any
+piece more than `128 - h` below the sprite's origin, which an s8 allows -
+writes past the surface's last row into whatever DirectDraw put after it in
+system memory; one with `x < -160` writes before the row. And the extent kept
+from those offsets becomes the source rectangle of the `Blt` into the texture,
+which DirectDraw refuses when it leaves the surface - the texture keeps
+whatever it had.
+
+**Why it may never show:** the pieces are a sprite's frame layout
+(`Sprite_Draw` `0x5935B0`, `SpriteCell_Add`); a sprite whose pieces fit inside
+320 x 256 around its origin never reaches it. None of the attract sequence's
+has been measured.
+
+**Ours does the same**; the fuzz keeps its pieces inside the stage except in
+one round in sixteen, where they spill across rows and past row 256 (inside
+the fake's buffer), and compares both. A fix - clip each piece to the stage,
+or refuse the sprite - is the owner's call and a
+## D33 — A jump's speed index can count down to a division by zero (latent)
+
+**Found:** reading `Field_JumpSetUp` `0x534610` and `Field_JumpCheckHeight`
+`0x535F50` for the takeover, 2026-09-23 ([`event-objs.md`](event-objs.md)
+sections 2 and 5). **Latent, Capcom's** (group V2 of the sixth round); the
+PSX twins `0x801C3530` / `0x801C5C40` do the same (`break 7` on the zero
+divisor).
+
+**The defect.** `Field_JumpSetUp` divides the jump's frames (0x10, or 0x20
+for directions 2 and 6) by `Field_MoveSpeeds[Field_State +0x128]` - a whole
+byte into a table of six, `0, 1, 2, 4, 8, 16`, with zeros at 6 and 7 after
+it - and then the rise by those frames, both with `idiv`. Index 0, 6 or 7
+faults on the first division; a speed above 0x20 (index 8 reads 64) leaves
+0 frames and faults on the second. `Field_JumpCheckHeight` lowers the index
+by one, with no bound, whenever the ground at the landing point is 0x80 or
+more above the object, and starts the jump again. The landing point does not
+depend on the speed (the distance is 16 steps whatever it is), so the same
+ledge is found too high again at the next index.
+
+**Why it may never show:** each check lowers the index once, and whether
+anything puts it back between attempts is unread - `Field_LeaderStart`
+`0x52D920` sets 3 on the leader's state 0, and the unreached `0x535FE0` sets
+`+0x70 + 2`. Three too-high landings without a reset in between would reach
+index 0. Not seen in any run.
+
+**Ours does the same** (both divisions are an inline `idiv`; the fuzz draws
+only the speeds that divide, since a fault would end the start-up test).
+Bounding the index is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry.
+## D34 — Inventory_Add searches the 32-byte key-item list 128 long (latent)
+
+**Found:** reading `Inventory_Add` `0x590BB0`, 2026-09-23
+([`char-stats.md`](char-stats.md) section 4). **By reading, the PC's own**:
+the PSX `Inventory_Add` `0x80165AA4` has no category-4 branch at all.
+
+**The defect.** For category 4 the PC adds the item to the first id byte of
+0 in the list `0x656B00[4]` = `0x904554`, and the loop runs 128 bytes, as
+for the other categories. The key-item list is 32 bytes (`KeyItem_Has`
+`0x5918E0` and `Inventory_CountUsed` `0x591A80` both stop there; the list
+`0x590C90` fills starts at `0x904574`, right after it). With all 32 key-item
+bytes set, a 33rd key item is written into that next list's first zero byte
+and the answer is 1. **Why it may never show:** whether the game ever holds
+32 key items at once is the owner's to say; the PSX's key items are 16
+records (`NameTable_KeyItems`), so probably not.
+
+**Ours does the same**; the fuzz searches category 4 with full lists and
+the control "stacks searched in category 4 too" is refused (by a fault, the
+null count list - see D35 - with a counting twin).
+
+## D35 — Inventory_Count of a key item that is held reads address 0 + i (latent)
+
+**Found:** reading `Inventory_Count` `0x5919B0`, 2026-09-23
+([`char-stats.md`](char-stats.md) section 4). **By reading, Capcom's** on the
+PC; the PSX pointer tables are filled at run time and were not read.
+
+**The defect.** With `equipped` 0 the function looks the item up in the id
+list `0x656B00[category]` and answers the byte at the same index of the
+count list `0x656B14[category]`. For category 4 that count pointer is 0, so a
+key item that is in the list reads address `i` (0..31) - an access
+violation. **Why it may never show:** nothing is known to ask for a key
+item's count; the 40 call sites are unread. **Ours does the same** (a
+volatile read of the same address), and the fuzz does not ask it.
+
+## D36 — Menu_DrawIcon's CLUT table has 21 entries and no bound (latent)
+
+**Found:** reading `Menu_DrawIcon` `0x5903F0`, 2026-09-23
+([`char-stats.md`](char-stats.md) section 5). **By reading, Capcom's on both
+platforms**: the PSX `0x80164EC8` builds the same 21-byte table on its stack
+and indexes it the same way.
+
+**The defect.** The icon's CLUT row comes from a 21-byte table on the stack,
+indexed by the icon's low byte without a bound: icon 21 and up takes a byte
+of the frame instead - three stack bytes never written (21..23), the return
+address, the first argument's slot holding a float temporary, the other
+arguments, the last argument's slot holding `y + h`, then the caller's
+frame. Icons 20 and up already draw the one fixed cell, so only the palette
+would be wrong. **Why it may never show:** the icons of the seven callers
+come from a loop bound or a table (`0x6672AC`) not read here.
+
+**Ours does the same** for icons 24 and up (read from the same stack, the
+detour being a `jmp`; the fuzz compares 24..91), and not for 21..23, which
+are undefined in the original.
+
+## D37 — A sprite's far texture edge is read past the coordinate table when u + w passes 256 (latent)
+
+**Found:** reading the three Direct3D sprite handlers for the takeover,
+2026-09-23 ([`sprt-draw.md`](sprt-draw.md) §2). **Latent, Capcom's** (group D
+of the sixth round). Unmeasured in game.
+
+**The defect.** `D3d_DrawSprt` `0x5A2300` (SPRT) takes a sprite's far texture
+edge from `[0x7CA9DC + 4 * (u + w)]` - `D3d_TexCoords[u + w - 1]` - with `u`
+the primitive's byte and `w` its u16 width, added unchecked; `D3d_DrawSprt8`
+and `D3d_DrawSprt16` read `D3d_TexCoords[u + 7]` and `[u + 15]` the same way;
+v and h likewise. The table has 256 entries. A sprite whose texels run past
+column 255 of its page (u + w above 256, u above 248 for SPRT_8, above 240
+for SPRT_16) reads its far coordinate from what follows the table: the
+dwords from `0x7CADE0` (the third holds `D3d_AfterDrawRequest` `0x7CADEA`),
+then from `u + w - 1` = 278 on `D3d_CellTexCache` `0x7CAE38` - a cache
+entry's words read as a float - and, for a u16 w of thousands, anything up
+to `0x80ADD4` (all inside `.data`, so never a fault). A `u + w` of 0 reads
+the dword before the table (`0x7CA9DC`, the gap after `D3d_Vertices`). The
+far edge is then an arbitrary float, and the sprite's texture is stretched
+or squeezed to it.
+
+**Why it may never show:** a PSX texture page is 256 texels wide and the
+PlayStation wraps u within it, so a sprite crossing column 255 would already
+have looked wrong on the console; the game's data probably never asks for
+one. None of the attract sequence's has been measured.
+
+**Ours does the same** with DIV-0010 off (`BOF3X_ORIGINAL=SpriteFarEdge`):
+the fuzz has `u + w` past 256 in two of every three of SPRT's rounds, many
+of them inside the 768 entries from the table on, which it randomises, and
+compares ours with Capcom's byte for byte; a control that reads one entry
+short is refused. With DIV-0010 on, the index reads our table
+(`g_far`), which has an entry for every `u + w` a `u8 + u16` can make: past
+256 it continues the line, `(j - 1/30 + 0.012) / 256`, a coordinate past the
+page's edge - so the sprite takes texels as the device's texture addressing
+wraps or clamps them, not garbage. That is a side effect of DIV-0010, not a
+fix of this: a fix (wrap `u + w` at 256 as the PSX did, or clamp) is the
+owner's call and a [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+## D38 — A save that fails its checksum is loaded into the live game block anyway (candidate, latent)
+
+**Found:** reading `LoadMenu_Read` `0x5883C0` for the sixth round's group X,
+2026-09-23 ([`save-menu.md`](save-menu.md) section 2). **Latent, Capcom's**;
+the PSX loads from the memory card by other code, not compared.
+
+**The defect.** The load menu reads the chosen `BISLPS0<n>.DAT` into
+`Save_Staging`, zeroes the checksum word (`+0x70`) and then copies the
+`0x10B0`-byte block into the live game block `0x9039E0` **while** summing it;
+only after the copy does it compare the sum with the stored checksum
+(`0x588462`). On a mismatch it plays the refusal sound, shows "could not
+load" (error 2) and goes back to choosing a slot - with the game block
+already overwritten by the rejected file, and `Field_ScriptFlags` set from
+its byte `+0x74D`. A failed *read* (`Save_ReadFile` -1) copies nothing.
+
+**Why it may never show:** from there the player can only load another save
+(which overwrites the block again) or cancel to the title and start a New
+Game. `TitleFlow_NewGame` `0x5880E0` resets the character records
+(`NewGame_InitCharacters`), half of `Cond_Flags` (the first dword of each
+8-byte record) and the area; whatever else of the block it does not reset -
+the inventory, the story flags from `Cond_Flags + 0xA0`, the gold, by their
+offsets unread here - would come from the corrupt file. Unchecked in game:
+it needs a save file with a wrong checksum.
+
+**Ours does the same** (control "the checksum compared as dwords" and
+"`Field_ScriptFlags` only on a good sum" are refused,
+[`save-menu.md`](save-menu.md) section 4). A fix - sum `Save_Staging` first
+and copy only on a match - is the owner's call and a
+[`DIVERGENCE.md`](DIVERGENCE.md) entry.
+## D39 — The menu box's middle takes its bottom texture row from h, not y + h (latent, unseen)
+
+**Read, not seen:** group Y of the sixth round, 2026-09-23
+([`menu-windows.md`](menu-windows.md) section 2). `Menu_DrawBox` `0x57CF60`
+draws the menu box as three or four `POLY_FT4`s of one 16 x 16 tile repeated
+through a texture window. Each quad's `v` coordinates are the screen `y` and
+`y + h` as bytes - so the tile's rows line up with the screen - for the left
+end (`0x57D065` stores `(h + y)` low byte at `+0x35` / `+0x45`) and the right
+end (`0x57D2C8` reloads that byte from the argument slot where `0x57D075`
+kept it). The middle quad(s) take their bottom `v` from `[esp + 0x40]`,
+which there is `h`'s own slot (`0x57D155` and `0x57D1C8`): `h`'s low byte,
+not `(y + h)`'s. The middle's texture is therefore stretched or squeezed by
+`y` mod 16 rows against the ends whenever `y` is not a multiple of 16.
+
+**Why it may never show:** if the tile's rows are uniform, or every caller's
+`y` is 16-aligned after its `+ 3`, nothing differs. Not checked against the
+PlayStation's `0x801AF3F0` (an overlay, unread) nor in game.
+
+**Ours does the same**; the control "the middle's v from y + h" is refused
+in 1,883 rounds of 2,000.
+
+## D40 — Four bounds the menu draws never check (latent)
+
+**Read, not seen:** group Y, 2026-09-23 ([`menu-windows.md`](menu-windows.md)
+section 3). None is known to be reached by any caller:
+
+- `Menu_DrawPanel` `0x575830`: the bottom edge's counter is a byte compared
+  with `w + 5`, so a `w` of 251 or more never ends (callers pass constants of
+  9 and so).
+- `Menu_DrawScrollBar` `0x57DD10`: `idiv` by `2 * total` and by `total`, so a
+  total of 0 is a divide fault (its callers pass 0x20, 0x80 or a list's size).
+- `Menu_DrawItemList` `0x5759C0`: its row counter is a byte compared with
+  `moving + 9`; `Menu_ListScroll` only answers 0 or 1, so it is safe as
+  shipped. The list takes its item and count arrays from the category once
+  but tests the category again per row, and key items (category 4) have no
+  count array (`0x656B24` is 0): a category changed to non-4 while drawing
+  would read through the null pointer. Nothing changes it mid-draw.
+- `Menu_DrawBackdrop` `0x575690`: `kind` indexes four CLUT words on its own
+  stack with no bound; 4 and up read its stack frame and its caller's. Config
+  keeps the byte `0x903A5B` in 0..3; only a corrupted save reaches it. Seen
+  poked (`tools/recipes/backdrop_kinds.txt`): Capcom's code draws no backdrop
+  at 4..8, 16, 64 and 255, the menu on black. **Ours draws none**
+  (DIV-0030); the other three are kept as the original has them.

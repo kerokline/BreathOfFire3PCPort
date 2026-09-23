@@ -42,6 +42,10 @@
 //                           it the shot is logged as the hold starts and the
 //                           grab lands wherever the game has got to.
 //   peek ADDR TYPE [LABEL]  log the value
+//   poke ADDR TYPE VALUE    write the value - to put the game in a state no
+//                           input reaches (a corrupted save's byte, say). An
+//                           experiment's tool: a recipe with a poke is not a
+//                           player's route, and says so in its log.
 //   mark TEXT               log the text
 //   end                     stop here
 //
@@ -58,7 +62,7 @@
 namespace bof3 {
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Mark, End };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Mark, End };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -258,6 +262,16 @@ void Load(const char* path) {
             st.width = Width(line, t[2]);
             st.addr = Address(line, t[1], st.width);
             st.text = t.size() == 4 ? t[3] : t[1];
+        } else if (w == "poke") {
+            need(4, 4);
+            st.kind = Kind::Poke;
+            st.width = Width(line, t[2]);
+            st.addr = Address(line, t[1], st.width);
+            st.value = Number(line, t[3]);
+            MEMORY_BASIC_INFORMATION mi{};
+            VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(st.addr)), &mi, sizeof mi);
+            if (!(mi.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
+                ParseError(line, "address not writable", t[1]);
         } else if (w == "mark") {
             st.kind = Kind::Mark;
             const std::size_t at = s.find_first_not_of(" \t", s.find("mark") + 4);
@@ -403,6 +417,16 @@ unsigned short NextWord() {
                 (unsigned)Read(s.addr, s.width), g_frame);
             Advance();
             continue;
+        case Kind::Poke: {
+            void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(s.addr));
+            if (s.width == 1) *static_cast<volatile std::uint8_t*>(p) = static_cast<std::uint8_t>(s.value);
+            else if (s.width == 2) *static_cast<volatile std::uint16_t*>(p) = static_cast<std::uint16_t>(s.value);
+            else *static_cast<volatile std::uint32_t*>(p) = s.value;
+            Log("input       POKE 0x%08X = 0x%X (u%u) recipe frame %u", (unsigned)s.addr, (unsigned)s.value,
+                s.width * 8, g_frame);
+            Advance();
+            continue;
+        }
         case Kind::Mark:
             Log("input       mark %s recipe frame %u", s.text.c_str(), g_frame);
             Advance();
@@ -441,11 +465,119 @@ void __cdecl ScriptedLatch() {
     Input_Pressed = static_cast<unsigned short>((g_prev ^ g_cur) & g_cur);
 }
 
+// --- Recording (BOF3X_RECORD) -------------------------------------------
+//
+// The same latch, the other way round: the player plays, and each frame's pad
+// word is written out as a recipe. The word is sampled once, at the first
+// latch of a new frame, and then held for the rest of that frame exactly as
+// playback holds a recipe's word - so what the game saw while recording is
+// what it will see when the recipe is played back, edge for edge. A tap
+// shorter than the gap between two frames' first latches is not seen by the
+// game either; that is the price of the guarantee. Runs of one word become
+// `hold BUTTONS N` or `wait N`; F12 writes `shot recN 1 [BUTTONS]` in place of
+// its frame, so the shot costs no frame and the recipe keeps its timing.
+
+FILE* g_rec = nullptr;
+unsigned short g_run_word = 0;
+unsigned g_run = 0;
+unsigned g_shots = 0;
+bool g_f12 = false;
+
+void WriteButtons(unsigned short word) {
+    bool first = true;
+    for (const Button& b : kButtons)
+        if (word & b.bit) {
+            std::fprintf(g_rec, "%s%s", first ? "" : "+", b.name);
+            first = false;
+        }
+}
+
+void FlushRun() {
+    if (g_run == 0) return;
+    if (g_run_word == 0) {
+        std::fprintf(g_rec, "wait %u\n", g_run);
+    } else {
+        std::fprintf(g_rec, "hold ");
+        WriteButtons(g_run_word);
+        std::fprintf(g_rec, " %u\n", g_run);
+    }
+    std::fflush(g_rec);
+    g_run = 0;
+}
+
+void Record(unsigned short word) {
+    // F12 from the game's own keyboard state: Pad_Read reads DirectInput's 256
+    // key bytes to 0x7DE828 each latch (symbols.toml Pad_Read), and DIK_F12 is
+    // 0x58. GetAsyncKeyState saw nothing on the first recording, 2026-09-23 -
+    // the game's DirectInput keyboard keeps the key from it.
+    constexpr std::uint32_t kKeyState = 0x7DE828, kDikF12 = 0x58;
+    const bool f12 = (Read(kKeyState + kDikF12, 1) & 0x80) != 0;
+    const bool shot = f12 && !g_f12;
+    g_f12 = f12;
+    if (shot) {
+        FlushRun();
+        std::fprintf(g_rec, "shot rec%u 1", ++g_shots);
+        if (word) {
+            std::fprintf(g_rec, " ");
+            WriteButtons(word);
+        }
+        std::fprintf(g_rec, "   # recipe frame %u\n", g_frame);
+        std::fflush(g_rec);
+        Log("input       record: shot rec%u at recipe frame %u", g_shots, g_frame);
+        LogFlush();
+        return;
+    }
+    if (g_run && word != g_run_word) FlushRun();
+    g_run_word = word;
+    ++g_run;
+}
+
+void __cdecl RecordingLatch() {
+    Input_Latch();
+    const std::uint32_t frame = Frame_Counter;
+    if (!g_seen_frame || frame != g_last_frame) {
+        g_seen_frame = true;
+        g_last_frame = frame;
+        g_prev = g_cur;
+        g_cur = Input_Held;   // the player's word, as Capcom's latch just read it
+        Record(g_cur);
+        ++g_frame;
+    }
+    Input_Held = g_cur;
+    Input_Previous = g_prev;
+    Input_Pressed = static_cast<unsigned short>((g_prev ^ g_cur) & g_cur);
+}
+
+void RecordStart(const char* path) {
+    g_rec = std::fopen(path, "w");
+    if (!g_rec) Fatal("BOF3X_RECORD: cannot open %s for writing", path);
+    char lang[16] = "(unset)", filter[16] = "(unset)";
+    GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    GetEnvironmentVariableA("BOF3X_FILTER", filter, sizeof filter);
+    std::fprintf(g_rec,
+                 "# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from\n"
+                 "# recipe frame 0. BOF3X_LANG=%s BOF3X_FILTER=%s - play it back with the same\n"
+                 "# language, since text timing differs between them. F12 wrote the shots.\n",
+                 lang, filter);
+    std::fflush(g_rec);
+    Log("input       recording the pad to %s (F12 = shot)", path);
+    constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
+    constexpr std::uint32_t kInputLatch = 0x4FC6A0;
+    RetargetCall("InputRecord", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
+}
+
 }  // namespace
 
 void InputScript_Start() {
     char path[MAX_PATH];
+    char rec[MAX_PATH];
+    const DWORD r = GetEnvironmentVariableA("BOF3X_RECORD", rec, sizeof rec);
     const DWORD n = GetEnvironmentVariableA("BOF3X_INPUT", path, sizeof path);
+    if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
+    if (r > 0 && r < sizeof rec) {
+        RecordStart(rec);
+        return;
+    }
     if (n == 0 || n >= sizeof path) return;
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
@@ -462,7 +594,7 @@ void InputScript_Start() {
     // no say - the variable being set is the switch.
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
     constexpr std::uint32_t kInputLatch = 0x4FC6A0;  // Input_Latch; symbols.gen.h binds the name as a macro
-    RetargetCall("InputScript", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch));
+    RetargetCall("InputScript", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
     g_active = true;
 }
 

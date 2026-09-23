@@ -39,7 +39,10 @@ offset 0, zero-padded, with one widened field
 Two original-code defects, noted, not fixed: `Save_ListFiles` **never calls
 `_findclose`** (a search handle leaks per call), and it **does not bound the
 table** — a seventeenth matching file writes past `0x929F40 + 0x180`, into the
-`0x92A0E0` staging buffer's neighbourhood.
+`0x92A0E0` staging buffer's neighbourhood. `Save_ReadFile`, `Save_ListFiles`
+and `Save_ReadSummaries` are ours since 2026-09-23 with both defects kept, and
+the two menus around them - the title's load menu `0x588140..0x5885D0` and
+its steps - are read ([`save-menu.md`](save-menu.md)).
 
 Call sites: `Save_ListFiles` from `0x587E6B` and `0x588156` only; both are
 states of the menu state machine keyed on byte `0x6BDF86` (jump table

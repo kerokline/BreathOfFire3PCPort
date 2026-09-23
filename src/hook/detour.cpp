@@ -18,17 +18,21 @@ int g_disabled = 0;
 constexpr int kMaxOwned = 4096;
 std::uint32_t g_owned[kMaxOwned];
 
+// A name, `*` for every name, or `-NAME` to take one back out: `*,-LoadDatFile`
+// is every name but LoadDatFile. An exclusion wins wherever it stands.
 bool NameListed(const char* list, const char* name) {
     size_t len = std::strlen(name);
+    bool listed = false;
     for (const char* p = list; *p;) {
         while (*p == ',' || *p == ' ') ++p;
         const char* end = p;
         while (*end && *end != ',' && *end != ' ') ++end;
         size_t n = static_cast<size_t>(end - p);
-        if ((n == 1 && *p == '*') || (n == len && std::memcmp(p, name, len) == 0)) return true;
+        if (n == len + 1 && *p == '-' && std::memcmp(p + 1, name, len) == 0) return false;
+        if ((n == 1 && *p == '*') || (n == len && std::memcmp(p, name, len) == 0)) listed = true;
         p = end;
     }
-    return false;
+    return listed;
 }
 
 bool WantsOriginal(const char* name) {
@@ -88,13 +92,13 @@ void Inject(const char* name, std::uint32_t original, void* ours) {
     }
 }
 
-void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours) {
+void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours, bool instrument) {
     auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
     std::int32_t rel;
     std::memcpy(&rel, at + 1, sizeof rel);
     if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
         Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
-    if (WantsOriginal(name)) {
+    if (!instrument && WantsOriginal(name)) {
         Log("retarget OFF %-24s call at 0x%08X left on 0x%08X", name, (unsigned)site, (unsigned)expected);
         return;
     }

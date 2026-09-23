@@ -7,7 +7,6 @@
 #include "game/save_io.h"
 #include "game/gfx_frame.h"
 #include "game/gfx_image.h"
-#include "game/gfx_sprite_uv.h"
 #include "game/gfx_texcache.h"
 #include "game/gfx_clut.h"
 #include "game/gfx_filter.h"
@@ -67,6 +66,17 @@
 #include "game/item_use.h"
 #include "game/sound.h"
 #include "game/d3d_draw.h"
+#include "game/display_env.h"
+#include "game/tex_page.h"
+#include "game/tex_cells.h"
+#include "game/event_objs.h"
+#include "game/char_stats.h"
+#include "game/member_sprites.h"
+#include "game/sprt_draw.h"
+#include "game/field_misc.h"
+#include "game/save_menu.h"
+#include "game/event_ops.h"
+#include "game/menu_windows.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -91,7 +101,6 @@ void InjectAll() {
     GfxFlush_Inject();
     GfxUnpack_Inject();
     GfxVramOps_Inject();
-    GfxSpriteUv_Inject();
     GfxFilter_Inject();
     MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
@@ -148,6 +157,29 @@ void InjectAll() {
                                 // operands moved onto recorders in the copies: order does not matter
     D3dDraw_Inject();           // every call of its clones re-aimed at a recorder, its four jump tables
                                 // relocated in the copies, the device a fake: order does not matter
+    DisplayEnv_Inject();        // every call of its clones re-aimed at a recorder or at another of its
+                                // clones, the surfaces, viewport and material fakes: order does not matter
+    TexPage_Inject();           // every call of its builder copies re-aimed at a recorder or at its own
+                                // helper and converter copies, DirectDraw a fake: order does not matter
+    TexCells_Inject();          // every call of its builder copies re-aimed at a recorder or at its own
+                                // helper copies, DirectDraw and the device fakes: order does not matter
+    EventObjs_Inject();         // every call of its clones re-aimed at a recorder: order does not matter
+    CharStats_Inject();         // every call of its clones re-aimed at a recorder, its seven jump tables
+                                // relocated in the copies, the trait lists swapped: order does not matter
+    MemberSprites_Inject();     // every call of its clones re-aimed at a recorder, its two dispatch tables
+                                // swapped and three jump tables relocated in the copies: order does not matter
+    SprtDraw_Inject();          // its copies are of Capcom's bytes, which nothing but its own Inject
+                                // patches; every call of them re-aimed at a recorder, the device a
+                                // fake: order does not matter
+    FieldMisc_Inject();         // every call of its clones re-aimed at a recorder, its jump table
+                                // relocated in the copy, the device a fake: order does not matter
+    SaveMenu_Inject();          // every call of its clones re-aimed at a recorder, its jump tables swapped
+                                // for recorders and Shop_Equip's relocated in the copy: order does not matter
+    EventOps_Inject();          // every call of its clones re-aimed at a recorder, three jump tables relocated
+                                // and the chapter table operand moved in the copies: order does not matter
+    MenuWindows_Inject();       // after MenuVerbs and YesNoLayout, whose patch sites it reads back (DIV-0018,
+                                // DIV-0027); every call of its clones re-aimed at a recorder, its two jump
+                                // tables relocated in the copies
     InjectReport();
 }
 

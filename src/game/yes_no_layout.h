@@ -4,3 +4,10 @@
 #pragma once
 
 void YesNoLayout_Inject();
+
+// What YesNoLayout_Inject put into Menu_YesNo's body, for our Menu_YesNo
+// (src/game/menu_windows.cpp): the line's call target (ours under DIV-0027,
+// null for Msg_SystemPtr) and whether the hand's stops moved.
+using YesNoLayout_LineFn = const unsigned char* (__cdecl*)(unsigned id);
+YesNoLayout_LineFn YesNoLayout_ActiveLine();
+bool YesNoLayout_StopsMoved();

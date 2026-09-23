@@ -370,4 +370,7 @@ The rest of the sound module, none of it reached by any trace: `0x587860`
 byte `Music_Stop`), `0x587B90` (`0x5A7080`, Play the ring again) and
 `0x587C20` (`0x5A7020`, is the ring playing). `Snd_LoadBank` and the
 DirectSound set-up (`Snd_Device`'s writer, unread) likewise. They call
-ours through the patched entries.
+ours through the patched entries. (Since 2026-09-23 `Sound_LoadStream`,
+`Sound_StreamDone` and `0x5A7020`, now `Music_IsPlaying`, are ours - group X
+of the sixth round, [`save-menu.md`](save-menu.md) - and `Snd_LoadBank` group
+S's.)

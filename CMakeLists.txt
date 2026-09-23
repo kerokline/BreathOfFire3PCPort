@@ -59,7 +59,6 @@ add_library(bof3x SHARED
   src/game/save_io.cpp
   src/game/dat_load.cpp
   src/game/text_advance.cpp
-  src/game/gfx_sprite_uv.cpp
   src/game/gfx_filter.cpp
   src/game/menu_frame.cpp
   src/game/text_draw.cpp
@@ -141,7 +140,30 @@ add_library(bof3x SHARED
   src/game/d3d_draw.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
-  src/game/d3d_list_fuzz.cpp)
+  src/game/d3d_list_fuzz.cpp
+  src/game/display_env.cpp
+  src/game/display_env_fuzz.cpp
+  src/game/ddraw_fuzz.cpp
+  src/game/tex_page.cpp
+  src/game/tex_page_fuzz.cpp
+  src/game/tex_cells.cpp
+  src/game/tex_cells_fuzz.cpp
+  src/game/event_objs.cpp
+  src/game/event_objs_fuzz.cpp
+  src/game/char_stats.cpp
+  src/game/char_stats_fuzz.cpp
+  src/game/member_sprites.cpp
+  src/game/member_sprites_fuzz.cpp
+  src/game/sprt_draw.cpp
+  src/game/sprt_draw_fuzz.cpp
+  src/game/field_misc.cpp
+  src/game/field_misc_fuzz.cpp
+  src/game/save_menu.cpp
+  src/game/save_menu_fuzz.cpp
+  src/game/event_ops.cpp
+  src/game/event_ops_fuzz.cpp
+  src/game/menu_windows.cpp
+  src/game/menu_windows_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
