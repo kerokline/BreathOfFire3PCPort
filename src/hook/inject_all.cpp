@@ -84,6 +84,7 @@
 #include "game/fmv_play.h"
 #include "game/world_map.h"
 #include "game/battle_draw.h"
+#include "game/battle_window_draw.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -198,6 +199,8 @@ void InjectAll() {
                                 // copy; none of its functions goes through a cull, so after Widescreen is fine
     BattleDraw_Inject();        // every call of its clones re-aimed at a recorder, the device a fake: order
                                 // does not matter (nothing before it patches bytes inside its six)
+    BattleWindowDraw_Inject();  // every call of its clones re-aimed at a recorder and no byte of its bodies
+                                // patched by any module: order does not matter (none of it reaches a cull)
     InjectReport();
 }
 
