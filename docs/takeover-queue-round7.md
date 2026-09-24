@@ -96,4 +96,16 @@ against `wm1b_orig`; the memory dump did not dump ("area never read 4"
 within 240 s; retried at 420 s in the wave-2 batch).
 
 **The wave-2 batch** (`analysis/validate_wave2.sh`, log
-`analysis/attract/wave2_batch.log`; 1,020 ours): running at hand-off.
+`analysis/attract/wave2_batch.log`; 1,020 ours): **started 06:40 and
+stopped at 06:55, owed a re-run with the machine hands-off.** What ran
+before the owner sat down: the self-tests in both languages clean; the
+world-map A/B 7 of 35 identical, the needle the map frames' only
+difference; the wide captures none black. Then the combat A/B's 43 captures
+came back as the owner's browser - `input_run.py` grabs the screen, and the
+game was no longer in front - so "0 of 43, 307,072 pixels" is the grab, not
+the build (`analysis/shots/wave2_combat_ours/f00420.png` is a web page).
+The batch was killed during the shop A/B. **Re-run:** the whole script
+(`SCRATCH=<the launcher copy> nohup bash analysis/validate_wave2.sh >
+analysis/attract/wave2_batch.log 2>&1 &`), keyboard, mouse and screen
+untouched for ~75 minutes; the memory dump (420 s wait) and the frame hash
+are the ones nothing has checked on 1,020 ours yet.

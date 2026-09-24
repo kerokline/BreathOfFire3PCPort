@@ -151,11 +151,14 @@ The single next action, concrete enough to start without asking anyone.
    doc's "Result": the route A/Bs within the tile-edge class, the wide
    sky, the oracle aligned, the frame hash identical but frame 0) except
    the memory dump, which never saw the attract's area in 240 s.
-   **Running at hand-off: the wave-2 batch** `analysis/validate_wave2.sh`
-   (log `analysis/attract/wave2_batch.log`, ~75 min: self-tests both
-   languages, the world-map A/B narrow and wide, the combat and shop A/Bs,
-   the attract captures, oracle, memory dump at 420 s, frame hash against
-   `wm1b_orig`). Read it; the memory dump is the one to watch.
+   **Owed first: the wave-2 batch** `analysis/validate_wave2.sh` on 1,020
+   ours (~75 min hands-off: self-tests both languages, the world-map A/B
+   narrow and wide, the combat and shop A/Bs, the attract captures, oracle,
+   memory dump at 420 s, frame hash against `wm1b_orig`). Its first run
+   (06:40) got through the self-tests and the world-map A/B clean, then the
+   owner sat down and the combat captures grabbed the browser instead of
+   the game - stopped, not a regression (round-7 doc, "Result"). A capture
+   batch needs the screen; run it while the owner is away.
    **Next:**
    1. **`entries_logic.txt` sizes**: about twenty wrong lines and a few
       missing entries, listed per group in the group docs (BA §, BB §7, BC,
