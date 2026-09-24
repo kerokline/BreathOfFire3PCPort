@@ -82,6 +82,7 @@
 #include "game/display_setup.h"
 #include "game/win_main.h"
 #include "game/fmv_play.h"
+#include "game/battle_items.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -192,6 +193,8 @@ void InjectAll() {
                                 // except that it runs before Widescreen_Inject, so its fuzz compares the
                                 // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: last, so every fuzz above ran against the original culls
+    BattleItems_Inject();       // every call of its clones re-aimed at a recorder, Sparkle_Types' entries
+                                // swapped and the stream's buffer a fake: order does not matter
     InjectReport();
 }
 
