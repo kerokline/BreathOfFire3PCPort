@@ -9,6 +9,8 @@
 #include <commctrl.h>
 
 #include <cstdio>
+#include <string>
+#include <vector>
 
 #include "launcher/resource.h"
 
@@ -278,6 +280,146 @@ void CheatsOptions(HWND owner, Config::Cheats& ch) {
     if (r == 1) ch = edit;
 }
 
+// ---- DIV-0050: the Controls dialog (docs/controls.md section 4.2) -----------
+//
+// Fourteen rows, one a PlayStation input, each with two key boxes and two pad
+// boxes. The boxes show what the bindings list holds for that input; OK
+// rebuilds the list from the boxes. A key entry that names two actions at
+// once (the keypad's diagonals in the default table) has no box, and is kept
+// as it is unless a box takes its key.
+
+std::wstring Wide(const std::string& s) {
+    std::wstring w;
+    for (unsigned char c : s) w += static_cast<wchar_t>(c);
+    return w;
+}
+
+void ControlsPopulate(HWND dlg, const input::Bindings& b) {
+    const input::ActionInfo* actions = input::Actions();
+    for (int row = 0; row < input::kActionCount; ++row) {
+        const unsigned short bit = actions[row].bit;
+        for (int slot = 0; slot < 2; ++slot) {
+            const int id = (slot ? IDC_CT_KEY2 : IDC_CT_KEY1) + row;
+            SendDlgItemMessageW(dlg, id, CB_RESETCONTENT, 0, 0);
+            AddItem(dlg, id, L"(none)");
+            for (int k = 0; k < input::KeyCount(); ++k) AddItem(dlg, id, Wide(input::Keys()[k].name).c_str());
+            Select(dlg, id, 0);
+        }
+        for (int slot = 0; slot < 2; ++slot) {
+            const int id = (slot ? IDC_CT_PAD2 : IDC_CT_PAD1) + row;
+            SendDlgItemMessageW(dlg, id, CB_RESETCONTENT, 0, 0);
+            AddItem(dlg, id, L"(none)");
+            for (int i = 0; i < static_cast<int>(input::PadInput::kCount); ++i)
+                AddItem(dlg, id, Wide(input::PadInputs()[i].label).c_str());
+            Select(dlg, id, 0);
+        }
+        // The first two single-action keys and the first two pad inputs bound to this input.
+        int found = 0;
+        for (const input::KeyBinding& k : b.keys) {
+            if (k.bits != bit || found == 2) continue;
+            int index = 0;
+            for (int i = 0; i < input::KeyCount(); ++i)
+                if (input::Keys()[i].dik == k.dik) index = i + 1;
+            if (index == 0) continue;   // a scancode without a name: kept, not shown
+            Select(dlg, (found ? IDC_CT_KEY2 : IDC_CT_KEY1) + row, index);
+            ++found;
+        }
+        found = 0;
+        for (const input::PadBinding& p : b.pad) {
+            if (p.bits != bit || found == 2) continue;
+            Select(dlg, (found ? IDC_CT_PAD2 : IDC_CT_PAD1) + row, static_cast<int>(p.input) + 1);
+            ++found;
+        }
+    }
+    SendDlgItemMessageW(dlg, IDC_CT_LAYOUT, CB_RESETCONTENT, 0, 0);
+    AddItem(dlg, IDC_CT_LAYOUT, L"By position - the lower button confirms (Xbox, PlayStation)");
+    AddItem(dlg, IDC_CT_LAYOUT, L"Nintendo - the pairs swapped, the right button confirms");
+    AddItem(dlg, IDC_CT_LAYOUT, L"Automatic - from the pad's own labels");
+    Select(dlg, IDC_CT_LAYOUT, static_cast<int>(b.layout));
+}
+
+void ControlsReadBack(HWND dlg, input::Bindings& b) {
+    const input::ActionInfo* actions = input::Actions();
+    std::vector<input::KeyBinding> keys;
+    std::vector<input::PadBinding> pad;
+    bool taken[256] = {};
+    for (int row = 0; row < input::kActionCount; ++row) {
+        for (int slot = 0; slot < 2; ++slot) {
+            const int index = Selected(dlg, (slot ? IDC_CT_KEY2 : IDC_CT_KEY1) + row);
+            if (index <= 0 || index > input::KeyCount()) continue;
+            const unsigned char dik = input::Keys()[index - 1].dik;
+            if (taken[dik]) continue;   // a key in two rows: the first row has it
+            taken[dik] = true;
+            keys.push_back({dik, actions[row].bit});
+        }
+        for (int slot = 0; slot < 2; ++slot) {
+            const int index = Selected(dlg, (slot ? IDC_CT_PAD2 : IDC_CT_PAD1) + row);
+            if (index <= 0 || index > static_cast<int>(input::PadInput::kCount)) continue;
+            const auto in = static_cast<input::PadInput>(index - 1);
+            bool dup = false;
+            for (const input::PadBinding& p : pad) dup = dup || p.input == in;
+            if (!dup) pad.push_back({in, actions[row].bit});
+        }
+    }
+    // Multi-action keys and unnamed scancodes from the old list, unless taken.
+    for (const input::KeyBinding& k : b.keys) {
+        const bool single = (k.bits & (k.bits - 1)) == 0;
+        const bool named = input::KeyName(k.dik)[0] != '0';
+        if ((single && named) || taken[k.dik]) continue;
+        taken[k.dik] = true;
+        keys.push_back(k);
+    }
+    if (keys.size() > static_cast<size_t>(input::kKeyTableMax)) keys.resize(input::kKeyTableMax);
+    b.keys = keys;
+    b.pad = pad;
+    const int layout = Selected(dlg, IDC_CT_LAYOUT);
+    b.layout = layout >= 0 && layout <= 2 ? static_cast<input::Layout>(layout) : input::Layout::kPositional;
+}
+
+INT_PTR CALLBACK ControlsProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_INITDIALOG: {
+        auto* b = reinterpret_cast<input::Bindings*>(lp);
+        SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(b));
+        ControlsPopulate(dlg, *b);
+        return TRUE;
+    }
+    case WM_COMMAND:
+        switch (LOWORD(wp)) {
+        case IDOK: {
+            auto* b = reinterpret_cast<input::Bindings*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            ControlsReadBack(dlg, *b);
+            EndDialog(dlg, 1);
+            return TRUE;
+        }
+        case IDC_CT_DEFAULTS: {
+            auto* b = reinterpret_cast<input::Bindings*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            *b = input::Bindings::Defaults();
+            ControlsPopulate(dlg, *b);
+            return TRUE;
+        }
+        case IDCANCEL:
+            EndDialog(dlg, 0);
+            return TRUE;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+// The Controls dialog over the settings dialog; the bindings change only on OK.
+void ControlsOptions(HWND owner, input::Bindings& b) {
+    input::Bindings edit = b;
+    const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_CONTROLS), owner, ControlsProc,
+                                      reinterpret_cast<LPARAM>(&edit));
+    if (r == -1) std::fprintf(stderr, "bof3x-launcher: the Controls dialog could not be created (error %lu)\n", GetLastError());
+    if (r == 1) b = edit;
+}
+
 INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
     case WM_INITDIALOG: {
@@ -311,6 +453,11 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_CHEATS: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
             CheatsOptions(dlg, state->cfg->cheats);
+            return TRUE;
+        }
+        case IDC_CONTROLS: {
+            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            ControlsOptions(dlg, state->cfg->bindings);
             return TRUE;
         }
         default:

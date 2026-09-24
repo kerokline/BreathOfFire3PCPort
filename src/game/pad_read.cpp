@@ -23,6 +23,8 @@
 // directions, the triggers L2 / R2, the face buttons by position or by the
 // Nintendo layout (BOF3X_PAD_LAYOUT=nintendo swaps them; auto follows the
 // pad's own labels). The stick threshold is the original's: half travel.
+// Both maps can be replaced from the launcher's Controls dialog: BOF3X_KEYS
+// rewrites the game's key table, BOF3X_PAD the pad map (input/bindings.h).
 //
 // Pad_Read runs from WinMain's loop on the main stack, so SDL's calls have
 // room; nothing here runs on a task's 16 KB stack.
@@ -35,17 +37,16 @@
 
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/bindings.h"
 
 namespace {
 
-// --- The PlayStation pad's bits (docs/input-script.md section 2) -----------
-constexpr unsigned kL2 = 0x1, kR2 = 0x2, kL1 = 0x4, kR1 = 0x8, kTriangle = 0x10, kCircle = 0x20,
-                   kCross = 0x40, kSquare = 0x80, kSelect = 0x100, kStart = 0x800, kUp = 0x1000,
-                   kRight = 0x2000, kDown = 0x4000, kLeft = 0x8000;
+namespace input = bof3x::input;
 
 constexpr unsigned kKeyTableEntries = 32;   // (u16 key, u16 bits) pairs; a key of 0 ends it
 constexpr HRESULT kInputLost = static_cast<HRESULT>(0x8007001E);   // DIERR_INPUTLOST
@@ -80,27 +81,15 @@ void ReadKeyboard() {
 }
 
 // --- The pad, through SDL3 -----------------------------------------------------
+//
+// The map is a list of (pad input -> PlayStation bits), input::Bindings'
+// pad half: the default of DIV-0050, or BOF3X_PAD from the launcher's
+// Controls dialog (bof3x.ini `pad.*`). The face buttons are read by
+// position; the Nintendo layout swaps the two pairs before the lookup, so
+// "south" in the map is the pad's lower button on either lettering.
 
-enum class Layout { kPositional, kNintendo, kAuto };
-
-struct PadButton {
-    SDL_GamepadButton button;
-    unsigned bits;
-};
-
-// The face buttons by position (the owner's default): south cross, east
-// circle, west square, north triangle. The Nintendo layout swaps each pair.
-constexpr PadButton kFacePositional[] = {
-    {SDL_GAMEPAD_BUTTON_SOUTH, kCross}, {SDL_GAMEPAD_BUTTON_EAST, kCircle},
-    {SDL_GAMEPAD_BUTTON_WEST, kSquare}, {SDL_GAMEPAD_BUTTON_NORTH, kTriangle}};
-constexpr PadButton kFaceNintendo[] = {
-    {SDL_GAMEPAD_BUTTON_SOUTH, kCircle}, {SDL_GAMEPAD_BUTTON_EAST, kCross},
-    {SDL_GAMEPAD_BUTTON_WEST, kTriangle}, {SDL_GAMEPAD_BUTTON_NORTH, kSquare}};
-constexpr PadButton kOtherButtons[] = {
-    {SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, kL1},  {SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, kR1},
-    {SDL_GAMEPAD_BUTTON_START, kStart},       {SDL_GAMEPAD_BUTTON_BACK, kSelect},
-    {SDL_GAMEPAD_BUTTON_DPAD_UP, kUp},        {SDL_GAMEPAD_BUTTON_DPAD_DOWN, kDown},
-    {SDL_GAMEPAD_BUTTON_DPAD_LEFT, kLeft},    {SDL_GAMEPAD_BUTTON_DPAD_RIGHT, kRight}};
+using input::PadInput;
+using input::Layout;
 
 // Half travel, the original's 500 of 1000 on the DirectInput axes.
 constexpr Sint16 kStickThreshold = 16384;
@@ -111,16 +100,83 @@ SDL_Gamepad* g_pad = nullptr;
 SDL_JoystickID g_pad_id = 0;
 Layout g_layout = Layout::kPositional;
 bool g_pad_nintendo = false;   // the layout in force for the open pad
+std::vector<input::PadBinding> g_pad_map;
 
-Layout LayoutFromEnv() {
+Layout LayoutFromEnv(Layout fallback) {
     char v[32] = {};
     const DWORD n = GetEnvironmentVariableA("BOF3X_PAD_LAYOUT", v, sizeof v);
-    if (n == 0 || n >= sizeof v) return Layout::kPositional;
-    if (std::strcmp(v, "nintendo") == 0) return Layout::kNintendo;
-    if (std::strcmp(v, "auto") == 0) return Layout::kAuto;
-    if (std::strcmp(v, "positional") != 0)
-        bof3::Log("pad: BOF3X_PAD_LAYOUT=%s not understood; positional", v);
-    return Layout::kPositional;
+    if (n == 0 || n >= sizeof v) return fallback;
+    const int l = input::LayoutFromName(v);
+    if (l < 0) {
+        bof3::Log("pad: BOF3X_PAD_LAYOUT=%s not understood; %s", v, input::LayoutName(fallback));
+        return fallback;
+    }
+    return static_cast<Layout>(l);
+}
+
+// BOF3X_PAD: `input=action,...,layout=NAME` (input/bindings.h). Unset, the
+// defaults; set, only what it names.
+void LoadPadMap() {
+    input::Bindings defaults = input::Bindings::Defaults();
+    g_pad_map = defaults.pad;
+    Layout layout = defaults.layout;
+    char text[2048] = {};
+    const DWORD n = GetEnvironmentVariableA("BOF3X_PAD", text, sizeof text);
+    if (n > 0 && n < sizeof text) {
+        std::vector<input::PadBinding> pad;
+        const int understood = input::ParsePad(text, ',', pad, layout);
+        g_pad_map = pad;
+        bof3::Log("pad: BOF3X_PAD - %d items understood, %u inputs bound, layout %s", understood,
+                  static_cast<unsigned>(pad.size()), input::LayoutName(layout));
+    } else if (n >= sizeof text) {
+        bof3::Log("pad: BOF3X_PAD too long (%lu); the default map", static_cast<unsigned long>(n));
+    }
+    g_layout = LayoutFromEnv(layout);
+}
+
+// The physical button to read for a map position; the Nintendo layout swaps
+// south <-> east and west <-> north.
+SDL_GamepadButton FaceButton(PadInput input) {
+    switch (input) {
+    case PadInput::kSouth: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_EAST : SDL_GAMEPAD_BUTTON_SOUTH;
+    case PadInput::kEast: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_SOUTH : SDL_GAMEPAD_BUTTON_EAST;
+    case PadInput::kWest: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_NORTH : SDL_GAMEPAD_BUTTON_WEST;
+    default: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_WEST : SDL_GAMEPAD_BUTTON_NORTH;
+    }
+}
+
+bool PadInputDown(PadInput input) {
+    auto button = [&](SDL_GamepadButton b) { return SDL_GetGamepadButton(g_pad, b); };
+    auto axis = [&](SDL_GamepadAxis a, bool positive) {
+        const Sint16 v = SDL_GetGamepadAxis(g_pad, a);
+        return positive ? v > kStickThreshold : v < -kStickThreshold;
+    };
+    switch (input) {
+    case PadInput::kSouth: case PadInput::kEast: case PadInput::kWest: case PadInput::kNorth:
+        return button(FaceButton(input));
+    case PadInput::kLb: return button(SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
+    case PadInput::kRb: return button(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
+    case PadInput::kLt: return SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > kTriggerThreshold;
+    case PadInput::kRt: return SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > kTriggerThreshold;
+    case PadInput::kStart: return button(SDL_GAMEPAD_BUTTON_START);
+    case PadInput::kBack: return button(SDL_GAMEPAD_BUTTON_BACK);
+    case PadInput::kGuide: return button(SDL_GAMEPAD_BUTTON_GUIDE);
+    case PadInput::kLs: return button(SDL_GAMEPAD_BUTTON_LEFT_STICK);
+    case PadInput::kRs: return button(SDL_GAMEPAD_BUTTON_RIGHT_STICK);
+    case PadInput::kDpadUp: return button(SDL_GAMEPAD_BUTTON_DPAD_UP);
+    case PadInput::kDpadDown: return button(SDL_GAMEPAD_BUTTON_DPAD_DOWN);
+    case PadInput::kDpadLeft: return button(SDL_GAMEPAD_BUTTON_DPAD_LEFT);
+    case PadInput::kDpadRight: return button(SDL_GAMEPAD_BUTTON_DPAD_RIGHT);
+    case PadInput::kLsUp: return axis(SDL_GAMEPAD_AXIS_LEFTY, false);
+    case PadInput::kLsDown: return axis(SDL_GAMEPAD_AXIS_LEFTY, true);
+    case PadInput::kLsLeft: return axis(SDL_GAMEPAD_AXIS_LEFTX, false);
+    case PadInput::kLsRight: return axis(SDL_GAMEPAD_AXIS_LEFTX, true);
+    case PadInput::kRsUp: return axis(SDL_GAMEPAD_AXIS_RIGHTY, false);
+    case PadInput::kRsDown: return axis(SDL_GAMEPAD_AXIS_RIGHTY, true);
+    case PadInput::kRsLeft: return axis(SDL_GAMEPAD_AXIS_RIGHTX, false);
+    case PadInput::kRsRight: return axis(SDL_GAMEPAD_AXIS_RIGHTX, true);
+    default: return false;
+    }
 }
 
 void OpenPad(SDL_JoystickID id) {
@@ -178,24 +234,43 @@ unsigned PadWord() {
     PollPadEvents();
     if (!g_pad) return 0;
     unsigned word = 0;
-    for (const PadButton& b : g_pad_nintendo ? kFaceNintendo : kFacePositional)
-        if (SDL_GetGamepadButton(g_pad, b.button)) word |= b.bits;
-    for (const PadButton& b : kOtherButtons)
-        if (SDL_GetGamepadButton(g_pad, b.button)) word |= b.bits;
-    const Sint16 x = SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_LEFTX);
-    const Sint16 y = SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_LEFTY);
-    if (x > kStickThreshold) word |= kRight;
-    if (x < -kStickThreshold) word |= kLeft;
-    if (y > kStickThreshold) word |= kDown;
-    if (y < -kStickThreshold) word |= kUp;
-    if (SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > kTriggerThreshold) word |= kL2;
-    if (SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > kTriggerThreshold) word |= kR2;
+    for (const input::PadBinding& b : g_pad_map)
+        if (PadInputDown(b.input)) word |= b.bits;
     return word;
+}
+
+// BOF3X_KEYS: `key=action,...` (input/bindings.h) written into the game's own
+// table Key_Table, which Cfg_Load filled from BOF3.CFG or the default a
+// moment before Game_Init - the same 32-entry (scancode, bits) shape, so
+// KeyboardWord and the original's loop read it alike. Unset, that table
+// stands as the original left it.
+void LoadKeyTable() {
+    char text[4096] = {};
+    const DWORD n = GetEnvironmentVariableA("BOF3X_KEYS", text, sizeof text);
+    if (n == 0) return;
+    if (n >= sizeof text) {
+        bof3::Log("pad: BOF3X_KEYS too long (%lu); the game's own table", static_cast<unsigned long>(n));
+        return;
+    }
+    std::vector<input::KeyBinding> keys;
+    const int understood = input::ParseKeys(text, ',', keys);
+    if (keys.size() > static_cast<size_t>(input::kKeyTableMax)) {
+        bof3::Log("pad: BOF3X_KEYS names %u keys, the table holds %d; the first %d", static_cast<unsigned>(keys.size()),
+                  input::kKeyTableMax, input::kKeyTableMax);
+        keys.resize(input::kKeyTableMax);
+    }
+    std::memset(Key_Table, 0, Key_Table_count * sizeof Key_Table[0]);
+    for (size_t i = 0; i < keys.size(); ++i) {
+        Key_Table[i * 2] = keys[i].dik;
+        Key_Table[i * 2 + 1] = keys[i].bits;
+    }
+    bof3::Log("pad: BOF3X_KEYS - %d items understood, %u keys in the table", understood,
+              static_cast<unsigned>(keys.size()));
 }
 
 void StartSdl() {
     if (g_sdl) return;
-    g_layout = LayoutFromEnv();
+    LoadPadMap();
     // The keyboard is read whether or not the window is in front (DISCL_BACKGROUND),
     // and DIV-0033 decides what to do with the words; the pad follows the same rule.
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -313,6 +388,7 @@ extern "C" void __cdecl DInput_Init(void* hinstance, void* hwnd) {
     } else {
         bof3::Log("pad: CreateDevice(GUID_SysKeyboard) failed");
     }
+    LoadKeyTable();
     StartSdl();
 }
 

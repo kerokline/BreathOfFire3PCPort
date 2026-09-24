@@ -1033,7 +1033,10 @@ record; step 1 is built - DIV-0050, `src/game/pad_read.cpp`, SDL3 fetched
 by CMake and built static (first configure needs the network) - and
 verified on the keyboard side (`tools/key_probe.py`, the shadow check, a
 recipe run) and the owner's Xbox pad opened; their window close then found
-two faults of ours, fixed (DIV-0050's verification, `tools/close_probe.py`). Next is step 2, the physical map in
+two faults of ours, fixed (DIV-0050's verification, `tools/close_probe.py`);
+committed as `785e202`. **Step 2 is built, uncommitted:** the bindings in
+`bof3x.ini` and the launcher's Controls dialog (`src/input/bindings.h`,
+`tools/ini_probe.py`). Next is step 2, the physical map in
 `bof3x.ini` with a launcher Controls tab, then the Controller row back to
 one icon column (D58), then the seventh Config row and the binding screen.
 Nothing committed yet: the owner decides.

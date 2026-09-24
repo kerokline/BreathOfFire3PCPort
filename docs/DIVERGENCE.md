@@ -2209,7 +2209,12 @@ designed in rather than bolted on.
   swapped in pairs; `auto` follows the pad's own button labels. The pad, like
   the keyboard, is read whether or not the window is in front (SDL's
   background-events hint), and DIV-0033 decides what becomes of the words.
-  `DInput_Shutdown` releases what was opened and stops SDL.
+  `DInput_Shutdown` releases what was opened and stops SDL. **Later the
+  same day:** the launcher's Controls dialog and `bof3x.ini` hold the
+  physical bindings (`src/input/bindings.h`); `BOF3X_KEYS` rewrites the
+  game's own key table and `BOF3X_PAD` the pad map when they differ from
+  the default, so a player who never opens the dialog gets exactly the
+  above ([`controls.md`](controls.md) §6 step 2).
 - **Rationale:** the owner, 2026-09-24: modern pads, one pad, a Nintendo
   toggle, SDL3 rather than XInput for DualSense and the community mapping
   database. Nothing of the PlayStation-level button swap (the Config panel's

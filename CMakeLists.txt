@@ -124,6 +124,7 @@ add_library(bof3x SHARED
   src/game/field_blocked.cpp
   src/game/field_input.cpp
   src/game/pad_read.cpp
+  src/input/bindings.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
   src/game/psx_gpu.cpp
@@ -236,6 +237,7 @@ add_executable(bof3x_launcher
   src/launcher/launcher.cpp
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
+  src/input/bindings.cpp
   src/launcher/launcher.rc)
 target_include_directories(bof3x_launcher PRIVATE src)
 target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32)

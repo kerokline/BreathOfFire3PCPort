@@ -16,6 +16,8 @@
 
 #include <string>
 
+#include "input/bindings.h"
+
 namespace bof3x {
 
 enum class Language { kOriginal, kEnglish };
@@ -69,6 +71,13 @@ struct Config {
         int exp = 1, zenny = 1;
         bool steal = false;
     } cheats;
+    // The physical bindings (docs/controls.md section 4.2, DIV-0050): the
+    // keyboard's (scancode -> PlayStation bits) table, which replaces the
+    // game's own when it differs from the default (BOF3X_KEYS; unset, the
+    // game reads BOF3.CFG lines 3+ or its default as it always did), the pad
+    // map and the face-button layout (BOF3X_PAD). Edited in the Controls...
+    // dialog; `key.NAME=action` and `pad.NAME=action` lines in the ini.
+    input::Bindings bindings = input::Bindings::Defaults();
     // Cleared by the dialog's "Show this window every time" box. --config
     // brings the dialog back whatever this says.
     bool show_launcher = true;

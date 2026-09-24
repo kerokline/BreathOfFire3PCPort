@@ -256,8 +256,22 @@ words decide what the word does.
    client rectangle (on `main` too), and SDL's HIDAPI discovery taking the
    `WM_QUIT` - `WM_DESTROY` now sets `Game_QuitFlag`. `tools/close_probe.py`
    is the check. **Confirmed by the owner in play with the pad, 2026-09-24.**
-2. The physical map in `bof3x.ini` (`[keys]` / `[pad]`) read by the DLL, and
-   a launcher Controls tab over it (§4.2); until then the keyboard is
-   `BOF3.CFG` lines 3+ as the original, and the pad map is the default.
+2. **Built 2026-09-24:** the physical map in `bof3x.ini` as `key.NAME=action`
+   and `pad.NAME=action` lines (`src/input/bindings.h`, shared by the launcher
+   and the DLL), handed to the DLL as `BOF3X_KEYS` / `BOF3X_PAD` when they
+   differ from the default - `BOF3X_KEYS` rewrites the game's own 32-entry
+   table at `Key_Table`, so the original's loop reads it; unset, that table
+   stands as `Cfg_Load` filled it. The launcher's **Controls...** dialog:
+   fourteen rows, an action each, two key boxes and two pad boxes, the
+   face-button layout below (by position, Nintendo, automatic), Defaults.
+   A key naming two actions at once (the keypad's diagonals) has no box and
+   is kept unless a box takes its key. **Verified:** `tools/ini_probe.py` -
+   a test ini with Z = circle, Up = down, Enter = select, Q = R2,
+   Numpad9 = up+right and X unbound, through the launcher to the game: every
+   word as bound, 6 of 6, and the log `BOF3X_KEYS - 5 items understood, 5
+   keys in the table`, `BOF3X_PAD - 3 items understood, 2 inputs bound,
+   layout nintendo`, the pad opened with that layout; the dialog seen
+   populated with the defaults (screenshot, 2026-09-24). Not yet checked in
+   play: a pad map changed from the dialog.
 3. The Controller row back to one icon column, icons from the disc (D58).
 4. The seventh row and the binding screen (§4.3).
