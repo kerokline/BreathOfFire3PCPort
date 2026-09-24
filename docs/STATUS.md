@@ -304,7 +304,9 @@ What is established:
    and zenny multipliers in our `Battle_EnemyDefeated`, and the steal roll
    patched at the port's two copies of it (DIV-0045, DIV-0046,
    [`cheats.md`](cheats.md)); confirmed on the recorded combat route, the owner
-   watching. The
+   watching. **The same day, D5's complete fix, DIV-0047:** the frame deadline
+   is a double at the PlayStation's 29.97 (measured 29.971; the frame hash
+   identical on all 10,319 frames, since logic reads no clock). The
    route's 40-function queue is the next wave, the compass and HUD first;
    the place plates are paint in the world maps' texture pages, as the
    sibling found, and the localisation build's next data item.

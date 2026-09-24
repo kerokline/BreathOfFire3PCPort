@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 46 entries, DIV-0001..0046)
+**Status:** IN PROGRESS (opened 2026-09-18; 47 entries, DIV-0001..0047)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2043,3 +2043,49 @@ designed in rather than bolted on.
   "Looked right to me, with the marbles steal".
 - **Reversible?** Yes: the switch off, `BOF3X_STEAL` unset, or
   `BOF3X_ORIGINAL=Cheat_StealAlways`.
+
+### The frame period is the PlayStation's 29.97, and the deadline is a double
+
+- **ID:** DIV-0047
+- **Date:** 2026-09-24
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop,
+  `src/game/win_main.cpp`; [`known-defects.md`](known-defects.md) D5,
+  [`IDEAS.md`](IDEAS.md) I16)
+- **Original behaviour:** the loop paces logic frames against a deadline in
+  the 32-bit float `Frame_Deadline` `0x6BC628`, advanced by the double
+  33.334 at `0x5C4218` (29.999 frames a second) and held under the 2^32
+  tick wrap. A float's spacing grows with its size, so the pace drifted
+  through bands as the clock grew - 31.25 a second past 2^28 ms, half speed
+  past 2^29 (D5). DIV-0022 kept the clock small, which left one unbroken
+  session drifting through the same bands from 35 minutes on (I16).
+- **New behaviour:** the deadline is a base plus a count of frames times
+  the period, in a double, and the period is the PlayStation's NTSC frame,
+  1001 / 30 = 33.3667 ms (29.970 a second). The clock is unwrapped into 64
+  bits from the slot's DWORD, so the tick wrap needs no handling. The float
+  at `0x6BC628` is no longer written. DIV-0034's clamp restarts the base and
+  the count. `BOF3X_FRAME_MS=n` (1..1000; tooling) sets another period -
+  33.334 is the port's own.
+- **Rationale:** the owner, 2026-09-24: "I would like the game to be back to
+  the official 29.97 frame pace". The PlayStation paces by vertical blank at
+  59.94 / 2; the port's 33.334 was its approximation. A count of frames
+  times the period cannot drift, whatever the session's length.
+- **Also in the PSX version?** The rate, yes - it is the PlayStation's; the
+  mechanism is not applicable there.
+- **Verification:** 2026-09-24. A 2.5-minute attract recording
+  (`analysis/attract/pace_ntsc.tsv`): 29.971 logic frames a second from
+  60 s to the end, 29.964 over 60..120 s, against 29.995 / 29.997 under
+  DIV-0022 alone (`clk_fix.tsv`). The exact check, a 6-minute traced run
+  (`analysis/calltrace/pace_ours`): **the per-frame call hash identical to
+  the branch's latest reference (`wave2_ours`) on all 10,319 frames**, and
+  against the all-original `wm1b_orig` differing on frame 0 alone, as
+  `wave2_ours` does - logic counts frames and reads no clock, so every
+  check keyed by `Frame_Counter` (the oracle, the frame hash, the memory
+  dumps, the recipes' captures) is unaffected; only wall-clock-timed draw
+  and pump calls move, which the hash's wall-clock exclusion already drops
+  ([`call-trace.md`](call-trace.md) §6). The polled oracle
+  (`attract_diff.py`, `clk_fix` against `pace_ntsc`) disagrees on 8
+  transition frames, the sampler's one-frame jitter that an
+  original-vs-original pair (`ab11_orig` / `ab11_origb`) shows too. Owed:
+  the owner's eye over a long session (the bands began at 35 minutes).
+- **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain` (the float and
+  33.334 again); `BOF3X_FRAME_MS=33.334` keeps the double at the port's rate.

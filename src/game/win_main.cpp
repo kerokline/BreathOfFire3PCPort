@@ -96,8 +96,17 @@ const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<st
 // The pacing constants (.rdata): the first deadline's offset, the frame
 // period, and the wrap the float deadline is held under.
 constexpr double kFirstFrameMs = 33.34;        // double at 0x5C4220
-constexpr double kFrameMs = 33.334;            // double at 0x5C4218
-constexpr float kTickWrap = 4294967296.0f;     // float at 0x5C4214
+// DIV-0047: the period is the PlayStation's NTSC frame, 1001 / 30 ms
+// (29.970 a second), not the port's 33.334 (29.999); and the deadline is
+// kept as a base plus a count of frames times the period, in a double -
+// never in the float at 0x6BC628 (Frame_Deadline), whose spacing past
+// 2^24 ms made the pace depend on the clock's size (known-defects D5;
+// DIV-0022 keeps the clock small, this makes the size not matter). The
+// float at 0x5C4214, 2^32, was the original's tick wrap; the clock is
+// unwrapped into 64 bits below instead. BOF3X_FRAME_MS=n (tooling, 1..1000)
+// sets another period: 33.334 is the port's own.
+constexpr double kFrameMs = 1001.0 / 30.0;     // the original's: double 33.334 at 0x5C4218
+double g_frame_ms = kFrameMs;
 constexpr U kEnvBase = 0x903880, kEnvStride = 0x90;   // the two display-environment pairs
 constexpr int kOverlayFrames = 0x78;
 
@@ -403,8 +412,15 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     HINSTANCE hinstance = static_cast<HINSTANCE>(hinstance_);
     g_loop_ours = true;
     {
-        char text[8];
+        char text[32];
         if (GetEnvironmentVariableA("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') g_background = false;
+        const DWORD n = GetEnvironmentVariableA("BOF3X_FRAME_MS", text, sizeof text);
+        if (n > 0) {
+            char* end = nullptr;
+            const double v = n < sizeof text ? std::strtod(text, &end) : 0.0;
+            if (end == nullptr || *end != '\0' || !(v >= 1.0 && v <= 1000.0)) bof3::Fatal("BOF3X_FRAME_MS must be 1..1000");
+            g_frame_ms = v;
+        }
     }
 
     if (!Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
@@ -475,9 +491,22 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         DWORD last_fps_tick = 0;
         MSG msg;
         bool quit = false;
+        // DIV-0047: the clock unwrapped into 64 bits (the slot's DWORD wraps
+        // at 49.7 days), and the deadline as base + frames * period.
+        DWORD last_tick = Tick();
+        std::uint64_t now64 = 0;
+        const auto Now = [&]() {
+            const DWORD t = Tick();
+            now64 += static_cast<DWORD>(t - last_tick);
+            last_tick = t;
+            return static_cast<double>(now64);
+        };
+        double deadline_base = 0.0;
+        std::uint64_t deadline_frames = 0;
         while (!quit) {
             Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(bof3::addr::Boot_Task)));
-            Frame_Deadline = static_cast<float>(static_cast<double>(Tick()) + kFirstFrameMs);
+            deadline_base = Now() + kFirstFrameMs;
+            deadline_frames = 0;
             for (;;) {
                 if (Game_QuitFlag) {
                     quit = true;
@@ -498,15 +527,17 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Task_SetStackBase();
                     break;   // Task_Create again
                 }
-                DWORD tick = Tick();
+                double now = Now();
+                double deadline = deadline_base + static_cast<double>(deadline_frames) * g_frame_ms;
                 // DIV-0034: the debt clamp.
-                if (static_cast<double>(tick) - static_cast<double>(Frame_Deadline) > kMaxDebtMs) {
+                if (now - deadline > kMaxDebtMs) {
                     bof3::Log("DIV-0034    frame deadline %.0f ms behind at Frame_Counter %lu: restarted",
-                              static_cast<double>(tick) - static_cast<double>(Frame_Deadline),
-                              static_cast<unsigned long>(Frame_Counter));
-                    Frame_Deadline = static_cast<float>(static_cast<double>(tick) + kFirstFrameMs);
+                              now - deadline, static_cast<unsigned long>(Frame_Counter));
+                    deadline_base = now + kFirstFrameMs;
+                    deadline_frames = 0;
+                    deadline = deadline_base;
                 }
-                if (static_cast<double>(tick) < static_cast<double>(Frame_Deadline)) {
+                if (now < deadline) {
                     unsigned char* env = Gfx_CurrentEnv;
                     Gpu_PutDispEnv(env);
                     Gpu_PutDrawEnv(env + 0x14);
@@ -524,21 +555,18 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // The wait: Sound_Tick on every spin, at least once a frame.
                 for (;;) {
                     Sound_Tick();
-                    tick = Tick();
-                    if (!(static_cast<double>(tick) < static_cast<double>(Frame_Deadline))) break;
+                    now = Now();
+                    if (!(now < deadline)) break;
                 }
-                if (tick - last_fps_tick > 1000) {
-                    last_fps_tick = tick;
+                if (last_tick - last_fps_tick > 1000) {
+                    last_fps_tick = last_tick;
                     Crt_sprintf(fps, Str(kStrFrameRate), frames_drawn);
                     frames_drawn = 0;
                 }
-                // deadline += 33.334 in double, stored as float; past 2^32 the
-                // float loses 2^32 (the compare is on the double sum, the
-                // subtraction on the stored float, as at 0x4FCF0F..0x4FCF3A).
-                const double sum = static_cast<double>(Frame_Deadline) + kFrameMs;
-                Frame_Deadline = static_cast<float>(sum);
-                if (!(sum <= static_cast<double>(kTickWrap)))
-                    Frame_Deadline = static_cast<float>(static_cast<double>(Frame_Deadline) - static_cast<double>(kTickWrap));
+                // DIV-0047: one more frame of the period. The original added
+                // 33.334 to the float at 0x6BC628 and held it under 2^32
+                // (0x4FCF0F..0x4FCF3A); that float is not written here.
+                ++deadline_frames;
                 Gfx_BufferIndex ^= 1;
                 unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(kEnvBase + Gfx_BufferIndex * kEnvStride));
                 Gfx_CurrentEnv = env;
