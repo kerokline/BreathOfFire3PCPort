@@ -11213,3 +11213,222 @@ params = "void"
 impl = "src/game/area_backdrop.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x4112A0..0x4112B7 (0x18 bytes, then nops to 0x4112C0), cdecl, no calls, no jumps: Sprite_Current +0x2E = 0xA0, +0x30 = 0x50 - the sprite's screen point (what Sprite_UpdateScreen writes and Sprite_DrawOverlays reads) pinned to (160, 80). Rel32 scan of .text: 33 callers, eleven triads at 0x401F80 / 0x401FD0 / 0x402030, 0x404030 / 0x404080 / 0x4040E0, .. 0x424D50 / 0x424DA0 / 0x424E00 - one per world-map region overlay compiled into the exe - each calling it first, then moving the sprite's scale +0x40 by 0x2000, counting +9 down, setting +0x48 and the state +1, and tail-jumping to Sprite_UpdateScreen 0x5890E0. World-map route (recipe_worldmap): 259 calls, from 0x404035 (24) and 0x404085 (211); not reached by the attract cycle or the shop route. Hypothesis in the name: that the pinned sprite is the party's marker over the map. It is not the sky (widescreen.md section 3d called 0x4112A9 that): a centred point needs nothing under the primitive shift."
+
+# ---------------------------------------------------------------------------
+# The battle windows (the seventh round's group BC, docs/battle_windows.md):
+# the window task 0x596A90's battle handlers, its small helpers, and the
+# battle party's per-frame state step. Extents measured by recursive descent
+# (capstone, 2026-09-23); every one fuzzed against a copy of Capcom's.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x441100
+name = "BattleParty_RunStates"
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x441100..0x44113B (0x3C bytes), cdecl, two calls and a tail jump, all to BattleObj_RunState 0x4411E0: for each of ObjTrio's three objects (0x802D40, 0x802E8C, 0x802FD8, stride 0x14C) Field_State and Sprite_Current are set to it first. Called once a frame by the battle frame 0x42E2F0 (2,091 calls on the combat route)."
+
+[[func]]
+pc = 0x441140
+name = "BattleParty_UpdateScreens"
+ret = "void"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x441140..0x441172 (0x33 bytes), cdecl, one call: for each of ObjTrio's three objects, Field_State and Sprite_Current set to it, then Sprite_UpdateScreen when its byte +0 has bit 0 and not bit 6. Called once a frame by the battle frame 0x42E2F0 after the state step."
+
+[[func]]
+pc = 0x441180
+psx = 0x801DEDA0
+name = "BattleObj_ScriptTick"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x441180..0x4411A8 (0x29 bytes), cdecl: al 1 when Field_State +0x90 has bit 2, or when the byte 0x904B8E is set and +0x134 lacks bit 4; else a tail jump to Sprite_ScriptTick. The PSX 0x801DEDA0 (BATTLE.EMI) term for term, its fields at +0x80 and +0x128. Some 30 call sites in the party's state handlers, every one reading al only (a test or a store of al)."
+
+[[func]]
+pc = 0x4411B0
+psx = 0x801DEE08
+name = "BattleObj_ScriptTickOnce"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4411B0..0x4411D8 (0x29 bytes), cdecl: BattleObj_ScriptTick's gate before a tail jump to Sprite_ScriptTickOnce. Pairs with the PSX 0x801DEE08 by call anchor. Callers read al only."
+
+[[func]]
+pc = 0x4411E0
+psx = 0x801DEE70
+name = "BattleObj_RunState"
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4411E0..0x4411F6 (0x17 bytes), cdecl: when Sprite_Current +0 has bit 0, a tail jump through the table 0x64DFE0 (27 handlers, 0x441200 .. 0x442E40, 0x437CC0 a bare ret) by the state byte +1, unbounded; else ret with eax still Sprite_Current. The PSX 0x801DEE70 does the same through 0x801EB094 (a jalr). pe_funcs.py's 0xC4 bytes ran into the first handler 0x441200."
+
+[[func]]
+pc = 0x4412B0
+psx = 0x801DEFA0
+name = "BattleObj_PickPose"
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4412B0..0x4414F5 (0x246 bytes) and its six-entry switch table at 0x4414F8, cdecl, 17 calls. The party object's standing pose: under 0x904AA0 = 5 with 0x904AE8 bit 1, 0x589110(pose, 0x8C5D80, 0x1800) with +8 + 0x1C (Field_State +0x91 bit 6), +0x4B (0x904AE5 bit 5) or +8 + 0x20; else Sprite_EnsureAnimation(+8 + n) by +0x90 / +0x91 flags, 0x904AA8 bit 4, +0x130 bit 1 and the action +0x125 (4 reads the skill +0x126's byte 0x65C4DD + 24 skill, bit 3); actions 3 and past 5 answer the action itself. The PSX 0x801DEFA0 has the same first block (0x8014D4E4 for 0x589110). Not recursive: pe_funcs.py's 0x105F-byte extent ran into its callers after 0x441510."
+
+[[func]]
+pc = 0x442FA0
+psx = 0x801D74DC
+name = "BattleWin_DrawPartyStatus"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x442FA0..0x4432E1 (0x342 bytes), cdecl, 19 calls, called by the window task 0x596A90 (2,027 calls on the combat route). The party row: edge pieces and a tile sized by the count 0x904AB0, then per member i at x + 0x14 + 0x5E i a tile, the gauge 0x444A90 of bytes 0x80333F + 36 i +0 / +2, charge lines when ObjTrio +0xA2 is set, the name +0x80 through 0x516E70, two digits, the values +0x98 and +0x9A through 0x444340 with colours from +0x90 / +0x91 / +0xA2, four lines in the window colour. The count is re-read after each member."
+
+[[func]]
+pc = 0x4432F0
+psx = 0x801D7A10
+name = "BattleWin_DrawCommandCross"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4432F0..0x4434B8 (0x1C9 bytes), cdecl, five calls, called by the window task. The command cross: arms 0..4 but the selection 0x904AB4 as Menu_DrawIcon icons grown by 0x904ABC + j about (x, y) + the bytes 0x64E2AC + 2 j (shade 0x40 for arms 2 and 3 while the actor 0x939EC4 +0x134 has bit 1, else 0x80), the selection re-read after each; then the selected arm, plain 16 x 16 or through BattleWin_DrawCommandIcon; then arms 5 and 6 while 0x904AC1 / 0x904AC2 are set."
+
+[[func]]
+pc = 0x4434C0
+psx = 0x801D7CE0
+name = "BattleWin_DrawCommandIcon"
+ret = "void"
+params = "unsigned k, unsigned x, unsigned y, unsigned w, unsigned h, unsigned shade"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4434C0..0x44360C (0x14D bytes), cdecl, six calls. A grown command icon: POLY_FT4 at (x, y) w x h from page (0x100, 0x100), u = k << 5, v 0xE0..0xF8, CLUT 0x7800 | a byte of 8 9 8 9 8 8 8 built on its stack, indexed by k's low byte without a bound. The PSX 0x801D7CE0 copies the same seven bytes from 0x801D0C64 and indexes them the same way."
+
+[[func]]
+pc = 0x443610
+psx = 0x801D7E80
+name = "BattleWin_DrawMessageBox"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x443610..0x44373E (0x12F bytes), cdecl, ten calls: tile 3 at (x, y + 2), edge pieces 8 and 9, four lines x + 2 .. x + 0x115 in the window colour (CLUT shadow row 0x903A5A, read after the draw mode). Called by BattleWin_DrawMessage 0x597ED0 and a neighbour of 0x597A30."
+
+[[func]]
+pc = 0x443740
+psx = 0x801D8060
+name = "BattleWin_DrawSmallBox"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x443740..0x44386B (0x12C bytes), cdecl, ten calls: BattleWin_DrawMessageBox's shape with tile 6, edges 4 and 5, lines to x + 0x45. Called by the window task (106 calls on the combat route)."
+
+[[func]]
+pc = 0x443870
+psx = 0x801D8240
+name = "BattleWin_DrawMediumBox"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x443870..0x44399B (0x12C bytes), cdecl, ten calls: the same with tile 0xA, edges 6 and 7, lines to x + 0x65. Called by the window task, 0x43B130 and 0x5982D0."
+
+[[func]]
+pc = 0x4439A0
+psx = 0x801D8420
+name = "BattleWin_DrawCommandLabel"
+ret = "void"
+params = "unsigned k"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4439A0..0x443B04 (0x165 bytes), cdecl, 11 calls, called by the window task. Command k's banner at Battle_CommandBoxes 0x64E2C8 + 8 k: tile 5, edges 0xA and 0xB, lines to x + 0x25, then its label Battle_CommandLabelPointers 0x669D60 + 4 k through Text_DrawAt at (x + 8, y + 3), 8 bytes - the Chinese command label seen after choosing a command. k unbounded."
+
+[[func]]
+pc = 0x443B10
+psx = 0x801D8660
+name = "BattleWin_DrawTargetEnemy"
+ret = "void"
+params = "int x, int y, unsigned t"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x443B10..0x443D83 (0x274 bytes), cdecl, 20 calls, called by the window task. Target slot t (enemy t - 3, EnemyWorkingRecords 0x93B9E0 + 0x128 e): a frame under abr 0 then abr 1, the gauge 0x444A90 of the current window's +0xB / +0xD when the enemy's +0xF is 1 else 0x444340 with 0xFFFF (which draws the string at 0x64E320 in place of its %4d), the name +0 through 0x516E70, two lines in the window colour and two 0x10 darker (a 16-bit clamp at 0)."
+
+[[func]]
+pc = 0x443D90
+psx = 0x801D8AB4
+name = "BattleWin_DrawEnemyStatus"
+ret = "void"
+params = "int x, int y, unsigned t"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x443D90..0x443F5A (0x1CB bytes), cdecl, 15 calls, called by the window task (1,823 calls on the combat route). BattleWin_DrawTargetEnemy in one layer: the gauge or the 0xFFFF value, the name only when 0x444EB0(e) answers al non-zero, four lines in the window colour."
+
+[[func]]
+pc = 0x443F60
+psx = 0x801D8DC8
+name = "BattleWin_DrawTargetMember"
+ret = "void"
+params = "int x, int y, unsigned m"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x443F60..0x444224 (0x2C5 bytes), cdecl, 22 calls, called by the window task. Member m's (ObjTrio + 0x14C m) banner: the two-layer frame, name +0x80 through 0x516E70, a digit, +0x98 and +0xA0 through 0x444340 with a colour from +0x90, the string at 0x64E31C (a slash) through Crt_sprintf into 0x904BA0 and Text_DrawFont8, two lines in the window colour and two 0x10 darker."
+
+[[func]]
+pc = 0x5979E0
+name = "Window_FlagAndAdvance"
+ret = "void"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5979E0..0x5979F1 (0x12 bytes), cdecl, no calls: the current window record (0x905B84) +0xF = 1, then its state +3 stepped on. Called by the window task 0x596A90."
+
+[[func]]
+pc = 0x597A00
+name = "Window_RestoreAndBack"
+ret = "void"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x597A00..0x597A2B (0x2C bytes), cdecl, no calls: the current window record's +4 / +6 from +0x10 / +0x12, +0xF = 0, state +3 stepped back. Called by the window task."
+
+[[func]]
+pc = 0x597A30
+name = "Window_DispatchKind"
+ret = "unsigned"
+params = "unsigned a0, unsigned a1, unsigned a2, unsigned a3, unsigned a4, unsigned a5, unsigned a6, unsigned a7"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x597A30..0x597A7E (0x4F bytes), cdecl: three handlers (0x597A80, 0x597BD0, 0x597C10) stored on its stack, called by the byte its eighth argument points at, unbounded, with all eight arguments pushed again; the answer is theirs. Called by the window task (14,590 calls on the combat route). pe_funcs.py's 0x4A0 bytes ran over the three handlers."
+
+[[func]]
+pc = 0x597ED0
+name = "BattleWin_DrawMessage"
+ret = "void"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x597ED0..0x597F19 (0x4A bytes), cdecl, two calls: BattleWin_DrawMessageBox at the current window's +4 / +6, then Text_DrawAt(+4 + 4, +6 + 3, 0, 0xFF, the dword at 0x93C2C4 + 8 x the byte 0x93C2A0), the record and the index read after the box. Called from a neighbour of 0x597A30 (572 calls on the combat route)."
+
+[[func]]
+pc = 0x597F20
+name = "BattleMsg_Advance"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x597F20..0x597F39 (0x1A bytes), cdecl, no calls: the byte 0x93C2A0 set to its value + 1 and 0xF; al 1 when the byte 0x93C2A1 equals it. The read index of a 16-entry ring at 0x93C2C4 (8 bytes an entry) whose +0 BattleWin_DrawMessage draws."
+
+[[func]]
+pc = 0x597F40
+name = "Text_GlyphCount"
+ret = "unsigned char"
+params = "const unsigned char *text"
+impl = "src/game/battle_windows.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x597F40..0x597F5C (0x1D bytes), cdecl, no calls: al = the characters to the NUL, a byte of 0x80 or more taking the next with it (so a lead byte right before the NUL takes the NUL too and the count reads on). Called by the window task (1,220 calls on the combat route). pe_funcs.py had 0x38A bytes."
