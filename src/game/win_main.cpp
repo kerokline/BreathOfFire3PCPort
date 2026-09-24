@@ -118,6 +118,8 @@ int g_speed = 1;
 bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
 constexpr const char* kStrSpeed2 = "Speed x2";
 constexpr const char* kStrSpeed1 = "Speed x1";
+constexpr const char* kStrFrameSaved = "Frame saved";
+constexpr const char* kStrFrameNotSaved = "Frame not saved";
 constexpr U kEnvBase = 0x903880, kEnvStride = 0x90;   // the two display-environment pairs
 constexpr int kOverlayFrames = 0x78;
 
@@ -255,6 +257,23 @@ void Overlay(const char* text) {
 }  // namespace
 
 bool WinMain_InputAllowed() { return !g_loop_ours || !g_background || g_foreground; }
+bool WinMain_Background() { return g_background; }
+
+// F11: the last frame presented, written beside the DLL as
+// bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).
+void SaveFrameBesideDll() {
+    wchar_t path[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(GetModuleHandleW(L"bof3x.dll"), path, MAX_PATH);
+    if (n == 0 || n >= MAX_PATH) return;
+    wchar_t* slash = wcsrchr(path, L'\\');
+    if (!slash) return;
+    const size_t room = MAX_PATH - static_cast<size_t>(slash + 1 - path);
+    if (std::swprintf(slash + 1, room, L"bof3x-frame-%lu.bmp", static_cast<unsigned long>(Frame_Counter)) < 0) return;
+    const bool ok = render::SaveFrame(path);
+    bof3::Log("F11         frame %lu %s %ls", static_cast<unsigned long>(Frame_Counter), ok ? "saved to" : "NOT saved:", path);
+    Overlay_Frames = kOverlayFrames;
+    Overlay_Text = ok ? kStrFrameSaved : kStrFrameNotSaved;
+}
 
 extern "C" void __cdecl Cursor_Sync(void) {
     if (Cfg_Fullscreen) {
@@ -398,6 +417,13 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
             Save_QuickWrite();
             Overlay_Frames = kOverlayFrames;
             Overlay_Text = Str(kStrSaveOk);
+            return 0;
+        }
+        // F11: the frame to a file (render::SaveFrame). Tooling, not a
+        // divergence: DIV-0040 made the key nothing, and nothing of the
+        // game's changes.
+        if (wparam == VK_F11) {
+            if ((lparam & (1 << 30)) == 0) SaveFrameBesideDll();
             return 0;
         }
         // DIV-0048: F1 toggles double speed; a held key's repeats (bit 30 of

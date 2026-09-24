@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 48 entries, DIV-0001..0048)
+**Status:** IN PROGRESS (opened 2026-09-18; 49 entries, DIV-0001..0049)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2146,3 +2146,36 @@ designed in rather than bolted on.
   after any stall inside DIV-0034's 500 ms that spans an area change. Not a
   divergence - a defect of ours.
 - **Reversible?** F1 again; with the loop, `BOF3X_ORIGINAL=Game_WinMain`.
+
+### The logo videos keep playing when the window is not in front
+
+- **ID:** DIV-0049
+- **Date:** 2026-09-24
+- **Subsystem:** platform (`Fmv_WndProc` `0x59E570`, ours in
+  `src/game/fmv_play.cpp`; the window procedure `Fmv_Play` installs for the
+  length of a video)
+- **Original behaviour:** on `WM_ACTIVATEAPP` the procedure sends MCI
+  `pause vfw` when the window is deactivated and `SetFocus` plus
+  `resume vfw` when it is activated again (read 2026-09-19 and again
+  2026-09-24: 0xD4 bytes, every case listed in the source; its default case
+  is `DefWindowProcA`, not the saved procedure as `symbols.toml` had said).
+  The videos stop whenever another window takes the focus - the owner's
+  report, 2026-09-24.
+- **New behaviour:** under DIV-0033 (the game keeps running when the window
+  is not in front, the default) neither MCI command is sent, and the video
+  plays on; the focus is still taken back on activation. `BOF3X_BACKGROUND=0`
+  keeps the original pair. Everything else of the procedure is as the
+  original: a key or a click ends the video, `MM_MCINOTIFY` at its end,
+  `WM_DESTROY` sets the quit flag.
+- **Rationale:** DIV-0033 made the loop keep running unfocused; the videos
+  before it were the one part of the start-up still freezing. The owner,
+  2026-09-24: "the startup videos freeze when focus is taken away, we should
+  fix that".
+- **Also in the PSX version?** Not applicable.
+- **Verification:** 2026-09-24. An attract run with `WM_ACTIVATEAPP` (clear)
+  posted to the window 4 s after launch and (set) at 12 s, the window left
+  in the background: 1,326 logic frames in 60 s with ours - the loop began
+  at about 15.8 s, as with no deactivation - against 1,088 with
+  `BOF3X_ORIGINAL=Fmv_WndProc`, the loop at about 23.7 s: the 8 s of
+  deactivation spent paused (`analysis/attract/fmv_ours.tsv`, `fmv_capcom.tsv`).
+- **Reversible?** `BOF3X_BACKGROUND=0`, or `BOF3X_ORIGINAL=Fmv_WndProc`.

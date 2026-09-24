@@ -312,7 +312,11 @@ What is established:
    steps had capped presents at 64 a second, D5's last trace);
    the 4x and 1 ms runs found and fixed a backend defect, a released
    surface's snapshot unreachable across a skipped present
-   ([`render-backend.md`](render-backend.md)). The
+   ([`render-backend.md`](render-backend.md)). **DIV-0049:** the logo videos
+   play on when the window is not in front (`Fmv_WndProc` ours); and the
+   game writes its own captures - `BOF3X_SHOT_DIR` for a recipe's shots,
+   F11 by hand - so `input_run.py --no-front` needs nothing on top
+   ([`input-script.md`](input-script.md)). The
    route's 40-function queue is the next wave, the compass and HUD first;
    the place plates are paint in the world maps' texture pages, as the
    sibling found, and the localisation build's next data item.

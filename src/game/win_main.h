@@ -13,3 +13,7 @@ void WinMain_Inject();
 // (BOF3X_ORIGINAL=Game_WndProc), which freezes the loop itself, so the
 // original behaviour is unchanged.
 bool WinMain_InputAllowed();
+
+// DIV-0033's switch: true unless BOF3X_BACKGROUND=0. Read by Fmv_WndProc
+// (DIV-0049), whose pause on deactivation follows it.
+bool WinMain_Background();
