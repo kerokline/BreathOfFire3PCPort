@@ -41,6 +41,7 @@
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
 #include "game/battle_flow.h"
+#include "game/battle_misc.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -211,6 +212,8 @@ void InjectAll() {
                                 // does not matter (no widescreen patch touches its functions)
     BattleSetup_Inject();       // group BA (round 7): every call of its clones re-aimed at a recorder, no jump
                                 // tables - order does not matter
+    BattleMisc_Inject();        // every call of its clones re-aimed at a recorder, the dispatch's table
+                                // immediates re-aimed and a jump table relocated in the copies: order does not matter
     InjectReport();
 }
 
