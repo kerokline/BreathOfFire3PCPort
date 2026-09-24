@@ -1287,3 +1287,39 @@ reachable in play is the owner's to say.)
 attack is added to; a charged enemy's is replaced by charge × ATK / 2, so a
 charge of 2 does nothing for an enemy. The PSX the same; whether it was
 intended is unknown. Kept.
+## D52 — The sparkle effect's phase table has no bound (latent)
+
+**Found:** group BH, 2026-09-24 ([`battle_items.md`](battle_items.md)).
+Read, not seen. `0x4B9000`, the sparkle's type-0 update (Capcom's; not
+taken, for this reason), calls its phase handler through a three-entry
+table on its own stack with no bound: a phase of 3 or more calls its own
+return address or the caller's stack. `Sparkle_Types` `0x65AE28` has one
+real entry, so a non-zero type would jump into data; the one writer stores
+0. Neither can be reproduced; a bounds check would be a divergence (as
+D22's `MsgBox_SystemChoice`). Kept.
+
+## D53 — `SndStream_Stop` tests an uninitialised local when `GetStatus` fails (latent)
+
+**Found:** group BH, 2026-09-24 ([`battle_items.md`](battle_items.md)),
+`SndStream_Stop` `0x5A71C0`. Read, not seen. PC only (the PSX streams from
+the disc). Kept.
+
+## D54 — The battle's pop-up writers do not check for a full record pool (latent)
+
+**Found:** group BG, 2026-09-24 ([`battle_sprites.md`](battle_sprites.md) §7).
+Read, not seen. `Battle_SetDamagePopup` `0x453DA0` and `Battle_SetHitPopup`
+`0x454410` take a record from `BattleTask_Create` `0x435180` (48 records of
+0x84 bytes at `0x93A000`, 0xFF when none is free) and never test for 0xFF,
+so a write would land past `.data`. Kept.
+
+## D55 — Eight different enemy kinds walk `Battle_OpenEnemyNames` past its list (latent)
+
+**Found:** group BG, 2026-09-24 ([`battle_sprites.md`](battle_sprites.md) §7),
+`Battle_OpenEnemyNames` `0x494A80`. Read, not seen. With eight distinct
+enemy kinds alive the walk runs past its eight-entry list into the stack;
+the PSX does the same. Ours reads the same words, since its entry stack
+pointer is the original's. Kept. Also there: the enemy data id is indexed
+by 16 bits in `Battle_SetupEnemy` `0x494320` but by 8 in
+`Battle_CopyEnemyData` `0x4946C0`; `ClutMap_Mark` `0x454DF0`'s release
+writes over the last scratch cell when the owner is not found; and
+`Sprite_SetClutStp` `0x4551A0` divides by zero for a CLUT kind of 5 or more.
