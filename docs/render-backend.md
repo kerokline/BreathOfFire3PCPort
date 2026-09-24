@@ -107,6 +107,11 @@ runs on). What they reproduce of the fixed pipeline of 1998:
   alpha, the eight `D3DCMP` functions.
 - **Blending.** `ALPHABLENDENABLE`, `SRCBLEND`, `DESTBLEND` as given,
   `ADD`.
+- **A corner at depth 0** (the port's `rhw = 0.1 / z` infinite) is drawn at
+  the nearest depth the game uses, `rhw` 409.6 and `z` 1/4096, instead of
+  vanishing as it did on Capcom's device: DIV-0044, the world map's compass
+  needle (D41). `BOF3X_DRAWLOG_RGB=RRGGBB` logs the first 64 draws holding a
+  vertex of that diffuse colour, the way that one was found.
 - **Not built, and said so at run time:** a depth test, culling, fog,
   lighting, a fill mode other than solid, a `Lock` of the back buffer or a
   `Blt` reading it (only `D3d_AfterDraw` would, [`display-setup.md`](display-setup.md)

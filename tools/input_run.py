@@ -94,7 +94,11 @@ def main():
     ap.add_argument('--lang', default=None, help='BOF3X_LANG, e.g. en')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
+    ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
+                    help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
     a = ap.parse_args()
+    global LOG
+    LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
 
     recipe = os.path.abspath(a.recipe)
     if not os.path.isfile(recipe):
@@ -119,7 +123,7 @@ def main():
         k, _, v = kv.partition('=')
         env[k] = v
 
-    launcher = os.path.join(ROOT, 'build', 'bof3x-launcher.exe')
+    launcher = a.launcher
     if subprocess.run([launcher, '--game', a.game, '--no-config'], env=env).returncode != 0:
         sys.exit('launcher failed')
 

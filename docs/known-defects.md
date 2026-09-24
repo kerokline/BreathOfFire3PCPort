@@ -1146,3 +1146,29 @@ section 3). None is known to be reached by any caller:
   poked (`tools/recipes/backdrop_kinds.txt`): Capcom's code draws no backdrop
   at 4..8, 16, 64 and 255, the menu on black. **Ours draws none**
   (DIV-0030); the other three are kept as the original has them.
+## D41 — A primitive corner at depth 0 is never drawn: the world map's compass needle (PC only, fixed by DIV-0044)
+
+**Found:** the owner's recorded world-map route, 2026-09-23
+([`world-map.md`](world-map.md) §3). Seen in the all-original capture (no
+needle in the dial, `analysis/shots/worldmap_orig/f01260.png`) and read.
+
+**The defect.** `0x408530`, called once a frame by the world map's frame
+function `0x404390`, draws the compass needle: `Gte_PushMatrix`, the map's
+rotation matrix `0x929EC8` through `Gte_RotMatrix` and `Gte_SetRotMatrix`, a
+zero translation, then `Gpu_SetPolyG4` over the four corners at `0x9037A0` -
+(-10, 0, 0), (0, -4, 0), (0, 4, 0), (10, 0, 0), a diamond - projected by
+`Gte_RotTransPers4` and given depths by `Gte_PrimDepths4_10B`, moved into the
+dial by `(0x9E - a, 0x76 - b)`, coloured red, purple, purple, blue, and
+committed. The depths come out 1/4096, 0, 0, 0 (`BOF3X_DRAWLOG_RGB=800080`,
+DIV-0044's verification). The port's handler `D3d_DrawPolyG4` sets `rhw = 0.1
+/ z`, infinite for three corners, and Capcom's Direct3D 6 device draws
+nothing: the PC port never shows the needle. The PlayStation draws it (the
+owner's screenshots of both releases: it turns with the map). **PC only**,
+in the port's PSX-to-Direct3D translation. Fixed in the backend by DIV-0044,
+not in the port's code, so the primitive is Capcom's byte for byte.
+
+**Seen beside it, not read:** on the PlayStation the dial is translucent over
+the map; the PC port draws it opaque. The dial is one of the two sprites
+`0x404620` draws through `0x404560`, which has a semi-transparent path
+(`Gpu_SetSemiTrans`) - which path the dial takes, and why it differs, is for
+the takeover ([`world-map.md`](world-map.md) §4).

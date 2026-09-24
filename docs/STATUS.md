@@ -296,6 +296,13 @@ What is established:
    [`THIRD_PARTY.md`](THIRD_PARTY.md)), the owner's chosen MIT shader
    ported with a sliders dialog. Owed: the oracle and hash once wide, a
    rescale under the older CRT look, the owner's tuning of the look.
+   **That night the owner recorded a world-map route** ([`world-map.md`](world-map.md)):
+   its A/B found the compass needle the PC port never draws - three corners
+   at depth 0, dropped by Capcom's device, a sliver under ours - fixed in the
+   backend (D41, DIV-0044, the owner's PSX screenshots the reference); the
+   route's 40-function queue is the next wave, the compass and HUD first;
+   the place plates are paint in the world maps' texture pages, as the
+   sibling found, and the localisation build's next data item.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.

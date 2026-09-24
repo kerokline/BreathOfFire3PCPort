@@ -1916,3 +1916,44 @@ designed in rather than bolted on.
   mural. Owed: the owner's tuning; the dialog's sliders by hand (only
   tried by code).
 - **Reversible?** The Look box's other entries; `BOF3X_PRESENT` unset.
+
+- **ID:** DIV-0044
+- **Date:** 2026-09-23
+- **Subsystem:** display (the Direct3D 11 backend's `DrawPrimitive`,
+  `src/render/render_shim.cpp`; [`world-map.md`](world-map.md) §3,
+  [`known-defects.md`](known-defects.md) D41)
+- **Original behaviour:** the port's draw handlers give every corner the
+  primitive's depth as `z` and `rhw = 0.1 / z` ([`d3d-draw.md`](d3d-draw.md)).
+  A corner at depth 0 gets an infinite `rhw`, and Capcom's Direct3D 6 device
+  draws nothing for the primitive. The one known is the world map's compass
+  needle, `0x408530`: a Gouraud quad whose four corners `Gte_PrimDepths4_10B`
+  puts at depths 1/4096, 0, 0, 0, so the PC port never shows it. The
+  PlayStation draws it - a red-to-blue diamond that turns with the map (the
+  owner's screenshots of the JP and US releases, 2026-09-23).
+- **New behaviour:** a corner whose `rhw` is not at or below 409.6 - the
+  value at depth 1/4096, the smallest the game otherwise hands the handlers;
+  infinity and NaN included - is drawn at that nearest depth: `rhw` 409.6,
+  `z` 1/4096. The first four are logged (`render: DrawPrimitive corner ...`).
+  The backend runs no depth test, so only the perspective-correct
+  interpolation sees the change.
+- **Rationale:** before this, our backend divided by the infinity itself and
+  collapsed those corners to the screen centre - the "purple triangle/plane"
+  the owner asked about on the world map (a sliver from the dial to the
+  party's position, the world-map A/B's 2,365 differing pixels per map
+  frame). The intent is the needle the PlayStation draws; the owner, on
+  seeing it: "Its what I remember - a red-blue compass marker".
+- **Also in the PSX version?** No: its GPU has no per-corner depth to divide
+  by, and the needle draws.
+- **Verification:** 2026-09-23. Bisect: the sliver stayed with every draw
+  handler Capcom's (`BOF3X_ORIGINAL` of the 18 `D3d_*`), and went with
+  `Display_Setup` Capcom's - so the backend, not the primitive.
+  `BOF3X_DRAWLOG_RGB=800080` logged the quad: corners at (72, -48) .. (92,
+  20), `z` 0.000244 / 0 / 0 / 0, `rhw` 409.6 / inf / inf / inf, diffuse red,
+  purple, purple, blue. With the clamp, `analysis/shots/sliver_fix/wm.png`
+  shows the diamond in the dial; the world-map A/B re-run
+  (`analysis/shots/worldmap_ours2`, `analysis/attract/worldmap_ours2_compare.log`)
+  differs from Capcom's on the map frames by the needle alone (~650 pixels)
+  plus the tile-edge scatter every field frame shows since `rb1`. Owed: the
+  owner's eye in game, turning the map.
+- **Reversible?** No switch of its own; `BOF3X_ORIGINAL=Display_Setup`
+  returns to Capcom's DirectDraw device, where the needle vanishes again.
