@@ -733,18 +733,21 @@ void FuzzBit(Tally& t, const void* clone, const void* ours, unsigned rounds, U s
 }
 
 void FuzzCopies(Tally& t, const void* clone, unsigned rounds) {
-    const Region regions[] = {{kContexts, kContextBytes}, {kParty, kPartyBytes}, {kEnemyObjects, kEnemyBytes}, {kSprite, 4}};
+    // The contexts through slot 82 (0x2AC0 bytes): from slot 50 a context lies
+    // over the enemy objects it may be copied from, so the copy's direction
+    // shows (rep movsd forward, a dword at a time).
+    const Region regions[] = {{kContexts, 0x2AC0}, {kParty, kPartyBytes}, {kSprite, 4}};
     g_test = kTestCopies;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x800000u + r;
         if (r % 8 == 0) FillRandom(kContexts, kContextBytes);
         RandomActors(true);
         PutLong(At(kSprite), Next());
-        PlanSlots(Next() % 40, 1 + Next() % 8);
-        Pass(t, regions, 4, 0xFFFFFFFFu, clone, As<const void*>(&Battle_SpawnActorCopies), RandomEntry());
-        unsigned n = 0;
-        for (unsigned c = 0; c < g_theirs.n && c < d3d_fuzz::kMaxCalls; ++c) n += g_theirs.calls[c].what == 1;
-        t.hits += n;
+        const bool over = OneIn(4);
+        if (over) PlanSlots(50 + Next() % 30, 1 + Next() % 3);
+        else PlanSlots(Next() % 40, 1 + Next() % 8);
+        Pass(t, regions, 3, 0xFFFFFFFFu, clone, As<const void*>(&Battle_SpawnActorCopies), RandomEntry());
+        t.hits += over && Called(g_theirs, 1);
     }
     g_test = kTestNone;
 }
