@@ -11279,3 +11279,61 @@ params = "unsigned long x, unsigned long z, int dy, unsigned size"
 impl = "src/game/world_map.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-24, 0x572FA0..0x57304E (0xAF bytes), cdecl, one call, every jump internal; the PSX 0x801564C4 (psx_pair call-disputed, confirmed by reading: the same row, bound and append) is the twin. row = x.high + z.high - MapView_Origin's two words + (x.low != 0) + (z.low != 0) + (signed byte dy) + 2; nothing unless 0 <= row < 0x38 and (Gfx_BufferIndex << 16) + 0x7F1BAC is above Gfx_PacketNext + (size & 0xFF) (unsigned); then Gpu_LinkPrim(the dword at 0x8022C4 + (Gfx_BufferIndex + row * 6) * 8, Gfx_PacketNext) - the tail of that map-view row's list in Gfx_FrameNodes - and, with the buffer index and Gfx_PacketNext read again, the tail slot = Gfx_PacketNext, Gfx_PacketNext += size & 0xFF. No result read: 371 E8 callers, draw code. World-map route: 9,714 calls."
+
+# --- Group BJ of the seventh round (docs/battle_draw.md): three Direct3D
+# handlers, the battle menu's item and skill lists, the area palette's tint.
+
+[[func]]
+pc = 0x5A0E80
+name = "D3d_DrawPolyG3"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/battle_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A0E80..0x5A1047 (0x1C8 bytes), table entry 4 (code 0x30, called at 0x59F0E2): three D3d_PrimColor calls (colours +4, +0x14, +0x24, the code byte +7 and the mode Gfx_DrawTpage & 0xFFFF re-read each, null specular) into locals, then three corners of 0x10 from +8 (sx, sy scale times x, y on the x87, sz by mov, rhw 0.1 / z, the diffuse), the fourth vertex's z 0x7CA9C0 set to 0, SetTexture(0, NULL), 0x437CC0(0) twice, D3d_SetBlend(code, mode), D3d_SetShadeMode(2), DrawPrimitive(TRIANGLELIST, 0x1C4, D3d_Vertices, 3, 0), whose result is returned. The port's own; no PSX twin. Combat route: 9,088 calls."
+
+[[func]]
+pc = 0x5A18B0
+name = "D3d_DrawLineG2"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/battle_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A18B0..0x5A19FC (0x14D bytes), table entry 11 (code 0x50, called at 0x59F144): two D3d_PrimColor calls (colours +4 and +0x14, code and mode re-read, null specular) into locals, two corners of 0x10 from +8 as D3d_DrawPolyG3's, SetTexture(0, NULL), 0x437CC0(0) and (1), blend, D3d_SetShadeMode(2), DrawPrimitive(LINESTRIP, 0x1C4, D3d_Vertices, 2, 0). The port's own; no PSX twin. Combat route: 3,140 calls."
+
+[[func]]
+pc = 0x5A1B50
+name = "D3d_DrawLineG3"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/battle_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A1B50..0x5A1D0D (0x1BE bytes), table entry 12 (code 0x58, called at 0x59F152): D3d_DrawPolyG3's three colours and three corners without its fourth-z store, SetTexture(0, NULL), 0x437CC0(0) and (1), blend, D3d_SetShadeMode(2), DrawPrimitive(LINESTRIP, 0x1C4, D3d_Vertices, 3, 0). The port's own; no PSX twin. Combat route: 3,140 calls."
+
+[[func]]
+pc = 0x59CD00
+name = "BattleMenu_DrawItemList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/battle_draw.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x59CD00..0x59D1F1 (0x4F2 bytes, 25 calls, every jump internal). Tail of the window-task handler 0x59CB40 (entry 1 of 0x66B534) with the record 0x905B84. Menu_DrawItemList's shape in seven rows: Menu_DrawBox(x + 3, y + 3, 0x99, 0x82, +9, 0x903A5A), Menu_ListScroll(+0xB, offset, moving, +0x12), rows 13 apart from 0x656B00[+0xA] + top, dim when +9 or Item_CanUse(+8, 0x66972C[0x904065[s8 0x929F06]], +0xA, id) is 0, colour 7 / 2 on the cursor (top + row == +0xD) / 0, the count 1 for category 4 else 0x656B14[+0xA]; cursor and marked rows raised 2 over a dim shadow; the title 0x66B58C[+0xA] centred by Text_CharCount, sprintf %3d/%3d of Inventory_CountUsed and 0x80 (0x20 for category 4) through Text_DrawFont8, the arrow pieces by word +0x10 bits 1 and 0 and its countdown, the frame pieces, Menu_DrawScrollBar(0x656B00[+0xA], +0xB, x + 0x90, y + 0x18, 7, 0x80, 0x5C). No PSX pair in pairs_propagated.json. Hypothesis in the name: battle, because the combat route reaches it (222 calls) and the attract, shop and world-map routes do not; the field menu's list is Menu_DrawItemList."
+
+[[func]]
+pc = 0x59D200
+name = "BattleMenu_DrawSkillList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/battle_draw.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x59D200..0x59D635 (0x436 bytes, 23 calls, every jump internal). Tail of the window-task handler 0x59CBC0 (entry 2 of 0x66B534). Menu_DrawBox(x + 3, y + 3, 0x99, 0x82, 0, 0x903A5A), Menu_ListScroll(+0x10, offset, moving, +0x12), ids from 0x591E50(+0xA, +0xB, 1) + top; per id: 0x57DA70(+8, 0x929F06, id) - dim when 0 - colour 7 / 0, 2 when the ROW INDEX equals +0xD; 0x591DB0(0x929F06, id, 1) and 0x5918A0(id) into 0x57DC90(x + 7, y, colour, icon, 0x65C4C8 + 0x18 id, cost, dim); raised 2 over a dim shadow when s16 +0x10 + row equals +0xD or +0xC (the two cursor tests disagree once scrolled, docs/battle_draw.md section 5). The title 0x66B5A0[+0xB] or, with word +0x14, 0x66B5B0 (0x66A220, the skill list's header per docs/dialogue-localisation.md) centred by strlen, arrows and countdown on byte +9, frame pieces (two more with word +0x14), Menu_DrawScrollBar(0x591E50(+0xA, +0xB, 1), +0x10, x + 0x90, y + 0x18, 7, 0xA, 0x5C). Calls group BD's 0x57DA70, 0x57DC90, 0x5918A0, 0x591DB0, 0x591E50 by address. No PSX pair. Combat route: 284 calls; battle in the name on the same grounds as BattleMenu_DrawItemList."
+
+[[func]]
+pc = 0x573050
+name = "AreaMap_TintClut"
+psx = 0x801565B4
+ret = "void"
+params = "int level"
+impl = "src/game/battle_draw.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x573050..0x573077 (0x28 bytes): nothing when Field_StatusBits 0x8034E1 bit 0 is set; else Gfx_ClutAdjust(0xFFFF, 0xFFF, level, level, level) and a tail jump to AreaMap_ClutCycleStart. The PSX 0x801565B4 does the same two calls (found by a scan of the sibling's generated code for jal 0x80158CE8 followed by 0x80158B60; not in pairs_propagated.json). Callers 0x4B51E0, 0x4FB010, 0x4FB070 (rel32 scan), state steps that step a byte of the record 0x937F88 by one and pass it sign-extended; eax on the way out is not a value (void). Combat route: 12 calls."
