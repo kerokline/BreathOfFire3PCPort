@@ -146,8 +146,18 @@ std::uint32_t FloatBitsFor(std::uint32_t h) {
     }
     }
 }
+// Hash() is the same within one call; several values in one call take a
+// salt that counts up (reset with the log, so both passes see the same).
+std::uint32_t g_salt;
+std::uint32_t Salted() {
+    std::uint32_t h = Hash() ^ (++g_salt * 0x9E3779B9u);
+    h ^= h >> 16;
+    h *= 0x7FEB352Du;
+    h ^= h >> 15;
+    return h;
+}
 void PutFloatBits(void* at) {
-    const std::uint32_t bits = FloatBitsFor(Hash());
+    const std::uint32_t bits = FloatBitsFor(Salted());
     std::memcpy(at, &bits, sizeof bits);
 }
 std::uint32_t Shorts3(const short* v) {
@@ -242,12 +252,12 @@ long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const s
 }
 void __cdecl StubDepths3(unsigned char* prim) {
     Record(16, Address(prim));
-    for (unsigned k = 0x10; k <= 0x30; k += 0x10) if (Hash() % 2) PutFloatBits(prim + k);
+    for (unsigned k = 0x10; k <= 0x30; k += 0x10) if (Salted() % 2) PutFloatBits(prim + k);
     Disturb();
 }
 void __cdecl StubDepths4(unsigned char* prim) {
     Record(17, Address(prim));
-    for (unsigned k = 0x14; k <= 0x50; k += 0x14) if (Hash() % 2) PutFloatBits(prim + k);
+    for (unsigned k = 0x14; k <= 0x50; k += 0x14) if (Salted() % 2) PutFloatBits(prim + k);
     Disturb();
 }
 void __cdecl StubStoreDepth(float* out) {
@@ -539,10 +549,11 @@ Region g_regions[] = {
     {0, 2 * kRecordBytes},                                    // g_sprites
     {0, 2 * kRecordBytes},                                    // g_actors
     {0, 0x40},                                                // g_cues
+    {at::kEnemyFxSize, 8 * 0x8C},                             // the enemy effect sizes of types 0..7
 };
 constexpr unsigned kRegionBytes = at::kSparkles * at::kSparkleStride + 4 + 4 + 0x10 + 0x20 + 0x104 + 0x10 + 4 + 4 + 1 + 1 +
                                   3 * at::kPartyStride + 8 * at::kEnemyStride + 4 + 4 + 4 + kPrimBytes +
-                                  2 * kRecordBytes + 2 * kRecordBytes + 0x40;
+                                  2 * kRecordBytes + 2 * kRecordBytes + 0x40 + 8 * 0x8C;
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -562,6 +573,7 @@ void Apply(const State& s) {
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
     g_trans = g_matrix = nullptr;
+    g_salt = 0;
 }
 
 // Random bytes put back inside what the functions dereference: the pointers
@@ -660,6 +672,8 @@ Args Seed(unsigned k) {
             args.a[1] = Stale(0xFF, Often() ? kSounds[Next() % 4] : Next() & 0xFF);
             At(at::kEnemySoundMode)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         }
+        if (k == kFxSizeK && index >= 3)   // a type the region covers
+            At(at::kEnemyRecords + (index - 3) * at::kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 8);
         if (k == kFxSizeK && index < 3) {
             unsigned char* const r = At(at::kPartyRecords + index * at::kPartyStride);
             if (Half()) r[0x134] ^= 2;

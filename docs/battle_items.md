@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-23) - twenty-four functions ours
 (`src/game/battle_items.cpp`, shadow name `battle_items`), each fuzzed
 headless against a copy of Capcom's with every call re-aimed at a recorder;
-CONTROLS_SUMMARY. **Not yet through the live check** - the combat A/B runs
+72 negative controls, 71 refused by a count and one by a fault (with a counting twin). **Not yet through the live check** - the combat A/B runs
 centrally after the merge (section 7).
 
 Group BH of the seventh round ([`takeover-queue-round7.md`](takeover-queue-round7.md)).
@@ -195,7 +195,7 @@ function: random bytes over the sparkle pool, the scratch words
 party and eight enemy records, `Sprite_Current` / `Frame_Counter`,
 `Gfx_PacketNext`, the actor index, `Field_State`, `Snd_Device`, the stream
 cell, two sprite and two actor records and a primitive buffer of the fuzz's
-own; the pointers put back inside them; then each function's boundaries
+own, and the effect sizes of enemy types 0..7 at `0x8C5652`; the pointers put back inside them; then each function's boundaries
 seeded (the delay 0 / 1 / 2, the offset table's 0 / -1 / 0x7FFF / 0x8000 /
 7 / -8, count one below the limit, `Frame_Counter` and 3 zero, the draws'
 start 0 / 0xFFFF / 0xFFE0 and radius 0 / 0xFFFF / 0x10000 / -1, a full pool
@@ -213,15 +213,114 @@ again and calls through it), a scratch or vertex word, a field of the
 sparkle or the sprite, `Frame_Counter` or the actor's sparkle count; the
 sine and cosine answer anything a quarter of the time, `Rand` negative
 values the CRT never gives, the projections NaN, infinities, 2^63 and
--0.99999994; the commits advance `Gfx_PacketNext` as the real ones do.
+-0.99999994 (each value of a call salted apart); the commits advance `Gfx_PacketNext` as the real ones do.
 
 Result (2026-09-23):
 
-RESULT_LINES
+    shadow      battle_items self-test: 48000 rounds over 24 functions (2000 each), 1583500 calls to the
+                stand-ins, 0 MISMATCHES
+    shadow      battle_items coverage: dispatched 536 / 481 / 500 / 483; alloc found 1590, full 410; launched 320;
+                freed 311; party animations 1024, enemy 976; stream data rewritten 578; sorted commits 198000,
+                sin 308000, cos 238000, tints 337, actor sounds 1598, enemy cues 531, sounds by id 503,
+                lost-buffer plays 1704
 
-`BOF3X_SHADOW='*'`: STAR_RESULT.
+`BOF3X_SHADOW='*'`: exit 0, every module's self-test passing (2026-09-24).
 
-CONTROLS_TABLE
+**Seventy-two negative controls**, planted one at a time by a script (not committed: apply, build, run `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=battle_items`, restore), each build's output read. Seventy-one are refused by a count (exit 3), each only in the functions it touches; one by a fault:
+
+| | Planted | Refused in (rounds of 2,000, by function) |
+|---|---|---|
+| C1 | PolyG3: code 0x31 | 2,000 |
+| C2 | PolyG3: two floats only | 2,000 |
+| C3 | LineG2: second float at +0x1C | 2,000 |
+| C4 | LineG3: code 0x5C | 2,000 |
+| C5 | Tile1: no float | 2,000 |
+| C6 | Dispatch: the phase byte as the type | a fault (access violation, exit 0xC0000005) - see below |
+| C7 | Launch: delay down by 2 | 2,000 |
+| C8 | Launch: sign test <= 0 | 27 |
+| C9 | Launch: x pointer read after the Rand | 7 |
+| C10 | Launch: dy added | 307 |
+| C11 | Launch: rise length Rand & 7 | 157 |
+| C12 | Launch: row from the sparkle before the Rand | 14 |
+| C13 | Sway: 25 not 24 | 2,458 over 2 functions (Sparkle_Rise 1,216, Sparkle_Fade 1,242) |
+| C14 | Rise: phase on count != limit | 2,000 |
+| C15 | Sway: angle & 0x7F | 2,024 over 2 functions (Sparkle_Rise 995, Sparkle_Fade 1,029) |
+| C16 | Fade: every eighth frame | 614 |
+| C17 | Fade: actor count kept | 296 |
+| C18 | Fade: not freed | 311 |
+| C19 | RaysG2: radius as a dword | 1,055 |
+| C20 | RaysG2: angle & 0x3F | 1,485 |
+| C21 | RayShade: * 5 | 3,769 over 2 functions (Sparkle_DrawRaysG2 1,907, Sparkle_DrawRaysG3 1,862) |
+| C22 | RaysG2: three rays | 2,000 |
+| C23 | RaysG3: a quarter radius | 1,419 |
+| C24 | RaysG3: tip dark 0 | 2,000 |
+| C25 | RaysG3: tip y by cos | 2,000 |
+| C26 | Disc: Rand & 7 | 950 |
+| C27 | Disc: colour row shade + 3 * kind | 1,950 |
+| C28 | Disc: rim 1 | 1,992 |
+| C29 | Alloc: full answers 0x7F | 410 |
+| C30 | Alloc: 127 records | 207 |
+| C31 | Free: four bytes | 1,992 |
+| C32 | Fan: radius 0x121 | 1,978 |
+| C33 | Fan: shade * 11 | 1,749 |
+| C34 | Fan: closing tpage 0x16 | 2,000 |
+| C35 | Fan: previous rim read before the setters | 187 |
+| C36 | PushMatrix: height not negated | 1,498 |
+| C37 | PushMatrix: translation outside the MATRIX | 2,000 |
+| C38 | PushMatrix: x >> 8 | 1,021 |
+| C39 | Ring: lift + 0x41 | 1,936 |
+| C40 | Ring: sort lean from y | 2,000 |
+| C41 | Ring: u1 = i * 4 | 1,999 |
+| C42 | Ring: lift angle without i | 2,000 |
+| C43 | Ring: last commit re-reads Sprite_Current | 1,999 |
+| C44 | FxDisc: radius * 3 | 1,810 |
+| C45 | FxDisc: red * 11 | 1,999 |
+| C46 | FxDisc: Sprite_Current kept over the sin | 650 |
+| C47 | SetAnimation: party below 4 | 314 |
+| C48 | SetAnimation: Sprite_Current not put back | 1,941 |
+| C49 | SetAnimation: the byte alone | 1,024 |
+| C50 | Ftol16: NaN answers 0x8000 | 1,182 |
+| C51 | UpdateScreenXY: height not negated | 1,467 |
+| C52 | UpdateScreenXY: y from +8 | 1,485 |
+| C53 | Flash: bit 0x40 | 173 |
+| C54 | Flash: enemy flag at +0x90 | 172 |
+| C55 | Flash: out ignored | 656 |
+| C56 | PlaySound: first not + 1 | 799 |
+| C57 | PlaySound: 0x601 | 503 |
+| C58 | PlaySound: mode inverted | 1,034 |
+| C59 | PlaySound: Field_State not set | 966 |
+| C60 | FxSize: bit 0 | 428 |
+| C61 | FxSize: enemy stride 0x8B | 859 |
+| C62 | Play: no Snd_Device test | 521 |
+| C63 | Play: lost is 0x88780097 | 762 |
+| C64 | Play: second Play on the first buffer | 68 |
+| C65 | Stop: status bit 1 | 786 |
+| C66 | Stop: cell kept | 1,473 |
+| C67 | Stop: Release on the first pointer | 35 |
+| C68 | Launch: drift Rand & 3 | 114 |
+| C69 | Launch: base x before the throw | 320 |
+| C70 | Ring: v2 z not zeroed | 2,000 |
+| C71 | Dispatch: table of words | 983 |
+| C72 | Fade: count down with the phase | 1,204 |
+
+Three need a word:
+
+- **C6 is refused by a fault**: the phase byte read as the type sends both
+  sides through `Sparkle_Types` past its four swapped entries, into data -
+  exit `0xC0000005`, which proves less than a count (Traps). C71, the right
+  byte but the table indexed by its bit 0, is its counting twin: 983 rounds.
+- **The first run of the controls had two not refused** (C52 and C61), and
+  both were the fuzz's blindness, not changes that change nothing: the
+  projection stand-in wrote the same float to x and y (one `Hash()` per
+  call), and the enemy effect-size table at `0x8C5652` was not a region (all
+  zero at start-up). The stand-ins now salt each value within a call, and
+  the table's first eight types are randomised with the enemy's type seeded
+  0..7; both are refused (1,485 and 859 rounds), and the table above is the
+  second run, every control against the final fuzz.
+- The thinnest by count are C9 (7 rounds: the current sparkle moved by the
+  `Rand` stand-in exactly while the x pointer is held), C12 (14), C8 (27: a
+  row's dx at exactly 0), C67 (35) and C64 (68) - each a re-read that only a
+  stand-in moving the cell can tell apart.
 
 ## 7. What the combat route reaches, and what is fuzz only
 
