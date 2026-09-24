@@ -11213,3 +11213,211 @@ params = "void"
 impl = "src/game/area_backdrop.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x4112A0..0x4112B7 (0x18 bytes, then nops to 0x4112C0), cdecl, no calls, no jumps: Sprite_Current +0x2E = 0xA0, +0x30 = 0x50 - the sprite's screen point (what Sprite_UpdateScreen writes and Sprite_DrawOverlays reads) pinned to (160, 80). Rel32 scan of .text: 33 callers, eleven triads at 0x401F80 / 0x401FD0 / 0x402030, 0x404030 / 0x404080 / 0x4040E0, .. 0x424D50 / 0x424DA0 / 0x424E00 - one per world-map region overlay compiled into the exe - each calling it first, then moving the sprite's scale +0x40 by 0x2000, counting +9 down, setting +0x48 and the state +1, and tail-jumping to Sprite_UpdateScreen 0x5890E0. World-map route (recipe_worldmap): 259 calls, from 0x404035 (24) and 0x404085 (211); not reached by the attract cycle or the shop route. Hypothesis in the name: that the pinned sprite is the party's marker over the map. It is not the sky (widescreen.md section 3d called 0x4112A9 that): a centred point needs nothing under the primitive shift."
+
+# --- group BB (round 7, 2026-09-23): the battle task and the turn flow, docs/battle_flow.md ---
+
+[[func]]
+pc = 0x42E400
+name = "Battle_PhaseDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x42E400..0x42E461 (0x62 bytes), cdecl, no rel32 calls: builds a six-entry table on its stack (mov [esp + 0..0x14], imm32: 0x42E470 0x42E990 0x42F070 0x42F220 0x4302B0 0x4311E0) and calls [esp + (dword 0x904AA0 and 0xFF) * 4], unchecked; first, when byte 0x904AAA is set, call [0x904B6C](3) and the phase dword re-read. Combat route (recipe_combat): 2,091 calls, all from 0x42E39E in the battle frame 0x42E2F0. No PSX twin in pairs_propagated.json. Named for what it dispatches; the six phases are unread."
+
+[[func]]
+pc = 0x435110
+name = "BattleTask_RunAll"
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x435110..0x435170 (0x61 bytes), cdecl, no rel32 calls: for the 48 slots of 0x84 bytes at 0x93A000 (to 0x93B8C0) whose byte +0 is non-zero: 0x93B8C4 and Sprite_Current = the slot, 0x93B940 = its dword +0x80, call a four-entry stack table (0x4352A0 0x435350 0x4378B0 0x4357D0) by byte +6, unchecked. Combat route: 2,091 calls from 0x42E3B7 in the battle frame. The PSX slot array is 0x801EC2A0 (0x78 bytes each, current pointer 0x801EC250; see BattleTask_Create); no PSX twin paired for the runner itself."
+
+[[func]]
+pc = 0x435180
+name = "BattleTask_Create"
+psx = 0x801E584C
+ret = "unsigned char"
+params = "unsigned kind, unsigned parameter"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x435180..0x4351E9 (0x6A bytes), cdecl, no calls: the first of the 48 slots at 0x93A000 (stride 0x84) whose byte +0 lacks bit 0 gets bit 0, byte +6 = the kind (argument 1's low byte), +5 = the parameter (argument 2's); returns its index in al, or 0xFF when all are taken. The PSX 0x801E584C (pairs_propagated call-anchored; read 2026-09-23) is the same over 0x801EC2A0, stride 0x78. Combat route: 52 calls from nine sites (0x437957, 0x43799B, 0x4377AB, 0x446BDA ...)."
+
+[[func]]
+pc = 0x4351F0
+name = "BattleTask_FreeCurrent"
+psx = 0x801E58C8
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4351F0..0x435254 (0x65 bytes), cdecl, no calls: bytes +0, +5, +6, +1, +2, +3, +4, +0x48, +0x5D, +0x5E, +0x5F of the slot 0x93B8C4 points at zeroed, the pointer re-read for each. PSX 0x801E58C8 (call-anchored) zeroes the same bytes of *0x801EC250. Combat route: 41 calls from eight sites."
+
+[[func]]
+pc = 0x435260
+name = "BattleTask_ClearAll"
+psx = 0x801E5978
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x435260..0x435294 (0x35 bytes), cdecl, no calls: the same eleven bytes as BattleTask_FreeCurrent in all 48 slots of 0x93A000. PSX 0x801E5978 (call-anchored), the same over 0x801EC2A0. Combat route: 1 call, from 0x42E58A."
+
+[[func]]
+pc = 0x435830
+name = "BattleEnemy_RunAll"
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x435830..0x435899 (0x6A bytes), cdecl, no rel32 calls: for the eight enemy objects of 0x128 bytes at 0x93B960 whose byte +0 is non-zero: Sprite_Current and 0x939AD8 = the object; byte 0x904AAA re-read per object; clear: call [0x64B084 + byte +0x100 * 4]; set: call [+0xF4](2) when byte +1 is non-zero, then [0x64B088 + (byte +0x100 of the re-read 0x939AD8) * 4] - the same .data table one entry on (its second dword is 0). Combat route: 2,091 calls from 0x42E3A8; 0x436090 reached 2,026 times and Battle_EnemyDefeated once from its call 0x435887. No PSX twin paired."
+
+[[func]]
+pc = 0x4358A0
+name = "BattleEnemy_UpdateScreenAll"
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4358A0..0x4358CD (0x2E bytes), cdecl: each enemy object at 0x93B960 (8 x 0x128) with byte +0 non-zero becomes Sprite_Current and 0x939AD8 and gets Sprite_UpdateScreen 0x588F20 (E8 at +0x1D). Combat route: 2,091 calls from 0x42E3C1. No PSX twin paired."
+
+[[func]]
+pc = 0x4358D0
+name = "BattleEnemy_SetAnimation"
+psx = 0x801E2298
+ret = "void"
+params = "unsigned animation"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4358D0..0x435A03 (0x134 bytes) and its 4-entry jump table at 0x435A04 (cases 0x4358EC 0x43592F 0x435970 0x4359B3), cdecl: on byte +8 of Sprite_Current (above 3 nothing), b = byte [dword 0x939AD8 +0xFC] + animation (+ 1 for cases 2 and 3); Sprite_EnsureAnimation(b and 0x7F); then b re-read through 0x939AD8 and its +0xFC, and Sprite_Current +0x2A = bit 7 of b for cases 0 and 2, its inverse for 1 and 3. PSX 0x801E2298 (call-anchored). Combat route: 82 calls, 66 from 0x437427. Named for the flip byte it sets with the animation."
+
+[[func]]
+pc = 0x436090
+name = "BattleEnemy_ScriptTick"
+psx = 0x801E3070
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x436090..0x4360B8 (0x29 bytes), cdecl: returns 1 when byte +0x92 of 0x939AD8's object has 0x44, or byte 0x904B8E is set and +0x114 lacks 0x10; else a tail jmp to Sprite_ScriptTick 0x5893A0 (E9 at +0x21). PSX 0x801E3070 the same (status +0x82 and 0x44, 0x801463CA, +0x104 and 0x10, 0x8014D86C). Combat route: 2,042 calls, 2,026 by the state dispatch of BattleEnemy_RunAll (return 0x43588E: reached by a tail jump of 0x4360F0, the state-0 entry of 0x64B084, through 0x64B1A0)."
+
+[[func]]
+pc = 0x4360C0
+name = "BattleEnemy_ScriptTickOnce"
+psx = 0x801E30D8
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4360C0..0x4360E8 (0x29 bytes), cdecl: BattleEnemy_ScriptTick with a tail jmp to Sprite_ScriptTickOnce 0x589410 (E9 at +0x21). PSX 0x801E30D8 the same (0x8014D9E0). The round list's 'recursive, calls Battle_ApplyDamage' was pe_funcs.py's extent running into the unlisted functions after it (0x4360F0 on); the real body is these 41 bytes. Combat route: 16 calls, all from 0x436A05."
+
+[[func]]
+pc = 0x436B50
+name = "BattleEnemy_Chance70"
+psx = 0x801E42C0
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x436B50..0x436BBE (0x6F bytes), cdecl: 0 when the word +0x92 of 0x939AD8's object has any of 0x4064, byte 0x904B34 is 3 or more, byte 0x904B35 is 4 with word 0x904B80 0xA1, byte 0x904B8E is set with +0x114 lacking 0x10, or +0x90 lacks bit 1; else 1 with bit 15 of dword +0x110, else Rand() % 100 < 70 (idiv, signed). PSX 0x801E42C0 (call-anchored), the sibling's STEAL.md false lead with the same Rand % 100 < 70 behind +0x80 and 2 and +0x100 and 0x8000. Combat route: 4 calls (0x436AA1 3, 0x436AD1 1). Hypothesis in the name only: what the chance decides is unread."
+
+[[func]]
+pc = 0x437470
+name = "Battle_EnemyDefeated"
+psx = 0x801E542C
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x437470..0x437574 (0x105 bytes), cdecl, five calls: Sprite_Current +0 or 0x40; 0x904AEC += u16 +0x96 and 0x904AF0 += u16 +0x94 of 0x939AD8's object, +0x94 zeroed, +0x93 or 0x40; 0x446650(actor +5); Battle_RollDrops; 0x904AB3 decremented, 0x904AE8 or 2 at zero; round flag 0x4000 of 0x904AA8 cleared when 0x904B8A is the actor; 0x494ED0(byte +0x8C); Sprite_ReleaseTint(Sprite_Current); +0x110 and 0xFFFFFF8F; 0x446FD0(actor); state bytes +1..+3 = 2, 0, 0. The sibling's Battle_EnemyDefeated 0x801E542C (names/functions.toml, status evidence) term for term and in the same order (0x1F800044 = Sprite_Current, 0x801EB458 = 0x939AD8, 0x80146328 / 0x8014632C = 0x904AEC / 0x904AF0). Combat route: 1 call (the kill), from 0x43588E."
+
+[[func]]
+pc = 0x437580
+name = "Battle_RollDrops"
+psx = 0x801E525C
+ret = "void"
+params = "void"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x437580..0x437696 (0x117 bytes), cdecl, one call (Rand, E8 at +0x56): the eight chance bytes 0 0 1 3 7 0x1F 0x7F 0xFF on the stack; for drops +0xA8 / +0xAC (u16 item, class byte +2) of 0x939AD8's object, both non-zero: drop when Rand and 0xFF is at most chance[class] (class unchecked); the list 0x904AF4 (u16) / 0x904B14 (counts) / 0x904AE7 (entries) searched, a match counting one and zeroing the item word - and then, match or not, the word appended with count 1, the entries grown below 15, the word zeroed. The PSX Battle_RollDrops 0x801E525C (sibling BATTLE_RAM.md; read 2026-09-23) leaves the loop on a match (j 0x801E53F0); the port does not - a defect, docs/battle_flow.md section 5. Not paired by pairs_propagated.json. Combat route: 1 call, from 0x4374DA."
+
+[[func]]
+pc = 0x437780
+name = "Battle_StartItemMagic"
+psx = 0x800AB188
+ret = "void"
+params = "unsigned id, unsigned owner"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x437780..0x4377C5 (0x46 bytes), cdecl: word 0x904B80 = id; row = byte [dword 0x64B274 + ((id and 0xFFFF) >> 8) * 4] + (id and 0xFF)]; BattleTask_Create(2, row); that slot's +0x80 = owner, the index untested. PSX 0x800AB188 (call-anchored, BATTLE.EMI#15) beside Magic_LoadForItem, whose table 0x800B39F0 this is (its sub-tables 100 / 92 / 72 bytes apart as 0x64B284 / 0x64B2E8 / 0x64B344; the fourth pointer is 0x675ED8 on the PC). Combat route: 1 call, from 0x42FC2F."
+
+[[func]]
+pc = 0x4377D0
+name = "Magic_LoadForItem"
+psx = 0x800AB1FC
+ret = "void"
+params = "unsigned id"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4377D0..0x437812 (0x43 bytes), cdecl: row as Battle_StartItemMagic; file = u16 at 0x64C2B8 + row * 8; unless 0xFFFF, LoadDatFile(file) and byte 0x904AA9 or 4. The sibling's Magic_LoadForItem 0x800AB1FC (names/functions.toml, evidence), the same lookup and flag (0x801462E4). Combat route: 1 call, from 0x42FBF5."
+
+[[func]]
+pc = 0x437930
+name = "Battle_StartAbilityMagic"
+psx = 0x800AB038
+ret = "void"
+params = "unsigned ability, unsigned owner"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x437930..0x4379CA (0x9B bytes), cdecl, two calls to BattleTask_Create: word 0x904B80 = the ability byte; slot A = BattleTask_Create(2, byte 0x64C1D0 + ability), its +0x80 = owner; if byte 0x65C4DD + (word 0x904B80 re-read) * 24 has 0x10: slot B = BattleTask_Create(1, 0x43), B +0x80 = the address of slot A, B +0xB = the ability. The indices are written over argument 1's slot and untested. PSX 0x800AB038 (call-anchored, BATTLE.EMI#15). Combat route: 3 calls, from 0x42FACE."
+
+[[func]]
+pc = 0x4379D0
+name = "Magic_LoadForAbility"
+psx = 0x800AB120
+ret = "void"
+params = "unsigned ability"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4379D0..0x437A04 (0x35 bytes), cdecl: row = byte 0x64C1D0 + (ability and 0xFF); file = u16 at 0x64C2B8 + row * 8; unless 0xFFFF, LoadDatFile(file) and byte 0x904AA9 or 4. The sibling's Magic_LoadForAbility 0x800AB120 (verified there): u8 0x800B3450, u16 0x800B3538 + row * 8, File_LoadRequest, 0x801462E4. Combat route: 3 calls, from 0x42F9B9."
+
+[[func]]
+pc = 0x432F10
+name = "BattleFx_RollingDigits"
+psx = 0x801E61FC
+ret = "void"
+params = "unsigned clut"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x432F10..0x432F89 (0x7A bytes), cdecl: slot = dword 0x93B8C4 (re-read for each access); s16 +0x32 incremented then taken mod 10 (idiv); for n = s8 +0xA down to 0: Battle_DrawNumber(u16 +0x36 - 8n - 12, u16 +0x3A, clut, (s16 +0x32 + n) mod 10). PSX 0x801E61FC (call-anchored; the same +0x32 step and the 0x66666667 divide). Combat route: 98 calls, from 0x432BDA. Named for the digits it cycles."
+
+[[func]]
+pc = 0x444480
+name = "Battle_DrawNumber"
+psx = 0x801D9654
+ret = "void"
+params = "int x, int y, unsigned clut, unsigned value"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x444480..0x444598 (0x119 bytes), cdecl, seven calls: Crt_sprintf(0x904BA0, 0x64E324 = %3d, value and 0xFFFF); Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, Gpu_GetTPage(0, 0, 0x3C0, 0) and 0xFFFF, 0), Gfx_CommitPrim(1, 0xC); then a do-while over the text to its NUL: each character but a space stored back less 0x30 and drawn as an 8 x 8 SPRT at (x + 8i, y) - Gpu_GetClut(clut << 4, 0x1E0), shade 0x80, u = (digit + 0x16) << 3, v 0xD0, Gpu_SetSprt, Gfx_CommitPrim(1, 0x1C). PSX 0x801D9654 (gap-tier pairing). Combat route: 343 calls (0x432F7B 182, 0x432BFD 161)."
+
+[[func]]
+pc = 0x4445A0
+name = "Battle_DrawLabel"
+psx = 0x801D97D4
+ret = "void"
+params = "int x, int y, unsigned clut, unsigned cell"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4445A0..0x444651 (0xB2 bytes), cdecl, six calls: the draw mode of Battle_DrawNumber, then one 24 x 8 SPRT at (x, y): Gpu_GetClut(clut << 4, 0x1E0), shade 0x80, u = cell * 0x18 + 0x68 (a byte), v 0xD0, Gpu_SetSprt, Gfx_CommitPrim(1, 0x1C). PSX 0x801D97D4 (gap-tier pairing). Combat route: 37 calls, from 0x432C21. Which labels the cells hold was not looked at."
+
+[[func]]
+pc = 0x4456C0
+name = "Battle_ActorIsOut"
+psx = 0x801DB4EC
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/battle_flow.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4456C0..0x445725 (0x66 bytes), cdecl, no calls: actor = the argument's low byte; below 3 the member record 0x802D40 + 0x14C * actor, else the enemy object 0x93B960 + 0x128 * (actor - 3) (unchecked); 1 when its byte +0 lacks bit 0, else 1 when byte +0x91 (member) or +0x93 (enemy) has 0x40, else 0. The PSX 0x801DB4EC (call-anchored; read 2026-09-23) is the same test on 0x80145E8C + 0x140 n and 0x801EB5A0 + 0x118 n (status 0x4000); the sibling's name there, Battle_ActorFrameUpdate (hypothesis), was a guess from its callers. Combat route: 10,594 calls from 16 sites."

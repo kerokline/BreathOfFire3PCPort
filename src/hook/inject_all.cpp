@@ -40,6 +40,7 @@
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/battle_flow.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -192,6 +193,9 @@ void InjectAll() {
                                 // except that it runs before Widescreen_Inject, so its fuzz compares the
                                 // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: last, so every fuzz above ran against the original culls
+    BattleFlow_Inject();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed and its jump table relocated in the copies: order
+                                // does not matter (no widescreen patch touches its functions)
     InjectReport();
 }
 
