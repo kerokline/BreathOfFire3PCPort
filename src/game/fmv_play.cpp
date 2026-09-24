@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/display_setup.h"
+#include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -50,6 +51,8 @@ constexpr U kFmtWindow = 0x66B62C;      // "window vfw handle %d"
 constexpr U kPlay = 0x66B5E8;           // "play vfw window from 0 notify"
 constexpr U kStop = 0x66B5D8;           // "stop vfw wait"
 constexpr U kClose = 0x66B644;          // "close vfw wait"
+constexpr U kPause = 0x66B690;          // "pause vfw"
+constexpr U kResume = 0x66B69C;         // "resume vfw"
 // 0x66B608 "put vfw destination at 0 0 640 480" is the literal DIV-0035
 // replaces with a computed rectangle.
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
@@ -118,4 +121,50 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     SetWindowLongA(hwnd, GWL_WNDPROC, saved_proc);
 }
 
-void FmvPlay_Inject() { BOF3_INJECT(Fmv_Play); }
+// original 0x59E570 (read whole, 0xD4 bytes; DIV-0049): the window procedure
+// Fmv_Play installs for the length of a video.
+//   WM_KEYDOWN, WM_LBUTTONDOWN, WM_RBUTTONDOWN: Fmv_Playing cleared if set
+//     (the skip); 0 returned.
+//   WM_DESTROY: Fmv_Playing = 0, Game_QuitFlag = 1, PostQuitMessage(0); 0.
+//   WM_ACTIVATEAPP: wParam set - SetFocus(hwnd), "resume vfw"; clear -
+//     "pause vfw"; 0. (The original; symbols.toml's "falls through to the
+//     saved procedure" was wrong - the default case is DefWindowProcA.)
+//   MM_MCINOTIFY (0x3B9): Fmv_Playing = 0 when wParam is
+//     MCI_NOTIFY_SUCCESSFUL (1), the video's end; 0 either way.
+//   else: DefWindowProcA.
+// DIV-0049: under DIV-0033 (the game keeps running when the window is not
+// in front) the pause and resume are not sent, so the video plays on;
+// BOF3X_BACKGROUND=0 keeps the original's pair.
+extern "C" long __stdcall Fmv_WndProc(void* hwnd_, unsigned msg, unsigned wparam, long lparam) {
+    HWND hwnd = static_cast<HWND>(hwnd_);
+    switch (msg) {
+    case WM_KEYDOWN:
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+        if (Fmv_Playing) Fmv_Playing = 0;
+        return 0;
+    case WM_DESTROY:
+        Fmv_Playing = 0;
+        Game_QuitFlag = 1;
+        PostQuitMessage(0);
+        return 0;
+    case WM_ACTIVATEAPP:
+        if (wparam) {
+            SetFocus(hwnd);
+            if (!WinMain_Background()) mciSendStringA(Str(kResume), nullptr, 0, nullptr);
+        } else if (!WinMain_Background()) {
+            mciSendStringA(Str(kPause), nullptr, 0, nullptr);
+        }
+        return 0;
+    case MM_MCINOTIFY:
+        if (wparam == MCI_NOTIFY_SUCCESSFUL) Fmv_Playing = 0;
+        return 0;
+    default:
+        return static_cast<long>(DefWindowProcA(hwnd, msg, wparam, static_cast<LPARAM>(lparam)));
+    }
+}
+
+void FmvPlay_Inject() {
+    BOF3_INJECT(Fmv_Play);
+    BOF3_INJECT(Fmv_WndProc);
+}

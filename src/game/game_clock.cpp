@@ -30,6 +30,10 @@ ULONGLONG g_start;
 DWORD g_base;
 ULONGLONG g_paused_at;   // 0: running
 
+// The high-resolution clock beside it, in QueryPerformanceCounter ticks.
+LARGE_INTEGER g_qpf, g_qpc_start;
+LONGLONG g_qpc_paused_at;   // 0: running
+
 // Time spent paused is taken out by moving the start forward, so the clock
 // resumes from where it stopped.
 DWORD WINAPI SessionTickCount() {
@@ -45,6 +49,9 @@ bool GameClock_Pause() {
     if (!g_ours || g_paused_at) return false;
     g_paused_at = GetTickCount64();
     if (g_paused_at == 0) g_paused_at = 1;
+    LARGE_INTEGER q;
+    QueryPerformanceCounter(&q);
+    g_qpc_paused_at = q.QuadPart ? q.QuadPart : 1;
     return true;
 }
 
@@ -52,6 +59,17 @@ void GameClock_Resume() {
     if (!g_paused_at) return;
     g_start += GetTickCount64() - g_paused_at;
     g_paused_at = 0;
+    LARGE_INTEGER q;
+    QueryPerformanceCounter(&q);
+    g_qpc_start.QuadPart += q.QuadPart - g_qpc_paused_at;
+    g_qpc_paused_at = 0;
+}
+
+double GameClock_NowMs() {
+    LARGE_INTEGER q;
+    if (g_qpc_paused_at) q.QuadPart = g_qpc_paused_at;
+    else QueryPerformanceCounter(&q);
+    return static_cast<double>(q.QuadPart - g_qpc_start.QuadPart) * 1000.0 / static_cast<double>(g_qpf.QuadPart);
 }
 
 void GameClock_Inject() {
@@ -59,6 +77,8 @@ void GameClock_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_TICK_BASE", text, sizeof text);
     if (n > 0 && n < sizeof text) g_base = static_cast<DWORD>(std::strtoul(text, nullptr, 0));
     g_start = GetTickCount64();
+    QueryPerformanceFrequency(&g_qpf);
+    QueryPerformanceCounter(&g_qpc_start);
 
     // The slot must already hold kernel32's GetTickCount - the loader has
     // bound the imports by the time the DLL is injected. PatchBytes refuses

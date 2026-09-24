@@ -46,4 +46,11 @@ U TargetScale();
 void RequestScale(U k);
 void SetRescaleHook(void (*hook)(U k));
 
+// Writes the target - the last frame presented, at its own size, before the
+// present's scaling and any look - to `path` as a 24-bit BMP. For a
+// recipe's shot (BOF3X_SHOT_DIR) and F11: the frame as the game drew it,
+// whatever covers the window. False before the device exists or when the
+// file cannot be written; the reason is logged.
+bool SaveFrame(const wchar_t* path);
+
 }  // namespace render

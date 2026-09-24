@@ -118,6 +118,21 @@ logged as its hold starts and nothing waits. With `BOF3X_ORIGINAL=Game_Clock`
 the freeze still works, but the pause is replayed unrendered afterwards, and
 the log says so.
 
+**The game writes its own captures** (2026-09-24). `input_run.py` sets
+`BOF3X_SHOT_DIR` to its `--out` directory, and at each shot the DLL writes
+`NAME.bmp` there itself - the render target read back through a staging
+copy (`render::SaveFrame`, `src/render/render_d3d11.cpp`): the frame as the
+game drew it, at the target's size, before the present's scaling and any
+look, whatever covers the window. The runner converts it to `NAME.png` and
+falls back to a screen grab only when the file is missing. With `--no-front`
+the runner never touches the window's z-order: DIV-0033 keeps the game
+running unfocused, so a recipe can play while the machine is in use. Checked
+on the Config recipe: 8 of 8 shots "from the game" with the window in the
+background, `analysis/shots/capture_check`. **F11** writes the same frame by
+hand, `bof3x-frame-<Frame_Counter>.bmp` beside the DLL, "Frame saved" on
+screen. Captures made this way are the target's size (the window's client
+under DIV-0042), so an A/B needs both sides made the same way.
+
 BUTTONS is a PSX button name (`up down left right cross circle square triangle
 l1 l2 r1 r2 start select`) or **`@ADDR`**, the u16 at that address when the
 step starts. That exists for the field's button assignments, which are part of

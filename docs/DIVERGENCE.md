@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 46 entries, DIV-0001..0046)
+**Status:** IN PROGRESS (opened 2026-09-18; 49 entries, DIV-0001..0049)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2043,3 +2043,139 @@ designed in rather than bolted on.
   "Looked right to me, with the marbles steal".
 - **Reversible?** Yes: the switch off, `BOF3X_STEAL` unset, or
   `BOF3X_ORIGINAL=Cheat_StealAlways`.
+
+### The frame period is the PlayStation's 29.97, and the deadline is a double
+
+- **ID:** DIV-0047
+- **Date:** 2026-09-24
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop,
+  `src/game/win_main.cpp`; [`known-defects.md`](known-defects.md) D5,
+  [`IDEAS.md`](IDEAS.md) I16)
+- **Original behaviour:** the loop paces logic frames against a deadline in
+  the 32-bit float `Frame_Deadline` `0x6BC628`, advanced by the double
+  33.334 at `0x5C4218` (29.999 frames a second) and held under the 2^32
+  tick wrap. A float's spacing grows with its size, so the pace drifted
+  through bands as the clock grew - 31.25 a second past 2^28 ms, half speed
+  past 2^29 (D5). DIV-0022 kept the clock small, which left one unbroken
+  session drifting through the same bands from 35 minutes on (I16).
+- **New behaviour:** the deadline is a base plus a count of frames times
+  the period, in a double, and the period is the PlayStation's NTSC frame,
+  1001 / 30 = 33.3667 ms (29.970 a second). The clock it is held against is
+  `GameClock_NowMs`, milliseconds since the game started as a double from
+  `QueryPerformanceCounter` (paused with DIV-0022's tick clock for a
+  recipe's frozen shot), so the tick wrap needs no handling - and the tick
+  slot's 15.6 ms steps no longer set the pace: it is still read for the
+  once-a-second frame-rate text only. The float at `0x6BC628` is no longer
+  written. DIV-0034's clamp restarts the base and
+  the count. `BOF3X_FRAME_MS=n` (1..1000; tooling) sets another period -
+  33.334 is the port's own.
+- **Rationale:** the owner, 2026-09-24: "I would like the game to be back to
+  the official 29.97 frame pace". The PlayStation paces by vertical blank at
+  59.94 / 2; the port's 33.334 was its approximation. A count of frames
+  times the period cannot drift, whatever the session's length.
+- **Also in the PSX version?** The rate, yes - it is the PlayStation's; the
+  mechanism is not applicable there.
+- **Verification:** 2026-09-24. A 2.5-minute attract recording
+  (`analysis/attract/pace_ntsc.tsv`): 29.971 logic frames a second from
+  60 s to the end, 29.964 over 60..120 s, against 29.995 / 29.997 under
+  DIV-0022 alone (`clk_fix.tsv`). The exact check, a 6-minute traced run
+  (`analysis/calltrace/pace_ours`): **the per-frame call hash identical to
+  the branch's latest reference (`wave2_ours`) on all 10,319 frames**, and
+  against the all-original `wm1b_orig` differing on frame 0 alone, as
+  `wave2_ours` does - logic counts frames and reads no clock, so every
+  check keyed by `Frame_Counter` (the oracle, the frame hash, the memory
+  dumps, the recipes' captures) is unaffected; only wall-clock-timed draw
+  and pump calls move, which the hash's wall-clock exclusion already drops
+  ([`call-trace.md`](call-trace.md) §6). The polled oracle
+  (`attract_diff.py`, `clk_fix` against `pace_ntsc`) disagrees on 8
+  transition frames, the sampler's one-frame jitter that an
+  original-vs-original pair (`ab11_orig` / `ab11_origb`) shows too. Owed:
+  the owner's eye over a long session (the bands began at 35 minutes).
+- **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain` (the float and
+  33.334 again); `BOF3X_FRAME_MS=33.334` keeps the double at the port's rate.
+
+### F1 toggles double speed
+
+- **ID:** DIV-0048
+- **Date:** 2026-09-24
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop and window
+  procedure, `src/game/win_main.cpp`; [`IDEAS.md`](IDEAS.md) I17)
+- **Original behaviour:** F1 does nothing; the loop's period is fixed.
+- **New behaviour:** F1 toggles between the period (DIV-0047's 1001 / 30
+  ms) and half of it: two logic frames per frame of wall time. The deadline
+  is rebased at the change so it starts from the current deadline. "Speed
+  x2" / "Speed x1" shows on screen for 120 frames, as F12's "Save OK" does;
+  a held key's repeats do not toggle. Like every other key, F1 ends an F9
+  pause. Off at start; not saved.
+- **Rationale:** the owner, 2026-09-24: "Can we bind F1 to a '2x speed'
+  function by halving the logic frame per second time?" - I17's mechanism.
+  Logic counts frames and reads no clock, so what the game computes is the
+  same at either speed: saves, the RNG, scripted events. When drawing cannot
+  keep up the loop skips presents, as it does catching up after a stall,
+  and DIV-0004 drains the upload queue after unrendered frames. The music
+  is fed from the spin at wall-clock time and is not sped up.
+- **Also in the PSX version?** No.
+- **Tooling that comes with it:** `BOF3X_FPS_LOG=1` writes one `fps` line a
+  second to the log - frames drawn, logic frames, the speed in force.
+- **Verification:** 2026-09-24. An attract run with F1 posted to the window
+  at 75 s (`analysis/attract/f1_speed.log`): 31.0 drawn / 31.0 logic a
+  second before, then `DIV-0048 speed x2 (F1) at Frame_Counter 1857` and
+  60.5 drawn / 60.5 logic a second over the next 75 s - every logic frame
+  still drawn, no present skipped. The owner watched it: "it looks like
+  its holding up pretty well to my eye". Where the skip begins, by period
+  (`BOF3X_FRAME_MS`, `period_*.log`): 4x, 121.8 logic and 62.8 drawn a
+  second; 1 ms, 1,015.6 logic and 64.4 drawn. **That 64 was the tick
+  slot's granularity, not the display:** `BOF3X_FPS_LOG` timing put the
+  draw branch at 0.1-1.2 ms and the logic at 0.04 ms, so time was never
+  short, but the deadline was held against a clock that steps 15.6 ms at a
+  time (1000 / 15.6 = 64), and every deadline but the first inside a step
+  counted as late. With the deadline on `QueryPerformanceCounter`
+  (DIV-0047, amended the same day): 4x, 121.8 drawn of 121.8 logic a
+  second (`qpc_8.3417.log`); 1x, 29.971 a second from the recording
+  (`qpc_33.3667.tsv`); the Config recipe's eight frozen shots with no
+  DIV-0034 restart. What the 60 Hz display shows of 120 presents a second
+  is its own business; nothing blocks on it (`BOF3X_VSYNC` unset).
+  Those two runs first ended in `render: a draw uses a released surface`,
+  our backend's guard: a frame skip across an area change left draws
+  recorded against a surface the game then released, and the snapshot
+  taken for exactly that case was unreachable - the release zeroed the
+  surface's dimensions, the present swept its GPU object before the draws
+  ran, and the guard tested the live pixels rather than the snapshot. Fixed
+  the same day in `render_shim.cpp` / `render_d3d11.cpp`
+  ([`render-backend.md`](render-backend.md)); the same path opens at 1x
+  after any stall inside DIV-0034's 500 ms that spans an area change. Not a
+  divergence - a defect of ours.
+- **Reversible?** F1 again; with the loop, `BOF3X_ORIGINAL=Game_WinMain`.
+
+### The logo videos keep playing when the window is not in front
+
+- **ID:** DIV-0049
+- **Date:** 2026-09-24
+- **Subsystem:** platform (`Fmv_WndProc` `0x59E570`, ours in
+  `src/game/fmv_play.cpp`; the window procedure `Fmv_Play` installs for the
+  length of a video)
+- **Original behaviour:** on `WM_ACTIVATEAPP` the procedure sends MCI
+  `pause vfw` when the window is deactivated and `SetFocus` plus
+  `resume vfw` when it is activated again (read 2026-09-19 and again
+  2026-09-24: 0xD4 bytes, every case listed in the source; its default case
+  is `DefWindowProcA`, not the saved procedure as `symbols.toml` had said).
+  The videos stop whenever another window takes the focus - the owner's
+  report, 2026-09-24.
+- **New behaviour:** under DIV-0033 (the game keeps running when the window
+  is not in front, the default) neither MCI command is sent, and the video
+  plays on; the focus is still taken back on activation. `BOF3X_BACKGROUND=0`
+  keeps the original pair. Everything else of the procedure is as the
+  original: a key or a click ends the video, `MM_MCINOTIFY` at its end,
+  `WM_DESTROY` sets the quit flag.
+- **Rationale:** DIV-0033 made the loop keep running unfocused; the videos
+  before it were the one part of the start-up still freezing. The owner,
+  2026-09-24: "the startup videos freeze when focus is taken away, we should
+  fix that".
+- **Also in the PSX version?** Not applicable.
+- **Verification:** 2026-09-24. An attract run with `WM_ACTIVATEAPP` (clear)
+  posted to the window 4 s after launch and (set) at 12 s, the window left
+  in the background: 1,326 logic frames in 60 s with ours - the loop began
+  at about 15.8 s, as with no deactivation - against 1,088 with
+  `BOF3X_ORIGINAL=Fmv_WndProc`, the loop at about 23.7 s: the 8 s of
+  deactivation spent paused (`analysis/attract/fmv_ours.tsv`, `fmv_capcom.tsv`).
+- **Reversible?** `BOF3X_BACKGROUND=0`, or `BOF3X_ORIGINAL=Fmv_WndProc`.

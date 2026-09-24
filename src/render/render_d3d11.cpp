@@ -388,12 +388,13 @@ GpuTexture* GpuOf(Surface* s) {
 // Makes the GPU texture hold what `version` sees.
 GpuTexture* Bind(TexVersion* version) {
     Surface* s = version->surface;
-    if (!s->pixels) bof3::Fatal("render: a draw uses a released surface");
+    // A released surface is drawn only through a snapshot taken at its release.
+    if (!s->pixels && !version->pixels) bof3::Fatal("render: a draw uses a released surface with no snapshot");
     GpuTexture* g = GpuOf(s);
     if (version->pixels) {
         // A snapshot: what the surface held when the draw was recorded.
         g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, version->pixels), s->width * 4, 0);
-        s->dirty = true;   // the live pixels come next
+        s->dirty = s->pixels != nullptr;   // the live pixels come next, if there are any
     } else if (s->dirty) {
         g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, s->pixels), s->width * 4, 0);
         s->dirty = false;
@@ -671,19 +672,23 @@ void InitOnFiber(const Options& options) {
 
 void* g_game_fiber;
 void* g_render_fiber;
-enum class Job { kNone, kInit, kPresent };
+enum class Job { kNone, kInit, kPresent, kSave };
 Job g_job;
 Frame* g_job_frame;
 const Options* g_job_options;
+const wchar_t* g_job_path;
+bool g_job_ok;
 
 void InitOnFiber(const Options& options);
 void PresentOnFiber(Frame& frame);
+bool SaveOnFiber(const wchar_t* path);
 
 void CALLBACK RenderFiber(void*) {
     for (;;) {
         switch (g_job) {
         case Job::kInit: InitOnFiber(*g_job_options); break;
         case Job::kPresent: PresentOnFiber(*g_job_frame); break;
+        case Job::kSave: g_job_ok = SaveOnFiber(g_job_path); break;
         case Job::kNone: break;
         }
         g_job = Job::kNone;
@@ -731,9 +736,12 @@ void ApplyPendingScale() {
 
 void PresentOnFiber(Frame& frame) {
     FpuGuard fpu;
-    SweepReleased();
     RunFrame(frame);
     Show();
+    // After the frame: a surface released since the last present may have
+    // draws in this one, through its snapshot, and needs its GPU object
+    // until they have run.
+    SweepReleased();
     ApplyPendingScale();
 }
 }  // namespace
@@ -745,6 +753,72 @@ void InitD3d11(const Options& options) {
     g_job_options = &options;
     RunOnFiber(Job::kInit);
     SetPresentHook(&PresentFrame);
+}
+
+namespace {
+// The target read back through a staging copy and written bottom-up as a
+// 24-bit BMP: no compressor to carry, and PIL reads it.
+bool SaveOnFiber(const wchar_t* path) {
+    FpuGuard fpu;
+    if (!g_target) return false;
+    D3D11_TEXTURE2D_DESC d = {};
+    g_target->GetDesc(&d);
+    d.Usage = D3D11_USAGE_STAGING;
+    d.BindFlags = 0;
+    d.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    d.MiscFlags = 0;
+    ID3D11Texture2D* staging = nullptr;
+    if (FAILED(g_device->CreateTexture2D(&d, nullptr, &staging))) {
+        bof3::Log("render: SaveFrame: no staging texture");
+        return false;
+    }
+    g_ctx->CopyResource(staging, g_target);
+    D3D11_MAPPED_SUBRESOURCE m = {};
+    if (FAILED(g_ctx->Map(staging, 0, D3D11_MAP_READ, 0, &m))) {
+        staging->Release();
+        bof3::Log("render: SaveFrame: Map failed");
+        return false;
+    }
+    const U w = d.Width, h = d.Height, row = (w * 3 + 3) & ~3u;
+    const U size = 54 + row * h;
+    auto* out = static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size));
+    bool ok = out != nullptr;
+    if (ok) {
+        unsigned char* p = out;
+        auto put16 = [&](U v) { *p++ = static_cast<unsigned char>(v); *p++ = static_cast<unsigned char>(v >> 8); };
+        auto put32 = [&](U v) { put16(v & 0xFFFF); put16(v >> 16); };
+        *p++ = 'B'; *p++ = 'M';
+        put32(size); put32(0); put32(54);
+        put32(40); put32(w); put32(h); put16(1); put16(24); put32(0); put32(row * h); put32(2835); put32(2835); put32(0); put32(0);
+        for (U y = 0; y < h; ++y) {
+            const unsigned char* src = static_cast<const unsigned char*>(m.pData) + (h - 1 - y) * m.RowPitch;
+            unsigned char* dst = out + 54 + y * row;
+            for (U x = 0; x < w; ++x) {   // B8G8R8A8 -> B G R
+                dst[x * 3] = src[x * 4];
+                dst[x * 3 + 1] = src[x * 4 + 1];
+                dst[x * 3 + 2] = src[x * 4 + 2];
+            }
+        }
+        HANDLE f = CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        DWORD wrote = 0;
+        ok = f != INVALID_HANDLE_VALUE && WriteFile(f, out, size, &wrote, nullptr) && wrote == size;
+        if (f != INVALID_HANDLE_VALUE) CloseHandle(f);
+        if (!ok) bof3::Log("render: SaveFrame: cannot write the file, error %lu", GetLastError());
+        HeapFree(GetProcessHeap(), 0, out);
+    }
+    g_ctx->Unmap(staging, 0);
+    staging->Release();
+    return ok;
+}
+}  // namespace
+
+bool SaveFrame(const wchar_t* path) {
+    if (!g_render_fiber || !g_device) return false;
+    if (GetCurrentThreadId() != g_main_thread) bof3::Fatal("render: SaveFrame on thread %lu, not the game's", GetCurrentThreadId());
+    g_job_path = path;
+    g_job_ok = false;
+    RunOnFiber(Job::kSave);
+    return g_job_ok;
 }
 
 void SweepReleased() {

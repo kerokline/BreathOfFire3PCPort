@@ -206,3 +206,19 @@ The logic oracles are indifferent to the backend by construction - the
 frame hash counts calls, the oracle counts `Rand`, the dump reads memory
 the draw does not write - so a difference there would mean the set-up
 wrote a global wrongly, not that a pixel moved.
+
+## Released surfaces with pending draws (fixed 2026-09-24)
+
+A draw is recorded against a `TexVersion`; when the game writes or releases
+the surface before the present, `BeforeWrite` snapshots the pixels into the
+frame arena so the draw still sees what it was recorded against. For a
+*release* the snapshot was unreachable: `Surface_Release` zeroed the width
+and height the snapshot is drawn through, `PresentOnFiber` swept the
+released surface's GPU object before `RunFrame`, and `Bind`'s guard tested
+the live `pixels` rather than the version's. Only a frame the loop had not
+presented could hit it - a skipped present across an area change - which
+DIV-0048's speed runs did within seconds (`analysis/attract/x4.log`,
+`unlocked.tsv`), and which 1x can do after a stall under DIV-0034's 500 ms.
+Now the release keeps the dimensions, the sweep runs after the frame, and
+the guard fires only with neither live pixels nor a snapshot. Verified by
+the 4x and 1 ms attract runs completing (`period_8.3417.log`, `period_1.log`).

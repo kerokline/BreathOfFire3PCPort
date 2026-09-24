@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-23 — forty entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed short term by DIV-0022; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
+**Status:** IN PROGRESS (2026-09-23 — forty entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047 (the deadline in a double at 29.97, 2026-09-24); D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable

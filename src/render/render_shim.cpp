@@ -307,12 +307,16 @@ unsigned long __stdcall Surface_Release(void* self) {
     auto* s = static_cast<Surface*>(self);
     if (s->refs == 0) bof3::Fatal("render: Release of a surface with no references");
     if (--s->refs > 0) return s->refs;
-    // Pending draws keep their own snapshot; the GPU object goes at the next present.
+    // Pending draws keep their own snapshot; the GPU object goes at the next
+    // present, after those draws have run (SweepReleased). The dimensions
+    // and format stay: the snapshot is drawn through them (2026-09-24: they
+    // were zeroed here, and a draw recorded before a release in a frame the
+    // loop had not presented - a frame skip across an area change - hit
+    // Bind's guard instead of its snapshot).
     if (s->version && s->pending_draws) BeforeWrite(s);
     Free(s->pixels);
     s->pixels = nullptr;
     s->refs = 0;
-    s->width = s->height = 0;
     // Left in the registry with `gpu` for render_d3d11 to release; the slot is
     // reused once that is done (SweepReleased).
     return 0;

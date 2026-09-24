@@ -15,6 +15,7 @@
 #include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "render/render_d3d11.h"
 
 // The recipe language (docs/input-script.md has it with examples). One step a
 // line, '#' to end of line is a comment, buttons joined with '+':
@@ -313,8 +314,23 @@ void Finish(const char* how) {
 // window holds one whole frame, and holds it until the driver says it has it.
 // The game clock stops meanwhile, so the frame deadline has no debt to replay
 // and the frames after the shot are presented as any others.
+// BOF3X_SHOT_DIR: the frame written by the game itself, <dir>\<NAME>.bmp
+// (render::SaveFrame - the target, not the window, so nothing has to be on
+// top). Logged as `saved` or `NOT saved` before the shot line.
+std::wstring g_shot_dir;
+
+void SaveShot(const Step& s) {
+    if (g_shot_dir.empty()) return;
+    std::wstring path = g_shot_dir + L"\\";
+    for (char c : s.text) path += static_cast<wchar_t>(static_cast<unsigned char>(c));
+    path += L".bmp";
+    const bool ok = render::SaveFrame(path.c_str());
+    Log("input       shot %s %s %ls", s.text.c_str(), ok ? "saved to" : "NOT saved:", path.c_str());
+}
+
 void Freeze(const Step& s) {
     const bool clock = GameClock_Pause();
+    SaveShot(s);
     ResetEvent(g_release);
     Log("input       shot %s recipe frame %u frozen%s", s.text.c_str(), g_frame,
         clock ? "" : " (clock not ours: the pause will be replayed)");
@@ -408,6 +424,7 @@ unsigned short NextWord() {
         }
         case Kind::Shot:
             if (!g_release && g_t == 0) {
+                SaveShot(s);
                 Log("input       shot %s recipe frame %u", s.text.c_str(), g_frame);
                 LogFlush();
             }
@@ -596,6 +613,12 @@ void InputScript_Start() {
     if (n == 0 || n >= sizeof path) return;
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
+    wchar_t dir[MAX_PATH];
+    const DWORD dn = GetEnvironmentVariableW(L"BOF3X_SHOT_DIR", dir, MAX_PATH);
+    if (dn > 0 && dn < MAX_PATH) {
+        g_shot_dir = dir;
+        Log("input       shots are written by the game to %ls (BOF3X_SHOT_DIR)", dir);
+    }
     char wait[8];
     if (GetEnvironmentVariableA("BOF3X_SHOT_WAIT", wait, sizeof wait)) {
         // Named for the process, so the driver can find it by pid.

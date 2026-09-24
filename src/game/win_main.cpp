@@ -52,6 +52,8 @@
 // loop, which is why the loop's locals stay small).
 #include "game/win_main.h"
 
+#include "game/game_clock.h"
+
 #include <windows.h>
 
 #include <cstdint>
@@ -96,8 +98,28 @@ const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<st
 // The pacing constants (.rdata): the first deadline's offset, the frame
 // period, and the wrap the float deadline is held under.
 constexpr double kFirstFrameMs = 33.34;        // double at 0x5C4220
-constexpr double kFrameMs = 33.334;            // double at 0x5C4218
-constexpr float kTickWrap = 4294967296.0f;     // float at 0x5C4214
+// DIV-0047: the period is the PlayStation's NTSC frame, 1001 / 30 ms
+// (29.970 a second), not the port's 33.334 (29.999); and the deadline is
+// kept as a base plus a count of frames times the period, in a double -
+// never in the float at 0x6BC628 (Frame_Deadline), whose spacing past
+// 2^24 ms made the pace depend on the clock's size (known-defects D5;
+// DIV-0022 keeps the clock small, this makes the size not matter). The
+// float at 0x5C4214, 2^32, was the original's tick wrap; the clock is
+// unwrapped into 64 bits below instead. BOF3X_FRAME_MS=n (tooling, 1..1000)
+// sets another period: 33.334 is the port's own.
+constexpr double kFrameMs = 1001.0 / 30.0;     // the original's: double 33.334 at 0x5C4218
+double g_frame_ms = kFrameMs;
+// DIV-0048: F1 toggles double speed - the period halved, so two logic
+// frames run per frame of wall time. Logic counts frames and reads no
+// clock, so what the game computes is the same; when drawing cannot keep
+// up the loop skips presents as it does catching up after a stall. Read by
+// the loop, which rebases the deadline when it changes.
+int g_speed = 1;
+bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
+constexpr const char* kStrSpeed2 = "Speed x2";
+constexpr const char* kStrSpeed1 = "Speed x1";
+constexpr const char* kStrFrameSaved = "Frame saved";
+constexpr const char* kStrFrameNotSaved = "Frame not saved";
 constexpr U kEnvBase = 0x903880, kEnvStride = 0x90;   // the two display-environment pairs
 constexpr int kOverlayFrames = 0x78;
 
@@ -235,6 +257,23 @@ void Overlay(const char* text) {
 }  // namespace
 
 bool WinMain_InputAllowed() { return !g_loop_ours || !g_background || g_foreground; }
+bool WinMain_Background() { return g_background; }
+
+// F11: the last frame presented, written beside the DLL as
+// bof3x-frame-<Frame_Counter>.bmp (render::SaveFrame).
+void SaveFrameBesideDll() {
+    wchar_t path[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(GetModuleHandleW(L"bof3x.dll"), path, MAX_PATH);
+    if (n == 0 || n >= MAX_PATH) return;
+    wchar_t* slash = wcsrchr(path, L'\\');
+    if (!slash) return;
+    const size_t room = MAX_PATH - static_cast<size_t>(slash + 1 - path);
+    if (std::swprintf(slash + 1, room, L"bof3x-frame-%lu.bmp", static_cast<unsigned long>(Frame_Counter)) < 0) return;
+    const bool ok = render::SaveFrame(path);
+    bof3::Log("F11         frame %lu %s %ls", static_cast<unsigned long>(Frame_Counter), ok ? "saved to" : "NOT saved:", path);
+    Overlay_Frames = kOverlayFrames;
+    Overlay_Text = ok ? kStrFrameSaved : kStrFrameNotSaved;
+}
 
 extern "C" void __cdecl Cursor_Sync(void) {
     if (Cfg_Fullscreen) {
@@ -380,6 +419,24 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
             Overlay_Text = Str(kStrSaveOk);
             return 0;
         }
+        // F11: the frame to a file (render::SaveFrame). Tooling, not a
+        // divergence: DIV-0040 made the key nothing, and nothing of the
+        // game's changes.
+        if (wparam == VK_F11) {
+            if ((lparam & (1 << 30)) == 0) SaveFrameBesideDll();
+            return 0;
+        }
+        // DIV-0048: F1 toggles double speed; a held key's repeats (bit 30 of
+        // lparam, the previous state) do not toggle it back.
+        if (wparam == VK_F1) {
+            if ((lparam & (1 << 30)) == 0) {
+                g_speed = g_speed == 1 ? 2 : 1;
+                Overlay_Frames = kOverlayFrames;
+                Overlay_Text = g_speed == 2 ? kStrSpeed2 : kStrSpeed1;
+                bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %lu", g_speed, static_cast<unsigned long>(Frame_Counter));
+            }
+            return 0;
+        }
         return 0;
     }
     case WM_SYSKEYDOWN:
@@ -403,8 +460,16 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     HINSTANCE hinstance = static_cast<HINSTANCE>(hinstance_);
     g_loop_ours = true;
     {
-        char text[8];
+        char text[32];
         if (GetEnvironmentVariableA("BOF3X_BACKGROUND", text, sizeof text) > 0 && text[0] == '0') g_background = false;
+        const DWORD n = GetEnvironmentVariableA("BOF3X_FRAME_MS", text, sizeof text);
+        if (n > 0) {
+            char* end = nullptr;
+            const double v = n < sizeof text ? std::strtod(text, &end) : 0.0;
+            if (end == nullptr || *end != '\0' || !(v >= 1.0 && v <= 1000.0)) bof3::Fatal("BOF3X_FRAME_MS must be 1..1000");
+            g_frame_ms = v;
+        }
+        if (GetEnvironmentVariableA("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
     }
 
     if (!Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
@@ -473,11 +538,30 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         char fps[0x50] = {};
         int frames_drawn = 0;
         DWORD last_fps_tick = 0;
+        unsigned long logic_at_fps_tick = 0;
+        // BOF3X_FPS_LOG: time inside the draw branch (present included) and
+        // inside the logic, QueryPerformanceCounter ticks, per second.
+        LARGE_INTEGER qpf = {}, q0 = {}, q1 = {}, q2 = {};
+        QueryPerformanceFrequency(&qpf);
+        long long draw_ticks = 0, logic_ticks = 0;
         MSG msg;
         bool quit = false;
+        // DIV-0047: the deadline as base + frames * period against the
+        // high-resolution clock (GameClock_NowMs: the tick slot steps 15.6 ms
+        // at a time, too coarse for a period under that). The tick is still
+        // read for the once-a-second frame-rate text, as the original did.
+        DWORD last_tick = Tick();
+        const auto Now = [&]() {
+            last_tick = Tick();
+            return GameClock_NowMs();
+        };
+        double deadline_base = 0.0;
+        std::uint64_t deadline_frames = 0;
+        int speed = 1;   // the period in force: g_frame_ms / speed (DIV-0048)
         while (!quit) {
             Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(bof3::addr::Boot_Task)));
-            Frame_Deadline = static_cast<float>(static_cast<double>(Tick()) + kFirstFrameMs);
+            deadline_base = Now() + kFirstFrameMs;
+            deadline_frames = 0;
             for (;;) {
                 if (Game_QuitFlag) {
                     quit = true;
@@ -498,15 +582,25 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Task_SetStackBase();
                     break;   // Task_Create again
                 }
-                DWORD tick = Tick();
-                // DIV-0034: the debt clamp.
-                if (static_cast<double>(tick) - static_cast<double>(Frame_Deadline) > kMaxDebtMs) {
-                    bof3::Log("DIV-0034    frame deadline %.0f ms behind at Frame_Counter %lu: restarted",
-                              static_cast<double>(tick) - static_cast<double>(Frame_Deadline),
-                              static_cast<unsigned long>(Frame_Counter));
-                    Frame_Deadline = static_cast<float>(static_cast<double>(tick) + kFirstFrameMs);
+                if (g_speed != speed) {
+                    // DIV-0048: the count so far at the old period becomes the
+                    // base, so the change starts from the current deadline.
+                    deadline_base += static_cast<double>(deadline_frames) * (g_frame_ms / speed);
+                    deadline_frames = 0;
+                    speed = g_speed;
                 }
-                if (static_cast<double>(tick) < static_cast<double>(Frame_Deadline)) {
+                double now = Now();
+                double deadline = deadline_base + static_cast<double>(deadline_frames) * (g_frame_ms / speed);
+                // DIV-0034: the debt clamp.
+                if (now - deadline > kMaxDebtMs) {
+                    bof3::Log("DIV-0034    frame deadline %.0f ms behind at Frame_Counter %lu: restarted",
+                              now - deadline, static_cast<unsigned long>(Frame_Counter));
+                    deadline_base = now + kFirstFrameMs;
+                    deadline_frames = 0;
+                    deadline = deadline_base;
+                }
+                if (now < deadline) {
+                    if (g_fps_log) QueryPerformanceCounter(&q0);
                     unsigned char* env = Gfx_CurrentEnv;
                     Gpu_PutDispEnv(env);
                     Gpu_PutDrawEnv(env + 0x14);
@@ -520,31 +614,42 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                         Overlay(fps);
                     }
                     ++frames_drawn;
+                    if (g_fps_log) {
+                        QueryPerformanceCounter(&q1);
+                        draw_ticks += q1.QuadPart - q0.QuadPart;
+                    }
                 }
                 // The wait: Sound_Tick on every spin, at least once a frame.
                 for (;;) {
                     Sound_Tick();
-                    tick = Tick();
-                    if (!(static_cast<double>(tick) < static_cast<double>(Frame_Deadline))) break;
+                    now = Now();
+                    if (!(now < deadline)) break;
                 }
-                if (tick - last_fps_tick > 1000) {
-                    last_fps_tick = tick;
+                if (last_tick - last_fps_tick > 1000) {
+                    last_fps_tick = last_tick;
                     Crt_sprintf(fps, Str(kStrFrameRate), frames_drawn);
+                    if (g_fps_log) {
+                        const double ms = 1000.0 / static_cast<double>(qpf.QuadPart);
+                        const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
+                        bof3::Log("fps         %d drawn, %lu logic, speed x%d; draw %.2f ms each, logic %.2f ms each", frames_drawn,
+                                  logic, speed, frames_drawn ? static_cast<double>(draw_ticks) * ms / frames_drawn : 0.0,
+                                  logic ? static_cast<double>(logic_ticks) * ms / logic : 0.0);
+                        draw_ticks = logic_ticks = 0;
+                    }
+                    logic_at_fps_tick = Frame_Counter;
                     frames_drawn = 0;
                 }
-                // deadline += 33.334 in double, stored as float; past 2^32 the
-                // float loses 2^32 (the compare is on the double sum, the
-                // subtraction on the stored float, as at 0x4FCF0F..0x4FCF3A).
-                const double sum = static_cast<double>(Frame_Deadline) + kFrameMs;
-                Frame_Deadline = static_cast<float>(sum);
-                if (!(sum <= static_cast<double>(kTickWrap)))
-                    Frame_Deadline = static_cast<float>(static_cast<double>(Frame_Deadline) - static_cast<double>(kTickWrap));
+                // DIV-0047: one more frame of the period. The original added
+                // 33.334 to the float at 0x6BC628 and held it under 2^32
+                // (0x4FCF0F..0x4FCF3A); that float is not written here.
+                ++deadline_frames;
                 Gfx_BufferIndex ^= 1;
                 unsigned char* env = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(kEnvBase + Gfx_BufferIndex * kEnvStride));
                 Gfx_CurrentEnv = env;
                 Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
                 Gfx_BeginFrame();
                 SpriteCell_Reset();
+                if (g_fps_log) QueryPerformanceCounter(&q2);
                 if (!Game_Paused) {
                     Task_RunAll();
                 } else {
@@ -554,6 +659,10 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Text_DrawAt(PauseText_X(lines[1], 0x70), 0x80, 0, 100, lines[1]);
                 }
                 Gfx_LinkOTags();
+                if (g_fps_log) {
+                    QueryPerformanceCounter(&q1);
+                    logic_ticks += q1.QuadPart - q2.QuadPart;
+                }
                 Frame_Counter += 1;
             }
         }

@@ -607,6 +607,10 @@ the place to start.
 
 ## I16 — Exact frame pacing: the deadline in a double
 
+**Done 2026-09-24 as DIV-0047:** the deadline is base + frames x period in a
+double, the period 1001 / 30 ms (29.97, the owner's choice); measured 29.971
+a second, the per-frame call hash identical to the latest reference on all 10,319 frames.
+
 **Ask (2026-09-21):** the owner, choosing DIV-0022 (the game's clock starts
 with the game) as the short-term fix for [`known-defects.md`](known-defects.md)
 D5, asked for the complete fix to be kept as a long-term idea.
@@ -660,6 +664,10 @@ Fast Startup carries across shutdowns) with four bytes and no game code
 touched; the rest needs a session of six-plus hours to show.
 
 ## I17 — Fast-forward: a shorter frame period while a key is held
+
+**Done 2026-09-24 as DIV-0048:** F1 toggles the period halved (2x), the
+deadline rebased at the change; a toggle rather than a hold, the owner's
+2026-09-24 wording.
 
 **Ask (2026-09-21):** the owner asked whether a 2x / 4x fast-forward is best
 done by cutting the frame period, or whether that is a bad mechanism.

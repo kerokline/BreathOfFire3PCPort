@@ -59,6 +59,22 @@ def game_window(pid):
 
 
 def grab(path):
+    # The game writes the frame itself when BOF3X_SHOT_DIR is set (input_script
+    # SaveShot -> render::SaveFrame): the target as drawn, whatever covers the
+    # window. Convert that; fall back to the screen only when it is missing.
+    bmp = os.path.splitext(path)[0] + '.bmp'
+    for _ in range(40):
+        if os.path.exists(bmp):
+            break
+        time.sleep(0.05)
+    if os.path.exists(bmp):
+        from PIL import Image
+        with Image.open(bmp) as im:
+            im.convert('RGB').save(path)
+            size = im.size
+        os.remove(bmp)
+        print(f'  saved {os.path.relpath(path, ROOT)} ({size[0]}x{size[1]}, from the game)')
+        return
     pid = game_pid()
     hwnd = pid and game_window(pid)
     if not hwnd:
@@ -96,6 +112,9 @@ def main():
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
     ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
                     help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
+    ap.add_argument('--no-front', action='store_true',
+                    help='leave the window where it is: the game writes its own frames (BOF3X_SHOT_DIR) and keeps '
+                         'running unfocused (DIV-0033), so nothing needs it on top')
     a = ap.parse_args()
     global LOG
     LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
@@ -111,6 +130,7 @@ def main():
         env.pop(k, None)
     env['BOF3X_INPUT'] = recipe
     env['BOF3X_SHOT_WAIT'] = '1'
+    env['BOF3X_SHOT_DIR'] = os.path.abspath(a.out)
     # the owner's screen=crt (DIV-0037) must not reach an A/B's captures;
     # --env BOF3X_PRESENT=crt asks for it
     env['BOF3X_PRESENT'] = 'clean'
@@ -125,7 +145,8 @@ def main():
     launch(a.launcher, a.game, env)
 
     stop = threading.Event()
-    threading.Thread(target=keep_in_front, args=(stop,), daemon=True).start()
+    if not a.no_front:
+        threading.Thread(target=keep_in_front, args=(stop,), daemon=True).start()
     status, pos, deadline = None, 0, time.time() + a.minutes * 60
     try:
         while status is None and time.time() < deadline:
