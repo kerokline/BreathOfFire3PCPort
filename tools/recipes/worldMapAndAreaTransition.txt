@@ -1,0 +1,111 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+wait 60
+hold start 3
+wait 81
+hold start 3
+wait 45
+hold r2 4
+wait 36
+hold down 3
+wait 7
+hold down 3
+wait 8
+hold down 2
+wait 19
+hold r2 4
+wait 15
+hold r2 5
+wait 32
+hold square 6
+hold square+down 1
+hold square+right+down 31
+hold square+right 1
+hold square 29
+hold square+up+right 27
+hold square+up+right+left 2
+hold square+up+left 40
+hold square+up+right 14
+hold square+up+right+left 1
+hold square+up+left 44
+hold square+up+right 4
+hold square+up+right+left 1
+hold square+up+left 29
+hold square+left 1
+hold square 2
+wait 15
+hold cross 15
+wait 38
+hold triangle 12
+wait 29
+hold cross 5
+wait 37
+hold r1 14
+hold r1+right 28
+hold r1+left 46
+hold r1+up+left 1
+hold r1+up 24
+hold r1 3
+hold r1+down 25
+hold r1 10
+hold r1+left 17
+wait 33
+hold l1 5
+wait 48
+hold down 1
+hold right+down 37
+wait 8
+hold l1 6
+wait 7
+hold left 1
+hold up+left 35
+hold square+up+left 23
+hold square 1
+wait 74
+hold square+left 1
+hold square+up+left 15
+hold square+up 1
+hold square+up+right 11
+hold square+up+left 19
+hold square+up+right 10
+hold square+up+left 13
+hold square+up 1
+hold square 1
+wait 32
+hold r1 4
+wait 21
+hold cross 3
+wait 79
+hold cross 4
+wait 20
+hold r1 4
+wait 11
+hold r2 4
+wait 123
+hold right+down 16
+hold right 1
+wait 58
+hold right+down 16
+hold right+down+left 1
+hold down+left 14
+hold down 1
+hold right+down 27
+hold right+down+left 2
+hold down+left 12
+hold down 1
+hold right+down 43
+wait 16
+hold r2 3
+wait 62
+hold square 1
+hold square+down 1
+hold square+right+down 72
+hold square+right+down+left 10
+hold square+down+left 18
+hold square+down 3
+hold square+right+down 84
+hold square 1
+wait 40
+hold square 2
+hold square+right+down 100
