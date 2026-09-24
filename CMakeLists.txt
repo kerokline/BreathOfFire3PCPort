@@ -171,6 +171,8 @@ add_library(bof3x SHARED
   src/game/area_backdrop.cpp
   src/game/area_backdrop_fuzz.cpp
   src/game/widescreen.cpp
+  src/game/battle_draw.cpp
+  src/game/battle_draw_fuzz.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
   src/render/crt.cpp
