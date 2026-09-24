@@ -181,6 +181,8 @@ add_library(bof3x SHARED
   src/game/battle_flow_fuzz.cpp
   src/game/battle_damage.cpp
   src/game/battle_damage_fuzz.cpp
+  src/game/battle_sprites.cpp
+  src/game/battle_sprites_fuzz.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
   src/render/crt.cpp

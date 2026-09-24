@@ -3288,15 +3288,6 @@ status = "hypothesis"
 evidence = "disasm 2026-09-22: forwards its seven arguments to entry Sprite_Current[4] of the four-handler table 0x663B84 (0x57C920, 0x57CA80, 0x57CBB0, 0x57CCE0), which read a and b as signed bytes, c and d as words and f as a byte. Op E9 repeats while al is non-zero."
 
 [[func]]
-pc = 0x454CC0
-name = "Sprite_SetTint"
-psx = 0x8019751C
-ret = "unsigned char"
-params = "unsigned char *sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a"
-status = "hypothesis"
-evidence = "call sites 2026-09-22: op EA calls it (Sprite_Current, b1..b4) except for a type-0x0A sprite, whose +0x5D..+0x5F take b1..b3 directly; op C0 stores its al as an index into MoveScript_TintRecords, three bytes of which ops C1 / C2 then add to or subtract from. Its four byte arguments read as bytes. Named as a colour by those uses."
-
-[[func]]
 pc = 0x454DC0
 name = "Sprite_ReleaseTint"
 psx = 0x80197718
@@ -3314,14 +3305,6 @@ ret = "void"
 params = "void"
 status = "hypothesis"
 evidence = "call site 0x577F20, 2026-09-22: op DB, then the sprite is grounded and tested as op DC. Unread."
-
-[[func]]
-pc = 0x587900
-name = "Sound_PlayById"
-ret = "void"
-params = "unsigned short id"
-status = "evidence"
-evidence = "disasm 2026-09-22, 4 instructions: Sound_PlayEffect(its first argument). Ops BC and BD call it with three and two arguments, D1 with two; only the first is read."
 
 [[func]]
 pc = 0x4DF820
@@ -3823,14 +3806,6 @@ ret = "unsigned char"
 params = "unsigned char *object, unsigned char toward"
 status = "hypothesis"
 evidence = "disasm 2026-09-22 (its first 60 instructions): the leader's position plus its facing step (ObjTrio +9, +0xC, +0x10), four quarter turns of Sprite_Current[8] from an odd direction, keeping the unblocked one nearest (toward 1) or farthest (0) by the sum of the two distances in object +0x94. Read a byte of its second argument. Unreached by the attract cycle."
-
-[[func]]
-pc = 0x454D60
-name = "Tint_Release"
-ret = "void"
-params = "unsigned char index"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its first 12 instructions): record index & 0xFF of MoveScript_TintRecords; with its bit 0 set, clears it (and bit 2 of the sprite at record +8 +0x24 when bit 7). Called by Field_ObjectFadeOut / Field_ObjectFadeIn when the fade is done."
 
 [[func]]
 pc = 0x537540
@@ -4856,15 +4831,6 @@ ret = "void"
 params = "unsigned char index"
 status = "hypothesis"
 evidence = "disasm 2026-09-22 (its head): masks its argument to a byte, record Field_Slots + index * 0x10, compares byte +0x4B of the pointer at +0xC with byte +2. Field_RunSlots calls it for each record with bit 0. Not reached by the attract cycle (hidden_b). Unread past its head."
-
-[[func]]
-pc = 0x588F00
-name = "Sprite_UpdateScreenSlot"
-psx = 0x8014D154
-ret = "void"
-params = "void"
-status = "evidence"
-evidence = "disasm 2026-09-22, 4 instructions: Sprite_Current +0x29 = Draw_OtSlot, then jmp Sprite_UpdateScreen. Party_UpdateScreens calls it when Field_Request is 3, where the PSX FUN_801BEAB0 calls 0x8014D154. Not reached by the attract cycle (hidden_b)."
 
 [[data]]
 pc = 0x655350
@@ -12859,3 +12825,321 @@ params = "void"
 impl = "src/game/battle_items.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5A71C0..0x5A71FD (0x3E bytes), cdecl. With a buffer at 0x7DE3C8: GetStatus (vtable +0x24) into an uninitialised local, Stop (+0x48) when bit 0 (DSBSTATUS_PLAYING), Release (+8), the cell cleared; the pointer read again before each call. Callers SndStream_Play, 0x587C5A and 0x5A6980 (shut-down). Combat route 3 calls."
+
+# --- Round seven, group BG: battle sprites, tints and the enemy banner
+# (src/game/battle_sprites.cpp, docs/battle_sprites.md). Every extent by
+# capstone, 2026-09-23; PSX twins from analysis/pairs_propagated.json, read in
+# the sibling's BATTLE.EMI#15 (4065db04) or GAME.EMI (9d00fd19) captures.
+
+[[func]]
+pc = 0x452BF0
+name = "Battle_RollPendingFlag"
+psx = 0x800A5EC0
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x452BF0..0x452DC5 (0x1D5 bytes), cdecl, calls 0x4456C0 and Rand, every jump internal; the PSX twin branch for branch (it ORs 0x100 into ctx +0x124, the pending-effect flags of BATTLE_RAM.md). Only for the byte Field_State +0x92 (PSX +0x82) = 0x1B, 0x3F or 0x44: per target not out whose status class (party +0xB7, enemy +0xC7) is under 6, Rand % 12 == 0 sets flag bit 0x100 (party +0x130, enemy +0x110); a side target (0xC0 bits of 0x904B44, 0x80 the party else the enemies) rolls each member and answers 1 if any hit. Combat route: 4 calls from 0x4412B0. The name says what it does; what the kinds are is not established."
+
+[[func]]
+pc = 0x452F70
+name = "Battle_SetTargetFlags"
+psx = 0x800A6570
+ret = "void"
+params = "unsigned target, unsigned bits"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x452F70..0x4530C1 (0x151 bytes), cdecl, calls 0x4456C0 and 0x446FB0, every jump internal. ORs the low 16 bits of bits into the flags of the target byte (party +0x130, enemy +0x110), state +1 = 0xB, 0x446FB0(actor); a side target does every member not out, 0x80 the party then 0x40 the enemies. Combat route: 1 call from 0x4C4C00."
+
+[[func]]
+pc = 0x4530D0
+name = "Battle_SetTargetFlag40"
+psx = 0x800A6780
+ret = "void"
+params = "unsigned target"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4530D0..0x453189 (0xB9 bytes), cdecl, calls 0x4456C0 only for side targets, every jump internal. Flag bit 0x40 on the target byte's record, or on every member not out of the side(s) its 0x80 / 0x40 bits name. Combat route: 8 calls from 0x4412B0, 0x4F7190, 0x4B5350."
+
+[[func]]
+pc = 0x453190
+name = "Battle_AnyFlagF0"
+psx = 0x800A690C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x453190..0x45320B (0x7B bytes), cdecl, no calls. 1 when a present actor (record +0 bit 0), party first, has any of bits 4..7 in its flags' low byte (party +0x130, enemy +0x110); else 0. Combat route: 817 calls from 0x42F9D0."
+
+[[func]]
+pc = 0x453210
+name = "Battle_ActionSuitsTarget"
+psx = 0x800A69E4
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x453210..0x453297 (0x87 bytes), cdecl, calls 0x4456C0; the PSX twin (its action records 16 bytes at 0x801CB230, the PC's 0x18 at 0x65C4D8) branch for branch. The action id is the u16 at +2 of the pointer 0x904B40: 0 with its record's flag bit 4; else, when the target 0x904B44 is out, 1 unless the id is 0x4C, 0x4D, 0xB4 or 0xB5, and when it is not, 1 only if it is one of them (by their shape revivals, unconfirmed). Combat route: 3 calls from 0x42E400."
+
+[[func]]
+pc = 0x4532A0
+name = "Battle_ItemSuitsTarget"
+psx = 0x800A6A9C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4532A0..0x4532FB (0x5B bytes), cdecl, calls 0x591810 (the PSX's 0x80166918) and 0x4456C0; the PSX twin branch for branch. As Battle_ActionSuitsTarget for an item: 0x591810(id high byte, id) with bit 4 answers 0, then the ids 0x0E and 0x128 play the out actions' part. Combat route: 1 call from 0x42F9D0."
+
+[[func]]
+pc = 0x4537A0
+name = "Battle_PickFlag8Member"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4537A0..0x45390C (0x16C bytes), cdecl, calls 0x453910, 0x453A10 and Rand, every jump internal; no PSX twin in the pairs. The test is 0x453910 when bit 9 of the action record u16 +4 is set, else Battle_MemberCoinFlip; a single party target that passes is taken, else one of the members that pass is drawn by Rand (signed remainder); the pick gets flag bit 3 and state +1 = 0xA and the answer is 1, none 0. Combat route: 3 calls from 0x42E400, none reaching 0x453910."
+
+[[func]]
+pc = 0x453A10
+name = "Battle_MemberCoinFlip"
+psx = 0x800A76E0
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x453A10..0x453A83 (0x73 bytes), cdecl, calls 0x4456C0, 0x453AC0 and Rand. 0 when the member is out, lacks flag bit 0, its byte +0x124 is not the acting actor 0x904B34, or 0x453AC0 answers non-zero; else 1 on an even Rand (the signed remainder). Combat route: 9 calls from 0x4537A0."
+
+[[func]]
+pc = 0x453B10
+name = "Battle_SettleFlag8"
+psx = 0x800A783C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x453B10..0x453BF1 (0xE1 bytes), cdecl, calls 0x4456C0, 0x453A90 and 0x590C90 twice. Per party member not out with flag bit 3: unless 0x453A90 has the action's low byte, an action whose record byte +5 has bit 1 goes to 0x590C90(id, member, 0, 1) and (id low byte, member +0x148, 0, 0) and its bit is set in the set at 0x904088; the answer becomes 1. Without bit 3 the flags are stored back unchanged. Combat route: 8 calls from 0x42F9D0."
+
+[[func]]
+pc = 0x453C00
+name = "Formation_ApplyStatMods"
+psx = 0x800A79AC
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x453C00..0x453D9C (0x19C bytes: code to 0x453D89, a 4-entry jump table at 0x453D8C), cdecl, calls 0x4456C0, Stat_AddClamped and Stat_AddCap100; named after its PSX twin (the sibling's names/functions.toml), which it matches case for case. By the formation byte 0x904060: 1 member 0 +0xC4 up by half, +0xC6 down a quarter, +0xD9 doubled to 100; 2 each member not out (up to 0x904AB0) +0xC8 down a quarter; 3 each takes member 0's +0xC8 then +0xC6 down by half; 4 member 2 +0xCA up by half, members 0 and 1 down a quarter. Combat route: 1 call from 0x42E400."
+
+[[func]]
+pc = 0x453DA0
+name = "Battle_SetDamagePopup"
+psx = 0x800A7BC0
+ret = "void"
+params = "unsigned amount, unsigned actor"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x453DA0..0x453EA3 (0x103 bytes), cdecl, calls 0x435180(0, 1). The 0x84-byte record at 0x93A000 it hands out gets +0xB = 0, +0x80 = the actor's record, +0x60 = the magnitude of the signed 16-bit amount, +0x27 = 6 for a negative amount else 0, and +7 by the actor's byte +0x12C / +0x10C: 4 without bit 0, 2 (+0x27 = 6) with bit 2 and not bit 4, 0 for a non-zero amount or bit 4, else 3. A slot of 0xFF is not checked. Named for the record's use as a number pop-up (hypothesis). Combat route: 8 calls from 0x4360C0."
+
+[[func]]
+pc = 0x453FA0
+name = "Battle_MemberAutoTarget"
+psx = 0x800A7FF0
+ret = "void"
+params = "unsigned member"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x453FA0..0x45421C (0x27C bytes: code to 0x454202, a 6-entry jump table at 0x454204), cdecl, 13 call sites (0x452DD0, 0x454290, 0x446B00, 0x4456C0, 0x454220, 0x454310, 0x454260, 0x591810, 0x435C80, 0x445730, Rand). Sets the target byte 0x904B44 for a party member by its +0x124 (a chosen target), +0x125 (a mode, copied to 0x904B35) and flags +0x134: confused / automatic members roll with Rand; a side target stands; modes 0/1 keep a target not out, 4/5 fall back on the pickers. Combat route: 10 calls from 0x42E400. The catalogue size 0x2BD included Battle_MemberOutAction."
+
+[[func]]
+pc = 0x454220
+name = "Battle_MemberOutAction"
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x454220..0x45425D (0x3D bytes), cdecl, no calls; missing from entries_logic.txt (it follows 0x453FA0's inline jump table). 1 when party member's action u16 +0x126 is 0x4C, 0x4D, 0xB4 or 0xB5 (the out actions of Battle_ActionSuitsTarget). Called by Battle_MemberAutoTarget only."
+
+[[func]]
+pc = 0x454380
+name = "Battle_PlayHitSound"
+psx = 0x800A8764
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x454380..0x454403 (0x83 bytes), cdecl, calls Sound_PlayEffect; named after its PSX twin, which it matches: class = the table 0x657465 (a byte every 0x1C) at the party actor's +0x92, or the enemy's +0x101; Sound_PlayEffect(u16 at 0x64F10C + (class + 7 * critical) * 2), critical = bit 7 of 0x904AA8. Combat route: 5 calls from 0x4360C0."
+
+[[func]]
+pc = 0x454410
+name = "Battle_SetHitPopup"
+psx = 0x800A8840
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x454410..0x45458E (0x17E bytes), cdecl, calls 0x435180(0, 3). The record gets +0x80 = Sprite_Current, +7 = 7 (block 0x904B50 +0xC bit 1) or the actor's hit class, +0x2E / +0x30 = the sprite's plus a signed offset (enemy sprites: the block 0x939AD8 +0xF2 / +0xF3; party: the pair at 0x64DF70 by sprite +8 and Field_State +0x89), +0x32, and +8 = the owning record's +8. Combat route: 5 calls from 0x4360C0."
+
+[[func]]
+pc = 0x454CC0
+name = "Sprite_SetTint"
+psx = 0x8019751C
+ret = "unsigned char"
+params = "unsigned char *sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x454CC0..0x454D5C (0x9C bytes), cdecl, calls ClutMap_Mark. The first of the 32 MoveScript_TintRecords with +0 bit 0 clear, 0xFF when none: +0 = (a << 1) + 0x41 (bit 7 too when the sprite's +0x28 is 0 and +0x24 bit 2 clear), +6 = ClutMap_Mark(+0x28, index, 1), +1 = sprite +0x27, +5 = +0x28, +8 = the sprite, +2..+4 = r g b; answers the index. Call sites 2026-09-22: op EA with Sprite_Current and b1..b4; op C0 keeps the index. Combat route: 20 calls (0x4360C0, 0x4412B0, 0x4B1520)."
+
+[[func]]
+pc = 0x454D60
+name = "Tint_Release"
+psx = 0x80197670
+ret = "void"
+params = "unsigned char index"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x454D60..0x454DB6 (0x56 bytes), cdecl, calls ClutMap_Mark. Record index (unchecked) of MoveScript_TintRecords, if in use: bit 7 clears bit 2 of the sprite at +8's +0x24; +0 = 0; the sprite's +0x27 back from +1; ClutMap_Mark(+5, index, 0) frees its clut cells. Called by Field_ObjectFadeOut / Field_ObjectFadeIn and Sprite_ReleaseTint. Combat route: 26 calls."
+
+[[func]]
+pc = 0x454DF0
+name = "ClutMap_Mark"
+psx = 0x80197784
+ret = "unsigned char"
+params = "unsigned kind, unsigned owner, unsigned claim"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x454DF0..0x454F30 (0x140 bytes: code to 0x454F19, a 5-entry jump table at 0x454F1C), cdecl, calls ClutMap_FindFree or ClutMap_FindOwner. The shared body of Sprite_SetTint and Tint_Release: claim writes the owner, release 0xFF, over 1 / 16 / 2 / 4 / 8 cells (kind 0..4) of the 4 x 16 clut map at 0x7E06A0 from the row and cell the callee left in DamageScratch bytes 0 and 1; answers the callee's al. The catalogue size 0x3AF ran on through ClutMap_FindFree and ClutMap_FindOwner. Combat route: 40 calls."
+
+[[func]]
+pc = 0x454F30
+name = "ClutMap_FindFree"
+psx = 0x801978BC
+ret = "unsigned char"
+params = "unsigned kind"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x454F30..0x455140 (0x210 bytes: code to 0x45512C, a 5-entry jump table at 0x45512C), cdecl, no calls; missing from entries_logic.txt (after 0x454DF0's inline table). The first free (0xFF) cell of the 4 x 16 map at 0x7E06A0 that starts an aligned free run of the kind's size; each free cell tried goes to DamageScratch bytes 0 / 1; answers the clut slot: kind 0 0xC0 + row * 16 + cell, 1 0x1C + row, 2 0xE0 + row * 8 + cell / 2, 3 0x70 + row * 4 + cell / 4, 4 0x38 + row * 2 + cell / 8, else 0xFF."
+
+[[func]]
+pc = 0x455140
+name = "ClutMap_FindOwner"
+psx = 0x80197B20
+ret = "unsigned char"
+params = "unsigned owner"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x455140..0x45519F (0x5F bytes), cdecl, no calls; missing from entries_logic.txt. The first cell of the clut map owned by the byte, its row and cell to DamageScratch bytes 0 / 1, answering the owner; 0xFF (scratch untouched) when none."
+
+[[func]]
+pc = 0x4551A0
+name = "Sprite_SetClutStp"
+psx = 0x80197B9C
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4551A0..0x455246 (0xA6 bytes), cdecl, no calls; the GAME.EMI twin term for term (divu for the PC idiv). For Sprite_Current: slot +0x27 over 0x6528CC[+0x28] gives the Gfx_ClutStrip row (+0x10 with +0x24 bit 2), the remainder times 0x6528D4[+0x28] the column; bit 15 (the PSX semi-transparency bit) set on entries 1 .. 0x6528C4[+0x28] * 16 - 1, Gfx_ClutStripDirty = 1. Kinds 5 and up divide by zero. Combat route: 4 calls from 0x42E400, once per living actor."
+
+[[func]]
+pc = 0x494280
+name = "Battle_InitEncounterKind"
+psx = 0x800A8AD4
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x494280..0x494293 (0x14 bytes), cdecl: tail jump to Battle_InitBossEncounter when the byte 0x904AAA is not 0, else to Battle_InitEnemies; named after its PSX twin (the sibling's boss flag 0x801462E6 split). The catalogue size 0x9A ran on through both. Combat route: 1 call from 0x42E400."
+
+[[func]]
+pc = 0x4942A0
+name = "Battle_InitBossEncounter"
+psx = 0x800A8B10
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4942A0..0x4942B3 (0x13 bytes), cdecl: 0x494500, then jmp [0x656954 + 0x904AAA * 4] - a table of 24 handlers, each reading no arguments (they set 0x904B64..0x904B6C or return). Reached only by Battle_InitEncounterKind's jmp; not by the combat route (an ordinary encounter)."
+
+[[func]]
+pc = 0x4942C0
+name = "Battle_InitEnemies"
+psx = 0x800A8B60
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4942C0..0x49431A (0x5A bytes), cdecl, calls Battle_SetupEnemy. 0x904AB2 = 0; each used record (+0 non-zero) of the eight 12-byte records at 0x939F00 becomes the next enemy: Battle_SetupEnemy(n, +1, dword +4, dword +8); then 0x904AB3 = 0x904AB2. Reached by Battle_InitEncounterKind's jmp (so untraced); the combat route calls Battle_SetupEnemy once through it."
+
+[[func]]
+pc = 0x494320
+name = "Battle_SetupEnemy"
+ret = "void"
+params = "unsigned slot, unsigned id, long x, long z"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x494320..0x4944F9 (0x1D9 bytes), cdecl, calls AreaMap_Elevation, Sprite_SetAnimationBank, Battle_CopyEnemyData, Battle_SetEnemyOffset, Battle_EnemyKindFlag. Enemy record slot (0x93B960 + slot * 0x128) becomes Sprite_Current and is set up from the enemy data id (0x8C55C8 + id * 0x8C, id by 16 bits): +0 = 1 (0x21 for banks 0x2CD / 0x2E1), +5 = slot + 3, +8 = 0x904AAC ^ 2, position (x, z) and its ground, bank = data u16 +0x1A (kept at +0x9A too), +0x8F = the kind flag of data +0xC; the enemy count 0x904AB2 up by one. No PSX twin in the pairs. Combat route: 1 call."
+
+[[func]]
+pc = 0x4946C0
+name = "Battle_CopyEnemyData"
+psx = 0x800A9148
+ret = "void"
+params = "unsigned slot, unsigned id"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4946C0..0x4948DC (0x21C bytes), cdecl, no calls. Copies the enemy data id (by its LOW BYTE here) at 0x8C55C8 + id * 0x8C into the EnemyWorkingRecords entry at 0x93B9E0 + slot * 0x128: the 12-byte enemy NAME from data +0 to record +0 (so this is where the battle's enemy name comes from), then stats and the resistance bytes (data +0x12..+0x34, +0x7C..+0x89), a rep movsd of the stat block to +0x30, +0x70 = the id, and the battle state cleared. Combat route: 1 call from Battle_SetupEnemy."
+
+[[func]]
+pc = 0x494A80
+name = "Battle_OpenEnemyNames"
+psx = 0x800A9894
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x494A80..0x494E6E (0x3EE bytes), cdecl, calls 0x59E2D0 per window; the PSX twin (0x80159874 its window call) structure for structure. Groups the living enemies' kinds (+0x8C) into up to eight kind / count pairs, sorts them by count, and opens one kind-3 window per enemy (0x59E2D0(0xC - n, 3)) at record 0x803160 + (0xC - n) * 0x24 with x / y from 0x656A34 by the layout 0x904AAC and +0xA = the actor; the window draws the name from the enemy record. For layouts 0 and 1 the column is measured first and starts below the table y. With eight different kinds the list walk runs past its eight entries into the stack above (PSX alike); ours reads the same words. Combat route: 1 call from 0x42E400."
+
+[[func]]
+pc = 0x494EA0
+name = "Battle_EnemyKindFlag"
+ret = "unsigned char"
+params = "unsigned kind"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x494EA0..0x494ECD (0x2D bytes), cdecl, no calls: bit (kind & 0xFFFF) of the dword set at 0x904068, as al. Battle_SetupEnemy keeps it in enemy +0x8F for the data's kind byte +0xC. Combat route: 1 call."
+
+[[func]]
+pc = 0x494ED0
+name = "Battle_SetEnemyKindFlag"
+ret = "void"
+params = "unsigned kind"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x494ED0..0x494EFD (0x2D bytes), cdecl, no calls: sets that bit. Combat route: 1 call from 0x437470."
+
+[[func]]
+pc = 0x494F00
+name = "Battle_SetEnemyOffset"
+ret = "void"
+params = "unsigned slot, unsigned id"
+impl = "src/game/battle_sprites.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x494F00..0x49503C (0x13C bytes: code to 0x49502B, a 4-entry jump table at 0x49502C), cdecl, no calls. By Sprite_Current +8 (0..3, else nothing) enemy slot +0xF2 / +0xF3 from the enemy data id (16 bits): +0x79 / +0x7B, -+0x79 / +0x7B, -+0x78 / +0x7A, +0x78 / +0x7A - the offsets Battle_SetHitPopup adds. The catalogue size 0x711 ran on into 0x495040. Combat route: 1 call."
+
+[[func]]
+pc = 0x588F00
+name = "Sprite_UpdateScreenSlot"
+psx = 0x8014D154
+ret = "void"
+params = "void"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 / 23, 0x588F00..0x588F13 (4 instructions): Sprite_Current +0x29 = Draw_OtSlot, then jmp Sprite_UpdateScreen. Party_UpdateScreens calls it when Field_Request is 3, where the PSX FUN_801BEAB0 calls 0x8014D154. Combat route: 201 calls; not reached by the attract cycle (hidden_b)."
+
+[[func]]
+pc = 0x587900
+name = "Sound_PlayById"
+ret = "void"
+params = "unsigned short id"
+impl = "src/game/battle_sprites.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 / 23, 0x587900..0x58790C (4 instructions): Sound_PlayEffect(its first argument, pushed whole; the callee reads 16 bits). Ops BC and BD call it with three and two arguments, D1 with two; only the first is read. Combat route: 1 call from 0x4C4C00."
