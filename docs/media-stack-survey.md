@@ -7,13 +7,20 @@ still exist on Windows 11, and what replacing each part would cost. One item has
 since been acted on (§6, `DIVERGENCE.md` DIV-0001); anything else built from §5
 needs its own ledger entry first.
 
+**Since then (noted 2026-09-24):** video out is replaced - Direct3D 11 behind
+DirectX 6's objects, no exclusive mode (DIV-0031); the FMV player's second
+DirectDraw and its mode-set are gone, the videos playing through MCI into the
+window (DIV-0035); input goes through SDL3 for the pad, the keyboard kept as
+the original read it (DIV-0050, [`controls.md`](controls.md)). Sound and the
+MP3 decoder are still Capcom's. The inventory below is the original's.
+
 ## 1. The inventory
 
 | Layer | What the port uses | API vintage | On Win11 24H2 (this machine) |
 |---|---|---|---|
 | Video out | `DDRAW.dll` — `DirectDrawCreate`, `DirectDrawEnumerateA` | DirectDraw 1 entry points, DX7-era interfaces | present, emulated |
 | 3D | `IDirect3D3` / `IDirect3DDevice3` / `IDirect3DViewport3`, obtained by `QueryInterface` off DirectDraw | DirectX 6 (1998) | present via `d3dim700.dll` |
-| Input | `DINPUT.dll` — `DirectInputCreateA` | DirectInput 3, ANSI | present |
+| Input | `DINPUT.dll` — `DirectInputCreateA` | DirectInput 7 (version `0x700`; "3" in the first draft, corrected 2026-09-24 from [`controls.md`](controls.md) §1), ANSI | present |
 | SFX / voice | `DSOUND.dll` ordinal 1 = `DirectSoundCreate` | DirectSound 1 | present, WASAPI-emulated |
 | FMV | `WINMM.mciSendStringA` → `open avivideo!<file> alias vfw` | MCI + VFW (1992) | driver present, **one codec missing** |
 | Music | MP3, decoded **inside `BOF3.exe`** | ISO-style MPEG-1 decoder | no OS dependency |
@@ -138,7 +145,8 @@ platform layer is already the first decompilation target. The renderer's own
 DirectDraw usage has **not** been read yet, and its size is unknown — the FMV
 path was small and self-contained, and that should not be assumed of the rest.
 
-`DINPUT.dll`'s `DirectInputCreateA` is DirectInput 3 and still resolves, but
+`DINPUT.dll`'s `DirectInputCreateA` is DirectInput 7 (called with version
+`0x700`, `DInput_Init` `0x5A94C0`; this said 3 until 2026-09-24) and still resolves, but
 DirectInput has been deprecated for two decades and does not see XInput
 controllers as anything modern; gamepad support is a likely casualty.
 

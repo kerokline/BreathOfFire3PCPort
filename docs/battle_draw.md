@@ -7,8 +7,7 @@ last instruction, fuzzed against Capcom's at start-up
 exit 0, 806 ours) with 66 negative controls: 64 refused by a comparison, one
 refused only by a fault and replaced, one blind at first and refused once the
 fuzz was sharpened (section 4.1). No divergence. One candidate defect of
-Capcom's (section 5). **Not yet through a live check** - the combat A/B reaches
-all six, and runs centrally after the merge.
+Capcom's (section 5). **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); the combat A/B reaches all six.
 
 Group BJ of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). Every claim below is

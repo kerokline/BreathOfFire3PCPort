@@ -2,8 +2,8 @@
 
 **Status:** IN PROGRESS (2026-09-23 - group D of the sixth parallel round:
 three functions ours, fuzzed headless against copies of Capcom's bytes and
-against DIV-0010's old re-aimed copies, 32 negative controls refused; not yet
-run in game - the batch after the merge is the first live check)
+against DIV-0010's old re-aimed copies, 32 negative controls refused; through the batch
+`ab26` - [`takeover-queue-round6.md`](takeover-queue-round6.md) status)
 
 `D3d_DrawSprt` `0x5A2300`, `D3d_DrawSprt8` `0x5A2520` and `D3d_DrawSprt16`
 `0x5A2710` draw the PSX's `SPRT`, `SPRT_8` and `SPRT_16` under Direct3D:

@@ -7,8 +7,10 @@ disc for five, the boot exe for two), fuzzed against Capcom's at start-up
 (`BOF3X_SHADOW=world_map`, 90,000 rounds, 0 mismatches) with 47 negative
 controls: 46 refused by a comparison, 1 a change that changes nothing (section
 3.1). No divergence; one defect written down (D42, the dial's opacity - a port
-change, kept). **Not yet through a live check** - the world-map route's A/B
-runs centrally after the merge (section 7).
+change, kept). **Through the between-waves and wave-2 batches** (2026-09-24,
+[`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the
+world-map A/B 7 of 35 identical, the map frames' only difference the
+needle, DIV-0044); section 7 had it owed.
 
 The first group of the wave [`world-map.md`](world-map.md) §4 queued: the
 owner's order was the compass and the HUD first, with the dial's translucency

@@ -3,8 +3,7 @@
 **Status:** IN PROGRESS (2026-09-24) - 32 functions ours (round seven, group
 BG, [`takeover-queue-round7.md`](takeover-queue-round7.md)), fuzzed headless
 against byte copies of Capcom's, 70 negative controls all refused; the self-test with `BOF3X_SHADOW='*'`
-passes. **Not yet through the live check**: that runs centrally after the
-merge (section 6).
+passes. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 6 had it owed.
 
 Source: [`src/game/battle_sprites.cpp`](../src/game/battle_sprites.cpp),
 [`battle_sprites_callees.h`](../src/game/battle_sprites_callees.h),

@@ -1,6 +1,6 @@
 # The attract sequence, the task system, and why the RNG is deterministic
 
-**Status:** IN PROGRESS (2026-09-19 — the oracle works; see §6)
+**Status:** IN PROGRESS (2026-09-19 — the oracle works; see §6. §8 re-checked 2026-09-24)
 
 Groundwork for [`IDEAS.md`](IDEAS.md) I6 — using the attract sequence as a
 whole-engine regression oracle, the way TR1X used demo playback
@@ -303,10 +303,16 @@ all-original reference over 7,478 frames (`attract_diff.py` exit 0).
   random-interval effect. No battle, no menu, no input path. A scripted-input
   replay would extend it, and now has a deterministic base to stand on — the
   hard part would be delivering input on an exact logic frame, which needs the
-  in-process logger below.
+  in-process logger below. *Since 2026-09-21: scripted input exists, pad
+  words delivered inside the game on exact frames, and since 2026-09-23 routes
+  recorded by playing - menus, a shop, the world map, a battle
+  ([`input-script.md`](input-script.md), §5a there).*
 - **Log from inside.** Take over `Task_RunAll` `0x5A98A0` (hand-written
   assembly — read its register contract first) or hook the frame loop, for an
-  exact frame counter and a state hash richer than three words.
+  exact frame counter and a state hash richer than three words. *Since
+  2026-09-19: the in-process call tracer gives a per-frame call hash
+  identical across launches ([`call-trace.md`](call-trace.md) §6), and the
+  frame counter is in-process; `Task_RunAll` itself was not needed.*
 - **Receipts.** This is the differential run [`STATUS.md`](STATUS.md)'s receipt
   policy was waiting for: git SHA, fixture ids, the two configurations, frames
   compared, result.

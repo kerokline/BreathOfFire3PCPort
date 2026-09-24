@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 49 entries, DIV-0001..0049)
+**Status:** IN PROGRESS (opened 2026-09-18; 51 entries, DIV-0001..0051)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -448,7 +448,7 @@ designed in rather than bolted on.
   then run to `0x8000`, where the CLUT strip begins; the largest English block
   is `0x5559`, and all 200 areas now get an overlay. Without the variable the
   base is the original's constant and nothing differs.
-- **Why this side:** measured 2026-09-20 over every operand of every function
+- **Rationale (why this side):** measured 2026-09-20 over every operand of every function
   in `analysis/pc_funcs.json` - the script window has 177 references from 41
   functions; the pool window has **two, both in `Msg_SystemPtr`**. And over
   every shipped `DAT`: exactly 44 chunks land in `0x4000`..`0x8000`, all at tag
@@ -543,6 +543,8 @@ designed in rather than bolted on.
 - **What it costs:** text the US script centres or aligns with spaces, on the
   assumption that every character is 8 px wide, shifts left by 3 px for each
   apostrophe or comma before the point in question. None seen wrong.
+- **Also in the PSX version?** no - the US release, this entry's original,
+  advances every character by 8 (above).
 - **Reversible?** Yes: build the overlays with `--mono`.
 
 ### Give a sprite's last texel row and column their share of the screen
@@ -644,6 +646,10 @@ designed in rather than bolted on.
   sequence opens no menu; owner to look at Config, and at the controller
   sub-panel. 421 and 172 sprites a frame: watch for anything else on the
   screen going missing, which is what a full packet pool would look like.
+  **Since then (noted 2026-09-24):** the owner has seen Config's panel frame
+  in game - "looks right" ([`HANDOFF.md`](HANDOFF.md) item 0a). The reserve
+  list's frame on "change party members" was seen in the owner's session
+  (`analysis/d1/point/s009.png`) but the owner has not commented: still open.
 
 ### Offer point sampling as a choice of look
 
@@ -1402,7 +1408,9 @@ designed in rather than bolted on.
   do it; not read).
 - **New behaviour:** for a kind of 4 or more ours makes the same draw-mode
   and CLUT calls and then draws no tiles. Kinds 0..3 are Capcom's, faithful
-  (the fuzz; the shop route's A/B is owed with the next batch).
+  (the fuzz; the shop route's A/B is owed with the next batch - run in
+  `ab26`, 35 of 35 identical: [`HANDOFF.md`](HANDOFF.md), round six's batch,
+  and [`takeover-queue-round6.md`](takeover-queue-round6.md)).
 - **Rationale:** the stack read cannot be reproduced in C++; the takeover
   first aborted there (CLAUDE.md rule 4), which turned what a player of the
   original sees - a black backdrop, or at kind 5 speckle that varies from
@@ -1751,6 +1759,10 @@ designed in rather than bolted on.
   function keys". With the backend there is one device.
 - **Also in the PSX version?** No.
 - **Verification:** built; to be pressed at the next run.
+  **Since 2026-09-24:** F11 is taken again, by tooling - it saves the frame
+  beside the DLL (`SaveFrameBesideDll`, `src/game/win_main.cpp`; the capture
+  work of DIV-0049). Nothing of the game's behaviour changes with it, so it
+  is not an entry of its own; F7 still does nothing.
 - **Reversible?** `BOF3X_ORIGINAL=Game_WndProc` (Capcom's window procedure,
   which also brings back the unfocused freeze).
 
@@ -1840,6 +1852,13 @@ designed in rather than bolted on.
   the oracle and the frame hash once with `BOF3X_WIDE=1` (a difference is
   a cull gating logic), the 55-shot attract A/B cropped to the middle 640
   columns, the owner's eye.
+  **Since then (noted 2026-09-24):** the world-map route was captured wide
+  after the merge, in the between-waves batch ("the wide captures with the
+  sky filling the bands") and the wave-2 batch ("the wide captures none
+  black") - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result".
+  The middle-640 comparison against the narrow capture is not reported
+  there. Still owed: the oracle and the frame hash with `BOF3X_WIDE=1`, the
+  cropped attract A/B, the owner's eye.
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
@@ -1887,8 +1906,8 @@ designed in rather than bolted on.
   resize if they are at a half-size for the game".
 - **Also in the PSX version?** No.
 - **Verification:** 2026-09-23, the window driven to four client sizes in
-  each mode by `SetWindowPos` (which sends `WM_SIZE` but not `WM_SIZING`;
-  the drag rule is owed the owner's hand), the title logo's width measured:
+  each mode by `SetWindowPos` (which sends `WM_SIZE` but not `WM_SIZING`),
+  the title logo's width measured:
   snap 871 / 1162 / 290 px for clients 1100 x 800 / 1280 x 960 / 700 x
   300 (3x / 4x / 1x, the picture centred), fit 968 / 1162 / 361 (3.33x /
   4x / 1.25x, the height filled); the log's `DIV-0042 target` lines at
@@ -1936,6 +1955,8 @@ designed in rather than bolted on.
   mural. Owed: the owner's tuning; the dialog's sliders by hand (only
   tried by code).
 - **Reversible?** The Look box's other entries; `BOF3X_PRESENT` unset.
+
+### A primitive's corner at depth 0 is drawn at the nearest depth: the world map's compass needle
 
 - **ID:** DIV-0044
 - **Date:** 2026-09-23
@@ -2266,8 +2287,9 @@ designed in rather than bolted on.
   PlayStation screen has one column, the button icons.
 - **New behaviour:** under an overlay language the second cell is not set up
   (`0x461BAC` jumps to the epilogue, whose `add esp` loses the block's three
-  pushes), the row's dark box is 0x58 wide instead of 0x68, the frame stays
-  the original's 0xC cells (DIV-0026's 0xF is not applied), and the cell's
+  pushes), the row's dark box is 0x58 wide instead of 0x68, the frame is
+  0xD cells (DIV-0026's 0xF is not applied; `push 0xC` at `0x461A61` made
+  `push 0xD`, `src/game/config_text.cpp`), and the cell's
   draw `0x461C00` is ours: the PlayStation's icon for the row's button, six
   new glyphs `loc_build.py` builds from the disc's atlas - the four shapes
   from its 12 x 12 set at atlas y 48 (the owner's choice, 2026-09-24, over

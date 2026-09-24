@@ -1,6 +1,7 @@
 # Scaffolding — launcher, detour layer, generated symbol header
 
-**Status:** STABLE (verified 2026-09-19 — phase 0 exit test passed, §5)
+**Status:** STABLE (verified 2026-09-19 — phase 0 exit test passed, §5; §1, §2's shadow check and
+§4's build re-checked against `CMakeLists.txt` / `CMakePresets.json` 2026-09-24)
 
 How our code gets into the game's process and takes over one original function
 at a time. This is [`PLAN.md`](PLAN.md) phase 0. It is **scaffolding built to be
@@ -17,7 +18,7 @@ was implemented **from those notes' descriptions, not from their source**
 
 | Piece | Where | What it does |
 |---|---|---|
-| `bof3x-launcher.exe` | `src/launcher/` | Hashes the player's `BOF3.exe` against the catalogued build, starts it **suspended**, runs `LoadLibraryW(bof3x.dll)` in it on a remote thread, waits for that to succeed, then resumes the game. |
+| `bof3x-launcher.exe` | `src/launcher/` | Hashes the player's `BOF3.exe` against the catalogued build, starts it **suspended**, runs `LoadLibraryW(bof3x.dll)` in it on a remote thread, waits for that to succeed, then resumes the game. Before that (since 2026-09-20) it shows a settings dialog, keeps its settings in `bof3x.ini` beside itself, hands ours to the game as environment variables and writes lines 1-2 of the game's `BOF3.CFG` ([`launcher-settings.md`](launcher-settings.md)). |
 | `bof3x.dll` | `src/hook/` + `src/game/` | In `DllMain`: verify the image, then install every detour. Holds our reimplementations. |
 | `bof3/symbols.gen.h` | generated into `build/gen/` | Every address, and the one binding of every callable name. Generated from [`symbols.toml`](../symbols.toml) by `tools/gen_symbols.py`; never committed, so it cannot drift. |
 
@@ -87,7 +88,8 @@ file then plans its own result on a copy of the state, lets the clone do the
 real work, and compares — and, at start-up, can fuzz the pair on synthetic
 input. First and so far only user: `Gfx_InvalidateTextures`
 (`src/game/gfx_texcache.cpp`, [`asset-loading-path.md`](asset-loading-path.md)
-§2).
+§2). *Since then it is the usual check for a takeover: 81 `BOF3X_SHADOW`
+names across 79 source files call `WantsShadow` (grep, 2026-09-24).*
 
 It is **not a trampoline** and does not soften the rule that a replaced
 function is replaced whole: nothing resumes into the original body, and a build
@@ -206,8 +208,9 @@ is what scripted and agent runs want.
 
 Needs `i686-w64-mingw32-clang++`, `cmake` ≥ 3.25, `ninja` and `python` ≥ 3.11 on
 `PATH` (or `LLVM_MINGW_ROOT` set), and, for the first configure, the network:
-SDL3 is fetched at a pinned tag and built static into the DLL
-([`THIRD_PARTY.md`](THIRD_PARTY.md) §2, DIV-0050); after that `build/_deps`
+SDL3 is fetched at a pinned tag and built static into the DLL and, since
+2026-09-24, the launcher too (`CMakeLists.txt`, the `bof3x_launcher` target;
+[`THIRD_PARTY.md`](THIRD_PARTY.md) §2, DIV-0050); after that `build/_deps`
 holds it. Verified with llvm-mingw 20260616 / clang
 22.1.8, cmake 3.31.12, ninja 1.13.2. The build reads no game data; outputs land
 in `build/`, which is gitignored. The DLL is linked `-static` so that it depends

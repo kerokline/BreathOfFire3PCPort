@@ -1,6 +1,6 @@
 # User checks — things only the owner can do in game
 
-**Status:** IN PROGRESS (2026-09-20)
+**Status:** IN PROGRESS (2026-09-24)
 
 Checks that need a person at the keyboard playing the game. Agents add items
 here instead of burying them in [`HANDOFF.md`](HANDOFF.md); the owner ticks
@@ -14,26 +14,6 @@ Launch for all of these: `build/bof3x-launcher.exe --game bof3`; log in
 `--no-config` to skip it.
 
 ## Open
-
-### 0. Load the converted PlayStation saves — do this one first
-
-*Why:* [`save-interchange.md`](save-interchange.md) — the converter is
-self-consistent but nothing it made has been loaded by a game.
-
-- [X] Load screen: slot **2** should be the JP save (12:48, Lv 11, party of
-      three), slot **3** the US save (42:37, Lv 38, solo adult Ryu). Do the
-      summaries show, with sane names, times and levels?
-- [X] Load each. Right place (US: the area the sibling's import landed in)?
-      Party, inventory, equipment, abilities and zenny intact? Character names
-      readable in the status menu (they are borrowed from PC slot 0)?
-- [X] Walk around, open menus, fight one battle, save to a new slot.
-- [] US save only: it carries 20 five-byte names in US text encoding for
-      the 60-member facility above. If you can get to where those names
-      are shown, what does the PC game draw for them?
-- [X] Note the confirm/cancel buttons after loading the US save — the sibling
-      saw US button config ride along in the save block.
-- Anything odd, however small, is the finding. Result goes to:
-  [`save-interchange.md`](save-interchange.md) §4.
 
 ### 1. Save and load through the fully-ours file layer
 
@@ -102,8 +82,10 @@ The attract sequence never gets there, so this path has only been fuzzed, and
 what the state *is* has not been established; an agent's memory of the game
 does not count.
 
-- Answered by the owner, 2026-09-20: yes - a field confusion status reverses
-  inputs, left for right and up for down. Recorded in the doc below.
+What the state is was answered by the owner, 2026-09-20: a field confusion
+status reverses inputs, left for right and up for down (recorded in the doc
+below). Only the A/B is left:
+
 - [ ] When you next have a confused party member on the field: do the controls reverse the same way
       with ours as with `BOF3X_ORIGINAL=Field_CopyInput` set? Both directions
       pairs, and does anything else stop responding while it lasts (the
@@ -115,17 +97,16 @@ does not count.
 
 *Why:* DIV-0014 ([`title-menu.md`](title-menu.md)). `START.DAT` loads only
 when a key takes the logo to the menu, so no unattended run reaches it; what
-exists is an offline preview.
+existed was an offline preview (since 2026-09-21 an input recipe reaches it,
+[`input-script.md`](input-script.md)).
 
 Launch with `BOF3X_LANG=en` after `python tools/loc_build.py all ...`
 ([`HANDOFF.md`](HANDOFF.md) "How to run things").
 
-- [x] Three rows: NEW GAME, LOAD GAME, CONFIG - whole, centred, nothing cut
-      off at the right, no stray pixels beside them? *Owner, 2026-09-21, off
-      an input-recipe capture: "looks perfect".*
-- [x] Move the cursor over each: is the selected row's glow right for thin
-      lettering? It was drawn for thick Chinese strokes. *Same capture and
-      verdict.*
+The three rows and the selected row's glow were confirmed by the owner,
+2026-09-21, off an input-recipe capture ("looks perfect"; recorded in
+[`title-menu.md`](title-menu.md) §3). Left:
+
 - [ ] `build/bof3x.log` has `DIV-0014: title menu rows 130, 140, 96 wide`.
 - [ ] The draw has a two-row layout, rows 0 and 2, on a byte nobody has read -
       a guess is "no save files present". If you know when the port shows two

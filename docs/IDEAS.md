@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-09-19; 9 entries, I6 built)
+**Status:** IN PROGRESS (2026-09-24; 20 entries, I1..I20 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -45,17 +45,26 @@ rule ([`README.md`](README.md)) here too.
 
 | Id | Title | Kind | Feasibility | State |
 |---|---|---|---|---|
-| I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | open — first pick once the game runs |
-| I2 | Selectable localisations from original discs | game behaviour | LOW | open |
+| I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | **PSX saves load and play on PC** (owner, 2026-09-19, [`save-interchange.md`](save-interchange.md) §4); only PC→PSX in a real PSX runtime is unchecked |
+| I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; other languages open |
 | I3 | Crude x86→C lifter as portability accelerator | engine | LOW | open |
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | open |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
-| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | open |
-| I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | open |
-| I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | open |
-| I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7 |
+| I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. Stays on the list |
+| I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | **built 2026-09-23** (DIV-0031) — [`render-backend.md`](render-backend.md) |
+| I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | **integer scaling built** (DIV-0036, DIV-0042); the wide view built as a fixed 426 x 240 (DIV-0041, survey build), not the `W / k` rule |
+| I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7; item 2 (the work queue) **built** — §9 there |
 | I11 | In-process crash reporter | tooling | HIGH | **built 2026-09-19** — [`crash-reporter.md`](crash-reporter.md) |
+| I12 | Let the game run while its window is not in front | tooling | HIGH | **built 2026-09-23** (DIV-0033) |
+| I13 | Save states: snapshot the running game, restore it | tooling | MEDIUM | open |
+| I14 | Compare what is drawn: display-list, texture, back-buffer hash | tooling | MIXED | open (the game writes its own frames since 2026-09-24, [`input-script.md`](input-script.md) §3; no hashing yet) |
+| I15 | A look toggle: clean / sharp against soft / CRT-like | look | — | **looks built** (DIV-0012, DIV-0037, DIV-0043), chosen in the launcher; only a live toggle key is missing |
+| I16 | Exact frame pacing: the deadline in a double | platform | MEDIUM | **done 2026-09-24** (DIV-0047) |
+| I17 | Fast-forward: a shorter frame period while a key is held | game behaviour | MEDIUM | **done 2026-09-24** (DIV-0048, a toggle) |
+| I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | open |
+| I19 | Screen curvature for the SatPixie look | look | HIGH | open |
+| I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 
 ---
 
@@ -72,7 +81,8 @@ PC file is the PSX `0x10B0`-byte game block from offset 0, same checksum rule,
 same offsets, with the character-record name field widened 5→9 bytes. Both
 directions round-trip byte-identically and the sibling's verifier accepts a PC
 save. **Next step:** the owner loads the converted JP and US saves
-([`USER_CHECKS.md`](USER_CHECKS.md)).
+([`USER_CHECKS.md`](USER_CHECKS.md)). *Done the same day: both load, play
+and re-save ([`save-interchange.md`](save-interchange.md) §4).*
 
 **Ask (2026-09-18, moved here from the order of work 2026-09-19):** convert a
 save between the PlayStation release and the PC port, in at least one direction.
@@ -102,7 +112,10 @@ Make a PC save, locate the 164-byte records in it by value, diff against the
 sibling's documented PSX layout.
 
 ### Outcome
-_open — tool exists, in-game load pending._
+_open — tool exists; in-game load done 2026-09-19 (both converted PSX saves
+load, play and re-save on PC, [`save-interchange.md`](save-interchange.md)
+§4). Left: PC→PSX in a real PSX runtime, and the US save's facility names
+(§4's open check)._
 
 ## I2 — Selectable localisations from original discs
 
@@ -112,6 +125,14 @@ player-supplied discs. **Kind:** game behaviour. **Feasibility:** LOW.
 
 Written up in [`STATUS.md`](STATUS.md) "A stated goal worth recording now" —
 not restated here. _Remaining sections to fill._
+
+**Partly built since (noted 2026-09-24):** English, from overlays built on
+the player's machine out of their own US disc - dialogue, system pools, item
+and ability names, the font, the title menu, the Config screen, menu verbs,
+battle labels, default names (DIV-0005..0009, DIV-0013..0020;
+[`dialogue-localisation.md`](dialogue-localisation.md)) - selected by
+`BOF3X_LANG=en` or the launcher's Language box. The other languages, and a
+runtime switch, are open.
 
 ## I3 — Crude x86→C lifter as portability accelerator
 
@@ -195,7 +216,10 @@ with `fullscreen = 0`? A windowed path already existing would change the shape
 of the work.
 
 ### Outcome
-_(open)_
+_(open when written) - overtaken 2026-09-23: the owner chose MCI into the
+window over a bundled decoder (DIV-0035, [`window-modes.md`](window-modes.md)
+§3); `Fmv_Play` `0x59E360` is ours and the exclusive mode-set is gone. The
+idea stays on the list._
 
 ## I8 — Replace the DirectDraw / `IDirect3D3` presentation layer
 
@@ -250,7 +274,9 @@ investigation, it needs no phase, and it converts this entry from a guess into
 an estimate.
 
 ### Outcome
-_(open)_
+_(open when written) - built 2026-09-23: Direct3D 11 behind DirectX 6's
+objects, no exclusive display mode (DIV-0031,
+[`render-backend.md`](render-backend.md), [`display-setup.md`](display-setup.md))._
 
 ## I9 — Integer-scale the picture and extend the view into the remainder
 
@@ -361,7 +387,10 @@ Read-only, needs no phase: measure the logical resolution and find the limits.
 list which functions own them. Output: a note sizing the second half honestly.
 
 ### Outcome
-_(open)_
+_(open when written) - integer scaling built 2026-09-23 (DIV-0036, then
+DIV-0042: `k` follows the resizable window); the extension built as a fixed
+426 x 240 picture under `BOF3X_WIDE=1` (DIV-0041, a survey build,
+[`widescreen.md`](widescreen.md)) rather than this entry's `W / k` rule._
 
 ## I10 — Uses for the call-trace data
 
@@ -595,6 +624,9 @@ filter does to text. Two looks, switchable in game:
   CRT-like (scanlines, a slight bloom) rather than merely blurred. That half
   is a post-process and belongs with the presentation layer's replacement
   (I8); under DirectDraw / `IDirect3D3` there is nowhere to put it.
+  *Since 2026-09-23 there is: the Direct3D 11 backend (DIV-0031) carries two
+  CRT looks, DIV-0037 and SatPixie DIV-0043, chosen in the launcher's Look
+  box.*
 
 What a LIVE toggle needs: the two `SetTextureStageState` calls made again on
 the device at `[0x7CC350]` (vtable `+0xA0`, stage 0, states `0x10` / `0x11`,
@@ -602,7 +634,10 @@ value 1 or 2) - safe from the render thread between frames; `Gfx_BeginFrame`
 is ours and is the obvious place. And a key: **the game's input path is
 unread**, which the owner expects to come with a controller-mapping pass. F8
 (windowed) shows the port does read function keys somewhere; that reader is
-the place to start.
+the place to start. *Since 2026-09-24 the input path is read and ours
+([`controls.md`](controls.md) §1, DIV-0050), and our WndProc already takes
+F1 for DIV-0048: what I15 still needs is only the live toggle key and the
+two state calls.*
 
 
 ## I16 — Exact frame pacing: the deadline in a double
@@ -673,7 +708,8 @@ deadline rebased at the change; a toggle rather than a hold, the owner's
 done by cutting the frame period, or whether that is a bad mechanism.
 **Kind:** game behaviour (opt-in)   **Feasibility:** MEDIUM   **Gated on:**
 an input reader for the key (the game's keyboard path is unread, as for
-I15); exact rates want I16.
+I15); exact rates want I16. *(Both met by 2026-09-24: our WndProc takes the
+key, I16 is DIV-0047.)*
 
 **The mechanism: yes, cut the period** - 16.667 ms for 2x, 8.333 ms for 4x.
 Why it suits this game (read 2026-09-21, WinMain's loop):

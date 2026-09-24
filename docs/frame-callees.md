@@ -5,9 +5,7 @@ objects' runner, the camera turn (effect kind `0x13`) and its three states,
 the slot records, the tint frame and the party members' screen updates,
 each fuzzed against a byte-copy of Capcom's at start-up
 (`BOF3X_SHADOW=frame_callees`, 24,000 rounds, 0 mismatches) with
-49 of 51 planted bugs refused, the other two changes that change nothing. **Not yet through the live batch check** (the frame hash,
-the oracle, the captures); that runs centrally after the parallel takeovers
-merge.
+49 of 51 planted bugs refused, the other two changes that change nothing. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)).
 
 [`field-frame.md`](field-frame.md) section 3 left these as the field frame's
 unread callees: `Field_Frame` / `Field_FrameScripted` (`0x517200` /

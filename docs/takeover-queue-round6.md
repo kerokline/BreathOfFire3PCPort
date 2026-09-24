@@ -51,6 +51,10 @@ shadow name, its Inject call at the end of `inject_all.cpp`, a doc
 | M - map patches, move tests, three draw handlers, four setters | `field_misc.cpp` | `AreaMap_BlockedNarrow` `0x5183C0`, `0x570AB0`, `AreaMap_ApplyPatch` `0x571110`, `0x5718F0`, `0x5725C0`, `MoveCmd_TestFB` `0x572650`, `MoveCmd_TestFC` `0x572790`, `0x572ED0`; the Direct3D handlers `0x5A0AB0` `0x5A1290` `0x5A1A00` (on `d3d_fuzz.*`, as group R's); the PSX setters `0x5A75B0` `0x5A7610` `0x5A7670` `0x5A7810` |
 | D - the DIV-0010 sprite handlers (added 2026-09-23, the owner's call) | `sprt_draw.cpp` | `D3d_DrawSprt` `0x5A2300`, `D3d_DrawSprt8` `0x5A2520`, `D3d_DrawSprt16` `0x5A2710` - today byte-copies of Capcom's handlers re-aimed for DIV-0010 (`gfx_sprite_uv.cpp`); reimplemented with DIV-0010 inside and switchable. The last attract function not ours |
 
+The lists are the queue as cut. As built (each group doc's status header,
+2026-09-24): V1 ended at 35 functions (queued 32), W at 20 (18), X at 44
+(23), Z at 21 (16), M at 16 (15; `AreaMap_TooSteepAt`, [`field-misc.md`](field-misc.md) §1).
+
 ## The live check
 
 After the merge, with round five's group U: the shop A/B

@@ -1,6 +1,7 @@
 # First-call trace: which functions a run reaches
 
-**Status:** IN PROGRESS (2026-09-19 — tool works; first attract trace taken)
+**Status:** IN PROGRESS (2026-09-19 — tool works; first attract trace taken;
+re-checked 2026-09-24 — §9 and §10 carry "since" notes)
 
 An in-process answer to "what code does the attract sequence actually run, in
 what order, called from where" — [`IDEAS.md`](IDEAS.md) I4 and the "log from
@@ -421,6 +422,12 @@ functions, 80 lie below `0x5A6000` — game code, not the support library
 that the hottest entries (`0x5A7BF0`, `0x5A8380`, ...) live in. What any of
 them *is* is unread; the queue orders work, it names nothing.
 
+*Since then (noted 2026-09-24):* seven takeover rounds have worked through
+this queue and its successors. The attract queue closed at 0 in scope on
+2026-09-23 with round five ([`takeover-queue-round5.md`](takeover-queue-round5.md);
+[`STATUS.md`](STATUS.md) order of work, stage 1), the input-reached queues
+carried on from recorded routes, and **1,025 functions are ours** (`inject: 1025 ours`, 2026-09-24); each round's doc names what its functions are.
+
 Caveats: static callees miss indirect calls, so a layer-0 function with
 `indirect_calls > 0` may not be a leaf; and `unreached_callees > 0` means part
 of the function's behaviour is outside what the attract run can verify.
@@ -440,6 +447,8 @@ of the function's behaviour is outside what the attract run can verify.
   the few hottest leaf entries would recover most of it.
 - **Arm the pointer-reached entries** (§2) once a list of them exists — the
   mode tables and task entries are already in `symbols.toml` evidence strings.
+  *Since: the list exists, [`attract-remaining.md`](attract-remaining.md) §3.*
 - **Work queue.** The 540 are the functions a takeover can be regression-tested
   against today; ordering them by first-call frame and caller is the I4
-  harvester's output.
+  harvester's output. *Since: built (§9) and worked to 0 in scope for the
+  attract sequence; see the note under §9.*

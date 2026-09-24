@@ -7,8 +7,7 @@ fuzzed against Capcom's at start-up (`BOF3X_SHADOW=battle_misc`, 147,500
 rounds, 0 mismatches; with `'*'`, exit 0 and 827 injects). There are 92
 negative controls: 90 were refused by a comparison and 2 are changes that
 change nothing (section 3.2). No divergence. No defect that the game reaches.
-**Not yet through a live check.** The combat A/B runs centrally after the
-merge (section 5).
+**Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 5 had it owed.
 
 This is group BF of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The functions are

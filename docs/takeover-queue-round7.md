@@ -55,6 +55,9 @@ a doc `docs/<file>.md`.
 | BI - inventory operations and the event-script bits on the way | `inventory_ops.cpp` | 25 | 5,218 | `0x5920E0` `0x5922A0` `0x592400` `0x5924E0` `0x592600` `0x592760` `0x592800` `0x592890` `0x5928F0` `0x5929D0` `0x592A30` `0x592BD0` `0x592C30` `0x592CD0` `0x592E00` `0x592E10` `0x592E30` `0x52F570` `0x532550` `0x532660` `0x5326B0` `0x532860` `0x532A70` `0x532B60` `0x534880` |
 | BJ - three Direct3D handlers, two big draw callees, one map helper | `battle_draw.cpp` | 6 | 3,619 | `0x5A0E80` `0x5A18B0` `0x5A1B50` `0x59CD00` `0x59D200` `0x573050` |
 
+The counts are the queue as cut. As built (the group docs' status headers,
+2026-09-24): BG ended at 32 functions (queued 27), BH at 24 (queued 20).
+
 ## The live check
 
 After the merge: the combat A/B (`analysis/validate_combat.sh`), which reaches

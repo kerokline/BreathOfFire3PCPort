@@ -5,8 +5,7 @@
 step, `Field_ObjectBlockedAhead` and `Field_ObjectBlocked`, the map test under
 the first, and the object tests both of them share. Each fuzzed against a copy
 of Capcom's with every call re-aimed at a recorder; 28 negative controls, all
-refused by count. **Not yet through the live batch check** - that runs
-centrally after the merge (section 6).
+refused by count. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 6 had it owed.
 
 Group G of the second parallel round. The callers were read last round:
 [`object-kinds.md`](object-kinds.md) (`Field_ObjectTurn`,

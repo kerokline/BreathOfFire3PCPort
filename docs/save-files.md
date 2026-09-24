@@ -1,6 +1,9 @@
 # Save files: `BISLPS0?.DAT`, and a save that vanishes from the menu
 
-**Status:** IN PROGRESS (2026-09-19)
+**Status:** IN PROGRESS (2026-09-19; extended 2026-09-23 - `Save_QuickWrite`
+read, the list and read functions ours). The vanishing save of §3 is fixed as
+[`DIVERGENCE.md`](DIVERGENCE.md) DIV-0002 and verified by the owner; its
+all-original A/B is still owed ([`USER_CHECKS.md`](USER_CHECKS.md) item 3).
 
 First read of the save path, prompted by the owner reaching a save point on
 2026-09-19. Feeds [`IDEAS.md`](IDEAS.md) I1 (save interchange). Save files are

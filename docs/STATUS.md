@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-23)
+**Status:** IN PROGRESS (2026-09-24)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,7 +15,31 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**Seven hundred and eighty-nine functions of ~2,952 recorded - roughly 10,200 real, since `pe_funcs.py` misses every function reached only through a pointer ([`attract-remaining.md`](attract-remaining.md) §3) - are ours** (a hundred and thirty-one from stage 1, three from the text path, below; sixteen on 2026-09-21 through the batch check - oracle, memory dump and frame hash identical ([`sprite-draw-order.md`](sprite-draw-order.md) §12-15); the matrix product among them carries DIV-0021, zeros in a `MATRIX`'s padding; the newest four, later that day, the map-cell handlers `0x570020` and `0x570660` with the condition test and the ground's elevation under them - fuzzed with 17 controls, every in-game call shadowed against a clone over a 7-minute attract run, and through the batch check (§16, `ab18_*`); DIV-0023, zeros in a vertex's padding as in DIV-0021, the owner's call; the newest two, that night, the attachment handle `0x57C0A0` and the inherited draw key `0x589770`, kept faithful to a search Capcom's code discards - latent, no shipped script asks for it ([`known-defects.md`](known-defects.md) D6, [`movement-script.md`](movement-script.md)) - through the batch check with a live shadow in three scenes (§17, `ab19_*`); **the newest twenty-one, 2026-09-22, the whole movement-script interpreter** - the step `0x576B50`, its flow pass `0x576E00` and all eight group handlers - **the field object update that runs it**, `0x517BF0` with its three helpers, the sprite's screen update `0x588F20` with its overlay queue, the attached object's update `0x5192A0` with its offset, and the three counter ops ([`movement-script.md`](movement-script.md) §1-1c) - each fuzzed against a clone with negative controls, and **through the batch check the same day** - captures 4 / 9 / 55 of 4 / 9 / 55 in three scenes, oracle, memory dump, and the frame hash identical on all 10,062 frames ([`movement-script.md`](movement-script.md) §1d, `ab20_*`); **the newest fifty-two, the same day, in five parallel groups** - the field's frame loop, the kind-2 object and the ground's slope, the field objects' kind handlers, the map and draw layers, the title task and the field's mode handler ([`field-frame.md`](field-frame.md), [`kind2-object.md`](kind2-object.md), [`object-kinds.md`](object-kinds.md), [`map-layers.md`](map-layers.md), [`mode-tasks.md`](mode-tasks.md)) - each fuzzed with negative controls, and through one batch check: captures identical in five scenes (the camera turn among them), oracle, memory dump, and the frame hash on all 10,062 frames (`ab21_*`, `ab21b_*`); DIV-0024, a fade past its jump table stops loudly; **the newest one hundred and nineteen, the same day, in seven parallel groups** - the field's mode handlers and the attract demo's scenario 16, the event script's field side, the event script interpreter with the flag helpers, the frame loop's remaining callees, the title's state handlers with the new-game start, the map view's scrolling and reset, and the blocked-ahead test ([`field-modes.md`](field-modes.md), [`field-event.md`](field-event.md), [`event-script.md`](event-script.md), [`frame-callees.md`](frame-callees.md), [`title-states.md`](title-states.md), [`map-scroll.md`](map-scroll.md), [`field-blocked.md`](field-blocked.md)) - 300 negative controls between them (37 / 48 / 46 / 51 / 40 / 50 / 28), six of which were changes that change nothing, and through one batch check: five A/B capture pairs identical, the oracle identical at every compared frame, the memory dump identical in all three regions, and the frame hash identical on all 10,060 frames against an original-vs-original pair (`ab22_*`, `ab22b_*`); no new divergence, and four latent or unchecked defects written down, D8..D11; **the newest one hundred and forty, the same evening, in five more parallel groups (the third round)** - the message box and the last two text pens, the window/task layer with the area change above it, the top-level task flow (boot, the field task, the area entry, all 21 transitions), the movement commands and the party, and sprite animation with the effect pool ([`msgbox.md`](msgbox.md), [`window-task.md`](window-task.md), [`mode-flow.md`](mode-flow.md), [`move-cmds.md`](move-cmds.md), [`sprite-pose.md`](sprite-pose.md)) - each fuzzed with negative controls, and through one batch check (`ab24_*`): five A/B capture pairs identical, the attract in English identical, the oracle identical at every compared frame, the memory dump identical, and the frame hash identical on all 10,063 frames beside an original-vs-original pair, after one fix to the call shape of `Boot_Task`; no new divergence, three latent defects written down, D14..D16; **the newest one hundred and one, that night, in five more groups (the fourth round)** - the area's links and the drop-in party, the field menu's item use (the 33 pointer-reached handlers the queue took for title code), the sound layer, the glyph draw, and the Direct3D draw handlers with the ordering-table walk ([`area-entry.md`](area-entry.md), [`item-use.md`](item-use.md), [`sound.md`](sound.md), [`glyph-draw.md`](glyph-draw.md), [`d3d-draw.md`](d3d-draw.md)) - each fuzzed with negative controls, and through one batch check (`ab25_*`): the oracle identical at every compared frame, the memory dump identical, and the frame hash identical on all 10,062 frames after one fix, to DIV-0028; the capture A/Bs of that batch came back black (the owner's screen cover) and are owed (`analysis/validate_ab25b.sh`); five divergences, DIV-0025..0029 - the glyphs' texel centres (D17), the Config controller panel, the Yes / No layout, the music fades per frame (D26), the save slot's name - every one confirmed in game by the owner, 2026-09-23; D17..D28 written down; **the newest two hundred and twenty-two, 2026-09-23, rounds five and six** - the last of what the attract sequence reaches (the display calls, the page, glyph and cell texture builders on a fake DirectDraw, and the DIV-0010 sprite handlers rewritten with the divergence inside), which **closes stage 1's attract queue at 0 in scope**, and everything the owner's recorded shop route reaches ([`takeover-queue-round6.md`](takeover-queue-round6.md), [`input-script.md`](input-script.md) §5a) - through one batch, `ab26`: the shop A/B 35 of 35, the attract captures all-Capcom against all-ours 55 of 55, oracle and memory dump identical, frame hash identical but for one frame explained as the `sscanf` of a heap address; DIV-0030; D30..D40): `LoadDatFile` `0x454590`, the DAT
+**1,025 functions of ~2,952 recorded are ours** (`inject: 1025 ours` in
+`bof3x.log`, 2026-09-24) - of roughly 10,200 real, since `pe_funcs.py` misses
+every function reached only through a pointer
+([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
+a wave; the detail - controls, batch results, the defects written down - is in
+each wave's own doc, and the counts are the ones the batch reported, not
+re-derived:
+
+| When | Wave | Added | Ours after | Batch | Doc |
+|---|---|---|---|---|---|
+| 09-19..20 | Stage 1 by hand: the file layer, the texture cache, the first logic, the PSX library layer | ~130 | | oracle, dumps, frame hash | this section, [`psx-library-layer.md`](psx-library-layer.md) |
+| 09-20 | The text path | 3 | | fuzz | [`dialogue-localisation.md`](dialogue-localisation.md) |
+| 09-21 | The draw-order pass's callees; map-cell handlers; attach handle and draw key | 16 + 4 + 2 | | `ab18`, `ab19` | [`sprite-draw-order.md`](sprite-draw-order.md) §12-17 |
+| 09-22 | The movement-script interpreter and the object update | 21 | | `ab20` | [`movement-script.md`](movement-script.md) |
+| 09-22 | Five groups: field frame, kind-2, object kinds, map layers, mode tasks | 52 | | `ab21` | [`field-frame.md`](field-frame.md) and siblings |
+| 09-22 | Seven groups: field modes, events, frame callees, title states, map scroll, blocked test | 119 | | `ab22` | [`field-modes.md`](field-modes.md) and siblings |
+| 09-22 | Round 3: message box, window/task, mode flow, move commands, sprite pose | 140 | | `ab24` | [`takeover-queue-round3.md`](takeover-queue-round3.md) |
+| 09-22 | Round 4: area entry, item use, sound, glyph draw, Direct3D handlers | 101 | | `ab25` | [`takeover-queue-round4.md`](takeover-queue-round4.md) |
+| 09-23 | Rounds 5 and 6: the attract queue closed at 0, the shop route | 222 | 789 | `ab26` | [`takeover-queue-round6.md`](takeover-queue-round6.md) |
+| 09-23 | The display overhaul: `Display_Setup`, WinMain, WndProc, `Fmv_Play` | | 796 | `wm1`, `wm1b` | [`window-modes.md`](window-modes.md) |
+| 09-23 | The world-map route's front: HUD, needle, sky backdrop | | 807 | | [`world-map-hud.md`](world-map-hud.md) |
+| 09-24 | Round 7: the battle engine in ten groups | | 1,020 | wave 2 | [`takeover-queue-round7.md`](takeover-queue-round7.md) |
+| 09-24 | `Fmv_WndProc`, the pad's `DInput_Init` / `Pad_Read` / `DInput_Shutdown`, and `Config_DrawControllerRow` (DIV-0051) | | 1,025 | | [`controls.md`](controls.md) |
+
+The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
 `0x5A7370`..`0x5A7510` (eight functions, [`asset-loading-path.md`](asset-loading-path.md)
 §1) — seven faithful, and `File_OpenWrite` with a null check the original
@@ -98,9 +122,9 @@ it was sampled read-only ([`menu-screens.md`](menu-screens.md)): its state
 machine is mapped, and the first of four defects of the 2001 menu is fixed -
 **DIV-0010**, the Direct3D sprite handlers' far texture edge, which cut the
 bottom off every menu numeral ([`known-defects.md`](known-defects.md) D1).
-That one is not a reimplementation: the log's "115 ours" counts three copies
-of Capcom's own handlers with two operands re-aimed, because a drawn surface
-cannot be checked yet. **DIV-0011** followed: the Config panel's frame, whose
+It began as three copies of Capcom's handlers with two operands re-aimed;
+round six rewrote them with the divergence inside
+([`sprt-draw.md`](sprt-draw.md)). **DIV-0011** followed: the Config panel's frame, whose
 draw the PC build compiled to an empty function, drawn again from a read of
 the PlayStation's, found by searching the owner's disc for the call's
 arguments; the reserve list on "change party members" had the same empty
@@ -143,9 +167,12 @@ What is established:
   now fixed by re-encoding to Cinepak, the ledger's first entry
   ([`media-stack-survey.md`](media-stack-survey.md),
   [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0001). Audio needs nothing. The FMV path
-  is fully read ([`replacing-mci.md`](replacing-mci.md)); the DirectDraw
-  presentation layer is the long-term liability, is **not** read yet, and is
-  [`IDEAS.md`](IDEAS.md) I8 against phase 3.
+  is read and ours, still through MCI, into our window (DIV-0035, DIV-0049;
+  [`replacing-mci.md`](replacing-mci.md)). The DirectDraw presentation layer,
+  once the long-term liability ([`IDEAS.md`](IDEAS.md) I8), now draws through
+  our Direct3D 11 backend behind DirectX 6's own objects (DIV-0031,
+  [`render-backend.md`](render-backend.md)), with no mode-set anywhere
+  (DIV-0032).
 - **The asset-loading path is partly read** ([`asset-loading-path.md`](asset-loading-path.md)):
   a 16-slot `FILE*` file layer at `0x5A7370`..`0x5A75F0`, and `LoadDatFile`'s
   four chunk kinds. Kind-0 data lands in **one arena at `0x803580 + tag`** — the
@@ -157,8 +184,10 @@ What is established:
   seed is fixed at 1, the binary has no `srand`, game logic cannot reach a
   clock, and all of it runs on one thread inside a four-coroutine task system.
   Original-vs-ours already compares identical
-  ([`attract-mode.md`](attract-mode.md)). Reach is two field scenes; no battle
-  or menu yet.
+  ([`attract-mode.md`](attract-mode.md)). The attract run's own reach is two
+  field scenes; the owner's recorded routes - the shop, the world map, a whole
+  combat, each playing back identically run to run - carry the check past it
+  ([`input-script.md`](input-script.md)).
 - **The PC save format is solved** ([`save-interchange.md`](save-interchange.md)):
   the PSX `0x10B0`-byte game block from file offset 0, same checksum rule, same
   field offsets, with the character-record name widened 5→9 bytes and later
@@ -166,10 +195,10 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 168 functions, 8 global blocks and 119 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 150 functions carry signatures and
-  are callable from our code, 122 of them ours (counted 2026-09-21 by
-  `gen_symbols.py` and `tomllib`, not from memory).
+- 1,102 functions, 8 global blocks and 306 data items named in
+  [`symbols.toml`](../symbols.toml), tiered; 1,024 functions carry an `impl`
+  (counted 2026-09-24 with `tomllib`, not from memory). The one detoured
+  function without an `impl` line is `Fmv_WndProc` `0x59E570`.
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
   reaches (540 of 2,936 in the attract sequence), call counts and edges, a
@@ -177,8 +206,10 @@ What is established:
   original-vs-ours, and a takeover work queue. The reporter
   ([`crash-reporter.md`](crash-reporter.md)) is always on and caught its first
   real crash the day it was built.
-- **Known defects are written down** ([`known-defects.md`](known-defects.md)):
-  clipped stat numerals (draw-time, cause unread), the mojibake title, the
+- **Known defects are written down** ([`known-defects.md`](known-defects.md),
+  D1..D58 - most of them latent, found by reading code as it was taken over).
+  The first ones were observed in play: clipped stat numerals (D1, fixed by
+  DIV-0010), the mojibake window title (D2, English since DIV-0039), the
   crash above, and a frame deadline kept in a 32-bit float, which makes game
   speed depend on Windows uptime — 31.25 fps at 4.5 days up, as measured,
   and **half speed past 6.2 days, observed 2026-09-21** (every run that day,
@@ -186,16 +217,19 @@ What is established:
   shutdowns, so players meet it within a week; past 12.4 days the game runs
   unthrottled and, by the code, draws nothing. **Fixed short term by
   DIV-0022** (the game's clock starts with the game: 30.00 logic frames a
-  second; the owner confirmed the speed in game, 2026-09-22); the complete
-  fix is [`IDEAS.md`](IDEAS.md) I16.
-- **The launcher has a settings dialog** (2026-09-20,
-  [`launcher-settings.md`](launcher-settings.md)): language, texture filter,
-  display and renderer, in a plain Win32 `DIALOGEX` with nothing vendored.
-  Language and filter go to the environment the game inherits, so the DLL did
-  not change; display and renderer are written into the game's own `BOF3.CFG`,
-  which is the original's input, not a patch — no ledger entry. Resolution is
-  shown disabled: 640x480 is welded into the presentation layer
-  ([`IDEAS.md`](IDEAS.md) I8). Also established there: the disc's `START.EXE` is
+  second; the owner confirmed the speed in game, 2026-09-22); **fixed completely by
+  DIV-0047** (2026-09-24: the deadline a double at the PlayStation's 29.97,
+  against `QueryPerformanceCounter`).
+- **The launcher has a settings dialog** (2026-09-20, grown since;
+  [`launcher-settings.md`](launcher-settings.md)), a plain Win32 `DIALOGEX`
+  with nothing vendored: language, look (texture filter, CRT, SatPixie with
+  its options dialog - DIV-0012, DIV-0037, DIV-0043), display, keep running
+  unfocused (DIV-0033), widescreen (DIV-0041), snap to whole multiples
+  (DIV-0042), **Cheats...** (DIV-0045, DIV-0046) and **Controls...**
+  (DIV-0050), every dialog walkable with a pad. Settings reach the DLL
+  through the environment the game inherits, `bof3x.ini`, or the game's own
+  `BOF3.CFG` (display and renderer - the original's input, not a patch).
+  Also established there: the disc's `START.EXE` is
   an autorun shell reached through `WinExec` and the registry, `SETUP.EXE` is
   InstallShield 5, and neither has anything to do with game configuration —
   `BOF3.CFG` is the only config filename in the exe. **Scripted runs now need
@@ -242,11 +276,21 @@ What is established:
   Manillo's are captured in game. Saves keep their names; the owner accepted
   gibberish across a language switch until a language-independent name
   system exists.
-- **The first battle is reachable unattended**: a new game plays into the
-  opening's scripted fight (field mode 5), and its command cross -
-  hold-to-choose - is captured command by command
-  ([`input-script.md`](input-script.md) §4). DIV-0010 and DIV-0014 were
-  confirmed by the owner off recipe captures the same day.
+- **Battle is reachable unattended**: a new game plays into the opening's
+  scripted fight (field mode 5), its command cross captured command by
+  command ([`input-script.md`](input-script.md) §4); and since 2026-09-23 the
+  owner's recorded combat route plays a random encounter back identically
+  run to run - the oracle round 7 took the battle engine over against
+  ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The game also
+  writes its own captures (`BOF3X_SHOT_DIR`, F11), so a run needs no window
+  in front (DIV-0049).
+- **Controls are ours** (2026-09-24, [`controls.md`](controls.md), PR 16):
+  the pad through SDL3 - one pad, hot-plug, a Nintendo-layout toggle - and
+  the keyboard path as the original (DIV-0050); key and pad bindings in
+  `bof3x.ini`, set in the launcher's Controls dialog by pressing the input;
+  the Config panel's Controller row back to the PlayStation's one icon
+  column (DIV-0051). All confirmed by the owner with their Xbox pad. The
+  in-game binding screen is deferred ([`IDEAS.md`](IDEAS.md) I20).
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
 
@@ -254,88 +298,72 @@ What is established:
 
 **Direction set by the owner, 2026-09-19** — three stages, in this order:
 
-1. **Replace every function the attract sequence reaches.** It is the part of
-   the game with a regression oracle today: 540 of 2,936 functions
-   ([`call-trace.md`](call-trace.md)), each testable the day it is taken over,
-   with the takeover queue already layered (§9 there). **Closed 2026-09-23**:
-   0 in scope - what the attract sequence still runs of Capcom's is the CRT,
-   the MP3 decoder, the Windows shell, the task system and the run-once
-   platform set-up, all left for [`IDEAS.md`](IDEAS.md) I8 / I12 by the
-   owner's choice. The input-reached queue carries it on: routes the owner
-   records, each A/B'd and traced ([`HANDOFF.md`](HANDOFF.md) 0000).
-   **Ahead of more routes, by the owner's direction of 2026-09-23: the UI
-   overhaul** ([`display-overhaul.md`](display-overhaul.md)) - window modes
-   without an exclusive mode-set, integer scaling, a shader present pass,
-   and widescreen. Its first step, a Direct3D 11 backend behind DirectX 6's
-   own objects, runs the game as of 2026-09-23
-   ([`render-backend.md`](render-backend.md), DIV-0031); the PSP release's
-   16:9 was mined in parallel for how Capcom did it
-   ([`psp-widescreen.md`](psp-widescreen.md)). **Its second step landed the
-   same afternoon: WinMain, WndProc and the FMV player are ours** (796 ours;
-   [`window-modes.md`](window-modes.md)) - a resizable window or a
-   borderless one the size of the monitor with no mode-set anywhere
-   (DIV-0032), the game running while unfocused with the pads zeroed
-   (DIV-0033, the owner's I12), the frame debt clamped (DIV-0034), the FMVs
-   through MCI into the window at an integer scale (DIV-0035, the owner's
-   choice over a bundled decoder); the oracle and memory dump through the
-   batch `wm1` with the window never in front, the frame hash's new
-   reference after a review the same evening found why every traced
-   all-original run had ended 16 s in (the tracer's single step saved by
-   a `pushfd` on Capcom's software-renderer set-up; `wm1b`: original-vs-original identical on all 10,313 frames, original-vs-ours on every logic frame).
-   **Step 4, integer scaling, that evening** (DIV-0036), then **the night
-   of 2026-09-23** ([`HANDOFF.md`](HANDOFF.md) item 000000): **the
-   widescreen survey build** (DIV-0041, [`widescreen.md`](widescreen.md)) -
-   426 x 240 behind the launcher's Widescreen box, the view shifted into a
-   wider target the PSP's way, the terrain and frame-pass culls widened,
-   the backdrop, fades and the menu boxes' slide-outs re-authored from what
-   the survey and the owner's play found; the sky gradient `0x571BE0`
-   deferred to a recorded route; **the resizable window** (DIV-0042) -
-   snap to whole multiples or fit to the height, the target following the
-   client between frames, the FMVs obeying, the placement remembered; the
-   owner: both modes "work perfect"; and **the SatPixie look** (DIV-0043,
-   [`THIRD_PARTY.md`](THIRD_PARTY.md)), the owner's chosen MIT shader
-   ported with a sliders dialog. Owed: the oracle and hash once wide, a
-   rescale under the older CRT look, the owner's tuning of the look.
-   **That night the owner recorded a world-map route** ([`world-map.md`](world-map.md)):
-   its A/B found the compass needle the PC port never draws - three corners
-   at depth 0, dropped by Capcom's device, a sliver under ours - fixed in the
-   backend (D41, DIV-0044, the owner's PSX screenshots the reference).
-   **2026-09-24: the sibling's three cheats are launcher settings** - EXP
-   and zenny multipliers in our `Battle_EnemyDefeated`, and the steal roll
-   patched at the port's two copies of it (DIV-0045, DIV-0046,
-   [`cheats.md`](cheats.md)); confirmed on the recorded combat route, the owner
-   watching. **The same day, D5's complete fix, DIV-0047:** the frame deadline
-   is a double at the PlayStation's 29.97 (measured 29.971; the frame hash
-   identical on all 10,319 frames, since logic reads no clock). **DIV-0048:
-   F1 toggles 2x** - every logic frame drawn at 2x and at 4x once the
-   deadline moved onto `QueryPerformanceCounter` (the tick slot's 15.6 ms
-   steps had capped presents at 64 a second, D5's last trace);
-   the 4x and 1 ms runs found and fixed a backend defect, a released
-   surface's snapshot unreachable across a skipped present
-   ([`render-backend.md`](render-backend.md)). **DIV-0049:** the logo videos
-   play on when the window is not in front (`Fmv_WndProc` ours); and the
-   game writes its own captures - `BOF3X_SHOT_DIR` for a recipe's shots,
-   F11 by hand - so `input_run.py --no-front` needs nothing on top
-   ([`input-script.md`](input-script.md)). The
-   route's 40-function queue is the next wave, the compass and HUD first;
-   the place plates are paint in the world maps' texture pages, as the
-   sibling found, and the localisation build's next data item.
-   **Then two groups took the route's front and are merged (807 ours):** the
-   map's frame, HUD and needle ([`world-map-hud.md`](world-map-hud.md); D42,
-   the dial's opacity, written down) and the sky backdrop with the wide
-   bands filled (DIV-0041 amended, [`area-backdrop.md`](area-backdrop.md)).
-   **The owner's combat route plays back identically run to run**, so the
-   battle engine's 209 reached functions are the seventh round
-   ([`takeover-queue-round7.md`](takeover-queue-round7.md)), ten groups in
-   parallel - **merged 2026-09-24 morning, 1,020 ours**, the between-waves
-   batch and then **the wave-2 batch passed on 1,020 ours** - the combat
-   A/B within the tile-edge class, oracle, memory dump and frame hash
-   identical (HANDOFF 0000000); D43..D57 written down, two groups renamed by what
-   they turned out to be (the Healing Herb's sparkles, the encounter's
-   placement).
-   The attract sequence's text boxes are the in-game dialogue engine
-   ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
-   check from stage 1.
+1. **Replace every function the attract sequence reaches.** It was the part
+   of the game with a regression oracle: 540 of 2,936 functions
+   ([`call-trace.md`](call-trace.md)), each testable the day it was taken
+   over. **Closed 2026-09-23 at 0 in scope** - what the attract sequence
+   still runs of Capcom's is the CRT, the MP3 decoder, the Windows shell,
+   the task system and the run-once platform set-up, left for
+   [`IDEAS.md`](IDEAS.md) I8 / I12 by the owner's choice. The input-reached
+   queue carries it on: routes the owner records, each A/B'd and traced -
+   the shop (round six), the world map, a combat (round seven). The attract
+   sequence's text boxes are the in-game dialogue engine
+   ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherited a
+   regression check from stage 1.
+
+   Since then, by the owner's direction, other work has run alongside the
+   routes, in this order:
+
+   - **The UI overhaul** (from 2026-09-23,
+     [`display-overhaul.md`](display-overhaul.md)). A Direct3D 11 backend
+     behind DirectX 6's own objects (DIV-0031,
+     [`render-backend.md`](render-backend.md)); WinMain, WndProc and the FMV
+     player ours (796 ours, [`window-modes.md`](window-modes.md)) - a
+     resizable window or a borderless one the size of the monitor with no
+     mode-set anywhere (DIV-0032), the game running while unfocused with the
+     pads zeroed (DIV-0033), the frame debt clamped (DIV-0034), the FMVs
+     through MCI into the window at an integer scale (DIV-0035); the oracle
+     and memory dump through `wm1`, the frame hash re-referenced as `wm1b`
+     after a review found why every traced all-original run had ended 16 s
+     in (the tracer's single step saved by a `pushfd` in Capcom's
+     software-renderer set-up). Then integer scaling (DIV-0036), the CRT
+     look (DIV-0037, [`crt-look.md`](crt-look.md)), **the widescreen survey
+     build** (DIV-0041, [`widescreen.md`](widescreen.md)) - 426 x 240, the
+     view shifted the PSP's way ([`psp-widescreen.md`](psp-widescreen.md)),
+     culls widened, backdrop, fades and slide-outs re-authored - **the
+     resizable window** (DIV-0042; the owner: both modes "work perfect"),
+     and **the SatPixie look** (DIV-0043, [`THIRD_PARTY.md`](THIRD_PARTY.md)),
+     the owner's chosen MIT shader with a sliders dialog. Owed: the oracle and
+     hash once wide, a rescale under the older CRT look, the owner's tuning of
+     the look.
+   - **The world-map route** (2026-09-23 night, [`world-map.md`](world-map.md)):
+     its A/B found the compass needle the PC port never draws, fixed in the
+     backend (D41, DIV-0044); two groups then took the route's front - the
+     map's frame, HUD and needle ([`world-map-hud.md`](world-map-hud.md), D42)
+     and the sky backdrop with the wide bands filled (DIV-0041 amended,
+     [`area-backdrop.md`](area-backdrop.md)) - 807 ours.
+   - **The battle engine, round seven** (merged 2026-09-24 morning,
+     [`takeover-queue-round7.md`](takeover-queue-round7.md)): the owner's
+     combat route plays back identically run to run, so its 209 reached
+     functions went in ten parallel groups - **1,020 ours**, the wave-2 batch
+     passed: the combat A/B within the tile-edge class, oracle, memory dump
+     and frame hash identical; D43..D57 written down.
+   - **Quality of life** (2026-09-24): the sibling's three cheats as launcher
+     settings (DIV-0045, DIV-0046, [`cheats.md`](cheats.md)); D5's complete
+     fix, the frame deadline a double at the PlayStation's 29.97 (DIV-0047;
+     the frame hash identical on all 10,319 frames, since logic reads no
+     clock); **F1 toggles 2x** speed (DIV-0048), with a backend defect found
+     and fixed on the way ([`render-backend.md`](render-backend.md)); the
+     logo videos playing on when the window is not in front (DIV-0049) and
+     the game writing its own captures (`BOF3X_SHOT_DIR`, F11,
+     [`input-script.md`](input-script.md)).
+   - **Controls** (2026-09-24, [`controls.md`](controls.md)): SDL3 pads and
+     `bof3x.ini` bindings with a Controls dialog (DIV-0050), the Config
+     panel's PlayStation icon column (DIV-0051) - 1,025 ours. Steps 1..3 of
+     its plan are done and confirmed; step 4, the in-game binding screen, is
+     [`IDEAS.md`](IDEAS.md) I20.
+
+   What is next is [`HANDOFF.md`](HANDOFF.md)'s to say.
 2. **Then the text swap** - [`dialogue-localisation.md`](dialogue-localisation.md):
    overlay `DAT`s and an upscaled font table, both built locally from the
    player's discs. **Begun 2026-09-20: English dialogue draws in the attract
@@ -343,15 +371,18 @@ What is established:
    narration, menus, item and ability names (DIV-0005..0009); on 2026-09-21
    the menu's buttons, the battle's command labels and New Game's names
    (DIV-0018..0020). Enemy and place names, some labels and headers, and text
-   in artwork are still Chinese - so
-   that the owner can make headway through the game
-   itself — and with that, reach code the attract sequence never runs. What
-   this means in detail is the owner's to say; the asset side of selectable
-   languages is surveyed below ("A stated goal worth recording now"), and any
-   swap is a divergence in the ledger sense.
-3. **Then the combat module**, which the attract sequence does not enter at
-   all, and which therefore needs stage 2's reach — and an oracle of its own —
-   before it can be replaced with the same confidence.
+   in artwork are still Chinese; round seven found where several of them
+   live (the enemy names, the command banner, the place plates -
+   [`HANDOFF.md`](HANDOFF.md)). What this means in detail is the owner's to
+   say; the asset side of selectable languages is surveyed below ("A stated
+   goal worth recording now"), and any swap is a divergence in the ledger
+   sense.
+3. **Then the combat module.** **Begun 2026-09-23/24, ahead of its turn:**
+   the attract sequence never enters it, but the owner's recorded combat
+   route became its oracle, and round seven took the 209 functions that
+   route reaches. What the route does not reach - boss and event battles,
+   the rest of the battle state handlers - needs further routes, or save
+   states ([`IDEAS.md`](IDEAS.md) I13).
 
 The numbered steps below are the history of how the project got here; this is
 what orders new work.
@@ -365,10 +396,13 @@ area**. That is the gate this step existed for — the game runs here — so
 
 It also settles what was an open worry: the legacy DirectDraw display path,
 including the exclusive-fullscreen `SetDisplayMode(640, 480, 16)` that FMV
-performs before the title screen, works on Windows 11 today. Replacing it is
-[`IDEAS.md`](IDEAS.md) I8, deliberate phase-3 work, not an emergency.
+performs before the title screen, works on Windows 11 today. Replacing it was
+[`IDEAS.md`](IDEAS.md) I8, deliberate phase-3 work, not an emergency - and was
+largely done on 2026-09-23 (DIV-0031, DIV-0032: no mode-set anywhere).
 
-What this test did **not** cover, carried forward rather than blocking:
+What this test did **not** cover, carried forward rather than blocking (kept
+as the record of the time; menus, saves, battle and the attract sequence have
+all been exercised since - see above):
 
 - No written baseline of what "working" looks like beyond the first area — no
   battle, menu, save/load or long-session stability check.
@@ -381,10 +415,10 @@ What this test did **not** cover, carried forward rather than blocking:
   property that made TR1X's demos a determinism oracle
   ([`prior-art/tr1x.md`](prior-art/tr1x.md) §2.5). It is "not a full attract
   mode" — no recorded gameplay input is known — so what it can police is area
-  load, scripting, text and rendering, not battle. **Not yet established:** what
-  drives it (a script, a timer table, recorded input), whether it is
-  deterministic run to run, and whether it touches `Rand`. That is
-  [`IDEAS.md`](IDEAS.md) I6.
+  load, scripting, text and rendering, not battle. What drives it and
+  whether it is deterministic were [`IDEAS.md`](IDEAS.md) I6, answered the
+  same day: it is deterministic, `Rand` included
+  ([`attract-mode.md`](attract-mode.md)).
 
 ### 1. Read the exe, starting with asset loading
 
@@ -397,8 +431,10 @@ Steps are in [`HANDOFF.md`](HANDOFF.md). Overlaps phase 0 and does not gate it.
 **Save file interchange was priority 1 here until 2026-09-19.** It is now
 [`IDEAS.md`](IDEAS.md) I1: still the first visible win to go for, but only once
 the game is up and running, since a converted save cannot be verified without
-loading it. Step 0 has now cleared that gate; it is available to pick up
-whenever a visible win is wanted.
+loading it. Step 0 cleared that gate and it was done the same day: both
+directions convert, and PSX saves load and play on PC
+([`save-interchange.md`](save-interchange.md)); PC→PSX is still checked
+statically only.
 
 ### 2. The overlay corpus
 
@@ -491,9 +527,10 @@ an unrecognised disc can be named rather than guessed at.
   a committed file recording the git SHA it ran against, the date, the
   `fixtures.toml` build ids on both sides, what was covered, the result, and the
   hashes of the vectors used. CI validates structure and freshness only — it
-  never needs a byte of game data. Deliberately *not* built yet: there is no
-  `src/` and no harness, and speculative verification infrastructure is exactly
-  what rots.
+  never needs a byte of game data. **Still not built** - it was deferred while
+  there was no `src/` and no harness; both exist now (the oracle, the memory
+  dump, the frame hash), so it is owed, as is a CI workflow that compiles
+  `src/` (`.github/workflows/` holds only the DCO check).
 - **Size floors for the matcher.** [`bsim-evaluation.md`](bsim-evaluation.md)
   shows tiny wrappers and very large functions are unreliable; nine pairs is too
   few to fit a cutoff.

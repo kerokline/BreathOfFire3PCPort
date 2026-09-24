@@ -1,6 +1,8 @@
 # The title menu
 
-**Status:** IN PROGRESS (2026-09-20) - built, previewed offline; not yet seen in game.
+**Status:** IN PROGRESS (2026-09-20; re-checked 2026-09-24) - built, previewed offline;
+seen in game and confirmed by the owner 2026-09-21 (§3). The two-row layout is
+still open (§4).
 
 The three rows of the start screen - 新游戏 / 载入游戏 / 选项, "new game", "load
 game", "options" - and how `BOF3X_LANG=en` turns them into NEW GAME / LOAD
@@ -84,14 +86,16 @@ Read 2026-09-20 (`tools/pe_disasm.py 0x588880`, `0x5888D0`); neither is in
 
 Preview without the game: the scratch script behind the 2026-09-20 session
 composed the page through CLUT 0 at the draw's own positions; the owner's
-verdict on it was "perfect". **In game it is unseen** -
-[`USER_CHECKS.md`](USER_CHECKS.md).
+verdict on it was "perfect". ~~**In game it is unseen**~~ - **seen in game
+since: the owner, 2026-09-21, off an input-recipe capture
+([`input-script.md`](input-script.md)): all three rows and the selected row's
+glow "look perfect".** What is left is in [`USER_CHECKS.md`](USER_CHECKS.md)
+item 6.
 
 ## 4. Open
 
-- The owner's look in game: all three rows, the selected row's glow (the
-  semi-transparent pass at doubled colour was drawn for thick Chinese strokes),
-  and the two-row layout with no save present.
+- ~~The owner's look in game: all three rows, the selected row's glow~~ (done
+  2026-09-21, §3). Still open: the two-row layout with no save present.
 - What the discs' second group of strings at (41, 48) is for - the
   PlayStation's glow, by guess. Reading the PSX draw would say, and would say
   whether the port's glow pass is Capcom's or the porting house's.

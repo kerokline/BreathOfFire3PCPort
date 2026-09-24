@@ -7,8 +7,7 @@ read whole by capstone against its true extent and fuzzed against a byte copy
 of Capcom's with every call out re-aimed at a recorder; 48 negative controls,
 46 refused by a count of mismatching rounds, one refused by a fault (and the
 comparison it was meant to test covered by another control), one not refused
-and shown below to be a change that changes nothing. **Not yet through the
-live batch check** - that runs centrally after the merge (section 7).
+and shown below to be a change that changes nothing. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 7 had it owed.
 
 [`attract-remaining.md`](attract-remaining.md) section 4.6 catalogued this
 block as "the `0x52D8F0`..`0x536AC0` block the area set-up and the field frame

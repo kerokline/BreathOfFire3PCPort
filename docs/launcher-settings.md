@@ -1,6 +1,8 @@
 # Launcher settings — the dialog, `bof3x.ini`, and what `START.EXE` actually is
 
-**Status:** STABLE (built and verified 2026-09-20)
+**Status:** STABLE (built and verified 2026-09-20; extended through 2026-09-24 -
+the Look box's CRT entries, snap, widescreen, cheats, controls and the pad.
+§6 is the record of 2026-09-20's verification, not re-run since)
 
 `bof3x-launcher` now opens a settings dialog before it starts the game. This
 document says what the shipped `START.EXE` / `SETUP.EXE` are (neither is a
@@ -59,7 +61,10 @@ DLL beside it; 9 MB where it was 1.
 Considered and rejected: **Dear ImGui** (MIT, so vendorable — but it needs its
 own window and render backend, and looks non-native); **Qt / wxWidgets** (LGPL
 and a large redistributable — friction on the commercial path,
-[`LICENSING.md`](LICENSING.md) §4, for no gain on a twelve-control panel);
+[`LICENSING.md`](LICENSING.md) §4, for no gain on a twelve-control panel -
+twelve when this was written; since 2026-09-23/24 the main dialog opens four
+more, SatPixie's Options, Cheats, Controls and its Bind capture, all
+`DIALOGEX` resources in the same `launcher.rc`, and the reasoning holds);
 **WPF / WinUI** (a .NET runtime dependency); **WebView2** (an Edge runtime
 dependency). A dialog resource is what a 2001-era game launcher would have
 used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
@@ -69,7 +74,8 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Setting | Where it goes | Mechanism |
 |---|---|---|
 | Language | `BOF3X_LANG` in the child's environment | ours — DIV-0005, [`dialogue-localisation.md`](dialogue-localisation.md) |
-| Texture filter | `BOF3X_FILTER` | ours — DIV-0012 |
+| Look (was "Texture filter"): Smooth, Sharp, CRT, SatPixie - four entries (`config_dialog.cpp`) | `BOF3X_FILTER=point` for Sharp and both CRT looks; `screen=` in the ini | ours — DIV-0012 |
+| Look: CRT - scanlines and glow (2026-09-23) | `BOF3X_PRESENT=crt` (`screen=crt`) | ours — DIV-0037; [`crt-look.md`](crt-look.md) |
 | Display (fullscreen/windowed) | line 1 of `<game>\BOF3.CFG` | **the original's own input**, `Cfg_Load` `0x4FD030` |
 | Renderer | line 2 of `BOF3.CFG` | the original's, same reader |
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
@@ -92,7 +98,8 @@ that the original would not have produced from the same file.
 Rules the writer follows:
 
 - **Lines 3+ are preserved.** They are the integer pairs `0x5A9860` consumes and
-  are unread by us ([`windowed-mode.md`](windowed-mode.md), Open). No third line
+  are unread by us ([`windowed-mode.md`](windowed-mode.md), Open) - *read
+  since: the keyboard table, [`controls.md`](controls.md) §1*. No third line
   is ever added — the line *count* selects between `0x5A9860` and `0x5A9880`.
 - **Nothing is written when there is nothing to say.** If the file is absent and
   the settings are `1`/`1`, the absent file already means that, so it stays
@@ -145,14 +152,33 @@ build/bof3x-launcher.exe --game bof3 --no-config  # never; for scripted runs
 game directory stays the player's, `BOF3.CFG` aside. It is plain text with
 comments and can be hand-edited:
 
+As `ConfigSave` (`src/launcher/config.cpp`) writes it at the defaults,
+2026-09-24 - each key has a `#` comment line above it in the real file,
+left out here, and the key and pad lists are cut short:
+
 ```ini
 [bof3x]
-language=original     # original | en
-filter=linear         # linear | point
-display=windowed      # fullscreen | windowed  -> BOF3.CFG line 1
-renderer=1            # 1 | 0                  -> BOF3.CFG line 2
-show_launcher=1       # 0 starts the game straight away
+language=original          # original | en
+filter=linear              # linear | point
+screen=clean               # clean | crt (DIV-0037) | satpixie (DIV-0043)
+satpixie.acc_modulate=0.65 # ... fourteen satpixie.* lines, the preset's names
+display=fullscreen         # fullscreen (a borderless window) | windowed -> BOF3.CFG line 1
+snap=1                     # DIV-0042
+scale=2                    # 2..8, the first window only, until bof3x.window exists
+wide=0                     # DIV-0041
+background=1               # DIV-0033
+renderer=1                 # 1 | 0                  -> BOF3.CFG line 2
+cheat.exp=1                # DIV-0045
+cheat.zenny=1
+cheat.steal=0              # DIV-0046
+key.Up=up                  # ... the 24 lines of the game's default table
+key.Z=triangle
+pad.layout=positional      # positional | nintendo | auto
+pad.south=cross            # ... eighteen pad.* lines
+show_launcher=1            # 0 starts the game straight away
 ```
+
+(The five-key example this replaced was the 2026-09-20 file.)
 
 The dialog's **"Show this window every time"** box clears `show_launcher`;
 `--config` is the way back, and the dialog says so on its face. Closing the
@@ -160,7 +186,12 @@ dialog, or pressing Exit, starts nothing and saves nothing.
 
 **Scripted runs inherit the settings file.** The launcher fills in
 `BOF3X_LANG` and `BOF3X_FILTER` from `bof3x.ini` only when the variable is
-unset or empty; a value already in the environment wins. So a harness that
+unset or empty; a value already in the environment wins. (That was the whole
+list on 2026-09-21. Since then `ConfigApplyEnvironment` fills thirteen the
+same way, each only when unset and only when the setting is not at its
+default: also `BOF3X_BACKGROUND`, `BOF3X_PRESENT`, `BOF3X_SATPIXIE`,
+`BOF3X_SNAP`, `BOF3X_WIDE`, `BOF3X_SCALE`, `BOF3X_EXP`, `BOF3X_ZENNY`,
+`BOF3X_STEAL`, `BOF3X_KEYS` and `BOF3X_PAD` - `src/launcher/config.cpp`.) So a harness that
 must run a particular configuration sets both variables explicitly. The DLL
 reads `BOF3X_LANG=original` as no overlay, and `BOF3X_FILTER=linear` is the
 port's own filter. `tools/attract_run.py` pins both by default (`--lang`,
@@ -181,6 +212,9 @@ option that cannot work.
   2560 x 1920 (8x), `scale=` in `bof3x.ini`, `BOF3X_SCALE` for the game - the
   render target of a *window*. A borderless window ignores it and takes the
   largest multiple that fits the monitor (DIV-0036, the owner's rule).
+  **Removed the same evening (DIV-0042):** the window resizes freely and the
+  picture follows it; `scale=` only seeds the first window, and after that
+  `bof3x.window` beside the dll keeps the last placement.
 - **Renderer.** `0x5A5160` holds the only reference to the `Software Render`
   string; until 2026-09-23 which value was which was not established, and the
   entries read "Default" and "Alternate". **Now traced**
@@ -193,9 +227,12 @@ option that cannot work.
   2026-09-23, so any all-original run since it was set has drawn with
   Capcom's software renderer.
 - **Audio, input, key bindings.** No mechanism yet. Lines 3+ of `BOF3.CFG` are
-  the obvious candidate for bindings and are still unread.
+  the obvious candidate for bindings and are still unread. *Since 2026-09-24
+  input and key bindings are offered - the Controls dialog, §3 (DIV-0050);
+  lines 3+ turned out to be the keyboard table
+  ([`controls.md`](controls.md) §1). Audio is still not offered.*
 
-## 6. Verified 2026-09-20
+## 6. Verified 2026-09-20 (the record of that day)
 
 On this machine, llvm-mingw 32-bit build, against the owner's install:
 

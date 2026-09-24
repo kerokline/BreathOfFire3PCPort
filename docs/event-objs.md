@@ -6,8 +6,7 @@ last instruction against its PSX twin (`GAME.EMI` section 0, capture
 `9d00fd19`), fuzzed against a copy of Capcom's at start-up
 (`BOF3X_SHADOW=event_objs`, 110,000 rounds, 0 mismatches) with 50 negative
 controls, 46 refused by a count and 4 that change nothing.
-**Not yet through the live batch** - the sixth round's shop A/B runs
-centrally after the merge ([`takeover-queue-round6.md`](takeover-queue-round6.md)).
+**Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35.
 No divergence; one latent defect written down
 ([`known-defects.md`](known-defects.md) D33).
 

@@ -3,9 +3,7 @@
 **Status:** IN PROGRESS (2026-09-24) - eighteen functions ours
 (`src/game/battle_damage.cpp`, shadow name `battle_damage`), each fuzzed
 headless against a copy of Capcom's with every call re-aimed at a recorder;
-99 negative controls, all 99 refused by a count. **Not yet through the live
-check** - the combat A/B (`analysis/validate_combat.sh`) runs centrally after
-the merge (section 7).
+99 negative controls, all 99 refused by a count. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 7 had it owed.
 
 Group BE of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The battle engine

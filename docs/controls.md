@@ -229,14 +229,23 @@ PlayStation's swap table and its one icon column; the physical bindings
 row. Both layers live: the physical map feeds the pad word, the save's swap
 words decide what the word does.
 
-**Still open:**
+The seventh row was later deferred (§6 step 4, [`IDEAS.md`](IDEAS.md) I20);
+the physical bindings live in the launcher's Controls dialog instead.
+
+**Still open** (as written; all four since settled, noted 2026-09-24):
 
 1. Pad API: XInput now, behind an interface (recommended), or SDL3 from the
-   start for DualSense and the community glyph database.
-2. Several pads: OR them all, or first connected.
+   start for DualSense and the community glyph database. **Settled: SDL3**
+   (the owner, DIV-0050's rationale).
+2. Several pads: OR them all, or first connected. **Settled: one pad, the
+   first connected, re-opened on hot-plug** (DIV-0050).
 3. Default XInput layout: Xbox positional (A cross) or a Nintendo-style
-   toggle from the start.
+   toggle from the start. **Settled: positional by default, with a toggle
+   from the start** - `BOF3X_PAD_LAYOUT=positional|nintendo|auto`,
+   `pad.layout=` in the ini (DIV-0050).
 4. The binding area's shape: one column of fourteen or two of seven.
+   **Moved to I20** with the in-game binding screen (§6 step 4); the
+   launcher's Controls dialog has fourteen rows.
 
 ## 6. Order of work
 

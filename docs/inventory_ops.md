@@ -4,9 +4,7 @@
 (`src/game/inventory_ops.cpp`, shadow name `inventory_ops`), each fuzzed
 headless against a byte copy of Capcom's with every call re-aimed at a
 recorder: **25 x 2,000 rounds, about 420,000 stand-in calls, 0 mismatches**;
-**80 negative controls, 76 refused by a count, 4 not refused - each a change that changes nothing** (section 6). No divergence. **Not yet through the live
-check** - the combat A/B (`analysis/validate_combat.sh`) runs centrally after
-the merge.
+**80 negative controls, 76 refused by a count, 4 not refused - each a change that changes nothing** (section 6). No divergence. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class).
 
 Group BI of the seventh round ([`takeover-queue-round7.md`](takeover-queue-round7.md)),
 "inventory operations and the event-script bits on the way". Read, it is

@@ -5,8 +5,7 @@
 against its PSX twin and fuzzed headless against a copy of Capcom's with
 every call re-aimed at a recorder: 38,000 rounds, 0 mismatches; 81 negative
 controls, 80 refused by a count and one a change that changes nothing.
-**Not yet through the live check** - the combat A/B
-(`analysis/validate_combat.sh`) runs centrally after the merge (section 8).
+**Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 8 had it owed.
 
 Group BA of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). The battle engine is

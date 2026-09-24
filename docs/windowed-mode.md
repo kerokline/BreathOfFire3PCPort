@@ -29,7 +29,9 @@ original program's own behaviour, reached through its own inputs.
   ([`launcher-settings.md`](launcher-settings.md) section 3).
 - **At runtime:** **F8** toggles fullscreen/windowed, provided the desktop is
   larger than 640x480. **F7** re-initialises the display with the second flag
-  (renderer select — see below).
+  (renderer select — see below). *Since 2026-09-23 F7 does nothing in ours
+  ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0040, `src/game/win_main.cpp`
+  `Game_WndProc`); F11 there saves the last frame as a BMP, tooling.*
 
 **Observed 2026-09-19** with the two-line file above, via `bof3x-launcher`:
 window style `0x14CA0000`, outer size 646x509 (a 640x480 client area), centred
@@ -109,11 +111,21 @@ fact: frames are replayed, not dropped. Only their timing changes.)
 
 ## Open
 
+As written 2026-09-19, with what has answered each since:
+
 - **Lines 3+ of `BOF3.CFG`** — integer pairs consumed by `0x5A9860`. Key or pad
   bindings is the obvious guess; unread. `DINPUT` lives near `0x5A9xxx`.
+  *Since 2026-09-24: the keyboard table, `(DIK scancode, pad bits)` a line,
+  over a 24-entry default ([`controls.md`](controls.md) §1).*
 - **What `0x65DA48` selects.** `0x5A5160` is the only function referencing the
   `Software Render` string, so hardware/software is likely; which value is
-  which is not established.
+  which is not established. *Since: `Cfg_RenderMode`, the index into the
+  device records - 0 "Software Render", 1 the first DirectDraw driver, which
+  is line 2's default ([`display-setup.md`](display-setup.md) §2.5).*
 - **Window size is fixed at 640x480.** Scaling is presentation-layer work
   ([`IDEAS.md`](IDEAS.md) I8). The known "fullscreen fallback" defect has still
-  not been reproduced and written down.
+  not been reproduced and written down. *Since 2026-09-23 the size is not
+  fixed: a resizable or borderless window (DIV-0032), the picture at an
+  integer multiple chosen for it (DIV-0036), resizing freely with the picture
+  snapped (DIV-0042). The debt clamp called obviously wanted above is built
+  (DIV-0034).*

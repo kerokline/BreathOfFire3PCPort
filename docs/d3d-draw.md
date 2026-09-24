@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS (2026-09-22 - group R of the fourth parallel round:
 twelve functions ours, faithful, fuzzed and controlled headless; no
-divergence; not yet run live - the batch after the merge is the first check.
+divergence; through the batch `ab25` (oracle, memory dump, frame hash) and `ab25b` (the capture A/Bs, run with `ab26`) - [`takeover-queue-round4.md`](takeover-queue-round4.md) status.
 Two latent defects written down, D27 and D28)
 
 Everything the port draws under Direct3D goes through one walk of the PSX

@@ -168,6 +168,15 @@ gap ([`docs/LICENSING.md`](docs/LICENSING.md) §7).
 
 ## Practical notes
 
+- **Building.** `cmake --preset i686` then `cmake --build build`, with the
+  llvm-mingw i686 toolchain (`i686-w64-mingw32-clang++` on `PATH`, or
+  `LLVM_MINGW_ROOT` set), `cmake` 3.25 or later, `ninja` and `python` 3.11
+  or later; llvm-mingw is the only supported toolchain
+  (`cmake/i686-llvm-mingw.cmake`). The first configure fetches SDL3. Full
+  details, and how to run the result against your own copy of the game, are
+  in [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4. The only CI check on a
+  pull request today is the DCO sign-off (`.github/workflows/dco.yml`); there
+  is no build CI yet, so build locally before you open one.
 - **Findings go in `docs/`.** Naming, status headers and the evidence rule are
   in [`docs/README.md`](docs/README.md). `SCREAMING_CASE.md` for durable
   subsystem documents, `kebab-case.md` for a single investigation.
@@ -180,5 +189,6 @@ gap ([`docs/LICENSING.md`](docs/LICENSING.md) §7).
   replaced original code are silent behavioural forks.
 - **Tooling output belongs in `analysis/`**, which is gitignored because it is
   derived from copyrighted game code.
-- Environment quirks specific to this machine — the Anaconda `python`, the
-  MSYS2 path, where Ghidra lives — are in [`CLAUDE.md`](CLAUDE.md).
+- Environment quirks specific to the owner's machine — the Anaconda `python`,
+  where Ghidra lives — are in [`CLAUDE.md`](CLAUDE.md). (That file also notes
+  an MSYS2 toolchain; the build does not use it - it uses llvm-mingw, above.)

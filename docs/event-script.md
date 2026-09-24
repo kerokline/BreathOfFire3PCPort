@@ -7,8 +7,7 @@ groups call - each read to its last instruction against its PSX twin and
 fuzzed against a copy of Capcom's with every call re-aimed at a recorder,
 **46 negative controls, 45 refused by a count**. Every one of the 200 areas'
 placement scripts decodes (`tools/event_scan.py`) and is byte-identical to the
-PlayStation disc's. **Not yet through the live batch check** - that runs
-centrally after the merge (section 8).
+PlayStation disc's. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 8 had it owed.
 
 [`attract-remaining.md`](attract-remaining.md) section 4.5 catalogued the
 `0x579740`..`0x57BA60` run as "entered only a few dozen times, from

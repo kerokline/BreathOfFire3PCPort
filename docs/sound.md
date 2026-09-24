@@ -5,7 +5,8 @@
 instruction, fuzzed against Capcom's at start-up (`BOF3X_SHADOW=sound`,
 46,000 rounds, 0 mismatches) with 70 negative controls: 64 refused by a
 count, 1 by a count only after minutes (a would-be hang), 2 only by a fault,
-3 that change nothing. **Not yet through a live batch** - and the live batch
+3 that change nothing. **Through the batch `ab25`** (oracle, memory dump, frame hash -
+[`takeover-queue-round4.md`](takeover-queue-round4.md) status) - and a batch
 covers sound only by the owner's ear (§6). No divergence; three defects of
 Capcom's written down ([`known-defects.md`](known-defects.md) D24..D26), one
 of which, D26, every fade in the game has.

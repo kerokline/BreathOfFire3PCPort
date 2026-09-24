@@ -5,8 +5,7 @@ handlers of `Title_States`, the title's two music helpers and the demo's
 corner badge, the logo's three draw sets, and the scenario start the demo
 goes through with the two functions under it. Each fuzzed against a copy of
 Capcom's with every call and tail jump re-aimed at a recorder; 40 negative
-controls, all refused. **Not yet through the live batch check** - that runs
-centrally after the merge (section 6).
+controls, all refused. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 6 had it owed.
 
 This continues [`mode-tasks.md`](mode-tasks.md), which read task 1's body
 `Title_Task` `0x4621C0` and the three functions it runs around its state

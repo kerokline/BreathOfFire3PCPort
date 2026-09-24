@@ -4,8 +4,8 @@
 eight functions ours in [`src/game/display_env.cpp`](../src/game/display_env.cpp),
 faithful, fuzzed against Capcom's at start-up (`BOF3X_SHADOW=display_env`,
 40,000 rounds, 0 mismatches) and controlled headless; no divergence, no new
-defect. Not yet run live - the batch after the merge is the first check, and
-the only one that sees a pixel)
+defect. Through the batch `ab26` with round six - attract captures 55 of 55,
+oracle and dump identical ([`takeover-queue-round5.md`](takeover-queue-round5.md) status))
 
 The fifth round's queue ([`takeover-queue-round5.md`](takeover-queue-round5.md))
 gave group S the PSX library's display calls as the port implements them over

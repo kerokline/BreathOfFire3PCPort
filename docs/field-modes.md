@@ -6,8 +6,7 @@ it, the chapter call table's thunk `Scenario_CallA`, scenario 16's eleven
 handlers (the attract sequence's demo) and the CLUT strip fade and restore
 under them. Each fuzzed against a copy of Capcom's with every call re-aimed
 at a recorder and every table it reads swapped for recording entries; 37
-negative controls, all refused. **Not yet through the live batch check** -
-that runs centrally after the merge (section 8).
+negative controls, all refused. **Through the live batch check `ab22` + `ab22b`** (2026-09-22, the second parallel round - [`HANDOFF.md`](HANDOFF.md)); section 8 had it owed.
 
 [`attract-remaining.md`](attract-remaining.md) section 4.6 listed this as
 "the dispatcher `0x56D690` and the handlers it reaches - `0x6619E8` is a

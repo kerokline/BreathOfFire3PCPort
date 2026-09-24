@@ -1,7 +1,8 @@
 # The fourth round's queue: what is left, and the owner's display fixes
 
 **Status:** DONE (2026-09-23) - all five groups merged; oracle, memory dump and
-frame hash through `ab25` (the capture A/Bs owed, `analysis/validate_ab25b.sh`)
+frame hash through `ab25` (the capture A/Bs owed, `analysis/validate_ab25b.sh` -
+since run with `ab26`: "every pair identical and none black", HANDOFF round six's batch)
 
 Drawn from the regenerated catalogue (`python tools/attract_catalog.py
 analysis/calltrace/hidden_b/bof3x.callcounts.tsv --also ...`: 276 reached
@@ -40,6 +41,9 @@ call that is not ours: `0x5321C0`, `0x5322D0`. Callers and context in
 `Area_ClassifyPending`, `Area_PickMusic`.
 
 ## P - the title's hidden cluster -> `src/game/title_tasks.cpp`
+
+*(As built: the cluster was the field menu's item use - `src/game/item_use.cpp`,
+fifty-nine functions, [`item-use.md`](item-use.md).)*
 
 The 33 pointer-reached functions at `0x496CC0`..`0x497680`, after
 `Title_LoadTask`, that `pe_funcs.py` folded into `0x496AD0`'s 0xBAA bytes

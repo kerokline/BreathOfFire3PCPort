@@ -8,9 +8,7 @@ Each read to its last instruction by capstone against its true extent, the
 ones with a PSX twin side by side with it, and fuzzed against a byte copy of
 Capcom's with every call out re-aimed at a recorder; 48 negative controls,
 46 refused by a count of mismatching rounds, 2 not refused and shown to be
-changes that change nothing (section 5). **Not
-yet through the live batch check** - that runs centrally after the merge
-(section 7).
+changes that change nothing (section 5). **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35; section 7 had it owed.
 
 Source: [`src/game/member_sprites.cpp`](../src/game/member_sprites.cpp),
 [`member_sprites_callees.h`](../src/game/member_sprites_callees.h),

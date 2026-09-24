@@ -2,8 +2,8 @@
 
 **Status:** IN PROGRESS (2026-09-23 - group T of the fifth parallel round:
 eight functions ours, faithful, fuzzed and controlled headless on a new fake
-DirectDraw, `src/game/ddraw_fuzz.*`; no divergence; not yet run live - the
-batch after the merge is the first check. One latent defect written down,
+DirectDraw, `src/game/ddraw_fuzz.*`; no divergence; through the batch `ab26` with
+round six ([`takeover-queue-round5.md`](takeover-queue-round5.md) status). One latent defect written down,
 D30)
 
 Every texture the Direct3D draw binds for a textured PSX primitive is a
