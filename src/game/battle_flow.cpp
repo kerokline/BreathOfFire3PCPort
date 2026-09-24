@@ -89,7 +89,7 @@ void LoadMagicRow(unsigned row) {
     At(at::kLoadFlags)[0] = static_cast<unsigned char>(At(at::kLoadFlags)[0] | 4);
 }
 
-// The PC's version of the pause hook and the enemy state tables' entries.
+// The event hook 0x904B6C and the enemies' +0xF4 hooks.
 using HookFn = void (__cdecl*)(int);
 
 }  // namespace
@@ -114,10 +114,10 @@ using HookFn = void (__cdecl*)(int);
 // on the original's stack, its own return address first; ours aborts
 // instead (CLAUDE.md rule 4, as mode_flow's Transition_Task).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch(void) {
-    const unsigned char paused = At(at::kPaused)[0];
+    const unsigned char event = At(at::kEventBattle)[0];
     std::uint32_t phase = static_cast<std::uint32_t>(Long(At(at::kPhase)));
-    if (paused != 0 && (phase & 0xFF) != 0) {
-        reinterpret_cast<HookFn>(PtrAt(at::kPauseHook))(3);
+    if (event != 0 && (phase & 0xFF) != 0) {
+        reinterpret_cast<HookFn>(PtrAt(at::kEventHook))(3);
         phase = static_cast<std::uint32_t>(Long(At(at::kPhase)));
     }
     const unsigned index = phase & 0xFF;
@@ -196,16 +196,16 @@ extern "C" void __cdecl BattleTask_ClearAll(void) {
 //
 // As the original has it: 0x904AAA is read afresh for each object; the
 // state is not checked (0x64B088 with state 0 is 0x64B084's second dword, a
-// null). The paused path re-reads 0x939AD8 after the hook; the other reads
+// null). The event path re-reads 0x939AD8 after the hook; the other reads
 // the loop's own object.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObject(i);
         if (e[0] == 0) continue;
-        const unsigned char paused = At(at::kPaused)[0];
+        const unsigned char event = At(at::kEventBattle)[0];
         Sprite_Current = e;
         SetPtrAt(at::kEnemyCurrent, e);
-        if (paused != 0) {
+        if (event != 0) {
             if (e[1] != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(e + 0xF4))))(2);
             const unsigned state = Enemy()[0x100];
             reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(at::kEnemyStates + 4))[state]();

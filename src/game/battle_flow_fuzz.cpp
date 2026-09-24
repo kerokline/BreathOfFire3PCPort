@@ -6,7 +6,7 @@
 // originals build on their stacks re-aimed inside the copies (their
 // immediates checked first); BattleEnemy_SetAnimation's jump table relocated
 // into its copy; the enemy state table 0x64B084's first nine entries, the
-// pause hook 0x904B6C and every enemy object's +0xF4 pointed at recorders,
+// event hook 0x904B6C and every enemy object's +0xF4 pointed at recorders,
 // and the objects' +0xFC at an animation table of our own. One round: one
 // function, random bytes in every region any of them touches, the pointers
 // and indices put back inside what the tables hold, each branch's
@@ -85,7 +85,7 @@ void Disturb() {
     const unsigned w = h >> 20;
     switch ((h >> 4) % 20) {
     case 0: At(at::kPhase)[0] = static_cast<unsigned char>(v % 6); break;
-    case 1: At(at::kPaused)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 1: At(at::kEventBattle)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 2: SetPtr(at::kEnemyCurrent, EnemyObj(v % 8)); break;
     case 3: Sprite_Current = EnemyObj(v % 8); break;
     case 4: SetPtr(at::kTaskCurrent, Slot(v % at::kTaskCount)); break;
@@ -141,24 +141,52 @@ void Disturb() {
 
 // The six phases, the four task kinds, the nine enemy state entries.
 template <unsigned N> void __cdecl StubHandler() { Record(N, Id(Sprite_Current), static_cast<std::uint32_t>(Long(At(at::kEnemyCurrent)))); Disturb(); }
-void __cdecl StubPauseHook(int n) { Record(40, static_cast<std::uint32_t>(n)); Disturb(); }
-void __cdecl StubEnemyHook(int n) { Record(41, static_cast<std::uint32_t>(n), Id(Sprite_Current)); Disturb(); }
+// The stand-ins below that move a byte half the time move one their callers
+// read again after the call: the phase after the event hook, 0x939AD8 after
+// an enemy's hook and after Rand, the animation table's bit 7 and
+// Sprite_Current after Sprite_EnsureAnimation, 0x904B80 after
+// BattleTask_Create, the text after Gpu_GetClut.
+void __cdecl StubEventHook(int n) {
+    Record(40, static_cast<std::uint32_t>(n));
+    if (Hash() % 2) At(at::kPhase)[0] = static_cast<unsigned char>((Hash() >> 8) % 6);
+    Disturb();
+}
+void __cdecl StubEnemyHook(int n) {
+    Record(41, static_cast<std::uint32_t>(n), Id(Sprite_Current));
+    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj((Hash() >> 8) % 8));
+    Disturb();
+}
 void __cdecl StubUpdateScreen() { Record(42, Id(Sprite_Current), static_cast<std::uint32_t>(Long(At(at::kEnemyCurrent)))); Disturb(); }
 unsigned char __cdecl StubEnsureAnimation(unsigned char a) {
     Record(43, SlotByte(a), Id(Sprite_Current));
+    const std::uint32_t h = Hash();
+    if (h % 2) for (unsigned char& b : g_anim) b = static_cast<unsigned char>(b ^ 0x80);
+    if ((h >> 1) % 2) Sprite_Current = EnemyObj((h >> 8) % 8);
     Disturb();
     return static_cast<unsigned char>(Hash() >> 7);
 }
 unsigned char __cdecl StubScriptTick() { Record(44); Disturb(); return static_cast<unsigned char>(Hash() >> 9); }
 unsigned char __cdecl StubScriptTickOnce() { Record(45); Disturb(); return static_cast<unsigned char>(Hash() >> 11); }
-// Values at the drop chances' and the 70 % test's edges, and anything.
+// Values at the drop chances' edges, or (BattleEnemy_Chance70's rounds) at
+// the 70 % test's, and anything.
+const int kDropEdges[] = {0, 1, 2, 3, 4, 7, 8, 0x1F, 0x20, 0x7F, 0x80, 0xFE, 0xFF, 0x100, 0x101, 0x103, 0x7FFF, -1, 0x1FF};
+const int kChanceEdges[] = {69, 70, 71, 169, 170, 99, 100, 0, -1, -69, -70, -71, -100, 0x7FFF, 0x7FA2};
+bool g_chance_edges;
 int __cdecl StubRand() {
-    static const int kEdges[] = {0, 1, 2, 3, 4, 7, 8, 0x1F, 0x20, 0x7F, 0x80, 0xFE, 0xFF, 0x100, 0x101, 0x103,
-                                 69, 70, 71, 169, 170, 0x7FFF, -1, -70, -71, 0x1FF};
+    static const unsigned char kChance[8] = {0, 0, 1, 3, 7, 0x1F, 0x7F, 0xFF};
     Record(46);
+    // a third of the drop rolls land on a class's chance or one above it -
+    // the class of one of the enemy's two drops, read before the move below
+    const std::uint32_t first = Hash();
+    const unsigned char* const e = move_script::At(static_cast<std::uint32_t>(Long(At(at::kEnemyCurrent))));
+    const unsigned edge = kChance[e[(first >> 3) % 2 ? 0xAE : 0xAA] & 7] + (first >> 5) % 2;
+    if (first % 2) SetPtr(at::kEnemyCurrent, EnemyObj((first >> 8) % 8));
     Disturb();
     const std::uint32_t h = Hash();
-    return h % 3 == 0 ? static_cast<int>(h >> 17) : kEdges[(h >> 8) % (sizeof kEdges / sizeof kEdges[0])];
+    if (!g_chance_edges && h % 3 == 0) return static_cast<int>((h >> 12) << 8 | (edge & 0xFF));
+    if (h % 4 == 0) return static_cast<int>(h >> 17);
+    return g_chance_edges ? kChanceEdges[(h >> 8) % (sizeof kChanceEdges / sizeof kChanceEdges[0])]
+                          : kDropEdges[(h >> 8) % (sizeof kDropEdges / sizeof kDropEdges[0])];
 }
 void __cdecl StubRemove(unsigned a) { Record(47, a & 0xFF); Disturb(); }
 void __cdecl StubRollDrops() { Record(48); Disturb(); }
@@ -170,6 +198,7 @@ void __cdecl StubLoadDat(int file) { Record(52, static_cast<std::uint32_t>(file)
 // the enemy objects - the original's 0xFF writes outside the image).
 unsigned char __cdecl StubTaskCreate(unsigned kind, unsigned parameter) {
     Record(53, kind & 0xFF, parameter & 0xFF);
+    if (Hash() % 2) SetWord(At(at::kMagicId), (Hash() >> 8) & 0xFF);
     Disturb();
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 8 == 0 ? 0x30 + (h >> 8) % 0x10 : (h >> 8) % at::kTaskCount);
@@ -200,7 +229,7 @@ int __cdecl StubSprintf(char* dst, const char* fmt, ...) {
         while (k) dst[n++] = digits[--k];
         dst[n] = 0;
     } else {
-        const unsigned len = (h >> 4) % 7;
+        const unsigned len = (h >> 4) % 3 == 0 ? 0 : (h >> 6) % 7;
         for (unsigned i = 0; i < len; ++i) {
             const unsigned c = (h >> (8 + i * 3)) % 4;
             dst[n++] = static_cast<char>(c == 0 ? ' ' : c == 1 ? '0' + (h >> i) % 10 : 1 + (h >> (i + 5)) % 0xFF);
@@ -233,6 +262,11 @@ void __cdecl StubCommit(unsigned slot, unsigned size) {
 }
 unsigned __cdecl StubGetClut(int x, int y) {
     Record(59, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+    if (Hash() % 2)
+        for (unsigned i = 0; i < 8; ++i) {
+            unsigned char* const c = At(at::kNumberText + i);
+            if (c[0] != 0 && c[0] != 0xFF) c[0] = static_cast<unsigned char>(c[0] + 1);
+        }
     Disturb();
     return Hash();
 }
@@ -279,7 +313,7 @@ const Callees kStubs = {
     StubGetTPage, StubDrawMode, StubCommit, StubGetClut, StubSetSprt,
 };
 // The enemy state table's first nine entries (states 0..7, and 8 for the
-// paused path's state 7).
+// event path's state 7).
 constexpr unsigned kStates = 9;
 const Handler kStateStubs[kStates] = {&StubHandler<120>, &StubHandler<121>, &StubHandler<122>, &StubHandler<123>,
                                       &StubHandler<124>, &StubHandler<125>, &StubHandler<126>, &StubHandler<127>,
@@ -360,7 +394,7 @@ const Region kRegions[] = {
     {at::kTasks, 0x22A0},        // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},               // Sprite_Current
     {at::kEnemyCurrent, 4},
-    {at::kPhase, 0x260},         // the battle's globals, the drop list, the pause hook, the text; to 0x904D00
+    {at::kPhase, 0x260},         // the battle's globals, the drop list, the event hook, the text; to 0x904D00
     {at::kMembers, 0x3E4},       // ObjTrio
     {0x64B284, 0x1C0},           // constant data from here on - random here, put back after: the item rows 0..2
     {0x675ED8, 0x100},           // the item rows 3
@@ -429,10 +463,10 @@ void Fix() {
         e[0xAE] = static_cast<unsigned char>(Next() % 8);   // above 7 reads the original's stack (ours aborts)
     }
     At(at::kPhase)[0] = static_cast<unsigned char>(Next() % 6);
-    SetPtr(at::kPauseHook, reinterpret_cast<const void*>(&StubPauseHook));
+    SetPtr(at::kEventHook, reinterpret_cast<const void*>(&StubEventHook));
     SetWord(At(at::kMagicId), Next() & 0xFF);
     At(at::kNumberText + 0x20)[0] = 0;
-    if (Half()) At(at::kPaused)[0] = 0;
+    if (Half()) At(at::kEventBattle)[0] = 0;
     if (Half()) At(at::kAnimGate)[0] = 0;
 }
 
@@ -444,6 +478,7 @@ unsigned char* Current() { return move_script::At(static_cast<std::uint32_t>(Lon
 Args Seed(unsigned k) {
     Args args;
     for (std::uint32_t& v : args.a) v = Next();
+    g_chance_edges = k == kChance70;
     switch (k) {
     case kPhaseDispatch:
         SetLong(At(at::kPhase), static_cast<std::int32_t>(Garbage(0xFF, Next() % 6)));
@@ -456,7 +491,8 @@ Args Seed(unsigned k) {
         break;
     case kTaskCreate: {
         // the first free slot anywhere, or none
-        const unsigned taken = Next() % 3 == 0 ? at::kTaskCount : Next() % at::kTaskCount;
+        const unsigned pick = Next() % 6;
+        const unsigned taken = pick < 2 ? at::kTaskCount : pick == 2 ? at::kTaskCount - 1 : Next() % at::kTaskCount;
         for (unsigned i = 0; i < at::kTaskCount; ++i) {
             unsigned char* const t = Slot(i);
             if (i < taken) t[0] = static_cast<unsigned char>(t[0] | 1);
@@ -468,7 +504,7 @@ Args Seed(unsigned k) {
     }
     case kEnemyRunAll:
     case kEnemyScreen:
-        At(at::kPaused)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(at::kEventBattle)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const e = EnemyObj(i);
             if (Half()) e[0] = 0;
@@ -507,6 +543,7 @@ Args Seed(unsigned k) {
             if (Often()) e[0x111] = static_cast<unsigned char>(e[0x111] & 0x7F);
             switch (Next() % 12) {
             case 0: e[0x92] = static_cast<unsigned char>(e[0x92] | (Half() ? 4 : Half() ? 0x20 : 0x40)); break;
+            case 6: e[0x92] = static_cast<unsigned char>(e[0x92] | 4); break;
             case 1: e[0x93] = static_cast<unsigned char>(e[0x93] | 0x40); break;
             case 2: At(at::kTurnGate)[0] = 3; break;
             case 3: At(at::kFormation)[0] = 4; SetWord(At(at::kMagicId), 0xA1); break;
@@ -530,8 +567,8 @@ Args Seed(unsigned k) {
             SetWord(e + slot, Next() % 4 == 0 ? 0 : Often() ? Next() % 5 : Next());
             e[slot + 2] = static_cast<unsigned char>(Next() % 4 == 0 ? 0 : Next() % 8);
         }
-        static const unsigned char kCounts[] = {0, 0, 1, 2, 3, 5, 14, 15, 16};
-        At(at::kDropCount)[0] = Often() ? kCounts[Next() % 9] : static_cast<unsigned char>(Next() % 17);
+        static const unsigned char kCounts[] = {0, 0, 1, 2, 3, 5, 14, 15, 15, 16};
+        At(at::kDropCount)[0] = Often() ? kCounts[Next() % 10] : static_cast<unsigned char>(Next() % 17);
         for (unsigned i = 0; i < 16; ++i)
             if (Often()) SetWord(At(at::kDropItems + i * 2), Next() % 5);
         break;
@@ -748,7 +785,7 @@ void SelfTest() {
     for (unsigned i = 100; i < 106; ++i) phases += c.logged[i] ? 1u : 0u;
     for (unsigned i = 110; i < 114; ++i) kinds += c.logged[i] ? 1u : 0u;
     for (unsigned i = 120; i < 129; ++i) states += c.logged[i] ? 1u : 0u;
-    bof3::Log("shadow      battle_flow coverage: phases %u of 6, task kinds %u of 4, enemy state entries %u of 9, pause "
+    bof3::Log("shadow      battle_flow coverage: phases %u of 6, task kinds %u of 4, enemy state entries %u of 9, event "
               "hook %u, enemy hook %u, screen updates %u, animations %u; ticks %u / %u (early 1: %u / %u rounds), chance 1 %u "
               "0 %u (rand reached in %u); created none %u; kills: battle end %u, flag cleared %u; drops rolled %u, merged %u, "
               "appended %u; files %u, second tasks %u; digits drawn %u; texts drawn %u (with a space %u), sprites %u; "

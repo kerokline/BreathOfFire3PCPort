@@ -7,8 +7,8 @@
 //   - Battle_PhaseDispatch 0x42E400 builds a six-entry table of the battle's
 //     phase handlers on its own stack (`mov [esp + k], imm32`) and calls
 //     `[esp + eax * 4]`; the table is `phases` below, and the fuzz re-aims
-//     the copy's immediates. Before it, when the byte 0x904AAA is set, it
-//     calls the pointer at 0x904B6C with 3.
+//     the copy's immediates. Before it, when the byte 0x904AAA and the phase
+//     are both non-zero, it calls the pointer at 0x904B6C with 3.
 //   - BattleTask_RunAll 0x435110 does the same with the four task kinds.
 //   - BattleEnemy_RunAll 0x435830 calls through the state table 0x64B084 in
 //     .data (0x64B088, one entry on, while 0x904AAA is set), and through an
@@ -39,11 +39,15 @@ constexpr std::uint32_t kEnemies = 0x93B960;
 constexpr std::uint32_t kEnemySize = 0x128;
 constexpr unsigned kEnemyCount = 8;
 constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy being run (PSX 0x801EB458)
-constexpr std::uint32_t kEnemyStates = 0x64B084;   // code pointers by +0x100; 0x64B088 while paused
+constexpr std::uint32_t kEnemyStates = 0x64B084;   // code pointers by +0x100; 0x64B088 in an event battle
 // The battle's globals (PSX 0x801462E0..).
 constexpr std::uint32_t kPhase = 0x904AA0;         // dword; its low byte picks Battle_PhaseDispatch's entry
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
-constexpr std::uint32_t kPaused = 0x904AAA;        // u8
+// u8: non-zero in some battles - compared with 0x10, 0x19, 0x1A and 0x25 by
+// other battle code (pe_xref.py, 48 references), so a number, not a flag;
+// "event battle" is a guess from what it switches on here (the hook below,
+// the enemies' +0xF4 hooks and the shifted state table)
+constexpr std::uint32_t kEventBattle = 0x904AAA;
 constexpr std::uint32_t kEnemiesLeft = 0x904AB3;   // u8 (PSX 0x801462EF)
 constexpr std::uint32_t kDropCount = 0x904AE7;     // u8, at most 15 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8, |= 2 when the last enemy falls (PSX 0x80146324)
@@ -53,7 +57,7 @@ constexpr std::uint32_t kDropItems = 0x904AF4;     // u16 x 16 (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;    // u8 x 16 (PSX 0x80146350)
 constexpr std::uint32_t kTurnGate = 0x904B34;      // u8, BattleEnemy_Chance70's "3 or more" gate
 constexpr std::uint32_t kFormation = 0x904B35;     // u8, BattleEnemy_Chance70's "4" gate
-constexpr std::uint32_t kPauseHook = 0x904B6C;     // void (*)(int), called with 3 while paused
+constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int): set by 0x437CC0 (0x437CF0, 0x438450, 0x43C9F0 ...); called with 3
 constexpr std::uint32_t kMagicId = 0x904B80;       // u16: the item or ability the magic loaders were given
 constexpr std::uint32_t kActorAt = 0x904B8A;       // u8 (PSX 0x801463C6)
 constexpr std::uint32_t kAnimGate = 0x904B8E;      // u8 (PSX 0x801463CA)

@@ -11223,7 +11223,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_flow.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x42E400..0x42E461 (0x62 bytes), cdecl, no rel32 calls: builds a six-entry table on its stack (mov [esp + 0..0x14], imm32: 0x42E470 0x42E990 0x42F070 0x42F220 0x4302B0 0x4311E0) and calls [esp + (dword 0x904AA0 and 0xFF) * 4], unchecked; first, when byte 0x904AAA is set, call [0x904B6C](3) and the phase dword re-read. Combat route (recipe_combat): 2,091 calls, all from 0x42E39E in the battle frame 0x42E2F0. No PSX twin in pairs_propagated.json. Named for what it dispatches; the six phases are unread."
+evidence = "disasm 2026-09-23, 0x42E400..0x42E461 (0x62 bytes), cdecl, no rel32 calls: builds a six-entry table on its stack (mov [esp + 0..0x14], imm32: 0x42E470 0x42E990 0x42F070 0x42F220 0x4302B0 0x4311E0) and calls [esp + (dword 0x904AA0 and 0xFF) * 4], unchecked; first, when byte 0x904AAA is set AND the phase byte is non-zero (test al, al twice, the second after mov eax, [0x904AA0] replaced al - the start-up fuzz caught it), call [0x904B6C](3), the event hook 0x437CC0 stores, and the phase dword re-read. 0x904AAA is compared with 0x10, 0x19, 0x1A, 0x25 elsewhere (pe_xref.py): a number, called the event battle here as a guess. Combat route (recipe_combat): 2,091 calls, all from 0x42E39E in the battle frame 0x42E2F0. No PSX twin in pairs_propagated.json. Named for what it dispatches; the six phases are unread."
 
 [[func]]
 pc = 0x435110
@@ -11271,7 +11271,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_flow.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x435830..0x435899 (0x6A bytes), cdecl, no rel32 calls: for the eight enemy objects of 0x128 bytes at 0x93B960 whose byte +0 is non-zero: Sprite_Current and 0x939AD8 = the object; byte 0x904AAA re-read per object; clear: call [0x64B084 + byte +0x100 * 4]; set: call [+0xF4](2) when byte +1 is non-zero, then [0x64B088 + (byte +0x100 of the re-read 0x939AD8) * 4] - the same .data table one entry on (its second dword is 0). Combat route: 2,091 calls from 0x42E3A8; 0x436090 reached 2,026 times and Battle_EnemyDefeated once from its call 0x435887. No PSX twin paired."
+evidence = "disasm 2026-09-23, 0x435830..0x435899 (0x6A bytes), cdecl, no rel32 calls: for the eight enemy objects of 0x128 bytes at 0x93B960 whose byte +0 is non-zero: Sprite_Current and 0x939AD8 = the object; byte 0x904AAA (the event battle) re-read per object; zero: call [0x64B084 + byte +0x100 * 4]; non-zero: call [+0xF4](2) when byte +1 is non-zero, then [0x64B088 + (byte +0x100 of the re-read 0x939AD8) * 4] - the same .data table one entry on (its second dword is 0). Combat route: 2,091 calls from 0x42E3A8; 0x436090 reached 2,026 times and Battle_EnemyDefeated once from its call 0x435887. No PSX twin paired."
 
 [[func]]
 pc = 0x4358A0
