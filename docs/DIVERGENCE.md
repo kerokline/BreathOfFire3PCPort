@@ -1813,7 +1813,11 @@ designed in rather than bolted on.
   the owner saw the map's corners pop while the attract sequence rotates
   it; self-tests 0 mismatches both ways (a first cut wrote -0.0 into the
   tile's x with the view off and the mode_flow fuzz caught it).
-  The launcher's "Widescreen" box (`wide=1`) sets `BOF3X_WIDE=1`. **Owed:** the oracle and the
+  The launcher's "Widescreen" box (`wide=1`) sets `BOF3X_WIDE=1`. Later
+  the same night, fourteen slide-out bounds of the menu and shop boxes
+  (window-task states, `kSlides`) moved outward by 53, after the owner's
+  screenshots showed them hanging in the bands; recaptured clean. The sky
+  gradient (`0x571BE0`) is deferred to a recorded route. **Owed:** the oracle and the
   frame hash once with `BOF3X_WIDE=1` (a difference is a cull gating
   logic), the 55-shot attract A/B cropped to the middle 640 columns, the
   owner's eye.

@@ -209,12 +209,13 @@ The single next action, concrete enough to start without asking anyone.
       addresses - §3b there); the menu backdrop, the fade tile and the save
       menu's black tile widened under `Widescreen_Live()` (0 until
       `Widescreen_Inject`, which runs last so the fuzzes see the original).
-      Survey findings in §5 there. **Open, the owner's calls:** the
-      dialogue box's side placements (the PSP moved them to keep the edge
-      distance); the time / money boxes a sub-menu slides off the old edge
-      now hang in the bands; whether any area change still shows a black
-      centre with live bands (another 320-wide fill, to find by
-      `BOF3X_RECORD`); the corner pop with the margin at 100. **Owed:** the
+      Survey findings in §5 there. The menu and shop boxes' slide-out
+      bounds are widened (fourteen operand patches, `kSlides`); the
+      dialogue boxes are fine by the owner's eye. **Open:** the sky gradient
+      `AreaMap_EntryKind1` `0x571BE0` needs a takeover (§5 there has the
+      reading) - deferred by the owner until their quicksave-based route
+      reaches it; whether any area change still shows a black centre with
+      live bands; the corner pop with the margin at 100. **Owed:** the
       oracle and the frame hash once with `BOF3X_WIDE=1` (§4 there); the
       attract A/B cropped to the middle 640 columns; a live
       `BOF3X_SHADOW=map_layers` under the wide view reports the cull's

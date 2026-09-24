@@ -163,15 +163,21 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
     to the new edges, or leave).
   - `wide_menu_screens`: **the time and money boxes that a sub-menu slides
     off the 320 edges hang visible in the bands**, cut at the old edge.
-    The original relied on the screen edge to hide them. Needs either the
-    slide to go 53 further or a clip at the view's edge. Not fixed.
+    The original relied on the screen edge to hide them. **Fixed later the
+    same night:** the boxes are window-task states in 0x596000..0x59D000
+    that step x by 0x20 a frame to an off-edge bound - nine `mov ecx,
+    imm32` (-170, -300, -100, -180, -110, -200, -150, -120 and 320) and five
+    `cmp cx / ax, imm16` (322, -190, -165, 347, 323) that free the window
+    once past it - and each bound moves outward by 53 (`kSlides` in
+    `widescreen.cpp`, `PatchBytes "Widescreen"`). Recaptured
+    (`wide2_menu_screens`, `wide2_shop_ab`, 40 shots): nothing in the bands.
   - `wide_attract_cycle` (55 shots; three grabbed the desktop instead of
     the game while the owner took their own screenshots, deleted): the
     mine's 3D scenes fill the frame; narration, "Dauna Mine" and the title
     centred. **The dialogue box at the lower left sits against the old
     edge** (`MsgBox_PlacementTable` entries 3..6, §3d) with the band beside
-    it. Not fixed: the owner decides between the PSP's policy (keep the
-    edge distance, 92 / 279) and leaving it.
+    it. The owner, 2026-09-23: "the dialogue boxes seem ok to me" - left as
+    they are unless one looks wrong.
   - **The owner, watching live:** (1) on an area change the 320 view goes
     black while the bands keep the last area for half a second - the fade
     tile `Transition_DrawTile` (ours, `mode_flow.cpp`) is 320 wide;
@@ -183,6 +189,18 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
     sequence rotates the map: the terrain cull at [-117, 437]; **widened to
     [-150, 470]** (`kTerrainMargin` 100), to be re-checked by eye.
   - `wide_shop`: the recorded route has no shots; nothing seen.
+  - **The sky (the owner's screenshot, 2026-09-23):** an area's gradient
+    backdrop is 320 wide, black in the bands. It is `AreaMap_EntryKind1`
+    `0x571BE0` (entry 1 of `AreaMap_EntryHandlers`, Capcom's, 0x147 bytes):
+    a Gouraud quad from (0, 0) to (320, 240) through `Gpu_SetDrawMode`,
+    `Gpu_SetPolyG4`, `Gpu_SetSemiTrans` and two `Gfx_CommitPrim`s, the two
+    colours from the entry, shown while the focus lies in the entry's
+    bounds. The left x is a zero register, not an immediate, so it cannot
+    be byte-patched; it needs a takeover beside `AreaMap_ClutCycle` in
+    `map_layers.cpp` with the quad at (-53, 0) 426 x 240 under
+    `Widescreen_Live()`. **Deferred (the owner): until a recorded route
+    reaches it** - they are making a save recipe with the quicksave for
+    harvesting calls.
   - Recorded in `wide_field_menu2`: the backdrop after its fix, seven
     column pairs, no band.
 - Since the survey the launcher has a "Widescreen" box (`wide=1` in
