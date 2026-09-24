@@ -11371,10 +11371,10 @@ pc = 0x57DC90
 psx = 0x801B0928
 name = "Menu_DrawSkillRow"
 ret = "void"
-params = "int x, int y, int colour, unsigned type, const unsigned char *name, unsigned cost, int dim"
+params = "int x, int y, int colour, unsigned kind, const unsigned char *name, unsigned cost, int dim"
 impl = "src/game/battle_window_draw.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x57DC90..0x57DD0E (0x7F bytes, 5 calls, no jumps): Menu_DrawIcon8(x, y + 2, byte 0x663D70[type byte], dim); Text_DrawAt(x + 10, y, colour, Text_CharCount(name), name); Crt_sprintf of %2d (0x64D3EC) of the cost byte into 0x904BA0; Text_DrawFont8(x + 0x6D, y + 2, colour, 0x904BA0). GAME.EMI 0x801B0928 alike (icons 0x801CD7EC). Combat route: 402 calls from 0x59D200."
+evidence = "disasm 2026-09-23, 0x57DC90..0x57DD0E (0x7F bytes, 5 calls, no jumps): Menu_DrawIcon8(x, y + 2, byte 0x663D70[kind byte], dim); Text_DrawAt(x + 10, y, colour, Text_CharCount(name), name); Crt_sprintf of %2d (0x64D3EC) of the cost byte into 0x904BA0; Text_DrawFont8(x + 0x6D, y + 2, colour, 0x904BA0). GAME.EMI 0x801B0928 alike (icons 0x801CD7EC). Combat route: 402 calls from 0x59D200, which passes the ability record itself as the name (0x65C4C8 + id * 0x18, the 16-byte GBK name field), Skill_FlagIndex as the kind and Skill_ApCost as the cost."
 
 [[func]]
 pc = 0x5918A0

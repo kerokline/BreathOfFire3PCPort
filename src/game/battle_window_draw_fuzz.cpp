@@ -266,9 +266,19 @@ void __cdecl StubFont8(int x, int y, int colour, const unsigned char* text) {
     Disturb();
 }
 // The cost: around the AP the seeds put in the records (0..20), sometimes far.
+// One call in three it also moves the AP of the record it was handed - the
+// cell Skill_CanUse reads before the call in battle and after it in the field.
 unsigned char __cdecl StubApCost(unsigned member, unsigned id, unsigned battle) {
     Record(17, member & 0xFF, id & 0xFF, battle & 0xFF);
     Disturb();
+    // (only inside the regions the rounds put back: 10 records, 4 working)
+    if (Hash() % 3 == 0 && (member & 0xFF) < ((battle & 0xFF) == 0 ? 10u : 4u)) {
+        const unsigned m = member & 0xFF;
+        unsigned char* const r = (battle & 0xFF) == 0 ? At(at::kCharRecords + m * at::kCharStride)
+                                                      : At(at::kWorking + m * at::kWorkingStride);
+        SetWord(r + 0x1A, (Hash() >> 8) % 21);
+        ++g_log_n;   // a different stream for the answer below
+    }
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 5 == 0 ? h >> 8 : h % 5 == 1 ? 0 : (h >> 8) % 21);
 }
@@ -541,14 +551,17 @@ Args Seed(unsigned k) {
     case kCanUse: {
         static const std::uint32_t kModes[] = {0, 1, 2, 3, 0x101, 0x102, 0xFF, 0x201};
         static const std::uint32_t kIds[] = {0, 0x14, 0x15, 0x3E, 0x8C, 0x97, 0x100, 0x114, 0x13, 0x16, 0x3D, 0x3F, 0x8B, 0x8D, 0x96, 0x98, 1};
-        args.a[0] = Often() ? Pick(kModes) : Next();
+        static const std::uint32_t kSpecial[] = {0x14, 0x15, 0x3E, 0x8C, 0x97};
+        // battle, on one of the five abilities with tests of their own, with
+        // the tests before them passed, half the rounds
+        args.a[0] = Half() ? Garbage(0xFF, 2) : Often() ? Pick(kModes) : Next();
         args.a[1] = Often() ? Garbage(0xFF, Next() % 4) : Garbage(0xFF, Next() % 8);
-        args.a[2] = Often() ? Garbage(Half() ? 0xFFFFFFFFu : 0xFF, Pick(kIds)) : Next();
+        args.a[2] = Half() ? Garbage(0xFF, Pick(kSpecial)) : Often() ? Garbage(Half() ? 0xFFFFFFFFu : 0xFF, Pick(kIds)) : Next();
         unsigned char* const a = Ability(args.a[2]);
-        a[0x10] = static_cast<unsigned char>(Next() % 4 | (Next() & 0xFC));
-        if (Half()) a[0x15] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
+        a[0x10] = static_cast<unsigned char>(Often() ? Next() | 3 : Next());
+        a[0x15] = static_cast<unsigned char>(Often() ? Next() & ~4u : Next() | 4);
         unsigned char* const w = At(at::kWorking + (args.a[1] & 3) * at::kWorkingStride);
-        if (Half()) w[0x10] = static_cast<unsigned char>(Half() ? 0x10 : Next() & ~0x10u);
+        w[0x10] = static_cast<unsigned char>(Often() ? Next() & ~0x10u : Next() | 0x10);
         break;
     }
     case kSkillRow:

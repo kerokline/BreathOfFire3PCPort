@@ -474,12 +474,14 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
 }
 
 // original 0x57DC90 (GAME.EMI 0x801B0928): one row of the skill list - the
-// type's 8 x 8 icon (table 0x663D70) at (x, y + 2), the name at (x + 10, y)
+// kind's 8 x 8 icon (table 0x663D70) at (x, y + 2), the name at (x + 10, y)
 // for Text_CharCount characters, "%2d" of the cost's low byte in the 8 px font
-// at (x + 0x6D, y + 2).
-extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned type, const unsigned char* name,
+// at (x + 0x6D, y + 2). The battle's skill list 0x59D200 hands it the ability
+// record itself as the name (its 16-byte GBK name field), Skill_FlagIndex as
+// the kind and Skill_ApCost as the cost.
+extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned kind, const unsigned char* name,
                                           unsigned cost, int dim) {
-    const unsigned char icon = At(at::kSkillIcons + (type & 0xFF))[0];
+    const unsigned char icon = At(at::kSkillIcons + (kind & 0xFF))[0];
     g.icon8(x, y + 2, icon, dim);
     const unsigned char n = g.char_count(name);
     g.text_draw_at(x + 10, y, colour, n, name);
