@@ -89,6 +89,7 @@
 #include "game/battle_window_draw.h"
 #include "game/battle_windows.h"
 #include "game/battle_setup.h"
+#include "game/battle_damage.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -214,6 +215,8 @@ void InjectAll() {
                                 // tables - order does not matter
     BattleMisc_Inject();        // every call of its clones re-aimed at a recorder, the dispatch's table
                                 // immediates re-aimed and a jump table relocated in the copies: order does not matter
+    BattleDamage_Inject();      // every call of its clones re-aimed at a recorder, its jump table relocated
+                                // and the effect handler tables swapped: order does not matter
     InjectReport();
 }
 
