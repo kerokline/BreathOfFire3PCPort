@@ -168,6 +168,7 @@ add_library(bof3x SHARED
   src/game/win_main.cpp
   src/game/fmv_play.cpp
   src/game/pause_text.cpp
+  src/game/widescreen.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
   src/render/crt.cpp)

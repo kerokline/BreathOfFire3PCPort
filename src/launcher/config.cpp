@@ -104,6 +104,9 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         } else if (key == "screen") {
             if (value == "crt") cfg.crt = true;
             else if (value == "clean") cfg.crt = false;
+        } else if (key == "wide") {
+            if (value == "0") cfg.wide = false;
+            else if (value == "1") cfg.wide = true;
         } else if (key == "scale") {
             if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') cfg.scale = value[0] - '0';
         }
@@ -131,6 +134,8 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
            "\r\n";
     out += "# 2..8: the window's picture, 320 x 240 times this (DIV-0036); fullscreen takes the largest that fits\r\n";
     out += "scale=" + std::to_string(cfg.scale) + "\r\n";
+    out += "# 1 the wide picture, 426 x 240 (DIV-0041, survey build) | 0 the original's 320 x 240\r\n";
+    out += std::string("wide=") + (cfg.wide ? "1" : "0") + "\r\n";
     out += "# 1 keeps the game running while its window is not in front (DIV-0033) | 0 the original's freeze\r\n";
     out += std::string("background=") + (cfg.background ? "1" : "0") + "\r\n";
     out += "# 1 (shipped default) | 0 -> line 2 of the game's BOF3.CFG\r\n";
@@ -156,6 +161,9 @@ void ConfigApplyEnvironment(const Config& cfg) {
 
     if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && cfg.crt)
         SetEnvironmentVariableW(L"BOF3X_PRESENT", L"crt");
+
+    if (GetEnvironmentVariableW(L"BOF3X_WIDE", existing, 64) == 0 && cfg.wide)
+        SetEnvironmentVariableW(L"BOF3X_WIDE", L"1");
 
     if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale != 2) {
         const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};

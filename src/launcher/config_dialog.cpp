@@ -55,6 +55,7 @@ void Populate(HWND dlg, const DialogState& state) {
     AddItem(dlg, IDC_DISPLAY, L"Windowed - resizable, F8 toggles");
     Select(dlg, IDC_DISPLAY, cfg.display == Display::kWindowed ? 1 : 0);
     CheckDlgButton(dlg, IDC_BACKGROUND, cfg.background ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(dlg, IDC_WIDE, cfg.wide ? BST_CHECKED : BST_UNCHECKED);
 
     // DIV-0036: item i is scale i + 2.
     for (int k = 2; k <= 8; ++k) {
@@ -81,6 +82,7 @@ void ReadBack(HWND dlg, Config& cfg) {
     const int scale = Selected(dlg, IDC_RESOLUTION) + 2;
     if (scale >= 2 && scale <= 8) cfg.scale = scale;
     cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
+    cfg.wide = IsDlgButtonChecked(dlg, IDC_WIDE) == BST_CHECKED;
     cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;
 }
 

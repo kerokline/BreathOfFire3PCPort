@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 40 entries, DIV-0001..0040)
+**Status:** IN PROGRESS (opened 2026-09-18; 41 entries, DIV-0001..0041)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1753,3 +1753,70 @@ designed in rather than bolted on.
 - **Verification:** built; to be pressed at the next run.
 - **Reversible?** `BOF3X_ORIGINAL=Game_WndProc` (Capcom's window procedure,
   which also brings back the unfocused freeze).
+
+### A 426 x 240 picture: the view widened by 53 columns a side (survey build)
+
+- **ID:** DIV-0041
+- **Date:** 2026-09-23
+- **Subsystem:** display (`src/game/widescreen.{h,cpp}`, `src/render/render_d3d11.cpp`,
+  `src/game/display_setup.cpp`, `MapView_Build` `0x56EC00` ours in
+  `src/game/map_layers.cpp`, `AreaMap_FrameAreaBD` `0x510780` Capcom's;
+  [`widescreen.md`](widescreen.md))
+- **Original behaviour:** the picture is the game's 320 x 240 view (at
+  `D3d_ScaleX/Y`, DIV-0036), 4:3. Two culls keep primitives whose projected
+  x lies in a fixed screen interval: `MapView_Build`'s terrain cell cull
+  `[-50, 370]` (`fcomp` against the `.rdata` floats `0x5C4234` / `0x5C4230`)
+  and `AreaMap_FrameAreaBD`'s frame pass, a wide range `[-200, 520]`
+  (`0x5C4240` / `0x5C423C`, operands at `0x51097E` / `0x510991`) or a narrow
+  `[-50, 370]` (the same two floats as the terrain cull, operands at
+  `0x5109BB` / `0x5109D2`) chosen by a y-derived test.
+- **New behaviour:** under `BOF3X_WIDE=1` the render target is 426k x 240k
+  and every primitive's x is moved by 53k on the way to it, in the scene
+  vertex shader: the game keeps drawing its 320-wide view with the
+  projection centre at (160, 120), the view sits centred, and whatever the
+  game already draws past its old edges - terrain, 3D geometry, scrolling
+  layers - fills the 53 columns each side. `D3d_ScaleX/Y` stay k, the
+  window opens 426k wide, a borderless window takes the largest k whose
+  426k x 240k fits its monitor (6 on 3440 x 1440, full height), the CRT
+  look's source is 426 x 240. The terrain cull becomes `[-117, 437]` and
+  the frame pass's ranges `[-252, 572]` and `[-102, 422]`: for the latter
+  the four operand addresses are re-aimed at floats in the dll (`PatchBytes`
+  `Widescreen`); the `.rdata` floats are untouched, since our
+  `MapView_Build` no longer reads them and nothing else does (image scan
+  2026-09-23: six references, all in these two functions). Off (the
+  default, and every oracle and hash run) nothing changes: the target is
+  320k wide, the shift 0, the culls the original's.
+- **Rationale:** the owner, 2026-09-23: 16:9 with **no crop** - the PSP's
+  384 x 216 (12 rows cut) was offered and turned down; 426 = 240 x 16/9
+  rounded down to even. The approach is Capcom's own from the PSP release
+  ([`psp-widescreen.md`](psp-widescreen.md) §2.3: +32 in all 21 primitive
+  converters, the same two culls widened, +46 and +31 for 32 columns; here
+  +67 and +52 for 53, the PSP's margin beyond its columns kept). Shifting
+  primitives rather than moving the projection centre means centred UI
+  needs nothing and a missed element stays centred instead of drifting.
+  **This is the survey build** ([`widescreen.md`](widescreen.md) §3e): the
+  sprite and object culls, the full-frame fills and fades, and the
+  edge-anchored UI are not yet re-authored, so their pops, bright bands and
+  edge gaps are expected and are what the survey lists (§5 there).
+- **Also in the PSX version?** No. The PSP release does the same shift, by
+  32, into a cropped 384 x 216 window (§2.4 there).
+- **Verification:** self-tests at 0 mismatches with `BOF3X_WIDE` 0 and 1
+  (the patches log `patch ON Widescreen` x4 and one `DIV-0041` line;
+  `Widescreen_Inject` runs last in `inject_all.cpp`, after every fuzz, so
+  the fuzzes compare the original culls). Live 2026-09-23: the field recipe
+  at k = 2, 852 x 480 captures (`analysis/shots/wide_field/`), the terrain
+  continuous across all 852 columns, the sprite centred. The survey
+  recipes' findings in `widescreen.md` §5; the same evening the menu
+  backdrop (two more column pairs), the fade tile and the save menu's
+  black tile (both (-53, 0) 426 x 240) were widened under
+  `Widescreen_Live()`, and the terrain cull opened to `[-150, 470]` after
+  the owner saw the map's corners pop while the attract sequence rotates
+  it; self-tests 0 mismatches both ways (a first cut wrote -0.0 into the
+  tile's x with the view off and the mode_flow fuzz caught it).
+  The launcher's "Widescreen" box (`wide=1`) sets `BOF3X_WIDE=1`. **Owed:** the oracle and the
+  frame hash once with `BOF3X_WIDE=1` (a difference is a cull gating
+  logic), the 55-shot attract A/B cropped to the middle 640 columns, the
+  owner's eye.
+- **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
+  keeps the frame pass's original ranges under a wide picture;
+  `BOF3X_ORIGINAL=MapView_Build` the terrain cull's.

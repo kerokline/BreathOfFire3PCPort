@@ -199,12 +199,27 @@ The single next action, concrete enough to start without asking anyone.
       `crt-easymode-halation`, is GPL. Owed: the owner tunes it in game
       with `BOF3X_CRT` (defaults are a first guess), best at k = 6
       borderless. Then maybe a live toggle key.
-   3. **Widescreen - the next session, planned in [`widescreen.md`](widescreen.md)**
-      (2026-09-23). The owner decided 426 x 240 with no crop, a 21:9 monitor
-      pillarboxed. The approach is the PSP's: every primitive shifted +53,
-      then the culls, full-frame fills and edge-anchored UI fixed. 53
-      columns outrun three culls Capcom left alone (§3b there). Start with
-      §3e's survey build behind `BOF3X_WIDE=1`.
+   3. **Widescreen - the survey build is built and played (2026-09-23
+      night, DIV-0041, [`widescreen.md`](widescreen.md))**: `BOF3X_WIDE=1`
+      or the launcher's "Widescreen" box; the target 426k x 240k with the
+      view shifted 53k in the scene shader (`src/game/widescreen.{h,cpp}`,
+      `render_d3d11.cpp`, `display_setup.cpp`); the terrain cull
+      `[-150, 470]`, the area-map frame pass's four `fcomp` operands
+      re-aimed at our floats (they were operand addresses, not float
+      addresses - §3b there); the menu backdrop, the fade tile and the save
+      menu's black tile widened under `Widescreen_Live()` (0 until
+      `Widescreen_Inject`, which runs last so the fuzzes see the original).
+      Survey findings in §5 there. **Open, the owner's calls:** the
+      dialogue box's side placements (the PSP moved them to keep the edge
+      distance); the time / money boxes a sub-menu slides off the old edge
+      now hang in the bands; whether any area change still shows a black
+      centre with live bands (another 320-wide fill, to find by
+      `BOF3X_RECORD`); the corner pop with the margin at 100. **Owed:** the
+      oracle and the frame hash once with `BOF3X_WIDE=1` (§4 there); the
+      attract A/B cropped to the middle 640 columns; a live
+      `BOF3X_SHADOW=map_layers` under the wide view reports the cull's
+      divergence by design. Not touched: the sprite and object culls
+      (§3b's table), the sky `0x571C85`, the message-box table.
    Not built, loud if reached: a `Lock` of the primary or back buffer
    (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` logs the first
    request), sub-rectangle locks, depth / fog / lighting, the back buffer's

@@ -2,7 +2,7 @@
 //
 // Four passes, every one ours:
 //
-//   1. Shrink: the render target (320k x 240k) to the game's own 320 x 240,
+//   1. Shrink: the render target (320k x 240k, or 426k wide, DIV-0041) to the game's own 320 x 240,
 //      each texel the mean of its k x k block in linear light.
 //   2, 3. A separable Gaussian blur of that, across and then down: the glow.
 //   4. The picture: for each window pixel, the two source lines above and
@@ -205,11 +205,14 @@ bool CrtWanted() {
     bof3::Fatal("BOF3X_PRESENT=%s: crt or clean", text);
 }
 
-void CrtInit(ID3D11Device* device, U target_w, U target_h) {
+void CrtInit(ID3D11Device* device, U target_w, U target_h, U k) {
     ReadKnobs();
+    if (k == 0 || target_w % k || target_h % k) bof3::Fatal("CRT: a %u x %u target is not a multiple of k = %u", target_w, target_h, k);
     g_c.target_w = static_cast<float>(target_w);
     g_c.target_h = static_cast<float>(target_h);
-    g_c.k = static_cast<float>(target_w / 320);
+    g_c.src_w = static_cast<float>(target_w / k);   // 320, or 426 wide (DIV-0041)
+    g_c.src_h = static_cast<float>(target_h / k);
+    g_c.k = static_cast<float>(k);
 
     ID3DBlob* vs = Compile("VS", "vs_4_0");
     Check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &g_vs), "VS");
@@ -236,8 +239,8 @@ void CrtInit(ID3D11Device* device, U target_w, U target_h) {
 
     for (int i = 0; i < 2; ++i) {
         D3D11_TEXTURE2D_DESC d = {};
-        d.Width = 320;
-        d.Height = 240;
+        d.Width = target_w / k;
+        d.Height = target_h / k;
         d.MipLevels = 1;
         d.ArraySize = 1;
         d.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
@@ -261,7 +264,7 @@ void CrtDraw(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* target, ID3D11R
     ctx->VSSetShader(g_vs, nullptr, 0);
     ctx->PSSetConstantBuffers(0, 1, &g_cb);
     ctx->PSSetSamplers(0, 1, &g_linear);
-    const D3D11_VIEWPORT source = {0, 0, 320, 240, 0, 1};
+    const D3D11_VIEWPORT source = {0, 0, g_c.src_w, g_c.src_h, 0, 1};
     Pass(ctx, g_shrink, g_rtv[0], source, target, nullptr);
     Pass(ctx, g_across, g_rtv[1], source, nullptr, g_srv[0]);
     Pass(ctx, g_down, g_rtv[0], source, nullptr, g_srv[1]);

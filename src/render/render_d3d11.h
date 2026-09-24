@@ -16,8 +16,9 @@ namespace render {
 
 struct Options {
     void* hwnd;            // the game's window
-    U logical_w, logical_h;   // the picture the game draws, in its own pixels: 640 x 480 today
-    U scale;               // integer scale of the logical picture on the window: 1 today
+    U logical_w, logical_h;   // the view the game draws, in its own pixels: 320 x 240
+    U scale;               // integer scale k: the target is (logical_w + 2 pad_x) k x logical_h k
+    U pad_x;               // columns each side of the view, in the game's pixels: 53 wide (DIV-0041), else 0
     bool point_filter;     // the present pass: nearest (true) or bilinear
     bool vsync;
 };

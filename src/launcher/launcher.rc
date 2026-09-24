@@ -5,7 +5,7 @@
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"
 
-IDD_CONFIG DIALOGEX 0, 0, 290, 214
+IDD_CONFIG DIALOGEX 0, 0, 290, 230
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Breath of Fire III - bof3x"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -33,10 +33,12 @@ BEGIN
 
     AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 14, 142, 250, 10
 
-    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 162, 200, 10
-    LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
-                    -1, 14, 175, 262, 9
+    AUTOCHECKBOX    "&Widescreen - 426 x 240, the view widened 53 columns a side (DIV-0041)", IDC_WIDE, 14, 156, 268, 10
 
-    DEFPUSHBUTTON   "&Play", IDOK, 172, 193, 52, 14
-    PUSHBUTTON      "E&xit", IDCANCEL, 230, 193, 52, 14
+    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 178, 200, 10
+    LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
+                    -1, 14, 191, 262, 9
+
+    DEFPUSHBUTTON   "&Play", IDOK, 172, 209, 52, 14
+    PUSHBUTTON      "E&xit", IDCANCEL, 230, 209, 52, 14
 END

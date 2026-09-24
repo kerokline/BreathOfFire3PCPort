@@ -10,11 +10,13 @@
 // originals' copies alike.
 #include "game/mode_flow.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/mode_flow_callees.h"
+#include "game/widescreen.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -166,9 +168,11 @@ extern "C" unsigned char __cdecl Transition_DrawTile(short* level, int step, uns
     tile[6] = grey;
     tile[5] = grey;
     tile[4] = grey;
-    SetLong(tile + 8, 0);
+    // DIV-0041: under a wide picture the fade covers it whole, (-53, 0) 426 x 240.
+    const float wide = static_cast<float>(Widescreen_Live());
+    SetLong(tile + 8, std::bit_cast<std::uint32_t>(0.0f - wide));   // x; 0.0f - wide, not -wide, which is -0.0f when wide is 0
     SetLong(tile + 0xC, 0);
-    SetLong(tile + 0x14, 0x43A00000);   // 320.0f
+    SetLong(tile + 0x14, std::bit_cast<std::uint32_t>(320.0f + 2 * wide));   // 0x43A00000, 320.0f
     SetLong(tile + 0x18, 0x43700000);   // 240.0f
     g.set_semi(tile, semi & 0xFF);
     g.commit(slot, 0x1C);

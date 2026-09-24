@@ -35,6 +35,7 @@ ID3D11Texture2D* g_target;
 ID3D11RenderTargetView* g_target_rtv;
 ID3D11ShaderResourceView* g_target_srv;
 U g_target_w, g_target_h;
+U g_pad_x;   // target pixels each side of the game's view (DIV-0041): every vertex x moves by it
 
 ID3D11VertexShader* g_vs;
 ID3D11PixelShader* g_ps;
@@ -104,7 +105,7 @@ template <class T> void Release(T*& p) {
 // --- shaders ---------------------------------------------------------------------------
 
 const char kSceneShader[] = R"(
-cbuffer FrameConstants : register(b0) { float2 target_size; float2 frame_pad; };
+cbuffer FrameConstants : register(b0) { float2 target_size; float2 view_pad; };
 cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; };
 Texture2D tex : register(t0);
 SamplerState smp : register(s0);
@@ -113,7 +114,7 @@ struct PSIn { float4 pos : SV_Position; float4 diffuse : COLOR0; float4 specular
 PSIn VS(VSIn i) {
     PSIn o;
     float w = i.pos.w > 0.0 ? 1.0 / i.pos.w : 1.0;
-    float2 ndc = float2((i.pos.x + PIXEL_OFFSET) / target_size.x * 2.0 - 1.0, 1.0 - (i.pos.y + PIXEL_OFFSET) / target_size.y * 2.0);
+    float2 ndc = float2((i.pos.x + view_pad.x + PIXEL_OFFSET) / target_size.x * 2.0 - 1.0, 1.0 - (i.pos.y + PIXEL_OFFSET) / target_size.y * 2.0);
     o.pos = float4(ndc * w, saturate(i.pos.z) * w, w);
     o.diffuse = i.diffuse;
     o.specular = i.specular;
@@ -437,8 +438,8 @@ void RunFrame(Frame& frame) {
     g_ctx->RSSetViewports(1, &vp);
     g_ctx->OMSetRenderTargets(1, &g_target_rtv, nullptr);
     struct {
-        float w, h, pad0, pad1;
-    } fc = {static_cast<float>(g_target_w), static_cast<float>(g_target_h), 0, 0};
+        float w, h, pad_x, pad_y;
+    } fc = {static_cast<float>(g_target_w), static_cast<float>(g_target_h), static_cast<float>(g_pad_x), 0};
     PutConstants(g_cb_frame, &fc, sizeof fc);
 
     // Consecutive draws in one state merge into one call.
@@ -578,7 +579,8 @@ void InitOnFiber(const Options& options) {
     g_window_w = static_cast<U>(client.right - client.left);
     g_window_h = static_cast<U>(client.bottom - client.top);
     MakeWindowTarget();
-    MakeTarget(options.logical_w * options.scale, options.logical_h * options.scale);
+    g_pad_x = options.pad_x * options.scale;
+    MakeTarget((options.logical_w + 2 * options.pad_x) * options.scale, options.logical_h * options.scale);
     ReadPixelOffset();
 
     ID3DBlob* vs = Compile(kSceneShader, "VS", "vs_4_0");
@@ -624,10 +626,11 @@ void InitOnFiber(const Options& options) {
     off.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     Check(g_device->CreateBlendState(&off, &g_blend_off), "CreateBlendState (off)");
     g_crt = CrtWanted();
-    if (g_crt) CrtInit(g_device, g_target_w, g_target_h);
+    if (g_crt) CrtInit(g_device, g_target_w, g_target_h, options.scale);
 
-    bof3::Log("render: Direct3D 11 feature level 0x%X, window %u x %u, target %u x %u, present %s", got, g_window_w,
-              g_window_h, g_target_w, g_target_h, options.point_filter ? "point" : "linear");
+    bof3::Log("render: Direct3D 11 feature level 0x%X, window %u x %u, target %u x %u (view %u x %u at %u, %u columns a side), present %s",
+              got, g_window_w, g_window_h, g_target_w, g_target_h, options.logical_w, options.logical_h, options.scale,
+              options.pad_x, options.point_filter ? "point" : "linear");
 }
 
 // --- the fiber ----------------------------------------------------------------------------

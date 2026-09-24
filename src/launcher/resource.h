@@ -11,3 +11,4 @@
 #define IDC_RENDERER    1006
 #define IDC_SHOW        1007
 #define IDC_BACKGROUND  1008
+#define IDC_WIDE        1009

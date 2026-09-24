@@ -121,7 +121,7 @@ DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount)()
 // AdjustWindowRect, centred on the desktop by (desktop - outer) / 2 - the
 // cdq / sub / sar sequence at 0x4FCCB1, a signed division toward zero, which
 // C's integer division also is. DIV-0036: the client is the render target's
-// size, 320k x 240k - the target's own k once the display is up, the window
+// size, 320k x 240k (426k x 240k wide, DIV-0041) - the target's own k once the display is up, the window
 // size setting before - with k lowered while the frame would not fit the
 // work area. At k = 2 that is the original's 640 x 480.
 RECT WindowedRect() {
@@ -131,7 +131,7 @@ RECT WindowedRect() {
     SystemParametersInfoA(SPI_GETWORKAREA, 0, &work, 0);
     RECT rc;
     for (;; --k) {
-        rc = {0, 0, static_cast<LONG>(320 * k), static_cast<LONG>(240 * k)};
+        rc = {0, 0, static_cast<LONG>(DisplaySetup_ViewWidth() * k), static_cast<LONG>(240 * k)};   // 426k wide under DIV-0041
         AdjustWindowRect(&rc, kWindowedStyle, FALSE);
         if (k <= 2 || (rc.right - rc.left <= work.right - work.left && rc.bottom - rc.top <= work.bottom - work.top)) break;
     }

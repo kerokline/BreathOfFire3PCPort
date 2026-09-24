@@ -44,6 +44,8 @@ struct Config {
     // DIV-0037: the CRT look in the present (BOF3X_PRESENT=crt). The dialog
     // offers it as the filter box's third entry, over the point filter.
     bool crt = false;
+    // DIV-0041: the wide picture, 426 x 240 (BOF3X_WIDE=1). Survey build.
+    bool wide = false;
     // Cleared by the dialog's "Show this window every time" box. --config
     // brings the dialog back whatever this says.
     bool show_launcher = true;

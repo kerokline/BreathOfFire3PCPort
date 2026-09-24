@@ -27,6 +27,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/sprt_draw.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "render/render_d3d11.h"
@@ -129,10 +130,12 @@ void FillFormat(U record, const Format& f, U rank) {
 
 bool g_backend_up;
 
-// The largest k in 1..kMaxScale whose 320k x 240k fits cw x ch; 1 if none.
-U FitScale(U cw, U ch) {
+U g_scale;   // the k chosen at set-up (DIV-0036)
+
+// The largest k in 1..kMaxScale whose (view width) k x 240k fits cw x ch; 1 if none.
+U FitScale(U view_w, U cw, U ch) {
     U k = kMaxScale;
-    while (k > 1 && (320 * k > cw || 240 * k > ch)) --k;
+    while (k > 1 && (view_w * k > cw || 240 * k > ch)) --k;
     return k;
 }
 
@@ -144,20 +147,23 @@ U FitScale(U cw, U ch) {
 render::Options ReadOptions(HWND hwnd, bool borderless) {
     render::Options o = {};
     o.hwnd = hwnd;
-    o.scale = 1;
     char text[32];
     U k = DisplaySetup_WindowedScale();
+    const U view_w = DisplaySetup_ViewWidth();
     if (borderless) {
         RECT client = {};
         GetClientRect(hwnd, &client);
-        k = FitScale(static_cast<U>(client.right - client.left), static_cast<U>(client.bottom - client.top));
+        k = FitScale(view_w, static_cast<U>(client.right - client.left), static_cast<U>(client.bottom - client.top));
         bof3::Log("DIV-0036    scale %u: the largest that fits the borderless client %ld x %ld", k,
                   client.right - client.left, client.bottom - client.top);
     } else if (k != 2) {
         bof3::Log("DIV-0036    scale %u: the window's size setting (BOF3X_SCALE)", k);
     }
-    o.logical_w = 320 * k;
-    o.logical_h = 240 * k;
+    o.logical_w = 320;
+    o.logical_h = 240;
+    o.scale = k;
+    o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 x 53) k wide, the view centred in it
+    g_scale = k;
     o.point_filter = false;
     if (GetEnvironmentVariableA("BOF3X_FILTER", text, sizeof text) > 0) {
         if (std::strcmp(text, "point") == 0) o.point_filter = true;
@@ -225,9 +231,12 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     PutLong(kScreenRight, width);
     PutLong(kScreenBottom, height);
     PutLong(kModeBpp, kModeBits);
-    PutFloat(kScaleX, static_cast<float>(width / 320.0));
-    PutFloat(kScaleY, static_cast<float>(height / 240.0));
-    SprtDraw_SetScale(width / 320);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
+    // The game's scale is k, the view's - not the target's width over 320,
+    // which a wide target (DIV-0041) would make 1.33k: the game keeps
+    // drawing a 320-wide view and the backend shifts it into the target.
+    PutFloat(kScaleX, static_cast<float>(g_scale));
+    PutFloat(kScaleY, static_cast<float>(g_scale));
+    SprtDraw_SetScale(g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
     Zero(kDeviceDesc, kDeviceDescBytes);
     PutLong(kDeviceDesc + kDescTextureCaps, kTextureCaps);
     PutLong(kDeviceDesc + kDescMinW, kMinTexture);
@@ -282,7 +291,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     s.flat = false;
 
     bof3::LogFlush();
-    bof3::Log("Display_Setup: %u x %u, scale %.1f, %s filter, device %d", width, height, static_cast<double>(width / 320.0),
+    bof3::Log("Display_Setup: %u x %u, scale %u, %s filter, device %d", width, height, g_scale,
               options.point_filter ? "point" : "linear", *device);
     return 0;
 }
@@ -296,6 +305,8 @@ unsigned DisplaySetup_WindowedScale() {
     return k;
 }
 
-unsigned DisplaySetup_TargetScale() { return g_backend_up ? render::TargetWidth() / 320 : 0; }
+unsigned DisplaySetup_TargetScale() { return g_backend_up ? g_scale : 0; }
+
+unsigned DisplaySetup_ViewWidth() { return 320 + 2 * Widescreen_Columns(); }
 
 void DisplaySetup_Inject() { BOF3_INJECT(Display_Setup); }
