@@ -282,10 +282,20 @@ What is established:
    reference after a review the same evening found why every traced
    all-original run had ended 16 s in (the tracer's single step saved by
    a `pushfd` on Capcom's software-renderer set-up; `wm1b`: original-vs-original identical on all 10,313 frames, original-vs-ours on every logic frame).
-   **Step 4, integer scaling, that evening** (DIV-0036): a window's picture
-   is the launcher's "Window size" (2x..8x of 320 x 240), a borderless
-   window takes the largest multiple that fits the monitor. The owner's eye
-   on the borderless window and the new sizes is owed.
+   **Step 4, integer scaling, that evening** (DIV-0036), then **the night
+   of 2026-09-23** ([`HANDOFF.md`](HANDOFF.md) item 000000): **the
+   widescreen survey build** (DIV-0041, [`widescreen.md`](widescreen.md)) -
+   426 x 240 behind the launcher's Widescreen box, the view shifted into a
+   wider target the PSP's way, the terrain and frame-pass culls widened,
+   the backdrop, fades and the menu boxes' slide-outs re-authored from what
+   the survey and the owner's play found; the sky gradient `0x571BE0`
+   deferred to a recorded route; **the resizable window** (DIV-0042) -
+   snap to whole multiples or fit to the height, the target following the
+   client between frames, the FMVs obeying, the placement remembered; the
+   owner: both modes "work perfect"; and **the SatPixie look** (DIV-0043,
+   [`THIRD_PARTY.md`](THIRD_PARTY.md)), the owner's chosen MIT shader
+   ported with a sliders dialog. Owed: the oracle and hash once wide, a
+   rescale under the older CRT look, the owner's tuning of the look.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.

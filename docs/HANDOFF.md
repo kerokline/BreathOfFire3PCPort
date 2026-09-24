@@ -969,39 +969,16 @@ _One line each, with a pointer. Add when something costs more than an hour._
   address, detoured or not (2026-09-23 review).
 ## In flight / uncommitted
 
-Branch `phase-3/UI-overhaul` (from `main` at PR 10). **Committed and pushed
-2026-09-23** (`340d373`, merged with PR 11's PSP findings in `5c168ed`): the
-backend - [`display-overhaul.md`](display-overhaul.md),
-[`display-setup.md`](display-setup.md), [`render-backend.md`](render-backend.md),
-`src/render/render_shim.{h,cpp}`, `src/render/render_d3d11.{h,cpp}`,
-`src/game/display_setup.{h,cpp}`, DIV-0031, `validate_ab27.sh`,
-`validate_rb1.sh`. **Uncommitted at the time of writing, the afternoon of
-2026-09-23:** step 3 - `src/game/win_main.{h,cpp}`, `src/game/fmv_play.{h,cpp}`,
-`src/hook/input_script.{h,cpp}` (`InputScript_Latch`, `DeviceLatch`),
-`src/hook/inject_all.cpp`, `CMakeLists.txt` (`winmm`), the launcher's
-`background` setting (five files), `tools/attract_run.py` (`--no-front`,
-`--launcher`), `symbols.toml` (the block at the end: the six taken over,
-thirteen typed callees, the loop's globals; `Cfg_Load` and `Fmv_Play`
-typed; `Fmv_Playing`'s ctype), `analysis/calltrace/entries_logic.txt`
-(`wm1`: two run-on sizes fixed, `entries_logic_0923c.txt` the list before),
-`analysis/validate_wm1.sh`; DIV-0032..0035; [`window-modes.md`](window-modes.md);
-the docs index, `windowed-mode.md`, `IDEAS.md` I12, `known-defects.md` D3,
-`display-overhaul.md` §5, STATUS, this file. **Then the review session,
-the same evening, also uncommitted**: `src/hook/calltrace.cpp` (the `pushfd`
-step, the loud stray step), `src/game/win_main.cpp` (the exit trace's code
-and unhandled-step logger, the calls through Capcom's addresses, the FMV
-quit return, DIV-0036's window size), `src/game/display_setup.{h,cpp}`
-(DIV-0036's k), `src/game/sprt_draw.{h,cpp}` (`SprtDraw_SetScale`),
-`src/render/render_d3d11.cpp` (the fit-down present, `BOF3X_PIXEL_OFFSET`),
-the launcher's Window size and renderer labels (`config.{h,cpp}`,
-`config_dialog.cpp`, `launcher.rc`), `tools/attract_run.py` (the
-`--no-front` guard; both harnesses pin `BOF3X_PRESENT=clean`), the CRT look
-(`src/render/crt.{h,cpp}`, `crt-look.md`, DIV-0037, the launcher's Look box), the English pause lines (`src/game/pause_text.{h,cpp}`,
-DIV-0038, `window-modes.md` §6), `analysis/validate_wm1b.sh`; DIV-0036 and notes on
-DIV-0010 / DIV-0035; `window-modes.md` §4a, `launcher-settings.md` §3 / §5,
-`display-overhaul.md` §4b / §5. The eleven merged agent
-worktrees of rounds five and six are removed; `.claude/worktrees/vibrant-wilbur-f9676a`
-was the PSP session's. The round-four PR is merged (PR 10).
+Branch `phase-3/UI-overhaul` (from `main` at PR 10). **Everything committed
+and pushed as of the night of 2026-09-23; the working tree is clean.** The
+day's commits in order: the backend (`340d373`, merged with PR 11's PSP
+findings in `5c168ed`), the window, loop and FMVs with integer scaling and
+the CRT look (`9c2bb22`), then the night: the widescreen survey build
+(`9f84be5`, DIV-0041), the resizable window with snap or fit (`6f50fc6`,
+DIV-0042), the SatPixie look (`0fb9188`, DIV-0043, `docs/THIRD_PARTY.md`),
+its dialog label, I19, and the slide-out bounds (`09ff603`). No PR yet for
+the branch. `.claude/worktrees/vibrant-wilbur-f9676a` was the PSP session's.
+The round-four PR is merged (PR 10).
 
 Branch `phase-3/intro-takeover`, **committed and pushed 2026-09-21, no PR**:
 the attract catalogue and the PSX pairing ([`attract-remaining.md`](attract-remaining.md),
