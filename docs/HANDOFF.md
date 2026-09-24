@@ -137,29 +137,37 @@ and kept for now (I18). The owner checked it all in game. All pushed on
 
 The single next action, concrete enough to start without asking anyone.
 
-0000000. **The owner's world-map route, 2026-09-23 night** ([`world-map.md`](world-map.md)):
-   `tools/recipes/worldMapAndAreaTransition.txt` (save 3, 2,143 frames), its
-   A/B (`analysis/validate_worldmap.sh`, a scratch launcher at 640 x 480,
-   `input_run.py --launcher`) and its all-original trace. **Found and fixed:
-   the compass needle** - `0x408530` builds a Gouraud diamond whose corners
-   `Gte_PrimDepths4_10B` puts at depth 0, `rhw` infinite, which Capcom's
-   Direct3D 6 device dropped (the PC port never shows the needle, D41) and
-   our backend collapsed to a sliver; DIV-0044 clamps the corner to the
-   nearest depth and the red-to-blue needle draws as on the PSX (the
-   owner's screenshots). Owed: the owner's eye, turning the map. **Next
-   wave, the owner's order:** the compass and HUD (`0x408530`, `0x404620`,
-   `0x404560`, `0x404390` - the dial is translucent on PSX, opaque on PC:
-   read why), then the background - **identified by the owner's screenshot as
-   the sky gradient's black wide bands, `AreaMap_EntryKind1` `0x571BE0`,
-   DIV-0041's deferred takeover, which this route reaches** (captures
-   `f00720`..`f01080`, `f01500`..`f01800`; it is missing from
-   `entries_plus_hidden.txt` with `0x571D30`, `0x571E20` - add them before
-   the next trace) with `0x4112A0` beside it, then the rest
-   of the 40 (section 4 there). **The place plates are paint** (the sibling's
-   `names/plates.toml`; the PC's "14-tile block pasted into 16 area pages"
-   is very likely the Chinese strip): the localisation build's next item is
-   an overlay chunk of the US `0x0E001000` section per world map, once the
-   plates' rectangles' home is known (section 5 there). 
+0000000. **The world-map wave is merged (807 ours) and the battle wave is running, 2026-09-23 night.**
+   The owner's world-map route ([`world-map.md`](world-map.md)) found the
+   compass needle the PC port never draws (D41, fixed in the backend by
+   DIV-0044). Two groups took the route's front: **group 1**
+   ([`world-map-hud.md`](world-map-hud.md), `src/game/world_map.cpp`): the
+   map's frame step and draw, its sprite draw, the HUD, the needle, two
+   map-view helpers - 7 functions, 90,000 rounds, 46 of 47 controls refused;
+   the dial's opacity is one operand of the port's (D42 - but the PSX blends
+   per texel by STP, which the port's palettes drop, so no divergence yet);
+   the plates' rectangles live in the area section `0x800D3800` (PC chunk
+   tag `0xB0000`), so the localisation overlay wants the US page **and**
+   that section. **Group 2** ([`area-backdrop.md`](area-backdrop.md),
+   `src/game/area_backdrop.cpp`): `AreaMap_DrawBackdrop` `0x571BE0` with the
+   sky quad from -53 to 373 under the wide view (DIV-0041 amended - the
+   owner's black bands), its two table siblings, and `0x4112A0`, which is
+   not a sky but `WorldMap_PinSprite`. **Then the owner's combat route**
+   (`tools/recipes/combat.txt`) turned out deterministic, and its 209-function
+   queue is [`takeover-queue-round7.md`](takeover-queue-round7.md): ten
+   groups on Opus in worktrees, spawned 22:20. **Owed:** the between-waves
+   batch `analysis/validate_wave1.sh` (log `analysis/attract/wave1_batch.log`:
+   self-tests, the world-map A/B narrow and wide, the combat and shop A/Bs,
+   the attract captures, oracle, memory dump, frame hash against `wm1b_orig`),
+   then the battle groups' merges one branch at a time and a second batch.
+   Found by group 1, not acted on: the world map's code is compiled into the
+   exe eleven times, once per world-map area (ten more copies of each function,
+   `world-map-hud.md`), and `0x404150`, `0x404230`, `0x404680` are
+   pointer-reached and missing from every entry list; `entries_logic.txt`
+   wants `0x404160` at `0xC1` and `0x404620` at `0x58` (changes the hash
+   content - re-record the reference with it). The runners now kill only the
+   game they started ([`world-map.md`](world-map.md) §6).
+
 000000. **The UI overhaul, steps 3 and 4 built: the window, the loop, the
    FMV player (DIV-0032..0035) and integer scaling (DIV-0036)**
    ([`window-modes.md`](window-modes.md), [`display-overhaul.md`](display-overhaul.md)

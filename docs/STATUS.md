@@ -303,6 +303,14 @@ What is established:
    route's 40-function queue is the next wave, the compass and HUD first;
    the place plates are paint in the world maps' texture pages, as the
    sibling found, and the localisation build's next data item.
+   **Then two groups took the route's front and are merged (807 ours):** the
+   map's frame, HUD and needle ([`world-map-hud.md`](world-map-hud.md); D42,
+   the dial's opacity, written down) and the sky backdrop with the wide
+   bands filled (DIV-0041 amended, [`area-backdrop.md`](area-backdrop.md)).
+   **The owner's combat route plays back identically run to run**, so the
+   battle engine's 209 reached functions are the seventh round
+   ([`takeover-queue-round7.md`](takeover-queue-round7.md)), ten groups in
+   parallel; the between-waves batch and the merges are owed (HANDOFF 0000000).
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.
