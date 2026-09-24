@@ -49,8 +49,12 @@ The player's copy is left alone (`CLAUDE.md` rule 1); it is simply not used.
 
 The dialog is a `DIALOGEX` in [`src/launcher/launcher.rc`](../src/launcher/launcher.rc),
 shown with `DialogBoxParamW`, plus a manifest asking for Common Controls 6 and
-DPI awareness. Nothing is vendored and nothing is linked but `comctl32`, so
-`bof3x-launcher.exe` stays one dependency-free 32-bit executable.
+DPI awareness. Nothing is vendored; until 2026-09-24 nothing was linked but
+`comctl32`, and since then SDL3 is built static into it as into the DLL
+([`THIRD_PARTY.md`](THIRD_PARTY.md) §2) - the Controls dialog's capture reads
+the pad through the same code the game does (`src/input/pad_sdl.cpp`), and
+the dialogs take the pad as navigation. Still one 32-bit executable with no
+DLL beside it; 9 MB where it was 1.
 
 Considered and rejected: **Dear ImGui** (MIT, so vendorable — but it needs its
 own window and render backend, and looks non-native); **Qt / wxWidgets** (LGPL
@@ -74,7 +78,7 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on | ours — DIV-0045, DIV-0046; [`cheats.md`](cheats.md) |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
-| Controls... (2026-09-24): fourteen rows, two keys and two pad inputs each, the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
+| Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
@@ -103,6 +107,29 @@ Rules the writer follows:
   build/bof3x-launcher.exe`) keep overriding it.
 - A setting at its default sets **no** variable, so a default run is identical
   to one launched with no settings file at all.
+
+### The pad in the launcher (2026-09-24)
+
+With the settings dialog open the launcher holds the pad through SDL, and
+stops it before the game starts. Two uses:
+
+- **The Controls capture.** A cell is a button showing its binding; clicking
+  it opens "Press a key or a pad input for Up". A keyboard hook on the
+  launcher's thread takes the next key whatever has the focus - the
+  scancode from the message, with the extended flag in bit 7, is
+  DirectInput's code - and a timer takes the next pad input that was not
+  already held when the dialog opened, in the map's positional terms with
+  the face-button layout applied, so what is captured is what the game
+  reads. The device decides the kind of cell: a pad press on a key cell
+  goes to that row's pad cell. A key or input already in another cell moves.
+  Escape cancels, Clear empties the cell. The guide button cannot be
+  captured; Windows keeps it.
+- **Navigation from the couch** (the owner's ask): in every dialog but the
+  capture, the pad's up / down move the focus, left / right change a combo
+  box or slider (else move the focus), cross clicks the focused button,
+  toggles its box or cycles a combo, circle is Cancel and start is OK,
+  through the launcher's own bindings. Edges only: nothing repeats while
+  held. The keyboard navigates the dialogs as Windows always has.
 
 ## 4. Using it
 

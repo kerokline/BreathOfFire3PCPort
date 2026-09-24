@@ -59,3 +59,8 @@
 #define IDC_CT_PAD2     1360
 #define IDC_CT_LAYOUT   1380
 #define IDC_CT_DEFAULTS 1381
+
+// The capture over a Controls cell: press a key or a pad input.
+#define IDD_CAPTURE      104
+#define IDC_CP_PROMPT   1400
+#define IDC_CP_CLEAR    1401

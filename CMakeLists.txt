@@ -125,6 +125,7 @@ add_library(bof3x SHARED
   src/game/field_input.cpp
   src/game/pad_read.cpp
   src/input/bindings.cpp
+  src/input/pad_sdl.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
   src/game/psx_gpu.cpp
@@ -238,8 +239,12 @@ add_executable(bof3x_launcher
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
   src/input/bindings.cpp
+  src/input/pad_sdl.cpp
   src/launcher/launcher.rc)
 target_include_directories(bof3x_launcher PRIVATE src)
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32)
+# SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
+# dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
+# and circle as navigation.
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")

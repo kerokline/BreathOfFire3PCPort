@@ -21,6 +21,7 @@
 
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
+#include "input/pad_sdl.h"
 
 #include <cstdio>
 #include <cwchar>
@@ -205,7 +206,12 @@ int wmain(int argc, wchar_t** argv) {
     if (!bof3x::ConfigLoad(ini, cfg)) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
 
     if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
-        if (!bof3x::ConfigDialogRun(game_dir, cfg)) return 0;   // closed: start nothing
+        // The pad, for the dialogs' navigation and the Controls capture; stopped
+        // before the game starts, which opens it for itself (DIV-0050).
+        bof3x::input::PadSdl_Start(cfg.bindings.layout, nullptr);
+        const bool play = bof3x::ConfigDialogRun(game_dir, cfg);
+        bof3x::input::PadSdl_Stop();
+        if (!play) return 0;   // closed: start nothing
         if (!bof3x::ConfigSave(ini, cfg))
             std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
                           ini.c_str());

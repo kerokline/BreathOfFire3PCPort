@@ -272,8 +272,17 @@ words decide what the word does.
    word as bound, 6 of 6, and the log `BOF3X_KEYS - 5 items understood, 5
    keys in the table`, `BOF3X_PAD - 3 items understood, 2 inputs bound,
    layout nintendo`, the pad opened with that layout; the dialog seen
-   populated with the defaults (screenshot, 2026-09-24). Not yet checked in
-   play: a pad map changed from the dialog.
+   populated with the defaults (screenshot, 2026-09-24). **Later the same
+   day, at the owner's ask:** the cells became buttons with a press-to-bind
+   capture (a keyboard hook for keys, SDL for the pad through
+   `src/input/pad_sdl.cpp`, now shared with the DLL), and the launcher's
+   dialogs take the pad as navigation - d-pad, cross, circle, start -
+   through the same bindings ([`launcher-settings.md`](launcher-settings.md)
+   §3). Verified: a probe clicked the Up key cell and pressed Y, then Home
+   into the second cell (an extended key, DIK 0xC7), then Escape on the
+   Cross cell: Y, Home, and X unchanged, and the shadow check and
+   `tools/ini_probe.py` still pass with the shared reader. **Owed to the
+   owner's pad:** a pad press into a cell, and the navigation itself.
 3. **Built 2026-09-24, DIV-0051:** the Controller row back to one icon
    column. What the read found on the way: the port never drew the
    PlayStation's shapes - its glyphs at those codes are circled numerals

@@ -30,7 +30,6 @@
 // room; nothing here runs on a task's 16 KB stack.
 #include "game/pad_read.h"
 
-#include <SDL3/SDL.h>
 #include <windows.h>
 #define DIRECTINPUT_VERSION 0x0700
 #include <dinput.h>
@@ -43,6 +42,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/bindings.h"
+#include "input/pad_sdl.h"
 
 namespace {
 
@@ -82,25 +82,17 @@ void ReadKeyboard() {
 
 // --- The pad, through SDL3 -----------------------------------------------------
 //
-// The map is a list of (pad input -> PlayStation bits), input::Bindings'
-// pad half: the default of DIV-0050, or BOF3X_PAD from the launcher's
-// Controls dialog (bof3x.ini `pad.*`). The face buttons are read by
-// position; the Nintendo layout swaps the two pairs before the lookup, so
-// "south" in the map is the pad's lower button on either lettering.
+// The reading itself is input/pad_sdl.cpp, shared with the launcher so that
+// what its Controls dialog captures is what the game reads. The map is a
+// list of (pad input -> PlayStation bits), input::Bindings' pad half: the
+// default of DIV-0050, or BOF3X_PAD from the launcher (bof3x.ini `pad.*`).
 
-using input::PadInput;
 using input::Layout;
 
-// Half travel, the original's 500 of 1000 on the DirectInput axes.
-constexpr Sint16 kStickThreshold = 16384;
-constexpr Sint16 kTriggerThreshold = 16384;
-
-bool g_sdl = false;
-SDL_Gamepad* g_pad = nullptr;
-SDL_JoystickID g_pad_id = 0;
 Layout g_layout = Layout::kPositional;
-bool g_pad_nintendo = false;   // the layout in force for the open pad
 std::vector<input::PadBinding> g_pad_map;
+
+void PadLogLine(const char* line) { bof3::Log("%s", line); }
 
 Layout LayoutFromEnv(Layout fallback) {
     char v[32] = {};
@@ -134,109 +126,10 @@ void LoadPadMap() {
     g_layout = LayoutFromEnv(layout);
 }
 
-// The physical button to read for a map position; the Nintendo layout swaps
-// south <-> east and west <-> north.
-SDL_GamepadButton FaceButton(PadInput input) {
-    switch (input) {
-    case PadInput::kSouth: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_EAST : SDL_GAMEPAD_BUTTON_SOUTH;
-    case PadInput::kEast: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_SOUTH : SDL_GAMEPAD_BUTTON_EAST;
-    case PadInput::kWest: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_NORTH : SDL_GAMEPAD_BUTTON_WEST;
-    default: return g_pad_nintendo ? SDL_GAMEPAD_BUTTON_WEST : SDL_GAMEPAD_BUTTON_NORTH;
-    }
-}
-
-bool PadInputDown(PadInput input) {
-    auto button = [&](SDL_GamepadButton b) { return SDL_GetGamepadButton(g_pad, b); };
-    auto axis = [&](SDL_GamepadAxis a, bool positive) {
-        const Sint16 v = SDL_GetGamepadAxis(g_pad, a);
-        return positive ? v > kStickThreshold : v < -kStickThreshold;
-    };
-    switch (input) {
-    case PadInput::kSouth: case PadInput::kEast: case PadInput::kWest: case PadInput::kNorth:
-        return button(FaceButton(input));
-    case PadInput::kLb: return button(SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
-    case PadInput::kRb: return button(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
-    case PadInput::kLt: return SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > kTriggerThreshold;
-    case PadInput::kRt: return SDL_GetGamepadAxis(g_pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > kTriggerThreshold;
-    case PadInput::kStart: return button(SDL_GAMEPAD_BUTTON_START);
-    case PadInput::kBack: return button(SDL_GAMEPAD_BUTTON_BACK);
-    case PadInput::kGuide: return button(SDL_GAMEPAD_BUTTON_GUIDE);
-    case PadInput::kLs: return button(SDL_GAMEPAD_BUTTON_LEFT_STICK);
-    case PadInput::kRs: return button(SDL_GAMEPAD_BUTTON_RIGHT_STICK);
-    case PadInput::kDpadUp: return button(SDL_GAMEPAD_BUTTON_DPAD_UP);
-    case PadInput::kDpadDown: return button(SDL_GAMEPAD_BUTTON_DPAD_DOWN);
-    case PadInput::kDpadLeft: return button(SDL_GAMEPAD_BUTTON_DPAD_LEFT);
-    case PadInput::kDpadRight: return button(SDL_GAMEPAD_BUTTON_DPAD_RIGHT);
-    case PadInput::kLsUp: return axis(SDL_GAMEPAD_AXIS_LEFTY, false);
-    case PadInput::kLsDown: return axis(SDL_GAMEPAD_AXIS_LEFTY, true);
-    case PadInput::kLsLeft: return axis(SDL_GAMEPAD_AXIS_LEFTX, false);
-    case PadInput::kLsRight: return axis(SDL_GAMEPAD_AXIS_LEFTX, true);
-    case PadInput::kRsUp: return axis(SDL_GAMEPAD_AXIS_RIGHTY, false);
-    case PadInput::kRsDown: return axis(SDL_GAMEPAD_AXIS_RIGHTY, true);
-    case PadInput::kRsLeft: return axis(SDL_GAMEPAD_AXIS_RIGHTX, false);
-    case PadInput::kRsRight: return axis(SDL_GAMEPAD_AXIS_RIGHTX, true);
-    default: return false;
-    }
-}
-
-void OpenPad(SDL_JoystickID id) {
-    g_pad = SDL_OpenGamepad(id);
-    if (!g_pad) {
-        bof3::Log("pad: SDL_OpenGamepad(%u) failed: %s", static_cast<unsigned>(id), SDL_GetError());
-        return;
-    }
-    g_pad_id = id;
-    bool nintendo = g_layout == Layout::kNintendo;
-    if (g_layout == Layout::kAuto)
-        nintendo = SDL_GetGamepadButtonLabel(g_pad, SDL_GAMEPAD_BUTTON_SOUTH) == SDL_GAMEPAD_BUTTON_LABEL_B;
-    g_pad_nintendo = nintendo;
-    const char* name = SDL_GetGamepadName(g_pad);
-    bof3::Log("pad: opened %s (type %d, layout %s)", name ? name : "?", static_cast<int>(SDL_GetGamepadType(g_pad)),
-              nintendo ? "nintendo" : "positional");
-}
-
-void ClosePad() {
-    if (!g_pad) return;
-    SDL_CloseGamepad(g_pad);
-    g_pad = nullptr;
-    g_pad_id = 0;
-    bof3::Log("pad: closed");
-}
-
-// The first connected pad, if none is open.
-void OpenAnyPad() {
-    if (g_pad) return;
-    int n = 0;
-    SDL_JoystickID* ids = SDL_GetGamepads(&n);
-    if (ids && n > 0) OpenPad(ids[0]);
-    SDL_free(ids);
-}
-
-// Hot-plug: SDL_UpdateGamepads notices devices coming and going and queues the
-// events; drain them so the queue never fills, and act on the two that matter.
-void PollPadEvents() {
-    SDL_UpdateGamepads();
-    SDL_Event e;
-    while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_EVENT_GAMEPAD_ADDED) {
-            if (!g_pad) OpenPad(e.gdevice.which);
-        } else if (e.type == SDL_EVENT_GAMEPAD_REMOVED) {
-            if (g_pad && e.gdevice.which == g_pad_id) {
-                ClosePad();
-                OpenAnyPad();
-            }
-        }
-    }
-}
-
 unsigned PadWord() {
-    if (!g_sdl) return 0;
-    PollPadEvents();
-    if (!g_pad) return 0;
-    unsigned word = 0;
-    for (const input::PadBinding& b : g_pad_map)
-        if (PadInputDown(b.input)) word |= b.bits;
-    return word;
+    if (!input::PadSdl_Started()) return 0;
+    input::PadSdl_Poll();
+    return input::PadSdl_Word(g_pad_map);
 }
 
 // BOF3X_KEYS: `key=action,...` (input/bindings.h) written into the game's own
@@ -269,28 +162,12 @@ void LoadKeyTable() {
 }
 
 void StartSdl() {
-    if (g_sdl) return;
+    if (input::PadSdl_Started()) return;
     LoadPadMap();
-    // The keyboard is read whether or not the window is in front (DISCL_BACKGROUND),
-    // and DIV-0033 decides what to do with the words; the pad follows the same rule.
-    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-    if (!SDL_Init(SDL_INIT_GAMEPAD)) {
-        bof3::Log("pad: SDL_Init(GAMEPAD) failed: %s - no pad", SDL_GetError());
-        return;
-    }
-    g_sdl = true;
-    const int v = SDL_GetVersion();
-    bof3::Log("pad: SDL %d.%d.%d, gamepad subsystem up", SDL_VERSIONNUM_MAJOR(v), SDL_VERSIONNUM_MINOR(v),
-              SDL_VERSIONNUM_MICRO(v));
-    OpenAnyPad();
+    input::PadSdl_Start(g_layout, &PadLogLine);
 }
 
-void StopSdl() {
-    if (!g_sdl) return;
-    ClosePad();
-    SDL_Quit();
-    g_sdl = false;
-}
+void StopSdl() { input::PadSdl_Stop(); }
 
 // --- BOF3X_SHADOW=pad_read: the keyboard path against a clone --------------------
 // With both device pointers null the original is the table loop and nothing

@@ -64,7 +64,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 `CMakeLists.txt` fetches [libsdl-org/SDL](https://github.com/libsdl-org/SDL)
 at the tag `release-3.4.16` at configure time and builds its joystick and
 gamepad layers (no video, audio or render) as a static library into
-`bof3x.dll`; `src/game/pad_read.cpp` is the one file that includes it.
+`bof3x.dll` and, since the same day, into `bof3x-launcher.exe`;
+`src/input/pad_sdl.cpp` is the one file that includes it.
 Nothing of SDL is copied into this repository. SDL is offered under the zlib
 licence, whose notice, taken from the repository's `LICENSE.txt` on
 2026-09-24, is:
