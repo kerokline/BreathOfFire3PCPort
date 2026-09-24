@@ -131,6 +131,8 @@ stops it before the game starts. Two uses:
   through the launcher's own bindings. Edges only: nothing repeats while
   held. The keyboard navigates the dialogs as Windows always has.
 
+Both confirmed by the owner with an Xbox Series X pad, 2026-09-24.
+
 ## 4. Using it
 
 ```

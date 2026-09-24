@@ -1041,8 +1041,9 @@ the Controller row's one icon column, is confirmed by the owner off
 screen is I20. **Uncommitted, 2026-09-24 evening:** the Controls dialog's
 press-to-bind capture and the launcher's pad navigation (SDL3 linked into
 the launcher, `src/input/pad_sdl.cpp` shared with the DLL); the keyboard
-side probed, the pad side owed to the owner. The branch is not pushed and
-has no PR. Next is step 4,
+side probed, the pad side confirmed by the owner (a pad press into a cell,
+the dialogs walked with the controller alone). Pushed, PR 16 open against
+`main`. Next is step 4,
 the seventh Config row and the binding screen ([`controls.md`](controls.md)
 §4.3). Next is step 2, the physical map in
 `bof3x.ini` with a launcher Controls tab, then the Controller row back to

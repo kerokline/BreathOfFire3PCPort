@@ -281,8 +281,9 @@ words decide what the word does.
    §3). Verified: a probe clicked the Up key cell and pressed Y, then Home
    into the second cell (an extended key, DIK 0xC7), then Escape on the
    Cross cell: Y, Home, and X unchanged, and the shadow check and
-   `tools/ini_probe.py` still pass with the shared reader. **Owed to the
-   owner's pad:** a pad press into a cell, and the navigation itself.
+   `tools/ini_probe.py` still pass with the shared reader. **Confirmed by the
+   owner with their Xbox pad, 2026-09-24:** a pad press registers in a cell
+   ("works great") and the dialogs can be walked with the controller alone.
 3. **Built 2026-09-24, DIV-0051:** the Controller row back to one icon
    column. What the read found on the way: the port never drew the
    PlayStation's shapes - its glyphs at those codes are circled numerals
