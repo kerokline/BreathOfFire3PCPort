@@ -1345,3 +1345,14 @@ Read, not seen; every one the PSX's too, kept:
 - `Sprite_ShadeLower` `0x534880` wraps above 127.
 - `Encounter_RollInitiative` `0x532550`'s "all noticed" result also needs
   the two slots past a three-member party to roll 50 or less.
+
+## D58 — The Config panel's keyboard column is hard-coded to the default keys (PC only)
+
+**Found:** reading the Controller sub-panel, 2026-09-24
+([`controls.md`](controls.md) §2). `0x461C00` draws, beside each action's
+PlayStation icon, a one-byte string per pad bit - `V` `C` `Z` `X` `S` `A` at
+`0x653818..0x65382C` - which are the *default* key table's letters. The
+live table (`Key_Table`, `BOF3.CFG` lines 3+) is never read, so a rebound
+keyboard leaves the panel showing keys that do nothing. The PlayStation has
+no such column. **Ours:** the column goes with the binding screen of
+[`controls.md`](controls.md) §4.3.

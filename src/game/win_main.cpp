@@ -302,6 +302,15 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
     HWND hwnd = static_cast<HWND>(hwnd_);
     switch (msg) {
     case WM_DESTROY:
+        bof3::Log("WndProc: WM_DESTROY - quitting");
+        // The loop leaves on Game_QuitFlag as well as on WM_QUIT. With SDL's
+        // gamepad layer in the process (DIV-0050) the WM_QUIT that
+        // PostQuitMessage sets can be taken by SDL's HIDAPI device discovery,
+        // which pumps its message window from our thread on every update
+        // (SDL_hidapi.c, PeekMessage / GetMessage on m_hwndMsg); the game then
+        // ran on without a window (2026-09-24, closing at the title, 3 of 3).
+        // The flag is what the original's Fmv_WndProc sets on WM_DESTROY too.
+        Game_QuitFlag = 1;
         // DIV-0042: the windowed placement outlives the window.
         if (!Cfg_Fullscreen) {
             RECT r;
@@ -570,6 +579,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 if (!Game_Paused) bof3::InputScript_Latch();
                 if (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
                     if (msg.message == WM_QUIT) {
+                        bof3::Log("WinMain: WM_QUIT");
                         quit = true;
                         break;
                     }
@@ -667,9 +677,13 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             }
         }
     }
+    bof3::Log("WinMain: loop left, tearing down");
     Display_Teardown(hwnd);
+    bof3::Log("WinMain: display down");
     Sound_Shutdown();
+    bof3::Log("WinMain: sound down");
     DInput_Shutdown();
+    bof3::Log("WinMain: input down, returning");
     return 1;
 }
 

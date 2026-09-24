@@ -2179,3 +2179,67 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=Fmv_WndProc`, the loop at about 23.7 s: the 8 s of
   deactivation spent paused (`analysis/attract/fmv_ours.tsv`, `fmv_capcom.tsv`).
 - **Reversible?** `BOF3X_BACKGROUND=0`, or `BOF3X_ORIGINAL=Fmv_WndProc`.
+
+### The pad through SDL3; the keyboard as the original; the DirectInput joystick dropped
+
+- **ID:** DIV-0050
+- **Date:** 2026-09-24
+- **Subsystem:** platform / input (`DInput_Init` `0x5A94C0`, `Pad_Read`
+  `0x5A9700`, `DInput_Shutdown` `0x5A9690`, ours in `src/game/pad_read.cpp`;
+  [`controls.md`](controls.md))
+- **Original behaviour:** `DInput_Init` enumerates the first attached
+  DirectInput joystick and `Pad_Read` maps it digitally: axes X / Y past half
+  travel are the directions, buttons 0..3 cross / square / triangle / circle,
+  buttons 5..9 R2 / L1 / R1 / start / select; the POV hat is never read, no
+  button reaches L2, button 4 is unused, hot-plug does not exist. On an
+  Xbox-class pad that is A = cross, B = square, X = triangle, Y = circle,
+  RB = R2, Back = L1, Start = R1, the stick clicks start / select, and a dead
+  d-pad. The keyboard is the DirectInput system keyboard, non-exclusive and
+  background, through the 32-entry key table (`BOF3.CFG` lines 3+ or the
+  default at `0x66C648`).
+- **New behaviour:** the keyboard path is reproduced as it was (the shadow
+  check `BOF3X_SHADOW=pad_read` runs a clone of the original with both device
+  pointers null against ours over random key states and tables). The joystick
+  enumeration is not run; SDL3's gamepad subsystem is started in its place
+  and `Pad_Read` ORs in one pad's word - the first connected, re-opened on
+  hot-plug: d-pad and left stick (half travel, the original's threshold) the
+  directions, LB / RB L1 / R1, LT / RT past half travel L2 / R2, Start /
+  Back start / select, the face buttons by position (south cross, east
+  circle, west square, north triangle) or, with `BOF3X_PAD_LAYOUT=nintendo`,
+  swapped in pairs; `auto` follows the pad's own button labels. The pad, like
+  the keyboard, is read whether or not the window is in front (SDL's
+  background-events hint), and DIV-0033 decides what becomes of the words.
+  `DInput_Shutdown` releases what was opened and stops SDL.
+- **Rationale:** the owner, 2026-09-24: modern pads, one pad, a Nintendo
+  toggle, SDL3 rather than XInput for DualSense and the community mapping
+  database. Nothing of the PlayStation-level button swap (the Config panel's
+  Controller row, save data) is touched: the physical map feeds the pad word,
+  the save's words decide what the word does.
+- **Also in the PSX version?** Not applicable.
+- **Verification:** 2026-09-24, this machine. The shadow check: 20,000
+  rounds, 0 differ, 17,200 non-zero words, 19,402 short tables. Live:
+  `tools/recipes/config_controller.txt` played to its end with SDL up in the
+  process (`analysis/shots/ctrl_sdl`, the panel as before), and
+  `tools/key_probe.py` - Z, up, Enter and Q sent to the window as scancodes
+  each set triangle, up, start and L2 in `Input_Held` and cleared on release
+  (ALL OK). The first live run found `DInput_Init`'s arguments reversed in
+  `symbols.toml` (it is (hinstance, hwnd)), corrected. **The pad side is
+  unexercised**: no pad was attached; the owner's first plug-in is the test.
+  **Later the same day** the owner plugged in an Xbox Series X pad (the log:
+  `pad: opened Xbox Series X Controller`) and closing the window from the
+  Config screen ended in `ResizeBuffers failed, HRESULT 0x80070057`. Two
+  faults, neither the pad's, both ours and both fixed: the present read a
+  destroyed window's client rectangle into an uninitialised `RECT` and
+  handed the garbage to `ResizeBuffers` - a `main` build without this
+  change fails the same way, 1 of 1 (`tools/close_probe.py`); and with
+  that gone the game ran on without a window, 3 of 3, because SDL's HIDAPI
+  device discovery pumps its message window from our thread and takes the
+  `WM_QUIT` (`SDL_hidapi.c`, `PeekMessage` / `GetMessage` on `m_hwndMsg`;
+  without SDL started the loop left normally, 1 of 1). Now `Show` returns
+  when the window is gone, and `WM_DESTROY` sets `Game_QuitFlag`, which the
+  loop checks first - what the original's `Fmv_WndProc` does on the same
+  message. After the fix: closed at the title 2 of 2, every teardown step
+  logged, the process gone. **Confirmed in game by the owner, 2026-09-24,
+  with the Xbox Series X pad: "game feels good with the controller"."
+- **Reversible?** `BOF3X_ORIGINAL=DInput_Init,Pad_Read,DInput_Shutdown`
+  restores the DirectInput joystick; the SDL build stays linked.

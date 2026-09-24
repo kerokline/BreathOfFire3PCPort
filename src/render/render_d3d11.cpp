@@ -490,8 +490,16 @@ void RunFrame(Frame& frame) {
 }
 
 void Show() {
-    RECT client;
-    GetClientRect(static_cast<HWND>(g_opt.hwnd), &client);
+    // The window may already be destroyed: WM_DESTROY arrives through the
+    // loop's DispatchMessage, and the frame in flight still presents after
+    // it. GetClientRect then fails and, with the RECT uninitialised, its
+    // garbage reached ResizeBuffers as E_INVALIDARG (the owner, 2026-09-24,
+    // closing the window at the title; reproduced 2 of 2). Nothing to show.
+    RECT client = {};
+    if (!GetClientRect(static_cast<HWND>(g_opt.hwnd), &client)) {
+        bof3::Log("render: GetClientRect failed, error %lu - window gone, nothing shown", GetLastError());
+        return;
+    }
     const U cw = static_cast<U>(client.right - client.left), ch = static_cast<U>(client.bottom - client.top);
     if (cw == 0 || ch == 0) return;   // minimised: nothing to show
     if (cw != g_window_w || ch != g_window_h) {

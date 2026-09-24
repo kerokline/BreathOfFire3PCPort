@@ -205,7 +205,10 @@ The launcher shows a settings dialog before starting the game
 is what scripted and agent runs want.
 
 Needs `i686-w64-mingw32-clang++`, `cmake` ≥ 3.25, `ninja` and `python` ≥ 3.11 on
-`PATH` (or `LLVM_MINGW_ROOT` set). Verified with llvm-mingw 20260616 / clang
+`PATH` (or `LLVM_MINGW_ROOT` set), and, for the first configure, the network:
+SDL3 is fetched at a pinned tag and built static into the DLL
+([`THIRD_PARTY.md`](THIRD_PARTY.md) §2, DIV-0050); after that `build/_deps`
+holds it. Verified with llvm-mingw 20260616 / clang
 22.1.8, cmake 3.31.12, ninja 1.13.2. The build reads no game data; outputs land
 in `build/`, which is gitignored. The DLL is linked `-static` so that it depends
 only on system DLLs — it is loaded by path into a process whose search order we

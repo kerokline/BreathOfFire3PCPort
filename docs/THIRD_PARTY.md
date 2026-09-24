@@ -1,6 +1,6 @@
 # Third-party code carried in this repository
 
-**Status:** CURRENT (2026-09-23)
+**Status:** CURRENT (2026-09-24)
 
 `CLAUDE.md` rule 5 keeps this list short: nothing copyleft, nothing whose
 terms we could not grant on at a handoff ([`LICENSING.md`](LICENSING.md)
@@ -57,4 +57,34 @@ AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
 ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
+```
+
+## 2. SDL3 (the pad, DIV-0050)
+
+`CMakeLists.txt` fetches [libsdl-org/SDL](https://github.com/libsdl-org/SDL)
+at the tag `release-3.4.16` at configure time and builds its joystick and
+gamepad layers (no video, audio or render) as a static library into
+`bof3x.dll`; `src/game/pad_read.cpp` is the one file that includes it.
+Nothing of SDL is copied into this repository. SDL is offered under the zlib
+licence, whose notice, taken from the repository's `LICENSE.txt` on
+2026-09-24, is:
+
+```
+Copyright (C) 1997-2026 Sam Lantinga <slouken@libsdl.org>
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
 ```

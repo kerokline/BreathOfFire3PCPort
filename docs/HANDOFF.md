@@ -1027,6 +1027,17 @@ _One line each, with a pointer. Add when something costs more than an hour._
   address, detoured or not (2026-09-23 review).
 ## In flight / uncommitted
 
+**Branch `ui/control-changes` (from `main` at PR 15), 2026-09-24, uncommitted:
+the controls work.** [`controls.md`](controls.md) is the plan and the
+record; step 1 is built - DIV-0050, `src/game/pad_read.cpp`, SDL3 fetched
+by CMake and built static (first configure needs the network) - and
+verified on the keyboard side (`tools/key_probe.py`, the shadow check, a
+recipe run) and the owner's Xbox pad opened; their window close then found
+two faults of ours, fixed (DIV-0050's verification, `tools/close_probe.py`). Next is step 2, the physical map in
+`bof3x.ini` with a launcher Controls tab, then the Controller row back to
+one icon column (D58), then the seventh Config row and the binding screen.
+Nothing committed yet: the owner decides.
+
 Branch `phase-3/UI-overhaul` (from `main` at PR 10). **Everything committed
 and pushed as of the night of 2026-09-23; the working tree is clean.** The
 day's commits in order: the backend (`340d373`, merged with PR 11's PSP
