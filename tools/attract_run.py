@@ -24,23 +24,62 @@ without them the run inherits whatever the owner last chose in the dialog -
 2026-09-21, an English attract run compared against a Chinese reference
 looked like a regression in LoadDatFile for an afternoon.
 """
-import argparse, ctypes, ctypes.wintypes as w, os, subprocess, sys, threading, time
+import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 u = ctypes.WinDLL('user32')
 
 
-def game_pid():
-    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq BOF3.exe', '/FO', 'CSV', '/NH'],
+OURS = None   # the pid of the game our launcher started (launch()); the helpers below act on it alone
+
+
+def pid_alive(pid):
+    out = subprocess.run(['tasklist', '/FI', f'PID eq {pid}', '/FO', 'CSV', '/NH'],
                          capture_output=True, text=True).stdout
-    return int(out.split(',')[1].strip('"')) if 'BOF3' in out else None
+    return 'BOF3' in out
+
+
+def game_pid():
+    """Our game's pid while it runs, else None. Never another session's BOF3.exe:
+    the agents' headless self-tests run beside these scripts (docs/world-map.md section 6)."""
+    return OURS if OURS and pid_alive(OURS) else None
 
 
 def kill_game():
-    subprocess.run(['taskkill', '/F', '/IM', 'BOF3.exe'], capture_output=True)
+    if not OURS:
+        return
+    subprocess.run(['taskkill', '/F', '/PID', str(OURS)], capture_output=True)
     t0 = time.time()
-    while game_pid() and time.time() - t0 < 10:
+    while pid_alive(OURS) and time.time() - t0 < 10:
         time.sleep(0.1)
+
+
+def kill_stale(launcher):
+    """Kill a leftover game whose bof3x.dll came from the given launcher's directory
+    (a crashed earlier run of these scripts), and no other BOF3.exe."""
+    want = os.path.normcase(os.path.dirname(os.path.abspath(launcher)))
+    ps = ("Get-Process BOF3 -ErrorAction SilentlyContinue | ForEach-Object { "
+          "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
+          "if ($m) { '{0}|{1}' -f $_.Id, $m.FileName } }")
+    out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        pid, _, dll = line.strip().partition('|')
+        if pid.isdigit() and os.path.normcase(os.path.dirname(dll)) == want:
+            print(f'  killing stale game {pid} ({dll})')
+            subprocess.run(['taskkill', '/F', '/PID', pid], capture_output=True)
+
+
+def launch(launcher, game, env):
+    """Start the game through the launcher and remember its pid."""
+    global OURS
+    r = subprocess.run([launcher, '--game', game, '--no-config'], env=env, capture_output=True, text=True)
+    sys.stdout.write(r.stdout)
+    m = re.search(r'\(pid (\d+)\)', r.stdout)
+    if r.returncode != 0 or not m:
+        sys.stdout.write(r.stderr)
+        sys.exit('launcher failed')
+    OURS = int(m.group(1))
+    return OURS
 
 
 def keep_in_front(stop):
@@ -94,10 +133,8 @@ def main():
     if a.no_front and capcom_wndproc:
         sys.exit('--no-front with Capcom\'s WndProc: the game freezes unfocused; hold the foreground instead')
 
-    if game_pid():
-        if a.no_kill:
-            sys.exit('BOF3.exe is already running')
-        kill_game()
+    if not a.no_kill:
+        kill_stale(a.launcher)
 
     env = dict(os.environ)
     env.pop('BOF3X_ORIGINAL', None)
@@ -110,8 +147,7 @@ def main():
     # --no-config: an oracle run must not stop on the settings dialog, and must
     # take the settings file's values without a human touching them
     # (docs/launcher-settings.md section 4).
-    if subprocess.run([launcher, '--game', a.game, '--no-config'], env=env).returncode != 0:
-        sys.exit('launcher failed')
+    launch(launcher, a.game, env)
 
     stop = threading.Event()
     if not a.no_front:
@@ -119,7 +155,8 @@ def main():
         front.start()
     try:
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'attract_watch.py'),
-                        '--minutes', str(a.minutes), '--wait', '30', '--out', a.out], check=True)
+                        '--minutes', str(a.minutes), '--wait', '30', '--out', a.out], check=True,
+                       env=dict(os.environ, BOF3X_RUN_PID=str(OURS)))
     finally:
         stop.set()
         kill_game()

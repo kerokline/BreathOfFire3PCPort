@@ -125,7 +125,7 @@ its takeover was deferred until a recorded route reached it. **This route
 reaches it**: the sky is on screen in `f00720`..`f01080` (the hill area) and
 `f01500`..`f01800` (the coast). The trace did not count it because it and
 its siblings `0x571D30`, `0x571E20` are absent from `entries_plus_hidden.txt`
-- add the three before the next trace. The takeover: the quad's x from
+- added by hand on 2026-09-23 with `0x571B40` (local file; `pe_hidden.py plus` regenerates it without them - re-add after). The takeover: the quad's x from
 `-53k` to `373k` under `Widescreen_Live()`, the original's 0..320 otherwise
 (the reading is in `widescreen.md` §5); `0x4112A0` (32 bytes, no calls,
 259 calls here) is the other "sky" address in that doc and goes with it.
@@ -171,6 +171,15 @@ each.
 - The MSYS2 `PATH` for the build shadows Anaconda's `python`: an
   `input_run.py` launched in the same shell failed on `PIL` before the game
   started, and the run looked like a capture that never happened.
+- **The runners killed every `BOF3.exe` by image name** - `attract_run.py`,
+  `input_run.py` and the batch scripts' `taskkill //IM` - and the agents'
+  headless self-tests run beside them: three all-shadow runs of group 2 were
+  cut short by the coordinator's live runs (`area-backdrop.md` §4). Since
+  2026-09-23 night the runners track the pid their own launcher started
+  (`launch()`, `game_pid()`, `kill_game()`), `kill_stale()` ends only a
+  leftover game whose `bof3x.dll` came from the same launcher directory, and
+  `attract_watch.py` takes the pid in `BOF3X_RUN_PID`. No script kills by
+  image name any more; agents never did.
 - The tracer arms nothing that is ours whatever `BOF3X_ORIGINAL` says, so a
   route's catalogue never lists a function already taken over: compare draw
   handler counts across traces by address, and expect zeros for ours.

@@ -346,8 +346,15 @@ The single next action, concrete enough to start without asking anyone.
       a shot), then the route is A/B'd and traced once all original, less the
       attract reach (`attract_catalog.py --minus`, the command in
       `takeover-queue-round6.md`), and that is the next round's queue.
-      Battle waits (the owner, 2026-09-23): it wants a save-state system or a
-      deterministic way to start a fight first.
+      **Battle no longer waits** (2026-09-23 night): the owner's
+      `tools/recipes/combat.txt` - an F12 save, a few steps, a random
+      encounter, the whole fight - plays back identically run to run (43 of
+      43 captures; the exe never seeds `rand`, the encounter counts steps),
+      so `combat_ab.txt` is the battle route; its A/B and all-original trace
+      are `analysis/validate_combat.sh` (log `analysis/attract/combat_batch.log`,
+      trace `analysis/calltrace/recipe_combat/`) - the battle queue is that
+      trace less the attract, shop and world-map reaches, the same
+      `attract_catalog.py --minus` command as [`world-map.md`](world-map.md) §4.
    2. **Named on the way and not taken**: nine pointer-reached window-task
       handlers `0x59B7B0`..`0x59BEA0` (Y); the leader's sub-state 2
       `0x52E110` and where a step lands `0x52E580` (V1); the member's states

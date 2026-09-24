@@ -41,6 +41,7 @@ Recipes in `tools/recipes/`:
 | `attract_cycle.txt` | no input; the attract sequence, a shot every 200 frames from 1,530 to 12,330 (each shot holds 30 frames) | 14,150 |
 | `shop.txt` / `shop_ab.txt` | recorded (§5a): save 3, the item and weapon shops, the inn, the save menu; `_ab` has a shot every 90 frames | 3,157 |
 | `worldMapAndAreaTransition.txt` / `_ab.txt` | recorded by the owner 2026-09-23: save 3, out of the town to the world map (Yraall Region, two place plates), into an area, the map again, two adjacent areas ([`world-map.md`](world-map.md)); `_ab` has a shot every 60 frames | 2,143 |
+| `combat.txt` / `combat_ab.txt` | recorded by the owner 2026-09-23: slot 0 (an F12 save in the field), a few steps, a random encounter, the fight - the command cross, a spell, a heal, a steal attempt, the item list - to "You won the battle!"; `_ab` has a shot every 60 frames. **Deterministic**: two playbacks under our build, 43 of 43 captures identical, the encounter at the same frame and the same damage every turn (`analysis/shots/combat_a`, `combat_b`) - the exe imports no `srand` or `time`, so the CRT's `rand` starts from its fixed seed, and the encounter test counts steps ([`event-ops.md`](event-ops.md), `Field_EncounterDue`). The battle start the handoff was waiting for. | 2,620 |
 | `worldmap_sliver.txt` | the route above cut at frame 1260 with one shot on the map - a one-minute check of the compass needle (DIV-0044) | 1,260 |
 
 ## 2. How it works

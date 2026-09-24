@@ -28,7 +28,7 @@ import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threadin
 from PIL import ImageGrab
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from attract_run import ROOT, game_pid, kill_game, keep_in_front  # noqa: E402
+from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front  # noqa: E402
 
 u = ctypes.WinDLL('user32')
 k32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -104,8 +104,7 @@ def main():
     if not os.path.isfile(recipe):
         sys.exit(f'no recipe {recipe}')
     os.makedirs(a.out, exist_ok=True)
-    if game_pid():
-        kill_game()
+    kill_stale(a.launcher)
 
     env = dict(os.environ)
     for k in ('BOF3X_ORIGINAL', 'BOF3X_LANG', 'BOF3X_INPUT'):
@@ -123,9 +122,7 @@ def main():
         k, _, v = kv.partition('=')
         env[k] = v
 
-    launcher = a.launcher
-    if subprocess.run([launcher, '--game', a.game, '--no-config'], env=env).returncode != 0:
-        sys.exit('launcher failed')
+    launch(a.launcher, a.game, env)
 
     stop = threading.Event()
     threading.Thread(target=keep_in_front, args=(stop,), daemon=True).start()
