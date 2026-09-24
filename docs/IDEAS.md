@@ -764,3 +764,24 @@ is one more parameter in `BOF3X_SATPIXIE` and a slider in the launcher's
 Options dialog, defaulting to 0 (straight, as SatPixie ships), and a line
 in DIV-0043's entry saying it is our addition to the preset. Not "accumulate
 modulation", which is the phosphor persistence between frames.
+
+## I20 — A Config row that opens the physical binding screen in game
+
+**Deferred 2026-09-24** by the owner, at the end of the controls work
+([`controls.md`](controls.md)): "a button in-game which would launch the
+mapper would be nice, but leave it as a future idea for now." What exists
+is the dual approach - the launcher's Controls dialog maps keys and pad
+inputs to PlayStation buttons (DIV-0050, `bof3x.ini`), and the game's own
+Config screen swaps PlayStation buttons between actions as the disc did
+(its panel back to the PlayStation's one icon column, DIV-0051).
+
+**The shape, when wanted** ([`controls.md`](controls.md) §4.3): a seventh
+Config row - the row tables `0x653808` / `0x653810` hold eight with two
+unused, the panel draw `0x461710` loops six and opens a `0x21` x `0x0D`
+frame, the caption is pool message `0xBC + row` - opening a screen we draw
+with the game's frame, small font and cursor: fourteen lines, a PlayStation
+input each, a keyboard cell and a pad cell, the device of a press deciding
+the cell, cells drawn as our own overlay through the backend so the glyph
+table is not spent. Bindings write to the physical layer and take effect
+the next frame, as `Pad_Read` reads the live table.
+

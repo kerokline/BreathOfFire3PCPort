@@ -1,7 +1,8 @@
 # The in-game Config screen: where its text lives, and how it was translated
 
 **Status:** CONFIRMED in game by the owner (2026-09-21) — layout, lettering
-and the selected row. The buttons above the panel are DIV-0018 (§8).
+and the selected row; the controller panel's icon column again 2026-09-24
+(DIV-0051, §8). The buttons above the panel are DIV-0018 (§8).
 
 The Config screen is menu state 7, `0x5902E0`
 ([`menu-screens.md`](menu-screens.md) §1), whose code sits at
@@ -308,3 +309,9 @@ and turns the two width computations into the small branch's own (`len * 4`,
   **Fixed as DIV-0026** (2026-09-22/23): width and font as DIV-0017, the
   names' right edge at `row x + 0x36` and the frame 0xF cells wide - both
   settled in game with the owner; confirmed 2026-09-23.
+  **Then DIV-0051 (2026-09-24):** the PlayStation's one column. The two
+  cells were the PC team's - the default key letter, hard-coded, and a
+  circled numeral for the button (the port never drew the shapes;
+  [`controls.md`](controls.md) §2). Now one cell with the PlayStation's
+  icon (the disc's 12 x 12 shapes, L1 / R1 composed), the frame at 0xD
+  cells, the row box 0x58 wide, the icon's quad at the call's x - 0x0C.

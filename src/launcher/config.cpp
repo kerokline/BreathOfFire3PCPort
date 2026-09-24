@@ -77,6 +77,10 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
     std::string text;
     if (!ReadWhole(path, text)) return false;
 
+    // A file that names any key or pad binding replaces the whole default
+    // list, so what the file says is what the game gets - not the defaults
+    // with the file's lines appended.
+    bool keys_seen = false, pad_seen = false;
     for (const std::string& raw : SplitLines(text)) {
         const std::string line = Trim(raw);
         if (line.empty() || line[0] == '#' || line[0] == ';' || line[0] == '[') continue;
@@ -141,6 +145,14 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         } else if (key == "cheat.steal") {
             if (value == "0") cfg.cheats.steal = false;
             else if (value == "1") cfg.cheats.steal = true;
+        } else if (key.compare(0, 4, "key.") == 0) {
+            if (!keys_seen) cfg.bindings.keys.clear();
+            keys_seen = true;
+            input::ParseKeys(key.substr(4) + "=" + value, ',', cfg.bindings.keys);
+        } else if (key.compare(0, 4, "pad.") == 0) {
+            if (!pad_seen) cfg.bindings.pad.clear();
+            pad_seen = true;
+            input::ParsePad(key.substr(4) + "=" + value, ',', cfg.bindings.pad, cfg.bindings.layout);
         } else if (key == "scale") {
             if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') cfg.scale = value[0] - '0';
         }
@@ -183,6 +195,14 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
     out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";
     out += std::string("cheat.steal=") + (cfg.cheats.steal ? "1" : "0") + "\r\n";
+    out += "# the keyboard: key.KEY=action (docs/controls.md; actions up down left right cross circle square\r\n";
+    out += "# triangle l1 l2 r1 r2 start select, joined with +); at most 32 lines. Replaces the game's own table\r\n";
+    out += "# (BOF3.CFG lines 3+) when it differs from the default, which is that table.\r\n";
+    out += input::FormatKeys(cfg.bindings.keys, "key.", "\r\n");
+    out += "# the pad: pad.INPUT=action, inputs south east west north lb rb lt rt start back guide ls rs\r\n";
+    out += "# dpad_up/down/left/right ls_up/down/left/right rs_up/down/left/right; pad.layout positional |\r\n";
+    out += "# nintendo (the face pairs swapped) | auto (the pad's own labels)\r\n";
+    out += input::FormatPad(cfg.bindings.pad, cfg.bindings.layout, "pad.", "\r\n");
     out += "# 0 hides this launcher's dialog and starts the game straight away\r\n";
     out += std::string("show_launcher=") + (cfg.show_launcher ? "1" : "0") + "\r\n";
     return WriteWhole(path, out);
@@ -252,6 +272,26 @@ void ConfigApplyEnvironment(const Config& cfg) {
         SetEnvironmentVariableA("BOF3X_ZENNY", std::to_string(cfg.cheats.zenny).c_str());
     if (GetEnvironmentVariableW(L"BOF3X_STEAL", existing, 64) == 0 && cfg.cheats.steal)
         SetEnvironmentVariableW(L"BOF3X_STEAL", L"1");
+
+    const input::Bindings defaults = input::Bindings::Defaults();
+    const bool keys_default = cfg.bindings.keys.size() == defaults.keys.size() &&
+        [&] { for (size_t i = 0; i < defaults.keys.size(); ++i)
+                  if (cfg.bindings.keys[i].dik != defaults.keys[i].dik || cfg.bindings.keys[i].bits != defaults.keys[i].bits) return false;
+              return true; }();
+    if (GetEnvironmentVariableW(L"BOF3X_KEYS", existing, 64) == 0 && !keys_default) {
+        std::string line = input::FormatKeys(cfg.bindings.keys, "", ",");
+        if (!line.empty()) line.pop_back();
+        SetEnvironmentVariableA("BOF3X_KEYS", line.c_str());
+    }
+    const bool pad_default = cfg.bindings.layout == defaults.layout && cfg.bindings.pad.size() == defaults.pad.size() &&
+        [&] { for (size_t i = 0; i < defaults.pad.size(); ++i)
+                  if (cfg.bindings.pad[i].input != defaults.pad[i].input || cfg.bindings.pad[i].bits != defaults.pad[i].bits) return false;
+              return true; }();
+    if (GetEnvironmentVariableW(L"BOF3X_PAD", existing, 64) == 0 && !pad_default) {
+        std::string line = input::FormatPad(cfg.bindings.pad, cfg.bindings.layout, "", ",");
+        if (!line.empty()) line.pop_back();
+        SetEnvironmentVariableA("BOF3X_PAD", line.c_str());
+    }
 
     // Neither is set for its default value: an unset variable is exactly what
     // the DLL treats as "the original's behaviour", and leaving it unset keeps

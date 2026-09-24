@@ -38,6 +38,7 @@
 #include "game/area_slope.h"
 #include "game/field_blocked.h"
 #include "game/field_input.h"
+#include "game/pad_read.h"
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
@@ -134,6 +135,7 @@ void InjectAll() {
     FieldObjects_Inject();
     SpriteScreen_Inject();
     FieldInput_Inject();
+    PadRead_Inject();           // DIV-0050: the keyboard as the original, the pad through SDL3
     SpriteClut_Inject();
     DrawLayers_Inject();
     DrawEmit_Inject();          // likewise

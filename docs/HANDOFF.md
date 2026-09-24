@@ -1027,6 +1027,29 @@ _One line each, with a pointer. Add when something costs more than an hour._
   address, detoured or not (2026-09-23 review).
 ## In flight / uncommitted
 
+**Branch `ui/control-changes` (from `main` at PR 15), 2026-09-24, uncommitted:
+the controls work.** [`controls.md`](controls.md) is the plan and the
+record; step 1 is built - DIV-0050, `src/game/pad_read.cpp`, SDL3 fetched
+by CMake and built static (first configure needs the network) - and
+verified on the keyboard side (`tools/key_probe.py`, the shadow check, a
+recipe run) and the owner's Xbox pad opened; their window close then found
+two faults of ours, fixed (DIV-0050's verification, `tools/close_probe.py`);
+committed as `785e202`. Step 2, the bindings in
+`bof3x.ini` and the launcher's Controls dialog, is `8a80ff0`. Step 3, DIV-0051,
+the Controller row's one icon column, is confirmed by the owner off
+`analysis/shots/ctrl_icons6` and committed (`c3dc865`). The in-game binding
+screen is I20. **Uncommitted, 2026-09-24 evening:** the Controls dialog's
+press-to-bind capture and the launcher's pad navigation (SDL3 linked into
+the launcher, `src/input/pad_sdl.cpp` shared with the DLL); the keyboard
+side probed, the pad side confirmed by the owner (a pad press into a cell,
+the dialogs walked with the controller alone). Pushed, PR 16 open against
+`main`. Next is step 4,
+the seventh Config row and the binding screen ([`controls.md`](controls.md)
+§4.3). Next is step 2, the physical map in
+`bof3x.ini` with a launcher Controls tab, then the Controller row back to
+one icon column (D58), then the seventh Config row and the binding screen.
+Nothing committed yet: the owner decides.
+
 Branch `phase-3/UI-overhaul` (from `main` at PR 10). **Everything committed
 and pushed as of the night of 2026-09-23; the working tree is clean.** The
 day's commits in order: the backend (`340d373`, merged with PR 11's PSP

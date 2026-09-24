@@ -39,6 +39,7 @@ BEGIN
                     -1, 14, 191, 262, 9
 
     PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 209, 52, 14
+    PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 209, 52, 14
     DEFPUSHBUTTON   "&Play", IDOK, 172, 209, 52, 14
     PUSHBUTTON      "E&xit", IDCANCEL, 230, 209, 52, 14
 END
@@ -108,4 +109,109 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_SP_DEFAULTS, 7, 231, 52, 14
     DEFPUSHBUTTON   "OK", IDOK, 182, 231, 52, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 240, 231, 52, 14
+END
+
+// DIV-0050 (docs/controls.md section 4.2): the physical bindings. Each row is
+// one PlayStation input; a cell is a button showing its binding - click it (or
+// press cross on it) and the capture dialog takes the next key or pad input.
+IDD_CONTROLS DIALOGEX 0, 0, 410, 334
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Controls"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Bindings", -1, 7, 7, 396, 272
+    LTEXT           "Keyboard", -1, 60, 20, 66, 9
+    LTEXT           "also", -1, 130, 20, 66, 9
+    LTEXT           "Pad", -1, 206, 20, 96, 9
+    LTEXT           "also", -1, 306, 20, 96, 9
+    LTEXT           "Up", -1, 14, 36, 44, 9
+    PUSHBUTTON      "", 1300, 60, 34, 66, 14
+    PUSHBUTTON      "", 1320, 130, 34, 66, 14
+    PUSHBUTTON      "", 1340, 206, 34, 96, 14
+    PUSHBUTTON      "", 1360, 306, 34, 96, 14
+    LTEXT           "Down", -1, 14, 53, 44, 9
+    PUSHBUTTON      "", 1301, 60, 51, 66, 14
+    PUSHBUTTON      "", 1321, 130, 51, 66, 14
+    PUSHBUTTON      "", 1341, 206, 51, 96, 14
+    PUSHBUTTON      "", 1361, 306, 51, 96, 14
+    LTEXT           "Left", -1, 14, 70, 44, 9
+    PUSHBUTTON      "", 1302, 60, 68, 66, 14
+    PUSHBUTTON      "", 1322, 130, 68, 66, 14
+    PUSHBUTTON      "", 1342, 206, 68, 96, 14
+    PUSHBUTTON      "", 1362, 306, 68, 96, 14
+    LTEXT           "Right", -1, 14, 87, 44, 9
+    PUSHBUTTON      "", 1303, 60, 85, 66, 14
+    PUSHBUTTON      "", 1323, 130, 85, 66, 14
+    PUSHBUTTON      "", 1343, 206, 85, 96, 14
+    PUSHBUTTON      "", 1363, 306, 85, 96, 14
+    LTEXT           "Cross", -1, 14, 104, 44, 9
+    PUSHBUTTON      "", 1304, 60, 102, 66, 14
+    PUSHBUTTON      "", 1324, 130, 102, 66, 14
+    PUSHBUTTON      "", 1344, 206, 102, 96, 14
+    PUSHBUTTON      "", 1364, 306, 102, 96, 14
+    LTEXT           "Circle", -1, 14, 121, 44, 9
+    PUSHBUTTON      "", 1305, 60, 119, 66, 14
+    PUSHBUTTON      "", 1325, 130, 119, 66, 14
+    PUSHBUTTON      "", 1345, 206, 119, 96, 14
+    PUSHBUTTON      "", 1365, 306, 119, 96, 14
+    LTEXT           "Square", -1, 14, 138, 44, 9
+    PUSHBUTTON      "", 1306, 60, 136, 66, 14
+    PUSHBUTTON      "", 1326, 130, 136, 66, 14
+    PUSHBUTTON      "", 1346, 206, 136, 96, 14
+    PUSHBUTTON      "", 1366, 306, 136, 96, 14
+    LTEXT           "Triangle", -1, 14, 155, 44, 9
+    PUSHBUTTON      "", 1307, 60, 153, 66, 14
+    PUSHBUTTON      "", 1327, 130, 153, 66, 14
+    PUSHBUTTON      "", 1347, 206, 153, 96, 14
+    PUSHBUTTON      "", 1367, 306, 153, 96, 14
+    LTEXT           "L1", -1, 14, 172, 44, 9
+    PUSHBUTTON      "", 1308, 60, 170, 66, 14
+    PUSHBUTTON      "", 1328, 130, 170, 66, 14
+    PUSHBUTTON      "", 1348, 206, 170, 96, 14
+    PUSHBUTTON      "", 1368, 306, 170, 96, 14
+    LTEXT           "L2", -1, 14, 189, 44, 9
+    PUSHBUTTON      "", 1309, 60, 187, 66, 14
+    PUSHBUTTON      "", 1329, 130, 187, 66, 14
+    PUSHBUTTON      "", 1349, 206, 187, 96, 14
+    PUSHBUTTON      "", 1369, 306, 187, 96, 14
+    LTEXT           "R1", -1, 14, 206, 44, 9
+    PUSHBUTTON      "", 1310, 60, 204, 66, 14
+    PUSHBUTTON      "", 1330, 130, 204, 66, 14
+    PUSHBUTTON      "", 1350, 206, 204, 96, 14
+    PUSHBUTTON      "", 1370, 306, 204, 96, 14
+    LTEXT           "R2", -1, 14, 223, 44, 9
+    PUSHBUTTON      "", 1311, 60, 221, 66, 14
+    PUSHBUTTON      "", 1331, 130, 221, 66, 14
+    PUSHBUTTON      "", 1351, 206, 221, 96, 14
+    PUSHBUTTON      "", 1371, 306, 221, 96, 14
+    LTEXT           "Start", -1, 14, 240, 44, 9
+    PUSHBUTTON      "", 1312, 60, 238, 66, 14
+    PUSHBUTTON      "", 1332, 130, 238, 66, 14
+    PUSHBUTTON      "", 1352, 206, 238, 96, 14
+    PUSHBUTTON      "", 1372, 306, 238, 96, 14
+    LTEXT           "Select", -1, 14, 257, 44, 9
+    PUSHBUTTON      "", 1313, 60, 255, 66, 14
+    PUSHBUTTON      "", 1333, 130, 255, 66, 14
+    PUSHBUTTON      "", 1353, 206, 255, 96, 14
+    PUSHBUTTON      "", 1373, 306, 255, 96, 14
+
+    LTEXT           "Face &buttons:", -1, 14, 284, 60, 9
+    COMBOBOX        IDC_CT_LAYOUT, 76, 282, 200, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Click a cell and press a key or a pad input; Escape cancels. The keypad's diagonals (7 9 1 3) stay bound unless a cell takes them.", -1, 14, 300, 390, 9
+
+    PUSHBUTTON      "&Defaults", IDC_CT_DEFAULTS, 7, 316, 52, 14
+    DEFPUSHBUTTON   "OK", IDOK, 292, 316, 52, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 350, 316, 52, 14
+END
+
+// The capture over a Controls cell (DIV-0050): the next key or pad input.
+IDD_CAPTURE DIALOGEX 0, 0, 250, 74
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Bind"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "", IDC_CP_PROMPT, 14, 12, 222, 22
+    LTEXT           "Escape cancels. Clear empties the cell.", -1, 14, 38, 222, 9
+    PUSHBUTTON      "&Clear", IDC_CP_CLEAR, 138, 53, 48, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 194, 53, 48, 14
 END

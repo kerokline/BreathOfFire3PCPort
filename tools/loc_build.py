@@ -97,6 +97,18 @@ APPEND_AT = 0x993                # first glyph past the shipped table
 SMALL_CELL_H, SMALL_CELLS_Y0 = 8, 120
 SMALL_APPEND_AT = 0xA00          # the 8 x 8 set, on the round boundary past the 12 px one
 SMALL_SPACE = SMALL_APPEND_AT + (0x93 - 0x30 + 1)   # a blank cell after it; see config_encode
+# The Config screen's controller icons (DIV-0051, docs/controls.md section 6
+# step 3), six glyphs after the blank: circle, cross, triangle, square, L1,
+# R1. The shapes are the atlas's 12 x 12 set at y 48 (the sheet's third row,
+# after the arrows and the heart; ink segments 181..190, 193..201, 205..214,
+# 218..226, read 2026-09-24) - the owner's choice over the 8 x 8 and the
+# 8 x 12 sets, both of which the atlas also holds. L1 and R1 are composed,
+# as the PlayStation's panel reads: the dialogue set's capital (codes 0x4C,
+# 0x52) with the 8 x 8 set's serifed "1" (code 0x31) low at its right, in a
+# 12 x 12 cell. Each cell is doubled to fill the 24 x 24 glyph.
+SHAPE_CELLS = ((180, 48), (192, 48), (204, 48), (216, 48))   # (x, y) of circle, cross, triangle, square
+LABEL_CAPS = (0x4C, 0x52)                                     # L, R in the dialogue set
+ICONS_AT = SMALL_SPACE + 1                                    # circle .. square, L1, R1
 GLYPH_LIMIT = 0x1000             # ours, DIV-0016; the original 0x516C94 was cmp cx, 0xA00
 PC_ADVANCE = 12                  # 0x497A44, 0x516CDE
 TEXT_ROOM = 0x8000               # the CLUT strip as loaded starts here; the system pool at
@@ -221,6 +233,39 @@ def build_table(base_table, rows, redrawn=None, mono=False):
     # two bytes and `4 * len` is exactly its width.
     table += blank
     advances.append(CELL_W)
+    # The six icons (ICONS_AT ..): 12 x 12 cells doubled. The disc's icons are
+    # pre-coloured (the 8 x 8 circle's body is nibbles 9 and 10, the cross's
+    # 14 and 15; counted 2026-09-24) where a letter's body is 1 with 7 for its
+    # ramp, and the panel draws them through the button's colour index, which
+    # maps 1 to that colour: every body nibble becomes 1 and 7 stays the ramp.
+    cells = [[rows[y0 + y][x0:x0 + 12] for y in range(12)] for x0, y0 in SHAPE_CELLS]
+    one = donor_cell(rows, 0x31, SMALL_CELLS_Y0, SMALL_CELL_H)
+    for code in LABEL_CAPS:
+        cap = donor_cell(rows, code)
+        ink = [x for x in range(CELL_W) if any(r[x] for r in cap)]
+        a0, a1 = min(ink), max(ink)
+        cell = [[0] * 12 for _ in range(12)]
+        for y in range(12):
+            for x in range(a0, a1 + 1):
+                cell[y][x - a0] = cap[y][x]
+        oink = [x for x in range(CELL_W) if any(r[x] for r in one)]
+        x0 = a1 - a0 + 1
+        for y in range(SMALL_CELL_H):
+            for x in range(min(oink), max(oink) + 1):
+                if x0 + x - min(oink) < 12:
+                    cell[4 + y][x0 + x - min(oink)] = one[y][x]
+        cells.append(cell)
+    for cell in cells:
+        big = [[0] * font_pc.GLYPH for _ in range(font_pc.GLYPH)]
+        for y in range(12):
+            for x in range(12):
+                v = cell[y][x]
+                v = 7 if v == 7 else (1 if v else 0)
+                for dy in range(2):
+                    for dx in range(2):
+                        big[2 * y + dy][2 * x + dx] = v
+        table += pc_glyph_from_rows(big)
+        advances.append(PC_ADVANCE)
 
     glyphs = len(table) // font_pc.GLYPH_BYTES
     if glyphs - 1 > GLYPH_LIMIT:

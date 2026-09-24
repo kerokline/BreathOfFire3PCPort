@@ -45,6 +45,27 @@ add_custom_command(
   VERBATIM)
 add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}")
 
+# --- SDL3, for the pad (DIV-0050, docs/controls.md) ------------------------
+# Fetched at configure time and built static into the DLL: the joystick and
+# gamepad layers only, no video, audio or render. zlib licence
+# (docs/THIRD_PARTY.md section 2). Pinned to a release tag; the first
+# configure needs the network.
+include(FetchContent)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+foreach(_sub AUDIO VIDEO RENDER GPU CAMERA HAPTIC SENSOR POWER DIALOG OPENGL OPENGLES VULKAN DIRECTX)
+  set(SDL_${_sub} OFF CACHE BOOL "" FORCE)
+endforeach()
+FetchContent_Declare(SDL3
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+  GIT_TAG release-3.4.16
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(SDL3)
+
 # --- the injected DLL --------------------------------------------------------
 add_library(bof3x SHARED
   src/hook/dllmain.cpp
@@ -102,6 +123,9 @@ add_library(bof3x SHARED
   src/game/title_states.cpp
   src/game/field_blocked.cpp
   src/game/field_input.cpp
+  src/game/pad_read.cpp
+  src/input/bindings.cpp
+  src/input/pad_sdl.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
   src/game/psx_gpu.cpp
@@ -203,7 +227,7 @@ target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # The Direct3D 11 render backend (docs/render-backend.md): the OS's own
 # libraries, nothing vendored; the shader compiler is d3dcompiler_47.dll.
-target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm)
+target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm SDL3::SDL3-static)
 
 # --- the launcher ------------------------------------------------------------
 # The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:
@@ -214,8 +238,13 @@ add_executable(bof3x_launcher
   src/launcher/launcher.cpp
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
+  src/input/bindings.cpp
+  src/input/pad_sdl.cpp
   src/launcher/launcher.rc)
 target_include_directories(bof3x_launcher PRIVATE src)
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32)
+# SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
+# dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
+# and circle as navigation.
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")

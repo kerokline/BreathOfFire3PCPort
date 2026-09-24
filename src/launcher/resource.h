@@ -15,6 +15,7 @@
 #define IDC_SNAP        1010
 #define IDC_LOOKOPTIONS 1011
 #define IDC_CHEATS      1012
+#define IDC_CONTROLS    1013
 
 // The SatPixie look's options dialog (DIV-0043).
 #define IDD_SATPIXIE     101
@@ -47,3 +48,19 @@
 #define IDC_CH_ZENNY_V  1211
 #define IDC_CH_STEAL    1220
 #define IDC_CH_DEFAULTS 1221
+
+// The Controls dialog (DIV-0050, docs/controls.md section 4.2): fourteen rows,
+// one an action, each with two key boxes and two pad boxes - the ids are
+// base + row.
+#define IDD_CONTROLS     103
+#define IDC_CT_KEY1     1300
+#define IDC_CT_KEY2     1320
+#define IDC_CT_PAD1     1340
+#define IDC_CT_PAD2     1360
+#define IDC_CT_LAYOUT   1380
+#define IDC_CT_DEFAULTS 1381
+
+// The capture over a Controls cell: press a key or a pad input.
+#define IDD_CAPTURE      104
+#define IDC_CP_PROMPT   1400
+#define IDC_CP_CLEAR    1401

@@ -1311,6 +1311,100 @@ ctype = "unsigned short"
 status = "evidence"
 evidence = "disasm 2026-09-21: Input_Latch 0x4FC6A0 stores (old ^ new) & new here - the buttons that went down this frame. The same three words for a second pad follow at 0x7E1BF0 / 0x7E1BF2 / 0x7E1BF4, from the high word of Pad_Read's result, which Pad_Read never sets."
 
+# The input devices (2026-09-24, docs/controls.md): DInput_Init 0x5A94C0, Pad_Read 0x5A9700, DInput_Shutdown 0x5A9690.
+
+[[data]]
+pc = 0x7DE7A8
+name = "Key_Table"
+ctype = "unsigned short"
+count = 64
+status = "evidence"
+evidence = "disasm 2026-09-24: 32 pairs (u16 DIK scancode, u16 pad bits), 0x80 bytes, ending at Key_State 0x7DE828; Pad_Read 0x5A981F..0x5A984E walks it until a key of 0 or the end and ORs the bits of every entry whose key byte is set. Written by 0x5A9860 (rep movsd of 0x20 dwords from Cfg_Load's stack array - BOF3.CFG lines 3+, two integers a line) or 0x5A9880 (from Key_TableDefault). pe_xref: those three functions only."
+
+[[data]]
+pc = 0x7DE828
+name = "Key_State"
+ctype = "unsigned char"
+count = 256
+status = "evidence"
+evidence = "disasm 2026-09-24: the DirectInput keyboard's 256 key bytes - GetDeviceState(0x100, 0x7DE828) at 0x5A97F8..0x5A9803 in Pad_Read; zeroed by DInput_Init (rep stosd of 0x40 dwords). bit 7 set = down. input_script.cpp reads DIK_F12 0x58 from it for the recorder's shot key."
+
+[[data]]
+pc = 0x7DE928
+name = "DInput_Object"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-24: IDirectInput7A, written by DirectInputCreateA(hinstance, 0x700, &0x7DE928, 0) in DInput_Init 0x5A94D7; used for EnumDevices and CreateDevice; released and zeroed by DInput_Shutdown 0x5A96E8."
+
+[[data]]
+pc = 0x7DE92C
+name = "DInput_Keyboard"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-24: IDirectInputDeviceA for GUID_SysKeyboard (0x5C4828), CreateDevice at 0x5A95E0; c_dfDIKeyboard, DISCL_NONEXCLUSIVE | DISCL_BACKGROUND, acquired. Pad_Read reads it at 0x5A97ED, re-acquiring on DIERR_INPUTLOST; DInput_Shutdown unacquires, releases and zeroes it."
+
+[[data]]
+pc = 0x7DE930
+name = "DInput_Joystick"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-24: IDirectInputDeviceA of the first attached DIDEVTYPE_JOYSTICK, created by the enumeration callback 0x5A9620 (which returns DIENUM_STOP after one); c_dfDIJoystick, DISCL_EXCLUSIVE | DISCL_FOREGROUND, DIPROP_RANGE -1000..1000 on offsets 0, 4, 8, 0x14. Pad_Read polls through DInput_Joystick2 and reads 0x50 bytes of DIJOYSTATE from it. Null when no joystick. Ours (pad_read.cpp) never creates it."
+
+[[data]]
+pc = 0x7DE934
+name = "DInput_Joystick2"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-09-24: a second interface on the joystick (QueryInterface at 0x5A9648 in the callback, IID at 0x5C4970 by position - IDirectInputDevice2A for Poll); Pad_Read calls its +0x64 (Poll) at 0x5A971B; released and zeroed by DInput_Shutdown."
+
+[[data]]
+pc = 0x7DE938
+name = "DInput_JoystickFound"
+ctype = "int"
+status = "evidence"
+evidence = "disasm 2026-09-24: set to 1 at 0x5A9674 in the enumeration callback once a joystick device is created; Pad_Read 0x5A97B1 reads buttons 5..9 only when it is 1. Read nowhere else (pe_xref: 2 refs)."
+
+[[data]]
+pc = 0x66C648
+name = "Key_TableDefault"
+ctype = "unsigned short"
+count = 64
+status = "evidence"
+evidence = "bytes 2026-09-24 (docs/controls.md section 1): 24 pairs then zeros - arrows the directions, Z X C V triangle cross square circle, A Q S W L1 L2 R1 R2, Enter start, right Shift select, Esc cross, Space circle, keypad 8 2 4 6 the directions and 9 1 7 3 the diagonals. Copied to Key_Table by 0x5A9880 when BOF3.CFG has two lines or fewer (Cfg_Load)."
+
+[[data]]
+pc = 0x5C4828
+name = "DInput_KeyboardGuid"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "bytes 2026-09-24: 6F1D2B61-D5A0-11CF-BFC7-444553540000 = GUID_SysKeyboard; pushed by DInput_Init 0x5A95D8 as CreateDevice's first argument. In .rdata."
+
+[[data]]
+pc = 0x5C4948
+name = "DInput_KeyboardFormat"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "bytes 2026-09-24: a DIDATAFORMAT {dwSize 0x18, dwObjSize 0x10, dwFlags DIDF_RELAXIS (2), dwDataSize 256, dwNumObjs 256, rgodf 0x5AC850} = c_dfDIKeyboard; pushed by DInput_Init 0x5A95E8 as SetDataFormat's argument. In .rdata."
+
+[[func]]
+pc = 0x461C00
+name = "Config_DrawControllerCell"
+ret = "void"
+params = "int x, int y, unsigned int word"
+impl = "src/game/config_text.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x461C00..0x461D5F (docs/controls.md section 2): cdecl (x, y, word); tests the word for 0x20, 0x40, 0x10, 0x80, 0x04, 0x08 in that order and for the first set bit calls Text_DrawAt(x + 4, y, colour, 3, icon) and Text_DrawAt(x - 0x10, y, 0, 3 or 4, letter), then returns: colours 2, 1, 6, 5, 0, 0; the icon strings the one-byte codes b c d X f g at 0x66A2E0.. (circled numerals and an X in the port's glyph table - the PC's stand-ins, never the PlayStation's shapes); the letters V X Z C A S at 0x653818..0x65382C, the default key table's, hard-coded (known-defects D58). Called once a row by 0x461A50 with x = panel x + 0x5D. Ours under an overlay language: DIV-0051, one icon where the letter was."
+
+[[func]]
+pc = 0x461AF0
+name = "Config_DrawControllerRow"
+ret = "void"
+params = "int x, int y, int row"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x461AF0..0x461BF0: cdecl (x, y, row). Menu_DrawRowBox 0x57CF60(x, y, 0x68, 0x10, 0, selected) - the row's dark box, 0x68 wide; the name from the pointer table 0x66A368[row] right-aligned at x + 0x20 (DIV-0026: x + 0x36) through Text_DrawAt 0x516B30 (DIV-0026: ConfigText_DrawSelected); then two 0x20-wide cells through 0x5A7650 / 0x461E50 at x + 0x3F and x + 0x53 (the second is skipped under DIV-0051). Called six times by 0x461A50 at x = panel x + 5, y = panel y + 6 + 18 * row."
+
 [[data]]
 pc = 0x937F94
 name = "Frame_Counter"
@@ -1345,6 +1439,7 @@ pc = 0x5A9700
 name = "Pad_Read"
 ret = "unsigned int"
 params = "void"
+impl = "src/game/pad_read.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-21, 341 bytes: with a joystick device (0x7DE930) polls it (vtable +0x64) and reads 0x50 bytes of state (+0x24, re-acquiring on 0x8007001E); axis x > 500 gives 0x2000, < -500 0x8000, y > 500 0x4000, < -500 0x1000; buttons 0-3 give 0x40, 0x80, 0x10, 0x20 and, when 0x7DE938 is 1, buttons 5-9 give 0x2, 0x4, 0x8, 0x800, 0x100. Then with a keyboard device (0x7DE92C) reads 256 key bytes to 0x7DE828 and ORs in the word of every entry of the 32-entry (u16 key, u16 bits) table at 0x7DE7A8 whose key is down; a key of 0 ends the table. The table is BOF3.CFG's key lines (0x5A9860) or the default at 0x66C648 (0x5A9880): arrows the directions, Z/X/C/V triangle/cross/square/circle, Esc cross, Space circle, Enter start, right Shift select, Q/W/A/S L2/R2/L1/R1, numeric keypad the directions and diagonals. High word always 0. Sole caller Input_Latch."
 
@@ -10891,6 +10986,7 @@ pc = 0x5A9690
 name = "DInput_Shutdown"
 ret = "void"
 params = "void"
+impl = "src/game/pad_read.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5A9690..0x5A96FF (0x6F bytes): Unacquire (+0x20) and Release of the joystick 0x7DE930, Release of its second interface 0x7DE934, Unacquire and Release of the keyboard 0x7DE92C, Release of the DirectInput object 0x7DE928, each slot zeroed. Sole caller WinMain's exit 0x4FD013."
 
@@ -10898,9 +10994,10 @@ evidence = "disasm 2026-09-23, 0x5A9690..0x5A96FF (0x6F bytes): Unacquire (+0x20
 pc = 0x5A94C0
 name = "DInput_Init"
 ret = "void"
-params = "void *hwnd, void *hinstance"
+params = "void *hinstance, void *hwnd"
+impl = "src/game/pad_read.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x5A94C0..0x5A9611 (0x151 bytes), cdecl: zeroes the 256 key bytes 0x7DE828; DirectInputCreateA(hinstance, 0x700, &0x7DE928, 0) through 0x5ADE90 or return; EnumDevices(DIDEVTYPE_JOYSTICK, 0x5A9620, 0, DIEDFL_ATTACHEDONLY); with a joystick 0x7DE930: SetDataFormat(c_dfDIJoystick 0x5C4960), SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND = 5), SetProperty(DIPROP_RANGE, -1000..1000) for the offsets 0, 4, 8 and 0x14 by DIPH_BYOFFSET, Acquire; CreateDevice(GUID_SysKeyboard 0x5C4828, &0x7DE92C, 0), SetDataFormat(c_dfDIKeyboard 0x5C4948), SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_BACKGROUND = 0xA), Acquire. The keyboard is read whether or not the window is in front - which is why DIV-0033 zeroes the pad words while it is not. Sole caller Game_Init."
+evidence = "Arguments (hinstance, hwnd), corrected 2026-09-24: 0x5A94D2 push eax then mov eax, [esp+0x24] = the FIRST argument, passed to DirectInputCreateA; 0x5A950C mov esi, [esp+0x24] after pop edi / push esi = the SECOND, passed to both SetCooperativeLevel calls; the first live run of ours with them reversed got DIERR_INVALIDPARAM. Otherwise: disasm 2026-09-23, 0x5A94C0..0x5A9611 (0x151 bytes), cdecl: zeroes the 256 key bytes 0x7DE828; DirectInputCreateA(hinstance, 0x700, &0x7DE928, 0) through 0x5ADE90 or return; EnumDevices(DIDEVTYPE_JOYSTICK, 0x5A9620, 0, DIEDFL_ATTACHEDONLY); with a joystick 0x7DE930: SetDataFormat(c_dfDIJoystick 0x5C4960), SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND = 5), SetProperty(DIPROP_RANGE, -1000..1000) for the offsets 0, 4, 8 and 0x14 by DIPH_BYOFFSET, Acquire; CreateDevice(GUID_SysKeyboard 0x5C4828, &0x7DE92C, 0), SetDataFormat(c_dfDIKeyboard 0x5C4948), SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_BACKGROUND = 0xA), Acquire. The keyboard is read whether or not the window is in front - which is why DIV-0033 zeroes the pad words while it is not. Sole caller Game_Init."
 
 [[func]]
 pc = 0x587B90
