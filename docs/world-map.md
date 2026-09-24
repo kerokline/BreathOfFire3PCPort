@@ -102,7 +102,7 @@ lists, not bound in `symbols.toml`:
 | `0x404560` | 188 | 3,614 | **a sprite draw** - `Gpu_SetSprt`, `Gfx_CommitPrim`, one path through `Gpu_SetSemiTrans`; ~6.4 a frame: the dial, the legend and, most likely, the plates over the spots | 1 |
 | `0x404620` | 96 | 477 | **the HUD**: two `0x404560` and `Text_DrawAt` (the region label) | 1 |
 | `0x408530` | 406 | 562 | **the compass needle** (§3) | 1 |
-| `0x4112A0` | 32 | 259 | no calls; "the sky" of [`widescreen.md`](widescreen.md) §3d, in the widescreen queue | 2 |
+| `0x4112A0` | 32 | 259 | no calls; "the sky" of [`widescreen.md`](widescreen.md) §3d - read: `WorldMap_PinSprite`, a sprite pinned to (160, 80), **ours** ([`area-backdrop.md`](area-backdrop.md)) | done |
 | `0x572F70` / `0x572FA0` | 47 / 175 | 115,056 / 9,714 | map-view helpers over `MapView_ItemAt` and `Gpu_LinkPrim`, from `0x404620` | with the frame |
 | `0x462A90`, `0x496250`, `0x496830`, `0x496A00`, `0x496AD0` | | | top-level mode helpers around the area change | 3 |
 | `0x517290` `Field_LoadingFrame`, `0x5172F0`, `0x573560`, `0x5744B0`, `0x5746C0`, `0x516E70` | | | the area entry's loading frames and field-object set-up (`0x599B90`'s callees) | 3 |
@@ -125,10 +125,14 @@ its takeover was deferred until a recorded route reached it. **This route
 reaches it**: the sky is on screen in `f00720`..`f01080` (the hill area) and
 `f01500`..`f01800` (the coast). The trace did not count it because it and
 its siblings `0x571D30`, `0x571E20` are absent from `entries_plus_hidden.txt`
-- added by hand on 2026-09-23 with `0x571B40` (local file; `pe_hidden.py plus` regenerates it without them - re-add after). The takeover: the quad's x from
-`-53k` to `373k` under `Widescreen_Live()`, the original's 0..320 otherwise
-(the reading is in `widescreen.md` §5); `0x4112A0` (32 bytes, no calls,
-259 calls here) is the other "sky" address in that doc and goes with it.
+- added by hand on 2026-09-23 with `0x571B40` (local file; `pe_hidden.py plus` regenerates it without them - re-add after). **Taken over** (group 2,
+[`area-backdrop.md`](area-backdrop.md)): `AreaMap_DrawBackdrop` with the
+quad's x from -53 to 373 under `Widescreen_Live()` and the original's
+0..320 otherwise, its siblings `AreaMap_TextureCycle` and
+`AreaMap_SlotZones` faithfully (fuzz only, never traced), and `0x4112A0` -
+which is not a sky but `WorldMap_PinSprite`, the marker sprite pinned to
+(160, 80), centred, nothing to widen. Owed: this route's captures wide and
+narrow.
 
 ## 5. The place plates, for the localisation build
 

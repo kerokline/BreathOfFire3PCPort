@@ -1816,14 +1816,34 @@ designed in rather than bolted on.
   The launcher's "Widescreen" box (`wide=1`) sets `BOF3X_WIDE=1`. Later
   the same night, fourteen slide-out bounds of the menu and shop boxes
   (window-task states, `kSlides`) moved outward by 53, after the owner's
-  screenshots showed them hanging in the bands; recaptured clean. The sky
-  gradient (`0x571BE0`) is deferred to a recorded route. **Owed:** the oracle and the
-  frame hash once with `BOF3X_WIDE=1` (a difference is a cull gating
-  logic), the 55-shot attract A/B cropped to the middle 640 columns, the
-  owner's eye.
+  screenshots showed them hanging in the bands; recaptured clean.
+  **The sky gradient, 2026-09-23 night** (the owner's screenshot of the hill
+  area before the world map: the gradient over the middle 320 columns,
+  the bands black): the area's backdrop is `AreaMap_EntryKind1` `0x571BE0`
+  - now `AreaMap_DrawBackdrop`, ours in `src/game/area_backdrop.cpp`
+  ([`area-backdrop.md`](area-backdrop.md)) - one POLY_G4 whose left x was a
+  zeroed register, so no byte patch. Under `Widescreen_Live()` its corners
+  are `(-53, 0)`, `(373, 0)`, `(-53, 240)`, `(373, 240)` in the game's
+  320-wide units (`0.0f - wide` and `320.0f + wide`, `wide` = 53), the
+  same rule as the fade tile and the save menu's black tile: the backend's
+  shift of 53k and scale k put those on target columns 0 and 426k exactly,
+  no band and no seam. Off, the quad is the original's (0, 0)..(320, 240)
+  bit for bit, and that is what the start-up fuzz compares (60,000 rounds,
+  0 mismatches; 16 planted changes refused, `area-backdrop.md` §4).
+  Self-tests at 0 mismatches with `BOF3X_WIDE` 0 and 1 (313 lines, 800
+  injects). **Owed for the sky:** the world-map route captured wide and
+  narrow after the merge - the gradient across all 852 columns at k = 2
+  in the hill and coast frames, the middle 640 identical to the narrow
+  capture. Read on the way and not widened: `0x4112A0`, "the sky" of
+  `widescreen.md` §3d, is `WorldMap_PinSprite` - a sprite pinned to (160,
+  80), centred, so it needs nothing under the primitive shift. **Owed:**
+  the oracle and the frame hash once with `BOF3X_WIDE=1` (a difference is
+  a cull gating logic), the 55-shot attract A/B cropped to the middle 640
+  columns, the owner's eye.
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
-  `BOF3X_ORIGINAL=MapView_Build` the terrain cull's.
+  `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
+  `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky.
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
