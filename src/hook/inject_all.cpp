@@ -85,6 +85,7 @@
 #include "game/world_map.h"
 #include "game/battle_draw.h"
 #include "game/battle_window_draw.h"
+#include "game/battle_windows.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -201,6 +202,8 @@ void InjectAll() {
                                 // does not matter (nothing before it patches bytes inside its six)
     BattleWindowDraw_Inject();  // every call of its clones re-aimed at a recorder and no byte of its bodies
                                 // patched by any module: order does not matter (none of it reaches a cull)
+    BattleWindows_Inject();     // every call of its clones re-aimed at a recorder, its state table, window-kind
+                                // handlers and switch table moved in the copies: order does not matter
     InjectReport();
 }
 
