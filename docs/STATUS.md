@@ -307,7 +307,9 @@ What is established:
    watching. **The same day, D5's complete fix, DIV-0047:** the frame deadline
    is a double at the PlayStation's 29.97 (measured 29.971; the frame hash
    identical on all 10,319 frames, since logic reads no clock). **DIV-0048:
-   F1 toggles 2x** - 60.5 drawn of 60.5 logic a second, no present skipped;
+   F1 toggles 2x** - every logic frame drawn at 2x and at 4x once the
+   deadline moved onto `QueryPerformanceCounter` (the tick slot's 15.6 ms
+   steps had capped presents at 64 a second, D5's last trace);
    the 4x and 1 ms runs found and fixed a backend defect, a released
    surface's snapshot unreachable across a skipped present
    ([`render-backend.md`](render-backend.md)). The

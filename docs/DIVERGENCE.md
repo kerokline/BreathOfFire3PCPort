@@ -2060,9 +2060,13 @@ designed in rather than bolted on.
   session drifting through the same bands from 35 minutes on (I16).
 - **New behaviour:** the deadline is a base plus a count of frames times
   the period, in a double, and the period is the PlayStation's NTSC frame,
-  1001 / 30 = 33.3667 ms (29.970 a second). The clock is unwrapped into 64
-  bits from the slot's DWORD, so the tick wrap needs no handling. The float
-  at `0x6BC628` is no longer written. DIV-0034's clamp restarts the base and
+  1001 / 30 = 33.3667 ms (29.970 a second). The clock it is held against is
+  `GameClock_NowMs`, milliseconds since the game started as a double from
+  `QueryPerformanceCounter` (paused with DIV-0022's tick clock for a
+  recipe's frozen shot), so the tick wrap needs no handling - and the tick
+  slot's 15.6 ms steps no longer set the pace: it is still read for the
+  once-a-second frame-rate text only. The float at `0x6BC628` is no longer
+  written. DIV-0034's clamp restarts the base and
   the count. `BOF3X_FRAME_MS=n` (1..1000; tooling) sets another period -
   33.334 is the port's own.
 - **Rationale:** the owner, 2026-09-24: "I would like the game to be back to
@@ -2120,8 +2124,17 @@ designed in rather than bolted on.
   still drawn, no present skipped. The owner watched it: "it looks like
   its holding up pretty well to my eye". Where the skip begins, by period
   (`BOF3X_FRAME_MS`, `period_*.log`): 4x, 121.8 logic and 62.8 drawn a
-  second; 1 ms, 1,015.6 logic and 64.4 drawn - the loop's own cost is
-  about a millisecond a logic frame, and presents cap near 60 a second.
+  second; 1 ms, 1,015.6 logic and 64.4 drawn. **That 64 was the tick
+  slot's granularity, not the display:** `BOF3X_FPS_LOG` timing put the
+  draw branch at 0.1-1.2 ms and the logic at 0.04 ms, so time was never
+  short, but the deadline was held against a clock that steps 15.6 ms at a
+  time (1000 / 15.6 = 64), and every deadline but the first inside a step
+  counted as late. With the deadline on `QueryPerformanceCounter`
+  (DIV-0047, amended the same day): 4x, 121.8 drawn of 121.8 logic a
+  second (`qpc_8.3417.log`); 1x, 29.971 a second from the recording
+  (`qpc_33.3667.tsv`); the Config recipe's eight frozen shots with no
+  DIV-0034 restart. What the 60 Hz display shows of 120 presents a second
+  is its own business; nothing blocks on it (`BOF3X_VSYNC` unset).
   Those two runs first ended in `render: a draw uses a released surface`,
   our backend's guard: a frame skip across an area change left draws
   recorded against a surface the game then released, and the snapshot

@@ -52,6 +52,8 @@
 // loop, which is why the loop's locals stay small).
 #include "game/win_main.h"
 
+#include "game/game_clock.h"
+
 #include <windows.h>
 
 #include <cstdint>
@@ -511,17 +513,21 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         int frames_drawn = 0;
         DWORD last_fps_tick = 0;
         unsigned long logic_at_fps_tick = 0;
+        // BOF3X_FPS_LOG: time inside the draw branch (present included) and
+        // inside the logic, QueryPerformanceCounter ticks, per second.
+        LARGE_INTEGER qpf = {}, q0 = {}, q1 = {}, q2 = {};
+        QueryPerformanceFrequency(&qpf);
+        long long draw_ticks = 0, logic_ticks = 0;
         MSG msg;
         bool quit = false;
-        // DIV-0047: the clock unwrapped into 64 bits (the slot's DWORD wraps
-        // at 49.7 days), and the deadline as base + frames * period.
+        // DIV-0047: the deadline as base + frames * period against the
+        // high-resolution clock (GameClock_NowMs: the tick slot steps 15.6 ms
+        // at a time, too coarse for a period under that). The tick is still
+        // read for the once-a-second frame-rate text, as the original did.
         DWORD last_tick = Tick();
-        std::uint64_t now64 = 0;
         const auto Now = [&]() {
-            const DWORD t = Tick();
-            now64 += static_cast<DWORD>(t - last_tick);
-            last_tick = t;
-            return static_cast<double>(now64);
+            last_tick = Tick();
+            return GameClock_NowMs();
         };
         double deadline_base = 0.0;
         std::uint64_t deadline_frames = 0;
@@ -568,6 +574,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     deadline = deadline_base;
                 }
                 if (now < deadline) {
+                    if (g_fps_log) QueryPerformanceCounter(&q0);
                     unsigned char* env = Gfx_CurrentEnv;
                     Gpu_PutDispEnv(env);
                     Gpu_PutDrawEnv(env + 0x14);
@@ -581,6 +588,10 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                         Overlay(fps);
                     }
                     ++frames_drawn;
+                    if (g_fps_log) {
+                        QueryPerformanceCounter(&q1);
+                        draw_ticks += q1.QuadPart - q0.QuadPart;
+                    }
                 }
                 // The wait: Sound_Tick on every spin, at least once a frame.
                 for (;;) {
@@ -591,9 +602,14 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 if (last_tick - last_fps_tick > 1000) {
                     last_fps_tick = last_tick;
                     Crt_sprintf(fps, Str(kStrFrameRate), frames_drawn);
-                    if (g_fps_log)
-                        bof3::Log("fps         %d drawn, %lu logic, speed x%d", frames_drawn,
-                                  static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick), speed);
+                    if (g_fps_log) {
+                        const double ms = 1000.0 / static_cast<double>(qpf.QuadPart);
+                        const unsigned long logic = static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick);
+                        bof3::Log("fps         %d drawn, %lu logic, speed x%d; draw %.2f ms each, logic %.2f ms each", frames_drawn,
+                                  logic, speed, frames_drawn ? static_cast<double>(draw_ticks) * ms / frames_drawn : 0.0,
+                                  logic ? static_cast<double>(logic_ticks) * ms / logic : 0.0);
+                        draw_ticks = logic_ticks = 0;
+                    }
                     logic_at_fps_tick = Frame_Counter;
                     frames_drawn = 0;
                 }
@@ -607,6 +623,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 Gpu_ClearOTagR(reinterpret_cast<unsigned long*>(env + 0x70), 8);
                 Gfx_BeginFrame();
                 SpriteCell_Reset();
+                if (g_fps_log) QueryPerformanceCounter(&q2);
                 if (!Game_Paused) {
                     Task_RunAll();
                 } else {
@@ -616,6 +633,10 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Text_DrawAt(PauseText_X(lines[1], 0x70), 0x80, 0, 100, lines[1]);
                 }
                 Gfx_LinkOTags();
+                if (g_fps_log) {
+                    QueryPerformanceCounter(&q1);
+                    logic_ticks += q1.QuadPart - q2.QuadPart;
+                }
                 Frame_Counter += 1;
             }
         }

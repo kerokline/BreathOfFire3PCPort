@@ -10,3 +10,12 @@ void GameClock_Inject();
 // (BOF3X_ORIGINAL=Game_Clock), when a pause is repaid as usual.
 bool GameClock_Pause();
 void GameClock_Resume();
+
+// DIV-0047 / DIV-0048: milliseconds since the game started as a double from
+// QueryPerformanceCounter, for our WinMain's frame deadline. The tick slot
+// above steps 15.6 ms at a time (GetTickCount's granularity), which at a
+// period under that let several deadlines pass in one step and drew one
+// frame of them (2026-09-24, the 4x and 1 ms runs: 64 drawn a second at
+// any period). Paused and resumed with the tick clock, so a frozen shot
+// leaves this deadline no debt either.
+double GameClock_NowMs();
