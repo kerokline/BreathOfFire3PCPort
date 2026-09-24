@@ -1323,3 +1323,25 @@ by 16 bits in `Battle_SetupEnemy` `0x494320` but by 8 in
 `Battle_CopyEnemyData` `0x4946C0`; `ClutMap_Mark` `0x454DF0`'s release
 writes over the last scratch cell when the owner is not found; and
 `Sprite_SetClutStp` `0x4551A0` divides by zero for a CLUT kind of 5 or more.
+## D56 — `Encounter_OnScreen` lost the PSX's lower bounds (PC only, latent)
+
+**Found:** group BI, 2026-09-24 ([`inventory_ops.md`](inventory_ops.md)),
+`Encounter_OnScreen` `0x5928F0`. Read, not seen. The PSX compares the
+projected corners as unsigned shorts against 320 and 240, which rejects a
+corner left of or above the screen as well; the port compares floats
+against 320 and 240 only, so such a corner passes. Kept faithful; a fix
+would be a ledger entry.
+
+## D57 — The encounter placement's small faults, as the PSX has them (latent)
+
+**Found:** group BI, 2026-09-24 ([`inventory_ops.md`](inventory_ops.md)).
+Read, not seen; every one the PSX's too, kept:
+
+- `Encounter_PlaceParty` `0x5920E0` checks the recentred path from the
+  centre's z cell twice, (Z, Z), and when none of the six retries passes
+  the centre still moves to the sixth.
+- `Encounter_AimCamera` `0x592A30` divides by the number of things averaged
+  with no guard.
+- `Sprite_ShadeLower` `0x534880` wraps above 127.
+- `Encounter_RollInitiative` `0x532550`'s "all noticed" result also needs
+  the two slots past a three-member party to roll 50 or less.

@@ -1,6 +1,6 @@
 # The seventh round's queue: what the combat route reaches
 
-**Status:** IN PROGRESS (2026-09-23 night) - ten groups spawned in parallel
+**Status:** IN PROGRESS (2026-09-24) - ten groups merged, 1,020 ours; the batch `validate_wave2.sh` running (section "Result" below)
 
 The second input-reached queue after the shop's ([`takeover-queue-round6.md`](takeover-queue-round6.md))
 and the world map's ([`world-map.md`](world-map.md) §4). The owner recorded
@@ -64,3 +64,36 @@ owned function in `analysis/calltrace/entries_logic.txt` first. The runners
 kill only the game they started since this night ([`world-map.md`](world-map.md)
 §6), so agents' headless self-tests and the coordinator's live runs no longer
 collide.
+
+## Result (2026-09-24 morning)
+
+All ten groups merged one branch at a time, the build and the headless
+self-tests (`BOF3X_SHADOW='*'`) at 0 mismatches after each: **1,020 ours**
+(from 807 at the world-map wave's merge). The session's usage limit cut
+every Opus agent off mid-work around 03:00; the worktrees kept everything,
+and each agent resumed with its context when told to commit its WIP first
+(nothing was restarted). Two groups were not what the catalogue said:
+BH is the Healing Herb's sparkle effect and the shared magic-effect draws,
+not an item menu; BI is the random encounter's placement on the field map,
+not inventory. Their file names keep the queue's. The defects found are
+D43..D57 in [`known-defects.md`](known-defects.md). Sizes wrong in
+`entries_logic.txt`, per the group docs (BA, BB, BC, BE, BG, BH, BI): about
+twenty lines; fixing them changes the frame hash's content, so re-record the
+reference (`wm1b_orig`) with them in one go.
+
+**The between-waves batch** (`analysis/validate_wave1.sh` then
+`validate_wave1b.sh`, logs `analysis/attract/wave1_batch.log`,
+`wave1b_batch.log`; on 807 and then 854 ours): self-tests clean in both
+languages; the world-map A/B 7 of 35 identical, the map frames differing by
+the needle alone (~650 px) and the rest by the tile-edge scatter; the wide
+captures with the sky filling the bands; the combat A/B 5 of 43 at 4..15
+px; the shop A/B 5 of 35 at up to 46 px; the attract captures 19 of 55 at
+up to 139 px (the same class - the DirectDraw device against ours; not
+chased); the oracle aligned (611 of 7,478 frames disagree by a two-frame
+timing skew from frame 3376 on, the `wm1_ours` kind - the hash is the
+arbiter); **the frame hash identical on every logic frame but frame 0**
+against `wm1b_orig`; the memory dump did not dump ("area never read 4"
+within 240 s; retried at 420 s in the wave-2 batch).
+
+**The wave-2 batch** (`analysis/validate_wave2.sh`, log
+`analysis/attract/wave2_batch.log`; 1,020 ours): running at hand-off.
