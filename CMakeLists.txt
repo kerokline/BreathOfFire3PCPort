@@ -178,6 +178,7 @@ add_library(bof3x SHARED
   src/game/battle_windows.cpp
   src/game/battle_windows_fuzz.cpp
   src/game/battle_flow.cpp
+  src/game/cheats.cpp
   src/game/battle_flow_fuzz.cpp
   src/game/battle_damage.cpp
   src/game/battle_damage_fuzz.cpp
