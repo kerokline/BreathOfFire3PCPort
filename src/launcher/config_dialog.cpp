@@ -197,6 +197,87 @@ void SatpixieOptions(HWND owner, Config::Satpixie& sp) {
     if (r == 1) sp = edit;
 }
 
+// ---- DIV-0045 / DIV-0046: the cheats dialog ---------------------------------
+
+struct CheatSlider {
+    int id, label;
+    int Config::Cheats::*value;
+};
+const CheatSlider kCheatSliders[] = {
+    {IDC_CH_EXP, IDC_CH_EXP_V, &Config::Cheats::exp},
+    {IDC_CH_ZENNY, IDC_CH_ZENNY_V, &Config::Cheats::zenny},
+};
+constexpr int kCheatMultiplierMax = 50;   // the DLL refuses more (src/game/cheats.cpp)
+
+void CheatsPopulate(HWND dlg, const Config::Cheats& ch) {
+    for (const CheatSlider& s : kCheatSliders) {
+        HWND h = GetDlgItem(dlg, s.id);
+        SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, kCheatMultiplierMax));
+        SendMessageW(h, TBM_SETTICFREQ, 5, 0);
+        SendMessageW(h, TBM_SETPOS, TRUE, static_cast<LPARAM>(ch.*s.value));
+        SetDlgItemInt(dlg, s.label, static_cast<UINT>(ch.*s.value), FALSE);
+    }
+    CheckDlgButton(dlg, IDC_CH_STEAL, ch.steal ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void CheatsReadBack(HWND dlg, Config::Cheats& ch) {
+    for (const CheatSlider& s : kCheatSliders) {
+        const int pos = static_cast<int>(SendDlgItemMessageW(dlg, s.id, TBM_GETPOS, 0, 0));
+        ch.*s.value = pos < 0 ? 0 : pos > kCheatMultiplierMax ? kCheatMultiplierMax : pos;
+    }
+    ch.steal = IsDlgButtonChecked(dlg, IDC_CH_STEAL) == BST_CHECKED;
+}
+
+INT_PTR CALLBACK CheatsProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_INITDIALOG: {
+        auto* ch = reinterpret_cast<Config::Cheats*>(lp);
+        SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ch));
+        CheatsPopulate(dlg, *ch);
+        return TRUE;
+    }
+    case WM_HSCROLL: {
+        HWND h = reinterpret_cast<HWND>(lp);
+        for (const CheatSlider& s : kCheatSliders) {
+            if (GetDlgItem(dlg, s.id) != h) continue;
+            SetDlgItemInt(dlg, s.label, static_cast<UINT>(SendMessageW(h, TBM_GETPOS, 0, 0)), FALSE);
+        }
+        return TRUE;
+    }
+    case WM_COMMAND:
+        switch (LOWORD(wp)) {
+        case IDOK: {
+            auto* ch = reinterpret_cast<Config::Cheats*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            CheatsReadBack(dlg, *ch);
+            EndDialog(dlg, 1);
+            return TRUE;
+        }
+        case IDC_CH_DEFAULTS: {
+            Config::Cheats defaults;
+            CheatsPopulate(dlg, defaults);
+            return TRUE;
+        }
+        case IDCANCEL:
+            EndDialog(dlg, 0);
+            return TRUE;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+// The cheats dialog over the settings dialog; the settings change only on OK.
+void CheatsOptions(HWND owner, Config::Cheats& ch) {
+    Config::Cheats edit = ch;
+    const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_CHEATS), owner, CheatsProc,
+                                      reinterpret_cast<LPARAM>(&edit));
+    if (r == 1) ch = edit;
+}
+
 INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
     case WM_INITDIALOG: {
@@ -225,6 +306,11 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_LOOKOPTIONS: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
             SatpixieOptions(dlg, state->cfg->sp);
+            return TRUE;
+        }
+        case IDC_CHEATS: {
+            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            CheatsOptions(dlg, state->cfg->cheats);
             return TRUE;
         }
         default:

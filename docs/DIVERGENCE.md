@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 43 entries, DIV-0001..0043)
+**Status:** IN PROGRESS (opened 2026-09-18; 46 entries, DIV-0001..0046)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1977,3 +1977,69 @@ designed in rather than bolted on.
   owner's eye in game, turning the map.
 - **Reversible?** No switch of its own; `BOF3X_ORIGINAL=Display_Setup`
   returns to Capcom's DirectDraw device, where the needle vanishes again.
+
+### The EXP and zenny won in battle, times a launcher slider
+
+- **ID:** DIV-0045
+- **Date:** 2026-09-24
+- **Subsystem:** battle (`Battle_EnemyDefeated` `0x437470`,
+  `src/game/battle_flow.cpp`; `src/game/cheats.cpp`; the launcher's
+  "Cheats..." dialog; [`cheats.md`](cheats.md))
+- **Original behaviour:** a fallen enemy's EXP (`+0x96`) and zenny (`+0x94`)
+  are added to the battle totals `0x904AEC` / `0x904AF0` as they are.
+- **New behaviour:** each yield is multiplied by `BOF3X_EXP` / `BOF3X_ZENNY`
+  (0..50) on the way into its total; the enemy's record is left alone. The
+  results screen, the per-member split and level-ups read the totals and
+  follow. 1, and unset, is the original's; 0 grants nothing. Set from the
+  launcher's Cheats dialog (`cheat.exp=` / `cheat.zenny=` in `bof3x.ini`).
+- **Rationale:** the owner, 2026-09-24: "there's a few cheats created [in the
+  sibling] - 2 for multiplying exp / zenny, and one for 100% steal chance.
+  Can we replicate that function here". The sibling scales the enemy's
+  record from a hook because the addition is overlay code there; here the
+  addition is ours, so the multiplier goes where the number is used.
+- **Also in the PSX version?** No; the sibling's `bof3.exp-boost` mod is the
+  same feature as a plugin.
+- **Verification:** 2026-09-24, headless with `BOF3X_EXP=10 BOF3X_ZENNY=3`:
+  the log's `DIV-0045 EXP x10, zenny x3`; `BOF3X_EXP=99` is a Fatal. The
+  `battle_flow` fuzz passes with the variables unset (21,000 rounds, 0
+  mismatches). The same day, the recorded combat route under `BOF3X_EXP=10
+  BOF3X_ZENNY=3` (`analysis/shots/combat_cheats` against `combat_clean2`),
+  watched by the owner: "30xp scaling correctly from 3". Owed: the zenny
+  line read off the results screen.
+- **Reversible?** Yes: the sliders at 1, or the variables unset.
+
+### Pilfer and Steal take the item whenever the enemy has one
+
+- **ID:** DIV-0046
+- **Date:** 2026-09-24
+- **Subsystem:** battle (the Pilfer and Steal state steps `0x4B54F0` and
+  `0x4F5140`, Capcom's; two `PatchBytes` in `src/game/cheats.cpp`; the
+  launcher's "Cheats..." dialog; [`cheats.md`](cheats.md) §3)
+- **Original behaviour:** each steal rolls `Rand() & 0xFF` against the
+  enemy's steal level (`+0x1A`) through the table `[0, 1, 3, 6, 12, 16, 32,
+  32]` times an agility tier 12 .. 4, and takes the drop-1 item (`+0x18`)
+  on a pass - a 9..14 % chance on the sibling's anchor enemy.
+- **New behaviour:** with `BOF3X_STEAL=1` the mask's immediate at `0x4B5691`
+  and `0x4F51EF` is 0, so the random byte is 0 and the roll passes whenever
+  the enemy's chance was above zero. An enemy at level 0 stays unstealable,
+  an enemy with nothing still says so, and the routine clears the item on
+  success, so the first attempt takes it and later ones find nothing. Off
+  by default; `cheat.steal=1` in `bof3x.ini`.
+- **Rationale:** the owner's request above. The sibling's `bof3.steal-always`
+  mod is the same patch on the disc's overlays; the port's copies of the
+  routine are the PSX's term for term, so its patch and its limits carry
+  over. A byte patch rather than a takeover because the roll sits inside
+  two state steps that are not yet ours and the divergence is one operand
+  (DIV-0012's case).
+- **Also in the PSX version?** No.
+- **Verification:** 2026-09-24, headless with `BOF3X_STEAL=1`: `patch ON
+  Cheat_StealAlways 6 bytes at 0x004B5691` and `0x004F51EF`, the expected
+  bytes (the immediate with the compare after it) found at both. The same
+  day, the recorded combat route (`tools/recipes/combat_ab.txt`) under
+  `BOF3X_STEAL=1` against a clean run at the same window size: capture 960
+  reads "You couldn't steal anything!" clean and "You grabbed Marbles!"
+  with the cheat, and the item list at 1740..1860 has Marbles as a sixth
+  entry (6/128); every other capture identical. The owner watched it:
+  "Looked right to me, with the marbles steal".
+- **Reversible?** Yes: the switch off, `BOF3X_STEAL` unset, or
+  `BOF3X_ORIGINAL=Cheat_StealAlways`.

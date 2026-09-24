@@ -299,7 +299,12 @@ What is established:
    **That night the owner recorded a world-map route** ([`world-map.md`](world-map.md)):
    its A/B found the compass needle the PC port never draws - three corners
    at depth 0, dropped by Capcom's device, a sliver under ours - fixed in the
-   backend (D41, DIV-0044, the owner's PSX screenshots the reference); the
+   backend (D41, DIV-0044, the owner's PSX screenshots the reference).
+   **2026-09-24: the sibling's three cheats are launcher settings** - EXP
+   and zenny multipliers in our `Battle_EnemyDefeated`, and the steal roll
+   patched at the port's two copies of it (DIV-0045, DIV-0046,
+   [`cheats.md`](cheats.md)); confirmed on the recorded combat route, the owner
+   watching. The
    route's 40-function queue is the next wave, the compass and HUD first;
    the place plates are paint in the world maps' texture pages, as the
    sibling found, and the localisation build's next data item.

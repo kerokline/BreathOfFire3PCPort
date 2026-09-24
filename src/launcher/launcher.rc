@@ -38,8 +38,35 @@ BEGIN
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
                     -1, 14, 191, 262, 9
 
+    PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 209, 52, 14
     DEFPUSHBUTTON   "&Play", IDOK, 172, 209, 52, 14
     PUSHBUTTON      "E&xit", IDCANCEL, 230, 209, 52, 14
+END
+
+// DIV-0045 / DIV-0046: the cheats (docs/cheats.md).
+IDD_CHEATS DIALOGEX 0, 0, 300, 150
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cheats"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Battle rewards", -1, 7, 7, 286, 64
+    LTEXT           "EXP won, times", -1, 14, 21, 90, 9
+    CONTROL         "", IDC_CH_EXP, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 18, 150, 14
+    LTEXT           "1", IDC_CH_EXP_V, 260, 21, 30, 9
+    LTEXT           "Zenny won, times", -1, 14, 37, 90, 9
+    CONTROL         "", IDC_CH_ZENNY, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 34, 150, 14
+    LTEXT           "1", IDC_CH_ZENNY_V, 260, 37, 30, 9
+    LTEXT           "1 is the game's own; 0 grants none at all, so no level-ups. Applied as each enemy falls.",
+                    -1, 14, 54, 276, 9
+
+    GROUPBOX        "Stealing", -1, 7, 76, 286, 46
+    AUTOCHECKBOX    "&Steal always succeeds", IDC_CH_STEAL, 14, 90, 270, 10
+    LTEXT           "Pilfer and Steal take the enemy's item on the first try whenever it carries one. Enemies with nothing still have nothing.",
+                    -1, 26, 102, 260, 18
+
+    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 7, 129, 52, 14
+    DEFPUSHBUTTON   "OK", IDOK, 182, 129, 52, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 240, 129, 52, 14
 END
 
 // DIV-0043: the SatPixie look's parameters, the preset's names and ranges.

@@ -133,6 +133,14 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         } else if (key == "wide") {
             if (value == "0") cfg.wide = false;
             else if (value == "1") cfg.wide = true;
+        } else if (key == "cheat.exp" || key == "cheat.zenny") {
+            char* end = nullptr;
+            const long v = std::strtol(value.c_str(), &end, 10);
+            if (end == value.c_str() || *end || v < 0 || v > 50) continue;
+            (key == "cheat.exp" ? cfg.cheats.exp : cfg.cheats.zenny) = static_cast<int>(v);
+        } else if (key == "cheat.steal") {
+            if (value == "0") cfg.cheats.steal = false;
+            else if (value == "1") cfg.cheats.steal = true;
         } else if (key == "scale") {
             if (value.size() == 1 && value[0] >= '2' && value[0] <= '8') cfg.scale = value[0] - '0';
         }
@@ -170,6 +178,11 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += std::string("background=") + (cfg.background ? "1" : "0") + "\r\n";
     out += "# 1 (shipped default) | 0 -> line 2 of the game's BOF3.CFG\r\n";
     out += std::string("renderer=") + (cfg.renderer ? "1" : "0") + "\r\n";
+    out += "# cheats (docs/cheats.md): EXP and zenny won in battle times 0..50, 1 the original's (DIV-0045);\r\n";
+    out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046)\r\n";
+    out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
+    out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";
+    out += std::string("cheat.steal=") + (cfg.cheats.steal ? "1" : "0") + "\r\n";
     out += "# 0 hides this launcher's dialog and starts the game straight away\r\n";
     out += std::string("show_launcher=") + (cfg.show_launcher ? "1" : "0") + "\r\n";
     return WriteWhole(path, out);
@@ -232,6 +245,13 @@ void ConfigApplyEnvironment(const Config& cfg) {
         const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};
         SetEnvironmentVariableW(L"BOF3X_SCALE", k);
     }
+
+    if (GetEnvironmentVariableW(L"BOF3X_EXP", existing, 64) == 0 && cfg.cheats.exp != 1)
+        SetEnvironmentVariableA("BOF3X_EXP", std::to_string(cfg.cheats.exp).c_str());
+    if (GetEnvironmentVariableW(L"BOF3X_ZENNY", existing, 64) == 0 && cfg.cheats.zenny != 1)
+        SetEnvironmentVariableA("BOF3X_ZENNY", std::to_string(cfg.cheats.zenny).c_str());
+    if (GetEnvironmentVariableW(L"BOF3X_STEAL", existing, 64) == 0 && cfg.cheats.steal)
+        SetEnvironmentVariableW(L"BOF3X_STEAL", L"1");
 
     // Neither is set for its default value: an unset variable is exactly what
     // the DLL treats as "the original's behaviour", and leaving it unset keeps

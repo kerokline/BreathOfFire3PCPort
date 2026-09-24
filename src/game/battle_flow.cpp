@@ -19,6 +19,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_flow_callees.h"
+#include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -309,8 +310,10 @@ extern "C" unsigned char __cdecl BattleEnemy_Chance70(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated(void) {
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
     unsigned char* e = Enemy();
-    SetLong(At(at::kExpTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kExpTotal))) + Word(e + 0x96)));
-    SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kZennyTotal))) + Word(e + 0x94)));
+    // DIV-0045: the yields times the launcher's multipliers, 1 unless set
+    // (src/game/cheats.cpp); the enemy's record keeps its own numbers.
+    SetLong(At(at::kExpTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kExpTotal))) + Word(e + 0x96) * Cheats_ExpMultiplier()));
+    SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kZennyTotal))) + Word(e + 0x94) * Cheats_ZennyMultiplier()));
     SetWord(e + 0x94, 0);
     e = Enemy();
     e[0x93] = static_cast<unsigned char>(e[0x93] | 0x40);

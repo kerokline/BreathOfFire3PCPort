@@ -10,6 +10,7 @@
 #include "game/gfx_texcache.h"
 #include "game/gfx_clut.h"
 #include "game/gfx_filter.h"
+#include "game/cheats.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
@@ -118,6 +119,7 @@ void InjectAll() {
     GfxUnpack_Inject();
     GfxVramOps_Inject();
     GfxFilter_Inject();
+    Cheats_Inject();            // DIV-0045 / DIV-0046, BOF3X_EXP / BOF3X_ZENNY / BOF3X_STEAL: nothing when unset
     MenuFrame_Inject();
     DrawPass_Inject();          // before what it calls: it clones their originals
     SpriteDraw_Inject();        // likewise: before PsxGpu_Inject and DrawEmit_Inject
