@@ -11213,3 +11213,298 @@ params = "void"
 impl = "src/game/area_backdrop.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x4112A0..0x4112B7 (0x18 bytes, then nops to 0x4112C0), cdecl, no calls, no jumps: Sprite_Current +0x2E = 0xA0, +0x30 = 0x50 - the sprite's screen point (what Sprite_UpdateScreen writes and Sprite_DrawOverlays reads) pinned to (160, 80). Rel32 scan of .text: 33 callers, eleven triads at 0x401F80 / 0x401FD0 / 0x402030, 0x404030 / 0x404080 / 0x4040E0, .. 0x424D50 / 0x424DA0 / 0x424E00 - one per world-map region overlay compiled into the exe - each calling it first, then moving the sprite's scale +0x40 by 0x2000, counting +9 down, setting +0x48 and the state +1, and tail-jumping to Sprite_UpdateScreen 0x5890E0. World-map route (recipe_worldmap): 259 calls, from 0x404035 (24) and 0x404085 (211); not reached by the attract cycle or the shop route. Hypothesis in the name: that the pinned sprite is the party's marker over the map. It is not the sky (widescreen.md section 3d called 0x4112A9 that): a centred point needs nothing under the primitive shift."
+
+# ---------------------------------------------------------------------------
+# Group BF of the seventh takeover round: the small battle helpers
+# (docs/battle_misc.md, src/game/battle_misc.cpp). Read whole with capstone
+# 2026-09-23 against the PSX BATTLE.EMI overlays where paired (the sibling's
+# overlay captures, sections 8a80230e.. for BATTLE.EMI#3 and 4065db04.. for
+# BATTLE.EMI#15); sizes are the extents read, not pe_funcs.py's. Calls into
+# other groups' functions are raw addresses in battle_misc_callees.h.
+
+[[func]]
+pc = 0x4469F0
+name = "Battle_WrapIndex"
+ret = "long"
+params = "long high, long low, long value"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4469F0..0x446A09 (0x1A bytes), cdecl, no calls: value below low returns high, value above high returns low, else value; signed compares on whole dwords. 24 E8 call sites, all in the item and skill menu handlers after 0x447840; most push the whole eax on to 0x445730 / 0x4457F0. No PSX twin paired. Combat route: 4 calls."
+
+[[func]]
+pc = 0x446A10
+name = "Battle_PulseStep"
+psx = 0x801DD7C8
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446A10..0x446A43 (0x34 bytes), no calls: the byte 0x904AC8 steps by 2, down while 0x904AC4 is 1, up otherwise; 0x1F or more sets 0x904AC4, 0 clears it (tested in that order). PSX 0x801DD7C8 (BATTLE.EMI#3) the same on 0x80146304 / 0x80146300; BattleMenu_ConfirmDispatch calls it first on both sides (PC 0x42EED0). Named for the menu cursor's pulse it drives, which is not read here. Combat route: 619 calls."
+
+[[func]]
+pc = 0x446A50
+name = "Battle_PlayActorCue"
+psx = 0x801DD820
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned cue"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446A50..0x446A7B (0x2C bytes): Sound_PlayEffect of the u16 at 0x64E3BC + (word +0x2C of the record Field_State points at + (cue and 0xFF) * 3) * 2, pushed in ecx with the record pointer's upper half above it; its eax returned (0x4FC079 returns it on). The PSX Battle_PlayActorCue 0x801DD820 term for term, 0x8014624C there. 13 E8 call sites. Combat route: 11 calls."
+
+[[func]]
+pc = 0x446BB0
+name = "Battle_StatusTint"
+psx = 0x801DDA7C
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned status"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446BB0..0x446BCD (0x1E bytes): when status has bit 7 (a byte test of the argument), Sprite_SetTint(Sprite_Current, -6, -10, 0, 0) and its eax returned; otherwise a bare ret, eax the caller's (0x44F40E and 0x44F446 return it on, so ours is a naked test and jump). PSX 0x801DDA7C the same with 0x8019751C and scratch 0x1F800044. 12 E8 call sites, after status words are or-ed in. Named for what it does; what status 0x80 is, is not read. Combat route: 4 calls."
+
+[[func]]
+pc = 0x446BD0
+name = "Battle_InitActorContext"
+psx = 0x801DDAB8
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446BD0..0x446C23 (0x54 bytes): slot = al of 0x435180(0, 6); the 0x84-byte context at 0x93A000 + slot * 0x84 gets +0x80 = Sprite_Current (read after the call), +9 = 0, and the object's dwords +0x34, +0x38, +0x3C. PSX 0x801DDAB8: 0x801E584C(0, 6), contexts of 0x78 at 0x801EC2A0, the object at +0x74. Only caller Battle_InitActorContexts. Combat route: 4 calls."
+
+[[func]]
+pc = 0x446C30
+name = "Battle_InitActorContexts"
+psx = 0x801DDB44
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446C30..0x446CA2 (0x73 bytes): the three party objects (ObjTrio, stride 0x14C) then the eight enemy objects (0x93B960, stride 0x128); one with bit 0 of byte 0 becomes Sprite_Current and Field_State (party) or 0x939AD8 (enemies) and gets Battle_InitActorContext, any other 0x435180(0, 0), so the slots stay in actor order. PSX 0x801DDB44 the same (0x1F800044 and 0x8014624C / 0x801EB458). Called once from 0x42E58A (battle set-up). Combat route: 1 call."
+
+[[func]]
+pc = 0x446E40
+name = "Battle_LoadSoundByKey"
+ret = "unsigned char"
+params = "unsigned key, unsigned set"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446E40..0x446E98 (0x59 bytes): the list pointer 0x6565BC[set and 0xFF]; null: al 1. Its dwords walked until one is -1 or has high half (shifted logically) equal to key and 0xFF; -1: al 1; else Sound_LoadStream(low half + 0x1000) - a SND kind-1 file - and al 0. 4 E8 call sites, each testing al. No PSX twin paired (the PSX streams from CD). Combat route: 3 calls."
+
+[[func]]
+pc = 0x446FB0
+name = "Battle_SetActorBit"
+psx = 0x801DE158
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned actor"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446FB0..0x446FC2 (0x13 bytes): the u16 0x904B82 or-ed with 1 shl (actor and 31); eax is the shifted 1 (0x42FBE0 pushes it on with a word over the low half). PSX 0x801DE158 on 0x801463BE, sllv. 19 E8 call sites. Combat route: 17 calls."
+
+[[func]]
+pc = 0x446FD0
+name = "Battle_ClearActorBit"
+psx = 0x801DE178
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned actor"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446FD0..0x446FE4 (0x15 bytes): the u16 0x904B82 and-ed with not (1 shl (actor and 31)); eax the mask. The sibling's Battle_ClearActorBit 0x801DE178 (hypothesis there, called from Battle_EnemyDefeated) term for term. 14 E8 call sites. Combat route: 16 calls."
+
+[[func]]
+pc = 0x446FF0
+name = "Battle_SpawnActorCopies"
+psx = 0x801DE19C
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446FF0..0x44710C (0x11D bytes): actors 0..10; party (index 2 or less): object present and its +0x134 without bit 3; enemy: 0x4456C0(index) al 0 and its +0x114 without bit 3. Each: slot = 0x435180(0, 7), Sprite_Current = the object, the context 0x93A000 + slot * 0x84 a rep movsd copy of the object's 0x80 bytes, +0x80 the object, +6 0, +5 7, +1 0, +2 0, +0x29 3, +0x5C..+0x5F 0. eax: the last context or 0x4456C0's, with al 11 (its caller 0x42E9C7 returns it). PSX 0x801DE19C by call anchor; what the copies are for is not read. Combat route: 4 calls."
+
+[[func]]
+pc = 0x447840
+name = "ItemMenu_CanUseSelected"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x447840..0x44787B (0x3C bytes): list = 0x591E50(byte 0x929F06, byte 0x8033AB, 1) - the actor's inventory page (0x591E50 returns a party record +0x6A / +0x74 / +0x7E / +0x60 by page) - then 0x57DA70(2, actor, the list byte at the cursor 0x8033AC), the actor read again, both dwords carrying the list pointer's upper half; al 1 when that returns al 0. Only caller 0x447776, which plays cue 0x107 when al is 1. Hypothesis in the name: that 0x57DA70 mode 2 is the usable test. No PSX twin paired. Combat route: 3 calls."
+
+[[func]]
+pc = 0x447E60
+name = "ItemMenu_SetupForActor"
+ret = "void"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x447E60..0x447F33 (0xD4 bytes), no calls: window record 16 (0x8033A0) for the actor at byte +5 of the context 0x939EC4 points at: +0 1, +1 8, +2 2, +3 2, +0xA the actor, +0xD 0xFF, +8 2, +0xB / word +0x10 / +0xC the actor's three bytes at 0x9045FC + actor * 3, +9 0, word +0x14 2 when the dword +0x10 of what 0x939FA0 points at has bit 1 and not bit 17 else 0, word +4 0x140, word +6 0x3F; then 0x80340C 0, 0x80340E 0, 0x929F06 the actor read again, 0x80340D 8. Only caller 0x447469. No PSX twin paired. Combat route: 3 calls."
+
+[[func]]
+pc = 0x449E00
+name = "Battle_ReturnTrue"
+psx = 0x80097F44
+psx_overlay = "BATTLE.EMI#15"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x449E00..0x449E02 (3 bytes, then nops to 0x449E10): mov al, 1; ret - a complete function, not a stub. PSX 0x80097F44 (BATTLE.EMI#15) is jr ra with v0 = 1, called by Item_TargetSetup as 0x80097F44() ? 0 : ..; its 13 PC callers all test al. Combat route: 6 calls."
+
+[[func]]
+pc = 0x449E10
+name = "ItemMenu_SetupForParty"
+psx = 0x80097F4C
+psx_overlay = "BATTLE.EMI#15"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x449E10..0x449E8A (0x7B bytes), no calls: window record 16 (0x8033A0) for the party's item list: +0 1, +2 1, +0xA / +0xB / +0xC the bytes 0x904605..0x904607, +3 2, +8 2, +1 8, +0xD 0xFF, +9 0, word +0x10 0, word +4 0xFF56, word +6 0x3F, 0x80340C 0, 0x80340D 8, 0x80340E 0; eax 0. PSX 0x80097F4C, ItemMenu_Open's call (gap89 tier). Only caller 0x4481E9. Combat route: 1 call."
+
+[[func]]
+pc = 0x449FE0
+name = "ItemMenu_FreeWindows"
+psx = 0x800981D4
+psx_overlay = "BATTLE.EMI#15"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x449FE0..0x449FFF (0x20 bytes): window records 16..19 (0x8033A0, stride 0x24) each made the current record 0x905B84 and freed by Window_FreeCurrent; the last call's eax returned (two callers tail-jump here). PSX 0x800981D4 frees records 0x10..0x13 through 0x801598DC alike. Combat route: 4 calls."
+
+[[func]]
+pc = 0x44A5C0
+name = "BattleBanner_Dispatch"
+psx = 0x801DE404
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A5C0..0x44A647 (0x88 bytes): 0x904AE9 = 0; for layer 0 then 1, each of the 8 pool entries at 0x93B8E0 (stride 0xC) made 0x93B8C0, then skipped unless +0 set, +3 the layer and +1 sharing no bit with 0x904AE9; DamageScratch = the index; call through a five-entry table built on the stack by immediates: 0x437CC0 (bare ret) for kinds 0, 3, 4, 0x44A740 for 1, 0x44A7B0 for 2. No bound on the kind. The sibling's BattleBanner_Dispatch (its body at 0x801DE440, the entry 0x801DE404 builds the table from 0x801D0C84: nop, kind 1, kind 2, nop, nop). Called from the battle frame 0x42E3A8. Combat route: 2,091 calls."
+
+[[func]]
+pc = 0x44A650
+name = "BattleBanner_Add"
+psx = 0x801DE528
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned kind, unsigned b2, unsigned layer, unsigned timer, const char *text"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A650..0x44A6D8 (0x89 bytes): the first entry from 2 to 7 whose +0 is 0 gets +0 or 1, +1 kind, +2 b2, +3 layer, word +8 the timer byte, +4 text, +0xA 0; eax index * 12, or 0x15 when none is free. PSX 0x801DE528 the same (Escape_Begin calls it as (1, 0, 0, 0x3C, text)). 31 E8 call sites. Combat route: 4 calls."
+
+[[func]]
+pc = 0x44A6E0
+name = "BattleBanner_Set"
+psx = 0x801DE5D4
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned slot, unsigned kind, unsigned b2, unsigned layer, unsigned timer, const char *text"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A6E0..0x44A73A (0x5B bytes), no calls: entry slot and 0xFF (no bound) filled as BattleBanner_Add fills one; eax slot * 12. PSX 0x801DE5D4 by call anchor. 4 E8 call sites. Combat route: 13 calls."
+
+[[func]]
+pc = 0x44A810
+name = "BattleBanner_ClearAll"
+psx = 0x801DE7CC
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A810..0x44A82A (0x1B bytes), no calls: bytes +0, +1, +2 of the eight entries to 0; eax 0x93B941. PSX 0x801DE7CC by call anchor. Callers 0x42E4A2 and 0x43740A. Combat route: 1 call."
+
+[[func]]
+pc = 0x44A830
+name = "BattleBanner_NoneOfKind"
+psx = 0x801DE820
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned char"
+params = "unsigned kind"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A830..0x44A871 (0x42 bytes), no calls: al 0 when an entry has +0 non-zero and +1 equal to kind and 0xFF, else 1 (eax is exactly that). The sibling's BattleBanner_NoneOfKind 0x801DE820 term for term. Callers the kind 1 and 2 handlers 0x44A78C (kind 1) and 0x44A7E7 (kind 4). Combat route: 4 calls."
+
+[[func]]
+pc = 0x44A880
+name = "BattleQueue_Push"
+psx = 0x801DE888
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned a, unsigned b, unsigned long value"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A880..0x44A8B6 (0x37 bytes), no calls: the entry at 0x93C2C0 + index * 8, index the byte 0x93C2A1 (no bound), gets +0 a, +1 b, dword +4 value; 0x93C2A1 = (index + 1) and 0xF; eax index * 8. PSX 0x801DE888 on 0x801EB520 / 0x801EC298. 16 E8 call sites. Combat route: 5 calls."
+
+[[func]]
+pc = 0x44A8C0
+name = "BattleQueue_Pending"
+psx = 0x801DE8F4
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A8C0..0x44A8D0 (0x11 bytes): al = the write index 0x93C2A1 differs from the read index 0x93C2A0. PSX 0x801DE8F4 (0x801EC298 against 0x801EBE74). Only caller 0x42E942, which tests al. Combat route: 1 call."
+
+[[func]]
+pc = 0x44A8E0
+name = "BattleBanner_SetMessage"
+psx = 0x801DE914
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "unsigned msg, unsigned b2"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A8E0..0x44A90A (0x2B bytes): Str_CopyN(0x904EC0, the pointer 0x669DE0[msg and 0xFF], 8), then banner entry 0's +2 = b2; Str_CopyN's eax returned. PSX 0x801DE914 copies from 8-byte strings at 0x801EAFB0 + msg * 8; the PC's table holds pointers. Callers 0x447124 and 0x447FF3. Combat route: 7 calls."
+
+[[func]]
+pc = 0x44A990
+name = "BattleBanner_ShowName"
+psx = 0x801DEA20
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "const unsigned char *actor"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44A990..0x44A9FE (0x6F bytes): Str_CopyN(0x904EC0, actor + 0x80, 8) - the enemy object's name, the 16 bytes the port prepended to the working record; when 0x904B7A is set, the string 0x669DE4 points at appended inline (repne scasb twice, rep movsd, rep movsb); then BattleBanner_Set(0, 1, 1, 0, 0xFF, 0x904EC0), whose eax is returned. PSX 0x801DEA20 copies 5 bytes from +0x74 and strcats 0x801EAFB8 under 0x801463B6. 7 E8 call sites. Combat route: 12 calls."
+
+[[func]]
+pc = 0x44AAD0
+name = "EnemyAI_TurnCheck"
+psx = 0x80098BB0
+psx_overlay = "BATTLE.EMI#15"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44AAD0..0x44AE12 (0x343 bytes) + jump table 0x44AE14 (20 dwords) + index bytes 0x44AE64 (0x26): the four rows of 16 at 0x8C5600 + (byte +0xF0 of the enemy 0x939AD8) * 0x8C; opcodes 0..8 EnemyAI_CondPartyFlag masks 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80; 9 / 0xA / 0x24 acting kind 0x904B35 4 / 1 / 1 with word +0x108 non-zero; 0x16 / 0x17 byte +0x92 bits 3 / 7; 0x18 byte +0xAA zero; 0x21..0x23 masks 1, 2, 4; 0x25 u16 +0xA4 not above s16 +0x108; the once-rows through 0x44B2C0 / 0x44B3A0 / 0x44B2E0, the rest 0x44B3A0 only; then 0x44B920, its eax returned. The sibling's EnemyAI_TurnCheck 0x80098BB0 (BATTLE.EMI#15, hypothesis there) opcode for opcode. Only caller 0x436908. Combat route: 8 calls."
+
+[[func]]
+pc = 0x5171A0
+name = "Str_CopyN"
+psx = 0x8015030C
+ret = "char *"
+params = "char *dst, const char *src, unsigned n"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5171A0..0x5171D3 (0x34 bytes), no calls: at most n and 0xFF bytes of src to dst, stopping at a NUL, byte by byte forward, then a NUL; eax the NUL's address (four callers tail-return it). PSX boot 0x8015030C by call (the banner functions call it on both sides). 14 E8 call sites. Combat route: 23 calls."
+
+[[func]]
+pc = 0x517440
+name = "Sprite_UpdateObjectScreens"
+psx = 0x801A1624
+ret = "void"
+params = "void"
+impl = "src/game/battle_misc.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x517440..0x517483 (0x44 bytes): each of the 30 Sprite_Objects made Sprite_Current; one present (bit 0) whose type byte +6 (read once, after that store) is 7 or 8 and up gets Sprite_UpdateScreenA for type 0xA, nothing for 9, Sprite_UpdateScreenSlot otherwise. PSX 0x801A1624 only by the callers tier. Called from the battle frame 0x42E3D1. Combat route: 2,091 calls."
