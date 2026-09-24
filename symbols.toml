@@ -11194,3 +11194,70 @@ name = "Input2_Pressed"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "Pad 2's pressed-this-frame word (Input_Latch)."
+
+# --- The world map's frame, HUD and compass needle (docs/world-map.md section 7, 2026-09-24) ---
+
+[[func]]
+pc = 0x404160
+name = "WorldMap_FrameStep"
+ret = "void"
+params = "void"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x404160..0x404220 (0xC1 bytes: the dispatcher and its case blocks 0x404180, 0x4041B0, 0x4041E0), cdecl, called from 0x404150 (the task frame: this, then a tail jump to the HUD's state machine 0x404230). By byte +2 of Sprite_Current through the four-entry table 0x5EF5F8: 0 the shared block 0x411310 (eleven tables name it: unless 0x9045FA is 2 or Field_ScriptFlags bit 8, word +0x2E = -0x30 and the state 1); 1 word +0x2E += 0x10, state 2 at 0x10 and above, then as 2; 2 the mode byte 2 makes the state 3, then 0x404390(0x10, word +0x2E); 3 word +0x2E -= 0x10, state 0 at -0x30 and below, state 1 unless the mode byte is 2, then 0x404390(0x10, word +0x2E). The pushed y carries a stale high half; every reader takes the low word. Ten byte-identical copies with their own tables (0x4020B0, 0x408070, 0x40BDF0, 0x4101A0, 0x414AC0, 0x419140, 0x41AFB0, 0x423DE0, 0x424E80): one per world-map area. PSX: the overlay 0x801F2C00 family (AREA016.EMI section 13, JP), a jalr through a state table. World-map route: 564 calls."
+
+[[func]]
+pc = 0x404390
+name = "WorldMap_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x404390..0x404554 (0x1C5 bytes), cdecl, eleven calls, every jump internal; the PSX twin 0x801F3B00 in JP AREA016.EMI's 0x801F2C00 section, branch for branch. Nothing unless Draw_PassFlags & 0x1B. Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x9C, 0), Gfx_CommitPrim(1, 0xC); 0x404560(x, y, 0) the dial; cell = AreaMap_ByteAt(word 0x905E66, word 0x905E62); legend 1 at (x+0x30, y) unless cell is 0xA0/0xA1/0xAE or Field_ScriptFlags2 bit 12, its key from the button map word 0x903580 over the six entries of 0x5EF670 (mask word, sprite byte +2) at (x+0x38, y+8) as index+1 (lit) or index (withheld); legend 2 at (x+0x30, y+0x10) unless cell is 0xA0/0xA1, its key from word 0x90358C over EIGHT entries (7 and 8 are the state table 0x5EF688's words; kept) at (x+0x38, y+0x10); legend 3 at (x+0x30, y+0x18) when 0x531920(cell x, cell z) is non-zero, or flag bit 12, or (0x90412C & 0x7F) == 0xC, or Field_ScriptFlags bit 14; 0x408530(x+0x18, y+0x18). Callers: the state machine's cases 0x4041CF, 0x404218. World-map route: 562 calls."
+
+[[func]]
+pc = 0x404560
+name = "WorldMap_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x404560..0x40461B (0xBC bytes), cdecl, five calls, every jump internal; the PSX twin 0x801F39D8 (JP AREA016.EMI section 13). Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x9C, 0), Gfx_CommitPrim(1, 0xC); at Gfx_PacketNext read again: Gpu_SetSprt, Gpu_SetSemiTrans(prim, (index & 0xFF) != 0) - the PSX passes 1 for every sprite: the port's dial (index 0) is opaque, the PSX's translucent (D42) - colour 0x80 x 3, x and y as floats of the arguments' low words at +8 / +0xC, CLUT 0x7B80 at +0x16, (w, h, u, v) from the 4-byte table 0x5EF618 by index & 0xFF at +0x18 / +0x1A / +0x14 / +0x15; Gfx_CommitPrim(1, 0x1C). Eight callers (0x404390 x 6, 0x404620 x 2); eleven byte-identical copies with their own tables (0x4024B0, 0x408470, 0x40C1F0, 0x4105A0, 0x411720, 0x414F00, 0x419540, 0x41B3B0, 0x4241E0, 0x425280). World-map route: 3,614 calls."
+
+[[func]]
+pc = 0x404620
+name = "WorldMap_DrawHud"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x404620..0x404677 (0x58 bytes), cdecl, three calls, one internal jump; the PSX twin 0x801F40C4 (JP AREA016.EMI section 13). Nothing unless Draw_PassFlags & 0x1B; 0x404560(x, y, 4) the region box, 0x404560(x+0x80, y, 5) its cap, then Text_DrawAt(x+4, y+4, 0, 0xFF, 0x803580 + the low word of the dword 0x803588) - the area's 0x80010000 section's string, the word read after the sprites. Callers: the HUD state machine 0x404230's cases 0x4042A9, 0x404325, 0x40437E (each with (0x5C, word +0x30 of Sprite_Current)). One other copy, 0x402570. World-map route: 477 calls."
+
+[[func]]
+pc = 0x408530
+name = "WorldMap_DrawNeedle"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x408530..0x4086C5 (0x196 bytes), cdecl, nine calls, no jumps; the PSX twin 0x801F3ECC (JP AREA016.EMI section 13), the same colours. The compass needle (docs/world-map.md section 3, D41, DIV-0044): Gte_PushMatrix; a local MATRIX by Gte_RotMatrix(Camera_Angles), its translation zeroed, Gte_SetRotMatrix and Gte_SetTransMatrix of it; (-10,0,0), (0,-4,0), (0,4,0), (10,0,0) into Prim_VertexScratch (pads untouched); Gpu_SetPolyG4 at Gfx_PacketNext; Gte_RotTransPers4 of the four into the corners +8 / +0x18 / +0x28 / +0x38 with two stack locals (ten arguments pushed); Gte_PrimDepths4_10B; each corner less (0x9E - x, 0x76 - y) on the x87 (fild, fsub); colours FF0000, 800080, 800080, 0000FF; Gfx_CommitPrim(1, 0x44); Gte_PopMatrix. The arguments' low words (movsx). Eleven callers, one per world-map frame copy (0x402498, 0x404548, 0x408458, 0x40C1D8, 0x410588, 0x411708, 0x414EE8, 0x419528, 0x41B398, 0x4241C8, 0x425268): the linker folded the copies onto one. World-map route: 562 calls."
+
+[[func]]
+pc = 0x572F70
+name = "MapView_ItemHalfAt"
+psx = 0x80156468
+ret = "unsigned char *"
+params = "long x, long y"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x572F70..0x572F9E (0x2F bytes), cdecl, one call, one internal jump: item = MapView_ItemAt(x, y) (the whole eax); 0 when 0, else DrawItems + (Gfx_BufferIndex + item * 2) * 0x48 - the item's half for this buffer, the index read after the call. The PSX 0x80156468 (psx_pair gap15) is the same over its 0x50-byte halves. Eleven callers (E8 scan: 0x402A4D, 0x404AFD, 0x408BBD, 0x40C7DD, 0x410B3D, 0x411CBD, 0x419ADD, 0x42477D, 0x4258CD, 0x5154D1, 0x51559D). World-map route: 115,056 calls."
+
+[[func]]
+pc = 0x572FA0
+name = "MapView_LinkPrimAt"
+psx = 0x801564C4
+ret = "void"
+params = "unsigned long x, unsigned long z, int dy, unsigned size"
+impl = "src/game/world_map.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x572FA0..0x57304E (0xAF bytes), cdecl, one call, every jump internal; the PSX 0x801564C4 (psx_pair call-disputed, confirmed by reading: the same row, bound and append) is the twin. row = x.high + z.high - MapView_Origin's two words + (x.low != 0) + (z.low != 0) + (signed byte dy) + 2; nothing unless 0 <= row < 0x38 and (Gfx_BufferIndex << 16) + 0x7F1BAC is above Gfx_PacketNext + (size & 0xFF) (unsigned); then Gpu_LinkPrim(the dword at 0x8022C4 + (Gfx_BufferIndex + row * 6) * 8, Gfx_PacketNext) - the tail of that map-view row's list in Gfx_FrameNodes - and, with the buffer index and Gfx_PacketNext read again, the tail slot = Gfx_PacketNext, Gfx_PacketNext += size & 0xFF. No result read: 371 E8 callers, draw code. World-map route: 9,714 calls."

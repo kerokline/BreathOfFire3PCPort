@@ -1171,4 +1171,36 @@ not in the port's code, so the primitive is Capcom's byte for byte.
 the map; the PC port draws it opaque. The dial is one of the two sprites
 `0x404620` draws through `0x404560`, which has a semi-transparent path
 (`Gpu_SetSemiTrans`) - which path the dial takes, and why it differs, is for
-the takeover ([`world-map.md`](world-map.md) §4).
+the takeover ([`world-map.md`](world-map.md) §4). *Read since: D42.*
+
+## D42 — The world map's dial is opaque: the port clears its semi-transparency bit (port change, kept)
+
+**Found:** the owner's screenshots of the PlayStation releases beside the PC
+port, 2026-09-23; read on the takeover of the world map's frame, 2026-09-24
+([`world-map-hud.md`](world-map-hud.md) §5.1).
+
+**The defect.** The world map's sprite draw `WorldMap_DrawSprite` `0x404560`
+(the port's; the PSX twin is `0x801F39D8` in the map overlay `0x801F2C00`
+off the JP disc) draws every sprite of the dial page - the dial, the three
+legend labels, the key glyphs, the region box - through one `SPRT`. The PSX
+calls `SetSemiTrans(prim, 1)` for all of them; the port calls
+`Gpu_SetSemiTrans(prim, index != 0)`, so the dial, index 0, is the one sprite
+drawn with the bit clear. **A port change**, one operand, and deliberate:
+the PlayStation blends a textured semi-transparent primitive per texel (only
+a texel whose CLUT entry has STP set is blended - on the JP dial 1,054 of
+5,376 texels, the glass over the map; the rim and markings are opaque; the
+legend has no STP texel and draws opaque), while the port's texture path
+drops STP (`Gfx_ConvertRow`'s palettes force every non-zero cell opaque) and
+its Direct3D blend is per primitive (`D3d_PrimColor` alpha `0x80`,
+`SRCALPHA / INVSRCALPHA`). With the PSX's operand the port would draw the
+whole dial, rim and all, at 50 %; the porting house cleared the bit instead.
+The same loss runs the other way for the legend: 50 % on the PC, opaque on
+the PSX.
+
+**Kept.** Ours is byte faithful to the port (the flip is negative control P1,
+refused in every opaque-path round). The PlayStation's picture needs STP
+carried into the 8-bit page's palette as alpha and the sprite handlers'
+blend keyed on it - a texture-path change that would make every
+semi-transparent 8-bit sprite in the game blend per texel as on the PSX -
+after which `SetSemiTrans(prim, 1)` here is a one-line divergence. Owed: the
+owner's eye, if that path is built.
