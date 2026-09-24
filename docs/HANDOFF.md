@@ -1037,7 +1037,9 @@ two faults of ours, fixed (DIV-0050's verification, `tools/close_probe.py`);
 committed as `785e202`. Step 2, the bindings in
 `bof3x.ini` and the launcher's Controls dialog, is `8a80ff0`. Step 3, DIV-0051,
 the Controller row's one icon column, is confirmed by the owner off
-`analysis/shots/ctrl_icons6` and committed. Next is step 4,
+`analysis/shots/ctrl_icons6` and committed (`c3dc865`). The controls work is
+**closed at the owner's word**; the in-game binding screen is I20. The
+branch is not pushed and has no PR. Next is step 4,
 the seventh Config row and the binding screen ([`controls.md`](controls.md)
 §4.3). Next is step 2, the physical map in
 `bof3x.ini` with a launcher Controls tab, then the Controller row back to

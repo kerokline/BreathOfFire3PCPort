@@ -1,7 +1,8 @@
 # Controls: what the port reads, what the Config panel's columns mean, and a plan for modern pads
 
-**Status:** IN PROGRESS (2026-09-24) - the read is done; step 1 of §6 is
-built and confirmed in play (DIV-0050, `src/game/pad_read.cpp`), the rest is not. The owner's
+**Status:** DONE (2026-09-24) - steps 1 to 3 of §6 built and confirmed by
+the owner (DIV-0050, DIV-0051); step 4, the in-game binding screen, deferred
+to [`IDEAS.md`](IDEAS.md) I20 at the owner's word. The owner's
 decisions are in §5.
 
 ## 1. What the 2001 port actually does (read 2026-09-24)
@@ -288,4 +289,7 @@ words decide what the word does.
    glyph shorter, and a sixth with the frame a cell past the box again, at
    the owner's word (`ctrl_icons5`, `ctrl_icons6`) - the sixth is the one
    built, **confirmed by the owner: "perfect"**.
-4. The seventh row and the binding screen (§4.3).
+4. **Deferred** (the owner, 2026-09-24: "I like this dual approach - config
+   menu for mapping controllers to PSX buttons, in-game PSX button mapping
+   - for now"): the seventh row and the binding screen of §4.3 are
+   [`IDEAS.md`](IDEAS.md) I20.
