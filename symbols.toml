@@ -355,44 +355,6 @@ evidence = "Battle_ScaleDamage 0x446430 reads the weapon/element byte from 0x903
 note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x86 equivalent, so the port relocated it to an ordinary global. Expect the same for every other 0x1F80xxxx address: they will never transfer by arithmetic. Only the one word is confirmed; the extent of the relocated block is unknown."
 
 [[func]]
-pc = 0x445A30
-psx = 0x801DBB40
-psx_overlay = "BATTLE.EMI#3"
-name = "Battle_ApplyDamage"
-args = ["attacker", "target"]
-status = "evidence"
-evidence = "disasm 2026-09-21, term for term against the PSX evidence note (sibling names/functions.toml): calls 0x445CF0(attacker, target, 0xFFFF) at 0x445A79 and takes the signed return (movsx at 0x445A86); 0x445CF0 -> 0x4462B0 -> Battle_ScaleDamage 0x446430. Target <= 2 uses party HP [esi + 0x802DD8] with max HP at +8 (0x802DE0), target >= 3 uses enemy HP [esi + 0x93BA04] with max HP at +0xC (0x93BA10) and status +0x68 |= 4 on the clamp (0x445C38). A negative amount heals, clamped at max. A kill sets HP 0 with a survive check against the byte at HP +4 (0x445B03). Enemy HP 0xFFFF is skipped (0x445B89). Then weapon element chars 'J'/'L'/'O' at party +0x82 (0x802DD2) roll through 0x44FA70 and inflict through 0x44F1D0(target, 0x40 / 8 / 0x20) (0x445C6C..0x445CD2). Returns the amount (0x445CDA)."
-note = "pe_xref.py does not see its HP accesses: it indexes only operands with no base register (docs/kinship-probe-battle-engine.md section 2)."
-
-[[func]]
-pc = 0x446430
-psx = 0x801DCD18
-psx_overlay = "BATTLE.EMI#3"
-name = "Battle_ScaleDamage"
-args = ["attacker", "target", "base"]
-status = "evidence"
-evidence = "disasm 2026-09-18, term for term against the PSX evidence note: base << 8 into 8.8 fixed, the multiplier clamped to at least 0xCD (= 205/256), rand() & 7 indexing an eight-entry variance table at 0x64E38C, /256; then if the weapon byte at 0x903850 & 0x1F, multiply by Battle_ElementAffinity 0x44EE80 and divide by 100 (magic 0x51EB851F, sar 5); then if & 0x20, multiply by s16 0x64E3AC[affinity class] and divide by 100. Both tables hold the PSX values exactly."
-
-[[func]]
-pc = 0x44B9F0
-psx = 0x8009A160
-psx_overlay = "BATTLE.EMI#15"
-name = "Effect_ApplyResult"
-args = []
-status = "evidence"
-evidence = "disasm 2026-09-21 against the PSX evidence note (sibling names/functions.toml). Actor status |= 0x31 on both sides (0x44BA07 party, 0x44BA1F enemy). kind == 4 selects a skill (0x44BA35). Charge flag 0x80 multiplies by the power word 0x939FEA (0x44BA5E, 0x44BA77). The effect handler is call [0x64E73C + 4 * 0x64E540[id]] (0x44BAF2, 0x44BAF8), or for an item [0x64E73C + 4 * 0x64E72C[category][id]] (0x44BB17, 0x44BB23); on both platforms the category table sits 0x10 below the handler table (PSX 0x800B164C / 0x800B165C). The handlers fill the result record at *0x904B60, HP delta at +4. Deltas are clamped to +-9999 (0x270F at 0x44BB90, -9999 at 0x44BBAA), the kill flag is |= 4 (0x44BC2E), and HP 0xFFFF is immune (0x44BCC3)."
-note = "No stack argument on PC: the actor comes from the global 0x904B54 (0x44B9F0), where PSX passes it. The pe_funcs.py extent (13,079 bytes) is not this function's size: it runs to 0x44BEC6 and the rest is the 0x64E73C handlers, which are pointer-reached (docs/kinship-probe-battle-engine.md section 2). Do not take a size from that extent."
-
-[[func]]
-pc = 0x44EE80
-psx = 0x8009FA78
-psx_overlay = "BATTLE.EMI#15"
-name = "Battle_ElementAffinity"
-args = ["target", "element_mask"]
-status = "evidence"
-evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 on the weapon byte & 0x1F, and reads the five element-affinity class bytes at enemy record +0x3F..+0x43 (0x93BA1F..0x93BA23) — the PSX fire/ice/lightning/earth/wind block at enemy +0x2F..+0x33 (BATTLE_RAM.md, The resistance grid) at the EnemyWorkingRecords shift."
-
-[[func]]
 pc = 0x44F030
 psx = 0x8009FD08
 psx_overlay = "BATTLE.EMI#15"
@@ -11213,3 +11175,218 @@ params = "void"
 impl = "src/game/area_backdrop.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x4112A0..0x4112B7 (0x18 bytes, then nops to 0x4112C0), cdecl, no calls, no jumps: Sprite_Current +0x2E = 0xA0, +0x30 = 0x50 - the sprite's screen point (what Sprite_UpdateScreen writes and Sprite_DrawOverlays reads) pinned to (160, 80). Rel32 scan of .text: 33 callers, eleven triads at 0x401F80 / 0x401FD0 / 0x402030, 0x404030 / 0x404080 / 0x4040E0, .. 0x424D50 / 0x424DA0 / 0x424E00 - one per world-map region overlay compiled into the exe - each calling it first, then moving the sprite's scale +0x40 by 0x2000, counting +9 down, setting +0x48 and the state +1, and tail-jumping to Sprite_UpdateScreen 0x5890E0. World-map route (recipe_worldmap): 259 calls, from 0x404035 (24) and 0x404085 (211); not reached by the attract cycle or the shop route. Hypothesis in the name: that the pinned sprite is the party's marker over the map. It is not the sky (widescreen.md section 3d called 0x4112A9 that): a centred point needs nothing under the primitive shift."
+
+# ---------------------------------------------------------------------------
+# Group BE of the seventh round (2026-09-23): damage, effects and affinities -
+# the damage chain, the effect result and its two amounts, the element
+# affinity, the turn order around them and the enemies' AI conditions.
+# src/game/battle_damage.cpp, docs/battle_damage.md. Every PSX twin is in
+# BATTLE.EMI#3 (load 0x801D0C00) or BATTLE.EMI#15 (load 0x80093800), read in
+# the sibling's Ghidra export (analysis/ghidra/*_decomp) and in capstone MIPS.
+# Four entries moved here from the kinship-probe section (Battle_ApplyDamage,
+# Battle_ScaleDamage, Effect_ApplyResult, Battle_ElementAffinity).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x444F40
+name = "Battle_BuildEntryOrder"
+psx = 0x801DA7A4
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x444F40..0x4450D6 (0x197 bytes), cdecl, three calls, every jump internal; the PSX 0x801DA7A4 (capstone MIPS, BATTLE.EMI#3) branch for branch, called by the sibling's round flow between Battle_ClearCommands and the command menu. Enemies 3..10 through 0x445980 for a sum and a highest agility nothing reads (the PSX too); each party member passing the gate (0x904B7A set needs second flags bit 15) and 0x4458B0 listed as (agility +0x98, actor), sorted highest first (signed words, swap when i < j), then 0x904AB6..0x904AB8 = 0xFF, 0x904AC3 = 0 and each listed member asked 0x4458B0 again and appended at the signed byte 0x904AC3. The party's command-entry order (the sibling's 0x801462F2 list). Combat route: 4 calls, from 0x42E400."
+
+[[func]]
+pc = 0x4450E0
+name = "Battle_BuildTurnOrder"
+psx = 0x801DAAB4
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4450E0..0x4453B6 (0x2D7 bytes), cdecl, six calls, every jump internal; the sibling's Battle_BuildTurnOrder term for term. Party: agility +0x98 + bonus (4 for an ability of NameTable_Abilities +1 kind 0, 2 for kind 1 or 3, 1 for an item) x s16 0x64E328[Battle_LevelClass(level +0x7A, 1)] / 100, 16-bit; enemies: agility +0x38 + s8 0x64E334[16 x Battle_LevelClass(+0x18, 0) + Rand & 15]; pairs at 0x939A80, count 0x904AE3, sorted highest first, actors to 0x904ACC (11 bytes, 0xFF), cursor 0x904AE2 = 0. A first party pass through 0x445980 computes a sum nothing reads. Level class 6 over-reads both tables (the PSX too, docs/battle_damage.md section 6). Combat route: 4 calls, from 0x42E400."
+
+[[func]]
+pc = 0x445640
+name = "Battle_LevelClass"
+psx = 0x801DB3FC
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned char"
+params = "unsigned level, unsigned row"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x445640..0x44567C (0x3D bytes), cdecl, no calls: the first i of 0..5 with the level byte below u8 0x64E374[6 x row + i], else 6; row 0 = 16 36 64 99 99 99, row 1 = 8 16 32 48 99 99, so 4 and 5 are unreachable and level 99 is class 6. The sibling's Battle_LevelClass. Answers al only (eax above is the caller's). Combat route: 12 calls, from Battle_BuildTurnOrder."
+
+[[func]]
+pc = 0x445680
+name = "Battle_ClearCommands"
+psx = 0x801DB45C
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x445680..0x4456B0 (0x31 bytes), no calls: the command byte +0x115 and flags dword +0x120 of the three party records, the command byte +0x85 and flags +0x90 of the eight enemy records, zeroed. The sibling's Battle_ClearCommands. Combat route: 7 calls, from 0x42E400 and 0x431030."
+
+[[func]]
+pc = 0x445730
+name = "Battle_DefaultTarget"
+psx = 0x801DB594
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x445730..0x4457E2 (0xB3 bytes), cdecl, four call sites to 0x4456C0, every jump internal: the first actor of the argument byte's side for which 0x4456C0 answers 0, from the byte up (party to 2, enemies to 10), then from the side's first (0 or 3) up to it; 0xFF if none; a byte above 10 skips the upward look. Uses its argument slot as the counter and pushes it whole. The sibling notes 0x801DB594(3) as the command menu's default enemy target. Combat route: 11 calls, from 0x446FF0, 0x447840, 0x447F40."
+
+[[func]]
+pc = 0x4458B0
+name = "Battle_ActorCanCommand"
+psx = 0x801DB80C
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4458B0..0x44597D (0xCE bytes), no calls: Battle_ActorCanAct with more refused - party status mask 0x4964 (not 0x4944) and second flags 0x14001, enemy second flags 0x4000. 0 unless the object's bit 0 is set, no masked status, with 0x904B8E set second flags bit 4, and 0x904AE4 is neither the side's value (2 party, 1 enemies) nor 3. psx from psx_pair (gap-anchored) and the calls: 0x801DA7A4 calls 0x801DB80C where the PC calls 0x4458B0. The name is for its one use: listing members for command entry. Combat route: 24 calls, from Battle_BuildEntryOrder."
+
+[[func]]
+pc = 0x445980
+name = "Battle_ActorCanAct"
+psx = 0x801DB9AC
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x445980..0x445A2F (0xB0 bytes), no calls: party - ObjTrio byte bit 0, status word +0x80 & 0x4944 clear, with 0x904B8E set second flags +0x124 bit 4; enemy - object byte (record - 0x80) bit 0, status +0x12 & 0x4144 clear, with 0x904B8E set +0x94 bit 4; then 0 if 0x904AE4 is 2 (party) or 1 (enemies) or 3. The sibling's Battle_ActorCanAct term for term. Answers al only. Combat route: 78 calls, from Battle_BuildTurnOrder, Battle_BuildEntryOrder and 0x4453C0."
+
+[[func]]
+pc = 0x445A30
+psx = 0x801DBB40
+psx_overlay = "BATTLE.EMI#3"
+name = "Battle_ApplyDamage"
+args = ["attacker", "target"]
+ret = "short"
+params = "unsigned attacker, unsigned target"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21 and 2026-09-23, 0x445A30..0x445CE0 (0x2B1 bytes), cdecl, nine calls, every jump internal; term for term against the PSX evidence note and FUN_801dbb40 (sibling Ghidra export). Target shown byte (+0x11C / +0x8C) = 0x11; amount = s16 Battle_CalcDamage(attacker, target, 0xFFFF). Flag bit 8 of the target's flags (an enemy's only with HP at most 0x7FFF): amount = HP, 0x44A650(1, 0, 0, 0x1E, dword 0x669E04), bit cleared, 0x8031F3 = 1. Party target (<= 2): HP +0x88 above the amount loses it, else HP 0 and flags bit 2 when the overkill is below byte +0x8C and second flags bits 0..1 are clear; a heal (<= 0) up to max HP +0x90, reaching it sets shown bit 2. Enemy: HP +0x24 of 0xFFFF skipped; no overkill test; max HP +0x30. Then a party attacker with byte +0x138 == 5 and a non-zero amount: weapon +0x82 'J' / 'L' / 'O' - 0x44FA70(attacker, target) == 0 -> 0x44F1D0(target, 0x40 / 8 / 0x20). Returns ax. Combat route: 4 calls, from 0x4360C0."
+note = "pe_xref.py does not see its HP accesses: it indexes only operands with no base register (docs/kinship-probe-battle-engine.md section 2). analysis/pairs_propagated.json pairs it with 0x8009A158 (call-anchored); that crossing is wrong - the body is 0x801DBB40's."
+
+[[func]]
+pc = 0x445CF0
+name = "Battle_CalcDamage"
+psx = 0x801DC00C
+psx_overlay = "BATTLE.EMI#3"
+ret = "short"
+params = "unsigned attacker, unsigned target, unsigned element"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x445CF0..0x44610A (0x41B bytes), cdecl, nine calls, every jump internal; FUN_801dc00c (sibling Ghidra export) branch for branch. DamageScratch = element (0xFFFF: a party attacker's weapon byte NameTable_Weapons +0x13, an enemy 0); a charged attacker (second flags bit 6) - party ATK 0x939FE4 += charge x ATK >> 1, enemy ATK = that (the PSX the same), charge and bit cleared; Battle_BaseDamage(a, t, 0); party on enemy doubled for weapons 0x13/0x17/0x33 on family (+0x0D) 4 and 0x16/0x35/0x40 on family 1; target status byte & 0x64 clear -> to-hit 0x446110 (party) / 0x4461B0 (enemy); else 0x40 and 0x20 cured through 0x44F4B0 (0x904B9A |= bit) with a minimum of 1, and 4 a minimum of 1; flags bit 1: x {50,50,50,50,60,60,60,70}[Rand % 8] / 100; 0x904AA8 bit 7: x 2 + Battle_BaseDamage(a, t, 1) / 4; a quarter off on a party target with 0x904060 == 2 and on status 0x80 (16-bit); minimum 1 with status 0x60 or 0x904AA8 bit 7; 0 with flags 0x10000; clamp +-9999. Returns ax; every caller (28, E8 scan) takes the low word. Combat route: 5 calls, from Battle_ApplyDamage and an effect handler."
+
+[[func]]
+pc = 0x4462B0
+name = "Battle_BaseDamage"
+psx = 0x801DCAA0
+psx_overlay = "BATTLE.EMI#3"
+ret = "int"
+params = "unsigned attacker, unsigned target, unsigned mode"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4462B0..0x4463D9 (0x12A bytes), cdecl, four calls, every jump internal; FUN_801dcaa0 (sibling Ghidra export) term for term. Party attacker or enemy on enemy: ATK 0x939FE4 less target DEF 0x939F86 (mode 0) or nothing, not below 0. Enemy on party: less 0x4463E0 (the party's mean DEF with the target's, halved; mode 0), not below 0, then 8.8 plus u16 enemy +0x18 x (2 + Rand % 2) << 16 / (u8 0x64E380[i] << 8), where i = x / -5 clamped - always 0 since x >= 0, so the divisor is 10 (the PSX has the same dead index). Then + (Rand & 1) and Battle_ScaleDamage(attacker, target, v), its eax returned whole (Battle_CalcDamage keeps all 32 bits). Combat route: 5 calls, from Battle_CalcDamage."
+
+[[func]]
+pc = 0x446430
+psx = 0x801DCD18
+psx_overlay = "BATTLE.EMI#3"
+name = "Battle_ScaleDamage"
+args = ["attacker", "target", "base"]
+ret = "int"
+params = "unsigned attacker, unsigned target, int base"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-18 and 2026-09-23, 0x446430..0x446530 (0x101 bytes), cdecl, two calls, every jump internal; term for term against the PSX evidence note: s = base << 8 into 8.8 fixed, the multiplier 0x100 - (s / 256000) << 17 >> 8 clamped to at least 0xCD (= 205/256), times s >> 8, times Battle_DamageVarianceTable[rand() & 7] >> 8; then if DamageScratch & 0x1F, times s16 Battle_ElementAffinity(target, scratch word) / 100 (magic 0x51EB851F, sar 5), the scratch read again after the call; then if & 0x20, times s16 Battle_HolyAffinityTable[holy class: party +0xA4, enemy +0x44] / 100; rounded half up out of 8.8, eax whole. Both tables hold the PSX values exactly. The attacker is not read. Combat route: 5 calls."
+
+[[func]]
+pc = 0x446650
+name = "Battle_RemoveFromTurnOrder"
+psx = 0x801DD114
+psx_overlay = "BATTLE.EMI#3"
+ret = "void"
+params = "unsigned actor"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x446650..0x4466F8 (0xA9 bytes), no calls: party - command byte +0x115 = 0, flags +0x120 bit 1 and second flags +0x124 bit 2 cleared; enemy - +0x85 = 0, +0x90 bit 1 cleared; then each of the first 0x904AE3 bytes of 0x904ACC equal to the actor byte set to 0xFF (the count read again each pass). The sibling's Battle_RemoveFromTurnOrder. Uses its argument slot as the counter. Combat route: 1 call, from 0x437470."
+
+[[func]]
+pc = 0x44AE90
+name = "EnemyAI_ChooseActions"
+psx = 0x80098F8C
+psx_overlay = "BATTLE.EMI#15"
+ret = "void"
+params = "void"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44AE90..0x44B1BC and its jump table 0x44B1C0 (29 entries, to 0x44B233; 0x3A4 bytes), cdecl, ten calls; the sibling's EnemyAI_ChooseActions (its row loop < 4 too). For each enemy 0..7 not out by 0x4456C0(e + 3): rows 0..3 of script 0x8C5600 + 0x8C x object byte +0xF0 (PSX stride 0x88), condition byte 0 minus 0xB through the table: a holding condition fires a row not done (EnemyAI_RowDone) through 0x44B3A0(object, row) and 0x44B2E0(object, row, 1); a failing one clears a done row with 0x44B2E0(object, row, 0). Conditions: 0xB/0xC HP <= max / 4 or / 2, 0xD AP <= max AP / 5, 0xE any enemy not out with status bit 0x2000, 0xF 0x904AB2 > 0x904AB3, 0x10 0x904AB3 == 1, 0x11/0x12 HP/AP > half, 0x13/0x14 turn counter 0x904B90 == 2/10, 0x15 party 0's level minus the object's +0x98 above 5, 0x19/0x1A counter even/odd, 0x1B/0x1C counter % 3 ==/!= 0, 0x1D/0x1E 0x904AB1 ==/!= 1, 0x1F 0x904AB3 == 0x904AB2, 0x20 0x904AB3 != 1, 0x26 0x44B240(row, e), 0x27 0x904B97 == 1; 0x16..0x18 and 0x21..0x25 skip. Then 0x44B920(). Combat route: 4 calls, from 0x42E400."
+
+[[func]]
+pc = 0x44B2C0
+name = "EnemyAI_RowDone"
+psx = 0x80099830
+psx_overlay = "BATTLE.EMI#15"
+ret = "unsigned char"
+params = "const unsigned char *enemy, unsigned row"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44B2C0..0x44B2D2 (0x13 bytes): (byte enemy +0xF1 >> (row & 31)) & 1 in al, eax above the enemy pointer's. The sibling's EnemyAI_RowDone reads +0xE1: the enemy record's +0x10 shift. 8 E8 callers (EnemyAI_ChooseActions, 0x44B240, 0x44AC..). Combat route: 4 calls."
+
+[[func]]
+pc = 0x44B9F0
+psx = 0x8009A160
+psx_overlay = "BATTLE.EMI#15"
+name = "Effect_ApplyResult"
+args = []
+ret = "void"
+params = "void"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-21 and 2026-09-23, 0x44B9F0..0x44BEC5 (0x4D6 bytes), two indirect calls, every jump internal; FUN_8009a160 (sibling Ghidra export) branch for branch. Target 0x904B54 shown |= 0x31. Unless kind 0x904B35 == 4 and ability 0x904B80 == 0xA3, a charged actor 0x904B34 (second flags bit 7) multiplies 0x939FEA by charge (+0x135 / +0xA5) + 1, 16-bit, charge and bit cleared. Handler call [0x64E73C + 4 x 0x64E540[ability]] for kind 4, else [0x64E73C + 4 x 0x64E72C[category][item]] from the word at *0x904B40 + 2 (the category unbounded); 130 handlers; on both platforms the category table sits 0x10 below the handler table (PSX 0x800B164C / 0x800B165C). Result record *0x904B60: target flag 0x10000 zeroes +4 and +6; each clamped to +-9999 (0x270F at 0x44BB90, -9999 at 0x44BBAA) and applied - party HP kill sets flags bit 2 under the overkill test (0x44BC2E), heal caps at max (shown & 0xEF | 5; AP & 0xDF | 0xA); enemy HP or AP 0xFFFF immune (0x44BCC3); an enemy's AP heal is compared with its max HP and clamped to max AP (the PSX too)."
+note = "No stack argument on PC: the target comes from the global 0x904B54 (0x44B9F0), where PSX passes it. The pe_funcs.py extent (13,079 bytes) is not this function's size: it ends at 0x44BEC5 and the rest is the 0x64E73C handlers, which are pointer-reached (docs/kinship-probe-battle-engine.md section 2). analysis/pairs_propagated.json pairs it with 0x801DBB40 (call-anchored), which is Battle_ApplyDamage's twin - a crossing."
+
+[[func]]
+pc = 0x44ED10
+name = "Effect_SkillDamage"
+psx = 0x8009F820
+psx_overlay = "BATTLE.EMI#15"
+ret = "int"
+params = "unsigned caster, unsigned target, unsigned power, unsigned psi"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44ED10..0x44EE75 (0x166 bytes), cdecl, three calls, every jump internal; FUN_8009f820 (sibling Ghidra export) term for term, including its choice of 0x8009FA78 or 0x8009FE88 by the fourth argument where the PC calls Battle_ElementAffinity or 0x44F030. (INT 0x939FEA + 100) x power x 100 / 100 unsigned; x max(100 - 0x939F8A / 5, 50) / 100 unsigned; x s16 affinity / 100 signed when NameTable_Abilities +4 & 0x1FF; x u16 0x64E94C[Rand & 7] (85..120) / 10000 signed; a quarter off (positive) when 0x904B54 <= 2 and 0x904060 == 2; halved with target second flags bit 9; 0 with flags 0x10000. eax whole. Called by five effect handlers. Combat route: 1 call, from an effect handler under Effect_ApplyResult."
+
+[[func]]
+pc = 0x44EE80
+psx = 0x8009FA78
+psx_overlay = "BATTLE.EMI#15"
+name = "Battle_ElementAffinity"
+args = ["target", "element_mask"]
+ret = "int"
+params = "unsigned target, unsigned mask"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-18 and 2026-09-23, 0x44EE80..0x44F02E (0x1AF bytes), no calls: for bits 0..4 of the mask byte, s16 0x64E95C[class] summed in 32 bits, the classes at enemy record +0x3F..+0x43 (0x93BA1F..0x93BA23; the PSX fire/ice/lightning/earth/wind block at +0x2F..+0x33, BATTLE_RAM.md) or party +0x9F..+0xA3. FUN_8009fa78 (sibling Ghidra export) term for term; the PSX sums in 16 bits and every PC caller takes ax. Combat route: 1 call."
+
+[[func]]
+pc = 0x44F130
+name = "Effect_HealAmount"
+psx = 0x800A0080
+psx_overlay = "BATTLE.EMI#15"
+ret = "int"
+params = "unsigned caster, unsigned target"
+impl = "src/game/battle_damage.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44F130..0x44F1C9 (0x9A bytes), no calls: NameTable_Abilities +3 of ability 0x904B80 x (INT 0x939FEA + 100) x 100 / 100 unsigned, x s16 0x64E99C[holy class: party +0xA4, enemy +0x44] (-300 -200 -100 0 50 100 200 400) / -10000 (magic 0x97247453, sar 12, no add: a signed division by -10000). FUN_800a0080 (sibling Ghidra export) divides by 10000 and negates - the same numbers. A negative answer heals. Only the second argument is read. Called by two effect handlers (0x44C12D, 0x44DDDD). Combat route: 1 call."
