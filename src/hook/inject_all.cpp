@@ -40,6 +40,7 @@
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/battle_flow.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -204,6 +205,9 @@ void InjectAll() {
                                 // patched by any module: order does not matter (none of it reaches a cull)
     BattleWindows_Inject();     // every call of its clones re-aimed at a recorder, its state table, window-kind
                                 // handlers and switch table moved in the copies: order does not matter
+    BattleFlow_Inject();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed and its jump table relocated in the copies: order
+                                // does not matter (no widescreen patch touches its functions)
     InjectReport();
 }
 
