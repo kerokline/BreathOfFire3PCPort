@@ -1388,6 +1388,23 @@ count = 24
 status = "evidence"
 evidence = "bytes 2026-09-24: a DIDATAFORMAT {dwSize 0x18, dwObjSize 0x10, dwFlags DIDF_RELAXIS (2), dwDataSize 256, dwNumObjs 256, rgodf 0x5AC850} = c_dfDIKeyboard; pushed by DInput_Init 0x5A95E8 as SetDataFormat's argument. In .rdata."
 
+[[func]]
+pc = 0x461C00
+name = "Config_DrawControllerCell"
+ret = "void"
+params = "int x, int y, unsigned int word"
+impl = "src/game/config_text.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x461C00..0x461D5F (docs/controls.md section 2): cdecl (x, y, word); tests the word for 0x20, 0x40, 0x10, 0x80, 0x04, 0x08 in that order and for the first set bit calls Text_DrawAt(x + 4, y, colour, 3, icon) and Text_DrawAt(x - 0x10, y, 0, 3 or 4, letter), then returns: colours 2, 1, 6, 5, 0, 0; the icon strings the one-byte codes b c d X f g at 0x66A2E0.. (circled numerals and an X in the port's glyph table - the PC's stand-ins, never the PlayStation's shapes); the letters V X Z C A S at 0x653818..0x65382C, the default key table's, hard-coded (known-defects D58). Called once a row by 0x461A50 with x = panel x + 0x5D. Ours under an overlay language: DIV-0051, one icon where the letter was."
+
+[[func]]
+pc = 0x461AF0
+name = "Config_DrawControllerRow"
+ret = "void"
+params = "int x, int y, int row"
+status = "evidence"
+evidence = "disasm 2026-09-24, 0x461AF0..0x461BF0: cdecl (x, y, row). Menu_DrawRowBox 0x57CF60(x, y, 0x68, 0x10, 0, selected) - the row's dark box, 0x68 wide; the name from the pointer table 0x66A368[row] right-aligned at x + 0x20 (DIV-0026: x + 0x36) through Text_DrawAt 0x516B30 (DIV-0026: ConfigText_DrawSelected); then two 0x20-wide cells through 0x5A7650 / 0x461E50 at x + 0x3F and x + 0x53 (the second is skipped under DIV-0051). Called six times by 0x461A50 at x = panel x + 5, y = panel y + 6 + 18 * row."
+
 [[data]]
 pc = 0x937F94
 name = "Frame_Counter"

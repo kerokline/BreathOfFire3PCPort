@@ -113,9 +113,49 @@ const char* TakeString(const std::uint8_t*& p, const std::uint8_t* end) {
 // (tools/loc_build.py), so the swap is a constant offset. The blank after the
 // UI set stays: it is the space, and its advance is 8 in either draw.
 constexpr std::uint32_t kUiGlyphs = 0xA00, kDialogueGlyphs = 0x993, kSetCells = 100;
+// DIV-0051: the controller panel's icons - six glyphs loc_build.py puts
+// after the UI set's blank (its ICONS_AT): circle, cross, triangle, square
+// from the disc's 12 x 12 set, L1 and R1 composed of the dialogue capital
+// and the small serifed 1, each doubled to fill the 24 x 24 glyph, so the
+// 24 px quad shows the icon at the screen's 2x with its own margins.
+constexpr std::uint32_t kIconCircle = kUiGlyphs + kSetCells + 1, kIconCross = kIconCircle + 1,
+                        kIconTriangle = kIconCircle + 2, kIconSquare = kIconCircle + 3,
+                        kIconL1 = kIconCircle + 4, kIconR1 = kIconCircle + 5;
+// The quad's x from the call's x (panel x + 0x5D). Measured off the captures
+// (analysis/shots/ctrl_icons, 2026-09-24): the row box's divider sits at
+// row x + 0x44 whatever the box's width, and the box ends at row x + width.
+// The 24 px quad at x - 0x14 runs from row x + 0x44 to 0x5C - the shapes'
+// own margins keep their ink a pixel or two inside - and the box, 0x60 wide,
+// ends four past it.
+constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of -0x14
+
 constexpr std::uint32_t kTextDrawAt = 0x516B30;   // its name is a macro here
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
 constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // 0x461AF0's one draw (DIV-0026)
+
+// The controller panel's cell, original 0x461C00 (docs/controls.md section 2).
+// The original tests the word's bits in the order circle, cross, triangle,
+// square, L1, R1 and draws, for the first it finds, the key letter of the
+// default table at (x - 0x10, y) in colour 0 and the button's glyph at
+// (x + 4, y) in the button's colour: circle 2, cross 1, triangle 6, square
+// 5, L1 and R1 0 - the port's glyphs there being circled numerals and an X.
+// Ours draws one thing, the PlayStation's icon, in that colour, where the
+// letter was: the PlayStation screen has one column (DIV-0051). Count 3 as
+// the original passes it. L2 and R2 have no icon on either side, as before.
+extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int word) {
+    struct Icon { unsigned bit; std::uint32_t glyph; int color; };
+    static const Icon kIcons[] = {
+        {0x20, kIconCircle, 2}, {0x40, kIconCross, 1},  {0x10, kIconTriangle, 6},
+        {0x80, kIconSquare, 5}, {0x04, kIconL1, 0},     {0x08, kIconR1, 0},
+    };
+    for (const Icon& i : kIcons) {
+        if (!(word & i.bit)) continue;
+        const unsigned char code[3] = {static_cast<unsigned char>(0x80 | (i.glyph >> 8)),
+                                       static_cast<unsigned char>(i.glyph), 0};
+        Text_DrawAt(x + kIconX, y, i.color, 3, code);
+        return;
+    }
+}
 
 extern "C" const unsigned char* __cdecl ConfigText_DrawSelected(int x, int y, int color, int count,
                                                                 const unsigned char* text) {
@@ -292,9 +332,31 @@ void ConfigText_Inject() {
         static const std::uint8_t edge_was[] = {0x83, 0xC1, 0x20};
         static const std::uint8_t edge_is[] = {0x83, 0xC1, 0x36};
         bof3::PatchBytes("ConfigController", 0x461B3F, edge_was, edge_is, 3);
+        // DIV-0051 (2026-09-24, the owner's choice: the PlayStation's one
+        // column): the frame from DIV-0026's 0xF cells to 0xD (below), the
+        // row's dark box from
+        // 0x68 wide to 0x60 (`push 0x68` at 0x461B06, Menu_DrawRowBox's
+        // width), the second cell's set-up skipped - 0x461BAC..0x461BE8,
+        // the `mov esi, [0x7E0670]` at its start made a jump to the
+        // `add esp, 0x44` at 0x461BE9, which loses that block's three
+        // pushes (push esi for 0x5A7650, push 0x20 / push 1 for 0x461E50)
+        // and becomes `add esp, 0x38` - and the cell's contents ours.
+        static const std::uint8_t box_was[] = {0x6A, 0x68};
+        static const std::uint8_t box_is[] = {0x6A, 0x58};   // the owner: half a glyph shorter than 0x60
+        bof3::PatchBytes("ConfigController", 0x461B06, box_was, box_is, 2);
+        static const std::uint8_t cell2_was[] = {0x8B, 0x35, 0x70, 0x06, 0x7E, 0x00};
+        static const std::uint8_t cell2_is[] = {0xEB, 0x3B, 0x90, 0x90, 0x90, 0x90};
+        bof3::PatchBytes("ConfigController", 0x461BAC, cell2_was, cell2_is, 6);
+        static const std::uint8_t esp_was[] = {0x83, 0xC4, 0x44};
+        static const std::uint8_t esp_is[] = {0x83, 0xC4, 0x38};
+        bof3::PatchBytes("ConfigController", 0x461BE9, esp_was, esp_is, 3);
+        // The frame from DIV-0026's 0xF cells to 0xD: 0x68 px from the panel's
+        // x, three past the row box's end at panel x + 0x65.
         static const std::uint8_t frame_was[] = {0x6A, 0x0C, 0x32};
-        static const std::uint8_t frame_is[] = {0x6A, 0x0F, 0x32};
+        static const std::uint8_t frame_is[] = {0x6A, 0x0D, 0x32};   // the owner: a cell past the box, as at the left
         bof3::PatchBytes("ConfigController", 0x461A61, frame_was, frame_is, 3);
+        bof3::Inject("Config_DrawControllerCell", bof3::addr::Config_DrawControllerCell,
+                     reinterpret_cast<void*>(&Config_DrawControllerCell));
     }
 
     // The rows' y is the original's. An earlier build lowered every string on

@@ -2248,3 +2248,56 @@ designed in rather than bolted on.
   with the Xbox Series X pad: "game feels good with the controller"."
 - **Reversible?** `BOF3X_ORIGINAL=DInput_Init,Pad_Read,DInput_Shutdown`
   restores the DirectInput joystick; the SDL build stays linked.
+
+### The Config screen's controller panel: the PlayStation's one icon column
+
+- **ID:** DIV-0051
+- **Date:** 2026-09-24
+- **Subsystem:** menu (Config, [`controls.md`](controls.md) §2, §6 step 3;
+  `src/game/config_text.cpp`, `tools/loc_build.py`)
+- **Original behaviour:** the 2001 port draws two cells right of each action
+  name: the keyboard key of the *default* table, hard-coded (D58), and a
+  coloured glyph naming the PlayStation button - which in the port's glyph
+  table is a circled numeral (circle ①, cross ②, triangle ③, R1 ⑥, L1 ⑤)
+  or an X (square), the port's stand-ins; the PlayStation's shapes were
+  never drawn (the Chinese capture `analysis/shots/ctrl_cn`, 2026-09-24).
+  Under the English overlay those glyph slots hold the US letters (b, X, c,
+  d, g, f) - DIV-0006's doubled font - so the column read as letters. The
+  PlayStation screen has one column, the button icons.
+- **New behaviour:** under an overlay language the second cell is not set up
+  (`0x461BAC` jumps to the epilogue, whose `add esp` loses the block's three
+  pushes), the row's dark box is 0x58 wide instead of 0x68, the frame stays
+  the original's 0xC cells (DIV-0026's 0xF is not applied), and the cell's
+  draw `0x461C00` is ours: the PlayStation's icon for the row's button, six
+  new glyphs `loc_build.py` builds from the disc's atlas - the four shapes
+  from its 12 x 12 set at atlas y 48 (the owner's choice, 2026-09-24, over
+  the 8 x 8 and 8 x 12 sets the atlas also holds), L1 and R1 composed of
+  the dialogue capital and the 8 x 8 set's serifed 1, as the PlayStation's
+  panel reads them (the owner spotted the serif) - each doubled to fill the
+  24 x 24 glyph, body nibbles remapped to the letters' so the button's
+  colour index applies. The row box is 0x58 wide (0x68), the frame 0xD
+  cells (DIV-0026's 0xF; a cell past the box's end, as the frame stands
+  off the rows at the left), the icon's quad at the call's x - 0x0C - the
+  three settled by the owner's eye off the fourth and fifth captures
+  ("half a glyph to the right, the box half a glyph shorter", then the
+  frame "half a glyph" back out past the box), the sixth capture
+  `analysis/shots/ctrl_icons6`. **Confirmed by the owner off that capture,
+  2026-09-24: "That looks perfect to me".** The keyboard's live bindings
+  are the launcher's Controls dialog (DIV-0050 step 2). Under
+  `BOF3X_LANG=original` nothing changes.
+- **Rationale:** the owner, 2026-09-24: "go back to the psx design"; the
+  PlayStation's screen as the reference.
+- **Also in the PSX version?** Not applicable - this is the PlayStation's
+  layout brought back.
+- **Verification:** 2026-09-24, `tools/recipes/config_controller.txt` in
+  English after `loc_build.py all` (the table 2,667 glyphs, the icons at
+  0xA65..0xA6A): `analysis/shots/ctrl_icons4/controller_panel.png`, the
+  fourth build - the first used the 8 x 12 dialogue shapes, which the owner
+  read as squashed; the second the 8 x 8 set, whose pre-coloured nibbles
+  came out in the wrong colours; the third fixed the colours; the fourth is
+  the 12 x 12 set with the composed labels. Six rows, one cell each, circle
+  red, square pink, cross blue, triangle green, R1 and L1 white, the box
+  ending four past the icon and the frame three past the box; the patches
+  and the inject logged ON.
+- **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
+  (the patches) and `Config_DrawControllerCell`.

@@ -1034,9 +1034,12 @@ by CMake and built static (first configure needs the network) - and
 verified on the keyboard side (`tools/key_probe.py`, the shadow check, a
 recipe run) and the owner's Xbox pad opened; their window close then found
 two faults of ours, fixed (DIV-0050's verification, `tools/close_probe.py`);
-committed as `785e202`. **Step 2 is built, uncommitted:** the bindings in
-`bof3x.ini` and the launcher's Controls dialog (`src/input/bindings.h`,
-`tools/ini_probe.py`). Next is step 2, the physical map in
+committed as `785e202`. Step 2, the bindings in
+`bof3x.ini` and the launcher's Controls dialog, is `8a80ff0`. Step 3, DIV-0051,
+the Controller row's one icon column, is confirmed by the owner off
+`analysis/shots/ctrl_icons6` and committed. Next is step 4,
+the seventh Config row and the binding screen ([`controls.md`](controls.md)
+§4.3). Next is step 2, the physical map in
 `bof3x.ini` with a launcher Controls tab, then the Controller row back to
 one icon column (D58), then the seventh Config row and the binding screen.
 Nothing committed yet: the owner decides.

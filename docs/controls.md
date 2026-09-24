@@ -273,5 +273,19 @@ words decide what the word does.
    layout nintendo`, the pad opened with that layout; the dialog seen
    populated with the defaults (screenshot, 2026-09-24). Not yet checked in
    play: a pad map changed from the dialog.
-3. The Controller row back to one icon column, icons from the disc (D58).
+3. **Built 2026-09-24, DIV-0051:** the Controller row back to one icon
+   column. What the read found on the way: the port never drew the
+   PlayStation's shapes - its glyphs at those codes are circled numerals
+   and an X (`analysis/shots/ctrl_cn/controller_panel.png`, the Chinese
+   screen). The atlas holds the shapes at three sizes - 8 x 8 (the UI set,
+   what the PlayStation panel's measure suggested), 8 x 12 (the dialogue
+   set, narrower drawings) and 12 x 12 - and the owner chose 12 x 12 by
+   eye against their PlayStation screenshot; L1 and R1 are composed of the
+   dialogue capital and the 8 x 8 serifed 1, the owner having spotted the
+   serif no single atlas cell has. Four builds, the captures
+   `analysis/shots/ctrl_icons` .. `ctrl_icons4` (DIV-0051's verification
+   line), then a fifth with the icon half a glyph right and the box half a
+   glyph shorter, and a sixth with the frame a cell past the box again, at
+   the owner's word (`ctrl_icons5`, `ctrl_icons6`) - the sixth is the one
+   built, **confirmed by the owner: "perfect"**.
 4. The seventh row and the binding screen (§4.3).

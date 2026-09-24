@@ -1354,5 +1354,5 @@ PlayStation icon, a one-byte string per pad bit - `V` `C` `Z` `X` `S` `A` at
 `0x653818..0x65382C` - which are the *default* key table's letters. The
 live table (`Key_Table`, `BOF3.CFG` lines 3+) is never read, so a rebound
 keyboard leaves the panel showing keys that do nothing. The PlayStation has
-no such column. **Ours:** the column goes with the binding screen of
-[`controls.md`](controls.md) §4.3.
+no such column. **Ours:** gone under DIV-0051 (2026-09-24, the one icon
+column); the live bindings are the launcher's Controls dialog.
