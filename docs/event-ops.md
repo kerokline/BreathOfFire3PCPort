@@ -8,8 +8,7 @@ and fuzzed headless against a byte copy of Capcom's with every call re-aimed
 at a recorder: **35 x 10,000 rounds, 559,326 stand-in calls, 0 mismatches**;
 **86 negative controls, 84 refused by a count, 2 not refused - both changes
 that change nothing** (section 9). The fuzz also caught a **clang miscompile**
-(section 8). **Not yet through the live check** - the shop A/B runs centrally
-after the merge (section 10).
+(section 8). **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35; section 10 had it owed.
 
 Group V1 of the sixth round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)), "the event script's

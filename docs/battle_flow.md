@@ -4,8 +4,7 @@
 (`src/game/battle_flow.cpp`). Each is fuzzed headless against a copy of
 Capcom's with every call re-aimed at a recorder: 21,000 rounds, 0 mismatches.
 92 negative controls were planted: 91 were refused by a count, and one was a
-change that changes nothing. **Not yet through a live check.** That check is
-the coordinator's combat A/B after the merge.
+change that changes nothing. **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class).
 
 This is group BB of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)). Every function is a

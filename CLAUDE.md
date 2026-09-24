@@ -87,10 +87,12 @@ may be exactly right here — **provided it is in the ledger.**
   Anaconda 3.13.9. `capstone` is installed.
 - Both a PowerShell tool and a Git Bash tool are available; `.sh` scripts want
   bash. `gh` is at `C:\Program Files\GitHub CLI`, authenticated as `kerokline`.
-- The MSYS2 toolchain at `/c/msys64/mingw64/bin` is **not on PATH** — prepend it
-  for builds, but note it shadows `python` with an interpreter missing our
-  packages. Run Python tooling *before* prepending, or call Anaconda by absolute
-  path. (Learned the hard way in the sibling repo.)
+- **The build uses llvm-mingw, not MSYS2**: `cmake --preset i686 && cmake
+  --build build`, with `i686-w64-mingw32-clang++` already on `PATH` (the
+  `retcomm` toolchain under `~/.local/share`) — [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4.
+  The MSYS2 toolchain at `/c/msys64/mingw64/bin` is the sibling repo's; if you
+  ever prepend it, it shadows `python` with an interpreter missing our
+  packages.
 
 - Ghidra is at `D:\Utilities\ghidra_12.1.3_PUBLIC`, projects in
   `D:\Utilities\GhidraProjects` (project `BoF3PC`, kept separate from the

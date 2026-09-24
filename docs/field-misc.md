@@ -4,9 +4,7 @@
 [`src/game/field_misc.cpp`](../src/game/field_misc.cpp), each read to its last
 instruction and against its PSX twin where one is paired, fuzzed against
 Capcom's at start-up (`BOF3X_SHADOW=field_misc`, 170,000 rounds, 0 mismatches)
-with 77 negative controls: 70 refused by a comparison, 3 that change nothing, 2 mis-planted and planted again, 2 refused only by a fault and replaced (section 3.1). No divergence, no defect. **Not yet through a live
-check** - the shop A/B and the attract batch run centrally after the merge
-(section 6).
+with 77 negative controls: 70 refused by a comparison, 3 that change nothing, 2 mis-planted and planted again, 2 refused only by a fault and replaced (section 3.1). No divergence, no defect. **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B 35 of 35 and the attract batch; section 6 had it owed.
 
 Group M of the sixth parallel round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)): what the owner's shop

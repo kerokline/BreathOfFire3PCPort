@@ -3,8 +3,7 @@
 **Status:** IN PROGRESS (2026-09-23) - twenty-four functions ours
 (`src/game/battle_items.cpp`, shadow name `battle_items`), each fuzzed
 headless against a copy of Capcom's with every call re-aimed at a recorder;
-72 negative controls, 71 refused by a count and one by a fault (with a counting twin). **Not yet through the live check** - the combat A/B runs
-centrally after the merge (section 7).
+72 negative controls, 71 refused by a count and one by a fault (with a counting twin). **Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 7 had it owed.
 
 Group BH of the seventh round ([`takeover-queue-round7.md`](takeover-queue-round7.md)).
 The queue called it "the battle item menu"; read, none of it is a menu. It is

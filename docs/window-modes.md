@@ -3,7 +3,9 @@
 **Status:** IN PROGRESS (2026-09-23). Step 3 of [`display-overhaul.md`](display-overhaul.md)
 §5: window modes without a mode-set, the game running unfocused (I12), the
 FMVs into the window. Built and checked by the batch of §4; the owner's eye
-on the borderless window, F8 and the FMVs is owed (§5).
+on the borderless window, F8 and the FMVs was given the same evening (§5) -
+only DIV-0034's title-bar drag is left. Re-checked 2026-09-24: F7 and F11 as
+§3 says them were changed since (DIV-0040; F11 now saves a frame).
 
 ## 1. What was taken over, and why these
 
@@ -77,7 +79,10 @@ differs in four ledgered ways.
   `WS_POPUP` window covering the monitor the window is on. F8 changes the
   style and placement and nothing else; coming back from borderless it
   restores the windowed placement the player had. F7 cycles the device name
-  and re-makes nothing. The three overlays (F7's name, F11's frame rate,
+  and re-makes nothing (*since DIV-0040, 2026-09-23: F7 does nothing, and
+  F11 - the frame-rate readout below - since 2026-09-24 writes the last
+  frame presented to `bof3x-frame-<n>.bmp` beside the DLL, tooling;
+  `src/game/win_main.cpp` `SaveFrameBesideDll`*). The three overlays (F7's name, F11's frame rate,
   F12's "Save OK") were `TextOut` through the back buffer's device context,
   which the backend's surface has not: they go to the log as `overlay`
   lines when the back buffer is ours, and are drawn as before under
@@ -256,14 +261,17 @@ window is in front, and DIV-0034 after a title-bar drag.
 - Also from the review: a quit during the FMVs (Alt+F4, which
   `Fmv_WndProc` turns into the quit flag) returns at once, as `0x4FCD3A`
   does; ours had torn down a display it never set up.
-- The window title is still the GBK string `0x65DA78`; an English title
-  under `BOF3X_LANG=en` would be a one-line DIV.
-- `tools/input_run.py` still foregrounds the window for its captures
-  (they want it unobscured, not focused); it could take `--no-front` too.
-- Step 4 of the overhaul (integer scaling, `k` from the client) is next:
+- ~~The window title is still the GBK string `0x65DA78`; an English title
+  under `BOF3X_LANG=en` would be a one-line DIV.~~ Done, DIV-0039 (§6).
+- ~~`tools/input_run.py` still foregrounds the window for its captures
+  (they want it unobscured, not focused); it could take `--no-front` too.~~
+  Done 2026-09-24: `input_run.py --no-front`, the game writing its own
+  frames (`BOF3X_SHOT_DIR`, [`input-script.md`](input-script.md)).
+- ~~Step 4 of the overhaul (integer scaling, `k` from the client) is next:
   `BOF3X_SCALE` still rasterises at 2 and the present scales that by an
   integer; a 1440-row monitor wants the target at 3 (§4b's `sprt_draw.cpp`
-  far-edge table first).
+  far-edge table first).~~ Built: DIV-0036 (the target at `k`), then
+  DIV-0042 (`k` from the window, which resizes freely).
 
 ## 6. The F9 pause in English (DIV-0038)
 
@@ -299,7 +307,8 @@ Checked 2026-09-23 at k = 3, English, F9 posted to the window
 `analysis/shots/pause3/field.png` in save 5's field): both pairs centred and
 inside the screen. Self-tests 0 mismatches. The other function keys: F7
 cycled the device name and F11 the frame rate - both nothing since DIV-0040
-(the owner: not needed); F12 writes an ordinary save to slot 0
+(the owner: not needed; F11 has since, 2026-09-24, been given to tooling:
+it saves the last frame as a BMP beside the DLL); F12 writes an ordinary save to slot 0
 (`BISLPS00.DAT`, [`save-files.md`](save-files.md)) with "Save OK", logged
 not drawn (DIV-0032); F10 and Alt are swallowed. The window's GBK title,
 mojibake outside a Chinese locale, is "Breath of Fire III" (DIV-0039).

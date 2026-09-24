@@ -5,8 +5,7 @@
 fuzzed headless against a copy of Capcom's with every call re-aimed at a
 recorder: 38,000 rounds, 0 mismatches; 62 negative controls, 60 refused by a
 count, two not refused because they change nothing. `BOF3X_SHADOW='*'` passes.
-**Not yet through the live check** - the combat A/B
-(`analysis/validate_combat.sh`) runs centrally after the merge (section 5).
+**Through the wave-2 batch** (2026-09-24, 1,020 ours - [`takeover-queue-round7.md`](takeover-queue-round7.md) "Result": the combat A/B 5 of 43 at 4..15 px, the tile-edge class); section 5 had it owed.
 
 Group BD of the seventh parallel round
 ([`takeover-queue-round7.md`](takeover-queue-round7.md)): the openers of

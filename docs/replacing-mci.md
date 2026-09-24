@@ -8,6 +8,14 @@ The compatibility problem this would have solved is already solved more cheaply
 by [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0001; this note exists so the option is
 costed rather than re-argued from scratch later.
 
+**Since then (noted 2026-09-24):** `Fmv_Play` `0x59E360` is ours with MCI
+kept - the videos play into the window at an integer scale (DIV-0035) and
+keep playing when the window is not in front (DIV-0049) - so the exclusive
+640 x 480 mode-set that §6 says presentation work has to remove (and
+[`windowed-mode.md`](windowed-mode.md) calls the most fragile operation in
+the program) no longer happens.
+The decoder costed here is still not built; I7 stays on the list.
+
 Named `replacing-mci.md` rather than `replacingMCI.md` to match the repo's
 kebab-case convention for investigation notes ([`README.md`](README.md)).
 

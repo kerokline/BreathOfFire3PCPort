@@ -1,7 +1,11 @@
 # Display overhaul — window modes, integer scaling, shaders, widescreen
 
-**Status:** IN PROGRESS (2026-09-23). A plan and a brainstorm; step 2 of §5
-is built ([`render-backend.md`](render-backend.md)), the rest is not. Addresses are `BOF3.exe`'s unless marked.
+**Status:** IN PROGRESS (2026-09-23; re-checked 2026-09-24). A plan and a
+brainstorm; step 2 of §5 was built when this was written
+([`render-backend.md`](render-backend.md)). Since then steps 3 (DIV-0032..0035),
+4 (DIV-0036, then DIV-0042), 5 (DIV-0037, DIV-0043 - the looks and the
+launcher box; the hotkey is not built) and 6's survey build (DIV-0041) are
+built too; §5 marks each. Addresses are `BOF3.exe`'s unless marked.
 
 The owner's ask (2026-09-23, branch `phase-3/UI-overhaul`): borderless
 windowed and fullscreen, integer scaling, an engine for shaders and advanced
@@ -10,7 +14,10 @@ Capcom's on the way. This doc says what is true about the display path today,
 what each uplift needs, which functions stand in the way, how each gets
 checked, and an order.
 
-## 1. What is true today
+## 1. What the original does
+
+(Titled "What is true today" when written, 2026-09-23; it describes Capcom's
+display path, which `BOF3X_ORIGINAL=Display_Setup` still runs.)
 
 Measured in [`display-env.md`](display-env.md), [`windowed-mode.md`](windowed-mode.md),
 [`glyph-draw.md`](glyph-draw.md), [`launcher-settings.md`](launcher-settings.md)
@@ -322,21 +329,31 @@ build of the same tree). Half a day for the answer.
    and `Fmv_Play` ours, MCI into the window (the owner's choice over I7);
    DirectInput's set-up read and left as it is - its keyboard is
    `DISCL_BACKGROUND`, which DIV-0033 answers by zeroing the pads while
-   unfocused. Owner's eye owed.
+   unfocused. Owner's eye owed (*given the same evening,
+   [`window-modes.md`](window-modes.md) §5*).
 4. **Integer scaling** (4b) — small once 2 exists; the `sprt_draw.cpp` table
    is the only real work. **Built 2026-09-23 evening** (DIV-0036), to the
    owner's rule: a window's k is the launcher's "Window size" (2..8,
    `BOF3X_SCALE`), a borderless window takes the largest k that fits the
-   monitor, both chosen once at set-up; the far-edge table follows k
+   monitor, both chosen once at set-up (*superseded the same evening by
+   DIV-0042: the size list is gone, the window resizes freely and k follows
+   it, snapped to whole multiples or fitted to the height; `scale=` seeds
+   only the first window*); the far-edge table follows k
    (`SprtDraw_SetScale`); a client smaller than the target gets a fit, not
    a crop. Owner's eye owed (k = 6 borderless, k = 3 windowed). "If we do
    widescreen eventually, this will get re-evaluated" (the owner).
 5. **Presets** (4c): the contract decided with the owner, nearest / bilinear
-   / one CRT, the hotkey, the launcher box.
+   / one CRT, the hotkey, the launcher box. **Built 2026-09-23** except the
+   hotkey: the CRT look (DIV-0037, [`crt-look.md`](crt-look.md)) and a
+   second, SatPixie (DIV-0043), chosen in the launcher's Look box
+   (`screen=`, `BOF3X_PRESENT`); no live toggle key yet
+   ([`IDEAS.md`](IDEAS.md) I15).
 6. **Widescreen** (4d): the PSP answer first (a survey, half a day), then the
    ours-side cull and anchor changes under a toggle as a survey build, then
    the ten-function queue from recorded routes, then per-area work as the
-   owner finds it.
+   owner finds it. **The survey build is in, 2026-09-23** (DIV-0041,
+   426 x 240 under `BOF3X_WIDE=1`, [`widescreen.md`](widescreen.md)); the
+   per-area work is not.
 
 Each takeover follows the recipe (HANDOFF "How to run things"); each look
 that differs from the original's is a ledger entry; the oracle runs stay at
@@ -348,11 +365,14 @@ that differs from the original's is a ledger entry; the oracle runs stay at
   loader? The first is days, the second weeks, and they are not both.
   **Answered 2026-09-23: neither loader nor files - looks built into the
   dll ([`crt-look.md`](crt-look.md)).**
-- FMV (4a): MCI into the window for now, or straight to I7?
+- FMV (4a): MCI into the window for now, or straight to I7? **Answered
+  2026-09-23: MCI into the window (DIV-0035); I7 stays on the list.**
 - Widescreen's default once it works: the PSP's choice, if the ELF shows
   Capcom made one, is a reasonable default to copy; otherwise off.
   **The shape is decided (2026-09-23):** 426 x 240, no crop, the monitor's
   spare width pillarboxed - not the PSP's 384 x 216 (HANDOFF "Pick up here"
   000000, next 3).
 - The saved 640 x 480 window vs a remembered size and position in
-  `bof3x.ini`.
+  `bof3x.ini`. **Answered 2026-09-23 (DIV-0042): the last windowed
+  placement is kept in `bof3x.window` beside the dll; `scale=` in the ini
+  sizes only the first window.**

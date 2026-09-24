@@ -213,7 +213,10 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
     column pairs, no band.
 - Since the survey the launcher has a "Widescreen" box (`wide=1` in
   `bof3x.ini`, which sets `BOF3X_WIDE=1`); the owner plays from it.
-- DIV-0036's k rule at 426 (the owner).
+- DIV-0036's k rule at 426 (the owner). *Overtaken (noted 2026-09-24): since
+  DIV-0042 there is no fixed k rule to revisit - the window resizes freely
+  and k follows it, snapped to whole multiples of the picture or fitted to
+  the height.*
 - The two PSP `SetGeomOffset` callers without PC twins (`(160, 144)`,
   `(?, 185)`, psp-widescreen §5) - an unmoved projection there would put
   something off-centre by 53.

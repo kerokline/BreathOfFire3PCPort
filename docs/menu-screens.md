@@ -1,6 +1,6 @@
 # The field menu: where it lives and what is wrong with it
 
-**Status:** IN PROGRESS (2026-09-20)
+**Status:** IN PROGRESS (2026-09-20; confirmations noted 2026-09-24)
 
 Started from the owner's report that the PC menu differs from the PlayStation
 one in many small ways. Everything in §1 and §2 was measured on the owner's
@@ -8,8 +8,11 @@ running game with read-only sampling (`tools/mem_watch.py`,
 `tools/task_stacks.py`) while the owner walked the menu and said what they
 did; the log is `analysis/memwatch/menu_state.tsv` (gitignored). §3 is static
 reading, and for the Config frame a read of the PlayStation side from the
-owner's disc. Two fixes came of it, DIV-0010 and DIV-0011; neither has been
-seen in the menu yet.
+owner's disc. Two fixes came of it, DIV-0010 and DIV-0011; neither had been
+seen in the menu when this was written. Since then both have: DIV-0011's
+Config frame and reserve list by the owner (§3 items 1 and 2), DIV-0010's
+numerals by the owner off an input-recipe A/B, 2026-09-21 ("numerals look
+good", [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0010, "Checked").
 
 ## 1. How the menu runs
 
@@ -95,7 +98,9 @@ entry when fixed.
    Unread; `0x574AB0` is called first by every Config frame and is the
    candidate.
 4. **Numerals lose their bottom row** - [`known-defects.md`](known-defects.md)
-   D1, now seen on every menu screen, not only Equipment. **Fixed as DIV-0010, unseen in the menu:**
+   D1, now seen on every menu screen, not only Equipment. **Fixed as
+   DIV-0010, confirmed in the menu by the owner 2026-09-21** (the input
+   recipe's A/B, [`input-script.md`](input-script.md) §5):
    the D3D sprite handlers reach their far texture value one pixel past the
    last pixel drawn. Not a menu bug - every sprite in the game has it.
 5. **Text has a glow the PlayStation's has not** (owner, same day). Two

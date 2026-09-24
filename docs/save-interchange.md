@@ -196,6 +196,11 @@ the first in-game save through the fully-ours file layer.
 Not yet seen: the 20 five-byte facility names of the US save, abilities and
 inventory checked item by item, and a load of the re-saved slots 4 and 5.
 
+**Open check, carried here from [`USER_CHECKS.md`](USER_CHECKS.md) item 0 when
+the rest of that item was retired (2026-09-24):** the US save carries 20
+five-byte names in US text encoding for the 60-member facility (§2a). If play
+reaches where those names are shown, what does the PC game draw for them?
+
 ## 5. What is not established
 
 - Whether ids — items, abilities, flags, area numbers — mean the same thing on

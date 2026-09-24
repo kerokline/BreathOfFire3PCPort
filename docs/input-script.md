@@ -1,6 +1,7 @@
 # Scripted input: walking the game to a screen unattended
 
-**Status:** WORKING (verified 2026-09-21)
+**Status:** WORKING (verified 2026-09-21; extended 2026-09-23 with recorded
+routes, §5a, and 2026-09-24 with captures the game writes itself, §3)
 
 The owner asked for a way for an agent to reach menus and screens while nobody
 is at the keyboard, and to capture them. This is it: a **recipe** of pad
@@ -19,13 +20,26 @@ python tools/input_run.py tools/recipes/field_menu.txt --out analysis/shots/menu
 ```
 
 `--lang` sets `BOF3X_LANG`, `--original` sets `BOF3X_ORIGINAL`, `--env K=V`
-sets anything else. The game must be windowed (`BOF3.CFG` first line `0`).
-Output: `OUT/NAME.png` for every `shot NAME`, the game's 640 x 480 client area;
-`mark`, `peek` and `until` lines echoed; exit 0 when the recipe says `done`.
-Like `attract_run.py` it pulls the game to the front every half second, so
-**the machine's keyboard and mouse must be left alone** for the run - a few
-minutes for the recipes below. Shots land in `analysis/`, which is
-gitignored: they are pictures of Capcom's game and are never committed.
+sets anything else. Output: `OUT/NAME.png` for every `shot NAME`; `mark`,
+`peek` and `until` lines echoed; exit 0 when the recipe says `done`. Since
+2026-09-24 **the game writes each shot itself** (`BOF3X_SHOT_DIR`, set to
+`--out`; `render::SaveFrame`): the render target as drawn, at the target's
+size - the window's client under DIV-0042 - before the present's scaling and
+any look, whatever covers the window (§3). The runner converts it to PNG and
+falls back to grabbing the window's client area from the screen only when
+the file is missing. **`--no-front`** leaves the window's z-order alone:
+DIV-0033 keeps the game running unfocused, so a recipe can play while the
+machine is in use. Without it the runner still pulls the game to the front
+every half second, as `attract_run.py` does, and the keyboard and mouse are
+best left alone.
+
+(As first written, 2026-09-21: the game had to be windowed, the shot was a
+screen grab of the 640 x 480 client, and the machine had to be left alone
+for the run.) Shots land in `analysis/`, which is gitignored: they are
+pictures of Capcom's game and are never committed.
+
+Routes can also be **recorded by playing** (`BOF3X_RECORD`, §5a) and played
+back as recipes; the owner's `shop.txt` was the first.
 
 Recipes in `tools/recipes/`:
 
@@ -244,9 +258,12 @@ differed before it was added.
   the only reads. Enough for walking menus.
 - **No input during the logo videos**: they play before the main loop, which
   the recipe's frames start after.
-- The driver grabs the screen, so the window must be on screen and in front;
+- ~~The driver grabs the screen, so the window must be on screen and in front;
   it is, for the run. A grab from the Direct3D surface itself is
-  [`IDEAS.md`](IDEAS.md) I14's question, not this tool's.
+  [`IDEAS.md`](IDEAS.md) I14's question, not this tool's.~~ Since 2026-09-24
+  the DLL writes the render target itself (§3, `BOF3X_SHOT_DIR`) and
+  `--no-front` leaves the window where it is; the screen grab is only the
+  fallback. Hashing frames for comparison (I14's levels) is still open.
 - Pad 2 is never touched.
 - Worth writing next: a recipe per screen the handoff owes a look at - the
   Items and Ability lists (clipping, [`dialogue-localisation.md`](dialogue-localisation.md)

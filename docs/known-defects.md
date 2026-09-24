@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-23 — forty entries, D19, D20 and D29 unused; D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047 (the deadline in a double at 29.97, 2026-09-24); D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17, the glyph sampling, fixed by DIV-0025 (confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D26, the music fades, fixed by DIV-0028 (confirmed in game 2026-09-23))
+**Status:** IN PROGRESS (2026-09-24 — fifty-five entries, D1..D58 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051)
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -51,7 +51,9 @@ of their cell show it; everything drawn as a sprite has it.
 bilinearly, and the inset is what keeps a cell's neighbours out - the values
 are right and the slip is that the far value is reached one pixel past the
 last one drawn. **Fixed as DIV-0010** ([`DIVERGENCE.md`](DIVERGENCE.md)); the
-owner has not yet looked at the menu numerals with it.
+owner has not yet looked at the menu numerals with it. **Since then:** the
+owner judged the in-menu A/B capture, 2026-09-21: "numerals look good"
+(DIVERGENCE.md DIV-0010, [`input-script.md`](input-script.md) §5).
 
 **Not established:** the same for the `POLY_FT4` handlers, which use the same
 table; the A/B run.
@@ -61,6 +63,8 @@ table; the A/B run.
 **Seen:** owner's screenshots, 2026-09-19. The title is GBK bytes passed to
 `CreateWindowExA`, so it is decoded in the system ANSI code page. Original
 behaviour by construction — our code does not touch window creation.
+**Since 2026-09-23 that is no longer so:** WinMain is ours (DIV-0032) and the
+title is English whatever the locale — **fixed as DIV-0039**.
 
 ## D3 — Fullscreen fallback and resolution handling
 
@@ -612,7 +616,7 @@ The software renderer's glyph path (`0x5A4900`, first jump table, the call at
 `0x59EFC9`) copies a 24 x 24 glyph to the back buffer directly when the quad
 is 24 x 24 and so should not show this; not checked.
 
-**Fixed as DIV-0025 (2026-09-22, group N; not yet seen in game)** - [`glyph-draw.md`](glyph-draw.md) §6. The proposal as it stood:
+**Fixed as DIV-0025 (2026-09-22, group N; confirmed in game by the owner 2026-09-23, commit `e42ac23`)** - [`glyph-draw.md`](glyph-draw.md) §6. The proposal as it stood:
 
 **Fix proposed (owner, 2026-09-22: "stage this as part of the next wave"):**
 sample texel centres, `(2u + 0.5) / 32` on both axes, keeping the 1:1
@@ -1355,4 +1359,6 @@ PlayStation icon, a one-byte string per pad bit - `V` `C` `Z` `X` `S` `A` at
 live table (`Key_Table`, `BOF3.CFG` lines 3+) is never read, so a rebound
 keyboard leaves the panel showing keys that do nothing. The PlayStation has
 no such column. **Ours:** gone under DIV-0051 (2026-09-24, the one icon
-column); the live bindings are the launcher's Controls dialog.
+column) - fixed under an overlay language only; with `BOF3X_LANG=original`
+the column is still drawn as the original draws it. The live bindings are
+the launcher's Controls dialog.

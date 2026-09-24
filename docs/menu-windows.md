@@ -5,8 +5,8 @@
 headless against a copy of Capcom's with every call re-aimed at a recorder:
 74,000 rounds, 0 mismatches, with the language overlay's two divergences off
 and on; 50 negative controls, 49 refused by a count, one not refused because
-it changes nothing. **Not yet through the live batch check** - the shop A/B
-(`analysis/validate_shop.sh`) runs centrally after the merge (section 6).
+it changes nothing. **Through the batch `ab26`** (2026-09-23, [`takeover-queue-round6.md`](takeover-queue-round6.md) status): the shop A/B
+(`analysis/validate_shop.sh`) 35 of 35; section 6 had it owed.
 
 Group Y of the sixth parallel round
 ([`takeover-queue-round6.md`](takeover-queue-round6.md)): what the owner's

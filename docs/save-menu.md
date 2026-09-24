@@ -5,8 +5,8 @@
 faithful, fuzzed against Capcom's at start-up (`BOF3X_SHADOW=save_menu`,
 66,000 rounds, 0 mismatches) and controlled headless (63 controls, 61
 refused by comparison, 2 changes that change nothing); no divergence, one
-candidate defect (D38). Not yet run live - the shop A/B after the merge
-is the first check)
+candidate defect (D38). Through the batch `ab26` - the shop A/B 35 of 35
+([`takeover-queue-round6.md`](takeover-queue-round6.md) status))
 
 The sixth round's queue ([`takeover-queue-round6.md`](takeover-queue-round6.md))
 gave group X 23 functions the owner's shop route reaches: the save files,

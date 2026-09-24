@@ -2,8 +2,9 @@
 
 **Status:** IN PROGRESS (2026-09-22 - group N of the fourth parallel round:
 two functions ours, fuzzed and controlled headless; DIV-0025, DIV-0026 and
-DIV-0027 built, none yet seen in game - the batch after the merge is the
-first live check)
+DIV-0027 built, all three confirmed in game by the owner 2026-09-23
+(DIVERGENCE.md); through the batch `ab25` and `ab25b` -
+[`takeover-queue-round4.md`](takeover-queue-round4.md) status)
 
 Every glyph the port draws - Chinese or the overlay's Latin - reaches the
 screen through one Direct3D handler, `D3d_DrawGlyph` `0x5A2900`, and the

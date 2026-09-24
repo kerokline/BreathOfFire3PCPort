@@ -1,6 +1,6 @@
 # Breath of Fire III — Chinese PC Port: renovation & uplift plan
 
-**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19). Scoping document.
+**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19; a progress note in §5 and one line in §6, 2026-09-24). Scoping document.
 
 **Update 2026-09-18:** §8 step 2 — the load-bearing experiment — has been run and
 **passed**, twice (text engine, then battle engine). See [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md).
@@ -342,6 +342,17 @@ port replays packets through DirectDraw. This project ends up doing neither.
 Each phase ends with something playable and something proven. Nothing here is
 speculative about phase N+1 succeeding.
 
+**As of 2026-09-24** (a note of fact, not a change of plan; [`STATUS.md`](STATUS.md)
+is authoritative): phase 0's exit passed (below). Phase 2's exit, a ranked
+work queue, is met - `calltrace.py queue`, [`call-trace.md`](call-trace.md)
+§9. Phase 3 is well under way: 1,025 functions ours, the platform layer's
+file I/O, WinMain, WndProc, the FMV player, `Display_Setup` with Direct3D 11
+behind DirectX 6's objects (DIV-0031), and the pad read among them. Several
+phase-5 items arrived early, as §6's risk suggested they should: a working
+borderless fullscreen and a resizable window (DIV-0032), integer scaling
+(DIV-0036, DIV-0042), and a 426 x 240 wide picture as a survey build
+(DIV-0041).
+
 ### Phase 0 — Our own scaffolding (weeks)
 Write a minimal loader and detour layer of our own: get code into the process,
 redirect one address to one of our functions, call the original. CMake, **one
@@ -477,6 +488,9 @@ infrastructure is at risk of stalling on enthusiasm alone. Worth deliberately
 interleaving visible wins — the fullscreen bug, resolution handling, the
 remaining untranslated location bubbles — into the early phases even though the
 plan does not technically need them yet. A living project has to stay alive.
+*As it turned out (2026-09-24): the game was playable in English on
+2026-09-20 (DIV-0005..0009) and the display work landed inside phase 3 - see the note at the
+head of §5.*
 
 ---
 

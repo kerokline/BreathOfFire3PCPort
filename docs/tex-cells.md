@@ -3,8 +3,8 @@
 **Status:** IN PROGRESS (2026-09-23 - group U of the fifth parallel round:
 eleven functions ours, faithful, fuzzed and controlled headless on group T's
 fake DirectDraw, `src/game/ddraw_fuzz.*` (extended: colour fill, a bigger
-log), and a fake device of its own; no divergence; not yet run live - the
-batch after the merge is the first check. Two latent defects written down,
+log), and a fake device of its own; no divergence; through the batch `ab26` with
+round six ([`takeover-queue-round5.md`](takeover-queue-round5.md) status). Two latent defects written down,
 D31 and D32)
 
 The field's sprites and the port's Chinese text are not drawn from VRAM the
