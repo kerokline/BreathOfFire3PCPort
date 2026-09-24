@@ -120,7 +120,10 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
   `0x576960`.
 - Screen-wide art: the menu backdrop repeats a 32-column pattern a fixed
   number of times (`0x575732`); widened, it needs two more columns a side or
-  its edges show. The sky (`0x4112A9`). The title and the full-screen
+  its edges show. ~~The sky (`0x4112A9`)~~ - read 2026-09-23: that site is
+  `WorldMap_PinSprite` `0x4112A0`, a sprite pinned to (160, 80), centred,
+  nothing to do ([`area-backdrop.md`](area-backdrop.md) §1); the sky is
+  `AreaMap_DrawBackdrop` `0x571BE0`, §5. The title and the full-screen
   pictures are 320 wide by nature: they stay pillarboxed inside the frame.
 
 ### 3e. Survey, then the owner's routes
@@ -198,9 +201,14 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
     bounds. The left x is a zero register, not an immediate, so it cannot
     be byte-patched; it needs a takeover beside `AreaMap_ClutCycle` in
     `map_layers.cpp` with the quad at (-53, 0) 426 x 240 under
-    `Widescreen_Live()`. **Deferred (the owner): until a recorded route
-    reaches it** - they are making a save recipe with the quicksave for
-    harvesting calls.
+    `Widescreen_Live()`. Deferred until a recorded route reached it; the
+    world-map route did (`world-map.md` §4). **Taken over the same night**
+    as `AreaMap_DrawBackdrop` (`src/game/area_backdrop.cpp`,
+    [`area-backdrop.md`](area-backdrop.md)) with its two sibling handlers:
+    the quad's x from -53 to 373 under `Widescreen_Live()`, the fade tile's
+    rule; the faithful quad fuzzed at 0 mismatches. **Owed:** the route's
+    captures wide and narrow after the merge (the coordinator's live
+    check).
   - Recorded in `wide_field_menu2`: the backdrop after its fix, seven
     column pairs, no band.
 - Since the survey the launcher has a "Widescreen" box (`wide=1` in

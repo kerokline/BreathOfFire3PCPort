@@ -38,6 +38,7 @@
 #include "game/field_blocked.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
+#include "game/area_backdrop.h"
 #include "game/widescreen.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
@@ -187,6 +188,9 @@ void InjectAll() {
     DisplaySetup_Inject();      // after GfxFilter, whose patch of the original set-up's bytes serves the BOF3X_ORIGINAL path
     WinMain_Inject();           // the window and the frame loop (DIV-0032..0034): no clones, order does not matter
     FmvPlay_Inject();           // the FMVs into the window (DIV-0035): likewise
+    AreaBackdrop_Inject();      // every call of its clones re-aimed at a recorder: order does not matter,
+                                // except that it runs before Widescreen_Inject, so its fuzz compares the
+                                // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: last, so every fuzz above ran against the original culls
     InjectReport();
 }
