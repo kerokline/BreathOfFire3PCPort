@@ -1204,3 +1204,86 @@ blend keyed on it - a texture-path change that would make every
 semi-transparent 8-bit sprite in the game blend per texel as on the PSX -
 after which `SetSemiTrans(prim, 1)` here is a one-line divergence. Owed: the
 owner's eye, if that path is built.
+## D43 — The battle skill list's cursor row and its raised row disagree once scrolled (candidate, latent)
+
+**Found:** reading `BattleMenu_DrawSkillList` `0x59D200` for group BJ of the
+seventh round, 2026-09-24 ([`battle_draw.md`](battle_draw.md)). Read, not
+seen; the PSX side not compared.
+
+**The defect.** The list colours a row as the cursor's when its on-screen
+index equals the cursor byte `+0xD` (`0x59D2D6`), but raises a row when top
++ index equals `+0xD` (`0x59D31B`). With the list scrolled the two pick
+different rows. Whether the window task's step keeps the two in agreement
+is unread (its tables `0x66B54C` / `0x66B560`). Ours keeps it; control S1
+of that group refuses the fix.
+
+## D44 — `BattleWin_DrawCell16` takes its x and y as unsigned (PC only, latent)
+
+**Found:** group BD, 2026-09-24 ([`battle_window_draw.md`](battle_window_draw.md)).
+Read, not seen. Every other helper of the battle windows reads the
+coordinates signed; this one reads them unsigned, so a negative coordinate
+lands 65,536 pixels away instead of just off the edge. The PSX twin has one
+reading for both. Kept.
+
+## D45 — `BattleWin_FirstOfKind` treats every window 5..12 as an enemy's (latent)
+
+**Found:** group BD, 2026-09-24 ([`battle_window_draw.md`](battle_window_draw.md)).
+Read, not seen. A party actor in one of those windows is looked up before
+the enemy records (`0x93B674` for actor 0), which could hide an enemy's
+name. The PSX does the same. Kept.
+
+## D46 — Five unchecked indices in the battle windows (latent)
+
+**Found:** group BC, 2026-09-24 ([`battle_windows.md`](battle_windows.md)).
+Read, not seen; kept as the original has them:
+
+- `BattleWin_DrawCommandIcon` `0x4434C0`: the colour table has no bound; a
+  command index of 7 or more reads the function's own stack frame (the PSX
+  the same; ours reads the same bytes, the fuzz checks 8..43).
+- `Window_DispatchKind` `0x597A30`: the handler table on its stack has no
+  bound; an index of 3 would call the function's own return address.
+- `BattleObj_RunState` `0x4411E0`: the 27-entry state table has no bound.
+- `BattleWin_DrawCommandLabel` `0x4439A0`: the command index has no bound.
+- `Text_GlyphCount` `0x597F40`: reads past the end of a string whose
+  double-byte lead byte sits just before the terminator.
+
+## D47 — A repeated drop in one battle also appends an item 0 (PC only, latent)
+
+**Found:** group BB, 2026-09-24 ([`battle_flow.md`](battle_flow.md) §5),
+`Battle_RollDrops` `0x437580` against the PSX `0x801E525C`. Read, not
+seen. On the PSX a drop that matches an entry already in the list adds to
+its count and stops; the port keeps searching, then also appends the zeroed
+item word as an item 0 with count 1. Needs two drops of the same item in
+one battle. Kept.
+
+## D48 — `BattleStep_Expire4000` reads an enemy's counter from the party array (latent)
+
+**Found:** group BA, 2026-09-24 ([`battle_setup.md`](battle_setup.md) §6).
+Read, not seen. The step reads each enemy's flag-0x4000 counter from the
+party array at the enemy's actor index (`0x803266` + 0x14C each) and then
+zeroes the enemy's own counter at `+0x122`, the one `Battle_TickCounters`
+counts up. The PSX does the same, so it shipped on both. Kept.
+
+## D49 — An enemy's AP heal is checked against its max HP (latent)
+
+**Found:** group BE, 2026-09-24 ([`battle_damage.md`](battle_damage.md)),
+`Effect_ApplyResult` `0x44B9F0`. Read, not seen. The heal is compared
+against max HP and then clamped to max AP, so an enemy's AP can end above
+its maximum. The PSX the same. Kept.
+
+## D50 — Level 99 reads past the turn-order tables (latent)
+
+**Found:** group BE, 2026-09-24 ([`battle_damage.md`](battle_damage.md)),
+`Battle_LevelClass` `0x445640` and its users. Read, not seen. Level 99
+lands in level class 6, one past the tables: a level-99 party member's
+bonus becomes 516 %, and a level-99 enemy's random offset comes from the
+damage variance table. The PSX the same. Kept. (Whether a level of 99 is
+reachable in play is the owner's to say.)
+
+## D51 — An enemy's charge replaces its attack instead of adding to it (candidate)
+
+**Found:** group BE, 2026-09-24 ([`battle_damage.md`](battle_damage.md) §2),
+`Battle_CalcDamage` `0x445CF0`. Read, not seen. A charged party member's
+attack is added to; a charged enemy's is replaced by charge × ATK / 2, so a
+charge of 2 does nothing for an enemy. The PSX the same; whether it was
+intended is unknown. Kept.
