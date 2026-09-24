@@ -665,6 +665,10 @@ touched; the rest needs a session of six-plus hours to show.
 
 ## I17 — Fast-forward: a shorter frame period while a key is held
 
+**Done 2026-09-24 as DIV-0048:** F1 toggles the period halved (2x), the
+deadline rebased at the change; a toggle rather than a hold, the owner's
+2026-09-24 wording.
+
 **Ask (2026-09-21):** the owner asked whether a 2x / 4x fast-forward is best
 done by cutting the frame period, or whether that is a bad mechanism.
 **Kind:** game behaviour (opt-in)   **Feasibility:** MEDIUM   **Gated on:**

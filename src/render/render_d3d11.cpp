@@ -388,12 +388,13 @@ GpuTexture* GpuOf(Surface* s) {
 // Makes the GPU texture hold what `version` sees.
 GpuTexture* Bind(TexVersion* version) {
     Surface* s = version->surface;
-    if (!s->pixels) bof3::Fatal("render: a draw uses a released surface");
+    // A released surface is drawn only through a snapshot taken at its release.
+    if (!s->pixels && !version->pixels) bof3::Fatal("render: a draw uses a released surface with no snapshot");
     GpuTexture* g = GpuOf(s);
     if (version->pixels) {
         // A snapshot: what the surface held when the draw was recorded.
         g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, version->pixels), s->width * 4, 0);
-        s->dirty = true;   // the live pixels come next
+        s->dirty = s->pixels != nullptr;   // the live pixels come next, if there are any
     } else if (s->dirty) {
         g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, s->pixels), s->width * 4, 0);
         s->dirty = false;
@@ -731,9 +732,12 @@ void ApplyPendingScale() {
 
 void PresentOnFiber(Frame& frame) {
     FpuGuard fpu;
-    SweepReleased();
     RunFrame(frame);
     Show();
+    // After the frame: a surface released since the last present may have
+    // draws in this one, through its snapshot, and needs its GPU object
+    // until they have run.
+    SweepReleased();
     ApplyPendingScale();
 }
 }  // namespace

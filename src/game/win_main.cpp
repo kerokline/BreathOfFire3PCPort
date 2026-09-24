@@ -107,6 +107,15 @@ constexpr double kFirstFrameMs = 33.34;        // double at 0x5C4220
 // sets another period: 33.334 is the port's own.
 constexpr double kFrameMs = 1001.0 / 30.0;     // the original's: double 33.334 at 0x5C4218
 double g_frame_ms = kFrameMs;
+// DIV-0048: F1 toggles double speed - the period halved, so two logic
+// frames run per frame of wall time. Logic counts frames and reads no
+// clock, so what the game computes is the same; when drawing cannot keep
+// up the loop skips presents as it does catching up after a stall. Read by
+// the loop, which rebases the deadline when it changes.
+int g_speed = 1;
+bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
+constexpr const char* kStrSpeed2 = "Speed x2";
+constexpr const char* kStrSpeed1 = "Speed x1";
 constexpr U kEnvBase = 0x903880, kEnvStride = 0x90;   // the two display-environment pairs
 constexpr int kOverlayFrames = 0x78;
 
@@ -389,6 +398,17 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
             Overlay_Text = Str(kStrSaveOk);
             return 0;
         }
+        // DIV-0048: F1 toggles double speed; a held key's repeats (bit 30 of
+        // lparam, the previous state) do not toggle it back.
+        if (wparam == VK_F1) {
+            if ((lparam & (1 << 30)) == 0) {
+                g_speed = g_speed == 1 ? 2 : 1;
+                Overlay_Frames = kOverlayFrames;
+                Overlay_Text = g_speed == 2 ? kStrSpeed2 : kStrSpeed1;
+                bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %lu", g_speed, static_cast<unsigned long>(Frame_Counter));
+            }
+            return 0;
+        }
         return 0;
     }
     case WM_SYSKEYDOWN:
@@ -421,6 +441,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             if (end == nullptr || *end != '\0' || !(v >= 1.0 && v <= 1000.0)) bof3::Fatal("BOF3X_FRAME_MS must be 1..1000");
             g_frame_ms = v;
         }
+        if (GetEnvironmentVariableA("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
     }
 
     if (!Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
@@ -489,6 +510,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         char fps[0x50] = {};
         int frames_drawn = 0;
         DWORD last_fps_tick = 0;
+        unsigned long logic_at_fps_tick = 0;
         MSG msg;
         bool quit = false;
         // DIV-0047: the clock unwrapped into 64 bits (the slot's DWORD wraps
@@ -503,6 +525,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         };
         double deadline_base = 0.0;
         std::uint64_t deadline_frames = 0;
+        int speed = 1;   // the period in force: g_frame_ms / speed (DIV-0048)
         while (!quit) {
             Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(bof3::addr::Boot_Task)));
             deadline_base = Now() + kFirstFrameMs;
@@ -527,8 +550,15 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Task_SetStackBase();
                     break;   // Task_Create again
                 }
+                if (g_speed != speed) {
+                    // DIV-0048: the count so far at the old period becomes the
+                    // base, so the change starts from the current deadline.
+                    deadline_base += static_cast<double>(deadline_frames) * (g_frame_ms / speed);
+                    deadline_frames = 0;
+                    speed = g_speed;
+                }
                 double now = Now();
-                double deadline = deadline_base + static_cast<double>(deadline_frames) * g_frame_ms;
+                double deadline = deadline_base + static_cast<double>(deadline_frames) * (g_frame_ms / speed);
                 // DIV-0034: the debt clamp.
                 if (now - deadline > kMaxDebtMs) {
                     bof3::Log("DIV-0034    frame deadline %.0f ms behind at Frame_Counter %lu: restarted",
@@ -561,6 +591,10 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 if (last_tick - last_fps_tick > 1000) {
                     last_fps_tick = last_tick;
                     Crt_sprintf(fps, Str(kStrFrameRate), frames_drawn);
+                    if (g_fps_log)
+                        bof3::Log("fps         %d drawn, %lu logic, speed x%d", frames_drawn,
+                                  static_cast<unsigned long>(Frame_Counter - logic_at_fps_tick), speed);
+                    logic_at_fps_tick = Frame_Counter;
                     frames_drawn = 0;
                 }
                 // DIV-0047: one more frame of the period. The original added

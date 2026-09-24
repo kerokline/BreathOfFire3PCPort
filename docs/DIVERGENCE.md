@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 47 entries, DIV-0001..0047)
+**Status:** IN PROGRESS (opened 2026-09-18; 48 entries, DIV-0001..0048)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2089,3 +2089,47 @@ designed in rather than bolted on.
   the owner's eye over a long session (the bands began at 35 minutes).
 - **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain` (the float and
   33.334 again); `BOF3X_FRAME_MS=33.334` keeps the double at the port's rate.
+
+### F1 toggles double speed
+
+- **ID:** DIV-0048
+- **Date:** 2026-09-24
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop and window
+  procedure, `src/game/win_main.cpp`; [`IDEAS.md`](IDEAS.md) I17)
+- **Original behaviour:** F1 does nothing; the loop's period is fixed.
+- **New behaviour:** F1 toggles between the period (DIV-0047's 1001 / 30
+  ms) and half of it: two logic frames per frame of wall time. The deadline
+  is rebased at the change so it starts from the current deadline. "Speed
+  x2" / "Speed x1" shows on screen for 120 frames, as F12's "Save OK" does;
+  a held key's repeats do not toggle. Like every other key, F1 ends an F9
+  pause. Off at start; not saved.
+- **Rationale:** the owner, 2026-09-24: "Can we bind F1 to a '2x speed'
+  function by halving the logic frame per second time?" - I17's mechanism.
+  Logic counts frames and reads no clock, so what the game computes is the
+  same at either speed: saves, the RNG, scripted events. When drawing cannot
+  keep up the loop skips presents, as it does catching up after a stall,
+  and DIV-0004 drains the upload queue after unrendered frames. The music
+  is fed from the spin at wall-clock time and is not sped up.
+- **Also in the PSX version?** No.
+- **Tooling that comes with it:** `BOF3X_FPS_LOG=1` writes one `fps` line a
+  second to the log - frames drawn, logic frames, the speed in force.
+- **Verification:** 2026-09-24. An attract run with F1 posted to the window
+  at 75 s (`analysis/attract/f1_speed.log`): 31.0 drawn / 31.0 logic a
+  second before, then `DIV-0048 speed x2 (F1) at Frame_Counter 1857` and
+  60.5 drawn / 60.5 logic a second over the next 75 s - every logic frame
+  still drawn, no present skipped. The owner watched it: "it looks like
+  its holding up pretty well to my eye". Where the skip begins, by period
+  (`BOF3X_FRAME_MS`, `period_*.log`): 4x, 121.8 logic and 62.8 drawn a
+  second; 1 ms, 1,015.6 logic and 64.4 drawn - the loop's own cost is
+  about a millisecond a logic frame, and presents cap near 60 a second.
+  Those two runs first ended in `render: a draw uses a released surface`,
+  our backend's guard: a frame skip across an area change left draws
+  recorded against a surface the game then released, and the snapshot
+  taken for exactly that case was unreachable - the release zeroed the
+  surface's dimensions, the present swept its GPU object before the draws
+  ran, and the guard tested the live pixels rather than the snapshot. Fixed
+  the same day in `render_shim.cpp` / `render_d3d11.cpp`
+  ([`render-backend.md`](render-backend.md)); the same path opens at 1x
+  after any stall inside DIV-0034's 500 ms that spans an area change. Not a
+  divergence - a defect of ours.
+- **Reversible?** F1 again; with the loop, `BOF3X_ORIGINAL=Game_WinMain`.

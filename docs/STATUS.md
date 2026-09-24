@@ -306,7 +306,11 @@ What is established:
    [`cheats.md`](cheats.md)); confirmed on the recorded combat route, the owner
    watching. **The same day, D5's complete fix, DIV-0047:** the frame deadline
    is a double at the PlayStation's 29.97 (measured 29.971; the frame hash
-   identical on all 10,319 frames, since logic reads no clock). The
+   identical on all 10,319 frames, since logic reads no clock). **DIV-0048:
+   F1 toggles 2x** - 60.5 drawn of 60.5 logic a second, no present skipped;
+   the 4x and 1 ms runs found and fixed a backend defect, a released
+   surface's snapshot unreachable across a skipped present
+   ([`render-backend.md`](render-backend.md)). The
    route's 40-function queue is the next wave, the compass and HUD first;
    the place plates are paint in the world maps' texture pages, as the
    sibling found, and the localisation build's next data item.
