@@ -21,6 +21,7 @@ struct Options {
     U pad_x;               // columns each side of the view, in the game's pixels: 53 wide (DIV-0041), else 0
     bool point_filter;     // the present pass: nearest (true) or bilinear
     bool vsync;
+    bool snap;             // DIV-0042: the present scales the target by a whole number (true) or fits it to the client
 };
 
 // Creates the device and swap chain on the window. Fatal on failure with the
@@ -36,5 +37,13 @@ void SweepReleased();
 // The logical size the target has now (for the set-up to hand the game).
 U TargetWidth();
 U TargetHeight();
+U TargetScale();
+
+// DIV-0042: asks for the target to be remade at scale k (1..8) after the
+// next present - between frames, so no recorded draw meets the wrong size.
+// The hook is called on the render fiber right after the target changes,
+// with the new k, for the set-up to give the game its new numbers.
+void RequestScale(U k);
+void SetRescaleHook(void (*hook)(U k));
 
 }  // namespace render

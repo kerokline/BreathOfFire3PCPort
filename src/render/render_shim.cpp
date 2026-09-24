@@ -845,6 +845,22 @@ Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bo
     return s;
 }
 
+bool ResizeSurface(Surface* s, U width, U height) {
+    if (!s->is_primary && !s->is_back) bof3::Fatal("render: ResizeSurface of a texture surface");
+    const U pitch = ((width * (s->bpp / 8)) + 15) & ~15u;
+    if (s->pixels) {
+        unsigned char* pixels = static_cast<unsigned char*>(Alloc(pitch * height));
+        if (!pixels) return false;
+        Free(s->pixels);
+        s->pixels = pixels;
+    }
+    s->width = width;
+    s->height = height;
+    s->pitch = pitch;
+    s->dirty = true;
+    return true;
+}
+
 PipeState& CurrentState() { return g_state; }
 void SetClearColor(U argb) { g_clear_color = argb; }
 Frame& CurrentFrame() { return g_frame; }

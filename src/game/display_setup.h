@@ -15,3 +15,12 @@ unsigned DisplaySetup_TargetScale();
 // The width of the picture in the game's pixels: 320, or 426 under BOF3X_WIDE=1
 // (DIV-0041, src/game/widescreen.h). The height is always 240.
 unsigned DisplaySetup_ViewWidth();
+
+// DIV-0042: the scale for a client of cw x ch - with snap, the largest k whose
+// picture fits (1 at least); without, the smallest k whose picture is not
+// smaller than the client's height (the present shrinks it to fit), 8 at most.
+unsigned DisplaySetup_ScaleForClient(unsigned cw, unsigned ch);
+
+// DIV-0042: BOF3X_SNAP - 0 fits the picture to the client, anything else (the
+// default) snaps it to whole multiples. Read once.
+bool DisplaySetup_Snap();

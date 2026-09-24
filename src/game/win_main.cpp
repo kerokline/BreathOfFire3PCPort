@@ -57,6 +57,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 #include "bof3/symbols.gen.h"
 #include "game/display_setup.h"
@@ -65,6 +66,7 @@
 #include "hook/detour.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "render/render_d3d11.h"
 #include "render/render_shim.h"
 
 namespace {
@@ -124,7 +126,48 @@ DWORD Tick() { return reinterpret_cast<DWORD(WINAPI*)(void)>(Imp_GetTickCount)()
 // size, 320k x 240k (426k x 240k wide, DIV-0041) - the target's own k once the display is up, the window
 // size setting before - with k lowered while the frame would not fit the
 // work area. At k = 2 that is the original's 640 x 480.
+// DIV-0042: the last windowed placement, kept in bof3x.window beside this
+// dll ("left top right bottom" of the window rectangle), so that a resized
+// window comes back at its size. Used when its frame still fits the work
+// area and its top-left is on a monitor; else the computed placement.
+std::wstring PlacementPath() {
+    HMODULE self = nullptr;
+    wchar_t path[MAX_PATH];
+    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCWSTR>(&PlacementPath), &self) ||
+        GetModuleFileNameW(self, path, MAX_PATH) == 0)
+        return L"";
+    std::wstring p = path;
+    const size_t slash = p.find_last_of(L"\\/");
+    return (slash == std::wstring::npos ? p : p.substr(0, slash)) + L"\\bof3x.window";
+}
+
+bool LoadPlacement(RECT& r) {
+    const std::wstring path = PlacementPath();
+    if (path.empty()) return false;
+    FILE* f = _wfopen(path.c_str(), L"r");
+    if (!f) return false;
+    long v[4];
+    const bool ok = fscanf(f, "%ld %ld %ld %ld", &v[0], &v[1], &v[2], &v[3]) == 4;
+    fclose(f);
+    if (!ok || v[2] - v[0] < 64 || v[3] - v[1] < 64) return false;
+    r = {v[0], v[1], v[2], v[3]};
+    if (!MonitorFromPoint({r.left + 8, r.top + 8}, MONITOR_DEFAULTTONULL)) return false;
+    return true;
+}
+
+void SavePlacement(const RECT& r) {
+    const std::wstring path = PlacementPath();
+    if (path.empty()) return;
+    FILE* f = _wfopen(path.c_str(), L"w");
+    if (!f) return;
+    fprintf(f, "%ld %ld %ld %ld\n", r.left, r.top, r.right, r.bottom);
+    fclose(f);
+}
+
 RECT WindowedRect() {
+    RECT saved;
+    if (LoadPlacement(saved)) return saved;
     unsigned k = DisplaySetup_TargetScale();
     if (k == 0) k = DisplaySetup_WindowedScale();
     RECT work = {0, 0, Desktop_Width, Desktop_Height};
@@ -220,11 +263,67 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
     HWND hwnd = static_cast<HWND>(hwnd_);
     switch (msg) {
     case WM_DESTROY:
+        // DIV-0042: the windowed placement outlives the window.
+        if (!Cfg_Fullscreen) {
+            RECT r;
+            if (GetWindowRect(hwnd, &r)) SavePlacement(r);
+        } else if (g_have_windowed_rect) {
+            SavePlacement(g_windowed_rect);
+        }
         PostQuitMessage(0);
         return 0;
     case WM_MOVE:
         Display_WindowMoved(static_cast<int>(static_cast<unsigned long>(lparam) & 0xFFFF),
                             static_cast<int>(static_cast<unsigned long>(lparam) >> 16));
+        return 0;
+    case WM_SIZING: {
+        // DIV-0042: a windowed drag keeps the picture's shape. With snap the
+        // client lands on a whole multiple of the picture (the nearest to the
+        // dragged height, 1..8); without, on the picture's aspect at the
+        // dragged height (a side edge: at the dragged width).
+        if (Cfg_Fullscreen) break;
+        RECT* r = reinterpret_cast<RECT*>(lparam);
+        RECT frame = {0, 0, 0, 0};
+        AdjustWindowRect(&frame, kWindowedStyle, FALSE);
+        const LONG fw = frame.right - frame.left, fh = frame.bottom - frame.top;
+        const LONG view_w = static_cast<LONG>(DisplaySetup_ViewWidth());
+        LONG cw = (r->right - r->left) - fw, ch = (r->bottom - r->top) - fh;
+        const bool by_width = wparam == WMSZ_LEFT || wparam == WMSZ_RIGHT;
+        if (DisplaySetup_Snap()) {
+            LONG k = by_width ? (cw + view_w / 2) / view_w : (ch + 120) / 240;
+            if (k < 1) k = 1;
+            if (k > 8) k = 8;
+            cw = view_w * k;
+            ch = 240 * k;
+        } else {
+            if (by_width) ch = cw * 240 / view_w;
+            else cw = ch * view_w / 240;
+            if (cw < view_w) cw = view_w, ch = 240;
+        }
+        const LONG w = cw + fw, h = ch + fh;
+        // Anchor the edge the user is not dragging.
+        if (wparam == WMSZ_LEFT || wparam == WMSZ_TOPLEFT || wparam == WMSZ_BOTTOMLEFT) r->left = r->right - w;
+        else r->right = r->left + w;
+        if (wparam == WMSZ_TOP || wparam == WMSZ_TOPLEFT || wparam == WMSZ_TOPRIGHT) r->top = r->bottom - h;
+        else r->bottom = r->top + h;
+        return 1;
+    }
+    case WM_SIZE:
+        // DIV-0042: the target follows the client, between frames.
+        if (wparam != SIZE_MINIMIZED && DisplaySetup_TargetScale() != 0) {
+            const unsigned cw = static_cast<unsigned long>(lparam) & 0xFFFF, ch = static_cast<unsigned long>(lparam) >> 16;
+            if (cw && ch) render::RequestScale(DisplaySetup_ScaleForClient(cw, ch));
+        }
+        return 0;
+    case WM_EXITSIZEMOVE:
+        if (!Cfg_Fullscreen) {
+            RECT r;
+            if (GetWindowRect(hwnd, &r)) {
+                g_windowed_rect = r;
+                g_have_windowed_rect = true;
+                SavePlacement(r);
+            }
+        }
         return 0;
     case WM_ACTIVATEAPP:
         if (wparam) {

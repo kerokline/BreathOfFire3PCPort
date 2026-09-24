@@ -57,13 +57,7 @@ void Populate(HWND dlg, const DialogState& state) {
     CheckDlgButton(dlg, IDC_BACKGROUND, cfg.background ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(dlg, IDC_WIDE, cfg.wide ? BST_CHECKED : BST_UNCHECKED);
 
-    // DIV-0036: item i is scale i + 2.
-    for (int k = 2; k <= 8; ++k) {
-        wchar_t item[48];
-        swprintf(item, 48, L"%d x %d (%dx)%ls", 320 * k, 240 * k, k, k == 2 ? L" - original" : L"");
-        AddItem(dlg, IDC_RESOLUTION, item);
-    }
-    Select(dlg, IDC_RESOLUTION, cfg.scale - 2);
+    CheckDlgButton(dlg, IDC_SNAP, cfg.snap ? BST_CHECKED : BST_UNCHECKED);
 
     AddItem(dlg, IDC_RENDERER, L"Direct3D (default)");
     AddItem(dlg, IDC_RENDERER, L"Software");
@@ -79,8 +73,7 @@ void ReadBack(HWND dlg, Config& cfg) {
     cfg.crt = look == 2;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
     cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
-    const int scale = Selected(dlg, IDC_RESOLUTION) + 2;
-    if (scale >= 2 && scale <= 8) cfg.scale = scale;
+    cfg.snap = IsDlgButtonChecked(dlg, IDC_SNAP) == BST_CHECKED;
     cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
     cfg.wide = IsDlgButtonChecked(dlg, IDC_WIDE) == BST_CHECKED;
     cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;

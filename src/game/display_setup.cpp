@@ -130,13 +130,34 @@ void FillFormat(U record, const Format& f, U rank) {
 
 bool g_backend_up;
 
-U g_scale;   // the k chosen at set-up (DIV-0036)
+U g_scale;   // the target's k (DIV-0036, DIV-0042)
 
 // The largest k in 1..kMaxScale whose (view width) k x 240k fits cw x ch; 1 if none.
 U FitScale(U view_w, U cw, U ch) {
     U k = kMaxScale;
     while (k > 1 && (view_w * k > cw || 240 * k > ch)) --k;
     return k;
+}
+
+// DIV-0042: the game's numbers for a target at k, written at set-up and again
+// from the render fiber whenever the target is remade (render::RequestScale):
+// D3d_ScaleX/Y, DIV-0010's far-edge table, Gfx_ScreenRect's size, and the
+// primary and back surfaces' size as GetSurfaceDesc reports it.
+void Rescale(U k) {
+    g_scale = k;
+    const U width = render::TargetWidth(), height = render::TargetHeight();
+    PutLong(kScreenRight, width);
+    PutLong(kScreenBottom, height);
+    PutFloat(kScaleX, static_cast<float>(k));
+    PutFloat(kScaleY, static_cast<float>(k));
+    SprtDraw_SetScale(k);
+    auto* primary = *reinterpret_cast<render::Surface**>(At(kPrimary));
+    auto* back = *reinterpret_cast<render::Surface**>(At(kBackBuffer));
+    if (primary && back) {
+        if (!render::ResizeSurface(primary, width, height) || !render::ResizeSurface(back, width, height))
+            bof3::Fatal("Display_Setup: out of memory resizing the primary and back surfaces to %u x %u", width, height);
+        PutLong(kBackPitch, back->pitch);
+    }
 }
 
 // DIVERGENCE DIV-0036: the render target is 320k x 240k, k chosen once at
@@ -148,17 +169,14 @@ render::Options ReadOptions(HWND hwnd, bool borderless) {
     render::Options o = {};
     o.hwnd = hwnd;
     char text[32];
-    U k = DisplaySetup_WindowedScale();
-    const U view_w = DisplaySetup_ViewWidth();
-    if (borderless) {
-        RECT client = {};
-        GetClientRect(hwnd, &client);
-        k = FitScale(view_w, static_cast<U>(client.right - client.left), static_cast<U>(client.bottom - client.top));
-        bof3::Log("DIV-0036    scale %u: the largest that fits the borderless client %ld x %ld", k,
-                  client.right - client.left, client.bottom - client.top);
-    } else if (k != 2) {
-        bof3::Log("DIV-0036    scale %u: the window's size setting (BOF3X_SCALE)", k);
-    }
+    // DIV-0042: the client decides, in both modes - the window opened at the
+    // remembered size (win_main.cpp) or the BOF3X_SCALE fallback, the
+    // borderless window at its monitor's.
+    RECT client = {};
+    GetClientRect(hwnd, &client);
+    const U k = DisplaySetup_ScaleForClient(static_cast<U>(client.right - client.left), static_cast<U>(client.bottom - client.top));
+    bof3::Log("DIV-0036    scale %u for the %s client %ld x %ld%s", k, borderless ? "borderless" : "windowed",
+              client.right - client.left, client.bottom - client.top, DisplaySetup_Snap() ? "" : " (DIV-0042: fitted, not snapped)");
     o.logical_w = 320;
     o.logical_h = 240;
     o.scale = k;
@@ -170,6 +188,7 @@ render::Options ReadOptions(HWND hwnd, bool borderless) {
         else if (std::strcmp(text, "linear") != 0) bof3::Fatal("BOF3X_FILTER=%s: point or linear", text);
     }
     o.vsync = GetEnvironmentVariableA("BOF3X_VSYNC", nullptr, 0) > 0;
+    o.snap = DisplaySetup_Snap();
     return o;
 }
 
@@ -225,6 +244,7 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     if (!g_backend_up) {
         render::InitShim(256 * 1024, 32 * 1024, 8 * 1024 * 1024);
         render::InitD3d11(options);
+        render::SetRescaleHook(&Rescale);
         g_backend_up = true;
     }
     const U width = render::TargetWidth(), height = render::TargetHeight();
@@ -308,5 +328,23 @@ unsigned DisplaySetup_WindowedScale() {
 unsigned DisplaySetup_TargetScale() { return g_backend_up ? g_scale : 0; }
 
 unsigned DisplaySetup_ViewWidth() { return 320 + 2 * Widescreen_Columns(); }
+
+bool DisplaySetup_Snap() {
+    static int snap = -1;
+    if (snap < 0) {
+        char text[8];
+        snap = !(GetEnvironmentVariableA("BOF3X_SNAP", text, sizeof text) > 0 && text[0] == '0');
+    }
+    return snap != 0;
+}
+
+unsigned DisplaySetup_ScaleForClient(unsigned cw, unsigned ch) {
+    const U view_w = DisplaySetup_ViewWidth();
+    if (DisplaySetup_Snap()) return FitScale(view_w, cw, ch);
+    U k = (ch + 239) / 240;   // the smallest k whose 240k covers the height: shrunk to fit, never enlarged
+    if (k < 1) k = 1;
+    if (k > kMaxScale) k = kMaxScale;
+    return k;
+}
 
 void DisplaySetup_Inject() { BOF3_INJECT(Display_Setup); }

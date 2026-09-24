@@ -121,6 +121,12 @@ void* MaterialObject();
 // the row up to 16 bytes. Returns null when out of memory.
 Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bool back);
 
+// DIV-0042: the primary or back surface at a new size - width, height and
+// pitch as GetSurfaceDesc reports them, the back buffer's pixels reallocated.
+// Only for those two, which no draw is ever recorded against. False when out
+// of memory (the surface then keeps its old size).
+bool ResizeSurface(Surface* s, U width, U height);
+
 // The state the device holds between draws, for the set-up to seed and for
 // tests to read.
 PipeState& CurrentState();

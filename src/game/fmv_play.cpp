@@ -34,6 +34,7 @@
 #include <cstdio>
 
 #include "bof3/symbols.gen.h"
+#include "game/display_setup.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -53,10 +54,14 @@ constexpr U kClose = 0x66B644;          // "close vfw wait"
 // replaces with a computed rectangle.
 const char* Str(U address) { return reinterpret_cast<const char*>(static_cast<std::uintptr_t>(address)); }
 
-// DIV-0035: where the 640 x 480 video lands in a client of cw x ch.
+// DIV-0035: where the 640 x 480 video lands in a client of cw x ch. DIV-0042
+// (the owner, 2026-09-23): with snap, the largest whole multiple of 640 x 480
+// that fits, centred - a 3x game window shows the video at 2x with a border,
+// and the window never changes size for a video; without snap, or when not
+// even 1x fits, the largest 4:3 fit.
 RECT Destination(LONG cw, LONG ch) {
     const LONG kx = cw / 640, ky = ch / 480;
-    LONG k = kx < ky ? kx : ky;
+    LONG k = DisplaySetup_Snap() ? (kx < ky ? kx : ky) : 0;
     LONG w, h;
     if (k >= 1) {
         w = 640 * k;

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 41 entries, DIV-0001..0041)
+**Status:** IN PROGRESS (opened 2026-09-18; 42 entries, DIV-0001..0042)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1820,3 +1820,57 @@ designed in rather than bolted on.
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's.
+
+### The window resizes freely; the picture snaps to whole multiples or fills the height
+
+- **ID:** DIV-0042
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WndProc` and `Game_WinMain` `src/game/win_main.cpp`,
+  `Display_Setup` `src/game/display_setup.cpp`, `Fmv_Play` `src/game/fmv_play.cpp`,
+  the backend `src/render/render_d3d11.cpp`; the launcher)
+- **Original behaviour:** a fixed 640 x 480 client (not resizable). Under
+  DIV-0036 until now: a window of a size picked in the launcher (2x..8x),
+  the render target made once at that k, and a later resize only
+  re-scaling the present.
+- **New behaviour:** the launcher's size list is gone; a "Snap the picture
+  to whole multiples of its size" box (`snap=` in `bof3x.ini`,
+  `BOF3X_SNAP=0` off) chooses between two rules, and the window is
+  resized instead. **Snap on (default):** a drag lands the client on a
+  whole multiple of the picture (the nearest to the dragged height, 1..8;
+  a side edge: to the dragged width), the render target is remade at that
+  k between frames, and the present shows it 1:1 - or centred at the
+  largest whole multiple when the client is not a multiple (a borderless
+  window, as DIV-0036 had it). **Snap off:** a drag keeps the picture's
+  aspect at the dragged height, the target is made at the smallest k whose
+  picture is not smaller than the client's height (8 at most) and the
+  present fits it to the client - the picture fills the height, never
+  cropped, never enlarged. The target change is asked for on `WM_SIZE`
+  and applied by the backend after the next present, then the set-up
+  rewrites `D3d_ScaleX/Y`, DIV-0010's far-edge table, `Gfx_ScreenRect`
+  and the primary and back surfaces' size. The FMVs (DIV-0035) follow the
+  rule too and never resize the window: snapped, the largest whole
+  multiple of 640 x 480 that fits, centred (a 3x window shows them at 2x
+  with a border); fitted, the largest 4:3 fit. The last windowed placement
+  is kept in `bof3x.window` beside the dll and used at the next start
+  when it still lands on a monitor; the ini's `scale=` is only the first
+  window's size before that file exists.
+- **Rationale:** the owner, 2026-09-23: "give people the option to either
+  stretch to window size, or choose a multiplier size window/fullscreen.
+  If multiplier sized, they should snap to the appropriate size, and if
+  stretchy, they should stretch on the height axis only (so the window
+  always stays 4:3 / 16:9)"; "no need to show the literal x2/3/4 choices,
+  since the window can be resized"; FMVs "shouldn't cause the window to
+  resize if they are at a half-size for the game".
+- **Also in the PSX version?** No.
+- **Verification:** 2026-09-23, the window driven to four client sizes in
+  each mode by `SetWindowPos` (which sends `WM_SIZE` but not `WM_SIZING`;
+  the drag rule is owed the owner's hand), the title logo's width measured:
+  snap 871 / 1162 / 290 px for clients 1100 x 800 / 1280 x 960 / 700 x
+  300 (3x / 4x / 1x, the picture centred), fit 968 / 1162 / 361 (3.33x /
+  4x / 1.25x, the height filled); the log's `DIV-0042 target` lines at
+  each change; the FMV at 1x in the 3x window with snap; `bof3x.window`
+  written at `WM_CLOSE`. Self-tests 0 mismatches. Not measured: a rescale
+  under the CRT look (its textures are remade by `CrtResize`).
+- **Reversible?** `BOF3X_SNAP` unset and the window left at 2x is
+  DIV-0036's picture; `BOF3X_ORIGINAL=Game_WndProc` is Capcom's window
+  procedure (no `WM_SIZING`, no rescale).

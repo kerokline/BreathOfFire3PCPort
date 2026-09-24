@@ -37,15 +37,19 @@ struct Config {
     // Off, the original's freeze and replay. BOF3X_BACKGROUND=0 in the
     // environment is the same switch for scripts.
     bool background = true;
-    // DIV-0036: a window's render target is 320 x 240 times this, 2..8
-    // (BOF3X_SCALE). A borderless window ignores it and takes the largest
-    // that fits the monitor.
+    // DIV-0036 / DIV-0042: the first window's size, 320 x 240 times this,
+    // 2..8 (BOF3X_SCALE), used only until the game has saved a placement of
+    // its own (bof3x.window beside the dll). Not in the dialog since
+    // 2026-09-23: the window is resized instead.
     int scale = 2;
     // DIV-0037: the CRT look in the present (BOF3X_PRESENT=crt). The dialog
     // offers it as the filter box's third entry, over the point filter.
     bool crt = false;
     // DIV-0041: the wide picture, 426 x 240 (BOF3X_WIDE=1). Survey build.
     bool wide = false;
+    // DIV-0042: the picture on the window at whole multiples of its size
+    // (the default) or stretched to the client's height (BOF3X_SNAP=0).
+    bool snap = true;
     // Cleared by the dialog's "Show this window every time" box. --config
     // brings the dialog back whatever this says.
     bool show_launcher = true;

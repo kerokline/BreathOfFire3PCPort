@@ -205,22 +205,22 @@ bool CrtWanted() {
     bof3::Fatal("BOF3X_PRESENT=%s: crt or clean", text);
 }
 
-void CrtInit(ID3D11Device* device, U target_w, U target_h, U k) {
-    ReadKnobs();
+// The size-dependent objects: the constants (an immutable buffer) and the
+// two glow textures of the game's own size. Made at set-up and again by
+// CrtResize (DIV-0042).
+void MakeSized(ID3D11Device* device, U target_w, U target_h, U k) {
     if (k == 0 || target_w % k || target_h % k) bof3::Fatal("CRT: a %u x %u target is not a multiple of k = %u", target_w, target_h, k);
     g_c.target_w = static_cast<float>(target_w);
     g_c.target_h = static_cast<float>(target_h);
     g_c.src_w = static_cast<float>(target_w / k);   // 320, or 426 wide (DIV-0041)
     g_c.src_h = static_cast<float>(target_h / k);
     g_c.k = static_cast<float>(k);
-
-    ID3DBlob* vs = Compile("VS", "vs_4_0");
-    Check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &g_vs), "VS");
-    vs->Release();
-    g_shrink = Pixel(device, "Shrink");
-    g_across = Pixel(device, "BlurAcross");
-    g_down = Pixel(device, "BlurDown");
-    g_picture = Pixel(device, "Picture");
+    if (g_cb) { g_cb->Release(); g_cb = nullptr; }
+    for (int i = 0; i < 2; ++i) {
+        if (g_srv[i]) { g_srv[i]->Release(); g_srv[i] = nullptr; }
+        if (g_rtv[i]) { g_rtv[i]->Release(); g_rtv[i] = nullptr; }
+        if (g_tex[i]) { g_tex[i]->Release(); g_tex[i] = nullptr; }
+    }
 
     D3D11_BUFFER_DESC b = {};
     b.ByteWidth = sizeof(Constants);
@@ -228,14 +228,6 @@ void CrtInit(ID3D11Device* device, U target_w, U target_h, U k) {
     b.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     D3D11_SUBRESOURCE_DATA init = {&g_c, 0, 0};
     Check(device->CreateBuffer(&b, &init, &g_cb), "constants");
-
-    D3D11_SAMPLER_DESC s = {};
-    s.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    s.AddressU = s.AddressV = s.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    s.MaxAnisotropy = 1;
-    s.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    s.MaxLOD = D3D11_FLOAT32_MAX;
-    Check(device->CreateSamplerState(&s, &g_linear), "sampler");
 
     for (int i = 0; i < 2; ++i) {
         D3D11_TEXTURE2D_DESC d = {};
@@ -251,6 +243,29 @@ void CrtInit(ID3D11Device* device, U target_w, U target_h, U k) {
         Check(device->CreateRenderTargetView(g_tex[i], nullptr, &g_rtv[i]), "glow target");
         Check(device->CreateShaderResourceView(g_tex[i], nullptr, &g_srv[i]), "glow view");
     }
+}
+
+void CrtResize(ID3D11Device* device, U target_w, U target_h, U k) { MakeSized(device, target_w, target_h, k); }
+
+void CrtInit(ID3D11Device* device, U target_w, U target_h, U k) {
+    ReadKnobs();
+
+    ID3DBlob* vs = Compile("VS", "vs_4_0");
+    Check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &g_vs), "VS");
+    vs->Release();
+    g_shrink = Pixel(device, "Shrink");
+    g_across = Pixel(device, "BlurAcross");
+    g_down = Pixel(device, "BlurDown");
+    g_picture = Pixel(device, "Picture");
+
+    D3D11_SAMPLER_DESC s = {};
+    s.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    s.AddressU = s.AddressV = s.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    s.MaxAnisotropy = 1;
+    s.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    s.MaxLOD = D3D11_FLOAT32_MAX;
+    Check(device->CreateSamplerState(&s, &g_linear), "sampler");
+    MakeSized(device, target_w, target_h, k);
     bof3::Log("DIV-0037    CRT look: halation %.3f, diffusion %.3f, scanlines %.2f..%.2f, beam %.2f..%.2f, "
               "brightness %.2f, gamma %.2f / %.2f, target %u x %u",
               g_c.halation, g_c.diffusion, g_c.scan_dark, g_c.scan_bright, g_c.beam_dark, g_c.beam_bright,

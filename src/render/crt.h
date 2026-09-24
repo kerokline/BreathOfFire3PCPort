@@ -22,6 +22,9 @@ bool CrtWanted();
 // 320k x 240k. BOF3X_CRT overrides the look's numbers (crt.cpp).
 void CrtInit(ID3D11Device* device, U target_w, U target_h, U k);
 
+// DIV-0042: the target changed size; the constants and the glow textures follow.
+void CrtResize(ID3D11Device* device, U target_w, U target_h, U k);
+
 // Draws the target onto `window` inside `picture` (the present's centred,
 // scaled rectangle, already cleared around). Leaves the render target and
 // viewport set to the window's.

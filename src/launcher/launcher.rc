@@ -22,18 +22,16 @@ BEGIN
     LTEXT           "&Display:", -1, 16, 70, 62, 9
     COMBOBOX        IDC_DISPLAY, 84, 68, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Window size:", -1, 16, 88, 62, 9
-    COMBOBOX        IDC_RESOLUTION, 84, 86, 186, 100, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Windowed only; fullscreen takes the largest that fits.", -1, 84, 101, 196, 9
-
-    LTEXT           "Re&nderer:", -1, 16, 118, 62, 9
-    COMBOBOX        IDC_RENDERER, 84, 116, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Re&nderer:", -1, 16, 88, 62, 9
+    COMBOBOX        IDC_RENDERER, 84, 86, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Only Capcom's set-up reads it; bof3x always draws with Direct3D 11.",
-                    -1, 84, 131, 196, 9
+                    -1, 84, 101, 196, 9
 
-    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 14, 142, 250, 10
-
-    AUTOCHECKBOX    "&Widescreen - 426 x 240, the view widened 53 columns a side (DIV-0041)", IDC_WIDE, 14, 156, 268, 10
+    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 14, 116, 250, 10
+    AUTOCHECKBOX    "&Widescreen - 426 x 240, the view widened 53 columns a side", IDC_WIDE, 14, 130, 268, 10
+    AUTOCHECKBOX    "S&nap the picture to whole multiples of its size", IDC_SNAP, 14, 144, 268, 10
+    LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches to the window's height.",
+                    -1, 26, 156, 256, 9
 
     AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 178, 200, 10
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",

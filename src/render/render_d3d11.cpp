@@ -36,6 +36,9 @@ ID3D11RenderTargetView* g_target_rtv;
 ID3D11ShaderResourceView* g_target_srv;
 U g_target_w, g_target_h;
 U g_pad_x;   // target pixels each side of the game's view (DIV-0041): every vertex x moves by it
+U g_scale;   // the target's k
+U g_pending_scale;   // DIV-0042: a k asked for by RequestScale, applied after the next present; 0 none
+void (*g_rescale_hook)(U);
 
 ID3D11VertexShader* g_vs;
 ID3D11PixelShader* g_ps;
@@ -484,13 +487,14 @@ void Show() {
         g_window_w = cw;
         g_window_h = ch;
     }
-    // Integer scale of the target on the window, centred, black borders. A
-    // client smaller than the target - a window dragged small, or F8 back to
-    // a window from a borderless start whose target was sized to the monitor
-    // (DIV-0036) - gets the largest fit of the target's shape instead, where
-    // before it was shown at 1x from the top-left corner and cropped.
+    // DIV-0042: with snap, an integer scale of the target on the window,
+    // centred, black borders - and the target follows the client (RequestScale),
+    // so in a window that is 1:1. Without snap, or when the client is smaller
+    // than the target (a window dragged small, or F8 back to a window from a
+    // borderless start, DIV-0036), the largest fit of the target's shape:
+    // the picture fills the client's height or width, never cropped.
     const U kx = cw / g_target_w, ky = ch / g_target_h;
-    const U k = kx < ky ? kx : ky;
+    const U k = g_opt.snap ? (kx < ky ? kx : ky) : 0;
     U w = g_target_w * k, h = g_target_h * k;
     if (k == 0) {
         if (static_cast<std::uint64_t>(cw) * g_target_h >= static_cast<std::uint64_t>(ch) * g_target_w) {
@@ -580,6 +584,7 @@ void InitOnFiber(const Options& options) {
     g_window_h = static_cast<U>(client.bottom - client.top);
     MakeWindowTarget();
     g_pad_x = options.pad_x * options.scale;
+    g_scale = options.scale;
     MakeTarget((options.logical_w + 2 * options.pad_x) * options.scale, options.logical_h * options.scale);
     ReadPixelOffset();
 
@@ -631,6 +636,7 @@ void InitOnFiber(const Options& options) {
     bof3::Log("render: Direct3D 11 feature level 0x%X, window %u x %u, target %u x %u (view %u x %u at %u, %u columns a side), present %s",
               got, g_window_w, g_window_h, g_target_w, g_target_h, options.logical_w, options.logical_h, options.scale,
               options.pad_x, options.point_filter ? "point" : "linear");
+    bof3::Log("DIV-0042    present: %s", options.snap ? "whole multiples of the picture" : "the picture fitted to the client");
 }
 
 // --- the fiber ----------------------------------------------------------------------------
@@ -688,11 +694,29 @@ void PresentFrame(Frame& frame) {
 }
 
 namespace {
+// DIV-0042: the target remade at the scale RequestScale asked for. After the
+// present, so the frame just drawn was recorded and run at one size; before
+// the game builds the next, whose draw handlers read the scale the hook now
+// writes (every reader of D3d_ScaleX/Y is in 0x59F680..0x5A5500, the OT walk
+// inside the present - image scan 2026-09-23).
+void ApplyPendingScale() {
+    const U k = g_pending_scale;
+    g_pending_scale = 0;
+    if (k == 0 || k == g_scale) return;
+    g_scale = k;
+    g_pad_x = g_opt.pad_x * k;
+    MakeTarget((g_opt.logical_w + 2 * g_opt.pad_x) * k, g_opt.logical_h * k);
+    if (g_crt) CrtResize(g_device, g_target_w, g_target_h, k);
+    bof3::Log("DIV-0042    target %u x %u at scale %u", g_target_w, g_target_h, k);
+    if (g_rescale_hook) g_rescale_hook(k);
+}
+
 void PresentOnFiber(Frame& frame) {
     FpuGuard fpu;
     SweepReleased();
     RunFrame(frame);
     Show();
+    ApplyPendingScale();
 }
 }  // namespace
 
@@ -721,6 +745,14 @@ void SweepReleased() {
 }
 
 U TargetWidth() { return g_target_w; }
+U TargetScale() { return g_scale; }
+
+void RequestScale(U k) {
+    if (k < 1 || k > 8) bof3::Fatal("render: RequestScale(%u)", k);
+    g_pending_scale = k;
+}
+
+void SetRescaleHook(void (*hook)(U)) { g_rescale_hook = hook; }
 U TargetHeight() { return g_target_h; }
 
 }  // namespace render
