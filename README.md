@@ -153,8 +153,6 @@ function can be switched back to Capcom's with `BOF3X_ORIGINAL`
   bugs, and replaces the renderer with OpenGL. A **peer project, not a base**:
   Its documented findings are cited and independently verified, the same way 
   this project treats any other source. See [`docs/PLAN.md`](docs/PLAN.md) §4.
-- [**bof3ext_resources**](https://github.com/TheRealBiggs/bof3ext_resources) —
-  360 files of translated text, fonts, and HD textures.
 - [**BreathOfFire3Recomp**](https://github.com/kerokline/BreathOfFire3Recomp) —
   the archival sibling, built from the *PlayStation* release. Source of the
   reverse-engineering corpus this project transfers names from (~677 named
