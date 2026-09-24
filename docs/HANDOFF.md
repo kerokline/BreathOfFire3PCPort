@@ -112,10 +112,8 @@ no hash run on record. `ab15`..`ab27`, `wm1` and `wm1_orig` are history.
    section and `0x800D3800` per world map ([`world-map-hud.md`](world-map-hud.md));
    the target banner `攻 击` is `BattleWin_DrawCommandLabel` from
    `0x669D60`, patch point the `Text_DrawAt` call at `0x443AF5`
-   ([`battle_windows.md`](battle_windows.md)); the enemy name is the enemy
-   record's first 12 bytes at `0x8C55C8 + id * 0x8C`, copied to
-   `0x93B9E0 + slot * 0x128` ([`battle_sprites.md`](battle_sprites.md); the
-   sibling's `names/enemies.toml` has the JP side); the ability names are
+   ([`battle_windows.md`](battle_windows.md)); the enemy names, the banner
+   messages and the EX suffix are done (DIV-0053, DIV-0052); the ability names are
    the 16-byte GBK field at `0x65C4C8 + id * 0x18`
    ([`battle_window_draw.md`](battle_window_draw.md)). Older and still open:
    the stat labels at `0x669CF0` (the US `Pwr` `Def` `Int` `Agl` stand

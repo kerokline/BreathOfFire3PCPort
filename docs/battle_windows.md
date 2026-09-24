@@ -266,6 +266,24 @@ in [`known-defects.md`](known-defects.md)):
   before it: it steps over the NUL as the second byte and counts on.
 - **`0x444EB0`'s answer** (group BD's) decides whether an enemy's name is
   shown; noted here only because `0x443D90` depends on it.
+- **Enemies of one kind show as nested, overlapping boxes, by design.** In
+  `Battle_OpenEnemyNames` `0x494A80`, a kind's windows sit 8 apart. Each is
+  a full `0x443D90` banner, 0x15 tall:
+  - the see-through tile 8 (76 x 17, blend mode 0);
+  - the gauge's black tile 9;
+  - edge shapes 2 and 3;
+  - four lines.
+
+  Only the name is left out after the first. The bodies stack into darker
+  bands, and each later frame shows as a box inside the one above. The
+  owner took it for a port artefact (2026-09-24). A research pass read it as
+  the PlayStation's: the US disc's `0x801D8AE4`, the tables at `0x801EAE50`
+  and `0x801EAD30`, and the layout at `0x800AC964` all match. The owner's
+  capture of the Japanese release confirmed it the same day. So did the faint
+  line under the name. A one-box drawing was built, captured on the owner's
+  `combatGroup` route and dropped: **the owner chose Capcom's design**, which
+  also closes each banner on its own as an enemy dies. Not a defect; no
+  ledger entry.
 
 **Not as the original, in upper halves nobody reads in the game:** where the
 original pushes a value whose upper bits are stack or register garbage,

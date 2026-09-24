@@ -502,7 +502,7 @@ designed in rather than bolted on.
   a separate decision, and on screen the budget is unmeasured (eight Chinese
   glyphs are 96 px, twelve letters at 8 px).
 - **Not covered:** enemy names (12-byte fields in battle data,
-  [`DAT_CONTAINER.md`](DAT_CONTAINER.md)), character names, place names,
+  [`DAT_CONTAINER.md`](DAT_CONTAINER.md); since DIV-0053), character names, place names,
   anything drawn as artwork, and whatever strings are in `.text`/`.data`
   outside these tables.
 - **Verification:** attract run with `BOF3X_LANG=en`, 2026-09-20: six
@@ -2323,3 +2323,89 @@ designed in rather than bolted on.
   and the inject logged ON.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
   (the patches) and `Config_DrawControllerCell`.
+
+### The battle banner's words and its EX suffix
+
+- **ID:** DIV-0052
+- **Date:** 2026-09-24
+- **Subsystem:** battle (only with a language overlay;
+  `src/game/battle_text.cpp`, `BattleBanner_SetMessage` in
+  `src/game/battle_misc.cpp`, `tools/loc_build.py`)
+- **Original behaviour:** the banner at the top of a fight shows an actor's
+  name or one of twelve messages. `BattleBanner_SetMessage` `0x44A8E0` copies
+  message k through the pointer table `0x669DE0` with `Str_CopyN(.., .., 8)`;
+  `BattleBanner_ShowName` `0x44A990` appends message 1, while `0x904B7A` is
+  set, to the name. Message 1 is a space and two picture glyphs, `0x8050`
+  `0x8051`, the "EX" of an extra turn; message 3 is a second pair,
+  `0x8052` `0x8053`. The other ten are Chinese. Under the English overlay,
+  glyphs `0x50..0x53` are the single-byte slots of `v` `w` `x` `y`, which
+  DIV-0006 paints with the US letters, so the extra-turn banner read
+  "Rei vw" (owner's screenshot, 2026-09-24).
+- **New behaviour:** a kind-12 chunk in the English `FIRST.DAT` carries the
+  US `BATTLE.EMI`'s twelve messages, from its 13-byte slots at `0x801EB000`:
+  Attack, EX, Examine, the second suffix, Defend, Charge, Reprisal, Critical,
+  Lucky Strike, Instant Kill, Escape, Counter. `loc_build.py` puts the two
+  suffixes' glyphs at `0xA6B..0xA6E`, after DIV-0051's icons, and re-encodes
+  the US codes (`0x151B 0x151C`, `0x151F 0x1520`) to them. EX is the disc's
+  own art, not the port's: one picture across two cells of the US atlas's
+  12 x 12 row (y 60, x 156 and 168). The letters overlap, and palette
+  entries 9..F are banded top to bottom, from pale through yellow and orange
+  to pink. Each cell is doubled with its nibbles as they are. The overlay's
+  text palette is the disc's (DIV-0013), whose row 0 holds that ramp. The
+  owner found the port's redrawn EX (the shipped `0x50` `0x51`, first
+  build) "pretty close" but not the PlayStation's fade or overlap. The
+  second suffix's cells were not identified in the atlas, so it keeps the
+  port's shipped glyphs `0x52` `0x53`. The PC's strings are packed 8 bytes apart (one
+  12), too small for "Lucky Strike", so the engine keeps the strings itself
+  and repoints the table, checking each shipped pointer first. The message
+  copy is 12 bytes, the US count (`addiu a2, zero, 0xC` at `0x801DE988`).
+  The banner text `0x904EC0` has 32 bytes before the next referenced global
+  (`0x904EE0`). Under `BOF3X_LANG=original` nothing changes.
+- **Rationale:** stage 2 (DIV-0005). The owner's US PlayStation screenshot
+  shows "Momo EX" in the pink picture glyphs, and the owner confirmed that the
+  English and Japanese releases draw it that way.
+- **Also in the PSX version?** Yes. These are the PlayStation's strings and
+  its copy length.
+- **Verification:** 2026-09-24. `loc_build.py all` reports
+  `battle messages: 12`, and only `en.FIRST.DAT` differs from the previous
+  build. `BOF3X_SHADOW=battle_misc` gives 147,500 rounds, 0 mismatches (the
+  shipped copy length, no overlay). The owner saw "Rei EX" in game with the
+  port's glyphs, 2026-09-24. **Confirmed by the owner in game the same day
+  with the disc's EX: "the EX looks good now".** **Owed:** a message banner
+  (Attack, Critical, ...) seen in game.
+- **Reversible?** play without `BOF3X_LANG`.
+
+### Enemy names in the overlay's language
+
+- **ID:** DIV-0053
+- **Date:** 2026-09-24
+- **Subsystem:** battle (only with a language overlay; `tools/loc_build.py`,
+  data only)
+- **Original behaviour:** each `AREAnnn.DAT` loads the area's eight enemy
+  kinds as a kind-0 chunk at arena `0xC2000`, size `0x4A8`: a 0x48-byte
+  header, then eight 0x8C-byte records whose first 12 bytes are the name,
+  landing at `0x8C55C8` (`MessagePools` `0x803580` + `0xC2048`).
+  `Battle_CopyEnemyData` `0x4946C0` copies the name into
+  `0x93B9E0 + slot * 0x128`. The enemy status banners, the target banner and
+  the actor banner draw it in Chinese.
+- **New behaviour:** `loc_build.py all` takes each US `AREAnnn.EMI`'s section
+  for `0x800E4000`. That section has the same header and the same records at
+  stride 0x88 with an 8-byte name, every later byte the same. For each live
+  record, the tool writes one 12-byte kind-0 chunk into `en.AREAnnn.DAT` at
+  arena `0xC2048 + k * 0x8C`: the US name, one byte a letter
+  (`encode_char`), NUL-padded. An area whose header or record numbers differ
+  keeps its names, and so does a name that does not encode in 8 bytes. That
+  is the most the banner (`Str_CopyN` 8) and the name window (count 8) draw.
+  The engine is unchanged: DIV-0005's overlay walk lays the chunks over the
+  shipped ones.
+- **Rationale:** stage 2 (DIV-0005). The owner asked for the enemy names in
+  English, 2026-09-24. The names are Capcom's US spellings, verbatim
+  (`Berserkr`, `BlueGbln`).
+- **Also in the PSX version?** Yes. These are the PlayStation's names.
+- **Verification:** 2026-09-24, by a scratch comparison of all 200 areas and
+  by `loc_build.py`'s own checks. The headers are identical, and **448 of 448
+  live records match past the name byte for byte**. There are 168 distinct
+  names, 3..8 bytes long, **448 written and 0 kept**. **Confirmed by the
+  owner in game, 2026-09-24**: "Mage Goo" and "Eye Goo" in the enemy status
+  banners ("the names look good").
+- **Reversible?** play without `BOF3X_LANG`.

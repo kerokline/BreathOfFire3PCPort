@@ -244,8 +244,8 @@ it is a table, a proportional font is a data change.
 3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), still
    advances 12. Unread; by position it is the PSX grow/shrink text effect.
 4. **Menus: built 2026-09-20, seen 2026-09-21** (DIV-0008, §7; captured by
-   input recipe on every menu screen). Left in Chinese: enemy and place
-   names, the stat labels, the list headers, the battle's target banner, and
+   input recipe on every menu screen). Left in Chinese: place names (enemy
+   names since DIV-0053), the stat labels, the list headers, the battle's target banner, and
    any string outside what §8 lists.
 5. The port widened name fields (enemy names 8 to 12 bytes, character names 5
    to 9). Dialogue that embeds a name goes through control codes, not these

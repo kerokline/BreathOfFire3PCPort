@@ -5,6 +5,7 @@
 // locals here.
 #include "game/dat_load.h"
 
+#include "game/battle_text.h"
 #include "game/char_names.h"
 #include "game/config_text.h"
 #include "game/menu_verbs.h"
@@ -97,8 +98,8 @@ void WalkDatFile(const char* path);
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 11, which are ours (DIV-0006, DIV-0008,
-//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020);
+//     rejected - except kinds 4 to 12, which are ours (DIV-0006, DIV-0008,
+//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -176,6 +177,9 @@ void WalkDatFile(const char* path) {
             break;
         case 11:  // DIV-0020: ours.
             CharNames_ApplyMerchant(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 12:  // DIV-0052: ours.
+            BattleMessages_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;
