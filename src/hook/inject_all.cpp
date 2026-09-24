@@ -87,6 +87,7 @@
 #include "game/battle_draw.h"
 #include "game/battle_window_draw.h"
 #include "game/battle_windows.h"
+#include "game/battle_setup.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -208,6 +209,8 @@ void InjectAll() {
     BattleFlow_Inject();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
                                 // stack tables re-aimed and its jump table relocated in the copies: order
                                 // does not matter (no widescreen patch touches its functions)
+    BattleSetup_Inject();       // group BA (round 7): every call of its clones re-aimed at a recorder, no jump
+                                // tables - order does not matter
     InjectReport();
 }
 
