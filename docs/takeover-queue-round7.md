@@ -1,6 +1,6 @@
 # The seventh round's queue: what the combat route reaches
 
-**Status:** IN PROGRESS (2026-09-24) - ten groups merged, 1,020 ours; the batch `validate_wave2.sh` running (section "Result" below)
+**Status:** IN PROGRESS (2026-09-24) - ten groups merged, 1,020 ours, the batch passed (section "Result"); the owner's eye owed
 
 The second input-reached queue after the shop's ([`takeover-queue-round6.md`](takeover-queue-round6.md))
 and the world map's ([`world-map.md`](world-map.md) §4). The owner recorded
@@ -95,17 +95,17 @@ arbiter); **the frame hash identical on every logic frame but frame 0**
 against `wm1b_orig`; the memory dump did not dump ("area never read 4"
 within 240 s; retried at 420 s in the wave-2 batch).
 
-**The wave-2 batch** (`analysis/validate_wave2.sh`, log
-`analysis/attract/wave2_batch.log`; 1,020 ours): **started 06:40 and
-stopped at 06:55, owed a re-run with the machine hands-off.** What ran
-before the owner sat down: the self-tests in both languages clean; the
-world-map A/B 7 of 35 identical, the needle the map frames' only
-difference; the wide captures none black. Then the combat A/B's 43 captures
-came back as the owner's browser - `input_run.py` grabs the screen, and the
-game was no longer in front - so "0 of 43, 307,072 pixels" is the grab, not
-the build (`analysis/shots/wave2_combat_ours/f00420.png` is a web page).
-The batch was killed during the shop A/B. **Re-run:** the whole script
-(`SCRATCH=<the launcher copy> nohup bash analysis/validate_wave2.sh >
-analysis/attract/wave2_batch.log 2>&1 &`), keyboard, mouse and screen
-untouched for ~75 minutes; the memory dump (420 s wait) and the frame hash
-are the ones nothing has checked on 1,020 ours yet.
+**The wave-2 batch passed** (`analysis/validate_wave2.sh`, log
+`analysis/attract/wave2_batch.log`, 07:05-07:52, 1,020 ours; a first start
+at 06:40 was stopped when the owner sat down and the captures grabbed the
+browser - `wave2_batch_aborted.log`, not a regression): self-tests clean in
+both languages; the world-map A/B 7 of 35 identical, the map frames' only
+difference the needle (largest 1,015 px, the fade frame); the wide captures
+none black; **the combat A/B 5 of 43 at 4..15 px** - the whole fight, with
+the battle engine ours, within the tile-edge class; the shop A/B 5 of 35 at
+up to 46 px; the attract captures 19 of 55 at up to 139 px; **the oracle
+identical at every logged frame** (7,478 from the alignment point); **the
+memory dump: arena and VRAM identical**, the palette row 506 the known
+artefact (HANDOFF Traps); **the frame hash identical on all 10,313 logic
+frames but frame 0** against `wm1b_orig`. Set the status header to STABLE
+when the owner has seen a fight.
