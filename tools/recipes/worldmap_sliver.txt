@@ -1,0 +1,74 @@
+# The world-map route cut at frame 1260 for a bisect of the purple sliver (analysis/attract/worldmap_batch.log): one shot on the map.
+wait 60
+hold start 3
+wait 81
+hold start 3
+wait 45
+hold r2 4
+wait 36
+hold down 3
+wait 7
+hold down 3
+wait 8
+hold down 2
+wait 19
+hold r2 4
+wait 15
+hold r2 5
+wait 32
+hold square 6
+hold square+down 1
+hold square+right+down 31
+hold square+right 1
+hold square 29
+hold square+up+right 27
+hold square+up+right+left 2
+hold square+up+left 40
+hold square+up+right 14
+hold square+up+right+left 1
+hold square+up+left 44
+hold square+up+right 4
+hold square+up+right+left 1
+hold square+up+left 29
+hold square+left 1
+hold square 2
+wait 15
+hold cross 15
+wait 38
+hold triangle 12
+wait 29
+hold cross 5
+wait 37
+hold r1 14
+hold r1+right 28
+hold r1+left 46
+hold r1+up+left 1
+hold r1+up 24
+hold r1 3
+hold r1+down 25
+hold r1 10
+hold r1+left 17
+wait 33
+hold l1 5
+wait 48
+hold down 1
+hold right+down 37
+wait 8
+hold l1 6
+wait 7
+hold left 1
+hold up+left 35
+hold square+up+left 23
+hold square 1
+wait 74
+hold square+left 1
+hold square+up+left 15
+hold square+up 1
+hold square+up+right 11
+hold square+up+left 19
+hold square+up+right 10
+hold square+up+left 13
+hold square+up 1
+hold square 1
+wait 26
+shot wm 1

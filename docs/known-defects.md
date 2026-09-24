@@ -1146,3 +1146,202 @@ section 3). None is known to be reached by any caller:
   poked (`tools/recipes/backdrop_kinds.txt`): Capcom's code draws no backdrop
   at 4..8, 16, 64 and 255, the menu on black. **Ours draws none**
   (DIV-0030); the other three are kept as the original has them.
+## D41 — A primitive corner at depth 0 is never drawn: the world map's compass needle (PC only, fixed by DIV-0044)
+
+**Found:** the owner's recorded world-map route, 2026-09-23
+([`world-map.md`](world-map.md) §3). Seen in the all-original capture (no
+needle in the dial, `analysis/shots/worldmap_orig/f01260.png`) and read.
+
+**The defect.** `0x408530`, called once a frame by the world map's frame
+function `0x404390`, draws the compass needle: `Gte_PushMatrix`, the map's
+rotation matrix `0x929EC8` through `Gte_RotMatrix` and `Gte_SetRotMatrix`, a
+zero translation, then `Gpu_SetPolyG4` over the four corners at `0x9037A0` -
+(-10, 0, 0), (0, -4, 0), (0, 4, 0), (10, 0, 0), a diamond - projected by
+`Gte_RotTransPers4` and given depths by `Gte_PrimDepths4_10B`, moved into the
+dial by `(0x9E - a, 0x76 - b)`, coloured red, purple, purple, blue, and
+committed. The depths come out 1/4096, 0, 0, 0 (`BOF3X_DRAWLOG_RGB=800080`,
+DIV-0044's verification). The port's handler `D3d_DrawPolyG4` sets `rhw = 0.1
+/ z`, infinite for three corners, and Capcom's Direct3D 6 device draws
+nothing: the PC port never shows the needle. The PlayStation draws it (the
+owner's screenshots of both releases: it turns with the map). **PC only**,
+in the port's PSX-to-Direct3D translation. Fixed in the backend by DIV-0044,
+not in the port's code, so the primitive is Capcom's byte for byte.
+
+**Seen beside it, not read:** on the PlayStation the dial is translucent over
+the map; the PC port draws it opaque. The dial is one of the two sprites
+`0x404620` draws through `0x404560`, which has a semi-transparent path
+(`Gpu_SetSemiTrans`) - which path the dial takes, and why it differs, is for
+the takeover ([`world-map.md`](world-map.md) §4). *Read since: D42.*
+
+## D42 — The world map's dial is opaque: the port clears its semi-transparency bit (port change, kept)
+
+**Found:** the owner's screenshots of the PlayStation releases beside the PC
+port, 2026-09-23; read on the takeover of the world map's frame, 2026-09-24
+([`world-map-hud.md`](world-map-hud.md) §5.1).
+
+**The defect.** The world map's sprite draw `WorldMap_DrawSprite` `0x404560`
+(the port's; the PSX twin is `0x801F39D8` in the map overlay `0x801F2C00`
+off the JP disc) draws every sprite of the dial page - the dial, the three
+legend labels, the key glyphs, the region box - through one `SPRT`. The PSX
+calls `SetSemiTrans(prim, 1)` for all of them; the port calls
+`Gpu_SetSemiTrans(prim, index != 0)`, so the dial, index 0, is the one sprite
+drawn with the bit clear. **A port change**, one operand, and deliberate:
+the PlayStation blends a textured semi-transparent primitive per texel (only
+a texel whose CLUT entry has STP set is blended - on the JP dial 1,054 of
+5,376 texels, the glass over the map; the rim and markings are opaque; the
+legend has no STP texel and draws opaque), while the port's texture path
+drops STP (`Gfx_ConvertRow`'s palettes force every non-zero cell opaque) and
+its Direct3D blend is per primitive (`D3d_PrimColor` alpha `0x80`,
+`SRCALPHA / INVSRCALPHA`). With the PSX's operand the port would draw the
+whole dial, rim and all, at 50 %; the porting house cleared the bit instead.
+The same loss runs the other way for the legend: 50 % on the PC, opaque on
+the PSX.
+
+**Kept.** Ours is byte faithful to the port (the flip is negative control P1,
+refused in every opaque-path round). The PlayStation's picture needs STP
+carried into the 8-bit page's palette as alpha and the sprite handlers'
+blend keyed on it - a texture-path change that would make every
+semi-transparent 8-bit sprite in the game blend per texel as on the PSX -
+after which `SetSemiTrans(prim, 1)` here is a one-line divergence. Owed: the
+owner's eye, if that path is built.
+## D43 — The battle skill list's cursor row and its raised row disagree once scrolled (candidate, latent)
+
+**Found:** reading `BattleMenu_DrawSkillList` `0x59D200` for group BJ of the
+seventh round, 2026-09-24 ([`battle_draw.md`](battle_draw.md)). Read, not
+seen; the PSX side not compared.
+
+**The defect.** The list colours a row as the cursor's when its on-screen
+index equals the cursor byte `+0xD` (`0x59D2D6`), but raises a row when top
++ index equals `+0xD` (`0x59D31B`). With the list scrolled the two pick
+different rows. Whether the window task's step keeps the two in agreement
+is unread (its tables `0x66B54C` / `0x66B560`). Ours keeps it; control S1
+of that group refuses the fix.
+
+## D44 — `BattleWin_DrawCell16` takes its x and y as unsigned (PC only, latent)
+
+**Found:** group BD, 2026-09-24 ([`battle_window_draw.md`](battle_window_draw.md)).
+Read, not seen. Every other helper of the battle windows reads the
+coordinates signed; this one reads them unsigned, so a negative coordinate
+lands 65,536 pixels away instead of just off the edge. The PSX twin has one
+reading for both. Kept.
+
+## D45 — `BattleWin_FirstOfKind` treats every window 5..12 as an enemy's (latent)
+
+**Found:** group BD, 2026-09-24 ([`battle_window_draw.md`](battle_window_draw.md)).
+Read, not seen. A party actor in one of those windows is looked up before
+the enemy records (`0x93B674` for actor 0), which could hide an enemy's
+name. The PSX does the same. Kept.
+
+## D46 — Five unchecked indices in the battle windows (latent)
+
+**Found:** group BC, 2026-09-24 ([`battle_windows.md`](battle_windows.md)).
+Read, not seen; kept as the original has them:
+
+- `BattleWin_DrawCommandIcon` `0x4434C0`: the colour table has no bound; a
+  command index of 7 or more reads the function's own stack frame (the PSX
+  the same; ours reads the same bytes, the fuzz checks 8..43).
+- `Window_DispatchKind` `0x597A30`: the handler table on its stack has no
+  bound; an index of 3 would call the function's own return address.
+- `BattleObj_RunState` `0x4411E0`: the 27-entry state table has no bound.
+- `BattleWin_DrawCommandLabel` `0x4439A0`: the command index has no bound.
+- `Text_GlyphCount` `0x597F40`: reads past the end of a string whose
+  double-byte lead byte sits just before the terminator.
+
+## D47 — A repeated drop in one battle also appends an item 0 (PC only, latent)
+
+**Found:** group BB, 2026-09-24 ([`battle_flow.md`](battle_flow.md) §5),
+`Battle_RollDrops` `0x437580` against the PSX `0x801E525C`. Read, not
+seen. On the PSX a drop that matches an entry already in the list adds to
+its count and stops; the port keeps searching, then also appends the zeroed
+item word as an item 0 with count 1. Needs two drops of the same item in
+one battle. Kept.
+
+## D48 — `BattleStep_Expire4000` reads an enemy's counter from the party array (latent)
+
+**Found:** group BA, 2026-09-24 ([`battle_setup.md`](battle_setup.md) §6).
+Read, not seen. The step reads each enemy's flag-0x4000 counter from the
+party array at the enemy's actor index (`0x803266` + 0x14C each) and then
+zeroes the enemy's own counter at `+0x122`, the one `Battle_TickCounters`
+counts up. The PSX does the same, so it shipped on both. Kept.
+
+## D49 — An enemy's AP heal is checked against its max HP (latent)
+
+**Found:** group BE, 2026-09-24 ([`battle_damage.md`](battle_damage.md)),
+`Effect_ApplyResult` `0x44B9F0`. Read, not seen. The heal is compared
+against max HP and then clamped to max AP, so an enemy's AP can end above
+its maximum. The PSX the same. Kept.
+
+## D50 — Level 99 reads past the turn-order tables (latent)
+
+**Found:** group BE, 2026-09-24 ([`battle_damage.md`](battle_damage.md)),
+`Battle_LevelClass` `0x445640` and its users. Read, not seen. Level 99
+lands in level class 6, one past the tables: a level-99 party member's
+bonus becomes 516 %, and a level-99 enemy's random offset comes from the
+damage variance table. The PSX the same. Kept. (Whether a level of 99 is
+reachable in play is the owner's to say.)
+
+## D51 — An enemy's charge replaces its attack instead of adding to it (candidate)
+
+**Found:** group BE, 2026-09-24 ([`battle_damage.md`](battle_damage.md) §2),
+`Battle_CalcDamage` `0x445CF0`. Read, not seen. A charged party member's
+attack is added to; a charged enemy's is replaced by charge × ATK / 2, so a
+charge of 2 does nothing for an enemy. The PSX the same; whether it was
+intended is unknown. Kept.
+## D52 — The sparkle effect's phase table has no bound (latent)
+
+**Found:** group BH, 2026-09-24 ([`battle_items.md`](battle_items.md)).
+Read, not seen. `0x4B9000`, the sparkle's type-0 update (Capcom's; not
+taken, for this reason), calls its phase handler through a three-entry
+table on its own stack with no bound: a phase of 3 or more calls its own
+return address or the caller's stack. `Sparkle_Types` `0x65AE28` has one
+real entry, so a non-zero type would jump into data; the one writer stores
+0. Neither can be reproduced; a bounds check would be a divergence (as
+D22's `MsgBox_SystemChoice`). Kept.
+
+## D53 — `SndStream_Stop` tests an uninitialised local when `GetStatus` fails (latent)
+
+**Found:** group BH, 2026-09-24 ([`battle_items.md`](battle_items.md)),
+`SndStream_Stop` `0x5A71C0`. Read, not seen. PC only (the PSX streams from
+the disc). Kept.
+
+## D54 — The battle's pop-up writers do not check for a full record pool (latent)
+
+**Found:** group BG, 2026-09-24 ([`battle_sprites.md`](battle_sprites.md) §7).
+Read, not seen. `Battle_SetDamagePopup` `0x453DA0` and `Battle_SetHitPopup`
+`0x454410` take a record from `BattleTask_Create` `0x435180` (48 records of
+0x84 bytes at `0x93A000`, 0xFF when none is free) and never test for 0xFF,
+so a write would land past `.data`. Kept.
+
+## D55 — Eight different enemy kinds walk `Battle_OpenEnemyNames` past its list (latent)
+
+**Found:** group BG, 2026-09-24 ([`battle_sprites.md`](battle_sprites.md) §7),
+`Battle_OpenEnemyNames` `0x494A80`. Read, not seen. With eight distinct
+enemy kinds alive the walk runs past its eight-entry list into the stack;
+the PSX does the same. Ours reads the same words, since its entry stack
+pointer is the original's. Kept. Also there: the enemy data id is indexed
+by 16 bits in `Battle_SetupEnemy` `0x494320` but by 8 in
+`Battle_CopyEnemyData` `0x4946C0`; `ClutMap_Mark` `0x454DF0`'s release
+writes over the last scratch cell when the owner is not found; and
+`Sprite_SetClutStp` `0x4551A0` divides by zero for a CLUT kind of 5 or more.
+## D56 — `Encounter_OnScreen` lost the PSX's lower bounds (PC only, latent)
+
+**Found:** group BI, 2026-09-24 ([`inventory_ops.md`](inventory_ops.md)),
+`Encounter_OnScreen` `0x5928F0`. Read, not seen. The PSX compares the
+projected corners as unsigned shorts against 320 and 240, which rejects a
+corner left of or above the screen as well; the port compares floats
+against 320 and 240 only, so such a corner passes. Kept faithful; a fix
+would be a ledger entry.
+
+## D57 — The encounter placement's small faults, as the PSX has them (latent)
+
+**Found:** group BI, 2026-09-24 ([`inventory_ops.md`](inventory_ops.md)).
+Read, not seen; every one the PSX's too, kept:
+
+- `Encounter_PlaceParty` `0x5920E0` checks the recentred path from the
+  centre's z cell twice, (Z, Z), and when none of the six retries passes
+  the centre still moves to the sixth.
+- `Encounter_AimCamera` `0x592A30` divides by the number of things averaged
+  with no guard.
+- `Sprite_ShadeLower` `0x534880` wraps above 127.
+- `Encounter_RollInitiative` `0x532550`'s "all noticed" result also needs
+  the two slots past a three-member party to roll 50 or less.

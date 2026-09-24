@@ -296,6 +296,26 @@ What is established:
    [`THIRD_PARTY.md`](THIRD_PARTY.md)), the owner's chosen MIT shader
    ported with a sliders dialog. Owed: the oracle and hash once wide, a
    rescale under the older CRT look, the owner's tuning of the look.
+   **That night the owner recorded a world-map route** ([`world-map.md`](world-map.md)):
+   its A/B found the compass needle the PC port never draws - three corners
+   at depth 0, dropped by Capcom's device, a sliver under ours - fixed in the
+   backend (D41, DIV-0044, the owner's PSX screenshots the reference); the
+   route's 40-function queue is the next wave, the compass and HUD first;
+   the place plates are paint in the world maps' texture pages, as the
+   sibling found, and the localisation build's next data item.
+   **Then two groups took the route's front and are merged (807 ours):** the
+   map's frame, HUD and needle ([`world-map-hud.md`](world-map-hud.md); D42,
+   the dial's opacity, written down) and the sky backdrop with the wide
+   bands filled (DIV-0041 amended, [`area-backdrop.md`](area-backdrop.md)).
+   **The owner's combat route plays back identically run to run**, so the
+   battle engine's 209 reached functions are the seventh round
+   ([`takeover-queue-round7.md`](takeover-queue-round7.md)), ten groups in
+   parallel - **merged 2026-09-24 morning, 1,020 ours**, the between-waves
+   batch and then **the wave-2 batch passed on 1,020 ours** - the combat
+   A/B within the tile-edge class, oracle, memory dump and frame hash
+   identical (HANDOFF 0000000); D43..D57 written down, two groups renamed by what
+   they turned out to be (the Healing Herb's sparkles, the encounter's
+   placement).
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.

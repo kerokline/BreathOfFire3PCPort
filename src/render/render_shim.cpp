@@ -10,6 +10,7 @@
 #include <windows.h>
 
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 
 #include "hook/log.h"
@@ -566,10 +567,32 @@ long __stdcall Device_SetRenderState(void*, U state, U value) {
     return kDdOk;
 }
 
+constexpr float kZNearest = 1.0f / 4096.0f;      // the smallest depth Gte_PrimDepths4_10B hands the handlers
+constexpr float kRhwNearest = 0.1f / kZNearest;  // 409.6, the port's rhw at that depth
+
 long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, U count, U) {
     if (fvf != 0x1C4) bof3::Fatal("render: DrawPrimitive with vertex format 0x%X (not TLVERTEX)", fvf);
     if (!vertices || count == 0) return static_cast<long>(kInvalidParams);
     const auto* in = static_cast<const Vertex*>(vertices);
+    // BOF3X_DRAWLOG_RGB=RRGGBB logs every draw with a vertex of that diffuse colour
+    // (the first 64): the way to see what the game handed us for one primitive.
+    {
+        static U want = 0xFFFFFFFF, logged = 0;
+        if (want == 0xFFFFFFFF) {
+            char text[16];
+            want = GetEnvironmentVariableA("BOF3X_DRAWLOG_RGB", text, sizeof text) > 0 ? std::strtoul(text, nullptr, 16) & 0xFFFFFF : 0x1000000;
+        }
+        if (want < 0x1000000 && logged < 64) {
+            for (U i = 0; i < count; ++i) {
+                if ((in[i].diffuse & 0xFFFFFF) != want) continue;
+                ++logged;
+                bof3::Log("drawlog: type %u count %u flat %u blend_enable %u", type, count, (unsigned)g_state.flat, (unsigned)g_state.blend_enable);
+                for (U k = 0; k < count; ++k)
+                    bof3::Log("drawlog:   v%u x %g y %g z %g rhw %g diffuse %08X specular %08X uv %g %g", k, in[k].x, in[k].y, in[k].z, in[k].rhw, in[k].diffuse, in[k].specular, in[k].u, in[k].v);
+                break;
+            }
+        }
+    }
     Command c = {};
     c.kind = Cmd::kDraw;
     c.state = g_state;
@@ -627,6 +650,23 @@ long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, 
     }
     default:
         bof3::Fatal("render: DrawPrimitive of type %u - not built", type);
+    }
+    // DIV-0044: a corner at depth 0 (the port's rhw = 0.1 / z is infinite) is
+    // drawn at the nearest depth the game otherwise uses, 1/4096 (rhw 409.6),
+    // instead of vanishing. Capcom's Direct3D 6 device dropped such a primitive;
+    // the world map's compass needle (0x408530, D41 in docs/known-defects.md)
+    // is the one seen. Dividing by the infinity ourselves collapsed those
+    // corners to the screen centre - the purple sliver of the world-map A/B.
+    {
+        static U logged = 0;
+        Vertex* v = g_frame.vertices + c.first;
+        for (U i = 0; i < c.count; ++i) {
+            if (v[i].rhw <= kRhwNearest) continue;   // false for inf and NaN too
+            if (logged++ < 4)
+                bof3::Log("render: DrawPrimitive corner %u at z %g rhw %g - drawn at the nearest depth (DIV-0044)", i, v[i].z, v[i].rhw);
+            v[i].rhw = kRhwNearest;
+            v[i].z = kZNearest;
+        }
     }
     if (c.state.texture) c.state.texture->surface->pending_draws++;
     AppendCommand(c);

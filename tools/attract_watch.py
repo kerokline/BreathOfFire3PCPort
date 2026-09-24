@@ -44,8 +44,9 @@ LCG_A, LCG_C = 0x343FD, 0x269EC3
 def find_game(wait=0.0):
     """pid of the running BOF3.exe; with `wait`, poll that many seconds for one."""
     t0 = time.time()
+    want = os.environ.get('BOF3X_RUN_PID')   # attract_run.py names the game it started
     while True:
-        out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq BOF3.exe', '/FO', 'CSV', '/NH'],
+        out = subprocess.run(['tasklist', '/FI', f'PID eq {want}' if want else 'IMAGENAME eq BOF3.exe', '/FO', 'CSV', '/NH'],
                              capture_output=True, text=True).stdout
         if 'BOF3' in out:
             return int(out.split(',')[1].strip('"'))

@@ -1,0 +1,198 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# Shots every 60 frames added by tools/recipe_shots.py from tools/recipes/combat.txt.
+wait 59
+hold start 1
+shot f00060 1 start
+hold start 3
+wait 56
+shot f00120 1
+wait 38
+hold start 6
+wait 15
+shot f00180 1
+wait 27
+hold r2 3
+wait 29
+shot f00240 1
+wait 29
+hold r2 5
+wait 25
+shot f00300 1 r2
+hold r2 4
+wait 55
+shot f00360 1
+wait 10
+hold up 1
+hold up+right 32
+wait 16
+shot f00420 1
+wait 59
+shot f00480 1
+wait 20
+hold up 11
+hold r2+up 6
+hold up 9
+wait 12
+hold right 1
+shot f00540 1 right
+hold right 2
+wait 9
+hold right 5
+wait 15
+hold r2 5
+wait 8
+hold r2 5
+wait 10
+shot f00600 1
+wait 12
+hold up 7
+hold r2+up 5
+wait 15
+hold right 5
+wait 7
+hold right 6
+wait 2
+shot f00660 1
+wait 7
+hold r2 4
+wait 10
+hold r2 5
+wait 11
+hold up 5
+hold r2+up 4
+hold r2 1
+wait 8
+hold right 4
+shot f00720 1 right
+wait 10
+hold left 5
+wait 6
+hold r2 4
+wait 22
+hold left 4
+wait 8
+shot f00780 1
+wait 14
+hold left 5
+wait 9
+hold left 4
+wait 15
+hold left 3
+wait 9
+shot f00840 1 down
+hold down 4
+wait 10
+hold r2 4
+wait 41
+shot f00900 1
+wait 59
+shot f00960 1
+wait 44
+hold r2 4
+wait 11
+shot f01020 1
+wait 59
+shot f01080 1
+wait 59
+shot f01140 1
+wait 59
+shot f01200 1
+wait 59
+shot f01260 1
+wait 59
+shot f01320 1
+wait 59
+shot f01380 1
+wait 33
+hold r2 4
+wait 21
+hold r2 1
+shot f01440 1 r2
+hold r2 2
+wait 46
+hold left 11
+shot f01500 1 left
+hold left 2
+hold r2+left 4
+hold left 5
+wait 8
+hold r2 4
+wait 26
+hold right 10
+shot f01560 1 r2+right
+hold r2+right 5
+wait 54
+shot f01620 1
+wait 59
+shot f01680 1
+wait 38
+hold down 5
+hold r2+down 4
+hold r2 1
+wait 11
+shot f01740 1
+wait 59
+shot f01800 1
+wait 43
+hold down 6
+wait 8
+hold down 2
+shot f01860 1 down
+hold down 1
+wait 8
+hold down 4
+wait 6
+hold r2 4
+wait 19
+hold down 4
+wait 13
+shot f01920 1
+wait 26
+hold r2 4
+wait 27
+hold r2 2
+shot f01980 1 r2
+hold r2 1
+wait 4
+hold r2 5
+wait 4
+hold r2 5
+wait 3
+hold r2 4
+wait 33
+shot f02040 1
+wait 59
+shot f02100 1
+wait 59
+shot f02160 1
+wait 59
+shot f02220 1
+wait 59
+shot f02280 1
+wait 55
+hold r2 4
+shot f02340 1 r2
+wait 9
+hold r2 5
+wait 8
+hold r2 6
+wait 7
+hold r2 6
+wait 8
+hold r2 6
+wait 4
+shot f02400 1
+wait 1
+hold r2 6
+wait 52
+shot f02460 1
+wait 59
+shot f02520 1
+wait 57
+hold r2 2
+shot f02580 1 r2
+hold r2 4
+wait 29
+hold r2 6

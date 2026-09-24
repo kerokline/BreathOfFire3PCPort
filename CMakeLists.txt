@@ -168,11 +168,35 @@ add_library(bof3x SHARED
   src/game/win_main.cpp
   src/game/fmv_play.cpp
   src/game/pause_text.cpp
+  src/game/area_backdrop.cpp
+  src/game/area_backdrop_fuzz.cpp
   src/game/widescreen.cpp
+  src/game/world_map.cpp
+  src/game/world_map_fuzz.cpp
+  src/game/battle_draw.cpp
+  src/game/battle_draw_fuzz.cpp
+  src/game/battle_windows.cpp
+  src/game/battle_windows_fuzz.cpp
+  src/game/battle_flow.cpp
+  src/game/battle_flow_fuzz.cpp
+  src/game/battle_damage.cpp
+  src/game/battle_damage_fuzz.cpp
+  src/game/battle_sprites.cpp
+  src/game/battle_sprites_fuzz.cpp
+  src/game/inventory_ops.cpp
+  src/game/inventory_ops_fuzz.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
   src/render/crt.cpp
-  src/render/satpixie.cpp)
+  src/render/satpixie.cpp
+  src/game/battle_window_draw.cpp
+  src/game/battle_window_draw_fuzz.cpp
+  src/game/battle_setup.cpp
+  src/game/battle_setup_fuzz.cpp
+  src/game/battle_misc.cpp
+  src/game/battle_misc_fuzz.cpp
+  src/game/battle_items.cpp
+  src/game/battle_items_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

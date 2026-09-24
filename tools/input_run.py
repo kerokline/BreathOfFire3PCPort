@@ -28,7 +28,7 @@ import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threadin
 from PIL import ImageGrab
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from attract_run import ROOT, game_pid, kill_game, keep_in_front  # noqa: E402
+from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front  # noqa: E402
 
 u = ctypes.WinDLL('user32')
 k32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -94,14 +94,17 @@ def main():
     ap.add_argument('--lang', default=None, help='BOF3X_LANG, e.g. en')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
+    ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
+                    help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
     a = ap.parse_args()
+    global LOG
+    LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
 
     recipe = os.path.abspath(a.recipe)
     if not os.path.isfile(recipe):
         sys.exit(f'no recipe {recipe}')
     os.makedirs(a.out, exist_ok=True)
-    if game_pid():
-        kill_game()
+    kill_stale(a.launcher)
 
     env = dict(os.environ)
     for k in ('BOF3X_ORIGINAL', 'BOF3X_LANG', 'BOF3X_INPUT'):
@@ -119,9 +122,7 @@ def main():
         k, _, v = kv.partition('=')
         env[k] = v
 
-    launcher = os.path.join(ROOT, 'build', 'bof3x-launcher.exe')
-    if subprocess.run([launcher, '--game', a.game, '--no-config'], env=env).returncode != 0:
-        sys.exit('launcher failed')
+    launch(a.launcher, a.game, env)
 
     stop = threading.Event()
     threading.Thread(target=keep_in_front, args=(stop,), daemon=True).start()

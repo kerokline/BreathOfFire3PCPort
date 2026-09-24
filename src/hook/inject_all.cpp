@@ -38,7 +38,12 @@
 #include "game/field_blocked.h"
 #include "game/field_input.h"
 #include "game/sprite_clut.h"
+#include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/battle_flow.h"
+#include "game/battle_misc.h"
+#include "game/battle_sprites.h"
+#include "game/inventory_ops.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -81,6 +86,13 @@
 #include "game/display_setup.h"
 #include "game/win_main.h"
 #include "game/fmv_play.h"
+#include "game/world_map.h"
+#include "game/battle_draw.h"
+#include "game/battle_window_draw.h"
+#include "game/battle_windows.h"
+#include "game/battle_setup.h"
+#include "game/battle_damage.h"
+#include "game/battle_items.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -187,7 +199,32 @@ void InjectAll() {
     DisplaySetup_Inject();      // after GfxFilter, whose patch of the original set-up's bytes serves the BOF3X_ORIGINAL path
     WinMain_Inject();           // the window and the frame loop (DIV-0032..0034): no clones, order does not matter
     FmvPlay_Inject();           // the FMVs into the window (DIV-0035): likewise
+    AreaBackdrop_Inject();      // every call of its clones re-aimed at a recorder: order does not matter,
+                                // except that it runs before Widescreen_Inject, so its fuzz compares the
+                                // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: last, so every fuzz above ran against the original culls
+    WorldMap_Inject();          // every call of its clones re-aimed at a recorder, its state table rebuilt in the
+                                // copy; none of its functions goes through a cull, so after Widescreen is fine
+    BattleDraw_Inject();        // every call of its clones re-aimed at a recorder, the device a fake: order
+                                // does not matter (nothing before it patches bytes inside its six)
+    BattleWindowDraw_Inject();  // every call of its clones re-aimed at a recorder and no byte of its bodies
+                                // patched by any module: order does not matter (none of it reaches a cull)
+    BattleWindows_Inject();     // every call of its clones re-aimed at a recorder, its state table, window-kind
+                                // handlers and switch table moved in the copies: order does not matter
+    BattleFlow_Inject();        // round 7 group BB: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed and its jump table relocated in the copies: order
+                                // does not matter (no widescreen patch touches its functions)
+    BattleSetup_Inject();       // group BA (round 7): every call of its clones re-aimed at a recorder, no jump
+                                // tables - order does not matter
+    BattleMisc_Inject();        // every call of its clones re-aimed at a recorder, the dispatch's table
+                                // immediates re-aimed and a jump table relocated in the copies: order does not matter
+    BattleDamage_Inject();      // every call of its clones re-aimed at a recorder, its jump table relocated
+                                // and the effect handler tables swapped: order does not matter
+    BattleItems_Inject();       // every call of its clones re-aimed at a recorder, Sparkle_Types' entries
+                                // swapped and the stream's buffer a fake: order does not matter
+    BattleSprites_Inject();     // group BG, round seven: every call of its clones re-aimed at a recorder,
+                                // three jump tables relocated in the copies, the boss table swapped: order does not matter
+    InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
     InjectReport();
 }
 

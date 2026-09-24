@@ -163,7 +163,7 @@ until a zero dword.
 |---|---|---|
 | `MapCell_Handlers` `0x663008` | `0x3F..0x4C` | all `MapCell_DrawWalls` |
 | `AreaMap_EntryHandlers` `0x66329C` | 0 | `AreaMap_ClutCycle` |
-| | 1, 2, 3 | `0x571BE0`, `0x571D30`, `0x571E20` - named `AreaMap_EntryKind1..3`, not read; none is called in `hidden_b` |
+| | 1, 2, 3 | `0x571BE0`, `0x571D30`, `0x571E20` - `AreaMap_DrawBackdrop`, `AreaMap_TextureCycle`, `AreaMap_SlotZones`, ours since 2026-09-23 ([`area-backdrop.md`](area-backdrop.md)); none is called in `hidden_b` |
 | | 4.. | `Kind2_Run`'s table `0x6632AC` (group B), then data: the mask reaches 128 entries |
 | `MapCell_WallTextures` `0x663280` | 0..3 | `0xB1800007`, `0xB1810007`, `0xBD800006`, `0xBD810006` |
 | | 4..6 (`0x663290`) | the code addresses `0x571880`, `0x571A30`, `0x571A70` - another table, not textures |
@@ -175,7 +175,9 @@ the fuzz can stand recorders in. Newly typed in `symbols.toml` (`# group D
 callees`, all `hypothesis`): `AreaMap_FrameAreaBD` `0x510630`,
 `MapView_ShiftColumnNext` / `Prev` `0x56EA30` / `0x56E9A0`,
 `MapView_ShiftRowsNext` / `Prev` `0x56EB50` / `0x56EAB0`, `MapView_PlaceRuns`
-`0x571FF0`, `AreaMap_EntryKind1..3`. Their call counts (`all_b`): 44, 150,
+`0x571FF0`, `AreaMap_EntryKind1..3` (since renamed `AreaMap_DrawBackdrop`,
+`AreaMap_TextureCycle`, `AreaMap_SlotZones` and taken over,
+[`area-backdrop.md`](area-backdrop.md)). Their call counts (`all_b`): 44, 150,
 92, 115, 402; the area-0xBD function and the three kinds are never called.
 The other callees were already typed and are ours: the GTE and GPU library,
 `Prim_SetTexture`, `Gfx_CommitPrim`, the draw-item pool, `DrawLayers_Reset`,
@@ -326,8 +328,9 @@ input flag's floor at exactly 2 (`2 - 2` and the floor are both 0).
 **What the fuzz does not reach.** The real callees: every one is a stand-in,
 so the live batch check - frozen-shot pixel A/B above all, since all six
 feed the draw - is the only test of the whole. Area `0xBD`'s path is a call
-and a return; `AreaMap_EntryKind1..3` are not called in the attract cycle,
-and neither is area `0xBD`. The rows past the clut strip, a zero period and
+and a return; `AreaMap_EntryKind1..3` (now `AreaMap_DrawBackdrop`,
+`AreaMap_TextureCycle`, `AreaMap_SlotZones`, ours) are not called in the
+attract cycle, and neither is area `0xBD`. The rows past the clut strip, a zero period and
 a runaway scan (above) are read, not run.
 
 **For the batch check** (`--original`):
