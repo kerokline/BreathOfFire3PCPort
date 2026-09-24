@@ -310,7 +310,11 @@ What is established:
    **The owner's combat route plays back identically run to run**, so the
    battle engine's 209 reached functions are the seventh round
    ([`takeover-queue-round7.md`](takeover-queue-round7.md)), ten groups in
-   parallel; the between-waves batch and the merges are owed (HANDOFF 0000000).
+   parallel - **merged 2026-09-24 morning, 1,020 ours**, the between-waves
+   batch passed but for the memory dump, the wave-2 batch running
+   (HANDOFF 0000000); D43..D57 written down, two groups renamed by what
+   they turned out to be (the Healing Herb's sparkles, the encounter's
+   placement).
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.
