@@ -39,6 +39,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_misc_callees.h"
+#include "game/battle_text.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -499,8 +500,10 @@ extern "C" unsigned char __cdecl BattleQueue_Pending(void) {
 // original 0x44A8E0 (PSX 0x801DE914): Str_CopyN(kBannerText, kMessages[msg &
 // 0xFF], 8) - the PC's table of string pointers where the PSX indexes 8-byte
 // strings - then banner entry 0's byte +2 = b2. Returns Str_CopyN's eax.
+// DIVERGENCE DIV-0052: 12 bytes, the US release's count, once a language
+// overlay has repointed the table at its longer words (src/game/battle_text.cpp).
 extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned b2) {
-    const U eax = g.copy_n(kBannerText, Long(At(kMessages + (msg & 0xFF) * 4)), 8);
+    const U eax = g.copy_n(kBannerText, Long(At(kMessages + (msg & 0xFF) * 4)), BattleMessages_CopyRoom());
     Banner(0)[2] = static_cast<unsigned char>(b2);
     return eax;
 }

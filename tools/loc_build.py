@@ -109,6 +109,23 @@ SMALL_SPACE = SMALL_APPEND_AT + (0x93 - 0x30 + 1)   # a blank cell after it; see
 SHAPE_CELLS = ((180, 48), (192, 48), (204, 48), (216, 48))   # (x, y) of circle, cross, triangle, square
 LABEL_CAPS = (0x4C, 0x52)                                     # L, R in the dialogue set
 ICONS_AT = SMALL_SPACE + 1                                    # circle .. square, L1, R1
+# The battle banner's two picture suffixes (DIV-0052, src/game/battle_text.cpp):
+# " EX" on an extra turn, and a second of the same shape. The PC draws them as
+# glyphs 0x50..0x53, which the single-byte slots of `v` .. `y` paint over, so
+# the shipped four are kept again after the icons. The US disc writes them as
+# the two-byte codes below (BATTLE.EMI's messages 1 and 3; the Japanese disc
+# the same codes), in the PC's order.
+SUFFIX_GLYPHS = (0x50, 0x51, 0x52, 0x53)
+SUFFIX_AT = ICONS_AT + 6
+SUFFIX_OF = {0x151B: 0x50, 0x151C: 0x51, 0x151F: 0x52, 0x1520: 0x53}
+# EX itself is the disc's, not the port's redrawing (the owner, 2026-09-24:
+# the port's does not match the PlayStation's): one picture across two cells of
+# the atlas's 12 x 12 row at y 60, x 156 and 168 (ink x 159..176, y 63..71,
+# the letters overlapping, nibbles 9..F banded top to bottom), each doubled to
+# the 24 x 24 glyph with its nibbles as they are - the overlay's text palette
+# is the disc's (DIV-0013). The second suffix's cells were not identified in
+# the atlas, so it keeps the port's glyphs.
+EX_CELLS = ((156, 60), (168, 60))
 GLYPH_LIMIT = 0x1000             # ours, DIV-0016; the original 0x516C94 was cmp cx, 0xA00
 PC_ADVANCE = 12                  # 0x497A44, 0x516CDE
 TEXT_ROOM = 0x8000               # the CLUT strip as loaded starts here; the system pool at
@@ -265,6 +282,16 @@ def build_table(base_table, rows, redrawn=None, mono=False):
                     for dx in range(2):
                         big[2 * y + dy][2 * x + dx] = v
         table += pc_glyph_from_rows(big)
+        advances.append(PC_ADVANCE)
+    # The suffixes' glyphs (SUFFIX_AT ..): EX from the disc, the second
+    # suffix as shipped, before any painting.
+    for i, g in enumerate(SUFFIX_GLYPHS):
+        if i < len(EX_CELLS):
+            x0, y0 = EX_CELLS[i]
+            big = [[rows[y0 + y // 2][x0 + x // 2] for x in range(font_pc.GLYPH)] for y in range(font_pc.GLYPH)]
+            table += pc_glyph_from_rows(big)
+        else:
+            table += base_table[g * font_pc.GLYPH_BYTES:(g + 1) * font_pc.GLYPH_BYTES]
         advances.append(PC_ADVANCE)
 
     glyphs = len(table) // font_pc.GLYPH_BYTES
@@ -845,6 +872,97 @@ def convert_battle_commands(game, donor):
     return [(KIND_BATTLE, 0, bytes(payload))]
 
 
+# The battle banner's twelve messages (DIV-0052, src/game/battle_text.cpp): the
+# PC's pointer table at MESSAGE_TABLE, read only by 0x44A8E0 and, for message
+# 1, 0x44A990. The US BATTLE.EMI has the same twelve as 13-byte slots, found
+# by the two suffixes at slots 1 and 3; copied 12 bytes at most.
+KIND_MESSAGES = 12
+MESSAGE_TABLE, MESSAGE_COUNT, MESSAGE_SLOT, MESSAGE_ROOM = 0x669DE0, 12, 13, 12
+MESSAGE_SHIPPED = (0x669D7C, 0x669D84, 0x669D8C, 0x669D94, 0x669D9C, 0x669DA4,
+                   0x669DAC, 0x669DB4, 0x669DBC, 0x669DC4, 0x669DD0, 0x669DD8)
+
+
+def encode_message(raw):
+    """A donor battle message -> PC bytes, or None if it holds a code English does not have."""
+    out, i = bytearray(), 0
+    while i < len(raw):
+        b = raw[i]
+        if b in LEAD and i + 1 < len(raw):
+            g = SUFFIX_OF.get((b << 8) | raw[i + 1])
+            if g is None:
+                return None
+            g = SUFFIX_AT + SUFFIX_GLYPHS.index(g)
+            out += bytes([0x80 | (g >> 8), g & 0xFF])
+            i += 2
+            continue
+        e = encode_char(b)
+        if e is None:
+            return None
+        out += e
+        i += 1
+    return bytes(out)
+
+
+def convert_battle_messages(game, donor):
+    """[(kind, tag, payload)] for the banner messages, or [] if `donor` (BATTLE.EMI) has none."""
+    table = struct.unpack("<%dI" % MESSAGE_COUNT, exe_bytes(game, MESSAGE_TABLE, 4 * MESSAGE_COUNT))
+    if table != MESSAGE_SHIPPED:
+        raise SystemExit("battle messages: the table at 0x%X is not the one this build expects" % MESSAGE_TABLE)
+    ex, second = b"\xff\x15\x1b\x15\x1c\x00", b"\xff\x15\x1f\x15\x20\x00"
+    at = donor.find(ex)
+    while at >= 0 and donor[at + 2 * MESSAGE_SLOT:at + 2 * MESSAGE_SLOT + len(second)] != second:
+        at = donor.find(ex, at + 1)
+    if at < MESSAGE_SLOT:
+        return []
+    start = at - MESSAGE_SLOT
+    payload = bytearray([MESSAGE_COUNT])
+    for i in range(MESSAGE_COUNT):
+        slot = donor[start + i * MESSAGE_SLOT:start + (i + 1) * MESSAGE_SLOT]
+        raw = slot.split(b"\0")[0]
+        out = encode_message(raw) if raw else None
+        if out is None:
+            raise SystemExit("battle: message %d holds a code English does not have: %s" % (i, slot.hex(" ")))
+        if len(out) > MESSAGE_ROOM:
+            raise SystemExit("battle: message %d encodes to %d bytes, %d are copied" % (i, len(out), MESSAGE_ROOM))
+        payload += out + b"\0"
+    return [(KIND_MESSAGES, 0, bytes(payload))]
+
+
+# The enemy records (DIV-0053): each AREAnnn.DAT's kind-0 chunk at arena
+# ENEMY_TAG, a 0x48-byte header and eight records of 0x8C bytes whose first
+# 12 are the name; 0x8C55C8 in memory, read by Battle_CopyEnemyData 0x4946C0.
+# The US AREAnnn.EMI has the same header and records at stride 0x88 in the
+# section for ENEMY_DEST, an 8-byte name and every later byte the same
+# (all 448 live records of the 200 areas, 2026-09-24). Each name goes over
+# its own 12 bytes as a kind-0 chunk; an area whose numbers disagree keeps
+# its names. The banner and the name window draw 8 bytes at most.
+ENEMY_TAG, ENEMY_DEST, ENEMY_HEAD, ENEMY_COUNT = 0xC2000, 0x800E4000, 0x48, 8
+ENEMY_STRIDE, ENEMY_NAME, DONOR_ENEMY_STRIDE, DONOR_ENEMY_NAME, ENEMY_SHOWN = 0x8C, 12, 0x88, 8, 8
+
+
+def convert_enemy_names(base, donor):
+    """[(kind, tag, payload)] for one area's enemy names, and how many were kept."""
+    if len(base) < ENEMY_HEAD + ENEMY_COUNT * ENEMY_STRIDE or len(donor) < ENEMY_HEAD + ENEMY_COUNT * DONOR_ENEMY_STRIDE:
+        raise ValueError("enemy records: a chunk is short")
+    if base[:ENEMY_HEAD] != donor[:ENEMY_HEAD]:
+        raise ValueError("enemy records: the headers differ")
+    out, kept = [], 0
+    for k in range(ENEMY_COUNT):
+        rec = base[ENEMY_HEAD + k * ENEMY_STRIDE:][:ENEMY_STRIDE]
+        d_rec = donor[ENEMY_HEAD + k * DONOR_ENEMY_STRIDE:][:DONOR_ENEMY_STRIDE]
+        if rec[ENEMY_NAME:] != d_rec[DONOR_ENEMY_NAME:]:
+            raise ValueError("enemy records: record %d's numbers differ" % k)
+        d_name = d_rec[:DONOR_ENEMY_NAME].split(b"\0")[0]
+        if not any(rec[:ENEMY_NAME]) and not d_name:
+            continue
+        enc = [encode_char(c) for c in d_name]
+        if not d_name or any(e is None for e in enc) or sum(map(len, enc)) > ENEMY_SHOWN:
+            kept += 1
+            continue
+        out.append((0, ENEMY_TAG + ENEMY_HEAD + k * ENEMY_STRIDE, b"".join(enc).ljust(ENEMY_NAME, b"\0")))
+    return out, kept
+
+
 def build_font(args, disc):
     rows = donor_sheet(disc)
     base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
@@ -1033,7 +1151,7 @@ def cmd_all(args):
     title = build_title(args, disc)
     if title:
         overlays["START.DAT"] = title
-    texts = pools = kept_text = kept_pool = 0
+    texts = pools = kept_text = kept_pool = enemies = kept_enemy = 0
     for name in sorted(os.listdir(d)):
         stem, ext = os.path.splitext(name)
         if ext.upper() != ".DAT" or "." in stem or (args.only and stem.upper() not in (args.only.upper(), "FIRST")):
@@ -1044,12 +1162,20 @@ def cmd_all(args):
             continue
         sections = None
         for c in chunks:
-            if c.kind != 0 or c.tag not in (0, POOL_TAG):
+            if c.kind != 0 or c.tag not in (0, POOL_TAG, ENEMY_TAG):
                 continue
             if sections is None:
                 sections = emi_sections(disc.read(found[0]))
             base = blob[c.offset:c.offset + c.size]
             try:
+                if c.tag == ENEMY_TAG:
+                    donor = [s for dest, s in sections if dest & 0x7FFFFFFF == ENEMY_DEST & 0x7FFFFFFF]
+                    if not donor:
+                        continue
+                    names, kept = convert_enemy_names(base, donor[0])
+                    enemies, kept_enemy = enemies + len(names), kept_enemy + kept
+                    overlays.setdefault(name, []).extend(names)
+                    continue
                 if c.tag == 0:
                     donor = [s for dest, s in sections if dest & 0x7FFFFFFF == 0x10000]
                     if not donor:
@@ -1085,12 +1211,16 @@ def cmd_all(args):
         cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += cmds
         print("battle commands: " + ("%d" % BATTLE_COUNT if cmds else "not found on this disc"))
+        msgs = convert_battle_messages(args.game, disc.read(battle_emi[0]))
+        overlays["FIRST.DAT"] += msgs
+        print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
 
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:
         names, report = convert_names(args.game, emi_sections(disc.read(game_emi[0]))[0][1])
         overlays["FIRST.DAT"] += names
         print("names: " + ", ".join(report))
+    print("enemy names: %d (%d kept)" % (enemies, kept_enemy))
     for name, chunks in overlays.items():
         write_overlay(os.path.join(d, "%s.%s" % (args.lang, name)), chunks)
     print("%d overlay files in %s: %d area texts (%d slots kept as shipped), %d system pools (%d kept)"

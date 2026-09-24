@@ -46,7 +46,8 @@ KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3", 4: "advances (ours,
          8: "menu verbs (ours, DIV-0018)",
          9: "battle command labels (ours, DIV-0019)",
          10: "default character names (ours, DIV-0020)",
-         11: "the fish merchant's name (ours, DIV-0020)"}
+         11: "the fish merchant's name (ours, DIV-0020)",
+         12: "battle banner messages (ours, DIV-0052)"}
 BANK_TOC = 0x188
 BANK_SLOTS = 61
 BANK_DATA = 0x380
