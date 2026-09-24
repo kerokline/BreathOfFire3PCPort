@@ -740,3 +740,19 @@ Overwrites slot 0 silently (and the input recorder's F12 shot writes one).
 In between, cheaper steps if the owner wants them: refuse it in battle
 and events, give it a slot of its own, draw "Save OK" on screen (it only
 reaches the log since DIV-0032).
+
+## I19 — Screen curvature for the SatPixie look
+
+**Ask (2026-09-23):** the owner, on finding the SatPixie look (DIV-0043)
+has no curvature knob: "Maybe later".
+**Kind:** look   **Feasibility:** HIGH   **Gated on:** nothing.
+
+SatPixie (Conkwer's fork) deliberately removed the newpixie preset's screen
+curvature - "straight screen" is its headline feature - so our port
+(`src/render/satpixie.cpp`) has none. The original newpixie Slang preset
+(hunterk's adaptation, same MIT / public-domain terms) keeps it: a UV warp
+before the picture pass samples, and a border fade with it. Adding it back
+is one more parameter in `BOF3X_SATPIXIE` and a slider in the launcher's
+Options dialog, defaulting to 0 (straight, as SatPixie ships), and a line
+in DIV-0043's entry saying it is our addition to the preset. Not "accumulate
+modulation", which is the phosphor persistence between frames.
