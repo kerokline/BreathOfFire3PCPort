@@ -8,6 +8,8 @@
 
 #include <commctrl.h>
 
+#include <cstdio>
+
 #include "launcher/resource.h"
 
 namespace bof3x {
@@ -49,7 +51,9 @@ void Populate(HWND dlg, const DialogState& state) {
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
     AddItem(dlg, IDC_FILTER, L"CRT - scanlines and glow");
-    Select(dlg, IDC_FILTER, cfg.crt ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
+    AddItem(dlg, IDC_FILTER, L"CRT - SatPixie (newpixie fork, MIT)");
+    Select(dlg, IDC_FILTER, cfg.satpixie ? 3 : cfg.crt ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
+    EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), cfg.satpixie);
 
     AddItem(dlg, IDC_DISPLAY, L"Fullscreen - borderless window");
     AddItem(dlg, IDC_DISPLAY, L"Windowed - resizable, F8 toggles");
@@ -71,12 +75,126 @@ void ReadBack(HWND dlg, Config& cfg) {
     const int look = Selected(dlg, IDC_FILTER);
     cfg.filter = look >= 1 ? Filter::kPoint : Filter::kLinear;
     cfg.crt = look == 2;
+    cfg.satpixie = look == 3;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
     cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
     cfg.snap = IsDlgButtonChecked(dlg, IDC_SNAP) == BST_CHECKED;
     cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
     cfg.wide = IsDlgButtonChecked(dlg, IDC_WIDE) == BST_CHECKED;
     cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;
+}
+
+// ---- DIV-0043: the SatPixie options dialog ----------------------------------
+
+struct Slider {
+    int id, label;
+    float Config::Satpixie::*value;
+    float lo, hi, step;
+    const char* format;
+};
+const Slider kSliders[] = {
+    {IDC_SP_MODULATE, IDC_SP_MODULATE_V, &Config::Satpixie::modulate, 0.0f, 1.0f, 0.01f, "%.2f"},
+    {IDC_SP_GAMMA, IDC_SP_GAMMA_V, &Config::Satpixie::gamma, 1.8f, 2.6f, 0.1f, "%.1f"},
+    {IDC_SP_CHROMA, IDC_SP_CHROMA_V, &Config::Satpixie::chroma, 0.0f, 5.0f, 0.1f, "%.1f"},
+    {IDC_SP_BLURX, IDC_SP_BLURX_V, &Config::Satpixie::blur_x, 0.0f, 5.0f, 0.25f, "%.2f"},
+    {IDC_SP_BLURY, IDC_SP_BLURY_V, &Config::Satpixie::blur_y, 0.0f, 5.0f, 0.25f, "%.2f"},
+};
+struct Toggle {
+    int id;
+    bool Config::Satpixie::*value;
+};
+const Toggle kToggles[] = {
+    {IDC_SP_NATURAL, &Config::Satpixie::natural},   {IDC_SP_GHOSTING, &Config::Satpixie::ghosting},
+    {IDC_SP_CHROMAON, &Config::Satpixie::chroma_on}, {IDC_SP_VIGNETTE, &Config::Satpixie::vignette},
+    {IDC_SP_VIG43, &Config::Satpixie::vignette_43},  {IDC_SP_WIGGLE, &Config::Satpixie::wiggle},
+    {IDC_SP_SCANROLL, &Config::Satpixie::scanroll},  {IDC_SP_OVERSCAN, &Config::Satpixie::overscan},
+};
+
+int SliderSteps(const Slider& s) { return static_cast<int>((s.hi - s.lo) / s.step + 0.5f); }
+
+void ShowSliderValue(HWND dlg, const Slider& s, float v) {
+    char text[32];
+    snprintf(text, sizeof text, s.format, static_cast<double>(v));
+    SetDlgItemTextA(dlg, s.label, text);
+}
+
+void SatpixiePopulate(HWND dlg, const Config::Satpixie& sp) {
+    for (const Slider& s : kSliders) {
+        HWND h = GetDlgItem(dlg, s.id);
+        SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, SliderSteps(s)));
+        SendMessageW(h, TBM_SETTICFREQ, static_cast<WPARAM>(SliderSteps(s) / 10 > 0 ? SliderSteps(s) / 10 : 1), 0);
+        const float v = sp.*s.value;
+        SendMessageW(h, TBM_SETPOS, TRUE, static_cast<LPARAM>((v - s.lo) / s.step + 0.5f));
+        ShowSliderValue(dlg, s, v);
+    }
+    for (const Toggle& t : kToggles) CheckDlgButton(dlg, t.id, sp.*t.value ? BST_CHECKED : BST_UNCHECKED);
+    SendDlgItemMessageW(dlg, IDC_SP_MASK, CB_RESETCONTENT, 0, 0);
+    AddItem(dlg, IDC_SP_MASK, L"Off");
+    AddItem(dlg, IDC_SP_MASK, L"Brightness lines");
+    AddItem(dlg, IDC_SP_MASK, L"Colour stripes");
+    Select(dlg, IDC_SP_MASK, sp.mask >= 0 && sp.mask <= 2 ? sp.mask : 0);
+}
+
+void SatpixieReadBack(HWND dlg, Config::Satpixie& sp) {
+    for (const Slider& s : kSliders) {
+        const int pos = static_cast<int>(SendDlgItemMessageW(dlg, s.id, TBM_GETPOS, 0, 0));
+        sp.*s.value = s.lo + static_cast<float>(pos) * s.step;
+    }
+    for (const Toggle& t : kToggles) sp.*t.value = IsDlgButtonChecked(dlg, t.id) == BST_CHECKED;
+    const int mask = Selected(dlg, IDC_SP_MASK);
+    sp.mask = mask >= 0 && mask <= 2 ? mask : 0;
+}
+
+INT_PTR CALLBACK SatpixieProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_INITDIALOG: {
+        auto* sp = reinterpret_cast<Config::Satpixie*>(lp);
+        SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(sp));
+        SatpixiePopulate(dlg, *sp);
+        return TRUE;
+    }
+    case WM_HSCROLL: {
+        // A slider moved: show its value.
+        HWND h = reinterpret_cast<HWND>(lp);
+        for (const Slider& s : kSliders) {
+            if (GetDlgItem(dlg, s.id) != h) continue;
+            const int pos = static_cast<int>(SendMessageW(h, TBM_GETPOS, 0, 0));
+            ShowSliderValue(dlg, s, s.lo + static_cast<float>(pos) * s.step);
+        }
+        return TRUE;
+    }
+    case WM_COMMAND:
+        switch (LOWORD(wp)) {
+        case IDOK: {
+            auto* sp = reinterpret_cast<Config::Satpixie*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            SatpixieReadBack(dlg, *sp);
+            EndDialog(dlg, 1);
+            return TRUE;
+        }
+        case IDC_SP_DEFAULTS: {
+            Config::Satpixie defaults;
+            SatpixiePopulate(dlg, defaults);
+            return TRUE;
+        }
+        case IDCANCEL:
+            EndDialog(dlg, 0);
+            return TRUE;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+// The options dialog over the settings dialog; the parameters change only on OK.
+void SatpixieOptions(HWND owner, Config::Satpixie& sp) {
+    Config::Satpixie edit = sp;
+    const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_SATPIXIE), owner, SatpixieProc,
+                                      reinterpret_cast<LPARAM>(&edit));
+    if (r == 1) sp = edit;
 }
 
 INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -101,6 +219,14 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDCANCEL:
             EndDialog(dlg, 0);
             return TRUE;
+        case IDC_FILTER:
+            if (HIWORD(wp) == CBN_SELCHANGE) EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), Selected(dlg, IDC_FILTER) == 3);
+            return TRUE;
+        case IDC_LOOKOPTIONS: {
+            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            SatpixieOptions(dlg, state->cfg->sp);
+            return TRUE;
+        }
         default:
             break;
         }

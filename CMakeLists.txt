@@ -171,7 +171,8 @@ add_library(bof3x SHARED
   src/game/widescreen.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
-  src/render/crt.cpp)
+  src/render/crt.cpp
+  src/render/satpixie.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

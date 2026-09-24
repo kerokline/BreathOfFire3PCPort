@@ -45,6 +45,18 @@ struct Config {
     // DIV-0037: the CRT look in the present (BOF3X_PRESENT=crt). The dialog
     // offers it as the filter box's third entry, over the point filter.
     bool crt = false;
+    // DIV-0043: the SatPixie look (BOF3X_PRESENT=satpixie), the Look box's
+    // fourth entry, with its parameters (BOF3X_SATPIXIE). The preset's
+    // defaults, but overscan off (the game's UI runs to the edge) and the
+    // vignette over the whole picture (a 4:3 one leaves a wide picture's
+    // bands bright).
+    bool satpixie = false;
+    struct Satpixie {
+        float modulate = 0.65f, gamma = 2.3f, chroma = 0.7f, blur_x = 0.0f, blur_y = 0.0f;
+        bool natural = true, ghosting = false, chroma_on = true, vignette = true, vignette_43 = false;
+        bool wiggle = false, scanroll = true, overscan = false;
+        int mask = 0;   // 0 off, 1 brightness lines, 2 colour stripes
+    } sp;
     // DIV-0041: the wide picture, 426 x 240 (BOF3X_WIDE=1). Survey build.
     bool wide = false;
     // DIV-0042: the picture on the window at whole multiples of its size
@@ -54,6 +66,10 @@ struct Config {
     // brings the dialog back whatever this says.
     bool show_launcher = true;
 };
+
+// The SatPixie parameters as `prefix name=value sep` for each, in the
+// preset's names: the ini's lines, or BOF3X_SATPIXIE's list.
+std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const char* sep);
 
 // Reads `path` if it is there, and returns whether there was one. Missing key
 // and unparsable value both leave the default in place: a settings file is not

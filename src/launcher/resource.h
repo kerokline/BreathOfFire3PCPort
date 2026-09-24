@@ -13,4 +13,27 @@
 #define IDC_BACKGROUND  1008
 #define IDC_WIDE        1009
 #define IDC_SNAP        1010
-#define IDC_SNAP        1010
+#define IDC_LOOKOPTIONS 1011
+
+// The SatPixie look's options dialog (DIV-0043).
+#define IDD_SATPIXIE     101
+#define IDC_SP_MODULATE 1100
+#define IDC_SP_GAMMA    1101
+#define IDC_SP_CHROMA   1102
+#define IDC_SP_BLURX    1103
+#define IDC_SP_BLURY    1104
+#define IDC_SP_MODULATE_V 1110
+#define IDC_SP_GAMMA_V    1111
+#define IDC_SP_CHROMA_V   1112
+#define IDC_SP_BLURX_V    1113
+#define IDC_SP_BLURY_V    1114
+#define IDC_SP_NATURAL  1120
+#define IDC_SP_GHOSTING 1121
+#define IDC_SP_CHROMAON 1122
+#define IDC_SP_VIGNETTE 1123
+#define IDC_SP_VIG43    1124
+#define IDC_SP_WIGGLE   1125
+#define IDC_SP_SCANROLL 1126
+#define IDC_SP_OVERSCAN 1127
+#define IDC_SP_MASK     1128
+#define IDC_SP_DEFAULTS 1129

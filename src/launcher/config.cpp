@@ -2,6 +2,8 @@
 
 #include <windows.h>
 
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -102,8 +104,29 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
             if (value == "0") cfg.background = false;
             else if (value == "1") cfg.background = true;
         } else if (key == "screen") {
-            if (value == "crt") cfg.crt = true;
-            else if (value == "clean") cfg.crt = false;
+            if (value == "crt") cfg.crt = true, cfg.satpixie = false;
+            else if (value == "satpixie") cfg.satpixie = true, cfg.crt = false;
+            else if (value == "clean") cfg.crt = false, cfg.satpixie = false;
+        } else if (key.compare(0, 9, "satpixie.") == 0) {
+            const std::string name = key.substr(9);
+            char* end = nullptr;
+            const float v = std::strtof(value.c_str(), &end);
+            if (end == value.c_str() || *end) continue;
+            auto& sp = cfg.sp;
+            if (name == "acc_modulate") sp.modulate = v;
+            else if (name == "gamma") sp.gamma = v;
+            else if (name == "chroma_strength") sp.chroma = v;
+            else if (name == "blur_x") sp.blur_x = v;
+            else if (name == "blur_y") sp.blur_y = v;
+            else if (name == "natural_vision") sp.natural = v > 0.5f;
+            else if (name == "ghosting_on") sp.ghosting = v > 0.5f;
+            else if (name == "chroma_on") sp.chroma_on = v > 0.5f;
+            else if (name == "vignette_on") sp.vignette = v > 0.5f;
+            else if (name == "vignette_aspect") sp.vignette_43 = v > 0.5f;
+            else if (name == "wiggle_toggle") sp.wiggle = v > 0.5f;
+            else if (name == "scanroll") sp.scanroll = v > 0.5f;
+            else if (name == "overscan_crop") sp.overscan = v > 0.5f;
+            else if (name == "shadow_mask") sp.mask = static_cast<int>(v + 0.5f);
         } else if (key == "snap") {
             if (value == "0") cfg.snap = false;
             else if (value == "1") cfg.snap = true;
@@ -130,8 +153,10 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
            "\r\n";
     out += "# linear (the port's own) | point (DIV-0012)\r\n";
     out += std::string("filter=") + (cfg.filter == Filter::kPoint ? "point" : "linear") + "\r\n";
-    out += "# clean | crt (scanlines, mask and glow, DIV-0037)\r\n";
-    out += std::string("screen=") + (cfg.crt ? "crt" : "clean") + "\r\n";
+    out += "# clean | crt (our scanlines and glow, DIV-0037) | satpixie (the SatPixie CRT, DIV-0043)\r\n";
+    out += std::string("screen=") + (cfg.satpixie ? "satpixie" : cfg.crt ? "crt" : "clean") + "\r\n";
+    out += "# the SatPixie look's parameters, the preset's names (BOF3X_SATPIXIE)\r\n";
+    out += SatpixieLine(cfg.sp, "satpixie.", "\r\n");
     out += "# fullscreen (a borderless window, DIV-0032) | windowed   -> line 1 of the game's BOF3.CFG\r\n";
     out += std::string("display=") + (cfg.display == Display::kWindowed ? "windowed" : "fullscreen") +
            "\r\n";
@@ -150,6 +175,30 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     return WriteWhole(path, out);
 }
 
+std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const char* sep) {
+    char buf[64];
+    std::string out;
+    auto num = [&](const char* name, float v) {
+        snprintf(buf, sizeof buf, "%s%s=%g%s", prefix, name, static_cast<double>(v), sep);
+        out += buf;
+    };
+    num("acc_modulate", sp.modulate);
+    num("gamma", sp.gamma);
+    num("chroma_strength", sp.chroma);
+    num("blur_x", sp.blur_x);
+    num("blur_y", sp.blur_y);
+    num("natural_vision", sp.natural ? 1.0f : 0.0f);
+    num("ghosting_on", sp.ghosting ? 1.0f : 0.0f);
+    num("chroma_on", sp.chroma_on ? 1.0f : 0.0f);
+    num("vignette_on", sp.vignette ? 1.0f : 0.0f);
+    num("vignette_aspect", sp.vignette_43 ? 1.0f : 0.0f);
+    num("wiggle_toggle", sp.wiggle ? 1.0f : 0.0f);
+    num("scanroll", sp.scanroll ? 1.0f : 0.0f);
+    num("overscan_crop", sp.overscan ? 1.0f : 0.0f);
+    num("shadow_mask", static_cast<float>(sp.mask));
+    return out;
+}
+
 void ConfigApplyEnvironment(const Config& cfg) {
     wchar_t existing[64];
 
@@ -164,8 +213,14 @@ void ConfigApplyEnvironment(const Config& cfg) {
     if (GetEnvironmentVariableW(L"BOF3X_BACKGROUND", existing, 64) == 0 && !cfg.background)
         SetEnvironmentVariableW(L"BOF3X_BACKGROUND", L"0");
 
-    if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && cfg.crt)
-        SetEnvironmentVariableW(L"BOF3X_PRESENT", L"crt");
+    if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && (cfg.crt || cfg.satpixie))
+        SetEnvironmentVariableW(L"BOF3X_PRESENT", cfg.satpixie ? L"satpixie" : L"crt");
+
+    if (cfg.satpixie && GetEnvironmentVariableW(L"BOF3X_SATPIXIE", existing, 64) == 0) {
+        std::string line = SatpixieLine(cfg.sp, "", ",");
+        if (!line.empty()) line.pop_back();   // the trailing comma
+        SetEnvironmentVariableA("BOF3X_SATPIXIE", line.c_str());
+    }
 
     if (GetEnvironmentVariableW(L"BOF3X_SNAP", existing, 64) == 0 && !cfg.snap)
         SetEnvironmentVariableW(L"BOF3X_SNAP", L"0");

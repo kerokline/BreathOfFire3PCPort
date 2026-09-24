@@ -68,6 +68,7 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Texture filter | `BOF3X_FILTER` | ours — DIV-0012 |
 | Display (fullscreen/windowed) | line 1 of `<game>\BOF3.CFG` | **the original's own input**, `Cfg_Load` `0x4FD030` |
 | Renderer | line 2 of `BOF3.CFG` | the original's, same reader |
+| Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
 | Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |

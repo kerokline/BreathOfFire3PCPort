@@ -18,6 +18,7 @@
 
 #include "hook/log.h"
 #include "render/crt.h"
+#include "render/satpixie.h"
 
 namespace render {
 namespace {
@@ -55,7 +56,9 @@ ID3D11SamplerState* g_sampler_present_point;
 ID3D11SamplerState* g_sampler_present_linear;
 ID3D11RasterizerState* g_raster;
 ID3D11BlendState* g_blend_off;
-bool g_crt;   // DIV-0037: the present draws through crt.cpp
+enum class Look { kClean, kCrt, kSatpixie };
+Look g_look = Look::kClean;   // DIV-0037 crt.cpp, DIV-0043 satpixie.cpp
+unsigned g_frame_count;        // presents so far, for the looks' animation
 
 struct BlendEntry {
     U src, dst;
@@ -95,6 +98,17 @@ private:
 
 void Check(HRESULT hr, const char* what) {
     if (FAILED(hr)) bof3::Fatal("render: %s failed, HRESULT 0x%08lX", what, static_cast<unsigned long>(hr));
+}
+
+// BOF3X_PRESENT: clean (unset), crt (DIV-0037) or satpixie (DIV-0043).
+Look LookWanted() {
+    char text[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_PRESENT", text, sizeof text);
+    if (n == 0) return Look::kClean;
+    if (n < sizeof text && std::strcmp(text, "clean") == 0) return Look::kClean;
+    if (n < sizeof text && std::strcmp(text, "crt") == 0) return Look::kCrt;
+    if (n < sizeof text && std::strcmp(text, "satpixie") == 0) return Look::kSatpixie;
+    bof3::Fatal("BOF3X_PRESENT=%s: clean, crt or satpixie", n < sizeof text ? text : "...");
 }
 
 template <class T> void Release(T*& p) {
@@ -513,8 +527,10 @@ void Show() {
     g_ctx->RSSetViewports(1, &vp);
     const float factor[4] = {0, 0, 0, 0};
     g_ctx->OMSetBlendState(g_blend_off, factor, 0xFFFFFFFF);
-    if (g_crt) {
-        CrtDraw(g_ctx, g_target_srv, g_window_rtv, vp);
+    ++g_frame_count;
+    if (g_look != Look::kClean) {
+        if (g_look == Look::kCrt) CrtDraw(g_ctx, g_target_srv, g_window_rtv, vp);
+        else SatpixieDraw(g_ctx, g_target_srv, g_window_rtv, vp, g_frame_count);
         const HRESULT hr = g_swap->Present(g_opt.vsync ? 1 : 0, 0);
         if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) Check(hr, "Present");
         return;
@@ -630,8 +646,9 @@ void InitOnFiber(const Options& options) {
     D3D11_BLEND_DESC off = {};
     off.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     Check(g_device->CreateBlendState(&off, &g_blend_off), "CreateBlendState (off)");
-    g_crt = CrtWanted();
-    if (g_crt) CrtInit(g_device, g_target_w, g_target_h, options.scale);
+    g_look = LookWanted();
+    if (g_look == Look::kCrt) CrtInit(g_device, g_target_w, g_target_h, options.scale);
+    if (g_look == Look::kSatpixie) SatpixieInit(g_device, g_target_w, g_target_h, options.scale);
 
     bof3::Log("render: Direct3D 11 feature level 0x%X, window %u x %u, target %u x %u (view %u x %u at %u, %u columns a side), present %s",
               got, g_window_w, g_window_h, g_target_w, g_target_h, options.logical_w, options.logical_h, options.scale,
@@ -706,7 +723,8 @@ void ApplyPendingScale() {
     g_scale = k;
     g_pad_x = g_opt.pad_x * k;
     MakeTarget((g_opt.logical_w + 2 * g_opt.pad_x) * k, g_opt.logical_h * k);
-    if (g_crt) CrtResize(g_device, g_target_w, g_target_h, k);
+    if (g_look == Look::kCrt) CrtResize(g_device, g_target_w, g_target_h, k);
+    if (g_look == Look::kSatpixie) SatpixieResize(g_device, g_target_w, g_target_h, k);
     bof3::Log("DIV-0042    target %u x %u at scale %u", g_target_w, g_target_h, k);
     if (g_rescale_hook) g_rescale_hook(k);
 }

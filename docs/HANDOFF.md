@@ -220,6 +220,20 @@ The single next action, concrete enough to start without asking anyone.
       `BOF3X_SHADOW=map_layers` under the wide view reports the cull's
       divergence by design. Not touched: the sprite and object culls
       (§3b's table), the sky `0x571C85`, the message-box table.
+   4. **The window resizes; snap or fit (DIV-0042, 2026-09-23 night):** the
+      launcher's size list is gone, a "Snap" box chooses whole multiples
+      (a drag lands on them, the target follows between frames through
+      `render::RequestScale` and the set-up's `Rescale`) or the picture
+      fitted to the client's height; the FMVs follow and never resize the
+      window; `bof3x.window` beside the dll remembers the placement. The
+      owner dragged it by hand: both modes "work perfect". Not measured: a
+      rescale under the CRT look (DIV-0037).
+   5. **The SatPixie look (DIV-0043, the same night):** the owner's chosen
+      MIT shader ported to HLSL (`src/render/satpixie.cpp`,
+      [`THIRD_PARTY.md`](THIRD_PARTY.md)), the Look box's fourth entry with
+      an Options dialog of sliders. The vignette covers the whole picture
+      by default since the preset's 4:3 shape showed on the wide view.
+      Owed: the owner's tuning, the dialog by hand (only tried by code).
    Not built, loud if reached: a `Lock` of the primary or back buffer
    (`D3d_AfterDraw`, never seen requested - `Gfx_DrawOTag` logs the first
    request), sub-rectangle locks, depth / fog / lighting, the back buffer's

@@ -11,6 +11,7 @@ Project-owned notes. Agents and humans both put findings here.
 | [`HANDOFF.md`](HANDOFF.md) | What the next session picks up, how, and the traps already paid for. Rewritten, not appended to. |
 | [`IDEAS.md`](IDEAS.md) | Intake for unscheduled proposals, each with a feasibility rating and a first step. |
 | [`DIVERGENCE.md`](DIVERGENCE.md) | The ledger of intentional behavioural changes. Read before changing game behaviour; append when you do. |
+| [`THIRD_PARTY.md`](THIRD_PARTY.md) | The permissive third-party code the repo carries, with each notice in full: today the SatPixie CRT shader (MIT / public domain) behind the `satpixie` look, DIV-0043. |
 | [`LICENSING.md`](LICENSING.md) | Why the repo is licensed the way it is, and the constraints that follow from wanting a commercial handoff to be possible. Read before vendoring anything or relaxing rule 1. |
 | [`SHARED_SOURCE.md`](SHARED_SOURCE.md) | Why the two binaries are compilations of one source tree, what that licenses, and the catalogue of changes the *porting house* made. Read before treating a PSX finding as a PC fact. |
 | [`DAT_CONTAINER.md`](DAT_CONTAINER.md) | The `DAT/*.DAT` format: a chunk stream mirroring the PSX `.EMI` section list, unencrypted. Audio re-encoded to WAV, overlay code dropped, most other sections byte-identical to the JP disc. |

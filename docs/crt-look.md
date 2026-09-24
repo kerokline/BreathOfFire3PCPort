@@ -76,7 +76,36 @@ grille (`analysis/shots/crt2/`): line structure only; the log line with the
 defaults; self-tests unchanged (0 mismatches, 796 ours). **Owed:** the
 owner's eye and the numbers - above all on the borderless window at k = 6.
 
-## 5. Open
+## 5. A second look: SatPixie (DIV-0043, 2026-09-23)
+
+The owner found a look they like: Conkwer's
+[CRT-SatPixie](https://github.com/Conkwer/satpixie-crt-shader), a fork of
+Mattias Gustavsson's "newpixie" CRT, offered under MIT or as public domain
+- so, unlike the libretro CRTs that made §1 write its own passes, it can be
+carried ([`THIRD_PARTY.md`](THIRD_PARTY.md) has the notice).
+`src/render/satpixie.cpp` ports the RetroArch preset to HLSL pass for pass:
+accumulate (this frame against the previous frame's horizontal blur, faded
+by `acc_modulate`), blur across, blur down, then the picture - chromatic
+aberration, ghosting, rolling scanlines, a vignette shaped for 4:3 or the
+whole picture, an optional shadow mask, filmic tone mapping, noise and
+flicker. `BOF3X_PRESENT=satpixie` selects it; `BOF3X_SATPIXIE="name=value,..."`
+sets its parameters by the preset's names (`acc_modulate`, `blur_x`,
+`blur_y`, `natural_vision`, `gamma`, `ghosting_on`, `chroma_on`,
+`chroma_strength`, `vignette_on`, `vignette_aspect`, `wiggle_toggle`,
+`scanroll`, `overscan_crop`, `shadow_mask`), each checked against the
+preset's range. The launcher's Look box has it as the fourth entry and its
+"Options..." button opens a dialog of sliders and switches for every
+parameter, saved as `satpixie.<name>=` lines in `bof3x.ini`. Differences
+from the preset, all deliberate: the source is our render target at its
+scale rather than the game's resolution doubled; the picture pass's
+"output size" is the picture's rectangle on the window; `overscan_crop`
+defaults to off, since the game's own UI runs to the edge; and
+`vignette_aspect` defaults to 0, the whole picture - the preset's 4:3 shape
+darkened the middle of the wide view (DIV-0041) and left its bands bright,
+which the owner saw on the title's mural the first evening. The look
+survives DIV-0042's rescale (`SatpixieResize`).
+
+## 6. Open
 
 - The defaults, in game (the owner).
 - A hotkey to cycle clean / CRT live ([`IDEAS.md`](IDEAS.md) I15's kind).

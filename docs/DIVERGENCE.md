@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 42 entries, DIV-0001..0042)
+**Status:** IN PROGRESS (opened 2026-09-18; 43 entries, DIV-0001..0043)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -1869,8 +1869,46 @@ designed in rather than bolted on.
   300 (3x / 4x / 1x, the picture centred), fit 968 / 1162 / 361 (3.33x /
   4x / 1.25x, the height filled); the log's `DIV-0042 target` lines at
   each change; the FMV at 1x in the 3x window with snap; `bof3x.window`
-  written at `WM_CLOSE`. Self-tests 0 mismatches. Not measured: a rescale
-  under the CRT look (its textures are remade by `CrtResize`).
+  written at `WM_CLOSE`. Self-tests 0 mismatches. **The owner, the same
+  evening, dragging the window by hand: "snap works perfect", "stretch
+  works perfect".** A rescale under the SatPixie look ran (three target
+  changes, `analysis/shots/resize_satpixie/`); under the CRT look not
+  measured (its textures are remade by `CrtResize` the same way).
 - **Reversible?** `BOF3X_SNAP` unset and the window left at 2x is
   DIV-0036's picture; `BOF3X_ORIGINAL=Game_WndProc` is Capcom's window
   procedure (no `WM_SIZING`, no rescale).
+
+### An optional second CRT look: SatPixie, with its parameters in the launcher
+
+- **ID:** DIV-0043
+- **Date:** 2026-09-23
+- **Subsystem:** display (the present, `src/render/satpixie.{h,cpp}`,
+  `src/render/render_d3d11.cpp`; the launcher's Look box and its Options
+  dialog; [`crt-look.md`](crt-look.md) §5, [`THIRD_PARTY.md`](THIRD_PARTY.md))
+- **Original behaviour:** the picture is presented as drawn (DIV-0037 added
+  our own CRT look as an option).
+- **New behaviour:** `BOF3X_PRESENT=satpixie` presents through a port of
+  Conkwer's CRT-SatPixie (Mattias Gustavsson's newpixie CRT, forked):
+  accumulate, blur across, blur down, then chromatic aberration, ghosting,
+  rolling scanlines, a vignette, an optional shadow mask, filmic tone
+  mapping, noise and flicker. Every parameter of the preset is a knob in
+  `BOF3X_SATPIXIE` and a slider or switch in the launcher's "Options..."
+  dialog (saved in `bof3x.ini` as `satpixie.<name>=`). Two defaults differ
+  from the preset's: overscan crop off, and the vignette over the whole
+  picture rather than a 4:3 shape. Off by default; every oracle and capture
+  harness pins the clean present.
+- **Rationale:** the owner, 2026-09-23: "I found a MIT/Open Source shader I
+  like, so I was wondering if we could incorporate it in a sub-menu with
+  sliders for the options". MIT with its notice kept is within
+  `LICENSING.md` section 4; the notice is in `THIRD_PARTY.md`. The 4:3
+  vignette on the wide view (DIV-0041) darkened the middle and left the
+  bands bright - the owner's screenshot of the title's mural - hence the
+  default.
+- **Also in the PSX version?** No.
+- **Verification:** 2026-09-23: compiles under the dll's HLSL 4.0 path; a
+  live run on the title at 3x, wide, through three rescales
+  (`analysis/shots/resize_satpixie/`): scanlines, fringing and the vignette
+  as the preset draws them, no Fatal. The owner ran it on the title's
+  mural. Owed: the owner's tuning; the dialog's sliders by hand (only
+  tried by code).
+- **Reversible?** The Look box's other entries; `BOF3X_PRESENT` unset.
