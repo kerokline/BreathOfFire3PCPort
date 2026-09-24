@@ -90,6 +90,7 @@
 #include "game/battle_windows.h"
 #include "game/battle_setup.h"
 #include "game/battle_damage.h"
+#include "game/battle_items.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -217,6 +218,8 @@ void InjectAll() {
                                 // immediates re-aimed and a jump table relocated in the copies: order does not matter
     BattleDamage_Inject();      // every call of its clones re-aimed at a recorder, its jump table relocated
                                 // and the effect handler tables swapped: order does not matter
+    BattleItems_Inject();       // every call of its clones re-aimed at a recorder, Sparkle_Types' entries
+                                // swapped and the stream's buffer a fake: order does not matter
     InjectReport();
 }
 

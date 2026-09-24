@@ -12620,3 +12620,242 @@ params = "unsigned caster, unsigned target"
 impl = "src/game/battle_damage.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x44F130..0x44F1C9 (0x9A bytes), no calls: NameTable_Abilities +3 of ability 0x904B80 x (INT 0x939FEA + 100) x 100 / 100 unsigned, x s16 0x64E99C[holy class: party +0xA4, enemy +0x44] (-300 -200 -100 0 50 100 200 400) / -10000 (magic 0x97247453, sar 12, no add: a signed division by -10000). FUN_800a0080 (sibling Ghidra export) divides by 10000 and negates - the same numbers. A negative answer heals. Only the second argument is read. Called by two effect handlers (0x44C12D, 0x44DDDD). Combat route: 1 call."
+
+# --- Group BH of the seventh round (docs/battle_items.md): the Healing Herb's
+# sparkles, three shared effect draws and the actor-matrix push, the battle
+# actor's helpers, four PSX primitive setters and the SND stream's play and
+# stop. All src/game/battle_items.cpp; shadow name battle_items.
+
+[[func]]
+pc = 0x5A75F0
+name = "Gpu_SetPolyG3"
+psx = 0x8017B2F4
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A75F0..0x5A7606 (0x17 bytes), cdecl, no calls: byte +7 = 0x30, the PSX GPU code of POLY_G3, and the float 0.01 to +0x10, +0x20, +0x30 (the port's 0x10-byte vertex). The sibling's SetPolyG3 (Psy-Q signature match); psx_pair call-anchored. 126 call sites; combat route 13,168 calls."
+
+[[func]]
+pc = 0x5A76B0
+name = "Gpu_SetLineG2"
+psx = 0x8017B40C
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A76B0..0x5A76C3 (0x14 bytes), cdecl, no calls: byte +7 = 0x50, the PSX GPU code of LINE_G2, and 0.01 to +0x10 and +0x20. The sibling's SetLineG2 (Psy-Q signature match); psx_pair call-disputed, the code byte decides. 26 call sites; combat route 4,520 calls."
+
+[[func]]
+pc = 0x5A76D0
+name = "Gpu_SetLineG3"
+psx = 0x8017B440
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A76D0..0x5A76E6 (0x17 bytes), cdecl, no calls: byte +7 = 0x58, the PSX GPU code of LINE_G3, and 0.01 to +0x10, +0x20, +0x30. The PSX SetLineG3 also stores the polyline terminator 0x55555555; the port's does not. Unpaired by psx_pair; the code byte and the call order in MAGIC070 (SetLineG2, SetLineG3, SetPolyG3 as the PC's 0x4B9300 / 0x4B9490 / 0x4B9680) decide. 11 call sites; combat route 4,520 calls."
+
+[[func]]
+pc = 0x5A7750
+name = "Gpu_SetTile1"
+psx = 0x8017B3A8
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7750..0x5A775F (0x10 bytes), cdecl, no calls: byte +7 = 0x68, the PSX GPU code of TILE_1, and 0.01 to +0x10. The sibling's SetTile1 (Psy-Q signature match); psx_pair call-anchored, and BattleActor_UpdateScreenXY's PSX twin 0x800AC68C calls it at the same point. 34 call sites; combat route 68 calls."
+
+[[func]]
+pc = 0x4B8FE0
+name = "Sparkle_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B8FE0..0x4B8FF1 (0x12 bytes; pe_funcs.py ran it on through 0x4B9000 and the three phase handlers): jmp [0x65AE28 + 4 * byte +1 of the sparkle at 0x685D90]. The table's one code entry is 0x4B9000, the dwords after it data; the type is never checked, and the one writer, the pool walk's spawner 0x4B8E00, stores 0. Sole caller the pool walk 0x4B8D70 (0x4B8DD9), which points 0x685D90 at each sparkle in use and 0x93B940 at its +0x28. MAGIC070.EMI (Healing Herb) on the PSX. Combat route 2,554 calls."
+
+[[func]]
+pc = 0x4B9090
+name = "Sparkle_Launch"
+psx = 0x801EF47C
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9090..0x4B91F0 (0x161 bytes), cdecl, six calls to Rand, every jump internal. Entry 0 of 0x4B9000's own three-entry stack table (pointer-reached, in no function list). The delay +5 down; at 0: the effect actor's (0x93B940) +0x34 / +0x38 / +0x3C to +0x14..+0x1C, its screen point +0x2E / +0x30 to +0x20 / +0x22; x thrown by the s16 dx of row (+7 and 0x1F) of 0x65AD34, 0..7 further from zero by Rand, y up by dy + 0..7; base x +8, drift +0xA = Rand and 1, wave +0xC = Rand, rise length +7 = (Rand and 6) + 0x65AE20[+4]; +5 = 0x10, +6 = 0, phase +2 up. The x pointer is taken before the Rand, the sparkle read again after every call. The PSX 0x801EF47C (MAGIC070): six Rand calls and the same stores, read at the calls and the stores to +5, +6, +7 and +2."
+
+[[func]]
+pc = 0x4B9200
+name = "Sparkle_Rise"
+psx = 0x801EF67C
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9200..0x4B926B (0x6C bytes), cdecl, one call (Math_Sin), every jump internal. Entry 1 of 0x4B9000's stack table. Wave +0xC up; angle ((+0xC and 0x3F) shl 6) to scratch 0x903856; x = base +8 + sin * 24 sar 12; y +0x22 += drift +0xA; count +6 up, and the phase +2 up when it reaches +7. The PSX 0x801EF67C (MAGIC070) instruction for instruction."
+
+[[func]]
+pc = 0x4B9270
+name = "Sparkle_Fade"
+psx = 0x801EF72C
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9270..0x4B92F4 (0x85 bytes), cdecl, one call (Math_Sin) and a tail jmp to Sparkle_Free 0x4B9900. Entry 2 of 0x4B9000's stack table. Sparkle_Rise's sway; count +6 down when (Frame_Counter and 3) is 0; brightness +5 down, and at 0 the effect actor's byte +0xB (its live sparkle count) down and the sparkle freed. The PSX 0x801EF72C (MAGIC070) instruction for instruction."
+
+[[func]]
+pc = 0x4B9300
+name = "Sparkle_DrawRaysG2"
+psx = 0x801EF810
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9300..0x4B9484 (0x185 bytes), cdecl. Both arguments read as low words (the caller 0x4B9000 pushes stale upper halves). The sparkle's point to scratch +0 / +2; Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) and 0x572FA0(+0x14, +0x18, 2, 0xC); scratch +8 / +0xA / +0xC = +5 * 6; four LINE_G2 from the point to point + radius * (cos, sin) of ((start + 8k) and 0x1F) shl 7, as floats, shade at the centre and 1 at the tip, each through 0x572FA0(.., 2, 0x34). Called by 0x4B9000 as (Frame_Counter shr 1, +6). PSX MAGIC070 0x801EF810 by the setter order. Combat route 1,130 calls."
+
+[[func]]
+pc = 0x4B9490
+name = "Sparkle_DrawRaysG3"
+psx = 0x801EFA44
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9490..0x4B967C (0x1ED bytes), cdecl. As Sparkle_DrawRaysG2 with LINE_G3: centre, half the radius (the low word shr 1), the full radius; 1 at both ends and the shade in the middle. Called by 0x4B9000 as ((Frame_Counter shr 1) + 4, +6 + +6 shr 1). PSX MAGIC070 0x801EFA44 by the setter order. Combat route 1,130 calls."
+
+[[func]]
+pc = 0x4B9680
+name = "Sparkle_DrawDisc"
+psx = 0x801EFCDC
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9680..0x4B98AE (0x22F bytes), cdecl, one Rand. Gpu_SetDrawMode(.., 0x35), 0x572FA0(+0x14, +0x18, 2, 0xC); radius (Rand and 3) + +6 to scratch +4; the rgb row (+3 + 4 * +4) of 0x65ADD4 times +5 to scratch +8 / +0xA / +0xC, +5 to +0xE; eight POLY_G3 of the point and two rim points at angles 0x200 apart (x by sin, y by cos), centre the row colour, rim +5 grey, each 0x572FA0(.., 2, 0x34). Called by 0x4B9000 while phase +2 is non-zero. PSX MAGIC070 0x801EFCDC by the setter order. Combat route 1,514 calls."
+
+[[func]]
+pc = 0x4B98B0
+name = "Sparkle_Alloc"
+psx = 0x801F0000
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B98B0..0x4B98F9 (0x4A bytes), cdecl, no calls: the first of the 128 records of 0x2C bytes at 0x684790 whose byte 0 has bit 0 clear gets it set and its index answered in al; 0xFF when none. The answer's upper bytes are the caller's eax; the one caller, the spawner 0x4B8E00 (0x4B8EA5), compares al. The PSX 0x801F0000 (MAGIC070) the same. Combat route 60 calls."
+
+[[func]]
+pc = 0x4B9900
+name = "Sparkle_Free"
+psx = 0x801F006C
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B9900..0x4B992E (0x2F bytes), cdecl, no calls: bytes +0..+4 of the sparkle at 0x685D90 cleared, the pointer read again for each. Reached only by Sparkle_Fade's tail jmp. The PSX 0x801F006C (MAGIC070) the same."
+
+[[func]]
+pc = 0x4AD6F0
+name = "MagicFx_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4AD6F0..0x4AD892 (0x1A3 bytes), cdecl. Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x55, 0), Gfx_CommitPrim(5, 0xC); scratch 0x903850 = 0x120, +0xA = Sprite_Current +0xA * 12; eight POLY_G3 in a fan round the origin through Gte_RotTransPers3 of the vertex scratch 0x9037A0 (origin, the previous rim point, the rim point at 0x200 k: sin, cos times 0x120 sar 12), Gte_PrimDepths3_10B, centre the shade, rim 1, Gfx_CommitPrim(5, 0x34); then SetDrawMode(.., 0x15), CommitPrim(5, 0xC). Callers 0x4AD02E and 0x4C500E (two overlays' copies folded into one, after MagicFx_PushActorMatrix). The PSX shape in Sacrifice / Fireblast (MAGIC 6bdc2d45 / 04b565fa, 0x801EFA20..0x801EFC5C), which picks tpage 0x55 or 0x125 and 0x15 or 0x25 by the video mode. Combat route 66 calls."
+
+[[func]]
+pc = 0x4B7D40
+name = "MagicFx_PushActorMatrix"
+psx = 0x801EF700
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4B7D40..0x4B7DDE (0x9F bytes), cdecl. Gte_PushMatrix; the SVECTOR ((x +0x34 sar 9) - 0x4000, (z +0x38 sar 9) - 0x4000, -(s16 +0x3E / 2)) of Sprite_Current through Gte_RotTrans into the translation of a MATRIX on its stack (+0x14 of the block), Gte_RotMatrix of zero angles into the block, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix and Gte_SetTransMatrix of it. Pops nothing. 74 call sites across the effect overlays. The PSX 0x801EF700 in Sacrifice (MAGIC 6bdc2d45) the same, MulMatrix2 for MulMatrix0. Combat route 258 calls."
+
+[[func]]
+pc = 0x4C5150
+name = "MagicFx_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4C5150..0x4C54EB (0x39C bytes), cdecl. Scratch 0x903850 = +9 * 4, +4 = +9 * 3, +6 = +0xA * 4 + 0x40, +8 = (+0xB and 0xF) shl 8 of Sprite_Current; 32 POLY_GT4 in a band: inner points (cos, sin) * +0 and z = sin(((+0xB + i) and 0xF) shl 8) * +6 sar 12 - +6, outer (cos, sin) * +4 and z 0, at angles 0x80 i; each SetDrawMode(.., 0x35), 0x572FA0 at the actor's +0x34 / +0x38 both plus inner x shl 9, tpage Gpu_GetTPage(0, 1, 0x340, 0x100), clut Gpu_GetClut(0, 0x1FA), u i * 4 / (i + 1) * 4, v (+0xB + 8) * 4 / (+0xB + 12) * 4, rim shade 0x68 - +0xB * 3, Gte_RotTransPers4 of the vertex scratch, Gte_PrimDepths4_14, 0x572FA0(.., 2, 0x54). Sole caller 0x4C5138. The PSX loop at Sacrifice (MAGIC 6bdc2d45) 0x801EF3BC..0x801EF6C4, tpage 0x55 or 0x125 there. Combat route 192 calls."
+
+[[func]]
+pc = 0x4C54F0
+name = "MagicFx_DrawDisc"
+psx = 0x801EF7B0
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4C54F0..0x4C5675 (0x186 bytes), cdecl. Scratch 0x903850 = Sprite_Current +9 * 2 + 0x20; eight POLY_G3 round the sprite's screen point +0x2E / +0x30 (x by sin, y by cos), centre red +9 * 10, the rest 1, each SetDrawMode(.., 0x35), 0x572FA0 at +0x34 / +0x38 (0xC, then 0x34 for the triangle); Sprite_Current read again after every call. Callers 0x4AD024 and 0x4C5004. The PSX 0x801EF7B0 in Sacrifice (MAGIC 6bdc2d45), tpage 0x35 or 0xA5 there. Combat route 66 calls."
+
+[[func]]
+pc = 0x4FB830
+name = "BattleActor_SetAnimation"
+psx = 0x800ABEC0
+ret = "void"
+params = "unsigned offset, unsigned arg"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FB830..0x4FB87B (0x4C bytes), cdecl. Sprite_Current = the effect actor 0x93B940 for the call, restored from a register after. Actor index 0x904B34 (a byte) below 3: Sprite_SetAnimation of the actor pointer with its low byte replaced by byte +8 + offset (pushed whole); else 0x435A20(the caller's ecx with the index in cl, arg) - 0x435A20 reads that byte only. BATTLE.EMI section 15 0x800ABEC0 (psx_pair call-anchored). 36 call sites; combat route 2 calls."
+
+[[func]]
+pc = 0x4FBD10
+name = "BattleActor_UpdateScreenXY"
+psx = 0x800AC68C
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FBD10..0x4FBDA4 (0x95 bytes), cdecl. The SVECTOR ((x +0x34 sar 9) - 0x4000, (z +0x38 sar 9) - 0x4000, -(s16 +0x3E / 2)) of Sprite_Current; Gpu_SetTile1(Gfx_PacketNext) - never committed; Gte_RotTransPers(v, prim + 8, ..), Gte_StoreDepthF(prim + 0x10); the float x / y at prim + 8 / + 0xC through the CRT's _ftol 0x5B9550 to Sprite_Current +0x2E / +0x30 (read again for each). BATTLE.EMI section 15 0x800AC68C (psx_pair call-anchored), SetTile1 and RotTransPers there too. 110 call sites; combat route 68 calls."
+
+[[func]]
+pc = 0x4FBDB0
+name = "BattleActor_Flash"
+psx = 0x800AC73C
+ret = "void"
+params = "unsigned index"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FBDB0..0x4FBE2E (0x7F bytes), cdecl. Nothing when 0x4456C0(index) answers non-zero in al (the actor is out). Index byte below 3: the party record 0x802D40 + 0x14C i, tinted by Sprite_SetTint(r, -6, -10, 0, 0) when its +0x90 has bit 7; else the enemy record 0x93B960 + 0x128 (i - 3), by its +0x92. BATTLE.EMI section 15 0x800AC73C (PSX stride 0x140). 27 call sites; combat route 2 calls."
+
+[[func]]
+pc = 0x4FC030
+name = "BattleActor_PlaySound"
+psx = 0x800ACBC0
+ret = "void"
+params = "unsigned first, unsigned second"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FC030..0x4FC0DB (0xAC bytes), cdecl. Actor index 0x904B34 below 3: Field_State = the party record, then 0x446A50(first + 1) unless first's low byte is 0 and 0x446A50(second) unless its low byte is 0 (0x446A50 masks to a byte: a sound from Field_State +0x2C's table). An enemy: with byte 0x904AAA set, 0x437450(the word at the record's +0xF8 pointer), else Sound_PlayById(0x600 + 2 * its +0xF0 byte). BATTLE.EMI section 15 0x800ACBC0. 22 call sites; combat route 1 call."
+
+[[func]]
+pc = 0x4FC1F0
+name = "BattleActor_FxSize"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4FC1F0..0x4FC25A (0x6B bytes), cdecl, no calls. Actor index (the low byte of the dword 0x904B34) below 3: with the party record's +0x134 bit 1, byte 0x65C3F8[byte 0x904B89], else 0x65C3EC[record +0x89]; an enemy: the byte at 0x8C5652 + 0x8C * its +0xF0. The answer in al; all ten callers (rel32 scan) store al to Sprite_Current +9, the size MagicFx_DrawRing and MagicFx_DrawDisc scale by - the name's hypothesis. Unpaired. Combat route 1 call."
+
+[[func]]
+pc = 0x5A7140
+name = "SndStream_Play"
+ret = "void"
+params = "const unsigned char *wave"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A7140..0x5A71BB (0x7C bytes), cdecl. Nothing without Snd_Device; SndStream_Stop; SndBuf_CreateFromWave(wave) kept at 0x7DE3C8, nothing if null; IDirectSoundBuffer SetCurrentPosition(0) (vtable +0x34) and Play(0, 0, 0) (+0x30); on DSERR_BUFFERLOST 0x88780096 Wave_FindData(wave, &data), SndBuf_Write(buffer, data, 0, size) and Play again. Sole caller Sound_LoadStream 0x5879A5 for a stream kind above 0. Combat route 3 calls."
+
+[[func]]
+pc = 0x5A71C0
+name = "SndStream_Stop"
+ret = "void"
+params = "void"
+impl = "src/game/battle_items.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A71C0..0x5A71FD (0x3E bytes), cdecl. With a buffer at 0x7DE3C8: GetStatus (vtable +0x24) into an uninitialised local, Stop (+0x48) when bit 0 (DSBSTATUS_PLAYING), Release (+8), the cell cleared; the pointer read again before each call. Callers SndStream_Play, 0x587C5A and 0x5A6980 (shut-down). Combat route 3 calls."
