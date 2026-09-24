@@ -70,10 +70,11 @@ BEGIN
     AUTOCHECKBOX    "&Ghosting", IDC_SP_GHOSTING, 14, 136, 130, 10
     AUTOCHECKBOX    "&Chromatic aberration", IDC_SP_CHROMAON, 150, 136, 130, 10
     AUTOCHECKBOX    "&Vignette", IDC_SP_VIGNETTE, 14, 150, 130, 10
-    AUTOCHECKBOX    "Vignette shaped for &4:3 (else the whole picture)", IDC_SP_VIG43, 150, 150, 140, 10
+    AUTOCHECKBOX    "Vignette shaped for &4:3 only", IDC_SP_VIG43, 150, 150, 136, 10
     AUTOCHECKBOX    "&Interference wiggle", IDC_SP_WIGGLE, 14, 164, 130, 10
     AUTOCHECKBOX    "&Rolling scanlines", IDC_SP_SCANROLL, 150, 164, 130, 10
     AUTOCHECKBOX    "&Overscan crop (trims the picture's edges)", IDC_SP_OVERSCAN, 14, 178, 270, 10
+    LTEXT           "The 4:3 vignette leaves a wide picture's side bands bright; off, it covers the whole picture.", -1, 26, 209, 260, 9
     LTEXT           "Shadow &mask:", -1, 14, 196, 60, 9
     COMBOBOX        IDC_SP_MASK, 76, 194, 120, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
