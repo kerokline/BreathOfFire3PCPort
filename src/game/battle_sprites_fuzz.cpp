@@ -100,7 +100,7 @@ void Disturb() {
     const std::uint32_t h = Hash();
     if (h % 3 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
-    switch ((h >> 4) % 12) {
+    switch ((h >> 4) % 13) {
     case 0: At(at::kTarget)[0] = static_cast<unsigned char>(v % 11); break;   // read again as an index: an actor
     case 1: At(at::kActor)[0] = static_cast<unsigned char>(v % 11); break;
     case 2: SetWord(g_mine.action + 2, (h >> 16) % 3 ? ((h >> 16) & 1 ? 0x4C : 0xB5) : (h >> 16) % 0x200); break;
@@ -126,6 +126,9 @@ void Disturb() {
         }
         break;
     case 6: Sprite_Current = PoolSprite(v); break;
+    case 11:   // the members' chosen targets, re-read by Battle_MemberAutoTarget: enemies
+        for (unsigned i = 0; i < 3; ++i) At(at::kParty + i * at::kPartyStride)[0x124] = static_cast<unsigned char>(3 + (v + i) % 8);
+        break;
     case 7: SetWord(At(0x802E08 + ((h >> 20) % 3) * at::kPartyStride), h >> 16); break;
     case 8: At(at::kCells)[(h >> 20) & 1] = static_cast<unsigned char>((h >> 20) & 1 ? v % 16 : v % 6); break;
     case 9: At(at::kClutMap)[v % 64] = static_cast<unsigned char>((h >> 20) % 3 ? 0xFF : v); break;
@@ -154,7 +157,7 @@ enum Stub : unsigned {
 struct StubSpec { std::uint32_t target; std::uint32_t mask[4]; };
 const StubSpec kSpecs[kStubs] = {
     {0x4456C0, {0xFF}}, {0x5B93D2, {}}, {0x446FB0, {0xFF}}, {0x590C90, {0xFF, 0xFF, 0xFF, 0xFF}},
-    {0x591810, {0xFF, 0xFFFF}}, {0x435180, {0xFF, 0xFF}}, {0x590E30, {~0u, 0xFFFF}}, {0x590F30, {~0u, 0xFF}},
+    {0x591810, {0xFF, 0xFF}}, {0x435180, {0xFF, 0xFF}}, {0x590E30, {~0u, 0xFFFF}}, {0x590F30, {~0u, 0xFF}},
     {0x59E2D0, {0xFF, 0xFF}}, {0x587740, {0xFFFF}}, {0x5720C0, {~0u, ~0u}}, {0x589590, {0xFFFF}}, {0x588F20, {}},
     {0x453910, {0xFF}}, {0x453A90, {0xFF}}, {0x453AC0, {0xFF}}, {0x453A10, {0xFF}}, {0x452DD0, {0xFF}},
     {0x454290, {0xFF}}, {0x446B00, {}}, {0x454220, {0xFF}}, {0x454260, {0xFF}}, {0x454310, {0xFF}},
@@ -170,7 +173,17 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
     Record(id + 1, a & s.mask[0], b & s.mask[1], c & s.mask[2], extra ? extra : d & s.mask[3]);
     std::uint32_t h = Hash();
     switch (id) {
-    case kRand: Disturb(); return Hash() & 0x7FFF;
+    case kRand: {
+        // Multiples of 12 and of 11 half the time, so that a remainder test
+        // against a neighbouring constant tells; else anything 0..0x7FFF.
+        Disturb();
+        const std::uint32_t r = Hash();
+        switch (r % 4) {
+        case 0: return ((r >> 8) % 2000) * 12;
+        case 1: return ((r >> 8) % 2000) * 11;
+        default: return (r >> 8) & 0x7FFF;
+        }
+    }
     case kPopupSlot: Disturb(); return (h >> 8) % 0x30;
     case kClutFind:
     case kClutOwner:
@@ -191,6 +204,10 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
     case kAddClamped:
         if (h % 2) SetWord(At(a), h >> 12);
         break;
+    case kItemClass:   // Battle_MemberAutoTarget reads the member's +0x124 again after it
+        if (h % 2)
+            for (unsigned i = 0; i < 3; ++i) At(at::kParty + i * at::kPartyStride)[0x124] = static_cast<unsigned char>(3 + (h >> 8) % 8);
+        break;
     case kAddCap:
         if (h % 2) At(a)[0] = static_cast<unsigned char>(h >> 12);
         break;
@@ -200,8 +217,8 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
     h = Hash();
     // Answers: nought, one, or any byte; a whole dword for the rest.
     switch (h % 4) {
-    case 0: return 0;
-    case 1: return 1;
+    case 0: case 1: return 0;
+    case 2: return 1;
     default: return h >> 4;
     }
 }
@@ -439,13 +456,14 @@ void SeedSprite(unsigned char* s) {
 void SeedClutMap() {
     unsigned char* const map = At(at::kClutMap);
     for (unsigned row = 0; row < 4; ++row) {
-        const unsigned style = Next() % 4;
+        const unsigned style = Next() % 5;
         for (unsigned c = 0; c < 16; ++c) {
             unsigned char v;
             switch (style) {
             case 0: v = 0xFF; break;                                             // a whole free row
             case 1: v = Next() % 5 ? 0xFF : static_cast<unsigned char>(Next() % 32); break;
             case 2: v = static_cast<unsigned char>((c / 4 + row) % 3 ? 0xFF : Next() % 32); break;   // aligned holes
+            case 4: v = static_cast<unsigned char>(c == (row & 1 ? 15 : 0) ? Next() % 32 : 0xFF); break;   // one cell short of a row
             default: v = static_cast<unsigned char>(Half() ? 0xFF : Next() % 32); break;
             }
             map[row * 16 + c] = v;
@@ -531,7 +549,7 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     case fCoinFlip: case fAutoTarget: case fOutAction: a[0] = High() | (Often() ? Next() % 3 : Next() % 11); break;
     case fDamagePopup: {
         static const std::uint32_t kAmounts[] = {0, 1, 0xFFFF, 0x7FFF, 0x8000, 0x8001, 2, 0xFFFE};
-        a[0] = (Next() & 0xFFFF0000u) | (Half() ? Pick(kAmounts) : Next() & 0xFFFF);
+        a[0] = (Next() & 0xFFFF0000u) | (Often() ? Pick(kAmounts) : Next() & 0xFFFF);
         a[1] = High() | (Next() % 11);
         break;
     }
@@ -541,7 +559,8 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     case fClutFind: a[0] = High() | (Often() ? Next() % 5 : Next() % 8); break;
     case fClutOwner: a[0] = High() | (Often() ? At(at::kClutMap)[Next() % 64] : Next() % 32); break;
     case fSetupEnemy: a[0] = High() | (Next() % 8); a[1] = (Next() & 0xFFFF0000u) | (Next() % 0x40); break;
-    case fCopyEnemy: case fEnemyOffset: a[0] = High() | (Next() % 8); a[1] = (Next() & 0xFFFFFF00u) | (Next() % 0x40); break;
+    case fCopyEnemy: a[0] = High() | (Next() % 8); a[1] = (Next() & 0xFFFFFF00u) | (Next() % 0x40); break;   // the id by its low byte
+    case fEnemyOffset: a[0] = High() | (Next() % 8); a[1] = (Next() & 0xFFFF0000u) | (Next() % 0x40); break;  // by 16 bits
     case fKindFlag: case fSetKindFlag: a[0] = (Next() & 0xFFFF0000u) | (Next() % 0x4000); break;
     case fEnemyNames: a[0] = 0xFFFF; break;   // the stack word above the return address: see SeedEightKinds
     default: break;
@@ -552,6 +571,23 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
         static const unsigned char kSlots[] = {0xC0, 0xCF, 0xFF, 0x1C, 0x1F, 0xE0, 0xFF, 0x70, 0x7F, 0x38, 0x3F, 0};
         s[0x27] = Often() ? Pick(kSlots) : static_cast<unsigned char>(Next());
     }
+    if (f == fSetupEnemy && Half()) {
+        static const std::uint16_t kBanks[] = {0x2CD, 0x2E1, 0x2CC, 0x2CE, 0x2E0, 0x2E2};
+        SetWord(At(at::kEnemyData + (a[1] & 0xFFFF) * at::kEnemyDataStride + 0x1A), Pick(kBanks));
+    }
+    if (f == fCoinFlip && Often()) {
+        unsigned char* const p = At(at::kParty + (a[0] & 0xFF) * at::kPartyStride);
+        p[0x124] = At(at::kActor)[0];
+        p[0x130] |= 1;
+    }
+    if (f == fAutoTarget && Often()) {   // the plain path to modes 4 and 5
+        unsigned char* const p = At(at::kParty + (a[0] & 0xFF) * at::kPartyStride);
+        p[0x90] &= 0xDF;
+        SetLong(p + 0x134, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p + 0x134)) & ~0x14001u));
+        At(at::kBattleFlags)[0] &= 0xEF;
+        p[0x124] = static_cast<unsigned char>(Next() % 3);
+        p[0x125] = static_cast<unsigned char>(4 + Next() % 2);
+    }
     if (f == fEnemyOffset && Often()) Sprite_Current[8] = static_cast<unsigned char>(Next() % 4);
     if (f == fHitPopup && Half()) Sprite_Current[5] = static_cast<unsigned char>(Next() % 3);
     if (f == fEnemyNames && Rarely()) SeedEightKinds();
@@ -560,6 +596,11 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
             unsigned char* const r = i < 3 ? At(at::kParty + i * at::kPartyStride) : At(at::kEnemies + (i - 3) * at::kEnemyStride);
             if (Often()) r[i < 3 ? 0x130 : 0x110] &= 0x0F;
         }
+    if (f == fAnyF0 && Half()) {   // one present member with bit 7 alone
+        unsigned char* const p = At(at::kParty + (Next() % 3) * at::kPartyStride);
+        p[0] |= 1;
+        p[0x130] = 0x80;
+    }
 }
 
 // --- the rounds ---------------------------------------------------------------
@@ -605,6 +646,15 @@ Result RunOne(unsigned f, void* theirs, unsigned rounds) {
                       "log %u / %u, first state difference at byte 0x%X",
                       c.name, round, a[0], a[1], a[2], a[3], their_out.result, our_out.result, their_out.log_n,
                       our_out.log_n, (unsigned)first);
+        if (r.bad <= 4)
+            for (unsigned i = 0; i < kLog && i < their_out.log_n; ++i)
+                if (std::memcmp(&their_out.log[i], &our_out.log[i], sizeof(Entry)) != 0) {
+                    const Entry& x = their_out.log[i];
+                    const Entry& y = our_out.log[i];
+                    bof3::Log("shadow      battle_sprites   log entry %u: theirs %u (0x%X 0x%X 0x%X 0x%X), ours %u (0x%X 0x%X 0x%X 0x%X)", i,
+                              x.what, x.a, x.b, x.c, x.d, y.what, y.a, y.b, y.c, y.d);
+                    break;
+                }
     }
     r.paths = n_seen;
     return r;
@@ -630,9 +680,7 @@ void SelfTest() {
     // What the fuzz swaps in, and what it puts back.
     static State saved;
     constexpr unsigned kAll = 0x7FF;
-    bof3::Log("shadow      battle_sprites DEBUG saving");
     Capture(saved, kAll);
-    bof3::Log("shadow      battle_sprites DEBUG saved");
     unsigned char* const saved_current = Sprite_Current;
     unsigned char* const saved_field = Field_State;
     const std::int32_t saved_offsets = Long(At(at::kEnemyOffsets));
@@ -649,7 +697,6 @@ void SelfTest() {
     int used = 0;
     for (unsigned f = 0; f < kFunctions; ++f) {
         const unsigned rounds = f == fClutStp ? 600 : 3000;
-        bof3::Log("shadow      battle_sprites DEBUG start %s", kClones[f].name);
         const Result r = RunOne(f, theirs[f], rounds);
         bad += r.bad;
         rounds_total += rounds;

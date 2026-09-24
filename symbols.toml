@@ -11450,7 +11450,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_sprites.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-23, 0x494A80..0x494E6E (0x3EE bytes), cdecl, calls 0x59E2D0 per window; the PSX twin (0x80159874 its window call) structure for structure but for the PC defect below. Groups the living enemies' kinds (+0x8C) into up to eight kind / count pairs, sorts them by count, and opens one kind-3 window per enemy (0x59E2D0(0xC - n, 3)) at record 0x803160 + (0xC - n) * 0x24 with x / y from 0x656A34 by the layout 0x904AAC and +0xA = the actor; the window draws the name from the enemy record. For layouts 0 and 1 the column height uses the first kind's count for every kind (PC only). Combat route: 1 call from 0x42E400."
+evidence = "disasm 2026-09-23, 0x494A80..0x494E6E (0x3EE bytes), cdecl, calls 0x59E2D0 per window; the PSX twin (0x80159874 its window call) structure for structure. Groups the living enemies' kinds (+0x8C) into up to eight kind / count pairs, sorts them by count, and opens one kind-3 window per enemy (0x59E2D0(0xC - n, 3)) at record 0x803160 + (0xC - n) * 0x24 with x / y from 0x656A34 by the layout 0x904AAC and +0xA = the actor; the window draws the name from the enemy record. For layouts 0 and 1 the column is measured first and starts below the table y. With eight different kinds the list walk runs past its eight entries into the stack above (PSX alike); ours reads the same words. Combat route: 1 call from 0x42E400."
 
 [[func]]
 pc = 0x494EA0

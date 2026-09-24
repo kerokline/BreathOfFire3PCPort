@@ -864,9 +864,8 @@ extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
 // function reads no text.
 //
 // As the original has it:
-//  - for layouts 0 and 1 the column's height is summed from the FIRST kind's
-//    count for every kind (the PC's `xor ecx, ecx` before the read; the PSX
-//    reads each kind's own) - a PC defect, docs/battle_sprites.md section 5;
+//  - for layouts 0 and 1 the column is first measured (each kind's count * 8
+//    + 0xD, and 2 between kinds) and starts that far below the table's y;
 //  - the list is ended only by a kind of 0xFFFF: with eight different kinds
 //    the walk runs on past the list's eight entries into the stack above the
 //    original's frame - its return address, then the caller's frame - and
@@ -919,7 +918,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
     std::uint16_t y = Word(At(at::kNamePlaces + layout * 4 + 2));
     if (layout < 2) {
         for (unsigned char k = 0;;) {
-            y = static_cast<std::uint16_t>(y + static_cast<std::uint16_t>(count(0) << 3) + 0xD);
+            y = static_cast<std::uint16_t>(y + static_cast<std::uint16_t>(count(k) << 3) + 0xD);
             ++k;
             if (kind(k) == 0xFFFF) break;
             y = static_cast<std::uint16_t>(y + 2);
