@@ -566,6 +566,10 @@ Args Seed(unsigned k) {
             static const unsigned char kBits[] = {0x20, 0x40, 4, 0x80, 0x60, 0};
             unsigned char* const t = x.actor[1] <= 2 ? PartyAt(x.actor[1]) + at::kPStatus : EnemyAt(x.actor[1]) + at::kEStatus;
             t[0] = kBits[Next() % 6];
+            // flag bit 1's roll, which can take a 1 back to 0 for the minimum-1 tests
+            unsigned char* const f = x.actor[1] <= 2 ? PartyAt(x.actor[1]) + at::kPFlags : EnemyAt(x.actor[1]) + at::kEFlags;
+            if (Half()) f[0] = static_cast<unsigned char>((f[0] | 2) & ~1u);
+            if (Half()) At(at::kBattleFlags)[0] = 0;
         }
         if (k == kApplyK && Half() && x.actor[1] <= 2) PartyAt(x.actor[1])[at::kPSurvive] = static_cast<unsigned char>(Next() % 3);
         x.a[0] = ActorArg(x.actor[0]);
