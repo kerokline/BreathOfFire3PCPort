@@ -82,6 +82,7 @@
 #include "game/display_setup.h"
 #include "game/win_main.h"
 #include "game/fmv_play.h"
+#include "game/world_map.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -192,6 +193,8 @@ void InjectAll() {
                                 // except that it runs before Widescreen_Inject, so its fuzz compares the
                                 // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: last, so every fuzz above ran against the original culls
+    WorldMap_Inject();          // every call of its clones re-aimed at a recorder, its state table rebuilt in the
+                                // copy; none of its functions goes through a cull, so after Widescreen is fine
     InjectReport();
 }
 

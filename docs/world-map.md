@@ -166,6 +166,12 @@ US plates on the page. Two things to settle first, both from data:
    `0x80104000`, "still a TODO" there) or the sprite records - and the US
    plates are not the JP widths. If the rectangles are in a data section, the
    overlay carries that section too; its `dest` will come out of the takeover.
+   **Answered from the data, 2026-09-24** ([`world-map-hud.md`](world-map-hud.md)
+   §5.2): not `0x404560` (its table is the dial, the legend and the box); the
+   map section `0x80104000` is byte-identical on the JP and US discs, and the
+   section that changes size with the plates is `0x800D3800` (2,700 -> 2,708
+   bytes: two sprite-frame records one cell longer) - the PC's kind-0 chunk
+   `0xB0000`. The overlay wants the US page **and** that section, whole.
 
 Then verify by capture: this route's `f01260` and `f01740` show one plate
 each.
@@ -187,3 +193,20 @@ each.
 - The tracer arms nothing that is ours whatever `BOF3X_ORIGINAL` says, so a
   route's catalogue never lists a function already taken over: compare draw
   handler counts across traces by address, and expect zeros for ours.
+
+## 7. The frame, the HUD and the needle: taken (group 1, 2026-09-24)
+
+The first group of §4's wave is ours - `0x404160`, `0x404390`, `0x404560`,
+`0x404620`, `0x408530`, `0x572F70`, `0x572FA0`, read against the PSX map
+overlay off the JP disc, fuzzed with 47 controls, faithful - in
+[`world-map-hud.md`](world-map-hud.md). Its two readings: **the dial is
+opaque because the port passes `index != 0` to `Gpu_SetSemiTrans` where the
+PSX passes 1** - one operand, but the PlayStation's picture (a glass that
+blends and a rim that does not) needs STP in the port's palettes, which its
+texture path drops, so it is written down as D42 and kept, not made a
+divergence (§5.1 there); and **the plates' rectangles are in the area's
+`0x800D3800` section**, the one that changes size between the JP and US
+discs, while the map section `0x80104000` does not (§5.2 there, and item 2
+of §5 above). Found beside them: the map's code exists in eleven copies, one
+per world-map area; the HUD's own state machine `0x404230` and the task
+frame `0x404150` are pointer-reached and not in the queue (§6 there).
