@@ -11213,3 +11213,195 @@ params = "void"
 impl = "src/game/area_backdrop.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x4112A0..0x4112B7 (0x18 bytes, then nops to 0x4112C0), cdecl, no calls, no jumps: Sprite_Current +0x2E = 0xA0, +0x30 = 0x50 - the sprite's screen point (what Sprite_UpdateScreen writes and Sprite_DrawOverlays reads) pinned to (160, 80). Rel32 scan of .text: 33 callers, eleven triads at 0x401F80 / 0x401FD0 / 0x402030, 0x404030 / 0x404080 / 0x4040E0, .. 0x424D50 / 0x424DA0 / 0x424E00 - one per world-map region overlay compiled into the exe - each calling it first, then moving the sprite's scale +0x40 by 0x2000, counting +9 down, setting +0x48 and the state +1, and tail-jumping to Sprite_UpdateScreen 0x5890E0. World-map route (recipe_worldmap): 259 calls, from 0x404035 (24) and 0x404085 (211); not reached by the attract cycle or the shop route. Hypothesis in the name: that the pinned sprite is the party's marker over the map. It is not the sky (widescreen.md section 3d called 0x4112A9 that): a centred point needs nothing under the primitive shift."
+
+# --- Group BA of the seventh round: battle set-up (src/game/battle_setup.cpp, docs/battle_setup.md) ---
+
+[[func]]
+pc = 0x4301B0
+name = "Battle_ClearActingFlags"
+psx = 0x801D4820
+ret = "void"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4301B0..0x4302A6 (0xF6 bytes), cdecl, no calls. The acting actor, 0x904B34's low byte (party 0x802D40 + a * 0x14C, above 2 an enemy at 0x93B960 + (a - 3) * 0x128), loses flag 0x40 of its u32 at +0x134 / +0x114 with the byte +0x144 / +0x124 zeroed, unless 0x904B35 is 4 and the word 0x904B80 is 0x27; then flag 0x80 with +0x145 / +0x125, unless kind 4 with the word 0xA3. PSX 0x801D4820 (BATTLE.EMI#3, call-anchored pair) the same, the actor read again between the parts. Callers 0x42F510 / 0x42F5F0 (table 0x64AE9C) and 0x430071. Hypothesis in the name: what the two flags mean."
+
+[[func]]
+pc = 0x4303D0
+name = "Battle_TickCounters"
+psx = 0x801D4D14
+ret = "void"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4303D0..0x4304F3 (0x123 bytes), cdecl, calls Battle_ActorSkipped and 0x4456C0 only. Per member not skipped: +0x142 up while at most 5 with flag 1 (+0x134), +0x143 while at most 5 with status 0x800 (+0x91 bit 3), +0x142 again while at most 2 with flag 0x4000; per enemy +0x122 while at most 2 with flag 0x4000 (+0x114). The byte 0x904B8E counts down when not 0 and at 0 clears flag 0x10 of every actor 0x4456C0 answers 0 for. PSX 0x801D4D14 the same. Called from 0x430386, not from the chain driver: the nine steps are called by 0x430510."
+
+[[func]]
+pc = 0x430640
+name = "BattleStep_Expire4000"
+psx = 0x801D524C
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430640..0x430790 (0x150 bytes), cdecl. Step 1 of the nine 0x430510 calls (0x43052D). Each actor not skipped with flag 0x4000 and its counter at 3: counter 0, flag cleared, HP change word (+0x128 / +0x108) = HP (+0x98 / +0xA4), bytes +1 +2 +4 +3 = 6 5 0 0, +0x12C / +0x10C = 0x11, 0x446FB0(actor); any: Battle_OpenMsgWindow, Msg_SystemPtr(0x2D), 0x44A650(2, 0, 0, 0x2D, text), al 1. The enemy counter is read from the party array at the actor index (0x803266 + (a - 3) * 0x14C) and the enemy's own +0x122 zeroed - the PSX 0x801D524C reads 0x80145FC2 + a * 0x140 the same way (docs/battle_setup.md section 6). No PSX pair recorded; paired by its place in 0x801D4FF4's sequence."
+
+[[func]]
+pc = 0x430790
+name = "BattleStep_Restore800"
+psx = 0x801D54C8
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430790..0x430889 (0xF9 bytes), cdecl. Step 2. Each member not skipped with status 0x800 and +0x143 at 5: +0x143 0, HP = max HP, AP = max AP (+0x98 / +0x9A from +0xA0 / +0xA2), +0x9C = +0xAE, Battle_ClearStatus(member, 0x8FF). Any: the window, one member 0x44A910(member) and line 0x2B, more line 0x2C. PSX 0x801D54C8 (callers pair)."
+
+[[func]]
+pc = 0x430890
+name = "BattleStep_PartyWake40"
+psx = 0x801D5628
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430890..0x430968 (0xD8 bytes), cdecl. Step 3. Each member not skipped with status bit 0x40 (+0x90): 0x446CB0(member) true clears the counter +0x12D and the bit, false counts +0x12D up. Any: the window, one 0x44A910(member) and line 0x25, more line 0x26. PSX 0x801D5628 (gap pair). The template of 0x430970 / 0x430A50 / 0x430B30."
+
+[[func]]
+pc = 0x430970
+name = "BattleStep_EnemyWake40"
+psx = 0x801D577C
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430970..0x430A42 (0xD2 bytes), cdecl. Step 4: 0x430890 for the enemies (status +0x92, counter +0x10D, name 0x44A960), lines 0x25 / 0x27. PSX 0x801D577C (gap pair)."
+
+[[func]]
+pc = 0x430A50
+name = "BattleStep_PartyWake20"
+psx = 0x801D58DC
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430A50..0x430B28 (0xD8 bytes), cdecl. Step 5: 0x430890 with status bit 0x20, lines 0x28 / 0x29. PSX 0x801D58DC (gap pair)."
+
+[[func]]
+pc = 0x430B30
+name = "BattleStep_EnemyWake20"
+psx = 0x801D5A30
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430B30..0x430C02 (0xD2 bytes), cdecl. Step 6: 0x430970 with status bit 0x20, lines 0x28 / 0x2A. PSX 0x801D5A30 (gap pair)."
+
+[[func]]
+pc = 0x430C10
+name = "BattleStep_Status80"
+psx = 0x801D5B90
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430C10..0x430D37 (0x127 bytes), cdecl. Step 7. Each actor not skipped with status bit 0x80: change words +0x12A then +0x128 (enemy +0x10A / +0x108) zeroed, 0x446540(actor) - which sets the HP change from HP - bytes +1 +2 +4 +3 = 6 5 0 0, +0x12C / +0x10C = 0x11, 0x446FB0. Any: the window and line 0x18. PSX 0x801D5B90 (gap pair)."
+
+[[func]]
+pc = 0x430D40
+name = "BattleStep_HpDrift"
+psx = 0x801D5D9C
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430D40..0x430F35 (0x1F5 bytes), cdecl. Step 8. Per member not skipped the HP change word +0x128 from 0: -1 at 0x904060 = 5; (max HP + 10) / -20 for character id 6 (+0x89), again for id 7 or 0 with flag 2 while 0x904B89 = 0x12; weapon 0x52 (+0x92) + (max HP + 10) / 20 capped at HP - 1; -1 each for +0x95 = 0x1F, +0x96 / +0x97 = 0x16, = 0x17; - max HP / 2 with status 1; not 0 marks the effect (0x11) and calls 0x446FB0. Enemies with status 1: +0x108 = -(max HP / 2). Answers the word 0x904B82 not 0. PSX 0x801D5D9C (gap pair), the same term for term. Which ids and items these are is not read here."
+
+[[func]]
+pc = 0x430F40
+name = "BattleStep_ApUpkeep"
+psx = 0x801D62A8
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x430F40..0x43102B (0xEB bytes), cdecl. Step 9. Per member not skipped with flag 2 and not 0x20 (+0x134): cost = (0x904B78 low byte + 1) / 2; AP (+0x9A) below it: +1 +2 +3 = 6 4 4 and 0x446FB0; else both change words 0, AP less the cost, +0x12A = cost, a cost not 0 marks the effect (+0x12C = 2) and calls 0x446FB0. Otherwise flag 0x20 cleared. Answers 0x904B82 not 0. PSX 0x801D62A8 (gap pair), the same."
+
+[[func]]
+pc = 0x431030
+name = "Battle_ActorSkipped"
+psx = 0x801D6494
+ret = "unsigned"
+params = "unsigned actor"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x431030..0x43108F (0x5F bytes), cdecl, al. 1 while the timer 0x904B8E runs and the actor lacks flag 0x10 (+0x134 / +0x114); else 0x4456C0(actor) != 0. Its 14 call sites are all in the chain's steps and Battle_TickCounters. PSX 0x801D6494 (gap pair)."
+
+[[func]]
+pc = 0x4453C0
+name = "Battle_MarkFasterSide"
+psx = 0x801DB020
+ret = "unsigned"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4453C0..0x445550 (0x190 bytes), cdecl, al. The standing enemies' (Battle_ActorStanding) agility +0xB8 averaged (low word / count, when not 0) and maxed; each member 0x445980 lets act that Battle_PartyOutpaces passes gets flag 0x8000 (+0x134), al 1 if any. Then the members' agility +0xA8 against each enemy 0x445980 lets act, 0x445600, flag 0x8000 (+0x114). Called from 0x4302E2, whose switch on al follows. PSX 0x801DB020 (gap pair), the same. Hypothesis: that the flag is a first-strike mark."
+
+[[func]]
+pc = 0x445550
+name = "Battle_ActorStanding"
+psx = 0x801DB2C0
+ret = "unsigned"
+params = "unsigned actor"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x445550..0x4455BA (0x6A bytes), cdecl, al over the record offset. 1 when present (+0 bit 0) and none of status 0x4944 (party +0x90) / 0x4144 (enemy +0x92). Two call sites, both in Battle_MarkFasterSide. PSX 0x801DB2C0 (gap pair)."
+
+[[func]]
+pc = 0x4455C0
+name = "Battle_PartyOutpaces"
+psx = 0x801DB368
+ret = "unsigned"
+params = "unsigned actor, unsigned average, unsigned highest"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x4455C0..0x4455FF (0x3F bytes), cdecl, al. 1 when the member's agility (+0xA8) is at least twice the average's low word and at least the highest's low word. One call site, 0x44545B. 0x445600 is its enemy twin (+0xB8), not taken. PSX 0x801DB368 (gap pair)."
+
+[[func]]
+pc = 0x444310
+name = "Battle_OpenMsgWindow"
+psx = 0x801D9454
+ret = "void"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x444310..0x44433D (0x2D bytes), cdecl. Window_Alloc(0, 3), then 0x803162 = 6, 0x803163 = 0, word 0x803164 = 0x14, word 0x803166 = 0xFFEA. 18 call sites, each followed by a Msg_SystemPtr line. PSX 0x801D9454 (call-anchored), the same with Window_Alloc 0x80159874."
+
+[[func]]
+pc = 0x446EA0
+name = "Battle_ReturnQueuedItem"
+psx = 0x801DDFB4
+ret = "void"
+params = "unsigned actor"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x446EA0..0x446F15 (0x75 bytes), cdecl. A member (0..2) found among the bytes 0x904ACC + (0x904AE2 - 1) up to 0x904AE3, whose +0x125 is 5 and +0x126 word's high byte 0: 0x446D90(+0x12E, +0x126) - which counts one back into the inventory list (0x656B14 / 0x656B00, capped at 99). 12 call sites. PSX 0x801DDFB4 (call-anchored), the same."
+
+[[func]]
+pc = 0x44AA00
+name = "Battle_OpeningMessage"
+psx = 0x801DEA9C
+ret = "void"
+params = "void"
+impl = "src/game/battle_setup.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x44AA00..0x44AA82 (0x82 bytes), cdecl. Line (Rand & 1) of a pair picked by the u32 0x904B90 - 1: 0 / 1, 2..4: 2 / 3, else 4 / 0 - Msg_SystemPtr of it through 0x44A6E0(0, 2, 0, 0, 0xFF, text). One call site 0x431514, after Battle_OpenMsgWindow. PSX 0x801DEA9C (gap pair), the same six bytes from 0x801D0C98. Hypothesis in the name: that these are the encounter's opening lines."
+
+[[func]]
+pc = 0x44F4B0
+name = "Battle_ClearStatus"
+psx = 0x800A0680
+ret = "unsigned"
+params = "unsigned actor, unsigned mask"
+impl = "src/game/battle_setup.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x44F4B0..0x44F644 (0x194 bytes), cdecl, ax. The status word (+0x90 / +0x92) loses each of bits 0x4000 0x800 0x80 0x40 0x10 8 4 2 1 the mask names, and 0x20 when both have it with 12 bytes put back at +0x34 from 0x93A034 + actor * 0x84; Sprite_ReleaseTint(actor object); the word stored; 0x446BB0(status) with Sprite_Current the object for the call. 23 call sites (effect handlers, the chain). PSX engine 0x800A0680 (boot-resident band at 0x80093800, call-anchored): the same, 0x801EC2D4 stride 0x78, scratch 0x1F800044 for Sprite_Current; the sibling's BATTLE_RAM.md calls it on status clear."
