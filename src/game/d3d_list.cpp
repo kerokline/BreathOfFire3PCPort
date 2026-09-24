@@ -133,7 +133,15 @@ using namespace d3d_list;
 // argument).
 void Gfx_DrawOTag(unsigned long* ot) {
     if (At(kDrawEnable)[0] == 0) return;
-    if (Word(kAfterDrawFlag) != 0) PutWord(kAfterDrawFlag, 0);
+    if (Word(kAfterDrawFlag) != 0) {
+        // Whether D3d_AfterDraw's request ever fires is unmeasured (display-setup.md section 7): say so once.
+        static bool seen;
+        if (!seen) {
+            seen = true;
+            bof3::Log("Gfx_DrawOTag: D3d_AfterDrawRequest was set on entry (first time)");
+        }
+        PutWord(kAfterDrawFlag, 0);
+    }
     const bool software = (At(kRenderFlags)[0] & 1) != 0;
     if (!software) Scene(0x24);
     U node = static_cast<U>(reinterpret_cast<std::uintptr_t>(ot));

@@ -25,6 +25,7 @@
 // Their modules patch Capcom's bytes as before; MenuWindows_Inject asks them
 // what went in and ours does the same.
 #include "game/menu_windows.h"
+#include "game/widescreen.h"
 
 #include <cstdint>
 #include <cstring>
@@ -1213,8 +1214,12 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
     const unsigned k = kind & 0xFF;
     if (k >= 4) return;   // DIV-0030
     const std::uint16_t clut = cluts[k];
-    std::int32_t column = 0;
-    for (int outer = 0; outer < 5; ++outer) {
+    // DIV-0041: a wide picture gets a pair of columns more each side, from
+    // -0x40 to 0x160, so the pattern covers -53..373; the original's five
+    // pairs from 0 are the middle of the seven.
+    const int extra = Widescreen_Live() ? 1 : 0;
+    std::int32_t column = -0x40 * extra;
+    for (int outer = 0; outer < 5 + 2 * extra; ++outer) {
         const unsigned char* pattern = At(at::kBackdropPattern + At(at::kBackdropStart)[k]);
         for (int inner = 0; inner < 2; ++inner) {
             const float fcolumn = F(S16(static_cast<std::uint32_t>(column)));

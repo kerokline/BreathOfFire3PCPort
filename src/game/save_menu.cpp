@@ -29,6 +29,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/save_menu_callees.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -386,9 +387,10 @@ extern "C" void __cdecl Menu_DrawBlackScreen(void) {
     g.set_tile(p);
     g.set_semi(p, 0);
     const U q = Addr(p);
-    PutLong(q + 8, 0);
+    const float wide = static_cast<float>(Widescreen_Live());   // DIV-0041: the black covers a wide picture whole
+    PutFloat(q + 8, 0.0f - wide);   // not -wide: that is -0.0f when wide is 0
     PutLong(q + 0xC, 0);
-    PutFloat(q + 0x14, 320.0f);
+    PutFloat(q + 0x14, 320.0f + 2 * wide);
     PutFloat(q + 0x18, 240.0f);
     PutByte(q + 4, 0);
     PutByte(q + 5, 0);

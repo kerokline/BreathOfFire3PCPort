@@ -4,3 +4,8 @@
 #pragma once
 
 void SprtDraw_Inject();
+
+// DIV-0010's far edge for the render target's integer scale k (320k x 240k);
+// Display_Setup calls it once the target's size is known. The table built at
+// inject is scale 2's, and k = 2 leaves it as it is.
+void SprtDraw_SetScale(unsigned k);

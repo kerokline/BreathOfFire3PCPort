@@ -263,6 +263,39 @@ What is established:
    platform set-up, all left for [`IDEAS.md`](IDEAS.md) I8 / I12 by the
    owner's choice. The input-reached queue carries it on: routes the owner
    records, each A/B'd and traced ([`HANDOFF.md`](HANDOFF.md) 0000).
+   **Ahead of more routes, by the owner's direction of 2026-09-23: the UI
+   overhaul** ([`display-overhaul.md`](display-overhaul.md)) - window modes
+   without an exclusive mode-set, integer scaling, a shader present pass,
+   and widescreen. Its first step, a Direct3D 11 backend behind DirectX 6's
+   own objects, runs the game as of 2026-09-23
+   ([`render-backend.md`](render-backend.md), DIV-0031); the PSP release's
+   16:9 was mined in parallel for how Capcom did it
+   ([`psp-widescreen.md`](psp-widescreen.md)). **Its second step landed the
+   same afternoon: WinMain, WndProc and the FMV player are ours** (796 ours;
+   [`window-modes.md`](window-modes.md)) - a resizable window or a
+   borderless one the size of the monitor with no mode-set anywhere
+   (DIV-0032), the game running while unfocused with the pads zeroed
+   (DIV-0033, the owner's I12), the frame debt clamped (DIV-0034), the FMVs
+   through MCI into the window at an integer scale (DIV-0035, the owner's
+   choice over a bundled decoder); the oracle and memory dump through the
+   batch `wm1` with the window never in front, the frame hash's new
+   reference after a review the same evening found why every traced
+   all-original run had ended 16 s in (the tracer's single step saved by
+   a `pushfd` on Capcom's software-renderer set-up; `wm1b`: original-vs-original identical on all 10,313 frames, original-vs-ours on every logic frame).
+   **Step 4, integer scaling, that evening** (DIV-0036), then **the night
+   of 2026-09-23** ([`HANDOFF.md`](HANDOFF.md) item 000000): **the
+   widescreen survey build** (DIV-0041, [`widescreen.md`](widescreen.md)) -
+   426 x 240 behind the launcher's Widescreen box, the view shifted into a
+   wider target the PSP's way, the terrain and frame-pass culls widened,
+   the backdrop, fades and the menu boxes' slide-outs re-authored from what
+   the survey and the owner's play found; the sky gradient `0x571BE0`
+   deferred to a recorded route; **the resizable window** (DIV-0042) -
+   snap to whole multiples or fit to the height, the target following the
+   client between frames, the FMVs obeying, the placement remembered; the
+   owner: both modes "work perfect"; and **the SatPixie look** (DIV-0043,
+   [`THIRD_PARTY.md`](THIRD_PARTY.md)), the owner's chosen MIT shader
+   ported with a sliders dialog. Owed: the oracle and hash once wide, a
+   rescale under the older CRT look, the owner's tuning of the look.
    The attract sequence's text boxes are the in-game dialogue engine
    ([`attract-mode.md`](attract-mode.md) §6), so stage 2 inherits a regression
    check from stage 1.

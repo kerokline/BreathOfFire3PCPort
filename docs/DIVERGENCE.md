@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 29 entries, DIV-0001..0029)
+**Status:** IN PROGRESS (opened 2026-09-18; 43 entries, DIV-0001..0043)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -576,7 +576,10 @@ designed in rather than bolted on.
   pinned by hash). One difference from the copies, where neither was
   Capcom's: our table had 1,024 entries and SPRT's unchecked index read past
   it into our dll's memory for `u + w` of 1,024 and up; it now has an entry
-  for every index a `u8 + u16` can make, the same line continued.
+  for every index a `u8 + u16` can make, the same line continued. At a
+  render scale k other than 2 (DIV-0036) the table is refilled for k at
+  set-up by the same derivation, `j + 0.012 - (8k - 15) / (2 (8k - 1))`,
+  which is the value above at k = 2 (and k = 2 keeps the pinned table).
 - **Rationale:** a bug, not a choice: the first and last texel are treated
   differently for no reason a design would have, and it cuts the base off every
   `2`. The obvious fix (far edge `u + w`) was built first and is wrong - it
@@ -1418,3 +1421,498 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=Menu_DrawBackdrop` (Capcom's function,
   stack read and all).
 
+### Draw through Direct3D 11 behind DirectX 6's objects, with no exclusive display mode
+
+- **ID:** DIV-0031
+- **Date:** 2026-09-23
+- **Subsystem:** display (`Display_Setup` `0x5A5160`, [`display-setup.md`](display-setup.md); the backend, [`render-backend.md`](render-backend.md))
+- **Original behaviour:** the set-up enumerates DirectDraw drivers and their
+  modes, keeps a synthetic "Software Render" device as record 0
+  (`Cfg_RenderMode` `0x65DA48` = 0 selects it: the port's own rasterisers into
+  system-memory surfaces), makes an `IDirectDraw4`, an `IDirect3D3` and a HAL
+  `IDirect3DDevice3` on the device's smallest mode of at least 640 x 480 x 16
+  - fullscreen an exclusive `SetDisplayMode` and a flip chain, windowed a
+  fixed 640 x 480 window with a clipper - and, when the HAL device refuses
+  the windowed back buffer, flips `Cfg_Fullscreen` to 1 for the rest of the
+  process and repeats the set-up fullscreen. Every draw then goes through
+  the `IDirect3DDevice3`, every texture through DirectDraw surfaces, and the
+  frame is shown by `Blt` (windowed) or `Flip`. The FMVs take the screen
+  through a second DirectDraw in exclusive mode.
+- **New behaviour:** the seven object slots hold this project's own
+  DirectDraw- and Direct3D-shaped objects (`src/render/render_shim.cpp`);
+  they record the frame and a Direct3D 11 device draws it into a target of
+  the logical picture's size times an integer scale (640 x 480 at the
+  default `BOF3X_SCALE=2`) and presents it centred on the window at the
+  largest integer scale the client area holds, black around it, through a
+  point or bilinear sampler (`BOF3X_FILTER`). No display mode is ever set,
+  `Cfg_Fullscreen` is never forced, and the software renderer is gone:
+  `Cfg_RenderMode` 0 and 1 both take the hardware path (F7 still cycles
+  the two names). The pixel-format records, the device caps and the scale
+  are what the HAL device reported on the owner's machine on 2026-09-23, so
+  the texture builders make the same texels. The GPU work runs on a fiber
+  with a 1 MB stack, because the game calls the present from a 16 KB task
+  stack.
+- **Rationale:** the owner's UI overhaul ([`display-overhaul.md`](display-overhaul.md)):
+  borderless and windowed modes without an exclusive mode-set, integer
+  scaling, and a shader present pass all need the picture in a render
+  target of our own. Route 2 there: one function taken over, no draw handler
+  changed, since every handler already reaches DirectX only through these
+  objects' vtables.
+- **Not covered:** the FMVs still take their own DirectDraw and exclusive
+  mode (`Fmv_Play` `0x59E360`, skipped when windowed); the software
+  rasterisers, `D3d_AfterDraw`'s read-back of the back buffer (never seen
+  requested; it ends the process loudly if it is), a `Lock` of the primary
+  or back buffer, sub-rectangle locks, depth, fog and lighting states (none
+  set by the game), texture formats other than RGB with masks.
+- **Also in the PSX version?** No: the PlayStation's GPU. This is the port's
+  layer.
+- **Verification:** `analysis/validate_rb1.sh` (2026-09-23): the four-shot
+  title and attract captures against Capcom's set-up and DirectDraw, point
+  filter - the title and narration screens pixel-identical, the two field
+  scenes 13 and 3 pixels apart, single texels on tile edges where the two
+  rasterisers' edge rules differ; the 55-shot attract A/B, the frame hash,
+  the oracle and the memory dump - results in [`render-backend.md`](render-backend.md) §5.
+- **Reversible?** Yes: `BOF3X_ORIGINAL=Display_Setup` runs Capcom's set-up,
+  and with it Capcom's DirectDraw, Direct3D 3 and every path above,
+  untouched (`gfx_filter.cpp`'s patch of its filter bytes serves that path).
+
+### Window modes: a resizable window, or a borderless window the size of the monitor
+
+- **ID:** DIV-0032
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`, `Game_WndProc`
+  `0x4FC6F0`, [`window-modes.md`](window-modes.md))
+- **Original behaviour:** WinMain creates the window with style `0xCA0000`
+  (`WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX`, not resizable) in both modes:
+  windowed a 640 x 480 client centred on the desktop, fullscreen the desktop's
+  size at 0,0 with the caption still on, and then `Display_Setup` takes an
+  exclusive 640 x 480 x 16 mode over it. A 640 x 480 desktop forces
+  fullscreen. F8 tears the display down (`Display_Teardown`), flips
+  `Cfg_Fullscreen`, resizes the window and runs `Display_Setup` again; F7
+  does the same with the next device record. The F7 device name, the F11
+  frame rate and the F12 "Save OK" are drawn by `TextOut` through the back
+  buffer's GDI device context (`Display_TextOut` `0x5A66B0`). Read whole
+  2026-09-23 (`python tools/pe_disasm.py 0x4fcb00:450 0x4fc6f0:400`;
+  `symbols.toml` has each branch).
+- **New behaviour:** windowed is a `WS_OVERLAPPEDWINDOW` - resizable, with
+  a 640 x 480 client to start, centred as before (since DIV-0036 the client
+  of the launcher's window size, 320k x 240k) - and the backend presents
+  at the largest integer scale the client holds, so dragging the window
+  bigger is the scale control. Fullscreen (`Cfg_Fullscreen` from `BOF3.CFG`
+  line 1, F8) is a borderless `WS_POPUP` window covering the monitor the
+  window is on, with no caption: on a 1440-row monitor the 640 x 480 target
+  shows at exactly three times, where the captioned window of the original
+  left room for two. F8 changes the window's style and placement and
+  nothing else - no teardown, no set-up; the windowed placement the player
+  last had is restored when F8 comes back from borderless. F7 cycles the
+  device name it shows and re-makes nothing (with DIV-0031 every device is
+  the same backend). The three overlays go to `build/bof3x.log` (`overlay`
+  lines) when the back buffer is the backend's, since its surface has no
+  device context; with Capcom's set-up (`BOF3X_ORIGINAL=Display_Setup`)
+  they are drawn as before. The 640 x 480 desktop rule is kept.
+- **Rationale:** the display overhaul's step 3 ([`display-overhaul.md`](display-overhaul.md)
+  §4a): window modes without a mode-set, so that the picture is an integer
+  multiple of 320 x 240 whatever the monitor. The owner's report of
+  2026-09-23 was the captioned "fullscreen" window: two times instead of
+  three on a 3440 x 1440 desktop, with the title bar showing.
+- **Also in the PSX version?** No: the PlayStation has no window. This is
+  the port's layer.
+- **Verification:** [`window-modes.md`](window-modes.md) §4.
+- **Reversible?** `BOF3X_ORIGINAL=Game_WinMain,Game_WndProc,Cursor_Sync,Display_WindowMoved,Display_DeviceName`
+  runs Capcom's window and loop (the FMV player is DIV-0035's switch). Not
+  with the backend in fullscreen: Capcom's WinMain would make its
+  captioned desktop-sized window again, which is the report above.
+
+### The game keeps running while its window is not in front
+
+- **ID:** DIV-0033
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WndProc` `0x4FC6F0`, `Game_WinMain`
+  `0x4FCB00`; [`IDEAS.md`](IDEAS.md) I12)
+- **Original behaviour:** `WM_ACTIVATEAPP` with a zero word clears
+  `App_Active` `0x6BC63B` and pauses the sound (`Sound_PauseAll`
+  `0x587C30`); WinMain's loop pumps messages and does nothing else while the
+  byte is 0, and the frame deadline keeps no relation to the clock, so on
+  reactivation the time away is replayed as unrendered logic frames
+  ([`windowed-mode.md`](windowed-mode.md) "Focus loss", measured
+  2026-09-19). The DirectInput keyboard is opened `DISCL_NONEXCLUSIVE |
+  DISCL_BACKGROUND` (`DInput_Init` `0x5A94C0`), so once the loop ran
+  unfocused it would read every key typed into other windows.
+- **New behaviour:** deactivation leaves `App_Active` set and the sound
+  playing; the loop runs, renders and paces as when in front. While the
+  window is not the foreground application the six pad words
+  (`Input_Held` / `Input_Previous` / `Input_Pressed` and pad 2's) are zeroed
+  after `Input_Latch` (`src/hook/input_script.cpp`, `DeviceLatch`), so the
+  game sees no input until it is in front again; a recipe's or the
+  recorder's words are unaffected. `BOF3X_BACKGROUND=0` (the launcher's
+  "Keep running when the window is not in front" box unticked,
+  `background=0` in `bof3x.ini`) restores the original's freeze - and its
+  replay, now bounded by DIV-0034.
+- **Rationale:** the owner, 2026-09-19: every attract-oracle and
+  memory-dump run took the PC away for minutes because the game had to be
+  in front. `tools/attract_run.py` and `input_run.py` still foreground the
+  window for their runs (a keypress elsewhere no longer reaches the game,
+  but their captures want the window unobscured); an ordinary play session
+  no longer has to stay in front.
+- **Also in the PSX version?** No: a console has no other window.
+- **Verification:** [`window-modes.md`](window-modes.md) §4.
+- **Reversible?** Yes, `BOF3X_BACKGROUND=0` / the launcher box, without
+  switching the loop back to Capcom's; `BOF3X_ORIGINAL=Game_WndProc` also
+  restores it, along with the rest of WndProc.
+
+### Frame debt is dropped, not replayed
+
+- **ID:** DIV-0034
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop)
+- **Original behaviour:** the deadline in `Frame_Deadline` `0x6BC628`
+  advances 33.334 ms a logic frame and nothing clamps it: after any stall -
+  the window inactive (DIV-0033 removes that one), a title-bar drag or
+  resize (a modal loop inside `DispatchMessage`), a suspend - the loop runs
+  30 logic frames per second of stall back to back, skipping every present,
+  until the deadline catches up ([`windowed-mode.md`](windowed-mode.md)).
+- **New behaviour:** when the loop finds the deadline more than 500 ms
+  behind the clock, it restarts the deadline at now + 33.34 as at the
+  loop's start and logs one `DIV-0034` line with the debt. The time away is
+  dropped. A debt under 500 ms - up to fifteen frames - is still replayed
+  as before, so ordinary hitches keep the original's catch-up.
+- **Rationale:** the "obviously wanted fix" the focus-loss finding named
+  and the owner asked for beside I12. What the game computes does not
+  change - logic frames are deterministic from launch - only how many run
+  after a stall.
+- **Also in the PSX version?** No: the PlayStation's frame loop is
+  VSync-driven.
+- **Verification:** [`window-modes.md`](window-modes.md) §4.
+- **Reversible?** With the loop: `BOF3X_ORIGINAL=Game_WinMain`. No switch
+  of its own.
+
+### The FMVs play into the window, at an integer scale, with no mode-set
+
+- **ID:** DIV-0035
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Fmv_Play` `0x59E360`, [`replacing-mci.md`](replacing-mci.md))
+- **Original behaviour:** with `Cfg_Fullscreen` set, `Fmv_Play` calls
+  `Fmv_EnterFullscreen` `0x59E4F0`: `WS_POPUP` on the window, a second
+  DirectDraw object, `SetCooperativeLevel(EXCLUSIVE | FULLSCREEN)` and
+  `SetDisplayMode(640, 480, 16)` - twice before the title screen - then
+  tells MCI `put vfw destination at 0 0 640 480`, plays, and afterwards
+  releases the DirectDraw, restores the style and sizes the window to the
+  desktop. Windowed, the same fixed 640 x 480 destination in the 640 x 480
+  client. Read 2026-09-19 and again whole 2026-09-23 (`symbols.toml`).
+- **New behaviour:** `Fmv_EnterFullscreen` is never called: no second
+  DirectDraw, no display mode, whatever `Cfg_Fullscreen` says. The
+  destination rectangle is computed from the window's client area: the
+  largest integer multiple of 640 x 480 that fits, centred, the class's
+  black brush around it; a client smaller than 640 x 480 gets the largest
+  4:3 fit. In a 640 x 480 client that is the original's rectangle. The
+  open with its disc-root retry, the subclass by `Fmv_WndProc`, the play,
+  the modal pump, the skip on a key or a click, the stop and close and the
+  restore of the window procedure are unchanged. The `DIV-0035` log line
+  says where the video landed.
+- **Rationale:** DIV-0032 has no exclusive mode for the FMV to take, and
+  MCI draws into whatever window it is given. This is the first of the two
+  ways [`display-overhaul.md`](display-overhaul.md) §4a offered, chosen by
+  the owner 2026-09-23 over I7's bundled decoder, which stays on the list.
+  The video is still Cinepak through `mciavi32` (DIV-0001).
+- **Also in the PSX version?** No: the PlayStation streams its movies
+  through the CD subsystem.
+- **Verification:** [`window-modes.md`](window-modes.md) §4.
+- **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player, mode-set
+  included when `Cfg_Fullscreen` is set - on a borderless DIV-0032 window
+  that is untested. (Our WinMain reaches the player, the set-up and the
+  window procedure through Capcom's addresses since the review of
+  2026-09-23, so each name's switch holds on its own; before, it called
+  ours directly and the switch did nothing under our WinMain.)
+
+### The picture is drawn at an integer multiple of 320 x 240 chosen for the window
+
+- **ID:** DIV-0036
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Display_Setup` `0x5A5160` ours since DIV-0031; `Game_WinMain` ours since DIV-0032; [`display-overhaul.md`](display-overhaul.md) §4b)
+- **Original behaviour:** the picture is 640 x 480 - a 640 x 480 x 16
+  display mode or a 640 x 480 client - at `D3d_ScaleX/Y` 2.0, and under
+  DIV-0031 until now a 640 x 480 render target presented at the largest
+  integer scale the client holds (`BOF3X_SCALE` could already set another
+  multiple, from the environment only).
+- **New behaviour:** the render target is 320k x 240k, `D3d_ScaleX/Y` = k,
+  with k chosen once, at set-up: **a borderless window** (`display=fullscreen`)
+  takes the largest k from 1 to 8 whose target fits its client - the
+  monitor: k = 6, 1920 x 1440, on the owner's 3440 x 1440 - and **a window**
+  takes the launcher's new "Window size" (`scale=2..8` in `bof3x.ini`, which
+  sets `BOF3X_SCALE`; 2 when unset) and opens with a client of the target's
+  size, k lowered while the frame would not fit the work area. A later resize
+  or F8 changes only the present's scale of that target; a client smaller
+  than the target now gets the largest fit of its shape instead of a crop
+  from the top-left (reached by F8 back to a window from a borderless start).
+  DIV-0010's far texture edge follows k (`SprtDraw_SetScale`, the same
+  derivation). One `DIV-0036` log line gives the k and why.
+- **Rationale:** the owner's rule, 2026-09-23: "windowed options should be
+  the available fixed k values, fullscreen uses largest k that will fit", k
+  picked at start-up only. Polygon edges and 3D geometry are then drawn at
+  the monitor's resolution instead of being magnified from 640 x 480.
+  Widescreen, when it comes, re-opens the choice (the owner).
+- **Also in the PSX version?** No: the PlayStation draws 320 x 240.
+- **Verification:** k = 3 run 2026-09-23: target 960 x 720, the far edge's
+  inset -0.183652 for scale 3 (the exact last-pixel-centre value for an 8
+  pixel sprite, computed independently). **Owed:** the owner's eye on the
+  borderless window at k = 6 and a window at k = 3 (sprite edges, glyphs -
+  still 640-res textures, point-scaled - and the full-screen tiles).
+- **Reversible?** A window with the size at 640 x 480 (the default) is the
+  original's picture; `BOF3X_SCALE=2` in the environment fixes a window at 2.
+  A borderless window always fits its monitor. `BOF3X_ORIGINAL=Display_Setup`
+  is Capcom's set-up, at 640 x 480.
+
+### An optional CRT look: scanlines and halation
+
+- **ID:** DIV-0037
+- **Date:** 2026-09-23
+- **Subsystem:** platform (the Direct3D 11 present, `src/render/crt.cpp`; [`crt-look.md`](crt-look.md))
+- **Original behaviour:** the picture is shown as drawn - by DirectDraw's
+  flip or Blt, or since DIV-0031 by the present scaling the render target
+  onto the window, nearest or bilinear.
+- **New behaviour:** with `BOF3X_PRESENT=crt` (the launcher's Look box,
+  "CRT - scanlines and glow", `screen=crt`) the present draws the target
+  through four passes of our own: a 320 x 240 linear-light shrink, a
+  two-pass Gaussian glow, and a picture pass with a brightness-dependent
+  Gaussian beam per game line and the glow added (halation). No curvature
+  and no phosphor mask (a grille was built first and removed at the
+  owner's request the same evening). The numbers are `BOF3X_CRT` knobs, printed on
+  the `DIV-0037` log line. Off by default; the harnesses pin it off.
+- **Rationale:** the owner, 2026-09-23: the display overhaul's presets
+  (§4c) as "a pre-packaged deal" rather than a slang loader, modelled on
+  libretro's `crt-easymode-halation` without the curvature. That shader is
+  GPL; ours is written from the technique, not from its code (`CLAUDE.md`
+  rule 5, [`LICENSING.md`](LICENSING.md) §4).
+- **Also in the PSX version?** No - the console's picture went to a real
+  CRT, which is what this imitates.
+- **Verification:** [`crt-look.md`](crt-look.md) §4: a k = 3 capture shows
+  the lines and the glow. The owner's eye owed.
+- **Reversible?** Yes: the default, `BOF3X_PRESENT=clean`, or another Look.
+
+### F9's pause lines in English
+
+- **ID:** DIV-0038
+- **Date:** 2026-09-23
+- **Subsystem:** text (`Pause_LinesGame` `0x66A418`, `Pause_LinesTitle` `0x66A448`; `src/game/pause_text.cpp`, [`window-modes.md`](window-modes.md) §6)
+- **Original behaviour:** F9 pauses and WinMain draws two Chinese lines at
+  (100, 100) and (0x70, 0x80) through `Text_DrawAt` - in game "press F9
+  again to return to the title / any other key to continue", on the title
+  and in the attract sequence "press F9 again to quit the game / any other
+  key returns to the title". The PC port's own strings in the exe; no disc
+  has them, so the English overlays (DIV-0005) left them Chinese.
+- **New behaviour:** once an English overlay's glyphs are installed, the
+  four pointers point at English of ours - "Press F9 again for the title
+  screen" / "Press any other key to continue", and "Press F9 again to quit
+  the game" / "Any other key returns to the title" - and our WinMain
+  centres each on its width. Without an English overlay nothing changes.
+- **Rationale:** the owner, 2026-09-23, on seeing the pause: "lets
+  translate that page as well". The wording is ours (the PlayStation has no
+  such screen), kept to one line each so the original two-line layout
+  stays.
+- **Also in the PSX version?** No: the console has no F9.
+- **Verification:** [`window-modes.md`](window-modes.md) §6: both pairs
+  captured in game at k = 3.
+- **Reversible?** `BOF3X_ORIGINAL=PauseText`, or no `BOF3X_LANG`.
+
+### The window's title and the missing-disc box in English
+
+- **ID:** DIV-0039
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WinMain` `0x4FCB00`, `src/game/win_main.cpp`)
+- **Original behaviour:** the window is created with the title `0x65DA78`,
+  GBK 龙战士Ⅲ ("Breath of Fire III", the game's Chinese name), and a failed
+  disc probe shows `0x65DA98` 请插入龙战士Ⅲ光盘！ ("please insert the Breath
+  of Fire III disc!") captioned `0x65DAB0` 错误 ("error"). All three are GBK
+  bytes handed to the ANSI calls, so outside a Chinese locale Windows shows
+  them as mojibake - the title as "ÁúÕ½Ê¿¢ó".
+- **New behaviour:** the title is "Breath of Fire III"; the box reads
+  "Please insert the Breath of Fire III disc." captioned "Breath of Fire
+  III". Always, whatever `BOF3X_LANG` says: this is Windows' chrome, not the
+  game's text, and the GBK is unreadable on the locales it would show on.
+- **Rationale:** the owner, 2026-09-23: "fix the chinese name of the exe in
+  the top left of the window".
+- **Also in the PSX version?** No window, no probe.
+- **Verification:** built; the title is seen at the next run.
+- **Reversible?** `BOF3X_ORIGINAL=Game_WinMain` (Capcom's window, with the
+  rest of DIV-0032..0036).
+
+### F7 and F11 do nothing
+
+- **ID:** DIV-0040
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WndProc` `0x4FC6F0`, `src/game/win_main.cpp`)
+- **Original behaviour:** F7 tore the display down, took the next renderer
+  device record, set it up again and showed its name for 0x78 frames; F11
+  toggled a "Frame Rate = N" readout. Since DIV-0031 / DIV-0032, F7 only
+  cycled a name and both readouts went to the log.
+- **New behaviour:** neither key does anything, beyond ending a pause as
+  every non-F9 key does. F8, F9 and F12 are unchanged.
+- **Rationale:** the owner, 2026-09-23: "those aren't really necessary as
+  function keys". With the backend there is one device.
+- **Also in the PSX version?** No.
+- **Verification:** built; to be pressed at the next run.
+- **Reversible?** `BOF3X_ORIGINAL=Game_WndProc` (Capcom's window procedure,
+  which also brings back the unfocused freeze).
+
+### A 426 x 240 picture: the view widened by 53 columns a side (survey build)
+
+- **ID:** DIV-0041
+- **Date:** 2026-09-23
+- **Subsystem:** display (`src/game/widescreen.{h,cpp}`, `src/render/render_d3d11.cpp`,
+  `src/game/display_setup.cpp`, `MapView_Build` `0x56EC00` ours in
+  `src/game/map_layers.cpp`, `AreaMap_FrameAreaBD` `0x510780` Capcom's;
+  [`widescreen.md`](widescreen.md))
+- **Original behaviour:** the picture is the game's 320 x 240 view (at
+  `D3d_ScaleX/Y`, DIV-0036), 4:3. Two culls keep primitives whose projected
+  x lies in a fixed screen interval: `MapView_Build`'s terrain cell cull
+  `[-50, 370]` (`fcomp` against the `.rdata` floats `0x5C4234` / `0x5C4230`)
+  and `AreaMap_FrameAreaBD`'s frame pass, a wide range `[-200, 520]`
+  (`0x5C4240` / `0x5C423C`, operands at `0x51097E` / `0x510991`) or a narrow
+  `[-50, 370]` (the same two floats as the terrain cull, operands at
+  `0x5109BB` / `0x5109D2`) chosen by a y-derived test.
+- **New behaviour:** under `BOF3X_WIDE=1` the render target is 426k x 240k
+  and every primitive's x is moved by 53k on the way to it, in the scene
+  vertex shader: the game keeps drawing its 320-wide view with the
+  projection centre at (160, 120), the view sits centred, and whatever the
+  game already draws past its old edges - terrain, 3D geometry, scrolling
+  layers - fills the 53 columns each side. `D3d_ScaleX/Y` stay k, the
+  window opens 426k wide, a borderless window takes the largest k whose
+  426k x 240k fits its monitor (6 on 3440 x 1440, full height), the CRT
+  look's source is 426 x 240. The terrain cull becomes `[-117, 437]` and
+  the frame pass's ranges `[-252, 572]` and `[-102, 422]`: for the latter
+  the four operand addresses are re-aimed at floats in the dll (`PatchBytes`
+  `Widescreen`); the `.rdata` floats are untouched, since our
+  `MapView_Build` no longer reads them and nothing else does (image scan
+  2026-09-23: six references, all in these two functions). Off (the
+  default, and every oracle and hash run) nothing changes: the target is
+  320k wide, the shift 0, the culls the original's.
+- **Rationale:** the owner, 2026-09-23: 16:9 with **no crop** - the PSP's
+  384 x 216 (12 rows cut) was offered and turned down; 426 = 240 x 16/9
+  rounded down to even. The approach is Capcom's own from the PSP release
+  ([`psp-widescreen.md`](psp-widescreen.md) §2.3: +32 in all 21 primitive
+  converters, the same two culls widened, +46 and +31 for 32 columns; here
+  +67 and +52 for 53, the PSP's margin beyond its columns kept). Shifting
+  primitives rather than moving the projection centre means centred UI
+  needs nothing and a missed element stays centred instead of drifting.
+  **This is the survey build** ([`widescreen.md`](widescreen.md) §3e): the
+  sprite and object culls, the full-frame fills and fades, and the
+  edge-anchored UI are not yet re-authored, so their pops, bright bands and
+  edge gaps are expected and are what the survey lists (§5 there).
+- **Also in the PSX version?** No. The PSP release does the same shift, by
+  32, into a cropped 384 x 216 window (§2.4 there).
+- **Verification:** self-tests at 0 mismatches with `BOF3X_WIDE` 0 and 1
+  (the patches log `patch ON Widescreen` x4 and one `DIV-0041` line;
+  `Widescreen_Inject` runs last in `inject_all.cpp`, after every fuzz, so
+  the fuzzes compare the original culls). Live 2026-09-23: the field recipe
+  at k = 2, 852 x 480 captures (`analysis/shots/wide_field/`), the terrain
+  continuous across all 852 columns, the sprite centred. The survey
+  recipes' findings in `widescreen.md` §5; the same evening the menu
+  backdrop (two more column pairs), the fade tile and the save menu's
+  black tile (both (-53, 0) 426 x 240) were widened under
+  `Widescreen_Live()`, and the terrain cull opened to `[-150, 470]` after
+  the owner saw the map's corners pop while the attract sequence rotates
+  it; self-tests 0 mismatches both ways (a first cut wrote -0.0 into the
+  tile's x with the view off and the mode_flow fuzz caught it).
+  The launcher's "Widescreen" box (`wide=1`) sets `BOF3X_WIDE=1`. Later
+  the same night, fourteen slide-out bounds of the menu and shop boxes
+  (window-task states, `kSlides`) moved outward by 53, after the owner's
+  screenshots showed them hanging in the bands; recaptured clean. The sky
+  gradient (`0x571BE0`) is deferred to a recorded route. **Owed:** the oracle and the
+  frame hash once with `BOF3X_WIDE=1` (a difference is a cull gating
+  logic), the 55-shot attract A/B cropped to the middle 640 columns, the
+  owner's eye.
+- **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
+  keeps the frame pass's original ranges under a wide picture;
+  `BOF3X_ORIGINAL=MapView_Build` the terrain cull's.
+
+### The window resizes freely; the picture snaps to whole multiples or fills the height
+
+- **ID:** DIV-0042
+- **Date:** 2026-09-23
+- **Subsystem:** platform (`Game_WndProc` and `Game_WinMain` `src/game/win_main.cpp`,
+  `Display_Setup` `src/game/display_setup.cpp`, `Fmv_Play` `src/game/fmv_play.cpp`,
+  the backend `src/render/render_d3d11.cpp`; the launcher)
+- **Original behaviour:** a fixed 640 x 480 client (not resizable). Under
+  DIV-0036 until now: a window of a size picked in the launcher (2x..8x),
+  the render target made once at that k, and a later resize only
+  re-scaling the present.
+- **New behaviour:** the launcher's size list is gone; a "Snap the picture
+  to whole multiples of its size" box (`snap=` in `bof3x.ini`,
+  `BOF3X_SNAP=0` off) chooses between two rules, and the window is
+  resized instead. **Snap on (default):** a drag lands the client on a
+  whole multiple of the picture (the nearest to the dragged height, 1..8;
+  a side edge: to the dragged width), the render target is remade at that
+  k between frames, and the present shows it 1:1 - or centred at the
+  largest whole multiple when the client is not a multiple (a borderless
+  window, as DIV-0036 had it). **Snap off:** a drag keeps the picture's
+  aspect at the dragged height, the target is made at the smallest k whose
+  picture is not smaller than the client's height (8 at most) and the
+  present fits it to the client - the picture fills the height, never
+  cropped, never enlarged. The target change is asked for on `WM_SIZE`
+  and applied by the backend after the next present, then the set-up
+  rewrites `D3d_ScaleX/Y`, DIV-0010's far-edge table, `Gfx_ScreenRect`
+  and the primary and back surfaces' size. The FMVs (DIV-0035) follow the
+  rule too and never resize the window: snapped, the largest whole
+  multiple of 640 x 480 that fits, centred (a 3x window shows them at 2x
+  with a border); fitted, the largest 4:3 fit. The last windowed placement
+  is kept in `bof3x.window` beside the dll and used at the next start
+  when it still lands on a monitor; the ini's `scale=` is only the first
+  window's size before that file exists.
+- **Rationale:** the owner, 2026-09-23: "give people the option to either
+  stretch to window size, or choose a multiplier size window/fullscreen.
+  If multiplier sized, they should snap to the appropriate size, and if
+  stretchy, they should stretch on the height axis only (so the window
+  always stays 4:3 / 16:9)"; "no need to show the literal x2/3/4 choices,
+  since the window can be resized"; FMVs "shouldn't cause the window to
+  resize if they are at a half-size for the game".
+- **Also in the PSX version?** No.
+- **Verification:** 2026-09-23, the window driven to four client sizes in
+  each mode by `SetWindowPos` (which sends `WM_SIZE` but not `WM_SIZING`;
+  the drag rule is owed the owner's hand), the title logo's width measured:
+  snap 871 / 1162 / 290 px for clients 1100 x 800 / 1280 x 960 / 700 x
+  300 (3x / 4x / 1x, the picture centred), fit 968 / 1162 / 361 (3.33x /
+  4x / 1.25x, the height filled); the log's `DIV-0042 target` lines at
+  each change; the FMV at 1x in the 3x window with snap; `bof3x.window`
+  written at `WM_CLOSE`. Self-tests 0 mismatches. **The owner, the same
+  evening, dragging the window by hand: "snap works perfect", "stretch
+  works perfect".** A rescale under the SatPixie look ran (three target
+  changes, `analysis/shots/resize_satpixie/`); under the CRT look not
+  measured (its textures are remade by `CrtResize` the same way).
+- **Reversible?** `BOF3X_SNAP` unset and the window left at 2x is
+  DIV-0036's picture; `BOF3X_ORIGINAL=Game_WndProc` is Capcom's window
+  procedure (no `WM_SIZING`, no rescale).
+
+### An optional second CRT look: SatPixie, with its parameters in the launcher
+
+- **ID:** DIV-0043
+- **Date:** 2026-09-23
+- **Subsystem:** display (the present, `src/render/satpixie.{h,cpp}`,
+  `src/render/render_d3d11.cpp`; the launcher's Look box and its Options
+  dialog; [`crt-look.md`](crt-look.md) §5, [`THIRD_PARTY.md`](THIRD_PARTY.md))
+- **Original behaviour:** the picture is presented as drawn (DIV-0037 added
+  our own CRT look as an option).
+- **New behaviour:** `BOF3X_PRESENT=satpixie` presents through a port of
+  Conkwer's CRT-SatPixie (Mattias Gustavsson's newpixie CRT, forked):
+  accumulate, blur across, blur down, then chromatic aberration, ghosting,
+  rolling scanlines, a vignette, an optional shadow mask, filmic tone
+  mapping, noise and flicker. Every parameter of the preset is a knob in
+  `BOF3X_SATPIXIE` and a slider or switch in the launcher's "Options..."
+  dialog (saved in `bof3x.ini` as `satpixie.<name>=`). Two defaults differ
+  from the preset's: overscan crop off, and the vignette over the whole
+  picture rather than a 4:3 shape. Off by default; every oracle and capture
+  harness pins the clean present.
+- **Rationale:** the owner, 2026-09-23: "I found a MIT/Open Source shader I
+  like, so I was wondering if we could incorporate it in a sub-menu with
+  sliders for the options". MIT with its notice kept is within
+  `LICENSING.md` section 4; the notice is in `THIRD_PARTY.md`. The 4:3
+  vignette on the wide view (DIV-0041) darkened the middle and left the
+  bands bright - the owner's screenshot of the title's mural - hence the
+  default.
+- **Also in the PSX version?** No.
+- **Verification:** 2026-09-23: compiles under the dll's HLSL 4.0 path; a
+  live run on the title at 3x, wide, through three rescales
+  (`analysis/shots/resize_satpixie/`): scanlines, fringing and the vignette
+  as the preset draws them, no Fatal. The owner ran it on the title's
+  mural. Owed: the owner's tuning; the dialog's sliders by hand (only
+  tried by code).
+- **Reversible?** The Look box's other entries; `BOF3X_PRESENT` unset.

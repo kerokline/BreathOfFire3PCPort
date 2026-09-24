@@ -68,7 +68,11 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Texture filter | `BOF3X_FILTER` | ours — DIV-0012 |
 | Display (fullscreen/windowed) | line 1 of `<game>\BOF3.CFG` | **the original's own input**, `Cfg_Load` `0x4FD030` |
 | Renderer | line 2 of `BOF3.CFG` | the original's, same reader |
-| Resolution | nowhere yet | see §5 |
+| Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
+| Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
+| Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
+| (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
+| Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
 
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
@@ -141,14 +145,22 @@ option that cannot work.
 
 ## 5. What is not offered, and why
 
-- **Resolution.** The control is present and **disabled**, showing `640 x 480`.
-  The size is welded into the presentation layer; resolution independence is
-  [`IDEAS.md`](IDEAS.md) I8 and is not launcher work. Shown disabled rather than
-  omitted so that the answer to "where is the resolution setting" is on screen.
-- **Renderer, honestly labelled.** `0x5A5160` holds the only reference to the
-  `Software Render` string, so line 2 is a renderer select by association — but
-  **which value is which is not established**, so the entries are "Default" and
-  "Alternate" with a note, not "Hardware" and "Software".
+- **Resolution** was a disabled box showing `640 x 480` until the Direct3D 11
+  backend. **Since 2026-09-23 it is "Window size"**: 640 x 480 (2x) to
+  2560 x 1920 (8x), `scale=` in `bof3x.ini`, `BOF3X_SCALE` for the game - the
+  render target of a *window*. A borderless window ignores it and takes the
+  largest multiple that fits the monitor (DIV-0036, the owner's rule).
+- **Renderer.** `0x5A5160` holds the only reference to the `Software Render`
+  string; until 2026-09-23 which value was which was not established, and the
+  entries read "Default" and "Alternate". **Now traced**
+  ([`window-modes.md`](window-modes.md) §4a): `0` is the synthetic software
+  record - Capcom's set-up takes `0x5A60E0`'s software branch through
+  `0x5AA671` and the MMX probe `0x5A9A30` - and `1` the Direct3D HAL. The
+  entries read "Direct3D (default)" and "Software". Only Capcom's set-up
+  reads the line (`BOF3X_ORIGINAL=Display_Setup`); ours always draws with
+  Direct3D 11 (DIV-0031). The owner's `bof3x.ini` said `renderer=0` on
+  2026-09-23, so any all-original run since it was set has drawn with
+  Capcom's software renderer.
 - **Audio, input, key bindings.** No mechanism yet. Lines 3+ of `BOF3.CFG` are
   the obvious candidate for bindings and are still unread.
 

@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/game_clock.h"
+#include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -83,6 +84,8 @@ std::vector<Step> g_steps;
 std::size_t g_index = 0;
 unsigned g_t = 0;                  // frames spent in the current step
 bool g_active = false;
+bool g_scripted = false;   // a recipe was loaded: the latch is ScriptedLatch until the process ends
+void DeviceLatch();
 bool g_seen_frame = false;
 std::uint32_t g_last_frame = 0;    // Frame_Counter at the last new frame
 unsigned g_frame = 0;              // frames the recipe has played
@@ -449,7 +452,7 @@ unsigned short NextWord() {
 // current word - a latch repeated inside one frame writes the same three
 // values again instead of losing the edge in Input_Pressed.
 void __cdecl ScriptedLatch() {
-    Input_Latch();
+    DeviceLatch();
     if (!g_active) return;
     const std::uint32_t frame = Frame_Counter;
     if (!g_seen_frame || frame != g_last_frame) {
@@ -476,6 +479,18 @@ void __cdecl ScriptedLatch() {
 // game either; that is the price of the guarantee. Runs of one word become
 // `hold BUTTONS N` or `wait N`; F12 writes `shot recN 1 [BUTTONS]` in place of
 // its frame, so the shot costs no frame and the recipe keeps its timing.
+
+// Capcom's latch, and DIV-0033: while the window is not in front the six
+// words it wrote are zeroed, because the DirectInput keyboard is opened
+// DISCL_BACKGROUND and reads what the player types elsewhere
+// (src/game/win_main.cpp). The recipe's words are put in after this, so an
+// unattended recipe run is not affected.
+void DeviceLatch() {
+    Input_Latch();
+    if (WinMain_InputAllowed()) return;
+    Input_Held = Input_Previous = Input_Pressed = 0;
+    Input2_Held = Input2_Previous = Input2_Pressed = 0;
+}
 
 FILE* g_rec = nullptr;
 unsigned short g_run_word = 0;
@@ -533,7 +548,7 @@ void Record(unsigned short word) {
 }
 
 void __cdecl RecordingLatch() {
-    Input_Latch();
+    DeviceLatch();
     const std::uint32_t frame = Frame_Counter;
     if (!g_seen_frame || frame != g_last_frame) {
         g_seen_frame = true;
@@ -595,7 +610,14 @@ void InputScript_Start() {
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
     constexpr std::uint32_t kInputLatch = 0x4FC6A0;  // Input_Latch; symbols.gen.h binds the name as a macro
     RetargetCall("InputScript", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
+    g_scripted = true;
     g_active = true;
+}
+
+void InputScript_Latch() {
+    if (g_rec) RecordingLatch();
+    else if (g_scripted) ScriptedLatch();
+    else DeviceLatch();
 }
 
 }  // namespace bof3

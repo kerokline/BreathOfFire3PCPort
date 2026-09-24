@@ -5,7 +5,7 @@
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"
 
-IDD_CONFIG DIALOGEX 0, 0, 290, 214
+IDD_CONFIG DIALOGEX 0, 0, 290, 230
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Breath of Fire III - bof3x"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -16,26 +16,69 @@ BEGIN
     COMBOBOX        IDC_LANGUAGE, 84, 22, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "", IDC_LANGNOTE, 84, 37, 186, 9
 
-    LTEXT           "&Texture filter:", -1, 16, 52, 62, 9
-    COMBOBOX        IDC_FILTER, 84, 50, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Look:", -1, 16, 52, 62, 9
+    COMBOBOX        IDC_FILTER, 84, 50, 132, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Options...", IDC_LOOKOPTIONS, 220, 49, 50, 14
 
     LTEXT           "&Display:", -1, 16, 70, 62, 9
     COMBOBOX        IDC_DISPLAY, 84, 68, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Resolution:", -1, 16, 88, 62, 9
-    COMBOBOX        IDC_RESOLUTION, 84, 86, 186, 80,
-                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT           "Fixed at 640x480 for now - see docs/IDEAS.md I8.", -1, 84, 101, 196, 9
+    LTEXT           "Re&nderer:", -1, 16, 88, 62, 9
+    COMBOBOX        IDC_RENDERER, 84, 86, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Only Capcom's set-up reads it; bof3x always draws with Direct3D 11.",
+                    -1, 84, 101, 196, 9
 
-    LTEXT           "Re&nderer:", -1, 16, 118, 62, 9
-    COMBOBOX        IDC_RENDERER, 84, 116, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Which mode is which is not established; change only to test.",
-                    -1, 84, 131, 186, 9
+    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 14, 116, 250, 10
+    AUTOCHECKBOX    "&Widescreen - 426 x 240, the view widened 53 columns a side", IDC_WIDE, 14, 130, 268, 10
+    AUTOCHECKBOX    "S&nap the picture to whole multiples of its size", IDC_SNAP, 14, 144, 268, 10
+    LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches to the window's height.",
+                    -1, 26, 156, 256, 9
 
-    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 162, 200, 10
+    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 178, 200, 10
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
-                    -1, 14, 175, 262, 9
+                    -1, 14, 191, 262, 9
 
-    DEFPUSHBUTTON   "&Play", IDOK, 172, 193, 52, 14
-    PUSHBUTTON      "E&xit", IDCANCEL, 230, 193, 52, 14
+    DEFPUSHBUTTON   "&Play", IDOK, 172, 209, 52, 14
+    PUSHBUTTON      "E&xit", IDCANCEL, 230, 209, 52, 14
+END
+
+// DIV-0043: the SatPixie look's parameters, the preset's names and ranges.
+IDD_SATPIXIE DIALOGEX 0, 0, 300, 252
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SatPixie CRT look - options"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Amounts", -1, 7, 7, 286, 96
+    LTEXT           "Accumulate modulation", -1, 14, 21, 90, 9
+    CONTROL         "", IDC_SP_MODULATE, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 18, 150, 14
+    LTEXT           "0.65", IDC_SP_MODULATE_V, 260, 21, 30, 9
+    LTEXT           "Gamma (natural vision)", -1, 14, 37, 90, 9
+    CONTROL         "", IDC_SP_GAMMA, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 34, 150, 14
+    LTEXT           "2.3", IDC_SP_GAMMA_V, 260, 37, 30, 9
+    LTEXT           "Chroma strength", -1, 14, 53, 90, 9
+    CONTROL         "", IDC_SP_CHROMA, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 50, 150, 14
+    LTEXT           "0.7", IDC_SP_CHROMA_V, 260, 53, 30, 9
+    LTEXT           "Horizontal blur", -1, 14, 69, 90, 9
+    CONTROL         "", IDC_SP_BLURX, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 66, 150, 14
+    LTEXT           "0", IDC_SP_BLURX_V, 260, 69, 30, 9
+    LTEXT           "Vertical blur", -1, 14, 85, 90, 9
+    CONTROL         "", IDC_SP_BLURY, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 82, 150, 14
+    LTEXT           "0", IDC_SP_BLURY_V, 260, 85, 30, 9
+
+    GROUPBOX        "Effects", -1, 7, 108, 286, 108
+    AUTOCHECKBOX    "&Natural vision (neutral colours, gamma above)", IDC_SP_NATURAL, 14, 122, 270, 10
+    AUTOCHECKBOX    "&Ghosting", IDC_SP_GHOSTING, 14, 136, 130, 10
+    AUTOCHECKBOX    "&Chromatic aberration", IDC_SP_CHROMAON, 150, 136, 130, 10
+    AUTOCHECKBOX    "&Vignette", IDC_SP_VIGNETTE, 14, 150, 130, 10
+    AUTOCHECKBOX    "Vignette shaped for &4:3 only", IDC_SP_VIG43, 150, 150, 136, 10
+    AUTOCHECKBOX    "&Interference wiggle", IDC_SP_WIGGLE, 14, 164, 130, 10
+    AUTOCHECKBOX    "&Rolling scanlines", IDC_SP_SCANROLL, 150, 164, 130, 10
+    AUTOCHECKBOX    "&Overscan crop (trims the picture's edges)", IDC_SP_OVERSCAN, 14, 178, 270, 10
+    LTEXT           "The 4:3 vignette leaves a wide picture's side bands bright; off, it covers the whole picture.", -1, 26, 209, 260, 9
+    LTEXT           "Shadow &mask:", -1, 14, 196, 60, 9
+    COMBOBOX        IDC_SP_MASK, 76, 194, 120, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "&Defaults", IDC_SP_DEFAULTS, 7, 231, 52, 14
+    DEFPUSHBUTTON   "OK", IDOK, 182, 231, 52, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 240, 231, 52, 14
 END

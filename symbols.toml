@@ -438,9 +438,12 @@ evidence = "Read from .data 2026-09-18: s16 x8 = 300, 200, 200, 150, 125, 100, 5
 pc = 0x59E360
 name = "Fmv_Play"
 args = ["filename", "hwnd", "fullscreen"]
+ret = "void"
+params = "const char *filename, void *hwnd, int fullscreen"
+impl = "src/game/fmv_play.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19: sprintf + mciSendStringA 'open avivideo!%s alias vfw', retrying with the CD-root prefix from 0x5A7370 on failure; Fmv_EnterFullscreen 0x59E4F0; SetWindowLongA(hwnd, GWL_WNDPROC, Fmv_WndProc 0x59E570); 'window vfw handle %d'; 'put vfw destination at 0 0 640 480'; 'play vfw window from 0 notify'; sets 0x6BE1C8 = 1; blocking GetMessageA/TranslateMessage/DispatchMessage loop until 0x6BE1C8 clears; 'stop vfw wait'; 'close vfw wait'; restores the WndProc, Releases the FMV DirectDraw object at 0x6BE1CC, SetWindowPos, restores GWL_STYLE from 0x6BE1C4. Sole holder of all seven MCI command strings (pe_xref.py: one reference each, all inside this function)."
-note = "The only MCI caller in the binary. Two call sites, both in 0x4FCB00 (CAPCOM.AVI at 0x4FCD0F, LOGOS.AVI at 0x4FCD26). Modal and blocking — the game's main loop does not run during playback."
+note = "The only MCI caller in the binary. Two call sites, both in 0x4FCB00 (CAPCOM.AVI at 0x4FCD0F, LOGOS.AVI at 0x4FCD26). Modal and blocking — the game's main loop does not run during playback. Read whole 2026-09-23: 0x59E360..0x59E4E3 (0x183 bytes), cdecl, three stack arguments at esp+0x7C after sub esp 0x6C and three pushes; every jump internal; the calls are Crt_sprintf, File_CdRoot, Fmv_EnterFullscreen and the import slots mciSendStringA, SetWindowLongA, GetMessageA, TranslateMessage, DispatchMessageA, SetWindowPos. Ours: DIV-0035 plays into the window at an integer scale of 640 x 480 and never calls Fmv_EnterFullscreen (docs/window-modes.md)."
 
 [[func]]
 pc = 0x59E4F0
@@ -448,7 +451,7 @@ name = "Fmv_EnterFullscreen"
 args = ["hwnd"]
 status = "evidence"
 evidence = "disasm 2026-09-19: SetWindowLongA(hwnd, GWL_STYLE, WS_POPUP) saving the old style to 0x6BE1C4; DirectDrawCreate(NULL, &0x6BE1CC, NULL) via 0x5ACBB0; vtable +0x50 SetCooperativeLevel(hwnd, 0x11 = DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN); vtable +0x54 SetDisplayMode(0x280, 0x1E0, 0x10); SetWindowPos(0, 0, 640, 480, SWP_SHOWWINDOW). Returns 1 on success, 0 on any failure."
-note = "Creates a SECOND DirectDraw object, separate from the game's — FMV does not composite with the renderer. The exclusive-fullscreen 640x480x16 mode-set here is the most fragile operation in the program on a compositing desktop, and it runs twice before the title screen (docs/replacing-mci.md section 6)."
+note = "Creates a SECOND DirectDraw object, separate from the game's — FMV does not composite with the renderer. The exclusive-fullscreen 640x480x16 mode-set here is the most fragile operation in the program on a compositing desktop, and it runs twice before the title screen (docs/replacing-mci.md section 6). Retired 2026-09-23 with DIV-0035: our Fmv_Play never calls it, so it runs only under BOF3X_ORIGINAL=Fmv_Play. Still Capcom's bytes."
 
 [[func]]
 pc = 0x59E570
@@ -459,6 +462,7 @@ evidence = "disasm 2026-09-19: WM_KEYDOWN (0x100) and WM_LBUTTONDOWN (0x201) cle
 [[data]]
 pc = 0x6BE1C8
 name = "Fmv_Playing"
+ctype = "unsigned char"
 status = "evidence"
 evidence = "Byte. Cleared at Fmv_Play 0x59E360 entry, set to 1 immediately after 'play vfw window from 0 notify', and the sole loop condition of the modal message pump. Cleared by Fmv_WndProc 0x59E570 on key or click (2026-09-19)."
 note = "Adjacent to Fmv_SavedStyle 0x6BE1C4 and Fmv_DDraw 0x6BE1CC; the three look like one small state block."
@@ -574,6 +578,8 @@ note = "Name from bof3ext (cited, CLAUDE.md rule 5). hypothesis only for the ret
 [[func]]
 pc = 0x4FD030
 name = "Cfg_Load"
+ret = "void"
+params = "void"
 status = "evidence"
 evidence = "disasm 2026-09-19: fopen of the BOF3.CFG literal at 0x65DAD8 in text mode; fgets 0x14 bytes per line; line 0 -> atoi -> 0x65DA44, line 1 -> atoi -> 0x65DA48, each later line sscanf'd with a two-integer format into consecutive byte pairs of a stack array; with more than two lines read the array goes to 0x5A9860, otherwise 0x5A9880 runs instead. If the file is missing both globals are set to 1. Sole reference to the filename string (pe_xref.py)."
 
@@ -589,7 +595,7 @@ pc = 0x65DA48
 name = "Cfg_RenderMode"
 ctype = "int"
 status = "hypothesis"
-evidence = "Second line of BOF3.CFG, initialised 1, passed by address to the display initialiser 0x5A5160 alongside Cfg_Fullscreen; WM_KEYDOWN 0x76 (F7) re-runs 0x5A5160 with it and then calls 0x5A6690 with its value. 0x5A5160 holds the only reference to the 'Software Render' string. So: hardware/software renderer select, by association - which value means which is not read."
+evidence = "Second line of BOF3.CFG, initialised 1, passed by address to the display initialiser 0x5A5160 alongside Cfg_Fullscreen; WM_KEYDOWN 0x76 (F7) re-runs 0x5A5160 with it and then calls 0x5A6690 with its value. 0x5A5160 holds the only reference to the 'Software Render' string. So: hardware/software renderer select, by association. Read 2026-09-23 (docs/display-setup.md section 2.4-2.5): an index into the 0x13C-byte device records at 0x6C3A50 - record 0 the synthetic Software Render (Gfx_RenderFlags bit 0), records 1.. the DirectDrawEnumerateA drivers; a value past the last record wraps to 0. With Display_Setup ours (DIV-0031) every value takes the hardware path."
 
 # ---------------------------------------------------------------------------
 # Save files
@@ -10851,3 +10857,340 @@ params = "unsigned char *prim"
 impl = "src/game/menu_windows.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5A7720..0x5A772F (0x10 bytes): byte +7 = 0x74, the PSX GPU code of SPRT_8, and the float 0.01 to +0x10. The sibling's SetSprt8 (confirmed). Callers Text_DrawFont8, Menu_DrawIcon8."
+
+[[func]]
+pc = 0x5A5160
+name = "Display_Setup"
+ret = "int"
+params = "void *hwnd, int *fullscreen, int *device, int *mode"
+impl = "src/game/display_setup.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23 (docs/display-setup.md), 0x5A5160..0x5A5BB4 (0xA55 bytes, 778 instructions, every jump internal), cdecl: the DirectDraw / Direct3D set-up. Callers WinMain 0x4FCD52, WndProc F8 0x4FC901 and F7 0x4FC94B, all (hwnd, &Cfg_Fullscreen, &Cfg_RenderMode, 0); a non-zero return WinMain maps through the error-string table 0x66B6A8. Desktop caps to 0x7C9F44 / 0x6C9F40 / 0x6BE1E0; zeroes Gfx_TexCache, Gfx_ClutRows, Font_TexCache (words 0xFFFF), 0x6BE9F8, 0x7CADE8, D3d_CellTexCache, Gfx_PixelFormat, Gfx_RenderFlags, 0x6C3A48, D3d_ShadeModeCache; D3d_TexCoords (i / 256 + 0.002); DirectDrawEnumerateA into device records 0x6C3A50 (0x13C each, record 0 the synthetic Software Render); IDirectDraw4, IDirect3D3, the HAL IDirect3DDevice3 only (on failure windowed: Cfg_Fullscreen = 1, teardown 0x5A6380, and the set-up repeats fullscreen); mode = the device's smallest of at least 640 x 480 x 16, D3d_ScaleX/Y = width / 320, height / 240; windowed: DDSCL_NORMAL, primary 0x200, back 0x2040, a clipper, Gfx_RenderFlags |= 0x200; fullscreen: 0x813, SetDisplayMode, flip chain 0x2218, |= 0x100; 0x5A60E0 for the three pixel-format records; Dd_CreatePlainSurface(320, 256, &Dd_StageSurface, 0); the back buffer's pitch to 0x7DED5C; viewport, black material, ten SetTextureStageState (MODULATE both, filters LINEAR at 0x5A5B20 / 0x5A5B33) and seven SetRenderState (alpha test GREATER 8, cull none, perspective, no specular, no fog). Ours: DIV-0031, the Direct3D 11 backend."
+
+# --- the window and the frame loop (2026-09-23): WinMain, WndProc and the window modes, docs/window-modes.md ---
+#
+# Porting-house code, no PSX counterpart. The two functions the whole exe
+# hangs off, read whole on 2026-09-23 (python tools/pe_disasm.py 0x4fcb00:450,
+# 0x4fc6f0:400) for the display overhaul's step 3 (docs/display-overhaul.md
+# section 4a). Import slots resolved from the PE import table.
+
+[[func]]
+pc = 0x4FCB00
+name = "Game_WinMain"
+ret = "int"
+params = "void *hinstance, void *hprev, char *cmdline, int show"
+cc = "__stdcall"
+impl = "src/game/win_main.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FCB00..0x4FD02A (0x52A bytes, ret 0x10: stdcall, four arguments), every jump internal. Disc_Probe(CAPCOM.AVI, BOF3.EXE) or MessageBoxA(the GBK insert-the-disc string 0x65DA98, 0x65DAB0, MB_ICONHAND) and return 1; Game_HInstance = hinstance; RegisterClassA(style 0, Game_WndProc 0x4FC6F0, LoadIconA(BOF3_ICON 0x65DA8C), LoadCursorA(IDC_ARROW), GetStockObject(BLACK_BRUSH), class Bof3 0x65DA84) or return -1; Cfg_Load; GetDC(0) HORZRES / VERTRES / BITSPIXEL * PLANES to Desktop_Width / Desktop_Height / Desktop_Bpp; a 640 x 480 desktop forces Cfg_Fullscreen = 1; fullscreen: position 0,0 size the desktop; windowed: AdjustWindowRect({0,0,640,480}, 0xCA0000 = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX) centred by (desktop - outer) / 2 toward zero; CreateWindowExA(0, Bof3, the GBK title 0x65DA78, 0xCA0000, x, y, w, h, 0, 0, hinstance, 0) to Game_Hwnd; ShowWindow(SW_SHOW), UpdateWindow, Cursor_Sync; Fmv_Play(CAPCOM.AVI 0x65DAB8, hwnd, Cfg_Fullscreen) then (LOGOS.AVI 0x65DA6C); if Game_QuitFlag: the exit path below; Display_Setup(hwnd, &Cfg_Fullscreen, &Cfg_RenderMode, 0) non-zero: Display_Teardown(hwnd), Display_ErrorBox(code), return 1; Cursor_Sync; Game_Init. The loop (0x4FCDA2): Task_Create(0, Boot_Task 0x496B60); Frame_Deadline = float(GetTickCount + 33.34 (double 0x5C4220)); 0x4FCDCA: if Game_QuitFlag exit; if not Game_Paused Input_Latch; PeekMessageA(PM_REMOVE): WM_QUIT exits, else TranslateMessage + DispatchMessageA; if App_Active is 0 loop again (nothing runs); if Game_RestartFlag: clear it, Task_SetStackBase, back to Task_Create; if GetTickCount < Frame_Deadline (fild / fcomp): Gpu_PutDispEnv(Gfx_CurrentEnv), Gpu_PutDrawEnv(env + 0x14), Gfx_FlushDirtyStrip, Gfx_FlushUploadQueue, Gfx_DrawOTag(env + 0x8C), then Overlay_Frames non-zero: Display_TextOut(0, 0, Overlay_Text) and Overlay_Frames--, else Fps_Shown: Display_TextOut(0, 0, the fps string); frames-drawn++; else the frame is skipped; Sound_Tick and GetTickCount until tick >= deadline (0x4FCEBC, Sound_Tick on every spin); once a second Crt_sprintf(fps, 0x65DA5C Frame Rate = %d, frames-drawn) and frames-drawn = 0; Frame_Deadline = float(deadline + 33.334 (double 0x5C4218)), and if the double sum exceeds 4294967296.0f (0x5C4214) the float less 2^32 (tick wrap); Gfx_BufferIndex ^= 1, Gfx_CurrentEnv = 0x903880 + index * 0x90, Gpu_ClearOTagR(env + 0x70, 8), Gfx_BeginFrame, SpriteCell_Reset; not Game_Paused: Task_RunAll; paused: Text_DrawAt(100, 100, 0, 100, line) and (0x70, 0x80, 0, 100, line) of Pause_LinesGame, or Pause_LinesTitle when Title_LogoState or Title_Fade is set; Gfx_LinkOTags; Frame_Counter++. Exit (0x4FD000): Display_Teardown(hwnd), Sound_Shutdown, DInput_Shutdown, return 1. GetTickCount is read through Imp_GetTickCount, held in esi. Ours: DIV-0032 (window modes), DIV-0033 (runs unfocused), DIV-0034 (the frame debt clamp)."
+
+[[func]]
+pc = 0x4FC6F0
+name = "Game_WndProc"
+ret = "long"
+params = "void *hwnd, unsigned int msg, unsigned int wparam, long lparam"
+cc = "__stdcall"
+impl = "src/game/win_main.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FC6F0..0x4FCAB4 (0x3C4 bytes, ret 0x10), every jump internal; lpfnWndProc of the Bof3 class (WinMain 0x4FCB98). WM_DESTROY: PostQuitMessage(0). WM_MOVE: Display_WindowMoved(LOWORD, HIWORD of lparam). WM_ACTIVATEAPP: wparam non-zero: if App_WasInactive Sound_ResumeAll, SetFocus(hwnd), App_Active = 1; zero: App_WasInactive = 1, App_Active = 0, Sound_PauseAll. WM_KEYDOWN: with Game_Paused set any key but F9 clears it and Sound_ResumeAll; F9 (0x78): not paused: Game_Paused = 1, Sound_PauseAll; paused: Game_Paused = 0 and, with Title_LogoState and Title_Fade both 0, Game_RestartFlag = 1 (quit to the title), else Game_QuitFlag = 1 (quit the program). F8 (0x77), only past a 640 x 480 desktop: Display_Changed = 1, Display_Teardown(hwnd), Cfg_Fullscreen ^= 1, the WinMain window rect again, SetWindowPos(hwnd, 0, x, y, w, h, SWP_SHOWWINDOW), Display_Setup(hwnd, &Cfg_Fullscreen, &Cfg_RenderMode, 0), Cursor_Sync. F7 (0x76): Display_Changed = 1, Display_Teardown, Cfg_RenderMode++, Display_Setup, Cursor_Sync, Overlay_Text = Display_DeviceName(Cfg_RenderMode) for Overlay_Frames = 0x78 frames. F11 (0x7A): Fps_Shown ^= 1. F12 (0x7B): Save_QuickWrite, Overlay_Text = Save OK 0x65DA54 for 0x78 frames. WM_SYSKEYDOWN: F10 (0x79) and VK_MENU (0x12) return 1, else DefWindowProcA. WM_SYSCOMMAND: SC_SCREENSAVE and SC_MONITORPOWER return 1, else DefWindowProcA. WM_POWERBROADCAST: wparam 0 (PBT_APMQUERYSUSPEND) returns BROADCAST_QUERY_DENY 0x424D5144, else DefWindowProcA. Everything else DefWindowProcA. Display_Changed 0x6BC63D is written here and read nowhere (pe_xref.py). Ours: DIV-0032, DIV-0033."
+
+[[func]]
+pc = 0x4FCAC0
+name = "Cursor_Sync"
+ret = "void"
+params = "void"
+impl = "src/game/win_main.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FCAC0..0x4FCAFD (0x3D bytes), no arguments, calls ShowCursor through its import slot 0x5C419C: with Cfg_Fullscreen set and Cursor_Hidden 0x65DA4C equal to 1: ShowCursor(FALSE), Cursor_Hidden = 0; with Cfg_Fullscreen clear and Cursor_Hidden 0: ShowCursor(TRUE), Cursor_Hidden = 1. So the cursor is hidden in fullscreen and shown windowed, one ShowCursor per change. Callers WinMain (0x4FCCFC, 0x4FCD86) and WndProc F8 / F7."
+
+[[func]]
+pc = 0x5A5130
+name = "Display_WindowMoved"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/win_main.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A5130..0x5A515E (0x2E bytes, no calls), cdecl: Gfx_WindowRect = {x, y, x + Gfx_ScreenRect[2] (0x66B710), y + Gfx_ScreenRect[3] (0x66B714)}. Sole caller WndProc WM_MOVE with the client origin from lparam. Read by Gfx_Present's windowed Blt (Capcom's path only: the backend presents into the client area)."
+
+[[func]]
+pc = 0x5A6690
+name = "Display_DeviceName"
+ret = "char *"
+params = "int device"
+impl = "src/game/win_main.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A6690..0x5A66A4 (0x14 bytes, no calls), cdecl: returns 0x6C3A68 + device * 0x13C - the name field (+0x18) of the device record 0x6C3A50 + device * 0x13C (docs/display-setup.md). Sole caller WndProc F7, for the on-screen overlay."
+
+[[func]]
+pc = 0x5A72C0
+name = "Disc_Probe"
+ret = "int"
+params = "const char *local_file, const char *disc_file"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A72C0..0x5A7360, cdecl (WinMain adds 8): Crt_fopen(local_file, rb) succeeds: 1. Else for the drive letters C..L: the File_CdRoot buffer 0x66BC2C gets the letter, GetDriveTypeA(it) == DRIVE_CDROM (5): Crt_sprintf(buf, 0x66BC30, root, disc_file) and Crt_fopen: found: 1 with the root left in the buffer. Neither: 0. WinMain calls it (CAPCOM.AVI 0x65DAB8, BOF3.EXE 0x65DAC4) and refuses to start on 0."
+
+[[func]]
+pc = 0x4FD110
+name = "Game_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FD110..0x4FD1F2 (0xE2 bytes, ends in a tail jmp to Task_SetStackBase): 0x5A7AA0, 0x5A7AE0(0xA0, 0x78), 0x5A7B00(1000) (sound set-up, unread), DInput_Init(Game_Hwnd, Game_HInstance), 0x5A6830(Game_Hwnd), 0x4DF820(0), the two display-environment pairs at 0x903880 / 0x903910 through 0x5A7910 and 0x5A78E0 (SetDefDispEnv / SetDefDrawEnv by shape: 0, 0, 320, 240 and 0, 240), 0x4FD200 on each (Gpu_ClearOTagR(env + 0x70, 8), bytes +0x2C..0x2F = 1, 0, 0, 0), Gfx_BufferIndex = 0, Gfx_CurrentEnv = 0x903880, Gfx_BeginFrame, Game_QuitFlag = 0. Sole caller WinMain 0x4FCD8B."
+
+[[func]]
+pc = 0x4FD290
+name = "Gfx_LinkOTags"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x4FD290..0x4FD2DA (0x4A bytes, pc_funcs' 0xC0 runs on): for i in 0..7: 0x5A7540(Gfx_CurrentEnv + 0x70 + 4i, &Gfx_OtPointers[Gfx_BufferIndex * 8 + i], the count dword at 0x929E30 + 4i). Sole caller WinMain 0x4FCFE0, after the frame's logic."
+
+[[func]]
+pc = 0x5A9907
+name = "Task_SetStackBase"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, four instructions: 0x66C858 = esp - 0x4000 - the base Task_Create carves the task stacks down from (docs/attract-mode.md section 2). Reached by Game_Init's tail jump and by WinMain's restart path 0x4FCFF6, so the task stacks lie in WinMain's own frame."
+
+[[func]]
+pc = 0x5A66B0
+name = "Display_TextOut"
+ret = "void"
+params = "int x, int y, const char *text"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A66B0..: GetDC (+0x44) on DDraw_BackBuffer, SetTextColor(white), SetBkMode(TRANSPARENT), TextOutA(dc, x, y, text, strlen), ReleaseDC. WinMain draws the F7 device name, the F12 Save OK and the F11 frame rate with it (docs/display-setup.md section 5.2). With the backend the back buffer's GetDC ends the process (render_shim.cpp: no slot for it), so ours draws these three with Text_DrawAt instead (DIV-0032)."
+
+[[func]]
+pc = 0x5A6720
+name = "Display_ErrorBox"
+ret = "void"
+params = "int code"
+status = "evidence"
+evidence = "disasm 2026-09-23: MessageBoxA of the error-string table 0x66B6A8 entry for Display_Setup's non-zero return. Sole caller WinMain 0x4FCD6C. Our Display_Setup returns 0 or ends the process, so ours never reaches it."
+
+[[func]]
+pc = 0x5A6380
+name = "Display_Teardown"
+ret = "void"
+params = "void *hwnd"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A6380..0x5A64A2 (0x122 bytes), cdecl: 0x5A64B0, 0x5A64E0, 0x5A6540, 0x5A6590, 0x5A65F0, 0x5A6760, 0x5A6650 (the texture caches' releases, by role), then Release and zero of D3d_BackMaterial, D3d_Viewport, D3d_Device, the IDirect3D3 0x7CC34C, the clipper 0x7CC348, the Z-buffer 0x7CC340, Dd_StageSurface, DDraw_BackBuffer, DDraw_Primary, and Dd_DirectDraw - after RestoreDisplayMode and SetCooperativeLevel(hwnd, DDSCL_NORMAL) when Gfx_RenderFlags bit 0x100 (fullscreen) is set. Callers WinMain's exit and set-up failure, WndProc F8 and F7."
+
+[[func]]
+pc = 0x5A6980
+name = "Sound_Shutdown"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A6980..0x5A69BD: 0x5A71C0, 0x5A70A0 (the music's stop and release, by role), then Release and zero of the two DirectSound objects at 0x7DE3C0 and 0x7DE3BC. Sole caller WinMain's exit 0x4FD00E."
+
+[[func]]
+pc = 0x5A9690
+name = "DInput_Shutdown"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A9690..0x5A96FF (0x6F bytes): Unacquire (+0x20) and Release of the joystick 0x7DE930, Release of its second interface 0x7DE934, Unacquire and Release of the keyboard 0x7DE92C, Release of the DirectInput object 0x7DE928, each slot zeroed. Sole caller WinMain's exit 0x4FD013."
+
+[[func]]
+pc = 0x5A94C0
+name = "DInput_Init"
+ret = "void"
+params = "void *hwnd, void *hinstance"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x5A94C0..0x5A9611 (0x151 bytes), cdecl: zeroes the 256 key bytes 0x7DE828; DirectInputCreateA(hinstance, 0x700, &0x7DE928, 0) through 0x5ADE90 or return; EnumDevices(DIDEVTYPE_JOYSTICK, 0x5A9620, 0, DIEDFL_ATTACHEDONLY); with a joystick 0x7DE930: SetDataFormat(c_dfDIJoystick 0x5C4960), SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND = 5), SetProperty(DIPROP_RANGE, -1000..1000) for the offsets 0, 4, 8 and 0x14 by DIPH_BYOFFSET, Acquire; CreateDevice(GUID_SysKeyboard 0x5C4828, &0x7DE92C, 0), SetDataFormat(c_dfDIKeyboard 0x5C4948), SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_BACKGROUND = 0xA), Acquire. The keyboard is read whether or not the window is in front - which is why DIV-0033 zeroes the pad words while it is not. Sole caller Game_Init."
+
+[[func]]
+pc = 0x587B90
+name = "Sound_ResumeAll"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23: a jmp to 0x5A7080 (unread, the sound module). Called by WndProc on WM_ACTIVATEAPP activation after a deactivation and on the key that ends the F9 pause; paired with Sound_PauseAll."
+
+[[func]]
+pc = 0x587C30
+name = "Sound_PauseAll"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x587C30..0x587C63: 0x5A6C30 on each non-zero entry of the 23 dwords 0x6BC8C8..0x6BC924 (the sound buffers, by role), 0x5A71C0 when 0x6BDE40 is set, then a jmp to 0x5A6FF0. Called by WndProc on WM_ACTIVATEAPP deactivation and on F9."
+
+[[func]]
+pc = 0x5809C0
+name = "Save_QuickWrite"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-23, first instructions: 0x9036D4 = 0, Crt_sprintf(0x904BA0, 0x664068, 0), the save block builder 0x5806F0, Crt_sprintf again with 0x9036D4, Save_WriteFile(0x904BA0, 0x12B0). No arguments. Sole caller WndProc F12, which then shows Save OK. Unread past that; group X's writer (docs/save-menu.md)."
+
+[[data]]
+pc = 0x6BC620
+name = "Game_Hwnd"
+ctype = "void *"
+status = "evidence"
+evidence = "WinMain stores CreateWindowExA's result here (0x4FCCE5) and reads it for the FMVs, Display_Setup and the teardown; Game_Init passes it to DInput_Init and 0x5A6830."
+
+[[data]]
+pc = 0x6BC624
+name = "Game_HInstance"
+ctype = "void *"
+status = "evidence"
+evidence = "WinMain's hinstance argument, stored at 0x4FCB8E; Game_Init passes it to DInput_Init."
+
+[[data]]
+pc = 0x6BC628
+name = "Frame_Deadline"
+ctype = "float"
+status = "evidence"
+evidence = "The frame deadline as a tick count in a 32-bit float (docs/windowed-mode.md, known-defects D5): set to GetTickCount + 33.34 when the loop starts, compared against GetTickCount to decide rendering and to spin, advanced by 33.334 per logic frame at 0x4FCF0F..0x4FCF3A. Read by DIV-0028 (sound.cpp) to count logic frames."
+
+[[data]]
+pc = 0x6BC62C
+name = "Overlay_Text"
+ctype = "const char *"
+status = "evidence"
+evidence = "The string WinMain draws at 0, 0 with Display_TextOut while Overlay_Frames is non-zero: the device name after F7, Save OK 0x65DA54 after F12."
+
+[[data]]
+pc = 0x6BC630
+name = "Overlay_Frames"
+ctype = "int"
+status = "evidence"
+evidence = "Frames left to show Overlay_Text; WndProc sets 0x78 (F7, F12), WinMain decrements per rendered frame at 0x4FCE97."
+
+[[data]]
+pc = 0x6BC634
+name = "Fps_Shown"
+ctype = "int"
+status = "evidence"
+evidence = "F11 toggles it (WndProc 0x4FC985); while set and no overlay is up, WinMain draws the once-a-second Frame Rate = %d string at 0, 0."
+
+[[data]]
+pc = 0x6BC639
+name = "Game_QuitFlag"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "Cleared by Game_Init; set by WndProc's second F9 on the title (0x4FC828) and by Fmv_WndProc's WM_DESTROY (0x59E5E3); WinMain's loop exits on it (0x4FCDCA), and after the FMVs it skips the display set-up (0x4FCD30)."
+
+[[data]]
+pc = 0x6BC63A
+name = "Game_Paused"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "F9 sets it (WndProc 0x4FC7E1); any key clears it. While set WinMain skips Input_Latch and Task_RunAll and draws the pause lines instead (0x4FCF7A); the frame deadline keeps advancing."
+
+[[data]]
+pc = 0x6BC63B
+name = "App_Active"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "WM_ACTIVATEAPP sets it to wparam != 0 (WndProc 0x4FC74E / 0x4FC766). While 0 WinMain's loop pumps messages and nothing else (0x4FCE10) - the freeze and replay of docs/windowed-mode.md. DIV-0033 leaves it set on deactivation."
+
+[[data]]
+pc = 0x6BC63C
+name = "Game_RestartFlag"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "Set by WndProc's second F9 in game (0x4FC815); WinMain clears it, resets the task stack base and creates task 0 again (0x4FCFF0) - quit to the title."
+
+[[data]]
+pc = 0x6BC63D
+name = "Display_Changed"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "Set to 1 by WndProc F8 and F7 (0x4FC867, 0x4FC927); read by nothing (pe_xref.py, 2 references, both writes)."
+
+[[data]]
+pc = 0x6BC640
+name = "App_WasInactive"
+ctype = "int"
+status = "evidence"
+evidence = "Set on WM_ACTIVATEAPP deactivation (WndProc 0x4FC75C); an activation with it set calls Sound_ResumeAll. Never cleared."
+
+[[data]]
+pc = 0x939A2C
+name = "Desktop_Bpp"
+ctype = "int"
+status = "evidence"
+evidence = "WinMain: GetDeviceCaps(BITSPIXEL) * GetDeviceCaps(PLANES) of the desktop DC (0x4FCC3F)."
+
+[[data]]
+pc = 0x939A30
+name = "Desktop_Height"
+ctype = "int"
+status = "evidence"
+evidence = "WinMain: GetDeviceCaps(VERTRES) of the desktop DC (0x4FCC24); WndProc F8 and Fmv_Play's restore read it."
+
+[[data]]
+pc = 0x939A34
+name = "Desktop_Width"
+ctype = "int"
+status = "evidence"
+evidence = "WinMain: GetDeviceCaps(HORZRES) of the desktop DC (0x4FCC1A); WndProc F8 and Fmv_Play's restore read it."
+
+[[data]]
+pc = 0x937F84
+name = "Gfx_CurrentEnv"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "The frame's display-environment pair: 0x903880 + Gfx_BufferIndex * 0x90, set by WinMain per logic frame (0x4FCF5F) and by Game_Init; +0 the DISPENV for Gpu_PutDispEnv, +0x14 the DRAWENV, +0x70 the eight ordering-table heads, +0x8C what Gfx_DrawOTag walks."
+
+[[data]]
+pc = 0x65DA4C
+name = "Cursor_Hidden"
+ctype = "int"
+status = "evidence"
+evidence = "Initialised 1; Cursor_Sync's state: 0 after it hid the cursor, 1 after it showed it. Only Cursor_Sync touches it (pe_xref.py)."
+
+[[data]]
+pc = 0x6BE1C4
+name = "Fmv_SavedStyle"
+ctype = "long"
+status = "evidence"
+evidence = "Fmv_EnterFullscreen saves the window's GWL_STYLE here before WS_POPUP; Fmv_Play restores it after playback (0x59E4D0)."
+
+[[data]]
+pc = 0x6BE1CC
+name = "Fmv_DDraw"
+ctype = "void *"
+status = "evidence"
+evidence = "The FMV's own DirectDraw object, made by Fmv_EnterFullscreen and Released by Fmv_Play (0x59E4B1); null when the FMV played windowed."
+
+[[data]]
+pc = 0x66A418
+name = "Pause_LinesGame"
+ctype = "const unsigned char *"
+count = 2
+status = "evidence"
+evidence = "Two text-code strings (0x66A3F0, 0x66A404) WinMain draws at (100, 100) and (0x70, 0x80) while Game_Paused, when Title_LogoState and Title_Fade are both 0 - in game. The second F9 then quits to the title."
+
+[[data]]
+pc = 0x66A448
+name = "Pause_LinesTitle"
+ctype = "const unsigned char *"
+count = 2
+status = "evidence"
+evidence = "The pair (0x66A420, 0x66A434) drawn while paused on the title, where the second F9 quits the program."
+
+[[data]]
+pc = 0x7E1BF0
+name = "Input2_Held"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "Pad 2's held word: Input_Latch stores the high word of Pad_Read's result here, which Pad_Read never sets. Input2_Previous 0x7E1BF2 and Input2_Pressed 0x7E1BF4 follow."
+
+[[data]]
+pc = 0x7E1BF2
+name = "Input2_Previous"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "Pad 2's previous word (Input_Latch)."
+
+[[data]]
+pc = 0x7E1BF4
+name = "Input2_Pressed"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "Pad 2's pressed-this-frame word (Input_Latch)."

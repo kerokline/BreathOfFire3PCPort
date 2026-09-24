@@ -17,6 +17,7 @@ namespace {
 
 constexpr int kMaxEntries = 8192;
 constexpr std::uint8_t kInt3 = 0xCC;
+constexpr std::uint8_t kPushfd = 0x9C;
 constexpr DWORD kTrapFlag = 0x100;
 
 struct Hit {
@@ -212,10 +213,22 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         for (Pending& p : g_pending) {
             if (p.thread != me) continue;
             *At(p.entry) = kInt3;
+            // An entry that begins with pushfd has just saved the trap flag
+            // we set to step it, and a popfd would set it again with nobody
+            // expecting the step: 0x5A9A30, the MMX probe of the software
+            // renderer's set-up, did exactly that and the CRT's __except
+            // ended the process with 0x80000004 (docs/window-modes.md 4a).
+            // The flags it saved are made the ones an untraced run saves.
+            if (g_byte[Find(p.entry)] == kPushfd)
+                *reinterpret_cast<DWORD*>(static_cast<std::uintptr_t>(ctx->Esp)) &= ~kTrapFlag;
             p.thread = 0;
             return EXCEPTION_CONTINUE_EXECUTION;
         }
-        return EXCEPTION_CONTINUE_SEARCH;
+        // A step no entry asked for: a trap flag of ours that escaped. Loud,
+        // because passed on it reaches the CRT's __except and the process
+        // ends with no CRASH line.
+        Fatal("calltrace: a single step at 0x%08lX that no traced entry asked for",
+              static_cast<unsigned long>(ctx->Eip));
     }
     if (rec->ExceptionCode != EXCEPTION_BREAKPOINT) return EXCEPTION_CONTINUE_SEARCH;
 

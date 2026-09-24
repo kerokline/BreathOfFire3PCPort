@@ -163,10 +163,22 @@ add_library(bof3x SHARED
   src/game/event_ops.cpp
   src/game/event_ops_fuzz.cpp
   src/game/menu_windows.cpp
-  src/game/menu_windows_fuzz.cpp)
+  src/game/menu_windows_fuzz.cpp
+  src/game/display_setup.cpp
+  src/game/win_main.cpp
+  src/game/fmv_play.cpp
+  src/game/pause_text.cpp
+  src/game/widescreen.cpp
+  src/render/render_shim.cpp
+  src/render/render_d3d11.cpp
+  src/render/crt.cpp
+  src/render/satpixie.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
+# The Direct3D 11 render backend (docs/render-backend.md): the OS's own
+# libraries, nothing vendored; the shader compiler is d3dcompiler_47.dll.
+target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm)
 
 # --- the launcher ------------------------------------------------------------
 # The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:

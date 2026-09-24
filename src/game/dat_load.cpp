@@ -17,6 +17,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/msg_pool.h"
 #include "game/name_tables.h"
+#include "game/pause_text.h"
 #include "game/title_menu.h"
 #include "game/text_advance.h"
 #include "hook/detour.h"
@@ -153,6 +154,7 @@ void WalkDatFile(const char* path) {
         }
         case 4:  // DIV-0006: ours. No shipped file has one (census of 742).
             TextAdvance_Set(payload, static_cast<std::uint32_t>(h.size), h.tag);
+            PauseText_Apply();   // DIV-0038: the English glyphs are in the table now
             break;
         case 5:  // DIV-0008: ours.
             NameTables_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));

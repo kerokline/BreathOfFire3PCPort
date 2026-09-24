@@ -5,6 +5,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_layers_callees.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -230,7 +231,9 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
     g.store_xy(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
     const float sx = MapView_ScreenXY[0], sy = MapView_ScreenXY[1];
     // x87 fcomp as the original has it: an unordered x or y is culled too.
-    if (!(sx >= -50.0f) || !(sx <= 370.0f) || !(sy >= -200.0f) || !(sy <= 290.0f)) {
+    // The x bounds are -50 / 370 unless the view is wide (DIV-0041,
+    // src/game/widescreen.cpp, which sets them after every start-up fuzz).
+    if (!(sx >= Widescreen_TerrainLo) || !(sx <= Widescreen_TerrainHi) || !(sy >= -200.0f) || !(sy <= 290.0f)) {
         g.release_cell(cell);
         return;
     }
