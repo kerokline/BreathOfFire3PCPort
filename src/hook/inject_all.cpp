@@ -43,6 +43,7 @@
 #include "game/battle_flow.h"
 #include "game/battle_misc.h"
 #include "game/battle_sprites.h"
+#include "game/inventory_ops.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -223,6 +224,7 @@ void InjectAll() {
                                 // swapped and the stream's buffer a fake: order does not matter
     BattleSprites_Inject();     // group BG, round seven: every call of its clones re-aimed at a recorder,
                                 // three jump tables relocated in the copies, the boss table swapped: order does not matter
+    InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
     InjectReport();
 }
 

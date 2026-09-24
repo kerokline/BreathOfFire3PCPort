@@ -13143,3 +13143,256 @@ params = "unsigned short id"
 impl = "src/game/battle_sprites.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22 / 23, 0x587900..0x58790C (4 instructions): Sound_PlayEffect(its first argument, pushed whole; the callee reads 16 bits). Ops BC and BD call it with three and two arguments, D1 with two; only the first is read. Combat route: 1 call from 0x4C4C00."
+
+# --- Group BI of the seventh round (docs/inventory_ops.md): the random
+# encounter's placement on the field map, under 0x591F30 (not ours), and the
+# battle intro's party steps. The round's row called them inventory
+# operations; they are not.
+
+[[func]]
+pc = 0x5920E0
+name = "Encounter_PlaceParty"
+psx = 0x801C73A8
+ret = "unsigned char"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5920E0..0x592292 (0x1B3 bytes), cdecl, four calls, every jump internal; one caller, 0x591F30 (at 0x591FB8), which Field_EncounterDue calls (0x53013C). The byte 0x904060 read first; n = Party_Count(1); members 0..2: order bytes 0x6BE074 = 0, 1, 2, placed bytes 0x6BE078 + 4i = 0, wide bytes 0x6BE079 + 4i = 1 when the record 0x66972C[0x904065 + i] is 2 or 6; a bubble sort of n passes (order read from memory) puts wide members first; if it swapped, the centre 0x903780 / 0x903784 is retried at six offsets 0x669C80 until 0x592C30(x, z, 1) and 0x592CD0(Z >> 16, Z >> 16, x >> 16, z >> 16) - the centre's z cell twice, on the PSX too - and moves to the sixth if none; then 0x5922A0(formation, order[i], n - 1, byte 0x6BE070) per member, 0 at the first failure, else 1. PSX FUN_801C73A8 (gap67) term for term. Combat route (recipe_combat): 1 call. Named for what it does; that it places the party for a field battle is read from the callers."
+
+[[func]]
+pc = 0x5922A0
+name = "Encounter_PlaceMember"
+psx = 0x801C7650
+ret = "unsigned char"
+params = "unsigned formation, unsigned member, unsigned last, unsigned facing"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5922A0..0x5923F6 (0x157 bytes), cdecl, three calls, every jump internal; one caller 0x5920E0. The offset (x, z) dwords of 0x6698B0 + 8 * ((last * last + formation) * 3 + member), low bytes; steps sign(-x) * 0x8000, sign(-z) * 0x8000; offset and steps turned (x, z) to (z, -x) while the facing byte, stepped + 1 and 3, is not 2; r = Rand and 1; two passes of 8 tries from centre + offset into the member's spot 0x7E06E0 + 8 * member, each 0x592400(member) and 0x5924E0(member) (the argument whole) or a step in memory along x when r xor pass, else z; success sets the placed byte 0x6BE078 + 4 * member. Uses three argument slots as counters. PSX FUN_801C7650 term for term. Combat route: 3 calls."
+
+[[func]]
+pc = 0x592400
+name = "Encounter_MemberClear"
+psx = 0x801C7880
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592400..0x5924D6 (0xD7 bytes), cdecl, two calls, every jump internal; one caller 0x5922A0. For k 0..2 other than the argument's low byte with its placed byte set: 0x592BD0(member spot, k's spot, member wide byte, k's wide byte), 0 when not apart; then 0x592CD0(centre x >> 16, centre z >> 16, spot x >> 16, spot z >> 16), centre and spot read again, as setne. PSX FUN_801C7880 term for term. Combat route: 3 calls."
+
+[[func]]
+pc = 0x5924E0
+name = "Encounter_MemberStands"
+psx = 0x801C79C0
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5924E0..0x592561 (0x82 bytes), cdecl, three calls, every jump internal; one caller 0x5922A0. Sprite_Current + 0x3C (read after the call) = AreaMap_Elevation(spot x, spot z) as a short << 16; then 0x592C30(spot, wide byte) and Sprite_ObjectAt(spot, wide byte) == 0xFF, eax 1 or 0. The spot read at each use. PSX FUN_801C79C0 term for term. Combat route: 3 calls."
+
+[[func]]
+pc = 0x592600
+name = "Encounter_PlaceEnemies"
+psx = 0x801C7BAC
+ret = "unsigned char"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592600..0x592752 (0x153 bytes), cdecl, two calls, every jump internal; one caller 0x591F30. 0x6BE071 = 0; for the eight 12-byte slots at 0x939F00 (+0 active, +1 kind, +4 x, +8 z) that are active: offset 0x669B60 + 8 * s16((c - 1) * c / 2 + placed), c the byte 0x6BE084 and placed 0x6BE071 read per slot, x + 0x50000, turned (x, z) to (z, -x) while the facing byte 0x6BE070, stepped + 1 and 3, is not 0; up to 49 jitters (s8 pairs 0x669AF8, times 0x8000) round the centre (read per try) written into the slot until 0x592C30(x, z, kind size +0x86 of 0x8C55C8 + 0x8C * kind) and 0x592800(slot, slot x, slot z read back, size): placed + 1 in memory; 49 failures clear the active byte. Answers placed != 0. PSX FUN_801C7BAC term for term. Combat route: 1 call."
+
+[[func]]
+pc = 0x592760
+name = "Encounter_EnemiesReachable"
+psx = 0x801C7DC4
+ret = "unsigned char"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592760..0x5927F6 (0x97 bytes), cdecl, three calls, every jump internal; one caller 0x591F30. 0x6BE071 = 0; each active enemy slot stays active iff some member m below Party_Count(1) (asked again after each) gives 0x592CD0(m x >> 16, m z >> 16, slot word +6, slot word +0xA), counted in 0x6BE071; answers that != 0. PSX FUN_801C7DC4 term for term. Combat route: 1 call."
+
+[[func]]
+pc = 0x592800
+name = "Encounter_EnemyClear"
+psx = 0x801C7ED8
+ret = "unsigned char"
+params = "unsigned count, long x, long z, unsigned size"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592800..0x592884 (0x85 bytes), cdecl, one call, every jump internal; one caller 0x592600. For the first count (low byte) enemy slots that are active: 0x592BD0(x, z, slot x, slot z, size, the slot kind's +0x86), 0 at the first not apart; else 1. PSX FUN_801C7ED8 term for term. Combat route: 1 call."
+
+[[func]]
+pc = 0x592890
+name = "AreaMap_CellNibble"
+psx = 0x801C7FCC
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592890..0x5928EA (0x5B bytes), cdecl, no calls. x and z as words: 0 unless x below AreaMap_Header byte 0 and z below byte 1; i = (width * z + x) as a word; the byte 0x8C3D80 + i / 2, its low nibble for an odd i, the high for an even one. Eight call sites: 0x592C30, six in 0x592E30, and 0x51B935 (member_sprites, which called it through a raw address). PSX FUN_801C7FCC (the map at 0x8002A000, the extent 0x80104000). Combat route: 17 calls. What the nibble means is only read from its callers (a size class, a passage class)."
+
+[[func]]
+pc = 0x5928F0
+name = "Encounter_OnScreen"
+psx = 0x801C805C
+ret = "unsigned char"
+params = "long x, long z, unsigned size, unsigned margin"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5928F0..0x5929CD (0xDE bytes), cdecl, four calls, every jump internal; two call sites in 0x591F30 (the party with 0x20, the enemies with the kind's +0x86 / +0x87). Four corners (size + 1) * 0x4000 out, each AreaMap_Elevation then 0x5929D0 into two floats: 0 if a screen x is 320.0 or more or a y 240.0 or more (fcomp, a NaN passes); then the first corner again, 1 iff y - margin (fild of its byte, fsubr) is 8.0 or more. The PSX FUN_801C805C compares unsigned shorts against 0x13F and 0xEF, so it also refuses a corner left of or above the screen; the PC does not (docs/inventory_ops.md section 5). The flag argument slot is its corner counter. Combat route: 4 calls."
+
+[[func]]
+pc = 0x5929D0
+name = "Encounter_Project"
+psx = 0x801C81BC
+ret = "long"
+params = "long x, long z, long y, unsigned long *sxy"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5929D0..0x592A23 (0x54 bytes), cdecl, one call, every jump internal; called only by 0x5928F0. Gte_RotTransPers of the shorts ((x sar 9) - 0x4000, (z sar 9) - 0x4000, -(s16(y high word) / 2) truncated), sxy the destination, the depth into its own z argument slot, its x slot passed as the unread flag; answers Gte_RotTransPers's eax. PSX FUN_801C81BC, which returns the destination instead. Combat route: 20 calls."
+
+[[func]]
+pc = 0x592A30
+name = "Encounter_AimCamera"
+psx = 0x801C823C
+ret = "void"
+params = "unsigned facing"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592A30..0x592BC0 (0x191 bytes), cdecl, nine calls, every jump internal; one caller 0x591F30 (the facing byte 0x6BE070). 0x939860 = the sum of s16 AreaMap_Elevation of the active enemy slots and of the Party_Count(1) members, read back after each call, idiv by their count (no guard: the PSX traps too) and 0xFFFFFFE0; Gte_RotMatrix(Camera_Angles, local MATRIX); the shorts 0x4000 - ((s16 offset of 0x669CB8 + 4 * facing) << 16 + centre) sar 9 for x and z and the mean sar 1, through Gte_ApplyMatrix, plus Camera_ShiftX, Camera_ShiftY and Camera_Distance + 0x1194 as the MATRIX translation; Gte_RotMatrix again, Gte_SetRotMatrix, Gte_SetTransMatrix. PSX FUN_801C823C term for term. Combat route: 1 call."
+
+[[func]]
+pc = 0x592BD0
+name = "Encounter_Apart"
+psx = 0x801C8490
+ret = "unsigned char"
+params = "long x0, long z0, long x1, long z1, unsigned size0, unsigned size1"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592BD0..0x592C29 (0x5A bytes), cdecl, no calls. s = ((size0 byte + 1) + (size1 byte + 1)) * 0x8000; 1 if the absolute 32-bit x difference (the other order when not positive) is s or more, else the same for z, else 0. Two call sites, 0x592400 and 0x592800. PSX FUN_801C8490 term for term. Combat route: 3 calls."
+
+[[func]]
+pc = 0x592C30
+name = "Encounter_CellFits"
+psx = 0x801C8510
+ret = "unsigned char"
+params = "long x, long z, unsigned size"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592C30..0x592CC0 (0x91 bytes), cdecl, one call, every jump internal; three call sites (0x5920E0, 0x5924E0, 0x592600). The corner (x, z) less size byte * 0x8000; v = AreaMap_CellNibble(corner x sar 16, corner z sar 16); b = (size byte shl 2) + 1 as a byte; 0 below b, 1 at b + 4 or more; else by the corner fractions (low words): both 0 needs v == b, z off the edge b + 2 or b + 3, x off it b + 1 or b + 3, both off 0. PSX FUN_801C8510 term for term. Writes v and b into its first and third argument slots. Combat route: 4 calls."
+
+[[func]]
+pc = 0x592CD0
+name = "Encounter_PathClear"
+psx = 0x801C881C
+ret = "unsigned char"
+params = "unsigned x0, unsigned z0, unsigned x1, unsigned z1"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592CD0..0x592DF4 (0x125 bytes), cdecl, six calls, every jump internal; three call sites (0x5920E0, 0x592400, 0x592760). Cells compared as words. Steps Short_Sign of the differences, a byte budget Short_Abs(dz) + Short_Abs(dx), refused at once when its sign bit is set; each turn a step along x (unless there) then along z (unless there) through 0x592E30, each taken step costing 1; 1 on arrival; ends when a turn moves nothing or the budget goes negative; then again from the other end, the argument slots xor-swapped; 0. PSX FUN_801C881C term for term. Combat route: 4 calls."
+
+[[func]]
+pc = 0x592E00
+name = "Short_Abs"
+psx = 0x801C8180
+ret = "unsigned"
+params = "unsigned v"
+impl = "src/game/inventory_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x592E00..0x592E0B (0xC bytes), cdecl, no calls: eax = the argument, negated (32 bits) when its low word is negative. Two call sites, both in 0x592CD0. PSX FUN_801C8180. Combat route: 8 calls."
+
+[[func]]
+pc = 0x592E10
+name = "Short_Sign"
+psx = 0x801C81A4
+ret = "short"
+params = "unsigned v"
+impl = "src/game/inventory_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x592E10..0x592E2B (0x1C bytes), cdecl, no calls: ax = 1, 0 or -1 by the sign of the argument low word; the high word of eax is the caller's (mov ax, word). Two call sites, both in 0x592CD0, which adds the whole eax and reads only the low word of the sums. PSX FUN_801C81A4. Combat route: 8 calls."
+
+[[func]]
+pc = 0x592E30
+name = "Encounter_StepOpen"
+psx = 0x801C8600
+ret = "unsigned char"
+params = "unsigned x0, unsigned z0, unsigned x1, unsigned z1"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x592E30..0x592EFD (0xCE bytes), cdecl, six calls, every jump internal; two call sites in 0x592CD0. Words: the same cell 1; ordered so x0 < x1 (or z0 < z1 on one x); along x AreaMap_CellNibble(x0, z0) 2 or more and not 3; along z 3 or more; a diagonal with one sign 5 or more; the other diagonal nibble(x0, z1) 4 or more, else nibble(x0, z0) not below 2 and not 3 and nibble(x0, z1) read again 3 or more. PSX FUN_801C8600 term for term. Combat route: 13 calls."
+
+[[func]]
+pc = 0x52F570
+name = "Sprite_TurnSense"
+psx = 0x801B3CF8
+ret = "unsigned char"
+params = "unsigned target"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x52F570..0x52F5B0 (0x41 bytes, pe_funcs had 0x50 through padding), cdecl, no calls. d = Sprite_Current + 8, plus 8 as a byte when below the target byte; al 0xFF when d is target + 1 .. target + 4, else 1. Ten call sites (0x51BF38 .. 0x520EEA, 0x532689), each storing al in Sprite_Current + 0xB. PSX FUN_801B3CF8 term for term. Combat route: 3 calls."
+
+[[func]]
+pc = 0x532550
+name = "Encounter_RollInitiative"
+psx = 0x801BFBA8
+ret = "void"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x532550..0x532657 (0x108 bytes), cdecl, two calls, every jump internal; one caller 0x52F429. ObjTrio + 0xB = 0xFF; five slots of 0x14C from ObjTrio (three objects there): r = Rand and 0x7F, redrawn above 100; below Field_MemberCount (read per slot) a member notices when the byte +0x38 of its actor record (0x66972C of the list 0x904062) is r or more - an Effect_FindFree object (0xFF also counts) with +0 1, +5 6, +6 1, the words +0x2E / +0x30 of the object, the bytes 0x660B24 / 0x660B25 of id +0x89 at +0xC / +0x10, ObjTrio + 0xB its index; past the count, r of 50 or less counts. Five: 0x904AE4 = 1, none 2, else 0. PSX FUN_801BFBA8 term for term. Combat route: 1 call. The name is a guess from the shape."
+
+[[func]]
+pc = 0x532660
+name = "Encounter_PartyTurnSense"
+psx = 0x801BFDC8
+ret = "void"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x532660..0x5326AE (0x4F bytes), cdecl, one call, every jump internal; one caller, the battle intro state 0x495EA0 (table 0x656A84 by word 0x66C7EA). Each member below Field_MemberCount (read per member): Sprite_Current = the object, + 0xB = Sprite_TurnSense(0x660B3C[byte 0x904AAC]), the sprite read after the call. PSX FUN_801BFDC8 term for term. Combat route: 1 call."
+
+[[func]]
+pc = 0x5326B0
+name = "Encounter_PartyTurn"
+psx = 0x801BFE54
+ret = "unsigned char"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x5326B0..0x532850 (0x1A1 bytes), cdecl, five calls, every jump internal; one caller, the intro state 0x495EC1. While a member +0xB is set: per member (Field_State, Sprite_Current), record word +0x10 bit 14 gives 0x5891C0(+0x4B, 0, 0x8C5D80, 0xA00) and +0xB 0 without a tick; else facing 0x660B3C[0x904AAC] already, +0xB set gives the animation of that direction and +0xB 0; not facing it, +8 = +8 + +0xB and 7 and its animation; Sprite_ScriptTick; 0. None set: bit 2 of 0x904AE5 answers 1; else each member 32 CLUT words 0x80D380 row +5 copied to 0x80D440, Sprite_ShadeFadeBegin, +0xB 0, +0x5D..+0x5F 0xC0, +0x5C 1; 1. PSX FUN_801BFE54 term for term. Combat route: 6 calls."
+
+[[func]]
+pc = 0x532860
+name = "Encounter_PartyToPlaces"
+psx = 0x801C0114
+ret = "unsigned char"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x532860..0x532A61 (0x202 bytes), cdecl, four calls, every jump internal; one caller, the intro state 0x495F91. Bit 2 of 0x904AE5: 1. Else the centre = Field_Kind2X / Z plus (s8 0x660B1C[2 * 0x904AAC]) << 16; per member: +0xB 0 and Sprite_ShadeLower(8) done - the spot of its place in 0x904065 (by Field_State +0x89, else the fourth), Field_State +0x138 bit 0 cleared, +0x29 Draw_OtSlot, +0x34 / +0x38 the spot, +0x3E MapView_GroundAt, +0x48 0, +0xB 1; +0xB 1 and Sprite_ShadeRaise(8) done - 32 words 0x80D440 row +5 into 0x811380, Gfx_ClutStripDirty, +0 bit 5 cleared, +0xB, +0x5D..+0x5F, +0x5C 0, +0xB 2; Sprite_ScriptTick. Answers every +0xB == 2. PSX FUN_801C0114 term for term. Combat route: 16 calls."
+
+[[func]]
+pc = 0x532A70
+name = "Encounter_PartyAtPlaces"
+ret = "void"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x532A70..0x532B51 (0xE2 bytes), cdecl, two calls, every jump internal; one caller, the intro state 0x495FDA. Per member (Field_State, Sprite_Current): a search of 0x904062 for id +0x89 whose result is never used; +0x34 / +0x38 the member spot 0x7E06E0 + 8i; +0x3E MapView_GroundAt; +0xB 0; Sprite_SetAnimation(0x904AAC, + 0x1C when bit 6 of the record byte +0x11 by Field_State +0x148). No PSX twin paired. Combat route: 1 call."
+
+[[func]]
+pc = 0x532B60
+name = "Encounter_PartyScriptOnce"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/inventory_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-23, 0x532B60..0x532C0D (0xAE bytes), cdecl, one call, every jump internal; one caller, the intro state 0x4960D1. Bit 4 of 0x904AE5: 1. Else per member (Field_State, Sprite_Current; the same unused search of 0x904062): +0xB 0 and Sprite_ScriptTickOnce non-zero give +0xB 1; answers every +0xB == 1. No PSX twin paired. Combat route: 42 calls."
+
+[[func]]
+pc = 0x534880
+name = "Sprite_ShadeLower"
+psx = 0x801C3998
+ret = "unsigned char"
+params = "unsigned step"
+impl = "src/game/inventory_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x534880..0x534911 (0x92 bytes), cdecl, no calls. Sprite_ShadeRaise mirror: each of Sprite_Current + 0x5D..+0x5F not 0x80 becomes s8 byte - s8 step as a 16-bit difference, 0x80 below -128, else its low byte; al 1 when all three are 0x80. Three call sites (0x403922, 0x525742, 0x5328DD). PSX FUN_801C3998 term for term. Combat route: 24 calls."
