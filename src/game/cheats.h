@@ -13,3 +13,10 @@ void Cheats_Inject();
 // multiplies a fallen enemy's yield by before adding it to the battle total.
 std::uint32_t Cheats_ExpMultiplier();
 std::uint32_t Cheats_ZennyMultiplier();
+
+// DIV-0046 on Pilfer's roll, which is ours since round eight (Steal_Start,
+// src/game/magic_fx_reached.cpp): the mask the random byte takes - 0xFF, or
+// 0 when the cheat's patch is in Capcom's body at 0x4B5691 (BOF3X_STEAL=1 and
+// not BOF3X_ORIGINAL=Cheat_StealAlways). Read from those bytes after the
+// patch, so ours rolls exactly as the patched original would.
+std::uint32_t Cheats_PilferRollMask();

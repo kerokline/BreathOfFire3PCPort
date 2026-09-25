@@ -25,6 +25,8 @@
 // where the original would call through its own stack (the doc, section 3).
 #include "game/magic_fx_reached.h"
 
+#include "game/cheats.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -301,6 +303,10 @@ int StealMultiplier(int diff) {
 // the bag full, 0x39; nothing to steal is 0x3A; a failed roll 0x39, or 0x3A
 // when the enemy's rate is 0. The message id goes to +0xA.
 //
+// This is Pilfer's copy of the routine (the PSX's MAGIC065.EMI; Steal's is
+// 0x4F5140, not ours - docs/cheats.md). DIV-0046's cheat lives in its roll:
+// see Cheats_PilferRollMask.
+//
 // As the original has it: the double's index is not tested; the target is
 // not checked to be an enemy (0..2 reads below the enemy records); the rate
 // row is unbounded; the target byte is read again after Rand and after
@@ -335,7 +341,11 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     const int rate = static_cast<signed char>(At(at::kStealRates)[enemy[at::kStealRate]]);
     const int r = g.rand();
     unsigned char* const e = Enemy(Byte(at::kTarget));
-    if (static_cast<int>(r & 0xFF) >= static_cast<int>(static_cast<std::uint32_t>(rate) * static_cast<std::uint32_t>(multiplier))) {
+    // DIV-0046 (BOF3X_STEAL=1): the mask is 0 when the cheat's patch is in
+    // the original's `and eax, 0xFF` at 0x4B5690 - the roll then passes
+    // whenever the rate times the multiplier is above 0.
+    const std::uint32_t mask = Cheats_PilferRollMask();
+    if (static_cast<int>(static_cast<std::uint32_t>(r) & mask) >= static_cast<int>(static_cast<std::uint32_t>(rate) * static_cast<std::uint32_t>(multiplier))) {
         Sprite_Current[0xA] = e[at::kStealRate] != 0 ? 0x39 : 0x3A;
         return;
     }

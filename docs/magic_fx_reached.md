@@ -170,10 +170,13 @@ phases are shared - taking them here takes them for the twin too. Which
 spell row 21 is was not identified: the draws are the ones round seven
 matched to Sacrifice's overlay (MAGIC055), but other overlays share them.
 
-**The steal** (row 69). Named for what `Steal_Start` does - the sibling's
-`names/overlays.toml` has `MAGIC115` as "UtmostAttack, Steal", and the
-queue's PSX twin for `0x4B54F0` is `801EEC90`; neither pairing was checked
-further. The start plays the thief's animation 0xC, creates the thief's
+**The steal** (row 69) - **Pilfer's copy of the routine**, by
+[`cheats.md`](cheats.md) (the PSX's `MAGIC065.EMI`; Steal's copy is
+`0x4F5140`, not in this group). The functions keep the `Steal_` names they
+merged with; the queue's PSX twin for `0x4B54F0` is `801EEC90`. **DIV-0046**
+(`BOF3X_STEAL=1`) patches this routine's roll mask at `0x4B5691`; ours reads
+that byte back through `Cheats_PilferRollMask()` and masks the roll with it,
+so the cheat holds with the function ours (section 5a). The start plays the thief's animation 0xC, creates the thief's
 double - a kind-1 task (parameter 0x45) whose first 0x80 bytes are a copy of
 the acting party record, its `+1` / `+2` cleared and kind / parameter set
 back after the copy - and rolls. (The animation is `BattleActor_SetAnimation`'s offset 0xC from the thief's own.)
@@ -270,6 +273,19 @@ the exe's values two rounds in three (random bytes made almost every rate
 too large or negative to meet a roll), and the round's first `Rand` lands on
 the compare or one below it half the time. The table below is the second
 run, every control against the final fuzz.
+
+**5a. Found after the merge: DIV-0046.** On the merged round-eight tree the
+coordinator's run failed in `Steal_Start`, 402 rounds (round 34 first, bytes
+142 / 274 / 406 - a task's message id `+0xA` - and the original calling
+`Inventory_Add` where ours did not). The cause was not another group's
+code: that run had `BOF3X_STEAL=1` from the launcher's config, so
+`Cheats_Inject` had patched the original's `and eax, 0xFF` at `0x4B5690` to
+`and eax, 0` before the fuzz cloned it, and ours rolled unpatched. Reproduced
+with the pre-fix build under `BOF3X_STEAL=1` (the same rounds and bytes);
+passing with it unset, which is why every run here passed. It was a real
+regression, not a fuzz artefact: live, the takeover would have dropped the
+cheat for Pilfer. Fixed as section 4 says, and ledgered as an amendment to
+DIV-0046. Both self-tests now pass with the variable set and unset.
 
 `BOF3X_SHADOW='*'`: exit 0, every module's self-test passing (2026-09-25).
 
