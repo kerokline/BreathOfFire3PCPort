@@ -34,6 +34,7 @@
 #include "game/menu_verbs.h"
 #include "game/menu_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/text_pairs.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -902,6 +903,7 @@ extern "C" unsigned char __cdecl Text_CharCount(const unsigned char* text) {
     while (text[0]) {
         ++n;
         if (text[0] & 0x80) {
+            if (TextPair_At(text)) ++n;   // DIV-0057: a pair is two characters wide
             text += 2;
             ++bytes;
         } else {

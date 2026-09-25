@@ -370,10 +370,17 @@ What is established:
    sequence**, and by the evening the owner was playing it: dialogue,
    narration, menus, item and ability names (DIV-0005..0009); on 2026-09-21
    the menu's buttons, the battle's command labels and New Game's names
-   (DIV-0018..0020). Enemy and place names, some labels and headers, and text
-   in artwork are still Chinese; round seven found where several of them
-   live (the enemy names, the command banner, the place plates -
-   [`HANDOFF.md`](HANDOFF.md)). What this means in detail is the owner's to
+   (DIV-0018..0020); on 2026-09-24 the enemy names and banner words
+   (DIV-0052, DIV-0053).
+   **Four languages since 2026-09-24:** English, French and German
+   (DIV-0054) and Japanese (DIV-0056), each from the player's own disc,
+   `BOF3X_LANG=en|fr|de|ja`. The world-map place plates follow the language
+   (DIV-0055). Japanese names use pair codes (DIV-0057), and a layout switch
+   keeps the original's full-width layout for `ja` / `zh` (DIV-0056).
+   Japanese is seen by capture only; French and German are captured on the
+   world map only. Still Chinese: the exe's own strings in Japanese mode,
+   some labels and headers, and text in artwork
+   ([`HANDOFF.md`](HANDOFF.md)). What this means in detail is the owner's to
    say; the asset side of selectable languages is surveyed below ("A stated
    goal worth recording now"), and any swap is a divergence in the ledger
    sense.

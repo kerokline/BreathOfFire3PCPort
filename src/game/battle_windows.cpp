@@ -29,6 +29,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/text_pairs.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -508,7 +509,8 @@ extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
     TargetFrame(x, y);
     const std::uint32_t enemy = at::kEnemies + at::kEnemyStride * e;
     EnemyGauge(x, y, enemy);
-    g.tiny_font(x + 4, y + 3, 0, 8, At(enemy));
+    std::uint8_t expanded[33];   // DIV-0057: the 8-unit draw is Capcom's, so pairs go in as their glyphs
+    g.tiny_font(x + 4, y + 3, 0, 8, TextPairs_Expand(At(enemy), expanded, sizeof expanded));
     g.line_semi1(x + 2, y + 2, x + 0x49, y + 2, r, gr, b);
     g.line_semi1(x + 2, y + 3, x + 2, y + 0x12, r, gr, b);
     const unsigned r2 = Darker(r), g2 = Darker(gr), b2 = Darker(b);
@@ -531,7 +533,9 @@ extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
     g.draw_edge(x, y + 0x13, 3, 1);
     const std::uint32_t enemy = at::kEnemies + at::kEnemyStride * e;
     EnemyGauge(x, y, enemy);
-    if (static_cast<unsigned char>(g.enemy_name_shown(e)) != 0) g.tiny_font(x + 4, y + 3, 0, 8, At(enemy));
+    std::uint8_t expanded[33];   // DIV-0057, as in BattleWin_DrawTargetEnemy
+    if (static_cast<unsigned char>(g.enemy_name_shown(e)) != 0)
+        g.tiny_font(x + 4, y + 3, 0, 8, TextPairs_Expand(At(enemy), expanded, sizeof expanded));
     g.line_semi1(x + 2, y + 2, x + 0x49, y + 2, r, gr, b);
     g.line_semi1(x + 2, y + 3, x + 2, y + 0x12, r, gr, b);
     g.line_semi0(x + 0x49, y + 2, x + 0x49, y + 0x12, r, gr, b);
@@ -648,7 +652,10 @@ extern "C" unsigned char __cdecl Text_GlyphCount(const unsigned char* text) {
     const unsigned char* p = text;
     unsigned char c = *p;
     while (c != 0) {
-        if (c & 0x80) ++p;
+        if (c & 0x80) {
+            if (TextPair_At(p)) ++n;      // DIV-0057: a pair is two characters wide
+            ++p;
+        }
         c = p[1];
         ++p;
         ++n;

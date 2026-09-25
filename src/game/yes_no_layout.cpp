@@ -41,6 +41,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -129,6 +130,7 @@ void YesNoLayout_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
     if (bof3::WantsShadow("yes_no_layout")) SelfTest();
     if (n == 0 || n >= sizeof lang || std::strcmp(lang, "original") == 0) return;
+    if (Lang_FullWidth()) return;   // DIV-0056: the original's stops were fitted to full-width words
 
     bof3::RetargetCall("YesNoLayout", kLineCall, kMsgSystemPtr, reinterpret_cast<void*>(&YesNo_Line));
     static const std::uint8_t stop_was[] = {0xB9, 0xFE, 0x00, 0x00, 0x00};

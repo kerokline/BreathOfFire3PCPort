@@ -251,8 +251,15 @@ it is a table, a proportional font is a data change.
    to 9). Dialogue that embeds a name goes through control codes, not these
    fields - *believed*, not checked; what a JP/US-length name record looks
    like under the PC's 9-byte walk is unread.
-6. German and French: their discs are on hand; their cells for the accented
-   letters are unread, and may need more than the 110 free glyphs leave.
+6. ~~German and French.~~ **Built 2026-09-24, DIV-0054; not yet seen in
+   game.** Both discs extend the same grid past `0x93` with their accented
+   letters (FR `0x94`..`0xAA`, DE `0x94`..`0xA7`, both sets). The glyph
+   bound follows the table since DIV-0016, so room was never the issue. Open
+   from the ledger entry: ~466 FR / ~273 DE slots whose European pointers
+   fall outside their block, and 37 / 54 accented enemy names over the
+   banner's 8 bytes. **Japanese built the same evening, DIV-0056**: both
+   sheets of `ENDKANJI.EMI`, 882 cells, all 200 areas with no slot kept,
+   seen by capture. Its exe-side strings are still Chinese.
 7. ~~The regression check with `BOF3X_LANG` unset.~~ Run 2026-09-20 with all
    111 ours, DIV-0005..0007 in: identical to the all-original reference at
    1,734 of 1,734 frames (a 1.9-minute run, not the whole cycle). The frame
@@ -387,3 +394,82 @@ labels at `0x669CF0` (Attack / Defense / Int / Agility - the US `Pwr` `Def`
 and shows gibberish across a language switch. The owner accepted that on
 2026-09-21 until a language-independent name system exists.
 
+
+## 9. Japanese names: the census for pair codes (2026-09-24)
+
+**The problem.** A Japanese item or enemy name is at most 8 glyphs (the JP
+records' `name[8]`, kana one byte and kanji two on the disc). On the PC every
+glyph is two bytes, so the longest take 16. That leaves no terminator in the
+items' 16-byte field (72 of 538 names) and does not fit the 8 bytes the
+battle banner copies (124 of 168 distinct enemy names). One-byte kana would
+fit all but 3 enemy names. It would also break the byte-based width math
+(section 8's table of units per byte) and depend on the one-byte codes the
+remaining Chinese uses.
+
+**Built the same night, DIV-0057.** A *pair code*: one two-byte code that our draw
+expands to two ordinary glyphs, stepping 12 after each. The builder pairs
+from the end of a name until it fits. Measured on the JP disc: every name
+fits, items in 15 bytes and enemies in the banner's 8. That takes 72 items
+and 124 enemies paired, with 49 + 192 distinct pairs.
+
+**Where names go.** All call sites were found by an E8 scan and the table
+readers by `pe_xref.py`:
+
+- **`Item_NamePtr` `0x591680`, 77 call sites.** The pointer goes to:
+  - `Text_DrawAt` (ours, through `Text_DrawString`) with `Text_CharCount` as
+    its count;
+  - `TextRecord_Set` `0x591940`, `strncpy(…, 16)` (`0x41C5B0`) or a 16-byte
+    dword copy (`0x45B5F0`) into the text records `0x904CE0`, which dialogue
+    inserts with `0x07 nn` and `MsgBox_Step` (ours) draws;
+  - `Str_CopyN` (ours) into a battle banner;
+  - `Crt_sprintf`.
+- **Direct table readers:**
+  - Items: `0x4B1420`, `0x4B58F0` (`Str_CopyN`), `0x58AAB0` (text records),
+    `0x573A80`, `0x574EC0`, the accessory screens `0x465120` and
+    `0x468C50`..`0x469210`.
+  - Abilities: `0x59D200` and `0x57DA70`/`0x57DC90`, `0x42E400` and
+    `0x42F9D0` (`Str_CopyN`), `0x575F50`, `0x585090`, `0x585500`,
+    `0x586D20`, `0x58D7B0` (text records).
+
+  Every draw among them is `Text_DrawAt`.
+- **Not reached by any name reader:**
+  - the unowned 8-unit glyph draw `0x516E70`;
+  - `Text_DrawFont8` `0x517090`, which the same functions call only for
+    numbers;
+  - the effect draw `0x4987E0`, reached only by `MsgBox_Step` under a
+    grow/shrink span.
+
+  A name inserted inside such a span would show the pair's placeholder
+  glyph.
+- **Seen live:** `BOF3X_TEXTLOG=1` on the combat route in Japanese showed
+  names drawn from the item tables, the ability table, the text records and
+  the banner buffer. Every call site was ours.
+
+**Widths.** `Text_CharCount` `0x57D800` counts characters, a two-byte code as
+one, and **stops at a terminator or 16 bytes**. About 20 of its 47 callers
+centre with `count * 6`, which is half the width at 12 units a glyph
+(`0x4B1420`: `x = 0xA0 - count * 6`). `Text_GlyphCount` `0x597F40` (one
+caller, `0x596A90`) likewise. Both counters are ours: counting a pair as two
+keeps every centring exact. `Text_DrawString`'s own count should count it as
+two as well, so that a caller's count still covers the name.
+
+**Missed by this census, caught by the placeholder:** the enemy name
+windows. `BattleWin_DrawTargetEnemy` `0x443B10` and
+`BattleWin_DrawEnemyStatus` `0x443D90` (ours) draw the name from the battle
+record, not from a table, through Capcom's 8-unit `0x516E70`. They now pass
+it `TextPairs_Expand`'s copy. Of `0x516E70`'s 18 callers, only these two
+carry names. The rest draw system-pool text, fixed labels, the Config
+screen and character names (`0x802DC0`).
+
+**Enemy names.** `Battle_CopyEnemyData` `0x4946C0` copies 12 bytes to the
+battle record at `+0x80`, and `BattleBanner_ShowName` `0x44A990` copies 8 of
+them to the banner. Both are ours. The enemy windows draw it as above.
+
+**What building it takes:**
+- `loc_build.py`: the pairing, and a kind-13 chunk holding the pair table.
+- `Text_DrawString` and `MsgBox_Step`: expand a pair.
+- `Text_CharCount` and `Text_GlyphCount`: count a pair as two.
+- A visible placeholder glyph at each pair code, so a missed path shows.
+- A `DIVERGENCE.md` entry.
+- Captures of the item and ability lists, the shop, a "got X" message and a
+  battle banner with a long enemy name.

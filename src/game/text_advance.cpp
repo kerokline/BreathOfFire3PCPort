@@ -56,6 +56,10 @@ int TextAdvance_Of(const std::uint8_t* text) {
 
 // Declared in game/text_advance.h: MsgBox_Step (src/game/msgbox.cpp) calls it
 // directly now that the stepper is ours.
+int TextAdvance_OfGlyph(std::uint32_t glyph) {
+    return g_advances && glyph < g_count ? g_advances[glyph] : kOriginalAdvance;
+}
+
 extern "C" const unsigned char* __cdecl MsgBox_DrawChar(int x, int y, int color, int count,
                                                         const unsigned char* text) {
     if (!g_advances) return Text_DrawAt(x, y, color, count, text);

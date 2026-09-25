@@ -14,6 +14,9 @@ void TextAdvance_Set(const std::uint8_t* advances, std::uint32_t count, std::uin
 // loaded or the byte is not a glyph.
 int TextAdvance_Of(const std::uint8_t* text);
 
+// The advance of glyph `glyph`; 12 when no table is loaded or it is past it.
+int TextAdvance_OfGlyph(std::uint32_t glyph);
+
 // DIV-0006 for the dialogue box's own pen: Text_DrawAt, then MsgBox_PenX
 // moved by (advance - 12) so that the stepper's `+ 12` lands the pen by the
 // glyph's advance. Identical to Text_DrawAt with no advance table loaded.

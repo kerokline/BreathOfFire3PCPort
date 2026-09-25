@@ -2409,3 +2409,230 @@ designed in rather than bolted on.
   owner in game, 2026-09-24**: "Mage Goo" and "Eye Goo" in the enemy status
   banners ("the names look good").
 - **Reversible?** play without `BOF3X_LANG`.
+
+- **ID:** DIV-0054
+- **Date:** 2026-09-24
+- **Subsystem:** text / font (only with a language overlay;
+  `tools/loc_build.py`, and one table in `src/game/config_text.cpp`)
+- **Original behaviour:** the PC port shipped Chinese only. Each
+  PlayStation language was its own build on its own SKU, with no language
+  switching in any of them (`STATUS.md`, "A stated goal worth recording
+  now").
+- **New behaviour:** `loc_build.py all --lang fr|de` builds French and German
+  overlays from the player's own French or German disc, the same way as the
+  English ones (DIV-0005..0009, 0014..0020, 0052, 0053). With
+  `BOF3X_LANG=fr` or `de` the game loads them. Three changes make that
+  work:
+  1. **Accented glyphs.** Both discs extend the English atlas's grid past
+     code `0x93`: French to `0xAA`, German to `0xA7`, in both the 8 x 12 and
+     the 8 x 8 sets. The US disc's cells there are empty. The tool finds the
+     run from the atlas (`latin_extension`) and appends two blocks, dialogue
+     cells at glyph `0xA80` and UI cells at `0xAA0`. These come after
+     everything DIV-0016/0051/0052 placed, so an English table is unchanged.
+     The Config screen's selected-row redraw swaps the second pair by a
+     constant offset, as it does the first (`kUiExtGlyphs`).
+  2. **Slot count from the PC file.** A text block's slot count was read off
+     the donor's first pointer. The European tables do not always agree with
+     it (15 FR and 11 DE areas), so the count is now the PC file's. Any slot
+     whose donor pointer falls outside the block keeps the PC's own message.
+  3. The Config trim accepts the accented codes as text.
+- **Rationale:** the owner's request, 2026-09-24: the other official
+  languages as options. Everything drawn comes from the player's discs.
+- **Also in the PSX version?** The text and the glyphs are the French and
+  German PlayStation releases'. Choosing among languages is ours.
+- **Verification:** 2026-09-24, off the owner's discs.
+  - **English is unchanged.** An English build with the change is byte for
+    byte the build without it, in all 245 overlay files, with the same log.
+  - **Both languages build end to end.** Font, Config, verbs, character
+    names, merchant, battle labels and messages, the six name tables with 0
+    kept, and 200 of 200 areas. French keeps 962 slots as shipped, German
+    769, against English's 496.
+  - **No Japanese leftovers leak through.** 6,600 French and 5,706 German
+    accented messages were checked against the Japanese disc; none is an
+    untranslated leftover.
+  - **Not yet seen in game.**
+- **Known gaps:**
+  - **Out-of-range slots.** The extra kept slots (~466 FR, ~273 DE) are all
+    donor pointers outside their block where the US disc has English text.
+    The European builds shortened some tables, aimed some slots elsewhere
+    (FR `AREA000` slot 57 is `0x4600` in a `0x24D3` block) and wrote text
+    over some table tails (FR `AREA004`, `AREA094`). Whether the PC's
+    scripts reach those slots is unread.
+  - **Enemy names.** 37 FR and 54 DE enemy names stay Chinese: each has an
+    accented letter, which is two bytes, so the name no longer fits the
+    banner's 8.
+  - **Title art and upscales.** The title menu stays as shipped: its letters
+    were measured on the US sheet. `--glyphs` / `--upscaler` refuse a disc
+    with accented cells, because the sheet covers 100 cells.
+  - **Launcher.** The launcher's settings file knows only `en` and
+    `original`. French and German need `BOF3X_LANG` set in the environment.
+- **Reversible?** play without `BOF3X_LANG`, or with `en`.
+
+- **ID:** DIV-0055
+- **Date:** 2026-09-24
+- **Subsystem:** world map (only with a language overlay;
+  `tools/loc_build.py`, data only)
+- **Original behaviour:** the place plates on the ten world maps (`AREA016`,
+  `033`, `045`, `065`, `087`, `088`, `115`, `121`, `151`, `152`) are paint
+  on each map's page, kind-1 chunk `0x0E001000`. The port repainted them in
+  Chinese over the Japanese disc's page: 4..7 tiles in one band.
+- **New behaviour:** `loc_build.py all` puts four of the donor disc's
+  sections for each world map into `<lang>.AREAnnn.DAT`, whole:
+  - the page;
+  - `0x800D3800` -> tag `0xB0000`, the map's sprite frames, the plates sized
+    per name;
+  - `0x800E3800` -> tag `0xC0000`;
+  - the palette section (`0x8002D800` JP / `0x80035800` Western) -> tag
+    `0xA000`, whose first CLUT is the plates'.
+
+  The same code serves every language: each disc carries its own plates.
+  The world map's code (in `BOF3.exe`, compiled from the JP overlay) and
+  its map section `0x80104000` are untouched.
+- **Rationale:** the owner's request, 2026-09-24 ("town banners"). These are
+  Capcom's own localised plates, off the player's disc.
+- **Also in the PSX version?** Yes, per language. These are those releases'
+  pages.
+- **Verification:** 2026-09-24.
+  - **The PC's side is Japanese.** The PC's `0xA000`, `0xB0000` and
+    `0xC0000` chunks are the JP disc's sections byte for byte in all ten
+    areas.
+  - **Nothing of the port's own is lost.** Every tile the PC changed lies
+    inside the tiles each Western page replaces.
+  - **The palette is needed.** Rendered, each disc's plates are right only
+    under its own first CLUT of the palette section.
+  - **English text is untouched.** An English build differs from the one
+    before only in those ten files, whose earlier chunks are intact.
+  - **Seen in game:** the owner's route `worldMapAndAreaTransition_ab`
+    (`f01260`, `f01740`) captured in all three languages shows "Cedar
+    Woods" / "Bois de Cèdres" / "Zedernwälder" and "McNeil" / "Dubois" /
+    "McNeil" on frames sized to them. The owner saw "Cedar Woods" live.
+- **Not yet seen:** `AREA065` (every Western disc) and `AREA121` (German).
+  There the discs rearranged the page itself: 25..32 tiles move, and
+  `0xC0000` and the block order of `0xB0000` change with them. The swap
+  carries all of it, and is right unless the exe's world-map code
+  addresses those blocks directly.
+- **Reversible?** play without `BOF3X_LANG`.
+
+- **ID:** DIV-0056
+- **Date:** 2026-09-24
+- **Subsystem:** text / font, and the layout switch for languages (only with
+  a language overlay; `tools/loc_build.py`, `src/game/lang_layout.cpp`)
+- **Original behaviour:** as DIV-0054, the port shipped Chinese only. The
+  Japanese PlayStation release draws its text from `ENDKANJI.EMI`:
+  - section 0 is 21 x 21 cells of 12 px, in which byte `b` below `0x5B` is
+    cell `b`, a kana `b` from `0x5B` up is cell `b + 0x23`, and `0x15 nn` is
+    cell `nn + 0x5B`;
+  - section 1 is the kanji sheet, where `0x12nn` / `0x13nn` is cell
+    `code - 0x1200`.
+
+  The sibling repo read this off the JP EXE's mapper `0x80151F4C`
+  (`docs/TEXT_ENGINE.md`), and it was re-measured here.
+- **New behaviour:**
+  1. **The Japanese overlay.** `loc_build.py all` on a disc that boots
+     `SLPS_` (`is_japanese`) builds a Japanese overlay:
+     - both sheets whole, 882 cells doubled to the PC's 24 x 24, from glyph
+       `0x993`, on the PC's own 12-unit advance;
+     - every code two bytes, except the two hanging brackets `「` `『`. The PC
+       hangs the same two at `0x2A` / `0x3C`, so they keep those bytes with
+       the disc's glyphs painted over the port's;
+     - `0xFF` as a space;
+     - the kanji lead bytes converted in dialogue, pools, item and ability
+       names and enemy names;
+     - the JP white text palette at `0x8002B800`, the JP system pool at
+       `0x80014000`, and the JP name records' 8-byte field;
+     - the world-map plates as DIV-0055.
+
+     The exe's own strings (kinds 7..12: Config, verbs, default names,
+     merchant, battle labels and messages) are not built for a Japanese
+     disc, so they stay Chinese.
+  2. **The layout switch.** The Latin layout patches (Config screen
+     DIV-0015/0017/0026/0051, menu verbs DIV-0018, Yes / No DIV-0027) fit
+     8-unit text and were keyed on "a language is set". `Lang_FullWidth()`
+     now names the full-width languages, `ja` and `zh` (owner, 2026-09-24:
+     the five official languages are a closed set, en/fr/de at 8 and zh/ja
+     at 12). For those the three injectors leave the original layout, which
+     was made for full-width text. Every other value, `original` and unset
+     included, takes the same path as before.
+- **Rationale:** the owner's request, 2026-09-24: Japanese as an option,
+  and the layout split by language type.
+- **Also in the PSX version?** The text and glyphs are the Japanese
+  release's. The layout is the port's own, which suits them.
+- **Verification:** 2026-09-24.
+  - **English is unchanged:** a build is byte for byte the one before, in
+    all 245 files.
+  - **Japanese builds in full.** 200 of 200 areas with **0 slots kept**;
+    44 pools with 42 slots kept; the six name tables with 72 of 538 kept
+    (8-character names do not fit with a terminator, and the PC's own
+    names never pass 12 bytes); enemy names 87 written and 361 kept (the
+    banner draws 8 bytes, 4 full-width glyphs).
+  - **Seen by capture, `BOF3X_LANG=ja`:**
+    - the attract sequence's narration and dialogue (ギリー, モーグ, the
+      ゴースト caption);
+    - the world-map plates シーダの森 and マクニール村 with the region
+      banner;
+    - the item and ability lists (げんきだま, 純げんきだま, リリフ).
+
+    「特能を使います」 was checked against the disc: the JP pool's own bytes
+    `12 3a 12 88`, decoded the same way by the sibling's `jptext.py`.
+  - **Not yet seen by the owner.**
+- **Known gaps:**
+  - The exe-side strings: menu buttons, list headers, default names, battle
+    labels.
+  - The 361 enemy names and 72 item names that do not fit.
+  - The launcher's settings file, which knows only `en` and `original`.
+  - The grow / shrink draw `0x4987E0` (unread), which Japanese shouts use.
+- **Reversible?** play without `BOF3X_LANG`.
+
+- **ID:** DIV-0057
+- **Date:** 2026-09-24
+- **Subsystem:** text (only with a Japanese overlay; `tools/loc_build.py`,
+  `src/game/text_pairs.cpp`, `Text_DrawString`, `Text_CharCount`,
+  `Text_GlyphCount`, the two enemy name windows)
+- **Original behaviour:** a glyph code draws one glyph. A Japanese name (at
+  most 8 glyphs, `name[8]` on the JP disc) is two bytes a glyph on the PC.
+  So the longest do not fit the items' 16-byte field with a terminator
+  (72 of 538), nor the 8 bytes the battle banner copies (124 of 168 distinct
+  enemy names).
+- **New behaviour:**
+  - **Pair codes.** A kind-13 chunk in `ja.FIRST.DAT` lists *pair codes*:
+    glyph numbers from `0xD10`, each standing for two ordinary glyphs.
+    `loc_build.py` pairs a Japanese item, ability or enemy name from its end
+    until it fits (items 15 bytes, enemies 8), and nothing else. That takes
+    226 pairs, and every name fits.
+  - **The draw.** `Text_DrawString` draws a pair as its two glyphs, the
+    second one advance on; the pair's own advance (kind 4) is the sum.
+  - **Counting.** A pair counts as two characters there and in
+    `Text_CharCount` / `Text_GlyphCount`, so every `count * 6` centring stays
+    exact.
+  - **The enemy name windows.** `BattleWin_DrawTargetEnemy` /
+    `BattleWin_DrawEnemyStatus` draw through Capcom's 8-unit `0x516E70`, so
+    they pass it the name with each pair replaced by its two codes
+    (`TextPairs_Expand`).
+  - **The placeholder.** The glyph at a pair code is a placeholder: both
+    kana at native 12 px, which draw at half size. A path that does not
+    expand pairs therefore shows small text, not a wrong word.
+  - **No table loaded.** With no table loaded every function is what it
+    was: the lookups answer "not a pair" and `TextPairs_Expand` returns its
+    argument.
+- **Rationale:** the owner's idea, 2026-09-24 ("two letters occupying a
+  single 2 byte location"). It was preferred over one-byte kana (which would
+  break byte-based widths and leave 3 enemy names over) and over widening
+  records (which moves every later field).
+- **Also in the PSX version?** No. The names are the JP release's and they
+  look the same; storing two glyphs in one code is ours.
+- **Verification:** 2026-09-24.
+  - **Census** (docs/dialogue-localisation.md section 9): every item and
+    ability name reaches `Text_DrawAt`, the text records or a banner copy,
+    all ours.
+  - **The missed path.** The census missed the enemy windows' `0x516E70`.
+    The placeholder showed it on the first battle capture (ヌイグルミ as
+    ヌイグ and a half-size ルミ), and the fix above was then checked on the
+    same capture: ヌイグルミ even. The 18 callers of `0x516E70` were then
+    read, and only those two carry names.
+  - **Seen in game:** 8-glyph names ドラゴンシールド and フォースアーマー
+    whole in the equipment panel. `BOF3X_TEXTLOG` showed pair codes drawn
+    from the armour table.
+  - **Self-tests:** `text_draw` 6,000 strings, `menu_windows` 74,000
+    rounds, `battle_windows` 66,000 rounds, all 0 mismatches.
+  - **English is unchanged:** 245 of 245 files.
+- **Reversible?** play without `BOF3X_LANG`, or in any other language.

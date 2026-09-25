@@ -42,6 +42,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -113,6 +114,11 @@ const char* TakeString(const std::uint8_t*& p, const std::uint8_t* end) {
 // (tools/loc_build.py), so the swap is a constant offset. The blank after the
 // UI set stays: it is the space, and its advance is 8 in either draw.
 constexpr std::uint32_t kUiGlyphs = 0xA00, kDialogueGlyphs = 0x993, kSetCells = 100;
+// The French and German discs' accented cells (codes 0x94 up) are a second
+// pair of blocks, laid out the same way: UI at 0xAA0, dialogue at 0xA80, up
+// to 24 cells (loc_build.py's EXT_SMALL_AT, EXT_AT, EXT_MAX). An English
+// overlay has no glyphs there, and its strings never name them.
+constexpr std::uint32_t kUiExtGlyphs = 0xAA0, kDialogueExtGlyphs = 0xA80, kExtCells = 24;
 // DIV-0051: the controller panel's icons - six glyphs loc_build.py puts
 // after the UI set's blank (its ICONS_AT): circle, cross, triangle, square
 // from the disc's 12 x 12 set, L1 and R1 composed of the dialogue capital
@@ -168,6 +174,7 @@ extern "C" const unsigned char* __cdecl ConfigText_DrawSelected(int x, int y, in
             if (!text[n + 1]) bof3::Fatal("config: a selected-row string ends inside a code");
             std::uint32_t g = (static_cast<std::uint32_t>(text[n] & 0x7F) << 8) | text[n + 1];
             if (g >= kUiGlyphs && g < kUiGlyphs + kSetCells) g = g - kUiGlyphs + kDialogueGlyphs;
+            else if (g >= kUiExtGlyphs && g < kUiExtGlyphs + kExtCells) g = g - kUiExtGlyphs + kDialogueExtGlyphs;
             big[n] = static_cast<unsigned char>(0x80 | (g >> 8));
             big[n + 1] = static_cast<unsigned char>(g);
             n += 2;
@@ -260,6 +267,7 @@ void ConfigText_Inject() {
     // text every number below is right as it stands.
     char lang[16];
     if (GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang) == 0) return;
+    if (Lang_FullWidth()) return;   // DIV-0056: the original layout is the full-width one
 
     // --- the label column, right-aligned -----------------------------------
     // Both branches of the row draw 0x461800 place a label at
