@@ -252,7 +252,9 @@ add_library(bof3x SHARED
   src/game/magic_fx_reached.cpp
   src/game/magic_fx_reached_fuzz.cpp
   src/game/menu_draw_helpers.cpp
-  src/game/menu_draw_helpers_fuzz.cpp)
+  src/game/menu_draw_helpers_fuzz.cpp
+  src/game/menu_lists.cpp
+  src/game/menu_lists_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
