@@ -613,12 +613,33 @@ evidence = "16 entries of 0x18 bytes: file name at +0, file size at +0x14. Fille
 # system. Established 2026-09-19, docs/attract-mode.md section 2.
 # ---------------------------------------------------------------------------
 
-[[block]]
+[[data]]
 name = "Task_Records"
 pc = 0x66C7D0
 status = "evidence"
 evidence = "disasm 2026-09-19 of 0x5A98A0 / 0x5A9914 / 0x5A9949: four records of 0x20 bytes (the scheduler walks edx = 0, 0x20 .. < 0x80). +0 u16 state (0 free, 1 sleeping, 2 runnable), +2 u16 frames left to sleep, +4 saved esp, +8..+0x1F task-private words (0x5A99F4 zeroes +8..+0x17 of the current task). The current task's record offset is at 0x66C850, the scheduler's own esp at 0x66C854, the top of the stack arena at 0x66C858."
 note = "Task 0's private words at +0x18/+0x1A are 0x66C7E8 / 0x66C7EA - the top-level mode and sub-step words that 0x588E88 dispatches on through the table at 0x667294."
+
+[[data]]
+pc = 0x66C850
+name = "Task_CurrentOffset"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-25: the running task record offset in Task_Records (0, 0x20, 0x40, 0x60). Written only by Task_RunAll (0x5A98AD, each record as the walk reaches it); read by Task_Sleep, Task_Restart, Task_Exit and Task_ClearPrivate. After the walk it holds 0x60 until the next frame."
+
+[[data]]
+pc = 0x66C854
+name = "Task_SchedulerEsp"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-25: Task_RunAll esp after its five pushes (0x5A98A5), on the caller stack; Task_BackToScheduler reloads it (0x5A98F0). Read and written by nothing else."
+
+[[data]]
+pc = 0x66C858
+name = "Task_StackTop"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-09-25: the top of the task stack arena, written only by Task_SetStackBase (esp - 0x4000); task k stack is the 0x4000 bytes below Task_StackTop - k * 0x4000, its first saved esp 0x1C below that top (Task_Create, Task_Restart)."
 
 [[func]]
 pc = 0x5A98A0
@@ -626,7 +647,8 @@ name = "Task_RunAll"
 ret = "void"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-19: saves ebx/ecx/esi/edi/ebp and esp to 0x66C854; for each of four records: skip if state 0; if state 1, decrement the sleep count and skip unless it reached 0, then mark 2; load esp from the record, pop ebp/edi/esi/edx/ecx/ebx, ret - resuming the task where it yielded. Tasks return here by jumping to 0x5A98F0, which restores the scheduler esp and continues the walk. Called once per logic frame from WinMain's loop (0x4FCF82) unless the F9 pause byte 0x6BC63A is set."
+evidence = "disasm 2026-09-25, 0x5A98A0..0x5A9906 (0x67 bytes with the landing Task_BackToScheduler at +0x50), hand-written, no calls: push ebx ecx esi edi ebp; esp to Task_SchedulerEsp 0x66C854; edx = 0, 0x20 .. < 0x80: edx to Task_CurrentOffset 0x66C850; state word 0 - next; state 1 - the sleep word +2 decremented (16 bits), next unless it reached 0, then state 2; any state but 0 and 1 runs at once. Run: esp = record +4, pop ebp edi esi edx ecx ebx, ret into the task. Next (0x5A98F6): edx + 0x20, loop; after the fourth pop ebp edi esi ecx ebx, ret. eax is never written: a task entered sees the eax the last yield left (Task_Sleep: the yielding task edx; Task_Restart: its entry; Task_Exit: the exiting task eax) and so does the caller. Called once per logic frame from WinMain (0x4FCF82) unless the F9 pause byte 0x6BC63A is set; the call tracer counts its arrivals as frames (docs/call-trace.md). Ours in naked asm, instruction for instruction (docs/task_sched.md)."
+impl = "src/game/task_sched.cpp"
 
 [[func]]
 pc = 0x5A9914
@@ -634,7 +656,8 @@ name = "Task_Create"
 ret = "void"
 params = "int slot, void *entry"
 status = "evidence"
-evidence = "disasm 2026-09-19: record = Task_Records + slot*0x20; state = 2; saved esp = [0x66C858] - slot*0x4000 - 0x1C; writes entry at saved esp + 0x18, i.e. as the return address the scheduler's six pops and ret will reach. So each task owns a 0x4000-byte stack carved downward from 0x66C858. WinMain creates task 0 with entry 0x496B60."
+evidence = "disasm 2026-09-25, 0x5A9914..0x5A9948 (0x35 bytes), cdecl, no calls, slot unchecked: record = Task_Records + slot * 0x20; state word = 2 (the sleep word untouched); saved esp = Task_StackTop - slot * 0x4000 - 0x1C (imul, sub, neg: 32-bit wrap); entry to saved esp + 0x18, where Task_RunAll six pops and ret reach it. The six dwords below the entry are whatever the stack holds, popped as the task first registers. eax left the saved esp, edx the entry, ecx and ebx kept. Callers: WinMain 0x4FCDA8 (0, Boot_Task), Boot_Task 0x496C77 (1, 0x496C90), Transition_Start 0x49505D (2), Title states 0x462359 / 0x46240D (0). Ours in C++, aborting on a slot past 3 (docs/task_sched.md section 3)."
+impl = "src/game/task_sched.cpp"
 
 [[func]]
 pc = 0x5A9949
@@ -642,8 +665,27 @@ name = "Task_Sleep"
 ret = "void"
 params = "int frames"
 status = "evidence"
-evidence = "disasm 2026-09-19: current record state = 1, sleep count = frames (16 bits); pushes ebx/ecx/<return address juggled through eax>/esi/edi/ebp in the order Task_RunAll pops them, stores esp in the record, jumps to 0x5A98F0. The ubiquitous Task_Sleep(1) in wait loops (e.g. 0x588EC6) is 'yield until next frame'."
+evidence = "disasm 2026-09-25, 0x5A9949..0x5A9975 (0x2D bytes), hand-written: eax = the frames argument; push edx; edx = Task_CurrentOffset; state word 1, sleep word = ax (16 bits); pop eax (the caller edx); push ebx ecx eax esi edi ebp - Task_RunAll pop order - saved esp = esp; jmp Task_BackToScheduler 0x5A98F0. Resumed, the six are popped and its own ret returns to the caller with the argument still on the stack (cdecl). Sleep(0) sleeps 65536 frames: the scheduler decrements before it tests. 76 call sites. Ours in naked asm, instruction for instruction."
+impl = "src/game/task_sched.cpp"
 note = "Siblings, same shape, unnamed: 0x5A9976 restarts the current task at a new entry point (state 2, fresh stack, entry = argument); 0x5A99AD kills the current task (zeroes the record)."
+
+[[func]]
+pc = 0x5A98F0
+name = "Task_BackToScheduler"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5A98F0..0x5A9906 (0x17 bytes, inside Task_RunAll extent): mov esp, Task_SchedulerEsp 0x66C854, then Task_RunAll walk goes on at the next record (edx + 0x20) and ends with its pops and ret. Not a function: the landing, reached by jmp with edx = the yielding task record offset - from Task_Sleep 0x5A9971, Task_Restart 0x5A99A8 and Task_Exit 0x5A99EF (E9 scan, no other reference). The tracer first-call caller 0x496C84 is the dword at esp, Boot_Task return address from its Task_Exit call. Ours in naked asm: the reload, then a jmp into our Task_RunAll walk."
+impl = "src/game/task_sched.cpp"
+
+[[func]]
+pc = 0x5A9976
+name = "Task_Restart"
+ret = "void"
+params = "void *entry"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5A9976..0x5A99AC (0x37 bytes), hand-written: eax = entry; edx = Task_CurrentOffset; state word 2 (sleep word untouched); ebx = (edx >> 5) * 0x4000, less Task_StackTop, negated, less 0x1C - the current task fresh saved esp, as Task_Create computes it; record +4 = ebx; entry to ebx + 0x18; jmp Task_BackToScheduler 0x5A98F0 - it never returns, and the task starts at the entry on the next frame (the walk goes on at the next record). ebx is left the new esp (popped over before anything reads it). 6 call sites: 0x4327DF, 0x569B64, 0x56CB53, 0x56CB71, 0x56D500, 0x58886D (TitleFlow_EnterGame, the restart at 0x495800). Ours in naked asm."
+impl = "src/game/task_sched.cpp"
 
 [[func]]
 pc = 0x5B9B6D
@@ -4342,7 +4384,8 @@ name = "Task_ClearPrivate"
 ret = "void"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-22, 6 instructions: zeroes the dwords at +8, +0xC, +0x10 and +0x14 of the current task's record (offset at 0x66C850). Called on entry by Title_Task and the field task 0x495800. PSX 0x8014B8F8."
+evidence = "disasm 2026-09-25, 0x5A99F4..0x5A9A21 (0x2E bytes, then int3 padding): eax = Task_CurrentOffset; the dwords +8, +0xC, +0x10 and +0x14 of that record zeroed; ret. Called on entry by Title_Task, the field task 0x495800, 0x56D3B9 and 0x588E7E. PSX 0x8014B8F8. The unit 0x5A98A0..0x5A9A21 ends here. Ours in C++."
+impl = "src/game/task_sched.cpp"
 
 [[func]]
 pc = 0x4624B0
@@ -4768,7 +4811,8 @@ name = "Task_Exit"
 ret = "void"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x47 bytes: zeroes the current task's 0x18-byte record (offset 0x66C850) and jumps into the scheduler 0x5A98F0, which reloads its own esp from 0x66C854 - it never returns. Title_StateMenu tail-jumps to it."
+evidence = "disasm 2026-09-25, 0x5A99AD..0x5A99F3 (0x47 bytes), hand-written: edx = Task_CurrentOffset; the six dwords +0..+0x17 of the record zeroed (state, sleep, saved esp and the first four private words; +0x18..+0x1F kept); jmp Task_BackToScheduler 0x5A98F0, which reloads the scheduler esp - it never returns. 10 sites, one a tail jmp (Title_StateMenu 0x462415). Ours in naked asm."
+impl = "src/game/task_sched.cpp"
 
 [[func]]
 pc = 0x517290
@@ -10957,7 +11001,8 @@ name = "Task_SetStackBase"
 ret = "void"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-23, four instructions: 0x66C858 = esp - 0x4000 - the base Task_Create carves the task stacks down from (docs/attract-mode.md section 2). Reached by Game_Init's tail jump and by WinMain's restart path 0x4FCFF6, so the task stacks lie in WinMain's own frame."
+evidence = "disasm 2026-09-25, 0x5A9907..0x5A9913 (0xD bytes): Task_StackTop 0x66C858 = esp - 0x4000, esp as it arrives (the return address on top). eax left that value. Reached by Game_Init tail jump and by WinMain restart path 0x4FCFF6, so the task stacks lie below WinMain own frame (docs/attract-mode.md section 2). Ours in naked asm: it reads esp."
+impl = "src/game/task_sched.cpp"
 
 [[func]]
 pc = 0x5A66B0
