@@ -95,6 +95,7 @@
 #include "game/battle_setup.h"
 #include "game/battle_damage.h"
 #include "game/battle_items.h"
+#include "game/battle_fx_tasks.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -229,6 +230,8 @@ void InjectAll() {
     BattleSprites_Inject();     // group BG, round seven: every call of its clones re-aimed at a recorder,
                                 // three jump tables relocated in the copies, the boss table swapped: order does not matter
     InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    BattleFxTasks_Inject();     // group CE, round eight: every call of its clones re-aimed at a recorder, six stack
+                                // tables re-aimed, a jump table relocated and Magic_Rows swapped: order does not matter
     InjectReport();
 }
 
