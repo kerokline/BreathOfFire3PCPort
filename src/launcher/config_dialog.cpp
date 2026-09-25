@@ -405,8 +405,10 @@ Cells CellsFrom(const input::Bindings& b) {
     const input::ActionInfo* actions = input::Actions();
     for (const input::KeyBinding& k : b.keys) {
         const bool single = (k.bits & (k.bits - 1)) == 0;
-        // KeyName spells an unnamed scancode as "0x..".
-        const bool named = input::KeyName(k.dik)[0] != '0';
+        // KeyName spells an unnamed scancode as "0x..". The 0 key is named "0",
+        // so the test is the prefix, not the first character.
+        const std::string name = input::KeyName(k.dik);
+        const bool named = name.compare(0, 2, "0x") != 0;
         int row = -1;
         for (int r = 0; r < input::kActionCount; ++r)
             if (actions[r].bit == k.bits) row = r;

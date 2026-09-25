@@ -16,6 +16,11 @@ namespace bof3 {
 // `shot` steps (input_script.cpp). Call after InjectAll.
 void InputScript_Start();
 
+// Writes the recorder's open run - the hold or wait still going when the
+// process ends - and closes the recording. Nothing when not recording.
+// Called from DLL_PROCESS_DETACH.
+void InputScript_Stop();
+
 // The latch our WinMain calls once per pass of its loop where Capcom's called
 // Input_Latch (0x4FCDDE): the recipe's or the recorder's latch when one is
 // on, else Input_Latch itself - and, in every case, DIV-0033's zeroing of the

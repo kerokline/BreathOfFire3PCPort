@@ -33,6 +33,9 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::InputScript_Start();
     } else if (reason == DLL_PROCESS_DETACH) {
         bof3::Log("bof3x detaching");
+        // Our streams are still open here: ExitProcess detaches this DLL
+        // before the C runtime it loaded.
+        bof3::InputScript_Stop();
         bof3::LogClose();
     }
     return TRUE;

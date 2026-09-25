@@ -582,8 +582,9 @@ void __cdecl RecordingLatch() {
 }
 
 // Opens the recording and puts RecordingLatch on WinMain's latch call. Runs are
-// written when they end, so the run still open when the process ends is not
-// in the file.
+// written when they end; the one still open when the process ends is written
+// by InputScript_Stop, at DLL_PROCESS_DETACH. A process ended by Fatal or
+// TerminateProcess gets no detach, and its recording keeps the last run lost.
 void RecordStart(const char* path) {
     g_rec = std::fopen(path, "w");
     if (!g_rec) Fatal("BOF3X_RECORD: cannot open %s for writing", path);
@@ -603,6 +604,13 @@ void RecordStart(const char* path) {
 }
 
 }  // namespace
+
+void InputScript_Stop() {
+    if (!g_rec) return;
+    FlushRun();
+    std::fclose(g_rec);
+    g_rec = nullptr;
+}
 
 void InputScript_Start() {
     char path[MAX_PATH];

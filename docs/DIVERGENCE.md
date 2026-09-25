@@ -1710,11 +1710,11 @@ designed in rather than bolted on.
   the lines and the glow. The owner's eye owed.
 - **Reversible?** Yes: the default, `BOF3X_PRESENT=clean`, or another Look.
 
-### F9's pause lines in English
+### F9's pause lines in the overlay's language
 
 - **ID:** DIV-0038
-- **Date:** 2026-09-23
-- **Subsystem:** text (`Pause_LinesGame` `0x66A418`, `Pause_LinesTitle` `0x66A448`; `src/game/pause_text.cpp`, [`window-modes.md`](window-modes.md) §6)
+- **Date:** 2026-09-23 (per language 2026-09-25)
+- **Subsystem:** text (`Pause_LinesGame` `0x66A418`, `Pause_LinesTitle` `0x66A448`; `src/game/pause_text.cpp`, `tools/loc_build.py` `PAUSE_LINES`, [`window-modes.md`](window-modes.md) §6)
 - **Original behaviour:** F9 pauses and WinMain draws two Chinese lines at
   (100, 100) and (0x70, 0x80) through `Text_DrawAt` - in game "press F9
   again to return to the title / any other key to continue", on the title
@@ -1726,13 +1726,40 @@ designed in rather than bolted on.
   screen" / "Press any other key to continue", and "Press F9 again to quit
   the game" / "Any other key returns to the title" - and our WinMain
   centres each on its width. Without an English overlay nothing changes.
+
+  **Amended 2026-09-25: one set per language.** The English lines were
+  built into the DLL and applied on *any* overlay's advance table (kind 4),
+  so the Japanese, French and German overlays showed the English too - under
+  Japanese, drawn through the Japanese glyph table
+  ([`new-code-audit.md`](new-code-audit.md) A2). Now `loc_build.py` writes
+  each language's four lines, in that overlay's own encoding, as chunk kind
+  14 in `FIRST.DAT`'s overlay, after its glyphs; the DLL re-aims the
+  pointers at those. An overlay without one keeps Capcom's Chinese. The
+  wording is ours, agreed with the owner 2026-09-25:
+  - **fr** "Appuyez sur F9 pour l'écran titre" / "Une autre touche pour
+    continuer"; "Appuyez sur F9 pour quitter" / "Une autre touche : écran
+    titre".
+  - **de** "F9 erneut: zum Titelbildschirm" / "Andere Taste:
+    weiterspielen"; "F9 erneut: Spiel beenden" / "Andere Taste: zum
+    Titelbild".
+  - **ja** もういちど F9 で タイトルへ / ほかの キーで つづける; もういちど F9 で
+    ゲームを おわる / ほかの キーで タイトルへ - kana only, since the table
+    holds just the JP disc's kanji; F and 9 are the disc's own cells.
+  - **en** as above.
+
+  `loc_build.py` refuses a line with a character the overlay has no glyph
+  for, or wider than the 320-unit screen: widest 280 units (en), 261 (fr),
+  240 (de), 228 (ja), built off the owner's four discs 2026-09-25.
 - **Rationale:** the owner, 2026-09-23, on seeing the pause: "lets
   translate that page as well". The wording is ours (the PlayStation has no
   such screen), kept to one line each so the original two-line layout
   stays.
 - **Also in the PSX version?** No: the console has no F9.
 - **Verification:** [`window-modes.md`](window-modes.md) §6: both pairs
-  captured in game at k = 3.
+  captured in game at k = 3 (English, 2026-09-23). The per-language build:
+  the four overlays built with the chunk, the rest of `FIRST.DAT`'s overlay
+  unchanged against the installed ones; the in-game check for fr, de and ja
+  is owed ([`new-code-audit.md`](new-code-audit.md) A2).
 - **Reversible?** `BOF3X_ORIGINAL=PauseText`, or no `BOF3X_LANG`.
 
 ### The window's title and the missing-disc box in English
@@ -2574,7 +2601,9 @@ designed in rather than bolted on.
 
      The exe's own strings (kinds 7..12: Config, verbs, default names,
      merchant, battle labels and messages) are not built for a Japanese
-     disc, so they stay Chinese.
+     disc, so they stay Chinese. The exception, since 2026-09-25, is F9's
+     pause lines (kind 14, DIV-0038), which a Japanese overlay carries in
+     kana.
   2. **The layout switch.** The Latin layout patches (Config screen
      DIV-0015/0017/0026/0051, menu verbs DIV-0018, Yes / No DIV-0027) fit
      8-unit text and were keyed on "a language is set". `Lang_FullWidth()`

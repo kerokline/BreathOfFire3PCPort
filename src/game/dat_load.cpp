@@ -100,8 +100,9 @@ void WalkDatFile(const char* path);
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 13, which are ours (DIV-0006, DIV-0008,
-//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057);
+//     rejected - except kinds 4 to 14, which are ours (DIV-0006, DIV-0008,
+//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057,
+//     DIV-0038);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -163,7 +164,6 @@ void WalkDatFile(const char* path) {
         }
         case 4:  // DIV-0006: ours. No shipped file has one (census of 742).
             TextAdvance_Set(payload, static_cast<std::uint32_t>(h.size), h.tag);
-            PauseText_Apply();   // DIV-0038: the English glyphs are in the table now
             break;
         case 5:  // DIV-0008: ours.
             NameTables_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
@@ -191,6 +191,9 @@ void WalkDatFile(const char* path) {
             break;
         case 13:  // DIV-0057: ours.
             TextPairs_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 14:  // DIV-0038: ours.
+            PauseText_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;
