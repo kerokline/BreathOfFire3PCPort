@@ -166,10 +166,11 @@ unsigned char __cdecl StubRollPending() { Record(8, Who()); Disturb(); return An
 // of the time; negatives now and then (the original's idiv is signed).
 int __cdecl StubRand() {
     Record(9, Who());
-    const unsigned edge = F()[0xBA];
     MoveField();
     if ((Hash() >> 25) % 2) F()[0xBA] = static_cast<unsigned char>(F()[0xBA] + 1 + (Hash() >> 26) % 3);
     Disturb();
+    // the edge of the percentage the caller reads after the call
+    const unsigned edge = F()[0xBA];
     const std::uint32_t h = Hash();
     const int base = static_cast<int>((h >> 8) % 300) * 100;
     switch (h % 6) {
@@ -423,6 +424,13 @@ void Seed(unsigned k) {
         if (Half()) f[0x125] = 4;
         static const unsigned char kCounts[] = {0, 1, 2};
         if (Often()) s[9] = kCounts[Next() % 3];
+        // the same action and flags in every member most rounds: the
+        // stand-ins move Field_State half the time
+        if (Often())
+            for (unsigned i = 0; i < 3; ++i) {
+                Member(i)[0x125] = f[0x125];
+                Member(i)[0x134] = f[0x134];
+            }
         break;
     }
     case kSwingCue: {
