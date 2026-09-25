@@ -1,6 +1,6 @@
 # The eighth round's queue: what the recorded routes reach that the traces could not see
 
-**Status:** IN PROGRESS (2026-09-25) - queued, not yet cut into worktrees
+**Status:** IN PROGRESS (2026-09-25) - all 22 groups merged, 1,465 ours, the batched live check passed ("Result"); the owner's eye owed
 
 The third input-reached queue, after the shop's ([`takeover-queue-round6.md`](takeover-queue-round6.md)),
 the world map's ([`world-map.md`](world-map.md) §4) and the combat route's
@@ -723,12 +723,92 @@ After each wave's merge, in this order, on a fresh build (item 4 above):
    `entries_logic.txt` first. Do it before 2026-09-27 or after a Restart
    (HANDOFF, Traps: 12.4 days).
 
+## Result (2026-09-25)
+
+All 22 groups were taken by Opus agents in their own worktrees, wave A (the
+`C` groups) first and wave B (the `D` groups) after it, and merged into
+`phase-3/takeover-queue-round-eight-nine` one branch at a time: after each,
+the build, the group's own shadow and `BOF3X_SHADOW='*'` headless, all exit
+0. **440 functions taken, 1,025 -> 1,465 ours** (`inject: 1465 ours, 0
+left original`). The queue said 442; the difference is entries that turned
+out not to be functions (switch cases inside hosts already ours: `0x404180`,
+`0x497C30`, `0x4414E0`, `0x5916B0`, `0x5917D0`), less the handful of
+functions the groups found inside their extents and took with them (CE's
+`0x432C40`, CG's `0x442DD0`, CM's `0x597D10`). Negative controls: 1959
+planted, 1938 refused by a mismatch count, the rest shown to change
+nothing observable (or, four of DG's, refused only by a fault).
+
+| Group | Doc | Taken | Controls | Refused | Not counted |
+|---|---|--:|--:|--:|---|
+| CA | [`battle_phases.md`](battle_phases.md) | 18 | 140 | 139 | 1 unobservable |
+| CB | [`battle_actions.md`](battle_actions.md) | 23 | 118 | 117 | 1 unobservable |
+| CC | [`battle_turn_steps.md`](battle_turn_steps.md) | 20 | 109 | 109 |  |
+| CD | [`battle_result.md`](battle_result.md) | 17 | 72 | 69 | 3 unobservable |
+| CE | [`battle_fx_tasks.md`](battle_fx_tasks.md) | 19 | 81 | 81 |  |
+| CF | [`enemy_ai_ops.md`](enemy_ai_ops.md) | 22 | 112 | 112 |  |
+| CG | [`battle_obj_states.md`](battle_obj_states.md) | 22 | 115 | 114 | 1 unobservable |
+| CH | [`battle_actor_copies.md`](battle_actor_copies.md) | 16 | 92 | 90 | 2 unobservable |
+| CI | [`battle_menu_states.md`](battle_menu_states.md) | 15 | 74 | 74 |  |
+| CJ | [`magic_fx_reached.md`](magic_fx_reached.md) | 25 | 78 | 78 |  |
+| CK | [`battle_odds.md`](battle_odds.md) | 10 | 49 | 48 | 1 unobservable |
+| CL | [`battle_win_states.md`](battle_win_states.md) | 19 | 41 | 40 | 1 unobservable |
+| CM | [`window_kinds.md`](window_kinds.md) | 12 | 44 | 44 |  |
+| DA | [`worldmap_area.md`](worldmap_area.md) | 30 | 97 | 97 |  |
+| DB | [`mode_states.md`](mode_states.md) | 20 | 107 | 104 | 3 unobservable |
+| DC | [`event_leader.md`](event_leader.md) | 27 | 95 | 94 | 1 unobservable |
+| DD | [`map_field_objects.md`](map_field_objects.md) | 16 | 132 | 132 |  |
+| DE | [`field_hidden.md`](field_hidden.md) | 15 | 83 | 81 | 2 unobservable |
+| DF | [`shop_states.md`](shop_states.md) | 25 | 104 | 104 |  |
+| DG | [`shop_states2.md`](shop_states2.md) | 24 | 121 | 116 | 4 refused by a fault, 1 unobservable |
+| DH | [`menu_lists.md`](menu_lists.md) | 20 | 56 | 56 |  |
+| DI | [`menu_draw_helpers.md`](menu_draw_helpers.md) | 25 | 39 | 39 |  |
+
+**The live check** (`analysis/validate_round8.sh`, then
+`validate_round8_hash.sh` and `validate_round8_nosteal.sh`, one batch with
+the owner away):
+
+| Check | Result |
+|---|---|
+| Combat A/B, cheats as the owner plays (steal on) | 5 of 43 identical; ours steals (Pilfer, DIV-0046) where Capcom's side, with `*`, has the cheat off - the item list and the victory line follow from it |
+| Combat A/B, steal off | 5 of 43 identical, the rest tile-edge pixels only (15 at most) |
+| Shop A/B | 5 of 35 identical, the rest tile-edge pixels only (2..46) |
+| World map A/B | 7 of 35 identical; the needle (DIV-0044) and tile-edge pixels |
+| First-call traces of the hidden list | no owned function among those entered, on all three routes; 28 / 25 / 23 hidden entries still Capcom's (shop / world map / combat) - the next queue |
+| Frame hash, all-original pair (`r8_orig` vs `r8_origb`) | identical on all 10,318 frames |
+| Frame hash, ours (`r8_ours`) | identical but frame 0, the set-up (as since `rb1`) |
+| Oracle | identical at every logged frame |
+
+The tile-edge pixels are the class every A/B has shown since the Direct3D 11
+backend (DIV-0031); round six's shop A/B was 35 of 35 before it.
+
+What the round found on the way, each written down where it belongs:
+
+- **The A/B original side trapped** on the English EX glyph since DIV-0052
+  (the glyph guard set only by a function the `*,KEEP` side leaves
+  Capcom's): DIV-0016 amended, `LoadDatFile` sets the bound too.
+- **CJ's Pilfer lost DIV-0046**: the cheat patches a byte of the original
+  `0x4B54F0`, which ours replaced; ours now reads the patch back (DIV-0046
+  amended). DI and DH kept DIV-0041's slide bounds the same way.
+- **`entries_logic.txt`**: the agents' lines, and 78 host extents that ran
+  over the functions taken, consolidated by `analysis/consolidate_entries.py`;
+  a comment line over the tracer's 511-character read stopped the first
+  frame-hash attempt, and the script now wraps comments.
+- **Latent defects of the original** the group docs describe, numbered in
+  [`known-defects.md`](known-defects.md) from D59.
+- **Naming questions** the groups raised and left alone (their docs say
+  where): `Item_Price` `0x591C20` returns a help-line message id, not a
+  price; `MoveScript_EffectState` `0x66972C` is the character-to-record
+  byte table; `0x596A90` is a menu panel draw, not the window task
+  (`Field_RunTaskRecords` `0x59E230` is); `0x42E2F0` is not the battle's
+  frame (`0x42E370` is); `ItemMenu_CanUseSelected` reads the other way round.
+
 ## Owed after the round
 
 - The owner's eye on a fight and on the shop under full ownership.
-- `remaining-catalog.md` regenerated: the 442 become ours, the `Any +`
-  column empties, and the next queue is a route the owner records
-  (`menu_screens.txt` first, then a boss).
+- `remaining-catalog.md` regenerated: the 440 are ours, and the 76 hidden
+  entries the routes still enter (28 / 25 / 23 above) are the next queue,
+  beside a route the owner records (`menu_screens.txt` first, then a boss).
+  The groups' docs name further unowned handlers in the tables they named.
 - The tables named in the round (the battle phase table, the enemy AI ops,
   the shop's two, the menu lists) added to the catalogue's `table` rule by
   their `symbols.toml` entries - nothing to do beyond naming them.

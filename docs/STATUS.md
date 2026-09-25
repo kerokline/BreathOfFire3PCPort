@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-24)
+**Status:** IN PROGRESS (2026-09-25)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,8 +15,8 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**1,025 functions of ~2,952 recorded are ours** (`inject: 1025 ours` in
-`bof3x.log`, 2026-09-24) - of roughly 10,200 real, since `pe_funcs.py` misses
+**1,465 functions of ~2,952 recorded are ours** (`inject: 1465 ours` in
+`bof3x.log`, 2026-09-25) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
 ([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
 a wave; the detail - controls, batch results, the defects written down - is in
@@ -38,6 +38,7 @@ re-derived:
 | 09-23 | The world-map route's front: HUD, needle, sky backdrop | | 807 | | [`world-map-hud.md`](world-map-hud.md) |
 | 09-24 | Round 7: the battle engine in ten groups | | 1,020 | wave 2 | [`takeover-queue-round7.md`](takeover-queue-round7.md) |
 | 09-24 | `Fmv_WndProc`, the pad's `DInput_Init` / `Pad_Read` / `DInput_Shutdown`, and `Config_DrawControllerRow` (DIV-0051) | | 1,025 | | [`controls.md`](controls.md) |
+| 09-25 | Round 8: the three routes' pointer-reached functions, the all-calls traces never armed, in 22 groups (the battle engine's phase, enemy AI, object and window states; the shop overlay, the field menu, the world map's areas, the event script's leader) | 440 | 1,465 | `r8` | [`takeover-queue-round8.md`](takeover-queue-round8.md) |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -196,7 +197,7 @@ What is established:
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
 - 1,102 functions, 8 global blocks and 306 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 1,025 functions carry an `impl`,
+  [`symbols.toml`](../symbols.toml), tiered; 1,465 functions carry an `impl`,
   one for every detour (`tools/ledger_check.py`, 2026-09-25; `Fmv_WndProc`
   `0x59E570` was the one without, until then).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.

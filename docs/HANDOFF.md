@@ -14,26 +14,26 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**1,025 functions are ours** (`inject: 1025 ours, 0 left original`,
-`build/bof3x.log` at `e428d77`); everything through PR 16 is merged
-(`0c7260e`). Stage 1's attract queue closed at 0 in scope; the input-reached
-queue runs on routes the owner records, and round seven took the battle
-engine off the combat route, the wave-2 batch passing on 1,020 ours
-([`takeover-queue-round7.md`](takeover-queue-round7.md) "Result"). Since
-then: the cheats, D5's complete fix (DIV-0047), F1's 2x, the game writing its
-own captures, and the controls (DIV-0050, DIV-0051; [`controls.md`](controls.md)
-DONE, step 4 deferred to [`IDEAS.md`](IDEAS.md) I20). The rest is
-[`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
+**1,465 functions are ours** (`inject: 1465 ours, 0 left original`, the
+round-eight branch `phase-3/takeover-queue-round-eight-nine`, not yet a PR).
+Round eight took the 440 pointer-reached functions the three recorded routes
+enter and the all-calls traces never armed, in 22 groups over two waves, and
+its batched live check passed ([`takeover-queue-round8.md`](takeover-queue-round8.md)
+"Result"). Before it: rounds one to seven, the cheats, D5's complete fix, the
+controls, the localisation into four languages, and the new-code audit's
+fixes (merged into the round's branch with its `loc_build.py all` rerun for
+all four discs). The rest is [`STATUS.md`](STATUS.md)'s wave table; do not
+copy it here.
 
-**The frame hash reference** is the all-original `analysis/calltrace/wm1b_orig`
-(twin `wm1b_origb`; `analysis/validate_wm1b.sh`, reference sides at
-`--original "*,-Game_Clock"`, `renderer=1`, windowed, foreground held). The
-latest all-ours match is `wave2_ours` (1,020 ours: identical on all 10,313
-logic frames but frame 0, the set-up, which has differed since `rb1` made
-`Display_Setup` ours - compare from frame 1 or say so); DIV-0047's
-`pace_ours` is identical to `wave2_ours` on all 10,319 frames. The functions
-taken since wave 2 have their self-tests and their ledger entries' checks,
-no hash run on record. `ab15`..`ab27`, `wm1` and `wm1_orig` are history.
+**The frame hash reference** is the all-original `analysis/calltrace/r8_orig`
+(twin `r8_origb`, identical on all 10,318 frames; `analysis/validate_round8_hash.sh`,
+reference sides at `--original "*,-Game_Clock"`, `renderer=1`, windowed,
+foreground held), recorded 2026-09-25 on the consolidated
+`entries_logic.txt` (`analysis/consolidate_entries.py` - run it after every
+round, and keep comment lines short: the tracer reads 511 characters a
+line). `r8_ours` (1,464 ours) is identical on every frame but frame 0, the
+set-up, which has differed since `rb1` made `Display_Setup` ours - compare
+from frame 1 or say so. `wm1b_*`, `wave2_ours` and `pace_ours` are history.
 
 ## Pick up here
 
