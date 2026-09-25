@@ -99,6 +99,7 @@
 #include "game/battle_odds.h"
 #include "game/window_kinds.h"
 #include "game/battle_fx_tasks.h"
+#include "game/battle_win_states.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -243,6 +244,8 @@ void InjectAll() {
     BattleResult_Inject();      // round 8 group CD: every call of its clones re-aimed at a recorder, its two
                                 // stack tables re-aimed in the copies and two .data step tables swapped:
                                 // order does not matter
+    BattleWinStates_Inject();   // group CL (round 8): every call of its clones re-aimed at a recorder and its
+                                // seven stack tables' immediates re-aimed in the copies: order does not matter
     InjectReport();
 }
 

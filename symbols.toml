@@ -14085,3 +14085,190 @@ params = "void"
 impl = "src/game/battle_result.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x598700..0x598749 (0x4A bytes), cdecl, four calls: BattleWin_DrawMediumBox(0x6E, 0x28); sprintf(0x904D20, 0x64ADDC \"%7d\", dword 0x904058); Text_DrawFont12(0x70, 0x2A, 0, 0x904D20); Text_DrawAt(0xC4, 0x2A, 0, 0xFF, 0x66A31C). No PSX twin paired."
+# ---------------------------------------------------------------------------
+# The battle windows' states (the eighth round's group CL,
+# docs/battle_win_states.md): record handler 3 of Field_RunTaskRecords and the
+# kinds and states under it, every one reached through a table built on its
+# caller's stack. Extents read by linear disassembly to the last instruction
+# (capstone, 2026-09-25); every one fuzzed against a copy of Capcom's.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x596FA0
+name = "BattleWin_Run"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x596FA0..0x596FF5 (0x56 bytes), cdecl, no rel32 calls: eight handlers stored on its stack (mov [esp + 4 i], imm32: 0x597000 0x597090 0x5971B0 0x597200 0x597320 0x5975D0 0x597C70 0x597D50) and call [esp + byte +2 of the current window 0x905B84 * 4], unchecked. Record handler 3 of Field_RunTaskRecords 0x59E230 (the immediate at 0x59E25C). Ours aborts past 7. pe_funcs.py folded it into 0x596A90 (F44), which is a 0x508-byte menu draw ending at 0x596F97, not the window task. Combat route."
+
+[[func]]
+pc = 0x597000
+name = "BattleWin_PartyRowStates"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597000..0x59702D (0x2E bytes), cdecl: a three-entry stack table (0x597030, 0x597070, 0x437CC0 a bare ret) called by the current window's state byte +3, unchecked. Kind 0 of BattleWin_Run. Combat route."
+
+[[func]]
+pc = 0x597030
+name = "BattleWin_PartyRowSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597030..0x59706E (0x3F bytes), cdecl, one call: the window's word +6 less 4 while above 0xC8 (signed cmp, jg), else set to 0xC8 and state +3 stepped on; then, the record re-read, BattleWin_DrawPartyStatus(+4, +6). Party row state 0: the row slides up into place. Combat route."
+
+[[func]]
+pc = 0x597070
+name = "BattleWin_PartyRowDraw"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597070..0x597087 (0x18 bytes), cdecl: BattleWin_DrawPartyStatus(+4, +6) of the current window. Party row state 1. Combat route."
+
+[[func]]
+pc = 0x597090
+name = "BattleWin_CrossStates"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597090..0x5970BD (0x2E bytes), cdecl: a three-entry stack table (0x5970C0, 0x597160, 0x437CC0) called by state +3, unchecked. Kind 1 of BattleWin_Run. Combat route."
+
+[[func]]
+pc = 0x5970C0
+name = "BattleWin_CrossGrow"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5970C0..0x597151 (0x92 bytes), cdecl, one call site: for arms i 0..4, growth g = 0x904ABC + i read first, then Menu_DrawIcon(i, window +4 + arm x + g / 2, +6 + arm y + g / 2, 0x10 - g, 0x10 - g, 0x80), arm points (x, y) bytes at 0x64E2AC + 2 i, the record re-read per arm; the icon argument is its own stack slot with the counter in the low byte. Then arm 0's growth re-read: 0 steps state +3 on, else the seven growth bytes 0x904ABC..0x904AC2 each lose 1. The cross's state 0. Combat route."
+
+[[func]]
+pc = 0x597160
+name = "BattleWin_CrossFrame"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597160..0x5971A1 (0x42 bytes), cdecl: for i 0..6, the selection byte 0x904AB4 (re-read each pass) equal to i raises growth i by 2 while below 8 (cmp 8, jae), any other lowers it by 2 while not 0 (jbe; 1 wraps to 0xFF); then BattleWin_DrawCommandCross(+4, +6). The cross's state 1: the selected arm's icon grows. Combat route."
+
+[[func]]
+pc = 0x5971B0
+name = "BattleWin_LabelStates"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5971B0..0x5971DA (0x2B bytes), cdecl: a three-entry stack table, 0x437CC0 at slots 0 and 2 from one mov eax, imm32 (0x5971BA) and 0x5971E0 at slot 1, called by state +3, unchecked. Kind 2 of BattleWin_Run. Combat route."
+
+[[func]]
+pc = 0x5971E0
+name = "BattleWin_LabelFrame"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5971E0..0x5971F5 (0x16 bytes), cdecl: unless the byte 0x903A5D is set, BattleWin_DrawCommandLabel(the selection byte 0x904AB4). Label state 1. Combat route."
+
+[[func]]
+pc = 0x597200
+name = "BattleWin_BannerStates"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597200..0x59722D (0x2E bytes), cdecl: a three-entry stack table (0x437CC0, 0x597230, 0x437CC0) called by state +3, unchecked. Kind 3 of BattleWin_Run. Combat route."
+
+[[func]]
+pc = 0x597230
+name = "BattleWin_BannerFrame"
+psx = 0x801E9470
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597230..0x597314 (0xE5 bytes), cdecl, five call sites: k = window +0xA indexes the banner pool 0x93B8E0 (12 bytes a record); n = Text_GlyphCount(dword +4); the record re-read; byte +2 set: BattleWin_DrawMediumBox(x - 0x10, y), then Text_DrawAt(x + 0x26 - 6 n, y + 3, +0xA colour, 0x12, +4); clear: BattleWin_DrawSmallBox(x, y), Text_DrawAt(x + 6 (6 - n), y + 3, colour, 8, +4); the record re-read after the box, the colour pushed in eax over the record offset's upper bits. Draws the banner's Chinese text (0x5972BB, 0x59730B). The PSX twin is the catalogue's (psx_pair), not read. Combat route."
+
+[[func]]
+pc = 0x597320
+name = "BattleWin_EnemyGaugeStates"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597320..0x5973FB (0xDC bytes), cdecl: a four-entry stack table (0x597400, 0x5974C0, 0x597510, 0x437CC0) by state +3, unchecked; then, record re-read, enemy E = 0x93B9E0 + 0x128 (slot +0xA - 3, full width): Window_DispatchKind(w + 0xB, E + 0x30, w + 0x1C, w + 0x14, E + 0x24, w + 0xD, w + 0x18, w + 8); Battle_ActorIsOut(slot) non-zero with +0xD 0 sets state 3; then E + 0x24 below (E + 0x30) >> 2 (unsigned words) ORs 0x20 into E + 0x13, else word E + 0x12 &= 0xDFFF. Kind 4 of BattleWin_Run: an enemy's gauge. Combat route."
+
+[[func]]
+pc = 0x597400
+name = "BattleWin_EnemyGaugeOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597400..0x5974B7 (0xB8 bytes), cdecl, no calls: +0xB = 55 * (E + 0x24) / (E + 0x30), idiv on the zero-extended words (a top of 0 faults; ours aborts), its low byte; 1 when that is 0 and the HP is not; +0x14 the HP, +0x1C the top, +0xD 0, state +3 on. Enemy gauge state 0. Combat route."
+
+[[func]]
+pc = 0x5974C0
+name = "BattleWin_EnemyGaugeFrame"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5974C0..0x59750D (0x4E bytes), cdecl, a call and a tail jump besides the draw: BattleWin_DrawEnemyStatus(+4, +6, +0xA); when 0x904AAF is set, the byte [0x939FA0] equal to +0xA calls Window_FlagAndAdvance, then the byte re-read with 0x40 tail-jumps to it. Enemy gauge state 1. Combat route."
+
+[[func]]
+pc = 0x597510
+name = "BattleWin_EnemyTargetFrame"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597510..0x5975CD (0xBE bytes), cdecl, three call sites: s = (+0xA - 3) & 0xFF (a byte, unlike its dispatcher), E = 0x93B9E0 + 0x128 s; x = s8 E + 0x72 + word E - 0x52 + (s8 0x64E2BC when the byte E - 0x78 is 0 or 3, else s8 0x64E2BE); y = s8 E + 0x73 + word E - 0x50 + 0xC; BattleWin_DrawTargetEnemy(+4, +6, +0xA); then Window_RestoreAndBack unless 0x904AAF is set and the target byte is the slot (no 0xC0 bits) or has 0x40. Enemy gauge state 2. Combat route."
+
+[[func]]
+pc = 0x5975D0
+name = "BattleWin_MemberGaugeStates"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5975D0..0x5976C1 (0xF2 bytes), cdecl: a three-entry stack table (0x5976D0, 0x597850, 0x5978B0, no idle entry) by state +3, unchecked; then, record re-read, member P = 0x802D40 + 0x14C slot: Window_DispatchKind(w + 0xB, P + 0xA0, w + 0x1C, w + 0x14, P + 0x98, w + 0xD, w + 0x18, w + 8), re-read, Window_DispatchKind(w + 0xC, P + 0xA2, w + 0x1E, w + 0x16, P + 0x9A, w + 0xE, w + 0x1A, w + 9), re-read, P + 0x98 below (P + 0xA0) >> 2 ORs 0x20 into P + 0x91, else word P + 0x90 &= 0xDFFF. Kind 5 of BattleWin_Run: a member's HP and AP gauges. Combat route."
+
+[[func]]
+pc = 0x5976D0
+name = "BattleWin_MemberGaugeOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5976D0..0x597841 (0x172 bytes), cdecl, no calls: +0xB = 55 HP / top (P + 0x98 / P + 0xA0, idiv, a top of 0 faults; ours aborts), 1 when 0 and HP is not; +0x14, +0x1C, +0xD 0; +0xC = 0 when the AP top P + 0xA2 is 0, else 55 AP / top (P + 0x9A), 1 when 0 and AP is not; +0x16, +0x1E, +0xE 0; state +3 on. Member gauge state 0. Combat route."
+
+[[func]]
+pc = 0x597850
+name = "BattleWin_MemberGaugeWait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597850..0x5978AA (0x5B bytes), cdecl, four call sites and a tail jump: nothing unless 0x904AAF; when Battle_ActorIsOut(+0xA) is non-zero, Battle_ReturnTrue is asked, twice if the first says 0, and both 0 return; then the target byte [0x939FA0] equal to the slot calls Window_FlagAndAdvance and, re-read, with 0x80 tail-jumps to it. Member gauge state 1. Combat route."
+
+[[func]]
+pc = 0x5978B0
+name = "BattleWin_MemberTargetFrame"
+ret = "void"
+params = "void"
+impl = "src/game/battle_win_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5978B0..0x5979D3 (0x124 bytes), cdecl, one call: P = the slot's member; x = s8 0x64DF70[2 (P + 8) + 8 (P + 0x89)] + word P + 0x2E + the side offset of P + 8 (0x64E2BC for 0 and 3, else 0x64E2BE); record re-read, y = word P + 0x30 + s8 0x64DF71[same] + 0xC; unless 0x904AAF is set and the target byte is the slot (no 0xC0 bits) or has 0x80, +0xF = 0 and state +3 back one (the place is not put back); else BattleWin_DrawTargetMember(+4, +6, +0xA). Member gauge state 2. Combat route."
+
+[[data]]
+pc = 0x64DF70
+name = "BattleWin_MemberTargetOffsets"
+ctype = "signed char"
+count = 88
+status = "hypothesis"
+evidence = "disasm 2026-09-25: BattleWin_MemberTargetFrame 0x5978B0 reads (dx, dy) s8 pairs at 0x64DF70 + 2 (column + 4 row), row the member object's byte +0x89 (the character id, as Encounter_PartyAtPlaces reads it), column its byte +8, unbounded. The bytes (pe dump) run as 11 rows of four pairs to 0x64DFC7 (dy -0x10..-0x1E, dx within +-8); 0x64DFC8.. holds 18 other bytes before the object state table 0x64DFE0. The count is that layout's, not a bound in code."
