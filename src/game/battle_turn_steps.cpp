@@ -14,9 +14,9 @@
 //     (phase 1) or, once 0x904AE8 is set, the battle's end (phase 5).
 //   - Phase 5, the battle's end (BattleEnd_*): by 0x904AA1, the members'
 //     tasks (0x4311F0), the win (0x4314B0, whose third step 0x431910 is the
-//     result through 0x431920 and group CD's pages), the flight (0x431540 and
-//     0x4315B0, not reached by the combat route, left Capcom's), and the way
-//     out (0x431760: Battle_WriteBackParty, the exit hook, the finish).
+//     result through 0x431920 and group CD's pages), the other way out (0x431540 and
+//     0x4315B0, not reached by the combat route, left Capcom's), and the
+//     exit (0x431760: Battle_WriteBackParty, the exit hook, the finish).
 //
 // Every call goes through battle_turn_steps::g (battle_turn_steps_callees.h),
 // so that the start-up fuzz can stand recorders in for them - for ours and for
@@ -274,7 +274,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
 
 // original 0x4311E0: phase 5's dispatch - entry 0x904AA1 of BattleEnd_Steps
 // (0x64AF44: BattleEnd_TaskStep, BattleEnd_WinStep, 0x431540 and 0x4315B0
-// (the flight's, Capcom's), BattleEnd_ExitStep).
+// (the other way out, Capcom's), BattleEnd_ExitStep).
 extern "C" void __cdecl BattleEnd_Step() {
     [[clang::musttail]] return Entry(at::kEndSteps, B(at::kState1))();
 }
@@ -286,7 +286,7 @@ extern "C" void __cdecl BattleEnd_TaskStep() {
 }
 
 // original 0x431200: 0x802D20 and the member cursor 0x904AA5 zeroed, 0x904AA2
-// stepped on. Also the flight's first step (0x64AF7C).
+// stepped on. Also the other way out's first step (0x64AF7C).
 extern "C" void __cdecl BattleEnd_TasksBegin() {
     B(at::kPartyByte) = 0;
     B(at::kCursor) = 0;
@@ -299,7 +299,7 @@ extern "C" void __cdecl BattleEnd_TasksBegin() {
 // parameter 0xB for character 4 and otherwise 0xC - then, for the other
 // characters, bit 0 of +0x134 cleared in the three records at 0x939AE0 -
 // owned by the member (the task's +0x80); the cursor steps past it. Either
-// way 0x904AA2 steps on. Also the flight's second step (0x64AF80).
+// way 0x904AA2 steps on. Also the other way out's second step (0x64AF80).
 // As the original has it: the cursor is re-read after each call and the
 // count at each test; BattleTask_Create's 0xFF (no slot free) is not tested,
 // so the owner then lands at 0x9423FC, past the slots.
@@ -426,7 +426,7 @@ extern "C" void __cdecl BattleEnd_ResultPage() {
     [[clang::musttail]] return Entry(at::kEndResultPages, B(at::kState4))();
 }
 
-// original 0x431760: the way out's dispatch - entry 0x904AA2 of
+// original 0x431760: the exit's dispatch - entry 0x904AA2 of
 // BattleEnd_ExitSteps (0x64AF90: Battle_WriteBackParty, BattleEnd_ExitHook,
 // BattleEnd_Finish, 0x4318F0 (Capcom's)).
 extern "C" void __cdecl BattleEnd_ExitStep() {

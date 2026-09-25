@@ -522,7 +522,7 @@ void Seed(unsigned k) {
 struct Coverage {
     unsigned logged[170];
     unsigned extra[4], chain_waits, chain_done, next_waits, next_end, next_round, started, no_slot, await_back, await_go,
-        await_win, await_flee, finish_raised;
+        await_win, await_other, finish_raised;
 } g_cover;
 
 void Cover(unsigned k, const State& in, const State& out) {
@@ -555,7 +555,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         if (byte(out, at::kState2) + 1 == byte(in, at::kState2)) ++g_cover.await_back;
         if (byte(out, at::kState2) == 0 && byte(in, at::kState2) != 0) ++g_cover.await_go;
         if (out.log_n && byte(out, at::kState1) == 1) ++g_cover.await_win;
-        if (out.log_n && byte(out, at::kState1) == 2) ++g_cover.await_flee;
+        if (out.log_n && byte(out, at::kState1) == 2) ++g_cover.await_other;
         break;
     case kFinishK:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
@@ -695,7 +695,7 @@ void SelfTest() {
               c.logged[3] + c.logged[4] + c.logged[5] + c.logged[6] + c.logged[7] + c.logged[8] + c.logged[9] +
                   c.logged[10] + c.logged[11],
               c.chain_waits, c.chain_done, c.next_waits, c.next_end, c.next_round, c.logged[31], c.logged[12], c.logged[14],
-              c.started, c.await_back, c.await_go, c.await_win, c.await_flee, c.logged[16], c.logged[17], c.logged[18],
+              c.started, c.await_back, c.await_go, c.await_win, c.await_other, c.logged[16], c.logged[17], c.logged[18],
               c.logged[32], c.logged[20], c.logged[21], c.logged[22], c.logged[23], c.logged[24], c.logged[25], c.logged[33],
               c.finish_raised, c.logged[27], c.logged[30]);
     if (bad) bof3::Fatal("the per-turn steps differ from the original in %u self-test rounds", bad);
