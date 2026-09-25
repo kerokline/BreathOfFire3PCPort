@@ -224,7 +224,9 @@ add_library(bof3x SHARED
   src/game/battle_misc.cpp
   src/game/battle_misc_fuzz.cpp
   src/game/battle_items.cpp
-  src/game/battle_items_fuzz.cpp)
+  src/game/battle_items_fuzz.cpp
+  src/game/magic_fx_reached.cpp
+  src/game/magic_fx_reached_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
