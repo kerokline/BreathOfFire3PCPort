@@ -83,6 +83,8 @@ add_library(bof3x SHARED
   src/game/gfx_filter.cpp
   src/game/menu_frame.cpp
   src/game/text_draw.cpp
+  src/game/lang_layout.cpp
+  src/game/text_pairs.cpp
   src/game/text_immediate.cpp
   src/game/msg_pool.cpp
   src/game/name_tables.cpp

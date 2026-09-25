@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-09-24; 20 entries, I1..I20 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-09-24; 21 entries, I1..I21 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -65,6 +65,7 @@ rule ([`README.md`](README.md)) here too.
 | I18 | F12 before shipping: disable it, or make it a true quicksave | game behaviour | HIGH / MEDIUM | open |
 | I19 | Screen curvature for the SatPixie look | look | HIGH | open |
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
+| I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 
 ---
 
@@ -821,3 +822,56 @@ the cell, cells drawn as our own overlay through the backend so the glyph
 table is not spent. Bindings write to the physical layer and take effect
 the next frame, as `Pad_Read` reads the live table.
 
+## I21 — Furigana over the Japanese script, drawn by our message box
+
+**Ask (2026-09-24):** the sibling repo shipped `jp_furigana`, every kanji
+word's reading in a row above it. Do the same here, using the PC's larger
+glyphs to show each reading at the kana font's native 12 px.
+**Kind:** game behaviour
+**Feasibility:** MEDIUM   **Gated on:** the plain Japanese overlay (I2);
+the owner's call to take it into its own branch, because it wants a lot of
+playtesting.
+
+### What already exists
+- **Glyph size.** `Text_EmitGlyph` `0x516D50` (ours) takes the quad's width
+  and height and always samples the whole 24 x 24 glyph (`symbols.toml`).
+  A Japanese kana is its 12 px sheet cell doubled to 24 x 24, so on a
+  6-unit quad it shows the original cell texel for texel at the base 2x
+  output. Two kana fit over each 12-unit kanji. The sibling repo had to
+  shrink native 12 px glyphs (6 px strokes, then its 8 x 8 kana font); here
+  the reduction is exact.
+- **Placement.** `MsgBox_Step` and `Text_DrawString` are ours, so a reading
+  can be placed by our own code. No hook, no `<0d>..<0e>` span, no single
+  global `P`, and no need for the PC's shrink draw `0x4987E0` (unread).
+- **The script side.** In the sibling repo:
+  - readings from SudachiPy plus 47 chosen ones (`names/readings.toml`);
+  - the encoder `tools/build_ruby_script.py`;
+  - the reflow rule, owner's call 2026-09-09: re-author breaks, and spend a
+    page break rather than a fourth row (`docs/FURIGANA.md`).
+
+  Readings are not proofread there yet.
+- **A mechanism for extra glyphs (DIV-0057, built the same night).** Pair
+  codes already make `Text_DrawString` emit more than one quad for one code,
+  with the advance from the kind-4 table, and they came with a census of
+  every text path (docs/dialogue-localisation.md section 9). A reading
+  could be carried the same way: a code standing for its reading's glyphs,
+  drawn small and lifted above the word. The census also shows which draws
+  are not ours (the 8-unit `0x516E70`, the effect draw `0x4987E0`). Only
+  `MsgBox_Step` and `Text_DrawString` matter for dialogue.
+
+### What is missing
+- The PC box's inner height: an annotated row needs 18 units against the
+  newline's 12. Two annotated rows should fit where three plain ones do.
+  Measure it off a capture.
+- A way for the script to mark which kana sit over which word, which our
+  `MsgBox_Step` reads.
+- Long readings over one kanji (志 こころざし): overhang or a gap. Count them
+  from the sibling repo's reading data.
+- The look under bilinear against point filtering (DIV-0012).
+
+### First concrete step
+A capture of one Japanese message with a hand-placed reading row, from a
+field save, to settle height and legibility before any script work.
+
+### Outcome
+_(2026-09-24) open._

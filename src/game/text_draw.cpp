@@ -7,6 +7,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/text_advance.h"
+#include "game/text_pairs.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -298,9 +299,25 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
                 index = static_cast<std::uint16_t>(c - 0x26);
             }
             if (index > g_glyph_limit) GlyphTrap();
-            std::memcpy(Gfx_PacketNext + 0x16, &index, sizeof index);
-            g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
-                   kCell - v, u, v, static_cast<int>(clut));
+            std::uint32_t pa, pb;
+            if (TextPair_Of(index, &pa, &pb)) {
+                // DIV-0057: a pair code is its two glyphs, the second one the
+                // first's advance on. It counts as two characters, but draws
+                // whole even when one is left (the message box asks for 1).
+                const auto a = static_cast<std::uint16_t>(pa), b = static_cast<std::uint16_t>(pb);
+                if (a > g_glyph_limit || b > g_glyph_limit) GlyphTrap();
+                std::memcpy(Gfx_PacketNext + 0x16, &a, sizeof a);
+                g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
+                       kCell - v, u, v, static_cast<int>(clut));
+                std::memcpy(Gfx_PacketNext + 0x16, &b, sizeof b);
+                g_emit(static_cast<std::uint16_t>(Text_PenX + TextAdvance_OfGlyph(a)),
+                       static_cast<std::uint16_t>(Text_PenY), kCell, kCell - v, u, v, static_cast<int>(clut));
+                if (count > 1) --count;
+            } else {
+                std::memcpy(Gfx_PacketNext + 0x16, &index, sizeof index);
+                g_emit(static_cast<std::uint16_t>(Text_PenX), static_cast<std::uint16_t>(Text_PenY), kCell,
+                       kCell - v, u, v, static_cast<int>(clut));
+            }
             Text_PenX = static_cast<short>(Text_PenX + TextAdvance_Of(first));  // DIV-0006
         }
         ++text;

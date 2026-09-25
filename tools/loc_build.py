@@ -126,6 +126,46 @@ SUFFIX_OF = {0x151B: 0x50, 0x151C: 0x51, 0x151F: 0x52, 0x1520: 0x53}
 # is the disc's (DIV-0013). The second suffix's cells were not identified in
 # the atlas, so it keeps the port's glyphs.
 EX_CELLS = ((156, 60), (168, 60))
+# The French and German discs carry more of the same grid: accented letters
+# in the cells after 0x93, in both sets (FR 0x94..0xAA, DE 0x94..0xA7; the US
+# disc's cells there are empty - measured 2026-09-24 off the three atlases,
+# and the codes are what their scripts use, e with acute 0xA1 7,162 times in
+# FR's area dialogue). They go in two blocks of their own past everything
+# above, so an English build's table is byte for byte what it was. Filled in
+# per disc by build_font (latin_extension); the Config screen's selected row
+# swaps the UI block for the dialogue one by a constant offset, as it does
+# for the first hundred (src/game/config_text.cpp).
+EXT_FIRST, EXT_MAX = 0x94, 0xAB  # the grid holds 4 rows of 31: codes up to 0xAB
+EXT_AT, EXT_SMALL_AT = 0xA80, 0xAA0
+ext_last = EXT_FIRST - 1         # none until a donor's atlas says otherwise
+# A Japanese disc (boots SLPS_, `is_japanese`) is a different font and a
+# different encoding (the sibling's docs/TEXT_ENGINE.md, names/font.toml, read
+# off the JP boot EXE's mapper 0x80151F4C; re-measured here 2026-09-24):
+# ENDKANJI.EMI section 0 is 21 x 21 cells of 12 px - byte b < 0x5B is cell b,
+# b >= 0x5B (the kana) is cell b + 0x23, and 0x15 nn is cell nn + 0x5B - and
+# section 1 is the kanji sheet, 21 x 21, 0x12nn / 0x13nn being cell
+# code - 0x1200. The cells use the Latin set's nibbles (1 body, 2..6 ramp,
+# 7 the drop shadow). Both sheets go in whole, doubled, from JA_AT; 12 px on
+# the PC's own 12-unit advance. The PC hangs its own brackets at 0x2A and
+# 0x3C (MsgBox_Step 0x4979A0) - the same two JP hangs, the corner bracket and
+# the white corner bracket - so those stay single bytes, with the disc's
+# glyphs painted over the port's.
+donor_ja = False
+JA_AT, JA_CELLS, JA_COLS, JA_CELL = 0x993, 441, 21, 12
+JA_KANJI_AT = JA_AT + JA_CELLS
+JA_HANG = {0x2A: 0x2A, 0x3B: 0x3C}   # JP code -> the PC byte that hangs it
+JA_SPACE = 0xFF                      # the JP word separator, 8,389 uses: a space
+# DIV-0057, pair codes (docs/dialogue-localisation.md section 9): a JP name is
+# at most 8 glyphs, two bytes each on the PC - 16, which leaves the items'
+# 16-byte field no terminator and does not fit the battle banner's 8. A pair
+# code is one two-byte code the DLL draws as two glyphs (Text_DrawString),
+# advancing 24 (its kind-4 entry) and counting as two characters. Names are
+# paired from their end until they fit; nothing else is. The table's own glyph
+# at a pair code is a placeholder - both kana at half size - so a draw that
+# does not expand pairs shows as small text rather than as a wrong word.
+PAIR_AT, PAIR_KIND = 0xD10, 13
+ja_pairs = {}                        # (glyph a, glyph b) -> pair glyph index
+ja_sheets = None                     # (single, kanji) rows, kept for the placeholders
 GLYPH_LIMIT = 0x1000             # ours, DIV-0016; the original 0x516C94 was cmp cx, 0xA00
 PC_ADVANCE = 12                  # 0x497A44, 0x516CDE
 TEXT_ROOM = 0x8000               # the CLUT strip as loaded starts here; the system pool at
@@ -175,6 +215,20 @@ def donor_sheet(disc):
                     row += [b & 0xF, b >> 4]
             rows.append(row)
     return rows
+
+
+def latin_extension(rows):
+    """The last code of the donor's accented cells past 0x93, or 0x93 if none.
+
+    A cell counts when it has ink in both sets, and the run stops at the first
+    empty one."""
+    last = LAST_CODE
+    for code in range(EXT_FIRST, EXT_MAX + 1):
+        if not all(any(v for r in donor_cell(rows, code, y0, h) for v in r)
+                   for y0, h in ((CELLS_Y0, CELL_H), (SMALL_CELLS_Y0, SMALL_CELL_H))):
+            break
+        last = code
+    return last
 
 
 def donor_cell(rows, code, y_first=CELLS_Y0, cell_h=CELL_H):
@@ -294,6 +348,20 @@ def build_table(base_table, rows, redrawn=None, mono=False):
             table += base_table[g * font_pc.GLYPH_BYTES:(g + 1) * font_pc.GLYPH_BYTES]
         advances.append(PC_ADVANCE)
 
+    # The accented cells, if this donor has them: dialogue then UI, each at
+    # its own round base, blanks in between.
+    if ext_last >= EXT_FIRST:
+        for at, y0, h, scale in ((EXT_AT, CELLS_Y0, CELL_H, 2), (EXT_SMALL_AT, SMALL_CELLS_Y0, SMALL_CELL_H, 3)):
+            if len(table) // font_pc.GLYPH_BYTES > at:
+                raise SystemExit("glyph block 0x%X overlaps the one before it" % at)
+            while len(table) // font_pc.GLYPH_BYTES < at:
+                table += blank
+                advances.append(PC_ADVANCE)
+            for code in range(EXT_FIRST, ext_last + 1):
+                cell = donor_cell(rows, code, y0, h)
+                table += pc_glyph(cell, scale)
+                advances.append(cell_advance(cell, mono) if scale == 2 else CELL_W)
+
     glyphs = len(table) // font_pc.GLYPH_BYTES
     if glyphs - 1 > GLYPH_LIMIT:
         raise SystemExit("table would hold %d glyphs, the limit is 0x%X" % (glyphs, GLYPH_LIMIT))
@@ -353,13 +421,144 @@ def pc_glyph_from_rows(cell):
 
 # ---------------------------------------------------------------- the text
 
+def is_japanese(disc):
+    """The disc's boot EXE is SLPS_ / SCPS_ - a Japanese build."""
+    try:
+        cnf = disc.read("SYSTEM.CNF")
+    except KeyError:
+        return False
+    boot = cnf.split(b"\n")[0].upper()
+    return b"SLPS_" in boot or b"SCPS_" in boot
+
+
+def ja_cell_of(code, lead=None):
+    """A JP code -> its glyph in our table, or None."""
+    if lead == 0x15:
+        return JA_AT + code + 0x5B if code + 0x5B < JA_CELLS else None
+    if lead in (0x12, 0x13):
+        k = ((lead - 0x12) << 8) | code
+        return JA_KANJI_AT + k if k < JA_CELLS else None
+    if 0x17 <= code < 0x5B:
+        return JA_AT + code
+    if 0x5B <= code <= 0xFE:
+        return JA_AT + code + 0x23
+    return None
+
+
+def ja_encode(code, lead=None):
+    if lead is None and code == JA_SPACE:
+        return bytes([SPACE_OUT])
+    if lead is None and code in JA_HANG:
+        return bytes([JA_HANG[code]])
+    g = ja_cell_of(code, lead)
+    return None if g is None else bytes([0x80 | (g >> 8), g & 0xFF])
+
+
+def ja_name(raw, room):
+    """A JP name -> PC bytes of at most `room`, pairing glyphs from its end
+    until it fits; None if a code has no glyph or it cannot be made to fit."""
+    units, i = [], 0
+    while i < len(raw):
+        if raw[i] in LEAD and i + 1 < len(raw):
+            e, i = ja_encode(raw[i + 1], raw[i]), i + 2
+        else:
+            e, i = ja_encode(raw[i]), i + 1
+        if e is None:
+            return None
+        units.append(e)
+    k = len(units) - 1
+    while sum(map(len, units)) > room and k > 0:
+        a, b = units[k - 1], units[k]
+        if len(a) == 2 and len(b) == 2 and a[0] & 0x80 and b[0] & 0x80 \
+                and ((a[0] & 0x7F) << 8 | a[1]) < PAIR_AT and ((b[0] & 0x7F) << 8 | b[1]) < PAIR_AT:
+            key = (((a[0] & 0x7F) << 8) | a[1], ((b[0] & 0x7F) << 8) | b[1])
+            g = ja_pairs.setdefault(key, PAIR_AT + len(ja_pairs))
+            units[k - 1:k + 1] = [bytes([0x80 | (g >> 8), g & 0xFF])]
+            k -= 2
+        else:
+            k -= 1
+    out = b"".join(units)
+    return out if len(out) <= room else None
+
+
+def ja_pair_chunks(font_chunks):
+    """Extend the font's kind-3 table and kind-4 advances with the pair codes'
+    placeholder glyphs, and the kind-13 pair table."""
+    if not ja_pairs:
+        return font_chunks
+    out = []
+    for kind, tag, payload in font_chunks:
+        if kind == 3:
+            table = bytearray(payload)
+            while len(table) // font_pc.GLYPH_BYTES < PAIR_AT:
+                table += bytes(font_pc.GLYPH_BYTES)
+            for (a, b), g in sorted(ja_pairs.items(), key=lambda kv: kv[1]):
+                table += ja_placeholder(a, b)
+            if len(table) // font_pc.GLYPH_BYTES - 1 > GLYPH_LIMIT:
+                raise SystemExit("pair codes run past glyph 0x%X" % GLYPH_LIMIT)
+            payload = bytes(table)
+        elif kind == 4:
+            adv = bytearray(payload)
+            while len(adv) < PAIR_AT:
+                adv.append(PC_ADVANCE)
+            for (a, b), g in sorted(ja_pairs.items(), key=lambda kv: kv[1]):
+                adv.append(adv[a] + adv[b])
+            payload = bytes(adv)
+        out.append((kind, tag, payload))
+    pairs = sorted(ja_pairs.items(), key=lambda kv: kv[1])
+    body = struct.pack("<H", len(pairs)) + b"".join(struct.pack("<HH", a, b) for (a, b), g in pairs)
+    return out + [(PAIR_KIND, PAIR_AT, body)]
+
+
+def ja_cell_rows(glyph):
+    """The 12 x 12 sheet cell behind one of our JP glyph indices."""
+    single, kanji = ja_sheets
+    rows, cell = (single, glyph - JA_AT) if glyph < JA_KANJI_AT else (kanji, glyph - JA_KANJI_AT)
+    r, c = divmod(cell, JA_COLS)
+    return [rows[JA_CELL * r + y][JA_CELL * c:JA_CELL * (c + 1)] for y in range(JA_CELL)]
+
+
+def ja_placeholder(a, b):
+    """Both cells at their native 12 px, side by side in the 24 x 24 glyph,
+    centred vertically: drawn by an ordinary 12-unit quad they are half size."""
+    big = [[0] * font_pc.GLYPH for _ in range(font_pc.GLYPH)]
+    for k, g in enumerate((a, b)):
+        cell = ja_cell_rows(g)
+        for y in range(JA_CELL):
+            for x in range(JA_CELL):
+                big[6 + y][JA_CELL * k + x] = cell[y][x]
+    return pc_glyph_from_rows(big)
+
+
+def encode_text(raw):
+    """A donor string with no controls -> PC bytes, or None if a code has no
+    glyph. Lead bytes are the Japanese two-byte codes; a Latin donor has none."""
+    out, i = bytearray(), 0
+    while i < len(raw):
+        if donor_ja and raw[i] in LEAD and i + 1 < len(raw):
+            e = ja_encode(raw[i + 1], raw[i])
+            i += 2
+        else:
+            e = encode_char(raw[i])
+            i += 1
+        if e is None:
+            return None
+        out += e
+    return bytes(out)
+
+
 def encode_char(code):
+    if donor_ja:
+        return ja_encode(code)
     if code == SPACE_IN:
         return bytes([SPACE_OUT])
     if code in ASCII_OF:
         return bytes([ASCII_OF[code]])
     if FIRST_CODE <= code <= LAST_CODE:
         g = APPEND_AT + code - FIRST_CODE
+        return bytes([0x80 | (g >> 8), g & 0xFF])
+    if EXT_FIRST <= code <= ext_last:
+        g = EXT_AT + code - EXT_FIRST
         return bytes([0x80 | (g >> 8), g & 0xFF])
     return None
 
@@ -389,7 +588,11 @@ def convert_run(buf, i, stop_at_nul_only=False):
             out += buf[i:i + 2]
             i += 2
         elif b in LEAD:
-            ok = False
+            e = ja_encode(buf[i + 1], b) if donor_ja and i + 1 < len(buf) else None
+            if e is None:
+                ok = False
+            else:
+                out += e
             i += 2
         elif b <= 0x16:
             out.append(b)
@@ -424,16 +627,24 @@ def message_end(buf, i):
 def convert_block(donor, base, room):
     """A donor text block -> a PC one. Slots whose donor message is not
     English keep the PC file's own message."""
-    n = struct.unpack_from("<H", donor, 0)[0] // 2
-    if struct.unpack_from("<H", base, 0)[0] // 2 != n:
-        raise ValueError("slot counts differ")
-    d_offs = struct.unpack_from("<%dH" % n, donor, 0)
+    # The slot count is the PC file's: its event script is what names the
+    # slots. The US tables agree with it everywhere; the French and German
+    # ones do not always (2026-09-24: 15 FR and 11 DE areas) - some entries
+    # point outside their block where the PC's slot is empty or unused, and
+    # FR AREA009 has five slots appended. Those slots keep the PC's message.
+    # Checked: of the slots both US and FR/DE point into their blocks, 96%
+    # carry the same control codes, AREA009 included. An unused slot points
+    # at the block's end, which is an empty message, not outside it.
+    n = struct.unpack_from("<H", base, 0)[0] // 2
+    d_offs = struct.unpack_from("<%dH" % n, donor.ljust(2 * n, b"\0"), 0)
     b_offs = struct.unpack_from("<%dH" % n, base, 0)
     body, placed, table, kept = bytearray(), {}, [], 0
     for slot in range(n):
         key = ("d", d_offs[slot])
         if key not in placed:
-            msg, _ = convert_run(donor, d_offs[slot])
+            msg = None
+            if 2 * n <= d_offs[slot] <= len(donor):   # the end itself: an unused, empty slot
+                msg, _ = convert_run(donor, d_offs[slot])
             if msg is None:
                 key = ("b", b_offs[slot])
                 msg = base[b_offs[slot]:message_end(base, b_offs[slot])]
@@ -513,6 +724,7 @@ POOL_DESTS = (0x1A000, 0x14000)
 # the PC records' numeric bytes at the donor's stride, so any Western disc
 # will do, and a disc whose numbers differ is refused.
 NAME_LEN, DONOR_NAME_LEN = 16, 12
+JA_NAME_LEN = 8     # the JP records' name field (sibling TEXT_TABLES.md); the PC's 16 is it widened
 NAME_TABLES = [
     ("consumables", 0x656B28, 22, 92, 0),
     ("key items", 0x657310, 20, 16, 0),
@@ -555,7 +767,8 @@ def convert_names(game, donor):
     chunks, report = [], []
     for what, va, stride, count, name_at in NAME_TABLES:
         pc = exe_bytes(game, va, stride * count)
-        d_stride = stride - NAME_LEN + DONOR_NAME_LEN
+        donor_len = JA_NAME_LEN if donor_ja else DONOR_NAME_LEN
+        d_stride = stride - NAME_LEN + donor_len
         # The numeric bytes of a record, name cut out - the same on both sides.
         def numbers(buf, i, n_len, st, origin=0):
             rec = buf[origin + i * st:origin + (i + 1) * st]
@@ -564,18 +777,18 @@ def convert_names(game, donor):
         probe = want[1]
         at, found = donor.find(probe), None
         while at >= 0 and found is None:
-            start = at - d_stride - (0 if name_at else DONOR_NAME_LEN)
-            if start >= 0 and all(numbers(donor, i, DONOR_NAME_LEN, d_stride, start) == want[i] for i in range(count)):
+            start = at - d_stride - (0 if name_at else donor_len)
+            if start >= 0 and all(numbers(donor, i, donor_len, d_stride, start) == want[i] for i in range(count)):
                 found = start
             at = donor.find(probe, at + 1)
         if found is None:
             raise SystemExit("%s: no table in the donor with the PC table's numbers at stride %d" % (what, d_stride))
         payload, kept = bytearray(), 0
         for i in range(count):
-            d_name = donor[found + i * d_stride + name_at:][:DONOR_NAME_LEN].split(b"\0")[0]
-            enc = [encode_char(c) for c in d_name]
-            if d_name and all(e is not None for e in enc) and sum(map(len, enc)) < NAME_LEN:
-                name = b"".join(enc)
+            d_name = donor[found + i * d_stride + name_at:][:donor_len].split(b"\0")[0]
+            enc = ja_name(d_name, NAME_LEN - 1) if donor_ja else encode_text(d_name)
+            if d_name and enc is not None and len(enc) < NAME_LEN:
+                name = enc
             else:
                 name, kept = pc[i * stride + name_at:][:NAME_LEN], kept + 1
             payload += name.ljust(NAME_LEN, b"\0")[:NAME_LEN]
@@ -616,7 +829,7 @@ def config_trim(token):
     letter or a digit.
     """
     i = len(token)
-    while i > 0 and (0x2A <= token[i - 1] <= 0x93 or token[i - 1] == SPACE_IN):
+    while i > 0 and (0x2A <= token[i - 1] <= max(LAST_CODE, ext_last) or token[i - 1] == SPACE_IN):
         i -= 1
     while i < len(token) and not (0x30 <= token[i] <= 0x5A or 0x61 <= token[i] <= 0x7A):
         i += 1
@@ -637,6 +850,8 @@ def small_char(code):
         g = SMALL_SPACE          # the blank cell; a space has no glyph either way
     elif FIRST_CODE <= code <= LAST_CODE:
         g = SMALL_APPEND_AT + code - FIRST_CODE
+    elif EXT_FIRST <= code <= ext_last:
+        g = EXT_SMALL_AT + code - EXT_FIRST
     else:
         return None
     return bytes([0x80 | (g >> 8), g & 0xFF])
@@ -955,16 +1170,70 @@ def convert_enemy_names(base, donor):
         d_name = d_rec[:DONOR_ENEMY_NAME].split(b"\0")[0]
         if not any(rec[:ENEMY_NAME]) and not d_name:
             continue
-        enc = [encode_char(c) for c in d_name]
-        if not d_name or any(e is None for e in enc) or sum(map(len, enc)) > ENEMY_SHOWN:
+        enc = (ja_name(d_name, ENEMY_SHOWN) if donor_ja else encode_text(d_name)) if d_name else None
+        if enc is None or len(enc) > ENEMY_SHOWN:
             kept += 1
             continue
-        out.append((0, ENEMY_TAG + ENEMY_HEAD + k * ENEMY_STRIDE, b"".join(enc).ljust(ENEMY_NAME, b"\0")))
+        out.append((0, ENEMY_TAG + ENEMY_HEAD + k * ENEMY_STRIDE, enc.ljust(ENEMY_NAME, b"\0")))
     return out, kept
 
 
+def ja_rows(disc, block):
+    """One of ENDKANJI.EMI's two sheets as rows of nibbles, de-interleaved."""
+    raw = emi_sections(disc.read(FONT_EMI))[block][1]
+    rows = []
+    for c in range(0, len(raw), 4096):
+        left, right = raw[c:c + 2048], raw[c + 2048:c + 4096]
+        for y in range(32):
+            row = []
+            for half in (left, right):
+                for b in half[y * 64:(y + 1) * 64]:
+                    row += [b & 0xF, b >> 4]
+            rows.append(row)
+    return rows
+
+
+def ja_glyph(rows, cell):
+    r, c = divmod(cell, JA_COLS)
+    big = [[rows[JA_CELL * r + y // 2][JA_CELL * c + x // 2] for x in range(font_pc.GLYPH)]
+           for y in range(font_pc.GLYPH)]
+    return pc_glyph_from_rows(big)
+
+
+def build_table_ja(base_table, disc):
+    count = len(base_table) // font_pc.GLYPH_BYTES
+    if count != JA_AT:
+        raise SystemExit("base table has %d glyphs, expected %d" % (count, JA_AT))
+    global ja_sheets
+    table = bytearray(base_table)
+    single, kanji = ja_rows(disc, 0), ja_rows(disc, 1)
+    ja_sheets = (single, kanji)
+    for rows in (single, kanji):
+        for cell in range(JA_CELLS):
+            table += ja_glyph(rows, cell)
+    for code, byte in JA_HANG.items():
+        slot = byte - 0x26
+        table[slot * font_pc.GLYPH_BYTES:(slot + 1) * font_pc.GLYPH_BYTES] = ja_glyph(single, code)
+    glyphs = len(table) // font_pc.GLYPH_BYTES
+    if glyphs - 1 > GLYPH_LIMIT:
+        raise SystemExit("table would hold %d glyphs, the limit is 0x%X" % (glyphs, GLYPH_LIMIT))
+    return bytes(table), bytes([PC_ADVANCE]) * glyphs
+
+
 def build_font(args, disc):
+    global ext_last, donor_ja
+    donor_ja = is_japanese(disc)
+    if donor_ja:
+        if args.glyphs or args.upscaler:
+            raise SystemExit("--glyphs / --upscaler are for the Latin set; this is a Japanese disc")
+        base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
+        table, advances = build_table_ja(base, disc)
+        print("font: %d glyphs (Japanese: %d single-byte and symbol cells at 0x%X, %d kanji at 0x%X), sha256 %s"
+              % (len(table) // font_pc.GLYPH_BYTES, JA_CELLS, JA_AT, JA_CELLS, JA_KANJI_AT,
+                 hashlib.sha256(table).hexdigest()))
+        return [(3, 0, table), (4, PC_ADVANCE, advances)]
     rows = donor_sheet(disc)
+    ext_last = latin_extension(rows)
     base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
     if args.glyphs and args.upscaler:
         raise SystemExit("--glyphs and --upscaler are two answers to one question")
@@ -973,12 +1242,18 @@ def build_font(args, disc):
         redrawn = cells_from_png(args.glyphs)
     elif args.upscaler:
         redrawn = run_upscaler(args.upscaler, rows)
+    if redrawn and ext_last >= EXT_FIRST:
+        raise SystemExit("--glyphs / --upscaler cover codes 0x%X..0x%X; this disc also has 0x%X..0x%X, "
+                         "which the sheet does not carry yet" % (FIRST_CODE, LAST_CODE, EXT_FIRST, ext_last))
     table, advances = build_table(base, rows, redrawn, args.mono)
     n_cells = LAST_CODE - FIRST_CODE + 1
     print("font: %d glyphs (%d dialogue cells at 0x%X, %d UI cells at 0x%X, "
           "%d single-byte slots repainted), sha256 %s"
           % (len(table) // font_pc.GLYPH_BYTES, n_cells, APPEND_AT, n_cells, SMALL_APPEND_AT,
              len(ASCII_OF), hashlib.sha256(table).hexdigest()))
+    if ext_last >= EXT_FIRST:
+        print("      accented cells 0x%X..0x%X: dialogue at 0x%X, UI at 0x%X"
+              % (EXT_FIRST, ext_last, EXT_AT, EXT_SMALL_AT))
     # kind 4 is ours (DIV-0006): a pen advance a glyph; the tag is the space's.
     return [(3, 0, table), (4, CELL_W, advances)]
 
@@ -986,7 +1261,8 @@ def build_font(args, disc):
 # The strip is kind-0 tag 0x8000 in FIRST.DAT and the 0x200-byte section for
 # 0x80033800 in FIRST.EMI (measured 2026-09-20; 0x8200 / 0x8400 pair with
 # 0x80033A00 / 0x80033C00 the same way).
-CLUT_TAG, CLUT_DEST, CLUT_ROW = 0x8000, 0x33800, 32
+CLUT_TAG, CLUT_ROW = 0x8000, 32
+CLUT_DESTS = (0x33800, 0x2B800)   # US and EU; JP, 0x8000 lower like the pool (DAT_CONTAINER.md section 2)
 
 
 def build_white_clut(args, disc):
@@ -1000,7 +1276,7 @@ def build_white_clut(args, disc):
     port's own, untouched."""
     blob, chunks = dat.load(os.path.join(dat_dir(args.game), "FIRST.DAT"))
     base = [c for c in chunks if c.kind == 0 and c.tag == CLUT_TAG]
-    donor = [s for dest, s in emi_sections(disc.read(disc.find("FIRST.EMI")[0])) if dest & 0x7FFFFFFF == CLUT_DEST]
+    donor = [s for dest, s in emi_sections(disc.read(disc.find("FIRST.EMI")[0])) if dest & 0x7FFFFFFF in CLUT_DESTS]
     if len(base) != 1 or len(donor) != 1 or len(donor[0]) < CLUT_ROW:
         raise SystemExit("FIRST: no CLUT strip to take the white row from")
     strip = bytearray(blob[base[0].offset:base[0].offset + base[0].size])
@@ -1142,6 +1418,71 @@ def build_title(args, disc):
     return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
 
 
+# ---------------------------------------------------------------- the world-map place plates
+
+# DIV-0055 (docs/world-map.md section 5, docs/world-map-hud.md section 5.2). The
+# place names on the ten world maps are paint on each map's page, and the
+# discs repainted them per language. On the PC, measured 2026-09-24 against
+# the JP disc in all ten areas: the page (kind 1, tag = the dest) differs from
+# JP's only in 4..7 tiles, every one of them inside the tiles each Western
+# disc replaces; and the three data sections that go with it are JP's byte
+# for byte:
+#   - 0x800D3800 -> tag 0xB0000: the map's sprite frames, the plates' among
+#     them, sized per plate (a Western disc's is 4..12 bytes longer);
+#   - 0x800E3800 -> tag 0xC0000: 60..400 bytes that differ only where a disc
+#     rearranged the page (AREA065 on every Western disc, AREA121 on the
+#     German), so read as where the moved blocks now are;
+#   - the palette section, 0x8002D800 on JP and 0x80035800 on the Western
+#     discs -> tag 0xA000: its first CLUT is the plates' - each disc's plates
+#     render right only under that disc's own (rendered 2026-09-24).
+# So the donor's four go over the PC's whole. The world map's code, compiled
+# into BOF3.exe from the JP overlay, is untouched; the Western overlays'
+# code differs from JP's by four bytes in eight of the ten areas.
+PLATE_AREAS = ("AREA016", "AREA033", "AREA045", "AREA065", "AREA087",
+               "AREA088", "AREA115", "AREA121", "AREA151", "AREA152")
+PLATE_PAGE = 0x0E001000
+PLATE_DATA = {0x800D3800: 0xB0000, 0x800E3800: 0xC0000, 0x8002D800: 0xA000, 0x80035800: 0xA000}
+
+
+def build_plates(game, disc):
+    """{DAT name: [(kind, tag, payload)]} for the world maps' place plates."""
+    out = {}
+    for area in PLATE_AREAS:
+        found = disc.find(area + ".EMI")
+        if not found:
+            raise SystemExit("plates: %s.EMI is not on this disc" % area)
+        blob, chunks = dat.load(os.path.join(dat_dir(game), area + ".DAT"))
+        pc = {(c.kind, c.tag): blob[c.offset:c.offset + c.size] for c in chunks}
+        donor = {}
+        for dest, s in emi_sections(disc.read(found[0])):
+            if dest == PLATE_PAGE:
+                donor[(1, PLATE_PAGE)] = s
+            elif dest in PLATE_DATA:
+                donor[(0, PLATE_DATA[dest])] = s
+        if len(donor) != 1 + len(set(PLATE_DATA.values())):
+            raise SystemExit("plates: %s has %d of the four sections" % (area, len(donor)))
+        for key, s in donor.items():
+            if key not in pc:
+                raise SystemExit("plates: %s has no chunk kind %d tag 0x%X" % (area, key[0], key[1]))
+            if key[1] == 0xB0000:
+                # Sized per plate, so not the PC's size. A header of dword
+                # offsets, section-relative, the first being the header's own
+                # size (0x1C in AREA016, 0x30 in AREA065); where a disc
+                # rearranged the page it reordered the blocks too (AREA065:
+                # the third at 0x69C on the PC, 0x4B8 on the US disc). So the
+                # check is the shape: the same header, every offset inside.
+                head = struct.unpack_from("<I", pc[key])[0]
+                if struct.unpack_from("<I", s)[0] != head or head % 4 or head > len(s):
+                    raise SystemExit("plates: %s's frame section header is not the PC's" % area)
+                if any(not head <= o < len(s) for o in struct.unpack_from("<%dI" % (head // 4), s)[1:]):
+                    raise SystemExit("plates: %s's frame section points outside itself" % area)
+            elif len(s) != len(pc[key]):
+                raise SystemExit("plates: %s chunk 0x%X is %d bytes, the PC's %d"
+                                 % (area, key[1], len(s), len(pc[key])))
+        out[area + ".DAT"] = [(k, t, s) for (k, t), s in sorted(donor.items())]
+    return out
+
+
 def cmd_all(args):
     """Every overlay, in one pass, one file written per shipped DAT that needs one."""
     disc, d = psx_disc.Disc(args.disc), dat_dir(args.game)
@@ -1193,6 +1534,13 @@ def cmd_all(args):
                 continue
             overlays.setdefault(name, []).append((0, c.tag, block))
     start_emi = disc.find("START.EMI")
+    if donor_ja:
+        # The exe's own strings (kinds 7..12) are found with the US layouts and
+        # drawn through the Latin layout patches; a Japanese overlay leaves
+        # them as shipped for now.
+        print("config, verbs, character names, merchant, battle labels and messages: "
+              "not built for a Japanese disc")
+        start_emi = None
     if start_emi and not args.only:
         cfg = convert_config(disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += cfg
@@ -1206,7 +1554,7 @@ def cmd_all(args):
         merchant = convert_merchant(args.game, disc)
         overlays["FIRST.DAT"] += merchant
         print("merchant name: " + ("found" if merchant else "not found on this disc"))
-    battle_emi = disc.find("BATTLE.EMI")
+    battle_emi = None if donor_ja else disc.find("BATTLE.EMI")
     if battle_emi and not args.only:
         cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += cmds
@@ -1221,6 +1569,14 @@ def cmd_all(args):
         overlays["FIRST.DAT"] += names
         print("names: " + ", ".join(report))
     print("enemy names: %d (%d kept)" % (enemies, kept_enemy))
+    if not args.only:
+        plates = build_plates(args.game, disc)
+        for name, chunks in plates.items():
+            overlays.setdefault(name, []).extend(chunks)
+        print("place plates: %d world maps" % len(plates))
+    if donor_ja and ja_pairs:
+        overlays["FIRST.DAT"] = ja_pair_chunks(overlays["FIRST.DAT"])
+        print("pair codes: %d from glyph 0x%X (DIV-0057)" % (len(ja_pairs), PAIR_AT))
     for name, chunks in overlays.items():
         write_overlay(os.path.join(d, "%s.%s" % (args.lang, name)), chunks)
     print("%d overlay files in %s: %d area texts (%d slots kept as shipped), %d system pools (%d kept)"

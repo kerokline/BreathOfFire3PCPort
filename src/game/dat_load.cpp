@@ -21,6 +21,7 @@
 #include "game/pause_text.h"
 #include "game/title_menu.h"
 #include "game/text_advance.h"
+#include "game/text_pairs.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -98,8 +99,8 @@ void WalkDatFile(const char* path);
 //   - the malloc results are not checked for null;
 //   - a chunk whose kind is outside 0..3 (including negative: the byte is
 //     sign-extended and compared unsigned) is skipped by its size, not
-//     rejected - except kinds 4 to 12, which are ours (DIV-0006, DIV-0008,
-//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052);
+//     rejected - except kinds 4 to 13, which are ours (DIV-0006, DIV-0008,
+//     DIV-0014, DIV-0015, DIV-0018, DIV-0019, DIV-0020, DIV-0052, DIV-0057);
 //   - the walk trusts each chunk's size; nothing checks that a payload lies
 //     inside the file buffer or that a kind-0 tag lies inside the arena;
 //   - the kind-3 copy is never freed here: Font_SetGlyphData owns it (and
@@ -180,6 +181,9 @@ void WalkDatFile(const char* path) {
             break;
         case 12:  // DIV-0052: ours.
             BattleMessages_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 13:  // DIV-0057: ours.
+            TextPairs_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;

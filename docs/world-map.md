@@ -176,6 +176,13 @@ US plates on the page. Two things to settle first, both from data:
 Then verify by capture: this route's `f01260` and `f01740` show one plate
 each.
 
+**Built 2026-09-24, DIV-0055**, for every donor language at once: the page,
+`0xB0000`, `0xC0000` and the palette section (`0xA000`, whose first CLUT is
+the plates'), whole. Those three data chunks are the JP disc's byte for byte
+on the PC, so only the plates change. Seen by capture in English, French and
+German on this route (`f01260`, `f01740`). `AREA065`, and German `AREA121`,
+rearrange the page and are not yet seen.
+
 ## 6. Traps met
 
 - The MSYS2 `PATH` for the build shadows Anaconda's `python`: an
