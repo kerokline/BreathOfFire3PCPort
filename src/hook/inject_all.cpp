@@ -101,6 +101,7 @@
 #include "game/window_kinds.h"
 #include "game/battle_fx_tasks.h"
 #include "game/battle_win_states.h"
+#include "game/battle_obj_states.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -249,6 +250,8 @@ void InjectAll() {
                                 // seven stack tables' immediates re-aimed in the copies: order does not matter
     EnemyAiOps_Inject();        // round 8 group CF: every call of its clones re-aimed at a recorder and its op
                                 // tables' entries swapped: order does not matter (it clones before its own Inject)
+    BattleObjStates_Inject();   // round 8 group CG: every call of its clones re-aimed at a recorder, its seven
+                                // table operands aimed at tables of recorders in the copies: order does not matter
     InjectReport();
 }
 
