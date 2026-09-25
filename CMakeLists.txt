@@ -238,7 +238,9 @@ add_library(bof3x SHARED
   src/game/enemy_ai_ops.cpp
   src/game/enemy_ai_ops_fuzz.cpp
   src/game/battle_obj_states.cpp
-  src/game/battle_obj_states_fuzz.cpp)
+  src/game/battle_obj_states_fuzz.cpp
+  src/game/battle_menu_states.cpp
+  src/game/battle_menu_states_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
