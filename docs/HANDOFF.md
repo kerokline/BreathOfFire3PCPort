@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-24)
+**Status:** IN PROGRESS (2026-09-25)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -37,50 +37,42 @@ from frame 1 or say so. `wm1b_*`, `wave2_ours` and `pace_ours` are history.
 
 ## Pick up here
 
-1. **Housekeeping.** `git worktree list` shows the twelve round-seven
-   `.claude/worktrees/agent-*` worktrees (their `worktree-agent-*` branches
-   all merged) and `vibrant-wilbur-f9676a` (detached at `5b8eeb2`, merged,
-   the PSP session's); merged local branches `phase-3/more-ui-work`,
-   `claude/vibrant-wilbur-f9676a` and `ui/control-changes` (PR 16; also on
-   `origin`). Local `main` is at `61d20a0`, behind `origin/main`
-   (`0c7260e`) - fast-forward it. Remove the worktrees and branches with
-   the owner's nod; check each worktree for uncommitted files first.
-   (`Fmv_WndProc`'s missing `impl` line is fixed: 1,025 `impl` against
-   1,025 detoured, which `tools/ledger_check.py` now checks in CI.)
-2. **`entries_logic.txt`, then re-record the frame hash reference once.**
-   About twenty wrong sizes and a few missing entries, listed per group in
-   round seven's docs (BA, BB §7, BC, BE, BG §6, BH, BI) and
-   [`world-map-hud.md`](world-map-hud.md) (`0x404160` at `0xC1`,
-   `0x404620` at `0x58`); add every function owned since wave 2
-   (`Fmv_WndProc`, the pad's `DInput_Init` / `Pad_Read` /
-   `DInput_Shutdown`, and DIV-0051's `Config_DrawControllerRow`) - an owned function missing from the list breaks
-   the hash (Traps). Fold in the other two things that move the hash's
-   content, so it is re-recorded once, not three times: the CRT `sscanf`
-   calls at frame 5524 (Traps), and **`pe_hidden.py` / `pe_funcs.py`
-   seeding** - the functions after an inline jump table (ten or so at
-   `0x593950`..`0x594240`, none in `entries.txt`,
-   [`attract-remaining.md`](attract-remaining.md) §3), sizes that run on
-   through pointer-reached neighbours (`0x56FF00` was `0xBA6`, really
-   `0x118`), and seeding from the PSX pairs (§5 there). Then three 6-minute
-   runs `validate_wm1b.sh`'s way, an original-vs-original pair beside ours.
-   Do it before 2026-09-27 or after a Restart (Traps: 12.4 days).
+1. **Housekeeping.** `git worktree list` shows the round-seven and
+   round-eight `.claude/worktrees/agent-*` worktrees (every one's branch is
+   merged into `phase-3/takeover-queue-round-eight-nine`; round eight's
+   `phase-3/round8-*` branches too), `audit-a-fixes` and
+   `vibrant-wilbur-f9676a`. Remove them with the owner's nod, checking each
+   for uncommitted files first. `ledger_check.py` counts `impl` lines
+   against detours in CI: 1,465 each.
+2. **The frame hash's content, still owed.** The reference was re-recorded
+   2026-09-25 as `r8_orig` on the consolidated `entries_logic.txt` (above).
+   Two things that move its content are not in it yet, so the next
+   re-record should fold them in together: the CRT `sscanf` calls at frame
+   5524 (Traps), and **`pe_hidden.py` / `pe_funcs.py` seeding** - the
+   functions after an inline jump table (ten or so at
+   `0x593950`..`0x594240`, [`attract-remaining.md`](attract-remaining.md)
+   §3), and seeding from the PSX pairs (§5 there). The round-eight groups'
+   docs list the rest of the extents they measured. Do a re-record before
+   2026-09-27 or after a Restart (Traps: 12.4 days).
 3. **The owner's eye** on round seven and the world-map wave: the compass
    needle turning with the map (DIV-0044), the sky's wide bands (DIV-0041
    amended), and a fight under full ownership - the round-seven doc's
    header waits on that to go STABLE. The owner played the combat route
    with cheats on at 08:12 on 2026-09-24, after the merge, on 1,020 ours:
    **ask whether that counts** before asking for another fight.
-4. **The next recorded route, round eight's queue.** Shape it from
-   [`remaining-catalog.md`](remaining-catalog.md) §3 (2026-09-25): every
-   function not ours by subsystem, reach measured per route for every start.
-   **442 route-reached functions are not ours** - 407 of them pointer-reached
-   handlers the all-calls traces never armed (§4 there): `BATTLE.EMI` 102,
-   `SHOP.EMI` 45, the boot-resident battle handlers 42, the event script 27.
-   **That queue is cut: [`takeover-queue-round8.md`](takeover-queue-round8.md)**,
-   two waves of 22 groups (A the combat route's 236, B the shop's and the
-   world map's 206), each with a live check on its route; run it the
-   parallel way under "How to run things". After it: the untraced
-   `menu_screens.txt` recipe (~240 more), then a boss fight.
+4. **The next queues.** Round eight is done
+   ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Result"). What
+   the three routes still enter of Capcom's is 76 hidden entries (28 shop,
+   25 world map, 23 combat - the first-call traces `analysis/calltrace/hidden_*`),
+   plus the unowned handlers each group doc names in the tables it named.
+   Then two directions, the owner's order to choose:
+   - **The spell round**: every row of the effect table `Magic_Rows`
+     `0x64C2B8` (151 rows, 137 entries, 3 ours), by one harness group and
+     then groups of 10..15 rows, fuzz-only; names from the sibling's
+     `magic.toml` read one id down ([`cut-content.md`](cut-content.md) §2,
+     §3). Read the engine rows 123 and 128 first (TCRF: crash, freeze).
+   - **New routes**: the untraced `menu_screens.txt` recipe (~240 more),
+     then a boss fight.
    The owner records with
    `BOF3X_RECORD` (F12 a shot); the route is A/B'd, traced once all
    original, less every earlier route's reach (`attract_catalog.py --minus`,
@@ -90,20 +82,17 @@ from frame 1 or say so. `wm1b_*`, `wave2_ours` and `pace_ours` are history.
    task table, key items in the battle list. The parallel method is under
    "How to run things".
 5. **What the rounds left unowned**, each named in its group doc:
-   - Round seven: `0x591F30`, `0x592570`, `0x5925A0` (the encounter
-     placement's driver), `0x589110`, `0x589160`, `0x5891C0`, `0x4B9000`
-     (D52), `0x430510` (the set-up chain's real caller), `0x43B130` (the
-     battle effect host, which reads the turn counter's strings), the 27
-     battle state handlers at `0x64DFE0`, the window-kind handlers
-     `0x597A80`..`0x597C10`, the 130 effect handlers after
-     `Effect_ApplyResult`, the boss handlers at `0x656954`.
-   - Round six: nine pointer-reached window-task handlers
-     `0x59B7B0`..`0x59BEA0` (Y); the leader's sub-state 2 `0x52E110` and
-     where a step lands `0x52E580` (V1); the member's states 2..8 and
-     `0x527640` (Z); the save block builder `0x5806F0` and `Save_QuickWrite`
-     `0x5809C0` (X; see I18 below); `0x591810`, `0x591B60`
-     (`Inventory_Remove`), `0x591CC0` (W, missing from every entry list);
-     `MsgBox_SystemChoice` (D22).
+   - Round eight: each group doc's "left original" and "in no group" lists
+     (for example CB's kind-3 stub `0x42F5E0`, CF's eighteen unqueued enemy
+     ops, CG's and CH's unqueued table entries, DD's seven `MapCell_Handlers`
+     entries, DH's `0x589E00` / `0x589FB0`).
+   - Round seven: `0x43B130` (the battle effect host, which reads the turn
+     counter's strings), the effect handlers after `Effect_ApplyResult` not
+     yet ours, the boss handlers at `0x656954`.
+   - Round six: the member's states 2..8 and `0x527640` (Z); the save block
+     builder `0x5806F0` and `Save_QuickWrite` `0x5809C0` (X; see I18
+     below); `0x591810`, `0x591B60` (`Inventory_Remove`), `0x591CC0` (W,
+     missing from every entry list).
    - Older: `0x5A7C70` (the `s16`-out `ApplyMatrix`, unreached); the
      software path's lock wrapper `0x5A3CC0` and `Display_Teardown`
      `0x5A6380` with the enumeration callbacks (retired by DIV-0031, still
