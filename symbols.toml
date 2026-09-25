@@ -13711,3 +13711,199 @@ params = "void"
 impl = "src/game/battle_odds.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-25, 0x4F7350..0x4F7377 (0x28 bytes), one call (0x4530D0 Battle_SetTargetFlag40 at +0x13) and a tail jmp (0x4351F0 BattleTask_FreeCurrent at +0x22): Sprite_Current +0xB not 0: ret, eax Sprite_Current; 0: SetTargetFlag40(byte 0x904B44, in ecx with the entry's upper bits - the callee masks), byte 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. In 45 stack tables (0x49C3E7 .. 0x4F9E06). Combat route: reached."
+# ---------------------------------------------------------------------------
+# Group CE of the eighth round (2026-09-25): the battle effect tasks - the
+# battle-task kinds 0, 1 and 2 that BattleTask_RunAll dispatches, kind 0's
+# damage popup, pose task, actor watch and follower, and the two round hooks
+# at 0x904B64 / 0x904B68. docs/battle_fx_tasks.md. Nineteen functions: the
+# eighteen of the round's list and the popup's state 0 (0x432C40), which sat
+# inside 0x432B70's catalogue extent.
+
+[[func]]
+pc = 0x4352A0
+name = "BattleFx_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4352A0..0x43534D (0xAE bytes), cdecl, no rel32 calls: 19 `mov [esp+k], imm32` (0x437CC0, 0x432B70, 0x432F90, 0x433190, 0x4332B0, 0x433380, 0x433460, 0x4337F0, 0x43C740, 0x4348E0, 0x434B90, 0x433970, 0x433B80, 0x434D70, 0x434F40, 0x452680, 0x452AD0, 0x434310, 0x452B60), then `call [esp + eax*4]` with al = byte +5 of dword 0x93B8C4, unchecked. Battle-task kind 0 (BattleTask_RunAll's stack table entry 0, immediate at 0x435118). No PSX twin paired. Combat route: jumped to."
+
+[[func]]
+pc = 0x435350
+name = "BattleMagicFx_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x435350..0x4357C5 (0x476 bytes), cdecl: a 0x1B8-byte stack table of 110 imm32 (0x437CC0 first, then 0x49AB60 .. 0x4EA0F0 - battle_fx_tasks.cpp), then `call [esp + eax*4]` by byte +5 of dword 0x93B8C4, unchecked. Battle-task kind 1 (BattleTask_RunAll's entry 1, immediate at 0x435120); the magic effects. No PSX twin paired. Combat route: jumped to."
+
+[[func]]
+pc = 0x4378B0
+name = "BattleMagicRow_Run"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4378B0..0x4378CC (0x1D bytes), cdecl: `test ah, 8` on dword 0x904AA8, then `jmp [eax*8 + 0x64C2BC]` with al = Sprite_Current +5 (Magic_Rows' code pointer by row); else ret. Battle-task kind 2 (BattleTask_RunAll's entry 2, immediate at 0x435128), the task Battle_StartItemMagic / Battle_StartAbilityMagic start with a magic row. No PSX twin paired. Combat route: jumped to."
+
+[[func]]
+pc = 0x432B70
+name = "BattleFx_DamagePopup"
+psx = 0x801E5BE4
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432B70..0x432C27 plus its 4-entry jump table 0x432C28..0x432C37 (0xC8 bytes), cdecl: state +1 of dword 0x93B8C4 through a 5-entry stack table (0x432C40, 0x432DB0, 0x432DE0, 0x432E50, 0x432EA0); then while Sprite_Current bit 0, by the slot's +7: 0 - states 0..2 BattleFx_RollingDigits(+0x27), else Battle_DrawNumber(+0x36 - 12, +0x3A, +0x27, +0x60); 1/2/3 - Battle_DrawLabel(+0x36, +0x3A, +0x27, cell 2/1/0); above 3 nothing. Kind 0 effect 1 (0x4352A0's immediate at 0x4352B7). PSX twin by the catalogue's pairing (not read). The name is from what it draws. Combat route: jumped to."
+
+[[func]]
+pc = 0x432C40
+name = "BattleFx_PopupStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432C40..0x432DAB (0x16C bytes), cdecl, no calls: x +0x36 / y +0x3A = owner (+0x80) +0x2E / +0x30 plus an s8 offset - a member (owner +5 <= 2) the pair at 0x64DF70 + ((owner +0x2C) * 4 + owner +8) * 2, an enemy 0x93B960 + 0x128 (actor - 3) + 0xF2 / +0xF3; y - 9 when +0xB is 1; +0xA = 2 / 1 / 0 by idiv of s32 +0x60 by 100 then 10; the actor's flag dword (ObjTrio + 0x14C a + 0x130, or the enemy's +0x110) or 0x80; +9 = 8, word +0x32 = 0, +1 inc. State 0 of BattleFx_DamagePopup (immediate at 0x432B7F); inside 0x432B70's catalogue extent, never listed. Combat route: reached with its host."
+
+[[func]]
+pc = 0x432DB0
+name = "BattleFx_PopupHold"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432DB0..0x432DDA (0x2B bytes), cdecl, no calls: byte +9 of dword 0x93B8C4 decremented; when it was 0, +1 inc and +9 = 4, the slot re-read for each. State 1 of BattleFx_DamagePopup (immediate at 0x432B87). Combat route: jumped to."
+
+[[func]]
+pc = 0x432DE0
+name = "BattleFx_PopupRise"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432DE0..0x432E43 (0x64 bytes), cdecl, no calls: dword +0x38 + 0x40000; +9 as PopupHold, and when it was 0: +1 inc, +0xC = 0x8000, +0x10 = 0xFFFA0000, +0x1C = movsx +0x3A, +0x18 = movsx +0x36. State 2 (immediate at 0x432B92). Combat route: jumped to."
+
+[[func]]
+pc = 0x432E50
+name = "BattleFx_PopupBounce"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432E50..0x432E9B (0x4C bytes), cdecl, no calls: when not (+0x1C > movsx +0x3A) and +0x18 != movsx +0x36: +9 = 0xA, +1 inc; else +0x34 += +0xC, +0x38 += +0x10, +0x10 += 0x14000. State 3 (immediate at 0x432B9A). Combat route: jumped to."
+
+[[func]]
+pc = 0x432EA0
+name = "BattleFx_PopupEnd"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432EA0..0x432F0B (0x6C bytes), cdecl: +9 as PopupHold; when it was 0 the owner's actor flag dword (as PopupStart's) and 0x7F in its low byte, then `jmp BattleTask_FreeCurrent`. State 4 (immediate at 0x432BA2). Combat route: jumped to."
+
+[[func]]
+pc = 0x433190
+name = "BattleFx_PoseTask"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x433190..0x4331C9 (0x3A bytes), cdecl: dword 0x9039D8 = 0x8C5D80; state Sprite_Current +1 through a 2-entry stack table (0x4331D0, 0x433290), unchecked; 0x9039D8 = 0x8B3580. Kind 0 effect 3 (0x4352A0's immediate at 0x4352CA). No PSX twin paired. Combat route: jumped to."
+
+[[func]]
+pc = 0x4331D0
+name = "BattleFx_PoseStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4331D0..0x433286 (0xB7 bytes), cdecl: Sprite_Current (re-read for each) +0x29 = 0, +0x25 = 0x1D, +0x26 = 0, +0x24 = 0x84, +0x27 = byte 0x64B058[+7] - 0x50, +0x28 = 0, word +0x2C = 0, +0x2B = 0; +0x2A = mode 6 ? +8 & 1 : (+8 == 1 or 2); +1 inc; Sprite_SetAnimation(byte 0x64B064 + (+8 >> 1) + 2 * +7), then `jmp Sprite_QueueOverlay`. State 0 of BattleFx_PoseTask (immediate at 0x4331A9). Combat route: jumped to."
+
+[[func]]
+pc = 0x433290
+name = "BattleFx_PosePlay"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x433290..0x4332A2 (0x13 bytes), cdecl: Sprite_ScriptTick; al non-zero `jmp BattleTask_FreeCurrent`, else `jmp Sprite_QueueOverlay`. State 1 of BattleFx_PoseTask (immediate at 0x4331B4). Combat route: jumped to."
+
+[[func]]
+pc = 0x4332E0
+name = "BattleFx_StepReset"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4332E0..0x4332F1 (0x12 bytes), cdecl, no calls: Sprite_Current +9 = 0, +1 inc (re-read). State 0 of 0x4332B0's 3-entry stack table (immediate at 0x4332BF) and entry 0 of the .data table 0x65C3A0 (0x4332E0, 0x4FB010, 0x4FB050, 0x4FB070 - group CJ's). Combat route: jumped to (first from 0x435350, the magic effects' dispatch)."
+
+[[func]]
+pc = 0x433460
+name = "BattleFx_ActorWatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x433460..0x4334BA (0x5B bytes), cdecl: a 5-entry stack table (0x4334C0, 0x433550, 0x433640, 0x433650, 0x433790); nothing when byte 0x904AA0 is 5; else 0x9039D8 = 0x8C5D80, `call [esp + eax*4]` by Sprite_Current +1 (unchecked), 0x9039D8 = 0x8B3580. Kind 0 effect 6 (0x4352A0's immediate at 0x4352E2). No PSX twin paired. Combat route: jumped to."
+
+[[func]]
+pc = 0x4334C0
+name = "BattleFx_ActorWatchTest"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4334C0..0x433549 (0x8A bytes), cdecl: o = dword 0x93B940; return when dword 0x904AA8 & 0x400 and o +5 == byte 0x904B34; Battle_ActorIsOut(o with its low byte o +5) - two sites, one per branch (o +5 <= 2 or not); non-zero returns; else o re-read, and Sprite_Current +1 inc when the status byte (ObjTrio + 0x14C a + 0x90, or 0x93B960 + 0x128 (a - 3) + 0x92) & 0x58. State 0 of BattleFx_ActorWatch (immediate at 0x43346C). Combat route: jumped to."
+
+[[func]]
+pc = 0x4337F0
+name = "BattleFx_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4337F0..0x433809 (0x1A bytes), cdecl: a 1-entry stack table (0x433810), `call [esp + eax*4]` by Sprite_Current +1, unchecked. Kind 0 effect 7 (0x4352A0's immediate at 0x4352EA). No PSX twin paired. Combat route: jumped to."
+
+[[func]]
+pc = 0x433810
+name = "BattleFx_FollowOwner"
+psx = 0x800A5360
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x433810..0x433969 (0x15A bytes), cdecl: from dword 0x93B940 to Sprite_Current, both re-read for each: +0 or 0x20, +0x48, dwords +0x40 +0x44, words +0x58 +0x5A, +0x4B +0x4A +0x49, dwords +0x4C +0x50 +0x54, +0x27 +0x28 +0x2A, dwords +0x34 +0x38 +0x3C; Sprite_UpdateScreen; call BattleTask_FreeCurrent when the owner's bit 0 is clear; `jmp BattleTask_FreeCurrent` when byte 0x904AA0 is not 1. State 0 of BattleFx_Follow (immediate at 0x4337FD). PSX twin by the catalogue's pairing (not read). Combat route: jumped to."
+
+[[func]]
+pc = 0x437720
+name = "BattleHook_Area189Script"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x437720..0x43774D (0x2E bytes), cdecl: with byte 0x904AE8 bit 0 and word 0x802290 == 0xBD: MoveScript_Var7 = 1, byte 0x8034E5 = 0x19, ScriptFlags_Set40, `jmp 0x446E20`. Stored at 0x904B64 by 0x436110 (the enemy state, `mov [0x904B64], 0x437720` at 0x436121) and called `call [0x904B64]` from 0x431464. The name is from its test; what area 0xBD is was not looked up. Combat route: indirect call."
+
+[[func]]
+pc = 0x437750
+name = "BattleHook_Area189Transition"
+ret = "void"
+params = "void"
+impl = "src/game/battle_fx_tasks.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x437750..0x43777A (0x2B bytes), cdecl: the same two tests; Transition_Start(4), then byte 0x904AA2 inc. Stored at 0x904B68 by 0x436110 (at 0x43612B) and called `call [0x904B68]` from 0x4317B9. Combat route: indirect call."
+
+[[data]]
+pc = 0x64C2B8
+name = "Magic_Rows"
+ctype = "unsigned long"
+count = 302
+status = "evidence"
+evidence = "disasm and a dump 2026-09-25: 151 rows of two dwords - a u16 DAT file (0xFFFF none; Magic_LoadForItem / Magic_LoadForAbility read it) and a code pointer, which BattleMagicRow_Run tail-jumps to by row (`jmp [eax*8 + 0x64C2BC]`). All 151 pointers are in .text (137 distinct, the highest 0x4FC330); row 151's is 0x9A1A9B1B. The rows the item and ability tables name are 0..150."
+
+[[data]]
+pc = 0x432C28
+name = "BattleFx_PopupFaces"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleFx_DamagePopup's `jmp [ecx*4 + 0x432C28]` by the slot's +7 (checked against 3): 0x432BCB (the number), 0x432C04 / 0x432C08 / 0x432C0C (labels, cells 2 / 1 / 0). In .text."

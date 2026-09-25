@@ -97,6 +97,7 @@
 #include "game/battle_items.h"
 #include "game/battle_odds.h"
 #include "game/window_kinds.h"
+#include "game/battle_fx_tasks.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -236,6 +237,8 @@ void InjectAll() {
     WindowKinds_Inject();       // round 8 group CM: every call of its clones re-aimed at a recorder and its three
                                 // stack tables re-aimed in the copies: order does not matter (it clones its twelve
                                 // before injecting them, and no module patches bytes inside them)
+    BattleFxTasks_Inject();     // group CE, round eight: every call of its clones re-aimed at a recorder, six stack
+                                // tables re-aimed, a jump table relocated and Magic_Rows swapped: order does not matter
     InjectReport();
 }
 
