@@ -4775,8 +4775,9 @@ name = "Field_LoadingFrame"
 psx = 0x8019A2B8
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only): 0x56E6C0, 0x57B780, Party_UpdateScreens, 0x5173E0, Effect_RunObjects, MoveScript_TintFrame, then a tail jump to 0x592F00 - a field frame without the event script, run by Scenario_Start while its scenario loads. PSX 0x8019A2B8."
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-22 (calls only): 0x56E6C0, 0x57B780, Party_UpdateScreens, 0x5173E0, Effect_RunObjects, MoveScript_TintFrame, then a tail jump to 0x592F00 - a field frame without the event script, run by Scenario_Start while its scenario loads. PSX 0x8019A2B8. Re-read whole 2026-09-25 (group DB, docs/mode_states.md): 0x517290..0x5172B2 (0x23 bytes), six calls - AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, MoveScript_TintFrame - and jmp Field_DrawFrame, nothing else; 16 call sites and one tail jmp (E8/E9 scan), the load waits of modes 4..11 and 0x544B1D, 0x551C60, 0x56D645. Worldmap and combat routes: 260 calls."
 
 [[data]]
 pc = 0x66C7F8
@@ -7768,7 +7769,8 @@ psx = 0x80152DB4
 ret = "void"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x98 bytes: sixteen handler addresses 0x498AD0..0x498D00 stored on its own stack, then call [esp + 4 * id - 0x200] for the choice id 0x7DEE64 - unbounded: an id of 0x90 or more calls a stack word above the table (docs/known-defects.md D22). The PSX 0x80152DB4 copies the same sixteen from 0x80149ACC and indexes the same way. Left Capcom's (docs/item-use.md): no faithful C++ for the out-of-range ids. hidden_b: 0 calls."
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-22, 0x98 bytes: sixteen handler addresses 0x498AD0..0x498D00 stored on its own stack, then call [esp + 4 * id - 0x200] for the choice id 0x7DEE64 - unbounded: an id of 0x90 or more calls a stack word above the table (docs/known-defects.md D22). The PSX 0x80152DB4 copies the same sixteen from 0x80149ACC and indexes the same way. Re-read 2026-09-25 (group DB, docs/mode_states.md section 2): the imm32s at +0xC and +0x19 + 8k (k 0..14), the call at +0x8D; its two callers 0x4981EC / 0x4983EC call it only for ids 0x80 and up (cmp / jae), and their tails 0x4981F1 / 0x4983F1 touch no stack word but their own ret, so id 0x90 (the return address called) is reproduced by calling the return address when it is one of those two; 0x91 and up, and 0x90 from any other caller (both commits are item_use.cpp's now), abort. Shop route: 1 call."
 
 [[func]]
 pc = 0x498AD0
@@ -18079,3 +18081,218 @@ ctype = "unsigned char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: 0x30 0x40 0x50 0x80 0x90 0xE0 0xF0, then the 0xFF end - the codes Field_CellsBlock tests first, the cells' low nibble dropped (mask 1)."
+# ---------------------------------------------------------------------------
+# --- 2026-09-25 (round eight, wave B), group DB: top-level modes, the system
+# choice and the field core. src/game/mode_states.cpp, docs/mode_states.md.
+# Eighteen new entries here; MsgBox_SystemChoice 0x498A30 and
+# Field_LoadingFrame 0x517290 existed and gained their impl where they
+# stand. 0x497C30 is not a function: it is case 0x14 of MsgBox_StatePrint's
+# jump table (0x497E34 entry 20 at 0x497E84), and its host is ours.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x496250
+name = "GameMode_LookEnd"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x496250..0x496281 (0x32 bytes; the catalogue's 0x59A ran on through ten functions): call Look_Return, then with Camera_Angles[0] == 0xFD56 and [2] == 0x200 (word compares) Game_Mode = 2, Field_Request = 0, Game_Step = 0. Called only by mode 6's handler 0x496230 (at 0x496241) for Game_Step not 0; step 0 there is Look_PadControl, and either way it tail-jumps Field_LoadingFrame. Worldmap route: 18 calls."
+
+[[func]]
+pc = 0x496290
+name = "GameMode_Shop"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x496290..0x49629E (0xF bytes): xor eax, eax / mov ax, Game_Step / jmp [eax*4 + 0x656AAC], unchecked. GameMode_Handlers entry 7 (.data 0x656A60). Mode 7 is the shop: Field_ObjectIdle sets it with the object's index in 0x929F0C, the shop route reaches all three steps, and step 1 runs the shop overlay 0x57F500. Shop route."
+
+[[func]]
+pc = 0x4962A0
+name = "Shop_Open"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x4962A0..0x496384 (0xE5 bytes), GameMode_ShopSteps entry 0: s8 0x929F0C >= 0 makes Sprite_Current = Sprite_Objects + 0xA4 * it; with its dword +0x18 == 9, mode 2 / step 0 / Field_Request 0, then unless +7 bit 3: +8 = +0x85, Sprite_FaceDirection(Sprite_Current +8), +0x80 |= 8; +0x80 &= ~0x20, Field_ScriptFlags &= 0xFEFF, Field_Frame. Otherwise LoadDatFile(0x31B), while !File_LoadDone { Field_LoadingFrame; Task_Sleep(1) }, Gfx_ClutStripCopyRow(1) and (2), Gfx_ClutStripDirty = 1, Field_Frame, Game_Step + 1. Ten calls. Shop route."
+
+[[func]]
+pc = 0x496390
+name = "Shop_Close"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x496390..0x496424 (0x95 bytes), GameMode_ShopSteps entry 2: 0x90412C |= 0x80, Snd_LoadBankFile((it & 0x7F) + 0x2C2) and the framed load wait; with Field_InputFlags bit 4, LoadDatFile(0x12A), its wait and the unread 0x4560D0; Game_Mode 2, Game_Step 0, Field_Request 0; jmp Field_Frame. Twelve calls. Shop route."
+
+[[func]]
+pc = 0x496830
+name = "Menu_WaitTransition"
+ret = "void"
+params = "unsigned char run"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x496830..0x496869 (0x3A bytes): Field_WaitTransition 0x4967F0 with Menu_Frame for Field_Frame - loop { Task_Sleep(1); wait word 0x66C810 0 and the argument's byte (bl, read once) 0: Task_Sleep(1), return; Menu_Frame; word 0: return }. Callers mode 3's steps 0 (0x495C15, push 1) and 2 (0x495C5E, push 0), each after Transition_Start. Worldmap route: 2 calls."
+
+[[func]]
+pc = 0x496A00
+name = "Look_PadControl"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x496A00..0x496AC0 (0xC1 bytes), no calls: with (u16 0x903586 & Input_Held) 0 the pitch word 0x929ECC decides the turn byte 0x66C7D9 (> 0x200: 0, < 0x200: 1, equal: kept) and Game_Step + 1; else Input_Held's bits 14 / 12 / 13 / 15 step yaw 0x929EC8 by -22 while > (s16) 0xFD56, +22 while < (s16) 0xFE39, the pitch +22 while < 0x355, -22 while > 0xAA, each with Light_AnglesCopy [0] / [2]. Callers mode 6 (0x49623A, step 0) and mode 11's step 1 (0x4967B0). Worldmap route: 176 calls."
+
+[[func]]
+pc = 0x496AD0
+name = "Look_Return"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x496AD0..0x496B57 (0x88 bytes, as item-use.md measured), no calls: yaw -22 while (s16) > 0xFD56 else 0xFD56, with Light_AnglesCopy[0]; the pitch word 0x929ECC, when not 0x200, 22 down (turn byte 0x66C7D9 0) or up (else) towards 0x200 and snapped there when at or past it, with Light_AnglesCopy[2]. Callers GameMode_LookEnd and mode 11's step 2 (0x4967C0). Worldmap route: 18 calls."
+
+[[func]]
+pc = 0x516E70
+name = "Text_DrawSmall"
+psx = 0x8014FD78
+ret = "const unsigned char *"
+params = "int x, int y, unsigned colour, unsigned count, const unsigned char *text"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x516E70..0x516F5D (0xEE bytes): u, v = the byte pair 0x65F5A8[(colour & 0xFF) >> 4], CLUT 0x7800 | (colour & 0xF); a leading NUL returns text + 1; then per byte while the count byte (decremented per byte) is not 0: 0x01 x back to the argument and y + 9, 0x20 x + 8, bit 7 a two-byte glyph ((b0 & 0x7F) << 8) + b1, else b - 0x26; a glyph goes to word +0x16 of the primitive at Gfx_PacketNext (re-read) and Text_EmitGlyph(x, y, 8, 8 - v, u, v, clut), x + 8; returns one past the ending NUL or past the next byte. u, v and 8 - v are pushed with registers' upper halves left over; Text_EmitGlyph uses the low words. 18 call sites (E8 scan). The PSX pairing is the catalogue's (psx 8014FD78), not re-read. Worldmap and combat routes: 8,255 calls."
+
+[[func]]
+pc = 0x5172F0
+name = "Menu_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x5172F0..0x5172FE (0xF bytes): call Field_ModeDispatch, call 0x589970 (the field menu's state dispatch, docs/menu-screens.md section 1), jmp Field_RunTaskRecords. Mode 3's step 1 (.data 0x656A78, the table 0x656A74 of 0x495BB0) and Menu_WaitTransition's frame (0x49684D); also called at 0x495C50. Worldmap route: 38 calls."
+
+[[func]]
+pc = 0x517300
+name = "Shop_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x517300..0x517327 (0x28 bytes): AreaMap_Frame, Party_ExtraScreens, Party_UpdateScreens, Field_ObjectsScreen, Effect_RunObjects, Field_DrawFrame, Field_RunTaskRecords (seven calls), jmp 0x57F500 (the shop overlay, group DF's). GameMode_ShopSteps entry 1 (.data 0x656AB0). Shop route."
+
+[[func]]
+pc = 0x525370
+name = "FieldCore_State2"
+psx = 0x801B79B8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x525370..0x525381 (0x12 bytes): jmp [0x66011C + (u8) Sprite_Current +2 * 4], unchecked. Entry 2 of both the members' state table 0x65F960 (.data 0x65F968) and the leader's 0x660918 (.data 0x660920). PSX pairing the catalogue's. Shop, worldmap and combat routes."
+
+[[func]]
+pc = 0x5258B0
+name = "FieldCore_Fade"
+psx = 0x801B8264
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x5258B0..0x5258C1 (0x12 bytes): jmp [0x660158 + (u8) Sprite_Current +3 * 4], unchecked. FieldCore_State2Steps entry 2 (.data 0x660124). PSX pairing the catalogue's. Shop, worldmap and combat routes."
+
+[[func]]
+pc = 0x5258D0
+name = "FieldCore_FadeBegin"
+psx = 0x801B82A8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x5258D0..0x52591E (0x4F bytes): Sprite_ShadeFadeBegin, then through Sprite_Current re-read at each store +0x5D +0x5E +0x5F = 0x80, +0x5C = 1, Field_State +0x137 = 7, +0 &= 0xBF, +3 = 1. FieldCore_FadeSteps entry 0 (.data 0x660158). Shop route: 14 calls (Sprite_ShadeFadeBegin's count)."
+
+[[func]]
+pc = 0x525920
+name = "FieldCore_FadeStep"
+psx = 0x801B833C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x525920..0x525958 (0x39 bytes): Sprite_ShadeFadeStep(8); non-zero: Field_State +0x137 = 0, Sprite_Current +1 = 1, +2 = +3 = 0. al is 0 on both returns and no caller of the state chain reads it (0x5173AE, 0x533525). FieldCore_FadeSteps entry 1 (.data 0x66015C). Shop route: 112 calls."
+
+[[func]]
+pc = 0x539AD0
+name = "Scena01_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x539AD0..0x539ADD (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x660D7C], unchecked - chapter 1's slot 0 (Scena01_Hooks 0x660D68, 0x662C80 entry 1), which Field_ModeDispatch calls; the shape of Scena16_Frame. Shop, worldmap and combat routes."
+
+[[func]]
+pc = 0x539B20
+name = "Scena01_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x539B20..0x53A24B and three jump tables 0x53A24C (6, area 5) / 0x53A264 (9, area 0xA) / 0x53A288 (8, area 0x17) to 0x53A2A7 - 0x788 bytes, not the catalogue's 416 (0x539CC0 is a case of the first table). Scena01_States entry 1: by Game_AreaNumber (0, 5, 7, 8, 9, 0xA, 0xD, 0xE, 0x10, 0x11, 0x16, 0x17, 0x21, each re-read) and the counter byte 0x90384A, with Flags_Test on the dword 0x929ED0, sets MoveScript_Var7 / 0x8034E5 and the counters, pass flags, script flags, music (Music_LoadFile 0 / 8 and the load wait, Music_FadeOutStop 0xA), camera distance (+0xA00, +0xB80), an effect (Effect_FindFree, kind 0x12 / 0x11), Flags_Set 0xB 0xD 0x1C 0x39 0x3F, Scenario_CallA 1 / 2, AreaMap_SetupEntries and MoveCmd_TestFB(0x49, 0xC); every exit stores 0x8034E2 = 2. 48 calls. Shop, worldmap and combat routes."
+
+[[func]]
+pc = 0x53D830
+name = "Scena01_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x53D830..0x53DD1D (0x4EE bytes), cdecl (x at +4, z at +8; bp is z's high word), al 1 or 0: chapter 1's slot 2 (.data 0x660D70), called by Scenario_StepHook with the leader's target. Areas 0xA, 7, 8, 0x13, 0x17, 0x16 test flags (Flags_Test on 0x929ED0) and inclusive signed bounds of x and z, and on a hit ScriptFlags_Set40 (not for area 0x16's first rectangle), the run 0x8034E4 / step 0x8034E5 / counters, Sound_PlayEffect(0x202) or Field_ChangeArea (8, 0x340000, 0x178000, 0x83), (0x17, 0x180000, 0x180000, 0x82), (0x16, 0x58000, 0x140000, 0x80), (0x16, 0x450000, 0xB8000, 0x81) and answer 1; area 0x60 sets flag 0x18 over x 0x10000 / 0x18000, z 0x110000..0x128000 and answers 0. 31 calls. Shop, worldmap and combat routes."
+
+[[func]]
+pc = 0x5960D0
+name = "Window_DrawCursor"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/mode_states.cpp"
+evidence = "disasm 2026-09-25, 0x5960D0..0x59611F (0x50 bytes): Menu_DrawHand(((s16) window +4 >> 4) + 4, (s16) window +6 >> 4 + word 0x66AE30[set * 6] * (s8) 0x7DEE67 + word 0x66AE2E[set * 6], 0), the window the dword 0x905B84, the set u8 0x7DEE65; 16-bit arithmetic, the upper halves the registers' leftovers (Menu_DrawHand reads the low words). Entered by the tail jmp at 0x595C44, the window kind 2's state 2 (window_task.cpp's kSetCursorDraw). Shop route."
+
+[[data]]
+pc = 0x656AAC
+name = "GameMode_ShopSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x4962A0 (Shop_Open), 0x517300 (Shop_Frame), 0x496390 (Shop_Close) - GameMode_Shop 0x496290 jumps through it on Game_Step, unchecked. The next word, 0x656AB8, is mode 8's table (0x496430's), from 0x496440."
+
+[[data]]
+pc = 0x66011C
+name = "FieldCore_State2Steps"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-25: 0x525390 0x5257A0 0x5258B0 (FieldCore_Fade) 0x525960 0x525CA0 0x5261E0 0x526490 0x526A90 0x526B80 - FieldCore_State2 0x525370 jumps through it on Sprite_Current +2, unchecked; 0x660140 starts 0x525390's own table (its call at 0x5253AF)."
+
+[[data]]
+pc = 0x660158
+name = "FieldCore_FadeSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x5258D0 (FieldCore_FadeBegin), 0x525920 (FieldCore_FadeStep) - FieldCore_Fade 0x5258B0 jumps through it on Sprite_Current +3, unchecked; the begin sets +3 to 1 and the step puts +1..+3 back to 1, 0, 0. 0x660160 starts 0x525960's table (its jump at 0x52596B)."
+
+[[data]]
+pc = 0x660D68
+name = "Scena01_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: chapter 1's vtable, 0x662C80 entry 1 (.data 0x662C84): 0x539AD0 (Scena01_Frame, slot 0, Field_ModeDispatch's), 0x53D470 (slot 1, the object hook), 0x53D830 (Scena01_StepHook, slot 2), 0x539AC0 (Scenario_NoHook, slot 3, the arrive hook), 0x53DD20 (slot 4, the cell hook). Slots 1 and 4 are no group's this round and unread."
+
+[[data]]
+pc = 0x660D7C
+name = "Scena01_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x539AE0 (state 0, the chapter's start: Scenario_CallA(0), Field_ChangeArea(9, 0x570000, 0x40000, 7), state 1), 0x539B20 (Scena01_EnterArea), 0x53A2B0 (state 2, the run) - Scena01_Frame jumps through it on the s8 0x8034E2, unchecked. The run table the state 2 jumps through starts one word on, 0x660D88 (at 0x53A2BA), as scenario 16's does."
