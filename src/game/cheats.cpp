@@ -37,7 +37,9 @@
 // asks Cheats_PilferRollMask for the mask: the byte this patch leaves at
 // 0x4B5691, read back after it. The patch is still made, so that
 // BOF3X_ORIGINAL=Steal_Start keeps the cheat, and the shadow fuzz's copy of
-// the original carries it.
+// the original carries it. Since round nine Steal's step 0x4F5140 is ours
+// too (SkillSteal_Roll in src/game/magic_steal.cpp) and reads its mask the
+// same way, from 0x4F51EF (Cheats_StealRollMask).
 //
 // Every harness run leaves these unset: with the variables unset nothing
 // here changes a byte or a number, and the battle_flow fuzz compares ours
@@ -47,6 +49,7 @@ namespace {
 
 std::uint32_t g_exp = 1, g_zenny = 1;
 std::uint32_t g_pilfer_mask = 0xFF;   // the byte at kPilferMaskImm once Cheats_Inject has run
+std::uint32_t g_steal_mask = 0xFF;    // the byte at kStealMaskImm, the same
 
 // 0..50, 1 when unset; anything else is a Fatal, as a wrong BOF3X_FILTER is.
 std::uint32_t Multiplier(const char* var) {
@@ -72,9 +75,12 @@ void Cheats_Inject() {
     g_zenny = Multiplier("BOF3X_ZENNY");
     if (g_exp != 1 || g_zenny != 1) bof3::Log("DIV-0045    EXP x%lu, zenny x%lu (BOF3X_EXP, BOF3X_ZENNY)", (unsigned long)g_exp, (unsigned long)g_zenny);
 
-    struct PilferMask {   // on every return below: the mask as the body now holds it
-        ~PilferMask() { g_pilfer_mask = *reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kPilferMaskImm)); }
-    } pilfer_mask;
+    struct RollMasks {   // on every return below: the masks as the bodies now hold them
+        ~RollMasks() {
+            g_pilfer_mask = *reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kPilferMaskImm));
+            g_steal_mask = *reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kStealMaskImm));
+        }
+    } roll_masks;
     char text[8];
     const DWORD n = GetEnvironmentVariableA("BOF3X_STEAL", text, sizeof text);
     if (n == 0) return;
@@ -90,3 +96,4 @@ void Cheats_Inject() {
 std::uint32_t Cheats_ExpMultiplier() { return g_exp; }
 std::uint32_t Cheats_ZennyMultiplier() { return g_zenny; }
 std::uint32_t Cheats_PilferRollMask() { return g_pilfer_mask; }
+std::uint32_t Cheats_StealRollMask() { return g_steal_mask; }

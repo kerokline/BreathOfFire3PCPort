@@ -118,6 +118,7 @@
 #include "game/shop_states2.h"
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
+#include "game/magic_steal.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -308,6 +309,10 @@ void InjectAll() {
                                 // nothing) and run on the fuzz's own stacks; no module patches bytes inside it:
                                 // order does not matter (other clones' calls to Task_Sleep and the rest are
                                 // re-aimed at their own recorders, and a call site keeps its target either way)
+    MagicSteal_Inject();        // round 9 group SH (the spell harness): its clones' calls and stack-table immediates
+                                // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
+                                // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
+                                // does not matter
     InjectReport();
 }
 

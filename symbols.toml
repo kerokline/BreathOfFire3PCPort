@@ -18854,3 +18854,40 @@ ctype = "unsigned char"
 count = 45
 status = "evidence"
 evidence = "read 2026-09-25: Menu_DrawPlayTime's three Menu_DrawPieces lists - 0x6633B4 the middle (drawn six times, 8 apart), 0x6633C0 the left end (at x - 0x10), 0x6633CC the right end (at x) - 3, 4 and 6 records to an id of 0xFF, back to back."
+
+# --- Round nine, group SH (the spell harness): Steal's overlay, MAGIC216 (docs/magic_steal.md) ---
+
+[[func]]
+pc = 0x4F50B0
+name = "SkillSteal_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_steal.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4F50B0..0x4F50DD (0x2E bytes), cdecl, void: a three-entry stack table (mov [esp + 0/4/8], imm32 0x4F50E0 0x4F5140 0x4F52D0) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 87 (its code pointer at .data 0x64C574), file 0x2AD = MAGIC216.EMI; the ability id 0xD8, Steal read one id down (docs/cut-content.md section 2). The first function of MAGIC216's extent 0x4F50B0..0x4F52E5 (tools/magic_rows.py). Fuzz only: no recorded route casts it."
+
+[[func]]
+pc = 0x4F50E0
+name = "SkillSteal_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_steal.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4F50E0..0x4F5135 (0x56 bytes), no calls: byte +8 and dwords +0x34 / +0x38 / +0x3C of the owner (dword 0x93B940) to Sprite_Current, both pointers read again for each; +0xB 0; +1 += 1. Entry 0 of SkillSteal_Task's table. Pilfer's start (Steal_Start 0x4B54F0) does the same and more."
+
+[[func]]
+pc = 0x4F5140
+name = "SkillSteal_Roll"
+ret = "void"
+params = "void"
+impl = "src/game/magic_steal.cpp"
+status = "evidence"
+evidence = "Steal's copy of the steal routine (MAGIC216.EMI; Pilfer's is Steal_Start 0x4B54F0); DIV-0046 patches its mask at 0x4F51EF, read back by Cheats_StealRollMask. disasm 2026-09-25, 0x4F5140..0x4F52C9 (0x18A bytes), seven calls: enemy e = 0x93B960 + 0x128 * (byte 0x904B44 - 3); d = party word +0xA8 (by byte 0x904B34) - e word +0xB8; tier 12, then 11 10 9 8 7 6 5 4 below 49 29 19 9 -10 -20 -30 -50 (a jge chain); esi = movsx byte SkillSteal_RateTable[e +0xAA] * tier; Rand() and 0xFF against esi (signed jge); e2 from 0x904B44 read again. Failed: Msg_SystemPtr(0x39, or 0x3A when e2 +0xAA is 0). Else e2 word +0xA8 0: 0x3A; else Inventory_Add(item sar 8, item, 1, 0) al 0: 0x39; else 0x4B58F0(item, category), Msg_SystemPtr(0x38), BattleQueue_Push(1, 0xFF, text), e3 (0x904B44 again) +0xAA and word +0xA8 0. Every end: BattleQueue_Push(1, 0xFF, text), Sprite_Current +1 += 1. Entry 1 of SkillSteal_Task's table."
+
+[[data]]
+pc = 0x65C204
+name = "SkillSteal_RateTable"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: SkillSteal_Roll's movsx byte [0x65C204 + the enemy's +0xAA], the index unbounded; the same eight values as Steal_RateTable 0x65AC20 (docs/cheats.md: the PSX's byte for byte)."
