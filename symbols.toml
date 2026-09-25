@@ -16300,3 +16300,265 @@ ctype = "unsigned char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: 5 4 5 4 4 0 0 0 - Sparkle_Spawn's launch delay step: a sparkle's +5 = this * (n >> 2) + 1."
+
+# --- round eight, group DH: the field menu and the list draws (src/game/menu_lists.cpp, docs/menu_lists.md) ---
+
+[[func]]
+pc = 0x589970
+name = "FieldMenu_Run"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589970..0x589980 (0x11 bytes): mov eax, [0x929F00]; and eax, 0xFF; jmp [eax*4 + 0x6672B4] (FieldMenu_States), unchecked. One caller, 0x5172F0 at 0x5172F5 (E8 scan), mode 3's per-frame call (docs/menu-screens.md section 1). World-map route: 38 calls."
+
+[[func]]
+pc = 0x589990
+name = "FieldMenu_Open"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589990..0x589B52 (0x1C3 bytes), FieldMenu_States[0] (0x6672B4); PSX 801D17B0 (catalogue pair). Zeroes 0x7E0674..0x7E0676, 0x929F05, 0x937F8E/F, 0x905D90, 0x905BA1; for s8 i < Field_MemberCount (u8, re-read, jl) Char_RecalcStats(0x903A70 + 0xA4 * 0x66972C[0x904062[i]]); copies 0x904062[k] / 0x904065[k] to 0x6BDF98[k] / 0x6BDF9B[k] while (s8 n) < Party_Count(0) & 0xFF (asked each pass), the rest of three 0xFF (jge 3 skips); 0x929F11 = 0; eight records 0x903A80 + 0xA4 i: word +0x10 >> 2 above word +8 (jbe) ORs 0x20 into byte +1, else word +0 &= 0xDFFF; nineteen globals 0x939880..0x9398CC zeroed; 0x929F10 == 1 sets 0x929F00 and 0x929F01 to 5, else FieldMenu_PlaceWindows 0x589E60, then 0x929F01 = 0 and 0x929F00 (re-read) + 1."
+
+[[func]]
+pc = 0x589B60
+name = "FieldMenu_TopBar"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589B60..0x589B6D (0xE bytes), FieldMenu_States[1] (0x6672B8): xor eax, eax; mov al, [0x929F01]; jmp [eax*4 + 0x6672D8] (FieldMenu_TopBarSteps), unchecked."
+
+[[func]]
+pc = 0x589B70
+name = "FieldMenu_TopBarInput"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589B70..0x589DF6 (0x287 bytes), FieldMenu_TopBarSteps[0] (0x6672D8). Menu_DrawBackdrop(0x903A5B); record 9 +0xA (0x8032AE) = cursor 0x929F05; record 10 word +0x10 (0x8032D8) = 0x6672E4[s8 cursor] (movsx); Sprite_Current = ObjTrio 0x802D40 (restored after); 0x8032B0 = 0 (Camp allowed) when 0x904152 and 0x589FB0() != 0, or (Field_InputFlags & 1 or Game_AreaNumber == 0xBD) and (0x531820() != 0 or (0x904152 re-read and 0x589FB0() != 0)), else 1. Input_AutoRepeat(Input_Pressed & 0xA000): 0x8000 Sound_PlayEffect(0x101), cursor - 1, 0x929F04 = 0, negative (jns) to 6; 0x2000 the same + 1, above 6 (jle) to 0. Input_Pressed re-read: cancel (0x903590) FieldMenu_ReconcileParty, step + 2, Game_Step + 1; confirm (0x90358E) on 6: 0x8032B0 == 0 -> ReconcileParty, Game_Step + 1, 0x905B60 = 1, step + 1, else Sound_PlayEffect(0x107); elsewhere Sound_PlayEffect(0x104), 0x929F04 = 5, records 7..10 state 1, records 4 + i (u16 i < Party_Count(0) & 0xFF, asked each pass) state 1 (cursor 0) / 7 (cursor 5) / 2, step + 1."
+
+[[func]]
+pc = 0x589E50
+name = "FieldMenu_BackdropStep"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589E50..0x589E5C (0xD bytes): mov al, [0x903A5B]; push eax; call Menu_DrawBackdrop; pop ecx; ret. Pointer-reached from FieldMenu_TopBarSteps[2] (0x6672E0) and 0x667350 (the table at 0x66734C, another screen's)."
+
+[[func]]
+pc = 0x589E60
+name = "FieldMenu_PlaceWindows"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589E60..0x589FAF (0x150 bytes); PSX 801D2010 (catalogue pair); one caller, FieldMenu_Open at 0x589B3A. Window_ResetAll; for u8 i < Party_Count(0) & 0xFF (jb, asked each pass) window record 0x8031F0 + 0x24 i: +0 1, +1 6, +2 0, +3 0, +4 0x62, +6 0x36 i + 0x3E, +0xA i, +0xB 0, +0xC 0; then records 7..10 (0x80325C, 0x803280, 0x8032A4, 0x8032C8) handler 6, kinds 1..4, state 0, at (0xC8, 0x10), (0x10, 0x10), (0x68, 0x2A), (0x73, 0x10); 0x8032AE / 0x8032AF / 0x8032B0 and words 0x8032B4, 0x8032D8 zero."
+
+[[func]]
+pc = 0x589FE0
+name = "FieldMenu_ReconcileParty"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589FE0..0x58A0D0 (0xF1 bytes, the found-case block 0x58A0B3 after the ret), no calls; callers FieldMenu_TopBarInput at 0x589C83 and 0x589CC0. Each non-0xFF byte of 0x6BDF98[0..2] not found in 0x904062[0..2] (0xFF never matches) adds 1; non-zero sets 0x929F11 = 1. The nine bytes 0x9045FC..0x904604 copied to the stack; each non-0xFF 0x904065[k] found at 0x6BDF9B[j] gets the copy's bytes 3j..3j+2 at 0x9045FC + 3k, not found zeros; 0xFF leaves them."
+
+[[func]]
+pc = 0x599B50
+name = "MenuList_Run"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599B50..0x599B61 (0x12 bytes): mov ecx, [0x905B84]; xor eax, eax; mov al, [ecx + 2]; jmp [eax*4 + 0x66AF94] (MenuList_Kinds), unchecked. Record handler 6 of Field_RunTaskRecords (its stack table's imm32 at 0x59E274; window_task_callees.h)."
+
+[[func]]
+pc = 0x599B70
+name = "MenuList_MemberPanel"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599B70..0x599B8F (0x20 bytes), MenuList_Kinds[0]: call [0x66AFE8 + 4 record[+3]] (MenuList_PanelStates, unchecked), then MenuList_DrawMemberPanel([0x905B84] re-read)."
+
+[[func]]
+pc = 0x599B90
+name = "MenuList_DrawMemberPanel"
+ret = "void"
+params = "unsigned char *rec"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599B90..0x599C20 (0x91 bytes), cdecl (rec); one caller, MenuList_MemberPanel at 0x599B89. 0x573560(word +4, word +6, 0x66972C[0x904062[3 +0xB + +0xA]], +0xC, 0); Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xF, 0); Gfx_CommitPrim(1, 0xC); Gpu_GetClut(0x10, 0x1E0) (0x80 pushed before it stays for the next call); 0x5744B0(+4 + 9, +6 + 5, +0xA + 3, 0x1E, clut, 0x80), the fields re-read from rec after the calls. 0x573560 reads its fourth argument's low byte (neg / sbb) and passes the dword to 0x57CF60's colour; 0x5744B0 masks x, y to words and takes bytes 3, 4, 6 and word 5. World-map route: 114 calls."
+
+[[func]]
+pc = 0x599D50
+name = "MenuList_MoneyBox"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599D50..0x599D82 (0x33 bytes), MenuList_Kinds[1]: call [0x66B014 + 4 record[+3]] (MenuList_MoneyStates), then Menu_DrawMoneyBox(word +4, word +6, 0, dword 0x904058) of [0x905B84] re-read."
+
+[[func]]
+pc = 0x599DC0
+name = "MenuList_TimeBox"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599DC0..0x599DE9 (0x2A bytes), MenuList_Kinds[2]: call [0x66B020 + 4 record[+3]] (MenuList_TimeStates), then 0x5746C0(word +4, word +6) of [0x905B84] re-read - a box 0x55 wide with bytes 0x9040C8 / 0x9040C9 printed through 0x65306C, the play time by its bytes (hypothesis)."
+
+[[func]]
+pc = 0x599E50
+name = "MenuList_TopBarIcons"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599E50..0x599F66 (0x117 bytes; the tail jmp at 0x599E62 lands on 0x599E70 inside it, reached from nowhere else - E8/E9 scan), MenuList_Kinds[3]. call [0x66B02C + 4 record[+3]] (MenuList_IconStates); +0xB != +0xA zeroes word +0x10; word +0x10 below 3 (s16, jge) gains 1; for u8 i < 7, i != +0xA: Menu_DrawIcon(0x6672AC[i], (i << 4) + word +4, word +6, 0x10, 0x10, i == 6 and +0xC ? 0x40 : 0x80); then the cursor's icon at ((+0xA << 4) + x - n, y - n), size ((byte +0x10 + 8) << 1) as a byte, the same shade rule; +0xB = +0xA. [0x905B84] re-read after every call and store."
+
+[[func]]
+pc = 0x599FA0
+name = "MenuList_TitleBox"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x599FA0..0x59A02E (0x8F bytes), MenuList_Kinds[4]. call [0x66B038 + 4 record[+3]] (MenuList_TitleStates); Menu_DrawTitleBox(word +4, word +6, 0x48, 0x13, byte 0x903A5A); t = Msg_SystemPtr(word +0x10); n = Text_CharCount(t); m = Text_CharCount(t) (movzx); Text_DrawAt(word +4 - 6 m + 0x25, word +6 + 3, 0, n, t) - the record re-read after the box, after the first count (y) and after the second (x). Draws the Chinese title text of the top bar's entry (ids 0x6672E4)."
+
+[[func]]
+pc = 0x59A3A0
+name = "MenuSlide_UpOff"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x59A3A0..0x59A3C7 (0x28 bytes): word [rec + 6] -= 0x10; below -20 (s16, jge) it is -20 and byte +3 = 0; [0x905B84] re-read after the add and after the clamp. A state of nine tables (0x66AE54, 0x66AE60, 0x66AF04, 0x66B030, 0x66B03C, 0x66B088, 0x66B0C4, 0x66B248, 0x66B254)."
+
+[[func]]
+pc = 0x59A3D0
+name = "MenuSlide_DownTo16"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x59A3D0..0x59A3F6 (0x27 bytes): word [rec + 6] += 0x10; above 0x10 (s16, jle) it is 0x10 and byte +3 = 0; [0x905B84] re-read as MenuSlide_UpOff. A state of five tables (0x66AE58, 0x66AF08, 0x66B040, 0x66B08C, 0x66B24C)."
+
+[[func]]
+pc = 0x59A580
+name = "MenuSlide_LeftOff"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x59A580..0x59A5A7 (0x28 bytes): word [rec + 4] -= 0x20; below -200 (the imm32 at 0x59A586, s16 compare, jge) it is the bound and byte +3 = 0. DIV-0041 patches that imm32 (-253 wide); ours reads it from there. A state of four tables (0x66AE6C, 0x66B0B0, 0x66B1B0, 0x66B550)."
+
+[[func]]
+pc = 0x59A5B0
+name = "MenuSlide_RightTo17"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x59A5B0..0x59A5D7 (0x28 bytes): word [rec + 4] += 0x20; above 0x11 (s16, jle) it is 0x11 and byte +3 = 0. A state of seven tables (0x66AE70, 0x66AEFC, 0x66B0B4, 0x66B1B4, 0x66B274, 0x66B308, 0x66B574)."
+
+[[func]]
+pc = 0x59A5E0
+name = "MenuSlide_RightOff"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x59A5E0..0x59A607 (0x28 bytes): word [rec + 4] += 0x20; above 0x140 (the imm32 at 0x59A5E6, jle) it is the bound and byte +3 = 0. DIV-0041 patches that imm32 (373 wide); ours reads it from there. A state of twenty tables (0x66AEEC .. 0x66B584, dword scan)."
+
+[[func]]
+pc = 0x59A680
+name = "MenuSlide_DownTo38"
+ret = "void"
+params = "void"
+impl = "src/game/menu_lists.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x59A680..0x59A6A7 (0x28 bytes): word [rec + 6] += 0x10; above 0x26 (s16, jle) it is 0x26 and byte +3 = 0. A state of four tables (0x66AE64, 0x66B0C8, 0x66B258, 0x66B264)."
+
+[[data]]
+pc = 0x6672B4
+name = "FieldMenu_States"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-25: FieldMenu_Open 0x589990, FieldMenu_TopBar 0x589B60, 0x58AAE0, 0x58D7C0, 0x58C2C0, 0x58F080, 0x58A4C0, 0x5902E0, 0x5902D0 - the menu states by 0x929F00 (docs/menu-screens.md section 1); jumped through by FieldMenu_Run 0x589970, unchecked. FieldMenu_TopBarSteps follows."
+
+[[data]]
+pc = 0x6672D8
+name = "FieldMenu_TopBarSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: FieldMenu_TopBarInput 0x589B70, 0x589E00 (the countdown into a screen, unread), FieldMenu_BackdropStep 0x589E50; jumped through by FieldMenu_TopBar 0x589B60 by 0x929F01, unchecked. FieldMenu_TitleIds follows."
+
+[[data]]
+pc = 0x6672E4
+name = "FieldMenu_TitleIds"
+ctype = "unsigned char"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-25: 9 0xB 0xA 0xC 8 0xD 0xE - the system text (Msg_SystemPtr) of each top-bar entry's title; FieldMenu_TopBarInput stores 0x6672E4[s8 cursor] to the title record's word +0x10."
+
+[[data]]
+pc = 0x6672AC
+name = "FieldMenu_IconIds"
+ctype = "unsigned char"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-25: 2 1 0 0xA 8 0x13 9 - the Menu_DrawIcon icon of each top-bar entry; read by MenuList_TopBarIcons by the entry, the cursor's unchecked. FieldMenu_States follows at 0x6672B4."
+
+[[data]]
+pc = 0x66AF94
+name = "MenuList_Kinds"
+ctype = "unsigned long"
+count = 21
+status = "evidence"
+evidence = "read 2026-09-25: record handler 6's kinds by window record byte +2, jumped through by MenuList_Run 0x599B50, unchecked - 0..4 MenuList_MemberPanel, MenuList_MoneyBox, MenuList_TimeBox, MenuList_TopBarIcons, MenuList_TitleBox; 5..20 0x59A030 0x59A190 0x59A200 0x59A270 0x59A2E0 0x59A400 0x59A440 0x59A560 0x59A640 0x59CB20 0x59A6B0 0x59A8E0 0x59A9C0 0x59AA10 0x59AA30 0x59ADE0 (other screens'; unread). MenuList_PanelStates follows."
+
+[[data]]
+pc = 0x66AFE8
+name = "MenuList_PanelStates"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-25: kind 0's states by byte +3, called by MenuList_MemberPanel, unchecked: 0x437CC0 (ret), 0x599C30, 0x59A960, 0x599C60, 0x599C90, 0x59A0B0, 0x59A0E0, 0x599CC0, 0x599CF0, MenuSlide_RightOff, 0x599D20 - to the next table; the top bar's confirm sets 1 (Items), 7 (Tactics) or 2."
+
+[[data]]
+pc = 0x66B014
+name = "MenuList_MoneyStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: kind 1's states, called by MenuList_MoneyBox, unchecked: 0x437CC0 (ret), MenuSlide_RightOff, 0x599D90."
+
+[[data]]
+pc = 0x66B020
+name = "MenuList_TimeStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: kind 2's states, called by MenuList_TimeBox, unchecked: 0x437CC0 (ret), 0x599DF0, 0x599E20."
+
+[[data]]
+pc = 0x66B02C
+name = "MenuList_IconStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: kind 3's states, called by MenuList_TopBarIcons, unchecked: 0x437CC0 (ret), MenuSlide_UpOff, 0x599F70."
+
+[[data]]
+pc = 0x66B038
+name = "MenuList_TitleStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: kind 4's states, called by MenuList_TitleBox, unchecked: 0x437CC0 (ret), MenuSlide_UpOff, MenuSlide_DownTo16."
