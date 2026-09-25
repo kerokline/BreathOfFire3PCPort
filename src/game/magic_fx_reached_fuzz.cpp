@@ -521,22 +521,26 @@ void Seed(unsigned k) {
     case kStealStart: {
         At(at::kTarget)[0] = static_cast<unsigned char>(Often() ? 3 + Next() % 8 : Next() % 3);
         unsigned char* const e = TargetEnemy();
-        if (Often()) e[at::kStealRate] = static_cast<unsigned char>(Next() % 8);
+        if (Often()) e[at::kStealRate] = static_cast<unsigned char>(Half() ? 1 + Next() % 7 : Next() % 8);
         if (Half()) SetWord(e + at::kStealItem, Half() ? 0 : Next() % 0x100);
         const int d = static_cast<int>(MF_PICK(49, 48, 29, 28, 19, 18, 9, 8, static_cast<std::uint32_t>(-10),
                                                static_cast<std::uint32_t>(-11), static_cast<std::uint32_t>(-20),
                                                static_cast<std::uint32_t>(-21), static_cast<std::uint32_t>(-30),
                                                static_cast<std::uint32_t>(-31), static_cast<std::uint32_t>(-50),
-                                               static_cast<std::uint32_t>(-51), 0x7FFF, static_cast<std::uint32_t>(-0x8000)));
-        const unsigned speed = Next() & 0x7FFF;
-        if (Often()) {
-            SetWord(e + at::kEnemySpeed, speed + 0x8000u);
+                                               static_cast<std::uint32_t>(-51), 0x3FFF, static_cast<std::uint32_t>(-0x4000)));
+        const unsigned speed = Next() & 0x3FFF;
+        unsigned m = static_cast<unsigned>(MF_PICK(4, 5, 6, 7, 8, 9, 10, 11, 12));
+        if (Next() % 4) {
+            // The speed difference at a threshold or one below, and Rand aimed
+            // at the rate times the multiplier the original takes for it: a
+            // threshold moved by one changes the answer at exactly that Rand.
+            SetWord(e + at::kEnemySpeed, speed + 0x4000u);
             SetWord(At(at::kParty + At(at::kActor)[0] * at::kPartyStride + at::kThiefSpeed),
-                    static_cast<unsigned>(static_cast<int>(speed + 0x8000u) + d));
+                    static_cast<unsigned>(static_cast<int>(speed + 0x4000u) + d));
+            m = d >= 49 ? 12 : d >= 29 ? 11 : d >= 19 ? 10 : d >= 9 ? 9 : d >= -10 ? 8 : d >= -20 ? 7 : d >= -30 ? 6 : d >= -50 ? 5 : 4;
         }
-        // Rand near the rate x multiplier the original compares with.
         const unsigned rate = e[at::kStealRate] < 8 ? static_cast<unsigned>(static_cast<signed char>(At(at::kStealRates)[e[at::kStealRate]])) : 0;
-        g_rand_hint = rate * static_cast<unsigned>(MF_PICK(4, 5, 6, 7, 8, 9, 10, 11, 12));
+        g_rand_hint = rate * m;
         break;
     }
     case kStealWait:
@@ -579,7 +583,7 @@ void Seed(unsigned k) {
         if (Half()) At(at::kFlags)[0] = static_cast<unsigned char>(At(at::kFlags)[0] ^ 4);
         break;
     case kUp:
-        if (Often()) sc[9] = static_cast<unsigned char>(MF_PICK(0xFF, 0xFE, 0x7F, 0x80, 0));
+        if (Often()) sc[9] = static_cast<unsigned char>(MF_PICK(0xFF, 0xFF, 0xFF, 0xFE, 0x7F, 0x80, 0));
         break;
     default:
         break;
