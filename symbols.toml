@@ -12306,6 +12306,178 @@ impl = "src/game/battle_misc.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x447E60..0x447F33 (0xD4 bytes), no calls: window record 16 (0x8033A0) for the actor at byte +5 of the context 0x939EC4 points at: +0 1, +1 8, +2 2, +3 2, +0xA the actor, +0xD 0xFF, +8 2, +0xB / word +0x10 / +0xC the actor's three bytes at 0x9045FC + actor * 3, +9 0, word +0x14 2 when the dword +0x10 of what 0x939FA0 points at has bit 1 and not bit 17 else 0, word +4 0x140, word +6 0x3F; then 0x80340C 0, 0x80340E 0, 0x929F06 the actor read again, 0x80340D 8. Only caller 0x447469. No PSX twin paired. Combat route: 3 calls."
 
+# Round 8 group CI (2026-09-25, docs/battle_menu_states.md): the battle menu
+# states, pointer-reached from the command step 0x42EED0 (through 0x64AE54 by
+# the command byte 0x904AA2) and entered by tail jumps; all void (void),
+# returning to Battle_PhaseDispatch.
+
+[[data]]
+pc = 0x64E44C
+name = "BattleAttackCmd_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleAttackCmd_Dispatch 0x447FD0 is xor eax, eax; mov al, [0x904AA3]; jmp [eax*4 + 0x64E44C], no bound. Holds 0x447FE0, 0x448020, 0x4480E0, 0x448140 (the states set 0..3: 0x448020 sets 2 and 3, 0x447FE0 counts up from 0). The one reference is 0x447FDA (a byte scan of the image for the dword). BattleItemCmd_States follows at once."
+
+[[data]]
+pc = 0x64E45C
+name = "BattleItemCmd_States"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleItemCmd_Dispatch 0x448180 is xor eax, eax; mov al, [0x904AA3]; jmp [eax*4 + 0x64E45C], no bound. Holds 0x448190, 0x448210, 0x448600, 0x448630, 0x4486C0, 0x448B80, 0x448C80, 0x4493E0, 0x449480, 0x4498F0 - ten, to BattleItemCmd_OpenSteps 0x64E484, which 0x448190 indexes; states 0..6 are set by the handlers read (0x448210 sets 3 and 6, 0x448630 4 and 5). One reference, 0x44818A."
+
+[[data]]
+pc = 0x64E484
+name = "BattleItemCmd_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleItemCmd_OpenDispatch 0x448190 is mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64E484]. Holds 0x4481B0 (sub-state 0 -> 1) and 0x4481E0 (sub-state 0, state on); BattleItemCmd_TargetSteps follows. One reference, 0x44819D."
+
+[[data]]
+pc = 0x64E48C
+name = "BattleItemCmd_TargetSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleItemCmd_TargetDispatch 0x4486C0 is mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64E48C]. Holds 0x4486E0, 0x448780, 0x4488C0, 0x448A70, 0x448B40 - the sub-states the handlers set are 1..4. The next dword, 0x64E4A0, starts 0x448B80's table (jmp [eax*4 + 0x64E4A0]: 0x448BA0, 0x448C00, 0x448A70, 0x448B40), not this group's. One reference, 0x4486CD."
+
+[[func]]
+pc = 0x447FD0
+name = "BattleAttackCmd_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x447FD0..0x447FDD (0xE bytes): the state byte 0x904AA3 through BattleAttackCmd_States 0x64E44C, a tail jump, no bound. Entry 3 of 0x64AE54 (at 0x64AE60), which 0x42EED0 tail-jumps through by the command byte 0x904AA2 - so reached from Battle_PhaseDispatch with nothing on the stack but its return. Hypothesis in the name: command 3 picks an enemy and commits action kind 0 (BattleAttackCmd_Confirm), taken to be the attack; not checked in game. PSX 0x80095070 by the catalogue's pairing, not read. Combat route: reached (first-call trace 2026-09-25)."
+
+[[func]]
+pc = 0x447FE0
+name = "BattleAttackCmd_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x447FE0..0x448017 (0x38 bytes): the command's target byte (*0x939FA0 + 0, the pointer read after the call) = Battle_DefaultTarget(3); BattleBanner_SetMessage(2, 0); then 0x904AA3 read and one up, 0x904AAF = 1, the auto-repeat latch word 0x7E01B8 = 0. State 0 of 0x64E44C. The attack in the name as BattleAttackCmd_Dispatch's."
+
+[[func]]
+pc = 0x448020
+name = "BattleAttackCmd_PickEnemy"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x448020..0x4480DB (0xBC bytes): Input_Pressed against Field_CancelButtons (state 3) then Field_ConfirmButtons (state 2), 16-bit tests; else Input_AutoRepeat(pressed & 0xF000): bit 0x2000 - target = Battle_DefaultTarget(Battle_WrapIndex(0x904AB2 + 2, 3, s8 target + 1)), cue 0x101; then bit 0x8000 - the same with - 1 and 0x4457F0 (the downward picker), cue 0x101. WrapIndex's eax is pushed whole; the command pointer and 0x904AB2 are read after the auto-repeat. State 1 of 0x64E44C."
+
+[[func]]
+pc = 0x4480E0
+name = "BattleAttackCmd_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4480E0..0x448138 (0x59 bytes): cue 0x104; 0x904AAF = 0; the command's +1 = 0 and dword +0xC |= 1 (the pointer 0x939FA0 read twice); the acting member's (*0x939EC4) +1 = 2; 0x904AC3 one up; 0x904AA1 = 1, 0x904AA2 = 0, 0x904AA3 = 0. State 2 of 0x64E44C."
+
+[[func]]
+pc = 0x448180
+name = "BattleItemCmd_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x448180..0x44818D (0xE bytes): the state byte 0x904AA3 through BattleItemCmd_States 0x64E45C, a tail jump, no bound. Entry 2 of 0x64AE54 (at 0x64AE5C), 0x42EED0's table by the command byte 0x904AA2; the item command by its states (the party item list, Item_CanUse, the inventory count spent). PSX 0x80095314 by the catalogue's pairing, not read. Combat route: reached."
+
+[[func]]
+pc = 0x448190
+name = "BattleItemCmd_OpenDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x448190..0x4481A0 (0x11 bytes): the dword 0x904AA4 and 0xFF through BattleItemCmd_OpenSteps 0x64E484, a tail jump, no bound. State 0 of 0x64E45C."
+
+[[func]]
+pc = 0x4481B0
+name = "BattleItemCmd_QueuePrompt"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4481B0..0x4481D6 (0x27 bytes): BattleQueue_Push(2, 0xFF, Msg_SystemPtr(0x4000)) - system bank 1, message 0 - then 0x904AA4 one up. Sub-state 0 of 0x64E484, and also the dword at 0x64E420 in group CH's table 0x64E3EC... The catalogue's .rdata 0x5C7001 and 0x5C7041 are not references: they are unaligned hits inside two 16-float records (0x5C7000 and 0x5C7040 hold 1037.5f, 0x4481B000)."
+
+[[func]]
+pc = 0x4481E0
+name = "BattleItemCmd_OpenList"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4481E0..0x448201 (0x22 bytes): the command's +1 = 5; ItemMenu_SetupForParty() (0x4481E9, its only caller); 0x904AA3 read, 0x904AA4 = 0, 0x904AA3 one up. Sub-state 1 of 0x64E484."
+
+[[func]]
+pc = 0x448210
+name = "BattleItemCmd_List"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x448210..0x4485F1 (0x3E2 bytes, 11 calls, every jump internal): nothing while record 16's +3 (0x8033A3) is set; the hand (record 19, 0x80340C) at record 16's x + 7, y + 13 * (cursor - top + 2); the acting member's ObjTrio dword +0x130 &= 0xBFFF; Input_AutoRepeat(pressed & 0xF00C): 0x8000 / 0x2000 the category +0xA back / on in 0..3 (a signed wrap below, above 3 to 0; request word +0x10 0x32 / 0x31; cue 0x101), else 0x1000 / 0x4000 the cursor +0xC one back to 0 / on to 0x7F (request +0x12 0xF0 above the top, 0x10 at top + 7), else 4 / 8 a page of 7 (the top +0xB capped at 0x79, the cursor 0x7F); cue 0x100 on a move; the last-pushed queue entry's text = Msg_SystemPtr(Item_Price(category, item)); then with +0x12 zero: up at row 0 opens record 21 and state 6; cancel saves the page / top / cursor to 0x904605..7, cue 0x106, state on; confirm puts category << 8 | item in the command's word +2 and asks Item_CanUse(record 16 +8, 0, category, item): refused cue 0x107, else cue 0x103 and state 3. State 1 of 0x64E45C."
+
+[[func]]
+pc = 0x448630
+name = "BattleItemCmd_TargetKind"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x448630..0x4486B4 (0x85 bytes): f = 0x591810(category 0x8033AA, the list's item) - the item's flag byte; f & 0x40: state (f & 0x10 | 0x40) >> 4, 4 or 5; else f & 0x80: target 0xC0, state 4, sub-state 3; else target 0x40 (f & 0x30 both), 0x80 (0x10 alone) or the acting member's +5, state 4, sub-state 3. The flag's arguments carry the caller's upper bits; 0x591810 masks them. State 3 of 0x64E45C."
+
+[[func]]
+pc = 0x4486C0
+name = "BattleItemCmd_TargetDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4486C0..0x4486D0 (0x11 bytes): the dword 0x904AA4 and 0xFF through BattleItemCmd_TargetSteps 0x64E48C, a tail jump, no bound. State 4 of 0x64E45C."
+
+[[func]]
+pc = 0x4486E0
+name = "BattleItemCmd_TargetBegin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4486E0..0x448772 (0x93 bytes): flag bit 0x20 (0x591810): target Battle_DefaultTarget(3), sub-state 1; else target 0 when Battle_ReturnTrue answers al non-zero, else Battle_DefaultTarget(0), sub-state 2; both: latch 0x7E01B8 = 0, 0x904AAF = 1. Sub-state 0 of 0x64E48C."
+
+[[func]]
+pc = 0x448780
+name = "BattleItemCmd_PickEnemy"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x448780..0x4488B4 (0x135 bytes): cancel sub-state 4, confirm 3; Input_AutoRepeat(pressed & 0xF000): 0x5000 with flag bit 0x80 - target 0 (Battle_ReturnTrue) or Battle_DefaultTarget(0), sub-state one up, cue 0x101, done; then 0x2000 / 0x8000 as BattleAttackCmd_PickEnemy's (Battle_WrapIndex(0x904AB2 + 2, 3, ..), Battle_DefaultTarget / 0x4457F0, cue 0x101). Sub-state 1 of 0x64E48C."
+
+[[func]]
+pc = 0x4488C0
+name = "BattleItemCmd_PickMember"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4488C0..0x448A64 (0x1A5 bytes, 15 calls): cancel sub-state 4, confirm 3; Input_AutoRepeat(pressed & 0xF000): 0x5000 with flag bit 0x80 - target Battle_DefaultTarget(3), sub-state one down, cue 0x101, done; 0x2000 - Battle_ReturnTrue first, then target = Battle_WrapIndex((dword 0x904AB0 and 0xFF) - 1, 0, s8 target + 1), through Battle_DefaultTarget when ReturnTrue answered 0; cue 0x101; 0x8000 - the same with - 1 and 0x4457F0. Sub-state 2 of 0x64E48C."
+
+[[func]]
+pc = 0x448A70
+name = "BattleItemCmd_Commit"
+ret = "void"
+params = "void"
+impl = "src/game/battle_menu_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x448A70..0x448B3C (0xCD bytes): cue 0x104; 0x904AAF = 0; the command's +1 = 5 and +0xA = the list cursor 0x8033AC; the acting member's +1 = 2; 0x904AC3 one up; the last-pushed queue entry's +1 = 1; the item spent: its count (0x656B14[category][cursor]) one less when above 1, else its id and count zeroed (the cursor and category re-read); ItemMenu_FreeWindows(); 0x904AA2..4 = 0, 0x904AA1 = 1. Sub-state 3 of 0x64E48C and entry 2 of 0x448B80's 0x64E4A0."
+
 [[func]]
 pc = 0x449E00
 name = "Battle_ReturnTrue"
