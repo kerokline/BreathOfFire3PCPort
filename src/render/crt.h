@@ -14,11 +14,6 @@
 
 namespace render {
 
-// BOF3X_PRESENT=crt. Nothing calls this: the present reads BOF3X_PRESENT
-// itself (LookWanted, render_d3d11.cpp), and this one would Fatal on
-// `satpixie` (DIV-0043).
-bool CrtWanted();
-
 // Compiles the four passes and makes the two glow textures at the game's own
 // size, target / k: 320 x 240, or 426 wide (DIV-0041). `target_w` / `target_h`
 // are the render target's size, 320k x 240k. BOF3X_CRT overrides the look's

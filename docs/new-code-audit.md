@@ -158,38 +158,61 @@ dirties the surface, and pending draws recorded with the key lose it.
   (docs/render-backend.md). **Owed:** nothing specific; the batch's captures
   should look as before.
 
-## B. Reported by the audit, not yet checked
+## B. Reported by the audit, checked 2026-09-25
 
-Each is the audit agent's reading. Confirm it or strike it.
+Each was the audit agent's reading. All ten were confirmed against the code
+on 2026-09-25. Seven were fixed that day; B3, B4 and B10 are left as they
+are, for the reasons given under them. The headless self-test passes with
+the fixes (exit 0) under no language, `original`, `en` and `ja`.
 
 - **B1** `render_shim.cpp` ~567: after 16 distinct unknown render states, each
   new one is logged on every call, not once.
+  **Fixed:** one bit per state below 256 (Direct3D 6's are), and one flag
+  for anything above.
 - **B2** `render_shim.cpp` `IsSurface` (~116), used by `Blt` / `BltFast`: a
   released surface still passes, and `CopyRect` would read null pixels.
+  **Fixed:** a released source of `Blt`, `BltFast` or a texture `Load` is
+  Fatal. It would be the game's own use-after-free, and DirectDraw's
+  behaviour there is undefined, so it stops rather than guessing.
 - **B3** `config_dialog.cpp` ~87: `(i + n) % n` divides by zero if a combo is
   ever empty when the pad cycles it. All combos are filled today.
+  **Left:** no combo can be empty.
 - **B4** `CaptureKeyHook`: Escape cancels a capture, so Escape can never be
   bound from the dialog, though the default table binds it. The dialog's text
   says "Escape cancels", so this may be intended.
+  **Left:** intended; the text says so.
 - **B5** `launcher.cpp` ~145: `Fatal` during `DllMain` (outside self-test)
   leaves exit code 3. The launcher's `module == 0` test then passes, and it
   goes on to `ResumeThread` a dead process. The DLL has already shown its own
   box, so the effect is a misleading second message.
+  **Fixed:** after the injection the launcher checks whether the game has
+  already exited, and if so exits with its code, quietly. **Owed:** not
+  testable headless (`BOF3X_SELFTEST_ONLY` takes its own path); any
+  start-up Fatal in the batch should show one box, not two.
 - **B6** `input_script.cpp` ~608: a `BOF3X_RECORD` or `BOF3X_INPUT` path
   longer than `MAX_PATH` is silently ignored rather than Fatal.
+  **Fixed:** both are Fatal, naming the variable.
 - **B7** `crt.cpp` `CrtWanted` (~202): nothing calls it, and it is wrong for
   `satpixie`. It also leaves `text` unterminated for a value of 16 bytes or
   more. Candidate for deletion. `MakeSized` (~215) is outside the anonymous
   namespace, so it is an external `render::MakeSized`.
+  **Fixed:** `CrtWanted` deleted; `MakeSized` moved into the anonymous
+  namespace.
 - **B8** `crash.cpp` ~122: any `ExceptionInformation[0]` of 2 or more prints
   as "executing". Only 8 (DEP) means that.
+  **Fixed:** 0, 1 and 8 are named; anything else prints its number.
+  `tools/crash_report.py` already read it that way.
 - **B9** `menu_verbs.cpp` ~131: `MenuVerbs_Inject` re-aims the label call for
   any `BOF3X_LANG`, "original" included. `YesNoLayout_Inject` excludes
   "original". Probably harmless, since the offset is zero with no table
   loaded, but the two disagree.
+  **Fixed:** the same test as `YesNoLayout_Inject`, which also drops a value
+  too long for the buffer. The self-test log shows the patch under `en`
+  only, not under `original`.
 - **B10** `text_pairs.cpp` ~42: a two-byte lead followed by NUL can report a
   pair that the expansion loop never expands. The only effect is an unneeded
   copy.
+  **Left:** harmless.
 
 ## C. Open questions
 

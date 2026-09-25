@@ -118,6 +118,11 @@ bool IsSurface(const void* p) {
         if (g_surfaces[i] == p) return true;
     return false;
 }
+// A Blt / BltFast / Load source that is one of ours but released: its pixels
+// are gone. DirectDraw's behaviour there is undefined, so it stops the game.
+void RequireLive(const Surface* s, const char* what) {
+    if (s->refs == 0) bof3::Fatal("render: %s from a released surface", what);
+}
 bool IsTexture(const void* p) {
     for (U i = 0; i < g_n_surfaces; ++i)
         if (TextureOf(g_surfaces[i]) == p) return true;
@@ -359,6 +364,7 @@ long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, 
     }
     auto* src = static_cast<Surface*>(src_surface);
     if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+    RequireLive(src, "a Blt");
     if (src->is_primary || src->is_back)
         bof3::Fatal("render: a Blt reads the %s surface back - not built (docs/render-backend.md)",
                     src->is_primary ? "primary" : "back");
@@ -376,6 +382,7 @@ long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const lo
     auto* dst = static_cast<Surface*>(self);
     auto* src = static_cast<Surface*>(src_surface);
     if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+    RequireLive(src, "a BltFast");
     if (dst->is_primary || dst->is_back || src->is_primary || src->is_back)
         bof3::Fatal("render: BltFast touching the primary or back buffer - not built");
     long sr[4];
@@ -477,6 +484,7 @@ long __stdcall Texture_Load(void* self, void* from) {
     auto* dst = SurfaceOfTexture(self);
     if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
     auto* src = SurfaceOfTexture(from);
+    RequireLive(src, "a texture Load");
     long dr[4], sr[4];
     RectOf(nullptr, dst, dr);
     RectOf(nullptr, src, sr);
@@ -575,12 +583,15 @@ long __stdcall Device_SetRenderState(void*, U state, U value) {
     case kRsDither:
         break;   // no effect on pre-transformed, unlit, undithered output
     default: {
-        static U seen[16];
-        static U n_seen;
-        bool known = false;
-        for (U i = 0; i < n_seen; ++i) known |= seen[i] == state;
-        if (!known) {
-            if (n_seen < 16) seen[n_seen++] = state;
+        // One bit a state below 256 (Direct3D 6's are); any above share one,
+        // so no state is logged more than once.
+        static U seen[8];
+        static bool seen_high;
+        if (state >= 256) {
+            if (!seen_high) bof3::Log("render: SetRenderState(%u, %u) ignored (first above 255)", state, value);
+            seen_high = true;
+        } else if (!(seen[state / 32] & (1u << (state % 32)))) {
+            seen[state / 32] |= 1u << (state % 32);
             bof3::Log("render: SetRenderState(%u, %u) ignored (first time)", state, value);
         }
     }

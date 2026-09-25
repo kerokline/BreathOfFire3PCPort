@@ -618,11 +618,13 @@ void InputScript_Start() {
     const DWORD r = GetEnvironmentVariableA("BOF3X_RECORD", rec, sizeof rec);
     const DWORD n = GetEnvironmentVariableA("BOF3X_INPUT", path, sizeof path);
     if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
-    if (r > 0 && r < sizeof rec) {
+    if (r >= sizeof rec) Fatal("BOF3X_RECORD: the path is %lu characters, over MAX_PATH", (unsigned long)r);
+    if (n >= sizeof path) Fatal("BOF3X_INPUT: the path is %lu characters, over MAX_PATH", (unsigned long)n);
+    if (r > 0) {
         RecordStart(rec);
         return;
     }
-    if (n == 0 || n >= sizeof path) return;
+    if (n == 0) return;
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
     wchar_t dir[MAX_PATH];
