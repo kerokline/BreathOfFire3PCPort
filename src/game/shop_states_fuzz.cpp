@@ -79,6 +79,12 @@ std::uint32_t Watch() {
     std::uint32_t h = 0x811C9DC5u;
     for (U a : kWatched) h = (h ^ B(a)) * 0x01000193u;
     for (U a : {at::kSpriteCurrent, at::kZenny, at::kSlot, at::kSlotTop}) h = (h ^ Long(a)) * 0x01000193u;
+    // the touched object's facing and flags (ShopMode_End's stores around its call)
+    const auto object = static_cast<signed char>(B(at::kObject));
+    if (object >= 0 && object < static_cast<int>(at::kSpriteCount)) {
+        const U o = at::kSpriteObjects + static_cast<U>(object) * at::kSpriteStride;
+        h = (h ^ B(o + 8) ^ static_cast<U>(B(o + 0x80)) << 8) * 0x01000193u;
+    }
     return h;
 }
 void Record(U what, U a = 0, U b = 0, U c = 0, U d = 0) {
@@ -99,12 +105,22 @@ void Disturb() {
     B(where) = static_cast<unsigned char>(h >> 12);
 }
 
+// Each stand-in below also moves, one call in two, a cell its callers read
+// again after the call (the counter after the title box, the colour after the
+// choices, the cursor and the pad after a sound, the object after the
+// restore, the sub-state after the stream, the slot after the repeat).
+void Nudge(U where, unsigned mask = 0xFF) {
+    const std::uint32_t h = Hash() * 0x27D4EB2Fu;
+    if ((h >> 16) & 1) B(where) = static_cast<unsigned char>((h >> 20) & mask);
+}
+
 // --- the stand-ins ---------------------------------------------------------
 
 U Low16(int v) { return static_cast<std::uint16_t>(v); }
 
 void __cdecl StubTitleBox(int x, int y, int w, int h, int colour) {
     Record(1, Low16(x) | Low16(y) << 16, static_cast<U>(w), static_cast<U>(h), static_cast<U>(colour) & 0xFF);
+    Nudge(at::kCount, 7);
     Disturb();
 }
 void __cdecl StubMoneyBox(int x, int y, int unused, unsigned value) {
@@ -128,10 +144,13 @@ void __cdecl StubOpenSystem(unsigned id) {
 }
 void __cdecl StubPlay(unsigned short id) {
     Record(6, id);
+    Nudge(at::kChoice, 3);
+    Nudge(at::kPressed + 1);
     Disturb();
 }
 void __cdecl StubStream(unsigned id) {
     Record(7, id);
+    Nudge(at::kSub, 7);
     Disturb();
 }
 int __cdecl StubStreamDone() {
@@ -143,10 +162,12 @@ int __cdecl StubStreamDone() {
 }
 void __cdecl StubSlots(int x, int y, unsigned highlight) {
     Record(9, Low16(x) | Low16(y) << 16, highlight);
+    Nudge(at::kCount, 7);
     Disturb();
 }
 void __cdecl StubReadSummaries() {
     Record(10);
+    Nudge(at::kSub, 7);
     Disturb();
 }
 // Input_AutoRepeat: an answer with up, down, both or neither, and noise.
@@ -155,6 +176,8 @@ unsigned __cdecl StubAutoRepeat(unsigned pressed) {
     static const unsigned kBits[] = {0, 0x1000, 0x4000, 0x5000, 0x1000, 0x4000};
     const unsigned r = kBits[h % 6] | ((h >> 8) & 0xAFFFu) | ((h >> 3) & 0xFFFF0000u);
     Record(11, pressed, r);
+    Nudge(at::kSlot, 0xF);
+    Nudge(at::kPressed + 1);
     Disturb();
     return r;
 }
@@ -192,6 +215,8 @@ void __cdecl StubTextRecord(unsigned slot, unsigned length, const unsigned char*
 }
 void __cdecl StubChoices(int x, int y) {
     Record(18, Low16(x), Low16(y));
+    Nudge(at::kColour, 0x1F);
+    Nudge(at::kCount, 7);
     Disturb();
 }
 void __cdecl StubBlack() {
@@ -200,6 +225,7 @@ void __cdecl StubBlack() {
 }
 void __cdecl StubRestore(unsigned full) {
     Record(20, full & 0xFF);
+    Nudge(at::kObject);
     Disturb();
 }
 
@@ -222,11 +248,11 @@ using Target = void (__cdecl*)();
 template <unsigned... N> struct Targets {
     static constexpr Target kAll[sizeof...(N)] = {&StubTarget<N>...};
 };
-constexpr unsigned kModeEntries = 11;
+constexpr unsigned kModeEntries = 12;   // the 11 and the zero dword after them
 constexpr unsigned kInnEntries = (at::kTablesEnd - at::kInnSteps) / 4;   // 27
 const Target* TargetTable() {
     return Targets<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-                   27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37>::kAll;
+                   27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38>::kAll;
 }
 
 // --- the copies ------------------------------------------------------------
@@ -428,8 +454,23 @@ void Fix() {
 void Seed(unsigned k) {
     switch (k) {
     case kDispatch:
-        B(at::kState) = static_cast<unsigned char>(Next() % kModeEntries);
+    case kInnDispatch:
+    case kPromptDispatch:
+    case kNightDispatch:
+    case kSaveDispatch:
+        // every byte a dispatcher could be made to index by, inside the
+        // swapped entries; then the one it does index by
+        B(at::kState) = static_cast<unsigned char>(Next() % 11);
+        B(at::kStep) = static_cast<unsigned char>(Next() % 5);
+        B(at::kSub) = static_cast<unsigned char>(Next() % 6);
+        B(at::kCount) = static_cast<unsigned char>(Next() % 7);
+        if (k != kDispatch) break;
+        B(at::kState) = static_cast<unsigned char>(Next() % 11);
         break;
+    default:
+        break;
+    }
+    switch (k) {
     case kInnDispatch:
         // mostly Inn_Steps' five; sometimes on into the tables after it
         B(at::kStep) = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % kInnEntries);
@@ -496,10 +537,13 @@ void Seed(unsigned k) {
         break;
     }
     case kFadeOut2:
-    case kRestore2:
+    case kRestore2: {
         SeedObject();
-        PutWord(at::kFade, Half() ? 0 : static_cast<std::uint16_t>(Next()));
+        // zero, or with only its high byte or only its low byte set
+        static const std::uint16_t kFades[] = {0, 0, 0x100, 0x8000, 1, 0xFF};
+        PutWord(at::kFade, Often() ? kFades[Next() % 6] : static_cast<std::uint16_t>(Next()));
         break;
+    }
     case kWait2:
         SeedCount(0, 2);
         break;
@@ -528,7 +572,7 @@ void Seed(unsigned k) {
 
 // What the rounds reached, from the original's side, for the log line.
 struct Coverage {
-    unsigned targets[38];
+    unsigned targets[39];
     unsigned forced, paid, short_of, other_choice, cancelled, moved, top_moved, yes, done, flagged;
 } g_cover;
 unsigned Logged(const State& s, U what) {
@@ -544,7 +588,7 @@ bool LoggedArg(const State& s, U what, U arg) {
 }
 void Cover(unsigned k, const State& out) {
     for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
-        if (out.log[i].what >= 0x100 && out.log[i].what < 0x100 + 38) ++g_cover.targets[out.log[i].what - 0x100];
+        if (out.log[i].what >= 0x100 && out.log[i].what < 0x100 + 39) ++g_cover.targets[out.log[i].what - 0x100];
     switch (k) {
     case kInnBegin:
         // the region starts at 0x929EC0: the step 0x929F01 at +0x41
@@ -660,8 +704,8 @@ void SelfTest() {
             if (bad_per[k]) bof3::Log("shadow      shop_states: %s mismatched in %u rounds", kClones[k].name, bad_per[k]);
     const Coverage& c = g_cover;
     unsigned reached = 0;
-    for (unsigned i = 0; i < 38; ++i) reached += c.targets[i] != 0;
-    bof3::Log("shadow      shop_states coverage: table entries reached %u of 38; to the save menu at once %u; inn paid %u, "
+    for (unsigned i = 0; i < 39; ++i) reached += c.targets[i] != 0;
+    bof3::Log("shadow      shop_states coverage: table entries reached %u of 39; to the save menu at once %u; inn paid %u, "
               "short of zenny %u, cancelled %u, cursor moved %u; save slot moved %u; asked to save %u; night over %u; "
               "message 0xD0 %u",
               reached, c.forced, c.paid, c.short_of, c.cancelled, c.moved, c.top_moved, c.yes, c.done, c.flagged);
