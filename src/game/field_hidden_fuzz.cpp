@@ -203,8 +203,12 @@ void __cdecl StubCopyFrames(unsigned frame, unsigned char* buffer, unsigned size
     if ((h >> 1) % 3 == 0) SetWord(Sc() + 0x58, (h >> 16) % 4);
     Disturb();
 }
+// The elevation scribbles on every effect object's +0x38 half the time: a
+// position word stored after the call instead of before shows.
 long __cdecl StubElevation(long x, long z) {
     Record(23, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
+    if (Hash() % 2)
+        for (unsigned i = 0; i < 20; ++i) SetWord(Effect_Objects + i * 0x80u + 0x38, Hash() >> 16);
     Disturb();
     return static_cast<long>(Hash());
 }
