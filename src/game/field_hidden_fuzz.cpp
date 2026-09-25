@@ -120,7 +120,7 @@ std::uint32_t __cdecl StubEffectFree() {
 }
 void __cdecl StubSetAnimation(unsigned a) { Record(4, a & 0xFF, Address(Sc())); Disturb(); }
 std::uint32_t __cdecl StubEnsureAnimation(unsigned a) { Record(5, a & 0xFF, Address(Sc())); Disturb(); return Hash(); }
-std::uint32_t __cdecl StubBlocked() {
+std::uint32_t __cdecl StubTargetAhead() {
     Record(6, Address(Sc()), Sc()[8]);
     Disturb();
     return AlOf(Hash() % 2 ? 0 : 1 + (Hash() >> 9) % 0xFF);
@@ -250,7 +250,7 @@ std::uint32_t __cdecl StubOnScreen(long x, long z, unsigned size, unsigned margi
 }
 
 const Callees kStubs = {
-    StubTick, StubTickOnce, StubEffectFree, StubSetAnimation, StubEnsureAnimation, StubBlocked, StubSlope, StubGround,
+    StubTick, StubTickOnce, StubEffectFree, StubSetAnimation, StubEnsureAnimation, StubTargetAhead, StubSlope, StubGround,
     StubPlay, StubObjectAt, StubCellPickup, StubByteAt, StubSpawn, StubRand, StubZenny, StubItemName, StubInventoryAdd,
     StubMsg, StubClearCell, StubFrameUpload, StubScriptStart, StubCopyFrames, StubElevation, StubPickRow, StubFillSlots,
     StubPlaceParty, StubPlaceEnemies, StubReachable, StubPush, StubPop, StubAim, StubPartyCount, StubOnScreen,
@@ -266,7 +266,7 @@ const void* StubFor(std::uint32_t target) {
     case 0x589810: return f(&StubEffectFree);
     case 0x5891F0: return f(&StubSetAnimation);
     case 0x589330: return f(&StubEnsureAnimation);
-    case 0x51C390: return f(&StubBlocked);
+    case 0x51C390: return f(&StubTargetAhead);
     case 0x5725C0: return f(&StubSlope);
     case 0x572570: return f(&StubGround);
     case 0x587740: return f(&StubPlay);

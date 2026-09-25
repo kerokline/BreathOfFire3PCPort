@@ -49,7 +49,7 @@ const Callees kOriginals = {
     Fn<Byte0>(bof3::addr::Effect_FindFree),
     Fn<void (__cdecl*)(unsigned)>(bof3::addr::Sprite_SetAnimation),
     Fn<std::uint32_t (__cdecl*)(unsigned)>(bof3::addr::Sprite_EnsureAnimation),
-    Fn<Byte0>(kBlockedAhead),
+    Fn<Byte0>(kTargetAhead),
     Fn<long (__cdecl*)(long, long, unsigned long)>(bof3::addr::MapView_SlopeAt),
     Fn<long (__cdecl*)(long, long)>(bof3::addr::MapView_GroundAt),
     Fn<void (__cdecl*)(unsigned)>(bof3::addr::Sound_PlayEffect),
@@ -227,8 +227,9 @@ void ProbeSide(unsigned d) {
 }  // namespace
 
 // original 0x51E930, form 0's state 0. An even direction +8 is turned one
-// eighth back (-1, & 7); when 0x51C390 finds that blocked, two on (+2), and
-// when that is blocked too, back to the first turn (-2). Then the slope one
+// eighth back (-1, & 7); when 0x51C390 finds nothing ahead that way (no
+// object two steps on, no 0xF2 cell), two on (+2), and when it finds nothing
+// there either, back to the first turn (-2). Then the slope one
 // step ahead in +8 (MapView_SlopeAt with the whole direction byte): steep
 // (the scratch flag and more than 0x40 as a short) - Sprite_EnsureAnimation(
 // (+8 - 1) / 2 + 0x46) and +2 one on; otherwise +0x2B = 1, the side probes
@@ -242,9 +243,9 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
     const unsigned char* s = Sprite_Current;
     if ((s[8] & 1) == 0) {
         Sprite_Current[8] = static_cast<unsigned char>((s[8] - 1) & 7);
-        if (Al(g.blocked_ahead()) == 0) {
+        if (Al(g.target_ahead()) == 0) {
             Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] + 2) & 7);
-            if (Al(g.blocked_ahead()) == 0) Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] - 2) & 7);
+            if (Al(g.target_ahead()) == 0) Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] - 2) & 7);
         }
         s = Sprite_Current;
     }
