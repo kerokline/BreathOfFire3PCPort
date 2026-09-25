@@ -21,6 +21,7 @@
 #include "game/pause_text.h"
 #include "game/title_menu.h"
 #include "game/text_advance.h"
+#include "game/text_draw.h"
 #include "game/text_pairs.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -151,6 +152,12 @@ void WalkDatFile(const char* path) {
         case 3: {
             void* copy = Crt_malloc(h.size);
             std::memcpy(copy, payload, static_cast<std::uint32_t>(h.size));
+            // DIV-0016: the string draw's glyph-index guard follows the table
+            // loaded, set here as well as in our Font_SetGlyphData, so that it
+            // holds when that one is Capcom's (an A/B side that keeps this
+            // loader ours and the font setter original trapped on DIV-0052's
+            // suffix glyph 0xA6B, 2026-09-25).
+            TextDraw_SetGlyphCount(static_cast<unsigned>(h.size) / 0x120);
             Font_SetGlyphData(copy, h.size);
             break;
         }
