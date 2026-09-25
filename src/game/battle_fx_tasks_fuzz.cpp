@@ -405,6 +405,7 @@ void Seed(unsigned k) {
     case kPoseStart:
         sc[7] = static_cast<unsigned char>(Half() ? 6 : Next() % 12);
         sc[8] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
+        sc[0x2D] = static_cast<unsigned char>(Next());   // the word +0x2C is cleared whole
         break;
     case kWatch:
         sc[1] = static_cast<unsigned char>(Next() % 5);
@@ -413,7 +414,18 @@ void Seed(unsigned k) {
     case kWatchTest: {
         if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 4);
         o[5] = static_cast<unsigned char>(Half() ? 2 + Next() % 2 : Next() % 11);
-        if (Half()) At(at::kTurnGate)[0] = o[5];
+        if (Next() % 4 == 0) At(at::kTurnGate)[0] = o[5];
+        // the status bytes the test reads, at each bit of 0x58 alone, at its
+        // neighbours and at none; the test is only reached past the actor test
+        static const unsigned char kStatus[] = {0, 0x40, 0x10, 0x08, 0x20, 0x80, 0x04, 0x58};
+        for (unsigned i = 0; i < 3; ++i) {
+            At(at::kMembers + 0x90 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
+            At(at::kMembers + 0x91 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
+        }
+        for (unsigned i = 0; i < 8; ++i) {
+            At(at::kEnemies + 0x92 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
+            At(at::kEnemies + 0x93 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
+        }
         break;
     }
     case kFollow: sc[1] = 0; break;
