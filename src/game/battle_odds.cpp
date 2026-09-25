@@ -13,7 +13,7 @@
 //   BattleFx_Brighten        0x4B1ED0..0x4B1F34 (0x65)  11 stack tables
 //   BattleFx_SetSize         0x4ED5C0..0x4ED5D6 (0x17)  7 stack tables
 //   BattleFx_WaitStep4       0x4EE8A0..0x4EE8B7 (0x18)  5 stack tables
-//   BattleFx_Finish          0x4F7350..0x4F7377 (0x28)  47 stack tables
+//   BattleFx_Finish          0x4F7350..0x4F7377 (0x28)  45 stack tables
 //
 // Every one is called with no argument - `call [esp + reg*4 + k]` from a
 // table of immediates its host builds on its stack, or `call [0x64E73C +
