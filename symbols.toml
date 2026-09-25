@@ -13493,3 +13493,189 @@ params = "unsigned step"
 impl = "src/game/inventory_ops.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534880..0x534911 (0x92 bytes), cdecl, no calls. Sprite_ShadeRaise mirror: each of Sprite_Current + 0x5D..+0x5F not 0x80 becomes s8 byte - s8 step as a 16-bit difference, 0x80 below -128, else its low byte; al 1 when all three are 0x80. Three call sites (0x403922, 0x525742, 0x5328DD). PSX FUN_801C3998 term for term. Combat route: 24 calls."
+
+# --- Group CH of the eighth round (2026-09-25): a command's target choice and the battle's item window, phase-1 entries 11 and 12 (src/game/battle_actor_copies.cpp, docs/battle_actor_copies.md) ---
+
+[[data]]
+pc = 0x64E3EC
+name = "BattleTarget_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_data 2026-09-25: 0x447120, 0x447140 - dispatched by BattleTarget_Dispatch 0x447110 (jmp [eax*4 + 0x64E3EC], eax the byte 0x904AA3; the one reference, pe_xref). The next dword, 0x64E3F4, is BattleTarget_Picks' first; the count is where the next table starts, not a bound in code."
+
+[[data]]
+pc = 0x64E3F4
+name = "BattleTarget_Picks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "pe_data 2026-09-25: 0x447160, 0x447190, 0x447290, 0x447390, 0x4473E0 - dispatched by BattleTarget_PickDispatch 0x447140 (jmp [eax*4 + 0x64E3F4], eax the dword 0x904AA4 and 0xFF). 0x447190 and 0x447290 set the index to 3 (confirm) or 4 (cancel), so five entries; 0x64E408 starts BattleItem_Steps. 0x447290 (the party's side of the pick) and 0x4473E0 (the cancel) are not reached by the combat route and are Capcom's."
+
+[[data]]
+pc = 0x64E408
+name = "BattleItem_Steps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "pe_data 2026-09-25: 0x447440, 0x4474B0, 0x447880, 0x4478B0, 0x447940, 0x447D70 - dispatched by BattleItem_Dispatch 0x447430 (jmp [eax*4 + 0x64E408], eax the byte 0x904AA3). BattleItem_Choose sets the index to 4 or 5 ((flags and 0x10 or 0x40) >> 4), so six entries; 0x64E420 starts BattleItem_OpenSteps. 0x447880 and 0x447D70 are not reached by the combat route and are Capcom's."
+
+[[data]]
+pc = 0x64E420
+name = "BattleItem_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_data 2026-09-25: 0x4481B0 (group CI's: Msg_SystemPtr(0x4000) to BattleQueue_Push(2, 0xFF, it), 0x904AA4 + 1), 0x447460 - dispatched by BattleItem_OpenDispatch 0x447440 (jmp [eax*4 + 0x64E420], eax the dword 0x904AA4 and 0xFF). 0x64E428 starts BattleItem_TargetSteps."
+
+[[data]]
+pc = 0x64E428
+name = "BattleItem_TargetSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "pe_data 2026-09-25: 0x447960, 0x4479E0, 0x447B10, 0x447CC0, 0x447D30 - dispatched by BattleItem_TargetDispatch 0x447940 (jmp [eax*4 + 0x64E428], eax the dword 0x904AA4 and 0xFF); the picks set 3 (confirm) and 4 (cancel). 0x64E43C starts the table of 0x447D70 (0x447D90, 0x447DD0, 0x447CC0, 0x447D30; not named here: 0x447D70 is in no group). 0x447D30 is not reached by the combat route and is Capcom's."
+
+[[func]]
+pc = 0x447110
+name = "BattleTarget_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447110..0x44711D (0xE bytes): xor eax, eax; mov al, [0x904AA3]; jmp [eax*4 + 0x64E3EC] (BattleTarget_Steps). Entry 11 of the phase-1 table 0x64AE28 (0x64AE54), which 0x42E990 tail-jumps through by 0x904AA1; 0x42E990 is Battle_PhaseDispatch's phase 1, so the frame and the return are Battle_PhaseDispatch's call's and eax is discarded - void (void). The index is not checked. The catalogue pairs it with PSX 0x80093A74 (not read). Combat route: reached (round-8 trace)."
+
+[[func]]
+pc = 0x447120
+name = "BattleTarget_ShowPrompt"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447120..0x447138 (0x19 bytes): BattleBanner_SetMessage(0, 0) (E8 at +4), then the byte 0x904AA3 read and stored + 1. BattleTarget_Steps entry 0; tail-jumped to, void (void). Combat route: reached."
+
+[[func]]
+pc = 0x447140
+name = "BattleTarget_PickDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447140..0x447150 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64E3F4] (BattleTarget_Picks). BattleTarget_Steps entry 1; void (void); the index is not checked. Combat route: reached."
+
+[[func]]
+pc = 0x447160
+name = "BattleTarget_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447160..0x44718E (0x2F bytes): Battle_DefaultTarget(3) (E8 at +2), its al to byte +0 of the pointer 0x939FA0 (re-read after the call); then 0x904AA4 read, 0x904AAF = 1, the u16 0x7E01B8 = 0, 0x904AA4 = the read + 1. BattleTarget_Picks entry 0; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x447190
+name = "BattleTarget_PickEnemy"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447190..0x447281 (0xF2 bytes), nine calls: ax = Input_Pressed once; tested with Field_CancelButtons (0x904AA4 = 4) then Field_ConfirmButtons (= 3); else esi = Input_AutoRepeat(it and 0xF000). esi and 0x5000: target = Battle_DefaultTarget(0), 0x904AA4 + 1, Sound_PlayEffect(0x101), return. Then esi and 0x2000: Battle_DefaultTarget(Battle_WrapIndex(byte 0x904AB2 + 2, 3, movsx target + 1)); and 0x8000: 0x4457F0(Battle_WrapIndex(.., 3, movsx target - 1)); each stored to 0x939FA0's +0 (re-read after the calls) and cue 0x101; both may run. BattleTarget_Picks entry 1 (the enemies); entry 2, 0x447290, is its party twin (0x904AB0 - 1, 0, and 0x5000 back to Battle_DefaultTarget(3), 0x904AA4 - 1), not reached. Combat route: reached."
+
+[[func]]
+pc = 0x447390
+name = "BattleTarget_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447390..0x4473DC (0x4D bytes): Sound_PlayEffect(0x104) (E8 at +5); then 0x904AAF = 0, byte +1 of 0x939FA0's pointer (read after the call) = 1, byte +1 of 0x939EC4's (read after that store) = 2, 0x904AC3 + 1, 0x904AA1 = 1, 0x904AA2 = 0x904AA3 = 0x904AA4 = 0, in that order. BattleTarget_Picks entry 3; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x447430
+name = "BattleItem_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447430..0x44743D (0xE bytes): xor eax, eax; mov al, [0x904AA3]; jmp [eax*4 + 0x64E408] (BattleItem_Steps). Entry 12 of the phase-1 table 0x64AE28 (0x64AE58), tail-jumped to from 0x42E990 as BattleTarget_Dispatch is: void (void); the index is not checked. The catalogue pairs it with PSX 0x80093F00 (not read; the sibling's XREF places it at Cmd_ConfirmAttack + 0xEC, span unknown). Combat route: reached."
+
+[[func]]
+pc = 0x447440
+name = "BattleItem_OpenDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447440..0x447450 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64E420] (BattleItem_OpenSteps). BattleItem_Steps entry 0; void (void); the index is not checked. Combat route: reached."
+
+[[func]]
+pc = 0x447460
+name = "BattleItem_OpenWindow"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447460..0x4474AA (0x4B bytes): byte +1 of 0x939FA0's pointer = 4; ItemMenu_SetupForActor (E8 at +9); the pointer re-read, its dword +0x10 with bit 1 and not bit 17 sets the page byte 0x8033AB = 2; then 0x939EC4's +5 read, 0x904AA4 = 0, 0x929F06 = that byte, 0x904AA3 + 1. BattleItem_OpenSteps entry 1; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x4474B0
+name = "BattleItem_Browse"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4474B0..0x447836 (0x387 bytes), eleven calls, two internal E9 jumps: nothing while 0x8033A3 is set. Else u16 0x803410 = dword 0x8033A4 + 7, 0x80340C = 1, u16 0x803412 = (cursor 0x8033AC - dword 0x8033B0 + 2) * 13 + u16 0x8033A6; ebx = Input_AutoRepeat(Input_Pressed and 0xF00C). Unless 0x939FA0's +0x10 has bit 1 and not bit 17: 0x8000 cue 0x101, page 0x8033AB - 1 (jns, else 3), 0x8033A9 = 0x32; else 0x2000 cue 0x101, page + 1 (jbe 3, else 0), 0x8033A9 = 0x31. Then one of 0x1000 (cursor - 1 unless 0; below the s16 scroll 0x8033B0 the u16 0x8033B2 = 0xF0), 0x4000 (cursor + 1 below 9; at scroll + 7 or more, 0x10), 4 (scroll 0: cursor 0; scroll below 7: cursor - scroll byte, scroll 0; else both - 7), 8 (scroll 3: cursor 9; above -4: cursor + 3 - scroll byte, scroll 3; else both + 7); cue 0x100 when the cursor byte changed. Then Msg_SystemPtr(u16 +6 of the 24-byte record 0x65C4D8 of Char_AbilityList(0x929F06, page, 1)[cursor]) to dword 0x93C2C4 + ((0x93C2A1 - 1) and 0xF) * 8, the index read before the list call; nothing more while 0x8033B2 is not 0. Input_Pressed again: cancel - page, scroll, cursor kept at 0x9045FC + 0x8033AA * 3, 0x8033A3 = 1, 0x80340C = 0, the queue entry's +1 = 1, cue 0x106, 0x904AA3 + 1; confirm - ItemMenu_CanUseSelected al non-zero: cue 0x107 only; else cue 0x103, the three kept, Char_AbilityList(0x929F06, page, 1)[cursor] to 0x939FA0's u16 +2, 0x8033A3 = 1, 0x80340C = 0, and 0x904AA3 = 3 - or for item 0x97 0x8031F3 = 2, target = 0x939EC4's +5, 0x904AA2 = 7, 0x904AA3 = 0. BattleItem_Steps entry 1; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x4478B0
+name = "BattleItem_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4478B0..0x44793F (0x90 bytes), one call: the flags byte of the 24-byte record 0x65C4D8 of Char_AbilityList(0x929F06, 0x8033AB, 1)[cursor 0x8033AC] (the cursor read after the call). 0x40: 0x904AA3 = ((flags and 0x10) or 0x40) >> 4 (4 or 5); else target (0x939FA0's +0) = 0xC0 for 0x80, 0x40 / 0x80 for 0x10 with / without 0x20 (neg; sbb; and 0xC0; add 0x80), else 0x939EC4's +5; then 0x904AA3 = 4, 0x904AA4 = 3. BattleItem_Steps entry 3; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x447940
+name = "BattleItem_TargetDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447940..0x447950 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64E428] (BattleItem_TargetSteps). BattleItem_Steps entry 4; void (void); the index is not checked. Combat route: reached."
+
+[[func]]
+pc = 0x447960
+name = "BattleItem_TargetBegin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447960..0x4479DE (0x7F bytes), three calls: the record 0x65C4D8 + 24 * (0x939FA0's u16 +2) flags byte and 0x20: target = Battle_DefaultTarget(3), 0x904AA4 = 1; else target = 0 when Battle_ReturnTrue's al is non-zero, else Battle_DefaultTarget(0), and 0x904AA4 = 2; then the u16 0x7E01B8 = 0 and 0x904AAF = 1. The pointer is re-read after each call. BattleItem_TargetSteps entry 0; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x4479E0
+name = "BattleItem_PickEnemy"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4479E0..0x447B05 (0x126 bytes), ten calls: BattleTarget_PickEnemy's head (cancel 4, confirm 3, else Input_AutoRepeat(Input_Pressed and 0xF000)); then the flags of the item under the window's cursor (Char_AbilityList(0x929F06, 0x8033AB, 1)[0x8033AC], read after the input call) and 0x80 with 0x5000: Battle_DefaultTarget(0), 0x904AA4 + 1, cue 0x101, return; else its 0x2000 / 0x8000 steps among actors 3 .. 0x904AB2 + 2, term for term. BattleItem_TargetSteps entry 1; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x447B10
+name = "BattleItem_PickParty"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447B10..0x447CBB (0x1AC bytes), fifteen calls: the same head and item flags; 0x80 with 0x5000: Battle_DefaultTarget(3), 0x904AA4 - 1, cue 0x101, return. 0x2000: Battle_WrapIndex(byte 0x904AB0 - 1, 0, movsx target + 1) - its al the target when Battle_ReturnTrue's al is non-zero, else through Battle_DefaultTarget - then cue 0x101; 0x8000: the same with - 1 and 0x4457F0, cue 0x101, and on the Battle_ReturnTrue path a return (the end either way). BattleItem_TargetSteps entry 2; void (void). Combat route: reached."
+
+[[func]]
+pc = 0x447CC0
+name = "BattleItem_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actor_copies.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x447CC0..0x447D28 (0x69 bytes), two calls: Sound_PlayEffect(0x104); 0x904AAF = 0; 0x939FA0's +1 = 4 (the pointer read after the call); 0x939EC4's +1 = 2; 0x904AC3 + 1; byte 0x93C2C1 + ((0x93C2A1 - 1) and 0xF) * 8 = 1; ItemMenu_FreeWindows; 0x904AA2 = 0x904AA3 = 0x904AA4 = 0, 0x904AA1 = 1. BattleItem_TargetSteps entry 3 and entry 2 of 0x447D70's table 0x64E43C; void (void). Combat route: reached."
