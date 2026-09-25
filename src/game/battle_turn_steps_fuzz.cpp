@@ -137,12 +137,28 @@ unsigned __cdecl StubMarkFaster() {
     return (Hash() & ~0xFFu) | kAl[(Hash() >> 5) % 11];
 }
 void __cdecl StubTick() { Record(2); Disturb(); }
-template <unsigned N> unsigned __cdecl StubStep() { Record(3 + N); Disturb(); return Answer(3); }
-void __cdecl StubLoadDat(int file) { Record(12, static_cast<std::uint32_t>(file)); Disturb(); }
+template <unsigned N> unsigned __cdecl StubStep() {
+    Record(3 + N);
+    if (Hash() % 3 == 0) B(at::kState2) = static_cast<unsigned char>((Hash() >> 8) % 15);
+    Disturb();
+    return Answer(3);
+}
+void __cdecl StubLoadDat(int file) {
+    Record(12, static_cast<std::uint32_t>(file));
+    if (Hash() % 3 == 0) B(at::kState1) = static_cast<unsigned char>((Hash() >> 8) % 4);
+    Disturb();
+}
 void __cdecl StubClearCommands() { Record(13); Disturb(); }
-unsigned __cdecl StubActorIsOut(unsigned a) { Record(14, a & 0xFF); Disturb(); return Answer(4); }
+unsigned __cdecl StubActorIsOut(unsigned a) {
+    Record(14, a & 0xFF);
+    if (Hash() % 4 == 0) B(at::kCursor) = static_cast<unsigned char>((Hash() >> 8) % 5);
+    if (Hash() % 5 == 0) B(at::kMembers) = static_cast<unsigned char>((Hash() >> 12) % 5);
+    Disturb();
+    return Answer(4);
+}
 unsigned __cdecl StubTaskCreate(unsigned kind, unsigned parameter) {
     Record(15, kind, parameter);
+    if (Hash() % 3 == 0) B(at::kCursor) = static_cast<unsigned char>((Hash() >> 8) % 5);
     Disturb();
     return (Hash() & ~0xFFu) | (g_slot_ff && (Hash() >> 9) % 8 == 0 ? 0xFFu : (Hash() >> 11) % 0x30);
 }
@@ -154,7 +170,12 @@ unsigned __cdecl StubClearStatus(unsigned a, unsigned mask) {
     return Hash();
 }
 void __cdecl StubReleaseTint(unsigned char* object) { Record(17, Address(object)); Disturb(); }
-void __cdecl StubReturnItem(unsigned a) { Record(18, a & 0xFF); Disturb(); }
+void __cdecl StubReturnItem(unsigned a) {
+    Record(18, a & 0xFF);
+    if (Hash() % 3 == 0) B(at::kBattleEnd) = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 4 == 0) B(at::kMembers) = static_cast<unsigned char>((Hash() >> 12) % 5);
+    Disturb();
+}
 void __cdecl StubDroppedCall(unsigned b) { Record(19, b & 0xFF); Disturb(); }
 // Moves Music_Track, which BattleEnd_ExitHook reads after it.
 void __cdecl StubFadeOut(int frames) {
@@ -169,7 +190,11 @@ int __cdecl StubLoadDone() {
     Record(24);
     Disturb();
     const std::uint32_t h = Hash();
-    return (h >> 3) % 4 == 0 ? 0 : static_cast<int>(h | 0x100);   // not 0 in any bit but the low byte, at times
+    switch ((h >> 3) % 4) {
+    case 0: return 0;
+    case 1: return static_cast<int>((h & 0xFFFFFF00u) | 0x100u);   // not 0, but al is
+    default: return static_cast<int>(h | 1u);
+    }
 }
 void __cdecl StubWriteBack(unsigned a) { Record(25, a); Disturb(); }
 void __cdecl StubWindowReset() { Record(26); Disturb(); }
@@ -179,6 +204,7 @@ void __cdecl StubTaskClearAll() { Record(28); Disturb(); }
 void __cdecl StubRecalc(unsigned char* record) {
     Record(29, Address(record), static_cast<std::uint32_t>(Word(record + 0x18)) | (record[0x1C] << 16) | (record[0x1E] << 24),
            static_cast<std::uint32_t>(Word(record + 0x10)) | (record[0xB] << 16));
+    if (Hash() % 3 == 0) B(at::kMembers) = static_cast<unsigned char>((Hash() >> 12) % 5);
     Disturb();
 }
 void __cdecl StubReloadParty() { Record(30); Disturb(); }
@@ -426,6 +452,7 @@ void Seed(unsigned k) {
         static const unsigned kStates[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0xFF};
         B(at::kState2) = static_cast<unsigned char>(Pick(kStates, 16));
         if (Half()) SetWord(At(at::kPending), 0);
+        else if (Half()) SetWord(At(at::kPending), 0x100u << (Next() % 8));
         if (Half()) B(at::kRoundFlags) |= 4;
         break;
     }
@@ -473,6 +500,7 @@ void Seed(unsigned k) {
     case kInputK:
     case kExitHookK:
         if (Half()) SetWord(At(at::kInput), 0);
+        else if (Half()) SetWord(At(at::kInput), 0x100u << (Next() % 8));
         if (Half()) B(at::kMusicFlags) ^= 0x40;
         if (Half()) B(at::kMusicTrack) = 0xFF;
         break;
