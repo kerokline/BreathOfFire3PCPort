@@ -11774,6 +11774,119 @@ impl = "src/game/battle_windows.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x597F40..0x597F5C (0x1D bytes), cdecl, no calls: al = the characters to the NUL, a byte of 0x80 or more taking the next with it (so a lead byte right before the NUL takes the NUL too and the count reads on). Called by the window task (1,220 calls on the combat route). pe_funcs.py had 0x38A bytes."
 
+# --- group CM (round 8, 2026-09-25): the window-kind handlers, docs/window_kinds.md ---
+# All twelve are pointer-reached: entered by `call [esp + r * 4]` through a table
+# the caller built on its own stack (mov [esp + k], imm32). The stack tables have
+# no address of their own, so they are described here and not given [[data]] entries.
+
+[[func]]
+pc = 0x597A80
+name = "Window_HpGaugeTrack"
+ret = "void"
+params = "unsigned char *gauge, const unsigned char *max_hp, unsigned char *max_seen, unsigned char *shown, unsigned char *hp, unsigned char *drain, unsigned char *step, unsigned char *kind"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597A80..0x597BCB (0x14C bytes), cdecl, no calls. Slot 0 of the three Window_DispatchKind 0x597A30 builds on its stack (the imm32 at 0x597A63); its only caller is the enemy target window 0x597320 at 0x59738E, whose eight pushes are w+0xB, enemy+0x30, w+0x1C, w+0x14, enemy+0x24, w+0xD, w+0x18, w+8 (w the window record, enemy EnemyWorkingRecords 0x93B9E0 + 0x128 (w[+0xA] - 3); +0x24 HP, +0x30 max HP - 0x5973C1 compares one with the other >> 2). The HP gauge's settled state: on a max change the HP clamped (jg), the gauge 55 * HP / max (idiv; 1 while HP non-zero) or 55 * shown / max capped at 0x37 (jbe), the max stored; then shown > HP (jle) -> gauge state 1 with the drained part (old gauge via DamageScratch 0x903850) >> 4 as the step, shown < HP -> state 2 with (55 HP / max - 55 shown / max) / 16 (cdq; and 0xF; sar 4), step at least 1, shown = HP. The eax it leaves is dead: 0x597399 loads al over it and Battle_ActorIsOut masks its argument to a byte."
+
+[[func]]
+pc = 0x597BD0
+name = "Window_HpGaugeDrain"
+ret = "void"
+params = "unsigned char *gauge, const unsigned char *max_hp, unsigned char *max_seen, unsigned char *shown, unsigned char *hp, unsigned char *drain, unsigned char *step, unsigned char *kind"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597BD0..0x597C0F (0x40 bytes), cdecl, no calls. Slot 1 of Window_DispatchKind's stack table (imm32 at 0x597A6B). The drained byte (arg 5), zero-extended to a word, against the step (arg 6) as a signed word (jle): above it, it loses the step's low byte; else it and the gauge state (arg 7) go to 0. Then the gauge (arg 0) is set to 1 when it is 0 and the HP word (arg 4) is not."
+
+[[func]]
+pc = 0x597C10
+name = "Window_HpGaugeFill"
+ret = "void"
+params = "unsigned char *gauge, const unsigned char *max_hp, unsigned char *max_seen, unsigned char *shown, unsigned char *hp, unsigned char *drain, unsigned char *step, unsigned char *kind"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597C10..0x597C6E (0x5F bytes), cdecl, no calls. Slot 2 of Window_DispatchKind's stack table (imm32 at 0x597A73). t = 55 * HP / max (idiv); while t - step > the gauge byte (jle, 32-bit signed) the gauge gains the step's low byte, else it becomes t's low byte and the gauge state goes to 0; then at least 1 while the HP is non-zero."
+
+[[func]]
+pc = 0x597C70
+name = "BattleWin_BannerRun"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597C70..0x597CEC (0x7D bytes), cdecl, two calls. Slot 6 of the eight the window task's battle handler 0x596FA0 (group CL's) builds on its stack (imm32 at 0x596FE2), by record byte +2. Its own three-entry stack table by record byte +3, unbounded: 0x597CF0, the bare ret 0x437CC0, 0x597D10. Then BattleWin_DrawMessageBox(+4, +6) and Text_DrawAt(+4 + 4, +6 + 3, colour, 0xFF, text) with text the dword 0x93B8E4 + 0xC n and colour the byte 0x93B8EA + 0xC n loaded into al over eax = 0xC n (so its upper bits are 0xC n's), n = record byte +0xA: an entry of the banner pool 0x93B8E0 (docs/battle_misc.md 1.1). The record is re-read after the state call and after the box."
+
+[[func]]
+pc = 0x597CF0
+name = "BattleWin_BannerSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597CF0..0x597D0A (0x1B bytes), cdecl, no calls. State 0 of BattleWin_BannerRun's stack table (imm32 at 0x597C7F): the current record's word +6 compared with 0x12 - equal, byte +3 incremented; else +6 += 8."
+
+[[func]]
+pc = 0x597D10
+name = "BattleWin_BannerSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597D10..0x597D42 (0x33 bytes), cdecl, one tail jump. State 2 of BattleWin_BannerRun's stack table (imm32 at 0x597C92); not in the round-eight queue (the combat route never reached it) and in no group - taken with its table. The current record's word +6 compared with 0xFFEA: equal, the byte 0x904AE9 and-ed with the complement of byte +1 of the entry the dword 0x93B8C0 points at, then jmp Window_FreeCurrent; else +6 -= 8."
+
+[[func]]
+pc = 0x597D50
+name = "BattleWin_MessageRun"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597D50..0x597D85 (0x36 bytes), cdecl. Slot 7 of 0x596FA0's stack table (imm32 at 0x596FEA). A four-entry stack table by record byte +3, unbounded: 0x597D90, 0x597DC0, 0x597DF0, 0x597E60."
+
+[[func]]
+pc = 0x597D90
+name = "BattleWin_MessageWait"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597D90..0x597DB3 (0x24 bytes), cdecl, no calls. State 0 of BattleWin_MessageRun (imm32 at 0x597D5F): when the message ring's write index 0x93C2A1 is not its read index 0x93C2A0, the current record's byte +3 incremented and the byte 0x939F60 set to 1. 0x939F60 is read at seven sites in six battle functions (pe_xref 2026-09-25: 0x42E400, 0x42F9D0 twice, 0x4AE130, 0x4B5350, 0x4B6BC0, 0x4F5050) and written only by this family."
+
+[[func]]
+pc = 0x597DC0
+name = "BattleWin_MessageSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597DC0..0x597DE6 (0x27 bytes), cdecl, one tail jump. State 1 of BattleWin_MessageRun (imm32 at 0x597D67): 0x939F60 = 1; the current record's word +6 equal to 0x12 -> byte +3 incremented, else +6 += 8; then jmp BattleWin_DrawMessage 0x597ED0."
+
+[[func]]
+pc = 0x597DF0
+name = "BattleWin_MessageShow"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597DF0..0x597E5E (0x6F bytes), cdecl, three calls. State 2 of BattleWin_MessageRun (imm32 at 0x597D72): BattleWin_DrawMessage; when ring entry [0x93C2A0] has flag bit 0 (0x93C2C0 + 8 i) and Input_Pressed is non-zero, BattleMsg_Advance and, when it answers al non-zero, record byte +3 = 3; then, with the read index re-read, when the entry has flag bit 1 and its byte +1 is not 0xFF, that byte decremented and at 0 the same advance. 0x93C2C1 is written with 1 by 0x447840 / 0x447F40 and with cl by 0x450510 (pe_xref)."
+
+[[func]]
+pc = 0x597E60
+name = "BattleWin_MessageSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597E60..0x597ECF (0x70 bytes), cdecl, two calls. State 3 of BattleWin_MessageRun (imm32 at 0x597D7A): the current record's word +6 equal to 0xFFEA -> 0x939F60 = 0 and byte +3 = 0 (back to waiting, the record kept), else +6 -= 8; then BattleWin_DrawMessageBox(+4, +6) and Text_DrawAt(+4 + 4, +6 + 3, 0, 0xFF, the dword 0x93C2C4 + 8 ((0x93C2A0 - 1) and 0xF)) - the entry just shown - the record re-read after the box."
+
+[[func]]
+pc = 0x597F60
+name = "Window_Handler4Kinds"
+ret = "void"
+params = "void"
+impl = "src/game/window_kinds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x597F60..0x597F9D (0x3E bytes), cdecl. Handler 4 of Field_RunTaskRecords' nine (the imm32 at 0x59E264). A six-entry stack table by the current record's byte +2, unbounded: 0x597FA0, 0x5984B0, eax (0), eax (0), 0x598570, 0x5986C0 - kinds 2 and 3 call address 0. 0x598570 and 0x5986C0 are group CD's (BATL_END.EMI); 0x597FA0 and 0x5984B0 are in no group, unread."
+
 # --- group BB (round 7, 2026-09-23): the battle task and the turn flow, docs/battle_flow.md ---
 
 [[func]]

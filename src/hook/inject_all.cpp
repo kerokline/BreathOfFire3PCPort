@@ -96,6 +96,7 @@
 #include "game/battle_damage.h"
 #include "game/battle_items.h"
 #include "game/battle_odds.h"
+#include "game/window_kinds.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -232,6 +233,9 @@ void InjectAll() {
     InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
     BattleOdds_Inject();        // group CK, round eight: every call and tail jmp of its clones re-aimed at a
                                 // recorder: order does not matter
+    WindowKinds_Inject();       // round 8 group CM: every call of its clones re-aimed at a recorder and its three
+                                // stack tables re-aimed in the copies: order does not matter (it clones its twelve
+                                // before injecting them, and no module patches bytes inside them)
     InjectReport();
 }
 
