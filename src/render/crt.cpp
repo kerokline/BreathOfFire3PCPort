@@ -182,6 +182,9 @@ void ReadKnobs() {
     }
 }
 
+// One full-window pass. The inputs are unbound first: each glow texture is
+// one pass's output and the next one's input, and D3D11 will not have one
+// texture bound as both.
 void Pass(ID3D11DeviceContext* ctx, ID3D11PixelShader* ps, ID3D11RenderTargetView* out, const D3D11_VIEWPORT& vp,
           ID3D11ShaderResourceView* t0, ID3D11ShaderResourceView* t1) {
     ID3D11ShaderResourceView* none[2] = {nullptr, nullptr};
@@ -207,7 +210,8 @@ bool CrtWanted() {
 
 // The size-dependent objects: the constants (an immutable buffer) and the
 // two glow textures of the game's own size. Made at set-up and again by
-// CrtResize (DIV-0042).
+// CrtResize (DIV-0042). The buffer takes g_c as it stands, so the knobs must
+// be read (ReadKnobs) before the first call.
 void MakeSized(ID3D11Device* device, U target_w, U target_h, U k) {
     if (k == 0 || target_w % k || target_h % k) bof3::Fatal("CRT: a %u x %u target is not a multiple of k = %u", target_w, target_h, k);
     g_c.target_w = static_cast<float>(target_w);
@@ -279,6 +283,8 @@ void CrtDraw(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* target, ID3D11R
     ctx->VSSetShader(g_vs, nullptr, 0);
     ctx->PSSetConstantBuffers(0, 1, &g_cb);
     ctx->PSSetSamplers(0, 1, &g_linear);
+    // The glow ping-pongs: shrink into [0], across into [1], down into [0],
+    // which the picture reads beside the target.
     const D3D11_VIEWPORT source = {0, 0, g_c.src_w, g_c.src_h, 0, 1};
     Pass(ctx, g_shrink, g_rtv[0], source, target, nullptr);
     Pass(ctx, g_across, g_rtv[1], source, nullptr, g_srv[0]);

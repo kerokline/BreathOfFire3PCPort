@@ -404,6 +404,7 @@ GpuTexture* Bind(TexVersion* version) {
 
 // --- the frame -------------------------------------------------------------------------------
 
+// `flat` is not compared: DrawPrimitive already baked it into the vertices.
 bool SameState(const PipeState& a, const PipeState& b) {
     return a.texture == b.texture && a.src_blend == b.src_blend && a.dst_blend == b.dst_blend &&
            a.blend_enable == b.blend_enable && a.alpha_test == b.alpha_test && a.alpha_ref == b.alpha_ref &&
@@ -411,6 +412,9 @@ bool SameState(const PipeState& a, const PipeState& b) {
            a.alpha_modulate == b.alpha_modulate && a.point_filter == b.point_filter && a.topology == b.topology;
 }
 
+// One Draw call in state `s`. The flag word is kSceneShader's `flags`: 1
+// textured, 2 colour-key discard, 4 alpha modulate, 8 specular, 16 alpha
+// test (`func` a D3DCMP value; 8, ALWAYS, keeps every pixel).
 void Draw(const PipeState& s, U first, U count) {
     struct {
         U flags, ref, func, pad;
@@ -492,9 +496,8 @@ void RunFrame(Frame& frame) {
 void Show() {
     // The window may already be destroyed: WM_DESTROY arrives through the
     // loop's DispatchMessage, and the frame in flight still presents after
-    // it. GetClientRect then fails and, with the RECT uninitialised, its
-    // garbage reached ResizeBuffers as E_INVALIDARG (the owner, 2026-09-24,
-    // closing the window at the title; reproduced 2 of 2). Nothing to show.
+    // it. GetClientRect then fails (an unchecked RECT once reached
+    // ResizeBuffers as E_INVALIDARG). Nothing to show.
     RECT client = {};
     if (!GetClientRect(static_cast<HWND>(g_opt.hwnd), &client)) {
         bof3::Log("render: GetClientRect failed, error %lu - window gone, nothing shown", GetLastError());
@@ -565,6 +568,9 @@ void InitOnFiber(const Options& options) {
     FpuGuard fpu;
     g_opt = options;
     DXGI_SWAP_CHAIN_DESC sd = {};
+    // BOF3X_SWAP picks the swap effect by its first letter: f FLIP_DISCARD
+    // (two buffers), s SEQUENTIAL, anything else or unset DISCARD (one buffer,
+    // docs/render-backend.md section 3).
     char swap[16] = "discard";
     GetEnvironmentVariableA("BOF3X_SWAP", swap, sizeof swap);
     const bool flip = swap[0] == 'f', sequential = swap[0] == 's';
@@ -704,10 +710,14 @@ void CALLBACK RenderFiber(void*) {
     }
 }
 
+// Runs `job` on the render fiber and returns when it is done. Game fiber only:
+// a call from the render fiber itself (the rescale hook, say) would switch to
+// the running fiber and overwrite g_job.
 void RunOnFiber(Job job) {
     if (!g_render_fiber) {
         g_game_fiber = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
         if (!g_game_fiber) g_game_fiber = GetCurrentFiber();   // already a fiber
+        // 256 KB committed, 1 MB reserved.
         g_render_fiber = CreateFiberEx(256 * 1024, 1024 * 1024, FIBER_FLAG_FLOAT_SWITCH, &RenderFiber, nullptr);
         if (!g_render_fiber) bof3::Fatal("render: CreateFiberEx failed, error %lu", GetLastError());
     }
@@ -787,6 +797,8 @@ bool SaveOnFiber(const wchar_t* path) {
         bof3::Log("render: SaveFrame: Map failed");
         return false;
     }
+    // 54 = the 14-byte file header and the 40-byte BITMAPINFOHEADER; rows pad
+    // to 4 bytes; 2835 pixels a metre is 72 DPI.
     const U w = d.Width, h = d.Height, row = (w * 3 + 3) & ~3u;
     const U size = 54 + row * h;
     auto* out = static_cast<unsigned char*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size));

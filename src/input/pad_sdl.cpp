@@ -7,7 +7,9 @@
 namespace bof3x::input {
 namespace {
 
-// Half travel, the original's 500 of 1000 on its DirectInput axes.
+// Half travel, the original's 500 of 1000 on its DirectInput axes (Pad_Read
+// 0x5A9700, docs/controls.md section 1). SDL's sticks run -32768..32767 and
+// its triggers 0..32767, so 16384 is half of either.
 constexpr Sint16 kStickThreshold = 16384;
 constexpr Sint16 kTriggerThreshold = 16384;
 
@@ -18,6 +20,9 @@ Layout g_layout = Layout::kPositional;
 bool g_nintendo = false;
 PadLog g_log = nullptr;
 
+// One line to the caller's log. `fmt` may use at most %s, %d, %s, in that
+// order, fed from a, b, c; a caller with only a number passes "" for a and
+// puts a bare %s before its %d.
 void Log(const char* fmt, const char* a = "", int b = 0, const char* c = "") {
     if (!g_log) return;
     char line[256];
@@ -33,6 +38,7 @@ void OpenPad(SDL_JoystickID id) {
     }
     g_pad_id = id;
     g_nintendo = g_layout == Layout::kNintendo;
+    // Auto: a pad whose lower face button is lettered B is Nintendo-lettered.
     if (g_layout == Layout::kAuto)
         g_nintendo = SDL_GetGamepadButtonLabel(g_pad, SDL_GAMEPAD_BUTTON_SOUTH) == SDL_GAMEPAD_BUTTON_LABEL_B;
     const char* name = SDL_GetGamepadName(g_pad);
@@ -56,7 +62,8 @@ void OpenAnyPad() {
     SDL_free(ids);
 }
 
-// The physical face button for a map position.
+// The physical face button for a map position; `input` is one of the four
+// face positions (the default case is north).
 SDL_GamepadButton FaceButton(PadInput input) {
     switch (input) {
     case PadInput::kSouth: return g_nintendo ? SDL_GAMEPAD_BUTTON_EAST : SDL_GAMEPAD_BUTTON_SOUTH;
@@ -90,6 +97,8 @@ bool PadSdl_Start(Layout layout, PadLog log) {
     return true;
 }
 
+// SDL_Quit, not SDL_QuitSubSystem: this file is SDL's only user in the DLL
+// and in the launcher.
 void PadSdl_Stop() {
     if (!g_started) return;
     ClosePad();

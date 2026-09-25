@@ -7,6 +7,8 @@
 namespace bof3x::input {
 namespace {
 
+// In the Controls dialog's row order: row r's cells are IDC_CT_KEY1 + r and
+// so on (src/launcher/resource.h, launcher.rc), so never reorder alone.
 const ActionInfo kActions[kActionCount] = {
     {kUp, "up", "Up"},           {kDown, "down", "Down"},     {kLeft, "left", "Left"},
     {kRight, "right", "Right"},  {kCross, "cross", "Cross"},  {kCircle, "circle", "Circle"},
@@ -73,6 +75,8 @@ const PadInputInfo kPadInputs[] = {
 };
 static_assert(sizeof kPadInputs / sizeof kPadInputs[0] == static_cast<size_t>(PadInput::kCount));
 
+// Indexed by Layout, in enum order; the Controls dialog's layout combo lists
+// the same three in the same order.
 const char* const kLayoutNames[] = {"positional", "nintendo", "auto"};
 
 bool EqualsNoCase(const std::string& a, const char* b) {

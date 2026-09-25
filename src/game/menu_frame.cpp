@@ -41,8 +41,8 @@
 //
 // Cost: (w - 2) * (h - 2) + 2 * (w - 4) + 2 * (h - 4) + 4 sprites of 0x1C
 // bytes - 421 for Config's panel, 172 for the controller's, 370 for the
-// reserve list - out of a 64 KB
-// packet pool that Gfx_CommitPrim guards by dropping what does not fit.
+// reserve list - out of a 64 KB packet pool that Gfx_CommitPrim guards by
+// dropping what does not fit.
 //
 // cdecl, four stack arguments, as the call sites push them. x and y arrive as
 // whole registers holding 16-bit values; w and h are immediates.

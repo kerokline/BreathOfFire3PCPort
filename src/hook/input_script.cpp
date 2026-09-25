@@ -20,7 +20,7 @@
 // The recipe language (docs/input-script.md has it with examples). One step a
 // line, '#' to end of line is a comment, buttons joined with '+':
 //
-//   set hold N              frames a press holds the buttons     (default 4)
+//   set hold N              frames a press holds the buttons, N > 0 (default 4)
 //   set gap N               frames released after each press     (default 8)
 //   wait N                  N frames, nothing held
 //   press BUTTONS [xK]      K times (default 1): hold, then release
@@ -309,11 +309,6 @@ void Finish(const char* how) {
     LogFlush();
 }
 
-// A frozen shot. Called from the latch at the top of WinMain's loop, where the
-// last frame built has just been presented and the next has not begun: the
-// window holds one whole frame, and holds it until the driver says it has it.
-// The game clock stops meanwhile, so the frame deadline has no debt to replay
-// and the frames after the shot are presented as any others.
 // BOF3X_SHOT_DIR: the frame written by the game itself, <dir>\<NAME>.bmp
 // (render::SaveFrame - the target, not the window, so nothing has to be on
 // top). Logged as `saved` or `NOT saved` before the shot line.
@@ -328,6 +323,12 @@ void SaveShot(const Step& s) {
     Log("input       shot %s %s %ls", s.text.c_str(), ok ? "saved to" : "NOT saved:", path.c_str());
 }
 
+// A frozen shot. Called from the latch at the top of WinMain's loop, where the
+// last frame built has just been presented and the next has not begun: the
+// window holds one whole frame, and holds it until the driver says it has it
+// (or kFreezeMs passes). The game clock stops meanwhile, so the frame deadline
+// has no debt to replay and the frames after the shot are presented as any
+// others.
 void Freeze(const Step& s) {
     const bool clock = GameClock_Pause();
     SaveShot(s);
@@ -459,8 +460,8 @@ unsigned short NextWord() {
 }
 
 // Replaces WinMain's call of Input_Latch at 0x4FCDDE. Capcom's latch always
-// runs first - the devices are polled and re-acquired as they would be - and
-// then, while the recipe plays, pad 1's words are ours.
+// runs first, through DeviceLatch - the devices are polled and re-acquired as
+// they would be - and then, while the recipe plays, pad 1's words are ours.
 //
 // WinMain calls the latch once per pass of its message loop, and the loop
 // spins without running a frame while the window is inactive; Frame_Counter
@@ -580,6 +581,9 @@ void __cdecl RecordingLatch() {
     Input_Pressed = static_cast<unsigned short>((g_prev ^ g_cur) & g_cur);
 }
 
+// Opens the recording and puts RecordingLatch on WinMain's latch call. Runs are
+// written when they end, so the run still open when the process ends is not
+// in the file.
 void RecordStart(const char* path) {
     g_rec = std::fopen(path, "w");
     if (!g_rec) Fatal("BOF3X_RECORD: cannot open %s for writing", path);

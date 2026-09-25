@@ -5,6 +5,9 @@
 #include "bof3/symbols.gen.h"
 #include "hook/log.h"
 
+// DIVERGENCE DIV-0057 (docs/dialogue-localisation.md section 9). A glyph
+// index g is written as the two-byte code 0x80 | g >> 8, g & 0xFF, and a
+// pair code is looked up only in that form; a single byte is never a pair.
 namespace {
 
 std::uint16_t* g_pairs;       // 2 * g_count glyph indices, Crt_malloc'd

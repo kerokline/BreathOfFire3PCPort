@@ -30,9 +30,10 @@
 //     original, whose callee keeps only the low 16 (`and ecx, 0xFFFF` at
 //     0x590601).
 //
-// Under a language overlay only (BOF3X_LANG set, and not "original"): the
-// Chinese line is what the stops were made for. All four prompts that use
-// the chooser get the new layout, since it is one function.
+// Under a Latin language overlay only (BOF3X_LANG set, not "original", and
+// not full-width - DIV-0056): the Chinese line is what the stops were made
+// for. All four prompts that use the chooser get the new layout, since it is
+// one function. YesNoLayout_Inject also applies DIV-0029 (below).
 #include "game/yes_no_layout.h"
 
 #include <windows.h>
@@ -67,6 +68,9 @@ unsigned SkipWord(const unsigned char* s, unsigned i) {
     return i;
 }
 
+// `s` (system message `id`) with kMoved spaces moved from its lead into the
+// gap between its two words, in g_line - same length, so it fits whenever
+// `s` does. Aborts on any other shape.
 const unsigned char* Respace(const unsigned char* s, unsigned id) {
     unsigned lead = 0;
     while (s[lead] == 0x20) ++lead;
@@ -176,6 +180,8 @@ YesNoLayout_LineFn YesNoLayout_ActiveLine() {
     return target == ours ? &YesNo_Line : nullptr;
 }
 
+// The 15 bytes from 0x5747F0 to the shift: the three patched instructions
+// with the two pushes between them (6A 00, 6A 18) that PatchBytes leaves.
 bool YesNoLayout_StopsMoved() {
     const auto* at = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(0x5747F0));
     static const std::uint8_t moved[] = {0xB9, 0x12, 0x01, 0x00, 0x00, 0x6A, 0x00, 0x6B, 0xC0, 0x38, 0x6A, 0x18, 0x90, 0x90, 0x90};

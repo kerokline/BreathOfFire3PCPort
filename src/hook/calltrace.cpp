@@ -45,10 +45,9 @@ volatile LONG g_frame = 0;
 // BOF3X_CALLTRACE_MODE=all: every entry is re-armed like Task_RunAll, so every
 // call is counted, not only the first. Two exceptions per call.
 bool g_all = false;
+// STOP, DETAIL and SPIN below are read only with MODE=all.
 // BOF3X_CALLTRACE_STOP=frame: the counts file is final at that frame, so two
 // runs of different speed can be compared over the same span.
-// BOF3X_CALLTRACE_SPIN=n: burn n loop turns per counted call - a way to run
-// the game at a second speed, to find what depends on speed.
 LONG g_stop_frame = 0;
 // BOF3X_CALLTRACE_DETAIL=lo-hi: every call made in those logic frames, in
 // order, to bof3x.calldetail.tsv. For finding which calls a differing frame
@@ -61,6 +60,8 @@ struct Call {
 Call g_detail[kMaxDetail];
 std::uint32_t g_details = 0;
 HANDLE g_out_detail = INVALID_HANDLE_VALUE;
+// BOF3X_CALLTRACE_SPIN=n: burn n loop turns per counted call - a way to run
+// the game at a second speed, to find what depends on speed.
 std::uint32_t g_spin = 0;
 std::uint32_t g_count[kMaxEntries];
 
@@ -144,7 +145,8 @@ void CountEdge(std::uint32_t caller, std::uint32_t entry) {
     Fatal("calltrace: more than %u distinct call edges", (unsigned)kEdgeSlots);
 }
 
-// The three below run only from the Task_RunAll breakpoint: WinMain's stack.
+// WriteAll through Flush run only from the Task_RunAll breakpoint: WinMain's
+// stack.
 void WriteAll(HANDLE h, const char* text, int len) {
     DWORD written = 0;
     WriteFile(h, text, static_cast<DWORD>(len), &written, nullptr);
@@ -204,6 +206,10 @@ void Flush() {
     }
 }
 
+// int3 at a listed entry: record, put the original byte back and resume at
+// the entry (Eip is one past the int3). To re-arm, the trap flag is set and
+// the entry noted in g_pending; the single-step after that one instruction
+// writes the int3 back. Anything else is passed on untouched.
 LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
     EXCEPTION_RECORD* rec = info->ExceptionRecord;
     CONTEXT* ctx = info->ContextRecord;
@@ -254,7 +260,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         Flush();
     } else if (g_all) {
         // Counts are kept for the game's one logic thread; a second thread
-        // in .text would race here, and section 3 of the doc found none.
+        // in .text would race here, and docs/call-trace.md section 3 found none.
         if (!g_stop_frame || g_frame < g_stop_frame) ++g_count[i];
         for (volatile std::uint32_t k = 0; k < g_spin; k = k + 1) {
         }
@@ -390,6 +396,8 @@ void CallTrace_Start(void* dll_module) {
     DWORD written = 0;
     WriteFile(g_out, kHeader, sizeof kHeader - 1, &written, nullptr);
 
+    // First in the chain (1), so the int3s and steps are ours before any other
+    // vectored handler sees them.
     if (!AddVectoredExceptionHandler(1, OnException)) Fatal("calltrace: no vectored handler");
 
     // Left writable on purpose: the handler restores bytes from arbitrary

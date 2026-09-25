@@ -62,7 +62,7 @@ enum class PadInput : unsigned char {
 struct PadInputInfo {
     PadInput input;
     const char* name;    // "south", "lb", "dpad_up", "ls_up" ...
-    const char* label;   // "A / Cross (south)", "LB", "D-pad up", "Left stick up" ...
+    const char* label;   // "South (A / Cross)", "LB / L1", "D-pad up", "Left stick up" ...
 };
 const PadInputInfo* PadInputs();   // kCount entries, in enum order
 int PadInputFromName(const std::string& name);   // -1 if unknown
@@ -99,8 +99,9 @@ struct Bindings {
 constexpr int kKeyTableMax = 32;
 
 // `name=action` items separated by `sep`. Parse* accept unknown items by
-// skipping them and return how many items were understood; `layout=NAME` is
-// a pad item. Format* write every entry.
+// skipping them and return how many items were understood (a `name=none`
+// item counts but adds nothing); `layout=NAME` is a pad item. Parse* append
+// to `out`. Format* write every entry.
 int ParseKeys(const std::string& text, char sep, std::vector<KeyBinding>& out);
 int ParsePad(const std::string& text, char sep, std::vector<PadBinding>& out, Layout& layout);
 std::string FormatKeys(const std::vector<KeyBinding>& keys, const char* prefix, const char* sep);

@@ -10,11 +10,14 @@
 namespace bof3 {
 namespace {
 
+// E8/E9 rel32: one opcode byte and a displacement counted from the end of the
+// five-byte instruction. Also the length of a CALL rel32.
 constexpr unsigned kJmpLen = 5;
 
 int g_enabled = 0;
 int g_disabled = 0;
 
+// Every address passed to Inject, both directions, for IsOwned.
 constexpr int kMaxOwned = 4096;
 std::uint32_t g_owned[kMaxOwned];
 
@@ -43,6 +46,7 @@ bool WantsOriginal(const char* name) {
     return NameListed(list, name);
 }
 
+// `jmp to` (E9 rel32) over the first five bytes at `at`, protection restored.
 void WriteJmp(const char* name, std::uint8_t* at, const std::uint8_t* to) {
     DWORD old = 0;
     if (!VirtualProtect(at, kJmpLen, PAGE_EXECUTE_READWRITE, &old))
@@ -96,6 +100,7 @@ void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
     auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
     std::int32_t rel;
     std::memcpy(&rel, at + 1, sizeof rel);
+    // E8 rel32 is CALL; only the displacement is rewritten below.
     if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
         Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
     if (!instrument && WantsOriginal(name)) {
@@ -137,7 +142,7 @@ void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
     if (IsOwned(original)) Fatal("%s: CloneOriginal after Inject - the entry is already a jmp", name);
     // A tracer or debugger patch at the entry would be copied as a relative
-    // jmp or a breakpoint, and run wrong from the new address. A function
+    // jmp or a breakpoint (CC, int3), and run wrong from the new address. A function
     // whose first instruction is its own call (0x517200 is a list of calls)
     // starts with E8 legitimately, and one whose whole body is a tail jump
     // (0x595B30, five bytes, is Window_FreeState) starts with E9: both are

@@ -16,8 +16,8 @@
 // 0x801EB000, copied with Str_CopyN(.., .., 12) (0x801DE988), in English:
 // "Attack", " EX", "Examine", ..., "Lucky Strike", "Instant Kill", ...
 // tools/loc_build.py carries them in a kind-12 chunk, the suffixes re-encoded
-// to where it keeps copies of the shipped glyphs 0x50..0x53. The PC's own
-// strings are packed 8 and 12 bytes apart, too small for "Lucky Strike", so
+// to the glyphs it adds for them at 0xA6B..0xA6E (whose art each is: DIV-0052).
+// The PC's own strings are packed 8 and 12 bytes apart, too small for "Lucky Strike", so
 // they are not written in place: they live here, the table is repointed, and
 // the copy grows to 12. The banner text has 32 bytes before the next global
 // (0x904EE0, 68 references; nothing references 0x904EC4..0x904EDC), which
@@ -36,7 +36,7 @@ constexpr std::uint32_t kRoom = 12;       // bytes a message; the US copy's coun
 constexpr std::uint32_t kPcRoom = 8;      // the PC's (0x44A8E4, push 8)
 
 // Where each pointer of the shipped table points (read 2026-09-24): the
-// strings are packed, 8 bytes apart but for the fourth-from-last, 12.
+// strings are packed, 8 bytes apart but for string 9 (0x669DC4), 12.
 constexpr std::uint32_t kShipped[kCount] = {0x669D7C, 0x669D84, 0x669D8C, 0x669D94, 0x669D9C, 0x669DA4,
                                             0x669DAC, 0x669DB4, 0x669DBC, 0x669DC4, 0x669DD0, 0x669DD8};
 

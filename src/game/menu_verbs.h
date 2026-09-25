@@ -16,7 +16,7 @@ void MenuVerbs_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
 void BattleCommands_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
 
 // Re-centres the button row's labels by their real width. Only with
-// BOF3X_LANG set.
+// BOF3X_LANG set, and not for a full-width language (DIV-0056).
 void MenuVerbs_Inject();
 
 // The label draw Menu_DrawButtonRow's call at 0x57499B reaches after

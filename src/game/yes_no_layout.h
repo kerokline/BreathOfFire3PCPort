@@ -3,6 +3,8 @@
 // language overlay. See src/game/yes_no_layout.cpp and docs/glyph-draw.md.
 #pragma once
 
+// DIV-0027, and DIV-0029's save-slot name inset with it. Only with BOF3X_LANG
+// set, not "original", and not a full-width language (DIV-0056).
 void YesNoLayout_Inject();
 
 // What YesNoLayout_Inject put into Menu_YesNo's body, for our Menu_YesNo

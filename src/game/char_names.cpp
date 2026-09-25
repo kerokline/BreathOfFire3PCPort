@@ -9,8 +9,9 @@
 //
 // So the English names go into those eight fields once, when FIRST.DAT loads,
 // and New Game hands them on. Before any write, the two instructions that
-// read the table are checked for the addresses above: if they are not the
-// ones this file was written against, nothing is written.
+// read the table, and the whelp's reset copy below, are checked for the
+// addresses they read: if they are not the ones this file was written
+// against, nothing is written.
 //
 // The whelp's name has one more home: 0x42E09D copies five bytes from the
 // 8-byte slot 0x669CE0 into character 7's name at some event - a reset of the

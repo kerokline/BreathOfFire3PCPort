@@ -11,7 +11,7 @@ void TextAdvance_Set(const std::uint8_t* advances, std::uint32_t count, std::uin
 
 // The advance of the character at `text` - its first byte, and its second if
 // the first has bit 7 set. 12, the original's constant, when no table is
-// loaded or the byte is not a glyph.
+// loaded, the byte is not a glyph, or the glyph is past the table.
 int TextAdvance_Of(const std::uint8_t* text);
 
 // The advance of glyph `glyph`; 12 when no table is loaded or it is past it.
@@ -21,9 +21,11 @@ int TextAdvance_OfGlyph(std::uint32_t glyph);
 // moved by (advance - 12) so that the stepper's `+ 12` lands the pen by the
 // glyph's advance. Identical to Text_DrawAt with no advance table loaded.
 // MsgBox_Step (src/game/msgbox.cpp) calls this where the original called
-// Text_DrawAt; the RetargetCall below puts the same call into Capcom's body,
+// Text_DrawAt; TextAdvance_Inject puts the same call into Capcom's body,
 // which is what BOF3X_ORIGINAL=MsgBox_Step runs.
 extern "C" const unsigned char* __cdecl MsgBox_DrawChar(int x, int y, int color, int count,
                                                         const unsigned char* text);
 
+// Re-aims Capcom's MsgBox_Step call of Text_DrawAt (0x497A22) at
+// MsgBox_DrawChar; BOF3X_ORIGINAL=MsgBox_DrawChar leaves the site alone.
 void TextAdvance_Inject();
