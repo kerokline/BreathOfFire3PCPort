@@ -37,7 +37,6 @@ unsigned char* Member(unsigned i) { return At(at::kMembers + i * at::kMemberSize
 unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
 unsigned char* Window(unsigned i) { return At(at::kWindows + i * at::kWindowSize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
-unsigned char* MenuActor() { return At(static_cast<std::uint32_t>(Long(At(at::kMenuActor)))); }
 
 // --- the stand-ins' log ----------------------------------------------------
 
@@ -117,20 +116,74 @@ void Disturb() {
 
 // --- the stand-ins ---------------------------------------------------------
 
+// The stand-ins are not quiet: besides Disturb, each moves - three calls in
+// four - a byte its caller reads again after the call (docs/battle_phases.md
+// section 4), from bits of its own hash, not Disturb's.
+std::uint32_t H2() { return (Hash() ^ 0x165667B1u) * 0x27D4EB2Du; }
+bool Nudging(std::uint32_t h) { return h % 4 != 0; }
+void FlipEvent(std::uint32_t h) { B(at::kEventBattle) = static_cast<unsigned char>(B(at::kEventBattle) ? 0 : 1 + (h >> 24) % 0x30); }
+
 // The void(void) callees, by a number of their own; the six stack-table
-// handlers (100..), the .data tables' sixteen (120..).
-template <unsigned N> void __cdecl StubV() { Record(N, Address(Sprite_Current)); Disturb(); }
-unsigned __cdecl StubRunStates() { Record(2); Disturb(); return Hash(); }
+// handlers (100..), the .data tables' sixteen (120..). Every one may move
+// 0x904AAA (Battle_Frame reads it after its calls) or the auto bit (Battle_
+// RoundStart and Battle_CommitRound read it after theirs); the pulse moves
+// the chosen command (the confirm dispatch's index, read after it); the
+// three set-up calls move a member's bit 0 (Battle_Init reads it after
+// them), the formation mods a byte of each member's stat block and its
+// snapshot; the status and enemy-name windows the sub-step.
+template <unsigned N> void __cdecl StubV() {
+    Record(N, Address(Sprite_Current));
+    const std::uint32_t h = H2();
+    if (Nudging(h)) {
+        if constexpr (N == 50) {
+            B(at::kSubStep) = static_cast<unsigned char>((h >> 8) % at::kMenuStepCount);
+        } else if constexpr (N >= 22 && N <= 24) {
+            Member((h >> 8) % 3)[0] = static_cast<unsigned char>(Member((h >> 8) % 3)[0] ^ 1);
+        } else if constexpr (N == 25) {
+            for (unsigned i = 0; i < 3; ++i) Member(i)[0xA0 + (h >> (8 + 3 * i)) % 0x40] ^= static_cast<unsigned char>(1 + (h >> 20) % 0xFF);
+        } else if constexpr (N == 34) {
+            B(at::kSubStep) = static_cast<unsigned char>(h >> 8);
+        } else if ((h >> 2) % 2) {
+            FlipEvent(h);
+        } else {
+            B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10);
+        }
+    }
+    Disturb();
+}
+unsigned __cdecl StubRunStates() { Record(2); if (Nudging(H2())) FlipEvent(H2()); Disturb(); return Hash(); }
 unsigned long __cdecl StubBannerClearAll() { Record(20); Disturb(); return Hash(); }
+// Battle_Init re-reads the count, the member bits and 0x904AAA after it;
+// Battle_CommitRound the member's command fields.
 unsigned char __cdecl StubActorIsOut(unsigned a) {
     Record(21, a & 0xFF);
+    const std::uint32_t h2 = H2();
+    if (Nudging(h2)) {
+        unsigned char* const m = Member((h2 >> 8) % 3);
+        switch ((h2 >> 2) % 5) {
+        case 0: B(at::kActorCount) = static_cast<unsigned char>((h2 >> 12) % 6); break;
+        case 1: m[0] = static_cast<unsigned char>(m[0] ^ 1); break;
+        case 2: FlipEvent(h2); break;
+        case 3: m[0x125] = static_cast<unsigned char>(m[0x125] == 5 ? h2 >> 16 : 5); break;
+        default: m[0x127] = static_cast<unsigned char>(m[0x127] ? 0 : h2 >> 16); SetLong(m + 0x130, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(m + 0x130)) ^ 0x4000u)); break;
+        }
+    }
     Disturb();
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 3 == 0 ? 0 : h % 3 == 1 ? 1 : h >> 9);
 }
 void __cdecl StubClutRow(unsigned row) { Record(26, row); Disturb(); }
-void __cdecl StubSetClutStp() { Record(27, Address(Sprite_Current)); Disturb(); }
-void __cdecl StubLoadDat(int file) { Record(28, static_cast<std::uint32_t>(file)); Disturb(); }
+void __cdecl StubSetClutStp() { Record(27, Address(Sprite_Current)); if (Nudging(H2())) FlipEvent(H2()); Disturb(); }
+// Battle_Init reads 0x904AAA again after the load.
+void __cdecl StubLoadDat(int file) {
+    Record(28, static_cast<std::uint32_t>(file));
+    const std::uint32_t h = H2();
+    if (Nudging(h)) {
+        if ((h >> 2) % 2) FlipEvent(h);
+        else B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10);
+    }
+    Disturb();
+}
 // The event hook moves the step: the original increments it after the call.
 void __cdecl StubEventHook(int n) {
     Record(29, static_cast<std::uint32_t>(n));
@@ -138,55 +191,137 @@ void __cdecl StubEventHook(int n) {
     Disturb();
 }
 // Mostly a record 0..15, now and then 0xFF (taken) - the upper bytes
-// anything, which a caller that did not take the low byte would use.
+// anything, which a caller that did not take the low byte would use. A
+// member's window moves what the caller reads of that member after it.
 unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
     Record(30, slot & 0xFF, kind & 0xFF);
     const unsigned n = g_log_n;
+    const std::uint32_t h2 = H2();
+    const unsigned s = slot & 0xFF;
+    if (Nudging(h2)) {
+        unsigned char* const m = Member(s >= 0xD && s < 0x10 ? s - 0xD : (h2 >> 8) % 3);
+        switch ((h2 >> 2) % 6) {
+        case 0: m[0x89] = static_cast<unsigned char>(h2 >> 12); break;
+        case 1: m[8] = static_cast<unsigned char>(h2 >> 12); break;
+        case 2: SetWord(m + 0x2E, h2 >> 16); break;
+        case 3: SetWord(m + 0x30, h2 >> 16); break;
+        case 4: B(at::kFacing) = static_cast<unsigned char>(h2 >> 12); break;
+        default: B(at::kInitiative) = static_cast<unsigned char>((h2 >> 12) % 4); break;
+        }
+    }
     Disturb();
     const std::uint32_t h = Hash();
     const unsigned r = (h & 0xFFFFFF00u) | (h % 5 == 0 ? 0xFFu : (h >> 8) % 16);
     if (n <= kLog) g_log[n - 1].c = r & 0xFF;
     return r;
 }
+// The intro re-reads the initiative byte after these.
+void NudgeInitiative() {
+    const std::uint32_t h = H2();
+    if (Nudging(h)) B(at::kInitiative) = static_cast<unsigned char>((h >> 8) % 4);
+}
 const unsigned char* __cdecl StubMsgPtr(unsigned id) {
     Record(31, id & 0xFFFF);
+    NudgeInitiative();
     Disturb();
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Hash() | 1));
 }
+// Also the message count, which BattleCommit_QueueMessages re-reads.
 unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value) {
     Record(32, a, b, static_cast<std::uint32_t>(value));
+    const std::uint32_t h = H2();
+    if (Nudging(h)) {
+        if ((h >> 2) % 2) B(at::kInitiative) = static_cast<unsigned char>((h >> 8) % 4);
+        else B(at::kMessageCount) = static_cast<unsigned char>((h >> 8) % 9);
+    }
     Disturb();
     return Hash();
 }
-void __cdecl StubOpenStatus(unsigned s) { Record(33, s); Disturb(); }
-void __cdecl StubOpenSub1(unsigned s) { Record(35, s); Disturb(); }
-unsigned char __cdecl StubQueuePending() { Record(36); Disturb(); return static_cast<unsigned char>(Hash() % 2 ? 0 : Hash() | 1); }
+void __cdecl StubOpenStatus(unsigned s) { Record(33, s); if (Nudging(H2())) B(at::kSubStep) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
+void __cdecl StubOpenSub1(unsigned s) { Record(35, s); NudgeInitiative(); Disturb(); }
+unsigned char __cdecl StubQueuePending() { Record(36); NudgeInitiative(); Disturb(); return static_cast<unsigned char>(Hash() % 2 ? 0 : Hash() | 1); }
 // 0 a third of the time; 0x100 now and then (a byte test would miss it).
+// It moves what its three callers read after it: the initiative byte, the
+// menu index, the auto bit and the wait.
 int __cdecl StubLoadDone() {
     Record(37);
+    const std::uint32_t h2 = H2();
+    if (Nudging(h2)) {
+        switch ((h2 >> 2) % 4) {
+        case 0: B(at::kInitiative) = static_cast<unsigned char>((h2 >> 8) % 4); break;
+        case 1: B(at::kMenuIndex) = static_cast<unsigned char>((h2 >> 8) % 4); break;
+        case 2: B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10); break;
+        default: SetWord(At(at::kWaitFrames), (h2 >> 8) % 3); break;
+        }
+    }
     Disturb();
     const std::uint32_t h = Hash();
     return h % 3 == 0 ? 0 : h % 7 == 0 ? 0x100 : static_cast<int>(h | 1);
 }
 void __cdecl StubOpenSub2(unsigned s) { Record(38, s); Disturb(); }
-void __cdecl StubOpenSub3(unsigned s) { Record(39, s); Disturb(); }
-unsigned long __cdecl StubSpawnCopies() { Record(43); Disturb(); return Hash(); }
-unsigned long __cdecl StubShowName(const unsigned char* actor) { Record(44, Address(actor)); Disturb(); return Hash(); }
-void __cdecl StubSound(unsigned short id) { Record(45, id); Disturb(); }
-// Battle_ReturnItem reads the slot's byte and the item's word.
+void __cdecl StubOpenSub3(unsigned s) { Record(39, s); if (Nudging(H2())) B(at::kPhase) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
+unsigned long __cdecl StubSpawnCopies() { Record(43); if (Nudging(H2())) B(at::kStep) = static_cast<unsigned char>(H2() >> 8); Disturb(); return Hash(); }
+unsigned long __cdecl StubShowName(const unsigned char* actor) {
+    Record(44, Address(actor));
+    if (Nudging(H2())) B(at::kStep) = static_cast<unsigned char>(H2() >> 8);
+    Disturb();
+    return Hash();
+}
+// The command cross re-reads, after a sound: the menu index and the step
+// (cancel), the command (confirm), window 2's x and y (select), the tap
+// bytes and the pad words (a direction), the greying bit.
+void __cdecl StubSound(unsigned short id) {
+    Record(45, id);
+    const std::uint32_t h = H2();
+    if (Nudging(h)) {
+        const unsigned v = (h >> 8) & 0xFF;
+        switch ((h >> 2) % 8) {
+        case 0: B(at::kMenuIndex) = static_cast<unsigned char>(1 + v % 3); break;
+        case 1: B(at::kStep) = static_cast<unsigned char>(v); break;
+        case 2: B(at::kCommand) = static_cast<unsigned char>(v % 8); break;
+        case 3: B(at::kTapTimer) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(at::kTapCommand) = static_cast<unsigned char>((h >> 16) % 8); break;
+        case 4: SetWord(Window(2) + 4 + 2 * (v % 2), h >> 16); break;
+        case 5: SetWord(At(at::kInputPressed), (h >> 16) & 0xF10C); break;
+        case 6: SetWord(At(at::kInputHeld), (h >> 16) & 0xF10C); break;
+        default: {
+            unsigned char* const r = At(static_cast<std::uint32_t>(Long(At(at::kMenuRecord))));
+            r[0x10] = static_cast<unsigned char>(r[0x10] ^ 2);
+            break;
+        }
+        }
+    }
+    Disturb();
+}
+// Battle_ReturnItem reads the slot's byte and the item's word; the cancel
+// path re-reads the menu actor after it.
 unsigned char __cdecl StubReturnItem(unsigned slot, unsigned item) {
     Record(46, slot & 0xFF, item & 0xFFFF);
+    const std::uint32_t h = H2();
+    if (Nudging(h)) SetPtr(at::kMenuActor, Member((h >> 8) % 3));
     Disturb();
     return static_cast<unsigned char>(Hash());
 }
-// The draws read the words of x and y (docs/battle_phases.md section 4).
+// The draws read the words of x and y (docs/battle_phases.md section 4); the
+// select path reads the command after the cross, window 1 after the label,
+// the step after the status.
+void NudgeSelect() {
+    const std::uint32_t h = H2();
+    if (!Nudging(h)) return;
+    switch ((h >> 2) % 3) {
+    case 0: B(at::kCommand) = static_cast<unsigned char>((h >> 8) % 8); break;
+    case 1: SetWord(Window(1) + 4 + 2 * ((h >> 8) % 2), h >> 16); break;
+    default: B(at::kStep) = static_cast<unsigned char>(h >> 8); break;
+    }
+}
 void __cdecl StubDrawCross(int x, int y) {
     Record(47, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF);
+    NudgeSelect();
     Disturb();
 }
-void __cdecl StubDrawLabel(unsigned k) { Record(48, k & 0xFF); Disturb(); }
+void __cdecl StubDrawLabel(unsigned k) { Record(48, k & 0xFF); NudgeSelect(); Disturb(); }
 void __cdecl StubDrawStatus(int x, int y) {
     Record(49, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF);
+    NudgeSelect();
     Disturb();
 }
 
@@ -470,16 +605,18 @@ void Seed(unsigned k) {
         SetWord(At(at::kConfirmButtons), confirm);
         static const std::uint16_t kDirs[] = {0x1000, 0x4000, 0x8000, 0x2000, 0x0004, 0x0008};
         unsigned pressed = 0, held = 0;
-        switch (Next() % 6) {
+        switch (Next() % 8) {
         case 0: pressed = cancel; break;
         case 1: pressed = confirm; break;
         case 2: held = 0x100; break;
         case 3:
+        case 5:
+        case 6:
         case 4: {
             const unsigned d = Next() % 6;
             held = kDirs[d] | (Half() ? kDirs[Next() % 6] : 0u);
             if (Often()) pressed = kDirs[d];
-            if (Half()) B(at::kTapCommand) = static_cast<unsigned char>(d + 1);
+            if (Often()) B(at::kTapCommand) = static_cast<unsigned char>(d + 1);
             if (Half() && B(at::kTapTimer) == 0) B(at::kTapTimer) = 8;
             break;
         }
@@ -489,9 +626,11 @@ void Seed(unsigned k) {
         if (Next() % 4 == 0) held |= Next() & 0xF1FF;
         SetWord(At(at::kInputPressed), pressed);
         SetWord(At(at::kInputHeld), held);
-        unsigned char* const a = MenuActor();
-        a[0x125] = static_cast<unsigned char>(Half() ? 5 : Next());
-        SetLong(a + 0x130, static_cast<std::int32_t>(Half() ? Next() | 0x4000 : Next() & ~0x4000u));
+        for (unsigned i = 0; i < 3; ++i) {
+            unsigned char* const a = Member(i);
+            a[0x125] = static_cast<unsigned char>(Often() ? 5 : Next());
+            SetLong(a + 0x130, static_cast<std::int32_t>(Half() ? Next() | 0x4000 : Next() & ~0x4000u));
+        }
         break;
     }
     case kConfirmDispatch:
