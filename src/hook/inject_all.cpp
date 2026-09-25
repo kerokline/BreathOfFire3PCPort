@@ -108,6 +108,7 @@
 #include "game/battle_actor_copies.h"
 #include "game/battle_turn_steps.h"
 #include "game/magic_fx_reached.h"
+#include "game/worldmap_area.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -272,6 +273,9 @@ void InjectAll() {
                                 // order does not matter
     MagicFxReached_Inject();    // round 8 group CJ: every call of its clones re-aimed at a recorder, its five stack
                                 // tables re-aimed in the copies and three .data tables swapped: order does not matter
+    WorldmapArea_Inject();      // round 8 group DA: every call and tail jmp of its clones re-aimed at a recorder
+                                // and its seven .data dispatch tables swapped for recorders: order does not matter
+                                // (it clones its thirty before injecting them; WorldMap_Inject cloned 0x404160 earlier)
     InjectReport();
 }
 

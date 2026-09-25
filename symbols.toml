@@ -16300,3 +16300,405 @@ ctype = "unsigned char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: 5 4 5 4 4 0 0 0 - Sparkle_Spawn's launch delay step: a sparkle's +5 = this * (n >> 2) + 1."
+
+# ---------------------------------------------------------------------------
+# Round 8 group DA: the world map's area code and the effect kinds its route
+# runs, all reached through pointers. docs/worldmap_area.md.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4037B0
+name = "Area29_PickFieldObject"
+psx = 0x801F2D2C
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4037B0..0x40387A (0xCB: a five-byte jmp 0x4037C0, then the body), cdecl, no arguments: area 29's descriptor init (+0x40 of 0x5EE270, 0x667590 entry 29; Area_Enter calls it). Rand() & 0x3F against the byte chances Area29_Weights (16 12 12 8 8 4 2 2, sum 64) picks one of the first eight Sprite_Objects records (0xA4 bytes); the other seven get byte +0 = 0. The kept one: Rand() & 7 into Area29_Cells, +0x34 = x << 16, +0x38 = z << 16, +0x3E = the word of AreaMap_Elevation(+0x34, z << 16). Then Field_EdgeBits = the low word of the dword 0x802E74 (the leader's +0x134) - 5. PSX twin from the sibling's names/area_records.toml (area 29, kind init). docs/worldmap_area.md section 1."
+
+[[func]]
+pc = 0x403CE0
+name = "Area33_ClearCellsA"
+psx = 0x801F2C38
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x403CE0..0x403D3E (0x5F), cdecl: area 33's handler 0 (Area33_Handlers, the descriptor 0x5EF4D8's +0x3C; called from the field-script op dispatch at 0x577B80). Eight calls of 0x579F00 (group DD's: AreaMap_Bytes[AreaMap_Header[0] * z + x] = value) with (x, z, 0): x 0x3A and 0x3B of rows 0x1C, 0x1D, 0x1F, 0x20. PSX twin: names/area_records.toml area 33 handler[0]. docs/worldmap_area.md section 1."
+
+[[func]]
+pc = 0x403D40
+name = "Area33_ClearCellsB"
+psx = 0x801F2CD0
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x403D40..0x403D64 (0x25), cdecl: area 33's handler 1: 0x579F00(0x11, 0x15, 0), (0x11, 0x16, 0), (0x12, 0x16, 0). PSX twin: area_records.toml area 33 handler[1]. docs/worldmap_area.md section 1."
+
+[[func]]
+pc = 0x403D70
+name = "WorldMap33_PlaceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x403D70..0x403DF6 (0x87), cdecl: WorldMap_FieldHooks entry 1 (0x56DE30 jumps through it by WorldMap_RecordIndex). By the s8 0x9039F4: 0 - ScriptFlags_Set40, the row of WorldMap33_PlaceMessages whose first word is the place word 0x937F82 (6 when none), Msg_OpenScript(the word at 0x5EF51C + (row * 16 + (s8) Cond_ByteFA) * 2), 0x9039F4 (read again) + 1 with Field_Request = 2; 1 - once Field_Request is not 2, ScriptFlags_Clear40 (0x57C7A0, group DD's) and 0x9039F3..0x9039F5 zeroed. The row and the byte are unchecked. docs/worldmap_area.md section 2."
+
+[[func]]
+pc = 0x403E00
+name = "WorldMap33_PlateRun"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x403E00..0x403ED5 (0xD6), cdecl: WorldMap_Records record 1 (area 33) +0, reached as effect kind 0 through EffectKind00_WorldMap. The cell ahead of the leader - the high words of (ObjTrio +9) * (+0xC) + (+0x34) and of the same with +0x10 / +0x38 - to Sprite_Current +0xC / +0x10 (sign-extended); +0xB = 1 / 2 / 3 when AreaMap_ByteAt of it (asked up to three times) is 0xA1 / 0xA0 / 0xAE, else 4 on Field_ScriptFlags2 bit 12, else 0; then WorldMap33_PlateStates by +1. The name (the place plate) is the reading of its states: an animation by place, a scale grown over eight frames, pinned to (160, 80) by WorldMap_PinSprite. docs/worldmap_area.md section 2."
+
+[[func]]
+pc = 0x403EE0
+name = "WorldMap33_PlateShow"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x403EE0..0x404021 (0x142), cdecl: WorldMap33_PlateStates 1. +7 = +0xB; kind 1 - the entry of WorldMap33_PlateAnims whose word is the place 0x937F82, searched with no bound, +0x18 = the place and its animation byte; kinds 2 / 3 / 4 - animations 3 / 0 / 1. Each then +0x40 = 0, +0x44 = 0x10000, +0x48 = 2, +9 = 8, Sprite_SetAnimation, +1 = 2. Other kinds return. docs/worldmap_area.md section 2."
+
+[[func]]
+pc = 0x404030
+name = "WorldMap33_PlateGrow"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404030..0x404070 (0x41), cdecl: WorldMap33_PlateStates 2. WorldMap_PinSprite; +0x40 += 0x2000; +9 - 1, at 0 +0x48 = 0 and +1 = 3; tail jmp Sprite_QueueOverlay. docs/worldmap_area.md section 2."
+
+[[func]]
+pc = 0x404080
+name = "WorldMap33_PlateHold"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404080..0x4040D7 (0x58), cdecl: WorldMap33_PlateStates 3. WorldMap_PinSprite; unless Game_Mode is 1, when +0xB is not +7, or Field_Request is 5, or +7 is 1 and the dword +0x18 is not the place word 0x937F82: +0x48 = 2, +9 = 8, +1 = 4; tail jmp Sprite_QueueOverlay. docs/worldmap_area.md section 2."
+
+[[func]]
+pc = 0x4040E0
+name = "WorldMap33_PlateShrink"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4040E0..0x40412F (0x50), cdecl: WorldMap33_PlateStates 4. WorldMap_PinSprite; +0x40 -= 0x2000; +9 - 1; not 0: tail jmp Sprite_QueueOverlay; 0 with Field_Request 5: tail jmp Effect_Release; else +0x48 = 0, +1 = 1 and no overlay. docs/worldmap_area.md section 2."
+
+[[func]]
+pc = 0x404130
+name = "WorldMapHud_Run"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404130..0x404141 (0x12), cdecl: WorldMap_Records record 1 +0xC, reached as effect kind 0x58 through EffectKind58_WorldMap. jmp [WorldMapHud_States + Sprite_Current +1 * 4], unchecked. docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x404150
+name = "WorldMapHud_Frame"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404150..0x404159 (0xA), cdecl: WorldMapHud_States 1. call WorldMap_FrameStep 0x404160; jmp WorldMapHud_BoxStep 0x404230. docs/world-map-hud.md section 6 read it first; docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x404230
+name = "WorldMapHud_BoxStep"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404230..0x404241 (0x12), cdecl, entered by WorldMapHud_Frame's tail jmp: jmp [WorldMapHud_BoxStates + Sprite_Current +3 * 4], unchecked. docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x404250
+name = "WorldMapHud_BoxSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404250..0x4042B1 (0x62), cdecl: WorldMapHud_BoxStates 1. Word +0x30 -= 10; (s16) <= 0xC8: +3 + 1; when the mode byte 0x9045FA is set with +0xB, or Field_Request is 2, or Field_ScriptFlags bit 8: +3 = 3; WorldMap_DrawHud(0x5C, the word +0x30 - pushed with the object pointer's upper half, read as a word). docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x4042C0
+name = "WorldMapHud_BoxHold"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4042C0..0x40432D (0x6E), cdecl: WorldMapHud_BoxStates 2. While +0xB is 0, +9 + 1 and at 0x5A (u8) +0xB + 1; then on the same leave test as the slide-in +3 + 1; WorldMap_DrawHud(0x5C, word +0x30). docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x404330
+name = "WorldMapHud_BoxSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x404330..0x404386 (0x57), cdecl: WorldMapHud_BoxStates 3. Word +0x30 += 10; (s16) >= 0xF0: +3 = 0; unless the mode byte is set, or Field_Request is 2, or Field_ScriptFlags bit 8: +3 = 1; WorldMap_DrawHud(0x5C, word +0x30). docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x4048E0
+name = "WorldMap33_DrawDrift"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4048E0..0x404D41 (0x462), cdecl: WorldMap_Records record 1 +0x10, through WorldMap_RecordHook10 (EffectKind18_States 2, 3). +2 == 0: word +0x3A += Frame_Counter & 0xF, +2 + 1. Under Draw_PassFlags bit 2, b = +0xB: +0x38 += b << 10; +0x3A = -8 above AreaMap_Header[1] + 8; within 25 cells of the leader in x OR z: a POLY_FT4 square of half-side |15 - (Frame_Counter & 0x1F)| + ((4 - b) << 8) about ((+0x34 >> 9) - 0x3FC0, (+0x38 >> 9) - 0x3FC0) through Gte_RotTransPers4 (ten arguments), Gte_PrimDepths4_10, Prim_SetTexture((b - 2) | 0xBB509100, prim, 1), Gfx_CommitPrim(4, 0x48); then (17 - 4b) x (16 - 4b) cells from +0x36 / +0x3A: each MapView_ItemHalfAt that answers gets a semi-transparent POLY_FT4 with the item's corners, colour 0x28, CLUT 0x78CB, tpage 0x5B, u / v from WorldMap33_DriftUV scrolled by +0x38, and MapView_LinkPrimAt(x << 16, z << 16, 1, 0x48). The name is the reading of the scroll. docs/worldmap_area.md section 4."
+
+[[func]]
+pc = 0x411310
+name = "WorldMap_FrameWait"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x411310..0x411336 (0x27), cdecl: WorldMap_FrameStep's state 0 (entry 0 of 0x5EF5F8 and of the other ten world-map copies' tables: 0x5E5F78, 0x5F7670, 0x60489C, 0x612638, 0x612FB4, 0x61BB98, 0x62032C, 0x624648, 0x6371C0, 0x6373C0). Unless the mode byte 0x9045FA is 2 or Field_ScriptFlags bit 8: word +0x2E = -0x30, +2 + 1. docs/world-map-hud.md section 1.1; docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x414BB0
+name = "WorldMapHud_BoxWait"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x414BB0..0x414BE7 (0x38), cdecl: WorldMapHud_BoxStates 0 and entry 0 of the other ten copies' box tables (0x5E5F88, 0x5F7680, 0x6048AC, 0x612648, 0x612FC4, 0x61BBA8, 0x62033C, 0x624658, 0x6371D0, 0x6373D0). Unless the box's leave test holds (the mode byte set with +0xB, Field_Request 2, Field_ScriptFlags bit 8): word +0x30 = 0xF0, +3 + 1. docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x419110
+name = "WorldMapHud_Start"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x419110..0x41912C (0x1D), cdecl: WorldMapHud_States 0 and entry 0 of the other ten copies' tables (0x5E5F70, 0x5F7668, 0x604894, 0x612630, 0x612FAC, 0x61BB90, 0x620324, 0x624640, 0x6371B8, 0x6373B8). +9 = 0, +0xB = 0, +1 + 1. docs/worldmap_area.md section 3."
+
+[[func]]
+pc = 0x462A90
+name = "WorldMap_RecordIndex"
+ret = "unsigned"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x462A90..0x462AB5 (0x26), cdecl, no arguments: the index (whole eax) of the first of the eleven 0x1C-byte WorldMap_Records whose byte +0x18 equals Game_AreaNumber (u16 against the zero-extended byte), 11 when none. 17 rel32 callers (the ten map copies' 0x40278C .. 0x42560C, which ignore the answer, 0x462AC0 .. 0x462B80, 0x56DE30); each takes the low byte. World-map route: 4,560 calls. docs/worldmap_area.md section 5."
+
+[[func]]
+pc = 0x462AE0
+name = "EffectKind00_WorldMap"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x462AE0..0x462AF9 (0x1A), cdecl: Effect_KindHandlers entry 0 (0x655350). WorldMap_RecordIndex, then jmp [0x653910 + (index & 0xFF) * 0x1C] - the record's +0 (WorldMap33_PlateRun on area 33); index 11 reads 0x653A44, the table after the records. docs/worldmap_area.md section 5."
+
+[[func]]
+pc = 0x462B40
+name = "EffectKind58_WorldMap"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x462B40..0x462B59 (0x1A), cdecl: Effect_KindHandlers entry 0x58 (0x6554B0). jmp [the record's +0xC] (WorldMapHud_Run on area 33). docs/worldmap_area.md section 5."
+
+[[func]]
+pc = 0x462B80
+name = "WorldMap_RecordHook10"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x462B80..0x462B99 (0x1A), cdecl: EffectKind18_States entries 2 and 3 (0x654074, 0x654078). jmp [the record's +0x10] (WorldMap33_DrawDrift on area 33). docs/worldmap_area.md section 5."
+
+[[func]]
+pc = 0x469BB0
+name = "EffectKind06_Run"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x469BB0..0x469BC1 (0x12), cdecl: Effect_KindHandlers entry 6 (0x655368). jmp [EffectKind06_States + Sprite_Current +1 * 4], unchecked. Combat route. docs/worldmap_area.md section 6."
+
+[[func]]
+pc = 0x469BD0
+name = "EffectKind06_Start"
+psx = 0x8019B404
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x469BD0..0x469CA6 (0xD7), cdecl: EffectKind06_States 0 (and 0x653EF4's). Sprite_SetAnimationBank(0x18); +0x48 = 0; word +0x2E += word +0xC, word +0x30 -= word +0x10; +0x24 = +0x2A = 0, +0x29 = 2; variant +6 == 3: +0 |= 0x20, +0x5C = 1, +0x5F/+0x5E/+0x5D = 0xF8, +9 = 0x14, else +0x5C and the three 0, +9 = 0x10; Sprite_SetAnimation(EffectKind06_Anims[+6]); +1 = 1. PSX twin from the catalogue (pairs_propagated). docs/worldmap_area.md section 6."
+
+[[func]]
+pc = 0x469CB0
+name = "EffectKind06_Tick"
+psx = 0x8019B544
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x469CB0..0x469CC1 (0x12), cdecl: EffectKind06_States 1. jmp [EffectKind06_Ticks + Sprite_Current +6 * 4], unchecked. docs/worldmap_area.md section 6."
+
+[[func]]
+pc = 0x469CD0
+name = "EffectKind06_Blink"
+psx = 0x8019B588
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x469CD0..0x469D0C (0x3D), cdecl: EffectKind06_Ticks 0, 1, 2, 4 (and 0x653F00's). +9 - 1; at 0 +1 + 1; else Sprite_ScriptTick and, while +9 bit 2 is set, tail jmp Sprite_QueueOverlay (+5 == 6) or Sprite_UpdateScreen. docs/worldmap_area.md section 6."
+
+[[func]]
+pc = 0x469DB0
+name = "EffectKind06_End"
+psx = 0x8019B7DC
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x469DB0..0x469DD1 (0x22), cdecl: EffectKind06_States 2 (and 0x653EFC). +0x5F = +0x5E = +0x5D = 0, tail jmp Effect_Release. docs/worldmap_area.md section 6."
+
+[[func]]
+pc = 0x46D830
+name = "EffectKind18_Run"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x46D830..0x46D841 (0x12), cdecl: Effect_KindHandlers entry 0x18 (0x6553B0). jmp [EffectKind18_States + Sprite_Current +1 * 4], unchecked. docs/worldmap_area.md section 6."
+
+[[func]]
+pc = 0x46D850
+name = "EffectKind18_Start"
+ret = "void"
+params = "void"
+impl = "src/game/worldmap_area.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x46D850..0x46D881 (0x32), cdecl: EffectKind18_States 0. +1 = +0xB, +2 = +3 = +4 = +9 = 0: the effect's sub-kind picks its next state. docs/worldmap_area.md section 6."
+
+[[data]]
+pc = 0x653910
+name = "WorldMap_Records"
+ctype = "unsigned long"
+count = 77
+status = "evidence"
+evidence = "read 2026-09-25: eleven 0x1C-byte records (77 dwords), one per world map - five code pointers (+0: effect kind 0, +4: kind 0xE via 0x462B00, +8: kind 0x16 via 0x462B20, +0xC: kind 0x58, +0x10: 0x462B80's), a data pointer +0x14 (0x462AC0 answers it) and the area byte +0x18: areas 16, 33, 45, 65, 87, 88, 104, 115, 121, 151, 152. Record 1 (area 33) is 0x403E00, 0x404800, 0x404680, 0x404130, 0x4048E0, 0x5EF338. Record 6 (area 104) has nulls at +4, +8, +0x14. The 'none' index 11 reads 0x653A44, 0x462BA0's table. Found by WorldMap_RecordIndex 0x462A90."
+
+[[data]]
+pc = 0x662DF0
+name = "WorldMap_FieldHooks"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: 0x56DE30 jumps through [0x662DF0 + WorldMap_RecordIndex() & 0xFF * 4] - one hook per world map (0x401B80, WorldMap33_PlaceMessage 0x403D70, 0x407B40, 0x40B8C0, 0x40FC60, 0x410D90, 0x414700, 0x418BE0, 0x41AB70, 0x423950, 0x424A30) and 0x4139E0 for index 11, no world map."
+
+[[data]]
+pc = 0x5EF4C8
+name = "Area33_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: area 33's descriptor (0x5EF4D8, 0x667590 entry 33) +0x3C: Area33_ClearCellsA 0x403CE0, Area33_ClearCellsB 0x403D40. The dword after, 0x41D270, is the descriptor's +0x34 list (0x41D270 is held by twelve .data dwords, one per world-map copy's descriptor by the look of it), so the array is two here; the sibling's area_records.toml lists a handler[2] for the PSX area 33 - unresolved."
+
+[[data]]
+pc = 0x5EF5DC
+name = "WorldMap33_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: called by WorldMap33_PlateRun 0x403E00 by Sprite_Current +1, unchecked: 0x401DE0 (area 16's copy's state 0, shared), WorldMap33_PlateShow, _PlateGrow, _PlateHold, _PlateShrink. The next dword starts WorldMapHud_States."
+
+[[data]]
+pc = 0x5EF5F0
+name = "WorldMapHud_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: jumped through by WorldMapHud_Run 0x404130 by +1, unchecked: WorldMapHud_Start 0x419110 (shared), WorldMapHud_Frame 0x404150. WorldMap_FrameStep's four-entry table 0x5EF5F8 follows (world_map.cpp's kStateTable)."
+
+[[data]]
+pc = 0x5EF608
+name = "WorldMapHud_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: jumped through by WorldMapHud_BoxStep 0x404230 by +3, unchecked: WorldMapHud_BoxWait 0x414BB0 (shared), _BoxSlideIn 0x404250, _BoxHold 0x4042C0, _BoxSlideOut 0x404330. WorldMap_DrawSprite's sprite table 0x5EF618 follows."
+
+[[data]]
+pc = 0x5EF320
+name = "WorldMap33_PlateAnims"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-25: six (u16 place, u8 animation, u8 0) entries - places 0x17, 8, 7, 0xE, 0x13, 0x60 with animations 8, 6, 4, 5, 0xA, 2. Searched by WorldMap33_PlateShow 0x403EE0 for the place word 0x937F82 with no bound. WorldMap_Records record 1's data 0x5EF338 follows."
+
+[[data]]
+pc = 0x5EF51C
+name = "WorldMap33_PlaceMessages"
+ctype = "unsigned short"
+count = 96
+status = "evidence"
+evidence = "read 2026-09-25: six 0x20-byte rows, each a place word (8, 0xD, 0x60, 0x17, 0xE, 0x13) then fifteen message ids (5 .. 0xA, one per row); WorldMap33_PlaceMessage 0x403D70 opens the word (row * 16 + (s8) Cond_ByteFA)."
+
+[[data]]
+pc = 0x5EF6B4
+name = "WorldMap33_DriftUV"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: three rows of four bytes read by WorldMap33_DrawDrift 0x4048E0 at +0xB - 2: the u base (00 50 ..), the v base (+4: A0 C0 ..), the cell size (+8: 0A 0C ..) - so +0xB 2 and 3 are the table's; 0, 1 and 4 read its neighbours."
+
+[[data]]
+pc = 0x5EE258
+name = "Area29_Cells"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-25: eight (x, z) cell pairs (0x15,0x10) (0x23,0x13) (0x1F,0x20) (0x0C,0x25) (0x1F,0x1B) (0x15,0x16) (0x25,0x0B) (0x23,0x23), by Rand() & 7 in Area29_PickFieldObject 0x4037B0."
+
+[[data]]
+pc = 0x5EE268
+name = "Area29_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 16 12 12 8 8 4 2 2 (sum 64): the chance of each of the eight field objects Area29_PickFieldObject 0x4037B0 keeps, against Rand() & 0x3F."
+
+[[data]]
+pc = 0x653EC8
+name = "EffectKind06_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: jumped through by EffectKind06_Run 0x469BB0 by +1, unchecked: EffectKind06_Start 0x469BD0, _Tick 0x469CB0, _End 0x469DB0. EffectKind06_Anims follows."
+
+[[data]]
+pc = 0x653ED4
+name = "EffectKind06_Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 0 0 2 1 3 4 0 0 - EffectKind06_Start's animation by the variant +6 (six variants, EffectKind06_Ticks' count)."
+
+[[data]]
+pc = 0x653EDC
+name = "EffectKind06_Ticks"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-25: jumped through by EffectKind06_Tick 0x469CB0 by the variant +6, unchecked: EffectKind06_Blink 0x469CD0 for 0, 1, 2, 4, 0x469D40 for 3, 0x469D10 for 5. The next dwords (0x653EF4..) are a second kind's state and tick tables sharing these handlers."
+
+[[data]]
+pc = 0x65406C
+name = "EffectKind18_States"
+ctype = "unsigned long"
+count = 160
+status = "hypothesis"
+evidence = "read 2026-09-25: jumped through by EffectKind18_Run 0x46D830 by +1, unchecked; EffectKind18_Start sets +1 from +0xB. Entries 0 EffectKind18_Start 0x46D850, 1 0x4FD2E0, 2 and 3 WorldMap_RecordHook10 0x462B80, 4 0x4FD470, 5 0x4FD7E0 ... 160 dwords from here point into .text before the first that does not (0x6542EC), so where this table ends is not established - the count is the upper bound, as Effect_KindHandlers'."
