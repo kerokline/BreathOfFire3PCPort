@@ -5,7 +5,7 @@
 //
 // Three kinds of transfer are not calls to a named function:
 //   - the eight dispatch stubs `jmp [table + 4 * state]` through the .data
-//     tables named in symbols.toml (BattleRoundEnd_Steps .. BattleEnd_ResultPages);
+//     tables named in symbols.toml (BattleRoundEnd_Steps .. BattleResult_ExpSteps);
 //     ours reads the same table, and the fuzz swaps the table entries for
 //     recorders;
 //   - two steps switch on a state through a jump table of their own

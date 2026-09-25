@@ -420,7 +420,7 @@ extern "C" void __cdecl BattleEnd_ResultStep() {
     [[clang::musttail]] return Entry(at::kEndResultSteps, B(at::kState3))();
 }
 
-// original 0x431920: entry (dword 0x904AA4 & 0xFF) of BattleEnd_ResultPages
+// original 0x431920: entry (dword 0x904AA4 & 0xFF) of BattleResult_ExpSteps
 // (0x64AFAC: group CD's 0x431940, 0x431A20, 0x431A90, 0x431AB0, 0x431B30).
 extern "C" void __cdecl BattleEnd_ResultPage() {
     [[clang::musttail]] return Entry(at::kEndResultPages, B(at::kState4))();
