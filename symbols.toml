@@ -13493,3 +13493,108 @@ params = "unsigned step"
 impl = "src/game/inventory_ops.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x534880..0x534911 (0x92 bytes), cdecl, no calls. Sprite_ShadeRaise mirror: each of Sprite_Current + 0x5D..+0x5F not 0x80 becomes s8 byte - s8 step as a 16-bit difference, 0x80 below -128, else its low byte; al 1 when all three are 0x80. Three call sites (0x403922, 0x525742, 0x5328DD). PSX FUN_801C3998 term for term. Combat route: 24 calls."
+
+# --- Group CK of the eighth round (2026-09-25, docs/battle_odds.md): the banner
+# pool's two kind handlers, two effect handlers and six effect-object states,
+# every one pointer-reached ---
+
+[[data]]
+pc = 0x64E73C
+name = "Effect_Handlers"
+ctype = "unsigned long"
+count = 130
+status = "evidence"
+evidence = "disasm 2026-09-25: Effect_ApplyResult (0x44B9F0) calls [0x64E73C + 4 x i] at 0x44BAF8 / 0x44BB23, i from 0x64E540[ability] (kind 4) or 0x64E72C[category][item]; 130 entries (docs/battle_damage.md). Slot 8 (0x64E75C) is Effect_Heal20 0x44C140, slot 31 (0x64E7B8) Effect_HalfAttack 0x44C990 - the only places either address is stored (a scan of the image for the dwords)."
+
+[[func]]
+pc = 0x44A740
+name = "BattleBanner_TickKind1"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x44A740..0x44A7AC (0x6D bytes), one call (0x44A830 BattleBanner_NoneOfKind at +0x4C), every jump internal. Reached only as entry 1 of the table BattleBanner_Dispatch builds on its stack (immediate at 0x44A5D4, call [esp + ecx*4 + 0xC] at 0x44A625, no argument, eax dropped). On *0x93B8C0: word +8 of 0xFF skips to the store; else 0x904AE9 |= +1, word +8 decremented; the pointer re-read; not 0: 0x8031FA (window record 4 +0xA) = DamageScratch; 0: +0 = 0, 0x904AE9 &= ~(+1 of the re-read pointer), NoneOfKind(1), al set: 0x8031F3 (record 4 +3) = 0. eax the entry or NoneOfKind's. Combat route: reached (round 8 first-call trace)."
+
+[[func]]
+pc = 0x44A7B0
+name = "BattleBanner_TickKind2"
+psx = 0x801DE71C
+psx_overlay = "BATTLE.EMI#3"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x44A7B0..0x44A807 (0x58 bytes), one call (0x44A830 at +0x37), every jump internal. Entry 2 of BattleBanner_Dispatch's stack table (immediate at 0x44A5DC). 0x904AE9 |= +1 first; word +8 not 0xFF: decremented through cx, pointer re-read; word +8 0: +0 = 0, NoneOfKind(4), al set: 0x803163 (window record 0 +3) = 2; else 0x80316A (record 0 +0xA) = DamageScratch. The kind is never cleared from 0x904AE9. PSX twin as paired in docs/battle_misc.md 1.1. Combat route: reached."
+
+[[func]]
+pc = 0x44C140
+name = "Effect_Heal20"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x44C140..0x44C14B (0xC bytes), no calls: word +4 of *0x904B60 (the result's HP delta) = 0xFFEC (-20, a heal: positive is damage in Effect_ApplyResult). eax the record pointer. Effect_Handlers slot 8, called by Effect_ApplyResult with no argument. Combat route: reached."
+
+[[func]]
+pc = 0x44C990
+name = "Effect_HalfAttack"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x44C990..0x44C9B7 (0x28 bytes), one call (0x445CF0 Battle_CalcDamage at +0x12): Battle_CalcDamage(byte 0x904B34, byte 0x904B54, 0xFFFF), both bytes pushed in eax / ecx with the entry's upper bits (the callee masks); sar ax, 1 and the word stored at *0x904B60 + 4, the pointer read after the call. eax the callee's with its low word halved. Effect_Handlers slot 31. Combat route: reached."
+
+[[func]]
+pc = 0x4AEE90
+name = "BattleFx_FreeTask"
+psx = 0x800C2120
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4AEE90..0x4AEE94 (5 bytes): jmp 0x4351F0 BattleTask_FreeCurrent, then nop padding to 0x4AEE9F. Stored as an immediate in 31 call tables built on the stack (0x43490C, 0x434BBC, 0x434D9C, 0x434F6C, 0x43EBC2, .. 0x4EE4B2; each followed by call [esp + eax*4]) and once in .data (0x64D474). PSX twin by the catalogue's table anchor. Combat route: reached."
+
+[[func]]
+pc = 0x4B1E70
+name = "BattleFx_TintActor"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4B1E70..0x4B1EC3 (0x54 bytes), two calls (0x454DC0 Sprite_ReleaseTint at +0x21, 0x454CC0 Sprite_SetTint at +0x2F), every jump internal. Sprite_Current +9 decremented; at 0: ReleaseTint(*0x904B4C, read at entry) then SetTint(same, 0, 0, 0, 1), al to +0xA, +9 = 8, +1 incremented, Sprite_Current re-read for each store. eax Sprite_Current. In 7 stack tables (0x4B1CC7, 0x4B8D8D, 0x4B994D, 0x4BA47D, 0x4C0207, 0x4EE6DD, 0x4F068D), each call [esp + eax*4 (+0xC)], no argument. The name is what it does to the actor's object; which effects use it is unread. Combat route: reached."
+
+[[func]]
+pc = 0x4B1ED0
+name = "BattleFx_Brighten"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4B1ED0..0x4B1F34 (0x65 bytes), no calls: bytes 0x7E0702 / 0x7E0703 / 0x7E0704 + 12 x (Sprite_Current +0xA, re-read each time, unbounded) incremented - MoveScript_TintRecords +2..+4, the colour; +9 decremented and at 0 +1 incremented. Sprite_Current read once, and again for the test. eax Sprite_Current. In 11 stack tables (0x4B1CD2, 0x4B8D95, 0x4B9955, 0x4BA485, 0x4BCFD6, 0x4C0212, 0x4C2812, 0x4CB8BA, 0x4EE6E5, 0x4EF642, 0x4F0695). Combat route: reached."
+
+[[func]]
+pc = 0x4ED5C0
+name = "BattleFx_SetSize"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4ED5C0..0x4ED5D6 (0x17 bytes), one call at +0 (0x4FC1F0 BattleActor_FxSize): al to Sprite_Current +9 (read after the call), +2 incremented (read again). eax Sprite_Current. In 7 stack tables (0x49C19F, 0x4A2DEC, 0x4A2F79, 0x4A3CAF, 0x4B583F, 0x4ED57F, 0x4EE48F). Combat route: reached."
+
+[[func]]
+pc = 0x4EE8A0
+name = "BattleFx_WaitStep4"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4EE8A0..0x4EE8B7 (0x18 bytes), no calls: Sprite_Current +0xB above 4 (unsigned): nothing; else +9 = 8 and +1 incremented (re-read). eax Sprite_Current. In 5 stack tables (0x4B8D9D, 0x4B995D, 0x4BA48D, 0x4EE6ED, 0x4F069D). Combat route: reached."
+
+[[func]]
+pc = 0x4F7350
+name = "BattleFx_Finish"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_odds.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4F7350..0x4F7377 (0x28 bytes), one call (0x4530D0 Battle_SetTargetFlag40 at +0x13) and a tail jmp (0x4351F0 BattleTask_FreeCurrent at +0x22): Sprite_Current +0xB not 0: ret, eax Sprite_Current; 0: SetTargetFlag40(byte 0x904B44, in ecx with the entry's upper bits - the callee masks), byte 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. In 47 stack tables (0x49C3E7 .. 0x4F9E06). Combat route: reached."
