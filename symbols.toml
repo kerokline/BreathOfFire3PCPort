@@ -5856,8 +5856,9 @@ name = "EventOp_Ex"
 psx = 0x8019715C
 ret = "void"
 params = "const unsigned char *op"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its first instructions, not taken over): EventScript_Op's handler for Ex (7 bytes); takes an effect slot from 0x589810 and fills Effect_Objects. Never reached by the attract cycle."
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (its first instructions); read whole 2026-09-25, 0x5898D0..0x58996E (0x9F bytes), cdecl, two calls: Effect_FindFree, none free (0xFF) nothing; else the object (index & 0xFF) << 7 of Effect_Objects: +0 = 1, +5 = op[1], u16 +0x36 = op[3], u16 +0x34 = op[2] ? 0x8000 : 0 (neg / sbb / and), u16 +0x3A = op[5], u16 +0x38 = op[4] ? 0x8000 : 0, u16 +0x3E = AreaMap_Elevation(dword +0x34, dword +0x38), +0xB = op[6]. One call site, EventScript_Op's table (0x579F4A). Worldmap route: 16 calls (docs/takeover-queue-round8.md, group DE)."
 
 
 # --- 2026-09-22 (third round), boundary callees registered before the groups
@@ -16300,3 +16301,195 @@ ctype = "unsigned char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: 5 4 5 4 4 0 0 0 - Sparkle_Spawn's launch delay step: a sparkle's +5 = this * (n >> 2) + 1."
+
+# --- 2026-09-25 (eighth round), group DE: field-side hidden functions (src/game/field_hidden.cpp)
+
+[[func]]
+pc = 0x51BA60
+name = "Member_ResumeUnlessHeld"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51BA60..0x51BA73 (0x14 bytes), cdecl, no calls: unless bit 10 of Field_ScriptFlags2 (test ah, 4 of the dword 0x905BA4), Sprite_Current +1 = 1. Pointer-reached only: Member_States 0x65F960 entry 3 (Field_MemberFrame's jmp). Worldmap route."
+
+[[func]]
+pc = 0x51BBD0
+name = "Member_EffectState"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51BBD0..0x51BCE4 (0x115 bytes), cdecl, five calls (four Sprite_ScriptTick tails, Effect_FindFree). By +2: 0 - unless ObjTrio +0x137 (byte 0x802E77) is 8, +1 = 1 and +2 = 0; 1 - +0xB = Effect_FindFree; 0xFF: +2 = 0; else the object (+0xB << 7 of Effect_Objects, +0xB re-read for each store) +0 = 1, +5 = 6, +6 = 1, dword +0xC = 0, dword +0x10 = u8 MoveScript_EffectArg[Field_State +0x89], u16 +0x2E / +0x30 the member's, +2 = 2; 2 - +2 = 0 once the object's +0 is 0; above 2 nothing. Sprite_ScriptTick last in every case (its eax left; Field_MembersFrame ignores it). Pointer-reached only: Member_States entry 7. Worldmap route."
+
+[[func]]
+pc = 0x51DA30
+name = "PartyAction_Finish"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51DA30..0x51DA95 (0x66 bytes), cdecl, four calls. By +0xB: 0 - Sprite_ScriptTickOnce, al 0: return; 1 - Sprite_ScriptTickOnce, al 0: return, else Sprite_SetAnimation(+8), +0xB = 2, return; 2.. - Sprite_ScriptTick, then return while Field_Request is set. Else +0x2B = 0 and Field_State +0x137 = 0. Pointer-reached only: 18 .data dwords hold it (a scan of the image, 2026-09-25): 0x65F9C8 0x65FA20 0x65FA7C 0x65FAF4 0x65FB50 0x65FBC8 0x65FC38 0x65FCD4 0x65FD30 0x65FDA8 0x65FDEC 0x65FE44 0x65FEF0 0x65FF60 0x65FF9C 0x66002C 0x660074 0x6600EC - entry 2 of the party sets' state tables (PartyAction0/1/2/5_Form0States among them). Worldmap route."
+
+[[func]]
+pc = 0x51E910
+name = "PartyAction5_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51E910..0x51E921 (0x12 bytes): jmp [0x65FBC0 + Sprite_Current +2 * 4], the byte unchecked (PartyAction5_Form0States, 3 entries). Pointer-reached only: PartyAction5_Forms 0x65FC18 entry 0. Worldmap route."
+
+[[func]]
+pc = 0x51E930
+name = "PartyAction5_Form0Begin"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51E930..0x51EAE0 (0x1B1 bytes), cdecl, ten calls. Even +8: (+8 - 1) & 7, then (+2) & 7 when 0x51C390 answers 0, then (-2) & 7 when it answers 0 again. d = +8 unmasked: MapView_SlopeAt(+0x34 + Field_DirectionSteps[d].x, +0x38 + [d].z, d in bl, upper ebx the caller's). Scratch 0x903850 set and s16 result > 0x40: Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46, cdq / sub / sar), +2 += 1. Else +0x2B = 1; for directions 3 and 5 the slope one step that way, steep: MapView_GroundAt there, and +0x2B = 0 when s16 +0x3E < s16 ground; Sound_PlayEffect(u16 +0x2C + 0x100); Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42); +0xA = 5. Then +0xB = 0, +2 += 1. Pointer-reached only: PartyAction5_Form0States entry 0. Worldmap route."
+
+[[func]]
+pc = 0x51EAF0
+name = "PartyAction5_Form0Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51EAF0..0x51EBCA (0xDB bytes), cdecl, five calls, 0x10 bytes of locals. +0xA -= 1; at 0: the point (+0x34 + 2 * steps[+8].x, +0x38 + 2 * steps[+8].z), Sprite_ObjectAt(point, 0): not 0xFF, signed below 0x1E byte 0x7DEF00 + i * 0xA4 |= 1 (Sprite_Objects +0x80), else 0x802080 + (i - 0x1E) * 0xA4 (Sprite_ObjectsExtra); Field_CellPickup(the point's high words, read from its locals at +0xA / +2, so the dwords' upper halves are uninitialised stack), none: (x + 1, z) when the x's low word is non-zero, then (x, z + 1) when z's is; +2 += 1. Sprite_ScriptTickOnce every call. Pointer-reached only: PartyAction5_Form0States entry 1. Worldmap route."
+
+[[func]]
+pc = 0x51EBD0
+name = "Field_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51EBD0..0x51ECEE (0x11F bytes), cdecl, fourteen calls. AreaMap_ByteAt(x, z): 0xF2 - Effect_FindFree not 0xFF: 0x524870(0, x, z); Rand & 0xF at least 0xD: amount 2 (5 at 0xF), times 10 (imul cl) when Field_InputFlags & 6 and Rand & 3 is 0, stored in the z argument's slot; 0x5307C0(amount), 0x524870(1, x, z); +0xB = 1. 0xF8 - 0x524870(0, x, z); Item_NamePtr(0, 0x56)'s 16 bytes to Text_Records; Inventory_Add(0, 0x56, 1, and a pushed 0): al set, Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3); Field_Request = 2; +0xB = 1. Both: 0x5728D0(x, z), answer 1. Else 0. Callers PartyAction5_Form0Resolve (0x51EB7F, 0x51EB95, 0x51EBA9). Worldmap route: 3 calls."
+
+[[func]]
+pc = 0x51F1B0
+name = "PartyAction5_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x51F1B0..0x51F1C2 (0x13 bytes): jmp [0x65FC18 + u16 Sprite_Current +0x2C * 4], unchecked (PartyAction5_Forms, 3 entries). Pointer-reached only: entry 5 of the party-set action table 0x6609D0, called by 0x52FB60 (group DC's) by 0x90412C & 0x7F. The sibling dispatchers 0x51C760 / 0x51CC20 / 0x51D730 (entries 0..2) have the same shape. Worldmap route."
+
+[[func]]
+pc = 0x589110
+name = "Sprite_PoseFromSet"
+ret = "void"
+params = "unsigned animation, unsigned char *set, unsigned size"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589110..0x589154 (0x45 bytes), cdecl, three calls: Sprite_CopyFrames(animation, set, size); +0x4B equal to the animation's low byte: Sprite_ScriptStart(u16 +0x58 - 2); else +0x4B = it and Sprite_ScriptStart(0). eax is Sprite_ScriptStart's (BattleObj_PickPose passes it on). 22 call sites (0x43C3BB..0x44135F, the battle object poses with 0x8C5D80 / 0x1800). Combat route: 3 calls."
+
+[[func]]
+pc = 0x589160
+name = "Sprite_CopyFrames"
+ret = "void"
+params = "unsigned frame, unsigned char *buffer, unsigned size"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x589160..0x5891B8 (0x59 bytes), cdecl, one call: Sprite_SetFrameQueueUpload(frame); n = size & 0xFFFF; to = buffer + u8 +5 * n (imul); n bytes from [Sprite_Current +0x50] to it, Sprite_Current and its +0x50 re-read for every byte; +0x50 = to. eax left the sprite (0 when n is 0); both callers overwrite it. Callers Sprite_PoseFromSet, Sprite_AnimFromSet. Combat route: 12 calls."
+
+[[func]]
+pc = 0x5891C0
+name = "Sprite_AnimFromSet"
+ret = "void"
+params = "unsigned animation, unsigned position, unsigned char *buffer, unsigned size"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5891C0..0x5891EC (0x2D bytes), cdecl, two calls: Sprite_CopyFrames(animation, buffer, size), +0x4B = the animation's low byte, Sprite_ScriptStart(position, the dword as given). Callers 0x4316C8 and inventory_ops' 0x5326B0 (0x532726, 0x532766, 0x532795, with 0x8C5D80 / 0xA00). Combat route: 9 calls."
+
+[[func]]
+pc = 0x591F30
+name = "Encounter_Place"
+ret = "unsigned char"
+params = "unsigned facing, unsigned keep_centre"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x591F30..0x5920DA (0x1AB bytes), cdecl, thirteen calls, every jump internal. Answer byte (a local) = 1; Sprite_Current = 0x6BDFF0; 0x6BE070 = facing's low byte, or (0x6BE070 + 1) & 3 from 4 up; keep_centre's low byte 0: 0x903780 = Field_Kind2X & 0xFFFF8000, 0x903784 = Field_Kind2Z & 0xFFFF8000. Encounter_PickRow & 0xFF, row 0x8C5580 + 9 * it into 0x6BE088, Encounter_FillSlots(row) into 0x6BE084; 0: answer 0. 0x904AAC = 0x6BE070; answer 0 unless Encounter_PlaceParty, Encounter_PlaceEnemies, Encounter_EnemiesReachable (short-circuit). Gte_PushMatrix; Encounter_AimCamera(0x6BE070 in cl); for m below al of Party_Count(1) (asked again after each): Encounter_OnScreen(0x7E06E0 + 8m, +4, the facing slot with its low byte = (0x904065[m] is 2 or 6), 0x20), 0 -> Gte_PopMatrix, answer 0; each active slot of 0x939F00 (12 bytes) not Encounter_OnScreen(+4, +8, kind 0x8C55C8 + 0x8C * +1 +0x86, +0x87): +0 = 0, 0x6BE071 -= 1; then 0x6BE071 read, Gte_PopMatrix, 0 -> answer 0. The member counter is kept in keep_centre's slot. PSX 801C70D8 (round-eight catalogue). One call site, Field_EncounterDue 0x53013C. Worldmap and combat routes: 83 calls."
+
+[[func]]
+pc = 0x592570
+name = "Encounter_PickRow"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x592570..0x59259A (0x2B bytes), cdecl, one call: r = (Rand & 0xF) + 1 as a byte; a byte sum of Encounter_Rows +8 (0x8C5588, 9 bytes a row) row by row, the first row whose sum is at least r (jbe); none of 8: 0. PSX 801C7A74 (round-eight catalogue). One call site, Encounter_Place. 83 calls."
+
+[[func]]
+pc = 0x5925A0
+name = "Encounter_FillSlots"
+ret = "unsigned char"
+params = "const unsigned char *row"
+impl = "src/game/field_hidden.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5925A0..0x5925FC (0x5D bytes), cdecl, one call: for the eight 12-byte slots at 0x939F00, +1 = row[k]; 0xFF: +0 = 0; else (Rand & 0xF) + 1 (int) against Encounter_SlotChance[k] read after it: above, +0 = 0; else +0 = 1 and the count (a byte in the pushed ecx slot) one on. Answers the count. PSX 801C7AE4 (round-eight catalogue). One call site, Encounter_Place. 83 calls."
+
+[[data]]
+pc = 0x65F960
+name = "Member_States"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-25: 0x51AC70 (Member_Start) 0x51AD40 (Member_Control) 0x525370 0x51BA60 (Member_ResumeUnlessHeld) 0x51BA80 0x437CC0 0x51BAA0 0x51BBD0 (Member_EffectState) 0x51BCF0, then five zero dwords; jumped through by Field_MemberFrame 0x51AC50 as [0x65F960 + Sprite_Current +1 * 4], the byte unchecked."
+
+[[data]]
+pc = 0x65F9C0
+name = "PartyAction0_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x51BFD0 0x51C190 0x51DA30 (PartyAction_Finish); jumped through by 0x51BFB0 as [0x65F9C0 + Sprite_Current +2 * 4], unchecked; 0x51BFB0 is entry 0 of 0x65FA00, which 0x51C760 (entry 0 of 0x6609D0) jumps through by u16 +0x2C."
+
+[[data]]
+pc = 0x65FA18
+name = "PartyAction1_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x51C7C0 0x51C980 0x51DA30 (PartyAction_Finish); jumped through by 0x51C7A0 by +2, unchecked; 0x51C7A0 is entry 0 of 0x65FA5C, which 0x51CC20 (entry 1 of 0x6609D0) jumps through by u16 +0x2C."
+
+[[data]]
+pc = 0x65FA74
+name = "PartyAction2_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x51CD10 0x51CED0 0x51DA30 (PartyAction_Finish); jumped through by 0x51CCF0 by +2, unchecked; 0x51CCF0 is entry 0 of 0x65FAD4, which 0x51D730 (entry 2 of 0x6609D0) jumps through by u16 +0x2C."
+
+[[data]]
+pc = 0x65FBC0
+name = "PartyAction5_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x51E930 (PartyAction5_Form0Begin) 0x51EAF0 (PartyAction5_Form0Resolve) 0x51DA30 (PartyAction_Finish); jumped through by PartyAction5_Form0 0x51E910 by +2, unchecked. The next dword starts another table (0x520840..., 0x65FBCC is jumped through by 0x51ECF0)."
+
+[[data]]
+pc = 0x65FC18
+name = "PartyAction5_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x51E910 (PartyAction5_Form0) 0x51ED10 0x5226D0; jumped through by PartyAction5_ByForm 0x51F1B0 by u16 +0x2C, unchecked. 0x65FC24 is the next table (0x51F1DB's)."
+
+[[data]]
+pc = 0x669CB0
+name = "Encounter_SlotChance"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 16 16 16 10 8 6 4 2 - Encounter_FillSlots' bound for (Rand & 0xF) + 1 per enemy slot, so slots 0..2 are always filled when their kind is not 0xFF and slot 7 two times in sixteen."
+
+[[data]]
+pc = 0x8C5580
+name = "Encounter_Rows"
+ctype = "unsigned char"
+count = 0x48
+status = "evidence"
+evidence = "disasm 2026-09-25: 8 rows of 9 bytes - bytes 0..7 the eight slots' enemy kinds (0xFF none, Encounter_FillSlots), byte 8 the row's weight (Encounter_PickRow sums 0x8C5588 + 9 * row); Encounter_Place keeps the chosen row's address in 0x6BE088. The enemy kinds' 0x8C-byte records follow at 0x8C55C8. Loaded with the area (bss, not the exe's)."
