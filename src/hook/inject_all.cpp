@@ -117,6 +117,7 @@
 #include "game/mode_states.h"
 #include "game/shop_states2.h"
 #include "game/map_field_objects.h"
+#include "game/magic_steal.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -302,6 +303,10 @@ void InjectAll() {
                                 // dispatch blocks swapped for recorders: order does not matter
     MapFieldObjects_Inject();   // round 8 group DD: every call of its clones re-aimed at a recorder and its jump
                                 // table relocated in the copy; no module patches bytes inside its sixteen: order
+                                // does not matter
+    MagicSteal_Inject();        // round 9 group SH (the spell harness): its clones' calls and stack-table immediates
+                                // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
+                                // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
     InjectReport();
 }
