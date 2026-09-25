@@ -41,13 +41,15 @@ unsigned char* ActionOf(unsigned a) { return a < 3 ? PartyObj(a) + 0x124 : Enemy
 constexpr unsigned kLog = 96;
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
-unsigned g_log_n, g_seed;
+unsigned g_log_n, g_seed, g_hash_n;
 
 constexpr unsigned kText = 0x200;
 unsigned char g_text[kText];   // what Msg_SystemPtr and Item_NamePtr answer into
 
+// A new value each call - both passes make the same calls in the same order
+// while they agree, so the sequence is the same on both sides.
 std::uint32_t Hash() {
-    std::uint32_t h = (g_seed + g_log_n * 0x2545F491u) * 0x9E3779B1u;
+    std::uint32_t h = (g_seed + g_log_n * 0x2545F491u + ++g_hash_n * 0x68E31DA4u) * 0x9E3779B1u;
     h ^= h >> 15;
     h *= 0x85EBCA6Bu;
     h ^= h >> 13;
@@ -128,7 +130,12 @@ void Disturb() {
 // --- the stand-ins ---------------------------------------------------------
 
 // The step tables' entries.
-template <unsigned N> void __cdecl StubStep() { Record(N, At(at::kSub)[0], At(at::kSub2)[0]); Disturb(); }
+template <unsigned N> void __cdecl StubStep() {
+    Record(N, At(at::kSub)[0], At(at::kSub2)[0]);
+    // Battle_ActionPhase reads both input words after the step
+    if (Hash() % 3 == 0) SetWord(At(at::kInputHeld), Word(At(at::kInputHeld)) ^ (1u << (Hash() % 16)));
+    Disturb();
+}
 void __cdecl StubHook(int n) {
     Record(40, static_cast<std::uint32_t>(n));
     // BattleAction_EnterKind reads the kind after the hook, BattleAction_End
@@ -142,13 +149,15 @@ void __cdecl StubHook(int n) {
 // The pick moves the target byte half the time - to a side or past 10 too,
 // which only Battle_BeginAction reads, and it bounds them.
 void __cdecl StubMemberAuto(unsigned m) {
-    Record(41, m & 0xFF);
+    Record(41, m & 0xFF, At(at::kActor)[0]);
+    if (Hash() % 2) At(at::kActor)[0] = static_cast<unsigned char>(Hash());
     static const unsigned char kTargets[] = {0, 1, 2, 3, 7, 10, 11, 0x40, 0x80, 0xC0, 0xFF};
     if (Hash() % 2) At(at::kTarget)[0] = kTargets[(Hash() >> 8) % sizeof kTargets];
     Disturb();
 }
 void __cdecl StubEnemyPick(unsigned e) {
-    Record(42, e & 0xFF);
+    Record(42, e & 0xFF, At(at::kActor)[0]);
+    if (Hash() % 2) At(at::kActor)[0] = static_cast<unsigned char>(Hash());
     static const unsigned char kTargets[] = {0, 2, 3, 9, 10, 11, 0x40, 0xC0};
     if (Hash() % 2) At(at::kTarget)[0] = kTargets[(Hash() >> 8) % sizeof kTargets];
     if (Hash() % 3 == 0) At(at::kQueueAt)[0] = static_cast<unsigned char>((Hash() >> 5) % 0x17);
@@ -158,6 +167,8 @@ void __cdecl StubClearActing() {
     Record(43);
     if (Hash() % 2) At(at::kSub)[0] = static_cast<unsigned char>(Hash() % 2 ? 2 : (Hash() >> 7) % 6);
     if (Hash() % 3 == 0) At(at::kActor)[0] = static_cast<unsigned char>(Actor(Hash() >> 9));
+    // BattleAction_End tests bit 6 after it
+    if (Hash() % 2) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] ^ 0x40);
     Disturb();
 }
 void __cdecl StubOpenWindow() { Record(44); Disturb(); }
@@ -195,6 +206,9 @@ char* __cdecl StubCopyN(char* dst, const char* src, unsigned n) {
     Record(50, Id(dst), Id(src), n & 0xFF);
     const std::uint32_t h = Hash();
     std::memcpy(dst + (h % 8), &h, sizeof h);
+    // the ability check re-reads the id and the actor after the name
+    if (Hash() % 2) SetWord(At(at::kAbility), ActionId(Hash()));
+    if (Hash() % 3 == 0) At(at::kActor)[0] = static_cast<unsigned char>(Actor(Hash()));
     Disturb();
     return dst;
 }
@@ -204,6 +218,8 @@ unsigned char __cdecl StubApCost(unsigned m, unsigned id, unsigned battle) {
     Record(51, m & 0xFF, id & 0xFF, battle & 0xFF);
     const unsigned a = At(at::kActor)[0];
     const unsigned ap = a < 11 ? Word(ActorObj(a) + (a < 3 ? 0x9A : 0xA6)) : 0;
+    // the AP was read before the call: move it
+    if (a < 11 && Hash() % 2) SetWord(ActorObj(a) + (a < 3 ? 0x9A : 0xA6), Hash() % 0x120);
     Disturb();
     const std::uint32_t h = Hash();
     const unsigned edge = (h % 3 == 0) ? ap : (h % 3 == 1) ? ap + 1 : ap - 1;
@@ -218,12 +234,21 @@ unsigned char __cdecl StubPickTarget() {
     const std::uint32_t h = Hash();
     if (h % 2) SetWord(At(at::kAbility), ActionId(h >> 3));
     Disturb();
-    return static_cast<unsigned char>(Actor(Hash() >> 4));
+    return static_cast<unsigned char>(Hash() % 4 == 0 ? 10 : Actor(Hash() >> 4));
 }
 void __cdecl StubLoadAbility(unsigned a) { Record(54, a & 0xFF); Disturb(); }
-int __cdecl StubLoadDone() { Record(55); Disturb(); const std::uint32_t h = Hash(); return h % 2 ? 0 : static_cast<int>(h | 0x100); }
+int __cdecl StubLoadDone() {
+    Record(55);
+    if (Hash() % 2) At(at::kEventBattle)[0] = static_cast<unsigned char>(Hash() % 2);
+    Disturb();
+    const std::uint32_t h = Hash();
+    return h % 2 ? 0 : static_cast<int>(h | 0x100);
+}
 void __cdecl StubStartAbility(unsigned a, unsigned owner) { Record(56, a & 0xFF, owner); Disturb(); }
-unsigned char __cdecl StubItemSuits() { Record(57); Disturb(); return static_cast<unsigned char>(Hash() % 3 == 0 ? Hash() >> 8 : 0); }
+unsigned char __cdecl StubItemSuits() {
+    Record(57);
+    if (Hash() % 2) SetPtr(at::kActor + at::kBAction, ActionOf(Actor(Hash())));
+    Disturb(); return static_cast<unsigned char>(Hash() % 3 == 0 ? Hash() >> 8 : 0); }
 void __cdecl StubReturnItem(unsigned a) {
     Record(58, a & 0xFF);
     if (Hash() % 2) At(at::kActor)[0] = static_cast<unsigned char>(Actor(Hash() >> 8));
@@ -243,7 +268,7 @@ unsigned char __cdecl StubAnyF0() {
     return static_cast<unsigned char>(Hash() % 3 == 0 ? Hash() >> 8 : 0);
 }
 void __cdecl StubLoadDat(int file) { Record(63, static_cast<std::uint32_t>(file)); Disturb(); }
-void __cdecl StubClutRow(unsigned row) { Record(64, row & 0xFF); Disturb(); }
+void __cdecl StubClutRow(unsigned row) { Record(64, row & 0xFF, At(at::kStep)[0], At(at::kSub)[0]); Disturb(); }
 unsigned char __cdecl StubSettle() {
     Record(65);
     if (Hash() % 2) At(at::kSub)[0] = static_cast<unsigned char>(Hash() >> 9);
@@ -419,6 +444,7 @@ void Apply(const State& s) {
     std::memcpy(g_text, s.text, sizeof g_text);
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
+    g_hash_n = 0;
 }
 unsigned Byte(const State& s, std::uint32_t address) {
     unsigned at = 0;
