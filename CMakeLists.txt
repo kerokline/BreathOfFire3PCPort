@@ -224,7 +224,51 @@ add_library(bof3x SHARED
   src/game/battle_misc.cpp
   src/game/battle_misc_fuzz.cpp
   src/game/battle_items.cpp
-  src/game/battle_items_fuzz.cpp)
+  src/game/battle_items_fuzz.cpp
+  src/game/battle_odds.cpp
+  src/game/battle_odds_fuzz.cpp
+  src/game/window_kinds.cpp
+  src/game/window_kinds_fuzz.cpp
+  src/game/battle_fx_tasks.cpp
+  src/game/battle_fx_tasks_fuzz.cpp
+  src/game/battle_result.cpp
+  src/game/battle_result_fuzz.cpp
+  src/game/battle_win_states.cpp
+  src/game/battle_win_states_fuzz.cpp
+  src/game/enemy_ai_ops.cpp
+  src/game/enemy_ai_ops_fuzz.cpp
+  src/game/battle_obj_states.cpp
+  src/game/battle_obj_states_fuzz.cpp
+  src/game/battle_menu_states.cpp
+  src/game/battle_menu_states_fuzz.cpp
+  src/game/battle_actions.cpp
+  src/game/battle_actions_fuzz.cpp
+  src/game/battle_actor_copies.cpp
+  src/game/battle_actor_copies_fuzz.cpp
+  src/game/battle_phases.cpp
+  src/game/battle_phases_fuzz.cpp
+  src/game/battle_turn_steps.cpp
+  src/game/battle_turn_steps_fuzz.cpp
+  src/game/magic_fx_reached.cpp
+  src/game/magic_fx_reached_fuzz.cpp
+  src/game/menu_draw_helpers.cpp
+  src/game/menu_draw_helpers_fuzz.cpp
+  src/game/menu_lists.cpp
+  src/game/menu_lists_fuzz.cpp
+  src/game/shop_states.cpp
+  src/game/shop_states_fuzz.cpp
+  src/game/worldmap_area.cpp
+  src/game/worldmap_area_fuzz.cpp
+  src/game/field_hidden.cpp
+  src/game/field_hidden_fuzz.cpp
+  src/game/event_leader.cpp
+  src/game/event_leader_fuzz.cpp
+  src/game/mode_states.cpp
+  src/game/mode_states_fuzz.cpp
+  src/game/shop_states2.cpp
+  src/game/shop_states2_fuzz.cpp
+  src/game/map_field_objects.cpp
+  src/game/map_field_objects_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

@@ -42,10 +42,13 @@
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/battle_actions.h"
 #include "game/battle_flow.h"
+#include "game/enemy_ai_ops.h"
 #include "game/battle_misc.h"
 #include "game/battle_sprites.h"
 #include "game/inventory_ops.h"
+#include "game/battle_phases.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -79,6 +82,7 @@
 #include "game/tex_cells.h"
 #include "game/event_objs.h"
 #include "game/char_stats.h"
+#include "game/battle_result.h"
 #include "game/member_sprites.h"
 #include "game/sprt_draw.h"
 #include "game/field_misc.h"
@@ -95,6 +99,24 @@
 #include "game/battle_setup.h"
 #include "game/battle_damage.h"
 #include "game/battle_items.h"
+#include "game/battle_odds.h"
+#include "game/window_kinds.h"
+#include "game/battle_fx_tasks.h"
+#include "game/battle_win_states.h"
+#include "game/battle_obj_states.h"
+#include "game/battle_menu_states.h"
+#include "game/battle_actor_copies.h"
+#include "game/battle_turn_steps.h"
+#include "game/magic_fx_reached.h"
+#include "game/menu_draw_helpers.h"
+#include "game/menu_lists.h"
+#include "game/shop_states.h"
+#include "game/worldmap_area.h"
+#include "game/field_hidden.h"
+#include "game/event_leader.h"
+#include "game/mode_states.h"
+#include "game/shop_states2.h"
+#include "game/map_field_objects.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -229,6 +251,58 @@ void InjectAll() {
     BattleSprites_Inject();     // group BG, round seven: every call of its clones re-aimed at a recorder,
                                 // three jump tables relocated in the copies, the boss table swapped: order does not matter
     InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    BattleOdds_Inject();        // group CK, round eight: every call and tail jmp of its clones re-aimed at a
+                                // recorder: order does not matter
+    WindowKinds_Inject();       // round 8 group CM: every call of its clones re-aimed at a recorder and its three
+                                // stack tables re-aimed in the copies: order does not matter (it clones its twelve
+                                // before injecting them, and no module patches bytes inside them)
+    BattleFxTasks_Inject();     // group CE, round eight: every call of its clones re-aimed at a recorder, six stack
+                                // tables re-aimed, a jump table relocated and Magic_Rows swapped: order does not matter
+    BattleResult_Inject();      // round 8 group CD: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed in the copies and two .data step tables swapped:
+                                // order does not matter
+    BattleWinStates_Inject();   // group CL (round 8): every call of its clones re-aimed at a recorder and its
+                                // seven stack tables' immediates re-aimed in the copies: order does not matter
+    EnemyAiOps_Inject();        // round 8 group CF: every call of its clones re-aimed at a recorder and its op
+                                // tables' entries swapped: order does not matter (it clones before its own Inject)
+    BattleObjStates_Inject();   // round 8 group CG: every call of its clones re-aimed at a recorder, its seven
+                                // table operands aimed at tables of recorders in the copies: order does not matter
+    BattleMenuStates_Inject();  // round 8 group CI: every call of its clones re-aimed at a recorder and the four
+                                // dispatch tables' entries swapped for recorders: order does not matter
+    BattleActions_Inject();     // round 8 group CB: every call of its clones re-aimed at a recorder, the seven
+                                // step tables' entries swapped in .data: order does not matter
+    BattleActorCopies_Inject(); // round 8 group CH: every call of its clones re-aimed at a recorder and its five
+                                // .data tables' entries swapped for recorders: order does not matter
+    BattlePhases_Inject();      // round 8 group CA: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed in the copies and its three .data tables swapped for
+                                // recorders: order does not matter (it clones only its own eighteen)
+    BattleTurnSteps_Inject();   // round 8 group CC: every call of its clones re-aimed at a recorder, two jump
+                                // tables relocated and eight .data dispatch tables swapped for recorders:
+                                // order does not matter
+    MagicFxReached_Inject();    // round 8 group CJ: every call of its clones re-aimed at a recorder, its five stack
+                                // tables re-aimed in the copies and three .data tables swapped: order does not matter
+    MenuDrawHelpers_Inject();   // round 8 group DI: every call of its clones re-aimed at a recorder and its eleven
+                                // .data dispatch tables swapped for recorders: order does not matter, except that it
+                                // runs after Widescreen_Inject, whose bound inside 0x59B440 ours reads back
+    MenuLists_Inject();         // round 8 group DH: every call of its clones re-aimed at a recorder and its eight
+                                // .data dispatch tables' entries swapped for recorders: order does not matter
+    ShopStates_Inject();        // round 8 group DF: every call of its clones re-aimed at a recorder and its five .data
+                                // dispatch tables' entries swapped for recorders: order does not matter
+    WorldmapArea_Inject();      // round 8 group DA: every call and tail jmp of its clones re-aimed at a recorder
+                                // and its seven .data dispatch tables swapped for recorders: order does not matter
+                                // (it clones its thirty before injecting them; WorldMap_Inject cloned 0x404160 earlier)
+    FieldHidden_Inject();       // round 8 group DE: every call of its clones re-aimed at a recorder and its two
+                                // .data tables' entries swapped for recorders: order does not matter
+    EventLeader_Inject();       // round 8 group DC: every call of its clones re-aimed at a recorder and its five
+                                // .data dispatch tables' entries swapped for recorders: order does not matter
+    ModeStates_Inject();        // round 8 group DB: every call of its clones re-aimed at a recorder, the system
+                                // choice's stack table re-aimed, three jump tables relocated and four .data
+                                // tables swapped for recorders: order does not matter
+    ShopStates2_Inject();       // round 8 group DG: every call of its clones re-aimed at a recorder and its two .data
+                                // dispatch blocks swapped for recorders: order does not matter
+    MapFieldObjects_Inject();   // round 8 group DD: every call of its clones re-aimed at a recorder and its jump
+                                // table relocated in the copy; no module patches bytes inside its sixteen: order
+                                // does not matter
     InjectReport();
 }
 

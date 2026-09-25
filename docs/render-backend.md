@@ -229,3 +229,16 @@ DIV-0048's speed runs did within seconds (`analysis/attract/x4.log`,
 Now the release keeps the dimensions, the sweep runs after the frame, and
 the guard fires only with neither live pixels nor a snapshot. Verified by
 the 4x and 1 ms attract runs completing (`period_8.3417.log`, `period_1.log`).
+
+Two holes the 2026-09-25 audit found by reading ([`new-code-audit.md`](new-code-audit.md)
+A1, A8), closed the same day:
+
+- **The slot.** A surface released before it was ever bound has no GPU
+  object, so its slot looked free to `MakeSurface`, which wiped it for the
+  next `CreateSurface` of the frame, and the snapshot was then drawn through
+  the new surface's size and format. A release that takes a snapshot now
+  marks the slot `snapshot_held`, which only `ResetFrame` clears.
+- **The key.** A snapshot now keeps the colour key it was taken under
+  (`TexVersion::color_key`), and `SetColorKey` counts as a write whether it
+  sets the key or clears it. Before, clearing did not mark the surface for
+  re-upload, and a key changed mid-frame re-keyed the draws already pending.

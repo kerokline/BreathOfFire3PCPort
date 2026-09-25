@@ -137,10 +137,16 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
         ExitProcess(code);
     }
 
-    // The thread's exit code is LoadLibraryW's return value: the module handle,
-    // or 0. A process ended by the DLL's own Fatal() also lands here, but with
-    // exit code 3 (Fatal's TerminateProcess code, src/hook/log.cpp), not 0 -
-    // so it passes this check; Fatal has already shown its own message box.
+    // A process ended by the DLL's own Fatal() during DllMain lands here too:
+    // Fatal has shown its own message box, so the launcher ends quietly with
+    // the game's exit code (3, Fatal's TerminateProcess code, src/hook/log.cpp)
+    // rather than resuming a dead process or showing a second box.
+    if (WaitForSingleObject(process, 0) == WAIT_OBJECT_0) {
+        DWORD code = 0;
+        GetExitCodeProcess(process, &code);
+        ExitProcess(code);
+    }
+    // The thread's exit code is LoadLibraryW's return value: the module handle, or 0.
     DWORD module = 0;
     GetExitCodeThread(thread, &module);
     CloseHandle(thread);

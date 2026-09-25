@@ -118,6 +118,11 @@ bool IsSurface(const void* p) {
         if (g_surfaces[i] == p) return true;
     return false;
 }
+// A Blt / BltFast / Load source that is one of ours but released: its pixels
+// are gone. DirectDraw's behaviour there is undefined, so it stops the game.
+void RequireLive(const Surface* s, const char* what) {
+    if (s->refs == 0) bof3::Fatal("render: %s from a released surface", what);
+}
 bool IsTexture(const void* p) {
     for (U i = 0; i < g_n_surfaces; ++i)
         if (TextureOf(g_surfaces[i]) == p) return true;
@@ -142,7 +147,7 @@ U Channel(U raw, U mask) {
     if (bits == 0) return 0;
     const U v = (raw & mask) >> shift;
     if (bits >= 8) return v >> (bits - 8);
-    return (v << (8 - bits)) | (v >> (bits - (8 - bits) > 0 ? (2 * bits - 8) : 0));
+    return (v << (8 - bits)) | (v >> (2 * bits > 8 ? 2 * bits - 8 : 0));
 }
 // A pixel as 32-bit A8R8G8B8, whatever the surface's format: alpha 255 unless
 // the surface has an alpha mask and the pixel's is clear.
@@ -255,6 +260,8 @@ TexVersion* NewVersion(Surface* s) {
     v->surface = s;
     v->pixels = nullptr;
     v->serial = g_frame.next_serial++;
+    v->color_key = 0;
+    v->has_color_key = false;
     return v;
 }
 
@@ -314,7 +321,13 @@ unsigned long __stdcall Surface_Release(void* self) {
     // present, after those draws have run (SweepReleased). The dimensions
     // and format stay: the snapshot is drawn through them
     // (docs/render-backend.md, "Released surfaces with pending draws").
-    if (s->version && s->pending_draws) BeforeWrite(s);
+    if (s->version && s->pending_draws) {
+        BeforeWrite(s);
+        // The snapshot is converted through this slot's dimensions, format
+        // and GPU object at the present, so MakeSurface must not hand the
+        // slot out again before then.
+        s->snapshot_held = true;
+    }
     Free(s->pixels);
     s->pixels = nullptr;
     s->refs = 0;
@@ -351,6 +364,7 @@ long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, 
     }
     auto* src = static_cast<Surface*>(src_surface);
     if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+    RequireLive(src, "a Blt");
     if (src->is_primary || src->is_back)
         bof3::Fatal("render: a Blt reads the %s surface back - not built (docs/render-backend.md)",
                     src->is_primary ? "primary" : "back");
@@ -368,6 +382,7 @@ long __stdcall Surface_BltFast(void* self, U x, U y, void* src_surface, const lo
     auto* dst = static_cast<Surface*>(self);
     auto* src = static_cast<Surface*>(src_surface);
     if (!src || !IsSurface(src)) return static_cast<long>(kInvalidParams);
+    RequireLive(src, "a BltFast");
     if (dst->is_primary || dst->is_back || src->is_primary || src->is_back)
         bof3::Fatal("render: BltFast touching the primary or back buffer - not built");
     long sr[4];
@@ -437,11 +452,14 @@ long __stdcall Surface_Unlock(void* self, const void*) {
 long __stdcall Surface_SetColorKey(void* self, U flags, const U* key) {
     auto* s = static_cast<Surface*>(self);
     if (flags != 8) return static_cast<long>(kUnsupported);   // DDCKEY_SRCBLT only
+    // The key is part of how the pixels upload, so setting or clearing one is a
+    // write: pending draws keep the key they were recorded with (a snapshot),
+    // and the GPU copy is remade.
+    BeforeWrite(s);
     if (!key) {
         s->has_color_key = false;
         return kDdOk;
     }
-    BeforeWrite(s);   // the key is part of how the pixels upload
     s->color_key = key[0];
     s->has_color_key = true;
     return kDdOk;
@@ -466,6 +484,7 @@ long __stdcall Texture_Load(void* self, void* from) {
     auto* dst = SurfaceOfTexture(self);
     if (!from || !IsTexture(from)) return static_cast<long>(kInvalidParams);
     auto* src = SurfaceOfTexture(from);
+    RequireLive(src, "a texture Load");
     long dr[4], sr[4];
     RectOf(nullptr, dst, dr);
     RectOf(nullptr, src, sr);
@@ -564,12 +583,15 @@ long __stdcall Device_SetRenderState(void*, U state, U value) {
     case kRsDither:
         break;   // no effect on pre-transformed, unlit, undithered output
     default: {
-        static U seen[16];
-        static U n_seen;
-        bool known = false;
-        for (U i = 0; i < n_seen; ++i) known |= seen[i] == state;
-        if (!known) {
-            if (n_seen < 16) seen[n_seen++] = state;
+        // One bit a state below 256 (Direct3D 6's are); any above share one,
+        // so no state is logged more than once.
+        static U seen[8];
+        static bool seen_high;
+        if (state >= 256) {
+            if (!seen_high) bof3::Log("render: SetRenderState(%u, %u) ignored (first above 255)", state, value);
+            seen_high = true;
+        } else if (!(seen[state / 32] & (1u << (state % 32)))) {
+            seen[state / 32] |= 1u << (state % 32);
             bof3::Log("render: SetRenderState(%u, %u) ignored (first time)", state, value);
         }
     }
@@ -647,8 +669,13 @@ long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, 
             out[i * 3 + 1] = in[b];
             out[i * 3 + 2] = in[d];
             if (c.state.flat) {
+                // A flat fan is not built: the game draws none - BOF3.exe's 21
+                // DrawPrimitive calls pass types 1, 3, 4 and 5, never 6
+                // (docs/new-code-audit.md C3, 2026-09-25) - and which vertex a
+                // D3D fan takes its flat colour from was never checked.
+                if (type == 6) bof3::Fatal("render: a flat-shaded triangle fan - not built (the game draws none)");
                 // Flat shading: the face takes the colour of its first vertex
-                // (for a strip, vertex i of triangle i; for a fan, the shared vertex 0).
+                // (for a strip, vertex i of triangle i).
                 for (U k = 1; k < 3; ++k) {
                     out[i * 3 + k].diffuse = out[i * 3].diffuse;
                     out[i * 3 + k].specular = out[i * 3].specular;
@@ -849,10 +876,13 @@ Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bo
     BuildTables();
     if (bpp != 16 && bpp != 32) bof3::Fatal("render: MakeSurface with %u bits a pixel", bpp);
     if (width == 0 || height == 0 || width > 4096 || height > 4096) return nullptr;
-    // Reuse a released slot whose GPU object is gone; else append.
+    // Reuse a released slot whose GPU object is gone and that no draw of this
+    // frame still needs (a released surface that was never bound has no GPU
+    // object yet, but its snapshot is drawn through it at the present); else append.
     Surface* s = nullptr;
     for (U i = 0; i < g_n_surfaces; ++i) {
-        if (g_surfaces[i]->refs == 0 && g_surfaces[i]->gpu == nullptr && g_surfaces[i]->pixels == nullptr) {
+        if (g_surfaces[i]->refs == 0 && g_surfaces[i]->gpu == nullptr && g_surfaces[i]->pixels == nullptr &&
+            !g_surfaces[i]->snapshot_held) {
             s = g_surfaces[i];
             break;
         }
@@ -924,6 +954,7 @@ void ResetFrame() {
     for (U i = 0; i < g_n_surfaces; ++i) {
         g_surfaces[i]->version = nullptr;
         g_surfaces[i]->pending_draws = 0;
+        g_surfaces[i]->snapshot_held = false;   // the frame that drew its snapshot is done
     }
     // The state's texture pointed into the arena.
     if (g_state.texture) g_state.texture = Use(g_state.texture->surface);
@@ -967,6 +998,8 @@ void BeforeWrite(Surface* s) {
     g_frame.arena_used += bytes;
     std::memcpy(copy, s->pixels, bytes);
     s->version->pixels = copy;
+    s->version->color_key = s->color_key;
+    s->version->has_color_key = s->has_color_key;
     s->version = nullptr;
     s->pending_draws = 0;
     // The device's bound texture moves to a fresh version, so later draws see the new pixels.

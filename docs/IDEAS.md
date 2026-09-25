@@ -66,6 +66,7 @@ rule ([`README.md`](README.md)) here too.
 | I19 | Screen curvature for the SatPixie look | look | HIGH | open |
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
+| I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
 
 ---
 
@@ -891,3 +892,21 @@ field save, to settle height and legibility before any script work.
 
 ### Outcome
 _(2026-09-24) open._
+
+---
+## I22 — Cut content: what the disc holds that play never shows
+
+**Ask (2026-09-25):** the owner brought TCRF's page on the game (saved as a
+PDF) and picked out the unused spells and skills, the unused songs and
+narration, the unused text, the whelp's menu portrait, and Sunder's
+animation on Mt. Myrneg, which ends before the player can reach it and
+should loop.
+**Kind:** game behaviour
+**Feasibility:** MIXED - the skills are located (their rows and PC entries,
+[`cut-content.md`](cut-content.md) §2) and go with the spell round; the
+loop wants the area's code ours first; the music, narration and text are
+unread on the PC.
+**First step:** the owner reaches the menu as the whelp with an F12 save,
+to see whether the portrait exists on the PC; the spell round reads the
+engine-side rows 123 and 128 first, which TCRF says crash and freeze.
+

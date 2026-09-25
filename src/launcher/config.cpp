@@ -116,12 +116,17 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
             char* end = nullptr;
             const float v = std::strtof(value.c_str(), &end);
             if (end == value.c_str() || *end) continue;
+            // The DLL stops the game on a value outside the preset's range
+            // (src/render/satpixie.cpp, kKnobs), so a hand edit outside it is
+            // dropped here like any other value this file does not know. The
+            // ranges are kKnobs' own; NaN fails every comparison and is dropped too.
+            auto in = [v](float lo, float hi) { return v >= lo && v <= hi; };
             auto& sp = cfg.sp;
-            if (name == "acc_modulate") sp.modulate = v;
-            else if (name == "gamma") sp.gamma = v;
-            else if (name == "chroma_strength") sp.chroma = v;
-            else if (name == "blur_x") sp.blur_x = v;
-            else if (name == "blur_y") sp.blur_y = v;
+            if (name == "acc_modulate") { if (in(0.0f, 1.0f)) sp.modulate = v; }
+            else if (name == "gamma") { if (in(1.8f, 2.6f)) sp.gamma = v; }
+            else if (name == "chroma_strength") { if (in(0.0f, 5.0f)) sp.chroma = v; }
+            else if (name == "blur_x") { if (in(0.0f, 5.0f)) sp.blur_x = v; }
+            else if (name == "blur_y") { if (in(0.0f, 5.0f)) sp.blur_y = v; }
             else if (name == "natural_vision") sp.natural = v > 0.5f;
             else if (name == "ghosting_on") sp.ghosting = v > 0.5f;
             else if (name == "chroma_on") sp.chroma_on = v > 0.5f;
@@ -130,7 +135,7 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
             else if (name == "wiggle_toggle") sp.wiggle = v > 0.5f;
             else if (name == "scanroll") sp.scanroll = v > 0.5f;
             else if (name == "overscan_crop") sp.overscan = v > 0.5f;
-            else if (name == "shadow_mask") sp.mask = static_cast<int>(v + 0.5f);
+            else if (name == "shadow_mask") { if (in(0.0f, 2.0f)) sp.mask = static_cast<int>(v + 0.5f); }
         } else if (key == "snap") {
             if (value == "0") cfg.snap = false;
             else if (value == "1") cfg.snap = true;

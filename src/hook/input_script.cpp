@@ -582,8 +582,9 @@ void __cdecl RecordingLatch() {
 }
 
 // Opens the recording and puts RecordingLatch on WinMain's latch call. Runs are
-// written when they end, so the run still open when the process ends is not
-// in the file.
+// written when they end; the one still open when the process ends is written
+// by InputScript_Stop, at DLL_PROCESS_DETACH. A process ended by Fatal or
+// TerminateProcess gets no detach, and its recording keeps the last run lost.
 void RecordStart(const char* path) {
     g_rec = std::fopen(path, "w");
     if (!g_rec) Fatal("BOF3X_RECORD: cannot open %s for writing", path);
@@ -604,17 +605,26 @@ void RecordStart(const char* path) {
 
 }  // namespace
 
+void InputScript_Stop() {
+    if (!g_rec) return;
+    FlushRun();
+    std::fclose(g_rec);
+    g_rec = nullptr;
+}
+
 void InputScript_Start() {
     char path[MAX_PATH];
     char rec[MAX_PATH];
     const DWORD r = GetEnvironmentVariableA("BOF3X_RECORD", rec, sizeof rec);
     const DWORD n = GetEnvironmentVariableA("BOF3X_INPUT", path, sizeof path);
     if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
-    if (r > 0 && r < sizeof rec) {
+    if (r >= sizeof rec) Fatal("BOF3X_RECORD: the path is %lu characters, over MAX_PATH", (unsigned long)r);
+    if (n >= sizeof path) Fatal("BOF3X_INPUT: the path is %lu characters, over MAX_PATH", (unsigned long)n);
+    if (r > 0) {
         RecordStart(rec);
         return;
     }
-    if (n == 0 || n >= sizeof path) return;
+    if (n == 0) return;
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
     wchar_t dir[MAX_PATH];

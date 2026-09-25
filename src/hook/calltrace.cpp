@@ -352,7 +352,10 @@ void CallTrace_Start(void* dll_module) {
     wchar_t path[MAX_PATH];
     DWORD len = GetModuleFileNameW(static_cast<HMODULE>(dll_module), path, MAX_PATH);
     static const wchar_t kTail[] = L"calltrace.tsv";  // bof3x.dll -> bof3x.calltrace.tsv
-    if (len < 4 || len - 3 + sizeof kTail / sizeof kTail[0] > MAX_PATH)
+    // Room for the longest of the four names written through `path`:
+    // calldetail.tsv, callframes.tsv and callcounts.tsv are a character longer.
+    constexpr DWORD kLongestTail = sizeof L"calldetail.tsv" / sizeof(wchar_t);
+    if (len < 4 || len - 3 + kLongestTail > MAX_PATH)
         Fatal("calltrace: DLL path unusable for the output file");
     std::memcpy(path + len - 3, kTail, sizeof kTail);
     g_out = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,

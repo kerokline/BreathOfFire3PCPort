@@ -118,10 +118,14 @@ void Report() {
         (unsigned)addr, where, g_job.thread);
     if ((r.ExceptionCode == EXCEPTION_ACCESS_VIOLATION || r.ExceptionCode == EXCEPTION_IN_PAGE_ERROR) &&
         r.NumberParameters >= 2) {
-        static const char* const kKind[] = {"reading", "writing"};
-        ULONG_PTR k = r.ExceptionInformation[0];
-        Log("CRASH %ld: %s 0x%08lX", (long)n, k < 2 ? kKind[k] : "executing",
-            (unsigned long)r.ExceptionInformation[1]);
+        // ExceptionInformation[0]: 0 read, 1 write, 8 execute (DEP).
+        const ULONG_PTR k = r.ExceptionInformation[0];
+        const char* kind = k == 0 ? "reading" : k == 1 ? "writing" : k == 8 ? "executing" : nullptr;
+        if (kind)
+            Log("CRASH %ld: %s 0x%08lX", (long)n, kind, (unsigned long)r.ExceptionInformation[1]);
+        else
+            Log("CRASH %ld: access kind %lu at 0x%08lX", (long)n, (unsigned long)k,
+                (unsigned long)r.ExceptionInformation[1]);
     }
     Log("CRASH %ld: eax %08lX ebx %08lX ecx %08lX edx %08lX esi %08lX edi %08lX", (long)n, c.Eax, c.Ebx,
         c.Ecx, c.Edx, c.Esi, c.Edi);
