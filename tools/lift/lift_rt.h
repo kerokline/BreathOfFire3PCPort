@@ -23,6 +23,7 @@ typedef int32_t s32;
 typedef uint64_t u64;
 typedef int64_t s64;
 
+// lift_fuzz.py mirrors this struct in ctypes: change both together.
 typedef struct {
     u32 eax, ecx, edx, ebx, esp, ebp, esi, edi;
     double st[8];

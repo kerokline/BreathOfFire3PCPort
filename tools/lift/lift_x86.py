@@ -13,10 +13,15 @@ decided by tools/lift/lift_fuzz.py, against the original bytes run in an
 emulator.
 
 What it refuses rather than guesses (CLAUDE.md rule 4 applies to generated
-code too): an instruction it has no semantics for, a segment override (SEH),
-an indirect jump that is not a recognised table, a call into the import table.
-Each becomes rt_fail() at that address, reached only if the path runs, and is
-counted in the report so a gap is never silent.
+code too), at two levels:
+  * a function it cannot decode (flow leaves code, undecodable bytes, a jump
+    table with a non-code entry) is not lifted at all - "NOT LIFTED";
+  * an instruction it cannot express - no semantics, a segment override (SEH),
+    an import call, an 80-bit x87 operand - becomes rt_fail() at that address,
+    reached only if that path runs. So do a division fault, an indirect
+    target that was not lifted (rt_dispatch) and a jump-table target that
+    was not decoded.
+Both are counted in the report, so a gap is never silent.
 
 Reads nothing but the file it is given. Point it at BOF3.exe only on your own
 machine; its output is derived from the binary and is game data (CLAUDE.md
@@ -31,6 +36,9 @@ from capstone import x86_const as X
 
 
 class Image:
+    """An i386 PE mapped as the loader would: headers and each section at
+    base + RVA, zero-filled to the section's virtual size."""
+
     def __init__(self, path):
         data = open(path, 'rb').read()
         pe = struct.unpack_from('<I', data, 0x3C)[0]
@@ -40,12 +48,12 @@ class Image:
         if machine != 0x14C:
             raise SystemExit(f'{path}: not i386')
         opt = pe + 24
-        self.base = struct.unpack_from('<I', data, opt + 28)[0]
-        self.size = struct.unpack_from('<I', data, opt + 56)[0]
+        self.base = struct.unpack_from('<I', data, opt + 28)[0]   # ImageBase
+        self.size = struct.unpack_from('<I', data, opt + 56)[0]   # SizeOfImage
         optsize = struct.unpack_from('<H', data, pe + 20)[0]
         imp_rva, imp_size = struct.unpack_from('<II', data, opt + 96 + 8 * 12)  # IAT directory
         self.iat = (self.base + imp_rva, self.base + imp_rva + imp_size) if imp_size else (0, 0)
-        self.sections = []
+        self.sections = []   # (name, va, extent, characteristics)
         self.mem = bytearray(self.size)
         self.mem[:0x1000] = data[:0x1000]
         sh = opt + optsize
@@ -148,7 +156,10 @@ class Func:
                 va = nxt
 
     def table_targets(self, insn):
-        """A jmp [table + reg*4]: the entries, bounded by a preceding cmp reg, n / ja when found."""
+        """A jmp [table + reg*4]: its targets. Bounded by a preceding cmp reg, n
+        when there is one; otherwise read until the first entry that is not a
+        code address. Over-reading is harmless: the emitted switch dispatches on
+        the target loaded at run time, so an extra entry is only an unused case."""
         L, mem = self.L, insn.operands[0].mem
         table, idx = mem.disp & 0xFFFFFFFF, mem.index
         bound = None
@@ -185,6 +196,8 @@ class Func:
         out = [f'// {self.name} at {self.entry:#010x}: {len(self.insns)} instructions',
                f'void fn_{self.entry:08X}(void) {{',
                '    u32 ' + ', '.join(f'{r} = R.{r}' for r in REGS) + ';',
+               # Every instruction computes every flag it defines; the C compiler
+               # deletes the ones nothing reads.
                '    u8 cf = 0, zf = 0, sf = 0, of = 0, pf = 0;',
                '    (void)cf; (void)zf; (void)sf; (void)of; (void)pf;']
         order = sorted(self.insns)
@@ -200,7 +213,6 @@ class Func:
                 L.stats['emitted as rt_fail'] += 1
                 body = [f'SAVE(); rt_fail("{c_str(str(e))}", {va:#x}u); return;']
             out.extend('    ' + b for b in body)
-            L.mnemonics[insn.mnemonic] += 1
             # Fall-through out of the decoded set: the next address belongs to
             # another function (shared tail) or was never reached.
             nxt = va + insn.size
@@ -263,9 +275,13 @@ class Func:
         return [f'zf = ({r}) == 0; sf = (({r}) & {SIGN[size]}) != 0; pf = PARITY({r});']
 
     def insn_c(self, insn):
+        """The C for one instruction, as a list of lines. Raises Unsupported
+        for anything it has no semantics for; emit() turns that into rt_fail."""
         m, ops, va = insn.mnemonic, insn.operands, insn.address
         L = self.L
         nxt = va + insn.size
+        # A rep prefix capstone reports apart from the mnemonic: fold it in, so
+        # the string-op cases below see 'rep stosd' either way.
         if insn.prefix[0] in (0xF2, 0xF3) and not m.startswith('rep'):
             m = ('repne ' if insn.prefix[0] == 0xF2 else 'rep ') + m
         # -- moves
@@ -358,7 +374,7 @@ class Func:
             else:
                 body += [f'  u32 k_ = n_ % {bits}; r_ = ((a_ >> k_) | (a_ << (({bits} - k_) % {bits}))) & {MASK[s]};',
                          f'  cf = (r_ & {SIGN[s]}) != 0; of = ((r_ >> ({bits} - 1)) ^ (r_ >> ({bits} - 2))) & 1;']
-            if m not in ('rol', 'ror'):
+            if m not in ('rol', 'ror'):   # rotates leave ZF, SF and PF alone
                 body += ['  ' + x for x in self.szf('r_', s)]
             return body + ['  ' + self.wr(ops[0], 'r_'), '} }']
         if m in ('shld', 'shrd'):
@@ -439,6 +455,10 @@ class Func:
             return [f'if (!ecx) goto L_{ops[0].imm:08X};']
         if m == 'loop':
             return [f'if (--ecx) goto L_{ops[0].imm:08X};']
+        # A call pushes the real return address, so the callee's frame is laid
+        # out as the original's; ret pops it without reading it, and returns
+        # to the C caller - code that rewrites its return address is not
+        # honoured.
         if m == 'call':
             op = ops[0]
             pre = f'esp -= 4; ST32(esp, {nxt:#x}u); SAVE();'
@@ -472,7 +492,9 @@ class Func:
             a = self.addr(o)
             if integer:
                 return {2: f'(double)(s16)LD16({a})', 4: f'(double)(s32)LD32({a})', 8: f'(double)(s64)LD64({a})'}[o.size]
-            return {4: f'(double)LDF32({a})', 8: f'LDF64({a})'}.get(o.size) or self.unsupported_x87(m, o)
+            if o.size not in (4, 8):
+                self.unsupported_x87(m, o)
+            return {4: f'(double)LDF32({a})', 8: f'LDF64({a})'}[o.size]
 
         if m in ('fld', 'fild'):
             if mem:
@@ -548,11 +570,12 @@ class Func:
             return []
         raise Unsupported(f'no semantics for {m}')
 
-    def unsupported_x87(self, m, o):
+    def unsupported_x87(self, m, o):   # raises
         raise Unsupported(f'{m} on a {o.size}-byte operand (80-bit x87 values)')
 
 
 def c_str(s):
+    """s, safe inside a C string literal."""
     return s.replace('\\', '\\\\').replace('"', "'")
 
 
@@ -563,10 +586,11 @@ class Lifter:
         self.md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
         self.md.detail = True
         self.stats = collections.Counter()
-        self.mnemonics = collections.Counter()
         self.calls = set()
 
     def run(self):
+        """Lift every entry. Returns (C source, lifted Funcs, {entry: reason
+        not lifted}, called addresses that are not in the entry list)."""
         funcs, bodies, failed = [], [], {}
         for va in sorted(self.entries):
             f = Func(self, va, self.entries[va])

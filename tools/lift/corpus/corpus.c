@@ -8,9 +8,11 @@
 // may publish. build.sh compiles it to a /FIXED i686 PE at 0x400000 with no
 // CRT, the way BOF3.exe is laid out.
 //
-// Every function is total: any argument and any contents of the globals give
-// a defined result, so the fuzz can feed it random bytes. Indices are masked,
-// divisors are forced non-zero, and float inputs come from integers.
+// Every function that takes no pointer is total: any argument and any contents
+// of the globals give a defined result, so the fuzz can feed it random bytes.
+// Indices are masked, divisors are forced non-zero, and float inputs come from
+// integers. The pointer-taking ones (memcpy, memset, the H_ handlers) fault on
+// a bad pointer, and the fuzz skips those rounds.
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
@@ -149,8 +151,10 @@ s32 Script_Op(u32 op, s32 a, s32 b) {
     }
 }
 
-// A switch whose table is indexed through a byte table first (the
-// Gfx_DrawOTag shape: jump table plus byte index table).
+// A sparse switch. MSVC compiles this shape to a byte index table in front of
+// a jump table (Gfx_DrawOTag); clang does not - it emits a 66-entry table for
+// 0..0x41 and compares for the rest - so the byte-index form stays untested.
+// docs/lifter-feasibility.md section 4.4.
 s32 Script_Sparse(u32 op) {
     switch (op & 0xFF) {
     case 0x00: return 10;

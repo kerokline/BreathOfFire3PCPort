@@ -17,8 +17,10 @@ This is the shape of the project's differential fuzz (docs/SCAFFOLDING.md,
 CloneOriginal): the original runs beside the candidate on identical state.
 The difference is the executor. An emulator needs no Windows and no game
 process, so this runs anywhere - on the synthetic corpus in CI, on BOF3.exe's
-bytes on the owner's machine (its leaf functions first: an import call or a
-callee that was not lifted ends the round as "not comparable", not as a pass).
+bytes on the owner's machine. Start there with leaf functions: a round where
+the lifted C reaches rt_fail (an unlifted callee, an import) counts as a
+mismatch, with the reason, and a round where the original faults (an import
+call jumps to an unmapped DLL) is skipped.
 """
 import argparse, ctypes, math, os, random, struct, sys
 
@@ -37,12 +39,16 @@ REGS = ['eax', 'ecx', 'edx', 'ebx', 'esp', 'ebp', 'esi', 'edi']
 UREG = {r: getattr(U, f'UC_X86_REG_{r.upper()}') for r in REGS}
 
 
+# Must match Cpu in lift_rt.h field for field: ctypes reads it by layout.
 class Cpu(ctypes.Structure):
     _fields_ = [(r, ctypes.c_uint32) for r in REGS] + [
         ('st', ctypes.c_double * 8), ('top', ctypes.c_uint32), ('cw', ctypes.c_uint16), ('sw', ctypes.c_uint16)]
 
 
 def f80_to_double(mant, se):
+    """An x87 register as Unicorn gives it - a 64-bit mantissa with its explicit
+    integer bit, and sign plus 15-bit exponent - as a double. Exact for any value
+    computed under 53-bit precision control."""
     sign = -1.0 if se & 0x8000 else 1.0
     e = se & 0x7FFF
     if e == 0x7FFF:
@@ -56,6 +62,7 @@ def f80_to_double(mant, se):
 
 
 def same_double(a, b):
+    """Bit for bit, except that any NaN equals any NaN: payloads are not compared."""
     if math.isnan(a) and math.isnan(b):
         return True
     return struct.pack('<d', a) == struct.pack('<d', b)
@@ -66,6 +73,8 @@ BOUNDARY = [0, 1, 2, 3, 7, 8, 15, 16, 29, 30, 31, 32, 63, 64, 0x7F, 0x80, 0xFF, 
 
 
 def arg(rng, pointers=()):
+    """One argument: a pointer into writable data, a boundary value, a small
+    integer, a small negative one, or 32 random bits."""
     k = rng.random()
     if pointers and k < 0.2:            # a pointer into a writable section
         va, n = rng.choice(pointers)
@@ -110,7 +119,7 @@ class Harness:
         uc.mem_write(self.img.base, bytes(self.img.mem))
         uc.mem_map(STACK_LO, STACK_HI - STACK_LO)
         uc.mem_map(RET_SENTINEL, 0x1000)
-        self.count = 0
+        self.count = 0   # instructions this round, against MAX_INSNS
 
         def hook(uc_, addr, size_, user):
             self.count += 1
@@ -151,13 +160,11 @@ class Harness:
             return 'skip: the original did not return'
         want = {r: uc.reg_read(UREG[r]) for r in REGS}
         sw = uc.reg_read(U.UC_X86_REG_FPSW)
-        want_top = (sw >> 11) & 7
+        want_top = (sw >> 11) & 7   # TOP starts at 0; a float return leaves one pushed
         want_st0 = f80_to_double(*uc.reg_read(U.UC_X86_REG_FP0 + want_top)) if want_top != 0 else None
         want_mem = [uc.mem_read(va, n) for va, n in self.compare]
 
         # -- the lifted C, on the host
-        for va, n in self.writable:
-            ctypes.memset(self.M + va, 0, n)
         self.mput(self.img.base, bytes(self.img.mem))
         for va, b in data:
             self.mput(va, b)

@@ -64,9 +64,8 @@ control "fdivr's operands swapped" 's|FST(0) = FST(\([0-9]\)) / FST(0);|FST(0) =
 control "a float store kept at double width" 's/STF32(\(.*\), FST(0));/STF64(\1, FST(0));/'
 # The oracle at 64-bit precision: the lifter's doubles are exact only under
 # the 53-bit control word BOF3.exe was measured running.
-sed 's/$//' "$out/lifted.c" > "$out/control.c"   # unchanged: the fault is the oracle's
-build "$out/control.c" "$out/control.so"
-if fuzz "$out/control.so" --cw 0x037F > /dev/null; then
+# The lifted C is the faithful one; the fault is in the oracle's set-up.
+if fuzz "$out/lifted.so" --cw 0x037F > /dev/null; then
     echo "   the oracle at 64-bit precision (0x037F): NOT refused"; failed=1
 else
     echo "   the oracle at 64-bit precision (0x037F): refused ($(tail -n 1 "$out/fuzz.log" | sed 's/lift_fuzz: //'))"

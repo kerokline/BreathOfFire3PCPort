@@ -23,8 +23,9 @@ The ownership ledger, symbols.toml `impl` against the detours in src/:
 Rule 4 (no stubs):
   * no TODO / FIXME / XXX / "for now" markers in src/.
 
-A known gap that predates this check is listed in KNOWN below with its reason;
-the check fails if a listed gap is ever closed, so the list cannot go stale.
+A missing field that only the author can write may be listed in KNOWN below
+with its reason; the check fails once a listed gap is closed, so the list
+cannot go stale.
 """
 import argparse, os, re, sys, tomllib
 
@@ -40,8 +41,9 @@ REQUIRED = ['ID', 'Date', 'Subsystem', 'Original behaviour', 'New behaviour',
 # write; the check will not invent it.
 KNOWN = {}
 
-# Where a DIV-NNNN may be cited. Everything tracked that is text.
-CITE_EXTS = {'.md', '.py', '.cpp', '.h', '.toml', '.rc', '.txt', '.yml', '.cmake'}
+# Where a DIV-NNNN may be cited: every file with one of these extensions under
+# the repository root, tracked or not, outside CITE_SKIP_DIRS.
+CITE_EXTS = {'.md', '.py', '.c', '.cpp', '.h', '.toml', '.rc', '.txt', '.yml', '.cmake', '.sh'}
 CITE_SKIP_DIRS = {'.git', 'build', 'analysis', '_deps', '.claude'}
 
 STUB_MARKERS = re.compile(r'\b(TODO|FIXME|XXX)\b|\bfor now\b', re.I)
@@ -80,7 +82,7 @@ def check_divergence(r):
     if not sep:
         r.error(f'{LEDGER}: no "## Entries" section')
         return set()
-    body_line0 = head.count('\n') + 2
+    body_line0 = head.count('\n') + 3   # 1-based, past the "## Entries" line
 
     # Split into entries at each `### ` heading, keeping line numbers.
     entries, cur = [], None
@@ -145,19 +147,18 @@ def check_divergence(r):
 
 
 def check_citations(r, defined):
-    cited = {}
-    for top in ('.',):
-        for rel, path in walk(top, CITE_EXTS):
-            if rel == LEDGER:
-                continue
-            try:
-                with open(path, encoding='utf-8') as f:
-                    lines = f.read().split('\n')
-            except UnicodeDecodeError:
-                continue
-            for i, line in enumerate(lines, 1):
-                for m in re.finditer(r'\bDIV-(\d{4})\b', line):
-                    cited.setdefault(f'DIV-{m.group(1)}', f'{rel}:{i}')
+    cited = {}   # DIV id -> where it is first cited
+    for rel, path in walk('.', CITE_EXTS):
+        if rel == LEDGER:
+            continue
+        try:
+            with open(path, encoding='utf-8') as f:
+                lines = f.read().split('\n')
+        except UnicodeDecodeError:
+            continue
+        for i, line in enumerate(lines, 1):
+            for m in re.finditer(r'\bDIV-(\d{4})\b', line):
+                cited.setdefault(f'DIV-{m.group(1)}', f'{rel}:{i}')
     for did, where in sorted(cited.items()):
         if did not in defined:
             r.error(f'{where}: cites {did}, which the ledger does not have')
@@ -193,7 +194,8 @@ def check_ownership(r):
     for rel, path in walk('src', {'.cpp', '.h'}):
         with open(path, encoding='utf-8') as f:
             src = f.read()
-        # The macro's own #define line is not a use of it.
+        # The macro's own #define is not a use of it. Blanked, not removed, so
+        # the line numbers below stay right.
         src = re.sub(r'^\s*#define[^\n]*(?:\\\n[^\n]*)*', lambda m: '\n' * m.group(0).count('\n'),
                      src, flags=re.M)
         hits = [(m.start(), m.group(1)) for m in INJECT_MACRO.finditer(src)]
