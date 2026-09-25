@@ -90,8 +90,8 @@ void Step(U table) { Dispatch(table, Rec()[3]); }
 // slot unbounded.
 unsigned Member(unsigned slot) { return At(at::kMemberRecord + At(at::kPartyList + slot)[0])[0]; }
 
-// The slides: the word at +off stepped by `by`; past `bound` (signed 16-bit,
-// `past` says which side) it is set to `to` and the step +3 goes to 0.
+// The slides: x (+4) or y (+6) stepped by `by`; past `bound` (signed 16-bit;
+// `below` says which side) it is set to `to` and the step +3 goes to 0.
 void SlideX(int by, short bound, bool below, short to) {
     unsigned char* const w = Rec();
     SetWord(w + 4, static_cast<unsigned>(Word(w + 4) + by));

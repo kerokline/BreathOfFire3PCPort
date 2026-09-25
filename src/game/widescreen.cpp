@@ -83,7 +83,7 @@ const Slide kSlides[] = {
     {0X59A136, 4, -180},
     {0X59A2B6, 4, -110},
     {0X59A586, 4, -200},
-    {0X59B446, 4, -150},
+    {0X59B446, 4, -150},   // read back by MenuWin_SlideOutLeft, ours since 2026-09-25 (menu_draw_helpers.cpp)
     {0X59C136, 4, -120},
     {0X59A5E6, 4, 320},
     {0X598A08, 2, 322},
