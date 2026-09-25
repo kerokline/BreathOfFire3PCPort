@@ -118,18 +118,31 @@ void Disturb() {
 
 // --- the stand-ins ---------------------------------------------------------
 
+// The stand-ins are not quiet: half the time each moves a byte its callers
+// read again after it - the step after the prompt, the command pointer after
+// the target calls and the window set-up, the window's actor / page / cursor
+// after a cue, the cursor after the list.
+bool Moves() { return (Hash() >> 27) % 2 != 0; }
+void MoveCommand() { if (Moves()) SetPtr(at::kCommand, g_cmd + (Hash() >> 20) % 0x10); }
+
 // The twenty table entries.
 template <unsigned N> void __cdecl StubHandler() {
     Record(N, B(at::kStep), B(at::kSub), Watched());
     Disturb();
 }
-U __cdecl StubSetMessage(U msg, U b2) { Record(1, msg, b2, Watched()); Disturb(); return Hash(); }
-U __cdecl StubDefaultTarget(U actor) { Record(2, actor, Watched()); Disturb(); return Hash(); }
-U __cdecl StubPrevTarget(U actor) { Record(3, actor, Watched()); Disturb(); return Hash(); }
+U __cdecl StubSetMessage(U msg, U b2) {
+    Record(1, msg, b2, Watched());
+    if (Moves()) B(at::kStep) = static_cast<unsigned char>(Hash() >> 20);
+    Disturb();
+    return Hash();
+}
+U __cdecl StubDefaultTarget(U actor) { Record(2, actor, Watched()); MoveCommand(); Disturb(); return Hash(); }
+U __cdecl StubPrevTarget(U actor) { Record(3, actor, Watched()); MoveCommand(); Disturb(); return Hash(); }
 // Inside low .. high, at its edges or past them, the value it was given, or
 // anything; the upper bits of a byte result as often as not.
 U __cdecl StubWrapIndex(U high, U low, U value) {
     Record(4, high, low, value, Watched());
+    MoveCommand();
     Disturb();
     const U h = Hash();
     const U picks[] = {low, high, value, high + 1, low - 1, 0x7F, 0x80, 0xFF, 0x100, h};
@@ -148,13 +161,28 @@ U __cdecl StubAutoRepeat(U pressed) {
     return (h & 0xFFFF0000u) | kHeld[(h >> 8) % (sizeof kHeld / sizeof kHeld[0])];
 }
 // Sound_PlayEffect reads the u16.
-U __cdecl StubPlayEffect(U id) { Record(6, id & 0xFFFF, Watched()); Disturb(); return Hash(); }
-U __cdecl StubSetupForActor() { Record(7, Watched()); Disturb(); return Hash(); }
+U __cdecl StubPlayEffect(U id) {
+    Record(6, id & 0xFFFF, Watched());
+    if (Moves()) {
+        const U h = Hash();
+        const unsigned char v = static_cast<unsigned char>(h >> 16);
+        switch ((h >> 24) % 4) {
+        case 0: B(at::kItemActor) = v; break;
+        case 1: B(at::kItemPage) = static_cast<unsigned char>(v % 5); break;
+        case 2: B(at::kItemCursor) = static_cast<unsigned char>(v % 12); break;
+        default: MoveCommand(); break;
+        }
+    }
+    Disturb();
+    return Hash();
+}
+U __cdecl StubSetupForActor() { Record(7, Watched()); MoveCommand(); Disturb(); return Hash(); }
 // Char_AbilityList reads the low byte of each argument (the original's carry
 // stale upper bits): a list somewhere in our buffer, so a cursor of 0..255
 // stays inside it.
 U __cdecl StubAbilityList(U member, U type, U battle) {
     Record(8, member & 0xFF, type & 0xFF, battle & 0xFF, Watched());
+    if (Moves()) B(at::kItemCursor) = static_cast<unsigned char>(Hash() >> 16);
     Disturb();
     return Address(g_list + (Hash() >> 8) % 0x100);
 }
@@ -390,12 +418,22 @@ void Seed(unsigned k) {
         SetLong(Cmd() + 0x10, static_cast<std::int32_t>(Often() ? Pick(kFlags) : Next()));
         static const unsigned char kPages[] = {0, 1, 2, 3, 4, 0x7F, 0x80, 0xFF};
         B(at::kItemPage) = Pick(kPages);
-        static const unsigned char kCursors[] = {0, 1, 2, 6, 7, 8, 9, 10, 0xFF, 0x80};
-        if (Often()) B(at::kItemCursor) = Pick(kCursors);
         static const std::uint16_t kScrolls[] = {0, 1, 2, 3, 4, 6, 7, 8, 9, 0xFFFF, 0xFFFD, 0xFFFC, 0xFFFB, 0x7FFF, 0x8000};
         if (Often()) SetWord(At(at::kItemScroll), Pick(kScrolls));
+        // the cursor at the edges of what is shown - the scroll row, one either
+        // side of it, the last row shown and one past it - or at 0, 8, 9
+        static const int kFromScroll[] = {-1, 0, 1, 6, 7};
+        static const unsigned char kCursors[] = {0, 1, 8, 9, 10, 0xFF, 0x80};
+        if (Often()) B(at::kItemCursor) = Half() ? static_cast<unsigned char>(B(at::kItemScroll) + Pick(kFromScroll)) : Pick(kCursors);
         if (Often()) B(at::kItemState) = 0;
-        if (Half()) SetWord(At(at::kItemScrollMotion), 0);
+        if (Often()) SetWord(At(at::kItemScrollMotion), 0);
+        if (k == kBrowse && Half()) {
+            // the window's own buttons: one cancel bit, one confirm bit apart
+            // from it, and one of them pressed
+            SetWord(At(at::kCancel), 1u << (Next() % 8));
+            SetWord(At(at::kConfirm), 1u << (8 + Next() % 8));
+            SetWord(At(at::kPressed), Word(At(Half() ? at::kConfirm : at::kCancel)));
+        }
         break;
     }
     default:
