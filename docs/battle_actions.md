@@ -4,7 +4,8 @@
 (`src/game/battle_actions.cpp`): the battle's phase 3 and every function its
 step tables reach that the round listed. Each is fuzzed headless against a
 copy of Capcom's with every call re-aimed at a recorder: 23,000 rounds, 0
-mismatches. @CONTROLS@
+mismatches. 118 negative controls were planted: 117 were refused by a count,
+and one (M2) is a change that changes nothing.
 
 This is group CB of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
@@ -142,8 +143,9 @@ the order of reads and stores in full):
     `0x904B88`) is above the actor's AP (a member's +0x9A, an enemy's +0xA6).
     Else `0x904AA5` = 0, round-flag bit 5 when `Battle_PickFlag8Member`
     answers 0, and on.
-  - `AbilityCommit` waits for round-flag bit 5 (someone else sets it, when
-    the pick answered non-zero), clears it, the object's +1 = 7, +2 = 0, the
+  - `AbilityCommit` waits for round-flag bit 5 (`AbilityCheck` sets it when
+    `Battle_PickFlag8Member` answered 0; otherwise other code must - not
+    looked for), clears it, the object's +1 = 7, +2 = 0, the
     pending bit, `0x904B8D` = the id; for the ids 0x24, 0x25 and 0x8C a new
     target from `0x42F9D0` (which also picks the id again) fills the target
     block; the magic file (`Magic_LoadForAbility`).
@@ -223,8 +225,8 @@ first (`and al, 3` into `0x904B35`), the rest of it was not read. Kept.
 
 - `0x42F5E0` (kind 3's stub, `jmp [0x64AEB4 + 0x904AA3 * 4]`) and its two
   targets `0x42F5F0` (`Battle_ClearActingFlags`, a banner of `0x669E08`,
-  `Battle_SetActorBit`, state 9) and `0x42F640` (waits for `0x904B82` to
-  clear, then step 3), and `0x42FE20` (`AfterSteps` entry 1; calls
+  `Battle_SetActorBit`, state 9) and `0x42F640` (once `0x904B82` is clear:
+  round-flag bit 2, step 3, both sub-steps 0), and `0x42FE20` (`AfterSteps` entry 1; calls
   `0x44A910` and `BattleQueue_Push`) are in **no group**: the combat route
   did not reach them (none is in the round's table). They are reached from
   this group's tables and are the natural next takeover beside it, with
@@ -286,15 +288,158 @@ bytes three calls in four.
 
 Result (2026-09-25), `BOF3X_SELFTEST_ONLY=1`:
 
-    battle_actions self-test: 23000 rounds over 23 functions (1000 each), 33071 calls to the stand-ins, 0 MISMATCHES
-    coverage: step entries 25 of 25, hook 1292; begin: none left 420, found 579 (target block 290); checks:
-      turned away 661, name banners 1159, status gate 103, AP short 110, AP enough 443; commits 664; preloads
-      402; messages 592; end: swaps 308, battle end 358
+    battle_actions self-test: 23000 rounds over 23 functions (1000 each), 32675 calls to the stand-ins, 0 MISMATCHES
+    coverage: step entries 25 of 25, hook 1304; begin: none left 420, found 579 (target block 311); checks:
+      turned away 626, name banners 1182, status gate 112, AP short 110, AP enough 468; commits 664; preloads
+      402; messages 592; end: swaps 231, battle end 356
 
-The run with `BOF3X_SHADOW='*'` exited 0 with `inject: 1047 ours` and no
-mismatch or Fatal anywhere in the log.
+Both runs exited 0 (`BOF3X_SHADOW='battle_actions'` and `BOF3X_SHADOW='*'`),
+with `inject: 1047 ours` and no mismatch or Fatal anywhere in the log.
 
-@CONTROLTABLE@
+**Negative controls.** A script (`controls.py` in the session scratchpad)
+planted each one alone in `battle_actions.cpp`: replace, build, self-test,
+revert. Every refused one exited 3 (the Fatal). The table gives the rounds
+that refused each one, of 1,000 (a control in a shared helper names each
+function that refused it).
+
+| | Planted | Refused in (of 1,000) |
+|---|---|---|
+| A1 | ActionPhase: the cancel test before the step | 43 |
+| A2 | ActionPhase: bit 5 cleared, not 4 | 306 |
+| A3 | ActionPhase: either word, not both | 281 |
+| S1 | BeginStep: by 0x904AA3 | 684 |
+| S2 | KindStep: by 0x904AA3 | 813 |
+| S3 | AbilityStep: the item table | 1000 |
+| S4 | ItemStep: the ability table | 1000 |
+| S5 | EffectStep: by 0x904AA3 | 666 |
+| S6 | AfterStep: the effect table | 1000 |
+| S7 | ActionPhase: by 0x904AA2 | 823 |
+| B1 | BeginAction: 0x904AE2 stored before the step on | 456 |
+| B2 | BeginAction: the actor stored before its pick | 554 |
+| B3 | BeginAction: the enemy pick given the actor | 424 |
+| B4 | BeginAction: a target of 11 filled | 55 |
+| B5 | BeginAction: the target read before the pick | 217 |
+| B6 | BeginAction: 0x904AE2 not counted at the end | 579 |
+| B7 | BeginAction: 0x904AA2 not counted | 579 |
+| B8 | member block: the stand index by char id * 2 | BeginAction 228, AbilityCommit 55 |
+| B9 | enemy block: x from +0xF3 | BeginAction 461, AbilityCommit 194 |
+| B10 | member block: the offset unsigned | BeginAction 137, AbilityCommit 32 |
+| B11 | stat copy: an enemy from +0xA0 | BeginAction 424, End 133 |
+| B12 | stat copy: 28 bytes | BeginAction 579, End 174 |
+| B13 | BeginAction: none left sets step 1 | 421 |
+| B14 | member block: z from +0x30 | BeginAction 262, AbilityCommit 59 |
+| E1 | EnterKind: the kind read before the hook | 264 |
+| E2 | EnterKind: the hook with 0 | 514 |
+| K1 | KindPlain: the bytes read before ClearActingFlags | 234 |
+| K2 | KindPlain: the name for kind 0 | 390 |
+| K3 | KindPlain: an enemy from 4 | 39 |
+| K4 | name record: 8 bytes | KindPlain 326, EnemyMessages 592 |
+| K5 | KindPlain: message 0x7E | 326 |
+| K6 | name record: not zeroed first | KindPlain 326, EnemyMessages 592 |
+| K7 | system banner: timer 0x2E | KindPlain 326, AbilityCheck 222 |
+| K8 | system banner: the window after the message | KindPlain 326, AbilityCheck 222 |
+| O1 | KindOne: the object read before the call | 315 |
+| O2 | KindOne: state 5 | 1000 |
+| O3 | KindOne: step 3 | 1000 |
+| C1 | AbilityCheck: the actor not re-read after the removal | 143 |
+| C2 | AbilityCheck: turned away with +1 = 3 | 310 |
+| C3 | AbilityCheck: the name shown for 0x97 too | 192 |
+| C4 | AbilityCheck: the name 15 bytes | 498 |
+| C5 | AbilityCheck: banner timer 0x3D | 498 |
+| C6 | AbilityCheck: status bit 5 | 177 |
+| C7 | AbilityCheck: the record byte +0x14 | 113 |
+| C8 | AbilityCheck: the AP re-read after the cost | 80 |
+| C9 | AbilityCheck: a cost equal to the AP refused | 37 |
+| C10 | AbilityCheck: the cost of a member by the formula whatever the actor | 282 |
+| C11 | AbilityCheck: the cost outside battle | 407 |
+| C12 | AbilityCheck: 0x20 when the pick answers non-zero | 257 |
+| C13 | AbilityCheck: 0x904AA5 kept | 452 |
+| C14 | AbilityCheck: the status gate by the id of before the banner | 54 |
+| C15 | AbilityCheck: the cost byte 0x904B79 for 0x97 | 171 |
+| C16 | AbilityCheck: the actor for the stats read before the banner | 154 |
+| C17 | AbilityCheck: an enemy AP +0xA4 | 77 |
+| C18 | AbilityCheck: 0x904AA3 kept | 468 |
+| M1 | AbilityCommit: runs without bit 5 | 484 |
+| M2 | AbilityCommit: the object not re-read for +2 | **not refused; no input could tell** |
+| M3 | AbilityCommit: 0x904B8D read before the bit | 235 |
+| M4 | AbilityCommit: 0x26 for 0x25 | 93 |
+| M5 | AbilityCommit: the target block bounded at 10 (as Battle_BeginAction) | 73 |
+| M6 | AbilityCommit: the file by the id of before the pick | 127 |
+| M7 | AbilityCommit: state 8 | 660 |
+| M8 | AbilityCommit: 0x904AA8 bit 5 kept | 664 |
+| T1 | AbilityStart: 0x904AA3 kept | 326 |
+| T2 | AbilityStart: the owner the action record | 503 |
+| T3 | AbilityStart: the id byte +3 | 489 |
+| T4 | AbilityStart: without waiting for the file | 497 |
+| I1 | ItemCheck: the removal by the actor of before the return | 144 |
+| I2 | ItemCheck: the record not re-read after the check | 307 |
+| I3 | ItemCheck: category and item swapped | 672 |
+| I4 | ItemCheck: banner timer 0x1F | 684 |
+| I5 | ItemCheck: 0x904AA3 read before the banner | 28 |
+| I6 | ItemCheck: the removal skipped | 316 |
+| I7 | ItemCheck: turned away with +2 kept | 315 |
+| N1 | ItemCommit: the record read before the bit | 315 |
+| N2 | ItemCommit: state 0xD | 990 |
+| R1 | ItemStart: the id a byte | 251 |
+| R2 | ItemStart: step 1 | 494 |
+| W1 | EffectWait: a member's flags +0x131 | 604 |
+| W2 | EffectWait: enemies 3..9 | 121 |
+| W3 | EffectWait: +4 kept | 325 |
+| W4 | EffectWait: a state-6 actor done again | 686 |
+| W5 | EffectWait: the pending word not tested | 262 |
+| W6 | EffectWait: 0x904AA8 bit 3 | 168 |
+| W7 | EffectWait: the pending word read before the flag test | 105 |
+| P1 | EffectPreload: the ability row by the low byte | 93 |
+| P2 | EffectPreload: file 0xCF | 402 |
+| P3 | EffectPreload: kind 5 not handled | 215 |
+| P4 | EffectPreload: 0x904AA2 counted only with a file | 598 |
+| L1 | EffectLoaded: the event byte read before File_LoadDone | 129 |
+| L2 | EffectLoaded: the hook with 5 | 262 |
+| L3 | EffectLoaded: 0x904AA8 loses 0x800 | 395 |
+| L4 | EffectLoaded: row 0x1B | 519 |
+| L5 | EffectLoaded: the stores after the row copy | 505 |
+| F1 | AfterSettle: zero gives 3 | 351 |
+| F2 | AfterSettle: 0x904AA2 read before the call | 180 |
+| F3 | AfterSettle: the pending word not tested | 140 |
+| G1 | EnemyMessages: the enemy index one on | 592 |
+| G2 | EnemyMessages: the count not re-read after the push | 274 |
+| G3 | EnemyMessages: the message id a byte | 592 |
+| G4 | EnemyMessages: the busy byte ignored | 150 |
+| G5 | EnemyMessages: entry n - 1 | 524 |
+| G6 | EnemyMessages: the push (1, 1, ..) | 592 |
+| G7 | EnemyMessages: none left, step 3 | 258 |
+| X1 | End: the last hook by the event byte read first | 38 |
+| X2 | End: 0x904AA8 keeps bit 2 | 704 |
+| X3 | End: battle end at step 3 | 356 |
+| X4 | End: a member's flags +0x134 | 19 |
+| X5 | End: the kind not set to 1 | 118 |
+| X6 | End: 12 bytes swapped | 155 |
+| X7 | End: the texts inverted | 174 |
+| X8 | End: 0x904AA2 0 after the swap | 172 |
+| X9 | End: banner timer 0x10 | 174 |
+| X10 | End: bit 6 tested before Battle_ClearActingFlags | 185 |
+| X11 | End: bit 12 kept | 265 |
+| X12 | End: the battle-end test before the hook | 75 |
+| X13 | End: the stat block of the old actor | 166 |
+| X14 | End: no pending test | 134 |
+
+**M2** changes nothing: `0x42F880` re-reads `0x904B3C` between its two
+stores with no call between (only the store to `0x904AA8`, which cannot
+alias the pointer), so both reads see the same object. It is not counted.
+
+**Thirteen controls were thin or blind in the first run** and are refused
+now, each once the recorder it depended on moved what its caller reads back,
+and once the stand-ins' pseudo-random answers stopped being one value per
+call (a recorder that moved a byte half the time and answered 0 half the time
+did both on the same bit, so its caller never saw the move): C8 (0, then 80),
+X10 (1, then 185), L1 (4, then 129), F2 (6, then 180), W7 (8, then 105), C14
+(9, then 54), A1 (14, then 43), L5 (18, then 505), B2 (18, then 554), I2 (21,
+then 307), C16 (33, then 154), M5 (19, then 73). S3 (0x904AA2 for
+`AbilityStep`'s index) faulted in the first run - the index ran past the
+three entries into `0x42F9D0`'s id bytes - and was replaced by the item
+table, refused in 1,000.
+
+**The thinnest now:** X4 (19), I5 (28), C9 (37), X1 (38), K3 (39), A1 (43).
 
 **What the fuzz cannot see:**
 
