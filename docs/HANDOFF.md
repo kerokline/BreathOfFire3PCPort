@@ -70,7 +70,18 @@ no hash run on record. `ab15`..`ab27`, `wm1` and `wm1_orig` are history.
    header waits on that to go STABLE. The owner played the combat route
    with cheats on at 08:12 on 2026-09-24, after the merge, on 1,020 ours:
    **ask whether that counts** before asking for another fight.
-4. **The next recorded route, round eight's queue.** The owner records with
+4. **The next recorded route, round eight's queue.** Shape it from
+   [`remaining-catalog.md`](remaining-catalog.md) §3 (2026-09-25): every
+   function not ours by subsystem, reach measured per route for every start.
+   **442 route-reached functions are not ours** - 407 of them pointer-reached
+   handlers the all-calls traces never armed (§4 there): `BATTLE.EMI` 102,
+   `SHOP.EMI` 45, the boot-resident battle handlers 42, the event script 27.
+   **That queue is cut: [`takeover-queue-round8.md`](takeover-queue-round8.md)**,
+   two waves of 22 groups (A the combat route's 236, B the shop's and the
+   world map's 206), each with a live check on its route; run it the
+   parallel way under "How to run things". After it: the untraced
+   `menu_screens.txt` recipe (~240 more), then a boss fight.
+   The owner records with
    `BOF3X_RECORD` (F12 a shot); the route is A/B'd, traced once all
    original, less every earlier route's reach (`attract_catalog.py --minus`,
    the command in [`takeover-queue-round6.md`](takeover-queue-round6.md) and
@@ -318,6 +329,20 @@ _One line each, with a pointer. Add when something costs more than an hour._
   clock changes pace, never logic). Already past 6.2 days, all-original
   runs go at half speed (D5): hash verdicts stand (logic frames), wall
   times do not. Pace figures before 2026-09-21 are the 31.25 band.
+- **An A/B original side that keeps a function ours can keep a dependency
+  of it original.** `Text_DrawString`'s glyph guard was set only by
+  `Font_SetGlyphData`, so with the English overlay the `*,KEEP` side
+  trapped at the first battle banner (glyph `0xA6B` over `0xA00`), every
+  run, tracer or not - found 2026-09-25 by the combat route, which no A/B
+  had played since DIV-0052. Fixed in `LoadDatFile` (DIV-0016, amended).
+  When a KEEP list keeps ours a function that reads state another of ours
+  writes, keep the writer too, or set the state where both sides run.
+- **An all-original side cannot write its own frames**: with `Display_Setup`
+  original there is no Direct3D 11 device, `render::SaveFrame` returns false
+  (`NOT saved:` in the log), and the runner falls back to the window grab at
+  every frozen shot - the screen must be uncovered, and a covered one hung a
+  run at its shot on 2026-09-25. A trace needs no captures: play the
+  recorded route file itself (`combat.txt`), not its `_ab` twin.
 - BSim produced one high-confidence wrong match; no BSim name exceeds
   `hypothesis` without a PC-side read ([`bsim-evaluation.md`](bsim-evaluation.md)).
 - Indexing PSX overlays into the BSim database degrades published ranks unless

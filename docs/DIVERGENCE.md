@@ -855,6 +855,14 @@ designed in rather than bolted on.
   table's glyph count - a size the original takes and never reads - and the
   bound becomes `max(0xA00, glyphs - 1)`. With every shipped file that is
   `0xA00`, the original's own number.
+  **Amended 2026-09-25:** `LoadDatFile`'s kind-3 case sets the same bound
+  before it calls `Font_SetGlyphData`. Found by the combat route on the A/B
+  original side (`--original "*,-LoadDatFile,..,-Text_DrawString,.."`):
+  there `Font_SetGlyphData` is Capcom's, the bound stayed `0xA00`, and
+  DIV-0052's EX suffix at glyph `0xA6B` tripped the guard at the first
+  command phase - the same fault, every run, with and without the tracer;
+  the all-ours side played the route through. The bound now follows the
+  table loaded on either side.
 - **Rationale:** the owner asked for the 8 x 8 set in the English font
   (2026-09-20) after spotting it in the atlas. It cannot go anywhere below
   `0xA00` - the 8 x 12 set holds `0x993`..`0x9F6` and only ten slots remain
