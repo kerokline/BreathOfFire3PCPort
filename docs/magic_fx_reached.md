@@ -3,7 +3,8 @@
 **Status:** IN PROGRESS (2026-09-25) - twenty-five functions ours
 (`src/game/magic_fx_reached.cpp`, shadow name `magic_fx_reached`), each
 fuzzed headless against a copy of Capcom's with every call re-aimed at a
-recorder; @CONTROLS@ Not yet through a live check: the coordinator's combat
+recorder; 78 negative controls, every one refused by a count (exit 3) in
+the one function it touches. Not yet through a live check: the coordinator's combat
 A/B after the merge.
 
 Group CJ of the eighth round ([`takeover-queue-round8.md`](takeover-queue-round8.md)).
@@ -175,20 +176,20 @@ queue's PSX twin for `0x4B54F0` is `801EEC90`; neither pairing was checked
 further. The start plays the thief's animation 0xC, creates the thief's
 double - a kind-1 task (parameter 0x45) whose first 0x80 bytes are a copy of
 the acting party record, its `+1` / `+2` cleared and kind / parameter set
-back after the copy - and rolls:
+back after the copy - and rolls. (The animation is `BattleActor_SetAnimation`'s offset 0xC from the thief's own.)
 
 - the multiplier m from the speed difference d = thief `+0xA8` - enemy
   `+0xB8` (words): 12 for d >= 49, then 11, 10, 9, 8, 7, 6, 5 below 49, 29,
   19, 9, -10, -20, -30, and 4 below -50;
 - success when `Rand() & 0xFF` < `Steal_RateTable[enemy +0xAA]` (signed) x m;
 - then the enemy's item `+0xA8` (category << 8 | index): none gives message
-  0x3A; `Inventory_Add(category, index, 1)` answering 0 (a full stack) gives
+  0x3A; `Inventory_Add(category, index, 1)` answering 0 (no room: a stack at 99, or no free slot) gives
   0x39; else 0x38, the item kept in the task's `+0x2C` and the enemy's item
   and rate cleared;
 - a failed roll gives 0x39, or 0x3A when the enemy's rate row is 0.
 
 `Steal_Wait` waits for the double (`+0xB`), then at its first frame plays
-animation 4 and clears the owner's bit 6, and counts `+9` from 0x1E down.
+animation offset 4 and clears the owner's bit 6, and counts `+9` from 0x1E down.
 `Steal_Report`, once the message window is down, puts the item's name in
 `Text_Records` for a theft and queues the system message `+0xA`
 (`BattleQueue_Push(1, 0x1E, text)`). `MagicFx_EndWhenIdle` sets the done
@@ -205,7 +206,7 @@ has the sparkles). `Sparkle_Spawn` clears the pool, takes the source's
 position and screen point, and makes `Sparkle_CountByKind[kind]` sparkles
 (30 for kind 0, the one it sets) with launch delays in steps of
 `Sparkle_DelayByKind` per four; a full pool skips one. `Sparkle_End` dims
-the tint record `+0xA` by one a frame for `+9` frames, then releases the
+the tint record `+0xA` (the one `0x4B1E70` took and `0x4B1ED0` brightened) by one a frame for `+9` frames, then releases the
 source's tints and flashes the target. `Sparkle_Update` is the sparkle's type
 0: its phase, its disc once launched, its rays on frames the sway allows.
 
@@ -248,11 +249,125 @@ the CRT never gives.
 
 Result (2026-09-25):
 
-@RESULT@
+    shadow      magic_fx_reached self-test: 50000 rounds over 25 functions (2000 each), 248158 calls to the
+                stand-ins, 0 MISMATCHES
+    shadow      magic_fx_reached coverage: disc-fan phases 695 / 652 / 653, steal 506 / 472 / 504 / 518, double
+                507 / 502 / 516 / 475, herb 307 / 341 / 351 / 336 / 342 / 323, sparkle 692 / 665 / 643; ring table
+                479 / 510 / 484 / 527, double types 991 / 1009, dim table 499 / 466 / 516 / 519; stolen 432, bag full
+                245, no add 1323; creates 14000, frees 1983, allocs 29642, dispatches 128174, rays 402 / 402, tints
+                4000, messages 1339
+
+The fuzz found no difference of ours. Its first runs failed twice on its
+own blindness, both fixed before the result above: every sparkle's `+0x28`
+became the owner `Sparkle_Task` hands on, and was a random dword the
+stand-ins then wrote through (an access violation); and the fields a target
+of 2 reads, `0x93B8E0..`, lay outside every region, so a stand-in's write
+there in the original's pass survived into ours (34 rounds of `Steal_Start`).
+The regions now cover `0x93B8C0..0x93B960` and the owners are put back. Two
+seeds were added after the first run of the controls, which refused the
+steal's two threshold controls in one round each: `Steal_RateTable` is given
+the exe's values two rounds in three (random bytes made almost every rate
+too large or negative to meet a roll), and the round's first `Rand` lands on
+the compare or one below it half the time. The table below is the second
+run, every control against the final fuzz.
 
 `BOF3X_SHADOW='*'`: exit 0, every module's self-test passing (2026-09-25).
 
-@CONTROLTABLE@
+**Seventy-eight negative controls**, planted one at a time by a script (not
+committed: apply, build, run `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=magic_fx_reached`, restore), each build's output read. All 78
+are refused by a count (exit 3), each only in the function it touches; none
+by a fault. At least one per behaviour: every constant, every compare's
+bound, every table index, the order of the calls, and each re-read of a
+cell the original reads again after a call.
+
+| | Planted | Refused in (rounds of 2,000, by function) |
+|---|---|---|
+| C1 | DiscFanTask: screen y - 0xF | FxDiscFan_Task 980 |
+| C2 | DiscFanTask: draws when +0 is 0 | FxDiscFan_Task 2,000 |
+| C3 | DiscFanTask: fan before disc | FxDiscFan_Task 1,002 |
+| C4 | DiscFanTask: table index phase ^ 1 | FxDiscFan_Task 1,347 |
+| C5 | DiscFanStart: delay 6 i + 2 | FxDiscFan_Start 2,000 |
+| C6 | DiscFanStart: parameter 0x17 | FxDiscFan_Start 2,000 |
+| C7 | DiscFanStart: five rings | FxDiscFan_Start 2,000 |
+| C8 | DiscFanStart: CLUT without bit 15 | FxDiscFan_Start 2,000 |
+| C9 | DiscFanStart: CLUT cell 0 kept | FxDiscFan_Start 2,000 |
+| C10 | DiscFanStart: Sprite_Current read before the create | FxDiscFan_Start 373 |
+| C11 | DiscFanStart: dirty flag not set | FxDiscFan_Start 1,995 |
+| C12 | DiscFanStart: target flags 0x20 | FxDiscFan_Start 2,000 |
+| C13 | DiscFanStart: target read after the flags call order (sound first) | FxDiscFan_Start 2,000 |
+| C14 | Grow: 0x11 | FxDiscFan_Grow 658 |
+| C15 | DiscFanFade: first bound 5 | FxDiscFan_Fade 157 |
+| C16 | DiscFanFade: second bound 4 | FxDiscFan_Fade 190 |
+| C17 | DiscFanFade: done flag bit 3 | FxDiscFan_Fade 65 |
+| C18 | RingTask: draws when +1 is 0 | FxRing_Task 251 |
+| C19 | RingTask: table index ^ 1 | FxRing_Task 2,000 |
+| C20 | RingWait: +9 = 0x41 | FxRing_Wait 335 |
+| C21 | RingWait: +0x38 from the owner +0x3C | FxRing_Wait 335 |
+| C22 | RingRise: +0xA += 3 | FxRing_Rise 2,000 |
+| C23 | RingFade: owner count kept | FxRing_Fade 308 |
+| C24 | StealTask: table index phase ^ 1 | Steal_Task 2,000 |
+| C25 | StealStart: animation (0xC, 3) | Steal_Start 2,000 |
+| C26 | StealStart: parameter 0x46 | Steal_Start 2,000 |
+| C27 | StealStart: copy 0x7C bytes | Steal_Start 2,000 |
+| C28 | StealStart: double kind 2 | Steal_Start 2,000 |
+| C29 | StealStart: threshold 0x30 | Steal_Start 11 |
+| C30 | StealStart: threshold -0x33 | Steal_Start 14 |
+| C31 | StealStart: rate unsigned | Steal_Start 393 |
+| C32 | StealStart: roll > not >= | Steal_Start 239 |
+| C33 | StealStart: target not re-read after Rand | Steal_Start 27 |
+| C34 | StealStart: Inventory_Add category from the low byte | Steal_Start 675 |
+| C35 | StealStart: enemy item kept | Steal_Start 430 |
+| C36 | StealStart: full bag 0x3A | Steal_Start 245 |
+| C37 | StealStart: target not re-read after Inventory_Add | Steal_Start 16 |
+| C38 | StealStart: owner bit 0x20 | Steal_Start 1,490 |
+| C39 | StealStart: failed roll 0x39 whatever the rate | Steal_Start 65 |
+| C40 | StealWait: animation 5 | Steal_Wait 126 |
+| C41 | StealWait: owner &= 0x7F | Steal_Wait 93 |
+| C42 | StealWait: first frame 0x1D | Steal_Wait 128 |
+| C43 | StealReport: message window ignored | Steal_Report 661 |
+| C44 | StealReport: name arguments swapped | Steal_Report 299 |
+| C45 | StealReport: Sprite_Current not re-read after the name | Steal_Report 9 |
+| C46 | StealReport: queue (1, 0x1F) | Steal_Report 1,339 |
+| C47 | EndWhenIdle: flags |= 8 | MagicFx_EndWhenIdle 726 |
+| C48 | CloneDispatch: index ^ 1 | StealClone_Dispatch 2,000 |
+| C49 | CloneTask: update when +0 is 0 | StealClone_Task 2,000 |
+| C50 | CloneTask: phase from +1 | StealClone_Task 1,504 |
+| C51 | CloneRun: sounds (0, 5) | StealClone_Run 321 |
+| C52 | CloneRun: phase +1 | StealClone_Run 321 |
+| C53 | CloneFinish: owner +0xA | StealClone_Finish 1,033 |
+| C54 | SparkleTask: owner not put back | Sparkle_Task 1,620 |
+| C55 | SparkleTask: owner saved before the phase | Sparkle_Task 67 |
+| C56 | SparkleTask: 127 sparkles | Sparkle_Task 995 |
+| C57 | SparkleTask: table index phase ^ 1 | Sparkle_Task 2,000 |
+| C58 | Spawn: +2 not cleared in the pool | Sparkle_Spawn 2,000 |
+| C59 | Spawn: +9 = 9 | Sparkle_Spawn 1,774 |
+| C60 | Spawn: delay n >> 1 | Sparkle_Spawn 1,332 |
+| C61 | Spawn: colour Rand & 7 | Sparkle_Spawn 1,542 |
+| C62 | Spawn: bound read once | Sparkle_Spawn 1,205 |
+| C63 | Spawn: Sprite_Current not re-read after Rand | Sparkle_Spawn 605 |
+| C64 | Spawn: sound 0x101 | Sparkle_Spawn 2,000 |
+| C65 | Spawn: offset row n + 1 | Sparkle_Spawn 1,713 |
+| C66 | End: tint bytes +1..+3 | Sparkle_End 2,000 |
+| C67 | End: the actor flashed | Sparkle_End 317 |
+| C68 | Update: G3 radius + 2 | Sparkle_Update 402 |
+| C69 | Update: G3 start + 3 | Sparkle_Update 402 |
+| C70 | Update: sway test & 7 | Sparkle_Update 278 |
+| C71 | Update: disc without the launched test | Sparkle_Update 503 |
+| C72 | Update: sparkle not re-read before G3 | Sparkle_Update 9 |
+| C73 | Update: table index phase ^ 1 | Sparkle_Update 1,357 |
+| C74 | DimDispatch: index ^ 1 | FxDim_Dispatch 2,000 |
+| C75 | DimDown: -7 | FxDim_Down 407 |
+| C76 | DimDown: tint not sign-extended | FxDim_Down 1,100 |
+| C77 | DimHold: bit 3 | FxDim_Hold 996 |
+| C78 | DimUp: +9 read before the free | FxDim_Up 20 |
+
+The thinnest by count are C45 and C72 (9 rounds each: a stand-in moving
+`Sprite_Current` or the current sparkle exactly across the one call between
+the two reads), C29 (11) and C30 (14), the steal's thresholds moved by one
+(only a roll landing on the compare with the difference at that threshold
+shows them), C37 (16) and C78 (20) - each a re-read or a boundary that only a
+stand-in moving the cell, or one seeded value, can tell apart.
 
 ## 6. For `analysis/calltrace/entries_logic.txt`
 
@@ -296,7 +411,8 @@ For the coordinator to number in [`known-defects.md`](known-defects.md):
 - **`BattleTask_Create`'s 0xFF untested** by `FxDiscFan_Start` (six creates)
   and `Steal_Start` - with all 48 slots taken the owner goes to `0x9423FC`
   and, for the steal, a 0x80-byte copy to `0x94237C`: past the slots and
-  past the image's end (`0x93F000`), an access violation. Round seven noted
+  past the image's end (`0x93F000`) - an access violation unless
+  something else is mapped there. Round seven noted
   the same for the magic starters.
 - **The steal does not check that the target is an enemy**: a target of 0..2
   reads (and on a theft writes) "enemy" fields below the enemy records - in
@@ -331,14 +447,15 @@ round seven's) say what it must hold:
    is how the ~1,900 can be enumerated at all, since none is a `call rel32`
    target.
 3. **One callee set.** Across these 25 the calls out are 29 functions, all
-   already ours or raw: the task create / free, the target flags, the
+   ours except `Rand` and `0x4B58F0`: the task create / free, the target flags, the
    sounds, the actor animation and sounds, `Rand`, the script tick, the
    screen update, the matrix push / pop, the shared draws, the primitive
    setters (round seven), the CLUT tint, the message queue. A harness with
    one recording stand-in per callee - `StubFor` here and in
    `battle_items_fuzz.cpp`, merged - would clone any effect function
    without a per-function table, provided the calls are found by the
-   disassembly (`calls.py`-style: every `E8` / `E9` leaving the extent).
+   disassembly (every `E8` / `E9` that leaves the extent - how this group's
+   clone table was built, by a capstone pass over the 25).
 4. **Linker-shared bodies.** Identical phases of two overlays are one body
    (`FxDiscFan_Grow`, the ring phases; round seven's shared draws): the
    harness must key on the address, and a takeover takes every overlay that
