@@ -25,6 +25,12 @@ flushed to `build/bof3x.calltrace.tsv` from that breakpoint — on WinMain's
 stack — so the handler does no I/O on a 16 KB task stack, and a `taskkill`
 loses at most one frame of hits.
 
+*Since 2026-09-25 `Task_RunAll` is ours* ([`task_sched.md`](task_sched.md)
+section 5): it is the one owned entry the tracer still arms - its `int3`
+then sits on the detour's `jmp` - and our WinMain calls it through
+`0x5A98A0` (`bof3::orig::Task_RunAll`), so a frame is still an arrival
+there.
+
 It is instrumentation, not replacement: no original code is skipped, so there
 is no ledger entry. It does leave `.text` writable for the process's life,
 which is why it is off unless asked for.

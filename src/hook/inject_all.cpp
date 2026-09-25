@@ -117,6 +117,7 @@
 #include "game/mode_states.h"
 #include "game/shop_states2.h"
 #include "game/map_field_objects.h"
+#include "game/task_sched.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -303,6 +304,10 @@ void InjectAll() {
     MapFieldObjects_Inject();   // round 8 group DD: every call of its clones re-aimed at a recorder and its jump
                                 // table relocated in the copy; no module patches bytes inside its sixteen: order
                                 // does not matter
+    TaskSched_Inject();         // round 9 group EA: the scheduler unit 0x5A98A0..0x5A9A21 cloned whole (it calls
+                                // nothing) and run on the fuzz's own stacks; no module patches bytes inside it:
+                                // order does not matter (other clones' calls to Task_Sleep and the rest are
+                                // re-aimed at their own recorders, and a call site keeps its target either way)
     InjectReport();
 }
 

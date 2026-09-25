@@ -268,7 +268,9 @@ add_library(bof3x SHARED
   src/game/shop_states2.cpp
   src/game/shop_states2_fuzz.cpp
   src/game/map_field_objects.cpp
-  src/game/map_field_objects_fuzz.cpp)
+  src/game/map_field_objects_fuzz.cpp
+  src/game/task_sched.cpp
+  src/game/task_sched_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
