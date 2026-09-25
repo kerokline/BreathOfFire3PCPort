@@ -131,7 +131,7 @@ void Disturb() {
         SetLong(sc + 0x34 + 4 * (w % 2), static_cast<std::int32_t>(h * 0x2545F491u));
         break;
     }
-    default: At(at::kPassageFlags + w % 32)[0] = static_cast<unsigned char>(v); break;
+    default: At(at::kPassageFlags + w % 0x34)[0] = static_cast<unsigned char>(v); break;   // to the count 0x90413C
     }
 }
 
@@ -673,10 +673,14 @@ Args Seed(unsigned k) {
     case kWayBlocked:
         args.a[2] = Garbage(0xFF, Half() ? 0 : Next() & 0xFF);
         break;
-    case kWayBlocked4:
+    case kWayBlocked4: {
         if (Half()) args.a[0] &= 0xFFFF0000u;
         if (Half()) args.a[1] &= 0xFFFF0000u;
+        // the ground near what the ground stand-in answers half the time
+        static const int kNear[] = {0, 0x10, -0x10, 0x40, -0x40, 0x80};
+        if (Often()) args.a[2] = Garbage(0xFFFF, static_cast<std::uint16_t>(Word(At(at::kLeaderHeight)) + kNear[Next() % 6]));
         break;
+    }
     case kCellsBlock:
         if (Half()) args.a[2] = 0;
         break;
