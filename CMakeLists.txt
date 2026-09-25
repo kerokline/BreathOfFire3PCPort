@@ -230,7 +230,9 @@ add_library(bof3x SHARED
   src/game/window_kinds.cpp
   src/game/window_kinds_fuzz.cpp
   src/game/battle_fx_tasks.cpp
-  src/game/battle_fx_tasks_fuzz.cpp)
+  src/game/battle_fx_tasks_fuzz.cpp
+  src/game/battle_result.cpp
+  src/game/battle_result_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

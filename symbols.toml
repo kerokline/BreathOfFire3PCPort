@@ -13907,3 +13907,181 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "disasm 2026-09-25: BattleFx_DamagePopup's `jmp [ecx*4 + 0x432C28]` by the slot's +7 (checked against 3): 0x432BCB (the number), 0x432C04 / 0x432C08 / 0x432C0C (labels, cells 2 / 1 / 0). In .text."
+# --- Round 8 group CD: the battle result (BATL_END.EMI), docs/battle_result.md
+
+[[data]]
+pc = 0x64AFAC
+name = "BattleResult_ExpSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: five code pointers 0x431940, 0x431A20, 0x431A90, 0x431AB0, 0x431B30, dispatched by 0x431920 (group CC's; entry 0 of 0x64AFA0) as `mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64AFAC]` (0x43192A). The next dword, 0x64AFC0, is the next table's (referenced by 0x431B6D). The EXP steps of the battle result: split, window, wait, tick, done."
+
+[[data]]
+pc = 0x64AFC0
+name = "BattleResult_LevelUpSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x431B80 (BattleResult_FindLevelUp), 0x431C10 (the level-up announcement, Capcom's - not in the round's queue: no route reached it), dispatched by BattleResult_LevelUpStep 0x431B60 (`jmp [eax*4 + 0x64AFC0]` at 0x431B6A, eax = 0x904AA4 & 0xFF). 0x64AFC8 is the next table's (0x431D5D)."
+
+[[data]]
+pc = 0x64AFC8
+name = "BattleResult_RewardSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x431D70, 0x432050, 0x432070, 0x4320F0, dispatched by BattleResult_RewardStep 0x431D50 (`jmp [eax*4 + 0x64AFC8]` at 0x431D5A, eax = 0x904AA4 & 0xFF). 0x64AFD8 starts another table (referenced from 0x43243A, 0x4324C6)."
+
+[[func]]
+pc = 0x431940
+name = "BattleResult_SplitExp"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431940..0x4319AD (0x6E bytes), cdecl, entry 0 of BattleResult_ExpSteps (reached by 0x431920's tail jmp), four calls: with 0x904AEC non-zero and n = 0x4319B0() (al) non-zero, 0x904AEC = (0x904AEC + n - 1) / n (div, 32-bit sum), else 0; sprintf(0x904CE0, 0x5E10C0 \"%d\", it); 0x93B8E4 = Msg_SystemPtr(5); PartySet_Select(0x90412C & 0x7F, 0); inc 0x904AA4. PSX 0x801EECD4 paired (analysis/pairs_propagated.json), not read. Combat route: reached (docs/takeover-queue-round8.md CD)."
+
+[[func]]
+pc = 0x431A20
+name = "BattleResult_OpenExpWindow"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431A20..0x431A87 (0x68 bytes), cdecl, entry 1 of BattleResult_ExpSteps, one call: Window_Alloc(1, 4); window slot 1 (0x803184) +2 = 4, +3 = 0, +9 = (0x904AB0 << 4) + 4; word 0x904B70 = 1 when 0x904AEC < 30, else 0x904AEC / 30 (mul 0x88888889, shr 4); inc 0x904AA4. PSX 0x801EEE50 paired, not read."
+
+[[func]]
+pc = 0x431A90
+name = "BattleResult_ExpWaitHeld"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431A90..0x431AA0 (0x11 bytes), cdecl, entry 2 of BattleResult_ExpSteps, no calls: inc 0x904AA4 when the word Input_Held 0x7E1BE8 is non-zero. PSX 0x801EEEE4 paired, not read."
+
+[[func]]
+pc = 0x431AB0
+name = "BattleResult_ExpTick"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431AB0..0x431B24 (0x75 bytes), cdecl, entry 3 of BattleResult_ExpSteps, calls at +0xA File_LoadDone, +0x34 / +0x56 0x4468B0: with Input_Held and File_LoadDone, 0x4468B0(0x904AEC), 0x904AEC = 0, inc 0x904AA4; else with step = dword 0x904B70 & 0xFFFF and 0x904AEC - step > 0 (signed), 0x4468B0(step) and 0x904AEC -= step (both re-read); else 0x4468B0(0x904AEC) and the same finish. Named after the sibling's BattleResult_ExpTick (PSX 0x801EEF58, its decomp: AddExp(step) while the counter exceeds the step, then the rest, counter 0, phase ++); the round pairs it with 0x801EEF18."
+
+[[func]]
+pc = 0x431B30
+name = "BattleResult_ExpDone"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431B30..0x431B53 (0x24 bytes), cdecl, entry 4 of BattleResult_ExpSteps, starts with a call (File_LoadDone at +0): when it answers non-zero, 0x904AA5 = 0, inc 0x904AA3, 0x904AA4 = 0. PSX 0x801EEFD0 paired, not read."
+
+[[func]]
+pc = 0x431B60
+name = "BattleResult_LevelUpStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431B60..0x431B70 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64AFC0] (BattleResult_LevelUpSteps). Entry 1 of 0x64AFA0 (by 0x904AA3, dispatched by group CC's 0x431910). The handlers take nothing and return nothing. PSX 0x801EF01C paired, not read."
+
+[[func]]
+pc = 0x431B80
+name = "BattleResult_FindLevelUp"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431B80..0x431C0C (0x8D bytes), cdecl, entry 0 of BattleResult_LevelUpSteps, calls at +0x26 0x4469D0 and +0x41 0x432170: while 0x904AA5 < 0x904AB0, r = 0x4469D0(byte 0x802DC9 + 0x14C * slot); 0x904AA7 = r, inc 0x904AA5 (re-read after the call); when 0x432170(r, 0) answers a non-zero word, 0x904AE8 |= 0x20, inc 0x904AA4, return. At the end 0x904AA4 = 0, inc 0x904AA3. PSX 0x801EF058 paired, not read."
+
+[[func]]
+pc = 0x431D50
+name = "BattleResult_RewardStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431D50..0x431D60 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64AFC8] (BattleResult_RewardSteps). Entry 2 of 0x64AFA0. PSX 0x801EF310 paired, not read."
+
+[[func]]
+pc = 0x431D70
+name = "BattleResult_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431D70..0x431FDA (0x26B bytes), cdecl, entry 0 of BattleResult_RewardSteps, ten calls, every jump internal: returns unless Input_Held (and Input_Pressed 0x7E1BEC while 0x904AE8 has 0x20); per party slot 0x498DE0(0x4469D0(id)) when 0x432170(0x4469D0(id), 0) is non-zero; 0x904AF0 += 0x904AF0 >> 1 when 0x431FE0(); window slot 1 byte +0 = 0, Window_Alloc(1, 4), +2 = 5, +3 = 0; sprintf(0x904CE0, \"%d\", 0x904AF0); 0x93B8E4 = Msg_SystemPtr(6); step 0x904B70 as BattleResult_OpenExpWindow's; with 0x904AE7 drops, Window_Alloc(0x15, 4), +2 = 1, +4 = 0x14, +6 = 0x46, +9 = ((n-1)/2)*13 + 0x12, and for n > 1 an exchange sort of the u16 items 0x904AF4 with the counts 0x904B14 (xor swaps, count re-read after each); Snd_LoadBankFile(word 0x904EFC + 3); inc 0x904AA4. The sibling's BattleResult_Setup (PSX 0x801EF390, its decomp) has the same steps in the same order; the round pairs it with 0x801EF34C."
+
+[[func]]
+pc = 0x432050
+name = "BattleResult_ZennyWaitHeld"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432050..0x43206D (0x1E bytes), cdecl, entry 1 of BattleResult_RewardSteps, no calls: with Input_Held non-zero, 0x904AA5 = 0 and inc 0x904AA4. PSX 0x801EF780 paired, not read."
+
+[[func]]
+pc = 0x432070
+name = "BattleResult_ZennyTick"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x432070..0x4320E8 (0x79 bytes), cdecl, entry 2 of BattleResult_RewardSteps, calls at +0xA File_LoadDone, +0x38 / +0x5A 0x591BE0 (Zenny_Add: 0x904058 += n, 0x904138 too when its second argument is 0, capped 9,999,999): BattleResult_ExpTick's shape over 0x904AF0, each call (amount, 0). The sibling's BattleResult_ZennyTick (PSX 0x801EF810); the round pairs it with 0x801EF7B8."
+
+[[func]]
+pc = 0x4320F0
+name = "BattleResult_AwardDrops"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4320F0..0x432163 (0x74 bytes), cdecl, entry 3 of BattleResult_RewardSteps, calls at +1 File_LoadDone and +0x3E Inventory_Add: when File_LoadDone, for each of 0x904AE7 drops Inventory_Add(byte 0x904AF5 + 2i, byte 0x904AF4 + 2i, byte 0x904B14 + i, 0) (count re-read after each), then 0x904AA1 = 4, 0x904AA2..0x904AA4 = 0. The sibling's BattleResult_AwardDrops (PSX 0x801EF874, its decomp: the same four arguments and the same mode bytes); the round's label for the pair (Card_CopyIconFrame1) is another overlay's function at the same PSX address."
+
+[[func]]
+pc = 0x598570
+name = "BattleResultWin_ExpState"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x598570..0x598595 (0x26 bytes), cdecl, no rel32 calls: a two-entry table on its stack, imm32 at +0xF 0x5986F0 and +0x17 0x5985A0, called by byte +3 of the record 0x905B84 (`call [esp + eax*4]`). State 4 of the window-kind handler 0x597F60 (group CM's; its stack table's +0x10 slot, imm at 0x597F8A), which BattleResult_OpenExpWindow sets. PSX 0x801F065C paired, not read."
+
+[[func]]
+pc = 0x5985A0
+name = "BattleResultWin_DrawExp"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5985A0..0x5986B9 (0x11A bytes), cdecl, eleven calls, every jump internal: 0x5982D0(0x14, 0x28, 0x118, record +9); per party slot n < 0x904AB0, y = byte 0x2C + 16n: Text_DrawAt(0x19, y, 0, 5, 0x802DC0 + 0x14C n); level byte +0xA == 0x63: Text_DrawAt(0x55, y, 0, 0xFF, Msg_SystemPtr(0x41)); else sprintf(0x904D20, \"%2d\", level + 1), Text_DrawFont12(0x85, y, 0, 0x904D20), sprintf(0x904D20, \"%6d\", 0x598810(n)), Text_DrawFont12(0xE3, ...), Text_DrawAt(0x55, y, 0, 0xFF, Msg_SystemPtr(0x15)). The frame's height and y carry a register's upper half (read as words by their callees). PSX 0x801F06D4 paired, not read."
+
+[[func]]
+pc = 0x5986C0
+name = "BattleResultWin_ZennyState"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5986C0..0x5986E5 (0x26 bytes), cdecl, no rel32 calls: the same two-entry stack table as BattleResultWin_ExpState, imm32 at +0xF 0x5986F0 and +0x17 0x598700. State 5 of the window-kind handler 0x597F60 (its +0x14 slot, imm at 0x597F92), which BattleResult_Setup sets. No PSX twin paired."
+
+[[func]]
+pc = 0x5986F0
+name = "BattleResultWin_NextStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5986F0..0x5986F8 (9 bytes): mov eax, [0x905B84]; inc byte [eax + 3]; ret. Entry 0 of both result-window states' stack tables (imm at 0x59857F and 0x5986CF). No PSX twin paired."
+
+[[func]]
+pc = 0x598700
+name = "BattleResultWin_DrawZenny"
+ret = "void"
+params = "void"
+impl = "src/game/battle_result.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x598700..0x598749 (0x4A bytes), cdecl, four calls: BattleWin_DrawMediumBox(0x6E, 0x28); sprintf(0x904D20, 0x64ADDC \"%7d\", dword 0x904058); Text_DrawFont12(0x70, 0x2A, 0, 0x904D20); Text_DrawAt(0xC4, 0x2A, 0, 0xFF, 0x66A31C). No PSX twin paired."

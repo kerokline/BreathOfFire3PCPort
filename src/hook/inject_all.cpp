@@ -79,6 +79,7 @@
 #include "game/tex_cells.h"
 #include "game/event_objs.h"
 #include "game/char_stats.h"
+#include "game/battle_result.h"
 #include "game/member_sprites.h"
 #include "game/sprt_draw.h"
 #include "game/field_misc.h"
@@ -239,6 +240,9 @@ void InjectAll() {
                                 // before injecting them, and no module patches bytes inside them)
     BattleFxTasks_Inject();     // group CE, round eight: every call of its clones re-aimed at a recorder, six stack
                                 // tables re-aimed, a jump table relocated and Magic_Rows swapped: order does not matter
+    BattleResult_Inject();      // round 8 group CD: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed in the copies and two .data step tables swapped:
+                                // order does not matter
     InjectReport();
 }
 
