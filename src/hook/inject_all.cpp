@@ -116,6 +116,7 @@
 #include "game/event_leader.h"
 #include "game/mode_states.h"
 #include "game/shop_states2.h"
+#include "game/map_field_objects.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -299,6 +300,9 @@ void InjectAll() {
                                 // tables swapped for recorders: order does not matter
     ShopStates2_Inject();       // round 8 group DG: every call of its clones re-aimed at a recorder and its two .data
                                 // dispatch blocks swapped for recorders: order does not matter
+    MapFieldObjects_Inject();   // round 8 group DD: every call of its clones re-aimed at a recorder and its jump
+                                // table relocated in the copy; no module patches bytes inside its sixteen: order
+                                // does not matter
     InjectReport();
 }
 

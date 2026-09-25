@@ -3185,8 +3185,9 @@ name = "ScriptFlags_Clear40"
 psx = 0x8015CA48
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 6 instructions: clears bit 0x40 of byte 0x8034E1 and bit 8 of the word 0x9039A2 (the blocking flags Field_MenuButton's callers test, docs/menu-screens.md). Op F0."
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 6 instructions: clears bit 0x40 of byte 0x8034E1 and bit 8 of the word 0x9039A2 (the blocking flags Field_MenuButton's callers test, docs/menu-screens.md). Op F0. 2026-09-25 (group DD, round eight): 0x57C7A0..0x57C7B5 (0x16 bytes), the byte read first and stored last, eax the caller's with the new byte in al; about 390 E8 callers and two tail jmps (0x417D49, 0x543A5D) by a .text scan - ours is a naked entry passing eax to the body. World-map route."
 
 [[func]]
 pc = 0x57C7C0
@@ -5650,8 +5651,9 @@ name = "EventScript_SkipSwitch"
 psx = 0x801A584C
 ret = "const unsigned char *"
 params = "const unsigned char *at"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole with its jump table 0x579D40, not taken over): at is ON the F4; steps 2, then to past its F5 - F6 steps 2, F7 F8 1, ops by length, F0 F1 F4 F9 FA through EventScript_SkipControl. Never reached by the attract cycle. psx_pair call."
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (whole with its jump table 0x579D40, not taken over): at is ON the F4; steps 2, then to past its F5 - F6 steps 2, F7 F8 1, ops by length, F0 F1 F4 F9 FA through EventScript_SkipControl. Never reached by the attract cycle. psx_pair call. 2026-09-25 (group DD, round eight): 0x579CF0..0x579D3F (0x50 bytes) + EventScript_SkipSwitchCases (0x2C); F2, F3 and FB..FF re-read the same byte for ever; byte +1 loaded into bl and never used. One E8 caller, EventScript_SkipControl 0x579ACD. World-map route: 1 call."
 
 [[func]]
 pc = 0x579D70
@@ -5717,8 +5719,9 @@ name = "EventOp_8x"
 psx = 0x801A6408
 ret = "void"
 params = "const unsigned char *op"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 8x (12 bytes): EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, Sprite_SetAnimation, then 0x579F00 four times (a byte into the AreaMap_Bytes grid). Never reached by the attract cycle."
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 8x (12 bytes): EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, Sprite_SetAnimation, then 0x579F00 four times (a byte into the AreaMap_Bytes grid). Never reached by the attract cycle. 2026-09-25 (group DD, round eight), whole: 0x57A3A0..0x57A5D8 (0x239 bytes), nine calls, every jump internal: while the s16 object index at 0x903850 is below 0x1E, object 0x7DEE80 + 0xA4 n becomes Sprite_Current and Field_ActiveMember; bank op[1..2] via 0x903852 (read after EventObj_Reset); +0 = 1; +0x34 = op[5] << 16 | (op[4] ? 0x8000 : 0), +0x38 likewise from op[7], op[6], copied to n's +0x8C / +0x90, +0x94 = 0; +0x3E = AreaMap_Elevation(+0x34, +0x38); +1 op[8], +2 op[10], +8 / +6 op[0]'s nibbles; n's +0x88 = 0xFFFF, +0x84 = op[9], +0xA0 = 0x7F; EventObj_SetFlags(op + 11); +0 |= 0x20 on op[3] bit 7; +0x5C..+0x5F; +0x2A from +7 bit 4; Sprite_SetAnimation(+8); AreaMap_SetByte(0x10) at the cell and at +1 x / +1 z / both by the half-cell words +0x34 / +0x38; the index + 1. Sprite_Current re-read at every access. World-map route: 7 calls."
 
 [[func]]
 pc = 0x57A5E0
@@ -18580,3 +18583,229 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-25: 0x588EB0 (TitleMode_Load) 0x587DB0 (TitleFlow_Step), then a 0 dword; called through by TitleTask_Run 0x588E70 by Game_Mode, unchecked."
+# ---------------------------------------------------------------------------
+# Round eight, group DD: map layers and field objects (2026-09-25,
+# docs/map_field_objects.md). EventScript_SkipSwitch, EventOp_8x and
+# ScriptFlags_Clear40 were typed earlier; their entries above now carry impl.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x570210
+name = "MapCell_DrawUprights"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x570210..0x570520 (0x311 bytes, then nops), cdecl, eight calls, every jump internal: MapCell_Handlers 1..3, 5..0xF, 0x31..0x33, 0x35..0x3E (a .data scan: 26 slots). e = (kind & 0xF) - 1; origin ((b1 - 0x81) << 7, (b0 - 0x80) << 7) to the scratch dwords 0x903850 / 0x903854 (read again after AreaMap_Elevation((b1 << 16) - 0x10000, b0 << 16)); h = -(s16 elevation / 2) to 0x903858; Gte_RotTransPers3(0x9037B0 top, 0x9037B8 base, 0x9037A0 stale, MapView_ScreenXY x3); Gte_StoreDepthF3 into the argument slots; culled unless x0 >= -80, x0 <= 400, y1 >= -20, y0 <= 260 (fcomp 0x5C4264 / 60 / 2C / 5C); MapCell_UprightCounts[e] times two POLY_FT4 (Gpu_SetPolyFT4, Gpu_SetShadeTex 0, the tables' u / v / CLUT, tpage 0x1B, Gfx_CommitPrim(6 when the top nibble, else Draw_OtSlot; 0x48)) then Gte_RotTransPers4 of the four outer vertices from MapCell_UprightOffsetsX / Y and Gte_StoreDepthF4. Shop, world-map and combat routes (DrawLayer_Open)."
+note = "Named for the geometry - quads standing from the cell's centre to offsets about it; what the kinds depict in game is unread."
+
+[[func]]
+pc = 0x570530
+name = "MapCell_DrawDiagonalWall"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x570530..0x570654 (0x125 bytes), cdecl, six calls, no jump but the slot's: MapCell_Handlers 4 and 0x34. One POLY_FT4 0x80 high along the cell's diagonal from corner (0, 1) to (1, 0): x (b1 << 7) - 0x4040, y (b0 << 7) - 0x4040, heights -(corner byte 2 / 1, unsigned) << 4 of AreaMap_Corners + (width * b0 + b1) * 4; Gpu_SetPolyFT4, Gpu_SetShadeTex 0, Gte_RotTransPers4 (stack vertices, fourth words unwritten), Gte_PrimDepths4_10, Prim_SetTexture(0xB1800110, prim, 1), Gfx_CommitPrim(6 or Draw_OtSlot, 0x48). World-map route."
+
+[[func]]
+pc = 0x570A00
+name = "MapCell_DrawFlatFaces"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x570A00..0x570AA5 (0xA6 bytes), cdecl, one call: MapCell_Handlers 0x11..0x17 and 0x19..0x1F (0x18 is 0x437CC0, a bare ret). The cell's draw item by the view ring's diagonal lookup inline (MapView_ItemAt's: (b1, b0) - MapView_Origin, row (sum + MapView_Row + 1), column (diff / 2 + MapView_Column + 1), one wrap each, when 0 <= sum, diff < 0x38), the low 12 bits of MapView_CellItems word +2; a non-zero one to MapCell_FlatOverlay(kind - 0x10, item). Shop and world-map routes."
+
+[[func]]
+pc = 0x571090
+name = "MapCell_PatchThenStep"
+ret = "void"
+params = "unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x571090..0x5710C3 (0x34 bytes), cdecl, one call: MapCell_Handlers 0x24. The record's kind byte becomes 0x25 (stored), then AreaMap_ApplyPatch(AreaMap_Header + ((record & 0xFFFF) + (AreaMap_PatchBase & 0xFFFF)) * 4); pops the argument slot ApplyPatch overwrote into ecx. Shop and world-map routes."
+
+[[func]]
+pc = 0x5710D0
+name = "MapCell_PatchThenStop"
+ret = "void"
+params = "unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5710D0..0x571103 (0x34 bytes), cdecl, one call: MapCell_Handlers 0x25, MapCell_PatchThenStep's twin with kind 0x23 (0x437CC0, a bare ret) - so an 0x24 record's patch is applied on two draws and then never. Shop and world-map routes."
+
+[[func]]
+pc = 0x5712E0
+name = "MapCell_DrawAnimated"
+psx = 0x80158464
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5712E0..0x5714F7 (0x218 bytes), cdecl, seven calls, every jump internal: MapCell_Handlers 0x27. Unless Area_TestCondition(word +0): the point ((s8 +7 + (b1 - 0x80) * 64) * 2, (s8 +6 + (b0 - 0x80) * 64) * 2, word +4) through Gte_RotTransPers into MapView_ScreenXY; culled unless -60 <= x <= 380, -150 <= y <= 300 (fcomp 0x5C4210 / 0C / 00 / 41FC) and the returned depth p non-zero; k the first index with Frame_Counter mod byte +8 (div) < byte +0xA + k; n = (byte +9 + 5) >> 2; the POLY_FT4 (Gpu_SetPolyFT4, Gpu_SetShadeTex 0, Gte_PrimDepthFlat4_10) with corners x - o0 * 1125.0 / p, + o1 * 1125.0 / p, y - o2 * 1125.0 / p, + o3 * 1125.0 / p (x87, the running value in st0; o the s8 bytes of dword n + 2k + 2), Prim_SetTexture(the next dword & ~0x8000, prim, 1), Gfx_CommitPrim(6 when its bit 30, read again, else Draw_OtSlot; 0x48). PSX FUN_80158464 (gap4 pair). Shop and world-map routes."
+
+[[func]]
+pc = 0x571880
+name = "AreaMap_SetupTint"
+psx = 0x80158C70
+ret = "void"
+params = "const unsigned char *entry"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x571880..0x5718EE (0x6F bytes), cdecl, two calls: AreaMap_SetupHandlers entry 0. Gfx_ClutAdjust(word +4, word +6, s8 +8, s8 +9, s8 +10) when Area_TestCondition(word +0) (al, movsx) is non-zero, else (word +4, word +6, 0, 0, 0); the words read after the condition; the ClutAdjust eax left in eax. PSX FUN_80158C70 (gap4 pair). Shop, world-map and combat routes."
+
+[[func]]
+pc = 0x571A30
+name = "AreaMap_SetupFlatColours"
+psx = 0x80158E78
+ret = "void"
+params = "const unsigned char *entry"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x571A30..0x571A6E (0x3F bytes), cdecl, no calls: AreaMap_SetupHandlers entry 1. The words at 0x8CB59A / 0x8CB59C (area block +0x1A / +0x1C, MapCell_FlatOverlay's colours) = the high words of dwords +4 / +8 when Cond_ByteFF is set, else their low words. PSX FUN_80158E78 (gap4 pair). Shop, world-map and combat routes."
+
+[[func]]
+pc = 0x571A70
+name = "AreaMap_SetupTexture"
+psx = 0x80158EE4
+ret = "void"
+params = "const unsigned char *entry"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x571A70..0x571AE0 (0x71 bytes), cdecl, no calls: AreaMap_SetupHandlers entry 2. Dword +4 (Cond_ByteFF set) or +8 into the area's texture run at dword (height * width + 1) / 2 (cdq; sar) + offset + tile of AreaMap_Header, tile the header word (byte 0 * width + byte 1 + offset * 2) of dword +0 - MapView_CellTextures' address. PSX FUN_80158EE4 (gap4 pair). World-map route."
+
+[[func]]
+pc = 0x573560
+name = "Menu_DrawMemberStatus"
+psx = 0x801D8270
+ret = "unsigned long"
+params = "int x, int y, unsigned member, unsigned highlight"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x573560..0x573891 (0x332 bytes), cdecl, 17 calls, every jump internal: a party member's list entry (menu_frame.cpp: the PSX 0x801EA99C's entry body). Menu_DrawBox(x + 3, y + 3, 0x7D, 0x30, highlight, byte 0x903A5A); record 0x903A70 + (member & 0xFF) * 0xA4; Menu_DrawItemIcon(x + 0x56, y + 2, +9, 1 / (+0x10 bit 7 ? 2 : 0)); Text_DrawAt(x + 0x14, y + 3, c, 5, record); Crt_sprintf into 0x904BA0 and Text_DrawFont8 for the level %3d (+0xA) at y + 0x17, HP '%3d/   ' '   /%3d' (+0x18, +0x20) at y + 0x1F, AP (+0x1A, +0x22) at y + 0x27; 0x516E70(x + 0x2E, y + 0x17, c or 1, 0x10, 0x66A0E8 / 0x66A0F0 by +0x10 bits 7 / 5, alternating on Frame_Counter bit 5); +0x10 bit 13 = HP < max / 4; Menu_DrawPieces(x, y, 0x6632C8, 0); Menu_DrawExpBar(x + 0x14, y + 0x12, member, (pieces eax & ~0xFF) | level, +0xC), whose eax is returned. Colours 7 when highlighted, else 0 / 4 / 2 by the quarter tests. Callers 0x58125B, 0x5817AF, 0x5840D4, 0x599BC2, 0x59BEE9 (tail-returns eax). PSX 0x801D8270 call-anchored. World-map route: 114 calls."
+
+[[func]]
+pc = 0x5744B0
+name = "Menu_DrawCell8"
+psx = 0x801DA0D4
+ret = "unsigned long"
+params = "unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut, unsigned shade"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5744B0..0x574525 (0x76 bytes), cdecl, three calls: a SPRT_8 at Gfx_PacketNext - Gpu_SetSprt8; x, y their low words (fild) as floats +8 / +0xC; u * 8 +0x14, v * 8 +0x15 (bytes); word +0x16 clut; +4..+6 the shade byte; Gpu_SetSemiTrans(prim, 0); Gfx_CommitPrim(1, 0x18), its eax returned. Eight E8 callers (0x461DB1, 0x461DD7, 0x461DFD, 0x57437E, 0x5750B7, 0x599C17 ...). PSX 0x801DA0D4 (gap pair). World-map route: 114 calls."
+
+[[func]]
+pc = 0x5746C0
+name = "Menu_DrawPlayTime"
+ret = "unsigned long"
+params = "int x, int y"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5746C0..0x5747C7 (0x108 bytes), cdecl, 15 calls, every jump internal: Menu_DrawBox(x + 3, y + 3, 0x55, 0x10, 0, byte 0x903A5A); the play clock's hours and minutes (0x9040C8, 0x9040C9) through Crt_sprintf('%02d') and Text_DrawFont12 at (x + 0x1C / x + 0x3C, y + 4); while the frame byte 0x9040CB < 15, two 0x516E70 dots ('.' 0x6637E0) at (x + 0x34, y + 5 / y + 9); Menu_DrawPieces 0x6633CC at (x, y), 0x6633B4 six times at x + 0x18 + 8 * ((last eax & 0xFFFF0000) | i), 0x6633C0 at x - 0x10, whose eax is returned. One caller, 0x599DE1. PSX pairs disputed (three 'callers' candidates). World-map route: 38 calls."
+
+[[func]]
+pc = 0x579F00
+name = "AreaMap_SetByte"
+psx = 0x801A5BC8
+ret = "unsigned long"
+params = "unsigned long x, unsigned long z, unsigned value"
+impl = "src/game/map_field_objects.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x579F00..0x579F26 (0x27 bytes), cdecl, no calls: AreaMap_Bytes[s16 x + s16 z * (AreaMap_Header dword & 0xFF)] = value's byte; eax the row offset with the byte in al. About 420 E8 call sites (a .text scan), the event ops 8x / 9x among them. PSX 0x801A5BC8 (call pair). World-map route: 30 calls."
+
+[[data]]
+pc = 0x66313C
+name = "MapCell_UprightCounts"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: 3 2 3 3 3 3 3 3 3 0 0 0 - MapCell_DrawUprights' pairs of quads for e = (kind & 0xF) - 1, as byte [0x66313C + e], read again after each pair. e reaches 14 (kinds 0xD..0xF, 0x3D, 0x3E), past this table into MapCell_UprightOffsetsX's bytes (9, 0xFF, 0xBE); 12 is the gap to it."
+
+[[data]]
+pc = 0x663148
+name = "MapCell_UprightOffsetsX"
+ctype = "short"
+count = 54
+status = "evidence"
+evidence = "read 2026-09-25: MapCell_DrawUprights' outer x offsets about the cell origin, word [0x663148 + ((i + 3e) * 2 + v / 2) * 2] for pair i of kind index e and vertex v 0..3 - three pairs of two per kind index 0..8. 54 is the gap to MapCell_UprightOffsetsY."
+
+[[data]]
+pc = 0x6631B4
+name = "MapCell_UprightOffsetsY"
+ctype = "short"
+count = 54
+status = "evidence"
+evidence = "read 2026-09-25: the y offsets beside MapCell_UprightOffsetsX, indexed the same way (word [0x6631B4 + ...]); in the first kinds each y pair is the x pair with its words swapped (x -247, -66 against y -66, -247)."
+
+[[data]]
+pc = 0x663220
+name = "MapCell_UprightHeights"
+ctype = "short"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-25: 0x200 0x200 0x100 0x80 0x280 0x100 0x200 0x200 0x100 0 - taken from the base height for the uprights' top (word [0x663220 + e * 2])."
+
+[[data]]
+pc = 0x663234
+name = "MapCell_UprightV01"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-25: the v of an upright quad's vertices 0 and 1 (+0x15, +0x25), byte [0x663234 + 2e + j] for quad j of the pair."
+
+[[data]]
+pc = 0x663248
+name = "MapCell_UprightV23"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-25: the v of vertices 2 and 3 (+0x35, +0x45), byte [0x663248 + 2e + j]."
+
+[[data]]
+pc = 0x66325C
+name = "MapCell_UprightU02"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: the u of vertices 0 and 2 (+0x14, +0x34), byte [0x66325C + e]."
+
+[[data]]
+pc = 0x663268
+name = "MapCell_UprightU13"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: the u of vertices 1 and 3 (+0x24, +0x44), byte [0x663268 + e]."
+
+[[data]]
+pc = 0x663274
+name = "MapCell_UprightClut"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: the CLUT word of both quads is (byte [0x663274 + e] >> 4) | 0x78C0; 12 is the gap to MapCell_WallTextures 0x663280."
+
+[[data]]
+pc = 0x579D40
+name = "EventScript_SkipSwitchCases"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-25: EventScript_SkipSwitch's jmp [0x579D40 + (op - 0xF0) * 4] for F0..FA: 0x579D1D (F0 F1 F4 F9 FA, EventScript_SkipControl), 0x579CFB (F2 F3, the same byte again), 0x579D3D (F5, the end), 0x579CF8 (F6, two on), 0x579D1A (F7 F8, one on). In .text, right after the function's ret."
+
+[[data]]
+pc = 0x6632C8
+name = "Menu_MemberPieces"
+ctype = "unsigned char"
+count = 141
+status = "evidence"
+evidence = "read 2026-09-25: Menu_DrawMemberStatus's Menu_DrawPieces list, 47 records (s8 column, s8 row, id) to an id of 0xFF. Its first four bytes are the zero dword after Kind2_StateTable (Kind2_Dispatch's state 5)."
+
+[[data]]
+pc = 0x6633B4
+name = "Menu_PlayTimePieces"
+ctype = "unsigned char"
+count = 45
+status = "evidence"
+evidence = "read 2026-09-25: Menu_DrawPlayTime's three Menu_DrawPieces lists - 0x6633B4 the middle (drawn six times, 8 apart), 0x6633C0 the left end (at x - 0x10), 0x6633CC the right end (at x) - 3, 4 and 6 records to an id of 0xFF, back to back."
