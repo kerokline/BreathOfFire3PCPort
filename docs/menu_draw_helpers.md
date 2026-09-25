@@ -83,7 +83,7 @@ instruction-level account):
   id with 0xFFFF, read 2026-09-25), so ours passes them zero-extended.
   `ShopWin_TitleRun`'s id is the record pointer's high word over the word
   +0x10; `Msg_SystemPtr` drops it.
-- **Unbounded indices**, as in the original, read from the same memory:
+- **Unbounded indices** (known-defects.md D59, D64), as in the original, read from the same memory:
   the kind (+2), each step (+3), the cursor box's width (+0xA, words past
   the two of its table are the low halves of `ShopWin_MemberStatsSteps`'
   pointers), the party slot +0xA (into `0x904062`, then `0x66972C`).
@@ -214,7 +214,7 @@ DH's `0x59A580` and `0x59A5E0`, not here. No cheat and no other divergence
 patches a byte of these twenty-five (`grep` of `src/` for their addresses
 and the tables', 2026-09-25).
 
-## 5. What the original does that looks wrong (not numbered)
+## 5. What the original does that looks wrong (numbered D87, D88)
 
 - **`ShopWin_MoneySlideUp` `0x59B390` does not slide.** It is
   `0x59A3A0` (group DH's slide-up to -0x14) byte for byte but for the
@@ -222,13 +222,13 @@ and the tables', 2026-09-25).
   from any y above -4 it jumps to -0x14 in one frame and stops; from -4 or
   less it moves up 0x10 a frame and the step never ends (the word wraps round
   to positive, where it snaps). Which case the shop shows, and whether the player can see the
-  difference, is not checked (unseen; the owner's eye after the merge). Kept (faithful); a candidate for
-  `known-defects.md`, for the coordinator to number. Negative control 14
+  difference, is not checked (unseen; the owner's eye after the merge). Kept (faithful); a candidate,
+  `known-defects.md` D87. Negative control 14
   plants the fix and is refused.
 - **`BattleMenuWin_ItemListSlideRight` `0x59CB60` tests 0x53 and stores
   0x52**, so an x landing exactly on 0x53 sits there a frame and goes on to
   0x73, then 0x52; the window rests at 0x52. `0x59CB90` (step 3, in no group) has the same 0x53 /
-  0x52 pair. Harmless; kept.
+  0x52 pair. Harmless; kept (known-defects.md D88).
 
 ## 6. What the fuzz did not reach, what stays original, and other groups' addresses
 

@@ -114,7 +114,7 @@ tables (`0x64E04C`, `0x64E058`) and then the sub-state tables named in
 (`0x64E12C`) and state 26's (`0x64E13C`) tables are not named: their states
 are not this group's.
 
-**Every index is unchecked**, as `BattleObj_RunState`'s: a byte, through a
+**Every index is unchecked** (known-defects.md D59), as `BattleObj_RunState`'s: a byte, through a
 table whose neighbours are other tables. Ours indexes the same way; nothing
 aborts, since a wrong index lands on another handler, not outside the image
 (the byte tables after `0x64E048` would be jumped through as code pointers -

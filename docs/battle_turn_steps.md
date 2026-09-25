@@ -13,7 +13,7 @@ the PSX's `BATTLE.EMI` compiled into the exe; the RAM layout is the one
 read against the sibling's `docs/BATTLE_RAM.md`. Every function is a
 faithful replacement, so no `DIVERGENCE.md` entry is owed. Two latent
 defects of Capcom's are described in section 4, kept as the original has
-them, for the coordinator to number.
+them, numbered D63 and D60 in known-defects.md.
 
 ## 1. What they are
 
@@ -169,9 +169,9 @@ group CD's functions. If CD names it too, the merge has a duplicate
 ## 3. Latent, as the original has them
 
 - The stubs do not check their state byte. One past a table reads the next
-  table's first entry.
+  table's first entry (known-defects.md D59).
 - `BattleEnd_StartMemberTask` does not test `BattleTask_Create`'s 0xFF (no
-  slot free); the owner then goes to `0x9423FC` (section 4).
+  slot free); the owner then goes to `0x9423FC` (section 4; known-defects.md D60).
 - The member index passed to `Battle_ActorIsOut`, `Battle_ClearStatus` and
   `Battle_ReturnQueuedItem` from `BattleRoundEnd_NextRound`,
   `BattleEnd_StartMemberTask` and `BattleEnd_AwaitMemberTasks` is a stack
@@ -179,10 +179,10 @@ group CD's functions. If CD names it too, the merge has a duplicate
   `ecx` at entry. All three callees (ours) mask the byte, so ours passes the
   index alone.
 
-## 4. Defects, for `known-defects.md` (the coordinator numbers them)
+## 4. Defects, for `known-defects.md` (numbered D63 and D60)
 
 **The round's end leaves the last member's and the last enemy's flag
-0x8000.** `BattleRoundEnd_CheckFaster` clears flag 0x8000 (+0x134 / +0x114,
+0x8000** (known-defects.md D63). `BattleRoundEnd_CheckFaster` clears flag 0x8000 (+0x134 / +0x114,
 the mark `Battle_MarkFasterSide` sets on the side that outpaces) with
 `ecx = 2` over the members from `0x802E74` and `ecx = 7` over the enemies
 from `0x93BA74`: members 0 and 1, enemies 0..6. The actor loops read beside
@@ -194,7 +194,8 @@ round. What reads flag 0x8000 was not read, so whether that gives an extra
 action is open. **Kept**; controls F7 and F8 plant the full loops and are
 refused (584, 589 rounds).
 
-**A full task table at the battle's end writes past the image.**
+**A full task table at the battle's end writes past the image**
+(known-defects.md D60).
 `BattleEnd_StartMemberTask` stores the member at `0x93A080 + 0x84 n` with
 `n = BattleTask_Create`'s al unchecked; with all 48 slots taken that is
 `0x9423FC`. The image ends at `0x93F000`; at start-up (the self-test's

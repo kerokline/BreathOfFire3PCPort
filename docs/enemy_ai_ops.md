@@ -10,7 +10,8 @@ merge.
 This is group CF of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. No defect of the
-original was found that a player can reach; two latent ones are in section 5.
+original was found that a player can reach; the latent ones are in section 5
+(known-defects.md D60, D64, D59).
 
 The name "script ops" is the queue's. What the code is: the handlers of an
 enemy object's **state 0**. `BattleEnemy_RunAll` (ours, `battle_flow.cpp`)
@@ -410,20 +411,20 @@ during that one call.
 ## 5. Found on the way
 
 - **Latent, as the original has it:**
-  - **A tint index of `0xFF`.** `Sprite_SetTint` answers `0xFF` when all 32
+  - **A tint index of `0xFF`** (known-defects.md D60). `Sprite_SetTint` answers `0xFF` when all 32
     records are taken, and `EnemyOp_HighlightOn` stores it in `+7`
     untested. `EnemyOp_HighlightPulse` then writes the pulse into
     `0x7E12F2..0x7E12F4`, which is `0x7E0700` + 12 x 255, past the records.
     It then calls `Tint_Release(0xFF)`, which reads the record there. The
     fuzz keeps the index below 64 and does not reach this. The PSX twin
     was not read.
-  - **The bob's slot is indexed by the actor.** `EnemyOp_Wait` indexes
+  - **The bob's slot is indexed by the actor** (known-defects.md D64). `EnemyOp_Wait` indexes
     the 0x84-byte battle-task slots by the actor byte `+5`, unchecked. An
     enemy's actor number is 3..10, so the slots used are 3..10. Whether
     those slots really belong to the actors was not read; it looks as if
     the battle keeps one task per actor at the start of the array. A
     corrupt actor byte of 0x74 or more would read past `.data` and fault.
-  - **No op checks its table index.** A step byte past a table's end runs
+  - **No op checks its table index** (known-defects.md D59). A step byte past a table's end runs
     the next table's entries, and past the last, whatever follows
     (`0x64B258` on is more tables, then bytes).
 - **`EnemyOp_ReceiveAction` replaces the status on a kill**

@@ -108,7 +108,7 @@ What each does is written above it in `battle_phases.cpp` and in its
   `BattleCommit_WaitLoad` (the files, then unless auto a 14-frame wait
   counted down from `0x904B70`, then phase 3).
 
-**Stack tables and bad indices.** As in `battle_flow`, the two stack-built
+**Stack tables and bad indices** (known-defects.md D59). As in `battle_flow`, the two stack-built
 tables' indices are unchecked in the original, and an index past them calls
 through its own stack; ours aborts (rule 4). The three `.data` dispatches
 are *not* bounded in ours either: they read the entry at the index, as the
@@ -441,17 +441,18 @@ table gives the rounds that refused each one, of 1,000.
 
 ## 5. Latent in the original
 
-For [`known-defects.md`](known-defects.md), if the coordinator wants it. No
-D-number is assigned here.
+Numbered in [`known-defects.md`](known-defects.md) (2026-09-25): D60 and
+D59.
 
-- **`BattleIntro_OpenWindows` does not test `Window_Alloc`'s `0xFF`.** When
+- **`BattleIntro_OpenWindows` does not test `Window_Alloc`'s `0xFF`**
+  (known-defects.md D60). When
   window `0x14` is already taken at a battle's start, the original writes
   +2, +3, x and y into "window 255": `0x80553C + 2..+7`, which is inside
   the script message pool `MessagePools` (`0x803580..0x807580`). What lies
   there, and whether window `0x14` can be taken at that moment, was not
   read. Kept, as the original has it; the fuzz seeds it (the first answer
   `0xFF` in about 210 rounds) and control W10 depends on it.
-- Neither stack table is bounded (section 1); ours aborts.
+- Neither stack table is bounded (section 1); ours aborts (known-defects.md D59).
 
 ## 6. For `analysis/calltrace/entries_logic.txt`
 

@@ -416,25 +416,25 @@ on the route, a steal with a party member as the target, a full bag.
 
 ## 8. Defects found (Capcom's, latent, kept)
 
-For the coordinator to number in [`known-defects.md`](known-defects.md):
+Numbered in [`known-defects.md`](known-defects.md) (2026-09-25):
 
-- **Five unbounded stack tables** (section 3): `FxDiscFan_Task`,
+- **Five unbounded stack tables** (section 3; D59): `FxDiscFan_Task`,
   `Steal_Task`, `StealClone_Task`, `Sparkle_Task`, `Sparkle_Update`. Latent;
   ours aborts. (The last was already proposed by round seven.)
-- **Three unchecked `.data` tables**: `FxRing_Phases`, `StealClone_Types`,
+- **Three unchecked `.data` tables** (D59; the null, D66): `FxRing_Phases`, `StealClone_Types`,
   `FxDim_Phases` - a phase past the table calls the next `.data` dword
   (`FxDim_Phases`' fifth is 0: a call to null). Latent; kept.
-- **`BattleTask_Create`'s 0xFF untested** by `FxDiscFan_Start` (six creates)
+- **`BattleTask_Create`'s 0xFF untested** (D60) by `FxDiscFan_Start` (six creates)
   and `Steal_Start` - with all 48 slots taken the owner goes to `0x9423FC`
   and, for the steal, a 0x80-byte copy to `0x94237C`: past the slots and
   past the image's end (`0x93F000`) - an access violation unless
   something else is mapped there. Round seven noted
   the same for the magic starters.
-- **The steal does not check that the target is an enemy**: a target of 0..2
+- **The steal does not check that the target is an enemy** (D67): a target of 0..2
   reads (and on a theft writes) "enemy" fields below the enemy records - in
   the task slots, or at `0x93B8E0` for 2. Whether the game ever lets the
   player steal from an ally is not known here (a game fact for the owner).
-- **`Steal_RateTable`'s row is the enemy's `+0xAA` unbounded** (8 rows);
+- **`Steal_RateTable`'s row is the enemy's `+0xAA` unbounded** (8 rows; D64);
   a row past 7 reads the dwords of `StealClone_Types` as rates.
 
 Not defects, noted: `FxDim_Up` applies the tint after freeing its task

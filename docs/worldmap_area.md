@@ -97,7 +97,7 @@ descriptor numbers in `0x667590`.
     + 1 (read again after `Msg_OpenScript`) and `Field_Request = 2`.
   - State 1: once `Field_Request` is no longer 2, `ScriptFlags_Clear40` and
     the three bytes are zeroed.
-  - Neither the row nor the byte is checked.
+  - Neither the row nor the byte is checked (known-defects.md D64).
 
 ## 2. The place plate: effect kind 0 on the Yraall map
 
@@ -213,7 +213,8 @@ With `b = +0xB`:
    It is appended with `MapView_LinkPrimAt`.
 
 Only `b` 2 and 3 have rows in `WorldMap33_DriftUV` (cell sizes 10 and 12).
-`b` 0, 1 and 4 read the bytes either side, and 5 and up draw no grid.
+`b` 0, 1 and 4 read the bytes either side, and 5 and up draw no grid
+(known-defects.md D64).
 
 What it looks like is unread. The name is a guess from the scroll: a texture
 drifting over the map's items near the party (cloud shadow or mist). The x
@@ -545,15 +546,15 @@ the round's rule for switch cases, it went with its host. It has no
   as [`world-map-hud.md`](world-map-hud.md) §6 said.
 - **For the localisation build** ([`world-map.md`](world-map.md) §5, DIV-0055):
   the plates are sprite animations chosen by place (section 2).
-- **Latent in the original, kept.** No D-number: the coordinator assigns
-  them.
+- **Latent in the original, kept.** Numbered in known-defects.md
+  (2026-09-25):
   1. `WorldMap33_PlateShow`'s search has no bound. A kind-1 cell (0xA1) at a
-     place not among the six would read on through `.data`.
+     place not among the six would read on through `.data` (D74).
   2. Outside a world map, `WorldMap_RecordIndex`'s 11 makes the kind handlers
-     call through `0x462BA0`'s table (section 5).
-  3. Record 6's null slots.
-  4. Area 29's "none kept" exit is unreachable with its table.
-  5. The drift's x-or-z distance test (section 4).
+     call through `0x462BA0`'s table (section 5) (D73).
+  3. Record 6's null slots (D66).
+  4. Area 29's "none kept" exit is unreachable with its table (D75).
+  5. The drift's x-or-z distance test (section 4) (D76).
 
   None of these has been seen in play.
 

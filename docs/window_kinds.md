@@ -59,7 +59,7 @@ tables are here or reach here:
 | `BattleWin_MessageRun` `0x597D50` | record +3 | `0x597D90` `0x597DC0` `0x597DF0` `0x597E60` |
 | `Window_Handler4Kinds` `0x597F60` | record +2 | `0x597FA0`, `0x5984B0`, **0**, **0**, `0x598570`, `0x5986C0` |
 
-None of the four is bounded in the original. Ours abort loudly on an index
+None of the four is bounded in the original (known-defects.md D59). Ours abort loudly on an index
 past the table (rule 4), as `Field_RunTaskRecords` and `Window_Run` already
 do: the slot past the end is the dispatcher's own return address.
 
@@ -258,24 +258,26 @@ The first run (2026-09-25) did not refuse *"no floor of 1 on the recomputed gaug
   timers (`0x447840`, `0x447F40`, `0x450510` write the timer byte) - other
   groups' code, unread here.
 
-## 7. Defects of the original (described, not numbered)
+## 7. Defects of the original (numbered in known-defects.md)
 
-For the coordinator to number after the merge; none is changed here.
+Numbered after the merge (2026-09-25): D66, D71, D72, D68. None is changed
+here.
 
 1. `Window_Handler4Kinds` `0x597F60`: kinds 2 and 3 of its stack table are 0,
    so a record-handler-4 window of kind 2 or 3 calls address 0. Latent: no
-   writer of such a kind is known.
+   writer of such a kind is known (D66).
 2. `BattleWin_BannerSlideOut` `0x597D10` clears the mask bits of the banner
    entry `0x93B8C0` points at - whichever entry `BattleBanner_Dispatch`
    visited last - not of the entry this window shows (record +0xA). With more
    than one banner live the wrong kind's bit may be cleared. Read, not seen;
    whether it matters depends on who reads `0x904AE9` after the window task
-   runs in a frame (unread).
+   runs in a frame (unread) (D71).
 3. The four slides compare y with 0x12 or 0xFFEA for *equality*, stepping 8:
    a window placed at a y not congruent to 0x12 modulo 8 never arrives and
-   wraps round the 16-bit word forever. Latent: the creators are not read.
+   wraps round the 16-bit word forever. Latent: the creators are not read
+   (D72).
 4. The gauge divides by the max HP without a test: a max of 0 is a
-   divide-by-zero fault.
+   divide-by-zero fault (D68).
 
 ## 8. Learned about other groups' addresses (said, not acted on)
 

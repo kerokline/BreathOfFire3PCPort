@@ -82,7 +82,7 @@ The names are hypotheses from what the code does. The short version:
 
 - **The five stubs** are `mov al, [step]; jmp [eax*4 + table]`. Ours read the
   table entry afresh from `.data` and call it. As the original has it, the
-  index is not checked. The tables sit back to back, so one past the end
+  index is not checked (known-defects.md D59). The tables sit back to back, so one past the end
   reads the next table's first entry; ours reads exactly what the original's
   `jmp` would.
 - **The pick states** (`0x447190`, `0x4479E0`, `0x447B10`) share a head:

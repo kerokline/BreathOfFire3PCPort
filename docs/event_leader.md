@@ -14,7 +14,8 @@ one [`field-event.md`](field-event.md) (group B) and
 party, stride `0x14C`, member 0 the leader; `Sprite_Current` and
 `Field_State` point into it. Every function is a faithful replacement, so no
 `DIVERGENCE.md` entry is owed. Candidate defects of Capcom's are in section
-6, kept as the original has them, for the coordinator to number.
+6, kept as the original has them, numbered D77, D78 and D74 in
+known-defects.md.
 
 ## 1. Where they sit
 
@@ -164,7 +165,7 @@ The long ones in full, as ours has them (each `evidence` field in
 All reproduced; none is a divergence.
 
 1. Every dispatch index is a whole byte, unchecked (section 1). Ours reads
-   the same memory.
+   the same memory (known-defects.md D59).
 2. `Field_LeaderStepLands` gives `Field_LeaderEffectTest` the pace read
    before the ticks, after it has set `+0x128` to 3 (control L11).
 3. `Field_SpotFree` puts `+9` back only when the spot is free, into
@@ -173,7 +174,7 @@ All reproduced; none is a divergence.
 4. `Field_SwapExchange`'s fallback spot search's answer is not read: a
    member with no free spot takes whatever `0x903858` / `0x90385C` held.
 5. `Field_ExitFromCell`'s search has no end test: a `0xA0` cell with no
-   record in the area's list walks on through memory.
+   record in the area's list walks on through memory (known-defects.md D74).
 6. `Field_PassageOpen` leaves `Field_ActiveMember` pointing at its dead
    stack buffer, and reads the buffer's `+0x88` whatever the script left
    there - the original never initialises it.
@@ -388,23 +389,23 @@ loop makes no call, so the two counts are always equal.
   match (both walk on), and dispatch indices past their tables (never
   generated: they would call real code).
 
-## 6. Candidate defects (for [`known-defects.md`](known-defects.md); the coordinator numbers them)
+## 6. Candidate defects (numbered in [`known-defects.md`](known-defects.md): D77, D78, D74)
 
-1. **An uninitialised message id.** `Field_PassageOpen`'s kind-2 path reads
+1. **An uninitialised message id** (D77). `Field_PassageOpen`'s kind-2 path reads
    the word `+0x88` of a stack buffer it never initialises and opens that
    script message (`& 0xFFF`) unless it is 0xFFFF. Unless the event script
    always writes `+0x88` through `Field_ActiveMember`, a kind-2 passage can
    open a message chosen by stack garbage. Latent: which scripts write it
    was not read, and no kind-2 passage is on the routes as far as was
    checked.
-2. **A dangling pointer.** The same path leaves `Field_ActiveMember`
+2. **A dangling pointer** (D77, with item 1). The same path leaves `Field_ActiveMember`
    pointing at the dead buffer. Whatever next reads it before it is set
    again reads a dead stack frame. Latent; its other users were not read.
-3. **A blocked spot zeroes a member's step count.** `Field_SpotFree` zeroes
+3. **A blocked spot zeroes a member's step count** (D78). `Field_SpotFree` zeroes
    `Sprite_Current +9` and restores it only on success; the swap calls it
    for each member, so a member whose spot is blocked loses its `+9`. What
    `+9` holds for a member at that point was not established.
-4. **No end to the exit search** (`Field_ExitFromCell`, quirk 5): a map
+4. **No end to the exit search** (D74) (`Field_ExitFromCell`, quirk 5): a map
    whose `0xA0` cell has no record hangs or faults.
 
 ## 7. For the batch check

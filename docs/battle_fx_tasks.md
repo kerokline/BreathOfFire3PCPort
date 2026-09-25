@@ -13,7 +13,7 @@ with `inject: 1043 ours`.
 This is group CE of the eighth parallel round. Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. No defect of the
 original was found beyond the unchecked table indices every stack-table
-dispatch in the battle engine has (section 3). The model is round seven's
+dispatch in the battle engine has (section 3; known-defects.md D59, D64). The model is round seven's
 [`battle_flow.md`](battle_flow.md), whose `BattleTask_RunAll` is the caller
 of the three kinds here.
 
@@ -131,7 +131,7 @@ refused at start-up), and checks `kOriginals` against the same list.
 a state table of `0x4FAFF0`'s and belongs with group CJ; it is not named
 here.
 
-## 3. Unchecked indices
+## 3. Unchecked indices (known-defects.md D59, D64)
 
 Every dispatch here indexes a table it does not bound, as the battle
 engine's others do: the six stack tables (19, 110, 5, 2, 5, 1 entries) by a

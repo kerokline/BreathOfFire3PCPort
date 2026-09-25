@@ -10,7 +10,8 @@ and one (M2) is a change that changes nothing.
 This is group CB of the eighth parallel round
 ([`takeover-queue-round8.md`](takeover-queue-round8.md)). Every function is a
 *faithful* replacement, so no `DIVERGENCE.md` entry is owed. Two latent
-defects of the original were found (section 3); both are kept. The model is
+defects of the original were found (section 3; known-defects.md D61 and
+D62); both are kept. The model is
 [`battle_flow.md`](battle_flow.md), whose `Battle_PhaseDispatch` calls
 `0x42F220` as its phase 3.
 
@@ -35,7 +36,7 @@ so an index past the count goes where the original's goes.
 | `BattleAction_EffectSteps` | `0x64AF14` | 3 | `0x904AA2` | `0x42FC60` `0x42FD20` `0x42FD90` |
 | `BattleAction_AfterSteps` | `0x64AF20` | 3 | `0x904AA2` | `0x42FDE0` `0x42FE20` `0x42FF70` |
 
-No code bounds any of them. The counts are where the next reader's table
+No code bounds any of them (known-defects.md D59). The counts are where the next reader's table
 starts: `0x64AEB4` (two entries, `0x42F5F0` `0x42F640`) is `0x42F5E0`'s,
 `0x64AEC8..0x64AF07` are `0x42F9D0`'s two 32-byte id tables, `0x64AF2C` is
 group CC's. `KindSteps`' six follow from its reader: the kind is 0..5 (kind 4
@@ -196,7 +197,7 @@ records the same masked values, so it cannot see these bits either way.
 ## 3. Found on the way
 
 **Defect, latent: `BattleAction_AbilityCommit`'s target block has no upper
-bound.** For the ids 0x24, 0x25 and 0x8C the new target is `0x42F9D0`'s
+bound** (known-defects.md D61). For the ids 0x24, 0x25 and 0x8C the new target is `0x42F9D0`'s
 answer, and `0x42F880` fills the target block with `cmp al, 2; ja` to the
 enemy path and no further test (`Battle_BeginAction` stops at 10:
 `cmp al, 0xA; ja`). `0x42F9D0` answers a side - 0x40, 0x80 or 0xC0 - when
@@ -211,10 +212,10 @@ depends on what is mapped there at run time, which was not looked at, and on
 whether those three ids are ever used in play (not known here; ask the
 owner). The PSX's twin was not read. **Kept, as the original has it** -
 ours computes the same addresses (control M5 plants the bound and is refused).
-For the coordinator's numbering; no D-number assigned.
+Numbered D61 in [`known-defects.md`](known-defects.md).
 
 **Latent: the "turned away" store writes a member's object by the formula
-for any actor.** `AbilityCheck` and `ItemCheck` store +1 = 2 and +2 = 0 at
+for any actor** (known-defects.md D62). `AbilityCheck` and `ItemCheck` store +1 = 2 and +2 = 0 at
 ObjTrio + 0x14C * actor without testing for a member, so an enemy actor
 would write inside whatever follows ObjTrio (`0x803124`..). Whether an enemy
 reaches kinds 4 and 5 was not settled: `0x435AB0` stores a two-bit kind

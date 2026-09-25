@@ -113,7 +113,7 @@ re-reads it, and the fuzz's stand-ins repoint it between calls (control 14,
   its actor, by the look of the values; not confirmed on screen).
 - **`BattleWin_MemberTargetOffsets` `0x64DF70`** (named, `[[data]]`): (dx,
   dy) s8 pairs, row the member's +0x89 (the character id), column its +8;
-  unbounded. The bytes run as 11 rows of four pairs to `0x64DFC7`.
+  unbounded (known-defects.md D64). The bytes run as 11 rows of four pairs to `0x64DFC7`.
 
 Points that matter for faithfulness:
 
@@ -220,10 +220,10 @@ ours already and fuzzed in its own module).
 
 ## 4. Defects of Capcom's, and not-as-the-original
 
-Latent defects, kept as the original has them where it can be kept (the
-coordinator numbers them in [`known-defects.md`](known-defects.md)):
+Latent defects, kept as the original has them where it can be kept
+(numbered in [`known-defects.md`](known-defects.md): D59, D68, D69, D70):
 
-- **Every stack table here is unbounded.** A kind byte of 8 or more, or a
+- **Every stack table here is unbounded** (D59). A kind byte of 8 or more, or a
   state byte past its table, calls through the words above the table on the
   dispatcher's stack - its own return address first. The member gauge's
   table has no idle entry, so **state 3 of kind 5 calls `0x596FF2`**, the
@@ -234,16 +234,16 @@ coordinator numbers them in [`known-defects.md`](known-defects.md)):
   bit 6) likewise, and its table has an idle entry at 3 anyway. Ours
   aborts past each table (CLAUDE.md rule 4, as `Battle_PhaseDispatch` and
   `Field_RunTaskRecords` do).
-- **A gauge top of 0 faults.** `0x597400` and `0x5976D0` divide by the HP
+- **A gauge top of 0 faults** (D68). `0x597400` and `0x5976D0` divide by the HP
   top with `idiv` unchecked (the AP top is checked). An enemy or member
   with a top HP of 0 opening a gauge window would raise a divide fault;
   ours aborts with a message instead. Neither is seen in play.
-- **A growth of 1 wraps.** `0x597160` lowers an unselected arm's growth by
+- **A growth of 1 wraps** (D69). `0x597160` lowers an unselected arm's growth by
   2 while it is not 0, so an odd growth goes 1 -> 0xFF (then 0xFD ..);
   growths are raised by 2 from 0 and lowered by 1 only in `0x5970C0`,
   which runs until arm 0's is 0 - an odd value in arms 1..6 after the grow
   is possible when they started unequal. Kept.
-- **The member's target banner does not put its place back** where the
+- **The member's target banner does not put its place back** (D70) where the
   enemy's does (`Window_RestoreAndBack`); state 1 of kind 5 draws nothing,
   so it does not show.
 

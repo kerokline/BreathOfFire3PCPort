@@ -86,7 +86,7 @@ The "Table" column's counts for the slides are a dword scan of the image
 
 Every call goes through `menu_lists::g` (`menu_lists_callees.h`). Eight of
 the twenty dispatch through code-pointer tables in `.data`, which are read
-afresh and unchecked, as the originals read them; a state or kind past a
+afresh and unchecked (known-defects.md D59), as the originals read them; a state or kind past a
 table's end reaches the next table's entries in both, since they are data
 and ours reads the same dword.
 
@@ -347,13 +347,15 @@ hosts these came out of; the consolidation keeps the smaller extent.
 
 ## 9. Defects of the original
 
-None that a player meets. Noted from the reading, no D-number:
+None that a player meets. Noted from the reading, numbered in
+[`known-defects.md`](known-defects.md): D85, D64, D86.
 
 - `FieldMenu_Open` copies one party pair per `Party_Count` without a bound:
   a count above 3 writes the saved reserve's bytes over the saved party's
-  (the two lists are three bytes apart). The count is at most 3 in play.
+  (the two lists are three bytes apart). The count is at most 3 in play
+  (D85).
 - `FieldMenu_TopBarInput` indexes the title ids by the cursor as a signed
   byte; only a cursor of `0x80` or more (a corrupted state block) reads
-  before the table.
+  before the table (D64).
 - The title's centring for 12-pixel glyphs (section 3) is right for the
-  Chinese it was written for and wrong for any narrower font.
+  Chinese it was written for and wrong for any narrower font (D86).

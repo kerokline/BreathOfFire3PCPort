@@ -93,7 +93,7 @@ Every `evidence` field in `symbols.toml` gives the extent read, the calls and
 the callers. The sizes are to the last instruction, capstone, 2026-09-25.
 
 **The two dispatchers read their `.data` tables in place with the index
-unchecked**, as the original does. This follows the precedent of the CJ
+unchecked** (known-defects.md D59), as the original does. This follows the precedent of the CJ
 group's `FxRing_Phases` ([`magic_fx_reached.md`](magic_fx_reached.md)). An
 index past the table reads the next table's dwords, the same on both sides.
 That is not a stack table, so there is nothing to abort.
@@ -125,7 +125,7 @@ on, and it was never a value there.
 - **An odd facing is not masked.** In `PartyAction5_Form0Begin`, an odd
   `+8` is kept as it is and indexes `Field_DirectionSteps` unchecked. `+8`
   of 8 or more reads past the 8 rows. `PartyAction5_Form0Resolve` indexes
-  it the same way.
+  it the same way (known-defects.md D64).
 - **`Inventory_Add` is pushed a fourth dword, 0**, by `Field_CellPickup`'s
   `0xF8` path. It reads three.
 - **A store that changes nothing.** `Member_EffectState` sub-state 0 stores
@@ -389,17 +389,17 @@ The merger should judge them as the earlier rounds' were.
 
 ## 7. Defects found (Capcom's, latent, kept)
 
-Neither has a D-number; the coordinator numbers them after the merge.
+Numbered D82 and D83 in [`known-defects.md`](known-defects.md).
 
 - **A zenny cell dug with every effect object busy is cleared for
-  nothing.** In `Field_CellPickup`'s `0xF2` path, the zenny roll only
+  nothing** (D82). In `Field_CellPickup`'s `0xF2` path, the zenny roll only
   happens once `Effect_FindFree` answers a slot. With all 20 objects taken,
   the path skips the roll and the `+0xB` store, but still clears the cell
   (`0x5728D0`) and answers 1. The chance is lost for good. The `0xF8` item
   path does not ask for an effect, so it cannot lose its item this way.
   Reaching it needs 20 live effect objects at the moment of the dig, which
   no route here does.
-- **The row weights are summed in a byte.** Weights over 255 in total wrap,
+- **The row weights are summed in a byte** (D83). Weights over 255 in total wrap,
   and a later row can then be picked for a roll the earlier rows should
   have covered. The rows come from the area's data. Whether any area's
   weights sum past 16, let alone 255, was not checked.
@@ -431,7 +431,7 @@ Neither has a D-number; the coordinator numbers them after the merge.
 Nothing here was bound, renamed or given an `impl`.
 
 - **`0x6609D0`** is the party-set action table that DC's `0x52FB60` calls
-  through, by `0x90412C & 0x7F`, unchecked below 128.
+  through, by `0x90412C & 0x7F`, unchecked below 128 (known-defects.md D59).
   - Its first twelve entries: `0x51C760` `0x51CC20` `0x51D730` `0x51DEB0`
     `0x51E8D0` `0x51F1B0` `0x51FA90` `0x520140` `0x520800` `0x521340`
     `0x521A70` `0x5220C0`.

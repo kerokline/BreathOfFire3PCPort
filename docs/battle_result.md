@@ -39,7 +39,7 @@ dispatches again on the byte `0x904AA4`:
 Every handler takes nothing and returns nothing, so the stubs' tail jumps
 are plain calls in ours. Ours reads the `.data` dword when the step runs
 and, as the original, does not check the index (0..255 all land inside
-`.data`; past the end is the next table).
+`.data`; past the end is the next table; known-defects.md D59).
 
 The result window is window slot 1 (`0x803184`, 36-byte records from
 `0x803160`) of kind 4, whose handler is `0x597F60` (group CM's). Its stack
@@ -286,8 +286,7 @@ defect (a merged drop appends an extra `(item 0, count 1)` entry). Read
 
 So the defect is visible - an empty first slot and possibly one extra row
 in the drop window - and harmless to the inventory. For
-[`known-defects.md`](known-defects.md); the coordinator numbers it with
-battle_flow's. Kept, as the original has it.
+[`known-defects.md`](known-defects.md): added to battle_flow's, D47. Kept, as the original has it.
 
 ## 6. For the merger
 

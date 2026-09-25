@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-24 — fifty-five entries, D1..D58 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051)
+**Status:** IN PROGRESS (2026-09-25 — eighty-five entries, D1..D88 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 and D87 candidates; D59, D66 and D68 abort in ours where the original would crash))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -701,6 +701,13 @@ measured; only a script with a choice id of `0x90` or more reaches it. It is
 why `0x498A30` stays Capcom's: no faithful C++ reproduces a call through an
 arbitrary stack word, and bounding it is a divergence.
 
+**Since round eight** (group DB, 2026-09-25, [`mode_states.md`](mode_states.md)
+§2): `0x498A30` is ours. Ids `0x80..0x8F` call their handler; `0x90` from
+either commit's tail is reproduced exactly (the tail run twice); `0x90` from
+any other caller, `0x91` and up, and below `0x80` abort through
+`bof3::Fatal` instead of corrupting the message box. The ids the scripts
+use are still unmeasured.
+
 ## D23 — A stack of 99 Faerie Tiaras loses one when used (latent)
 
 **Found:** reading `ItemUse_FaerieTiara` `0x4975F0` and `Inventory_Add`
@@ -1260,6 +1267,15 @@ its count and stops; the port keeps searching, then also appends the zeroed
 item word as an item 0 with count 1. Needs two drops of the same item in
 one battle. Kept.
 
+What the result screen does with it (group CD, 2026-09-25,
+[`battle_result.md`](battle_result.md) §5): `BattleResult_Setup` counts it
+(the drop window grows by 13 for every second entry, the sort puts the word
+0 first); the drop window's draw `0x5984B0` skips a word of 0 (`0x5984F4`)
+but places every entry by its index, so the real drops shift one place and
+**the first slot is left empty**; `Inventory_Add` returns 0 for item 0 and
+adds nothing. Visible - an empty first slot, possibly one extra row - and
+harmless to the inventory.
+
 ## D48 — `BattleStep_Expire4000` reads an enemy's counter from the party array (latent)
 
 **Found:** group BA, 2026-09-24 ([`battle_setup.md`](battle_setup.md) §6).
@@ -1301,6 +1317,10 @@ return address or the caller's stack. `Sparkle_Types` `0x65AE28` has one
 real entry, so a non-zero type would jump into data; the one writer stores
 0. Neither can be reproduced; a bounds check would be a divergence (as
 D22's `MsgBox_SystemChoice`). Kept.
+
+**Since round eight** (group CJ, 2026-09-25, [`magic_fx_reached.md`](magic_fx_reached.md)
+§3): `0x4B9000` is ours as `Sparkle_Update`, taken with the stack-table
+abort (D59); its phases stay 0..2 in every writer read.
 
 ## D53 — `SndStream_Stop` tests an uninitialised local when `GetStatus` fails (latent)
 
@@ -1362,3 +1382,581 @@ no such column. **Ours:** gone under DIV-0051 (2026-09-24, the one icon
 column) - fixed under an overlay language only; with `BOF3X_LANG=original`
 the column is still drawn as the original draws it. The live bindings are
 the launcher's Controls dialog.
+
+## D59 — Dispatch indices are never checked (latent; ours aborts past a stack table)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, first by group CA ([`battle_phases.md`](battle_phases.md) §1,
+§5) and then by nearly every group of the eighth round. One entry for the
+class; the groups' own sections carry the tables in full.
+
+**Established:** a state, step or kind byte is used as a table index with no
+bound, in the two forms the battle engine and the field use. The `.data`
+tables are read in place by ours as by the original, so an index past one
+reads the next table's entries (or whatever follows) on both sides. The
+stack-built tables (`mov [esp + 4 i], imm32` then `call [esp + index * 4]`)
+call the dispatcher's own return address and then the caller's frame past
+their end; **ours aborts there with `bof3::Fatal`** (CLAUDE.md rule 4,
+battle_flow's precedent), a difference only on an index the original would
+crash on. No index past a table was seen or found reachable with the
+game's own values.
+
+- **Stack tables (ours aborts):**
+  - CA: `BattleStart_Dispatch` `0x42E470` and `BattleIntro_Dispatch`
+    `0x42E730` ([`battle_phases.md`](battle_phases.md) §1).
+  - CE: the six stack tables of the battle effect tasks (19, 110, 5, 2, 5
+    and 1 entries), `BattleFx_Dispatch` `0x4352A0`'s 19 and
+    `BattleMagicFx_Dispatch` `0x435350`'s 110 among them
+    ([`battle_fx_tasks.md`](battle_fx_tasks.md) §3).
+  - CJ: `FxDiscFan_Task` `0x4C4FC0`, `Steal_Task` `0x4B54B0`,
+    `StealClone_Task` `0x4B5830`, `Sparkle_Task` `0x4B8D70` and
+    `Sparkle_Update` `0x4B9000` (D52's, now taken with the abort)
+    ([`magic_fx_reached.md`](magic_fx_reached.md) §3, §8).
+  - CL: `BattleWin_Run` `0x596FA0`'s eight kinds and its kinds' state
+    tables. The member gauge's table has no idle entry, so state 3 of kind 5
+    calls `0x596FF2`, the middle of `BattleWin_Run` (`add esp, 0x20; ret`
+    on the wrong frame); what would reach state 3 there needs a target byte
+    a slot of 0..2 never has ([`battle_win_states.md`](battle_win_states.md) §4).
+  - CM: `Window_DispatchKind` `0x597A30` (D46's), `BattleWin_BannerRun`
+    `0x597C70`, `BattleWin_MessageRun` `0x597D50` and
+    `Window_Handler4Kinds` `0x597F60` ([`window_kinds.md`](window_kinds.md) §1).
+- **`.data` tables (ours reads the same entry):**
+  - CA: `Battle_InputSteps` `0x64AE28`, `Battle_MenuSteps` `0x64AE54`,
+    `Battle_CommitSteps` `0x64AE74`.
+  - CB: the seven action tables `BattleAction_Steps` `0x64AE80` ..
+    `BattleAction_AfterSteps` `0x64AF20` ([`battle_actions.md`](battle_actions.md) §1).
+  - CC: the phase 4 and 5 stubs `0x4302B0` and `0x4311E0` and their tables
+    `BattleRoundEnd_Steps` `0x64AF2C` .. `BattleEnd_ResultPages` `0x64AFAC`
+    ([`battle_turn_steps.md`](battle_turn_steps.md) §3).
+  - CD: `BattleResult_LevelUpStep` `0x431B60` and `BattleResult_RewardStep`
+    `0x431D50` over `0x64AFC0` and `0x64AFC8` (0..255 all land inside
+    `.data`) ([`battle_result.md`](battle_result.md) §1).
+  - CE: `Magic_Rows`, by `Sprite_Current +5`.
+  - CF: the enemy op tables, `BattleEnemy_States` `0x64B084` ..
+    `EnemyOp_DeathSubs` `0x64B234`; past the last, `0x64B258` on is more
+    tables, then bytes ([`enemy_ai_ops.md`](enemy_ai_ops.md) §5).
+  - CG: `BattleObj_SwingSubs` `0x64E074`, `BattleObj_CastSubs` `0x64E0E4`,
+    `BattleObj_CastDoneSubs` `0x64E118`, `BattleObj_State12Subs` `0x64E134`
+    and the state tables beside them, as D46's `BattleObj_RunState`
+    (the group counts it no defect of its own;
+    [`battle_obj_states.md`](battle_obj_states.md) §1).
+  - CH: the five stubs over `BattleTarget_Steps` `0x64E3EC` ..
+    `BattleItem_TargetSteps` `0x64E428` ([`battle_actor_copies.md`](battle_actor_copies.md) §1).
+  - CI: `BattleAttackCmd_Dispatch` `0x447FD0`, `BattleItemCmd_Dispatch` and
+    their state tables `0x64E44C` .. `0x64E48C` ([`battle_menu_states.md`](battle_menu_states.md) §5).
+  - CJ: `FxRing_Phases` `0x65B5B8`, `StealClone_Types` `0x65AC28`,
+    `FxDim_Phases` `0x65C3A0` (the last's fifth dword is 0: D66).
+  - DC: `Field_LeaderStates` `0x660918`, `Field_LeaderControlSteps`
+    `0x660954` and each state's own table, a whole byte each
+    ([`event_leader.md`](event_leader.md) §1, §3); `Field_ActionBySet`
+    `0x6609D0` by `0x90412C & 0x7F` ([`field_hidden.md`](field_hidden.md) §9).
+  - DE: `PartyAction5_Form0States` `0x65FBC0` and `PartyAction5_ByForm`
+    `0x51F1B0`'s `0x65FC18` ([`field_hidden.md`](field_hidden.md) §2).
+  - DG: `ShopTrade_States` `0x664118` .. `ShopSell_SellSteps` `0x66417C` and
+    `TitleTask_Modes` `0x667294` ([`shop_states2.md`](shop_states2.md) §2, §5).
+  - DH: the eight dispatches of the field menu and the list draws, among
+    them `FieldMenu_States` (by the byte `0x929F00`), `FieldMenu_TopBarSteps`
+    and `MenuList_Kinds` ([`menu_lists.md`](menu_lists.md) §2).
+  - DI: `Window_Handler7KindTable` `0x66B1F8` by the kind +2 and every step
+    table by +3, `0x66B244` .. `0x66B560` ([`menu_draw_helpers.md`](menu_draw_helpers.md) §1).
+
+The PSX twins were not compared for the class; where a group read one it
+says so in its doc.
+
+**Status:** latent. A bound on a `.data` table would be a divergence (the
+original survives an index one past, landing on a real but wrong handler).
+
+## D60 — An allocator's "none free" answer is never tested (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, groups CA ([`battle_phases.md`](battle_phases.md) §5), CC
+([`battle_turn_steps.md`](battle_turn_steps.md) §3, §4), CF
+([`enemy_ai_ops.md`](enemy_ai_ops.md) §5) and CJ
+([`magic_fx_reached.md`](magic_fx_reached.md) §8). The same class as D54
+(the pop-up writers) and battle_flow's magic starters.
+
+**Established:**
+
+- `BattleIntro_OpenWindows` `0x42E770` does not test `Window_Alloc`'s
+  `0xFF`. With window `0x14` already taken at a battle's start it writes
+  +2, +3, x and y into "window 255", `0x80553C + 2..+7`, inside the script
+  message pool `MessagePools` (`0x803580..0x807580`). What lies there, and
+  whether window `0x14` can be taken then, was not read.
+- `BattleEnd_StartMemberTask` stores the member at `0x93A080 + 0x84 n` with
+  `n` = `BattleTask_Create`'s al untested; with all 48 slots taken that is
+  `0x9423FC`, past the image's end `0x93F000`. At start-up (the self-test's
+  `VirtualQuery`, 2026-09-25) `0x940000..` is reserved but not committed, so
+  the store would fault unless something commits that range first.
+- `FxDiscFan_Start` `0x4C5020` (six creates) and `Steal_Start` `0x4B54F0`
+  likewise: the owner goes to `0x9423FC` and, for the steal, a 0x80-byte
+  copy to `0x94237C`.
+- `EnemyOp_HighlightOn` stores `Sprite_SetTint`'s `0xFF` (all 32 records
+  taken) in `+7` untested; `EnemyOp_HighlightPulse` then writes the pulse
+  into `0x7E12F2..0x7E12F4` (`0x7E0700` + 12 x 255, past the records) and
+  calls `Tint_Release(0xFF)`, which reads the record there. The PSX twin
+  was not read.
+
+Ours computes the same addresses in every case (the CA fuzz seeds the
+`0xFF`).
+
+**Status:** latent: 48 live tasks, 32 live tints or a taken window `0x14` at
+those moments were not seen.
+
+## D61 — `BattleAction_AbilityCommit`'s target block has no upper bound (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CB ([`battle_actions.md`](battle_actions.md) §3).
+
+**Established:** for the ids 0x24, 0x25 and 0x8C the new target is
+`0x42F9D0`'s answer, and `0x42F880` fills the target block with
+`cmp al, 2; ja` to the enemy path and no further test (`Battle_BeginAction`
+stops at 10). `0x42F9D0` answers a side - 0x40, 0x80 or 0xC0 - when the
+picked id's record byte +0x10 (`0x65C4D8` + 24 id) has bit 4; of the ids in
+its two tables (`0x64AEC8`, `0x64AEE8`) `0x5C`, `0x5D`, `0x60`, `0x61`,
+`0x62`, `0x65` and `0x66` do, and for a member actor the answer is 0x40. The
+enemy path then reads the s8 at `0x93BA52` + 0x128 * (0x40 - 3) =
+`0x9400DA`, past `.data` (`0x93D6EC`) and the image (`0x93F000`), and
+stores pointers to `0x93FFE8` / `0x9400EC` in `0x904B4C` / `0x904B50`.
+Whether that faults depends on what is mapped there at run time (not looked
+at) and on whether the three ids are used in play (not known; the owner's
+to say). The PSX twin was not read. Ours computes the same addresses
+(control M5 plants the bound and is refused).
+
+**Status:** latent.
+
+## D62 — The "turned away" store writes a member's object for any actor (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CB ([`battle_actions.md`](battle_actions.md) §3).
+
+**Established:** `AbilityCheck` and `ItemCheck` store +1 = 2 and +2 = 0 at
+ObjTrio + 0x14C * actor without testing for a member, so an enemy actor
+would write inside whatever follows ObjTrio (`0x803124`..). Whether an enemy
+reaches kinds 4 and 5 was not settled (`0x435AB0` stores a two-bit kind
+first; the rest of it was not read). Ours does the same.
+
+**Status:** latent.
+
+## D63 — The round's end leaves flag 0x8000 on the third member and the eighth enemy (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CC ([`battle_turn_steps.md`](battle_turn_steps.md) §4).
+
+**Established:** `BattleRoundEnd_CheckFaster` clears flag 0x8000 (+0x134 /
++0x114, the mark `Battle_MarkFasterSide` sets on the side that outpaces)
+with `ecx = 2` over the members from `0x802E74` and `ecx = 7` over the
+enemies from `0x93BA74`: members 0 and 1, enemies 0..6. The actor loops
+beside it (`Battle_TickCounters`, `Battle_MarkFasterSide`) run 0..2 and
+3..10. **The PSX twin `0x801D4B08` has the same bounds** (`sltiu 2` from 0,
+`sltiu 0xA` from 3), so the PC inherited it. A third member or eighth enemy
+once marked keeps the mark into every later round. What reads flag 0x8000
+was not read, so whether that gives an extra action is open. Ours keeps
+it; controls F7 and F8 plant the full loops and are refused.
+
+**Status:** latent (its effect unknown).
+
+## D64 — Unchecked data indices beside the dispatches (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, groups CE, CF, CI, CJ, CL, DA, DE, DH and DI (each named below).
+Every one is read by ours from the same memory as the original's; none was
+seen out of range.
+
+**Established:**
+
+- CE ([`battle_fx_tasks.md`](battle_fx_tasks.md) §3): the enemy index
+  `actor - 3` of the damage popup and the actor watch is not checked, and
+  the popup's party offset table `0x64DF70` is indexed by the owner's
+  `+0x2C * 4 + +8` unchecked. CL ([`battle_win_states.md`](battle_win_states.md)
+  §2) reads the same table, `BattleWin_MemberTargetOffsets`, by the
+  character id and the side byte, unbounded (11 rows of four pairs to
+  `0x64DFC7`).
+- CF ([`enemy_ai_ops.md`](enemy_ai_ops.md) §5): `EnemyOp_Wait` indexes the
+  0x84-byte battle-task slots by the actor byte `+5`; an actor of 0x74 or
+  more would read past `.data` and fault.
+- CI ([`battle_menu_states.md`](battle_menu_states.md) §5): the item list's
+  category is not checked before `0x656B00[category]`; left and right keep
+  it in 0..3, and at 4 the commit would write through `0x656B14[4]`, which
+  is 0.
+- CJ ([`magic_fx_reached.md`](magic_fx_reached.md) §8): `Steal_RateTable`
+  `0x65AC20`'s row is the enemy's `+0xAA`, unbounded (8 rows); a row past 7
+  reads `StealClone_Types`' dwords as rates.
+- DA ([`worldmap_area.md`](worldmap_area.md) §1, §4):
+  `WorldMap33_PlaceMessage` checks neither its row nor the s8
+  `Cond_ByteFA`; `WorldMap33_DrawDrift` `0x4048E0` has rows of
+  `WorldMap33_DriftUV` for `b` 2 and 3 only, so `b` 0, 1 and 4 read the
+  bytes either side.
+- DE ([`field_hidden.md`](field_hidden.md) §2): `PartyAction5_Form0Begin`
+  `0x51E930` keeps an odd facing `+8` and indexes `Field_DirectionSteps`
+  with it; `+8` of 8 or more reads past the 8 rows. `PartyAction5_Form0Resolve`
+  `0x51EAF0` the same.
+- DH ([`menu_lists.md`](menu_lists.md) §9): `FieldMenu_TopBarInput`
+  `0x589B70` indexes the title ids by the cursor as a signed byte; a cursor
+  of `0x80` or more (a corrupted state block) reads before the table.
+- DI ([`menu_draw_helpers.md`](menu_draw_helpers.md) §1): the cursor box's
+  width +0xA (words past the two of `ShopWin_CursorBoxWidths` are the low
+  halves of `ShopWin_MemberStatsSteps`' pointers) and the party slot +0xA
+  (into `0x904062`, then `0x66972C`).
+
+**Status:** latent.
+
+## D65 — A battle item is spent when its command is chosen (latent, unverified)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CI ([`battle_menu_states.md`](battle_menu_states.md) §5).
+
+**Established:** the item is spent when the command is chosen, not when it
+is used. What happens to it if the turn never comes (the battle ends first)
+was not read by CI; group CC's `BattleRoundEnd_NextRound` and battle-end
+steps call `Battle_ReturnQueuedItem` ([`battle_turn_steps.md`](battle_turn_steps.md)
+§3), which may be the answer, but the two were not put together. Whether
+the PSX does the same was not checked.
+
+**Status:** latent; possibly not a defect at all once the return path is
+read.
+
+## D66 — Dispatch tables that hold a null entry (latent; ours aborts in three)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, groups CJ ([`magic_fx_reached.md`](magic_fx_reached.md) §8), CM
+([`window_kinds.md`](window_kinds.md) §4, §7), DA
+([`worldmap_area.md`](worldmap_area.md) §5) and DG
+([`shop_states2.md`](shop_states2.md) §2).
+
+**Established:** each of these calls address 0 in the original when its
+index reaches the null:
+
+- `FxDim_Phases` `0x65C3A0`: four entries, then a 0 - a phase of 4 is a call
+  to null (CJ). CF's `EnemyOp_Steps` `0x64B1A0` is likewise followed by a
+  null at `0x64B1D0` ([`enemy_ai_ops.md`](enemy_ai_ops.md) §2).
+- `Window_Handler4Kinds` `0x597F60`: slots 2 and 3 of its stack table are
+  stored from `eax` (0), so a record-handler-4 window of kind 2 or 3 calls
+  address 0; no writer of such a kind is known (CM). **Ours aborts loudly.**
+- `WorldMap_Records` record 6 (area 104) holds nulls at `+4`, `+8` and
+  `+0x14`; kinds 0xE and 0x16 (`0x462B00`, `0x462B20`, not taken) would call
+  one. Ours reads the table in place, as the original (DA).
+- `TitleTask_Modes` `0x667294` [2]: a `Game_Mode` of 2 while task 0 runs
+  the title. **Ours aborts** (rule 4) (DG).
+
+**Status:** latent.
+
+## D67 — The steal does not check that its target is an enemy (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CJ ([`magic_fx_reached.md`](magic_fx_reached.md) §8).
+
+**Established:** a target of 0..2 reads (and on a theft writes) "enemy"
+fields below the enemy records - in the task slots, or at `0x93B8E0` for 2.
+Whether the game ever lets the player steal from an ally is not known (a
+game fact for the owner). Ours does the same.
+
+**Status:** latent.
+
+## D68 — Divides with no zero test: the battle gauges' max HP and the animated cell's period (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, groups CL ([`battle_win_states.md`](battle_win_states.md) §4),
+CM ([`window_kinds.md`](window_kinds.md) §6, §7) and DD
+([`map_field_objects.md`](map_field_objects.md) §5).
+
+**Established:**
+
+- `BattleWin_EnemyGaugeOpen` `0x597400` and `BattleWin_MemberGaugeOpen`
+  `0x5976D0` divide by the HP top with `idiv` unchecked (the AP top is
+  checked): a top HP of 0 opening a gauge window raises a divide fault.
+  **Ours aborts with a message instead** (CL).
+- The enemy HP gauge's `Window_HpGaugeTrack` `0x597A80` and its drain state
+  divide by the max HP without a test; a max of 0 raises #DE. Never seeded
+  (CM).
+- `MapCell_DrawAnimated` `0x5712E0` divides by its period byte unchecked; a
+  period of 0 is a divide fault on both sides (DD).
+
+**Status:** latent.
+
+## D69 — An odd arm growth on the battle cross wraps (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CL ([`battle_win_states.md`](battle_win_states.md) §4).
+
+**Established:** `BattleWin_CrossFrame` `0x597160` lowers an unselected
+arm's growth by 2 while it is not 0, so an odd growth goes 1 -> 0xFF (then
+0xFD ..). Growths are raised by 2 from 0 and lowered by 1 only in
+`BattleWin_CrossGrow` `0x5970C0`, which runs until arm 0's is 0 - so an odd
+value in arms 1..6 after the grow is possible when they started unequal.
+Ours keeps it.
+
+**Status:** latent.
+
+## D70 — The member's target banner does not put its place back (latent, does not show)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CL ([`battle_win_states.md`](battle_win_states.md) §4).
+
+**Established:** the enemy's target banner (`BattleWin_EnemyTargetFrame`
+`0x597510`) restores the window's home place through
+`Window_RestoreAndBack`; the member's (`BattleWin_MemberTargetFrame`
+`0x5978B0`) does not. State 1 of kind 5 draws nothing, so it does not show.
+Ours keeps it.
+
+**Status:** latent.
+
+## D71 — `BattleWin_BannerSlideOut` clears the last-visited banner's mask bit (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CM ([`window_kinds.md`](window_kinds.md) §7).
+
+**Established:** `BattleWin_BannerSlideOut` `0x597D10` clears the mask bits
+of the banner entry `0x93B8C0` points at - whichever entry
+`BattleBanner_Dispatch` visited last - not of the entry this window shows
+(record +0xA). With more than one banner live the wrong kind's bit may be
+cleared. Whether it matters depends on who reads `0x904AE9` after the window
+task runs in a frame (unread). The combat route did not reach the slide-out
+(fuzz only).
+
+**Status:** latent.
+
+## D72 — The banner and message slides test for equality and can miss their stop (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group CM ([`window_kinds.md`](window_kinds.md) §7).
+
+**Established:** the four slides - `BattleWin_BannerSlideIn` `0x597CF0`,
+`BattleWin_BannerSlideOut` `0x597D10`, `BattleWin_MessageSlideIn`
+`0x597DC0`, `BattleWin_MessageSlideOut` `0x597E60` - compare y with 0x12 or
+0xFFEA for *equality*, stepping 8. A window placed at a y not congruent to
+0x12 modulo 8 never arrives and wraps round the 16-bit word forever. The
+creators are not read.
+
+**Status:** latent.
+
+## D73 — Off a world map, `WorldMap_RecordIndex`'s 11 runs another table's handlers (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DA ([`worldmap_area.md`](worldmap_area.md) §5).
+
+**Established:** `WorldMap_RecordIndex` `0x462A90` answers 11 when no record
+of `WorldMap_Records` `0x653910` matches the area. The three kind handlers
+then read the dwords after the eleventh record, which are the table
+`0x653A44` of `0x462BA0` (`0x462BC0`, `0x462BF0`, `0x462E70`, ...). So an
+effect of kind 0, 0x58 or 0x18/2..3 run outside a world map calls
+`0x462BA0`'s state entries. Which effects reach that is unread. Ours reads
+the same tables in place.
+
+**Status:** latent.
+
+## D74 — Searches with no end test (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, groups DA ([`worldmap_area.md`](worldmap_area.md) §7, §10), DC
+([`event_leader.md`](event_leader.md) §3, §6) and DD
+([`map_field_objects.md`](map_field_objects.md) §5).
+
+**Established:**
+
+- `WorldMap33_PlateShow`'s search for the place has no bound: a kind-1 cell
+  (0xA1) at a place not among `WorldMap33_PlateAnims`' six would read on
+  through `.data` (DA).
+- `Field_ExitFromCell`'s search has no end test: a map whose `0xA0` cell has
+  no record in the area's list walks on through memory - a hang or a fault
+  (DC).
+- `MapCell_DrawAnimated` `0x5712E0` scans its thresholds without a bound
+  (DD).
+
+Ours walks the same memory in each; the fuzzes always plant a match.
+
+**Status:** latent: each needs area data the shipped game was not found to
+have (not scanned).
+
+## D75 — Area 29's "none kept" exit is unreachable with its table (latent, dead)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DA ([`worldmap_area.md`](worldmap_area.md) §1, §10).
+
+**Established:** area 29's placement keeps one of the first eight
+`Sprite_Objects` records by a weighted roll over `Area29_Weights`
+`0x5EE268`. The weights sum to exactly 64, so the loop's "none kept" exit
+(index 8) is never taken with the shipped table. It matters only if the
+table changes (a data edit in this project).
+
+**Status:** latent (dead with the shipped data).
+
+## D76 — The drift layer draws when the leader is near in x *or* z (latent, intent open)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DA ([`worldmap_area.md`](worldmap_area.md) §4).
+
+**Established:** `WorldMap33_DrawDrift` `0x4048E0` draws only when the leader
+is within 25 cells of the layer's position in x **or** in z. Whether an AND
+was meant is open. What the layer looks like is unread; the PSX twin was
+not read.
+
+**Status:** latent; possibly intended.
+
+## D77 — `Field_PassageOpen`'s kind-2 path reads a stack buffer it never initialises (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DC ([`event_leader.md`](event_leader.md) §3, §6 items 1
+and 2, merged here: one cause).
+
+**Established:** the kind-2 path reads the word `+0x88` of a stack buffer it
+never initialises and opens that script message (`& 0xFFF`) unless it is
+0xFFFF. Unless the event script always writes `+0x88` through
+`Field_ActiveMember`, a kind-2 passage can open a message chosen by stack
+garbage. The same path leaves `Field_ActiveMember` pointing at the dead
+buffer, so whatever next reads it before it is set again reads a dead stack
+frame. Which scripts write it, and the pointer's other users, were not read;
+no kind-2 passage is on the routes as far as was checked.
+
+**Status:** latent.
+
+## D78 — A blocked spot zeroes a member's `+9` (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DC ([`event_leader.md`](event_leader.md) §3, §6).
+
+**Established:** `Field_SpotFree` zeroes `Sprite_Current +9` and restores it
+only when the spot is free; the swap calls it for each member, so a member
+whose spot is blocked loses its `+9`. What `+9` holds for a member at that
+point was not established. Ours keeps it.
+
+**Status:** latent.
+
+## D79 — `EventScript_SkipSwitch` hangs on F2, F3 or FB..FF (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DD ([`map_field_objects.md`](map_field_objects.md) §5).
+
+**Established:** `EventScript_SkipSwitch` `0x579CF0`'s jump table
+`EventScript_SkipSwitchCases` `0x579D40` sends F2 and F3 back to the byte
+they are on, and `cmp ecx, 0xA; ja` sends FB..FF there too; the loop never
+advances. A switch body being skipped with one of those at an op position
+freezes the game task. The PSX `0x801A584C` was not read; which scripts
+have them is unread.
+
+**Status:** latent.
+
+## D80 — `MapCell_DrawUprights` indexes its tables past their nine kinds (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DD ([`map_field_objects.md`](map_field_objects.md) §5).
+
+**Established:** in `MapCell_DrawUprights` `0x570210`, kinds with a low
+nibble of 0xA..0xC (and 0x3A..0x3C) read counts 0 and draw nothing;
+0xD..0xF (and 0x3D, 0x3E) read `MapCell_UprightOffsetsX`' bytes 9, 0xFF and
+0xBE as counts and would draw 9, 255 or 190 pairs from offsets well past
+the tables. Whether any area's cell runs use those kinds is unread (a scan
+of the area files would answer it).
+
+**Status:** latent.
+
+## D81 — `MapCell_PatchThenStep` applies its patch twice (latent, may be deliberate)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DD ([`map_field_objects.md`](map_field_objects.md) §5).
+
+**Established:** `MapCell_PatchThenStep` `0x571090` (kind 0x24) rewrites the
+record's kind to 0x25 and then applies patch-list entry
+`(record & 0xFFFF) + AreaMap_PatchBase` through `AreaMap_ApplyPatch`;
+`MapCell_PatchThenStop` `0x5710D0` (kind 0x25) rewrites it to 0x23 (a bare
+`ret`) and applies the same patch. So an 0x24 record applies its patch on
+two draws of the cell, and never after. Harmless if the patch is
+idempotent; may be deliberate.
+
+**Status:** latent.
+
+## D82 — A zenny cell dug with every effect object busy is cleared for nothing (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DE ([`field_hidden.md`](field_hidden.md) §7).
+
+**Established:** in `Field_CellPickup` `0x51EBD0`'s `0xF2` path the zenny
+roll happens only once `Effect_FindFree` answers a slot. With all 20
+objects taken the path skips the roll and the `+0xB` store but still clears
+the cell (`0x5728D0`) and answers 1, so the chance is lost for good. The
+`0xF8` item path asks for no effect and cannot lose its item this way. No
+route reaches 20 live effect objects at a dig.
+
+**Status:** latent.
+
+## D83 — The encounter row weights are summed in a byte (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DE ([`field_hidden.md`](field_hidden.md) §7).
+
+**Established:** `Encounter_PickRow` `0x592570` picks a row by
+`(Rand & 0xF) + 1` against a byte running sum. Weights over 255 in total
+wrap, and a later row can then be picked for a roll the earlier rows should
+have covered. The rows come from the area's data; whether any area's
+weights sum past 16, let alone 255, was not checked.
+
+**Status:** latent.
+
+## D84 — A shop count step of one plays its sound twice (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DG ([`shop_states2.md`](shop_states2.md) §5).
+
+**Established:** `ShopTrade_BuyCount` and `ShopTrade_SellCount` compare the
+count with the one they started with after the one-step clamp *and again*
+after the ten-step clamp, so a single up or down plays the cursor sound
+(`0x100` / `0x101`) twice in the frame. Two identical effects started
+together are unlikely to be heard as two.
+
+**Status:** latent.
+
+## D85 — `FieldMenu_Open` copies the party by `Party_Count` without a bound (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DH ([`menu_lists.md`](menu_lists.md) §9).
+
+**Established:** `FieldMenu_Open` `0x589990` copies one party pair per
+`Party_Count` without a bound: a count above 3 writes the saved reserve's
+bytes over the saved party's (the two lists are three bytes apart). The
+count is at most 3 in play.
+
+**Status:** latent.
+
+## D86 — The field menu's screen title is centred for 12-pixel glyphs (candidate under an overlay language)
+
+**Seen:** not seen as such; found by reading the code while taking it over,
+2026-09-25, group DH ([`menu_lists.md`](menu_lists.md) §3, §9). A candidate
+for the owner's "the screen title sits left of centre"
+([`menu-screens.md`](menu-screens.md) section 3 item 3).
+
+**Established:** `MenuList_TitleBox` `0x599FA0` draws the top bar's title
+(the system text of `FieldMenu_TitleIds` `0x6672E4`, by the cursor) in a box
+`0x48` wide, starting the text at x + `0x25` - 6 n, n the `Text_CharCount`
+of the string. That is right for the Chinese it was written for and wrong
+for any narrower font - the case [`dialogue-localisation.md`](dialogue-localisation.md)
+section 6 item 1a predicts. Ours draws what the original draws; nothing
+re-centred.
+
+**Status:** candidate (not a fault of the original's own text).
+
+## D87 — `ShopWin_MoneySlideUp` does not slide (candidate)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DI ([`menu_draw_helpers.md`](menu_draw_helpers.md) §5).
+
+**Established:** `ShopWin_MoneySlideUp` `0x59B390` is `0x59A3A0` (the
+slide-up to -0x14) byte for byte but for the branch: `jle` where `0x59A3A0`
+has `jge`. So when the money box is sent up, from any y above -4 it jumps to
+-0x14 in one frame and stops; from -4 or less it moves up 0x10 a frame and
+the step never ends (the word wraps round to positive, where it snaps).
+Which case the shop shows, and whether the player can see the difference,
+is not checked (the owner's eye after the merge). Ours keeps it; negative
+control 14 plants the fix and is refused.
+
+**Status:** candidate.
+
+## D88 — `BattleMenuWin_ItemListSlideRight` tests 0x53 and stores 0x52 (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, group DI ([`menu_draw_helpers.md`](menu_draw_helpers.md) §5).
+
+**Established:** `BattleMenuWin_ItemListSlideRight` `0x59CB60` tests 0x53
+and stores 0x52, so an x landing exactly on 0x53 sits there a frame and goes
+on to 0x73, then 0x52; the window rests at 0x52. `0x59CB90` (step 3, in no
+group) has the same pair. Harmless; ours keeps it.
+
+**Status:** latent.

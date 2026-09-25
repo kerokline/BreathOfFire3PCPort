@@ -459,23 +459,23 @@ flat-face tests went from 10,000 and 3,000 rounds to 20,000.
   read below them.
 - The order of stores with no call between them.
 
-## 5. Possible defects of the 2001 code (for the coordinator; not numbered, not fixed)
+## 5. Possible defects of the 2001 code (numbered in known-defects.md; not fixed)
 
-- **`EventScript_SkipSwitch` hangs on F2, F3 or FB..FF.** Its jump table
+- **`EventScript_SkipSwitch` hangs on F2, F3 or FB..FF** (D79). Its jump table
   sends F2 and F3 back to the byte they are on, and `cmp ecx, 0xA; ja`
   sends FB..FF there too; the loop never advances. A switch body being
   skipped with one of those at an op position freezes the game task. The
   PSX `0x801A584C` was not read. Latent: which scripts have them unread.
-- **`MapCell_DrawUprights` indexes its tables past their nine kinds.** Kinds
+- **`MapCell_DrawUprights` indexes its tables past their nine kinds** (D80). Kinds
   with a low nibble of 0xA..0xC (and 0x3A..0x3C) read counts 0 and draw
   nothing; 0xD..0xF (and 0x3D, 0x3E) read `MapCell_UprightOffsetsX`' bytes 9,
   0xFF and 0xBE as counts and would draw 9, 255 or 190 pairs from offsets
   well past the tables. Whether any area's cell runs use those kinds is unread
   (a scan of the area files would answer it).
 - **`MapCell_DrawAnimated`** divides by its period byte unchecked and scans
-  its thresholds without a bound.
+  its thresholds without a bound (D68, D74).
 - **`MapCell_PatchThenStep`** applies its patch twice (once as 0x24, once as
-  0x25). Harmless if the patch is idempotent; may be deliberate.
+  0x25). Harmless if the patch is idempotent; may be deliberate (D81).
 
 ## 6. Found on the way (other groups' addresses - said, not acted on)
 

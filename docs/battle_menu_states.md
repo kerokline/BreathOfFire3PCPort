@@ -329,15 +329,15 @@ a cursor or a top at one edge and one direction bit together.
 
 ## 5. Latent, as the original has it
 
-- The four dispatches have no bound (section 1).
+- The four dispatches have no bound (section 1; known-defects.md D59).
 - The list's category is not checked before `0x656B00[category]`; left and
   right keep it inside 0..3, and `ItemMenu_SetupForParty` restores what the
   list saved. At category 4 the commit would write through `0x656B14[4]`,
-  which is 0.
+  which is 0 (known-defects.md D64).
 - The item is spent when the command is chosen, not when it is used; what
   happens to it if the turn never comes (the battle ends first) was not
   read. This is the port's order; whether the PSX does the same was not
-  checked.
+  checked (known-defects.md D65).
 
 ## 6. For the batch check
 

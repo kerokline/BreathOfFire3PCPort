@@ -126,7 +126,7 @@ table. None of its own four states (`0x582EC0`, `0x582FB0`, `0x582FF0`,
 the entry (a `musttail` jump: the handler returns to our caller). The index
 is not checked: past its table the next table's words are read, as in the
 original. A null entry would be a call to 0 in the original; ours aborts
-(rule 4). The only null reachable that way is `TitleTask_Modes` [2] - a
+(rule 4). The only null reachable that way (known-defects.md D66) is `TitleTask_Modes` [2] - a
 `Game_Mode` of 2 while task 0 runs the title, which the title flow never
 sets.
 
@@ -372,15 +372,16 @@ full) and M9 (the step read before the sound).
 
 ## 5. What the original does that it should not
 
-Described here, not numbered - the coordinator numbers after the merge.
+Numbered in [`known-defects.md`](known-defects.md) after the merge: D84 and
+D59 (the last two below cannot fault or matter, and are not numbered).
 None shows in play as far as the reads go, and all are kept.
 
-- **A step of one plays its sound twice.** `ShopTrade_BuyCount` and
+- **A step of one plays its sound twice** (D84). `ShopTrade_BuyCount` and
   `ShopTrade_SellCount` compare the count with the one they started with
   after the one-step clamp *and again* after the ten-step clamp, so a single
   up or down plays the cursor sound (`0x100` / `0x101`) twice in the frame.
   Two identical effects started together are unlikely to be heard as two.
-- **Unchecked dispatch indices** (every table of section 2): a state or step
+- **Unchecked dispatch indices** (every table of section 2; D59): a state or step
   byte out of range jumps through the next table, and far enough past
   through non-code. Nothing found sets one out of range.
 - **`ShopTrade_BuyList` divides the money by the scaled price** with no
