@@ -235,8 +235,10 @@ first (`and al, 3` into `0x904B35`), the rest of it was not read. Kept.
   `entries_logic.txt` line `0042F9D0 7D5` runs over all of this group from
   `0x42FAB0` (it is 0xD3 bytes, to `0x42FAA2`). The catalogue's "folded
   into `0x42F9D0`" for eleven of this group's entries is that overrun.
-  (`dialogue-localisation.md` line 431 lists `0x42F9D0` as `Str_CopyN`; the
-  symbol table has `Str_CopyN` at `0x5171A0`, and `0x42F9D0` is not it.)
+  `dialogue-localisation.md` lists `0x42E400` and `0x42F9D0` among the
+  ability table's readers (with `Str_CopyN`) by those overlong extents: the
+  readers are `BattleAction_AbilityCheck` `0x42F680` (the name copy) and
+  `0x42FE20` (it copies a record's first 16 bytes to `Text_Records[1]`).
 - `0x435AB0`, the enemy's action pick (it takes the enemy index, calls
   `Rand` and stores a kind in `0x904B35`), is in no group and unnamed.
 
