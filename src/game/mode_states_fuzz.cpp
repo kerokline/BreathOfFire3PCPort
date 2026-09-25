@@ -121,6 +121,15 @@ void Disturb() {
 // --- the stand-ins ---------------------------------------------------------
 
 template <unsigned N> void __cdecl StubVoid() { Record(N, Id(Sprite_Current)); Disturb(); }
+// Look_Return brings the camera home half the time, one word or both, so
+// that GameMode_LookEnd's test after it goes either way.
+void __cdecl StubLookReturn() {
+    Record(20);
+    const std::uint32_t h = Hash();
+    if (h % 2) SetWord(At(0x929EC8), 0xFD56);
+    if ((h >> 1) % 3) SetWord(At(0x929ECC), 0x200);
+    Disturb();
+}
 // Not done for the round's first g_load_limit asks, then done.
 int __cdecl StubLoadDone() {
     Record(1);
@@ -202,7 +211,7 @@ const Callees kStubs = {
     {Choice<0>, Choice<1>, Choice<2>, Choice<3>, Choice<4>, Choice<5>, Choice<6>, Choice<7>, Choice<8>, Choice<9>,
      Choice<10>, Choice<11>, Choice<12>, Choice<13>, Choice<14>, Choice<15>},
     {0, 0},
-    StubVoid<20>, StubVoid<21>, StubMenuFrame,
+    StubLookReturn, StubVoid<21>, StubMenuFrame,
     StubVoid<22>, StubLoadDat, StubLoadDone, StubSleep, StubClutRow, StubFace, StubBank, StubVoid<23>, StubEmit,
     StubVoid<24>, StubVoid<25>, StubVoid<26>, StubVoid<27>, StubVoid<28>, StubVoid<29>, StubVoid<30>, StubVoid<31>,
     StubVoid<32>, StubVoid<33>, StubVoid<34>, StubVoid<35>, StubShadeStep,
