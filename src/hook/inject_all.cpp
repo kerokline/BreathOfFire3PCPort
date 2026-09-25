@@ -42,6 +42,7 @@
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/battle_actions.h"
 #include "game/battle_flow.h"
 #include "game/enemy_ai_ops.h"
 #include "game/battle_misc.h"
@@ -255,6 +256,8 @@ void InjectAll() {
                                 // table operands aimed at tables of recorders in the copies: order does not matter
     BattleMenuStates_Inject();  // round 8 group CI: every call of its clones re-aimed at a recorder and the four
                                 // dispatch tables' entries swapped for recorders: order does not matter
+    BattleActions_Inject();     // round 8 group CB: every call of its clones re-aimed at a recorder, the seven
+                                // step tables' entries swapped in .data: order does not matter
     InjectReport();
 }
 

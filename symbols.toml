@@ -15083,3 +15083,290 @@ ctype = "signed char"
 count = 88
 status = "hypothesis"
 evidence = "disasm 2026-09-25: BattleWin_MemberTargetFrame 0x5978B0 reads (dx, dy) s8 pairs at 0x64DF70 + 2 (column + 4 row), row the member object's byte +0x89 (the character id, as Encounter_PartyAtPlaces reads it), column its byte +8, unbounded. The bytes (pe dump) run as 11 rows of four pairs to 0x64DFC7 (dy -0x10..-0x1E, dx within +-8); 0x64DFC8.. holds 18 other bytes before the object state table 0x64DFE0. The count is that layout's, not a bound in code."
+# ---------------------------------------------------------------------------
+# Round 8 group CB: the action phases (src/game/battle_actions.cpp, docs/battle_actions.md)
+
+[[data]]
+pc = 0x64AE80
+name = "BattleAction_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA1 by Battle_ActionPhase's call: 0x42F250, 0x42F500, 0x42FC50, 0x42FDD0, 0x430010. Every stub indexes it by a byte and checks nothing."
+
+[[data]]
+pc = 0x64AE94
+name = "BattleAction_BeginSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA2 by BattleAction_BeginStep's jmp: 0x42F260, 0x42F4C0. Every stub indexes it by a byte and checks nothing."
+
+[[data]]
+pc = 0x64AE9C
+name = "BattleAction_KindSteps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA2 (the command kind, from BattleAction_EnterKind) by BattleAction_KindStep's jmp: 0x42F510, 0x42F5B0, 0x42F510, 0x42F5E0, 0x42F670, 0x42FAF0. The count is where the next table's reader starts (0x64AEB4 is 0x42F5E0's, by 0x904AA3), not a bound in code. Every stub indexes it by a byte and checks nothing."
+
+[[data]]
+pc = 0x64AEBC
+name = "BattleAction_AbilitySteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA3 by BattleAction_AbilityStep's jmp: 0x42F680, 0x42F880, 0x42FAB0; 0x64AEC8 on is 0x42F9D0's two 32-byte id tables. Every stub indexes it by a byte and checks nothing."
+
+[[data]]
+pc = 0x64AF08
+name = "BattleAction_ItemSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA3 by BattleAction_ItemStep's jmp: 0x42FB00, 0x42FBD0, 0x42FC10. Every stub indexes it by a byte and checks nothing."
+
+[[data]]
+pc = 0x64AF14
+name = "BattleAction_EffectSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA2 by BattleAction_EffectStep's jmp: 0x42FC60, 0x42FD20, 0x42FD90. Every stub indexes it by a byte and checks nothing."
+
+[[data]]
+pc = 0x64AF20
+name = "BattleAction_AfterSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-25: code pointers in .data, read by 0x904AA2 by BattleAction_AfterStep's jmp: 0x42FDE0, 0x42FE20, 0x42FF70; 0x64AF2C on is group CC's. Every stub indexes it by a byte and checks nothing."
+
+[[func]]
+pc = 0x42F220
+name = "Battle_ActionPhase"
+psx = 0x801D2AA0
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F220..0x42F24B (0x2C bytes), cdecl, no relative calls: call [0x64AE80 + byte 0x904AA1 * 4] (BattleAction_Steps, 5 entries), then word Field_CancelButtons & word Input_Held non-zero clears bit 4 of the word 0x904AA8, both read after the step. The fourth entry of Battle_PhaseDispatch's stack table (phase 3). PSX twin is the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F250
+name = "BattleAction_BeginStep"
+psx = 0x801D2B14
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F250..0x42F25D (0xE bytes): xor eax, eax; mov al, [0x904AA2]; jmp [eax*4 + 0x64AE94] (BattleAction_BeginSteps: 0x42F260, 0x42F4C0). Entry 0 of BattleAction_Steps, a tail jump - the prototype is 0x42F220's call. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F260
+name = "Battle_BeginAction"
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F260..0x42F4B6 (0x257 bytes), cdecl, calls 0x453FA0 (Battle_MemberAutoTarget) or 0x435AB0 (actor - 3), every jump internal. The first byte of the turn order 0x904ACC from 0x904AE2 below 0x904AE3 (read once) that is not 0xFF, 0x904AE2 following the search; none: 0x904AA0 = 4, 0x904AA1 = 0. Else after the pick 0x904B34 = the actor and the acting block: +8 the object (ObjTrio 0x802D40 + 0x14C a, or 0x93B960 + 0x128 (a - 3)), +0xC its +0x124 / +0x104, +2 / +4 the words +0x2E / +0x30 plus an s8 pair (a member's from 0x64DF70 at 2 * (+8 + (+0x89) * 4), an enemy's +0xF2 / +0xF3), +6 the word +0x32; 32 bytes of +0xA0 / +0xB0 to 0x939FE0 (rep movsd); a target byte 0x904B44 below 3 or at most 10 fills the target block 0x904B44 the same way; 0x904AA2 and 0x904AE2 + 1. The catalogue labels it with the sibling's PSX name Battle_BeginAction (BATTLE_RAM.md: what it copies to 0x801EC278 per action); the PSX address was not read."
+
+[[func]]
+pc = 0x42F4C0
+name = "BattleAction_EnterKind"
+psx = 0x801D2FB8
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F4C0..0x42F4F9 (0x3A bytes), cdecl: byte 0x904AAA set calls [0x904B6C](1); then 0x904AA1 = 1 and 0x904AA2 = byte 0x904B35 (read after the hook). Entry 1 of BattleAction_BeginSteps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F500
+name = "BattleAction_KindStep"
+psx = 0x801D300C
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F500..0x42F50D (0xE bytes): jmp [byte 0x904AA2 * 4 + 0x64AE9C] (BattleAction_KindSteps, six entries by the command kind). Entry 1 of BattleAction_Steps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F510
+name = "BattleAction_KindPlain"
+psx = 0x801D3048
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F510..0x42F5A5 (0x96 bytes), cdecl, calls 0x4301B0 (at +0), 0x444310, 0x497740, 0x44A650. Battle_ClearActingFlags; then for 0x904AA2 == 2 and byte 0x904B34 >= 3: Text_Records[0] zeroed and the enemy's name record (+0x80, 12 bytes) copied in, Battle_OpenMsgWindow, BattleBanner_Add(2, 0, 0, 0x2D, Msg_SystemPtr(0x7F)); then 0x904AA0 = 3, 0x904AA1 = 0, 0x904AA2 = 0. Entries 0 and 2 of BattleAction_KindSteps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F5B0
+name = "BattleAction_KindOne"
+psx = 0x801D3160
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F5B0..0x42F5DD (0x2E bytes), cdecl, calls 0x446FB0: Battle_SetActorBit(byte 0x904B34), then [0x904B3C] + 1 = 4 (pointer read after the call), 0x904AA0 = 3, 0x904AA1 = 2, 0x904AA2 = 0. Entry 1 of BattleAction_KindSteps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F670
+name = "BattleAction_AbilityStep"
+psx = 0x801D32C0
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F670..0x42F67D (0xE bytes): jmp [byte 0x904AA3 * 4 + 0x64AEBC] (BattleAction_AbilitySteps). Entry 4 of BattleAction_KindSteps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F680
+name = "BattleAction_AbilityCheck"
+psx = 0x801D32FC
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F680..0x42F875 (0x1F6 bytes), cdecl, 13 calls (0x453210, 0x446650, 0x5171A0, 0x44A650 x3, 0x444310 x2, 0x497740 x2, 0x591DB0 x2, 0x4537A0), every jump internal. Word 0x904B80 = the u16 +2 of [0x904B40]. Battle_ActionSuitsTarget non-zero: Battle_RemoveFromTurnOrder(0x904B34), ObjTrio + 0x14C * actor +1 = 2, +2 = 0 (the member formula whatever the actor), 0x904AA0 = 3, 0x904AA1 = 0x904AA2 = 0. Else unless the id is 0x97: 0x8031F3 = 1, Str_CopyN(0x904EA0, 0x65C4C8 + 24 id, 0x10), BattleBanner_Add(1, 1, 0, 0x3C, 0x904EA0). Status (member +0x90 / enemy +0x92) bit 4 with record byte +0x15 bit 2: message 0x37. Cost Skill_ApCost(object +5, id low byte, 1), or byte 0x904B78 for 0x97, to 0x904B88; above the AP (+0x9A / +0xA6, read before the cost): message 0x36. Each message: Battle_OpenMsgWindow, BattleBanner_Add(2, 0, 0, 0x2D, Msg_SystemPtr(n)), 0x904AA1 = 0x904AA2 = 0. Else 0x904AA5 = 0, Battle_PickFlag8Member zero sets 0x904AA8 |= 0x20, 0x904AA3 + 1. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42F880
+name = "BattleAction_AbilityCommit"
+psx = 0x801D360C
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F880..0x42F9C8 (0x149 bytes), cdecl, calls 0x446FB0, 0x42F9D0, 0x4379D0. Nothing until 0x904AA8 bit 5; then it is cleared, [0x904B3C] +1 = 7 and (re-read) +2 = 0, Battle_SetActorBit(0x904B34), 0x904B8D = byte 0x904B80; for the word 0x24 / 0x25 / 0x8C, 0x904B44 = 0x42F9D0() and the target block filled (a member's for 0..2, an enemy's for anything above - no upper bound); Magic_LoadForAbility(byte 0x904B80, re-read); 0x904AA3 + 1. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FAB0
+name = "BattleAction_AbilityStart"
+psx = 0x801D399C
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FAB0..0x42FAEB (0x3C bytes), cdecl, calls 0x454810 (at +0) and 0x437930: File_LoadDone non-zero gives Battle_StartAbilityMagic(byte +2 of [0x904B40], [0x904B3C]) and 0x904AA0 = 3, 0x904AA1 = 2, 0x904AA2 = 0x904AA3 = 0. Entry 2 of BattleAction_AbilitySteps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FAF0
+name = "BattleAction_ItemStep"
+psx = 0x801D3A08
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FAF0..0x42FAFD (0xE bytes): jmp [byte 0x904AA3 * 4 + 0x64AF08] (BattleAction_ItemSteps). Entry 5 of BattleAction_KindSteps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FB00
+name = "BattleAction_ItemCheck"
+psx = 0x801D3A44
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FB00..0x42FBC0 (0xC1 bytes), cdecl, calls 0x4532A0, 0x446EA0, 0x446650, 0x591680, 0x5171A0, 0x44A650. Word 0x904B80 = u16 +2 of [0x904B40]. Battle_ItemSuitsTarget non-zero: Battle_ReturnQueuedItem(0x904B34), Battle_RemoveFromTurnOrder(0x904B34, re-read), 0x904AA0 = 3, 0x904AA1 = 0x904AA2 = 0, ObjTrio + 0x14C * actor +1 = 2, +2 = 0. Else Str_CopyN(0x904EA0, Item_NamePtr(+3, +2 of [0x904B40] re-read), 0x10), BattleBanner_Add(1, 1, 0, 0x1E, 0x904EA0), 0x904AA3 + 1, 0x904AA5 = 0, 0x8031F3 = 1. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FBD0
+name = "BattleAction_ItemCommit"
+psx = 0x801D3B94
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FBD0..0x42FC04 (0x35 bytes), cdecl, calls 0x446FB0 and 0x4377D0: [0x904B3C] +1 = 0xC, Battle_SetActorBit(0x904B34), Magic_LoadForItem(u16 +2 of [0x904B40], read after), 0x904AA3 + 1. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FC10
+name = "BattleAction_ItemStart"
+psx = 0x801D3BFC
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FC10..0x42FC4C (0x3D bytes), cdecl, calls 0x454810 (at +0) and 0x437780: File_LoadDone non-zero gives Battle_StartItemMagic(u16 +2 of [0x904B40], [0x904B3C]) and 0x904AA0 = 3, 0x904AA1 = 2, 0x904AA2 = 0x904AA3 = 0. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FC50
+name = "BattleAction_EffectStep"
+psx = 0x801D3C68
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FC50..0x42FC5D (0xE bytes): jmp [byte 0x904AA2 * 4 + 0x64AF14] (BattleAction_EffectSteps). Entry 2 of BattleAction_Steps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FC60
+name = "BattleAction_EffectWait"
+psx = 0x801D3CA4
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FC60..0x42FD14 (0xB5 bytes), cdecl, calls 0x446FB0 (two sites) and 0x453190. Members 0..2 (flags +0x130) then enemies 3..10 (+0x110): bit 6 set and state +1 not 6 gives +1 = 6, +2..+4 = 0 and Battle_SetActorBit(actor). Then Battle_AnyFlagF0 zero, word 0x904B82 zero and 0x904AA8 bit 2: 0x904AA2 + 1. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FD20
+name = "BattleAction_EffectPreload"
+psx = 0x801D3E60
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FD20..0x42FD8E (0x6F bytes), cdecl, calls 0x454590. Kind 0x904B35 == 4: row byte 0x64C1D0 + the whole u16 0x904B80; == 5: the item row of u16 +2 of [0x904B40] through the four pointers 0x64B274; that row's u16 at 0x64C2B8 + 8 row not 0xFFFF gives LoadDatFile(0xD0). Any kind: 0x904AA2 + 1. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FD90
+name = "BattleAction_EffectLoaded"
+psx = 0x801D3F4C
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FD90..0x42FDCC (0x3D bytes), cdecl, calls 0x454810 (at +0) and 0x4549F0: File_LoadDone non-zero: byte 0x904AAA set calls [0x904B6C](4); word 0x904AA8 &= 0xFBFF, 0x904AA1 = 3, 0x904AA2 = 0, Gfx_ClutStripCopyRow(0x1A). PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FDD0
+name = "BattleAction_AfterStep"
+psx = 0x801D3FCC
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FDD0..0x42FDDD (0xE bytes): jmp [byte 0x904AA2 * 4 + 0x64AF20] (BattleAction_AfterSteps). Entry 3 of BattleAction_Steps. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FDE0
+name = "BattleAction_AfterSettle"
+psx = 0x801D4008
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FDE0..0x42FE17 (0x38 bytes), cdecl, calls 0x453B10: with 0x904AA8 bit 2 and word 0x904B82 zero, Battle_SettleFlag8 non-zero gives 0x904AA5 = 0 and 0x904AA2 + 1, zero gives 0x904AA2 = 2. PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x42FF70
+name = "BattleAction_EnemyMessages"
+psx = 0x801D4284
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42FF70..0x430009 (0x9A bytes), cdecl, calls 0x497740 and 0x44A880. Byte 0x939F60 set: nothing. n = byte 0x93C2A2: 0 gives 0x904AA1 = 4, 0x904AA2 = 0; else Text_Records[0] zeroed and 12 bytes of 0x93B9E0 + 0x128 * byte 0x939FBC[4n] copied in, BattleQueue_Push(1, 0, Msg_SystemPtr(u16 0x939FBE[4n])), 0x93C2A2 - 1 (re-read). PSX twin the catalogue's pair, not read."
+
+[[func]]
+pc = 0x430010
+name = "BattleAction_End"
+psx = 0x801D43BC
+ret = "void"
+params = "void"
+impl = "src/game/battle_actions.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x430010..0x4301A4 (0x195 bytes), cdecl, calls 0x4301B0 and 0x44A650, three calls through [0x904B6C]. With 0x904AA8 bit 2 and word 0x904B82 zero: word 0x904AA8 &= 0xD7FB, 0x904AA1 = 0x904AA2 = 0, hook(0) when 0x904AAA (read first); 0x904AE8 set: 0x904AA0 = 4, 0x904AA1 = 2, done. Else Battle_ClearActingFlags, bit 12 of 0x904AA8 cleared, and with bit 6 the dwords 0x904B34..0x904B43 and 0x904B44..0x904B53 swapped, 0x904B35 = 1, the new actor's 32 bytes +0xA0 / +0xB0 to 0x939FE0, BattleBanner_Add(1, 0, 0, 0xF, [0x669E0C] when its flags +0x130 / +0x110 have bit 15, else [0x669DF8]), 0x8031F3 = 1, 0x904AA1 = 0, 0x904AA2 = 1. Last hook(5) when 0x904AAA (re-read). Entry 4 of BattleAction_Steps. PSX twin the catalogue's pair, not read."
