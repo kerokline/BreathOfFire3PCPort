@@ -244,7 +244,9 @@ add_library(bof3x SHARED
   src/game/battle_actions.cpp
   src/game/battle_actions_fuzz.cpp
   src/game/battle_actor_copies.cpp
-  src/game/battle_actor_copies_fuzz.cpp)
+  src/game/battle_actor_copies_fuzz.cpp
+  src/game/battle_phases.cpp
+  src/game/battle_phases_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

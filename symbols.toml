@@ -12157,6 +12157,219 @@ impl = "src/game/battle_flow.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x42E400..0x42E461 (0x62 bytes), cdecl, no rel32 calls: builds a six-entry table on its stack (mov [esp + 0..0x14], imm32: 0x42E470 0x42E990 0x42F070 0x42F220 0x4302B0 0x4311E0) and calls [esp + (dword 0x904AA0 and 0xFF) * 4], unchecked; first, when byte 0x904AAA is set AND the phase byte is non-zero (test al, al twice, the second after mov eax, [0x904AA0] replaced al - the start-up fuzz caught it), call [0x904B6C](3), the event hook 0x437CC0 stores, and the phase dword re-read. 0x904AAA is compared with 0x10, 0x19, 0x1A, 0x25 elsewhere (pe_xref.py): a number, called the event battle here as a guess. Combat route (recipe_combat): 2,091 calls, all from 0x42E39E in the battle frame 0x42E2F0. No PSX twin in pairs_propagated.json. Named for what it dispatches; the six phases are unread."
 
+# Round 8 group CA (2026-09-25, docs/battle_phases.md): the battle's frame and
+# the phase table's first half - phases 0, 1 and 2 of Battle_PhaseDispatch.
+
+[[func]]
+pc = 0x42E370
+name = "Battle_Frame"
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E370..0x42E3F3 (0x84 bytes), cdecl, 15 calls and a tail jmp to Field_DrawFrame 0x592F00. State 5 of the battle mode's table 0x656A84 (pe_xref: the dword at 0x656A98), jumped to by 0x495E98 (jmp [0x656A84 + word 0x66C7EA * 4]). Battle_PhaseDispatch runs unless byte 0x904AA8 has bit 1, or (window 0's byte 0x803160 non-zero or 0x904AE9 bit 1) with the phase byte 0x904AA0 not 5; then BattleParty_RunStates, BattleEnemy_RunAll, BattleBanner_Dispatch, AreaMap_Frame, BattleTask_RunAll, BattleParty_UpdateScreens, BattleEnemy_UpdateScreenAll, Field_ObjectsScreen or Sprite_UpdateObjectScreens by 0x904AAA (read after those), Party_ExtraScreens, Effect_RunObjects, Field_RunSlots, MoveScript_TintFrame, Field_RunTaskRecords. pe_funcs.py folded it into 0x42E2F0, which ends at 0x42E361 and is a different function (battle_flow.md's 'battle frame 0x42E2F0' is this one). Combat route: reached (round-8 first-call trace)."
+
+[[func]]
+pc = 0x42E470
+name = "BattleStart_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E470..0x42E491 (0x22 bytes), cdecl, no rel32 calls: phase 0 of Battle_PhaseDispatch's stack table. Builds a two-entry table on its stack (mov [esp], 0x42E4A0 at +5; mov [esp + 4], 0x42E730 at +0x12) and calls [esp + byte 0x904AA1 * 4], unchecked (ours aborts past 2). No PSX twin paired."
+
+[[func]]
+pc = 0x42E4A0
+name = "Battle_Init"
+psx = 0x801D1228
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E4A0..0x42E724 (0x285 bytes), cdecl, 11 rel32 calls and call [0x904B6C](6): BattleBanner_ClearAll; 0x904AB1 = count of actors below byte 0x904AB0 (re-read) that Battle_ActorIsOut says are in; 0x939EC4 = 0x802D40; the battle globals reset (0x904AA5..A7, AB4, ABC = 8, word AA8, AE8, dword B90 = 1, AF0, AEC, AE6, AAD, B7A, word B98, AE7, word B82, B8B, B8A, B8E, B97, B89, word 0x904EFE); Battle_InitEncounterKind, BattleTask_ClearAll, Battle_InitActorContexts; per member in use +0xA0..+0xBF copied to +0xC0, +0x91 |= 0x20 when word +0x98 < word +0xA0 >> 2 else word +0x90 &= 0xDFFF, +0x125/+0x12D/+0x130..+0x13F/+0x142..+0x145 zeroed; Formation_ApplyStatMods; +0xC0 copied back; 16 words 0x80D560 -> 0x811560; Gfx_ClutStripCopyRow 0x1A, 0x1B; actors 0..10 Sprite_Current + Sprite_SetClutStp (enemies when not out and 0x904AAA != 0x25); LoadDatFile(word 0x904EFC + 0x15D) unless 0x904AAA; 0x904B24..0x904B33 zeroed; the hook with 6 while 0x904AAA; step 0x904AA1 + 1. PSX Battle_Init (sibling names/functions.toml, ghidra decomp 2026-09-05) the same order of terms: formation mods on the scratch, the low-HP bit, the turn counter 1, the boss 0x25 skip, 0x801E5978 (= BattleTask_ClearAll's twin), the hook with 6."
+
+[[func]]
+pc = 0x42E730
+name = "BattleIntro_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E730..0x42E761 (0x32 bytes), cdecl, no rel32 calls: phase 0 step 1. A four-entry stack table (imm32 at +9, +0x16, +0x1E, +0x26: 0x42E770, 0x42E8C0, 0x42E8D0, 0x42E930) called by byte 0x904AA2, unchecked (ours aborts past 4). No PSX twin paired."
+
+[[func]]
+pc = 0x42E770
+name = "BattleIntro_OpenWindows"
+psx = 0x801D1820
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E770..0x42E8B4 (0x145 bytes), cdecl, 8 calls: 0x93C2A0/1 = 0; Window_Alloc(0x14, 3) and that record (its low byte, 0xFF untested) +2 = 7, +3 = 0, +4 = 0x14, +6 = -22; 0x904AE4 == 1 -> BattleQueue_Push(2, 0x30, Msg_SystemPtr(0x16)), == 2 (re-read) -> Msg 0x17; per member in use (+0 bit 0) Window_Alloc(0xD + i, 3), window 0xD + i +2 = 5, +3 = 0, +4 = s8 0x64E2BC[((byte 0x904AAC ^ 2) >> 1) * 2] + s8 0x64DF70[(+8 + 4 * +0x89) * 2] + word +0x2E, +6 = s8 0x64DF71[..] + word +0x30 + 12, +0xA = i, +8 = +9 = 0; BattleWin_OpenStatus(0), Battle_OpenEnemyNames, 0x904AA2 + 1. PSX twin 0x801D1820 (the catalogue's pairs_propagated)."
+
+[[func]]
+pc = 0x42E8C0
+name = "BattleIntro_WaitWindow"
+psx = 0x801D1AAC
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E8C0..0x42E8CF (0x10 bytes), no calls: 0x904AA2 + 1 when window 1's +3 (0x803187) is 1. PSX twin 0x801D1AAC (pairs_propagated)."
+
+[[func]]
+pc = 0x42E8D0
+name = "BattleIntro_PrepareCross"
+psx = 0x801D1AE0
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E8D0..0x42E92E (0x5F bytes), cdecl, one call: BattleWin_OpenSub1(0); byte 0x904AE4 >= 2 -> window 2 +3 (0x8031AB) = 2 and the 7 bytes 0x904ABC..C2 = 0, else all 0x10 (the command cross's growth, BattleWin_DrawCommandCross's evidence); 0x904AA2 + 1. PSX twin 0x801D1AE0 (pairs_propagated)."
+
+[[func]]
+pc = 0x42E930
+name = "BattleIntro_Finish"
+psx = 0x801D1B8C
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E930..0x42E98D (0x5E bytes), cdecl, 4 calls: when byte 0x904AE4 >= 2 or window 2 +3 (0x8031AB) == 1, BattleQueue_Pending() == 0 and File_LoadDone() != 0: BattleWin_OpenSub2(0x904AE4 >= 2 (re-read) ? 2 : 1), BattleWin_OpenSub3(2), phase 0x904AA0 + 1, 0x904AA1 = 0x904AA2 = 0. PSX twin 0x801D1B8C (pairs_propagated)."
+
+[[func]]
+pc = 0x42E990
+name = "BattleInput_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E990..0x42E99D (0xE bytes): phase 1 of Battle_PhaseDispatch's stack table, xor eax, eax; mov al, [0x904AA1]; jmp [eax * 4 + 0x64AE28] (Battle_InputSteps), unchecked. Ours calls the entry read at the jump, unchecked as well (the tables around it are more tables and data)."
+
+[[func]]
+pc = 0x42E9A0
+name = "Battle_RoundStart"
+psx = 0x801D1C88
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E9A0..0x42E9D2 (0x33 bytes), cdecl, 4 calls (the entry is one): Battle_ClearCommands, Battle_BuildEntryOrder, 0x904AC3 = 0; byte 0x904AA8 (read after the calls) bit 4 -> 0x446720() and phase 0x904AA0 = 2, else Battle_SpawnActorCopies and 0x904AA1 + 1. Battle_InputSteps[0]. PSX Battle_RoundStart (sibling, evidence): the same, with AutoBattle_FillCommands 0x801DD264 for 0x446720."
+
+[[func]]
+pc = 0x42E9E0
+name = "BattleInput_NextMember"
+psx = 0x801D1D08
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42E9E0..0x42EAC8 (0xE9 bytes), cdecl, 2 calls: once File_LoadDone(): from s8 0x904AC3 (0: word Input_Held = 0; >= 3: none), each byte 0x904AB6[i] != 0xFF -> 0x904AAE, taken unless ObjTrio +0x90 & 0x20 or dword +0x134 & 0x14001; i++ stored. Taken: 0x939EC4 = member, 0x939FA0 = member + 0x124, BattleBanner_ShowName(member), window 4/3/2 +3 = 1, 0x904AA1 + 1. None: 0x904AA5 = 0x904AA6 = 0, word 0x904B70 = 0xE, phase + 1, 0x904AA1 = 0. Battle_InputSteps[1]. PSX twin 0x801D1D08 (pairs_propagated)."
+
+[[func]]
+pc = 0x42EAD0
+name = "BattleMenu_CommandSelect"
+psx = 0x801D1E84
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42EAD0..0x42ED8A (0x2BB bytes), cdecl, 9 calls: 0x904AA5 counts down; Input_Pressed & Field_CancelButtons with 0x904AC3 != 0: sound 0x106, 0x904AC3 and 0x904AA1 - 1, the member 0x904AB6[index] -> 0x939EC4, +0x134 &= ~4, +1 = 2, +0x125 == 5 -> 0x446D90(+0x12E, word +0x126) unless +0x130 bit 14 (cleared instead), +0x130 = 0, +0x125 = 0. Field_ConfirmButtons: 0x904AB4 2 or 3 with [0x939FA0] +0x10 bit 1 -> sound 0x107; else sound 0x104, 0x904AA1 + 2, 0x904AA2 = 0x904AB4, window 3/2 +3 = 2. Input_Held bit 8: sound 0x104, window 2/1/3 +3 = 2, BattleWin_DrawCommandCross(window 2 x, y), BattleWin_DrawCommandLabel(0x904AB4), BattleWin_DrawPartyStatus(window 1 x, y), 0x904AA1 + 1. Else directions k = 5..0 of the words 0x64AE3C held -> 0x904AB4 = k + 1; pressed -> sound 0x101 and a second press within 0x904AA5's 8 frames of the same k chooses it (k 1 or 2 greyed: tap cleared), Input_Pressed / Input_Held re-read. None held: 0x904AB4 = 0. Battle_InputSteps[2]. PSX twin 0x801D1E84 (pairs_propagated)."
+
+[[func]]
+pc = 0x42EED0
+name = "BattleMenu_ConfirmDispatch"
+psx = 0x801D24CC
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42EED0..0x42EEE2 (0x13 bytes): call Battle_PulseStep (the entry), then jmp [byte 0x904AA2 * 4 + 0x64AE54] (Battle_MenuSteps), unchecked. Battle_InputSteps[4]. PSX BattleMenu_ConfirmDispatch 0x801D24CC (sibling, hypothesis): 0x801DD7C8 then the table 0x801EAB94[0x801462DE] - the same shape."
+
+[[func]]
+pc = 0x42EEF0
+name = "Cmd_ConfirmDefend"
+psx = 0x801D2514
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x42EEF0..0x42EF42 (0x53 bytes), no calls: [0x939FA0] +1 = 2, +0 = [0x939EC4] +5, dword +0xC |= 2; [0x939EC4] +1 = 2; 0x904AC3 + 1, 0x904AA1 = 1, 0x904AA2 = 0x904AA3 = 0; pointers re-read at each use. Battle_MenuSteps[4]. Named from the sibling's BATTLE_RAM.md: Defend is command 2, stored at 0x801D2520 inside PSX 0x801D2514, a target of BattleMenu_ConfirmDispatch's table; the PC store of 2 to the command record +1 matches."
+
+[[func]]
+pc = 0x42F070
+name = "BattleCommit_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F070..0x42F07D (0xE bytes): phase 2 of Battle_PhaseDispatch's stack table, jmp [byte 0x904AA1 * 4 + 0x64AE74] (Battle_CommitSteps), unchecked; ours the same."
+
+[[func]]
+pc = 0x42F080
+name = "Battle_CommitRound"
+psx = 0x801D2774
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F080..0x42F12F (0xB0 bytes), cdecl, 5 calls: Battle_BuildTurnOrder; window 4 +3 = 2 unless 0x904AA8 bit 4; window 3/2 +3 = 2; 0x93B8E0 = 0; members 0..2 not out (Battle_ActorIsOut) with +0x125 == 5 and word +0x126 & 0xFF00: 0x446D90(+0x12E, +0x126) unless +0x130 bit 14, which is cleared instead; 0x904AA8 |= 8; EnemyAI_ChooseActions; LoadDatFile(0xD1) unless bit 4 (re-read); 0x904AA1 + 1. Battle_CommitSteps[0]. PSX Battle_CommitRound (sibling, evidence): the same terms, with sound 5 where the PC loads file 0xD1."
+
+[[func]]
+pc = 0x42F130
+name = "BattleCommit_QueueMessages"
+psx = 0x801D28E0
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F130..0x42F1C1 (0x92 bytes), cdecl, 2 calls: nothing while byte 0x939F60; count n = byte 0x93C2A2, 0 -> 0x904AA1 + 1; else Text_Records[0] (32 bytes) zeroed and its first 12 bytes = enemy object (byte 0x939FBC + 4n) +0x80.., BattleQueue_Push(1, 0, Msg_SystemPtr(word 0x939FBE + 4n)), 0x93C2A2 - 1 (re-read). Battle_CommitSteps[1]. PSX twin 0x801D28E0 (pairs_propagated). What queues the records is unread."
+
+[[func]]
+pc = 0x42F1D0
+name = "BattleCommit_WaitLoad"
+psx = 0x801D2A1C
+ret = "void"
+params = "void"
+impl = "src/game/battle_phases.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x42F1D0..0x42F213 (0x44 bytes), cdecl, one call (the entry): once File_LoadDone(), and unless 0x904AA8 bit 4 once word 0x904B70 (post-decremented each test) was 0: word 0x904B70 = 0, phase 0x904AA0 + 1, 0x904AA1 = 0. Battle_CommitSteps[2]. PSX twin 0x801D2A1C (pairs_propagated)."
+
+# Round 8 group CA's tables (2026-09-25, docs/battle_phases.md).
+
+[[data]]
+pc = 0x64AE28
+name = "Battle_InputSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleInput_Dispatch 0x42E990 jumps through it by byte 0x904AA1 (pe_xref: its one reference, 0x42E99A). Entries: Battle_RoundStart 0x42E9A0, BattleInput_NextMember 0x42E9E0, BattleMenu_CommandSelect 0x42EAD0, 0x42ED90 (jmp [0x64AE48 + byte 0x904AA2 * 4]: 0x42EDA0, 0x42EE00, 0x42EEA0 - unowned), BattleMenu_ConfirmDispatch 0x42EED0. The count is where Battle_CommandPadMasks begins; no code bounds the index."
+
+[[data]]
+pc = 0x64AE3C
+name = "Battle_CommandPadMasks"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleMenu_CommandSelect 0x42EAD0 reads word [esi * 2 + 0x64AE3C] for k = 5..0 and tests it against Input_Held and Input_Pressed; its any-direction test is 0xF00C, their OR. Values 0x1000 up, 0x4000 down, 0x8000 left, 0x2000 right, 0x0004 L1, 0x0008 R1 (Input_Held's bit layout): the command k + 1 each direction selects."
+
+[[data]]
+pc = 0x64AE54
+name = "Battle_MenuSteps"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleMenu_ConfirmDispatch 0x42EED0 jumps through it by byte 0x904AA2, the chosen command (pe_xref: one reference, 0x42EEDF). Entries: 0x447110, 0x447430 (group CH), 0x448180, 0x447FD0 (group CI), Cmd_ConfirmDefend 0x42EEF0, 0x42EF50 (the PSX Cmd_AutoBattle_Begin 0x801D2598's twin, unowned), 0x44A000 and 0x44FF00 (each a jmp through its own table by byte 0x904AA3). Eight: Battle_CommitSteps follows."
+
+[[data]]
+pc = 0x64AE74
+name = "Battle_CommitSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "disasm 2026-09-25: BattleCommit_Dispatch 0x42F070 jumps through it by byte 0x904AA1 (pe_xref: one reference, 0x42F07A). Entries: Battle_CommitRound 0x42F080, BattleCommit_QueueMessages 0x42F130, BattleCommit_WaitLoad 0x42F1D0; the last sets the step to 0. Phase 3's table 0x64AE80 (referenced from 0x42F22A, group CB) follows."
+
+
 [[func]]
 pc = 0x435110
 name = "BattleTask_RunAll"
