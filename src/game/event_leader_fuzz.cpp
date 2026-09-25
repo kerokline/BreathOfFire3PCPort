@@ -93,7 +93,7 @@ void Disturb() {
         break;
     }
     case 4: Member(w % 3)[1] = static_cast<unsigned char>(v % 3 == 0 ? 3 : v % 3 == 1 ? 5 : v % 12); break;
-    case 5: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (1u << (v % 8))); break;
+    case 5: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (w % 2 ? 1u : 1u << (v % 8))); break;
     case 6: Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ (1u << (v % 16))); break;
     case 7: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (1u << (v % 16))); break;
     case 8: Field_Request = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 3 == 1 ? 1 : v); break;
@@ -186,7 +186,11 @@ unsigned char __cdecl StubCellsNone(long x, long z, unsigned wide, unsigned code
 }
 unsigned char __cdecl StubEnsureAnimation(unsigned char a) { Record(17, a, Sc()); Disturb(); return Answer(4); }
 void __cdecl StubJumpStart() { Record(18, Sc()); Disturb(); }
-void __cdecl StubClearSteps() { Record(19, Sc()); Disturb(); }
+void __cdecl StubClearSteps() {
+    Record(19, Sc());
+    if (Hash() % 2) Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ 1);
+    Disturb();
+}
 unsigned char __cdecl StubEncounterDue() { Record(20); Disturb(); return Answer(4); }
 unsigned char __cdecl StubEffectTest(unsigned pace) { Record(21, pace & 0xFF); Disturb(); return Answer(6); }
 // The whole dword is tested: now and then only its upper bytes are set.
@@ -203,6 +207,7 @@ void __cdecl StubShadeBegin() { Record(26, Sc()); Disturb(); }
 // Near the leader's height half the time: the 0x40 and 0xC0 edges.
 long __cdecl StubGroundAt(long x, long z) {
     Record(27, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
+    if (Hash() % 2) Sprite_Current = Member((Hash() >> 8) % 3);
     Disturb();
     const std::uint32_t h = Hash();
     static const int kEdges[] = {0, 0x3F, 0x40, 0x41, -0x40, -0x41, 0xBF, 0xC0, 0xC1, -0xC0, -0xC1, 0x7FFF};
@@ -225,12 +230,17 @@ void __cdecl StubScriptRun(const unsigned char* script) {
     unsigned char* const b = Field_ActiveMember;
     b[0x86] = static_cast<unsigned char>(h >> 3);
     SetWord(b + 0x88, h % 3 == 0 ? 0xFFFFu : h >> 16);
+    if ((h >> 5) % 2) g_passage[4 + (h >> 6) % 2] = static_cast<unsigned char>(h >> 24);
     Disturb();
 }
 void __cdecl StubOpenScript(unsigned short id) { Record(37, id); Disturb(); }
 void __cdecl StubOpenSystem(unsigned id) { Record(38, id); Disturb(); }
 unsigned char __cdecl StubFlagsTest(const unsigned char* bits, unsigned i) { Record(39, Address(bits), i & 0xFF); Disturb(); return static_cast<unsigned char>(Hash() % 3 == 0); }
-void __cdecl StubFlagsSet(unsigned char* bits, unsigned i) { Record(40, Address(bits), i & 0xFF); Disturb(); }
+void __cdecl StubFlagsSet(unsigned char* bits, unsigned i) {
+    Record(40, Address(bits), i & 0xFF);
+    if (Hash() % 2) SetLong(At(at::kPassageCount), static_cast<std::int32_t>(Hash()));
+    Disturb();
+}
 void __cdecl StubPlayEffect(unsigned short id) { Record(41, id); Disturb(); }
 unsigned char* __cdecl StubItemName(unsigned cat, unsigned item) {
     Record(42, cat & 0xFF, item & 0xFF);
@@ -246,6 +256,7 @@ unsigned char __cdecl StubTestFC(short x, short z) { Record(44, static_cast<std:
 // Above and below 0x40 in the low word, whatever the upper.
 long __cdecl StubSlopeAt(long x, long z, unsigned long d) {
     Record(45, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), static_cast<std::uint32_t>(d));
+    At(at::kScratch)[0] = static_cast<unsigned char>(Hash() % 2 ? 0 : 1 + (Hash() >> 9) % 0xFF);
     Disturb();
     static const std::uint16_t kSlopes[] = {0x3F, 0x40, 0x41, 0, 0x8000, 0x7FFF, 0xFFC0};
     const std::uint32_t h = Hash();
@@ -253,6 +264,7 @@ long __cdecl StubSlopeAt(long x, long z, unsigned long d) {
 }
 unsigned char __cdecl StubObjectAt(long x, long z, unsigned margin) {
     Record(46, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), margin, Word(Sprite_Current + 0x3E));
+    if (Hash() % 2) Sprite_Current = Member((Hash() >> 8) % 3);
     Disturb();
     return Hash() % 2 ? 0xFF : static_cast<unsigned char>(Hash() >> 7);
 }
@@ -272,6 +284,9 @@ const unsigned char* __cdecl StubAreaExits() {
     sc[0x37] = 0;
     sc[0x3B] = 0;
     const unsigned k = Hash() % kExits;
+    // decoys before it: the same x, another z
+    for (unsigned j = 0; j < k; ++j)
+        if ((Hash() >> j) % 2) { g_exits[j * 4] = sc[0x36]; g_exits[j * 4 + 1] = static_cast<unsigned char>(sc[0x3A] + 1 + j); }
     g_exits[k * 4] = sc[0x36];
     g_exits[k * 4 + 1] = sc[0x3A];
     return g_exits;
@@ -548,9 +563,11 @@ Args Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const fs = Field_State;
     switch (k) {
-    case kStepping:
-        if (Half()) sc[9] = 0;
+    case kStepping: {
+        static const unsigned char kLeft[] = {0, 0, 1, 1, 2, 0xFF};
+        sc[9] = kLeft[Next() % 6];
         break;
+    }
     case kStepLands: {
         if (Half()) fs[0x128] = 4;
         static const unsigned char kRun[] = {0x0F, 0x10, 0x11, 0x12, 0};
@@ -560,6 +577,12 @@ Args Seed(unsigned k) {
         if (Often()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x2060u);
         if (Often()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x100u);
         if (Half()) sc[0x70] = 0;
+        {
+            // held: nothing, a direction bit alone, the confirm button's bits
+            const unsigned pick = Next() % 5;
+            Field_InputHeld = static_cast<unsigned short>(pick == 0 ? 0 : pick == 1 ? 0x1000u << (Next() % 4)
+                                                          : pick == 2 ? Word(At(at::kButtonConfirm)) & Next() : Next());
+        }
         if ((Field_InputFlags & 3) == 2 && Often()) {
             // on an edge the step lands on: 0x20000, or the header's size less 3
             const unsigned d = sc[8] % 8;
@@ -678,7 +701,7 @@ Args Seed(unsigned k) {
         if (Half()) args.a[1] &= 0xFFFF0000u;
         // the ground near what the ground stand-in answers half the time
         static const int kNear[] = {0, 0x10, -0x10, 0x40, -0x40, 0x80};
-        if (Often()) args.a[2] = Garbage(0xFFFF, static_cast<std::uint16_t>(Word(At(at::kLeaderHeight)) + kNear[Next() % 6]));
+        if (Often()) args.a[2] = Garbage(0xFFFF, static_cast<std::uint16_t>(Word(At(at::kLeaderHeight)) + (Half() ? 0 : kNear[Next() % 6])));
         break;
     }
     case kCellsBlock:
