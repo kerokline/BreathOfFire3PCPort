@@ -1258,6 +1258,94 @@ def build_font(args, disc):
     return [(3, 0, table), (4, CELL_W, advances)]
 
 
+# DIV-0038: F9's pause lines, ours - the PlayStation has no such screen, and
+# the PC port's own are Chinese in the exe (src/game/pause_text.cpp). Four
+# lines: in game "F9 again" / "any other key", then on the title the same
+# pair. The wording is ours, agreed with the owner 2026-09-25. A language
+# with no entry gets no chunk, and Capcom's lines stay.
+PAUSE_KIND = 14
+PAUSE_LINES = {
+    "en": ("Press F9 again for the title screen", "Press any other key to continue",
+           "Press F9 again to quit the game", "Any other key returns to the title"),
+    "fr": ("Appuyez sur F9 pour l'écran titre", "Une autre touche pour continuer",
+           "Appuyez sur F9 pour quitter", "Une autre touche : écran titre"),
+    "de": ("F9 erneut: zum Titelbildschirm", "Andere Taste: weiterspielen",
+           "F9 erneut: Spiel beenden", "Andere Taste: zum Titelbild"),
+    "ja": ("もういちど F9 で タイトルへ",
+           "ほかの キーで つづける",
+           "もういちど F9 で ゲームを おわる",
+           "ほかの キーで タイトルへ"),
+}
+# Text -> donor codes, then encode_char as for the disc's own text. Latin:
+# letters and digits are their own codes (ASCII_OF), and the punctuation and
+# accent these lines use are the donor's (ASCII_OF; e acute 0xA1, see
+# EXT_FIRST). Japanese: the kana are the JP script's gojuon run from 0x5B - 46
+# hiragana, 9 small, 25 voiced, then the same in katakana from 0xAB (the
+# sibling's tools/jptext.py, docs/TEXT_ENGINE.md) - and the long-vowel bar is
+# single-byte 0x2D, as the name fields use it.
+LATIN_CODE = {" ": SPACE_IN, "'": 0x8E, ":": 0x8F, "é": 0xA1}
+JA_HIRA = ("あいうえおかきくけこさしすせそ"
+           "たちつてとなにぬねのはひふへほ"
+           "まみむめもやゆよらりるれろわをん"
+           "ぁぃぅぇぉっゃゅょ"
+           "がぎぐげござじずぜぞだぢづでど"
+           "ばびぶべぼぱぴぷぺぽ")
+assert len(JA_HIRA) == 80
+JA_CODE = {c: 0x5B + i for i, c in enumerate(JA_HIRA)}
+JA_CODE.update({chr(ord(c) + 0x60): 0xAB + i for i, c in enumerate(JA_HIRA)})
+JA_CODE.update({" ": JA_SPACE, "ー": 0x2D})
+
+
+def pause_code(ch):
+    if donor_ja:
+        if ch in JA_CODE:
+            return JA_CODE[ch]
+        return ord(ch) if "0" <= ch <= "9" or "A" <= ch <= "Z" else None
+    if ch in LATIN_CODE:
+        return LATIN_CODE[ch]
+    return ord(ch) if ch.isascii() and ch.isalnum() else None
+
+
+def pause_width(line, advances, space):
+    """The line's width in units, as the DLL's TextAdvance_Of reads it."""
+    w, i = 0, 0
+    while i < len(line):
+        b = line[i]
+        if b == 0x20:
+            w, i = w + space, i + 1
+            continue
+        g, i = (((b & 0x7F) << 8) | line[i + 1], i + 2) if b & 0x80 else (b - 0x26, i + 1)
+        w += advances[g] if g < len(advances) else PC_ADVANCE
+    return w
+
+
+def build_pause(args, font_chunks):
+    lines = PAUSE_LINES.get(args.lang)
+    if lines is None:
+        print("pause lines: none written for '%s'; the exe's own stay" % args.lang)
+        return []
+    if (args.lang == "ja") != donor_ja:
+        raise SystemExit("pause lines: --lang %s with a %s disc" % (args.lang, "Japanese" if donor_ja else "Latin"))
+    space, advances = [(tag, payload) for kind, tag, payload in font_chunks if kind == 4][0]
+    body = bytearray()
+    for text in lines:
+        out = bytearray()
+        for ch in text:
+            code = pause_code(ch)
+            e = None if code is None else encode_char(code)
+            if e is None:
+                raise SystemExit("pause lines: %r has no glyph in this overlay (in %r)" % (ch, text))
+            out += e
+        # WinMain centres each on 160 (PauseText_X), so it must fit 320 units.
+        width = pause_width(out, advances, space)
+        if width > 320:
+            raise SystemExit("pause lines: %r is %d units wide; the screen is 320" % (text, width))
+        body += out + b"\0"
+    print("pause lines: 4 in '%s', widest %d units"
+          % (args.lang, max(pause_width(bytes(l), advances, space) for l in body.split(b"\0")[:4])))
+    return [(PAUSE_KIND, 0, bytes(body))]
+
+
 # The strip is kind-0 tag 0x8000 in FIRST.DAT and the 0x200-byte section for
 # 0x80033800 in FIRST.EMI (measured 2026-09-20; 0x8200 / 0x8400 pair with
 # 0x80033A00 / 0x80033C00 the same way).
@@ -1487,6 +1575,7 @@ def cmd_all(args):
     """Every overlay, in one pass, one file written per shipped DAT that needs one."""
     disc, d = psx_disc.Disc(args.disc), dat_dir(args.game)
     overlays = {"FIRST.DAT": build_font(args, disc)}
+    overlays["FIRST.DAT"] += build_pause(args, overlays["FIRST.DAT"])   # after the glyphs it names
     if not args.pc_white:
         overlays["FIRST.DAT"] += build_white_clut(args, disc)
     title = build_title(args, disc)

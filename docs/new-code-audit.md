@@ -19,7 +19,9 @@ commit, so search for the function name if they have moved.
 ## A. Bugs confirmed by reading the code
 
 Each was read to the point where the failure follows from the code. None has
-been seen to happen.
+been seen to happen. All eight were re-read against the code and fixed on
+2026-09-25 (branch `phase-3/audit-a-fixes`); the headless self-test passes
+(exit 0, 1,448 injects). What each still owes in game is under it.
 
 ### A1. A released surface's slot can be reused while a draw still needs it
 
@@ -47,6 +49,10 @@ arena, and a different format misreads it.
 - **Likely fix:** do not reuse a slot that is referenced from the current
   frame. Either keep a `pending_draws`-style count that survives the release,
   or reuse slots only in `SweepReleased`.
+- **Fixed 2026-09-25:** a release that takes a snapshot sets
+  `Surface::snapshot_held`; `MakeSurface` skips such a slot and `ResetFrame`
+  clears the flag (docs/render-backend.md). **Owed:** the area-change
+  frame-skip runs above, which should finish as before.
 
 ### A2. The Japanese overlay switches the F9 pause lines to English
 
@@ -61,6 +67,13 @@ Japanese glyph table.
 - **Decision for the owner:** Chinese lines (gate `PauseText_Apply` on the
   language, and amend DIV-0038 and DIV-0056 to say so), or Japanese lines (new
   data, a new ledger entry).
+- **Decided and fixed 2026-09-25:** a translation per language (the owner).
+  French and German had the same bug. The lines moved out of the DLL into
+  the overlay: `loc_build.py` `PAUSE_LINES`, chunk kind 14, DIV-0038 and
+  DIV-0056 amended. **Owed:** rebuild the four overlays (`loc_build.py all`
+  per disc - until then the English overlay shows Capcom's lines), then F9 in
+  game and on the title under each of en, fr, de and ja, with captures for
+  the owner to judge the fit (and C1).
 
 ### A3. A binding to the 0 key never shows in the Controls dialog
 
@@ -72,6 +85,7 @@ in a cell.
 
 - **Check:** bind 0 in `bof3x.ini`, open Controls.
 - **Fix:** test for the `0x` prefix, not the first character.
+- **Fixed 2026-09-25.** **Owed:** the check above.
 
 ### A4. A recording loses its last run
 
@@ -84,6 +98,9 @@ last hold or wait.
 - **Check:** record a short route that ends on a held button, then read the
   last line.
 - **Fix:** flush on detach, or at the recorder's own end.
+- **Fixed 2026-09-25:** `InputScript_Stop` at `DLL_PROCESS_DETACH` writes
+  the open run and closes the file. A process ended by `Fatal` gets no detach
+  and still loses it. **Owed:** the check above.
 
 ### A5. The call tracer's file names can run one character past the path buffer
 
@@ -94,6 +111,7 @@ and `callcounts.tsv` are 15, and are copied into the same
 
 - **Reach:** only with the DLL's path within a character of `MAX_PATH`.
 - **Fix:** check against the longest name.
+- **Fixed 2026-09-25.**
 
 ### A6. A hand-edited SatPixie value in bof3x.ini stops the game
 
@@ -106,6 +124,10 @@ own rule is that a settings file is never something to fail on.
 - **Fix:** clamp or drop out-of-range values in the launcher. The dialog
   cannot produce them, since its trackbar sliders are confined to a range;
   only a hand edit can.
+- **Fixed 2026-09-25:** `ConfigLoad` drops a value outside the preset's
+  range, as it drops any value it does not know. So does NaN, which passed
+  the DLL's own range test too (every comparison with it is false).
+  **Owed:** the check above, which should start with the default gamma.
 
 ### A7. `Channel` shifts by a wrapped count for masks under 4 bits
 
@@ -118,6 +140,7 @@ wraps to a huge count, which is undefined. `render_d3d11.cpp`'s copy uses
   `Channel` is used only for red, green and blue. It would bite if a 1-, 2- or
   3-bit colour mask ever arrived.
 - **Fix:** the d3d11 copy's form.
+- **Fixed 2026-09-25.**
 
 ### A8. Clearing a colour key does not mark the surface for re-upload
 
@@ -128,39 +151,68 @@ dirties the surface, and pending draws recorded with the key lose it.
 
 - **Check:** whether the game ever clears a key on a surface it keeps drawing
   (log in `Surface_SetColorKey`).
+- **Wider than read:** a snapshot did not keep the key either, so a key
+  *changed* mid-frame re-keyed the draws already pending.
+- **Fixed 2026-09-25:** `SetColorKey` is a write whether it sets or clears,
+  and each snapshot carries the key it was taken under
+  (docs/render-backend.md). **Owed:** nothing specific; the batch's captures
+  should look as before.
 
-## B. Reported by the audit, not yet checked
+## B. Reported by the audit, checked 2026-09-25
 
-Each is the audit agent's reading. Confirm it or strike it.
+Each was the audit agent's reading. All ten were confirmed against the code
+on 2026-09-25. Seven were fixed that day; B3, B4 and B10 are left as they
+are, for the reasons given under them. The headless self-test passes with
+the fixes (exit 0) under no language, `original`, `en` and `ja`.
 
 - **B1** `render_shim.cpp` ~567: after 16 distinct unknown render states, each
   new one is logged on every call, not once.
+  **Fixed:** one bit per state below 256 (Direct3D 6's are), and one flag
+  for anything above.
 - **B2** `render_shim.cpp` `IsSurface` (~116), used by `Blt` / `BltFast`: a
   released surface still passes, and `CopyRect` would read null pixels.
+  **Fixed:** a released source of `Blt`, `BltFast` or a texture `Load` is
+  Fatal. It would be the game's own use-after-free, and DirectDraw's
+  behaviour there is undefined, so it stops rather than guessing.
 - **B3** `config_dialog.cpp` ~87: `(i + n) % n` divides by zero if a combo is
   ever empty when the pad cycles it. All combos are filled today.
+  **Left:** no combo can be empty.
 - **B4** `CaptureKeyHook`: Escape cancels a capture, so Escape can never be
   bound from the dialog, though the default table binds it. The dialog's text
   says "Escape cancels", so this may be intended.
+  **Left:** intended; the text says so.
 - **B5** `launcher.cpp` ~145: `Fatal` during `DllMain` (outside self-test)
   leaves exit code 3. The launcher's `module == 0` test then passes, and it
   goes on to `ResumeThread` a dead process. The DLL has already shown its own
   box, so the effect is a misleading second message.
+  **Fixed:** after the injection the launcher checks whether the game has
+  already exited, and if so exits with its code, quietly. **Owed:** not
+  testable headless (`BOF3X_SELFTEST_ONLY` takes its own path); any
+  start-up Fatal in the batch should show one box, not two.
 - **B6** `input_script.cpp` ~608: a `BOF3X_RECORD` or `BOF3X_INPUT` path
   longer than `MAX_PATH` is silently ignored rather than Fatal.
+  **Fixed:** both are Fatal, naming the variable.
 - **B7** `crt.cpp` `CrtWanted` (~202): nothing calls it, and it is wrong for
   `satpixie`. It also leaves `text` unterminated for a value of 16 bytes or
   more. Candidate for deletion. `MakeSized` (~215) is outside the anonymous
   namespace, so it is an external `render::MakeSized`.
+  **Fixed:** `CrtWanted` deleted; `MakeSized` moved into the anonymous
+  namespace.
 - **B8** `crash.cpp` ~122: any `ExceptionInformation[0]` of 2 or more prints
   as "executing". Only 8 (DEP) means that.
+  **Fixed:** 0, 1 and 8 are named; anything else prints its number.
+  `tools/crash_report.py` already read it that way.
 - **B9** `menu_verbs.cpp` ~131: `MenuVerbs_Inject` re-aims the label call for
   any `BOF3X_LANG`, "original" included. `YesNoLayout_Inject` excludes
   "original". Probably harmless, since the offset is zero with no table
   loaded, but the two disagree.
+  **Fixed:** the same test as `YesNoLayout_Inject`, which also drops a value
+  too long for the buffer. The self-test log shows the patch under `en`
+  only, not under `original`.
 - **B10** `text_pairs.cpp` ~42: a two-byte lead followed by NUL can report a
   pair that the expansion loop never expands. The only effect is an unneeded
   copy.
+  **Left:** harmless.
 
 ## C. Open questions
 
@@ -172,14 +224,26 @@ Each is the audit agent's reading. Confirm it or strike it.
   right. **Check in game:** F9 with `BOF3X_LANG=en`. Measure where the box
   or the screen cuts a line, and whether all four fit. Then correct the
   comment, and the lines if they overflow (DIV-0038).
+  (2026-09-25: the comment went with the lines' move to `loc_build.py`,
+  which now refuses a line wider than 320 units and prints the widest - 280
+  for English. The in-game check still decides whether 320 is the real
+  limit.)
 - **C2 - `IDC_RESOLUTION`.** `src/launcher/resource.h:10` defines it, and
   nothing uses it. The owner: probably left over from the scale dropdown,
   which the window's snap-to logic replaced (DIV-0042). Remove it when next in
   `launcher.rc`.
-- **C3 - flat shading on a triangle fan.** `render_shim.cpp` ~651 says a
-  fan's flat colour comes from the shared vertex 0. Direct3D's flat-shading
-  rule may take vertex i + 1 for fans instead. Check against the D3D6/7
-  documentation, or a fan the game draws flat.
+- **C3 - flat shading on a triangle fan. Closed 2026-09-25.**
+  `render_shim.cpp` said a fan's flat colour comes from the shared vertex 0;
+  Direct3D's rule may take vertex i + 1. It does not matter: the game draws
+  no fans. BOF3.exe has 21 `DrawPrimitive` calls (`push 0x1C4`, the TLVERTEX
+  format, each followed by `push type`), and their types are 5 (10 calls),
+  3 (6), 4 (4) and 1 (1, `0x5A22E8`) - never 6. The one other call through
+  the device's `+0x70` slot, `0x5A563B`, passes two arguments, so it is not
+  `DrawPrimitive`. Our ported handlers pass 3, 4 and 5; the game's "fan"
+  effect `MagicFx_DrawFan` is separate triangles before it reaches Direct3D.
+  So a flat-shaded fan is now Fatal ("not built") instead of drawn by an
+  unchecked rule; Gouraud fans are unchanged. No ledger entry: nothing drawn
+  changes.
 - **C4 - `kZNearest`.** `render_shim.cpp` ~580: 1/4096 as the smallest depth
   `Gte_PrimDepths4_10B` hands the handlers. This matches DIV-0044, but nobody
   has checked it against the binary.

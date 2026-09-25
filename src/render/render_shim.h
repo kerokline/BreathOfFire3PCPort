@@ -46,6 +46,10 @@ struct TexVersion {
     Surface* surface;
     const unsigned char* pixels;   // a snapshot in the frame arena, or null
     U serial;                      // unique per version, for the GPU-side cache
+    // With a snapshot: the colour key as it stood when the snapshot was taken,
+    // since SetColorKey can change the surface's own afterwards.
+    U color_key;
+    bool has_color_key;
 };
 
 struct Surface {
@@ -61,6 +65,7 @@ struct Surface {
     unsigned char* pixels;         // HeapAlloc'd, height * pitch bytes; null for the primary and once released
     TexVersion* version;           // the version pending draws see; replaced on a rewrite
     U pending_draws;               // draws recorded against `version` since it was made
+    bool snapshot_held;            // released with a snapshot the current frame still draws; not reusable until ResetFrame
     void* gpu;                     // render_d3d11's per-surface object, or null
     U gpu_serial;                  // the TexVersion serial the GPU texture holds
     // DDPIXELFORMAT as GetSurfaceDesc reports it

@@ -315,8 +315,8 @@ U Channel(U raw, U mask, U shift, U bits) {
 
 // Converts `pixels` (the surface's format) to B8G8R8A8 in the scratch buffer:
 // alpha 0 for a texel whose alpha bit is clear (a format with alpha) or that
-// equals the surface's colour key; 255 otherwise.
-const unsigned char* Convert(const Surface* s, const unsigned char* pixels) {
+// equals the colour key `keyed` / `key`; 255 otherwise.
+const unsigned char* Convert(const Surface* s, const unsigned char* pixels, bool keyed, U key) {
     const U bytes = s->width * s->height * 4;
     if (bytes > g_scratch_bytes) {
         if (g_scratch) HeapFree(GetProcessHeap(), 0, g_scratch);
@@ -324,8 +324,6 @@ const unsigned char* Convert(const Surface* s, const unsigned char* pixels) {
         if (!g_scratch) bof3::Fatal("render: out of memory converting a %u x %u texture", s->width, s->height);
         g_scratch_bytes = bytes;
     }
-    const bool keyed = s->has_color_key;
-    const U key = s->color_key;
     U rs, rb, gs, gb, bs, bb;
     MaskBits(s->pf_rmask, &rs, &rb);
     MaskBits(s->pf_gmask, &gs, &gb);
@@ -393,10 +391,11 @@ GpuTexture* Bind(TexVersion* version) {
     GpuTexture* g = GpuOf(s);
     if (version->pixels) {
         // A snapshot: what the surface held when the draw was recorded.
-        g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, version->pixels), s->width * 4, 0);
+        g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, version->pixels, version->has_color_key, version->color_key),
+                               s->width * 4, 0);
         s->dirty = s->pixels != nullptr;   // the live pixels come next, if there are any
     } else if (s->dirty) {
-        g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, s->pixels), s->width * 4, 0);
+        g_ctx->UpdateSubresource(g->texture, 0, nullptr, Convert(s, s->pixels, s->has_color_key, s->color_key), s->width * 4, 0);
         s->dirty = false;
     }
     return g;

@@ -197,17 +197,6 @@ void Pass(ID3D11DeviceContext* ctx, ID3D11PixelShader* ps, ID3D11RenderTargetVie
     ctx->Draw(4, 0);
 }
 
-}  // namespace
-
-bool CrtWanted() {
-    char text[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_PRESENT", text, sizeof text);
-    if (n == 0) return false;
-    if (std::strcmp(text, "crt") == 0) return true;
-    if (std::strcmp(text, "clean") == 0) return false;
-    bof3::Fatal("BOF3X_PRESENT=%s: crt or clean", text);
-}
-
 // The size-dependent objects: the constants (an immutable buffer) and the
 // two glow textures of the game's own size. Made at set-up and again by
 // CrtResize (DIV-0042). The buffer takes g_c as it stands, so the knobs must
@@ -248,6 +237,8 @@ void MakeSized(ID3D11Device* device, U target_w, U target_h, U k) {
         Check(device->CreateShaderResourceView(g_tex[i], nullptr, &g_srv[i]), "glow view");
     }
 }
+
+}  // namespace
 
 void CrtResize(ID3D11Device* device, U target_w, U target_h, U k) { MakeSized(device, target_w, target_h, k); }
 

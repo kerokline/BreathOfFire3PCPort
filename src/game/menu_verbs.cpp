@@ -127,8 +127,11 @@ void BattleCommands_Apply(std::uint32_t tag, const std::uint8_t* payload, std::u
 }
 
 void MenuVerbs_Inject() {
+    // A Latin language overlay only: BOF3X_LANG set, not "original" (as
+    // YesNoLayout_Inject tests it), and not a full-width language.
     char lang[16];
-    if (GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang) == 0) return;
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n == 0 || n >= sizeof lang || std::strcmp(lang, "original") == 0) return;
     if (Lang_FullWidth()) return;   // DIV-0056: full-width verbs centre as the original does
     bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt, reinterpret_cast<void*>(&MenuVerbs_DrawLabel));
 }
