@@ -57,6 +57,8 @@ Entry g_log[kLog];
 unsigned g_log_n;
 std::uint32_t g_seed;        // the stand-ins' own stream: the same on both passes
 std::uint32_t g_rand_hint;   // a value the seeding wants Rand & 0xFF to land around
+int g_rand_first = -1;       // the seeding's answer for the round's first Rand, or -1
+int g_rand_pending = -1;     // the same, reset for each pass
 
 std::uint32_t Hash() {
     std::uint32_t h = (g_seed + g_log_n * 0x2545F491u) * 0x9E3779B1u;
@@ -176,6 +178,11 @@ int __cdecl StubRand() {
     Record(26);
     Disturb();
     const std::uint32_t h = Hash();
+    if (g_rand_pending >= 0) {
+        const int v = g_rand_pending;
+        g_rand_pending = -1;
+        return static_cast<int>((h >> 8) & 0x7F00u) | v;
+    }
     if (h % 3 == 0) return static_cast<int>(((h >> 8) & 0x7F00u) | ((g_rand_hint + (h >> 4) % 3 - 1) & 0xFF));
     return h % 4 == 0 ? static_cast<int>(h) : static_cast<int>(h >> 1) & 0x7FFF;
 }
@@ -462,6 +469,7 @@ void Apply(const State& s) {
     for (const Region& r : g_regions) { std::memcpy(At(r.at), s.memory + n, r.size); n += r.size; }
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
+    g_rand_pending = g_rand_first;
 }
 
 // Random bytes put back inside what the functions dereference.
@@ -492,6 +500,7 @@ void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const cur = Pointer(at::kSparkleCurrent);
     g_rand_hint = Next();
+    g_rand_first = -1;
     switch (k) {
     case kDiscFanTask:
         sc[1] = static_cast<unsigned char>(Next() % 3);
@@ -522,6 +531,10 @@ void Seed(unsigned k) {
         At(at::kTarget)[0] = static_cast<unsigned char>(Often() ? 3 + Next() % 8 : Next() % 3);
         unsigned char* const e = TargetEnemy();
         if (Often()) e[at::kStealRate] = static_cast<unsigned char>(Half() ? 1 + Next() % 7 : Next() % 8);
+        if (Often()) {   // the table as the exe has it (random bytes the rest of the time)
+            static const unsigned char kRates[8] = {0, 1, 3, 6, 12, 16, 32, 32};
+            std::memcpy(At(at::kStealRates), kRates, sizeof kRates);
+        }
         if (Half()) SetWord(e + at::kStealItem, Half() ? 0 : Next() % 0x100);
         const int d = static_cast<int>(MF_PICK(49, 48, 29, 28, 19, 18, 9, 8, static_cast<std::uint32_t>(-10),
                                                static_cast<std::uint32_t>(-11), static_cast<std::uint32_t>(-20),
@@ -541,6 +554,8 @@ void Seed(unsigned k) {
         }
         const unsigned rate = e[at::kStealRate] < 8 ? static_cast<unsigned>(static_cast<signed char>(At(at::kStealRates)[e[at::kStealRate]])) : 0;
         g_rand_hint = rate * m;
+        // Half the time the roll lands on the compare exactly, or one below.
+        if (Half() && g_rand_hint <= 0xFF) g_rand_first = static_cast<int>((g_rand_hint - (Half() ? 1u : 0u)) & 0xFF);
         break;
     }
     case kStealWait:
