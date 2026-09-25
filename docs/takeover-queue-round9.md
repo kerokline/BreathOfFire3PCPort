@@ -29,7 +29,7 @@ of them is game logic:
 | `0x404180`, `0x4414E0`, `0x497C30`, `0x5916B0`, `0x5917D0` | switch cases inside hosts already ours (round eight's "Result") | nothing to take |
 | `0x5A5BC0`, `0x5A5E40`, `0x5A5EA0`, `0x5A5F90`, `0x5A6230` (and shop's `0x5A6FF0`, `0x5A7080` in round eight's trace) | the DirectDraw / Direct3D enumeration callbacks under `Display_Setup` `0x5A5160`; their callers are system DLLs. Reached only because the traced side runs Capcom's set-up; ours (DIV-0031) never calls them | no - retired on our side |
 | `0x5B08A0`..`0x5B1160` (14) | the statically linked MP3 decoder's pointer-reached starts | no - library code; replacing the decoder is its own decision (see §3) |
-| `Task_RunAll` `0x5A98A0`, `0x5A98F0` | the task scheduler: hand-written stack switching, once per logic frame | **group EA** |
+| `Task_RunAll` `0x5A98A0`, `0x5A98F0` | the task scheduler: hand-written stack switching, once per logic frame | **group EA**, merged |
 | `0x576CD0`, `0x577B80` | switch cases of `MoveScript_Step` and `MoveScript_GroupF` (jump tables `0x576CF0`, `0x577B90`), hosts already ours; their "caller" was whatever dword sat at `esp` (EA read it). Reached only on an all-original side | nothing to take |
 
 So after round eight **the three routes enter no game logic of Capcom's
