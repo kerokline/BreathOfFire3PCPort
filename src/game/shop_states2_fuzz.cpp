@@ -81,7 +81,7 @@ unsigned char g_names[0x40];
 // --- the stand-ins' log -----------------------------------------------------
 
 constexpr unsigned kLog = 96;
-struct Entry { std::uint32_t what, a, b, c, d; };
+struct Entry { std::uint32_t what, a, b, c, d, memory; };
 Entry g_log[kLog];
 unsigned g_log_n, g_seed;
 unsigned g_sleeps, g_sleep_limit, g_loads, g_load_after;
@@ -94,8 +94,18 @@ std::uint32_t Hash() {
     h ^= h >> 13;
     return h;
 }
+// The bytes the functions store, hashed at every call: a store moved across
+// a call shows even where the callee does not read it.
+std::uint32_t Watched() {
+    static const struct { std::uint32_t at, size; } kWatched[] = {
+        {0x929F00, 0x20}, {0x6BC880, 0x40}, {0x803160, 0x320}, {at::kMoney, 0x10}, {at::kGameMode, 4}, {at::kClutDirty, 1}};
+    std::uint32_t h = 0x811C9DC5u;
+    for (const auto& r : kWatched)
+        for (std::uint32_t i = 0; i < r.size; ++i) h = (h ^ At(r.at)[i]) * 0x01000193u;
+    return h;
+}
 void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0) {
-    if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
+    if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d, Watched()};
     ++g_log_n;
 }
 
