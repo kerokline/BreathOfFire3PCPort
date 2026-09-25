@@ -119,7 +119,7 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
-    switch ((h >> 4) % 26) {
+    switch ((h >> 4) % 27) {
     case 0: PutByte(at::kSub, v); g_touched = true; break;
     case 1: PutByte(at::kState, v); g_touched = true; break;
     case 2: PutByte(at::kCounter, v); break;
@@ -145,6 +145,7 @@ void Disturb() {
     case 22: PutByte(at::kSlotCursor, v % 3 == 0 ? v : v % 2); break;
     case 23: g_counts[w % 5][kInvAt + (v % 0x90) - 0x10] = static_cast<unsigned char>(h >> 8); break;
     case 24: PutWord(at::kRate, h); break;
+    case 25: PutByte(at::kChoice, v % 3 == 0 ? v : v % 2); break;
     default: PutByte(0x803264, v); break;
     }
 }
@@ -202,6 +203,8 @@ unsigned short __cdecl StubInvCount(unsigned kind, unsigned item, unsigned equip
     Record(9, kind & 0xFF, item & 0xFF, equipped & 0xFF);
     Disturb();
     const std::uint32_t h = Hash();
+    static const unsigned char kEdges[] = {0, 0, 36, 49, 50, 63, 99, 100};
+    if (h % 3 == 0) return kEdges[(h >> 4) % sizeof kEdges];
     if (h % 2) return static_cast<unsigned short>((h >> 16 & 0xFF00) | (45 + (h >> 4) % 12));
     if (h % 3 == 0) return static_cast<unsigned short>((h >> 16) & 0xFF00);
     return static_cast<unsigned short>(h >> 9);
@@ -251,7 +254,18 @@ unsigned __cdecl StubAutoRepeat(unsigned pressed) {
     if (h % 2) return (h & 0xFFFF0000u) | kBits[(h >> 3) % (sizeof kBits / sizeof kBits[0])];
     return h * 0x2C1B3C6Du;
 }
-void __cdecl StubSound(unsigned short id) { Record(18, id); Disturb(); }
+// The sounds come just before most of the states' reads of the state, the
+// step and the choice: a quarter of them move one of the three.
+void __cdecl StubSound(unsigned short id) {
+    Record(18, id);
+    const std::uint32_t h = Hash();
+    if (h % 4 == 0) {
+        static const U kMoved[] = {at::kSub, at::kState, at::kChoice};
+        PutByte(kMoved[(h >> 3) % 3], At(kMoved[(h >> 3) % 3])[0] + 1 + (h >> 5) % 3);
+        if (kMoved[(h >> 3) % 3] != at::kChoice) g_touched = true;
+    }
+    Disturb();
+}
 void __cdecl StubWindowReset() { Record(19); Disturb(); }
 void __cdecl StubTaskClear() { Record(20); Disturb(); }
 void __cdecl StubTaskSleep(int frames) {
