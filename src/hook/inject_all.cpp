@@ -43,6 +43,7 @@
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
 #include "game/battle_flow.h"
+#include "game/enemy_ai_ops.h"
 #include "game/battle_misc.h"
 #include "game/battle_sprites.h"
 #include "game/inventory_ops.h"
@@ -229,6 +230,8 @@ void InjectAll() {
     BattleSprites_Inject();     // group BG, round seven: every call of its clones re-aimed at a recorder,
                                 // three jump tables relocated in the copies, the boss table swapped: order does not matter
     InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    EnemyAiOps_Inject();        // round 8 group CF: every call of its clones re-aimed at a recorder and its op
+                                // tables' entries swapped: order does not matter (it clones before its own Inject)
     InjectReport();
 }
 
