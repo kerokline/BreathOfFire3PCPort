@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-25) - twelve functions ours
 (`src/game/window_kinds.cpp`, shadow name `window_kinds`), each fuzzed
 headless against a copy of Capcom's with every call re-aimed at a recorder:
-24,000 rounds, 0 mismatches; @CONTROLS@ `BOF3X_SHADOW='*'` passes. Not yet
+24,000 rounds, 0 mismatches; 44 negative controls planted, 44 refused by a count of mismatches. `BOF3X_SHADOW='*'` passes. Not yet
 through a live batch: the coordinator's check after the merge is the combat
 route.
 
@@ -187,9 +187,61 @@ answers as the real one does, `Window_FreeCurrent`'s clears the record's bytes
 0, +2 and +3, and between calls a `Disturb()` writes one of ten watched bytes
 or, once in 23, repoints `0x905B84` at another record.
 
-    @SELFTEST@
+    shadow      window_kinds self-test: 24000 rounds over 12 functions (2000 each), 18833 calls to the stand-ins, 0 MISMATCHES; the 22 window records, the current record, the message ring and its indices, 0x939F60, the banner pool, its pointer and mask, Input_Pressed, DamageScratch's byte, the gauge's two records and the stand-ins' log compared
+    shadow      window_kinds coverage: gauge max changed 651, HP clamped 130, capped at 0x37 279; to drain 342, to fill 415, settled 1243, emptied 228; drain on 1437 done 563; fill on 1091 done 909; slid in 260, banner freed 148, colour with upper bits 671; message opened 448, advanced by a button 506, by the timer 151, closed 152
 
-@CONTROLTABLE@
+### Negative controls
+
+44 planted bugs, one at a time, rebuilt and re-run headless (`BOF3X_SELFTEST_ONLY=1`, a scratch driver that edits `window_kinds.cpp`, builds, runs and restores). **44 of 44 were refused by a count of mismatches**, each in the function it was planted in and nowhere else.
+
+| the bug | rounds that refused it (of 2,000) |
+|---|--:|
+| Track: the HP not clamped to a changed max | 130 |
+| Track: no floor of 1 on the recomputed gauge (shown = HP) | 30 |
+| Track: the recomputed gauge capped at 0x38, not 0x37 | 24 |
+| Track: the cap leaves the shown HP behind | 168 |
+| Track: the max not remembered | 651 |
+| Track: the old gauge kept in a register, DamageScratch not written | 380 |
+| Track: the drain step an eighth, not a sixteenth | 396 |
+| Track: the fill step shifted (floor), not divided (toward zero) | 11 |
+| Track: a fall starts the fill state | 510 |
+| Track: no floor of 1 on the step | 379 |
+| Track: HP 0 leaves the gauge standing | 113 |
+| Track: an unchanged HP treated as a fall | 888 |
+| Drain: continues while the drained part EQUALS the step | 194 |
+| Drain: the step compared unsigned | 59 |
+| Drain: the gauge state not reset when drained | 563 |
+| Drain: no floor of 1 on the gauge | 95 |
+| Fill: grows while the gap EQUALS the step | 249 |
+| Fill: grows by the step plus one | 629 |
+| Fill: the gauge state not reset when full | 909 |
+| Fill: no floor of 1 on the gauge | 239 |
+| BannerRun: the colour argument its low byte alone | 671 |
+| BannerRun: the text at x + 5 | 2000 |
+| BannerRun: the record not re-read after the box | 62 |
+| BannerRun: states 0 and 2 swapped | 1355 |
+| BannerSlideIn: arrives at 0x1A | 278 |
+| BannerSlideIn: 4 a frame | 1874 |
+| BannerSlideOut: the mask and-ed with the kind, not its complement | 140 |
+| BannerSlideOut: freed at 0xFFE2 | 282 |
+| BannerSlideOut: the record not freed | 148 |
+| MessageRun: states 0/1 and 2/3 swapped | 2000 |
+| MessageWait: 0x939F60 not set | 448 |
+| MessageWait: opens when the ring is EMPTY | 2000 |
+| MessageSlideIn: 0x939F60 not set | 1861 |
+| MessageSlideIn: the message not drawn | 2000 |
+| MessageShow: a button needs no press | 462 |
+| MessageShow: the read index not re-read before the timer | 352 |
+| MessageShow: a timer of 0xFF counts down too | 129 |
+| MessageShow: the button closes to state 2 | 130 |
+| MessageShow: the timer on flag bit 2, not bit 1 | 859 |
+| MessageSlideOut: the entry AT the read index drawn | 2000 |
+| MessageSlideOut: back to state 4, not 0 | 152 |
+| MessageSlideOut: 0x939F60 not cleared | 136 |
+| MessageSlideOut: the record not re-read after the box | 53 |
+| Handler4Kinds: kind 4 runs kind 5 | 484 |
+
+The first run (2026-09-25) did not refuse *"no floor of 1 on the recomputed gauge"*: its path needs a changed max, the shown HP equal to the HP, and 55 * HP / max = 0, which the random HP almost never gave. The seeds were widened (an HP below max / 55, a shown HP at the 0x37 cap) and every control re-run; the table is that second run. The fill step's "shifted, not divided" control is the thinnest (it needs a negative max, where the pixel difference goes negative) and is refused all the same.
 
 ## 6. What the fuzz did not reach, and what no check has seen
 
