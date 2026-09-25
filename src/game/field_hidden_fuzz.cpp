@@ -61,6 +61,11 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
     ++g_log_n;
 }
+// Field_CellPickup's rounds lean its stand-ins towards the found paths: the
+// cell 0xF2 or 0xF8, an effect object free, a Rand nibble of 13..15 or one
+// with & 3 clear.
+bool g_pickup;
+
 // A byte answer: al as asked, the rest of eax anything.
 std::uint32_t AlOf(unsigned al) { return (Hash() & ~0xFFu) | (al & 0xFF); }
 
@@ -111,7 +116,7 @@ std::uint32_t __cdecl StubEffectFree() {
     Record(3);
     Disturb();
     const std::uint32_t h = Hash();
-    return AlOf(h % 4 == 0 ? 0xFF : (h >> 8) % 20);
+    return AlOf(h % (g_pickup ? 8 : 4) == 0 ? 0xFF : (h >> 8) % 20);
 }
 void __cdecl StubSetAnimation(unsigned a) { Record(4, a & 0xFF, Address(Sc())); Disturb(); }
 std::uint32_t __cdecl StubEnsureAnimation(unsigned a) { Record(5, a & 0xFF, Address(Sc())); Disturb(); return Hash(); }
@@ -157,6 +162,7 @@ std::uint32_t __cdecl StubByteAt(unsigned x, unsigned z) {
     Disturb();
     static const unsigned char kCells[] = {0xF2, 0xF2, 0xF8, 0xF8, 0xF3, 0xF9, 0, 0xFF};
     const std::uint32_t h = Hash();
+    if (g_pickup && h % 4 != 0) return AlOf((h >> 8) % 3 ? 0xF2 : 0xF8);
     return AlOf(h % 5 == 0 ? h >> 8 : kCells[(h >> 8) % 8]);
 }
 void __cdecl StubSpawn(unsigned k, unsigned x, unsigned z) { Record(13, k & 0xFF, x & 0xFFFF, z & 0xFFFF); Disturb(); }
@@ -166,8 +172,9 @@ int __cdecl StubRand() {
     Record(14);
     Disturb();
     static const unsigned char kNibbles[] = {0, 1, 12, 13, 14, 15, 15, 5, 7, 9, 3, 11};
+    static const unsigned char kPickupNibbles[] = {13, 14, 15, 15, 12, 0};   // the find, then the tenfold's & 3
     const std::uint32_t h = Hash();
-    const unsigned nib = h % 3 == 0 ? (h >> 4) & 0xF : kNibbles[(h >> 4) % 12];
+    const unsigned nib = g_pickup && h % 2 ? kPickupNibbles[(h >> 4) % 6] : h % 3 == 0 ? (h >> 4) & 0xF : kNibbles[(h >> 4) % 12];
     return static_cast<int>(((h >> 8) << 4 & 0x7FF0) | nib);
 }
 void __cdecl StubZenny(unsigned v) { Record(15, v); Disturb(); }
@@ -448,6 +455,7 @@ Args Seed(unsigned k) {
     Args args;
     for (std::uint32_t& v : args.a) v = Next();
     unsigned char* const s = Sc();
+    g_pickup = k == kPickup;
     switch (k) {
     case kResume:
         if (Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x400u);
@@ -493,9 +501,11 @@ Args Seed(unsigned k) {
         // bits above the low word anything; the set our buffer, or g_src
         // itself a little on (the copy then reads what it wrote)
         const unsigned anim = Half() ? s[0x4B] : Next() & 0xFF;
-        const unsigned n = Often() ? Next() % 0x40 : Next() % 0x80;
+        // (sizes up to 0x140 into our own buffer: bits 8..15 of the size count)
+        const bool own = Often();
+        const unsigned n = own && Next() % 4 == 0 ? Next() % 0x141 : Often() ? Next() % 0x40 : Next() % 0x80;
         const std::uint32_t size = Garbage(0xFFFF, Half() ? n : (Half() ? 0 : 1));
-        unsigned char* const buffer = Often() ? g_dst : g_src + Next() % 0x100;
+        unsigned char* const buffer = own ? g_dst : g_src + Next() % 0x100;
         static const std::uint16_t kPositions[] = {0, 1, 2, 3, 0xFFFF};
         SetWord(s + 0x58, kPositions[Next() % 5]);
         if (k == kAnim) {

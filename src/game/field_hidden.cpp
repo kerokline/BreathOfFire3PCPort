@@ -175,8 +175,8 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
 // a states table by +2)
 // ===========================================================================
 
-// original 0x51DA30: state 2 of every form-0 state table (0x65F9C0,
-// 0x65FA18, 0x65FA74, 0x65FBC0 and 16 more), by +0xB:
+// original 0x51DA30: entry 2 of the party sets' state tables - 18 .data
+// dwords hold it, PartyAction0/1/2/5_Form0States among them - by +0xB:
 //   0 - Sprite_ScriptTickOnce; when it answers non-zero, the end;
 //   1 - Sprite_ScriptTickOnce; when it answers non-zero,
 //       Sprite_SetAnimation(+8) and +0xB = 2;
