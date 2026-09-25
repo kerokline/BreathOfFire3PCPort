@@ -110,6 +110,7 @@
 #include "game/magic_fx_reached.h"
 #include "game/menu_draw_helpers.h"
 #include "game/menu_lists.h"
+#include "game/shop_states.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -279,6 +280,8 @@ void InjectAll() {
                                 // runs after Widescreen_Inject, whose bound inside 0x59B440 ours reads back
     MenuLists_Inject();         // round 8 group DH: every call of its clones re-aimed at a recorder and its eight
                                 // .data dispatch tables' entries swapped for recorders: order does not matter
+    ShopStates_Inject();        // round 8 group DF: every call of its clones re-aimed at a recorder and its five .data
+                                // dispatch tables' entries swapped for recorders: order does not matter
     InjectReport();
 }
 

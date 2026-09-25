@@ -16888,3 +16888,271 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-25: kind 4's states, called by MenuList_TitleBox, unchecked: 0x437CC0 (ret), MenuSlide_UpOff, MenuSlide_DownTo16."
+[[func]]
+pc = 0x57F500
+name = "ShopMode_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F500..0x57F510 (0x11 bytes): mov eax, [0x929F00]; and eax, 0xFF; jmp [eax*4 + 0x663E40] (ShopMode_States, 11 entries, unchecked). Jumped to, not called: Game_Mode 7's step 1 0x517300 ends in jmp 0x57F500 (0x517323), as does 0x56D4D0 (0x56D4D5) - E8/E9 scan of .text; no dword in the image points at it. The state's function returns to Field_Task. Shop route: reached (first-call trace 2026-09-25)."
+
+[[func]]
+pc = 0x57F520
+name = "ShopMode_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F520..0x57F5C3 (0xA4 bytes, no calls): ShopMode_States 0. s8 0x929F0C < 0: 0x929F00 = 0x929EC2 + 2; else Sprite_Current = 0x7DEE80 + 0xA4 n, 0x929F00 = its +0x18 + 2, 0x929EC3 = its +0x1C. Eight records from 0x903A80 (Field_ActorStates, stride 0xA4): (u16 +0x10 shr 2) > u16 +8 sets byte +1 bit 5, else and word +0, 0xDFFF. 0x929F01/02/0A = 0, 0x929F04 = 6, 0x903844 = 0x658930 + 23 * 0x929EC3 (lea/shl/sub). esi saved."
+
+[[func]]
+pc = 0x57F5D0
+psx = 0x801D0FF8
+name = "ShopMode_End"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F5D0..0x57F644 (0x75 bytes, calls Sprite_FaceDirection 0x57F609, Window_ResetAll 0x57F638): ShopMode_States 1 and 4 (0x663E44, 0x663E50). With s8 0x929F0C >= 0: Sprite_Current = the object (esi); unless +7 bit 3: +8 = +0x85, Sprite_FaceDirection(byte [Sprite_Current + 8]), +0x80 or 8 through esi; +0x80 and 0xDF; Field_ScriptFlags and 0xFEFF. Always Window_ResetAll, inc word Game_Step. PSX twin by the catalogue (remaining_catalog.tsv), not read."
+
+[[func]]
+pc = 0x57F650
+name = "Inn_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F650..0x57F65D (0xE bytes): xor eax, eax; mov al, [0x929F01]; jmp [eax*4 + 0x663F4C] (Inn_Steps, unchecked). ShopMode_States 3 (0x663E4C): the object's +0x18 = 1."
+
+[[func]]
+pc = 0x57F660
+name = "Inn_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F660..0x57F6D7 (0x78 bytes, no calls): Inn_Steps 0. 0x929F01 + 1, 0x6BC881 = 0, 0x929F04 = 4, 0x929F02 = 0; Field_InputFlags == 0x40 or Game_AreaNumber 0xBC / 0x85 / 0xC1: 0x929F0F = 0x929F0C, 0x929F0C = 0xFE, 0x929F01 = 3, 0x929F02 = 0; else 0x929F0C == 0xFE: 0x929F01 = 3, 0x929F02 = 0."
+
+[[func]]
+pc = 0x57F6E0
+name = "InnPrompt_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F6E0..0x57F6ED (0xE bytes): xor eax, eax; mov al, [0x929F02]; jmp [eax*4 + 0x663F60] (InnPrompt_States, unchecked). Inn_Steps 1 (0x663F50)."
+
+[[func]]
+pc = 0x57F6F0
+name = "InnPrompt_TitleIn"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F6F0..0x57F754 (0x65 bytes, calls Menu_DrawTitleBox 0x57F715, Msg_OpenSystem 0x57F74E): InnPrompt_States 0 (0x663F60). Title box (0x14, 0x12 - 20 * [0x929F04], 0x118, 0x13, colour byte 0x903A5A pushed in eax); 0x929F04 - 1; at 0: 0x929F02 + 1, 0x929F0B = 1, and with 0x929F0C != 0xFF Msg_OpenSystem(0xD1)."
+
+[[func]]
+pc = 0x57F760
+psx = 0x801D3BA8
+name = "InnPrompt_Greeting"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F760..0x57F805 (0xA6 bytes, 7 calls): InnPrompt_States 1 (0x663F64). Title box; with 0x929F0C != 0xFF: Crt_sprintf(0x904BA0, 0x5E10C0 %d, 10 * 0x929EC3), TextRecord_Set(0, 8, 0x904BA0), Text_DrawAt(0x1C, 0x16, 0, 0xFF, Msg_SystemPtr(0xA1)), Menu_DrawMoneyBox(0x62, 0x28, 0, [0x904058]). Byte 0x7DEE44 bit 1: 0x929F04 = 6, 0x929F02 + 1, Sound_PlayEffect(0x102). PSX twin by the catalogue, not read."
+
+[[func]]
+pc = 0x57F810
+name = "InnPrompt_ChoicesIn"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F810..0x57F893 (0x84 bytes, 5 calls): InnPrompt_States 2 (0x663F68). SaveMenu_DrawChoices(0x6E - 48 * [0x929F04], 0x4C); title box (colour in edx after the call); with an object message 0xA1 and the zenny box; 0x929F04 - 1, at 0 0x929F02 + 1."
+
+[[func]]
+pc = 0x57F8A0
+psx = 0x801D3D94
+name = "InnPrompt_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57F8A0..0x57FA30 (0x191 bytes, 10 calls): InnPrompt_States 3 (0x663F6C). The draw of 0x57F810 at 0x6E; ecx = dword Input_Pressed: bit 12 cursor 0x6BC881 - 1 (jns, else 2), else bit 14 + 1 (above 2 to 0); moved: Sound_PlayEffect(0x101), cursor and pad re-read. Field_ConfirmButtons & cx: 0x929F04 = 0, 0x6BC882 = 0 (a dead sete dl / cmp edx, -1 / je before them), cursor != 0: 0x104, 0x929F02 + 2; cursor 0 and [0x904058] >= 10 * 0x929EC3 (jb): 0x104, zenny - 10 * 0x929EC3 (re-read), + 2; else 0x107, + 1. Else Field_CancelButtons & cx: 0x106, + 2, 0x929F04 = 0, 0x6BC882 = 1. PSX twin by the catalogue, not read."
+
+[[func]]
+pc = 0x57FAB0
+name = "InnPrompt_ChoicesOut"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FAB0..0x57FB59 (0xAA bytes, 3 calls): InnPrompt_States 5 (0x663F74). SaveMenu_DrawChoices(0x6E + 48 * [0x929F04], 0x4C), title box, with an object the zenny box; 0x929F04 + 1; at 6: 0x6BC882 set: 0x929F04 = 0, 0x929F01 + 3; else 0x929F02 = 0, 0x929F04 = (setne cl; dec ecx; and ecx, 0x2D) 0x2D for cursor 0 else 0, 0x929F01 + cursor + 1."
+
+[[func]]
+pc = 0x57FB60
+name = "InnNight_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FB60..0x57FB6D (0xE bytes): xor eax, eax; mov al, [0x929F02]; jmp [eax*4 + 0x663F78] (InnNight_States, unchecked). Inn_Steps 2 (0x663F54)."
+
+[[func]]
+pc = 0x57FB70
+name = "InnNight_Message"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FB70..0x57FBD4 (0x65 bytes, 4 calls): InnNight_States 0 (0x663F78). Title box; with an object Text_DrawAt(0x1C, 0x16, 0, 0xFF, Msg_SystemPtr(0xA4)); 0x929F04 - 1, at 0 0x929F02 + 1 then Transition_Start(0)."
+
+[[func]]
+pc = 0x57FBE0
+name = "InnNight_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FBE0..0x57FC33 (0x54 bytes, 4 calls): InnNight_States 1 (0x663F7C). word 0x66C810 (MoveScript_WaitWordDA) 0: Menu_DrawBlackScreen, 0x929F02 + 1; else with an object title box and message 0xA4."
+
+[[func]]
+pc = 0x57FC40
+name = "InnNight_Jingle"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FC40..0x57FC62 (0x23 bytes, 2 calls): InnNight_States 2 (0x663F80). Menu_DrawBlackScreen, Sound_LoadStream(0), 0x929F02 + 1, 0x929F04 = 0x96."
+
+[[func]]
+pc = 0x57FC70
+name = "InnNight_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FC70..0x57FCA8 (0x39 bytes, 3 calls): InnNight_States 3 (0x663F84). Menu_DrawBlackScreen; 0x929F04 counted down to 0 (test al, al; jbe); at 0, Sound_StreamDone non-zero (test eax, eax): 0x929F02 + 1, Transition_Start(1)."
+
+[[func]]
+pc = 0x57FCB0
+psx = 0x801D447C
+name = "InnNight_Restore"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FCB0..0x57FD18 (0x69 bytes, 3 calls): InnNight_States 4 (0x663F88). Title box; word 0x66C810 zero: Party_RestoreAll(1), 0x929F02 + 1, 0x929F0B = 1, words 0x7E01B8 and 0x7E1BE0 = 0, with an object Msg_OpenSystem(0xD5). PSX twin by the catalogue, not read."
+
+[[func]]
+pc = 0x57FD20
+name = "InnNight_AskSave"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FD20..0x57FD7C (0x5D bytes, 4 calls): InnNight_States 5 (0x663F8C). Title box; 0x929F0C != 0xFF: byte 0x7DEE44 bit 1 steps 0x929F02; == 0xFF: Text_DrawAt(0x1C, 0x16, 0, 0xFF, Msg_SystemPtr(0x1D)), Menu_YesNo non-zero (al) steps 0x929F02."
+
+[[func]]
+pc = 0x57FD80
+name = "InnNight_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FD80..0x57FDCC (0x4D bytes, 1 call): InnNight_States 6 (0x663F90). Title box; 0x929F04 = 0, 0x929F02 = 0; 0x929F01 + 2 when 0x929F0B is 0, else + 1."
+
+[[func]]
+pc = 0x57FDD0
+name = "FieldSave_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FDD0..0x57FDDD (0xE bytes): xor eax, eax; mov al, [0x929F02]; jmp [eax*4 + 0x663F94] (FieldSave_States, unchecked). Inn_Steps 3 (0x663F58): the in-game save menu, the inn's and the save point's (0x929F0C = 0xFE)."
+
+[[func]]
+pc = 0x57FDE0
+name = "FieldSave_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FDE0..0x57FDFE (0x1F bytes, 1 call): FieldSave_States 0 (0x663F94). Save_ReadSummaries; 0x929F04 = 4; dwords 0x9036D4 and 0x8034D0 = 0; 0x929F02 + 1. DIV-0002 names this state (docs/save-files.md)."
+
+[[func]]
+pc = 0x57FE00
+name = "FieldSave_SlotsIn"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FE00..0x57FE62 (0x63 bytes, 3 calls): FieldSave_States 1 (0x663F98). 0x929F04 == 4: Sound_PlayEffect(0x102); title box; SaveMenu_DrawSlots(0x20 - 80 * [0x929F04], 0x30, 1) - x from movzx ax over Menu_DrawTitleBox's eax, its upper half that call's leftover; 0x929F04 - 1, at 0 0x929F02 + 1."
+
+[[func]]
+pc = 0x57FE70
+name = "FieldSave_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x57FE70..0x57FF7B (0x10C bytes, 8 calls): FieldSave_States 2 (0x663F9C). Title box, message 0x9D, SaveMenu_DrawSlots(0x20, 0x30, 1); ah of Input_AutoRepeat(Input_Pressed & 0x5000): bit 4 with slot 0x9036D4 non-zero: slot - 1, first 0x8034D0 - 1 when slot < first (jge); else bit 6 with slot < 15 (jge): slot + 1, first + 1 (re-read) when slot > first + 2 (jle). Old slot's low byte (push ecx slot) != new dword: Sound_PlayEffect(0x101). Input_Pressed re-read: confirm 0x104, 0x929F02 + 1, 0x929F0B = 0; else cancel 0x106, 0x929F02 = 6."
+
+[[func]]
+pc = 0x580150
+name = "FieldSave_SlotsOut"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x580150..0x58019A (0x4B bytes, 2 calls): FieldSave_States 6 (0x663FAC). Title box; SaveMenu_DrawSlots(0x20 + 80 * [0x929F04], 0x30, 0), x's upper half as 0x57FE00's; 0x929F04 + 1, at 4 0x929F02 + 1."
+
+[[func]]
+pc = 0x5801A0
+name = "FieldSave_End"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5801A0..0x580228 (0x89 bytes, 2 calls): FieldSave_States 7 (0x663FB0). Title box; 0x929F02 = 0; 0x6BC881 != 2 and 0x929F0C != 0xFE: 0x929F01 = 1, 0x929F02 = 1; else byte 0x66C7DA non-zero and 0x6BC880 zero: words 0x7E01B8 / 0x7E1BE0 and 0x929F0B = 0, 0x929F02 = 8, Msg_OpenSystem(0xD0); else 0x929F04 = 0, 0x929F01 + 1."
+
+[[data]]
+pc = 0x663E40
+name = "ShopMode_States"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x57F520 0x57F5D0 0x5818B0 0x57F650 0x57F5D0 0x5837E0 0x580A40 0x584180 0x582EB0 0x583350 0x580300, then a 0 dword; jumped through by ShopMode_Dispatch 0x57F50A by the byte 0x929F00, unchecked. ShopMode_Begin sets the state to the object's +0x18 + 2 (0x929EC2 + 2 with none): 2 the shop (group DG's 0x5818B0), 3 the inn."
+
+[[data]]
+pc = 0x663F4C
+name = "Inn_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x57F660 0x57F6E0 0x57FB60 0x57FDD0 0x580280; jumped through by Inn_Dispatch 0x57F657 by the byte 0x929F01, unchecked. The next table, InnPrompt_States, starts at 0x663F60."
+
+[[data]]
+pc = 0x663F60
+name = "InnPrompt_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x57F6F0 0x57F760 0x57F810 0x57F8A0 0x57FA40 0x57FAB0; jumped through by InnPrompt_Dispatch 0x57F6E7 by the byte 0x929F02, unchecked. The next table, InnNight_States, starts at 0x663F78."
+
+[[data]]
+pc = 0x663F78
+name = "InnNight_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x57FB70 0x57FBE0 0x57FC40 0x57FC70 0x57FCB0 0x57FD20 0x57FD80; jumped through by InnNight_Dispatch 0x57FB67 by the byte 0x929F02, unchecked. The next table, FieldSave_States, starts at 0x663F94."
+
+[[data]]
+pc = 0x663F94
+name = "FieldSave_States"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x57FDE0 0x57FE00 0x57FE70 0x57FF80 0x580010 0x5800D0 0x580150 0x5801A0 0x580230; jumped through by FieldSave_Dispatch 0x57FDD7 by the byte 0x929F02, unchecked. Nine: FieldSave_End sets state 8 (0x580230); 0x663FB8 starts the table 0x580300 jumps through (0x580307)."
