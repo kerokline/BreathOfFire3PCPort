@@ -77,6 +77,13 @@ std::uint32_t TextHash(const unsigned char* p) { return Bytes(p, 12); }
 
 unsigned char* Member(unsigned slot) { return At(at::kMembers + slot * at::kMemberSize); }
 
+// Set for the DrawExp rounds seeded with 14..16 slots, where the line's y
+// byte wraps: the stand-ins' moves of the party count then keep it long.
+bool g_long;
+unsigned char PartyCount(unsigned v, unsigned short_mod) {
+    return static_cast<unsigned char>(g_long ? 14 + v % 3 : v % short_mod);
+}
+
 // Every byte below is one some function reads again after a call, or reads
 // only after one - so a read moved before a call, or a store moved across
 // one, shows. Pointers stay inside the arrays, indices inside the tables.
@@ -89,7 +96,7 @@ void Disturb() {
     case 0: At(at::kStep)[0] = static_cast<unsigned char>(v); break;
     case 1: At(at::kPhase2)[0] = static_cast<unsigned char>(v); break;
     case 2: At(at::kMember)[0] = static_cast<unsigned char>(v % 5); break;
-    case 3: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 5); break;
+    case 3: At(at::kPartyCount)[0] = PartyCount(v, 5); break;
     case 4: At(at::kDropCount)[0] = static_cast<unsigned char>(v % 18); break;
     case 5: SetLong(At(at::kExpTotal), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
     case 6: SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
@@ -154,10 +161,12 @@ unsigned char __cdecl StubRosterIndex(unsigned id) {
 unsigned __cdecl StubLevelUpPending(unsigned index, unsigned b) {
     Record(44, index & 0xFF, b & 0xFF);
     const std::uint32_t h = Hash();
-    if ((h >> 3) % 2) At(at::kPartyCount)[0] = static_cast<unsigned char>((h >> 8) % 5);
+    if ((h >> 3) % 2) At(at::kPartyCount)[0] = PartyCount(h >> 8, 5);
     Disturb();
-    // non-zero one call in three; half of the zeros only in the low word
-    return h % 3 == 0 ? (h | 1) : (h % 2 ? 0 : h & 0xFFFF0000u);
+    // non-zero one call in three - half of those with a low byte of 0 -
+    // and half of the zeros only in the low word
+    if (h % 3 == 0) return (h >> 9) % 2 ? (h | 1) : ((h & 0xFFFF0000u) | 0x100u | (h & 0xFE00u));
+    return h % 2 ? 0 : h & 0xFFFF0000u;
 }
 void __cdecl StubLevelUp(unsigned index) {
     Record(45, index & 0xFF);
@@ -175,7 +184,7 @@ unsigned char __cdecl StubAddZenny(unsigned n, unsigned flag) {
 void __cdecl StubDrawFrame(int x, int y, int w, int h) {
     Record(47, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF,
            static_cast<std::uint32_t>(w) & 0xFFFF, static_cast<std::uint32_t>(h) & 0xFFFF);
-    if (Hash() % 2) At(at::kPartyCount)[0] = static_cast<unsigned char>(Hash() % 6);
+    if (Hash() % 2) At(at::kPartyCount)[0] = PartyCount(Hash(), 6);
     Disturb();
 }
 // 0x598810 reads its slot as a byte; its answer is a dword, printed.
@@ -232,7 +241,7 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
     }
     const std::uint32_t h = Hash();
     if ((h >> 3) % 2) At(at::kDropCount)[0] = static_cast<unsigned char>((h >> 8) % 18);
-    if ((h >> 4) % 2) At(at::kPartyCount)[0] = static_cast<unsigned char>((h >> 12) % 5);
+    if ((h >> 4) % 2) At(at::kPartyCount)[0] = PartyCount(h >> 12, 5);
     if ((h >> 5) % 2) SetLong(At(at::kExpTotal), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h));
     if ((h >> 6) % 2) SetLong(At(at::kZennyTotal), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h * 7));
     Disturb();
@@ -260,7 +269,7 @@ unsigned char __cdecl StubInventoryAdd(unsigned category, unsigned item, unsigne
 const unsigned char* __cdecl StubTextDrawAt(int x, int y, int color, int count, const unsigned char* text) {
     Record(56, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF,
            static_cast<std::uint32_t>(color), static_cast<std::uint32_t>(count), Id(text) ^ TextHash(text));
-    if (Hash() % 2) At(at::kPartyCount)[0] = static_cast<unsigned char>(Hash() % 6);
+    if (Hash() % 2) At(at::kPartyCount)[0] = PartyCount(Hash(), 6);
     if (Hash() % 3 == 0) Member((Hash() >> 8) % kMaxMembers)[0xA] = static_cast<unsigned char>(Hash() % 2 ? 0x63 : Hash() >> 16);
     Disturb();
     return text;
@@ -463,6 +472,7 @@ std::uint32_t Amount(std::uint32_t step) {
 
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
+    g_long = false;
     switch (k) {
     case kSplitExp:
         SetLong(At(at::kExpTotal), static_cast<std::int32_t>(Half() ? 0 : Amount(Next() % 5)));
@@ -516,7 +526,8 @@ void Seed(unsigned k) {
         break;
     case kDrawExp:
         // the y byte wraps past 14 slots
-        if (Next() % 8 == 0) At(at::kPartyCount)[0] = static_cast<unsigned char>(14 + Next() % 3);
+        g_long = Next() % 8 == 0;
+        if (g_long) At(at::kPartyCount)[0] = static_cast<unsigned char>(14 + Next() % 3);
         break;
     default:
         break;
@@ -575,7 +586,8 @@ void Cover(unsigned k, const State& in, const State& out) {
         break;
     case kDrawExp: {
         g_cover.max_level += logged(50);
-        if (ByteOf(in, at::kPartyCount) > 13 && logged(56)) ++g_cover.wrapped;
+        for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
+            if (out.log[i].what == 56 && out.log[i].a == 0x19 && out.log[i].b < 0x2C) { ++g_cover.wrapped; break; }
         break;
     }
     default:
