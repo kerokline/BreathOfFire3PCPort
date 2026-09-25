@@ -16010,3 +16010,293 @@ params = "void"
 impl = "src/game/battle_turn_steps.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x431920..0x431930 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64AFAC] (BattleEnd_ResultPages, group CD's pages). Entry 0 of BattleEnd_ResultSteps."
+# ---------------------------------------------------------------------------
+# Round eight, group CJ: the magic effects the fight casts, reached only
+# through pointers (src/game/magic_fx_reached.cpp, docs/magic_fx_reached.md).
+# All run as battle tasks: Sprite_Current is the task slot (BattleTask_RunAll),
+# 0x93B940 its owner +0x80. Kind-2 tasks are entered by the jmp [0x64C2BC +
+# 8 * row] of 0x4378B0 (group CE's), kind-1 ones by the call through
+# 0x435350's 110-entry stack table (CE's) - so every one is void(void), cdecl,
+# with its caller's frame.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4C4FC0
+name = "FxDiscFan_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4FC0..0x4C501B (0x5C bytes), cdecl, void: a three-entry stack table (mov [esp + 0/4/8], imm32 0x4C5020 0x4AD130 0x4AD160) called by byte +1 of Sprite_Current, unchecked; then when byte +0 is not 0: BattleActor_UpdateScreenXY, word +0x30 -= 0x10, MagicFx_DrawDisc, MagicFx_PushActorMatrix, MagicFx_DrawFan, Gte_PopMatrix. Entered by 0x4378B0's jmp through 0x64C364 (row 21 of 0x64C2BC). 0x4ACFE0 is its twin (children of parameter 0x34, the sound before the flags). Combat route: first-call trace 2026-09-25."
+
+[[func]]
+pc = 0x4C5020
+name = "FxDiscFan_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5020..0x4C510B (0xEC bytes), cdecl, three calls: byte +8 and dwords +0x34/+0x38/+0x3C from the sprite at 0x904B4C (read once), +0xB 0; six BattleTask_Create(1, 0x16), the index's slot +0x80 = Sprite_Current (read after each create), +9 = 6 i + 1, Sprite_Current +0xB += 1 - the index untested; words 0x812982..0x81299E = the word 0x4000 below | 0x8000, word 0x812980 = 0, Gfx_ClutStripDirty 1; Battle_SetTargetFlags(byte 0x904B44, 0x10); Sound_PlayById(0x100); +9 1, +0xA 1, +1 += 1. Stack table entry 0 of FxDiscFan_Task. Combat route."
+
+[[func]]
+pc = 0x4AD130
+name = "FxDiscFan_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4AD130..0x4AD158 (0x29 bytes), no calls: Sprite_Current +9 and +0xA up by one; +9 == 0x10 steps +1. Entry 1 of the stack tables of FxDiscFan_Task (0x4C4FD7) and its twin 0x4ACFE0 (0x4ACFF7): one body the linker shares. Combat route."
+
+[[func]]
+pc = 0x4AD160
+name = "FxDiscFan_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4AD160..0x4AD1BB (0x5C bytes): +0xB below 4 and +9 not 0: +9 down; +0xB below 3 and +0xA not 0: +0xA down; +0xB and +0xA both 0: Battle_SetTargetFlag40(byte 0x904B44), byte 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 2 of FxDiscFan_Task's table and of 0x4ACFE0's. Combat route."
+
+[[func]]
+pc = 0x4C5110
+name = "FxRing_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5110..0x4C5142 (0x33 bytes): call [0x65B5B8 + 4 * byte +1] (FxRing_Phases, unchecked); then when +0 and +1 are both not 0: MagicFx_PushActorMatrix, MagicFx_DrawRing, jmp Gte_PopMatrix. Entry 22 (0x16) of 0x435350's stack table (.text 0x43540A): the ring tasks FxDiscFan_Start makes. Its twin 0x4AD1C0 (entry 52) uses 0x65AA28 and draws 0x4AD350. Combat route."
+
+[[func]]
+pc = 0x4AD200
+name = "FxRing_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4AD200..0x4AD269 (0x6A bytes), no calls: +9 down; at 0 the dwords +0x34/+0x38/+0x3C of the owner 0x93B940, +9 = 0x40, +0xA and +0xB 0, +1 += 1. Entry 0 of FxRing_Phases (0x65B5B8) and of 0x65AA28. Combat route."
+
+[[func]]
+pc = 0x4AD270
+name = "FxRing_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4AD270..0x4AD2A7 (0x38 bytes), no calls: +0xB += 1, +0xA += 2, +9 -= 2 (bytes); +9 == 0x10 steps +1. Entry 1 of FxRing_Phases and of 0x65AA28. Combat route."
+
+[[func]]
+pc = 0x4AD2B0
+name = "FxRing_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4AD2B0..0x4AD2F2 (0x43 bytes): +0xB += 1, +0xA -= 3, +9 -= 2; +9 == 0: the owner 0x93B940's +0xB down, jmp BattleTask_FreeCurrent. Entry 2 of FxRing_Phases and of 0x65AA28. Combat route."
+
+[[func]]
+pc = 0x4B54B0
+name = "Steal_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B54B0..0x4B54E5 (0x36 bytes): a four-entry stack table (0x4B54F0 0x4B5770 0x4B57C0 0x4F52D0) called by +1, unchecked. Entered by 0x4378B0's jmp through 0x64C4EC (row 69 of 0x64C2BC). The steal by its start's reading (Inventory_Add of the enemy's +0xA8); the sibling's MAGIC115 is 'UtmostAttack, Steal'. Combat route."
+
+[[func]]
+pc = 0x4B54F0
+name = "Steal_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B54F0..0x4B5760 (0x271 bytes), four calls: the owner's +8/+0x34/+0x38/+0x3C, +0xB 0, +9 0x1E, +1 += 1; BattleActor_SetAnimation(0xC, 2); slot = BattleTask_Create(1, 0x45) (untested): +0x80 = Sprite_Current, rep movsd 0x20 dwords from ObjTrio + 0x14C * byte 0x904B34, +1 +2 0, +6 1, +5 0x45; +0xB += 1; the owner's +0 |= 0x40. Enemy e = 0x93B960 + 0x128 * (byte 0x904B44 - 3): d = party +0xA8 word - e +0xB8 word, m = 12..4 at 49/29/19/9/-10/-20/-30/-50 (jge chain); edi = movsx byte 0x65AC20[e +0xAA] * m; Rand & 0xFF < edi (signed): e' (0x904B44 re-read) +0xA8 word 0 gives +0xA 0x3A, else Inventory_Add(item >> 8, item, 1, 0) al: +0xA 0x38, word +0x2C = item, e'' +0xAA and +0xA8 0 - or 0x39; failed roll: 0x39, 0x3A when e' +0xAA is 0. Queue's PSX twin 801EEC90. Combat route."
+
+[[func]]
+pc = 0x4B5770
+name = "Steal_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B5770..0x4B57B6 (0x47 bytes), one call: nothing while +0xB is not 0; +9 == 0x1E: BattleActor_SetAnimation(4, 0), the owner's +0 &= 0xBF; +9 down, at 0 +1 += 1. Steal_Task's entry 1. Combat route."
+
+[[func]]
+pc = 0x4B57C0
+name = "Steal_Report"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B57C0..0x4B580B (0x4C bytes), three calls: nothing while byte 0x939F60 (the battle message window, set by 0x597D90) is set; +0xA == 0x38: 0x4B58F0(+0x2C, +0x2D) (an item name into Text_Records by index and category); BattleQueue_Push(1, 0x1E, Msg_SystemPtr(+0xA as the low word of a dword whose high word is Sprite_Current's)); +1 += 1. Steal_Task's entry 2. Combat route."
+
+[[func]]
+pc = 0x4F52D0
+name = "MagicFx_EndWhenIdle"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4F52D0..0x4F52E5 (0x16 bytes): when byte 0x939F60 is 0, byte 0x904AA8 |= 4 and jmp BattleTask_FreeCurrent. Entry 3 of Steal_Task's table (.text 0x4B54DA) and entry 2 of 0x4F50B0's (.text 0x4F50D2). Combat route."
+
+[[func]]
+pc = 0x4B5810
+name = "StealClone_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B5810..0x4B5821 (0x12 bytes): jmp [0x65AC28 + 4 * byte +1] (StealClone_Types, unchecked). Entry 69 (0x45) of 0x435350's stack table (.text 0x4355F4): the task Steal_Start makes, whose +1 it clears. Combat route."
+
+[[func]]
+pc = 0x4B5830
+name = "StealClone_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B5830..0x4B5875 (0x46 bytes), one call: a four-entry stack table (0x4ED5C0 0x4B5880 0x4B58C0 0x4AEE90) called by byte +2, unchecked; then Sprite_UpdateScreen when +0 is not 0. StealClone_Types entry 0. Combat route."
+
+[[func]]
+pc = 0x4B5880
+name = "StealClone_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B5880..0x4B58B2 (0x33 bytes), two calls: Sprite_ScriptTickOnce (answer unused); +9 down; at 0 BattleActor_PlaySound(0, 4) and +2 += 1. StealClone_Task's entry 1. Combat route."
+
+[[func]]
+pc = 0x4B58C0
+name = "StealClone_Finish"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B58C0..0x4B58EC (0x2D bytes), two calls: when Sprite_ScriptTickOnce answers al not 0: Battle_SetTargetFlag40(byte 0x904B44), the owner's +0xB down, +2 += 1. StealClone_Task's entry 2. Combat route."
+
+[[func]]
+pc = 0x4B8D70
+name = "Sparkle_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B8D70..0x4B8DF0 (0x81 bytes), one call: a six-entry stack table (0x4B8E00 0x4B1E70 0x4B1ED0 0x4EE8A0 0x4B8F50 0x4F7350) by +1, unchecked; then 0x93B940 saved, and for the 128 sparkles of 0x684790 (stride 0x2C) with bit 0 of +0: 0x685D90 = it, 0x93B940 = its +0x28, Sparkle_Dispatch, 0x93B940 put back. Entered by 0x4378B0's jmp through 0x64C41C (row 43). The Healing Herb's (MAGIC070.EMI; docs/battle_items.md). Combat route."
+
+[[func]]
+pc = 0x4B8E00
+name = "Sparkle_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B8E00..0x4B8F4D (0x14E bytes), four calls: bytes +0..+2 of the 128 sparkles 0; Sprite_Current +4 0; +8/+0x34/+0x38/+0x3C from the sprite 0x904B4C; BattleActor_UpdateScreenXY; +0xB 0, +9 8, +0xA 0, +1 += 1; n from 0 while n < byte 0x65AE10[+4] (re-read each round): Sparkle_Alloc, and unless 0xFF: +0x28 = Sprite_Current, +1 +2 0, +3 = Rand & 3, +4 = +4, +7 = n, +5 = byte 0x65AE18[+4] * (n >> 2) + 1, Sprite_Current +0xB += 1; Sound_PlayEffect(0x100). Sparkle_Task's entry 0. Combat route."
+
+[[func]]
+pc = 0x4B8F50
+name = "Sparkle_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B8F50..0x4B8FD4 (0x85 bytes), two calls: bytes 0x7E0702/3/4 + 12 * +0xA (MoveScript_TintRecords +2..+4) down one, +0xA re-read for each; +9 down; at 0 Sprite_ReleaseTint(dword 0x904B4C), BattleActor_Flash(byte 0x904B44), +1 += 1. Sparkle_Task's entry 4. Combat route."
+
+[[func]]
+pc = 0x4B9000
+name = "Sparkle_Update"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9000..0x4B908E (0x8F bytes), three calls: a three-entry stack table (Sparkle_Launch, Sparkle_Rise, Sparkle_Fade) by byte +2 of the sparkle at 0x685D90, unchecked (3 calls the function's own return address); then when +0 bit 0 and +2: Sparkle_DrawDisc; when +0xC & 3: Sparkle_DrawRaysG2(Frame_Counter >> 1, +6) and Sparkle_DrawRaysG3((Frame_Counter >> 1) + 4, (+6 >> 1) + +6), the radii with stale upper halves. Sparkle_Types' (0x65AE28) one entry; left Capcom's by round seven (docs/battle_items.md section 3). Combat route: 2,554 calls."
+
+[[func]]
+pc = 0x4FAFF0
+name = "FxDim_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FAFF0..0x4FB001 (0x12 bytes): jmp [0x65C3A0 + 4 * byte +1] (FxDim_Phases, unchecked). Entry 67 (0x43) of 0x435350's stack table (.text 0x4355DE): the kind-1 task Battle_StartAbilityMagic's second task is (parameter 0x43). Combat route."
+
+[[func]]
+pc = 0x4FB010
+name = "FxDim_Down"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB010..0x4FB040 (0x31 bytes), one call: +9 down; +9 == 0xFA steps +1; AreaMap_TintClut(movsx +9). FxDim_Phases entry 1. Combat route."
+
+[[func]]
+pc = 0x4FB050
+name = "FxDim_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB050..0x4FB061 (0x12 bytes), no calls: byte 0x904AA8 bit 2 steps +1. FxDim_Phases entry 2. Combat route."
+
+[[func]]
+pc = 0x4FB070
+name = "FxDim_Up"
+ret = "void"
+params = "void"
+impl = "src/game/magic_fx_reached.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB070..0x4FB09F (0x30 bytes), two calls: +9 up; at 0 BattleTask_FreeCurrent; AreaMap_TintClut(movsx +9, read after). FxDim_Phases entry 3, and 0x65AC0C's. Combat route."
+
+[[data]]
+pc = 0x65B5B8
+name = "FxRing_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4AD200 0x4AD270 0x4AD2B0 0x4AD300, called by FxRing_Task 0x4C5110 as [0x65B5B8 + 4 * byte +1], unchecked. The fourth is never reached (the third frees the task)."
+
+[[data]]
+pc = 0x65AA28
+name = "FxRing_PhasesTwin"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: the same four entries as FxRing_Phases, called by 0x4AD1C0 (the twin effect's ring task, entry 52 of 0x435350's table; not in group CJ, not ours)."
+
+[[data]]
+pc = 0x65AC28
+name = "StealClone_Types"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x4B5830 0x4B5B30, jumped through by StealClone_Dispatch 0x4B5810 by byte +1, unchecked; Steal_Start sets +1 to 0 and nothing steps it, so 0x4B5B30 is not reached from there."
+
+[[data]]
+pc = 0x65C3A0
+name = "FxDim_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4332E0 (group CE's) 0x4FB010 0x4FB050 0x4FB070, then a 0 dword; jumped through by FxDim_Dispatch 0x4FAFF0 by byte +1, unchecked."
+
+[[data]]
+pc = 0x65AC20
+name = "Steal_RateTable"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 0 1 3 6 12 16 32 32, read by Steal_Start 0x4B54F0 as movsx byte [0x65AC20 + the enemy's +0xAA], the index unbounded; times the speed multiplier 4..12 against Rand & 0xFF."
+
+[[data]]
+pc = 0x65AE10
+name = "Sparkle_CountByKind"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 0x1E 0x3C 0x3C 0x3C 0x3C 0 0 0 - the sparkles Sparkle_Spawn 0x4B8E00 makes for the task's kind +4 (0 as it sets it)."
+
+[[data]]
+pc = 0x65AE18
+name = "Sparkle_DelayByKind"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 5 4 5 4 4 0 0 0 - Sparkle_Spawn's launch delay step: a sparkle's +5 = this * (n >> 2) + 1."
