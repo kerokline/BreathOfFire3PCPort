@@ -11996,6 +11996,386 @@ status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x436B50..0x436BBE (0x6F bytes), cdecl: 0 when the word +0x92 of 0x939AD8's object has any of 0x4064, byte 0x904B34 is 3 or more, byte 0x904B35 is 4 with word 0x904B80 0xA1, byte 0x904B8E is set with +0x114 lacking 0x10, or +0x90 lacks bit 1; else 1 with bit 15 of dword +0x110, else Rand() % 100 < 70 (idiv, signed). PSX 0x801E42C0 (call-anchored), the sibling's STEAL.md false lead with the same Rand % 100 < 70 behind +0x80 and 2 and +0x100 and 0x8000. Combat route: 4 calls (0x436AA1 3, 0x436AD1 1). Hypothesis in the name only: what the chance decides is unread."
 
 [[func]]
+pc = 0x4360F0
+name = "EnemyOp_StepDispatch"
+psx = 0x801E3140
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4360F0..0x436101 (0x12 bytes), cdecl: xor eax, eax; mov al, [Sprite_Current + 1]; jmp [eax*4 + 0x64B1A0] (EnemyOp_Steps), the index unchecked. The state-0 entry of the enemy state table 0x64B084 (BattleEnemy_RunAll). PSX 0x801E3140 (remaining_catalog pair). Combat route: reached every frame an enemy is in state 0."
+
+[[func]]
+pc = 0x436110
+name = "EnemyOp_Begin"
+psx = 0x801E3184
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436110..0x436164 (0x55 bytes), cdecl, two calls: 0x939AD8's +0xFC = 0x64B078 (the animation bytes 0..7), dwords 0x904B64 = 0x437720 and 0x904B68 = 0x437750; BattleEnemy_SetAnimation(0) (E8 at +0x25); Sprite_Current +0 |= 0x40; Battle_StatusTint(word 0x939AD8 +0x92, pushed as edx with its upper half unset; E8 at +0x44); Sprite_Current +1 incremented. EnemyOp_Steps entry 0. PSX 0x801E3184. Hypothesis in the name only."
+
+[[func]]
+pc = 0x436170
+name = "EnemyOp_EnterDispatch"
+psx = 0x801E3224
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x436170..0x436181 (0x12 bytes), cdecl: jmp [Sprite_Current +2 * 4 + 0x64B1D4] (EnemyOp_EnterSubs: 0x436190, 0x436270). EnemyOp_Steps entry 1. PSX 0x801E3224."
+
+[[func]]
+pc = 0x436190
+name = "EnemyOp_ScaleInDispatch"
+psx = 0x801E3268
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x436190..0x4361A1 (0x12 bytes), cdecl: jmp [Sprite_Current +3 * 4 + 0x64B1DC] (EnemyOp_ScaleInSubs: 0x4361B0, 0x436210). EnemyOp_EnterSubs entry 0. PSX 0x801E3268."
+
+[[func]]
+pc = 0x4361B0
+name = "EnemyOp_ScaleInStart"
+psx = 0x801E32AC
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4361B0..0x436208 (0x59 bytes), cdecl, one call: Sprite_Current +0 &= 0xBF; BattleEnemy_SetAnimation(0) (E8 at +0xA); then, Sprite_Current re-read for each store, +0x48 = 2, dwords +0x44 = +0x40 = +0xC = 0, +0x18 = 0x666, +3 = 1. EnemyOp_ScaleInSubs entry 0. PSX 0x801E32AC. The scale-in reading of +0x40 / +0x44 (0x10000 = 1.0) is inference from EnemyOp_ScaleInStep."
+
+[[func]]
+pc = 0x436210
+name = "EnemyOp_ScaleInStep"
+psx = 0x801E3310
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436210..0x43626D (0x5E bytes), cdecl: while s32 Sprite_Current +0x40 < 0x10000: +0x40 = +0xC + it, +0x44 += +0xC, +0xC += +0x18; else +0x48 = 0 and +1..+3 = 3, 0, 0; then a tail jmp to BattleEnemy_ScriptTick (E9 at +0x59). EnemyOp_ScaleInSubs entry 1. PSX 0x801E3310."
+
+[[func]]
+pc = 0x4363B0
+name = "EnemyOp_Idle"
+psx = 0x801E3550
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4363B0..0x4363D9 (0x2A bytes), cdecl, two calls: BattleEnemy_SetAnimation(8 when byte 0x939AD8 +0x110 has 2, else 0) (E8 at +0x14); BattleEnemy_ScriptTick (E8 at +0x1C, its al unused); Sprite_Current +1 incremented. EnemyOp_Steps entry 2 (also in the tables 0x64C7B8, 0x64C818, 0x64C898, 0x64C8DC, 0x64C930). PSX 0x801E3550."
+
+[[func]]
+pc = 0x4363E0
+name = "EnemyOp_Wait"
+psx = 0x801E35B0
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4363E0..0x436506 (0x127 bytes), cdecl: call [Sprite_Current +2 * 4 + 0x64B1EC] (EnemyOp_WaitSubs); then 0x939AD8 and Sprite_Current read once: with +0x92 bit 5 a bob - the byte +9 of the 0x84-byte battle-task slot 0x93A000 + 0x84 * (Sprite_Current +5, re-read at each use) is incremented while +0x110 bit 11 is set (bit flipped at >= 12, signed) and decremented while clear (flipped at <= -12); Sprite_Current +0x34 (mode +8 of 1 or 3) or +0x38 = the slot's same dword + (s8 byte << 9); then unless +0x110 bit 12 a tail jmp to BattleEnemy_ScriptTick (E9 at +0x121). EnemyOp_Steps entry 3 (also 0x64C7BC, 0x64C81C, 0x64C89C, 0x64C8E0, 0x64C934). PSX 0x801E35B0. The slot indexed by an actor number is as read; what the slot is for an actor is unread."
+
+[[func]]
+pc = 0x436510
+name = "EnemyOp_HighlightOn"
+psx = 0x801E37B4
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436510..0x436555 (0x46 bytes), cdecl, one call: with byte 0x904AAF set and the byte at the pointer 0x939FA0 equal to Sprite_Current +5 or having 0x40: Sprite_SetTint(Sprite_Current, 0, 0, 0, 0) (E8 at +0x2A), its al to Sprite_Current +7, +2 = 1. EnemyOp_WaitSubs entry 0. PSX 0x801E37B4."
+
+[[func]]
+pc = 0x436560
+name = "EnemyOp_HighlightPulse"
+psx = 0x801E3838
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436560..0x4365CB (0x6C bytes), cdecl, one call: bytes 0x7E0704 / 0x7E0703 / 0x7E0702 + 12 * (Sprite_Current +7) = byte 0x904AC8 (the menu pulse); then unless 0x904AAF is set and the byte at *0x939FA0 is +5 or has 0x40: Tint_Release(+7) (E8 at +0x5A) and +2 = 0. Sprite_Current read once before the call. EnemyOp_WaitSubs entry 1. PSX 0x801E3838."
+
+[[func]]
+pc = 0x4366E0
+name = "EnemyOp_ActDispatch"
+psx = 0x801E3AE0
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4366E0..0x4366F1 (0x12 bytes), cdecl: jmp [Sprite_Current +2 * 4 + 0x64B1FC] (EnemyOp_ActSubs: 0x436700, 0x436720, 0x436700, 0x436BC0, 0x436D90, 0x436F00). EnemyOp_Steps entry 6 (also 0x64C8A8, 0x64C940). PSX 0x801E3AE0."
+
+[[func]]
+pc = 0x436700
+name = "EnemyOp_ActBegin"
+psx = 0x801E3B24
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x436700..0x436713 (0x14 bytes), cdecl: Sprite_Current +4 = 0, +2 = 1. EnemyOp_ActSubs entries 0 and 2 (also 0x64C7E0/8, 0x64C840/8, 0x64C904/C). PSX 0x801E3B24."
+
+[[func]]
+pc = 0x436720
+name = "EnemyOp_HitDispatch"
+psx = 0x801E3B48
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x436720..0x436731 (0x12 bytes), cdecl: jmp [Sprite_Current +3 * 4 + 0x64B214] (EnemyOp_HitSubs: 0x436740, 0x436A00, 0x436A20). EnemyOp_ActSubs entry 1 (also 0x64C7E4, 0x64C844, 0x64C908). PSX 0x801E3B48."
+
+[[func]]
+pc = 0x436740
+name = "EnemyOp_ReceiveAction"
+psx = 0x801E3B8C
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436740..0x4369FB (0x2BC bytes), cdecl, 17 calls and call [0x939AD8 +0xF4](1): words 0x904B9A / 0x904B98 = 0; 0x904B5C = Sprite_Current, 0x904B54 = its +5, 0x904B60 = 0x939AD8 + 0x104, whose +4 / +6 words and +8 byte are zeroed; 8 dwords 0x939AD8 +0xB0 -> 0x939F80; kind 0x904B35: 1 Battle_ApplyDamage(0x904B34, 0x904B44) to [0x904B60]+4, 4..5 Effect_ApplyResult, else nothing; event 0x904AAA: +0xF4 hook(1); +0x10C bit 0 with word +0x108 0: +2 = 3, ret; unless +0x110 bit 9: SetAnimation(4) for kind 1, kind 5 when 0x591810(0x904B81, 0x904B80) lacks 4, kind 4 when byte 0x65C4D8 + 24 * word 0x904B80 lacks 4; +0x10C bit 0 Battle_SetDamagePopup(+0x108, +5), bit 1 0x453EB0(+0x10A, +5); +0x92 |= 0x904B98, zeroed; EnemyAI_TurnCheck; s16 +0x108 > 0: HP +0xA4 zero -> +9 = 0, round flag 0x80 Sprite_SetTint(SC, 0x10, 0x10, 0x10, 0), +0x92 = 0x4000; else event -> 0x437450(word [+0xF8]+4); either s16 +0x108 / +0x10A < 0 -> Sound_PlayEffect(0x206); unless round flag 0x2000: Battle_PlayHitSound + Battle_SetHitPopup for kind 1 and kind 4 with byte 0x65C4DD + 24 id bit 3; round flag 0x80 cleared; BattleEnemy_ScriptTick; +3 incremented. 0x939AD8 re-read after every call. EnemyOp_HitSubs entry 0. PSX twin by the catalogue the sibling's Battle_ResolveAction_Enemy 0x801E3B8C (names/functions.toml, hypothesis there; its se_cues show 0x206 and 0x204 from it)."
+
+[[func]]
+pc = 0x436A00
+name = "EnemyOp_WaitAnimOnce"
+psx = 0x801E406C
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x436A00..0x436A11 (0x12 bytes), cdecl: BattleEnemy_ScriptTickOnce (E8 at +0), its al non-zero -> Sprite_Current +3 incremented. EnemyOp_HitSubs entry 1 (also 0x64B248). PSX 0x801E406C. Combat route: the 16 calls of 0x4360C0 all return to 0x436A05 (docs/battle_flow.md)."
+
+[[func]]
+pc = 0x436A20
+name = "EnemyOp_HitEnd"
+psx = 0x801E40B4
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436A20..0x436B4B (0x12C bytes), cdecl, five calls: Sprite_ScriptTickOnce (E8 at +0); byte 0x939AD8 +0x93 bit 6: Sprite_ReleaseTint(Sprite_Current), word 0x904AA8 &= 0xFFBF, +1..+3 = 6, 4, 0, ret; round flag 0x40: word = (dword & 0xFFBF) | 0x1000; else unless 0x904B44 & 0xC0: kind 1 and BattleEnemy_Chance70 -> 0x904AA8 |= 0x40; kind 4 with byte 0x65C4DD + 24 id bit 3, Chance70, then byte 0x65C4D8 + 24 id (re-read) lacking 0x10 -> |= 0x40; then Battle_ClearActorBit(+5), 0x939AD8 +0x110 &= 0xFFFFFF8F and &= ~0x200 (re-read for each), +1..+3 = 2, 0, 0. EnemyOp_HitSubs entry 2 (also 0x64B230). PSX 0x801E40B4. Chance70's callers are these two sites (docs/battle_flow.md)."
+
+[[func]]
+pc = 0x436D90
+name = "EnemyOp_DeathDispatch"
+psx = 0x801E46B8
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x436D90..0x436DA1 (0x12 bytes), cdecl: jmp [Sprite_Current +3 * 4 + 0x64B234] (EnemyOp_DeathSubs: 0x436DB0, 0x436E00, 0x436E40, 0x436EC0). EnemyOp_ActSubs entry 4. PSX 0x801E46B8. Reached after EnemyOp_HitEnd sets +1..+3 = 6, 4, 0."
+
+[[func]]
+pc = 0x436DB0
+name = "EnemyOp_DeathSwellStart"
+psx = 0x801E46FC
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436DB0..0x436DF3 (0x44 bytes), cdecl: Sprite_Current +0x48 = 2, dwords +0x44 = +0x40 = 0x10000, +0xC = 0, +0x18 = 0x666, +3 = 1. EnemyOp_DeathSubs entry 0. PSX 0x801E46FC."
+
+[[func]]
+pc = 0x436E00
+name = "EnemyOp_DeathSwell"
+psx = 0x801E4738
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436E00..0x436E3D (0x3E bytes), cdecl: while s32 Sprite_Current +0x40 < 0x14000: +0x40 = +0xC + it, +0x44 += +0xC, +0xC += +0x18; else +3 = 2. EnemyOp_DeathSubs entry 1. PSX 0x801E4738."
+
+[[func]]
+pc = 0x436E40
+name = "EnemyOp_DeathFlash"
+psx = 0x801E4794
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436E40..0x436EBC (0x7D bytes), cdecl, four calls: Sound_PlayEffect(0x204) (E8 at +5); event 0x904AAA: 0x437450(word [0x939AD8 +0xF8] + 6); Sprite_ReleaseTint(Sprite_Current); Sprite_SetTint(Sprite_Current, 0xFF, 0xFF, 0xFF, 0); +0x10 = 0, +0x1C = 0xFFFFE000, +3 = 3. EnemyOp_DeathSubs entry 2. PSX 0x801E4794 (the sibling's se_cues: 0x204 from Battle_ResolveAction_Enemy's extent)."
+
+[[func]]
+pc = 0x436EC0
+name = "EnemyOp_DeathSquash"
+psx = 0x801E482C
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x436EC0..0x436EF1 (0x32 bytes), cdecl: Sprite_Current +0x44 += +0x10, +0x10 += +0x1C; s32 +0x44 < 0 -> tail jmp Battle_EnemyDefeated (E9 at +0x2C). EnemyOp_DeathSubs entry 3. PSX 0x801E482C. Combat route: the kill's one Battle_EnemyDefeated call comes through here."
+
+[[func]]
+pc = 0x437420
+name = "EnemyOp_HitPose"
+psx = 0x801E51C8
+ret = "void"
+params = "void"
+impl = "src/game/enemy_ai_ops.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x437420..0x437447 (0x28 bytes), cdecl: BattleEnemy_SetAnimation(4) (E8 at +2); dword 0x939AD8 +0x110 bit 4 -> tail jmp BattleEnemy_ScriptTick (E9 at +0x19), else bit 5 -> tail jmp BattleEnemy_ScriptTickOnce (E9 at +0x22). EnemyOp_Steps entry 11 (also 0x64C8BC, 0x64C900, 0x64C954). PSX 0x801E51C8. Combat route: 66 of BattleEnemy_SetAnimation's 82 calls return to 0x437427 (docs/battle_flow.md)."
+
+[[data]]
+pc = 0x64B084
+name = "BattleEnemy_States"
+ctype = "unsigned long"
+count = 64
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the one reference is BattleEnemy_RunAll's call [edx*4 + 0x64B084] (0x435887), and 0x64B088 (0x435876) in an event battle; 64 code pointers to 0x64B180 (0x64B184 on are bytes), the second a null. Entry 0 is EnemyOp_StepDispatch."
+
+[[data]]
+pc = 0x64B1A0
+name = "EnemyOp_Steps"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of EnemyOp_StepDispatch (0x4360FB), by Sprite_Current +1: 0x436110 0x436170 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437240 0x4DF820 0x437420, then a null at 0x64B1D0 (not counted)."
+
+[[data]]
+pc = 0x64B1D4
+name = "EnemyOp_EnterSubs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of EnemyOp_EnterDispatch (0x43617B), by +2: 0x436190 0x436270."
+
+[[data]]
+pc = 0x64B1DC
+name = "EnemyOp_ScaleInSubs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of EnemyOp_ScaleInDispatch (0x43619B), by +3: 0x4361B0 0x436210."
+
+[[data]]
+pc = 0x64B1E4
+name = "EnemyOp_EnterSubs2"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of 0x436270 (0x43627B, nobody's), by +3: 0x436290 0x436330."
+
+[[data]]
+pc = 0x64B1EC
+name = "EnemyOp_WaitSubs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the call of EnemyOp_Wait (0x4363EC), by +2: 0x436510 0x436560."
+
+[[data]]
+pc = 0x64B1F4
+name = "EnemyOp_Step5Subs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of 0x436620 (0x43662B, nobody's; EnemyOp_Steps entry 5), by +2: 0x436640 0x4366B0."
+
+[[data]]
+pc = 0x64B1FC
+name = "EnemyOp_ActSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of EnemyOp_ActDispatch (0x4366EB), by +2: 0x436700 0x436720 0x436700 0x436BC0 0x436D90 0x436F00 (0x64B214 is the next table's)."
+
+[[data]]
+pc = 0x64B214
+name = "EnemyOp_HitSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of EnemyOp_HitDispatch (0x43672B), by +3: 0x436740 0x436A00 0x436A20 (0x64B220 is the next table's)."
+
+[[data]]
+pc = 0x64B220
+name = "EnemyOp_Act3Subs"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of 0x436BC0 (0x436BCB, nobody's; EnemyOp_ActSubs entry 3), by +3: 0x436BE0 0x436C40 0x436C90 0x436D50 0x436A20 (0x64B234 is the next table's)."
+
+[[data]]
+pc = 0x64B234
+name = "EnemyOp_DeathSubs"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of EnemyOp_DeathDispatch (0x436D9B), by +3: 0x436DB0 0x436E00 0x436E40 0x436EC0 (0x64B244 is the next table's)."
+
+[[data]]
+pc = 0x64B244
+name = "EnemyOp_Act5Subs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of 0x436F00 (0x436F0B, nobody's; EnemyOp_ActSubs entry 5), by +3: 0x436F20 0x436A00 0x436FD0 (0x64B250 is the next table's)."
+
+[[data]]
+pc = 0x64C7B0
+name = "EnemyOp_StepsB"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x437A1B (inside the enemy state 7 handler 0x437A10, nobody's), by +1: EnemyOp_Steps with 0x437A30 and 0x4DF820 (a bare ret) for entries 0 and 1, 0x437A70 (whose jmp 0x437A7B goes through EnemyOp_ActSubsB) for 6 and 0x437A90 for 11 (0x64C7E0 is the next table's)."
+
+[[data]]
+pc = 0x64C7E0
+name = "EnemyOp_ActSubsB"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp of 0x437A70 (0x437A7B, nobody's; EnemyOp_StepsB entry 6), by +2: EnemyOp_ActSubs with 0x43B550 for entry 4: 0x436700 0x436720 0x436700 0x436BC0 0x43B550 0x436F00."
+
+[[data]]
+pc = 0x64C810
+name = "EnemyOp_StepsC"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x437B7B (inside state 8 0x437B70, nobody's), by +1: as EnemyOp_StepsB with 0x437B90, 0x437BD0 and 0x437BF0 for entries 0, 6 and 11."
+
+[[data]]
+pc = 0x64C840
+name = "EnemyOp_ActSubsC"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x437BDB (nobody's), by +2: as EnemyOp_ActSubsB."
+
+[[data]]
+pc = 0x64C890
+name = "EnemyOp_StepsD"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x437EEB (inside 0x437CC0's extent - the event hooks docs/battle_flow.md names - nobody's), by +1: 0x437F00 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437F40 0x4DF820 0x437420."
+
+[[data]]
+pc = 0x64C8D4
+name = "EnemyOp_StepsE"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x43807B (inside 0x437CC0's extent), by +1: 0x438090 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4380D0 0x437030 0x437180 0x437240 0x4DF820 0x437420."
+
+[[data]]
+pc = 0x64C904
+name = "EnemyOp_ActSubsE"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x4380DB (inside 0x437CC0's extent), by +2: as EnemyOp_ActSubsB."
+
+[[data]]
+pc = 0x64C928
+name = "EnemyOp_StepsF"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "pe_xref.py 2026-09-25: the jmp at 0x43810B (inside 0x437CC0's extent), by +1: 0x438120 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437240 0x4DF820 0x437420."
+
+[[func]]
 pc = 0x437470
 name = "Battle_EnemyDefeated"
 psx = 0x801E542C
