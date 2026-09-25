@@ -113,6 +113,7 @@
 #include "game/shop_states.h"
 #include "game/worldmap_area.h"
 #include "game/field_hidden.h"
+#include "game/event_leader.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -289,6 +290,8 @@ void InjectAll() {
                                 // (it clones its thirty before injecting them; WorldMap_Inject cloned 0x404160 earlier)
     FieldHidden_Inject();       // round 8 group DE: every call of its clones re-aimed at a recorder and its two
                                 // .data tables' entries swapped for recorders: order does not matter
+    EventLeader_Inject();       // round 8 group DC: every call of its clones re-aimed at a recorder and its five
+                                // .data dispatch tables' entries swapped for recorders: order does not matter
     InjectReport();
 }
 

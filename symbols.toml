@@ -17749,3 +17749,333 @@ ctype = "unsigned char"
 count = 0x48
 status = "evidence"
 evidence = "disasm 2026-09-25: 8 rows of 9 bytes - bytes 0..7 the eight slots' enemy kinds (0xFF none, Encounter_FillSlots), byte 8 the row's weight (Encounter_PickRow sums 0x8C5588 + 9 * row); Encounter_Place keeps the chosen row's address in 0x6BE088. The enemy kinds' 0x8C-byte records follow at 0x8C55C8. Loaded with the area (bss, not the exe's)."
+[[func]]
+pc = 0x52E110
+name = "Field_LeaderStepping"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52E110..0x52E137 (0x28 bytes), cdecl, no arguments: Field_State +0x137 = 1; Sprite_Current +9 zero -> jmp 0x52E580 (Field_LeaderStepLands), else +9 - 1 and jmp Field_LeaderStepTick 0x52E140. Entry 2 of Field_LeaderControlSteps (.data 0x66095C); the only other reference to 0x52E580 is this jmp (E8/E9 scan). Queue: shop, worldmap, combat."
+
+[[func]]
+pc = 0x52E580
+name = "Field_LeaderStepLands"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52E580..0x52E9C4 (0x445 bytes, recursive descent, every jump internal), cdecl, no arguments; reached only by 0x52E129's jmp. +7 run counter (pace 4: up to 0x11; else 0); pace saved; Field_EquipTick unless Field_InputFlags bit 0; Field_Bit20Tick, Field_FloorDamage; Field_Tile89(0) / Field_Tile8A(0) / Field_TileD0 / Field_TileA4 (the last with MoveCmd_TestFB) end it; on foot: cell 0xAF -> Field_LeaderAnimation, Field_ChangeArea(0x937F82, 0x903860, 0x90384C, 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; Field_ScriptFlags2 bit 13 -> Field_ScriptFlags |= 0x100 and stop; cell 0xC0 -> Area_LinkAt; input bit 1: the edge test (Field_DirectionSteps * +0x70 + position against 0x20000 and (AreaMap_Header[0/1] - 3) << 16) -> Sprite_EnsureAnimation, Field_ChangeArea(0x802290, 0x7E091C, 0x7E0920, 4); then AreaMap_CellsAll(.., 0xA7, 0) -> Area_LinkAt, Field_Request 5; AreaMap_CellsNone(.., 0xA6, 0) zero -> the return point 0x904148 (0x904152 = 0); Field_ScriptFlags2 bit 5 -> xor, Field_JumpStart, +9 - 1, Field_LeaderStepTick, +2 = 2; else Field_EdgeBits + 1 (+2 on directions 2 / 6), Sprite_ClearSteps, F3Divisor / FAWord 0, Field_EncounterDue (unless input bit 0 or flags2 & 0x60) -> state 5 and flags2 bit 12; pace 3, Field_LeaderEffectTest(saved pace), Scenario_ArriveHook (non-zero: stop), Field_Bit80Tick, Field_LeaderWalk while (Field_InputHeld & (0x903580 | 0xF000)) and flags bit 8 / flags2 bit 6 clear; else standing (+0x137 = 0, +2 = 1). Queue: shop, worldmap, combat."
+
+[[func]]
+pc = 0x52E9D0
+name = "Field_SwapState"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52E9D0..0x52E9E1 (0x12 bytes): jmp [0x660968 + 4 * Sprite_Current +2] (Field_SwapSteps, unchecked). Entry 3 of Field_LeaderStates (.data 0x660924); Field_LeaderSwapTest 0x5302C0 sets state 3 with Field_ScriptFlags2 bit 10, which Field_SwapEnd clears. Queue: worldmap."
+
+[[func]]
+pc = 0x52E9F0
+name = "Field_SwapGather"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52E9F0..0x52EB93 (0x1A4 bytes), cdecl, entry 0 of Field_SwapSteps (.data 0x660968): for each of Field_MemberCount members (re-read each turn) Sprite_Current = it; slot = i - 1, for the leader the count less one (the byte decremented in place); with ObjTrio +0x138 bit 0 or slot 0, Field_SpotFree at the leader's position with the member's +0x70; else the formation spot (s8 pairs 0x6608F6 + 2 * (slot + 2 * the leader's direction), << 15, plus the leader's position) if Field_SpotFree and 0x52EC20(0x903858, 0x90385C, Sprite_Current +0x70), else Field_SpotFree at the leader's with Sprite_Current +0x70; a member after the leader that found one: Member_ClearState(i), +1 = 3, Sprite_ShadeFadeBegin, +0x5C = 1. Then Sprite_Current = ObjTrio and ObjTrio +2 + 1 when a member after the leader is in state 3, else 4. Queue: worldmap."
+
+[[func]]
+pc = 0x52EBA0
+name = "Field_SpotFree"
+ret = "unsigned char"
+params = "long x, long z, unsigned direction, unsigned raised"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52EBA0..0x52EC1D (0x7E bytes), cdecl, four dword arguments, the third unread: ground = MapView_GroundAt(x, z); Sprite_Current +9 saved and zeroed; Field_WayBlocked(x, z, raised, ground) non-zero -> 0; |s16 ObjTrio +0x3E - s16 ground| > 0x40 -> 0; else 0x903858 = x, 0x90385C = z, word 0x903852 = MapView_GroundAt(x, z), +9 put back into Sprite_Current re-read, 1. Seven callers (E8 scan): Field_SwapGather x4, Field_SwapExchange x3. Queue: worldmap, recorded start (20 calls)."
+
+[[func]]
+pc = 0x52ED80
+name = "Field_SwapSpinOut"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52ED80..0x52EE61 (0xE2 bytes), cdecl, entry 1 of Field_SwapSteps (.data 0x66096C): Sprite_Current +9 + 1, +8 = (+8 + 1) & 7, Sprite_SetAnimation(+8); for members 1.. below Field_MemberCount (re-read) in state 3 with s8 +0x5D > -32 * +9: +0x5D = +9 * 0xE0 (imul, low byte) and +0x5E / +0x5F copied from it through Sprite_Current re-read; Sprite_Current = ObjTrio; ObjTrio +9 == 4 -> +2 + 1. Queue: worldmap."
+
+[[func]]
+pc = 0x52EE70
+name = "Field_SwapExchange"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52EE70..0x52F1A5 (0x336 bytes), cdecl, entry 2 of Field_SwapSteps (.data 0x660970): Field_State +0x138 saved; member 1 in state 3: ObjTrio_SwapFields(0, 1, 1) and with 3 members and member 2 in state 3 (1, 2, 1); else that test for (0, 2, 1). Each member in state 3: Sprite_Current = Field_State = it, Field_MemberSprite(+0x89, i), +0x138 = saved (+0x29 = 4 if bit 0), rep movsd 0x29 dwords from actor record MoveScript_EffectState[+0x89] to +0x80, +0x148 its index, 0x904062[i] = +0x89; i > 0: Sprite_ShadeFadeBegin, +0 &= 0xBF, +0x5C = 1, +8 = ObjTrio +8 ^ 4; i > 0 and ObjTrio +0x138 bit 0 clear: the formation spot (Field_SpotFree, 0x52EC20) else Field_SpotFree at the leader's (answer unread); else Field_SpotFree at the leader's; +0x34 / +0x38 = 0x903858 / 0x90385C, +0x3E = MapView_GroundAt, Sprite_SetAnimation(+8). Then Sprite_Current = Field_State = ObjTrio, Field_Kind2X / Z = the leader's, F3Divisor 0x20, FAWord = s16 (ObjTrio +0x3E - word MapView_Elevation) / (max |moved| >> 13 low byte) (idiv) or 0, ObjTrio +9 = 4, +2 + 1. Queue: worldmap."
+
+[[func]]
+pc = 0x52F1B0
+name = "Field_SwapSpinIn"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F1B0..0x52F345 (0x196 bytes), cdecl, entry 3 of Field_SwapSteps (.data 0x660974): Sprite_Current +9 - 1, +8 = (+8 + 1) & 7, Sprite_SetAnimation; members 1.. in state 3 get +0x5D..+0x5F = +9 * 0xE0 (the count re-read only after such a member); Field_State = Sprite_Current = ObjTrio; ObjTrio +9 != 0 -> return; else each such member: Sprite_LoadPalette(0x80D380 + +5 * 64, 0), +0 &= 0xDF, +0x5D..+0x5F / +0x5C / +9 = 0, Sprite_ClearSteps, dwords +0x18 / +0x1C / +0x20 = 0; Sprite_Current = ObjTrio, +2 + 1. Queue: worldmap."
+
+[[func]]
+pc = 0x52F350
+name = "Field_SwapEnd"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F350..0x52F387 (0x38 bytes), entry 4 of Field_SwapSteps (.data 0x660978): nothing while Field_Kind2Hold; else Field_ScriptFlags2 &= 0xFBFF, MapView_SetElevation(word Sprite_Current +0x3E; the upper half of the pushed dword is stale, the callee keeps 16 bits), +1 = 1, +2 = 0. Queue: worldmap."
+
+[[func]]
+pc = 0x52F390
+name = "Field_MenuState"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F390..0x52F3A1 (0x12 bytes): jmp [0x66097C + 4 * Sprite_Current +2] (Field_MenuSteps, unchecked). Entry 4 of Field_LeaderStates (.data 0x660928); Field_LeaderMenuTest 0x530380 sets state 4. Queue: worldmap."
+
+[[func]]
+pc = 0x52F3B0
+name = "Field_MenuOpen"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F3B0..0x52F3C0 (0x11 bytes), entry 0 of Field_MenuSteps (.data 0x66097C): Sprite_Current +2 = 1, Field_Request = 1 (the menu, symbols.toml Field_MenuButton). Queue: worldmap."
+
+[[func]]
+pc = 0x52F3D0
+name = "Field_MenuWait"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F3D0..0x52F3F8 (0x29 bytes), entry 1 of Field_MenuSteps (.data 0x660980): Field_Request 1 -> nothing; else Field_ScriptFlags2 &= 0xF7FF, Sprite_Current +1 = 1, +2 = 0. Queue: worldmap."
+
+[[func]]
+pc = 0x52F400
+name = "Field_EncounterState"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F400..0x52F411 (0x12 bytes): jmp [0x660984 + 4 * Sprite_Current +2] (Field_EncounterSteps, unchecked). Entry 5 of Field_LeaderStates (.data 0x66092C); Field_LeaderStepLands sets state 5 on Field_EncounterDue. Queue: combat."
+
+[[func]]
+pc = 0x52F420
+name = "Field_EncounterStart"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F420..0x52F481 (0x62 bytes; the queue's 112 is padding), entry 0 of Field_EncounterSteps (.data 0x660984): byte 0x904AAA zero -> Encounter_RollInitiative, +2 = 1; else members 1.. below Field_MemberCount (re-read after each) Member_ClearState(i) and +1 = 5, then Sprite_Current +0xB = 0xFF, +2 = 1. Queue: combat."
+
+[[func]]
+pc = 0x52F490
+name = "Field_EncounterWait"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F490..0x52F4EB (0x5C bytes), entry 1 of Field_EncounterSteps (.data 0x660988): +0xB != 0xFF: Effect_Objects[+0xB * 0x80] non-zero -> nothing, else +0xB = 0xFF; +0xB == 0xFF: with more than one member, member 1 +1 must be 5 (and member 2's with three); then +0xB = 0, Field_ScriptFlags2 &= 0xEFFF, Field_Request = 3. Queue: combat."
+
+[[func]]
+pc = 0x52F5E0
+name = "Field_PassageState"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F5E0..0x52F5F6 (0x17 bytes): call [0x66098C + 4 * Sprite_Current +2] (Field_PassageSteps, unchecked), then jmp Sprite_ScriptTick. Entry 7 of Field_LeaderStates (.data 0x660934); Field_LeaderTalkTest 0x530920 sets state 7 on a passage. Queue: shop."
+
+[[func]]
+pc = 0x52F600
+name = "Field_PassageOpen"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F600..0x52F754 (0x155 bytes), cdecl, a 0xA4-byte local, entry 0 of Field_PassageSteps (.data 0x66098C): e = Area_PassageAhead; Field_LeaderAnimation(+8) on foot else Sprite_EnsureAnimation((+8 >> 1) + 0x10); word e+4 bit 15 clear or e[6] 0xFF: Msg_OpenSystem(0), +2 + 1; e[6] 0 Msg_OpenSystem(word & 0xFFF) / 1 Msg_OpenScript(word & 0xFFF), +2 + 2; 2: Field_ActiveMember = the local, local +0x86 = 0xFF, EventScript_Run(Area_Descriptors[Game_AreaNumber] +4 -> [word & 0xFFF]), Msg_OpenScript(local +0x88 & 0xFFF) unless that word is 0xFFFF, Field_State +0x12A = Field_ActiveMember +0x86, +0x12C = the word, +2 + 3; any other kind +2 + 2; Field_Request = 2 on every path. Queue: shop."
+
+[[func]]
+pc = 0x52F760
+name = "Field_PassageTake"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F760..0x52F89C (0x13D bytes), entry 1 of Field_PassageSteps (.data 0x660990): Field_Request non-zero -> nothing; e = Area_PassageAhead; Flags_Test(0x90410C, e[4]) -> Msg_OpenSystem(1); e[6] 0xFF: dword 0x90413C + 1, Flags_Set(0x90410C, e[4]) unless 0xFF, Sound_PlayEffect(0x106), 0x5307C0(e[5] * 40); else Item_NamePtr(e[6], word e+4 >> 8) - 16 bytes to Text_Records 0x904CE0 - and Inventory_Add(e[6], word e+4 >> 8, 1, 0): taken -> Flags_Set then 0x90413C + 1 (unless e[4] 0xFF), Sound_PlayEffect(0x106), Msg_OpenSystem(2); else Msg_OpenSystem(3). Field_Request = 2, +2 = 2 on every path. Queue: shop."
+
+[[func]]
+pc = 0x52F8A0
+name = "Field_PassageEnd"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52F8A0..0x52F8E8 (0x49 bytes), entry 2 of Field_PassageSteps (.data 0x660994): Field_Request non-zero -> nothing; Field_LeaderAnimation(+8) on foot else Sprite_EnsureAnimation(+8); +1 = 1, +2 = 0. Queue: shop."
+
+[[func]]
+pc = 0x52FB60
+name = "Field_ActionState"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x52FB60..0x52FBA2 (0x43 bytes): call [0x6609D0 + 4 * (byte 0x90412C & 0x7F)] (Field_ActionBySet, unchecked); Field_State +0x137 non-zero -> return; else Sprite_EnsureAnimation(+8), Member_ClearState(0), +1 = 1. Entry 10 of Field_LeaderStates (.data 0x660940); Field_LeaderCheckTest 0x530800 and Field_LeaderEffectTest 0x530860 set state 0xA. Queue: worldmap."
+
+[[func]]
+pc = 0x5317F0
+name = "Field_EncounterArea"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5317F0..0x53181D (0x2E bytes), no calls: the first of the ten word pairs at 0x660A90 (to 0x660AB8) whose first is Game_AreaNumber - its second to word 0x937F82; none, nothing. One caller, Field_LeaderWalk (0x52DDA0, as event_ops.cpp's kEncounterArea). Queue: worldmap, recorded start (1 call)."
+
+[[func]]
+pc = 0x531920
+name = "Field_CellHasEvent"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x531920..0x53194A (0x2B bytes), cdecl: AreaMap_ByteAt(x, z) (the two dwords pushed, read as words) in the 0xFF-ended list 0x660B10 (Field_EventCells) -> 1, else 0. Twelve callers: eleven world-map sites 0x402453..0x425223 and Field_LeaderCellEvent 0x53185A. Queue: worldmap, recorded start (562 calls)."
+
+[[func]]
+pc = 0x531AF0
+name = "Field_ExitFromCell"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x531AF0..0x531B5E (0x6F bytes), cdecl: AreaMap_ByteAt(Sprite_Current +0x36, +0x3A) not 0xA0 -> nothing; else r = 0x462AC0() and the first 4-byte record with r[0] == word +0x36 and r[1] == word +0x3A (no end test): word 0x937F82 = r[2], 0x903860 = 0xE8000, 0x90384C = 0x410000, byte 0x905B88 = r[3]. One caller, Field_LeaderCellEvent (0x5319AF). Queue: worldmap, recorded start (2 calls)."
+
+[[func]]
+pc = 0x533780
+name = "Field_PendingWalkIn"
+ret = "void"
+params = "void"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x533780..0x5338AF (0x130 bytes), cdecl, entry 0 of Field_PendingJumps (.data 0x660B60): byte 0x904EF2 zero -> ObjTrio +0 &= 0xBF, Member_ClearState(0), ObjTrio +0x138 &= 0xFD, 0x904EF2 = (re-read) + 1; else nothing while |leader x - 0x904EF4| and |z - 0x904EF8| are both below 0x10000; else with more than one member, for members 1..count-1 with bit (1 << n mod 32, n the running count from 0x904EF2) clear in word Field_ScriptFlags: +0 &= 0xBF, +1 = +2 = 2, +3 = +4 = 0, +0x138 &= 0xFD, the bit cleared in a 16-bit copy of Field_ScriptFlags2; n + 1 per member; the copy and n stored. Then n == Field_MemberCount: MoveCmd_TestFC(word 0x904EF6, word 0x904EFA), Field_ScriptFlags2 &= 0xFFEF, 0x904EF0 = 0. Queue: shop, worldmap, combat."
+
+[[func]]
+pc = 0x535610
+name = "Field_WayBlocked"
+ret = "unsigned char"
+params = "long x, long z, unsigned raised, long ground"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x535610..0x535638 (0x29 bytes), cdecl: the low byte of `raised` set -> 0x535830(x, z, ground), else Field_WayBlocked4(x, z, ground); the callee's al. Eleven callers (E8 scan): 0x51B37D.. (member_sprites, six), 0x526711, Field_SpotFree 0x52EBC9, 0x52EC20's 0x52ECDE / 0x52ED4E, Field_TileTurn 0x5351D6. Queue: worldmap, recorded start (20 calls)."
+
+[[func]]
+pc = 0x535640
+name = "Field_WayBlocked4"
+ret = "unsigned char"
+params = "long x, long z, long ground"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x535640..0x535727 (0xE8 bytes), cdecl: Field_CellsBlock(x, z, 0) -> 1; x's low word non-zero and s16 MapView_SlopeAt(x, z, 3) > 0x40 with byte 0x903850 -> 1; the same for z's (5) and both (4); |s16 MapView_GroundAt(x, z) - s16 ground| > 0xC0 -> 1; else Sprite_Current +0x3E saved, set to ground's word, Sprite_ObjectAt(x, z, 0), +0x3E put back into Sprite_Current re-read; al = that != 0xFF. One caller, Field_WayBlocked. Queue: worldmap, recorded start (20 calls)."
+
+[[func]]
+pc = 0x535730
+name = "Field_CellsBlock"
+ret = "unsigned char"
+params = "long x, long z, unsigned wide"
+impl = "src/game/event_leader.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x535730..0x535829 (0xFA bytes), cdecl: AreaMap_CellsNone(x, z, wide, code, 1) zero for any code of the 0xFF-ended 0x660C24 (Field_BlockingCells) -> 1; CellsNone(.., 0x10, 0) zero -> 1; unless Field_State +0x138 bit 0, (.., 0x11, 0) zero -> 1; (0x20, 0) and (0x21, 0) both zero -> 1; (0xC0, 0) and (0xA0, 1) both zero -> 1; al = (0xA2, 0) == 0. Callers Field_WayBlocked4 (wide 0) and 0x535830 (wide 1). Queue: worldmap, recorded start (20 calls)."
+
+[[data]]
+pc = 0x660918
+name = "Field_LeaderStates"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-25: 0x52D920 Field_LeaderStart, 0x52DA50 Field_LeaderControl, 0x525370, 0x52E9D0 Field_SwapState, 0x52F390 Field_MenuState, 0x52F400 Field_EncounterState, 0x52F4F0, 0x52F5E0 Field_PassageState, 0x52F950, 0x528880, 0x52FB60 Field_ActionState, 0x52FBB0, 0x52FE90, 0x42A8B0, 0x534480 - Field_LeaderFrame's jmp by Sprite_Current +1, unchecked (field-event.md section 1); 0x660954 follows."
+
+[[data]]
+pc = 0x660954
+name = "Field_LeaderControlSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x52DA70 Field_LeaderStand, 0x52DB90 Field_LeaderWalk, 0x52E110 Field_LeaderStepping - Field_LeaderControl's call by Sprite_Current +2, unchecked; the step sounds (u16) follow at 0x660960."
+
+[[data]]
+pc = 0x660968
+name = "Field_SwapSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: 0x52E9F0 Field_SwapGather, 0x52ED80 Field_SwapSpinOut, 0x52EE70 Field_SwapExchange, 0x52F1B0 Field_SwapSpinIn, 0x52F350 Field_SwapEnd - Field_SwapState's jmp by Sprite_Current +2, unchecked; Field_MenuSteps follows."
+
+[[data]]
+pc = 0x66097C
+name = "Field_MenuSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x52F3B0 Field_MenuOpen, 0x52F3D0 Field_MenuWait - Field_MenuState's jmp by Sprite_Current +2, unchecked."
+
+[[data]]
+pc = 0x660984
+name = "Field_EncounterSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x52F420 Field_EncounterStart, 0x52F490 Field_EncounterWait - Field_EncounterState's jmp by Sprite_Current +2, unchecked."
+
+[[data]]
+pc = 0x66098C
+name = "Field_PassageSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x52F600 Field_PassageOpen, 0x52F760 Field_PassageTake, 0x52F8A0 Field_PassageEnd, 0x52F8F0 (unread, not reached; Field_PassageOpen's kind-2 path goes there) - Field_PassageState's call by Sprite_Current +2, unchecked; state 8's table (0x52F950's) starts at 0x66099C."
+
+[[data]]
+pc = 0x6609D0
+name = "Field_ActionBySet"
+ctype = "unsigned long"
+count = 19
+status = "evidence"
+evidence = "read 2026-09-25: 0x51C760 0x51CC20 0x51D730 0x51DEB0 0x51E8D0 0x51F1B0 0x51FA90 0x520140 0x520800 0x521340 0x521A70 0x5220C0 0x522690 0x522B60 0x5234D0 0x523990 0x5243F0 0x524950 0x525350 - Field_ActionState's call by the party set 0x90412C & 0x7F (19 rows, as PartySet_Find's table), unchecked; 0x52FBD0 follows."
+
+[[data]]
+pc = 0x660B60
+name = "Field_PendingJumps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x533780 Field_PendingWalkIn, 0x5338B0, 0x5338F0, 0x533900 - Field_PendingJump's jmp by byte 0x904EF1, unchecked (field-event.md section 1)."
+
+[[data]]
+pc = 0x660A90
+name = "Field_EncounterAreas"
+ctype = "unsigned short"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-25: ten (area, encounter area) word pairs - (0x10, 0x14) (0x21, 0x1D) (0x2D, 0x3F) (0x41, 0x40) (0x57, 0x48) (0x58, 0x49) (0x73, 0x6E) (0x79, 0x14) (0x97, 0x7C) (0x98, 0x7D); Field_EncounterArea's search, to 0x660AB8."
+
+[[data]]
+pc = 0x660B10
+name = "Field_EventCells"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: 0xC0 0xA0 0xA1 0xAE 0xAF 0x91 0x26 0x27 0x28 0x29 0x2C, then the 0xFF end - the cell codes Field_CellHasEvent answers 1 for."
+
+[[data]]
+pc = 0x660C24
+name = "Field_BlockingCells"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 0x30 0x40 0x50 0x80 0x90 0xE0 0xF0, then the 0xFF end - the codes Field_CellsBlock tests first, the cells' low nibble dropped (mask 1)."
