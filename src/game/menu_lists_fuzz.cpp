@@ -69,6 +69,19 @@ std::uint32_t Id(const void* p) {
     return at;
 }
 std::uint32_t Current() { return static_cast<std::uint32_t>(Long(At(at::kCurrent))); }
+// MenuList_DrawMemberPanel's argument: its stand-ins move the record's fields,
+// which it reads again after them.
+unsigned char* g_arg_rec;
+void MoveArgRecord() {
+    const std::uint32_t h = Hash();
+    if (!g_arg_rec || h % 2) return;
+    switch ((h >> 1) % 4) {
+    case 0: SetWord(g_arg_rec + 4, h >> 16); break;
+    case 1: SetWord(g_arg_rec + 6, h >> 16); break;
+    case 2: g_arg_rec[0xA] = static_cast<unsigned char>(h >> 8); break;
+    default: g_arg_rec[0xB] = static_cast<unsigned char>(h >> 8); break;
+    }
+}
 
 // Coordinates near the slide bounds and the screen's edges, and anything.
 std::uint16_t Coordinate(std::uint32_t h) {
@@ -174,10 +187,10 @@ unsigned char __cdecl StubCampCell() {
 }
 unsigned __cdecl StubAutoRepeat(unsigned pressed) {
     Record(48, pressed, Id(Sprite_Current));
-    if (Hash() % 2) SetWord(At(at::kPressed), Hash() >> 12);
+    if (Hash() % 4 == 0) SetWord(At(at::kPressed), Word(At(at::kPressed)) ^ (1u << (Hash() >> 8) % 16));
     Disturb();
     const std::uint32_t h = Hash();
-    return (h & ~0xA000u) | (h % 3 == 0 ? 0x8000u : 0) | ((h >> 2) % 3 == 0 ? 0x2000u : 0);
+    return (h & ~0xA000u) | (h % 4 == 0 ? 0x8000u : 0) | ((h >> 2) % 4 == 0 ? 0x2000u : 0);
 }
 void __cdecl StubSound(unsigned short id) {
     Record(49, id, B(at::kCursor));
@@ -192,6 +205,7 @@ void __cdecl StubMemberBody(int x, int y, unsigned record, unsigned flag, int ze
     Record(51, static_cast<std::uint32_t>(x) & 0xFFFF, static_cast<std::uint32_t>(y) & 0xFFFF, record & 0xFF, flag & 0xFF,
            static_cast<std::uint32_t>(zero), Id(Gfx_PacketNext));
     if (Hash() % 2) Gfx_PacketNext = g_prim + (Hash() >> 8) % 0x100;
+    MoveArgRecord();
     Disturb();
 }
 void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
@@ -209,6 +223,7 @@ void __cdecl StubCommit(unsigned slot, unsigned size) {
 // them again after it.
 unsigned __cdecl StubGetClut(int x, int y) {
     Record(54, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+    MoveArgRecord();
     Disturb();
     return Hash();
 }
@@ -454,6 +469,7 @@ struct Args { std::uint32_t a[4]; };
 Args Seed(unsigned k) {
     Args args;
     for (std::uint32_t& v : args.a) v = Next();
+    g_arg_rec = nullptr;
     switch (k) {
     case kRun:
         B(at::kMenu) = static_cast<unsigned char>(Next() % 9);
@@ -470,7 +486,7 @@ Args Seed(unsigned k) {
         B(at::kStep) = static_cast<unsigned char>(Next() % 3);
         break;
     case kInput: {
-        static const unsigned char kCursors[] = {0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 0x7F, 0x80, 0x81, 0xFF};
+        static const unsigned char kCursors[] = {0, 1, 2, 3, 4, 5, 5, 5, 6, 6, 6, 6, 6, 7, 0x7F, 0x80, 0x81, 0xFF};
         B(at::kCursor) = kCursors[Next() % sizeof kCursors];
         B(at::kCampFlag) = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         B(at::kInputFlags) = static_cast<unsigned char>(Half() ? Next() & ~1u : Next() | 1);
@@ -482,7 +498,14 @@ Args Seed(unsigned k) {
         unsigned pressed = Next() & 0xFFFF;
         switch (Next() % 3) {
         case 0: pressed |= c; break;
-        case 1: pressed = (pressed & ~c) | (f & ~c); break;
+        case 1:
+            pressed = f & ~c;
+            if (pressed == 0) {
+                SetWord(At(at::kCancel), 1);
+                SetWord(At(at::kConfirm), 2);
+                pressed = 2;
+            }
+            break;
         default: pressed &= ~(c | f); break;
         }
         SetWord(At(at::kPressed), pressed);
@@ -500,6 +523,7 @@ Args Seed(unsigned k) {
     case kMember: {
         unsigned char* const r = Record_(Next() % 22);
         args.a[0] = Address(r);
+        g_arg_rec = r;
         break;
     }
     case kIcons: {
