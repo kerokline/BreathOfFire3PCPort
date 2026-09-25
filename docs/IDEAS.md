@@ -47,7 +47,7 @@ rule ([`README.md`](README.md)) here too.
 |---|---|---|---|---|
 | I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | **PSX saves load and play on PC** (owner, 2026-09-19, [`save-interchange.md`](save-interchange.md) §4); only PC→PSX in a real PSX runtime is unchecked |
 | I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; other languages open |
-| I3 | Crude x86→C lifter as portability accelerator | engine | LOW | open |
+| I3 | Crude x86→C lifter as portability accelerator | engine | MEDIUM | **prototype built 2026-09-25**, on a synthetic corpus — [`lifter-feasibility.md`](lifter-feasibility.md); first run on `BOF3.exe` open |
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | open |
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
@@ -138,8 +138,24 @@ runtime switch, are open.
 ## I3 — Crude x86→C lifter as portability accelerator
 
 **Ask (2026-09-18):** [`PLAN.md`](PLAN.md) §2 recommendation and phase 4.
-**Kind:** engine. **Feasibility:** LOW. **Gated on:** phase 3 platform layer.
-_To fill._
+**Kind:** engine. **Feasibility:** MEDIUM (was LOW; 2026-09-25). **Gated on:**
+phase 3 platform layer; the task system ours on host coroutines; the renderer
+thread's x87 control word measured.
+
+Studied in [`lifter-feasibility.md`](lifter-feasibility.md) with a prototype,
+`tools/lift/`. On a synthetic corpus written to imitate the game's shapes, the
+prototype lifts every function to 64-bit-clean C. That C matches the original
+bytes run in an emulator on every comparable round, and six negative controls
+are refused. Lifting instructions is the easy part. What blocks a cutover is
+what the docs already measured: the task system's raw `esp` swap, which lifted
+C cannot express; the x87 model being exact only under `0x027F`; discovery of
+~10,200 starts; and the imports.
+
+### First concrete step
+
+Run `lift_x86.py` over `BOF3.exe`'s entries on the owner's machine, output to
+`analysis/` (never committed). Its refusal report is the measure of how far
+"crude" is from the real binary (§7 there).
 
 ## I4 — Stacktrace-driven work-queue harvester
 
