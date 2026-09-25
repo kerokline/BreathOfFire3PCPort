@@ -85,10 +85,6 @@ unsigned char AbilityByte(std::uint32_t flags) { return At(flags + Word(At(at::k
 // The enemy's +0xF4 hook.
 using HookFn = void (__cdecl*)(int);
 
-// The battle-task slot EnemyOp_Wait numbers by the actor byte +5, read
-// afresh each time the original reads it.
-unsigned char* ActorSlot() { return At(at::kTasks + Sc()[5] * at::kTaskSize); }
-
 }  // namespace
 
 // ===========================================================================
