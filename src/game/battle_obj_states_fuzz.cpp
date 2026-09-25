@@ -131,19 +131,32 @@ unsigned char Answer(unsigned shift) {
     return static_cast<unsigned char>(h % 3 == 0 ? 0 : (h >> 2) | 1);
 }
 
+// Half the time, the object pointer its caller re-reads after the call moved
+// to another member - so a pointer kept across a call shows.
+void MoveSprite() {
+    const std::uint32_t h = Hash() >> 21;
+    if (h % 2) Sprite_Current = Member((static_cast<unsigned>(S() - Member(0)) / at::kMemberSize + 1 + (h >> 1) % 2) % 3);
+}
+void MoveField() {
+    const std::uint32_t h = Hash() >> 23;
+    if (h % 2) Field_State = Member((static_cast<unsigned>(F() - Member(0)) / at::kMemberSize + 1 + (h >> 1) % 2) % 3);
+}
+
 template <unsigned N> void __cdecl StubHandler() { Record(100 + N, Who(), Obj()); Disturb(); }
 
 unsigned __cdecl StubPickPose() { Record(1, Who(), Obj()); Disturb(); return Hash(); }
-unsigned char __cdecl StubTick() { Record(2, Who(), Obj()); Disturb(); return Answer(3); }
-unsigned char __cdecl StubTickOnce() { Record(3, Who(), Obj()); Disturb(); return Answer(5); }
+unsigned char __cdecl StubTick() { Record(2, Who(), Obj()); MoveSprite(); Disturb(); return Answer(3); }
+unsigned char __cdecl StubTickOnce() { Record(3, Who(), Obj()); MoveSprite(); Disturb(); return Answer(5); }
 long __cdecl StubElevation(long x, long y) {
     Record(4, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y), Who());
+    MoveSprite();
     Disturb();
     return static_cast<long>(Hash());   // the whole dword: the caller keeps 16 bits
 }
 unsigned char __cdecl StubEnsure(unsigned char a) { Record(5, a, Who(), Obj()); Disturb(); return static_cast<unsigned char>(Hash()); }
 unsigned char __cdecl StubSetTint(unsigned char* p, unsigned char r, unsigned char g_, unsigned char b, unsigned char a) {
     Record(6, Id(p), static_cast<std::uint32_t>(r) | g_ << 8 | b << 16 | static_cast<std::uint32_t>(a) << 24, Who());
+    MoveSprite();
     Disturb();
     return static_cast<unsigned char>(Hash() >> 3);
 }
@@ -154,18 +167,21 @@ unsigned char __cdecl StubRollPending() { Record(8, Who()); Disturb(); return An
 int __cdecl StubRand() {
     Record(9, Who());
     const unsigned edge = F()[0xBA];
+    MoveField();
+    if ((Hash() >> 25) % 2) F()[0xBA] = static_cast<unsigned char>(F()[0xBA] + 1 + (Hash() >> 26) % 3);
     Disturb();
     const std::uint32_t h = Hash();
     const int base = static_cast<int>((h >> 8) % 300) * 100;
     switch (h % 6) {
     case 0: return static_cast<int>(h >> 17);
-    case 1: return -static_cast<int>(edge) - base;
+    case 1:
+    case 5: return -static_cast<int>(edge) - base - static_cast<int>((h >> 3) % 2);
     case 2: return base + static_cast<int>(edge) - 1;
     case 3: return base + static_cast<int>(edge) + 1;
     default: return base + static_cast<int>(edge);
     }
 }
-unsigned long __cdecl StubCue(unsigned cue) { Record(10, cue & 0xFF, Who()); Disturb(); return Hash(); }
+unsigned long __cdecl StubCue(unsigned cue) { Record(10, cue & 0xFF, Who()); MoveField(); Disturb(); return Hash(); }
 unsigned char __cdecl StubTaskCreate(unsigned kind, unsigned parameter) {
     Record(11, kind & 0xFF, parameter & 0xFF, Who());
     Disturb();
@@ -175,10 +191,11 @@ void __cdecl StubSetTarget(unsigned t) { Record(12, t & 0xFF, Who()); Disturb();
 int __cdecl StubLoadDone() { Record(13, Who()); Disturb(); const std::uint32_t h = Hash(); return h % 3 == 0 ? 0 : static_cast<int>(h | 0x100); }
 unsigned char __cdecl StubLoadSound(unsigned key, unsigned set) {
     Record(14, key & 0xFF, set & 0xFF, Who());
+    MoveField();
     Disturb();
     return Answer(9);
 }
-unsigned long __cdecl StubClearBit(unsigned actor) { Record(15, actor & 0xFF, Who()); Disturb(); return Hash(); }
+unsigned long __cdecl StubClearBit(unsigned actor) { Record(15, actor & 0xFF, Who()); MoveField(); Disturb(); return Hash(); }
 void __cdecl StubEndAction() { Record(16, Who(), Obj()); Disturb(); }
 
 // --- the tables of recorders -------------------------------------------------
@@ -411,6 +428,10 @@ void Seed(unsigned k) {
     case kSwingCue: {
         static const unsigned char kCounts[] = {0, 1, 1, 1, 1, 2};
         s[9] = kCounts[Next() % 6];
+        // the same count in every member most rounds: the tick's stand-in
+        // moves Sprite_Current half the time
+        if (Often())
+            for (unsigned i = 0; i < 3; ++i) Member(i)[9] = s[9];
         static const unsigned char kPercents[] = {0, 1, 50, 99, 100, 0xFF};
         if (Often()) f[0xBA] = kPercents[Next() % 6];
         break;
