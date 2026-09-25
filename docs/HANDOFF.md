@@ -45,8 +45,8 @@ no hash run on record. `ab15`..`ab27`, `wm1` and `wm1_orig` are history.
    `origin`). Local `main` is at `61d20a0`, behind `origin/main`
    (`0c7260e`) - fast-forward it. Remove the worktrees and branches with
    the owner's nod; check each worktree for uncommitted files first.
-   Also small: `Fmv_WndProc` `0x59E570` is detoured but has no `impl` line
-   in `symbols.toml` (1,024 `impl` against 1,025 ours - STATUS).
+   (`Fmv_WndProc`'s missing `impl` line is fixed: 1,025 `impl` against
+   1,025 detoured, which `tools/ledger_check.py` now checks in CI.)
 2. **`entries_logic.txt`, then re-record the frame hash reference once.**
    About twenty wrong sizes and a few missing entries, listed per group in
    round seven's docs (BA, BB §7, BC, BE, BG §6, BH, BI) and

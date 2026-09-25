@@ -1,0 +1,39 @@
+# Repository checks that read only the repository: fast, and no toolchain.
+#
+#   tools/ledger_check.py   the divergence ledger (CLAUDE.md rule 2), the
+#                           symbols.toml impl lines against the detours in src/,
+#                           and rule 4's stub markers
+#   tools/gen_symbols.py    symbols.toml parses and generates (names, addresses,
+#                           signatures, impl files) - the same step the build
+#                           runs, here without waiting for a toolchain
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ledgers:
+    name: Ledgers and symbols
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Divergence and ownership ledgers
+        run: python tools/ledger_check.py --verbose
+
+      - name: symbols.toml generates
+        run: python tools/gen_symbols.py --toml symbols.toml --out "$RUNNER_TEMP/symbols.gen.h"
