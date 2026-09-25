@@ -304,10 +304,17 @@ std::uint16_t Near(std::uint16_t v) {
 void SeedGauge(unsigned k) {
     const std::uint16_t max = MaxHp();
     SetWord(g_enemy + 0x30, max);
-    const std::uint16_t hp = Near(max);
+    const int m = static_cast<short>(max);
+    std::uint16_t hp = Near(max);
+    // an HP so small against the max that 55 * HP / max is 0 (the floor of 1)
+    if (Next() % 6 == 0 && m > 55) hp = static_cast<std::uint16_t>(1 + Next() % static_cast<unsigned>(m / 55));
     SetWord(g_enemy + 0x24, hp);
     SetWord(g_win + 0x1C, Often() ? max : Near(max));
-    SetWord(g_win + 0x14, Often() ? Near(hp) : hp);
+    std::uint16_t shown = Often() ? Near(hp) : hp;
+    // a shown HP whose 55 * shown / max lands at 0x37..0x39 (the cap)
+    if (Next() % 6 == 0 && m > 0 && m < 0x2000)
+        shown = static_cast<std::uint16_t>((m * (0x37 + static_cast<int>(Next() % 3)) + 54) / 55);
+    SetWord(g_win + 0x14, shown);
     static const unsigned char kGauge[] = {0, 1, 2, 0x36, 0x37, 0x38, 0xFF, 0x10};
     g_win[0xB] = Often() ? static_cast<unsigned char>(Next() % 0x38) : kGauge[Next() % 8];
     g_win[0xD] = static_cast<unsigned char>(Next());
