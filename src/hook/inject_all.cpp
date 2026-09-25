@@ -106,6 +106,7 @@
 #include "game/battle_obj_states.h"
 #include "game/battle_menu_states.h"
 #include "game/battle_actor_copies.h"
+#include "game/battle_turn_steps.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -265,6 +266,9 @@ void InjectAll() {
     BattlePhases_Inject();      // round 8 group CA: every call of its clones re-aimed at a recorder, its two
                                 // stack tables re-aimed in the copies and its three .data tables swapped for
                                 // recorders: order does not matter (it clones only its own eighteen)
+    BattleTurnSteps_Inject();   // round 8 group CC: every call of its clones re-aimed at a recorder, two jump
+                                // tables relocated and eight .data dispatch tables swapped for recorders:
+                                // order does not matter
     InjectReport();
 }
 

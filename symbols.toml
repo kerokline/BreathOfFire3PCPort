@@ -15768,3 +15768,253 @@ params = "void"
 impl = "src/game/battle_actor_copies.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-25, 0x447CC0..0x447D28 (0x69 bytes), two calls: Sound_PlayEffect(0x104); 0x904AAF = 0; 0x939FA0's +1 = 4 (the pointer read after the call); 0x939EC4's +1 = 2; 0x904AC3 + 1; byte 0x93C2C1 + ((0x93C2A1 - 1) and 0xF) * 8 = 1; ItemMenu_FreeWindows; 0x904AA2 = 0x904AA3 = 0x904AA4 = 0, 0x904AA1 = 1. BattleItem_TargetSteps entry 3 and entry 2 of 0x447D70's table 0x64E43C; void (void). Combat route: reached."
+# --- Group CC of the eighth round (2026-09-25): the per-turn steps, phases 4 and 5 (src/game/battle_turn_steps.cpp, docs/battle_turn_steps.md) ---
+
+[[data]]
+pc = 0x64AF2C
+name = "BattleRoundEnd_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x4302C0, 0x430510, 0x431090; read by 0x4302B7 `jmp [eax*4 + 0x64AF2C]` with eax the byte 0x904AA1 (unchecked). The next table, BattleRoundEnd_FasterSteps, starts at 0x64AF38."
+
+[[data]]
+pc = 0x64AF38
+name = "BattleRoundEnd_FasterSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x4302D0, 0x430500, 0x431090; read by 0x4302C7 `jmp [eax*4 + 0x64AF38]`, eax the byte 0x904AA2. BattleEnd_Steps starts at 0x64AF44."
+
+[[data]]
+pc = 0x64AF44
+name = "BattleEnd_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x4311F0, 0x4314B0, 0x431540, 0x4315B0, 0x431760; read by 0x4311E7 `jmp [eax*4 + 0x64AF44]`, eax the byte 0x904AA1. Step 1 is the win (0x904AA1 = 1 for 0x904AE8 bit 1, by BattleEnd_AwaitMemberTasks), step 2 the other way out (bit 0, unreached by the combat route), step 4 set by 0x431740. BattleEnd_TaskSteps starts at 0x64AF58."
+
+[[data]]
+pc = 0x64AF58
+name = "BattleEnd_TaskSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x431200, 0x431220, 0x431320; read by 0x4311F7 `jmp [eax*4 + 0x64AF58]`, eax the byte 0x904AA2. The first two recur at 0x64AF7C in 0x4315B0's table. BattleEnd_WinSteps starts at 0x64AF64."
+
+[[data]]
+pc = 0x64AF64
+name = "BattleEnd_WinSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x4314C0, 0x431520, 0x431910; read by 0x4314B7 `jmp [eax*4 + 0x64AF64]`, eax the byte 0x904AA2. 0x64AF70 (0x431550, 0x4315A0, 0x432430, by 0x431540) and 0x64AF7C (0x431200, 0x431220, 0x4315C0, 0x431710, 0x431740, by 0x4315B0) follow, unnamed: their stubs are not reached by the combat route and belong to no group of this round."
+
+[[data]]
+pc = 0x64AF90
+name = "BattleEnd_ExitSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x431770, 0x4317B0, 0x4317F0, 0x4318F0; read by 0x431767 `jmp [eax*4 + 0x64AF90]`, eax the byte 0x904AA2. BattleEnd_ResultSteps starts at 0x64AFA0."
+
+[[data]]
+pc = 0x64AFA0
+name = "BattleEnd_ResultSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x431920, 0x431B60, 0x431D50 (the last two group CD's, each a stub over its own table by 0x904AA4: 0x64AFC0, 0x64AFC8); read by 0x431917 `jmp [eax*4 + 0x64AFA0]`, eax the byte 0x904AA3. BattleEnd_ResultPages starts at 0x64AFAC."
+
+[[data]]
+pc = 0x64AFAC
+name = "BattleEnd_ResultPages"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "pe data 2026-09-25: 0x431940, 0x431A20, 0x431A90, 0x431AB0, 0x431B30 (group CD's); read by 0x43192A `jmp [eax*4 + 0x64AFAC]`, eax the dword 0x904AA4 and 0xFF. 0x431B60's table starts at 0x64AFC0. Named here with its stub 0x431920 (group CC); its entries are CD's."
+
+[[func]]
+pc = 0x4302B0
+name = "BattleRoundEnd_Step"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4302B0..0x4302BD (0xE bytes): xor eax, eax; mov al, [0x904AA1]; jmp [eax*4 + 0x64AF2C] (BattleRoundEnd_Steps). Phase 4 of Battle_PhaseDispatch's stack table (its fifth immediate, 0x42E433); entered by that call, so the target returns to Battle_PhaseDispatch. Named for what it dispatches: the round's end (the extra round, the status chain, the next round)."
+
+[[func]]
+pc = 0x4302C0
+name = "BattleRoundEnd_FasterStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4302C0..0x4302CD (0xE bytes): xor eax, eax; mov al, [0x904AA2]; jmp [eax*4 + 0x64AF38] (BattleRoundEnd_FasterSteps). Entry 0 of BattleRoundEnd_Steps."
+
+[[func]]
+pc = 0x4302D0
+name = "BattleRoundEnd_CheckFaster"
+psx = 0x801D4B08
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4302D0..0x4303C3 (0xE3 bytes of code and a 4-entry jump table at 0x4303B4), cdecl, calls Battle_MarkFasterSide and Battle_TickCounters. If 0x904B7A or 0x904B8E is set, or Battle_MarkFasterSide's al is 0 or above 3: flag 0x8000 cleared from members 0..1 (0x802E74, ecx = 2) and enemies 0..6 (0x93BA74, ecx = 7), 0x904B90 += 1, 0x904B7A = 0, Battle_TickCounters, 0x904AA2 = 0, 0x904AA1 += 1. Else 0x904B7A = al (1 -> 1, 2 -> 2, 3 -> 3), with 0x904AE4 == 2 turning 3 into 2 and 1 into the round's end (after 0x904AA2 += 1); 0x904AA2 += 1. PSX 0x801D4B08 (the sibling's overlays_static_0002.c, read 2026-09-25): the same tests and loop bounds (sltiu 2, sltiu 0xA from 3). Entry 0 of BattleRoundEnd_FasterSteps. Hypothesis in the name: that 0x904B7A is the faster side's extra round."
+
+[[func]]
+pc = 0x430500
+name = "BattleRoundEnd_FasterNext"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x430500..0x430506 (7 bytes): inc byte ptr [0x904AA2]; ret. Entry 1 of BattleRoundEnd_FasterSteps, one frame between BattleRoundEnd_CheckFaster and BattleRoundEnd_NextRound."
+
+[[func]]
+pc = 0x430510
+name = "BattleRoundEnd_StatusChain"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x430510..0x430633 (0xEC bytes of code and a 14-entry jump table at 0x4305FC), cdecl. By the byte 0x904AA2 (above 13 nothing): each state increments 0x904AA2 in memory and calls the next BattleStep (Expire4000, Restore800, PartyWake40, EnemyWake40, PartyWake20, EnemyWake20, Status80, HpDrift, ApUpkeep), returning on al != 0, falling through otherwise; states 1, 8, 10, 12 (after Expire4000, Status80, HpDrift, ApUpkeep) wait for the word 0x904B82 to be 0, then clear 0x904AA8 bit 2 and step on; the other steps' next state is the next step's; state 13 zeroes 0x904AA2 and steps 0x904AA1 on. Entry 1 of BattleRoundEnd_Steps. The nine steps' callers per battle_setup.md."
+
+[[func]]
+pc = 0x431090
+name = "BattleRoundEnd_NextRound"
+psx = 0x801D653C
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431090..0x4311D6 (0x147 bytes), cdecl, calls LoadDatFile, Battle_ClearCommands, Battle_ActorIsOut and [0x904B6C](2). Returns while any dword 0x803540..0x80355C is set, or in an event battle (0x904AAA) when the hook answers al 0xFF. With 0x904AE8 set: 0x904AA8 &= ~0x10, the bytes 0x803184 + 0x24 k zeroed for k 0..11 but 2, 0x904AA0 = 5, 0x904AA1 = 0. Else, unless 0x904AA8 bit 4: 0x904ABD (u32) = 0, 0x904ABC = 8, 0x904AC1 (u16) = 0, 0x904AB4 = 0, LoadDatFile(0x131); Battle_ClearCommands; members 0..2 not out get state +1 = 2; 0x904AA8 &= ~8, 0x904AE4 = 0, 0x904AA0 = 1, 0x904AA1 = 0x904AA2 = 0. Entry 2 of both BattleRoundEnd tables. PSX twin from pairs_propagated.json, not read."
+
+[[func]]
+pc = 0x4311E0
+name = "BattleEnd_Step"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4311E0..0x4311ED (0xE bytes): xor eax, eax; mov al, [0x904AA1]; jmp [eax*4 + 0x64AF44] (BattleEnd_Steps). Phase 5 of Battle_PhaseDispatch's stack table (its sixth immediate, 0x42E43B), which BattleRoundEnd_NextRound sets once 0x904AE8 is not 0."
+
+[[func]]
+pc = 0x4311F0
+name = "BattleEnd_TaskStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4311F0..0x4311FD (0xE bytes): xor eax, eax; mov al, [0x904AA2]; jmp [eax*4 + 0x64AF58] (BattleEnd_TaskSteps). Entry 0 of BattleEnd_Steps."
+
+[[func]]
+pc = 0x431200
+name = "BattleEnd_TasksBegin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431200..0x431212 (0x13 bytes): 0x802D20 = 0x904AA5 = 0, inc byte ptr [0x904AA2]. Entry 0 of BattleEnd_TaskSteps and of 0x4315B0's table 0x64AF7C."
+
+[[func]]
+pc = 0x431220
+name = "BattleEnd_StartMemberTask"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x431220..0x431315 (0xF6 bytes), cdecl, calls Battle_ActorIsOut and BattleTask_Create. From the cursor 0x904AA5 below the count 0x904AB0 (the cursor re-read after the call, the count at each test, the cursor stored at each step): the first member not out with +0x134 & 3 gets +0x130 |= 0x2000 and BattleTask_Create(0, character +0x89 == 4 ? 0xB : 0xC) - for 0xC first bit 0 of +0x134 cleared in the three 0x14C records at 0x939AE0 - whose slot's +0x80 (0x93A080 + 0x84 n, n unchecked) gets the member at the cursor re-read; the cursor += 1. 0x904AA2 += 1 on every path. Entry 1 of BattleEnd_TaskSteps and 0x64AF80. Hypothesis in the name: what the task does."
+
+[[func]]
+pc = 0x431320
+name = "BattleEnd_AwaitMemberTasks"
+psx = 0x801D69E4
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x431320..0x4314AB (0x18C bytes), cdecl, calls Battle_ClearStatus, Sprite_ReleaseTint, Battle_ReturnQueuedItem, Port_DroppedCall, LoadDatFile and [0x904B64]. Returns while any member below the entry count 0x904AB0 has +0x130 & 0x2000; 0x904AA2 -= 1 while 0x904AA5 is not that count. Unless 0x904AE8 bit 0: each member (count re-read), Sprite_Current = it, status 0x800 (+0x91 bit 3) giving +0x98 = +0xA0, +0x9A = +0xA2, +0x9C = +0xAE and Battle_ClearStatus(i, +0x90 & 0xBFFF); Battle_ClearStatus(i, +0x90 re-read & 0xBF5F), Sprite_ReleaseTint, Battle_ReturnQueuedItem(i); 0x904AE8 re-read; 0x904B8E = 0. If 0x904AAA is 0: 0x904AA1 = 2 for 0x904AE8 bit 0, then 1 for bit 1. [0x904B64](); Port_DroppedCall(0); LoadDatFile(0xCD) if 0x904AA1 is 1, (0xCE) if it is then 2; 0x904AA2 = 0. Entry 2 of BattleEnd_TaskSteps. PSX twin from pairs_propagated.json, not read."
+
+[[func]]
+pc = 0x4314B0
+name = "BattleEnd_WinStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4314B0..0x4314BD (0xE bytes): xor eax, eax; mov al, [0x904AA2]; jmp [eax*4 + 0x64AF64] (BattleEnd_WinSteps). Entry 1 of BattleEnd_Steps, the step 0x904AE8 bit 1 (the last enemy fallen, Battle_EnemyDefeated) selects."
+
+[[func]]
+pc = 0x4314C0
+name = "BattleEnd_WinBegin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4314C0..0x43151F (0x60 bytes), cdecl, calls Music_FadeOutStop, Music_Play, Battle_OpenMsgWindow and Battle_OpeningMessage. Members 0..2 with +0 bit 0 get +1 = 2 (0x802D41, 0x802E8D, 0x802FD9); unless 0x904AE5 bit 0x40, Music_FadeOutStop(10), Music_Play(0xA5, 10); Battle_OpenMsgWindow; Battle_OpeningMessage; 0x904AA2 += 1. Entry 0 of BattleEnd_WinSteps."
+
+[[func]]
+pc = 0x431520
+name = "BattleEnd_WinAwaitInput"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431520..0x431539 (0x1A bytes), cdecl, its first instruction the call to File_LoadDone: 0x904AA2 += 1 when eax is not 0 and Input_Pressed (0x7E1BEC) is not 0. Entry 1 of BattleEnd_WinSteps."
+
+[[func]]
+pc = 0x431760
+name = "BattleEnd_ExitStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431760..0x43176D (0xE bytes): xor eax, eax; mov al, [0x904AA2]; jmp [eax*4 + 0x64AF90] (BattleEnd_ExitSteps). Entry 4 of BattleEnd_Steps (0x904AA1 = 4 is stored by 0x431740)."
+
+[[func]]
+pc = 0x431770
+name = "Battle_WriteBackParty"
+psx = 0x801D71B0
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431770..0x4317A0 (0x31 bytes), cdecl: 0x446A80(0), (1), (2), Window_ResetAll, LoadDatFile(2), 0x904AA2 += 1. The sibling's Battle_WriteBackParty 0x801D71B0 (names/functions.toml: Battle_WriteBackMember(0..2), 0x8015990C, 0x801629CC(0x256), DAT_801462DE++) term for term; its name kept. Entry 0 of BattleEnd_ExitSteps."
+
+[[func]]
+pc = 0x4317B0
+name = "BattleEnd_ExitHook"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4317B0..0x4317E8 (0x39 bytes), cdecl, its first instruction the call to File_LoadDone; then Music_FadeOutStop and [0x904B68]. Once File_LoadDone answers: [0x904B68](); unless 0x904AE5 bit 0x40, Music_FadeOutStop(10) and 0x904AE8 |= 8 when Music_Track (0x904131) is then 0xFF; 0x904AA2 += 1. Entry 1 of BattleEnd_ExitSteps."
+
+[[func]]
+pc = 0x4317F0
+name = "BattleEnd_Finish"
+psx = 0x801D7320
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4317F0..0x4318E8 (0xF9 bytes), cdecl, calls 0x494E70, BattleTask_ClearAll, Char_RecalcStats and 0x446600. Each member below 0x904AB0 (re-read) with +0x91 bit 6 (status 0x4000): CharacterRecords + 0xA4 * (+0x148): +0x18 = 1 (u16), +0x1C = 1, +0x1E += 1 below 5, +0x10 &= 0xBFFF, +0xB &= 0xFB, Char_RecalcStats(record). Then 0x446600, Game_Step (0x66C7EA) += 1, 0x904AE9 and 0x904AA0..0x904AA4 = 0. Entry 2 of BattleEnd_ExitSteps. PSX twin from pairs_propagated.json, not read."
+
+[[func]]
+pc = 0x431910
+name = "BattleEnd_ResultStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431910..0x43191D (0xE bytes): xor eax, eax; mov al, [0x904AA3]; jmp [eax*4 + 0x64AFA0] (BattleEnd_ResultSteps). Entry 2 of BattleEnd_WinSteps."
+
+[[func]]
+pc = 0x431920
+name = "BattleEnd_ResultPage"
+ret = "void"
+params = "void"
+impl = "src/game/battle_turn_steps.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x431920..0x431930 (0x11 bytes): mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64AFAC] (BattleEnd_ResultPages, group CD's pages). Entry 0 of BattleEnd_ResultSteps."
