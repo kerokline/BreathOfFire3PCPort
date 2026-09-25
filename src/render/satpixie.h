@@ -1,4 +1,4 @@
-// The SatPixie CRT look (DIV-0043, docs/crt-look.md section 7): a port to
+// The SatPixie CRT look (DIV-0043, docs/crt-look.md section 5): a port to
 // HLSL of Conkwer's "CRT-SatPixie" (github.com/Conkwer/satpixie-crt-shader),
 // itself a fork of Mattias Gustavsson's "newpixie" CRT, both offered under
 // the MIT licence or as public domain - the one third-party look this
@@ -29,8 +29,8 @@ void SatpixieInit(ID3D11Device* device, U target_w, U target_h, U k);
 void SatpixieResize(ID3D11Device* device, U target_w, U target_h, U k);
 
 // Draws the target onto `window` inside `picture`. `frame` counts presents,
-// for the look's animation. Leaves the render target and viewport set to
-// the window's.
+// for the look's animation. Leaves the render target set to `window`, the
+// viewport to `picture`, and no shader resources bound.
 void SatpixieDraw(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* target, ID3D11RenderTargetView* window,
                   const D3D11_VIEWPORT& picture, unsigned frame);
 

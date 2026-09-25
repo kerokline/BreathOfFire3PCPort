@@ -293,7 +293,7 @@ void ConfigApplyEnvironment(const Config& cfg) {
         SetEnvironmentVariableA("BOF3X_PAD", line.c_str());
     }
 
-    // Neither is set for its default value: an unset variable is exactly what
+    // None is set for its default value: an unset variable is exactly what
     // the DLL treats as "the original's behaviour", and leaving it unset keeps
     // a default run byte-identical to one launched without a settings file.
 }

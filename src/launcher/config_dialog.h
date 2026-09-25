@@ -7,8 +7,10 @@
 namespace bof3x {
 
 // Shows the settings dialog, modally. Returns true if the player pressed Play,
-// with `cfg` updated to what the controls said; false if they closed it, with
-// `cfg` untouched - closing the window must not save anything.
+// with `cfg` updated to what the controls said; false if they closed it -
+// closing the window must not save anything, so the caller does not save on
+// false. On false `cfg` is not reliably untouched: an OK in the Look options,
+// Cheats or Controls dialog has already written cfg.sp / .cheats / .bindings.
 //
 // `game_dir` is only read from: it decides whether the English option is
 // offered at all.

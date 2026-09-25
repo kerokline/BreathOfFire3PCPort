@@ -14,8 +14,12 @@ namespace bof3x::input {
 // Lines for the caller's log; nullptr for none.
 using PadLog = void (*)(const char* line);
 
-// SDL_Init(GAMEPAD) with the background-events hint; false if SDL refused.
+// SDL_Init(GAMEPAD) with the background-events hint, then opens the first pad
+// if one is connected; false if SDL refused. A second call while started does
+// nothing and keeps the first call's layout and log.
 bool PadSdl_Start(Layout layout, PadLog log);
+// Stop closes the pad and quits SDL, harmless if not started; Started is
+// whether Start succeeded and Stop has not run since.
 void PadSdl_Stop();
 bool PadSdl_Started();
 
@@ -28,7 +32,8 @@ bool PadSdl_Open();   // a pad is open
 // auto, decided when the pad opens).
 bool PadSdl_InputDown(PadInput input);
 
-// The PlayStation word for a map.
+// The PlayStation word for a map: the OR of every down input's bits, 0 with
+// no pad open.
 unsigned PadSdl_Word(const std::vector<PadBinding>& map);
 
 // The first map-space input that is down, or -1: for a binding capture.

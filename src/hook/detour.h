@@ -27,7 +27,9 @@ void VerifyImage();
 //           Capcom's function - original behaviour, same process, same loader.
 //
 // A function is disabled by listing its name in the BOF3X_ORIGINAL environment
-// variable (comma separated), or all of them with BOF3X_ORIGINAL=*.
+// variable (comma or space separated), or all of them with BOF3X_ORIGINAL=*;
+// `-NAME` takes one back out of `*` (NameListed in detour.cpp). Disabling
+// writes the jmp over the start of OUR function, not Capcom's.
 void Inject(const char* name, std::uint32_t original, void* ours);
 
 // Re-aims ONE relative call inside an original function at ours, leaving the
@@ -35,8 +37,8 @@ void Inject(const char* name, std::uint32_t original, void* ours);
 // call site of a function with many. Refuses unless `site` holds a CALL to
 // `expected`. BOF3X_ORIGINAL=<name> leaves the site untouched - unless
 // `instrument`: a probe that replaces nothing of Capcom's (the input recipe
-// and recorder) is not game code, and `*` must not switch it off. It did,
-// 2026-09-23: an all-original recipe run got no input at all.
+// and recorder) is not game code, and `*` must not switch it off
+// (docs/input-script.md section 5a).
 void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours,
                   bool instrument = false);
 
@@ -56,10 +58,11 @@ void PatchBytes(const char* name, std::uint32_t at, const std::uint8_t* expected
 // the first five bytes. The copy lives in process memory only.
 //
 // A relative CALL - or a tail JMP - that does leave the range is named in
-// `calls`: the offset of its E8 or E9 byte, and where the copy should call instead - null for "where the
-// original called", or another clone, so that a cloned caller reaches the
-// cloned callee and never ours. An entry that is itself a CALL (E8 at offset
-// 0) is refused as a patch unless `calls` names offset 0.
+// `calls`: the offset of its E8 or E9 byte, and where the copy should call
+// instead - null for "where the original called", or another clone, so that a
+// cloned caller reaches the cloned callee and never ours. An entry that is itself a CALL or JMP (E8 or
+// E9 at offset 0) is refused as a patch unless `calls` names offset 0; an
+// int3 (CC) at the entry is always refused.
 //
 // `expected` is what the original calls there - the callee's address in the
 // image - when the caller knows it: the copy is refused if the site reaches
@@ -76,7 +79,8 @@ struct CloneCall {
 void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
                     const CloneCall* calls = nullptr, int n_calls = 0);
 
-// True if `name` is listed in the BOF3X_SHADOW environment variable.
+// True if `name` is listed in the BOF3X_SHADOW environment variable (the same
+// list syntax as BOF3X_ORIGINAL).
 bool WantsShadow(const char* name);
 
 // True if this original address has been passed to Inject - in either

@@ -8,7 +8,9 @@
 // each function costs one exception per run and then runs as Capcom built it.
 // The exception is Task_RunAll, which is re-armed after every hit by a
 // single-step: WinMain calls it once per logic frame, so counting its hits is
-// an exact frame counter.
+// an exact frame counter. BOF3X_CALLTRACE_MODE=all re-arms every entry the
+// same way, for per-frame call counts, edges and a call hash
+// (bof3x.callframes.tsv, bof3x.callcounts.tsv; docs/call-trace.md sections 5-6).
 //
 // This is instrumentation, not a replacement: no original code is skipped or
 // reimplemented, so it needs no DIVERGENCE.md entry. It does make .text

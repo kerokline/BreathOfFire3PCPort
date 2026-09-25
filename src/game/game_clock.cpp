@@ -20,6 +20,10 @@
 // when the game does: the float code, untouched, then sees the numbers it
 // was written for.
 //
+// That is the original WinMain (BOF3X_ORIGINAL=Game_WinMain). Ours
+// (win_main.cpp, DIV-0047) paces on GameClock_NowMs below and reads the slot
+// only for the once-a-second frame-rate text.
+//
 // BOF3X_TICK_BASE=N (tooling; decimal or 0x hex) starts this clock at N ms
 // instead of 0, to put the original pacing code in any band of D5 on
 // demand. BOF3X_ORIGINAL=Game_Clock leaves the slot on Windows' clock.

@@ -138,7 +138,7 @@ void InjectAll() {
     PadRead_Inject();           // DIV-0050: the keyboard as the original, the pad through SDL3
     SpriteClut_Inject();
     DrawLayers_Inject();
-    DrawEmit_Inject();          // likewise
+    DrawEmit_Inject();          // before PsxGpu_Inject: it clones originals PsxGpu takes over
     PsxGteMatrix_Inject();      // before what it calls: it clones their originals
     PsxGteTransform_Inject();   // likewise
     PsxGpu_Inject();
@@ -159,7 +159,7 @@ void InjectAll() {
     EventScript_Inject();       // its fuzz stands recorders in for every callee, so any slot will do
     MsgBox_Inject();            // every call of its clones re-aimed at a recorder, and every stack-built
                                 // dispatch table's immediates too: order does not matter
-    WindowTask_Inject();        // last: every call of its clones is re-aimed at a recorder and every
+    WindowTask_Inject();        // every call of its clones is re-aimed at a recorder and every
                                 // stack-built table re-aimed in the copy, so order does not matter
     SpritePose_Inject();        // every call of its clones re-aimed at a recorder or at another of its
                                 // own clones: order does not matter
@@ -206,7 +206,7 @@ void InjectAll() {
     AreaBackdrop_Inject();      // every call of its clones re-aimed at a recorder: order does not matter,
                                 // except that it runs before Widescreen_Inject, so its fuzz compares the
                                 // original's 320-wide backdrop quad
-    Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: last, so every fuzz above ran against the original culls
+    Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: after the modules above, so their fuzz ran against the original culls
     WorldMap_Inject();          // every call of its clones re-aimed at a recorder, its state table rebuilt in the
                                 // copy; none of its functions goes through a cull, so after Widescreen is fine
     BattleDraw_Inject();        // every call of its clones re-aimed at a recorder, the device a fake: order

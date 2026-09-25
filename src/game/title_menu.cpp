@@ -18,7 +18,7 @@
 // reimplementation.
 //
 // The page is 256 texels wide and the rows start at u = 0, so any byte fits;
-// DIV-0010's far-edge table runs to 1,024. START.DAT is walked again each
+// DIV-0010's far-edge table has an entry for every u + w. START.DAT is walked again each
 // time the title comes round, so the bytes found there are the last ones
 // written, and that is what PatchBytes is told to expect.
 // BOF3X_ORIGINAL=TitleMenu_Widths leaves the immediates alone.

@@ -44,6 +44,8 @@ HANDLE g_child = nullptr;
 // (docs/SCAFFOLDING.md section 2).
 bool SelfTestOnly() { return GetEnvironmentVariableW(L"BOF3X_SELFTEST_ONLY", nullptr, 0) > 0; }
 
+// Every failure path: ends a suspended game process if there is one, reports
+// on stderr and in a message box, and exits 1.
 [[noreturn]] void Die(const wchar_t* fmt, ...) {
     if (g_child) TerminateProcess(g_child, 1);
     wchar_t buf[1024];
@@ -76,6 +78,8 @@ std::wstring OwnDirectory() {
     return path.substr(0, path.find_last_of(L"\\/"));
 }
 
+// The file's SHA-256 as lowercase hex, the form kExpectedSha256 is written in.
+// Any I/O or CNG failure Die()s.
 std::string Sha256Hex(const std::wstring& path) {
     HANDLE file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -134,7 +138,9 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
     }
 
     // The thread's exit code is LoadLibraryW's return value: the module handle,
-    // or 0. A process ended by the DLL's own Fatal() also lands here.
+    // or 0. A process ended by the DLL's own Fatal() also lands here, but with
+    // exit code 3 (Fatal's TerminateProcess code, src/hook/log.cpp), not 0 -
+    // so it passes this check; Fatal has already shown its own message box.
     DWORD module = 0;
     GetExitCodeThread(thread, &module);
     CloseHandle(thread);

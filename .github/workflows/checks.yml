@@ -1,0 +1,62 @@
+# Repository checks that read only the repository and no game data.
+#
+#   tools/ledger_check.py   the divergence ledger (CLAUDE.md rule 2), the
+#                           symbols.toml impl lines against the detours in src/,
+#                           and rule 4's stub markers
+#   tools/gen_symbols.py    symbols.toml parses and generates (names, addresses,
+#                           signatures, impl files) - the same step the build
+#                           runs, here without waiting for a toolchain
+#   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
+#                           synthetic corpus, with its negative controls
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ledgers:
+    name: Ledgers and symbols
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Divergence and ownership ledgers
+        run: python tools/ledger_check.py --verbose
+
+      - name: symbols.toml generates
+        run: python tools/gen_symbols.py --toml symbols.toml --out "$RUNNER_TEMP/symbols.gen.h"
+
+  lifter:
+    # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
+    # synthetic corpus, fuzz it against the original bytes in Unicorn, and
+    # check every negative control is refused. Synthetic code only.
+    name: Lifter prototype self-test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install clang, lld, capstone, unicorn
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q clang lld llvm
+          python -m pip install --quiet capstone unicorn
+
+      - name: Self-test
+        run: sh tools/lift/selftest.sh "$RUNNER_TEMP/lift" 100

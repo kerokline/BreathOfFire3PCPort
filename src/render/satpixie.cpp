@@ -1,4 +1,4 @@
-// The SatPixie CRT look (satpixie.h, DIV-0043, docs/crt-look.md section 7).
+// The SatPixie CRT look (satpixie.h, DIV-0043, docs/crt-look.md section 5).
 //
 // A port of github.com/Conkwer/satpixie-crt-shader's RetroArch preset
 // (satpixie-crt.slangp: accumulate.slang, blur_horiz.slang, blur_vert.slang,
@@ -179,7 +179,9 @@ float4 Picture(V i) : SV_Target {
 }
 )";
 
-// The parameters, the preset's names and defaults (overscan_crop 0 here).
+// The parameters, the preset's names and defaults (overscan_crop and
+// vignette_aspect 0 here, the file header says why). The first four and
+// frame_count are set by MakeSized and SatpixieDraw, not by a knob.
 struct Params {
     float source_w, source_h, output_w, output_h;
     float frame_count, acc_modulate, blur_x, blur_y;

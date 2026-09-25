@@ -174,9 +174,14 @@ gap ([`docs/LICENSING.md`](docs/LICENSING.md) §7).
   or later; llvm-mingw is the only supported toolchain
   (`cmake/i686-llvm-mingw.cmake`). The first configure fetches SDL3. Full
   details, and how to run the result against your own copy of the game, are
-  in [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4. The only CI check on a
-  pull request today is the DCO sign-off (`.github/workflows/dco.yml`); there
-  is no build CI yet, so build locally before you open one.
+  in [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4.
+- **CI on a pull request** runs three workflows, none of which touches game
+  data: the DCO sign-off (`.github/workflows/dco.yml`); the build of
+  `bof3x.dll` and the launcher with the pinned llvm-mingw, including a check
+  that both import system DLLs only (`build.yml`); and the ledger checks
+  (`checks.yml`), which you can run first with `python tools/ledger_check.py`.
+  CI does not run the game - the fuzzes and the frame hash need `BOF3.exe`, so
+  they stay local.
 - **Findings go in `docs/`.** Naming, status headers and the evidence rule are
   in [`docs/README.md`](docs/README.md). `SCREAMING_CASE.md` for durable
   subsystem documents, `kebab-case.md` for a single investigation.

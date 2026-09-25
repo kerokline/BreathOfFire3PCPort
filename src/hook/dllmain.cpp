@@ -1,6 +1,11 @@
 // bof3x.dll entry point. Loaded into BOF3.exe by bof3x-launcher while the
 // process is still suspended, so everything here runs before the game's entry
 // point 0x5BA057 and no game thread can be inside a function we patch.
+//
+// Order: the log first (Fatal writes to it), the image check before anything
+// that trusts an address, and the tracer after InjectAll, which it needs to
+// know what is owned (calltrace.h). BOF3X_SELFTEST_ONLY ends the
+// process after the injects, and Fatal skips its message box.
 #include <windows.h>
 
 #include "hook/calltrace.h"
