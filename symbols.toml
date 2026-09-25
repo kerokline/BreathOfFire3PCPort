@@ -18296,3 +18296,287 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-25: 0x539AE0 (state 0, the chapter's start: Scenario_CallA(0), Field_ChangeArea(9, 0x570000, 0x40000, 7), state 1), 0x539B20 (Scena01_EnterArea), 0x53A2B0 (state 2, the run) - Scena01_Frame jumps through it on the s8 0x8034E2, unchecked. The run table the state 2 jumps through starts one word on, 0x660D88 (at 0x53A2BA), as scenario 16's does."
+# ---------------------------------------------------------------------------
+# Round 8 group DG: the shop's buy and sell states, the shop's close, task 0's title loop
+# (src/game/shop_states2.cpp, docs/shop_states2.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5818B0
+name = "ShopTrade_Step"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5818B0..0x5818BD (0xE bytes): xor eax, eax; mov al, [0x929F01]; jmp [eax*4 + 0x664118] - ShopTrade_States by the shop's state byte, unchecked. Entry 2 of the field menus' table 0x663E40 (0x663E48, group DF's); first reached from 0x495829 on the shop route."
+
+[[func]]
+pc = 0x5818C0
+name = "ShopTrade_OpenStep"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5818C0..0x5818CD (0xE bytes): jmp [0x66412C + 4 * byte 0x929F02], unchecked - ShopTrade_States entry 0 (0x664118). Shop route."
+
+[[func]]
+pc = 0x5818D0
+name = "ShopTrade_Open"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5818D0..0x58196C (0x9D bytes), four calls: Shop_InitWindows; 0x929F04 = 6; 0x6BC8A4 = 0; 0x929F02 + 1 (read after the call); for each (category, item) pair of the shop's list [0x903844] (count byte first, index unsigned below it): Item_IconKind(category, item), then the list pointer and the category re-read - a category not 0 whose icon kind (al) is not 0xA or 0xB sets 0x6BC8A4 = 1 and stops; then Shop_PriceRate(0x6BC8B4) (two call sites, one per exit). Entry 0 of 0x66412C. Shop route. PSX twin 0x801D1154 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x581970
+name = "ShopTrade_OpenWait"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x581970..0x5819AC (0x3D bytes), no calls: 0x929F04 - 1; at 0 the bytes 0x6BC8AA, 0x6BC8A8, 0x6BC8AB, 0x929F04, 0x929F05 cleared, 0x929F01 + 1 (read before), 0x929F02 = 0. Entry 1 of 0x66412C. Shop route."
+
+[[func]]
+pc = 0x5819B0
+name = "ShopTrade_ChoiceStep"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5819B0..0x5819BD (0xE bytes): jmp [0x664134 + 4 * byte 0x929F02], unchecked - ShopTrade_States entry 1. Shop route."
+
+[[func]]
+pc = 0x5819C0
+name = "ShopTrade_Choice"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5819C0..0x581ADB (0x11C bytes), five calls: help word 0x803170 = 0x46 + s8 0x6BC8AB; hand 0x803454 on at (0x8031AC + 48 n + 4, 0x8031AE + 4); Input_AutoRepeat(Input_Pressed & 0xA000) & 0xA000 flips 0x6BC8AB with Sound_PlayEffect(0x101); Input_Pressed re-read: confirm - sounds 0x104, 0x102, 0x929F04 = 5, 0x929F02 = 0, 0x929F01 + 1 (buy) or + 2 (sell); cancel - sound 0x106, 0x803454 = 0x803430 = 0, 0x803163 = 0x8031AB = 0x803187 = 1, 0x929F04 = 5, 0x929F01 + 3. Entry 0 of 0x664134. Shop route."
+
+[[func]]
+pc = 0x581AE0
+name = "ShopTrade_BuyStep"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x581AE0..0x581AED (0xE bytes): jmp [0x664138 + 4 * byte 0x929F02], unchecked - ShopTrade_States entry 2. Shop route."
+
+[[func]]
+pc = 0x581AF0
+name = "ShopTrade_BuySetup"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x581AF0..0x581BD7 (0xE8 bytes), two calls (Party_Count(0), before the loop and after each member, low byte unsigned): with 0x6BC8A4 set each member panel 0x8031CC + 36 i gets +0xA i, +4 0xFF6A, +6 54 i + 0x3E, +0..+3 1 7 5 2, +0xB +0xC 0; then the buy list window 0x803280: +4 0x140, +6 0x3E, +3 (0x6BC8A4 = 0) + 2, +0..+2 1 7 7, +0xA 0, +0xB the rate's low byte, +0x20 the list pointer [0x903844]; 0x6BC8A9 = 0, 0x929F02 + 1. Entry 0 of 0x664138. Shop route."
+
+[[func]]
+pc = 0x581BE0
+name = "ShopTrade_BuyList"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x581BE0..0x581ECC (0x2ED bytes), fifteen calls: the pair under s8 0x6BC8A9 to 0x6BC89C / 0x6BC8AD; member panels +0xB Item_IconKind, +0xC the item; help 0x803170 = Item_Price (0x591C20); with 0x803283 = 0 the hand to the row; Input_AutoRepeat(pressed & 0x5000): 0x1000 up (below 0 to count - 1), 0x4000 down (past s8 count - 1 to 0), a move Sound 0x100 and the list pointer and cursor re-read; confirm: count 1, 0x6BC8A0 = Shop_ScalePrice(Item_BasePrice & 0xFFFF, word 0x6BC8B4), 0x6BC8B0 = money 0x904058 / it (div), held = low bytes of Inventory_Count(.., 1) + (.., 0): > 0x63 count and most 0, else most cut to 0x63 - held; money >= price: 0x929F0B = 1, Sound 0x103, step + 1, else Sound 0x107; cancel: Sound 0x106, panels +3 = 1, 0x803283 = 1, state 1 step 0. Entry 1 of 0x664138. Shop route. PSX twin 0x801D1634 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x581ED0
+name = "ShopTrade_BuyCount"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x581ED0..0x582083 (0x1B4 bytes), six calls: the count window 0x8032A4 (+4 x, +6 y + 0x2D, +0xA rate low byte, +0xB row, +0xC count, +0x20 list), help 0x48 with a count else 0x4E; Input_AutoRepeat(pressed & 0xF000): 0x8000 / 0x2000 count -/+ 1, then clamps (< 1 signed to 1, > low byte of 0x6BC8B0 unsigned to it), Sound 0x100 if changed from the start (al and cl re-read); 0x4000 / 0x1000 -/+ 10, clamps, Sound 0x100 if changed from the START again (both sounds in one frame); confirm: count not 0 - Sound 0x103, 0x929F0B = 1, step + 1, else Sound 0x107; cancel: Sound 0x106, step - 1. Entry 2 of 0x664138. Shop route. PSX twin 0x801D1A88 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x582090
+name = "ShopTrade_BuyConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x582090..0x5821D6 (0x147 bytes), seven calls: TextRecord_Set(0, 0x10, Item_NamePtr(0x6BC89C, 0x6BC8AD)); help 0x49; hand at (dword 0x803164 - 36 s8 0x929F0B + 0xE8, 0x803166 + 5); pressed dword & 0xA000 flips 0x929F0B with Sound 0x100 and re-reads it; confirm with yes: Sound 0x104, money -= (count low byte) * 0x6BC8A0, Inventory_Add(category, item, dword 0x6BC8AC, 0), then Item_IconKind: 0x6BC8A4 and category set and kind not 0xA/0xB - 0x929F0B = 1, step + 1, else step - 2; no or cancel: Sound 0x106, step - 2. Entry 3 of 0x664138. Shop route. PSX twin 0x801D1D58 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x5821E0
+name = "ShopTrade_BuyAskEquip"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5821E0..0x5822BE (0xDF bytes), five calls: the same yes/no frame as ShopTrade_BuyConfirm with help 0x4A; yes: Sound 0x103, 0x929F06 = 0, step + 1; no or cancel: Sound 0x106, step - 3. Entry 4 of 0x664138. Shop route. PSX twin 0x801D1F74 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x5822C0
+name = "ShopTrade_BuyMember"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5822C0..0x5824C4 (0x205 bytes), eleven calls: the name; help 0x4B; 0x803454 = 0, 0x803430 = 1 at the member panel's +4 / +6 words; Party_Count(0) then Input_AutoRepeat(pressed & 0x5000): 0x1000 up (below 0 to count - 1), 0x4000 down (past s8 count - 1 to 0), a move Sound 0x101; confirm: Item_EquipMask(category, item) al tested against 1 shl 0x66972C[0x904062[s8 0x929F06]] - clear: Sound 0x107; else the panels' +3 3 / 1 (signed index below the count), the slot box 0x803238 (1 7 6 2, 0xFF6A, 0x74, +0xA the member), Sound 0x103, 0x803430 = 0, 0x6BC8A7 = 0, 0x929F04 = 5, step + 1; cancel: Sound 0x106, 0x803430 = 0, step - 4. Entry 5 of 0x664138. Shop route. PSX twin 0x801D20D8 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x5824D0
+name = "ShopTrade_BuySlot"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5824D0..0x58269C (0x1CD bytes), eleven calls: Item_IconKind (bl, kept); hand at (dword 0x80323C + 6, 13 (0x6BC8A7 + kind + 1) + 0x80323E); Input_AutoRepeat(pressed & 0x5000); kind 5: help 0x4C and repeat & 0x5000 flips 0x6BC8A7 then Sound 0x100; else the name and help 0x3A; confirm: Sound 0x104, Shop_Equip(0x66972C[0x904062[member]], 0x6BC8A7 + kind - 1, item), Char_RecalcStats(0x903A70 + 0xA4 * record, re-read), step + 1; cancel: Sound 0x106, panels +3 4 (the member, s8) / 2, 0x80323B = 1, step - 1. Entry 6 of 0x664138. Shop route. PSX twin 0x801D23EC (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x5826A0
+name = "ShopTrade_BuyEquipped"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5826A0..0x58276D (0xCE bytes), five calls: the name; help 0x4D; 0x803454 = 0; any pressed word: panels +3 4 / 2, 0x80323B = 1, Inventory_Count(category, item, 0) word not 0 - step - 2, else step - 6. Entry 7 of 0x664138. Shop route. PSX twin 0x801D26B0 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x582770
+name = "ShopTrade_SellStep"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x582770..0x58277D (0xE bytes): jmp [0x664158 + 4 * byte 0x929F02], unchecked - ShopTrade_States entry 3. Shop route."
+
+[[func]]
+pc = 0x582780
+name = "ShopTrade_SellSetup"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x582780..0x5827EA (0x6B bytes), no calls: the sell list window 0x80325C: +4 0x140, +6 0x3E, +0xA +0xB +0xC +9 0, words +0x10 +0x12 0, +0..+3 1 7 9 2, +0xD 0xFF, +8 3; step + 1. Entry 0 of 0x664158 and of 0x66417C. Shop route."
+
+[[func]]
+pc = 0x5827F0
+name = "ShopTrade_SellList"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x5827F0..0x582B55 (0x366 bytes), eleven calls: item = [0x656B00 + 4 tab][row] (tab 0x803266, row 0x803268 & 0xFF), help = Item_Price(tab, item); with 0x80325F = 0 the hand to (0x803260 + 7, 13 (row - top) + 0x803262 + 0x1B); Input_AutoRepeat(pressed & 0xF00C): 0x8000 / 0x2000 the tab -/+ 1 wrapping 0..3 (Sound 0x101, word 0x80326C 0x32 / 0x31); 0x1000 row - 1 (not below 0; below top starts 0x80326E = 0xF0), 0x4000 row + 1 (to 0x7F; row >= top + 9 starts 0x10), 4 page up by 9 (top 0: row 0; top < 9: row - top, top 0), 8 page down by 9 (top 0x77: row 0x7F; top > 0x6E: to 0x77); a row change Sound 0x100; returns while 0x80326E; confirm: the item chosen, Sound 0x103, Item_CanUse(0x803264, 0, category, item): 0 - Sound 0x107; else Sound 0x103, 0x6BC8A9 = row, 0x6BC8B0 = [0x656B14 + 4 category][s8 row], count 1, 0x6BC8A0 = Shop_SellPrice(category, item, 0x6BC8AA), step + 1; cancel: Sound 0x106, 0x80325F = 1, 0x929F04 = 7, step + 3. Entry 1 of 0x664158 and of 0x66417C. Shop route."
+
+[[func]]
+pc = 0x582B60
+name = "ShopTrade_SellCount"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x582B60..0x582CF1 (0x192 bytes), five calls: the count window 0x8032C8 (+4 0x803260, +6 13 (s8 row - top) + 0x803262 + 0x14, +0xA category, +0xB item, +0xC count, +0xD 0x6BC8AA), help 0x51; the count stepped as ShopTrade_BuyCount's with Sound 0x101 (two sounds in one frame the same way); confirm: Sound 0x103, 0x929F0B = 1, step + 1; cancel: Sound 0x106, step - 1. Entry 2 of 0x664158 and of 0x66417C. Shop route."
+
+[[func]]
+pc = 0x582D00
+name = "ShopTrade_SellConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x582D00..0x582E76 (0x177 bytes), five calls: the yes/no frame with help 0x52; yes: Sound 0x104, money += (count low byte) * 0x6BC8A0, above 0x98967F unsigned it is 0x98967F; [0x656B14 + 4 category][s8 row] -= count, and at 0 [0x656B00 + ..][row] and the count 0; step - 2; no or cancel: Sound 0x106, step - 2. Entry 3 of 0x664158 and of 0x66417C. Shop route."
+
+[[func]]
+pc = 0x582E80
+name = "ShopTrade_SellClose"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x582E80..0x582EA3 (0x24 bytes), no calls: 0x803454 = 0; 0x929F04 - 1, and at 0 0x929F01 = 1, 0x929F02 = 0. Entry 4 of 0x664158 and of 0x66417C. Shop route."
+
+[[func]]
+pc = 0x584F70
+name = "ShopTrade_Close"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x584F70..0x584F8A (0x1B bytes), one call: 0x929F04 - 1, and at 0 Window_ResetAll then 0x929F00 = 1. ShopTrade_States entry 4 (0x664128) and entry 4 of 0x664264 (0x584120's menu). Folded into 0x584120's catalogue extent; shop route. PSX twin 0x801E0E08 (the catalogue's pairing, not read here)."
+
+[[func]]
+pc = 0x588E70
+name = "TitleTask_Run"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x588E70..0x588EA9 (0x3A bytes), four calls and one indirect: Game_Mode = Game_Step = 0; Task_ClearPrivate; Window_ResetAll; loop for ever: Task_Sleep(1); call [0x667294 + 4 (dword Game_Mode & 0xFFFF)] unchecked; Field_RunTaskRecords. Task 0's entry created by Title_StateMenu 0x4623F0 (the pointer at .text 0x462407); every route reaches it."
+
+[[func]]
+pc = 0x588EB0
+name = "TitleMode_Load"
+ret = "void"
+params = "void"
+impl = "src/game/shop_states2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x588EB0..0x588EF3 (0x44 bytes), five calls: LoadDatFile(0x31D); File_LoadDone, and while 0 Task_Sleep(1) and again; Gfx_ClutStripRestore; then Gfx_ClutStripDirty + 1 (read before) and Game_Mode + 1 (word). TitleTask_Modes entry 0 (0x667294); every route."
+
+[[data]]
+pc = 0x664118
+name = "ShopTrade_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: 0x5818C0 0x5819B0 0x581AE0 0x582770 0x584F70 - the shop's states open, buy or sell, buy, sell, close; jumped through by ShopTrade_Step 0x5818B0 by byte 0x929F01, unchecked (the next tables follow)."
+
+[[data]]
+pc = 0x66412C
+name = "ShopTrade_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x5818D0 0x581970, jumped through by ShopTrade_OpenStep 0x5818C0 by byte 0x929F02, unchecked."
+
+[[data]]
+pc = 0x664134
+name = "ShopTrade_ChoiceSteps"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: 0x5819C0, jumped through by ShopTrade_ChoiceStep 0x5819B0 by byte 0x929F02, unchecked."
+
+[[data]]
+pc = 0x664138
+name = "ShopTrade_BuySteps"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: 0x581AF0 0x581BE0 0x581ED0 0x582090 0x5821E0 0x5822C0 0x5824D0 0x5826A0 (setup, list, count, confirm, ask to equip, member, slot, equipped), jumped through by ShopTrade_BuyStep 0x581AE0 by byte 0x929F02, unchecked."
+
+[[data]]
+pc = 0x664158
+name = "ShopTrade_SellSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: 0x582780 0x5827F0 0x582B60 0x582D00 0x582E80 (setup, list, count, confirm, close), jumped through by ShopTrade_SellStep 0x582770 by byte 0x929F02, unchecked."
+
+[[data]]
+pc = 0x66416C
+name = "ShopSell_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x582EC0 0x582FB0 0x582FF0 0x583000, jumped through by the stub 0x582EB0 (entry 8 of the field menus' table 0x663E40, 0x663E60) by byte 0x929F01, unchecked; state 2's stub 0x582FF0 jumps through ShopSell_SellSteps. Another menu kind, whose state 2 runs the sell steps; not reached by the shop route, and none of its four entries is in any round-8 group."
+
+[[data]]
+pc = 0x66417C
+name = "ShopSell_SellSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: the same five entries as ShopTrade_SellSteps (0x582780 .. 0x582E80), jumped through by 0x582FF0 by byte 0x929F02, unchecked."
+
+[[data]]
+pc = 0x667294
+name = "TitleTask_Modes"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x588EB0 (TitleMode_Load) 0x587DB0 (TitleFlow_Step), then a 0 dword; called through by TitleTask_Run 0x588E70 by Game_Mode, unchecked."

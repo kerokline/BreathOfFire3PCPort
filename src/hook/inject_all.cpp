@@ -115,6 +115,7 @@
 #include "game/field_hidden.h"
 #include "game/event_leader.h"
 #include "game/mode_states.h"
+#include "game/shop_states2.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -296,6 +297,8 @@ void InjectAll() {
     ModeStates_Inject();        // round 8 group DB: every call of its clones re-aimed at a recorder, the system
                                 // choice's stack table re-aimed, three jump tables relocated and four .data
                                 // tables swapped for recorders: order does not matter
+    ShopStates2_Inject();       // round 8 group DG: every call of its clones re-aimed at a recorder and its two .data
+                                // dispatch blocks swapped for recorders: order does not matter
     InjectReport();
 }
 
