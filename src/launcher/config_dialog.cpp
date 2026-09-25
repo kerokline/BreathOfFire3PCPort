@@ -49,6 +49,8 @@ int Selected(HWND dlg, int id) {
 // there a press is the thing being captured.
 namespace padnav {
 
+// Ours, not an address: any id no attached dialog uses for another timer (the
+// capture's is 1, and it does not attach). Polled every 16 ms, about 60 Hz.
 constexpr UINT_PTR kTimer = 0x5D1;
 std::vector<input::PadBinding> g_map = input::Bindings::Defaults().pad;
 unsigned g_prev = 0;
@@ -147,6 +149,9 @@ void Populate(HWND dlg, const DialogState& state) {
     CheckDlgButton(dlg, IDC_SHOW, cfg.show_launcher ? BST_CHECKED : BST_UNCHECKED);
 }
 
+// The inverse of Populate. Every look but the first takes the point filter
+// (the CRT look is "over the point filter", config.h); renderer 1 is
+// Direct3D, 0 Software (config.h, Cfg_RenderMode).
 void ReadBack(HWND dlg, Config& cfg) {
     cfg.language = Selected(dlg, IDC_LANGUAGE) == 1 ? Language::kEnglish : Language::kOriginal;
     const int look = Selected(dlg, IDC_FILTER);
@@ -400,6 +405,7 @@ Cells CellsFrom(const input::Bindings& b) {
     const input::ActionInfo* actions = input::Actions();
     for (const input::KeyBinding& k : b.keys) {
         const bool single = (k.bits & (k.bits - 1)) == 0;
+        // KeyName spells an unnamed scancode as "0x..".
         const bool named = input::KeyName(k.dik)[0] != '0';
         int row = -1;
         for (int r = 0; r < input::kActionCount; ++r)
@@ -526,6 +532,7 @@ INT_PTR CALLBACK CaptureProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         for (int i = 0; i < static_cast<int>(input::PadInput::kCount); ++i)
             c->held_at_open[i] = input::PadSdl_InputDown(static_cast<input::PadInput>(i));
         c->hook = SetWindowsHookExW(WH_KEYBOARD, CaptureKeyHook, nullptr, GetCurrentThreadId());
+        // The pad poll. WM_DESTROY kills it and removes the hook.
         SetTimer(dlg, 1, 16, nullptr);
         return TRUE;
     }
@@ -631,6 +638,8 @@ INT_PTR CALLBACK ControlsProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         default:
             break;
         }
+        // A cell: four columns 20 ids apart from IDC_CT_KEY1 (KEY1, KEY2,
+        // PAD1, PAD2 - resource.h), id = column base + row.
         if (id >= IDC_CT_KEY1 && id < IDC_CT_KEY1 + 4 * 20 && HIWORD(wp) == BN_CLICKED) {
             const int kind = (id - IDC_CT_KEY1) / 20, row = (id - IDC_CT_KEY1) % 20;
             if (row < input::kActionCount) {

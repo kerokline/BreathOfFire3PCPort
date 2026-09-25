@@ -19,7 +19,9 @@ namespace {
 // 16 KB task stacks carved out of a static buffer (docs/attract-mode.md
 // section 2), outside the thread's TEB stack limits, and Windows will not walk
 // frame-based handlers - the unhandled-exception filter among them - from
-// such a stack. A vectored handler is called before that check.
+// such a stack. A vectored handler is called before that check. (Reasoning
+// from how Windows dispatches, not yet observed: docs/crash-reporter.md
+// section 2.)
 //
 // The price is that it sees first-chance exceptions, including any the game
 // goes on to handle itself. So it reports only codes that are faults rather
@@ -96,6 +98,8 @@ bool InCode(std::uint32_t v) {
 
 // A stack word is a plausible return address if it points into code and the
 // bytes before it are a call: E8 rel32, or FF /2 in its 2-, 3- and 6-byte forms.
+// Only the FF opcode byte is tested, not the /2 in ModRM, so this is a filter
+// that lets some non-calls through - a scan, not a walk.
 bool AfterCall(std::uint32_t v) {
     std::uint8_t b[6];
     if (!InCode(v) || !Peek(v - 6, b, sizeof b)) return false;
@@ -131,6 +135,9 @@ void Report() {
     }
 
     // Where the game was. Read through Peek: a crash may have taken these too.
+    // Task_Records +0 / +2: task 0's state and frames left to sleep; +0x18 /
+    // +0x1A: the top-level mode and step; MsgBoxState +8: the message index
+    // (symbols.toml Task_Records, MsgBoxState).
     std::uint16_t area = 0, task0[2] = {0, 0}, mode_step[2] = {0, 0}, message = 0;
     Peek(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Game_AreaNumber)), &area, sizeof area);
     Peek(addr::Task_Records, task0, sizeof task0);
@@ -180,6 +187,7 @@ void Report() {
     LogFlush();
 }
 
+// The one reporter thread: waits on g_wake, reports g_job, sets g_done.
 DWORD WINAPI Reporter(LPVOID) {
     // Loaded here rather than in DllMain (loader lock) or in the handler.
     if (HMODULE h = LoadLibraryA("dbghelp.dll"))
@@ -192,6 +200,7 @@ DWORD WINAPI Reporter(LPVOID) {
     }
 }
 
+// One report at a time: a second fault while g_busy is passed on unreported.
 LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
     if (!IsFault(info->ExceptionRecord->ExceptionCode)) return EXCEPTION_CONTINUE_SEARCH;
     if (g_reports >= kMaxReports) return EXCEPTION_CONTINUE_SEARCH;
@@ -252,6 +261,8 @@ void Crash_Start(void* dll_module) {
     if (!thread) Fatal("crash reporter: cannot create its thread, error %lu", GetLastError());
     CloseHandle(thread);
 
+    // Last in the vectored chain (0). The call tracer's int3s and single steps
+    // are not in IsFault's list, so they are never reported either way.
     if (!AddVectoredExceptionHandler(0, OnException)) Fatal("crash reporter: no vectored handler");
     Log("crash reporter armed");
 

@@ -3,9 +3,11 @@
 // Runs the frame that render_shim.cpp recorded - clears and TLVERTEX draws
 // against the game's own surfaces - into a render target of the logical
 // picture's size times an integer scale, then puts that target on the swap
-// chain's back buffer, centred, and presents. Every call in here happens under
-// the present, on the main thread; a call from a game task's 16 KB stack ends
-// the process (docs/SCAFFOLDING.md section 3).
+// chain's back buffer, centred, and presents. Every entry into Direct3D runs on
+// the main thread, on a render fiber with a 1 MB stack of its own, since the
+// game calls the present from a 16 KB task stack (docs/SCAFFOLDING.md section
+// 3, docs/render-backend.md section 4); a call from another thread ends the
+// process.
 #pragma once
 
 #include <cstdint>
@@ -34,7 +36,8 @@ void PresentFrame(Frame& frame);
 // Frees the GPU objects of released surfaces. Called by the present.
 void SweepReleased();
 
-// The logical size the target has now (for the set-up to hand the game).
+// The target's size now in pixels - (logical_w + 2 pad_x) k by logical_h k -
+// and its k (for the set-up to hand the game).
 U TargetWidth();
 U TargetHeight();
 U TargetScale();

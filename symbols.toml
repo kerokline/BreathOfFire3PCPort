@@ -418,6 +418,10 @@ note = "Creates a SECOND DirectDraw object, separate from the game's — FMV doe
 [[func]]
 pc = 0x59E570
 name = "Fmv_WndProc"
+ret = "long"
+params = "void *hwnd, unsigned msg, unsigned wparam, long lparam"
+cc = "__stdcall"
+impl = "src/game/fmv_play.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-19, read whole 2026-09-24 (0x59E570..0x59E643, 0xD4 bytes): WM_KEYDOWN (0x100), WM_LBUTTONDOWN (0x201) and WM_RBUTTONDOWN (0x204) clear the playing flag 0x6BE1C8 if set - the skip path; WM_ACTIVATEAPP (0x1C) with wParam != 0 calls SetFocus(hwnd) then mciSendStringA('resume vfw' 0x66B69C), with wParam 0 mciSendStringA('pause vfw' 0x66B690); WM_DESTROY (0x2) clears the flag, sets Game_QuitFlag and PostQuitMessage(0); MM_MCINOTIFY (0x3B9) with wParam 1 clears the flag; everything else is DefWindowProcA (import 0x5C4150) - not the saved procedure, as this note said before 2026-09-24. Installed and removed by Fmv_Play 0x59E360. Ours since DIV-0049 (src/game/fmv_play.cpp)."
 

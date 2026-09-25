@@ -217,6 +217,16 @@ in `build/`, which is gitignored. The DLL is linked `-static` so that it depends
 only on system DLLs — it is loaded by path into a process whose search order we
 do not control.
 
+CI builds the same thing on every push to `main` and every pull request
+(`.github/workflows/build.yml`): llvm-mingw at the tag above (its `ucrt`
+flavour), cross-compiled on an Ubuntu runner, and it fails if either binary
+imports anything but system DLLs - a `lib*.dll` from the toolchain or
+`SDL3.dll` would mean the `-static` link broke. The two binaries are kept as a
+workflow artifact for 14 days. `.github/workflows/checks.yml` runs
+`tools/ledger_check.py` (the divergence ledger's shape and IDs, every
+`DIV-NNNN` cited, `impl` lines against the detours, rule 4's markers) and
+`gen_symbols.py`. No workflow reads game data or runs the game.
+
 [`PLAN.md`](PLAN.md) phase 0 originally said "clang-cl and MSVC both green".
 That was written before the TR1X note; this document supersedes it, and
 `PLAN.md` has been updated.

@@ -17,9 +17,8 @@
 //
 // The English is ours - the PlayStation has no such screen - kept under
 // about 37 characters, since at the English font's 8 units a character a
-// line must fit the 320-unit screen (a 42-character first try ran off both
-// edges), and is written
-// in the English overlay's encoding, which for letters, digits and the space
+// line must fit the 320-unit screen, and is written in the English overlay's
+// encoding, which for letters, digits and the space
 // is ASCII (tools/loc_build.py, ASCII_OF). The four pointers are re-aimed
 // through PatchBytes under the name "PauseText", so BOF3X_ORIGINAL=PauseText
 // keeps Capcom's lines; and only once the English glyphs are in the table,

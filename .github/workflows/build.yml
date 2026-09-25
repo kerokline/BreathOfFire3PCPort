@@ -1,0 +1,109 @@
+# Build bof3x.dll and bof3x-launcher.exe on every push to main and every pull
+# request, with the project's one supported toolchain (docs/SCAFFOLDING.md
+# section 4): llvm-mingw, i686, pinned to the release the build is verified
+# with. Cross-compiled on Linux: the toolchain is the same, and the runner is
+# faster to start.
+#
+# The build reads no game data (CMakeLists.txt), so a hosted runner is enough.
+# Nothing here runs the game; the checks that need BOF3.exe stay on the
+# owner's machine.
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # docs/SCAFFOLDING.md section 4: "Verified with llvm-mingw 20260616".
+  # Change both together.
+  LLVM_MINGW_TAG: "20260616"
+  # llvm-mingw ships a ucrt and an msvcrt flavour; ucrt is its default.
+  LLVM_MINGW_CRT: ucrt
+
+jobs:
+  i686:
+    name: i686 (llvm-mingw)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ninja
+        run: sudo apt-get update -q && sudo apt-get install -y -q ninja-build
+
+      - name: Cache llvm-mingw
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/llvm-mingw
+          key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-ubuntu-x86_64
+
+      - name: Fetch llvm-mingw ${{ env.LLVM_MINGW_TAG }}
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          # Matched by pattern so a change in the Ubuntu base the release is
+          # built on does not break the download.
+          gh release download "$LLVM_MINGW_TAG" -R mstorsjo/llvm-mingw \
+            -p "llvm-mingw-${LLVM_MINGW_TAG}-${LLVM_MINGW_CRT}-ubuntu-*-x86_64.tar.xz"
+          ls -l llvm-mingw-*.tar.xz
+          sha256sum llvm-mingw-*.tar.xz
+          mkdir llvm-mingw
+          tar -xf llvm-mingw-*.tar.xz -C llvm-mingw --strip-components=1
+          rm llvm-mingw-*.tar.xz
+
+      - name: Toolchain versions
+        run: |
+          echo "LLVM_MINGW_ROOT=$RUNNER_TEMP/llvm-mingw" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/llvm-mingw/bin/i686-w64-mingw32-clang++" --version
+          cmake --version | head -1
+          ninja --version
+          python --version
+
+      - name: Configure
+        run: cmake --preset i686
+
+      - name: Build
+        run: cmake --build build
+
+      # The DLL is injected by path into a process whose DLL search order we
+      # do not control, so it is linked -static (CMakeLists.txt): it may import
+      # system DLLs only. Fail if a toolchain runtime DLL or SDL3.dll crept in.
+      - name: Check imports
+        run: |
+          set -euo pipefail
+          readobj="$LLVM_MINGW_ROOT/bin/llvm-readobj"
+          fail=0
+          for f in build/bof3x.dll build/bof3x-launcher.exe; do
+            echo "== $f"
+            "$readobj" --file-headers "$f" | grep -E '^\s*(Format|Arch):'
+            "$readobj" --coff-imports "$f" | sed -n 's/^ *Name: \(.*\.dll\)$/\1/Ip' | sort -uf | tee imports.txt
+            if grep -iE '^(lib.*|sdl3)\.dll$' imports.txt; then
+              echo "::error file=CMakeLists.txt::$f imports a non-system DLL (above); it must link -static"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      # Our own binaries, built from this repository and SDL3 (zlib licence,
+      # docs/THIRD_PARTY.md). No game data is in the build tree.
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: bof3x-i686-${{ github.sha }}
+          path: |
+            build/bof3x.dll
+            build/bof3x-launcher.exe
+          if-no-files-found: error
+          retention-days: 14

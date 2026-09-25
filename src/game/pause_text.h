@@ -3,9 +3,10 @@
 
 #include <cstdint>
 
-// Called when an English overlay's advance table is installed (dat_load.cpp,
-// chunk kind 4): the English glyphs are in the table from then on, so the four
+// Called when an overlay's advance table is installed (dat_load.cpp, chunk
+// kind 4): the English glyphs are in the table from then on, so the four
 // pause-line pointers are re-aimed at English strings. Once per process.
+// Any kind-4 chunk calls it - the Japanese overlay's too (tools/loc_build.py).
 void PauseText_Apply();
 
 // Where our WinMain draws a pause line: centred on 160 by its real width when

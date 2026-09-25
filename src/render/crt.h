@@ -14,20 +14,23 @@
 
 namespace render {
 
-// BOF3X_PRESENT=crt. Read once, at set-up.
+// BOF3X_PRESENT=crt. Nothing calls this: the present reads BOF3X_PRESENT
+// itself (LookWanted, render_d3d11.cpp), and this one would Fatal on
+// `satpixie` (DIV-0043).
 bool CrtWanted();
 
-// Compiles the four passes and makes the two glow textures, 320 x 240 - the
-// game's own lines. `target_w` / `target_h` are the render target's size,
-// 320k x 240k. BOF3X_CRT overrides the look's numbers (crt.cpp).
+// Compiles the four passes and makes the two glow textures at the game's own
+// size, target / k: 320 x 240, or 426 wide (DIV-0041). `target_w` / `target_h`
+// are the render target's size, 320k x 240k. BOF3X_CRT overrides the look's
+// numbers (crt.cpp).
 void CrtInit(ID3D11Device* device, U target_w, U target_h, U k);
 
 // DIV-0042: the target changed size; the constants and the glow textures follow.
 void CrtResize(ID3D11Device* device, U target_w, U target_h, U k);
 
 // Draws the target onto `window` inside `picture` (the present's centred,
-// scaled rectangle, already cleared around). Leaves the render target and
-// viewport set to the window's.
+// scaled rectangle, already cleared around). Leaves the render target set to
+// `window`, the viewport to `picture`, and no shader resources bound.
 void CrtDraw(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* target, ID3D11RenderTargetView* window,
              const D3D11_VIEWPORT& picture);
 

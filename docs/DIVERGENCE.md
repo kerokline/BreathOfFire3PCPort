@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 51 entries, DIV-0001..0051)
+**Status:** IN PROGRESS (opened 2026-09-18; 57 entries, DIV-0001..0057)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -501,6 +501,11 @@ designed in rather than bolted on.
   `Lgt.Clothing`. The 16-byte field would hold longer spellings; using it is
   a separate decision, and on screen the budget is unmeasured (eight Chinese
   glyphs are 96 px, twelve letters at 8 px).
+- **Rationale:** the names the menus draw are compiled into `BOF3.exe`,
+  not carried in any `DAT`, so the overlays of DIV-0005 cannot reach them.
+  Without this, an English game shows Chinese item and ability names in
+  every menu. The port's 16-byte field holds every US name, so only the name
+  bytes are replaced and the numbers stay Capcom's.
 - **Not covered:** enemy names (12-byte fields in battle data,
   [`DAT_CONTAINER.md`](DAT_CONTAINER.md); since DIV-0053), character names, place names,
   anything drawn as artwork, and whatever strings are in `.text`/`.data`
@@ -2429,6 +2434,8 @@ designed in rather than bolted on.
   banners ("the names look good").
 - **Reversible?** play without `BOF3X_LANG`.
 
+### French and German overlays, with the discs' accented glyphs
+
 - **ID:** DIV-0054
 - **Date:** 2026-09-24
 - **Subsystem:** text / font (only with a language overlay;
@@ -2487,6 +2494,8 @@ designed in rather than bolted on.
     `original`. French and German need `BOF3X_LANG` set in the environment.
 - **Reversible?** play without `BOF3X_LANG`, or with `en`.
 
+### The world map's place plates from the donor disc
+
 - **ID:** DIV-0055
 - **Date:** 2026-09-24
 - **Subsystem:** world map (only with a language overlay;
@@ -2531,6 +2540,8 @@ designed in rather than bolted on.
   carries all of it, and is right unless the exe's world-map code
   addresses those blocks directly.
 - **Reversible?** play without `BOF3X_LANG`.
+
+### A Japanese overlay, and the layout switch for languages
 
 - **ID:** DIV-0056
 - **Date:** 2026-09-24
@@ -2601,6 +2612,8 @@ designed in rather than bolted on.
   - The launcher's settings file, which knows only `en` and `original`.
   - The grow / shrink draw `0x4987E0` (unread), which Japanese shouts use.
 - **Reversible?** play without `BOF3X_LANG`.
+
+### Two kana in one glyph code: pair codes for Japanese names
 
 - **ID:** DIV-0057
 - **Date:** 2026-09-24

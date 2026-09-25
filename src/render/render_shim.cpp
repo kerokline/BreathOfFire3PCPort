@@ -88,6 +88,7 @@ template <int kObject> void FillAll(void** table) {
                     25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47>(table);
 }
 
+// Slots per table; FillAll's list above must run 0..kSlots-1 to match.
 constexpr U kSlots = 48;
 void* g_dd_vtable[kSlots];
 void* g_surface_vtable[kSlots];
@@ -96,6 +97,8 @@ void* g_device_vtable[kSlots];
 void* g_viewport_vtable[kSlots];
 void* g_material_vtable[kSlots];
 
+// The DirectDraw, device, viewport and material objects are static
+// singletons: their AddRef and Release answer 1 and free nothing.
 struct Object {
     void* const* vtable;
 };
@@ -309,10 +312,8 @@ unsigned long __stdcall Surface_Release(void* self) {
     if (--s->refs > 0) return s->refs;
     // Pending draws keep their own snapshot; the GPU object goes at the next
     // present, after those draws have run (SweepReleased). The dimensions
-    // and format stay: the snapshot is drawn through them (2026-09-24: they
-    // were zeroed here, and a draw recorded before a release in a frame the
-    // loop had not presented - a frame skip across an area change - hit
-    // Bind's guard instead of its snapshot).
+    // and format stay: the snapshot is drawn through them
+    // (docs/render-backend.md, "Released surfaces with pending draws").
     if (s->version && s->pending_draws) BeforeWrite(s);
     Free(s->pixels);
     s->pixels = nullptr;
@@ -332,6 +333,9 @@ long __stdcall Surface_Blt(void* self, const long* dst_rect, void* src_surface, 
     if (flags & kBltColorFill) {
         if (!fx) return static_cast<long>(kInvalidParams);
         if (dst->is_back) {
+            // A fill of the back buffer is a whole-target clear: the rectangle
+            // is not read, and the fill colour is taken as ARGB - the back
+            // buffer's own X-8-8-8 raw value (Display_Setup makes it 32-bit).
             Command c = {};
             c.kind = Cmd::kClear;
             c.color = Long(Bytes(fx) + kFxFillColor);
@@ -452,6 +456,8 @@ unsigned long __stdcall Texture_AddRef(void* self) { return Surface_AddRef(Surfa
 unsigned long __stdcall Texture_Release(void* self) { return Surface_Release(SurfaceOfTexture(self)); }
 long __stdcall Texture_GetHandle(void* self, void*, U* handle) {
     if (!handle) return static_cast<long>(kInvalidParams);
+    // The interface pointer itself; nothing here takes a handle back
+    // (SetTexture takes the interface).
     *handle = static_cast<U>(reinterpret_cast<std::uintptr_t>(self));
     return kDdOk;
 }
@@ -655,12 +661,13 @@ long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, 
     default:
         bof3::Fatal("render: DrawPrimitive of type %u - not built", type);
     }
-    // DIV-0044: a corner at depth 0 (the port's rhw = 0.1 / z is infinite) is
-    // drawn at the nearest depth the game otherwise uses, 1/4096 (rhw 409.6),
-    // instead of vanishing. Capcom's Direct3D 6 device dropped such a primitive;
-    // the world map's compass needle (0x408530, D41 in docs/known-defects.md)
-    // is the one seen. Dividing by the infinity ourselves collapsed those
-    // corners to the screen centre - the purple sliver of the world-map A/B.
+    // DIV-0044: a corner nearer than the nearest depth the game otherwise uses,
+    // 1/4096 (rhw 409.6) - in practice depth 0, where the port's rhw = 0.1 / z
+    // is infinite - is drawn at that depth instead of vanishing. Capcom's
+    // Direct3D 6 device dropped such a primitive; the world map's compass
+    // needle (0x408530, D41 in docs/known-defects.md) is the one seen.
+    // Dividing by the infinity ourselves collapsed those corners to the screen
+    // centre - the purple sliver of the world-map A/B.
     {
         static U logged = 0;
         Vertex* v = g_frame.vertices + c.first;
@@ -729,6 +736,7 @@ long __stdcall Viewport_SetBackground(void*, U handle) {
 long __stdcall Viewport_Clear(void*, U count, const long* rects, U flags) {
     if (!(flags & 1)) return kDdOk;   // D3DCLEAR_TARGET
     if (count != 1 || !rects) bof3::Fatal("render: Clear of %u rectangles - not built", count);
+    // The one rectangle is not read: the clear covers the whole target (RunFrame).
     Command c = {};
     c.kind = Cmd::kClear;
     c.color = g_clear_color;
@@ -745,7 +753,7 @@ long __stdcall Material_QueryInterface(void*, const void*, void** out) {
 unsigned long __stdcall Material_AddRef(void*) { return 1; }
 unsigned long __stdcall Material_Release(void*) { return 1; }
 long __stdcall Material_SetMaterial(void*, const void* material) {
-    if (!material || Long(material) != 0x50) return static_cast<long>(kInvalidParams);
+    if (!material || Long(material) != 0x50) return static_cast<long>(kInvalidParams);   // D3DMATERIAL's dwSize
     float rgba[4];
     std::memcpy(rgba, Bytes(material) + 4, sizeof rgba);   // dcvDiffuse
     auto channel = [](float f) -> U {
@@ -961,6 +969,7 @@ void BeforeWrite(Surface* s) {
     s->version->pixels = copy;
     s->version = nullptr;
     s->pending_draws = 0;
+    // The device's bound texture moves to a fresh version, so later draws see the new pixels.
     if (g_state.texture && g_state.texture->surface == s) g_state.texture = Use(s);
 }
 

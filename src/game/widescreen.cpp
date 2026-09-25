@@ -5,13 +5,12 @@
 // drawing in its own 0..320 space with the projection centre at (160, 120)
 // and anything it already draws past its edges - 3D geometry, scrolling
 // layers - lands in the side bands. What this file holds is the game side:
-// the culls that were tuned to a 320-wide view and now pop at the new edges.
+// the culls that were tuned to a 320-wide view and now pop at the new edges,
+// and the menu boxes that slid off the old edges (kSlides, below).
 //
 // The survey build (widescreen.md section 3e) widens the two the PSP widened:
-//   - the terrain cull in MapView_Build (ours): [-50, 370] to [-150, 470] -
-//     the PSP went from [-50, 370] to [-96, 416] for 32 columns, 14 beyond
-//     the columns it added; 53 + 14 = 67 here popped at the corners of a
-//     rotating map, so kTerrainMargin is 100;
+//   - the terrain cull in MapView_Build (ours): [-50, 370] to [-150, 470],
+//     wider than the PSP's [-96, 416] (kTerrainMargin says why);
 //   - the area-map frame pass AreaMap_FrameAreaBD 0x510780 (Capcom's): the
 //     wide range [-200, 520] to [-252, 572] and the narrow [-50, 370] to
 //     [-102, 422] - the PSP widened both by 31 for 32 columns; 52 for 53.
@@ -41,9 +40,10 @@ namespace {
 
 constexpr U kColumns = 53;   // 426 = 240 x 16 / 9 rounded down to even, less 320, halved
 // How far past the original's [-50, 370] the terrain cull keeps cells. The
-// PSP's 14 beyond its columns (53 + 14 = 67) still let the map's far corners
-// pop about 20 px in at the top left and right while the attract sequence
-// rotates the map (the owner, 2026-09-23); 100 is the next try.
+// PSP's [-96, 416] kept 14 beyond its 32 columns; 53 + 14 = 67 here still
+// let the map's far corners pop about 20 px in at the top left and right
+// while the attract sequence rotates the map (the owner, 2026-09-23); 100 is
+// the next try.
 constexpr U kTerrainMargin = 100;
 
 float g_wide_lo = -200.0f - (kColumns - 1), g_wide_hi = 520.0f + (kColumns - 1);

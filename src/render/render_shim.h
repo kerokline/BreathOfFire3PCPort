@@ -20,7 +20,9 @@
 // that list to render_d3d11.cpp, which runs it. This is deliberate: draw
 // handlers run wherever the game calls them, including the 16 KB task stacks
 // (docs/SCAFFOLDING.md section 3), and the GPU work happens only under the
-// present, which WinMain's frame loop calls on the main thread's stack.
+// present - which the game also calls from a task stack, so render_d3d11.cpp
+// runs it on a fiber with a 1 MB stack of its own (docs/render-backend.md
+// sections 2 and 4).
 //
 // A texture that a recorded draw uses and that the game then rewrites (a page
 // texture refreshed for a new CLUT, a glyph slot reused) keeps its old pixels
@@ -56,7 +58,7 @@ struct Surface {
     bool has_color_key;
     bool is_primary, is_back, locked;
     bool dirty;                    // pixels or key changed since the GPU copy was made
-    unsigned char* pixels;         // HeapAlloc'd, height * pitch bytes; null for the primary
+    unsigned char* pixels;         // HeapAlloc'd, height * pitch bytes; null for the primary and once released
     TexVersion* version;           // the version pending draws see; replaced on a rewrite
     U pending_draws;               // draws recorded against `version` since it was made
     void* gpu;                     // render_d3d11's per-surface object, or null
@@ -101,7 +103,7 @@ struct Frame {
     U n_vertices, max_vertices;
     Command* commands;
     U n_commands, max_commands;
-    unsigned char* arena;      // snapshots
+    unsigned char* arena;      // the frame's TexVersions and pixel snapshots; emptied by ResetFrame
     U arena_used, arena_size;
     U next_serial;
 };
@@ -118,7 +120,8 @@ void* MaterialObject();
 // Makes a surface the way IDirectDraw4::CreateSurface would from a
 // DDSURFACEDESC2 (dwFlags, dwWidth, dwHeight, ddpfPixelFormat, ddsCaps), or
 // straight from its dimensions. bpp 16 (5-6-5) or 32 (X-8-8-8); pitch rounds
-// the row up to 16 bytes. Returns null when out of memory.
+// the row up to 16 bytes. Returns null when out of memory or when a
+// dimension is 0 or above 4096.
 Surface* MakeSurface(U width, U height, U bpp, U caps, U caps2, bool primary, bool back);
 
 // DIV-0042: the primary or back surface at a new size - width, height and

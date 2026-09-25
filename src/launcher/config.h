@@ -3,15 +3,15 @@
 //
 // Three destinations, because there are three mechanisms:
 //
-//  - Language and texture filter are ours. The DLL reads them from the
-//    environment (BOF3X_LANG, BOF3X_FILTER), and the game process inherits the
-//    launcher's, so setting them here needs no new channel and no DLL change.
+//  - bof3x.ini holds every setting below, for the launcher itself.
+//  - Everything ours - language, filter, the looks, the window, the cheats,
+//    the bindings - reaches the DLL as BOF3X_* environment variables
+//    (ConfigApplyEnvironment), and the game process inherits the launcher's,
+//    so setting them here needs no new channel and no DLL change.
 //  - Display and renderer are the ORIGINAL program's, read by Cfg_Load
 //    0x4FD030 out of a two-line BOF3.CFG in the game directory
 //    (docs/windowed-mode.md). We write that file rather than patch anything:
 //    it is the port's own documented input, so this is not a divergence.
-//  - The window size is ours too since the Direct3D 11 backend: BOF3X_SCALE,
-//    the render target's integer scale of 320 x 240 in a window (DIV-0036).
 #pragma once
 
 #include <string>
@@ -45,7 +45,7 @@ struct Config {
     // 2026-09-23: the window is resized instead.
     int scale = 2;
     // DIV-0037: the CRT look in the present (BOF3X_PRESENT=crt). The dialog
-    // offers it as the filter box's third entry, over the point filter.
+    // offers it as the Look box's third entry, over the point filter.
     bool crt = false;
     // DIV-0043: the SatPixie look (BOF3X_PRESENT=satpixie), the Look box's
     // fourth entry, with its parameters (BOF3X_SATPIXIE). The preset's
@@ -96,7 +96,8 @@ bool ConfigLoad(const std::wstring& path, Config& cfg);
 // which the caller reports without refusing to start the game.
 bool ConfigSave(const std::wstring& path, const Config& cfg);
 
-// Sets BOF3X_LANG / BOF3X_FILTER in THIS process, which the game inherits.
+// Sets the BOF3X_* variables for every non-default setting in THIS process,
+// which the game inherits; a default leaves its variable unset.
 // A variable already present in the environment wins: the documented developer
 // invocations (`BOF3X_LANG=en build/bof3x-launcher.exe`, docs/HANDOFF.md) must
 // keep overriding whatever the file says.

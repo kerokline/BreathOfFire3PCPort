@@ -196,9 +196,9 @@ What is established:
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
 - 1,102 functions, 8 global blocks and 306 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 1,024 functions carry an `impl`
-  (counted 2026-09-24 with `tomllib`, not from memory). The one detoured
-  function without an `impl` line is `Fmv_WndProc` `0x59E570`.
+  [`symbols.toml`](../symbols.toml), tiered; 1,025 functions carry an `impl`,
+  one for every detour (`tools/ledger_check.py`, 2026-09-25; `Fmv_WndProc`
+  `0x59E570` was the one without, until then).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
   reaches (540 of 2,936 in the attract sequence), call counts and edges, a

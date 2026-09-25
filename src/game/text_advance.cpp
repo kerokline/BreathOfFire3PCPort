@@ -8,8 +8,10 @@
 // builds' font, whose cells are 8 x 12 and whose stepper adds 8
 // (SLUS-00422 0x80150770).
 //
-// Nothing of MsgBox_Step is replaced. Its one call of Text_DrawAt, at
-// 0x497A22, is re-aimed here; we make the same call and then move
+// MsgBox_Step is ours (src/game/msgbox.cpp) and calls MsgBox_DrawChar
+// directly; Capcom's body, which BOF3X_ORIGINAL=MsgBox_Step runs, has its one
+// call of Text_DrawAt, at 0x497A22, re-aimed here. Either way we make the
+// same call and then move
 // MsgBox_PenX by (advance - 12), so that the stepper's own `+ 12` lands the
 // pen where the glyph's advance says. With no table loaded - every shipped
 // file - the adjustment is zero and the box behaves as the original.
