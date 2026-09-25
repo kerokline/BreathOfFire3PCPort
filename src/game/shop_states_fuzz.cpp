@@ -3,8 +3,8 @@
 //
 // Twenty-five byte-copies, every call out re-aimed at a recording stand-in;
 // the five .data dispatch tables' 38 entries (ShopMode_States' 11, then
-// Inn_Steps .. FieldSave_States' 27, one block) swapped for recorders and put
-// back. One round: one function, random bytes over every region any of them
+// Inn_Steps .. FieldSave_States' 27, one block), and the zero dword after
+// ShopMode_States, swapped for recorders and put back. One round: one function, random bytes over every region any of them
 // touches - the state block 0x929EC0..0x929F0F, the eight character records,
 // the sprite objects and Sprite_Current, the inn's bytes, the zenny, the pad
 // and its button maps, the save cursor - then the object index and the
@@ -145,6 +145,7 @@ void __cdecl StubOpenSystem(unsigned id) {
 void __cdecl StubPlay(unsigned short id) {
     Record(6, id);
     Nudge(at::kChoice, 3);
+    Nudge(at::kZenny);
     Nudge(at::kPressed + 1);
     Disturb();
 }
