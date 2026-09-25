@@ -577,10 +577,11 @@ Args Seed(unsigned k) {
         if (Often()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x2060u);
         if (Often()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x100u);
         if (Half()) sc[0x70] = 0;
+        if (Often()) SetWord(At(at::kButtonConfirm), Word(At(at::kButtonConfirm)) & 0x0FFFu);
         {
             // held: nothing, a direction bit alone, the confirm button's bits
             const unsigned pick = Next() % 5;
-            Field_InputHeld = static_cast<unsigned short>(pick == 0 ? 0 : pick == 1 ? 0x1000u << (Next() % 4)
+            Field_InputHeld = static_cast<unsigned short>(pick == 0 ? 0 : pick == 1 ? (Half() ? 0x1000u : 0x1000u << (Next() % 4))
                                                           : pick == 2 ? Word(At(at::kButtonConfirm)) & Next() : Next());
         }
         if ((Field_InputFlags & 3) == 2 && Often()) {
