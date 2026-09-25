@@ -499,8 +499,9 @@ extern "C" void __cdecl Field_SwapExchange(void) {
 // each of them has its palette back (Sprite_LoadPalette from 0x80D380 + +5 *
 // 64), +0 bit 5 and the shade, +0x5C and +9 cleared, the steps and +0x18 /
 // +0x1C / +0x20 zeroed, and the leader goes to sub-state 4.
-// As the original has it: the member count is read again only after a member
-// in state 3, and Field_State is set to the leader before the +9 test.
+// As the original has it: Field_State is set to the leader before the +9
+// test. (The member count is read again only after a member in state 3; as
+// every call there is followed by that read, this cannot show - control I3.)
 extern "C" void __cdecl Field_SwapSpinIn(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     {
@@ -822,9 +823,9 @@ extern "C" void __cdecl Field_ExitFromCell(void) {
 // +0x138 bit 1, and its bit cleared in Field_ScriptFlags2 - counting one per
 // member. When the count reaches the member count: MoveCmd_TestFC at the
 // point's whole parts, Field_ScriptFlags2 bit 4 cleared, 0x904EF0 = 0.
-// As the original has it: the bit tested is the count's, not the member's (so
-// it starts at 1 << 1 and goes on past the members), shifted mod 32, and
-// cleared in the 16-bit flags only.
+// As the original has it: the bit tested is the running count's (from 1, so
+// member i's own while the walk-in runs once), shifted mod 32, and cleared in
+// the 16-bit Field_ScriptFlags2 only.
 extern "C" void __cdecl Field_PendingWalkIn(void) {
     unsigned char n = Byte(at::kPendingCount);
     if (n == 0) {
