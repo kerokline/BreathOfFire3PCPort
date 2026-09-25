@@ -409,8 +409,8 @@ void Seed(unsigned k) {
         break;
     }
     case kSwingCue: {
-        static const unsigned char kCounts[] = {0, 1, 1, 2};
-        s[9] = kCounts[Next() % 4];
+        static const unsigned char kCounts[] = {0, 1, 1, 1, 1, 2};
+        s[9] = kCounts[Next() % 6];
         static const unsigned char kPercents[] = {0, 1, 50, 99, 100, 0xFF};
         if (Often()) f[0xBA] = kPercents[Next() % 6];
         break;
@@ -488,7 +488,7 @@ void SelfTest() {
 
     for (unsigned role = 0; role < kRoles; ++role)
         for (unsigned i = 0; i < 256; ++i)
-            g_tables[role][i] = Address(reinterpret_cast<const void*>(AllStubs::f[(i + 11 * role) % kStubs]));
+            g_tables[role][i] = Address(reinterpret_cast<const void*>(AllStubs::f[(i + 13 * role) % kStubs]));
 
     void* clones[kCount];
     for (unsigned k = 0; k < kCount; ++k) {
