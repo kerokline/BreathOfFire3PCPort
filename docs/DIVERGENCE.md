@@ -2070,6 +2070,17 @@ designed in rather than bolted on.
   with the cheat, and the item list at 1740..1860 has Marbles as a sixth
   entry (6/128); every other capture identical. The owner watched it:
   "Looked right to me, with the marbles steal".
+- **Amended 2026-09-25 (round eight, group CJ):** Pilfer's step `0x4B54F0`
+  is ours now (`Steal_Start`, `src/game/magic_fx_reached.cpp`) and never
+  runs the patched body, so the takeover had silently dropped Pilfer's half
+  of this cheat - the merged tree's shadow fuzz caught it (402 rounds under
+  `BOF3X_STEAL=1`: the original's copy carries the patch, ours did not). Ours
+  now masks the roll with `Cheats_PilferRollMask()`, the byte the patch
+  leaves at `0x4B5691` read back after `Cheats_Inject`, so it rolls as the
+  patched original does; the patch is still made, so
+  `BOF3X_ORIGINAL=Steal_Start` keeps the cheat too. The fuzz passes with the
+  variable set and unset. Steal's step `0x4F5140` is still Capcom's and
+  still patched.
 - **Reversible?** Yes: the switch off, `BOF3X_STEAL` unset, or
   `BOF3X_ORIGINAL=Cheat_StealAlways`.
 
