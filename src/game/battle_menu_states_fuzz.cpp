@@ -112,27 +112,37 @@ void Disturb() {
 
 // --- the stand-ins ---------------------------------------------------------
 
+// The stand-ins below that move a byte half the time move one their callers
+// read again after the call: the command pointer after the target pickers,
+// Battle_WrapIndex and Battle_ReturnTrue; the state after the banner and the
+// set-up; the category and the sub-state after a cue.
+void MoveCommand() { if (Hash() % 2) SetPtr(at::kCommandRecord, g_cmd + ((Hash() >> 8) % 2) * kCmdSize); }
+
 // The 21 table entries.
 template <unsigned N> void __cdecl StubHandler() { Record(N, At(at::kState)[0], At(at::kSubState)[0]); Disturb(); }
 
 unsigned char __cdecl StubDefaultTarget(unsigned a) {
     Record(1, a, Id(CurrentCmd()));
+    MoveCommand();
     Disturb();
     return static_cast<unsigned char>(Hash() >> 7);
 }
 unsigned char __cdecl StubPrevTarget(unsigned a) {
     Record(2, a, Id(CurrentCmd()));
+    MoveCommand();
     Disturb();
     return static_cast<unsigned char>(Hash() >> 9);
 }
 long __cdecl StubWrap(long high, long low, long value) {
     Record(3, static_cast<std::uint32_t>(high), static_cast<std::uint32_t>(low), static_cast<std::uint32_t>(value));
+    MoveCommand();
     Disturb();
     const std::uint32_t h = Hash();
     return h % 2 ? static_cast<long>(value) : static_cast<long>(h);
 }
 unsigned long __cdecl StubBanner(unsigned msg, unsigned b2) {
     Record(4, msg, b2);
+    if (Hash() % 2) At(at::kState)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
     return Hash();
 }
@@ -149,6 +159,9 @@ unsigned __cdecl StubAutoRepeat(unsigned pressed) {
 }
 void __cdecl StubSound(unsigned short id) {
     Record(6, id);
+    const std::uint32_t h = Hash();
+    if (h % 2) At(at::kList)[0xA] = static_cast<unsigned char>((h >> 8) % 4);
+    if ((h >> 1) % 2) At(at::kSubState)[0] = static_cast<unsigned char>(h >> 16);
     Disturb();
 }
 const unsigned char* __cdecl StubSystemPtr(unsigned id) {
@@ -161,7 +174,12 @@ unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value)
     Disturb();
     return Hash();
 }
-unsigned long __cdecl StubSetup() { Record(9); Disturb(); return Hash(); }
+unsigned long __cdecl StubSetup() {
+    Record(9);
+    if (Hash() % 2) At(at::kState)[0] = static_cast<unsigned char>(Hash() >> 8);
+    Disturb();
+    return Hash();
+}
 unsigned long __cdecl StubFree() { Record(10); Disturb(); return Hash(); }
 // The three below read their arguments' low bytes (Item_Price and 0x591810 by
 // `and eax, 0xFF`, Item_CanUse by its evidence), so they are recorded so.
@@ -183,6 +201,8 @@ unsigned char __cdecl StubFlags(unsigned category, unsigned item) {
 }
 unsigned char __cdecl StubReturnTrue() {
     Record(14, Id(CurrentCmd()));
+    MoveCommand();
+    if (Hash() % 4 == 1) At(at::kPartyCount)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
     const std::uint32_t h = Hash();
     return static_cast<unsigned char>(h % 3 == 0 ? 0 : h >> 8);
@@ -375,17 +395,23 @@ unsigned char EdgeTarget() {
 void Seed(unsigned k) {
     unsigned char* const list = At(at::kList);
     switch (k) {
+    // the other step byte inside the tables too, so that an index read from
+    // the wrong byte shows as a count, not a crash
     case kAtkDispatch:
         At(at::kState)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % kTableEntries);
+        At(at::kSubState)[0] = static_cast<unsigned char>(Next() % 4);
         break;
     case kItemDispatch:
         At(at::kState)[0] = static_cast<unsigned char>(Often() ? Next() % 10 : Next() % (kTableEntries - 4));
+        At(at::kSubState)[0] = static_cast<unsigned char>(Next() % 5);
         break;
     case kOpenDispatch:
         At(at::kSubState)[0] = static_cast<unsigned char>(Often() ? Next() % 2 : Next() % (kTableEntries - 14));
+        At(at::kState)[0] = static_cast<unsigned char>(Next() % 7);
         break;
     case kTargetDispatch:
         At(at::kSubState)[0] = static_cast<unsigned char>(Next() % 5);
+        At(at::kState)[0] = static_cast<unsigned char>(Next() % 5);
         break;
     case kAtkPick:
     case kItemPick:
@@ -413,7 +439,7 @@ void Seed(unsigned k) {
         list[0xB] = top;
         static const int kRows[] = {0, 0, 1, 2, 3, 5, 6, -1, 7, 8};
         switch (Next() % 6) {
-        case 0: list[0xC] = 0; if (Half()) list[0xB] = 0; break;
+        case 0: list[0xC] = static_cast<unsigned char>(Half() ? 0 : 1); if (Half()) list[0xB] = 0; break;
         case 1: list[0xC] = static_cast<unsigned char>(0x7E + Next() % 3); break;
         case 2: break;
         default: list[0xC] = static_cast<unsigned char>(top + kRows[Next() % 10]); break;
