@@ -163,7 +163,13 @@ void __cdecl StubMediumBox(int x, int y) { Record(5, Lo16(x), Lo16(y)); Disturb(
 void __cdecl StubTargetEnemy(int x, int y, unsigned t) { Record(6, Lo16(x), Lo16(y), t & 0xFF); Disturb(); }
 void __cdecl StubEnemyStatus(int x, int y, unsigned t) { Record(7, Lo16(x), Lo16(y), t & 0xFF); Disturb(); }
 void __cdecl StubTargetMember(int x, int y, unsigned m) { Record(8, Lo16(x), Lo16(y), m & 0xFF); Disturb(); }
-void __cdecl StubFlagAdvance() { Record(9, Id(Current())); Disturb(); }
+// The target byte is read again after the first advance: moved half the time.
+void __cdecl StubFlagAdvance() {
+    Record(9, Id(Current()));
+    Disturb();
+    const std::uint32_t h = Hash() * 0x27D4EB2Fu;
+    if (h & 0x10000) *At(static_cast<std::uint32_t>(Long(At(at::kTarget)))) = TargetByte(h >> 8, h >> 20);
+}
 void __cdecl StubRestoreBack() { Record(10, Id(Current())); Disturb(); }
 unsigned __cdecl StubDispatchKind(unsigned a0, unsigned a1, unsigned a2, unsigned a3, unsigned a4, unsigned a5,
                                   unsigned a6, unsigned a7) {
