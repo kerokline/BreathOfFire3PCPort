@@ -276,6 +276,14 @@ void __cdecl StubSetTexture(unsigned long texture, unsigned char* prim, int coun
     Record(10, static_cast<U>(texture), Packet(prim), static_cast<U>(count), PrimHash(prim, 0x48));
     prim[0x16] ^= static_cast<unsigned char>(Hash(29));
     Disturb(30);
+    // MapCell_DrawAnimated reads its texture dword again after this call for
+    // bit 30: half the time that bit is flipped in the record's copy.
+    if (Hash(63) % 2 == 0)
+        for (U i = 0; i + 4 <= sizeof g_record; i += 4)
+            if ((Dword(g_record + i) & 0xFFFF7FFFu) == static_cast<U>(texture)) {
+                SetDword(g_record + i, Dword(g_record + i) ^ 0x40000000u);
+                break;
+            }
 }
 void __cdecl StubFlatOverlay(int faces, unsigned item) { Record(11, static_cast<U>(faces), item); }
 void __cdecl StubApplyPatch(const unsigned char* entry) {
@@ -969,14 +977,14 @@ void SelfTest() {
     };
     TestUprights(tallies[0], uprights, 8000);
     TestDiagonalWall(tallies[1], wall, 5000);
-    TestFlatFaces(tallies[2], flat, 3000);
+    TestFlatFaces(tallies[2], flat, 20000);
     TestPatch(tallies[3], step, 3000, MapCell_PatchThenStep);
     TestPatch(tallies[4], stop, 3000, MapCell_PatchThenStop);
     TestAnimated(tallies[5], animated, 20000);
     TestTint(tallies[6], tint, 5000);
     TestFlatColours(tallies[7], colours, 3000);
     TestSetupTexture(tallies[8], texture, 5000);
-    TestMemberStatus(tallies[9], member, 10000);
+    TestMemberStatus(tallies[9], member, 20000);
     TestCell8(tallies[10], cell, 3000);
     TestPlayTime(tallies[11], clock, 5000);
     TestSkipSwitch(tallies[12], skip, 5000);
