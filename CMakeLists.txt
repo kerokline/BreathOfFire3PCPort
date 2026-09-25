@@ -226,7 +226,7 @@ add_library(bof3x SHARED
   src/game/battle_items.cpp
   src/game/battle_items_fuzz.cpp
   src/game/battle_odds.cpp
-  src/game/battle_odds_fuzz.cpp)
+  src/game/battle_odds_fuzz.cpp
   src/game/window_kinds.cpp
   src/game/window_kinds_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
