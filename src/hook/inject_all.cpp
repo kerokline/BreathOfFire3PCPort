@@ -46,6 +46,7 @@
 #include "game/battle_misc.h"
 #include "game/battle_sprites.h"
 #include "game/inventory_ops.h"
+#include "game/battle_phases.h"
 #include "game/draw_layers.h"
 #include "game/psx_gpu.h"
 #include "game/psx_gte.h"
@@ -229,6 +230,9 @@ void InjectAll() {
     BattleSprites_Inject();     // group BG, round seven: every call of its clones re-aimed at a recorder,
                                 // three jump tables relocated in the copies, the boss table swapped: order does not matter
     InventoryOps_Inject();      // every call of its clones re-aimed at a recorder: order does not matter
+    BattlePhases_Inject();      // round 8 group CA: every call of its clones re-aimed at a recorder, its two
+                                // stack tables re-aimed in the copies and its three .data tables swapped for
+                                // recorders: order does not matter (it clones only its own eighteen)
     InjectReport();
 }
 
