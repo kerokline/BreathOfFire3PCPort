@@ -4,14 +4,15 @@
 // entry (the port has none - docs/save-interchange.md section 2): 0x437820
 // copies seven 0xA4-byte default records from 0x64B390 into the live table at
 // 0x903A70 (`lea esi, [ebp + 0x64B390]`, 0x437834), then the eighth, the
-// whelp's, from 0x64B80C into the slot 0x669736 names - 7 (0x437891). Each
-// record starts with a 9-byte name field. Read 2026-09-21.
+// whelp's, from 0x64B80C (`mov esi`, 0x437891) into the slot whose number the
+// byte Char_WhelpSlot 0x669736 holds - 7 (symbols.toml). Each record starts
+// with a 9-byte name field. Read 2026-09-21.
 //
 // So the English names go into those eight fields once, when FIRST.DAT loads,
 // and New Game hands them on. Before any write, the two instructions that
 // read the table, and the whelp's reset copy below, are checked for the
 // addresses they read: if they are not the ones this file was written
-// against, nothing is written.
+// against, the game stops (Fatal) before anything is written.
 //
 // The whelp's name has one more home: 0x42E09D copies five bytes from the
 // 8-byte slot 0x669CE0 into character 7's name at some event - a reset of the

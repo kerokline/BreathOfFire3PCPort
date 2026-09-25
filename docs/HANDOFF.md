@@ -164,32 +164,40 @@ no hash run on record. `ab15`..`ab27`, `wm1` and `wm1_orig` are history.
    change still shows a black centre with live bands; the corner pop with
    the margin at 100. A live `BOF3X_SHADOW=map_layers` under the wide view
    reports the cull's divergence by design.
+9. **[`new-code-audit.md`](new-code-audit.md), with the game on hand.** The
+   2026-09-25 readability audit of the code new to the game left eight bugs
+   confirmed by reading and not yet seen in game, ten unchecked reports and
+   six open questions. Each has its check. The two the owner decides on are
+   A1 (a surface slot reused under a pending draw) and A2 (the Japanese
+   overlay switches F9's lines to English). Also the lifter's first run on
+   `BOF3.exe` ([`lifter-feasibility.md`](lifter-feasibility.md) §7), output
+   to `analysis/`.
 
 ## Then
 
 Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
 
-9. **`analysis/pairs_propagated.json` errors**: `0x445A30` / `0x44B9F0`
+10. **`analysis/pairs_propagated.json` errors**: `0x445A30` / `0x44B9F0`
    swapped, `0x44F030` paired to the wrong twin
    ([`battle_damage.md`](battle_damage.md)). Then the divergence map of
    [`attract-remaining.md`](attract-remaining.md) §5.1 (`psx_pair.py areas
    && fill && propagate`, five minutes; never use the `call-disputed` tier),
    scenario overlays, the name import as `hypothesis`.
-10. **The first receipt, and a CI job that compiles `src/`**
-   ([`STATUS.md`](STATUS.md) open decisions; `.github/workflows/` holds only
-   `dco.yml`). The evidence a receipt records exists: `attract_diff.py`,
+11. **The first receipt** ([`STATUS.md`](STATUS.md) open decisions). CI
+   compiles `src/` since 2026-09-25 (`.github/workflows/build.yml`, beside the
+   ledger checks in `checks.yml`). The evidence a receipt records exists: `attract_diff.py`,
    `mem_dump.py --compare`, `calltrace.py frames`, the route A/Bs.
-11. **[`IDEAS.md`](IDEAS.md) I13, save states** - the random encounter is
+12. **[`IDEAS.md`](IDEAS.md) I13, save states** - the random encounter is
     deterministic now (`combat.txt`), so save states are for what no route
     replays: bosses and event battles.
-12. **I15, the live look toggle** - the input path is read and ours
+13. **I15, the live look toggle** - the input path is read and ours
     (DIV-0050), so it wants only a key; I19 (curvature for SatPixie) beside
     it.
-13. **I18, F12 before shipping** - `Save_QuickWrite` writes a normal save to
+14. **I18, F12 before shipping** - `Save_QuickWrite` writes a normal save to
     slot 0 from anywhere, battles included; the owner keeps it for now and
     wants it disabled or a true quicksave before shipping. The recorder's
     F12 shot lands on top of it.
-14. **The display overhaul's owed checks** ([`display-overhaul.md`](display-overhaul.md)
+15. **The display overhaul's owed checks** ([`display-overhaul.md`](display-overhaul.md)
     §5, [`window-modes.md`](window-modes.md) §6): the edge pixels of `rb1`
     - `BOF3X_PIXEL_OFFSET=0.498046875` against the 27 differing captures of
     the 55-shot attract A/B (`validate_rb1.sh`, about 25 minutes); the
@@ -202,14 +210,14 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
     fog / lighting, the back buffer's `GetDC`. The set-up's pixel formats
     and caps `0xCCD` are this machine's HAL's; the backend takes any RGB
     masks.
-15. **Stage 2's regression check**: which of `MsgBox_Step`'s 23 control
+16. **Stage 2's regression check**: which of `MsgBox_Step`'s 23 control
     codes the attract sequence's eight messages use (tracer detail mode);
     nothing covers `Msg_OpenSystem` ([`attract-mode.md`](attract-mode.md) §6).
     And a check of the list the draw-order pass builds in the real game -
     I14 level 1 - with a hand-written header for the sprite object (five
     files address it by offset; [`sprite-draw-order.md`](sprite-draw-order.md)
     §5, §6).
-16. **The owner, in game** ([`USER_CHECKS.md`](USER_CHECKS.md)): with
+17. **The owner, in game** ([`USER_CHECKS.md`](USER_CHECKS.md)): with
     `BOF3X_LANG=en` - the choice lists at 8 px, item and ability menus for
     clipping, a pick-up, the masters' talk, a long area (`AREA090`,
     `175`-`185`, DIV-0007); USER_CHECKS 6's two-row title layout; a save and
@@ -224,12 +232,12 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
     `BOF3X_SHADOW=Gfx_InvalidateTextures`); DIV-0047 over a long session
     (the old bands began at 35 minutes); DIV-0039's window title (built,
     "seen at the next run" - confirm it was).
-17. **Finish reading the asset path**: the 32 callers of `LoadDatFile`, the
+18. **Finish reading the asset path**: the 32 callers of `LoadDatFile`, the
     value-sequence search for the dropped PSX sections
     ([`asset-loading-path.md`](asset-loading-path.md) §4). For I1, the PC
     block builder `0x5806F0` and the options bytes at block `+0x78`;
     PC-to-PSX is still static only.
-18. **Obligations** ([`STATUS.md`](STATUS.md)): contact TheRealBiggs; write
+19. **Obligations** ([`STATUS.md`](STATUS.md)): contact TheRealBiggs; write
     findings back to the sibling (the `0x0C` answer, `Rand` not matching).
     Still unknown, though both are ours: what the 8-byte records of
     `SpriteCell_Add` `0x5A6790` (table `0x6BEA18`, read by `0x5A32B0`) are.
