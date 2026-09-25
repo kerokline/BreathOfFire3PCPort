@@ -250,7 +250,9 @@ add_library(bof3x SHARED
   src/game/battle_turn_steps.cpp
   src/game/battle_turn_steps_fuzz.cpp
   src/game/magic_fx_reached.cpp
-  src/game/magic_fx_reached_fuzz.cpp)
+  src/game/magic_fx_reached_fuzz.cpp
+  src/game/shop_states2.cpp
+  src/game/shop_states2_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
