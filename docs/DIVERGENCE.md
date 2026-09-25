@@ -501,6 +501,11 @@ designed in rather than bolted on.
   `Lgt.Clothing`. The 16-byte field would hold longer spellings; using it is
   a separate decision, and on screen the budget is unmeasured (eight Chinese
   glyphs are 96 px, twelve letters at 8 px).
+- **Rationale:** the names the menus draw are compiled into `BOF3.exe`,
+  not carried in any `DAT`, so the overlays of DIV-0005 cannot reach them.
+  Without this, an English game shows Chinese item and ability names in
+  every menu. The port's 16-byte field holds every US name, so only the name
+  bytes are replaced and the numbers stay Capcom's.
 - **Not covered:** enemy names (12-byte fields in battle data,
   [`DAT_CONTAINER.md`](DAT_CONTAINER.md); since DIV-0053), character names, place names,
   anything drawn as artwork, and whatever strings are in `.text`/`.data`

@@ -38,9 +38,7 @@ REQUIRED = ['ID', 'Date', 'Subsystem', 'Original behaviour', 'New behaviour',
 
 # (DIV id, missing field) -> why it is accepted. Content only the author can
 # write; the check will not invent it.
-KNOWN = {
-    ('DIV-0008', 'Rationale'): 'written 2026-09-20 without one; the owner to supply',
-}
+KNOWN = {}
 
 # Where a DIV-NNNN may be cited. Everything tracked that is text.
 CITE_EXTS = {'.md', '.py', '.cpp', '.h', '.toml', '.rc', '.txt', '.yml', '.cmake'}
