@@ -95,3 +95,14 @@ context: `docs/takeover-queue-round9-spells.md` §4 for the group's units,
 [`magic_harness.md`](magic_harness.md) §3 for what a group writes. Merge one
 branch at a time into `phase-3/round-nine`: the build, the group's shadow
 and `BOF3X_SHADOW='*'` headless after each.
+
+**Where it stood when the session stopped (2026-09-25, late):** every
+group has its work committed on `phase-3/round9-<group>`. Ten of eleven
+branches patched `magic_harness.h/.cpp` their own way, so group **HX**
+(`phase-3/round9-hx`) was started to consolidate them into one API with a
+porting table per group in `magic_harness.md`; it was paused almost at
+once. Next, in order: finish HX and merge it; resume each group to port
+onto it, run its controls and finish its doc; merge them one at a time.
+S16 is furthest along (72 of 72 controls refused; its doc's controls table
+to fill). The frame-hash re-record (§4) is due before 2026-09-27 or after a
+Restart.
