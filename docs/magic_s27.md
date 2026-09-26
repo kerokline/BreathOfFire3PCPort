@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS (2026-09-26). All 47 functions are ours
 (`src/game/magic_s27.cpp`, shadow name `magic_s27`), fuzzed headless through
-the shared harness with 0 mismatches over 94,000 rounds; @@CONTROLS_SUMMARY@@
+the shared harness with 0 mismatches over 94,000 rounds; 167 negative controls, 166 refused and one an equivalent mutant (its near variant refused).
 Nothing recorded casts these spells, so this is fuzz only until the owner sees
 them cast.
 
@@ -217,7 +217,199 @@ Result in this worktree (2026-09-26):
 
 ## 6. Controls
 
-@@CONTROLS@@
+There are 167 plants, each put in `magic_s27.cpp` one at a time by a script
+that was not committed (it anchors each plant on a string it checks is unique;
+for each: plant, rebuild, run `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s27`,
+restore; the clean source rebuilt at the end). **166 are refused**, every one
+by a count (exit 3) and only in the functions the plant touches; one is an
+equivalent mutant, and its near variant is refused. The figures are
+mismatched rounds out of 2,000 per function, in this worktree.
+
+| | Planted | Refused in |
+|---|---|---|
+| B1 | Burn_Task: draws gated on +2 | Burn_Task 401 |
+| B2 | Burn_Task: disc before ring | Burn_Task 788 |
+| B3 | Burn_Task: entries 3/4 swapped | Burn_Task 811 |
+| B4 | Burn_Start: height from the source's +0x38 | Burn_Start 2,000 |
+| B5 | Burn_Start: delay (i + 2) x 4 | Burn_Start 2,000 |
+| B6 | Burn_Start: parameter 0x30 | Burn_Start 2,000 |
+| B7 | Burn_Start: the task read before the create | Burn_Start 445 |
+| B8 | Burn_Start: second run not semi-transparent | Burn_Start 2,000 |
+| B9 | LightClutRow: the last run's entry 0 kept | Burn_Start 2,000; WhelpBreath_Start 2,000; DragonBreath_Start 2,000 |
+| B10 | Burn_Start: +9 1 | Burn_Start 2,000 |
+| B11 | Burn_WaitFlag: at 0x11 | Burn_WaitFlag 849 |
+| B12 | Burn_WaitFlag: flags 0x20 | Burn_WaitFlag 414 |
+| B13 | SpellFx_Countdown: on at 1 | SpellFx_Countdown 1,333 |
+| B14 | BurnFlame_Task: entries 1/2 swapped | BurnFlame_Task 1,335 |
+| B15 | BurnFlame_Task: draw gated on +2 | BurnFlame_Task 472 |
+| B16 | BurnFlame_Start: speed 9 | BurnFlame_Start 655 |
+| B17 | BurnFlame_Start: +0xB 0x11 | BurnFlame_Start 655 |
+| B18 | Climb: speed up by +0xB | BurnFlame_Rise 1,995; BurnFlame_Fade 1,992 |
+| B19 | BurnFlame_Rise: on at 0x12 | BurnFlame_Rise 448 |
+| B20 | BurnFlame_Fade: the owner's +0xA | BurnFlame_Fade 656 |
+| B21 | BurnFlame_Fade: +0xB kept | BurnFlame_Fade 1,996 |
+| B22 | BurnFlame_Draw: top shade +0xB << 4 | BurnFlame_Draw 1,943 |
+| B23 | BurnFlame_Draw: height + 0x21 | BurnFlame_Draw 1,996 |
+| B24 | BurnFlame_Draw: waver & 7 | BurnFlame_Draw 2,000 |
+| B25 | BurnFlame_Draw: z sorted by the first point's y | BurnFlame_Draw 1,999 |
+| B26 | BurnFlame_Draw: far v + 0xB | BurnFlame_Draw 2,000 |
+| B27 | BurnFlame_Draw: u1 (k + 2) x 8 | BurnFlame_Draw 2,000 |
+| B28 | BurnFlame_Draw: page x 0x380 | BurnFlame_Draw 2,000 |
+| B29 | BurnFlame_Draw: depths 4_10 | BurnFlame_Draw 2,000 |
+| B30 | BurnFlame_Draw: sorted size 0x50 | BurnFlame_Draw 2,000 |
+| B31 | BurnFlame_Draw: point 1 green 2 | BurnFlame_Draw 2,000 |
+| B32 | Burn_DrawRing: outer 0xC1 | Burn_DrawRing 1,999 |
+| B33 | Burn_DrawRing: shade +9 x 5 | Burn_DrawRing 1,973 |
+| B34 | Burn_DrawRing: point 0 y from x | Burn_DrawRing 2,000 |
+| B35 | Burn_DrawRing: slot 4 | Burn_DrawRing 2,000 |
+| B36 | Burn_DrawRing: closing tpage 0x55 | Burn_DrawRing 2,000 |
+| B37 | Burn_DrawDisc: rim shade +9 x 7 | Burn_DrawDisc 1,987 |
+| B38 | Burn_DrawDisc: centre blue a | Burn_DrawDisc 1,993 |
+| B39 | Burn_DrawDisc: size 0x30 | Burn_DrawDisc 2,000 |
+| W1 | WhelpBreath_Task: entries 0/1 swapped | WhelpBreath_Task 1,312 |
+| W2 | WhelpBreath_Start: beam delay 5 | WhelpBreath_Start 1,962 |
+| W3 | WhelpBreath_Start: sprite's owner the task | WhelpBreath_Start 1,725 |
+| W4 | WhelpBreath_Start: direction bit 0 | WhelpBreath_Start 1,029 |
+| W5 | WhelpBreath_Start: second sprite +0xB 2 | WhelpBreath_Start 1,000 |
+| W6 | WhelpBreath_Start: middle run semi-transparent | WhelpBreath_Start 2,000 |
+| W7 | WhelpBreath_WaitBeam: at 2 | WhelpBreath_WaitBeam 1,028 |
+| W8 | WhelpBreath_WaitBeam: kinds 1 and 2 | WhelpBreath_WaitBeam 1,024 |
+| W9 | WhelpBreath_WaitBeam: the task read before the create | WhelpBreath_WaitBeam 60 |
+| W10 | WhelpBreathChild_Task: kinds swapped | WhelpBreathChild_Task 2,000 |
+| W11 | WhelpBreathBeam_Run: owner 0xFE | WhelpBreathBeam_Run 801 |
+| W12 | WhelpBreathBeam_Run: MAGIC122's hold / fade swapped | WhelpBreathBeam_Run 785 |
+| W13 | Aim: kept y from +0x2E | WhelpBreathBeam_Aim 685; DragonBreathBeam_Aim 658 |
+| W14 | Aim: Math_Ratan2's arguments swapped | WhelpBreathBeam_Aim 685; DragonBreathBeam_Aim 661 |
+| W15 | Aim: y moved by +0x12 | WhelpBreathBeam_Aim 685; DragonBreathBeam_Aim 661 |
+| W16 | Aim: screen point before the move to the owner | WhelpBreathBeam_Aim 53; DragonBreathBeam_Aim 53 |
+| W17 | WhelpBreathBeam_Aim: +0xB 0x12 | WhelpBreathBeam_Aim 676 |
+| W18 | WhelpBreathBeam_Aim: sound before +2 on | WhelpBreathBeam_Aim 24 |
+| W19 | WhelpBreathBeam_Grow: length up by 4 | WhelpBreathBeam_Grow 2,000 |
+| W20 | WhelpBreathBeam_Grow: at 7 | WhelpBreathBeam_Grow 930 |
+| W21 | WhelpBreathBeam_Draw: waver x 12 | WhelpBreathBeam_Draw 1,639 |
+| W22 | WhelpBreathBeam_Draw: step << 5 | WhelpBreathBeam_Draw 1,640 |
+| W23 | WhelpBreathBeam_Draw: near width's angle without - 1 | WhelpBreathBeam_Draw 1,640 |
+| W24 | BeamWidth: + 2 | WhelpBreathBeam_Draw 1,640 |
+| W25 | BeamWidth: x 3 | WhelpBreathBeam_Draw 1,640 |
+| W26 | WhelpBreathBeam_Draw: far base k x 4 + 5 | WhelpBreathBeam_Draw 473 |
+| W27 | WhelpBreathBeam_Draw: point 1 y from x | WhelpBreathBeam_Draw 1,637 |
+| W28 | WhelpBreathBeam_Draw: page x 0x340 | WhelpBreathBeam_Draw 1,640 |
+| W29 | WhelpBreathBeam_Draw: second quad u 0x41 | WhelpBreathBeam_Draw 1,640 |
+| W30 | BeamV: x 0x1F | WhelpBreathBeam_Draw 1,630 |
+| W31 | BeamShade: x 11 | WhelpBreathBeam_Draw 1,640 |
+| W32 | WhelpBreathBeam_Draw: second angle - 0x3FF | WhelpBreathBeam_Draw 1,639 |
+| W33 | WhelpBreathBeam_Draw: size 0x50 | WhelpBreathBeam_Draw 1,640 |
+| W34 | WhelpBreathBeam_Draw: one step short | WhelpBreathBeam_Draw 973 |
+| W35 | WhelpBreathSprite_Run: bank + 1 | WhelpBreathSprite_Run 2,000 |
+| W36 | WhelpBreathSprite_Run: default bank + 4 | WhelpBreathSprite_Run 2,000 |
+| W37 | WhelpBreathSprite_Run: glow grow / hold swapped | WhelpBreathSprite_Run 459 |
+| W38 | WhelpBreathSprite_Start: +0x27 0xA0 | WhelpBreathSprite_Start 2,000 |
+| W39 | WhelpBreathSprite_Start: +0x2A bit 1 | WhelpBreathSprite_Start 1,268 |
+| W40 | WhelpBreathSprite_Start: animation 2 | WhelpBreathSprite_Start 213 |
+| W41 | WhelpBreathSprite_Start: +0x2A not inverted | WhelpBreathSprite_Start 213 |
+| W42 | WhelpBreathSprite_Start: +9 0x77 | WhelpBreathSprite_Start 381 |
+| W43 | WhelpBreathSprite_Start: five ages cleared | WhelpBreathSprite_Start 426 |
+| W44 | WhelpBreathSprite_Start: +0xA 0x51 | WhelpBreathSprite_Start 373 |
+| W45 | WhelpBreathSprite_Start: 4 as 3 | WhelpBreathSprite_Start 382 |
+| W46 | WhelpBreathSprite_Play: freed while running | WhelpBreathSprite_Play 2,000 |
+| W47 | WhelpBreathSprite_Hold: screen before the tick | WhelpBreathSprite_Hold 2,000 |
+| W48 | WhelpBreathFlames_Grow: at 0x5F | WhelpBreathFlames_Grow 869 |
+| W49 | WhelpBreathFlames_End: at 0x6F | WhelpBreathFlames_End 863 |
+| W50 | WhelpBreathGlow_Grow: at 0x11 | WhelpBreathGlow_Grow 873 |
+| W51 | WhelpBreathGlow_Hold: +9 down | WhelpBreathGlow_Hold 2,000 |
+| W52 | WhelpBreathGlow_End: freed at 1 | WhelpBreathGlow_End 1,291 |
+| W53 | WhelpBreathFlames_Draw: offsets by 8 | WhelpBreathFlames_Draw 1,992 |
+| W54 | WhelpBreathFlames_Draw: +0xA / +0xB swapped | WhelpBreathFlames_Draw 1,974 |
+| W55 | WhelpBreathFlames_Draw: z from dx | WhelpBreathFlames_Draw 2,000 |
+| W56 | WhelpBreathFlames_Draw: height from dz | WhelpBreathFlames_Draw 2,000 |
+| W57 | WhelpBreathFlames_Draw: direction from +9 | WhelpBreathFlames_Draw 1,981 |
+| W58 | WhelpBreathFlames_Draw: 3j <= +9 | WhelpBreathFlames_Draw 187 |
+| W59 | WhelpBreathFlames_Draw: & 0x1F | WhelpBreathFlames_Draw 240 |
+| W60 | WhelpBreathFlames_Draw: actor e + 2 | WhelpBreathFlames_Draw 2,000 |
+| W61 | WhelpBreathFlames_DrawColumn: k > +9 | WhelpBreathFlames_DrawColumn 229 |
+| W62 | WhelpBreathFlames_DrawColumn: ages up to 0x10 | WhelpBreathFlames_DrawColumn 305 |
+| W63 | WhelpBreathFlames_DrawColumn: radius + 0x33 | WhelpBreathFlames_DrawColumn 1,723 |
+| W64 | WhelpBreathFlames_DrawColumn: height x 16 | WhelpBreathFlames_DrawColumn 1,708 |
+| W65 | WhelpBreathFlames_DrawColumn: corner 0xA01 | WhelpBreathFlames_DrawColumn 1,724 |
+| W66 | WhelpBreathFlames_DrawColumn: CLUT x 0x21 | WhelpBreathFlames_DrawColumn 1,724 |
+| W67 | WhelpBreathFlames_DrawColumn: v 0x61 | WhelpBreathFlames_DrawColumn 1,724 |
+| W68 | WhelpBreathFlames_DrawColumn: shade 0x60 | WhelpBreathFlames_DrawColumn 1,724 |
+| W69 | WhelpBreathFlames_DrawColumn: depths 4_10B | WhelpBreathFlames_DrawColumn 1,724 |
+| W70 | WhelpBreathFlames_PushMatrix: direction 1 about y | WhelpBreathFlames_PushMatrix 225 |
+| W71 | WhelpBreathFlames_PushMatrix: height >> 1 | WhelpBreathFlames_PushMatrix 496 |
+| W72 | WhelpBreathFlames_PushMatrix: z - 0x3FFF | WhelpBreathFlames_PushMatrix 2,000 |
+| W73 | WhelpBreathGlow_Draw: height from +0x3C | WhelpBreathGlow_Draw 1,923 |
+| W74 | WhelpBreathGlow_Draw: direction not copied | WhelpBreathGlow_Draw 1,871 |
+| W75 | WhelpBreathGlow_DrawFan: frame & 0x1F | WhelpBreathGlow_DrawFan 1,033 |
+| W76 | WhelpBreathGlow_DrawFan: - 5 | WhelpBreathGlow_DrawFan 2,000 |
+| W77 | WhelpBreathGlow_DrawFan: + 7 | WhelpBreathGlow_DrawFan 2,000 |
+| W78 | WhelpBreathGlow_DrawFan: centre x 10 + 2 | WhelpBreathGlow_DrawFan 2,000 |
+| W79 | WhelpBreathGlow_DrawFan: tpage 0xD4 | WhelpBreathGlow_DrawFan 2,000 |
+| D1 | DragonBreath_Task: entries swapped | DragonBreath_Task 2,000 |
+| D2 | DragonBreath_Start: parameter 0x5B | DragonBreath_Start 2,000 |
+| D3 | DragonBreath_Start: middle run semi-transparent | DragonBreath_Start 2,000 |
+| D4 | DragonBreath_Start: +9 1 | DragonBreath_Start 2,000 |
+| D5 | DragonBreath_Start: beam delay 3 | DragonBreath_Start 1,957 |
+| D6 | DragonBreathBeam_Run: every fourth frame | DragonBreathBeam_Run 54 |
+| D7 | DragonBreathBeam_Run: +0x5E & 1 | DragonBreathBeam_Run 180 |
+| D8 | DragonBreathBeam_Run: +0x5E + 6 | DragonBreathBeam_Run 860 |
+| D9 | DragonBreathBeam_Run: 0xB - +0x5E | DragonBreathBeam_Run 860 |
+| D10 | DragonBreathBeam_Run: gated on +1 | DragonBreathBeam_Run 389 |
+| D11 | DragonBreathBeam_Aim: +9 0x11 | DragonBreathBeam_Aim 661 |
+| D12 | DragonBreathBeam_Aim: +0xC 1 | DragonBreathBeam_Aim 661 |
+| D13 | DragonBreathBeam_Aim: +0x5D & 3 | DragonBreathBeam_Aim 266 |
+| D14 | DragonBreathBeam_Widen: by 7 | DragonBreathBeam_Widen 2,000 |
+| D15 | DragonBreathBeam_Hit: at 7 | DragonBreathBeam_Hit 963 |
+| D16 | DragonBreathBeam_Brighten: at 0x12 | DragonBreathBeam_Brighten 875 |
+| D17 | DragonBreathBeam_Hold: at 0x2D | DragonBreathBeam_Hold 871 |
+| D18 | DragonBreathBeam_Dim: by 1 | DragonBreathBeam_Dim 2,000 |
+| D19 | DragonBreathBeam_End: +0xB down past 0 | DragonBreathBeam_End 1,014 |
+| D20 | DragonBreathBeam_End: owner 0xFE | DragonBreathBeam_End 646 |
+| D21 | DragonBreathBeam_Draw: steps of 13 | DragonBreathBeam_Draw 1,702 |
+| D22 | DragonBreathBeam_Draw: near taper to 3 | DragonBreathBeam_Draw 510 |
+| D23 | DragonBreathBeam_Draw: far taper to 4 | **not refused** - an equivalent mutant (below) |
+| D23b | DragonBreathBeam_Draw: far taper to 5 (D23's near variant) | DragonBreathBeam_Draw 290 |
+| D24 | DragonBreathBeam_Draw: shade x 14 | DragonBreathBeam_Draw 1,699 |
+| D25 | DragonBreathBeam_Draw: jitter & 7 | DragonBreathBeam_Draw 1,306 |
+| D26 | DragonBreathBeam_Draw: near jitter the new one | DragonBreathBeam_Draw 1,519 |
+| D27 | ShadeRed: >> 2 | DragonBreathBeam_Draw 47 |
+| D28 | DragonBreathBeam_Draw: outer + 0x11 | DragonBreathBeam_Draw 511 |
+| D29 | DragonRadii: near x step | DragonBreathBeam_Draw 1,703 |
+| D30 | DragonBreathBeam_Draw: second quad point 0 full | DragonBreathBeam_Draw 1,690 |
+| D31 | ShadeOne: red 2 | DragonBreathBeam_Draw 1,703 |
+| D32 | DragonBreathBeam_Draw: last quad size 0x40 | DragonBreathBeam_Draw 1,703 |
+| D33 | DragonCentres: far y from x | DragonBreathBeam_Draw 1,703 |
+| D34 | DragonSides: far x by the near radius | DragonBreathBeam_Draw 1,703 |
+| D35 | DrawLines: n steps | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+| D36 | DrawLines: n & 0x1FF | DragonBreathBeam_DrawLinesA 997; DragonBreathBeam_DrawLinesB 1,025 |
+| D37 | DrawLines: 64 out | DragonBreathBeam_DrawLinesA 1,882; DragonBreathBeam_DrawLinesB 1,889 |
+| D38 | DrawLines: first radius << 3 | DragonBreathBeam_DrawLinesA 1,900; DragonBreathBeam_DrawLinesB 1,896 |
+| D39 | DrawLines: shade + 6 | DragonBreathBeam_DrawLinesA 1,963; DragonBreathBeam_DrawLinesB 1,980 |
+| D40 | DrawLines: walk <= 12 | DragonBreathBeam_DrawLinesA 1,922; DragonBreathBeam_DrawLinesB 1,900 |
+| D41 | DrawLines: back to the kept x for y | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+| D42 | DrawLines: swing + 0x11 | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+| D43 | DrawLines: (k & 0x3F) | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+| D44 | DrawLines: blue / 4 | DragonBreathBeam_DrawLinesA 1,989; DragonBreathBeam_DrawLinesB 1,992 |
+| D45 | DrawLines: size 0x24 | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+| D46 | DragonBreathBeam_DrawLinesB: side - 0x3FF | DragonBreathBeam_DrawLinesB 2,000 |
+| D47 | DrawLines: first point x from y | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+| D48 | DrawLines: kept y not moved | DragonBreathBeam_DrawLinesA 2,000; DragonBreathBeam_DrawLinesB 2,000 |
+
+**D23, not refused: equivalent.** `DragonBreathBeam_Draw`'s far radius is
+`+0xB x step` while the step is below 4, else `+0xB x 4`. Moving the bound to
+`step <= 4` changes only step 4, where both give `+0xB x 4`: no input tells
+them apart. The near variant D23b (`step <= 5`, which differs at step 5) is
+refused in 290 rounds.
+
+The thinnest are W18 (24 rounds: the beam's sound moved before `+2` on - seen
+only when the sound's recorder moves `Sprite_Current` and the increment lands
+on another slot), D27 (47: the signed `/ 4` of the shade as a shift - it
+differs only for a negative shade, which only the disturbance's scratch word
+makes), W16 (53 each: only a recorder's disturbance tells the two orders of
+`AtOwner` and the screen update apart), D6 (54) and W9 (60: the task pointer
+read before the create, seen when the create's disturbance moves
+`Sprite_Current`).
+
 
 ## 7. What nothing reached
 
