@@ -24618,3 +24618,565 @@ pc = 0x65B5F4
 name = "Magic092_SparkPhases"
 status = "evidence"
 evidence = "read 2026-09-25: Magic092_SparkRun's call table by +2: 0x4E9770 0x4E5950 0x4E97D0 0x4E97F0; MAGIC093's table follows at 0x65B604."
+
+# --- Round nine, group S29: MAGIC125, MAGIC126 (DivineBreath, ShadowBreath read one id down; docs/magic_s29.md) ---
+
+[[func]]
+pc = 0x4E0910
+name = "DivineBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0910..0x4E0984 (0x75 bytes), group S29: a two-entry stack table (mov [esp + 0x10 / 0x14], imm32 0x4E0990 0x4F7350) called by byte +1 of Sprite_Current, unchecked; then for each of the 64 records of DivineMote_Pool (0x69FC30, stride 0x84) with +0 bit 0: Sprite_Current = it, 0x93B940 = its +0x80, call DivineMote_Task, both put back to the values read after the phase. Magic_Rows row 125, file 0x28D = MAGIC125.EMI, ability id 0x7D (DivineBreath read one id down, a hypothesis: docs/cut-content.md section 2); the first function of MAGIC125's extent 0x4E0910..0x4E1996 (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0990
+name = "DivineBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0990..0x4E0A57 (0xC8 bytes), group S29: four calls: bytes 0..2 of the 64 pool records cleared; MagicFx_CenterOnSide; +0xB 0, +1 += 1; BattleTask_Create(1, 0x5C) twice, each slot's +0x80 Sprite_Current (read after the call), +1 0 / 1, +9 1 / 9, Sprite_Current +0xB += 1 (the slot index untested); Sound_PlayById(0x100). Entry 0 of DivineBreath_Task's table. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0A60
+name = "DivineBreathFx_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0A60..0x4E0A71 (0x12 bytes), group S29: jmp [0x65BBA4 + 4 x byte +1] (DivineBreathFx_Kinds, two entries, unchecked). Kind-1 task parameter 0x5C (BattleTask_Create's kind table 0x435350), created by DivineBreath_Start. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0A80
+name = "DivineBeam_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0A80..0x4E0AF6 (0x77 bytes), group S29: call [0x65BBAC + 4 x byte +2] (DivineBeam_Steps, three, unchecked); while +0 and +2: on an even Frame_Counter +0x5D..+0x5F = (Rand & 3) + 4; MagicFx_PushActorMatrix, DivineBeam_DrawDisc, DivineBeam_DrawWall, tail jmp Gte_PopMatrix. Entry 0 of DivineBreathFx_Kinds. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0B00
+name = "DivineBeam_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0B00..0x4E0BAF (0xB0 bytes), group S29: +9 -= 1; at 0: +0x34 / +0x38 the owner's, +0x3C the owner's + 0x4000000, +0x5D..+0x5F (Rand & 3) + 4, dword +0x14 0x100, +9 0x10, +0xA 8, +2 += 1. Entry 0 of DivineBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0BB0
+name = "DivineBeam_Descend"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0BB0..0x4E0BDD (0x2E bytes), group S29: no calls: +0x3C += 0xFF800000; +0xA -= 1, at 0 +2 += 1. Entry 1 of DivineBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0BE0
+name = "DivineBeam_Widen"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0BE0..0x4E0C14 (0x35 bytes), group S29: +0x14 += 0x20; +9 -= 1; at 0 the owner's +0xB -= 1 and tail jmp BattleTask_FreeCurrent. Entry 2 of DivineBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0C20
+name = "DivineBeam_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0C20..0x4E0DF6 (0x1D7 bytes), group S29: thirteen calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), Gfx_CommitPrim(5, 0xC); word 0x903850 = +0x14; the scratch colours 0x903856 / 58 / 5A = s8 +0x5D..+0x5F x +9; sixteen POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1) of (0, 0, 0) and two rim points 0x100 apart (Math_Sin / Math_Cos x radius sar 12, into Prim_VertexScratch), Gte_RotTransPers3, Gte_PrimDepths3_10B, the centre the colour bytes, the rim 0x10, Gfx_CommitPrim(5, 0x34); then draw mode 0x15, Gfx_CommitPrim(5, 0xC). Called by DivineBeam_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E0E00
+name = "DivineBeam_DrawWall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0E00..0x4E1022 (0x223 bytes), group S29: eleven calls: word 0x903850 = +0x14, the colours as DivineBeam_DrawDisc's; 32 POLY_G4 between rim points 0x80 apart at z -0x300 and 0 (Gte_RotTransPers4, Gte_PrimDepths4_10B), the top 1, the foot the colour bytes; each after Gpu_SetDrawMode(.., 0x35) linked by MapView_LinkPrimAt(+0x34 + x << 9, +0x38 + y << 9, 0, 0xC) and (.., 0, 0x44). Called by DivineBeam_Run and DivineBurst_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1030
+name = "DivineBurst_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1030..0x4E1062 (0x33 bytes), group S29: call [0x65BBB8 + 4 x byte +2] (DivineBurst_Steps, three, unchecked); while +0 and +2: MagicFx_PushActorMatrix, DivineBeam_DrawWall, tail jmp Gte_PopMatrix. Entry 1 of DivineBreathFx_Kinds. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1070
+name = "DivineBurst_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1070..0x4E110D (0x9E bytes), group S29: no calls: +9 -= 1; at 0 the owner's point, +0x5D..+0x5F 0xF, dword +0x14 0x100, +0x20 0x21, +9 0x10, +0xA 0x1E, +2 += 1. Entry 0 of DivineBurst_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1110
+name = "DivineBurst_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1110..0x4E11E0 (0xD1 bytes), group S29: four calls: dword +0x20 -= 2 unless 1; +0x14 -= +0x20; under 0x30 (signed): Battle_SetTargetFlags(byte 0x904B44, 0x10), Sound_PlayById(0x101), 64 x DivineMote_Alloc (the index untested): the record's +0x80 the owner, +1 0, +0xB i, +9 (Rand & 7) + 8 (i / 6) + 1, the owner's +0xB += 1; +2 += 1. Entry 1 of DivineBurst_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E11F0
+name = "DivineBurst_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E11F0..0x4E1230 (0x41 bytes), group S29: dword +0x14 -= 1 while over 8 (signed); on an odd Frame_Counter +9 -= 1, at 0 the owner's +0xB -= 1 and tail jmp BattleTask_FreeCurrent. Entry 2 of DivineBurst_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1240
+name = "DivineMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1240..0x4E1251 (0x12 bytes), group S29: jmp [0x65BBC4 + 4 x byte +1] (DivineMote_TaskTable, one entry, unchecked). Run by DivineBreath_Task for each live DivineMote_Pool record. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1260
+name = "DivineMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1260..0x4E12E8 (0x89 bytes), group S29: call [0x65BBC8 + 4 x byte +2] (DivineMote_Steps, two, unchecked); while +0 and +2: Gpu_SetDrawMode(.., 0x35), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC), BattleActor_UpdateScreenXY, DivineMote_DrawStar, DivineMote_DrawRing, draw mode 0x15 linked the same. Entry 0 of DivineMote_TaskTable. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E12F0
+name = "DivineMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E12F0..0x4E1424 (0x135 bytes), group S29: four calls: +9 -= 1; at 0: +0xC 0x5000, +0x18 0x200, +0x14 0x80000, +0x20 0x40000; word 0x903850 = +0xC, angle word 0x903854 = ((+0xB & 7) x 8 + +9) << 6; +0x34 / +0x38 the owner's plus Math_Sin / Math_Cos x radius sar 12, +0x3C the owner's; +0x5D..+0x5F (Rand & 7) + 5; +9 0, +0xA 0x18, +2 += 1. Entry 0 of DivineMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1430
+name = "DivineMote_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1430..0x4E1500 (0xD1 bytes), group S29: three calls: +9 += 1; +0xC -= +0x18, +0x14 += +0x20; the angle as DivineMote_Launch's; +0x34 / +0x38 += Math_Sin / Math_Cos x +0xC sar 12, each through the pointer taken before the call; +0x3C += +0x14; at +0xC 0 the owner's +0xB -= 1 and tail jmp 0x4F6290 (MAGIC219's: Sprite_Current bytes 0..4 cleared). Entry 1 of DivineMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1510
+name = "DivineMote_DrawStar"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1510..0x4E16D4 (0x1C5 bytes), group S29: seven calls: radius word 0x903850 = +0xA; eight POLY_G3 of screen floats (fild): the point (+0x2E, +0x30) and two rim points 0x200 apart (sin / cos x radius sar 12 plus the point, 16-bit), the centre 0xF0, the rim s8 +0x5D..+0x5F << 4, each MapView_LinkPrimAt(+0x34, +0x38, 2, 0x34). Called by DivineMote_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E16E0
+name = "DivineMote_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E16E0..0x4E1934 (0x255 bytes), group S29: eleven calls: radii words 0x903850 = +0xA, 0x903852 = +0xA x 2; eight POLY_G4 of screen floats between the two circles, 0x200 apart, the outer edge 1, the inner the scratch colour bytes (DivineMote_DrawStar's), each MapView_LinkPrimAt(+0x34, +0x38, 2, 0x44). Called by DivineMote_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1940
+name = "DivineMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1940..0x4E1996 (0x57 bytes), group S29: no calls: the first of DivineMote_Pool's 64 records with +0 bit 0 clear gets it set; its index in al, or 0xFF when none (callers never test it). Called by DivineBurst_Shrink. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E19A0
+name = "ShadowBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E19A0..0x4E1A00 (0x61 bytes), group S29: a two-entry stack table (mov [esp + 0xC / 0x10], imm32 0x4E1A10 0x4F7350) by byte +1, unchecked; then for each of the 128 records of ShadowMote_Pool (0x6A1D30, stride 0x20) with +0 bit 0: ShadowMote_Current (0x6A2D30) = it, 0x93B940 = its +0x1C, call ShadowMote_Task, the owner put back (the current record is not). Magic_Rows row 127, file 0x28E = MAGIC126.EMI, ability id 0x7E (ShadowBreath read one id down, a hypothesis); the first function of MAGIC126's extent 0x4E19A0..0x4E3254. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1A10
+name = "ShadowBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1A10..0x4E1AD4 (0xC5 bytes), group S29: four calls: bytes 0..2 of the 128 pool records cleared; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY; +0xB +9 0, +1 += 1; eight BattleTask_Create(1, 0x4E), each slot's +0x80 Sprite_Current, +1 2, +0xB i, +9 i + 1, Sprite_Current +0xB += 1 (the slot index untested); Sound_PlayById(0x102); words 0x812980..0x812B7F (Gfx_ClutStrip row 26) from 0x4000 below with bit 15 set, Gfx_ClutStripDirty 1. Entry 0 of ShadowBreath_Task's table. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1AE0
+name = "ShadowBreathFx_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1AE0..0x4E1AF1 (0x12 bytes), group S29: jmp [0x65BBD0 + 4 x byte +1] (ShadowBreathFx_Kinds, three entries, unchecked). Kind-1 task parameter 0x4E, created by ShadowBreath_Start (+1 2) and ShadowSeeker_Burst (+1 0 and 1). Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1B00
+name = "ShadowOrb_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1B00..0x4E1B3C (0x3D bytes), group S29: call [0x65BBDC + 4 x byte +2] (ShadowOrb_Steps, four, unchecked); while +0 and +2: MagicFx_PushActorMatrix, ShadowOrb_DrawRim, ShadowOrb_DrawBand, ShadowOrb_DrawDisc, tail jmp Gte_PopMatrix. Entry 0 of ShadowBreathFx_Kinds. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1B40
+name = "ShadowOrb_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1B40..0x4E1B6A (0x2B bytes), group S29: no calls: +9 += 2, +0xA += 0x18; at +9 0x10 +2 += 1. Entry 1 of ShadowOrb_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1B70
+name = "ShadowOrb_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1B70..0x4E1B83 (0x14 bytes), group S29: no calls: +2 += 1 once the owner's +0xB is below 2 (unsigned). Entry 2 of ShadowOrb_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1B90
+name = "ShadowOrb_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1B90..0x4E1D3D (0x1AE bytes), group S29: eleven calls: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(5, 0xC); radius word 0x903850 = +0xA x 2, the shade words +9 x 12; 32 POLY_G3 of (0, 0, 0) and two rim points 0x100 apart (Gte_RotTransPers3, Gte_PrimDepths3_10B), the centre the shade, the rim 1, Gfx_CommitPrim(5, 0x34). Called by ShadowOrb_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1D40
+name = "ShadowOrb_DrawRim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1D40..0x4E1FA6 (0x267 bytes), group S29: sixteen calls: draw mode 0x35, Gfx_CommitPrim(5, 0xC); word 0x903850 = +0xA x 2, 0x903852 = (Rand & 3) + +0xA x 3; the shade +9 x 15, +9 x 4, +9 x 15; sixteen POLY_G4 between the two circles 0x100 apart (Gte_RotTransPers4, Gte_PrimDepths4_10B), the outer points 1, the inner the shade, Gfx_CommitPrim(5, 0x44). Called by ShadowOrb_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E1FB0
+name = "ShadowOrb_DrawBand"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E1FB0..0x4E2200 (0x251 bytes), group S29: fifteen calls: as ShadowOrb_DrawRim without Rand: word 0x903850 = +0xA, 0x903852 = +0xA x 2, the shade on the outer points, the inner 1. Called by ShadowOrb_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2210
+name = "ShadowGlow_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2210..0x4E223D (0x2E bytes), group S29: call [0x65BBEC + 4 x byte +2] (ShadowGlow_Steps, four, unchecked); while +0 and +2: BattleActor_UpdateScreenXY, tail jmp ShadowGlow_Draw. Entry 1 of ShadowBreathFx_Kinds. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2240
+name = "ShadowGlow_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2240..0x4E22BE (0x7F bytes), group S29: +9 -= 1; at 0: Sound_PlayById(0x100), the owner's point, +0xB 0, +9 0x14, +0xA 0, +2 += 1. Entry 0 of ShadowGlow_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E22C0
+name = "ShadowGlow_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E22C0..0x4E22DC (0x1D bytes), group S29: no calls: +9 += 2; at 0x96 +2 += 1. Entry 2 of ShadowGlow_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E22E0
+name = "ShadowGlow_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E22E0..0x4E269D (0x3BE bytes), group S29: twelve calls: words 0x903850 = 0x28, 0x903852 = +9, 0x903854 = +0xA << 3, 0x90385C / 5E = +0x2E / +0x30; Gpu_SetDrawMode(.., 0xB5), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); two POLY_GT4 (Gpu_SetPolyGT4, semi-transparent) of screen floats x -/+ 0x28, y - +9 - 16 .. y - 16 and y - 16 .. y, Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), uv 8..0x57 by 8..+9 + 8 and +9 + 8..+9 + 0x18, the shade on all points but the lower's foot (1); each linked (2, 0x54). Tail of ShadowGlow_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E26A0
+name = "ShadowSeeker_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E26A0..0x4E26CD (0x2E bytes), group S29: call [0x65BBFC + 4 x byte +2] (ShadowSeeker_Steps, four, unchecked); while +0 and +2: BattleActor_UpdateScreenXY, tail jmp ShadowSeeker_Draw. Entry 2 of ShadowBreathFx_Kinds. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E26D0
+name = "ShadowSeeker_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E26D0..0x4E27D9 (0x10A bytes), group S29: two calls: +9 -= 1; at 0: +8 and the point from the sprite at 0x904B3C (the acting actor's); +0xC 0x8000, +0x10 0; 0x446770(Sprite_Current) turns them by +8; +0x34 += +0xC, +0x38 += +0x10, +0x3C += 0x800000; +0xC = Math_Ratan2(float (owner x - x), float (owner z - z)); +9 0, +2 += 1. Entry 0 of ShadowSeeker_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E27E0
+name = "ShadowSeeker_Home"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E27E0..0x4E28B3 (0xD4 bytes), group S29: three calls: +9 += 4 while under 0x10; MagicFx_StepToward(owner, 0x60); +0x10 = +0xC; +0xC = Math_Ratan2 as ShadowSeeker_Launch's; MagicFx_NearSprite(owner, 0xC000) non-zero (all of eax): +2 += 1; else +0x10 = |(+0x10 & 0xFFF) - (+0xC & 0xFFF)| and +2 += 1 when 0x600 < it < 0xA00 (signed). Entry 1 of ShadowSeeker_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E28C0
+name = "ShadowSeeker_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E28C0..0x4E29DD (0x11E bytes), group S29: six calls: +0xB not 0: +2 += 1 only. Else Sound_PlayById(0x101); BattleTask_Create(1, 0x4E) twice, +0x80 the owner, +1 0 / +1 1 +9 0x2E, the owner's +0xB += 1 each; 64 x ShadowMote_Alloc (the index untested): +0x1C the owner, +1 0, +4 i, +5 (Rand & 0xF) + (i & 1) x 16 + 0x18, the owner's +0xB += 1; Battle_SetTargetFlags(byte 0x904B44, 0x10); +2 += 1. Entry 2 of ShadowSeeker_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E29E0
+name = "ShadowSeeker_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E29E0..0x4E2A07 (0x28 bytes), group S29: +9 -= 2; once negative as a signed byte the owner's +0xB -= 1 and tail jmp BattleTask_FreeCurrent. Entry 3 of ShadowSeeker_Steps (also reached from MAGIC168, 169 and 172 by tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2A10
+name = "ShadowSeeker_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2A10..0x4E2BE5 (0x1D6 bytes), group S29: nine calls: draw mode 0x35, Gfx_CommitPrim(3, 0xC); words 0x903854 0, 0x903850 0x18, 0x90385C / 5E the screen point; the colours ShadowSeeker_Colours[2 +0xB] x +9, +9, [2 +0xB + 1] x +9 (+0xB unchecked); sixteen POLY_G3 of screen floats fanned 0x100 apart (sin / cos x 0x18 sar 12 plus the point, 32-bit), the centre the colours, the rim 1, Gfx_CommitPrim(3, 0x34). Tail of ShadowSeeker_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2BF0
+name = "ShadowMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2BF0..0x4E2C01 (0x12 bytes), group S29: jmp [0x65BC1C + 4 x byte [ShadowMote_Current] +1] (ShadowMote_TaskTable, one entry, unchecked). Run by ShadowBreath_Task for each live ShadowMote_Pool record. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2C10
+name = "ShadowMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2C10..0x4E2C3D (0x2E bytes), group S29: call [0x65BC20 + 4 x the current record's +2] (ShadowMote_Steps, four, unchecked); the record read again; while +0 and +2: ShadowMote_Project, tail jmp ShadowMote_Draw. Entry 0 of ShadowMote_TaskTable. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2C40
+name = "ShadowMote_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2C40..0x4E2D2B (0xEC bytes), group S29: two calls, on the current record: +5 -= 1; at 0: angle word 0x903854 = (+4 & 0xF) << 8, radius 0x903850 = (+4 >> 4) x 8 + 8; +0x10 / +0x14 = Math_Sin / Math_Cos x radius (not shifted) plus the owner's x / z; +0x18 the owner's +0x3C + 0x800000; +8 0, +5 +6 0, +7 the radius, +2 += 1. Entry 0 of ShadowMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2D30
+name = "ShadowMote_Spread"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2D30..0x4E2DE5 (0xB6 bytes), group S29: two calls, on the current record (read again after each): on an odd Frame_Counter +5 and +7 += 1; the point round the owner at radius +7 (unshifted); +0x18 += +8; +6 += 1, at 0x10 +2 += 1. Entry 1 of ShadowMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2DF0
+name = "ShadowMote_Lift"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2DF0..0x4E2E9F (0xB0 bytes), group S29: two calls: on an odd Frame_Counter +7 += 1; +8 += 0x80000; the point as ShadowMote_Spread's, +0x18 += +8; +2 += 1 once +8 >= 0x800000 (signed). Entry 2 of ShadowMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2EA0
+name = "ShadowMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2EA0..0x4E2F54 (0xB5 bytes), group S29: three calls: on an odd Frame_Counter +7 += 1; the point and height as ShadowMote_Spread's; +6 -= 1, at 0 the owner's +0xB -= 1 and tail jmp ShadowMote_Free. Entry 3 of ShadowMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E2F60
+name = "ShadowMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E2F60..0x4E3131 (0x1D2 bytes), group S29: seven calls: words 0x903850 = +5, 0x903852 = +5 x 4, 0x903854 = +6 x 6, 0x90385C / 5E = +0xC / +0xE; Gpu_SetDrawMode(.., 0xB5), MapView_LinkPrimAt(+0x10, +0x14, 2, 0xC); a POLY_FT4 (Gpu_SetPolyFT4, semi-transparent) of screen floats x -/+ +5, y - +5 x 4 .. y, Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), uv 0x58..0x68 by 8..0x48, the shade; linked (2, 0x48). Tail of ShadowMote_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E3140
+name = "ShadowMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E3140..0x4E318E (0x4F bytes), group S29: no calls: the first of ShadowMote_Pool's 128 records with +0 bit 0 clear gets it set; its index in al, or 0xFF when none (the caller never tests it). Called by ShadowSeeker_Burst. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E3190
+name = "ShadowMote_Free"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E3190..0x4E31B5 (0x26 bytes), group S29: no calls: the current record's bytes 0..3 cleared. Tail of ShadowMote_Fade. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[func]]
+pc = 0x4E31C0
+name = "ShadowMote_Project"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s29.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E31C0..0x4E3254 (0x95 bytes), group S29: five calls: Gpu_SetTile1(Gfx_PacketNext), Gte_RotTransPers of (+0x10 sar 9 - 0x4000, +0x14 sar 9 - 0x4000, -(s16 +0x1A / 2)) into the packet's +8, Gte_StoreDepthF(+0x10), the two floats through the CRT's _ftol 0x5B9550 into words +0xC / +0xE of the current record (read again). BattleActor_UpdateScreenXY's shape for a pool record. Called by ShadowMote_Run. Fuzz only: no recorded route casts it (docs/magic_s29.md)."
+
+[[data]]
+pc = 0x65BBA4
+name = "DivineBreathFx_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26: DivineBreathFx_Task's jmp [0x65BBA4 + 4 x byte +1]: DivineBeam_Run, DivineBurst_Run. The first bytes of MAGIC125's .data."
+
+[[data]]
+pc = 0x65BBAC
+name = "DivineBeam_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26: DivineBeam_Run's call [0x65BBAC + 4 x byte +2]: DivineBeam_Wait, DivineBeam_Descend, DivineBeam_Widen."
+
+[[data]]
+pc = 0x65BBB8
+name = "DivineBurst_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26: DivineBurst_Run's call [0x65BBB8 + 4 x byte +2]: DivineBurst_Wait, DivineBurst_Shrink, DivineBurst_Fade."
+
+[[data]]
+pc = 0x65BBC4
+name = "DivineMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26: DivineMote_Task's jmp [0x65BBC4 + 4 x byte +1]: DivineMote_Run."
+
+[[data]]
+pc = 0x65BBC8
+name = "DivineMote_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26: DivineMote_Run's call [0x65BBC8 + 4 x byte +2]: DivineMote_Launch, DivineMote_Fly. MAGIC126's .data follows."
+
+[[data]]
+pc = 0x65BBD0
+name = "ShadowBreathFx_Kinds"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26: ShadowBreathFx_Task's jmp [0x65BBD0 + 4 x byte +1]: ShadowOrb_Run, ShadowGlow_Run, ShadowSeeker_Run."
+
+[[data]]
+pc = 0x65BBDC
+name = "ShadowOrb_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: ShadowOrb_Run's call [0x65BBDC + 4 x byte +2]: 0x4ADB50 (MAGIC056's), ShadowOrb_Grow, ShadowOrb_WaitChildren, 0x4B1740 (MAGIC060's)."
+
+[[data]]
+pc = 0x65BBEC
+name = "ShadowGlow_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: ShadowGlow_Run's call [0x65BBEC + 4 x byte +2]: ShadowGlow_Wait, 0x4A5D20 (MAGIC040's), ShadowGlow_Grow, 0x4A5D50 (MAGIC040's)."
+
+[[data]]
+pc = 0x65BBFC
+name = "ShadowSeeker_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: ShadowSeeker_Run's call [0x65BBFC + 4 x byte +2]: ShadowSeeker_Launch, _Home, _Burst, _Fade."
+
+[[data]]
+pc = 0x65BC0C
+name = "ShadowSeeker_Colours"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-26: ShadowSeeker_Draw's movzx [0x65BC0C + 2 x byte +0xB] and [0x65BC0D + ...]: eight pairs (red, blue), indexed by the seeker's number, unchecked."
+
+[[data]]
+pc = 0x65BC1C
+name = "ShadowMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26: ShadowMote_Task's jmp [0x65BC1C + 4 x the current record's +1]: ShadowMote_Run."
+
+[[data]]
+pc = 0x65BC20
+name = "ShadowMote_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: ShadowMote_Run's call [0x65BC20 + 4 x the current record's +2]: ShadowMote_Wait, _Spread, _Lift, _Fade; MAGIC129's table follows at 0x65BC30."
+
+[[data]]
+pc = 0x69FC30
+name = "DivineMote_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-26: 64 records of 0x84 (a battle task's shape: +0 bit 0 in use, +1 +2 the phases, +0x80 the owner), cleared by DivineBreath_Start, taken by DivineMote_Alloc, run by DivineBreath_Task as Sprite_Current; ends at 0x6A1D30, ShadowMote_Pool."
+
+[[data]]
+pc = 0x6A1D30
+name = "ShadowMote_Pool"
+ctype = "unsigned char"
+count = 4096
+status = "evidence"
+evidence = "read 2026-09-26: 128 records of 0x20 (+0 bit 0 in use, +1 +2 the phases, +4 the number, +5 +6 +7 counters, +8 the rise, +0xC / +0xE the screen point, +0x10 / +0x14 / +0x18 x z height, +0x1C the owner), cleared by ShadowBreath_Start, taken by ShadowMote_Alloc, run by ShadowBreath_Task through ShadowMote_Current; ends at 0x6A2D30."
+
+[[data]]
+pc = 0x6A2D30
+name = "ShadowMote_Current"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-26: ShadowBreath_Task stores each live ShadowMote_Pool record here before ShadowMote_Task and leaves the last; every ShadowMote_ function reads its record through it, again after each call."
