@@ -119,6 +119,7 @@
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
+#include "game/magic_s23.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -313,6 +314,10 @@ void InjectAll() {
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
+    MagicS23_Inject();          // round 9 group S23 (Cyclone, Typhoon, Quake, Simoon): its clones' calls re-aimed at
+                                // the harness's recorders, or left on the GTE / GPU library both sides call; after
+                                // every module it calls through (psx_gte*, psx_gpu, map_cells, world_map); no
+                                // module patches bytes inside its 51: otherwise order does not matter
     InjectReport();
 }
 

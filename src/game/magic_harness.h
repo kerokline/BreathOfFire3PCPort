@@ -108,8 +108,18 @@ struct Clone {
 };
 
 // How a recorder answers: a byte in lo..hi with garbage above it (an index,
-// a count), a byte of 0 or not 0 (a flag), the harness's Rand, or garbage.
-enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
+// a count), a byte of 0 or not 0 (a flag), the harness's Rand, or garbage;
+// kBool is a whole eax of exactly 0 or 1 (0 a third of the time), for a
+// callee whose caller tests all 32 bits.
+//
+// kThrough is not a recorder: both the copy and ours call the callee itself
+// (the copy's site keeps its target, ours gets the function back from Call).
+// It is for a callee that is a deterministic function of state the group's
+// regions hold and that answers through pointers - the GTE and GPU library,
+// Math_Sin - so that what it computes from the caller's arguments (a stack
+// vector, a matrix) lands in the compared state instead of being logged as a
+// pointer. Nothing is logged for it.
+enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand, kBool, kThrough };
 
 // A callee the standard set (magic_harness.cpp, kStandard) lacks. `key` is
 // the pointer ours calls - (std::uint32_t)name, which is Capcom's address or

@@ -106,7 +106,12 @@ void Disturb() {
         break;
     }
     case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+        // only an enemy record the state holds (3..10): a party target's
+        // "enemy" is 0x93B5E8.. and reaches the owner pointer 0x93B940 (a
+        // random byte there and case 11 writes through it), and a group may
+        // seed the side bits 0x40 / 0x80, whose "enemy" lies far past the
+        // records
+        if (Mem(at::kTarget)[0] - 3u < 8u) TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
@@ -152,6 +157,7 @@ std::uint32_t Answering(const Slot& s) {
         }
         if (h % 3 == 0) return ((h >> 8) & 0x7F00u) | ((g_rand_hint + (h >> 4) % 3 - 1) & 0xFF);
         return h % 4 == 0 ? h : (h >> 1) & 0x7FFF;
+    case Answer::kBool: return h % 3 == 0 ? 0u : 1u;
     case Answer::kGarbage:
     default: return h;
     }
@@ -246,6 +252,14 @@ void RegisterHandler(std::uint32_t address) {
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
     s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0};
+}
+// A callee both sides call for real (Answer::kThrough): the copy's site is
+// left aimed at it.
+bool Through(std::uint32_t address, const char* who) {
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == address) return g_slots[i].answer == Answer::kThrough;
+    bof3::Fatal("magic_harness: %s calls 0x%X, which no stand-in covers: list it in the group's callees", who,
+                (unsigned)address);
 }
 const void* StubFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
@@ -367,7 +381,9 @@ void SetRandFirst(int first) { g_rand_first = first; }
 
 const void* StandIn(std::uint32_t key) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].key == key) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].key == key)
+            return g_slots[i].answer == Answer::kThrough ? reinterpret_cast<const void*>(static_cast<std::uintptr_t>(key))
+                                                         : reinterpret_cast<const void*>(kStubs.f[i]);
     bof3::Fatal("magic_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
 }
 
@@ -411,7 +427,9 @@ void Run(const Group& group) {
         const Clone& c = group.clones[k];
         bof3::CloneCall calls[32];
         if (c.n_calls > 32) bof3::Fatal("magic_harness: %s has %d calls", c.name, c.n_calls);
-        for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target, c.name), c.calls[i].target};
+        for (int i = 0; i < c.n_calls; ++i)
+            calls[i] = {c.calls[i].offset, Through(c.calls[i].target, c.name) ? nullptr : StubFor(c.calls[i].target, c.name),
+                        c.calls[i].target};
         clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         PatchImms(clones[k], c);
     }
