@@ -105,6 +105,13 @@ struct Clone {
     const JumpTable* tables;
     int n_tables;
     const void* ours;
+    // No recorder moves anything while this one runs: for a function whose
+    // callees touch no battle state and which indexes its own stack by a cell
+    // it reads again (0x4C0E30, group S18), where a moved cell would send the
+    // original's store out of its frame.
+    bool calm = false;
+    // What of the function's answer (eax) is compared; 0 for a phase.
+    std::uint32_t ret_mask = 0;
 };
 
 // How a recorder answers: a byte in lo..hi with garbage above it (an index,
@@ -115,14 +122,18 @@ enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
 // the pointer ours calls - (std::uint32_t)name, which is Capcom's address or
 // our function - and `address` the original's, the one clones call; for a
 // callee that is Capcom's the two are equal. masks[i] is what of argument i
-// the callee reads (a u8 argument is pushed with garbage above it).
+// the callee reads (a u8 argument is pushed with garbage above it; a pointer
+// into the caller's stack differs between the passes: mask it 0). Up to eight
+// arguments are logged. Bit i of deref16 logs argument i by the 16 bytes it
+// points at instead (an array the caller builds on its stack).
 struct Callee {
     const char* name;
     std::uint32_t address, key;
     unsigned nargs;
-    std::uint32_t masks[4];
+    std::uint32_t masks[8];
     Answer answer;
     std::uint8_t lo, hi;
+    std::uint8_t deref16 = 0;
 };
 
 // A .data table of handlers the functions read in place: its entries are

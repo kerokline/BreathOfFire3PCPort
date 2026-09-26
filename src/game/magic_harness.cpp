@@ -48,8 +48,10 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 std::uint32_t g_rng = 0x2545F491u;
 
-constexpr unsigned kLog = 1024;
-struct Entry { std::uint32_t what, a, b, c, d; };
+// 2,048 calls a round: the largest spell draw so far (Drain's orb, 0x4BEF70,
+// group S18) makes about 1,700.
+constexpr unsigned kLog = 2048;
+struct Entry { std::uint32_t what, a[8], answer; };
 Entry g_log[kLog];
 unsigned g_log_n;
 std::uint32_t g_seed;        // the recorders' own stream: the same on both passes
@@ -64,10 +66,29 @@ std::uint32_t Hash() {
     h ^= h >> 13;
     return h;
 }
-void Log5(std::uint32_t what, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) {
-    if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
+void Log(std::uint32_t what, const std::uint32_t (&a)[8]) {
+    if (g_log_n < kLog) g_log[g_log_n] = {what, {a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]}, 0};
     ++g_log_n;
 }
+void Log5(std::uint32_t what, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) {
+    Log(what, {a, b, c, d, 0, 0, 0, 0});
+}
+
+// What a pointer argument marked in a callee's deref16 points at: its 16
+// bytes folded into one word (the pointer itself is the caller's stack, which
+// differs between the passes; what the callee reads there does not).
+std::uint32_t Digest16(std::uint32_t p) {
+    std::uint32_t w[4];
+    std::memcpy(w, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(p)), sizeof w);
+    std::uint32_t h = 0x811C9DC5u;
+    for (std::uint32_t v : w) h = (h ^ v) * 0x01000193u + (h >> 7);
+    return h;
+}
+
+// Set while a clone marked calm runs: its callees touch none of the battle
+// state, and the original indexes its own stack by a cell it reads again (see
+// Clone::calm), so nothing is moved behind it.
+bool g_calm = false;
 
 // --- the harness's own memory -------------------------------------------------
 
@@ -82,7 +103,7 @@ const Group* g_group = nullptr;
 // Every cell below is one some effect reads again after a call.
 void Disturb() {
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) return;
+    if (g_calm || h % 3 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 4) % 16) {
@@ -122,9 +143,10 @@ struct Slot {
     std::uint32_t address;   // what a clone's call site or table holds
     std::uint32_t key;       // what ours passes to Call
     unsigned nargs;
-    std::uint32_t masks[4];
+    std::uint32_t masks[8];
     Answer answer;
     std::uint8_t lo, hi;
+    std::uint8_t deref16;    // arguments logged by the 16 bytes they point at
     bool handler;            // a phase: logs the slot's phase bytes, answers nothing
     unsigned calls;          // the original's side, for the coverage line
 };
@@ -157,25 +179,29 @@ std::uint32_t Answering(const Slot& s) {
     }
 }
 
+// Eight arguments read (cdecl: a callee taking fewer never looks at the rest,
+// which are the caller's own stack), as many as the callee takes logged.
 template <unsigned I>
-std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3) {
+std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3, std::uint32_t a4,
+                           std::uint32_t a5, std::uint32_t a6, std::uint32_t a7) {
     const Slot& s = g_slots[I];
     if (s.handler) {
         Log5(1000 + I, Cur(), Sprite_Current[1], Sprite_Current[2], 0);
         Disturb();
         return Hash();
     }
-    const std::uint32_t a[4] = {a0, a1, a2, a3};
-    std::uint32_t r[4] = {};
-    for (unsigned i = 0; i < s.nargs && i < 4; ++i) r[i] = a[i] & s.masks[i];
-    Log5(I, r[0], r[1], r[2], r[3]);
+    const std::uint32_t a[8] = {a0, a1, a2, a3, a4, a5, a6, a7};
+    std::uint32_t r[8] = {};
+    for (unsigned i = 0; i < s.nargs && i < 8; ++i) r[i] = (s.deref16 >> i & 1 ? Digest16(a[i]) : a[i]) & s.masks[i];
+    Log(I, r);
     Disturb();
     const std::uint32_t answer = Answering(s);
-    if (s.answer != Answer::kGarbage && g_log_n <= kLog) g_log[g_log_n - 1].d ^= answer & 0xFF;   // the answer in the log
+    if (s.answer != Answer::kGarbage && g_log_n <= kLog) g_log[g_log_n - 1].answer = answer & 0xFF;   // the answer in the log
     return answer;
 }
 
-using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                        std::uint32_t, std::uint32_t, std::uint32_t);
 template <std::size_t... I> constexpr auto MakeStubs(std::index_sequence<I...>) {
     struct T { StubFn f[sizeof...(I)]; };
     return T{{&Stub<I>...}};
@@ -238,14 +264,16 @@ void Register(const Callee& c) {
         if (g_slots[i].address == c.address) return;   // listed twice: the first stands
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0};
+    if (c.nargs > 8) bof3::Fatal("magic_harness: callee %s takes %u arguments, the stand-ins log 8", c.name, c.nargs);
+    s = {c.name, c.address, c.key, c.nargs, {}, c.answer, c.lo, c.hi, c.deref16, false, 0};
+    for (unsigned i = 0; i < 8; ++i) s.masks[i] = c.masks[i];
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return;
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0};
+    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, 0, true, 0};
 }
 const void* StubFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
@@ -274,7 +302,7 @@ void Capture(State& s) {
         std::memcpy(s.memory + n, Mem(g_regions[i].at), g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memcpy(s.log, g_log, sizeof s.log);
+    std::memcpy(s.log, g_log, (g_log_n < kLog ? g_log_n : kLog) * sizeof(Entry));
     s.log_n = g_log_n;
 }
 void Apply(const State& s) {
@@ -283,13 +311,12 @@ void Apply(const State& s) {
         std::memcpy(Mem(g_regions[i].at), s.memory + n, g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memset(g_log, 0, sizeof g_log);
-    g_log_n = 0;
+    g_log_n = 0;   // the entries past the count are never read
     g_rand_pending = g_rand_first;
 }
 bool Same(const State& a, const State& b) {
     return a.log_n == b.log_n && std::memcmp(a.memory, b.memory, g_bytes) == 0 &&
-           std::memcmp(a.log, b.log, sizeof a.log) == 0;
+           std::memcmp(a.log, b.log, (a.log_n < kLog ? a.log_n : kLog) * sizeof(Entry)) == 0;
 }
 unsigned FirstDifference(const State& a, const State& b) {
     for (unsigned i = 0; i < g_bytes; ++i)
@@ -452,19 +479,22 @@ void Run(const Group& group) {
         Capture(input);
 
         const std::uint32_t a0 = Next(), a1 = Next(), a2 = Next();   // the task runner's, ignored
+        g_calm = group.clones[k].calm;
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             State& out = pass ? ours : theirs;
             const void* const fn = pass ? group.clones[k].ours : clones[k];
             g_active = pass == 1;
-            reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
+            const std::uint32_t ret = reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
             g_active = false;
+            if (group.clones[k].ret_mask) Log5(2000, ret & group.clones[k].ret_mask, 0, 0, 0);   // what it answers
             Capture(out);
         }
+        g_calm = false;
         calls += theirs.log_n;
         for (unsigned i = 0; i < theirs.log_n && i < kLog; ++i) {
             const std::uint32_t w = theirs.log[i].what;
-            const unsigned s = w >= 1000 ? w - 1000 : w;
+            const unsigned s = w >= 2000 ? kSlots : w >= 1000 ? w - 1000 : w;
             if (s < g_slot_n) ++g_slots[s].calls;
         }
         if (theirs.log_n > kLog)
