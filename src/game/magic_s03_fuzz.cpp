@@ -278,7 +278,8 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 #define S03_RAW(address) #address, address, address
 const mh::Callee kCallees[] = {
     // listed over the standard ones for their effects
-    {S03_OURS(MagicFx_NearSprite), 2, {kAll, kAll}, mh::Answer::kFlag, 0, 0, {}, &StirAgain},
+    // MagicFx_NearSprite answers an int its two callers here test whole: kBool
+    {S03_OURS(MagicFx_NearSprite), 2, {kAll, kAll}, mh::Answer::kBool, 0, 0, {}, &StirAgain},
     {S03_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &StirAgain},
     {S03_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &StirAgain},
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map: all ours)
@@ -374,7 +375,7 @@ void Seed(unsigned k) {
     case kBlitzBolt_Task: sc[1] = 0; break;
     case kMindSwordBlade_Run:
         sc[2] = Byte(mh::Next() % 6);
-        if (mh::Half()) sc[0xB] = 0;   // the lead blade's draw
+        sc[0xB] = Byte(mh::Half() ? 0 : mh::Half() ? 1 : sc[0xB]);   // the lead blade's draw, and the next
         break;
     case kMindSwordSpark_Run: case kChlorineCloud_Run: sc[2] = Byte(mh::Next() % 3); break;
     case kMindSwordFlash_Run: case kChlorineCopy_Task: sc[2] = Byte(mh::Next() % 4); break;
