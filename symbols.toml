@@ -19763,3 +19763,499 @@ count = 2
 status = "evidence"
 evidence = "read 2026-09-25: Magic074_ActorDispatch's jmp [0x65B1AC + 4 * +1]: Magic074_ActorTask, then Magic074_SparkleUpdate - entry 0 of Magic074_SparkleDispatch's table at 0x65B1B0, which runs on into MAGIC075's code pointers (0x4BCE10..). +1 stays 0."
 
+pc = 0x4BEB50
+name = "Drain_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEB50..0x4BEB75 (0x26 bytes), cdecl: a two-entry stack table (mov [esp + 0/4], imm32 0x4BEB80 0x4F7350) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 52 (file 0x15F = MAGIC079.EMI, the ability ids 0x4F / 0xB7; Drain read one id down, docs/cut-content.md section 2 - a hypothesis in the name); its code pointer, the first function of MAGIC079's extent 0x4BEB50..0x4BF8C3 (tools/magic_rows.py). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEB80
+name = "Drain_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEB80..0x4BEBFC (0x7D bytes), cdecl: +0xB = 0; four times BattleTask_Create(1, 0x2B) (the kind-1 table's entry 43, DrainOrb_Dispatch), the slot's +0x80 = Sprite_Current (read after the call), +1 = 0..3, +2 = 0, +9 = 0x10, Sprite_Current +0xB up; Sound_PlayById(0x100); +1 up. Drain_Task's entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEC00
+name = "DrainOrb_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEC00..0x4BEC11 (0x12 bytes), cdecl: jmp [0x65B240 + 4 * byte +1] (DrainOrb_Types, unchecked): the kind-1 task parameter 0x2B (tools/magic_rows.py: 1.43). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEC20
+name = "DrainOrbA_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEC20..0x4BEC52 (0x33 bytes), cdecl: call [DrainOrbA_Phases 0x65B250 + 4 * byte +2], unchecked; then, Sprite_Current read again, if +0 and +2 are both non-zero: MagicFx_PushActorMatrix, DrainOrb_Draw, jmp Gte_PopMatrix. DrainOrb_Types entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEC60
+name = "DrainOrbA_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEC60..0x4BECC0 (0x61 bytes), cdecl: the target block's object [0x904B4C] +0x34 / +0x38 less 0x4000 and +0x3C plus 0x4000000 to the task's; +0xB = 0x10, +9 = 0x10, +0xA = 0xB0; +2 up. DrainOrbA_Phases entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BECD0
+name = "DrainOrbA_Drop"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BECD0..0x4BECF6 (0x27 bytes), cdecl: word +0x3E += -0x40; +9 down; +2 up at 0. DrainOrbA_Phases entry 1. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BED00
+name = "DrainOrbA_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BED00..0x4BED37 (0x38 bytes), cdecl: +9 up unless 0x20; +0xA down; at 0x30 +9 = 0 and +2 up. DrainOrbA_Phases entry 2. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BED40
+name = "DrainOrbA_Signal"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BED40..0x4BED80 (0x41 bytes), cdecl: +9 up unless 0x20; +0xA down; at 0x10 the owner [0x93B940] +0xB down and +2 up. DrainOrbA_Phases entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BED90
+name = "DrainOrbA_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BED90..0x4BEDBB (0x2C bytes), cdecl: +0xA down, +0xB down; at +0xB 0 jmp BattleTask_FreeCurrent. DrainOrbA_Phases entry 4. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEDC0
+name = "DrainOrbB_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEDC0..0x4BEDF2 (0x33 bytes), cdecl: DrainOrbA_Task's body with DrainOrbB_Phases 0x65B264. DrainOrb_Types entry 1. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEE00
+name = "DrainOrbB_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEE00..0x4BEE74 (0x75 bytes), cdecl: +9 down; at 0: the acting block's object [0x904B3C] +0x34 / +0x38 less 0x4000, +0x3C plus 0x4000000 to the task's; +0xB = 0x10, +9 = 0x10, +0xA = 0; +2 up. DrainOrbB_Phases entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEE80
+name = "DrainOrbB_Drop"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEE80..0x4BEEAF (0x30 bytes), cdecl: word +0x3E += -0x40; +9 down; at 0 +9 = 0x20 and +2 up. DrainOrbB_Phases entry 1. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEEB0
+name = "DrainOrbB_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEEB0..0x4BEEE7 (0x38 bytes), cdecl: +9 down unless 0; +0xA up; at 0x80 +9 = 0x20 and +2 up. DrainOrbB_Phases entry 2. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEEF0
+name = "DrainOrbB_Signal"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEEF0..0x4BEF30 (0x41 bytes), cdecl: +9 down unless 0; +0xA up; at 0xA0 the owner's +0xB down and +2 up. DrainOrbB_Phases entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEF40
+name = "DrainOrbB_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEF40..0x4BEF6B (0x2C bytes), cdecl: +0xA up, +0xB down; at +0xB 0 jmp BattleTask_FreeCurrent. DrainOrbB_Phases entry 4. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BEF70
+name = "DrainOrb_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BEF70..0x4BF51B (0x5AC bytes), cdecl: 23 calls out (Gpu_SetDrawMode, MapView_LinkPrimAt, Math_Sin / _Cos, Gpu_SetPolyG4, Gte_RotTransPers4, Gte_PrimDepths4_10B): 24 rings of eight POLY_G4 each, radius scratch word 0x903850, height -40 n, offset (sin((Frame_Counter + n) & 63 << 6) * 3n) >> 12, shades DrainOrb_ShadeA / _ShadeB by (+0xA + n) & 15, a ring collapsing to +0xB * 2 by +9, +1 and phase +2 (docs/magic_s18.md section 2). About 1,700 calls a frame. Types 0 and 1's draw. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF520
+name = "DrainOrbC_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF520..0x4BF552 (0x33 bytes), cdecl: DrainOrbA_Task's body with DrainOrbC_Phases 0x65B2F8 and DrainOrb_DrawDisc. DrainOrb_Types entry 2. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF560
+name = "DrainOrbC_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF560..0x4BF5A4 (0x45 bytes), cdecl: the target's object's +0x34 / +0x38 / +0x3C to the task's; +9 = 4, +0xA = 0xB0; +2 up. DrainOrbC_Phases entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF5B0
+name = "DrainOrbC_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF5B0..0x4BF5D2 (0x23 bytes), cdecl: +0xA down; +2 up when the owner's +0xB equals +1. DrainOrbC_Phases entry 2 (entry 1 is 0x4C2D10, MAGIC086's). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF5E0
+name = "DrainOrbC_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF5E0..0x4BF612 (0x33 bytes), cdecl: +0xA down, +9 down; at +9 4 the owner's +0xB down and jmp BattleTask_FreeCurrent. DrainOrbC_Phases entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF620
+name = "DrainOrbD_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF620..0x4BF652 (0x33 bytes), cdecl: DrainOrbA_Task's body with DrainOrbD_Phases 0x65B308 and DrainOrb_DrawDisc. DrainOrb_Types entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF660
+name = "DrainOrbD_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF660..0x4BF6AF (0x50 bytes), cdecl: +9 down; at 0 the acting block's object's position to the task's, +9 = 4, +2 up. DrainOrbD_Phases entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF6B0
+name = "DrainOrbD_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF6B0..0x4BF6D2 (0x23 bytes), cdecl: +0xA up; +2 up when the owner's +0xB equals +1. DrainOrbD_Phases entry 2. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF6E0
+name = "DrainOrbD_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF6E0..0x4BF712 (0x33 bytes), cdecl: +0xA up, +9 down; at +9 4 the owner's +0xB down and jmp BattleTask_FreeCurrent. DrainOrbD_Phases entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4BF720
+name = "DrainOrb_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BF720..0x4BF8C3 (0x1A4 bytes), cdecl: 13 calls out: a fan of eight semi-transparent POLY_G3 (Gpu_SetDrawMode tpage 0x55, then 0x15 after), radius +9 << 4 (scratch word 0x903850), Gte_RotTransPers3 / Gte_PrimDepths3_10B, the centre DrainOrb_DiscShade[+0xA & 15] with 0xF0 0xF0, the rim 1 1 1, Gfx_CommitPrim(5, 0x34). Types 2 and 3's draw. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C01F0
+name = "Buff_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C01F0..0x4C0235 (0x46 bytes), cdecl: a six-entry stack table (0x4C0240 0x4B1E70 0x4B1ED0 0x4C03B0 0x4C03D0 0x4E5200) called by byte +1, unchecked. Magic_Rows row 32 (file 0x162 = MAGIC082.EMI, the ability ids 0x22 0x23 0x52 0x54 0x55 0xB8 0xBA 0xBB - the sibling's names/magic.toml; read one id down Steroids, Magic Belt, Protect, Speed, Might: 'Buff' is a hypothesis in the name); its code pointer, the first function of MAGIC082's extent 0x4C01F0..0x4C1461 (tools/magic_rows.py). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0240
+name = "Buff_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0240..0x4C03AC (0x16D bytes), cdecl: the target's object's +8 / +0x34 / +0x38 / +0x3C to the task; +4 = Buff_Kind(); +0xB 0, +9 0x10, +1 up; BattleTask_Create(1, 5) five times (one +1 = 0, four +1 = 1 with +0xB 0/8/0x10/0x18, +9 that + 1, +0xA the task's +9), +0xB counting them; 16 + 16 words 0x80E980 -> 0x812980, Gfx_ClutStripDirty = 1; Sound_PlayById(0x100). Buff_Task's entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C03B0
+name = "Buff_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C03B0..0x4C03C7 (0x18 bytes), cdecl: at +0xB 1 or 0 (unsigned), +9 = 8 and +1 up. Buff_Task's entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C03D0
+name = "Buff_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C03D0..0x4C04EB (0x11C bytes), cdecl: MoveScript_TintRecords[+0xA] bytes +2 / +3 / +4 down; +9 down; at 0: Sprite_ReleaseTint([0x904B4C]), BattleActor_Flash(0x904B44), 0x4FB6F0(byte 0x65C39C[+4], 0x904B44), BattleTask_Create(1, 0x48) with +0x80 the task, +4 the task's +4 when that answered non-zero else 8, +9 1, +0xA 0; +0xB up; +1 up. Buff_Task's entry 4. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C04F0
+name = "Buff_Kind"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C04F0..0x4C0611 (0x122 bytes), cdecl: 0x88 bytes of code, a four-entry jump table (0x4C0568) and a 0x9A-byte index table (0x4C0578): byte 0x904B35 4 -> by the word 0x904B80, 0x52 / 0xB8 answer 0, 0x54 / 0xBA 1, 0x22 / 0x23 / 0x55 / 0xBB 2, else 3 - exactly MAGIC082's ability ids (names/magic.toml) in the three pairs 0x66 apart; any other 0x904B35: 0x10B -> word 0x52 and 0, 0x211 -> 0x54 and 1, 0x14 / 0x117 -> 0x55 and 2, else 3. Called by Buff_Start only. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0620
+name = "BuffFx_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0620..0x4C0631 (0x12 bytes), cdecl: jmp [0x65B3D8 + 4 * byte +1] (BuffFx_Types, unchecked): the kind-1 task parameter 5 (tools/magic_rows.py: 1.5). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0640
+name = "BuffRing_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0640..0x4C0671 (0x32 bytes), cdecl: call [BuffRing_Phases 0x65B3E0 + 4 * byte +2], unchecked; while +0 is non-zero: MagicFx_PushActorMatrix, BuffRing_DrawBand, BuffRing_DrawDisc, jmp Gte_PopMatrix. BuffFx_Types entry 0. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0680
+name = "BuffRing_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0680..0x4C0693 (0x14 bytes), cdecl: +2 up once the owner's +0xB is 2 or less. BuffRing_Phases entry 1 (reached also from MAGIC062, 110, 219..221 by magic_rows.py). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C06A0
+name = "BuffRing_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C06A0..0x4C0890 (0x1F1 bytes), cdecl: 13 calls out: sixteen semi-transparent POLY_G3 (tpage 0x35, 0x15 after), radius (sin / cos << 7) >> 12, the centre +9 * 5 grey, the rim BuffRing_DiscColors[3 * +4] times +9 (scratch words 0x903856..0x90385C), Gfx_CommitPrim(5, 0x34). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C08A0
+name = "BuffRing_DrawBand"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C08A0..0x4C0AE6 (0x247 bytes), cdecl: 17 calls out: sixteen semi-transparent POLY_G4 (tpage 0x35), inner radius << 7, outer << 8, the inner edge BuffRing_BandColors[3 * +4] times +9, the outer 1 1 1, Gfx_CommitPrim(5, 0x44). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0AF0
+name = "BuffSpike_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0AF0..0x4C0B01 (0x12 bytes), cdecl: jmp [BuffSpike_Phases 0x65B3EC + 4 * byte +2], unchecked. BuffFx_Types entry 1. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0B10
+name = "BuffSpike_Arc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0B10..0x4C0BA4 (0x95 bytes), cdecl: BattleActor_UpdateScreenXY, MagicFx_DrawDiscRadius((Rand() & 3) + 0x18), MagicFx_PushActorMatrix, BuffSpike_Draw, Gte_PopMatrix; +9 up on odd Frame_Counter; +0x14 += +0x20, word +0x3E += word +0x14; +0xA down; at 0 +0x14 = -16, +0x20 = 4, +0xA = 8, +2 up. BuffSpike_Phases entry 2. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0BB0
+name = "BuffSpike_Arc2"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0BB0..0x4C0C31 (0x82 bytes), cdecl: BuffSpike_Arc's frame and flight; at +0xA 0, +0xA = 0x1C - +0xB and +2 up. BuffSpike_Phases entry 3. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0C40
+name = "BuffSpike_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0C40..0x4C0D13 (0xD4 bytes), cdecl: the frame with the disc (Rand() & 3) + 0x40 when dword +0xC is 4 and +0xA below 5, else + 0x18; dword +0xC below 4 (signed): +0x10 up, and +0xC up when +0x10 & 7 is 0; +9 += byte +0xC; at +0xC 4: +0xA down, at 0 Sound_PlayById(0x101) if +0xB is 0, +0x10 / +0x14 / +0x20 = 8, +2 up. BuffSpike_Phases entry 4. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0D20
+name = "BuffSpike_Orbit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0D20..0x4C0E23 (0x104 bytes), cdecl: the frame with the disc (Rand() & 3) + 0x20; +0x10 += 4; +9 += +0xC; +0xB += 2; scratch 0x903854 = (+0xB & 31) << 7, 0x903850 = +0xA * word +0x10 + 0xB0 (16-bit); +0x34 / +0x38 = the owner's plus (sin / cos * that) >> 3; +0xA up; at 0x10 the owner's +0xB down and jmp BattleTask_FreeCurrent. BuffSpike_Phases entry 5. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C0E30
+name = "BuffSpike_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C0E30..0x4C12E8 (0x4B9 bytes), cdecl: 18 calls out: two rows of four POLY_G3 (radius 0x30, the apex +0x50 then -0x50, angles (a & 31) << 7 for a from +9 by 8), coloured by BuffSpike_ColorsUp / _ColorsDown[3 * (i + 4 * +4)], each depth (Gte_RotAverage3) into a four-entry stack array by (a - +9) / 8 read again, Gfx_PacketNext += 0x34 each; each row to 0x4FB880(x, z, depths, first packet, 4, 0x34, 2), the effect library's. Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[func]]
+pc = 0x4C12F0
+name = "MagicFx_DrawDiscRadius"
+ret = "void"
+params = "unsigned radius"
+impl = "src/game/magic_s18.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C12F0..0x4C1461 (0x172 bytes), cdecl: cdecl, one argument (its low word read): eight semi-transparent POLY_G3 on screen at +0x2E / +0x30, the float vertices (sin / cos * radius) >> 12 added, the centre 0x80 grey, the rim 1 1 1, each with Gpu_SetDrawMode(0x35) and MapView_LinkPrimAt(x, z, 2, 0xC / 0x34) - MagicFx_DrawDisc's (0x4C54F0) shape with the radius passed in. Reached from MAGIC082 and MAGIC083 (magic_rows.py). Fuzz only (docs/magic_s18.md): no recorded route casts it."
+
+[[data]]
+pc = 0x65B240
+name = "DrainOrb_Types"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4BEC20 0x4BEDC0 0x4BF520 0x4BF620, read by DrainOrb_Dispatch as jmp [0x65B240 + 4 * +1], unchecked; Drain_Start gives its four children +1 = 0..3."
+
+[[data]]
+pc = 0x65B250
+name = "DrainOrbA_Phases"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: 0x4BEC60 0x4BECD0 0x4BED00 0x4BED40 0x4BED90, called by DrainOrbA_Task by +2, unchecked (the fifth frees the task)."
+
+[[data]]
+pc = 0x65B264
+name = "DrainOrbB_Phases"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: 0x4BEE00 0x4BEE80 0x4BEEB0 0x4BEEF0 0x4BEF40, called by DrainOrbB_Task by +2, unchecked."
+
+[[data]]
+pc = 0x65B278
+name = "DrainOrb_ShadeA"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-25: DrainOrb_Draw's movsx-indexed word [0x65B278 + 4 * i], i = (+0xA + n) & 15: a ring's colour in phases 2 and 3."
+
+[[data]]
+pc = 0x65B2B8
+name = "DrainOrb_ShadeB"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-25: DrainOrb_Draw's word [0x65B2B8 + 4 * i]: a ring's colour in the other phases and a collapsed ring's."
+
+[[data]]
+pc = 0x65B2F8
+name = "DrainOrbC_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4BF560 0x4C2D10 (MAGIC086's) 0x4BF5B0 0x4BF5E0, called by DrainOrbC_Task by +2, unchecked."
+
+[[data]]
+pc = 0x65B308
+name = "DrainOrbD_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4BF660 0x4C2D10 0x4BF6B0 0x4BF6E0, called by DrainOrbD_Task by +2, unchecked."
+
+[[data]]
+pc = 0x65B318
+name = "DrainOrb_DiscShade"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-25: DrainOrb_DrawDisc's word [0x65B318 + 4 * (+0xA & 15)]: the centre's red byte (also to scratch 0x903858)."
+
+[[data]]
+pc = 0x65B360
+name = "BuffSpike_ColorsUp"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-25: BuffSpike_Draw's first row: bytes [0x65B360 + 3 * (i + 4 * +4)] +0 / +1 / +2, i 0..3 and the kind +4 0..3 (Buff_Kind): 48 bytes, the next table at +0x30."
+
+[[data]]
+pc = 0x65B390
+name = "BuffSpike_ColorsDown"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-25: BuffSpike_Draw's second row, the same indexing."
+
+[[data]]
+pc = 0x65B3C0
+name = "BuffRing_DiscColors"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: BuffRing_DrawDisc's rim: bytes [0x65B3C0 + 3 * +4] +0 / +1 / +2, each times +9."
+
+[[data]]
+pc = 0x65B3CC
+name = "BuffRing_BandColors"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: BuffRing_DrawBand's inner edge: bytes [0x65B3CC + 3 * +4], each times +9."
+
+[[data]]
+pc = 0x65B3D8
+name = "BuffFx_Types"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x4C0640 0x4C0AF0, read by BuffFx_Dispatch as jmp [0x65B3D8 + 4 * +1], unchecked; Buff_Start's children have +1 0 (the ring) and 1 (the spikes)."
+
+[[data]]
+pc = 0x65B3E0
+name = "BuffRing_Phases"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: 0x4C2D10 (MAGIC086's) 0x4C0680 0x4B1740 (MAGIC060's: +9 down, at 0 the owner's +0xB down and freed), called by BuffRing_Task by +2, unchecked."
+
+[[data]]
+pc = 0x65B3EC
+name = "BuffSpike_Phases"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-25: 0x4BDD20 (MAGIC078's) 0x4C1EB0 (MAGIC083's) 0x4C0B10 0x4C0BB0 0x4C0C40 0x4C0D20, read by BuffSpike_Dispatch as jmp [0x65B3EC + 4 * +2], unchecked."

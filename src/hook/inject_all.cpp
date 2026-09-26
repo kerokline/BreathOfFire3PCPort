@@ -121,6 +121,7 @@
 #include "game/magic_steal.h"
 #include "game/magic_lib.h"
 #include "game/magic_s16.h"
+#include "game/magic_s18.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -322,6 +323,9 @@ void InjectAll() {
                                 // four .data dispatch cells re-aimed at the harness's recorders; no module patches
                                 // bytes inside its sixty (DIV-0046's masks are Pilfer's and Steal's): order does
                                 // not matter
+    MagicS18_Inject();          // round 9 group S18 (MAGIC079 / MAGIC082 through the spell harness): its clones' calls,
+                                // stack-table immediates and eight .data tables re-aimed at recorders; no module
+                                // patches bytes inside its 42: order does not matter
     InjectReport();
 }
 
