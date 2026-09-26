@@ -27061,3 +27061,487 @@ ctype = "unsigned char"
 count = 6
 status = "evidence"
 evidence = "read 2026-09-26: six bytes (.bss), cleared by WhelpBreathSprite_Start (a dword and a word), stepped by WhelpBreathFlames_Draw, read by WhelpBreathFlames_DrawColumn: each flame of a column's age. No other reference found (E8 scan of the group's functions only)."
+
+# --- Round nine group S26 (docs/magic_s26.md): MAGIC114, MAGIC115, MAGIC117.
+
+[[func]]
+pc = 0x4D7960
+name = "Magic114_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7960..0x4D79FE (0x9F bytes), cdecl, group S26: the kind-2 task: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) and Gfx_CommitPrim(3, 0xC); while +0 and +1 are set, Magic114_DrawRing (Sprite_Current read again); a seven-entry stack table (mov [esp + 0..0x18], imm32 0x4D7A00 0x4D7AA0 0x4D7AD0 0x4D7B00 0x4D7B70 0x4D7BA0 0x4D7BD0) called by +1, unchecked; the draw mode and commit again. Magic_Rows row 11, file 0x283 = MAGIC114.EMI, ability id 0x72 (Fire Whip read one id down, a hypothesis: docs/cut-content.md section 2); the first function of MAGIC114's extent 0x4D7960..0x4D9437 (tools/magic_rows.py). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7A00
+name = "Magic114_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7A00..0x4D7A94 (0x95 bytes), cdecl, group S26: entry 0: Gfx_ClutStrip words 0x200..0x2FF = Gfx_ClutStripSource's | 0x8000 and 0x1A00..0x1AFF = the source's as they are (one loop, 0x80F980 / 0x812980 from 0x80B980 / 0x80E980); Gfx_ClutStripDirty 1; Sound_PlayById(0x100); +8 and +0x34 / +0x38 / +0x3C the owner's (0x93B940, read again for each); +0xA 0; +1 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7AA0
+name = "Magic114_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7AA0..0x4D7AC9 (0x2A bytes), cdecl, group S26: entry 1: +0xA up; above 0x20, +1 on and +9 0. No calls. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7AD0
+name = "Magic114_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7AD0..0x4D7AF9 (0x2A bytes), cdecl, group S26: entry 2: +9 up; above 0x20, +1 on and +9 0. No calls. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7B00
+name = "Magic114_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7B00..0x4D7B6C (0x6D bytes), cdecl, group S26: entry 3: +9 up; at 0x20 or more: +1 on, Sound_PlayById(0x101), BattleTask_Create(1, 7) (Magic114_ChildTask) with +1 0, +8 the owner's, +0x80 the owner (0x93B940 read after the call). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7B70
+name = "Magic114_Rays"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7B70..0x4D7B91 (0x22 bytes), cdecl, group S26: entry 4: +9 down; at 0 +1 on; else a tail jmp to Magic114_DrawRays. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7BA0
+name = "Magic114_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7BA0..0x4D7BCA (0x2B bytes), cdecl, group S26: entry 5: +0xA down; at 0 +1 on and +9 0x40. No calls. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7BD0
+name = "Magic114_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7BD0..0x4D7C04 (0x35 bytes), cdecl, group S26: entry 6 (also in MAGIC054's and MAGIC113's stack tables): +9 down; at 0 Battle_SetTargetFlag40(byte 0x904B44), byte 0x904AA8 |= 4, tail jmp BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7C10
+name = "Magic114_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7C10..0x4D7CFB (0xEC bytes), cdecl, group S26: Magic114_PushMatrix; the start Gfx_PacketNext kept; eight times (i 0..7): +0xC / +0x10 = Magic114_RingOffsets[(i & 3) * 2 + 0 / 1] x byte +0xA (imul), turned by 0x446770, copied to +0x34 / +0x38; +0xC / +0x10 the next two x +0xA, turned; +0xB = i; Magic114_DrawTriangle(a local int[8]); then MagicFx_LinkByDepth(owner +0x34, +0x38, the locals, the start, 8, 0x34, 2), Gte_PopMatrix. Sprite_Current read again after every call. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D7D00
+name = "Magic114_DrawTriangle"
+ret = "void"
+params = "int *keys"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7D00..0x4D7FFB (0x2FC bytes), cdecl, group S26: Gpu_SetPolyG3(Gfx_PacketNext); vertices (+0x34 sar 9, +0x38 sar 9, 0), (+0xC sar 9, +0x10 sar 9, 0), (0, 0, +0xA x 3, negated for +0xB 4 and up) in Prim_VertexScratch; Gte_RotAverage3 (eight arguments, the last two the frame's) into keys[+0xB] (read again after the call); colours by +0xB through an eight-entry jump table (0x4D7FC4; 8 and up: none written); in phase +1 2 with Frame_Counter & 0x18 0 and +0xB above 3 and ((Frame_Counter >> 1) ^ +0xB) & 3 0: all three (0x80, 0x80, 0xC0); in phases 3 and 4 a six-entry jump table (0x4D7FE4) by +0xB - 1 fades one vertex by +9 for indices 1, 2, 5, 6; Gfx_PacketNext (read again) += 0x34. cdecl, one pointer argument. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8000
+name = "Magic114_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8000..0x4D80B9 (0xBA bytes), cdecl, group S26: Gte_PushMatrix; rotation (0, 0, ((byte +0xA & 0x1F) - 2) << 7 as a word); vector ((owner +0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -((s16 +0x3E + 0x200) / 2)); Gte_RotTrans (three pushed, the flag the frame's), Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D80C0
+name = "Magic114_ChildTask"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D80C0..0x4D80D1 (0x12 bytes), cdecl, group S26: kind 1 parameter 7: jmp [Magic114_ChildKinds + 4 * byte +1], unchecked (three entries: Magic114_TrailRun, Magic114_BeamRun, Magic114_SpriteRun). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D80E0
+name = "Magic114_TrailRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D80E0..0x4D80F1 (0x12 bytes), cdecl, group S26: Magic114_ChildKinds[0]: jmp [Magic114_TrailPhases + 4 * byte +2], unchecked (two entries). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8100
+name = "Magic114_TrailAim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8100..0x4D819F (0xA0 bytes), cdecl, group S26: Magic114_TrailPhases[0]: MagicFx_CenterOnSide; +0x14 = s16 +0x3E; +0xC / +0x10 = Magic114_RingOffsets[4] / [5] << 5, turned by 0x446770; +0x34 / +0x38 the owner's plus them, word +0x3E the owner's + 0x200; +0xA and +9 0; +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D81A0
+name = "Magic114_TrailSpawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D81A0..0x4D82AC (0x10D bytes), cdecl, group S26: Magic114_TrailPhases[1]: Magic114_DrawTrail; BattleTask_Create(1, 7) with +0x80 the owner, +1 2, +8 the owner's, +0x34 / +0x38 = +0xC / +0x10 + Field_Kind2X / Field_Kind2Z, word +0x3E = word +0x14; with +9 0 a second (+1 1, +0x80 the owner, +8 / +0xC / +0x10 / word +0x3E this task's (+0x14), +9 0x10, +0xB 0); +9 up; above 0xC BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D82B0
+name = "Magic114_DrawTrail"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D82B0..0x4D8520 (0x271 bytes), cdecl, group S26: +0x10 = (5 - +9) << 17, +0xC 0x28000, turned (0x446770): x / z = them + Field_Kind2X / Z; Gpu_SetDrawMode(.., 0xB5), MapView_LinkPrimAt(x, z, 0, 0xC); Gpu_SetPolyG4 and Gpu_SetSemiTrans(p, 1) on Gfx_PacketNext; vertices at the position turned from (0, -0x1000) and (0, 0x1000), at x / z, and at ((0x28000, (7 - +9) x 3 << 15) turned) + Field_Kind2X / Z (height dword +0x14 halved); Gte_RotAverage4 (ten arguments); colours (0x10, 1, 1) x 2, (0xE0, 0x40, 0x40), (1, 1, 1); MapView_LinkPrimAt(x, z, 0, 0x44). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8530
+name = "Magic114_BeamRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8530..0x4D856F (0x40 bytes), cdecl, group S26: Magic114_ChildKinds[1]: call [Magic114_BeamPhases + 4 * byte +2], unchecked (three entries); then with +0 and +2 set: Magic114_DrawBeamGlow, Magic114_DrawBeamStrip(byte +0xB, pushed in eax over the previous call's answer), tail jmp Magic114_DrawBeamCore. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8570
+name = "Magic114_BeamWait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8570..0x4D85F0 (0x81 bytes), cdecl, group S26: Magic114_BeamPhases[0]: +9 down; at 0 Sound_PlayById(0x102), +0x34 / +0x38 = +0xC / +0x10 + Field_Kind2X / Z, +0xB 0, +9 0x10, dwords +0x14 and +0x20 0, +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8600
+name = "Magic114_BeamGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8600..0x4D8651 (0x52 bytes), cdecl, group S26: Magic114_BeamPhases[1]: dword +0x20 -= 5; dword +0x14 0x30: Battle_SetTargetFlags(byte 0x904B44, 0x10); +0x14 += 2; at 0xC0 +0xB 1 and +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8660
+name = "Magic114_BeamFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8660..0x4D869A (0x3B bytes), cdecl, group S26: Magic114_BeamPhases[2]: dword +0x20 -= 5, dword +0x14 += 2, +9 down; at 0 tail jmp BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D86A0
+name = "Magic114_DrawBeamCore"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D86A0..0x4D8A56 (0x3B7 bytes), cdecl, group S26: Gpu_SetDrawMode(.., 0xB5), Gfx_CommitPrim(3, 0xC); the first pair turned from (0x80000, 0) and (-0x30000, 0); while i (from 1) is below dword +0x14 (signed) and the depth -0x8000 i is above -0x1C0000 (at most 55 steps): Gpu_SetPolyFT4, Gpu_SetSemiTrans(p, 1), the last pair copied, the next turned from ((+0x14 - i < 0x20 ? (+0x14 - i) << 14 : 0x80000), depth) and ((+0x14 - i < 8 ? (i - +0x14) x 3 << 13 : -0x30000), depth), Gpu_GetTPage(1, 1, 0x340, 0x100) to +0x26, Gpu_GetClut(0, 0x1E2) to +0x16, v = (dword +0x20 + 4 i) mod 0xBC (unsigned) + 0x40 through DamageScratch's word, Gte_RotAverage4, grey (Math_Sin(((Frame_Counter + i) & 0x3F) << 6) << 5 sar 12) + 0xA0 while +2 is below 2 else +9 x 10 through the word at 0x903852; Gfx_CommitPrim(3, 0x48). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8A60
+name = "Magic114_DrawBeamStrip"
+ret = "void"
+params = "unsigned abr"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8A60..0x4D8DD1 (0x372 bytes), cdecl, group S26: as Magic114_DrawBeamCore with the argument's byte abr: Gpu_SetDrawMode(.., 0x95 | (abr & 3) << 5), Gfx_CommitPrim(5, 0xC); Gpu_SetSemiTrans(p, abr), Gpu_GetTPage(1, abr, 0x340, 0x100); u = (i & 0xF) x 12 + 0x40, v 0 / 0xC4 and u + 0xB; grey +9 x 8; Gfx_CommitPrim(5, 0x48). cdecl, one argument (read as a byte). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D8DE0
+name = "Magic114_DrawBeamGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D8DE0..0x4D90C2 (0x2E3 bytes), cdecl, group S26: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(5, 0xC); the first pair turned from (-0x30000, 0) and (-0x50000, 0), heights -(s16 +0x3E / 2); the core's loop with Gpu_SetPolyG4, the pair from ((+0x14 - i < 8 ? (i - +0x14) x 3 << 13 : -0x30000), depth) and (x 5, -0x50000); Gte_RotAverage4; grey +9 x 4 at the inner two, (1, 1, 1) at the outer; Gfx_CommitPrim(5, 0x44). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D90D0
+name = "Magic114_SpriteRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D90D0..0x4D90F6 (0x27 bytes), cdecl, group S26: Magic114_ChildKinds[2]: dword 0x9039D8 = 0x8E3580; call [Magic114_SpritePhases + 4 * byte +2], unchecked (two entries); 0x9039D8 = 0x8B3580. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9100
+name = "Magic114_SpriteStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9100..0x4D917E (0x7F bytes), cdecl, group S26: Magic114_SpritePhases[0]: +0x25 0x1D, +0x26 0, +0x27 0x1A, +0x28 1, +0x2A (+8 - 1) & 1, +0x29 4, +0x24 0, word +0x2C 0, +0x2B 0, +9 0, +2 on; Sprite_SetAnimation(0); tail jmp Sprite_UpdateScreen. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9180
+name = "Magic114_SpriteTick"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9180..0x4D9192 (0x13 bytes), cdecl, group S26: Magic114_SpritePhases[1]: Sprite_ScriptTickOnce; al not 0: tail jmp BattleTask_FreeCurrent, else tail jmp Sprite_UpdateScreen. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D91A0
+name = "Magic114_DrawRays"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D91A0..0x4D9317 (0x178 bytes), cdecl, group S26: with +9 above 0x18: Magic114_PushRayMatrix; r = ~+9 & 0x1F, grey 0x80 - r << 4, dy a frame byte 0 or 0xFE (+8 above 1; the dword's upper bytes the frame's); for angles 0..0xFC0 by 0x40: Gpu_SetDrawMode(.., 0xB5), MapView_LinkPrimAt(+0x34, +0x38, dy, 0xC), Gpu_SetLineF2, Gpu_SetSemiTrans(p, 1), the two points (Math_Cos / Math_Sin(angle) x r << 4 shr 12, 0) through Gte_RotTransPers and Gte_StoreDepthF, the grey, MapView_LinkPrimAt(.., 0x20); Gte_PopMatrix. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9320
+name = "Magic114_PushRayMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9320..0x4D9437 (0x118 bytes), cdecl, group S26: Gte_PushMatrix; rotation (0x400, 0, 0) for +8 odd, else (0, 0x400, 0); +0xC 0xC000, +0x10 0, turned (0x446770, its argument never popped); +0x34 / +0x38 the owner's plus them, word +0x3E the owner's + 0x200; the matrix at that position as Magic114_PushMatrix's. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9440
+name = "Magic115_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9440..0x4D9475 (0x36 bytes), cdecl, group S26: the kind-2 task: a four-entry stack table (imm32 0x4D9480 0x4D9560 0x4D95B0 0x4F7350 BattleFx_Finish) called by byte +1, unchecked. Magic_Rows row 115, file 0x284 = MAGIC115.EMI, ability ids 0x73 / 0xD7 (Remedy read one id down, a hypothesis: docs/cut-content.md section 2); the first function of MAGIC115's extent 0x4D9440..0x4D9ADA (tools/magic_rows.py). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9480
+name = "Magic115_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9480..0x4D955A (0xDB bytes), cdecl, group S26: entry 0: the source sprite 0x904B4C read once; +0x34 / +0x38 / +0x3C its; BattleTask_Create(1, 0x30) with +0x80 this task and +1 0; Sprite_ReleaseTint(source), Sprite_SetTint(source, 0, 0, 0, 1) into +0xA; Gfx_ClutStrip words 0x1A00..0x1A0F = the source strip's | 0x8000, then word 0x1A00 the source's; Gfx_ClutStripDirty 1; Sound_PlayById(0x100); +0xB 1, +9 0, +1 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9560
+name = "Magic115_TintUp"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9560..0x4D95AC (0x4D bytes), cdecl, group S26: entry 1: bytes +2..+4 of MoveScript_TintRecords[+0xA] (unchecked) = +9 << 1; at +9 6 or more +1 on. No calls. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D95B0
+name = "Magic115_TintDown"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D95B0..0x4D9627 (0x78 bytes), cdecl, group S26: entry 2: on odd Frame_Counter bytes +2..+4 of MoveScript_TintRecords[+0xA] down one; byte +2 0: Tint_Release(+0xA) and +1 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9630
+name = "Magic115_ChildTask"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9630..0x4D9641 (0x12 bytes), cdecl, group S26: kind 1 parameter 0x30: jmp [Magic115_ChildKinds + 4 * byte +1], unchecked (two entries). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9650
+name = "Magic115_OrbitRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9650..0x4D968C (0x3D bytes), cdecl, group S26: Magic115_ChildKinds[0]: dword 0x9039D8 = 0x8E3580; call [Magic115_OrbitPhases + 4 * byte +2], unchecked (four entries, the last MAGIC058's 0x4AF490); +0 and +2 set: Sprite_UpdateScreen; 0x9039D8 = 0x8B3580. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9690
+name = "Magic115_OrbitStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9690..0x4D9780 (0xF1 bytes), cdecl, group S26: Magic115_OrbitPhases[0]: +0x34 / +0x38 the owner's, word +0x3E the owner's + 0x2C0; the sprite set up (+0x25 0x1D, +0x26 0, +0x40 / +0x44 0x10000, +0x48 1, +0x27 0xA0, +0x28 0, +0x24 4, +0x5C..+0x5F 0, +0x2A 0, +0x29 4, word +0x2C 0, +0x2B 0); Sprite_SetAnimation(0); +9 0xFF; +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9790
+name = "Magic115_Orbit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9790..0x4D98D7 (0x148 bytes), cdecl, group S26: Magic115_OrbitPhases[1]: Sprite_ScriptTick; +9 up; dword 0x903850 = (+9 & 0x3F) << 6; +0x34 = (Math_Sin(it) x 3 << 14 sar 12) + owner +0x34, +0x38 the same with Math_Cos(the dword read again); +9 & 7 0: BattleTask_Create(1, 0x30) with +0x80 the owner, +1 1, +9 ((+9 >> 2) + 2) << 2, this task's position, the owner's +9 and +0xB up; +9 0x40: +0 |= 0x20, +0x5C 1, +0x5D..+0x5F 0xC0, +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D98E0
+name = "Magic115_OrbitFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D98E0..0x4D9988 (0xA9 bytes), cdecl, group S26: Magic115_OrbitPhases[2]: +0x5D..+0x5F += 0xFC; Sprite_ScriptTick; Magic115_Orbit's step of +9 and the position; +0x5D 0x80; +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9990
+name = "Magic115_MoteRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9990..0x4D99CC (0x3D bytes), cdecl, group S26: Magic115_ChildKinds[1]: as Magic115_OrbitRun through Magic115_MotePhases (four entries, the last 0x4AF490). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D99D0
+name = "Magic115_MoteStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D99D0..0x4D9A7E (0xAF bytes), cdecl, group S26: Magic115_MotePhases[0]: Magic115_OrbitStart's sprite set-up without the position; Sprite_SetAnimation(1); +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9A80
+name = "Magic115_MoteTick"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9A80..0x4D9A97 (0x18 bytes), cdecl, group S26: Magic115_MotePhases[1]: Sprite_ScriptTickOnce twice; the second's al not 0: +2 += 2. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9AA0
+name = "Magic115_MoteFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9AA0..0x4D9ADA (0x3B bytes), cdecl, group S26: Magic115_MotePhases[2]: +0x5D..+0x5F += 0xFC; Sprite_ScriptTickOnce; +0x5D 0x80; +2 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9F40
+name = "Magic117_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9F40..0x4D9F75 (0x36 bytes), cdecl, group S26: the kind-2 task: a four-entry stack table (imm32 0x4D9F80 0x4D9FD0 0x4DA040 0x43F460, the last the engine's end of row 123) called by byte +1, unchecked. Magic_Rows row 73, file 0x286 = MAGIC117.EMI, ability ids 0x75 / 0x98 (Rest and Snooze read one id down, a hypothesis: docs/cut-content.md section 2); the first function of MAGIC117's extent 0x4D9F40..0x4DA214 (tools/magic_rows.py). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9F80
+name = "Magic117_TintSet"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9F80..0x4D9FC6 (0x47 bytes), cdecl, group S26: entry 0: Sprite_ReleaseTint(source 0x904B4C), Sprite_SetTint(the source read again, 0, 0, 0, 1) into +0xB; +9 0, +0xA 2, +1 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4D9FD0
+name = "Magic117_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D9FD0..0x4DA033 (0x64 bytes), cdecl, group S26: entry 1 (also MAGIC010's): bytes +2..+4 of MoveScript_TintRecords[+0xB] (unchecked) up one; +9 up; at 0x10 +1 on. No calls. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4DA040
+name = "Magic117_Dim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DA040..0x4DA0DB (0x9C bytes), cdecl, group S26: entry 2: the tint record's bytes down one; +9 down; at 0 +0xA down: not 0, +1 down (back to Magic117_Brighten); 0, Sprite_ReleaseTint(source), BattleActor_Flash(byte 0x904B44), +1 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4DA0E0
+name = "Magic117_TaskB"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DA0E0..0x4DA115 (0x36 bytes), cdecl, group S26: the kind-2 task of row 106: a four-entry stack table (imm32 0x49DF30 MAGIC010's, 0x4DA120, 0x4DA190, 0x43F460) called by byte +1, unchecked. Magic_Rows row 106, file 0x286 = MAGIC117.EMI, ability id 0x95 (Douse read one id down, a hypothesis). Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4DA120
+name = "Magic117_Darken"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DA120..0x4DA183 (0x64 bytes), cdecl, group S26: entry 1 of Magic117_TaskB: the tint record +0xB's bytes +2..+4 down one; +9 up; at 0x10 +1 on. No calls. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[func]]
+pc = 0x4DA190
+name = "Magic117_Lighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s26.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DA190..0x4DA214 (0x85 bytes), cdecl, group S26: entry 2 of Magic117_TaskB: the tint record's bytes up one; +9 down; at 0 Sprite_ReleaseTint(source), BattleActor_Flash(byte 0x904B44), +1 on. Fuzz only (BOF3X_SHADOW=magic_s26): no recorded route casts it (docs/magic_s26.md)."
+
+[[data]]
+pc = 0x65BA40
+name = "Magic114_RingOffsets"
+ctype = "int"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-26: ten dwords Magic114_DrawRing reads by (i & 3) * 8 + 0 / 4 / 8 / 0xC (to 0x65BA67) and Magic114_TrailAim entries 4 and 5; the ring's point offsets, scaled by the size byte. Read in place by ours; not copied."
+
+[[data]]
+pc = 0x65BA68
+name = "Magic114_ChildKinds"
+status = "evidence"
+evidence = "read 2026-09-26: Magic114_ChildTask's jmp table by +1: 0x4D80E0 0x4D8530 0x4D90D0; Magic114_TrailPhases follows."
+
+[[data]]
+pc = 0x65BA74
+name = "Magic114_TrailPhases"
+status = "evidence"
+evidence = "read 2026-09-26: Magic114_TrailRun's jmp table by +2: 0x4D8100 0x4D81A0."
+
+[[data]]
+pc = 0x65BA7C
+name = "Magic114_BeamPhases"
+status = "evidence"
+evidence = "read 2026-09-26: Magic114_BeamRun's call table by +2: 0x4D8570 0x4D8600 0x4D8660."
+
+[[data]]
+pc = 0x65BA88
+name = "Magic114_SpritePhases"
+status = "evidence"
+evidence = "read 2026-09-26: Magic114_SpriteRun's call table by +2: 0x4D9100 0x4D9180; MAGIC115's tables follow."
+
+[[data]]
+pc = 0x65BA90
+name = "Magic115_ChildKinds"
+status = "evidence"
+evidence = "read 2026-09-26: Magic115_ChildTask's jmp table by +1: 0x4D9650 0x4D9990."
+
+[[data]]
+pc = 0x65BA98
+name = "Magic115_OrbitPhases"
+status = "evidence"
+evidence = "read 2026-09-26: Magic115_OrbitRun's call table by +2: 0x4D9690 0x4D9790 0x4D98E0 0x4AF490 (MAGIC058's)."
+
+[[data]]
+pc = 0x65BAA8
+name = "Magic115_MotePhases"
+status = "evidence"
+evidence = "read 2026-09-26: Magic115_MoteRun's call table by +2: 0x4D99D0 0x4D9A80 0x4D9AA0 0x4AF490; MAGIC118's table follows at 0x65BAB8."

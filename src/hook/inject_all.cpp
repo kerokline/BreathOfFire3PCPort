@@ -136,6 +136,7 @@
 #include "game/magic_s31.h"
 #include "game/magic_s28.h"
 #include "game/magic_s27.h"
+#include "game/magic_s26.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -387,6 +388,9 @@ void InjectAll() {
     MagicS27_Inject();          // round 9 group S27 (MAGIC118, 120, 121): its clones' calls, stack-table immediates
                                 // and two jump tables re-aimed or moved, its six .data tables swapped for the fuzz
                                 // only; no module patches bytes inside its 47: order does not matter
+    MagicS26_Inject();          // round 9 group S26 (MAGIC114, 115, 117): its clones' calls, stack-table immediates,
+                                // jump tables and seven .data tables re-aimed or moved for the fuzz only; no module
+                                // patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 
