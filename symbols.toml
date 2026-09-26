@@ -28871,3 +28871,747 @@ pc = 0x6A2D38
 name = "Holocaust_Sparks"
 status = "evidence"
 evidence = "read 2026-09-26, group C2: 64 records of 0x84 (bss), bit 0 of +0 live; allocated by HolocaustSpark_Alloc, walked by Holocaust_Task."
+
+# --- round 9 group C1 (docs/magic_c1.md): MAGIC010, 080, 113, 145, 146, 213 ---
+
+[[func]]
+pc = 0x49DEF0
+name = "WhiteFlag_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DEF0..0x49DF25 (0x36 bytes), group C1: a four-entry stack table (WhiteFlag_TintSource, 0x4D9FD0 - MAGIC117, group S26 -, WhiteFlag_Untint, 0x43F460 - the engine row 123 end, group E) called by byte +1, unchecked. Magic_Rows row 9, file MAGIC010, TCRF id 0x19 (White Flag, docs/cut-content.md section 2); the first function of MAGIC010 0x49DEF0..0x49DFF4 (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x49DF30
+name = "WhiteFlag_TintSource"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DF30..0x49DF6C (0x3D bytes), group C1: Sprite_ReleaseTint(source 0x904B4C); +0xB = Sprite_SetTint(source, 0, 0, 0, 1) (the source read again); +9 0; +1 += 1. Entry 0 of WhiteFlag_Task. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x49DF70
+name = "WhiteFlag_Untint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DF70..0x49DFF4 (0x85 bytes), group C1: bytes +2, +3, +4 of MoveScript_TintRecords record +0xB (12-byte records, unbounded) down by one; +9 -= 1; at 0 Sprite_ReleaseTint(source), BattleActor_Flash(target 0x904B44), +1 += 1. Entry 2 of WhiteFlag_Task. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4FC330
+name = "Magic080_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4FC330..0x4FC355 (0x26 bytes), group C1: a two-entry stack table (Magic080_Start, Magic080_Run) by byte +1, unchecked. Magic_Rows row 27, file MAGIC080, loaded by many ability ids (TCRF 0x50, 0x6F, 0x70, 0x93, 0x94 among them); reads no id. First function of MAGIC080 0x4FC330..0x4FC696, linked after the effect library. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4FC360
+name = "Magic080_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4FC360..0x4FC3BC (0x5D bytes), group C1: +0x34 / +0x38 from Field_Kind2X / Field_Kind2Z; word +0x3E AreaMap_Elevation(+0x34, +0x38); +0xB Rand & 0x3F; +9 0x30; +1 += 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4FC3C0
+name = "Magic080_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4FC3C0..0x4FC41C (0x5D bytes), group C1: BattleActor_UpdateScreenXY; word +0x2E -= 0x24; +0xB non-zero: Magic080_DrawGlyphs, else Magic080_DrawText; +9 -= 1, at 0 Battle_SetTargetFlag40(target), 0x904AA8 |= 4, BattleTask_FreeCurrent (tail jmp). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4FC420
+name = "Magic080_DrawText"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4FC420..0x4FC53B (0x11C bytes), group C1: six primitives, each Gpu_SetCode6C at Gfx_PacketNext: corners (+0x2E + 12 i .. + 12, +0x30 .. + 12) as words, grey 0x80, +0x16 the two-byte code ((b0 & 0x7F) << 8) + b1 of the string Magic080_TextPointers[i] points at, CLUT Gpu_GetClut(0, 0x1E0), u / v 0 / 12; Gfx_CommitPrim(2, 0x28). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4FC540
+name = "Magic080_DrawGlyphs"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4FC540..0x4FC696 (0x157 bytes), group C1: seven Gpu_SetPolyFT4 quads at Gfx_PacketNext, float corners (+0x2E + 12 i .. + 12, +0x30 .. + 12), grey 0x80, Gpu_GetTPage(0, 1, 0x3C0, 0), Gpu_GetClut(0, 0x1E0), u / v from Magic080_GlyphCells[4 i] / [4 i + 2] (+ 12 at the far corners); Gfx_CommitPrim(2, 0x48). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D67F0
+name = "Pentagram_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D67F0..0x4D685F (0x70 bytes), group C1: an eight-entry stack table (Pentagram_Start, _Rings, _Star, _Band, _Sprites, _WaitSprites, _WaitChildren, 0x4D7BD0 - MAGIC114, group S26) by byte +1, unchecked; with +0 set MagicFx_PushActorMatrix, Pentagram_DrawDisc, Gte_PopMatrix. Magic_Rows row 10, file MAGIC113, TCRF id 0x71 (Pentagram); first function of MAGIC113 0x4D67F0..0x4D7952. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6860
+name = "Pentagram_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6860..0x4D68FC (0x9D bytes), group C1: target 0x904B44 and actor 0x904B34 both below 3 or both 3 and up: Battle_SetTargetFlag40(target), 0x904AA8 |= 4, BattleTask_FreeCurrent (tail jmp); else +0x34 / +0x38 / +0x3C the source sprite 0x904B4C, words 0x812980..0x81299F (Gfx_ClutStrip 0x1A00..0x1A0F) from 0x4000 below with 0x8000 set, Gfx_ClutStripDirty 1, +0xB and +9 0, +1 += 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6900
+name = "Pentagram_Rings"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6900..0x4D6A2B (0x12C bytes), group C1: +9 += 1; at 0x10 two BattleTask_Create(1, 3) children (+0x80 Sprite_Current read after each, +1 0, +0xB 0 / 1, +8 (owner +8 - 2) & 3, +9 +0xA 0, +0x34 +0x38 dwords and +0x3E word the task), Sound_PlayEffect(0x101), +1 += 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6A30
+name = "Pentagram_Star"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6A30..0x4D6ABC (0x8D bytes), group C1: at +0xB 3 one BattleTask_Create(1, 3) child as Pentagram_Rings but +1 1 and +0xB unwritten; +1 += 1 (Sprite_Current as read after the create). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6AC0
+name = "Pentagram_Band"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6AC0..0x4D6B68 (0xA9 bytes), group C1: at +0xB 4 one child, +1 2; +1 += 1; Sound_PlayEffect(0x102); byte 0x803154 = 0x7F, byte 0x92BF14 = 0 (unnamed). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6B70
+name = "Pentagram_Sprites"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6B70..0x4D6C51 (0xE2 bytes), group C1: Port_DroppedCall(0x14, 0x10) and (0x14) every frame; at +0xB 5 six children (+1 3, +4 i & 1, +9 (i >> 1) * 8 + 1, +0xB i >> 1), the last read task +0xB 0, +1 += 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6C60
+name = "Pentagram_WaitSprites"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6C60..0x4D6C77 (0x18 bytes), group C1: at +0xB 6: +0xB 0x84, +1 += 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6C80
+name = "Pentagram_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6C80..0x4D6C8E (0xF bytes), group C1: at +0xB 0x80: +1 += 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6C90
+name = "Pentagram_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6C90..0x4D6E21 (0x192 bytes), group C1: Gpu_SetDrawMode(tpage 0x55), Gfx_CommitPrim(5, 0xC); dword 0x903850 0x1C0; 32 Gpu_SetPolyG3 semi-transparent triangles from (0, 0) to the circle (Math_Sin / Math_Cos x the dword >> 12) at 0x80 steps, Gte_RotTransPers3, Gte_PrimDepths3_10B, centre shade +9 x 12 (via dword 0x903854), rim 1, Gfx_CommitPrim(5, 0x34); then tpage 0x15, Gfx_CommitPrim(5, 0xC). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6E30
+name = "PentagramChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6E30..0x4D6E41 (0x12 bytes), group C1: jmp [PentagramChild_Kinds + 4 * byte +1], unchecked (four entries). Kind-1 task parameter 3, created by the Pentagram phases. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6E50
+name = "PentagramRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6E50..0x4D6E94 (0x45 bytes), group C1: call [PentagramRing_Phases + 4 * byte +2], unchecked; with +0 set MagicFx_PushActorMatrix, dword 0x903850 PentagramRing_Radii[+0xB] (unbounded), PentagramRing_Draw, Gte_PopMatrix (tail jmp). PentagramChild_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6EA0
+name = "PentagramRing_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6EA0..0x4D6ECA (0x2B bytes), group C1: +9 += 1; at 0x21 the owner 0x93B940 +0xB 3, +2 += 1. PentagramRing_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D6ED0
+name = "PentagramRing_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6ED0..0x4D7076 (0x1A7 bytes), group C1: tpage 0x35 draw mode, Gfx_CommitPrim(5, 0xC); for i 1..32 (angle 0x80 i) while +9 > i: Gpu_SetLineF2, semi-transparent when +2 is 2, the previous point and the new one on the circle of radius dword 0x903850 through Gte_RotTransPers / Gte_StoreDepthF, colour (0xF0, 0xAA, 0xC8) less +0xA x (20, 14, 16) when +2 is 2, Gfx_CommitPrim(5, 0x20); tpage 0x15, Gfx_CommitPrim(5, 0xC). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7080
+name = "PentagramStar_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7080..0x4D70AC (0x2D bytes), group C1: call [PentagramStar_Phases + 4 * byte +2], unchecked; with +0 set MagicFx_PushActorMatrix, PentagramStar_Draw, Gte_PopMatrix (tail jmp). PentagramChild_Kinds[1]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D70B0
+name = "PentagramStar_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D70B0..0x4D70DA (0x2B bytes), group C1: +9 += 1; at 0x28 the owner +0xB 4, +2 += 1. PentagramStar_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D70E0
+name = "PentagramFx_WaitRelease"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D70E0..0x4D70F3 (0x14 bytes), group C1: owner +0xB 0x84: +2 += 1. Entry 1 of PentagramRing_Phases and PentagramStar_Phases. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7100
+name = "PentagramFx_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7100..0x4D7125 (0x26 bytes), group C1: +0xA += 1; at 0xC owner +0xB -= 1, BattleTask_FreeCurrent (tail jmp). Entry 2 of PentagramRing_Phases and PentagramStar_Phases. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7130
+name = "PentagramStar_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7130..0x4D7371 (0x242 bytes), group C1: tpage 0x35 draw mode, Gfx_CommitPrim(5, 0xC); five Gpu_SetLineF2 lines i while 8 i < +9: from the point at angle PentagramStar_Points[i] x 0x111 (radius (v x 288) >> 12) toward point i + 1, min(+9 - 8 i, 8) eighths of the way (truncating divide by 8); Gte_RotTransPers, Gte_StoreDepthF, the ring colours, Gfx_CommitPrim(5, 0x20); tpage 0x15, Gfx_CommitPrim(5, 0xC). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7380
+name = "PentagramBand_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7380..0x4D73AC (0x2D bytes), group C1: call [PentagramBand_Phases + 4 * byte +2], unchecked; with +0 set MagicFx_PushActorMatrix, PentagramBand_Draw, Gte_PopMatrix (tail jmp). PentagramChild_Kinds[2]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D73B0
+name = "PentagramBand_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D73B0..0x4D73DA (0x2B bytes), group C1: +9 += 1; at 0x31 the owner +0xB 5, +2 += 1. PentagramBand_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D73E0
+name = "PentagramBand_WaitRelease"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D73E0..0x4D7400 (0x21 bytes), group C1: owner +0xB 0x84: Sound_PlayEffect(0x103), +2 += 1. PentagramBand_Phases[1]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7410
+name = "PentagramBand_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7410..0x4D7435 (0x26 bytes), group C1: +0xA += 1; at 0x10 owner +0xB -= 1, BattleTask_FreeCurrent (tail jmp). PentagramBand_Phases[2]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7440
+name = "PentagramBand_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7440..0x4D775E (0x31F bytes), group C1: dword 0x903858 +9 << 5 below 0x10, else 0x200; points on a circle of radius (v x 304) >> 12; for i 1..32 while +9 > i: the height +9 - i << 5 below 0x10, else 0x200 + Rand & 0x3F (0x200 at i 32); a Gpu_SetPolyG4 quad from the last rim pair to the new one, foot +0xA x 8 - height, tpage 0x35 draw mode and the quad each MapView_LinkPrimAt at the far rim point << 9 plus +0x34 / +0x38 (dy 0; 0xC, 0x44), colours 1 at the foot, (0xC0 - +0xA x 12, (0x10 - +0xA) x 2 via dword 0x903854) at the top, Gte_RotTransPers4, Gte_PrimDepths4_10B; tpage 0x15, Gfx_CommitPrim(3, 0xC). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D7760
+name = "PentagramSprite_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D7760..0x4D77C7 (0x68 bytes), group C1: tpage 0xB5 draw mode, Gfx_CommitPrim(3, 0xC); dword 0x9039D8 0x8E3580; call [PentagramSprite_Phases + 4 * byte +2], unchecked; 0x9039D8 0x8B3580; tpage 0x95, Gfx_CommitPrim(3, 0xC). PentagramChild_Kinds[3]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D77D0
+name = "PentagramSprite_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D77D0..0x4D78C8 (0xF9 bytes), group C1: +0x3C += 0x1800000 at +0xB 2, += 0x2000000 with +4 set; +0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28 0, +0 |= 0x20, +0x5D..+0x5F 0xC0, +0x5C 1, +0x2A +4, +0x29 and +0x24 4, word +0x2C 0, +0x2B 1, +9 0, +2 += 1; Sound_PlayEffect(0x100) at +0xB 0; Sprite_SetAnimation(+0xB). PentagramSprite_Phases[1]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4D78D0
+name = "PentagramSprite_Animate"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D78D0..0x4D7952 (0x83 bytes), group C1: Sprite_ScriptTickOnce; al 0: Sprite_UpdateScreen (tail jmp); else +9 += 1, above 2 the owner +0xB += 1 and BattleTask_FreeCurrent; else +0x2A (+0x2A - 1) & 1, Sprite_SetAnimation(+0xB), Sprite_UpdateScreen, and at +0xB 0 Sound_PlayEffect(0x104 at +9 1, else 0x100). PentagramSprite_Phases[2]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9A70
+name = "Ink_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9A70..0x4E9A9D (0x2E bytes), group C1: a three-entry stack table (Ink_Start, 0x49DA50 - MAGIC009, group S03 -, 0x43F460 - engine, group E) by byte +1, unchecked. Magic_Rows row 149, file MAGIC145, TCRF id 0x91 (Ink); first function of MAGIC145 0x4E9A70..0x4E9EE0. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9AA0
+name = "Ink_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9AA0..0x4E9B64 (0xC5 bytes), group C1: +0xB 0, +1 += 1; three BattleTask_Create(1, 0x6C) children (+0x80 Sprite_Current read after each, +1 0, +0xB 0..2, +9 1 / 5 / 9), +0xB counting them; words 0x8129C2..0x8129DF (Gfx_ClutStrip 0x1A21..0x1A2F) from 0x4000 below with 0x8000 set, 0x8129C0 0, Gfx_ClutStripDirty 1; Sound_PlayById(0x100); Battle_SetTargetFlags(target, 0x10). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9B70
+name = "InkPuff_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9B70..0x4E9B81 (0x12 bytes), group C1: jmp [InkPuff_Kinds + 4 * byte +1], unchecked (one entry). Kind-1 task parameter 0x6C. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9B90
+name = "InkPuff_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9B90..0x4E9BB8 (0x29 bytes), group C1: call [InkPuff_Phases + 4 * byte +2], unchecked (InkPuff_Start, 0x49DB90 MAGIC009, 0x4A5D50 MAGIC040); with +0 and +2 set Ink_DrawPuff (tail jmp). InkPuff_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9BC0
+name = "InkPuff_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9BC0..0x4E9C88 (0xC9 bytes), group C1: +9 -= 1; at 0: +8 the source sprite (held in esi); +0xC / +0x10 InkPuff_Offsets row +0xB (12 bytes, unbounded); 0x446770(Sprite_Current) turns them; +0x34 / +0x38 the source plus them, +0x3C the source plus the row third dword; BattleActor_UpdateScreenXY; +9 +0xA 0; +2 += 1. InkPuff_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9C90
+name = "Ink_DrawPuff"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9C90..0x4E9EE0 (0x251 bytes), group C1: tpage 0x55 draw mode MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); words 0x903850 +9 x 2, 0x903854 +0xA x 8; a Gpu_SetPolyFT4 semi-transparent quad, float corners at angles 0x200, 0x600, 0xE00, 0xA00 of radius word 0x903850 (Math_Cos / Math_Sin, >> 12) round (+0x2E, +0x30), Gpu_GetTPage(0, 2, 0x340, 0x100), Gpu_GetClut(0x20, 0x1FA), grey byte 0x903854; MapView_LinkPrimAt(+0x34, +0x38, 2, 0x48). Tail-jumped to by InkPuff_Run and InkInkPuff_Run. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9EF0
+name = "InkInk_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9EF0..0x4E9F6C (0x7D bytes), group C1: a three-entry stack table (InkInk_Start, 0x49DA50, 0x43F460) by byte +1, unchecked; then each of the 64 records of InkInkPuff_Pool with bit 0 becomes Sprite_Current (its +0x80 the owner 0x93B940) for InkInkPuff_Dispatch, both put back from values read after the phase call. Magic_Rows row 150, file MAGIC146, TCRF id 0x92 (Ink Ink); first function of MAGIC146 0x4E9EF0..0x4EA446. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4E9F70
+name = "InkInk_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E9F70..0x4EA0E1 (0x172 bytes), group C1: InkInkPuff_Pool records +0..+2 cleared; +0xB 0, +9 8, +1 += 1; with target 0x904B44 & 0x40 actors 3..10, else 0..2: unless Battle_ActorIsOut, BattleTask_Create(1, 0x6D) (+0x80 the task, +1 0, +4 the actor, +0xB and +9 (count << 4) + 1 from the count +0xB, which goes up); Gfx_ClutStrip 0x1A21..0x1A2F with 0x8000, 0x1A20 0, Gfx_ClutStripDirty 1. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA0F0
+name = "InkInkActor_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA0F0..0x4EA101 (0x12 bytes), group C1: jmp [InkInkActor_Kinds + 4 * byte +1], unchecked (one entry). Kind-1 task parameter 0x6D. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA110
+name = "InkInkActor_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA110..0x4EA121 (0x12 bytes), group C1: jmp [InkInkActor_Phases + 4 * byte +2], unchecked (InkInkActor_Start, 0x4B3320 MAGIC063). InkInkActor_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA130
+name = "InkInkActor_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA130..0x4EA253 (0x124 bytes), group C1: +9 -= 1; at 0: the actor record by +4 (enemy (i - 3) x 0x128 from 0x93B960 with target & 0x40, else party i x 0x14C from 0x802D40; unchecked); Sound_PlayById(0x100); +8, +0x34, +0x38, +0x3C the record; +0xB 0, +2 += 1; three InkInkPuff_Alloc records (0xFF skipped; +0x80 the task, +1 0, +0xB 0..2, +9 1 / 3 / 5), +0xB counting them; Battle_SetTargetFlags(+4, 0x10). InkInkActor_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA260
+name = "InkInkPuff_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA260..0x4EA271 (0x12 bytes), group C1: jmp [InkInkPuff_Kinds + 4 * byte +1], unchecked (one entry). Called for each live InkInkPuff_Pool record by InkInk_Task. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA280
+name = "InkInkPuff_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA280..0x4EA2A8 (0x29 bytes), group C1: call [InkInkPuff_Phases + 4 * byte +2], unchecked (InkInkPuff_Start, 0x49DB90 MAGIC009, InkInkPuff_Fade); with +0 and +2 set Ink_DrawPuff (tail jmp). InkInkPuff_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA2B0
+name = "InkInkPuff_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA2B0..0x4EA3A6 (0xF7 bytes), group C1: +9 -= 1; at 0: +8, +0x34, +0x38, +0x3C the owner 0x93B940; +0xC / +0x10 InkInkPuff_Offsets row +0xB (unbounded); 0x446770(Sprite_Current); +0x34 += +0xC, +0x38 += +0x10, +0x3C += the row third dword; BattleActor_UpdateScreenXY; +9 +0xA 0; +2 += 1. InkInkPuff_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA3B0
+name = "InkInkPuff_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA3B0..0x4EA3E3 (0x34 bytes), group C1: +9 += 1, +0xA -= 1; at 0 owner +0xB -= 1 and 0x4F6290 (MAGIC219, group S37: Sprite_Current +0..+4 cleared; tail jmp). InkInkPuff_Phases[2]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4EA3F0
+name = "InkInkPuff_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4EA3F0..0x4EA446 (0x57 bytes), group C1: the first of InkInkPuff_Pool 64 records (0x84 bytes) with bit 0 clear gets bit 0, its index in al; al 0xFF when none (eax above al not set). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4A60
+name = "Magic213_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4A60..0x4F4AD4 (0x75 bytes), group C1: a two-entry stack table (Magic213_Start, 0x4E5200 - MAGIC131, group S30) by byte +1, unchecked; then the 64 records of Magic213Mote_Pool walked as InkInk_Task walks its pool, for Magic213Mote_Dispatch. Magic_Rows row 148, file MAGIC213, TCRF id 0xD5 (PurifyAll by TCRF; the shifted label reads Miyakuri); first function of MAGIC213 0x4F4A60..0x4F50A6. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4AE0
+name = "Magic213_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4AE0..0x4F4C32 (0x153 bytes), group C1: Magic213Mote_Pool records +0..+2 cleared; +0xB 0, +1 += 1; the living actors of the target side as InkInk_Start but BattleTask_Create(1, 0x6B) and the child +0xB unwritten; Gfx_ClutStrip 0x1A00..0x1A0F from its source as they are, Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4C40
+name = "Magic213Actor_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4C40..0x4F4C51 (0x12 bytes), group C1: jmp [Magic213Actor_Kinds + 4 * byte +1], unchecked (one entry). Kind-1 task parameter 0x6B. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4C60
+name = "Magic213Actor_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4C60..0x4F4C71 (0x12 bytes), group C1: jmp [Magic213Actor_Phases + 4 * byte +2], unchecked (Magic213Actor_Start, ActorFx_TintUp, Magic213Actor_Untint, MagicFx_EndWithChildren). Magic213Actor_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4C80
+name = "Magic213Actor_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4C80..0x4F4D9F (0x120 bytes), group C1: +9 -= 1; at 0: the actor record as InkInkActor_Start; +0x34 / +0x38 / +0x3C its; +0xB 0, +9 0x10, +0xA 0, +2 += 1; seven Magic213Mote_Alloc records (+9 1, 5, .. 25); Sprite_ReleaseTint(record), +0xA = Sprite_SetTint(record, 0, 0, 0, 1). Magic213Actor_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4DA0
+name = "ActorFx_TintUp"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4DA0..0x4F4E04 (0x65 bytes), group C1: bytes +2..+4 of MoveScript_TintRecords record +0xA up by one; +9 -= 1, at 0 +2 += 1. Magic213Actor_Phases[1], and entry 2 of MAGIC073 and MAGIC074 child tables (docs/magic_s16.md section 3). Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4E10
+name = "Magic213Actor_Untint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4E10..0x4F4E95 (0x86 bytes), group C1: bytes +2..+4 of tint record +0xA down by one; when +2 is 0: Tint_Release(+0xA), Battle_SetTargetFlag40(+4), +2 += 1. Magic213Actor_Phases[2]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4EA0
+name = "Magic213Mote_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4EA0..0x4F4EB1 (0x12 bytes), group C1: jmp [Magic213Mote_Kinds + 4 * byte +1], unchecked (one entry). Called for each live Magic213Mote_Pool record by Magic213_Task. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4EC0
+name = "Magic213Mote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4EC0..0x4F4EFC (0x3D bytes), group C1: dword 0x9039D8 0x8E3580; call [Magic213Mote_Phases + 4 * byte +2], unchecked; with +0 and +2 set Sprite_UpdateScreen; 0x9039D8 0x8B3580. Magic213Mote_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F4F00
+name = "Magic213Mote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F4F00..0x4F5025 (0x126 bytes), group C1: +9 -= 1; at 0: word 0x903850 (+0xB & 7) << 9; +0x34 owner + Math_Sin x 12, +0x38 owner + Math_Cos x 12 (the word read again), +0x3C owner + 0x1800000; +0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28 0, +0x5D..+0x5F 0, +0x5C 0, +0x2A 0, +0x29 and +0x24 4, word +0x2C 0, +0x2B 1; Sprite_SetAnimation(+0xB % 3); +2 += 1. Magic213Mote_Phases[0]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F5030
+name = "Magic213Mote_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F5030..0x4F5046 (0x17 bytes), group C1: Sprite_ScriptTickOnce; al not 0: owner +0xB -= 1 and 0x4F6290 (tail jmp). Magic213Mote_Phases[1]. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[func]]
+pc = 0x4F5050
+name = "Magic213Mote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_c1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4F5050..0x4F50A6 (0x57 bytes), group C1: InkInkPuff_Alloc on Magic213Mote_Pool: index in al, 0xFF when full. Fuzz only: no recorded route casts it (docs/magic_c1.md)."
+
+[[data]]
+pc = 0x65B9F0
+name = "PentagramChild_Kinds"
+ctype = "void *"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramChild_Task jmp [0x65B9F0 + 4 * +1]: PentagramRing_Run, PentagramStar_Run, PentagramBand_Run, PentagramSprite_Run. Pentagram_Rings / _Star / _Band / _Sprites set +1 0..3."
+
+[[data]]
+pc = 0x65BA00
+name = "PentagramRing_Radii"
+ctype = "long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramRing_Run dword 0x903850 = [0x65BA00 + 4 * +0xB]; the two rings +0xB 0 and 1. The index is unbounded."
+
+[[data]]
+pc = 0x65BA08
+name = "PentagramRing_Phases"
+ctype = "void *"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramRing_Run call [0x65BA08 + 4 * +2]: PentagramRing_Grow, PentagramFx_WaitRelease, PentagramFx_Fade. Data follows (PentagramStar_Points)."
+
+[[data]]
+pc = 0x65BA14
+name = "PentagramStar_Points"
+ctype = "signed char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramStar_Draw movsx byte [0x65BA14 + i] and [+ i + 1], i 0..4, each x 0x111 an angle."
+
+[[data]]
+pc = 0x65BA1C
+name = "PentagramStar_Phases"
+ctype = "void *"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramStar_Run call [0x65BA1C + 4 * +2]: PentagramStar_Grow, PentagramFx_WaitRelease, PentagramFx_Fade."
+
+[[data]]
+pc = 0x65BA28
+name = "PentagramBand_Phases"
+ctype = "void *"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramBand_Run call [0x65BA28 + 4 * +2]: PentagramBand_Grow, PentagramBand_WaitRelease, PentagramBand_Fade."
+
+[[data]]
+pc = 0x65BA34
+name = "PentagramSprite_Phases"
+ctype = "void *"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group C1: PentagramSprite_Run call [0x65BA34 + 4 * +2]: 0x4E47F0 (MAGIC130 count-down of +9, group S30), PentagramSprite_Start, PentagramSprite_Animate."
+
+[[data]]
+pc = 0x65BE00
+name = "InkPuff_Kinds"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkPuff_Task jmp [0x65BE00 + 4 * +1]: InkPuff_Run. The next cell begins InkPuff_Phases."
+
+[[data]]
+pc = 0x65BE04
+name = "InkPuff_Phases"
+ctype = "void *"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkPuff_Run call [0x65BE04 + 4 * +2]: InkPuff_Start, 0x49DB90 (MAGIC009), 0x4A5D50 (MAGIC040)."
+
+[[data]]
+pc = 0x65BE10
+name = "InkPuff_Offsets"
+ctype = "long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkPuff_Start dwords [0x65BE10 / 14 / 18 + 12 * +0xB]: three rows of (dx, dz, dy), +0xB 0..2 as Ink_Start sets it; unbounded."
+
+[[data]]
+pc = 0x65BE34
+name = "InkInkActor_Kinds"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkInkActor_Task jmp [0x65BE34 + 4 * +1]: InkInkActor_Run."
+
+[[data]]
+pc = 0x65BE38
+name = "InkInkActor_Phases"
+ctype = "void *"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkInkActor_Run jmp [0x65BE38 + 4 * +2]: InkInkActor_Start, 0x4B3320 (MAGIC063). The next cell begins InkInkPuff_Kinds."
+
+[[data]]
+pc = 0x65BE40
+name = "InkInkPuff_Kinds"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkInkPuff_Dispatch jmp [0x65BE40 + 4 * +1]: InkInkPuff_Run."
+
+[[data]]
+pc = 0x65BE44
+name = "InkInkPuff_Phases"
+ctype = "void *"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkInkPuff_Run call [0x65BE44 + 4 * +2]: InkInkPuff_Start, 0x49DB90 (MAGIC009), InkInkPuff_Fade."
+
+[[data]]
+pc = 0x65BE50
+name = "InkInkPuff_Offsets"
+ctype = "long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-26, group C1: InkInkPuff_Start dwords [0x65BE50 / 54 / 58 + 12 * +0xB], +0xB 0..2 as InkInkActor_Start sets it; unbounded."
+
+[[data]]
+pc = 0x65C1E4
+name = "Magic213Actor_Kinds"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group C1: Magic213Actor_Task jmp [0x65C1E4 + 4 * +1]: Magic213Actor_Run."
+
+[[data]]
+pc = 0x65C1E8
+name = "Magic213Actor_Phases"
+ctype = "void *"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group C1: Magic213Actor_Run jmp [0x65C1E8 + 4 * +2]: Magic213Actor_Start, ActorFx_TintUp, Magic213Actor_Untint, MagicFx_EndWithChildren."
+
+[[data]]
+pc = 0x65C1F8
+name = "Magic213Mote_Kinds"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group C1: Magic213Mote_Dispatch jmp [0x65C1F8 + 4 * +1]: Magic213Mote_Run."
+
+[[data]]
+pc = 0x65C1FC
+name = "Magic213Mote_Phases"
+ctype = "void *"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group C1: Magic213Mote_Run call [0x65C1FC + 4 * +2]: Magic213Mote_Start, Magic213Mote_End."
+
+[[data]]
+pc = 0x65DA28
+name = "Magic080_GlyphCells"
+ctype = "unsigned char"
+count = 28
+status = "evidence"
+evidence = "read 2026-09-26, group C1: Magic080_DrawGlyphs u = byte [0x65DA28 + 4 i], v = byte [0x65DA2A + 4 i], i 0..6."
+
+[[data]]
+pc = 0x66A3C8
+name = "Magic080_TextPointers"
+ctype = "unsigned char *"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-26, group C1: Magic080_DrawText mov eax, [ebp] for ebp 0x66A3C8..0x66A3DC: six string pointers, the first two bytes of each read."
+
+[[data]]
+pc = 0x6A6F40
+name = "InkInkPuff_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-26, group C1: 64 task-like records of 0x84 bytes: InkInk_Start clears +0..+2, InkInkPuff_Alloc takes one by bit 0, InkInk_Task runs each live one as Sprite_Current (+0x80 its owner)."
+
+[[data]]
+pc = 0x6B2958
+name = "Magic213Mote_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-26, group C1: 64 records of 0x84 bytes, as InkInkPuff_Pool: Magic213_Start clears, Magic213Mote_Alloc takes, Magic213_Task runs."

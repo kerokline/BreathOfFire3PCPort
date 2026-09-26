@@ -139,6 +139,7 @@
 #include "game/magic_s26.h"
 #include "game/magic_s30.h"
 #include "game/magic_c2.h"
+#include "game/magic_c1.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -400,6 +401,10 @@ void InjectAll() {
                                 // Holocaust): its clones' calls, stack-table immediates and .data handler tables
                                 // re-aimed at the shared harness's recorders; no module patches bytes inside its 64:
                                 // order does not matter
+    MagicC1_Inject();           // round 9 group C1 (MAGIC010, 080, 113, 145, 146, 213: the unfinished skills): its
+                                // clones' calls, stack-table immediates and fifteen .data tables re-aimed at the
+                                // shared harness's recorders; no module patches bytes inside its 62: order does
+                                // not matter
     InjectReport();
 }
 
