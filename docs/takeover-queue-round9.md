@@ -259,3 +259,26 @@ fix in the harness and each group's controls re-run; `magic_rows.py`'s jump
 table bound; the raw-address calls rebound to names; `known-defects.md`
 numbered for both waves. Then the third wave: S01..S15 and S32..S38, 22
 groups.
+
+## 10. Wave three (2026-09-26 evening, from `56b8c71`)
+
+Merged so far: **S01** (26), **S06** (56), **S05** (29): 2,579 ours.
+
+**`entries_logic.txt` was emptied and rebuilt once** (S05's script, 19:35;
+[`magic_s05.md`](magic_s05.md) §9): S05 rebuilt it from the 19:32 snapshot
+`entries_logic_0926_1932_raw.txt` plus the groups that wrote after it.
+Checked after S05's merge: every start of the snapshot is present (4,332 of
+4,332; 4,540 now). **34 owned functions have no line, and none had one before
+the accident**: 9 are the wall-clock exclusions (`wallclock_reach.json`); 25
+are not - the two window procedures, `Gfx_MoveImage` / `Gfx_MoveCells`, five
+move-script ops, `Field_ObjectFollow`, three `AreaMap_*`, three
+`D3d_Draw*`, the four `Sparkle_*` helpers, `Battle_MemberOutAction`, two
+`ClutMap_*`, `Battle_InitBossEncounter`, `Battle_InitEnemies`. The morning's
+hash matched with them absent, so they are covered by a host extent or not
+on the attract path; audit them with the next re-record.
+
+**`tools/magic_rows.py` misses stack-table handlers loaded through a
+register** (S06: `0x4A2DC0`, `0x4A2F40` load three handlers into a register
+before storing them; the generated clone would have called Capcom's real
+handlers). A group's coverage line missing a handler is the sign. Fix with
+the jump-table bound (§9).
