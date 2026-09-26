@@ -451,7 +451,7 @@ void Seed(unsigned k) {
 void SelfTest() {
     const mh::Group group = {
         "magic_c1", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
-        kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000,
+        kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000, nullptr, 3,
     };
     mh::Run(group);
 }
