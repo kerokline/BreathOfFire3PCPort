@@ -30665,3 +30665,477 @@ ctype = "unsigned long"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-26, group S05: Magic017Image_Task's jmp [0x65A69C + 4 x byte +1]: Magic017Image_Run. The dwords after it are MAGIC008's (0x4A2480 ..)."
+
+# ---- round nine group S02 (MAGIC003; MAGIC004 and the nine files folded into it): docs/magic_s02.md ----
+
+[[func]]
+pc = 0x49A7B0
+name = "SuperCombo_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A7B0..0x49A811 (0x62 bytes), group S02: the kind-2 task: a call through SuperCombo_Phases (ten entries) by byte +1, unchecked; then, with Sprite_Current and 0x93B940 saved after it, every pool entry of SuperComboHit_Pool (32 of 0x84 at 0x6769C0) whose +0 has bit 0 is run: Sprite_Current the entry, the owner its +0x80, SuperComboHit_Task called, both put back. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49A820
+name = "SuperCombo_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A820..0x49A874 (0x55 bytes), group S02: entry 0: bytes +0..+2 of the 32 pool entries cleared; +0x2E 0xA0, +0x30 0x70 (the screen point of the prompt), +0xB 0, +9 0x1E, +0xA 0 (the hit count), +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49A880
+name = "SuperCombo_Prompt1"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A880..0x49A8B6 (0x37 bytes), group S02: entry 1: SuperCombo_DrawBox(1), SuperCombo_DrawText(1); +9 down, at 0 +9 0x1E and +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49A8C0
+name = "SuperCombo_Prompt2"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A8C0..0x49A8F6 (0x37 bytes), group S02: entry 2: SuperCombo_DrawBox(2), SuperCombo_DrawText(2); +9 down, at 0 +9 0xA and +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49A900
+name = "SuperCombo_PickButton"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A900..0x49A959 (0x5A bytes), group S02: entry 3: +9 down; at 0: +0xB = Rand & 3 (the button asked for), +9 = the byte at 0x65A504 + the count +0xA below 0x10, else 3 (the time allowed), +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49A960
+name = "SuperCombo_ReadButton"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A960..0x49A9E8 (0x89 bytes), group S02: entry 4: SuperCombo_DrawBox(4), SuperCombo_DrawButton(+0xB); then Input_Pressed (read after both): with any of bits 0xF0, +9 6 and, when the whole word equals the byte at 0x65A518 + +0xB, +0xA up and +1 3 (another button) while +0xA stays below 0x20, else +1 5; with none, +9 down and at 0 +9 6, +1 5. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49A9F0
+name = "SuperCombo_Pause"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49A9F0..0x49AA15 (0x26 bytes), group S02: entry 5: +9 down, at 0 +9 0x1E and +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AA20
+name = "SuperCombo_ShowCount"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AA20..0x49AA5B (0x3C bytes), group S02: entry 6: SuperCombo_DrawBox(0), SuperCombo_DrawCount(+0xA), SuperCombo_DrawText(0); +9 down, at 0 +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AA60
+name = "SuperCombo_Strike"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AA60..0x49AAE8 (0x89 bytes), group S02: entry 7: the owner's +8 and +0x34/+0x38/+0x3C copied, +0xB 0, +1 on; BattleActor_SetAnimation(0xC, 2); SuperCombo_SpawnDash and SuperCombo_SpawnImages; +4 = +0xB (the children made); the owner's +0 bit 0x40; Sound_PlayById(0x100). Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AAF0
+name = "SuperCombo_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AAF0..0x49AB18 (0x29 bytes), group S02: entry 8: once +0xB (children alive) is 0: bit 0x40 of the actor sprite's +0 (0x904B3C) cleared, BattleActor_SetAnimation(4, 0), +1 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AB20
+name = "SuperCombo_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AB20..0x49AB52 (0x33 bytes), group S02: entry 9: Sound_PlayById(0x102); the hit count +0xA to the battle byte 0x904B96; Battle_SetTargetFlag40(target); the done bit 4 of 0x904AA8; tail jmp BattleTask_FreeCurrent. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AB60
+name = "SuperComboChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AB60..0x49AB85 (0x26 bytes), group S02: the kind-1 task of parameter 1: a two-entry stack table by +1 (SuperComboDash_Run, SuperComboImage_Run), unchecked. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AB90
+name = "SuperComboDash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AB90..0x49ABE3 (0x54 bytes), group S02: a five-entry stack table by +2 (SuperComboDash_Start, _Leap, _Hit, _Return, _End), unchecked; then while +2 and +0 are set Sprite_UpdateScreenSlot. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49ABF0
+name = "SuperComboDash_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49ABF0..0x49AC7C (0x8D bytes), group S02: +9 down; at 0: +0x18/+0x1C/+0x44 keep +0x34/+0x38/+0x3C, the step +0xC 0x2000, +0x10 0, the rise +0x14 0x300000, the fall +0x20 0xFFF80000; 0x446770(task) turns the step by the direction; +9 = BattleActor_FxSize's al; +2 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AC80
+name = "SuperComboDash_Leap"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AC80..0x49AD21 (0xA2 bytes), group S02: +9 counts down to 0 (0xFF stays): at 0 Sound_PlayById(0x101), BattleActor_PlaySound(2, 0), SuperCombo_SpawnHits, Battle_SetTargetFlags(target, 0x10), +9 0xFF; then x/z/height stepped by +0xC/+0x10/+0x14, +0x14 by +0x20; Sprite_ScriptTickOnce; +2 on when the height is back at +0x44. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AD30
+name = "SuperComboDash_Hit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AD30..0x49ADB4 (0x85 bytes), group S02: the same count-down and hit as _Leap without the move; Sprite_ScriptTickOnce; once +9 is 0xFF: the step +0xC 0xFFFFE000, +0x10 0, 0x446770(task), +2 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49ADC0
+name = "SuperComboDash_Return"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49ADC0..0x49AE01 (0x42 bytes), group S02: x/z stepped by +0xC/+0x10; Sprite_ScriptTickOnce; +2 on when both are back at +0x18/+0x1C. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AE10
+name = "SuperComboDash_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AE10..0x49AE27 (0x18 bytes), group S02: when the owner's +0xB is at most 1: it counted down and a tail jmp BattleTask_FreeCurrent; else it waits. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AE30
+name = "SuperComboImage_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AE30..0x49AE7B (0x4C bytes), group S02: a four-entry stack table by +2 (SuperComboImage_Start, _Leap, _Turn, _Return), unchecked; then while +2 and +0 are set Sprite_UpdateScreenSlot. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AE80
+name = "SuperComboImage_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AE80..0x49AF75 (0xF6 bytes), group S02: +9 down; at 0 the dash's set-up (+0x18.., steps, 0x446770), then +0 bit 0x20, +0x5C 3, +0x5D/+0x5F/+0x5E = +0xB x 0xF0 (low byte), Sprite_SetTint(task, the three signed bytes at 0x65A4F8 + 3 x +0xB, 1); +2 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AF80
+name = "SuperComboImage_Leap"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AF80..0x49AFD7 (0x58 bytes), group S02: x/z/height stepped, the rise by the fall; Sprite_ScriptTickOnce; +2 on when the height is back at +0x44. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49AFE0
+name = "SuperComboImage_Turn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49AFE0..0x49B015 (0x36 bytes), group S02: the step +0xC 0xFFFFE000, +0x10 0, 0x446770(task); Sprite_ScriptTickOnce; +2 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B020
+name = "SuperComboImage_Return"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B020..0x49B074 (0x55 bytes), group S02: x/z stepped; Sprite_ScriptTickOnce; back at +0x18/+0x1C: Sprite_ReleaseTint(task), the owner's +0xB down, tail jmp BattleTask_FreeCurrent. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B080
+name = "SuperComboHit_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B080..0x49B091 (0x12 bytes), group S02: a pool entry's task: a jmp through SuperComboHit_TaskTable (one entry) by +1, unchecked. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B0A0
+name = "SuperComboHit_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B0A0..0x49B0EF (0x50 bytes), group S02: the frame-offset table 0x9039D8 set to 0x8C5D80; a two-entry stack table by +2 (SuperComboHit_Start, _Play), unchecked; while +0 and +2 are set Sprite_QueueOverlay; 0x9039D8 back to 0x8B3580. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B0F0
+name = "SuperComboHit_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B0F0..0x49B1C9 (0xDA bytes), group S02: +9 down; at 0: the source sprite's (0x904B4C) +8 and position copied, BattleActor_UpdateScreenXY, the sprite bytes +0x24..+0x2C set (+0x27 the byte at 0x65A550 + +0xB less 0x50, +0x2A bit 0 of +4), Sprite_SetAnimation(+0xB), +2 on. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B1D0
+name = "SuperComboHit_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B1D0..0x49B1EB (0x1C bytes), group S02: Sprite_ScriptTickOnce twice; when the second reports the end, the owner's +0xB down and a tail jmp to MAGIC219's 0x4F6290. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B1F0
+name = "SuperCombo_SpawnDash"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B1F0..0x49B2A0 (0xB1 bytes), group S02: one kind-1 task of parameter 1 (unchecked slot), the acting actor's record (0x904B34: party below 3, else enemy by index - 3, unchecked) copied over its first 0x80 bytes (rep movsd), +0x80 the current task, +6 1, +5 1, +1 0, +2 0, +9 1; the current task's +0xB up. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B2B0
+name = "SuperCombo_SpawnImages"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B2B0..0x49B38A (0xDB bytes), group S02: four such copies with +1 1, +0xB 0..3 and +9 5, 9, 13, 17; the current task's +0xB up for each. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B390
+name = "SuperCombo_SpawnHits"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B390..0x49B41F (0x90 bytes), group S02: for i below the owner's +0xA (the hit count, read again each time): SuperComboHit_Alloc's entry (unchecked: 0xFF writes past the pool) gets +0x80 the owner, +1 0, +2 0, +4 i, +0xB (i >> 1) & 7, +9 1 + 4 i; the owner's +0xB up. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B420
+name = "SuperCombo_DrawText"
+ret = "void"
+params = "unsigned which"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B420..0x49B5E0 (0x1C1 bytes), group S02: which (u8) picks a string from the pointer table 0x66A0D8 and a length from 0x65A51C: a draw-mode packet (tpage 0x15), then a 12 x 12 textured quad per glyph (0xFF a half-width space, 0 the end) from the task's +0x2E less 6 x the length, the glyph (c - 0x3F) as u = 12 (n mod 21), v = 12 (n / 21 + 3), clut (0, 0x1E0), committed to layer 2. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B5F0
+name = "SuperCombo_DrawButton"
+ret = "void"
+params = "unsigned button"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B5F0..0x49B6F9 (0x10A bytes), group S02: a draw-mode packet, then one 12 x 12 quad at the task's +0x2E / +0x30: u = 12 (button + 15), v 0x30..0x3C, clut x the byte at 0x65A520 + button. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B700
+name = "SuperCombo_DrawCount"
+ret = "void"
+params = "unsigned count"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B700..0x49B8F7 (0x1F8 bytes), group S02: a draw-mode packet, then count mod 10 as a 12 x 12 digit at +0x2E - 0x42, and count / 10 (when not 0) 12 to its left: u = 12 (digit + 6), v 0x18..0x24. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49B900
+name = "SuperCombo_DrawBox"
+ret = "void"
+params = "unsigned which"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49B900..0x49BA86 (0x187 bytes), group S02: two semi-transparent tiles (draw mode tpage 0x55) round the rectangle of 0x65A55C + 8 x which (x, y, w, h words) at the task's screen point, grown by 4 then 6, shade 0x20; the draw mode back to tpage 0x15. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BA90
+name = "SuperComboHit_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BA90..0x49BAE6 (0x57 bytes), group S02: the first of SuperComboHit_Pool's 32 entries without bit 0 of +0 gets it, its index in al (upper eax the caller's); 0xFF when none is free. Magic_Rows row 3, file 0x22C = MAGIC003.EMI, ability id 0x3 (Super Combo read one id down, a hypothesis); MAGIC003's extent 0x49A7B0..0x49BAE6. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BAF0
+name = "ElemStrike_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BAF0..0x49BB2D (0x3E bytes), group S02: the kind-2 task: a five-entry stack table by +1 (ElemStrike_Start, _Tint, _Hit, _Fade, _End), unchecked. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BB30
+name = "ElemStrike_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BB30..0x49BCC1 (0x192 bytes), group S02: the owner's +8 and position copied, +0xB and +9 0, +1 on; BattleActor_SetAnimation(0xC, 2); ElemStrike_Kind; a kind-1 task of parameter 0x46 (unchecked) made a copy of the acting actor's record (0x80 bytes, rep movsd) with +0x80 the task, +1 0, +2 0, +6 1, +5 0x46; a second with +1 1 and the task's +3 / +4; +0xB up for each; the owner's +0 bit 0x40, 0x904AA9 bit 0x20, CLUT row 26 back from its source (no STP bits). MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BCD0
+name = "ElemStrike_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BCD0..0x49BDD5 (0x106 bytes), group S02: once +0xB is at most 1: +0x5D..+0x5F the three bytes at 0x65A584 + 3 x +4; the target's record (party below 3, else enemy by index - 3) untinted and tinted by them (Sprite_SetTint, a 0), its slot to +0xA; BattleActor_SetAnimation(4, 0); the owner's bit 0x40 cleared; Battle_SetTargetFlags(target, 0x20); Sound_PlayById(0x100), and 0x101 for an ability 0x85..0x88; +1 on. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BDE0
+name = "ElemStrike_Hit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BDE0..0x49BE27 (0x48 bytes), group S02: once +0xB is 0: the sound word at 0x65A5B4 + 2 x +4 unless 0; Battle_SetTargetFlag40(target); +9 0; +1 on. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BE30
+name = "ElemStrike_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BE30..0x49BF25 (0xF6 bytes), group S02: while +9 is below 0xC MAGIC008's 0x4A29C0 and +9 up by 4; each of +0x5D..+0x5F not 0 down by 2 (odd values wrap), written to tint record +0xA (MoveScript_TintRecords + 12 n + 2..4); all three 0: the target's record untinted, BattleActor_Flash(target), +1 on. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BF30
+name = "ElemStrike_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BF30..0x49BF8D (0x5E bytes), group S02: the target's record taken first; unless Battle_ActorIsOut(target) is 0 and the record's state +1 is 6, the done bit 4 of 0x904AA8 and BattleTask_FreeCurrent. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49BF90
+name = "ElemStrike_Kind"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49BF90..0x49C164 (0x1D5 bytes), group S02: the ability word 0x904B80 less 4 through the byte table 0x49C0CC (0x99 entries) to one of twelve cases of the jump table 0x49C09C (bounded by cmp eax, 0x98; past it the last case): +3 / +4 by case = (0,0) (1,1) (0,2) (1,3) (0,4) (1,8) (1,9) (1,0xA) (1,0xB) (1,5) (0,6) (0,7), the last also past the byte table. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49C170
+name = "ElemStrikeChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C170..0x49C181 (0x12 bytes), group S02: the kind-1 task of parameter 0x46: a jmp through ElemStrikeChild_Kinds (two entries) by +1, unchecked. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49C190
+name = "ElemStrikeCopy_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C190..0x49C1D5 (0x46 bytes), group S02: the actor copy: a four-entry stack table by +2 (BattleFx_SetSize, ElemStrikeCopy_Play, MAGIC161's 0x4EE560, BattleFx_FreeTask), unchecked; Sprite_UpdateScreen while +0 is set. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49C1E0
+name = "ElemStrikeCopy_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C1E0..0x49C221 (0x42 bytes), group S02: Sprite_ScriptTickOnce; +9 down, at 0 BattleActor_PlaySound(2 for an ability of 0x85 or more, else 0; 4) and +2 on. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49C230
+name = "ElemStrikeFx_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C230..0x49C275 (0x46 bytes), group S02: a draw-mode packet (tpage 0x15) committed to layer 3; 0x9039D8 set to 0x8E3580; a call through ElemStrikeFx_Steps (three entries) by +2, unchecked; 0x9039D8 back to 0x8B3580. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49C280
+name = "ElemStrikeFx_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C280..0x49C377 (0xF8 bytes), group S02: at the source sprite (0x904B4C), 0x800000 higher; sprite bytes +0x24..+0x2C and +0x5C..+0x5F set (+0x27 0x1A with +0x28 1 and +0x24 0 when +3, else 0xA0, 0, 4); Sprite_SetAnimation(0); +9 the byte at 0x65A5A8 + +4; +2 on. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[func]]
+pc = 0x49C380
+name = "ElemStrikeFx_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s02.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C380..0x49C3C5 (0x46 bytes), group S02: +9 counts down to 0, at 0 Sound_PlayById(0x101); Sprite_ScriptTickOnce: at its end the owner's +0xB down and a tail jmp BattleTask_FreeCurrent, else a tail jmp Sprite_UpdateScreen. MAGIC004's code, which the rows 88, 92, 93, 98..100, 129..132 of ten files (MAGIC004, 005, 029, 049, 133..136, 156, 157) all run (the linker folded identical overlays; the Strike and Claw abilities read one id down, hypotheses); extent 0x49BAF0..0x49C3C5. Fuzz only: no recorded route casts it (docs/magic_s02.md)."
+
+[[data]]
+pc = 0x65A524
+name = "SuperCombo_Phases"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-26, group S02: SuperCombo_Task's call [0x65A524 + 4 x byte +1]: SuperCombo_Start, _Prompt1, _Prompt2, _PickButton, _ReadButton, _Pause, _ShowCount, _Strike, _WaitChildren, _End; SuperComboHit_TaskTable follows at 0x65A54C."
+
+[[data]]
+pc = 0x65A54C
+name = "SuperComboHit_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S02: SuperComboHit_Task's jmp [0x65A54C + 4 x byte +1]: SuperComboHit_Run; byte data follows at 0x65A550."
+
+[[data]]
+pc = 0x6769C0
+name = "SuperComboHit_Pool"
+ctype = "unsigned char"
+count = 4224
+status = "evidence"
+evidence = "read 2026-09-26, group S02: 32 task-like entries of 0x84 bytes (bit 0 of +0 in use, +0x80 the owner) that SuperCombo_Task runs after its phase, SuperCombo_Start clears and SuperComboHit_Alloc hands out; .bss."
+
+[[data]]
+pc = 0x65A5CC
+name = "ElemStrikeChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S02: ElemStrikeChild_Task's jmp [0x65A5CC + 4 x byte +1]: ElemStrikeCopy_Run, ElemStrikeFx_Run; ElemStrikeFx_Steps follows."
+
+[[data]]
+pc = 0x65A5D4
+name = "ElemStrikeFx_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S02: ElemStrikeFx_Run's call [0x65A5D4 + 4 x byte +2]: MAGIC167's 0x4EF840, ElemStrikeFx_Start, ElemStrikeFx_Play; MAGIC006's table follows at 0x65A5E0 (0x49C4E0 is MAGIC006's)."
