@@ -185,3 +185,24 @@ change held: the traced runs armed their entries and counted 10,309 frames.
 The spell wave's functions are not on the attract path, so the hash says
 nothing about them beyond "nothing the attract sequence runs moved"; their
 check is the fuzz and the owner casting them.
+
+## 9. The second wave (2026-09-26, from `973a69d`)
+
+Ten groups out at 12:30 (C1, C2, C3, E, S26..S31), briefed with the first
+wave's lessons (`analysis/round9_wave2_brief.md`). Merged so far:
+
+- **E** ([`magic_engine.md`](magic_engine.md)): 22 functions, the five
+  engine rows; 102 controls, 100 refused, 2 equivalent. `0x43FE80`, which
+  S23 and S25 call by address, is `MagicFx_DoneAndFree`. Paralyzer (row 123)
+  reads an enemy's `+0xF8` unchecked, which only the event-battle set-ups
+  write, so an ordinary battle reads address 0 - faithful in ours. Head
+  Cracker's (row 128) waits end for ordinary targets; what freezes TCRF's
+  case is unexplained (candidates in the doc). 2,025 ours.
+
+**A harness blind spot E found, owed after the wave:** a `kFlag` stand-in
+answers 0 exactly when its own disturbance did nothing (both come from one
+hash), so a re-read after a "no" answer is never exercised. E worked around
+it with an `effect` in its own fuzz. Every group whose functions re-read
+after a `kFlag` callee may have the same gap. The fix belongs in
+`magic_harness.cpp` (draw the answer and the disturbance from separate
+bits), after wave two merges, then each group's controls re-run.
