@@ -1,4 +1,4 @@
-// The spell round's shared harness (magic_harness.h; docs/magic_harness.md).
+﻿// The spell round's shared harness (magic_harness.h; docs/magic_harness.md).
 //
 // Generalises what battle_fx_tasks_fuzz.cpp and magic_fx_reached_fuzz.cpp
 // do for one fixed set of functions:
@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>   // S24DBG-TEMP
 #include <utility>
 
 #include "bof3/symbols.gen.h"
@@ -48,7 +49,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 std::uint32_t g_rng = 0x2545F491u;
 
-constexpr unsigned kLog = 1024;
+constexpr unsigned kLog = 4096;   // a draw loop of MAGIC104 makes about 1,700 calls
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
 unsigned g_log_n;
@@ -97,7 +98,11 @@ void Disturb() {
     case 8: Frame_Counter = h >> 6; break;
     case 9: case 10: {
         static const unsigned kFields[] = {0, 1, 2, 4, 8, 9, 0xA, 0xB, 0xC, 0x2C, 0x2D, 0x30, 0x34, 0x38, 0x3C};
-        Sprite_Current[kFields[v % 15]] = b;
+        const unsigned field = kFields[v % 15];
+        // The phase bytes stay 0 or 1: an effect that dispatches through a
+        // table after a call (MAGIC104's 0x4D12A0, two entries) must still
+        // land inside it - past it the copy calls into data and ours aborts.
+        Sprite_Current[field] = field == 1 || field == 2 ? static_cast<unsigned char>(b & 1) : b;
         break;
     }
     case 11: {
@@ -105,9 +110,17 @@ void Disturb() {
         Pointer(at::kOwner)[kFields[v % 8]] = b;
         break;
     }
-    case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+    case 12: case 13: {
+        // Only for a target the records hold: a group may seed the target
+        // byte with its side bits (0x40, 0x80), whose "enemy" lies past the
+        // image. And never into the current slot / owner cells: target 2's
+        // "enemy" (0x93B838..0x93B95F) covers them, and a torn owner pointer
+        // is dereferenced by the next disturbance (case 11).
+        unsigned char* const cell = TargetEnemy() + (h >> 20) % at::kEnemyStride;
+        const std::uint32_t where = Key(cell);
+        if (Mem(at::kTarget)[0] <= 10 && (where < 0x93B8C0 || where >= at::kEnemies)) *cell = static_cast<unsigned char>(v);
         break;
+    }
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
@@ -127,6 +140,7 @@ struct Slot {
     std::uint8_t lo, hi;
     bool handler;            // a phase: logs the slot's phase bytes, answers nothing
     unsigned calls;          // the original's side, for the coverage line
+    std::uint8_t deref[4];   // bytes of argument i hashed instead of the pointer (Callee::deref)
 };
 constexpr unsigned kSlots = 160;
 Slot g_slots[kSlots];
@@ -138,8 +152,8 @@ std::uint32_t Answering(const Slot& s) {
     const std::uint32_t h = Hash();
     switch (s.answer) {
     case Answer::kByte: {
-        const unsigned span = static_cast<unsigned>(s.hi) - s.lo + 1;
-        return (h & 0xFFFFFF00u) | (s.lo + (h >> 8) % span);
+        const unsigned span = ((static_cast<unsigned>(s.hi) - s.lo) & 0xFFu) + 1;
+        return (h & 0xFFFFFF00u) | ((s.lo + (h >> 8) % span) & 0xFFu);
     }
     case Answer::kFlag: return h % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
     case Answer::kRand:
@@ -165,9 +179,26 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
         Disturb();
         return Hash();
     }
+    if (s.answer == Answer::kPhase) {
+        Log5(I, Cur(), static_cast<std::uint32_t>(move_script::Long(Mem(at::kOwner))),
+             Sprite_Current[1] | static_cast<std::uint32_t>(Sprite_Current[2]) << 8,
+             s.masks[0] ? static_cast<std::uint32_t>(move_script::Long(Mem(s.masks[0]))) : 0);
+        Disturb();
+        return Hash();
+    }
     const std::uint32_t a[4] = {a0, a1, a2, a3};
     std::uint32_t r[4] = {};
-    for (unsigned i = 0; i < s.nargs && i < 4; ++i) r[i] = a[i] & s.masks[i];
+    for (unsigned i = 0; i < s.nargs && i < 4; ++i) {
+        if (s.deref[i]) {
+            // FNV-1a over the bytes the argument points at
+            std::uint32_t f = 0x811C9DC5u;
+            const auto* p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[i]));
+            for (unsigned b = 0; b < s.deref[i]; ++b) f = (f ^ p[b]) * 0x01000193u;
+            r[i] = f;
+        } else {
+            r[i] = a[i] & s.masks[i];
+        }
+    }
     Log5(I, r[0], r[1], r[2], r[3]);
     Disturb();
     const std::uint32_t answer = Answering(s);
@@ -238,14 +269,15 @@ void Register(const Callee& c) {
         if (g_slots[i].address == c.address) return;   // listed twice: the first stands
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0};
+    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0,
+         {c.deref[0], c.deref[1], c.deref[2], c.deref[3]}};
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return;
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0};
+    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0, {}};
 }
 const void* StubFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
@@ -452,11 +484,14 @@ void Run(const Group& group) {
         Capture(input);
 
         const std::uint32_t a0 = Next(), a1 = Next(), a2 = Next();   // the task runner's, ignored
+        static const bool kDbg = std::getenv("S24DBG") != nullptr;   // S24DBG-TEMP
+        if (kDbg) bof3::Log("S24DBG round %u %s", round, group.clones[k].name);   // S24DBG-TEMP
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             State& out = pass ? ours : theirs;
             const void* const fn = pass ? group.clones[k].ours : clones[k];
             g_active = pass == 1;
+            if (kDbg) bof3::Log("S24DBG pass %d sc %p pn %p owner %p", pass, (void*)Sprite_Current, (void*)Gfx_PacketNext, (void*)Pointer(at::kOwner));   // S24DBG-TEMP
             reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
             g_active = false;
             Capture(out);

@@ -108,14 +108,22 @@ struct Clone {
 };
 
 // How a recorder answers: a byte in lo..hi with garbage above it (an index,
-// a count), a byte of 0 or not 0 (a flag), the harness's Rand, or garbage.
-enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
+// a count; lo above hi wraps through 0xFF, so 0xFF..0x3F is "none, or 0..0x3F"),
+// a byte of 0 or not 0 (a flag), the harness's Rand, or garbage. kPhase is a
+// callee that is another function of the group's own, called directly (not
+// through a table): it answers garbage and logs, like a handler, the task it
+// ran for - Sprite_Current, the owner 0x93B940, the phase bytes +1 / +2, and
+// the dword at masks[0] when that is not 0 (a pool's "current" cell).
+enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand, kPhase };
 
 // A callee the standard set (magic_harness.cpp, kStandard) lacks. `key` is
 // the pointer ours calls - (std::uint32_t)name, which is Capcom's address or
 // our function - and `address` the original's, the one clones call; for a
 // callee that is Capcom's the two are equal. masks[i] is what of argument i
 // the callee reads (a u8 argument is pushed with garbage above it).
+// deref[i], when not 0, logs a hash of that many bytes at argument i instead
+// of the pointer: an input the caller built in its own stack frame (a GTE
+// vector, an angle triple), whose address differs between the copy and ours.
 struct Callee {
     const char* name;
     std::uint32_t address, key;
@@ -123,6 +131,7 @@ struct Callee {
     std::uint32_t masks[4];
     Answer answer;
     std::uint8_t lo, hi;
+    std::uint8_t deref[4] = {};
 };
 
 // A .data table of handlers the functions read in place: its entries are

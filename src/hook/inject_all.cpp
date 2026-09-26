@@ -119,6 +119,7 @@
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
+#include "game/magic_s24.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -313,6 +314,8 @@ void InjectAll() {
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
+    MagicS24_Inject();          // round 9 group S24 (MAGIC104..106): no patch in its band; its calls into group L
+                                // and the engine go through raw addresses re-aimed at the harness's recorders
     InjectReport();
 }
 
