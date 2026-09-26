@@ -21,6 +21,7 @@
 
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
+#include "launcher/exe_image.h"
 #include "input/pad_sdl.h"
 
 #include <cstdio>
@@ -209,6 +210,16 @@ int wmain(int argc, wchar_t** argv) {
             L"Every address bof3x patches is specific to that one file; refusing to start. "
             L"If this is an uncatalogued release, see fixtures.toml.",
             exe.c_str(), sha.c_str(), kExpectedSha256);
+
+    // The default key table, from the exe itself rather than a copy of it
+    // (docs/exe-table-audit.md): before the settings, whose defaults use it.
+    {
+        std::vector<bof3x::input::KeyBinding> keys;
+        std::string why;
+        if (!bof3x::ExeDefaultKeys(exe, keys, why))
+            Die(L"cannot read the default key table from %ls: %hs", exe.c_str(), why.c_str());
+        bof3x::input::SetDefaultKeys(keys);
+    }
 
     // Settings. The file lives next to the launcher, not in the game directory,
     // which stays the player's own (CLAUDE.md rule 1) apart from BOF3.CFG -

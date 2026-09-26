@@ -1,6 +1,6 @@
 # User checks — things only the owner can do in game
 
-**Status:** IN PROGRESS (2026-09-24)
+**Status:** IN PROGRESS (2026-09-26)
 
 Checks that need a person at the keyboard playing the game. Agents add items
 here instead of burying them in [`HANDOFF.md`](HANDOFF.md); the owner ticks
@@ -115,3 +115,19 @@ The three rows and the selected row's glow were confirmed by the owner,
 - [ ] Each row still goes where it went.
 - Result goes to: [`title-menu.md`](title-menu.md) section 3, and DIV-0014's
   "Checked".
+
+### 7. Tables read from the exe instead of copied
+
+*Why:* [`exe-table-audit.md`](exe-table-audit.md) §7. Three places now read a
+table out of `BOF3.exe` where our source used to hold a copy of it. They
+compile, but nothing has run them.
+
+- [ ] The launcher starts. It now reads the default key table out of
+      `BOF3.exe` after the hash check; a failure says `cannot read the default
+      key table`.
+- [ ] Settings → Controls → **Defaults** shows the original 24 keys: arrows,
+      Z X C V, A Q S W, Enter, right Shift, Esc, Space, the keypad.
+- [ ] `BOF3X_SHADOW=field_blocked,magic_fx_reached` with
+      `BOF3X_SELFTEST_ONLY=1`: both self-tests report 0 MISMATCHES.
+- [ ] Walk into a wall and a river on the field: still blocked.
+- Result goes to: [`exe-table-audit.md`](exe-table-audit.md) §7.

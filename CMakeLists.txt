@@ -285,10 +285,14 @@ add_executable(bof3x_launcher
   src/launcher/launcher.cpp
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
+  src/launcher/exe_image.cpp
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
   src/launcher/launcher.rc)
-target_include_directories(bof3x_launcher PRIVATE src)
+# symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
+# player's BOF3.exe, not copied (docs/exe-table-audit.md).
+target_include_directories(bof3x_launcher PRIVATE src "${_gen_dir}")
+add_dependencies(bof3x_launcher bof3x_symbols)
 # SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.

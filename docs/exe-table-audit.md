@@ -1,6 +1,6 @@
 # Audit: does taken-over code transcribe the exe's game tables?
 
-**Status:** IN PROGRESS (2026-09-26, `src/` at `f2444e9`; the audit is done, and the fixes and the rule's wording are open)
+**Status:** IN PROGRESS (2026-09-26, `src/` at `f2444e9`; the audit is done and §7 records what was fixed; the rule's wording is open)
 
 The rule under test, proposed in [`ASSET_SOURCES.md`](ASSET_SOURCES.md) §5:
 
@@ -186,3 +186,39 @@ For the owner to confirm. None has been done.
    immediates and compiler float constants are code; expected-value checks
    (P) verify, they do not supply. Then decide whether it becomes a
    `CLAUDE.md` hard rule.
+
+## 7. Resolved (2026-09-26)
+
+- **V1 fixed.** The launcher reads `Key_TableDefault` out of the player's
+  `BOF3.exe` by address, right after the hash check
+  (`src/launcher/exe_image.cpp`, the one launcher file that includes
+  `symbols.gen.h`). `input::KeysFromTable` parses it and `SetDefaultKeys`
+  hands it to `Bindings::Defaults()`. An unreadable table is a `Die`. In the
+  game, `Defaults().keys` is now empty; nothing there reads it (`pad_read.cpp`
+  uses only `.pad`).
+- **V2 fixed.** The fuzz snapshots `Steal_RateTable` from the image at the
+  start of `SelfTest`, the `worldmap_area_fuzz.cpp` pattern. The values in
+  `cheats.cpp`'s comment are replaced by a reference. The table is Capcom's
+  original steal chance. DIV-0046's always-steal cheat never touches it: it
+  zeroes the random byte's mask instead.
+- **?1 fixed.** `field_blocked.cpp` reads the blocking nibbles from the
+  switch tables at `0x518660` / `0x518654` on first use. The structural checks
+  (an index above 2, a jump target other than the two case bodies) are still
+  Fatals.
+- **?2 and ?3 kept as code.** Reading them in place would mean decoding
+  instructions, not reading a table. `kCategory`'s values are case-body
+  immediates. The area lists would need the switch's bounds decoded from
+  `.text`, and handler addresses taken from each case body's `call`. Both are
+  code on the PSX too: the area hooks live in the area overlays, which a
+  disc-only build replaces with our code anyway. So a `switch`'s case list
+  counts as code.
+- **The pause lines stay.** The owner's call: they exist only in the PC port,
+  so no disc build has to supply them.
+
+Not verified at run time: this container has no `BOF3.exe` and cannot run
+Windows programs. The changed files compile under `i686-w64-mingw32-g++`
+`-std=c++20 -Wall -Wextra` with no new warnings, and `KeysFromTable` passed a
+native test on made-up tables. What the owner should check: the launcher
+starts, and the Controls dialog's Defaults button shows the 24 original keys.
+Both fuzzes (`field_blocked`, `magic_fx_reached`) should still report 0
+mismatches under `BOF3X_SHADOW`.
