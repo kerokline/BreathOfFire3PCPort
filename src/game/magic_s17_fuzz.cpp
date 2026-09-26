@@ -10,7 +10,7 @@
 // whose arguments point at the caller's stack (they log what is pointed at),
 // that write through a pointer the caller reads again (the GTE's outputs, a
 // depth), that move Gfx_PacketNext as the real ones do, or that take more
-// than four arguments. LeechShell_Edge takes arguments: it is invoked with
+// than four arguments. LeechShell_Edge takes arguments: Group::args gives it
 // the seed's.
 #include <cstdint>
 #include <cstring>
@@ -184,47 +184,47 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 #define S17_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define S17_RAW(text, address) text, address, address
 const mh::Callee kCallees[] = {
-    {S17_OURS(Sprite_SetTint), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecSetTint)},
-    {S17_OURS(Tint_Release), 1, {kU8}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Sprite_SetAnimation), 1, {kU8}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Math_Ratan2), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecRatan2)},
-    {S17_OURS(Gpu_SetDrawMode), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecDrawMode)},
-    {S17_OURS(Gfx_CommitPrim), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecCommit)},
-    {S17_OURS(MapView_LinkPrimAt), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecLink)},
-    {S17_OURS(Gpu_SetPolyFT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gpu_SetPolyF4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gpu_SetLineF4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gpu_GetClut), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gte_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(Gte_RotTrans), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecRotTrans)},
-    {S17_OURS(Gte_RotMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecRotMatrix)},
-    {S17_OURS(Gte_MulMatrix0), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecMulMatrix0)},
-    {S17_OURS(Gte_SetRotMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecSetRot)},
-    {S17_OURS(Gte_SetTransMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecSetTrans)},
-    {S17_OURS(Gte_RotAverage4), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecRotAverage4)},
-    {S17_OURS(Gte_RotTransPers4), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecRotTransPers4)},
-    {S17_OURS(Gte_PrimDepths4_0C), 1, {kAll}, mh::Answer::kGarbage, 0, 0, nullptr},
+    {S17_OURS(Sprite_SetTint), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecSetTint)},
+    {S17_OURS(Tint_Release), 1, {kU8}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Sprite_SetAnimation), 1, {kU8}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Math_Ratan2), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecRatan2)},
+    {S17_OURS(Gpu_SetDrawMode), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecDrawMode)},
+    {S17_OURS(Gfx_CommitPrim), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecCommit)},
+    {S17_OURS(MapView_LinkPrimAt), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecLink)},
+    {S17_OURS(Gpu_SetPolyFT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gpu_SetPolyF4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gpu_SetLineF4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gpu_GetClut), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gte_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(Gte_RotTrans), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecRotTrans)},
+    {S17_OURS(Gte_RotMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecRotMatrix)},
+    {S17_OURS(Gte_MulMatrix0), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecMulMatrix0)},
+    {S17_OURS(Gte_SetRotMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecSetRot)},
+    {S17_OURS(Gte_SetTransMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecSetTrans)},
+    {S17_OURS(Gte_RotAverage4), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecRotAverage4)},
+    {S17_OURS(Gte_RotTransPers4), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecRotTransPers4)},
+    {S17_OURS(Gte_PrimDepths4_0C), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
     // this group's own, called by its others
-    {S17_OURS(Revive_IsStrong), 0, {}, mh::Answer::kByte, 0, 1, nullptr},
-    {S17_OURS(ReviveHalo_Draw), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(ReviveMote_Dispatch), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecMoteDispatch)},
-    {S17_OURS(ReviveMote_Draw), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(ReviveMote_Alloc), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecAlloc)},
-    {S17_OURS(LeechShell_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(LeechShell_Draw), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_OURS(LeechShell_Edge), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecEdge)},
-    {S17_OURS(LeechOrb_DrawRings), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
+    {S17_OURS(Revive_IsStrong), 0, {}, mh::Answer::kByte, 0, 1, {}, nullptr, nullptr},
+    {S17_OURS(ReviveHalo_Draw), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(ReviveMote_Dispatch), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecMoteDispatch)},
+    {S17_OURS(ReviveMote_Draw), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(ReviveMote_Alloc), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecAlloc)},
+    {S17_OURS(LeechShell_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(LeechShell_Draw), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_OURS(LeechShell_Edge), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecEdge)},
+    {S17_OURS(LeechOrb_DrawRings), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
     // other groups' (docs/magic_s17.md section 5)
-    {S17_RAW("0x4FB880", kSortPrims), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecSort)},
-    {S17_RAW("0x4FB9F0", kSeek), 2, {kAll, kU16}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_RAW("0x4FBBD0", kNear), 0, {}, mh::Answer::kGarbage, 0, 0, reinterpret_cast<const void*>(&RecNear)},
-    {S17_RAW("0x4F1BD0", kMoteGlow), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
-    {S17_RAW("0x4F6290", kMoteDone), 0, {}, mh::Answer::kGarbage, 0, 0, nullptr},
+    {S17_RAW("0x4FB880", kSortPrims), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecSort)},
+    {S17_RAW("0x4FB9F0", kSeek), 2, {kAll, kU16}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_RAW("0x4FBBD0", kNear), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecNear)},
+    {S17_RAW("0x4F1BD0", kMoteGlow), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
+    {S17_RAW("0x4F6290", kMoteDone), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
 };
 #undef S17_OURS
 #undef S17_RAW
@@ -297,19 +297,12 @@ constexpr mh::CallSite kCalls4BE810[] = {
     {0x1F1, 0x5A7A50}, {0x204, 0x5A7A00}, {0x24E, 0x5A77C0}, {0x259, 0x572FA0}, {0x268, 0x5A75B0}, {0x270, 0x5A7780},
     {0x2A3, 0x5A85F0}, {0x2A9, 0x5A9240}, {0x301, 0x572FA0}};
 
-void InvokeEdge(const void* fn) {
-    using EdgeFn = void (__cdecl*)(unsigned char*, long*, unsigned long, unsigned long, unsigned long, unsigned long,
-                                   unsigned long, unsigned long, unsigned long, unsigned long);
-    const std::uint32_t* const v = g_own.edge_v;
-    reinterpret_cast<EdgeFn>(const_cast<void*>(fn))(Gfx_PacketNext, &g_own.edge_out, v[0], v[1], v[2], v[3], v[4], v[5],
-                                                     v[6], v[7]);
-}
 
 #define MH_N(a) static_cast<int>(sizeof a / sizeof a[0])
-#define S17_P(name, base, size) {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0, nullptr}
-#define S17_K(name, base, size, calls) {#name, base, size, calls, MH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0, nullptr}
-#define S17_I(name, base, size, imms) {#name, base, size, nullptr, 0, imms, MH_N(imms), nullptr, 0, reinterpret_cast<const void*>(&::name), 0, nullptr}
-#define S17_KI(name, base, size, calls, imms) {#name, base, size, calls, MH_N(calls), imms, MH_N(imms), nullptr, 0, reinterpret_cast<const void*>(&::name), 0, nullptr}
+#define S17_P(name, base, size) {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0}
+#define S17_K(name, base, size, calls) {#name, base, size, calls, MH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0}
+#define S17_I(name, base, size, imms) {#name, base, size, nullptr, 0, imms, MH_N(imms), nullptr, 0, reinterpret_cast<const void*>(&::name), 0}
+#define S17_KI(name, base, size, calls, imms) {#name, base, size, calls, MH_N(calls), imms, MH_N(imms), nullptr, 0, reinterpret_cast<const void*>(&::name), 0}
 const mh::Clone kClones[] = {
     // MAGIC075
     S17_I(Purify_Task, 0x4BCBF0, 0x2E, kImms4BCBF0),
@@ -326,7 +319,7 @@ const mh::Clone kClones[] = {
     S17_K(Revive_TintSource, 0x4BD180, 0x58, kCalls4BD180),
     S17_P(Revive_WaitMotes, 0x4BD1E0, 0x19),
     S17_K(Revive_Fade, 0x4BD200, 0x79, kCalls4BD200),
-    {"Revive_IsStrong", 0x4BD280, 0x23, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Revive_IsStrong), 0xFF, nullptr},
+    {"Revive_IsStrong", 0x4BD280, 0x23, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Revive_IsStrong), 0xFF},
     S17_P(ReviveHalo_Dispatch, 0x4BD2B0, 0x12),
     S17_K(ReviveHalo_Task, 0x4BD2D0, 0x2E, kCalls4BD2D0),
     S17_P(ReviveHalo_Wait, 0x4BD300, 0x7A),
@@ -337,7 +330,7 @@ const mh::Clone kClones[] = {
     S17_K(ReviveMote_Launch, 0x4BD690, 0x132, kCalls4BD690),
     S17_K(ReviveMote_Rise, 0x4BD7D0, 0xC7, kCalls4BD7D0),
     S17_K(ReviveMote_Draw, 0x4BD8A0, 0x1B8, kCalls4BD8A0),
-    {"ReviveMote_Alloc", 0x4BDA60, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ReviveMote_Alloc), 0xFF, nullptr},
+    {"ReviveMote_Alloc", 0x4BDA60, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ReviveMote_Alloc), 0xFF},
     // MAGIC078
     S17_KI(Leech_Task, 0x4BDAC0, 0x5E, kCalls4BDAC0, kImms4BDAC0),
     S17_K(Leech_Start, 0x4BDB20, 0xE4, kCalls4BDB20),
@@ -353,7 +346,7 @@ const mh::Clone kClones[] = {
     S17_K(LeechShell_End, 0x4BDE20, 0x29, kCalls4BDE20),
     S17_K(LeechShell_Draw, 0x4BDE50, 0x6F6, kCalls4BDE50),
     {"LeechShell_Edge", 0x4BE550, 0x5F, kCalls4BE550, MH_N(kCalls4BE550), nullptr, 0, nullptr, 0,
-     reinterpret_cast<const void*>(&::LeechShell_Edge), 0, &InvokeEdge},
+     reinterpret_cast<const void*>(&::LeechShell_Edge), 0},
     S17_K(LeechShell_PushMatrix, 0x4BE5B0, 0xAE, kCalls4BE5B0),
     S17_K(LeechOrb_Task, 0x4BE660, 0x6D, kCalls4BE660),
     S17_P(LeechOrb_WaitShell, 0x4BE6D0, 0x1B),
@@ -500,12 +493,23 @@ void Seed(unsigned k) {
 
 // A group cell moved after a call: the packet pointer, or a word of the
 // vertex scratch or of the radius words.
+// LeechShell_Edge's arguments: the packet pointer, its out cell and the four
+// SVECTORs the seed put in g_own (every other clone ignores its words).
+void Args(unsigned k, std::uint32_t* a);
+
 void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 3) {
     case 0: Gfx_PacketNext = g_own.prims + ((h >> 12) & 0xFFC); break;
     case 1: SetWord(mh::Mem(0x9037A0 + ((h >> 12) & 0x1E)), h >> 16); break;
     default: SetWord(mh::Mem(0x903850 + ((h >> 12) & 0xE)), h >> 16); break;
     }
+}
+
+void Args(unsigned k, std::uint32_t* a) {
+    if (k != kShellEdge) return;
+    a[0] = Key(Gfx_PacketNext);
+    a[1] = Key(&g_own.edge_out);
+    for (unsigned i = 0; i < 8; ++i) a[2 + i] = g_own.edge_v[i];
 }
 
 }  // namespace
@@ -516,7 +520,7 @@ void SelfTest() {
     const mh::Group group = {
         "magic_s17", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kDataTables, sizeof kDataTables / sizeof kDataTables[0], g_regions, sizeof g_regions / sizeof g_regions[0],
-        &Seed, &Disturb, 2000, &Settle,
+        &Seed, &Disturb, 2000, &Settle, 0, &Args,
     };
     mh::Run(group);
 }

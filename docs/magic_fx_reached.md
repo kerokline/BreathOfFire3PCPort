@@ -14,8 +14,8 @@ that `pe_funcs.py` folded them into. Read, the 25 are four effects and one
 shared end:
 
 - **the disc-and-fan effect** (kind-2 row 21) and its six rings;
-- **the steal** (row 69) and the thief's double;
-- **the Healing Herb** (row 43; MAGIC070.EMI, [`battle_items.md`](battle_items.md))
+- **the steal** (row 70) and the thief's double;
+- **the Healing Herb** (row 44; MAGIC070.EMI, [`battle_items.md`](battle_items.md))
   - its task and the sparkle's update, the two parts of it round seven left;
 - **the backdrop dim** (kind 1, parameter 0x43 - the second task
   `Battle_StartAbilityMagic` starts);
@@ -42,7 +42,7 @@ return are the task runner's. The two entrances (both group CE's, not ours):
 
 - **kind 2** - `0x4378B0`: `jmp [0x64C2BC + 8 * row]` (an eight-byte table,
   the second word of each row unread). Row 21 (`.data 0x64C364`) is
-  `FxDiscFan_Task`, row 43 (`0x64C41C`) `Sparkle_Task`, row 69 (`0x64C4EC`)
+  `FxDiscFan_Task`, row 44 (`0x64C41C`) `Sparkle_Task`, row 70 (`0x64C4EC`)
   `Steal_Task`. The table is `0x4378B0`'s, so it is not named here.
 - **kind 1** - `0x435350`: a 110-entry table built on its stack, called by
   the parameter `+5`. Entry 22 (`.text 0x43540A`) is `FxRing_Task`, 67
@@ -87,7 +87,7 @@ Sizes are ret to ret (capstone, every jump internal).
 | `FxRing_Wait` | `0x4AD200` | 0x6A | `FxRing_Phases[0]` | the delay, then the owner's position |
 | `FxRing_Rise` | `0x4AD270` | 0x38 | `[1]` | `+0xB` +1, `+0xA` +2, `+9` -2 to 0x10 |
 | `FxRing_Fade` | `0x4AD2B0` | 0x43 | `[2]` | `+0xA` -3, `+9` -2 to 0; the owner's count; free |
-| `Steal_Task` | `0x4B54B0` | 0x36 | kind-2 row 69 | phase by `+1` (stack table) |
+| `Steal_Task` | `0x4B54B0` | 0x36 | kind-2 row 70 | phase by `+1` (stack table) |
 | `Steal_Start` | `0x4B54F0` | 0x271 | its entry 0 | the double, and the roll (section 4) |
 | `Steal_Wait` | `0x4B5770` | 0x47 | entry 1 | wait for the double; the thief's animation 4 |
 | `Steal_Report` | `0x4B57C0` | 0x4C | entry 2 | the item's name and the message, once the window is down |
@@ -96,7 +96,7 @@ Sizes are ret to ret (capstone, every jump internal).
 | `StealClone_Task` | `0x4B5830` | 0x46 | `StealClone_Types[0]` | phase by `+2` (stack table), then its sprite's screen update |
 | `StealClone_Run` | `0x4B5880` | 0x33 | its entry 1 | animate; at `+9` 0 the thief's sounds (0, 4) |
 | `StealClone_Finish` | `0x4B58C0` | 0x2D | entry 2 | animate to the end; flag 0x40; the owner's count |
-| `Sparkle_Task` | `0x4B8D70` | 0x81 | kind-2 row 43 | phase by `+1` (stack table), then every live sparkle's dispatch |
+| `Sparkle_Task` | `0x4B8D70` | 0x81 | kind-2 row 44 | phase by `+1` (stack table), then every live sparkle's dispatch |
 | `Sparkle_Spawn` | `0x4B8E00` | 0x14E | its entry 0 | the pool cleared, the source's position, the sparkles made |
 | `Sparkle_End` | `0x4B8F50` | 0x85 | entry 4 | a tint record dimmed; the tints released, the target flashed |
 | `Sparkle_Update` | `0x4B9000` | 0x8F | `Sparkle_Types[0]` | the sparkle's phase (stack table), its disc and its rays |
@@ -170,7 +170,7 @@ phases are shared - taking them here takes them for the twin too. Which
 spell row 21 is was not identified: the draws are the ones round seven
 matched to Sacrifice's overlay (MAGIC055), but other overlays share them.
 
-**The steal** (row 69) - **Pilfer's copy of the routine**, by
+**The steal** (row 70) - **Pilfer's copy of the routine**, by
 [`cheats.md`](cheats.md) (the PSX's `MAGIC065.EMI`; Steal's copy is
 `0x4F5140`, not in this group). The functions keep the `Steal_` names they
 merged with; the queue's PSX twin for `0x4B54F0` is `801EEC90`. **DIV-0046**
@@ -203,7 +203,7 @@ flag and frees the task. The double: its size (`0x4ED5C0`), then
 these message ids are "stole", "could not" and "nothing to steal" is by the
 branches, not by reading the text.
 
-**The Healing Herb** (row 43). `Sparkle_Task` runs the effect's phase and
+**The Healing Herb** (row 44). `Sparkle_Task` runs the effect's phase and
 then walks the sparkle pool ([`battle_items.md`](battle_items.md) section 3
 has the sparkles). `Sparkle_Spawn` clears the pool, takes the source's
 position and screen point, and makes `Sparkle_CountByKind[kind]` sparkles
