@@ -1,4 +1,4 @@
-﻿// The spell round's shared harness (magic_harness.h; docs/magic_harness.md).
+// The spell round's shared harness (magic_harness.h; docs/magic_harness.md).
 //
 // Generalises what battle_fx_tasks_fuzz.cpp and magic_fx_reached_fuzz.cpp
 // do for one fixed set of functions:
@@ -22,13 +22,16 @@
 // Frame_Counter, or a field of the task, the owner or the target enemy (and
 // a group's own cells, through its disturb) - so a value ours keeps where
 // the original reads memory again, or the other way round, shows.
+//
+// Round nine's eleven spell groups each grew this file on their own branch;
+// group HX folded their additions into one (docs/magic_harness.md section 7
+// has what each group's calls became).
 #include "game/magic_harness.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <cstdlib>   // S24DBG-TEMP
 #include <utility>
 
 #include "bof3/symbols.gen.h"
@@ -49,14 +52,24 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 std::uint32_t g_rng = 0x2545F491u;
 
-constexpr unsigned kLog = 4096;   // a draw loop of MAGIC104 makes about 1,700 calls
+// 32,768 entries a round: a draw that walks a mesh makes thousands of calls
+// (group S20's 0x4C4C00, 4,262). Only the prefix a pass wrote is copied and
+// compared, so the size costs memory, not time.
+constexpr unsigned kLog = 32768;
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
 unsigned g_log_n;
 std::uint32_t g_seed;        // the recorders' own stream: the same on both passes
+std::uint32_t g_salt;        // Noise's count within the pass
 std::uint32_t g_rand_hint;
 int g_rand_first = -1;
 int g_rand_pending = -1;
+
+// What an entry is (`what`): a call or a phase counts in the coverage line.
+constexpr std::uint32_t kPhaseTag = 1000;   // + slot: a handler's or a kPhase callee's
+constexpr std::uint32_t kMoreTag = 2000;    // + slot: a call's arguments past the fourth
+constexpr std::uint32_t kNoteTag = 3000;    // Note / NoteBytes
+constexpr std::uint32_t kReturnTag = 4000;  // a clone's answer (Clone::ret_mask)
 
 std::uint32_t Hash() {
     std::uint32_t h = (g_seed + g_log_n * 0x2545F491u) * 0x9E3779B1u;
@@ -69,6 +82,9 @@ void Log5(std::uint32_t what, std::uint32_t a, std::uint32_t b, std::uint32_t c,
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
     ++g_log_n;
 }
+
+// Set while a clone marked calm runs (Clone::calm): nothing is disturbed.
+bool g_calm = false;
 
 // --- the harness's own memory -------------------------------------------------
 
@@ -83,7 +99,7 @@ const Group* g_group = nullptr;
 // Every cell below is one some effect reads again after a call.
 void Disturb() {
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) return;
+    if (g_calm || h % 3 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 4) % 16) {
@@ -98,11 +114,10 @@ void Disturb() {
     case 8: Frame_Counter = h >> 6; break;
     case 9: case 10: {
         static const unsigned kFields[] = {0, 1, 2, 4, 8, 9, 0xA, 0xB, 0xC, 0x2C, 0x2D, 0x30, 0x34, 0x38, 0x3C};
-        const unsigned field = kFields[v % 15];
-        // The phase bytes stay 0 or 1: an effect that dispatches through a
-        // table after a call (MAGIC104's 0x4D12A0, two entries) must still
-        // land inside it - past it the copy calls into data and ours aborts.
-        Sprite_Current[field] = field == 1 || field == 2 ? static_cast<unsigned char>(b & 1) : b;
+        const unsigned f = kFields[v % 15];
+        // a group's phase_span keeps the phase bytes inside its tables
+        const unsigned span = g_group ? g_group->phase_span : 0;
+        Sprite_Current[f] = (f == 1 || f == 2) && span ? static_cast<unsigned char>(b % span) : b;
         break;
     }
     case 11: {
@@ -110,22 +125,20 @@ void Disturb() {
         Pointer(at::kOwner)[kFields[v % 8]] = b;
         break;
     }
-    case 12: case 13: {
-        // Only for a target the records hold: a group may seed the target
-        // byte with its side bits (0x40, 0x80), whose "enemy" lies past the
-        // image. And never into the current slot / owner cells: target 2's
-        // "enemy" (0x93B838..0x93B95F) covers them, and a torn owner pointer
-        // is dereferenced by the next disturbance (case 11).
-        unsigned char* const cell = TargetEnemy() + (h >> 20) % at::kEnemyStride;
-        const std::uint32_t where = Key(cell);
-        if (Mem(at::kTarget)[0] <= 10 && (where < 0x93B8C0 || where >= at::kEnemies)) *cell = static_cast<unsigned char>(v);
+    case 12: case 13:
+        // Only a target the enemy records hold (3..10). A party target's
+        // "enemy" lies below them, over the current slot and the owner
+        // (0x93B8C4, 0x93B940: a torn owner is written through by the next
+        // case 11), and a side bit (0x40, 0x80) a group's seed sets points
+        // past the image - found by five groups of round nine.
+        if (Mem(at::kTarget)[0] - 3u < 8u) TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
-    }
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
     default: break;
     }
+    if (g_group && g_group->settle) g_group->settle();
 }
 
 // --- the stand-ins ------------------------------------------------------------
@@ -135,14 +148,16 @@ struct Slot {
     std::uint32_t address;   // what a clone's call site or table holds
     std::uint32_t key;       // what ours passes to Call
     unsigned nargs;
-    std::uint32_t masks[4];
+    std::uint32_t masks[kArgs];
     Answer answer;
     std::uint8_t lo, hi;
+    std::uint8_t deref[kArgs];
+    Effect effect;
+    const void* custom;      // the group's own stand-in, or null for the pool's
     bool handler;            // a phase: logs the slot's phase bytes, answers nothing
     unsigned calls;          // the original's side, for the coverage line
-    std::uint8_t deref[4];   // bytes of argument i hashed instead of the pointer (Callee::deref)
 };
-constexpr unsigned kSlots = 160;
+constexpr unsigned kSlots = 256;
 Slot g_slots[kSlots];
 unsigned g_slot_n;
 
@@ -156,6 +171,7 @@ std::uint32_t Answering(const Slot& s) {
         return (h & 0xFFFFFF00u) | ((s.lo + (h >> 8) % span) & 0xFFu);
     }
     case Answer::kFlag: return h % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
+    case Answer::kBool: return h % 3 == 0 ? 0u : 1u;
     case Answer::kRand:
         // some values the CRT's never answers (negative); a third of the time
         // near the value the seeding asked for; the round's first exactly.
@@ -171,11 +187,15 @@ std::uint32_t Answering(const Slot& s) {
     }
 }
 
+// kArgs argument slots (cdecl: a callee taking fewer never looks at the rest,
+// which are the caller's own frame); as many as the callee takes are logged,
+// four to an entry.
 template <unsigned I>
-std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3) {
+std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3, std::uint32_t a4,
+                           std::uint32_t a5, std::uint32_t a6, std::uint32_t a7, std::uint32_t a8, std::uint32_t a9) {
     const Slot& s = g_slots[I];
     if (s.handler) {
-        Log5(1000 + I, Cur(), Sprite_Current[1], Sprite_Current[2], 0);
+        Log5(kPhaseTag + I, Cur(), Sprite_Current[1], Sprite_Current[2], 0);
         Disturb();
         return Hash();
     }
@@ -186,27 +206,24 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
         Disturb();
         return Hash();
     }
-    const std::uint32_t a[4] = {a0, a1, a2, a3};
-    std::uint32_t r[4] = {};
-    for (unsigned i = 0; i < s.nargs && i < 4; ++i) {
-        if (s.deref[i]) {
-            // FNV-1a over the bytes the argument points at
-            std::uint32_t f = 0x811C9DC5u;
-            const auto* p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[i]));
-            for (unsigned b = 0; b < s.deref[i]; ++b) f = (f ^ p[b]) * 0x01000193u;
-            r[i] = f;
-        } else {
-            r[i] = a[i] & s.masks[i];
-        }
-    }
+    const std::uint32_t a[kArgs] = {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9};
+    std::uint32_t r[kArgs] = {};
+    for (unsigned i = 0; i < s.nargs && i < kArgs; ++i)
+        r[i] = s.deref[i] ? HashBytes(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a[i])), s.deref[i])
+                          : a[i] & s.masks[i];
+    const unsigned entry = g_log_n;
     Log5(I, r[0], r[1], r[2], r[3]);
+    if (s.nargs > 4) Log5(kMoreTag + I, r[4], r[5], r[6], r[7]);
+    if (s.nargs > 8) Log5(kMoreTag + I, r[8], r[9], 0, 0);
     Disturb();
-    const std::uint32_t answer = Answering(s);
-    if (s.answer != Answer::kGarbage && g_log_n <= kLog) g_log[g_log_n - 1].d ^= answer & 0xFF;   // the answer in the log
+    std::uint32_t answer = Answering(s);
+    if (s.effect) answer = s.effect(a, answer);
+    if (s.answer != Answer::kGarbage && entry < kLog) g_log[entry].d ^= answer & 0xFF;   // the answer in the log
     return answer;
 }
 
-using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                        std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
 template <std::size_t... I> constexpr auto MakeStubs(std::index_sequence<I...>) {
     struct T { StubFn f[sizeof...(I)]; };
     return T{{&Stub<I>...}};
@@ -265,26 +282,49 @@ void Register(const Callee& c) {
     } else if (c.key >= kImageLo && c.key < kImageHi) {
         bof3::Fatal("magic_harness: callee %s is Capcom's now (0x%X): list it as such", c.name, (unsigned)c.key);
     }
+    if (c.nargs > kArgs) bof3::Fatal("magic_harness: callee %s takes %u arguments, the stand-ins %u", c.name, c.nargs, kArgs);
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].address == c.address) return;   // listed twice: the first stands
+        if (g_slots[i].address == c.address) return;   // listed twice: the first (the group's) stands
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0,
-         {c.deref[0], c.deref[1], c.deref[2], c.deref[3]}};
+    s = {};
+    s.name = c.name;
+    s.address = c.address;
+    s.key = c.key;
+    s.nargs = c.nargs;
+    std::memcpy(s.masks, c.masks, sizeof s.masks);
+    s.answer = c.answer;
+    s.lo = c.lo;
+    s.hi = c.hi;
+    std::memcpy(s.deref, c.deref, sizeof s.deref);
+    s.effect = c.effect;
+    s.custom = c.custom;
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return;
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0, {}};
+    s = {};
+    s.name = "handler";
+    s.address = s.key = address;
+    s.handler = true;
 }
-const void* StubFor(std::uint32_t address, const char* who) {
+// What stands in for slot i: the group's own stand-in, the pool's recorder,
+// or for kThrough the callee itself.
+const void* StubOf(unsigned i) {
+    const Slot& s = g_slots[i];
+    if (s.custom) return s.custom;
+    if (s.answer == Answer::kThrough) return reinterpret_cast<const void*>(static_cast<std::uintptr_t>(s.address));
+    return reinterpret_cast<const void*>(kStubs.f[i]);
+}
+unsigned SlotFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].address == address) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].address == address) return i;
     bof3::Fatal("magic_harness: %s calls 0x%X, which no stand-in covers: list it in the group's callees", who,
                 (unsigned)address);
 }
+const void* StubFor(std::uint32_t address, const char* who) { return StubOf(SlotFor(address, who)); }
 
 // --- the state both passes start from ------------------------------------------
 
@@ -300,14 +340,16 @@ struct State {
 };
 unsigned g_bytes;
 
+unsigned Used(unsigned log_n) { return log_n < kLog ? log_n : kLog; }
+
 void Capture(State& s) {
     unsigned n = 0;
     for (unsigned i = 0; i < g_region_n; ++i) {
         std::memcpy(s.memory + n, Mem(g_regions[i].at), g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memcpy(s.log, g_log, sizeof s.log);
     s.log_n = g_log_n;
+    std::memcpy(s.log, g_log, Used(g_log_n) * sizeof(Entry));
 }
 void Apply(const State& s) {
     unsigned n = 0;
@@ -315,18 +357,24 @@ void Apply(const State& s) {
         std::memcpy(Mem(g_regions[i].at), s.memory + n, g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memset(g_log, 0, sizeof g_log);
-    g_log_n = 0;
+    g_log_n = 0;   // the entries past the count are never read or compared
+    g_salt = 0;
     g_rand_pending = g_rand_first;
 }
 bool Same(const State& a, const State& b) {
     return a.log_n == b.log_n && std::memcmp(a.memory, b.memory, g_bytes) == 0 &&
-           std::memcmp(a.log, b.log, sizeof a.log) == 0;
+           std::memcmp(a.log, b.log, Used(a.log_n) * sizeof(Entry)) == 0;
 }
 unsigned FirstDifference(const State& a, const State& b) {
     for (unsigned i = 0; i < g_bytes; ++i)
         if (a.memory[i] != b.memory[i]) return i;
     return g_bytes;
+}
+unsigned FirstLogDifference(const State& a, const State& b) {
+    const unsigned n = Used(a.log_n < b.log_n ? a.log_n : b.log_n);
+    for (unsigned i = 0; i < n; ++i)
+        if (std::memcmp(&a.log[i], &b.log[i], sizeof(Entry)) != 0) return i;
+    return n;
 }
 // The region and offset a state byte belongs to, for the log.
 void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
@@ -374,6 +422,8 @@ void PatchImms(void* copy, const Clone& c) {
 }
 
 using Fn3 = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t);
+using FnArgs = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                        std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
 
 }  // namespace
 
@@ -397,9 +447,60 @@ unsigned char* Pointer(std::uint32_t cell) {
 void SetRandHint(std::uint32_t hint) { g_rand_hint = hint; }
 void SetRandFirst(int first) { g_rand_first = first; }
 
+void Record(std::uint32_t address, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) {
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == address && !g_slots[i].handler) {
+            Log5(i, a, b, c, d);
+            return;
+        }
+    bof3::Fatal("magic_harness: a custom stand-in records 0x%X, which no callee lists", (unsigned)address);
+}
+void Stir() { Disturb(); }
+std::uint32_t Noise() {
+    // Hash is the same until the log grows: salted by a count, reset with the
+    // log, so several values within one call differ
+    std::uint32_t h = Hash() ^ (++g_salt * 0x9E3779B9u);
+    h ^= h >> 16;
+    h *= 0x7FEB352Du;
+    h ^= h >> 15;
+    return h;
+}
+void Note(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) { Log5(kNoteTag, a, b, c, d); }
+void NoteBytes(const void* p, unsigned n) {
+    std::uint32_t w[4] = {};
+    if (n <= sizeof w) {
+        std::memcpy(w, p, n);
+    } else {
+        w[0] = HashBytes(p, n);
+        w[1] = n;
+    }
+    Log5(kNoteTag + 1, w[0], w[1], w[2], w[3]);
+}
+void FillBytes(void* p, unsigned n) {
+    for (unsigned i = 0; i < n; ++i) static_cast<unsigned char*>(p)[i] = static_cast<unsigned char>(Noise() >> 7);
+}
+std::uint32_t HashBytes(const void* p, unsigned n) {
+    std::uint32_t h = 0x811C9DC5u;
+    for (unsigned i = 0; i < n; ++i) h = (h ^ static_cast<const unsigned char*>(p)[i]) * 0x01000193u;
+    return h;
+}
+
+// What ours gets for slot i, calling `key`: a kThrough callee's own function.
+const void* ForOurs(unsigned i, std::uint32_t key) {
+    return g_slots[i].answer == Answer::kThrough ? reinterpret_cast<const void*>(static_cast<std::uintptr_t>(key)) : StubOf(i);
+}
+
 const void* StandIn(std::uint32_t key) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].key == key) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].key == key) return ForOurs(i, key);
+    // A callee that is ours now, called by its original address (MH_AT: a
+    // group written while it was Capcom's), or a standard callee a group
+    // listed by its address and ours calls by name: the same slot.
+    std::uint32_t address = key;
+    for (const Callee& c : kStandard)
+        if (c.key == key) address = c.address;
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == address) return ForOurs(i, key);
     bof3::Fatal("magic_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
 }
 
@@ -407,8 +508,9 @@ void Run(const Group& group) {
     const unsigned per = group.rounds ? group.rounds : 2000;
     g_group = &group;
     g_slot_n = 0;
-    for (const Callee& c : kStandard) Register(c);
+    // the group's first: its listing of a standard callee stands
     for (unsigned i = 0; i < group.n_callees; ++i) Register(group.callees[i]);
+    for (const Callee& c : kStandard) Register(c);
     for (unsigned k = 0; k < group.n_clones; ++k)
         for (int i = 0; i < group.clones[k].n_imms; ++i) RegisterHandler(group.clones[k].imms[i].value);
     for (unsigned t = 0; t < group.n_data_tables; ++t)
@@ -441,9 +543,13 @@ void Run(const Group& group) {
     if (group.n_clones > 256) bof3::Fatal("magic_harness: %s: more than 256 clones", group.shadow);
     for (unsigned k = 0; k < group.n_clones; ++k) {
         const Clone& c = group.clones[k];
-        bof3::CloneCall calls[32];
-        if (c.n_calls > 32) bof3::Fatal("magic_harness: %s has %d calls", c.name, c.n_calls);
-        for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target, c.name), c.calls[i].target};
+        bof3::CloneCall calls[64];
+        if (c.n_calls > 64) bof3::Fatal("magic_harness: %s has %d calls", c.name, c.n_calls);
+        for (int i = 0; i < c.n_calls; ++i) {
+            // a kThrough callee's site keeps its target (null: CloneOriginal relocates it)
+            const unsigned slot = SlotFor(c.calls[i].target, c.name);
+            calls[i] = {c.calls[i].offset, g_slots[slot].answer == Answer::kThrough ? nullptr : StubOf(slot), c.calls[i].target};
+        }
         clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         PatchImms(clones[k], c);
     }
@@ -473,7 +579,6 @@ void Run(const Group& group) {
             const std::uint32_t v = Next();
             std::memcpy(input.memory + i, &v, g_bytes - i < 4 ? g_bytes - i : 4);
         }
-        std::memset(input.log, 0, sizeof input.log);
         input.log_n = 0;
         g_rand_first = -1;
         Apply(input);
@@ -483,24 +588,34 @@ void Run(const Group& group) {
         if (group.seed) group.seed(k);
         Capture(input);
 
-        const std::uint32_t a0 = Next(), a1 = Next(), a2 = Next();   // the task runner's, ignored
-        static const bool kDbg = std::getenv("S24DBG") != nullptr;   // S24DBG-TEMP
-        if (kDbg) bof3::Log("S24DBG round %u %s", round, group.clones[k].name);   // S24DBG-TEMP
+        // the task runner's three words (ignored by a phase), or the group's arguments
+        std::uint32_t a[kArgs] = {Next(), Next(), Next()};
+        if (group.args) {
+            for (unsigned i = 3; i < kArgs; ++i) a[i] = Next();
+            group.args(k, a);
+        }
+        const Clone& c = group.clones[k];
+        g_calm = c.calm;
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             State& out = pass ? ours : theirs;
-            const void* const fn = pass ? group.clones[k].ours : clones[k];
+            const void* const fn = pass ? c.ours : clones[k];
             g_active = pass == 1;
-            if (kDbg) bof3::Log("S24DBG pass %d sc %p pn %p owner %p", pass, (void*)Sprite_Current, (void*)Gfx_PacketNext, (void*)Pointer(at::kOwner));   // S24DBG-TEMP
-            reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
+            const std::uint32_t answer =
+                group.args ? reinterpret_cast<FnArgs>(const_cast<void*>(fn))(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9])
+                           : reinterpret_cast<Fn3>(const_cast<void*>(fn))(a[0], a[1], a[2]);
             g_active = false;
+            if (c.ret_mask) Log5(kReturnTag, answer & c.ret_mask, 0, 0, 0);
             Capture(out);
         }
-        calls += theirs.log_n;
-        for (unsigned i = 0; i < theirs.log_n && i < kLog; ++i) {
+        g_calm = false;
+        for (unsigned i = 0; i < Used(theirs.log_n); ++i) {
             const std::uint32_t w = theirs.log[i].what;
-            const unsigned s = w >= 1000 ? w - 1000 : w;
-            if (s < g_slot_n) ++g_slots[s].calls;
+            const unsigned s = w >= kPhaseTag ? w - kPhaseTag : w;
+            if (w < kMoreTag && s < g_slot_n) {
+                ++g_slots[s].calls;
+                ++calls;
+            }
         }
         if (theirs.log_n > kLog)
             bof3::Fatal("magic_harness: %s made %u calls, the log holds %u", group.clones[k].name, theirs.log_n, kLog);
@@ -510,9 +625,10 @@ void Run(const Group& group) {
                 std::uint32_t region, offset;
                 const unsigned first = FirstDifference(theirs, ours);
                 Where(first, region, offset);
-                bof3::Log("shadow      %s self-test MISMATCH: round %u, %s, log %u / %u, first differing byte %u (0x%X + 0x%X)",
-                          group.shadow, round, group.clones[k].name, theirs.log_n, ours.log_n, first, (unsigned)region,
-                          (unsigned)offset);
+                bof3::Log("shadow      %s self-test MISMATCH: round %u, %s, log %u / %u (first differing entry %u), first "
+                          "differing byte %u (0x%X + 0x%X)",
+                          group.shadow, round, c.name, theirs.log_n, ours.log_n, FirstLogDifference(theirs, ours), first,
+                          (unsigned)region, (unsigned)offset);
             }
         }
     }
@@ -524,10 +640,17 @@ void Run(const Group& group) {
     bof3::Log("shadow      %s self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, %u MISMATCHES; "
               "%u bytes of state (%u regions) and the stand-ins' log compared",
               group.shadow, per * group.n_clones, group.n_clones, per, calls, bad, g_bytes, g_region_n);
+    // in lines of at most 900 characters (bof3::Log holds 1,024)
     char line[900];
     unsigned n = 0;
-    for (unsigned i = 0; i < g_slot_n && n + 64 < sizeof line; ++i) {
+    bool more = false;   // a line of it already logged
+    for (unsigned i = 0; i < g_slot_n; ++i) {
         if (g_slots[i].calls == 0) continue;
+        if (n + 64 >= sizeof line) {
+            bof3::Log("shadow      %s coverage%s: %s,", group.shadow, more ? ", continued" : " (calls the originals made)", line);
+            n = 0;
+            more = true;
+        }
         const int w = g_slots[i].handler
                           ? std::snprintf(line + n, sizeof line - n, "%sphase 0x%X %u", n ? ", " : "",
                                           (unsigned)g_slots[i].address, g_slots[i].calls)
@@ -535,7 +658,8 @@ void Run(const Group& group) {
                                           g_slots[i].calls);
         if (w > 0) n += static_cast<unsigned>(w);
     }
-    bof3::Log("shadow      %s coverage (calls the originals made): %s", group.shadow, n ? line : "none");
+    if (n || !more)
+        bof3::Log("shadow      %s coverage%s: %s", group.shadow, more ? ", continued" : " (calls the originals made)", n ? line : "none");
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);

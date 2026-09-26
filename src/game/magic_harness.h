@@ -14,7 +14,8 @@
 //      Phase(address) below, so the fuzz can stand recorders in for ours as
 //      for the originals' copies;
 //   2. a magic_harness::Group: its clones (tools/magic_rows.py --clones prints
-//      them), any callee the standard set lacks, any .data table the
+//      them), any callee the standard set lacks (or records too coarsely: a
+//      pointer argument, an answer through memory), any .data table the
 //      functions dispatch through, any region beyond the standard ones, and a
 //      Seed(k) that puts function k's boundaries in;
 //   3. one call, magic_harness::Run(group), under its BOF3X_SHADOW name, before
@@ -105,33 +106,76 @@ struct Clone {
     const JumpTable* tables;
     int n_tables;
     const void* ours;
+    // For a function that answers: what of eax its callers read (0xFF for a
+    // byte in al), logged after each pass and compared; 0 for a phase.
+    std::uint32_t ret_mask = 0;
+    // No recorder moves anything while this one runs: for a function whose
+    // callees touch no battle state and which indexes its own stack by a cell
+    // it reads again (0x4C0E30, group S18), where a moved cell would send the
+    // original's store out of its frame.
+    bool calm = false;
 };
 
-// How a recorder answers: a byte in lo..hi with garbage above it (an index,
-// a count; lo above hi wraps through 0xFF, so 0xFF..0x3F is "none, or 0..0x3F"),
-// a byte of 0 or not 0 (a flag), the harness's Rand, or garbage. kPhase is a
-// callee that is another function of the group's own, called directly (not
-// through a table): it answers garbage and logs, like a handler, the task it
-// ran for - Sprite_Current, the owner 0x93B940, the phase bytes +1 / +2, and
-// the dword at masks[0] when that is not 0 (a pool's "current" cell).
-enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand, kPhase };
+// The most arguments a recorder takes (Gte_RotTransPers4 takes ten). A
+// caller that pushes fewer leaves its own frame in the rest, never logged.
+constexpr unsigned kArgs = 10;
 
-// A callee the standard set (magic_harness.cpp, kStandard) lacks. `key` is
-// the pointer ours calls - (std::uint32_t)name, which is Capcom's address or
-// our function - and `address` the original's, the one clones call; for a
-// callee that is Capcom's the two are equal. masks[i] is what of argument i
-// the callee reads (a u8 argument is pushed with garbage above it).
-// deref[i], when not 0, logs a hash of that many bytes at argument i instead
-// of the pointer: an input the caller built in its own stack frame (a GTE
-// vector, an angle triple), whose address differs between the copy and ours.
+// How a recorder answers:
+//   kGarbage  any eax;
+//   kByte     a byte in lo..hi with garbage above it (an index, a count; lo
+//             above hi wraps through 0xFF, so 0xFF..0x3F is "none, or 0..0x3F");
+//   kFlag     a byte of 0 (a third of the time) or not 0, garbage above;
+//   kBool     a whole eax of exactly 0 (a third of the time) or 1, for a
+//             callee whose callers test all 32 bits;
+//   kRand     the harness's Rand (SetRandHint, SetRandFirst);
+//   kPhase    a function of the group's own called directly (not through a
+//             table): answers garbage and logs, like a handler, the task it
+//             ran for - Sprite_Current, the owner, the phase bytes +1 / +2,
+//             and the dword at masks[0] when that is not 0 (a pool's
+//             "current" cell);
+//   kThrough  no recorder: the copy's site keeps its target and ours gets the
+//             callee back from Call, so both sides call it for real. For a
+//             deterministic callee of state the regions hold that answers
+//             through pointers - the GTE and GPU library, Math_Sin - so what
+//             it computes lands in the compared state. Nothing is logged.
+enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kBool, kRand, kPhase, kThrough };
+
+// A callee the standard set (magic_harness.cpp, kStandard) lacks, or one of
+// the standard set the group needs recorded differently (the group's listing
+// is registered first and stands). `key` is the pointer ours calls -
+// (std::uint32_t)name, which is Capcom's address or our function - and
+// `address` the original's, the one clones call; for a callee that is
+// Capcom's the two are equal. masks[i] is what of argument i the callee
+// reads (a u8 argument is pushed with garbage above it; a pointer into the
+// caller's stack differs between the passes: mask it 0).
+//
+// The three optional fields, from least to most the group's own:
+//   deref[i]  not 0: argument i is logged as a hash of that many bytes at
+//             it instead of the pointer (an input the caller built in its own
+//             frame: a GTE vector, an angle triple);
+//   effect    called after the recorder logs and disturbs, with every argument
+//             slot and the answer its kind chose; what it returns is the
+//             answer. It may log what the callee reads (Note, NoteBytes),
+//             fill what it writes (FillBytes), move a cell the real callee
+//             moves (Gfx_PacketNext), or put back a cell the caller cannot
+//             survive garbage in. Only the callee's own arguments are the
+//             caller's (see kArgs);
+//   custom    the group's own stand-in, used in place of the harness's
+//             recorder on both sides: a function of the callee's exact type
+//             that logs through Record, disturbs through Stir, and answers
+//             from Noise. nargs / masks / answer / deref / effect are then
+//             unused.
+using Effect = std::uint32_t (*)(const std::uint32_t* args, std::uint32_t answer);
 struct Callee {
     const char* name;
     std::uint32_t address, key;
     unsigned nargs;
-    std::uint32_t masks[4];
+    std::uint32_t masks[kArgs];
     Answer answer;
     std::uint8_t lo, hi;
-    std::uint8_t deref[4] = {};
+    std::uint8_t deref[kArgs] = {};
+    Effect effect = nullptr;
+    const void* custom = nullptr;
 };
 
 // A .data table of handlers the functions read in place: its entries are
@@ -153,6 +197,19 @@ struct Group {
     void (*seed)(unsigned k);       // function k's boundaries, after the random fill
     void (*disturb)(std::uint32_t h);   // optional: move a group cell after a call
     unsigned rounds;                // per function; 0 is 2,000
+    // Optional: called after every disturbance, to put back what the function
+    // being fuzzed reads again after a call and cannot survive garbage in (a
+    // phase byte it indexes a table with past a call).
+    void (*settle)() = nullptr;
+    // Non-zero: a phase byte (+1, +2) the disturbance moves stays below this -
+    // for a group whose dispatchers read the phase after a call through a
+    // table of that many entries (MAGIC104's 0x4D12A0: 2). 0, the default:
+    // any byte.
+    unsigned phase_span = 0;
+    // Optional: for functions that take arguments, the kArgs words function
+    // k is called with (random on entry), filled after the seed; both passes
+    // get the same. Null: a task step, called with three ignored words.
+    void (*args)(unsigned k, std::uint32_t* a) = nullptr;
 };
 
 // Clones every function (before the caller injects), fuzzes each against ours
@@ -178,5 +235,26 @@ unsigned char* Pointer(std::uint32_t cell);
 // `first` (0..255) is the round's first answer exactly.
 void SetRandHint(std::uint32_t hint);
 void SetRandFirst(int first);
+
+// --- for a Callee's effect or custom stand-in ------------------------------------
+//
+// Everything here depends only on the log so far and the state, so the two
+// passes see the same.
+
+// A custom stand-in's call: one log entry, counted in the coverage line
+// against the callee at `address` (Callee::address).
+void Record(std::uint32_t address, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0);
+// The disturbance the harness's recorders make after recording.
+void Stir();
+// The recorders' stream: a new value at each call, the same on both passes.
+std::uint32_t Noise();
+// One more entry in the log, compared like a call: a value the callee read.
+void Note(std::uint32_t a, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0);
+// n bytes at p into the log: up to 16 as they are, more as a hash.
+void NoteBytes(const void* p, unsigned n);
+// n bytes at p from the recorders' stream (what a callee writes).
+void FillBytes(void* p, unsigned n);
+// FNV-1a over n bytes.
+std::uint32_t HashBytes(const void* p, unsigned n);
 
 }  // namespace magic_harness

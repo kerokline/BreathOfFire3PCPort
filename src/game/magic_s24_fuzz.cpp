@@ -10,8 +10,6 @@
 // the standard ones; and a seed per function.
 #include <cstdint>
 #include <cstring>
-#include <windows.h>   // S24DBG-TEMP
-#include "hook/log.h"   // S24DBG-TEMP
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
@@ -124,7 +122,7 @@ const mh::Clone kClones[] = {
     {"Fx105_MoteRun", 0x4D1F50, 0x2C, kCalls4D1F50, MH_N(kCalls4D1F50), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx105_MoteRun)},
     {"Fx105_MoteStart", 0x4D1F80, 0x185, kCalls4D1F80, MH_N(kCalls4D1F80), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx105_MoteStart)},
     {"Fx105_MoteDrift", 0x4D2110, 0xA3, kCalls4D2110, MH_N(kCalls4D2110), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx105_MoteDrift)},
-    {"Fx105_MoteAlloc", 0x4D21C0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx105_MoteAlloc)},
+    {"Fx105_MoteAlloc", 0x4D21C0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx105_MoteAlloc), 0xFF},
     {"Fx105_MoteDraw", 0x4D2220, 0x223, kCalls4D2220, MH_N(kCalls4D2220), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx105_MoteDraw)},
     {"Fx106_Task", 0x4D2450, 0x61, kCalls4D2450, MH_N(kCalls4D2450), kImms4D2450, MH_N(kImms4D2450), nullptr, 0, reinterpret_cast<const void*>(&::Fx106_Task)},
     {"Fx106_Start", 0x4D24C0, 0xFA, kCalls4D24C0, MH_N(kCalls4D24C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_Start)},
@@ -136,7 +134,7 @@ const mh::Clone kClones[] = {
     {"Fx106_SparkRise", 0x4D2930, 0xBC, kCalls4D2930, MH_N(kCalls4D2930), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_SparkRise)},
     {"Fx106_PushMatrix", 0x4D29F0, 0xBC, kCalls4D29F0, MH_N(kCalls4D29F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_PushMatrix)},
     {"Fx106_DrawSpark", 0x4D2AB0, 0x245, kCalls4D2AB0, MH_N(kCalls4D2AB0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_DrawSpark)},
-    {"Fx106_SparkAlloc", 0x4D2D00, 0x4F, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_SparkAlloc)},
+    {"Fx106_SparkAlloc", 0x4D2D00, 0x4F, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_SparkAlloc), 0xFF},
     {"Fx106_SparkFree", 0x4D2D50, 0x2F, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Fx106_SparkFree)},
 };
 #undef MH_N
@@ -379,22 +377,14 @@ void Disturb(std::uint32_t h) {
 
 }  // namespace
 
-LONG CALLBACK S24Veh(EXCEPTION_POINTERS* e) {   // S24DBG-TEMP
-    bof3::Log("S24DBG exception %08lX at %p, info %p %p, eax %08lX ecx %08lX edx %08lX esi %08lX edi %08lX esp %08lX", e->ExceptionRecord->ExceptionCode,
-              e->ExceptionRecord->ExceptionAddress, (void*)e->ExceptionRecord->ExceptionInformation[0],
-              (void*)e->ExceptionRecord->ExceptionInformation[1], e->ContextRecord->Eax, e->ContextRecord->Ecx,
-              e->ContextRecord->Edx, e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp);
-    return EXCEPTION_CONTINUE_SEARCH;
-}
 void SelfTest() {
-    AddVectoredExceptionHandler(1, &S24Veh);   // S24DBG-TEMP
     g_regions[4].at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_prims));
     g_regions[5].at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_frames));
     unsigned n_callees = 0;
     const mh::Callee* const callees = Callees(n_callees);
     const mh::Group group = {
         "magic_s24", kClones, sizeof kClones / sizeof kClones[0], callees, n_callees, kTables,
-        sizeof kTables / sizeof kTables[0], g_regions, sizeof g_regions / sizeof g_regions[0], &Seed, &Disturb, 2000,
+        sizeof kTables / sizeof kTables[0], g_regions, sizeof g_regions / sizeof g_regions[0], &Seed, &Disturb, 2000, nullptr, 2,
     };
     mh::Run(group);
 }
