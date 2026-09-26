@@ -19,7 +19,6 @@
 // through magic_s22::g_hooks.
 #include <cstdint>
 #include <cstring>
-#include <cstdlib>
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
@@ -274,9 +273,7 @@ void Disturb(std::uint32_t h) {
 
 void SetFloat(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 
-unsigned g_base = 0;   // DEBUG
 void Seed(unsigned k) {
-    k += g_base;
     unsigned char* const sc = Sc();
     mh::SetPointer(0x7E0670, PacketAt(mh::Next()));
     // The fcomp against 0.0 in Myollnir_DrawBand reads the third point's y
@@ -553,12 +550,8 @@ void SelfTestOwn() {
 
 void SelfTest() {
     SelfTestOwn();
-    unsigned from = 0, to = sizeof kClones / sizeof kClones[0];   // DEBUG
-    if (const char* e = std::getenv("S22_FROM")) from = static_cast<unsigned>(std::atoi(e));
-    if (const char* e = std::getenv("S22_TO")) to = static_cast<unsigned>(std::atoi(e));
-    g_base = from;
     const mh::Group group = {
-        "magic_s22", kClones + from, to - from, kCallees, sizeof kCallees / sizeof kCallees[0],
+        "magic_s22", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000,
     };
     mh::Run(group);
