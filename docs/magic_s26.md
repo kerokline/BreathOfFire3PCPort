@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS (2026-09-26). All 48 functions are ours
 (`src/game/magic_s26.cpp`, shadow name `magic_s26`), fuzzed headless through
-the shared harness with 0 mismatches over 96,000 rounds; CONTROLS_SUMMARY.
+the shared harness with 0 mismatches over 96,000 rounds; 156 of 158 negative controls refused by a count, the other two equivalent mutants (section 6).
 Nothing recorded casts these spells, so this is fuzz only until the owner
 sees them cast.
 
@@ -211,16 +211,200 @@ after the ring).
 
 **Result** in this worktree (2026-09-26):
 
-    RESULT_LINE
+    shadow      magic_s26 self-test: 96000 rounds over 48 functions (2000 each), 1709421 calls to the stand-ins,
+                0 MISMATCHES; 18632 bytes of state (21 regions) and the stand-ins' log compared
 
-Coverage: every callee and handler the clones name is reached - e.g.
+Coverage (counted on the run before the final seed; the final run's move by a few hundred): every callee and handler the clones name is reached - e.g.
 `0x446770` 170,296, `MapView_LinkPrimAt` 165,536, `Gte_RotAverage4` 59,148,
 `MagicFx_LinkByDepth` 2,000, `Tint_Release` 448, `Battle_SetTargetFlags` 214,
 each sprite phase 479..1,013. `BOF3X_SHADOW='*'`: exit 0.
 
 ## 6. Controls
 
-CONTROLS_TEXT
+158 plants, each put in `magic_s26.cpp` one at a time by a script (the
+scratch `controls.py`, not committed: replace an anchor that must be unique,
+rebuild, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s26`, restore, rebuild),
+2026-09-26, on the final fuzz. **156 of 158 refused** by a count
+(exit 3), each in the function or functions its plant touches; the two
+others are equivalent mutants, each with a near variant planted and refused.
+Counts are this worktree's.
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| T1 | Task: first draw mode tpage 0x36 | Magic114_Task 2000 |
+| T2 | Task: the ring without the +0 test | Magic114_Task 807 |
+| T3 | Task: the phase not read again after the ring | Magic114_Task 25 |
+| T4 | Task: table entries 1 and 2 swapped | Magic114_Task 658 |
+| T5 | Task: the second commit to slot 4 | Magic114_Task 2000 |
+| S1 | Start: row 2 with bit 0x4000 | Magic114_Start 2000 |
+| S2 | Start: row 26 from the next word | Magic114_Start 2000 |
+| S3 | Start: sound 0x101 | Magic114_Start 2000 |
+| S4 | Start: +0x3C not copied | Magic114_Start 1763 |
+| S5 | Start: Gfx_ClutStripDirty 2 | Magic114_Start 2000 |
+| G1 | Grow: past 0x21 | Magic114_Grow 478 |
+| G2 | Hold: at 0x20 | Magic114_Hold 431 |
+| L1 | Launch: from 0x21 | Magic114_Launch 445 |
+| L2 | Launch: task 8 | Magic114_Launch 1472 |
+| L3 | Launch: the owner read before the create | Magic114_Launch 44 |
+| L4 | Launch: the child +8 the task's | Magic114_Launch 1289 |
+| R1 | Rays: drawn at 0 too | Magic114_Rays 459 |
+| SH1 | Shrink: +9 0x41 | Magic114_Shrink 450 |
+| E1 | End: flag 2 | Magic114_End 341 |
+| E2 | End: the actor's flag 0x40 | Magic114_End 404 |
+| DR1 | Ring: offset rows by i & 1 | Magic114_DrawRing 1995 |
+| DR2 | Ring: +0x34 from +0x10 | Magic114_DrawRing 1995 |
+| DR3 | Ring: the task not read again after the first turn | Magic114_DrawRing 431 |
+| DR4 | Ring: +0xB = i + 1 | Magic114_DrawRing 2000 |
+| DR5 | Ring: bias 3 | Magic114_DrawRing 2000 |
+| DR6 | Ring: the start packet read after the loop | Magic114_DrawRing 198 |
+| DR7 | Ring: x the task's | Magic114_DrawRing 1754 |
+| TR1 | Triangle: lift x 2 | Magic114_DrawTriangle 1991 |
+| TR2 | Triangle: lowered from index 5 | Magic114_DrawTriangle 193 |
+| TR3 | Triangle: the key index not read again | Magic114_DrawTriangle 56 |
+| TR4 | Triangle: colour of index 1 red 0x41 | Magic114_DrawTriangle 368 |
+| TR5 | Triangle: flash when Frame_Counter & 0x10 is 0 | Magic114_DrawTriangle 15 |
+| TR6 | Triangle: flash from index 3 | Magic114_DrawTriangle 97 |
+| TR7 | Triangle: index 5 fade red (+9 + 0x15) << 2 | Magic114_DrawTriangle 34 |
+| TR8 | Triangle: fades in phase 3 only | Magic114_DrawTriangle 75 |
+| TR9 | Triangle: the packet on by 0x30 | Magic114_DrawTriangle 2000 |
+| TR10 | Triangle: index 6 blue 0xB1 - +9 | Magic114_DrawTriangle 45 |
+| TR11 | Triangle: the first vertex z 1 | Magic114_DrawTriangle 2000 |
+| PM1 | PushMatrix: angle << 6 | Magic114_PushMatrix 1939 |
+| PM2 | PushMatrix: height + 0x100 | Magic114_PushMatrix 2000 |
+| PM3 | PushMatrix: x the task's | Magic114_PushMatrix 1730 |
+| CT1 | ChildTask: kinds 0 and 1 swapped | Magic114_ChildTask 1325 |
+| TRR1 | TrailRun: phases swapped | Magic114_TrailRun 2000 |
+| TA1 | TrailAim: +0x14 from +0x3C | Magic114_TrailAim 1995 |
+| TA2 | TrailAim: offsets << 4 | Magic114_TrailAim 2000 |
+| TA3 | TrailAim: height + 0x201 | Magic114_TrailAim 2000 |
+| TA4 | TrailAim: not centred | Magic114_TrailAim 2000 |
+| TS1 | TrailSpawn: the sprite child +1 1 | Magic114_TrailSpawn 1981 |
+| TS2 | TrailSpawn: Field_Kind2X read before the create | Magic114_TrailSpawn 2 |
+| TS3 | TrailSpawn: the beam child at +9 1 | Magic114_TrailSpawn 921 |
+| TS4 | TrailSpawn: freed past 0xD | Magic114_TrailSpawn 160 |
+| TS5 | TrailSpawn: the beam child +9 0x11 | Magic114_TrailSpawn 916 |
+| TS6 | TrailSpawn: the beam child +8 the owner's | Magic114_TrailSpawn 788 |
+| DT1 | DrawTrail: (5 - +9) << 16 | Magic114_DrawTrail 1989 |
+| DT2 | DrawTrail: the draw mode linked one row off | Magic114_DrawTrail 2000 |
+| DT3 | DrawTrail: colour 0xE1 | Magic114_DrawTrail 2000 |
+| DT4 | DrawTrail: the start point read again | Magic114_DrawTrail 179 |
+| DT5 | DrawTrail: the end height from +0x3E | Magic114_DrawTrail 2000 |
+| DT6 | DrawTrail: the side -0x800 | Magic114_DrawTrail 2000 |
+| BR1 | BeamRun: the strip mode +0xA | Magic114_BeamRun 711 |
+| BR2 | BeamRun: drawn without the +0 test | Magic114_BeamRun 639 |
+| BR3 | BeamRun: glow and core swapped | Magic114_BeamRun 712 |
+| BW1 | BeamWait: sound 0x103 | Magic114_BeamWait 456 |
+| BW2 | BeamWait: +9 0xF | Magic114_BeamWait 456 |
+| BW3 | BeamWait: the scroll kept | Magic114_BeamWait 456 |
+| BG1 | BeamGrow: the flag at 0x32 | Magic114_BeamGrow 221 |
+| BG2 | BeamGrow: flag 0x20 | Magic114_BeamGrow 221 |
+| BG3 | BeamGrow: the task not read again after the flag | Magic114_BeamGrow 8 |
+| BG4 | BeamGrow: scroll -4 | Magic114_BeamGrow 2000 |
+| BF1 | BeamFade: length + 3 | Magic114_BeamFade 2000 |
+| BC1 | Core: 54 steps at most | Magic114_DrawBeamCore 66 |
+| BC2 | Core: widening below 0x21 | **not refused: equivalent** (below) |
+| BC3 | Core: v mod 0xBD | Magic114_DrawBeamCore 1485 |
+| BC4 | Core: page x 0x341 | Magic114_DrawBeamCore 1488 |
+| BC5 | Core: pulse while +2 below 3 | Magic114_DrawBeamCore 781 |
+| BC6 | Core: pulse sar 11 | Magic114_DrawBeamCore 1334 |
+| BC7 | Core: grey +9 x 9 | Magic114_DrawBeamCore 777 |
+| BC8 | Core: pulse by 2 i | Magic114_DrawBeamCore 1334 |
+| BC9 | Core: commit 0x44 | Magic114_DrawBeamCore 1488 |
+| BC10 | Core: nothing below length 3 | Magic114_DrawBeamCore 25 |
+| BS1 | Strip: tpage by abr & 1 | Magic114_DrawBeamStrip 982 |
+| BS2 | Strip: semi-transparency 1 | Magic114_DrawBeamStrip 1470 |
+| BS3 | Strip: u by i & 7 | Magic114_DrawBeamStrip 696 |
+| BS4 | Strip: v 0xC5 | Magic114_DrawBeamStrip 1472 |
+| BS5 | Strip: grey +9 x 4 | Magic114_DrawBeamStrip 1471 |
+| BS6 | Strip: narrowing below 9 | **not refused: equivalent** (below) |
+| GL1 | Glow: tpage 0x56 | Magic114_DrawBeamGlow 2000 |
+| GL2 | Glow: outer narrowing x 4 | Magic114_DrawBeamGlow 838 |
+| GL3 | Glow: outer colour 2 | Magic114_DrawBeamGlow 1481 |
+| GL4 | Glow: first outer point -0x40000 | Magic114_DrawBeamGlow 2000 |
+| GL5 | Glow: grey +9 x 5 | Magic114_DrawBeamGlow 1479 |
+| GL6 | Glow: the vertex copy a2 from ba | Magic114_DrawBeamGlow 539 |
+| SR1 | SpriteRun: bank 0x8E3581 | Magic114_SpriteRun 2000 |
+| SR2 | SpriteRun: bank after 0x8B3581 | Magic114_SpriteRun 2000 |
+| SS1 | SpriteStart: CLUT row 0x1B | Magic114_SpriteStart 2000 |
+| SS2 | SpriteStart: flip +8 & 1 | Magic114_SpriteStart 1998 |
+| SS3 | SpriteStart: animation 1 | Magic114_SpriteStart 2000 |
+| ST1 | SpriteTick: inverted | Magic114_SpriteTick 2000 |
+| RY1 | Rays: from +9 0x1A | Magic114_DrawRays 356 |
+| RY2 | Rays: nearer row from direction 1 | Magic114_DrawRays 305 |
+| RY3 | Rays: radius & 0xF | Magic114_DrawRays 290 |
+| RY4 | Rays: grey 0x81 - r x 16 | Magic114_DrawRays 1270 |
+| RY5 | Rays: the far point sine and cosine swapped | Magic114_DrawRays 1270 |
+| RY6 | Rays: the line linked as 0x1C | Magic114_DrawRays 1270 |
+| RY7 | Rays: the task read before the matrix | Magic114_DrawRays 33 |
+| PR1 | RayMatrix: axes swapped | Magic114_PushRayMatrix 2000 |
+| PR2 | RayMatrix: offset 0xB000 | Magic114_PushRayMatrix 2000 |
+| PR3 | RayMatrix: height + 0x2C0 | Magic114_PushRayMatrix 2000 |
+| MT1 | 115 Task: TintUp and TintDown swapped | Magic115_Task 1034 |
+| MS1 | 115 Start: the source read again for the tint | Magic115_Start 83 |
+| MS2 | 115 Start: the child owned by the owner | Magic115_Start 1751 |
+| MS3 | 115 Start: fifteen CLUT entries | Magic115_Start 2000 |
+| MS4 | 115 Start: the first entry keeps its bit | Magic115_Start 1003 |
+| MS5 | 115 Start: tint alpha 0 | Magic115_Start 2000 |
+| MS6 | 115 Start: +0xB 2 | Magic115_Start 2000 |
+| TU1 | TintUp: on from 7 | Magic115_TintUp 459 |
+| TU2 | TintUp: green +9 << 2 | Magic115_TintUp 1995 |
+| TD1 | TintDown: on even frames | Magic115_TintDown 2000 |
+| TD2 | TintDown: green tested | Magic115_TintDown 485 |
+| TD3 | TintDown: the next record released | Magic115_TintDown 481 |
+| MC1 | 115 ChildTask: kinds swapped | Magic115_ChildTask 2000 |
+| OR1 | OrbitRun: the screen point without the +0 test | Magic115_OrbitRun 740 |
+| OR2 | OrbitRun: the bank not restored | Magic115_OrbitRun 2000 |
+| OR3 | OrbitRun: the screen point with the engine's bank | Magic115_OrbitRun 740 |
+| OS1 | OrbitStart: height + 0x2C1 | Magic115_OrbitStart 1997 |
+| OS2 | SpriteSetUp: +0x48 2 | Magic115_OrbitStart 2000, Magic115_MoteStart 2000 |
+| OS3 | SpriteSetUp: CLUT row 0xA1 | Magic115_OrbitStart 2000, Magic115_MoteStart 2000 |
+| OS4 | OrbitStart: +9 0xFE | Magic115_OrbitStart 2000 |
+| CI1 | Circle: angle & 0x1F | Magic115_Orbit 665, Magic115_OrbitFade 644 |
+| CI2 | Circle: the angle not read again for the cosine | Magic115_OrbitFade 3 |
+| CI3 | Circle: x 2 | Magic115_Orbit 1997, Magic115_OrbitFade 2000 |
+| CI4 | Circle: the owner read before the sine | Magic115_Orbit 73, Magic115_OrbitFade 82 |
+| OB1 | Orbit: a mote every fourth step | Magic115_Orbit 105 |
+| OB2 | Orbit: the mote delay + 3 | Magic115_Orbit 1270 |
+| OB3 | Orbit: the owner +0xB not counted | Magic115_Orbit 1270 |
+| OB4 | Orbit: the end at 0x3F | Magic115_Orbit 554 |
+| OB5 | Orbit: bit 0x10 | Magic115_Orbit 394 |
+| OB6 | Orbit: the mote +1 0 | Magic115_Orbit 1270 |
+| OF1 | OrbitFade: red down 3 | Magic115_OrbitFade 185 |
+| OF2 | OrbitFade: red 0x81 | Magic115_OrbitFade 2000 |
+| MR1 | MoteRun: phases 1 and 2 swapped | Magic115_MoteRun 985 |
+| MST1 | MoteStart: animation 2 | Magic115_MoteStart 2000 |
+| MTK1 | MoteTick: on by one | Magic115_MoteTick 1328 |
+| MTK2 | MoteTick: the first tick tested | Magic115_MoteTick 660 |
+| MF1 | MoteFade: red 0x81 | Magic115_MoteFade 2000 |
+| K1 | 117 Task: Brighten and Dim swapped | Magic117_Task 1013 |
+| K2 | TintSet: the source read once | Magic117_TintSet 30 |
+| K3 | TintSet: three pulses | Magic117_TintSet 2000 |
+| K4 | Brighten: on at 0x11 | Magic117_Brighten 916 |
+| K5 | TintStep: green through +0xA | Magic117_Brighten 1992, Magic117_Dim 1992, Magic117_Darken 1988, Magic117_Lighten 1993 |
+| K6 | Dim: back two phases | Magic117_Dim 325 |
+| K7 | Dim: the actor flashed | Magic117_Dim 94 |
+| K8 | 117 TaskB: Darken and Lighten swapped | Magic117_TaskB 966 |
+| K9 | Darken: brighter | Magic117_Darken 2000 |
+| K10 | Lighten: the actor flashed | Magic117_Lighten 411 |
+| K11 | Lighten: the tint not released | Magic117_Lighten 455 |
+| BC2b | Core: widening below 0x22 (BC2 near variant) | Magic114_DrawBeamCore 85 |
+| BS6b | Strip: narrowing below 10 (BS6 near variant) | Magic114_DrawBeamStrip 120 |
+
+**The two equivalent mutants.** BC2 moves the core's widening bound from
+`d < 0x20` to `d < 0x21`: at d = 0x20 the widened value `0x20 << 14` is
+0x80000, the value the other branch stores, so no input tells them apart;
+BC2b (`< 0x22`) is refused. BS6 moves the strip's narrowing bound from 8 to
+9: at `length - i` = 8 the narrowed value `-24 << 13` is 0xFFFD0000, the
+other branch's; BS6b (`< 10`) is refused.
+
+**The thinnest** are the re-reads across a call, which show only when the
+disturbance moves exactly that cell across exactly that call: CI2 (the angle
+read again for the cosine: 2 and 3 rounds), BG3 (the task after the flag
+call), TS2 (`Field_Kind2X` after the create), T3 (the phase after the ring),
+and TR5 (the flash's frame mask, which needs phase 2, an index above 3 and a
+matching frame at once). A first run on a seed one step off the count edges
+refused G2 in 4 rounds; the seeds were moved to the edges (431 now) and the
+whole set run again.
 
 ## 7. What nothing reached
 
