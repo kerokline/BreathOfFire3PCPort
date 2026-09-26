@@ -1,6 +1,6 @@
 # The ninth round's queue: what the routes still enter, and the spells
 
-**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA and SH merged (1,476 ours); the first spell wave out (L, S16..S25)
+**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and the first spell wave (L, S16..S25) merged: 2,003 ours; the frame-hash re-record and the owner's eye owed
 
 Round eight left "76 hidden entries the three routes still enter" as the
 next queue ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Owed
@@ -131,3 +131,35 @@ ours aborts with a message when that number is 0. The original faults at the
 same point, so no reachable case behaves better in the original; the owner
 expects normal play never casts at an empty side. Unmeasured: a trace of a
 fight where the last enemy dies to a multi-target spell would settle it.
+
+## 7. The first spell wave merged (2026-09-26)
+
+All eleven groups merged into `phase-3/round-nine`, one at a time (L, S16,
+S18, S21, S24, S17, S19, S22, S23, S25, S20): after each, the build, the
+group's shadow and `BOF3X_SHADOW='*'` headless, all exit 0. **527 functions
+taken, 1,476 -> 2,003 ours.** `ledger_check` clean after S16's sparkle
+injects were written out (a token-pasting macro hid forty of them from its
+regex). `entries_logic.txt` consolidated: 3,827 entries, no extent over the
+next start (L's `0x4FC2D0` and S16's `0x4BCB70` host extents corrected by
+hand).
+
+| Group | Doc | Taken | Controls | Refused | Not refused |
+|---|---|--:|--:|--:|---|
+| L | [`magic_lib.md`](magic_lib.md) | 25 | 106 | 106 | |
+| S16 | [`magic_s16.md`](magic_s16.md) | 60 | 72 | 72 | |
+| S17 | [`magic_s17.md`](magic_s17.md) | 48 | 125 | 125 | |
+| S18 | [`magic_s18.md`](magic_s18.md) | 42 | 121 | 121 | |
+| S19 | [`magic_s19.md`](magic_s19.md) | 43 | 108 | 102 | 6: a re-read across a call that changes nothing the spell reads |
+| S20 | [`magic_s20.md`](magic_s20.md) | 51 | 134 | 134 | |
+| S21 | [`magic_s21.md`](magic_s21.md) | 48 | 152 | 150 | 2: equivalent (no call between the two reads) |
+| S22 | [`magic_s22.md`](magic_s22.md) | 56 | 98 | 98 | |
+| S23 | [`magic_s23.md`](magic_s23.md) | 51 | 70 | 69 | 1: equivalent (both arguments always 0) |
+| S24 | [`magic_s24.md`](magic_s24.md) | 47 | 80 | 79 | 1: equivalent (both branches write the same bytes at the threshold) |
+| S25 | [`magic_s25.md`](magic_s25.md) | 56 | 113 | 107 | 6: equivalent (steps of 0x10, multiples of 8) |
+
+Every group is fuzz-only: no recorded route casts these spells. Their live
+check is the owner casting them. The groups' latent defects are described in
+their docs and not yet numbered in `known-defects.md`; the commonest kinds are
+unbounded stack and `.data` dispatch tables, pool allocators whose "none
+free" answer (`0xFF`) is never checked, and the divides by the live-target
+count (the owner's call above).
