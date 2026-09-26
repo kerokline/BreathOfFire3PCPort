@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS (2026-09-26). All 20 functions are ours
 (`src/game/magic_c3.cpp`, shadow name `magic_c3`), fuzzed headless through
-the shared harness: 0 mismatches over 40,000 rounds. CONTROLS_LINE Nothing
+the shared harness: 0 mismatches over 40,000 rounds. 117 of 120 negative controls are refused; the other three are equivalent mutants (section 6). Nothing
 recorded reaches either overlay, so this is fuzz only (section 7).
 
 Round nine, second spell wave, group C3
@@ -219,23 +219,177 @@ rounds each, through the consolidated harness without edits.
 
 Result in this worktree (2026-09-26):
 
-    shadow      magic_c3 self-test: 40000 rounds over 20 functions (2000 each), 872186 calls to the stand-ins,
+    shadow      magic_c3 self-test: 40000 rounds over 20 functions (2000 each), 871118 calls to the stand-ins,
                 0 MISMATCHES; 11880 bytes of state (11 regions) and the stand-ins' log compared
 
 Coverage (calls the originals made): `Gpu_GetTPage` 2000, `Gpu_SetDrawMode`
 10000, `Gfx_CommitPrim` 158000, `Gpu_SetPolyG4` 146000, `Gpu_SetPolyF4`
 2000, `Gpu_SetSemiTrans` 148000, `Math_Sin` 96000, `Math_Cos` 72000,
-`0x5A7A90` 200000, the ball's draw 4000, `Magic111Wash_Draw` 1018,
-`Magic111Flash_Draw` 630, `BattleTask_Create` 8000, `BattleTask_FreeCurrent`
-1462, `Battle_SetTargetFlag40` 993, `Sound_PlayById` 4000,
-`BattleActor_SetAnimation` 993, `Sprite_UpdateScreen` 1090, `Rand` 2000,
-and every phase of the five tables (471..1308 each).
+`0x5A7A90` 200000, the ball's draw 4000, `Magic111Wash_Draw` 1039,
+`Magic111Flash_Draw` 697, `BattleTask_Create` 8000, `BattleTask_FreeCurrent`
+1468, `Battle_SetTargetFlag40` 429, `Sound_PlayById` 4000,
+`BattleActor_SetAnimation` 429, `Sprite_UpdateScreen` 1056, `Rand` 2000,
+and every phase of the five tables (465..1349 each).
 
-`BOF3X_SHADOW='*'`: SHADOW_ALL_LINE
+`BOF3X_SHADOW='*'`: exit 0, with every group at 0 mismatches.
 
 ## 6. Controls
 
-CONTROLS_SECTION
+There are 120 plants in `magic_c3.cpp`, each put in one at a time by a
+script that was not committed (scratch `c3plant.py`). For each it planted,
+rebuilt, ran `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_c3`, restored and
+rebuilt. Each anchor was checked to occur exactly once. **117 are refused**:
+each exits 3, with a count only in the functions the plant touches. The
+figures are mismatched rounds out of 2,000, in this worktree, with the final
+seed. **Three are not refused, and all three are equivalent mutants:**
+
+- **D10e:** the last ring's y is kept as a short. It is only ever read as a
+  short, so no input can tell the difference. Its near variant D10 (the first
+  ring's y taken as +radius) is refused.
+- **D42:** meant to copy the previous ring after the ring's first point is
+  written, but the plant put the copy before that write. Nothing writes the
+  ring between the two places, so it is equivalent as planted. D42b plants it
+  where it was meant to go, and is refused.
+- **M37e:** the wash's corner 2 red is read back from the scratch cell instead
+  of the register. No call lies between the store and the read, so nothing can
+  move the cell. Its near variant M37 (corner 2 blue from the other angle) is
+  refused.
+
+| | Planted | Refused in |
+|---|---|---|
+| A1 | Magic002_Task: entries 0/1 swapped | Magic002_Task 1,336 |
+| A2 | Start: BattleTask_Create(3, 2) | Magic002_Start 2,000 |
+| A3 | Start: x from party +0x2C | Magic002_Start 2,000 |
+| A4 | Start: x step / 9 | Magic002_Start 2,000 |
+| A5 | Start: y step from x0 | Magic002_Start 2,000 |
+| A6 | Start: radius 0x29 | Magic002_Start 2,000 |
+| A7 | Start: ball address to Sprite_Current +0x80 | Magic002_Start 823 |
+| A8 | Start: scale 0x101 | Magic002_Start 2,000 |
+| A9 | Start: spread 0xFF | Magic002_Start 2,000 |
+| A10 | Wait: at 0x27 | Magic002_Wait 409 |
+| A11 | Wait: signed compare | Magic002_Wait 324 |
+| A12 | Ball_Task: entries swapped | Magic002Ball_Task 2,000 |
+| A13 | Fly: turn += 0x101 | Magic002Ball_Fly 2,000 |
+| A14 | Fly: radius += 5 | Magic002Ball_Fly 2,000 |
+| A15 | Fly: on at 10 | Magic002Ball_Fly 409 |
+| A16 | Fly: signed compare | Magic002Ball_Fly 385 |
+| A17 | draw call: radius >> 2 | Magic002Ball_Fly 2,000, Magic002Ball_Shatter 2,000 |
+| A18 | draw call: spread and scale swapped | Magic002Ball_Fly 2,000, Magic002Ball_Shatter 2,000 |
+| A19 | Shatter: scale -= 7 | Magic002Ball_Shatter 2,000 |
+| A20 | Shatter: freed at 0x28 | Magic002Ball_Shatter 426 |
+| A21 | Shatter: spread += 3 | Magic002Ball_Shatter 2,000 |
+| A22 | Shatter: turn += 0x21 | Magic002Ball_Shatter 2,000 |
+| D1 | draw: GetTPage arguments in PSX order | Magic002Ball_Draw 2,000 |
+| D2 | draw: draw mode dtd 1 | Magic002Ball_Draw 2,000 |
+| D3 | draw: light -0x93C | Magic002Ball_Draw 1,993 |
+| D4 | draw: shade >> 11 | Magic002Ball_Draw 2,000 |
+| D5 | draw: lower shade from x, not -y | Magic002Ball_Draw 1,993 |
+| D6 | draw: pole at +radius | Magic002Ball_Draw 1,993 |
+| D7 | draw: first latitude 0x80 | Magic002Ball_Draw 2,000 |
+| D8 | draw: s not negated | Magic002Ball_Draw 1,993 |
+| D9 | draw: c >> 11 | Magic002Ball_Draw 1,993 |
+| D10 | draw: the pole ring y +radius (equivalent-check near variant) | Magic002Ball_Draw 1,993 |
+| D10e | draw: last ring y kept as a short (equivalent: read only as a short) | **not refused**: equivalent |
+| D11 | draw: start angle turn & 0x7F | Magic002Ball_Draw 1,020 |
+| D12 | draw: angle step 0x101 | Magic002Ball_Draw 2,000 |
+| D13 | draw: point x >> 11 | Magic002Ball_Draw 1,993 |
+| D14 | draw: point z by c | Magic002Ball_Draw 1,993 |
+| D15 | draw: far end +s | Magic002Ball_Draw 1,993 |
+| D16 | draw: far end shaded at +s | Magic002Ball_Draw 1,993 |
+| D17 | draw: mid / 3 | Magic002Ball_Draw 1,993 |
+| D18 | draw: centre floored (>> 2), not truncated | Magic002Ball_Draw 1,991 |
+| D19 | draw: xp0 >> 7 | Magic002Ball_Draw 1,993 |
+| D20 | draw: xw1 + 1 | Magic002Ball_Draw 1,965 |
+| D21 | draw: yp cp + mid | Magic002Ball_Draw 1,993 |
+| D22 | draw: yw by spread | Magic002Ball_Draw 1,992 |
+| D23 | draw: ox by scale | Magic002Ball_Draw 1,992 |
+| D24 | draw: oy >> 7 | Magic002Ball_Draw 1,993 |
+| D25 | draw: upper v0 shade prev[j + 1] | Magic002Ball_Draw 2,000 |
+| D26 | draw: upper v2 shade [j] | Magic002Ball_Draw 2,000 |
+| D27 | draw: lower v0 shade this ring | Magic002Ball_Draw 2,000 |
+| D28 | draw: lower blue 1 | Magic002Ball_Draw 2,000 |
+| D29 | draw: lower v0 y + oy | Magic002Ball_Draw 1,993 |
+| D30 | draw: upper v3 y from yp | Magic002Ball_Draw 1,993 |
+| D31 | draw: v1 x from xp0 | Magic002Ball_Draw 1,993 |
+| D32 | draw: upper quad opaque | Magic002Ball_Draw 2,000 |
+| D33 | draw: lower quad committed 0x40 | Magic002Ball_Draw 2,000 |
+| D34 | draw: packet not re-read for the lower quad | Magic002Ball_Draw 1,015 |
+| D35 | draw: one segment fewer | Magic002Ball_Draw 2,000 |
+| D36 | draw: x not read as a short | Magic002Ball_Draw 2,000 |
+| D37 | draw: upper dot with x for y | Magic002Ball_Draw 1,993 |
+| D38 | draw: dot z term from y | Magic002Ball_Draw 1,993 |
+| D39 | draw: seven points a ring | Magic002Ball_Draw 2,000 |
+| D40 | draw: ring start point z 1 | Magic002Ball_Draw 100 |
+| D41 | draw: scale not a short | Magic002Ball_Draw 1,983 |
+| D42 | draw: prev copied after the ring start | **not refused**: equivalent |
+| M1 | Magic111_Task: entries 0/1 swapped | Magic111_Task 1,315 |
+| M2 | Start: +8 from the owner +9 | Magic111_Start 1,884 |
+| M3 | Start: +0x3C from the owner +0x38 | Magic111_Start 1,954 |
+| M4 | Start: first child parameter 0x58 | Magic111_Start 2,000 |
+| M5 | Start: party below 4 | Magic111_Start 201 |
+| M6 | Start: 0x7C bytes copied | Magic111_Start 2,000 |
+| M7 | Start: child +6 = 2 | Magic111_Start 2,000 |
+| M8 | Start: child +2 left | Magic111_Start 1,986 |
+| M9 | Start: children kinds 2 and 3 | Magic111_Start 2,000 |
+| M10 | Start: second sound 0x102 | Magic111_Start 2,000 |
+| M11 | Start: owner bit 0x20 | Magic111_Start 1,485 |
+| M12 | Start: first child not counted | Magic111_Start 1,940 |
+| M13 | Start: first child +0x80 the owner | Magic111_Start 1,706 |
+| M14 | Wait: animation 5 | Magic111_Wait 429 |
+| M15 | Wait: owner and 0x9F | Magic111_Wait 212 |
+| M16 | Wait: flag 0x40 on the actor | Magic111_Wait 390 |
+| M17 | Wait: at one child | Magic111_Wait 478 |
+| M18 | Child_Task: kinds 0/1 swapped | Magic111Child_Task 1,325 |
+| M19 | Double_Run: update when +0 is 0 | Magic111Double_Run 2,000 |
+| M20 | Double_Run: steps 0/1 swapped | Magic111Double_Run 1,319 |
+| M21 | Double_Begin: +0x29 = 3 | Magic111Double_Begin 2,000 |
+| M22 | Double_Wait: at 0 only | Magic111Double_Wait 342 |
+| M23 | Double_Wait: down by 2 | Magic111Double_Wait 681 |
+| M24 | Double_Wait: signed compare | Magic111Double_Wait 329 |
+| M25 | Wash_Run: steps 1/2 swapped | Magic111Wash_Run 962 |
+| M26 | Wash_Run: +0x10 up by 2 | Magic111Wash_Run 1,039 |
+| M27 | Wash_Run: drawn with +0 clear | Magic111Wash_Run 961 |
+| M28 | Wash_Start: Rand & 0x1F | Magic111Wash_Start 1,035 |
+| M29 | Wash_Start: + 0x20 | Magic111Wash_Start 2,000 |
+| M30 | Wash_Start: +0xA 0x3B | Magic111Wash_Start 2,000 |
+| M31 | Pulse: x 5 | Magic111Wash_Draw 1,991 |
+| M32 | Pulse: + 9 | Magic111Wash_Draw 1,991 |
+| M33 | Pulse: +9 read before the call | Magic111Wash_Draw 845 |
+| M34 | Wash_Draw: tpage 0x56 | Magic111Wash_Draw 2,000 |
+| M35 | Wash_Draw: corner 0 green from the first angle | Magic111Wash_Draw 1,967 |
+| M36 | Wash_Draw: corner 1 offset 0x10 | Magic111Wash_Draw 1,993 |
+| M37 | Wash_Draw: corner 2 blue from the second angle | Magic111Wash_Draw 1,969 |
+| M37e | Wash_Draw: corner 2 red from the cell, not the register (equivalent: no call between) | **not refused**: equivalent |
+| M38 | Wash_Draw: corner 3 offset -0x10 | Magic111Wash_Draw 2,000 |
+| M39 | Wash_Draw: corner 3 blue = green | Magic111Wash_Draw 1,960 |
+| M40 | Wash_Draw: flat quad | Magic111Wash_Draw 2,000 |
+| M41 | FullScreen: 240.0 | Magic111Wash_Draw 2,000, Magic111Flash_Draw 2,000 |
+| M42 | Wash_Draw: committed 0x40 | Magic111Wash_Draw 2,000 |
+| M43 | Wash_Draw: closing tpage 0x16 | Magic111Wash_Draw 2,000 |
+| M44 | Flash_Run: drawn at +2 0 | Magic111Flash_Run 325 |
+| M45 | Flash_Run: steps 1/2 swapped | Magic111Flash_Run 1,377 |
+| M46 | Flash_Wait: at 1 | Magic111Flash_Wait 357 |
+| M47 | Flash_Wait: +9 = 1 | Magic111Flash_Wait 997 |
+| M48 | Flash_Draw: grey x 14 | Magic111Flash_Draw 1,993 |
+| M49 | Flash_Draw: tpage 0x36 | Magic111Flash_Draw 2,000 |
+| M50 | Flash_Draw: committed 0x3C | Magic111Flash_Draw 2,000 |
+| M51 | Flash_Draw: last corner x and y swapped | Magic111Flash_Draw 2,000 |
+| M52 | Flash_Draw: blue not written | Magic111Flash_Draw 1,995 |
+| M53 | Wash_Draw: packet read before the first commit | Magic111Wash_Draw 27 |
+| D42b | draw: prev copied after the ring start is written | Magic002Ball_Draw 1,993 |
+
+**The thinnest:**
+
+- **M53 (27):** the wash's packet pointer read before the first commit, not
+  after it. It shows only when the disturbance moves `Gfx_PacketNext` during
+  that commit.
+- **D40 (100):** the ring's first point shaded with z 1 instead of 0. It
+  shows only where the normal's rounding changes.
+- **M5 (201):** the party / enemy split moved by one. It shows only for
+  actor 3.
+
+M17 (the wait gated at one child) was refused in 6 rounds before the seed
+put `+0xB` at 0..2 two times in three; it is now refused in 478.
 
 ## 7. What nothing reached
 
