@@ -106,3 +106,20 @@ onto it, run its controls and finish its doc; merge them one at a time.
 S16 is furthest along (72 of 72 controls refused; its doc's controls table
 to fill). The frame-hash re-record (§4) is due before 2026-09-27 or after a
 Restart.
+
+## 6. HX merged; the wave ported (2026-09-26)
+
+HX's harness merged as `ea27991`: one API for the eleven groups' edits,
+the per-group port in [`magic_harness.md`](magic_harness.md) §7, Steal's
+counts and five of its controls unchanged in HX's worktree. The machine was
+restarted overnight, which retires §4's 2026-09-27 deadline.
+
+**A harness count depends on the build directory.** Steal's self-test gives
+9,278 stand-in calls in HX's worktree and 9,850 in the main checkout, from
+identical source and flags, each the same on every run, 0 mismatches in
+both. The harness stores pointers to its own records (inside our DLL) into
+game memory, and the DLL's load address differs by path, so the fuzz takes
+slightly different branches. Both passes of a round see the same inputs,
+so the comparison is sound; what does not carry between checkouts is a
+documented call count. Merges are judged by 0 mismatches and controls
+refused, not by matching a count.
