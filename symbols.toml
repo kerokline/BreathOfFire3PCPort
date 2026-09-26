@@ -20766,3 +20766,556 @@ ctype = "signed char"
 count = 56
 status = "evidence"
 evidence = "disasm 2026-09-25: 56 bytes Iceblast_Start fills from Rand (-15..15), read by Iceblast_DrawSpires / _DrawSpiresInner (rows of 8) and IceShard_Draw (8 h + .., and h + k, unbounded by +0xB)."
+
+# ---------------------------------------------------------------------------
+# --- Round nine, group S24: MAGIC104, MAGIC105, MAGIC106 (src/game/magic_s24.cpp, docs/magic_s24.md) ---
+
+[[func]]
+pc = 0x4D04B0
+name = "Fx104_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D04B0..0x4D04E5 (0x36 bytes), cdecl, every jump internal: the kind-2 task: a four-entry stack table (0x4D04F0 0x4D0600 0x4D0620 0x4D0700) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 14, file MAGIC104 (the ability read one id down: Sirocco, a hypothesis - cut-content section 2). First function of MAGIC104's extent 0x4D04B0..0x4D16D3 (tools/magic_rows.py). Fuzz only."
+
+[[func]]
+pc = 0x4D04F0
+name = "Fx104_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D04F0..0x4D05F5 (0x106 bytes), cdecl, every jump internal: calls 0x4FC0E0 (group L), BattleTask_Create, 0x446770, Sound_PlayById: +8 = byte +8 of [0x904B3C] xor 2 when (0x904B44 & 0x40) and (0x904B34 < 3) agree; 0x4FC0E0 (the targets' centre); +0xB 0; +1 on; eight BattleTask_Create(1, 0xB): its +0x80 the task, +1 1, +0xB i, +9 0, +0xA 2i; task +0xC / +0x10 = Fx104_ChildOffsets pair i, 0x446770(task), child +0x34 / +0x38 = +0xC / +0x10 + Field_Kind2X / Z, +0x3C the task's; Sound_PlayById(0x102). Sprite_Current read again after every call. Entry 0 of Fx104_Task's table."
+
+[[func]]
+pc = 0x4D0600
+name = "Fx104_WaitFirstRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0600..0x4D0617 (0x18 bytes), cdecl, every jump internal: no calls: when +0xB is 7, +9 = 8 and +1 on. Entry 1 of Fx104_Task's table."
+
+[[func]]
+pc = 0x4D0620
+name = "Fx104_SecondRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0620..0x4D06FF (0xE0 bytes), cdecl, every jump internal: calls BattleTask_Create, 0x446770: +9 down; at 0, +0xB 0, +1 on, eight children as Fx104_Start's but +1 0 and +0xA 16i + 1, no sound. Entry 2 of Fx104_Task's table."
+
+[[func]]
+pc = 0x4D0700
+name = "Fx104_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0700..0x4D0726 (0x27 bytes), cdecl, every jump internal: when +0xB is 7: Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 3 of Fx104_Task's table."
+
+[[func]]
+pc = 0x4D0730
+name = "Fx104_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0730..0x4D0741 (0x12 bytes), cdecl, every jump internal: kind-1 task parameter 0xB (BattleTask_Create(1, 0xB) from Fx104_Start / _SecondRing): jmp [Fx104_ChildPhases + 4 * byte +1], unchecked."
+
+[[func]]
+pc = 0x4D0750
+name = "Fx104_Whirl"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0750..0x4D078C (0x3D bytes), cdecl, every jump internal: call [Fx104_WhirlPhases + 4 * byte +2], unchecked; then when +0 and +2 are not 0: 0x4D0D30, 0x4D0FF0, 0x4D0DF0, 0x4D0890, jmp Gte_PopMatrix. Entry 0 of Fx104_ChildPhases."
+
+[[func]]
+pc = 0x4D0790
+name = "Fx104_WhirlDelay"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0790..0x4D07DE (0x4F bytes), cdecl, every jump internal: +0xA down; at 0 Sound_PlayById(0x101 if +0xB odd, else 0x100), +9 +0xA 0, +2 on. Entry 0 of Fx104_WhirlPhases."
+
+[[func]]
+pc = 0x4D07E0
+name = "Fx104_WhirlGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D07E0..0x4D0804 (0x25 bytes), cdecl, every jump internal: +9 up; at 8, +0xA 0 and +2 on. Entry 1 of Fx104_WhirlPhases."
+
+[[func]]
+pc = 0x4D0810
+name = "Fx104_WhirlSpin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0810..0x4D0841 (0x32 bytes), cdecl, every jump internal: +0xA and +9 up; at +9 0x10, +0xA 0 and +2 on. Entry 2 of Fx104_WhirlPhases."
+
+[[func]]
+pc = 0x4D0850
+name = "Fx104_WhirlEnd"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0850..0x4D0886 (0x37 bytes), cdecl, every jump internal: +0xA and +9 up; at +9 0x18 the owner (0x93B940) +0xB = +0xB, jmp BattleTask_FreeCurrent. Entry 3 of Fx104_WhirlPhases."
+
+[[func]]
+pc = 0x4D0890
+name = "Fx104_DrawFunnel"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0890..0x4D0D24 (0x495 bytes), cdecl, every jump internal: 25 calls (Math_Sin / Math_Cos, Gpu_SetDrawMode 0xB5, MapView_LinkPrimAt, Gpu_SetPolyG4, Gpu_SetSemiTrans, Gte_RotTransPers4, Gte_PrimDepths4_10B): radius word 0x903850 = +9 * 30 (+2 above 1: (+9 + 8) * 15), rows 0x18 (+2 above 1: 0x18 - (+9 - 8) / 2) down to 17, 16 quads a row between the rows' circles, vertices in 0x9037A0..; colour by +2 (1 a gradient by row and column, 2 / 3 a fade by +0xA, else untouched). Up to 8 x 214 calls."
+
+[[func]]
+pc = 0x4D0D30
+name = "Fx104_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0D30..0x4D0DE5 (0xB6 bytes), cdecl, every jump internal: Gte_PushMatrix; angles (0, 0, (Frame_Counter & 15) << 8 when +5 is 0xC); the point ((+0x34 >> 9) - 0x4000, (+0x38 >> 9) - 0x4000, -(+0x3E / 2)): Gte_RotTrans, Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix."
+
+[[func]]
+pc = 0x4D0DF0
+name = "Fx104_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0DF0..0x4D0FED (0x1FE bytes), cdecl, every jump internal: 14 calls: radius cos(0x800) * +9 * 30 >> 12; 32 POLY_G3 from (0,0,0) to the rim, placed at the rim point >> 9 (LinkPrimAt(.., 2, 0xC / 0x34)), draw mode 0x35; colour 0x41 - 8 * +0xA (word 0x903856) on +2 == 3 else 0x40; a closing draw mode 0x15, Gfx_CommitPrim(5, 0xC)."
+
+[[func]]
+pc = 0x4D0FF0
+name = "Fx104_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0FF0..0x4D129E (0x2AF bytes), cdecl, every jump internal: 19 calls: radii cos(0x800) * (+9 + 1) * 34 >> 12 and cos(0x800) * +9 * 34 >> 12 (0x903850 / 0x903852); draw mode 0x35 on slot 5, 32 POLY_G4 (Gfx_CommitPrim(5, 0x44)), outer colour 0x31 - 2 * +9 above +9 == 8 else 0x20, inner 1; draw mode 0x15 after."
+
+[[func]]
+pc = 0x4D12A0
+name = "Fx104_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D12A0..0x4D12ED (0x4E bytes), cdecl, every jump internal: draw mode 0x35, Gfx_CommitPrim(4, 0xC); call [Fx104_BurstPhases + 4 * byte +2], unchecked; the draw mode again. Entry 1 of Fx104_ChildPhases."
+
+[[func]]
+pc = 0x4D12F0
+name = "Fx104_BurstDelay"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D12F0..0x4D131A (0x2B bytes), cdecl, every jump internal: no calls: +0xA down while not 0; at 0, word +0x3E += 0x200, +9 8, +2 on. Entry 0 of Fx104_BurstPhases."
+
+[[func]]
+pc = 0x4D1320
+name = "Fx104_BurstShrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1320..0x4D1363 (0x44 bytes), cdecl, every jump internal: 0x4D0D30, 0x4D1370, Gte_PopMatrix; word +0x3E -= 0x40; +9 down, at 0 the owner +0xB = +0xB and jmp BattleTask_FreeCurrent. Entry 1 of Fx104_BurstPhases."
+
+[[func]]
+pc = 0x4D1370
+name = "Fx104_DrawSphere"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1370..0x4D16D3 (0x364 bytes), cdecl, every jump internal: 27 calls: radius +9 * 8 (0x903850); latitudes 0x400..0xB00 step 0x100, longitudes 0x200..0x1000 step 0x200, one POLY_G4 each (draw mode 0xB5, LinkPrimAt(.., 0, 0xC / 0x44)), colour +9 * 24 + 1 twice, +9 * 16 + 1."
+
+[[func]]
+pc = 0x4D16E0
+name = "Fx105_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D16E0..0x4D1759 (0x7A bytes), cdecl, every jump internal: the kind-2 task: a two-entry stack table (0x4D1760, BattleFx_Finish 0x4F7350) by +1, unchecked; then for each of the 64 records of Fx105_MotePool with bit 0 of +0: Sprite_Current = it, 0x93B940 = its +0x80, 0x4D1F30 and 0x4D2220, both put back. Magic_Rows row 64, file MAGIC105 (read one id down: Kyrie, a hypothesis). First function of MAGIC105's extent 0x4D16E0..0x4D2442."
+
+[[func]]
+pc = 0x4D1760
+name = "Fx105_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1760..0x4D18BF (0x160 bytes), cdecl, every jump internal: the pool's bytes 0..2 cleared; 0x4FC0E0 (group L); +8 the owner's; +0xC 0xFFF80000, +0x10 0, 0x446770; +0x34 / +0x38 = +0xC / +0x10 + Field_Kind2X / Z; +0xC = Math_Ratan2((float)(Kind2X - +0x34), (float)(Kind2Z - +0x38)); +0xB 0; seven BattleTask_Create(1, 0x33): +0x80 the task, +1 0, +4 i, the task's +0xB up; words 0x812980..0x81299E = the word 0x4000 below | 0x8000, 0x812980 0, Gfx_ClutStripDirty 1; Sound_PlayById(0x100); +1 on. Entry 0 of Fx105_Task's table."
+
+[[func]]
+pc = 0x4D18C0
+name = "Fx105_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D18C0..0x4D18D1 (0x12 bytes), cdecl, every jump internal: kind-1 task parameter 0x33: jmp [Fx105_ChildPhases + 4 * byte +1], unchecked."
+
+[[func]]
+pc = 0x4D18E0
+name = "Fx105_Orb"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D18E0..0x4D1934 (0x55 bytes), cdecl, every jump internal: a four-entry stack table (0x4D1940 0x4D19E0 0x4D1A80 0x4D1AA0) by +2, unchecked; then when +0 is not 0 and +2 not 3: 0x4D1AC0, 0x4D1B60, Gte_PopMatrix. Entry 0 of Fx105_ChildPhases."
+
+[[func]]
+pc = 0x4D1940
+name = "Fx105_OrbStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1940..0x4D19D8 (0x99 bytes), cdecl, every jump internal: no calls: +0x34 / +0x38 / +0x3C the owner's; +0xC = s16 Fx105_OrbAngles[2 * +4] + owner +0xC, +0x10 = s16 [0x65B88E + 2 * +4] + owner +0xC (the index unbounded); +0xB +9 +0xA 0; +2 on."
+
+[[func]]
+pc = 0x4D19E0
+name = "Fx105_OrbEmit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D19E0..0x4D1A70 (0x91 bytes), cdecl, every jump internal: when ((+4 ^ Frame_Counter) & 3) == 0: 0x4D21C0; unless 0xFF, the mote: +0x80 the orb, +1 +2 0, +9 the orb's +9, +0x10 its +0x10; the orb's +0xB up. On odd Frame_Counter +9 up, at 0x20 +2 on."
+
+[[func]]
+pc = 0x4D1A80
+name = "Fx105_OrbHold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1A80..0x4D1A9B (0x1C bytes), cdecl, every jump internal: no calls: +0xA up, at 0x40 +2 on."
+
+[[func]]
+pc = 0x4D1AA0
+name = "MagicFx_EndWithChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1AA0..0x4D1AB9 (0x1A bytes), cdecl, every jump internal: reached from 15 overlays (tools/magic_rows.py): when +0xB is 0, the owner's +0xB down and jmp BattleTask_FreeCurrent. Entry 3 of Fx105_Orb's table; the body lies in MAGIC105's extent."
+
+[[func]]
+pc = 0x4D1AC0
+name = "Fx105_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1AC0..0x4D1B5E (0x9F bytes), cdecl, every jump internal: as Fx104_PushMatrix with the angles all 0."
+
+[[func]]
+pc = 0x4D1B60
+name = "Fx105_DrawOrb"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1B60..0x4D1F2D (0x3CE bytes), cdecl, every jump internal: 16 calls: six colour words 0x903854.. = c - (c >> 6) * +0xA, c = Fx105_OrbColours[+4 * 3 + j] (unbounded); a first ring at radius 64 by angles +0xC / +0x10; then +9 bands (radius (n + 1) * 64, height -(sin(0x40 n) * 3 << 7 >> 12)), each a POLY_G4 (draw mode 0x35, LinkPrimAt(.., 2, 0xC / 0x44)). Up to 255 x 11 calls."
+
+[[func]]
+pc = 0x4D1F30
+name = "Fx105_Mote"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1F30..0x4D1F41 (0x12 bytes), cdecl, every jump internal: jmp [Fx105_MotePhases + 4 * byte +1], unchecked. Called by Fx105_Task with Sprite_Current a mote."
+
+[[func]]
+pc = 0x4D1F50
+name = "Fx105_MoteRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1F50..0x4D1F7B (0x2C bytes), cdecl, every jump internal: dword 0x9039D8 = 0x8E3580; call [Fx105_MoteRunPhases + 4 * byte +2], unchecked; BattleActor_UpdateScreenXY; 0x9039D8 = 0x8B3580. Entry 0 of Fx105_MotePhases."
+
+[[func]]
+pc = 0x4D1F80
+name = "Fx105_MoteStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D1F80..0x4D2104 (0x185 bytes), cdecl, every jump internal: calls Math_Sin / Math_Cos, AreaMap_Elevation, Rand, Sprite_SetAnimation: word 0x903852 = sin(+9 << 6) * 3 << 7 >> 11, 0x903850 = (+9 + 1) << 6; +0x34 / +0x38 = sin / cos(+0x10) * it >> 3 + the owner's; word +0x3E = owner +0x3E + 0x903852 - 0x20; +0x14 = (short)AreaMap_Elevation(+0x34, +0x38); sprite fields (+0x25 0x1D, +0x27 0xA0, +0 |= 0x20, +0x5C..+0x5F 1 0xC0 0xC0 0xC0, +0x29 3, +0x24 4, ...); Sprite_SetAnimation((Rand & 1) + 1); +0xA = Rand & 0x3F; +2 on. Entry 0 of Fx105_MoteRunPhases."
+
+[[func]]
+pc = 0x4D2110
+name = "Fx105_MoteDrift"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2110..0x4D21B2 (0xA3 bytes), cdecl, every jump internal: calls Math_Sin / Math_Cos, Sprite_ScriptTickOnce: +0xA up; +0x34 / +0x38 += sin / cos((+0xA & 63) << 8) sign-extended from 29 bits; word +0x3E -= 8; when the script ends or (short)+0x3E < +0x14, the owner's +0xB down and bytes 0..2 cleared. Entry 1 of Fx105_MoteRunPhases."
+
+[[func]]
+pc = 0x4D21C0
+name = "Fx105_MoteAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D21C0..0x4D2216 (0x57 bytes), cdecl, every jump internal: no calls: the first of Fx105_MotePool's 64 without bit 0 of +0, marked; al 0xFF when none."
+
+[[func]]
+pc = 0x4D2220
+name = "Fx105_MoteDraw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2220..0x4D2442 (0x223 bytes), cdecl, every jump internal: calls Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetSprt, Gpu_SetSemiTrans: unless +0 bit 6 or the screen point (+0x2E, +0x30) outside (-0x40..0x180, -0x40..0x130), the frame [+0x54] + u16 +0x5A: a count, then 5-byte parts, each a draw mode (tpage ((+0x28 ? 4 : 0) | +0x5C & 3) << 5 | 0x1D) and a SPRT on ordering slot +0x29: size Fx105_MoteSizes[part & 15], u part+3, v +0x26 + part+4, CLUT by +0x27 (row by +0x28), tint +0x5D..+0x5F + 0x80, x mirrored by part bit 7 when +0x2A, semi-transparent by +0 bit 5."
+
+[[func]]
+pc = 0x4D2450
+name = "Fx106_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2450..0x4D24B0 (0x61 bytes), cdecl, every jump internal: the kind-2 task: a two-entry stack table (0x4D24C0, BattleFx_Finish) by +1, unchecked; then for each of Fx106_SparkPool's 96 with bit 0 of +0: Fx106_SparkCurrent = it, 0x93B940 = its +0x1C, 0x4D25C0, the owner put back. Magic_Rows row 104, file MAGIC106 (read one id down: Death, a hypothesis). First function of MAGIC106's extent 0x4D2450..0x4D2D7E."
+
+[[func]]
+pc = 0x4D24C0
+name = "Fx106_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D24C0..0x4D25B9 (0xFA bytes), cdecl, every jump internal: the pool's bytes 0..2 cleared; +0x34 / +0x38 / +0x3C (+0x1000000) from [0x904B4C]; +0xB +9 0; +1 on; 96 x 0x4D2D00 (the index unchecked): +0x1C the task, +1 0, +4 i, +0xA (Rand & 15) + 16 (i >> 5) + 1, +8 0x40 - that; the task's +0xB up; Sound_PlayById(0x100), (0x101). Entry 0 of Fx106_Task's table."
+
+[[func]]
+pc = 0x4D25C0
+name = "Fx106_Spark"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D25C0..0x4D25D1 (0x12 bytes), cdecl, every jump internal: jmp [Fx106_SparkPhases + 4 * byte +1 of [Fx106_SparkCurrent]], unchecked."
+
+[[func]]
+pc = 0x4D25E0
+name = "Fx106_SparkRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D25E0..0x4D2612 (0x33 bytes), cdecl, every jump internal: call [Fx106_SparkRunPhases + 4 * byte +2 of the spark], unchecked; then when +0 and +2 are not 0: 0x4D29F0, 0x4D2AB0, jmp Gte_PopMatrix. Entry 0 of Fx106_SparkPhases."
+
+[[func]]
+pc = 0x4D2620
+name = "Fx106_SparkDelay"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2620..0x4D2760 (0x141 bytes), cdecl, every jump internal: calls Math_Sin / Math_Cos, Rand: the spark's +0xA down; at 0: radius ((+4 >> 5) + 6) << 4 (0x903850), angle (+4 & 31) << 7 (0x903854); +0x10 / +0x14 = sin / cos * radius + the owner's +0x34 / +0x38, +0x18 the owner's +0x3C, +0xE the angle; +5 +6 +7 each (Rand & 7) + 5; +3 +9 0; +0xA (Rand & 3) << 3; +0xB Rand; +0xC the radius; +2 on. Entry 0 of Fx106_SparkRunPhases."
+
+[[func]]
+pc = 0x4D2770
+name = "Fx106_SparkConverge"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2770..0x4D2836 (0xC7 bytes), cdecl, every jump internal: word +0xC -= 2; placed (sin / cos(+0xE) * +0xC + the owner's); +0xB up; +9 += 2 below 0x10; at +0xC <= (+4 >> 5) * 8 + 0x20: +2 on, and for spark 0 (+4 == 0) Battle_SetTargetFlags(byte 0x904B44, 0x10). Entry 1 of Fx106_SparkRunPhases."
+
+[[func]]
+pc = 0x4D2840
+name = "Fx106_SparkSpin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2840..0x4D2922 (0xE3 bytes), cdecl, every jump internal: +0xE = (+0xE + 0x40) & 0xFFF, placed, +0xB up; +5 up below 0xC, +6 +7 down above 4, +3 up below 7; +8 down, at 0 +2 on. Entry 2 of Fx106_SparkRunPhases."
+
+[[func]]
+pc = 0x4D2930
+name = "Fx106_SparkRise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2930..0x4D29EB (0xBC bytes), cdecl, every jump internal: turned and placed as Fx106_SparkSpin; word +0x1A += +0xA; +0xB up; on odd Frame_Counter +9 down, at 0 the owner's +0xB down and jmp 0x4D2D50. Entry 3 of Fx106_SparkRunPhases."
+
+[[func]]
+pc = 0x4D29F0
+name = "Fx106_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D29F0..0x4D2AAB (0xBC bytes), cdecl, every jump internal: as Fx104_PushMatrix for the spark: angles (0, 0, (0x800 - +0xE + +3 * 0x80) & 0xFFF), the point from +0x10 / +0x14 / +0x1A."
+
+[[func]]
+pc = 0x4D2AB0
+name = "Fx106_DrawSpark"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2AB0..0x4D2CF4 (0x245 bytes), cdecl, every jump internal: 12 calls: draw mode 0x35 at the spark's point (LinkPrimAt(.., 2, 0xC)); colours +5 / +6 / +7 times +9 (0x90385A..); four POLY_G3 from (0,0,0) to points at the radii / angles of Fx106_ShardTables, heights sin(((+0xB + tilt j) & 15) << 8) << 5 >> 12, LinkPrimAt(.., 2, 0x34)."
+
+[[func]]
+pc = 0x4D2D00
+name = "Fx106_SparkAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2D00..0x4D2D4E (0x4F bytes), cdecl, every jump internal: no calls: the first of Fx106_SparkPool's 96 without bit 0 of +0, marked; al 0xFF when none."
+
+[[func]]
+pc = 0x4D2D50
+name = "Fx106_SparkFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s24.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2D50..0x4D2D7E (0x2F bytes), cdecl, every jump internal: no calls: bytes 0..4 of [Fx106_SparkCurrent] cleared, the pointer read again for each."
+
+[[data]]
+pc = 0x65B828
+name = "Fx104_ChildOffsets"
+ctype = "long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-25: eight (x, z) pairs, [edi - 4] / [edi] for edi 0x65B82C..0x65B864 step 8, by Fx104_Start and Fx104_SecondRing: each child's offset before 0x446770 turns it."
+
+[[data]]
+pc = 0x65B868
+name = "Fx104_ChildPhases"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D0750 0x4D12A0, jumped through by Fx104_Child by byte +1 (1 for the first ring, 0 for the second), unchecked. The next three tables follow at once (tools/magic_rows.py counts the run as one of nine)."
+
+[[data]]
+pc = 0x65B870
+name = "Fx104_WhirlPhases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D0790 0x4D07E0 0x4D0810 0x4D0850, called by Fx104_Whirl by byte +2, unchecked (the fourth frees the task)."
+
+[[data]]
+pc = 0x65B880
+name = "Fx104_BurstPhases"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D12F0 0x4D1320, called by Fx104_Burst by byte +2, unchecked (the second frees the task)."
+
+[[data]]
+pc = 0x65B888
+name = "Fx105_ChildPhases"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D18E0, jumped through by Fx105_Child by byte +1 (0; nothing steps it), unchecked: +1 = 1 would jump to the words of Fx105_OrbAngles."
+
+[[data]]
+pc = 0x65B88C
+name = "Fx105_OrbAngles"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: Fx105_OrbStart's movsx word [0x65B88C + 2 * +4] and [0x65B88E + 2 * +4], the orb index 0..6, unbounded."
+
+[[data]]
+pc = 0x65B89C
+name = "Fx105_OrbColours"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-25: Fx105_DrawOrb's six bytes at 0x65B89C + 3 * +4 + 0..5 (overlapping rows of three), the index unbounded."
+
+[[data]]
+pc = 0x65B8B4
+name = "Fx105_MotePhases"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D1F50, jumped through by Fx105_Mote by byte +1 (0), unchecked."
+
+[[data]]
+pc = 0x65B8B8
+name = "Fx105_MoteRunPhases"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D1F80 0x4D2110, called by Fx105_MoteRun by byte +2, unchecked."
+
+[[data]]
+pc = 0x65B8C0
+name = "Fx105_MoteSizes"
+ctype = "unsigned char"
+count = 32
+status = "evidence"
+evidence = "read 2026-09-25: Fx105_MoteDraw's SPRT width / height bytes at 0x65B8C0 / 0x65B8C1 + 2 * (part byte & 15)."
+
+[[data]]
+pc = 0x65B8E0
+name = "Fx106_SparkPhases"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D25E0, jumped through by Fx106_Spark by byte +1 (0), unchecked."
+
+[[data]]
+pc = 0x65B8E4
+name = "Fx106_SparkRunPhases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: 0x4D2620 0x4D2770 0x4D2840 0x4D2930, called by Fx106_SparkRun by byte +2, unchecked."
+
+[[data]]
+pc = 0x65B8F4
+name = "Fx106_ShardTables"
+ctype = "unsigned char"
+count = 36
+status = "evidence"
+evidence = "read 2026-09-25: Fx106_DrawSpark's four s16[4] - two radii (+0, +8) and two angles (+0x10, +0x18) - and u8[4] tilts (+0x20), by the shard 0..3."
+
+[[data]]
+pc = 0x695C38
+name = "Fx105_MotePool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-25: 64 records of 0x84 (a battle task's shape), bit 0 of +0 in use: cleared by Fx105_Start, taken by Fx105_MoteAlloc, run by Fx105_Task."
+
+[[data]]
+pc = 0x697D38
+name = "Fx106_SparkPool"
+ctype = "unsigned char"
+count = 3072
+status = "evidence"
+evidence = "read 2026-09-25: 96 records of 0x20, bit 0 of +0 in use, +0x1C the owner: cleared by Fx106_Start, taken by Fx106_SparkAlloc, run by Fx106_Task."
+
+[[data]]
+pc = 0x698938
+name = "Fx106_SparkCurrent"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-25: the spark Fx106_Task is running (left at the last one); every spark phase reads it again after each call."
