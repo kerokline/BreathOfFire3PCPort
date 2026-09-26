@@ -132,14 +132,14 @@ const mh::Clone kClones[] = {
     {"Magic087_RiseStep", 0x4C3FE0, 0x69, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic087_RiseStep)},
     {"Magic087_PushMatrix", 0x4C4050, 0xB2, kCalls4C4050, MH_N(kCalls4C4050), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic087_PushMatrix)},
     {"Magic087_DrawTriangle", 0x4C4110, 0x319, kCalls4C4110, MH_N(kCalls4C4110), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic087_DrawTriangle)},
-    {"Magic087_PoolAlloc", 0x4C4430, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic087_PoolAlloc)},
+    {"Magic087_PoolAlloc", 0x4C4430, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic087_PoolAlloc), 0xFF},
     {"Magic088_Task", 0x4C4490, 0x4E, nullptr, 0, kImms4C4490, MH_N(kImms4C4490), nullptr, 0, reinterpret_cast<const void*>(&::Magic088_Task)},
     {"Magic088_Start", 0x4C44E0, 0x165, kCalls4C44E0, MH_N(kCalls4C44E0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_Start)},
     {"Magic088_TintOn", 0x4C4650, 0x58, kCalls4C4650, MH_N(kCalls4C4650), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_TintOn)},
     {"Magic088_Darken", 0x4C46B0, 0x4D, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_Darken)},
     {"Magic088_Lighten", 0x4C4700, 0x74, kCalls4C4700, MH_N(kCalls4C4700), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_Lighten)},
     {"Magic088_Apply", 0x4C4780, 0xAD, kCalls4C4780, MH_N(kCalls4C4780), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_Apply)},
-    {"Magic088_Variant", 0x4C4830, 0xFF, nullptr, 0, nullptr, 0, kTables4C4830, MH_N(kTables4C4830), reinterpret_cast<const void*>(&::Magic088_Variant)},
+    {"Magic088_Variant", 0x4C4830, 0xFF, nullptr, 0, nullptr, 0, kTables4C4830, MH_N(kTables4C4830), reinterpret_cast<const void*>(&::Magic088_Variant), 0xFF},
     {"Magic088_Child", 0x4C4930, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_Child)},
     {"Magic088_FanRun", 0x4C4950, 0x2D, kCalls4C4950, MH_N(kCalls4C4950), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_FanRun)},
     {"Magic088_DrawFan", 0x4C4980, 0x1A5, kCalls4C4980, MH_N(kCalls4C4980), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic088_DrawFan)},
@@ -161,7 +161,7 @@ const mh::Clone kClones[] = {
     {"Magic092_FlameGrow", 0x4C5B60, 0x3C, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic092_FlameGrow)},
     {"Magic092_DrawFlame", 0x4C5BA0, 0x6AA, kCalls4C5BA0, MH_N(kCalls4C5BA0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic092_DrawFlame)},
     {"Magic092_SparkRun", 0x4C6250, 0x4F, kCalls4C6250, MH_N(kCalls4C6250), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic092_SparkRun)},
-    {"Magic092_PoolAlloc", 0x4C62A0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic092_PoolAlloc)},
+    {"Magic092_PoolAlloc", 0x4C62A0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Magic092_PoolAlloc), 0xFF},
 };
 #undef MH_N
 
@@ -175,11 +175,14 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 
 // The callees the standard set lacks. The draws' arguments are all pushed as
 // whole dwords (constants, pointers into the packet or the vertex scratch);
-// stack addresses are masked off (0) and what they point at is logged with
-// LogPointee where the callee reads it.
+// stack addresses are masked off (0) and what they point at is logged by
+// `deref` where the callee reads it: the vector and the angles the matrix
+// calls are handed on the stack (six bytes each; the original leaves the pads
+// unwritten), and the vertices each projection reads as it is called. The
+// two pool allocs and Magic088_Variant answer al (`ret_mask` 0xFF).
 const mh::Callee kCallees[] = {
     {S20_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0},
-    {S20_OURS(Sprite_SetTint), 4, {kAll, kU8, kU8, kU8}, mh::Answer::kByte, 0, 0xFF},
+    {S20_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, mh::Answer::kByte, 0, 0xFF},
     {S20_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
@@ -193,13 +196,13 @@ const mh::Callee kCallees[] = {
     {S20_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gte_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0},
-    {S20_OURS(Gte_RotTrans), 2, {0, 0}, mh::Answer::kGarbage, 0, 0},
-    {S20_OURS(Gte_RotMatrix), 2, {0, 0}, mh::Answer::kGarbage, 0, 0},
+    {S20_OURS(Gte_RotTrans), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, {6}},
+    {S20_OURS(Gte_RotMatrix), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, {6}},
     {S20_OURS(Gte_MulMatrix0), 3, {kAll, 0, 0}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gte_SetRotMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gte_SetTransMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0},
-    {S20_OURS(Gte_RotTransPers3), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S20_OURS(Gte_RotTransPers4), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
+    {S20_OURS(Gte_RotTransPers3), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {6, 6, 6}},
+    {S20_OURS(Gte_RotTransPers4), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {6, 6, 6, 6}},
     {S20_OURS(Gte_PrimDepths3_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gte_PrimDepths3_10C), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gte_PrimDepths4_0C), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
@@ -382,17 +385,6 @@ void Seed(unsigned k) {
 }  // namespace
 
 void SelfTest() {
-    // What the draws hand the matrix calls on their stack: the vector and
-    // the angles (six bytes each; the original leaves the pads unwritten).
-    mh::LogPointee(bof3::addr::Gte_RotTrans, 0, 6);
-    mh::LogPointee(bof3::addr::Gte_RotMatrix, 0, 6);
-    // The vertices each projection reads, as it is called.
-    for (unsigned arg = 0; arg < 3; ++arg) mh::LogPointee(bof3::addr::Gte_RotTransPers3, arg, 6);
-    for (unsigned arg = 0; arg < 4; ++arg) mh::LogPointee(bof3::addr::Gte_RotTransPers4, arg, 6);
-    // The three that answer something their callers read.
-    mh::LogReturn(bof3::addr::Magic087_PoolAlloc, 0xFF);
-    mh::LogReturn(bof3::addr::Magic088_Variant, 0xFF);
-    mh::LogReturn(bof3::addr::Magic092_PoolAlloc, 0xFF);
     const mh::Group group = {
         "magic_s20", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, nullptr, 2000,
