@@ -9,7 +9,6 @@
 // helpers' kinds 5..7 divide by zero. So this group passes Run an Extras: the
 // arguments per function, what of eax to compare, and the two acts.
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -129,7 +128,7 @@ unsigned g_out;          // Battle_ActorIsOut's answers, a bit per actor 0..10
 
 const mh::Region kRegions[] = {
     {kPacketNext, 4}, {kOrigin, 4}, {0x905B88, 4}, {0x8022C0, 0xA90}, {0x904B50, 0x40}, {0x939F80, 0x20},
-    {kPackets, 0x140}, {kStrip, kStripWords * 2}, {0x80B980, 0x200}, {Key(g_keys), sizeof g_keys},
+    {kPackets, 0x200}, {0x8C5652, 0x8C * 16}, {kStrip, kStripWords * 2}, {0x80B980, 0x200}, {Key(g_keys), sizeof g_keys},
 };
 
 // --- the acts --------------------------------------------------------------------
@@ -140,7 +139,24 @@ std::uint32_t VectorNormalAct(const std::uint32_t* a) {
     return static_cast<std::uint32_t>(::Gte_VectorNormalS(in, reinterpret_cast<short*>(static_cast<std::uintptr_t>(a[1]))));
 }
 std::uint32_t ActorIsOutAct(const std::uint32_t* a) { return 0x5A5A5A00u | ((g_out >> ((a[0] & 0xFF) % 11)) & 1u); }
-const mh::Act kActs[] = {{0x5A8C00, &VectorNormalAct}, {0x4456C0, &ActorIsOutAct}};
+// Gfx_CommitPrim moves the packet pointer on by the size, as the real one
+// does when the pool has room, so two primitives in a row land apart.
+std::uint32_t CommitAct(const std::uint32_t* a) {
+    unsigned char* const cell = mh::Mem(0x7E0670);
+    move_script::SetLong(cell, move_script::Long(cell) + static_cast<std::int32_t>(a[1] & 0xFF));
+    return 0;
+}
+// The buff roll: what it would read - the target byte, the result record
+// pointer and the stats copy - noted; the answer a flag from the stat.
+std::uint32_t BuffRollAct(const std::uint32_t* a) {
+    mh::Note(mh::Mem(0x904B54)[0], static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x904B60))),
+             static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x939F80))),
+             static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x939F9C))));
+    const std::uint32_t h = (a[0] & 0xFF) * 0x9E3779B1u + mh::Mem(0x904B54)[0];
+    return (h >> 9) % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
+}
+const mh::Act kActs[] = {{0x5A8C00, &VectorNormalAct}, {0x4456C0, &ActorIsOutAct}, {0x461E50, &CommitAct},
+                         {0x44FC10, &BuffRollAct}};
 
 // --- the seed ---------------------------------------------------------------------
 
@@ -212,6 +228,8 @@ void Seed(unsigned k) {
         g_args[1] = (g_args[1] & 0xFFFFFF00u) | mh::Next() % 11;
         break;
     case kPopup:
+        // bit 6 of the target: who is an enemy
+        mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Half() ? mh::Next() % 11 : 0x40 | mh::Next());
         break;
     case kLink: {
         // the depth near its bounds half the time, the pool's end near the
@@ -294,12 +312,17 @@ void Seed(unsigned k) {
     }
     case kCenter: {
         mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(MH_PICK(0, 1, 2, 0x40, 0x43, 0x80, 0x81, 0xC0, 0xC3, 0x7F));
+        // at most one of the party out and two enemies standing: every one
+        // out is a division by zero (both sides), and this leaves a control
+        // that drops one actor a count, not an abort
         do g_out = mh::Next() & 0x7FF;
-        while ((g_out & 7) == 7 || (g_out >> 3) == 0xFF);
+        while (__builtin_popcount(g_out & 7) > 1 || __builtin_popcount(g_out >> 3) > 6);
         break;
     }
     case kSizeB:
         mh::Mem(mh::at::kActor)[0] = static_cast<unsigned char>(mh::Next() % 11);
+        // the enemy's type among the first 16 rows of its table (a region)
+        for (unsigned e = 0; e < 8; ++e) mh::EnemyOf(static_cast<unsigned char>(e + 3))[0xF0] = static_cast<unsigned char>(mh::Next() % 16);
         if (mh::Often()) mh::Mem(0x904B89)[0] = static_cast<unsigned char>(mh::Next() % 28);
         break;
     case kFormation:
@@ -328,19 +351,9 @@ void Disturb(std::uint32_t h) {
     }
 }
 
-unsigned g_only = 0xFFFF;   // DEBUG
-void SeedOnly(unsigned k) { Seed(g_only); (void)k; }
-void ArgsOnly(unsigned, std::uint32_t* a) { Args(g_only, a); }
 }  // namespace
+
 void SelfTest() {
-    if (const char* e = std::getenv("MLIB_ONLY")) {
-        g_only = static_cast<unsigned>(std::atoi(e));
-        const mh::Group group = {"magic_lib", kClones + g_only, 1, kCallees, sizeof kCallees / sizeof kCallees[0], nullptr, 0,
-            kRegions, sizeof kRegions / sizeof kRegions[0], &SeedOnly, &Disturb, 2000};
-        const mh::Extras extras = {&ArgsOnly, kReturns + g_only, kActs, sizeof kActs / sizeof kActs[0]};
-        mh::Run(group, extras);
-        return;
-    }
     const mh::Group group = {
         "magic_lib", kClones, kCount, kCallees, sizeof kCallees / sizeof kCallees[0], nullptr, 0,
         kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000,

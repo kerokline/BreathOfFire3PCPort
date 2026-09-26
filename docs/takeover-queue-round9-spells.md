@@ -67,13 +67,15 @@ immediates - the stack tables -, `.data` handler tables, and
 
 **Two things in the band that are not a spell's:**
 
-- **the effect library**, `0x4FAF90..0x4FC32F` (35 functions, 9 ours):
+- **the effect library**, `0x4FAFF0..0x4FC32F` (34 functions, 9 ours;
+  taken by group L, [`magic_lib.md`](magic_lib.md)):
   after MAGIC226/227 and before MAGIC080, called by up to 94 overlays -
   `BattleActor_SetAnimation`, `_UpdateScreenXY`, `_Flash`, `_PlaySound`,
   `_FxSize`, the backdrop dim `FxDim_*`, a slot allocator for `0x6BAD60`.
-  Its data follows MAGIC226's. Its first function, `0x4FAF90`, could be
-  MAGIC226's last (a pool allocator with no overlay data, reached by 225,
-  226, 227): the only boundary here decided by judgement;
+  Its data follows MAGIC226's. `0x4FAF90` before it, first given to the
+  library, is **MAGIC226/227's last** (settled by group L,
+  [`magic_lib.md`](magic_lib.md) section 1: MAGIC225 ends with the same
+  allocator for its own pool, and the two pools are consecutive `.bss`);
 - **four `MapCell_Handlers` entries** and their helper, `0x4CEB40`,
   `0x4CED60`, `0x4CEFC0`, `0x4CF270`, `0x4CF4B0`, between MAGIC102 and
   MAGIC103: field map-cell draws (entries 40..43 of the 77 at `0x663008`,
@@ -88,8 +90,8 @@ is reached from 44). Taking one takes it for every overlay that reaches it;
 the harness keys on the address, so nothing else changes.
 
 **How sure.** The unit boundaries are as sure as the reach: every one is
-confirmed by a function its own file reaches on each side, except the
-library's first function (above). The PSX catalogue's function counts
+confirmed by a function its own file reaches on each side; the library's
+first boundary was settled by reading (above). The PSX catalogue's function counts
 (`overlay_catalog.json`) are consistently about half the PC's: the PC
 counts every stack-table phase, the catalogue's roots miss most.
 
@@ -197,7 +199,7 @@ ours; bytes their own.
 | C2 | 129, 057, 081, 116 | 59, 84, 85, 145 | Holocaust, Bone Dance, RottenBreath, UtmostAttack | 64 | 9,622 |
 | C3 | 002, 111 | 2, 119 | - (no ability loads them) | 20 | 4,243 |
 | E | engine: `0x4378D0`, `0x4525F0`, `0x43F3B0`, `0x43FC80` and their phases, `0x43FE90` | 0, 108, 123, 126, 128 | Restore Form, Paralyzer, Head Cracker, (no label) | 22 | ~1,500 |
-| L **1** | the effect library | - | - | 26 | 3,986 |
+| L **1** | the effect library | - | - | 25 | 3,899 |
 | S01 | 001 | 1, 105 | Nue Stomp, Jump | 26 | 3,275 |
 | S02 | 003, 004 (with 005, 029, 049, 133..136, 156, 157 folded) | 3, 88, 92, 93, 98..100, 129..132 | Super Combo, ThundrStrike, Holy Strike, Demonbane, Flame Strike, Pyrokinesis, Frost Strike, Wind Strike, Flame Claw, Frost Claw, Thunder Claw, Shining Claw | 48 | 6,774 |
 | S03 | 006, 009, 012 | 51, 71, 109 | Mind Sword, Chlorine, Blitz | 44 | 9,184 |
@@ -235,7 +237,7 @@ ours; bytes their own.
 | S35 | 167, 168, 169 | 91, 97, 117 | Last Resort, Cure, Benediction | 46 | 9,873 |
 | S36 | 172, 173, 218 | 23, 34, 142 | Magic Ball, Intimidate, Aura Breath | 45 | 12,729 |
 | S37 | 219, 220/221, 222 | 133, 136, 138, 146 | Magma Breath, Geo Breath, Gaea's Breath, Combustion | 60 | 10,889 |
-| S38 | 223, 225, 226/227 | 135, 137, 140, 147 | Tempest, Hurricane, (no label), MeteorStrike | 53 | 10,131 |
+| S38 | 223, 225, 226/227 | 135, 137, 140, 147 | Tempest, Hurricane, (no label), MeteorStrike | 54 | 10,218 |
 
 43 groups, 2,034 functions with group E. Rows already whole ours and in no
 group: 21 (MAGIC091, Flare), 44 (MAGIC070, Heal), 87 (MAGIC216, Steal);

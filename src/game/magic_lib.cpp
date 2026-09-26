@@ -447,9 +447,9 @@ MLIB_EXPORT void __cdecl SpriteClut_ClearEntry31(const unsigned char* s) {
 }
 
 // original 0x4FBF50: the record's CLUT, count entries (as SpriteClut_SetStp),
-// copied word by word upward to the strip's row 2 (0x80F980) - overlapping
-// cells copy as the loop does, not as memmove; Gfx_ClutStripDirty 1; the
-// kind's divisor * 2 answered.
+// copied word by word upward to the strip's row 2 (0x80F980), as the loop
+// does (kinds 0..4's cells tile the strip, so a source never half-overlaps
+// row 2); Gfx_ClutStripDirty 1; the kind's divisor * 2 answered.
 MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
     const unsigned cell = ClutCell(s, "SpriteClut_CopyToFxRow");
     for (unsigned i = 0; i < SpriteClut_Counts[s[0x28]] * 16u; ++i)

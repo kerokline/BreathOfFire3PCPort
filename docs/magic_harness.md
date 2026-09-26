@@ -110,9 +110,20 @@ the worked example: 110 lines of group file for three functions, most of it the 
 `Inventory_Add`, `Msg_SystemPtr`, `BattleQueue_Push`, `Rand` and
 `0x4B58F0`. Each is written `MH_OURS(name)` or `MH_THEIRS(name)`; a callee
 that changes hands (a later round takes `Rand`) fails at start-up with a
-line saying so, and moves column. The effect library at `0x4FAF90..0x4FC32F`
-(queue group L) is mostly not here yet: when L is taken, its functions join
-the standard set, and until then a group lists what it calls of it.
+line saying so, and moves column. The effect library (`0x4FAFF0..0x4FC32F`,
+queue group L, [`magic_lib.md`](magic_lib.md)) has joined it: the seventeen
+functions an overlay calls, by name. A group written while they were
+Capcom's calls them by address (`MH_AT`); `StandIn` finds a stand-in by the
+original's address as well as by the pointer ours passes, and the group's own
+listing of the callee is ignored (the first registration stands).
+
+**For functions that take arguments** (group L's; [`magic_lib.md`](magic_lib.md)
+section 4): `Run(group, Extras)` adds the arguments per function (eight
+words, the same on both passes), what of eax to compare, and `Act`s - a
+callee's recorder that computes its answer (and may write through its
+arguments and `Note` what it read). Stand-ins take and log eight arguments
+(`Callee::masks[8]`). The disturbance leaves the target enemy's record alone
+when the target byte is 11 or more (a side flag has no record).
 
 ## 5. What it cannot do
 
