@@ -186,9 +186,8 @@ C1_EXPORT void __cdecl WhiteFlag_Task(void) {
 // original 0x49DF30: the source sprite's tints released and a tint (0, 0, 0,
 // 1) set on it, its record kept in +0xB; +9 0; +1 on.
 C1_EXPORT void __cdecl WhiteFlag_TintSource(void) {
-    unsigned char* const s0 = Source();
-    MH_CALL(Sprite_ReleaseTint)(s0);
-    const unsigned char tint = MH_CALL(Sprite_SetTint)(s0, 0, 0, 0, 1);
+    MH_CALL(Sprite_ReleaseTint)(Source());
+    const unsigned char tint = MH_CALL(Sprite_SetTint)(Source(), 0, 0, 0, 1);
     Sc()[0xB] = tint;
     Sc()[9] = 0;
     Inc(Sc()[1]);
