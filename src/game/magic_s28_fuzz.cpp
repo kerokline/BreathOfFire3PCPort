@@ -271,11 +271,11 @@ void SeedAlloc(std::uint32_t pool, unsigned n) {
 }
 // A screen coordinate at or either side of the bounds BreathMote_Fly tests.
 void SetCoord(unsigned char* at, unsigned bound) {
-    const std::uint32_t pick = mh::Next() % 8;
+    const std::uint32_t pick = mh::Next() % 10;
     static const int kNear[] = {-1, 0, 1};
     if (pick < 3) SetWord(at, static_cast<unsigned>(kNear[pick]));
     else if (pick < 6) SetWord(at, bound + kNear[pick - 3]);
-    else if (pick == 6) SetWord(at, 1 + mh::Next() % (bound - 1));
+    else if (pick < 9) SetWord(at, 1 + mh::Next() % (bound - 1));
 }
 
 void Seed(unsigned k) {
@@ -324,6 +324,9 @@ void Seed(unsigned k) {
         sc[3] = static_cast<unsigned char>(mh::Next() % 8);
         sc[0xA] = Near(sc[3] + 6u);
         sc[9] = Near(1);
+        // a speed that leaves the point where it was placed, often: the bounds
+        // tested after the move are the seed's
+        if (mh::Often()) SetLong(sc + 0xC, static_cast<std::int32_t>(mh::Next() % 4));
         SetCoord(sc + 0x2E, 0x140);
         SetCoord(sc + 0x30, 0xF0);
         break;
