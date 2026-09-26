@@ -120,6 +120,7 @@
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
 #include "game/magic_lib.h"
+#include "game/magic_s16.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -317,6 +318,10 @@ void InjectAll() {
     MagicLib_Inject();          // round 9 group L (the effect library): its clones' calls and the popup tasks'
                                 // stack-table immediates re-aimed at the shared harness's recorders; no module
                                 // patches bytes inside its 25: order does not matter
+    MagicS16_Inject();          // round 9 group S16 (MAGIC071..074): its clones' calls, stack-table immediates and
+                                // four .data dispatch cells re-aimed at the harness's recorders; no module patches
+                                // bytes inside its sixty (DIV-0046's masks are Pilfer's and Steal's): order does
+                                // not matter
     InjectReport();
 }
 
