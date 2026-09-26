@@ -333,7 +333,7 @@ void Seed(unsigned k) {
         break;
     case kDivineBeam_Descend: Near(sc[0xA], 1); break;
     case kDivineBurst_Shrink: {
-        const std::uint32_t step = MH_PICK(1, 2, 3, 0x21, 0x40);
+        const std::uint32_t step = MH_PICK(1, 2, 3, 0x21, 0x40, 0, 0xFFFFFFFFu, 0xFFFFFFFEu);
         SetLong(sc + 0x20, static_cast<std::int32_t>(step));
         const std::uint32_t taken = step == 1 ? 1 : step - 2;
         if (mh::Often()) SetLong(sc + 0x14, static_cast<std::int32_t>(0x30 + taken - 1 + mh::Next() % 3));
