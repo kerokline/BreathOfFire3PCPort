@@ -150,6 +150,28 @@ struct Group {
 // for g.rounds rounds, logs the counts, and is a Fatal on any difference.
 void Run(const Group& g);
 
+// A recorder the group writes itself, for a callee the pool's cannot stand in
+// for: more than four arguments, pointers into the caller's frame (a GTE
+// call's outputs), results written through a pointer, an answer the pool's
+// kinds lack, or a callee that must not disturb (a pure one - Math_Sin, a
+// GTE or GPU primitive call - that the originals read memory again after only
+// because nothing changes it). `stand_in` has the callee's own signature and
+// logs through Note; `key` and `address` are as in Callee. Registered before
+// the standard set, so it replaces a standard callee's recorder too.
+struct Custom {
+    const char* name;
+    std::uint32_t address, key;
+    const void* stand_in;
+};
+void Run(const Group& g, const Custom* customs, unsigned n_customs);
+
+// For a Custom's recorder: log a call to the stand-in at `address` (the
+// coverage line counts it), the recorders' own stream (the same on both
+// passes, a new value each log entry), and the pool recorders' disturbance.
+void Note(std::uint32_t address, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0);
+std::uint32_t Salt();
+void Stir();
+
 // --- seeding helpers, for Seed and Disturb -------------------------------------
 
 std::uint32_t Next();

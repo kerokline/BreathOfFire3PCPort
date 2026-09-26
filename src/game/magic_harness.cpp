@@ -106,7 +106,9 @@ void Disturb() {
         break;
     }
     case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+        // only a target byte that names an actor (0..10): a group's seed may
+        // set the side bits 0x40 / 0x80 its effects test
+        if (Mem(at::kTarget)[0] < 11) TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
@@ -127,6 +129,7 @@ struct Slot {
     std::uint8_t lo, hi;
     bool handler;            // a phase: logs the slot's phase bytes, answers nothing
     unsigned calls;          // the original's side, for the coverage line
+    const void* custom;      // a group's own recorder (Custom), or null for the pool's
 };
 constexpr unsigned kSlots = 160;
 Slot g_slots[kSlots];
@@ -238,18 +241,35 @@ void Register(const Callee& c) {
         if (g_slots[i].address == c.address) return;   // listed twice: the first stands
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0};
+    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0,
+         nullptr};
+}
+// A group's own recorder: registered before the standard set, so it stands
+// in for a standard callee too.
+void RegisterCustom(const Custom& c) {
+    if (c.key == c.address) {
+        if (c.key < kImageLo || c.key >= kImageHi)
+            bof3::Fatal("magic_harness: callee %s at 0x%X is not Capcom's code", c.name, (unsigned)c.key);
+    } else if (c.key >= kImageLo && c.key < kImageHi) {
+        bof3::Fatal("magic_harness: callee %s is Capcom's now (0x%X): list it as such", c.name, (unsigned)c.key);
+    }
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == c.address) bof3::Fatal("magic_harness: %s listed twice", c.name);
+    if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
+    Slot& s = g_slots[g_slot_n++];
+    s = {c.name, c.address, c.key, 0, {}, Answer::kGarbage, 0, 0, false, 0, c.stand_in};
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return;
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0};
+    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0, nullptr};
 }
 const void* StubFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].address == address) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].address == address)
+            return g_slots[i].custom ? g_slots[i].custom : reinterpret_cast<const void*>(kStubs.f[i]);
     bof3::Fatal("magic_harness: %s calls 0x%X, which no stand-in covers: list it in the group's callees", who,
                 (unsigned)address);
 }
@@ -367,14 +387,29 @@ void SetRandFirst(int first) { g_rand_first = first; }
 
 const void* StandIn(std::uint32_t key) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].key == key) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].key == key)
+            return g_slots[i].custom ? g_slots[i].custom : reinterpret_cast<const void*>(kStubs.f[i]);
     bof3::Fatal("magic_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
 }
 
-void Run(const Group& group) {
+std::uint32_t Salt() { return Hash(); }
+void Stir() { Disturb(); }
+void Note(std::uint32_t address, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) {
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == address) {
+            Log5(i, a, b, c, d);
+            return;
+        }
+    bof3::Fatal("magic_harness: Note for 0x%X, which no stand-in covers", (unsigned)address);
+}
+
+void Run(const Group& group) { Run(group, nullptr, 0); }
+
+void Run(const Group& group, const Custom* customs, unsigned n_customs) {
     const unsigned per = group.rounds ? group.rounds : 2000;
     g_group = &group;
     g_slot_n = 0;
+    for (unsigned i = 0; i < n_customs; ++i) RegisterCustom(customs[i]);
     for (const Callee& c : kStandard) Register(c);
     for (unsigned i = 0; i < group.n_callees; ++i) Register(group.callees[i]);
     for (unsigned k = 0; k < group.n_clones; ++k)
@@ -489,9 +524,19 @@ void Run(const Group& group) {
     bof3::Log("shadow      %s self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, %u MISMATCHES; "
               "%u bytes of state (%u regions) and the stand-ins' log compared",
               group.shadow, per * group.n_clones, group.n_clones, per, calls, bad, g_bytes, g_region_n);
+    // on as many lines as it takes (the log's line is 1,024 bytes)
     char line[900];
     unsigned n = 0;
-    for (unsigned i = 0; i < g_slot_n && n + 64 < sizeof line; ++i) {
+    bool first = true;
+    for (unsigned i = 0; i <= g_slot_n; ++i) {
+        if (i == g_slot_n || n + 64 >= sizeof line) {
+            if (n || (first && i == g_slot_n))
+                bof3::Log("shadow      %s coverage (calls the originals made)%s: %s", group.shadow, first ? "" : ", cont.",
+                          n ? line : "none");
+            if (n) first = false;
+            n = 0;
+            if (i == g_slot_n) break;
+        }
         if (g_slots[i].calls == 0) continue;
         const int w = g_slots[i].handler
                           ? std::snprintf(line + n, sizeof line - n, "%sphase 0x%X %u", n ? ", " : "",
@@ -500,7 +545,6 @@ void Run(const Group& group) {
                                           g_slots[i].calls);
         if (w > 0) n += static_cast<unsigned>(w);
     }
-    bof3::Log("shadow      %s coverage (calls the originals made): %s", group.shadow, n ? line : "none");
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);
