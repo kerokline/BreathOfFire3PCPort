@@ -1,0 +1,148 @@
+# tables.toml — the table catalog: where each game table lives in each build,
+# and what its fields mean.
+#
+# Schema only. No value from any table goes in this file, or anywhere else in
+# the repository (CLAUDE.md rule 1): `tools/tables.py dump` reads the values
+# out of the player's own BOF3.exe or disc, to the terminal or to analysis/.
+# Why a catalog of tables and not of items: docs/ASSET_SOURCES.md section 5,
+# docs/exe-table-audit.md section 5.
+#
+#   [[table]]         one table
+#     key             short name for the command line
+#     symbol          its symbols.toml [[data]] name, which holds the PC address
+#     group           items | ...
+#     what, index     what a record is, and what indexes the table
+#     count, stride   records, and bytes per record, in the PC build
+#     name            { at } - a 16-byte name field at that offset in the PC
+#                     record. On a disc it is narrower ([meta] name_len), and
+#                     every field after it moves up by the difference.
+#     find_in         the disc file a build with no recorded address is
+#                     searched in, by the PC table's numeric bytes
+#     [[table.psx]]   a recorded disc address: build (fixtures.toml id),
+#                     file, addr (the PSX load address), status, cite
+#     [[table.field]] at (PC offset), type, name, meaning, status, cite;
+#                     `overlaps = true` when two views of the same bytes are
+#                     both worth naming
+#
+# status is the evidence tier (docs/README.md): evidence = read in the code
+# and cited, hypothesis = inferred, unknown = nobody has read it.
+#
+# tools/tables.py check validates this file against symbols.toml and
+# fixtures.toml; CI runs it.
+
+[meta]
+updated = 2026-09-26
+# The name field's width by build. The PC's 16 is the JP disc's 8 widened;
+# the Western discs have 12 (loc_build.py NAME_TABLES, measured 2026-09-20).
+name_len = { "pc-zh" = 16, japanese = 8, western = 12 }
+
+# ---------------------------------------------------------------------------
+# Items and abilities
+#
+# The five item tables chain in .data: consumables + 92 * 22 = key items;
+# + 16 * 20 = weapons; + 83 * 28 + 4 = armour; + 68 * 26 = accessories
+# (symbols.toml, NameTable_Consumables). Every numeric byte equals the JP
+# disc's, 534 of 534 records (loc_build.py, 2026-09-20).
+# ---------------------------------------------------------------------------
+
+[[table]]
+key = "consumables"
+symbol = "NameTable_Consumables"
+group = "items"
+what = "a consumable item"
+index = "item id, category 0; key items read this table too (docs/char-stats.md section 4)"
+count = 92
+stride = 22
+name = { at = 0 }
+find_in = "GAME.EMI"
+[[table.psx]]
+build = "psx-jp"
+file = "GAME.EMI"
+addr = 0x801C995C
+status = "evidence"
+cite = "symbols.toml NameTable_Consumables psx; found by the JP disc's price sequence, 2026-09-20"
+
+[[table]]
+key = "key_items"
+symbol = "NameTable_KeyItems"
+group = "items"
+what = "a key item"
+index = "item id, category 4"
+count = 16
+stride = 20
+name = { at = 0 }
+find_in = "GAME.EMI"
+[[table.psx]]
+build = "psx-jp"
+file = "GAME.EMI"
+addr = 0x801C9E64
+status = "evidence"
+cite = "symbols.toml NameTable_KeyItems psx"
+
+[[table]]
+key = "weapons"
+symbol = "NameTable_Weapons"
+group = "items"
+what = "a weapon"
+index = "item id, category 1"
+count = 83
+stride = 28
+name = { at = 0 }
+find_in = "GAME.EMI"
+[[table.psx]]
+build = "psx-jp"
+file = "GAME.EMI"
+addr = 0x801C9F24
+status = "evidence"
+cite = "symbols.toml NameTable_Weapons psx"
+
+[[table]]
+key = "armour"
+symbol = "NameTable_Armour"
+group = "items"
+what = "an armour, shield or helmet"
+index = "item id, category 2"
+count = 68
+stride = 26
+name = { at = 0 }
+find_in = "GAME.EMI"
+[[table.psx]]
+build = "psx-jp"
+file = "GAME.EMI"
+addr = 0x801CA5A0
+status = "evidence"
+cite = "symbols.toml NameTable_Armour psx"
+
+[[table]]
+key = "accessories"
+symbol = "NameTable_Accessories"
+group = "items"
+what = "an accessory"
+index = "item id, category 3"
+count = 52
+stride = 24
+name = { at = 0 }
+find_in = "GAME.EMI"
+[[table.psx]]
+build = "psx-jp"
+file = "GAME.EMI"
+addr = 0x801CAA68
+status = "evidence"
+cite = "symbols.toml NameTable_Accessories psx"
+
+[[table]]
+key = "abilities"
+symbol = "NameTable_Abilities"
+group = "items"
+what = "an ability: eight parameter bytes, then the name"
+index = "ability id"
+count = 227
+stride = 24
+name = { at = 8 }
+find_in = "GAME.EMI"
+[[table.psx]]
+build = "psx-jp"
+file = "GAME.EMI"
+addr = 0x801CB230
+status = "evidence"
+cite = "symbols.toml NameTable_Abilities psx; JP stride 16, US 20"
