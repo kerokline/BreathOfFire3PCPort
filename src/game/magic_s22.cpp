@@ -14,8 +14,8 @@
 //     of kind-1 task 0x0C in three kinds - a bolt, four orbs, four rings.
 //
 // Every call goes through the harness (MH_CALL / MH_AT / Phase), so the
-// start-up fuzz can stand recorders in for ours as for the originals' copies,
-// except in the three functions magic_s22.h's Hooks cover. No divergence:
+// start-up fuzz can stand recorders in for ours as for the originals' copies.
+// No divergence:
 // each is a faithful replacement, except that a phase past a task's table
 // aborts where the original would call through whatever follows it
 // (docs/magic_fx_reached.md section 3, the precedent), and the targets' centre
@@ -31,21 +31,6 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-
-namespace magic_s22 {
-
-const Hooks kHooks = {
-    Gte_PushMatrix,
-    reinterpret_cast<void (__cdecl*)(const short*, long*, long*)>(reinterpret_cast<void*>(&::Gte_RotTrans)),
-    Gte_RotMatrix,
-    Gte_MulMatrix0,
-    Gte_SetRotMatrix,
-    Gte_SetTransMatrix,
-    Battle_ActorIsOut,
-};
-Hooks g_hooks = kHooks;
-
-}  // namespace magic_s22
 
 namespace {
 
@@ -313,8 +298,7 @@ namespace {
 // translation at +0x14. The rotation is the task's tilt (+0x18, +0x1C as
 // shorts, 0) or (0, 0, 0x200); the task is read after the push.
 void PushTaskMatrix(bool tilt) {
-    const magic_s22::Hooks& g = magic_s22::g_hooks;
-    g.push_matrix();
+    MH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sc();
     const short rot[4] = {tilt ? S16(s + 0x18) : short{0}, tilt ? S16(s + 0x1C) : short{0}, tilt ? short{0} : short{0x200},
                           0};
@@ -329,11 +313,14 @@ void PushTaskMatrix(bool tilt) {
     } m;
     static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
     long flag;
-    g.rot_trans(v, m.t, &flag);
-    g.rot_matrix(rot, m.m);
-    g.mul_matrix0(Camera_Matrix, m.m, m.m);
-    g.set_rot(reinterpret_cast<const unsigned long*>(&m));
-    g.set_trans(reinterpret_cast<const unsigned long*>(&m));
+    // The original pushes a third argument (the flag) to Gte_RotTrans, which
+    // takes two (cdecl: the caller pops it).
+    using RotTransFn = void (__cdecl*)(const short*, long*, long*);
+    S22_AS(RotTransFn, Gte_RotTrans)(v, m.t, &flag);
+    MH_CALL(Gte_RotMatrix)(rot, m.m);
+    MH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);
+    MH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
+    MH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
 }
 
 }  // namespace
@@ -555,7 +542,6 @@ S22_EXPORT void __cdecl BlizzardShard_DrawRing(void) {
 // the average height. Every actor out divides by zero in the original: ours
 // aborts there (docs/magic_s22.md section 6).
 S22_EXPORT void __cdecl Blizzard_CenterOnTargets(void) {
-    const magic_s22::Hooks& g = magic_s22::g_hooks;
     const bool enemies = (TargetByte() & 0x40) != 0;
     SetSD(0xC, 0);
     SetSD(8, 0);
@@ -563,7 +549,7 @@ S22_EXPORT void __cdecl Blizzard_CenterOnTargets(void) {
     SetSD(0, 0);
     const unsigned n = enemies ? 8 : 3;
     for (unsigned i = 0; i < n; ++i) {
-        if (g.is_out(enemies ? i + 3 : i) != 0) continue;
+        if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
         const unsigned char* const r = enemies ? EnemyRecord(i) : PartyRecord(i);
         SetSD(0, static_cast<std::uint32_t>(SD(0)) + static_cast<std::uint32_t>(Long(r + 0x34) >> 9) - 0x4000u);
         SetSD(4, static_cast<std::uint32_t>(SD(4)) + static_cast<std::uint32_t>(Long(r + 0x38) >> 9) - 0x4000u);

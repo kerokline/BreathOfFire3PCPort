@@ -13,21 +13,4 @@ namespace magic_s22 {
 // original before MagicS22_Inject patches it.
 void SelfTest();
 
-// The callees of the three functions the shared harness cannot compare
-// (magic_s22_fuzz.cpp says why): the two actor-matrix pushes, whose GTE
-// callees take the vectors by pointer, and the targets' centre, whose
-// Battle_ActorIsOut answers decide a divisor. In the game these are the
-// callees themselves; their own fuzz points them at recorders.
-struct Hooks {
-    void (__cdecl* push_matrix)();
-    void (__cdecl* rot_trans)(const short* v, long* t, long* flag);
-    short* (__cdecl* rot_matrix)(const short* angles, short* m);
-    short* (__cdecl* mul_matrix0)(const short* a, const short* b, short* out);
-    void (__cdecl* set_rot)(const unsigned long* m);
-    void (__cdecl* set_trans)(const unsigned long* m);
-    unsigned char (__cdecl* is_out)(unsigned actor);
-};
-extern Hooks g_hooks;
-extern const Hooks kHooks;
-
 }  // namespace magic_s22

@@ -1,22 +1,19 @@
 // BOF3X_SHADOW=magic_s22: group S22's four overlays (MAGIC096..099) through
-// the spell round's shared harness (magic_harness.h), once at start-up, and
-// three functions through a fuzz of their own. docs/magic_s22.md section 5.
+// the spell round's shared harness (magic_harness.h), once at start-up.
+// docs/magic_s22.md section 5.
 //
 // The clone table is tools/magic_rows.py --unit MAGIC096..099 --clones
 // (2026-09-25; capstone, every jump internal but the jump table of
-// BlizzardShard_Launch, which the harness moves into the copy), less the three
-// the harness cannot compare:
+// BlizzardShard_Launch, which the harness moves into the copy), names given.
+// Two needs beyond the standard set, both through the harness's fields:
 //
-//   - BlizzardShard_PushMatrix 0x4C91E0 and LightningBolt_PushMatrix 0x4CAE30
-//     hand their vectors to the GTE by pointer - the harness logs arguments,
-//     not what they point at, so a wrong vector would pass;
-//   - Blizzard_CenterOnTargets 0x4C9AF0 divides by the count of the actors
-//     Battle_ActorIsOut says are in, and the harness's recorder answers
-//     "out" for every one of them often enough to fault both sides.
-//
-// Those three run below (SelfTestOwn) with recorders of this file's that read
-// the vectors and answer from a mask with one actor in, reached from ours
-// through magic_s22::g_hooks.
+//   - the two matrix pushes (0x4C91E0, 0x4CAE30) hand their vectors to the
+//     GTE by pointer: `deref` logs what they point at, and an `effect` on
+//     each GTE callee writes a result where the real one writes, so what
+//     reaches the next call is compared too;
+//   - Blizzard_CenterOnTargets (0x4C9AF0) divides by the count of the actors
+//     Battle_ActorIsOut says are in: its `effect` keeps one actor of each
+//     side in (chosen by the seed), so no round divides by zero.
 #include <cstdint>
 #include <cstring>
 
@@ -44,6 +41,9 @@ constexpr mh::CallSite kCalls4C8E90[] = {{0x4B, 0x4C91E0}, {0x50, 0x4C9290}, {0x
 constexpr mh::Imm kImms4C8E90[] = {{0xF, 0x4C8F10}, {0x17, 0x4C9170}, {0x22, 0x4C2D90}, {0x2A, 0x4E47F0}, {0x32, 0x4C91B0}};
 constexpr mh::CallSite kCalls4C8F10[] = {{0x57, 0x446770}, {0xBE, 0x5B93D2}, {0xD8, 0x5B93D2}, {0xE9, 0x5B93D2}, {0x101, 0x5B93D2}, {0x11E, 0x5B93D2}, {0x136, 0x5B93D2}, {0x147, 0x5B93D2}, {0x15F, 0x5B93D2}, {0x17C, 0x5B93D2}, {0x189, 0x5B93D2}, {0x1A9, 0x5B93D2}, {0x1BA, 0x5B93D2}, {0x1D2, 0x5B93D2}, {0x1EF, 0x5B93D2}, {0x1F8, 0x5B93D2}};
 constexpr mh::JumpTable kTables4C8F10[] = {{0xB0, 0x248, 4}};
+constexpr mh::CallSite kCalls4C91E0[] = {{0x3, 0x5A7B90}, {0x67, 0x5A8200}, {0x76, 0x5A8060}, {0x8A, 0x5A7D70}, {0x94, 0x5A8DE0}, {0x9E, 0x5A8E00}};
+constexpr mh::CallSite kCalls4C9AF0[] = {{0x30, 0x4456C0}, {0xA5, 0x4456C0}};
+constexpr mh::CallSite kCalls4CAE30[] = {{0x3, 0x5A7B90}, {0x61, 0x5A8200}, {0x70, 0x5A8060}, {0x84, 0x5A7D70}, {0x8E, 0x5A8DE0}, {0x98, 0x5A8E00}};
 constexpr mh::CallSite kCalls4C91B0[] = {{0x21, 0x4351F0}};
 constexpr mh::CallSite kCalls4C9290[] = {{0x88, 0x5A7A00}, {0xA1, 0x5A7A50}, {0xD1, 0x5A7A00}, {0xEA, 0x5A7A50}, {0x144, 0x5A77C0}, {0x14E, 0x572FA0}, {0x15A, 0x5A7590}, {0x16C, 0x5A79A0}, {0x17E, 0x5A79E0}, {0x1D1, 0x5A84A0}, {0x1D7, 0x5A9200}, {0x20D, 0x572FA0}, {0x267, 0x5A7A00}, {0x283, 0x5A7A50}, {0x2A9, 0x5A7A00}, {0x2C2, 0x5A7A50}, {0x313, 0x5A77C0}, {0x31D, 0x572FA0}, {0x329, 0x5A75D0}, {0x33C, 0x5A79A0}, {0x34F, 0x5A79E0}, {0x3A6, 0x5A85F0}, {0x3AC, 0x5A9290}, {0x3D1, 0x572FA0}};
 constexpr mh::CallSite kCalls4C96A0[] = {{0x14, 0x5A77C0}, {0x2A, 0x572FA0}, {0x78, 0x5A7A00}, {0x91, 0x5A7A50}, {0xCD, 0x5A75F0}, {0xD5, 0x5A7780}, {0x103, 0x5A7A00}, {0x11C, 0x5A7A50}, {0x159, 0x5A84A0}, {0x15F, 0x5A9310}, {0x1C3, 0x572FA0}};
@@ -93,9 +93,11 @@ const mh::Clone kClones[] = {
     {"BlizzardShard_Launch", 0x4C8F10, 0x258, kCalls4C8F10, MH_N(kCalls4C8F10), nullptr, 0, kTables4C8F10, MH_N(kTables4C8F10), reinterpret_cast<const void*>(&::BlizzardShard_Launch)},
     {"BlizzardShard_Grow", 0x4C9170, 0x39, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::BlizzardShard_Grow)},
     {"BlizzardShard_End", 0x4C91B0, 0x27, kCalls4C91B0, MH_N(kCalls4C91B0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::BlizzardShard_End)},
+    {"BlizzardShard_PushMatrix", 0x4C91E0, 0xA7, kCalls4C91E0, MH_N(kCalls4C91E0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::BlizzardShard_PushMatrix)},
     {"BlizzardShard_DrawCrystal", 0x4C9290, 0x406, kCalls4C9290, MH_N(kCalls4C9290), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::BlizzardShard_DrawCrystal)},
     {"BlizzardShard_DrawFan", 0x4C96A0, 0x1E4, kCalls4C96A0, MH_N(kCalls4C96A0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::BlizzardShard_DrawFan)},
     {"BlizzardShard_DrawRing", 0x4C9890, 0x25E, kCalls4C9890, MH_N(kCalls4C9890), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::BlizzardShard_DrawRing)},
+    {"Blizzard_CenterOnTargets", 0x4C9AF0, 0x164, kCalls4C9AF0, MH_N(kCalls4C9AF0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Blizzard_CenterOnTargets)},
     {"Jolt_Task", 0x4C9C60, 0x26, nullptr, 0, kImms4C9C60, MH_N(kImms4C9C60), nullptr, 0, reinterpret_cast<const void*>(&::Jolt_Task)},
     {"Jolt_Start", 0x4C9C90, 0x19A, kCalls4C9C90, MH_N(kCalls4C9C90), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Jolt_Start)},
     {"JoltBolt_Task", 0x4C9E30, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::JoltBolt_Task)},
@@ -112,6 +114,7 @@ const mh::Clone kClones[] = {
     {"LightningBolt_Run", 0x4CAC60, 0xAA, kCalls4CAC60, MH_N(kCalls4CAC60), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_Run)},
     {"LightningBolt_Wait", 0x4CAD10, 0x45, kCalls4CAD10, MH_N(kCalls4CAD10), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_Wait)},
     {"LightningBolt_Rise", 0x4CAD60, 0xC1, kCalls4CAD60, MH_N(kCalls4CAD60), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_Rise)},
+    {"LightningBolt_PushMatrix", 0x4CAE30, 0xA1, kCalls4CAE30, MH_N(kCalls4CAE30), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_PushMatrix)},
     {"LightningBolt_DrawBand", 0x4CAEE0, 0x606, kCalls4CAEE0, MH_N(kCalls4CAEE0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_DrawBand)},
     {"LightningBolt_DrawArcs", 0x4CB4F0, 0x1E9, kCalls4CB4F0, MH_N(kCalls4CB4F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_DrawArcs)},
     {"LightningBolt_DrawFlash", 0x4CB6E0, 0x1A7, kCalls4CB6E0, MH_N(kCalls4CB6E0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::LightningBolt_DrawFlash)},
@@ -143,10 +146,11 @@ const mh::Clone kClones[] = {
 
 enum : unsigned {
     kBlizzard_Task, kBlizzard_Start, kBlizzard_Wait, kBlizzardShard_Task, kBlizzardShard_Run, kBlizzardShard_Launch,
-    kBlizzardShard_Grow, kBlizzardShard_End, kBlizzardShard_DrawCrystal, kBlizzardShard_DrawFan, kBlizzardShard_DrawRing,
+    kBlizzardShard_Grow, kBlizzardShard_End, kBlizzardShard_PushMatrix, kBlizzardShard_DrawCrystal, kBlizzardShard_DrawFan,
+    kBlizzardShard_DrawRing, kBlizzard_CenterOnTargets,
     kJolt_Task, kJolt_Start, kJoltBolt_Task, kJoltBolt_Run, kJoltBolt_Rise, kJoltBolt_Fade, kJoltBolt_End,
     kJoltBolt_DrawBand, kJoltBolt_DrawArcs, kJoltBolt_DrawFlash, kLightning_Task, kLightning_Start, kLightningBolt_Task,
-    kLightningBolt_Run, kLightningBolt_Wait, kLightningBolt_Rise, kLightningBolt_DrawBand, kLightningBolt_DrawArcs,
+    kLightningBolt_Run, kLightningBolt_Wait, kLightningBolt_Rise, kLightningBolt_PushMatrix, kLightningBolt_DrawBand, kLightningBolt_DrawArcs,
     kLightningBolt_DrawFlash, kMyollnir_Task, kMyollnir_Start, kMyollnir_Darken, kMyollnir_WaitChildren, kMyollnir_End,
     kMyollnirChild_Task, kMyollnirBolt_Run, kMyollnirBolt_Start, kMyollnirBolt_Hold, kMyollnirBolt_End, kMyollnirOrb_Run,
     kMyollnirOrb_Start, kMyollnir_GrowHold, kMyollnirOrb_Circle, kMyollnirOrb_End, kMyollnir_DrawBand, kMyollnirRing_Run,
@@ -169,8 +173,50 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 // harness logs four arguments: what Gpu_SetDrawMode's fifth, Sprite_SetTint's
 // fifth and the projections' outputs after the fourth are is not compared
 // (docs/magic_s22.md section 5).
+// Battle_ActorIsOut: the recorder's flag, except for the one actor of each
+// side the seed keeps in.
+unsigned g_keep_party, g_keep_enemy;
+std::uint32_t IsOutEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const unsigned actor = a[0] & 0xFF;
+    return actor == g_keep_party || actor == g_keep_enemy ? answer & 0xFFFFFF00u : answer;
+}
+// The GTE stand-ins of the matrix pushes: a result from the inputs, written
+// where the real callee writes.
+std::uint32_t RotTransEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const auto* v = reinterpret_cast<const short*>(static_cast<std::uintptr_t>(a[0]));
+    auto* t = reinterpret_cast<long*>(static_cast<std::uintptr_t>(a[1]));
+    t[0] = v[0] * 3 + 1;
+    t[1] = v[1] * 5 - 2;
+    t[2] = v[2] * 7 + 3;
+    return answer;
+}
+std::uint32_t RotMatrixEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const auto* r = reinterpret_cast<const short*>(static_cast<std::uintptr_t>(a[0]));
+    auto* m = reinterpret_cast<short*>(static_cast<std::uintptr_t>(a[1]));
+    for (unsigned i = 0; i < 9; ++i) m[i] = static_cast<short>(r[i % 3] * static_cast<int>(i + 1) + static_cast<int>(i));
+    return answer;
+}
+std::uint32_t MulMatrixEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const auto* b = reinterpret_cast<const short*>(static_cast<std::uintptr_t>(a[1]));
+    auto* out = reinterpret_cast<short*>(static_cast<std::uintptr_t>(a[2]));
+    mh::Note(a[1] == a[2]);
+    for (unsigned i = 0; i < 9; ++i) out[i] = static_cast<short>(b[i] * 3 + 7);
+    return answer;
+}
+std::uint32_t SetTransEffect(const std::uint32_t* a, std::uint32_t answer) {
+    mh::NoteBytes(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[0])) + 0x14, 12);
+    return answer;
+}
+
 const mh::Callee kCallees[] = {
-    {S22_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0},
+    {S22_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &IsOutEffect},
+    {S22_OURS(Gte_PushMatrix), 0, {}, kG, 0, 0},
+    // Gte_RotTrans: the original pushes three (the flag unread).
+    {S22_OURS(Gte_RotTrans), 3, {0, 0, 0}, kG, 0, 0, {6}, &RotTransEffect},
+    {S22_OURS(Gte_RotMatrix), 2, {0, 0}, kG, 0, 0, {6}, &RotMatrixEffect},
+    {S22_OURS(Gte_MulMatrix0), 3, {kAll, 0, 0}, kG, 0, 0, {0, 18}, &MulMatrixEffect},
+    {S22_OURS(Gte_SetRotMatrix), 1, {0}, kG, 0, 0, {18}},
+    {S22_OURS(Gte_SetTransMatrix), 1, {0}, kG, 0, 0, {}, &SetTransEffect},
     {S22_OURS(Sprite_SetTint), 4, {kAll, kU8, kU8, kU8}, kG, 0, 0},
     {S22_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},
     {S22_OURS(Math_Cos), 1, {kAll}, kG, 0, 0},
@@ -250,7 +296,7 @@ void Disturb(std::uint32_t h) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
     case 1: {
         const unsigned k = (v % 8) * 2;
-        SetWord(mh::Mem(kScratch + k), k == 8 || k == 0xC ? word % 24 : k == 0xE ? 0 : word);
+        SetWord(mh::Mem(kScratch + k), k == 8 ? word % 24 : k == 0xC ? 1 + word % 23 : k == 0xE ? 0 : word);
         break;
     }
     case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
@@ -285,6 +331,8 @@ void Seed(unsigned k) {
         else if (pick == 6) SetLong(PacketAt(q) + 0x2C, 0x7FC00000);
     }
     if (mh::Half()) mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Mem(mh::at::kTarget)[0] | 0x40);
+    g_keep_party = mh::Next() % 3;
+    g_keep_enemy = 3 + mh::Next() % 8;
     switch (k) {
     // the dispatchers: an index inside the table (a phase past it aborts ours)
     case kBlizzard_Task: sc[1] = static_cast<unsigned char>(mh::Next() % 3); break;
@@ -341,215 +389,7 @@ void Seed(unsigned k) {
 
 }  // namespace
 
-// --- the three the harness cannot compare -----------------------------------------
-
-namespace {
-
-// Their recorders: every call and what it reads, into one log per pass. The
-// GTE stand-ins write deterministic results where the original's callee
-// writes (the translation, the matrix), so what reaches the next call is
-// compared too; each may move the task's fields (and the scratch sums) that
-// the caller reads after it.
-struct OwnLog {
-    std::uint32_t v[512];
-    unsigned n;
-    void Put(std::uint32_t x) {
-        if (n < 512) v[n] = x;
-        ++n;
-    }
-};
-OwnLog g_own;
-std::uint32_t g_own_seed;
-std::uint32_t g_out_mask;
-alignas(16) unsigned char g_tasks[2][0x84];
-
-std::uint32_t OwnHash() {
-    std::uint32_t h = (g_own_seed + g_own.n * 0x9E3779B1u) * 0x85EBCA6Bu;
-    h ^= h >> 13;
-    return h * 0xC2B2AE35u;
-}
-// After a call: a third of the time Sprite_Current moves to the other task,
-// or one of the fields the pushes and the centre read is rewritten.
-void OwnDisturb() {
-    const std::uint32_t h = OwnHash();
-    switch (h % 6) {
-    case 0: Sprite_Current = g_tasks[(h >> 8) & 1]; break;
-    case 1: {
-        static const unsigned kFields[] = {0x18, 0x19, 0x1C, 0x1D, 0x34, 0x36, 0x38, 0x3A, 0x3E, 0x3F};
-        Sprite_Current[kFields[(h >> 8) % 10]] = static_cast<unsigned char>(h >> 16);
-        break;
-    }
-    case 2: SetLong(mh::Mem(kScratch + ((h >> 8) % 3) * 4), static_cast<std::int32_t>(h)); break;
-    case 3: SetLong(mh::Mem(kScratch + 0xC), static_cast<std::int32_t>(1 + (h >> 8) % 20)); break;
-    default: break;
-    }
-}
-void Put3(const short* v) {
-    for (unsigned i = 0; i < 3; ++i) g_own.Put(static_cast<std::uint16_t>(v[i]));
-}
-void __cdecl OwnPush() {
-    g_own.Put(0x100);
-    OwnDisturb();
-}
-void __cdecl OwnRotTrans(const short* v, long* t, long* flag) {
-    g_own.Put(0x200);
-    Put3(v);
-    t[0] = v[0] * 3 + 1;
-    t[1] = v[1] * 5 - 2;
-    t[2] = v[2] * 7 + 3;
-    *flag = 0;
-    OwnDisturb();
-}
-short* __cdecl OwnRotMatrix(const short* a, short* m) {
-    g_own.Put(0x300);
-    Put3(a);
-    for (unsigned i = 0; i < 9; ++i) m[i] = static_cast<short>(a[i % 3] * static_cast<int>(i + 1) + static_cast<int>(i));
-    OwnDisturb();
-    return m;
-}
-short* __cdecl OwnMulMatrix0(const short* a, const short* b, short* out) {
-    g_own.Put(0x400);
-    g_own.Put(a == Camera_Matrix);
-    g_own.Put(b == out);
-    for (unsigned i = 0; i < 9; ++i) g_own.Put(static_cast<std::uint16_t>(b[i]));
-    for (unsigned i = 0; i < 9; ++i) out[i] = static_cast<short>(b[i] * 3 + 7);
-    OwnDisturb();
-    return out;
-}
-void __cdecl OwnSetRot(const unsigned long* m) {
-    g_own.Put(0x500);
-    const auto* s = reinterpret_cast<const short*>(m);
-    for (unsigned i = 0; i < 9; ++i) g_own.Put(static_cast<std::uint16_t>(s[i]));
-    OwnDisturb();
-}
-void __cdecl OwnSetTrans(const unsigned long* m) {
-    g_own.Put(0x600);
-    for (unsigned i = 0; i < 3; ++i) g_own.Put(static_cast<std::uint32_t>(Long(reinterpret_cast<const unsigned char*>(m) + 0x14 + 4 * i)));
-    OwnDisturb();
-}
-unsigned g_out_calls;
-unsigned char __cdecl OwnIsOut(unsigned actor) {
-    g_own.Put(0x700 | (actor & 0xFF));
-    const unsigned bit = (g_out_mask >> (g_out_calls++ & 31)) & 1;
-    OwnDisturb();
-    return static_cast<unsigned char>(bit);
-}
-const Hooks kOwnHooks = {OwnPush, OwnRotTrans, OwnRotMatrix, OwnMulMatrix0, OwnSetRot, OwnSetTrans, OwnIsOut};
-
-template <typename F> const void* V(F f) { return reinterpret_cast<const void*>(f); }
-
-struct OwnState {
-    unsigned char scratch[0x10];
-    unsigned char tasks[2][0x84];
-    std::uint32_t current;
-    OwnLog log;
-};
-void OwnCapture(OwnState& s) {
-    std::memcpy(s.scratch, mh::Mem(kScratch), sizeof s.scratch);
-    std::memcpy(s.tasks, g_tasks, sizeof s.tasks);
-    s.current = Key(Sprite_Current);
-    s.log = g_own;
-}
-bool OwnSame(const OwnState& a, const OwnState& b) {
-    return a.log.n == b.log.n && std::memcmp(a.log.v, b.log.v, sizeof a.log.v) == 0 &&
-           std::memcmp(a.scratch, b.scratch, sizeof a.scratch) == 0 && std::memcmp(a.tasks, b.tasks, sizeof a.tasks) == 0 &&
-           a.current == b.current;
-}
-
-void SelfTestOwn() {
-    struct Own {
-        const char* name;
-        std::uint32_t base, size;
-        bof3::CloneCall calls[6];
-        int n;
-        void (__cdecl* ours)();
-        void* copy;
-    };
-    static Own own[] = {
-        {"BlizzardShard_PushMatrix", 0x4C91E0, 0xA7,
-         {{0x3, V(OwnPush), 0x5A7B90}, {0x67, V(OwnRotTrans), 0x5A8200}, {0x76, V(OwnRotMatrix), 0x5A8060},
-          {0x8A, V(OwnMulMatrix0), 0x5A7D70}, {0x94, V(OwnSetRot), 0x5A8DE0}, {0x9E, V(OwnSetTrans), 0x5A8E00}},
-         6, &::BlizzardShard_PushMatrix, nullptr},
-        {"LightningBolt_PushMatrix", 0x4CAE30, 0xA1,
-         {{0x3, V(OwnPush), 0x5A7B90}, {0x61, V(OwnRotTrans), 0x5A8200}, {0x70, V(OwnRotMatrix), 0x5A8060},
-          {0x84, V(OwnMulMatrix0), 0x5A7D70}, {0x8E, V(OwnSetRot), 0x5A8DE0}, {0x98, V(OwnSetTrans), 0x5A8E00}},
-         6, &::LightningBolt_PushMatrix, nullptr},
-        {"Blizzard_CenterOnTargets", 0x4C9AF0, 0x164, {{0x30, V(OwnIsOut), 0x4456C0}, {0xA5, V(OwnIsOut), 0x4456C0}}, 2,
-         &::Blizzard_CenterOnTargets, nullptr},
-    };
-    for (Own& o : own) o.copy = bof3::CloneOriginal(o.name, o.base, o.size, o.calls, o.n);
-
-    // Everything the three read or write, kept and put back.
-    static unsigned char kept_scratch[0x10], kept_enemies[8 * 0x128], kept_party[3 * 0x14C];
-    unsigned char* const enemies = mh::Mem(mh::at::kEnemies);
-    unsigned char* const party = mh::Mem(mh::at::kParty);
-    std::memcpy(kept_scratch, mh::Mem(kScratch), sizeof kept_scratch);
-    std::memcpy(kept_enemies, enemies, sizeof kept_enemies);
-    std::memcpy(kept_party, party, sizeof kept_party);
-    const unsigned char kept_target = mh::Mem(mh::at::kTarget)[0];
-    unsigned char* const kept_current = Sprite_Current;
-
-    constexpr unsigned kRounds = 2000;
-    unsigned bad = 0, calls = 0, divided[2] = {0, 0};
-    static OwnState input, theirs, ours;
-    for (unsigned round = 0; round < kRounds * 3; ++round) {
-        const unsigned k = round % 3;
-        for (auto& t : g_tasks)
-            for (auto& b : t) b = static_cast<unsigned char>(mh::Next());
-        for (unsigned i = 0; i < 0x10; ++i) mh::Mem(kScratch)[i] = static_cast<unsigned char>(mh::Next());
-        for (unsigned i = 0; i < 8 + 3; ++i) {
-            unsigned char* const r = i < 8 ? enemies + i * 0x128 : party + (i - 8) * 0x14C;
-            SetLong(r + 0x34, static_cast<std::int32_t>(mh::Next()));
-            SetLong(r + 0x38, static_cast<std::int32_t>(mh::Next()));
-            SetWord(r + 0x3E, mh::Next());
-        }
-        mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Next());
-        // The actors out: random, and never every one of those the side has.
-        const bool all_enemies = (mh::Mem(mh::at::kTarget)[0] & 0x40) != 0;
-        g_out_mask = mh::Next();
-        g_out_mask &= ~(1u << (mh::Next() % (all_enemies ? 8 : 3)));
-        Sprite_Current = g_tasks[mh::Next() & 1];
-        g_own_seed = mh::Next();
-        g_own.n = 0;
-        OwnCapture(input);
-        const unsigned char target = mh::Mem(mh::at::kTarget)[0];
-        for (int pass = 0; pass < 2; ++pass) {
-            std::memcpy(mh::Mem(kScratch), input.scratch, sizeof input.scratch);
-            std::memcpy(g_tasks, input.tasks, sizeof g_tasks);
-            Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(input.current));
-            mh::Mem(mh::at::kTarget)[0] = target;
-            g_own.n = 0;
-            g_out_calls = 0;
-            if (pass) {
-                g_hooks = kOwnHooks;
-                own[k].ours();
-                g_hooks = kHooks;
-            } else {
-                reinterpret_cast<void (__cdecl*)()>(own[k].copy)();
-            }
-            OwnCapture(pass ? ours : theirs);
-        }
-        calls += theirs.log.n;
-        if (k == 2) ++divided[all_enemies];
-        if (!OwnSame(theirs, ours) && ++bad <= 12)
-            bof3::Log("shadow      magic_s22 self-test MISMATCH: round %u, %s, log %u / %u", round, own[k].name, theirs.log.n,
-                      ours.log.n);
-    }
-    std::memcpy(mh::Mem(kScratch), kept_scratch, sizeof kept_scratch);
-    std::memcpy(enemies, kept_enemies, sizeof kept_enemies);
-    std::memcpy(party, kept_party, sizeof kept_party);
-    mh::Mem(mh::at::kTarget)[0] = kept_target;
-    Sprite_Current = kept_current;
-    bof3::Log("shadow      magic_s22 self-test (own recorders): %u rounds over 3 functions (%u each), %u calls to the "
-              "stand-ins, %u MISMATCHES; the centre over the enemies %u times, the party %u",
-              kRounds * 3, kRounds, calls, bad, divided[1], divided[0]);
-    if (bad) bof3::Fatal("magic_s22 differs from the original in %u self-test rounds (own recorders)", bad);
-}
-
-}  // namespace
-
 void SelfTest() {
-    SelfTestOwn();
     const mh::Group group = {
         "magic_s22", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000,
