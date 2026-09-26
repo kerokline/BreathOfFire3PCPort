@@ -119,6 +119,7 @@
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
+#include "game/magic_s22.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -313,6 +314,10 @@ void InjectAll() {
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
+    MagicS22_Inject();          // round 9 group S22 (MAGIC096..099: Blizzard, Jolt, Lightning, Myollnir): its
+                                // clones' calls, stack-table immediates and .data handler tables re-aimed at the
+                                // shared harness's recorders, three through its own; no module patches bytes inside
+                                // its 56: order does not matter
     InjectReport();
 }
 
