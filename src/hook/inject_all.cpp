@@ -125,6 +125,7 @@
 #include "game/magic_s21.h"
 #include "game/magic_s24.h"
 #include "game/magic_s17.h"
+#include "game/magic_s19.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -338,6 +339,9 @@ void InjectAll() {
     MagicS17_Inject();          // round 9 group S17 (MAGIC075 / 077 / 078): its clones' calls, stack-table
                                 // immediates and .data handler tables re-aimed at the shared harness's recorders;
                                 // no module patches bytes inside its 48: order does not matter
+    MagicS19_Inject();          // round 9 group S19 (MAGIC083, MAGIC086): its clones' calls, stack-table immediates
+                                // and eight .data handler tables re-aimed at the shared harness's recorders; no
+                                // module patches bytes inside its 43: order does not matter
     InjectReport();
 }
 
