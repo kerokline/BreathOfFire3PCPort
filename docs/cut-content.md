@@ -97,8 +97,15 @@ the PlayStation, with the skill hacked into a player's list. The PC's
 behaviour is unread.
 
 Four rows have an overlay and are loaded by no ability in `magic.toml`:
-rows 2, 7, 119 and 147. They may be item or enemy magic through the item
-row table, which was not checked, or cut content.
+rows 2, 7, 119 and 147. Checked 2026-09-26 against the item row table
+`0x64B274` and the whole ability row table `0x64C1D0`
+([`magic_c3.md`](magic_c3.md) §1):
+
+- **row 119** is item magic, category 0 index 32;
+- **row 147** is ability `0xE3` (227), one past the sibling's list: its
+  record duplicates 226's, and its file is `MAGIC227`;
+- **rows 2 and 7** are reached by no index inside either table on the PC:
+  unreachable, so cut content or a leftover.
 
 ## 3. What this changes for the spell round
 

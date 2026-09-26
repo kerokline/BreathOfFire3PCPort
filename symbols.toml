@@ -24823,3 +24823,209 @@ params = "void"
 impl = "src/game/magic_engine.cpp"
 status = "hypothesis"
 evidence = "disasm 2026-09-26, 0x440060..0x44007A (0x1B bytes), cdecl, void: Battle_SetTargetFlag40(byte 0x904B44); [0x93B940] +0xA -= 1 (the Head Cracker task's children); jmp BattleTask_FreeCurrent. Fuzz only."
+
+# --- round nine, group C3: MAGIC002 (row 2) and MAGIC111 (row 119), the overlays no ability loads (docs/magic_c3.md)
+
+[[func]]
+pc = 0x499D80
+name = "Magic002_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499D80..0x499DAD (0x2E bytes), group C3: cdecl, void: a three-entry stack table (imm32 0x499DB0, 0x499E90, 0x43FE80 - the engine's done flag and free) by byte +1 of Sprite_Current, unchecked. Magic_Rows row 2 (code pointer at .data 0x64C2CC), file 0x22B = MAGIC002.EMI; no ability id's row byte (0x64C1D0) is 2, and no item index inside the item sub-tables (0x64B274) is (docs/magic_c3.md section 1). The first function of MAGIC002's extent 0x499D80..0x49A7AD (tools/magic_rows.py). Fuzz only."
+
+[[func]]
+pc = 0x499DB0
+name = "Magic002_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499DB0..0x499E8D (0xDE bytes), group C3: one call, BattleTask_Create(3, 1) (kind 3, parameter 1 = Magic002Ball_Task), the slot untested. The ball: +1 0, +0xC / +0x10 party record 0's words +0x2E / +0x30 (0x802D6E / 0x802D70) shifted left 16, +0x14 0, +0x18 0x28, +9 0, +0x1C / +0x20 ((the source sprite 0x904B4C's +0x2E / +0x30 less those) shl 16) / 10 (imul 0x66666667, sar 2, a signed divide), dword +0x60 and word +0x58 0x100. Then the current slot's (0x93B8C4, not Sprite_Current) +0x80 = the ball's address, over its own owner pointer, and Sprite_Current +1 += 1. Fuzz only."
+
+[[func]]
+pc = 0x499E90
+name = "Magic002_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499E90..0x499EA9 (0x1A bytes), group C3: no calls: byte +9 of the task at the current slot's (0x93B8C4) +0x80 - the ball Magic002_Start put there - at 0x28 or above (unsigned): Sprite_Current +1 += 1. Fuzz only."
+
+[[func]]
+pc = 0x499EB0
+name = "Magic002Ball_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499EB0..0x499ED5 (0x26 bytes), group C3: a two-entry stack table (imm32 0x499EE0, 0x499F70) by byte +1, unchecked. Battle-task kind 3, parameter 1 (the kind table's entry, immediate at 0x4357E7). Fuzz only."
+
+[[func]]
+pc = 0x499EE0
+name = "Magic002Ball_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499EE0..0x499F6A (0x8B bytes), group C3: one call: dword +0x14 += 0x100, +0x18 += 4, +0xC += +0x1C, +0x10 += +0x20, byte +9 += 1; Magic002Ball_Draw(+0xC sar 16, +0x10 sar 16, +0x18 sar 1, word +0x14, word +0x60, word +0x58 - the words pushed with a register's upper half); +9 above 10 (unsigned): +1 += 1. Fuzz only."
+
+[[func]]
+pc = 0x499F70
+name = "Magic002Ball_Shatter"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499F70..0x499FE4 (0x75 bytes), group C3: one call and a tail jmp: dword +0x60 += 4, word +0x58 += 0xFFF8, dword +0x14 += 0x20, byte +9 += 1; Magic002Ball_Draw as Magic002Ball_Fly; +9 above 0x28: tail jmp BattleTask_FreeCurrent. Fuzz only."
+
+[[func]]
+pc = 0x499FF0
+name = "Magic002Ball_Draw"
+ret = "void"
+params = "int x, int y, int radius, int turn, int spread, int scale"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499FF0..0x49A7AD (0x7BE bytes), group C3: cdecl, six arguments (x, y, radius, spread, scale read as shorts, turn as its low byte), 0xE4 bytes of frame, every jump internal. Gpu_GetTPage(0x3C0, 0x100, 0, 0) and 0xFFFF to Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, it, 0), Gfx_CommitPrim(1, 0xC). The light (-0x93D, -0x93D, -0x93D); ten times the pole (0, -radius, 0) through Gte_VectorNormalS and two square roots (0x5A7A90, fild / fsqrt / _ftol) of the normal's dot with the light, y as is and negated, each shl 8 sar 12 to a byte. Four rings of latitude 0x100..0x400: s = -(sin x radius) sar 12, c = -(cos x radius) sar 12, points from angle (turn and 0xFF) by 0x100 while below 0x900 (cos x s sar 12, sin x s sar 12), the ends s and -s, each shaded as the pole; between a ring and the previous, per segment two semi-transparent Gpu_SetPolyG4 quads committed Gfx_CommitPrim(1, 0x44), the corners scaled round the segment's centre by scale sar 8 and the centre pushed by spread sar 8, the second mirrored in y with the negated-y shades. The z of each point is computed and never read. Fuzz only."
+
+[[func]]
+pc = 0x4D6110
+name = "Magic111_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6110..0x4D613D (0x2E bytes), group C3: cdecl, void: a three-entry stack table (imm32 0x4D6140, 0x4D62C0, 0x43FE80 - the engine's done flag and free) by byte +1, unchecked. Magic_Rows row 119 (code pointer at .data 0x64C674), file 0x280 = MAGIC111.EMI; no ability id's row byte is 119; the item row table 0x64B274's category 0 at index 32 is (docs/magic_c3.md section 1). The first function of MAGIC111's extent 0x4D6110..0x4D67E5. Fuzz only."
+
+[[func]]
+pc = 0x4D6140
+name = "Magic111_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6140..0x4D62BB (0x17C bytes), group C3: five calls: +8 and +0x34..+0x3C the owner's (0x93B940), +0xB and +9 0, +1 += 1; three BattleTask_Create(1, 0x57), slots untested, each with +0x80 = Sprite_Current and counted in +0xB: the first a rep movsd of 0x80 bytes of the acting actor's record (byte 0x904B34 up to 2 the party 0x802D40 + 0x14C i, else the enemy 0x93B960 + 0x128 (i - 3)), then +1, +2 0, +6 1, +5 0x57; the second +1 = 1, the third +1 = 2. Sound_PlayById(0x100), (0x101); the owner's byte +0 or 0x40. Fuzz only."
+
+[[func]]
+pc = 0x4D62C0
+name = "Magic111_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D62C0..0x4D62F8 (0x39 bytes), group C3: two calls: +0xB 0: BattleActor_SetAnimation(4, 0), the owner's byte +0 and 0xBF, Battle_SetTargetFlag40(byte 0x904B44), +1 += 1. Fuzz only."
+
+[[func]]
+pc = 0x4D6300
+name = "Magic111Child_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6300..0x4D6311 (0x12 bytes), group C3: jmp [0x65B9C8 + 4 x byte +1] (Magic111Child_Kinds, three entries, unchecked). Battle-task kind 1, parameter 0x57 (the kind table's entry, immediate at 0x4356C5). Fuzz only."
+
+[[func]]
+pc = 0x4D6320
+name = "Magic111Double_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6320..0x4D635D (0x3E bytes), group C3: a three-entry stack table (imm32 0x4D6360, 0x4D6380, BattleFx_FreeTask 0x4AEE90) by byte +2, unchecked; then Sprite_UpdateScreen while byte +0 is set. Magic111Child_Kinds entry 0: the copy of the caster's record. Fuzz only."
+
+[[func]]
+pc = 0x4D6360
+name = "Magic111Double_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6360..0x4D6371 (0x12 bytes), group C3: no calls: byte +0x29 = 2, +2 += 1. Fuzz only."
+
+[[func]]
+pc = 0x4D6380
+name = "Magic111Double_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6380..0x4D639A (0x1B bytes), group C3: no calls: the owner's (0x93B940) byte +0xB at 1 or below (unsigned): it minus 1, +2 += 1. Fuzz only."
+
+[[func]]
+pc = 0x4D63A0
+name = "Magic111Wash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D63A0..0x4D63D0 (0x31 bytes), group C3: call [0x65B9D4 + 4 x byte +2] (Magic111Wash_Steps, four entries, unchecked); with byte +0 set, dwords +0xC and +0x10 += 1 and a tail jmp to Magic111Wash_Draw. Magic111Child_Kinds entry 1. Fuzz only."
+
+[[func]]
+pc = 0x4D63E0
+name = "Magic111Wash_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D63E0..0x4D641A (0x3B bytes), group C3: one call: dword +0xC = Rand and 0x3F, +0x10 = +0xC + 0x1F, +9 0, +0xA 0x3C, +2 += 1. Magic111Wash_Steps entry 0. Fuzz only."
+
+[[func]]
+pc = 0x4D6420
+name = "Magic111Wash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6420..0x4D66FF (0x2E0 bytes), group C3: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x55, 0), Gfx_CommitPrim(3, 0xC); Gpu_SetPolyG4 and Gpu_SetSemiTrans(1) on the next packet, corners (0,0) (319,0) (0,239) (319,239) as floats; each corner's three colour bytes ((Math_Sin(angle) x 6 sar 12) + 8) times byte +9 (8-bit imul, +9 re-read), the angles ((byte +0xC or +0x10 + 0, 0xF, 0x1F, -0x11) and 0x3F) shl 6 stored to words 0x903850 / 0x903852 and read back from there after the corner's first call; Gfx_CommitPrim(3, 0x44), Gpu_SetDrawMode(.., 0x15, ..), Gfx_CommitPrim(3, 0xC). Fuzz only."
+
+[[func]]
+pc = 0x4D6700
+name = "Magic111Flash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6700..0x4D6728 (0x29 bytes), group C3: call [0x65B9E4 + 4 x byte +2] (Magic111Flash_Steps, three entries, unchecked); with byte +0 and byte +2 set a tail jmp to Magic111Flash_Draw. Magic111Child_Kinds entry 2. Fuzz only."
+
+[[func]]
+pc = 0x4D6730
+name = "Magic111Flash_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6730..0x4D674D (0x1E bytes), group C3: no calls: the owner's byte +0xB at 2 or below: +9 0, +2 += 1. Magic111Flash_Steps entry 0. Fuzz only."
+
+[[func]]
+pc = 0x4D6750
+name = "Magic111Flash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4D6750..0x4D67E5 (0x96 bytes), group C3: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), Gfx_CommitPrim(3, 0xC); Gpu_SetPolyF4 and Gpu_SetSemiTrans(1) on the next packet, the whole screen (0,0)..(319,239) as floats, grey byte +9 x 15 (8-bit imul); Gfx_CommitPrim(3, 0x38), Gpu_SetDrawMode(.., 0x15, ..), Gfx_CommitPrim(3, 0xC). Fuzz only."
+
+[[data]]
+pc = 0x65B9C8
+name = "Magic111Child_Kinds"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26: Magic111Child_Task's jmp [0x65B9C8 + 4 x byte +1]: 0x4D6320 0x4D63A0 0x4D6700. Stored as dwords; called through a cast."
+
+[[data]]
+pc = 0x65B9D4
+name = "Magic111Wash_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: Magic111Wash_Run's call [0x65B9D4 + 4 x byte +2]: 0x4D63E0, BarrierRing_Grow 0x4C2D10, MagicFx_WaitA 0x4BDD20, 0x4B1740 (MAGIC060). Stored as dwords; called through a cast."
+
+[[data]]
+pc = 0x65B9E4
+name = "Magic111Flash_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26: Magic111Flash_Run's call [0x65B9E4 + 4 x byte +2]: 0x4D6730, 0x4E5950 (MAGIC131), 0x4B18B0 (MAGIC060); MAGIC113's table follows at 0x65B9F0. Stored as dwords; called through a cast."

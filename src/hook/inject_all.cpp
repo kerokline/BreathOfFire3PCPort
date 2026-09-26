@@ -131,6 +131,7 @@
 #include "game/magic_s25.h"
 #include "game/magic_s20.h"
 #include "game/magic_engine.h"
+#include "game/magic_c3.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -364,6 +365,9 @@ void InjectAll() {
     MagicEngine_Inject();       // round 9 group E (the engine-side rows 0, 108, 123, 126, 128 and Head Cracker's
                                 // rock): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders; no module patches bytes inside its 22: order does not matter
+    MagicC3_Inject();           // round 9 group C3 (MAGIC002, MAGIC111: the overlays no ability loads): its clones'
+                                // calls and stack-table immediates re-aimed, its three .data tables swapped for the
+                                // fuzz only; no module patches bytes inside its 20: order does not matter
     InjectReport();
 }
 
