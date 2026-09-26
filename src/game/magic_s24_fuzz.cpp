@@ -154,6 +154,13 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu, kAngle 
 template <typename F> constexpr std::uint32_t KeyOf(F f) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(f)); }
 #define S24_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define S24_RAW(address) #address, address, address
+// A commit logs the primitive it links (the 0x40 bytes at Gfx_PacketNext):
+// the draws write every primitive into the same few bytes of the buffer, so
+// the regions at the end hold only the last one.
+std::uint32_t LogPrimitive(const std::uint32_t*, std::uint32_t answer) {
+    mh::NoteBytes(Gfx_PacketNext, 0x40);
+    return answer;
+}
 const mh::Callee* Callees(unsigned& n) {
     // A pointer the caller built in its own frame is logged by the bytes it
     // points at (deref) or not at all (mask 0): its address differs between
@@ -164,8 +171,8 @@ const mh::Callee* Callees(unsigned& n) {
         {S24_OURS(Math_Cos), 1, {kAngle}, mh::Answer::kGarbage, 0, 0},
         {S24_OURS(Math_Ratan2), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
         {S24_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kU16}, mh::Answer::kGarbage, 0, 0},
-        {S24_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, mh::Answer::kGarbage, 0, 0},
-        {S24_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, mh::Answer::kGarbage, 0, 0},
+        {S24_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, mh::Answer::kGarbage, 0, 0, {}, &LogPrimitive},
+        {S24_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, mh::Answer::kGarbage, 0, 0, {}, &LogPrimitive},
         {S24_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
         {S24_OURS(Gpu_SetPolyG4), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
         {S24_OURS(Gpu_SetSprt), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
