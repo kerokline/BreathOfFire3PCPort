@@ -272,7 +272,7 @@ std::uint32_t HeadingEffect(const std::uint32_t*, std::uint32_t answer) {
 
 // --- the callees the standard set lacks -----------------------------------------
 
-constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
+constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 constexpr mh::Answer kG = mh::Answer::kGarbage;
 #define S03_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define S03_RAW(address) #address, address, address
