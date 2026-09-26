@@ -106,7 +106,9 @@ void Disturb() {
         break;
     }
     case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+        // a target byte of 11.. (a side flag: 0x40 the enemies, 0xC0 both)
+        // has no record inside the image to disturb
+        if (Mem(at::kTarget)[0] < 11) TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
@@ -122,11 +124,12 @@ struct Slot {
     std::uint32_t address;   // what a clone's call site or table holds
     std::uint32_t key;       // what ours passes to Call
     unsigned nargs;
-    std::uint32_t masks[4];
+    std::uint32_t masks[8];
     Answer answer;
     std::uint8_t lo, hi;
     bool handler;            // a phase: logs the slot's phase bytes, answers nothing
     unsigned calls;          // the original's side, for the coverage line
+    std::uint32_t (*act)(const std::uint32_t* args);   // Run(g, x)'s: computes the answer
 };
 constexpr unsigned kSlots = 160;
 Slot g_slots[kSlots];
@@ -157,25 +160,31 @@ std::uint32_t Answering(const Slot& s) {
     }
 }
 
+// Eight arguments read whatever the caller pushed (cdecl: the words above the
+// last are the caller's own frame); only nargs of them are logged.
 template <unsigned I>
-std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3) {
+std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3, std::uint32_t a4,
+                           std::uint32_t a5, std::uint32_t a6, std::uint32_t a7) {
     const Slot& s = g_slots[I];
     if (s.handler) {
         Log5(1000 + I, Cur(), Sprite_Current[1], Sprite_Current[2], 0);
         Disturb();
         return Hash();
     }
-    const std::uint32_t a[4] = {a0, a1, a2, a3};
-    std::uint32_t r[4] = {};
-    for (unsigned i = 0; i < s.nargs && i < 4; ++i) r[i] = a[i] & s.masks[i];
+    const std::uint32_t a[8] = {a0, a1, a2, a3, a4, a5, a6, a7};
+    std::uint32_t r[8] = {};
+    for (unsigned i = 0; i < s.nargs && i < 8; ++i) r[i] = a[i] & s.masks[i];
     Log5(I, r[0], r[1], r[2], r[3]);
+    if (s.nargs > 4) Log5(4000 + I, r[4], r[5], r[6], r[7]);   // not counted twice in the coverage
     Disturb();
+    if (s.act) return s.act(a);
     const std::uint32_t answer = Answering(s);
     if (s.answer != Answer::kGarbage && g_log_n <= kLog) g_log[g_log_n - 1].d ^= answer & 0xFF;   // the answer in the log
     return answer;
 }
 
-using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                        std::uint32_t, std::uint32_t, std::uint32_t);
 template <std::size_t... I> constexpr auto MakeStubs(std::index_sequence<I...>) {
     struct T { StubFn f[sizeof...(I)]; };
     return T{{&Stub<I>...}};
@@ -221,6 +230,26 @@ const Callee kStandard[] = {
     // an item's name into Text_Records by (index, category) - unnamed, in no
     // group (docs/magic_fx_reached.md section 10)
     {"0x4B58F0", 0x4B58F0, 0x4B58F0, 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    // The effect library (group L, magic_lib.cpp; docs/magic_lib.md section
+    // 2): what the overlays call of it. A group written while these were
+    // Capcom's calls them by address (MH_AT); StandIn finds them by it.
+    {MH_OURS(MagicFx_ApplyBuff), 2, {kU8, kU8}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_BuffPopup), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_LinkByDepth), 7, {kAll, kAll, kAll, kAll, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_StepToward), 2, {kAll, kU16}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_StepTowardPoint), 5, {kAll, kAll, kAll, 0, kU16}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_StepAround), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_NearSprite3D), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_NearSprite), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_NearPoint3D), 4, {kAll, kAll, 0xFFFF0000u, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_NearPoint), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(SpriteClut_SetStp), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(SpriteClut_ClearEntry31), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(SpriteClut_CopyToFxRow), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(SpriteClut_RestoreFxRow), 0, {}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_CenterOnSide), 0, {}, Answer::kGarbage, 0, 0},
+    {MH_OURS(BattleActor_FxSizeB), 0, {}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_FormationOffset), 0, {}, Answer::kGarbage, 0, 0},
 };
 #undef MH_OURS
 #undef MH_THEIRS
@@ -238,14 +267,15 @@ void Register(const Callee& c) {
         if (g_slots[i].address == c.address) return;   // listed twice: the first stands
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0};
+    s = {c.name, c.address, c.key, c.nargs, {}, c.answer, c.lo, c.hi, false, 0, nullptr};
+    for (unsigned i = 0; i < 8; ++i) s.masks[i] = c.masks[i];
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return;
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0};
+    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0, nullptr};
 }
 const void* StubFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
@@ -341,7 +371,8 @@ void PatchImms(void* copy, const Clone& c) {
         move_script::Relocate(copy, c.base, c.size, {c.tables[i].jmp_disp, c.tables[i].table, c.tables[i].entries});
 }
 
-using Fn3 = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t);
+using Fn8 = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                     std::uint32_t, std::uint32_t, std::uint32_t);
 
 }  // namespace
 
@@ -368,10 +399,18 @@ void SetRandFirst(int first) { g_rand_first = first; }
 const void* StandIn(std::uint32_t key) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].key == key) return reinterpret_cast<const void*>(kStubs.f[i]);
+    // A callee that is ours now, called by its original address (MH_AT): a
+    // group written while it was Capcom's.
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == key) return reinterpret_cast<const void*>(kStubs.f[i]);
     bof3::Fatal("magic_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
 }
 
-void Run(const Group& group) {
+void Note(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) { Log5(2000, a, b, c, d); }
+
+void Run(const Group& group) { Run(group, Extras{nullptr, nullptr, nullptr, 0}); }
+
+void Run(const Group& group, const Extras& extras) {
     const unsigned per = group.rounds ? group.rounds : 2000;
     g_group = &group;
     g_slot_n = 0;
@@ -382,6 +421,16 @@ void Run(const Group& group) {
     for (unsigned t = 0; t < group.n_data_tables; ++t)
         for (unsigned i = 0; i < group.data_tables[t].entries; ++i)
             RegisterHandler(static_cast<std::uint32_t>(move_script::Long(Mem(group.data_tables[t].at + 4 * i))));
+    for (unsigned i = 0; i < extras.n_acts; ++i) {
+        bool found = false;
+        for (unsigned j = 0; j < g_slot_n; ++j)
+            if (g_slots[j].address == extras.acts[i].address) {
+                g_slots[j].act = extras.acts[i].fn;
+                found = true;
+            }
+        if (!found) bof3::Fatal("magic_harness: %s: an act for 0x%X, which no stand-in covers", group.shadow,
+                                (unsigned)extras.acts[i].address);
+    }
 
     // the regions: the standard ones, then the group's
     g_region_n = 0;
@@ -451,14 +500,19 @@ void Run(const Group& group) {
         if (group.seed) group.seed(k);
         Capture(input);
 
-        const std::uint32_t a0 = Next(), a1 = Next(), a2 = Next();   // the task runner's, ignored
+        // the task runner's three words (ignored by a phase), or the group's arguments
+        std::uint32_t a[8];
+        for (std::uint32_t& w : a) w = Next();
+        if (extras.args) extras.args(k, a);
+        const std::uint32_t ret_mask = extras.returns ? extras.returns[k] : 0;
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             State& out = pass ? ours : theirs;
             const void* const fn = pass ? group.clones[k].ours : clones[k];
             g_active = pass == 1;
-            reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
+            const std::uint32_t r = reinterpret_cast<Fn8>(const_cast<void*>(fn))(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
             g_active = false;
+            if (ret_mask) Log5(3000, r & ret_mask, 0, 0, 0);
             Capture(out);
         }
         calls += theirs.log_n;

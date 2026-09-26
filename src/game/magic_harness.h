@@ -115,12 +115,13 @@ enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
 // the pointer ours calls - (std::uint32_t)name, which is Capcom's address or
 // our function - and `address` the original's, the one clones call; for a
 // callee that is Capcom's the two are equal. masks[i] is what of argument i
-// the callee reads (a u8 argument is pushed with garbage above it).
+// the callee reads (a u8 argument is pushed with garbage above it); up to
+// eight are logged.
 struct Callee {
     const char* name;
     std::uint32_t address, key;
     unsigned nargs;
-    std::uint32_t masks[4];
+    std::uint32_t masks[8];
     Answer answer;
     std::uint8_t lo, hi;
 };
@@ -149,6 +150,37 @@ struct Group {
 // Clones every function (before the caller injects), fuzzes each against ours
 // for g.rounds rounds, logs the counts, and is a Fatal on any difference.
 void Run(const Group& g);
+
+// --- for a group whose functions take arguments or answer ----------------------
+//
+// The effect library (group L, magic_lib_fuzz.cpp) is called with arguments
+// and answers in eax, where a spell's phase takes and answers nothing; and a
+// few of its callees write through a pointer (Gte_VectorNormalS) or must
+// answer as the state says (Battle_ActorIsOut, whose every-actor-out case is
+// a division by zero). Run(g, x) is Run(g) with these; every field may be
+// null.
+
+// A callee's recorder that computes its answer: after logging and the
+// disturbance, fn(args) - which may write through them and Note() what it
+// read - is the answer. Keyed on the original's address.
+struct Act {
+    std::uint32_t address;
+    std::uint32_t (*fn)(const std::uint32_t* args);
+};
+
+struct Extras {
+    // The arguments function k is called with (eight words, random on entry),
+    // filled after the seed: both passes get the same.
+    void (*args)(unsigned k, std::uint32_t* a);
+    // Per clone, what of eax is compared (0: nothing, a void function).
+    const std::uint32_t* returns;
+    const Act* acts;
+    unsigned n_acts;
+};
+void Run(const Group& g, const Extras& x);
+
+// For an Act: one more entry in the recorders' log (what the callee read).
+void Note(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d);
 
 // --- seeding helpers, for Seed and Disturb -------------------------------------
 

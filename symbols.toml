@@ -18891,3 +18891,300 @@ ctype = "signed char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: SkillSteal_Roll's movsx byte [0x65C204 + the enemy's +0xAA], the index unbounded; the same eight values as Steal_RateTable 0x65AC20 (docs/cheats.md: the PSX's byte for byte)."
+
+[[func]]
+pc = 0x4FB0A0
+name = "BuffPopup_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4FB0A0..0x4FB0F2 (0x53 bytes), one call: a four-entry stack table (mov [esp + 0/4/8/0xC], imm32 0x4FB100 0x4FB190 0x4FB1F0 0x4FB230) called by byte +1 of Sprite_Current, unchecked; then with Sprite_Current (read again) +0 and +1 both non-zero, 0x4FB3E0(byte +4). Kind 1 parameter 0x48 (BattleMagicFx_Dispatch's entry, .text 0x4355xx; created by 0x4FB790 only). Effect library (docs/magic_lib.md). The name: the icon popup MagicFx_BuffPopup makes; 'buff' is the reading of 0x44FC10's stat change, a hypothesis."
+
+[[func]]
+pc = 0x4FB100
+name = "BuffPopup_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB100..0x4FB18C (0x8D bytes), one call (0x4FBD10 BattleActor_UpdateScreenXY): +9 -= 1; at 0: dwords +0x34/+0x38/+0x3C from the owner (dword 0x93B940, read again for each); BattleActor_UpdateScreenXY; word +0x2E += -0x18; word +0x30 -= byte +0xA; dword +0x10 = -14; +9 = 0; +0xA = 1; +1 += 1. Entry 0 of BuffPopup_Task's table."
+
+[[func]]
+pc = 0x4FB190
+name = "BuffPopup_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB190..0x4FB1E4 (0x55 bytes), no calls: +0xA += 1 while below 8; dword +0x10 += 2; word +0x30 += word +0x10; +9 += 1; at 0xC: dword +0x10 = -6, +1 += 1. Entry 1 of both popup tasks' tables."
+
+[[func]]
+pc = 0x4FB1F0
+name = "BuffPopup_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB1F0..0x4FB226 (0x37 bytes), no calls: dword +0x10 += 2; word +0x30 += word +0x10; +9 += 1; at 0x10 +1 += 1. Entry 2 of both popup tasks' tables."
+
+[[func]]
+pc = 0x4FB230
+name = "BuffPopup_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB230..0x4FB255 (0x26 bytes): +9 += 1; at 0x1C: byte +0xB of the owner (dword 0x93B940) -= 1 and a tail jmp to BattleTask_FreeCurrent 0x4351F0. Entry 3 of both popup tasks' tables."
+
+[[func]]
+pc = 0x4FB260
+name = "BuffPopupAt_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4FB260..0x4FB2B2 (0x53 bytes): BuffPopup_Task's twin whose entry 0 is 0x4FB2C0 (immediates 0x4FB2C0 0x4FB190 0x4FB1F0 0x4FB230), the same draw tail. Kind 1 parameter 2 (BattleMagicFx_Dispatch; MAGIC225 reaches it)."
+
+[[func]]
+pc = 0x4FB2C0
+name = "BuffPopupAt_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB2C0..0x4FB3D1 (0x112 bytes), one call (BattleActor_UpdateScreenXY): +9 -= 1; at 0 the position dwords +0x34/+0x38/+0x3C of the actor whose battle index is byte +0xB (below 3 the party record 0x802D40 + 0x14C i, else the enemy's 0x93B960 + 0x128 (i - 3), unchecked), then the same tail as BuffPopup_Start. Entry 0 of BuffPopupAt_Task's table."
+
+[[func]]
+pc = 0x4FB3E0
+name = "BuffPopup_Draw"
+ret = "void"
+params = "unsigned icon"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB3E0..0x4FB6E3 (0x304 bytes), ten calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x15, 0), Gfx_CommitPrim(2, 0xC); twice a POLY_FT4 at Gfx_PacketNext (read once after the commit before it; Gpu_SetPolyFT4): corners from s16 Sprite_Current +0x2E / +0x30 and byte +0xA as floats - first (x+1, y+1) (x+0x31, y+1) (x+1, y+A+1) (x+0x31, y+A+1) shade 1, then (x, y) (x+0x30, y) (x, y+A) (x+0x30, y+A) shade 0x80; Gpu_GetTPage(0, 0, 0x380, 0x100) to +0x26, Gpu_GetClut(0x10, 0x1FA) to +0x16; u v from BuffPopup_IconUV[(icon & 0xFF) * 4] (+0, +2; u + 0x30 on the right, v + A below), unchecked; Gfx_CommitPrim(2, 0x48). Called by both popup tasks only."
+
+[[func]]
+pc = 0x4FB6F0
+name = "MagicFx_ApplyBuff"
+ret = "unsigned char"
+params = "unsigned stat, unsigned actor"
+impl = "src/game/magic_lib.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4FB6F0..0x4FB78B (0x9C bytes), one call: keeps byte 0x904B54 and dword 0x904B60; 0x904B54 = the actor byte; 0x904B60 = party record + 0x124 (actor below 3) or enemy record + 0x104, and 8 dwords from the record's +0xA0 / +0xB0 to 0x939F80 (rep movsd); 0x44FC10(stat, whole); both put back; al 1 when 0x44FC10's al was 0, else 0 (upper eax its). 0x44FC10: 1 when 0x44F6A0 (a roll) answers non-zero, else 0x44F650 moves the result record's byte +0x14 + (stat & 0xFF) by a signed table step, clamped -25..50, and 0x453300(target): a stat change, so 'buff' (hypothesis). 10 call sites (MAGIC008 013 040 043 082 088, 225 twice, MagicFx_BuffPopup twice)."
+
+[[func]]
+pc = 0x4FB790
+name = "MagicFx_BuffPopup"
+ret = "void"
+params = "unsigned kind, unsigned who"
+impl = "src/game/magic_lib.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4FB790..0x4FB827 (0x98 bytes), three calls: with byte 0x904B44 bit 6, MagicFx_ApplyBuff(MagicFx_BuffStats[kind & 3], (who + 3) as a byte), else (.., who whole); icon = kind's byte, or 8 when it answered 0; slot = BattleTask_Create(1, 0x48) (the byte, untested); slot +0x80 = Sprite_Current (read after the create), +4 = icon, +9 = 1, +0xA = 0. Callers MAGIC038 0x4A4BED and MAGIC083 0x4C19FF (E8 scan)."
+
+[[func]]
+pc = 0x4FB880
+name = "MagicFx_LinkByDepth"
+ret = "void"
+params = "unsigned x, unsigned z, int *keys, unsigned prims, unsigned count, unsigned size, unsigned bias"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB880..0x4FB9EE (0x16F bytes), one call (Gpu_LinkPrim): depth = hi(z) - (lo(z) == 0) - (lo(x) == 0) - s16 0x7E068A - s16 MapView_Origin + hi(x) + (bias & 0xFF) + 2 (hi the upper word movsx, lo the lower); outside 0..0x37 (signed), or 0x7F1BAC + (Gfx_BufferIndex << 16) at or below Gfx_PacketNext + (size & 0xFF) (unsigned): Gfx_PacketNext -= (count & 0xFF) * (size & 0xFF). Else count times: the index of the largest key (signed, the first of equals); a zero key skips; else the key zeroed, Gpu_LinkPrim(the dword at 0x8022C4 + (Gfx_BufferIndex + depth * 6) * 8, prims + size * index), and that dword (Gfx_BufferIndex read again) = the primitive. The a0 stack slot holds the loop count. 9 call sites (MAGIC062 078 082 083 twice each, 114), e.g. MAGIC062 (Sprite_Current +0x34, +0x38, keys, prims, 4, 0x34, 2)."
+
+[[func]]
+pc = 0x4FB9F0
+name = "MagicFx_StepToward"
+ret = "void"
+params = "const unsigned char *to, int speed"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FB9F0..0x4FBA8C (0x9D bytes), one call: long in[3] = ((to +0x34 - sc +0x34) sar 9, (+0x38 difference) sar 9, (s16 to +0x3E - s16 sc +0x3E) sar 1), sc Sprite_Current read once; Gte_VectorNormalS(in, out); Sprite_Current (again) +0x34 += (out[0] * (short)speed) sar 3, +0x38 += (out[1] * speed) sar 3, word +0x3E += (out[2] * speed) sar 11. 13 call sites, 4 of them the engine's (Restore Form 0x4528A3, 0x43D8E2)."
+
+[[func]]
+pc = 0x4FBA90
+name = "MagicFx_StepTowardPoint"
+ret = "void"
+params = "unsigned x, unsigned z, unsigned y, unsigned pad, int speed"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBA90..0x4FBB37 (0xA8 bytes), one call: MagicFx_StepToward toward a point passed as four dwords by value (the fourth not read) and a short at the fifth: in = (x - ((+0x34 sar 9) - 0x4000), z - ((+0x38 sar 9) - 0x4000), y - (s16 +0x3E sar 1)), built in the argument slots themselves. MAGIC048 0x4AAEF9 passes Sprite_Current's (+0xC sar 9) - 0x4000, (+0x10 sar 9) - 0x4000, +0x14 sar 1 and 0x10. 12 call sites."
+
+[[func]]
+pc = 0x4FBB40
+name = "MagicFx_StepAround"
+ret = "int"
+params = "const unsigned char *to, int radius, int offset"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBB40..0x4FBBCA (0x8B bytes), three calls: a = (Math_Ratan2((float) dz, (float) dx) + offset) & 0xFFF, d the dwords +0x34 / +0x38 of to less Sprite_Current's; Sprite_Current +0x34 += (Math_Cos(a) * radius) sar 12, +0x38 += (Math_Sin(a) * radius) sar 12, the slot pointer read before each call and the field after; eax a. 8 call sites (MAGIC015 six, MAGIC100 two)."
+
+[[func]]
+pc = 0x4FBBD0
+name = "MagicFx_NearSprite3D"
+ret = "int"
+params = "const unsigned char *other, unsigned size"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBBD0..0x4FBC29 (0x5A bytes), no calls: eax 1 when (unsigned) sc +0x34 - other +0x34 + size / 2 and the same on +0x38 are at most size, and ((size >> 9) - other word +0x3E + sc word +0x3E) & 0xFFFF at most size >> 8; else 0. 7 call sites, 4 the engine's."
+
+[[func]]
+pc = 0x4FBC30
+name = "MagicFx_NearSprite"
+ret = "int"
+params = "const unsigned char *other, unsigned size"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBC30..0x4FBC6F (0x40 bytes), no calls: MagicFx_NearSprite3D's first two tests only. 12 call sites."
+
+[[func]]
+pc = 0x4FBC70
+name = "MagicFx_NearPoint3D"
+ret = "int"
+params = "unsigned x, unsigned z, unsigned yw, unsigned size"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBC70..0x4FBCC6 (0x57 bytes), no calls: MagicFx_NearSprite3D against (x, z) and the upper word of yw (read as the dword at [esp + 0x16]; only its low word, yw's upper, survives the & 0xFFFF): ((size >> 9) + sc word +0x3E - that) & 0xFFFF. MAGIC048 passes Sprite_Current +0xC, +0x10, the dword +0x3C and 0x60000."
+
+[[func]]
+pc = 0x4FBCD0
+name = "MagicFx_NearPoint"
+ret = "int"
+params = "unsigned x, unsigned z, unsigned size"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBCD0..0x4FBD0A (0x3B bytes), no calls: MagicFx_NearSprite against (x, z). One call site, MAGIC219 0x4F5EFC."
+
+[[func]]
+pc = 0x4FBE30
+name = "SpriteClut_SetStp"
+ret = "void"
+params = "const unsigned char *s"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBE30..0x4FBECF (0xA0 bytes), no calls: kind k = byte +0x28, index b = byte +0x27; row = b / SpriteClut_Divisors[k] (idiv), col = the low byte of (b % that) * SpriteClut_Mults[k] (imul byte); row += 0x10 (a byte) when +0x24 has bit 2; for i = 1 while i < SpriteClut_Counts[k] * 16 (k re-read) the high byte of Gfx_ClutStrip word (row * 256 + col + i) |= 0x80; Gfx_ClutStripDirty = 1. Divisors of kinds 5..7 are 0 (a division by zero); k unchecked. 10 call sites."
+
+[[func]]
+pc = 0x4FBED0
+name = "SpriteClut_ClearEntry31"
+ret = "void"
+params = "const unsigned char *s"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBED0..0x4FBF41 (0x72 bytes), no calls: SpriteClut_SetStp's cell; Gfx_ClutStripDirty = 1; the word 0x80F5BE + 2 * cell (entry 31) = 0. 4 call sites (MAGIC001, 015 twice, 018/019)."
+
+[[func]]
+pc = 0x4FBF50
+name = "SpriteClut_CopyToFxRow"
+ret = "unsigned"
+params = "const unsigned char *s"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FBF50..0x4FBFFE (0xAF bytes), no calls: SpriteClut_SetStp's cell; SpriteClut_Counts[k] * 16 words copied upward one at a time from Gfx_ClutStrip + cell to 0x80F980 (the strip's row 2), k re-read each; Gfx_ClutStripDirty = 1; eax = SpriteClut_Divisors[byte +0x28] * 2 (zero-extended). 10 call sites."
+
+[[func]]
+pc = 0x4FC000
+name = "SpriteClut_RestoreFxRow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FC000..0x4FC020 (0x21 bytes), no calls: the words 0x80F980..0x80FB7F from 0x4000 below (Gfx_ClutStripSource's row 2); Gfx_ClutStripDirty = 1. 7 call sites, each after a SpriteClut_CopyToFxRow's effect."
+
+[[func]]
+pc = 0x4FC0E0
+name = "MagicFx_CenterOnSide"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4FC0E0..0x4FC1E1 (0x102 bytes), two calls (Battle_ActorIsOut): target byte 0x904B44 read once; bits 6 and 7 both set: nothing. Bit 6: enemies 0..7 (Battle_ActorIsOut(i + 3), dl), else party 0..2 (the index whole); of those answering 0 in al, sums of +0x34 sar 9, +0x38 sar 9 and s16 +0x3E, and the count n (records read after the call); Sprite_Current +0x34 = (sum / n) shl 9, +0x38 the same, word +0x3E = sum / n (idiv). n 0 divides by zero. 31 call sites (29 overlays, one engine)."
+
+[[func]]
+pc = 0x4FC260
+name = "BattleActor_FxSizeB"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4FC260..0x4FC2CA (0x6B bytes), no calls: BattleActor_FxSize 0x4FC1F0 shape with the next tables: actor byte 0x904B34 below 3 - party +0x134 bit 1: FxSizeB_AltTable[byte 0x904B89], else FxSizeB_Table[+0x89]; an enemy: byte 0x8C5653 + 0x8C * its +0xF0. al; upper eax not a value. One call site, MAGIC009 0x49DE50, which stores al to Sprite_Current +9 as FxSize's callers do - the name's hypothesis."
+
+[[func]]
+pc = 0x4FC2D0
+name = "MagicFx_FormationOffset"
+ret = "void"
+params = "void"
+impl = "src/game/magic_lib.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-25, 0x4FC2D0..0x4FC321 (0x52 bytes), no calls: r = MagicFx_FormationRows[byte 0x904B89]; Sprite_Current dword +0xC = s16 MagicFx_FormationOffsets[(r * 4 + (+8 & 3)) * 2], +0x10 = the next short; both indices unchecked. 5 call sites (MAGIC120..124). 0x904B89 is the byte FxSize's second table is indexed by; 'formation' is a guess."
+
+[[data]]
+pc = 0x65C39C
+name = "MagicFx_BuffStats"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: MagicFx_BuffPopup's stat by kind & 3 (movzx byte [ecx + 0x65C39C]), passed to MagicFx_ApplyBuff. FxDim_Phases follows at 0x65C3A0."
+
+[[data]]
+pc = 0x65C3B0
+name = "BuffPopup_IconUV"
+ctype = "unsigned char"
+count = 36
+status = "evidence"
+evidence = "read 2026-09-25: BuffPopup_Draw's u (+0) and v (+2) by icon * 4, unchecked; nine cells (0..7 the kinds MagicFx_BuffPopup passes, 8 its resisted one), SpriteClut_Counts follows."
+
+[[data]]
+pc = 0x65C3D4
+name = "SpriteClut_Counts"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: the CLUT helpers' entry count / 16 by the record's +0x28; five non-zero."
+
+[[data]]
+pc = 0x65C3DC
+name = "SpriteClut_Divisors"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: the CLUT helpers' idiv divisor by +0x28; entries 5..7 are 0 (a division by zero). SpriteClut_CopyToFxRow answers it * 2."
+
+[[data]]
+pc = 0x65C3E4
+name = "SpriteClut_Mults"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: the CLUT helpers' column multiplier by +0x28 (imul byte: the low byte is what is kept)."
+
+[[data]]
+pc = 0x65C414
+name = "FxSizeB_Table"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-25: BattleActor_FxSizeB by the party record's +0x89 (BattleActor_FxSize's is 0x65C3EC, the same length); unchecked."
+
+[[data]]
+pc = 0x65C420
+name = "FxSizeB_AltTable"
+ctype = "unsigned char"
+count = 28
+status = "evidence"
+evidence = "read 2026-09-25: BattleActor_FxSizeB by byte 0x904B89 when the member's +0x134 has bit 1 (FxSize's is 0x65C3F8); length to MagicFx_FormationOffsets; unchecked."
+
+[[data]]
+pc = 0x65C43C
+name = "MagicFx_FormationOffsets"
+ctype = "short"
+count = 56
+status = "evidence"
+evidence = "read 2026-09-25: MagicFx_FormationOffset's pairs of shorts, four per row (by an actor's +8 & 3), seven rows to MagicFx_FormationRows."
+
+[[data]]
+pc = 0x65C4AC
+name = "MagicFx_FormationRows"
+ctype = "unsigned char"
+count = 28
+status = "evidence"
+evidence = "read 2026-09-25: MagicFx_FormationOffset's row by byte 0x904B89 (values 0..6 in the first 28 bytes); the length is FxSizeB_AltTable's, which the same byte indexes - a guess, the index is unchecked."
