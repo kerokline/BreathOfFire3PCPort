@@ -302,7 +302,16 @@ std::uint32_t DepthEffect(const std::uint32_t* a, std::uint32_t answer) {
     return answer;
 }
 
+// The sprite children point 0x9039D8 at a sprite bank around their phase and
+// put it back after: only a callee between sees it, so Sprite_UpdateScreen
+// (standard, listed here for this) logs it.
+std::uint32_t BankSeen(const std::uint32_t*, std::uint32_t answer) {
+    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(kSpriteBank))));
+    return answer;
+}
+
 const mh::Callee kCallees[] = {
+    {S30_OURS(Sprite_UpdateScreen), 0, {}, kG, 0, 0, {}, &BankSeen},
     {S30_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0},
     {S30_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &Committed},
     {S30_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},
