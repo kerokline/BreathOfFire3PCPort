@@ -24618,3 +24618,208 @@ pc = 0x65B5F4
 name = "Magic092_SparkPhases"
 status = "evidence"
 evidence = "read 2026-09-25: Magic092_SparkRun's call table by +2: 0x4E9770 0x4E5950 0x4E97D0 0x4E97F0; MAGIC093's table follows at 0x65B604."
+
+# ---------------------------------------------------------------------------
+# Round nine group E: the engine-side rows of Magic_Rows (file 0xFFFF: rows 0,
+# 108, 123, 126, 128) and Head Cracker's rock (kind 1, parameter 0x5D).
+# docs/magic_engine.md. Names read one id down are hypotheses
+# (docs/cut-content.md section 2).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4378D0
+name = "MagicHold_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4378D0..0x4378F5 (0x26 bytes), cdecl, void: a two-entry stack table (mov [esp + 0/4], imm32 0x47FDA0 0x437900) called by byte +1 of Sprite_Current, unchecked. Magic_Rows rows 0 and 126 (.data 0x64C2BC, 0x64C6AC), file 0xFFFF; row 126 is id 0x7F, TCRF's Assault ('halts the game a moment, then a plain attack'): a 60-frame hold, then flag 0x40 on the target. Fuzz only."
+
+[[func]]
+pc = 0x47FDA0
+name = "Task_StartHold60"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x47FDA0..0x47FDB1 (0x12 bytes), cdecl, void: Sprite_Current +9 = 0x3C, +1 += 1. Entry 0 of MagicHold_Task's stack table and of the .data table 0x654904 that 0x47FD80 (no group's) jumps through by +1 - a shared body. Fuzz only."
+
+[[func]]
+pc = 0x437900
+name = "MagicHold_Countdown"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x437900..0x43792C (0x2D bytes), cdecl, void: Sprite_Current +9 not 0: +9 -= 1; else Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 1 of MagicHold_Task's table. Fuzz only."
+
+[[func]]
+pc = 0x4525F0
+name = "RestoreForm_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x4525F0..0x452615 (0x26 bytes), cdecl, void: a two-entry stack table (0x452620 0x452660) by +1, unchecked. Magic_Rows row 108 (.data 0x64C61C), file 0xFFFF; the ability id 0xD9, Restore Form read one id down (the name a hypothesis). Fuzz only."
+
+[[func]]
+pc = 0x452620
+name = "RestoreForm_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x452620..0x45265A (0x3B bytes), cdecl, void: the party record 0x802D40 + 0x14C * (byte 0x904B34), unchecked: +1 = 6 (the reaction state), +2 = 4, +3 = 4, +4 = 0; Sprite_Current +1 += 1. The member's state-6 handler 0x441A10 then runs entry 4 of 0x64E07C (0x442080). Fuzz only."
+
+[[func]]
+pc = 0x452660
+name = "RestoreForm_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x452660..0x452676 (0x17 bytes), cdecl, void: while the pending word 0x904B82 is not 0 nothing; then 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Fuzz only."
+
+[[func]]
+pc = 0x43F3B0
+name = "Paralyzer_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43F3B0..0x43F3DD (0x2E bytes), cdecl, void: a three-entry stack table (0x43F3E0 0x43F430 0x43F460) by +1, unchecked. Magic_Rows row 123 (.data 0x64C694), file 0xFFFF; id 0x8B, TCRF's Paralyzer ('crashes the game'). Fuzz only."
+
+[[func]]
+pc = 0x43F3E0
+name = "Paralyzer_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43F3E0..0x43F42A (0x4B bytes), cdecl, void: Sprite_Current = [0x93B8C4] +0x80 (the caster); 0x437450(u16 [[0x939AD8] + 0xF8] + 4) - the current enemy's cue table, read without the event-battle test every other reader makes; Sprite_SetAnimation(2); Sprite_Current back, its +1 += 1. The unchecked +0xF8 read is the latent crash (docs/magic_engine.md section 6). Fuzz only."
+
+[[func]]
+pc = 0x43F430
+name = "MagicFx_WaitOwnerAnim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x43F430..0x43F45B (0x2C bytes), cdecl, void: Sprite_Current = [0x93B8C4] +0x80; Sprite_ScriptTickOnce() not 0 (al): the saved slot's +1 += 1; Sprite_Current back. Entry 1 of Paralyzer_Task's table and a stack-table entry of MAGIC081's (imm at 0x4BF8EE). Fuzz only."
+
+[[func]]
+pc = 0x43F460
+name = "MagicFx_FlagTargetEnd"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x43F460..0x43F479 (0x1A bytes), cdecl, void: Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 2 of Paralyzer_Task's table; also a stack-table immediate of thirteen overlay sites (0x49DF1A .. 0x4E9F16). Fuzz only."
+
+[[func]]
+pc = 0x43FC80
+name = "HeadCracker_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FC80..0x43FCD7 (0x58 bytes), cdecl, void: a ten-entry stack table by +1, unchecked: 0x43FCE0 0x43FD20 0x43FD80, then 0x43FDC0 / 0x43FE00 three times (loaded into ecx / eax by mov imm32 at +0x4 / +0x9 and stored thrice), then 0x43FE80. Magic_Rows row 128 (.data 0x64C6BC), file 0xFFFF; id 0x80, TCRF's Head Cracker ('freezes the game'). Fuzz only."
+
+[[func]]
+pc = 0x43FCE0
+name = "HeadCracker_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FCE0..0x43FD1D (0x3E bytes), cdecl, void: Sprite_Current = [0x93B8C4] +0x80; Sprite_SetAnimation(2); Sprite_Current back; its dword +0xC = 8; Sprite_Current +1 += 1. Fuzz only."
+
+[[func]]
+pc = 0x43FD20
+name = "HeadCracker_Windup"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FD20..0x43FD72 (0x53 bytes), cdecl, void: Sprite_Current dword +0xC -= 1; at 0 Sound_PlayEffect(0x601) and +1 += 1 (Sprite_Current read after the call); then Sprite_Current = [0x93B8C4] +0x80, Sprite_ScriptTickOnce (answer unused), Sprite_Current back. Fuzz only."
+
+[[func]]
+pc = 0x43FD80
+name = "HeadCracker_WaitCaster"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FD80..0x43FDB4 (0x35 bytes), cdecl, void: Sprite_Current = [0x93B8C4] +0x80; Sprite_ScriptTickOnce() not 0 (al): the saved slot's +0xA = 0, +1 += 1; Sprite_Current back. No limit on the wait. Fuzz only."
+
+[[func]]
+pc = 0x43FDC0
+name = "HeadCracker_Drop"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FDC0..0x43FDFD (0x3E bytes), cdecl, void: al = BattleTask_Create(1, 0x5D) (HeadCrackerRock_Task, BattleMagicFx_Dispatch entry 0x5D); dword 0x93A080 + 0x84 al = Sprite_Current (the index unchecked: 0xFF writes past the slots); Sprite_Current +0xA += 1, +1 += 1. Entries 3, 5, 7 of HeadCracker_Task's table. Fuzz only."
+
+[[func]]
+pc = 0x43FE00
+name = "HeadCracker_WaitTarget"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FE00..0x43FE74 (0x75 bytes), cdecl, void: Sprite_Current +0xA not 0: nothing; Battle_ActorIsOut(byte 0x904B44) not 0 (al): +1 = 9; else the target re-read: below 3 byte 0x802D41 + 0x14C t, else 0x93B961 + 0x128 (t - 3), unchecked; equal to 6 (the reaction state): nothing; else +1 += 1. No limit on the wait. Entries 4, 6, 8. Fuzz only."
+
+[[func]]
+pc = 0x43FE80
+name = "MagicFx_DoneAndFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x43FE80..0x43FE8B (0xC bytes), cdecl, void: 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 9 of HeadCracker_Task's table; a stack-table immediate of 21 more sites (0x43F61A and overlays from 0x499002 to 0x4F11CE, among them Simoon's 0x4CF612 and Ragnarok's 0x4D533A). Fuzz only."
+
+[[func]]
+pc = 0x43FE90
+name = "HeadCrackerRock_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FE90..0x43FEA9 (0x1A bytes), cdecl, void: a one-entry stack table (0x43FEB0) by +1, unchecked. BattleMagicFx_Dispatch's entry 0x5D (imm at 0x435707), created only by HeadCracker_Drop. Fuzz only."
+
+[[func]]
+pc = 0x43FEB0
+name = "HeadCrackerRock_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FEB0..0x43FEF2 (0x43 bytes), cdecl, void: a three-entry stack table (0x43FF00 0x440010 0x440060) by +2, unchecked; then Sprite_Current (re-read) +0 bit 0: Sprite_ScriptTick, Sprite_UpdateScreen. Fuzz only."
+
+[[func]]
+pc = 0x43FF00
+name = "HeadCrackerRock_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x43FF00..0x44000F (0x110 bytes), cdecl, void: Sprite_SetAnimationBank(0x1D3); +0x34 / +0x38 from the target's object (0x802D74 / 0x802D78 + 0x14C t for t up to 2, else 0x93B994 / 0x93B998 + 0x128 (t - 3)); word +0x3E += 0x800; +0x14 = 0, +0x20 = -16; bytes +0x5D +0x5E +0x5F +0x5C +0x24 +0x48 +0x2A = 0, +0x29 = 2; Sprite_SetAnimation(3); +2 += 1. Fuzz only."
+
+[[func]]
+pc = 0x440010
+name = "HeadCrackerRock_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x440010..0x44005B (0x4C bytes), cdecl, void: word +0x3E += word +0x14; dword +0x14 += +0x20; AreaMap_Elevation(+0x34, +0x38), its ax signed + 0x180; the signed word +0x3E of Sprite_Current re-read below that: +2 += 1. Fuzz only."
+
+[[func]]
+pc = 0x440060
+name = "HeadCrackerRock_Land"
+ret = "void"
+params = "void"
+impl = "src/game/magic_engine.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-26, 0x440060..0x44007A (0x1B bytes), cdecl, void: Battle_SetTargetFlag40(byte 0x904B44); [0x93B940] +0xA -= 1 (the Head Cracker task's children); jmp BattleTask_FreeCurrent. Fuzz only."
