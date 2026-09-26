@@ -1,6 +1,6 @@
 # The ninth round's queue: what the routes still enter, and the spells
 
-**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and the first spell wave (L, S16..S25) merged: 2,003 ours; the frame hash re-recorded and matching; the owner's eye owed
+**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and spell waves one and two merged: 2,468 ours; the frame hash to re-record again, the owner's eye owed
 
 Round eight left "76 hidden entries the three routes still enter" as the
 next queue ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Owed
@@ -230,3 +230,32 @@ and 7 unreachable on the PC), **S29** (49), **S31** (51), **S28** (42, with
 - **The first wave's raw-address calls into the second wave's functions**
   (`0x43FE80`, `0x4E47F0`, `0x4E5200`, ...) can now be rebound to names;
   they work as they are (the harness's stand-in falls back to the address).
+
+**Wave two complete (2026-09-26 evening): all ten merged, 2,003 -> 2,468
+ours (465 functions).** Then C2 ([`magic_c2.md`](magic_c2.md), 64: the four
+enemy-only skills' PC overlays hold no damage, element or status code - they
+draw, play sounds and set target flags; whatever TCRF saw comes from the
+battle engine) and C1 ([`magic_c1.md`](magic_c1.md), 62: row 27 reads no
+ability id and draws the same glyph cells for The World, Again, Death Bomb,
+Roulette and the skills players meet; Pentagram draws nothing when the
+target is on the actor's side). The usage cap cut C1 once; its committed
+work resumed intact.
+
+| Group | Taken | Controls | Refused | Not refused |
+|---|--:|--:|--:|---|
+| C1 | 62 | 214 | 211 | 2 equivalent; 1 caught by a fault, its variant by a count |
+| C2 | 64 | 206 | 205 | 1 equivalent |
+| C3 | 20 | 120 | 117 | 3 equivalent |
+| E | 22 | 102 | 100 | 2 equivalent |
+| S26 | 48 | 158 | 156 | 2 equivalent |
+| S27 | 47 | 167 | 166 | 1 equivalent |
+| S28 | 42 | 153 | 152 | 1 equivalent |
+| S29 | 49 | 142 | 142 | |
+| S30 | 60 | 169 | 169 | |
+| S31 | 51 | 197 | 197 | |
+
+Still owed, in order: the frame hash re-recorded (owner away); the `kFlag`
+fix in the harness and each group's controls re-run; `magic_rows.py`'s jump
+table bound; the raw-address calls rebound to names; `known-defects.md`
+numbered for both waves. Then the third wave: S01..S15 and S32..S38, 22
+groups.
