@@ -126,9 +126,15 @@ void Disturb() {
         Pointer(at::kOwner)[kFields[v % 8]] = b;
         break;
     }
-    case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+    case 12: case 13: {
+        // A target of 0..2 puts the "enemy" below the records, over the task
+        // slots and the current-slot / owner cells: never those two pointers
+        // (a byte of the owner moved, the next case 11 wrote through it -
+        // group S18's 1,700-call draw met it).
+        unsigned char* const cell = TargetEnemy() + (h >> 20) % at::kEnemyStride;
+        if (cell < Mem(0x93B8C0) || cell >= Mem(0x93B960)) *cell = static_cast<unsigned char>(v);
         break;
+    }
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
@@ -519,7 +525,7 @@ void Run(const Group& group) {
     bof3::Log("shadow      %s self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, %u MISMATCHES; "
               "%u bytes of state (%u regions) and the stand-ins' log compared",
               group.shadow, per * group.n_clones, group.n_clones, per, calls, bad, g_bytes, g_region_n);
-    char line[900];
+    char line[2048];   // a group of many handlers (S18: 42 functions, 35 phases)
     unsigned n = 0;
     for (unsigned i = 0; i < g_slot_n && n + 64 < sizeof line; ++i) {
         if (g_slots[i].calls == 0) continue;
