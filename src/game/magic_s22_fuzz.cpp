@@ -170,9 +170,9 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 
 // A pointer argument into ours' or the copy's own stack frame (the depth and
 // flag outputs) differs between the two by construction: masked off. The
-// harness logs four arguments: what Gpu_SetDrawMode's fifth, Sprite_SetTint's
-// fifth and the projections' outputs after the fourth are is not compared
-// (docs/magic_s22.md section 5).
+// projections' vertices are logged by what they hold (`deref`, the three
+// shorts of each SVECTOR): the scratch they sit in is rewritten every step,
+// so its final state alone would miss a wrong vertex (control J17).
 // Battle_ActorIsOut: the recorder's flag, except for the one actor of each
 // side the seed keeps in.
 unsigned g_keep_party, g_keep_enemy;
@@ -217,10 +217,10 @@ const mh::Callee kCallees[] = {
     {S22_OURS(Gte_MulMatrix0), 3, {kAll, 0, 0}, kG, 0, 0, {0, 18}, &MulMatrixEffect},
     {S22_OURS(Gte_SetRotMatrix), 1, {0}, kG, 0, 0, {18}},
     {S22_OURS(Gte_SetTransMatrix), 1, {0}, kG, 0, 0, {}, &SetTransEffect},
-    {S22_OURS(Sprite_SetTint), 4, {kAll, kU8, kU8, kU8}, kG, 0, 0},
+    {S22_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, kG, 0, 0},
     {S22_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},
     {S22_OURS(Math_Cos), 1, {kAll}, kG, 0, 0},
-    {S22_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0},
+    {S22_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0},
     {S22_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0},
     {S22_OURS(Gpu_SetPolyFT4), 1, {kAll}, kG, 0, 0},
     {S22_OURS(Gpu_SetPolyG3), 1, {kAll}, kG, 0, 0},
@@ -229,9 +229,9 @@ const mh::Callee kCallees[] = {
     {S22_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, kG, 0, 0},
     {S22_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0},
     {S22_OURS(Gpu_GetClut), 2, {kAll, kAll}, kG, 0, 0},
-    {S22_OURS(Gte_RotTransPers), 4, {kAll, kAll, 0, 0}, kG, 0, 0},
-    {S22_OURS(Gte_RotTransPers3), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0},
-    {S22_OURS(Gte_RotTransPers4), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0},
+    {S22_OURS(Gte_RotTransPers), 4, {kAll, kAll, 0, 0}, kG, 0, 0, {6}},
+    {S22_OURS(Gte_RotTransPers3), 8, {kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, kG, 0, 0, {6, 6, 6}},
+    {S22_OURS(Gte_RotTransPers4), 10, {kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, kG, 0, 0, {6, 6, 6, 6}},
     {S22_OURS(Gte_StoreDepthF), 1, {kAll}, kG, 0, 0},
     {S22_OURS(Gte_PrimDepths3_10), 1, {kAll}, kG, 0, 0},
     {S22_OURS(Gte_PrimDepths4_10), 1, {kAll}, kG, 0, 0},
