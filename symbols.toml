@@ -22924,3 +22924,568 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-25: MyollnirRing_Run's call [0x65B74C + 4 x byte +2]: MyollnirRing_Start, MyollnirRing_Grow, MyollnirRing_Circle, MyollnirRing_End."
+
+# --- round 9 group S23: MAGIC100..103 (Cyclone, Typhoon, Quake, Simoon read one id down) ----------------
+
+[[func]]
+pc = 0x4CC970
+name = "Cyclone_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CC970..0x4CC99D (0x2E bytes), cdecl, void (a battle task's step): cdecl, void: a three-entry stack table (imm32 0x4CC9A0 0x4CCA70 0x4F7350 at +0xF/+0x17/+0x22) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 13, file 0x275 = MAGIC100.EMI, ability ids 0x64 / 0xCA, Cyclone read one id down (a hypothesis, docs/cut-content.md section 2). The first function of MAGIC100's extent (tools/magic_rows.py). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CC9A0
+name = "Cyclone_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CC9A0..0x4CCA65 (0xC6 bytes), cdecl, void (a battle task's step): two calls (BattleTask_Create(1, 0xA) eight times, Sound_PlayById(0x100)): the owner's +8 / +0x34 / +0x38 and the source's (0x904B4C) +0x3C to the task, +9 and +0xB 0, +1 on; each child's +0x80 the task, +1 0, +0xB its index, +9 2i + 1, the task's +0xB up. The slot 0xFF is not checked. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCA70
+name = "Cyclone_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCA70..0x4CCA95 (0x26 bytes), cdecl, void (a battle task's step): one call: while +9 is 0 nothing; else Battle_SetTargetFlags(byte 0x904B44, 0x10) and +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCAA0
+name = "FxFunnel_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCAA0..0x4CCAB1 (0x12 bytes), cdecl, void (a battle task's step): jmp [0x65B75C + 4 * byte +1] (FxFunnel_Types). BattleTask_Create kind 1, parameter 0x0A (from MAGIC096..100, tools/magic_rows.py). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCAC0
+name = "FxFunnel_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCAC0..0x4CCB01 (0x42 bytes), cdecl, void (a battle task's step): call [0x65B760 + 4 * byte +2] (FxFunnel_Phases), then with +0 and +2 not 0: 0x4CCEF0, 0x4CCFA0, Gte_PopMatrix, 0x4CD2D0, 0x4CD390 and a tail jmp Gte_PopMatrix. FxFunnel_Types[0]. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCB10
+name = "FxFunnel_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCB10..0x4CCC8B (0x17C bytes), cdecl, void (a battle task's step): FxFunnel_Phases[0]. +9 down; at 0: owner +8; +0xC 0x60000, +0x10 0, 0x446770(Sprite_Current) (turns the pair by the record's +8); +0x34 / +0x38 the owner's plus the pair, then the owner's +0x3C / +8 / +0x34 / +0x38 / +0x3C copied over (the offset is overwritten); +0x20 = (Math_Ratan2(float dx, float dz) - 0x800) & 0xFFF; +0x18 = -4 - (Rand & 3) for +0xB odd, else (Rand & 3) + 4; +0x1C = (Rand & 0x30) + 0x50; +0xA 0; +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCC90
+name = "FxFunnel_Approach"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCC90..0x4CCD2B (0x9C bytes), cdecl, void (a battle task's step): FxFunnel_Phases[1]. The target record (party 0x802D40 + 0x14C t below 3, else enemy, unchecked); +0x20 +- 0x200 & 0xFFF by +0xB's bit 0; +0x14 = 0x4FBB40(record, 0xC000, +0x18 << 6); +0xA up 4, at 0x10 +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCD30
+name = "FxFunnel_Orbit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCD30..0x4CCE33 (0x104 bytes), cdecl, void (a battle task's step): FxFunnel_Phases[2]. As FxFunnel_Approach, the old +0x14 to +0x10 first; then 0x4FBC30(record, 0xC000) (eax tested whole) non-zero, or |(+0x10 & 0xFFF) - (+0x14 & 0xFFF)| (kept in +0x10) in 0x401..0xBFF: the owner's +9 up and +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCE40
+name = "FxFunnel_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCE40..0x4CCEE9 (0xAA bytes), cdecl, void (a battle task's step): FxFunnel_Phases[3]. +0xC 0x1000, +0x10 0, 0x446770(Sprite_Current); +0x34 += +0xC, +0x38 += +0x10, word +0x3E += 0x40; +0x20 +- 0x200; +0xA down, at 0 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCEF0
+name = "FxFunnel_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCEF0..0x4CCF93 (0xA4 bytes), cdecl, void (a battle task's step): Gte_PushMatrix; the SVECTOR ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -((s16 +0x3E + 0x100) / 2)) through Gte_RotTrans into a stack MATRIX's translation, Gte_RotMatrix of zero angles, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CCFA0
+name = "FxFunnel_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CCFA0..0x4CD2C7 (0x328 bytes), cdecl, void (a battle task's step): 17 calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) and MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); the scratch words 0x903850.. (radii from +0x1C, colours +0xA * 12 and +0xA, the angle index (+0x20 / 64) & 0x3F); 31 G4 quads (Gpu_SetPolyG4, semi-transparent, Gte_RotTransPers4 of Prim_VertexScratch, Gte_PrimDepths4_10B) each linked by MapView_LinkPrimAt(+0x34, +0x38, 2, 0x44). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD2D0
+name = "FxFunnel_PushGroundMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD2D0..0x4CD38B (0xBC bytes), cdecl, void (a battle task's step): as FxFunnel_PushMatrix, the height s16 +0x3E below phase 3, else AreaMap_Elevation(+0x34, +0x38) (ax), halved and negated with no 0x100. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD390
+name = "FxFunnel_DrawGround"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD390..0x4CD6A1 (0x312 bytes), cdecl, void (a battle task's step): 19 calls: Gpu_SetDrawMode(.., 0x55) and Gfx_CommitPrim(5, 0xC); inner radius +0x1C - 0x20, outer swelling by sin(0x40 i) * inner / 2 >> 12; 31 G4 quads, colour +0xA * 2 inside, 1 outside, each Gfx_CommitPrim(5, 0x44); a closing Gpu_SetDrawMode(.., 0x15) committed. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD6B0
+name = "Typhoon_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD6B0..0x4CD70D (0x5E bytes), cdecl, void (a battle task's step): a five-entry stack table (0x4CD710 0x4CD7E0 0x4DA3B0 0x4CD820 0x4F7350) by byte +1, unchecked; then with +0xA and +0 not 0 MagicFx_PushActorMatrix, 0x4CD840, Gte_PopMatrix. Magic_Rows row 26, file 0x276 = MAGIC101.EMI, ability ids 0x65 / 0xCB, Typhoon read one id down (a hypothesis). 0x4DA3B0 is MAGIC118's. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD710
+name = "Typhoon_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD710..0x4CD7D9 (0xCA bytes), cdecl, void (a battle task's step): +8 = the byte +8 of the sprite at 0x904B3C, xor 2 when 0x904B44's bit 0x40 and 'actor 0x904B34 below 3' agree; 0x4FC0E0(); +0xB 0, +9 0x30, +0xA 0, +1 on; sixteen BattleTask_Create(1, 0x1B): +0x80 the task, +1 0, +4 i, +9 (i >> 2) * 12 + 1, the task's +0xB up; Sound_PlayById(0x100). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD7E0
+name = "Typhoon_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD7E0..0x4CD811 (0x32 bytes), cdecl, void (a battle task's step): +0xA up; at 0x10 Battle_SetTargetFlags(byte 0x904B44, 0x10) and +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD820
+name = "Typhoon_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD820..0x4CD83C (0x1D bytes), cdecl, void (a battle task's step): no calls: +0xA down; at 0 +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CD840
+name = "Typhoon_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CD840..0x4CD9FA (0x1BB bytes), cdecl, void (a battle task's step): 14 calls: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(5, 0xC); radius 0x80 + (sin((Frame_Counter & 0x1F) << 7) << 4 >> 12) in 0x903850, colour +0xA * 6; eight G3 triangles (Gpu_SetPolyG3, Gte_RotTransPers3, Gte_PrimDepths3_10B) at angles 0x200 i, outer corners colour 1, each Gfx_CommitPrim(5, 0x34); a closing draw mode 0x15. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDA00
+name = "FxSpiral_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDA00..0x4CDA11 (0x12 bytes), cdecl, void (a battle task's step): jmp [0x65B770 + 4 * byte +1] (FxSpiral_Types). BattleTask_Create kind 1, parameter 0x1B (from MAGIC096..101). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDA20
+name = "FxSpiral_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDA20..0x4CDA52 (0x33 bytes), cdecl, void (a battle task's step): call [0x65B79C + 4 * byte +2] (FxSpiral_Phases), then with +0 and +2 not 0: 0x4CDCF0, 0x4CDDC0, tail jmp Gte_PopMatrix. FxSpiral_Types[0]. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDA60
+name = "FxSpiral_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDA60..0x4CDB28 (0xC9 bytes), cdecl, void (a battle task's step): FxSpiral_Phases[0]. +9 down; at 0: owner's +8, +0x34, +0x38, +0x3C + 0x1800000; +0xB (+4 << 2) & 0x3F; +0xC = u16 [0x65B774 + 2 * +4] << 8 (+4 unbounded); +0x10 0x60, +0x14 0x20; +9 (+4 << 2) + 1; +0xA 0; +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDB30
+name = "FxSpiral_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDB30..0x4CDB8D (0x5E bytes), cdecl, void (a battle task's step): FxSpiral_Phases[1]. +0xB up 8; word +0x3E = owner +0x3E + 0x180 + (Math_Sin((Frame_Counter & 0x1F) << 7) << 5 >> 12); +0xA up 2, at 0x10 +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDB90
+name = "FxSpiral_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDB90..0x4CDC47 (0xB8 bytes), cdecl, void (a battle task's step): FxSpiral_Phases[2]. As FxSpiral_Grow's first part; +9 down; at 0: Sound_PlayById(0x101) when +4 is 0; +0xB = byte [0x65B794 + 2 * +8] (unbounded); +0x10 and +0x14 0x80, +0x1C 0x18, +9 0x10, +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDC50
+name = "FxSpiral_Spread"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDC50..0x4CDC8A (0x3B bytes), cdecl, void (a battle task's step): FxSpiral_Phases[3], no calls: +0xB up 4, +0x10 += +0x1C, +9 down, at 0 +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDC90
+name = "FxSpiral_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDC90..0x4CDCE6 (0x57 bytes), cdecl, void (a battle task's step): FxSpiral_Phases[4]: +0xB += +0xA >> 1, +0x1C -= 2, +0x10 += +0x1C, +0xA down, at 0 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDCF0
+name = "FxSpiral_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDCF0..0x4CDDB4 (0xC5 bytes), cdecl, void (a battle task's step): Gte_PushMatrix; angles (0, s16 +0xC, 0) when the owner's +8 has bit 0, else (+0xC, 0, 0); the translation as FxFunnel_PushMatrix's with -(s16 +0x3E / 2); Gte_RotTrans, Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, ..), Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CDDC0
+name = "FxSpiral_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CDDC0..0x4CE0F1 (0x332 bytes), cdecl, void (a battle task's step): 17 calls: draw mode 0x35 linked by MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); inner radius +0x10, outer +0x10 + sin(0x40 i) * +0x14 >> 12, the angle index +0xB; 31 G4 quads, colour +0xA * i for 0x40 i below 0x200 else +0xA << 3, inner +0xA, each MapView_LinkPrimAt(.., 2, 0x44). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CE100
+name = "Quake_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CE100..0x4CE135 (0x36 bytes), cdecl, void (a battle task's step): a four-entry stack table (0x4CE140 0x4CE4A0 0x4CE500 0x4CEA20) by byte +1, unchecked. Magic_Rows row 69, file 0x277 = MAGIC102.EMI, ability ids 0x66 / 0xCC, Quake read one id down (a hypothesis). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CE140
+name = "Quake_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CE140..0x4CE490 (0x351 bytes), cdecl, void (a battle task's step): one jump table (2 entries at +0x330, indexed by the byte table 0x4CE478 by 0x904AAA - 0x1C, up to 0x18). The facing (as Typhoon_Start's) to 0x6959CC; 0x695C2C / 0x695C2E = s16 0x905E66 / 0x905E62 plus the signed bytes [0x65B7B0 + 2 facing] / [+1]; +0xB, +9 0; heights less AreaMap_Elevation to 0x695A24 (party with byte +0), 0x695994 / 0x6959D0 (enemies not Battle_ActorIsOut), 0x6959E0 (Sprite_Objects in use), 0x695A1C (Sprite_ObjectsExtra), 0x6959A4 (Effect_Objects in use of kind 0x17); every MapView_Cells run of AreaMap_Header dwords walked by byte +2, code 0 / 0x21 / 0x22 / 0x27 to 0x28 / 0x29 / 0x2A / 0x2B; 255 bytes at 0x695B2C zeroed; 0x695C30 = 1 for 0x904AAA of 0x1C, 0x23, 0x2F, 0x34, else 0; Sound_PlayById(0x100); +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CE4A0
+name = "Quake_Rumble"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CE4A0..0x4CE4F6 (0x57 bytes), cdecl, void (a battle task's step): no calls: +9 up; at 0x10 +9 0 and +1 on; MapView_Redraw 2; Camera_ShiftY = (2 (Frame_Counter & 1) - 1) * (+9 >> 1). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CE500
+name = "Quake_Heave"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CE500..0x4CEA15 (0x516 bytes), cdecl, void (a battle task's step): for i 0..15 the lift (sin((+9 + 2i) << 7) >> 8) - (sin(((+9 + 2i) << 7) - 0x80) >> 8) (0 at i 0) and the fall (0 at i 15) by Math_Sin; for j 0..13 inside AreaMap_Header's width (byte 0) and height (byte 1) the four bytes of AreaMap_Corners (0x8CB5B0 + 4 (width row + col)) raised by lift / fall idiv the bytes [0x65B7B8 + (facing >> 1) * 15 + j] and [+1] (a 0 divisor faults); 0x695B2C / 0x695A2C the lift kept; then the heights put back over AreaMap_Elevation (party when 0x904B44 has 0x80, else enemies, with 0x695C30 an enemy above the ground keeping its height), MapView_Redraw 2, Camera_ShiftY (Frame & 1) * 16 - 8, +9 up; the 16 x 14 bytes at 0x695B2C all 0 and +9 above 0x5A: +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CEA20
+name = "Quake_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CEA20..0x4CEB3B (0x11C bytes), cdecl, void (a battle task's step): the MapView_Cells walk with code 0x28 to 0 (the low 24 bits kept), 0x29 / 0x2A / 0x2B to 0x21 / 0x22 / 0x27; Camera_ShiftY 0; Battle_SetTargetFlag40(byte 0x904B44); 0x904AA8 |= 4; BattleTask_FreeCurrent; MapView_Redraw 2. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF5F0
+name = "Simoon_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF5F0..0x4CF61D (0x2E bytes), cdecl, void (a battle task's step): a three-entry stack table (0x4CF620 0x4CF740 0x43FE80) by byte +1, unchecked. Magic_Rows row 57, file 0x278 = MAGIC103.EMI, ability ids 0x67 / 0xCD, Simoon read one id down (a hypothesis). 0x43FE80 is the engine's (queue group E). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF620
+name = "Simoon_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF620..0x4CF733 (0x114 bytes), cdecl, void (a battle task's step): four BattleTask_Create(1, 0x2D): +1 2 (the task's +0xB = 1), two with +1 1, +0xB i, +9 i + 1, one with +1 0, the task's +0xB counting them; the CLUT words 0x812982.. and 0x8129A2.. (15 each) = the words 0x4000 below | 0x8000, 0x812980 and 0x8129A0 0; Gfx_ClutStripDirty 1; Sound_PlayById(0x100); +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF740
+name = "Simoon_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF740..0x4CF763 (0x24 bytes), cdecl, void (a battle task's step): while +0xB is not 0 nothing; else Battle_SetTargetFlag40(byte 0x904B44) and +1 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF770
+name = "SimoonFx_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF770..0x4CF781 (0x12 bytes), cdecl, void (a battle task's step): jmp [0x65B7D8 + 4 * byte +1] (SimoonFx_Types). BattleTask_Create kind 1, parameter 0x2D (from MAGIC103). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF790
+name = "SimoonDome_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF790..0x4CF7C2 (0x33 bytes), cdecl, void (a battle task's step): call [0x65B7E4 + 4 * byte +2] (SimoonDome_Phases); with +0 and +2 not 0 MagicFx_PushActorMatrix, 0x4CF8C0, tail jmp Gte_PopMatrix. SimoonFx_Types[0]. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF7D0
+name = "SimoonDome_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF7D0..0x4CF817 (0x48 bytes), cdecl, void (a battle task's step): SimoonDome_Phases[0], no calls: the source's +0x34, +0x38 and word +0x3E; +9, +0xA 0; +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF820
+name = "SimoonDome_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF820..0x4CF86E (0x4F bytes), cdecl, void (a battle task's step): SimoonDome_Phases[1]: at +9 = 4 Battle_SetTargetFlags(byte 0x904B44, 0x10); 0x903850 = +9 * 28; +9 up, at 8 +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF870
+name = "SimoonDome_Expand"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF870..0x4CF8B5 (0x46 bytes), cdecl, void (a battle task's step): SimoonDome_Phases[2]: 0x903850 = +9 * 4 + 0xC0; +0xA, +9 up; at +9 = 0x28 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CF8C0
+name = "SimoonDome_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CF8C0..0x4CFD12 (0x453 bytes), cdecl, void (a battle task's step): 21 calls: eight rings (latitudes 0xC00 down by 0x80) of 32 GT4 quads (0x80 apart): colours 0x81 or 0x81 - 8 d / 1 once +9 passes 0x10 plus the ring; per quad Gpu_SetDrawMode(.., 0x35) and MapView_LinkPrimAt(x, z, 2, 0xC) at the outer corner's map point ((s16 << 9) + +0x34 / +0x38), Gpu_SetPolyGT4, semi-transparent, Gte_RotTransPers4, Gte_PrimDepths4_14, Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), u (j << 3), v ((+0xA + 2 (0x14 + 0x18 - ring)) << 2), MapView_LinkPrimAt(x, z, 2, 0x54). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CFD20
+name = "SimoonDust_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CFD20..0x4CFD48 (0x29 bytes), cdecl, void (a battle task's step): call [0x65B808 + 4 * byte +2] (SimoonDust_Phases); with +0 and +2 not 0 a tail jmp 0x4CFEB0. SimoonFx_Types[1]. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CFD50
+name = "SimoonDust_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CFD50..0x4CFDDD (0x8E bytes), cdecl, void (a battle task's step): SimoonDust_Phases[0], no calls: +9 down; at 0 +0x34 / +0x38 / +0x3C = the source's plus the dwords [0x65B7F0 + 12 * +0xB] (+0xB unbounded); +9, +0xA 0; +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CFDE0
+name = "SimoonDust_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CFDE0..0x4CFE0E (0x2F bytes), cdecl, void (a battle task's step): SimoonDust_Phases[1]: BattleActor_UpdateScreenXY; +0xA up 2, +9 up, at 8 +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CFE10
+name = "SimoonDust_Arc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CFE10..0x4CFE49 (0x3A bytes), cdecl, void (a battle task's step): SimoonDust_Phases[2]: BattleActor_UpdateScreenXY; word +0x30 -= (+9 - 8) / 2 (signed, toward zero); +9 up, at 0x1C +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CFE50
+name = "SimoonDust_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CFE50..0x4CFEA7 (0x58 bytes), cdecl, void (a battle task's step): SimoonDust_Phases[3]: as SimoonDust_Arc, +9 up to 0x2C; +0xA down, at 0 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4CFEB0
+name = "SimoonDust_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4CFEB0..0x4D01FA (0x34B bytes), cdecl, void (a battle task's step): 15 calls: draw mode 0x35 linked by MapView_LinkPrimAt(+0x34, +0x38, 0, 0xC); a GT4 whose corners are floats: the screen point +0x2E / +0x30 plus sin / cos of (+9 - 0x80), (+9 + 0x40), (+9 - 0x40) (bytes) and +9, times 16, by the size (+9 * 2 after phase 1, (+9 - 8) / 4 + 0x10 before) >> 12; Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0x10, 0x1FA), u / v 1 and 0x1F, colour (+0xA << 3, +0xA * 7, +0xA << 2); MapView_LinkPrimAt(.., 0, 0x54). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4D0200
+name = "SimoonFan_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0200..0x4D0232 (0x33 bytes), cdecl, void (a battle task's step): call [0x65B818 + 4 * byte +2] (SimoonFan_Phases); with +0 and +2 not 0 MagicFx_PushActorMatrix, 0x4D02C0, tail jmp Gte_PopMatrix. SimoonFx_Types[2]. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4D0240
+name = "SimoonFan_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0240..0x4D0285 (0x46 bytes), cdecl, void (a battle task's step): SimoonFan_Phases[0], no calls: the source's +0x34, +0x38, +0x3C; +9, +0xA 0; +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4D0290
+name = "SimoonFan_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D0290..0x4D02B9 (0x2A bytes), cdecl, void (a battle task's step): SimoonFan_Phases[1], no calls: +0xA up 2, +9 up, at 8 +2 on. Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[func]]
+pc = 0x4D02C0
+name = "SimoonFan_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s23.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D02C0..0x4D04A2 (0x1E3 bytes), cdecl, void (a battle task's step): 13 calls: draw mode 0x55 committed (5, 0xC); radius cos(0x800) * (+9 + 0x58) << 2 >> 12 after phase 1, cos(0x800) * +9 * 48 >> 12 before; colours +0xA * 6 and +0xA << 3; sixteen G3 triangles 0x100 apart (Gte_RotTransPers3, Gte_PrimDepths3_10B), outer corners 0, each Gfx_CommitPrim(5, 0x34). Fuzz only (BOF3X_SHADOW=magic_s23): no recorded route casts it."
+
+[[data]]
+pc = 0x65B75C
+name = "FxFunnel_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: FxFunnel_Dispatch's jmp table by +1: 0x4CCAC0. The dword after it is FxFunnel_Phases. Read in place, never copied."
+
+[[data]]
+pc = 0x65B760
+name = "FxFunnel_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: FxFunnel_Task's call table by +2: 0x4CCB10 0x4CCC90 0x4CCD30 0x4CCE40 (the fourth frees the task). Read in place, never copied."
+
+[[data]]
+pc = 0x65B770
+name = "FxSpiral_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: FxSpiral_Dispatch's jmp table by +1: 0x4CDA20. Read in place, never copied."
+
+[[data]]
+pc = 0x65B774
+name = "FxSpiral_Turns"
+ctype = "unsigned short"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-25: FxSpiral_Wait's u16 [0x65B774 + 2 * +4] << 8 to +0xC (the tilt FxSpiral_PushMatrix reads); 16 words, +4 is the child's index 0..15. Read in place, never copied."
+
+[[data]]
+pc = 0x65B794
+name = "FxSpiral_Tilts"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: FxSpiral_Hold's byte [0x65B794 + 2 * +8] to +0xB, +8 unbounded (every other byte read). Read in place, never copied."
+
+[[data]]
+pc = 0x65B79C
+name = "FxSpiral_Phases"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-25: FxSpiral_Task's call table by +2: 0x4CDA60 0x4CDB30 0x4CDB90 0x4CDC50 0x4CDC90 (the fifth frees the task). Read in place, never copied."
+
+[[data]]
+pc = 0x65B7B0
+name = "Quake_FacingOffsets"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-25: Quake_Start's movsx bytes [0x65B7B0 + 2 facing] and [+1], added to 0x905E66 / 0x905E62 for the block's first column / row; four pairs, the facing byte unbounded. Read in place, never copied."
+
+[[data]]
+pc = 0x65B7B8
+name = "Quake_Divisors"
+ctype = "unsigned char"
+count = 30
+status = "evidence"
+evidence = "read 2026-09-25: Quake_Heave's idiv divisors [0x65B7B8 + (facing >> 1) * 15 + j] and [+1], j 0..13: two rows of 15; a facing of 4 or more reads 0x65B7D6, which is 0 (a divide fault). Read in place, never copied."
+
+[[data]]
+pc = 0x65B7D8
+name = "SimoonFx_Types"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: SimoonFx_Dispatch's jmp table by +1: 0x4CF790 0x4CFD20 0x4D0200. Read in place, never copied."
+
+[[data]]
+pc = 0x65B7E4
+name = "SimoonDome_Phases"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: SimoonDome_Task's call table by +2: 0x4CF7D0 0x4CF820 0x4CF870. Read in place, never copied."
+
+[[data]]
+pc = 0x65B7F0
+name = "SimoonDust_Offsets"
+ctype = "long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-25: SimoonDust_Wait's dwords [0x65B7F0 / F4 / F8 + 12 * +0xB] added to the source's position; two rows, +0xB unbounded. Read in place, never copied."
+
+[[data]]
+pc = 0x65B808
+name = "SimoonDust_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: SimoonDust_Task's call table by +2: 0x4CFD50 0x4CFDE0 0x4CFE10 0x4CFE50. Read in place, never copied."
+
+[[data]]
+pc = 0x65B818
+name = "SimoonFan_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: SimoonFan_Task's call table by +2: 0x4D0240 0x4D0290, then 0x4AE0D0 0x4AE0F0 (MAGIC056's, reached by five overlays). Read in place, never copied."

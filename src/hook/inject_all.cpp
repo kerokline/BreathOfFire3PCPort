@@ -127,6 +127,7 @@
 #include "game/magic_s17.h"
 #include "game/magic_s19.h"
 #include "game/magic_s22.h"
+#include "game/magic_s23.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -347,6 +348,10 @@ void InjectAll() {
                                 // clones' calls, stack-table immediates and .data handler tables re-aimed at the
                                 // shared harness's recorders, three through its own; no module patches bytes inside
                                 // its 56: order does not matter
+    MagicS23_Inject();          // round 9 group S23 (Cyclone, Typhoon, Quake, Simoon): its clones' calls re-aimed at
+                                // the harness's recorders, or left on the GTE / GPU library both sides call; after
+                                // every module it calls through (psx_gte*, psx_gpu, map_cells, world_map); no
+                                // module patches bytes inside its 51: otherwise order does not matter
     InjectReport();
 }
 
