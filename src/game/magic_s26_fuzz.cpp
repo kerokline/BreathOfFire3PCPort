@@ -367,9 +367,10 @@ void Seed(unsigned k) {
         if (mh::Half()) s[0] = 0;
         break;
     // the counts: each side of their ends
-    case kMagic114_Grow: if (mh::Often()) s[0xA] = Around(0x21); break;
-    case kMagic114_Hold: if (mh::Often()) s[9] = Around(0x21); break;
-    case kMagic114_Launch: if (mh::Often()) s[9] = Around(0x20); break;
+    // (each count stepped before its test: the seed one step before the edge)
+    case kMagic114_Grow: if (mh::Often()) s[0xA] = Around(0x20); break;
+    case kMagic114_Hold: if (mh::Often()) s[9] = Around(0x20); break;
+    case kMagic114_Launch: if (mh::Often()) s[9] = Around(0x1F); break;
     case kMagic114_Rays: case kMagic114_End: case kMagic114_BeamWait: case kMagic114_BeamFade:
         if (mh::Often()) s[9] = Around(1);
         break;
@@ -385,6 +386,10 @@ void Seed(unsigned k) {
         s[0xB] = static_cast<unsigned char>(mh::Next() % 10);
         if (mh::Often()) s[1] = static_cast<unsigned char>(2 + mh::Next() % 3);
         if (mh::Half()) Frame_Counter &= ~0x18u;
+        if (mh::Half()) {   // the flash's frame for this index, in phase 2
+            s[1] = 2;
+            Frame_Counter = (Frame_Counter & ~0x1Eu) | (s[0xB] & 3u) << 1;
+        }
         break;
     case kMagic114_DrawBeamCore: case kMagic114_DrawBeamStrip: case kMagic114_DrawBeamGlow:
         if (mh::Often()) SetLong(s + 0x14, static_cast<std::int32_t>(mh::Next() % 70) - 4);
