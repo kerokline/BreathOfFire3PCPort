@@ -24618,3 +24618,529 @@ pc = 0x65B5F4
 name = "Magic092_SparkPhases"
 status = "evidence"
 evidence = "read 2026-09-25: Magic092_SparkRun's call table by +2: 0x4E9770 0x4E5950 0x4E97D0 0x4E97F0; MAGIC093's table follows at 0x65B604."
+
+# ---------------------------------------------------------------------------
+# Round nine, group S31: MAGIC132, MAGIC137, MAGIC138, MAGIC143 (docs/magic_s31.md).
+
+[[func]]
+pc = 0x4E6950
+name = "DoomBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6950..0x4E698D (0x3E bytes), group S31: a five-entry stack table (DoomBreath_Start, _Brighten, _Fade, 0x4F9F70 - MAGIC226/227's count-down to target flags 0x10 -, DoomBreath_End) called by byte +1, unchecked. Magic_Rows row 139, file 0x292 = MAGIC132.EMI, ability id 0x84 (Doom Breath read one id down, a hypothesis); the first function of MAGIC132's extent 0x4E6950..0x4E7413. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6990
+name = "DoomBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6990..0x4E6A4F (0xC0 bytes), group S31: five calls: +8 the owner's +8; MagicFx_CenterOnSide; BattleTask_Create(1, 0x64) with +0x80 Sprite_Current, +1 0, +9 0x18; Gfx_ClutStrip row 26 (0x812980..0x812B7F) from its source 0x4000 below with bit 15 set, Gfx_ClutStripDirty 1; Sprite_ReleaseTint and Sprite_SetTint(0, 0, 0, 1) on the sprite at dword 0x904B3C, its answer (al) to +0xA; Sound_PlayById(0x100); +0xB and +9 0, +1 on. Entry 0 of DoomBreath_Task. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6A50
+name = "DoomBreath_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6A50..0x4E6AC2 (0x73 bytes), group S31: no calls: bytes +2, +3, +4 of MoveScript_TintRecords + 12 x byte +0xA up by one, +9 up; at 0x10 byte +0x29 of the sprite at 0x904B3C 2 and +1 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6AD0
+name = "DoomBreath_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6AD0..0x4E6B5D (0x8E bytes), group S31: two calls: the same tint bytes down by one, +9 down; at 0 Sprite_ReleaseTint(the sprite at 0x904B3C), BattleActor_Flash(byte 0x904B34), +9 0x10, +1 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6B60
+name = "DoomBreath_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6B60..0x4E6B90 (0x31 bytes), group S31: two calls: when byte +0xB is 0xFF (set by DoomBreathOrb_End): byte +0x29 of the sprite at 0x904B3C 4, Battle_SetTargetFlag40(byte 0x904B44), bit 2 of 0x904AA8, a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6BA0
+name = "DoomBreathOrb_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6BA0..0x4E6BB1 (0x12 bytes), group S31: jmp [0x65BD64 + 4 x byte +1] (DoomBreathOrb_TaskTable, one entry, unchecked). Kind-1 task parameter 0x64, created by DoomBreath_Start. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6BC0
+name = "DoomBreathOrb_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6BC0..0x4E6BFF (0x40 bytes), group S31: call [0x65BD68 + 4 x byte +2] (DoomBreathOrb_Steps, five entries, unchecked); then if byte +0 and byte +2 are set: +0xA up when +2 is above 1, DoomBreathOrb_PushMatrix, _DrawStream, _DrawGlow, a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6C00
+name = "DoomBreathOrb_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6C00..0x4E6CF1 (0xF2 bytes), group S31: two calls to 0x446770 (the dx / dz turn by the direction +8): +9 down; at 0: +8 the owner's; +0xC / +0x10 0xFFF80000 / 0xFFF10000 turned, +0x34 / +0x38 those plus Field_Kind2X / Field_Kind2Z; +0x3C the owner's + 0x800000; +0xC / +0x10 0x8000 / 0 turned; +0xB 0x1A, +9 0x2C, +0xA 0, dword +0x1C 0, dword +0x20 0x80, +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6D00
+name = "DoomBreathOrb_Move"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6D00..0x4E6D3C (0x3D bytes), group S31: no calls: +0x34 += +0xC, +0x38 += +0x10, +9 down; at 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6D40
+name = "DoomBreathOrb_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6D40..0x4E6D6F (0x30 bytes), group S31: no calls: +0xB = (+0xB - 1) & 0x3F, dword +0x1C up by 2; at 0x80 +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6D70
+name = "DoomBreathOrb_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6D70..0x4E6DAD (0x3E bytes), group S31: no calls: +0xB = (+0xB - 1) & 0x3F, dwords +0x1C and +0x20 down by 2; at +0x1C 0x20 +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6DB0
+name = "DoomBreathOrb_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6DB0..0x4E6DE5 (0x36 bytes), group S31: one call: dword +0x1C down by 1, +0x20 by 2; at +0x1C 0 the owner's +0xB 0xFF and a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6DF0
+name = "DoomBreathOrb_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6DF0..0x4E6EB8 (0xC9 bytes), group S31: six calls: Gte_PushMatrix; then with Sprite_Current read once: the angles (0, 0, 0x400 / 0x800 / 0xC00 for a direction +8 of 0 / 1 / 2, else 0), the vector (+0x34 sar 9 - 0x4000, +0x38 sar 9 - 0x4000, -(s16 +0x3E / 2)); Gte_RotTrans into the stack MATRIX +0x14 (a third argument, the flag, pushed), Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E6EC0
+name = "DoomBreathOrb_DrawStream"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E6EC0..0x4E7127 (0x268 bytes), group S31: thirteen calls: Gpu_SetDrawMode tpage 0xB5 and Gfx_CommitPrim(2, 0xC); word 0x903850 the task's +0x20, 0x903852 the angle ((+0xB + i) & 0x3F) sl 7, 0x903854 the shade (0x80, or at +2 = 4 dword +0x1C / 2 sl 3); 63 POLY_FT4 (Gpu_SetPolyFT4, semi-transparent) each between the SVECTORs of Prim_VertexScratch, 0xE00 wide, y i sl 6, z sin x word 0x903850 sar 12, Gpu_GetTPage(1, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), v ((+0xA + i) mod 14) sl 4 + 8 (word 0x903856), Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(2, 0x48); a closing draw-mode packet tpage 0x95. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7130
+name = "DoomBreathOrb_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7130..0x4E7413 (0x2E4 bytes), group S31: eleven calls: as DoomBreathOrb_DrawStream's frame, two POLY_G4 (Gpu_SetPolyG4, semi-transparent) 0xC00 wide from y -0x80, the shade 0xC0 (at +2 = 4 dword +0x1C / 2 x 12) and a quarter of it (s16, toward zero) at the far edge of the first and the near edge of the second, 1 elsewhere; Gte_PrimDepths4_10B, Gfx_CommitPrim(2, 0x44). Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7420
+name = "Corona_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7420..0x4E744D (0x2E bytes), group S31: a three-entry stack table (Corona_Start, Corona_Wait, Corona_End) called by byte +1, unchecked. Magic_Rows row 101, file 0x297 = MAGIC137.EMI, ability id 0x89 (Corona read one id down, a hypothesis); the first function of MAGIC137's extent 0x4E7420..0x4E7FE0. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7450
+name = "Corona_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7450..0x4E75A3 (0x154 bytes), group S31: three calls to BattleTask_Create(1, 0x4B): +0xB 0, +9 0x18, +1 on; a child with +0x80 Sprite_Current, +1 0, +8 the owner's, +0xB up; a child with +1 1, +0xB up; Gfx_ClutStrip row 26 from its source with bit 15 set, Gfx_ClutStripDirty 1; when byte 0x904AAA is not 0 and byte +0x100 of the enemy record by (byte 0x904B34 - 3, unchecked) is 0x29: a third child whose first 0x80 bytes are that record (rep movsd), then +1 2, +2 0, +6 1, +5 0x4B, +9 0, +0x29 3. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E75B0
+name = "Corona_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E75B0..0x4E75E2 (0x33 bytes), group S31: one call: +9 down; at 0 Battle_SetTargetFlags(byte 0x904B44, 0x20) and +1 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E75F0
+name = "Corona_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E75F0..0x4E7621 (0x32 bytes), group S31: two calls: when +0xB is 0: Battle_SetTargetFlag40(byte 0x904B44), +9 0x1E, bit 2 of 0x904AA8, a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7630
+name = "CoronaChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7630..0x4E7641 (0x12 bytes), group S31: jmp [0x65BD7C + 4 x byte +1] (CoronaChild_Kinds, three entries, unchecked). Kind-1 task parameter 0x4B, created by Corona_Start. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7650
+name = "CoronaRay_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7650..0x4E767C (0x2D bytes), group S31: call [0x65BD88 + 4 x byte +2] (CoronaRay_Steps, four entries, unchecked); then if byte +0 is set CoronaRay_PushMatrix, CoronaRay_Draw and a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7680
+name = "CoronaRay_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7680..0x4E772A (0xAB bytes), group S31: three calls: +0xC / +0x10 0xFFFD8000 / 0 turned by 0x446770; +0x34 / +0x38 those plus Field_Kind2X / Field_Kind2Z; word +0x3E AreaMap_Elevation(Field_Kind2X, Field_Kind2Z) + 0x200; Sound_PlayEffect(0x100); dword +0x14 0x2FFF, +0xB 0x34, +9 0, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7730
+name = "CoronaRay_Advance"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7730..0x4E77C5 (0x96 bytes), group S31: two calls: +0xB += (+9 shr 6) + 1; +0xA down on odd Frame_Counter; +0xC / +0x10 0x2000 / 0 turned by 0x446770 and added to +0x34 / +0x38; +9 += 0xFE; at 0x30 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E77D0
+name = "CoronaRay_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E77D0..0x4E78AB (0xDC bytes), group S31: six calls: DoomBreathOrb_PushMatrix's shape with the z angle from a four-entry jump table by the direction +8 (0, 0x400, 0x800, 0xC00); a direction past 3 leaves the angle word unwritten (stack garbage; ours aborts). Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E78B0
+name = "CoronaRay_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E78B0..0x4E7E27 (0x578 bytes), group S31: twenty-three calls: Gpu_SetDrawMode tpage 0xB5 and Gfx_CommitPrim(2, 0xC); words 0x903850 +9, 52 0x80, 54 the radius, 56 +0xA, 58 the angle (+0xB & 0x3F) sl 6; for i = 1 while i < s16 0x903850: a POLY_GT4 (Gpu_SetPolyGT4, semi-transparent) between the two point pairs (Math_Sin / Math_Cos of 0x580 and 0x280 at radius (i + 4) sl 5, the height sin(angle) x +0xA), shade 0x80 or at +2 = 3 (+9 - 0x30) / 3 sl 3, ramped up over i < 16 and down over the last 8 (dword 0x903850 read), Gpu_GetTPage(1, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), u (0x3F - ((not (Frame_Counter x 2) + i) & 0x3F)) sl 2 with 0xFC made 0xFB, Gte_RotTransPers4 at +8 / +0x1C / +0x30 / +0x44, Gte_PrimDepths4_14, Gfx_CommitPrim(2, 0x54); a closing draw-mode packet tpage 0x15. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7E30
+name = "CoronaFlash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7E30..0x4E7E52 (0x23 bytes), group S31: call [0x65BD98 + 4 x byte +2] (CoronaFlash_Steps, four entries, unchecked); then if byte +0 is set a tail jmp to CoronaFlash_Draw. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7E60
+name = "CoronaFlash_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7E60..0x4E7E7B (0x1C bytes), group S31: no calls: +9 0, +0xA 0x88, +2 on. Entry 0 of CoronaFlash_Steps, reached from 11 files (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7E80
+name = "CoronaFlash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7E80..0x4E7F71 (0xF2 bytes), group S31: seven calls: Gpu_SetDrawMode tpage 0x35 and Gfx_CommitPrim(2, 0xC); one POLY_G4 (semi-transparent) over (0, 0)..(319.0, 239.0) as floats, mirrored by bit 0 of the owner's direction +8; colours +9 on one edge, (+9 x 12, +9 sl 2, +9 sl 2) on the other; Gfx_CommitPrim(2, 0x44); a closing draw-mode packet tpage 0x15. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7F80
+name = "CoronaEnemy_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7F80..0x4E7FAD (0x2E bytes), group S31: a three-entry stack table (CoronaEnemy_Start, the engine's 0x43EC10, BattleFx_FreeTask) called by byte +2, unchecked. Entry 2 of CoronaChild_Kinds. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7FB0
+name = "CoronaEnemy_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7FB0..0x4E7FE0 (0x31 bytes), group S31: three calls: +0xB and +9 0; Sprite_SetAnimation(3), Sprite_ScriptTick, Sprite_QueueOverlay; +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E7FF0
+name = "MainCannon_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E7FF0..0x4E801D (0x2E bytes), group S31: a three-entry stack table (MainCannon_Start, MainCannon_Fire, MainCannon_End) called by byte +1, unchecked. Magic_Rows row 118, file 0x298 = MAGIC138.EMI, ability id 0x8A (Main Cannon read one id down, a hypothesis); the first function of MAGIC138's extent 0x4E7FF0..0x4E8656. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8020
+name = "MainCannon_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8020..0x4E8091 (0x72 bytes), group S31: one call: words +0x2E 0xF0, +0x30 0xFA; the first 16 words of Gfx_ClutStrip row 26 from its source (no bit set), Gfx_ClutStripDirty 1; +0xB and +9 0; Sprite_ScriptTick with Sprite_Current the owner (0x93B940), put back; +1 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E80A0
+name = "MainCannon_Fire"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E80A0..0x4E815B (0xBC bytes), group S31: two calls: when Frame_Counter & 7 is 0: BattleTask_Create(1, 0x56); unless 0xFF: +1 0, +2 0, words +0x2E 0xDC (+ 0x14 for an odd +9) and +0x30 0xFA, +0xA the caller's +9, +0x80 Sprite_Current, +9 up, +0xB up; at +9 6 +1 on; Sprite_ScriptTick on the owner. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8160
+name = "MainCannon_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8160..0x4E819F (0x40 bytes), group S31: three calls: Sprite_ScriptTick on the owner; when +0xB is 0: Battle_SetTargetFlag40(byte 0x904B44), bit 2 of 0x904AA8, a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E81A0
+name = "MainCannonChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E81A0..0x4E81B1 (0x12 bytes), group S31: jmp [0x65BDA8 + 4 x byte +1] (MainCannonChild_Kinds, two entries, unchecked). Kind-1 task parameter 0x56, created by MainCannon_Fire and MainCannonShell_Fly. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E81C0
+name = "MainCannonShell_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E81C0..0x4E8211 (0x52 bytes), group S31: one call: dword 0x9039D8 0x8E3580; a three-entry stack table (MainCannonShell_Aim, _Fly, BattleFx_FreeTask) by byte +2, unchecked; Sprite_QueueOverlay if bit 0 of +0; dword 0x9039D8 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8220
+name = "MainCannonShell_Aim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8220..0x4E843E (0x21F bytes), group S31: one call: with the actor byte 0x904B34 (read as a dword, the low byte): at 0..2 the party record 0x802D40 + 0x14C a, else the enemy record 0x93B960 + 0x128 (a - 3), unchecked; dword +0xC (their s16 +0x2E - s16 +0x2E + 0x28, or 0x14 for an even owner +9) sl 4 / 8, dword +0x10 (their s16 +0x30 - s16 +0x30) sl 4 / 8 (cdq, and 7: toward zero); +0x18 / +0x1C s16 +0x2E / +0x30 sl 4; bytes +0x24 0x84, +0x25 0x1E, +0x27 0xA0, +0x29 3, +0x48 1, the rest of +0x26..+0x2D and +0x5C..+0x5F 0; Sprite_SetAnimation((byte 0x904B44 - 1) & 1); +9 3, +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8440
+name = "MainCannonShell_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8440..0x4E854D (0x10E bytes), group S31: two calls: words +0x2E / +0x30 dwords +0x18 / +0x1C sar 4; +0x18 += +0xC, +0x1C += +0x10; while s16 +0x30 is below the actor's s16 +0x30 - 0x14 (party) or - 0x28 (enemy): BattleTask_Create(1, 0x56) with +1 1, +2 0, +0x2E / +0x30 / +0xA the shell's, +0x80 the owner, and +2 on; Sprite_ScriptTick. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8550
+name = "MainCannonBlast_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8550..0x4E85A1 (0x52 bytes), group S31: one call: dword 0x9039D8 0x8C5D80; a three-entry stack table (MainCannonBlast_Start, _Play, 0x4AF490 - MAGIC058's owner count down and free) by byte +2, unchecked; Sprite_UpdateScreen if byte +0; dword 0x9039D8 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E85B0
+name = "MainCannonBlast_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E85B0..0x4E8635 (0x86 bytes), group S31: two calls: bytes +0x24 0x84, +0x25 0x1D, +0x27 0xB4, +0x26 +0x28 +0x29 +0x2A +0x2B and word +0x2C 0; Sprite_SetAnimation(5); Sound_PlayEffect(0x100 + (+0xA & 1)); +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8640
+name = "MainCannonBlast_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8640..0x4E8656 (0x17 bytes), group S31: two calls: Sprite_ScriptTick; its al not 0: +2 on; else a tail jmp to Sprite_QueueOverlay. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8660
+name = "ThunderClap_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8660..0x4E8685 (0x26 bytes), group S31: a two-entry stack table (ThunderClap_Start, 0x4E5200 - MAGIC131's done flag and free once +0xB is 0) called by byte +1, unchecked. Magic_Rows row 66, file 0x299 = MAGIC143.EMI, ability id 0x8F (Thunder Clap read one id down, a hypothesis); the first function of MAGIC143's extent 0x4E8660..0x4E9138. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8690
+name = "ThunderClap_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8690..0x4E86FC (0x6D bytes), group S31: two calls: with the source sprite (dword 0x904B4C) read first, BattleTask_Create(1, 0x35) with +0x80 Sprite_Current, +1 0, dwords +0x34 / +0x38 / +0x3C the source's; +0xB 1; Sound_PlayById(0x100); +1 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8700
+name = "ThunderClapBolt_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8700..0x4E8711 (0x12 bytes), group S31: jmp [0x65BDB0 + 4 x byte +1] (ThunderClapBolt_TaskTable, one entry, unchecked). Kind-1 task parameter 0x35, created by ThunderClap_Start. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8720
+name = "ThunderClapBolt_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8720..0x4E87C9 (0xAA bytes), group S31: call [0x65BDB4 + 4 x byte +2] (ThunderClapBolt_Steps, four entries, unchecked); BattleActor_UpdateScreenXY; while +2 and +0 are set: LightningBolt_PushMatrix (group S22), ThunderClapBolt_DrawBand(0x30, 0x10, 3), +0xB += 4, _DrawBand(0x20, 0x50, 0xF), += 2, _DrawArcs, += 4, _DrawBand(0x18, 0x80, 0x1F), += 0xF6; word +0x2E += 0x10, _DrawFlash, -= 0x20, _DrawFlash; a tail jmp to Gte_PopMatrix. LightningBolt_Run's shape with its own draws and steps. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E87D0
+name = "ThunderClapBolt_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E87D0..0x4E87FC (0x2D bytes), group S31: one call: +0xB Rand & 0xF, +9 and +0xA 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8800
+name = "ThunderClapBolt_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8800..0x4E8868 (0x69 bytes), group S31: three calls: +0xA += 4, +0xB up; at +0xA 0x10: Sprite_ReleaseTint and Sprite_SetTint(-8, -8, -8, 1) on the source sprite (dword 0x904B4C, read for each), Battle_SetTargetFlags(byte 0x904B44, 0x10), +9 0x20, +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8870
+name = "ThunderClapBolt_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8870..0x4E88C4 (0x55 bytes), group S31: three calls: +0xB up, +9 down; at 0: Battle_SetTargetFlag40(byte 0x904B44), Sprite_ReleaseTint(the source sprite), BattleActor_Flash(byte 0x904B44), +2 on. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E88D0
+name = "ThunderClapBolt_DrawBand"
+ret = "void"
+params = "int a1, int a2, int a3"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E88D0..0x4E8D9F (0x4D0 bytes), group S31: twenty-seven calls: Myollnir_DrawBand's (group S22) with dword 0x903850 first s16 a2 / 2 (toward zero), 58 +0xA sl 3, 5C (Scratch_Swap) +0xA x 13 read back at each use, the steps -(3 i) sl 4, 23 steps (i < 0x18), and no test of the projected y. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8DA0
+name = "ThunderClapBolt_DrawArcs"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8DA0..0x4E8F93 (0x1F4 bytes), group S31: sixteen calls: MyollnirRing_DrawArcs (group S22) with dword 0x903850 first 0x80 and the swing 0xA0 +- Rand & 0x1F. Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[func]]
+pc = 0x4E8FA0
+name = "ThunderClapBolt_DrawFlash"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s31.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E8FA0..0x4E9138 (0x199 bytes), group S31: ten calls: Myollnir_DrawFlash (group S22) with dword 0x903850 = Rand & 7 + +0xA x 4 (read as a dword) and the centre +0xA x (8, 8, 6). Fuzz only: no recorded route casts it (docs/magic_s31.md)."
+
+[[data]]
+pc = 0x65BD64
+name = "DoomBreathOrb_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S31: DoomBreathOrb_Task's jmp [0x65BD64 + 4 x byte +1]: DoomBreathOrb_Run."
+
+[[data]]
+pc = 0x65BD68
+name = "DoomBreathOrb_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S31: DoomBreathOrb_Run's call [0x65BD68 + 4 x byte +2]: DoomBreathOrb_Launch, _Move, _Grow, _Shrink, _End; MAGIC137's table follows at 0x65BD7C."
+
+[[data]]
+pc = 0x65BD7C
+name = "CoronaChild_Kinds"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S31: CoronaChild_Task's jmp [0x65BD7C + 4 x byte +1]: CoronaRay_Run, CoronaFlash_Run, CoronaEnemy_Task."
+
+[[data]]
+pc = 0x65BD88
+name = "CoronaRay_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S31: CoronaRay_Run's call [0x65BD88 + 4 x byte +2]: CoronaRay_Start, 0x4B6B20, 0x4B6B70 (MAGIC067's), CoronaRay_Advance."
+
+[[data]]
+pc = 0x65BD98
+name = "CoronaFlash_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S31: CoronaFlash_Run's call [0x65BD98 + 4 x byte +2]: CoronaFlash_Start, BarrierRing_Grow, MagicFx_WaitA, 0x4B1740 (MAGIC060's); MAGIC138's table follows at 0x65BDA8."
+
+[[data]]
+pc = 0x65BDA8
+name = "MainCannonChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S31: MainCannonChild_Task's jmp [0x65BDA8 + 4 x byte +1]: MainCannonShell_Run, MainCannonBlast_Run; MAGIC143's table follows at 0x65BDB0."
+
+[[data]]
+pc = 0x65BDB0
+name = "ThunderClapBolt_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S31: ThunderClapBolt_Task's jmp [0x65BDB0 + 4 x byte +1]: ThunderClapBolt_Run."
+
+[[data]]
+pc = 0x65BDB4
+name = "ThunderClapBolt_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S31: ThunderClapBolt_Run's call [0x65BDB4 + 4 x byte +2]: ThunderClapBolt_Start, _Rise, _Fade, JoltBolt_End (group S22); the next overlay's table follows at 0x65BDC4."
