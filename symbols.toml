@@ -24777,7 +24777,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_engine.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x43FE80..0x43FE8B (0xC bytes), cdecl, void: 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 9 of HeadCracker_Task's table; a stack-table immediate of twenty more sites (0x43F61A and overlays from 0x499002 to 0x4F11CE, among them Simoon's 0x4CF612 and Ragnarok's 0x4D533A). Fuzz only."
+evidence = "disasm 2026-09-26, 0x43FE80..0x43FE8B (0xC bytes), cdecl, void: 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 9 of HeadCracker_Task's table; a stack-table immediate of 21 more sites (0x43F61A and overlays from 0x499002 to 0x4F11CE, among them Simoon's 0x4CF612 and Ragnarok's 0x4D533A). Fuzz only."
 
 [[func]]
 pc = 0x43FE90
