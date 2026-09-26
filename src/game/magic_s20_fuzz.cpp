@@ -180,12 +180,22 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 // calls are handed on the stack (six bytes each; the original leaves the pads
 // unwritten), and the vertices each projection reads as it is called. The
 // two pool allocs and Magic088_Variant answer al (`ret_mask` 0xFF).
+// The fuzz's own packet buffer: Gfx_PacketNext points here every round (the
+// stand-ins never move it), so every primitive of a draw is built in the same
+// bytes. Each commit (MapView_LinkPrimAt, Gfx_CommitPrim) therefore logs the
+// packet as it stands - else only the last primitive of a draw is compared.
+alignas(16) unsigned char g_packet[0x60];
+std::uint32_t Committed(const std::uint32_t*, std::uint32_t answer) {
+    mh::NoteBytes(g_packet, sizeof g_packet);
+    return answer;
+}
+
 const mh::Callee kCallees[] = {
     {S20_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0},
     {S20_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, mh::Answer::kByte, 0, 0xFF},
     {S20_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S20_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S20_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
+    {S20_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Committed},
+    {S20_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Committed},
     {S20_OURS(Gpu_SetPolyGT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S20_OURS(Gpu_SetPolyF4), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
@@ -258,10 +268,8 @@ constexpr std::uint32_t kStride = 0x84;
 constexpr std::uint32_t kPoolsSize = (kPoolB - kPools) + 0x100 * kStride;
 constexpr std::uint32_t kTints = 0x7E0700;     // MoveScript_TintRecords, 12 bytes; any byte indexes them
 constexpr std::uint32_t kAbility = 0x904B80;
+constexpr std::uint32_t kEnemyLift = 0x8C564F;   // + 0x8C * an enemy's type +0xF0
 
-// The fuzz's own packet buffer: Gfx_PacketNext points here every round (the
-// stand-ins never move it).
-alignas(16) unsigned char g_packet[0x60];
 
 const mh::Region kRegions[] = {
     {kPools, kPoolsSize},
@@ -274,6 +282,7 @@ const mh::Region kRegions[] = {
     {0x812980, 0x40},                   // CLUT strip rows 26 and 27
     {0x65B588, 0x18},                   // MAGIC088's six band phases
     {kAbility, 4},
+    {kEnemyLift, 8 * 0x8C},             // MAGIC087's lift bytes for enemy types 0..7 (zero at start-up)
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_packet)), sizeof g_packet},
 };
 
@@ -304,6 +313,8 @@ void Seed(unsigned k) {
     // byte is past 10).
     if ((k == kM087Start || k == kM092Start || k == kM092ChildTint || k == kM092ChildEnd) && mh::Half())
         mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(0x40 | mh::Next() % 11);
+    if (k == kM087Start)   // enemy types inside the lift region
+        for (unsigned i = 0; i < 8; ++i) mh::EnemyOf(static_cast<unsigned char>(i + 3))[0xF0] = Byte(mh::Next() % 8);
     switch (k) {
     case kM087Task:
     case kM092Task: sc[1] = Byte(mh::Next() % 2); break;
