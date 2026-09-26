@@ -168,7 +168,7 @@ const mh::Clone kClones[] = {
     {"FlameSpark_Stretch", 0x4C6EF0, 0x2A, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::FlameSpark_Stretch)},
     {"FlameSpark_Fade", 0x4C6F20, 0x41, kCalls4C6F20, MH_N(kCalls4C6F20), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::FlameSpark_Fade)},
     {"FlameSpark_Draw", 0x4C6F70, 0x346, kCalls4C6F70, MH_N(kCalls4C6F70), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::FlameSpark_Draw)},
-    {"FlamePool_Alloc", 0x4C72C0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::FlamePool_Alloc), 1},
+    {"FlamePool_Alloc", 0x4C72C0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::FlamePool_Alloc), 0xFF},
     {"Inferno_TargetCentre", 0x4C7320, 0x10B, kCalls4C7320, MH_N(kCalls4C7320), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Inferno_TargetCentre)},
     {"Frost_Task", 0x4C7430, 0x26, nullptr, 0, kImms4C7430, MH_N(kImms4C7430), nullptr, 0, reinterpret_cast<const void*>(&::Frost_Task)},
     {"Frost_Start", 0x4C7460, 0xAC, kCalls4C7460, MH_N(kCalls4C7460), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Frost_Start)},
@@ -245,13 +245,13 @@ std::uint32_t IsOut(const std::uint32_t* a, std::uint32_t h) {
 }
 // Sprite_SetTint's and Gpu_SetDrawMode's fifth argument.
 std::uint32_t Fifth(const std::uint32_t* a, std::uint32_t h) {
-    mh::LogValue(a[4]);
+    mh::Note(a[4]);
     return h;
 }
 // The primitive cursor moved on by the size, half the time, inside the buffer.
 void Advance(std::uint32_t size) {
     unsigned char* const at = Gfx_PacketNext;
-    if (mh::Salted() % 2 && at >= g_prims && at + (size & 0xFF) < g_prims + kPrimBytes / 2) Gfx_PacketNext = at + (size & 0xFF);
+    if (mh::Noise() % 2 && at >= g_prims && at + (size & 0xFF) < g_prims + kPrimBytes / 2) Gfx_PacketNext = at + (size & 0xFF);
 }
 std::uint32_t Link(const std::uint32_t* a, std::uint32_t h) {
     Advance(a[3]);
@@ -271,7 +271,7 @@ std::uint32_t SetPrim(const std::uint32_t* a, std::uint32_t h) {
 std::uint32_t Rtp3(const std::uint32_t* a, std::uint32_t h) {
     std::uint32_t f = 0x811C9DC5u;
     for (int i = 0; i < 3; ++i) f = Fnv(f, P(a[i]), 6);
-    mh::LogValue(f ^ (a[4] - a[3]) * 0x10001u ^ (a[5] - a[3]) * 0x1003u);
+    mh::Note(f ^ (a[4] - a[3]) * 0x10001u ^ (a[5] - a[3]) * 0x1003u);
     for (int i = 3; i < 6; ++i) mh::FillBytes(W(a[i]), 8);
     mh::FillBytes(W(a[6]), 4);
     return h;
@@ -279,7 +279,7 @@ std::uint32_t Rtp3(const std::uint32_t* a, std::uint32_t h) {
 std::uint32_t Rtp4(const std::uint32_t* a, std::uint32_t h) {
     std::uint32_t f = 0x811C9DC5u;
     for (int i = 0; i < 4; ++i) f = Fnv(f, P(a[i]), 6);
-    mh::LogValue(f ^ (a[5] - a[4]) * 0x10001u ^ (a[6] - a[4]) * 0x1003u ^ (a[7] - a[4]) * 0x101u);
+    mh::Note(f ^ (a[5] - a[4]) * 0x10001u ^ (a[6] - a[4]) * 0x1003u ^ (a[7] - a[4]) * 0x101u);
     for (int i = 4; i < 8; ++i) mh::FillBytes(W(a[i]), 8);
     mh::FillBytes(W(a[8]), 4);
     return h;
@@ -290,28 +290,28 @@ std::uint32_t Rtp4(const std::uint32_t* a, std::uint32_t h) {
 // block RotMatrix and MulMatrix0 then fill) has to be ours too.
 std::uint32_t g_trans, g_matrix;
 std::uint32_t RotTrans(const std::uint32_t* a, std::uint32_t h) {
-    mh::LogBytes(P(a[0]), 6);
+    mh::NoteBytes(P(a[0]), 6);
     g_trans = a[1];
     mh::FillBytes(W(a[1]), 12);
     return h;
 }
 std::uint32_t RotMatrix(const std::uint32_t* a, std::uint32_t) {
-    mh::LogValue(Fnv(0x811C9DC5u, P(a[0]), 6) ^ (g_trans - a[1]));
+    mh::Note(Fnv(0x811C9DC5u, P(a[0]), 6) ^ (g_trans - a[1]));
     g_matrix = a[1];
     mh::FillBytes(W(a[1]), 18);
     return a[1];
 }
 std::uint32_t MulMatrix0(const std::uint32_t* a, std::uint32_t) {
-    mh::LogValue(Fnv(0x811C9DC5u, P(a[1]), 18) ^ (a[1] - g_matrix) ^ (a[2] - g_matrix) << 16);
+    mh::Note(Fnv(0x811C9DC5u, P(a[1]), 18) ^ (a[1] - g_matrix) ^ (a[2] - g_matrix) << 16);
     mh::FillBytes(W(a[2]), 18);
     return a[2];
 }
 std::uint32_t SetRot(const std::uint32_t* a, std::uint32_t h) {
-    mh::LogValue(Fnv(0x811C9DC5u, P(a[0]), 18) ^ (a[0] - g_matrix));
+    mh::Note(Fnv(0x811C9DC5u, P(a[0]), 18) ^ (a[0] - g_matrix));
     return h;
 }
 std::uint32_t SetTrans(const std::uint32_t* a, std::uint32_t h) {
-    mh::LogValue(Fnv(0x811C9DC5u, P(a[0] + 0x14), 12) ^ (a[0] - g_matrix));
+    mh::Note(Fnv(0x811C9DC5u, P(a[0] + 0x14), 12) ^ (a[0] - g_matrix));
     return h;
 }
 
@@ -321,33 +321,33 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 
 const mh::Callee kCallees[] = {
     // Capcom's and ours the draws call
-    {S21_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, &IsOut},
-    {S21_OURS(Sprite_SetTint), 4, {kAll, kU8, kU8, kU8}, mh::Answer::kGarbage, 0, 0, &Fifth},
-    {S21_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &Trig},
-    {S21_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &Trig},
-    {S21_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, &Fifth},
-    {S21_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, &Link},
-    {S21_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, &Commit},
-    {S21_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &SetPrim},
-    {S21_OURS(Gpu_SetPolyG4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &SetPrim},
-    {S21_OURS(Gpu_SetPolyGT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &SetPrim},
-    {S21_AT(0x5A76F0), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &SetPrim},
-    {S21_AT(0x5A7570), 1, {kAll}, mh::Answer::kGarbage, 0, 0, &SetPrim},
+    {S21_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &IsOut},
+    {S21_OURS(Sprite_SetTint), 4, {kAll, kU8, kU8, kU8}, mh::Answer::kGarbage, 0, 0, {}, &Fifth},
+    {S21_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &Trig},
+    {S21_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &Trig},
+    {S21_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Fifth},
+    {S21_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Link},
+    {S21_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Commit},
+    {S21_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &SetPrim},
+    {S21_OURS(Gpu_SetPolyG4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &SetPrim},
+    {S21_OURS(Gpu_SetPolyGT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &SetPrim},
+    {S21_AT(0x5A76F0), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &SetPrim},
+    {S21_AT(0x5A7570), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, &SetPrim},
     {S21_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S21_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S21_OURS(Gpu_GetClut), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S21_OURS(Gte_RotTransPers3), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, &Rtp3},
-    {S21_OURS(Gte_RotTransPers4), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, &Rtp4},
+    {S21_OURS(Gte_RotTransPers3), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Rtp3},
+    {S21_OURS(Gte_RotTransPers4), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &Rtp4},
     {S21_OURS(Gte_PrimDepths3_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S21_OURS(Gte_PrimDepths3_0C), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S21_OURS(Gte_PrimDepths4_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S21_OURS(Gte_PrimDepths4_10C), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S21_OURS(Gte_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0},
-    {S21_OURS(Gte_RotTrans), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, &RotTrans},
-    {S21_OURS(Gte_RotMatrix), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, &RotMatrix},
-    {S21_OURS(Gte_MulMatrix0), 3, {kAll, 0, 0}, mh::Answer::kGarbage, 0, 0, &MulMatrix0},
-    {S21_OURS(Gte_SetRotMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0, &SetRot},
-    {S21_OURS(Gte_SetTransMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0, &SetTrans},
+    {S21_OURS(Gte_RotTrans), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, {}, &RotTrans},
+    {S21_OURS(Gte_RotMatrix), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, {}, &RotMatrix},
+    {S21_OURS(Gte_MulMatrix0), 3, {kAll, 0, 0}, mh::Answer::kGarbage, 0, 0, {}, &MulMatrix0},
+    {S21_OURS(Gte_SetRotMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0, {}, &SetRot},
+    {S21_OURS(Gte_SetTransMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0, {}, &SetTrans},
     // a pool slot's free: MAGIC219's (group S37), by its address
     {S21_AT(0x4F6290), 0, {}, mh::Answer::kGarbage, 0, 0},
     // ours, calling one another
