@@ -78,3 +78,20 @@ then a first wave of about ten groups, the rest in later sessions.
 - Latent defects for `known-defects.md`: Capcom's `Task_Create` does not
   check its slot (past 3 it writes over `0x66C850` / `0x66C854`); ours
   aborts ([`task_sched.md`](task_sched.md)); SH's engine rows 123 (plays a sound through an unchecked pointer) and 128 (waits with no limit), [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §3.
+
+## 5. Paused for the usage limit (2026-09-25 night)
+
+The first spell wave was paused before its groups finished: S16..S25 were
+told to commit their work in progress with a "Paused" section at the top of
+their group doc (what is done, fuzzed, controlled, and the next step) and
+stop. L, the effect library, was left running (the smallest group, and
+every other group calls it).
+
+To resume: `git worktree list` shows each group's worktree under
+`.claude/worktrees/agent-*` on its branch `phase-3/round9-<group>`; read the
+group doc's "Paused" section and carry on from there, or resume the agent
+with its context. The brief every group was given is its first commit's
+context: `docs/takeover-queue-round9-spells.md` §4 for the group's units,
+[`magic_harness.md`](magic_harness.md) §3 for what a group writes. Merge one
+branch at a time into `phase-3/round-nine`: the build, the group's shadow
+and `BOF3X_SHADOW='*'` headless after each.
