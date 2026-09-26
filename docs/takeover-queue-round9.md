@@ -206,3 +206,27 @@ it with an `effect` in its own fuzz. Every group whose functions re-read
 after a `kFlag` callee may have the same gap. The fix belongs in
 `magic_harness.cpp` (draw the answer and the disturbance from separate
 bits), after wave two merges, then each group's controls re-run.
+
+Merged since (each: the build, the group's shadow, `'*'`, `ledger_check`,
+the entry list consolidated): **C3** ([`magic_c3.md`](magic_c3.md), 20;
+row 119 is item magic - item index 32 - row 147 is ability 227, rows 2
+and 7 unreachable on the PC), **S29** (49), **S31** (51), **S28** (42, with
+`Port_DroppedCall` `0x4DF820`, the linker's one shared empty function),
+**S27** (47; `0x4DA3B0` is `SpellFx_Countdown`, S23 now calls it by name),
+**S26** (48), **S30** (60; `0x4E47F0` `MagicFx_CountDown9`, `0x4E5200`
+`MagicFx_EndWhenChildrenDone`). 2,342 ours, C1 and C2 outstanding.
+
+**Owed after wave two, besides the `kFlag` fix above:**
+
+- **The frame hash again.** `Port_DroppedCall` runs on the attract and
+  combat paths; owned now, the tracer arms it on neither side, so the
+  2026-09-26 morning reference (`r9_orig` / `r9_origb`) no longer compares
+  with this build. Re-record after the wave.
+- **`tools/magic_rows.py` over-counts a jump table that another follows**
+  (S26: `Magic114_DrawTriangle` `0x4D7D00`'s first table has 8 entries,
+  `cmp ecx, 7`; the tool ran on into the second at `0x4D7FE4` and said 14,
+  which the harness refuses with a Fatal). Bound the count by the `cmp`
+  before the dispatch.
+- **The first wave's raw-address calls into the second wave's functions**
+  (`0x43FE80`, `0x4E47F0`, `0x4E5200`, ...) can now be rebound to names;
+  they work as they are (the harness's stand-in falls back to the address).
