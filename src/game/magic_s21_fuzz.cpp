@@ -446,8 +446,11 @@ void Seed(unsigned k) {
             unsigned char* const slot = mh::Mem(kPool + i * 0x84);
             slot[0] = static_cast<unsigned char>(mh::Next() % 5 ? slot[0] | 1 : slot[0] & ~1u);
         }
-        if (mh::Next() % 4 == 0)
+        if (mh::Next() % 4 == 0) {
+            // every slot in use, or all but the last
             for (unsigned i = 0; i < 32; ++i) mh::Mem(kPool + i * 0x84)[0] |= 1;
+            if (mh::Half()) mh::Mem(kPool + 31 * 0x84)[0] &= ~1u;
+        }
         break;
     case kFrostWait:
         if (mh::Half()) sc[0xB] = 0xFF;
@@ -496,6 +499,16 @@ void Seed(unsigned k) {
         if (mh::Often()) sc[0xB] = static_cast<unsigned char>(mh::Next() % 12);
         if (mh::Half()) sc[0xA] = 0;
         if (mh::Half()) sc[9] = static_cast<unsigned char>(mh::Next() % 0x40);
+        if (mh::Next() % 4 == 0) {
+            // a height exactly 0 (the clamp's edge): row 0, even; the column
+            // bytes 0..4 zero and the point bytes from 5 on -4 * +9, so the
+            // height -j[col] + j[k] + 4 * +9 is 0 from the fourth column on
+            sc[0xB] = 0;
+            sc[0xA] = 0;
+            sc[9] = static_cast<unsigned char>(1 + mh::Next() % 8);
+            std::memset(mh::Mem(kJitter), 0, 5);
+            std::memset(mh::Mem(kJitter + 5), static_cast<unsigned char>(-4 * sc[9]), 0x38 - 5);
+        }
         break;
     default:
         break;
