@@ -1,5 +1,16 @@
 # The spell harness: one fuzz for every spell group
 
+> **Paused (2026-09-25, group HX, branch `phase-3/round9-hx` from 026ebff):**
+> the consolidation has no code yet. Done so far: read the harness, Steal's
+> fuzz, queue §7, and the diffs on branches `l` (8-arg stubs, `Act`/`Extras`/`Note`,
+> `StandIn` by address, the library in `kStandard`, which needs L's symbols)
+> and `s16` (Disturb 12/13 skips target >= 11 and the current-slot/owner
+> cells). **Next step:** read the diffs on s17..s25 (`git diff 9ad12f1
+> phase-3/round9-<g> -- src/game/magic_harness.h src/game/magic_harness.cpp
+> src/game/magic_steal_fuzz.cpp docs/magic_harness.md`), write the superset
+> harness, port `magic_steal_fuzz.cpp`, build, run Steal's self-test and
+> controls, and add the porting table for each group here.
+
 **Status:** IN PROGRESS (2026-09-25) - built and proved on one overlay
 (Steal's, [`magic_steal.md`](magic_steal.md): 3 functions, 28 of 28
 controls refused); no wave group has used it yet.
