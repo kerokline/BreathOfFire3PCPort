@@ -100,7 +100,9 @@ void Disturb() {
     case 8: Frame_Counter = h >> 6; break;
     case 9: case 10: {
         static const unsigned kFields[] = {0, 1, 2, 4, 8, 9, 0xA, 0xB, 0xC, 0x2C, 0x2D, 0x30, 0x34, 0x38, 0x3C};
-        Sprite_Current[kFields[v % 15]] = b;
+        const unsigned f = kFields[v % 15];
+        const unsigned span = g_group ? g_group->phase_span : 0;
+        Sprite_Current[f] = (f == 1 || f == 2) && span ? static_cast<unsigned char>(b % span) : b;
         break;
     }
     case 11: {
@@ -109,7 +111,12 @@ void Disturb() {
         break;
     }
     case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+        // an enemy's record only: a party target (0..2) indexes below the
+        // records, onto the current slot and the owner (0x93B8C4, 0x93B940),
+        // and one of 11 or more (bit 0x40: every enemy, or every member) past
+        // the image
+        if (Mem(at::kTarget)[0] >= 3 && Mem(at::kTarget)[0] < 11)
+            TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
@@ -526,18 +533,26 @@ void Run(const Group& group) {
     bof3::Log("shadow      %s self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, %u MISMATCHES; "
               "%u bytes of state (%u regions) and the stand-ins' log compared",
               group.shadow, per * group.n_clones, group.n_clones, per, calls, bad, g_bytes, g_region_n);
+    // the coverage, in lines the log holds (a group of many callees runs to more than one)
     char line[900];
     unsigned n = 0;
-    for (unsigned i = 0; i < g_slot_n && n + 64 < sizeof line; ++i) {
+    bool any = false, more = false;
+    for (unsigned i = 0; i < g_slot_n; ++i) {
         if (g_slots[i].calls == 0) continue;
+        if (n + 64 >= sizeof line) {
+            bof3::Log("shadow      %s coverage%s: %s", group.shadow, more ? " (more)" : " (calls the originals made)", line);
+            n = 0;
+            more = true;
+        }
         const int w = g_slots[i].handler
                           ? std::snprintf(line + n, sizeof line - n, "%sphase 0x%X %u", n ? ", " : "",
                                           (unsigned)g_slots[i].address, g_slots[i].calls)
                           : std::snprintf(line + n, sizeof line - n, "%s%s %u", n ? ", " : "", g_slots[i].name,
                                           g_slots[i].calls);
         if (w > 0) n += static_cast<unsigned>(w);
+        any = true;
     }
-    bof3::Log("shadow      %s coverage (calls the originals made): %s", group.shadow, n ? line : "none");
+    bof3::Log("shadow      %s coverage%s: %s", group.shadow, more ? " (more)" : " (calls the originals made)", any ? line : "none");
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);

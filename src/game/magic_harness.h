@@ -157,6 +157,10 @@ struct Group {
     void (*seed)(unsigned k);       // function k's boundaries, after the random fill
     void (*disturb)(std::uint32_t h);   // optional: move a group cell after a call
     unsigned rounds;                // per function; 0 is 2,000
+    // Non-zero: a phase byte (+1, +2) the disturbance moves stays below this -
+    // for a group whose dispatchers read the phase after a call (a .data table
+    // of two entries past which lie other bytes, a stack table). 0: any byte.
+    unsigned phase_span = 0;
 };
 
 // Clones every function (before the caller injects), fuzzes each against ours
