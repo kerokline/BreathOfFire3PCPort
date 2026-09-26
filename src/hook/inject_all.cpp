@@ -119,6 +119,7 @@
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
+#include "game/magic_lib.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -313,6 +314,9 @@ void InjectAll() {
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
+    MagicLib_Inject();          // round 9 group L (the effect library): its clones' calls and the popup tasks'
+                                // stack-table immediates re-aimed at the shared harness's recorders; no module
+                                // patches bytes inside its 25: order does not matter
     InjectReport();
 }
 

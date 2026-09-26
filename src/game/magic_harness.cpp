@@ -269,6 +269,27 @@ const Callee kStandard[] = {
     // an item's name into Text_Records by (index, category) - unnamed, in no
     // group (docs/magic_fx_reached.md section 10)
     {"0x4B58F0", 0x4B58F0, 0x4B58F0, 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    // The effect library (group L, magic_lib.cpp; docs/magic_lib.md section
+    // 2): the seventeen functions an overlay calls. A group written while
+    // these were Capcom's calls them by address (MH_AT); StandIn finds them
+    // by it.
+    {MH_OURS(MagicFx_ApplyBuff), 2, {kU8, kU8}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_BuffPopup), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_LinkByDepth), 7, {kAll, kAll, kAll, kAll, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_StepToward), 2, {kAll, kU16}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_StepTowardPoint), 5, {kAll, kAll, kAll, 0, kU16}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_StepAround), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_NearSprite3D), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_NearSprite), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_NearPoint3D), 4, {kAll, kAll, 0xFFFF0000u, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(MagicFx_NearPoint), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0},
+    {MH_OURS(SpriteClut_SetStp), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(SpriteClut_ClearEntry31), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(SpriteClut_CopyToFxRow), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {MH_OURS(SpriteClut_RestoreFxRow), 0, {}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_CenterOnSide), 0, {}, Answer::kGarbage, 0, 0},
+    {MH_OURS(BattleActor_FxSizeB), 0, {}, Answer::kGarbage, 0, 0},
+    {MH_OURS(MagicFx_FormationOffset), 0, {}, Answer::kGarbage, 0, 0},
 };
 #undef MH_OURS
 #undef MH_THEIRS

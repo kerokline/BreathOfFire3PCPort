@@ -40,8 +40,9 @@ measurements):
    BattleTask_Create(1 or 3, parameter) through the kinds' stack tables),
    and a function reached from one file only must sit in that file's extent.
    The exceptions are printed (one: the bare ret every empty function was
-   folded into). The effect library at 0x4FAF90, after MAGIC226/227, is a
-   unit of its own; code reached from no entry whose address a table of
+   folded into). The effect library at 0x4FAFF0, after MAGIC226/227, is a
+   unit of its own (0x4FAF90 before it is MAGIC226/227's pool allocator,
+   docs/magic_lib.md section 1); code reached from no entry whose address a table of
    another subsystem holds (MapCell_Handlers') is not counted.
 4. A file whose lowest entry lies inside another file's extent and is
    reached from that file too (MAGIC016 inside MAGIC015; MAGIC005, 029,
@@ -71,7 +72,7 @@ TASK_CREATE = 0x435180      # BattleTask_Create(kind, parameter)
 # BattleTask_RunAll's kinds with a stack table by parameter: kind 1 is
 # BattleMagicFx_Dispatch (110 entries), kind 3 is 0x4357D0 (8 entries).
 KIND_DISPATCH = {1: (0x435350, 0x476), 3: (0x4357D0, 0x56)}
-LIBRARY_LO = 0x4FAF90       # the effect library after MAGIC226/227 (see section 1 of the doc)
+LIBRARY_LO = 0x4FAFF0       # the effect library after MAGIC226/227 (docs/magic_lib.md section 1: 0x4FAF90 is theirs)
 LIBRARY_NAME = 'LIBRARY'
 
 
