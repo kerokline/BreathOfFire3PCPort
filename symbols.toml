@@ -29615,3 +29615,245 @@ ctype = "unsigned char"
 count = 8448
 status = "evidence"
 evidence = "read 2026-09-26, group C1: 64 records of 0x84 bytes, as InkInkPuff_Pool: Magic213_Start clears, Magic213Mote_Alloc takes, Magic213_Task runs."
+
+[[func]]
+pc = 0x498FE0
+name = "NueStomp_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x498FE0..0x49900D (0x2E bytes), group S01: call [esp + 4 x byte +1] through a three-entry stack table (NueStomp_Start, Magic001_EndWhenChildDone, MagicFx_DoneAndFree), unchecked. Magic_Rows row 1's entry (MAGIC001). Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499010
+name = "NueStomp_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499010..0x499166 (0x157 bytes), group S01: the owner's +8 and +0x34..+0x3C to the task, +0xB 1; BattleTask_Create(1, 0x49), its slot filled by rep movsd with 0x80 bytes of the acting actor's record (0x802D40 + 0x14C i below 3, else 0x93B960 + 0x128 (i - 3)), +0x80 this task, +1 / +2 / +9 0, +6 1, +5 0x49; SpriteClut_CopyToFxRow(owner) to +0x27, the owner's +0x28 and +0x24, SpriteClut_SetStp; owner +0 |= 0x40; +1 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499170
+name = "NueStompChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499170..0x499181 (0x12 bytes), group S01: jmp [0x65A4F0 + 4 x byte +1] (Magic001_ChildTaskTable, two entries: NueStompChild_Run, JumpChild_Run), unchecked. Kind-1 task parameter 0x49 (battle_fx_tasks.cpp's kind table), created by NueStomp_Start. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499190
+name = "NueStompChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499190..0x499213 (0x84 bytes), group S01: call [esp + 4 x byte +2] through an eleven-entry stack table (NueStompChild_Begin .. _Return, then MAGIC015's 0x4A0BA0), unchecked; then Sprite_UpdateScreen when byte +0 and byte +2 are set. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499220
+name = "NueStompChild_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499220..0x49925D (0x3E bytes), group S01: 0x435A70(byte 0x904B34, 0xA) (the acting enemy's animation), the owner's +0x27 to +0x27, +9 and +0xA 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499260
+name = "NueStompChild_Leap"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499260..0x4992A4 (0x45 bytes), group S01: when Sprite_ScriptTickOnce answers not 0: BattleActor_PlaySound(2, 0), 0x435A70(actor, 0xB), dword +0x14 0x100, +0x20 -8, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4992B0
+name = "NueStompChild_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4992B0..0x49932B (0x7C bytes), group S01: dword +0x14 += +0x20, word +0x3E += word +0x14; at +0x14 0: +0x34 / +0x38 the source sprite's (0x904B4C), +0x3C += source +0x3C - owner +0x3C, +9 0x1F, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499330
+name = "NueStompChild_Drop"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499330..0x4993A0 (0x71 bytes), group S01: the move of NueStompChild_Rise; +9 down; at 0 Sound_PlayById(0x203), 0x435A70(actor, 0xC), Battle_SetTargetFlags(target, 0x10), +9 3, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4993B0
+name = "NueStompChild_Crouch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4993B0..0x4993D1 (0x22 bytes), group S01: when Sprite_ScriptTickOnce answers not 0: 0x435A70(actor, 0xA), +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4993E0
+name = "NueStompChild_Bounce"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4993E0..0x499437 (0x58 bytes), group S01: Sprite_ScriptTickOnce three times, the last answer tested: BattleActor_PlaySound(2, 0), 0x435A70(actor, 0xB), +0x14 0x140, +0x20 -0x40, +0xA 9, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499440
+name = "NueStompChild_Hop"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499440..0x499479 (0x3A bytes), group S01: the move; +0xA down; at 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499480
+name = "NueStompChild_Stomp"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499480..0x4994D5 (0x56 bytes), group S01: Sprite_ScriptTickOnce three times, the last tested: Sound_PlayById(0x203), 0x435A70(actor, 0xC), +9 down: at 0 +2 on, else +2 -= 3 (back to NueStompChild_Crouch). Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4994E0
+name = "NueStompChild_Land"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4994E0..0x499532 (0x53 bytes), group S01: when Sprite_ScriptTickOnce answers not 0: Battle_SetTargetFlag40(target), +0 |= 0x20, +0x5C 1, +0x5D..+0x5F 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499540
+name = "NueStompChild_Return"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499540..0x4995AF (0x70 bytes), group S01: +0x5D -= 0x10 and +0x5E / +0x5F += 0xF0 unless +0x5D is 0x80; at 0x80 the owner's +0x34..+0x3C, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4995B0
+name = "Jump_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4995B0..0x4995DD (0x2E bytes), group S01: call [esp + 4 x byte +1] through a three-entry stack table (Jump_Start, Magic001_EndWhenChildDone, MagicFx_DoneAndFree), unchecked. Magic_Rows row 105's entry (MAGIC001). Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4995E0
+name = "Jump_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4995E0..0x49974B (0x16C bytes), group S01: as NueStomp_Start with BattleActor_SetAnimation(8, 0) before BattleTask_Create(1, 0x4F) (+5 0x4F), and SpriteClut_ClearEntry31(task) after SpriteClut_SetStp. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499750
+name = "Magic001_EndWhenChildDone"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499750..0x499775 (0x26 bytes), group S01: when +0xB is 0: SpriteClut_RestoreFxRow, owner +0 &= 0xBF, +1 on. Entry 1 of both NueStomp_Task's and Jump_Task's tables. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499780
+name = "JumpChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499780..0x499791 (0x12 bytes), group S01: jmp [0x65A4F4 + 4 x byte +1] (Magic001_ChildTaskTable's second entry, JumpChild_Run; one entry), unchecked. Kind-1 task parameter 0x4F, created by Jump_Start. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4997A0
+name = "JumpChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4997A0..0x49981E (0x7F bytes), group S01: call [esp + 4 x byte +2] through a seven-entry stack table (JumpChild_Begin, _Rise, _Hover, _Return, MAGIC056's 0x4AE3C0, JumpChild_Fade, MAGIC015's 0x4A0BA0), unchecked; then when +0 and +2 are set Sprite_UpdateScreen, and below step 5 JumpChild_PushMatrix, JumpChild_DrawShadow, Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499820
+name = "JumpChild_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499820..0x499865 (0x46 bytes), group S01: the owner's +0x27, +0x14 0x100, +0x20 -0x10, +9 0, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499870
+name = "JumpChild_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499870..0x4998FD (0x8E bytes), group S01: the move; +0xA down while not 0; at +0x14 0 over the source sprite as NueStompChild_Rise, +9 0xF, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499900
+name = "JumpChild_Hover"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499900..0x4999DD (0xDE bytes), group S01: the move; +0xA up while below 8; +9 down; at 0 BattleActor_PlaySound(2, 0), Sound_PlayById(0x203), +0x14 0x40, +0x20 -8, +0xC Math_Ratan2(float (owner x - x), float (owner z - z)), Battle_SetTargetFlag40(target), +9 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x4999E0
+name = "JumpChild_Return"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4999E0..0x499A70 (0x91 bytes), group S01: +0x34 += Math_Sin(+0xC) shl 0xD sar 0xC, +0x38 += Math_Cos(+0xC) the same (each through the field pointer taken before the call); the move; +0xA up while +9 is below 8 and +0xA below 0x10; +9 down; at 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499A80
+name = "JumpChild_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499A80..0x499B01 (0x82 bytes), group S01: as NueStompChild_Return, with +0xA down by 2 while not 0. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499B10
+name = "JumpChild_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499B10..0x499BC7 (0xB8 bytes), group S01: Gte_PushMatrix; Gte_RotTrans of (+0x34 sar 9 - 0x4000, +0x38 sar 9 - 0x4000, -(height / 2)) (height word +0x3E of the owner below step 2, of the source sprite after) into the translation; Gte_RotMatrix of angles 0; Gte_MulMatrix0(Camera_Matrix, m, m); Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[func]]
+pc = 0x499BD0
+name = "JumpChild_DrawShadow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s01.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x499BD0..0x499D74 (0x1A5 bytes), group S01: Gpu_SetDrawMode(tpage 0x55) and Gfx_CommitPrim(5, 0xC); words 0x903850 / 0x903852 = +0xA x 8; sixteen POLY_G3 (0x34 bytes) for angle 0x100..0x1000: centre 0, previous rim, rim radius x Math_Sin / Math_Cos sar 12, Gte_RotTransPers3, Gte_PrimDepths3_10B, colours byte 0x903852 x 3 and 1 x 6, semi-transparent, Gfx_CommitPrim(5, 0x34); Gpu_SetDrawMode(tpage 0x15), Gfx_CommitPrim(5, 0xC). Fuzz only: no recorded route casts it (docs/magic_s01.md)."
+
+[[data]]
+pc = 0x65A4F0
+name = "Magic001_ChildTaskTable"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S01: NueStompChild_Task jmp [0x65A4F0 + 4 x byte +1] and JumpChild_Task jmp [0x65A4F4 + 4 x byte +1]: NueStompChild_Run, JumpChild_Run. The second task reads the same table from its second entry."
