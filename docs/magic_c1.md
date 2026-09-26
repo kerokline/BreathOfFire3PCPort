@@ -253,16 +253,16 @@ harness edit. Beyond the standard set:
   and `MapView_LinkPrimAt` with an `effect` that logs the fuzz's 0x800-byte
   packet buffer and advances `Gfx_PacketNext` by the size, as the real ones
   do - so every primitive of a draw is compared; `0x446770` with an `effect`
-  writing the task's `+0xC..+0x13` (the turn), which the puffs read again;
+  logging the task's `+0xC..+0x13` and direction as the caller left them and writing new ones (the turn), which the puffs read again;
   `Sprite_UpdateScreen` noting the frame-offset table pointer; the five phases
   called with that pointer switched (`0x4E47F0`, `0x4D77D0`, `0x4D78D0`,
   `0x4F4F00`, `0x4F5030`) listed as `kPhase` callees logging it, ahead of
   their `.data` tables; the group's nine directly called functions as
   `kPhase`; the allocs answering 0..0x3F or 0xFF;
 - **fifteen `.data` tables**, each cell once (abutting tables list their own);
-- **regions** (33,748 bytes with the standard ones): the scratch and vertex
+- **regions** (33,812 bytes with the standard ones): the scratch and vertex
   words, `Gfx_PacketNext` and the buffer, `MoveScript_TintRecords`, CLUT
-  entries 0x1A00..0x1A2F and their source, `Field_Kind2Z` / `X`, `0x9039D8`,
+  entries 0x1A00..0x1A3F (one row past the last written, so an overrun shows) and their source, `Field_Kind2Z` / `X`, `0x9039D8`,
   `0x803154`, `0x92BF14`, both pools whole, and the overlays' `.data` the
   functions read (radii, points, offsets, glyph cells) less the handler
   cells;
@@ -285,8 +285,8 @@ harness edit. Beyond the standard set:
 
 **Result** (2026-09-26; this worktree):
 
-    shadow      magic_c1 self-test: 124000 rounds over 62 functions (2000 each), 1833899 calls to the stand-ins,
-                0 MISMATCHES; 33748 bytes of state (26 regions) and the stand-ins' log compared
+    shadow      magic_c1 self-test: 124000 rounds over 62 functions (2000 each), 1833294 calls to the stand-ins,
+                0 MISMATCHES; 33812 bytes of state (26 regions) and the stand-ins' log compared
 
 Every callee and every handler the clones name is reached (the coverage
 lines; e.g. `Battle_ActorIsOut` 21,875, `BattleTask_Create` 17,576,
