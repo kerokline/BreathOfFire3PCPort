@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-09-24; 21 entries, I1..I21 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-09-26; 23 entries, I1..I23 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -67,6 +67,7 @@ rule ([`README.md`](README.md)) here too.
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
+| I23 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | open; planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) (owner, 2026-09-26) |
 
 ---
 
@@ -910,3 +911,43 @@ unread on the PC.
 to see whether the portrait exists on the PC; the spell round reads the
 engine-side rows 123 and 128 first, which TCRF says crash and freeze.
 
+
+---
+## I23 — The scenario round: the chapter banks wave by wave
+
+**Ask (2026-09-26):** the owner, after the chapter tables were walked
+([`scenario-roots.md`](scenario-roots.md)): take the scenario banks over
+"in a wave-by-wave approach like we're doing with the magic calls", and for
+now document the plan and list it here.
+**Kind:** engine
+**Feasibility:** HIGH   **Gated on:** nobody - the function list is a
+script's output; the live check per chapter wants a recipe save the owner
+records, which can follow the fuzz rather than precede it.
+
+### What already exists
+- The list: 638 functions from the three chapter-indexed tables (`0x662C80`
+  vtables, `0x660B84` / `0x660BD4` call tables), 17 already ours, in one
+  band `0x537F20..0x56C080` in chapter order; `tools/scenario_roots.py`
+  reproduces it and names every engine function the banks call (232).
+- The pattern: the spell round's whole-overlay groups, its shared harness
+  (`magic_harness`, [`magic_harness.md`](magic_harness.md)), its per-group
+  docs and controls; chapter 16 already taken over the same way
+  ([`field-modes.md`](field-modes.md)) as the template for a chapter's
+  state machine.
+- The catalogue's reason for ranking the banks last - discovery needing
+  saves - is gone (scenario-roots §6).
+
+### What is missing
+- A harness for the three call shapes (vtable slot, call-table entry, state
+  handler) over one frame of scenario state, from `magic_harness`.
+- Names for the 20 vtables and the call and state tables in `symbols.toml`.
+- One small chapter read whole to fix the harness's state table.
+
+### First concrete step
+Read SC0 (chapter 0, 23 functions at `0x537F20..0x539A30`) to its last
+instruction and list the state it reads and the engine functions it calls;
+then the harness, proved on SC0. The plan, groups and waves:
+[`takeover-queue-scenario.md`](takeover-queue-scenario.md).
+
+### Outcome
+_(2026-09-26) open; planned, not scheduled._
