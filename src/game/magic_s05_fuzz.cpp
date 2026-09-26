@@ -227,7 +227,7 @@ void Seed(unsigned k) {
         break;
     case kMagic017Image_Return:
         Near(sc[9], 1);
-        if (mh::Half()) sc[0xB] = 0;
+        if (mh::Often()) sc[0xB] = Byte(mh::Next() % 3);
         break;
     case kMagic017Image_Strike:
         if (mh::Often()) Owner()[0xB] = Byte(mh::Half() ? 1 : mh::Next() % 3);
