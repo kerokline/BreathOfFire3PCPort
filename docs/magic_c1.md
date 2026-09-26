@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-26) - sixty-two functions ours
 (`src/game/magic_c1.cpp`, shadow name `magic_c1`), fuzzed headless through
 the shared harness ([`magic_harness.md`](magic_harness.md)): 0 mismatches in
-124,000 rounds; CONTROLS_SUMMARY. Fuzz only: no recorded route casts any of
+124,000 rounds; 211 of 214 negative controls refused by a count, the other three two equivalent mutants (near variants refused) and one refused by a fault (section 10). Fuzz only: no recorded route casts any of
 them (section 10).
 
 Group C1 of round nine's second spell wave
@@ -297,7 +297,258 @@ and 4,669, every phase 219..2,000). Counts depend on the build directory
 
 ## 10. The controls
 
-CONTROLS_TABLE
+Two hundred and fourteen, planted one at a time by a script (the scratch
+`controls.py`, not committed: replace an anchor that occurs once, rebuild,
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_c1`, read the log; at the end the
+source restored and **rebuilt**), 2026-09-26, on the fuzz as committed.
+**211 of 214 refused** by a count (exit 3), each in the function or
+functions its plant touches; counts are this worktree's. The three not
+refused:
+
+- **P71, equivalent**: `PentagramBand_Draw`'s first height, `b << 5` below
+  0x10 and 0x200 from there - at exactly 0x10 both give 0x200, so moving the
+  bound to include 0x10 changes nothing any input can see. Its near variant
+  P71b (0x201 when grown) is refused.
+- **I4, equivalent**: `Ink_Start` copying CLUT entry 0x1A20 too - the next
+  instruction clears it, so no state holds the copy. Its near variant I4b
+  (the copy one entry too far, to 0x1A30) is refused; a first run of it was
+  not, because the region then stopped at 0x1A2F, and the region was widened
+  to 0x1A3F for it.
+- **J30, refused by a fault, not a count**: `InkInkActor_Start` computing the
+  actor's record after the sound call. The disturbance then moves `+4` (any
+  byte) as well as the side bit, and an enemy index up to 255 reads past the
+  image: the run faults (exit 0xC0000005) - once after 12 counted mismatches,
+  once before any. Its variant J30b (only the side bit read late, `+4`
+  before) is refused by a count.
+
+Two plants of the first run were themselves wrong (I12 and I22 re-read in
+the planted code at the same point ours reads, so planted nothing) and were
+rewritten; and I10 (a puff's `dz` from the wrong dword) went unrefused until
+the turn's stand-in logged the offsets it is handed - the fuzz was fixed, not
+the plant. The table is the second run, after both.
+
+The thinnest are the re-reads across one call: I18 (6 rounds: the puff's
+radius word taken unsigned - only a negative radius word, which only the
+disturbance sets, shows it), I23, J27 (the allocs' last record), P10 /
+P11 (`NewChild` reading the owner or the task before the create), P21, I12;
+each shows only when a disturbance lands on exactly that call.
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| W1 | WhiteFlag_Task: entries 0 and 1 swapped | WhiteFlag_Task 995 |
+| W2 | TintSource: tint blue 1 | WhiteFlag_TintSource 2,000 |
+| W3 | TintSource: +9 = 1 | WhiteFlag_TintSource 2,000 |
+| W4 | TintSource: the source not read again after the release | WhiteFlag_TintSource 45 |
+| W5 | Untint: two colour bytes | WhiteFlag_Untint 2,000 |
+| W6 | Untint: records of 16 bytes | WhiteFlag_Untint 1,995 |
+| W7 | Untint: the actor flashed, not the target | WhiteFlag_Untint 647 |
+| W8 | Untint: +1 on without the release | WhiteFlag_Untint 669 |
+| M1 | Magic080_Task: its two entries swapped | Magic080_Task 2,000 |
+| M2 | Start: x from Field_Kind2Z | Magic080_Start 2,000 |
+| M3 | Start: Rand & 0x1F | Magic080_Start 1,036 |
+| M4 | Start: +9 0x2F | Magic080_Start 2,000 |
+| M5 | Start: elevation at (+0x38, +0x34) | Magic080_Start 2,000 |
+| M6 | Run: x 0x23 to the left | Magic080_Run 2,000 |
+| M7 | Run: glyphs and text swapped | Magic080_Run 2,000 |
+| M8 | Run: done flag 2 | Magic080_Run 466 |
+| M9 | Run: the screen update after the move | Magic080_Run 60 |
+| M10 | DrawText: five characters | Magic080_DrawText 2,000 |
+| M11 | DrawText: the first byte whole | Magic080_DrawText 2,000 |
+| M12 | DrawText: CLUT y 0x1E1 | Magic080_DrawText 2,000 |
+| M13 | DrawText: v 11 at the third corner | Magic080_DrawText 2,000 |
+| M14 | DrawText: slot 3 | Magic080_DrawText 2,000 |
+| M15 | DrawText: third corner 11 down | Magic080_DrawText 2,000 |
+| M16 | DrawGlyphs: u from the second byte | Magic080_DrawGlyphs 2,000 |
+| M17 | DrawGlyphs: blend 0 | Magic080_DrawGlyphs 2,000 |
+| M18 | DrawGlyphs: 11 wide | Magic080_DrawGlyphs 2,000 |
+| M19 | DrawGlyphs: the packet pointer read once | Magic080_DrawGlyphs 2,000 |
+| M20 | DrawGlyphs: grey 0x7F in blue | Magic080_DrawGlyphs 2,000 |
+| M21 | DrawGlyphs: the screen point read before SetPolyFT4 | Magic080_DrawGlyphs 386 |
+| P1 | Pentagram_Task: WaitSprites and WaitChildren swapped | Pentagram_Task 494 |
+| P2 | Pentagram_Task: the disc drawn when +0 is 0 | Pentagram_Task 2,000 |
+| P3 | Start: the actor side at 2 | Pentagram_Start 416 |
+| P4 | Start: the bail flags the actor | Pentagram_Start 654 |
+| P5 | Start: height from +0x38 | Pentagram_Start 1,053 |
+| P6 | Start: STP 0x4000 | Pentagram_Start 1,053 |
+| P7 | Start: CLUT entries 0x1A00..0x1A0E | Pentagram_Start 1,053 |
+| P8 | Start: Gfx_ClutStripDirty not set | Pentagram_Start 1,051 |
+| P9 | NewChild: direction - 1 | Pentagram_Rings 434, Pentagram_Star 467, Pentagram_Band 452 |
+| P10 | NewChild: the owner read before the create | Pentagram_Rings 19, Pentagram_Star 9, Pentagram_Band 9 |
+| P11 | NewChild: the task read before the create | Pentagram_Rings 19, Pentagram_Star 10, Pentagram_Band 17 |
+| P12 | NewChild: word +0x3E from +0x3C | Pentagram_Rings 434, Pentagram_Star 467, Pentagram_Band 452 |
+| P13 | NewChild: parameter 4 | Pentagram_Rings 434, Pentagram_Star 467, Pentagram_Band 452 |
+| P14 | Rings: at 0x11 | Pentagram_Rings 875 |
+| P15 | Rings: sound 0x100 | Pentagram_Rings 434 |
+| P16 | Rings: +0xB 1 and 2 | Pentagram_Rings 434 |
+| P17 | Star: a child of kind 2 | Pentagram_Star 467 |
+| P18 | Band: at +0xB 5 | Pentagram_Band 909 |
+| P19 | Band: 0x803154 = 0x7E | Pentagram_Band 452 |
+| P20 | Band: 0x92BF14 = 1 | Pentagram_Band 452 |
+| P21 | Band: the sound before +1 on | Pentagram_Band 11 |
+| P22 | Sprites: dropped call 0x15 | Pentagram_Sprites 2,000 |
+| P23 | Sprites: +9 (i >> 1) * 8 + 2 | Pentagram_Sprites 407 |
+| P24 | Sprites: +4 (i >> 1) & 1 | Pentagram_Sprites 407 |
+| P25 | Sprites: the task read before each create | Pentagram_Sprites 61 |
+| P26 | Sprites: at +0xB 4 | Pentagram_Sprites 836 |
+| P27 | Sprites: five sprites | Pentagram_Sprites 407 |
+| P28 | WaitSprites: at 7 | Pentagram_WaitSprites 883 |
+| P29 | WaitSprites: +0xB 0x83 | Pentagram_WaitSprites 433 |
+| P30 | WaitChildren: at 0x81 | Pentagram_WaitChildren 868 |
+| P31 | DrawDisc: radius 0x1C1 | Pentagram_DrawDisc 1,997 |
+| P32 | DrawDisc: shade x 11 | Pentagram_DrawDisc 2,000 |
+| P33 | DrawDisc: tpage 0x56 | Pentagram_DrawDisc 2,000 |
+| P34 | DrawDisc: 31 triangles | Pentagram_DrawDisc 2,000 |
+| P35 | DrawDisc: the last rim point read before the set-ups | Pentagram_DrawDisc 79 |
+| P36 | DrawDisc: the radius not read again | Pentagram_DrawDisc 581 |
+| P37 | DrawDisc: a rim colour 2 | Pentagram_DrawDisc 2,000 |
+| P38 | DrawDisc: the centre vertex not cleared | Pentagram_DrawDisc 2,000 |
+| P39 | PentagramChild_Task: by +2 | PentagramChild_Task 1,513 |
+| P40 | Ring_Run: the radius by +0xA | PentagramRing_Run 1,026 |
+| P41 | Ring_Run: the radius read before the push | PentagramRing_Run 51 |
+| P42 | Ring_Grow: at 0x20 | PentagramRing_Grow 915 |
+| P43 | Ring_Grow: owner +0xB 2 | PentagramRing_Grow 490 |
+| P44 | FxWaitRelease: at 0x85 | PentagramFx_WaitRelease 910 |
+| P45 | FxFade: at 0xD | PentagramFx_Fade 871 |
+| P46 | FxFade: the owner count up | PentagramFx_Fade 435 |
+| P47 | Ring_Draw: a line while +9 >= i | PentagramRing_Draw 511 |
+| P48 | LineColour: green 0xAB | PentagramRing_Draw 1,767, PentagramStar_Draw 1,358 |
+| P49 | LineColour: red dimmed x 21 | PentagramRing_Draw 1,638, PentagramStar_Draw 1,319 |
+| P50 | LineColour: dimmed at +2 1 | PentagramRing_Draw 1,866, PentagramStar_Draw 1,717 |
+| P51 | Ring_Draw: semi-transparent at +2 1 | PentagramRing_Draw 1,867 |
+| P52 | Ring_Draw: the second depth at +0x18 | PentagramRing_Draw 1,918 |
+| P53 | Ring_Draw: the new point height not cleared | PentagramRing_Draw 120 |
+| P54 | Ring_Draw: the closing commit to slot 4 | PentagramRing_Draw 2,000 |
+| P55 | Ring_Draw: the first point from Sin(0) of the old radius | PentagramRing_Draw 1,999 |
+| P56 | Star_Run: drawn whatever +0 | PentagramStar_Run 980 |
+| P57 | Star_Grow: at 0x29 | PentagramStar_Grow 866 |
+| P58 | Star_Grow: owner +0xB 5 | PentagramStar_Grow 433 |
+| P59 | Star_Draw: capped at 7 | PentagramStar_Draw 1,746 |
+| P60 | Star_Draw: a floor, not a truncation | PentagramStar_Draw 1,629 |
+| P61 | Star_Draw: angle x 0x110 | PentagramStar_Draw 1,956 |
+| P62 | Star_Draw: the points unsigned | PentagramStar_Draw 1,822 |
+| P63 | Star_Draw: a line while 8 i <= +9 | PentagramStar_Draw 135 |
+| P64 | Star_Draw: the far point radius 289 | PentagramStar_Draw 1,958 |
+| P65 | Star_Draw: +9 read once for the loop | PentagramStar_Draw 954 |
+| P66 | Star_Draw: the near point z from the far one | PentagramStar_Draw 1,958 |
+| P67 | Band_Run: by +1 | PentagramBand_Run 1,309 |
+| P68 | Band_Grow: at 0x30 | PentagramBand_Grow 864 |
+| P69 | Band_WaitRelease: sound 0x104 | PentagramBand_WaitRelease 444 |
+| P70 | Band_Fade: at 0x11 | PentagramBand_Fade 879 |
+| P71 | Band_Draw: the first height at 0x10 too | **NOT REFUSED (exit 0)** |
+| P72 | Band_Draw: the loop height at 0x10 too | PentagramBand_Draw 452 |
+| P71b | Band_Draw: the first height 0x201 when grown (near variant of the equivalent P71) | PentagramBand_Draw 1,146 |
+| P72b | Band_Draw: the loop height below 0x11 | PentagramBand_Draw 452 |
+| P73 | Band_Draw: 0x200 exactly at i 31 | PentagramBand_Draw 565 |
+| P74 | Band_Draw: Rand & 0x7F | PentagramBand_Draw 1,761 |
+| P75 | Band_Draw: the rim radius 305 | PentagramBand_Draw 1,929 |
+| P76 | Band_Draw: the height read before the Sin | PentagramBand_Draw 37 |
+| P77 | Band_Draw: the foot red 2 | PentagramBand_Draw 1,929 |
+| P78 | Band_Draw: the top red 0xC1 | PentagramBand_Draw 1,929 |
+| P79 | Band_Draw: the quad linked with dy 1 | PentagramBand_Draw 1,929 |
+| P80 | Band_Draw: sorted at the near rim point | PentagramBand_Draw 1,929 |
+| P81 | Band_Draw: the closing commit to slot 5 | PentagramBand_Draw 2,000 |
+| P82 | Band_Draw: the top colour byte from the shade x 3 | PentagramBand_Draw 1,929 |
+| P83 | Band_Draw: the far top not cleared | PentagramBand_Draw 176 |
+| P84 | Sprite_Run: the effects table 0x8E3581 | PentagramSprite_Run 2,000 |
+| P85 | Sprite_Run: the battle table not put back | PentagramSprite_Run 2,000 |
+| P86 | Sprite_Run: tpage 0xB6 | PentagramSprite_Run 2,000 |
+| P87 | Sprite_Start: raised at +0xB 1 | PentagramSprite_Start 960 |
+| P88 | Sprite_Start: +0x2A 0 | PentagramSprite_Start 1,005 |
+| P89 | Sprite_Start: +0 bit 0x10 | PentagramSprite_Start 1,511 |
+| P90 | Sprite_Start: sound for +0xB 1 | PentagramSprite_Start 984 |
+| P91 | Sprite_Start: grey 0xC1 in blue | PentagramSprite_Start 2,000 |
+| P92 | Sprite_Start: the +4 raise 0x1800000 | PentagramSprite_Start 1,005 |
+| P93 | Animate: freed past 3 | PentagramSprite_Animate 196 |
+| P94 | Animate: +0x2A not masked | PentagramSprite_Animate 453 |
+| P95 | Animate: sound 0x104 at +9 2 | PentagramSprite_Animate 201 |
+| P96 | Animate: no screen update while the script runs | PentagramSprite_Animate 644 |
+| P97 | Animate: the owner count down | PentagramSprite_Animate 885 |
+| I1 | Ink_Task: the wait and the end swapped | Ink_Task 1,340 |
+| I2 | Ink_Start: delays step 3 | Ink_Start 2,000 |
+| I3 | Ink_Start: parameter 0x6D | Ink_Start 2,000 |
+| I4 | Ink_Start: the CLUT entries from 0x1A20 | **NOT REFUSED (exit 0)** |
+| I4b | Ink_Start: the CLUT entries to 0x1A30 (near variant of the equivalent I4) | Ink_Start 2,000 |
+| I5 | Ink_Start: entry 0x1A20 kept | Ink_Start 2,000 |
+| I6 | Ink_Start: target flags 0x20 | Ink_Start 2,000 |
+| I7 | Ink_Start: the child +0xB not set | Ink_Start 1,999 |
+| I8 | Ink_Start: the flags before the sound | Ink_Start 2,000 |
+| I9 | InkPuff_Run: drawn with +2 0 | InkPuff_Run 373 |
+| I10 | PuffPlace: dz from the third dword | InkPuff_Start 662 |
+| I11 | PuffPlace: +0xC not read again after the turn | InkPuff_Start 662 |
+| I12 | PuffPlace: the source read again after the turn | InkPuff_Start 14 |
+| I13 | PuffPlace: +0xA not cleared | InkPuff_Start 662 |
+| I14 | InkPuff_Start: direction from +9 of the source | InkPuff_Start 655 |
+| I15 | DrawPuff: radius x 3 | Ink_DrawPuff 1,985 |
+| I16 | DrawPuff: grey x 7 | Ink_DrawPuff 1,962 |
+| I17 | DrawPuff: corners 3 and 4 swapped | Ink_DrawPuff 2,000 |
+| I18 | DrawPuff: the radius as unsigned | Ink_DrawPuff 6 |
+| I19 | DrawPuff: CLUT x 0x21 | Ink_DrawPuff 2,000 |
+| I20 | DrawPuff: v 0x41 at the far corners | Ink_DrawPuff 2,000 |
+| I21 | DrawPuff: the second link dy 3 | Ink_DrawPuff 2,000 |
+| I22 | DrawPuff: the packet read before the link | Ink_DrawPuff 2,000 |
+| I23 | DrawPuff: the radius word read once, before the loop | Ink_DrawPuff 9 |
+| I24 | DrawPuff: tpage y 0xF0 | Ink_DrawPuff 2,000 |
+| J1 | InkInk_Task: the walk over 63 | InkInk_Task 1,002, Magic213_Task 994 |
+| J2 | Walk: the owner not put back | InkInk_Task 1,627, Magic213_Task 1,621 |
+| J3 | Walk: records with bit 1 | InkInk_Task 2,000, Magic213_Task 2,000 |
+| J4 | Walk: the task saved before the phase | InkInk_Task 62 |
+| J5 | ClearPool: +2 kept | InkInk_Start 2,000, Magic213_Start 2,000 |
+| J6 | InkInk_Start: +9 7 | InkInk_Start 1,865 |
+| J7 | SpawnOnActors: enemies 3..9 | InkInk_Start 985, Magic213_Start 1,023 |
+| J8 | SpawnOnActors: the side bit 0x80 | InkInk_Start 985, Magic213_Start 1,023 |
+| J9 | SpawnOnActors: delay x 8 | InkInk_Start 1,097, Magic213_Start 1,130 |
+| J10 | SpawnOnActors: the task read before the create | InkInk_Start 124, Magic213_Start 113 |
+| J11 | SpawnOnActors: the out actors too | InkInk_Start 1,961, Magic213_Start 1,961 |
+| J12 | InkInkActor_Run: by +1 | InkInkActor_Run 967 |
+| J13 | ActorRecord: the enemy stride 0x12C | InkInkActor_Start 304, Magic213Actor_Start 285 |
+| J14 | ActorRecord: a member from 0x802D44 | InkInkActor_Start 260, Magic213Actor_Start 359 |
+| J15 | InkInkActor_Start: the sound after the copy | InkInkActor_Start 50 |
+| J16 | InkInkActor_Start: delays 1, 3 | InkInkActor_Start 658 |
+| J17 | InkInkActor_Start: flags on the target byte | InkInkActor_Start 637 |
+| J18 | SpawnRecords: a full pool not skipped | InkInkActor_Start 38, Magic213Actor_Start 74 |
+| J19 | SpawnRecords: +0xB from 1 | InkInkActor_Start 658, Magic213Actor_Start 688 |
+| J20 | SpawnRecords: the task read before the alloc | InkInkActor_Start 51, Magic213Actor_Start 118 |
+| J21 | InkInkPuff_Start: direction from the task | InkInkPuff_Start 602 |
+| J22 | InkInkPuff_Start: dz not read again after the turn | InkInkPuff_Start 698 |
+| J23 | InkInkPuff_Start: the height row + 4 | InkInkPuff_Start 654 |
+| J24 | InkInkPuff_Fade: +9 not counted | InkInkPuff_Fade 1,997 |
+| J25 | InkInkPuff_Fade: the owner count kept | InkInkPuff_Fade 662 |
+| J26 | PoolAlloc: bit 1 marked | InkInkPuff_Alloc 786, Magic213Mote_Alloc 814 |
+| J27 | PoolAlloc: one record short | InkInkPuff_Alloc 9, Magic213Mote_Alloc 10 |
+| J28 | InkInkPuff_Run: drawn with +2 0 | InkInkPuff_Run 346 |
+| J29 | InkInk_Start: the CLUT without STP | InkInk_Start 2,000 |
+| J30 | InkInkActor_Start: the side bit read after the sound | **NOT REFUSED (exit 3221225477)** |
+| J30b | InkInkActor_Start: only the side bit read after the sound (+4 before) | InkInkActor_Start 26 |
+| X1 | Magic213_Task: its entries swapped | Magic213_Task 2,000 |
+| X2 | Magic213_Task: the walk to 0x4F4EC0 | Magic213_Task 1,993 |
+| X3 | Magic213_Start: parameter 0x6C | Magic213_Start 1,644 |
+| X4 | Magic213_Start: the child +0xB written | Magic213_Start 1,634 |
+| X5 | Magic213_Start: the CLUT with STP | Magic213_Start 2,000 |
+| X6 | Magic213_Start: sound 0x101 | Magic213_Start 2,000 |
+| X7 | Magic213Actor_Run: three entries | Magic213Actor_Run 515 |
+| X8 | Actor_Start: +9 0xF | Magic213Actor_Start 658 |
+| X9 | Actor_Start: motes step 3 | Magic213Actor_Start 688 |
+| X10 | Actor_Start: the tint (0, 0, 1, 1) | Magic213Actor_Start 688 |
+| X11 | Actor_Start: the tint kept in +0xB | Magic213Actor_Start 688 |
+| X12 | Actor_Start: the release skipped | Magic213Actor_Start 688 |
+| X13 | Actor_Start: the height not copied | Magic213Actor_Start 688 |
+| X14 | TintUp: two colour bytes | ActorFx_TintUp 2,000 |
+| X15 | TintUp: +2 on at 1 | ActorFx_TintUp 1,348 |
+| X16 | Untint: ended on the third byte | Magic213Actor_Untint 507 |
+| X17 | Untint: flag 0x40 on the target byte | Magic213Actor_Untint 499 |
+| X18 | Untint: the record not released | Magic213Actor_Untint 502 |
+| X19 | Mote_Run: the table not switched | Magic213Mote_Run 2,000 |
+| X20 | Mote_Run: updated whatever +2 | Magic213Mote_Run 505 |
+| X21 | Mote_Run: the table put back before the update | Magic213Mote_Run 571 |
+| X22 | Mote_Start: angle (+0xB & 3) x 0x200 | Magic213Mote_Start 335 |
+| X23 | Mote_Start: radius 13 | Magic213Mote_Start 680 |
+| X24 | Mote_Start: the angle not read again for the Cos | Magic213Mote_Start 23 |
+| X25 | Mote_Start: raised 0x2000000 | Magic213Mote_Start 680 |
+| X26 | Mote_Start: animation % 4 | Magic213Mote_Start 523 |
+| X27 | Mote_Start: +2 on before the animation | Magic213Mote_Start 32 |
+| X28 | Mote_Start: +0x2B 0 | Magic213Mote_Start 680 |
+| X29 | Mote_End: the owner count kept | Magic213Mote_End 1,294 |
+| X30 | Mote_End: freed while the script runs | Magic213Mote_End 2,000 |
 
 ## 11. What nothing reached
 
