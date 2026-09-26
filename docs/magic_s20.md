@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS (2026-09-26) - 51 functions ours
 (`src/game/magic_s20.cpp`, shadow name `magic_s20`), fuzzed headless
-through the shared harness with 0 mismatches; @CONTROLS_SUMMARY@. No
+through the shared harness with 0 mismatches; 134 of 134 negative controls refused. No
 recorded route casts any of the three: fuzz only until the owner's eye.
 
 Round nine, first spell wave, group S20
@@ -185,7 +185,9 @@ rounds each.
 
 `deref` logs what the matrix calls read on the stack (`Gte_RotTrans`'s
 vector, `Gte_RotMatrix`'s angles) and the vertices each projection reads
-as it is called. Stack addresses themselves are masked off. `ret_mask 0xFF`
+as it is called. Stack addresses themselves are masked off. Each commit
+(`MapView_LinkPrimAt`, `Gfx_CommitPrim`) logs the packet buffer through an
+`effect`: every primitive of a draw is built in the same bytes. `ret_mask 0xFF`
 on the two allocators and `Magic088_Variant` compares their al.
 
 **The thirteen `.data` tables** are swapped for recorders, each with the
@@ -201,9 +203,9 @@ entries its overlay reaches.
 - 256 tint records;
 - the scratch `0x903850..0x90385F` and `Prim_VertexScratch`;
 - the CLUT source rows and strip rows 26 and 27;
-- MAGIC088's band phases and the ability id.
-
-That is 59,120 bytes in 19 regions.
+- MAGIC088's band phases and the ability id;
+- the lift bytes `0x8C564F` for enemy types 0..7 (zero at start-up, so
+  seeded). That is 60,240 bytes in 20 regions.
 
 **Seeds.** Each dispatcher's index stays inside its table. Each compare's
 two sides are seeded:
@@ -218,8 +220,8 @@ two sides are seeded:
 
 **Result (2026-09-26, this worktree, on the consolidated harness `ea27991`):**
 
-    shadow      magic_s20 self-test: 102000 rounds over 51 functions (2000 each), 10663623 calls to the stand-ins,
-                0 MISMATCHES; 59120 bytes of state (19 regions) and the stand-ins' log compared
+    shadow      magic_s20 self-test: 102000 rounds over 51 functions (2000 each), 10663511 calls to the stand-ins,
+                0 MISMATCHES; 60240 bytes of state (20 regions) and the stand-ins' log compared
 
 Every stand-in and every handler was reached (the coverage lines). The
 draws dominate: `Magic088_DrawWave` makes 4,262 calls a run.
@@ -239,7 +241,148 @@ bit indexed past the image. All four are in the consolidated harness
 
 ## 5. The controls
 
-@CONTROLS_TABLE@
+134 negative controls, planted one at a time by a script (not committed: apply, `cmake --build build`, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s20`, restore), on the ported fuzz in this worktree. **134 of 134 are refused by a count (exit 3), each only in the function it touches.** The thinnest: AR3 (14), AP3 (22), F4 (50), AB3 (66), B7 (69).
+
+| | Function | Planted | Refused in (rounds of 2,000) |
+|---|---|---|--:|
+| A1 | `Magic087_Task` | stack table entries swapped | 2,000 |
+| A2 | `Magic087_Task` | mote live test bit 1 | 1,997 |
+| A3 | `Magic087_Task` | Sprite_Current not put back | 1,981 |
+| A4 | `Magic087_Task` | walks 79 motes | 1,013 |
+| B1 | `Magic087_Start` | enemy lift byte one on | 979 |
+| B2 | `Magic087_Start` | enemy +9 step 9 | 954 |
+| B3 | `Magic087_Start` | member lift 0x80000 | 710 |
+| B4 | `Magic087_Start` | enemy out test i + 2 | 1,023 |
+| B5 | `Magic087_Start` | CLUT bit 14 not 15 | 2,000 |
+| B6 | `Magic087_Start` | side bit 0x20 | 1,023 |
+| B7 | `Magic087_Start` | Sprite_Current read before the create | 69 |
+| B8 | `Magic087_Start` | child +4 the count after | 980 |
+| C1 | `Magic087_Child` | type by +2 | 1,439 |
+| C2 | `Magic087_ChildPhase` | phase by +1 | 1,614 |
+| D1 | `Magic087_ChildSpawn` | type-0 +9 = 2n + 3 | 2,000 |
+| D2 | `Magic087_ChildSpawn` | second four type 0 | 2,000 |
+| D3 | `Magic087_ChildSpawn` | sound at +4 = 1 | 754 |
+| E1 | `Magic087_ChildWait` | waits for 3 | 1,038 |
+| F1 | `Magic087_ChildRing` | +9 back to 7 | 691 |
+| F2 | `Magic087_ChildRing` | +0xB 0x81 | 617 |
+| F3 | `Magic087_ChildRing` | second column offset 14 | 2,000 |
+| F4 | `Magic087_ChildRing` | second mote owner the first read | 50 |
+| G1 | `Magic087_ChildGrow` | threshold 0x11 | 1,009 |
+| H1 | `Magic087_ChildEnd` | owner count down by 2 | 1,023 |
+| I1 | `Magic087_DrawColumn` | n = +4 / 2 + 2 | 811 |
+| I2 | `Magic087_DrawColumn` | phase-3 start +9 / 4 | 615 |
+| I3 | `Magic087_DrawColumn` | shade threshold 0x150 | 1,227 |
+| I4 | `Magic087_DrawColumn` | first angle + 2 | 1,602 |
+| I5 | `Magic087_DrawColumn` | x - 3 | 1,602 |
+| I6 | `Magic087_DrawColumn` | tpage x 0x380 | 1,602 |
+| I7 | `Magic087_DrawColumn` | x + 8 from the y | 1,602 |
+| I8 | `Magic087_DrawColumn` | v & 0x3F | 1,164 |
+| I9 | `Magic087_DrawColumn` | shade not carried | 1,532 |
+| I10 | `Magic087_DrawColumn` | Sprite_Current not read again after the second sine | 256 |
+| J1 | `Magic087_MoteRun` | type by +2 | 975 |
+| K1 | `Magic087_OrbitRun` | no triangle in phase 2 (not 3) | 504 |
+| L1 | `Magic087_OrbitStart` | radius 0x101 | 1,017 |
+| L2 | `Magic087_OrbitStart` | type-0 +9 0x1E | 678 |
+| M1 | `Magic087_OrbitSpin` | x sar 4 | 998 |
+| M2 | `Magic087_OrbitSpin` | angle & 0x7F | 994 |
+| M3 | `Magic087_OrbitSpin` | cap 0x22 | 337 |
+| M4 | `Magic087_OrbitSpin` | +4 test inverted | 926 |
+| M5 | `Magic087_OrbitSpin` | z from the owner +0x34 | 2,000 |
+| N1 | `Magic087_OrbitWait` | waits for 0x80 | 946 |
+| O1 | `Magic087_OrbitFade` | owner count down by 2 | 987 |
+| P1 | `Magic087_RiseRun` | no triangle in phase 1 | 972 |
+| Q1 | `Magic087_RiseStart` | type test 3 | 1,342 |
+| Q2 | `Magic087_RiseStart` | +0xA 0x1F | 2,000 |
+| R1 | `Magic087_RiseStep` | rises 16 | 2,000 |
+| S1 | `Magic087_PushMatrix` | turn << 5 (seen only by LogPointee) | 1,958 |
+| S2 | `Magic087_PushMatrix` | lift 0x100 (seen only by LogPointee) | 2,000 |
+| S3 | `Magic087_PushMatrix` | x sar 8 (seen only by LogPointee) | 2,000 |
+| S4 | `Magic087_PushMatrix` | Camera_Matrix + 1 | 2,000 |
+| T1 | `Magic087_DrawTriangle` | radius 0x81 | 1,011 |
+| T2 | `Magic087_DrawTriangle` | corner 0x680 | 2,000 |
+| T3 | `Magic087_DrawTriangle` | shade table one on | 1,870 |
+| T4 | `Magic087_DrawTriangle` | p[0x16] 2 | 2,000 |
+| T5 | `Magic087_DrawTriangle` | corner z 1 (the first triangle: seen by LogPointee) | 2,000 |
+| U1 | `Magic087_PoolAlloc` | answers i + 1 (seen only by LogReturn) | 1,019 |
+| U2 | `Magic087_PoolAlloc` | marks bit 1 | 1,019 |
+| V1 | `Magic088_Task` | entries 2 and 3 swapped | 594 |
+| W1 | `Magic088_Start` | +9 0x11 | 1,943 |
+| W2 | `Magic088_Start` | second child +0xA 0x11 | 2,000 |
+| W3 | `Magic088_Start` | row 27 from 2 bytes on | 2,000 |
+| W4 | `Magic088_Start` | first child type 2 | 1,948 |
+| W5 | `Magic088_Start` | variant + 1 | 1,972 |
+| X1 | `Magic088_TintOn` | tint (0, 0, 1) | 980 |
+| X2 | `Magic088_TintOn` | +0x5C 2 | 980 |
+| X3 | `Magic088_TintOn` | tint's fifth argument 2 | 980 |
+| Y1 | `Magic088_Darken` | record +4 not +3 | 2,000 |
+| Z1 | `Magic088_Lighten` | tests +3 | 1,018 |
+| Z2 | `Magic088_Lighten` | flashes the actor | 935 |
+| AA1 | `Magic088_Apply` | child +4 = +4 + 5 | 661 |
+| AA2 | `Magic088_Apply` | stat table one on | 816 |
+| AA3 | `Magic088_Apply` | arguments swapped | 957 |
+| AB1 | `Magic088_Variant` | id 0x113 | 164 |
+| AB2 | `Magic088_Variant` | case 2 answers 2 (seen only by LogReturn) | 130 |
+| AB3 | `Magic088_Variant` | bound 0xA1 | 66 |
+| AB4 | `Magic088_Variant` | writes 0x5B | 104 |
+| AC1 | `Magic088_Child` | type by +2 | 1,337 |
+| AD1 | `Magic088_FanRun` | lives by +1 | 1,053 |
+| AE1 | `Magic088_DrawFan` | radius 0xF1 | 2,000 |
+| AE2 | `Magic088_DrawFan` | fifteen triangles | 2,000 |
+| AE3 | `Magic088_DrawFan` | centre * 11 | 1,996 |
+| AE4 | `Magic088_DrawFan` | closing tpage 0x16 | 2,000 |
+| AE5 | `Magic088_DrawFan` | rim x from y (seen by LogPointee) | 2,000 |
+| AF1 | `Magic088_WaveRun` | bands not stepped | 803 |
+| AG1 | `Magic088_WaveGrow` | threshold 0x1F | 977 |
+| AH1 | `Magic088_WaveHold` | owner count down by 2 | 1,028 |
+| AI1 | `Magic088_WaveFade` | down by 1 | 2,000 |
+| AJ1 | `Magic088_WaveStep` | odd and even swapped | 2,000 |
+| AK1 | `Magic088_DrawWave` | colour row * 5 | 2,000 |
+| AK2 | `Magic088_DrawWave` | z not negated | 1,992 |
+| AK3 | `Magic088_DrawWave` | column phase + 2 | 2,000 |
+| AK4 | `Magic088_DrawWave` | inner radius 16 b | 2,000 |
+| AK5 | `Magic088_DrawWave` | link size 0x34 | 2,000 |
+| AK6 | `Magic088_DrawWave` | green from 0x90385E | 2,000 |
+| AK7 | `Magic088_DrawWave` | B4 from the old B0 (seen by LogPointee) | 2,000 |
+| AL1 | `Magic092_Task` | walks 47 motes | 1,030 |
+| AL2 | `Magic092_Task` | entries swapped | 2,000 |
+| AM1 | `Magic092_Start` | +9 = 16 n + 2 | 1,645 |
+| AM2 | `Magic092_Start` | +3 = i + 1 | 1,645 |
+| AM3 | `Magic092_Start` | cell 0 = 1 | 2,000 |
+| AM4 | `Magic092_Start` | member out test i + 3 | 975 |
+| AN1 | `Magic092_Child` | type by +2 | 1,487 |
+| AO1 | `Magic092_ChildRun` | no draw in phase 1 | 509 |
+| AP1 | `Magic092_ChildSpawn` | +0 |= 0x40 | 866 |
+| AP2 | `Magic092_ChildSpawn` | type n != 1 | 1,047 |
+| AP3 | `Magic092_ChildSpawn` | full test 0xFE | 22 |
+| AQ1 | `Magic092_ChildTint` | threshold 0x12 | 978 |
+| AQ2 | `Magic092_ChildTint` | enemy flags index + 2 | 476 |
+| AQ3 | `Magic092_ChildTint` | red -7 | 975 |
+| AQ4 | `Magic092_ChildTint` | enemy record one on | 476 |
+| AR1 | `Magic092_ChildEnd` | +9 down at 0 too | 1,021 |
+| AR2 | `Magic092_ChildEnd` | flag40 index + 4 | 535 |
+| AR3 | `Magic092_ChildEnd` | flash index from the first read | 14 |
+| AS1 | `Magic092_MoteRun` | type by +2 | 1,369 |
+| AT1 | `Magic092_FlameRun` | no screen point | 800 |
+| AU1 | `Magic092_FlameGrow` | threshold 0x18 | 1,019 |
+| AU2 | `Magic092_FlameGrow` | owner bit 6 | 765 |
+| AV1 | `Magic092_DrawFlame` | Rand & 7 | 2,000 |
+| AV2 | `Magic092_DrawFlame` | 27 rows | 2,000 |
+| AV3 | `Magic092_DrawFlame` | counter from 5 | 2,000 |
+| AV4 | `Magic092_DrawFlame` | inner shade 0x90 | 2,000 |
+| AV5 | `Magic092_DrawFlame` | row + 0xD | 2,000 |
+| AV6 | `Magic092_DrawFlame` | outer row << 2 | 2,000 |
+| AV7 | `Magic092_DrawFlame` | clut y 0x1FB | 2,000 |
+| AV8 | `Magic092_DrawFlame` | 0x90385C by 0x903850 | 2,000 |
+| AV9 | `Magic092_DrawFlame` | rows +0xA + 1 apart | 2,000 |
+| AV10 | `Magic092_DrawFlame` | outer right p[0x50] from 0x90385C | 2,000 |
+| AW1 | `Magic092_SparkRun` | left 17 | 365 |
+| AW2 | `Magic092_SparkRun` | up 11 | 771 |
+| AW3 | `Magic092_SparkRun` | type 2 goes left | 365 |
+| AX1 | `Magic092_PoolAlloc` | answers i + 1 (seen only by LogReturn) | 982 |
+
+A first run (before the fuzz logged the packet at each commit and seeded the enemy lift bytes) left three unrefused, which is why those two were added. `B1` (the lift byte one on) read a table that is all zero at start-up, so both reads agreed; its eight rows by enemy type are now a seeded region. `AV4` and `AV5` (the flame's first quad) wrote the one packet buffer that the later quads overwrite before anything compared it; every `MapView_LinkPrimAt` and `Gfx_CommitPrim` now logs the packet as it stands.
+
+Not planted, because no fuzz can see them: the order of writes between two calls when nothing reads them in between (ours keeps the original's order anyway), and the original's extra flag arguments to `Gte_RotTrans` / `Gte_RotTransPers3` / `4`, which the replacements do not declare.
 
 ## 6. What nothing reached
 
