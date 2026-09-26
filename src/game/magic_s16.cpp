@@ -722,26 +722,32 @@ MS16_SPARKLES(073, k073)
 MS16_SPARKLES(074, k074)
 #undef MS16_SPARKLES
 
-#define MS16_INJECT_SPARKLES(N)            \
-    BOF3_INJECT(Magic##N##_SparkleDispatch); \
-    BOF3_INJECT(Magic##N##_SparkleUpdate);   \
-    BOF3_INJECT(Magic##N##_SparkleLaunch);   \
-    BOF3_INJECT(Magic##N##_SparkleRise);     \
-    BOF3_INJECT(Magic##N##_SparkleFade);     \
-    BOF3_INJECT(Magic##N##_SparkleRaysG2);   \
-    BOF3_INJECT(Magic##N##_SparkleRaysG3);   \
-    BOF3_INJECT(Magic##N##_SparkleDisc);     \
-    BOF3_INJECT(Magic##N##_SparkleAlloc);    \
-    BOF3_INJECT(Magic##N##_SparkleFree)
-
 void MagicS16_Inject() {
     if (bof3::WantsShadow("magic_s16")) magic_s16::SelfTest();
     BOF3_INJECT(Magic071_Task);
     BOF3_INJECT(Magic071_Spawn);
-    MS16_INJECT_SPARKLES(071);
+    BOF3_INJECT(Magic071_SparkleDispatch);
+    BOF3_INJECT(Magic071_SparkleUpdate);
+    BOF3_INJECT(Magic071_SparkleLaunch);
+    BOF3_INJECT(Magic071_SparkleRise);
+    BOF3_INJECT(Magic071_SparkleFade);
+    BOF3_INJECT(Magic071_SparkleRaysG2);
+    BOF3_INJECT(Magic071_SparkleRaysG3);
+    BOF3_INJECT(Magic071_SparkleDisc);
+    BOF3_INJECT(Magic071_SparkleAlloc);
+    BOF3_INJECT(Magic071_SparkleFree);
     BOF3_INJECT(Magic072_Task);
     BOF3_INJECT(Magic072_Spawn);
-    MS16_INJECT_SPARKLES(072);
+    BOF3_INJECT(Magic072_SparkleDispatch);
+    BOF3_INJECT(Magic072_SparkleUpdate);
+    BOF3_INJECT(Magic072_SparkleLaunch);
+    BOF3_INJECT(Magic072_SparkleRise);
+    BOF3_INJECT(Magic072_SparkleFade);
+    BOF3_INJECT(Magic072_SparkleRaysG2);
+    BOF3_INJECT(Magic072_SparkleRaysG3);
+    BOF3_INJECT(Magic072_SparkleDisc);
+    BOF3_INJECT(Magic072_SparkleAlloc);
+    BOF3_INJECT(Magic072_SparkleFree);
     BOF3_INJECT(Magic073_Task);
     BOF3_INJECT(Magic073_Spawn);
     BOF3_INJECT(Magic073_Wait);
@@ -749,7 +755,16 @@ void MagicS16_Inject() {
     BOF3_INJECT(Magic073_ActorTask);
     BOF3_INJECT(Magic073_ActorStart);
     BOF3_INJECT(ActorFx_WaitStep4);
-    MS16_INJECT_SPARKLES(073);
+    BOF3_INJECT(Magic073_SparkleDispatch);
+    BOF3_INJECT(Magic073_SparkleUpdate);
+    BOF3_INJECT(Magic073_SparkleLaunch);
+    BOF3_INJECT(Magic073_SparkleRise);
+    BOF3_INJECT(Magic073_SparkleFade);
+    BOF3_INJECT(Magic073_SparkleRaysG2);
+    BOF3_INJECT(Magic073_SparkleRaysG3);
+    BOF3_INJECT(Magic073_SparkleDisc);
+    BOF3_INJECT(Magic073_SparkleAlloc);
+    BOF3_INJECT(Magic073_SparkleFree);
     BOF3_INJECT(Magic073_CountReacting);
     BOF3_INJECT(Magic074_Task);
     BOF3_INJECT(Magic074_Spawn);
@@ -759,6 +774,14 @@ void MagicS16_Inject() {
     BOF3_INJECT(ActorFx_Tint);
     BOF3_INJECT(ActorFx_Untint);
     BOF3_INJECT(ActorFx_End);
-    MS16_INJECT_SPARKLES(074);
+    BOF3_INJECT(Magic074_SparkleDispatch);
+    BOF3_INJECT(Magic074_SparkleUpdate);
+    BOF3_INJECT(Magic074_SparkleLaunch);
+    BOF3_INJECT(Magic074_SparkleRise);
+    BOF3_INJECT(Magic074_SparkleFade);
+    BOF3_INJECT(Magic074_SparkleRaysG2);
+    BOF3_INJECT(Magic074_SparkleRaysG3);
+    BOF3_INJECT(Magic074_SparkleDisc);
+    BOF3_INJECT(Magic074_SparkleAlloc);
+    BOF3_INJECT(Magic074_SparkleFree);
 }
-#undef MS16_INJECT_SPARKLES
