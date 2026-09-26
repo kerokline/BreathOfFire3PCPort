@@ -72,6 +72,8 @@ ledger stays trustworthy.
 - **ID:** DIV-0001
 - **Date:** YYYY-MM-DD
 - **Subsystem:** text / battle / field / menu / platform / audio / render
+- **Tier:** Forced | Intent | Sensible | Extension - see "Tiers" below; an
+  optional " - <clause>" says why when the call is not obvious.
 - **Original behaviour:** what the shipped PC port does, and how that was
   established (the evidence rule applies — cite the measurement).
 - **New behaviour:** what this project does instead.
@@ -82,6 +84,31 @@ ledger stays trustworthy.
   *original* one, and it changes how confident the fix should be.
 - **Reversible?** whether it sits behind a config toggle, and the key if so.
 ```
+
+### Tiers
+
+Every entry says which *kind* of change it is. The fields above record what
+changed; the tier records how far from the original it is allowed to take the
+game, which is what a player-facing preset ("as shipped", "fixed", "extended")
+would be built from. Adapted from Severed Chains' retail-accuracy tiers
+([`prior-art/severed-chains.md`](prior-art/severed-chains.md) §2.1), with one
+added because we ledger engine-level changes and they do not.
+
+| Tier | The original... | We... | Example |
+|---|---|---|---|
+| **Forced** | does something a reimplementation cannot reproduce: reads stale stack, jumps into another function's body | pick the nearest deterministic behaviour. Not a choice, so no preset can turn it off | DIV-0021, DIV-0024 |
+| **Intent** | crashes, hangs, loses data, or does what it plainly did not mean to - a port bug, an original bug, or a platform the code no longer fits | make it do what it meant. Where the PlayStation shows what was meant, that is the target | DIV-0002, DIV-0004, DIV-0011 |
+| **Sensible** | works as designed | change presentation, platform, language or comfort - the window, the look, the pace of play, the text - without changing what happens *in play* | DIV-0031, DIV-0048, the language overlays |
+| **Extension** | works as designed | change what happens in play: rules, balance, content, cheats | DIV-0045, DIV-0046 |
+
+There is no "accurate" tier because matching the original is not a divergence
+and has no entry. Debug and development features (tracers, the A/B switch) are
+tooling, not divergence, and are not ledgered at all.
+
+When a change could be read as Intent or Sensible, write the clause. The test
+is the rationale: Intent argues the original was *wrong*; Sensible argues it
+was fine and something else is better. `tools/ledger_check.py` refuses an
+entry with no tier or a tier not in this table.
 
 Assign IDs sequentially and never reuse them. A superseded entry stays, marked
 `SUPERSEDED by DIV-NNNN` — the record of what was once believed is part of the
@@ -123,6 +150,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0001
 - **Date:** 2026-09-19
 - **Subsystem:** platform
+- **Tier:** Intent - the logo video is broken on every current Windows
 - **Original behaviour:** the port plays `capcom.avi` through MCI — `open
   avivideo!%s alias vfw`, `play vfw window from 0 notify`, `stop vfw wait`
   (strings in `.rdata`; `WINMM.mciSendStringA` is the only `winmm` import).
@@ -180,6 +208,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0002
 - **Date:** 2026-09-19
 - **Subsystem:** menu
+- **Tier:** Intent
 - **Original behaviour:** a save written to a slot that had no file when the
   save directory was last listed **does not appear in the save menu** until the
   game is restarted; the file itself is written correctly. Reported by the
@@ -228,6 +257,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0003
 - **Date:** 2026-09-19
 - **Subsystem:** platform
+- **Tier:** Intent
 - **Original behaviour:** `File_OpenWrite` `0x5A7420` stores the `fopen(path,
   "wb")` result into `File_Slots[slot]` and returns the slot index **without
   testing the result** (disasm 2026-09-19: `call 0x5B9B6D` at `0x5A7457`, then
@@ -268,6 +298,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0004
 - **Date:** 2026-09-19
 - **Subsystem:** platform
+- **Tier:** Intent
 - **Original behaviour:** game logic queues image uploads (sprite animation
   frames, through `0x5894D0`: `queue[count] = ...; count++`, no bound), and the
   queue is drained by `Gfx_FlushUploadQueue` `0x461F00` **only in the branch of
@@ -318,6 +349,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0005
 - **Date:** 2026-09-20
 - **Subsystem:** assets / localisation
+- **Tier:** Sensible
 - **Original behaviour:** `LoadDatFile` `0x454590` reads `DAT\<name>` and walks
   its chunks; that is all. There is one language, compiled in with the data
   ([`dialogue-localisation.md`](dialogue-localisation.md) §2).
@@ -352,6 +384,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0006
 - **Date:** 2026-09-20
 - **Subsystem:** text
+- **Tier:** Sensible
 - **Original behaviour:** `MsgBox_Step` `0x497840` draws one character through
   `Text_DrawAt` `0x516B30` (call at `0x497A22`) and then adds a flat 12 to its
   pen, `MsgBox_PenX` `0x7DEE5C` (`add bp, 0xC` at `0x497A44`) - the PSX JP
@@ -433,6 +466,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0007
 - **Date:** 2026-09-20
 - **Subsystem:** text / assets
+- **Tier:** Sensible
 - **Original behaviour:** the area script loads at arena offset 0 and the
   system pool at `0x4000` (PSX `0x80010000` / `0x80014000`, the Japanese
   layout), so an area's text has 16 KiB. The largest shipped block is `0x39CB`.
@@ -475,6 +509,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0008
 - **Date:** 2026-09-20
 - **Subsystem:** text / assets
+- **Tier:** Sensible
 - **Original behaviour:** the names the menus draw are compiled into
   `BOF3.exe`: six fixed-stride record tables in `.data` (`symbols.toml`
   `NameTable_*`), the PSX `GAME.EMI` tables with the name field widened.
@@ -527,6 +562,7 @@ designed in rather than bolted on.
 - **What this diverges from:** not the Chinese PC port, which has no English,
   but **the US PlayStation release**, which is where the English comes from
   and what "as it was" means for it (CLAUDE.md rule 6).
+- **Tier:** Sensible
 - **Original behaviour (US release):** the dialogue font is monospaced. Every
   cell is 8 x 12 and the stepper adds 8 after every character, with no
   exception for any glyph (`SLUS_004.22`, `addiu v0, v0, 8` at `0x80150770`;
@@ -557,6 +593,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0010
 - **Date:** 2026-09-20
 - **Subsystem:** render
+- **Tier:** Intent
 - **Original behaviour:** the three Direct3D sprite handlers (`D3d_DrawSprt`
   `0x5A2300`, `D3d_DrawSprt8` `0x5A2520`, `D3d_DrawSprt16` `0x5A2710`) take the
   quad's texture edges from the float table `0x7CA9E0`, read live as
@@ -618,6 +655,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0011
 - **Date:** 2026-09-20
 - **Subsystem:** menu
+- **Tier:** Intent
 - **Original behaviour:** the Config screen's panel draw `0x461710` and its
   controller sub-panel `0x461A50` each begin with a call `(x, y, w, h)` -
   `(.., 0x21, 0x0D)` and `(.., 0x0C, 0x0F)` - to `0x4DF820`, a bare `ret` with
@@ -661,6 +699,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0012
 - **Date:** 2026-09-20
 - **Subsystem:** render
+- **Tier:** Sensible
 - **Original behaviour:** the renderer's set-up `0x5A5160` sets stage 0's
   filters once - `SetTextureStageState(0, D3DTSS_MINFILTER 0x11, 2)` at
   `0x5A5B28` and `(0, D3DTSS_MAGFILTER 0x10, 2)` at `0x5A5B3B`, 2 being LINEAR
@@ -689,6 +728,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0013
 - **Date:** 2026-09-20
 - **Subsystem:** text
+- **Tier:** Sensible
 - **Original behaviour:** `FIRST.DAT`'s CLUT strip (kind 0, tag `0x8000`)
   differs from the PlayStation's (`FIRST.EMI`, section for `0x80033800`; US
   and JP discs alike) in **row 0 alone**, white text: indices 1-7 are 28, 27,
@@ -717,6 +757,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0014
 - **Date:** 2026-09-20
 - **Subsystem:** menu / text
+- **Tier:** Sensible
 - **Original behaviour:** the title menu is artwork - image chunk
   `0x1C000200` of `START.DAT`, three rows of 32 px Chinese characters (new
   game, load game, options) - drawn by `0x5888D0` one `SPRT` a row, centred,
@@ -754,6 +795,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0015
 - **Date:** 2026-09-20
 - **Subsystem:** menu / text
+- **Tier:** Sensible
 - **Original behaviour:** the Config screen's text is not in any `DAT`. It is
   in `BOF3.exe`, in three shapes, read 2026-09-20
   ([`config-screen.md`](config-screen.md)): six row labels as address operands
@@ -842,6 +884,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0016
 - **Date:** 2026-09-20
 - **Subsystem:** text / font
+- **Tier:** Sensible
 - **Original behaviour:** the string draw `Text_DrawString` `0x516B70`
   compares a glyph index against a flat `0xA00` (`cmp cx, 0xA00 / jbe` at
   `0x516C94`) and runs `mov dx, 0x1000 / in al, dx` above it - a privileged
@@ -896,6 +939,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0017
 - **Date:** 2026-09-21
 - **Subsystem:** menu / Config screen (only with a language overlay)
+- **Tier:** Sensible
 - **Original behaviour:** the row under the cursor is drawn large. `0x461800`
   (label) and `0x461970` (options) each branch on the row being selected and
   draw through `Text_DrawAt` `0x516B30` - the 12-unit quad - instead of the
@@ -929,6 +973,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0018
 - **Date:** 2026-09-21
 - **Subsystem:** menu (only with a language overlay)
+- **Tier:** Sensible
 - **Original behaviour:** the buttons above a menu panel - Config's two, and
   the rows of Items, Ability, Equipment and Tactics - are drawn by `0x574890`
   from a set number: 5-byte records at `0x66383C` (a count and up to four
@@ -972,6 +1017,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0019
 - **Date:** 2026-09-21
 - **Subsystem:** battle (only with a language overlay)
+- **Tier:** Sensible
 - **Original behaviour:** holding a direction or shoulder button on the
   battle's command cross shows the command's name in a box beside it:
   seven 8-byte slots at `0x669D28` behind the pointer table `0x669D60` -
@@ -1004,6 +1050,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0020
 - **Date:** 2026-09-21
 - **Subsystem:** text / New Game (only with a language overlay)
+- **Tier:** Sensible
 - **Original behaviour:** the port has no name entry. New Game (`0x437820`)
   copies seven 0xA4-byte default character records from `0x64B390` into the
   live table `0x903A70` and the whelp's, the eighth, from `0x64B80C` into
@@ -1049,6 +1096,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0021
 - **Date:** 2026-09-21
 - **Subsystem:** platform (PSX library layer)
+- **Tier:** Forced
 - **Original behaviour:** the matrix product `Gte_MulMatrix0` `0x5A7D70`
   builds its nine `s16` results on the stack and copies **five dwords** to
   the out, 20 bytes for an 18-byte result. So bytes 18 and 19 of every out, a
@@ -1093,6 +1141,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0022
 - **Date:** 2026-09-21
 - **Subsystem:** platform (frame pacing)
+- **Tier:** Intent - a platform bug: the code assumes a tick count that fits a float
 - **Original behaviour:** WinMain paces logic frames against a deadline kept
   in a **32-bit float** at `0x6BC628`: a `GetTickCount` value in
   milliseconds, advanced by 33.334 a frame. `GetTickCount` counts from the
@@ -1154,6 +1203,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0023
 - **Date:** 2026-09-21
 - **Subsystem:** platform (PSX library layer, as DIV-0021)
+- **Tier:** Forced
 - **Original behaviour:** the map-cell handler `MapCell_DrawQuads` `0x570020`
   builds each quad's vertices as 8-byte PSX `SVECTOR`s in its own stack
   frame and writes x, y and z but never the fourth word. `Gte_LoadVertex` and
@@ -1194,6 +1244,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0024
 - **Date:** 2026-09-22
 - **Subsystem:** field objects (the kind handlers, [`object-kinds.md`](object-kinds.md))
+- **Tier:** Forced
 - **Original behaviour:** `Field_ObjectFadeOut` `0x5193B0` and
   `Field_ObjectFadeIn` `0x5194E0` dispatch on the sprite's sub-state byte
   `+4` through jump tables with no bound (`0x65F654`, `0x65F65C`, adjacent).
@@ -1222,6 +1273,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0025
 - **Date:** 2026-09-22
 - **Subsystem:** renderer (the glyph handler, [`glyph-draw.md`](glyph-draw.md))
+- **Tier:** Intent - the sprite handlers carry a texel inset the glyph handler never got
 - **Original behaviour:** `D3d_DrawGlyph` `0x5A2900`, the Direct3D draw of
   every glyph (primitive code `0x6C`), sets each corner's texture coordinate
   to `2u / 32`, `2v / 32` - the glyph's 24 texels on a 24-pixel quad, 1:1,
@@ -1256,6 +1308,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0026
 - **Date:** 2026-09-22
 - **Subsystem:** menu (Config, [`config-screen.md`](config-screen.md) §8)
+- **Tier:** Sensible
 - **Original behaviour:** the controller panel's row draw `0x461AF0` places
   each name at `row x + 0x20 - len * 6` and draws it through the large
   `Text_DrawAt` - right-aligned for Chinese, two bytes and 12 units a
@@ -1290,6 +1343,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-22
 - **Subsystem:** menu (the chooser `Menu_YesNo` `0x5747D0`,
   [`glyph-draw.md`](glyph-draw.md) §7)
+- **Tier:** Sensible
 - **Original behaviour:** the chooser under "OK to overwrite?" (and "Do you
   want to save?", "Load game?", "Is this what you want?") draws system
   message `0xF` at x `0x1C` and the pointing hand at `0xFE - 36 * selection`.
@@ -1322,6 +1376,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0028
 - **Date:** 2026-09-22
 - **Subsystem:** sound (`Sound_Tick` `0x587C70`, [`sound.md`](sound.md))
+- **Tier:** Intent - restores the PlayStation fade the port lost
 - **Original behaviour:** the fades (`Music_FadeIn` / `FadeOut` /
   `FadeOutStop`, `Music_Play`'s fade in, the event ops `B4` `B5` `B9`..`BB`)
   take a count in frames - op `B4 tt 08` is an 8-frame fade in - and
@@ -1369,6 +1424,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0029
 - **Date:** 2026-09-22
 - **Subsystem:** menus (the save / load slot panel `0x576960`)
+- **Tier:** Sensible
 - **Original behaviour:** the panel draws the slot's name - five bytes of
   the save header, copied to `0x904BA0` - through `Text_DrawAt` at the
   panel's x + `0x13` (`lea eax, [ebp + 0x13]` at `0x576A46`, the one call
@@ -1400,6 +1456,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0030
 - **Date:** 2026-09-23
 - **Subsystem:** menus (`Menu_DrawBackdrop` `0x575690`, [`menu-windows.md`](menu-windows.md) §3)
+- **Tier:** Forced
 - **Original behaviour:** the backdrop's kind is Config's "Background" byte
   `0x903A5B`, which the Config screen keeps in 0..3 (`0x461239` /
   `0x46126D`) - four patterns. The function picks its CLUT from four words on
@@ -1447,6 +1504,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0031
 - **Date:** 2026-09-23
 - **Subsystem:** display (`Display_Setup` `0x5A5160`, [`display-setup.md`](display-setup.md); the backend, [`render-backend.md`](render-backend.md))
+- **Tier:** Sensible
 - **Original behaviour:** the set-up enumerates DirectDraw drivers and their
   modes, keeps a synthetic "Software Render" device as record 0
   (`Cfg_RenderMode` `0x65DA48` = 0 selects it: the port's own rasterisers into
@@ -1503,6 +1561,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Game_WinMain` `0x4FCB00`, `Game_WndProc`
   `0x4FC6F0`, [`window-modes.md`](window-modes.md))
+- **Tier:** Sensible
 - **Original behaviour:** WinMain creates the window with style `0xCA0000`
   (`WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX`, not resizable) in both modes:
   windowed a 640 x 480 client centred on the desktop, fullscreen the desktop's
@@ -1550,6 +1609,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Game_WndProc` `0x4FC6F0`, `Game_WinMain`
   `0x4FCB00`; [`IDEAS.md`](IDEAS.md) I12)
+- **Tier:** Sensible
 - **Original behaviour:** `WM_ACTIVATEAPP` with a zero word clears
   `App_Active` `0x6BC63B` and pauses the sound (`Sound_PauseAll`
   `0x587C30`); WinMain's loop pumps messages and does nothing else while the
@@ -1586,6 +1646,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0034
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop)
+- **Tier:** Intent - replaying a stall is not what a frame loop is for
 - **Original behaviour:** the deadline in `Frame_Deadline` `0x6BC628`
   advances 33.334 ms a logic frame and nothing clamps it: after any stall -
   the window inactive (DIV-0033 removes that one), a title-bar drag or
@@ -1612,6 +1673,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0035
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Fmv_Play` `0x59E360`, [`replacing-mci.md`](replacing-mci.md))
+- **Tier:** Sensible
 - **Original behaviour:** with `Cfg_Fullscreen` set, `Fmv_Play` calls
   `Fmv_EnterFullscreen` `0x59E4F0`: `WS_POPUP` on the window, a second
   DirectDraw object, `SetCooperativeLevel(EXCLUSIVE | FULLSCREEN)` and
@@ -1650,6 +1712,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0036
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Display_Setup` `0x5A5160` ours since DIV-0031; `Game_WinMain` ours since DIV-0032; [`display-overhaul.md`](display-overhaul.md) §4b)
+- **Tier:** Sensible
 - **Original behaviour:** the picture is 640 x 480 - a 640 x 480 x 16
   display mode or a 640 x 480 client - at `D3d_ScaleX/Y` 2.0, and under
   DIV-0031 until now a 640 x 480 render target presented at the largest
@@ -1688,6 +1751,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0037
 - **Date:** 2026-09-23
 - **Subsystem:** platform (the Direct3D 11 present, `src/render/crt.cpp`; [`crt-look.md`](crt-look.md))
+- **Tier:** Sensible
 - **Original behaviour:** the picture is shown as drawn - by DirectDraw's
   flip or Blt, or since DIV-0031 by the present scaling the render target
   onto the window, nearest or bilinear.
@@ -1715,6 +1779,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0038
 - **Date:** 2026-09-23 (per language 2026-09-25)
 - **Subsystem:** text (`Pause_LinesGame` `0x66A418`, `Pause_LinesTitle` `0x66A448`; `src/game/pause_text.cpp`, `tools/loc_build.py` `PAUSE_LINES`, [`window-modes.md`](window-modes.md) §6)
+- **Tier:** Sensible
 - **Original behaviour:** F9 pauses and WinMain draws two Chinese lines at
   (100, 100) and (0x70, 0x80) through `Text_DrawAt` - in game "press F9
   again to return to the title / any other key to continue", on the title
@@ -1767,6 +1832,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0039
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Game_WinMain` `0x4FCB00`, `src/game/win_main.cpp`)
+- **Tier:** Sensible
 - **Original behaviour:** the window is created with the title `0x65DA78`,
   GBK 龙战士Ⅲ ("Breath of Fire III", the game's Chinese name), and a failed
   disc probe shows `0x65DA98` 请插入龙战士Ⅲ光盘！ ("please insert the Breath
@@ -1789,6 +1855,7 @@ designed in rather than bolted on.
 - **ID:** DIV-0040
 - **Date:** 2026-09-23
 - **Subsystem:** platform (`Game_WndProc` `0x4FC6F0`, `src/game/win_main.cpp`)
+- **Tier:** Sensible
 - **Original behaviour:** F7 tore the display down, took the next renderer
   device record, set it up again and showed its name for 0x78 frames; F11
   toggled a "Frame Rate = N" readout. Since DIV-0031 / DIV-0032, F7 only
@@ -1814,6 +1881,7 @@ designed in rather than bolted on.
   `src/game/display_setup.cpp`, `MapView_Build` `0x56EC00` ours in
   `src/game/map_layers.cpp`, `AreaMap_FrameAreaBD` `0x510780` Capcom's;
   [`widescreen.md`](widescreen.md))
+- **Tier:** Sensible
 - **Original behaviour:** the picture is the game's 320 x 240 view (at
   `D3d_ScaleX/Y`, DIV-0036), 4:3. Two culls keep primitives whose projected
   x lies in a fixed screen interval: `MapView_Build`'s terrain cell cull
@@ -1911,6 +1979,7 @@ designed in rather than bolted on.
 - **Subsystem:** platform (`Game_WndProc` and `Game_WinMain` `src/game/win_main.cpp`,
   `Display_Setup` `src/game/display_setup.cpp`, `Fmv_Play` `src/game/fmv_play.cpp`,
   the backend `src/render/render_d3d11.cpp`; the launcher)
+- **Tier:** Sensible
 - **Original behaviour:** a fixed 640 x 480 client (not resizable). Under
   DIV-0036 until now: a window of a size picked in the launcher (2x..8x),
   the render target made once at that k, and a later resize only
@@ -1968,6 +2037,7 @@ designed in rather than bolted on.
 - **Subsystem:** display (the present, `src/render/satpixie.{h,cpp}`,
   `src/render/render_d3d11.cpp`; the launcher's Look box and its Options
   dialog; [`crt-look.md`](crt-look.md) §5, [`THIRD_PARTY.md`](THIRD_PARTY.md))
+- **Tier:** Sensible
 - **Original behaviour:** the picture is presented as drawn (DIV-0037 added
   our own CRT look as an option).
 - **New behaviour:** `BOF3X_PRESENT=satpixie` presents through a port of
@@ -2003,6 +2073,7 @@ designed in rather than bolted on.
 - **Subsystem:** display (the Direct3D 11 backend's `DrawPrimitive`,
   `src/render/render_shim.cpp`; [`world-map.md`](world-map.md) §3,
   [`known-defects.md`](known-defects.md) D41)
+- **Tier:** Intent - the needle the PlayStation draws
 - **Original behaviour:** the port's draw handlers give every corner the
   primitive's depth as `z` and `rhw = 0.1 / z` ([`d3d-draw.md`](d3d-draw.md)).
   A corner at depth 0 gets an infinite `rhw`, and Capcom's Direct3D 6 device
@@ -2046,6 +2117,7 @@ designed in rather than bolted on.
 - **Subsystem:** battle (`Battle_EnemyDefeated` `0x437470`,
   `src/game/battle_flow.cpp`; `src/game/cheats.cpp`; the launcher's
   "Cheats..." dialog; [`cheats.md`](cheats.md))
+- **Tier:** Extension
 - **Original behaviour:** a fallen enemy's EXP (`+0x96`) and zenny (`+0x94`)
   are added to the battle totals `0x904AEC` / `0x904AF0` as they are.
 - **New behaviour:** each yield is multiplied by `BOF3X_EXP` / `BOF3X_ZENNY`
@@ -2076,6 +2148,7 @@ designed in rather than bolted on.
 - **Subsystem:** battle (the Pilfer and Steal state steps `0x4B54F0` and
   `0x4F5140`, Capcom's; two `PatchBytes` in `src/game/cheats.cpp`; the
   launcher's "Cheats..." dialog; [`cheats.md`](cheats.md) §3)
+- **Tier:** Extension
 - **Original behaviour:** each steal rolls `Rand() & 0xFF` against the
   enemy's steal level (`+0x1A`) through the table `[0, 1, 3, 6, 12, 16, 32,
   32]` times an agility tier 12 .. 4, and takes the drop-1 item (`+0x18`)
@@ -2123,6 +2196,7 @@ designed in rather than bolted on.
 - **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop,
   `src/game/win_main.cpp`; [`known-defects.md`](known-defects.md) D5,
   [`IDEAS.md`](IDEAS.md) I16)
+- **Tier:** Intent - the PlayStation's pace; the port's 33.334 ms was an approximation of it
 - **Original behaviour:** the loop paces logic frames against a deadline in
   the 32-bit float `Frame_Deadline` `0x6BC628`, advanced by the double
   33.334 at `0x5C4218` (29.999 frames a second) and held under the 2^32
@@ -2172,6 +2246,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** platform (`Game_WinMain` `0x4FCB00`'s loop and window
   procedure, `src/game/win_main.cpp`; [`IDEAS.md`](IDEAS.md) I17)
+- **Tier:** Sensible - logic is unchanged at either speed
 - **Original behaviour:** F1 does nothing; the loop's period is fixed.
 - **New behaviour:** F1 toggles between the period (DIV-0047's 1001 / 30
   ms) and half of it: two logic frames per frame of wall time. The deadline
@@ -2226,6 +2301,7 @@ designed in rather than bolted on.
 - **Subsystem:** platform (`Fmv_WndProc` `0x59E570`, ours in
   `src/game/fmv_play.cpp`; the window procedure `Fmv_Play` installs for the
   length of a video)
+- **Tier:** Sensible
 - **Original behaviour:** on `WM_ACTIVATEAPP` the procedure sends MCI
   `pause vfw` when the window is deactivated and `SetFocus` plus
   `resume vfw` when it is activated again (read 2026-09-19 and again
@@ -2259,6 +2335,7 @@ designed in rather than bolted on.
 - **Subsystem:** platform / input (`DInput_Init` `0x5A94C0`, `Pad_Read`
   `0x5A9700`, `DInput_Shutdown` `0x5A9690`, ours in `src/game/pad_read.cpp`;
   [`controls.md`](controls.md))
+- **Tier:** Sensible
 - **Original behaviour:** `DInput_Init` enumerates the first attached
   DirectInput joystick and `Pad_Read` maps it digitally: axes X / Y past half
   travel are the directions, buttons 0..3 cross / square / triangle / circle,
@@ -2327,6 +2404,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** menu (Config, [`controls.md`](controls.md) §2, §6 step 3;
   `src/game/config_text.cpp`, `tools/loc_build.py`)
+- **Tier:** Sensible
 - **Original behaviour:** the 2001 port draws two cells right of each action
   name: the keyboard key of the *default* table, hard-coded (D58), and a
   coloured glyph naming the PlayStation button - which in the port's glyph
@@ -2382,6 +2460,7 @@ designed in rather than bolted on.
 - **Subsystem:** battle (only with a language overlay;
   `src/game/battle_text.cpp`, `BattleBanner_SetMessage` in
   `src/game/battle_misc.cpp`, `tools/loc_build.py`)
+- **Tier:** Sensible
 - **Original behaviour:** the banner at the top of a fight shows an actor's
   name or one of twelve messages. `BattleBanner_SetMessage` `0x44A8E0` copies
   message k through the pointer table `0x669DE0` with `Str_CopyN(.., .., 8)`;
@@ -2432,6 +2511,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** battle (only with a language overlay; `tools/loc_build.py`,
   data only)
+- **Tier:** Sensible
 - **Original behaviour:** each `AREAnnn.DAT` loads the area's eight enemy
   kinds as a kind-0 chunk at arena `0xC2000`, size `0x4A8`: a 0x48-byte
   header, then eight 0x8C-byte records whose first 12 bytes are the name,
@@ -2467,6 +2547,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** text / font (only with a language overlay;
   `tools/loc_build.py`, and one table in `src/game/config_text.cpp`)
+- **Tier:** Sensible
 - **Original behaviour:** the PC port shipped Chinese only. Each
   PlayStation language was its own build on its own SKU, with no language
   switching in any of them (`STATUS.md`, "A stated goal worth recording
@@ -2527,6 +2608,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** world map (only with a language overlay;
   `tools/loc_build.py`, data only)
+- **Tier:** Sensible
 - **Original behaviour:** the place plates on the ten world maps (`AREA016`,
   `033`, `045`, `065`, `087`, `088`, `115`, `121`, `151`, `152`) are paint
   on each map's page, kind-1 chunk `0x0E001000`. The port repainted them in
@@ -2574,6 +2656,7 @@ designed in rather than bolted on.
 - **Date:** 2026-09-24
 - **Subsystem:** text / font, and the layout switch for languages (only with
   a language overlay; `tools/loc_build.py`, `src/game/lang_layout.cpp`)
+- **Tier:** Sensible
 - **Original behaviour:** as DIV-0054, the port shipped Chinese only. The
   Japanese PlayStation release draws its text from `ENDKANJI.EMI`:
   - section 0 is 21 x 21 cells of 12 px, in which byte `b` below `0x5B` is
@@ -2649,6 +2732,7 @@ designed in rather than bolted on.
 - **Subsystem:** text (only with a Japanese overlay; `tools/loc_build.py`,
   `src/game/text_pairs.cpp`, `Text_DrawString`, `Text_CharCount`,
   `Text_GlyphCount`, the two enemy name windows)
+- **Tier:** Sensible
 - **Original behaviour:** a glyph code draws one glyph. A Japanese name (at
   most 8 glyphs, `name[8]` on the JP disc) is two bytes a glyph on the PC.
   So the longest do not fit the items' 16-byte field with a terminator

@@ -10,6 +10,7 @@ anywhere, including CI (.github/workflows/checks.yml).
 The divergence ledger, docs/DIVERGENCE.md (CLAUDE.md rule 2):
   * every entry under "## Entries" is a `### title` followed by exactly one
     `- **ID:** DIV-NNNN`, and carries the fields the entry format names;
+  * its Tier is one the ledger's "Tiers" table defines;
   * IDs run DIV-0001, DIV-0002, ... with no gap and no repeat;
   * the Status line's "N entries, DIV-0001..NNNN" matches the entries;
   * every DIV-NNNN cited anywhere in the repository exists.
@@ -34,8 +35,12 @@ LEDGER = os.path.join('docs', 'DIVERGENCE.md')
 
 # Fields every entry carries (docs/DIVERGENCE.md, "Entry format"). A field may
 # carry a parenthetical qualifier: "Rationale (why this side)".
-REQUIRED = ['ID', 'Date', 'Subsystem', 'Original behaviour', 'New behaviour',
+REQUIRED = ['ID', 'Date', 'Subsystem', 'Tier', 'Original behaviour', 'New behaviour',
             'Rationale', 'Also in the PSX version?', 'Reversible?']
+
+# The tiers docs/DIVERGENCE.md "Tiers" defines. The field is the tier word,
+# optionally followed by " - <why>".
+TIERS = ('Forced', 'Intent', 'Sensible', 'Extension')
 
 # (DIV id, missing field) -> why it is accepted. Content only the author can
 # write; the check will not invent it.
@@ -116,6 +121,10 @@ def check_divergence(r):
                 r.note(f'{did}: no "{field}" field (known: {KNOWN[did, field]})')
             else:
                 r.error(f'{where}: {did} has no "- **{field}:**" field')
+        m = re.search(r'^- \*\*Tier:\*\*\s*(.*)$', chunk, re.M)
+        if m and not re.fullmatch(r'(' + '|'.join(TIERS) + r')(?: - .+)?', m.group(1).strip()):
+            r.error(f'{where}: {did} tier {m.group(1).strip()!r} is not one of '
+                    f'{", ".join(TIERS)} (optionally " - <why>")')
         m = re.search(r'^- \*\*Date:\*\*\s*(\S+)', chunk, re.M)
         if m and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', m.group(1)):
             r.error(f'{where}: {did} date {m.group(1)!r} is not YYYY-MM-DD')
