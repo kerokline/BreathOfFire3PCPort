@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-26) - 64 functions ours
 (`src/game/magic_c2.cpp`, shadow name `magic_c2`), fuzzed headless through
 the shared harness ([`magic_harness.md`](magic_harness.md)), with no edit to
-the harness: 0 mismatches in 128,000 rounds. @CONTROLS_SUMMARY@ Fuzz only:
+the harness: 0 mismatches in 128,000 rounds. 206 negative controls, 205 refused by a count (exit 3), one an equivalent mutant (section 10). Fuzz only:
 no recorded route casts any of them (section 11).
 
 Group C2 of round nine's second spell wave
@@ -196,8 +196,9 @@ nothing added to the harness (every need met by its fields):
   `Sprite_ScriptTick`, `Sprite_UpdateScreen` - also the frame-offset table
   `0x9039D8` -, `BattleActor_UpdateScreenXY`, `BattleTask_FreeCurrent`,
   `MagicFx_StepToward`, `MagicFx_CenterOnSide`, MAGIC219's `0x4F6290`), so a
-  caster swap left out or undone early shows; `Gfx_ClutStripCopyRow`,
-  `AreaMap_Elevation`; the draws' GPU calls and `Math_Sin` / `Math_Cos` /
+  caster swap left out or undone early shows; `Gfx_ClutStripCopyRow`;
+  `AreaMap_Elevation` answering a third of the time exactly the task's height
+  word (the bones' landing compare at its boundary); the draws' GPU calls and `Math_Sin` / `Math_Cos` /
   `Math_Ratan2`; `Gfx_CommitPrim` and `MapView_LinkPrimAt` with an `effect`
   that logs the packet (0x58 bytes) - the stand-ins never advance
   `Gfx_PacketNext`, so every primitive of a draw is built in the same
@@ -218,7 +219,8 @@ nothing added to the harness (every need met by its fields):
 - **the seed**: every round the packet pointer into the buffer, every mote's
   and spark's owner `+0x80` a real slot or record (the walks make it the
   owner, which a recorder writes through), half the streaks dead and a
-  quarter at their last frame, the side bit `0x40` half the time; then by
+  quarter at their last frame (for the draw-all and the end, a third of
+  the time only a few live and none ending, or none at all), the side bit `0x40` half the time; then by
   function: each dispatcher's phase inside its table, each count-down at
   and either side of its end (`BoneDance_Spawn`'s 0x20, the cloud's age at
   0x63..0x65 and 0x7F..0x81, the beam's emit window at 0x10 / 0x11, the
@@ -233,19 +235,19 @@ nothing added to the harness (every need met by its fields):
 - **`args`**: a streak record for `UtmostAttack_DrawStreak` and
   `_InitStreak`;
 - **the disturbance** of the group's cells (the harness's case 14): the
-  packet pointer, a scratch word, a vertex word, a byte of a streak, a byte
-  of a mote or spark below its owner, the frame-offset table pointer, bit 0
+  packet pointer, a scratch word, a vertex word, a byte of a streak (half
+  the time a point of the one being drawn), a byte of a mote or spark below its owner, the frame-offset table pointer, bit 0
   of a party record (`Holocaust_Start` reads them across its creates).
 
 **Result** (2026-09-26, this worktree):
 
-    shadow      magic_c2 self-test: 128000 rounds over 64 functions (2000 each), 946570 calls to the stand-ins,
+    shadow      magic_c2 self-test: 128000 rounds over 64 functions (2000 each), 905797 calls to the stand-ins,
                 0 MISMATCHES; 34439 bytes of state (22 regions) and the stand-ins' log compared
 
 Coverage: every callee and handler the clones name is reached, e.g.
-`Math_Sin` 174,094, `Gpu_SetPolyG4` 37,784, `0x4D9D50` 127,521, `0x494110`
-8,000, `0x43F430` 515, `0x4F9F70` 678, `0x4F6290` 1,011, the allocators
-1,253 and 725, `HolocaustBeam_Draw` (as `HolocaustBeam_Run`'s tail) 1,115.
+`Math_Sin` 173,706, `Gpu_SetPolyG4` 37,688, `0x4D9D50` 88,253, `0x494110`
+8,000, `0x43F430` 515, `0x4F9F70` 678, `0x4F6290` 1,013, the allocators
+1,245 and 781, `HolocaustBeam_Draw` (as `HolocaustBeam_Run`'s tail) 1,118.
 Counts depend on the build directory ([`takeover-queue-round9.md`](takeover-queue-round9.md)
 §6). `BOF3X_SHADOW='*'`: exit 0.
 
@@ -320,7 +322,234 @@ description" claims are about text these overlays do not hold.
 
 ## 10. The controls
 
-@CONTROLS_TABLE@
+Planted one at a time by a script (the scratch `controls.py`, not committed:
+replace a unique anchor in `magic_c2.cpp`, build, `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=magic_c2`, restore; after the last, rebuild and run clean: 0
+mismatches). 2026-09-26, on the final fuzz file; counts are this worktree's.
+**205 of 206 refused** by a count (exit 3), each in the function its plant
+touches; one equivalent mutant (R21), its near variant refused.
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| B1 | BoneDance_Task: entries 0 and 1 swapped | BoneDance_Task 1,349 |
+| B2 | BoneDance_Start: CLUT row 0x19 | BoneDance_Start 2,000 |
+| B3 | BoneDance_Start: dirty set to 1, not incremented | BoneDance_Start 1,995 |
+| B4 | BoneDance_Cast: second sound 0x103 | BoneDance_Cast 2,000 |
+| B5 | BoneDance_Cast: caster animation 2 | BoneDance_Cast 2,000 |
+| B6 | BoneDance_Cast: the shaker +1 = 2 | BoneDance_Cast 2,000 |
+| B7 | BoneDance_Cast: Sprite_Current read before the create | BoneDance_Cast 81 |
+| B8 | BoneDance_Hold: the caster not swapped in | BoneDance_Hold 1,665 |
+| B9 | BoneDance_Hold: +0xA kept | BoneDance_Hold 1,992 |
+| B10 | BoneDance_Spawn: even frames | BoneDance_Spawn 2,000 |
+| B11 | BoneDance_Spawn: 0x21 bones | BoneDance_Spawn 195 |
+| B13 | BoneDance_Spawn: the bone at the task, not the owner | BoneDance_Spawn 389 |
+| B14 | BoneDance_WaitBones: against +0xB | BoneDance_WaitBones 966 |
+| B15 | BoneDance_End: flag 2 | BoneDance_End 1,354 |
+| B16 | BoneDanceChild_Task: entries 1 and 2 swapped | BoneDanceChild_Task 1,358 |
+| B17 | BoneDanceBone_Run: frame table 0x8E3584 | BoneDanceBone_Run 986 |
+| B18 | BoneDanceBone_Run: drawn on bit 1 | BoneDanceBone_Run 1,048 |
+| B19 | BoneDanceBone_Start: x Rand % 6 + 1 | BoneDanceBone_Start 965 |
+| B20 | BoneDanceBone_Start: z branches swapped | BoneDanceBone_Start 2,000 |
+| B21 | BoneDanceBone_Start: 0x500 higher | BoneDanceBone_Start 2,000 |
+| B22 | BoneDanceBone_Start: +0x27 0xA1 | BoneDanceBone_Start 2,000 |
+| B23 | BoneDanceBone_Start: four bounces | BoneDanceBone_Start 2,000 |
+| B24 | BoneDanceBone_Start: the owner x read before the Rand | BoneDanceBone_Start 78 |
+| B25 | BoneDanceBone_Fall: bounce at the ground too | BoneDanceBone_Fall 665 |
+| B26 | BoneDanceBone_Fall: unsigned compare | BoneDanceBone_Fall 682 |
+| B27 | BoneDanceBone_Fall: elevation at (x, x) | BoneDanceBone_Fall 2,000 |
+| B28 | BoneDanceBone_Fall: z Rand % 6 - 2 | BoneDanceBone_Fall 670 |
+| B29 | BoneDanceBone_Fall: height by +0x16 | BoneDanceBone_Fall 2,000 |
+| B30 | BoneDanceBone_Fall: script not ticked | BoneDanceBone_Fall 2,000 |
+| B31 | BoneDanceBone_Fall: speed before height | BoneDanceBone_Fall 2,000 |
+| B32 | BoneDanceBone_End: the owner +0xB | BoneDanceBone_End 2,000 |
+| B33 | BoneDanceShake_Run: BattleFx_Finish for BattleFx_FreeTask | BoneDanceShake_Run 665 |
+| B34 | BoneDanceShake_Start: count one on | BoneDanceShake_Start 1,993 |
+| B35 | BoneDanceShake_Step: stop at 0xFE | BoneDanceShake_Step 378 |
+| B36 | BoneDanceShake_Step: four beats | BoneDanceShake_Step 190 |
+| B37 | BoneDanceShake_Step: shift not doubled | BoneDanceShake_Step 1,011 |
+| B38 | BoneDanceShake_Step: MapView_Redraw 1 | BoneDanceShake_Step 2,000 |
+| B39 | BoneDanceShake_Step: owner bit 1 | BoneDanceShake_Step 995 |
+| B40 | BoneDanceShake_Step: the task not read again after the sound | BoneDanceShake_Step 9 |
+| B41 | BoneDanceShake_Down: floor -2 | BoneDanceShake_Down 262 |
+| B42 | BoneDanceShake_Up: up to 1 | BoneDanceShake_Up 292 |
+| B43 | BoneDanceFollow_Run: drawn whatever the owner +0xA | BoneDanceFollow_Run 981 |
+| B44 | BoneDanceFollow: elevation at (x, z) - the fix | BoneDanceFollow_Start 2,000, BoneDanceFollow_Step 2,000 |
+| B45 | BoneDanceFollow: x - 2 | BoneDanceFollow_Start 2,000, BoneDanceFollow_Step 2,000 |
+| B46 | BoneDanceFollow_Start: shade 0x7F | BoneDanceFollow_Start 2,000 |
+| B47 | BoneDanceFollow_Step: on while the owner lives | BoneDanceFollow_Step 2,000 |
+| R1 | RottenBreath_Task: 0x43F430 and Emit swapped | RottenBreath_Task 1,048 |
+| R2 | Walk: the owner not put back | RottenBreath_Task 1,645, Holocaust_Task 1,622 |
+| R3 | RottenBreath_Task: 47 motes walked | RottenBreath_Task 1,001 |
+| R4 | Walk: records with bit 1 | RottenBreath_Task 2,000, Holocaust_Task 2,000 |
+| R5 | RottenBreath_Start: +2 of the motes kept | RottenBreath_Start 2,000 |
+| R6 | RottenBreath_Start: bit 14 for the STP bit | RottenBreath_Start 2,000 |
+| R7 | RottenBreath_Start: entry 0 keeps the STP bit | RottenBreath_Start 1,014 |
+| R8 | RottenBreath_Start: dirty 2 | RottenBreath_Start 2,000 |
+| R9 | RottenBreath_Start: caster animation 2 | RottenBreath_Start 2,000 |
+| R10 | RottenBreath_Emit: the cloud +1 = 1 | RottenBreath_Emit 1,999 |
+| R11 | RottenBreath_Emit: the caster read before the slot writes | RottenBreath_Emit 34 |
+| R12 | RottenBreath_Emit: +0xB 2 | RottenBreath_Emit 2,000 |
+| R13 | RottenBreath_End: waits on +0xA | RottenBreath_End 977 |
+| R14 | RottenBreathChild_Task: index +1 ^ 1 | RottenBreathChild_Task 2,000 |
+| R15 | RottenBreathCloud_Run: entries 0 and 1 swapped | RottenBreathCloud_Run 1,323 |
+| R16 | RottenBreathCloud_Start: one unit on | RottenBreathCloud_Start 2,000 |
+| R17 | RottenBreathCloud_Start: the aim +1 = 2 | RottenBreathCloud_Start 2,000 |
+| R18 | RottenBreathCloud_Start: the aim slot not kept | RottenBreathCloud_Start 1,982 |
+| R19 | RottenBreathCloud_Start: +9 kept | RottenBreathCloud_Start 1,992 |
+| R20 | RottenBreathCloud_Emit: frames & 3 == 2 | RottenBreathCloud_Emit 1,499 |
+| R21 | RottenBreathCloud_Emit: threshold 0x65 | not refused: equivalent - at age 0x64 both branches store 8 (8 - 0 / 4); the near variant R21b is refused |
+| R21b | RottenBreathCloud_Emit: threshold 0x63 (R21 near variant) | RottenBreathCloud_Emit 142 |
+| R22 | RottenBreathCloud_Emit: / 2 | RottenBreathCloud_Emit 624 |
+| R23 | RottenBreathCloud_Emit: on at 0x80 | RottenBreathCloud_Emit 236 |
+| R24 | RottenBreathCloud_Emit: mote +0xB the age + 1 | RottenBreathCloud_Emit 1,245 |
+| R25 | RottenBreathCloud_Emit: the cloud count kept | RottenBreathCloud_Emit 1,245 |
+| R26 | RottenBreathAim_Run: flag bit 3 | RottenBreathAim_Run 1,031 |
+| R27 | RottenBreathMote_Run: swirl and fly swapped | RottenBreathMote_Run 971 |
+| R28 | RottenBreathMote_Start: x + 0x1000 | RottenBreathMote_Start 2,000 |
+| R29 | RottenBreathMote_Start: Ratan2 arguments swapped | RottenBreathMote_Start 1,949 |
+| R30 | RottenBreathMote_Start: 0x80 higher | RottenBreathMote_Start 2,000 |
+| R31 | RottenBreathMote_Start: aim slot from the mote +0xA | RottenBreathMote_Start 1,711 |
+| R32 | RottenBreathMote_Swirl: angle & 0x1F | RottenBreathMote_Swirl 989 |
+| R33 | RottenBreathMote_Swirl: x 301 | RottenBreathMote_Swirl 2,000 |
+| R34 | RottenBreathMote_Swirl: x by 6 sin | RottenBreathMote_Swirl 2,000 |
+| R35 | RottenBreathMote_Swirl: x of the task read after the call | RottenBreathMote_Swirl 52 |
+| R36 | RottenBreathMote_Swirl: 7 sin not sign-extended from 20 bits | RottenBreathMote_Swirl 2,000 |
+| R37 | RottenBreathMote_Swirl: fly at 0x11 | RottenBreathMote_Swirl 831 |
+| R38 | RottenBreathMote_Swirl: +0xA 0x3F | RottenBreathMote_Swirl 825 |
+| R39 | RottenBreathMote_Fly: speed 2 | RottenBreathMote_Fly 2,000 |
+| R40 | RottenBreathMote_Fly: not drawn | RottenBreathMote_Fly 2,000 |
+| R41 | RottenBreathMote_End: four bytes cleared | RottenBreathMote_End 1,991 |
+| R42 | RottenBreathMote_End: the cloud +0xA | RottenBreathMote_End 2,000 |
+| R43 | RottenBreathMote_Draw: size 0x3F after 8 | RottenBreathMote_Draw 914 |
+| R44 | RottenBreathMote_Draw: size n x 8 + 9 | RottenBreathMote_Draw 1,084 |
+| R45 | RottenBreathMote_Draw: shade 0x81 | RottenBreathMote_Draw 1,981 |
+| R46 | RottenBreathMote_Draw: corners 0 and 1 swapped | RottenBreathMote_Draw 2,000 |
+| R47 | RottenBreathMote_Draw: y from +0x2E | RottenBreathMote_Draw 2,000 |
+| R48 | RottenBreathMote_Draw: tpage mode 1 | RottenBreathMote_Draw 2,000 |
+| R49 | RottenBreathMote_Draw: CLUT row 0x1FB | RottenBreathMote_Draw 2,000 |
+| R50 | RottenBreathMote_Draw: u 0x1E | RottenBreathMote_Draw 2,000 |
+| R51 | RottenBreathMote_Draw: linked 0x50 | RottenBreathMote_Draw 2,000 |
+| R52 | RottenBreathMote_Draw: tpage 0x56 | RottenBreathMote_Draw 2,000 |
+| R53 | RottenBreathMote_Draw: the shade read before Gpu_GetTPage | RottenBreathMote_Draw 3 |
+| R54 | RottenBreathMote_Draw: the size read once | RottenBreathMote_Draw 14 |
+| R55 | RottenBreathMote_Alloc: 47 records | RottenBreathMote_Alloc 4 |
+| R56 | Alloc: bits 0 and 1 marked | RottenBreathMote_Alloc 761, HolocaustSpark_Alloc 737 |
+| U1 | UtmostAttack_Task: entries 1 and 2 swapped | UtmostAttack_Task 1,066 |
+| U2 | UtmostAttack_Start: 0x80 units higher | UtmostAttack_Start 2,000 |
+| U3 | UtmostAttack_Start: caster animation 2 | UtmostAttack_Start 2,000 |
+| U4 | UtmostAttack_WaitCaster: 0x77 frames | UtmostAttack_WaitCaster 1,306 |
+| U5 | UtmostAttack_WaitCaster: not put back after the sound | UtmostAttack_WaitCaster 43 |
+| U6 | UtmostAttack_WaitCaster: sound effect 0x102 | UtmostAttack_WaitCaster 1,313 |
+| U7 | UtmostAttack_Stream: flag 0x40 on the actor | UtmostAttack_Stream 882 |
+| U8 | UtmostAttack_Stream: drawn before spawned | UtmostAttack_Stream 2,000 |
+| U9 | UtmostAttack_End: ends while streaks live | UtmostAttack_End 2,000 |
+| U10 | UtmostAttack_ClearStreaks: 127 | UtmostAttack_ClearStreaks 1,045 |
+| U11 | UtmostAttack_DrawStreaks: tpage abr 2 | UtmostAttack_DrawStreaks 2,000 |
+| U12 | UtmostAttack_DrawStreaks: velocity read before the draw | UtmostAttack_DrawStreaks 1 |
+| U13 | UtmostAttack_DrawStreaks: z moved by the height velocity | UtmostAttack_DrawStreaks 1,689 |
+| U14 | UtmostAttack_DrawStreaks: any only when one ends | UtmostAttack_DrawStreaks 321 |
+| U15 | UtmostAttack_DrawStreaks: +1 cleared, not +0 | UtmostAttack_DrawStreaks 1,368 |
+| U16 | UtmostAttack_DrawStreaks: no map camera | UtmostAttack_DrawStreaks 2,000 |
+| U17 | UtmostAttack_DrawStreaks: committed at 2 | UtmostAttack_DrawStreaks 2,000 |
+| U18 | UtmostAttack_DrawStreak: 0x800 either side | UtmostAttack_DrawStreak 2,000 |
+| U19 | UtmostAttack_DrawStreak: z read again for the second vertex | UtmostAttack_DrawStreak 1 |
+| U20 | UtmostAttack_DrawStreak: the two colours swapped | UtmostAttack_DrawStreak 2,000 |
+| U21 | UtmostAttack_DrawStreak: committed 0x40 | UtmostAttack_DrawStreak 2,000 |
+| U22 | UtmostAttack_SpawnStreaks: seven | UtmostAttack_SpawnStreaks 2,000 |
+| U23 | UtmostAttack_FreeStreak: bit 0 only | UtmostAttack_FreeStreak 341 |
+| U24 | UtmostAttack_InitStreak: life 0xF | UtmostAttack_InitStreak 2,000 |
+| U25 | UtmostAttack_InitStreak: Rand & 0xFF | UtmostAttack_InitStreak 988 |
+| U26 | UtmostAttack_InitStreak: first point x + d | UtmostAttack_InitStreak 1,998 |
+| U27 | UtmostAttack_InitStreak: z + one unit | UtmostAttack_InitStreak 1,998 |
+| U28 | UtmostAttack_InitStreak: velocity d / 4 | UtmostAttack_InitStreak 1,998 |
+| U29 | UtmostAttack_InitStreak: velocity shifted logically | UtmostAttack_InitStreak 1,012 |
+| U30 | UtmostAttack_InitStreak: red << 6 | UtmostAttack_InitStreak 1,366 |
+| U31 | UtmostAttack_InitStreak: +0x28 0x8000 | UtmostAttack_InitStreak 2,000 |
+| H1 | Holocaust_Task: entries 0 and 1 swapped | Holocaust_Task 1,337 |
+| H2 | Holocaust_Task: 63 sparks walked | Holocaust_Task 1,007 |
+| H3 | Holocaust_Start: members 0..1 | Holocaust_Start 532 |
+| H4 | Holocaust_Start: side bit 0x80 | Holocaust_Start 911 |
+| H5 | Holocaust_Start: +9 0x37 | Holocaust_Start 1,970 |
+| H6 | Holocaust_Start: beam +0xB member << 3 | Holocaust_Start 793 |
+| H7 | Holocaust_Start: beam +9 0x3D | Holocaust_Start 916 |
+| H8 | Holocaust_Start: parameter 0x6B | Holocaust_Start 916 |
+| H9 | Holocaust_Start: Sprite_Current read before the create | Holocaust_Start 61 |
+| H10 | Holocaust_Start: party bit 1 | Holocaust_Start 917 |
+| H11 | HolocaustBeam_Task: index +1 ^ 1 | HolocaustBeam_Task 2,000 |
+| H12 | HolocaustBeam_Run: +0xB kept | HolocaustBeam_Run 1,995 |
+| H13 | HolocaustBeam_Run: drawn whatever +2 | HolocaustBeam_Run 407 |
+| H14 | HolocaustBeam_Aim: the enemy record less three | HolocaustBeam_Aim 14 |
+| H15 | HolocaustBeam_Aim: far end half a unit on | HolocaustBeam_Aim 34 |
+| H16 | HolocaustBeam_Aim: near end 0x350 higher | HolocaustBeam_Aim 1,032 |
+| H17 | HolocaustBeam_Aim: step an eighth | HolocaustBeam_Aim 33 |
+| H18 | HolocaustBeam_Aim: step by a shift (rounding down) | HolocaustBeam_Aim 20 |
+| H19 | HolocaustBeam_Aim: Ratan2 arguments swapped | HolocaustBeam_Aim 38 |
+| H20 | HolocaustBeam_Aim: heading & 0x7FF | HolocaustBeam_Aim 534 |
+| H21 | HolocaustBeam_Aim: +9 0x95 | HolocaustBeam_Aim 1,024 |
+| H22 | HolocaustBeam_Aim: fade 0xF | HolocaustBeam_Aim 1,032 |
+| H23 | HolocaustBeam_Aim: the side from the actor byte | HolocaustBeam_Aim 14 |
+| H24 | HolocaustBeam_Grow: by 3 | HolocaustBeam_Grow 2,000 |
+| H25 | HolocaustBeam_Emit: from 0x10 | HolocaustBeam_Emit 237 |
+| H26 | HolocaustBeam_Emit: angle & 0x3F | HolocaustBeam_Emit 406 |
+| H27 | HolocaustBeam_Emit: the owner read before the Rand | HolocaustBeam_Emit 25 |
+| H28 | HolocaustBeam_Emit: delay 2 | HolocaustBeam_Emit 781 |
+| H29 | HolocaustBeam_Emit: owned by the beam | HolocaustBeam_Emit 706 |
+| H30 | HolocaustBeam_Fade: the owner count kept | HolocaustBeam_Fade 988 |
+| H31 | HolocaustBeam_Draw: fade x 14 | HolocaustBeam_Draw 1,601 |
+| H32 | HolocaustBeam_Draw: fade x 5 | HolocaustBeam_Draw 1,601 |
+| H33 | HolocaustBeam_Draw: half-width + 9 | HolocaustBeam_Draw 1,701 |
+| H34 | HolocaustBeam_Draw: first heading - 0x400 | HolocaustBeam_Draw 1,988 |
+| H35 | HolocaustBeam_Draw: one segment short | HolocaustBeam_Draw 491 |
+| H36 | HolocaustBeam_Draw: the bound read once | HolocaustBeam_Draw 1,441 |
+| H37 | HolocaustBeam_Draw: wave & 0x1F | HolocaustBeam_Draw 1,392 |
+| H38 | HolocaustBeam_Draw: swing x 47 | HolocaustBeam_Draw 1,701 |
+| H39 | HolocaustBeam_Draw: wave across + 0x800 | HolocaustBeam_Draw 1,701 |
+| H40 | HolocaustBeam_Draw: x wave halved | HolocaustBeam_Draw 1,701 |
+| H41 | HolocaustBeam_Draw: Ratan2 arguments swapped | HolocaustBeam_Draw 1,701 |
+| H42 | HolocaustBeam_Draw: dy against the old y | HolocaustBeam_Draw 1,701 |
+| H43 | HolocaustBeam_Draw: the previous heading not kept | HolocaustBeam_Draw 1,701 |
+| H44 | HolocaustBeam_Draw: quad 1 edge x 16 | HolocaustBeam_Draw 1,701 |
+| H45 | HolocaustBeam_Draw: quad 2 outer by this half-width | HolocaustBeam_Draw 1,701 |
+| H46 | HolocaustBeam_Draw: quad 3 on the + side | HolocaustBeam_Draw 1,701 |
+| H47 | HolocaustBeam_Draw: quad 4 colour | HolocaustBeam_Draw 1,479 |
+| H48 | HolocaustBeam_Draw: the first end at 2 | HolocaustBeam_Draw 1,701 |
+| H49 | HolocaustBeam_Draw: the last end by +0xB | HolocaustBeam_Draw 979 |
+| H50 | HolocaustBeam_Draw: the previous heading from the word 0x903856 | HolocaustBeam_Draw 1,701 |
+| H51 | HolocaustBeam_Draw: closing tpage 0x35 | HolocaustBeam_Draw 2,000 |
+| H52 | HolocaustBeam_Draw: x step times i + 1 | HolocaustBeam_Draw 1,700 |
+| H53 | HolocaustBeam_Draw: the previous centre read before the Sin | HolocaustBeam_Draw 9 |
+| H54 | HolocaustBeam_Draw: quad 1 committed 0x40 | HolocaustBeam_Draw 1,701 |
+| H55 | HolocaustSpark_Task: index +1 ^ 1 | HolocaustSpark_Task 2,000 |
+| H56 | HolocaustSpark_Run: tpage 0x36 | HolocaustSpark_Run 985 |
+| H57 | HolocaustSpark_Run: no screen point | HolocaustSpark_Run 985 |
+| H58 | HolocaustSpark_Start: radius + 0x1D | HolocaustSpark_Start 954 |
+| H59 | HolocaustSpark_Start: angle << 6 | HolocaustSpark_Start 921 |
+| H60 | HolocaustSpark_Start: x by the cosine | HolocaustSpark_Start 954 |
+| H61 | HolocaustSpark_Start: red + 4 | HolocaustSpark_Start 954 |
+| H62 | HolocaustSpark_Start: lift 0x10000 | HolocaustSpark_Start 954 |
+| H63 | HolocaustSpark_Rise: height before speed | HolocaustSpark_Rise 2,000 |
+| H64 | HolocaustSpark_Fade: MAGIC219 clear not called | HolocaustSpark_Fade 1,013 |
+| H65 | HolocaustSpark_Fade: the owner count kept | HolocaustSpark_Fade 1,006 |
+| H66 | HolocaustSpark_Draw: first rim radius 16 | HolocaustSpark_Draw 1,979 |
+| H67 | HolocaustSpark_Draw: rim colour 2 | HolocaustSpark_Draw 2,000 |
+| H68 | HolocaustSpark_Draw: step 0x100 | HolocaustSpark_Draw 2,000 |
+| H69 | HolocaustSpark_Draw: rim x and y swapped | HolocaustSpark_Draw 2,000 |
+| H70 | HolocaustSpark_Draw: linked 0x30 | HolocaustSpark_Draw 2,000 |
+| H71 | HolocaustSpark_Draw: colour by +9 | HolocaustSpark_Draw 1,994 |
+| H72 | HolocaustSpark_Alloc: 63 | HolocaustSpark_Alloc 6 |
+
+The first run (on the fuzz before the landing, few-live and streak-point
+seeds) left four not refused: B25 (the landing at exactly the ground - the
+elevation's random answer never met the height), U14 (the any-live answer
+with always some streak ending), U19 (the re-read of a point's z - the
+disturbance rarely hit the streak drawn) and R21. The seeds in section 7
+were added for the first three. The thinnest now are the re-reads across a
+call, which show only when the disturbance moves exactly that cell during
+exactly that call: U12 and U19 (1 round each: a streak's velocity and z
+across the draw), R53 (3), B40 and H53 (9), R54 (14); and the allocators'
+last record (R55 4, H72 6: the pool must fill to exactly there). The
+HolocaustBeam_Aim plants (H14..H23, 14..38) are thin because the aim runs
+only in the rounds its count-down reaches 0.
 
 ## 11. What reaches it
 
