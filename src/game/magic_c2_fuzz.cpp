@@ -274,6 +274,12 @@ std::uint32_t NoteCurrent(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(Key(Sprite_Current));
     return answer;
 }
+// AreaMap_Elevation: a third of the time exactly the current task's height
+// word (+0x3E), so the bones' landing compare meets its boundary.
+std::uint32_t GroundAtHeight(const std::uint32_t*, std::uint32_t answer) {
+    if (mh::Noise() % 3 == 0) return static_cast<std::uint32_t>(static_cast<short>(move_script::Word(Sprite_Current + 0x3E)));
+    return answer;
+}
 std::uint32_t NoteDrawn(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
     return answer;
@@ -296,7 +302,7 @@ const mh::Callee kCallees[] = {
     {C2_OURS(MagicFx_StepToward), 2, {kAll, kU16}, kG, 0, 0, {}, &NoteCurrent},
     {C2_OURS(MagicFx_CenterOnSide), 0, {}, kG, 0, 0, {}, &NoteCurrent},
     {C2_OURS(Gfx_ClutStripCopyRow), 1, {kU8}, kG, 0, 0},
-    {C2_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0},
+    {C2_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &GroundAtHeight},
     // the draws'
     {C2_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, kG, 0, 0, {}, &Committed},
     {C2_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, kG, 0, 0, {}, &Committed},
@@ -356,6 +362,7 @@ const mh::Region kRegions[] = {
 // --- the seed -------------------------------------------------------------------
 
 unsigned g_k;   // the function being fuzzed, for settle
+std::uint32_t g_streak;   // the streak handed to DrawStreak / InitStreak, for Disturb
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return mh::Pointer(at::kOwner); }
@@ -433,6 +440,17 @@ void Seed(unsigned k) {
         if (mh::Half()) Occupy(kMotes, 48, mh::Half() ? 48 : mh::Next() % 48);
         break;
     case kUtmostAttack_Stream: if (mh::Half()) sc[9] = 1; break;
+    case kUtmostAttack_DrawStreaks: case kUtmostAttack_End:
+        // a third of the time only a few live, none at its last frame; a
+        // sixth none (the any-live answer's other side)
+        if (mh::Often()) break;
+        for (unsigned i = 0; i < 128; ++i) {
+            Streak(i)[0] = 0;
+            if (Streak(i)[2] == 1) Streak(i)[2] = 2;
+        }
+        if (mh::Half())
+            for (unsigned n = 0; n < 3; ++n) Streak(mh::Next() % 128)[0] = 1;
+        break;
     case kUtmostAttack_FreeStreak:
         if (mh::Half()) {
             for (unsigned i = 0; i < 128; ++i) Streak(i)[0] = B(Streak(i)[0] | 1);
@@ -468,7 +486,8 @@ void Seed(unsigned k) {
 
 // The two streak functions take a streak: one of the 128.
 void Args(unsigned k, std::uint32_t* a) {
-    if (k == kUtmostAttack_DrawStreak || k == kUtmostAttack_InitStreak) a[0] = kStreaks + (mh::Next() % 128) * kStreak;
+    g_streak = kStreaks + (mh::Next() % 128) * kStreak;
+    if (k == kUtmostAttack_DrawStreak || k == kUtmostAttack_InitStreak) a[0] = g_streak;
 }
 
 // After a call, two in three (the harness's case 14): the packet pointer, a
@@ -482,7 +501,13 @@ void Disturb(std::uint32_t h) {
     case 0: mh::SetPointer(kPacketNext, PacketAt(v)); break;
     case 1: SetWord(mh::Mem(kS + 2 * (v % 8)), h >> 16); break;
     case 2: SetWord(mh::Mem(kV + 2 * (v % 2)), h >> 16); break;
-    case 3: Streak(v % 128)[(h >> 20) % kStreak] = b; break;
+    case 3:
+        // half the time the streak being drawn, its points
+        if (v & 1)
+            mh::Mem(g_streak)[4 + (h >> 20) % 0x1C] = b;
+        else
+            Streak(v % 128)[(h >> 20) % kStreak] = b;
+        break;
     case 4: (v & 1 ? Mote(v % 48) : Spark(v % 64))[(h >> 20) % 0x80] = b; break;
     case 5: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
     default: {
