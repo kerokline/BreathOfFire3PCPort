@@ -10,7 +10,8 @@
 //             library (group L)
 //   0x4FBC30  1 when Sprite_Current is within a box of a record - group L
 //   0x4FC0E0  a side's centre to Sprite_Current - group L
-// The stack tables also name 0x4DA3B0 (MAGIC118's) and 0x43FE80 (group E's
+// The stack tables also name SpellFx_Countdown 0x4DA3B0 (MAGIC118's, group
+// S27, called by its name) and 0x43FE80 (group E's
 // engine row 128), and SimoonFan_Phases 0x4AE0D0 / 0x4AE0F0 (MAGIC056's):
 // they are called as phases, by the address the table holds.
 #pragma once
@@ -96,7 +97,6 @@ constexpr std::uint32_t kTurnByFacing = 0x446770;
 constexpr std::uint32_t kOrbitRecord = 0x4FBB40;
 constexpr std::uint32_t kNearRecord = 0x4FBC30;
 constexpr std::uint32_t kSideCentre = 0x4FC0E0;
-constexpr std::uint32_t kTyphoonPhase2 = 0x4DA3B0;   // MAGIC118's
 constexpr std::uint32_t kEnginePhase = 0x43FE80;     // group E's (Head Cracker's end)
 
 using TurnFn = void (__cdecl*)(unsigned char*);

@@ -546,13 +546,13 @@ S23_EXPORT void __cdecl FxFunnel_DrawGround(void) {
 // ============================================================================
 
 // original 0x4CD6B0: the kind-2 task (Magic_Rows row 26). Its phase +1
-// through a five-entry stack table - Typhoon_Start, Typhoon_Grow, 0x4DA3B0
-// (MAGIC118's, not ours), Typhoon_Fade, BattleFx_Finish - unchecked in the
+// through a five-entry stack table - Typhoon_Start, Typhoon_Grow, SpellFx_Countdown
+// (0x4DA3B0, MAGIC118's: group S27), Typhoon_Fade, BattleFx_Finish - unchecked in the
 // original, ours aborts past it; then, while +0xA and +0 are not 0, the fan
 // under the actor's matrix.
 S23_EXPORT void __cdecl Typhoon_Task(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::Typhoon_Start, bof3::addr::Typhoon_Grow,
-                                                 magic_s23::kTyphoonPhase2, bof3::addr::Typhoon_Fade,
+                                                 bof3::addr::SpellFx_Countdown, bof3::addr::Typhoon_Fade,
                                                  bof3::addr::BattleFx_Finish};
     Dispatch("Typhoon_Task", kPhases, 5);
     const unsigned char* const sc = Sc();
