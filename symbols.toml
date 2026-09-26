@@ -18891,3 +18891,523 @@ ctype = "signed char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: SkillSteal_Roll's movsx byte [0x65C204 + the enemy's +0xAA], the index unbounded; the same eight values as Steal_RateTable 0x65AC20 (docs/cheats.md: the PSX's byte for byte)."
+
+[[func]]
+pc = 0x4BCBF0
+name = "Purify_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCBF0..0x4BCC1D (0x2E bytes), cdecl: a three-entry stack table (mov [esp + 0/4/8], imm32 0x4BCC20 0x4BCD10 0x4BCD60) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 46, file 0x260 = MAGIC075.EMI; ability ids 0x4B / 0xB3, Purify read one id down (a hypothesis: docs/magic_s17.md). The first function of MAGIC075's extent 0x4BCBF0..0x4BCFA6 (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCC20
+name = "Purify_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCC20..0x4BCD0B (0xEC bytes), cdecl: four calls: the source (dword 0x904B4C, read once) +0x34/+0x38/+0x3C to Sprite_Current, +0xB 0, +1 += 1; bl = 1, 6, .. 31 (add 5 while below 0x24): BattleTask_Create(1, 0x25), the slot's +0x80 Sprite_Current, +1 0, +0xB 0..6, +9 bl; Sprite_ReleaseTint(src), Sprite_SetTint(src, 0, 0, 0, 1) al to +0xA; 16 words 0x80E980 to 0x812980 (CLUT row 26); Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Entry 0 of Purify_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCD10
+name = "Purify_Glow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCD10..0x4BCD5C (0x4D bytes), cdecl: no calls: MoveScript_TintRecords[+0xA] bytes +2/+3/+4 = +0xB * 2; +0xB == 7 steps +1. Entry 1 of Purify_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCD60
+name = "Purify_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCD60..0x4BCDEA (0x8B bytes), cdecl: three calls: the tint record +0xA's +2/+3/+4 each += 0xFE; +2 zero: Tint_Release(+0xA), Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 |= 4, tail jmp BattleTask_FreeCurrent. Entry 2 of Purify_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCDF0
+name = "PurifyMote_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCDF0..0x4BCE01 (0x12 bytes), cdecl: jmp [0x65B1B4 + 4 * byte +1] (PurifyMote_Types, one entry), unchecked. Battle-task kind 1 parameter 0x25 (Purify_Start creates it). Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCE10
+name = "PurifyMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCE10..0x4BCE4C (0x3D bytes), cdecl: one call and one through .data: dword 0x9039D8 = 0x8E3580; call [0x65B1B8 + 4 * byte +2] (PurifyMote_Phases); Sprite_Current +0 and +2 non-zero: Sprite_UpdateScreen; 0x9039D8 = 0x8B3580. Also reached from MAGIC074. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCE50
+name = "PurifyMote_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCE50..0x4BCF80 (0x131 bytes), cdecl: three calls: +9 -= 1; at 0: angle (+0xB & 7) << 9 to dword 0x903850; +0x34 = owner (0x93B940) +0x34 + (Math_Sin * 5 << 13 sar 12), +0x38 likewise with Math_Cos(dword 0x903850); word +0x3E = owner +0x3E + 0x180; sprite bytes +0x24..+0x2B, +0x5C..+0x5F set; Sprite_SetAnimation(+0xB / 3); +2 += 1. Entry 0 of PurifyMote_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCF90
+name = "PurifyMote_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCF90..0x4BCFA6 (0x17 bytes), cdecl: Sprite_ScriptTickOnce al non-zero: owner +0xB += 1, tail jmp BattleTask_FreeCurrent. Entry 1 of PurifyMote_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BCFB0
+name = "Revive_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCFB0..0x4BD044 (0x95 bytes), cdecl: a six-entry stack table (0x4BD050 0x4BD180 BattleFx_Brighten 0x4BD1E0 0x4BD200 BattleFx_Finish) by byte +1, unchecked; then edi = Sprite_Current, ebx = dword 0x93B940 (both read after), and for each of the 64 records of 0x68C0B8 (stride 0x84) with +0 bit 0: Sprite_Current = it, 0x93B940 = its +0x80, call 0x4BD5C0, both put back. Magic_Rows row 30, file 0x262 = MAGIC077.EMI; ability ids 0x4C / 0xB4 and 0x4D / 0xB5, Raise Dead and Resurrect read one id down. The first function of MAGIC077's extent 0x4BCFB0..0x4BDAB6. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD050
+name = "Revive_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD050..0x4BD17A (0x12B bytes), cdecl: three calls: +0/+1/+2 of the 64 pool records 0; +4 = Revive_IsStrong al; the source (0x904B4C) +8/+0x34/+0x38/+0x3C to Sprite_Current; +0xB 0, +9 0x3C, +0xA 0, +1 += 1; BattleTask_Create(1, 0x62): +0x80 Sprite_Current, +1 0, +9 1; +0xB += 1; Sound_PlayById(0x100); 0x100 words 0x80E980 | 0x8000 to 0x812980 and 0x10 words 0x80B980 | 0x8000 to 0x80F980, cell 0 of each without the bit; Gfx_ClutStripDirty 1. Entry 0 of Revive_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD180
+name = "Revive_TintSource"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD180..0x4BD1D7 (0x58 bytes), cdecl: two calls: +9 -= 1; at 0 Sprite_ReleaseTint(dword 0x904B4C), Sprite_SetTint(0x904B4C read again, 0, 0, 0, 1) al to +0xA, +9 8, +1 += 1. Entry 1 of Revive_Task's table; also reached from MAGIC167. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD1E0
+name = "Revive_WaitMotes"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD1E0..0x4BD1F8 (0x19 bytes), cdecl: no calls: +0xB zero: +9 8, +1 += 1. Entry 3 of Revive_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD200
+name = "Revive_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD200..0x4BD278 (0x79 bytes), cdecl: one call: the tint record +0xA's +2/+3/+4 each -= 1; +9 -= 1; at 0 Sprite_ReleaseTint(dword 0x904B4C), +1 += 1. Entry 4 of Revive_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD280
+name = "Revive_IsStrong"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD280..0x4BD2A2 (0x23 bytes), cdecl: no calls: al 1 when byte 0x904B35 is 4 and word 0x904B80 is neither 0x4C nor 0xB4, else 0 (the upper bytes of eax garbage; its one caller keeps al). Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD2B0
+name = "ReviveHalo_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD2B0..0x4BD2C1 (0x12 bytes), cdecl: jmp [0x65B1C0 + 4 * byte +1] (ReviveHalo_Types, one entry), unchecked. Battle-task kind 1 parameter 0x62 (Revive_Start creates it). Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD2D0
+name = "ReviveHalo_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD2D0..0x4BD2FD (0x2E bytes), cdecl: call [0x65B1C4 + 4 * byte +2] (ReviveHalo_Phases, four entries); +0 and +2 non-zero: BattleActor_UpdateScreenXY, tail jmp 0x4BD420. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD300
+name = "ReviveHalo_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD300..0x4BD379 (0x7A bytes), cdecl: no calls: +9 -= 1; at 0 the owner's (0x93B940) +4, +0x34, +0x38, +0x3C + 0xC00000 to Sprite_Current, +9 0, +0xA 0x3C, +2 += 1. Entry 0 of ReviveHalo_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD380
+name = "ReviveHalo_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD380..0x4BD41F (0xA0 bytes), cdecl: two calls: +9 += 1; at 0x10, byte 0x65B1D4[+4] (unchecked) times: 0x4BDA60 al; not 0xFF: the pool record's +0x80 = dword 0x93B940, +1 0, +0xB the number, +9 (Rand & 0xF) + 0x10, the owner's +0xB += 1; then +2 += 1. Entry 1 of ReviveHalo_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD420
+name = "ReviveHalo_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD420..0x4BD5B2 (0x193 bytes), cdecl: seven calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0xB5, 0), MapView_LinkPrimAt(+0x34, +0x38, 1, 0xC); word 0x903856 = +9 << 3; Gpu_SetPolyFT4, Gpu_SetSemiTrans(1); the float corners (x -/+ half, y - height, y) from +0x2E/+0x30, height 0x60 / half 0x38 when +4 else 0x40 / 0x18; +0x26 Gpu_GetTPage(1, 1, 0x340, 0x100), +0x16 Gpu_GetClut(0, 0x1FA); the uv bytes by +4; rgb the low byte of 0x903856; MapView_LinkPrimAt(+0x34, +0x38, 1, 0x48). x87: fild / fst only. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD5C0
+name = "ReviveMote_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD5C0..0x4BD5D1 (0x12 bytes), cdecl: jmp [0x65B1D8 + 4 * byte +1] (ReviveMote_Types, one entry), unchecked. Called by Revive_Task for each live pool record. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD5E0
+name = "ReviveMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD5E0..0x4BD683 (0xA4 bytes), cdecl: a three-entry stack table (0x4BD690 0x4F1A40 0x4BD7D0) by byte +2, unchecked; Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); +0 and +2 non-zero: BattleActor_UpdateScreenXY, 0x4BD8A0, 0x4F1BD0; Gpu_SetDrawMode(.., 0x15, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC). Entry 0 of ReviveMote_Types. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD690
+name = "ReviveMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD690..0x4BD7C1 (0x132 bytes), cdecl: seven calls: +9 -= 1; at 0: +0xB zero Sound_PlayById(0x101); dword +0xC 8; angle (+0xB & 0xF) << 8 to word 0x903854; +0x34 / +0x38 = Math_Sin / Math_Cos(word 0x903854) * dword +0xC + the owner's; +0x3C = the owner's + 0x800000; +0x14 = ((Rand & 3) + 2) << 20, +0x20 = +0x14 / 16; +0x5D/+0x5E/+0x5F (Rand & 7) + 6; +9 0, +0xA 0x10, +2 += 1. Entry 0 of ReviveMote_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD7D0
+name = "ReviveMote_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD7D0..0x4BD896 (0xC7 bytes), cdecl: three calls: dword +0xC += 1; the orbit as ReviveMote_Launch's; dword +0x20 below +0x14 (signed): +0x14 -= +0x20, +0x3C += +0x14; Frame_Counter bit 0: +9 -= 1, at 0 the owner's +0xB -= 1 and tail jmp 0x4F6290. Entry 2 of ReviveMote_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BD8A0
+name = "ReviveMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BD8A0..0x4BDA57 (0x1B8 bytes), cdecl: seven calls: words 0x903850 = 8, 0x903856 = +9 * 12, 0x903858/5A/5C = movsx byte +0x5D/+0x5E/+0x5F * +9; eight times: Gpu_SetPolyG3(Gfx_PacketNext), Gpu_SetSemiTrans(1), vertex 0 the float +0x2E/+0x30, vertices 1 and 2 at angle a and a + 0x200 (Math_Sin / Math_Cos * word 0x903850 sar 12 + the point), the rgb bytes, MapView_LinkPrimAt(+0x34, +0x38, 2, 0x34). Also reached from MAGIC168 / 169. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDA60
+name = "ReviveMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDA60..0x4BDAB6 (0x57 bytes), cdecl: no calls: the first of the 64 records at 0x68C0B8 (stride 0x84) with +0 bit 0 clear gets it set, its index in al; none, al 0xFF (or al, 0xFF). The upper bytes of eax are the caller's. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDAC0
+name = "Leech_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDAC0..0x4BDB1D (0x5E bytes), cdecl: a two-entry stack table (0x4BDB20 0x4BDC10) by byte +1 (read after the first commit), unchecked, between two Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) + Gfx_CommitPrim(4, 0xC). Magic_Rows row 15, file 0x263 = MAGIC078.EMI; ability ids 0x4E / 0xB6, Leech Power read one id down. The first function of MAGIC078's extent 0x4BDAC0..0x4BEB45. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDB20
+name = "Leech_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDB20..0x4BDC03 (0xE4 bytes), cdecl: three calls: edi = dword 0x904B4C; BattleTask_Create(1, 0xD): +0x80 Sprite_Current, +1 0, +9 0, +0x34/+0x38 the owner's, +0x3C the owner's + 0x2000000; BattleTask_Create(1, 0xD): +0x80 the first child, +0x4C Sprite_Current, +1 1, +9 0, +0x34/+0x38 edi's, +0x3C edi's + 0x1000000; Sound_PlayById(0x100); +0xB 0; +1 += 1. Entry 0 of Leech_Task's table. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDC10
+name = "Leech_WaitOrbs"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDC10..0x4BDC36 (0x27 bytes), cdecl: +0xB == 0xFF: Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 |= 4, tail jmp BattleTask_FreeCurrent. Entry 1 of Leech_Task's table; reached from 8 files. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDC40
+name = "LeechOrb_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDC40..0x4BDC51 (0x12 bytes), cdecl: jmp [0x65B1DC + 4 * byte +1] (LeechOrb_Types: 0x4BDC60, 0x4BE660), unchecked. Battle-task kind 1 parameter 0xD (Leech_Start creates both). Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDC60
+name = "LeechShell_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDC60..0x4BDCF2 (0x93 bytes), cdecl: between two Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) + Gfx_CommitPrim(4, 0xC): +2 below 3: dword +0xC = 0x1000 when Frame_Counter's low byte is 0x40, else (Frame_Counter & 0x3F) << 6; call [0x65B1E4 + 4 * byte +2] (LeechShell_Phases, seven); the owner's +0xB not 0xFF: 0x4BE5B0, 0x4BDE50, Gte_PopMatrix. Entry 0 of LeechOrb_Types. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDD00
+name = "LeechShell_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDD00..0x4BDD1F (0x20 bytes), cdecl: no calls: +9 == 0xC: +0xA 0xF, +2 += 1; else +9 += 1. Entry 0 of LeechShell_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDD20
+name = "MagicFx_WaitA"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDD20..0x4BDD3C (0x1D bytes), cdecl: no calls: +0xA -= 1; at 0 +2 += 1. Entry 1 of LeechShell_Phases and 2 of ReviveHalo_Phases; reached from 17 files (one body the linker kept here). Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDD40
+name = "LeechShell_Aim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDD40..0x4BDDA9 (0x6A bytes), cdecl: one call: Math_Ratan2((float)(source +0x38 - +0x38), (float)(source +0x34 - +0x34)) (source dword 0x904B4C; fild / fstp); (result sar 6) & 0x3F equal to dword +0xC / 64 (signed): +0xA 0xF, +2 += 1. Entry 2 of LeechShell_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDDB0
+name = "LeechShell_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDDB0..0x4BDDDB (0x2C bytes), cdecl: no calls: +0xA -= 1; at 0 the owner's +0xB 1, +2 += 1. Entry 3 of LeechShell_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDDE0
+name = "LeechShell_WaitOrb"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDDE0..0x4BDDFD (0x1E bytes), cdecl: no calls: the owner's +0xB == 2: +0xA 0, +2 += 1. Entry 4 of LeechShell_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDE00
+name = "LeechShell_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDE00..0x4BDE1C (0x1D bytes), cdecl: no calls: +0xA += 8; above 0x80 (unsigned) +2 += 1. Entry 5 of LeechShell_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDE20
+name = "LeechShell_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDE20..0x4BDE48 (0x29 bytes), cdecl: +9 -= 1; at 0 the owner's +0xB 0xFF, tail jmp BattleTask_FreeCurrent. Entry 6 of LeechShell_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BDE50
+name = "LeechShell_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BDE50..0x4BE545 (0x6F6 bytes), cdecl: 51 calls: Gpu_SetDrawMode(.., 0xB5, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); dwords 0x903850 = +9 * 10, 0x903854 = +9 * 7; two bands of six Gpu_SetPolyF4 quads (latitudes 0x65B21C..0x65B224, longitudes 0x65B204..0x65B218 after a first edge at 0x180), vertex (cos(lat) * [0x903854], sin(lat) * [0x903850] * cos / sin(lon)) into Prim_VertexScratch, each with a line quad 0x4BE550 written from Gfx_PacketNext + 0x380 and Gte_RotAverage4's depth to a stack array; two caps of two quads at 0x65B21C / 0x65B224; then 0x4FB880 over the 16 quads and the 12 lines; Gfx_PacketNext past the lines. Integer only. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE550
+name = "LeechShell_Edge"
+ret = "void"
+params = "unsigned char *prim, long *out, unsigned long v0a, unsigned long v0b, unsigned long v1a, unsigned long v1b, unsigned long v2a, unsigned long v2b, unsigned long v3a, unsigned long v3b"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE550..0x4BE5AE (0x5F bytes), cdecl: three calls: Gpu_SetLineF4(prim), Gpu_SetSemiTrans(prim, 1), rgb 0x40 0x40 0xC0; *out = Gte_RotAverage4(&v0, &v1, &v2, &v3 - four SVECTORs passed by value - prim + 8/0x14/0x20/0x2C, &local, &arg0 as a tenth the port's Gte_RotAverage4 does not read). Called by 0x4BDE50 only. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE5B0
+name = "LeechShell_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE5B0..0x4BE65D (0xAE bytes), cdecl: six calls: Gte_PushMatrix; angles (0, 0, word +0xC when byte +5 is 0xD); vector ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(word +0x3E / 2)); Gte_RotTrans into the MATRIX's translation, Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. MagicFx_PushActorMatrix 0x4B7D40 with a z spin. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE660
+name = "LeechOrb_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE660..0x4BE6CC (0x6D bytes), cdecl: between two Gpu_SetDrawMode(.., 0x35, 0) + Gfx_CommitPrim(4, 0xC): +2 non-zero: MagicFx_PushActorMatrix, 0x4BE810, Gte_PopMatrix; call [0x65B228 + 4 * byte +2] (LeechOrb_Phases, six). Entry 1 of LeechOrb_Types. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE6D0
+name = "LeechOrb_WaitShell"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE6D0..0x4BE6EA (0x1B bytes), cdecl: no calls: the byte +0xB of the pointer at +0x4C (the effect's task) == 1: +0xA 0, +2 += 1. Entry 0 of LeechOrb_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE6F0
+name = "LeechOrb_Chime"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE6F0..0x4BE718 (0x29 bytes), cdecl: +9 == 8: Sound_PlayById(0x101), +2 += 1; else +9 += 1. Entry 1 of LeechOrb_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE720
+name = "LeechOrb_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE720..0x4BE761 (0x42 bytes), cdecl: 0x4FB9F0(owner, 0x30); word +0x3E += 0x10; 0x4FBBD0(owner read again, 0x1C000) eax non-zero: +0xA 0x1E, +2 += 1. Entry 2 of LeechOrb_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE770
+name = "LeechOrb_Pause"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE770..0x4BE79E (0x2F bytes), cdecl: +0xA -= 1; at 0 Sound_PlayById(0x102), +2 += 1. Entry 3 of LeechOrb_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE7A0
+name = "LeechOrb_Merge"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE7A0..0x4BE7E5 (0x46 bytes), cdecl: esi = +0x4C (before the calls); 0x4FB9F0(owner, 8); 0x4FBBD0(owner read again, 0x4000) eax non-zero: esi +0xB 2, +0xA 0, +2 += 1. Entry 4 of LeechOrb_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE7F0
+name = "LeechOrb_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE7F0..0x4BE80D (0x1E bytes), cdecl: +0xA += 1; at 8 tail jmp BattleTask_FreeCurrent. Entry 5 of LeechOrb_Phases. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[func]]
+pc = 0x4BE810
+name = "LeechOrb_DrawRings"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s17.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BE810..0x4BEB45 (0x336 bytes), cdecl: 27 call sites: dword 0x903850 = +9 << 2; latitudes 0x400..0xB00 by 0x100 (and each + 0x100), longitudes 0x100..0x1000 by 0x100: vertices (cos(lat) * r * sin(lon), cos(lat) * r * cos(lon), sin(lat) * r) (sar 12 each, 32-bit imul) into Prim_VertexScratch; each quad Gpu_SetDrawMode(.., 0xB5, 0), MapView_LinkPrimAt(x, z, 2, 0xC), Gpu_SetPolyF4, Gpu_SetSemiTrans(1), Gte_RotTransPers4, Gte_PrimDepths4_0C, rgb 0x80 0x10 0x10 or from +2 >= 5 (0x81 - (+0xA << 4), 0x11 - (+0xA << 1) twice), MapView_LinkPrimAt(x, z, 2, 0x38), x / z the orb's +0x34 / +0x38 plus the far edge's x / y << 9. 128 quads a call. Fuzz only: no recorded route casts it (docs/magic_s17.md)."
+
+[[data]]
+pc = 0x65B1B4
+name = "PurifyMote_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: PurifyMote_Dispatch's jmp [0x65B1B4 + 4 * byte +1]; its one entry 0x4BCE10 (the next dword is PurifyMote_Phases). The index unchecked."
+
+[[data]]
+pc = 0x65B1B8
+name = "PurifyMote_Phases"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: PurifyMote_Task's call [0x65B1B8 + 4 * byte +2]: 0x4BCE50, 0x4BCF90 (the second frees the task). The index unchecked."
+
+[[data]]
+pc = 0x65B1C0
+name = "ReviveHalo_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: ReviveHalo_Dispatch's jmp [0x65B1C0 + 4 * byte +1]; its one entry 0x4BD2D0."
+
+[[data]]
+pc = 0x65B1C4
+name = "ReviveHalo_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: ReviveHalo_Task's call [0x65B1C4 + 4 * byte +2]: 0x4BD300, 0x4BD380, 0x4BDD20 (MagicFx_WaitA), 0x4B1740 (MAGIC060's). The index unchecked."
+
+[[data]]
+pc = 0x65B1D4
+name = "ReviveHalo_MoteCounts"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: ReviveHalo_Spawn's byte [0x65B1D4 + byte +4], the index unchecked; rows 0 and 1 are the counts for Revive_IsStrong 0 and 1, rows 2 and 3 are 0."
+
+[[data]]
+pc = 0x65B1D8
+name = "ReviveMote_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: ReviveMote_Dispatch's jmp [0x65B1D8 + 4 * byte +1]; its one entry 0x4BD5E0."
+
+[[data]]
+pc = 0x65B1DC
+name = "LeechOrb_Types"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: LeechOrb_Dispatch's jmp [0x65B1DC + 4 * byte +1]: 0x4BDC60 (the shell, +1 0), 0x4BE660 (the orb, +1 1)."
+
+[[data]]
+pc = 0x65B1E4
+name = "LeechShell_Phases"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-25: LeechShell_Task's call [0x65B1E4 + 4 * byte +2]: 0x4BDD00 0x4BDD20 0x4BDD40 0x4BDDB0 0x4BDDE0 0x4BDE00 0x4BDE20 (the last frees the task). The index unchecked."
+
+[[data]]
+pc = 0x65B200
+name = "LeechShell_Angles"
+ctype = "long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-25: LeechShell_Draw's angles, walked by address: longitudes at +4..+0x18 (and +0 .. +0x14 by the caps' loop), latitudes at +0x1C, +0x20, +0x24."
+
+[[data]]
+pc = 0x65B228
+name = "LeechOrb_Phases"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-25: LeechOrb_Task's call [0x65B228 + 4 * byte +2]: 0x4BE6D0 0x4BE6F0 0x4BE720 0x4BE770 0x4BE7A0 0x4BE7F0 (the last frees the task); MAGIC079's own table follows. The index unchecked."
+
+[[data]]
+pc = 0x68C0B8
+name = "ReviveMote_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-25: 64 task-shaped records of 0x84 bytes (+0 bit 0 in use, +0x80 the owner), walked by Revive_Task (Sprite_Current each live one), emptied by Revive_Start, allocated by ReviveMote_Alloc."

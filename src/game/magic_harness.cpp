@@ -48,7 +48,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 std::uint32_t g_rng = 0x2545F491u;
 
-constexpr unsigned kLog = 1024;
+constexpr unsigned kLog = 4096;   // a ring of 128 quads makes about 1,700 calls
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
 unsigned g_log_n;
@@ -106,13 +106,17 @@ void Disturb() {
         break;
     }
     case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+        // only an enemy target: "enemy" 2 is 0x93B838.., over the current
+        // slot and owner cells (0x93B8C4 / 0x93B940), and 0 and 1 lie below
+        // every region
+        if (Mem(at::kTarget)[0] >= 3) TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
     default: break;
     }
+    if (g_group && g_group->settle) g_group->settle();
 }
 
 // --- the stand-ins ------------------------------------------------------------
@@ -127,6 +131,7 @@ struct Slot {
     std::uint8_t lo, hi;
     bool handler;            // a phase: logs the slot's phase bytes, answers nothing
     unsigned calls;          // the original's side, for the coverage line
+    const void* custom;      // the group's own stand-in, or null
 };
 constexpr unsigned kSlots = 160;
 Slot g_slots[kSlots];
@@ -194,33 +199,33 @@ constexpr auto kStubs = MakeStubs(std::make_index_sequence<kSlots>{});
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 
 const Callee kStandard[] = {
-    {MH_OURS(BattleTask_Create), 2, {kU8, kU8}, Answer::kByte, 0, at::kTaskCount - 1},
-    {MH_OURS(BattleTask_FreeCurrent), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Battle_SetTargetFlags), 2, {kU8, kU16}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Battle_SetTargetFlag40), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Sound_PlayById), 1, {kU16}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0},
-    {MH_OURS(BattleActor_SetAnimation), 2, {kU8, kAll}, Answer::kGarbage, 0, 0},
-    {MH_OURS(BattleActor_UpdateScreenXY), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(BattleActor_PlaySound), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
-    {MH_OURS(BattleActor_Flash), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {MH_OURS(BattleActor_FxSize), 0, {}, Answer::kFlag, 0, 0},
-    {MH_OURS(Sprite_ScriptTickOnce), 0, {}, Answer::kFlag, 0, 0},
-    {MH_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Sprite_ReleaseTint), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {MH_OURS(MagicFx_PushActorMatrix), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(MagicFx_DrawDisc), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(MagicFx_DrawFan), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(MagicFx_DrawRing), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Gte_PopMatrix), 0, {}, Answer::kGarbage, 0, 0},
-    {MH_OURS(AreaMap_TintClut), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {MH_OURS(Inventory_Add), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0},
-    {MH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0},
-    {MH_OURS(BattleQueue_Push), 3, {kU8, kU8, kAll}, Answer::kGarbage, 0, 0},
-    {MH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
+    {MH_OURS(BattleTask_Create), 2, {kU8, kU8}, Answer::kByte, 0, at::kTaskCount - 1, nullptr},
+    {MH_OURS(BattleTask_FreeCurrent), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Battle_SetTargetFlags), 2, {kU8, kU16}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Battle_SetTargetFlag40), 1, {kU8}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Sound_PlayById), 1, {kU16}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(BattleActor_SetAnimation), 2, {kU8, kAll}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(BattleActor_UpdateScreenXY), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(BattleActor_PlaySound), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(BattleActor_Flash), 1, {kU8}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(BattleActor_FxSize), 0, {}, Answer::kFlag, 0, 0, nullptr},
+    {MH_OURS(Sprite_ScriptTickOnce), 0, {}, Answer::kFlag, 0, 0, nullptr},
+    {MH_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Sprite_ReleaseTint), 1, {kAll}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(MagicFx_PushActorMatrix), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(MagicFx_DrawDisc), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(MagicFx_DrawFan), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(MagicFx_DrawRing), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Gte_PopMatrix), 0, {}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(AreaMap_TintClut), 1, {kAll}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(Inventory_Add), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, nullptr},
+    {MH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_OURS(BattleQueue_Push), 3, {kU8, kU8, kAll}, Answer::kGarbage, 0, 0, nullptr},
+    {MH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0, nullptr},
     // an item's name into Text_Records by (index, category) - unnamed, in no
     // group (docs/magic_fx_reached.md section 10)
-    {"0x4B58F0", 0x4B58F0, 0x4B58F0, 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    {"0x4B58F0", 0x4B58F0, 0x4B58F0, 2, {kU8, kU8}, Answer::kGarbage, 0, 0, nullptr},
 };
 #undef MH_OURS
 #undef MH_THEIRS
@@ -238,18 +243,22 @@ void Register(const Callee& c) {
         if (g_slots[i].address == c.address) return;   // listed twice: the first stands
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0};
+    s = {c.name, c.address, c.key, c.nargs, {c.masks[0], c.masks[1], c.masks[2], c.masks[3]}, c.answer, c.lo, c.hi, false, 0,
+         c.custom};
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return;
     if (g_slot_n == kSlots) bof3::Fatal("magic_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
-    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0};
+    s = {"handler", address, address, 0, {}, Answer::kGarbage, 0, 0, true, 0, nullptr};
+}
+const void* StubOf(unsigned i) {
+    return g_slots[i].custom ? g_slots[i].custom : reinterpret_cast<const void*>(kStubs.f[i]);
 }
 const void* StubFor(std::uint32_t address, const char* who) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].address == address) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].address == address) return StubOf(i);
     bof3::Fatal("magic_harness: %s calls 0x%X, which no stand-in covers: list it in the group's callees", who,
                 (unsigned)address);
 }
@@ -274,8 +283,8 @@ void Capture(State& s) {
         std::memcpy(s.memory + n, Mem(g_regions[i].at), g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memcpy(s.log, g_log, sizeof s.log);
     s.log_n = g_log_n;
+    std::memcpy(s.log, g_log, (g_log_n < kLog ? g_log_n : kLog) * sizeof(Entry));
 }
 void Apply(const State& s) {
     unsigned n = 0;
@@ -283,13 +292,12 @@ void Apply(const State& s) {
         std::memcpy(Mem(g_regions[i].at), s.memory + n, g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memset(g_log, 0, sizeof g_log);
-    g_log_n = 0;
+    g_log_n = 0;   // entries past the count are never read or compared
     g_rand_pending = g_rand_first;
 }
 bool Same(const State& a, const State& b) {
     return a.log_n == b.log_n && std::memcmp(a.memory, b.memory, g_bytes) == 0 &&
-           std::memcmp(a.log, b.log, sizeof a.log) == 0;
+           std::memcmp(a.log, b.log, (a.log_n < kLog ? a.log_n : kLog) * sizeof(Entry)) == 0;
 }
 unsigned FirstDifference(const State& a, const State& b) {
     for (unsigned i = 0; i < g_bytes; ++i)
@@ -363,11 +371,28 @@ unsigned char* Pointer(std::uint32_t cell) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(move_script::Long(Mem(cell)))));
 }
 void SetRandHint(std::uint32_t hint) { g_rand_hint = hint; }
+
+void Record(std::uint32_t address, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) {
+    for (unsigned i = 0; i < g_slot_n; ++i)
+        if (g_slots[i].address == address && !g_slots[i].handler) {
+            Log5(i, a, b, c, d);
+            return;
+        }
+    bof3::Fatal("magic_harness: a custom stand-in records 0x%X, which no callee lists", (unsigned)address);
+}
+void Stir() { Disturb(); }
+std::uint32_t Noise() { return Hash(); }
+std::uint32_t HashBytes(const void* p, unsigned n) {
+    std::uint32_t h = 0x811C9DC5u;
+    const auto* b = static_cast<const unsigned char*>(p);
+    for (unsigned i = 0; i < n; ++i) h = (h ^ b[i]) * 0x01000193u;
+    return h;
+}
 void SetRandFirst(int first) { g_rand_first = first; }
 
 const void* StandIn(std::uint32_t key) {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].key == key) return reinterpret_cast<const void*>(kStubs.f[i]);
+        if (g_slots[i].key == key) return StubOf(i);
     bof3::Fatal("magic_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
 }
 
@@ -409,8 +434,8 @@ void Run(const Group& group) {
     if (group.n_clones > 256) bof3::Fatal("magic_harness: %s: more than 256 clones", group.shadow);
     for (unsigned k = 0; k < group.n_clones; ++k) {
         const Clone& c = group.clones[k];
-        bof3::CloneCall calls[32];
-        if (c.n_calls > 32) bof3::Fatal("magic_harness: %s has %d calls", c.name, c.n_calls);
+        bof3::CloneCall calls[64];
+        if (c.n_calls > 64) bof3::Fatal("magic_harness: %s has %d calls", c.name, c.n_calls);
         for (int i = 0; i < c.n_calls; ++i) calls[i] = {c.calls[i].offset, StubFor(c.calls[i].target, c.name), c.calls[i].target};
         clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         PatchImms(clones[k], c);
@@ -441,7 +466,6 @@ void Run(const Group& group) {
             const std::uint32_t v = Next();
             std::memcpy(input.memory + i, &v, g_bytes - i < 4 ? g_bytes - i : 4);
         }
-        std::memset(input.log, 0, sizeof input.log);
         input.log_n = 0;
         g_rand_first = -1;
         Apply(input);
@@ -457,8 +481,11 @@ void Run(const Group& group) {
             State& out = pass ? ours : theirs;
             const void* const fn = pass ? group.clones[k].ours : clones[k];
             g_active = pass == 1;
-            reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
+            std::uint32_t result = 0;
+            if (group.clones[k].invoke) group.clones[k].invoke(fn);
+            else result = reinterpret_cast<Fn3>(const_cast<void*>(fn))(a0, a1, a2);
             g_active = false;
+            if (group.clones[k].result_mask) Log5(0xFFFF0000u, result & group.clones[k].result_mask, 0, 0, 0);
             Capture(out);
         }
         calls += theirs.log_n;
@@ -489,18 +516,25 @@ void Run(const Group& group) {
     bof3::Log("shadow      %s self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, %u MISMATCHES; "
               "%u bytes of state (%u regions) and the stand-ins' log compared",
               group.shadow, per * group.n_clones, group.n_clones, per, calls, bad, g_bytes, g_region_n);
+    // in lines of at most 900 characters (bof3::Log holds 1,024)
     char line[900];
     unsigned n = 0;
-    for (unsigned i = 0; i < g_slot_n && n + 64 < sizeof line; ++i) {
+    bool any = false;
+    for (unsigned i = 0; i < g_slot_n; ++i) {
         if (g_slots[i].calls == 0) continue;
+        if (n + 64 >= sizeof line) {
+            bof3::Log("shadow      %s coverage (calls the originals made): %s,", group.shadow, line);
+            n = 0;
+        }
         const int w = g_slots[i].handler
                           ? std::snprintf(line + n, sizeof line - n, "%sphase 0x%X %u", n ? ", " : "",
                                           (unsigned)g_slots[i].address, g_slots[i].calls)
                           : std::snprintf(line + n, sizeof line - n, "%s%s %u", n ? ", " : "", g_slots[i].name,
                                           g_slots[i].calls);
         if (w > 0) n += static_cast<unsigned>(w);
+        any = true;
     }
-    bof3::Log("shadow      %s coverage (calls the originals made): %s", group.shadow, n ? line : "none");
+    if (n || !any) bof3::Log("shadow      %s coverage (calls the originals made): %s", group.shadow, n ? line : "none");
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);

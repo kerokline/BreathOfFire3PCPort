@@ -105,6 +105,13 @@ struct Clone {
     const JumpTable* tables;
     int n_tables;
     const void* ours;
+    // For a function with a result: what of eax its callers read (0xFF for a
+    // byte in al), logged after each pass; 0 for void.
+    std::uint32_t result_mask;
+    // For a function that takes arguments: calls `fn` (the copy, then ours)
+    // with arguments the group's seed put in its own regions. Null: the
+    // function is called as a task step, with three ignored arguments.
+    void (*invoke)(const void* fn);
 };
 
 // How a recorder answers: a byte in lo..hi with garbage above it (an index,
@@ -116,6 +123,15 @@ enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
 // our function - and `address` the original's, the one clones call; for a
 // callee that is Capcom's the two are equal. masks[i] is what of argument i
 // the callee reads (a u8 argument is pushed with garbage above it).
+//
+// `custom`, when set, is the group's own stand-in, used in place of the
+// harness's for both passes: a function of the callee's exact type that
+// records through Record() below, calls Stir(), and answers from Noise() -
+// for a callee whose pointer arguments point at the caller's stack (the
+// recorder logs what they point at, not where), that writes through a
+// pointer the caller reads again, that moves Gfx_PacketNext as the real one
+// does, or that takes more than four arguments. nargs / masks / answer are
+// then unused.
 struct Callee {
     const char* name;
     std::uint32_t address, key;
@@ -123,6 +139,7 @@ struct Callee {
     std::uint32_t masks[4];
     Answer answer;
     std::uint8_t lo, hi;
+    const void* custom;
 };
 
 // A .data table of handlers the functions read in place: its entries are
@@ -144,6 +161,10 @@ struct Group {
     void (*seed)(unsigned k);       // function k's boundaries, after the random fill
     void (*disturb)(std::uint32_t h);   // optional: move a group cell after a call
     unsigned rounds;                // per function; 0 is 2,000
+    // Optional: called after every disturbance, to put back what the function
+    // being fuzzed reads again after a call and cannot survive garbage in -
+    // a phase byte it indexes a table with, read past a call.
+    void (*settle)();
 };
 
 // Clones every function (before the caller injects), fuzzes each against ours
@@ -169,5 +190,18 @@ unsigned char* Pointer(std::uint32_t cell);
 // `first` (0..255) is the round's first answer exactly.
 void SetRandHint(std::uint32_t hint);
 void SetRandFirst(int first);
+
+// --- for a group's custom stand-ins (Callee::custom) ---------------------------
+
+// One record in the log, as the harness's own recorders make: `address` is
+// the callee's (Callee::address), which names the slot the coverage counts.
+void Record(std::uint32_t address, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d);
+// The disturbance the harness's recorders make after recording.
+void Stir();
+// The recorders' deterministic noise: the same on both passes at the same
+// point of the log.
+std::uint32_t Noise();
+// A hash of n bytes, for a recorder logging what a pointer points at.
+std::uint32_t HashBytes(const void* p, unsigned n);
 
 }  // namespace magic_harness

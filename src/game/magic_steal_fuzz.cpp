@@ -27,10 +27,10 @@ constexpr mh::CallSite kCalls4F5140[] = {{0xA6, 0x5B93D2}, {0xEB, 0x590BB0}, {0x
 #define MH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 const mh::Clone kClones[] = {
     {"SkillSteal_Task", 0x4F50B0, 0x2E, nullptr, 0, kImms4F50B0, MH_N(kImms4F50B0), nullptr, 0,
-     reinterpret_cast<const void*>(&::SkillSteal_Task)},
-    {"SkillSteal_Start", 0x4F50E0, 0x56, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::SkillSteal_Start)},
+     reinterpret_cast<const void*>(&::SkillSteal_Task), 0, nullptr},
+    {"SkillSteal_Start", 0x4F50E0, 0x56, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::SkillSteal_Start), 0, nullptr},
     {"SkillSteal_Roll", 0x4F5140, 0x18A, kCalls4F5140, MH_N(kCalls4F5140), nullptr, 0, nullptr, 0,
-     reinterpret_cast<const void*>(&::SkillSteal_Roll)},
+     reinterpret_cast<const void*>(&::SkillSteal_Roll), 0, nullptr},
 };
 #undef MH_N
 enum : unsigned { kTask, kStart, kRoll };
@@ -101,7 +101,7 @@ void SelfTest() {
     std::memcpy(g_exe_rates, mh::Mem(kRates), sizeof g_exe_rates);
     const mh::Group group = {
         "magic_steal", kClones, sizeof kClones / sizeof kClones[0], nullptr, 0, nullptr, 0,
-        kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, nullptr, 2000,
+        kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, nullptr, 2000, nullptr,
     };
     mh::Run(group);
 }
