@@ -216,6 +216,7 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 std::uint32_t AdvanceByArg1(const std::uint32_t* a, std::uint32_t answer);
 std::uint32_t AdvanceByArg3(const std::uint32_t* a, std::uint32_t answer);
 std::uint32_t KeepFacing(const std::uint32_t* a, std::uint32_t answer);
+std::uint32_t NoteBank(const std::uint32_t* a, std::uint32_t answer);
 
 #define S25_OURS(name) #name, ::bof3::addr::name, Key(&::name)
 #define S25_RAW(address) #address, address, address
@@ -260,6 +261,8 @@ const mh::Callee kCallees[] = {
     {S25_OURS(Gte_PrimDepths4_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gte_PrimDepths4_10C), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Sprite_SetAnimation), 1, {kU8}, mh::Answer::kGarbage, 0, 0},
+    // listed over the standard one for its effect: the sprite bank it draws with
+    {S25_OURS(Sprite_UpdateScreen), 0, {}, mh::Answer::kGarbage, 0, 0, {}, &NoteBank},
     // other units: the effect library (group L), the engine
     {S25_RAW(0x4FC0E0), 0, {}, mh::Answer::kGarbage, 0, 0},
     {S25_RAW(0x4FBA90), 5, {kAll, kAll, kAll, 0, 0xFFFFu}, mh::Answer::kGarbage, 0, 0},   // the pad unread
@@ -340,6 +343,12 @@ std::uint32_t AdvanceByArg3(const std::uint32_t* a, std::uint32_t answer) {
 // aborts: the fuzz stays inside the table.
 std::uint32_t KeepFacing(const std::uint32_t*, std::uint32_t answer) {
     Sprite_Current[8] &= 3;
+    return answer;
+}
+// SpellRagnarok_SpriteChild switches the sprite bank pointer around its
+// phase and Sprite_UpdateScreen: what the update would draw with.
+std::uint32_t NoteBank(const std::uint32_t*, std::uint32_t answer) {
+    mh::Note(static_cast<std::uint32_t>(move_script::Long(mh::Mem(kSpriteBank))));
     return answer;
 }
 
@@ -434,6 +443,9 @@ void Seed(unsigned k) {
     case kRagnarok_SparkFade: Near(sc[0xA], 1); break;
     // the draws: both phase parities, a short count now and then
     case kSleep_DrawFan: case kSleep_DrawDome: sc[1] = Byte(mh::Next() % 4); break;
+    case kDepress_DrawVortex:
+        if (mh::Half()) SetLong(sc + 0x64, static_cast<std::int32_t>(MH_PICK(0, 1, static_cast<std::uint32_t>(-1), 0x80)));
+        break;
     case kConfuse_DrawRays:
         sc[1] = Byte(mh::Half() ? 5 : mh::Next() % 6);
         if (mh::Often()) sc[9] = Byte(mh::Next() % 24);
