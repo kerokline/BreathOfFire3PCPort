@@ -232,7 +232,7 @@ None of these are scheduled. Each is a candidate for [`IDEAS.md`](../IDEAS.md):
 
 | # | What | Kind | Feasibility |
 |---|---|---|---|
-| a | A `Tier:` field in the ledger (§2.1), enforced by `ledger_check.py`, backfilled over DIV-0001..0057 | docs / process | HIGH |
+| a | A `Tier:` field in the ledger (§2.1), enforced by `ledger_check.py`, backfilled over DIV-0001..0057 | docs / process | **built 2026-09-26**: [`DIVERGENCE.md`](../DIVERGENCE.md) "Tiers", with a fourth tier, *Forced*, theirs lacks. Presets from it are not built |
 | b | `script_ops.toml` as the single description of the event and movement script ops, read by the scanners (§2.3) | tooling | HIGH |
 | c | A script assembler + diff-patch step in `loc_build.py`, with a `DIV-NNNN` per patch (§2.2) | tooling | MEDIUM (needs b) |
 | d | A version stamp in built overlays, checked at load (§2.5) | tooling | HIGH |
