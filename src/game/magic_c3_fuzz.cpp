@@ -178,7 +178,7 @@ void Seed(unsigned k) {
         if (mh::Often()) mh::Mem(at)[9] = static_cast<unsigned char>(0x27 + mh::Next() % 3);
         break;
     }
-    case kMagic111_Wait: if (mh::Half()) sc[0xB] = 0; break;
+    case kMagic111_Wait: if (mh::Often()) sc[0xB] = static_cast<unsigned char>(mh::Next() % 3); break;
     case kMagic111Double_Wait: case kMagic111Flash_Wait:
         if (mh::Often()) Owner()[0xB] = static_cast<unsigned char>(mh::Next() % 4);
         break;
