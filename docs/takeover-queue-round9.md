@@ -1,6 +1,6 @@
 # The ninth round's queue: what the routes still enter, and the spells
 
-**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA merged (1,473 ours), SH out
+**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA and SH merged (1,476 ours); the first spell wave out (L, S16..S25)
 
 Round eight left "76 hidden entries the three routes still enter" as the
 next queue ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Owed
@@ -42,7 +42,8 @@ boss fight, an event battle).
 | Group | Doc | Queue |
 |---|---|---|
 | EA - the task scheduler | [`task_sched.md`](task_sched.md) | **merged**: the hand-written unit `0x5A98A0`..`0x5A9A21`, eight functions (`Task_RunAll`, the landing `Task_BackToScheduler` `0x5A98F0`, `Task_SetStackBase`, `Task_Create`, `Task_Sleep`, `Task_Restart` `0x5A9976`, `Task_Exit`, `Task_ClearPrivate`); 33 controls, all refused (30 by a count, 3 by a fault) |
-| SH - the spell harness | `takeover-queue-round9-spells.md` | `tools/magic_rows.py` (each `Magic_Rows` row's overlay and its PC extent), a shared fuzz harness for one overlay, one small overlay taken end to end, a reading of engine rows 123 and 128, and the spell round's grouping |
+| SH - the spell harness | [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md), [`magic_harness.md`](magic_harness.md), [`magic_steal.md`](magic_steal.md) | **merged**:  `tools/magic_rows.py` (each `Magic_Rows` row's overlay and its PC extent), a shared fuzz harness for one overlay, one small overlay taken end to end, a reading of engine rows 123 and 128, and the spell round's grouping. Taken: Steal (MAGIC216, row 87), three functions; 28 controls, all refused |
+| L, S16..S25 - the first spell wave | [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §6 | eleven groups, 528 functions: the effect library and MAGIC071..110 (healing, restoring, buffs, the elements). Out 2026-09-25 |
 
 **The spell round's size**, measured before SH started: the 133 overlay
 entries of `Magic_Rows` (`0x498FE0`..`0x4FC330`) sit among about 2,070
@@ -74,6 +75,34 @@ then a first wave of about ten groups, the rest in later sessions.
   must log its armed entries with no `Fatal` and advance its frame numbers.
 - **The live look**: boot, the title demo, entering a game
   (`Task_Restart`), area transitions, F9's pause.
-- A latent defect for `known-defects.md`: Capcom's `Task_Create` does not
+- Latent defects for `known-defects.md`: Capcom's `Task_Create` does not
   check its slot (past 3 it writes over `0x66C850` / `0x66C854`); ours
-  aborts ([`task_sched.md`](task_sched.md)).
+  aborts ([`task_sched.md`](task_sched.md)); SH's engine rows 123 (plays a sound through an unchecked pointer) and 128 (waits with no limit), [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §3.
+
+## 5. Paused for the usage limit (2026-09-25 night)
+
+The first spell wave was paused before its groups finished: S16..S25 were
+told to commit their work in progress with a "Paused" section at the top of
+their group doc (what is done, fuzzed, controlled, and the next step) and
+stop. L, the effect library, was left running (the smallest group, and
+every other group calls it).
+
+To resume: `git worktree list` shows each group's worktree under
+`.claude/worktrees/agent-*` on its branch `phase-3/round9-<group>`; read the
+group doc's "Paused" section and carry on from there, or resume the agent
+with its context. The brief every group was given is its first commit's
+context: `docs/takeover-queue-round9-spells.md` §4 for the group's units,
+[`magic_harness.md`](magic_harness.md) §3 for what a group writes. Merge one
+branch at a time into `phase-3/round-nine`: the build, the group's shadow
+and `BOF3X_SHADOW='*'` headless after each.
+
+**Where it stood when the session stopped (2026-09-25, late):** every
+group has its work committed on `phase-3/round9-<group>`. Ten of eleven
+branches patched `magic_harness.h/.cpp` their own way, so group **HX**
+(`phase-3/round9-hx`) was started to consolidate them into one API with a
+porting table per group in `magic_harness.md`; it was paused almost at
+once. Next, in order: finish HX and merge it; resume each group to port
+onto it, run its controls and finish its doc; merge them one at a time.
+S16 is furthest along (72 of 72 controls refused; its doc's controls table
+to fill). The frame-hash re-record (§4) is due before 2026-09-27 or after a
+Restart.
