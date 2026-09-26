@@ -235,6 +235,23 @@ enum : unsigned {
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 using mh::Answer;
 
+// 0x4FBB40's answer is the new orbit angle; FxFunnel_Orbit compares its
+// distance from the last (+0x10 by then) with 0x400 and 0xC00. Half the time
+// it lands on either bound or one beside it.
+std::uint32_t OrbitAnswer(const std::uint32_t*, std::uint32_t answer) {
+    if (answer & 1) return answer;
+    static const int kD[] = {0x400, 0x401, 0x3FF, 0xC00, 0xBFF, 0xC01, -0x400, -0x401, -0xC00, -0xBFF};
+    const int last = static_cast<int>(move_script::Long(Sprite_Current + 0x10)) & 0xFFF;
+    return (answer & 0xFFFFF000u) | (static_cast<std::uint32_t>(last - kD[(answer >> 1) % 10]) & 0xFFF);
+}
+// AreaMap_Elevation's answer (ax is read) a third of the time 0xFF..0x101,
+// the heights the seed gives Quake's kept enemy heights, so the hover
+// compare meets its equal case.
+std::uint32_t GroundAnswer(const std::uint32_t*, std::uint32_t answer) {
+    if (answer % 3) return answer;
+    return (answer & 0xFFFF0000u) | (0x100u + (answer >> 2) % 3 - 1);
+}
+
 const mh::Callee kCallees[] = {
     // called for real on both sides: deterministic in the regions below
     {S23_OURS(Gte_PushMatrix), 0, {}, Answer::kThrough, 0, 0},
@@ -261,10 +278,10 @@ const mh::Callee kCallees[] = {
     // recorders
     {S23_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     {S23_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
-    {S23_OURS(AreaMap_Elevation), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {S23_OURS(AreaMap_Elevation), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, &GroundAnswer},
     {S23_OURS(Battle_ActorIsOut), 1, {kU8}, Answer::kFlag, 0, 0},
     {S23_RAW("0x446770", kTurnByFacing), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {S23_RAW("0x4FBB40", kOrbitRecord), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {S23_RAW("0x4FBB40", kOrbitRecord), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &OrbitAnswer},
     {S23_RAW("0x4FBC30", kNearRecord), 2, {kAll, kAll}, Answer::kBool, 0, 0},
     {S23_RAW("0x4FC0E0", kSideCentre), 0, {}, Answer::kGarbage, 0, 0},
     // the group's own, as the tasks call them
@@ -413,6 +430,8 @@ void Seed(unsigned k) {
         break;
     case kQuake_Rumble: sc[9] = pick(MH_PICK(0xF, 0xE, 0x10, mh::Next())); break;
     case kQuake_Heave:
+        for (unsigned i = 0; i < 8; ++i)
+            if (mh::Often()) SetWord(mh::Mem(at::kQuakeEnemyZ + 2 * i), 0xFF + mh::Next() % 3);
         sc[9] = pick(MH_PICK(0x5A, 0x59, 0x5B, mh::Next()));
         if (mh::Half()) std::memset(mh::Mem(at::kQuakeLift), 0, 0xF0);
         if (mh::Half()) mh::Mem(at::kArea)[mh::Next() & 1] = 0;
