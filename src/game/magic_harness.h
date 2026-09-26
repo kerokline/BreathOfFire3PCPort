@@ -169,5 +169,13 @@ unsigned char* Pointer(std::uint32_t cell);
 // `first` (0..255) is the round's first answer exactly.
 void SetRandHint(std::uint32_t hint);
 void SetRandFirst(int first);
+// For the next Run only: the recorder for the callee at `callee_address` (the
+// original's) also logs the `bytes` (up to 16) that its argument `arg` (0..3)
+// points at when called - for a callee that reads what it is handed (a vector
+// built on the caller's stack, whose address the mask must drop).
+void LogPointee(std::uint32_t callee_address, unsigned arg, unsigned bytes);
+// For the next Run only: the clone at `clone_base` answers something its
+// callers read (an index in al): its answer, masked, is compared too.
+void LogReturn(std::uint32_t clone_base, std::uint32_t mask);
 
 }  // namespace magic_harness

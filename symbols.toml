@@ -18891,3 +18891,562 @@ ctype = "signed char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: SkillSteal_Roll's movsx byte [0x65C204 + the enemy's +0xAA], the index unbounded; the same eight values as Steal_RateTable 0x65AC20 (docs/cheats.md: the PSX's byte for byte)."
+
+# ---------------------------------------------------------------------------
+# Round nine group S20: MAGIC087, MAGIC088, MAGIC092 (Magic_Rows rows 48, 29, 49). docs/magic_s20.md.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4C3490
+name = "Magic087_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3490..0x4C3504 (0x75 bytes), cdecl, void: a two-entry stack table (mov [esp + 0x10 / 0x14], imm32 0x4C3510 0x4F7350) called by byte +1 of Sprite_Current, unchecked; then for each of the 80 motes at 0x6906D8 (stride 0x84) with +0 bit 0: Sprite_Current = the mote, dword 0x93B940 = its +0x80, call 0x4C3CC0, both put back (the values read after the phase). Magic_Rows row 48 (file MAGIC087.EMI; ability ids 0x57 and 0xBD, Silence read one id down - a hypothesis). The first function of MAGIC087's extent 0x4C3490..0x4C4486 (tools/magic_rows.py). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3510
+name = "Magic087_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3510..0x4C36F6 (0x1E7 bytes), four calls: +0xB 0; bytes +0..+2 of the 80 motes cleared; byte 0x904B44 bit 0x40: for enemies i 0..7 not out (Battle_ActorIsOut(i + 3)), else members 0..2 (Battle_ActorIsOut(i)): BattleTask_Create(1, 0x27), the slot's +0x80 = Sprite_Current (read after the create), +4 = its +0xB, +9 = 8 i + 1, +0x34 / +0x38 the actor's, +0x3C the actor's + 0x800000, an enemy's word +0x3E += byte 0x8C564F + 0x8C * its +0xF0; Sprite_Current +0xB += 1; the index untested. Words 0x812982..0x81299E = word 0x7400 below | 0x8000, word 0x812980 = Gfx_ClutStripSource's, Gfx_ClutStripDirty 1, +1 += 1. Entry 0 of Magic087_Task's table. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3700
+name = "Magic087_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3700..0x4C3711 (0x12 bytes), no calls: jmp [0x65B4E8 + 4 * byte +1], unchecked (one entry, 0x4C3720). Kind-1 task parameter 0x27 (BattleTask_Create(1, 0x27) in Magic087_Start). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3720
+name = "Magic087_ChildPhase"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3720..0x4C3731 (0x12 bytes), no calls: jmp [0x65B4EC + 4 * byte +2], unchecked (five entries 0x4C3740 0x4C3840 0x4C3870 0x4C3960 0x4C39A0). Magic087_Child's one type; reached by MAGIC083 and 086 too. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3740
+name = "Magic087_ChildSpawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3740..0x4C383A (0xFB bytes), three calls: +0xB 0; eight 0x4C4430 allocs (al untested): +0x80 = Sprite_Current (read after each), four with +1 0, +4 and +0xB n, +9 2n + 1, four with +1 1, +4 n, +9 2n + 1; Sprite_Current +0xB += 1 each; +2 += 1; Sound_PlayById(0x100) when +4 is 0. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3840
+name = "Magic087_ChildWait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3840..0x4C386A (0x2B bytes), no calls: when +0xB is 2: +4 0, +9 8, +0xA 0x10, +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3870
+name = "Magic087_ChildRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3870..0x4C395D (0xEE bytes), six calls: Sound_PlayById(0x101) when +4 is 0; +9 -= 1, at 0 two 0x4C4430 allocs (+0x80 Sprite_Current, +1 2 and 3; al untested), +9 8, +0xA -= 1 and at 0 +0xB 0x82, +9 0, +2 += 1; then +4 += 1, BattleActor_UpdateScreenXY, 0x4C39C0(0), 0x4C39C0(0xF). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3960
+name = "Magic087_ChildGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3960..0x4C3995 (0x36 bytes), three calls: +9 += 1; at 0x10 +2 += 1 and return; else +4 += 1, BattleActor_UpdateScreenXY, 0x4C39C0(0), 0x4C39C0(0xF). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C39A0
+name = "Magic087_ChildEnd"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C39A0..0x4C39B8 (0x19 bytes), one call: when +0xB is 0x80, the owner's (0x93B940) +0xB -= 1 and a tail jmp to BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C39C0
+name = "Magic087_DrawColumn"
+ret = "void"
+params = "int offset"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C39C0..0x4C3CB9 (0x2FA bytes), nine calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); dword 0x903858 1; n = 8, or +4 / 2 + 1 below 0x10; i from 0 (+9 / 2 when +2 is 3) while i < n: a POLY_GT4 (Gpu_SetPolyGT4, Gpu_SetSemiTrans 1), x = s16 +0x2E - (Math_Sin(((+4 + i + offset + 1) & 31) << 7) << 3 >> 12) - 4 and the next angle's, rows s16 +0x30 - 8i - 8 / - 8i, x + 8.0 (0x5C41CC), each angle to dword 0x903854; the top shade the carried byte 0x903858, then 0x903858 = (i + 1) * 16, or 0x151 - 48 i from 48 i = 0x120; tpage Gpu_GetTPage(0, 1, 0x3C0, 0x100), clut Gpu_GetClut(0, 0x1FA); u 0 / 8, v ((+4 + 4 i) * 2) & 31 and + 8; MapView_LinkPrimAt(+0x34, +0x38, 2, 0x54). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3CC0
+name = "Magic087_MoteRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3CC0..0x4C3CD1 (0x12 bytes), no calls: jmp [0x65B500 + 4 * byte +1], unchecked (four: 0x4C3CE0 twice, 0x4C3F20 twice). Called by Magic087_Task for each live mote. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3CE0
+name = "Magic087_OrbitRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3CE0..0x4C3D16 (0x37 bytes), four calls: call [0x65B510 + 4 * byte +2] (four: 0x4C3D20 0x4C3D90 0x4C3EA0 0x4C3EC0), unchecked; then when +0 and +2 is neither 0 nor 3: 0x4C4050, 0x4C4110, a tail jmp to Gte_PopMatrix. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3D20
+name = "Magic087_OrbitStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3D20..0x4C3D82 (0x63 bytes), no calls: +9 -= 1; at 0: dword +0xC 0x100, dword +0x18 4, +1 non-zero: +0xB 0, +9 0, else +0xB 8, +9 0x1F; +0xA 0; +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3D90
+name = "Magic087_OrbitSpin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3D90..0x4C3E9E (0x10F bytes), two calls: +0xB and +9 += 1; dword 0x903854 = (+9 & 63) << 6; dword +0xC -= dword +0x18, to dword 0x903850; +0x34 = (Math_Sin(0x903854) imul dword 0x903850 sar 3) + the owner's +0x34, +0x38 likewise with Math_Cos, +0x3C the owner's; +0xA += 1 below 0x21; at +0xC 0: +4 0 steps +2, else the owner's +0xB -= 1 and +0..+4 cleared. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3EA0
+name = "Magic087_OrbitWait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3EA0..0x4C3EB3 (0x14 bytes), no calls: +2 += 1 when the owner's (0x93B940) +0xB is 0x82. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3EC0
+name = "Magic087_OrbitFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3EC0..0x4C3F10 (0x51 bytes), no calls: +0xA -= 1; at 0 the owner's +0xB -= 1 and bytes +0..+4 cleared (Sprite_Current read again for each). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3F20
+name = "Magic087_RiseRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3F20..0x4C3F52 (0x33 bytes), four calls: call [0x65B520 + 4 * byte +2] (two: 0x4C3F60 0x4C3FE0), unchecked; then when +0 and +2: 0x4C4050, 0x4C4110, a tail jmp to Gte_PopMatrix. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3F60
+name = "Magic087_RiseStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3F60..0x4C3FDD (0x7E bytes), no calls: +0x34 / +0x38 / +0x3C the owner's; +1 2: +0xB 0, else +0xB 8; +9 0, +0xA 0x20, +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C3FE0
+name = "Magic087_RiseStep"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C3FE0..0x4C4048 (0x69 bytes), no calls: dword +0x3C += 0xFFF80000, +9 += 1, +0xA -= 1; at 0 +2 += 1 then bytes +0..+4 cleared. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4050
+name = "Magic087_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4050..0x4C4101 (0xB2 bytes), six calls: Gte_PushMatrix; on its stack v = (+0x34 sar 9 - 0x4000, +0x38 sar 9 - 0x4000, -((s16 +0x3E + 0x200) / 2)), angles (0, 0, (+0xB & 63) << 6), a MATRIX at esp+0x14 with the translation at +0x14; Gte_RotTrans(v, t, flag), Gte_RotMatrix(angles, m), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix(m), Gte_SetTransMatrix(m). MagicFx_PushActorMatrix's shape with a turn and a lift. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4110
+name = "Magic087_DrawTriangle"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4110..0x4C4428 (0x319 bytes), 24 calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); dword 0x903850 = 0x80, or +9 * 4 + 0x80 from +1 = 2; two LINE_G3 (Gpu_SetLineG3, Gpu_SetSemiTrans 1): Prim_VertexScratch 0x9037A0 / A8 / B0 = (Math_Sin(a) imul r sar 12, Math_Cos(a) imul r sar 12, 0) at 0x200 0x600 0xA00, then 0xA00 0xE00 0x200; Gte_RotTransPers3, Gte_PrimDepths3_10C; dword 0x903858 = byte 0x65B528[+4] * +0xA, the colours from it and 1; MapView_LinkPrimAt(+0x34, +0x38, 2, 0x34) each. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4430
+name = "Magic087_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4430..0x4C4486 (0x57 bytes), no calls: the first of the 80 motes at 0x6906D8 (stride 0x84) whose +0 lacks bit 0 gets it; its index in al, 0xFF when none (the upper bytes of eax the caller's). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4490
+name = "Magic088_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4490..0x4C44DD (0x4E bytes), cdecl, void: a seven-entry stack table (0x4C44E0 0x4C4650 0x4C46B0 0x4EF7C0 0x4C4700 0x4C4780 0x4E5200) called by byte +1, unchecked. Magic_Rows row 29 (file MAGIC088.EMI; ability ids 0x1E 0x1F 0x58 0x59 0x5A 0xBE 0xBF 0xC0 - Molasses, Tarbaby, Slow, Blunt, Weaken read one id down, a hypothesis). The first function of MAGIC088's extent 0x4C4490..0x4C4FB1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C44E0
+name = "Magic088_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C44E0..0x4C4644 (0x165 bytes), four calls: +0x34 / +0x38 / +0x3C from the sprite at 0x904B4C (read once); +4 = 0x4C4830's al; +0xB 0, +9 0x10, +1 += 1; BattleTask_Create(1, 0x20) twice, each slot +0x80 = Sprite_Current (read after), at its position, the first +1 0 +9 0 +0xA 0, the second +1 1, +4 and +9 Sprite_Current's, +0xA 0x10; +0xB += 1 each; 16 words 0x812980.. and 0x8129A0.. from 0x4000 below; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Entry 0 of Magic088_Task's table. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4650
+name = "Magic088_TintOn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4650..0x4C46A7 (0x58 bytes), two calls: the sprite at 0x904B4C read first; +9 -= 1; at 0 its +0x5C 1, Sprite_ReleaseTint(it), +0xA = Sprite_SetTint(it, 0, 0, 0, 1), +9 8, +1 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C46B0
+name = "Magic088_Darken"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C46B0..0x4C46FC (0x4D bytes), no calls: bytes +2 and +3 of MoveScript_TintRecords[+0xA] (0x7E0700 + 12 * +0xA, unchecked) -= 1; +9 -= 1; at 0 +1 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4700
+name = "Magic088_Lighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4700..0x4C4773 (0x74 bytes), two calls: the sprite at 0x904B4C read first; the tint record's +2 and +3 += 1; when +2 is 0: its +0x5C 0, Sprite_ReleaseTint(it), BattleActor_Flash(byte 0x904B44), +1 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4780
+name = "Magic088_Apply"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4780..0x4C482C (0xAD bytes), three calls: when +0xB is 0: 0x4FB6F0(byte 0x65C39C[+4], byte 0x904B44) (the effect library's stat change, group L); BattleTask_Create(1, 0x48), its +0x80 = Sprite_Current (read after), +4 = +4 + 4 when al was non-zero, else 8; +9 1, +0xA 0; +0xB += 1; +1 += 1. The index untested. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4830
+name = "Magic088_Variant"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4830..0x4C492E (0xFF bytes), no calls, one jump table (0x4C487C, four entries) indexed by a byte table at 0x4C488C (0xA3 entries): with byte 0x904B35 = 4, word 0x904B80 (the ability id) - 0x1E, unsigned, above 0xA2 answers 3, else the byte table's entry picks al = 1, 2, 0 or 3; with 0x904B35 not 4, word 0x904B80 = 0x112 is set to 0x5A and answers 0, any other 3. Only al is defined. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4930
+name = "Magic088_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4930..0x4C4941 (0x12 bytes), no calls: jmp [0x65B574 + 4 * byte +1], unchecked (two: 0x4C4950 0x4C4B30). Kind-1 task parameter 0x20. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4950
+name = "Magic088_FanRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4950..0x4C497C (0x2D bytes), three calls: call [0x65B57C + 4 * byte +2] (three, other overlays': 0x4C2D10 0x4EF840 0x4B1740), unchecked; when +0: MagicFx_PushActorMatrix, 0x4C4980, a tail jmp to Gte_PopMatrix. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4980
+name = "Magic088_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4980..0x4C4B24 (0x1A5 bytes), 13 calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x55, 0), Gfx_CommitPrim(5, 0xC); word 0x903850 0xF0, word 0x90385A = +9 * 12; 16 POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1) of (0, 0, 0), the last rim point and (Math_Sin(a), Math_Cos(a)) * 0xF0 >> 12 for a 0x100..0x1000; Gte_RotTransPers3, Gte_PrimDepths3_10B, the centre 0x90385A's byte, the rim 1; Gfx_CommitPrim(5, 0x34); then Gpu_SetDrawMode(.., 0x15, 0), Gfx_CommitPrim(5, 0xC). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4B30
+name = "Magic088_WaveRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4B30..0x4C4B67 (0x38 bytes), four calls: call [0x65B5A8 + 4 * byte +2] (four: 0x4E47F0 0x4C4B70 0x4C4B90 0x4C4BC0), unchecked; when +0 and +2: MagicFx_PushActorMatrix, 0x4C4BE0, 0x4C4C00, a tail jmp to Gte_PopMatrix. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4B70
+name = "Magic088_WaveGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4B70..0x4C4B8B (0x1C bytes), no calls: +9 += 1; at 0x20 +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4B90
+name = "Magic088_WaveHold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4B90..0x4C4BBE (0x2F bytes), no calls: +0xA -= 1; at 0 the owner's +0xB -= 1 and +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4BC0
+name = "Magic088_WaveFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4BC0..0x4C4BDF (0x20 bytes), one call: +9 -= 2; at 0 a tail jmp to BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4BE0
+name = "Magic088_WaveStep"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4BE0..0x4C4BFF (0x20 bytes), no calls: the six dwords 0x65B588..0x65B59F, the even-indexed += 1, the odd -= 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C4C00
+name = "Magic088_DrawWave"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C4C00..0x4C4FB1 (0x3B2 bytes), 19 call sites: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); word 0x903858 = +9; six bands b (dwords 0x65B588 + 4b): radii 32b / 32(b+1), colour bytes 0x65B52C + 3 (+4 * 6 + b) times +9 / 2 into words 0x90385A / C / E; 64 POLY_F4 each (Gpu_SetPolyF4, Gpu_SetSemiTrans 1) between columns c - 1 and c at angle c << 6, z = -((Math_Sin(((band byte + c + 1) & 15) << 8) imul s16 0x903858 sar 12) + dword 0x903858); Gte_RotTransPers4, Gte_PrimDepths4_0C, MapView_LinkPrimAt(.., 2, 0x38). 4,262 calls a run. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5680
+name = "Magic092_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5680..0x4C56F4 (0x75 bytes), cdecl, void: a two-entry stack table (0x4C5700 0x4E5200) called by byte +1, unchecked; then for each of the 48 motes at 0x693018 (stride 0x84) with +0 bit 0: Sprite_Current = the mote, 0x93B940 = its +0x80, call 0x4C5B10, both put back. Magic_Rows row 49 (file MAGIC092.EMI; ability ids 0x5C and 0xC2, Fireblast read one id down - a hypothesis). The first function of MAGIC092's extent 0x4C5680..0x4C62F6. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5700
+name = "Magic092_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5700..0x4C589F (0x1A0 bytes), four calls: bytes +0..+2 of the 48 motes cleared; +0xB 0; byte 0x904B44 bit 0x40: enemies i 0..7 not out (Battle_ActorIsOut(i + 3)), else members 0..2: BattleTask_Create(1, 0x28), +0x80 Sprite_Current (read after), +3 = i, +0x34 / +0x38 / +0x3C the actor's, +9 = 16 n + 1 by the count n made; +0xB += 1; the index untested. Word 0x812980 0, words 0x812982..0x81299E = 0x4000 below | 0x8000, Gfx_ClutStripDirty 1, +1 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C58A0
+name = "Magic092_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C58A0..0x4C58B1 (0x12 bytes), no calls: jmp [0x65B5C8 + 4 * byte +1], unchecked (one: 0x4C58C0). Kind-1 task parameter 0x28. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C58C0
+name = "Magic092_ChildRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C58C0..0x4C58F2 (0x33 bytes), three calls: call [0x65B5CC + 4 * byte +2] (four: 0x4C5900 0x4C59B0 0x4E93C0 0x4C5A60), unchecked; when +0 and +2: MagicFx_PushActorMatrix, 0x4E9420 (MAGIC144's), a tail jmp to Gte_PopMatrix. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5900
+name = "Magic092_ChildSpawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5900..0x4C59A4 (0xA5 bytes), two calls: +9 -= 1; at 0: +0xB 0, three 0x4C62A0 allocs n 0..2, each not 0xFF: +0x80 Sprite_Current (read after), +0 |= 0x41, +1 = n != 0, +2 0, +0xB n, Sprite_Current +0xB += 1; Sound_PlayById(0x100); +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C59B0
+name = "Magic092_ChildTint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C59B0..0x4C5A5E (0xAF bytes), three calls: +9 += 2; at 0x10 the actor +3 (0x904B44 bit 0x40: enemy record 0x93B960 + 0x128 * +3, else member 0x802D40 + 0x14C * +3; unchecked): Sprite_ReleaseTint(it), Sprite_SetTint(it, -8, -8, -8, 1), Battle_SetTargetFlags(+3 + 3 or +3, 0x10); +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5A60
+name = "Magic092_ChildEnd"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5A60..0x4C5B0D (0xAE bytes), four calls: +9 -= 1 unless 0; when +0xB is 0x80: the actor +3 as 0x4C59B0 reads it: Sprite_ReleaseTint, BattleActor_Flash and Battle_SetTargetFlag40 by its battle index (Sprite_Current read again for each); the owner's +0xB -= 1; a tail jmp to BattleTask_FreeCurrent. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5B10
+name = "Magic092_MoteRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5B10..0x4C5B21 (0x12 bytes), no calls: jmp [0x65B5DC + 4 * byte +1], unchecked (two: 0x4C5B30 0x4C6250). Called by Magic092_Task for each live mote. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5B30
+name = "Magic092_FlameRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5B30..0x4C5B5D (0x2E bytes), two calls: call [0x65B5E4 + 4 * byte +2] (four: 0x4E9630 0x4E9690 0x4C5B60 0x4E96B0), unchecked; when +0 and +2: BattleActor_UpdateScreenXY, a tail jmp to 0x4C5BA0. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5B60
+name = "Magic092_FlameGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5B60..0x4C5B9B (0x3C bytes), no calls: +9 and +0xA += 1; at +9 0x19 the owner's +0xB |= 0x80, +2 += 1. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C5BA0
+name = "Magic092_DrawFlame"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C5BA0..0x4C6249 (0x6AA bytes), 27 calls: words 0x903854 / 56 = +0x2E / +0x30, 0x903850 = +9, 0x903852 = +9 * 3; 28 rows a = 0x100..0x7C0 step 0x40, each Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) and MapView_LinkPrimAt(.., 2, 0xC), half-widths Math_Sin(a + 0x40) and Math_Sin(a) times s16 0x903850 >> 12 (0x903858, 0x90385A), Math_Sin(a) * s16 0x903852 >> 12 (0x90385E), 0x903852 = (Rand & 15) + +9 * 3, Math_Sin(a + 0x40) * that >> 12 (0x90385C); four POLY_GT4 (Gpu_SetPolyGT4, Gpu_SetSemiTrans 1, Gpu_GetClut(0, 0x1FA), Gpu_GetTPage(0, 1, 0x340, 0x100)), rows y - +0xA to y, y += +0xA; texture rows from (row + 4) * 6 or * 3 plus +0xA in stack bytes reused across the quads; MapView_LinkPrimAt(.., 2, 0x54) each. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C6250
+name = "Magic092_SparkRun"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6250..0x4C629E (0x4F bytes), two calls: call [0x65B5F4 + 4 * byte +2] (four: 0x4E9770 0x4E5950 0x4E97D0 0x4E97F0), unchecked; when +0 and +2: BattleActor_UpdateScreenXY, word +0x2E -= 0x10 (+0xB 1) or += 0x10, word +0x30 -= 0xC, a tail jmp to 0x4E9850 (MAGIC144's). Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[func]]
+pc = 0x4C62A0
+name = "Magic092_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s20.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C62A0..0x4C62F6 (0x57 bytes), no calls: the first of the 48 motes at 0x693018 (stride 0x84) whose +0 lacks bit 0 gets it; its index in al, 0xFF when none. Fuzz only (BOF3X_SHADOW=magic_s20): no recorded route casts it (docs/magic_s20.md)."
+
+[[data]]
+pc = 0x6906D8
+name = "Magic087_Motes"
+status = "evidence"
+evidence = "read 2026-09-25: 80 motes of 0x84 bytes (to 0x692FD8), walked by Magic087_Task, allocated by Magic087_PoolAlloc, cleared by Magic087_Start; +0 bit 0 in use, +1 type, +2 phase, +0x80 owner. Pool B (Magic092_Motes) follows at 0x693018."
+
+[[data]]
+pc = 0x693018
+name = "Magic092_Motes"
+status = "evidence"
+evidence = "read 2026-09-25: 48 motes of 0x84 bytes (to 0x6948D8), walked by Magic092_Task, allocated by Magic092_PoolAlloc, cleared by Magic092_Start."
+
+[[data]]
+pc = 0x65B4E8
+name = "Magic087_ChildTypes"
+status = "evidence"
+evidence = "read 2026-09-25: Magic087_Child's jmp table by +1: one entry (0x4C3720), then Magic087_ChildPhases."
+
+[[data]]
+pc = 0x65B4EC
+name = "Magic087_ChildPhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic087_ChildPhase's jmp table by +2: 0x4C3740 0x4C3840 0x4C3870 0x4C3960 0x4C39A0."
+
+[[data]]
+pc = 0x65B500
+name = "Magic087_MoteTypes"
+status = "evidence"
+evidence = "read 2026-09-25: Magic087_MoteRun's jmp table by +1: 0x4C3CE0 0x4C3CE0 0x4C3F20 0x4C3F20."
+
+[[data]]
+pc = 0x65B510
+name = "Magic087_OrbitPhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic087_OrbitRun's call table by +2: 0x4C3D20 0x4C3D90 0x4C3EA0 0x4C3EC0."
+
+[[data]]
+pc = 0x65B520
+name = "Magic087_RisePhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic087_RiseRun's call table by +2: 0x4C3F60 0x4C3FE0."
+
+[[data]]
+pc = 0x65B574
+name = "Magic088_ChildTypes"
+status = "evidence"
+evidence = "read 2026-09-25: Magic088_Child's jmp table by +1: 0x4C4950 0x4C4B30."
+
+[[data]]
+pc = 0x65B57C
+name = "Magic088_FanPhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic088_FanRun's call table by +2: 0x4C2D10 0x4EF840 0x4B1740 (other overlays' bodies)."
+
+[[data]]
+pc = 0x65B588
+name = "Magic088_WaveBands"
+status = "evidence"
+evidence = "read 2026-09-25: six dwords, stepped by Magic088_WaveStep (even +1, odd -1), their low nibble the bands' phases in Magic088_DrawWave."
+
+[[data]]
+pc = 0x65B5A8
+name = "Magic088_WavePhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic088_WaveRun's call table by +2: 0x4E47F0 0x4C4B70 0x4C4B90 0x4C4BC0; FxRing_Phases follows."
+
+[[data]]
+pc = 0x65B5C8
+name = "Magic092_ChildTypes"
+status = "evidence"
+evidence = "read 2026-09-25: Magic092_Child's jmp table by +1: one entry (0x4C58C0), then Magic092_ChildPhases."
+
+[[data]]
+pc = 0x65B5CC
+name = "Magic092_ChildPhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic092_ChildRun's call table by +2: 0x4C5900 0x4C59B0 0x4E93C0 0x4C5A60."
+
+[[data]]
+pc = 0x65B5DC
+name = "Magic092_MoteTypes"
+status = "evidence"
+evidence = "read 2026-09-25: Magic092_MoteRun's jmp table by +1: 0x4C5B30 0x4C6250."
+
+[[data]]
+pc = 0x65B5E4
+name = "Magic092_FlamePhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic092_FlameRun's call table by +2: 0x4E9630 0x4E9690 0x4C5B60 0x4E96B0."
+
+[[data]]
+pc = 0x65B5F4
+name = "Magic092_SparkPhases"
+status = "evidence"
+evidence = "read 2026-09-25: Magic092_SparkRun's call table by +2: 0x4E9770 0x4E5950 0x4E97D0 0x4E97F0; MAGIC093's table follows at 0x65B604."
