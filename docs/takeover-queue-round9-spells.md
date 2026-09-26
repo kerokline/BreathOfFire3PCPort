@@ -200,21 +200,21 @@ ours; bytes their own.
 | C3 **2** | 002, 111 | 2, 119 | - (no ability loads them) | 20 | 4,243 |
 | E **2** | engine: `0x4378D0`, `0x4525F0`, `0x43F3B0`, `0x43FC80` and their phases, `0x43FE90` | 0, 108, 123, 126, 128 | Restore Form, Paralyzer, Head Cracker, (no label) | 22 | ~1,500 |
 | L **1** | the effect library | - | - | 25 | 3,899 |
-| S01 | 001 | 1, 105 | Nue Stomp, Jump | 26 | 3,275 |
-| S02 | 003, 004 (with 005, 029, 049, 133..136, 156, 157 folded) | 3, 88, 92, 93, 98..100, 129..132 | Super Combo, ThundrStrike, Holy Strike, Demonbane, Flame Strike, Pyrokinesis, Frost Strike, Wind Strike, Flame Claw, Frost Claw, Thunder Claw, Shining Claw | 48 | 6,774 |
-| S03 | 006, 009, 012 | 51, 71, 109 | Mind Sword, Chlorine, Blitz | 44 | 9,184 |
-| S04 | 013, 015 (016 folded) | 4, 7, 50, 55, 58 | Snap, Charge, Flying Kick, Air Raid | 56 | 9,776 |
-| S05 | 017, 018/019 | 5, 6, 43, 53, 54, 68 | Astral Warp, Shadowwalk, Giant Growth, Aura, SpiritBlast, Double Blow, Multistrike, Triple Blow | 29 | 3,794 |
-| S06 | 008, 020 | 8, 42 | Gambit, Mind Flay, Blind, Devour, (no label), Syphon, Feign Swing, Backhand, Risky Blow, Disembowel | 56 | 6,118 |
-| S07 | 021, 038, 039, 040 | 33, 78, 79, 121 | Bonebreak, War Shout, Focus, Meditation, Enlighten | 59 | 10,091 |
-| S08 | 041, 042, 043, 044 | 80, 81, 96, 110 | Berserk, Counter, Mind's Eye, WardOfLight, Resist, Evil Eye | 59 | 12,823 |
-| S09 | 045, 046/047, 048, 050 | 31, 41, 61, 62, 63 | Bone Dart, Firebreath, Icebreath, Dream Breath, Pollen, Venom Breath | 47 | 8,956 |
-| S10 | 052, 053, 054, 055, 056 | 56, 65, 107, 112, 134 | Ovum, Lavaburst, Howling, Ebonfire, Sacrifice | 60 | 9,739 |
-| S11 | 058, 059 | 82, 83 | Sanctuary, Tornado | 35 | 7,142 |
-| S12 | 060, 062 | 39, 95 | Identify, Celerity | 44 | 8,119 |
-| S13 | 063 | 143 | Sudden Death | 25 | 3,796 |
-| S14 | 064, 065, 066 | 17, 70, 77 | Weretiger, Pilfer, Tsunami | 57 | 8,654 |
-| S15 | 067, 068, 069 | 18, 40, 75 | Chill, Foretell, Influence | 52 | 9,299 |
+| S01 **3** | 001 | 1, 105 | Nue Stomp, Jump | 26 | 3,275 |
+| S02 **3** | 003, 004 (with 005, 029, 049, 133..136, 156, 157 folded) | 3, 88, 92, 93, 98..100, 129..132 | Super Combo, ThundrStrike, Holy Strike, Demonbane, Flame Strike, Pyrokinesis, Frost Strike, Wind Strike, Flame Claw, Frost Claw, Thunder Claw, Shining Claw | 48 | 6,774 |
+| S03 **3** | 006, 009, 012 | 51, 71, 109 | Mind Sword, Chlorine, Blitz | 44 | 9,184 |
+| S04 **3** | 013, 015 (016 folded) | 4, 7, 50, 55, 58 | Snap, Charge, Flying Kick, Air Raid | 56 | 9,776 |
+| S05 **3** | 017, 018/019 | 5, 6, 43, 53, 54, 68 | Astral Warp, Shadowwalk, Giant Growth, Aura, SpiritBlast, Double Blow, Multistrike, Triple Blow | 29 | 3,794 |
+| S06 **3** | 008, 020 | 8, 42 | Gambit, Mind Flay, Blind, Devour, (no label), Syphon, Feign Swing, Backhand, Risky Blow, Disembowel | 56 | 6,118 |
+| S07 **3** | 021, 038, 039, 040 | 33, 78, 79, 121 | Bonebreak, War Shout, Focus, Meditation, Enlighten | 59 | 10,091 |
+| S08 **3** | 041, 042, 043, 044 | 80, 81, 96, 110 | Berserk, Counter, Mind's Eye, WardOfLight, Resist, Evil Eye | 59 | 12,823 |
+| S09 **4** | 045, 046/047, 048, 050 | 31, 41, 61, 62, 63 | Bone Dart, Firebreath, Icebreath, Dream Breath, Pollen, Venom Breath | 47 | 8,956 |
+| S10 **4** | 052, 053, 054, 055, 056 | 56, 65, 107, 112, 134 | Ovum, Lavaburst, Howling, Ebonfire, Sacrifice | 60 | 9,739 |
+| S11 **4** | 058, 059 | 82, 83 | Sanctuary, Tornado | 35 | 7,142 |
+| S12 **4** | 060, 062 | 39, 95 | Identify, Celerity | 44 | 8,119 |
+| S13 **4** | 063 | 143 | Sudden Death | 25 | 3,796 |
+| S14 **4** | 064, 065, 066 | 17, 70, 77 | Weretiger, Pilfer, Tsunami | 57 | 8,654 |
+| S15 **4** | 067, 068, 069 | 18, 40, 75 | Chill, Foretell, Influence | 52 | 9,299 |
 | S16 **1** | 071, 072, 073, 074 | 45, 47, 113, 114 | Healing Herb, Rejuvenate, Restore, Vitalize, Vigor | 60 | 12,517 |
 | S17 **1** | 075, 077, 078 | 15, 30, 46 | Purify, Raise Dead, Resurrect, Leech Power | 48 | 7,685 |
 | S18 **1** | 079, 082 | 32, 52 | Drain, Steroids, Magic Belt, Protect, Speed, Might | 42 | 7,758 |
@@ -231,13 +231,13 @@ ours; bytes their own.
 | S29 **2** | 125, 126 | 125, 127 | DivineBreath, ShadowBreath | 49 | 10,165 |
 | S30 **2** | 130, 131 | 141, 144 | Venom, KaiserBreath | 60 | 9,099 |
 | S31 **2** | 132, 137, 138, 143 | 66, 101, 118, 139 | Doom Breath, Corona, Main Cannon, Thunder Clap | 51 | 9,832 |
-| S32 | 144, 150 | 67, 72 | Wall of Fire, Eye Beam | 36 | 4,648 |
-| S33 | 151, 154 | 35, 86 | Accession, Mighty Chop | 57 | 9,790 |
-| S34 | 158, 159, 161, 162, 166 | 89, 90, 111, 116, 120 | Charm, (no label), Timed Blow, Transfer, Monopolize | 47 | 7,664 |
-| S35 | 167, 168, 169 | 91, 97, 117 | Last Resort, Cure, Benediction | 46 | 9,873 |
-| S36 | 172, 173, 218 | 23, 34, 142 | Magic Ball, Intimidate, Aura Breath | 45 | 12,729 |
-| S37 | 219, 220/221, 222 | 133, 136, 138, 146 | Magma Breath, Geo Breath, Gaea's Breath, Combustion | 60 | 10,889 |
-| S38 | 223, 225, 226/227 | 135, 137, 140, 147 | Tempest, Hurricane, (no label), MeteorStrike | 54 | 10,218 |
+| S32 **5** | 144, 150 | 67, 72 | Wall of Fire, Eye Beam | 36 | 4,648 |
+| S33 **5** | 151, 154 | 35, 86 | Accession, Mighty Chop | 57 | 9,790 |
+| S34 **5** | 158, 159, 161, 162, 166 | 89, 90, 111, 116, 120 | Charm, (no label), Timed Blow, Transfer, Monopolize | 47 | 7,664 |
+| S35 **5** | 167, 168, 169 | 91, 97, 117 | Last Resort, Cure, Benediction | 46 | 9,873 |
+| S36 **5** | 172, 173, 218 | 23, 34, 142 | Magic Ball, Intimidate, Aura Breath | 45 | 12,729 |
+| S37 **5** | 219, 220/221, 222 | 133, 136, 138, 146 | Magma Breath, Geo Breath, Gaea's Breath, Combustion | 60 | 10,889 |
+| S38 **5** | 223, 225, 226/227 | 135, 137, 140, 147 | Tempest, Hurricane, (no label), MeteorStrike | 54 | 10,218 |
 
 43 groups, 2,034 functions with group E. Rows already whole ours and in no
 group: 21 (MAGIC091, Flare), 44 (MAGIC070, Heal), 87 (MAGIC216, Steal);
@@ -295,6 +295,26 @@ committed): no harness edits, `deref` and a primitive-logging `effect` for the
 draws, `ret_mask` on every al answer, plain `BOF3_INJECT` lines, controls that
 rebuild after restoring. E lies outside the band and builds its clone tables
 by hand.
+
+## 6b. Waves three to five (staged 2026-09-26)
+
+The last 22 groups, split three ways after wave two ran into the usage cap
+on its last group: each wave is about a quarter smaller than wave two's 465
+functions, and in address order, so an overlay's shared code stays in one
+wave.
+
+| Wave | Groups | Functions | KB |
+|---|---|--:|--:|
+| 3 | S01 .. S08 | 377 | ~62 |
+| 4 | S09 .. S15 | 320 | ~56 |
+| 5 | S32 .. S38 | 345 | ~66 |
+
+The brief is wave two's with its lessons added (`analysis/round9_wave345_brief.md`;
+the group lines `analysis/round9_wave{3,4,5}_groups.tsv`; not committed): the
+`kFlag` blind spot worked round in each group's fuzz until the harness is
+fixed, jump-table counts checked against their `cmp`, a group `disturb`
+drawing only from its hash, never `commit -a` during controls, and the
+earlier waves' shared functions called by name.
 
 ## 7. For the coordinator
 
