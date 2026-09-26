@@ -951,3 +951,46 @@ then the harness, proved on SC0. The plan, groups and waves:
 
 ### Outcome
 _(2026-09-26) open; planned, not scheduled._
+
+## I24 — The area round: the area overlays enumerated from their tables
+
+**Ask (2026-09-26):** the owner: take the area overlays over "in a
+programmatic manner instead of by singleton discovery - similar to how
+we're doing magic captures and plan to do scenario capture"; then, after
+the measurement, write the plan up on that shape with the effect-kind and
+field-core code on rounds of their own, and a clean tool as the first step.
+**Kind:** engine
+**Feasibility:** HIGH   **Gated on:** nobody - the roots are seven tables
+and the areas' data blocks, all in the exe; the live check per world wants a
+recorded walk the owner makes after the fuzz.
+
+### What already exists
+- The measurement: a scratch re-aim of `tools/scenario_roots.py` at the
+  area descriptor table `0x667590` and six more tables reaches 1,133 of the
+  1,457 starts in the band `0x401000..0x430000`, and the per-area blocks
+  come out in area order (1 of 161 out of order), so the block rule of
+  `magic_rows.py` applies ([`takeover-queue-areas.md`](takeover-queue-areas.md) §1).
+- The pattern: the spell round's whole-overlay groups and shared harness,
+  the scenario plan's call shapes; DA's world-map areas and `Area29_*` /
+  `Area33_*` already taken the singleton way.
+- Ground truth per root: the sibling's `names/area_records.toml`, 728
+  pairs.
+
+### What is missing
+- `tools/area_rows.py`, the clean tool (the scratch copy is not in the
+  repo and splits the data blocks approximately).
+- Names for the two unnamed engine tables `0x662CE8` and `0x662F28` and the
+  cell hook `0x56E670`.
+- An `area_harness` for the six call shapes over one field frame.
+
+### First concrete step
+Write `tools/area_rows.py` and let its report replace the plan's numbers;
+then the harness, proved on a world 0 area the attract cycle enters. The
+plan, groups and waves: [`takeover-queue-areas.md`](takeover-queue-areas.md).
+The effect-kind (`0x460000..0x48FFFF`, through `EffectKind18_States`) and
+field-core (`0x500000..0x52FFFF`, through the tables at `0x65E000..`)
+functions the catalogue labels "Area overlays" are **not** this round's;
+each is a round of its own with the same walker.
+
+### Outcome
+_(2026-09-26) open; planned, not scheduled._
