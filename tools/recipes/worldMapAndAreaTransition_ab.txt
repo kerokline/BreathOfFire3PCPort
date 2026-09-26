@@ -1,6 +1,7 @@
 # Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
 # recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
 # language, since text timing differs between them. F12 wrote the shots.
+# save town
 # Shots every 60 frames added by tools/recipe_shots.py from tools/recipes/worldMapAndAreaTransition.txt.
 wait 60
 shot f00060 1 start
@@ -13,15 +14,9 @@ wait 33
 shot f00180 1
 wait 11
 hold r2 4
-wait 36
-hold down 3
-wait 5
+wait 44
 shot f00240 1
-wait 1
-hold down 3
-wait 8
-hold down 2
-wait 19
+wait 33
 hold r2 4
 wait 15
 hold r2 5

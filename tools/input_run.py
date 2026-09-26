@@ -20,6 +20,14 @@ While a recipe plays, the real keyboard is ignored - but this script, like
 attract_run.py, pulls the game to the front every half second, so leave the
 machine alone for the length of the run.
 
+A recipe that loads a save names it in a `# save NAME` header line, and the
+file lives in tools/recipe_saves/NAME.DAT, not in a game slot: for the run it
+is put into slot 0 and the owner's slot 0 is backed up, then put back as soon
+as the game logs the load - the file is not read again - or when the game has
+exited (recipe_saves.py). So every recipe opens slot 0, and the game's slots
+stay free to play in. Another run waits for the hand-back; a game that is not
+a scripted run (no BOF3X_INPUT) refuses the swap.
+
 Needs the game windowed (BOF3.CFG first line 0, or the launcher dialog).
 Exit status 0 when the recipe finished, 1 when it FAILED or timed out.
 """
@@ -29,6 +37,7 @@ from PIL import ImageGrab
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front  # noqa: E402
+import recipe_saves  # noqa: E402
 
 u = ctypes.WinDLL('user32')
 k32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -42,6 +51,7 @@ except OSError:
 LOG = os.path.join(ROOT, 'build', 'bof3x.log')
 SHOT = re.compile(r'input\s+shot (\S+) recipe frame (\d+)( frozen)?')
 END = re.compile(r'input\s+(done|FAILED) at recipe frame (\d+)')
+LOADED = re.compile(r'save\s+loaded slot ([0-9A-F]+)')     # LoadMenu_Read, src/game/save_menu.cpp
 
 
 def game_window(pid):
@@ -115,6 +125,15 @@ def main():
     ap.add_argument('--no-front', action='store_true',
                     help='leave the window where it is: the game writes its own frames (BOF3X_SHOT_DIR) and keeps '
                          'running unfocused (DIV-0033), so nothing needs it on top')
+    ap.add_argument('--save', default=None, metavar='NAME',
+                    help='the recipe save to put in slot 0 (tools/recipe_saves/NAME.DAT), instead of the one '
+                         'the recipe\'s `# save NAME` header names')
+    ap.add_argument('--no-save', action='store_true', help='leave slot 0 alone whatever the recipe says')
+    ap.add_argument('--slot0-shared', action='store_true',
+                    help='swap slot 0 although a game that is not a scripted run is up (one that never opens a '
+                         'save or load menu)')
+    ap.add_argument('--slot0-wait', type=float, default=300, metavar='S',
+                    help='seconds to wait for another run to hand slot 0 back (it does on its load)')
     a = ap.parse_args()
     global LOG
     LOG = os.path.join(os.path.dirname(os.path.abspath(a.launcher)), 'bof3x.log')
@@ -142,6 +161,24 @@ def main():
         k, _, v = kv.partition('=')
         env[k] = v
 
+    # The save the recipe loads goes into slot 0 for the run and the owner's
+    # slot 0 comes back after it (recipe_saves.py; docs/input-script.md 1a).
+    save = None if a.no_save else (recipe_saves.save_path(a.save, a.game) if a.save
+                                   else recipe_saves.recipe_save(recipe, a.game))
+    if save is None:
+        print('slot 0: left alone (no `# save NAME` header)' if not a.no_save else 'slot 0: left alone (--no-save)')
+        status = run(a, env, None)
+    else:
+        with recipe_saves.Slot0(a.game, save, shared=a.slot0_shared, wait=a.slot0_wait, recipe=recipe) as slot0:
+            status = run(a, env, slot0)
+    print(f'end: {status}')
+    sys.exit(0 if status == 'done' else 1)
+
+
+def run(a, env, slot0):
+    """Launch, follow the log to the recipe's end, end the game. The status
+    word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
+    logs the save loaded: the file is not read again after that."""
     launch(a.launcher, a.game, env)
 
     stop = threading.Event()
@@ -177,13 +214,16 @@ def main():
                     status = m[1]
                 elif re.search(r'input\s+(mark|peek|line) ', line):
                     print(line.strip())
+                elif m := LOADED.search(line):
+                    print(f'save loaded: slot {m[1]}')
+                    if slot0:
+                        slot0.release('the game has loaded it')
         if status is None:
             status = 'timed out'
     finally:
         stop.set()
         kill_game()
-    print(f'end: {status}')
-    sys.exit(0 if status == 'done' else 1)
+    return status
 
 
 if __name__ == '__main__':

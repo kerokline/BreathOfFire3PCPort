@@ -297,9 +297,12 @@ Worktrees and branches to remove: item 1.
 Local only, gitignored, worth keeping:
 
 - `bof3/BOF3.CFG`, `build/bof3x.ini`; the owner's saves `bof3/BISLPS00`..`05`
-  and `0F.DAT` - **5 is adult Ryu, Lv 38, the one the menu recipes load**
-  (a US conversion: menu square, confirm cross, cancel triangle); the combat
-  route loads its own F12 save.
+  and `0F.DAT`, theirs to play in since 2026-09-26; **the recipes' saves are
+  `tools/recipe_saves/*.DAT`** (`adult_ryu` - adult Ryu, Lv 38, a US
+  conversion: menu square, confirm cross, cancel triangle - `town`, `combat`),
+  swapped into slot 0 for a run by `input_run.py`
+  ([`input-script.md`](input-script.md) §1a). Gitignored, so a fresh clone
+  re-imports them from the owner's slots.
 - `analysis/calltrace/wm1b_orig`, `wm1b_origb`, `wave2_ours`, `pace_ours`
   (the current hash reference and its matches); the older `ab*` references
   and their `entries_logic_09xx*.txt` lists are history. `all_b/` and

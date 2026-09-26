@@ -1,6 +1,7 @@
 # Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
 # recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
 # language, since text timing differs between them. F12 wrote the shots.
+# save town
 # Shots every 90 frames added by tools/recipe_shots.py from tools/recipes/shop.txt.
 wait 61
 hold start 4
@@ -12,13 +13,7 @@ wait 31
 shot f00180 1
 wait 10
 hold r2 4
-wait 37
-hold down 2
-wait 3
-hold down 3
-wait 2
-hold down 4
-wait 14
+wait 65
 hold r2 5
 wait 5
 shot f00270 1
