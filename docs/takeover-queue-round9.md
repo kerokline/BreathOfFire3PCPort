@@ -1,6 +1,6 @@
 # The ninth round's queue: what the routes still enter, and the spells
 
-**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and the first spell wave (L, S16..S25) merged: 2,003 ours; the frame-hash re-record and the owner's eye owed
+**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and the first spell wave (L, S16..S25) merged: 2,003 ours; the frame hash re-recorded and matching; the owner's eye owed
 
 Round eight left "76 hidden entries the three routes still enter" as the
 next queue ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Owed
@@ -163,3 +163,25 @@ their docs and not yet numbered in `known-defects.md`; the commonest kinds are
 unbounded stack and `.data` dispatch tables, pool allocators whose "none
 free" answer (`0xFF`) is never checked, and the divides by the live-target
 count (the owner's call above).
+
+## 8. The frame hash re-recorded (2026-09-26)
+
+`analysis/validate_round9_hash.sh` on `0775a49` (2,003 ours, the other
+session's recipe-saves commit on top of the wave), after the overnight
+Restart, the entry list consolidated first (3,827 entries, no extent over
+the next start). One start at 08:34 was abandoned two minutes in (the owner
+was still at the keyboard; its log is `r9_hash_aborted.batchlog`); the
+batch that counts ran 08:36..08:54 with the owner away.
+
+| Check | Result |
+|---|---|
+| `r9_orig` vs `r9_origb`, all original (`*,-Game_Clock`, foreground held) | **identical on all 10,309 frames** |
+| `r9_orig` vs `r9_ours` (2,002 ours injected, unfocused) | identical but frame 0, the set-up (438 calls against 286), as since `rb1` made `Display_Setup` ours |
+| Oracle, orig vs ours | identical at every logged frame (8,997 from the alignment point): Rand count, message index, area word |
+
+**`r9_orig` / `r9_origb` are the reference from here**; `r8_*` are history
+(EA's scheduler takeover moved every frame's hash). The scheduler's tracer
+change held: the traced runs armed their entries and counted 10,309 frames.
+The spell wave's functions are not on the attract path, so the hash says
+nothing about them beyond "nothing the attract sequence runs moved"; their
+check is the fuzz and the owner casting them.
