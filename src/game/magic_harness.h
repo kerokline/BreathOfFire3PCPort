@@ -109,7 +109,9 @@ struct Clone {
 
 // How a recorder answers: a byte in lo..hi with garbage above it (an index,
 // a count), a byte of 0 or not 0 (a flag), the harness's Rand, or garbage.
-enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
+// kBool: exactly 0 or 1, or garbage with al 0 (for a callee answering a C
+// bool its callers test whole).
+enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand, kBool };
 
 // A callee the standard set (magic_harness.cpp, kStandard) lacks. `key` is
 // the pointer ours calls - (std::uint32_t)name, which is Capcom's address or
@@ -169,5 +171,18 @@ unsigned char* Pointer(std::uint32_t cell);
 // `first` (0..255) is the round's first answer exactly.
 void SetRandHint(std::uint32_t hint);
 void SetRandFirst(int first);
+
+// A group's hook into every callee recorder of its next Run (reset when Run
+// returns): called with the original's address and the ten argument slots
+// (only those the callee takes are the caller's), once before the recorder
+// disturbs (after = false) and once after (after = true). It may log what
+// the masks cannot - a pointer argument's contents, an argument past the
+// fourth - and may keep the state inside the domain ours is defined on. It
+// must depend on the arguments and the state only (both passes run it).
+using CallHook = void (*)(std::uint32_t address, const std::uint32_t* args, bool after);
+void SetCallHook(CallHook hook);
+// Into the recorders' log, compared like a call.
+void LogValue(std::uint32_t v);
+void LogBytes(const void* p, unsigned n);   // up to 16 bytes as they are, more as a hash
 
 }  // namespace magic_harness

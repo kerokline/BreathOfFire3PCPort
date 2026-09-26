@@ -48,7 +48,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 std::uint32_t g_rng = 0x2545F491u;
 
-constexpr unsigned kLog = 1024;
+constexpr unsigned kLog = 32768;
 struct Entry { std::uint32_t what, a, b, c, d; };
 Entry g_log[kLog];
 unsigned g_log_n;
@@ -68,6 +68,9 @@ void Log5(std::uint32_t what, std::uint32_t a, std::uint32_t b, std::uint32_t c,
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
     ++g_log_n;
 }
+
+// A group's hook (SetCallHook), for the Run it is set for.
+CallHook g_hook = nullptr;
 
 // --- the harness's own memory -------------------------------------------------
 
@@ -106,7 +109,10 @@ void Disturb() {
         break;
     }
     case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+        // only a target that is one enemy: a side (0x40 / 0x80, which a
+        // group's seed may set) has no record
+        if (Mem(at::kTarget)[0] >= 3 && Mem(at::kTarget)[0] < 11)
+            TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
         break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
@@ -142,6 +148,9 @@ std::uint32_t Answering(const Slot& s) {
         return (h & 0xFFFFFF00u) | (s.lo + (h >> 8) % span);
     }
     case Answer::kFlag: return h % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
+    // exactly 0 or 1 (a C bool in eax), or garbage with al 0 (a caller that
+    // tests al where the callee's eax is read whole)
+    case Answer::kBool: return h % 3 == 0 ? 0u : h % 3 == 1 ? 1u : (h | 0x100u) & 0xFFFFFF00u;
     case Answer::kRand:
         // some values the CRT's never answers (negative); a third of the time
         // near the value the seeding asked for; the round's first exactly.
@@ -157,25 +166,33 @@ std::uint32_t Answering(const Slot& s) {
     }
 }
 
+// Ten argument slots: a callee of more than four (Gte_RotTransPers4 takes
+// ten) is logged by its first four and the group's hook. A slot the caller did
+// not push is the caller's frame, read and never logged.
 template <unsigned I>
-std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3) {
+std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3, std::uint32_t a4,
+                           std::uint32_t a5, std::uint32_t a6, std::uint32_t a7, std::uint32_t a8, std::uint32_t a9) {
     const Slot& s = g_slots[I];
     if (s.handler) {
         Log5(1000 + I, Cur(), Sprite_Current[1], Sprite_Current[2], 0);
         Disturb();
         return Hash();
     }
-    const std::uint32_t a[4] = {a0, a1, a2, a3};
+    const std::uint32_t a[10] = {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9};
     std::uint32_t r[4] = {};
     for (unsigned i = 0; i < s.nargs && i < 4; ++i) r[i] = a[i] & s.masks[i];
+    const unsigned entry = g_log_n;
     Log5(I, r[0], r[1], r[2], r[3]);
+    if (g_hook) g_hook(s.address, a, false);
     Disturb();
+    if (g_hook) g_hook(s.address, a, true);
     const std::uint32_t answer = Answering(s);
-    if (s.answer != Answer::kGarbage && g_log_n <= kLog) g_log[g_log_n - 1].d ^= answer & 0xFF;   // the answer in the log
+    if (s.answer != Answer::kGarbage && entry < kLog) g_log[entry].d ^= answer & 0xFF;   // the answer in the log
     return answer;
 }
 
-using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                       std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
 template <std::size_t... I> constexpr auto MakeStubs(std::index_sequence<I...>) {
     struct T { StubFn f[sizeof...(I)]; };
     return T{{&Stub<I>...}};
@@ -274,7 +291,7 @@ void Capture(State& s) {
         std::memcpy(s.memory + n, Mem(g_regions[i].at), g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memcpy(s.log, g_log, sizeof s.log);
+    std::memcpy(s.log, g_log, (g_log_n < kLog ? g_log_n : kLog) * sizeof(Entry));
     s.log_n = g_log_n;
 }
 void Apply(const State& s) {
@@ -283,13 +300,12 @@ void Apply(const State& s) {
         std::memcpy(Mem(g_regions[i].at), s.memory + n, g_regions[i].size);
         n += g_regions[i].size;
     }
-    std::memset(g_log, 0, sizeof g_log);
-    g_log_n = 0;
+    g_log_n = 0;   // only the entries a pass writes are captured and compared
     g_rand_pending = g_rand_first;
 }
 bool Same(const State& a, const State& b) {
     return a.log_n == b.log_n && std::memcmp(a.memory, b.memory, g_bytes) == 0 &&
-           std::memcmp(a.log, b.log, sizeof a.log) == 0;
+           std::memcmp(a.log, b.log, (a.log_n < kLog ? a.log_n : kLog) * sizeof(Entry)) == 0;
 }
 unsigned FirstDifference(const State& a, const State& b) {
     for (unsigned i = 0; i < g_bytes; ++i)
@@ -364,6 +380,20 @@ unsigned char* Pointer(std::uint32_t cell) {
 }
 void SetRandHint(std::uint32_t hint) { g_rand_hint = hint; }
 void SetRandFirst(int first) { g_rand_first = first; }
+void SetCallHook(CallHook hook) { g_hook = hook; }
+void LogValue(std::uint32_t v) { Log5(0xFFFFFFFFu, v, 0, 0, 0); }
+void LogBytes(const void* p, unsigned n) {
+    std::uint32_t w[4] = {};
+    if (n <= sizeof w) {
+        std::memcpy(w, p, n);
+    } else {
+        std::uint32_t h = 0x811C9DC5u;
+        for (unsigned i = 0; i < n; ++i) h = (h ^ static_cast<const unsigned char*>(p)[i]) * 0x01000193u;
+        w[0] = h;
+        w[1] = n;
+    }
+    Log5(0xFFFFFFFEu, w[0], w[1], w[2], w[3]);
+}
 
 const void* StandIn(std::uint32_t key) {
     for (unsigned i = 0; i < g_slot_n; ++i)
@@ -441,7 +471,6 @@ void Run(const Group& group) {
             const std::uint32_t v = Next();
             std::memcpy(input.memory + i, &v, g_bytes - i < 4 ? g_bytes - i : 4);
         }
-        std::memset(input.log, 0, sizeof input.log);
         input.log_n = 0;
         g_rand_first = -1;
         Apply(input);
@@ -507,6 +536,7 @@ void Run(const Group& group) {
         bof3::Fatal("%s differs from the original in %u self-test rounds", group.shadow, bad);
     }
     g_group = nullptr;
+    g_hook = nullptr;
 }
 
 }  // namespace magic_harness

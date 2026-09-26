@@ -18891,3 +18891,573 @@ ctype = "signed char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: SkillSteal_Roll's movsx byte [0x65C204 + the enemy's +0xAA], the index unbounded; the same eight values as Steal_RateTable 0x65AC20 (docs/cheats.md: the PSX's byte for byte)."
+
+[[func]]
+pc = 0x4D2D80
+name = "SpellSleep_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2D80..0x4D2DA5 (0x26 bytes), group S25: cdecl, void: a two-entry stack table (imm32 0x4D2DB0, 0x4BDC10 - MAGIC078's end phase) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 24, file 0x27C = MAGIC107.EMI, ability ids 0x6B / 0xD1 (Sleep read one id down, docs/cut-content.md section 2 - a label). The first function of MAGIC107's extent 0x4D2D80..0x4D3E9A (tools/magic_rows.py). Fuzz only: no recorded route casts it."
+
+[[func]]
+pc = 0x4D2DB0
+name = "SpellSleep_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2DB0..0x4D2E2E (0x7F bytes), group S25: three calls: 0x4FC0E0 (the effect library's centre-on-target-side), BattleTask_Create(1, 0x19) (al), Sound_PlayById(0x100). The new slot's +0x80 = Sprite_Current, +8 = byte +8 of the record dword 0x904B3C points at (read after the create), +0x34 / +0x38 = Field_Kind2X / Z, +0x3C = Sprite_Current +0x3C + 0x4000000; then Sprite_Current +0xB 0 and +1 += 1, the pointer read again for each. Entry 0 of SpellSleep_Task's table."
+
+[[func]]
+pc = 0x4D2E30
+name = "SpellSleep_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2E30..0x4D2E7F (0x50 bytes), group S25: the kind-1 task 0x19: call [0x65B918 + byte +1 * 4] (SpellSleep_ChildPhases, unbounded); then unless byte +0 of Sprite_Current (read again) is 0: 0x4D2F40, 0x4D3030, 0x4D3350, 0x4D3160, Gte_PopMatrix, 0x4D36C0, 0x4D3CB0, 0x4D3770, 0x4D3A40, jmp Gte_PopMatrix."
+
+[[func]]
+pc = 0x4D2E80
+name = "SpellSleep_ChildInit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2E80..0x4D2EA5 (0x26 bytes), group S25: no calls: Sprite_Current +0xB, +9, +0xA 0 and +1 += 1, the pointer read again for each. Entry 0 of SpellSleep_ChildPhases."
+
+[[func]]
+pc = 0x4D2EB0
+name = "SpellSleep_ChildGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2EB0..0x4D2ED8 (0x29 bytes), group S25: no calls: +9 += 1, +0xA += 1; +1 += 1 when +9 is 0x20. Entry 1 of SpellSleep_ChildPhases."
+
+[[func]]
+pc = 0x4D2EE0
+name = "SpellSleep_ChildHold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2EE0..0x4D2EFB (0x1C bytes), group S25: no calls: +9 += 1; +1 += 1 when it is 0xC0. Entry 2 of SpellSleep_ChildPhases."
+
+[[func]]
+pc = 0x4D2F00
+name = "SpellSleep_ChildFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2F00..0x4D2F35 (0x36 bytes), group S25: +9 += 1, +0xA -= 1; when +0xA (read again) is 0, byte +0xB of the owner (dword 0x93B940) = 0xFF and jmp BattleTask_FreeCurrent. Entry 3 of SpellSleep_ChildPhases."
+
+[[func]]
+pc = 0x4D2F40
+name = "SpellSleep_PushSwayMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D2F40..0x4D3029 (0xEA bytes), group S25: Gte_PushMatrix; angles on the stack: with n = (Math_Sin((+9 & 0x3F) << 6) shl 9) sar 12, (0, n, 0) when +8 bit 0 is set, else (n, 0, 0); the SVECTOR ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(s16 +0x3E / 2)) of Sprite_Current (read again after the sine) through Gte_RotTrans into the MATRIX's translation, Gte_RotMatrix(angles), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix - MagicFx_PushActorMatrix's shape with angles. Pops nothing."
+
+[[func]]
+pc = 0x4D3030
+name = "SpellSleep_DrawStem"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3030..0x4D3155 (0x126 bytes), group S25: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); a LINE_G3 (Gpu_SetLineG3, Gpu_SetSemiTrans 1) of the vertex scratch 0x9037A0 = (0, 0, 0), (0, 0, 0x170), (0, 0, 0x180) through Gte_RotTransPers3 into +8 / +0x18 / +0x28, Gte_PrimDepths3_10C; Scratch_Swap = +0xA * 6, colour bytes +4..+6 and +0x14..+0x16 from it, +0x24..+0x26 1; MapView_LinkPrimAt(.., 2, 0x34)."
+
+[[func]]
+pc = 0x4D3160
+name = "SpellSleep_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3160..0x4D334C (0x1ED bytes), group S25: Gpu_SetDrawMode(.., ((+1 & 1) << 5) | 0x15), MapView_LinkPrimAt(.., 2, 0xC); dword 0x903850 = 0x20; sixteen triangles round (0, 0, 0x180), the rim (sin, cos) * 0x20 at 0x1C0, 0x100 apart; a counter from 0x81 down 0x10 draws when above 0x11 or below -0x2F: 0x5A7570 (libgpu SetPolyF3, code 0x20), Gpu_SetSemiTrans(+1 & 1), Gte_RotTransPers3 into +8 / +0x14 / +0x20, Gte_PrimDepths3_0C, colours (+0xA * 6, 1, 1) for odd phases else (0xC0, the counter or a second counter from -0x5F via Scratch_Swap, 0x10), MapView_LinkPrimAt(.., 2, 0x2C)."
+
+[[func]]
+pc = 0x4D3350
+name = "SpellSleep_DrawDome"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3350..0x4D36B1 (0x362 bytes), group S25: Gpu_SetDrawMode(.., ((+1 & 1) << 5) | 0x15), MapView_LinkPrimAt(.., 2, 0xC); dword 0x903850 = 0x20; four latitude bands (0x800 down to 0x400 by 0x100) of sixteen F4 quads, points (cos lat * r * sin a, cos lat * r * cos a, sin lat * r + 0x1C0) >> 12; a counter from 0xF1 down 0x10 draws below 0xC1: Gpu_SetPolyF4, Gpu_SetSemiTrans(+1 & 1), Gte_RotTransPers4 into +8 / +0x14 / +0x20 / +0x2C, Gte_PrimDepths4_0C, colours (+0xA * 6, 1) odd phases else (0xC0, the counter or 0x11 + 0x10 i above 0x81), +6 1; MapView_LinkPrimAt(.., 2, 0x38)."
+
+[[func]]
+pc = 0x4D36C0
+name = "SpellSleep_PushTurnMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D36C0..0x4D376B (0xAC bytes), group S25: Gte_PushMatrix; angles (0, 0, 0x400 when +8 bit 0 else 0); the actor MATRIX as SpellSleep_PushSwayMatrix's (Gte_RotTrans, Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix), Gte_SetRotMatrix, Gte_SetTransMatrix). Pops nothing."
+
+[[func]]
+pc = 0x4D3770
+name = "SpellSleep_DrawTrail"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3770..0x4D3A3C (0x2CD bytes), group S25: dwords 0x903850 = 0x180, 0x903854 = 0x1E0, Scratch_Swap = (+0xA >> 1) * 4 + 1; steps from +9 & 0x3F back until (+9 - ((+0xA >> 1) + 1)) & 0x3F (+9 read again each step): angle t = (Math_Sin(step << 6) shl 9 sar 12) + 0x400 to 0x903858, points (0, cos t, sin t) * 0x180 and * 0x1E0 (the previous step's kept), Gpu_SetDrawMode(.., 0x35), MapView_LinkPrimAt(.., 2, 0xC), Gpu_SetPolyG4, Gpu_SetSemiTrans 1, Gte_RotTransPers4 into +8 / +0x18 / +0x28 / +0x38, Gte_PrimDepths4_10B, colours from Scratch_Swap fading by 4 a step, MapView_LinkPrimAt(.., 2, 0x44)."
+
+[[func]]
+pc = 0x4D3A40
+name = "SpellSleep_DrawTrailLines"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3A40..0x4D3CA8 (0x269 bytes), group S25: Scratch_Swap = (+0xA >> 2) * 12 + 1; the trail's steps ((+0xA >> 2) + 1 of them) as LINE_G4: 0x5A76F0 (libgpu SetLineG4, code 0x5C), points (0, cos, sin) of the step's angle times the dword 0x903850 >> 12, << 4 >> 12, * 21 << 4 >> 12, * 3 << 7 >> 12; Gpu_SetDrawMode(.., 0x35), MapView_LinkPrimAt(.., 2, 0xC / 0x44), Gpu_SetSemiTrans 1, Gte_RotTransPers4, Gte_PrimDepths4_10C; the middle colours Scratch_Swap, fading by 12 a step, the ends 1."
+
+[[func]]
+pc = 0x4D3CB0
+name = "SpellSleep_DrawShadowFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3CB0..0x4D3E9A (0x1EB bytes), group S25: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(5, 0xC); 0x903850 = 0x180; c = cos(the swing angle t, to 0x903858) * 0x180 >> 12; 0x903850 = 0x30; sixteen POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1, Gte_RotTransPers3, Gte_PrimDepths3_10B) round (0, c, 0x200) of radius 0x30, 0x100 apart, centre Scratch_Swap = +0xA * 3, rim 1, Gfx_CommitPrim(5, 0x34); Gpu_SetDrawMode(.., 0x15), Gfx_CommitPrim(5, 0xC)."
+
+[[func]]
+pc = 0x4D3EA0
+name = "SpellConfuse_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3EA0..0x4D3EC5 (0x26 bytes), group S25: cdecl, void: a two-entry stack table (imm32 0x4D3ED0, 0x4BDC10) called by byte +1, unchecked. Magic_Rows row 25, file 0x27D = MAGIC108.EMI, ability ids 0x1B / 0x6C / 0xD2 (Confuse read one id down for the last two, docs/cut-content.md section 2 - a label). The first function of MAGIC108's extent 0x4D3EA0..0x4D49D2. Fuzz only."
+
+[[func]]
+pc = 0x4D3ED0
+name = "SpellConfuse_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3ED0..0x4D3F2F (0x60 bytes), group S25: the source sprite dword 0x904B4C read first; BattleTask_Create(1, 0x1A); the slot's +0x80 = Sprite_Current, +8 and +0x34 / +0x38 / +0x3C the source's; Sprite_Current (read after the create) +0xB 0, +1 += 1. Entry 0 of SpellConfuse_Task's table."
+
+[[func]]
+pc = 0x4D3F30
+name = "SpellConfuse_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3F30..0x4D3F6B (0x3C bytes), group S25: the kind-1 task 0x1A: call [0x65B928 + byte +1 * 4] (SpellConfuse_ChildPhases, unbounded); then unless byte +0 is 0: 0x4D4510, 0x4D45F0, Gte_PopMatrix, 0x4D41B0, 0x4D4300, jmp Gte_PopMatrix."
+
+[[func]]
+pc = 0x4D3F70
+name = "SpellConfuse_ChildInit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D3F70..0x4D4071 (0x102 bytes), group S25: +0xC = 0x20000, +0x10 = 0; 0x446770(Sprite_Current) (the engine's turn of +0xC / +0x10 by the facing +8); +0x34 += +0xC, +0x38 += +0x10, word +0x3E += 0xC0; +0x18 / +0x1C / +0x20 = +0x34 / +0x38 / +0x3C; the record of byte 0x904B34 (party 0x802D40 + 0x14C i for i <= 2, else enemy 0x93B960 + 0x128 (i - 3)): its +0x34 / +0x38, +0x3C + 0xC00000; +0xB, +9, +0xA 0; +1 += 1; Sound_PlayById(0x100). Entry 0 of SpellConfuse_ChildPhases."
+
+[[func]]
+pc = 0x4D4080
+name = "SpellConfuse_ChildFly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4080..0x4D40FD (0x7E bytes), group S25: +0xA += 1; 0x4FBA90(a VECTOR by value: (+0x18 sar 9) - 0x4000, (+0x1C sar 9) - 0x4000, +0x20 sar 17, an uninitialised pad; then 0x20) - the effect library's step towards a point, which reads the three and the speed; +1 += 1 when 0x4FBC70(+0x18, +0x1C, +0x20, 0x8000) (within a box, 0 or 1) answers non-zero in eax. Entry 1."
+
+[[func]]
+pc = 0x4D4100
+name = "SpellConfuse_ChildChime"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4100..0x4D4137 (0x38 bytes), group S25: +0xA += 1; when (+0xA & 0x1F) is 0: Sound_PlayById(0x101), +0xA 0, +1 += 1. Entry 2."
+
+[[func]]
+pc = 0x4D4140
+name = "SpellConfuse_ChildGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4140..0x4D415C (0x1D bytes), group S25: no calls: +9 += 8; +1 += 1 at 0x80. Entry 3."
+
+[[func]]
+pc = 0x4D4160
+name = "SpellConfuse_ChildHold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4160..0x4D417B (0x1C bytes), group S25: no calls: +0xA += 1; +1 += 1 at 0x60. Entry 4."
+
+[[func]]
+pc = 0x4D4180
+name = "SpellConfuse_ChildEnd"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4180..0x4D41A7 (0x28 bytes), group S25: +0xA += 1; at 0x80 the owner's (0x93B940) +0xB = 0xFF and jmp BattleTask_FreeCurrent. Entry 5."
+
+[[func]]
+pc = 0x4D41B0
+name = "SpellConfuse_PushFacingMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D41B0..0x4D42F3 (0x144 bytes), group S25: Gte_PushMatrix; a jump table of four (at 0x4D42E4) on byte +8 (ja past 3 to the shared tail, angles uninitialised): with n = (~+0xA & 0x1F) << 7, angles (n, 0, 0x800), (0, n, 0xC00), (n, 0, 0), (0, n, 0x400); the actor MATRIX as SpellSleep_PushSwayMatrix's. Pops nothing."
+
+[[func]]
+pc = 0x4D4300
+name = "SpellConfuse_DrawRays"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4300..0x4D450D (0x20E bytes), group S25: phase byte +1; dword 0x903850 = 0 (the ray counter); vertex (+0xA, cos 0 * n, sin 0 * n); while the counter (read again) is below +9: Gpu_SetDrawMode(.., ((phase == 5) << 5) | 0x15), MapView_LinkPrimAt(.., 0, 0xC), Gpu_SetLineF2, Gpu_SetSemiTrans(phase == 5), Gte_RotTransPers + Gte_StoreDepthF of the vertex into +8 / +0x10; x = +0xA - i if above i else 0, (cos, sin)(0x80 i) * n, again into +0x14 / +0x1C; colours ((0x80 - +0xA) * 2, * 3 via 0x903854, * 2 via Scratch_Swap) in phase 5 else (0x80, 0xC0, 0x80); MapView_LinkPrimAt(.., 0, 0x20); counter += 1."
+
+[[func]]
+pc = 0x4D4510
+name = "SpellConfuse_PushSpinMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4510..0x4D45E5 (0xD6 bytes), group S25: Gte_PushMatrix; n = (+0xA & 0x1F) << 7; angles (0, n, 0x400) when +8 bit 0 else (n, 0, 0); the actor MATRIX as SpellSleep_PushSwayMatrix's. Pops nothing."
+
+[[func]]
+pc = 0x4D45F0
+name = "SpellConfuse_DrawQuads"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D45F0..0x4D49D2 (0x3E3 bytes), group S25: two POLY_G4 (Gpu_SetDrawMode(.., 0x35), MapView_LinkPrimAt(.., 0, 0xC), Gpu_SetPolyG4, Gpu_SetSemiTrans 1, Gte_RotTransPers4 into +8 / +0x18 / +0x28 / +0x38, Gte_PrimDepths4_10B, MapView_LinkPrimAt(.., 0, 0x44)) of corners (0, cos, sin) * r at 0x200 / 0x600 / 0xE00 / 0xA00, then 0 / 0x400 / 0xC00 / 0x800; r (dword 0x903850) = +0xA * 8 capped at 0xC0 in phase 1, else 0xC0; shade (0x903854) (0x80 - +0xA) * 3 in phase 5, else 0x60."
+
+[[func]]
+pc = 0x4D49E0
+name = "SpellDepress_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D49E0..0x4D4A15 (0x36 bytes), group S25: cdecl, void: a four-entry stack table (imm32 0x4D4A20, 0x4D4BA0, 0x4D4BE0, 0x4D4C60) by byte +1, unchecked. Magic_Rows row 12, file 0x27E = MAGIC109.EMI, ability ids 0x6D / 0xD3 (Depress read one id down, a label). The first function of MAGIC109's extent 0x4D49E0..0x4D52FC. Fuzz only."
+
+[[func]]
+pc = 0x4D4A20
+name = "SpellDepress_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4A20..0x4D4B94 (0x175 bytes), group S25: target byte 0x904B44 0x80 with actor 0x904B34 below 3, or 0x40 with the actor above 2: +1 = 1, Battle_SetTargetFlag40(target), byte 0x904AA8 |= 4, BattleTask_FreeCurrent. Else Sound_PlayEffect(0x100); +9 = 2; a RECT (word +0x2E - +9, Gfx_BufferIndex * 240 + word +0x30 - +9, +9 * 2, +9 * 2) through Gpu_SetDrawMove(Gfx_PacketNext, rect, 0x340, 0x100), Gfx_CommitPrim(3, 0x18); words +0x2E / +0x30 from 0x65B940 (SpellDepress_Corners) row (byte 0x904AAC, xor 2 unless the target has 0x40), unbounded; dword +0x64 0; +1 += 1."
+
+[[func]]
+pc = 0x4D4BA0
+name = "SpellDepress_Open"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4BA0..0x4D4BD9 (0x3A bytes), group S25: +9 += 2; at 0x54: +1 += 1, +0xA = 0x40; 0x4D4CE0(dword +0x64)."
+
+[[func]]
+pc = 0x4D4BE0
+name = "SpellDepress_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4BE0..0x4D4C5B (0x7C bytes), group S25: +0xA -= 1; when it was 0: Battle_SetTargetFlags(byte 0x904B44, 0x10), +1 += 1; 0x4D4CE0(dword +0x64); then +0x64 += 8 up to 0x80 (then +0xB 1) or, with +0xB set, -= 8 down to -0x80 (then +0xB 0)."
+
+[[func]]
+pc = 0x4D4C60
+name = "SpellDepress_Close"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4C60..0x4D4CDC (0x7D bytes), group S25: +9 -= 2; at 2: Battle_SetTargetFlag40(byte 0x904B44), byte 0x904AA8 |= 4, jmp BattleTask_FreeCurrent; else 0x4D4CE0(dword +0x64) and the +0x64 swing as SpellDepress_Hold's."
+
+[[func]]
+pc = 0x4D4CE0
+name = "SpellDepress_DrawVortex"
+ret = "void"
+params = "int step"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D4CE0..0x4D52FC (0x61D bytes), group S25: cdecl (step). Nine rings of sixteen dword pairs at 0x6989C0 (SpellDepress_Rings), ring r (Math_Sin, Math_Cos of 0x100 k) * (+9 >> 3) * r >> 12; the RECT of SpellDepress_Start through Gpu_SetDrawMove again, Gfx_CommitPrim(3, 0x18), Gpu_SetDrawMode(.., 0x11D), Gfx_CommitPrim(3, 0xC); the outer ring at 0x698940 (radius +9); then eight bands: the next ring at 0x698E40 (radius (+9 >> 3) * (7 - b), turned by a twist that adds step more each band), sixteen pairs of an F4 (Gpu_SetPolyF4, black) and a GT4 at +0x38 (Gpu_SetPolyGT4, tpage 0x11D, shades 0x70 - 0x10 b and 0x10 more) whose screen corners (fild / fst) are word +0x2E / +0x30 plus the rings' pairs, winding by the sign of dword +0x64, texture bytes the rings' low bytes plus +9 (rows 0x70 - 0x10 b of 0x698A40 / 0x6989C0); Gfx_CommitPrim(3, 0x38), (3, 0x54); rep movsd the next ring to the outer."
+
+[[func]]
+pc = 0x4D5300
+name = "SpellRagnarok_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5300..0x4D5345 (0x46 bytes), group S25: cdecl, void: a six-entry stack table (imm32 0x4D5350, 0x4D5460, 0x4D54A0, 0x4D54E0, 0x4D5560, 0x43FE80 - the engine's done flag and free) by byte +1, unchecked. Magic_Rows row 38, file 0x27F = MAGIC110.EMI, ability ids 0x6E / 0xD4 (Ragnarok read one id down, a label). The first function of MAGIC110's extent 0x4D5300..0x4D610B. Fuzz only."
+
+[[func]]
+pc = 0x4D5350
+name = "SpellRagnarok_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5350..0x4D545F (0x110 bytes), group S25: 0x4FC0E0; +8 = the owner's (0x93B940) +8; +0xB 0, +9 0x58, +1 += 1; BattleTask_Create(1, 0x10): +0x80 Sprite_Current, +1 = 1, Sprite_Current +0xB += 1; BattleTask_Create(1, 0x10): +0x80, +1 = 0, +9 = 0x28, +0xB += 1 twice; words 0x812980.. (0x100) = 0x80E980.. | 0x8000 and 0x80F980.. (0x10) = 0x80B980.. | 0x8000, the first of each without the bit; Gfx_ClutStripDirty 1; Sound_PlayById(0x100)."
+
+[[func]]
+pc = 0x4D5460
+name = "SpellRagnarok_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5460..0x4D5494 (0x35 bytes), group S25: when +0xB is 2: Sound_PlayById(0x101), +9 and +0xA 0, +1 += 1."
+
+[[func]]
+pc = 0x4D54A0
+name = "SpellRagnarok_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D54A0..0x4D54DC (0x3D bytes), group S25: 0x4D55C0; when Frame_Counter bit 0: +0xA += 2 while below 0x10, +9 += 1, +1 += 1 at 0x10."
+
+[[func]]
+pc = 0x4D54E0
+name = "SpellRagnarok_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D54E0..0x4D555C (0x7D bytes), group S25: 0x4D55C0; when +0xB is 0: Battle_SetTargetFlags(byte 0x904B44, 0x10); six BattleTask_Create(1, 0x10) with +0x80 Sprite_Current, +1 = 2, +0xB = 0..5, each Sprite_Current +0xB += 1; +1 += 1."
+
+[[func]]
+pc = 0x4D5560
+name = "SpellRagnarok_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5560..0x4D55B1 (0x52 bytes), group S25: 0x4D55C0; when Frame_Counter & 3 is 0: +0xA -= 1 unless 0, +9 -= 1; at 0 Battle_SetTargetFlag40(byte 0x904B44) and +1 += 1."
+
+[[func]]
+pc = 0x4D55C0
+name = "SpellRagnarok_DrawScreenTint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D55C0..0x4D5777 (0x1B8 bytes), group S25: Gpu_SetDrawMode(.., 0x35), Gfx_CommitPrim(1, 0xC); word 0x903854 = +9 * 15 then +0xA * 15; two POLY_G4 (Gpu_SetPolyG4, Gpu_SetSemiTrans 1) with float corners (0, 0) (319, 0) (0, 120) (319, 120) and (0, 120) (319, 120) (0, 359) (319, 359), every colour byte the word's low byte, Gfx_CommitPrim(1, 0x44) each; Gpu_SetDrawMode(.., 0x15), Gfx_CommitPrim(1, 0xC)."
+
+[[func]]
+pc = 0x4D5780
+name = "SpellRagnarok_Child"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5780..0x4D5791 (0x12 bytes), group S25: the kind-1 task 0x10: jmp [0x65B960 + byte +1 * 4] (SpellRagnarok_ChildKinds, three entries, unbounded)."
+
+[[func]]
+pc = 0x4D57A0
+name = "SpellRagnarok_SpriteChild"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D57A0..0x4D57DB (0x3C bytes), group S25: dword 0x9039D8 = 0x8E3580; call [0x65B96C + byte +2 * 4] (SpellRagnarok_SpritePhases, five entries, unbounded: MAGIC130's 0x4E47F0, then 0x4D57E0, 0x4D58C0, 0x4D5910, 0x4D5960); Sprite_UpdateScreen when byte +0 bit 0 and +2 >= 2; 0x9039D8 = 0x8B3580. Entry 0 of SpellRagnarok_ChildKinds."
+
+[[func]]
+pc = 0x4D57E0
+name = "SpellRagnarok_SpriteInit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D57E0..0x4D58B1 (0xD2 bytes), group S25: words +0x2E 0xA0, +0x30 0x12C; bytes +0x25 0x1D, +0x26 0, +0x27 0x1A, +0x28 1, +0x24 0x80; dwords +0x40 0x30000, +0x44 0xC000; +0x48 2, +0x5D..+0x5F and +0x5C 0, +0x2A 0, +0x29 2, word +0x2C 0, +0x2B 1; Sprite_SetAnimation(0); +2 += 1."
+
+[[func]]
+pc = 0x4D58C0
+name = "SpellRagnarok_SpriteRise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D58C0..0x4D5903 (0x44 bytes), group S25: word +0x2E = (Rand() & 3) + 0x9F; word +0x30 -= 2; +0x44 += 0x2000; +2 += 1 at 0x18000 or more (signed)."
+
+[[func]]
+pc = 0x4D5910
+name = "SpellRagnarok_SpriteClimb"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5910..0x4D5954 (0x45 bytes), group S25: the jitter; word +0x30 -= 4; below 0xB2 (signed): the owner's +0xB -= 1, +2 += 1."
+
+[[func]]
+pc = 0x4D5960
+name = "SpellRagnarok_SpriteLeave"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5960..0x4D599C (0x3D bytes), group S25: the jitter; word +0x30 -= 2; below 0x80: the owner's +0xB -= 1, jmp BattleTask_FreeCurrent."
+
+[[func]]
+pc = 0x4D59A0
+name = "SpellRagnarok_RingChild"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D59A0..0x4D59D7 (0x38 bytes), group S25: call [0x65B980 + byte +2 * 4] (SpellRagnarok_RingPhases, four entries, unbounded: 0x4D59E0, 0x4D5A50, MAGIC082's 0x4C0680, MAGIC060's 0x4B1740); unless byte +0 or +2 is 0: MagicFx_PushActorMatrix, 0x4D5A70, 0x4D5C10, jmp Gte_PopMatrix. Entry 1 of SpellRagnarok_ChildKinds."
+
+[[func]]
+pc = 0x4D59E0
+name = "SpellRagnarok_RingInit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D59E0..0x4D5A4C (0x6D bytes), group S25: +0xC = +0x10 = 0x60000; +0x34 = +0xC + Field_Kind2X, +0x38 = +0x10 + Field_Kind2Z, +0x3C the owner's; +0x14 = 0x100; +9 = 0x10; +2 += 1."
+
+[[func]]
+pc = 0x4D5A50
+name = "SpellRagnarok_RingGrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5A50..0x4D5A6F (0x20 bytes), group S25: no calls: +0x14 += 0x40; +2 += 1 at 0xC00."
+
+[[func]]
+pc = 0x4D5A70
+name = "SpellRagnarok_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5A70..0x4D5C0D (0x19E bytes), group S25: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(2, 0xC); words 0x903850 = +0x14, 0x903854 = +9 << 2; 64 POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1, Gte_RotTransPers3, Gte_PrimDepths3_10B) of the origin and two rim points (sin, cos) * r at 0x40 steps, every colour the word 0x903854, Gfx_CommitPrim(2, 0x34)."
+
+[[func]]
+pc = 0x4D5C10
+name = "SpellRagnarok_DrawRim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5C10..0x4D5E3A (0x22B bytes), group S25: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(2, 0xC); words 0x903850 = +0x14, 0x903852 = +0x14 + 0x80, 0x903854 = +9 << 2; 64 POLY_G4 (Gpu_SetPolyG4, Gpu_SetSemiTrans 1, Gte_RotTransPers4, Gte_PrimDepths4_10B) between the two radii at 0x40 steps, inner colours 1, outer the word 0x903854, Gfx_CommitPrim(2, 0x44)."
+
+[[func]]
+pc = 0x4D5E40
+name = "SpellRagnarok_SparkChild"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5E40..0x4D5E72 (0x33 bytes), group S25: call [0x65B990 + byte +2 * 4] (SpellRagnarok_SparkPhases, two entries, unbounded); unless byte +0 or +2 is 0: MagicFx_PushActorMatrix, 0x4D5F20, jmp Gte_PopMatrix. Entry 2 of SpellRagnarok_ChildKinds."
+
+[[func]]
+pc = 0x4D5E80
+name = "SpellRagnarok_SparkInit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5E80..0x4D5EE4 (0x65 bytes), group S25: +0x34 = dword 0x65B998[+0xB * 8] + Field_Kind2X, +0x38 = dword 0x65B99C[+0xB * 8] + Field_Kind2Z (SpellRagnarok_SparkOffsets, +0xB unbounded), +0x3C the owner's; +9 0x60, +0xA 0x40; +2 += 1."
+
+[[func]]
+pc = 0x4D5EF0
+name = "SpellRagnarok_SparkFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5EF0..0x4D5F1C (0x2D bytes), group S25: +9 += 2, +0xA -= 1; at 0 jmp BattleTask_FreeCurrent."
+
+[[func]]
+pc = 0x4D5F20
+name = "SpellRagnarok_DrawSpark"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s25.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4D5F20..0x4D610B (0x1EC bytes), group S25: a POLY_FT4 at Gfx_PacketNext (Gpu_SetPolyFT4, Gpu_SetSemiTrans 1): words 0x903850 = +9 * 3, 0x903854 = +0xA << 1; corners (cos, sin, 0) * r at 0x200 / 0x600 / 0xE00 / 0xA00; tpage Gpu_GetTPage(0, 1, 0x340, 0x100) at +0x26, clut Gpu_GetClut(0, 0x1E2) at +0x16; uv (0, 0x80) (0x20, 0x80) (0, 0xA0) (0x20, 0xA0); colour the word 0x903854; Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(3, 0x48)."
+
+[[data]]
+pc = 0x65B918
+name = "SpellSleep_ChildPhases"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: four code pointers (0x4D2E80, 0x4D2EB0, 0x4D2EE0, 0x4D2F00): SpellSleep_Child's call [0x65B918 + byte +1 * 4]; followed by SpellConfuse_ChildPhases."
+
+[[data]]
+pc = 0x65B928
+name = "SpellConfuse_ChildPhases"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: six code pointers (0x4D3F70 .. 0x4D4180): SpellConfuse_Child's call [0x65B928 + byte +1 * 4]; followed by SpellDepress_Corners."
+
+[[data]]
+pc = 0x65B940
+name = "SpellDepress_Corners"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: four (x, y) word pairs in dwords, stride 8: SpellDepress_Start's words at 0x65B940 / 0x65B944 + corner * 8, the corner byte 0x904AAC (xor 2 unless the target has 0x40), unbounded; followed by SpellRagnarok_ChildKinds."
+
+[[data]]
+pc = 0x65B960
+name = "SpellRagnarok_ChildKinds"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: three code pointers (0x4D57A0, 0x4D59A0, 0x4D5E40): SpellRagnarok_Child's jmp [0x65B960 + byte +1 * 4]."
+
+[[data]]
+pc = 0x65B96C
+name = "SpellRagnarok_SpritePhases"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: five code pointers (0x4E47F0 - MAGIC130's, a count down of +9 - then 0x4D57E0, 0x4D58C0, 0x4D5910, 0x4D5960): SpellRagnarok_SpriteChild's call by byte +2."
+
+[[data]]
+pc = 0x65B980
+name = "SpellRagnarok_RingPhases"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: four code pointers (0x4D59E0, 0x4D5A50, 0x4C0680 - MAGIC082's, 0x4B1740 - MAGIC060's): SpellRagnarok_RingChild's call by byte +2."
+
+[[data]]
+pc = 0x65B990
+name = "SpellRagnarok_SparkPhases"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: two code pointers (0x4D5E80, 0x4D5EF0): SpellRagnarok_SparkChild's call by byte +2."
+
+[[data]]
+pc = 0x65B998
+name = "SpellRagnarok_SparkOffsets"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: (x, z) dword pairs, stride 8, six used (the sparks' +0xB 0..5): SpellRagnarok_SparkInit, +0xB unbounded."
+
+[[data]]
+pc = 0x698940
+name = "SpellDepress_Outer"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: sixteen (x, y) dwords (0x80 bytes, bss): SpellDepress_DrawVortex's outer ring, overwritten by SpellDepress_Inner each band (rep movsd)."
+
+[[data]]
+pc = 0x6989C0
+name = "SpellDepress_Rings"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: nine rings of sixteen (x, y) dwords (0x480 bytes, bss) written by SpellDepress_DrawVortex; their low bytes are also its texture coordinates (rows at 0x6989C0 and 0x698A40)."
+
+[[data]]
+pc = 0x698E40
+name = "SpellDepress_Inner"
+status = "evidence"
+evidence = "read 2026-09-25, group S25: sixteen (x, y) dwords (0x80 bytes, bss): SpellDepress_DrawVortex's inner ring of each band."
