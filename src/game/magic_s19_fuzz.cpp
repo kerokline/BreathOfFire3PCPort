@@ -145,7 +145,7 @@ constexpr mh::CallSite kCalls4C3360[] = {{0x13, 0x5A7A00}, {0x3E, 0x5A7A50}, {0x
 const mh::Clone kClones[] = {
     {"Shield_Task", 0x4C1470, 0x75, kCalls4C1470, MH_N(kCalls4C1470), kImms4C1470, MH_N(kImms4C1470), nullptr, 0, reinterpret_cast<const void*>(&::Shield_Task)},
     {"Shield_Start", 0x4C14F0, 0x218, kCalls4C14F0, MH_N(kCalls4C14F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Shield_Start)},
-    {"Shield_Kind", 0x4C1710, 0x20, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Shield_Kind)},
+    {"Shield_Kind", 0x4C1710, 0x20, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Shield_Kind), 0xFF},
     {"ShieldAura_Dispatch", 0x4C1730, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldAura_Dispatch)},
     {"ShieldAura_Task", 0x4C1750, 0x38, kCalls4C1750, MH_N(kCalls4C1750), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldAura_Task)},
     {"ShieldAura_Wait", 0x4C1790, 0x86, kCalls4C1790, MH_N(kCalls4C1790), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldAura_Wait)},
@@ -161,7 +161,7 @@ const mh::Clone kClones[] = {
     {"ShieldSpark_Spin", 0x4C20D0, 0xE1, kCalls4C20D0, MH_N(kCalls4C20D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldSpark_Spin)},
     {"ShieldSpark_Orbit", 0x4C21C0, 0x104, kCalls4C21C0, MH_N(kCalls4C21C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldSpark_Orbit)},
     {"ShieldSpark_DrawCrystal", 0x4C22D0, 0x4B6, kCalls4C22D0, MH_N(kCalls4C22D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldSpark_DrawCrystal)},
-    {"ShieldSpark_Alloc", 0x4C2790, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldSpark_Alloc)},
+    {"ShieldSpark_Alloc", 0x4C2790, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::ShieldSpark_Alloc), 0xFF},
     {"Barrier_Task", 0x4C27F0, 0x46, nullptr, 0, kImms4C27F0, MH_N(kImms4C27F0), nullptr, 0, reinterpret_cast<const void*>(&::Barrier_Task)},
     {"Barrier_Start", 0x4C2840, 0x116, kCalls4C2840, MH_N(kCalls4C2840), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Barrier_Start)},
     {"Barrier_Tint", 0x4C2960, 0x46, kCalls4C2960, MH_N(kCalls4C2960), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Barrier_Tint)},
