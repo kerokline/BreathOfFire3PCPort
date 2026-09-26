@@ -123,3 +123,11 @@ slightly different branches. Both passes of a round see the same inputs,
 so the comparison is sound; what does not carry between checkouts is a
 documented call count. Merges are judged by 0 mismatches and controls
 refused, not by matching a count.
+
+**The owner on the divide-by-zero aborts (2026-09-26): no DIVERGENCE
+entry.** Where Capcom's code divides by the number of live targets
+(`Inferno_TargetCentre`, `Blizzard_CenterOnTargets`, `MagicFx_CenterOnSide`)
+ours aborts with a message when that number is 0. The original faults at the
+same point, so no reachable case behaves better in the original; the owner
+expects normal play never casts at an empty side. Unmeasured: a trace of a
+fight where the last enemy dies to a multi-target spell would settle it.
