@@ -7,12 +7,12 @@
 // no REFUSED line). Beyond the harness's standard set this group lists the
 // draw callees (the GTE and libgpu entry points, Math_Sin / Math_Cos,
 // Gfx_CommitPrim, MapView_LinkPrimAt), the other units' functions it calls,
-// and its own functions that others of its own call. A hook
-// (magic_harness::SetCallHook) logs what an argument mask cannot - the
-// SVECTORs a projection reads, the angles, the DR_MOVE rectangle, the
-// arguments past the fourth - moves Gfx_PacketNext on by each commit's size
-// through a packet buffer of the fuzz's own, as the real commits do, and keeps
-// the facing byte a jump table reads inside the table.
+// and its own functions that others of its own call. Pointer arguments a
+// callee reads through (the SVECTORs a projection reads, the angles, the
+// DR_MOVE rectangle) are logged by their bytes (deref); effects move
+// Gfx_PacketNext on by each commit's size through a packet buffer of the
+// fuzz's own, as the real commits do, and keep the facing byte a jump table
+// reads inside the table.
 #include <cstdint>
 #include <cstring>
 
@@ -213,17 +213,21 @@ template <typename F> std::uint32_t Key(F* f) {
 }
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 
+std::uint32_t AdvanceByArg1(const std::uint32_t* a, std::uint32_t answer);
+std::uint32_t AdvanceByArg3(const std::uint32_t* a, std::uint32_t answer);
+std::uint32_t KeepFacing(const std::uint32_t* a, std::uint32_t answer);
+
 #define S25_OURS(name) #name, ::bof3::addr::name, Key(&::name)
 #define S25_RAW(address) #address, address, address
 const mh::Callee kCallees[] = {
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map, battle_items: all ours)
     {S25_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gpu_SetDrawMode), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},   // + tw: the hook
+    {S25_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &AdvanceByArg1},
+    {S25_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, mh::Answer::kGarbage, 0, 0, {}, &AdvanceByArg3},
+    {S25_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gpu_SetDrawMove), 4, {kAll, 0, kAll, kAll}, mh::Answer::kGarbage, 0, 0},   // + the rect: the hook
+    {S25_OURS(Gpu_SetDrawMove), 4, {kAll, 0, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {0, 8}},   // the rect's bytes
     {S25_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gpu_GetClut), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gpu_SetLineG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
@@ -235,15 +239,18 @@ const mh::Callee kCallees[] = {
     {S25_OURS(Gpu_SetPolyGT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_RAW(0x5A7570), 1, {kAll}, mh::Answer::kGarbage, 0, 0},   // libgpu SetPolyF3, unnamed
     {S25_RAW(0x5A76F0), 1, {kAll}, mh::Answer::kGarbage, 0, 0},   // libgpu SetLineG4, unnamed
-    {S25_OURS(Gte_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gte_RotTrans), 3, {0, 0, 0}, mh::Answer::kGarbage, 0, 0},        // stack pointers; the vector: the hook
-    {S25_OURS(Gte_RotMatrix), 2, {0, 0}, mh::Answer::kGarbage, 0, 0},          // the angles: the hook
+    {S25_OURS(Gte_PushMatrix), 0, {}, mh::Answer::kGarbage, 0, 0, {}, &KeepFacing},
+    {S25_OURS(Gte_RotTrans), 3, {0, 0, 0}, mh::Answer::kGarbage, 0, 0, {6}},   // stack pointers; the vector's bytes
+    {S25_OURS(Gte_RotMatrix), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, {6}},     // the angles' bytes
     {S25_OURS(Gte_MulMatrix0), 3, {kAll, 0, 0}, mh::Answer::kGarbage, 0, 0},   // Camera_Matrix, the stack's
     {S25_OURS(Gte_SetRotMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gte_SetTransMatrix), 1, {0}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gte_RotTransPers), 4, {kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gte_RotTransPers3), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S25_OURS(Gte_RotTransPers4), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
+    // the projections: each SVECTOR by its six bytes, the outputs by address,
+    // the depth and flag (the caller's stack) not at all
+    {S25_OURS(Gte_RotTransPers), 4, {0, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0, {6}},
+    {S25_OURS(Gte_RotTransPers3), 8, {0, 0, 0, kAll, kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0, {6, 6, 6}},
+    {S25_OURS(Gte_RotTransPers4), 10, {0, 0, 0, 0, kAll, kAll, kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0,
+     {6, 6, 6, 6}},
     {S25_OURS(Gte_StoreDepthF), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gte_PrimDepths3_0C), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S25_OURS(Gte_PrimDepths3_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
@@ -255,7 +262,7 @@ const mh::Callee kCallees[] = {
     {S25_OURS(Sprite_SetAnimation), 1, {kU8}, mh::Answer::kGarbage, 0, 0},
     // other units: the effect library (group L), the engine
     {S25_RAW(0x4FC0E0), 0, {}, mh::Answer::kGarbage, 0, 0},
-    {S25_RAW(0x4FBA90), 4, {kAll, kAll, kAll, 0}, mh::Answer::kGarbage, 0, 0},   // the pad unread; + speed: the hook
+    {S25_RAW(0x4FBA90), 5, {kAll, kAll, kAll, 0, 0xFFFFu}, mh::Answer::kGarbage, 0, 0},   // the pad unread
     {S25_RAW(0x4FBC70), 4, {kAll, kAll, 0xFFFF0000u, kAll}, mh::Answer::kBool, 0, 0},
     {S25_RAW(0x446770), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     // this group's own, called by its own
@@ -319,36 +326,21 @@ void Advance(std::uint32_t size) {
     Gfx_PacketNext = p;
 }
 
-const void* At(std::uint32_t v) { return reinterpret_cast<const void*>(static_cast<std::uintptr_t>(v)); }
-
-void Hook(std::uint32_t address, const std::uint32_t* a, bool after) {
-    if (after) {
-        // SpellConfuse_PushFacingMatrix's jump table reads the facing right
-        // after this call; past 3 the original's angles are stack garbage and
-        // ours aborts: the fuzz stays inside the table.
-        if (address == addr::Gte_PushMatrix) Sprite_Current[8] &= 3;
-        return;
-    }
-    switch (address) {
-    case addr::Gte_RotTransPers3:
-        for (unsigned i = 0; i < 3; ++i) mh::LogBytes(At(a[i]), 6);
-        mh::LogValue(a[4]);
-        mh::LogValue(a[5]);
-        break;
-    case addr::Gte_RotTransPers4:
-        for (unsigned i = 0; i < 4; ++i) mh::LogBytes(At(a[i]), 6);
-        for (unsigned i = 4; i < 8; ++i) mh::LogValue(a[i]);
-        break;
-    case addr::Gte_RotTransPers:
-    case addr::Gte_RotTrans:
-    case addr::Gte_RotMatrix: mh::LogBytes(At(a[0]), 6); break;
-    case addr::Gpu_SetDrawMove: mh::LogBytes(At(a[1]), 8); break;
-    case addr::Gpu_SetDrawMode: mh::LogValue(a[4]); break;
-    case 0x4FBA90: mh::LogValue(a[4] & 0xFFFF); break;
-    case addr::Gfx_CommitPrim: Advance(a[1]); break;
-    case addr::MapView_LinkPrimAt: Advance(a[3]); break;
-    default: break;
-    }
+// The callees' effects (after the recorder's log and disturbance).
+std::uint32_t AdvanceByArg1(const std::uint32_t* a, std::uint32_t answer) {
+    Advance(a[1]);
+    return answer;
+}
+std::uint32_t AdvanceByArg3(const std::uint32_t* a, std::uint32_t answer) {
+    Advance(a[3]);
+    return answer;
+}
+// SpellConfuse_PushFacingMatrix's jump table reads the facing right after
+// Gte_PushMatrix; past 3 the original's angles are stack garbage and ours
+// aborts: the fuzz stays inside the table.
+std::uint32_t KeepFacing(const std::uint32_t*, std::uint32_t answer) {
+    Sprite_Current[8] &= 3;
+    return answer;
 }
 
 // The group's cells a recorder may move (the harness's case 14).
@@ -463,7 +455,6 @@ void SelfTest() {
         kTables,     sizeof kTables / sizeof kTables[0], g_regions, sizeof g_regions / sizeof g_regions[0], &Seed,
         &Disturb,    2000,
     };
-    mh::SetCallHook(&Hook);
     mh::Run(group);
 }
 
