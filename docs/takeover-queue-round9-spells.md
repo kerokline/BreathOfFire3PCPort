@@ -189,16 +189,16 @@ divergence for the owner to choose (a living project may).
 
 Whole overlays only, about 40..60 functions a group, in address order so
 shared bodies stay close; the cut content first so it is visible; the
-first wave marked **1**. Names are read one id down; "(no label)" is an id
+first wave marked **1**, the second **2**. Names are read one id down; "(no label)" is an id
 whose lower neighbour has no English label. Counts are functions not yet
 ours; bytes their own.
 
 | Group | Overlays (MAGIC0NN) | Rows | Abilities (read one id down) | Fns | Bytes |
 |---|---|---|---|--:|--:|
-| C1 | 010, 080, 113, 145, 146, 213 | 9, 10, 27, 148, 149, 150 | Unmotivate, (no label), Watch Enemy, White Flag, Recall, MagicShuffle, Lark, The World, Again, Trump, Death Bomb, Roulette, Pentagram, Ink, Ink Ink, Miyakuri | 62 | 9,226 |
-| C2 | 129, 057, 081, 116 | 59, 84, 85, 145 | Holocaust, Bone Dance, RottenBreath, UtmostAttack | 64 | 9,622 |
-| C3 | 002, 111 | 2, 119 | - (no ability loads them) | 20 | 4,243 |
-| E | engine: `0x4378D0`, `0x4525F0`, `0x43F3B0`, `0x43FC80` and their phases, `0x43FE90` | 0, 108, 123, 126, 128 | Restore Form, Paralyzer, Head Cracker, (no label) | 22 | ~1,500 |
+| C1 **2** | 010, 080, 113, 145, 146, 213 | 9, 10, 27, 148, 149, 150 | Unmotivate, (no label), Watch Enemy, White Flag, Recall, MagicShuffle, Lark, The World, Again, Trump, Death Bomb, Roulette, Pentagram, Ink, Ink Ink, Miyakuri | 62 | 9,226 |
+| C2 **2** | 129, 057, 081, 116 | 59, 84, 85, 145 | Holocaust, Bone Dance, RottenBreath, UtmostAttack | 64 | 9,622 |
+| C3 **2** | 002, 111 | 2, 119 | - (no ability loads them) | 20 | 4,243 |
+| E **2** | engine: `0x4378D0`, `0x4525F0`, `0x43F3B0`, `0x43FC80` and their phases, `0x43FE90` | 0, 108, 123, 126, 128 | Restore Form, Paralyzer, Head Cracker, (no label) | 22 | ~1,500 |
 | L **1** | the effect library | - | - | 25 | 3,899 |
 | S01 | 001 | 1, 105 | Nue Stomp, Jump | 26 | 3,275 |
 | S02 | 003, 004 (with 005, 029, 049, 133..136, 156, 157 folded) | 3, 88, 92, 93, 98..100, 129..132 | Super Combo, ThundrStrike, Holy Strike, Demonbane, Flame Strike, Pyrokinesis, Frost Strike, Wind Strike, Flame Claw, Frost Claw, Thunder Claw, Shining Claw | 48 | 6,774 |
@@ -225,12 +225,12 @@ ours; bytes their own.
 | S23 **1** | 100, 101, 102, 103 | 13, 26, 57, 69 | Cyclone, Typhoon, Quake, Simoon | 51 | 12,001 |
 | S24 **1** | 104, 105, 106 | 14, 64, 104 | Sirocco, Kyrie, Death | 47 | 10,068 |
 | S25 **1** | 107, 108, 109, 110 | 12, 24, 25, 38 | Sleep, (no label), Confuse, Depress, Ragnarok | 56 | 12,823 |
-| S26 | 114, 115, 117 | 11, 73, 106, 115 | Fire Whip, Remedy, Rest, Snooze, Douse | 48 | 8,928 |
-| S27 | 118, 120, 121 | 16, 60, 122 | Burn, Whelp Breath, DragonBreath | 47 | 13,563 |
-| S28 | 122, 123, 124 | 74, 76, 124 | Firebreath, Icebreath, ThundrBreath | 42 | 12,012 |
-| S29 | 125, 126 | 125, 127 | DivineBreath, ShadowBreath | 49 | 10,165 |
-| S30 | 130, 131 | 141, 144 | Venom, KaiserBreath | 60 | 9,099 |
-| S31 | 132, 137, 138, 143 | 66, 101, 118, 139 | Doom Breath, Corona, Main Cannon, Thunder Clap | 51 | 9,832 |
+| S26 **2** | 114, 115, 117 | 11, 73, 106, 115 | Fire Whip, Remedy, Rest, Snooze, Douse | 48 | 8,928 |
+| S27 **2** | 118, 120, 121 | 16, 60, 122 | Burn, Whelp Breath, DragonBreath | 47 | 13,563 |
+| S28 **2** | 122, 123, 124 | 74, 76, 124 | Firebreath, Icebreath, ThundrBreath | 42 | 12,012 |
+| S29 **2** | 125, 126 | 125, 127 | DivineBreath, ShadowBreath | 49 | 10,165 |
+| S30 **2** | 130, 131 | 141, 144 | Venom, KaiserBreath | 60 | 9,099 |
+| S31 **2** | 132, 137, 138, 143 | 66, 101, 118, 139 | Doom Breath, Corona, Main Cannon, Thunder Clap | 51 | 9,832 |
 | S32 | 144, 150 | 67, 72 | Wall of Fire, Eye Beam | 36 | 4,648 |
 | S33 | 151, 154 | 35, 86 | Accession, Mighty Chop | 57 | 9,790 |
 | S34 | 158, 159, 161, 162, 166 | 89, 90, 111, 116, 120 | Charm, (no label), Timed Blow, Transfer, Monopolize | 47 | 7,664 |
@@ -278,6 +278,23 @@ group, so taking it lets them join the harness's standard set (a group
 lists what it calls of the library until then). The wave's groups do not
 share functions with each other except through shared bodies the address
 keys (section 1).
+
+## 6a. The second wave (staged 2026-09-26)
+
+**C1, C2, C3, E, S26 .. S31**: ten groups, about 525 functions. The cut
+content first, as the owner asked on 2026-09-25 for the unseen spells and
+abilities: the unfinished skills (C1), the enemy-only skills TCRF flags
+(C2), the two overlays no ability loads (C3) and the engine rows with
+Paralyzer and Head Cracker (E, ported faithfully, not fixed). Then the
+overlays after the first wave's in address order, S26 .. S31, whose MAGIC118,
+MAGIC130 and MAGIC131 the first wave already calls by raw address.
+
+Each group's brief is the first wave's with its lessons folded in
+(`analysis/round9_wave2_brief.md`, `analysis/round9_wave2_groups.tsv`, not
+committed): no harness edits, `deref` and a primitive-logging `effect` for the
+draws, `ret_mask` on every al answer, plain `BOF3_INJECT` lines, controls that
+rebuild after restoring. E lies outside the band and builds its clone tables
+by hand.
 
 ## 7. For the coordinator
 
