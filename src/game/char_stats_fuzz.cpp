@@ -260,7 +260,7 @@ const Clone kClones[] = {
     CS_P(TextRecord_Set, 0x591940, 0x69, kNoTable, 0),
     CS_P(Inventory_Count, 0x5919B0, 0xC5, kNoTable, 2),
     CS_P(Inventory_CountUsed, 0x591A80, 0x3C, kNoTable, 1),
-    CS_P(Item_Price, 0x591C20, 0x9C, (move_script::Table{0x12, 0x8C, 4}), 4),
+    CS_P(Item_HelpMessage, 0x591C20, 0x9C, (move_script::Table{0x12, 0x8C, 4}), 4),
 };
 #undef CS_C
 #undef CS_P

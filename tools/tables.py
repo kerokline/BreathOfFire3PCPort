@@ -34,6 +34,10 @@ STATUSES = {"evidence", "hypothesis", "unknown"}
 PC_NAME_LEN = 16
 
 
+class Missing(Exception):
+    pass
+
+
 def fail(msg):
     sys.exit("tables: " + msg)
 
@@ -67,7 +71,7 @@ def check(cat, syms, builds):
         name = t.get("name")
         if name is not None and not (0 <= name["at"] and name["at"] + PC_NAME_LEN <= stride):
             errs.append("%s: the name field does not fit the stride" % where)
-        taken = {}
+        taken, bits_taken, bit_bytes = {}, {}, set()
         if name is not None:
             for b in range(name["at"], name["at"] + PC_NAME_LEN):
                 taken[b] = "name"
@@ -85,9 +89,20 @@ def check(cat, syms, builds):
             width = TYPES[fld["type"]][1]
             if not 0 <= fld["at"] or fld["at"] + width > stride:
                 errs.append("%s: +0x%X..+0x%X is outside the 0x%X-byte record" % (fw, fld["at"], fld["at"] + width, stride))
+            if "bits" in fld:
+                lo, hi = fld["bits"]
+                if not 0 <= lo <= hi < 8 * width:
+                    errs.append("%s: bits %d..%d do not fit a %s" % (fw, lo, hi, fld["type"]))
+                for bit in range(lo, hi + 1):
+                    k = (fld["at"], fld["type"], bit)
+                    if k in bits_taken:
+                        errs.append("%s: bit %d is also %s" % (fw, bit, bits_taken[k]))
+                    bits_taken[k] = fld["name"]
+                bit_bytes.update(range(fld["at"], fld["at"] + width))
+                continue
             for b in range(fld["at"], fld["at"] + width):
-                if b in taken and not fld.get("overlaps"):
-                    errs.append("%s: byte +0x%X is also %s (mark `overlaps` if intended)" % (fw, b, taken[b]))
+                if (b in taken or b in bit_bytes) and not fld.get("overlaps"):
+                    errs.append("%s: byte +0x%X is also %s (mark `overlaps` if intended)" % (fw, b, taken.get(b, "a bit field")))
                 taken.setdefault(b, fld["name"])
         for p in t.get("psx", []):
             if p.get("build") not in builds:
@@ -131,14 +146,41 @@ def disc_build(disc, builds):
 
 
 def emi_at(disc, file, addr, size):
+    """`size` bytes at PSX address `addr` in `file`: an EMI's sections by
+    their load addresses, or with file = "BOOT" the boot EXE SYSTEM.CNF names."""
     import loc_build
+    if file == "BOOT":
+        boot = disc.read("SYSTEM.CNF").split(b"\n")[0].split(b":")[-1].strip().lstrip(b"\\").split(b";")[0]
+        exe = disc.read(boot.decode().replace("\\", "/"))
+        if exe[:8] != b"PS-X EXE":
+            raise Missing("the boot file %s is not a PS-X EXE" % boot.decode())
+        t_addr, t_size = struct.unpack_from("<II", exe, 0x18)
+        if t_addr <= addr and addr + size <= t_addr + t_size:
+            return exe[0x800 + addr - t_addr:0x800 + addr - t_addr + size]
+        raise Missing("0x%08X..+0x%X is not in the boot EXE (0x%08X..0x%08X)" % (addr, size, t_addr, t_addr + t_size))
     found = disc.find(file)
     if not found:
-        fail("no %s on this disc" % file)
+        raise Missing("no %s on this disc" % file)
     for dest, blob in loc_build.emi_sections(disc.read(found[0])):
         if dest <= addr and addr + size <= dest + len(blob):
             return blob[addr - dest:addr - dest + size]
-    fail("0x%08X..+0x%X is in no section of %s" % (addr, size, file))
+    raise Missing("0x%08X..+0x%X is in no section of %s" % (addr, size, file))
+
+
+def psx_bytes(disc, where, size):
+    """The recorded address read from the first of its files that holds it.
+    `file` may list several when which one holds the table is not settled."""
+    files = where["file"] if isinstance(where["file"], list) else [where["file"]]
+    why = []
+    for f in files:
+        try:
+            raw = emi_at(disc, f, where["addr"], size)
+            if len(files) > 1:
+                print("(%s: found in %s)" % (where["build"], f), file=sys.stderr)
+            return raw
+        except Missing as e:
+            why.append(str(e))
+    fail("; ".join(why))
 
 
 def found_by_numbers(t, donor_sections, pc, name_len):
@@ -173,7 +215,11 @@ def records(t, raw, name_len):
             row["name"] = "".join(chr(c) if 0x20 <= c < 0x7F else "\\x%02X" % c for c in nm)
         for fld in t.get("field", []):
             code, _ = TYPES[fld["type"]]
-            row[fld["name"]] = struct.unpack_from(code, rec, narrowed(t, fld["at"], name_len))[0]
+            v = struct.unpack_from(code, rec, narrowed(t, fld["at"], name_len))[0]
+            if "bits" in fld:
+                lo, hi = fld["bits"]
+                v = (v >> lo) & ((1 << (hi - lo + 1)) - 1)
+            row[fld["name"]] = v
         rows.append(row)
     return rows
 
@@ -213,8 +259,10 @@ def cmd_list(a, cat, syms, builds):
             print("    %-8s %s at 0x%08X  [%s]" % (p["build"], p["file"], p["addr"], p["status"]))
         if t.get("name"):
             print("    +0x%02X  name[16]" % t["name"]["at"])
-        for fld in sorted(t.get("field", []), key=lambda f: f["at"]):
-            print("    +0x%02X  %-4s %-16s %-10s %s" % (fld["at"], fld["type"], fld["name"], fld["status"], fld["meaning"]))
+        for fld in sorted(t.get("field", []), key=lambda f: (f["at"], f.get("bits", [0])[0])):
+            bits = fld.get("bits")
+            span = "" if bits is None else ("b%d" % bits[0] if bits[0] == bits[1] else "b%d-%d" % tuple(bits))
+            print("    +0x%02X %-6s %-4s %-16s %-10s %s" % (fld["at"], span, fld["type"], fld["name"], fld["status"], fld["meaning"]))
     return 0
 
 
@@ -241,7 +289,7 @@ def cmd_dump(a, cat, syms, builds):
             size = pc_size - (PC_NAME_LEN - name_len) * t["count"]
             where = next((p for p in t.get("psx", []) if p["build"] == build["id"]), None)
             if where is not None:
-                raw = emi_at(disc, where["file"], where["addr"], size)
+                raw = psx_bytes(disc, where, size)
             elif a.game and t.get("name") and t.get("find_in"):
                 import loc_build
                 found = disc.find(t["find_in"])
@@ -297,4 +345,7 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except BrokenPipeError:          # `| head`
+        os._exit(0)

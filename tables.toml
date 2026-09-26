@@ -19,8 +19,11 @@
 #     find_in         the disc file a build with no recorded address is
 #                     searched in, by the PC table's numeric bytes
 #     [[table.psx]]   a recorded disc address: build (fixtures.toml id),
-#                     file, addr (the PSX load address), status, cite
+#                     file, addr (the PSX load address), status, cite. `file`
+#                     is an EMI, "BOOT" for the boot EXE, or a list of both
+#                     when which one holds the table is not settled
 #     [[table.field]] at (PC offset), type, name, meaning, status, cite;
+#                     `bits = [lo, hi]` for a bit field of that word;
 #                     `overlaps = true` when two views of the same bytes are
 #                     both worth naming
 #
@@ -57,10 +60,115 @@ name = { at = 0 }
 find_in = "GAME.EMI"
 [[table.psx]]
 build = "psx-jp"
-file = "GAME.EMI"
+file = ["GAME.EMI", "BOOT"]
 addr = 0x801C995C
 status = "evidence"
-cite = "symbols.toml NameTable_Consumables psx; found by the JP disc's price sequence, 2026-09-20"
+cite = "symbols.toml NameTable_Consumables psx, found by the JP disc's price sequence 2026-09-20; which file holds it is not settled"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [0, 0]
+name = "field_use"
+meaning = "usable from the field menu's item list (Item_CanUse mode 1); a byte of 0 is refused by ItemUse_Dispatch"
+status = "evidence"
+cite = "menu_windows.cpp:990; item_use.cpp:111; Item_UseFlags 0x591810 category 0"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [1, 1]
+name = "battle_use"
+meaning = "usable in battle (Item_CanUse mode 2, the battle item window)"
+status = "evidence"
+cite = "menu_windows.cpp:993; battle_misc.cpp:313, 353"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [2, 2]
+name = "no_hit_anim"
+meaning = "the enemy does not play its hit animation for it"
+status = "hypothesis"
+cite = "enemy_ai_ops.cpp:281, 341 (read; the meaning from that one use)"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [3, 3]
+name = "no_sell"
+meaning = "cannot be sold (Item_CanUse mode 3, the shop's sell list)"
+status = "evidence"
+cite = "menu_windows.cpp:994; shop_states2.cpp:765, 781, 903"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [4, 4]
+name = "target_group"
+meaning = "targets a side or group (battle target 0x80, or 0x40 with target_other); in the field a party-wide item"
+status = "evidence"
+cite = "battle_menu_states.cpp:405; battle_sprites.cpp:245; docs/item-use.md"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [5, 5]
+name = "target_other"
+meaning = "with target_group the other side; target picking starts on the enemies"
+status = "evidence"
+cite = "battle_menu_states.cpp:405, 427; battle_sprites.cpp:498 (reads; 'other side' is the reading)"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [6, 6]
+name = "target_choose"
+meaning = "the player chooses a target"
+status = "evidence"
+cite = "battle_menu_states.cpp:394-395"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [7, 7]
+name = "target_all"
+meaning = "everyone (target 0xC0), or may cross sides while picking"
+status = "evidence"
+cite = "battle_menu_states.cpp:398"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [0, 3]
+name = "icon_kind"
+meaning = "icon kind (Item_KindIcons) and, for equipment, the slot: 1 weapon, 2..4 the armour slots, 5 accessory; key items read this byte of the consumable at their id"
+status = "evidence"
+cite = "char_stats.cpp:609-612 (Item_IconKind 0x591720); shop_states2.cpp:703-725"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [4, 7]
+name = "icon_high"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x12
+type = "u16"
+name = "help_msg"
+meaning = "system message id of the help line (Item_HelpMessage 0x591C20 -> Msg_SystemPtr)"
+status = "evidence"
+cite = "char_stats.cpp:640; battle_menu_states.cpp:235-236"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+name = "price"
+meaning = "base price; the shop sells at half (Item_BasePrice 0x5749F0, Shop_SellPrice 0x583100)"
+status = "evidence"
+cite = "menu_windows.cpp:931; save_menu.cpp:440-447"
 
 [[table]]
 key = "key_items"
@@ -74,10 +182,25 @@ name = { at = 0 }
 find_in = "GAME.EMI"
 [[table.psx]]
 build = "psx-jp"
-file = "GAME.EMI"
+file = ["GAME.EMI", "BOOT"]
 addr = 0x801C9E64
 status = "evidence"
-cite = "symbols.toml NameTable_KeyItems psx"
+cite = "symbols.toml NameTable_KeyItems psx (the address); which file holds it on the JP disc is not settled"
+
+[[table.field]]
+at = 0x10
+type = "u16"
+name = "help_msg"
+meaning = "system message id of the help line (Item_HelpMessage, category 4)"
+status = "evidence"
+cite = "char_stats.cpp:639"
+
+[[table.field]]
+at = 0x12
+type = "u16"
+name = "unread_12"
+meaning = "no reader found; icon kind and price for a key item come from the consumable at the same id"
+status = "unknown"
 
 [[table]]
 key = "weapons"
@@ -91,10 +214,162 @@ name = { at = 0 }
 find_in = "GAME.EMI"
 [[table.psx]]
 build = "psx-jp"
-file = "GAME.EMI"
+file = ["GAME.EMI", "BOOT"]
 addr = 0x801C9F24
 status = "evidence"
-cite = "symbols.toml NameTable_Weapons psx"
+cite = "symbols.toml NameTable_Weapons psx (the address); which file holds it on the JP disc is not settled"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+name = "equip_mask"
+meaning = "who may equip it: bit n is CharacterRecords index n (Item_EquipMask 0x5917A0)"
+status = "evidence"
+cite = "char_stats.cpp:625; shop_states2.cpp:656-658"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [0, 0]
+name = "field_use"
+meaning = "usable from the field menu's item list (Item_CanUse mode 1); a byte of 0 is refused by ItemUse_Dispatch"
+status = "evidence"
+cite = "menu_windows.cpp:990; item_use.cpp:111; Item_UseFlags 0x591810 category 1"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [1, 1]
+name = "battle_use"
+meaning = "usable in battle (Item_CanUse mode 2, the battle item window)"
+status = "evidence"
+cite = "menu_windows.cpp:993; battle_misc.cpp:313, 353"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [2, 2]
+name = "no_hit_anim"
+meaning = "the enemy does not play its hit animation for it"
+status = "hypothesis"
+cite = "enemy_ai_ops.cpp:281, 341 (read; the meaning from that one use)"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [3, 3]
+name = "no_sell"
+meaning = "cannot be sold (Item_CanUse mode 3, the shop's sell list)"
+status = "evidence"
+cite = "menu_windows.cpp:994; shop_states2.cpp:765, 781, 903"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [4, 4]
+name = "target_group"
+meaning = "targets a side or group (battle target 0x80, or 0x40 with target_other); in the field a party-wide item"
+status = "evidence"
+cite = "battle_menu_states.cpp:405; battle_sprites.cpp:245; docs/item-use.md"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [5, 5]
+name = "target_other"
+meaning = "with target_group the other side; target picking starts on the enemies"
+status = "evidence"
+cite = "battle_menu_states.cpp:405, 427; battle_sprites.cpp:498 (reads; 'other side' is the reading)"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [6, 6]
+name = "target_choose"
+meaning = "the player chooses a target"
+status = "evidence"
+cite = "battle_menu_states.cpp:394-395"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [7, 7]
+name = "target_all"
+meaning = "everyone (target 0xC0), or may cross sides while picking"
+status = "evidence"
+cite = "battle_menu_states.cpp:398"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+bits = [0, 3]
+name = "icon_kind"
+meaning = "icon kind (Item_KindIcons) and, for equipment, the slot: 1 weapon, 2..4 the armour slots, 5 accessory"
+status = "evidence"
+cite = "char_stats.cpp:609-612 (Item_IconKind 0x591720); shop_states2.cpp:703-725"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+bits = [4, 7]
+name = "icon_high"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x13
+type = "u8"
+name = "element"
+meaning = "attack element bits: 0..4 fire, ice, lightning, earth, wind (Battle_ElementAffinity), 5 holy (Battle_ScaleDamage)"
+status = "evidence"
+cite = "battle_damage.cpp:449-455; docs/battle_damage.md"
+
+[[table.field]]
+at = 0x14
+type = "u8"
+name = "weight"
+meaning = "subtracted from AGI (Char_ApplyWeapon 0x590FC0)"
+status = "evidence"
+cite = "char_stats.cpp:267"
+
+[[table.field]]
+at = 0x15
+type = "u8"
+name = "hit_class"
+meaning = "hit sound and pop-up class, Battle_HitSounds[class + 7 * critical]"
+status = "evidence"
+cite = "battle_sprites.cpp:523-531, 549"
+
+[[table.field]]
+at = 0x16
+type = "u8"
+name = "attack"
+meaning = "added to ATK (Char_ApplyWeapon)"
+status = "evidence"
+cite = "char_stats.cpp:266"
+
+[[table.field]]
+at = 0x17
+type = "u8"
+name = "unread_17"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x18
+type = "u16"
+name = "help_msg"
+meaning = "system message id of the help line (Item_HelpMessage)"
+status = "evidence"
+cite = "char_stats.cpp:636"
+
+[[table.field]]
+at = 0x1A
+type = "u16"
+name = "price"
+meaning = "base price (Item_BasePrice)"
+status = "evidence"
+cite = "menu_windows.cpp:928"
 
 [[table]]
 key = "armour"
@@ -108,10 +383,146 @@ name = { at = 0 }
 find_in = "GAME.EMI"
 [[table.psx]]
 build = "psx-jp"
-file = "GAME.EMI"
+file = ["GAME.EMI", "BOOT"]
 addr = 0x801CA5A0
 status = "evidence"
-cite = "symbols.toml NameTable_Armour psx"
+cite = "symbols.toml NameTable_Armour psx (the address); which file holds it on the JP disc is not settled"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+name = "equip_mask"
+meaning = "who may equip it: bit n is CharacterRecords index n (Item_EquipMask)"
+status = "evidence"
+cite = "char_stats.cpp:626"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [0, 0]
+name = "field_use"
+meaning = "usable from the field menu's item list (Item_CanUse mode 1); a byte of 0 is refused by ItemUse_Dispatch"
+status = "evidence"
+cite = "menu_windows.cpp:990; item_use.cpp:111; Item_UseFlags 0x591810 category 2"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [1, 1]
+name = "battle_use"
+meaning = "usable in battle (Item_CanUse mode 2, the battle item window)"
+status = "evidence"
+cite = "menu_windows.cpp:993; battle_misc.cpp:313, 353"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [2, 2]
+name = "no_hit_anim"
+meaning = "the enemy does not play its hit animation for it"
+status = "hypothesis"
+cite = "enemy_ai_ops.cpp:281, 341 (read; the meaning from that one use)"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [3, 3]
+name = "no_sell"
+meaning = "cannot be sold (Item_CanUse mode 3, the shop's sell list)"
+status = "evidence"
+cite = "menu_windows.cpp:994; shop_states2.cpp:765, 781, 903"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [4, 4]
+name = "target_group"
+meaning = "targets a side or group (battle target 0x80, or 0x40 with target_other); in the field a party-wide item"
+status = "evidence"
+cite = "battle_menu_states.cpp:405; battle_sprites.cpp:245; docs/item-use.md"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [5, 5]
+name = "target_other"
+meaning = "with target_group the other side; target picking starts on the enemies"
+status = "evidence"
+cite = "battle_menu_states.cpp:405, 427; battle_sprites.cpp:498 (reads; 'other side' is the reading)"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [6, 6]
+name = "target_choose"
+meaning = "the player chooses a target"
+status = "evidence"
+cite = "battle_menu_states.cpp:394-395"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [7, 7]
+name = "target_all"
+meaning = "everyone (target 0xC0), or may cross sides while picking"
+status = "evidence"
+cite = "battle_menu_states.cpp:398"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+bits = [0, 3]
+name = "icon_kind"
+meaning = "icon kind (Item_KindIcons) and, for equipment, the slot: 1 weapon, 2..4 the armour slots, 5 accessory"
+status = "evidence"
+cite = "char_stats.cpp:609-612 (Item_IconKind 0x591720); shop_states2.cpp:703-725"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+bits = [4, 7]
+name = "icon_high"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x13
+type = "u8"
+name = "weight"
+meaning = "subtracted from AGI (Char_ApplyArmour 0x591190)"
+status = "evidence"
+cite = "char_stats.cpp:312"
+
+[[table.field]]
+at = 0x14
+type = "u8"
+name = "defence"
+meaning = "added to DEF (Char_ApplyArmour)"
+status = "evidence"
+cite = "char_stats.cpp:311"
+
+[[table.field]]
+at = 0x15
+type = "u8"
+name = "unread_15"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x16
+type = "u16"
+name = "help_msg"
+meaning = "system message id of the help line (Item_HelpMessage)"
+status = "evidence"
+cite = "char_stats.cpp:637"
+
+[[table.field]]
+at = 0x18
+type = "u16"
+name = "price"
+meaning = "base price (Item_BasePrice)"
+status = "evidence"
+cite = "menu_windows.cpp:929"
 
 [[table]]
 key = "accessories"
@@ -125,24 +536,306 @@ name = { at = 0 }
 find_in = "GAME.EMI"
 [[table.psx]]
 build = "psx-jp"
-file = "GAME.EMI"
+file = ["GAME.EMI", "BOOT"]
 addr = 0x801CAA68
 status = "evidence"
-cite = "symbols.toml NameTable_Accessories psx"
+cite = "symbols.toml NameTable_Accessories psx (the address); which file holds it on the JP disc is not settled"
 
+[[table.field]]
+at = 0x10
+type = "u8"
+name = "equip_mask"
+meaning = "who may equip it: bit n is CharacterRecords index n (Item_EquipMask)"
+status = "evidence"
+cite = "char_stats.cpp:627"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [0, 0]
+name = "field_use"
+meaning = "usable from the field menu's item list (Item_CanUse mode 1); a byte of 0 is refused by ItemUse_Dispatch"
+status = "evidence"
+cite = "menu_windows.cpp:990; item_use.cpp:111; Item_UseFlags 0x591810 category 3"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [1, 1]
+name = "battle_use"
+meaning = "usable in battle (Item_CanUse mode 2, the battle item window)"
+status = "evidence"
+cite = "menu_windows.cpp:993; battle_misc.cpp:313, 353"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [2, 2]
+name = "no_hit_anim"
+meaning = "the enemy does not play its hit animation for it"
+status = "hypothesis"
+cite = "enemy_ai_ops.cpp:281, 341 (read; the meaning from that one use)"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [3, 3]
+name = "no_sell"
+meaning = "cannot be sold (Item_CanUse mode 3, the shop's sell list)"
+status = "evidence"
+cite = "menu_windows.cpp:994; shop_states2.cpp:765, 781, 903"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [4, 4]
+name = "target_group"
+meaning = "targets a side or group (battle target 0x80, or 0x40 with target_other); in the field a party-wide item"
+status = "evidence"
+cite = "battle_menu_states.cpp:405; battle_sprites.cpp:245; docs/item-use.md"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [5, 5]
+name = "target_other"
+meaning = "with target_group the other side; target picking starts on the enemies"
+status = "evidence"
+cite = "battle_menu_states.cpp:405, 427; battle_sprites.cpp:498 (reads; 'other side' is the reading)"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [6, 6]
+name = "target_choose"
+meaning = "the player chooses a target"
+status = "evidence"
+cite = "battle_menu_states.cpp:394-395"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+bits = [7, 7]
+name = "target_all"
+meaning = "everyone (target 0xC0), or may cross sides while picking"
+status = "evidence"
+cite = "battle_menu_states.cpp:398"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+bits = [0, 3]
+name = "icon_kind"
+meaning = "icon kind (Item_KindIcons) and, for equipment, the slot: 1 weapon, 2..4 the armour slots, 5 accessory; kinds 0xA and 0xB are kept out of the shop's equip prompt"
+status = "evidence"
+cite = "char_stats.cpp:609-612 (Item_IconKind 0x591720); shop_states2.cpp:703-725"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+bits = [4, 7]
+name = "icon_high"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x13
+type = "u8"
+name = "weight"
+meaning = "subtracted from AGI (Char_ApplyAccessories 0x591490)"
+status = "evidence"
+cite = "char_stats.cpp:360"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+name = "help_msg"
+meaning = "system message id of the help line (Item_HelpMessage)"
+status = "evidence"
+cite = "char_stats.cpp:638"
+
+[[table.field]]
+at = 0x16
+type = "u16"
+name = "price"
+meaning = "base price (Item_BasePrice)"
+status = "evidence"
+cite = "menu_windows.cpp:930"
+
+# The ability records are framed as every reader of a name takes them: name
+# first, at 0x65C4C8. symbols.toml's NameTable_Abilities is the same bytes
+# 16 later - the parameters of id n with the name of id n + 1 - which DIV-0008
+# still writes through (symbols.toml, its note). Whether id 227 exists (a name
+# at 0x65DA10 with parameters after it) is open.
 [[table]]
 key = "abilities"
-symbol = "NameTable_Abilities"
+symbol = "Ability_Records"
 group = "items"
-what = "an ability: eight parameter bytes, then the name"
+what = "an ability: name, then eight parameter bytes"
 index = "ability id"
 count = 227
 stride = 24
-name = { at = 8 }
+name = { at = 0 }
 find_in = "GAME.EMI"
 [[table.psx]]
 build = "psx-jp"
-file = "GAME.EMI"
-addr = 0x801CB230
+file = ["GAME.EMI", "BOOT"]
+addr = 0x801CB228
 status = "evidence"
-cite = "symbols.toml NameTable_Abilities psx; JP stride 16, US 20"
+cite = "symbols.toml Ability_Records psx: Skill_FlagIndex's boot twin reads 0x801CB234 + 16 id for the +0x14 word; which file holds it is not settled"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [0, 0]
+name = "field_use"
+meaning = "usable in the field (Skill_CanUse 0x57DA70)"
+status = "evidence"
+cite = "battle_window_draw.cpp:451"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [1, 1]
+name = "battle_use"
+meaning = "usable in battle (Skill_CanUse)"
+status = "evidence"
+cite = "battle_window_draw.cpp:458"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [2, 2]
+name = "no_hit_anim"
+meaning = "the enemy does not play its hit animation for it"
+status = "hypothesis"
+cite = "enemy_ai_ops.cpp:344 (read; the meaning from that one use)"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [3, 3]
+name = "unread_bit3"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [4, 4]
+name = "target_group"
+meaning = "targets a side or group, as the item flag byte"
+status = "evidence"
+cite = "battle_sprites.cpp:235; enemy_ai_ops.cpp:426-427; battle_actor_copies.cpp:398-410"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [5, 5]
+name = "target_other"
+meaning = "with target_group the other side; no automatic member target"
+status = "evidence"
+cite = "battle_sprites.cpp:476; battle_actor_copies.cpp:428"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [6, 6]
+name = "target_choose"
+meaning = "the player chooses a target"
+status = "evidence"
+cite = "battle_actor_copies.cpp:454-455"
+
+[[table.field]]
+at = 0x10
+type = "u8"
+bits = [7, 7]
+name = "target_all"
+meaning = "everyone, or may cross sides while picking"
+status = "evidence"
+cite = "battle_actor_copies.cpp:475-476"
+
+[[table.field]]
+at = 0x11
+type = "u8"
+name = "order_kind"
+meaning = "turn-order class: 0 gives +4 agility, 1 or 3 +2 (Battle_BuildTurnOrder 0x4450E0)"
+status = "hypothesis"
+cite = "battle_damage.cpp:222-225, 252-254 (read; 'class' is the reading)"
+
+[[table.field]]
+at = 0x12
+type = "u8"
+name = "ap_cost"
+meaning = "AP cost; accessories 0x19 and 0x1A worn reduce it (Skill_ApCost 0x591DB0)"
+status = "evidence"
+cite = "battle_window_draw.cpp:519; docs/battle_window_draw.md"
+
+[[table.field]]
+at = 0x13
+type = "u8"
+name = "power"
+meaning = "heal power, times (INT + 100) and the holy class's Skill_HealByHoly (Effect_HealAmount 0x44F130)"
+status = "evidence"
+cite = "battle_damage.cpp:834-845"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+bits = [0, 8]
+name = "element_mask"
+meaning = "element or kind mask: bits 0..4 fire, ice, lightning, earth, wind to Battle_ElementAffinity; the lowest set bit + 1 is the skill list's icon kind (Skill_FlagIndex 0x5918A0)"
+status = "evidence"
+cite = "battle_damage.cpp:811-816; battle_window_draw.cpp:494-507"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+bits = [9, 9]
+name = "learnable"
+meaning = "the action goes to a member's learned list (Battle_SettleFlag8 0x453B10 -> AbilityList_Add)"
+status = "hypothesis"
+cite = "battle_sprites.cpp:260, 292-311 (read; the name is the reading)"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+bits = [10, 10]
+name = "status_blocked"
+meaning = "not usable while the member's status has bit 4 (message 0x37)"
+status = "evidence"
+cite = "battle_window_draw.cpp:459; battle_actions.cpp:339"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+bits = [11, 11]
+name = "physical_hit"
+meaning = "the cast takes the hit branch: pose 8 not 0x28, the enemy plays hit sound and pop-up"
+status = "hypothesis"
+cite = "battle_obj_states.cpp:339-340, 413-414; enemy_ai_ops.cpp:378, 426 (read; the name is the reading)"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+bits = [12, 12]
+name = "second_task"
+meaning = "a second magic task (kind 1, 0x43) is started (Battle_StartAbilityMagic 0x437930)"
+status = "evidence"
+cite = "battle_flow.cpp:411-430"
+
+[[table.field]]
+at = 0x14
+type = "u16"
+bits = [13, 15]
+name = "unread_hi"
+meaning = "no reader found"
+status = "unknown"
+
+[[table.field]]
+at = 0x16
+type = "u16"
+name = "help_msg"
+meaning = "system message id of the description (BattleItem_Browse 0x4474B0 -> Msg_SystemPtr)"
+status = "evidence"
+cite = "battle_actor_copies.cpp:349"

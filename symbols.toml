@@ -250,6 +250,130 @@ psx = 0x801CB230
 name = "NameTable_Abilities"
 status = "evidence"
 evidence = "measured 2026-09-20: 227 records of 24 bytes - eight parameter bytes, then name[16]; the parameter bytes equal the JP disc's (sibling names/abilities.toml `raw`) in 226 of 226. JP stride 16, US 20."
+note = "Framed 16 bytes late (found 2026-09-26, tables.toml): every reader of a name takes it from Ability_Records 0x65C4C8 + 24 id, name first, so a record here is the parameters of id n and the name of id n + 1. Reads at this base plus k are Ability_Records' field + 0x10 + k, correct as they stand (battle_damage.cpp). DIV-0008 writes names from here + 8 - ids 1..227 - with the donor found in the same framing, so it is consistent (hypothesis, not re-measured); id 0's name is never replaced."
+
+[[data]]
+pc = 0x65C4C8
+psx = 0x801CB228
+name = "Ability_Records"
+status = "evidence"
+evidence = "read 2026-09-26 from the readers, not measured: name[16] then the eight parameter bytes, 24 a record by ability id - Menu_DrawSkillRow's caller 0x59D200 passes 0x65C4C8 + 0x18 id as the name, BattleAction_AbilityCheck 0x42F680 copies 16 bytes from 0x65C4C8 + 24 id to the banner, Skill_ApCost reads + 0x12 and Skill_FlagIndex + 0x14 at this base. PSX: Skill_FlagIndex's boot twin reads 0x801CB234 + 16 id for the + 0x14 word, which puts the JP record (name[8], then the same eight bytes) at 0x801CB228. Fields: tables.toml abilities."
+note = "The same bytes as NameTable_Abilities, framed as the code reads them. Whether a 228th record (id 227, name at 0x65DA10) has parameter bytes is open: dump 0x65DA10..0x65DA2F."
+
+# --- item-adjacent tables (2026-09-26, the table catalog's research; addresses only - fields and counts in tables.toml where known) ---
+
+[[data]]
+pc = 0x656B00
+name = "Inventory_IdLists"
+status = "evidence"
+evidence = "five pointers by category: 0x904154 + 0x80 cat for 0..3, then the key items 0x904554 (char_stats_callees.h, docs/char-stats.md section 4). Read by Inventory_Add, Inventory_Count, Inventory_CountUsed, the shop's sell list, the battle and menu item lists."
+
+[[data]]
+pc = 0x656B14
+name = "Inventory_CountLists"
+status = "evidence"
+evidence = "five pointers by category: 0x904354 + 0x80 cat for 0..3, the fifth 0 (D35, docs/known-defects.md). Ends exactly at NameTable_Consumables."
+
+[[data]]
+pc = 0x64B274
+psx = 0x800B39F0
+name = "ItemMagic_RowTables"
+status = "evidence"
+evidence = "four pointers by category to u8 tables by item id giving the Magic_Rows row: Battle_StartItemMagic 0x437780, Magic_LoadForItem 0x4377D0, 0x42FD20 (battle_flow.cpp, docs/battle_flow.md). The fourth points at 0x675ED8. The sub-tables' lengths are unread."
+
+[[data]]
+pc = 0x64C1D0
+psx = 0x800B3450
+name = "AbilityMagic_Rows"
+status = "evidence"
+evidence = "u8 by ability id, the Magic_Rows row: Battle_StartAbilityMagic 0x437930, Magic_LoadForAbility 0x4379D0 (battle_flow_callees.h). Count unread; at most 0xE8 to Magic_Rows, the PSX spacing alike."
+
+[[data]]
+pc = 0x64E540
+name = "Ability_EffectIndex"
+status = "evidence"
+evidence = "u8 by ability id, the Effect_Handlers slot: Effect_ApplyResult 0x44B9F0 for kind 4 (battle_damage.cpp). Count unread; at most 0x1EC to Item_EffectIndexTables."
+
+[[data]]
+pc = 0x64E72C
+psx = 0x800B164C
+name = "Item_EffectIndexTables"
+status = "evidence"
+evidence = "four pointers by item category (id >> 8, unbounded) to u8 tables by item id, the Effect_Handlers slot: Effect_ApplyResult 0x44B9F0 for kind 5 (battle_damage.cpp, docs/kinship-probe-battle-engine.md)."
+
+[[data]]
+pc = 0x64E94C
+psx = 0x800B186C
+name = "Skill_PowerVariance"
+status = "evidence"
+evidence = "eight u16 by Rand & 7, over 10000: Effect_SkillDamage 0x44ED10 (battle_damage.cpp, docs/battle_damage.md). Not Battle_DamageVarianceTable 0x64E38C, which Battle_ScaleDamage reads."
+
+[[data]]
+pc = 0x64E95C
+name = "Battle_ElementTable"
+status = "evidence"
+evidence = "s16 per affinity class, the element percent: Battle_ElementAffinity 0x44EE80. Count disputed - 8 by the spacing to 0x64E96C, more in docs/battle_damage.md's list; settle by the range of the class bytes (party +0x9F..+0xA3, enemy +0x3F..+0x43). PSX 0x800B187C by kinship, not verified."
+
+[[data]]
+pc = 0x64E99C
+name = "Skill_HealByHoly"
+status = "evidence"
+evidence = "s16 per holy class 0..7, over -10000: Effect_HealAmount 0x44F130 (battle_damage.cpp). Not Battle_HolyAffinityTable 0x64E3AC."
+
+[[data]]
+pc = 0x663D60
+name = "Item_KindIcons"
+status = "evidence"
+evidence = "u8 by an item's icon kind (the low nibble), its 8 x 8 icon: Menu_DrawItemRow 0x57DBF0 (menu_windows.cpp). 16 entries to Skill_KindIcons."
+
+[[data]]
+pc = 0x663D70
+psx = 0x801CD7EC
+name = "Skill_KindIcons"
+status = "evidence"
+evidence = "u8 by Skill_FlagIndex (0..9), the skill row's 8 x 8 icon: Menu_DrawSkillRow 0x57DC90; the GAME.EMI twin reads 0x801CD7EC."
+
+[[data]]
+pc = 0x663660
+name = "Equip_SlotIcons"
+status = "evidence"
+evidence = "u8 per equipment slot (weapon, three armour, two accessories): Menu_DrawEquipPanel 0x573A80 (menu_windows.cpp). Six entries; the EQUIP label 0x663668 follows."
+
+[[data]]
+pc = 0x64F10C
+name = "Battle_HitSounds"
+status = "evidence"
+evidence = "u16 sound ids by hit class + 7 * critical: Battle_PlayHitSound 0x454380 (battle_sprites.cpp). The class is a weapon's + 0x15 (tables.toml) or an enemy's + 0x101. Count by that indexing 14, not confirmed."
+
+[[data]]
+pc = 0x658930
+name = "Shop_Records"
+status = "evidence"
+evidence = "23-byte records by shop number (object + 0x1C, 0x929EC3): a u8 count, then (u8 category, u8 item) pairs - ShopMode_Begin 0x57F520, ShopTrade_Open 0x5818D0 (shop_states.cpp, docs/shop_states.md). Starts exactly where NameTable_Accessories ends. Count unread; at most 50 to ItemUse_Handlers."
+
+[[data]]
+pc = 0x658F48
+name = "Char_ExpTable"
+status = "evidence"
+evidence = "0x318 bytes a member, 8-byte rows, the u16 at + 0 of each row the EXP for that level step (summed to the level): Char_ExpForLevel 0x574A60 (menu_windows.cpp). Row bytes + 2..+ 7 are unread by it; presumably the level-up gains 0x498DE0 reads (hypothesis). Members: at most 8 to FxRing_PhasesTwin."
+
+[[data]]
+pc = 0x667248
+name = "NewGame_GrowthRolls"
+status = "evidence"
+evidence = "eight 3-byte {lo, hi, n} records, NewGame_RollSum's arguments: NewGame_RollGrowth 0x588AC0 (save_menu.cpp). Effectively dead - the rolls land at 0x903640 and are cleared at once."
+
+[[data]]
+pc = 0x667260
+name = "NewGame_GrowthValues"
+status = "evidence"
+evidence = "u8 by roll sum: NewGame_RollGrowth 0x588AC0. Count unread; at most 52 to TitleTask_Modes."
+
+[[data]]
+pc = 0x667548
+name = "Char_TraitLists"
+status = "evidence"
+evidence = "pointers by a character's trait byte (record + 0x1F; 0xFF or a null pointer none) to (kind, amount) byte pairs ended by kind 0xE, innate resistances and percentages: Char_ApplyTraits 0x590800 (char_stats.cpp, docs/char-stats.md). Count unread; at most 18 to Area_Descriptors."
 
 [[data]]
 pc = 0x8034F4
@@ -9334,13 +9458,13 @@ evidence = "disasm 2026-09-23, 0x591A80..0x591ABB (0x3C bytes), no PSX pair reco
 
 [[func]]
 pc = 0x591C20
-name = "Item_Price"
+name = "Item_HelpMessage"
 psx = 0x80167058
 ret = "unsigned"
 params = "unsigned category, unsigned item"
 impl = "src/game/char_stats.cpp"
-status = "hypothesis"
-evidence = "disasm 2026-09-23, 0x591C20..0x591CAA plus its 4-entry jump table to 0x591CBB (0x9C bytes): the word of weapons + 0x18, armour + 0x16, accessories + 0x14, key items + 0x10, consumables + 0x12 (eax whole, the word zero-extended). The shop screens call it 523 times on the owner's shop route (0x581C70, 0x58281C) - the price, by that use (the NameTable_Consumables note has the price at + 0x14, which this does not read). 15 call sites."
+status = "evidence"
+evidence = "disasm 2026-09-23, 0x591C20..0x591CAA plus its 4-entry jump table to 0x591CBB (0x9C bytes): the word of weapons + 0x18, armour + 0x16, accessories + 0x14, key items + 0x10, consumables + 0x12 (eax whole, the word zero-extended). 15 call sites. Renamed 2026-09-26 from Item_Price: every caller read hands the word to Msg_SystemPtr as the help line (BattleItemCmd 0x448210, the shop's 0x581BE0 and 0x5827F0 into 0x803170), and the price is the NEXT word, which Item_BasePrice 0x5749F0 reads (tables.toml field help_msg / price)."
 # --- round six, group Z: the party members' sprites (src/game/member_sprites.cpp, docs/member-sprites.md) ---
 
 [[func]]
@@ -13397,7 +13521,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_menu_states.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x448210..0x4485F1 (0x3E2 bytes, 11 calls, every jump internal): nothing while record 16's +3 (0x8033A3) is set; the hand (record 19, 0x80340C) at record 16's x + 7, y + 13 * (cursor - top + 2); the acting member's ObjTrio dword +0x130 &= 0xBFFF; Input_AutoRepeat(pressed & 0xF00C): 0x8000 / 0x2000 the category +0xA back / on in 0..3 (a signed wrap below, above 3 to 0; request word +0x10 0x32 / 0x31; cue 0x101), else 0x1000 / 0x4000 the cursor +0xC one back to 0 / on to 0x7F (request +0x12 0xF0 above the top, 0x10 at top + 7), else 4 / 8 a page of 7 (the top +0xB capped at 0x79, the cursor 0x7F); cue 0x100 on a move; the last-pushed queue entry's text = Msg_SystemPtr(Item_Price(category, item)); then with +0x12 zero: up at row 0 opens record 21 and state 6; cancel saves the page / top / cursor to 0x904605..7, cue 0x106, state on; confirm puts category << 8 | item in the command's word +2 and asks Item_CanUse(record 16 +8, 0, category, item): refused cue 0x107, else cue 0x103 and state 3. State 1 of 0x64E45C."
+evidence = "disasm 2026-09-25, 0x448210..0x4485F1 (0x3E2 bytes, 11 calls, every jump internal): nothing while record 16's +3 (0x8033A3) is set; the hand (record 19, 0x80340C) at record 16's x + 7, y + 13 * (cursor - top + 2); the acting member's ObjTrio dword +0x130 &= 0xBFFF; Input_AutoRepeat(pressed & 0xF00C): 0x8000 / 0x2000 the category +0xA back / on in 0..3 (a signed wrap below, above 3 to 0; request word +0x10 0x32 / 0x31; cue 0x101), else 0x1000 / 0x4000 the cursor +0xC one back to 0 / on to 0x7F (request +0x12 0xF0 above the top, 0x10 at top + 7), else 4 / 8 a page of 7 (the top +0xB capped at 0x79, the cursor 0x7F); cue 0x100 on a move; the last-pushed queue entry's text = Msg_SystemPtr(Item_HelpMessage(category, item)); then with +0x12 zero: up at row 0 opens record 21 and state 6; cancel saves the page / top / cursor to 0x904605..7, cue 0x106, state on; confirm puts category << 8 | item in the command's word +2 and asks Item_CanUse(record 16 +8, 0, category, item): refused cue 0x107, else cue 0x103 and state 3. State 1 of 0x64E45C."
 
 [[func]]
 pc = 0x448630
@@ -18383,7 +18507,7 @@ ret = "void"
 params = "void"
 impl = "src/game/shop_states2.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x581BE0..0x581ECC (0x2ED bytes), fifteen calls: the pair under s8 0x6BC8A9 to 0x6BC89C / 0x6BC8AD; member panels +0xB Item_IconKind, +0xC the item; help 0x803170 = Item_Price (0x591C20); with 0x803283 = 0 the hand to the row; Input_AutoRepeat(pressed & 0x5000): 0x1000 up (below 0 to count - 1), 0x4000 down (past s8 count - 1 to 0), a move Sound 0x100 and the list pointer and cursor re-read; confirm: count 1, 0x6BC8A0 = Shop_ScalePrice(Item_BasePrice & 0xFFFF, word 0x6BC8B4), 0x6BC8B0 = money 0x904058 / it (div), held = low bytes of Inventory_Count(.., 1) + (.., 0): > 0x63 count and most 0, else most cut to 0x63 - held; money >= price: 0x929F0B = 1, Sound 0x103, step + 1, else Sound 0x107; cancel: Sound 0x106, panels +3 = 1, 0x803283 = 1, state 1 step 0. Entry 1 of 0x664138. Shop route. PSX twin 0x801D1634 (the catalogue's pairing, not read here)."
+evidence = "disasm 2026-09-25, 0x581BE0..0x581ECC (0x2ED bytes), fifteen calls: the pair under s8 0x6BC8A9 to 0x6BC89C / 0x6BC8AD; member panels +0xB Item_IconKind, +0xC the item; help 0x803170 = Item_HelpMessage (0x591C20); with 0x803283 = 0 the hand to the row; Input_AutoRepeat(pressed & 0x5000): 0x1000 up (below 0 to count - 1), 0x4000 down (past s8 count - 1 to 0), a move Sound 0x100 and the list pointer and cursor re-read; confirm: count 1, 0x6BC8A0 = Shop_ScalePrice(Item_BasePrice & 0xFFFF, word 0x6BC8B4), 0x6BC8B0 = money 0x904058 / it (div), held = low bytes of Inventory_Count(.., 1) + (.., 0): > 0x63 count and most 0, else most cut to 0x63 - held; money >= price: 0x929F0B = 1, Sound 0x103, step + 1, else Sound 0x107; cancel: Sound 0x106, panels +3 = 1, 0x803283 = 1, state 1 step 0. Entry 1 of 0x664138. Shop route. PSX twin 0x801D1634 (the catalogue's pairing, not read here)."
 
 [[func]]
 pc = 0x581ED0
@@ -18464,7 +18588,7 @@ ret = "void"
 params = "void"
 impl = "src/game/shop_states2.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-25, 0x5827F0..0x582B55 (0x366 bytes), eleven calls: item = [0x656B00 + 4 tab][row] (tab 0x803266, row 0x803268 & 0xFF), help = Item_Price(tab, item); with 0x80325F = 0 the hand to (0x803260 + 7, 13 (row - top) + 0x803262 + 0x1B); Input_AutoRepeat(pressed & 0xF00C): 0x8000 / 0x2000 the tab -/+ 1 wrapping 0..3 (Sound 0x101, word 0x80326C 0x32 / 0x31); 0x1000 row - 1 (not below 0; below top starts 0x80326E = 0xF0), 0x4000 row + 1 (to 0x7F; row >= top + 9 starts 0x10), 4 page up by 9 (top 0: row 0; top < 9: row - top, top 0), 8 page down by 9 (top 0x77: row 0x7F; top > 0x6E: to 0x77); a row change Sound 0x100; returns while 0x80326E; confirm: the item chosen, Sound 0x103, Item_CanUse(0x803264, 0, category, item): 0 - Sound 0x107; else Sound 0x103, 0x6BC8A9 = row, 0x6BC8B0 = [0x656B14 + 4 category][s8 row], count 1, 0x6BC8A0 = Shop_SellPrice(category, item, 0x6BC8AA), step + 1; cancel: Sound 0x106, 0x80325F = 1, 0x929F04 = 7, step + 3. Entry 1 of 0x664158 and of 0x66417C. Shop route."
+evidence = "disasm 2026-09-25, 0x5827F0..0x582B55 (0x366 bytes), eleven calls: item = [0x656B00 + 4 tab][row] (tab 0x803266, row 0x803268 & 0xFF), help = Item_HelpMessage(tab, item); with 0x80325F = 0 the hand to (0x803260 + 7, 13 (row - top) + 0x803262 + 0x1B); Input_AutoRepeat(pressed & 0xF00C): 0x8000 / 0x2000 the tab -/+ 1 wrapping 0..3 (Sound 0x101, word 0x80326C 0x32 / 0x31); 0x1000 row - 1 (not below 0; below top starts 0x80326E = 0xF0), 0x4000 row + 1 (to 0x7F; row >= top + 9 starts 0x10), 4 page up by 9 (top 0: row 0; top < 9: row - top, top 0), 8 page down by 9 (top 0x77: row 0x7F; top > 0x6E: to 0x77); a row change Sound 0x100; returns while 0x80326E; confirm: the item chosen, Sound 0x103, Item_CanUse(0x803264, 0, category, item): 0 - Sound 0x107; else Sound 0x103, 0x6BC8A9 = row, 0x6BC8B0 = [0x656B14 + 4 category][s8 row], count 1, 0x6BC8A0 = Shop_SellPrice(category, item, 0x6BC8AA), step + 1; cancel: Sound 0x106, 0x80325F = 1, 0x929F04 = 7, step + 3. Entry 1 of 0x664158 and of 0x66417C. Shop route."
 
 [[func]]
 pc = 0x582B60

@@ -179,6 +179,13 @@ that function to one build. Both are cheap to prevent at takeover time and
 expensive to find later. The audit of the ~400 files taken over so far is
 [`exe-table-audit.md`](exe-table-audit.md).
 
+**The table catalog** is [`tables.toml`](../tables.toml) (started 2026-09-26
+with the item and ability tables). It records each table's symbol, count, record
+size, each disc build's recorded address, and what every field means, with
+the reader that proves it. It holds no values: `tools/tables.py dump` reads
+them from the player's own `BOF3.exe` or disc, into `analysis/`. That is this
+section's map in the form an importer can use.
+
 The rule is written here as a proposal. Promoting it to a `CLAUDE.md` hard rule
 is the owner's decision.
 

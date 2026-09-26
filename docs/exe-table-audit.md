@@ -163,6 +163,14 @@ party and field tables, the experience and growth tables, shop inventories,
 menu layout and art, and battle text. A must-source list generated from
 `symbols.toml` would miss all of them.
 
+**Since 2026-09-26** the item-adjacent ones among them have `[[data]]` entries
+(`Shop_Records`, `Char_ExpTable`, `Char_TraitLists`, the effect and magic
+index tables, the icon tables and others), and the six item and ability
+record tables have field layouts in [`tables.toml`](../tables.toml). The same
+research found that `NameTable_Abilities` is framed 16 bytes late; the code
+reads `Ability_Records` `0x65C4C8`. It also found that `Item_Price` read the
+help-line message, not the price, so it is now `Item_HelpMessage`.
+
 For about half the content tables, the PSX address is already recorded
 (`psx =` or a comment). Where the port re-laid UI textures, the PC's UI
 geometry tables may match no PSX table at all.

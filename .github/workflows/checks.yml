@@ -6,6 +6,9 @@
 #   tools/gen_symbols.py    symbols.toml parses and generates (names, addresses,
 #                           signatures, impl files) - the same step the build
 #                           runs, here without waiting for a toolchain
+#   tools/tables.py check   the table catalog: every table's symbol and build
+#                           exist, every field fits its record, nothing overlaps
+#                           unmarked, every claimed field cites its reader
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
 #                           synthetic corpus, with its negative controls
 name: Checks
@@ -39,6 +42,9 @@ jobs:
 
       - name: symbols.toml generates
         run: python tools/gen_symbols.py --toml symbols.toml --out "$RUNNER_TEMP/symbols.gen.h"
+
+      - name: tables.toml against symbols.toml and fixtures.toml
+        run: python tools/tables.py check
 
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
