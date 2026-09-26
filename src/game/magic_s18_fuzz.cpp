@@ -105,7 +105,7 @@ const mh::Clone kClones[] = {
     S18_CALLS(Buff_Start, 0x4C0240, 0x16D, kCalls4C0240),
     S18_PLAIN(Buff_WaitChildren, 0x4C03B0, 0x18),
     S18_CALLS(Buff_Fade, 0x4C03D0, 0x11C, kCalls4C03D0),
-    {"Buff_Kind", 0x4C04F0, 0x122, nullptr, 0, nullptr, 0, kTables4C04F0, MH_N(kTables4C04F0), S18_FN(Buff_Kind), false, 0xFF},
+    {"Buff_Kind", 0x4C04F0, 0x122, nullptr, 0, nullptr, 0, kTables4C04F0, MH_N(kTables4C04F0), S18_FN(Buff_Kind), 0xFF},
     S18_PLAIN(BuffFx_Dispatch, 0x4C0620, 0x12),
     S18_CALLS(BuffRing_Task, 0x4C0640, 0x32, kCalls4C0640),
     S18_PLAIN(BuffRing_Wait, 0x4C0680, 0x14),
@@ -118,7 +118,7 @@ const mh::Clone kClones[] = {
     S18_CALLS(BuffSpike_Orbit, 0x4C0D20, 0x104, kCalls4C0D20),
     // calm: the original stores each depth by (a - +9) / 8 with +9 read again
     // (mh::Clone::calm)
-    {"BuffSpike_Draw", 0x4C0E30, 0x4B9, kCalls4C0E30, MH_N(kCalls4C0E30), nullptr, 0, nullptr, 0, S18_FN(BuffSpike_Draw), true, 0},
+    {"BuffSpike_Draw", 0x4C0E30, 0x4B9, kCalls4C0E30, MH_N(kCalls4C0E30), nullptr, 0, nullptr, 0, S18_FN(BuffSpike_Draw), 0, true},
     S18_CALLS(MagicFx_DrawDiscRadius, 0x4C12F0, 0x172, kCalls4C12F0),
 };
 #undef S18_PLAIN
@@ -149,15 +149,16 @@ const mh::Callee kCallees[] = {
     {S18_OURS(Gpu_SetPolyG3), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S18_OURS(Gpu_SetPolyG4), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S18_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    // the vertices (the vertex scratch) and the screen points (the packet);
+    // the vertices (the vertex scratch, logged by their eight bytes each) and
+    // the screen points (the packet);
     // the last two pointers are the caller's stack
-    {S18_OURS(Gte_RotTransPers3), 8, {kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0},
-    {S18_OURS(Gte_RotTransPers4), 8, {kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {S18_OURS(Gte_RotAverage3), 8, {kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0},
+    {S18_OURS(Gte_RotTransPers3), 8, {kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0, {8, 8, 8}},
+    {S18_OURS(Gte_RotTransPers4), 8, {kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {8, 8, 8, 8}},
+    {S18_OURS(Gte_RotAverage3), 8, {kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, mh::Answer::kGarbage, 0, 0, {8, 8, 8}},
     {S18_OURS(Gte_PrimDepths3_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {S18_OURS(Gte_PrimDepths4_10B), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     // the effect library's (queue group L): the depths array by its 16 bytes
-    {"0x4FB880", 0x4FB880, 0x4FB880, 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, 1u << 2},
+    {"0x4FB880", 0x4FB880, 0x4FB880, 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0, {0, 0, 16}},
     {"0x4FB6F0", 0x4FB6F0, 0x4FB6F0, 2, {kU8, kU8}, mh::Answer::kFlag, 0, 0},
     // this group's own, called by its others
     {S18_OURS(DrainOrb_Draw), 0, {}, mh::Answer::kGarbage, 0, 0},
