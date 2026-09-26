@@ -3,7 +3,8 @@
 **Status:** IN PROGRESS (2026-09-26). All 48 functions are ours
 (`src/game/magic_s02.cpp`, shadow name `magic_s02`), fuzzed headless through
 the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
-it: 0 mismatches over 96,000 rounds. CONTROLS_SUMMARY Nothing recorded casts
+it: 0 mismatches over 96,000 rounds. 230 of 231 negative controls refused (229 by a count, one by a fault); the
+one left is an equivalent mutant, whose near variant was refused. Nothing recorded casts
 these abilities, so this is fuzz only until the owner sees them used.
 
 Round nine, third spell wave, group S02
@@ -154,7 +155,7 @@ where MAGIC006's table starts (`0x65A5E0`, `0x49C4E0` is MAGIC006's).
 rounds each, with no harness edits; what the harness lacks is built in
 `magic_s02_fuzz.cpp`:
 
-- **Callees** (28 listed; the standard set supplies the rest):
+- **Callees** (33 listed; the standard set supplies the rest):
   - the draws: `Gfx_CommitPrim` has an `effect` that logs the primitive's
     bytes (`NoteBytes`, the size the call names) and moves `Gfx_PacketNext`
     on through a 0x2000-byte buffer of the fuzz's own;
@@ -170,22 +171,31 @@ rounds each, with no harness edits; what the harness lacks is built in
     pointer taken before;
   - this group's own functions called directly (`kPhase`, or the draws with
     their one u8 argument), and the four other units' by address;
+  - the five phases run under a swapped frame-offset table
+    (`SuperComboHit_Run`'s two, `ElemStrikeFx_Steps`' three) as `kPhase`
+    callees that also log `0x9039D8` (the handlers' recorders do not);
   - `SuperComboHit_Alloc`'s stand-in answers 0..31 only (section 8).
 - **Tables:** the four `.data` tables of section 4.
 - **Regions** beyond the standard ones: `Gfx_PacketNext` and the packet
   buffer; the pool; `0x904B80..0x904B97` (the ability word, the hit count);
-  Input_Pressed; `0x9039D8`; `MoveScript_TintRecords`; CLUT row 26 and its
-  source. 27,908 bytes of state in 17 regions.
+  Input_Pressed; `0x9039D8`; `MoveScript_TintRecords`; the prompt texts'
+  pointer table `0x66A0D8` and 64 bytes of strings of the fuzz's own; CLUT
+  row 26 and its source. 27,988 bytes of state in 19 regions.
 - **Seed:** every pool entry's owner a task slot (the disturbance writes
   through the owner while `SuperCombo_Task` runs an entry); `0x904B3C` at one
   of the harness's sprite records; the ability word the group's ids half the
   time; each dispatcher inside its table; each count-down at 1 or 2; the
-  prompt's count at 0xF / 0x10 and 0x1F / 0x20; Input_Pressed nothing, one
+  prompt's count at 0xF / 0x10 / 0x13 / 0x14 (the time table's entries
+  0x10..0x13 are the late time, 3) and 0x1F / 0x20; the text table the
+  game's strings or, half the time, the fuzz's own (up to 12 bytes of 0xFF,
+  glyphs and anything, or empty: the game's have no 0xFF and none is
+  empty); Input_Pressed nothing, one
   bit, several, the wanted bit alone (half the time) or with bit 0x100; the
   dash's +9 0, 1, 2 or 0xFF; the landing and start points one step away
   (or one off it); the owner's +0xB 0..2 and +0xA 0..0x20; the pool full a
   quarter of the time for the allocator; the fade's channels 0..3; the
-  target's state 6; the ability word around the kind table's ends.
+  target's state 6; the ability word one of the kind table's ids, around
+  its ends, or anything.
   `Group::args` gives the draws a text 0..3, a box 0..4, any button and
   count (half below 10), with garbage above the byte half the time.
   `phase_span = 3`: `ElemStrikeFx_Run` reads its phase after a call.
@@ -194,17 +204,258 @@ rounds each, with no harness edits; what the harness lacks is built in
 
 Result in this worktree (2026-09-26):
 
-    shadow      magic_s02 self-test: 96000 rounds over 48 functions (2000 each), 320813 calls to the stand-ins,
-                0 MISMATCHES; 27908 bytes of state (17 regions) and the stand-ins' log compared
+    shadow      magic_s02 self-test: 96000 rounds over 48 functions (2000 each), 313838 calls to the stand-ins,
+                0 MISMATCHES; 27988 bytes of state (19 regions) and the stand-ins' log compared
 
 Every callee listed and every handler was called by the originals
-(coverage line in `build/bof3x.log`). `BOF3X_SHADOW='*'`: exit 0 (319,994
+(coverage line in `build/bof3x.log`). `BOF3X_SHADOW='*'`: exit 0 (310,580
 stand-in calls for this group in that run: the harness's pointers into the DLL
 move a few branches, 0 mismatches).
 
 ## 6. Controls
 
-CONTROLS_TEXT
+231 plants, each put in `magic_s02.cpp` one at a time by a script (not committed) that planted, rebuilt, checked the build had recompiled the file, ran `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s02`, restored; after the last it restored, rebuilt and ran the clean self-test (0 mismatches). **230 of 231 refused**: 229 by exit 3 with a count only in the functions the plant touches, one (H36) by an access violation in ours. The one not refused is an equivalent mutant (P19), and its near variant (P19b) was refused. The P-, K-, H-, D- controls are MAGIC003's task and phases, its dash and after-images, its hit sprites and pool, its draws; the E- controls MAGIC004's.
+
+The first run left three more standing, which the fuzz then learnt to see (their rows are the second run's, with every control of the functions concerned run again):
+
+- **D2, D10**: the game's four prompt texts hold no 0xFF and none is empty, so the half-width space and the first-byte test were never met. The seed now aims the text table (`0x66A0D8`, a region, put back after) at strings of the fuzz's own half the time.
+- **E56**: `ElemStrikeFx_Run`'s frame-offset table is overwritten after its phase, and the handlers' recorders did not log it. The five phases run under a swapped table are now listed as `kPhase` callees logging `0x9039D8`.
+
+And `ElemStrike_Kind`'s seed now names the kind table's ids directly (E43 and E48 had been refused in 3 rounds). The thinnest now (fewer than 60 rounds): E47 16, E42 22, E52 24, E21 31, E48 36, E22 40, E43 45, E23 51, P28 52, P19b 57.
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| P1 | Task: phases 3/4 swapped | SuperCombo_Task 395 |
+| P2 | Task: pool entries run on bit 1 | SuperCombo_Task 2000 |
+| P3 | Task: 31 pool entries | SuperCombo_Task 1019 |
+| P4 | Task: owner not set for the entry | SuperCombo_Task 2000 |
+| P5 | Task: owner not put back | SuperCombo_Task 1709 |
+| P6 | Task: Sprite_Current saved before the phase | SuperCombo_Task 71 |
+| P7 | Task: Sprite_Current not put back | SuperCombo_Task 1982 |
+| P8 | Start: pool +2 kept | SuperCombo_Start 2000 |
+| P9 | Start: x 0xA1 | SuperCombo_Start 2000 |
+| P10 | Start: y 0x71 | SuperCombo_Start 2000 |
+| P11 | Start: +9 0x1F | SuperCombo_Start 2000 |
+| P12 | Start: count kept | SuperCombo_Start 1985 |
+| P13 | Prompt1: box 2 | SuperCombo_Prompt1 2000 |
+| P14 | Prompt1: text 0 | SuperCombo_Prompt1 2000 |
+| P15 | Prompt1: +9 0x1D | SuperCombo_Prompt1 457 |
+| P16 | Prompt2: +9 0xB | SuperCombo_Prompt2 457 |
+| P17 | Prompt2: text 1 | SuperCombo_Prompt2 2000 |
+| P18 | Pick: Rand & 7 | SuperCombo_PickButton 251 |
+| P19 | Pick: times below 0x11 | not refused: **equivalent** (entry 0x10 of the time table is 3, the late time) |
+| P19b | Pick: times below 0x15 (near variant of P19) | SuperCombo_PickButton 57 |
+| P20 | Pick: late time 4 | SuperCombo_PickButton 435 |
+| P21 | Pick: time table + 1 | SuperCombo_PickButton 85 |
+| P22 | Read: box 3 | SuperCombo_ReadButton 2000 |
+| P23 | Read: pad mask 0x70 | SuperCombo_ReadButton 265 |
+| P24 | Read: low byte compared | SuperCombo_ReadButton 234 |
+| P25 | Read: at most 0x21 | SuperCombo_ReadButton 111 |
+| P26 | Read: wrong press goes to 3 | SuperCombo_ReadButton 1316 |
+| P27 | Read: +9 7 on a press | SuperCombo_ReadButton 1783 |
+| P28 | Read: time-out +9 5 | SuperCombo_ReadButton 52 |
+| P29 | Read: the button from +0xA | SuperCombo_ReadButton 1994 |
+| P30 | Pause: +9 0x1F | SuperCombo_Pause 501 |
+| P31 | ShowCount: count from +9 | SuperCombo_ShowCount 1952 |
+| P32 | ShowCount: text before box | SuperCombo_ShowCount 2000 |
+| P33 | Strike: direction from the owner's +9 | SuperCombo_Strike 1947 |
+| P34 | Strike: animation 0xD | SuperCombo_Strike 2000 |
+| P35 | Strike: +4 before the spawns | SuperCombo_Strike 183 |
+| P36 | Strike: owner bit 0x20 | SuperCombo_Strike 1512 |
+| P37 | Strike: z not copied | SuperCombo_Strike 1763 |
+| P38 | Wait: mask 0x7F | SuperCombo_WaitChildren 775 |
+| P39 | Wait: animation 5 | SuperCombo_WaitChildren 1019 |
+| P40 | End: sound 0x103 | SuperCombo_End 2000 |
+| P41 | End: count read before the sound | SuperCombo_End 78 |
+| P42 | End: hits to 0x904B97 | SuperCombo_End 2000 |
+| P43 | End: done bit 8 | SuperCombo_End 1447 |
+| K1 | Child: kinds swapped | SuperComboChild_Task 2000 |
+| K2 | Dash_Run: steps 1/2 swapped | SuperComboDash_Run 819 |
+| K3 | Dash_Run: update without +0 | SuperComboDash_Run 783 |
+| K4 | LeapSetUp: step 0x2001 | SuperComboDash_Start 469, SuperComboImage_Start 511 |
+| K5 | LeapSetUp: rise 0x300001 | SuperComboDash_Start 473, SuperComboImage_Start 512 |
+| K6 | LeapSetUp: fall 0xFFF80001 | SuperComboDash_Start 473, SuperComboImage_Start 512 |
+| K7 | LeapSetUp: landing from z | SuperComboDash_Start 473, SuperComboImage_Start 512 |
+| K8 | LeapSetUp: +0x10 1 | SuperComboDash_Start 473, SuperComboImage_Start 512 |
+| K9 | Dash_Start: +9 not the size | SuperComboDash_Start 473 |
+| K10 | Dash_Start: size before the turn | SuperComboDash_Start 473 |
+| K11 | CountDown: sound 0x100 | SuperComboDash_Leap 435, SuperComboDash_Hit 438 |
+| K12 | CountDown: actor sound (3, 0) | SuperComboDash_Leap 435, SuperComboDash_Hit 438 |
+| K13 | CountDown: flags 0x11 | SuperComboDash_Leap 435, SuperComboDash_Hit 438 |
+| K14 | CountDown: no hits | SuperComboDash_Leap 435, SuperComboDash_Hit 438 |
+| K15 | CountDown: 0xFF counts down too | SuperComboDash_Leap 443, SuperComboDash_Hit 452 |
+| K16 | CountDown: +9 0xFE | SuperComboDash_Leap 429, SuperComboDash_Hit 432 |
+| K17 | LeapMove: no fall | SuperComboDash_Leap 2000, SuperComboImage_Leap 2000 |
+| K18 | LeapMove: fall before height | SuperComboDash_Leap 2000, SuperComboImage_Leap 2000 |
+| K19 | Dash_Leap: landing against +0x40 | SuperComboDash_Leap 531 |
+| K20 | Dash_Leap: tick before the move | SuperComboDash_Leap 236 |
+| K21 | Dash_Hit: back step 0xFFFFD000 | SuperComboDash_Hit 832 |
+| K22 | Dash_Hit: no turn | SuperComboDash_Hit 832 |
+| K23 | Dash_Hit: on at 0xFE | SuperComboDash_Hit 832 |
+| K24 | GroundMove: z by +0xC | SuperComboDash_Return 2000, SuperComboImage_Return 2000 |
+| K25 | BackAtStart: x only | SuperComboDash_Return 375, SuperComboImage_Return 392 |
+| K26 | Dash_End: at most 2 | SuperComboDash_End 342 |
+| K27 | Dash_End: not counted down | SuperComboDash_End 977 |
+| K28 | Image_Run: steps 2/3 swapped | SuperComboImage_Run 1002 |
+| K29 | Image_Start: bit 0x10 | SuperComboImage_Start 435 |
+| K30 | Image_Start: +0x5C 2 | SuperComboImage_Start 512 |
+| K31 | Image_Start: shade x 0xE0 | SuperComboImage_Start 477 |
+| K32 | Image_Start: +0x5E not set | SuperComboImage_Start 511 |
+| K33 | Image_Start: tint stride 4 | SuperComboImage_Start 505 |
+| K34 | Image_Start: tint channels rotated | SuperComboImage_Start 471 |
+| K35 | Image_Start: tint a 0 | SuperComboImage_Start 512 |
+| K36 | Image_Leap: no tick | SuperComboImage_Leap 2000 |
+| K37 | Image_Turn: back step 0xFFFFE001 | SuperComboImage_Turn 1984 |
+| K38 | Image_Turn: tick before the turn | SuperComboImage_Turn 2000 |
+| K39 | Image_Return: owner +0xB not down | SuperComboImage_Return 144 |
+| K40 | Image_Return: release the actor record | SuperComboImage_Return 144 |
+| H1 | Hit_Run: frame table 0x8C5D84 | SuperComboHit_Run 2000 |
+| H2 | Hit_Run: table not put back | SuperComboHit_Run 2000 |
+| H3 | Hit_Run: queued with +2 0 | SuperComboHit_Run 500 |
+| H4 | Hit_Run: steps swapped | SuperComboHit_Run 2000 |
+| H5 | Hit_Start: direction from src +9 | SuperComboHit_Start 519 |
+| H6 | Hit_Start: height from +0x38 | SuperComboHit_Start 530 |
+| H7 | Hit_Start: +0x25 0x1E | SuperComboHit_Start 530 |
+| H8 | Hit_Start: +0x24 0x80 | SuperComboHit_Start 530 |
+| H9 | Hit_Start: +0x27 less 0x4F | SuperComboHit_Start 530 |
+| H10 | Hit_Start: +0x2A bit 1 | SuperComboHit_Start 271 |
+| H11 | Hit_Start: animation from +4 | SuperComboHit_Start 530 |
+| H12 | Hit_Start: +0x29 1 | SuperComboHit_Start 530 |
+| H13 | Hit_Play: the first tick's answer | SuperComboHit_Play 1104 |
+| H14 | Hit_Play: owner +0xB kept | SuperComboHit_Play 1336 |
+| H15 | Spawn: dash +1 1 | SuperCombo_SpawnDash 2000 |
+| H16 | Spawn: dash +9 2 | SuperCombo_SpawnDash 2000 |
+| H17 | Spawn: dash parameter 2 | SuperCombo_SpawnDash 2000 |
+| H18 | CopyRecord: 0x7C bytes | SuperCombo_SpawnDash 2000, SuperCombo_SpawnImages 2000, ElemStrike_Start 2000 |
+| H19 | ActorRecord: party at 0..3 | SuperCombo_SpawnDash 379, SuperCombo_SpawnImages 445, ElemStrike_Start 398 |
+| H20 | Spawn: images +9 from 6 | SuperCombo_SpawnImages 2000 |
+| H21 | Spawn: three images | SuperCombo_SpawnImages 2000 |
+| H22 | Spawn: images +0xB from 1 | SuperCombo_SpawnImages 2000 |
+| H23 | Spawn: images +2 1 | SuperCombo_SpawnImages 2000 |
+| H24 | SpawnHits: owner +0xA not tested | SuperCombo_SpawnHits 218 |
+| H25 | SpawnHits: +9 from 2 | SuperCombo_SpawnHits 1782 |
+| H26 | SpawnHits: +0xB (i >> 1) & 3 | SuperCombo_SpawnHits 1029 |
+| H27 | SpawnHits: +0xB i & 7 | SuperCombo_SpawnHits 1543 |
+| H28 | SpawnHits: owner read once | SuperCombo_SpawnHits 700 |
+| H29 | SpawnHits: +4 i + 1 | SuperCombo_SpawnHits 1782 |
+| H30 | SpawnHits: +1 not cleared | SuperCombo_SpawnHits 1782 |
+| H31 | SpawnHits: bound read once | SuperCombo_SpawnHits 690 |
+| H32 | SpawnHits: step 3 | SuperCombo_SpawnHits 1543 |
+| H33 | Alloc: bit 0 not set | SuperComboHit_Alloc 1487 |
+| H34 | Alloc: none free 0xFE | SuperComboHit_Alloc 513 |
+| H35 | Alloc: from entry 1 | SuperComboHit_Alloc 493 |
+| H36 | Pool: stride 0x80 | an access violation in ours (exit 0xC0000005), no count |
+| D1 | Text: centred by 5 a glyph | SuperCombo_DrawText 1873 |
+| D2 | Text: space 5 | SuperCombo_DrawText 639 |
+| D3 | Text: glyph base 0x40 | SuperCombo_DrawText 1873 |
+| D4 | Text: 20 glyphs a row | SuperCombo_DrawText 1618 |
+| D5 | Text: v from row 2 | SuperCombo_DrawText 1873 |
+| D6 | Text: advance 11 | SuperCombo_DrawText 1789 |
+| D7 | Text: y from +0x32 | SuperCombo_DrawText 1873 |
+| D8 | Text: lengths table + 1 | SuperCombo_DrawText 1388 |
+| D9 | Text: commit 0x44 | SuperCombo_DrawText 1873 |
+| D10 | Text: first glyph not tested | SuperCombo_DrawText 80 |
+| D12 | Quad12: size 13 | SuperCombo_DrawText 1873, SuperCombo_DrawButton 2000, SuperCombo_DrawCount 2000 |
+| D13 | Quad12: y2 at y | SuperCombo_DrawText 1873, SuperCombo_DrawButton 2000, SuperCombo_DrawCount 2000 |
+| D14 | GlyphPage: tpage y 0x3C1 | SuperCombo_DrawText 1873, SuperCombo_DrawCount 2000 |
+| D15 | GlyphPage: clut y 0x1E1 | SuperCombo_DrawText 1873, SuperCombo_DrawCount 2000 |
+| D16 | GlyphUv: shade 0x81 | SuperCombo_DrawText 1873, SuperCombo_DrawButton 2000, SuperCombo_DrawCount 2000 |
+| D17 | GlyphUv: u2 from u1 | SuperCombo_DrawText 1873, SuperCombo_DrawButton 2000, SuperCombo_DrawCount 2000 |
+| D18 | Button: u (b + 14) | SuperCombo_DrawButton 2000 |
+| D19 | Button: v 0x31 | SuperCombo_DrawButton 2000 |
+| D20 | Button: clut table + 1 | SuperCombo_DrawButton 1685 |
+| D21 | Button: tpage 0x14 | SuperCombo_DrawButton 2000 |
+| D22 | Count: x - 0x40 | SuperCombo_DrawCount 2000 |
+| D23 | Count: tens 11 left | SuperCombo_DrawCount 980 |
+| D24 | Count: 0 tens drawn | SuperCombo_DrawCount 1020 |
+| D25 | Count: base 16 | SuperCombo_DrawCount 980 |
+| D26 | Count: digit u (d + 5) | SuperCombo_DrawCount 2000 |
+| D27 | Count: tens v 0x19 | SuperCombo_DrawCount 980 |
+| D28 | Count: packet not re-read for the tens | SuperCombo_DrawCount 980 |
+| D29 | Box: tpage 0x56 | SuperCombo_DrawBox 2000 |
+| D30 | Box: grow 4, 7 | SuperCombo_DrawBox 2000 |
+| D31 | Box: y from the x word | SuperCombo_DrawBox 1618 |
+| D32 | Box: w + grow | SuperCombo_DrawBox 2000 |
+| D33 | Box: shade 0x21 | SuperCombo_DrawBox 2000 |
+| D34 | Box: tile commit 0x18 | SuperCombo_DrawBox 2000 |
+| D35 | Box: stride 6 | SuperCombo_DrawBox 1584 |
+| D36 | Box: no semi-transparency | SuperCombo_DrawBox 2000 |
+| D37 | Box: draw mode not put back | SuperCombo_DrawBox 2000 |
+| D38 | Box: screen point read once | SuperCombo_DrawBox 169 |
+| E1 | Task: phases 1/2 swapped | ElemStrike_Task 797 |
+| E2 | Start: +9 1 | ElemStrike_Start 1909 |
+| E3 | Start: the kind not taken | ElemStrike_Start 2000 |
+| E4 | Start: parameter 0x47 | ElemStrike_Start 2000 |
+| E5 | Start: copy +5 0x45 | ElemStrike_Start 2000 |
+| E6 | Start: copy +6 0 | ElemStrike_Start 2000 |
+| E7 | Start: effect +1 0 | ElemStrike_Start 2000 |
+| E8 | Start: effect +4 from +3 | ElemStrike_Start 1991 |
+| E9 | Start: 0x904AA9 bit 0x40 | ElemStrike_Start 1489 |
+| E10 | Start: CLUT with STP | ElemStrike_Start 2000 |
+| E11 | Start: CLUT row 25 | ElemStrike_Start 2000 |
+| E12 | Start: dirty not set | ElemStrike_Start 1995 |
+| E13 | Start: second child +0xB not counted | ElemStrike_Start 2000 |
+| E14 | Start: owner bit 0x80 | ElemStrike_Start 1526 |
+| E15 | Tint: at most 2 | ElemStrike_Tint 458 |
+| E16 | Tint: table stride 4 | ElemStrike_Tint 891 |
+| E17 | Tint: tint a 1 | ElemStrike_Tint 898 |
+| E18 | Tint: slot to +9 | ElemStrike_Tint 898 |
+| E19 | Tint: owner mask 0x7F | ElemStrike_Tint 621 |
+| E20 | Tint: flags 0x10 | ElemStrike_Tint 898 |
+| E21 | Tint: claws from 0x84 | ElemStrike_Tint 31 |
+| E22 | Tint: claws to 0x89 | ElemStrike_Tint 40 |
+| E23 | Tint: the target party at 0..3 | ElemStrike_Tint 68, ElemStrike_Fade 69, ElemStrike_End 51 |
+| E24 | Tint: no release | ElemStrike_Tint 898 |
+| E25 | Tint: animation (4, 1) | ElemStrike_Tint 898 |
+| E26 | Hit: sound table + 2 | ElemStrike_Hit 900 |
+| E27 | Hit: 0 sound played | ElemStrike_Hit 171 |
+| E28 | Hit: +9 1 | ElemStrike_Hit 1019 |
+| E29 | Hit: at +0xB 1 | ElemStrike_Hit 1024 |
+| E30 | Fade: below 0xD | ElemStrike_Fade 491 |
+| E31 | Fade: +9 up by 3 | ElemStrike_Fade 557 |
+| E32 | Fade: down by 1 | ElemStrike_Fade 1923 |
+| E33 | Fade: clamped at 0 | ElemStrike_Fade 212 |
+| E34 | Fade: record offset 1 | ElemStrike_Fade 2000 |
+| E35 | Fade: ends on two channels | ElemStrike_Fade 67 |
+| E36 | Fade: flash the actor | ElemStrike_Fade 659 |
+| E37 | Fade: 0x4A29C0 not called | ElemStrike_Fade 558 |
+| E38 | End: state 5 | ElemStrike_End 413 |
+| E39 | End: out not tested | ElemStrike_End 752 |
+| E40 | End: state read before the call | ElemStrike_End 177 |
+| E41 | End: done bit 2 | ElemStrike_End 1118 |
+| E42 | End: the record from the target after the call | ElemStrike_End 22 |
+| E43 | Kind: cases 5/9 swapped | ElemStrike_Kind 45 |
+| E44 | Kind: default (0, 6) | ElemStrike_Kind 1331 |
+| E45 | Kind: bound 0x97 | ElemStrike_Kind 87 |
+| E46 | Kind: less 3 | ElemStrike_Kind 832 |
+| E47 | Kind: the low byte of the ability | ElemStrike_Kind 16 |
+| E48 | Kind: +3 for case 3 0 | ElemStrike_Kind 36 |
+| E49 | Child: kinds swapped | ElemStrikeChild_Task 2000 |
+| E50 | Copy_Run: steps 1/2 swapped | ElemStrikeCopy_Run 978 |
+| E51 | Copy_Run: update always | ElemStrikeCopy_Run 942 |
+| E52 | Copy_Play: from 0x86 | ElemStrikeCopy_Play 24 |
+| E53 | Copy_Play: second 3 | ElemStrikeCopy_Play 482 |
+| E54 | Copy_Play: no tick | ElemStrikeCopy_Play 2000 |
+| E55 | Fx_Run: layer 2 | ElemStrikeFx_Run 2000 |
+| E56 | Fx_Run: frame table 0x8E3584 | ElemStrikeFx_Run 2000 |
+| E57 | Fx_Run: table not put back | ElemStrikeFx_Run 2000 |
+| E58 | Fx_Run: steps 1/2 swapped | ElemStrikeFx_Run 1363 |
+| E59 | Fx_Run: phase read before the draw mode | ElemStrikeFx_Run 114 |
+| E60 | Fx_Start: 0x800001 higher | ElemStrikeFx_Start 1992 |
+| E61 | Fx_Start: z from +0x34 | ElemStrikeFx_Start 2000 |
+| E62 | Fx_Start: +0x27 0x1B | ElemStrikeFx_Start 1014 |
+| E63 | Fx_Start: +0x24 5 | ElemStrikeFx_Start 986 |
+| E64 | Fx_Start: +0x29 3 | ElemStrikeFx_Start 2000 |
+| E65 | Fx_Start: +0x5C kept | ElemStrikeFx_Start 1987 |
+| E66 | Fx_Start: +0x2B 0 | ElemStrikeFx_Start 2000 |
+| E67 | Fx_Start: animation 1 | ElemStrikeFx_Start 2000 |
+| E68 | Fx_Start: delay table + 1 | ElemStrikeFx_Start 1573 |
+| E69 | Fx_Start: +3 tested as +4 | ElemStrikeFx_Start 991 |
+| E70 | Fx_Play: sound 0x100 | ElemStrikeFx_Play 532 |
+| E71 | Fx_Play: sound at 1 | ElemStrikeFx_Play 821 |
+| E72 | Fx_Play: owner +0xB kept | ElemStrikeFx_Play 1326 |
+| E73 | Fx_Play: update after the free too | ElemStrikeFx_Play 1333 |
+| E74 | Fx_Play: 0 counts down | ElemStrikeFx_Play 506 |
 
 ## 7. What nothing reached
 

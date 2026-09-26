@@ -228,6 +228,30 @@ constexpr std::uint32_t kPool = 0x6769C0, kPoolStride = 0x84, kActorRecord = 0x9
                         kFrameSet = 0x9039D8, kInput = 0x7E1BEC, kTints = 0x7E0700;
 unsigned char* PoolEntry(unsigned i) { return mh::Mem(kPool + (i % 32) * kPoolStride); }
 
+// The prompt texts: SuperCombo_DrawText reads the pointer table 0x66A0D8 in
+// place. The game's four strings hold no 0xFF (the half-width space) and none
+// is empty, so half the time the seed aims the table at strings of the
+// fuzz's own: up to 12 bytes, 0xFF, glyphs and anything, or none.
+constexpr std::uint32_t kTexts = 0x66A0D8;
+std::uint32_t g_real_texts[4];
+alignas(4) unsigned char g_texts[4][16];
+void AimTexts() {
+    const bool own = mh::Half();
+    for (unsigned t = 0; t < 4; ++t) {
+        if (!own) {
+            SetLong(mh::Mem(kTexts + 4 * t), static_cast<std::int32_t>(g_real_texts[t]));
+            continue;
+        }
+        const unsigned n = mh::Next() % 13;
+        for (unsigned i = 0; i < n; ++i) {
+            const std::uint32_t r = mh::Next();
+            g_texts[t][i] = r % 3 == 0 ? 0xFF : static_cast<unsigned char>(r % 3 == 1 ? 0x40 + (r >> 8) % 0x40 : 1 + (r >> 8) % 0xFF);
+        }
+        g_texts[t][n] = 0;
+        mh::SetPointer(kTexts + 4 * t, g_texts[t]);
+    }
+}
+
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
 // The target's record as the originals index it (a party member below 3).
@@ -331,6 +355,13 @@ const mh::Callee kCallees[] = {
     {S02_RAW(0x49B700), 1, {kU8}, kG, 0, 0},
     {S02_RAW(0x49B900), 1, {kU8}, kG, 0, 0},
     {S02_RAW(0x49BA90), 0, {}, mh::Answer::kByte, 0, 0x1F},
+    // the phases run under a swapped frame-offset table (SuperComboHit_Run's
+    // two, ElemStrikeFx_Steps' three): kPhase logs the table 0x9039D8 too
+    {S02_RAW(0x49B0F0), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49B1D0), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x4EF840), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49C280), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49C380), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
 };
 #undef S02_OURS
 #undef S02_RAW
@@ -347,6 +378,8 @@ mh::Region g_regions[] = {
     {kInput, 4},          // Input_Pressed
     {kFrameSet, 4},       // the frame-offset table pointer
     {kTints, 0xC00},      // MoveScript_TintRecords
+    {kTexts, 16},         // the prompt texts' pointers (the seed aims them)
+    {0, sizeof g_texts},  // g_texts (filled in at start-up)
     {0x80E980, 0x200},    // Gfx_ClutStripSource row 26
     {0x812980, 0x200},    // Gfx_ClutStrip row 26
 };
@@ -386,6 +419,7 @@ void Seed(unsigned k) {
     // every pool entry's owner a task or a record (the disturbance writes
     // through the owner while SuperCombo_Task runs an entry)
     for (unsigned i = 0; i < 32; ++i) mh::SetPointer(kPool + i * kPoolStride + 0x80, mh::TaskAt(mh::Next()));
+    AimTexts();
     if (mh::Half()) sc[0] = 0;
     if (mh::Half()) SetWord(mh::Mem(kAbility), MH_PICK(0x3, 0x4, 0x5, 0x84, 0x85, 0x86, 0x88, 0x89, 0x9C, 0x9D, 0x9E));
     switch (k) {
@@ -406,7 +440,9 @@ void Seed(unsigned k) {
         break;
     case kSuperCombo_PickButton:
         Near(sc[9], 1);
-        Near(sc[0xA], 0xF);
+        // the count at the time table's end (0x10; entries 0x10..0x13 are 3,
+        // the late time, 0x14 the next table's)
+        if (mh::Half()) sc[0xA] = Byte(MH_PICK(0xF, 0x10, 0x13, 0x14));
         break;
     case kSuperCombo_ReadButton: {
         Near(sc[9], 1);
@@ -456,7 +492,8 @@ void Seed(unsigned k) {
         if (mh::Half()) TargetRecordOf(mh::Mem(mh::at::kTarget)[0])[1] = 6;
         break;
     case kElemStrike_Kind:
-        if (mh::Often()) SetWord(mh::Mem(kAbility), mh::Half() ? mh::Next() % 0xA0 : (mh::Half() ? MH_PICK(3, 4, 0x9C, 0x9D) : mh::Next()));
+        if (mh::Often()) SetWord(mh::Mem(kAbility), mh::Half() ? MH_PICK(4, 5, 7, 0x1D, 0x31, 0x85, 0x86, 0x87, 0x88, 0x9B, 0x9C, 0x9D, 6, 3)
+                                                             : (mh::Half() ? mh::Next() % 0xA0 : mh::Next()));
         break;
     case kElemStrikeFx_Start: if (mh::Half()) sc[3] = 0; break;
     case kElemStrikeFx_Play: sc[9] = mh::Often() ? Byte(MH_PICK(0, 0, 1, 1, 2)) : Byte(mh::Next()); break;
@@ -482,6 +519,8 @@ void Args(unsigned k, std::uint32_t* a) {
 
 void SelfTest() {
     g_regions[1].at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_prims));
+    g_regions[8].at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_texts));
+    for (unsigned t = 0; t < 4; ++t) g_real_texts[t] = static_cast<std::uint32_t>(Long(mh::Mem(kTexts + 4 * t)));
     mh::Group group = {
         "magic_s02", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables,     sizeof kTables / sizeof kTables[0], g_regions, sizeof g_regions / sizeof g_regions[0], &Seed,
