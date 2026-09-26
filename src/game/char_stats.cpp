@@ -632,7 +632,7 @@ extern "C" unsigned __cdecl Item_EquipMask(unsigned category, unsigned item) {
 
 // original 0x591C20 (PSX 0x80167058): the price word - weapons +0x18, armour
 // +0x16, accessories +0x14, key items +0x10, consumables +0x12.
-extern "C" unsigned __cdecl Item_Price(unsigned category, unsigned item) {
+extern "C" unsigned __cdecl Item_HelpMessage(unsigned category, unsigned item) {
     const unsigned i = item & 0xFF;
     switch (category & 0xFF) {
     case 1: return Word(At(at::kWeapons + i * at::kWeaponStride + 0x18));
@@ -682,5 +682,5 @@ void CharStats_Inject() {
     BOF3_INJECT(TextRecord_Set);
     BOF3_INJECT(Inventory_Count);
     BOF3_INJECT(Inventory_CountUsed);
-    BOF3_INJECT(Item_Price);
+    BOF3_INJECT(Item_HelpMessage);
 }

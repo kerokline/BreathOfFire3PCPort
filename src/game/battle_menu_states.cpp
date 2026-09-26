@@ -44,7 +44,7 @@ const Callees kOriginals = {
     BattleQueue_Push,
     ItemMenu_SetupForParty,
     ItemMenu_FreeWindows,
-    Item_Price,
+    Item_HelpMessage,
     Item_CanUse,
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(kItemFlags),
     Battle_ReturnTrue,
@@ -232,8 +232,8 @@ extern "C" void __cdecl BattleItemCmd_OpenList(void) {
 //      when at or past top + 7; else L1 (4) a page back, R1 (8) a page on (the
 //      top at most 0x79, the cursor 0x7F at the end). Cue 0x100 when the
 //      cursor moved.
-//   3. The last-pushed queue entry's text = Msg_SystemPtr(Item_Price(category,
-//      item)) - the item's help line; Item_Price's word is a system message id
+//   3. The last-pushed queue entry's text = Msg_SystemPtr(Item_HelpMessage(category,
+//      item)) - the item's help line; Item_HelpMessage's word is a system message id
 //      here.
 //   4. With a scroll request pending, nothing more. Up pressed on row 0 opens
 //      record 21 above the list (cue 0x100) and goes to state 6. A cancel

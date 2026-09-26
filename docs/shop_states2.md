@@ -79,7 +79,7 @@ every read and store in the order the original makes it. The short version:
   (the window record `0x803160`'s `+0x10`): `0x46` / `0x47` buy / sell,
   `0x48` / `0x4E` the count, `0x49` "buy?", `0x4A` "equip it?", `0x4B` on
   whom, `0x4C` which slot, `0x3A` the slot, `0x4D` equipped, `0x51` the
-  sell count, `0x52` "sell?"; the list steps put `Item_Price`'s word there
+  sell count, `0x52` "sell?"; the list steps put `Item_HelpMessage`'s word there
   (section 7). The yes / no steps and the member / slot steps copy the item's
   name into text record 0 first (`TextRecord_Set(0, 0x10, Item_NamePtr)`).
   **None of these functions draws text**: the help window (`0x803160`) and
@@ -139,7 +139,7 @@ callee reads the byte, and nothing more, of each such argument:
 
 | Callee | Reads |
 |---|---|
-| `Item_IconKind`, `Item_Price`, `Item_BasePrice`, `Item_NamePtr`, `Item_EquipMask` | category and item `& 0xFF` (char_stats.cpp, menu_windows.cpp) |
+| `Item_IconKind`, `Item_HelpMessage`, `Item_BasePrice`, `Item_NamePtr`, `Item_EquipMask` | category and item `& 0xFF` (char_stats.cpp, menu_windows.cpp) |
 | `Inventory_Count`, `Inventory_Add` | category, item, count / flag `& 0xFF` |
 | `Item_CanUse` | mode, category, item `& 0xFF`; the member `& 31` (a constant 0 here) |
 | `Shop_Equip` | record, slot `& 0xFF`; the item goes whole to `0x591B60`, which reads its byte (`mov bl, [esp + 0xC]`), and to a byte store |
@@ -331,7 +331,7 @@ table gives the rounds that refused each one, of 1,000 for its function.
 | Q12 | SellList: the most from the id list | 114 |
 | Q13 | SellList: the stack's row unsigned | 13 |
 | Q14 | SellList: cancel counter 5 | 108 |
-| Q15 | SellList: Item_Price with the arguments swapped | 992 |
+| Q15 | SellList: Item_HelpMessage with the arguments swapped | 992 |
 | Q16 | SellList: the hand rows 12 apart | 595 |
 | Q17 | SellList: the choice byte for Shop_SellPrice's flag | 114 |
 | K1 | SellCount: help 0x50 | 1000 |
@@ -409,7 +409,7 @@ None shows in play as far as the reads go, and all are kept.
 
 ## 7. Other groups' addresses (said, not acted on)
 
-- **`Item_Price` `0x591C20` (group W's) is not a price.** Its word goes to
+- **`Item_HelpMessage` `0x591C20` (group W's; `Item_Price` until 2026-09-26) is not a price.** Its word goes to
   the help line's message word `0x803170` in both list steps, and the price
   the shop charges is `Item_BasePrice` `0x5749F0`'s (group Y's) through
   `Shop_ScalePrice`. It reads weapons `+0x18`, armour `+0x16`, accessories

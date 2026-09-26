@@ -44,7 +44,7 @@ capstone MIPS from the boot EXE (`SLPS_009.90`) where the table says so.
 | `TextRecord_Set` | `0x591940` | 0x69 | `0x80166B9C` | section 4 |
 | `Inventory_Count` | `0x5919B0` | 0xC5 | `0x80166C1C`, read (head) | section 4 |
 | `Inventory_CountUsed` | `0x591A80` | 0x3C | none recorded | section 4 |
-| `Item_Price` | `0x591C20` | 0x9C | `0x80167058` | section 4 |
+| `Item_HelpMessage` | `0x591C20` | 0x9C | `0x80167058` | section 4 |
 
 **Two not on the queue, taken:** `Stat_AddResist` `0x590EE0` - all 60 of
 its call sites (E8 scan) are in `Char_RecalcStats` and its passes, and the
@@ -63,7 +63,7 @@ the right sizes, as are the other twelve. Three real functions
 are missing from the list, none ours: `0x591810` (0x88 bytes with its
 table: `Item_EquipMask`'s sibling on byte `+0x11`, 18 call sites),
 `0x591B60` (0x5D: the sibling's `Inventory_Remove` `0x80166F30`) and
-`0x591CC0` (after `Item_Price`: adds a member to the party lists).
+`0x591CC0` (after `Item_HelpMessage`: adds a member to the party lists).
 
 ## 2. The stat recompute
 
@@ -202,11 +202,13 @@ followed by the 128-byte list `0x590C90` fills (the sibling's
 The item tables (`NameTable_*`, symbols.toml), by category 1 weapons, 2
 armour, 3 accessories, 4 key items, any other the consumables:
 `Item_NamePtr` `0x591680` the record (its first 16 bytes the name);
-`Item_Price` `0x591C20` the word at weapons `+0x18`, armour `+0x16`,
-accessories `+0x14`, key items `+0x10`, consumables `+0x12` - the shop
-screens call it 523 times on the route, hence the name (hypothesis; the
-`NameTable_Consumables` note puts the price at `+0x14`, which nothing here
-reads); `Item_IconKind` `0x591720` the low nibble of the equipment's
+`Item_HelpMessage` `0x591C20` the word at weapons `+0x18`, armour `+0x16`,
+accessories `+0x14`, key items `+0x10`, consumables `+0x12` - the item's
+help-line message id, which every caller hands to `Msg_SystemPtr`. It was
+named `Item_Price` until 2026-09-26: the shop screens call it 523 times on
+the route, but for the help line. The price is the next word, which
+`Item_BasePrice` `0x5749F0` reads (every field: [`tables.toml`](../tables.toml));
+`Item_IconKind` `0x591720` the low nibble of the equipment's
 `+0x12` or the consumables' `+0x11` - **key items read the consumables'
 table** (category 4 is not a case), as the original does; `Item_EquipMask`
 `0x5917A0` the equipment's `+0x10`, every other category `0xFF`. Both
@@ -379,7 +381,7 @@ its wearer).
 The shop route reaches eighteen of the twenty (`recipe_shop` call counts,
 2026-09-23): the equipment screen runs `Equip_PreviewSlot` 1,407 times and
 through it `Char_RecalcStats` and all four passes; the shop lists
-`Item_NamePtr` 10,074, `Item_IconKind` 10,719, `Item_Price` 523;
+`Item_NamePtr` 10,074, `Item_IconKind` 10,719, `Item_HelpMessage` 523;
 `Inventory_Add` 3 (a purchase, a found item). **Not reached by it**:
 `Stat_AddResist` (no member on the route has a resistance effect) and
 `Equip_PreviewSet`; both are fuzz only. Within the reached ones the route
@@ -401,7 +403,7 @@ trace list with the sizes in section 1.
 
 - D34, D35, D36 ([`known-defects.md`](known-defects.md)),
   latent.
-- `Item_Price`'s offsets contradict the `NameTable_Consumables` note's
+- `Item_HelpMessage`'s offsets contradict the `NameTable_Consumables` note's
   "u16 price" at `+0x14` (section 4); not re-measured here.
 - The field menu's item handlers call `Char_RecalcStats` and `Inventory_Add`
   (group P); both are now ours, so `item_use`'s stand-ins stand for ours.

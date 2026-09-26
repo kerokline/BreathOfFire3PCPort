@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-09-24; 21 entries, I1..I21 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-09-26; 23 entries, I1..I23 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -46,7 +46,7 @@ rule ([`README.md`](README.md)) here too.
 | Id | Title | Kind | Feasibility | State |
 |---|---|---|---|---|
 | I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | **PSX saves load and play on PC** (owner, 2026-09-19, [`save-interchange.md`](save-interchange.md) §4); only PC→PSX in a real PSX runtime is unchecked |
-| I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; other languages open |
+| I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; other languages open; widened into [`ASSET_SOURCES.md`](ASSET_SOURCES.md) |
 | I3 | Crude x86→C lifter as portability accelerator | engine | MEDIUM | **prototype built 2026-09-25**, on a synthetic corpus — [`lifter-feasibility.md`](lifter-feasibility.md); first run on `BOF3.exe` open |
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | open |
@@ -67,6 +67,7 @@ rule ([`README.md`](README.md)) here too.
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
+| I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26) |
 
 ---
 
@@ -135,6 +136,15 @@ battle labels, default names (DIV-0005..0009, DIV-0013..0020;
 [`dialogue-localisation.md`](dialogue-localisation.md)) - selected by
 `BOF3X_LANG=en` or the launcher's Language box. The other languages, and a
 runtime switch, are open.
+
+**Widened into a delivery plan (2026-09-26):** [`ASSET_SOURCES.md`](ASSET_SOURCES.md)
+treats this idea as the special case of a general one: build the game from
+whatever copies the player owns, down to a single PSX disc once the code is
+ours. It covers identity by per-file hash, recipes per build, one import step
+into a canonical cache, and what a disc can and cannot supply. It also
+proposes the rule that taken-over code never transcribes the exe's game
+tables, audited in [`exe-table-audit.md`](exe-table-audit.md). Music is
+split out as I23.
 
 ## I3 — Crude x86→C lifter as portability accelerator
 
@@ -910,3 +920,33 @@ unread on the PC.
 to see whether the portrait exists on the PC; the spell round reads the
 engine-side rows 123 and 128 first, which TCRF says crash and freeze.
 
+
+---
+## I23 — Music: the PC's MP3s against the disc's sequences
+
+**Ask (2026-09-26):** how different are the PC port's MP3s from the
+PlayStation's own music data played back properly - would disc music feel
+like restoring the original sound, or be much the same?
+**Kind:** tooling (a measurement; what it decides is engine work)
+**Feasibility:** HIGH for the comparison - every input is the owner's own
+files and an emulator. **Gated on:** nobody, but it needs the game files, so
+it runs on the owner's machine.
+
+### What already exists
+- The disc's music is sequenced (VH/VB + SEQ in 81 `BGM*.EMI`); the PC's 166
+  MP3s are recordings of it, renumbered ([`DAT_CONTAINER.md`](DAT_CONTAINER.md)
+  §5).
+- The PC loops by rewinding the decoder to the file's start
+  ([`asset-loading-path.md`](asset-loading-path.md) §1a).
+
+### What is missing
+- The track map (exe table beside `BGM\%03d`), the MP3s' encoding parameters,
+  where each SEQ's loop point lives.
+
+### First concrete step
+[`bgm-comparison.md`](bgm-comparison.md) §3, steps 1-3: inventory both sides,
+then the loop test on three tracks. That settles the likeliest audible
+difference (intros replayed or lost on loop) in an afternoon.
+
+### Outcome
+_(2026-09-26) open; method written._

@@ -186,17 +186,25 @@ int LayoutFromName(const std::string& name) {
     return -1;
 }
 
+bool KeysFromTable(const unsigned char* table, size_t bytes, std::vector<KeyBinding>& out) {
+    for (size_t at = 0; at + 4 <= bytes; at += 4) {
+        const unsigned key = table[at] | table[at + 1] << 8;
+        if (key == 0) break;
+        if (key > 0xFF) return false;
+        out.push_back({static_cast<unsigned char>(key), static_cast<unsigned short>(table[at + 2] | table[at + 3] << 8)});
+    }
+    return true;
+}
+
+namespace {
+std::vector<KeyBinding> g_default_keys;   // SetDefaultKeys'
+}  // namespace
+
+void SetDefaultKeys(const std::vector<KeyBinding>& keys) { g_default_keys = keys; }
+
 Bindings Bindings::Defaults() {
     Bindings b;
-    // Key_TableDefault 0x66C648 in order (docs/controls.md section 1).
-    b.keys = {
-        {0xC8, kUp},        {0xD0, kDown},         {0xCB, kLeft},          {0xCD, kRight},
-        {0x2C, kTriangle},  {0x2D, kCross},        {0x2E, kSquare},        {0x2F, kCircle},
-        {0x1E, kL1},        {0x10, kL2},           {0x1F, kR1},            {0x11, kR2},
-        {0x1C, kStart},     {0x36, kSelect},       {0x01, kCross},         {0x39, kCircle},
-        {0x48, kUp},        {0x50, kDown},         {0x4B, kLeft},          {0x4D, kRight},
-        {0x49, kUp | kRight}, {0x4F, kDown | kLeft}, {0x47, kUp | kLeft},  {0x51, kRight | kDown},
-    };
+    b.keys = g_default_keys;   // Key_TableDefault 0x66C648 in order (docs/controls.md section 1)
     b.pad = {
         {PadInput::kSouth, kCross},    {PadInput::kEast, kCircle},     {PadInput::kWest, kSquare},
         {PadInput::kNorth, kTriangle}, {PadInput::kLb, kL1},           {PadInput::kRb, kR1},

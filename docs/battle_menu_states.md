@@ -104,7 +104,7 @@ row.
   (request word +0x10 = `0x32` / `0x31`), up/down move the cursor (request
   +0x12 = `0xF0` / `0x10` when the list must scroll), L1/R1 page. It then
   sets the last-pushed queue entry's text to
-  `Msg_SystemPtr(Item_Price(category, item))` - the item's help line. With no
+  `Msg_SystemPtr(Item_HelpMessage(category, item))` - the item's help line. With no
   scroll pending: up on row 0 opens record 21 and goes to state 6; cancel
   saves the page and cursor, cue `0x106`, state 2 (`0x448600`, left
   Capcom's); confirm asks `Item_CanUse(record 16 +8, 0, category, item)` -
@@ -142,7 +142,7 @@ call).
 
 ## 3. Found on the way (other groups' addresses: said, not acted on)
 
-- **`Item_Price` (`0x591C20`, `char_stats.cpp`) is a message id here.** Its
+- **`Item_HelpMessage` (`0x591C20`, `char_stats.cpp`; `Item_Price` until 2026-09-26) is a message id here.** Its
   word goes straight to `Msg_SystemPtr` as the list's help line. For
   consumables it reads record +0x12, which `NameTable_Consumables` calls the
   "ref" word (+0x14 is the price); its own evidence already notes that it
@@ -271,7 +271,7 @@ self-test, revert. The table gives the rounds that refused each, of 1,000
 | L13 | List: R1 top capped at 0x78 | List 12 |
 | L14 | List: no cue for a move | List 472 |
 | L15 | List: the help line to the entry at the write index | List 852, Commit 1000 |
-| L16 | List: Item_Price with the arguments swapped | List 850 |
+| L16 | List: Item_HelpMessage with the arguments swapped | List 850 |
 | L17 | List: the scroll request not tested | List 197 |
 | L18 | List: up at the top to state 5 | List 19 |
 | L19 | List: up at the top whatever the row before | List 11 |
@@ -324,7 +324,7 @@ a cursor or a top at one edge and one direction bit together.
   (`0x448140`, `0x448600`, `0x448B40`.., the queue's reader) do;
 - the order of stores with no call between them;
 - the upper bits of the arguments the original passes to `0x591810`,
-  `Item_Price` and `Item_CanUse` (the caller's registers; all three read the
+  `Item_HelpMessage` and `Item_CanUse` (the caller's registers; all three read the
   low byte, and the recorders record only it).
 
 ## 5. Latent, as the original has it

@@ -40,7 +40,7 @@ namespace shop_states2 {
 
 const Callees kOriginals = {
     Shop_InitWindows, Shop_PriceRate, Shop_ScalePrice, Shop_SellPrice, Shop_Equip,
-    Item_IconKind, Item_Price, Item_BasePrice, Inventory_Count, Inventory_Add, Item_NamePtr, TextRecord_Set,
+    Item_IconKind, Item_HelpMessage, Item_BasePrice, Inventory_Count, Inventory_Add, Item_NamePtr, TextRecord_Set,
     Item_EquipMask, Item_CanUse, Char_RecalcStats, Party_Count,
     Input_AutoRepeat, Sound_PlayEffect,
     Window_ResetAll, Task_ClearPrivate, Task_Sleep, Field_RunTaskRecords, LoadDatFile, File_LoadDone,
@@ -385,7 +385,7 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
 // original 0x581BE0 (PSX 0x801D1634): the buy list. The entry under the
 // cursor (s8 0x6BC8A9) becomes the chosen category and item; each party
 // member's panel gets the item's icon kind (+0xB) and the item (+0xC, read
-// after the call); the help line is Item_Price's word (0x591C20, a message
+// after the call); the help line is Item_HelpMessage's word (0x591C20, a message
 // id - section 1). With the list's window up (0x803283 = 0) the hand goes
 // to the row: x = 0x803284 + 4, y = 0x803286 + 13 * row + 0xA, and the list
 // pointer to 0x803474. The repeat of the pressed 0x5000 bits: 0x1000 up
@@ -785,7 +785,7 @@ extern "C" void __cdecl ShopTrade_SellSetup(void) {
 // original 0x5827F0: the sell list - four category tabs (0x803266, 0..3,
 // the inventory's categories 0 consumables, 1 weapons, 2 armour, 3
 // accessories), a top row (0x803267) and a row (0x803268) of the category's
-// 128. The item under the cursor becomes the chosen one and its Item_Price
+// 128. The item under the cursor becomes the chosen one and its Item_HelpMessage
 // word the help line; with the window up (0x80325F = 0) the hand goes to (x
 // + 7, y + 13 * (row - top) + 0x1B). The repeat of the pressed 0xF00C bits:
 // 0x8000 / 0x2000 the tab left / right with sound 0x101, wrapping, and the

@@ -181,7 +181,7 @@ unsigned long __cdecl StubSetup() {
     return Hash();
 }
 unsigned long __cdecl StubFree() { Record(10); Disturb(); return Hash(); }
-// The three below read their arguments' low bytes (Item_Price and 0x591810 by
+// The three below read their arguments' low bytes (Item_HelpMessage and 0x591810 by
 // `and eax, 0xFF`, Item_CanUse by its evidence), so they are recorded so.
 unsigned __cdecl StubPrice(unsigned category, unsigned item) {
     Record(11, category & 0xFF, item & 0xFF);

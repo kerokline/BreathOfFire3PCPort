@@ -89,14 +89,25 @@ struct Bindings {
     std::vector<PadBinding> pad;
     Layout layout = Layout::kPositional;
 
-    // The original's default key table (Key_TableDefault 0x66C648, 24 entries,
-    // the keypad's diagonals among them) and the DIV-0050 pad map.
+    // The original's default key table as SetDefaultKeys was given it (the
+    // launcher reads Key_TableDefault out of the player's BOF3.exe; empty
+    // until then, and in the game, which needs only the pad) and the DIV-0050
+    // pad map.
     static Bindings Defaults();
     bool operator==(const Bindings& o) const;
     bool operator!=(const Bindings& o) const { return !(*this == o); }
 };
 
 constexpr int kKeyTableMax = 32;
+
+// Key_Table's shape, and Key_TableDefault's: (u16 DIK scancode, u16 pad bits)
+// pairs, ended by a key of 0 or by `bytes`. Appends to `out`; false if a key
+// is not a DIK scancode (above 0xFF), which means the bytes are not the table.
+bool KeysFromTable(const unsigned char* table, size_t bytes, std::vector<KeyBinding>& out);
+
+// What Defaults().keys is from now on. Not a copy in our source: the table
+// is the exe's (docs/exe-table-audit.md).
+void SetDefaultKeys(const std::vector<KeyBinding>& keys);
 
 // `name=action` items separated by `sep`. Parse* accept unknown items by
 // skipping them and return how many items were understood (a `name=none`
