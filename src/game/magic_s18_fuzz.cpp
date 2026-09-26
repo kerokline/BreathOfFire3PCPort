@@ -251,7 +251,10 @@ void Seed(unsigned k) {
         if (mh::Often()) move_script::SetWord(mh::Mem(kActionId), id);
         break;
     }
-    case kFxDispatch: sc[1] = static_cast<unsigned char>(mh::Next() % 2); break;
+    case kFxDispatch:   // +2 too, so a dispatch read from the wrong byte stays inside the table
+        sc[1] = static_cast<unsigned char>(mh::Next() % 2);
+        sc[2] = static_cast<unsigned char>(mh::Next() % 2);
+        break;
     case kRingTask:
         sc[2] = static_cast<unsigned char>(mh::Next() % 3);
         if (mh::Half()) sc[0] = 0;
@@ -263,7 +266,7 @@ void Seed(unsigned k) {
         const std::uint32_t spin = MH_PICK(3, 4, 4, 5, 0xFFFFFFFFu, 0x80000000u);
         if (mh::Often()) move_script::SetLong(sc + 0xC, static_cast<std::int32_t>(spin));
         sc[0xA] = static_cast<unsigned char>(MH_PICK(1, 1, 4, 5, 6, 0x80));
-        if (mh::Half()) sc[0xB] = 0;
+        if (mh::Often()) sc[0xB] = static_cast<unsigned char>(mh::Next() % 2);   // the first spike, or the second
         if (mh::Half()) sc[0x10] = static_cast<unsigned char>(MH_PICK(7, 0xF, 0));
         break;
     }

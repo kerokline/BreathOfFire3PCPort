@@ -1,29 +1,9 @@
 # Drain's and the buffs' overlays: round nine group S18
 
-## Paused (2026-09-25)
-
-- **Done:** all 42 functions ours (`src/game/magic_s18.cpp`), symbols.toml
-  (42 `[[func]]`, 15 `[[data]]`), CMakeLists / inject_all, the harness
-  extensions (section 6), 42 lines appended to the main checkout's
-  `analysis/calltrace/entries_logic.txt`.
-- **Fuzzed:** all 42, 0 mismatches in 84,000 rounds; `'*'` exit 0;
-  `magic_steal` unchanged.
-- **Controls:** 49 of about 125 run (script: scratchpad `s18/controls.py`,
-  results `s18/controls_out.tsv`): D1..D6, O1, A1..A10, B1..B7, C1..C4,
-  E1..E3, W1..W17 - all refused except **W3** (the first ring's offset x2)
-  and **W13** (the upper ring's offset from the lower's): the vertex scratch's
-  contents reach no recorder, only its last state.
-- **Next step:** give the GTE callees `deref16` on their vertex arguments
-  (bits 0..3 for `Gte_RotTransPers4`, 0..2 for `_3` / `Gte_RotAverage3`) in
-  `magic_s18_fuzz.cpp`, rebuild, re-run the self-test and W3 / W13, then run
-  the rest (`python controls.py W18 W19 W20 X1 ... Q4`), fill section 7's
-  table (`CONTROLS_TABLE`, `CONTROLS_SUMMARY` placeholders), add the
-  README index row, commit.
-
-**Status:** IN PROGRESS (2026-09-25) - 42 functions ours
+**Status:** IN PROGRESS (2026-09-26) - 42 functions ours
 (`src/game/magic_s18.cpp`, shadow name `magic_s18`), fuzzed headless
 through the spell harness ([`magic_harness.md`](magic_harness.md)), 0
-mismatches in 84,000 rounds; CONTROLS_SUMMARY. No recorded route casts
+mismatches in 84,000 rounds; 121 negative controls, every one refused by a count (exit 3) in the function it touches. No recorded route casts
 either overlay: fuzz only until the owner's eye.
 
 Group S18 of the spell round ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)
@@ -45,8 +25,8 @@ the names; nothing here reads a stat. The `Buff` prefix carries that guess.
 
 The functions found are exactly the extents' (`tools/magic_rows.py`): 25
 and 17, none missing, none found inside another's body. The extents end at
-`0x4BF8C3` (then MAGIC080's padding and MAGIC081's `0x4BF8D0`... is not
-this group's) and at `0x4C1461` (MAGIC083's first function follows).
+`0x4BF8C3` (padding, then MAGIC081's entry `0x4BF8D0`, group C2's) and at
+`0x4C1461` (then MAGIC083's first function, group S19's).
 
 ## 1. MAGIC079: a task and four children
 
@@ -210,36 +190,168 @@ action id and the command kind. 2,000 rounds a function.
 
 Result (2026-09-25):
 
-    shadow      magic_s18 self-test: 84000 rounds over 42 functions (2000 each), 4412466 calls to the stand-ins,
+    shadow      magic_s18 self-test: 84000 rounds over 42 functions (2000 each), 4410238 calls to the stand-ins,
                 0 MISMATCHES; 15640 bytes of state (16 regions) and the stand-ins' log compared
 
-`BOF3X_SHADOW='*'`: exit 0; `magic_steal` unchanged (9,278 calls, 0
-mismatches, the same coverage).
+(Counts in this worktree; the harness's own pointers make them depend on
+the build directory.) `BOF3X_SHADOW='*'`: exit 0; `magic_steal` 0
+mismatches.
 
-**What the harness needed** (`magic_harness.h` / `.cpp`, backward
-compatible - Steal's group compiles and runs unchanged):
+**What the harness gives it** (the consolidated harness, group HX,
+[`magic_harness.md`](magic_harness.md) section 7; this group's first
+version added these to the harness and was ported onto HX's):
 
-- **eight arguments** logged, not four (`Callee::masks[8]`): the GTE calls
-  take eight to ten, `Gpu_SetDrawMode` five, `0x4FB880` seven;
-- **`Callee::deref16`**: an argument logged by the 16 bytes it points at -
-  `0x4FB880`'s depth array lives on the caller's stack, so its pointer
-  differs between the passes while its contents must not;
-- **`Clone::calm`**: no recorder disturbs anything while that clone runs -
-  `BuffSpike_Draw`'s stack index would otherwise send the original's store
-  out of its frame (section 4); its callees touch no battle state, so the
-  game never moves anything there either;
-- **`Clone::ret_mask`**: the function's answer compared (`Buff_Kind`'s u8);
-- **the log** 2,048 calls a round (`DrainOrb_Draw` makes about 1,700), and
-  only the entries written are copied and compared;
-- **a fix**: the disturbance that writes a byte of the target enemy's
-  record, for a target of 0..2 (below the records), could land on the
-  current-slot and owner cells `0x93B8C0..0x93B95F`; the next disturbance
-  then wrote through a garbage owner - a crash `DrainOrb_Draw`'s 1,700
-  calls a round met in its tenth round. That range is skipped now.
+- ten logged arguments (`Callee::masks`): the GTE calls take eight to ten,
+  `Gpu_SetDrawMode` five, `0x4FB880` seven;
+- `Callee::deref` byte counts: `0x4FB880`'s depth array (16 bytes, on the
+  caller's stack, so its pointer differs between the passes while its
+  contents must not), and the GTE calls' vertex arguments (8 bytes each: the
+  vertex scratch is rewritten every quad, so only its contents at each call
+  show a vertex computed wrong - controls W3 and W13 needed it);
+- `Clone::calm` for `BuffSpike_Draw`: no recorder disturbs anything while it
+  runs - its stack index would otherwise send the original's store out of
+  its frame (section 4); its callees touch no battle state, so the game never
+  moves anything there either;
+- `Clone::ret_mask` 0xFF for `Buff_Kind`'s answer;
+- a log long enough for `DrainOrb_Draw`'s ~1,700 calls a round, compared by
+  prefix;
+- the target-record disturbance kept to targets 3..10. This group met the
+  reason first: a target of 0..2 put the "enemy" record over the
+  current-slot and owner cells `0x93B8C0..0x93B95F`, and the next
+  disturbance wrote through a garbage owner - a crash in
+  `DrainOrb_Draw`'s tenth round.
 
 ## 7. The controls
 
-CONTROLS_TABLE
+121 controls, planted one at a time by a script (not committed: apply, build, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s18`, restore; no plant is left in the source). Every one is refused by a count (exit 3), each only in the function it touches - the shared bodies (`OrbTask`, `SpikeFly`) in each function that has them. Counts are this worktree's; R1 and S7..S12 were re-run after the seed gave `BuffSpike_Spin` a second spike (`+0xB` 1) and `BuffFx_Dispatch` a bounded `+2`: before that, S10 went unrefused (`+0xB` 1 was seeded 1 time in 256) and R1 was refused only by our own abort past the two-entry table, not by a count.
+
+Before the port onto the consolidated harness, W3 and W13 (a vertex offset wrong) went unrefused: the vertex scratch is rewritten every quad, so only its last contents were compared. The GTE calls now log their vertex arguments by their eight bytes (`deref`), and both are refused in every round.
+
+The thinnest: S11 (1 round: `Sprite_Current` not read again after the one sound call - it needs a recorder to move the slot across that call), K3 (4: `0x211` under another command kind), W11 (17: a ring collapsing at `+9` equal to *n*), K1 / K2 / K4 (one id each of the seeded list).
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| D1 | Drain_Task: entries swapped | Drain_Task 2000 |
+| D2 | Drain_Start: child +1 = i + 1 | Drain_Start 2000 |
+| D3 | Drain_Start: child +9 0x11 | Drain_Start 2000 |
+| D4 | Drain_Start: sound 0x101 | Drain_Start 2000 |
+| D5 | Drain_Start: parameter 0x2C | Drain_Start 2000 |
+| D6 | Drain_Start: Sprite_Current read before the create | Drain_Start 218 |
+| O1 | DrainOrb_Dispatch: by +2 | DrainOrb_Dispatch 1486 |
+| A1 | OrbTask: draws at phase 0 too | DrainOrbA_Task 221, DrainOrbB_Task 220, DrainOrbC_Task 255, DrainOrbD_Task 265 |
+| A2 | OrbTask: Sprite_Current not read again after the phase | DrainOrbA_Task 27, DrainOrbB_Task 32, DrainOrbC_Task 45, DrainOrbD_Task 35 |
+| A3 | DrainOrbA_Place: height +0x4000100 | DrainOrbA_Place 2000 |
+| A4 | DrainOrbA_Place: +0xA 0xAF | DrainOrbA_Place 2000 |
+| A5 | DrainOrbA_Drop: -0x3F | DrainOrbA_Drop 2000 |
+| A6 | DrainOrbA_Run: cap 0x1F | DrainOrbA_Run 768 |
+| A7 | DrainOrbA_Run: at 0x2F | DrainOrbA_Run 996 |
+| A8 | DrainOrbA_Signal: at 0xF | DrainOrbA_Signal 983 |
+| A9 | DrainOrbA_Signal: the owner not counted down | DrainOrbA_Signal 489 |
+| A10 | DrainOrbA_Shrink: freed at 1 | DrainOrbA_Shrink 1028 |
+| B1 | DrainOrbB_Place: at the target | DrainOrbB_Place 258 |
+| B2 | DrainOrbB_Place: +0xA 1 | DrainOrbB_Place 492 |
+| B3 | DrainOrbB_Drop: +9 0x21 | DrainOrbB_Drop 496 |
+| B4 | DrainOrbB_Run: at 0x81 | DrainOrbB_Run 1002 |
+| B5 | DrainOrbB_Run: +9 below 0 | DrainOrbB_Run 381 |
+| B6 | DrainOrbB_Signal: at 0x9F | DrainOrbB_Signal 1032 |
+| B7 | DrainOrbB_Shrink: +0xA not up | DrainOrbB_Shrink 1999 |
+| C1 | DrainOrbC_Place: +9 5 | DrainOrbC_Place 2000 |
+| C2 | DrainOrbC_Wait: against +2 | DrainOrbC_Wait 627 |
+| C3 | DrainOrbC_Shrink: at 3 | DrainOrbC_Shrink 1020 |
+| C4 | DrainOrbC_Shrink: the owner not counted down | DrainOrbC_Shrink 522 |
+| E1 | DrainOrbD_Place: at the target | DrainOrbD_Place 262 |
+| E2 | DrainOrbD_Wait: +0xA down | DrainOrbD_Wait 2000 |
+| E3 | DrainOrbD_Shrink: +0xA not up | DrainOrbD_Shrink 1999 |
+| W1 | DrainOrb_Draw: frame & 0x7F | DrainOrb_Draw 1004 |
+| W2 | DrainOrb_Draw: base radius +0xB * 3 | DrainOrb_Draw 1994 |
+| W3 | DrainOrb_Draw: first offset x2 | DrainOrb_Draw 2000 |
+| W4 | DrainOrb_Draw: the first radius from phase 3 | DrainOrb_Draw 127 |
+| W5 | DrainOrb_Draw: the first collapse without +9 | DrainOrb_Draw 221 |
+| W6 | DrainOrb_Draw: height -41 n | DrainOrb_Draw 2000 |
+| W7 | DrainOrb_Draw: ring offset x2 | DrainOrb_Draw 2000 |
+| W8 | DrainOrb_Draw: shade index + 1 | DrainOrb_Draw 2000 |
+| W9 | DrainOrb_Draw: phase 2/3 ring shade B | DrainOrb_Draw 301 |
+| W10 | DrainOrb_Draw: factor below 7 | DrainOrb_Draw 105 |
+| W11 | DrainOrb_Draw: collapse at +9 = n | DrainOrb_Draw 17 |
+| W12 | DrainOrb_Draw: collapsed radius + 1 | DrainOrb_Draw 1279 |
+| W13 | DrainOrb_Draw: the upper ring's offset the lower's | DrainOrb_Draw 2000 |
+| W14 | DrainOrb_Draw: seven quads a ring | DrainOrb_Draw 2000 |
+| W15 | DrainOrb_Draw: green c / 4 | DrainOrb_Draw 2000 |
+| W16 | DrainOrb_Draw: third corner the upper shade | DrainOrb_Draw 1998 |
+| W17 | DrainOrb_Draw: linked by 0x34 | DrainOrb_Draw 2000 |
+| W18 | DrainOrb_Draw: the previous height not kept | DrainOrb_Draw 2000 |
+| W19 | DrainOrb_Draw: depths before the projection | DrainOrb_Draw 2000 |
+| W20 | DrainOrb_Draw: mode tpage 0x35 | DrainOrb_Draw 2000 |
+| X1 | DrainOrb_DrawDisc: radius << 3 | DrainOrb_DrawDisc 1993 |
+| X2 | DrainOrb_DrawDisc: tpage 0x35 | DrainOrb_DrawDisc 2000 |
+| X3 | DrainOrb_DrawDisc: centre green 0xF1 | DrainOrb_DrawDisc 2000 |
+| X4 | DrainOrb_DrawDisc: shade & 7 | DrainOrb_DrawDisc 1100 |
+| X5 | DrainOrb_DrawDisc: committed by 0x44 | DrainOrb_DrawDisc 2000 |
+| X6 | DrainOrb_DrawDisc: opaque | DrainOrb_DrawDisc 2000 |
+| F1 | Buff_Task: entries 3 and 4 swapped | Buff_Task 638 |
+| F2 | Buff_Start: +8 not copied | Buff_Start 1918 |
+| F4 | Buff_Start: the kind to +5 | Buff_Start 2000 |
+| F5 | Buff_Start: +9 0x11 | Buff_Start 1891 |
+| F6 | Buff_Start: the ring +1 2 | Buff_Start 1837 |
+| F7 | Buff_Start: a spike +9 = b | Buff_Start 2000 |
+| F8 | Buff_Start: a spike's +0xA the task's +0xA | Buff_Start 1994 |
+| F9 | Buff_Start: 15 words of the strip | Buff_Start 2000 |
+| F10 | Buff_Start: the strip not marked | Buff_Start 1992 |
+| F11 | Buff_Start: sound 0x102 | Buff_Start 2000 |
+| F12 | Buff_WaitChildren: at 2 | Buff_WaitChildren 431 |
+| F13 | Buff_Fade: blue byte +5 | Buff_Fade 2000 |
+| F14 | Buff_Fade: the next kind's byte | Buff_Fade 457 |
+| F15 | Buff_Fade: fallback 7 | Buff_Fade 177 |
+| F16 | Buff_Fade: parameter 0x47 | Buff_Fade 482 |
+| F17 | Buff_Fade: the actor's tint released | Buff_Fade 235 |
+| F18 | Buff_Fade: child +0xA 1 | Buff_Fade 482 |
+| K1 | Buff_Kind: 0xB8 answers 1 | Buff_Kind 28 |
+| K2 | Buff_Kind: 0x23 answers 3 | Buff_Kind 27 |
+| K3 | Buff_Kind: 0x211 becomes 0x55 | Buff_Kind 4 |
+| K4 | Buff_Kind: 0x14 answers 3 | Buff_Kind 16 |
+| K5 | Buff_Kind: command kind 5 | Buff_Kind 353 |
+| R1 | BuffFx_Dispatch: by +2 | BuffFx_Dispatch 1023 |
+| R2 | BuffRing_Task: disc before band | BuffRing_Task 1020 |
+| R3 | BuffRing_Wait: below 2 | BuffRing_Wait 263 |
+| R4 | BuffRing_DrawDisc: centre +9 * 4 | BuffRing_DrawDisc 1988 |
+| R5 | BuffRing_DrawDisc: radius << 6 | BuffRing_DrawDisc 2000 |
+| R6 | BuffRing_DrawDisc: from 0x80 | BuffRing_DrawDisc 2000 |
+| R7 | BuffRing_DrawDisc: rim green the table blue | BuffRing_DrawDisc 1900 |
+| R8 | BuffRing_DrawBand: outer << 7 | BuffRing_DrawBand 2000 |
+| R9 | BuffRing_DrawBand: outer 2 2 2 | BuffRing_DrawBand 2000 |
+| R10 | BuffRing_DrawBand: committed by 0x34 | BuffRing_DrawBand 2000 |
+| S1 | BuffSpike_Dispatch: by +1 | BuffSpike_Dispatch 1670 |
+| S2 | BuffSpike_Arc: disc 0x19 | BuffSpike_Arc 2000 |
+| S3 | SpikeFly: even frames | BuffSpike_Arc 2000, BuffSpike_Arc2 2000 |
+| S4 | SpikeFly: height by +0x16 | BuffSpike_Arc 2000, BuffSpike_Arc2 2000 |
+| S5 | BuffSpike_Arc: speed -15 | BuffSpike_Arc 392 |
+| S6 | BuffSpike_Arc2: 0x1D | BuffSpike_Arc2 411 |
+| S7 | BuffSpike_Spin: wide below 6 | BuffSpike_Spin 67 |
+| S8 | BuffSpike_Spin: wide 0x41 | BuffSpike_Spin 202 |
+| S9 | BuffSpike_Spin: every fourth | BuffSpike_Spin 75 |
+| S10 | BuffSpike_Spin: the sound for +0xB 1 too | BuffSpike_Spin 42 |
+| S11 | BuffSpike_Spin: not read again after the sound | BuffSpike_Spin 1 |
+| S12 | BuffSpike_Spin: the spin compared unsigned | BuffSpike_Spin 820 |
+| S13 | BuffSpike_Orbit: +0x10 up 5 | BuffSpike_Orbit 2000 |
+| S14 | BuffSpike_Orbit: + 0xB1 | BuffSpike_Orbit 2000 |
+| S15 | BuffSpike_Orbit: x >> 4 | BuffSpike_Orbit 2000 |
+| S16 | BuffSpike_Orbit: z from the owner's +0x3C | BuffSpike_Orbit 2000 |
+| S17 | BuffSpike_Orbit: freed at 0x11 | BuffSpike_Orbit 719 |
+| T1 | BuffSpike_Draw: radius 0x31 | BuffSpike_Draw 2000 |
+| T2 | BuffSpike_Draw: apex 0x51 | BuffSpike_Draw 2000 |
+| T3 | BuffSpike_Draw: the second apex not negated | BuffSpike_Draw 2000 |
+| T4 | BuffSpike_Draw: the second angle a + 7 | BuffSpike_Draw 2000 |
+| T5 | BuffSpike_Draw: depths reversed | BuffSpike_Draw 2000 |
+| T6 | BuffSpike_Draw: packets 0x30 apart | BuffSpike_Draw 2000 |
+| T7 | BuffSpike_Draw: colours by 3 * kind | BuffSpike_Draw 1691 |
+| T8 | BuffSpike_Draw: the first row slot 3 | BuffSpike_Draw 2000 |
+| T9 | BuffSpike_Draw: the second row from the first packet | BuffSpike_Draw 2000 |
+| T10 | BuffSpike_Draw: semi-transparent | BuffSpike_Draw 2000 |
+| T11 | BuffSpike_Draw: mode linked at dy 0 | BuffSpike_Draw 2000 |
+| Q1 | MagicFx_DrawDiscRadius: centre 0x7F | MagicFx_DrawDiscRadius 2000 |
+| Q2 | MagicFx_DrawDiscRadius: the centre's y from +0x2E | MagicFx_DrawDiscRadius 2000 |
+| Q3 | MagicFx_DrawDiscRadius: steps of 0x100 | MagicFx_DrawDiscRadius 2000 |
+| Q4 | MagicFx_DrawDiscRadius: the triangle linked at dy 0 | MagicFx_DrawDiscRadius 2000 |
 
 ## 8. What nothing reached
 
