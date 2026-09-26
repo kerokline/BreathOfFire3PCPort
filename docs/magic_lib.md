@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-25) - 25 functions ours
 (`src/game/magic_lib.cpp`, shadow name `magic_lib`), fuzzed headless through
 the shared harness, which this group extended for functions that take
-arguments and answer; CONTROLS_LINE. No recorded route calls any of them:
+arguments and answer; 106 negative controls, every one refused by a count (exit 3). No recorded route calls any of them:
 fuzz only until the owner's eye.
 
 Group L of round nine ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
@@ -198,7 +198,11 @@ gains, without changing what a spell group writes:
   more (a side flag - `0x40` the enemies - has no record inside the image;
   the write crashed).
 
-`magic_harness.md` section 4 says the same in its place.
+`magic_harness.md` section 4 says the same in its place. These edits are
+committed on this branch (`magic_harness.h` / `.cpp`); group HX is
+consolidating the wave's harness edits into one API, and this group ports
+onto it afterwards. The fuzz's own acts (`Gfx_CommitPrim` moving the packet
+on, the buff roll noting what it reads) live in `magic_lib_fuzz.cpp`.
 
 ## 5. The fuzz, and the controls
 
@@ -206,7 +210,7 @@ gains, without changing what a spell group writes:
 re-aimed at handler recorders, every call at its recorder), the standard
 regions plus the group's - `Gfx_PacketNext`, `MapView_Origin`,
 `Gfx_BufferIndex`, the depth nodes `0x8022C0..`, the battle bytes
-`0x904B50..0x904B8F`, `0x939F80`, the first 0x140 bytes of the packet pool,
+`0x904B50..0x904B8F`, `0x939F80`, the first 0x200 bytes of the packet pool, the first 16 rows of the enemy-type table at `0x8C5652`,
 the whole `Gfx_ClutStrip`, row 2 of `Gfx_ClutStripSource`, the keys; 2,000
 rounds a function. The group's disturbance moves `Gfx_PacketNext` between
 two cells, `Gfx_BufferIndex`, and the ability target and result record.
@@ -226,9 +230,156 @@ byte from 0, 1, 2, 0x40, 0x43, 0x80, 0x81, 0xC0, 0xC3, 0x7F.
 
 Result (2026-09-25):
 
-    RESULT_BLOCK
+    shadow      magic_lib self-test: 50000 rounds over 25 functions (2000 each), 81233 calls to the stand-ins,
+                0 MISMATCHES; 33884 bytes of state (19 regions) and the stand-ins' log compared
+    shadow      magic_lib coverage (calls the originals made): BattleTask_Create 2000, BattleTask_FreeCurrent 1321,
+                BattleActor_UpdateScreenXY 2611, MagicFx_ApplyBuff 2000, BuffPopup_Draw 2285, Gpu_SetDrawMode 2000,
+                Gfx_CommitPrim 6000, Gpu_SetPolyFT4 4000, Gpu_GetTPage 4000, Gpu_GetClut 4000, Gpu_LinkPrim 3042,
+                Gte_VectorNormalS 4000, Math_Ratan2 2000, Math_Cos 2000, Math_Sin 2000, Battle_ActorIsOut 7649,
+                0x44FC10 2000, phase 0x4FB100 488, phase 0x4FB190 1031, phase 0x4FB1F0 1009, phase 0x4FB230 994,
+                phase 0x4FB2C0 478
 
-CONTROLS_SECTION
+The calls count includes the returns and the acts' notes, which are log
+entries too. `BOF3X_SHADOW='*'`: exit 0.
+
+**106 negative controls**, planted one at a time by a script (not
+committed: apply to `magic_lib.cpp`, build, `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=magic_lib`, restore). All 106 are refused by a count (exit 3);
+a control in a helper two functions share is refused in both, every other
+only in the function it touches.
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| T1 | BuffPopup_Task: table entries 0 and 1 swapped | BuffPopup_Task 983 |
+| T2 | BuffPopup_Task: draw without the +0 test | BuffPopup_Task 343, BuffPopupAt_Task 396 |
+| T3 | BuffPopup_Task: draw the icon at +5 | BuffPopup_Task 1,158, BuffPopupAt_Task 1,119 |
+| T4 | BuffPopupAt_Task: entry 0 BuffPopup_Start | BuffPopupAt_Task 478 |
+| S1 | BuffPopup_Start: +0x38 from the owner's +0x3C | BuffPopup_Start 1,312 |
+| S2 | BuffPopup_Start: +9 down by 2 | BuffPopup_Start 2,000 |
+| P1 | both starts: lift 0x17 | BuffPopup_Start 1,312, BuffPopupAt_Start 1,299 |
+| P2 | both starts: lift by +0xB | BuffPopup_Start 1,308, BuffPopupAt_Start 1,294 |
+| P3 | both starts: speed -13 | BuffPopup_Start 1,312, BuffPopupAt_Start 1,299 |
+| P4 | both starts: +0xA = 2 | BuffPopup_Start 1,312, BuffPopupAt_Start 1,299 |
+| P5 | both starts: Sprite_Current kept across UpdateScreenXY | BuffPopup_Start 50, BuffPopupAt_Start 39 |
+| B1 | BuffPopupAt_Start: the actor +0xB ^ 1 | BuffPopupAt_Start 1,299 |
+| B2 | BuffPopupAt_Start (and CenterOnSide): party below 4 | BuffPopupAt_Start 127, MagicFx_CenterOnSide 295 |
+| R1 | BuffPopup_Rise: height up to 9 | BuffPopup_Rise 404 |
+| R2 | BuffPopup_Rise: on at 13 | BuffPopup_Rise 1,310 |
+| R3 | BuffPopup_Rise: speed -5 | BuffPopup_Rise 1,308 |
+| R4 | BuffPopup_Rise: speed += 3 | BuffPopup_Rise 2,000 |
+| F1 | BuffPopup_Fall: on at 17 | BuffPopup_Fall 1,332 |
+| F2 | BuffPopup_Fall: y += word +0x12 | BuffPopup_Fall 2,000 |
+| E1 | BuffPopup_End: free at 27 | BuffPopup_End 1,324 |
+| E2 | BuffPopup_End: the owner's +0xA down | BuffPopup_End 1,321 |
+| E3 | BuffPopup_End: no free | BuffPopup_End 1,321 |
+| D1 | BuffPopup_Draw: draw mode dither 0 | BuffPopup_Draw 2,000 |
+| D2 | BuffPopup_Draw: commit (2, 0xD) | BuffPopup_Draw 2,000 |
+| D3 | BuffPopup_Draw: shadow 0x30 wide | BuffPopup_Draw 1,996 |
+| D4 | BuffPopup_Draw: shadow shade 2 | BuffPopup_Draw 2,000 |
+| D5 | BuffPopup_Draw: page y 0x101 | BuffPopup_Draw 2,000 |
+| D6 | BuffPopup_Draw: CLUT y 0x1FB | BuffPopup_Draw 2,000 |
+| D7 | BuffPopup_Draw: icon & 7 | BuffPopup_Draw 228 |
+| D8 | BuffPopup_Draw: v at +0x35 from u | BuffPopup_Draw 1,764 |
+| D9 | BuffPopup_Draw: the packet re-read after GetTPage | BuffPopup_Draw 72 |
+| D10 | BuffPopup_Draw: shadow y0 without +1 | BuffPopup_Draw 2,000 |
+| AB1 | MagicFx_ApplyBuff: party result +0x120 | MagicFx_ApplyBuff 505 |
+| AB2 | MagicFx_ApplyBuff: enemy result +0x100 | MagicFx_ApplyBuff 1,475 |
+| AB3 | MagicFx_ApplyBuff: 28 bytes copied | MagicFx_ApplyBuff 2,000 |
+| AB4 | MagicFx_ApplyBuff: target not put back | MagicFx_ApplyBuff 1,994 |
+| AB5 | MagicFx_ApplyBuff: answer inverted | MagicFx_ApplyBuff 2,000 |
+| AB6 | MagicFx_ApplyBuff: party below 2 | MagicFx_ApplyBuff 150 |
+| AB7 | MagicFx_ApplyBuff: record not put back | MagicFx_ApplyBuff 2,000 |
+| AB8 | MagicFx_ApplyBuff: stats from +0xA4 | MagicFx_ApplyBuff 511 |
+| BP1 | MagicFx_BuffPopup: enemy who + 2 | MagicFx_BuffPopup 1,011 |
+| BP2 | MagicFx_BuffPopup: stat by kind & 1 | MagicFx_BuffPopup 1,000 |
+| BP3 | MagicFx_BuffPopup: resisted icon 9 | MagicFx_BuffPopup 663 |
+| BP4 | MagicFx_BuffPopup: +9 = 2 | MagicFx_BuffPopup 2,000 |
+| BP5 | MagicFx_BuffPopup: owner read before the create | MagicFx_BuffPopup 54 |
+| BP6 | MagicFx_BuffPopup: create (1, 0x47) | MagicFx_BuffPopup 2,000 |
+| BP7 | MagicFx_BuffPopup: enemies by bit 7 | MagicFx_BuffPopup 507 |
+| L1 | MagicFx_LinkByDepth: depth + 1 | MagicFx_LinkByDepth 888 |
+| L2 | MagicFx_LinkByDepth: depth 0x38 accepted | MagicFx_LinkByDepth 77 |
+| L3 | MagicFx_LinkByDepth: pool end: < not <= | MagicFx_LinkByDepth 166 |
+| L4 | MagicFx_LinkByDepth: give back one | MagicFx_LinkByDepth 1,032 |
+| L5 | MagicFx_LinkByDepth: keys unsigned | MagicFx_LinkByDepth 625 |
+| L6 | MagicFx_LinkByDepth: the last of equals | MagicFx_LinkByDepth 410 |
+| L7 | MagicFx_LinkByDepth: zero key linked | MagicFx_LinkByDepth 704 |
+| L8 | MagicFx_LinkByDepth: key not zeroed | MagicFx_LinkByDepth 808 |
+| L9 | MagicFx_LinkByDepth: the head not re-computed after the link | MagicFx_LinkByDepth 17 |
+| L10 | MagicFx_LinkByDepth: lo(x) test dropped | MagicFx_LinkByDepth 232 |
+| L11 | MagicFx_LinkByDepth: origin x not subtracted | MagicFx_LinkByDepth 892 |
+| L12 | MagicFx_LinkByDepth: hi unsigned | MagicFx_LinkByDepth 794 |
+| L13 | MagicFx_LinkByDepth: depth row * 5 | MagicFx_LinkByDepth 726 |
+| ST1 | MagicFx_StepToward: x sar 8 | MagicFx_StepToward 1,757 |
+| ST2 | MagicFx_StepToward: height: difference of the halves | MagicFx_StepToward 472 |
+| SA1 | both steps: x step sar 4 | MagicFx_StepToward 1,757, MagicFx_StepTowardPoint 2,000 |
+| SA2 | both steps: height sar 12 | MagicFx_StepToward 1,650, MagicFx_StepTowardPoint 1,999 |
+| SA3 | both steps: speed unsigned | MagicFx_StepToward 873, MagicFx_StepTowardPoint 1,025 |
+| SA4 | both steps: Sprite_Current kept across the normalisation | MagicFx_StepToward 53, MagicFx_StepTowardPoint 78 |
+| SP1 | MagicFx_StepTowardPoint: x less 0x3FFF | MagicFx_StepTowardPoint 2,000 |
+| SP2 | MagicFx_StepTowardPoint: height sar 2 | MagicFx_StepTowardPoint 1,999 |
+| AR1 | MagicFx_StepAround: Ratan2 arguments swapped | MagicFx_StepAround 1,753 |
+| AR2 | MagicFx_StepAround: angle & 0x7FF | MagicFx_StepAround 1,016 |
+| AR3 | MagicFx_StepAround: cos sar 11 | MagicFx_StepAround 2,000 |
+| AR4 | MagicFx_StepAround: the x slot read after the cosine | MagicFx_StepAround 55 |
+| AR5 | MagicFx_StepAround: z by the cosine | MagicFx_StepAround 2,000 |
+| N1 | the four near tests: x: >= not > | MagicFx_NearSprite3D 149, MagicFx_NearSprite 208, MagicFx_NearPoint3D 145, MagicFx_NearPoint 181 |
+| N2 | the four near tests: half a quarter | MagicFx_NearSprite3D 536, MagicFx_NearSprite 555, MagicFx_NearPoint3D 587, MagicFx_NearPoint 647 |
+| N3 | MagicFx_NearSprite3D: height < not <= | MagicFx_NearSprite3D 184 |
+| N4 | MagicFx_NearSprite3D: height size >> 8 | MagicFx_NearSprite3D 134 |
+| N5 | MagicFx_NearSprite: z against x | MagicFx_NearSprite 917 |
+| N6 | MagicFx_NearPoint3D: height the low word | MagicFx_NearPoint3D 294 |
+| N7 | MagicFx_NearPoint3D: height < not <= | MagicFx_NearPoint3D 150 |
+| N8 | MagicFx_NearPoint: x and z swapped | MagicFx_NearPoint 896 |
+| C1 | the three CLUT helpers: row + 0x20 | SpriteClut_SetStp 280, SpriteClut_ClearEntry31 273, SpriteClut_CopyToFxRow 198 |
+| C2 | the three CLUT helpers: column + 1 | SpriteClut_SetStp 1,527, SpriteClut_ClearEntry31 2,000, SpriteClut_CopyToFxRow 2,000 |
+| C3 | the three CLUT helpers: row bit 3 | SpriteClut_SetStp 986, SpriteClut_ClearEntry31 1,033, SpriteClut_CopyToFxRow 1,050 |
+| SS1 | SpriteClut_SetStp: from entry 0 | SpriteClut_SetStp 994 |
+| SS2 | SpriteClut_SetStp: the low byte | SpriteClut_SetStp 2,000 |
+| SS3 | SpriteClut_SetStp: not dirty | SpriteClut_SetStp 1,996 |
+| CE1 | SpriteClut_ClearEntry31: entry 30 | SpriteClut_ClearEntry31 2,000 |
+| CE2 | SpriteClut_ClearEntry31: not dirty | SpriteClut_ClearEntry31 1,994 |
+| CR1 | SpriteClut_CopyToFxRow: one entry up | SpriteClut_CopyToFxRow 2,000 |
+| CR2 | SpriteClut_CopyToFxRow: divisor * 4 | SpriteClut_CopyToFxRow 2,000 |
+| CR3 | SpriteClut_CopyToFxRow: one entry fewer | SpriteClut_CopyToFxRow 1,730 |
+| RR1 | SpriteClut_RestoreFxRow: one entry fewer | SpriteClut_RestoreFxRow 2,000 |
+| RR2 | SpriteClut_RestoreFxRow: not dirty | SpriteClut_RestoreFxRow 1,994 |
+| CS1 | MagicFx_CenterOnSide: both bits not a return | MagicFx_CenterOnSide 432 |
+| CS2 | MagicFx_CenterOnSide: seven enemies | MagicFx_CenterOnSide 589 |
+| CS3 | MagicFx_CenterOnSide: x / 512 not sar 9 | MagicFx_CenterOnSide 775 |
+| CS4 | MagicFx_CenterOnSide: x divided unsigned | MagicFx_CenterOnSide 557 |
+| CS5 | MagicFx_CenterOnSide: the height unsigned | MagicFx_CenterOnSide 1,193 |
+| CS6 | MagicFx_CenterOnSide: party asked as 1..3 | MagicFx_CenterOnSide 979 |
+| FS1 | BattleActor_FxSizeB: bit 0 | BattleActor_FxSizeB 268 |
+| FS2 | BattleActor_FxSizeB: FxSize's enemy byte | BattleActor_FxSizeB 1,436 |
+| FS3 | BattleActor_FxSizeB: the first table for both | BattleActor_FxSizeB 271 |
+| FO1 | MagicFx_FormationOffset: +8 & 7 | MagicFx_FormationOffset 975 |
+| FO2 | MagicFx_FormationOffset: +0x10 the first short | MagicFx_FormationOffset 1,895 |
+| FO3 | MagicFx_FormationOffset: rows of 3 | MagicFx_FormationOffset 806 |
+
+The thinnest are the re-reads across a call - L9 (17: the depth node's
+address recomputed after the link, shown only when the disturbance flips
+`Gfx_BufferIndex` during it), SA4, AR4, P5, BP5, D9 (39..78) - and the
+bounds L2 (77) and D7 (228: icon 8 alone).
+
+**What a first pass missed, and how it was fixed.** Four controls were not
+refused by the first seed: AB1 and AB2 (the result record's address, set
+only during the buff roll's call) until the roll's recorder became an act
+that notes the target byte, the record pointer and the stats copy it would
+read; BP1 and BP7 (the enemy branch) until the seed set target bit 6; CS2
+and CS6 (an actor dropped) until the side's out-mask left at most one party
+member out; FS2 (the enemy table's byte) until the enemies' type bytes were
+held to 16 rows made a region. D3, D4 and D10 (the shadow quad) were refused
+in some 50 rounds only, because both quads landed on the same packet bytes;
+`Gfx_CommitPrim`'s recorder now moves the packet pointer on by the size, as
+the real one does. B1 as first planted (the actor from `+0xA`) crashed both
+sides on an index past the records and was replanted as `+0xB ^ 1`.
+
+Not planted, because no fuzz can see it: the order of reads with no call
+between them (the popup phases re-read Sprite_Current per field; nothing
+runs between), and `SpriteClut_CopyToFxRow`'s forward copy against a
+memmove (kinds 0..4's cells tile the strip, so no source half-overlaps row
+2).
 
 ## 6. Defects (Capcom's, latent, kept)
 
