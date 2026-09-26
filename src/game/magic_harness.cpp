@@ -105,9 +105,19 @@ void Disturb() {
         Pointer(at::kOwner)[kFields[v % 8]] = b;
         break;
     }
-    case 12: case 13:
-        TargetEnemy()[(h >> 20) % at::kEnemyStride] = static_cast<unsigned char>(v);
+    case 12: case 13: {
+        // Not for a target of 11 or more (a group's seed setting the side bit
+        // 0x40, group S16): it has no record, EnemyOf would point past the
+        // image. And not into the current-slot and owner cells, which a
+        // target of 0..2 reaches (0x93B960 - 0x128 * (3 - target)): a later
+        // disturbance writes through the owner.
+        if (Mem(at::kTarget)[0] >= 11) break;
+        unsigned char* const cell = TargetEnemy() + (h >> 20) % at::kEnemyStride;
+        const std::uint32_t a = Key(cell);
+        if ((a >= at::kCurrentSlot && a < at::kCurrentSlot + 4) || (a >= at::kOwner && a < at::kOwner + 4)) break;
+        *cell = static_cast<unsigned char>(v);
         break;
+    }
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;

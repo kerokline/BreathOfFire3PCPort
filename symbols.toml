@@ -18891,3 +18891,578 @@ ctype = "signed char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-25: SkillSteal_Roll's movsx byte [0x65C204 + the enemy's +0xAA], the index unbounded; the same eight values as Steal_RateTable 0x65AC20 (docs/cheats.md: the PSX's byte for byte)."
+
+# --- Round nine, group S16: MAGIC071..074, rows 45, 113, 47, 114 (docs/magic_s16.md) ---
+
+[[func]]
+pc = 0x4B9930
+name = "Magic071_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9930..0x4B99B0 (0x81 bytes), cdecl, one call: a six-entry stack table (0x4B99C0, BattleFx_TintActor 0x4B1E70, BattleFx_Brighten 0x4B1ED0, BattleFx_WaitStep4 0x4EE8A0, Sparkle_End 0x4B8F50, BattleFx_Finish 0x4F7350) by Sprite_Current +1, unchecked; then 0x93B940 saved and for the 128 records of 0x685D98 with +0 bit 0: 0x687398 = it, 0x93B940 = its +0x28, Magic071_SparkleDispatch 0x4B9B10, 0x93B940 put back. Magic_Rows row 45 (MAGIC071.EMI), entered by 0x4378B0's jmp; MAGIC070's Sparkle_Task instruction for instruction but its addresses. Fuzz only."
+
+[[func]]
+pc = 0x4B99C0
+name = "Magic071_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B99C0..0x4B9B0D (0x14E bytes), cdecl, four calls (BattleActor_UpdateScreenXY, Magic071_SparkleAlloc, Rand, Sound_PlayEffect(0x100)): +0..+2 of the pool's 128 records cleared; Sprite_Current +4 = 1 (MAGIC070's stores 0); the source sprite 0x904B4C (read once) +8 and +0x34..+0x3C to Sprite_Current (re-read each); +0xB 0, +9 8, +0xA 0, +1 on; then for n below counts 0x65AF08[+4] a record (0xFF skips): +0x28 Sprite_Current, +1 +2 0, +3 Rand & 3, +4 the kind, +7 n, +5 delays 0x65AF10[kind] * (n >> 2) + 1 (imul r8), Sprite_Current +0xB up. Entry 0 of Magic071_Task's table. MAGIC070's Sparkle_Spawn instruction for instruction but the kind and its addresses. Fuzz only."
+
+[[func]]
+pc = 0x4BA460
+name = "Magic072_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA460..0x4BA4E0 (0x81 bytes), cdecl, one call: a six-entry stack table (0x4BA4F0, BattleFx_TintActor 0x4B1E70, BattleFx_Brighten 0x4B1ED0, BattleFx_WaitStep4 0x4EE8A0, Sparkle_End 0x4B8F50, BattleFx_Finish 0x4F7350) by Sprite_Current +1, unchecked; then 0x93B940 saved and for the 128 records of 0x6873A0 with +0 bit 0: 0x6889A0 = it, 0x93B940 = its +0x28, Magic072_SparkleDispatch 0x4BA640, 0x93B940 put back. Magic_Rows row 113 (MAGIC072.EMI), entered by 0x4378B0's jmp; MAGIC070's Sparkle_Task instruction for instruction but its addresses. Fuzz only."
+
+[[func]]
+pc = 0x4BA4F0
+name = "Magic072_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA4F0..0x4BA63D (0x14E bytes), cdecl, four calls (BattleActor_UpdateScreenXY, Magic072_SparkleAlloc, Rand, Sound_PlayEffect(0x100)): +0..+2 of the pool's 128 records cleared; Sprite_Current +4 = 2 (MAGIC070's stores 0); the source sprite 0x904B4C (read once) +8 and +0x34..+0x3C to Sprite_Current (re-read each); +0xB 0, +9 8, +0xA 0, +1 on; then for n below counts 0x65B000[+4] a record (0xFF skips): +0x28 Sprite_Current, +1 +2 0, +3 Rand & 3, +4 the kind, +7 n, +5 delays 0x65B008[kind] * (n >> 2) + 1 (imul r8), Sprite_Current +0xB up. Entry 0 of Magic072_Task's table. MAGIC070's Sparkle_Spawn instruction for instruction but the kind and its addresses. Fuzz only."
+
+[[func]]
+pc = 0x4B9B10
+name = "Magic071_SparkleDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9B10..0x4B9B21 (0x12 bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B8FE0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. Jmp [types + 4 * byte +1 of the sparkle at the overlay's current cell], read in place, unchecked. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4B9B30
+name = "Magic071_SparkleUpdate"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9B30..0x4B9BBE (0x8F bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9000, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. A three-entry stack table (launch, rise, fade) by the sparkle's +2, unchecked; then with +0 bit 0 and +2 the disc, and with +0xC & 3 the rays G2(Frame_Counter >> 1, +6) and G3((Frame_Counter >> 1) + 4, (+6 >> 1) + +6), stale upper halves. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4B9BC0
+name = "Magic071_SparkleLaunch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9BC0..0x4B9D20 (0x161 bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9090, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. Six Rand calls: +5 down; at 0 the owner's (0x93B940) +0x34..+0x3C and +0x2E / +0x30 to the sparkle, x and y thrown by the offset row +7 & 0x1F, base x, drift Rand & 1, sway Rand, rise (Rand & 6) + life[+4], +5 = 0x10, +6 = 0, +2 on; the sparkle re-read after each call. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4B9D30
+name = "Magic071_SparkleRise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9D30..0x4B9D9B (0x6C bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9200, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. One call (Math_Sin): +0xC up, x = base + sin((+0xC & 0x3F) << 6) * 24 >> 12 (angle in scratch 0x903856), y += +0xA; +6 up, at +7 the phase +2 on. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4B9DA0
+name = "Magic071_SparkleFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9DA0..0x4B9E24 (0x85 bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9270, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. Math_Sin and a tail jmp to the overlay's free: the sway; +6 down when Frame_Counter & 3 is 0; +5 down, at 0 the owner's +0xB down and the sparkle freed. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4B9E30
+name = "Magic071_SparkleRaysG2"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9E30..0x4B9FB4 (0x185 bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9300, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. Gpu_SetDrawMode, MapView_LinkPrimAt, Gpu_SetLineG2, Gpu_SetSemiTrans, Math_Cos, Math_Sin: four G2 lines at Gfx_PacketNext (re-read each) from the sparkle's point, radius and start their low words, angle ((start + 8k) & 0x1F) << 7, shade +5 * 6 at the centre. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4B9FC0
+name = "Magic071_SparkleRaysG3"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4B9FC0..0x4BA1AC (0x1ED bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9490, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. As the G2 rays with Gpu_SetLineG3: three points, the middle at half the radius bright (+5 * 6), the ends dark. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA1B0
+name = "Magic071_SparkleDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA1B0..0x4BA3DE (0x22F bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9680, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. Gpu_SetDrawMode, MapView_LinkPrimAt, Rand, Gpu_SetPolyG3, Gpu_SetSemiTrans, Math_Sin, Math_Cos: eight G3 triangles round the sparkle's point, radius (Rand & 3) + +6, the centre colour row (+3 + 4 * +4) of the overlay's colour table times +5, the rim +5. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA3E0
+name = "Magic071_SparkleAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA3E0..0x4BA429 (0x4A bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B98B0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. No calls: the first record of the overlay's pool without bit 0 of +0 gets it and its index is answered in al; 0xFF when none. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA430
+name = "Magic071_SparkleFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA430..0x4BA45E (0x2F bytes), cdecl. MAGIC071's copy (Magic_Rows row 45) of MAGIC070's 0x4B9900, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x685D98 (128 records of 0x2C), current cell 0x687398, offsets 0x65AE2C, colours 0x65AECC, life 0x65AF18, types 0x65AF20. No calls: bytes +0..+4 of the current sparkle cleared, the cell re-read for each; reached only by the fade's tail jmp. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA640
+name = "Magic072_SparkleDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA640..0x4BA651 (0x12 bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B8FE0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. Jmp [types + 4 * byte +1 of the sparkle at the overlay's current cell], read in place, unchecked. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA660
+name = "Magic072_SparkleUpdate"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA660..0x4BA6EE (0x8F bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9000, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. A three-entry stack table (launch, rise, fade) by the sparkle's +2, unchecked; then with +0 bit 0 and +2 the disc, and with +0xC & 3 the rays G2(Frame_Counter >> 1, +6) and G3((Frame_Counter >> 1) + 4, (+6 >> 1) + +6), stale upper halves. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA6F0
+name = "Magic072_SparkleLaunch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA6F0..0x4BA850 (0x161 bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9090, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. Six Rand calls: +5 down; at 0 the owner's (0x93B940) +0x34..+0x3C and +0x2E / +0x30 to the sparkle, x and y thrown by the offset row +7 & 0x1F, base x, drift Rand & 1, sway Rand, rise (Rand & 6) + life[+4], +5 = 0x10, +6 = 0, +2 on; the sparkle re-read after each call. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA860
+name = "Magic072_SparkleRise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA860..0x4BA8CB (0x6C bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9200, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. One call (Math_Sin): +0xC up, x = base + sin((+0xC & 0x3F) << 6) * 24 >> 12 (angle in scratch 0x903856), y += +0xA; +6 up, at +7 the phase +2 on. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA8D0
+name = "Magic072_SparkleFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA8D0..0x4BA954 (0x85 bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9270, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. Math_Sin and a tail jmp to the overlay's free: the sway; +6 down when Frame_Counter & 3 is 0; +5 down, at 0 the owner's +0xB down and the sparkle freed. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BA960
+name = "Magic072_SparkleRaysG2"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BA960..0x4BAAE4 (0x185 bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9300, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. Gpu_SetDrawMode, MapView_LinkPrimAt, Gpu_SetLineG2, Gpu_SetSemiTrans, Math_Cos, Math_Sin: four G2 lines at Gfx_PacketNext (re-read each) from the sparkle's point, radius and start their low words, angle ((start + 8k) & 0x1F) << 7, shade +5 * 6 at the centre. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BAAF0
+name = "Magic072_SparkleRaysG3"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BAAF0..0x4BACDC (0x1ED bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9490, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. As the G2 rays with Gpu_SetLineG3: three points, the middle at half the radius bright (+5 * 6), the ends dark. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BACE0
+name = "Magic072_SparkleDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BACE0..0x4BAF0E (0x22F bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9680, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. Gpu_SetDrawMode, MapView_LinkPrimAt, Rand, Gpu_SetPolyG3, Gpu_SetSemiTrans, Math_Sin, Math_Cos: eight G3 triangles round the sparkle's point, radius (Rand & 3) + +6, the centre colour row (+3 + 4 * +4) of the overlay's colour table times +5, the rim +5. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BAF10
+name = "Magic072_SparkleAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BAF10..0x4BAF59 (0x4A bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B98B0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. No calls: the first record of the overlay's pool without bit 0 of +0 gets it and its index is answered in al; 0xFF when none. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BAF60
+name = "Magic072_SparkleFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BAF60..0x4BAF8E (0x2F bytes), cdecl. MAGIC072's copy (Magic_Rows row 113) of MAGIC070's 0x4B9900, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6873A0 (128 records of 0x2C), current cell 0x6889A0, offsets 0x65AF24, colours 0x65AFC4, life 0x65B010, types 0x65B018. No calls: bytes +0..+4 of the current sparkle cleared, the cell re-read for each; reached only by the fade's tail jmp. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BAF90
+name = "Magic073_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BAF90..0x4BAFF0 (0x61 bytes), cdecl, one call: a two-entry stack table (Magic073_Spawn 0x4BB000, Magic073_Wait 0x4BB170) by Sprite_Current +1, unchecked; then the pool walk over the 160 records of 0x6889A8 (0x68A528 the current cell, 0x93B940 each one's +0x28, Magic073_SparkleDispatch 0x4BB390, put back). Magic_Rows row 47 (MAGIC073.EMI). Fuzz only."
+
+[[func]]
+pc = 0x4BB000
+name = "Magic073_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB000..0x4BB161 (0x162 bytes), cdecl, calls Battle_ActorIsOut, BattleTask_Create, Sound_PlayById: +0..+2 of the 160 records of 0x6889A8 cleared; Sprite_Current +4 = 0, +0xB 0, +1 on (re-read each); for the enemies 3..10 when byte 0x904B44 has 0x40, else the members 0..2, each not out (the counter pushed as a dword, low byte read): BattleTask_Create(1, 0x26) and in that slot +0x80 = Sprite_Current (re-read), +1 0, +4 the actor, +9 the delay (1, then +0x1C per child), Sprite_Current +0xB up; then Sound_PlayById(0x100). Entry 0 of Magic073_Task's table. Fuzz only."
+
+[[func]]
+pc = 0x4BB170
+name = "Magic073_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB170..0x4BB191 (0x22 bytes), cdecl, a call and a tail jmp: nothing while Sprite_Current +0xB (children) is not 0 or Magic073_CountReacting answers not 0 (al); then 0x904AA8 |= 4 and jmp BattleTask_FreeCurrent. Entry 1 of Magic073_Task's table. Fuzz only."
+
+[[func]]
+pc = 0x4BB1A0
+name = "Magic073_ActorDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB1A0..0x4BB1B1 (0x12 bytes): jmp [0x65B0E0 + 4 * Sprite_Current +1], read in place, unchecked; entry 0 is Magic073_ActorTask, entry 1 the sparkle table's (0x65B0E4). BattleTask kind 1, parameter 0x26 (0x435350's table), created by Magic073_Spawn with +1 0. Fuzz only."
+
+[[func]]
+pc = 0x4BB1C0
+name = "Magic073_ActorTask"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB1C0..0x4BB205 (0x46 bytes), cdecl: a six-entry stack table (Magic073_ActorStart 0x4BB210, ActorFx_Tint 0x4BC110, 0x4F4DA0 (MAGIC213's, group C1's: the tint brightened), ActorFx_WaitStep4 0x4BB370, ActorFx_Untint 0x4BC1A0, ActorFx_End 0x4BC260) by Sprite_Current +2 (read once), unchecked. Entry 0 of 0x65B0E0. Fuzz only."
+
+[[func]]
+pc = 0x4BB210
+name = "Magic073_ActorStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB210..0x4BB36E (0x15F bytes), cdecl, calls BattleActor_UpdateScreenXY, Magic073_SparkleAlloc, Rand: Sprite_Current +9 down; at 0 the actor +4's record (0x802D40 + 0x14C a below 3, else 0x93B960 + 0x128 (a - 3)) +8 and +0x34..+0x3C to Sprite_Current; +0xB 0, +9 8, +0xA 0, +2 on; then as the spawns' loop with the kind the owner's (0x93B940) +4, re-read after Rand and for the bound: counts 0x65B0D4, delays 0x65B0D8, pool 0x6889A8; no sound. Entry 0 of Magic073_ActorTask's table. Fuzz only."
+
+[[func]]
+pc = 0x4BB370
+name = "ActorFx_WaitStep4"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB370..0x4BB387 (0x18 bytes), no calls: Sprite_Current +0xB above 4 (unsigned) nothing; else +9 = 8 and +2 on (re-read). BattleFx_WaitStep4 0x4EE8A0 on the child's phase byte +2. In the child tables of MAGIC073, 074, 168 and 169 (magic_funcs.tsv). Fuzz only."
+
+[[func]]
+pc = 0x4BB390
+name = "Magic073_SparkleDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB390..0x4BB3A1 (0x12 bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B8FE0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. Jmp [types + 4 * byte +1 of the sparkle at the overlay's current cell], read in place, unchecked. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BB3B0
+name = "Magic073_SparkleUpdate"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB3B0..0x4BB43E (0x8F bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9000, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. A three-entry stack table (launch, rise, fade) by the sparkle's +2, unchecked; then with +0 bit 0 and +2 the disc, and with +0xC & 3 the rays G2(Frame_Counter >> 1, +6) and G3((Frame_Counter >> 1) + 4, (+6 >> 1) + +6), stale upper halves. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BB440
+name = "Magic073_SparkleLaunch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB440..0x4BB5A0 (0x161 bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9090, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. Six Rand calls: +5 down; at 0 the owner's (0x93B940) +0x34..+0x3C and +0x2E / +0x30 to the sparkle, x and y thrown by the offset row +7 & 0x1F, base x, drift Rand & 1, sway Rand, rise (Rand & 6) + life[+4], +5 = 0x10, +6 = 0, +2 on; the sparkle re-read after each call. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BB5B0
+name = "Magic073_SparkleRise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB5B0..0x4BB61B (0x6C bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9200, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. One call (Math_Sin): +0xC up, x = base + sin((+0xC & 0x3F) << 6) * 24 >> 12 (angle in scratch 0x903856), y += +0xA; +6 up, at +7 the phase +2 on. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BB620
+name = "Magic073_SparkleFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB620..0x4BB6A4 (0x85 bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9270, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. Math_Sin and a tail jmp to the overlay's free: the sway; +6 down when Frame_Counter & 3 is 0; +5 down, at 0 the owner's +0xB down and the sparkle freed. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BB6B0
+name = "Magic073_SparkleRaysG2"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB6B0..0x4BB834 (0x185 bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9300, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. Gpu_SetDrawMode, MapView_LinkPrimAt, Gpu_SetLineG2, Gpu_SetSemiTrans, Math_Cos, Math_Sin: four G2 lines at Gfx_PacketNext (re-read each) from the sparkle's point, radius and start their low words, angle ((start + 8k) & 0x1F) << 7, shade +5 * 6 at the centre. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BB840
+name = "Magic073_SparkleRaysG3"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BB840..0x4BBA2C (0x1ED bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9490, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. As the G2 rays with Gpu_SetLineG3: three points, the middle at half the radius bright (+5 * 6), the ends dark. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BBA30
+name = "Magic073_SparkleDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBA30..0x4BBC5E (0x22F bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9680, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. Gpu_SetDrawMode, MapView_LinkPrimAt, Rand, Gpu_SetPolyG3, Gpu_SetSemiTrans, Math_Sin, Math_Cos: eight G3 triangles round the sparkle's point, radius (Rand & 3) + +6, the centre colour row (+3 + 4 * +4) of the overlay's colour table times +5, the rim +5. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BBC60
+name = "Magic073_SparkleAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBC60..0x4BBCA9 (0x4A bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B98B0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. No calls: the first record of the overlay's pool without bit 0 of +0 gets it and its index is answered in al; 0xFF when none. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BBCB0
+name = "Magic073_SparkleFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBCB0..0x4BBCDE (0x2F bytes), cdecl. MAGIC073's copy (Magic_Rows row 47) of MAGIC070's 0x4B9900, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x6889A8 (160 records of 0x2C), current cell 0x68A528, offsets 0x65B01C, colours 0x65B0BC, life 0x65B0DC, types 0x65B0E4. No calls: bytes +0..+4 of the current sparkle cleared, the cell re-read for each; reached only by the fade's tail jmp. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BBCE0
+name = "Magic073_CountReacting"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBCE0..0x4BBD57 (0x78 bytes), cdecl, two call sites (Battle_ActorIsOut): for i 0..7, Battle_ActorIsOut(i + 3) al 0 and byte 0x93BCD9 + 0x128 i equal to 6 count one; for i 0..2, Battle_ActorIsOut(i) al 0 and byte 0x802D41 + 0x14C i equal to 6 count one; the count in al. 0x93BCD9 is 0x93B961 + 0x128 * 3: the enemies' state bytes three records past the actor tested (docs/magic_s16.md section 6). Called by Magic073_Wait. Fuzz only."
+
+[[func]]
+pc = 0x4BBD60
+name = "Magic074_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBD60..0x4BBDC0 (0x61 bytes), cdecl, one call: a two-entry stack table (Magic074_Spawn 0x4BBDD0, 0x4E5200 - MAGIC131's wait-and-end, group S30's) by Sprite_Current +1, unchecked; then the pool walk over the 160 records of 0x68A530 (0x68C0B0 the current cell, Magic074_SparkleDispatch 0x4BC2A0). Magic_Rows row 114 (MAGIC074.EMI). Fuzz only."
+
+[[func]]
+pc = 0x4BBDD0
+name = "Magic074_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBDD0..0x4BBF31 (0x162 bytes): Magic073_Spawn instruction for instruction but the pool 0x68A530, the kind 1 and the child's parameter 0x24. Entry 0 of Magic074_Task's table. Fuzz only."
+
+[[func]]
+pc = 0x4BBF40
+name = "Magic074_ActorDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBF40..0x4BBF51 (0x12 bytes): jmp [0x65B1AC + 4 * Sprite_Current +1], read in place, unchecked; entry 0 Magic074_ActorTask, entry 1 the sparkle table's (0x65B1B0), the words after it MAGIC075's. BattleTask kind 1, parameter 0x24. Fuzz only."
+
+[[func]]
+pc = 0x4BBF60
+name = "Magic074_ActorTask"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBF60..0x4BBFA5 (0x46 bytes): Magic073_ActorTask but entry 0 Magic074_ActorStart 0x4BBFB0; the other five the same shared bodies. Fuzz only."
+
+[[func]]
+pc = 0x4BBFB0
+name = "Magic074_ActorStart"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BBFB0..0x4BC10E (0x15F bytes): Magic073_ActorStart instruction for instruction but counts 0x65B1A0, delays 0x65B1A4, Magic074_SparkleAlloc and the pool 0x68A530. Fuzz only."
+
+[[func]]
+pc = 0x4BC110
+name = "ActorFx_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC110..0x4BC191 (0x82 bytes), cdecl, calls Sprite_ReleaseTint and Sprite_SetTint: the actor record by Sprite_Current +4 (as Magic073_ActorStart); +9 down, at 0 (re-read) ReleaseTint(record), SetTint(record, 0, 0, 0, 1) al to +0xA, +9 8, +2 on. BattleFx_TintActor on the child's actor rather than the source. Entry 1 of the MAGIC073 and 074 child tables. Fuzz only."
+
+[[func]]
+pc = 0x4BC1A0
+name = "ActorFx_Untint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC1A0..0x4BC259 (0xBA bytes), cdecl, calls Sprite_ReleaseTint and BattleActor_Flash: the actor record by +4; bytes 0x7E0702..0x7E0704 + 12 x Sprite_Current +0xA (MoveScript_TintRecords' colour, the index unbounded) down one; +9 down, at 0 (re-read) ReleaseTint(record), BattleActor_Flash(+4 re-read), +2 on. Sparkle_End 0x4B8F50 on the child's actor. Entry 4 of the MAGIC073 and 074 child tables. Fuzz only."
+
+[[func]]
+pc = 0x4BC260
+name = "ActorFx_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC260..0x4BC290 (0x31 bytes), a call and a tail jmp: nothing while Sprite_Current +0xB; else the owner's (0x93B940) +0xB down, Battle_SetTargetFlag40(+4), jmp BattleTask_FreeCurrent. Entry 5 of the MAGIC073 and 074 child tables. Fuzz only."
+
+[[func]]
+pc = 0x4BC2A0
+name = "Magic074_SparkleDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC2A0..0x4BC2B1 (0x12 bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B8FE0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. Jmp [types + 4 * byte +1 of the sparkle at the overlay's current cell], read in place, unchecked. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC2C0
+name = "Magic074_SparkleUpdate"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC2C0..0x4BC34E (0x8F bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9000, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. A three-entry stack table (launch, rise, fade) by the sparkle's +2, unchecked; then with +0 bit 0 and +2 the disc, and with +0xC & 3 the rays G2(Frame_Counter >> 1, +6) and G3((Frame_Counter >> 1) + 4, (+6 >> 1) + +6), stale upper halves. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC350
+name = "Magic074_SparkleLaunch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC350..0x4BC4B0 (0x161 bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9090, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. Six Rand calls: +5 down; at 0 the owner's (0x93B940) +0x34..+0x3C and +0x2E / +0x30 to the sparkle, x and y thrown by the offset row +7 & 0x1F, base x, drift Rand & 1, sway Rand, rise (Rand & 6) + life[+4], +5 = 0x10, +6 = 0, +2 on; the sparkle re-read after each call. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC4C0
+name = "Magic074_SparkleRise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC4C0..0x4BC52B (0x6C bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9200, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. One call (Math_Sin): +0xC up, x = base + sin((+0xC & 0x3F) << 6) * 24 >> 12 (angle in scratch 0x903856), y += +0xA; +6 up, at +7 the phase +2 on. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC530
+name = "Magic074_SparkleFade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC530..0x4BC5B4 (0x85 bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9270, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. Math_Sin and a tail jmp to the overlay's free: the sway; +6 down when Frame_Counter & 3 is 0; +5 down, at 0 the owner's +0xB down and the sparkle freed. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC5C0
+name = "Magic074_SparkleRaysG2"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC5C0..0x4BC744 (0x185 bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9300, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. Gpu_SetDrawMode, MapView_LinkPrimAt, Gpu_SetLineG2, Gpu_SetSemiTrans, Math_Cos, Math_Sin: four G2 lines at Gfx_PacketNext (re-read each) from the sparkle's point, radius and start their low words, angle ((start + 8k) & 0x1F) << 7, shade +5 * 6 at the centre. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC750
+name = "Magic074_SparkleRaysG3"
+ret = "void"
+params = "unsigned start, unsigned radius"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC750..0x4BC93C (0x1ED bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9490, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. As the G2 rays with Gpu_SetLineG3: three points, the middle at half the radius bright (+5 * 6), the ends dark. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BC940
+name = "Magic074_SparkleDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BC940..0x4BCB6E (0x22F bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9680, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. Gpu_SetDrawMode, MapView_LinkPrimAt, Rand, Gpu_SetPolyG3, Gpu_SetSemiTrans, Math_Sin, Math_Cos: eight G3 triangles round the sparkle's point, radius (Rand & 3) + +6, the centre colour row (+3 + 4 * +4) of the overlay's colour table times +5, the rim +5. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BCB70
+name = "Magic074_SparkleAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCB70..0x4BCBB9 (0x4A bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B98B0, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. No calls: the first record of the overlay's pool without bit 0 of +0 gets it and its index is answered in al; 0xFF when none. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[func]]
+pc = 0x4BCBC0
+name = "Magic074_SparkleFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s16.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4BCBC0..0x4BCBEE (0x2F bytes), cdecl. MAGIC074's copy (Magic_Rows row 114) of MAGIC070's 0x4B9900, instruction for instruction (capstone compare 2026-09-25) but for its own addresses: pool 0x68A530 (160 records of 0x2C), current cell 0x68C0B0, offsets 0x65B0E8, colours 0x65B188, life 0x65B1A8, types 0x65B1B0. No calls: bytes +0..+4 of the current sparkle cleared, the cell re-read for each; reached only by the fade's tail jmp. Fuzz only: no recorded route casts it (docs/magic_s16.md)."
+
+[[data]]
+pc = 0x65AF20
+name = "Magic071_SparkleTypes"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: Magic071_SparkleDispatch's jmp [0x65AF20 + 4 * type]; its one code entry is Magic071_SparkleUpdate, the words after it data (as MAGIC070's Sparkle_Types 0x65AE28). The type is never checked; the spawn stores 0."
+
+[[data]]
+pc = 0x65B018
+name = "Magic072_SparkleTypes"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: Magic072_SparkleDispatch's jmp [0x65B018 + 4 * type]; its one code entry is Magic072_SparkleUpdate, the words after it data (as MAGIC070's Sparkle_Types 0x65AE28). The type is never checked; the spawn stores 0."
+
+[[data]]
+pc = 0x65B0E0
+name = "Magic073_ActorPhases"
+ctype = "void *"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: Magic073_ActorDispatch's jmp [0x65B0E0 + 4 * +1]: Magic073_ActorTask, then Magic073_SparkleUpdate - which is also entry 0 of Magic073_SparkleDispatch's table at 0x65B0E4, the two tables overlapping. The child's +1 is 0 as the spawn sets it; nothing steps it."
+
+[[data]]
+pc = 0x65B1AC
+name = "Magic074_ActorPhases"
+ctype = "void *"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: Magic074_ActorDispatch's jmp [0x65B1AC + 4 * +1]: Magic074_ActorTask, then Magic074_SparkleUpdate - entry 0 of Magic074_SparkleDispatch's table at 0x65B1B0, which runs on into MAGIC075's code pointers (0x4BCE10..). +1 stays 0."
+

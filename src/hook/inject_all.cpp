@@ -119,6 +119,7 @@
 #include "game/map_field_objects.h"
 #include "game/task_sched.h"
 #include "game/magic_steal.h"
+#include "game/magic_s16.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -313,6 +314,10 @@ void InjectAll() {
                                 // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
                                 // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
                                 // does not matter
+    MagicS16_Inject();          // round 9 group S16 (MAGIC071..074): its clones' calls, stack-table immediates and
+                                // four .data dispatch cells re-aimed at the harness's recorders; no module patches
+                                // bytes inside its sixty (DIV-0046's masks are Pilfer's and Steal's): order does
+                                // not matter
     InjectReport();
 }
 
