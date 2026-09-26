@@ -258,6 +258,26 @@ std::uint32_t StirAgain(const std::uint32_t*, std::uint32_t answer) {
     mh::Stir();
     return answer;
 }
+// Battle_ActorIsOut while BlitzBolt_Seek is fuzzed: after the stir, half the
+// time the bolt's record's point (+0x34..+0x3F) moved, so the out branch's
+// reads of it after the call are compared (the harness writes a record only
+// when it is the target enemy's).
+std::uint32_t OutEffect(const std::uint32_t* a, std::uint32_t answer) {
+    answer = StirAgain(a, answer);
+    if (Fuzzing(kBlitzBolt_Seek) && (mh::Noise() & 1)) {
+        const unsigned i = Sc()[4];
+        unsigned char* const rec = mh::Mem(mh::at::kTarget)[0] & 0x40 ? mh::Mem(mh::at::kEnemies + (i % 8) * mh::at::kEnemyStride)
+                                                                       : mh::PartyOf(Byte(i % 5));
+        mh::FillBytes(rec + 0x34, 12);
+    }
+    return answer;
+}
+// Math_Cos while MindSwordSpark_Start is fuzzed: half the time the angle word
+// 0x903858 moved, so the sine's read of it back is compared.
+std::uint32_t CosEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (Fuzzing(kMindSwordSpark_Start) && (mh::Noise() & 1)) mh::FillBytes(mh::Mem(kScratch + 8), 2);
+    return answer;
+}
 // Math_Ratan2 while MindSwordBlade_Fly is fuzzed: half the time the heading
 // kept in +0x10 turned by one step either side of 0x600 / 0xA00.
 std::uint32_t HeadingEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -281,10 +301,10 @@ const mh::Callee kCallees[] = {
     // MagicFx_NearSprite answers an int its two callers here test whole: kBool
     {S03_OURS(MagicFx_NearSprite), 2, {kAll, kAll}, mh::Answer::kBool, 0, 0, {}, &StirAgain},
     {S03_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &StirAgain},
-    {S03_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &StirAgain},
+    {S03_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &OutEffect},
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map: all ours)
     {S03_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},
-    {S03_OURS(Math_Cos), 1, {kAll}, kG, 0, 0},
+    {S03_OURS(Math_Cos), 1, {kAll}, kG, 0, 0, {}, &CosEffect},
     {S03_OURS(Math_Ratan2), 2, {kAll, kAll}, kG, 0, 0, {}, &HeadingEffect},
     {S03_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
     {S03_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {}, &LinkEffect},
