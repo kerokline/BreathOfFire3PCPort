@@ -130,6 +130,7 @@
 #include "game/magic_s23.h"
 #include "game/magic_s25.h"
 #include "game/magic_s20.h"
+#include "game/magic_s28.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -360,6 +361,11 @@ void InjectAll() {
     MagicS20_Inject();          // round 9 group S20 (MAGIC087, 088, 092): its clones' calls, stack-table immediates
                                 // and jump table re-aimed or moved, its thirteen .data tables swapped for the
                                 // fuzz only; no module patches bytes inside its 51: order does not matter
+    MagicS28_Inject();          // round 9 group S28 (MAGIC122..124: Firebreath, Icebreath, ThundrBreath, and
+                                // Port_DroppedCall 0x4DF820): its clones' calls and stack-table immediates re-aimed
+                                // at the shared harness's recorders, its seven .data tables swapped for the fuzz
+                                // only; after every module whose fuzz clones a caller of 0x4DF820 (they re-aim that
+                                // site themselves); DIV-0011 re-aims four calls to it, bytes outside it
     InjectReport();
 }
 
