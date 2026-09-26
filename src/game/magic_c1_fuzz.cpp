@@ -267,6 +267,14 @@ const mh::Callee kCallees[] = {
     {C1_THEIRS(0x4F4EA0), 0, {}, mh::Answer::kPhase, 0, 0},
     {C1_THEIRS(0x4FC420), 0, {}, mh::Answer::kPhase, 0, 0},
     {C1_THEIRS(0x4FC540), 0, {}, mh::Answer::kPhase, 0, 0},
+    // The phases PentagramSprite_Run and Magic213Mote_Run call with the
+    // frame-offset table 0x9039D8 switched: listed before their .data tables
+    // register them as plain handlers, so each call also logs the pointer.
+    {C1_THEIRS(0x4E47F0), 0, {0x9039D8}, mh::Answer::kPhase, 0, 0},
+    {C1_THEIRS(0x4D77D0), 0, {0x9039D8}, mh::Answer::kPhase, 0, 0},
+    {C1_THEIRS(0x4D78D0), 0, {0x9039D8}, mh::Answer::kPhase, 0, 0},
+    {C1_THEIRS(0x4F4F00), 0, {0x9039D8}, mh::Answer::kPhase, 0, 0},
+    {C1_THEIRS(0x4F5030), 0, {0x9039D8}, mh::Answer::kPhase, 0, 0},
     // the allocs: an index 0..0x3F, or 0xFF (none free)
     {C1_THEIRS(0x4EA3F0), 0, {}, mh::Answer::kByte, 0xFF, 0x3F},
     {C1_THEIRS(0x4F5050), 0, {}, mh::Answer::kByte, 0xFF, 0x3F},
