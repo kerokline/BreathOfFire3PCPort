@@ -80,7 +80,11 @@ the worked example: 110 lines of group file for three functions, most of it the 
   again: `Sprite_Current`, the current slot, the owner, the source sprite,
   the target and actor bytes, the message-window byte, the effect flags,
   `Frame_Counter`, a field of the task or the owner, any byte of the target
-  enemy's record, or (the group's `disturb`) a cell of the group's.
+  enemy's record, or (the group's `disturb`) a cell of the group's. The
+  target's record is not written for a target of 11 or more (none: a side
+  bit such as `0x40` would point it past the image), nor where a target of
+  0..2 lands it on the current-slot or owner cell (group S16,
+  [`magic_s16.md`](magic_s16.md) section 4).
 - **The copies.** `bof3::CloneOriginal` with every call re-aimed at its
   recorder (`expected` checked: a site already re-aimed is refused), the
   stack-table immediates checked and re-aimed, jump tables moved into the
