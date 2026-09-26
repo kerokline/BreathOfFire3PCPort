@@ -312,9 +312,10 @@ void Seed(unsigned k) {
     // the count-downs and count-ups: at, and either side of, their ends
     case kBreathBeam_Aim: case kBreathMote_Launch: case kThunderBolt_Aim:
         sc[9] = Near(1);
-        sc[8] = static_cast<unsigned char>(mh::Next() % 5);
+        // the aims take the direction from the owner's +8: every case of the switch
+        Owner()[8] = static_cast<unsigned char>(mh::Next() % 5);
         break;
-    case kIcebreath_Start: sc[8] = static_cast<unsigned char>(mh::Next() % 5); break;
+    case kIcebreath_Start: Owner()[8] = static_cast<unsigned char>(mh::Next() % 5); break;
     case kBreathBeam_Widen: sc[9] = Near(7); break;
     case kBreathBeam_Hit: sc[9] = Near(0x17); break;
     case kBreathBeam_Hold: sc[9] = Near(0x77); break;
