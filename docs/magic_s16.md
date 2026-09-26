@@ -1,5 +1,16 @@
 # Four sparkle overlays: MAGIC071..074
 
+**Status:** IN PROGRESS (2026-09-26) - sixty functions ours
+(`src/game/magic_s16.cpp`, shadow name `magic_s16`), fuzzed headless
+through the shared harness ([`magic_harness.md`](magic_harness.md), group
+HX's consolidated one): 0 mismatches in 120,000 rounds, and 0 in 10,000
+rounds of the answers check (section 4); 72 of 72 negative controls refused
+by a count (exit 3). Fuzz only: no recorded route casts any of them
+(section 8).
+
+Group S16 of round nine's first spell wave
+([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
+
 ## 1. The four overlays, and what they are
 
 | Overlay | `Magic_Rows` row | Loaded by ids (one id down: the name, a hypothesis) | Extent | Functions |
