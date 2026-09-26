@@ -298,8 +298,8 @@ const mh::Region kRegions[] = {
     {0x7E0670, 4},                               // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
     {Key(MoveScript_TintRecords), 0xC00},
-    {0x812980, 0x60},                            // Gfx_ClutStrip 0x1A00..0x1A2F
-    {0x80E980, 0x60},                            // Gfx_ClutStripSource, the same
+    {0x812980, 0x80},                            // Gfx_ClutStrip 0x1A00..0x1A3F
+    {0x80E980, 0x80},                            // Gfx_ClutStripSource, the same
     {0x905E60, 8},                               // Field_Kind2Z, Field_Kind2X
     {0x9039D8, 4},                               // the frame-offset table pointer
     {0x803154, 1},
