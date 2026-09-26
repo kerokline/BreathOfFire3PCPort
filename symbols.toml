@@ -3454,7 +3454,8 @@ name = "Port_DroppedCall"
 ret = "void"
 params = "unsigned char b"
 status = "evidence"
-evidence = "disasm 2026-09-22: a bare ret, where the port left calls the PSX made and dropped what they did. Op B8 b1 b2 b3 calls it with b2 (PSX 0x8015DCF0(b1, b2, b3, b3)); Sprite_UpdateScreen and Sprite_QueueOverlay call it with nothing for a sprite with flag bit 8 (PSX 0x80161E44)."
+impl = "src/game/magic_s28.cpp"
+evidence = "disasm 2026-09-22: a bare ret, where the port left calls the PSX made and dropped what they did. Op B8 b1 b2 b3 calls it with b2 (PSX 0x8015DCF0(b1, b2, b3, b3)); Sprite_UpdateScreen and Sprite_QueueOverlay call it with nothing for a sprite with flag bit 8 (PSX 0x80161E44). Taken by group S28 2026-09-26 (it lies inside MAGIC124 0x4DF4B0..0x4E0906, the linker kept the one folded copy there): the program empty function every empty function was folded into, with 25 call sites of 0, 1 and 4 arguments (DIV-0011) and the kind-1 task table entry 91 (0x5B, created by MAGIC113). The combat route to frame 2560 calls it 6 times: Game_Init, Title_StateMenu, BattleEnd_AwaitMemberTasks, and 3 from functions already ours (docs/magic_s28.md section 1)."
 
 [[data]]
 pc = 0x9035A4
@@ -26116,3 +26117,452 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S31: ThunderClapBolt_Run's call [0x65BDB4 + 4 x byte +2]: ThunderClapBolt_Start, _Rise, _Fade, JoltBolt_End (group S22); the next overlay's table follows at 0x65BDC4."
+
+[[func]]
+pc = 0x4DD8B0
+name = "Firebreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DD8B0..0x4DD8D5 (0x26 bytes), group S28: kind-2 task of Magic_Rows row 74 (MAGIC122; Firebreath read one id down): a two-entry stack table by +1, Firebreath_Start and Leech_WaitOrbs. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DD8E0
+name = "Firebreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DD8E0..0x4DD9E2 (0x103 bytes), group S28: +8 and +0x34/+0x38/+0x3C from the owner; BattleTask_Create(1, 0x38) (answer unchecked): +0x80 the task, +1 0, +9 4; CLUT row 26 (0x812980) from its buffer 0x4000 below, words 1..0xF and 0x21..0x2F with bit 15, 0x11..0x1F as they are, words 0, 0x10, 0x20 zero; Gfx_ClutStripDirty 1; +0xB 0, +9 0, +1 += 1. Entry 0 of Firebreath_Task. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DD9F0
+name = "BreathBeam_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DD9F0..0x4DDA01 (0x12 bytes), group S28: kind-1 task 0x38 (kind table index 56): jmp [0x65BB48 + 4 x byte +1], one entry (BreathBeam_Run), index unchecked. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDA10
+name = "BreathBeam_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDA10..0x4DDA44 (0x35 bytes), group S28: call [0x65BB4C + 4 x byte +2] (five steps: Aim, Widen, Hit, Hold, Fade); then unless the owner +0xB is 0xFF or +2 is 0: BreathBeam_DrawGlow, tail jmp BreathBeam_DrawTextured. Reached from MAGIC114, 115, 118, 120, 121 and 122. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDA50
+name = "BreathBeam_Aim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDA50..0x4DDBF7 (0x1A8 bytes), group S28: +9 -= 1; at 0: +8 from the owner; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY, the centre screen point into DamageScratch +0xC/+0xE; the owner position, UpdateScreenXY again; a party actor (byte 0x904B34 < 3) MagicFx_FormationOffset, else +0xC/+0x10 by +8 (0: 0x29,-13; 1: -41,-13; 2: -38,-38; else 0x26,-38); +0x2E/+0x30 += them, into scratch +8/+0xA; +0x14 = Math_Ratan2(float(cx - x), float(cy - y)); +4 0x10, +0xB 0x11, +9 0, +0xA 1, +2 += 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDC00
+name = "BreathBeam_Widen"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDC00..0x4DDC29 (0x2A bytes), group S28: +0xA += 3, +9 += 1; at 8, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDC30
+name = "BreathBeam_Hit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDC30..0x4DDC6E (0x3F bytes), group S28: +0xB -= 1, +9 += 1; at 0x18 Battle_SetTargetFlags(byte 0x904B44, 0x10) and +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDC70
+name = "BreathBeam_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDC70..0x4DDC8B (0x1C bytes), group S28: +9 += 1; at 0x78, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDC90
+name = "BreathBeam_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDC90..0x4DDCD1 (0x42 bytes), group S28: +0xB += 1, +4 -= 1, +9 += 1; at 0x88 the owner +0xB = 0xFF and tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DDCE0
+name = "BreathBeam_DrawTextured"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DDCE0..0x4DE361 (0x682 bytes), group S28: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) + Gfx_CommitPrim(3, 0xC); for i = 1..+0xA (re-read each step): the path point (scratch +8/+0xA, previous in +0xC/+0xE) moved 16 along ((sin(((+9 + i) and 0x3F) shl 6) shl 8) sar 12 + +0x14) and 0xFFF; two GT4 quads (0x54) either side at half-widths ((sin shl 1) sar 12 + 9i - 5 or + 9i + 4) idiv byte +0xB, plus 1; CLUT (0, 0x1FA), page (0, 1, 0x380, 0x100); u 0x40/0x80 then 0/0x40, v (+9 x 30 + i) shl 3; shade +4 shl 3 and +4; Gfx_CommitPrim(3, 0x54) each; draw mode 0x15 last. A zero +0xB divides by zero (ours aborts). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DE370
+name = "BreathBeam_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DE370..0x4DE8BD (0x54E bytes), group S28: as BreathBeam_DrawTextured with G4 quads (0x44): phases ((i - +9) and 0xF) shl 8, half-widths ((sin x (i - 1) x 6) sar 12) + 18i - 14 and ((sin x i x 6) sar 12) + 18i + 4 idiv byte +0xB plus 1; shade (+4 shl 3, +4 shl 2, +4 shl 2) on the outer edge, 1 inner. A zero +0xB divides by zero (ours aborts). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DE8C0
+name = "Icebreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DE8C0..0x4DE973 (0xB4 bytes), group S28: kind-2 task of Magic_Rows row 76 (MAGIC123; Icebreath read one id down): a two-entry stack table by +1 (Icebreath_Start, BattleFx_Finish); draw mode 0x35; each of the 90 BreathMote_Pool records with bit 0 run through IcePool_Dispatch as Sprite_Current with its +0x80 as 0x93B940, both restored; draw mode 0x15. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DE980
+name = "Icebreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DE980..0x4DEB78 (0x1F9 bytes), group S28: bytes +0..+2 of the 90 pool records cleared; +8 from the owner; CenterOnSide, UpdateScreenXY, the centre into scratch +0xA/+0xC; the owner position, UpdateScreenXY; the offset as BreathBeam_Aim; +0x2E/+0x30 into scratch +6/+8; +0x14 Math_Ratan2; +0xB 0; 90 x IcePool_Alloc (answer unchecked): +0x80 the task, +1 i and 1, +9 (i shr 2) x 3 + 1, +0xB += 1; Sound_PlayById(0x102); Battle_SetTargetFlags(target, 0x10); +9 0, +1 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEB80
+name = "IcePool_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEB80..0x4DEB91 (0x12 bytes), group S28: jmp [0x65BB60 + 4 x byte +1]: two entries, both BreathMote_Task; index unchecked. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEBA0
+name = "BreathMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEBA0..0x4DEBB1 (0x12 bytes), group S28: jmp [0x65BB68 + 4 x byte +2]: Launch, Fly, Burst, Free; index unchecked. Reached from 7 files. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEBC0
+name = "BreathMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEBC0..0x4DEC99 (0xDA bytes), group S28: +9 -= 1; at 0: +0x2E/+0x30 from the owner; Rand bit 0 set: +0x14 = owner +0x14 + (Rand and 0xFF), else minus; +3 Rand and 7, dword +0xC (Rand and 7) + 8, +0xB Rand, +9 (Rand and 0xF) + 8, +0xA 2, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DECA0
+name = "BreathMote_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DECA0..0x4DEDE3 (0x144 bytes), group S28: +0xB += 1; scratch +4 = ((sin((+0xB and 0x3F) shl 6) shl 7) sar 12) + word +0x14; +0x2E/+0x30 += sin/cos of it x word +0xC sar 12 (the pointer taken before each call); scratch +6/+8 the point; +0xA += 2 while below +3 + 6; +9 -= 1, at 0: Frame_Counter bit 0 set: Sound_PlayById(0x100 for +1 odd, else 0x101); +0xB 0, +2 += 1. Then with 0 < x < 0x140 and 0 < y < 0xF0 (signed words): BreathMote_DrawHex, tail jmp BreathMote_DrawRing. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEDF0
+name = "BreathMote_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEDF0..0x4DEE34 (0x45 bytes), group S28: +0xB += 1, +9 += 1, +0xA -= 1; at 0 the owner +0xB -= 1 and tail jmp 0x4F6290 (MAGIC219, the record free), else tail jmp BreathMote_DrawBurst. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEE40
+name = "BreathMote_Free"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEE40..0x4DEE4C (0xD bytes), group S28: the owner +0xB -= 1, tail jmp 0x4F6290 (MAGIC219, the record free). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEE50
+name = "BreathMote_DrawHex"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEE50..0x4DEFC2 (0x173 bytes), group S28: scratch +0 = +0xA; six G3 (0x34): the point (scratch +6/+8) and two corners at radius +0xA along ((BreathMote_Angles[j or j + 1] + +9) and 0x3F) shl 6 (into scratch +4); colours (1, 1, 0xC0) and 0xE0 grey; Gfx_CommitPrim(3, 0x34) each. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DEFD0
+name = "BreathMote_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DEFD0..0x4DF201 (0x232 bytes), group S28: scratch +0 = +0xA, +0xE = (Rand and 7) + +0xA x 2; six G4 (0x44) between the two radii along the BreathMote_Angles steps; outer 1, inner (0x20, 0x20, 0xC0); Gfx_CommitPrim(3, 0x44) each. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF210
+name = "BreathMote_DrawBurst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF210..0x4DF44D (0x23E bytes), group S28: eight G3 (0x34): each at a point (scratch +6/+8) +0xB x 2 + 4 + (Rand and 3) from +0x2E/+0x30 along 0x200 k, corners at radius +0xA along ((+9 + 2k, + 5, - 6) and 0xF) shl 8; colours (0x20, 0x20, 0xC0), 0xC0 grey, (0x20, 0x20, 0xC0); Gfx_CommitPrim(3, 0x34) each. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF450
+name = "IcePool_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF450..0x4DF4A6 (0x57 bytes), group S28: the first of the 90 BreathMote_Pool records without bit 0, marked, its index in al; 0xFF (or al, 0xFF) when all are in use. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF4B0
+name = "Thunderbreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF4B0..0x4DF578 (0xC9 bytes), group S28: kind-2 task of Magic_Rows row 124 (MAGIC124; ThundrBreath read one id down): a four-entry stack table by +1 (Thunderbreath_Start, 0x4F9F70 of MAGIC226, Thunderbreath_Wait, BattleFx_Finish); draw mode 0x35; the 64 ThunderPool records with bit 0 run through ThunderPool_Dispatch as Sprite_Current (+0x80 the owner); Thunderbreath_DrawOrb; draw mode 0x15. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF580
+name = "Thunderbreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF580..0x4DF690 (0x111 bytes), group S28: bytes +0..+2 of the 64 records cleared; +8 and the position from the owner; UpdateScreenXY, MagicFx_FormationOffset (no actor test); +0x2E/+0x30 += +0xC/+0x10; +0xB 0, +9 8, +0xA 0x10, +1 += 1; 32 x ThunderPool_Alloc (answer unchecked): +0x80 the task, +1 0, +4 i, +0xB 0, +9 (i shl 2) + 1, +0xB += 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF6A0
+name = "Thunderbreath_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF6A0..0x4DF6C2 (0x23 bytes), group S28: with +0xB 2 or less (unsigned): +0xA -= 1, at 0 +1 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF6D0
+name = "Thunderbreath_DrawOrb"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF6D0..0x4DF815 (0x146 bytes), group S28: grey +0xA x 15 (byte), radius 0x20 + (Rand and 3); eight G3 (0x34) from +0x2E/+0x30 to the radius at 0x200 k and 0x200 (k + 1); centre grey, rim 1; Gfx_CommitPrim(3, 0x34) each. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF830
+name = "ThunderPool_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF830..0x4DF841 (0x12 bytes), group S28: jmp [0x65BB80 + 4 x byte +1]: ThunderBolt_Task, ThunderSpark_Task; index unchecked. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF850
+name = "ThunderBolt_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF850..0x4DF8ED (0x9E bytes), group S28: call [0x65BB88 + 4 x byte +2] (Aim, Grow, Flicker, Fade); then with +0 and +2 set: +0xB += 1, ThunderBolt_Draw; with (+0xB and 3) 0, +2 1 and +0xA set: ThunderPool_Alloc, unless 0xFF a spark record (+0x80 the owner, +1 1, +0x2E/+0x30 scratch +8/+0xA) and the owner +0xB += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DF8F0
+name = "ThunderBolt_Aim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DF8F0..0x4DFA1C (0x12D bytes), group S28: +9 -= 1; at 0: CenterOnSide, UpdateScreenXY, the centre into scratch +0xC/+0xE; +0x2E/+0x30 from the owner, into scratch +8/+0xA; +0x14 Math_Ratan2 toward the centre, plus (Rand and 7) shl 6 for an odd +4, minus for an even (through the pointer taken before Rand); dword +0xC 0, +0xB Rand and 0x3F, +9 0x10, +0xA 0, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DFA20
+name = "ThunderBolt_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DFA20..0x4DFA3C (0x1D bytes), group S28: +0xA += 4; at 0x10, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DFA40
+name = "ThunderBolt_Flicker"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DFA40..0x4DFA82 (0x43 bytes), group S28: +0xA = ((sin((+0xB and 0x3F) shl 6) shl 2) sar 12) + 0x10; dword +0xC += 1; at 0x10, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DFA90
+name = "ThunderBolt_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DFA90..0x4DFADF (0x50 bytes), group S28: as the flicker; +9 -= 2; at 0 the owner +0xB -= 1 and tail jmp 0x4F6290 (MAGIC219, the record free). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4DFAE0
+name = "ThunderBolt_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4DFAE0..0x4E046D (0x98E bytes), group S28: width scratch +2 = 3 + (Rand and 1); shades from +9 (x 8, x 4, x 15); the point (Prim_VertexScratch +0/+2) from +0x2E/+0x30; for i = 1..+0xA (a byte counter; re-read each step): every eighth step a new width 2 + (Rand and 3), the point 16 along dword +0x14, the path bent across (+0x14 - 0x400) by sin(0x800 idiv +0xA x i) x ((Rand and 0xF) + 0x18) x sin(((+0xB + i) and 0x1F) shl 7); heading Math_Ratan2; four G4 (0x44) round the segment, the far corners 1 at i == +0xA; Gfx_CommitPrim(3, 0x44) each. +0xA 0xFF never ends; a zero +0xA re-read inside divides by zero (ours aborts). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E0470
+name = "ThunderSpark_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0470..0x4E049D (0x2E bytes), group S28: call [0x65BB98 + 4 x byte +2] (Start, Grow, Fade); then with +0 and +2 set: ThunderSpark_DrawFan, tail jmp ThunderSpark_DrawRing. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E04A0
+name = "ThunderSpark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E04A0..0x4E04D8 (0x39 bytes), group S28: +0x5D 8, +0x5E 6, +0x5F 0xF (the colour), +9 0, +0xA 2, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E04E0
+name = "ThunderSpark_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E04E0..0x4E050A (0x2B bytes), group S28: +0xA += 2, +9 += 4; at 0x10, +2 += 1. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E0510
+name = "ThunderSpark_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0510..0x4E0544 (0x35 bytes), group S28: +0xA += 1, +9 -= 4; at 0 the owner +0xB -= 1 and tail jmp 0x4F6290 (MAGIC219, the record free). Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E0550
+name = "ThunderSpark_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E0550..0x4E06B2 (0x163 bytes), group S28: eight G3 (0x34) from +0x2E/+0x30 to radius +0xA x 2 at 0x200 k; centre +9 x 15 grey, rim the colour +0x5D..+0x5F x +9 (bytes); Gfx_CommitPrim(3, 0x34) each. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E06C0
+name = "ThunderSpark_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E06C0..0x4E08A1 (0x1E2 bytes), group S28: eight G4 (0x44) between radius +0xA x 3 (the colour x +9) and +0xA x 2 (1) at 0x200 k; Gfx_CommitPrim(3, 0x44) each. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[func]]
+pc = 0x4E08B0
+name = "ThunderPool_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s28.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4E08B0..0x4E0906 (0x57 bytes), group S28: the first of the 64 ThunderPool records without bit 0, marked, its index in al; 0xFF when all are in use. Fuzz only: no recorded route casts it (docs/magic_s28.md)."
+
+[[data]]
+pc = 0x65BB48
+name = "BreathBeam_Phases"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26: BreathBeam_Task's jmp table by +1: BreathBeam_Run."
+
+[[data]]
+pc = 0x65BB4C
+name = "BreathBeam_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26: BreathBeam_Run's call table by +2: 0x4DDA50 0x4DDC00 0x4DDC30 0x4DDC70 0x4DDC90."
+
+[[data]]
+pc = 0x65BB60
+name = "IcePool_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26: IcePool_Dispatch's jmp table by +1: 0x4DEBA0 twice."
+
+[[data]]
+pc = 0x65BB68
+name = "BreathMote_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: BreathMote_Task's jmp table by +2: 0x4DEBC0 0x4DECA0 0x4DEDF0 0x4DEE40."
+
+[[data]]
+pc = 0x65BB78
+name = "BreathMote_Angles"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-26: the u8 angle steps (and 0x3F, shl 6) BreathMote_DrawHex and BreathMote_DrawRing read at j and j + 1 for j = 0..5 (values not recorded here)."
+
+[[data]]
+pc = 0x65BB80
+name = "ThunderPool_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26: ThunderPool_Dispatch's jmp table by +1: 0x4DF850 0x4E0470."
+
+[[data]]
+pc = 0x65BB88
+name = "ThunderBolt_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26: ThunderBolt_Task's call table by +2: 0x4DF8F0 0x4DFA20 0x4DFA40 0x4DFA90."
+
+[[data]]
+pc = 0x65BB98
+name = "ThunderSpark_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26: ThunderSpark_Task's call table by +2: 0x4E04A0 0x4E04E0 0x4E0510; MAGIC125's table follows at 0x65BBA4."
+
+[[data]]
+pc = 0x69ACC8
+name = "BreathMote_Pool"
+ctype = "unsigned char"
+count = 11880
+status = "evidence"
+evidence = "disasm 2026-09-26: 90 records of 0x84 (0x69ACC8..0x69DB2F) Icebreath_Task runs itself: +0 bit 0 in use, +1 the kind, +0x80 the owner; IcePool_Alloc hands them out."
+
+[[data]]
+pc = 0x69DB30
+name = "ThunderPool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "disasm 2026-09-26: 64 records of 0x84 (0x69DB30..0x69FC2F) Thunderbreath_Task runs itself: bolts (+1 0) and sparks (+1 1), +0x80 the owner; ThunderPool_Alloc hands them out."
