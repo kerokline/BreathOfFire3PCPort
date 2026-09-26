@@ -6,8 +6,8 @@
 // Gte_VectorNormalS writes its answer through a pointer (run for real, what
 // it read noted), Battle_ActorIsOut must leave someone standing (every actor
 // out is a division by zero, in the original as in ours), and the CLUT
-// helpers' kinds 5..7 divide by zero. So this group passes Run an Extras: the
-// arguments per function, what of eax to compare, and the two acts.
+// helpers' kinds 5..7 divide by zero. So the group sets Group::args, each
+// clone's ret_mask, and an effect on four callees (magic_harness.md section 7).
 #include <cstdint>
 #include <cstring>
 
@@ -44,38 +44,42 @@ constexpr mh::CallSite kCalls4FB9F0[] = {{0x44, 0x5A8C00}};
 constexpr mh::CallSite kCalls4FBA90[] = {{0x4F, 0x5A8C00}};
 constexpr mh::CallSite kCalls4FBB40[] = {{0x35, 0x5A7A70}, {0x52, 0x5A7A50}, {0x71, 0x5A7A00}};
 constexpr mh::CallSite kCalls4FC0E0[] = {{0x39, 0x4456C0}, {0x86, 0x4456C0}};
+constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 #define MH_N(a) static_cast<int>(sizeof a / sizeof a[0])
-#define ML_C(name, base, size, calls) \
-    {#name, base, size, calls, MH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name)}
-#define ML_P(name, base, size) {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name)}
+// The last field is what of eax is compared (Clone::ret_mask): 0 for a
+// function that answers nothing.
+#define ML_C(name, base, size, calls, ret) \
+    {#name, base, size, calls, MH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), ret}
+#define ML_P(name, base, size, ret) \
+    {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), ret}
 const mh::Clone kClones[] = {
     {"BuffPopup_Task", 0x4FB0A0, 0x53, kCalls4FB0A0, MH_N(kCalls4FB0A0), kImms4FB0A0, MH_N(kImms4FB0A0), nullptr, 0,
      reinterpret_cast<const void*>(&::BuffPopup_Task)},
-    ML_C(BuffPopup_Start, 0x4FB100, 0x8D, kCalls4FB100),
-    ML_P(BuffPopup_Rise, 0x4FB190, 0x55),
-    ML_P(BuffPopup_Fall, 0x4FB1F0, 0x37),
-    ML_C(BuffPopup_End, 0x4FB230, 0x26, kCalls4FB230),
+    ML_C(BuffPopup_Start, 0x4FB100, 0x8D, kCalls4FB100, 0),
+    ML_P(BuffPopup_Rise, 0x4FB190, 0x55, 0),
+    ML_P(BuffPopup_Fall, 0x4FB1F0, 0x37, 0),
+    ML_C(BuffPopup_End, 0x4FB230, 0x26, kCalls4FB230, 0),
     {"BuffPopupAt_Task", 0x4FB260, 0x53, kCalls4FB260, MH_N(kCalls4FB260), kImms4FB260, MH_N(kImms4FB260), nullptr, 0,
      reinterpret_cast<const void*>(&::BuffPopupAt_Task)},
-    ML_C(BuffPopupAt_Start, 0x4FB2C0, 0x112, kCalls4FB2C0),
-    ML_C(BuffPopup_Draw, 0x4FB3E0, 0x304, kCalls4FB3E0),
-    ML_C(MagicFx_ApplyBuff, 0x4FB6F0, 0x9C, kCalls4FB6F0),
-    ML_C(MagicFx_BuffPopup, 0x4FB790, 0x98, kCalls4FB790),
-    ML_C(MagicFx_LinkByDepth, 0x4FB880, 0x16F, kCalls4FB880),
-    ML_C(MagicFx_StepToward, 0x4FB9F0, 0x9D, kCalls4FB9F0),
-    ML_C(MagicFx_StepTowardPoint, 0x4FBA90, 0xA8, kCalls4FBA90),
-    ML_C(MagicFx_StepAround, 0x4FBB40, 0x8B, kCalls4FBB40),
-    ML_P(MagicFx_NearSprite3D, 0x4FBBD0, 0x5A),
-    ML_P(MagicFx_NearSprite, 0x4FBC30, 0x40),
-    ML_P(MagicFx_NearPoint3D, 0x4FBC70, 0x57),
-    ML_P(MagicFx_NearPoint, 0x4FBCD0, 0x3B),
-    ML_P(SpriteClut_SetStp, 0x4FBE30, 0xA0),
-    ML_P(SpriteClut_ClearEntry31, 0x4FBED0, 0x72),
-    ML_P(SpriteClut_CopyToFxRow, 0x4FBF50, 0xAF),
-    ML_P(SpriteClut_RestoreFxRow, 0x4FC000, 0x21),
-    ML_C(MagicFx_CenterOnSide, 0x4FC0E0, 0x102, kCalls4FC0E0),
-    ML_P(BattleActor_FxSizeB, 0x4FC260, 0x6B),
-    ML_P(MagicFx_FormationOffset, 0x4FC2D0, 0x52),
+    ML_C(BuffPopupAt_Start, 0x4FB2C0, 0x112, kCalls4FB2C0, 0),
+    ML_C(BuffPopup_Draw, 0x4FB3E0, 0x304, kCalls4FB3E0, 0),
+    ML_C(MagicFx_ApplyBuff, 0x4FB6F0, 0x9C, kCalls4FB6F0, 0xFF),
+    ML_C(MagicFx_BuffPopup, 0x4FB790, 0x98, kCalls4FB790, 0),
+    ML_C(MagicFx_LinkByDepth, 0x4FB880, 0x16F, kCalls4FB880, 0),
+    ML_C(MagicFx_StepToward, 0x4FB9F0, 0x9D, kCalls4FB9F0, 0),
+    ML_C(MagicFx_StepTowardPoint, 0x4FBA90, 0xA8, kCalls4FBA90, 0),
+    ML_C(MagicFx_StepAround, 0x4FBB40, 0x8B, kCalls4FBB40, kAll),
+    ML_P(MagicFx_NearSprite3D, 0x4FBBD0, 0x5A, kAll),
+    ML_P(MagicFx_NearSprite, 0x4FBC30, 0x40, kAll),
+    ML_P(MagicFx_NearPoint3D, 0x4FBC70, 0x57, kAll),
+    ML_P(MagicFx_NearPoint, 0x4FBCD0, 0x3B, kAll),
+    ML_P(SpriteClut_SetStp, 0x4FBE30, 0xA0, 0),
+    ML_P(SpriteClut_ClearEntry31, 0x4FBED0, 0x72, 0),
+    ML_P(SpriteClut_CopyToFxRow, 0x4FBF50, 0xAF, kAll),
+    ML_P(SpriteClut_RestoreFxRow, 0x4FC000, 0x21, 0),
+    ML_C(MagicFx_CenterOnSide, 0x4FC0E0, 0x102, kCalls4FC0E0, 0),
+    ML_P(BattleActor_FxSizeB, 0x4FC260, 0x6B, 0xFF),
+    ML_P(MagicFx_FormationOffset, 0x4FC2D0, 0x52, 0),
 };
 #undef ML_C
 #undef ML_P
@@ -86,31 +90,51 @@ enum : unsigned {
 };
 static_assert(sizeof kClones / sizeof kClones[0] == kCount, "one enum per clone");
 
-// What of eax each answers (0: void, or not a value).
-constexpr std::uint32_t kReturns[kCount] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0, 0, 0, 0, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-    0, 0, 0xFFFFFFFFu, 0, 0, 0xFF, 0,
-};
+unsigned g_out;          // Battle_ActorIsOut's answers, a bit per actor 0..10
+
+// --- the effects (callees' recorders that compute their answers) --------------------------------------------------------------------
+
+std::uint32_t VectorNormalAct(const std::uint32_t* a, std::uint32_t) {
+    const auto* const in = reinterpret_cast<const long*>(static_cast<std::uintptr_t>(a[0]));
+    mh::Note(static_cast<std::uint32_t>(in[0]), static_cast<std::uint32_t>(in[1]), static_cast<std::uint32_t>(in[2]), 0);
+    return static_cast<std::uint32_t>(::Gte_VectorNormalS(in, reinterpret_cast<short*>(static_cast<std::uintptr_t>(a[1]))));
+}
+std::uint32_t ActorIsOutAct(const std::uint32_t* a, std::uint32_t) { return 0x5A5A5A00u | ((g_out >> ((a[0] & 0xFF) % 11)) & 1u); }
+// Gfx_CommitPrim moves the packet pointer on by the size, as the real one
+// does when the pool has room, so two primitives in a row land apart.
+std::uint32_t CommitAct(const std::uint32_t* a, std::uint32_t) {
+    unsigned char* const cell = mh::Mem(0x7E0670);
+    move_script::SetLong(cell, move_script::Long(cell) + static_cast<std::int32_t>(a[1] & 0xFF));
+    return 0;
+}
+// The buff roll: what it would read - the target byte, the result record
+// pointer and the stats copy - noted; the answer a flag from the stat.
+std::uint32_t BuffRollAct(const std::uint32_t* a, std::uint32_t) {
+    mh::Note(mh::Mem(0x904B54)[0], static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x904B60))),
+             static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x939F80))),
+             static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x939F9C))));
+    const std::uint32_t h = (a[0] & 0xFF) * 0x9E3779B1u + mh::Mem(0x904B54)[0];
+    return (h >> 9) % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
+}
 
 // The callees the standard set lacks. Gte_VectorNormalS's two pointers are
 // each function's own frame (masked off; its act notes what `in` held).
-constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 #define ML_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 const mh::Callee kCallees[] = {
     {ML_OURS(BuffPopup_Draw), 1, {kU8}, mh::Answer::kGarbage, 0, 0},
     {ML_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {ML_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
+    {ML_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &CommitAct},
     {ML_OURS(Gpu_SetPolyFT4), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {ML_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {ML_OURS(Gpu_GetClut), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {ML_OURS(Gpu_LinkPrim), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
-    {ML_OURS(Gte_VectorNormalS), 2, {0, 0}, mh::Answer::kGarbage, 0, 0},
+    {ML_OURS(Gte_VectorNormalS), 2, {0, 0}, mh::Answer::kGarbage, 0, 0, {}, &VectorNormalAct},
     {ML_OURS(Math_Ratan2), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0},
     {ML_OURS(Math_Cos), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
     {ML_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0},
-    {ML_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kGarbage, 0, 0},
+    {ML_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kGarbage, 0, 0, {}, &ActorIsOutAct},
     // the buff roll: 1 in al when resisted - unnamed, the engine's
-    {"0x44FC10", 0x44FC10, 0x44FC10, 1, {kU8}, mh::Answer::kFlag, 0, 0},
+    {"0x44FC10", 0x44FC10, 0x44FC10, 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &BuffRollAct},
 };
 #undef ML_OURS
 
@@ -124,39 +148,11 @@ constexpr unsigned kStripWords = 0x2000;
 constexpr std::uint32_t kFxRowWord = 0x200;    // 0x80F980, the strip's row 2
 
 int g_keys[16];
-unsigned g_out;          // Battle_ActorIsOut's answers, a bit per actor 0..10
 
 const mh::Region kRegions[] = {
     {kPacketNext, 4}, {kOrigin, 4}, {0x905B88, 4}, {0x8022C0, 0xA90}, {0x904B50, 0x40}, {0x939F80, 0x20},
     {kPackets, 0x200}, {0x8C5652, 0x8C * 16}, {kStrip, kStripWords * 2}, {0x80B980, 0x200}, {Key(g_keys), sizeof g_keys},
 };
-
-// --- the acts --------------------------------------------------------------------
-
-std::uint32_t VectorNormalAct(const std::uint32_t* a) {
-    const auto* const in = reinterpret_cast<const long*>(static_cast<std::uintptr_t>(a[0]));
-    mh::Note(static_cast<std::uint32_t>(in[0]), static_cast<std::uint32_t>(in[1]), static_cast<std::uint32_t>(in[2]), 0);
-    return static_cast<std::uint32_t>(::Gte_VectorNormalS(in, reinterpret_cast<short*>(static_cast<std::uintptr_t>(a[1]))));
-}
-std::uint32_t ActorIsOutAct(const std::uint32_t* a) { return 0x5A5A5A00u | ((g_out >> ((a[0] & 0xFF) % 11)) & 1u); }
-// Gfx_CommitPrim moves the packet pointer on by the size, as the real one
-// does when the pool has room, so two primitives in a row land apart.
-std::uint32_t CommitAct(const std::uint32_t* a) {
-    unsigned char* const cell = mh::Mem(0x7E0670);
-    move_script::SetLong(cell, move_script::Long(cell) + static_cast<std::int32_t>(a[1] & 0xFF));
-    return 0;
-}
-// The buff roll: what it would read - the target byte, the result record
-// pointer and the stats copy - noted; the answer a flag from the stat.
-std::uint32_t BuffRollAct(const std::uint32_t* a) {
-    mh::Note(mh::Mem(0x904B54)[0], static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x904B60))),
-             static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x939F80))),
-             static_cast<std::uint32_t>(move_script::Long(mh::Mem(0x939F9C))));
-    const std::uint32_t h = (a[0] & 0xFF) * 0x9E3779B1u + mh::Mem(0x904B54)[0];
-    return (h >> 9) % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
-}
-const mh::Act kActs[] = {{0x5A8C00, &VectorNormalAct}, {0x4456C0, &ActorIsOutAct}, {0x461E50, &CommitAct},
-                         {0x44FC10, &BuffRollAct}};
 
 // --- the seed ---------------------------------------------------------------------
 
@@ -356,10 +352,9 @@ void Disturb(std::uint32_t h) {
 void SelfTest() {
     const mh::Group group = {
         "magic_lib", kClones, kCount, kCallees, sizeof kCallees / sizeof kCallees[0], nullptr, 0,
-        kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000,
+        kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 2000, nullptr, 0, &Args,
     };
-    const mh::Extras extras = {&Args, kReturns, kActs, sizeof kActs / sizeof kActs[0]};
-    mh::Run(group, extras);
+    mh::Run(group);
 }
 
 }  // namespace magic_lib
