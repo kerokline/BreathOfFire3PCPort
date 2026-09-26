@@ -19763,6 +19763,7 @@ count = 2
 status = "evidence"
 evidence = "read 2026-09-25: Magic074_ActorDispatch's jmp [0x65B1AC + 4 * +1]: Magic074_ActorTask, then Magic074_SparkleUpdate - entry 0 of Magic074_SparkleDispatch's table at 0x65B1B0, which runs on into MAGIC075's code pointers (0x4BCE10..). +1 stays 0."
 
+[[func]]
 pc = 0x4BEB50
 name = "Drain_Task"
 ret = "void"
