@@ -20260,3 +20260,509 @@ ctype = "unsigned long"
 count = 6
 status = "evidence"
 evidence = "read 2026-09-25: 0x4BDD20 (MAGIC078's) 0x4C1EB0 (MAGIC083's) 0x4C0B10 0x4C0BB0 0x4C0C40 0x4C0D20, read by BuffSpike_Dispatch as jmp [0x65B3EC + 4 * +2], unchecked."
+
+# --- Round nine, group S21: MAGIC093, 094, 095 (Inferno, Frost, Iceblast read one id down; docs/magic_s21.md) ---
+
+[[func]]
+pc = 0x4C6300
+name = "Inferno_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6300..0x4C6374 (0x75 bytes), cdecl, void: a two-entry stack table (imm32 0x4C6380 0x4C6540) called by byte +1 of Sprite_Current, unchecked; then Sprite_Current and the owner 0x93B940 read once, and for each of the 32 slots of 0x84 at 0x6948D8 with bit 0 of +0, Sprite_Current = the slot, 0x93B940 = its +0x80, call 0x4C6700, both put back. Magic_Rows row 103 (file 0x26E = MAGIC093.EMI); ability ids 0x5D / 0xC3, Inferno read one id down (a label). First function of MAGIC093's extent 0x4C6300..0x4C742A (tools/magic_rows.py). Fuzz only."
+
+[[func]]
+pc = 0x4C6380
+name = "Inferno_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6380..0x4C6532 (0x1B3 bytes), cdecl, void: bytes +0..+2 of the 32 pool slots cleared; Inferno_TargetCentre; +0xB, +9 0, +1 up; with 0x904B44 bit 0x40, for 8 enemies Battle_ActorIsOut(i + 3), else for 3 party members (i): not out -> BattleTask_Create(1, 0x4D), +0x80 Sprite_Current, +1 0, +3 i, +9 0x10, Sprite_Current +9 up; 8 x FlamePool_Alloc (answer unchecked): +0x80, +1 0, +4 i, +0xB up; 16 x: +1 1, +0xB i, +9 (i + 3) << 3, +0xB up; words 0x812980..0x812B7F = word [-0x4000] | 0x8000; byte 0x937F90 = 1; Sound_PlayById(0x100). Entry 0 of Inferno_Task's table."
+
+[[func]]
+pc = 0x4C6540
+name = "Inferno_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6540..0x4C655F (0x20 bytes), cdecl, void, no calls but a tail jmp: Sprite_Current read once; +0xB and +9 both 0 -> byte 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 1 of Inferno_Task's table."
+
+[[func]]
+pc = 0x4C6560
+name = "FxScorch_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6560..0x4C6571 (0x12 bytes), cdecl, void: jmp [0x65B604 + 4 * Sprite_Current +1] (one entry, 0x4C6580). The kind-1 task of parameter 0x4D (kind table 0x435350; tools/magic_rows.py 1.77), which Inferno_Start creates on each target; reached from MAGIC088, 091, 092, 093."
+
+[[func]]
+pc = 0x4C6580
+name = "FxScorch_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6580..0x4C6591 (0x12 bytes), cdecl, void: jmp [0x65B608 + 4 * Sprite_Current +2] (0x4C65A0 0x4C6650 0x4C66F0). FxScorch_Phases[0]."
+
+[[func]]
+pc = 0x4C65A0
+name = "FxScorch_Delay"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C65A0..0x4C664E (0xAF bytes), cdecl, void: +9 down; at 0 (0x904B44 bit 0x40: enemy record 0x93B960 + 0x128 * +3, else party 0x802D40 + 0x14C * +3) Sprite_ReleaseTint(r), Sprite_SetTint(r, -8, -8, -8, 1), Battle_SetTargetFlags(+3 + 3 or +3, 0x10); +2 up. FxScorch_Steps[0]."
+
+[[func]]
+pc = 0x4C6650
+name = "FxScorch_Hit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6650..0x4C66E7 (0x98 bytes), cdecl, void: owner +0xB below 8 (jae returns) -> Battle_SetTargetFlag40(+3 (+3 for enemies)), Sprite_ReleaseTint(the record), BattleActor_Flash(the index); +2 up; Sprite_Current read again for each. FxScorch_Steps[1]."
+
+[[func]]
+pc = 0x4C66F0
+name = "FxScorch_Free"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C66F0..0x4C66FC (0xD bytes), cdecl, void: owner +9 down; jmp BattleTask_FreeCurrent. FxScorch_Steps[2]."
+
+[[func]]
+pc = 0x4C6700
+name = "FlamePool_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6700..0x4C6711 (0x12 bytes), cdecl, void: jmp [0x65B614 + 4 * Sprite_Current +1] (0x4C6720 0x4C6D80): a pool slot's kind. Called by Inferno_Task for each live slot."
+
+[[func]]
+pc = 0x4C6720
+name = "FlameColumn_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6720..0x4C6764 (0x45 bytes), cdecl, void: call [0x65B61C + 4 * +2] (0x4C6770 0x4C6840 0x4C68F0 0x4C6910); +0xB up; +0 and +2 both non-zero -> MagicFx_PushActorMatrix, 0x4C6940, 0x4C6B10, jmp Gte_PopMatrix. FlamePool_Types[0]."
+
+[[func]]
+pc = 0x4C6770
+name = "FlameColumn_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6770..0x4C683B (0xCC bytes), cdecl, void: +0xA = (Rand & 3) << 4; word 0x903850 = 0xC0 - +0xA; word 0x90385A = (+4 & 7) << 9; +0x34 = Math_Sin(angle) * r sar 3 + owner +0x34, +0x38 = Math_Cos(word 0x90385A) * r sar 3 + owner +0x38 (words re-read), +0x3C = owner's; +0xB = Rand; +9 0; +2 up. FlameColumn_Phases[0]."
+
+[[func]]
+pc = 0x4C6840
+name = "FlameColumn_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6840..0x4C68E9 (0xAA bytes), cdecl, void: word 0x903850 = +9 * 8 + 0xC0 - +0xA; placed as FlameColumn_Start does; +9 up, at 0x10 +2 up. FlameColumn_Phases[1]."
+
+[[func]]
+pc = 0x4C68F0
+name = "FlameColumn_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C68F0..0x4C6903 (0x14 bytes), cdecl, void, no calls: owner +0xB == 8 -> +2 up. FlameColumn_Phases[2]."
+
+[[func]]
+pc = 0x4C6910
+name = "FlameColumn_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6910..0x4C6936 (0x27 bytes), cdecl, void: +9 down; at 0 owner +0xB down, jmp 0x4F6290 (a pool slot's free, MAGIC219's). FlameColumn_Phases[3]."
+
+[[func]]
+pc = 0x4C6940
+name = "FlameColumn_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6940..0x4C6B05 (0x1C6 bytes), cdecl, void: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); word 0x903850 = (Math_Sin((+0xB & 0x1F) << 7) shl 4 sar 12) + 0x100; colours from +9 as bytes (x10, x9, x4, x2); 16 POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1) of the vertex scratch 0x9037A0 (origin, previous rim, rim at 0x100 k: sin, cos x r sar 12) through Gte_RotTransPers3, Gte_PrimDepths3_10B, MapView_LinkPrimAt(.., 2, 0x34). Called by FlameColumn_Task; reached from MAGIC088, 091, 092, 093."
+
+[[func]]
+pc = 0x4C6B10
+name = "FlameColumn_DrawBand"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6B10..0x4C6D7B (0x26C bytes), cdecl, void: as FlameColumn_DrawDisc, two radii (words 0x903850 = sin .. + 0x100, 0x903852 = .. + 0x180); 16 POLY_G4 (Gpu_SetPolyG4) through Gte_RotTransPers4 of A0 / A8 / B0 / B8, Gte_PrimDepths4_10B; inner vertices 1, outer (+9 x10, x4, x2); linked (.., 2, 0x44)."
+
+[[func]]
+pc = 0x4C6D80
+name = "FlameSpark_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6D80..0x4C6DAD (0x2E bytes), cdecl, void: call [0x65B62C + 4 * +2] (0x4C6DB0 0x4C6ED0 0x4C6EF0 0x4C6F20); +0 and +2 non-zero -> BattleActor_UpdateScreenXY, jmp 0x4C6F70. FlamePool_Types[1]."
+
+[[func]]
+pc = 0x4C6DB0
+name = "FlameSpark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6DB0..0x4C6ECC (0x11D bytes), cdecl, void: +9 down; at 0 the owner's +0x34 / +0x38 / +0x3C; word 0x903850 = 0x100, word 0x90385A = (Rand & 7) << 9; +0x34 += sin x r sar 3, +0x38 += cos x r sar 3; +0xB odd -> Sound_PlayById(0x101 + (+0xB >> 1) % 3); +0xB 0x10, +9 0, +0xA 0x40, +2 up. FlameSpark_Phases[0]."
+
+[[func]]
+pc = 0x4C6ED0
+name = "FlameSpark_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6ED0..0x4C6EEC (0x1D bytes), cdecl, void, no calls: +9 += 0x20; at 0xC0 +2 up. FlameSpark_Phases[1]."
+
+[[func]]
+pc = 0x4C6EF0
+name = "FlameSpark_Stretch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6EF0..0x4C6F19 (0x2A bytes), cdecl, void, no calls: +9 += 2, +0xA down; at +0xA 0x30 +2 up. FlameSpark_Phases[2]."
+
+[[func]]
+pc = 0x4C6F20
+name = "FlameSpark_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6F20..0x4C6F60 (0x41 bytes), cdecl, void: +9 up, +0xA and +0xB down; at +0xB 0 owner +0xB down, jmp 0x4F6290. FlameSpark_Phases[3]."
+
+[[func]]
+pc = 0x4C6F70
+name = "FlameSpark_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C6F70..0x4C72B5 (0x346 bytes), cdecl, void: words 0x90385C = +9, 0x90385E = +0xA, 0x903856 = +0x2E, 0x903858 = +0x30; Gpu_SetDrawMode(.., 0xB5), MapView_LinkPrimAt(.., 0, 0xC); two POLY_GT4 (Gpu_SetPolyGT4) of screen floats (fild) x -/+ +0xA, y - +9 .. y and y - +9 - 16 .. y - +9, shade +0xB << 3, Gpu_GetTPage(1, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), uv 0x40..0xC0 x 0x40..0xFF and 0x30..0x40; each linked (.., 0, 0x54). Tail of FlameSpark_Task."
+
+[[func]]
+pc = 0x4C72C0
+name = "FlamePool_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C72C0..0x4C7316 (0x57 bytes), cdecl, unsigned char, no calls: the first of the 32 slots at 0x6948D8 (stride 0x84) without bit 0 of +0 gets it and its index in al; 0xFF in al when none (or al, 0xFF); eax's upper bytes the caller's. Called by Inferno_Start, which uses the answer unchecked."
+
+[[func]]
+pc = 0x4C7320
+name = "Inferno_TargetCentre"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7320..0x4C742A (0x10B bytes), cdecl, void: over the 8 enemies (0x904B44 bit 0x40; 0x93B998 = enemy +0x38, stride 0x128) or the 3 party members (0x802D78, stride 0x14C) for which Battle_ActorIsOut answers 0: sums of (+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000 and word +0x3E, then idiv by the count: Sprite_Current +0x34 / +0x38 = (mean + 0x4000) shl 9, word +0x3E = the mean. With none counted the idiv faults (#DE). Called by Inferno_Start."
+
+[[func]]
+pc = 0x4C7430
+name = "Frost_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7430..0x4C7455 (0x26 bytes), cdecl, void: a two-entry stack table (imm32 0x4C7460 0x4C7510) called by byte +1 of Sprite_Current, unchecked. Magic_Rows row 20 (file 0x26F = MAGIC094.EMI); ability ids 0x5E / 0xC4, Frost read one id down (a label). First function of MAGIC094's extent 0x4C7430..0x4C7CCE. Fuzz only."
+
+[[func]]
+pc = 0x4C7460
+name = "Frost_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7460..0x4C750B (0xAC bytes), cdecl, void: the source 0x904B4C read once: +0x34 / +0x38 / +0x3C and words +0x2E, +0x30 - 0x10 to Sprite_Current; BattleTask_Create(1, 0x15): +0x80 Sprite_Current, +8 the source's +8, +0x34 / +0x38 / +0x3C the source's; +0xB 0; +1 up; Sound_PlayById(0x100). Entry 0 of Frost_Task's table."
+
+[[func]]
+pc = 0x4C7510
+name = "Frost_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7510..0x4C75A7 (0x98 bytes), cdecl, void: words +0x2E, +0x30 - 0x10 from the source; +0xB == 0xFF -> the target's record (byte 0x904B44 < 3: party by the dword's low byte, else enemy) Sprite_ReleaseTint, BattleActor_Flash(target), Battle_SetTargetFlag40(target), 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 1."
+
+[[func]]
+pc = 0x4C75B0
+name = "FrostRing_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C75B0..0x4C7601 (0x52 bytes), cdecl, void: call [0x65B63C + 4 * +1] (0x4C7610 0x4C7640 0x4C76D0 0x4C7710); owner +0xB != 0xFF -> 0x4C7A80, 0x4C7740, 0x4C7B30, Gte_PopMatrix; always Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x15, 0), Gfx_CommitPrim(3, 0xC). The kind-1 task of parameter 0x15 (1.21), which Frost_Start creates."
+
+[[func]]
+pc = 0x4C7610
+name = "FrostRing_Mark"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7610..0x4C763C (0x2D bytes), cdecl, void: Battle_SetTargetFlags(byte 0x904B44, 0x20); +9, +0xA 0; +1 up. FrostRing_Phases[0]."
+
+[[func]]
+pc = 0x4C7640
+name = "FrostRing_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7640..0x4C76C4 (0x85 bytes), cdecl, void: +0xA, +9 up; at +9 0x10 the target's record Sprite_ReleaseTint, Sprite_SetTint(r, 6, 4, 8, 0), +9 0, +1 up. FrostRing_Phases[1]."
+
+[[func]]
+pc = 0x4C76D0
+name = "FrostRing_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C76D0..0x4C7707 (0x38 bytes), cdecl, void, no calls: +0xA up while below 0x10 (Sprite_Current read again only then); +9 up; at 0x10 +9 0, +1 up. FrostRing_Phases[2]."
+
+[[func]]
+pc = 0x4C7710
+name = "FrostRing_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7710..0x4C7737 (0x28 bytes), cdecl, void: +9 up; at 0x20 owner +0xB = 0xFF, jmp BattleTask_FreeCurrent. FrostRing_Phases[3]."
+
+[[func]]
+pc = 0x4C7740
+name = "FrostRing_DrawShards"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7740..0x4C7A76 (0x337 bytes), cdecl, void: six rings i: dwords 0x903850 = (i + 1) << 4, 0x903854 / 0x903858 by +1 (2: (i + 1) << 6, -80 ((i ^ 7) + 1); 3: ((i + 1) << 6) - +9, 2 (+9 - 40 ((i ^ 7) + 1)); else 4 +9 (i + 1), -5 +9 ((i ^ 7) + 1)); eight POLY_G3 each at 0x200 k (Math_Cos / Math_Sin x dword sar 12 into the vertex scratch), linked at +0x34 / +0x38 plus the rim point shl 9 (2, 0xC / 0x34), Gte_RotTransPers3, Gte_PrimDepths3_10B; shade dword 0x90385C = (i + 1) << 4, in phase 3 less (+9 >> 1)(i + 1) (1 when negative) and blue 0xC1 - +9 * 6. Called by FrostRing_Task."
+
+[[func]]
+pc = 0x4C7A80
+name = "FrostRing_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7A80..0x4C7B26 (0xA7 bytes), cdecl, void: Gte_PushMatrix; on its stack angles (0, 0, +0xA << 4), vector ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(word +0x3E / 2)); Gte_RotTrans into the MATRIX's translation (+0x14), Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. MagicFx_PushActorMatrix's shape with a turn. Called by FrostRing_Task."
+
+[[func]]
+pc = 0x4C7B30
+name = "FrostRing_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7B30..0x4C7CCE (0x19F bytes), cdecl, void: dword 0x903850 by +1 (2: 0x40; 3: (0x20 - +9) * 2; else +9 * 3 + 0x10); 32 POLY_G3 at the owner's screen point (words +0x2E / +0x30, fild) with rim points at 0x80 k (sin / cos x r sar 12), centre (0x20, 0x20, 0xC0), rim 1; each Gpu_SetDrawMode(.., 0x35), linked (2, 0xC / 0x34). Called by FrostRing_Task."
+
+[[func]]
+pc = 0x4C7CD0
+name = "Iceblast_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7CD0..0x4C7D17 (0x48 bytes), cdecl, void: a five-entry stack table (imm32 0x4C7D20 0x4C7E30 0x4C7EC0 0x4C7F20 0x4C7F50), MagicFx_PushActorMatrix, the entry by +1 (unchecked), Gte_PopMatrix. Magic_Rows row 22 (file 0x270 = MAGIC095.EMI); ability ids 0x5F / 0xC5, Iceblast read one id down (a label). First function of MAGIC095's extent 0x4C7CD0..0x4C8D34. Fuzz only."
+
+[[func]]
+pc = 0x4C7D20
+name = "Iceblast_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7D20..0x4C7E2A (0x10B bytes), cdecl, void: the source read once: words +0x2E, +0x30 and +0x34 / +0x38 / +0x3C to Sprite_Current; the 0x38 bytes at 0x695958: Rand odd -> -(Rand & 0xF), else Rand & 0xF; twelve BattleTask_Create(1, 0x17): +0x80 Sprite_Current, +8 the source's, +0x34.. Sprite_Current's, +9 0x30 - 4 i, +0xA 0, +0xB i; Sound_PlayById(0x100); +9, +0xA 0; +1 up. Entry 0."
+
+[[func]]
+pc = 0x4C7E30
+name = "Iceblast_Chill"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7E30..0x4C7EB9 (0x8A bytes), cdecl, void: 0x4C87E0; +0xA == 0xC -> the target's record Sprite_ReleaseTint, Sprite_SetTint(r, 6, 4, 8, 0), Battle_SetTargetFlags(target, 0x200); +0xA up (Sprite_Current re-read only after the tint), at 0x10 +1 up. Entry 1."
+
+[[func]]
+pc = 0x4C7EC0
+name = "Iceblast_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7EC0..0x4C7F10 (0x51 bytes), cdecl, void: 0x4C7FE0, 0x4C83E0, 0x4C87E0; +9 up; at 0x40 Sound_PlayById(0x101), (0x102), +9 0x30, +1 up. Entry 2."
+
+[[func]]
+pc = 0x4C7F20
+name = "Iceblast_Sink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7F20..0x4C7F4B (0x2C bytes), cdecl, void: the three draws; +9 down, at 0 +1 up. Entry 3."
+
+[[func]]
+pc = 0x4C7F50
+name = "Iceblast_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7F50..0x4C7FD4 (0x85 bytes), cdecl, void: 0x4C87E0; +0xA down; at 0 the target's record Sprite_ReleaseTint, BattleActor_Flash, Battle_SetTargetFlag40, 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. Entry 4."
+
+[[func]]
+pc = 0x4C7FE0
+name = "Iceblast_DrawSpires"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C7FE0..0x4C83D3 (0x3F4 bytes), cdecl, void: six rows i, eight columns at 0x200 k: vertex A0 radius 0x100 - 41 i + s8 [0x695958 + 8 i + (k & 7)] (dword 0x903850; 0x903854 the base), height -72 i - that byte; A8 radius 0xD7 - 41 i + the byte 8 on, height -72 (i + 1) - it; row 5's A8 x / z 0; B0 / B8 the previous column swapped (A8 / A0). Gpu_SetDrawMode(.., 0x35), linked at the column (0, 0xC / 0x44), 0x5A76F0 (code 0x5C), Gte_RotTransPers4, Gte_PrimDepths4_10C; shade (+9 - 7 i) * 6 at most 0x30, not linked at 0 or below; odd k lit on A0 / B0, even on A8 / B8. Called by Iceblast_Rise and _Sink."
+
+[[func]]
+pc = 0x4C83E0
+name = "Iceblast_DrawSpiresInner"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C83E0..0x4C87D2 (0x3F3 bytes), cdecl, void: Iceblast_DrawSpires' rows with B0 / B8 the previous column unswapped, Gpu_SetPolyG4, Gte_PrimDepths4_10B; d = +9 - 8 i: not linked at 0 or below; below 5 bytes +6 and +0x26 48 d (dword 0x903858), the rest 1; else +0x16 and +0x36 48 d - 192 at most 0xC0, +6 and +0x26 0xC0, the rest 1. Called by Iceblast_Rise and _Sink."
+
+[[func]]
+pc = 0x4C87E0
+name = "Iceblast_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C87E0..0x4C896F (0x190 bytes), cdecl, void: dword 0x903850 = 0x1C0; 16 POLY_G3 round the origin (sin / cos x r sar 12), Gpu_SetDrawMode(Gfx_PacketNext read after the cosine, .., 0x35), linked (+0x34, +0x38, 2, 0xC / 0x34); centre grey +0xA << 3 (dword 0x903858), rim 1; Gte_RotTransPers3, Gte_PrimDepths3_10B. Called by four of Iceblast_Task's phases."
+
+[[func]]
+pc = 0x4C8970
+name = "IceShard_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C8970..0x4C898B (0x1C bytes), cdecl, void: MagicFx_PushActorMatrix; call [0x65B64C + 4 * +1] (0x4C8990 0x4C89C0); jmp Gte_PopMatrix. The kind-1 task of parameter 0x17 (1.23), which Iceblast_Start creates twelve of."
+
+[[func]]
+pc = 0x4C8990
+name = "IceShard_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C8990..0x4C89B7 (0x28 bytes), cdecl, void, no calls: owner +1 == 3 -> +9 down, at 0 +1 up. IceShard_Phases[0]."
+
+[[func]]
+pc = 0x4C89C0
+name = "IceShard_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C89C0..0x4C89E2 (0x23 bytes), cdecl, void: 0x4C89F0; +9 up; at 0x20 jmp BattleTask_FreeCurrent. IceShard_Phases[1]."
+
+[[func]]
+pc = 0x4C89F0
+name = "IceShard_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s21.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-25, 0x4C89F0..0x4C8D34 (0x345 bytes), cdecl, void: h = +0xB >> 1; 32 POLY_F3 (0x5A7570) at 0x80 k, k 1..32: radius 0x100 - 41 h + s8 [0x695958 + 8 h + ((k / 8) & 7)] + 4 (+0xA, or +9 while +0xA is 0), height -72 h - the byte (- 0x24 for odd +0xB), each moved by s8 [0x695958 + h + k] (16-bit sums on the stack); linked at the point (0, 0xC / 0x2C); corners at ((+9 + 0x10, +9 - 0x18, +9 - 0xF) & 0x3F) << 6, radius 0x21 - +9; height + +9 * 4, and when above 0: 0, +0xA = +9 if +0xA is 0; colour (0x40, 0x40, 0x40 + Rand & 0x7F); Gte_RotTransPers3, Gte_PrimDepths3_0C. Called by IceShard_Run."
+
+[[data]]
+pc = 0x65B604
+name = "FxScorch_Phases"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-25: FxScorch_Dispatch's jmp [0x65B604 + 4 * +1]; its one entry 0x4C6580 (FxScorch_Run). The overlays' .data run in file order; the next table starts at 0x65B608."
+
+[[data]]
+pc = 0x65B608
+name = "FxScorch_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-25: FxScorch_Run's jmp [0x65B608 + 4 * +2]: 0x4C65A0 0x4C6650 0x4C66F0."
+
+[[data]]
+pc = 0x65B614
+name = "FlamePool_Types"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: FlamePool_Dispatch's jmp [0x65B614 + 4 * +1]: 0x4C6720 (FlameColumn_Task, Inferno_Start's kind 0) 0x4C6D80 (FlameSpark_Task, kind 1)."
+
+[[data]]
+pc = 0x65B61C
+name = "FlameColumn_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: FlameColumn_Task's call [0x65B61C + 4 * +2]: 0x4C6770 0x4C6840 0x4C68F0 0x4C6910."
+
+[[data]]
+pc = 0x65B62C
+name = "FlameSpark_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: FlameSpark_Task's call [0x65B62C + 4 * +2]: 0x4C6DB0 0x4C6ED0 0x4C6EF0 0x4C6F20."
+
+[[data]]
+pc = 0x65B63C
+name = "FrostRing_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-25: FrostRing_Task's call [0x65B63C + 4 * +1]: 0x4C7610 0x4C7640 0x4C76D0 0x4C7710."
+
+[[data]]
+pc = 0x65B64C
+name = "IceShard_Phases"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-25: IceShard_Task's call [0x65B64C + 4 * +1]: 0x4C8990 0x4C89C0; constants follow."
+
+[[data]]
+pc = 0x6948D8
+name = "FlamePool"
+ctype = "unsigned char"
+count = 4224
+status = "evidence"
+evidence = "disasm 2026-09-25: 32 records of 0x84 (the task slots' shape: +0 bit 0 in use, +1 the kind, +0x80 the owner) that Inferno_Start fills through FlamePool_Alloc and Inferno_Task runs itself; ends at 0x695958."
+
+[[data]]
+pc = 0x695958
+name = "Iceblast_Jitter"
+ctype = "signed char"
+count = 56
+status = "evidence"
+evidence = "disasm 2026-09-25: 56 bytes Iceblast_Start fills from Rand (-15..15), read by Iceblast_DrawSpires / _DrawSpiresInner (rows of 8) and IceShard_Draw (8 h + .., and h + k, unbounded by +0xB)."
