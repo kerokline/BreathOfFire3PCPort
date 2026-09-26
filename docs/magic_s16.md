@@ -1,22 +1,5 @@
 # Four sparkle overlays: MAGIC071..074
 
-## Paused (2026-09-25)
-
-- **Done:** all 60 functions of MAGIC071..074 are ours (`src/game/magic_s16.cpp`), with `symbols.toml` entries, CMake and `inject_all.cpp` wiring, and 39 lines appended to the main checkout's `entries_logic.txt`.
-- **Fuzzed:** `magic_s16` passed with 0 mismatches over 120,000 rounds, plus 0 in the 10,000-round answers check. `BOF3X_SHADOW='*'` exited 0.
-- **Controls:** all 72 planted one at a time by the scratch `controls.py`, and all 72 refused (exit 3). The per-control counts are in the scratch `s16/controls_run.log` (JSON lines); the source is clean.
-- **Next step:** fill section 5's table and the status line (`CONTROLS_TABLE` / `CONTROLS_SUMMARY`) from that log, commit, and report. Then port onto HX's consolidated harness API. The harness edit in 3e70326 (the target-enemy disturbance) is for HX to fold in; do not edit `magic_harness.*` further.
-
-**Status:** IN PROGRESS (2026-09-25) - sixty functions ours
-(`src/game/magic_s16.cpp`, shadow name `magic_s16`), fuzzed headless
-through the shared harness ([`magic_harness.md`](magic_harness.md)): 0
-mismatches in 120,000 rounds, and 0 in 10,000 rounds of the answers check
-(section 4); CONTROLS_SUMMARY. Fuzz only: no recorded route casts any of
-them (section 8).
-
-Group S16 of round nine's first spell wave
-([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §4).
-
 ## 1. The four overlays, and what they are
 
 | Overlay | `Magic_Rows` row | Loaded by ids (one id down: the name, a hypothesis) | Extent | Functions |
@@ -200,9 +183,9 @@ count's two calls kept on `Battle_ActorIsOut`, ours, which only reads) and
 run against ours for 2,000 rounds from the same random pool, party and
 enemy bytes: al and the pool compared.
 
-**Result** (2026-09-25):
+**Result** (2026-09-26, after the merge; this worktree):
 
-    shadow      magic_s16 self-test: 120000 rounds over 60 functions (2000 each), 2018669 calls to the stand-ins,
+    shadow      magic_s16 self-test: 120000 rounds over 60 functions (2000 each), 2016703 calls to the stand-ins,
                 0 MISMATCHES; 46068 bytes of state (18 regions) and the stand-ins' log compared
     shadow      magic_s16 answers: 10000 rounds over 5 functions (the allocs' al and pool, the count's al),
                 1977 full pools, 1365 counts not 0, 0 MISMATCHES
@@ -214,23 +197,88 @@ about 950. The counts vary a little run to run: pointer values of the DLL's
 own (the harness's records, the buffer) land in bytes a later round reads.
 `BOF3X_SHADOW='*'`: exit 0.
 
-**Two harness changes** (`magic_harness.cpp`, the target-enemy disturbance,
-cases 12 and 13), both found by this group's seed and neither changing
-what a passing group computes:
-
-- a target byte of 11 or more has no enemy record: `EnemyOf` pointed past
-  the image (`0x93ECA8`), and the seed's side bit `0x40` crashed the fuzz
-  there. It now writes nothing;
-- a target of 0..2 puts `EnemyOf` below the records (`0x93B960 - 0x128 *
-  (3 - target)`), whose 0x128 bytes reach the current-slot cell `0x93B8C4`
-  and the owner cell `0x93B940`; a byte written into the owner, then case
-  11's write through it, crashed. It now skips those two cells. Steal's
-  group never made two calls after such a write; any group that does would
-  have met it.
+**The harness, after the merge.** This group's seed (the side bit `0x40` on the target byte) exposed two crashes in the target-enemy disturbance (cases 12 and 13): a target of 11 or more pointed `EnemyOf` past the image, and a target of 0..2 reached the current-slot and owner cells below the enemy records, which a later disturbance wrote through. Group HX's consolidated harness (`ea27991`, [`magic_harness.md`](magic_harness.md) §7) now disturbs the target record only for targets 3..10; this group's fuzz file needed no change. The run above is on that harness, in this worktree (2026-09-26); `BOF3X_SHADOW='*'` exit 0. The answers check (the five al answers) is the one feature built in the group's own fuzz file, as the harness compares memory and the log only.
 
 ## 5. The controls
 
-CONTROLS_TABLE
+Seventy-two, planted one at a time by a script (the scratch `controls.py`, not committed: replace, build, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s16`, restore), re-run on the ported fuzz after the merge of the consolidated harness (`ea27991`), 2026-09-26. **72 of 72 refused** by a count (exit 3), each in the function or functions its plant touches; counts are this worktree's.
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| T1 | Magic071_Task: table entries 0 and 1 swapped | Magic071_Task 636 |
+| T2 | Walk: the owner not put back | Magic071_Task 1,603, Magic072_Task 1,597, Magic073_Task 1,665, Magic074_Task 1,603 |
+| T3 | Walk: records with bit 1, not bit 0 | Magic071_Task 1,999, Magic072_Task 1,995, Magic073_Task 1,999, Magic074_Task 1,999 |
+| T4 | Walk: 074's pool walked to 0x9F | Magic074_Task 1,006 |
+| T5 | Magic073_Task: its two entries swapped | Magic073_Task 2,000 |
+| T6 | Walk: the owner saved before the phase (072) | Magic072_Task 76 |
+| S1 | Magic071_Spawn: kind 0 (MAGIC070's) | Magic071_Spawn 1,956 |
+| S2 | Spawn: +8 from the source's +9 | Magic071_Spawn 1,565, Magic072_Spawn 1,565 |
+| S3 | Spawn: +9 = 7 | Magic071_Spawn 1,589, Magic072_Spawn 1,612 |
+| S4 | MakeSparkles: Sprite_Current read before the alloc | Magic071_Spawn 1,206, Magic072_Spawn 1,199, Magic073_ActorStart 447, Magic074_ActorStart 396 |
+| S5 | MakeSparkles: delay by n >> 1 | Magic071_Spawn 1,871, Magic072_Spawn 1,853, Magic073_ActorStart 845, Magic074_ActorStart 788 |
+| S6 | MakeSparkles: shade Rand & 7 | Magic071_Spawn 1,939, Magic072_Spawn 1,929, Magic073_ActorStart 880, Magic074_ActorStart 838 |
+| S7 | MakeSparkles: the bound read once | Magic071_Spawn 1,880, Magic072_Spawn 1,856, Magic073_ActorStart 702, Magic074_ActorStart 678 |
+| S8 | Spawn: sound 0x101 | Magic071_Spawn 2,000, Magic072_Spawn 2,000 |
+| S9 | ClearPool: +2 kept | Magic071_Spawn 2,000, Magic072_Spawn 2,000, Magic073_Spawn 2,000, Magic074_Spawn 2,000 |
+| S10 | MakeSparkles: a full pool not skipped (0xFF taken as a record) | Magic071_Spawn 435, Magic072_Spawn 437, Magic073_ActorStart 196, Magic074_ActorStart 135 |
+| A1 | SpawnOnActors: delay step 0x1D | Magic073_Spawn 1,116, Magic074_Spawn 1,057 |
+| A2 | SpawnOnActors: enemies 3..9 | Magic073_Spawn 1,037, Magic074_Spawn 998 |
+| A3 | Magic073_Spawn: parameter 0x27 | Magic073_Spawn 1,705 |
+| A4 | SpawnOnActors: the child's +1 = 1 | Magic073_Spawn 1,705, Magic074_Spawn 1,695 |
+| A5 | SpawnOnActors: the child not counted | Magic073_Spawn 1,679, Magic074_Spawn 1,673 |
+| A6 | SpawnOnActors: the side bit 0x80 | Magic073_Spawn 1,037, Magic074_Spawn 998 |
+| A7 | SpawnOnActors: Sprite_Current read before the create | Magic073_Spawn 112, Magic074_Spawn 105 |
+| A8 | Magic074_Spawn: kind 0 | Magic074_Spawn 1,856 |
+| W1 | Magic073_Wait: flag 2 | Magic073_Wait 247 |
+| W2 | Magic073_Wait: the count not asked | Magic073_Wait 1,013 |
+| C1 | CountReacting: the members' state 5 | answers check: Magic073_CountReacting (20 of 10,000) |
+| C2 | CountReacting: the enemies' own state bytes (0x93B961) | answers check: Magic073_CountReacting (1076 of 10,000) |
+| C3 | CountReacting: members 0..1 | Magic073_CountReacting 2,000 |
+| D1 | Magic073_ActorDispatch: index +1 ^ 1 | Magic073_ActorDispatch 2,000 |
+| D2 | Magic074_ActorTask: by +1, not +2 | Magic074_ActorTask 1,685 |
+| D3 | Magic074_ActorTask: entry 0 073's start | Magic074_ActorTask 308 |
+| AS1 | ActorStart: the kind the child's own +4 | Magic073_ActorStart 931, Magic074_ActorStart 943 |
+| AS2 | ActorRecord: a member below 4 | Magic073_ActorStart 61, Magic074_ActorStart 77, ActorFx_Tint 91, ActorFx_Untint 97 |
+| AS3 | ActorStart: +0xA = 1 | Magic073_ActorStart 834, Magic074_ActorStart 878 |
+| AS4 | MakeSparkles: the kind not read again after Rand | Magic071_Spawn 1,931, Magic072_Spawn 1,911, Magic073_ActorStart 752, Magic074_ActorStart 699 |
+| WS1 | ActorFx_WaitStep4: above 5 | ActorFx_WaitStep4 326 |
+| TI1 | ActorFx_Tint: red 1 | ActorFx_Tint 992 |
+| TI2 | ActorFx_Tint: +0xA not kept | ActorFx_Tint 987 |
+| TI3 | ActorFx_Tint: the release skipped | ActorFx_Tint 992 |
+| UT1 | ActorFx_Untint: tint bytes +1..+3 | ActorFx_Untint 2,000 |
+| UT2 | ActorFx_Untint: the next actor flashed | ActorFx_Untint 1,015 |
+| UT3 | ActorFx_Untint: Sprite_Current not read again for +2 | ActorFx_Untint 50 |
+| E1 | ActorFx_End: the parent's count kept | ActorFx_End 998 |
+| E2 | ActorFx_End: flag on +5 | ActorFx_End 1,007 |
+| SD1 | Dispatch: 071 through 072's table | Magic071_SparkleDispatch 2,000 |
+| UP1 | Update: launch and rise swapped | Magic071_SparkleUpdate 1,345, Magic072_SparkleUpdate 1,370, Magic073_SparkleUpdate 1,329, Magic074_SparkleUpdate 1,322 |
+| UP2 | Update: the disc without the launched test | Magic071_SparkleUpdate 336, Magic072_SparkleUpdate 326, Magic073_SparkleUpdate 316, Magic074_SparkleUpdate 326 |
+| UP3 | Update: G3 radius + 1 | Magic071_SparkleUpdate 495, Magic072_SparkleUpdate 489, Magic073_SparkleUpdate 511, Magic074_SparkleUpdate 522 |
+| UP4 | Update: G2 at Frame_Counter, not / 2 | Magic071_SparkleUpdate 495, Magic072_SparkleUpdate 489, Magic073_SparkleUpdate 511, Magic074_SparkleUpdate 522 |
+| UP5 | Update: the sparkle not read again before G3 | Magic071_SparkleUpdate 2, Magic072_SparkleUpdate 1, Magic073_SparkleUpdate 1 |
+| L1 | Launch: offset row & 0xF | Magic071_SparkleLaunch 252, Magic072_SparkleLaunch 247, Magic073_SparkleLaunch 251, Magic074_SparkleLaunch 243 |
+| L2 | Launch: y thrown down | Magic071_SparkleLaunch 1,017, Magic072_SparkleLaunch 1,011, Magic073_SparkleLaunch 1,020, Magic074_SparkleLaunch 966 |
+| L3 | Launch: life by shade | Magic071_SparkleLaunch 914, Magic072_SparkleLaunch 876, Magic073_SparkleLaunch 917, Magic074_SparkleLaunch 769 |
+| L4 | Launch: brightness 0x11 | Magic071_SparkleLaunch 1,017, Magic072_SparkleLaunch 1,011, Magic073_SparkleLaunch 1,020, Magic074_SparkleLaunch 966 |
+| L5 | Launch: the sparkle not read again after the x Rand | Magic072_SparkleLaunch 1 |
+| R1 | Rise: at count + 1 | Magic071_SparkleRise 1,030, Magic072_SparkleRise 997, Magic073_SparkleRise 1,026, Magic074_SparkleRise 1,046 |
+| R2 | Sway: 25 wide | Magic071_SparkleRise 2,000, Magic071_SparkleFade 2,000, Magic072_SparkleRise 2,000, Magic072_SparkleFade 2,000, Magic073_SparkleRise 2,000, Magic073_SparkleFade 2,000, Magic074_SparkleRise 2,000, Magic074_SparkleFade 2,000 |
+| F1 | Fade: Frame_Counter & 7 | Magic071_SparkleFade 221, Magic072_SparkleFade 215, Magic073_SparkleFade 246, Magic074_SparkleFade 243 |
+| F2 | Fade: the owner's count kept | Magic071_SparkleFade 936, Magic072_SparkleFade 978, Magic073_SparkleFade 982, Magic074_SparkleFade 962 |
+| G1 | RaysG2: shade * 5 | Magic071_SparkleRaysG2 1,937, Magic071_SparkleRaysG3 1,925, Magic072_SparkleRaysG2 1,945, Magic072_SparkleRaysG3 1,932, Magic073_SparkleRaysG2 1,944, Magic073_SparkleRaysG3 1,934, Magic074_SparkleRaysG2 1,942, Magic074_SparkleRaysG3 1,926 |
+| G2 | RaysG2: eight rays | Magic071_SparkleRaysG2 2,000, Magic072_SparkleRaysG2 2,000, Magic073_SparkleRaysG2 2,000, Magic074_SparkleRaysG2 2,000 |
+| G3 | RaysG3: half a quarter | Magic071_SparkleRaysG3 2,000, Magic072_SparkleRaysG3 2,000, Magic073_SparkleRaysG3 2,000, Magic074_SparkleRaysG3 2,000 |
+| G4 | RaysG3: the middle point's colour 2 | Magic071_SparkleRaysG3 2,000, Magic072_SparkleRaysG3 2,000, Magic073_SparkleRaysG3 2,000, Magic074_SparkleRaysG3 2,000 |
+| G5 | RaysG2: the scratch angle not read again after Cos | Magic071_SparkleRaysG2 11, Magic072_SparkleRaysG2 11, Magic073_SparkleRaysG2 7, Magic074_SparkleRaysG2 15 |
+| G6 | RaysG2: the packet pointer read once | Magic071_SparkleRaysG2 156, Magic072_SparkleRaysG2 165, Magic073_SparkleRaysG2 149, Magic074_SparkleRaysG2 150 |
+| DI1 | Disc: radius Rand & 7 | Magic071_SparkleDisc 961, Magic072_SparkleDisc 950, Magic073_SparkleDisc 952, Magic074_SparkleDisc 917 |
+| DI2 | Disc: colour row + 1 | Magic071_SparkleDisc 1,947, Magic072_SparkleDisc 1,949, Magic073_SparkleDisc 1,964, Magic074_SparkleDisc 1,964 |
+| DI3 | Disc: sixteen triangles | Magic071_SparkleDisc 2,000, Magic072_SparkleDisc 2,000, Magic073_SparkleDisc 2,000, Magic074_SparkleDisc 2,000 |
+| AL1 | Alloc: bit 1 marked | Magic071_SparkleAlloc 733, Magic072_SparkleAlloc 756, Magic073_SparkleAlloc 759, Magic074_SparkleAlloc 732 |
+| AL2 | Alloc: one record short | Magic071_SparkleAlloc 4, Magic072_SparkleAlloc 2, Magic073_SparkleAlloc 7, Magic074_SparkleAlloc 3 |
+| FR1 | Free: +4 kept | Magic071_SparkleFree 1,991, Magic072_SparkleFree 1,990, Magic073_SparkleFree 1,991, Magic074_SparkleFree 1,994 |
+
+The thinnest are the re-reads: UP5 (the sparkle read again before the G3 rays; 1..2 rounds per overlay, none in 074's run), L5 (after the x `Rand`; 1 round, in 072) and AL2 (the alloc's last record; 2..7). Each shows only when the group's disturbance moves the current cell across exactly that call, or the pool fills to its last record. C1 and C2 are refused only by the answers check (the count answers in al, which the harness does not compare): 20 and 1,076 of its 10,000 rounds.
 
 ## 6. Defects (Capcom's, latent, kept)
 
