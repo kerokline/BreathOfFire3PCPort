@@ -1,5 +1,13 @@
 # The effect library: the helpers every spell calls
 
+> **Paused (2026-09-25):** the group is complete - 25 functions ours, 106 of
+> 106 controls refused, `magic_lib` and `'*'` self-tests exit 0, committed
+> (bfa5b7b); no control is left planted. Next step: port the fuzz onto group
+> HX's consolidated harness API once it lands (this branch's
+> `magic_harness.h/.cpp` edits - `Extras`, `Act`, eight-argument stand-ins,
+> the library in the standard set, `StandIn` by address, the `Disturb`
+> guard - are what HX must absorb), then rerun the self-tests and controls.
+
 **Status:** IN PROGRESS (2026-09-25) - 25 functions ours
 (`src/game/magic_lib.cpp`, shadow name `magic_lib`), fuzzed headless through
 the shared harness, which this group extended for functions that take
