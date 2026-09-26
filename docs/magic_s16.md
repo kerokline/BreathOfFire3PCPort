@@ -1,5 +1,12 @@
 # Four sparkle overlays: MAGIC071..074
 
+## Paused (2026-09-25)
+
+- **Done:** all 60 functions of MAGIC071..074 are ours (`src/game/magic_s16.cpp`), with `symbols.toml` entries, CMake and `inject_all.cpp` wiring, and 39 lines appended to the main checkout's `entries_logic.txt`.
+- **Fuzzed:** `magic_s16` passed with 0 mismatches over 120,000 rounds, plus 0 in the 10,000-round answers check. `BOF3X_SHADOW='*'` exited 0.
+- **Controls:** all 72 planted one at a time by the scratch `controls.py`, and all 72 refused (exit 3). The per-control counts are in the scratch `s16/controls_run.log` (JSON lines); the source is clean.
+- **Next step:** fill section 5's table and the status line (`CONTROLS_TABLE` / `CONTROLS_SUMMARY`) from that log, commit, and report. Then port onto HX's consolidated harness API. The harness edit in 3e70326 (the target-enemy disturbance) is for HX to fold in; do not edit `magic_harness.*` further.
+
 **Status:** IN PROGRESS (2026-09-25) - sixty functions ours
 (`src/game/magic_s16.cpp`, shadow name `magic_s16`), fuzzed headless
 through the shared harness ([`magic_harness.md`](magic_harness.md)): 0
