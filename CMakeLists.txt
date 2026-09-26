@@ -305,7 +305,9 @@ add_library(bof3x SHARED
   src/game/magic_s31.cpp
   src/game/magic_s31_fuzz.cpp
   src/game/magic_s28.cpp
-  src/game/magic_s28_fuzz.cpp)
+  src/game/magic_s28_fuzz.cpp
+  src/game/magic_s27.cpp
+  src/game/magic_s27_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
