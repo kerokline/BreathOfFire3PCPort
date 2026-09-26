@@ -85,11 +85,13 @@ constexpr std::uint32_t kEnemyAnimation = 0x435A70;
 using EnemyAnimFn = void (__cdecl*)(unsigned, unsigned);
 void EnemyAnimation(unsigned char actor, unsigned animation) { MH_AT(EnemyAnimFn, kEnemyAnimation)(actor, animation); }
 
-// The engine's step handlers the tables hold (group E): the done flag and
-// free, and the target's flag 0x40 with the done flag and free.
-constexpr std::uint32_t kDoneAndFree = 0x43FE80;      // MagicFx_DoneAndFree
-constexpr std::uint32_t kFlagTargetEnd = 0x43F460;    // MagicFx_FlagTargetEnd
-constexpr std::uint32_t kFreeTask = 0x4AEE90;         // BattleFx_FreeTask
+// The step handlers of other groups the tables hold, by their addresses (a
+// phase is always called through the address its table holds): group E's
+// done flag and free (0x43FE80) and target flag 0x40 with the done flag and
+// free (0x43F460), round eight's task free (0x4AEE90).
+constexpr std::uint32_t kDoneAndFree = bof3::addr::MagicFx_DoneAndFree;
+constexpr std::uint32_t kFlagTargetEnd = bof3::addr::MagicFx_FlagTargetEnd;
+constexpr std::uint32_t kFreeTask = bof3::addr::BattleFx_FreeTask;
 
 // The kinds-table parameters of the images (BattleTask_Create(1, n)).
 constexpr unsigned kImage017 = 0x21;   // Magic017Image_Task
