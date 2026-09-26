@@ -165,6 +165,12 @@ std::uint32_t __cdecl RecAlloc() {
     const std::uint32_t h = mh::Noise();
     return (h & 0xFFFFFF00u) | (h % 4 == 0 ? 0xFFu : (h >> 8) % 64);
 }
+// Sprite_UpdateScreen reads the frame-offset table 0x9039D8, which
+// PurifyMote_Task swaps in around it: the recorder logs it.
+void __cdecl RecUpdateScreen() {
+    mh::Record(bof3::addr::Sprite_UpdateScreen, Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(0x9039D8))));
+    mh::Stir();
+}
 void __cdecl RecMoteDispatch() {
     mh::Record(bof3::addr::ReviveMote_Dispatch, Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(mh::at::kOwner))),
                Sprite_Current[1], 0);
@@ -185,6 +191,7 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 #define S17_RAW(text, address) text, address, address
 const mh::Callee kCallees[] = {
     {S17_OURS(Sprite_SetTint), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecSetTint)},
+    {S17_OURS(Sprite_UpdateScreen), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&RecUpdateScreen)},
     {S17_OURS(Tint_Release), 1, {kU8}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
     {S17_OURS(Sprite_SetAnimation), 1, {kU8}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
     {S17_OURS(Math_Sin), 1, {kAll}, mh::Answer::kGarbage, 0, 0, {}, nullptr, nullptr},
