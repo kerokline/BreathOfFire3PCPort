@@ -269,44 +269,44 @@ void Project(float* out, std::uint32_t h, unsigned n) {
 // Math_Sin / Math_Cos: the angle logged; three in four answers in -4096..4096
 // (the table's range), the rest anything, so that a wrapping multiply shows.
 template <std::uint32_t A> int __cdecl StubTrig(int angle) {
-    mh::Note(A, static_cast<std::uint32_t>(angle));
-    const std::uint32_t h = mh::Salt();
+    mh::Record(A, static_cast<std::uint32_t>(angle));
+    const std::uint32_t h = mh::Noise();
     return h % 4 ? static_cast<int>(h % 8193) - 4096 : static_cast<int>(h);
 }
 void __cdecl StubDrawMode(unsigned char* prim, int dfe, int dtd, unsigned tpage, unsigned long tw) {
-    mh::Note(bof3::addr::Gpu_SetDrawMode, Key(prim), static_cast<std::uint32_t>(dfe) ^ (static_cast<std::uint32_t>(dtd) << 16),
+    mh::Record(bof3::addr::Gpu_SetDrawMode, Key(prim), static_cast<std::uint32_t>(dfe) ^ (static_cast<std::uint32_t>(dtd) << 16),
              tpage, static_cast<std::uint32_t>(tw));
 }
 // A commit or a link moves Gfx_PacketNext on by the size - three times in
 // four; the fourth models a full pool or a cell off the map, where the real
 // ones leave it.
 void Advance(unsigned size) {
-    if (mh::Salt() % 4) Gfx_PacketNext = Gfx_PacketNext + (size & 0xFF);
+    if (mh::Noise() % 4) Gfx_PacketNext = Gfx_PacketNext + (size & 0xFF);
 }
 void __cdecl StubCommit(unsigned slot, unsigned size) {
-    mh::Note(bof3::addr::Gfx_CommitPrim, slot & 0xFF, size & 0xFF);
+    mh::Record(bof3::addr::Gfx_CommitPrim, slot & 0xFF, size & 0xFF);
     Advance(size);
 }
 void __cdecl StubLinkAt(unsigned long x, unsigned long z, int dy, unsigned size) {
-    mh::Note(bof3::addr::MapView_LinkPrimAt, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z),
+    mh::Record(bof3::addr::MapView_LinkPrimAt, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z),
              static_cast<std::uint32_t>(dy) & 0xFF, size & 0xFF);
     Advance(size);
 }
-template <std::uint32_t A> void __cdecl StubPrim(unsigned char* prim) { mh::Note(A, Key(prim)); }
+template <std::uint32_t A> void __cdecl StubPrim(unsigned char* prim) { mh::Record(A, Key(prim)); }
 unsigned char* __cdecl StubPolyG4(unsigned char* prim) {
-    mh::Note(bof3::addr::Gpu_SetPolyG4, Key(prim));
+    mh::Record(bof3::addr::Gpu_SetPolyG4, Key(prim));
     return prim;
 }
-void __cdecl StubSemi(unsigned char* prim, unsigned abe) { mh::Note(bof3::addr::Gpu_SetSemiTrans, Key(prim), abe); }
-template <std::uint32_t A> void __cdecl StubDepths(void* prim) { mh::Note(A, Key(prim)); }
+void __cdecl StubSemi(unsigned char* prim, unsigned abe) { mh::Record(bof3::addr::Gpu_SetSemiTrans, Key(prim), abe); }
+template <std::uint32_t A> void __cdecl StubDepths(void* prim) { mh::Record(A, Key(prim)); }
 
 // The projections: the vectors' contents and the outputs' places logged; the
 // outputs and the depth written; a depth answered (Gte_RotAverage3's is kept
 // by the crystal).
 long __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, long* p) {
-    mh::Note(bof3::addr::Gte_RotTransPers3, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2), Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3),
+    mh::Record(bof3::addr::Gte_RotTransPers3, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2), Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3),
              Key(s0), Key(s1) ^ (Key(s2) << 1));
-    const std::uint32_t h = mh::Salt();
+    const std::uint32_t h = mh::Noise();
     Project(s0, Mix(h, 1), 2);
     Project(s1, Mix(h, 2), 2);
     Project(s2, Mix(h, 3), 2);
@@ -315,10 +315,10 @@ long __cdecl StubRtp3(const short* v0, const short* v1, const short* v2, float* 
 }
 long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const short* v3, float* s0, float* s1, float* s2,
                       float* s3, long* p) {
-    mh::Note(bof3::addr::Gte_RotTransPers4, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2) ^ (Key(v3) << 3),
+    mh::Record(bof3::addr::Gte_RotTransPers4, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2) ^ (Key(v3) << 3),
              Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3) ^ (Vec3(v3) << 5), Key(s0) ^ (Key(s1) << 1),
              Key(s2) ^ (Key(s3) << 1));
-    const std::uint32_t h = mh::Salt();
+    const std::uint32_t h = mh::Noise();
     Project(s0, Mix(h, 1), 2);
     Project(s1, Mix(h, 2), 2);
     Project(s2, Mix(h, 3), 2);
@@ -327,9 +327,9 @@ long __cdecl StubRtp4(const short* v0, const short* v1, const short* v2, const s
     return static_cast<long>(Mix(h, 6));
 }
 long __cdecl StubRotAverage3(const short* v0, const short* v1, const short* v2, float* s0, float* s1, float* s2, long* p) {
-    mh::Note(bof3::addr::Gte_RotAverage3, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2), Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3),
+    mh::Record(bof3::addr::Gte_RotAverage3, Key(v0) ^ (Key(v1) << 1) ^ (Key(v2) << 2), Vec3(v0) ^ (Vec3(v1) << 1) ^ (Vec3(v2) << 3),
              Key(s0), Key(s1) ^ (Key(s2) << 1));
-    const std::uint32_t h = mh::Salt();
+    const std::uint32_t h = mh::Noise();
     Project(s0, Mix(h, 1), 3);
     Project(s1, Mix(h, 2), 3);
     Project(s2, Mix(h, 3), 3);
@@ -343,11 +343,11 @@ long __cdecl StubRotAverage3(const short* v0, const short* v1, const short* v2, 
 constexpr std::uint32_t kLinkSorted = 0x4FB880;
 void __cdecl StubLinkSorted(unsigned long x, unsigned long z, long* depths, unsigned char* prim, unsigned count,
                             unsigned stride, unsigned last) {
-    mh::Note(kLinkSorted, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), Key(prim),
+    mh::Record(kLinkSorted, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), Key(prim),
              (count & 0xFF) | ((stride & 0xFF) << 8) | ((last & 0xFF) << 16));
-    mh::Note(kLinkSorted, static_cast<std::uint32_t>(depths[0]), static_cast<std::uint32_t>(depths[1]),
+    mh::Record(kLinkSorted, static_cast<std::uint32_t>(depths[0]), static_cast<std::uint32_t>(depths[1]),
              static_cast<std::uint32_t>(depths[2]), static_cast<std::uint32_t>(depths[3]));
-    const std::uint32_t h = mh::Salt();
+    const std::uint32_t h = mh::Noise();
     if (h % 4 == 0) {
         Gfx_PacketNext = Gfx_PacketNext - (count & 0xFF) * (stride & 0xFF);
     } else {
@@ -356,21 +356,21 @@ void __cdecl StubLinkSorted(unsigned long x, unsigned long z, long* depths, unsi
     }
 }
 unsigned char __cdecl StubSetTint(unsigned char* sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
-    mh::Note(bof3::addr::Sprite_SetTint, Key(sprite), r | (g << 8) | (b << 16), a);
+    mh::Record(bof3::addr::Sprite_SetTint, Key(sprite), r | (g << 8) | (b << 16), a);
     mh::Stir();
-    return static_cast<unsigned char>(mh::Salt());
+    return static_cast<unsigned char>(mh::Noise());
 }
 unsigned char __cdecl StubKind() {
-    mh::Note(bof3::addr::Shield_Kind);
+    mh::Record(bof3::addr::Shield_Kind);
     mh::Stir();
-    return static_cast<unsigned char>(mh::Salt());
+    return static_cast<unsigned char>(mh::Noise());
 }
 // ShieldSpark_Alloc: a slot's index (its live bit set, as the real one), or
 // 0xFF a fifth of the time.
 unsigned char __cdecl StubAlloc() {
-    mh::Note(bof3::addr::ShieldSpark_Alloc);
+    mh::Record(bof3::addr::ShieldSpark_Alloc);
     mh::Stir();
-    const std::uint32_t h = mh::Salt();
+    const std::uint32_t h = mh::Noise();
     if (h % 5 == 0) return 0xFF;
     const unsigned i = (h >> 8) % kPoolCount;
     Pool(i)[0] = static_cast<unsigned char>(Pool(i)[0] | 1);
@@ -381,16 +381,18 @@ unsigned char __cdecl StubAlloc() {
 // phase may free or take another slot of the pool.
 template <std::uint32_t A> void __cdecl StubOnSlot() {
     const unsigned char* const cur = Sprite_Current;
-    mh::Note(A, Key(cur), static_cast<std::uint32_t>(move_script::Long(mh::Mem(mh::at::kOwner))), cur[1] | (cur[2] << 8));
+    mh::Record(A, Key(cur), static_cast<std::uint32_t>(move_script::Long(mh::Mem(mh::at::kOwner))), cur[1] | (cur[2] << 8));
     if (A == bof3::addr::ShieldSpark_Dispatch) {
-        const std::uint32_t h = mh::Salt();
+        const std::uint32_t h = mh::Noise();
         if (h % 3 == 0) Pool((h >> 8) % kPoolCount)[0] ^= 1;
     }
     mh::Stir();
 }
 
-#define S19_CUSTOM_OURS(name, fn) {#name, ::bof3::addr::name, KeyOf(&::name), reinterpret_cast<const void*>(fn)}
-const mh::Custom kCustoms[] = {
+#define S19_CUSTOM_OURS(name, fn) \
+    {#name, ::bof3::addr::name, KeyOf(&::name), 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(fn)}
+constexpr std::uint32_t kU8 = 0xFF, kU16 = 0xFFFF;
+const mh::Callee kCallees[] = {
     S19_CUSTOM_OURS(Math_Sin, &StubTrig<bof3::addr::Math_Sin>),
     S19_CUSTOM_OURS(Math_Cos, &StubTrig<bof3::addr::Math_Cos>),
     S19_CUSTOM_OURS(Gpu_SetDrawMode, &StubDrawMode),
@@ -407,7 +409,7 @@ const mh::Custom kCustoms[] = {
     S19_CUSTOM_OURS(Gte_PrimDepths4_10B, &StubDepths<bof3::addr::Gte_PrimDepths4_10B>),
     S19_CUSTOM_OURS(Gte_PrimDepths3_10C, &StubDepths<bof3::addr::Gte_PrimDepths3_10C>),
     S19_CUSTOM_OURS(Sprite_SetTint, &StubSetTint),
-    {"0x4FB880", kLinkSorted, kLinkSorted, reinterpret_cast<const void*>(&StubLinkSorted)},
+    {"0x4FB880", kLinkSorted, kLinkSorted, 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&StubLinkSorted)},
     S19_CUSTOM_OURS(Shield_Kind, &StubKind),
     S19_CUSTOM_OURS(ShieldSpark_Alloc, &StubAlloc),
     S19_CUSTOM_OURS(ShieldSpark_Dispatch, &StubOnSlot<bof3::addr::ShieldSpark_Dispatch>),
@@ -417,18 +419,14 @@ const mh::Custom kCustoms[] = {
     S19_CUSTOM_OURS(BarrierDisc_Draw, &StubOnSlot<bof3::addr::BarrierDisc_Draw>),
     S19_CUSTOM_OURS(BarrierRing_Draw, &StubOnSlot<bof3::addr::BarrierRing_Draw>),
     S19_CUSTOM_OURS(BarrierLine_Draw, &StubOnSlot<bof3::addr::BarrierLine_Draw>),
-    {"0x4F6290", 0x4F6290, 0x4F6290, reinterpret_cast<const void*>(&StubOnSlot<0x4F6290>)},
-};
-#undef S19_CUSTOM_OURS
-
-constexpr std::uint32_t kU8 = 0xFF, kU16 = 0xFFFF;
-const mh::Callee kCallees[] = {
+    {"0x4F6290", 0x4F6290, 0x4F6290, 0, {}, mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&StubOnSlot<0x4F6290>)},
     {"Battle_ActorIsOut", bof3::addr::Battle_ActorIsOut, KeyOf(&::Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0},
     // the library's (group L): a kind-1 task 0x48 by (kind & 3, side index); both read as bytes
     {"0x4FB790", 0x4FB790, 0x4FB790, 2, {kU8, kU8}, mh::Answer::kGarbage, 0, 0},
     // MAGIC082's (group S18): a disc of radius (word) at the task
     {"0x4C12F0", 0x4C12F0, 0x4C12F0, 1, {kU16}, mh::Answer::kGarbage, 0, 0},
 };
+#undef S19_CUSTOM_OURS
 
 const mh::DataTable kTables[] = {
     {0x65B47C, 1},   // ShieldAura_Types
@@ -632,7 +630,7 @@ void SelfTest() {
         "magic_s19", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], g_regions, sizeof g_regions / sizeof g_regions[0], &Seed, &Disturb, 2000,
     };
-    mh::Run(group, kCustoms, sizeof kCustoms / sizeof kCustoms[0]);
+    mh::Run(group);
 }
 
 }  // namespace magic_s19
