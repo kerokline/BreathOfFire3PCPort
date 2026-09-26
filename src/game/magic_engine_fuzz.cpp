@@ -175,6 +175,18 @@ std::uint32_t GroundAnswer(const std::uint32_t*, std::uint32_t answer) {
     return (answer & 0xFFFF0000u) | (static_cast<std::uint32_t>(ground) & 0xFFFF);
 }
 
+// Battle_ActorIsOut: a kFlag recorder answers 0 exactly when its own
+// disturbance did nothing (both come from one hash), so a caller's read after
+// a "not out" answer never saw a moved cell - HeadCracker_WaitTarget's
+// re-read of the target was invisible (control T3). This answers from its own
+// stream instead, and a quarter of the time moves the target to any of the
+// eleven actors (whose state bytes the seed makes 6 half the time).
+std::uint32_t OutAnswer(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t h = mh::Noise();
+    if (h % 4 == 0) mh::Mem(at::kTarget)[0] = static_cast<unsigned char>((h >> 8) % 11);
+    return (h >> 4) % 3 == 0 ? answer | 0x10 : answer & 0xFFFFFF00u;
+}
+
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 #define ME_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define ME_CUSTOM(f) mh::Answer::kGarbage, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&f)
@@ -184,7 +196,7 @@ const mh::Callee kCallees[] = {
     {ME_OURS(Sprite_ScriptTickOnce), 0, {}, ME_CUSTOM(RecTickOnce)},
     {ME_OURS(Sprite_ScriptTick), 0, {}, ME_CUSTOM(RecTick)},
     {ME_OURS(Sprite_UpdateScreen), 0, {}, ME_CUSTOM(RecUpdateScreen)},
-    {ME_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0},
+    {ME_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &OutAnswer},
     {ME_OURS(AreaMap_Elevation), 2, {kAll, kAll}, mh::Answer::kGarbage, 0, 0, {}, &GroundAnswer},
     // Sound_PlayEffect(id) unless id is 0xFFFF: reads the low word
     {"0x437450", 0x437450, 0x437450, 1, {kU16}, mh::Answer::kGarbage, 0, 0},
@@ -239,10 +251,13 @@ void Seed(unsigned k) {
     case kHeadCracker_WaitTarget: {
         if (mh::Often()) sc[0xA] = 0;
         else if (mh::Half()) sc[0xA] = static_cast<unsigned char>(MH_PICK(1, 0xFF));
-        const unsigned char t = mh::Mem(at::kTarget)[0];
-        unsigned char* const actor = t < 3 ? mh::PartyOf(t) : mh::EnemyOf(t);
-        if (mh::Half()) actor[1] = 6;
-        else if (mh::Half()) actor[1] = static_cast<unsigned char>(MH_PICK(5, 7, 0, 0x86));
+        // every actor's state 6 half the time, so a target moved by the
+        // stand-ins lands on either side of the test
+        for (unsigned t = 0; t < 11; ++t) {
+            unsigned char* const actor = t < 3 ? mh::PartyOf(static_cast<unsigned char>(t)) : mh::EnemyOf(static_cast<unsigned char>(t));
+            if (mh::Half()) actor[1] = 6;
+            else if (mh::Half()) actor[1] = static_cast<unsigned char>(MH_PICK(5, 7, 0, 0x86));
+        }
         break;
     }
     case kHeadCrackerRock_Task:

@@ -280,8 +280,8 @@ MENGINE_EXPORT void __cdecl HeadCracker_WaitCaster(void) {
 // one; the phase on.
 //
 // As the original has it: the slot index is not checked. 0xFF (no slot free)
-// writes the owner 0x7B4 bytes past the last slot's, and the count waits for a
-// rock that never lands (docs/magic_engine.md section 6).
+// writes the owner at 0x9423FC, past the image's end (0x93F000), and the count
+// waits for a rock that never lands (docs/magic_engine.md section 6).
 MENGINE_EXPORT void __cdecl HeadCracker_Drop(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x5D);
     unsigned char* const self = Sprite_Current;
