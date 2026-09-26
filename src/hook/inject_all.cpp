@@ -130,6 +130,7 @@
 #include "game/magic_s23.h"
 #include "game/magic_s25.h"
 #include "game/magic_s20.h"
+#include "game/magic_s27.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -360,6 +361,9 @@ void InjectAll() {
     MagicS20_Inject();          // round 9 group S20 (MAGIC087, 088, 092): its clones' calls, stack-table immediates
                                 // and jump table re-aimed or moved, its thirteen .data tables swapped for the
                                 // fuzz only; no module patches bytes inside its 51: order does not matter
+    MagicS27_Inject();          // round 9 group S27 (MAGIC118, 120, 121): its clones' calls, stack-table immediates
+                                // and two jump tables re-aimed or moved, its six .data tables swapped for the fuzz
+                                // only; no module patches bytes inside its 47: order does not matter
     InjectReport();
 }
 
