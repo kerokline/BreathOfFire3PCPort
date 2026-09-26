@@ -105,11 +105,23 @@ struct Clone {
     const JumpTable* tables;
     int n_tables;
     const void* ours;
+    std::uint8_t answer_bytes = 0;   // a function that answers: its answer compared at this width (1, 2, 4)
 };
 
 // How a recorder answers: a byte in lo..hi with garbage above it (an index,
 // a count), a byte of 0 or not 0 (a flag), the harness's Rand, or garbage.
 enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kRand };
+
+// What a callee does through its pointers, for one whose memory arguments
+// matter (a GTE call's vectors, matrices and outputs; a primitive setter):
+// its recorder calls it after the log entry with every argument (up to ten,
+// the caller's pushes; any past those are the caller's frame, to be left
+// alone) and the answer the kind chose, and answers what it returns. It
+// logs what the callee reads (LogBytes, LogValue) and fills what it writes
+// (FillBytes), both from the harness's stream, so the two passes see the
+// same. Pointers into a caller's own stack differ between the passes: log
+// their contents or their distance from one another, never the pointer.
+using Effect = std::uint32_t (*)(const std::uint32_t* args, std::uint32_t answer);
 
 // A callee the standard set (magic_harness.cpp, kStandard) lacks. `key` is
 // the pointer ours calls - (std::uint32_t)name, which is Capcom's address or
@@ -123,6 +135,7 @@ struct Callee {
     std::uint32_t masks[4];
     Answer answer;
     std::uint8_t lo, hi;
+    Effect effect = nullptr;        // optional: see Effect
 };
 
 // A .data table of handlers the functions read in place: its entries are
@@ -169,5 +182,12 @@ unsigned char* Pointer(std::uint32_t cell);
 // `first` (0..255) is the round's first answer exactly.
 void SetRandHint(std::uint32_t hint);
 void SetRandFirst(int first);
+
+// --- for a callee's Effect -------------------------------------------------------
+
+void LogValue(std::uint32_t v);                 // one more log entry
+void LogBytes(const void* p, unsigned n);       // a hash of n bytes, one log entry
+void FillBytes(void* p, unsigned n);            // n bytes from the recorders' stream
+std::uint32_t Salted();                         // one value from the recorders' stream
 
 }  // namespace magic_harness
