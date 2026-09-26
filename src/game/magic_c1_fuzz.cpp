@@ -215,6 +215,8 @@ std::uint32_t LinkEffect(const std::uint32_t* a, std::uint32_t answer) {
 // the call shows.
 std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     auto* task = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    mh::NoteBytes(task + 0xC, 8);   // what it turns (its direction +8 with it)
+    mh::Note(task[8]);
     mh::FillBytes(task + 0xC, 8);
     return answer;
 }
