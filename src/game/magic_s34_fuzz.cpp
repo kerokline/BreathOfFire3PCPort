@@ -416,12 +416,9 @@ void Seed(unsigned k) {
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
-    case kCharm_Task:
+    case kCharm_Task: case kMonopolize_Task:
         sc[1] = Byte(mh::Next() % 2);
         FixOwners(kCharmPool, 64, 0x84, 0x80);
-        break;
-    case kMonopolize_Task:
-        sc[1] = Byte(mh::Next() % 2);
         FixOwners(kMonopolizePool, 64, 0x84, 0x80);
         break;
     case kMagic159_Task: sc[1] = Byte(mh::Next() % 2); break;
