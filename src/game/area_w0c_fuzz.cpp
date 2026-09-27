@@ -228,6 +228,7 @@ void SeedAnswer() {
 // The mode tail's state, each case and the two out-of-range sides.
 void SeedTailState(unsigned last) {
     if (ah::Often()) B(at::kTailState) = static_cast<unsigned char>(ah::Next() % (last + 3) - 1);
+    else if (ah::Half()) B(at::kTailState) = static_cast<unsigned char>(last);
 }
 
 // ---- area 27 ----
@@ -239,7 +240,7 @@ void Seed27(unsigned k) {
         SeedTailState(4);
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3));
         if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x20, 0x1F, 0x21, 0x10, 0x0F, 0x11, 0x31, 0x30, 0x32));
-        if (ah::Often()) move_script::SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 2, 0, 0x10, 0xFFFF));
+        if (ah::Often()) move_script::SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 1, 2, 0, 0x10, 0xFFFF));
         break;
     default: break;
     }
@@ -251,6 +252,11 @@ void Seed32(unsigned k) {
     switch (k) {
     case k32Choice: SeedAnswer(); break;
     case k32RunA: case k32RunB: Sprite_Current[4] = static_cast<unsigned char>(ah::Next() % 2); break;
+    case k32Spawn4F:
+        // only subtracted and divided here, never followed: any value, below
+        // Sprite_Objects too (the division is signed)
+        if (ah::Half()) move_script::SetLong(ah::Mem(at::kActiveMember), static_cast<std::int32_t>(ah::Next()));
+        break;
     case k32TintStep: {
         // all three at 0xC0, or one step short, or either side of the signed compare
         const bool done = ah::Half();
@@ -291,7 +297,7 @@ void Seed34(unsigned k) {
     switch (k) {
     case k34Choice:
         SeedAnswer();
-        if (ah::Often()) Cond_ByteFA = static_cast<signed char>(AH_PICK(8, 7, 9, 0x88));
+        if (ah::Often()) Cond_ByteFA = static_cast<signed char>(AH_PICK(8, 8, 8, 7, 9, 0x88));
         break;
     case k34Skip:
         if (ah::Often()) Field_State[0x89] = static_cast<unsigned char>(AH_PICK(7, 6, 8, 0x87));
@@ -305,6 +311,17 @@ void Seed36(unsigned k) {
     Common();
     switch (k) {
     case k36Hook:
+        // half the rounds every test passes but at most one, drawn to fail
+        if (ah::Half()) {
+            Cond_ByteFD = 2;
+            B(at::kLeaderByte8) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
+            ah::Mem(at::kStoryFlags)[0x33 >> 3] |= 1u << (0x33 & 7);   // for the record: Flags_Test is a recorder
+            if (ah::Half()) {
+                if (ah::Half()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(1, 3, 0x82));
+                else B(at::kLeaderByte8) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
+            }
+            break;
+        }
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
         if (ah::Often()) B(at::kLeaderByte8) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
         break;
@@ -316,6 +333,16 @@ void Seed36(unsigned k) {
 // 3 x 3 rectangle (0x46..0x48, 0x23..0x25) two times in three; each side
 // drawn alone so one edge can be off while the other is on.
 void Args36(unsigned, std::uint32_t* a) {
+    if (ah::Half()) {
+        // inside, or one edge just off (x 0x45 / 0x49, z 0x22 / 0x26)
+        a[0] = (0x46 + ah::Next() % 3) << 16 | (a[0] & 0xFFFF);
+        a[1] = (0x23 + ah::Next() % 3) << 16 | (a[1] & 0xFFFF);
+        if (ah::Half()) {
+            if (ah::Half()) a[0] = static_cast<std::uint32_t>(AH_PICK(0x45, 0x49, 0x145, 0xFF46)) << 16 | (a[0] & 0xFFFF);
+            else a[1] = static_cast<std::uint32_t>(AH_PICK(0x22, 0x26, 0x123, 0xFF23)) << 16 | (a[1] & 0xFFFF);
+        }
+        return;
+    }
     if (ah::Often()) a[0] = (0x45 + ah::Next() % 5) << 16 | (a[0] & 0xFFFF);
     if (ah::Often()) a[1] = (0x22 + ah::Next() % 5) << 16 | (a[1] & 0xFFFF);
 }
@@ -354,7 +381,7 @@ void RunArea(const char* shadow, int area, const ah::Clone* clones, unsigned n, 
 }  // namespace
 
 void SelfTest() {
-    constexpr unsigned kRounds = 4000;
+    constexpr unsigned kRounds = 6000;
     RunArea("area_w0c", 27, kClones27, sizeof kClones27 / sizeof kClones27[0], nullptr, 0, &Seed27, nullptr, kRounds);
     RunArea("area_w0c", 28, kClones28, sizeof kClones28 / sizeof kClones28[0], nullptr, 0, &Seed28, nullptr, kRounds);
     RunArea("area_w0c", 32, kClones32, sizeof kClones32 / sizeof kClones32[0], kTables32, sizeof kTables32 / sizeof kTables32[0],

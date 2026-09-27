@@ -43906,7 +43906,7 @@ name = "Area32_Choices"
 ctype = "unsigned long"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-27 (round ten group AR0C): area 32's descriptor 0x5EF2C8 +0x34: Area32_ChoiceLeaderAnim, 0x403050 (AR0B's band), then Area32_Handlers' six."
+evidence = "read 2026-09-27 (round ten group AR0C): area 32's descriptor 0x5EF2C8 +0x34: Area32_ChoiceLeaderAnim, 0x403050 (area 22's block, a body nine areas share), then Area32_Handlers' six."
 
 [[data]]
 pc = 0x5EF2B0
@@ -43986,7 +43986,7 @@ name = "WorldMap33_Record04Cells"
 ctype = "unsigned char"
 count = 12
 status = "evidence"
-evidence = "read 2026-09-27 (round ten group AR0C): Area33_Record04Start's 4-byte rows by the object's +0xB: x, z (the map cell set to 0xA0) and two bytes unread here; a zero row follows."
+evidence = "read 2026-09-27 (round ten group AR0C): Area33_Record04Start's 4-byte rows by the object's +0xB: x, z (the map cell set to 0xA0) and two bytes unread here; a zero row follows. WorldMap_Records[1] +0x14 (0x653940, the record's data pointer) is this table."
 
 [[data]]
 pc = 0x5F0184
