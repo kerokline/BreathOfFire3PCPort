@@ -225,9 +225,13 @@ std::uint32_t KeepFacing(const std::uint32_t*, std::uint32_t answer) {
 // Battle_ActorIsOut: the recorder's flag; for Foretell_Read one enemy kept in,
 // and an enemy that is in has its divisor word +0xB0 not 0 (read right after
 // this answer, before the next disturbance).
+// While Foretell_Read is fuzzed the enemies' answers follow g_out (bit i for
+// enemy i + 3), so the seed knows which are counted.
+unsigned g_out = 0;
 std::uint32_t IsOutEffect(const std::uint32_t* a, std::uint32_t answer) {
     if (!g_keep_enemy) return answer;
     const unsigned actor = a[0] & 0xFF;
+    if (actor >= 3 && actor <= 10) answer = (answer & 0xFFFFFF00u) | ((g_out >> (actor - 3)) & 1u);
     if (actor == g_kept) answer &= 0xFFFFFF00u;
     if ((answer & 0xFF) == 0 && actor >= 3 && actor <= 10) {
         unsigned char* const e = mh::EnemyOf(static_cast<unsigned char>(actor));
@@ -403,13 +407,61 @@ unsigned char* Member(unsigned i) { return mh::PartyOf(static_cast<unsigned char
 // Foretell_Read's records: every divisor word not 0, the ratio's word most
 // often at most the divisor (the bands 0..70 %), the means close (the level
 // bands), the six flag bytes around their bounds; at least one member counted.
+// The fuzz's own reckoning of Foretell_Read's score before the bias byte (a
+// replica of the original's arithmetic, section 5 of the doc), from the
+// seeded records and g_out; pn / en the members and enemies counted.
+int Ratio(const unsigned char* r, unsigned a, unsigned b) { return static_cast<int>(Word(r + a)) * 100 / Word(r + b); }
+int Step(int q, int previous, bool party) {
+    static const int kP[8] = {-0x15, -0x12, -0xF, -0xC, -9, -6, -3, 0};
+    static const int kE[8] = {0x15, 0x12, 0xF, 0xC, 9, 8, 3, 0};
+    if (q == 0) return party ? -0x18 : 0x18;
+    int s = previous;
+    for (int k = 0; k < 8; ++k)
+        if (q > 10 * k) s = party ? kP[k] : kE[k];
+    return s;
+}
+std::uint32_t ScoreBeforeBias(int& pn, int& en) {
+    std::uint32_t score = 0;
+    int step = 0;
+    std::uint16_t psum = 0, esum = 0;
+    pn = en = 0;
+    for (unsigned i = 0; i < 3; ++i) {
+        const unsigned char* const r = Member(i);
+        if (r[0] == 0) continue;
+        if (r[0x91] & 0x40) {
+            score -= 0x18;
+            continue;
+        }
+        psum = static_cast<std::uint16_t>(psum + r[0x8A]);
+        ++pn;
+        step = Step(Ratio(r, 0x98, 0xA0), step, true);
+        score += static_cast<std::uint32_t>(step);
+    }
+    for (unsigned i = 0; i < 8; ++i) {
+        if (3 + i != g_kept && ((g_out >> i) & 1)) continue;
+        const unsigned char* const e = Enemy(i);
+        esum = static_cast<std::uint16_t>(esum + Word(e + 0x98));
+        ++en;
+        step = Step(Ratio(e, 0xA4, 0xB0), step, false);
+        score += static_cast<std::uint32_t>(step);
+    }
+    score += (static_cast<std::uint32_t>(mh::Mem(0x904AB2)[0]) - static_cast<std::uint32_t>(en)) * 8u;
+    const short diff = static_cast<short>(static_cast<short>(psum) / pn - static_cast<short>(esum) / en);
+    static const short kAt[14] = {20, 15, 10, 7, 5, 3, 1, -1, -3, -5, -7, -10, -15, -20};
+    static const int kV[14] = {0x78, 0x6E, 0x64, 0x5F, 0x5A, 0x55, 0x50, 0x46, 0x3C, 0x2D, 0x1E, 0x14, 0xA, 5};
+    int level = 0x82;
+    for (int k = 0; k < 14; ++k)
+        if (diff <= kAt[k]) level = kV[k];
+    return score + static_cast<std::uint32_t>(level);
+}
+
 void SeedForetell() {
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const r = Member(i);
         const unsigned den = 1 + mh::Next() % 0x3FF;
         SetWord(r + 0xA0, den);
-        if (mh::Often()) SetWord(r + 0x98, mh::Next() % (den + 1));
-        if (mh::Often()) r[0x8A] = Byte(mh::Next() % 100);
+        if (mh::Often()) SetWord(r + 0x98, mh::Half() ? 0 : mh::Next() % (den + 1));
+        if (mh::Often()) r[0x8A] = Byte(20 + mh::Next() % 30);
         if (mh::Half()) r[0] = Byte(mh::Half() ? 0 : 1 + mh::Next() % 0xFF);
         if (mh::Half()) r[0x91] = Byte(r[0x91] & ~0x40u);
     }
@@ -422,12 +474,33 @@ void SeedForetell() {
         unsigned char* const e = Enemy(i);
         const unsigned den = 1 + mh::Next() % 0x3FF;
         SetWord(e + 0xB0, den);
-        if (mh::Often()) SetWord(e + 0xA4, mh::Next() % (den + 1));
-        if (mh::Often()) SetWord(e + 0x98, mh::Next() % 100);
+        if (mh::Often()) SetWord(e + 0xA4, mh::Half() ? 0 : mh::Next() % (den + 1));
+        if (mh::Often()) SetWord(e + 0x98, 20 + mh::Next() % 30);
         for (unsigned k = 0xBF; k <= 0xC4; ++k)
             if (mh::Half()) e[k] = Byte(mh::Next() % 5);
     }
     g_kept = 3 + mh::Next() % 8;
+    // which enemies are out: at random, or all but the kept one
+    g_out = mh::Often() ? mh::Next() & 0xFF : 0xFF;
+    // a quarter of the time the kept enemy's word +0x98 near 0x8000, so the
+    // enemies' 16-bit mean is far below 0 and the difference leaves 16 bits
+    if (mh::Next() % 4 == 0) {
+        for (unsigned i = 0; i < 8; ++i) SetWord(Enemy(i) + 0x98, 0);
+        SetWord(Enemy(g_kept - 3) + 0x98, 0x8000 + mh::Next() % 16);
+    }
+    // two times in three the bias byte puts the score on a message bound
+    // (0, 0x1E, 0x32, 0x46, 0x5A, 100) or one either side of it
+    if (mh::Often()) {
+        if (mh::Often()) mh::Mem(0x904AB2)[0] = Byte(mh::Next() % 16);
+        int pn = 0, en = 0;
+        const std::uint32_t before = ScoreBeforeBias(pn, en);
+        if (pn > 0 && en > 0) {
+            static const int kBounds[6] = {0, 0x1E, 0x32, 0x46, 0x5A, 100};
+            const int want = kBounds[mh::Next() % 6] + static_cast<int>(mh::Next() % 3) - 1;
+            const int bias = static_cast<short>(static_cast<std::uint32_t>(want) - before);
+            if (bias >= -128 && bias <= 127) mh::Mem(0x65ACB7 + static_cast<std::uint32_t>(pn - en))[0] = Byte(static_cast<unsigned>(bias));
+        }
+    }
 }
 
 void Seed(unsigned k) {
