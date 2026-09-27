@@ -31593,3 +31593,638 @@ ctype = "unsigned long"
 count = 12
 status = "evidence"
 evidence = "read 2026-09-26, group S03: BlitzBolt_Run's jmp [0x65A630 + 4 x byte +2]: BlitzBolt_Start, (BlitzBolt_Seek, _Bounce, _Next) x 3, 0x4AF490 (MAGIC058, group S11), BlitzBolt_Drift (entry 11, reached by BlitzBolt_Seek's +2 = 11). MAGIC013's table starts at 0x65A660 (0x49EBE0), which a +2 of 12 would read."
+
+[[func]]
+pc = 0x4A6440
+name = "Berserk_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6440..0x4A6485 (0x46 bytes), group S08: the kind-2 task: a six-entry stack table (Berserk_Start, _Tint, _Brighten, _WaitChildren, _Fade, BattleFx_Finish) called by byte +1, unchecked. The first function of the extent. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6490
+name = "Berserk_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6490..0x4A657F (0xF0 bytes), group S08: the owner position into +0x34/+0x38/+0x3C; +0xB 0, +9 0xA, +0xA 0, +1 on; eight BattleTask_Create(1, 0x3D) children with +0x80 Sprite_Current, +1 0, +9 1, 9, .., 0x39, then one with +1 1, each counted in +0xB, the slot unchecked; Sound_PlayById(0x100). Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6580
+name = "Berserk_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6580..0x4A65CD (0x4E bytes), group S08: +9 down; at 0 Sprite_ReleaseTint and Sprite_SetTint(0,0,0,1) on the source sprite 0x904B4C (read again after the first), the tint slot into +9, +1 on. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A65D0
+name = "Berserk_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A65D0..0x4A6634 (0x65 bytes), group S08: the MoveScript_TintRecords record +9 (12 bytes a record): +2 up by 2, +3 and +4 up by 1; +0xA up; at 8 +1 on. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6640
+name = "Berserk_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6640..0x4A664E (0xF bytes), group S08: +1 on when +0xB is 1. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6650
+name = "Berserk_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6650..0x4A66D5 (0x86 bytes), group S08: the tint record +9: +2 down by 2, +3 and +4 by 1; +0xA down; at 0 Sprite_ReleaseTint on the source, BattleActor_Flash of the target byte 0x904B44, +1 on. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A66E0
+name = "BerserkChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A66E0..0x4A66F1 (0x12 bytes), group S08: jmp [0x65A82C + 4 x byte +1]: BerserkChild_Kinds, two entries (BerserkRing_Run, BerserkGlow_Run), unchecked. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6700
+name = "BerserkRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6700..0x4A674D (0x4E bytes), group S08: a three-entry stack table by +2 (BerserkRing_Start, _Grow, _Fade); then while +0 bit 0 and +2: MagicFx_PushActorMatrix, BerserkRing_Draw, Gte_PopMatrix. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6750
+name = "BerserkRing_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6750..0x4A67B0 (0x61 bytes), group S08: +9 down; at 0 the owner position, +9 0, +0xA 0, +2 on. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A67C0
+name = "BerserkRing_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A67C0..0x4A67DC (0x1D bytes), group S08: +0xA up by 4; at 0x20 +2 on. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A67E0
+name = "BerserkRing_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A67E0..0x4A6814 (0x35 bytes), group S08: +9 up by 4, +0xA down; at 0 the owner +0xB down and a tail jmp to BattleTask_FreeCurrent. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6820
+name = "BerserkGlow_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6820..0x4A6875 (0x56 bytes), group S08: a four-entry stack table by +2 (BerserkGlow_Start, MagicFx_CountUp9By2, BarrierLine_Wait, MAGIC060 0x4B1740); then while +0 bit 0 and +2: MagicFx_PushActorMatrix, BerserkGlow_Draw, Gte_PopMatrix. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6880
+name = "BerserkGlow_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6880..0x4A68C4 (0x45 bytes), group S08: the owner position, +9 0, +2 on. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A68D0
+name = "BerserkRing_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A68D0..0x4A6C03 (0x334 bytes), group S08: twenty-one calls: 64 semi-transparent G4 quads (tpage 0x35, MapView_LinkPrimAt layer 0 at the task x / z each plus the lower x sl 9): word 0x903850 0x80 the lower radius, 52 the upper radius +9 - (sin sl 4 sar 12) + 0xA0, 58 the height +0xA x 8 + 0x20 - (sin sl 3 sar 12), the angle ((Rand & 3) + +9 + i) & 0xF sl 8 (the first again at i 0x40); the vertex scratch rolled one step a quad; colours 1 above, (0xC0, 0x30, 0x30) below. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6C10
+name = "BerserkGlow_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6C10..0x4A6DE9 (0x1DA bytes), group S08: thirteen calls: sixteen semi-transparent G3 triangles (Gfx_CommitPrim layer 5) round the origin, radius word 0x903850 0x88, angles 0x100 apart; the centre 1, the rim word 0x903856 = +9 sl 3 in red and that / 4 (toward zero) in green and blue; tpage 0x35 then 0x15. Magic_Rows row 80, file 0x240 = MAGIC041.EMI, ability id 0x29 (Berserk read one id down, a hypothesis); extent 0x4A6440..0x4A6DE9. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6DF0
+name = "Counter_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6DF0..0x4A6E15 (0x26 bytes), group S08: the kind-2 task: a two-entry stack table (Counter_Start, BattleFx_Finish) by +1, unchecked. The first function of the extent. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6E20
+name = "Counter_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6E20..0x4A6EBA (0x9B bytes), group S08: the owner +8 and position; +0xB 0, +1 on; one BattleTask_Create(1, 0x3E) child with +0x80 Sprite_Current, +1 0, counted in +0xB; Sound_PlayById(0x100). Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6EC0
+name = "CounterChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6EC0..0x4A6ED1 (0x12 bytes), group S08: jmp [0x65A834 + 4 x byte +1]: CounterChild_Kinds, one entry (CounterMark_Run), unchecked. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6EE0
+name = "CounterMark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6EE0..0x4A6F8E (0xAF bytes), group S08: a five-entry stack table by +2 (CounterMark_Start, _Open, _Grow, _Swell, _Fade); then while +0 bit 0 and +2: CounterMark_DrawDisc, CounterMark_DrawSpokes(0, +9), CounterMark_DrawArc(+0xB + 8 / 0x10 / 0x18, +0xA), Sprite_Current read after each call. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A6F90
+name = "CounterMark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6F90..0x4A6FFE (0x6F bytes), group S08: the owner +8 and position; CounterMark_Place; +0xB, +9, +0xA 0; +2 on. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7000
+name = "CounterMark_Open"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7000..0x4A7028 (0x29 bytes), group S08: +0xB up, +0xA up; at 4 +2 on. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7030
+name = "CounterMark_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7030..0x4A7059 (0x2A bytes), group S08: +0xB up, +9 up by 8; at 0x50 +2 on. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7060
+name = "CounterMark_Swell"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7060..0x4A7097 (0x38 bytes), group S08: +0xB up, +9 and +0xA up by 4; at +0xA 0x20 +2 on. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A70A0
+name = "CounterMark_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A70A0..0x4A70E7 (0x48 bytes), group S08: +0xB up; +9 down by 0xC unless 0; +0xA down by 4; at 0 the owner +0xB down and a tail jmp to BattleTask_FreeCurrent. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A70F0
+name = "CounterMark_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A70F0..0x4A721D (0x12E bytes), group S08: BattleActor_UpdateScreenXY; for a target byte below 3, a word pair from a table at ((+8 shr 1) + row x 2) x 4: CounterMark_FormOffsets 0x65A890 by CounterMark_FormIndex[byte 0x904B89] when the member +0x134 has bit 1, else CounterMark_MemberOffsets 0x65A838 by the member +0x89; word +0x2E plus the x for +8 of 0 or 3, minus it otherwise; +0x30 plus the y. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7220
+name = "CounterMark_DrawSpokes"
+ret = "void"
+params = "unsigned first, unsigned radius"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7220..0x4A7525 (0x306 bytes), group S08: nineteen calls: from the screen point +0x2E/+0x30 (kept in words 0x903850/52), for the byte step first, + 0x10 while below (first & 0xFF) + 0x20: three semi-transparent G2 lines (Gfx_CommitPrim layer 3) at angle (step & 0x1F) sl 7, one of radius & 0xFFFF (0xC0 to 1), two of (radius / 3) x 2 one pixel above and below (0x80 to 1). The byte step never reaches its end for first 0xE0 or more (the one caller passes 0). Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7530
+name = "CounterMark_DrawArc"
+ret = "void"
+params = "unsigned first, unsigned radius"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7530..0x4A7681 (0x152 bytes), group S08: nine calls: from the screen point, four semi-transparent G2 lines (layer 3; 0x80, 0x80, 0x20 to 1) of radius & 0xFFFF at the word steps first & 0xFF + 0, 0x20, 0x40, 0x60, angle (step & 0x7F) sl 5. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7690
+name = "CounterMark_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7690..0x4A7822 (0x193 bytes), group S08: twelve calls: sixteen semi-transparent G3 triangles (layer 3) round the screen point, radius word 0x903854 = (Rand & 3) + +0xA shr 1, angles 0x200 apart; centre 0x60, rim 1. Magic_Rows row 81, file 0x241 = MAGIC042.EMI, ability ids 0x1A and 0x2A (Counter and Mind's Eye read one id down, hypotheses); extent 0x4A6DF0..0x4A7822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7830
+name = "Ward_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7830..0x4A78BC (0x8D bytes), group S08: the kind-2 task: a five-entry stack table (Ward_Start, _Tint, _Brighten, _Fade, BattleFx_Finish) by +1, unchecked; then every WardMote_Pool record with +0 bit 0 run by a direct call to WardMote_Task as Sprite_Current with 0x93B940 its +0x80, both put back (as read after the phase call). The first function of the extent. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A78C0
+name = "Ward_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A78C0..0x4A79C8 (0x109 bytes), group S08: WardMote_Pool +0..+2 cleared; the source sprite +8 and position; +0xB 0, +9 9, +1 on; eight WardMote_Alloc calls, each not 0xFF given +0x80 Sprite_Current, +0xB its index 0..7, +9 1, 9, .., 0x39 and counted in +0xB; Gfx_ClutStrip 0x1A00..0x1A1F from Gfx_ClutStripSource; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A79D0
+name = "Ward_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A79D0..0x4A7A23 (0x54 bytes), group S08: +9 down; at 0 Sprite_ReleaseTint and Sprite_SetTint(0,0,0,1) on the source sprite (read at entry), the slot into +0xA, +9 4, +1 on. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7A30
+name = "Ward_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7A30..0x4A7AA1 (0x72 bytes), group S08: the tint record +0xA +2..+4 each up by 2, +9 down; at 0 +9 4, +1 on. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7AB0
+name = "Ward_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7AB0..0x4A7BD6 (0x127 bytes), group S08: the tint record +2..+4 down by 2, +9 down; at 0: +0xB 2 or more: +9 4, +1 back; else Tint_Release(+0xA), BattleActor_Flash(target), and when the word 0x904B80 is 0x2B MagicFx_ApplyBuff(1, target) and BattleTask_Create(1, 0x48) with +0x80 Sprite_Current, +4 0 if al else 8, +9 1, +0xA 0, counted in +0xB; +1 on. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7BE0
+name = "WardMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7BE0..0x4A7BF1 (0x12 bytes), group S08: jmp [0x65A904 + 4 x byte +1]: WardMote_TaskTable, one entry (WardMote_Run), unchecked. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7C00
+name = "WardMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7C00..0x4A7C32 (0x33 bytes), group S08: call [0x65A908 + 4 x byte +2]: WardMote_Steps, four entries, unchecked; then while +0 and +2 are not 0: WardMote_PushMatrix, WardMote_Draw, a tail jmp to Gte_PopMatrix. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7C40
+name = "WardMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7C40..0x4A7D4C (0x10D bytes), group S08: +9 down; at 0: the owner +8; +0xC 0x20000, +0x10 0 turned by 0x446770; the position the owner plus that, the height the owner + 0x1000000; +0xC -0x1000, +0x10 0 turned; +0x14 Math_Ratan2(owner x - Field_Kind2X, owner z - Field_Kind2Z); +9, +0xA 0; +2 on. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7D50
+name = "WardMote_Open"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7D50..0x4A7D99 (0x4A bytes), group S08: the position on by the step +0xC/+0x10, +9 up, +0xA up by 2; at 0x10 +2 on. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7DA0
+name = "WardMote_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7DA0..0x4A7DDB (0x3C bytes), group S08: the position on by the step, +9 up; at 0x18 +2 on. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7DE0
+name = "WardMote_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7DE0..0x4A7E5E (0x7F bytes), group S08: the position on by the step, +9 up, +0xA down by 2; at 0 the owner +0xB down and +0..+4 cleared (the pool record free). Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7E60
+name = "WardMote_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7E60..0x4A7F0D (0xAE bytes), group S08: six calls: Gte_PushMatrix; Camera_Matrix x the rotation (0x400, WardMote_Tilts[+8], 0), translation Gte_RotTrans of (x sar 9 - 0x4000, z sar 9 - 0x4000, -(s16 +0x3E / 2)); one MATRIX on the stack; Gte_SetRotMatrix, Gte_SetTransMatrix. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A7F10
+name = "WardMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A7F10..0x4A81E0 (0x2D1 bytes), group S08: eighteen calls: tpage 0x35 linked at the mote (layer 0); eight semi-transparent G4 quads between a ring of radius +9 x 12 (word 0x903852) and one of +9 sl 3 (0x903850), angles 0x200 apart; the inner colour words 56/58/5A ((Rand & 7) + 4) x +0xA each when the word 0x904B80 is 0x2B, else +0xA x 4, x 8, x 4; the outer 1. Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A81F0
+name = "WardMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A81F0..0x4A8246 (0x57 bytes), group S08: the first of the 64 WardMote_Pool records with +0 bit 0 clear gets bit 0 and its index in al; al 0xFF when none (the rest of eax is the caller's). Magic_Rows row 110, file 0x242 = MAGIC043.EMI, ability ids 0x2B and 0x99 (WardOfLight and Resist read one id down, hypotheses); extent 0x4A7830..0x4A8246. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8250
+name = "EvilEye_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8250..0x4A8275 (0x26 bytes), group S08: the kind-2 task: a two-entry stack table (EvilEye_Start, BattleFx_Finish) by +1, unchecked. The first function of the extent. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8280
+name = "EvilEye_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8280..0x4A8358 (0xD9 bytes), group S08: the owner +8 and position; +0xB 0, +1 on; two BattleTask_Create(1, 6) children with +0x80 Sprite_Current, +1 0, +4 0 and 1, counted in +0xB, the slot unchecked; Gfx_ClutStrip 0x1A21..0x1A2F from the source with 0x8000, 0x1A20 0; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8360
+name = "EvilEyeChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8360..0x4A8371 (0x12 bytes), group S08: jmp [0x65A924 + 4 x byte +1]: EvilEyeChild_Kinds, two entries (EvilEyeBeam_Run, EvilEyeSpark_Run), unchecked. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8380
+name = "EvilEyeBeam_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8380..0x4A83C0 (0x41 bytes), group S08: call [0x65A92C + 4 x byte +2]: EvilEyeBeam_Steps, four entries, unchecked; then while +0 and +2 are not 0 a tail jmp to EvilEyeBeam_DrawThin for +4 not 0, EvilEyeBeam_DrawWide for +4 0. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A83D0
+name = "EvilEyeBeam_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A83D0..0x4A85B9 (0x1EA bytes), group S08: three calls: the owner +8; +0xC/+0x10/+0x14 by the actor byte 0x904B34: below 3 (0x4000, 0, 0x1000000); an enemy by its record +0x8C: 0x9A (0x10000, 0, 0x2000000), 0xB5 (-0xE000, 0, 0x3800000), else (0x2000, 0, 0x1C00000); turned by 0x446770 and added to the owner position; +0xC Math_Ratan2(source x - x, source z - z), +0x10 0; BattleActor_UpdateScreenXY; the screen point into trail points 0 and 1 of beam +4; +0xB 0, +9 0x10, +0xA 1, +2 on. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A85C0
+name = "EvilEyeBeam_Seek"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A85C0..0x4A8722 (0x163 bytes), group S08: six calls: +0xA up while below 0x10; MagicFx_StepTowardPoint(source x sar 9 - 0x4000, z sar 9 - 0x4000, (height + 0x800000) sar 17, -, 0xC0); +0x10 the old +0xC, +0xC Math_Ratan2 to the source; snapped onto the source and +2 on when MagicFx_NearSprite(source, 0x8000) answers not 0 (eax tested whole) or the turn abs((+0x10 & 0xFFF) - (+0xC & 0xFFF)), kept in +0x10, lies strictly between 0x600 and 0xA00; BattleActor_UpdateScreenXY, EvilEyeBeam_Record; Battle_SetTargetFlags(target, 0x10) unless +2 is 1 or +4 is not 0. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8730
+name = "EvilEyeBeam_Trail"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8730..0x4A87E9 (0xBA bytes), group S08: while +0xA is below 0x10: +0xB and +0xA up, BattleActor_UpdateScreenXY, EvilEyeBeam_Record; when Frame_Counter & 3 is 0, BattleTask_Create(1, 6) and unless 0xFF: +0x80 the owner 0x93B940, +1 1, the beam position, the owner +0xB up; at +0xA 0x10 +9 0x10 and +2 on. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A87F0
+name = "EvilEyeBeam_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A87F0..0x4A881B (0x2C bytes), group S08: EvilEyeBeam_Erase; +9 down; at 0 the owner +0xB down and a tail jmp to BattleTask_FreeCurrent. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8820
+name = "EvilEyeBeam_DrawThin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8820..0x4A8C6C (0x44D bytes), group S08: seventeen calls: from the first trail point at or after +0xB whose x is not 0xFFFF (an unbounded scan), segments while the index is below +0xA: semi-transparent G4 quads (layer 3, tpage 0x35 then 0x15) whose corners are the two points pushed out 2 (word 0x903850) along the Math_Ratan2 heading + and - 0x400 (& 0xFFF), the near end the previous heading; colours 1, 1 and 0xCD - 12 j near, 0xC1 - 12 j far, word 0x903854 left 0x61 - 6 j. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A8C70
+name = "EvilEyeBeam_DrawWide"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A8C70..0x4A9348 (0x6D9 bytes), group S08: twenty-two calls: the same walk as EvilEyeBeam_DrawThin twice with width 0xC: first the quads between the trail and its edge at heading + 0x400 (colours 0x67 - 6 j and 0x61 - 6 j), then the edge at heading - 0x400 (0x89 - 8 j, 0x81 - 8 j). Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A9350
+name = "EvilEyeBeam_Record"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9350..0x4A93DD (0x8E bytes), group S08: the trail points of beam +4 (EvilEyeBeam_Trails, 0x80 bytes a beam, unchecked) from +0xA - 1 down to +0xB moved one on; the screen point +0x2E/+0x30 into point +0xB. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A93E0
+name = "EvilEyeBeam_Erase"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A93E0..0x4A946A (0x8B bytes), group S08: EvilEyeBeam_Record with 0xFFFF, 0xFFFF written for the point. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A9470
+name = "EvilEyeSpark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9470..0x4A9498 (0x29 bytes), group S08: call [0x65A93C + 4 x byte +2]: EvilEyeSpark_Steps, three entries, unchecked; then while +0 and +2 are not 0 a tail jmp to EvilEyeSpark_Draw. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A94A0
+name = "EvilEyeSpark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A94A0..0x4A9500 (0x61 bytes), group S08: BattleActor_UpdateScreenXY; word +0x30 up by 8; +0x5D, +0x5E, +0x5F each (Rand & 3) + 1; +9 0, +0xA 0x10, +2 on. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A9510
+name = "EvilEyeSpark_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9510..0x4A9545 (0x36 bytes), group S08: Rand, its al tested and the flags dropped; words +0x2E and +0x30 down by 1; +9 up by 4; at 0x10 +2 on. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A9550
+name = "EvilEyeSpark_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9550..0x4A9598 (0x49 bytes), group S08: word +0x30 down by 2, +9 up; Rand dropped as in _Grow; word +0x2E down by 1; +0xA down; at 0 the owner +0xB down and a tail jmp to BattleTask_FreeCurrent. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[func]]
+pc = 0x4A95A0
+name = "EvilEyeSpark_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s08.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A95A0..0x4A9822 (0x283 bytes), group S08: fifteen calls: tpage 0x55 linked at the task (layer 2); one semi-transparent FT4 quad round the screen point, radius +9 x 2 at the angles 0x200, 0x600, 0xE00, 0xA00; Gpu_GetTPage(0, 2, 0x340, 0x100), Gpu_GetClut(0x20, 0x1FA), u/v 0x80..0xA0 x 0x20..0x40; colour words 5A/5C/5E the signed bytes +0x5D..+0x5F x +0xA. Magic_Rows row 96, file 0x243 = MAGIC044.EMI, ability id 0x2C (Evil Eye read one id down, a hypothesis); extent 0x4A8250..0x4A9822. Fuzz only: no recorded route casts it (docs/magic_s08.md)."
+
+[[data]]
+pc = 0x65A82C
+name = "BerserkChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S08: BerserkChild_Task's jmp [0x65A82C + 4 x byte +1]: BerserkRing_Run, BerserkGlow_Run; MAGIC042's table follows at 0x65A834."
+
+[[data]]
+pc = 0x65A834
+name = "CounterChild_Kinds"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S08: CounterChild_Task's jmp: CounterMark_Run; CounterMark_MemberOffsets follows."
+
+[[data]]
+pc = 0x65A838
+name = "CounterMark_MemberOffsets"
+ctype = "short"
+count = 44
+status = "evidence"
+evidence = "read 2026-09-26, group S08: CounterMark_Place: word pairs (dx, dy) at ((+8 shr 1) + member +0x89 x 2) x 4; 22 pairs to CounterMark_FormOffsets."
+
+[[data]]
+pc = 0x65A890
+name = "CounterMark_FormOffsets"
+ctype = "short"
+count = 44
+status = "evidence"
+evidence = "read 2026-09-26, group S08: CounterMark_Place: word pairs as CounterMark_MemberOffsets, by CounterMark_FormIndex's byte when the member +0x134 has bit 1; 22 pairs to CounterMark_FormIndex."
+
+[[data]]
+pc = 0x65A8E8
+name = "CounterMark_FormIndex"
+ctype = "unsigned char"
+count = 28
+status = "evidence"
+evidence = "read 2026-09-26, group S08: CounterMark_Place: byte [0x65A8E8 + byte 0x904B89], unchecked; 28 bytes to WardMote_TaskTable."
+
+[[data]]
+pc = 0x65A904
+name = "WardMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S08: WardMote_Task's jmp: WardMote_Run; WardMote_Steps follows."
+
+[[data]]
+pc = 0x65A908
+name = "WardMote_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S08: WardMote_Run's call [0x65A908 + 4 x byte +2]: WardMote_Launch, _Open, _Fly, _End."
+
+[[data]]
+pc = 0x65A918
+name = "WardMote_Tilts"
+ctype = "short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S08: WardMote_PushMatrix: word [0x65A918 + 2 x byte +8], unchecked, the rotation's y (0x400, 0x800, 0xC00, 0)."
+
+[[data]]
+pc = 0x65A924
+name = "EvilEyeChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S08: EvilEyeChild_Task's jmp: EvilEyeBeam_Run, EvilEyeSpark_Run."
+
+[[data]]
+pc = 0x65A92C
+name = "EvilEyeBeam_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S08: EvilEyeBeam_Run's call: EvilEyeBeam_Start, _Seek, _Trail, _End."
+
+[[data]]
+pc = 0x65A93C
+name = "EvilEyeSpark_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S08: EvilEyeSpark_Run's call: EvilEyeSpark_Start, _Grow, _Fade; MAGIC045's table follows at 0x65A948."
+
+[[data]]
+pc = 0x67BC40
+name = "WardMote_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-26, group S08: 64 task-like records of 0x84 bytes: Ward_Start clears +0..+2, WardMote_Alloc takes one by bit 0, Ward_Task runs each live one as Sprite_Current (+0x80 its owner), WardMote_End frees it."
+
+[[data]]
+pc = 0x67DD40
+name = "EvilEyeBeam_Trails"
+ctype = "unsigned char"
+count = 256
+status = "evidence"
+evidence = "read 2026-09-26, group S08: 32 points (x, y words) a beam by +4 (0, 1): EvilEyeBeam_Start, _Record and _Erase write them, _DrawThin / _DrawWide read them; every index unchecked."
