@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-26). All 59 functions are ours
 (`src/game/magic_s07.cpp`, shadow name `magic_s07`), fuzzed headless through
 the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
-it: 0 mismatches over 118,000 rounds. @@CONTROLS_SUMMARY@@ Nothing recorded
+it: 0 mismatches over 118,000 rounds. 274 negative controls: 271 refused by a count (exit 3), one by a fault (B7) and one by a hang (E48), each with a near variant refused by a count, and one equivalent mutant (B65, section 6). Nothing recorded
 casts these spells, so this is fuzz only until the owner sees them cast.
 
 Round nine, third spell wave, group S07
@@ -200,6 +200,10 @@ rounds each, with no harness edits; what the harness lacks is built in
     the frame-offset table too; `WarShoutMote_Run`'s five steps are listed
     as `kPhase` recorders logging `0x9039D8`, before their `.data` table
     registers them;
+  - `Math_Sin` / `Math_Cos` rewrite a scratch or vertex word a quarter of
+    the time, and `BattleTask_Create` every actor record's position a third
+    of the time, so the re-reads after those calls are compared (controls
+    F40, W20: section 6);
   - **the `kFlag` blind spot** (queue §9): the script ticks and
     `Battle_ActorIsOut` answer from the recorders' stream through an
     `effect`, not from the hash that chose their disturbance, so a "no" can
@@ -233,17 +237,316 @@ rounds each, with no harness edits; what the harness lacks is built in
 
 Result in this worktree (2026-09-26):
 
-    shadow      magic_s07 self-test: 118000 rounds over 59 functions (2000 each), 3628913 calls to the stand-ins,
+    shadow      magic_s07 self-test: 118000 rounds over 59 functions (2000 each), 3627404 calls to the stand-ins,
                 0 MISMATCHES; 25444 bytes of state (23 regions) and the stand-ins' log compared
 
 Every callee listed and every handler was called by the originals
-(coverage line in `build/bof3x.log`). `BOF3X_SHADOW='*'`: exit 0 (3,628,585
+(coverage line in `build/bof3x.log`). `BOF3X_SHADOW='*'`: exit 0 (3,628,875
 stand-in calls for this group in that run: the harness's pointers into the
 DLL move a few branches, 0 mismatches).
 
 ## 6. Controls
 
-@@CONTROLS_TABLE@@
+274 plants, each put in `magic_s07.cpp` one at a time by a script (not committed) that planted, rebuilt, checked the build had recompiled the file, ran `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s07`, restored; after the last it restored, rebuilt and ran the clean self-test (0 mismatches). B, W, F and E are Bonebreak, War Shout, Focus and Enlighten. 274 negative controls: 271 refused by a count (exit 3), one by a fault (B7) and one by a hang (E48), each with a near variant refused by a count, and one equivalent mutant (B65, section 6).
+
+The first run (272 plants) left four standing that were not equivalent, and the fuzz was fixed for each, then every control run again: **F40** (a scratch angle not read again after a call) and **W20** (an actor's position read before the create) showed the group disturbance reached one word too rarely - `Math_Sin` / `Math_Cos` and `BattleTask_Create` now have effects that rewrite the scratch and the actor positions; **F14** (the ability id tested as a byte) showed the seed never put a high byte above 0xA3; E48's first near variant (five lines) could hang too and was replaced by two lines (E63).
+
+The thinnest (fewer than 60 rounds):
+
+- **B2** (Bonebreak_Task: self read before the phase): 54
+- **B13** (Start: actor read before the create): 57
+- **B17** (Start: +0xB counted before the copy): 43
+- **B27** (WaitScript: +2 before the flag): 48
+- **B30** (Shade: +9 read before the shade): 25
+- **B41** (Launch: z pointer after the cos): 24
+- **B44** (Launch: the cos angle not read again): 6
+- **B62** (Alloc: 63 records): 4
+- **W31** (Appear: the cos angle not read again): 14
+- **W41** (Orbit: the height scale not read again): 32
+- **W41** (Orbit: the height scale not read again): 45
+- **W41** (Orbit: the height scale not read again): 42
+- **W49** (Rise: tick after the colour): 47
+- **F40** (Mote_Start: sin angle not read again): 3
+- **F83** (Disc: previous point read before the prim): 42
+- **E17** (Rays_Run: task not read again): 6
+- **E30** (Anchor: target below 4): 43
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| B1 | Bonebreak_Task: entries 0/1 swapped | Bonebreak_Task 1367 |
+| B2 | Bonebreak_Task: self read before the phase | Bonebreak_Task 54 |
+| B3 | Bonebreak_Task: 63 records | Bonebreak_Task 1002 |
+| B4 | Bonebreak_Task: live bit 2 | Bonebreak_Task 2000 |
+| B5 | Bonebreak_Task: owner not set | Bonebreak_Task 1986 |
+| B6 | Bonebreak_Task: owner not put back | Bonebreak_Task 1610 |
+| B7 | Bonebreak_Task: record owner +0x7C | a fault (access violation) in the first round: the owner pointer read 4 bytes low is garbage the walk makes the owner; near variant B66 refused by a count |
+| B8 | Start: pool +2 kept | Bonebreak_Start 2000 |
+| B9 | Start: animation 0xD | Bonebreak_Start 2000 |
+| B10 | Start: parameter 8 | Bonebreak_Start 2000 |
+| B11 | Start: party at 0..1 | Bonebreak_Start 391 |
+| B12 | Start: 0x7C bytes copied | Bonebreak_Start 2000 |
+| B13 | Start: actor read before the create | Bonebreak_Start 57 |
+| B14 | Start: child +6 2 | Bonebreak_Start 2000 |
+| B15 | Start: child +5 8 | Bonebreak_Start 2000 |
+| B16 | Start: owner bit 5 | Bonebreak_Start 1482 |
+| B17 | Start: +0xB counted before the copy | Bonebreak_Start 43 |
+| B18 | Child_Run: steps 1/2 swapped | BonebreakChild_Run 671 |
+| B19 | Child_Run: update with +0 zero | BonebreakChild_Run 2000 |
+| B20 | Burst: +9 checked before the tick | BonebreakChild_Burst 1333 |
+| B21 | Burst: sound 0x101 | BonebreakChild_Burst 667 |
+| B22 | Burst: eleven motes | BonebreakChild_Burst 667 |
+| B23 | Burst: delay x 4 | BonebreakChild_Burst 667 |
+| B24 | Burst: owner read before the alloc | BonebreakChild_Burst 205 |
+| B25 | Burst: +9 1 not 0 | BonebreakChild_Burst 629 |
+| B26 | WaitScript: on at no end | BonebreakChild_WaitScript 2000 |
+| B27 | WaitScript: +2 before the flag | BonebreakChild_WaitScript 48 |
+| B28 | Shade: at 0xD | BonebreakChild_Shade 664 |
+| B29 | Shade: +9 by 3 | BonebreakChild_Shade 675 |
+| B30 | Shade: +9 read before the shade | BonebreakChild_Shade 25 |
+| B31 | WaitMotes: at 1 | BonebreakChild_WaitMotes 1344 |
+| B32 | WaitMotes: owner +0xA | BonebreakChild_WaitMotes 699 |
+| B33 | Mote_Run: steps 0/2 swapped | BonebreakMote_Run 1274 |
+| B34 | Mote_Run: drawn at +2 0 | BonebreakMote_Run 326 |
+| B35 | Mote_Run: ring before fan | BonebreakMote_Run 711 |
+| B36 | Launch: Rand & 3 | BonebreakMote_Launch 341 |
+| B37 | Launch: height sl 4 | BonebreakMote_Launch 555 |
+| B38 | Launch: speed 0xD | BonebreakMote_Launch 673 |
+| B39 | Launch: angle sl 8 | BonebreakMote_Launch 569 |
+| B40 | Launch: sar 4 | BonebreakMote_Launch 683 |
+| B41 | Launch: z pointer after the cos | BonebreakMote_Launch 24 |
+| B42 | Launch: +0xA 0x11 | BonebreakMote_Launch 683 |
+| B43 | Launch: x from the source's +0x38 | BonebreakMote_Launch 683 |
+| B44 | Launch: the cos angle not read again | BonebreakMote_Launch 6 |
+| B45 | Fade: by 1 | BonebreakMote_Fade 2000 |
+| B46 | Fade: owner not counted | BonebreakMote_Fade 705 |
+| B47 | DrawFan: tpage 0x36 | BonebreakMote_DrawFan 2000 |
+| B48 | DrawFan: x 10 | BonebreakMote_DrawFan 1998 |
+| B49 | DrawFan: radius +9 x 3 | BonebreakMote_DrawFan 1972 |
+| B50 | DrawFan: 15 triangles | BonebreakMote_DrawFan 2000 |
+| B51 | DrawFan: step 0x80 | BonebreakMote_DrawFan 2000 |
+| B52 | DrawFan: rim +0x15 c1 | BonebreakMote_DrawFan 1998 |
+| B53 | DrawFan: centre y from x | BonebreakMote_DrawFan 2000 |
+| B54 | DrawFan: linked size 0x30 | BonebreakMote_DrawFan 2000 |
+| B55 | DrawFan: layer 1 | BonebreakMote_DrawFan 2000 |
+| B56 | DrawRing: x 7 | BonebreakMote_DrawRing 1994 |
+| B57 | DrawRing: outer +9 x 4 | BonebreakMote_DrawRing 1925 |
+| B58 | DrawRing: outer at the inner radius | BonebreakMote_DrawRing 1999 |
+| B59 | DrawRing: vertices 1 / 2 swapped | BonebreakMote_DrawRing 2000 |
+| B60 | DrawRing: outer shade 2 | BonebreakMote_DrawRing 2000 |
+| B61 | DrawRing: size 0x40 | BonebreakMote_DrawRing 2000 |
+| B62 | Alloc: 63 records | BonebreakMote_Alloc 4 |
+| B63 | Alloc: not marked | BonebreakMote_Alloc 1455 |
+| B64 | Alloc: full 0xFE | BonebreakMote_Alloc 545 |
+| B65 | Child_Task: past table allowed | not refused: equivalent - the one-entry table's index is always 0 in the fuzz (any other index aborts ours by design and reads the next table in Capcom's), so dispatching entry 0 regardless cannot differ; the table's own contents are checked by B18 / B33 |
+| B66 | Bonebreak_Task: record owner this task (B7's near variant) | Bonebreak_Task 1988 |
+| W1 | WarShout_Task: entries 0/1 swapped | WarShout_Task 1307 |
+| W2 | Start: + 0x1000000 | WarShout_Start 2000 |
+| W3 | Start: fifteen motes | WarShout_Start 2000 |
+| W4 | Start: delay sl 2 | WarShout_Start 2000 |
+| W5 | Start: +0xB not numbered | WarShout_Start 2000 |
+| W6 | Start: parameter 0x58 | WarShout_Start 2000 |
+| W7 | Start: row 2 without STP | WarShout_Start 2000 |
+| W8 | Start: row 2 word 0 kept with STP | WarShout_Start 1027 |
+| W9 | Start: row 26 half | WarShout_Start 2000; Focus_Start 2000; Enlighten_Start 2000 |
+| W10 | Start: not dirty | WarShout_Start 1993 |
+| W11 | Start: +9 kept | WarShout_Start 1324 |
+| W12 | Rally: at 1 | WarShout_Rally 1298 |
+| W13 | Rally: sound 0x100 | WarShout_Rally 666 |
+| W14 | Rally: side bit 0x80 | WarShout_Rally 321 |
+| W15 | Rally: seven enemies | WarShout_Rally 321 |
+| W16 | Rally: enemy index i + 2 | WarShout_Rally 321 |
+| W17 | Rally: out made | WarShout_Rally 666 |
+| W18 | Rally: +4 3 | WarShout_Rally 548 |
+| W19 | Rally: +1 0 | WarShout_Rally 548 |
+| W20 | Rally: x read before the create | WarShout_Rally 303 |
+| W21 | Rally: z from +0x3C | WarShout_Rally 548 |
+| W22 | Rally: +1 not on | WarShout_Rally 666 |
+| W23 | Child_Task: kinds swapped | WarShoutChild_Task 2000 |
+| W24 | Mote_Run: table not swapped | WarShoutMote_Run 2000 |
+| W25 | Mote_Run: table not put back | WarShoutMote_Run 2000 |
+| W26 | Mote_Run: steps 1/2 swapped | WarShoutMote_Run 812 |
+| W27 | Mote_Run: update at +2 0 | WarShoutMote_Run 215 |
+| W28 | Appear: +0x14 kept | WarShoutMote_Appear 662 |
+| W29 | Appear: x sl 0x11 | WarShoutMote_Appear 662 |
+| W30 | Appear: height sl 0x16 | WarShoutMote_Appear 661 |
+| W31 | Appear: the cos angle not read again | WarShoutMote_Appear 14 |
+| W32 | Appear: +0x27 0x21 | WarShoutMote_Appear 662 |
+| W33 | Appear: +0x29 5 | WarShoutMote_Appear 662 |
+| W34 | Appear: animation by +0xA | WarShoutMote_Appear 656 |
+| W35 | Appear: +0x5E 0x81 | WarShoutMote_Appear 662 |
+| W36 | Appear: +0 bit 4 | WarShoutMote_Appear 502 |
+| W37 | Appear: +0x25 0x1E | WarShoutMote_Appear 662 |
+| W38 | Appear: word +0x2C 1 | WarShoutMote_Appear 661 |
+| W39 | Orbit: angle mask 0x3F | WarShoutMote_Rise 977; WarShoutMote_Circle 772; WarShoutMote_Fade 1013 |
+| W40 | Orbit: x sl 0x12 | WarShoutMote_Rise 2000; WarShoutMote_Circle 2000; WarShoutMote_Fade 2000 |
+| W41 | Orbit: the height scale not read again | WarShoutMote_Rise 32; WarShoutMote_Circle 45; WarShoutMote_Fade 42 |
+| W42 | Orbit: 0x400 | WarShoutMote_Rise 1980; WarShoutMote_Circle 1977; WarShoutMote_Fade 1980 |
+| W43 | Orbit: +0x14 by 2 | WarShoutMote_Rise 2000; WarShoutMote_Circle 2000; WarShoutMote_Fade 2000 |
+| W44 | Orbit: height angle sl 5 | WarShoutMote_Rise 1956; WarShoutMote_Circle 1966; WarShoutMote_Fade 1974 |
+| W45 | Orbit: z from the owner's +0x34 | WarShoutMote_Rise 2000; WarShoutMote_Circle 2000; WarShoutMote_Fade 2000 |
+| W46 | Rise: colour by 5 | WarShoutMote_Rise 2000 |
+| W47 | Rise: at 0xBF | WarShoutMote_Rise 1213 |
+| W48 | Rise: bit 5 kept | WarShoutMote_Rise 302 |
+| W49 | Rise: tick after the colour | WarShoutMote_Rise 47 |
+| W50 | Circle: at 0xFF | WarShoutMote_Circle 783 |
+| W51 | Circle: +0x5F 0xC1 | WarShoutMote_Circle 411 |
+| W52 | Circle: +0x5C 0 | WarShoutMote_Circle 411 |
+| W53 | Fade: colour by 3 | WarShoutMote_Fade 228 |
+| W54 | Fade: +0x5D 0x7F | WarShoutMote_Fade 2000 |
+| W55 | Fade: orbit before the tick | WarShoutMote_Fade 2000 |
+| W56 | Buff_Run: steps swapped | WarShoutBuff_Run 2000 |
+| W57 | Buff_Start: arguments swapped | WarShoutBuff_Start 1993 |
+| W58 | Buff_Start: +0xB 2 | WarShoutBuff_Start 2000 |
+| F1 | Focus_Task: entries 1/2 swapped | Focus_Task 1324 |
+| F2 | Start: position not the owner's z | Focus_Start 1759 |
+| F3 | Start: kind to +5 | Focus_Start 2000 |
+| F4 | Start: aura +4 - 1 | Focus_Start 1683 |
+| F5 | Start: seven motes | Focus_Start 2000 |
+| F6 | Start: delay + 8 | Focus_Start 2000 |
+| F7 | Start: delay from the next | Focus_Start 2000 |
+| F8 | Start: motes +1 0 | Focus_Start 2000 |
+| F9 | Start: parameter 0x3A | Focus_Start 2000 |
+| F10 | Start: aura not counted | Focus_Start 1602 |
+| F11 | Start: CLUT not dirty | Focus_Start 1992 |
+| F12 | Kind: 0xA4 | Focus_Kind 567 |
+| F13 | Kind: 3 / 1 | Focus_Kind 1548 |
+| F14 | Kind: the byte | Focus_Kind 352 |
+| F15 | Child_Task: kinds swapped | FocusChild_Task 2000 |
+| F16 | Aura_Run: steps 3/4 swapped | FocusAura_Run 697 |
+| F17 | Aura_Run: bit 1 | FocusAura_Run 409 |
+| F18 | Aura_Run: disc before ring | FocusAura_Run 406 |
+| F19 | Aura_Run: no pop | FocusAura_Run 406 |
+| F20 | Aura_Start: +0xA 2 | FocusAura_Start 2000 |
+| F21 | Grow: by 1 | FocusAura_Grow 2000 |
+| F22 | Grow: at 0x12 | FocusAura_Grow 623 |
+| F23 | Swell: at 0x16 | FocusAura_Swell 643 |
+| F24 | Swell: tint alpha 0 | FocusAura_Swell 643 |
+| F25 | Swell: tint slot to +0xA | FocusAura_Swell 643 |
+| F26 | Swell: not released | FocusAura_Swell 643 |
+| F27 | Swell: +9 kept | FocusAura_Swell 1993 |
+| F28 | Brighten: two channels | FocusAura_Brighten 2000 |
+| F29 | Brighten: stride 8 | FocusAura_Brighten 1992 |
+| F30 | Brighten: at 0x12 | FocusAura_Brighten 695 |
+| F31 | Dim: by 1 | FocusAura_Dim 2000 |
+| F32 | Dim: at channel +3 | FocusAura_Dim 713 |
+| F33 | End: by 1 | FocusAura_End 2000 |
+| F34 | End: the actor flashed | FocusAura_End 644 |
+| F35 | End: owner not counted | FocusAura_End 660 |
+| F36 | Mote_Run: steps 1/2 swapped | FocusMote_Run 1359 |
+| F37 | Mote_Run: no screen point | FocusMote_Run 346 |
+| F38 | Mote_Start: angle sl 8 | FocusMote_Start 642 |
+| F39 | Mote_Start: x 4 | FocusMote_Start 643 |
+| F40 | Mote_Start: sin angle not read again | FocusMote_Start 3 |
+| F41 | Mote_Start: +0xA 5 | FocusMote_Start 643 |
+| F42 | Mote_Start: height kept | FocusMote_Start 573 |
+| F43 | Mote_Grow: at 0x90 | FocusMote_Grow 673 |
+| F44 | Mote_Rise: by 4 | FocusMote_Rise 1996 |
+| F45 | Mote_Draw: height +0xA | FocusMote_Draw 1988 |
+| F46 | Mote_Draw: shade x 2 | FocusMote_Draw 1337 |
+| F47 | Mote_Draw: layer 1 | FocusMote_Draw 2000 |
+| F48 | Mote_Draw: bottom y - h | FocusMote_Draw 1992 |
+| F49 | Mote_Draw: top shade 2 | FocusMote_Draw 2000 |
+| F50 | Mote_Draw: +0x35 SB(4) | FocusMote_Draw 1926 |
+| F51 | Mote_Draw: y from +0x2E | FocusMote_Draw 1994 |
+| F52 | Ring: height +9 | FocusAura_DrawRing 1966 |
+| F53 | Ring: Rand & 7 | FocusAura_DrawRing 1012 |
+| F54 | Ring: first lift x 5 | FocusAura_DrawRing 1769 |
+| F55 | Ring: outer 0x81 | FocusAura_DrawRing 1920 |
+| F56 | Ring: first radius sl 3 | FocusAura_DrawRing 1953 |
+| F57 | Ring: shades from the disc's | FocusAura_DrawRing 1918 |
+| F58 | Ring: first z not the lift | FocusAura_DrawRing 1833 |
+| F59 | Ring: first outer x at the inner radius | FocusAura_DrawRing 1853 |
+| F60 | Ring: 63 quads | FocusAura_DrawRing 2000 |
+| F61 | Ring: step not in the angle | FocusAura_DrawRing 2000 |
+| F62 | Ring: loop lift sl 2 | FocusAura_DrawRing 2000 |
+| F63 | Ring: loop second sin not read again | FocusAura_DrawRing 1011 |
+| F64 | Ring: loop radius + 0x81 | FocusAura_DrawRing 2000 |
+| F65 | Ring: old point z from the new lift | FocusAura_DrawRing 2000 |
+| F66 | Ring: new inner x at the outer radius | FocusAura_DrawRing 2000 |
+| F67 | Ring: old outer y from x | FocusAura_DrawRing 2000 |
+| F68 | Ring: sort by y too | FocusAura_DrawRing 2000 |
+| F69 | Ring: shift sl 8 | FocusAura_DrawRing 2000 |
+| F70 | Ring: inner shade 0 | FocusAura_DrawRing 2000 |
+| F71 | Ring: vertices 2 / 3 swapped | FocusAura_DrawRing 2000 |
+| F72 | Ring: depths 4_10 | FocusAura_DrawRing 2000 |
+| F73 | Ring: linked on layer 1 | FocusAura_DrawRing 2000 |
+| F74 | Ring: last outer y at the inner radius | FocusAura_DrawRing 2000 |
+| F75 | Shades: below 0xF | FocusAura_DrawRing 290; FocusAura_DrawDisc 295 |
+| F76 | Shades: sl 3 | FocusAura_DrawRing 1049; FocusAura_DrawDisc 1115 |
+| F77 | Shades: third x +0xA | FocusAura_DrawRing 512; FocusAura_DrawDisc 577 |
+| F78 | Disc: radius 0x89 | FocusAura_DrawDisc 1976 |
+| F79 | Disc: layer 4 first | FocusAura_DrawDisc 2000 |
+| F80 | Disc: 15 triangles | FocusAura_DrawDisc 2000 |
+| F81 | Disc: centre x 1 | FocusAura_DrawDisc 2000 |
+| F82 | Disc: rim y from cos at x | FocusAura_DrawDisc 2000 |
+| F83 | Disc: previous point read before the prim | FocusAura_DrawDisc 42 |
+| F84 | Disc: centre shade 0 | FocusAura_DrawDisc 2000 |
+| F85 | Disc: size 0x30 | FocusAura_DrawDisc 2000 |
+| F86 | Disc: closing tpage 0x35 | FocusAura_DrawDisc 2000 |
+| F87 | Disc: z kept | FocusAura_DrawDisc 1959 |
+| E1 | Enlighten_Task: entries 0/1 swapped | Enlighten_Task 1338 |
+| E2 | Start: direction +9 | Enlighten_Start 1956 |
+| E3 | Start: one child | Enlighten_Start 2000 |
+| E4 | Start: parameter 0x3D | Enlighten_Start 2000 |
+| E5 | Start: +1 kind + 1 | Enlighten_Start 2000 |
+| E6 | Start: sound 0x101 | Enlighten_Start 2000 |
+| E7 | Apply: at 1 | Enlighten_Apply 1346 |
+| E8 | Apply: stat 2 | Enlighten_Apply 673 |
+| E9 | Apply: icons swapped | Enlighten_Apply 673 |
+| E10 | Apply: parameter 0x47 | Enlighten_Apply 673 |
+| E11 | Apply: +9 2 | Enlighten_Apply 673 |
+| E12 | Apply: +1 not on | Enlighten_Apply 673 |
+| E13 | Child_Task: kinds swapped | EnlightenChild_Task 2000 |
+| E14 | Rays_Run: steps 1/2 swapped | EnlightenRays_Run 974 |
+| E15 | Rays_Run: length x 4 | EnlightenRays_Run 364 |
+| E16 | Rays_Run: second from + 8 | EnlightenRays_Run 365 |
+| E17 | Rays_Run: task not read again | EnlightenRays_Run 6 |
+| E18 | Rays_Run: no disc | EnlightenRays_Run 365 |
+| E19 | Rays_Start: not anchored | EnlightenRays_Start 2000 |
+| E20 | Rays_Start: +0xA 1 | EnlightenRays_Start 2000 |
+| E21 | Rays_Grow: at 0x11 | EnlightenRays_Grow 1323 |
+| E22 | Rays_Grow: +9 kept | EnlightenRays_Grow 2000 |
+| E23 | Rays_Fade: +9 down | EnlightenRays_Fade 1994 |
+| E24 | Ring_Run: steps swapped | EnlightenRing_Run 2000 |
+| E25 | Ring_Run: drawn with bit 0 clear | EnlightenRing_Run 726 |
+| E26 | Ring_Start: +0xB 0xC | EnlightenRing_Start 2000 |
+| E27 | Ring_Start: +0xA 0x7F | EnlightenRing_Start 2000 |
+| E28 | Spread: +9 by the old +0xB | EnlightenRing_Spread 1998 |
+| E29 | Spread: by 0xB | EnlightenRing_Spread 1993 |
+| E30 | Anchor: target below 4 | Enlighten_AnchorToActor 43 |
+| E31 | Anchor: flag bit 2 | Enlighten_AnchorToActor 653 |
+| E32 | Anchor: index from +0x88 | Enlighten_AnchorToActor 728 |
+| E33 | Anchor: tables swapped | Enlighten_AnchorToActor 678 |
+| E34 | Anchor: direction 2 adds | Enlighten_AnchorToActor 316 |
+| E35 | Anchor: index x 1 | Enlighten_AnchorToActor 1293 |
+| E36 | Anchor: dy from dx | Enlighten_AnchorToActor 1363 |
+| E37 | Anchor: dy subtracted | Enlighten_AnchorToActor 1356 |
+| E38 | Anchor: form index table + 1 | Enlighten_AnchorToActor 641 |
+| E39 | Anchor: direction >> 2 | Enlighten_AnchorToActor 1016 |
+| E40 | Lines: 3 lines | EnlightenRays_DrawLines 2000 |
+| E41 | Lines: angle mask 0xF | EnlightenRays_DrawLines 2000 |
+| E42 | Lines: sin for x | EnlightenRays_DrawLines 2000 |
+| E43 | Lines: length's low byte | EnlightenRays_DrawLines 1995 |
+| E44 | Lines: shade 0x71 | EnlightenRays_DrawLines 2000 |
+| E45 | Lines: size 0x20 | EnlightenRays_DrawLines 2000 |
+| E46 | Lines: step 4 | EnlightenRays_DrawLines 2000 |
+| E47 | Lines: x read after the angle store | EnlightenRays_DrawLines 2000 |
+| E48 | Lines: the step from the whole word | a hang: the loop bound grows with the argument's garbage above the byte and never ends; near variant E63 refused by a count |
+| E49 | RaysDisc: radius +9 | EnlightenRays_DrawDisc 1972 |
+| E50 | RaysDisc: step 0x100 | EnlightenRays_DrawDisc 2000 |
+| E51 | RaysDisc: centre 0x7F | EnlightenRays_DrawDisc 2000 |
+| E52 | RaysDisc: size 0x30 | EnlightenRays_DrawDisc 2000 |
+| E53 | RaysDisc: second y by sin | EnlightenRays_DrawDisc 2000 |
+| E54 | RingDraw: 31 lines | EnlightenRing_Draw 2000 |
+| E55 | RingDraw: step sl 6 | EnlightenRing_Draw 2000 |
+| E56 | RingDraw: radius +0xA | EnlightenRing_Draw 1963 |
+| E57 | RingDraw: grey from +9 | EnlightenRing_Draw 2000 |
+| E58 | RingDraw: size 0x1C | EnlightenRing_Draw 2000 |
+| E59 | RingDraw: end y at +0x1C | EnlightenRing_Draw 2000 |
+| E60 | RingDraw: cos angle not read again | EnlightenRing_Draw 624 |
+| E61 | RingDraw: closing tpage 0x35 | EnlightenRing_Draw 2000 |
+| E63 | Lines: two lines (E48's near variant) | EnlightenRays_DrawLines 2000 |
+| E62 | Start: CLUT not dirty | Enlighten_Start 1992 |
 
 ## 7. Latent defects (Capcom's, kept)
 
