@@ -567,6 +567,25 @@ The S- controls are Snap_Task / Start, B- Snap_Buff, W- the wave, R- its rings, 
 | C176 | Shadow: first rim Cos(1) | KickImage_DrawShadow 2000 |
 | C177 | Shadow: radius read before the draw mode | KickImage_DrawShadow 132 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) section 8): 56 controls in the
+affected functions, 56 refused.** The eight clones that reach a `kFlag` /
+`kBool` answer are `Snap_Buff`, `ChargeImage_Dash`, `ChargeTrail_Dash`,
+`KickImage_Tick`, `KickImage_Settle`, `AirRaidImage_Bounce`,
+`FlyingKickImage_Dive` and `FlyingKickImage_Bounce`. Selected, every control
+whose plant lies in one of them or in a helper they call: B1..B9, C46 (the
+shared owner point, `KickImage_Settle` among its four), C47..C57 (C52..C57 in
+the shared aim), C61 / C62 (the shared rise and fall), C81 / C82, C114 / C115
+(the shared hit), C116..C134 and C148..C157, each rebuilt from the table.
+Skipped: every other control, whose plant lies only in functions that reach
+no `kFlag` / `kBool` answer. Each was refused, and in exactly the rounds the
+table gives: this group's fuzz already answers `Battle_ActorIsOut`,
+`MagicFx_ApplyBuff`, `Sprite_ScriptTickOnce` and the near tests from
+`Noise` (section 5), not from the harness's draw. The thinnest: **C122** 8,
+**B9** 11, **C121** 49, **C114** 53 (`AirRaidImage_Dive`). Clean self-test
+after the restore: 0 mismatches, exit 0; `BOF3X_SHADOW='*'` exit 0. No fuzz
+change.
+
 ## 7. What nothing reached
 
 No recorded route casts any of these spells (queue §5); the live check is
