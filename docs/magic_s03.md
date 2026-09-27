@@ -486,6 +486,8 @@ The thinnest (fewer than 60 rounds):
 | H12 | PutShades: channels reversed | MindSwordBlade_DrawLead 2000, MindSwordBlade_Draw 2000, MindSwordSpark_Draw 2000 |
 | H13 | AngleVertex: y centred on the x | MindSwordBlade_DrawLead 2000, MindSwordBlade_Draw 2000 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 51 controls in the affected functions, 50 refused, the fifty-first the known equivalent.** Section 8 lists `BlitzBolt_Next`, `BlitzBolt_Seek`, `Blitz_Start`, `ChlorineCopy_Play` and `MindSwordBlade_Fly`. Selected: M22..M32 (`_Fly`), C45..C47 (`ChlorineCopy_Play`), B2..B12 and H2 (`Blitz_Start`; H2's `Row26Stp` is shared with `Chlorine_Start`), B23..B28 (`_Next`, and `LaunchBolt` shared with `BlitzBolt_Start`), B29..B44 (`_Seek`; B40's `BoltRecord` also `_Next`), B52..B54 (`_Next`). Skipped: every other control, which plants only in functions whose originals call no `kFlag` / `kBool` recorder - among them B22 (`BlitzBolt_Start` alone) and B20 / B21 (`BlitzBolt_Run`, whose clone reaches `_Seek` / `_Next` only as handler recorders). Rebuilt from the table (the scripts were never committed) and run by the same plant / rebuild / self-test / restore loop. B7 is again not refused (the equivalent above) and B8, its near variant, is refused in 2,000. The thinnest: M26 30, B40 63 in `_Next` (398 in `_Seek`), M25 69, M28 93, C45 186, B25 191 in `_Next`; the rest as the table or near it (e.g. B23 373, B53 282, B54 279, M29 / M30 349). No fuzz change. After the last: restored, rebuilt, clean self-test exit 0, 0 mismatches.
+
 ## 7. What nothing reached
 
 No recorded route casts any of these spells (queue §5); the live check is
