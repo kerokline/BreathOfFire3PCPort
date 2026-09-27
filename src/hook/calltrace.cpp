@@ -94,7 +94,7 @@ Pending g_pending[kMaxThreads];
 // the same question with BOF3X_ORIGINAL set and without: that is what makes
 // original-vs-ours comparable (docs/call-trace.md section 7).
 constexpr std::uint32_t kOwnedCaller = 0xFFFFFFFFu;
-constexpr int kMaxOwnedRanges = 2048;  // 326 ours after the second parallel round, 2026-09-22
+constexpr int kMaxOwnedRanges = 8192;  // 3,165 ours after spell wave four, 2026-09-27 (2,048 hit at 3,165)
 struct Range {
     std::uint32_t lo, hi;
 };
