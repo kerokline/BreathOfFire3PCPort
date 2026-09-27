@@ -350,7 +350,12 @@ std::uint32_t AStep(unsigned k) {
     case kRun10: return SH_PICK(0, 1, 2, 3, 4, 5);
     case kRun13: return SH_PICK(0, 1, 2, 3, 4, 5, 6, 7, 0xE, 0xF, 0x10, 0x11, 0x12, 0x13);
     case kRun14: return sh::Next() % 6;
-    case kRun16: return sh::Next() % 0x68;
+    case kRun16:
+        return sh::Half() ? sh::Next() % 0x68
+                          : SH_PICK(0, 1, 2, 3, 4, 5, 6, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x1A,
+                                    0x1B, 0x1C, 0x1E, 0x1F, 0x20, 0x21, 0x23, 0x24, 0x25, 0x26, 0x27, 0x29, 0x32, 0x33,
+                                    0x34, 0x35, 0x36, 0x37, 0x38, 0x3A, 0x3C, 0x3D, 0x3E, 0x3F, 0x40, 0x41, 0x42, 0x44,
+                                    0x46, 0x47, 0x48, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x64, 0x65, 0x66);
     case kRun17: return sh::Next() % 0x20;
     case kRun18: return sh::Next() % 0x12;
     case kRun20: return sh::Next() % 8;
@@ -463,6 +468,15 @@ void Seed(unsigned k) {
             }
         }
         if (k == kRun16 && sh::Half()) B(at::kCounters + 1) = 1;
+        if (k == kRun16 && sh::Often())   // counter 3 one of the twelve codes the run's tables hold
+            B(at::kCounters + 3) = static_cast<unsigned char>(SH_PICK(1, 2, 3, 4, 5, 6, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10));
+        if (k == kRun16 && (B(at::kStep) == 5 || B(at::kStep) == 6) && sh::Often()) {   // a pair the step maps
+            static const unsigned char kPairs[][2] = {{0, 1}, {0, 5}, {1, 0}, {1, 5}, {5, 0}, {5, 1}, {0, 6}, {1, 6},
+                                                      {6, 0}, {6, 1}, {5, 5}, {2, 1}};
+            const unsigned i = sh::Next() % 12;
+            B(at::kPartyA) = kPairs[i][0];
+            B(at::kPartyB) = kPairs[i][1];
+        }
         break;
     default: break;
     }
@@ -503,7 +517,9 @@ void Args(unsigned k, std::uint32_t* a) {
 // the bit-0 bytes, the level byte. Draws only from h.
 void Disturb(std::uint32_t h) {
     const unsigned char v = static_cast<unsigned char>(h >> 16);
-    switch ((h >> 8) % 10) {
+    switch ((h >> 8) % 12) {
+    case 10: B(at::kPassFlags) = v; break;
+    case 11: B(at::kCounters) = v; break;
     case 0: B(at::kCounters + (h >> 12) % 3) = v; break;
     case 1: SetW(at::kArea, (h >> 16) & 1 ? 0x4E : 0x2D + (h >> 17) % 0x25); break;
     case 2: B(at::kSelector) = static_cast<unsigned char>(1 + (h >> 16) % 6); break;
@@ -517,18 +533,26 @@ void Disturb(std::uint32_t h) {
     }
 }
 
-// After every disturbance (two calls in three), for the two functions that
-// re-read the area after their calls: half the time the area moved to one
+// After every disturbance (two calls in three), for run 16 the pass flags
+// half the time; for the two functions that re-read the area after their calls: half the time the area moved to one
 // they test, since the harness's disturbance reaches the group's cells only
 // one time in sixteen. Noise() is the recorders' stream, the same on both
 // passes.
 void Settle() {
+    if (g_k == kRun16) {   // the pass flags moved: run 16 stores them before or after its transitions
+        const std::uint32_t n = sh::Noise();
+        if (n & 1) B(at::kPassFlags) = static_cast<unsigned char>(n >> 8);
+        return;
+    }
     if (g_k != kEnterArea && g_k != kStepHook) return;
     const std::uint32_t n = sh::Noise();
     if ((n & 1) == 0) return;
     static const unsigned short kEnter[] = {0x2D, 0x31, 0x34, 0x41, 0x44, 0x45, 0x4E, 0x4F, 0x50, 0x51};
     static const unsigned short kStep[] = {0x31, 0x34, 0x43, 0x44, 0x4E};
-    if (g_k == kEnterArea) SetW(at::kArea, kEnter[(n >> 8) % 10]);
+    if (g_k == kEnterArea) {
+        SetW(at::kArea, kEnter[(n >> 8) % 10]);
+        if (n & 2) B(at::kCounters) = static_cast<unsigned char>(n >> 16);   // read back after 0x34's Flags_Clear
+    }
     else SetW(at::kArea, kStep[(n >> 8) % 5]);
 }
 
@@ -550,7 +574,7 @@ void SelfTest() {
                        sizeof kRegions / sizeof kRegions[0],
                        &Seed,
                        &Disturb,
-                       8000};
+                       20000};
     group.args = &Args;
     group.settle = &Settle;
     group.chapter = 5;
