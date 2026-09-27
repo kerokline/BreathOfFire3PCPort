@@ -291,6 +291,18 @@ std::uint32_t TickEffect(const std::uint32_t*, std::uint32_t) {
     return FreshFlag();
 }
 std::uint32_t FlagEffect(const std::uint32_t*, std::uint32_t) { return FreshFlag(); }
+// BattleTask_Create: a third of the time every actor record's position
+// (+0x34..+0x3F, party 0..2, enemies 3..10) rewritten from the stream, so a
+// creator that reads a record after the create (WarShout_Rally, control W20)
+// is compared.
+std::uint32_t CreateEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (mh::Noise() % 3 != 0) return answer;
+    for (unsigned a = 0; a < 11; ++a) {
+        unsigned char* const rec = a < 3 ? mh::PartyOf(static_cast<unsigned char>(a)) : mh::EnemyOf(static_cast<unsigned char>(a));
+        mh::FillBytes(rec + 0x34, 12);
+    }
+    return answer;
+}
 // Math_Sin / Math_Cos: a quarter of the time a scratch or vertex word
 // rewritten from the stream, so every read of them again after a trig call
 // is compared (the group's own disturbance reaches one word too rarely:
@@ -313,6 +325,7 @@ constexpr mh::Answer kG = mh::Answer::kGarbage, kPh = mh::Answer::kPhase;
 #define S07_RAW(address) #address, address, address
 const mh::Callee kCallees[] = {
     // listed over the standard ones for their effects
+    {S07_OURS(BattleTask_Create), 2, {kU8, kU8}, mh::Answer::kByte, 0, mh::at::kTaskCount - 1, {}, &CreateEffect},
     {S07_OURS(Sprite_UpdateScreen), 0, {}, kG, 0, 0, {}, &NoteSpriteFrames},
     {S07_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &TickEffect},
     {S07_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &FlagEffect},
