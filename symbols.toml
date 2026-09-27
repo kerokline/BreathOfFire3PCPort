@@ -33972,7 +33972,7 @@ name = "Foretell_Bias"
 ctype = "signed char"
 count = 12
 status = "evidence"
-evidence = "read 2026-09-26, group S15: Foretell_Read adds s8 [0x65ACB7 + members - enemies]: indices -8..3 reach 0x65ACAF (ChillMark_Steps' last byte) .. 0x65ACBA."
+evidence = "read 2026-09-26, group S15: Foretell_Read adds s8 [0x65ACB7 + members - enemies]: with at least one of each counted (a zero count faults first, at the idiv) the index is -7..2, bytes 0x65ACB0..0x65ACB9; 0x65ACBA / 0x65ACBB are never read."
 
 [[data]]
 pc = 0x65ACBC

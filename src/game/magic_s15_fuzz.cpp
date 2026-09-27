@@ -206,6 +206,18 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     mh::FillBytes(task + 0xC, 8);
     return answer;
 }
+// BattleTask_Create: while Chill_SpawnMarks is fuzzed, a byte of one actor's
+// position (+0x34..+0x3F) moves at each create, so a marker that copied the
+// position before its create (not after, as the original) shows.
+bool g_move_positions = false;
+std::uint32_t CreateEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (!g_move_positions) return answer;
+    const std::uint32_t n = mh::Noise();
+    const unsigned a = n % 11;
+    unsigned char* const r = a < 3 ? mh::PartyOf(static_cast<unsigned char>(a)) : mh::EnemyOf(static_cast<unsigned char>(a));
+    r[0x34 + (n >> 8) % 12] = static_cast<unsigned char>(n >> 16);
+    return answer;
+}
 std::uint32_t KeepFacing(const std::uint32_t*, std::uint32_t answer) {
     if (g_keep_facing) Sprite_Current[8] &= 3;
     return answer;
@@ -258,6 +270,8 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 #define S15_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define S15_RAW(address) #address, address, address
 const mh::Callee kCallees[] = {
+    // listed over the standard one for its effect
+    {S15_OURS(BattleTask_Create), 2, {kU8, kU8}, mh::Answer::kByte, 0, mh::at::kTaskCount - 1, {}, &CreateEffect},
     // the battle and sprite calls
     {S15_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0, {}, &IsOutEffect},
     {S15_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, kG, 0, 0},
@@ -339,7 +353,7 @@ unsigned char* Sc() { return Sprite_Current; }
 // the log.
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
-    switch ((h >> 8) % 7) {
+    switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
     case 2: {
@@ -355,6 +369,14 @@ void Disturb(std::uint32_t h) {
         break;
     }
     case 5: mh::Mem(kTints + v % 0xC00)[0] = Byte(h >> 24); break;
+    case 6: {
+        // a byte of any actor's position (+0x34..+0x3F), which the markers
+        // copy after their creates; the harness moves only the target's
+        const unsigned a = v % 11;
+        unsigned char* const r = a < 3 ? mh::PartyOf(Byte(a)) : mh::EnemyOf(Byte(a));
+        r[0x34 + (v >> 4) % 12] = Byte(h >> 24);
+        break;
+    }
     default: break;
     }
 }
@@ -414,6 +436,7 @@ void Seed(unsigned k) {
     g_keep_facing = k == kChillRay_PushMatrix;
     g_keep_enemy = k == kForetell_Read;
     g_keep_index = k == kInfluenceMark_Start;
+    g_move_positions = k == kChill_SpawnMarks;
     if (mh::Often()) sc[8] = Byte(mh::Next() % 5);
     if (mh::Half()) sc[0] = 0;
     // the enemy types InfluenceMark_Start indexes the lift bytes by
