@@ -1,42 +1,31 @@
 # Scenario chapters 3 and 4: `Scena03_*` and `Scena04_*`
 
-**Status:** IN PROGRESS (2026-09-27) - stage A: fifty functions read to the
-last instruction and written (`src/game/scena_sc3.cpp`, shadow name
-`scena_sc3`), `symbols.toml` entries with `impl`, the fuzz file written
-against the scenario harness's contract; **not built, not fuzzed, no
-controls yet** - the scenario harness (group SCH) is not merged. Syntax
-checked against a private renamed copy of `magic_harness.h`.
+**Status:** IN PROGRESS (2026-09-27) - fifty functions ours
+(`src/game/scena_sc3.cpp`, shadow name `scena_sc3`), fuzzed headless
+through the scenario harness ([`scenario_harness.md`](scenario_harness.md),
+merged at `218eeec`): 0 mismatches in 100,000 rounds (chapter 3's 36
+functions with `Cond_ByteFA` 3, chapter 4's 14 with 4); 75 of 76 negative
+controls refused by a count (exit 3), the other an equivalent mutant with
+its near variant refused. Fuzz only: no recorded route plays chapters 3 or
+4 (section 8).
 
 Group SC3 of round ten's first wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1,
 [`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3).
 
-## Stage A done - what stage B has to do
+## Stage A and stage B
 
-1. Merge `phase-3/capture-round-ten` at the harness's SHA; drop nothing of
-   this group's.
-2. Register the module: `src/game/scena_sc3.cpp` and `scena_sc3_fuzz.cpp` at
-   the end of `CMakeLists.txt`'s list, `ScenaSc3_Inject()` (header
-   `game/scena_sc3.h`) at the end of `inject_all.cpp`.
-3. Port the fuzz file to what the harness really is:
-   - each clone's call shape is a comment (`kSlot`, `kObject`, `kHook`,
-     `kState`, `kCallee`, section 4); if the harness has a `shape` field
-     (SCH's `scenario_rows.py` prints `Shape::kObject` / `kHook` after
-     `ret_mask, calm`), move the comments into it;
-   - the callee list (`ListCallees`) names every callee the fifty make; drop
-     or keep those the harness's standard set holds (the group's listing
-     stands either way, `magic_harness.md` §3);
-   - the regions (`ListRegions`) list every cell the fifty touch; drop those
-     the harness's standard regions hold if the harness refuses overlaps;
-   - `Scenario_CallB` `0x5341C0` is named by SCH (`4e71c44`): the raw
-     address in `scena_sc3_callees.h` can stay until the rebinding pass.
-4. Build (read the output), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_sc3`
-   to 0 mismatches, then `BOF3X_SHADOW='*'`.
-5. Plant and refuse the controls of section 5 by a script (plant, rebuild,
-   run, restore, rebuild; anchor each on a unique string), and fill in the
-   counts.
-6. Fill in section 4's result and coverage; move this section down to
-   "Stage A" history.
+Stage A (commit `6514faf`, before the harness existed) read and wrote the
+fifty, wrote the fuzz against the harness's API contract and syntax-checked
+it against a renamed copy of `magic_harness.h`. Stage B merged the harness
+(`218eeec`), registered the module (the end of `CMakeLists.txt`'s list and
+of `inject_all.cpp`) and ported the fuzz to what the harness is: one Group
+per chapter byte, each clone's shape in its field, the callee and region
+lists trimmed to what the harness's 70 standard callees and 22 standard
+regions lack, typed stand-ins in the object handler tables. Re-running
+`tools/scenario_rows.py --unit SC3 --clones` at the tip prints no clones:
+all fifty are `impl` now; the stage A table (`222eb0f`) stands (`207ef4e`
+renamed one shape, `kEntry`, which this file uses).
 
 ## 1. The band and what is in it
 
@@ -169,121 +158,181 @@ the cases that do not clear it: step 7 sets step 0x1E from it, steps 8, 9,
 
 ## 4. The fuzz
 
-`BOF3X_SHADOW=scena_sc3`, `scena_sc3_fuzz.cpp`, one `scenario_harness::Run`:
+`BOF3X_SHADOW=scena_sc3`, `scena_sc3_fuzz.cpp`: **two** `scenario_harness::Run`
+calls, because a `Group` writes one chapter into `Cond_ByteFA` (and points
+`0x929ED0` at that chapter's flag row) every round - chapter 3's 36 with
+`chapter = 3`, chapter 4's 14 with `chapter = 4` (logged as
+`scena_sc3 (chapter 3)` / `(chapter 4)`). `Scena04_Message` runs with
+chapter 4's byte; it reads none.
 
-- **the clones**: fifty, `tools/scenario_rows.py --unit SC3 --clones`
-  (SCH's tool at `222eb0f`, run from the scratch), names put in; nine jump
-  tables moved into the copies (the two byte tables stay in the original,
-  read-only); `ret_mask 0xFF` on the 23 that answer in al (the hooks, the
-  area tests, the object handlers 1..4, 7, 8, chapter 4's handler 0,
-  `Scena03_ObjectsAllFour`, `Scena03_SpawnAtMember`, `Scena04_Message`).
-  Each clone's call shape is a comment: kSlot (slot 0, no arguments),
-  kObject (slot 1, the object), kHook (slots 2..4, `(x, z)`, al), kState (a
-  state, run or handler reached through a chapter table), kCallee (called
-  directly by another of the fifty, with its own arguments);
-- **callees**: every one the fifty call, 58: the engine's by name
-  (`Flags_Test` a flag, `Sound_StreamDone` / `File_LoadDone` a bool,
-  `Effect_FindFree` a byte 0..0x13 or 0xFF, `EventObj_SetFlags` its
-  pointer logged as the byte it points at), the eleven by address (SE's two, `Scenario_CallB`, eight nobody owns:
-  `0x56D800` a byte 0 or negative, `0x57CD90` 0..0x1D or 0xFF), and the
-  fourteen of ours the originals' E8 / E9 reach (the area tests and
-  `ObjectsAllFour` / `Message` a flag);
-- **the tables** swapped: `Scena03_States` + `Runs` as one window of 12,
-  `Scena03_ObjectHandlers` (9), `Scena03_CellHandlers` (1),
-  `Scena04_States` + `Runs` (6), `Scena04_ObjectHandlers` (1),
-  `Scena04_CellHandlers` (1);
-- **regions**: the scenario bytes `0x8034E0..0x8034F3`, `0x903840..0x90385F`,
-  the flag rows `0x903FA0..0x903FB7`, the pass flags, area, script flags,
-  request, `Game_Mode`, wait word, message id, `0x937F88..0x937F9B`,
-  `0x929EC0..0x929F1F` (camera, the row pointer, `Kind2Hold`, elevation),
-  the three members, `Effect_Objects`, `Sprite_Objects`, and an object
-  buffer of the fuzz's own;
+- **the clones**: fifty, `tools/scenario_rows.py --unit SC3 --clones` (SCH's
+  tool at `222eb0f`), names put in; nine jump tables moved into the copies
+  (the two byte tables stay in the original, read-only); `ret_mask 0xFF` on
+  the 23 that answer in al. **Shapes** (the Clone's field): `kSlot` the two
+  frames; `kState` the states, runs, scenes, bobs, the tremor, the four-bit
+  tail and the two cell handlers; `kObject` the two object hooks; `kHook` the
+  step, arrive and cell hooks and the eight area tests (`(x, z)`, al);
+  `kEntry` the object handlers (object, row), `Scena03_SpawnAtMember` (the
+  member) and `Scena04_Message` (the id);
+- **callees** beyond the harness's 70: `EventObj_SetFlags` again (its
+  pointer, into the original's own frame, logged as the byte it points at),
+  the six nobody owns by address (`0x533E50`; `0x56D800` a byte 0 or 0xFF;
+  `0x57CD90` 0..0x1D or 0xFF; `0x587B80`; `0x590C90`; `0x591900`), the
+  fourteen of ours the originals' E8 / E9 reach (the area tests,
+  `ObjectsAllFour`, `SpawnAtMember` and `Message` a flag; the bobs and the
+  tremor `kPhase`), and the ten object handler stand-ins;
+- **the object handler tables**: a `.data` table's handler recorder logs no
+  arguments, and the object handlers take (object, row), so, as SC0's
+  `ObjectEntry`, the seed writes a typed stand-in of the fuzz's own into each
+  entry of `Scena03_ObjectHandlers` (9) and `Scena04_ObjectHandlers` (1),
+  each logging the object and the row against the handler's own address
+  (entry 6, the bare `ret` `0x437CC0`, is also `Scena03_Runs` entry 0, a
+  handler recorder's: its stand-in logs against `0x5449F0` instead); the
+  tables are regions, put back after the run;
+- **the tables** swapped for handler recorders: `Scena03_States` + `Runs`
+  as one window of 12, `Scena03_CellHandlers` (1), `Scena04_States` + `Runs`
+  (6), `Scena04_CellHandlers` (1);
+- **regions** beyond the standard 22: `0x904CD0`, `0x904EE0`,
+  `Music_Track`, `Cond_ByteFE`, the message id `0x7DEE48`, `Game_Mode`,
+  `0x929F00..0x929F13`, `MoveScript_EffectState`, `Field_ActiveMember`, and
+  the object handler table (32 regions in all, about 10,050 bytes);
 - **the seed**: the state and run inside the swapped windows; the step
-  inside each scene's cases and one past (any byte a third of the time);
-  the timer at every value a case compares and one either side; counter 0
-  at every constant compared (38), counter 1 at 0..3 and 0x15; the area at
-  every one tested; `Cond_ByteFD` 0..7; the request 2, the wait word 0, the
-  message ids, `Kind2Hold` 0, `Game_Mode` 2 half the time each; the byte
-  `0x905E68` 1 and the row's four bits set half the time; the leader's `+8`
-  3..7; `Sprite_Current` a record of the pool; the object's `+0x86` 0..8
-  (chapter 4: 0); the hooks' `(x, z)` at each exact coordinate or cell
-  tested, on the cell or half a cell into it;
-- **the disturbance** after a call: the step, the timer, a counter, the
-  request, the wait word, the area, a byte of the effect records,
-  `Sprite_Current` (another record), `Field_StatusBits`, the camera
-  distance - each a cell some case reads again after a call.
+  inside each scene's cases and one past; half the time a step that waits on
+  a counter with the counter at the value its case compares, or one either
+  side (the pairs read off the cases by capstone, `kWaits`); a scene's timer
+  0..2 a third of the time; the timer, counter 0 and counter 1 at every
+  constant compared; the area at every one tested (the entries' own half
+  the time); `Cond_ByteFD` 0..7; the request, wait word, message ids,
+  `Kind2Hold`, `Game_Mode` 2 half the time each; the row's four bits and the
+  byte `0x905E68`; the leader's `+8` 3..7; the object's `+0x86` in the four
+  records the `kObject` shape passes; run 3 at its track steps, run 6 at
+  step 0x13 with the timer 0x32, run 8 at its shaking steps, chapter 4's
+  run 2 at its timed steps and at step 0x15 before the tremor;
+- **the arguments**: the eight area tests at each exact coordinate or cell
+  range they test, on it, half a cell into it, or one cell either side
+  (`kHits`); the object handlers a sprite record and a row; the member 0..2
+  with garbage above; the message id any byte;
+- **the disturbance** (the group's part; drawn from the hash only - a first
+  version drew from the harness's `Next` and mismatched in 403 rounds, the
+  passes seeing different disturbances): counter 1, the area, a byte of the
+  effect records, `Field_StatusBits`, the camera distance, `Game_Mode`, the
+  timer and counter 0 at compared values, the step 2..0x16, `Cond_ByteFD`;
+  and for the function being fuzzed, half the time, the one cell it reads
+  again after a call: area 0x63's `Cond_ByteFD`, run 6's timer, run 3's
+  counter 0, chapter 4's run 2 step.
 
-**Result:** stage B.
+**Result** (2026-09-27, this worktree):
 
-## 5. The controls (stage B)
+    shadow      scena_sc3 (chapter 3) self-test: 72000 rounds over 36 functions (2000 each), 93946 calls to the stand-ins,
+                0 MISMATCHES; 10068 bytes of state (32 regions) and the stand-ins' log compared
+    shadow      scena_sc3 (chapter 4) self-test: 28000 rounds over 14 functions (2000 each), 24415 calls to the stand-ins,
+                0 MISMATCHES; 10036 bytes of state (32 regions) and the stand-ins' log compared
 
-To plant one at a time, each anchored on a unique string of
-`scena_sc3.cpp`; the column is filled in by stage B.
+Coverage (the originals' calls): every callee and handler the clones name is
+reached - e.g. chapter 3's `Flags_Test` 16,690, `Field_ChangeArea` 638,
+`Scena04_Message` 1,323, the nine object handler stand-ins 203..242 each,
+`0x4410B0` / `0x532ED0` 36, `Scenario_CallB` 7, each run 262..302 as a
+phase; chapter 4's `Scena04_Tremor` 1,021, `File_LoadDone` 30,
+`MapView_SetElevation` 33, each run 770..800. Counts vary a little with the
+build directory. `BOF3X_SHADOW='*'`: exit 0 (338 self-test lines).
 
-| | Planted | Refused in |
+## 5. The controls
+
+Seventy-six, planted one at a time by a script (the scratch `controls.py`,
+not committed: each anchored on a unique string of `scena_sc3.cpp`; replace,
+build, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_sc3`, restore; rebuild at
+the end), on the final fuzz, 2026-09-27. **75 of 76 refused** by a count
+(exit 3), each in the function its plant touches; C12e is an equivalent
+mutant. Counts are this worktree's.
+
+| | Planted | Refused in (rounds of 2,000) |
 |---|---|---|
-| F1 | `Scena03_Frame`: state + 1 | |
-| F2 | `Scena04_Run`: the run table of chapter 3 | |
-| S1 | `Scena03_Start`: row `0x903FB0` | |
-| E1 | `Scena03_EnterArea`: area 0x27's pass flags 0x1F | |
-| E2 | `Scena03_EnterArea`: area 0x2D's counters cleared before `Scenario_CallA` | |
-| E3 | `Scena03_EnterArea`: area 0x38 goes on when `Cond_ByteFD` is not 1 | |
-| E4 | `Scena03_EnterArea`: area 0x63 `Cond_ByteFD` read again for the 3 | |
-| E5 | `Scena04_EnterArea`: counter 1 == 1 without `ObjTrio_SetBit40` | |
-| E6 | `Scena04_EnterArea`: area 0x30's counters cleared after the test | |
-| E7 | `Scena04_EnterArea`: member 2's `+0x24` kept | |
-| C1 | `Scena03_Scene1`: effect kind 0x15 | |
-| C2 | `Scena03_Scene1` step 4: `0x904CD0` 0x30 | |
-| C3 | `Scena03_Scene2`: counter 0 = 0xB | |
-| C4 | `Scena03_Scene3` step 3: timer tested before the decrement | |
-| C5 | `Scena03_Scene3` step 0xC: `<= 0x14` | |
-| C6 | `Scena03_Scene3` step 0xF: counter read before `Music_Play` | |
-| C7 | `Scena03_Scene4` step 5: message 0x34 | |
-| C8 | `Scena03_Scene5` step 0xB: pass flags after `Transition_Start` | |
-| C9 | `Scena03_Scene5` step 0xF: step 1 | |
-| C10 | `Scena03_Scene6` step 0x13: the second compare of the first read | |
-| C11 | `Scena03_Scene6` step 0x1C: `Cond_ByteFD` 2 | |
-| C12 | `Scena03_Scene7` step 6: the kept slot indexed unsigned | |
-| C13 | `Scena03_Scene8` step 7: `& 3 == 1` | |
-| C14 | `Scena03_Scene8` step 0xB: step stored after the sound | |
-| C15 | `Scena03_Scene8` step 0xE: `>= 0x15` returns | |
-| C16 | `Scena03_Scene8` step 0x14: no `0x56D6F0` | |
-| P1 | `Scena03_SpawnAtMember`: x + 0x4000 | |
-| P2 | `Scena03_SpawnAtMember`: `Sprite_Current` not read again after `AreaMap_Elevation` | |
-| P3 | `Scena03_SpawnAtMember`: flags 0x80 | |
-| B1 | `Scena03_BobParty4`: `<< 3` | |
-| B2 | `Scena03_BobParty2`: member 2 | |
-| O1 | `Scena03_ObjectHook`: `+0x87` | |
-| O2 | `Scena03_Object3`: flag 0x13 | |
-| O3 | `Scena03_ObjectsAllFour`: `& 7` | |
-| O4 | `Scena03_Object5`: sleep 2 | |
-| O5 | `Scena03_Object8`: timer 0x1F | |
-| O6 | `Scena04_Object0`: answer 1 | |
-| H1 | `Scena03_StepHook`: area 0x29 to `StepArea32` | |
-| H2 | `Scena03_StepArea33`: flag 0 asked once | |
-| H3 | `Scena03_StepArea29`: `Near(z, 7, 3)` | |
-| H4 | `Scena03_StepArea25`: z 0x410000 | |
-| H5 | `Scena03_StepArea45`: the third door dropped | |
-| H6 | `Scena03_StepArea32`: x cell 0x16 | |
-| H7 | `Scena03_StepArea63`: `Cond_ByteFD` read before the test | |
-| H8 | `Scena03_ArriveHook`: area 0x46 | |
-| H9 | `Scena03_ArriveArea47`: `Near(x, 0xE, 3)` | |
-| H10 | `Scena03_CellHook`: the answer's sign unsigned | |
-| H11 | `Scena04_StepArea28`: the leader's kind 3 refused | |
-| H12 | `Scena04_StepArea28`: message 4 | |
-| H13 | `Scena04_Message`: `0x9039A2 |= 1` | |
-| H14 | `Scena04_CellHook`: `Scena03_Cells` | |
-| K1 | `Scena03_Cell0` / `Scena04_Cell0`: timer 0xB | |
-| Q1 | `Scena04_Scene1` step 6: `<< 5` | |
-| Q2 | `Scena04_Scene1` step 8: `* 8` | |
-| Q3 | `Scena04_Scene1` step 0x1D: `Game_Mode` 3 | |
-| Q4 | `Scena04_Scene1` step 4: the effect indexed by `0x903850` | |
-| R1 | `Scena04_Scene2` exit: `< 0xC` | |
-| R2 | `Scena04_Scene2` step 7: step 0x1D | |
-| R3 | `Scena04_Scene2` step 9: `jns` as unsigned | |
-| R4 | `Scena04_Scene2` step 0x15: al not read again after the tremor | |
-| R5 | `Scena04_Scene2` step 0x10: the clamp at 0x3FF | |
-| T1 | `Scena04_Tremor`: `>> 2` | |
+| F1 | Scena03_Frame: state ^ 1 (inside the swapped window) | Scena03_Frame 2,000 |
+| F2 | Scena04_Frame: indexed by the run | Scena04_Frame 1,441 |
+| S1 | Scena03_Start: row 0x903FB0 | Scena03_Start 2,000 |
+| S2 | Scena04_Start: state 2 | Scena04_Start 2,000 |
+| E1 | Scena03_EnterArea: area 0x27 pass flags 0x1F | Scena03_EnterArea 57 |
+| E2 | Scena03_EnterArea: area 0x2D counters cleared before Scenario_CallA | Scena03_EnterArea 3 |
+| E3 | Scena03_EnterArea: area 0x38 on Cond_ByteFD 2 | Scena03_EnterArea 31 |
+| E4 | Scena03_EnterArea: area 0x63 step 7 | Scena03_EnterArea 3 |
+| E5 | Scena04_EnterArea: counter 1 == 2 places Kind2 | Scena04_EnterArea 16 |
+| E6 | Scena04_EnterArea: area 0x30 counters kept | Scena04_EnterArea 18 |
+| E7 | Scena04_EnterArea: member 2 +0x24 kept | Scena04_EnterArea 32 |
+| E8 | Scena04_EnterArea: music 0x40 | Scena04_EnterArea 11 |
+| C1 | Scena03_Scene1: effect kind 0x15 | Scena03_Scene1 353 |
+| C2 | Scena03_Scene1 step 4: area track 0x30 | Scena03_Scene1 121 |
+| C3 | Scena03_Scene2: counter 0 = 0xB | Scena03_Scene2 268 |
+| C4 | Scena03_Scene3 step 3: timer tested before the decrement | Scena03_Scene3 4 |
+| C5 | Scena03_Scene3 step 0xC: <= 0x14 | Scena03_Scene3 35 |
+| C6 | Scena03_Scene3 step 0xF: counter read before Music_Play | Scena03_Scene3 7 |
+| C20 | Scena03_Scene3 step 0xB: 0x532ED0 x and z swapped | Scena03_Scene3 36 |
+| C7 | Scena03_Scene4 step 5: message 0x34 | Scena03_Scene4 5 |
+| C17 | Scena03_Scene4 step 6: facing 0x83 | Scena03_Scene4 13 |
+| C22 | Scena03_Scene4 step 7: counter + 2 | Scena03_Scene4 28 |
+| C8 | Scena03_Scene5 step 0xB: Scenario_CallA(2) | Scena03_Scene5 23 |
+| C9 | Scena03_Scene5 step 0xF: step 1 | Scena03_Scene5 66 |
+| C21 | Scena03_Scene5 step 3: pending kind 2 | Scena03_Scene5 4 |
+| C10 | Scena03_Scene6 step 0x13: the second compare of the first read | Scena03_Scene6 5 |
+| C11 | Scena03_Scene6 step 0x1C: Cond_ByteFD 2 | Scena03_Scene6 59 |
+| C18 | Scena03_Scene6 step 2: z 0x270000 | Scena03_Scene6 2 |
+| C12 | Scena03_Scene7 step 6: effect kind 0x23 | Scena03_Scene7 80 |
+| C12e | TakeKeptEffect: the slot indexed unsigned (equivalent: the answer is 0..0x13 or 0xFF, which returns first) | not refused: equivalent (the answer is 0..0x13 or 0xFF, and 0xFF returns first); C12 is its near variant |
+| C19 | Scena03_Scene7 step 6: +0x3C 0x4000000 | Scena03_Scene7 80 |
+| C13 | Scena03_Scene8 step 7: & 3 == 1 | Scena03_Scene8 81 |
+| C14 | Scena03_Scene8 step 0xB: step stored after the sounds | Scena03_Scene8 1 |
+| C15 | Scena03_Scene8 step 0xE: one stand-in | Scena03_Scene8 49 |
+| C16 | Scena03_Scene8 step 0x14: no 0x56D6F0 | Scena03_Scene8 41 |
+| P1 | Scena03_SpawnAtMember: x + 0x4000 | Scena03_SpawnAtMember 1,950 |
+| P2 | Scena03_SpawnAtMember: Sprite_Current not read again after AreaMap_Elevation | Scena03_SpawnAtMember 214 |
+| P3 | Scena03_SpawnAtMember: flags 0x80 | Scena03_SpawnAtMember 1,950 |
+| B1 | Bob: << 3 | Scena03_BobParty4 1,057, Scena03_BobParty2 2,000 |
+| B2 | Bob: member 2 for member 1 | Scena03_BobParty4 1,057, Scena03_BobParty2 2,000 |
+| B3 | Scena03_BobParty2: Scena03_Bob4 | Scena03_BobParty2 959 |
+| O1 | Scena03_ObjectHook: the next handler | Scena03_ObjectHook 2,000 |
+| O2 | Scena03_Object3: flag 0x13 | Scena03_Object3 2,000 |
+| O3 | Scena03_ObjectsAllFour: & 7 | Scena03_ObjectsAllFour 67 |
+| O4 | Scena03_Object5: sleep 2 | Scena03_Object5 665 |
+| O5 | Scena03_Object8: timer 0x1F | Scena03_Object8 2,000 |
+| O6 | Scena04_Object0: answer 1 | Scena04_Object0 2,000 |
+| H1 | Scena03_StepHook: area 0x29 to StepArea32 | Scena03_StepHook 67 |
+| H2 | Scena03_StepArea33: flag 0 asked once | Scena03_StepArea33 486 |
+| H3 | Scena03_StepArea29: z cells 7..9 | Scena03_StepArea29 55 |
+| H4 | Scena03_StepArea25: z 0x410000 | Scena03_StepArea25 374 |
+| H5 | Scena03_StepArea45: the third door dropped | Scena03_StepArea45 117 |
+| H6 | Scena03_StepArea32: x cell 0x16 | Scena03_StepArea32 610 |
+| H7 | Scena03_StepArea63: Cond_ByteFD read before the test | Scena03_StepArea63 3 |
+| H8 | Scena03_ArriveHook: area 0x46 | Scena03_ArriveHook 78 |
+| H9 | Scena03_ArriveArea47: x cells 0xE..0x10 | Scena03_ArriveArea47 76 |
+| H10 | Scena03_CellHook: none answers 0xFE | Scena03_CellHook 982 |
+| H11 | Scena04_StepArea28: the leader kind 3 refused | Scena04_StepArea28 20 |
+| H12 | Scena04_StepArea28: message 4 | Scena04_StepArea28 30 |
+| H13 | Scena04_Message: 0x9039A2 \|= 1 | Scena04_Message 1,469 |
+| H14 | Scena04_CellHook: Scena03_Cells | Scena04_CellHook 2,000 |
+| K1 | Scena04_Cell0: timer 0xB | Scena04_Cell0 2,000 |
+| K2 | Scena03_Cell0: message 0x1A | Scena03_Cell0 2,000 |
+| Q1 | Scena04_Scene1 step 6: << 5 | Scena04_Scene1 8 |
+| Q2 | Scena04_Scene1 step 8: * 8 | Scena04_Scene1 18 |
+| Q3 | Scena04_Scene1 step 0x1D: Game_Mode 3 | Scena04_Scene1 9 |
+| Q4 | Scena04_Scene1 step 4: the effect indexed by 0x903850 | Scena04_Scene1 11 |
+| Q5 | Scena04_Scene1 step 0x15: facing 1 | Scena04_Scene1 62 |
+| R1 | Scena04_Scene2 exit: < 0xC | Scena04_Scene2 106 |
+| R2 | Scena04_Scene2 step 7: step 0x1D | Scena04_Scene2 13 |
+| R3 | Scena04_Scene2 step 9: the sign test on bit 14 | Scena04_Scene2 25 |
+| R4 | Scena04_Scene2 step 0x15: al not read again after the tremor | Scena04_Scene2 4 |
+| R5 | Scena04_Scene2 step 0x10: clamped to 0x3FF | Scena04_Scene2 46 |
+| R6 | Scena04_Scene2 step 8: the effect x 0, not the yaw | Scena04_Scene2 15 |
+| T1 | Scena04_Tremor: >> 2 | Scena04_Tremor 1,256 |
+| T2 | Scena04_Tremor: * 2 | Scena04_Tremor 977 |
+
+The thinnest are the re-reads and orders: C14 (1 round), E2 and E4 and H7 (3),
+C4 and R4 (4), C10 (5). Each shows only when the disturbance moves exactly
+the cell read again across exactly that call. The first run of the controls
+had five not refused - E2, C4, C10, H7, R4 - each a re-read or an order no
+input of that fuzz reached; the seeds and the per-function disturbance of
+section 4 (a scene's timer at 0..2, the entries' areas, the cell each reads
+again) were added for them, and all 76 were run again. A seventh, C12e, first
+crashed both sides: the plant itself was wrong (a missing parenthesis made it
+index `(pool + slot) << 7`); rewritten as meant it is equivalent.
 
 ## 6. Cross-group calls and callees
 
@@ -294,7 +343,7 @@ group's):
 |---|---|---|
 | `0x4410B0` | (u8): member 0's `+1` = 5, `+2..+4` 0, `0x904AAA` = the byte, `0x904AE5` from a table, `0x905BA5 |= 0x10` | group SE |
 | `0x579D70` | `EventObj_Face` | group SE |
-| `0x5341C0` | `Scenario_CallB` (named by SCH, `4e71c44`) | SCH |
+| `0x5341C0` | `Scenario_CallB` (named by SCH, not taken) | nobody (SCH names it) |
 | `0x532ED0` | (x, z, u8): the party placed at a point | nobody |
 | `0x533E50` | (): the party's records refreshed (`Char_RecalcStats`) | nobody |
 | `0x56D6F0` | (): `Field_StatusBits |= 0x80` | nobody |
@@ -304,7 +353,7 @@ group's):
 | `0x590C90` | (u8 id, x, u8, y): called with 0x97 and the effect state's byte | nobody |
 | `0x591900` | (u8): into the first free of 32 bytes at `0x904554` | nobody |
 
-By name (ours or Capcom's): `Flags_Test`, `Flags_Set`, `AreaMap_SetByte`,
+In the fuzz, `0x4410B0`, `0x532ED0`, `0x56D6F0`, `Scenario_CallB` and `EventObj_Face` are the harness's standard callees; the other six are this group's (section 4). By name (ours or Capcom's): `Flags_Test`, `Flags_Set`, `AreaMap_SetByte`,
 `Party_DropIn`, `ScriptFlags_Set40` / `Clear40`, `ObjTrio_SetBit40` /
 `ClearBit40`, `Scenario_CallA`, `MapView_SetElevation`, `Kind2_Place`,
 `Music_FadeOutStop` / `Play` / `FadeOut` / `LoadFile`, `Sound_PlayEffect`

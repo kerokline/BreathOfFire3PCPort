@@ -418,6 +418,22 @@ void Seed(unsigned k) {
         sh::Mem(s.counter ? at::kCounter1 : at::kCounter0)[0] =
             static_cast<unsigned char>(s.value + (jitter == 0 ? 1u : jitter == 1 ? 0xFFu : 0u));
     }
+    // a scene's timer at its end (the waits test 0; step 3 of run 3 decrements first)
+    if (StepSpan(g_clones[k].name) && sh::Next() % 3 == 0) SetWord(sh::Mem(at::kTimer), SH_PICK(0, 1, 2));
+    // run 6's step 0x13 at its first sound, run 3's steps that play the track
+    if (Named("Scena03_Scene6") && sh::Next() % 3 == 0) {
+        sh::Mem(at::kStep)[0] = 0x13;
+        SetWord(sh::Mem(at::kTimer), SH_PICK(0x32, 0x32, 0xA, 1));
+    }
+    if (Named("Scena04_Scene2") && sh::Next() % 4 == 0) {
+        sh::Mem(at::kStep)[0] = 0x15;
+        SetWord(sh::Mem(at::kTimer), SH_PICK(0x14, 0x15, 0x20));
+    }
+    if (Named("Scena03_Scene3") && sh::Next() % 5 == 0) sh::Mem(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(0xF, 0x19));
+    // an area the entry knows
+    if (Named("EnterArea") && sh::Often())
+        SetWord(sh::Mem(at::kArea), four ? SH_PICK(0x28, 0x2A, 0x30, 0x36, 0x41)
+                                         : SH_PICK(0x25, 0x26, 0x27, 0x29, 0x2D, 0x32, 0x38, 0x45, 0x47, 0x63));
     // Scena04_Scene2's timed steps near their turns
     if (four && Named("Scene2") && sh::Half()) {
         sh::Mem(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(8, 9, 0xA, 0xB, 0xC, 0xD, 0x10, 0x12, 0x13, 0x15));
@@ -459,14 +475,43 @@ void Args(unsigned k, std::uint32_t* a) {
 void Disturb(std::uint32_t h) {
     static const unsigned char kC1[] = {0, 1, 2, 0x15};
     static const unsigned char kAreas[] = {0x25, 0x28, 0x29, 0x2A, 0x2D, 0x30, 0x32, 0x33, 0x36, 0x38, 0x41, 0x45, 0x47, 0x63};
-    switch ((h >> 8) % 7) {
+    // the timer, counter 0 and the step to values the cases compare (the
+    // harness's own moves them to any value)
+    static const unsigned short kTimers[] = {0, 1, 2, 0xA, 0xC, 0xD, 0x13, 0x14, 0x20, 0x32};
+    static const unsigned char kC0[] = {0, 1, 2, 5, 9, 0xF, 0x13, 0x14, 0x15, 0x1C, 0x22, 0x28, 0x2B, 0x32};
+    // the function being fuzzed reads this one again after a call: half the
+    // time, move it (area 0x63's test Cond_ByteFD after Flags_Test; run 6
+    // step 0x13 the timer after the first sound; run 3 counter 0 after the
+    // music)
+    if (h & 0x1000000) {
+        if (Named("StepArea63")) {
+            sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(2 + ((h >> 17) & 1));
+            return;
+        }
+        if (Named("Scena03_Scene6")) {
+            SetWord(sh::Mem(at::kTimer), 0xA);
+            return;
+        }
+        if (Named("Scena04_Scene2")) {   // step 0x15's exit reads the step again after the tremor
+            sh::Mem(at::kStep)[0] = static_cast<unsigned char>(2 + (h >> 17) % 11);
+            return;
+        }
+        if (Named("Scena03_Scene3")) {
+            sh::Mem(at::kCounter0)[0] = static_cast<unsigned char>(h & 0x20000 ? 0x1F : 0x1E);
+            return;
+        }
+    }
+    switch ((h >> 8) % 10) {
     case 0: sh::Mem(at::kCounter1)[0] = h & 0x10000 ? kC1[(h >> 17) % sizeof kC1] : static_cast<unsigned char>(h >> 24); break;
     case 1: SetWord(sh::Mem(at::kArea), h & 0x10000 ? kAreas[(h >> 17) % sizeof kAreas] : h >> 16); break;
     case 2: sh::Mem(at::kEffects + (h >> 12) % 0xA00)[0] = static_cast<unsigned char>(h >> 24); break;
     case 3: sh::Mem(at::kStatusBits)[0] = static_cast<unsigned char>(h >> 16); break;
     case 4: SetWord(sh::Mem(at::kCamDistance), h >> 16); break;
     case 5: SetWord(sh::Mem(at::kGameMode), (h >> 16) & 3); break;
-    default: sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>((h >> 16) & 7); break;
+    case 6: SetWord(sh::Mem(at::kTimer), kTimers[(h >> 16) % (sizeof kTimers / sizeof kTimers[0])]); break;
+    case 7: sh::Mem(at::kCounter0)[0] = kC0[(h >> 16) % sizeof kC0]; break;
+    case 8: sh::Mem(at::kStep)[0] = static_cast<unsigned char>(2 + (h >> 16) % 0x15); break;
+    default: sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(h & 0x10000 ? 2 + ((h >> 17) & 1) : (h >> 18) & 7); break;
     }
 }
 
