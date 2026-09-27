@@ -364,6 +364,8 @@ add_library(bof3x SHARED
   src/game/area_011_fuzz.cpp
   src/game/area_cell_hook.cpp
   src/game/area_cell_hook_fuzz.cpp
+  src/game/area_w0b.cpp
+  src/game/area_w0b_fuzz.cpp
   src/game/scenario_harness.cpp
   src/game/scena_sc0.cpp
   src/game/scena_sc0_fuzz.cpp
