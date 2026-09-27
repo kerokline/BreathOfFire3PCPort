@@ -153,10 +153,17 @@ std::uint32_t NameEffect(const std::uint32_t*, std::uint32_t) {
 // it, and the recorders back for every other function, which reach the table
 // through Scena11_Runs with no arguments). scena_sc0_fuzz.cpp's ObjectEntry
 // is the precedent.
-void __cdecl TriggerEntry(unsigned char* object, unsigned char* row) {
-    sh::Record(0x55E170, KeyOf(object), KeyOf(row), object[0x86]);
+// One per entry, so the log says which entry the trigger called.
+template <unsigned I> void __cdecl TriggerEntry(unsigned char* object, unsigned char* row) {
+    sh::Record(0x55E170, I, KeyOf(object), KeyOf(row));
     sh::Stir();
 }
+using TriggerFn = void (__cdecl*)(unsigned char*, unsigned char*);
+const TriggerFn kTriggerEntries[] = {
+    &TriggerEntry<0>, &TriggerEntry<1>, &TriggerEntry<2>, &TriggerEntry<3>, &TriggerEntry<4>,
+    &TriggerEntry<5>, &TriggerEntry<6>, &TriggerEntry<7>, &TriggerEntry<8>, &TriggerEntry<9>,
+    &TriggerEntry<10>, &TriggerEntry<11>, &TriggerEntry<12>, &TriggerEntry<13>, &TriggerEntry<14>,
+};
 
 const sh::Callee kCallees[] = {
     // the flag bits (the pointer read from 0x929ED0 is the same on both sides)
@@ -200,9 +207,9 @@ const sh::Callee kCallees[] = {
     {SC11_THEIRS(Sound_ResumeAll), 0, {}, sh::Answer::kGarbage, 0, 0},
     {SC11_RAW("0x587B80", kSoundJmp), 0, {}, sh::Answer::kGarbage, 0, 0},
     // Scena11_Triggers' entries while Scena11_ObjectTrigger is fuzzed: the
-    // object, the row and the object's +0x86 logged (below)
+    // entry's index, the object and the row logged (below)
     {"Scena11_Triggers[] (keyed on 0x55E170)", 0x55E170, 0x55E170, 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
-     reinterpret_cast<const void*>(&TriggerEntry)},
+     reinterpret_cast<const void*>(&TriggerEntry<0>)},
 };
 
 // --- the .data tables: swapped for recorders while the fuzz runs --------------------
@@ -283,7 +290,7 @@ void Seed(unsigned k) {
         g_have_recorders = true;
     }
     for (unsigned i = 0; i < kTriggerCount; ++i)
-        SetLong(Mem(kTriggers + 4 * i), static_cast<std::int32_t>(k == kObjectTrigger ? KeyOf(&TriggerEntry) : g_trigger_recorders[i]));
+        SetLong(Mem(kTriggers + 4 * i), static_cast<std::int32_t>(k == kObjectTrigger ? KeyOf(kTriggerEntries[i]) : g_trigger_recorders[i]));
     // the chapter's bytes, by the values each comparison names
     B(kState) = static_cast<unsigned char>(sh::Next() % 3);
     B(kVar7) = static_cast<unsigned char>(sh::Often() ? PickOf(kVar7s) : sh::Next() % 25);
