@@ -47214,3 +47214,588 @@ ctype = "unsigned long"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-27 (round ten group AR0C): area 37's descriptor +0x3C: Area37_ToggleScriptFlag8 (PSX 0x801F3B14), then a zero."
+
+# ---------------------------------------------------------------------------
+# Round 10 group SC7: scenario chapters 7 and 8, 0x54F080..0x553B30
+# (src/game/scena_sc7.cpp, docs/scena_sc7.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x54F080
+name = "Scena07_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F080..0x54F08E (0xE bytes): slot 0 of Scena07_Hooks (Field_ModeDispatch): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x6611CC], Scena07_States by the state, unchecked. PSX twin 0x801FA65C (the sibling's scenario_records.toml, SCENA07 vtable[0])."
+
+[[func]]
+pc = 0x54F090
+name = "Scena07_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F090..0x54F0A2 (0x12 bytes): state 0 (Scena07_States entry 0): the dword 0x903FC8 (chapter 7's flag row) cleared, state 1."
+
+[[func]]
+pc = 0x54F0B0
+name = "Scena07_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F0B0..0x54F326 (0x276 bytes): state 1: by Game_AreaNumber (read afresh at each test) 0x35, 0x4A (Cond_ByteFD 1), 0x55, 0x69, 0xAF (Cond_ByteFD 1) and the chapter's flags: Scenario_CallA, drop-ins, Sprite_Kind2 +0x3E and MapView_SetElevation 0xD80, Kind2 x/z and Field_ViewReset, Flags_Clear 5 and 6 outside area 0x4A, AreaMap_SetByte pairs (after LoadDatFile(0) and a File_LoadDone poll when flag 9), story flag 0x4F, run 6 / run 1 / run 3 armed; state 2 on every way out. PSX twin hypothesis 0x801FA6B4 (pairs_propagated.json, by callers)."
+
+[[func]]
+pc = 0x54F330
+name = "Scena07_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F330..0x54F33E (0xE bytes): state 2: movsx eax, byte 0x8034E4 / jmp [eax*4 + 0x6611D8], Scena07_Runs by MoveScript_Var7, unchecked."
+
+[[func]]
+pc = 0x54F340
+name = "Scena07_Scene1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F340..0x54F41C (0xDC bytes): run 1: switch on the step 0..3 (jump table of 4 at 0x54F40C; 0x54F380 is its case 1, not a function): message 1, then Transition_Start(1) with Kind2 at 0x2D8000 / 0x5D0000, counter 0 = 1, on 0x15 flag 0 and the run over."
+
+[[func]]
+pc = 0x54F420
+name = "Scena07_Scene2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F420..0x54F9E0 (0x5C0 bytes): run 2: switch on the step 0..0x1C (jump table of 29 at 0x54F96C; 0x54F540, 0x54F560 and 0x54F8A0 are its cases 7, 8 and 0x15): message 0x11, transitions, Field_StatusBits |= 1 and the change to area 0xAF, effects of kind 0x13 / 0x31 / 0x38 on counter 0 values, music 0x60 / 0x63, the camera words set, 0x532ED0 and Field_StartEventBattle(0x1D), flag 1; step 0x1C ends the run."
+
+[[func]]
+pc = 0x54F9E0
+name = "Scena07_Scene3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54F9E0..0x54FB40 (0x160 bytes): run 3: switch on the step 0..6 (jump table of 7 at 0x54FB24; 0x54FA40 is its case 3): counter 0 = 3 / 0xD / 0x10, a fade out, 0x533E50, 0x587B80, stream 0; on Sound_StreamDone Sound_ResumeAll, Field_StatusBits &= 0xFE, flag 2 and the change to area 0xAF; a fade in; the run over."
+
+[[func]]
+pc = 0x54FB40
+name = "Scena07_Scene4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54FB40..0x54FE90 (0x350 bytes): run 4: switch on the step 0..0xC (jump table of 13 at 0x54FE5C): an effect of kind 6 kept in member 0's +0xB (its +0x10 from MoveScript_EffectArg by member 0's +0x89), waited on; Kind2_Place(0); 0x532ED0; effects of kind 0x3B at sprite 0 and 0x13; steps 8 and 9 call Scena07_TimedEffects and count the timer up; music 0x5E; Field_StartEventBattle(0x1E); step 0xC flag 3 and the run over."
+
+[[func]]
+pc = 0x54FE90
+name = "Scena07_TimedEffects"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54FE90..0x54FF3A (0xAA bytes): run 4's timed effects: for 12 records of Scena07_TimedRecords 0x6611FC (6 bytes: x, z, s16 frame) whose frame equals the timer 0x8034E6 (re-read each record): Effect_FindFree (none: return), kind 0x18 at +5 and +0xB, +0x36 / +0x3A the record's x / z, Sound_PlayEffect(0x202 + record % 3). Called by Scena07_Scene4 only."
+
+[[func]]
+pc = 0x54FF40
+name = "Scena07_Scene5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54FF40..0x54FFD2 (0x92 bytes): run 5: steps 0..2 (a chain of decrements): the change to area 0x35 and 0x904CD0 = 0x4D; the wait word; on counter 0 = 9 flag 7, the change to area 0x58, Field_ScriptFlags &= 0xFFF7 and the run over."
+
+[[func]]
+pc = 0x54FFE0
+name = "Scena07_Scene6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x54FFE0..0x55088C (0x8AC bytes): run 6: switch on the step 0..0x27 (jump table of 40 at 0x5507EC): Scenario_CallB 0 and 1, messages 6 / 0x11 / 0x12, effects of kind 0x49 through Scena07_TakeEffect49 (12 E8) moved on timers, 0x532ED0 and Field_StartEventBattle(0x1F), the change to area 0x55, effects of kind 0x46 and 0x13, Scena07_PlaceObjects, 0x56D6F0 and the change to area 0x20. Its tail 0x5507CC: step above 0x1F Scena07_ShakeCamera, above 0x26 again; some cases return first, some shake once unconditionally (0x5507D5)."
+
+[[func]]
+pc = 0x550890
+name = "Scena07_ShakeCamera"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550890..0x5508B2 (0x22 bytes): MapView_Redraw = 2; Camera_ShiftY (u16) += Scena07_Shake 0x661244 [Frame_Counter & 3] (s8) << 2. Called twice by Scena07_Scene6's tail."
+
+[[func]]
+pc = 0x5508C0
+name = "Scena07_PlaceObjects"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5508C0..0x55092C (0x6C bytes): 14 times: 0x57CD90 (a free sprite; the answer's byte stored as a u16 to 0x903850; 0xFF skips), EventOp_0x on Scena07_PlacedObjects 0x661248 + 0x11 * i, Sprite_Current +0x3E = 0xA00, and when Scena07_PlacedSeats 0x661338 [i] is not 0: Field_ActiveMember +0x81 = it, Sprite_Current +3 = +1, +1 = 5. Called by Scena07_Scene6 step 0x26."
+
+[[func]]
+pc = 0x550930
+name = "Scena07_Scene7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550930..0x550B1E (0x1EE bytes): run 7: steps 0..0x15 through a byte table of 0x16 at 0x550B08 into a jump table of 7 at 0x550AEC (0x550950 is its case 0): two rewards - Inventory_Add(1, record 7 +0x12 + 1, 1, 0) / (2, record 7 +0x15 + 1, 1, 0) (a fourth word pushed, unread); full: counter 0 = 0x20 / 0x25 and the run over; else Item_NamePtr's 16 bytes to Text_Records +0 / +0x20, message 0x94 / 0x95, flag 0x22 / 0x23, sound 0x106; step 0x14 Msg_OpenSystem(1); step 0x15 the run over."
+
+[[func]]
+pc = 0x550B20
+name = "Scena07_Scene8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550B20..0x550B46 (0x26 bytes): run 8: at step 0 with no message open, ScriptFlags_Clear40 and the run over."
+
+[[func]]
+pc = 0x550B50
+name = "Scena07_ObjectHook"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550B50..0x550B6F (0x1F bytes): slot 1 (0x56D6D0 pushes the object): call [object +0x86 * 4 + 0x661348](object, [0x929ED0]), Scena07_ObjectHandlers, unchecked; 0x56D6D0 reads no answer. PSX twin 0x801FD3BC (SCENA07 vtable[1])."
+
+[[func]]
+pc = 0x550B70
+name = "Scena07_Object0"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550B70..0x550BAC (0x3C bytes): object handler 0: Flags_Set([0x929ED0], 0xA) (not the row given), ScriptFlags_Set40, Party_DropIn(3); the object +1 = 4, +0x84 = 2, +0x83 = 5, +0x8A (u16) = 0."
+
+[[func]]
+pc = 0x550BB0
+name = "Scena07_Object1"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550BB0..0x550BF3 (0x43 bytes): object handler 1: flag 0xB, 0x591900(5), ScriptFlags_Set40, Party_DropIn(4); the object to state 4 with +0x83 = 6. PSX twin hypothesis 0x801FD45C (pairs_propagated.json, by callers)."
+
+[[func]]
+pc = 0x550C00
+name = "Scena07_Object2"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550C00..0x550C3C (0x3C bytes): object handler 2: flag 0xC, ScriptFlags_Set40, Party_DropIn(9); the object to state 4 with +0x83 = 0x1D."
+
+[[func]]
+pc = 0x550C40
+name = "Scena07_Object3"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550C40..0x550C89 (0x49 bytes): object handler 3: ScriptFlags_Set40, the four counters 0x903848..B cleared, Flags_Test(0x903FC0 - chapter 6's row -, 0x22); step 0, or 0x14 when set; run 7."
+
+[[func]]
+pc = 0x550C90
+name = "Scena07_Object4"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550C90..0x550CD4 (0x44 bytes): object handler 4: as handler 3 with chapter 6's flag 0x23 and step 0xA (or 0x14)."
+
+[[func]]
+pc = 0x550CE0
+name = "Scena07_TakeEffect49"
+ret = "unsigned char *"
+params = "unsigned member"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550CE0..0x550D12 (0x32 bytes): Effect_FindFree; the record Effect_Objects + slot * 0x80 answered in eax whatever the slot (0xFF: 0x7E9160, past the pool); when not 0xFF +0 = 1, +5 = 0x49, +1 = the argument's byte. Called 12 times by Scena07_Scene6, which writes through the answer unchecked."
+
+[[func]]
+pc = 0x550D20
+name = "Scena07_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550D20..0x550F1C (0x1FC bytes): slot 2 (Scenario_StepHook, (x, z), al): area 0x4A (flag 4 not 7, x 0x348000, z cells 0x13..0x16) run 5; 0x52 (z cells 0x3C..0x40, x cells 0x22..0x25) counter 0 = 0x10 unless flag 4 with Scena07_PartyHas89State2, or member 0's +8 is 4..6 (stored to 0x903850); 0x55 (z 0x1C8000, x cells 0x25..0x26, not flag 9) message 2, Field_ScriptFlags +1 |= 1, run 6 step 5; 0x69 (member 0's +8 not 0..2, s16 z cell above 0x1D) message 1, run 8; 0xAF (flag 0 not 1, z cells 0x20..0x24, x cells 0x18..0x2D) run 2; al 1 when a scene starts. PSX twin 0x801FD67C (SCENA07 vtable[2])."
+
+[[func]]
+pc = 0x550F20
+name = "Scena07_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550F20..0x550F78 (0x58 bytes): slot 3 (Scenario_ArriveHook, (x, z), al): area 0x67, not flag 3, z <= 0x200000 (signed), x cells 0x4A..0x4B: ScriptFlags_Set40, Music_FadeOut(0x20), run 4, al 1; else 0. PSX twin 0x801FD944 (SCENA07 vtable[3])."
+
+[[func]]
+pc = 0x550F80
+name = "Scena07_PartyHas89State2"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550F80..0x550FC2 (0x42 bytes): al 1 when one of the first Field_MemberCount (u8) ObjTrio records has +0x89 = 2, else 0. Called by Scena07_StepHook and by 0x55BBB1 (chapter 10's code, SC9b's band)."
+
+[[func]]
+pc = 0x550FD0
+name = "Scena07_CellHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x550FD0..0x550FFD (0x2D bytes): slot 4 (0x56D7A0, (x, z), al): 0x56D800(Scena07_Cells 0x66135C, 1, x, z); negative: or al, 0xFF; else call [answer * 4 + 0x661364] (Scena07_CellHandlers, unchecked), al 1. PSX twin 0x801FDA7C (SCENA07 vtable[4])."
+
+[[func]]
+pc = 0x551000
+name = "Scena07_Cell0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551000..0x551014 (0x14 bytes): Scena07_CellHandlers entry 0: ScriptFlags_Set40, run 6 at step 0xA."
+
+[[func]]
+pc = 0x551020
+name = "Scena08_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551020..0x55102E (0xE bytes): slot 0 of Scena08_Hooks (Field_ModeDispatch): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x66137C], Scena08_States by the state, unchecked. PSX twin 0x801FA294 (SCENA08 vtable[0])."
+
+[[func]]
+pc = 0x551030
+name = "Scena08_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551030..0x55105D (0x2D bytes): state 0: state 1, the dword 0x903FD0 (chapter 8's flag row) and the four counters 0x903848 cleared, Scena08_PartyBitsToRecord0, Scena08_SwapKeyItem4, Flags_Set(0x904030, 0x43)."
+
+[[func]]
+pc = 0x551060
+name = "Scena08_PartyBitsToRecord0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551060..0x5510A0 (0x40 bytes): bit 0 of +0xB set on CharacterRecords 0..7 (0x903A7B, stride 0xA4), 0x533E50, bit 0 cleared on records 1..7. Called by Scena08_Start."
+
+[[func]]
+pc = 0x5510A0
+name = "Scena08_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5510A0..0x55157E (0x4DE bytes): state 1: by Game_AreaNumber 0 (Cond_ByteFD 0), 1 (Cond_ByteFD 2), 2, 3, 0xC, 0xF, 0x12, 0x15 (Cond_ByteFD 0), 0x20 (Cond_ByteFD 5, 1, 0) and the chapter's flags: Scenario_CallA, drop-ins, Kind2 and the view with MapView_SetElevation(AreaMap_Elevation), sprites 0 and 1 +1 / +0x83, an effect of kind 0x13, member 1 +0 |= 0x40, member 0's +8 / x / z kept at 0x6BC720, AreaMap_SetByte 11 times, Music_LoadFile(0x74) with a File_LoadDone poll, runs 4, 8, 9, 0xA, 1 armed; in area 0x15 Flags_Set is pushed (row, the row pointer's low byte, 0x14); state 2 on every way out. PSX twin hypothesis 0x801FA3E4 (pairs_propagated.json, by callers)."
+
+[[func]]
+pc = 0x551580
+name = "Scena08_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551580..0x55158E (0xE bytes): state 2: movsx eax, byte 0x8034E4 / jmp [eax*4 + 0x661388], Scena08_Runs by MoveScript_Var7, unchecked."
+
+[[func]]
+pc = 0x551590
+name = "Scena08_Scene1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551590..0x5518D4 (0x344 bytes): run 1: switch on the step 0..0xC (jump table of 13 at 0x5518A0; step 0 runs on into step 1): timed music 0x2B, counter 0 = 1, effects of kind 0x52 (the first at AreaMap_Elevation), Transition_Start(4), Music_FadeOut / FadeOutStop, CharacterRecords by MoveScript_EffectState [7] / [8] set, Scenario_CallA(0) and the change to area 0x20, again on counter 0x16 with flag 0, sound 0x204, on 0x1D the change to area 0x20 with flag 1 and Field_ScriptFlags |= 0x20, the run over."
+
+[[func]]
+pc = 0x5518E0
+name = "Scena08_Scene2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5518E0..0x551971 (0x91 bytes): run 2: steps 0..2 (a chain of decrements): Sprite_ObjectsExtra +0x83 = 3, +0x8A = 0; on 0x90384B = 0x12 a 0x10-frame wait (decrement stored first); flag 3, 0x9039F6 (u16) = 1, 0x9039F3 = 5, 0x9039F4 = 3, the run over."
+
+[[func]]
+pc = 0x551980
+name = "Scena08_Scene3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551980..0x551DD8 (0x458 bytes): run 3: switch on the step 0..0x12 (jump table of 19 at 0x551D8C; 0x551BA0 is its case 9): the counters cleared, a drop-in, Kind2 at member 0 and MoveScript_F3Divisor from Field_MoveSpeeds +4 << 3; Sprite_Kind2 placed with AreaMap_Elevation; an effect of kind 0x51; Music_FadeOut, 0x532ED0; timed waits; sound 0x20A; message 0x12; Field_StartEventBattle(0x20) (step 0xD waits for it); LoadDatFile(1) polled with Field_LoadingFrame; an effect of kind 0x63; music 0x6D; flags 3 and 0x10 of 0x904650 and 4, the run over."
+
+[[func]]
+pc = 0x551DE0
+name = "Scena08_Scene4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551DE0..0x551F34 (0x154 bytes): run 4: switch on the step 0..0xA (jump table of 11 at 0x551F08; 0x551E40 is its case 2, so pairs_propagated.json's pair of it with 0x801FB8A0 is a case's): counter 0 = 0xA and a drop-in; flag 5; the sprite 0x90384B names (unchecked) with bit 0x80, a drop-in and the run over; message 0x24; step 0xA flag 6, 0x591BE0(0xBB8, 0) and the change to area 1."
+
+[[func]]
+pc = 0x551F40
+name = "Scena08_Scene5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x551F40..0x552119 (0x1D9 bytes): run 5: steps 0..4 and 0x64 through a byte table of 0x65 at 0x5520B4 into a jump table of 7 at 0x552098 (0x551F60 is its case 0): the change to area 2, step 0x64; in area 2 an effect of kind 0x57; counters 1 and 2 the changes to area 0x35 (step 1 runs on into step 2's test); Cond_ByteFE = 1 on 6; on 8 0x533E50, flag 7, the change to area 0x73, the run over."
+
+[[func]]
+pc = 0x552120
+name = "Scena08_Scene6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x552120..0x5523D4 (0x2B4 bytes): run 6: switch on the step 0..8 (jump table of 9 at 0x5523B0): Music_FadeOut over 0x20 frames and a drop-in; effects of kind 0x13 / 0x5F with the slot kept at 0x6BC72F and waited on; 0x532ED0 and Field_StartEventBattle(0x21) (step 7 waits for it); step 8 flag 8 and the run over."
+
+[[func]]
+pc = 0x5523E0
+name = "Scena08_Scene7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5523E0..0x5525A4 (0x1C4 bytes): run 7: steps 0..0xF through a byte table of 0x10 at 0x552594 into a jump table of 9 at 0x552570 (0x552400 is its case 0): a timed drop-in; flag 9 and the run over; the change to area 0; a fade out, 0x533E50, 0x587B80, stream 0; on its end Sound_ResumeAll and a fade in; flag 0xB; on counter 0 the sprite 0x903804 points at +6 = 5, +0x18 = 1, +0x1C = 3 (the pointer read afresh each store), the run over."
+
+[[func]]
+pc = 0x5525B0
+name = "Scena08_Scene8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5525B0..0x552CA0 (0x6F0 bytes): run 8: switch on the step 0..0x1B (jump table of 28 at 0x552C30; 0x552770 is its case 8): the change to area 0xB, message 0x27, music 0xC, effects of kind 0x13 kept at 0x6BC72F, the kept area change (0x6BC720 flags, x, z) back; Scenario_CallB(0) and Scena08_SpawnPair with 0x904065 / 0x904066 kept; Kind2_Place; music of 0x904CD0; on message 0xE the sprite 0x903804 points at kept (x, z and (pointer - Sprite_Objects) / 0xA4, a signed division); on counter 0 flag 0xE, that sprite's +0 = 0 (index unchecked), Scenario_CallA(2), the party-list bytes put back, member 1 at the kept x, z and AreaMap_Elevation."
+
+[[func]]
+pc = 0x552CA0
+name = "Scena08_SpawnPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x552CA0..0x552D44 (0xA4 bytes): two free sprites from 0x57CD90 (indices as dwords to 0x6BC724 / 0x6BC728, each +0 = 1; no second: the first's +0 = 0 again); for each its index as a u16 to 0x903850, EventOp_6x(0x6613B8 / 0x6613C8) and Sprite_SetAnimationAt(0x4C / 0x36, 0). Called by Scena08_Scene8 step 0xE."
+
+[[func]]
+pc = 0x552D50
+name = "Scena08_Scene9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x552D50..0x552EE8 (0x198 bytes): run 9: switch on the step 0..7 (jump table of 8 at 0x552EC8; 0x552DD0 is its case 3): Kind2_Place(0) and Field_ScriptFlags |= 8 on counter 8; a 0x78-frame wait; on counter 0 the change to area 0xD with flag 0xF; a drop-in; an effect of kind 0x5F; sound 0x203, flag 0x10, the change to area 0xF."
+
+[[func]]
+pc = 0x552EF0
+name = "Scena08_Scene10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x552EF0..0x553041 (0x151 bytes): run 10: steps 0 and 0xA..0xC through a byte table of 0xD at 0x553034 into a jump table of 5 at 0x553020: step 0 a drop-in and the run over; effects of kind 0x13 (the second kept at 0x6BC72F and waited on); flag 0x14 and the run over."
+
+[[func]]
+pc = 0x553050
+name = "Scena08_Scene11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553050..0x553621 (0x5D1 bytes): run 11: steps 0..0x15 and 0x64 through a byte table of 0x65 at 0x5535BC into a jump table of 23 at 0x553560 (0x553070 and 0x5534E0 are its cases 0 and 0x14; pairs_propagated.json pairs 0x553070 across sections): PartySet_LoadFirst(7, 8, 4) / LoadSecond(7, 8, 4, 0) with Kind2 at 0x170000 / 0xF0000; Scenario_CallA 5 and 6; effects of kind 0x5F / 0x60; message 9, Scena08_SetUpRecord4 and two CharacterRecords (by MoveScript_EffectState [7] and [4]) +0xB / +0x11 / +0x18 set; 0x532ED0 and Field_StartEventBattle(0x22) (step 0xB waits for it); flag 0x15; the change to area 0x2B; music 0x73, stream 3; message 0x22; music 0x64 and Kind2 at member 0; 0x56D6F0 and the run over."
+
+[[func]]
+pc = 0x553630
+name = "Scena08_SetUpRecord4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553630..0x553686 (0x56 bytes): CharacterRecords record 4 (0x903D00): the dword +0xC += 0x2710, 0x498DE0(4), bytes +0x12..+0x15 = 7, 0x38, 0x21, 0xE, Char_RecalcStats(0x903D00), Char_HealHp(4, 0, 0), Char_HealAp(4, 0, 0). Called by Scena08_Scene11 step 7. PSX twin hypothesis 0x801FDF84 (pairs_propagated.json, by callers)."
+
+[[func]]
+pc = 0x553690
+name = "Scena08_ObjectHook"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553690..0x5536AF (0x1F bytes): slot 1: call [object +0x86 * 4 + 0x6613D8](object, [0x929ED0]), Scena08_ObjectHandlers, unchecked. PSX twin 0x801FE018 (SCENA08 vtable[1])."
+
+[[func]]
+pc = 0x5536B0
+name = "Scena08_Object0"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5536B0..0x5536D4 (0x24 bytes): object handler 0 (arguments unread): counter 0 = 0, ScriptFlags_Set40, run 7, timer 0x20, step 0."
+
+[[func]]
+pc = 0x5536E0
+name = "Scena08_Object1"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x5536E0..0x5536FB (0x1B bytes): object handler 1 (arguments unread): counter 0 = 0, ScriptFlags_Set40, run 7 at step 0xA."
+
+[[func]]
+pc = 0x553700
+name = "Scena08_Object2"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553700..0x55372B (0x2B bytes): object handler 2 (arguments unread): counter 0 = 0, ScriptFlags_Set40, run 0xA step 0, Flags_Set([0x929ED0], 0x13)."
+
+[[func]]
+pc = 0x553730
+name = "Scena08_SwapKeyItem4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553730..0x553747 (0x17 bytes): the 32 bytes at 0x904554 (the key items 0x591900 appends to): each 4 becomes 0xE. Called by Scena08_Start."
+
+[[func]]
+pc = 0x553750
+name = "Scena08_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553750..0x55380C (0xBC bytes): slot 2 ((x, z), al): area 1 (x 0x338000, z cells 0x27..0x28) run 4 step 5 until flag 6, then run 5 (counter 0 cleared) until flag 7, al 1; area 0x46 (x 0x388000, z cells 0x2E..0x31) flag 0x16, al 0. PSX twin 0x801FE170 (SCENA08 vtable[2])."
+
+[[func]]
+pc = 0x553810
+name = "Scena08_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc7.cpp"
+evidence = "disasm 2026-09-27, group SC7, 0x553810..0x553B21 (0x311 bytes): slot 3 ((x, z), al): area 1 (not flag 5, x cells 0x1C..0x1D, z cells 0x2B..0x2C) run 4; area 0xC (flag 0xB not 0xD) by exact x 0x2F0000 (z <= 0x1F0000, run not 8) run 8 step 0xA timer 0x14, 0x1B0000 / 0x160000 / 0x110000 at an exact z flags 0x18 / 0x19 / 0x1A with sounds 0x201 / 0x202 / 0x203 once, 0x70000 (z 0x130000) sound 0x204 and run 8 step 0x14; area 0xD (flag 0xF not 0x10, z <= 0x38000, x cells 0x1C..0x1D) run 9 step 5; area 0x23 (not flag 8, x cells 0x45..0x47, z cells 0x37..0x39, member 0's +8 not 0 / 6 / 7, stored to 0x903850) run 6; area 0x2B (flag 0x14 not 0x15, z >= 0xF0000, x cells 0x20..0x25) run 11; al 1 when a scene starts. PSX twin 0x801FE2A0 (SCENA08 vtable[3])."
+
+[[data]]
+pc = 0x6611CC
+name = "Scena07_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: chapter 7's states: 0x54F090 Scena07_Start, 0x54F0B0 Scena07_EnterArea, 0x54F330 Scena07_Run; Scena07_Frame jumps through it on the s8 0x8034E2. Scena07_Runs follows."
+
+[[data]]
+pc = 0x6611D8
+name = "Scena07_Runs"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: chapter 7's runs by MoveScript_Var7: 0x437CC0 (a ret), Scena07_Scene1..8 (0x54F340, 0x54F420, 0x54F9E0, 0x54FB40, 0x54FF40, 0x54FFE0, 0x550930, 0x550B20); Scena07_Run jumps through it unchecked. Scena07_TimedRecords follows."
+
+[[data]]
+pc = 0x6611FC
+name = "Scena07_TimedRecords"
+ctype = "unsigned char"
+count = 72
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: 12 records of 6 bytes (u16 x, u16 z, s16 frame) Scena07_TimedEffects 0x54FE90 reads (+4 compared with the timer; +0, +2 to an effect's +0x36, +0x3A). The 4 bytes after them are Scena07_Shake."
+
+[[data]]
+pc = 0x661244
+name = "Scena07_Shake"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: Scena07_ShakeCamera adds this [Frame_Counter & 3] << 2 to Camera_ShiftY."
+
+[[data]]
+pc = 0x661248
+name = "Scena07_PlacedObjects"
+ctype = "unsigned char"
+count = 238
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: 14 event-op records of 0x11 bytes Scena07_PlaceObjects hands to EventOp_0x, one per placed object."
+
+[[data]]
+pc = 0x661338
+name = "Scena07_PlacedSeats"
+ctype = "unsigned char"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: one byte per Scena07_PlacedObjects record: not 0, Field_ActiveMember +0x81 = it and the object set to state 5."
+
+[[data]]
+pc = 0x661348
+name = "Scena07_ObjectHandlers"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: Scena07_ObjectHook's call [0x661348 + object[0x86] * 4](object, row): Scena07_Object0..4 (0x550B70, 0x550BB0, 0x550C00, 0x550C40, 0x550C90)."
+
+[[data]]
+pc = 0x66135C
+name = "Scena07_Cells"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: the one 5-byte cell record Scena07_CellHook passes to 0x56D800 (n = 1)."
+
+[[data]]
+pc = 0x661364
+name = "Scena07_CellHandlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: Scena07_CellHook's call [0x661364 + answer * 4]: 0x551000 Scena07_Cell0. Scena08_Hooks follows (the scenario walk read on into it)."
+
+[[data]]
+pc = 0x66137C
+name = "Scena08_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: chapter 8's states: 0x551030 Scena08_Start, 0x5510A0 Scena08_EnterArea, 0x551580 Scena08_Run; Scena08_Frame jumps through it on the s8 0x8034E2. Scena08_Runs follows."
+
+[[data]]
+pc = 0x661388
+name = "Scena08_Runs"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: chapter 8's runs by MoveScript_Var7: 0x437CC0 (a ret), Scena08_Scene1..11 (0x551590, 0x5518E0, 0x551980, 0x551DE0, 0x551F40, 0x552120, 0x5523E0, 0x5525B0, 0x552D50, 0x552EF0, 0x553050); Scena08_Run jumps through it unchecked."
+
+[[data]]
+pc = 0x6613B8
+name = "Scena08_PairOps"
+ctype = "unsigned char"
+count = 32
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: two 16-byte event-op records Scena08_SpawnPair hands to EventOp_6x (+0 for the first sprite, +0x10 for the second)."
+
+[[data]]
+pc = 0x6613D8
+name = "Scena08_ObjectHandlers"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: Scena08_ObjectHook's call [0x6613D8 + object[0x86] * 4](object, row): Scena08_Object0..2 (0x5536B0, 0x5536E0, 0x553700); a 0 at 0x6613E4, then chapter 9's vtable at 0x6613E8."
+
+[[data]]
+pc = 0x6BC720
+name = "Scena08_Kept"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-27, group SC7: chapter 8's cells in .data: +0 a byte (member 0's +8 by Scena08_EnterArea area 0xC, a sprite index by Scena08_Scene8 step 0x1A; Field_ChangeArea's flags at step 7), +4 / +8 dwords (a point, or Scena08_SpawnPair's two sprite indices), +0xC / +0xD the party-list bytes 0x904065 / 0x904066 kept, +0xF an effect slot waited on (runs 6, 8, 10)."

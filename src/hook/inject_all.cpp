@@ -176,6 +176,7 @@
 #include "game/area_w0a.h"
 #include "game/scena_sc6.h"
 #include "game/area_w0c.h"
+#include "game/scena_sc7.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -570,6 +571,10 @@ void InjectAll() {
                                 // re-aimed at the area harness's recorders, its five .data state tables swapped
                                 // for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    ScenaSc7_Inject();          // round 10 group SC7 (scenario chapters 7 and 8, 0x54F080..0x553B30): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its tables swapped for the
+                                // fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
     InjectReport();
 }
 
