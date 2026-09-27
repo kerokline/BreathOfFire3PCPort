@@ -270,6 +270,14 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(Key(Sprite_Current));
     return answer;
 }
+// Sprite_ScriptTickOnce answers 0 or 1 in al (sprite_anim.cpp); a kFlag
+// "yes" always has bit 4, so a quarter of the time al is exactly 1 here
+// (garbage above), or a test of other bits than al's whole would stand.
+std::uint32_t NoteSpriteOnce(const std::uint32_t* a, std::uint32_t answer) {
+    NoteSprite(a, answer);
+    if ((answer & 0xFF) != 0 && mh::Noise() % 4 == 0) answer = (answer & 0xFFFFFF00u) | 1;
+    return answer;
+}
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
     return answer;
@@ -333,7 +341,7 @@ constexpr mh::Answer kG = mh::Answer::kGarbage;
 const mh::Callee kCallees[] = {
     // listed over the standard ones for their effects
     {S37_OURS(Sprite_UpdateScreen), 0, {}, kG, 0, 0, {}, &NoteSpriteFrames},
-    {S37_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &NoteSprite},
+    {S37_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &NoteSpriteOnce},
     // the sprite calls
     {S37_OURS(Sprite_ScriptTick), 0, {}, mh::Answer::kFlag, 0, 0, {}, &NoteSprite},
     {S37_OURS(Sprite_SetAnimation), 1, {kU8}, kG, 0, 0, {}, &NoteSprite},
