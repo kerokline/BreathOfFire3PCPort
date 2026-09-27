@@ -36930,3 +36930,660 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
+
+# ---------------------------------------------------------------------------
+# Round nine group S38: MAGIC223, MAGIC225, MAGIC226/227 (docs/magic_s38.md)
+
+[[func]]
+pc = 0x4F8640
+name = "Tempest_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8640..0x4F86BC (0x7D bytes), group S38: a three-entry stack table (Tempest_Start, MagicFx_CountDownFlag10, Tempest_End) called by byte +1, unchecked; then the 64 records of Tempest_GustPool (0x6B7BE0) with bit 0 of +0 walked, each Sprite_Current with +0x80 the owner for TempestGust_Task (both read after the phase call, put back after each). Magic_Rows row 137, file 0x2B3 = MAGIC223.EMI, ability ids 0xDF and 0xE0 (Tempest and Hurricane read one id down, hypotheses); the first function of MAGIC223's extent 0x4F8640..0x4F8F36. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F86C0
+name = "Tempest_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F86C0..0x4F8821 (0x162 bytes), group S38: the gust pool's +0..+2 cleared; +8 and +0x34/+0x38/+0x3C from the owner; +9 8, +0xB 0, +1 on; BattleTask_Create(1, 0x63) (the flash, unchecked) owned and counted in +0xB; 48 x Tempest_GustAlloc: each record owned by the task, +0xB its number, +9 (Rand & 0xF) + 16 x (i >> 3) + 1, counted (0xFF skipped); CLUT row 26 words 1..15 and 17..31 from Gfx_ClutStripSource | 0x8000, words 0 and 16 cleared, the dirty byte; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8830
+name = "Tempest_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8830..0x4F8859 (0x2A bytes), group S38: at +0xB 0: the word 0x904AA8 |= 0x2004, Battle_SetTargetFlag40(target), BattleTask_FreeCurrent (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8860
+name = "TempestFlash_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8860..0x4F8871 (0x12 bytes), group S38: jmp [0x65C2E4 + 4 x byte +1] (TempestFlash_TaskTable, one entry, unchecked). Kind-1 task parameter 0x63, created by Tempest_Start. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8880
+name = "TempestFlash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8880..0x4F88A2 (0x23 bytes), group S38: call [0x65C2E8 + 4 x byte +2] (TempestFlash_Steps: CoronaFlash_Start, BarrierRing_Grow, MAGIC167's 0x4EF840, MagicFx_CountDownRelease); then with +0 set, a tail jmp to TempestFlash_Draw. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F88B0
+name = "TempestFlash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F88B0..0x4F89DE (0x12F bytes), group S38: draw-mode 0x35 on layer 2; one semi-transparent G4 over 0..319 x 0..239 (floats), the edge by the owner's +8 bit 0 bright; +9 and +9 x 8 in the dwords 0x903858 / Scratch_Swap and the colour bytes read from them; Gfx_CommitPrim(2, 0x44); draw-mode 0x15. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F89E0
+name = "TempestGust_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F89E0..0x4F89F1 (0x12 bytes), group S38: jmp [0x65C2F8 + 4 x byte +1] (TempestGust_TaskTable, one entry, unchecked). The task of a Tempest_GustPool record, called by Tempest_Task's walk. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8A00
+name = "TempestGust_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8A00..0x4F8A28 (0x29 bytes), group S38: call [0x65C2FC + 4 x byte +2] (TempestGust_Steps: _Launch, _Drift, _Fly); then with +0 and +2 set, a tail jmp to TempestGust_Draw. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8A30
+name = "TempestGust_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8A30..0x4F8B48 (0x119 bytes), group S38: +9 down; at 0: +8 and the position from the owner; BattleActor_UpdateScreenXY; the dword 0x903854 = ((+0xB & 7) << 8) + TempestGust_Angles[+8] + 0x400; word +0x2E += Math_Sin x 72 >> 12, word +0x30 += Math_Cos(0x903854 read back) x 72 >> 12 (each through a pointer taken before its call); +0x14 = TempestGust_Angles[+8] (the index unchecked, read in place); +0xB 0 when the word 0x904B80 (the ability) is 0xDF, else 0x10; +9 0, +0xA 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8B50
+name = "TempestGust_Drift"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8B50..0x4F8BB2 (0x63 bytes), group S38: word +0x2E += Math_Sin(+0x14) x 8 >> 12, word +0x30 += Math_Cos(+0x14) x 8 >> 12; +9 up, +0xA up by 4; at 0x10 +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8BC0
+name = "TempestGust_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8BC0..0x4F8C25 (0x66 bytes), group S38: word +0x2E / +0x30 += Math_Sin / Math_Cos(+0x14) x 24 >> 12; +9 up; at 0x14 the owner's +0xB down and a tail jmp to MAGIC219's 0x4F6290 (+0..+4 cleared). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8C30
+name = "TempestGust_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8C30..0x4F8ED0 (0x2A1 bytes), group S38: draw-mode 0x55 on layer 3; one semi-transparent FT4: the dword 0x903850 0x4A, 0x903858 +0xA << 3; four corners (Math_Sin, Math_Cos) of +0x14 + 0xF78 / 0x888 / 0x88 / 0x773 (0x903854) times 0x903850 >> 12 round the screen point +0x2E / +0x30, each read back after its call; Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(+0xB, 0x1FA); u 8..0x98, v ((+9 & 3) << 5) + 8 .. + 0x28; the colour from 0x903858; Gfx_CommitPrim(3, 0x48). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8EE0
+name = "Tempest_GustAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8EE0..0x4F8F36 (0x57 bytes), group S38: the first of Tempest_GustPool's 64 records (0x6B7BE0, 0x84 bytes) without bit 0 of +0 gets it; the index in al, 0xFF when none (upper eax garbage, callers test al). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8F40
+name = "Magic225_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8F40..0x4F8FC4 (0x85 bytes), group S38: a four-entry stack table (Magic225_Start, _Spawn, _Apply, BattleFx_Finish) called by byte +1, unchecked; then the 32 records of Magic225_ShardPool (0x6B9CE0) walked for Magic225Shard_Task. Magic_Rows row 140, file 0x2B4 = MAGIC225.EMI, ability id 0xE1 (no label read one id down); the first function of MAGIC225's extent 0x4F8F40..0x4F9DD6. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F8FD0
+name = "Magic225_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8FD0..0x4F9080 (0xB1 bytes), group S38: the shard pool's +0..+2 cleared; MagicFx_CenterOnSide; +0xB 0, +9 0x18, +1 on; BattleTask_Create(1, 0x65) (the veil, unchecked) owned and counted; CLUT rows 2 and 26 copied from Gfx_ClutStripSource word by word (no STP bits), the dirty byte; Sound_PlayById(0x101). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9090
+name = "Magic225_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9090..0x4F9126 (0x97 bytes), group S38: +9 down; at 0 sixteen times: Sound_PlayById(0x100), Magic225_ShardAlloc, the record owned by the task, +1 0, +0xB the number, +9 8 + 4 i, counted in +0xB (0xFF skipped); +1 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9130
+name = "Magic225_Apply"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9130..0x4F9398 (0x269 bytes), group S38: at +0xB 0: with the target's side bit 0x40 the actors 3..10, else 0..2, each that Battle_ActorIsOut says is in: for j 0..2, MagicFx_ApplyBuff(MagicFx_BuffStats[j], actor), then BattleTask_Create(1, 2) (tested for 0xFF): +0x80 the task, +4 j + 4 (8 when ApplyBuff answered 0), +0xB the actor, +9 1 / 6 / 11, +0xA 12 j, counted in +0xB; +1 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F93A0
+name = "Magic225Veil_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F93A0..0x4F93B1 (0x12 bytes), group S38: jmp [0x65C318 + 4 x byte +1] (Magic225Veil_TaskTable, one entry, unchecked). Kind-1 task parameter 0x65, created by Magic225_Start. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F93C0
+name = "Magic225Veil_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F93C0..0x4F9442 (0x83 bytes), group S38: 0x9039D8 = 0x8E3580; call [0x65C328 + 4 x byte +2] (Magic225Veil_Steps: _Start, _FadeIn, BarrierRing_Grow, _WaitBuffs, _End); with +0 and +2 set: Magic225Veil_DrawShade and Magic225Veil_DrawBurst (0x30, 0x10, 0x52, 0), (0x12C, 0, 0x80, 1), (0x40, 0xF0, 0x6C, 2), (0x140, 0xF0, 0x5C, 3); 0x9039D8 = 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9450
+name = "Magic225Veil_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9450..0x4F9506 (0xB7 bytes), group S38: the actor's sprite (0x904B3C) +0x29 = 2; the side's actors Battle_ActorIsOut says are in (enemies 0..7 at 0x93B989 + 0x128 i with the side bit, else party 0..2 at 0x802D69 + 0x14C i) +0x29 = 2; +0x29 7 when the byte 0x904AAA is 0x37, else 3; +0xB 1, +9 0, +0xA 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9510
+name = "Magic225Veil_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9510..0x4F9535 (0x26 bytes), group S38: +0xA up by 2; at 0x10 +0xB 0 and +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9540
+name = "Magic225Veil_WaitBuffs"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9540..0x4F955E (0x1F bytes), group S38: when the owner's +0xB is 1 or less: +0xB 1, +2 on (MAGIC167's 0x4EF840 without the store). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9560
+name = "Magic225Veil_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9560..0x4F960D (0xAE bytes), group S38: +9 down by 2 while not 0; +0xA down; at 0 the actor's sprite and the side's live actors +0x29 = 4, the owner's +0xB down, BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9610
+name = "Magic225Veil_DrawBurst"
+ret = "void"
+params = "int x, int y, int radius, int kind"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9610..0x4F9977 (0x368 bytes), group S38: four arguments (the words' low halves, kind's low byte): draw-mode 0x55 committed on layer +0x29; the dwords 0x903850 = radius, 0x903854 = radius + radius / 2, Scratch_Swap = +9 << 2, 0x903860 / 64 / 68 = the three bytes of Magic225Veil_BurstColours[kind] x +9; 32 semi-transparent G3 fans from (x, y) to the radius, then 32 G4 between 1.5 radius (colour 1) and the radius, 0x80 of angle a step, every vertex float, each read back after its call; the argument slots reused for the float centre and the counters. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9980
+name = "Magic225Veil_DrawShade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9980..0x4F9A3C (0xBD bytes), group S38: draw-mode ((+0xB & 3) << 5) | 0x15 on layer +0x29; one F4 over the screen (0 / 319 x 0 / 239 floats at +8, +0x14, +0x20, +0x2C), Gpu_SetSemiTrans by +0xB, grey (+0xA + 1) x 15 in Scratch_Swap; Gfx_CommitPrim(+0x29, 0x38). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9A40
+name = "Magic225Shard_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9A40..0x4F9A51 (0x12 bytes), group S38: jmp [0x65C33C + 4 x byte +1] (Magic225Shard_TaskTable, one entry, unchecked). The task of a Magic225_ShardPool record. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9A60
+name = "Magic225Shard_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9A60..0x4F9A9C (0x3D bytes), group S38: 0x9039D8 = 0x8E3580; call [0x65C340 + 4 x byte +2] (Magic225Shard_Steps: _Launch, _Fly, _Fall); with +0 and +2 set Sprite_UpdateScreen; 0x9039D8 = 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9AA0
+name = "Magic225Shard_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9AA0..0x4F9C57 (0x1B8 bytes), group S38: +9 down; at 0: the actor's sprite 0x904B3C read once; its +8; (0x10000, 0) turned by 0x446770 and added to its position, +0x3C its + 0x1000000; +0x14 = Math_Ratan2(float (owner.x - x), float (owner.z - z)) then +/- (Rand & 0xFF) by bit 0 of +0xB; the sprite fields +0x24..+0x2B, +0x40/+0x44 0x10000, +0x48 2, +0x5C..+0x5F 0; Sprite_SetAnimation(0); +0xC 0xC, +9 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9C60
+name = "Magic225Shard_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9C60..0x4F9CE9 (0x8A bytes), group S38: Sprite_ScriptTick (unread); +0x40 / +0x44 up by 0x800; +0x34 / +0x38 += Math_Sin / Math_Cos(+0x14) x +0xC (Sprite_Current read after each call); on odd Frame_Counter: at +0xC 4, +2 on, else +0xC down. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9CF0
+name = "Magic225Shard_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9CF0..0x4F9D74 (0x85 bytes), group S38: Sprite_ScriptTick; +0x40 / +0x44 up by 0x800; +0x34 / +0x38 += Math_Sin / Math_Cos(+0x14) << 2; +9 down; at 0 the owner's +0xB down and a tail jmp to 0x4F6290. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9D80
+name = "Magic225_ShardAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9D80..0x4F9DD6 (0x57 bytes), group S38: the first of Magic225_ShardPool's 32 records (0x6B9CE0) without bit 0 of +0 gets it; the index in al, 0xFF when none. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9DE0
+name = "MeteorStrike_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9DE0..0x4F9E5C (0x7D bytes), group S38: a three-entry stack table (MeteorStrike_Start, MagicFx_CountDownFlag10, BattleFx_Finish) called by byte +1, unchecked; then the 48 records of MeteorStrike_RecordPool (0x6BAD60) walked for MeteorStrikeRecord_Task. Magic_Rows rows 135 and 147, files 0x2B5 / 0x2B6 = MAGIC226 / MAGIC227.EMI, ability ids 0xE2 and 0xE3 (MeteorStrike read one id down, a hypothesis; 0xE3 is C3's row 147); the first function of the extent 0x4F9DE0..0x4FAFE6. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9E60
+name = "MeteorStrike_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9E60..0x4F9F6A (0x10B bytes), group S38: the record pool's +0..+2 cleared; MagicFx_CenterOnSide, BattleActor_UpdateScreenXY; +8 the actor sprite's (0x904B3C) +8, xor 2 when the target's side bit and the actor (0x904B34 below 3) disagree; +0xB 0, +9 0x10, +1 on; BattleTask_Create(1, 0x5F) (the rock, unchecked) owned and counted; Sound_PlayById(0x100); CLUT row 26 and row 2's first 16 words from the source | 0x8000, their first words without; the dirty byte. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9F70
+name = "MagicFx_CountDownFlag10"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9F70..0x4F9FA2 (0x33 bytes), group S38: +9 down; at 0 Battle_SetTargetFlags(target, 0x10) and +1 on. A stack-table phase of ten overlays (MAGIC053, 118, 129, 130, 132, 223, 226 and others: magic_funcs.tsv); in MAGIC226/227's extent. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9FB0
+name = "MeteorStrikeRock_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9FB0..0x4F9FC1 (0x12 bytes), group S38: jmp [0x65C34C + 4 x byte +1] (MeteorStrikeRock_TaskTable, one entry, unchecked). Kind-1 task parameter 0x5F, created by MeteorStrike_Start. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4F9FD0
+name = "MeteorStrikeRock_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F9FD0..0x4FA025 (0x56 bytes), group S38: 0x9039D8 = 0x8E3580; call [0x65C350 + 4 x byte +2] (MeteorStrikeRock_Steps: _Launch, _Fall, _Shake, _Hide, _End); with bit 0 of +0 and +2 set: BattleActor_UpdateScreenXY, Sprite_UpdateScreen, MAGIC219's 0x4F6020, LavaburstChild_DrawGlow, MeteorStrikeRock_DrawRing, Gte_PopMatrix; 0x9039D8 = 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA030
+name = "MeteorStrikeRock_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA030..0x4FA1BF (0x190 bytes), group S38: position and +8 from the owner; (0x20000, 0) turned by 0x446770 and added, +0x14 0x9000000 over the owner's +0x3C; the step (-0x1000, 0) turned, +0x20 0x300000; the sprite fields (+0x25 0x1D, +0x27 0x1A, +0x29 4, +0x40/+0x44 0x10000, ...); Sprite_SetAnimation(0); +4 0, +0xB 0, +9 0x20, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA1C0
+name = "MeteorStrikeRock_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA1C0..0x4FA33B (0x17C bytes), group S38: position += step, +0x14 -= +0x20, +0x3C = the owner's + +0x14, +0xB up by 6; when Frame_Counter & 3 is 0 a record (MeteorStrike_RecordAlloc, 0xFF skipped): +0x80 the rock, +1 1, +9 1, counted in +4; +9 down; at 0 thirty-two records owned by the owner (read after each alloc): +1 0, +0x5D MeteorStrikeChip_Shades[i >> 3], +0xB i & 7, +9 3 (i >> 3) + 1, +0xA MeteorStrikeChip_Fades[i >> 3], the owner's +0xB up; Camera_Angles[0] += 0x14; Sound_PlayById(0x101); +9 8, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA340
+name = "MeteorStrikeRock_Shake"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA340..0x4FA386 (0x47 bytes), group S38: Camera_Angles[0] += 0x14 or -0x14 by bit 0 of +9; +9 down; at 0 Camera_Angles[0] = 0xFD56, +9 0x3C, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA390
+name = "MeteorStrikeRock_Hide"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA390..0x4FA3DB (0x4C bytes), group S38: +9 down; at 0 +0 |= 0x20, +0x5C 1, +0x5D..+0x5F 0, +2 on. Also reached from MAGIC222's table (magic_funcs.tsv). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA3E0
+name = "MeteorStrikeRock_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA3E0..0x4FA433 (0x54 bytes), group S38: +0xA down by 2 while not 0; +0x5D..+0x5F down by 8; at +0x5D 0x80 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA440
+name = "MeteorStrikeRock_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA440..0x4FA669 (0x22A bytes), group S38: draw-mode 0x55 on layer 5; words 0x903850 = +0xB, 0x903852 = +0xB x 2, 0x90385A = +0xA x 4; 64 semi-transparent G4 at 0x40 of angle a step between the circles of the two radii (Math_Sin / Math_Cos x the word >> 12 into Prim_VertexScratch, each pair carried round, z 0), Gte_RotTransPers4 + Gte_PrimDepths4_10B, colour 1 inside and the byte 0x90385A outside, Gfx_CommitPrim(5, 0x44). Also called by MAGIC053's LavaburstChild_Run. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA670
+name = "MeteorStrikeRecord_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA670..0x4FA681 (0x12 bytes), group S38: jmp [0x65C36C + 4 x byte +1] (MeteorStrikeRecord_Kinds, two entries: MeteorStrikeChip_Run, MeteorStrikeTrail_Run; unchecked). The task of a MeteorStrike_RecordPool record. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA690
+name = "MeteorStrikeChip_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA690..0x4FA6BD (0x2E bytes), group S38: call [0x65C384 + 4 x byte +2] (MeteorStrikeChip_Steps: _Launch, _Rise, _Fall); with +0 and +2 set, BattleActor_UpdateScreenXY and a tail jmp to MeteorStrikeChip_Draw. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA6C0
+name = "MeteorStrikeChip_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA6C0..0x4FA78F (0xD0 bytes), group S38: +9 down; at 0: word 0x903854 = ((+0xB - 2) & 0xF) << 8; +0x34 = the owner's + Math_Sin x 24, +0x38 = the owner's + Math_Cos(0x903854 read back) x 24, +0x3C the owner's; +0x14 MeteorStrikeChip_Lifts[+0xB & 3], +0x20 -(+0x14 / 16); +0x5E 0x10, +9 0x20, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA790
+name = "MeteorStrikeChip_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA790..0x4FA850 (0xC1 bytes), group S38: +0x34 / +0x38 += 2 x Math_Sin / Math_Cos of ((+0xB - 2) & 0xF) << 8 (0x903854, read back); +0x3C += +0x14, +0x14 += +0x20; +9 down; at 0 +0x14 the lift again, +0x20 -(+0x14 / 8), +9 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA860
+name = "MeteorStrikeChip_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA860..0x4FA904 (0xA5 bytes), group S38: the same drift at 1 x; +0x5E down while not 0; +9 down; at 0 the owner's +0xB down and a tail jmp to 0x4F6290. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FA910
+name = "MeteorStrikeChip_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FA910..0x4FAB6C (0x25D bytes), group S38: draw-mode 0x35 linked by MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); words 0x90385A = (signed) +0x5E x 6, 0x903850 = +0xA; one semi-transparent FT4, corner i (Math_Cos, Math_Sin) of 0x200 / 0x600 / 0xE00 / 0xA00 x 0x903850 >> 12 round +0x2E / +0x30; Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1E2); uv (0..0x20, 0x80..0xA0); red +0x5D + 0x90385A, green and blue 0x90385A; MapView_LinkPrimAt(.., 2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FAB70
+name = "MeteorStrikeTrail_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FAB70..0x4FABA2 (0x33 bytes), group S38: call [0x65C390 + 4 x byte +2] (MeteorStrikeTrail_Steps: _Start, _Follow, _Fade); with +0 and +2 set MagicFx_PushActorMatrix, MeteorStrikeTrail_Draw and a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FABB0
+name = "MeteorStrikeTrail_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FABB0..0x4FAC36 (0x87 bytes), group S38: +9 down; at 0: +8 and the position from the owner (the rock), +0x3C its - 0x3000000; +0x14 0x60000, +9 8, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FAC40
+name = "MeteorStrikeTrail_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FAC40..0x4FAC8D (0x4E bytes), group S38: +0x34 / +0x38 from the owner, +0x3C -= +0x14; +9 up; at 0x18 +2 on. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FAC90
+name = "MeteorStrikeTrail_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FAC90..0x4FACF7 (0x68 bytes), group S38: +9 up, +0xA down by 2; +0x34 / +0x38 from the owner, +0x3C -= +0x14; at +0xA 0 the owner's +4 down and a tail jmp to 0x4F6290. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FAD00
+name = "MeteorStrikeTrail_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FAD00..0x4FAF86 (0x287 bytes), group S38: words 0x903850 = +9 x 24, 0x903852 = +9 x 32, 0x90385A/C/E = +0xA x 12 / 6 / 6; 32 semi-transparent G4 at 0x80 of angle a step between a circle of 0x903852 at z -0x40 and one of 0x903850 at z 0 (Prim_VertexScratch, each pair carried round), each linked by MapView_LinkPrimAt at (+0x34 + (outer x << 9), +0x38 + (outer z << 9), 0, 0xC / 0x48) around a draw-mode 0x35; Gte_RotTransPers4, Gte_PrimDepths4_10B; colour 1 above, the three scratch bytes below. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[func]]
+pc = 0x4FAF90
+name = "MeteorStrike_RecordAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s38.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4FAF90..0x4FAFE6 (0x57 bytes), group S38: the first of MeteorStrike_RecordPool's 48 records (0x6BAD60) without bit 0 of +0 gets it; the index in al, 0xFF when none. MAGIC226/227's, not the library's (docs/magic_lib.md section 1). Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+
+[[data]]
+pc = 0x65C2E4
+name = "TempestFlash_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S38: TempestFlash_Task's jmp [0x65C2E4 + 4 x byte +1]: TempestFlash_Run."
+
+[[data]]
+pc = 0x65C2E8
+name = "TempestFlash_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S38: TempestFlash_Run's call [0x65C2E8 + 4 x byte +2]: CoronaFlash_Start, BarrierRing_Grow, 0x4EF840 (MAGIC167), MagicFx_CountDownRelease."
+
+[[data]]
+pc = 0x65C2F8
+name = "TempestGust_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S38: TempestGust_Task's jmp [0x65C2F8 + 4 x byte +1]: TempestGust_Run."
+
+[[data]]
+pc = 0x65C2FC
+name = "TempestGust_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S38: TempestGust_Run's call [0x65C2FC + 4 x byte +2]: TempestGust_Launch, _Drift, _Fly."
+
+[[data]]
+pc = 0x65C308
+name = "TempestGust_Angles"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S38: TempestGust_Launch: dword [0x65C308 + 4 x direction +8], an angle added to the gust's start angle and kept as its heading +0x14; read by an unchecked byte (a direction past 3 reads the next table)."
+
+[[data]]
+pc = 0x65C318
+name = "Magic225Veil_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S38: Magic225Veil_Task's jmp [0x65C318 + 4 x byte +1]: Magic225Veil_Run."
+
+[[data]]
+pc = 0x65C31C
+name = "Magic225Veil_BurstColours"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-27, group S38: Magic225Veil_DrawBurst: bytes [0x65C31C + 3 x kind + 0..2], each times +9, the burst's colour; kind 0..3 from Magic225Veil_Run."
+
+[[data]]
+pc = 0x65C328
+name = "Magic225Veil_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S38: Magic225Veil_Run's call [0x65C328 + 4 x byte +2]: Magic225Veil_Start, _FadeIn, BarrierRing_Grow, _WaitBuffs, _End."
+
+[[data]]
+pc = 0x65C33C
+name = "Magic225Shard_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S38: Magic225Shard_Task's jmp [0x65C33C + 4 x byte +1]: Magic225Shard_Run."
+
+[[data]]
+pc = 0x65C340
+name = "Magic225Shard_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S38: Magic225Shard_Run's call [0x65C340 + 4 x byte +2]: Magic225Shard_Launch, _Fly, _Fall."
+
+[[data]]
+pc = 0x65C34C
+name = "MeteorStrikeRock_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeRock_Task's jmp [0x65C34C + 4 x byte +1]: MeteorStrikeRock_Run."
+
+[[data]]
+pc = 0x65C350
+name = "MeteorStrikeRock_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeRock_Run's call [0x65C350 + 4 x byte +2]: MeteorStrikeRock_Launch, _Fall, _Shake, _Hide, _End."
+
+[[data]]
+pc = 0x65C364
+name = "MeteorStrikeChip_Shades"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeRock_Fall: byte [0x65C364 + (i >> 3)] to chip i's +0x5D (i 0..31)."
+
+[[data]]
+pc = 0x65C368
+name = "MeteorStrikeChip_Fades"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeRock_Fall: byte [0x65C368 + (i >> 3)] to chip i's +0xA (its radius in MeteorStrikeChip_Draw)."
+
+[[data]]
+pc = 0x65C36C
+name = "MeteorStrikeRecord_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeRecord_Task's jmp [0x65C36C + 4 x byte +1]: MeteorStrikeChip_Run, MeteorStrikeTrail_Run."
+
+[[data]]
+pc = 0x65C374
+name = "MeteorStrikeChip_Lifts"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeChip_Launch / _Rise: dword [0x65C374 + 4 x (+0xB & 3)] to the chip's lift +0x14."
+
+[[data]]
+pc = 0x65C384
+name = "MeteorStrikeChip_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeChip_Run's call [0x65C384 + 4 x byte +2]: MeteorStrikeChip_Launch, _Rise, _Fall."
+
+[[data]]
+pc = 0x65C390
+name = "MeteorStrikeTrail_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S38: MeteorStrikeTrail_Run's call [0x65C390 + 4 x byte +2]: MeteorStrikeTrail_Start, _Follow, _Fade; MagicFx_BuffStats follows at 0x65C39C."
+
+[[data]]
+pc = 0x6B7BE0
+name = "Tempest_GustPool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-27, group S38: 64 task-like records of 0x84 bytes (bit 0 of +0 in use, +0x80 the owner): Tempest_GustAlloc's, walked by Tempest_Task, cleared by Tempest_Start; Magic225_ShardPool follows at 0x6B9CE0."
+
+[[data]]
+pc = 0x6B9CE0
+name = "Magic225_ShardPool"
+ctype = "unsigned char"
+count = 4224
+status = "evidence"
+evidence = "read 2026-09-27, group S38: 32 records of 0x84 bytes: Magic225_ShardAlloc's, walked by Magic225_Task, cleared by Magic225_Start; MeteorStrike_RecordPool follows at 0x6BAD60."
+
+[[data]]
+pc = 0x6BAD60
+name = "MeteorStrike_RecordPool"
+ctype = "unsigned char"
+count = 6336
+status = "evidence"
+evidence = "read 2026-09-27, group S38: 48 records of 0x84 bytes: MeteorStrike_RecordAlloc's, walked by MeteorStrike_Task, cleared by MeteorStrike_Start; +1 0 a chip, 1 a trail (MeteorStrikeRecord_Kinds)."

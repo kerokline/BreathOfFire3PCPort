@@ -155,6 +155,7 @@
 #include "game/magic_s12.h"
 #include "game/magic_s14.h"
 #include "game/magic_s15.h"
+#include "game/magic_s38.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -477,6 +478,10 @@ void InjectAll() {
                                 // calls, stack-table immediates and jump table re-aimed or moved, its ten .data
                                 // tables swapped for the fuzz only; no module patches bytes inside its 52
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS38_Inject();          // round 9 group S38 (MAGIC223, 225, 226/227: Tempest / Hurricane, an unlabelled id,
+                                // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
+                                // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module
+                                // patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 
