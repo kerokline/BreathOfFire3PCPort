@@ -40961,3 +40961,570 @@ ctype = "unsigned char"
 count = 6336
 status = "evidence"
 evidence = "read 2026-09-27, group S38: 48 records of 0x84 bytes: MeteorStrike_RecordAlloc's, walked by MeteorStrike_Task, cleared by MeteorStrike_Start; +1 0 a chip, 1 a trail (MeteorStrikeRecord_Kinds)."
+
+# ---------------------------------------------------------------------------
+# Round 10 group SC3: scenario chapters 3 and 4, 0x5428C0..0x546390
+# (src/game/scena_sc3.cpp, docs/scena_sc3.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5428C0
+name = "Scena03_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5428C0..0x5428CE (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x660F64]: Scena03_States by the state, unchecked. Slot 0 of Scena03_Hooks (Field_ModeDispatch); Scena16_Frame and Scena01_Frame are the shape."
+
+[[func]]
+pc = 0x5428D0
+name = "Scena03_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5428D0..0x5428E2 (0x12 bytes): state 0 (Scena03_States entry 0): state 1, the dword 0x903FA8 (chapter 3 flag row) cleared."
+
+[[func]]
+pc = 0x5428F0
+name = "Scena03_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5428F0..0x542C9C (0x3AC bytes): state 1: by Game_AreaNumber 0x25, 0x26, 0x27, 0x29, 0x2D, 0x32, 0x38, 0x45, 0x47, 0x63, the flags and Cond_ByteFD - pass flags, AreaMap_SetByte, the counters, camera, Party_DropIn, Scenario_CallA / CallB, a scene armed; state 2 on every exit. PSX twin hypothesis 0x801F8E00 (pairs_propagated, callers)."
+
+[[func]]
+pc = 0x542CA0
+name = "Scena03_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x542CA0..0x542CAE (0xE bytes): state 2: jmp [MoveScript_Var7 * 4 + 0x660F70], Scena03_Runs, unchecked."
+
+[[func]]
+pc = 0x542CB0
+name = "Scena03_Scene1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x542CB0..0x542F18 (0x268 bytes): run 1: switch on the step 0x8034E5, 8 cases (jump table 0x542EF8): drop-in, three kind 0x14 effects on counter 0 = 0x28..0x2A, 0x590C90(0x97, ...), flags, the change to area 0x2D, a kind 0x13 effect, the change to area 0x27 and run 3. PSX twin hypothesis 0x801F9570."
+
+[[func]]
+pc = 0x542F20
+name = "Scena03_Scene2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x542F20..0x542F60 (0x40 bytes): run 2: step 0 Party_DropIn(1) and counter 0 = 0xA; step 1 on counter 0x28 run 1 step 1."
+
+[[func]]
+pc = 0x542F60
+name = "Scena03_Scene3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x542F60..0x5434B3 (0x553 bytes): run 3: two-level switch (byte table 0x543480 of 0x33 steps, jump table 0x543418 of 26): messages 1 and 0x32, area 0x29, flags 3..6, 0x532ED0 and 0x4410B0, two streams, Kind2 moves."
+
+[[func]]
+pc = 0x5434C0
+name = "Scena03_Scene4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5434C0..0x54368C (0x1CC bytes): run 4: 11 steps (jump table 0x543660; step 9 nothing): message 0x20, two changes to area 0x25, flag 0x15."
+
+[[func]]
+pc = 0x543690
+name = "Scena03_Scene5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x543690..0x543AE4 (0x454 bytes): run 5: 18 steps (jump table 0x543A9C): changes to areas 0x2D and 0x32, messages 0xA and 0xB, three kind 0x13 effects, flags 0x19 and 0x1A."
+
+[[func]]
+pc = 0x543AF0
+name = "Scena03_Scene6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x543AF0..0x544038 (0x548 bytes): run 6: 29 steps (jump table 0x543FC4): area 0x63, a stream, AreaMap_SetupEntries, three Field_ViewReset views, Cond_ByteFD 3 and flag 0x1C."
+
+[[func]]
+pc = 0x544040
+name = "Scena03_Scene7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544040..0x54432C (0x2EC bytes): run 7: 14 steps (jump table 0x5442F4): two changes in area 0x63, effects 0x13 and 0x22 (its slot kept in the s8 0x8034E3), flag 0x1D."
+
+[[func]]
+pc = 0x544330
+name = "Scena03_Scene8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544330..0x544824 (0x4F4 bytes): run 8: 21 steps (jump table 0x5447D0, entries 14 and 15 one case): the party bobbed and stand-ins spawned at members 0 and 1 on a timer with sounds 0x201..0x206, effects 0x13 / 0x23 / 0x25, music 0x49 and 0x51, flags 0x1E and 0x904650 bit 6, a tail jump to 0x56D6F0."
+
+[[func]]
+pc = 0x544830
+name = "Scena03_SpawnAtMember"
+ret = "unsigned char"
+params = "unsigned char member"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544830..0x544984 (0x154 bytes): a stand-in sprite at party member (byte): 0x57CD90 free Sprite_Objects index (0 when none), current and active member, EventObj_Reset, animation bank 0x67, member x + 0x8000 and z, AreaMap_Elevation, state 4, EventObj_SetFlags(0x88), EventObj_Face; answers 1 in al. PSX twin hypothesis 0x801FC1D0."
+
+[[func]]
+pc = 0x544990
+name = "Scena03_BobParty4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544990..0x5449B2 (0x22 bytes): members 0 and 1 +0x3E += s8 0x660F94[timer & 3] << 4 (Scena03_Bob4)."
+
+[[func]]
+pc = 0x5449C0
+name = "Scena03_BobParty2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5449C0..0x5449E2 (0x22 bytes): members 0 and 1 +0x3E += s8 0x660F98[timer & 1] << 4 (Scena03_Bob2)."
+
+[[func]]
+pc = 0x5449F0
+name = "Scena03_ObjectHook"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5449F0..0x544A0F (0x1F bytes): slot 1 (0x56D6D0 pushes the object): call [object +0x86 * 4 + 0x660F9C](object, [0x929ED0]), Scena03_ObjectHandlers, unchecked; 0x56D6D0 reads no answer."
+
+[[func]]
+pc = 0x544A10
+name = "Scena03_Object0"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544A10..0x544A33 (0x23 bytes): object handler 0: ScriptFlags_Set40, Flags_Set(bank argument, 0x14), run 4 step 0."
+
+[[func]]
+pc = 0x544A40
+name = "Scena03_Object1"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544A40..0x544A54 (0x14 bytes): object handler 1: Flags_Set(bank argument, 0x10), tail jmp Scena03_ObjectsAllFour."
+
+[[func]]
+pc = 0x544A60
+name = "Scena03_Object2"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544A60..0x544A74 (0x14 bytes): object handler 2: Flags_Set(bank, 0x11), tail jmp Scena03_ObjectsAllFour."
+
+[[func]]
+pc = 0x544A80
+name = "Scena03_Object3"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544A80..0x544A94 (0x14 bytes): object handler 3: Flags_Set(bank, 0x12), tail jmp Scena03_ObjectsAllFour."
+
+[[func]]
+pc = 0x544AA0
+name = "Scena03_Object4"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544AA0..0x544AB4 (0x14 bytes): object handler 4: Flags_Set(bank, 0x13), tail jmp Scena03_ObjectsAllFour."
+
+[[func]]
+pc = 0x544AC0
+name = "Scena03_ObjectsAllFour"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544AC0..0x544AE6 (0x26 bytes): the shared tail of object handlers 1..4 (tools/scenario_rows.py makes it a start): 0x903FAA & 0xF == 0xF - ScriptFlags_Set40, step 6, timer 0x1E, al 1; else al 0."
+
+[[func]]
+pc = 0x544AF0
+name = "Scena03_Object5"
+ret = "void"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544AF0..0x544B3A (0x4A bytes): object handler 5: 0x591900(1), message 0x2F, request 2, 0x587B80, Sound_LoadStream(2), waits Sound_StreamDone with Field_LoadingFrame and Task_Sleep(1), tail jmp Sound_ResumeAll."
+
+[[func]]
+pc = 0x544B40
+name = "Scena03_Object7"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544B40..0x544B56 (0x16 bytes): object handler 7 (entry 6 is the ret 0x437CC0): ScriptFlags_Set40, run 6 step 0, al 0."
+
+[[func]]
+pc = 0x544B60
+name = "Scena03_Object8"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544B60..0x544B7F (0x1F bytes): object handler 8: ScriptFlags_Set40, timer 0x1E, run 7 step 0, al 0."
+
+[[func]]
+pc = 0x544B80
+name = "Scena03_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544B80..0x544C73 (0xF3 bytes): slot 2 (Scenario_StepHook, (x, z), al): switch on Game_AreaNumber - 0x25 (byte table 0x544C34 of 0x3F, jump table 0x544C18 of 7) to the area tests 0x25 / 0x29 / 0x32 / 0x33 / 0x45 / 0x63, else al 0."
+
+[[func]]
+pc = 0x544C80
+name = "Scena03_StepArea33"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544C80..0x544CFF (0x7F bytes): area 0x33: flags 1 and 0 (0 asked twice on one path), x high word and z: run 2 or run 1; al 0 always."
+
+[[func]]
+pc = 0x544D00
+name = "Scena03_StepArea29"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544D00..0x544D50 (0x50 bytes): area 0x29: without flag 7, z cell 7..8 at x 0x5C0000 - flag 7, run 3 step 0xA, al 1."
+
+[[func]]
+pc = 0x544D50
+name = "Scena03_StepArea25"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544D50..0x544D97 (0x47 bytes): area 0x25: without flag 0x15, z 0x418000 and x cell 0x20..0x23 - run 4 step 5, Scena04_Message(0x33)."
+
+[[func]]
+pc = 0x544DA0
+name = "Scena03_StepArea45"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544DA0..0x544E2C (0x8C bytes): area 0x45: without flag 0x18, three doors - run 5 step 0, Scena04_Message(0x12)."
+
+[[func]]
+pc = 0x544E30
+name = "Scena03_StepArea32"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544E30..0x544E75 (0x45 bytes): area 0x32: with flag 0x1A, x cell 0x15 and z cell 0x34..0x35 - run 5 step 0x10, Scena04_Message(0x1F)."
+
+[[func]]
+pc = 0x544E80
+name = "Scena03_StepArea63"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544E80..0x544F3D (0xBD bytes): area 0x63: flag 0x1B and Cond_ByteFD 2 / 3 - run 6 step 5 with message 0xC, or step 0xF (al 1) / 0xD with message 0x11 by flag 0x1C."
+
+[[func]]
+pc = 0x544F40
+name = "Scena03_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544F40..0x544F60 (0x20 bytes): slot 3 (Scenario_ArriveHook, (x, z), al): area 0x47 - Scena03_ArriveArea47, else al 0."
+
+[[func]]
+pc = 0x544F60
+name = "Scena03_ArriveArea47"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544F60..0x544FAD (0x4D bytes): area 0x47: without flag 0x1E, z 0x490000 and x cell 0xE..0x11 - ScriptFlags_Set40, run 8 step 2, timer 0x1E, al 1."
+
+[[func]]
+pc = 0x544FB0
+name = "Scena03_CellHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544FB0..0x544FDD (0x2D bytes): slot 4 (0x56D7A0, (x, z), al sign-tested): 0x56D800(0x660FC0, 1, x, z); negative - al 0xFF; else call [0x660FC8 + answer * 4], al 1."
+
+[[func]]
+pc = 0x544FE0
+name = "Scena03_Cell0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x544FE0..0x54500E (0x2E bytes): Scena03_CellHandlers entry 0: message 0x19, request 2, ScriptFlags_Set40, timer 0x1E, run 7 step 0."
+
+[[func]]
+pc = 0x545010
+name = "Scena04_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x545010..0x54501E (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x660FE4]: Scena04_States, unchecked. Slot 0 of Scena04_Hooks."
+
+[[func]]
+pc = 0x545020
+name = "Scena04_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x545020..0x545032 (0x12 bytes): state 0: state 1, the dword 0x903FB0 (chapter 4 flag row) cleared."
+
+[[func]]
+pc = 0x545040
+name = "Scena04_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x545040..0x545321 (0x2E1 bytes): state 1: areas 0x28, 0x2A, 0x30, 0x36, 0x41 by the flags, Cond_ByteFD and counter 1 - music 0x3F, Scenario_CallA, drop-ins, ObjTrio_SetBit40, AreaMap_SetByte, the three members +0x24 bit 0x20 cleared, effects 0x13 and 0x2E; state 2. PSX twin hypothesis 0x801F817C."
+
+[[func]]
+pc = 0x545330
+name = "Scena04_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x545330..0x54533E (0xE bytes): state 2: jmp [MoveScript_Var7 * 4 + 0x660FF0], Scena04_Runs, unchecked."
+
+[[func]]
+pc = 0x545340
+name = "Scena04_Scene1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x545340..0x5459C4 (0x684 bytes): run 1: 31 steps (jump table 0x545948; 0x5453D0, 0x5455A0, 0x545910 of pc_hidden are its cases): a quake on Scena04_Quake, the camera, messages 0xD / 0xE, streams, the changes to areas 0x2A and 0x28, flag 4, the Game_Mode 7 switch waited out."
+
+[[func]]
+pc = 0x5459D0
+name = "Scena04_Scene2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5459D0..0x546124 (0x754 bytes): run 2: 31 steps (jump table 0x5460A8; 0x545AA0, 0x545F70 of pc_hidden are its cases), one exit that tail-jumps to Scena04_Tremor when the byte left in al - 2 is below 0xB: camera, music 0x41, effects, areas 0x41 and 0x36, flags 7 and 0xC."
+
+[[func]]
+pc = 0x546130
+name = "Scena04_Tremor"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x546130..0x546157 (0x27 bytes): MapView_Elevation += 4 * s8 0x661000[(Frame_Counter >> 1) & 3] (Scena04_TremorSteps), MapView_Redraw 2."
+
+[[func]]
+pc = 0x546160
+name = "Scena04_ObjectHook"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x546160..0x54617F (0x1F bytes): slot 1: call [object +0x86 * 4 + 0x661004](object, [0x929ED0]), Scena04_ObjectHandlers, unchecked."
+
+[[func]]
+pc = 0x546180
+name = "Scena04_Object0"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *bank"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x546180..0x546192 (0x12 bytes): object handler 0: Flags_Set(bank argument, 0), al 0."
+
+[[func]]
+pc = 0x5461A0
+name = "Scena04_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5461A0..0x5461C0 (0x20 bytes): slot 2 (x, z): area 0x28 - Scena04_StepArea28, else al 0. (Slot 3 is Scenario_NoHook.)"
+
+[[func]]
+pc = 0x5461C0
+name = "Scena04_StepArea28"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x5461C0..0x54631F (0x15F bytes): area 0x28: flags 2, 3, 7, the x / z cells and member 0 +8 (not 4..6, stored to 0x903850) - flag 2, sound 0x204, run 1 step 1 (al 1), or run 1 step 0 with Scena04_Message(2 / 3 / 0x26)."
+
+[[func]]
+pc = 0x546320
+name = "Scena04_Message"
+ret = "unsigned char"
+params = "unsigned char id"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x546320..0x546340 (0x20 bytes): Msg_OpenScript(the byte id), 0x9039A3 |= 1, Field_Request 2, al 1. Called by chapter 3 and 4 hooks."
+
+[[func]]
+pc = 0x546340
+name = "Scena04_CellHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x546340..0x54636D (0x2D bytes): slot 4: 0x56D800(0x661008, 1, x, z); negative - al 0xFF; else call [0x661010 + answer * 4], al 1."
+
+[[func]]
+pc = 0x546370
+name = "Scena04_Cell0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc3.cpp"
+evidence = "disasm 2026-09-27, group SC3, 0x546370..0x54638D (0x1D bytes): Scena04_CellHandlers entry 0: ScriptFlags_Set40, timer 0xA, run 2 step 0."
+
+[[data]]
+pc = 0x660F64
+name = "Scena03_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: chapter 3 states: 0x5428D0 Scena03_Start, 0x5428F0 Scena03_EnterArea, 0x542CA0 Scena03_Run; Scena03_Frame jumps through it on the s8 0x8034E2. Scena03_Runs follows."
+
+[[data]]
+pc = 0x660F70
+name = "Scena03_Runs"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: chapter 3 runs by MoveScript_Var7: 0 the ret 0x437CC0, 1..8 Scena03_Scene1..Scene8; Scena03_Run jumps through it unchecked."
+
+[[data]]
+pc = 0x660F94
+name = "Scena03_Bob4"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: four s8 steps Scena03_BobParty4 adds (times 16) to members 0 and 1 +0x3E by the timer & 3."
+
+[[data]]
+pc = 0x660F98
+name = "Scena03_Bob2"
+ctype = "signed char"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: two s8 steps Scena03_BobParty2 adds (times 16) by the timer & 1."
+
+[[data]]
+pc = 0x660F9C
+name = "Scena03_ObjectHandlers"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: Scena03_ObjectHook by object +0x86: Scena03_Object0..5, the ret 0x437CC0 (6), Scena03_Object7, Object8; called with (object, flag row)."
+
+[[data]]
+pc = 0x660FC0
+name = "Scena03_Cells"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: one 5-byte cell record 0x56D800 reads for Scena03_CellHook (area, x cell, z cell, flags, length - by 0x56D800 read, not verified field by field)."
+
+[[data]]
+pc = 0x660FC8
+name = "Scena03_CellHandlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: Scena03_CellHook calls entry [0x56D800 answer]: Scena03_Cell0."
+
+[[data]]
+pc = 0x660FE4
+name = "Scena04_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: chapter 4 states: Scena04_Start, Scena04_EnterArea, Scena04_Run; Scena04_Runs follows."
+
+[[data]]
+pc = 0x660FF0
+name = "Scena04_Runs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: chapter 4 runs: the ret 0x437CC0, Scena04_Scene1, Scena04_Scene2."
+
+[[data]]
+pc = 0x660FFC
+name = "Scena04_Quake"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: four s8 steps Scena04_Scene1 step 6 adds (times 64) to MapView_Elevation by the timer & 3."
+
+[[data]]
+pc = 0x661000
+name = "Scena04_TremorSteps"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: four s8 steps Scena04_Tremor adds (times 4) to MapView_Elevation by (Frame_Counter >> 1) & 3."
+
+[[data]]
+pc = 0x661004
+name = "Scena04_ObjectHandlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: Scena04_ObjectHook by object +0x86: Scena04_Object0."
+
+[[data]]
+pc = 0x661008
+name = "Scena04_Cells"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: one 5-byte cell record 0x56D800 reads for Scena04_CellHook."
+
+[[data]]
+pc = 0x661010
+name = "Scena04_CellHandlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group SC3: Scena04_CellHook calls entry [0x56D800 answer]: Scena04_Cell0."
