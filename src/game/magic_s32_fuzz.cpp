@@ -264,8 +264,8 @@ const mh::Callee kCallees[] = {
     {S32_RAW(0x4EA670), 0, {}, mh::Answer::kPhase, 0, 0},
     {S32_RAW(0x4EA6C0), 0, {}, mh::Answer::kPhase, 0, 0},
     {S32_RAW(0x4EA890), 0, {}, mh::Answer::kPhase, 0, 0},
-    {S32_RAW(0x4EA9D0), 1, {kAll}, kG, 0, 0},
-    {S32_RAW(0x4EAA10), 1, {kAll}, kG, 0, 0},
+    {S32_RAW(0x4EA9D0), 1, {kAll}, kG, 0, 0, {0x34}},   // a spiral point: its bytes
+    {S32_RAW(0x4EAA10), 1, {kAll}, kG, 0, 0, {0x68}},   // two spiral points
     {S32_RAW(0x4EAB70), 0, {}, mh::Answer::kPhase, 0, 0},
     {S32_RAW(0x4EABA0), 0, {}, mh::Answer::kPhase, 0, 0},
     {S32_RAW(0x4EAC00), 0, {}, mh::Answer::kFlag, 0, 0},
