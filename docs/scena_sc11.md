@@ -1,40 +1,15 @@
 # Scenario chapter 11: its frame, eight scenes, fourteen triggers and two hooks
 
-**Status:** IN PROGRESS (2026-09-27) - stage A: thirty functions written
-(`src/game/scena_sc11.cpp`, shadow name `scena_sc11`), their `symbols.toml`
-entries with `impl`, the fuzz file against the scenario harness's contract
-and the `entries_logic.txt` lines; **not built, not fuzzed, no controls yet**
-(the harness, group SCH's, had not merged). Syntax-checked against a private
-copy of `magic_harness.h` renamed to `scenario_harness`.
+**Status:** IN PROGRESS (2026-09-27) - thirty functions ours
+(`src/game/scena_sc11.cpp`, shadow name `scena_sc11`), fuzzed headless
+through the scenario harness ([`scenario_harness.md`](scenario_harness.md),
+merged at `218eeec`): **0 mismatches in 240,000 rounds**; 54 controls
+planted, **52 refused by a count, 2 by a fault** (each with a near variant
+refused by a count); `BOF3X_SHADOW='*'` exit 0. Fuzz only: no recorded route
+plays chapter 11 (section 8).
 
 Group SC11 of round ten's first wave ([`takeover-queue-round10.md`](takeover-queue-round10.md)
 §1; the plan [`takeover-queue-scenario.md`](takeover-queue-scenario.md)).
-
-## Stage A done - what stage B has to do
-
-1. Merge `phase-3/capture-round-ten` at the harness's SHA. Hold
-   `scena_sc11_fuzz.cpp` against the real `scenario_harness.h`: the call
-   shape is written as `Clone::shape` of type `scenario_harness::Shape`
-   (`kSlot`, `kObject`, `kHook`, `kCallEntry`) after `ret_mask` and `calm`,
-   the form `tools/scenario_rows.py --clones` (222eb0f) prints - rename if the
-   harness chose otherwise. `Group` is filled positionally up to `args`
-   (`settle`, `phase_span` 0, `args`), as magic_harness's.
-2. Drop from `kRegions` any region the harness's standard set already holds
-   (the chapter bytes `0x8034E0..`, the counters, `Field_Request`, the wait
-   word, `Game_AreaNumber`, `Sprite_Current` are likely in it), and from
-   `kCallees` nothing: the group's listing stands over the standard one.
-3. Register the module: `src/game/scena_sc11.cpp` and `scena_sc11_fuzz.cpp` at
-   the end of `CMakeLists.txt`'s list (the `)` on the last line only), and
-   `#include "game/scena_sc11.h"` / `ScenaSc11_Inject();` at the end of
-   `src/hook/inject_all.cpp`.
-4. Build; `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_sc11` to 0 mismatches,
-   then `BOF3X_SHADOW='*'`; check the coverage line names every callee of
-   section 5 and the three `.data` tables' handlers.
-5. The controls of section 7, planted one at a time by a script (plant,
-   rebuild, run, restore, rebuild), each anchored on a unique string; an
-   equivalent recorded with its reason and a refused near variant.
-6. `tools/ledger_check.py` 0 errors; this doc's status, section 4's counts and
-   section 7's results; the `docs/README.md` row.
 
 ## 1. What chapter 11 is, by its code
 
@@ -54,7 +29,7 @@ Its call tables are not in the band: table A (`0x65F7DC`, nine entries) and
 B (`0x65F800`, five) point into `0x5199A0..0x51A540` (Boot: field; the
 seven read - B 0..3, A 0..2 - are party set-ups that read no argument), where the PSX's `subA` entries are in the
 overlay itself (`0x801FAB74..`). The chapter reaches them through
-`Scenario_CallA` and `0x5341C0`, with the entry number only.
+`Scenario_CallA` and `Scenario_CallB` (`0x5341C0`), with the entry number only.
 
 The shape is the plan's plain state machine (as `Scena16_*`,
 [`field-modes.md`](field-modes.md)): the frame jumps through
@@ -117,11 +92,11 @@ pass flags 0 (each then state 2 and return), 0 - with flag 0xC set and 0xE
 clear - `ScriptFlags_Set40`, the counters, pass flags and step 0,
 `MoveScript_Var7` 8 (scene 8), and the call-table entries by the byte
 `0x90412C & 0x7F`: 7 B1 B0 A0, 8 B1 A1, 9 B1 B2 A0, 10 B1 A2, 13 B0 A1, 14
-B0 B2 A0, 15 B0 A2, 16 B2 A1, 18 B2 A2 (B is `0x5341C0`, A
+B0 B2 A0, 15 B0 A2, 16 B2 A1, 18 B2 A2 (B is `Scenario_CallB`, A
 `Scenario_CallA`). Then by the area, read afresh: 0x79 (counter 2 1: pass
 0), 0x82 (1: pass 0x1F), 0x83 (1: elevation 0x498 and on; 2: script flags
 `| 0x16`, pass 0x1F; 3: pass 0x1F), 0x84 (1: script flags `| 0x16`, pass 0;
-2: pass 0x1F), 0x88 (1: `0x5341C0(3)`; 2: elevation 0x200; 10: an effect of
+2: pass 0x1F), 0x88 (1: `Scenario_CallB(3)`; 2: elevation 0x200; 10: an effect of
 kind 0x77, `+1` 1), and 0x2D, 0x41, 0x57, 0x10, 0x73 clear the counters, the
 step and `MoveScript_Var7`. State 2.
 
@@ -156,48 +131,74 @@ of 6 on the roll, Scene5 `0x2A` through 43, Scene6 `0x30` through 49, Scene8
 
 ## 4. The fuzz
 
-`BOF3X_SHADOW=scena_sc11`, `scena_sc11_fuzz.cpp`, one `scenario_harness::Run`:
+`BOF3X_SHADOW=scena_sc11`, `scena_sc11_fuzz.cpp`, one `scenario_harness::Run`
+with `chapter = 11` (so `Cond_ByteFA` is 11 and the flag-row pointer
+`0x929ED0` is chapter 11's row every round), 8,000 rounds a function:
 
-- **the clones**: the thirty, as `scenario_rows.py --clones` printed them,
-  each marked with its call shape;
-- **the callees**, all listed by the group: the flag bits (`Flags_Test` a
-  flag, `Flags_Set`, `ScriptFlags_Set40` / `Clear40`), the call tables
-  (`Scenario_CallA`, `0x5341C0`, the entry byte), `Field_ChangeArea`,
-  `Party_DropIn`, `Transition_Start`, `MapView_SetElevation`, `Kind2_Place`,
-  `MoveCmd_TestFB`, `Port_DroppedCall`, `0x534DB0`, `0x537480`, `0x56D6F0`,
-  `Effect_FindFree` (a slot 0..0x13 or 0xFF), `Sprite_SetAnimationBank`,
-  `Sprite_SetAnimation`, `Scena11_EffectAnimate` (ours, called by its E8),
-  `Rand`, `Msg_OpenScript`, `Msg_OpenSystem`, `Inventory_Count` (a bool: the
-  callers test ax whole), `Inventory_Add` (a flag), `Item_NamePtr` (answers a
-  16-byte buffer of the fuzz's own, filled from the stream), the sound and
-  music calls (`Sound_StreamDone` a bool: eax tested whole);
+- **the clones**: the thirty, as `scenario_rows.py --unit SC11 --clones`
+  printed them at 222eb0f (at the merged tip the tool lists none: all are
+  ours), each with its call shape - `kSlot` the frame, `kState` the three
+  states, the eight scenes and the fourteen triggers, `kObject` slot 1, `kHook`
+  slots 3 and 4 (al compared), `kEntry` `Scena11_EffectAnimate` (one word, the
+  slot, from scene 4's E8);
+- **the callees**, every one the thirty call, listed by the group (its listing
+  stands over the harness's 70 standard ones): the flag bits (`Flags_Test` a
+  `kFlag` - its callers test al -, `Flags_Set`, `ScriptFlags_Set40` /
+  `Clear40`), `Scenario_CallA` / `Scenario_CallB` (the entry byte), the field
+  calls, `0x534DB0`, `0x537480`, `0x56D6F0`, `Effect_FindFree` (a slot 0..0x13
+  or 0xFF), the sprite calls, `Scena11_EffectAnimate` (ours, by its E8),
+  `Rand`, the messages, `Inventory_Count` (a `kBool`: ax tested whole),
+  `Inventory_Add` (a flag), `Item_NamePtr` (answers a 16-byte buffer of the
+  fuzz's own, filled from the stream), the sound and music calls
+  (`Sound_StreamDone` a `kBool`), `0x587B80`;
 - **the `.data` tables** swapped for recorders: `Scena11_States`,
   `Scena11_Runs`, `Scena11_Triggers` (a `MoveScript_Var7` of 10..24 reaches a
-  trigger's recorder through the run table, as in the game);
-- **regions**: the chapter bytes, the camera and counters, the effect
-  records, `ObjTrio`, `Text_Records` and the bytes around it, the flags and
-  bytes the scenes write (`kRegions`);
-- **the seed**: the flag pointer at a buffer of the fuzz's own, the state
-  0..2, `MoveScript_Var7` the scenes and 10, 11, 14 (or 0..24), counter 0 the
-  values waited on, counter 2 the set-up's values, counter 3 a slot with its
-  record live or not, the request 0 / 2 / 8, the wait word 0, the areas each
-  test names, the party byte 6..19 (with its top bit), member 0's `+8` (0, 6,
-  7, others) and `+0x89` (6, 7, others), each scene's steps (every case and
-  the one past its bound), the object's `+0x86` 0..14, the hook's x at
+  trigger's recorder through the run table, as in the game). While
+  `Scena11_ObjectTrigger` is fuzzed, the seed puts in each of
+  `Scena11_Triggers`' fifteen cells a stand-in of the entry's own type
+  (object, row), one per entry, logging the entry's index and both arguments
+  (a handler recorder logs none; `scena_sc0_fuzz.cpp`'s `ObjectEntry` is the
+  precedent), and the recorders back for every other function;
+- **regions** beyond the harness's 22 standard ones: `0x904CD0` and
+  `Text_Records` (0x20), `0x904EE0`, the party byte `0x90412C`, `Cond_ByteFE`,
+  `Camera_ShiftY`, `Field_Kind2Hold` - 10,035 bytes in 28 regions in all;
+- **the seed**: the state 0..2, `MoveScript_Var7` the scenes and 10, 11, 14 (or
+  0..24), counter 0 the values the scenes wait on (scene 1's own half the
+  time), counter 2 the set-up's values, counter 3 a slot with its record live
+  or not (1 or 2 half the time for scene 6), the request 0 / 2 / 8, the wait
+  word 0, the areas each test names (for the set-up: area 0x65 with counter 2
+  0 and the party byte 6..19 half the time, else area 0x83 with counter 2 1
+  half of that), member 0's `+8` (0, 6, 7, others) and `+0x89` (6, 7, others;
+  scene 4's steps 0 / 0x14 with the value they test half the time), each
+  scene's steps (every case, the step after it and one past the bound; any
+  byte one round in eight), the object's `+0x86` 0..14, the hook's x at
   0x160000 either side;
-- **the disturbance**: a counter byte, the request, the wait word,
-  `Field_Kind2Hold`, the live byte of counter 3's effect; `settle` keeps
-  counter 3 inside the twenty records.
+- **the disturbance** (the group's, after the harness's): a counter byte, the
+  request, the wait word, `Field_Kind2Hold`, the slot byte `0x903850` (a
+  record 0..19: scene 4 reads it back after `Rand`), the area (half of all
+  disturbances while `Scena11_EnterArea` runs: it reads the area afresh after
+  its calls), the live byte of counter 3's effect; `settle` keeps counter 3
+  inside the twenty records.
 
-Counts: stage B.
+**Result** (2026-09-27, this worktree):
+
+    shadow      scena_sc11 self-test: 240000 rounds over 30 functions (8000 each), 205879 calls to the stand-ins,
+                0 MISMATCHES; 10035 bytes of state (28 regions) and the stand-ins' log compared
+
+Coverage: every callee and every handler of the three tables is reached -
+e.g. `Scenario_CallA` 539, `Scenario_CallB` 757, `Scena11_EffectAnimate`
+576, `Rand` 1,200, `Item_NamePtr` 91, `0x587B80` 17 (the least: scene 6 step
+46 at counter 0 4), the trigger stand-in 8,000, each trigger's recorder
+81..493. `BOF3X_SHADOW='*'`: exit 0. `ledger_check`: 0 errors.
 
 ## 5. Cross-group calls
 
 By raw address in `scena_sc11_callees.h` (nobody owns them this wave):
-`0x5341C0` (call table B's thunk, `Scenario_CallA`'s twin), `0x534DB0`,
-`0x537480` (below SC0's band), `0x587B80` (a jmp into the sound layer),
-`0x56D6F0` (past the bank: `Field_StatusBits |= 0x80`). Every other callee
-is ours already and called by name. No SE helper is called.
+`0x534DB0`, `0x537480` (below SC0's band), `0x587B80` (a jmp into the sound
+layer), `0x56D6F0` (past the bank: `Field_StatusBits |= 0x80`; also in the
+harness's standard set by address). `0x5341C0` is `Scenario_CallB` (SCH's
+name, not taken) and called by name. Every other callee is ours already and
+called by name. No SE helper is called.
 
 ## 6. Latent defects (Capcom's, described, kept)
 
@@ -227,56 +228,88 @@ is ours already and called by name. No SE helper is called.
 
 For the coordinator to number; nothing is fixed here.
 
-## 7. The controls (stage B)
+## 7. The controls
 
-Planned, one per behaviour, each to be refused by a count:
+Fifty-four, planted one at a time by a script (the scratch `controls.py`, not
+committed: replace one unique string in `scena_sc11.cpp`, rebuild,
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_sc11`, restore; rebuilt at the end
+and the clean self-test re-run, 0 mismatches). **52 refused by a count
+(exit 3), 2 by a fault**, each in the function its plant touches; counts are
+rounds of 8,000, in this worktree.
 
-| | Plant | In |
+The first two runs, on 2,000 rounds and a thinner seed, left three standing,
+and the fuzz was strengthened rather than the plants excused: E5 (area 0x83's
+counter 1 returning at once) is told apart only when the area changes across
+`MapView_SetElevation`, so the group's disturbance now moves the area while
+`Scena11_EnterArea` runs, and the seed puts area 0x83 with counter 2 at 1 in;
+S18 needed counter 3 at 1 or 2 with scene 6 at step 20; T1c showed the trigger
+stand-in logging the object's byte, not the entry called - it is now one
+stand-in per entry. S4 and S24 were refused in one run and not the next at
+2,000 rounds (under 1 in 300); at 8,000 with scene 1's waited counters seeded
+they are refused in 39 and 11.
+
+| | Planted | Refused in |
 |---|---|---|
-| F1 | the frame through `Scena11_Runs` | `Scena11_Frame` |
-| F2 | the start's state 2 | `Scena11_Start` |
-| E1 | area 0x65 counter 2 1 / 2 pass flags swapped | `Scena11_EnterArea` |
-| E2 | flag 0xE tested for set | `Scena11_EnterArea` |
-| E3 | party byte `& 0xFF` | `Scena11_EnterArea` |
-| E4 | entry 13's `CallB(0)` as `CallB(1)` | `Scena11_EnterArea` |
-| E5 | area 0x83 counter 1 returns before the 0x84 test | `Scena11_EnterArea` |
-| E6 | area 0x88 counter 10 effect kind 0x78 | `Scena11_EnterArea` |
-| E7 | area 0x73 dropped from the clearing list | `Scena11_EnterArea` |
-| E8 | the area not read afresh after the case-0 calls | `Scena11_EnterArea` |
-| R1 | the run through `Scena11_States` | `Scena11_Run` |
-| S1 | scene 1 step 0 member 0's 6 drops in 1 | `Scena11_Scene1` |
-| S2 | scene 1 step 3 area x 0x60000 | `Scena11_Scene1` |
-| S3 | scene 1 step 11 without the fall-through | `Scena11_Scene1` |
-| S4 | scene 1 step 15 script flags `^ 0x10` | `Scena11_Scene1` |
-| S5 | scene 1 step 0x33 Var7 kept | `Scena11_Scene1` |
-| S6 | scene 2 step 1 counter 0 cleared | `Scena11_Scene2` |
-| S7 | scene 3 step 10 item 0x4E | `Scena11_Scene3` |
-| S8 | scene 3 step 12 counter 0 kept | `Scena11_Scene3` |
-| S9 | scene 4 roll `& 7` | `Scena11_Scene4` |
-| S10 | scene 4 slot not read back after Rand | `Scena11_Scene4` |
-| S11 | scene 4 full bag: script, not system, message | `Scena11_Scene4` |
-| S12 | `EffectAnimate` +0x20 -7 | `Scena11_EffectAnimate` |
-| S13 | `EffectAnimate` Sprite_Current read once | `Scena11_EffectAnimate` |
-| S14 | scene 5 step 0x2A as step 4 without the 0x14 branch | `Scena11_Scene5` |
-| S15 | scene 5 step 9 slot byte read once before the call | `Scena11_Scene5` |
-| S16 | scene 5 step 6 bit 0x20 | `Scena11_Scene5` |
-| S17 | scene 5 step 0x28 counter 0 0xFE | `Scena11_Scene5` |
-| S18 | scene 6 step 20 counter 3 tested for 2 | `Scena11_Scene6` |
-| S19 | scene 6 step 35 arguments swapped | `Scena11_Scene6` |
-| S20 | scene 6 step 10 Set40 after the request test | `Scena11_Scene6` |
-| S21 | scene 8 step 1 distance - 0x400 | `Scena11_Scene8` |
-| S22 | scene 8 step 3 +0xC not cleared | `Scena11_Scene8` |
-| S23 | scene 8 step 7 without the fall-through | `Scena11_Scene8` |
-| S24 | scene 8 step 14 stops on a full pool | `Scena11_Scene8` |
-| S25 | scene 8 angle 2, not 1 | `Scena11_Scene8` |
-| S26 | scene 9 step 9 script flags `^ 0x14` | `Scena11_Scene9` |
-| T1 | the trigger index `+0x85` | `Scena11_ObjectTrigger` |
-| T2 | trigger 1 flag 6 | `Scena11_Trigger01` |
-| T3 | trigger 4 step 0xB | `Scena11_Trigger04` |
-| T4 | trigger 11 counter 0 kept | `Scena11_Trigger11` |
-| H1 | the hook's x `>=` | `Scena11_ArriveHook` |
-| H2 | the hook's member byte 7 dropped | `Scena11_ArriveHook` |
-| H3 | slot 4 answers 0xFE | `Scena11_CellHook` |
+| F1 | the frame through `Scena11_Runs` | `Scena11_Frame` 8,000 |
+| F2 | the start's state 2 | `Scena11_Start` 8,000 |
+| E1 | area 0x65 counter 2 of 2: pass flags 1 | `Scena11_EnterArea` 22 |
+| E2 | flag 0xE tested for set | `Scena11_EnterArea` 2,609 |
+| E3 | party byte `& 0xFF` | `Scena11_EnterArea` 292 |
+| E4 | entry 13's `CallB(0)` as `CallB(1)` | `Scena11_EnterArea` 58 |
+| E5 | area 0x83 counter 1 returns before the 0x84 test | `Scena11_EnterArea` 41 |
+| E5b | area 0x83 counter 1 without the redraw | `Scena11_EnterArea` 2,044 |
+| E6 | area 0x88 counter 10: effect kind 0x78 | `Scena11_EnterArea` 21 |
+| E7 | 0x74 for 0x73 in the clearing list | `Scena11_EnterArea` 165 |
+| E8 | area 0x88 counter 9 for 10 | `Scena11_EnterArea` 22 |
+| S30 | area 0x65's start: scene 9 | `Scena11_EnterArea` 782 |
+| R1 | the run through `Scena11_States` | `Scena11_Run` 7,425 |
+| S1 | scene 1 step 0: member 0's 6 drops in 1 | `Scena11_Scene1` 47 |
+| S2 | scene 1 step 3: x 0x60000 | `Scena11_Scene1` 46 |
+| S3 | scene 1 step 11 without the fall-through | `Scena11_Scene1` 26 |
+| S4 | scene 1 step 15: script flags `^ 0x10` | `Scena11_Scene1` 39 |
+| S5 | scene 1 step 0x33: `MoveScript_Var7` kept | `Scena11_Scene1` 243 |
+| S6 | scene 2 step 1: counter 0 cleared | `Scena11_Scene2` 171 |
+| S7 | scene 3 step 10: item 0x4E | `Scena11_Scene3` 141 |
+| S8 | scene 3 step 12: counter 0 kept | `Scena11_Scene3` 35 |
+| S9 | scene 4 roll `& 7` | `Scena11_Scene4` 576 |
+| S10 | scene 4: the slot not read back after `Rand` | `Scena11_Scene4` 2 |
+| S11 | scene 4 full bag: script, not system, message | `Scena11_Scene4` 85 |
+| S32 | the name copy 12 bytes | `Scena11_Scene4` 85, `Scena11_Scene5` 6 |
+| S12 | `EffectAnimate` +0x20 -7 | `Scena11_EffectAnimate` 8,000 |
+| S13 | `EffectAnimate` +0x24 through the pointer before the call | `Scena11_EffectAnimate` 323 |
+| S14 | scene 5 step 0x2A without the 0x14 branch | `Scena11_Scene5` 21 |
+| S15 | scene 5 step 9: `Sprite_Current` not read again after the call | `Scena11_Scene5` 14 |
+| S16 | scene 5 step 6: bit 0x20 | `Scena11_Scene5` 178 |
+| S17 | scene 5 step 0x28: counter 0 0xFE | `Scena11_Scene5` 12 |
+| S29 | scene 5 step 9: word +0x32 | `Scena11_Scene5` 237 |
+| S18 | scene 6 step 20: counter 3 at 2 | `Scena11_Scene6` 18 |
+| S19 | scene 6 step 35: `0x537480`'s arguments swapped | `Scena11_Scene6` 20 |
+| S20 | scene 6 step 10: `ScriptFlags_Set40` after the request test | `Scena11_Scene6` 52 |
+| S28 | scene 6 step 45: music over 9 frames | `Scena11_Scene6` 190 |
+| S21 | scene 8 step 1: distance - 0x400 | `Scena11_Scene8` 221 |
+| S22 | scene 8 step 3: +0xC not cleared | `Scena11_Scene8` 208 |
+| S23 | scene 8 step 7 without the fall-through | `Scena11_Scene8` 6 |
+| S24 | scene 8 step 14 stops on a full pool | `Scena11_Scene8` 11 |
+| S25 | the effects at `Camera_Angles[2]` | `Scena11_Scene8` 670 |
+| S26 | scene 9 step 9: script flags `^ 0x14` | `Scena11_Scene9` 628 |
+| S27 | scene 9 step 7: transition 5 | `Scena11_Scene9` 46 |
+| T1 | the trigger index from `+0x85` | a fault (a wild index past the table: both sides call through garbage) |
+| T1b | the trigger index `^ 1` | a fault (14 becomes 15: the 0 after the table, a call to address 0) |
+| T1c | the trigger index the next entry, in the table | `Scena11_ObjectTrigger` 8,000 |
+| T2 | the trigger's arguments swapped | `Scena11_ObjectTrigger` 8,000 |
+| T3 | trigger 1: flag 6 | `Scena11_Trigger01` 8,000 |
+| S31 | the triggers' start: counter 2 kept | `Scena11_Trigger02..10`, `12..14` 7,302..7,351 each |
+| T4 | trigger 4: step 0xB | `Scena11_Trigger04` 8,000 |
+| T5 | trigger 11: counter 0 kept | `Scena11_Trigger11` 7,482 |
+| H1 | the arrive hook's x `>=` | `Scena11_ArriveHook` 1,372 |
+| H2 | the arrive hook without member 0's 7 | `Scena11_ArriveHook` 171 |
+| H3 | slot 4 answers 0xFE | `Scena11_CellHook` 8,000 |
+
+The thinnest are the re-reads: S10 (the slot byte read back after `Rand`, 2
+rounds: only when the disturbance moves `0x903850` across that call), S23
+(6), S24 (11) and S17 (12). T1 and T1b plant indexes the original's table
+cannot survive; T1c, inside the table, is refused by a count. No equivalent
+mutant stands.
 
 ## 8. What reaches it
 

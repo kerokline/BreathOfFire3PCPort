@@ -9,8 +9,9 @@
 // comparison's constants in, the arguments of the three that take any, and a
 // disturbance of the chapter's cells.
 //
-// Written in stage A against the contract (magic_harness's API one for one,
-// plus the clone's call shape): not built until the harness merges (stage B).
+// Chapter 11 on the group (Cond_ByteFA and its flag row every round); 0
+// mismatches in 240,000 rounds, 54 controls refused (docs/scena_sc11.md
+// sections 4 and 7).
 #include <cstdint>
 #include <cstring>
 
