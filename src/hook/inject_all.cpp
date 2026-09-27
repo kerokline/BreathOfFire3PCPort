@@ -171,6 +171,7 @@
 #include "game/scena_sc3.h"
 #include "game/scena_sc1.h"
 #include "game/scena_sc12.h"
+#include "game/scena_sc9a.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -547,6 +548,9 @@ void InjectAll() {
     ScenaCalls_Inject();        // round 10 group CALLS (the chapter call tables' 98 entries, 0x519890..0x51AC50):
                                 // its clones' calls re-aimed at the scenario harness's recorders; no module patches
                                 // bytes inside its 98 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc9a_Inject();         // round 10 group SC9a (scenario chapter 9's first block, 0x553B30..0x557170):
+                                // no module patches bytes inside its 22 (DIVERGENCE.md, cheats.cpp): order does
+                                // not matter
     InjectReport();
 }
 
