@@ -312,6 +312,8 @@ build, run `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s24`, restore).
 | L3 | SparkFree: +4 kept | Fx106_SparkFree 1,992 |
 | F3b | Funnel: gradient step at 0x700 | Fx104_DrawFunnel 1,461 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 2 controls in the affected functions, 2 refused** - Z1 and Z2, the controls in `Fx105_MoteDrift` (the one section-8 function), rebuilt from the table (Z2 as the x step's 29-bit sign-extension dropped); each by exit 3 with a count only there: Z1 95 (was 101), Z2 1,741. Clean self-test after them 0 mismatches, exit 0. No fuzz change.
+
 ## 5. What nothing reached
 
 Every function here is fuzz-only. The combat route casts none of these
