@@ -383,6 +383,8 @@ runs between), and `SpriteClut_CopyToFxRow`'s forward copy against a
 memmove (kinds 0..4's cells tile the strip, so no source half-overlaps row
 2).
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 15 controls in the affected functions, 15 refused.** Selected: AB1..AB8 (`MagicFx_ApplyBuff`, whose buff roll `0x44FC10` answers a flag) and BP1..BP7 (`MagicFx_BuffPopup`, which calls it). Skipped: the other 91, planted in neither function. The plants were rebuilt from the table (the original script was not committed) and run by plant / rebuild / self-test / restore; restored, rebuilt, clean self-test 0 mismatches (exit 0), and `BOF3X_SHADOW='*'` exit 0. Every count but one is the table's (BP3 679 -> 672); the thinnest: BP5 58, AB6 172. No fuzz change.
+
 ## 6. Defects (Capcom's, latent, kept)
 
 For the coordinator to number; none is new in kind.
