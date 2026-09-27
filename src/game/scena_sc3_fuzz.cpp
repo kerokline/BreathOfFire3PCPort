@@ -1,18 +1,15 @@
 // BOF3X_SHADOW=scena_sc3: chapters 3 and 4 through the scenario harness
-// (scenario_harness.h), once at start-up. docs/scena_sc3.md section 4.
+// (scenario_harness.h), once at start-up, as two runs - one per chapter byte
+// (a Group takes one chapter). docs/scena_sc3.md section 4.
 //
 // The clone table (tools/scenario_rows.py --unit SC3 --clones, SCH's tool at
-// 222eb0f, checked against the reading), every callee the fifty call - the
-// engine's by name, the ones nobody owns by address, and our own called
-// directly (the step hooks' area tests, the stand-in spawn, the bobs, the
-// tremor, the message) -, the chapters' .data dispatch tables, the regions,
-// a seed of each compared constant and a disturbance of the chapter cells.
-//
-// Each clone's call shape (the scenario harness's Shape, marked here in a
-// comment until the harness has the field): kSlot a vtable slot 0 (no
-// arguments), kObject slot 1 (the object), kHook slots 2..4 ((x, z), al),
-// kState a state or run handler reached through the chapter's tables, and
-// kCallee a function the others call directly (with its own arguments).
+// 222eb0f, checked against the reading) with each clone's call shape; the
+// callees the harness's standard set lacks (the unnamed ones, ours the
+// originals call directly, EventObj_SetFlags' pointer dereferenced); typed
+// stand-ins written into the object handler tables (they take arguments);
+// the state, run and cell handler tables swapped; the regions beyond the
+// standard ones; a seed of each compared constant and a disturbance of the
+// chapter cells the harness's own does not move.
 #include <cstdint>
 #include <cstring>
 
@@ -95,70 +92,108 @@ constexpr sh::CallSite kCalls546370[] = {{0x0, 0x57C7C0}};
 
 #define SH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define SC3_OURS(f) reinterpret_cast<const void*>(&::f)
-// Name, base, size, calls, imms (none), tables, ours, ret_mask. Shape in the comment.
-const sh::Clone kClones[] = {
-    {"Scena03_Frame", 0x5428C0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Frame)},                     // kSlot 0 (Scena03_States)
-    {"Scena03_Start", 0x5428D0, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Start)},                    // kState 0
-    {"Scena03_EnterArea", 0x5428F0, 0x3AC, kCalls5428F0, SH_N(kCalls5428F0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_EnterArea)},   // kState 1
-    {"Scena03_Run", 0x542CA0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Run)},                         // kState 2 (Scena03_Runs)
-    {"Scena03_Scene1", 0x542CB0, 0x268, kCalls542CB0, SH_N(kCalls542CB0), nullptr, 0, kTables542CB0, SH_N(kTables542CB0), SC3_OURS(Scena03_Scene1)},   // kState, run 1
-    {"Scena03_Scene2", 0x542F20, 0x40, kCalls542F20, SH_N(kCalls542F20), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Scene2)},           // kState, run 2
-    {"Scena03_Scene3", 0x542F60, 0x553, kCalls542F60, SH_N(kCalls542F60), nullptr, 0, kTables542F60, SH_N(kTables542F60), SC3_OURS(Scena03_Scene3)},   // kState, run 3
-    {"Scena03_Scene4", 0x5434C0, 0x1CC, kCalls5434C0, SH_N(kCalls5434C0), nullptr, 0, kTables5434C0, SH_N(kTables5434C0), SC3_OURS(Scena03_Scene4)},   // kState, run 4
-    {"Scena03_Scene5", 0x543690, 0x454, kCalls543690, SH_N(kCalls543690), nullptr, 0, kTables543690, SH_N(kTables543690), SC3_OURS(Scena03_Scene5)},   // kState, run 5
-    {"Scena03_Scene6", 0x543AF0, 0x548, kCalls543AF0, SH_N(kCalls543AF0), nullptr, 0, kTables543AF0, SH_N(kTables543AF0), SC3_OURS(Scena03_Scene6)},   // kState, run 6
-    {"Scena03_Scene7", 0x544040, 0x2EC, kCalls544040, SH_N(kCalls544040), nullptr, 0, kTables544040, SH_N(kTables544040), SC3_OURS(Scena03_Scene7)},   // kState, run 7
-    {"Scena03_Scene8", 0x544330, 0x4F4, kCalls544330, SH_N(kCalls544330), nullptr, 0, kTables544330, SH_N(kTables544330), SC3_OURS(Scena03_Scene8)},   // kState, run 8
-    {"Scena03_SpawnAtMember", 0x544830, 0x154, kCalls544830, SH_N(kCalls544830), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_SpawnAtMember), 0xFF},   // kCallee (member), al
-    {"Scena03_BobParty4", 0x544990, 0x22, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_BobParty4)},            // kCallee
-    {"Scena03_BobParty2", 0x5449C0, 0x22, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_BobParty2)},            // kCallee
-    {"Scena03_ObjectHook", 0x5449F0, 0x1F, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ObjectHook)},          // kObject (Scena03_ObjectHandlers)
-    {"Scena03_Object0", 0x544A10, 0x23, kCalls544A10, SH_N(kCalls544A10), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object0)},        // kState (object, bank)
-    {"Scena03_Object1", 0x544A40, 0x14, kCalls544A40, SH_N(kCalls544A40), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object1), 0xFF},  // kState (object, bank), al
-    {"Scena03_Object2", 0x544A60, 0x14, kCalls544A60, SH_N(kCalls544A60), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object2), 0xFF},
-    {"Scena03_Object3", 0x544A80, 0x14, kCalls544A80, SH_N(kCalls544A80), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object3), 0xFF},
-    {"Scena03_Object4", 0x544AA0, 0x14, kCalls544AA0, SH_N(kCalls544AA0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object4), 0xFF},
-    {"Scena03_ObjectsAllFour", 0x544AC0, 0x26, kCalls544AC0, SH_N(kCalls544AC0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ObjectsAllFour), 0xFF},   // kCallee (a tail), al
-    {"Scena03_Object5", 0x544AF0, 0x4A, kCalls544AF0, SH_N(kCalls544AF0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object5)},        // kState (object, bank)
-    {"Scena03_Object7", 0x544B40, 0x16, kCalls544B40, SH_N(kCalls544B40), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object7), 0xFF},
-    {"Scena03_Object8", 0x544B60, 0x1F, kCalls544B60, SH_N(kCalls544B60), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object8), 0xFF},
-    {"Scena03_StepHook", 0x544B80, 0xF3, kCalls544B80, SH_N(kCalls544B80), nullptr, 0, kTables544B80, SH_N(kTables544B80), SC3_OURS(Scena03_StepHook), 0xFF},   // kHook slot 2 (x, z), al
-    {"Scena03_StepArea33", 0x544C80, 0x7F, kCalls544C80, SH_N(kCalls544C80), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea33), 0xFF},   // kCallee (x, z), al
-    {"Scena03_StepArea29", 0x544D00, 0x50, kCalls544D00, SH_N(kCalls544D00), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea29), 0xFF},
-    {"Scena03_StepArea25", 0x544D50, 0x47, kCalls544D50, SH_N(kCalls544D50), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea25), 0xFF},
-    {"Scena03_StepArea45", 0x544DA0, 0x8C, kCalls544DA0, SH_N(kCalls544DA0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea45), 0xFF},
-    {"Scena03_StepArea32", 0x544E30, 0x45, kCalls544E30, SH_N(kCalls544E30), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea32), 0xFF},
-    {"Scena03_StepArea63", 0x544E80, 0xBD, kCalls544E80, SH_N(kCalls544E80), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea63), 0xFF},
-    {"Scena03_ArriveHook", 0x544F40, 0x20, kCalls544F40, SH_N(kCalls544F40), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ArriveHook), 0xFF},   // kHook slot 3 (x, z), al
-    {"Scena03_ArriveArea47", 0x544F60, 0x4D, kCalls544F60, SH_N(kCalls544F60), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ArriveArea47), 0xFF},   // kCallee (x, z), al
-    {"Scena03_CellHook", 0x544FB0, 0x2D, kCalls544FB0, SH_N(kCalls544FB0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_CellHook), 0xFF},   // kHook slot 4 (x, z), al (Scena03_CellHandlers)
-    {"Scena03_Cell0", 0x544FE0, 0x2E, kCalls544FE0, SH_N(kCalls544FE0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Cell0)},            // kState (the cell's handler)
-    {"Scena04_Frame", 0x545010, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Frame)},                     // kSlot 0 (Scena04_States)
-    {"Scena04_Start", 0x545020, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Start)},                    // kState 0
-    {"Scena04_EnterArea", 0x545040, 0x2E1, kCalls545040, SH_N(kCalls545040), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_EnterArea)},   // kState 1
-    {"Scena04_Run", 0x545330, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Run)},                         // kState 2 (Scena04_Runs)
-    {"Scena04_Scene1", 0x545340, 0x684, kCalls545340, SH_N(kCalls545340), nullptr, 0, kTables545340, SH_N(kTables545340), SC3_OURS(Scena04_Scene1)},   // kState, run 1
-    {"Scena04_Scene2", 0x5459D0, 0x754, kCalls5459D0, SH_N(kCalls5459D0), nullptr, 0, kTables5459D0, SH_N(kTables5459D0), SC3_OURS(Scena04_Scene2)},   // kState, run 2
-    {"Scena04_Tremor", 0x546130, 0x27, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Tremor)},                  // kCallee (Scena04_Scene2's tail)
-    {"Scena04_ObjectHook", 0x546160, 0x1F, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_ObjectHook)},          // kObject (Scena04_ObjectHandlers)
-    {"Scena04_Object0", 0x546180, 0x12, kCalls546180, SH_N(kCalls546180), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Object0), 0xFF},  // kState (object, bank), al
-    {"Scena04_StepHook", 0x5461A0, 0x20, kCalls5461A0, SH_N(kCalls5461A0), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_StepHook), 0xFF},   // kHook slot 2 (x, z), al
-    {"Scena04_StepArea28", 0x5461C0, 0x15F, kCalls5461C0, SH_N(kCalls5461C0), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_StepArea28), 0xFF},   // kCallee (x, z), al
-    {"Scena04_Message", 0x546320, 0x20, kCalls546320, SH_N(kCalls546320), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Message), 0xFF},  // kCallee (id), al
-    {"Scena04_CellHook", 0x546340, 0x2D, kCalls546340, SH_N(kCalls546340), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_CellHook), 0xFF},   // kHook slot 4 (x, z), al (Scena04_CellHandlers)
-    {"Scena04_Cell0", 0x546370, 0x1D, kCalls546370, SH_N(kCalls546370), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Cell0)},            // kState (the cell's handler)
-};
-constexpr unsigned kClonesN = sizeof kClones / sizeof kClones[0];
+constexpr sh::Shape kSlot = sh::Shape::kSlot, kState = sh::Shape::kState, kHook = sh::Shape::kHook, kEntry = sh::Shape::kEntry,
+                    kObject = sh::Shape::kObject;
 
-// --- the callees ---------------------------------------------------------------
+// Chapter 3's 36, fuzzed with Cond_ByteFA 3 (its row 0x903FA8). Shapes: the
+// frame kSlot; the states, runs, scenes, bobs, the four-bit tail and the
+// cell's handler kState (no arguments); the object hook kObject; the object
+// handlers kEntry (object, row: the group's args); the hooks and the area
+// tests kHook ((x, z), al); the spawn kEntry (the member).
+const sh::Clone kClones3[] = {
+    {"Scena03_Frame", 0x5428C0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Frame), 0, false, kSlot},
+    {"Scena03_Start", 0x5428D0, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Start), 0, false, kState},
+    {"Scena03_EnterArea", 0x5428F0, 0x3AC, kCalls5428F0, SH_N(kCalls5428F0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_EnterArea), 0, false, kState},
+    {"Scena03_Run", 0x542CA0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Run), 0, false, kState},
+    {"Scena03_Scene1", 0x542CB0, 0x268, kCalls542CB0, SH_N(kCalls542CB0), nullptr, 0, kTables542CB0, SH_N(kTables542CB0), SC3_OURS(Scena03_Scene1), 0, false, kState},
+    {"Scena03_Scene2", 0x542F20, 0x40, kCalls542F20, SH_N(kCalls542F20), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Scene2), 0, false, kState},
+    {"Scena03_Scene3", 0x542F60, 0x553, kCalls542F60, SH_N(kCalls542F60), nullptr, 0, kTables542F60, SH_N(kTables542F60), SC3_OURS(Scena03_Scene3), 0, false, kState},
+    {"Scena03_Scene4", 0x5434C0, 0x1CC, kCalls5434C0, SH_N(kCalls5434C0), nullptr, 0, kTables5434C0, SH_N(kTables5434C0), SC3_OURS(Scena03_Scene4), 0, false, kState},
+    {"Scena03_Scene5", 0x543690, 0x454, kCalls543690, SH_N(kCalls543690), nullptr, 0, kTables543690, SH_N(kTables543690), SC3_OURS(Scena03_Scene5), 0, false, kState},
+    {"Scena03_Scene6", 0x543AF0, 0x548, kCalls543AF0, SH_N(kCalls543AF0), nullptr, 0, kTables543AF0, SH_N(kTables543AF0), SC3_OURS(Scena03_Scene6), 0, false, kState},
+    {"Scena03_Scene7", 0x544040, 0x2EC, kCalls544040, SH_N(kCalls544040), nullptr, 0, kTables544040, SH_N(kTables544040), SC3_OURS(Scena03_Scene7), 0, false, kState},
+    {"Scena03_Scene8", 0x544330, 0x4F4, kCalls544330, SH_N(kCalls544330), nullptr, 0, kTables544330, SH_N(kTables544330), SC3_OURS(Scena03_Scene8), 0, false, kState},
+    {"Scena03_SpawnAtMember", 0x544830, 0x154, kCalls544830, SH_N(kCalls544830), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_SpawnAtMember), 0xFF, false, kEntry},
+    {"Scena03_BobParty4", 0x544990, 0x22, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_BobParty4), 0, false, kState},
+    {"Scena03_BobParty2", 0x5449C0, 0x22, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_BobParty2), 0, false, kState},
+    {"Scena03_ObjectHook", 0x5449F0, 0x1F, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ObjectHook), 0, false, kObject},
+    {"Scena03_Object0", 0x544A10, 0x23, kCalls544A10, SH_N(kCalls544A10), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object0), 0, false, kEntry},
+    {"Scena03_Object1", 0x544A40, 0x14, kCalls544A40, SH_N(kCalls544A40), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object1), 0xFF, false, kEntry},
+    {"Scena03_Object2", 0x544A60, 0x14, kCalls544A60, SH_N(kCalls544A60), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object2), 0xFF, false, kEntry},
+    {"Scena03_Object3", 0x544A80, 0x14, kCalls544A80, SH_N(kCalls544A80), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object3), 0xFF, false, kEntry},
+    {"Scena03_Object4", 0x544AA0, 0x14, kCalls544AA0, SH_N(kCalls544AA0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object4), 0xFF, false, kEntry},
+    {"Scena03_ObjectsAllFour", 0x544AC0, 0x26, kCalls544AC0, SH_N(kCalls544AC0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ObjectsAllFour), 0xFF, false, kState},
+    {"Scena03_Object5", 0x544AF0, 0x4A, kCalls544AF0, SH_N(kCalls544AF0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object5), 0, false, kEntry},
+    {"Scena03_Object7", 0x544B40, 0x16, kCalls544B40, SH_N(kCalls544B40), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object7), 0xFF, false, kEntry},
+    {"Scena03_Object8", 0x544B60, 0x1F, kCalls544B60, SH_N(kCalls544B60), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Object8), 0xFF, false, kEntry},
+    {"Scena03_StepHook", 0x544B80, 0xF3, kCalls544B80, SH_N(kCalls544B80), nullptr, 0, kTables544B80, SH_N(kTables544B80), SC3_OURS(Scena03_StepHook), 0xFF, false, kHook},
+    {"Scena03_StepArea33", 0x544C80, 0x7F, kCalls544C80, SH_N(kCalls544C80), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea33), 0xFF, false, kHook},
+    {"Scena03_StepArea29", 0x544D00, 0x50, kCalls544D00, SH_N(kCalls544D00), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea29), 0xFF, false, kHook},
+    {"Scena03_StepArea25", 0x544D50, 0x47, kCalls544D50, SH_N(kCalls544D50), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea25), 0xFF, false, kHook},
+    {"Scena03_StepArea45", 0x544DA0, 0x8C, kCalls544DA0, SH_N(kCalls544DA0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea45), 0xFF, false, kHook},
+    {"Scena03_StepArea32", 0x544E30, 0x45, kCalls544E30, SH_N(kCalls544E30), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea32), 0xFF, false, kHook},
+    {"Scena03_StepArea63", 0x544E80, 0xBD, kCalls544E80, SH_N(kCalls544E80), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_StepArea63), 0xFF, false, kHook},
+    {"Scena03_ArriveHook", 0x544F40, 0x20, kCalls544F40, SH_N(kCalls544F40), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ArriveHook), 0xFF, false, kHook},
+    {"Scena03_ArriveArea47", 0x544F60, 0x4D, kCalls544F60, SH_N(kCalls544F60), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_ArriveArea47), 0xFF, false, kHook},
+    {"Scena03_CellHook", 0x544FB0, 0x2D, kCalls544FB0, SH_N(kCalls544FB0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_CellHook), 0xFF, false, kHook},
+    {"Scena03_Cell0", 0x544FE0, 0x2E, kCalls544FE0, SH_N(kCalls544FE0), nullptr, 0, nullptr, 0, SC3_OURS(Scena03_Cell0), 0, false, kState},
+};
+// Chapter 4's 14, with Cond_ByteFA 4 (its row 0x903FB0). Scena04_Message is
+// chapter 4's (chapter 3's hooks call it too; it reads no chapter byte).
+const sh::Clone kClones4[] = {
+    {"Scena04_Frame", 0x545010, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Frame), 0, false, kSlot},
+    {"Scena04_Start", 0x545020, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Start), 0, false, kState},
+    {"Scena04_EnterArea", 0x545040, 0x2E1, kCalls545040, SH_N(kCalls545040), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_EnterArea), 0, false, kState},
+    {"Scena04_Run", 0x545330, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Run), 0, false, kState},
+    {"Scena04_Scene1", 0x545340, 0x684, kCalls545340, SH_N(kCalls545340), nullptr, 0, kTables545340, SH_N(kTables545340), SC3_OURS(Scena04_Scene1), 0, false, kState},
+    {"Scena04_Scene2", 0x5459D0, 0x754, kCalls5459D0, SH_N(kCalls5459D0), nullptr, 0, kTables5459D0, SH_N(kTables5459D0), SC3_OURS(Scena04_Scene2), 0, false, kState},
+    {"Scena04_Tremor", 0x546130, 0x27, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Tremor), 0, false, kState},
+    {"Scena04_ObjectHook", 0x546160, 0x1F, nullptr, 0, nullptr, 0, nullptr, 0, SC3_OURS(Scena04_ObjectHook), 0, false, kObject},
+    {"Scena04_Object0", 0x546180, 0x12, kCalls546180, SH_N(kCalls546180), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Object0), 0xFF, false, kEntry},
+    {"Scena04_StepHook", 0x5461A0, 0x20, kCalls5461A0, SH_N(kCalls5461A0), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_StepHook), 0xFF, false, kHook},
+    {"Scena04_StepArea28", 0x5461C0, 0x15F, kCalls5461C0, SH_N(kCalls5461C0), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_StepArea28), 0xFF, false, kHook},
+    {"Scena04_Message", 0x546320, 0x20, kCalls546320, SH_N(kCalls546320), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Message), 0xFF, false, kEntry},
+    {"Scena04_CellHook", 0x546340, 0x2D, kCalls546340, SH_N(kCalls546340), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_CellHook), 0xFF, false, kHook},
+    {"Scena04_Cell0", 0x546370, 0x1D, kCalls546370, SH_N(kCalls546370), nullptr, 0, nullptr, 0, SC3_OURS(Scena04_Cell0), 0, false, kState},
+};
+constexpr unsigned kCount3 = sizeof kClones3 / sizeof kClones3[0];
+constexpr unsigned kCount4 = sizeof kClones4 / sizeof kClones4[0];
+
+// --- the object handler tables ---------------------------------------------------
 //
-// Listed whole (registered before the harness's standard set, so a listing
-// here stands): stage B drops those the scenario harness already records the
-// same way. The key is the pointer ours passes: our function for a callee
-// that is ours, the address for Capcom's.
+// A .data table's handler recorder logs no arguments, and the object handlers
+// take (object, row): a typed stand-in of the fuzz's own is written into each
+// entry by the seed (the tables are regions, put back after the run), each
+// logging against the handler's own address. Scena03_ObjectHandlers' entry 6
+// is the bare ret 0x437CC0, which is also Scena03_Runs entry 0 (a handler
+// recorder's): its stand-in logs against the object hook 0x5449F0 instead,
+// an address no clone calls.
+constexpr std::uint32_t kObjAddr3[9] = {0x544A10, 0x544A40, 0x544A60, 0x544A80, 0x544AA0, 0x544AF0, 0x5449F0, 0x544B40, 0x544B60};
+constexpr std::uint32_t kObjAddr4 = 0x546180;
+template <unsigned I> void __cdecl ObjectEntry3(unsigned char* object, unsigned char* row) {
+    sh::Record(kObjAddr3[I], Key(object), Key(row));
+    sh::Stir();
+}
+void __cdecl ObjectEntry4(unsigned char* object, unsigned char* row) {
+    sh::Record(kObjAddr4, Key(object), Key(row));
+    sh::Stir();
+}
+const void* const kObjEntries3[9] = {
+    reinterpret_cast<const void*>(&ObjectEntry3<0>), reinterpret_cast<const void*>(&ObjectEntry3<1>),
+    reinterpret_cast<const void*>(&ObjectEntry3<2>), reinterpret_cast<const void*>(&ObjectEntry3<3>),
+    reinterpret_cast<const void*>(&ObjectEntry3<4>), reinterpret_cast<const void*>(&ObjectEntry3<5>),
+    reinterpret_cast<const void*>(&ObjectEntry3<6>), reinterpret_cast<const void*>(&ObjectEntry3<7>),
+    reinterpret_cast<const void*>(&ObjectEntry3<8>),
+};
+
+// --- the callees -------------------------------------------------------------------
+//
+// Beyond the harness's standard 70 (docs/scenario_harness.md section 4), which
+// already record every named engine callee these call and 0x4410B0,
+// 0x532ED0, 0x56D6F0, Scenario_CallB and EventObj_Face.
 constexpr std::uint32_t kAll = 0xFFFFFFFF;
 #define SC3_CAPCOM(name, address, n, ...) {name, address, address, n, {__VA_ARGS__}, sh::Answer::kGarbage, 0, 0}
-#define SC3_OURS_CALLEE(name, fn, address, n, ...) {name, address, Key(reinterpret_cast<const void*>(&::fn)), n, {__VA_ARGS__}, sh::Answer::kGarbage, 0, 0}
+#define SC3_OURS_CALLEE(fn, n, ...) {#fn, ::bof3::addr::fn, Key(reinterpret_cast<const void*>(&::fn)), n, {__VA_ARGS__}, sh::Answer::kGarbage, 0, 0}
 
 sh::Callee Answering(sh::Callee c, sh::Answer a, std::uint8_t lo = 0, std::uint8_t hi = 0) {
     c.answer = a;
@@ -166,142 +201,89 @@ sh::Callee Answering(sh::Callee c, sh::Answer a, std::uint8_t lo = 0, std::uint8
     c.hi = hi;
     return c;
 }
+sh::Callee Custom(const char* name, std::uint32_t address, const void* fn) {
+    sh::Callee c = {name, address, address, 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0};
+    c.custom = fn;
+    return c;
+}
 
-// Filled at SelfTest (Key() of our functions is not a constant expression).
 sh::Callee g_callees[64];
 unsigned g_n_callees = 0;
-void Add(const sh::Callee& c) { g_callees[g_n_callees++] = c; }
+void Add(const sh::Callee& c) {
+    if (g_n_callees == sizeof g_callees / sizeof g_callees[0]) bof3::Fatal("scena_sc3: more than 64 callees");
+    g_callees[g_n_callees++] = c;
+}
 
-void ListCallees() {
+void ListCallees(int chapter) {
     g_n_callees = 0;
-    // The engine's, ours by name.
-    Add(Answering(SC3_OURS_CALLEE("Flags_Test", Flags_Test, 0x57C140, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(SC3_OURS_CALLEE("Flags_Set", Flags_Set, 0x57C0F0, 2, kAll, kAll));
-    Add(SC3_OURS_CALLEE("AreaMap_SetByte", AreaMap_SetByte, 0x579F00, 3, kAll, kAll, kAll));
-    Add(SC3_OURS_CALLEE("Party_DropIn", Party_DropIn, 0x531F90, 1, kAll));
-    Add(SC3_OURS_CALLEE("ScriptFlags_Set40", ScriptFlags_Set40, 0x57C7C0, 0));
-    Add(SC3_OURS_CALLEE("ScriptFlags_Clear40", ScriptFlags_Clear40, 0x57C7A0, 0));
-    Add(SC3_OURS_CALLEE("ObjTrio_SetBit40", ObjTrio_SetBit40, 0x57C810, 0));
-    Add(SC3_OURS_CALLEE("Scenario_CallA", Scenario_CallA, 0x5341A0, 1, 0xFF));
-    Add(SC3_OURS_CALLEE("MapView_SetElevation", MapView_SetElevation, 0x5725F0, 1, kAll));
-    Add(SC3_OURS_CALLEE("Kind2_Place", Kind2_Place, 0x5734F0, 1, 0xFF));
-    Add(SC3_OURS_CALLEE("Music_FadeOutStop", Music_FadeOutStop, 0x587B40, 1, kAll));
-    Add(SC3_OURS_CALLEE("Music_Play", Music_Play, 0x587AE0, 2, kAll, kAll));
-    Add(SC3_OURS_CALLEE("Music_FadeOut", Music_FadeOut, 0x587BE0, 1, kAll));
-    Add(SC3_OURS_CALLEE("Music_LoadFile", Music_LoadFile, 0x587A20, 1, kAll));
-    Add(SC3_OURS_CALLEE("Sound_PlayEffect", Sound_PlayEffect, 0x587740, 1, 0xFFFF));
-    Add(SC3_OURS_CALLEE("Sound_LoadStream", Sound_LoadStream, 0x587910, 1, kAll));
-    Add(Answering(SC3_OURS_CALLEE("Sound_StreamDone", Sound_StreamDone, 0x587A00, 0), sh::Answer::kBool));
-    Add(Answering(SC3_OURS_CALLEE("File_LoadDone", File_LoadDone, 0x454810, 0), sh::Answer::kBool));
-    // Effect_Objects holds 20 records: a slot 0..0x13, or 0xFF none.
-    Add(Answering(SC3_OURS_CALLEE("Effect_FindFree", Effect_FindFree, 0x589810, 0), sh::Answer::kByte, 0xFF, 0x13));
-    Add(SC3_OURS_CALLEE("Field_ChangeArea", Field_ChangeArea, 0x594E00, 4, kAll, kAll, kAll, kAll));
-    Add(SC3_OURS_CALLEE("Msg_OpenScript", Msg_OpenScript, 0x4976D0, 1, 0xFFFF));
-    Add(SC3_OURS_CALLEE("Transition_Start", Transition_Start, 0x495040, 1, 0xFF));
-    Add(SC3_OURS_CALLEE("Field_LoadingFrame", Field_LoadingFrame, 0x517290, 0));
-    Add(SC3_OURS_CALLEE("Task_Sleep", Task_Sleep, 0x5A9949, 1, kAll));
-    Add(SC3_OURS_CALLEE("Field_ViewReset", Field_ViewReset, 0x56F670, 0));
-    Add(SC3_OURS_CALLEE("AreaMap_SetupEntries", AreaMap_SetupEntries, 0x571720, 0));
-    Add(SC3_OURS_CALLEE("MoveCmd_TestFB", MoveCmd_TestFB, 0x572650, 2, 0xFFFF, 0xFFFF));
-    Add(SC3_OURS_CALLEE("EventObj_Reset", EventObj_Reset, 0x579E30, 0));
-    Add(SC3_OURS_CALLEE("Sprite_SetAnimationBank", Sprite_SetAnimationBank, 0x589590, 1, 0xFFFF));
-    Add(SC3_OURS_CALLEE("AreaMap_Elevation", AreaMap_Elevation, 0x5720C0, 2, kAll, kAll));
+    // The standard set logs EventObj_SetFlags' pointer; the originals' points
+    // into their own frame: log the byte it points at.
     {
-        // a pointer to a byte of the caller's frame (the original's: its
-        // argument's top byte): logged as the byte it points at
-        sh::Callee c = SC3_OURS_CALLEE("EventObj_SetFlags", EventObj_SetFlags, 0x579DB0, 1, 0);
+        sh::Callee c = SC3_OURS_CALLEE(EventObj_SetFlags, 1, 0);
         c.deref[0] = 1;
         Add(c);
     }
-    // Capcom's, named but not ours.
-    Add(SC3_CAPCOM("ObjTrio_ClearBit40", 0x57C7E0, 0));
-    Add(SC3_CAPCOM("Sound_ResumeAll", 0x587B90, 0));
     // Nobody's, by address (scena_sc3_callees.h).
-    Add(SC3_CAPCOM("0x4410B0 (SE)", kLeaderState5, 1, 0xFF));
-    Add(SC3_CAPCOM("EventObj_Face 0x579D70 (SE)", kEventObjFace, 0));
-    Add(SC3_CAPCOM("Scenario_CallB 0x5341C0", kCallB, 1, 0xFF));
-    Add(SC3_CAPCOM("0x532ED0", kPlaceParty, 3, kAll, kAll, 0xFF));
     Add(SC3_CAPCOM("0x533E50", kPartyRestore, 0));
-    Add(SC3_CAPCOM("0x56D6F0", kStatusBit80, 0));
-    // 0x56D800: an index below n (1) or 0xFF; the originals test al's sign
+    // an index below n (1) or 0xFF; the callers test al's sign
     Add(Answering(SC3_CAPCOM("0x56D800", kCellFind, 4, kAll, 0xFF, kAll, kAll), sh::Answer::kByte, 0xFF, 0x00));
-    // 0x57CD90: a Sprite_Objects index 0..0x1D, or 0xFF none
+    // a Sprite_Objects index 0..0x1D, or 0xFF none
     Add(Answering(SC3_CAPCOM("0x57CD90", kSpriteFindFree, 0), sh::Answer::kByte, 0xFF, 0x1D));
     Add(SC3_CAPCOM("0x587B80", kMusicStop, 0));
     Add(SC3_CAPCOM("0x590C90", kItemEvent, 4, 0xFF, kAll, 0xFF, kAll));
     Add(SC3_CAPCOM("0x591900", kKeyItemAdd, 1, 0xFF));
-    // Ours called directly by the originals' E8 / E9 (each clone is fuzzed
-    // alone; these answer as the callers read them).
-    Add(SC3_OURS_CALLEE("Scena03_SpawnAtMember", Scena03_SpawnAtMember, 0x544830, 1, 0xFF));
-    Add(SC3_OURS_CALLEE("Scena03_BobParty4", Scena03_BobParty4, 0x544990, 0));
-    Add(SC3_OURS_CALLEE("Scena03_BobParty2", Scena03_BobParty2, 0x5449C0, 0));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_ObjectsAllFour", Scena03_ObjectsAllFour, 0x544AC0, 0), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_StepArea33", Scena03_StepArea33, 0x544C80, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_StepArea29", Scena03_StepArea29, 0x544D00, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_StepArea25", Scena03_StepArea25, 0x544D50, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_StepArea45", Scena03_StepArea45, 0x544DA0, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_StepArea32", Scena03_StepArea32, 0x544E30, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_StepArea63", Scena03_StepArea63, 0x544E80, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena03_ArriveArea47", Scena03_ArriveArea47, 0x544F60, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(SC3_OURS_CALLEE("Scena04_Tremor", Scena04_Tremor, 0x546130, 0));
-    Add(Answering(SC3_OURS_CALLEE("Scena04_StepArea28", Scena04_StepArea28, 0x5461C0, 2, kAll, kAll), sh::Answer::kFlag));
-    Add(Answering(SC3_OURS_CALLEE("Scena04_Message", Scena04_Message, 0x546320, 1, 0xFF), sh::Answer::kFlag));
+    // Ours the originals' E8 / E9 reach: those whose answer is read answer
+    // as their callers read it; the rest log the chapter bytes (kPhase).
+    Add(Answering(SC3_OURS_CALLEE(Scena03_SpawnAtMember, 1, 0xFF), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_BobParty4, 0), sh::Answer::kPhase));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_BobParty2, 0), sh::Answer::kPhase));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_ObjectsAllFour, 0), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_StepArea33, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_StepArea29, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_StepArea25, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_StepArea45, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_StepArea32, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_StepArea63, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena03_ArriveArea47, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena04_Tremor, 0), sh::Answer::kPhase));
+    Add(Answering(SC3_OURS_CALLEE(Scena04_StepArea28, 2, kAll, kAll), sh::Answer::kFlag));
+    Add(Answering(SC3_OURS_CALLEE(Scena04_Message, 1, 0xFF), sh::Answer::kFlag));
+    // The object handler tables' stand-ins.
+    if (chapter == 3) {
+        static const char* const kNames[9] = {"ObjectHandlers3[0]", "ObjectHandlers3[1]", "ObjectHandlers3[2]", "ObjectHandlers3[3]",
+                                              "ObjectHandlers3[4]", "ObjectHandlers3[5]", "ObjectHandlers3[6]", "ObjectHandlers3[7]",
+                                              "ObjectHandlers3[8]"};
+        for (unsigned i = 0; i < 9; ++i) Add(Custom(kNames[i], kObjAddr3[i], kObjEntries3[i]));
+    } else {
+        Add(Custom("ObjectHandlers4[0]", kObjAddr4, reinterpret_cast<const void*>(&ObjectEntry4)));
+    }
 }
 
 // --- the tables ------------------------------------------------------------------
 //
-// Swapped for recorders while the fuzz runs. Each chapter's state table runs
-// on into its run table (the frame's index 3.. reads runs), so one window
-// holds both: the seeds keep the indices inside.
-const sh::DataTable kTables[] = {
-    {at::kStates3, 12},       // Scena03_States (3) and Scena03_Runs (9)
-    {at::kObjects3, 9},       // Scena03_ObjectHandlers
-    {at::kCellHandlers3, 1},  // Scena03_CellHandlers
-    {at::kStates4, 6},        // Scena04_States (3) and Scena04_Runs (3)
-    {at::kObjects4, 1},       // Scena04_ObjectHandlers
-    {at::kCellHandlers4, 1},  // Scena04_CellHandlers
-};
+// Swapped for recorders while the fuzz runs (no arguments). Each chapter's
+// state table runs on into its run table (the frame's index 3.. reads runs),
+// so one window holds both: the seeds keep the indices inside.
+const sh::DataTable kTables3[] = {{at::kStates3, 12}, {at::kCellHandlers3, 1}};
+const sh::DataTable kTables4[] = {{at::kStates4, 6}, {at::kCellHandlers4, 1}};
 
 // --- the regions -------------------------------------------------------------------
 //
-// Every cell the fifty read or write; stage B drops those the harness's
-// standard regions already hold.
-unsigned char g_object[0x100];   // the object slot 1 is given
-sh::Region g_regions[32];
-unsigned g_n_regions = 0;
-void Region(std::uint32_t at, std::uint32_t size) { g_regions[g_n_regions++] = {at, size}; }
-void ListRegions() {
-    g_n_regions = 0;
-    Region(0x8034E0, 0x14);             // Cond_ByteFA .. Cond_ByteFD: state, effect byte, run, step, timer
-    Region(0x903840, 0x20);             // Camera_Distance, the counters, the slot byte
-    Region(0x903FA0, 0x18);             // the chapters' flag rows 0x903FA8 / 0x903FB0
-    Region(at::kPassFlags, 1);
-    Region(at::kArea, 2);
-    Region(at::kByteFE, 1);
-    Region(0x905E60, 0xA);              // Field_Kind2Z / X, the byte after, MapView_Redraw
-    Region(at::kScriptFlags, 2);
-    Region(at::kRequest, 1);
-    Region(at::kGameMode, 2);
-    Region(at::kWait, 2);
-    Region(at::kMessage, 2);
-    Region(0x937F88, 0x14);             // Sprite_Current, MoveScript_F3Divisor, Frame_Counter, the pending kind
-    Region(at::kAreaTrack, 1);
-    Region(at::kAreaTransition, 1);
-    Region(at::kMusicTrack, 1);
-    Region(0x929EC0, 0x60);             // member counts, camera angles, the flag row pointer, the load bytes, Kind2Hold, elevation
-    Region(at::kEffectState, 1);
-    Region(at::kMembers, 3 * at::kMemberStride);
-    Region(at::kActiveMember, 4);
-    Region(at::kEffects, 0xA00);
-    Region(at::kSprites, 0x1338);
-    Region(Key(g_object), sizeof g_object);
-}
+// Beyond the harness's 22 standard ones: the cells of the chapters' own.
+const sh::Region kRegions3[] = {
+    {at::kAreaTrack, 1}, {at::kAreaTransition, 1}, {at::kMusicTrack, 1}, {at::kByteFE, 1}, {at::kMessage, 2},
+    {at::kGameMode, 2}, {0x929F00, 0x14}, {at::kEffectState, 4}, {at::kActiveMember, 4}, {at::kObjects3, 9 * 4},
+};
+const sh::Region kRegions4[] = {
+    {at::kAreaTrack, 1}, {at::kAreaTransition, 1}, {at::kMusicTrack, 1}, {at::kByteFE, 1}, {at::kMessage, 2},
+    {at::kGameMode, 2}, {0x929F00, 0x14}, {at::kEffectState, 4}, {at::kActiveMember, 4}, {at::kObjects4, 4},
+};
 
 // --- the seed ----------------------------------------------------------------------
 //
-// Every constant the fifty compare a cell with, picked half the time; the
-// step within each scene's cases (and one past); the state and run inside
-// the swapped windows.
+// Every constant the fifty compare a cell with, picked often; the step
+// within each scene's cases (and one past); the state and run inside the
+// swapped windows; the object handler stand-ins into their tables.
 std::uint32_t PickC0() {
     return SH_PICK(1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xC, 0xD, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x1C,
                    0x1D, 0x1F, 0x22, 0x23, 0x25, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2F, 0x32, 0x34, 0x55, 0x58);
@@ -313,108 +295,201 @@ std::uint32_t PickTimer() {
 std::uint32_t PickArea() {
     return SH_PICK(0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2D, 0x30, 0x32, 0x33, 0x36, 0x38, 0x41, 0x45, 0x47, 0x63, 0x64);
 }
-// A 16.16 coordinate near the cells and exact values the hooks test.
-std::int32_t PickCoord() {
+// A 16.16 coordinate at the exact values and cells the hooks test.
+std::uint32_t PickCoord() {
     if (sh::Half()) {
-        return static_cast<std::int32_t>(SH_PICK(0x5C0000, 0x418000, 0x3A8000, 0x28000, 0x4C8000, 0xA8000, 0xB8000, 0x490000, 0x60000,
-                                                 0x40000, 0x4D8000, 0x248000));
+        return SH_PICK(0x5C0000, 0x418000, 0x3A8000, 0x28000, 0x4C8000, 0xA8000, 0xB8000, 0x490000, 0x60000, 0x40000, 0x4D8000,
+                       0x248000);
     }
     const std::uint32_t hi = SH_PICK(1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xD, 0xE, 0x10, 0x11, 0x12, 0x13, 0x15, 0x16, 0x17, 0x18, 0x19,
                                      0x1A, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x33, 0x34, 0x35, 0x36, 0x3B, 0x3C,
                                      0x3D, 0x3E, 0x56, 0x57, 0x5A, 0x5B);
-    return static_cast<std::int32_t>((hi << 16) | (sh::Half() ? 0 : (sh::Half() ? 0x8000 : (sh::Next() & 0xFFFF))));
+    return (hi << 16) | (sh::Half() ? 0 : (sh::Half() ? 0x8000 : (sh::Next() & 0xFFFF)));
 }
 
-// Steps each clone's switch holds (0: any byte, weighted low).
+// The steps each scene's switch holds (0: none).
 unsigned StepSpan(const char* name) {
     struct Span { const char* name; unsigned span; };
     static const Span kSpans[] = {
-        {"Scena03_Scene1", 9}, {"Scena03_Scene2", 3}, {"Scena03_Scene3", 0x34}, {"Scena03_Scene4", 0xC}, {"Scena03_Scene5", 0x13},
-        {"Scena03_Scene6", 0x1E}, {"Scena03_Scene7", 0xF}, {"Scena03_Scene8", 0x16}, {"Scena04_Scene1", 0x20}, {"Scena04_Scene2", 0x20},
+        {"Scena03_Scene1", 8}, {"Scena03_Scene2", 2}, {"Scena03_Scene3", 0x33}, {"Scena03_Scene4", 0xB}, {"Scena03_Scene5", 0x12},
+        {"Scena03_Scene6", 0x1D}, {"Scena03_Scene7", 0xE}, {"Scena03_Scene8", 0x15}, {"Scena04_Scene1", 0x1F}, {"Scena04_Scene2", 0x1F},
     };
     for (const Span& s : kSpans)
         if (std::strcmp(s.name, name) == 0) return s.span;
-    return 0x20;
+    return 0;
 }
 
-bool IsChapter4(unsigned k) { return kClones[k].base >= 0x545010; }
+// Each scene's steps that wait on a counter, and the value compared: {step,
+// counter 0 / 1, value}. Read off the cases (the first compare of 0x903848 /
+// 0x903849 in each, capstone, the scratch stepcmp.py), 2026-09-27.
+struct StepWait { unsigned char step, counter, value; };
+struct SceneWaits { const char* name; StepWait waits[16]; };
+const SceneWaits kWaits[] = {
+    {"Scena03_Scene1", {{1, 0, 0x28}, {2, 0, 0x29}, {3, 0, 0x2A}, {4, 0, 0x32}, {7, 0, 0x2}}},
+    {"Scena03_Scene2", {{1, 0, 0x28}}},
+    {"Scena03_Scene3", {{2, 0, 0x22}, {5, 0, 0x2}, {6, 0, 0x18}, {7, 0, 0x25}, {8, 1, 0x15}, {9, 0, 0x2B}, {11, 0, 0xF}, {12, 0, 0x14},
+                        {14, 0, 0x1D}, {16, 0, 0x1F}, {24, 0, 0x55}, {26, 0, 0x58}, {50, 0, 0x9}}},
+    {"Scena03_Scene4", {{1, 0, 0x4}, {8, 0, 0xF}}},
+    {"Scena03_Scene5", {{2, 0, 0x8}, {4, 0, 0x9}, {8, 0, 0x2}, {9, 0, 0x3}, {12, 0, 0x5}, {13, 0, 0x6}, {14, 0, 0x15}, {15, 0, 0x7}}},
+    {"Scena03_Scene6", {{3, 0, 0xA}, {7, 0, 0x5}, {12, 0, 0x8}, {16, 0, 0x1}, {22, 0, 0x4}, {25, 0, 0x9}, {28, 0, 0xD}}},
+    {"Scena03_Scene7", {{1, 0, 0x2}, {4, 0, 0x7}, {5, 0, 0x12}, {6, 0, 0x16}, {7, 0, 0x18}, {8, 0, 0x27}, {11, 0, 0x2F}, {13, 0, 0x34}}},
+    {"Scena03_Scene8", {{4, 0, 0x10}, {5, 0, 0x13}, {14, 0, 0x15}, {15, 0, 0x15}, {16, 0, 0x17}, {19, 0, 0x1C}, {20, 0, 0x27}}},
+    {"Scena04_Scene1", {{2, 0, 0x1}, {3, 0, 0x2}, {7, 0, 0x14}, {14, 0, 0x23}, {17, 0, 0x2B}, {19, 0, 0x1}, {21, 0, 0x5}, {22, 0, 0x2},
+                        {23, 0, 0x1}, {24, 0, 0x9}}},
+    {"Scena04_Scene2", {{1, 0, 0xC}, {2, 0, 0xF}, {6, 0, 0x11}, {14, 0, 0x22}, {15, 0, 0x23}, {17, 0, 0x2}, {20, 0, 0x3}, {22, 0, 0x11}}},
+};
+const SceneWaits* WaitsOf(const char* name) {
+    for (const SceneWaits& w : kWaits)
+        if (std::strcmp(w.name, name) == 0) return &w;
+    return nullptr;
+}
+
+// The area tests' (x, z) where they turn: an exact coordinate or a cell range
+// (its high word; the fraction 0, 0x8000 or any), one cell either side too.
+struct Hit { std::uint32_t x0, x1, z0, z1; bool x_exact, z_exact; };
+struct AreaHits { const char* name; Hit hits[4]; };
+const AreaHits kHits[] = {
+    {"Scena03_StepArea33", {{2, 4, 0x60000, 0x60000, false, true}, {3, 4, 0x40000, 0x40000, false, true}}},
+    {"Scena03_StepArea29", {{0x5C0000, 0x5C0000, 7, 8, true, false}}},
+    {"Scena03_StepArea25", {{0x20, 0x23, 0x418000, 0x418000, false, true}}},
+    {"Scena03_StepArea45", {{0x3A8000, 0x3A8000, 0x3C, 0x3D, true, false}, {0x1F, 0x20, 0x28000, 0x28000, false, true},
+                            {0x1F, 0x20, 0x4C8000, 0x4C8000, false, true}}},
+    {"Scena03_StepArea32", {{0x15, 0x15, 0x34, 0x35, false, false}}},
+    {"Scena03_StepArea63", {{0xA8000, 0xA8000, 0x24, 0x25, true, false}, {5, 6, 0xB8000, 0xB8000, false, true}}},
+    {"Scena03_ArriveArea47", {{0xE, 0x11, 0x490000, 0x490000, false, true}}},
+    {"Scena04_StepArea28", {{0x57, 0x5A, 0x13, 0x15, false, false}, {0x57, 0x5A, 0xB, 0x10, false, false},
+                            {0x4D8000, 0x4D8000, 0x18, 0x19, true, false}, {0x1F, 0x21, 0x248000, 0x248000, false, true}}},
+};
+std::uint32_t Coord(std::uint32_t lo, std::uint32_t hi, bool exact) {
+    if (exact) return lo;
+    std::uint32_t cell = lo + sh::Next() % (hi - lo + 1);
+    if (sh::Next() % 4 == 0) cell = sh::Half() ? cell - 1 : hi + 1;
+    const std::uint32_t frac = sh::Half() ? 0 : (sh::Half() ? 0x8000 : (sh::Next() & 0xFFFF));
+    return (cell & 0xFFFF) << 16 | frac;
+}
+
+const sh::Clone* g_clones = kClones3;
+int g_chapter = 3;
+unsigned g_k = 0;
+bool Named(const char* part) { return std::strstr(g_clones[g_k].name, part) != nullptr; }
 
 void Seed(unsigned k) {
-    // the scenario bytes
-    sh::Mem(at::kState)[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next() % (IsChapter4(k) ? 6 : 12));
-    sh::Mem(at::kRun)[0] = static_cast<unsigned char>(sh::Next() % (IsChapter4(k) ? 3 : 9));
-    const unsigned span = StepSpan(kClones[k].name);
-    sh::Mem(at::kStep)[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % (span + 1) : sh::Next());
+    g_k = k;
+    const bool four = g_chapter == 4;
+    // the tables' indices, inside the swapped windows
+    sh::Mem(at::kState)[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next() % (four ? 6 : 12));
+    sh::Mem(at::kRun)[0] = static_cast<unsigned char>(sh::Next() % (four ? 3 : 9));
+    // the step: every case, one past, else any byte
+    if (const unsigned span = StepSpan(g_clones[k].name); span && sh::Next() % 6)
+        sh::Mem(at::kStep)[0] = static_cast<unsigned char>(sh::Next() % (span + 1));
     if (sh::Often()) SetWord(sh::Mem(at::kTimer), PickTimer());
-    sh::Mem(at::kEffectByte)[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 0x14 : 0xFF);
-    // the counters
-    if (sh::Often()) sh::Mem(at::kCounter0)[0] = static_cast<unsigned char>(PickC0());
-    if (sh::Half()) sh::Mem(at::kCounter1)[0] = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3, 0x15));
-    // the area, the bytes the entries test
+    sh::Mem(at::kEffectByte)[0] = static_cast<unsigned char>(sh::Next() % 6 ? sh::Next() % 0x14 : 0xFF);
+    // the counters the steps wait on
+    if (sh::Next() % 6) sh::Mem(at::kCounter0)[0] = static_cast<unsigned char>(PickC0());
+    if (sh::Often()) sh::Mem(at::kCounter1)[0] = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3, 0x15));
+    // the area, Cond_ByteFD, the bytes the entries and hooks test
     if (sh::Often()) SetWord(sh::Mem(at::kArea), PickArea());
     if (sh::Often()) sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(sh::Next() % 8);
     if (sh::Half()) sh::Mem(at::kKind2Mode)[0] = 1;
     if (sh::Half()) sh::Mem(at::kRow3Byte2)[0] = static_cast<unsigned char>(sh::Mem(at::kRow3Byte2)[0] | 0xF);
-    sh::Mem(at::kLeaderKind)[0] = static_cast<unsigned char>(sh::Often() ? 3 + sh::Next() % 5 : sh::Next());
+    if (sh::Often()) sh::Mem(at::kLeaderKind)[0] = static_cast<unsigned char>(3 + sh::Next() % 5);
     // the waits
     if (sh::Half()) sh::Mem(at::kRequest)[0] = 2;
     if (sh::Half()) SetWord(sh::Mem(at::kWait), 0);
     if (sh::Half()) SetWord(sh::Mem(at::kMessage), SH_PICK(1, 0xC, 0x11, 0x12, 0x1F, 0x33));
     if (sh::Half()) sh::Mem(at::kKind2Hold)[0] = 0;
     if (sh::Half()) SetWord(sh::Mem(at::kGameMode), 2);
-    if (sh::Half()) SetWord(sh::Mem(at::kCamDistance), SH_PICK(0, 0x10, 0x3F8, 0x3FF, 0x400, 0x7FF0));
-    // the pointers read through: the current sprite a record of the pool,
-    // the object slot 1 is given
-    sh::SetPointer(at::kSpriteCurrent, sh::Mem(at::kSprites + (sh::Next() % 30) * at::kSpriteStride));
-    g_object[0x86] = static_cast<unsigned char>(IsChapter4(k) ? 0 : sh::Next() % 9);
+    if (sh::Half()) SetWord(sh::Mem(at::kCamDistance), SH_PICK(0, 0x10, 0x22, 0x3F8, 0x3FF, 0x400, 0x7FF0));
+    // the object handlers' index in the records the kObject shape passes
+    for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(four ? 0 : sh::Next() % 9);
+    // the object handler tables' stand-ins
+    if (four) {
+        SetLong(sh::Mem(at::kObjects4), static_cast<std::int32_t>(Key(reinterpret_cast<const void*>(&ObjectEntry4))));
+    } else {
+        for (unsigned i = 0; i < 9; ++i) SetLong(sh::Mem(at::kObjects3 + 4 * i), static_cast<std::int32_t>(Key(kObjEntries3[i])));
+    }
+    // a step that waits on a counter, with the counter at (or next to) the value
+    if (const SceneWaits* w = WaitsOf(g_clones[k].name); w && sh::Half()) {
+        unsigned n = 0;
+        while (n < 16 && (w->waits[n].value || w->waits[n].step)) ++n;
+        const StepWait& s = w->waits[sh::Next() % n];
+        sh::Mem(at::kStep)[0] = s.step;
+        const unsigned jitter = sh::Next() % 5;
+        sh::Mem(s.counter ? at::kCounter1 : at::kCounter0)[0] =
+            static_cast<unsigned char>(s.value + (jitter == 0 ? 1u : jitter == 1 ? 0xFFu : 0u));
+    }
+    // Scena04_Scene2's timed steps near their turns
+    if (four && Named("Scene2") && sh::Half()) {
+        sh::Mem(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(8, 9, 0xA, 0xB, 0xC, 0xD, 0x10, 0x12, 0x13, 0x15));
+        SetWord(sh::Mem(at::kTimer), SH_PICK(0, 1, 2, 0xD, 0x13, 0x14, 0x23, 0x24));
+    }
+    // Scena03_Scene8's shaking steps at their turns
+    if (!four && Named("Scene8") && sh::Half()) {
+        sh::Mem(at::kStep)[0] = static_cast<unsigned char>(7 + sh::Next() % 7);
+        SetWord(sh::Mem(at::kTimer), SH_PICK(0x1F, 0x20, 0x2F, 0x30, 0x4F, 0x50, 0x8F, 0x90, 0x9F, 0xA0, 0x10F, 0x110, 0x12F, 0x130));
+    }
 }
 
-// Function k's arguments: (x, z) for the hooks and area tests, the object and
-// a row for slot 1 and its handlers, a member, a message id.
+// Function k's arguments beyond the shape's: the hooks' and area tests' (x, z)
+// at the values tested, the object handlers' object and row, the member, the id.
 void Args(unsigned k, std::uint32_t* a) {
-    const char* const name = kClones[k].name;
-    if (std::strstr(name, "Hook") || std::strstr(name, "StepArea") || std::strstr(name, "ArriveArea")) {
-        a[0] = static_cast<std::uint32_t>(PickCoord());
-        a[1] = static_cast<std::uint32_t>(PickCoord());
+    g_k = k;
+    const sh::Clone& c = g_clones[k];
+    if (c.shape == sh::Shape::kHook && sh::Often()) {
+        a[0] = PickCoord();
+        a[1] = PickCoord();
     }
-    if (std::strstr(name, "ObjectHook") || std::strstr(name, "Object0") || std::strstr(name, "Object1") ||
-        std::strstr(name, "Object2") || std::strstr(name, "Object3") || std::strstr(name, "Object4") ||
-        std::strstr(name, "Object5") || std::strstr(name, "Object7") || std::strstr(name, "Object8")) {
-        a[0] = Key(g_object);
-        a[1] = sh::Next();   // the row, only passed on to Flags_Set's recorder
+    for (const AreaHits& h : kHits) {
+        if (std::strcmp(h.name, c.name) != 0 || !sh::Often()) continue;
+        unsigned n = 0;
+        while (n < 4 && h.hits[n].x0) ++n;
+        const Hit& t = h.hits[sh::Next() % n];
+        a[0] = Coord(t.x0, t.x1, t.x_exact);
+        a[1] = Coord(t.z0, t.z1, t.z_exact);
     }
-    if (std::strcmp(name, "Scena03_SpawnAtMember") == 0) a[0] = sh::Often() ? sh::Next() % 3 : (sh::Next() & 0xFFFFFF00) | (sh::Next() % 3);
-    if (std::strcmp(name, "Scena04_Message") == 0) a[0] = sh::Next();
+    if (Named("_Object") && c.shape == sh::Shape::kEntry) a[0] = Key(sh::SpriteRecord(sh::Next()));
+    if (Named("SpawnAtMember")) a[0] = (sh::Next() & 0xFFFFFF00u) | (sh::Next() % 3);
 }
 
-// After a call, two in three: a chapter cell the scenes read again - the
-// step, the timer, a counter, the request, the wait word, the area, a byte of
-// the effect records, the current sprite (another record of the pool).
+// After a call, two in three (the harness's own list moves the step, run,
+// wait, row, Sprite_Current, Frame_Counter, counter 0, request, timer, script
+// flags): a chapter cell of this group's the scenes and hooks read again.
+// Only from the hash it is given: the harness's Next would differ between the
+// passes.
 void Disturb(std::uint32_t h) {
-    switch ((h >> 8) % 10) {
-    case 0: sh::Mem(at::kStep)[0] = static_cast<unsigned char>(h >> 16); break;
-    case 1: SetWord(sh::Mem(at::kTimer), h >> 16); break;
-    case 2: sh::Mem(at::kCounters + ((h >> 12) & 3))[0] = static_cast<unsigned char>(h >> 16); break;
-    case 3: sh::Mem(at::kRequest)[0] = static_cast<unsigned char>((h >> 16) & 3); break;
-    case 4: SetWord(sh::Mem(at::kWait), (h >> 16) & 1); break;
-    case 5: SetWord(sh::Mem(at::kArea), h >> 16); break;
-    case 6: sh::Mem(at::kEffects + (h >> 12) % 0xA00)[0] = static_cast<unsigned char>(h >> 24); break;
-    case 7: sh::SetPointer(at::kSpriteCurrent, sh::Mem(at::kSprites + ((h >> 16) % 30) * at::kSpriteStride)); break;
-    case 8: sh::Mem(at::kStatusBits)[0] = static_cast<unsigned char>(h >> 16); break;
-    default: SetWord(sh::Mem(at::kCamDistance), h >> 16); break;
+    static const unsigned char kC1[] = {0, 1, 2, 0x15};
+    static const unsigned char kAreas[] = {0x25, 0x28, 0x29, 0x2A, 0x2D, 0x30, 0x32, 0x33, 0x36, 0x38, 0x41, 0x45, 0x47, 0x63};
+    switch ((h >> 8) % 7) {
+    case 0: sh::Mem(at::kCounter1)[0] = h & 0x10000 ? kC1[(h >> 17) % sizeof kC1] : static_cast<unsigned char>(h >> 24); break;
+    case 1: SetWord(sh::Mem(at::kArea), h & 0x10000 ? kAreas[(h >> 17) % sizeof kAreas] : h >> 16); break;
+    case 2: sh::Mem(at::kEffects + (h >> 12) % 0xA00)[0] = static_cast<unsigned char>(h >> 24); break;
+    case 3: sh::Mem(at::kStatusBits)[0] = static_cast<unsigned char>(h >> 16); break;
+    case 4: SetWord(sh::Mem(at::kCamDistance), h >> 16); break;
+    case 5: SetWord(sh::Mem(at::kGameMode), (h >> 16) & 3); break;
+    default: sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>((h >> 16) & 7); break;
     }
+}
+
+void RunChapter(int chapter, const sh::Clone* clones, unsigned n, const sh::DataTable* tables, unsigned n_tables,
+                const sh::Region* regions, unsigned n_regions, const char* shadow) {
+    g_clones = clones;
+    g_chapter = chapter;
+    ListCallees(chapter);
+    sh::Group group = {shadow, clones, n, g_callees, g_n_callees, tables, n_tables, regions, n_regions, &Seed, &Disturb, 2000};
+    group.args = &Args;
+    group.chapter = chapter;
+    sh::Run(group);
 }
 
 }  // namespace
 
+// Two runs of the harness, one per chapter byte (a Group takes one chapter):
+// chapter 3's 36 functions with Cond_ByteFA 3, chapter 4's 14 with 4.
 void SelfTest() {
-    ListCallees();
-    ListRegions();
-    const sh::Group group = {
-        "scena_sc3", kClones, kClonesN, g_callees, g_n_callees, kTables, sizeof kTables / sizeof kTables[0],
-        g_regions, g_n_regions, &Seed, &Disturb, 2000, nullptr, 0, &Args,
-    };
-    sh::Run(group);
+    RunChapter(3, kClones3, kCount3, kTables3, sizeof kTables3 / sizeof kTables3[0], kRegions3,
+               sizeof kRegions3 / sizeof kRegions3[0], "scena_sc3 (chapter 3)");
+    RunChapter(4, kClones4, kCount4, kTables4, sizeof kTables4 / sizeof kTables4[0], kRegions4,
+               sizeof kRegions4 / sizeof kRegions4[0], "scena_sc3 (chapter 4)");
 }
 
 }  // namespace scena_sc3
