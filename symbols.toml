@@ -36930,3 +36930,514 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
+
+# --- round 9 group S36 (docs/magic_s36.md): MAGIC172, MAGIC173, MAGIC218 (Magic Ball, Intimidate, Aura Breath read one id down) ---
+
+[[func]]
+pc = 0x4F1E40
+name = "MagicBall_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1E40..0x4F1E65 (0x26 bytes), group S36: MAGIC172 row 23 entry, the kind-2 task: a two-entry stack table by +1, MagicBall_Start and BattleFx_Finish. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F1E70
+name = "MagicBall_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1E70..0x4F1F62 (0xF3 bytes), group S36: the owner +8 and point copied; +0xB 0, +1 on; BattleTask_Create(1, 0x51) nine times (unchecked): the core (+1 0) and eight orbs (+1 1, +4 the core slot, +9 i + 1, +0xB i), each +0x80 this task and counted in +0xB; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F1F70
+name = "MagicBallChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1F70..0x4F1F81 (0x12 bytes), group S36: kind 1 parameter 0x51: jmp [MagicBallChild_Kinds + 4 x byte +1], unchecked. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F1F90
+name = "MagicBallCore_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1F90..0x4F221D (0x28E bytes), group S36: call [MagicBallCore_Steps + 4 x byte +2]; then while +0: by +2 (read again) 2 eight sparks (masks 7 and 0xF), disc, ring, both swell rings; 3 the swell rings; 4 eight sparks (3 and 7); else five sparks (3), disc, ring; BattleActor_UpdateScreenXY first; each spark angle Rand and 0x1FF plus a constant. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2220
+name = "MagicBallCore_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2220..0x4F22C6 (0xA7 bytes), group S36: the owner point, y + 0x800000; +0xC Math_Ratan2(dx, dz) toward the source sprite 0x904B4C; +0xB, +9, +0xA 0; +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F22D0
+name = "MagicBallCore_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F22D0..0x4F2430 (0x161 bytes), group S36: +9 up by 4 below 0x10; MagicFx_StepTowardPoint to the source point (y + 0x1000000) at 0x40 (the fourth word its own uninitialised stack, unread); +0x10 the old heading, +0xC the new; MagicFx_NearSprite(source, 0x8000) or the turn (+0x10 and 0xFFF less +0xC and 0xFFF, absolute) between 0x600 and 0xA00 exclusive: target flags 0x10, Sound_PlayById(0x101), +9 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2440
+name = "MagicBallCore_Swell"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2440..0x4F247D (0x3E bytes), group S36: no calls: +0xB up by 2; +0xA up by 2 below 0x10; +9 down, at 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2480
+name = "MagicBallCore_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2480..0x4F24C7 (0x48 bytes), group S36: +0xB up by 4, +0xA down by 2; at 0 Sound_PlayById(0x102), +9 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F24D0
+name = "MagicBallOrb_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F24D0..0x4F24FA (0x2B bytes), group S36: call [MagicBallOrb_Steps + 4 x byte +2]; then while byte +0 AND byte +2 (bitwise) is not 0: BattleActor_UpdateScreenXY and a tail jmp to MagicBallOrb_DrawDisc. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2500
+name = "MagicBallOrb_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2500..0x4F25AB (0xAC bytes), group S36: +9 down; at 0 the owner point (y + 0x800000), +0xC the angle to the source sprite, +9 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F25B0
+name = "MagicBallOrb_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F25B0..0x4F267A (0xCB bytes), group S36: MagicBallCore_Fly for an orb without the hit: +9, the step, the heading; +2 on once byte +2 of the task slot +4 (the core, unchecked) is 2. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2680
+name = "MagicBall_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2680..0x4F2857 (0x1D8 bytes), group S36: draw mode 0x35 on layer 3; sixteen semi-transparent G3 triangles (float vertices) of radius word 0x903850 = 0x10 round the screen point +0x2E / +0x30, angle word 0x903854 stepping 0x100; centre shade +9 x 12, rim (+9 x 2, +9 x 2, +9 x 14), each read back from the scratch; Gfx_CommitPrim(3, 0x34). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2860
+name = "MagicBall_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2860..0x4F2A9A (0x23B bytes), group S36: sixteen G4 quads between radii 0x10 and 0x18, inner edge shaded (+9, +9, +9 x 14), outer 1; Gfx_CommitPrim(3, 0x44). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2AA0
+name = "MagicBall_DrawRingOut"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2AA0..0x4F2CDC (0x23D bytes), group S36: the ring between +0xB and +0xB x 2, outer edge shaded (1, +0xA x 6, +0xA x 8), inner 1. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2CE0
+name = "MagicBall_DrawRingIn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2CE0..0x4F2F1D (0x23E bytes), group S36: the ring between +0xB x 2 and +0xB x 4, inner edge shaded (1, +0xA x 5, +0xA x 8), outer 1. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F2F20
+name = "MagicBall_DrawSpark"
+ret = "void"
+params = "int angle, int mask"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F2F20..0x4F313C (0x21D bytes), group S36: G2 lines from radius 0x10 at the word angle; per line the far end turned by Rand and 0x7F, the radius moved by (Math_Sin((i and 0x1F) sl 7) x (Rand and the s16 mask)) sar 12, i a counter kept in the angle argument slot from 1; until the radius drops below 0x10 (unbounded); shades +9 x 6 or, before step 3, (r x 3 - 0x24) x 2 and (r x 3 - 0x27) x 2, blue a third; Gfx_CommitPrim(3, 0x24). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3140
+name = "MagicBall_DrawSparkShort"
+ret = "void"
+params = "int angle, int mask"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3140..0x4F335C (0x21D bytes), group S36: MagicBall_DrawSpark with the turn Rand and 0x3F, the shades r x 3 - 0x18 and - 0x1B, the loop until the radius drops below 0xC. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3360
+name = "MagicBallOrb_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3360..0x4F3535 (0x1D6 bytes), group S36: sixteen G3 triangles of radius 0x18, centre shaded (MagicBallOrb_Shades[+0xB] first x +9, +9, second x +9; the index unchecked), rim 1. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3540
+name = "Intimidate_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3540..0x4F3565 (0x26 bytes), group S36: MAGIC173 row 34 entry: a two-entry stack table by +1, Intimidate_Start and BattleFx_Finish. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3570
+name = "Intimidate_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3570..0x4F363B (0xCC bytes), group S36: owner +8 and point; +0xB 0, +1 on; BattleTask_Create(1, 0x18) twice (unchecked), +1 0, +4 0 and 1, +0x80 this task, counted in +0xB; CLUT row 26 copied back plain (0x80E980 to 0x812980, 0x100 words), Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3640
+name = "IntimidateChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3640..0x4F3651 (0x12 bytes), group S36: kind 1 parameter 0x18: jmp [IntimidateChild_Kinds + 4 x byte +1], unchecked. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3660
+name = "IntimidateTrail_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3660..0x4F36A0 (0x41 bytes), group S36: call [IntimidateTrail_Steps + 4 x byte +2]; then while +0 and +2: +4 not 0 tail jmp IntimidateTrail_DrawThin, else IntimidateTrail_DrawWide. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F36B0
+name = "IntimidateTrail_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F36B0..0x4F38AB (0x1FC bytes), group S36: owner +8; offset (+0xC, +0x10, +0x14) by the acting actor 0x904B34: party (0x4000, 0, 0xC00000); enemy record +0x8C 0x61 (0x38000, 0, 0), 0x6C (0x20000 or with +8 bit 1 clear 0x30000, 0, 0x800000), else (0x10000, 0, 0x800000); 0x446770 turns it; point = owner point + offset; +0xC the angle to the source (read before the turn), +0x10 0; BattleActor_UpdateScreenXY; trail points 0 and 1 the screen point; +0xB 0, +9 0x10, +0xA 1, +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F38B0
+name = "IntimidateTrail_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F38B0..0x4F3A7D (0x1CE bytes), group S36: +0xA up below 8; MagicFx_StepTowardPoint to the source point (y + 0x800000) at 0xC0; the heading; near (0x8000) or turned past (0x600..0xA00): x / z the source and +2 on; BattleActor_UpdateScreenXY, IntimidateTrail_Push; trail 0 (+4 0) off step 1 flags the target 0x10; at step 2 BattleTask_Create(1, 0x18) (unchecked): +0x80 the owner, +1 1, this point, the owner +0xB up. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3A80
+name = "IntimidateTrail_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3A80..0x4F3ABC (0x3D bytes), group S36: below +0xA 8: +0xB and +0xA up, BattleActor_UpdateScreenXY, IntimidateTrail_Push; +0xA 8 (at entry or after): +9 8, +2 on; above 8 nothing. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3AC0
+name = "IntimidateTrail_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3AC0..0x4F3AEB (0x2C bytes), group S36: IntimidateTrail_PushGap; +9 down, at 0 the owner +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3AF0
+name = "IntimidateTrail_DrawThin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3AF0..0x4F3F34 (0x445 bytes), group S36: draw mode 0x35; from point +0xB (past any x = -1, the scan unbounded) to +0xA, a G4 quad between each point and the next, 2 (word 0x903850) either side at the Math_Ratan2(dx, dy) angle plus and minus 0x400; shades (0x6D - 12 k, same, 1) near and (0x61 - 12 k, same, 1) far; Gfx_CommitPrim(3, 0x44); draw mode 0x15 after. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F3F40
+name = "IntimidateTrail_DrawWide"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F3F40..0x4F4631 (0x6F2 bytes), group S36: two passes of IntimidateTrail_DrawThin shape at 0xC: the +0x400 side, the line edge shaded 0x6D / 0x61 - 12 k, then the -0x400 side, 0x91 / 0x81 - 16 k, the offset edge 1; each pass rescans from +0xB. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F4640
+name = "IntimidateTrail_Push"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F4640..0x4F46CD (0x8E bytes), group S36: no calls: the trail +4 points +0xB..+0xA - 1 moved one on from the end, point +0xB the screen point (+0x2E, +0x30); IntimidateTrail_Points + ((+4 sl 5) + k) x 4, unchecked. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F46D0
+name = "IntimidateTrail_PushGap"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F46D0..0x4F475A (0x8B bytes), group S36: IntimidateTrail_Push with (-1, -1). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F4760
+name = "IntimidateBurst_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F4760..0x4F47AB (0x4C bytes), group S36: 0x9039D8 = 0x8E3580; call [IntimidateBurst_Steps + 4 x byte +2]; while +0: BattleActor_UpdateScreenXY, IntimidateBurst_DrawDisc, before step 3 Sprite_UpdateScreen; 0x9039D8 = 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F47B0
+name = "IntimidateBurst_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F47B0..0x4F4844 (0x95 bytes), group S36: the sprite bytes +0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28 0, +0x24 4, +0x5C..+0x5F 0, +0x2A 0, +0x29 3, word +0x2C 0, +0x2B 1; Sprite_SetAnimation(0); +9 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F4850
+name = "IntimidateBurst_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F4850..0x4F4871 (0x22 bytes), group S36: Sprite_ScriptTickOnce; +9 up by 4, at 0x10 +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F4880
+name = "IntimidateBurst_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F4880..0x4F4896 (0x17 bytes), group S36: Sprite_ScriptTickOnce twice; al of the second not 0: +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F48A0
+name = "IntimidateBurst_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F48A0..0x4F48C7 (0x28 bytes), group S36: no calls but the tail: +9 down by 4, at 0 the owner +0xB down and jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F48D0
+name = "IntimidateBurst_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F48D0..0x4F4A53 (0x184 bytes), group S36: draw mode 0x35; radius (Rand and 3) + 0x1C; eight G3 triangles (angle 0x200 steps) round the screen point read again after every call, centre +9 x 6, rim 1; Gfx_CommitPrim(3, 0x34). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F52F0
+name = "AuraBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F52F0..0x4F5315 (0x26 bytes), group S36: MAGIC218 row 142 entry: a two-entry stack table by +1, AuraBreath_Start and BattleFx_Finish. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F5320
+name = "AuraBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5320..0x4F53F3 (0xD4 bytes), group S36: AuraBreath_Struck cleared (two dwords); owner +8 and point; +0xB 0, +1 on; BattleTask_Create(1, 0x67) (unchecked): +0x80 this task, +1 0, +9 1, counted; CLUT row 26 back with bit 0x8000 set, dirty; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F5400
+name = "AuraBreathDome_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5400..0x4F5411 (0x12 bytes), group S36: kind 1 parameter 0x67: jmp [AuraBreathDome_TaskTable + 4 x byte +1], unchecked. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F5420
+name = "AuraBreathDome_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5420..0x4F5452 (0x33 bytes), group S36: call [AuraBreathDome_Steps + 4 x byte +2]; while +0 and +2: MagicFx_PushActorMatrix, AuraBreathDome_Draw, a tail jmp Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F5460
+name = "AuraBreathDome_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5460..0x4F54CC (0x6D bytes), group S36: no calls: +9 down; at 0 the owner point, +0x5D 0x10, +9 0x10, +0xA 4, +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F54D0
+name = "AuraBreathDome_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F54D0..0x4F5587 (0xB8 bytes), group S36: +9 up by 2; word 0x903850 = +9 sl 4; enemies 3..10 with AuraBreath_Struck 0, not Battle_ActorIsOut, AuraBreath_InReach(record) not 0 and not the actor byte: struck 0xFF, Battle_SetTargetFlags(index, 0x10); odd frames +0xA up below 0x20; +9 0x60: +2 on. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F5590
+name = "AuraBreathDome_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5590..0x4F55DF (0x50 bytes), group S36: odd frames +0xA up below 0x20; +9 up; +0x5D down, at 0 the owner +0xB down and jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F55E0
+name = "AuraBreathDome_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F55E0..0x4F596F (0x390 bytes), group S36: eight bands (radius word 0x903852 = +9 sl 4 stepping down 0x40, height minus sin(0x100 (band + 1)) x (+0xA sl 4) sar 12) of 32 FT4 quads on Prim_VertexScratch: each Gpu_SetDrawMode 0xB5 and MapView_LinkPrimAt(corner map point, 1, 0xC), tpage (1, 1, 0x340, 0x100), clut (0, 0x1FA), u ((j and 1) + band / 4 x 2) sl 6, v and height AuraBreathDome_V / _Height by band, Gte_RotTransPers4, Gte_PrimDepths4_10, shade +0x5D (signed) sl 3, MapView_LinkPrimAt(.., 1, 0x48). Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[func]]
+pc = 0x4F5970
+name = "AuraBreath_InReach"
+ret = "int"
+params = "unsigned char *record"
+impl = "src/game/magic_s36.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5970..0x4F59CF (0x60 bytes), group S36: no calls: 1 in eax when the squared (x sar 9, z sar 9) distance from Sprite_Current to the record (wrapping) is at most word 0x903850 squared (signed setge), else 0. Also called by MAGIC058 (Sanctuary, group S11) at 0x4AF328 and 0x4AF3E6. Fuzz only: no recorded route casts it (docs/magic_s36.md)."
+
+[[data]]
+pc = 0x65C180
+name = "MagicBallChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S36: MagicBallChild_Task jmp [0x65C180 + 4 x byte +1]: MagicBallCore_Run, MagicBallOrb_Run."
+
+[[data]]
+pc = 0x65C188
+name = "MagicBallCore_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S36: MagicBallCore_Run call [0x65C188 + 4 x byte +2]: MagicBallCore_Start, _Fly, _Swell, _Shrink, MagicFx_CountDown2Release (MAGIC060)."
+
+[[data]]
+pc = 0x65C19C
+name = "MagicBallOrb_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S36: MagicBallOrb_Run call [0x65C19C + 4 x byte +2]: MagicBallOrb_Start, _Fly, ShadowSeeker_Fade (MAGIC168)."
+
+[[data]]
+pc = 0x65C1A8
+name = "MagicBallOrb_Shades"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-27, group S36: MagicBallOrb_DrawDisc: bytes [0x65C1A8 + 2 x +0xB] and [+1], the centre red and blue factors, ten pairs to IntimidateChild_Kinds."
+
+[[data]]
+pc = 0x65C1BC
+name = "IntimidateChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S36: IntimidateChild_Task jmp [0x65C1BC + 4 x byte +1]: IntimidateTrail_Run, IntimidateBurst_Run."
+
+[[data]]
+pc = 0x65C1C4
+name = "IntimidateTrail_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S36: IntimidateTrail_Run call [0x65C1C4 + 4 x byte +2]: _Start, _Fly, _Grow, _Fade."
+
+[[data]]
+pc = 0x65C1D4
+name = "IntimidateBurst_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S36: IntimidateBurst_Run call [0x65C1D4 + 4 x byte +2]: _Start, _Rise, _Play, _Fade."
+
+[[data]]
+pc = 0x65C20C
+name = "AuraBreathDome_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S36: AuraBreathDome_Task jmp [0x65C20C + 4 x byte +1]: AuraBreathDome_Run."
+
+[[data]]
+pc = 0x65C210
+name = "AuraBreathDome_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S36: AuraBreathDome_Run call [0x65C210 + 4 x byte +2]: _Wait, _Grow, _Fade."
+
+[[data]]
+pc = 0x65C21C
+name = "AuraBreathDome_V"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S36: AuraBreathDome_Draw: byte [0x65C21C + band], the texture v of band 0..7."
+
+[[data]]
+pc = 0x65C224
+name = "AuraBreathDome_Height"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S36: AuraBreathDome_Draw: byte [0x65C224 + band], the texture height of band 0..7 (v + it - 1 the bottom row)."
+
+[[data]]
+pc = 0x6B2858
+name = "IntimidateTrail_Points"
+ctype = "unsigned short"
+count = 128
+status = "evidence"
+evidence = "read 2026-09-27, group S36: IntimidateTrail_Push / _PushGap / _Start write, the two ribbon draws read: word pairs (x, y) at 0x6B2858 + ((trail sl 5) + k) x 4, 32 a trail, trails 0 and 1 (+4 of each, from Intimidate_Start), to Magic213Mote_Pool; neither index checked."
+
+[[data]]
+pc = 0x6B4A58
+name = "AuraBreath_Struck"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S36: AuraBreath_Start clears it (two dwords); AuraBreathDome_Grow sets byte i to 0xFF when it flags enemy i (battle index i + 3), so each is flagged once."
