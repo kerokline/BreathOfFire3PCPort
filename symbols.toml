@@ -33465,3 +33465,293 @@ ctype = "unsigned char"
 count = 8448
 status = "evidence"
 evidence = "read 2026-09-26, group S07: 64 task-like records of 0x84 bytes: Bonebreak_Start clears +0..+2, BonebreakMote_Alloc takes one by bit 0, Bonebreak_Task runs each live one as Sprite_Current (+0x80 its owner). Not named before (symbols.toml, 2026-09-26)."
+
+# --- round 9 group S13 (docs/magic_s13.md): MAGIC063, Magic_Rows row 143 (id 0x3F, Sudden Death read one id down) ---
+
+[[func]]
+pc = 0x4B2F40
+name = "SuddenDeath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2F40..0x4B2FA0 (0x61 bytes), group S13: a two-entry stack table by byte +1 of Sprite_Current (SuddenDeath_Spawn, MagicFx_EndWhenChildrenDone), unchecked; then the walk of SuddenDeath_Motes (96 records of 0x20): each with bit 0 becomes SuddenDeath_CurrentMote, its +0x1C the owner 0x93B940 for a call of SuddenDeathMote_Task, the owner (saved after the phase) put back after each. Magic_Rows row 143 entry (analysis/magic_rows.tsv). Fuzz only: no recorded route casts it (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B2FB0
+name = "SuddenDeath_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2FB0..0x4B30E0 (0x131 bytes), group S13: SuddenDeath_Motes' +0..+2 cleared (96 records); +0xB and +9 0, +1 on; a child (BattleTask_Create(1, 0x68): +0x80 this task, +1 0, +4 the actor, this task's +0xB up) for every enemy 3..10 then every member 0..2 that Battle_ActorIsOut does not answer for and that is not the acting actor 0x904B34; Sound_PlayById(0x100). SuddenDeath_Task entry 0. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B30F0
+name = "SuddenDeathChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B30F0..0x4B3101 (0x12 bytes), group S13: jmp [SuddenDeathChild_Kinds + 4 * byte +1], unchecked (one entry; SuddenDeathMote_Kinds follows). The kind-1 task of parameter 0x68 (analysis/magic_funcs.tsv 1.104; battle_fx_tasks.cpp's kind table). Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3110
+name = "SuddenDeathChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3110..0x4B314D (0x3E bytes), group S13: a five-entry stack table by byte +2, unchecked: SuddenDeathChild_Start, _Delay, _WaitMotes, _Burst, _End. SuddenDeathChild_Kinds entry 0. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3150
+name = "SuddenDeathChild_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3150..0x4B3200 (0xB1 bytes), group S13: the actor +4's record (party below 3, else enemy +4 - 3, unchecked): its +0x34 / +0x38 to the task, its +0x3C + 0x2000000; +9 (Rand and 0xF) + 1, +0xB 0, +2 on; one mote from SuddenDeathMote_Alloc (0xFF skipped): +0x1C this task, +1 1 (an orbit mote), this task's +0xB up. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3210
+name = "SuddenDeathChild_Delay"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3210..0x4B3249 (0x3A bytes), group S13: +9 down; at 0, if the parent's (0x93B940) +0xB is 1 the step becomes 3 (SuddenDeathChild_Burst: the last child left), else the parent's +0xB down and +2 on (SuddenDeathChild_WaitMotes). Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3250
+name = "SuddenDeathChild_WaitMotes"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3250..0x4B3261 (0x12 bytes), group S13: while +0xB (its motes) is not 0 nothing; at 0 a tail jmp to BattleTask_FreeCurrent. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3270
+name = "SuddenDeathChild_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3270..0x4B3311 (0xA2 bytes), group S13: once +0xB is 0: 92 motes from SuddenDeathMote_Alloc (0xFF skipped), each +0x1C this task, +1 0 (a burst mote), +4 its number n, +0xA (Rand and 0xF) + (n / 32) x 16 + 1, +8 0x40 - that, this task's +0xB up; Sound_PlayById 0x101 and 0x102; +2 on. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3320
+name = "SuddenDeathChild_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3320..0x4B3345 (0x26 bytes), group S13: once +0xB is 0: Battle_SetTargetFlag40(+4), the owner's +0xB down, a tail jmp to BattleTask_FreeCurrent. Also InkInkActor_Phases' second entry (MAGIC146, group C1). Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3350
+name = "SuddenDeathMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3350..0x4B3361 (0x12 bytes), group S13: jmp [SuddenDeathMote_Kinds + 4 * byte +1 of SuddenDeath_CurrentMote], unchecked (two entries: burst, orbit). Called by SuddenDeath_Task's walk. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3370
+name = "SuddenDeathBurst_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3370..0x4B33A2 (0x33 bytes), group S13: call [SuddenDeathBurst_Steps + 4 * mote +2], unchecked (four entries); then while the mote's +0 and +2 are set: SuddenDeathMote_PushMatrix, SuddenDeathMote_Draw, a tail jmp to Gte_PopMatrix. SuddenDeathMote_Kinds entry 0. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B33B0
+name = "SuddenDeathBurst_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B33B0..0x4B34F0 (0x141 bytes), group S13: mote +0xA down; at 0: radius ((+4 / 32) + 6) x 16 and angle (+4 and 0x1F) x 128 into the words 0x903850 / 0x903854; +0x10 / +0x14 the owner's +0x34 / +0x38 plus Math_Sin / Math_Cos of the angle times the radius; +0x18 the owner's +0x3C; +0xE the angle; +5..+7 (Rand and 7) + 5; +3 and +9 0; +0xA (Rand and 3) x 8; +0xB Rand; +0xC the radius; +2 on. SuddenDeathBurst_Steps entry 0. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3500
+name = "SuddenDeathBurst_Close"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3500..0x4B35C9 (0xCA bytes), group S13: mote radius word +0xC down 2; position from the owner by Math_Sin / Math_Cos of +0xE times the radius; +0xB up; +9 up 2 below 0x10; at a radius not above (+4 / 32) x 8 + 0x20, +2 on and, for mote 0 (+4 0), Battle_SetTargetFlags(the owner's +4, 0x10). SuddenDeathBurst_Steps entry 1. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B35D0
+name = "SuddenDeathBurst_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B35D0..0x4B36B2 (0xE3 bytes), group S13: mote angle +0xE up 0x40 (mod 0x1000); position as SuddenDeathBurst_Close; +0xB up; +5 up to 0xC; +6 and +7 down to 4; +3 up to 7; +8 down, at 0 +2 on. SuddenDeathBurst_Steps entry 2. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B36C0
+name = "SuddenDeathBurst_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B36C0..0x4B377B (0xBC bytes), group S13: angle up 0x40; position; height word +0x1A up by +0xA; +0xB up; on odd frames (Frame_Counter bit 0) +9 down, at 0 the owner's +0xB down and a tail jmp to SuddenDeathMote_Free. SuddenDeathBurst_Steps entry 3. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3780
+name = "SuddenDeathMote_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3780..0x4B383B (0xBC bytes), group S13: Gte_PushMatrix; a MATRIX on the stack: Gte_RotTrans of ((+0x10 sar 9) - 0x4000, (+0x14 sar 9) - 0x4000, -(height word +0x1A / 2)) into its translation, Gte_RotMatrix of (0, 0, (0x800 - +0xE + +3 x 128) and 0xFFF), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3840
+name = "SuddenDeathMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3840..0x4B3A84 (0x245 bytes), group S13: a draw-mode packet (tpage 0x35) linked at the mote (MapView_LinkPrimAt size 0xC); colour words 0x90385A / C / E the mote's +5 / +6 / +7 times +9; four semi-transparent gouraud triangles, each from the origin to two points of SuddenDeathMote_Shape (radius and angle words i and i + 4), both lifted by Math_Sin((+0xB + SuddenDeathMote_Turns[i]) and 0xF) x 256) x 32 / 4096, through Gte_RotTransPers3 / Gte_PrimDepths3_10B, linked at the mote (size 0x34). Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3A90
+name = "SuddenDeathOrbit_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3A90..0x4B3AC2 (0x33 bytes), group S13: as SuddenDeathBurst_Run through SuddenDeathOrbit_Steps (five entries), unchecked. SuddenDeathMote_Kinds entry 1. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3AD0
+name = "SuddenDeathOrbit_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3AD0..0x4B3B95 (0xC6 bytes), group S13: position the owner's plus Math_Sin(0) / Math_Cos(0) x 32; +0x18 the owner's +0x3C; +5..+7 (Rand and 7) + 5; +0xE 0, +3 7, +9 0, +0xA 0x40, +0xB Rand; +2 on. SuddenDeathOrbit_Steps entry 0. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3BA0
+name = "SuddenDeathOrbit_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3BA0..0x4B3C30 (0x91 bytes), group S13: angle +0xE up 0x20 (mod 0x1000); position the owner's plus Math_Sin / Math_Cos x 32; +9 up 2, +0xB up; at +9 0x10 +2 on. SuddenDeathOrbit_Steps entry 1. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3C40
+name = "SuddenDeathOrbit_Circle"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3C40..0x4B3CEA (0xAB bytes), group S13: angle up 0x20; position; +0xB up; +0xA down, at 0: +0xA 0x40 if the owner's step +2 is 3, else 1; +2 on. SuddenDeathOrbit_Steps entry 2. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3CF0
+name = "SuddenDeathOrbit_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3CF0..0x4B3DAF (0xC0 bytes), group S13: the owner at step 3: +0xB up 4, angle up 0x40; else +0xB up 1, angle up 0x20; position; +0xA down, at 0 +2 on. SuddenDeathOrbit_Steps entry 3. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3DB0
+name = "SuddenDeathOrbit_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3DB0..0x4B3E79 (0xCA bytes), group S13: the owner at step 3: +0xB up 2, angle up 0x40; else up 1 and 0x20; position; +9 down, at 0 the owner's +0xB down and a tail jmp to SuddenDeathMote_Free. SuddenDeathOrbit_Steps entry 4. Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3E80
+name = "SuddenDeathMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3E80..0x4B3ECE (0x4F bytes), group S13: the first of SuddenDeath_Motes' 96 records with bit 0 clear gets bit 0, its index in al; al 0xFF when none (eax above al not set). Fuzz only (docs/magic_s13.md)."
+
+[[func]]
+pc = 0x4B3ED0
+name = "SuddenDeathMote_Free"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s13.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3ED0..0x4B3EFE (0x2F bytes), group S13: bytes +0..+4 of SuddenDeath_CurrentMote cleared, the cell read again for each. Tail jmp of SuddenDeathBurst_Rise and SuddenDeathOrbit_Fade. Fuzz only (docs/magic_s13.md)."
+
+[[data]]
+pc = 0x65ABA4
+name = "SuddenDeathChild_Kinds"
+ctype = "void *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S13: SuddenDeathChild_Task jmp [0x65ABA4 + 4 * +1]: SuddenDeathChild_Run. SuddenDeath_Spawn sets +1 0; SuddenDeathMote_Kinds follows."
+
+[[data]]
+pc = 0x65ABA8
+name = "SuddenDeathMote_Kinds"
+ctype = "void *"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S13: SuddenDeathMote_Task jmp [0x65ABA8 + 4 * mote +1]: SuddenDeathBurst_Run (SuddenDeathChild_Burst sets +1 0), SuddenDeathOrbit_Run (SuddenDeathChild_Start sets 1)."
+
+[[data]]
+pc = 0x65ABB0
+name = "SuddenDeathBurst_Steps"
+ctype = "void *"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S13: SuddenDeathBurst_Run call [0x65ABB0 + 4 * mote +2]: SuddenDeathBurst_Launch, _Close, _Spin, _Rise. SuddenDeathMote_Shape follows."
+
+[[data]]
+pc = 0x65ABC0
+name = "SuddenDeathMote_Shape"
+ctype = "short"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-26, group S13: SuddenDeathMote_Draw's words for triangle i (0..3): the first point's radius at +2i, the second's at +8 + 2i, their angles at +0x10 + 2i and +0x18 + 2i."
+
+[[data]]
+pc = 0x65ABE0
+name = "SuddenDeathMote_Turns"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S13: SuddenDeathMote_Draw adds byte i to the mote's +0xB for triangle i's lift angle ((sum and 0xF) x 256)."
+
+[[data]]
+pc = 0x65ABE4
+name = "SuddenDeathOrbit_Steps"
+ctype = "void *"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S13: SuddenDeathOrbit_Run call [0x65ABE4 + 4 * mote +2]: SuddenDeathOrbit_Start, _Brighten, _Circle, _Spin, _Fade."
+
+[[data]]
+pc = 0x682680
+name = "SuddenDeath_Motes"
+ctype = "unsigned char"
+count = 3072
+status = "evidence"
+evidence = "read 2026-09-26, group S13: 96 records of 0x20 bytes: SuddenDeath_Spawn clears +0..+2, SuddenDeathMote_Alloc takes one by bit 0, SuddenDeath_Task's walk runs each live one (its +0x1C the owner). SuddenDeath_CurrentMote follows."
+
+[[data]]
+pc = 0x683280
+name = "SuddenDeath_CurrentMote"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-26, group S13: the mote SuddenDeath_Task's walk is running; every mote step reads it again after each call."
