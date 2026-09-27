@@ -36930,3 +36930,580 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
+
+[[func]]
+pc = 0x4EAE70
+name = "Accession_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAE70..0x4EAE9D (0x2E bytes), group S33: a three-entry stack table (Accession_Start, Accession_Run, Accession_End) called by byte +1, unchecked. Magic_Rows row 86, file 0x29E = MAGIC151.EMI, ability id 0x97 (Accession read one id down, a hypothesis); the first function of MAGIC151's extent 0x4EAE70..0x4ED0B1. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EAEA0
+name = "Accession_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAEA0..0x4EAF41 (0xA2 bytes), group S33: the engine's 0x4514A0 (no arguments); byte 0x8031F3 1; Msg_SystemPtr(byte 0x64ECB0[0x904B89]); Str_CopyN(0x904EA0, it, 8); BattleBanner_Add(1, 1, 0, 0x3C, 0x904EA0); +2 up when 0x904B89 (read again) is 3, 0xB or 0xD; +9 3 when the target's party record +0x89 is 0, else 0x1E; +1 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EAF50
+name = "Accession_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAF50..0x4EAF75 (0x26 bytes), group S33: a two-entry stack table (Accession_StepsA, Accession_StepsB) by byte +2, unchecked. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EAF80
+name = "Accession_StepsA"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAF80..0x4EAFBD (0x3E bytes), group S33: a five-entry stack table by byte +3, unchecked: Accession_ActorPose, _ActorScript, _LoadFormA, _ApplyA, _Finish. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EAFC0
+name = "Accession_ActorPose"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAFC0..0x4EB004 (0x45 bytes), group S33: Sprite_Current swapped to the acting member's party record (0x904B34 unchecked) for Sprite_EnsureAnimation(its +8 + 0x3C), then back; +3 up on the saved slot. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB010
+name = "Accession_ActorScript"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB010..0x4EB0E7 (0xD8 bytes), group S33: +9 down, at 0 Sound_PlayById 0x100 (0x101 when the target's party +0x89 is not 0); the acting member's script ticked once as Sprite_Current; at its end (al not 0) the member's +0 or 0x40, Sprite_Current back, +0xB 0, BattleTask_Create(1, 0x44) with +0x80 the task and +1 4 (the controller), +3 up. The slot is unchecked. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB0F0
+name = "Accession_LoadFormA"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB0F0..0x4EB15F (0x70 bytes), group S33: at +0xB 1: LoadDatFile(u16 [ptr][party set 0x90412C byte]), ptr the dword at 0x64E9BC + 8 x byte 0x904B89 (+4 when the owner's +8 is neither 0 nor 1), unchecked (three of the 26 pointer pairs are null); +3 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB160
+name = "Accession_ApplyA"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB160..0x4EB247 (0xE8 bytes), group S33: at File_LoadDone (eax tested whole): 0x904AA8 bit 14 cleared when set and byte 0x904B8A is the actor; on the acting member's record as Sprite_Current: Sprite_ReleaseTint, its +0x27 to 0x939B07 + 0x14C a, Sprite_LoadPalette(0x80D380 + its +5 x 64, byte 0x904B79), Battle_StatusTint(its +0x90 word), Sprite_SetClutStp, Sprite_EnsureAnimation(+8 + 4); Sprite_Current back, +3 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB250
+name = "Accession_Finish"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB250..0x4EB29E (0x4F bytes), group S33: the acting member's +0 and 0xBF (Sprite_Current swapped round it); +1 up, +2 and +3 0. Shared by both step tables. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB2A0
+name = "Accession_StepsB"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB2A0..0x4EB2DD (0x3E bytes), group S33: a five-entry stack table by byte +3, unchecked: Accession_ActorPose, _ActorScript, _LoadFormB, _ApplyB, _Finish. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB2E0
+name = "Accession_LoadFormB"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB2E0..0x4EB34F (0x70 bytes), group S33: at +0xB 1: party records 0..2 +0 or 0x40; LoadDatFile(the first u16 of the table Accession_LoadFormA picks); +3 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB350
+name = "Accession_ApplyB"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB350..0x4EB5FB (0x2AC bytes), group S33: at File_LoadDone: each member 0..2 with +0 bit 0: Sprite_ReleaseTint, +0x27 kept at 0x939B07, 0x939C05 byte and 0x939C10 dword 0, Battle_ReturnQueuedItem, Battle_RemoveFromTurnOrder (the argument slot's garbage above the byte); Battle_ClearActorBit(actor); rep movsd 0x53 dwords of the acting member's record over party record 0; it placed at the fight's centre 0x903780 / 0x903784 with AreaMap_Elevation, task slot 0 +0x34 / +0x38 / +0x3C too (the height shl 16); 0x904AA9 or 0x80; party 1 and 2 +0 0; the actor 0; 0x904B8F the old 0x904AB0; 0x904AB0 / 0x904AB1 1; each present member's window Window_Alloc(0xD + i, 3) placed from BattleWin_MemberTargetOffsets and 0x64E2BC; 0x80318E, 0x904AA8 bit 14, 0x803188 0x70; on the acting record as Sprite_Current: Battle_SetActorBit(+5), +0 and 0xBF, Field_MemberSprite(0x669750[set x 3], 0), Sprite_LoadPalette, Battle_StatusTint, Sprite_SetClutStp, Sprite_EnsureAnimation(+8 + 4); back, +3 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB600
+name = "Accession_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB600..0x4EB63E (0x3F bytes), group S33: at +0xB 2: the done flag 0x904AA8 or 4; the acting member's dword +0x134 and not 4, or 0x20; BattleTask_FreeCurrent (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB640
+name = "AccessionChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB640..0x4EB651 (0x12 bytes), group S33: the kind-1 task: jmp [AccessionChild_Kinds + 4 x byte +1], unchecked. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB660
+name = "AccessionCtl_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB660..0x4EB6A5 (0x46 bytes), group S33: the controller: a six-entry stack table by byte +2, unchecked: _Start, _SpawnRing, _SpawnOrb, _Signal, _WaitOwner, _End. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB6B0
+name = "AccessionCtl_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB6B0..0x4EB75B (0xAC bytes), group S33: +8 the source sprite's +8; +0x34 / +0x38 the fight's centre; +0x3E AreaMap_Elevation of it; +0xB 0, +9 4, +2 up; a bolt child (BattleTask_Create(1, 0x44), +1 2, +9 1) counted in +0xB; Sound_PlayById 0x102. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB760
+name = "AccessionCtl_SpawnRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB760..0x4EB7CC (0x6D bytes), group S33: +9 down; at 0 a ring child (kind 1, 0x44, +1 3) counted in +0xB, +9 4, +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB7D0
+name = "AccessionCtl_SpawnOrb"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB7D0..0x4EB841 (0x72 bytes), group S33: +9 down; at 0 an orb child (kind 1, 0x44, +1 0) counted in +0xB, Sound_PlayById 0x103, +9 0x14, +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB850
+name = "AccessionCtl_Signal"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB850..0x4EB87B (0x2C bytes), group S33: +9 down; at 0 the owner's +0xB 1 and +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB880
+name = "AccessionCtl_WaitOwner"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB880..0x4EB893 (0x14 bytes), group S33: +2 up once the owner's +1 is 2. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB8A0
+name = "AccessionCtl_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB8A0..0x4EB8BB (0x1C bytes), group S33: at +0xB 0: the owner's +0xB 2, BattleTask_FreeCurrent (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB8C0
+name = "AccessionOrb_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB8C0..0x4EB8F7 (0x38 bytes), group S33: call [AccessionOrb_Steps + 4 x byte +2], unchecked; then while +0 and +2: MagicFx_PushActorMatrix, AccessionOrb_DrawShell, AccessionOrb_DrawGlow, Gte_PopMatrix (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB900
+name = "AccessionOrb_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB900..0x4EB97F (0x80 bytes), group S33: +0x34 / +0x38 / +0x3C the owner's; +0x5D and +0x5E 0x10, +0x5F 0x24; +4, +0xB, +9 0; +0xA 0x1E; +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB980
+name = "AccessionOrb_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB980..0x4EB99C (0x1D bytes), group S33: +9 up by 2; at 0x20 +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EB9A0
+name = "AccessionOrb_Emit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EB9A0..0x4EBA25 (0x86 bytes), group S33: when Frame_Counter and 3 is 0: a spark child (kind 1, 0x44, +1 1, +4 this +4 and 0xF) counted in +0xB, +4 up; while the owner's +2 is 5, +0xA down, at 0 +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EBA30
+name = "AccessionOrb_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EBA30..0x4EBA3F (0x10 bytes), group S33: +2 up at +0xB 0. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EBA40
+name = "AccessionOrb_Dim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EBA40..0x4EBA5B (0x1C bytes), group S33: +0x5D down; at 8 +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EBA60
+name = "AccessionOrb_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EBA60..0x4EBA99 (0x3A bytes), group S33: +0x5D down unless 0; +0x5E down; at 0 the owner's +0xB down and BattleTask_FreeCurrent (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EBAA0
+name = "AccessionOrb_DrawShell"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EBAA0..0x4EBDA7 (0x308 bytes), group S33: a dome: radius +9 sl 4 (word 0x903850), eight bands from latitude 0x400 by 0x80, sixteen longitudes (i and 0xF) sl 8; each Gpu_SetDrawMode(tpage 0x55) and MapView_LinkPrimAt(corner x sl 9 + +0x34, z sl 9 + +0x38, 1, 0xC), a semi-transparent Gpu_SetPolyF4, Gte_RotTransPers4 at stride 0xC, Gte_PrimDepths4_0C, the shade signed +0x5D x 15 (word 0x90385A), linked 0x38. Every scratch and vertex word read back after each call. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EBDB0
+name = "AccessionOrb_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EBDB0..0x4EC0E6 (0x337 bytes), group S33: one band of sixteen semi-transparent Gpu_SetPolyG4 (tpage 0x35) between latitude 0x400 at radius +9 sl 4 and latitude ((Rand and 3) + signed +0x5F) sl 5 at radius +9 x 18; vertices 0 / 1 shade 1, 2 / 3 (signed +0x5E x 12, x 8, x 12); Gte_PrimDepths4_10B; linked 0x44 at the corner as the shell. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC0F0
+name = "AccessionSpark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC0F0..0x4EC15F (0x70 bytes), group S33: call [AccessionSpark_Steps + 4 x byte +2], unchecked; while +0 and +2: MagicFx_PushActorMatrix, dword +0xC up, +9 up by 2, AccessionSpark_Draw(byte 0x65BEA0[2 x +4] + +9, byte 0x65BEA1[2 x +4]) (+4 unchecked: 16 pairs), Gte_PopMatrix (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC160
+name = "AccessionSpark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC160..0x4EC1D3 (0x74 bytes), group S33: at the owner; dword +0xC Rand and 0x1F; +0x5D 0x10, +0xB and +9 0, +0xA 4, +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC1E0
+name = "AccessionSpark_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC1E0..0x4EC205 (0x26 bytes), group S33: +0xA up by 4; from 0x20 (unsigned) +0xB 1 and +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC210
+name = "AccessionSpark_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC210..0x4EC237 (0x28 bytes), group S33: +0x5D down by 2; at 0 the owner's +0xB down and BattleTask_FreeCurrent (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC240
+name = "AccessionSpark_Draw"
+ret = "void"
+params = "unsigned a1, unsigned a2"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC240..0x4EC4F5 (0x2B6 bytes), group S33: the low bytes of its two arguments: +0xA lines (the count read back each line) at radius 0x200: latitude ((Rand and 3) + 4) x sin(((+0xC + i) and 0x1F) sl 7) + a2, sl 4; longitude the byte of a1's slot plus Rand and 7, kept in the slot, sl 4; each Gpu_SetDrawMode(tpage ((+0xB and 3) sl 5) or 0x15), MapView_LinkPrimAt(.., 2, 0xC), Gpu_SetLineF2, Gpu_SetSemiTrans(+0xB), two Gte_RotTransPers / Gte_StoreDepthF, shade signed +0x5D x 12, linked 0x20. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC500
+name = "AccessionBolt_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC500..0x4EC571 (0x72 bytes), group S33: call [AccessionBolt_Steps + 4 x byte +2], unchecked; BattleActor_UpdateScreenXY; while +2 and +0: SpellSleep_PushTurnMatrix, AccessionBolt_DrawBand (0x20, 0x20, 7), +0xB up 4, (0x10, 0x40, 0xF), +0xB up 4, (0x10, 0x60, 0x1F), +0xB down 8, Gte_PopMatrix (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC580
+name = "AccessionBolt_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC580..0x4EC5F2 (0x73 bytes), group S33: +9 down; at 0 the owner's position, +0xB Rand and 0xF, +9 and +0xA 0, +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC600
+name = "AccessionBolt_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC600..0x4EC632 (0x33 bytes), group S33: +0xB up, +0xA up by 4; at 0x10 +9 8 and +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4EC640
+name = "AccessionBolt_DrawBand"
+ret = "void"
+params = "int a1, int a2, int a3"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EC640..0x4ECB70 (0x531 bytes), group S33: one band row: word 0x903850 first s16 a2 / 2 (toward zero), 0x90385A +0xA x 15, 0x90385C (Scratch_Swap) +0xA x 13; Gpu_SetDrawMode(tpage 0x35) at the task; 17 steps (i 1..0x11), each the radius a2 + or - (Rand and a3) by Rand bit 0, the angle ((+0xB + i) and 0xF) sl 8, -i sl 6 high, four Gpu_SetPolyG4 offset by a1 low word (in, out 2 a1, in), the first step's far corners 1; Gte_RotTransPers4 at stride 0x10, Gte_PrimDepths4_10B, MapView_LinkPrimAt(.., 2, 0x44). The Myollnir_DrawBand shape (group S22) with its own corners and shades. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ECB80
+name = "AccessionRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ECB80..0x4ECBB7 (0x38 bytes), group S33: call [AccessionRing_Steps + 4 x byte +2], unchecked; while +0 and +2: MagicFx_PushActorMatrix, AccessionRing_DrawInner, AccessionRing_DrawOuter, Gte_PopMatrix (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ECBC0
+name = "AccessionRing_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ECBC0..0x4ECC11 (0x52 bytes), group S33: at the owner; dword +0x14 0x100, +9 0x10, +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ECC20
+name = "AccessionRing_Widen"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ECC20..0x4ECC42 (0x23 bytes), group S33: dword +0x14 up by 0x80; at 0x400 +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ECC50
+name = "AccessionRing_DrawInner"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ECC50..0x4ECE7C (0x22D bytes), group S33: Gpu_SetDrawMode(tpage 0x35), Gfx_CommitPrim(4, 0xC); 64 semi-transparent Gpu_SetPolyG4 round the ring from radius +0x14 to +0x14 + 0x40 (angle 0x40 .. 0x1000 by 0x40), the outer vertices shade +9 x 15, the inner 1; Gte_RotTransPers4, Gte_PrimDepths4_10B, Gfx_CommitPrim(4, 0x44). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ECE80
+name = "AccessionRing_DrawOuter"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ECE80..0x4ED0B1 (0x232 bytes), group S33: AccessionRing_DrawInner from radius +0x14 + 0x40 to + 0x80, the shades the other way round. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED0C0
+name = "MightyChop_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED0C0..0x4ED0F5 (0x36 bytes), group S33: a four-entry stack table (MightyChop_Start, _Throw, _End, BattleFx_Finish) by byte +1, unchecked. Magic_Rows row 35, file 0x29F = MAGIC154.EMI, ability id 0x9A (Mighty Chop read one id down, a hypothesis); the first function of MAGIC154's extent 0x4ED0C0..0x4ED66E. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED100
+name = "MightyChop_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED100..0x4ED1E6 (0xE7 bytes), group S33: BattleActor_SetAnimation(0xC, 2); BattleTask_Create(1, 0x52), unchecked; rep movsd 0x20 dwords of the acting actor's record (party below 3, else enemy index - 3, unchecked) into the slot; its +0x80 the task, +1 1, +2 0, +6 1, +5 0x52; Gfx_ClutStrip words 0x1A00..0x1A0F from Gfx_ClutStripSource, Gfx_ClutStripDirty 1; the owner's +0 or 0x40; +0xB and +9 1; +1 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED1F0
+name = "MightyChop_Throw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED1F0..0x4ED2C3 (0xD4 bytes), group S33: at +0xB 0: +8 the source sprite's; +0xC 0, +0x10 0xFFFE8000, 0x446770; +0x34 / +0x38 the pair plus the source's, +0x3C the source's; Sound_PlayById 0x100; six BattleTask_Create(1, 0x52), unchecked, with +0x80 the task, +1 0, +0xB i, +9 3 i + 1, each counted in +0xB; +1 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED2D0
+name = "MightyChop_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED2D0..0x4ED30A (0x3B bytes), group S33: at +9 0: BattleActor_SetAnimation(4, 0), the owner's +0 and 0xBF, Battle_SetTargetFlags(target, 0x10), +1 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED310
+name = "MightyChopChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED310..0x4ED321 (0x12 bytes), group S33: the kind-1 task: jmp [MightyChopChild_Kinds + 4 x byte +1], unchecked. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED330
+name = "MightyChopBlade_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED330..0x4ED38B (0x5C bytes), group S33: Gpu_SetDrawMode(tpage 0x35), Gfx_CommitPrim(3, 0xC); 0x9039D8 0x8E3580; call [MightyChopBlade_Steps + 4 x byte +2], unchecked; while +0 and +2 Sprite_UpdateScreen; 0x9039D8 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED390
+name = "MightyChopBlade_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED390..0x4ED4AF (0x120 bytes), group S33: +9 down; at 0: +8 the owner's; +0xC 0, +0x10 +0xB sl 15, 0x446770; the position the owner's plus the pair, its height; +0x40 / +0x44 0x8000, +0x48 2, +0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28 0, +0x2A +8 and 1, +0x29 3, +0x24 4, word +0x2C 0, +0x2B 0; Sprite_SetAnimation(0), Sprite_ScriptTick; +9 0, +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED4B0
+name = "MightyChopBlade_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED4B0..0x4ED4ED (0x3E bytes), group S33: +0x40 up by 0x4000, +0x44 by 0x8000, +9 up; at 4 +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED4F0
+name = "MightyChopBlade_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED4F0..0x4ED538 (0x49 bytes), group S33: +0x40 down by 0x4000, +0x44 by 0x8000, +9 down; at 0 the owner's +0xB down, BattleTask_FreeCurrent (a tail jmp). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED540
+name = "MightyChopBlade_Sink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED540..0x4ED569 (0x2A bytes), group S33: +0x44 down by 0x1000; at +0x5F 0x80 the owner's +0xB down, BattleTask_FreeCurrent (a tail jmp). Entry 3 of MightyChopBlade_Steps; no step moves +2 to it (Shrink frees the task). Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED570
+name = "MightyChopCopy_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED570..0x4ED5B5 (0x46 bytes), group S33: a four-entry stack table by byte +2, unchecked: BattleFx_SetSize, MightyChopCopy_Play, MightyChopCopy_Wait, BattleFx_FreeTask; then while +0 Sprite_UpdateScreen. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED5E0
+name = "MightyChopCopy_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED5E0..0x4ED640 (0x61 bytes), group S33: +9 down; at 0 Sprite_ScriptTickOnce and BattleActor_PlaySound(2, 4); else Sprite_ScriptTickOnce and, at its end (al), the sound and +9 0 (else return); then the owner's +0xB down and +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[func]]
+pc = 0x4ED650
+name = "MightyChopCopy_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s33.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED650..0x4ED66E (0x1F bytes), group S33: at Sprite_ScriptTickOnce's end (al): the owner's +9 down (MightyChop_End waits for it) and +2 up. Fuzz only: no recorded route casts it (docs/magic_s33.md)."
+
+[[data]]
+pc = 0x65BE74
+name = "AccessionChild_Kinds"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S33: AccessionChild_Task's jmp [0x65BE74 + 4 x byte +1]: AccessionOrb_Run, AccessionSpark_Run, AccessionBolt_Run, AccessionRing_Run, AccessionCtl_Run."
+
+[[data]]
+pc = 0x65BE88
+name = "AccessionOrb_Steps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-27, group S33: AccessionOrb_Run's call [0x65BE88 + 4 x byte +2]: _Start, _Grow, _Emit, _WaitChildren, _Dim, _Fade. 32 bytes of other data (AccessionSpark_Angles) follow."
+
+[[data]]
+pc = 0x65BEC0
+name = "AccessionSpark_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S33: AccessionSpark_Run's call [0x65BEC0 + 4 x byte +2]: _Start, _Grow, _Fade."
+
+[[data]]
+pc = 0x65BECC
+name = "AccessionBolt_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S33: AccessionBolt_Run's call [0x65BECC + 4 x byte +2]: _Start, _Rise, group S22's MyollnirBolt_Hold and JoltBolt_End."
+
+[[data]]
+pc = 0x65BEDC
+name = "AccessionRing_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S33: AccessionRing_Run's call [0x65BEDC + 4 x byte +2]: _Start, _Widen, group S29's DivineBeam_Widen."
+
+[[data]]
+pc = 0x65BEE8
+name = "MightyChopChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S33: MightyChopChild_Task's jmp [0x65BEE8 + 4 x byte +1]: MightyChopBlade_Run, MightyChopCopy_Run."
+
+[[data]]
+pc = 0x65BEF0
+name = "MightyChopBlade_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S33: MightyChopBlade_Run's call [0x65BEF0 + 4 x byte +2]: _Start, _Grow, _Shrink, _Sink. The next overlay's data follows at 0x65BF00."
+
+[[data]]
+pc = 0x65BEA0
+name = "AccessionSpark_Angles"
+ctype = "unsigned char"
+count = 32
+status = "evidence"
+evidence = "read 2026-09-27, group S33: AccessionSpark_Run: bytes [0x65BEA0 + 2 x +4] and [+1], the two angle bytes (x 16 a Math_Sin angle) AccessionSpark_Draw starts from; 16 pairs, +4 unchecked (AccessionOrb_Emit gives it +4 and 0xF)."

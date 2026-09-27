@@ -155,6 +155,7 @@
 #include "game/magic_s12.h"
 #include "game/magic_s14.h"
 #include "game/magic_s15.h"
+#include "game/magic_s33.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -477,6 +478,9 @@ void InjectAll() {
                                 // calls, stack-table immediates and jump table re-aimed or moved, its ten .data
                                 // tables swapped for the fuzz only; no module patches bytes inside its 52
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS33_Inject();          // round 9 group S33 (MAGIC151, 154: Accession, Mighty Chop): its clones' calls
+                                // and stack-table immediates re-aimed, its seven .data tables swapped for the
+                                // fuzz only; no module patches bytes inside its 57 (DIVERGENCE.md, cheats.cpp)
     InjectReport();
 }
 
