@@ -278,6 +278,8 @@ const sh::Region kRegions[] = {
     {at::kObjects, 4 * at::kObjectCount},
     {at::kLeapPhases, 4 * at::kLeapPhaseCount},
     {at::kCellHandlers, 4 * at::kCellHandlerCount},
+    {at::kGuestStats, 8},        // Capcom's constant bytes, random here so that each byte's use is seen
+    {at::kMemberBytes, 8},       // likewise
     {0, sizeof g_leap_object},   // the leap's object (its address set at start-up)
 };
 sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
@@ -427,6 +429,8 @@ void Seed(unsigned k) {
                 B(at::kRecord7 + 0x15) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
             }
             if (run == 12 && sh::Half()) B(at::kBank7DEE44) = static_cast<unsigned char>(sh::Next() & 2);
+            if (run == 8 && sh::Often())   // step 0's sort: the three +0x89 among a few values (ties too)
+                for (unsigned m = 0; m < 3; ++m) B(at::kObjTrio + at::kObjStride * m + 0x89) = static_cast<unsigned char>(sh::Next() % 4);
         }
         break;
     }
@@ -493,11 +497,18 @@ void Disturb(std::uint32_t h) {
     }
 }
 
-// After every disturbance, for the two that read the area again after their
-// calls (EnterArea, StepHook): half the time the area moved to one they test,
+// After every disturbance: for run 16, half the time one of record 7's two
+// equipment bytes moved (it reads them again after Inventory_Add); for the two
+// that read the area again after their calls (EnterArea, StepHook): half the
+// time the area moved to one they test,
 // since the harness's disturbance reaches the group's cells one time in
 // sixteen. Noise() is the recorders' stream, the same on both passes.
 void Settle() {
+    if (g_k == kRun16) {   // record 7's two bytes, read again after Inventory_Add
+        const std::uint32_t n = sh::Noise();
+        if (n & 1) B(at::kRecord7 + ((n >> 1) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(n >> 8);
+        return;
+    }
     if (g_k != kEnterArea && g_k != kStepHook) return;
     const std::uint32_t n = sh::Noise();
     if (!(n & 1)) return;
