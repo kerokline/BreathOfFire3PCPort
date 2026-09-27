@@ -168,8 +168,9 @@ One frame of field state is every input. The shapes the roots give:
 | A handler `+0x3C[n]` | `MoveScript_GroupD` ops `03` / `DE`, `Sprite_Current` the running object | none | `DE`: `Sprite_Current[8]` read after |
 | A choice handler `+0x34[id]` | `MsgBox_ChoiceCommit`, the message word `0x7DEE48` read after | none | may open another message |
 | The init `+0x40` | `Area_Enter`, after the map and party are placed | none | - |
-| A step or arrive hook | `Area_StepHook` / `Area_ArriveHook` | `(x, z)` | `al` |
-| A mode-tail or cell-hook phase | `Field_ModeTailRun`, `0x56E670` | none | - |
+| A step, arrive or cell hook | `Area_StepHook` / `Area_ArriveHook` / `0x56E670` (`Area_CellHook`, through `Area_CellHooks`) | `(x, z)` | `al` |
+| A mode-tail phase | `Field_ModeTailRun` (through `Field_ModeTailKinds`) | none | - |
+| An object trigger | `0x56E020` (through `Field_ObjectTriggers`) | `(object, 0x904030)` | - |
 | A state handler | the area's own frame function, through a table in the area's data | none | - |
 
 What they read, by the frontier and the functions read so far: `Field_State`
