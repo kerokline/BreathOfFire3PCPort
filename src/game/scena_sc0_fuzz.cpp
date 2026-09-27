@@ -135,7 +135,8 @@ unsigned Index(const char* name) {
         if (std::strcmp(kClones[k].name, name) == 0) return k;
     bof3::Fatal("scena_sc0: no clone %s", name);
 }
-unsigned kStartK, kFrameK, kRunK, kSteerK, kRun11K, kObjectK, kHookK;
+unsigned g_k;   // the clone being seeded, for Disturb
+unsigned kEnterK, kRun5K, kStartK, kFrameK, kRunK, kSteerK, kRun11K, kObjectK, kHookK;
 
 unsigned char& B(std::uint32_t a) { return sh::Mem(a)[0]; }
 void SetW(std::uint32_t a, unsigned v) { move_script::SetWord(sh::Mem(a), v); }
@@ -153,6 +154,7 @@ unsigned StepsOf(unsigned k) {
 }
 
 void Seed(unsigned k) {
+    g_k = k;
     // the areas the chapter tests, and Cond_ByteFD's five cases
     if (sh::Often()) SetW(kArea, SH_PICK(1, 2, 4, 0x18, 0x19, 0x1F));
     if (sh::Often()) B(kByteFD) = static_cast<unsigned char>(sh::Next() % 5);
@@ -165,7 +167,7 @@ void Seed(unsigned k) {
     }
     // the counters the steps wait on, each boundary in
     if (sh::Often())
-        B(kCounter) = static_cast<unsigned char>(SH_PICK(1, 3, 4, 5, 7, 8, 0xA, 0xB, 0xC, 0xD, 0x11, 0x14, 0x15, 0x1E, 0x1F, 0x24, 0x25));
+        B(kCounter) = static_cast<unsigned char>(SH_PICK(1, 3, 4, 5, 7, 8, 0xA, 0xB, 0xC, 0xD, 0x11, 0x13, 0x14, 0x15, 0x1E, 0x1F, 0x24, 0x25));
     if (sh::Often())
         B(kByte4A) = static_cast<unsigned char>(SH_PICK(0, 1, 3, 9, 0x13, 0x14, 0x15, 0x17, 0x23, 0x30, 0x35, 0x38, 0x71));
     if (sh::Often()) B(kByte4B) = static_cast<unsigned char>(SH_PICK(0, 1, 0x54, 0x60));
@@ -177,6 +179,23 @@ void Seed(unsigned k) {
     if (sh::Half()) Frame_Counter = Frame_Counter & ~0x1Fu;
     if (sh::Half()) B(kInput + 1) = static_cast<unsigned char>(sh::Half() ? 0 : SH_PICK(0x10, 0x20, 0x40, 0x80));
     if (sh::Half()) B(kObjTrio + 1) = 2;
+    // area 1's effect, and the counter it reads again after taking the slot
+    if (k == kEnterK && sh::Half()) {
+        SetW(kArea, 1);
+        B(kByte4A) = sh::Half() ? 0 : 3;
+    }
+    // run 11's step 5 at the counter's last count, no direction pressed
+    if (k == kRun11K && sh::Half()) {
+        B(kStep) = 5;
+        B(kCounter) = static_cast<unsigned char>(SH_PICK(0x13, 0x14));
+        B(kInput + 1) = 0;
+    }
+    // run 5's shaking steps, with something to shake
+    if (k == kRun5K && sh::Half()) {
+        B(kStep) = static_cast<unsigned char>(4 + sh::Next() % 3);
+        B(kByte4A) = static_cast<unsigned char>(1 + sh::Next() % 0x20);
+        Frame_Counter = Frame_Counter & ~0xFu;
+    }
     // the tables' indices, inside what the original can jump to
     if (k == kFrameK) B(0x8034E2) = static_cast<unsigned char>(sh::Next() % 15);
     if (k == kRunK) B(kRun) = static_cast<unsigned char>(sh::Next() % 12);
@@ -195,9 +214,15 @@ void Args(unsigned k, std::uint32_t* a) {
     if (k == kHookK && sh::Often()) a[0] = (SH_PICK(0x2B, 0x14) << 16) | (a[0] & 0xFFFF);
 }
 
-// the chapter's own cells a handler reads again after a call
+// the chapter's own cells a handler reads again after a call: half the time
+// to a value a step compares with, else any byte
 void Disturb(std::uint32_t h) {
-    const auto b = static_cast<unsigned char>(h >> 24);
+    static const unsigned char kValues[] = {0, 1, 3, 0x13, 0x1E, 0x1F, 0x23, 0x35, 0x54, 0x60, 0x71};
+    const auto b = h & 0x10000 ? kValues[(h >> 17) % sizeof kValues] : static_cast<unsigned char>(h >> 24);
+    if (g_k == kEnterK) {   // area 1: the count read again after Effect_FindFree
+        B(kByte4A) = h & 0x100 ? 3 : 0;
+        return;
+    }
     switch ((h >> 8) % 4) {
     case 0: B(kByte4A) = b; break;
     case 1: B(kByte4B) = b; break;
@@ -210,6 +235,8 @@ void Disturb(std::uint32_t h) {
 
 void SelfTest() {
     kStartK = Index("Scena00_Start");
+    kRun5K = Index("Scena00_Run5");
+    kEnterK = Index("Scena00_EnterArea");
     kFrameK = Index("Scena00_Frame");
     kRunK = Index("Scena00_Run");
     kSteerK = Index("Scena00_Steer");
