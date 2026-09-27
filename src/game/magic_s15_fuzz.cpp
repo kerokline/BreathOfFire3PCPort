@@ -488,6 +488,16 @@ void SeedForetell() {
         for (unsigned i = 0; i < 8; ++i) SetWord(Enemy(i) + 0x98, 0);
         SetWord(Enemy(g_kept - 3) + 0x98, 0x8000 + mh::Next() % 16);
     }
+    // otherwise, two times in three, every counted member's byte +0x8A one value
+    // and every counted enemy's word +0x98 another, their difference on an
+    // edge of the level bands (20, 15, 10, 7, 5, 3, 1, -1, .. -20) or one above
+    else if (mh::Often()) {
+        static const int kEdges[14] = {20, 15, 10, 7, 5, 3, 1, -1, -3, -5, -7, -10, -15, -20};
+        const int diff = kEdges[mh::Next() % 14] + static_cast<int>(mh::Next() % 2);
+        const int base = 30 + static_cast<int>(mh::Next() % 30);
+        for (unsigned i = 0; i < 3; ++i) Member(i)[0x8A] = Byte(static_cast<unsigned>(base + diff));
+        for (unsigned i = 0; i < 8; ++i) SetWord(Enemy(i) + 0x98, static_cast<unsigned>(base));
+    }
     // two times in three the bias byte puts the score on a message bound
     // (0, 0x1E, 0x32, 0x46, 0x5A, 100) or one either side of it
     if (mh::Often()) {
