@@ -322,3 +322,47 @@ Left: waves four (S09..S15, 320) and five (S32..S38, 345), then the owed
 list (§9, §10): the frame hash, the two `kFlag` gaps in the harness and the
 controls re-run, `magic_rows.py`'s two misses, the raw-address rebinding,
 `known-defects.md` for all three waves.
+
+## 11. Wave four (2026-09-27, from `62b1e37`)
+
+Seven groups, S09..S15 (MAGIC045..069), after the `kFlag` fix and its
+controls re-run ([`magic_harness.md`](magic_harness.md) sections 4 and 8)
+and `magic_rows.py`'s bounded tables; the brief was wave three's with the
+workarounds removed. **320 functions, 3,165 ours.** Merged in address
+order after S13 and S11 (which reported first); every merge built, passed
+its own shadow and `'*'` headless, `ledger_check` 0 errors, and every
+wave-four function has its `entries_logic.txt` line.
+
+| Group | Units | Functions | Controls refused | Doc |
+|---|---|--:|---|---|
+| S09 | MAGIC045..048, 050 | 47 | 277 of 280; E21, D63 equivalent, D63b beyond the harness (a `kFlag` non-zero always has bit 4) | [`magic_s09.md`](magic_s09.md) |
+| S10 | MAGIC052..056 | 60 | 356 of 359; S41, S46, S48 equivalent | [`magic_s10.md`](magic_s10.md) |
+| S11 | MAGIC058, 059 | 35 | 226 of 226 | [`magic_s11.md`](magic_s11.md) |
+| S12 | MAGIC060, 062 | 44 | 346 of 348; D16, S20 equivalent | [`magic_s12.md`](magic_s12.md) |
+| S13 | MAGIC063 | 25 | 152 of 153; F2 equivalent | [`magic_s13.md`](magic_s13.md) |
+| S14 | MAGIC064..066 | 57 | 300 of 300 | [`magic_s14.md`](magic_s14.md) |
+| S15 | MAGIC067..069 | 52 | 251 of 254; F19, F30, I78 equivalent | [`magic_s15.md`](magic_s15.md) |
+
+Every equivalent has a refused near variant. Six groups strengthened
+their own fuzz after a first run left controls standing (S09, S10, S11,
+S12, S13, S14 - each re-ran its whole set); none edited the harness. S12
+and S14 were cut by the usage limit after their controls; S14 resumed for
+its last three.
+
+**Newly named shared functions**, still called by raw address elsewhere
+(they work: the stand-in falls back to the address; rebinding is owed):
+`MagicFx_UncountAndFree` `0x4AF490` (S11; held by S03, S04, S07, S09,
+S10, S15, S26, S31), `MagicFx_CountDownRelease` `0x4B1740` and
+`MagicFx_CountDown2Release` `0x4B18B0` (S12; C3, S03, S08, S15, S31),
+`ChillRay_Grow` / `_Shrink` `0x4B6B20` / `0x4B6B70` (S15; S31),
+`Item_CopyName` `0x4B58F0` (S14; the harness's standard list, Steal).
+
+**Defects described, not fixed** (each group doc): the common set again
+- unbounded dispatch tables, `BattleTask_Create`'s `0xFF` unchecked,
+divides by a live count (ours aborts) - and: S09's full breath pool writes
+record 255 at `0x6861BC` inside `.data` (silent); S12's Identify on a party
+member reads an "enemy" record in the task-slot area and can mark an
+arbitrary enemy kind identified; S15's `ChillRay_PushMatrix` turns by an
+uninitialised stack word past facing 3; S13's burst can skip mote 0 and
+never set its 0x10 flag; S10's `EbonfireRing_End` and S11's
+`SanctuaryMote_Slow` are unreached.

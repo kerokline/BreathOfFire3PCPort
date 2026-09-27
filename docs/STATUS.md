@@ -15,8 +15,8 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**2,845 functions are ours** (`inject: 2845 ours` in
-`bof3x.log`, 2026-09-26; the spell round counts pointer-reached starts
+**3,165 functions are ours** (`inject: 3165 ours` in
+`bof3x.log`, 2026-09-27; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
 ([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
@@ -44,6 +44,7 @@ re-derived:
 | 09-26 | Spell wave 1: the effect library and MAGIC071..110 (L, S16..S25) | 527 | 2,003 | `r9` | [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) |
 | 09-26 | Spell wave 2: the cut content (C1..C3), the engine rows (E), MAGIC114..143 (S26..S31) | 465 | 2,468 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 9 |
 | 09-26 | Spell wave 3: MAGIC001..044 (S01..S08) | 377 | 2,845 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 10 |
+| 09-27 | Spell wave 4: MAGIC045..069 (S09..S15) | 320 | 3,165 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 11 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -202,7 +203,7 @@ What is established:
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
 - 1,102 functions, 8 global blocks and 306 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 2,845 functions carry an `impl`,
+  [`symbols.toml`](../symbols.toml), tiered; 3,165 functions carry an `impl`,
   one for every detour (`tools/ledger_check.py`, 2026-09-26; `Fmv_WndProc`
   `0x59E570` was the one without, until then).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.

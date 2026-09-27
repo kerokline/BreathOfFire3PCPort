@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**2,845 functions are ours** (`inject: 2845 ours, 0 left original`), on
+**3,165 functions are ours** (`inject: 3165 ours, 0 left original`), on
 `phase-3/round-nine`, local, not yet a PR. Round nine
 ([`takeover-queue-round9.md`](takeover-queue-round9.md)) re-traced the three
 routes - the "76" were 29 distinct entries, of which only the task scheduler
@@ -24,7 +24,8 @@ every overlay behind `Magic_Rows` `0x64C2B8`, 2,064 functions in 43 groups,
 through one shared fuzz harness ([`magic_harness.md`](magic_harness.md); SH
 built it, HX folded eleven groups' edits into one API). **Waves one to three
 are merged** (L, S16..S25; C1..C3, E, S26..S31; S01..S08: 1,369 functions
-since round eight). **Waves four (S09..S15) and five (S32..S38) remain.** Before wave four
+since round eight), and **wave four** (S09..S15, 320, round9 doc section
+11) on 2026-09-27. **Wave five (S32..S38) remains.** Before wave four
 the harness's two `kFlag` gaps were fixed and `magic_rows.py`'s table
 counts bounded (`015a3c3`, `93cc006`); the fix reaches 117 clones
 ([`magic_harness.md`](magic_harness.md) section 8), and their 532 controls
@@ -46,29 +47,34 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
 
 ## Pick up here
 
-1. **Spell waves four and five.** Staged in
+1. **Spell wave five.** Staged in
    [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)
-   section 6b: wave four S09..S15 (320 functions), wave five S32..S38 (345;
-   MAGIC227 is row 147, C3 found it). The brief is
-   `analysis/round9_wave345_brief.md` and the group lines
-   `analysis/round9_wave{4,5}_groups.tsv` (gitignored - they live in the
+   section 6b: S32..S38 (345 functions; MAGIC227 is row 147, C3 found it).
+   The brief is `analysis/round9_wave345_brief.md` and the group lines
+   `analysis/round9_wave5_groups.tsv` (gitignored - they live in the
    checkout, not in git): point the brief's `reset --hard` at the tip before
    launching (`sed` its 40-hex SHA), spawn one Opus agent per line in a
    worktree ("read your brief ... your group is line `sNN` of ..."), and merge
-   each as it reports with the routine below. About 350 functions fits one
-   usage window; wave two's 465 did not.
+   each as it reports with the routine below. Wave four's 320 used most of
+   one usage window (two groups were cut after their controls and resumed).
    **The merge routine**: merge `--no-ff`; the conflicts are always
    both-appended in `CMakeLists.txt`, `inject_all.cpp`, `symbols.toml`,
    `docs/README.md` - keep both, the CMake list's `)` on its last line only,
    and in `symbols.toml` **repeat the shared `[[func]]` header** when a hunk
    starts inside an entry (the S18 merge lost one); `tomllib` parse and no
    duplicate `pc`; build; the group's shadow and `BOF3X_SHADOW='*'` headless;
-   `ledger_check.py` 0 errors; `analysis/consolidate_entries.py`.
+   `ledger_check.py` 0 errors; `analysis/consolidate_entries.py`. The
+   earlier session's `merge_group.sh` + `keepboth.py` do all but the last
+   two (copied to this session's scratchpad; they worked for all seven of
+   wave four).
 2. **Owed by the spell round, before or after wave five** (round9 doc
    sections 6 to 10):
    - **The frame hash re-record** (above), owner away about 20 minutes.
    - **Rebinding**: many groups call later groups' functions by raw address;
      they work (the stand-in falls back to the address) but can take names.
+     Wave four named the most-held ones (round9 doc section 11:
+     `MagicFx_UncountAndFree` `0x4AF490` in eight groups,
+     `MagicFx_CountDownRelease` `0x4B1740` in five).
    - **`known-defects.md`**: the groups describe; nobody has numbered them.
      Commonest: unbounded dispatch tables, `BattleTask_Create` / pool `0xFF`
      unchecked, divides by the live-target count, loops that never end past
