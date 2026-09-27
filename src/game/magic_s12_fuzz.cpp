@@ -333,13 +333,22 @@ unsigned char* Owner() { return mh::Pointer(mh::at::kOwner); }
 // The group's cells a recorder may move (the harness's case 14).
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
-    switch ((h >> 8) % 6) {
+    switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
     case 2: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
     case 3: mh::Mem(kTints + v % 0xC00)[0] = Byte(h >> 24); break;
     case 4: SetWord(mh::Mem(kInput), (h >> 16) & 1 ? 0 : h >> 20); break;
     case 5: SetLong(mh::Mem(kSeenBits + 4 * (v % 8)), static_cast<std::int32_t>(h)); break;
+    case 6: {
+        // the target enemy's "identifiable" byte +0x8F, 0 or not: the panel and
+        // the roll read it after calls (an enemy target only, as the harness's
+        // own record disturbance)
+        const unsigned t = mh::Mem(mh::at::kTarget)[0];
+        if (t >= 3 && t <= 10)
+            mh::Mem(mh::at::kEnemies + (t - 3) * mh::at::kEnemyStride + 0x8F)[0] = (h >> 16) & 1 ? 0 : Byte(h >> 24);
+        break;
+    }
     default: break;
     }
 }

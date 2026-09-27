@@ -33617,7 +33617,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s12.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4B1740..0x4B1766 (0x27 bytes), group S12, cdecl: +9 down; at 0 the owner's (0x93B940) +0xB down - one child fewer - and a tail jmp to BattleTask_FreeCurrent. A child's last phase in sixteen files' tables (analysis/magic_funcs.tsv): IdentifyDim_Steps, CelerityRing_Steps, BuffRing_Phases (MAGIC082), CoronaFlash_Steps (MAGIC137); called by address by groups C3, S03, S08, S17, S18, S20, S25, S29, S30, S31. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+evidence = "disasm 2026-09-26, 0x4B1740..0x4B1766 (0x27 bytes), group S12, cdecl: +9 down; at 0 the owner's (0x93B940) +0xB down - one child fewer - and a tail jmp to BattleTask_FreeCurrent. A child's last phase in sixteen files' tables (analysis/magic_funcs.tsv): IdentifyDim_Steps, CelerityRing_Steps, BuffRing_Phases (MAGIC082), CoronaFlash_Steps (MAGIC137); held as a raw constant by groups C3, S03, S08 and S31. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
 
 [[func]]
 pc = 0x4B1770
