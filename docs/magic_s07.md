@@ -548,6 +548,27 @@ The thinnest (fewer than 60 rounds):
 | E63 | Lines: two lines (E48's near variant) | EnlightenRays_DrawLines 2000 |
 | E62 | Start: CLUT not dirty | Enlighten_Start 1992 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) §8): 42 controls in the affected
+functions, 42 refused.** The seven affected clones are
+`BonebreakChild_Burst` / `_WaitScript`, `WarShout_Rally`,
+`WarShoutMote_Rise` / `_Circle` / `_Fade` and `Enlighten_Apply`. Selected:
+B20..B27, W12..W22, W39..W45 (the orbit step the three motes' phases share),
+W46..W55 and E7..E12; every other control plants outside these functions
+(B18 / B19 and W26 / W27 are the `_Run` dispatchers, not the phases). Each was
+planted again by a script (plant, rebuild, recompile checked,
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s07`, restore, rebuild), rebuilt
+from the table and anchored on strings that occur once (the orbit's angle
+lines also occur in `WarShoutMote_Appear`, so W39 / W44 anchor on the line
+before). All 42 exit 3, only in the planted functions, and 41 of them in
+**the same count as the table's**: the script ticks and `Battle_ActorIsOut`
+already answer through this group's own `effect` (section 5, the kFlag blind
+spot), so the harness's new draw never reaches a caller here. The one that
+moved, W53 (2000, was 228), is the rebuilt plant's wording, not the stream:
+this time all three channels step down by 3. Thinnest: W41 (Rise
+32, Circle 45, Fade 42), W49 47, B27 48. No fuzz change. Clean self-test
+after: 0 mismatches, exit 0; `BOF3X_SHADOW='*'`: exit 0.
+
 ## 7. Latent defects (Capcom's, kept)
 
 Described here, not numbered:

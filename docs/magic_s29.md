@@ -396,6 +396,18 @@ The thinnest:
 - **S40, S41 (44, 35)**: `ShadowSeeker_Home`'s bounds, reached through the
   `Math_Ratan2` effect.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) §8): 8 controls in the affected
+functions, 8 refused.** The one affected clone is `ShadowSeeker_Home` (its
+`MagicFx_NearSprite` is `kBool`); its controls S36 (the shared heading, also
+in `_Launch`) and S37..S43 were planted again by a script (plant, rebuild,
+recompile checked, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s29`, restore,
+rebuild), rebuilt from the table. All exit 3: S36 Launch 283 / Home 1769,
+S37 323, S38 2000, S39 2000, S40 47, S41 42, S42 324, S43 321 (Home). The
+thinnest are still the bounds, S41 (42) and S40 (47), up from 35 and 44. No
+fuzz change. Clean self-test after: 0 mismatches, exit 0;
+`BOF3X_SHADOW='*'`: exit 0.
+
 
 ## 7. What nothing reached, and latent defects (Capcom's, kept)
 
