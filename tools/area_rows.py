@@ -36,13 +36,18 @@ read off the exe here, and through the area's own data:
 5. WorldMap_Records 0x653910 (eleven 0x1C-byte records, five code fields and
    the area byte +0x18) and WorldMap_FieldHooks 0x662DF0 (one per record,
    the twelfth for "no world map").
+5a. Field_ObjectTriggers 0x662E20: 0x56E020, called by 0x56D6B0 for an
+   object with +0x89 bit 6, calls [0x662E1C + object[+0x86] * 4](object,
+   story flags) - ids 1..64 up to the null before Area_CellHooks. Not in the
+   plan's seven; found by this tool's scan 7. Area-less: an id is set by
+   whatever placed the object.
 6. The area's data block: every dword of its .data that points at a band
    function, beyond the descriptor's own tables (the state tables its frame
    functions dispatch through, handler lists its scripts name). The block is
    the span from the previous descriptor's end to this one's, corrected by
-   the walk: a dword outside the span its own area's exclusive code and
-   descriptor touch, but inside exactly one other area's span, is that
-   area's (area 33's tables run on after its descriptor).
+   the walk: a dword in a table (the nearest start at or below it that code
+   or a descriptor names) that one area alone reads - its descriptor or its
+   exclusive code - is that area's, wherever it lies.
 7. For completeness, not roots of any area: rel32 calls into the band from
    outside it, and .data dwords outside the descriptor region that hold a
    band start. The tool prints them; an area harness must know they exist.
@@ -110,6 +115,7 @@ TAIL_KINDS, TAIL_KIND_COUNT, TAIL_KIND_BYTE = 0x662CE8, 64, 0x9039F3
 CELL_HOOKS, CELL_HOOK_COUNT = 0x662F28, 28
 WM_RECORDS, WM_RECORD_SIZE, WM_RECORD_COUNT, WM_CODE_FIELDS, WM_AREA = 0x653910, 0x1C, 11, 5, 0x18
 WM_HOOKS, WM_HOOK_COUNT = 0x662DF0, 12
+OBJ_TRIGGERS = 0x662E1C          # 0x56E020: call [0x662E1C + object[+0x86] * 4](object, 0x904030); ids from 1
 BARE_RET = 0x437CC0             # every empty handler slot's target
 PADDING = (0x90, 0xCC)
 
@@ -422,6 +428,9 @@ def main():
         wm_area.append(img.u8(at + WM_AREA))
         wm_code.append([img.u32(at + 4 * f) for f in range(WM_CODE_FIELDS)])
     wm_hooks = [img.u32(WM_HOOKS + 4 * i) for i in range(WM_HOOK_COUNT)]
+    triggers = []
+    while OBJ_TRIGGERS + 4 * (len(triggers) + 1) < CELL_HOOKS and img.u32(OBJ_TRIGGERS + 4 * (len(triggers) + 1)):
+        triggers.append(img.u32(OBJ_TRIGGERS + 4 * (len(triggers) + 1)))
 
     # the descriptor region: area 0's lowest table to area 199's descriptor end
     region_lo = min(v for v in fields[0] if v and descs[0] - 0x40000 < v < descs[0])
@@ -461,10 +470,33 @@ def main():
                 fixed[h].append((wm_area[r], 'world-map record %d +0x%X' % (r, 4 * f)))
         fixed[wm_hooks[r]].append((wm_area[r], 'world-map field hook %d' % r))
     fixed[wm_hooks[WM_RECORD_COUNT]].append((None, 'world-map field hook %d (none)' % WM_RECORD_COUNT))
+    for i, h in enumerate(triggers):
+        fixed[h].append((None, 'object trigger %d' % (i + 1)))
+
+    # rel32 calls into the band from outside it (scan 7); those from the hook
+    # switches are roots already, the rest are area-less roots of their own
+    t = next(sec for sec in img.secs if sec[0] == '.text')
+    seg = img.data[t[3]:t[3] + t[4]]
+    outside_calls = collections.defaultdict(list)
+    for i in range(len(seg) - 5):
+        if seg[i] in (0xE8, 0xE9):
+            src = img.text_lo + i
+            if BAND_LO <= src < BAND_HI:
+                continue
+            tgt = (src + 5 + struct.unpack_from('<i', seg, i + 1)[0]) & 0xFFFFFFFF
+            if BAND_LO <= tgt < BAND_HI:
+                ins = mr.decode(img, src)
+                if ins is not None and ins.mnemonic in ('call', 'jmp') and ins.operands[0].type == x86.X86_OP_IMM:
+                    outside_calls[tgt].append(src)
+    switches = [(STEP_HOOK, 0x56E2F8), (ARRIVE_HOOK, 0x56E5B8)]
+    for tgt, srcs in outside_calls.items():
+        for src in srcs:
+            if not any(lo <= src < hi for lo, hi in switches):
+                fixed[tgt].append((None, 'called from %#x' % src))
 
     # ---- discovery, the tables, the data blocks, to a fixpoint -----------
     extra = {h for h in fixed if BAND_LO <= h < BAND_HI}
-    spans = None
+    refs = None             # {.data table: the areas that read it}, from the previous round
     for rnd in range(6):
         funcs, dropped, found = discover(img, band, extra)
         starts = sorted(funcs)
@@ -535,8 +567,6 @@ def main():
             return i if 0 <= i < AREAS and x < desc_block[i][1] else (AREAS - 1 if x >= region_hi else None)
 
         desc_table_words = set()
-        for k, f in enumerate(fields):
-            pass
         for k in range(AREAS):
             for fo in (CHOICE, HANDLERS):
                 t = fields[k][fo // 4]
@@ -544,24 +574,36 @@ def main():
                     n = len(code_run(img, t, table_starts))
                     desc_table_words.update(range(t, t + 4 * n, 4))
         data_ptrs = []          # (address, value, desc-order owner)
-        for x in range(region_lo & ~3, region_hi + 0x4000, 4):
-            v = img.u32(x)
-            if v is None or not (BAND_LO <= v < BAND_HI):
-                continue
-            if v not in sset and not _looks_like_start(img, v):
-                continue
-            k = block_owner(x)
-            if k is not None and descs[k] <= x < descs[k] + DESC_SIZE:
-                continue        # the descriptor's own +0x40
-            data_ptrs.append((x, v, k))
+        # to the last descriptor's end; past it only the tables the last
+        # area's own code alone reads (the BATE / BATTLE tables follow it)
+        ref_starts = sorted(refs) if refs else []
+        ranges = [(region_lo & ~3, region_hi)]
+        for t in ref_starts:
+            if t >= region_hi and refs[t] == {AREAS - 1}:
+                ranges.append((t, t + 4 * max(1, len(code_run(img, t, table_starts)))))
+        for lo_, hi_ in ranges:
+            for x in range(lo_, hi_, 4):
+                v = img.u32(x)
+                if v is None or not (BAND_LO <= v < BAND_HI):
+                    continue
+                if v not in sset and not _looks_like_start(img, v):
+                    continue
+                k = block_owner(x)
+                if k is not None and descs[k] <= x < descs[k] + DESC_SIZE:
+                    continue        # the descriptor's own +0x40
+                data_ptrs.append((x, v, k))
 
         def data_owner(x, k):
-            if spans is None or k is None:
+            """The walk's correction: the table holding x (the nearest start
+            at or below it that code or a descriptor names, within 0x400) is
+            read by one area only - that area's."""
+            if not refs or k is None:
                 return k
-            if spans.get(k) and spans[k][0] <= x <= spans[k][1]:
+            i = bisect.bisect_right(ref_starts, x) - 1
+            if i < 0 or x - ref_starts[i] >= 0x400:
                 return k
-            others = [j for j, sp in spans.items() if sp and sp[0] <= x <= sp[1]]
-            return others[0] if len(others) == 1 else k
+            owners = refs[ref_starts[i]]
+            return next(iter(owners)) if len(owners) == 1 else k
 
         data_roots = collections.defaultdict(list)
         moved = []
@@ -595,20 +637,23 @@ def main():
             if k is not None:
                 for x in s:
                     reached_by[x].add(k)
-        # the spans for the next round: the descriptor, its tables, and the
-        # .data its exclusive code touches, inside the descriptor region
-        nspans = {}
+        # for the next round: which areas read each table in the descriptor
+        # region - a descriptor's own fields, and its area's exclusive code
+        nrefs = collections.defaultdict(set)
         for k in range(AREAS):
-            pts = [descs[k], descs[k] + DESC_SIZE - 1]
-            pts += [v for v in fields[k] if region_lo <= v < region_hi + 0x4000]
+            for v in fields[k]:
+                if region_lo <= v < region_hi:
+                    nrefs[v].add(k)
             for x in reach.get(k, ()):
                 if reached_by[x] == {k}:
-                    pts += [t for t in funcs[x].drefs | funcs[x].tables if region_lo <= t < region_hi + 0x4000]
-            nspans[k] = (min(pts), max(pts))
-        if not (new - set(extra)) and nspans == spans:
+                    for t in funcs[x].drefs | funcs[x].tables:
+                        if region_lo <= t < region_hi + 0x1000:
+                            nrefs[t].add(k)
+        nrefs = dict(nrefs)
+        if not (new - set(extra)) and nrefs == refs:
             break
         extra |= new
-        spans = nspans
+        refs = nrefs
     rounds = rnd + 1
 
     # ---- units: blocks of exclusive functions -----------------------------
@@ -647,10 +692,12 @@ def main():
         u['bytes'] = sum(funcs[x].end - x for x in u['funcs'])
         u['ours'] = [x for x in u['funcs'] if x in ours]
         u['world'] = world_of.get(u['areas'][0])
-    pre = [x for x in starts if x < units[0]['lo']]
-    if pre:
-        units.insert(0, dict(lo=BAND_LO, hi=units[0]['lo'], areas=[], name='PRE', funcs=pre, world=None,
-                             bytes=sum(funcs[x].end - x for x in pre), ours=[x for x in pre if x in ours]))
+    # the starts before the first block are the first block's gaps
+    u = units[0]
+    u['lo'] = BAND_LO
+    u['funcs'] = [x for x in starts if u['lo'] <= x < u['hi']]
+    u['bytes'] = sum(funcs[x].end - x for x in u['funcs'])
+    u['ours'] = [x for x in u['funcs'] if x in ours]
     tail_funcs = [x for x in starts if x >= tail_lo]
     ulos = [u['lo'] for u in units]
 
@@ -712,23 +759,11 @@ def main():
 
     # the completeness scans (7): calls into the band from outside, and .data
     # outside the descriptor region naming a band start
-    t = next(s for s in img.secs if s[0] == '.text')
-    seg = img.data[t[3]:t[3] + t[4]]
-    outside_calls = collections.defaultdict(list)
-    for i in range(len(seg) - 5):
-        if seg[i] in (0xE8, 0xE9):
-            src = img.text_lo + i
-            if BAND_LO <= src < BAND_HI:
-                continue
-            tgt = (src + 5 + struct.unpack_from('<i', seg, i + 1)[0]) & 0xFFFFFFFF
-            if tgt in sset and BAND_LO <= tgt < tail_lo:
-                ins = mr.decode(img, src)
-                if ins is not None and ins.address == src and ins.mnemonic in ('call', 'jmp'):
-                    outside_calls[tgt].append(src)
     fixed_words = set(range(TAIL_KINDS, TAIL_KINDS + 4 * TAIL_KIND_COUNT, 4)) \
         | set(range(CELL_HOOKS, CELL_HOOKS + 8 * CELL_HOOK_COUNT, 4)) \
         | set(range(WM_RECORDS, WM_RECORDS + WM_RECORD_SIZE * WM_RECORD_COUNT, 4)) \
-        | set(range(WM_HOOKS, WM_HOOKS + 4 * WM_HOOK_COUNT, 4))
+        | set(range(WM_HOOKS, WM_HOOKS + 4 * WM_HOOK_COUNT, 4)) \
+        | set(range(OBJ_TRIGGERS + 4, OBJ_TRIGGERS + 4 + 4 * len(triggers), 4))
     outside_data = collections.defaultdict(list)
     for nm, v, _, raw, rsz in img.secs:
         if nm == '.text':
@@ -737,7 +772,7 @@ def main():
             w = struct.unpack_from('<I', img.data, raw + off)[0]
             if w in sset and BAND_LO <= w < tail_lo:
                 va = v + off
-                if region_lo <= va < region_hi + 0x4000 or va in fixed_words:
+                if region_lo <= va < region_hi or va in fixed_words:
                     continue
                 if va in (AREA_TABLE,):
                     continue
@@ -891,19 +926,24 @@ def main():
           '%d kinds; band slots no band code arms: %s' % (
               TAIL_KIND_COUNT, len(tv), len(set(tv)), len(in_band(tv)),
               len([n for n in tail_armed if 0 < n < TAIL_KIND_COUNT]), ' '.join('%d:%#x' % (i, tail[i]) for i in unarmed)))
+    print('  object triggers: %d ids, %d distinct, %d in the band' % (
+        len(triggers), len(set(triggers)), len(in_band(triggers))))
     wv = [h for r in wm_code for h in r if h] + wm_hooks
     print('  world map: %d records (areas %s), %d code fields + %d field hooks, %d distinct, %d in the band' % (
         WM_RECORD_COUNT, ','.join(map(str, wm_area)), sum(1 for r in wm_code for h in r if h), WM_HOOK_COUNT,
         len(set(wv)), len(in_band(wv))))
     dv = [(x, v) for x, v, _ in data_ptrs]
     print('  data blocks %#x..%#x: %d code pointers, %d in a descriptor\'s +0x34 / +0x3C table, %d beyond (%d distinct '
-          'targets); %d moved off the descriptor order by the walk: %s' % (
+          'targets); %d moved off the descriptor order by the walk (area from area: pointers): %s' % (
               region_lo, region_hi, len(dv), sum(1 for x, _ in dv if x in desc_table_words),
               sum(1 for x, _ in dv if x not in desc_table_words), len({v for x, v in dv if x not in desc_table_words}),
-              len(moved), ', '.join('%#x (%d -> %d)' % (x, k, j) for x, _, k, j in moved[:12]) + (' ...' if len(moved) > 12 else '')))
-    print('  outside the seven: %d band starts called from outside the band (%s); %d named by .data outside the '
-          'descriptor region (%s)' % (
-              len(outside_calls), ' '.join('%#x<-%s' % (x, ','.join('%#x' % s for s in v[:2])) for x, v in sorted(outside_calls.items())),
+              len(moved), ', '.join('%d from %d: %d' % (j, k, n) for (k, j), n in sorted(
+                  collections.Counter((k, j) for _, _, k, j in moved).items(), key=lambda kv: (-kv[1], kv[0])))))
+    oc = {x: [c for c in v if not any(lo <= c < hi for lo, hi in switches)] for x, v in outside_calls.items()}
+    oc = {x: v for x, v in oc.items() if v}
+    print('  outside the seven: %d band starts called from outside the band, not by the hook switches (%s); %d named '
+          'by .data outside the descriptor region and the tables above (%s)' % (
+              len(oc), ' '.join('%#x<-%s' % (x, ','.join('%#x' % s for s in v[:2])) for x, v in sorted(oc.items())),
               len(outside_data), ' '.join('%#x@%s' % (x, ','.join('%#x' % s for s in v[:2])) for x, v in sorted(outside_data.items())[:20])))
     print()
     reached = {x for x in starts if reached_by.get(x)}
