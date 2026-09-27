@@ -36930,3 +36930,655 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
+
+[[func]]
+pc = 0x4F59D0
+name = "MagmaBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F59D0..0x4F5A54 (0x85 bytes), group S37, cdecl: one call (0x4F5BC0 MagmaBreathRecord_Task): a four-entry stack table (MagmaBreath_Start, _Spawn, _Strike, BattleFx_Finish) called by byte +1, unchecked; then the 32 MagmaBreath_Pool records walked: each with bit 0 of +0 run through MagmaBreathRecord_Task as Sprite_Current, its +0x80 the owner 0x93B940, both cells put back from values read once after the phase. Magic_Rows row 138, file 0x2AF = MAGIC219.EMI, ability id 0xDB (Magma Breath read one id down, a hypothesis); the first function of MAGIC219's extent 0x4F59D0..0x4F62BE. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5A60
+name = "MagmaBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5A60..0x4F5AF3 (0x94 bytes), group S37, cdecl: two calls (MagicFx_CenterOnSide, Sound_PlayById): bytes +0..+2 of the 32 pool records 0; the task at the side's centre; +0xB 0, +1 += 1; Gfx_ClutStrip 0x200..0x2FF and 0x1A00..0x1AFF = Gfx_ClutStripSource | 0x8000, interleaved, then words 0x200 and 0x1A00 plain; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Entry 0 of MagmaBreath_Task's table. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5B00
+name = "MagmaBreath_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5B00..0x4F5B7C (0x7D bytes), group S37, cdecl: two calls (MagmaBreath_PoolAlloc, Rand): 24 times: a record (0xFF skips): +0x80 Sprite_Current, +1 0, +0xB the number, +9 = (Rand & 1) + MagmaBreath_SpawnDelays[number] + 1 (bytes), Sprite_Current +0xB += 1 (read again after Rand); then +9 8, +1 += 1. Entry 1 of MagmaBreath_Task's table. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5B80
+name = "MagmaBreath_Strike"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5B80..0x4F5BBC (0x3D bytes), group S37, cdecl: two calls: +9 -= 1; at 0 Sound_PlayById(0x101), Battle_SetTargetFlags(byte 0x904B44, 0x10), +1 += 1. Entry 2 of MagmaBreath_Task's table. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5BC0
+name = "MagmaBreathRecord_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5BC0..0x4F5BD1 (0x12 bytes), group S37, cdecl: no calls: jmp [0x65C244 + 4 x byte +1] (MagmaBreathRecord_TaskTable, one entry), unchecked. Called only by MagmaBreath_Task's pool walk. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5BE0
+name = "MagmaBreathRecord_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5BE0..0x4F5C2B (0x4C bytes), group S37, cdecl: four calls and a table call: dword 0x9039D8 (the sprite frame-offset table) 0x8E3580; call [0x65C248 + 4 x byte +2] (MagmaBreathRecord_Steps, four), unchecked; then when byte +0 and +2 are not 0: Sprite_UpdateScreen, MagicFx_PushRecordMatrix, MagmaBreathRecord_DrawGlow, Gte_PopMatrix; 0x9039D8 0x8B3580 either way. Entry 0 of MagmaBreathRecord_TaskTable. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5C30
+name = "MagmaBreathRecord_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5C30..0x4F5E37 (0x208 bytes), group S37, cdecl: five calls (0x446770, Math_Sin, Math_Cos, Sprite_SetAnimation, Math_Ratan2): +9 -= 1; at 0: +8 from the sprite at 0x904B3C (the acting actor's), +0xC 0x20000, +0x10 0, 0x446770(Sprite_Current) turns them; +0x34 / +0x38 the sprite's plus them, +0x3C its + 0x800000; dword 0x903850 = ((+0xB >> 3) + 2) << 4, dword 0x903854 = (((+0xB >> 3) + 2 (+0xB & 7)) & 0xF) << 8; +0xC / +0x10 = Math_Sin / Math_Cos of that angle x the radius (dword, read again) + the owner's +0x34 / +0x38, +0x14 the owner's +0x3C; sprite fields (+0x25 0x1D, +0x26 0xC0, +0x40 / +0x44 0x10000, +0x27 2, +0x28 1, +0x29 4, the rest 0); Sprite_SetAnimation(0); +0x18 = Math_Ratan2(float (+0xC - +0x34), float (+0x10 - +0x38)); +9 3, +0xA 4, +2 += 1. Entry 0 of MagmaBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5E40
+name = "MagmaBreathRecord_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5E40..0x4F5F63 (0x124 bytes), group S37, cdecl: four calls (Sprite_ScriptTick, Math_Ratan2, MagicFx_StepTowardPoint, MagicFx_NearPoint): while +9 is not 0 it goes down and Sprite_ScriptTick runs (answer unread); +0x1C = +0x18; +0x18 = Math_Ratan2(float (+0xC - +0x34), float (+0x10 - +0x38)); MagicFx_StepTowardPoint((+0xC >> 9) - 0x4000, (+0x10 >> 9) - 0x4000, (high word of +0x14 + 0xC0) >> 1, an uninitialised stack word (unread), 0x40); MagicFx_NearPoint(+0xC, +0x10, 0x8000) not 0 (eax tested whole): +2 += 1; else +0x1C = abs((+0x1C & 0xFFF) - (+0x18 & 0xFFF)), and +2 += 1 when it is over 0x600 and under 0xA00. +0xC / +0x10 / +0x14 read once before the calls. Entry 1 of MagmaBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5F70
+name = "MagmaBreathRecord_Land"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5F70..0x4F5FDD (0x6E bytes), group S37, cdecl: one call: +0x34 / +0x38 / +0x3C = +0xC / +0x10 / +0x14; +0x25 0x1D, +0x26 0, +0x27 0x1A, +0x2B 1; Sprite_SetAnimation(1); +9 0xE, +0xA 0xC, +2 += 1. Entry 2 of MagmaBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F5FE0
+name = "MagmaBreathRecord_Burn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F5FE0..0x4F601E (0x3F bytes), group S37, cdecl: one call and a tail jmp (MagicFx_FreeCurrentRecord): Sprite_ScriptTickOnce (answer unread); +0xA -= 1 unless 0; +9 -= 1; at 0 the owner's +0xB -= 1 and jmp MagicFx_FreeCurrentRecord. Entry 3 of MagmaBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6020
+name = "MagicFx_PushRecordMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6020..0x4F60C3 (0xA4 bytes), group S37, cdecl: six calls: Gte_PushMatrix; the SVECTOR ((+0x34 >> 9) - 0x4000, (+0x38 >> 9) - 0x4000, -(the owner's word +0x3E / 2)) and angles (0, 0, 0) on the stack; Gte_RotTrans (a third, unread argument pushed), Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Byte-for-byte the body of MAGIC046/047's ElemBreathMote_PushMatrix but for the order of three stores. Called by MagmaBreathRecord_Run, GeoBreathChild_Run and MAGIC053's LavaburstChild_Run (group S10). Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F60D0
+name = "MagmaBreathRecord_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F60D0..0x4F622E (0x15F bytes), group S37, cdecl: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x55, 0), Gfx_CommitPrim(5, 0xC); dword 0x903850 = +0xA << 4; 16 POLY_G3 fanned from the origin (Prim_VertexScratch: origin, the last rim point, the next at 0x100 k: Math_Sin / Math_Cos x the dword, sar 12), Gpu_SetSemiTrans(1), Gte_RotTransPers3, Gte_PrimDepths3_10B, centre colour 0x60, rim 1, Gfx_CommitPrim(5, 0x34). Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6230
+name = "MagmaBreath_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6230..0x4F6286 (0x57 bytes), group S37, cdecl: no calls: the first of the 32 MagmaBreath_Pool records whose +0 lacks bit 0 gets it; its index in al, 0xFF when all are taken (only al is defined). Called by MagmaBreath_Spawn, which tests 0xFF. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6290
+name = "MagicFx_FreeCurrentRecord"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6290..0x4F62BE (0x2F bytes), group S37, cdecl: no calls: bytes +0..+4 of Sprite_Current 0 (Sprite_Current read again for each), al left 0 (no caller reads it). A pool record's free: bit 0 of +0 is the pools' in-use bit (MagmaBreath_PoolAlloc and its twins). The last step of records and children in 22 files (analysis/magic_funcs.tsv), most by a tail jmp; groups C1, C2, S02, S07, S10, S11, S17, S19 hold it as a raw constant. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F62C0
+name = "GeoBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F62C0..0x4F633C (0x7D bytes), group S37, cdecl: one call (0x4F6D90 GeoBreathRecord_Task): a three-entry stack table (GeoBreath_Start, 0x4F9F70 - MAGIC226/227's count-down to target flags 0x10 -, BattleFx_Finish) called by byte +1, unchecked; then the 64 GeoBreath_Pool records walked as MagmaBreath_Task walks its 32. Magic_Rows rows 136 and 146, files 0x2B0 / 0x2B1 = MAGIC220 / MAGIC221.EMI, ability ids 0xDC / 0xDD (Geo Breath / Gaea's Breath read one id down, hypotheses); one code for both, the first function of the extent 0x4F62C0..0x4F71E6. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6340
+name = "GeoBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6340..0x4F6433 (0xF4 bytes), group S37, cdecl: three calls (MagicFx_CenterOnSide, Sound_PlayById, BattleTask_Create): bytes +0..+2 of the 64 pool records 0; the side's centre; +0x34 = Field_Kind2X, +0x38 = Field_Kind2Z; +0xB 0, +9 0x38, +1 += 1; Sound_PlayById(0x100); BattleTask_Create(1, 0x61): +0x80 Sprite_Current, +1 0, Sprite_Current +0xB += 1; Gfx_ClutStrip 0x1A00..0x1AFF and 0x200..0x20F = the source | 0x8000, words 0x1A00 and 0x200 plain, Gfx_ClutStripDirty 1. Entry 0 of GeoBreath_Task's table. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6440
+name = "GeoBreathChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6440..0x4F6451 (0x12 bytes), group S37, cdecl: no calls: jmp [0x65C258 + 4 x byte +1] (GeoBreathChild_TaskTable, one entry), unchecked. The kind-1 task of parameter 0x61. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6460
+name = "GeoBreathChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6460..0x4F64B0 (0x51 bytes), group S37, cdecl: five calls and a table call: 0x9039D8 0x8E3580; call [0x65C25C + 4 x byte +2] (GeoBreathChild_Steps, eight), unchecked; then when bit 0 of +0 is set and +2 is not 0: Sprite_UpdateScreen, MagicFx_PushRecordMatrix, GeoBreathChild_DrawGlow, GeoBreathChild_DrawRing, Gte_PopMatrix; 0x9039D8 0x8B3580 either way. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F64C0
+name = "GeoBreathChild_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F64C0..0x4F65C7 (0x108 bytes), group S37, cdecl: one call: +0x34 / +0x38 the owner's, +0x3C the owner's + 0x1600000; sprite fields (+0x25 0x1D, +0x27 0x1A, +0x28 1, +0x40 / +0x44 0x10000, +0x29 4, the rest 0); Sprite_SetAnimation(0); +0x5D 0x10, +0xB 0, +9 0xA, +0xA 0, +2 += 1. Entry 0 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F65D0
+name = "GeoBreathChild_Swirl"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F65D0..0x4F6611 (0x42 bytes), group S37, cdecl: one call: Sprite_ScriptTickOnce (answer unread); +0xB += 0xC; +9 -= 1; at 0 +9 0x1E, +0xA 3, +2 += 1. Entry 1 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6620
+name = "GeoBreathChild_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6620..0x4F66FE (0xDF bytes), group S37, cdecl: three callees (GeoBreath_PoolAlloc, Sound_PlayById twice): +9 -= 1; at 0 +0xA -= 1: at 0 MapView_Redraw (byte 0x905E69) 0x5D, +9 0x3C, +2 = 4; else 16 records (0xFF skips): +0x80 the owner, +1 0, +0xB the number, the owner's +0xB += 1; Sound_PlayById(0x101) when +0xA is 2; Sound_PlayById(0x102); +0xC 0x800, +9 4, +2 += 1. Entry 2 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6700
+name = "GeoBreathChild_Shake"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6700..0x4F677E (0x7F bytes), group S37, cdecl: no calls: bit 0 of Frame_Counter set: +0x34 = owner +0x34 + +0xC, +0x38 = owner +0x38 - +0xC; clear: the signs swapped; +9 -= 1; at 0 +9 8, +2 -= 1 (back to the burst). Entry 3 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6780
+name = "GeoBreathChild_Quake"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6780..0x4F6879 (0xFA bytes), group S37, cdecl: three callees: the shake; when Frame_Counter & 7 is 0 Sound_PlayById(0x102) and 16 records as the burst; Camera_ShiftX = (+9 & 1) << 4; +9 -= 1; at 0 +9 0x20, +2 += 1. Entry 4 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6880
+name = "GeoBreathChild_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6880..0x4F698D (0x10E bytes), group S37, cdecl: three callees: the shake; every eighth frame the sound and 16 records; Camera_ShiftX = +9 >> 1 when +9 is odd, else 0; +9 -= 1; at 0 Camera_ShiftX 0, +9 8, +2 += 1. Entry 5 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6990
+name = "GeoBreathChild_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6990..0x4F69B8 (0x29 bytes), group S37, cdecl: one call and a tail jmp: +0x5D -= 2 unless 0; Sprite_ScriptTickOnce: al not 0: the owner's +0xB -= 1, jmp BattleTask_FreeCurrent. Entry 7 of GeoBreathChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F69C0
+name = "GeoBreathChild_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F69C0..0x4F6B5E (0x19F bytes), group S37, cdecl: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(5, 0xC); word 0x903850 = byte +0xB, word 0x90385A = the signed byte +0x5D << 2; 64 POLY_G3 fanned from the origin at 0x40 k (the radius word read again after every call), every colour byte the byte 0x90385A, Gfx_CommitPrim(5, 0x34). MAGIC053's LavaburstChild_DrawGlow with its own two words. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6B60
+name = "GeoBreathChild_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6B60..0x4F6D89 (0x22A bytes), group S37, cdecl: Gpu_SetDrawMode(.., 0x55), Gfx_CommitPrim(5, 0xC); words 0x903850 = +0xB, 0x903852 = +0xB << 1, 0x90385A = the signed +0x5D << 2; 64 POLY_G4 at 0x40 k: vertices 0 / 1 on the radius 0x903852 (colour 1), 2 / 3 on 0x903850 (the byte 0x90385A); Gte_RotTransPers4, Gte_PrimDepths4_10B, Gfx_CommitPrim(5, 0x44). Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6D90
+name = "GeoBreathRecord_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6D90..0x4F6DA1 (0x12 bytes), group S37, cdecl: no calls: jmp [0x65C27C + 4 x byte +1] (GeoBreathRecord_TaskTable, one entry), unchecked. Called only by GeoBreath_Task's pool walk. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6DB0
+name = "GeoBreathRecord_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6DB0..0x4F6DE2 (0x33 bytes), group S37, cdecl: a table call and three calls: call [0x65C280 + 4 x byte +2] (GeoBreathRecord_Steps, three), unchecked; when byte +0 and +2 are not 0: MagicFx_PushActorMatrix, GeoBreathRecord_Draw, jmp Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6DF0
+name = "GeoBreathRecord_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6DF0..0x4F6E75 (0x86 bytes), group S37, cdecl: two calls: word 0x903854 = +0xB << 8; +0x34 = owner +0x34 + Math_Sin(it) x 24, +0x38 = owner +0x38 + Math_Cos(the word, read again) x 24, +0x3C the owner's; +9 8, +0xA 0x10, +2 += 1. Entry 0 of GeoBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6E80
+name = "GeoBreathRecord_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6E80..0x4F6EE9 (0x6A bytes), group S37, cdecl: two calls: word 0x903854 = +0xB << 8; the cell +0x34 (its address taken before the call) += Math_Sin x 3, +0x38 += Math_Cos(the word) x 3; +9 -= 1, at 0 +2 += 1. Entry 1 of GeoBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6EF0
+name = "GeoBreathRecord_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6EF0..0x4F6F62 (0x73 bytes), group S37, cdecl: two calls and a tail jmp: as GeoBreathRecord_Fly by x 2; +0xA -= 2; at 0 the owner's +0xB -= 1, jmp MagicFx_FreeCurrentRecord. Entry 2 of GeoBreathRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F6F70
+name = "GeoBreathRecord_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F6F70..0x4F718F (0x220 bytes), group S37, cdecl: Gpu_SetDrawMode(.., 0x35), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); a POLY_FT4 (Gpu_SetSemiTrans 1) of radius word 0x903850 = 0x100 at the angles 0x200, 0x600, 0xE00, 0xA00 (Math_Cos x, Math_Sin y); Gpu_GetTPage(0, 1, 0x340, 0x100) to +0x26, Gpu_GetClut(0, 0x1E2) to +0x16, uv (0,0x80) (0x20,0x80) (0,0xA0) (0x20,0xA0), colour the word 0x90385A = +0xA x 6; Gte_RotTransPers4, Gte_PrimDepths4_10, MapView_LinkPrimAt(.., 2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7190
+name = "GeoBreath_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7190..0x4F71E6 (0x57 bytes), group S37, cdecl: no calls: the first of the 64 GeoBreath_Pool records whose +0 lacks bit 0 gets it; its index in al, 0xFF when all are taken (only al is defined). Called by the child's burst, quake and settle, which test 0xFF. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F71F0
+name = "Combustion_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F71F0..0x4F721D (0x2E bytes), group S37, cdecl: no calls: a three-entry stack table (Combustion_Start, _Wait, BattleFx_Finish) called by byte +1, unchecked. Magic_Rows row 133, file 0x2B2 = MAGIC222.EMI, ability id 0xDE (Combustion read one id down, a hypothesis); the first function of MAGIC222's extent 0x4F71F0..0x4F8638 (0x4F7350 BattleFx_Finish in it was ours before). Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7220
+name = "Combustion_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7220..0x4F7317 (0xF8 bytes), group S37, cdecl: four calls (MagicFx_CenterOnSide, BattleActor_UpdateScreenXY, BattleTask_Create twice): +0xB 0, +9 0x10, +1 += 1; two BattleTask_Create(1, 0x60): +0x80 Sprite_Current, +1 1 then 0, +9 0x10, +0xB += 1 each; Gfx_ClutStrip row 26 whole and 0x200..0x20F from the source | 0x8000, words 0x1A00 / 0x200 plain, dirty. Entry 0 of Combustion_Task's table. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7320
+name = "Combustion_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7320..0x4F734E (0x2F bytes), group S37, cdecl: one call: +9 -= 1; at 0 Sound_PlayById(0x100), +1 += 1. Entry 1 of Combustion_Task's table. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7380
+name = "CombustionChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7380..0x4F7391 (0x12 bytes), group S37, cdecl: no calls: jmp [0x65C28C + 4 x byte +1] (CombustionChild_Kinds, four), unchecked. The kind-1 task of parameter 0x60. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F73A0
+name = "CombustionSprite_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F73A0..0x4F73E1 (0x42 bytes), group S37, cdecl: a table call and two calls: 0x9039D8 0x8E3580; call [0x65C29C + 4 x byte +2] (CombustionSprite_Steps, six), unchecked; when bit 0 of +0 is set and +2 is not 0 BattleActor_UpdateScreenXY, Sprite_UpdateScreen; 0x9039D8 0x8B3580. Entry 0 of CombustionChild_Kinds. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F73F0
+name = "CombustionSprite_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F73F0..0x4F7513 (0x124 bytes), group S37, cdecl: one call: +9 -= 1; at 0 +0x14 0x7800000, +0x20 0x600000, +0x34 / +0x38 the owner's, +0x3C the owner's + +0x14; sprite fields (+0x25 0x1D, +0x27 0x1A, +0x28 1, +0x40 / +0x44 0x10000, +0x48 2, +0x29 4, +0x2B 1, the rest 0); Sprite_SetAnimation(0); +9 0x10, +2 += 1. Entry 0 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7520
+name = "CombustionSprite_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7520..0x4F75D6 (0xB7 bytes), group S37, cdecl: two callees: +0x14 -= +0x20, +0x3C = owner +0x3C + +0x14; +9 -= 1; at 0 Sound_PlayById(0x101), eight BattleTask_Create(1, 0x60), unchecked: +0x80 the owner, +1 2, +0xB the number, the owner's +0xB += 1; Camera_Angles[0] += 0x14; +9 8, +2 += 1. Entry 1 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F75E0
+name = "CombustionSprite_Shake"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F75E0..0x4F7626 (0x47 bytes), group S37, cdecl: no calls: Camera_Angles[0] += 0x14 when +9 is odd, -= 0x14 when even; +9 -= 1; at 0 Camera_Angles[0] 0xFD56, +9 0x16, +2 += 1. Entry 2 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7630
+name = "CombustionSprite_Flash"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7630..0x4F76DC (0xAD bytes), group S37, cdecl: two calls: +9 -= 1; at 0 Sound_PlayById(0x102); BattleTask_Create(1, 0x60): +0x80 the owner, +1 3, the owner's +0xB += 1; +0 |= 0x20, +0x5C 1, +0x5D..+0x5F 0x40, +9 0xC, +2 += 1. Entry 3 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F76E0
+name = "CombustionSprite_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F76E0..0x4F7743 (0x64 bytes), group S37, cdecl: a tail jmp: +0x5D..+0x5F += 0xF0; dword +0x40 += 0x1000, then += 0x800 again (+0x44 untouched); at +0x5D 0x80 the owner's +0xB -= 1, jmp BattleTask_FreeCurrent. Entry 5 of CombustionSprite_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7750
+name = "CombustionGlow_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7750..0x4F7787 (0x38 bytes), group S37, cdecl: a table call and three calls: call [0x65C2B4 + 4 x byte +2] (CombustionGlow_Steps, four), unchecked; when byte +0 and +2 are not 0 MagicFx_PushActorMatrix, CombustionGlow_DrawGlow, CombustionGlow_DrawRing, jmp Gte_PopMatrix. Entry 1 of CombustionChild_Kinds. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7790
+name = "CombustionGlow_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7790..0x4F77F9 (0x6A bytes), group S37, cdecl: no calls: +9 -= 1; at 0 +0x34 / +0x38 / +0x3C the owner's, +0x14 0, +9 0, +0xA 0x26, +2 += 1. Entry 0 of CombustionGlow_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7800
+name = "CombustionGlow_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7800..0x4F7829 (0x2A bytes), group S37, cdecl: no calls: +9 += 1, dword +0x14 += 6; at +9 0x10 +2 += 1. Entry 1 of CombustionGlow_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7830
+name = "CombustionGlow_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7830..0x4F79CD (0x19E bytes), group S37, cdecl: GeoBreathChild_DrawGlow's fan with word 0x903850 = word +0x14 and word 0x90385A = byte +9 << 2. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F79D0
+name = "CombustionGlow_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F79D0..0x4F7BF8 (0x229 bytes), group S37, cdecl: GeoBreathChild_DrawRing's ring with words 0x903850 = word +0x14, 0x903852 = word +0x14 << 1 (16 bits), 0x90385A = byte +9 << 2. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7C00
+name = "CombustionMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7C00..0x4F7C32 (0x33 bytes), group S37, cdecl: a table call and three calls: call [0x65C2C4 + 4 x byte +2] (CombustionMote_Steps, three), unchecked; when byte +0 and +2 are not 0 MagicFx_PushActorMatrix, CombustionMote_Draw, jmp Gte_PopMatrix. Entry 2 of CombustionChild_Kinds. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7C40
+name = "CombustionMote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7C40..0x4F7CDF (0xA0 bytes), group S37, cdecl: three calls: +0xC = (Rand & 7) + 8; word 0x903854 = +0xB << 9; +0x34 = Math_Sin x +0xC + owner +0x34, +0x38 = Math_Cos(the word) x +0xC + owner +0x38 (Sprite_Current and +0xC read after each call); +0x3C the owner's; +9 8, +0xA 0x10, +2 += 1. Entry 0 of CombustionMote_Steps and of MAGIC053's LavaburstRecord_Steps (group S10). Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7CE0
+name = "CombustionMote_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7CE0..0x4F7D66 (0x87 bytes), group S37, cdecl: two calls: +0xC += 1; the orbit as CombustionMote_Start's; +9 -= 1, at 0 +2 += 1. Entry 1 of CombustionMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7D70
+name = "CombustionMote_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7D70..0x4F7E00 (0x91 bytes), group S37, cdecl: two calls and a tail jmp: +0xC += 1; the orbit; +0xA -= 1, at 0 the owner's +0xB -= 1, jmp BattleTask_FreeCurrent. Entry 2 of CombustionMote_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F7E10
+name = "CombustionMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F7E10..0x4F802D (0x21E bytes), group S37, cdecl: GeoBreathRecord_Draw's textured quad with the colour word 0x90385A = +0xA << 3. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F8030
+name = "CombustionFlash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8030..0x4F805D (0x2E bytes), group S37, cdecl: a table call and two calls: call [0x65C2D0 + 4 x byte +2] (CombustionFlash_Steps, five), unchecked; when byte +0 and +2 are not 0 CombustionFlash_Draw, then jmp CombustionFlash_Draw (drawn twice). Entry 3 of CombustionChild_Kinds. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F8060
+name = "CombustionFlash_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8060..0x4F80BB (0x5C bytes), group S37, cdecl: one call: words +0x2E / +0x30 the owner's; Battle_SetTargetFlags(byte 0x904B44, 0x10); +0xB 8, +9 0, +0xA 4, +2 += 1. Entry 0 of CombustionFlash_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F80C0
+name = "CombustionFlash_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F80C0..0x4F80E5 (0x26 bytes), group S37, cdecl: no calls: +0xA -= 1; at 0 +0xA 0x10, +2 += 1. Entry 2 of CombustionFlash_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F80F0
+name = "CombustionFlash_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F80F0..0x4F811A (0x2B bytes), group S37, cdecl: no calls: +0xB += 4; +0xA -= 1, at 0 +2 += 1. Entry 3 of CombustionFlash_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F8120
+name = "CombustionFlash_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8120..0x4F8154 (0x35 bytes), group S37, cdecl: a tail jmp: +0xB += 4; +9 -= 1, at 0 the owner's +0xB -= 1, jmp BattleTask_FreeCurrent. Entry 4 of CombustionFlash_Steps. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[func]]
+pc = 0x4F8160
+name = "CombustionFlash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s37.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F8160..0x4F8638 (0x4D9 bytes), group S37, cdecl: Gpu_SetDrawMode(.., 0x35), Gfx_CommitPrim(2, 0xC); words 0x903850 = +0xB, 0x903852 = +0xB << 1, 0x90385A = +9 x 15, 0x90385C / 0x90385E = +9 << 3; 32 steps of x from the word +0x2E - 0x100 (16 bits, sign-extended each step) by 0x10, the angle a from 0 by 0x40: four POLY_G4 (Gpu_SetSemiTrans 1) in screen space, floats: above the line y (the signed word +0x30) from y to y + (Math_Sin x 0x903850 sar 12) and on to the 0x903852 radius, the same below, the radius words read again after each Math_Sin; Gfx_CommitPrim(2, 0x44) each. The x and y floats kept in its frame across the calls. Fuzz only: no recorded route casts it (docs/magic_s37.md)."
+
+[[data]]
+pc = 0x6B4A60
+name = "MagmaBreath_Pool"
+ctype = "unsigned char"
+count = 4224
+status = "evidence"
+evidence = "read 2026-09-27, group S37: 32 task-like records of 0x84 bytes: MagmaBreath_Start clears +0..+2, MagmaBreath_PoolAlloc takes one by bit 0, MagmaBreath_Task runs each live one as Sprite_Current (+0x80 its owner) through MagmaBreathRecord_Task, MagicFx_FreeCurrentRecord frees it."
+
+[[data]]
+pc = 0x6B5AE0
+name = "GeoBreath_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-27, group S37: 64 task-like records of 0x84 bytes (to 0x6B7BE0): GeoBreath_Start clears +0..+2, GeoBreath_PoolAlloc takes one, GeoBreath_Task walks them through GeoBreathRecord_Task. Follows MagmaBreath_Pool's 0x1080 bytes."
+
+[[data]]
+pc = 0x65C22C
+name = "MagmaBreath_SpawnDelays"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-27, group S37: MagmaBreath_Spawn: byte [0x65C22C + n], n 0..23, each record's first delay less (Rand & 1) + 1."
+
+[[data]]
+pc = 0x65C244
+name = "MagmaBreathRecord_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S37: MagmaBreathRecord_Task's jmp [0x65C244 + 4 x byte +1]: MagmaBreathRecord_Run."
+
+[[data]]
+pc = 0x65C248
+name = "MagmaBreathRecord_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S37: MagmaBreathRecord_Run's call [0x65C248 + 4 x byte +2]: MagmaBreathRecord_Launch, _Fly, _Land, _Burn."
+
+[[data]]
+pc = 0x65C258
+name = "GeoBreathChild_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S37: GeoBreathChild_Task's jmp [0x65C258 + 4 x byte +1]: GeoBreathChild_Run."
+
+[[data]]
+pc = 0x65C25C
+name = "GeoBreathChild_Steps"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S37: GeoBreathChild_Run's call [0x65C25C + 4 x byte +2]: GeoBreathChild_Start, _Swirl, _Burst, _Shake, _Quake, _Settle, BuffRing_Wait (MAGIC082, group S18), GeoBreathChild_End."
+
+[[data]]
+pc = 0x65C27C
+name = "GeoBreathRecord_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S37: GeoBreathRecord_Task's jmp [0x65C27C + 4 x byte +1]: GeoBreathRecord_Run."
+
+[[data]]
+pc = 0x65C280
+name = "GeoBreathRecord_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S37: GeoBreathRecord_Run's call [0x65C280 + 4 x byte +2]: GeoBreathRecord_Start, _Fly, _Fade."
+
+[[data]]
+pc = 0x65C28C
+name = "CombustionChild_Kinds"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S37: CombustionChild_Task's jmp [0x65C28C + 4 x byte +1]: CombustionSprite_Run, CombustionGlow_Run, CombustionMote_Run, CombustionFlash_Run."
+
+[[data]]
+pc = 0x65C29C
+name = "CombustionSprite_Steps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-27, group S37: CombustionSprite_Run's call [0x65C29C + 4 x byte +2]: CombustionSprite_Start, _Fall, _Shake, _Flash, 0x4FA390 (MAGIC226/227), CombustionSprite_Fade."
+
+[[data]]
+pc = 0x65C2B4
+name = "CombustionGlow_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S37: CombustionGlow_Run's call [0x65C2B4 + 4 x byte +2]: CombustionGlow_Start, _Grow, MagicFx_WaitA (group S17), MagicFx_CountDownRelease (group S12)."
+
+[[data]]
+pc = 0x65C2C4
+name = "CombustionMote_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S37: CombustionMote_Run's call [0x65C2C4 + 4 x byte +2]: CombustionMote_Start, _Grow, _Shrink."
+
+[[data]]
+pc = 0x65C2D0
+name = "CombustionFlash_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S37: CombustionFlash_Run's call [0x65C2D0 + 4 x byte +2]: CombustionFlash_Start, MagicFx_CountUp9By2 (group S30), CombustionFlash_Hold, _Spin, _End."
