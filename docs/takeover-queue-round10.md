@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-27) - wave one merged whole: eight groups, 175 functions, 3,510 -> 3,685 ours; wave two to stage
+**Status:** IN PROGRESS (2026-09-27 night) - wave one merged (3,685 ours); wave two staged, eight groups, 419 functions
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -193,7 +193,30 @@ round's end; the two `entries_logic.txt` extents SE corrected
 `consolidate_entries.py`); the fix for `pairs_propagated.json`'s pair of
 `0x5455A0` (a jump-table case, SC3).
 
-## 5. Wave two (to stage)
+## 6. Wave two staged (2026-09-27 night, from the tip after `368b84f`)
+
+Eight groups, one stage each (both harnesses exist). Counts are the
+tools' at this tip (`scenario_rows.py`, `area_rows.py --groups`): starts
+in the band less ours. The fifteen engine callees of section 3 wait for
+wave three; the `Playthrough fixes` commit `368b84f` (the other session's)
+is in the base. Brief `analysis/round10_wave2_brief.md`, group lines
+`analysis/round10_wave2_groups.tsv` (gitignored).
+
+| Group | What | Band | To take | Module |
+|---|---|---|--:|---|
+| CALLS | the chapter call tables' entries, engine-side, shared between chapters | `0x519890..0x51AC50` | 98 | `scena_calls` |
+| SC5 | chapter 5 | `0x546390..0x54A910` | 35 | `scena_sc5` |
+| SC6 | chapter 6 | `0x54A910..0x54F080` | 48 | `scena_sc6` |
+| SC7 | chapters 7 and 8, with 6's shared tail | `0x54F080..0x553B30` | 52 | `scena_sc7` |
+| SC9a | chapter 9's first block | `0x553B30..0x557170` | 22 | `scena_sc9a` |
+| AR0A | world 0: areas 0..5, 7..8, 10..13, 15 | `0x401000..0x401B80` | 48 | `area_w0a` |
+| AR0B | world 0: areas 16, 18..26 | `0x401B80..0x403400` | 61 | `area_w0b` |
+| AR0C | world 0: areas 27..29, 32..37 (the combat and world-map routes enter 29 and 33) | `0x403400..0x4053B0` | 55 | `area_w0c` |
+
+419 functions: over the ~350 a usage window held in round nine, so a cut
+mid-wave is expected and resumable (commit early is in the brief).
+
+## 5. Wave two (as listed before staging)
 
 Scenario: **CALLS** (the call tables' block `0x519890..0x51AC50`, 99
 starts, `scenario_rows.py --unit CALLS`), SC5, SC6, SC7, SC9a (plan
