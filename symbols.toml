@@ -37914,3 +37914,579 @@ ctype = "unsigned char"
 count = 32
 status = "evidence"
 evidence = "read 2026-09-27, group S33: AccessionSpark_Run: bytes [0x65BEA0 + 2 x +4] and [+1], the two angle bytes (x 16 a Math_Sin angle) AccessionSpark_Draw starts from; 16 pairs, +4 unchecked (AccessionOrb_Emit gives it +4 and 0xF)."
+
+# --- round nine group S34: MAGIC158, 159, 161, 162, 166 (docs/magic_s34.md) ---
+
+[[func]]
+pc = 0x4ED670
+name = "Charm_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED670..0x4ED6E4 (0x75 bytes), group S34: a two-entry stack table (Charm_Start, BattleFx_Finish) by byte +1, unchecked; then Sprite_Current and 0x93B940 kept, and for each of the 64 records of Charm_Pool with bit 0 of +0: Sprite_Current the record, 0x93B940 its +0x80, CharmMote_Task (a direct call), both put back. Magic_Rows row 89, file 0x2A2 = MAGIC158.EMI, ability id 0x9E (Charm read one id down, a hypothesis); the first function of MAGIC158's extent 0x4ED670..0x4EDDC6. Fuzz only: no recorded route casts it (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4ED6F0
+name = "Charm_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED6F0..0x4ED7C3 (0xD4 bytes), group S34: three calls: Charm_Pool's +0..+2 cleared; the task's +8 and +0x34/+0x38/+0x3C from the source sprite 0x904B4C; +0xB 0, +1 on; sixteen times Charm_PoolAlloc, and for an index not 0xFF: the record's +0x80 Sprite_Current, +0 or 0x41, +0xB the loop count, +9 (Rand & 0x1F) + 1, Sprite_Current's +0xB up; Sound_PlayById(0x100). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4ED7D0
+name = "CharmMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED7D0..0x4ED7E1 (0x12 bytes), group S34: jmp [CharmMote_TaskTable + 4 x byte +1], unchecked. Called by Charm_Task for each live Charm_Pool record. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4ED7F0
+name = "CharmMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED7F0..0x4ED822 (0x33 bytes), group S34: call [CharmMote_Steps + 4 x byte +2], unchecked; then, Sprite_Current read again, while +0 and +2 are not 0: CharmMote_PushMatrix, CharmMote_Draw, and a tail jmp to Gte_PopMatrix. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4ED830
+name = "CharmMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED830..0x4ED93E (0x10F bytes), group S34: three calls: +9 down; at 0 word 0x903854 = (+0xB & 0xF) sl 8; +0x34 = owner +0x34 + (Math_Sin sl 15 sar 12), +0x38 likewise with Math_Cos of the word read back, +0x3C = owner +0x3C + 0x4800000; Rand & 7 picks a triple of Charm_Colours into +0x5D..+0x5F; +0x14 0x80, +0x20 -16, +9 8, +0xA 2, +2 on. Owner and Sprite_Current read again after each call. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4ED940
+name = "CharmMote_ToOwner"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED940..0x4ED987 (0x48 bytes), group S34: no calls: word +0x3E down by 0x60; +9 up unless 0x10; +0xA up by 2 unless 0x10; +2 on when word +0x3E equals the owner's. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4ED990
+name = "CharmMote_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4ED990..0x4EDA54 (0xC5 bytes), group S34: two calls: word 0x903854 = (+0xB & 0xF) sl 8; +0x34 (the pointer taken before the call) += Math_Sin sl 12 sar 12, +0x38 likewise with Math_Cos of the word read back; +0x14 += +0x20, word +0x3E += word +0x14; +0xA down, at 0 the owner's +0xB down and +0..+4 cleared. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDA60
+name = "CharmMote_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDA60..0x4EDB27 (0xC8 bytes), group S34: six calls: Gte_PushMatrix; the angles (0x400, 0xE00, (Frame_Counter's low byte & 0x1F) sl 7, inverted first when bit 0 of +0xB is set); the vector ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(s16 +0x3E / 2)) through Gte_RotTrans into the matrix's translation, Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Called by CharmMote_Run and MonopolizeMote_Run. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDB30
+name = "CharmMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDB30..0x4EDD60 (0x231 bytes), group S34: thirteen calls: Gpu_SetDrawMode tpage 0x35 and MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); words 0x903850 +9 x 2, 52 +9 x 4, 56/58/5A the signed +0x5D/+0x5E/+0x5F x +0xA; for i = 0, 2 .. 8: a semi-transparent POLY_F4 (Gpu_SetPolyF4) through the centre and the points at angles 0x199 (i + 1) (radius word 52), 0x199 i and 0x199 (i + 2) (0 for i = 8, radius word 50), Gte_RotTransPers4 at +8/+0x14/+0x20/+0x2C, Gte_PrimDepths4_0C, colour bytes 56/58/5A, MapView_LinkPrimAt(.., 2, 0x38). Called by CharmMote_Run and MonopolizeMote_Run. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDD70
+name = "Charm_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDD70..0x4EDDC6 (0x57 bytes), group S34: no calls: the first of Charm_Pool's 64 records whose +0 lacks bit 0 gets it; its index in al, 0xFF when all are taken (only al is defined). Called by Charm_Start, which tests 0xFF. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDDD0
+name = "Magic159_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDDD0..0x4EDDF5 (0x26 bytes), group S34: a two-entry stack table (Magic159_Start, BattleFx_Finish) by byte +1, unchecked. Magic_Rows row 120, file 0x2A3 = MAGIC159.EMI, ability id 0x9F (no English label one id down); the first function of MAGIC159's extent 0x4EDDD0..0x4EE2D7. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDE00
+name = "Magic159_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDE00..0x4EDEBB (0xBC bytes), group S34: three calls: +0x34/+0x38/+0x3C from the source sprite 0x904B4C, +0xB 0, +1 on; BattleTask_Create(1, 0x58), its slot unchecked: +0x80 Sprite_Current (read after the call), +1 0, +9 8, Sprite_Current's +0xB up; Gfx_ClutStrip row 26 (0x812980, 0x100 words) from Gfx_ClutStripSource or 0x8000, Gfx_ClutStripDirty 1; Battle_SetTargetFlags(target, 0x10); Sound_PlayById(0x100). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDEC0
+name = "Magic159Child_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDEC0..0x4EDED1 (0x12 bytes), group S34: jmp [Magic159Child_TaskTable + 4 x byte +1], unchecked. The kind-1 task of parameter 0x58 (battle_fx_tasks.cpp's table). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDEE0
+name = "Magic159Child_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDEE0..0x4EDF21 (0x42 bytes), group S34: call [Magic159Child_Steps + 4 x byte +2], unchecked; then while +0 and +2 are not 0: BattleActor_UpdateScreenXY, word +0x2E up by 8, word +0x30 down by 0x10, and a tail jmp to Magic159Child_Draw. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDF30
+name = "Magic159Child_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDF30..0x4EDF92 (0x63 bytes), group S34: no calls: +9 down; at 0 +0x34/+0x38/+0x3C from the owner, +9 0x10, +0xA 0, +2 on. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDFA0
+name = "Magic159Child_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDFA0..0x4EDFC9 (0x2A bytes), group S34: no calls: +9 up, +0xA up by 2, at 0x10 +2 on. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDFD0
+name = "Magic159Child_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDFD0..0x4EDFEB (0x1C bytes), group S34: no calls: +9 up, above 0x20 (unsigned) +2 on. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EDFF0
+name = "Magic159Child_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EDFF0..0x4EE024 (0x35 bytes), group S34: +9 up, +0xA down by 2; at 0 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE030
+name = "Magic159Child_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE030..0x4EE2D7 (0x2A8 bytes), group S34: fifteen calls: Gpu_SetDrawMode tpage 0x35 and MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); words 0x903850 +9 x 2, 52 +0xA x 8, 54 +0xA; a semi-transparent POLY_GT4 whose four corners are the screen point (s16 +0x2E, +0x30) plus Math_Cos / Math_Sin of 0xE00, 0xA00, 0x200, 0x600 x word 50 sar 12, stored as floats (fild / fstp) at +8, +0x1C, +0x30, +0x44; Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), uv (8, 8), (0x57, 8), (8, 0x48), (0x57, 0x48); shades byte 52 on the first two corners and 54 on the last two; MapView_LinkPrimAt(.., 2, 0x54). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE2E0
+name = "TimedBlow_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE2E0..0x4EE30D (0x2E bytes), group S34: a three-entry stack table (TimedBlow_Start, TimedBlow_Wait, MagicFx_DoneAndFree) by byte +1, unchecked. Magic_Rows row 111, file 0x2A4 = MAGIC161.EMI, ability id 0xA1 (Timed Blow read one id down, a hypothesis); the first function of MAGIC161's extent 0x4EE2E0..0x4EE6BC. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE310
+name = "TimedBlow_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE310..0x4EE426 (0x117 bytes), group S34: two calls: +8 and +0x34/+0x38/+0x3C from the owner, +0xB 0, +1 on; BattleActor_SetAnimation(0xC, 2); BattleTask_Create(1, 0x54), its slot unchecked, filled by rep movsd with the first 0x80 bytes of the acting actor's record (byte 0x904B34: ObjTrio + 0x14C i for 0..2, else the enemy record 0x93B960 + 0x128 (i - 3), unchecked); its +0x80 Sprite_Current, +1 / +2 0, +6 1, +5 0x54; Sprite_Current's +0xB up; the owner's +0 or 0x40. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE430
+name = "TimedBlow_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE430..0x4EE458 (0x29 bytes), group S34: once +0xB is 0: the owner's +0 and 0xBF, BattleActor_SetAnimation(0x18, 0), +1 on. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE460
+name = "TimedBlowCopy_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE460..0x4EE471 (0x12 bytes), group S34: jmp [TimedBlowCopy_TaskTable + 4 x byte +1], unchecked. The kind-1 task of parameter 0x54 (battle_fx_tasks.cpp's table). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE480
+name = "TimedBlowCopy_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE480..0x4EE4D3 (0x54 bytes), group S34: a five-entry stack table (BattleFx_SetSize, TimedBlowCopy_Strike, TimedBlowCopy_Flash, BattleFx_ScriptToEnd, BattleFx_FreeTask) by byte +2, unchecked; Sprite_UpdateScreen while +0 and +2 are not 0. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE4E0
+name = "TimedBlowCopy_Strike"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE4E0..0x4EE51E (0x3F bytes), group S34: three calls: Sprite_ScriptTickOnce (its answer unread); +9 down; at 0 BattleActor_PlaySound(2, 4), Battle_SetTargetFlag40(target), +2 on. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE520
+name = "TimedBlowCopy_Flash"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE520..0x4EE552 (0x33 bytes), group S34: at +9 0x10 Sound_PlayById(0x100) and +2 on, else +9 up by 4; TimedBlow_DrawFlash; a tail jmp to Sprite_ScriptTickOnce. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE560
+name = "BattleFx_ScriptToEnd"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE560..0x4EE57E (0x1F bytes), group S34: Sprite_ScriptTickOnce; when al is not 0 the owner's +0xB down and +2 on. A step of eleven files (analysis/magic_funcs.tsv), among them MAGIC004's ElemStrikeCopy_Run (group S02 calls it by address). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE580
+name = "TimedBlow_DrawFlash"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE580..0x4EE6BC (0x13D bytes), group S34: ten calls: Gpu_SetDrawMode tpage 0x35 and Gfx_CommitPrim(1, 0xC); two semi-transparent POLY_G4 (Gpu_SetPolyG4) with float corners (0, 0)..(319, 120) and (0, 120)..(319, 359), shaded (0xC0, 0x60, 0x60) on the outer edge and (+9 x 0xC, +9 x 6, +9 x 6) (bytes) on the shared edge, each Gfx_CommitPrim(1, 0x44); a closing Gpu_SetDrawMode tpage 0x15, Gfx_CommitPrim(1, 0xC). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE6C0
+name = "Transfer_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE6C0..0x4EE740 (0x81 bytes), group S34: a six-entry stack table (Transfer_Start, BattleFx_TintActor, BattleFx_Brighten, BattleFx_WaitStep4, Sparkle_End, BattleFx_Finish) by byte +1, unchecked; then 0x93B940 kept, and for each of the 128 records of Transfer_Pool with bit 0 of +0: TransferMote_Current the record, 0x93B940 its +0x28, TransferMote_Task (a direct call), 0x93B940 put back (the current pointer is not). Magic_Rows row 116, file 0x2A5 = MAGIC162.EMI, ability id 0xA2 (Transfer read one id down, a hypothesis); the first function of MAGIC162's extent 0x4EE6C0..0x4EF20E. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE750
+name = "Transfer_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE750..0x4EE898 (0x149 bytes), group S34: four calls: Transfer_Pool's +0..+2 cleared; +4 4; +8 and +0x34/+0x38/+0x3C from the source sprite; BattleActor_UpdateScreenXY; +0xB 0, +9 8, +0xA 0, +1 on; Sound_PlayById(0x100); then for i below Transfer_Counts[+4] (read again each time): Transfer_PoolAlloc, and for an index not 0xFF the record's +0x28 Sprite_Current, +1 / +2 0, +3 Rand & 3, +4 the task's +4, +7 i, +5 (i shr 2) x Transfer_Delays[+4] + 1 (bytes), the task's +0xB up. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE8C0
+name = "TransferMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE8C0..0x4EE8D1 (0x12 bytes), group S34: jmp [TransferMote_TaskTable + 4 x byte +1 of the record TransferMote_Current points at], unchecked. Called by Transfer_Task for each live record. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE8E0
+name = "TransferMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE8E0..0x4EE96E (0x8F bytes), group S34: a three-entry stack table (TransferMote_Start, TransferMote_Rise, TransferMote_Fade) by the current record's +2, unchecked; then, the record read again, while bit 0 of +0 and +2 are set: TransferMote_DrawStar, and when +0xC & 3 is not 0 TransferMote_DrawRays(Frame_Counter shr 1, +6) and TransferMote_DrawForks((Frame_Counter shr 1) + 4, (+6 shr 1) + +6). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EE970
+name = "TransferMote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EE970..0x4EEAD0 (0x161 bytes), group S34: six Rand calls: the current record's +5 down; at 0 its +0x14/+0x18/+0x1C from the owner's +0x34/+0x38/+0x3C and words +0x20/+0x22 from the owner's +0x2E/+0x30; word +0x20 moved by TransferMote_Offsets[+7 & 0x1F] x minus Rand & 7 when that is negative, else plus it; word +0x22 less (y + Rand & 7); word +8 = +0x20; word +0xA Rand & 1; word +0xC Rand; +7 (Rand & 6) + Transfer_Rise[+4]; +5 0x10, +6 0, +2 on. The record pointer read again after every call. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EEAE0
+name = "TransferMote_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EEAE0..0x4EEB4B (0x6C bytes), group S34: one call: the current record's word +0xC up; word 0x903856 = (+0xC & 0x3F) sl 6; word +0x20 = word +8 + (Math_Sin x 24 sar 12); word +0x22 += word +0xA; +6 up, at +7 +2 on. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EEB50
+name = "TransferMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EEB50..0x4EEBD4 (0x85 bytes), group S34: two calls: TransferMote_Rise's sway; when Frame_Counter & 3 is 0 +6 down; +5 down, at 0 the owner's +0xB down and a tail jmp to TransferMote_Free. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EEBE0
+name = "TransferMote_DrawRays"
+ret = "void"
+params = "unsigned a1, unsigned a2"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EEBE0..0x4EED64 (0x185 bytes), group S34: seven calls: words 0x903850/52 the current record's +0x20/+0x22; Gpu_SetDrawMode tpage 0x35 and MapView_LinkPrimAt(+0x14, +0x18, 2, 0xC); words 58/5A/5C +5 x 6; for k from a1 and 0xFFFF while k < that + 0x20, by 8: a semi-transparent LINE_G2 (Gpu_SetLineG2) from the point to Math_Cos / Math_Sin of ((k & 0x1F) sl 7, kept in word 56) x (a2 and 0xFFFF) sar 12 from it, floats; shades bytes 58/5A/5C then 1; MapView_LinkPrimAt(.., 2, 0x34). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EED70
+name = "TransferMote_DrawForks"
+ret = "void"
+params = "unsigned a1, unsigned a2"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EED70..0x4EEF5C (0x1ED bytes), group S34: nine calls: TransferMote_DrawRays's head; for k from a1 and 0xFFFF while k < that + 0x20, by 8: a semi-transparent LINE_G3 (Gpu_SetLineG3) from the point through the points at (a2 and 0xFFFF) shr 1 and a2 along the angle (k & 0x1F) sl 7, floats; shades 1, bytes 58/5A/5C, 1; MapView_LinkPrimAt(.., 2, 0x34). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EEF60
+name = "TransferMote_DrawStar"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EEF60..0x4EF18E (0x22F bytes), group S34: ten calls: Gpu_SetDrawMode tpage 0x35 and MapView_LinkPrimAt(+0x14, +0x18, 2, 0xC); word 0x903854 = (Rand & 3) + +6, words 50/52 +0x20/+0x22, 58/5A/5C TransferMote_Colours[(+4 x 4 + +3) x 3 + 0..2] x +5, 5E +5; for the angles 0, 0x200 .. 0xE00: a semi-transparent POLY_G3 (Gpu_SetPolyG3) from the point to Math_Sin / Math_Cos of the angle and the next x word 54 sar 12 (x from the sine, y from the cosine), floats; shades bytes 58/5A/5C at the centre and 5E at the rim; MapView_LinkPrimAt(.., 2, 0x34). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF190
+name = "Transfer_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF190..0x4EF1D9 (0x4A bytes), group S34: no calls: the first of Transfer_Pool's 128 records (0x2C bytes) whose +0 lacks bit 0 gets it; its index in al, 0xFF when all are taken. Called by Transfer_Start, which tests 0xFF. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF1E0
+name = "TransferMote_Free"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF1E0..0x4EF20E (0x2F bytes), group S34: no calls: the current record's +0..+4 cleared (the pointer read again for each). TransferMote_Fade's tail jmp. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF210
+name = "Monopolize_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF210..0x4EF284 (0x75 bytes), group S34: Charm_Task's shape: a two-entry stack table (Monopolize_Start, BattleFx_Finish) by byte +1, unchecked; then Monopolize_Pool's 64 records walked through MonopolizeMote_Task. Magic_Rows row 90, file 0x2A6 = MAGIC166.EMI, ability id 0xA6 (Monopolize read one id down, a hypothesis); the first function of MAGIC166's extent 0x4EF210..0x4EF616. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF290
+name = "Monopolize_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF290..0x4EF363 (0xD4 bytes), group S34: Charm_Start's shape on Monopolize_Pool with 32 motes (Monopolize_PoolAlloc). Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF370
+name = "MonopolizeMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF370..0x4EF381 (0x12 bytes), group S34: jmp [MonopolizeMote_TaskTable + 4 x byte +1], unchecked. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF390
+name = "MonopolizeMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF390..0x4EF3C2 (0x33 bytes), group S34: CharmMote_Run's shape: call [MonopolizeMote_Steps + 4 x byte +2], unchecked; while +0 and +2 are not 0 MAGIC158's CharmMote_PushMatrix and CharmMote_Draw and a tail jmp to Gte_PopMatrix. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF3D0
+name = "MonopolizeMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF3D0..0x4EF4D8 (0x109 bytes), group S34: CharmMote_Launch's shape with the owner's +0x3C unchanged, Monopolize_Colours, +0x20 -8, +9 1, +0xA 0x10. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF4E0
+name = "MonopolizeMote_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF4E0..0x4EF5B2 (0xD3 bytes), group S34: CharmMote_Fall's spiral at (+0xB & 0x1F) sl 7; then +9 up until 0x10; at 0x10 +0xA down, at 0 the owner's +0xB down and +0..+4 cleared. Fuzz only (docs/magic_s34.md)."
+
+[[func]]
+pc = 0x4EF5C0
+name = "Monopolize_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s34.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF5C0..0x4EF616 (0x57 bytes), group S34: Charm_PoolAlloc's shape on Monopolize_Pool. Called by Monopolize_Start, which tests 0xFF. Fuzz only (docs/magic_s34.md)."
+
+[[data]]
+pc = 0x6A9108
+name = "Charm_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-27, group S34: 64 task-like records of 0x84 bytes: Charm_Start clears +0..+2, Charm_PoolAlloc takes one by bit 0, Charm_Task runs each live one as Sprite_Current (+0x80 its owner) through CharmMote_Task. Ends where Transfer_Pool starts."
+
+[[data]]
+pc = 0x6AB208
+name = "Transfer_Pool"
+ctype = "unsigned char"
+count = 5632
+status = "evidence"
+evidence = "read 2026-09-27, group S34: 128 records of 0x2C bytes (+0x28 the owner): Transfer_Start clears +0..+2, Transfer_PoolAlloc takes one by bit 0, Transfer_Task runs each live one through TransferMote_Task with TransferMote_Current pointing at it."
+
+[[data]]
+pc = 0x6AC808
+name = "TransferMote_Current"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-27, group S34: the Transfer_Pool record being run: set by Transfer_Task's walk, read (again after every call) by every TransferMote_ function in place of Sprite_Current."
+
+[[data]]
+pc = 0x6AC810
+name = "Monopolize_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-27, group S34: Charm_Pool's twin for MAGIC166: 64 records of 0x84 bytes, cleared by Monopolize_Start, taken by Monopolize_PoolAlloc, walked by Monopolize_Task."
+
+[[data]]
+pc = 0x65BF00
+name = "Charm_Colours"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-27, group S34: CharmMote_Launch copies triple Rand & 7 into +0x5D..+0x5F, which CharmMote_Draw multiplies by +0xA as signed bytes. Eight triples to CharmMote_TaskTable."
+
+[[data]]
+pc = 0x65BF18
+name = "CharmMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S34: CharmMote_Task's jmp [0x65BF18 + 4 x byte +1]: CharmMote_Run."
+
+[[data]]
+pc = 0x65BF1C
+name = "CharmMote_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S34: CharmMote_Run's call [0x65BF1C + 4 x byte +2]: CharmMote_Launch, _ToOwner, _Fall. MAGIC159's table follows."
+
+[[data]]
+pc = 0x65BF28
+name = "Magic159Child_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S34: Magic159Child_Task's jmp [0x65BF28 + 4 x byte +1]: Magic159Child_Run."
+
+[[data]]
+pc = 0x65BF2C
+name = "Magic159Child_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S34: Magic159Child_Run's call [0x65BF2C + 4 x byte +2]: Magic159Child_Wait, _Grow, _Hold, _Fade."
+
+[[data]]
+pc = 0x65BF3C
+name = "TimedBlowCopy_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S34: TimedBlowCopy_Task's jmp [0x65BF3C + 4 x byte +1]: TimedBlowCopy_Run."
+
+[[data]]
+pc = 0x65BF40
+name = "TransferMote_Offsets"
+ctype = "short"
+count = 64
+status = "evidence"
+evidence = "read 2026-09-27, group S34: TransferMote_Start's x / y offset pair [0x65BF40 + 4 x (+7 & 0x1F)], 32 pairs; the x tested for sign. The 0x20 bytes after it (to 0x65BFE0) are read by no function of MAGIC162."
+
+[[data]]
+pc = 0x65BFE0
+name = "TransferMote_Colours"
+ctype = "unsigned char"
+count = 60
+status = "evidence"
+evidence = "read 2026-09-27, group S34: TransferMote_DrawStar's centre shade [0x65BFE0 + (+4 x 4 + +3) x 3 + 0..2], five kinds of four triples to Transfer_Counts."
+
+[[data]]
+pc = 0x65C01C
+name = "Transfer_Counts"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S34: Transfer_Start makes Transfer_Counts[+4] records; +4 is always 4 there. Padded to 8 bytes."
+
+[[data]]
+pc = 0x65C024
+name = "Transfer_Delays"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S34: Transfer_Start's record delay +5 = (i shr 2) x Transfer_Delays[+4] + 1. Padded to 8 bytes."
+
+[[data]]
+pc = 0x65C02C
+name = "Transfer_Rise"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group S34: TransferMote_Start's rise length +7 = (Rand & 6) + Transfer_Rise[+4]. Padded to 8 bytes."
+
+[[data]]
+pc = 0x65C034
+name = "TransferMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S34: TransferMote_Task's jmp [0x65C034 + 4 x byte +1 of the current record]: TransferMote_Run."
+
+[[data]]
+pc = 0x65C038
+name = "Monopolize_Colours"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-27, group S34: MonopolizeMote_Launch's eight triples, as Charm_Colours."
+
+[[data]]
+pc = 0x65C050
+name = "MonopolizeMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S34: MonopolizeMote_Task's jmp [0x65C050 + 4 x byte +1]: MonopolizeMote_Run."
+
+[[data]]
+pc = 0x65C054
+name = "MonopolizeMote_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S34: MonopolizeMote_Run's call [0x65C054 + 4 x byte +2]: MonopolizeMote_Launch, _Fall. MAGIC167's table follows."
