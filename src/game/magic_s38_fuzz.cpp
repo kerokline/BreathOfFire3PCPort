@@ -294,6 +294,11 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     auto* task = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
     mh::Note(task[8], static_cast<std::uint32_t>(Long(task + 0xC)), static_cast<std::uint32_t>(Long(task + 0x10)));
     mh::FillBytes(task + 0xC, 8);
+    // Magic225Shard_Launch reads the actor's sprite 0x904B3C once, before the
+    // turn: a quarter of the time the pointer moves here, so a re-read shows
+    // (control V97 stood on the harness's own disturbance alone).
+    const std::uint32_t r = mh::Noise();
+    if (r % 4 == 0) mh::SetPointer(kActorRecord, mh::SpriteRecord(r >> 8));
     return answer;
 }
 // None free (0xFF) a quarter of the time, for Magic225_Apply only.
@@ -485,12 +490,18 @@ void Seed(unsigned k) {
         break;
     // the counters: at their thresholds
     case kTempest_End: case kMagic225_Apply: if (mh::Often()) sc[0xB] = 0; break;
-    case kTempestGust_Launch: case kMagic225_Spawn: case kMagic225Shard_Launch: case kMagic225Shard_Fall:
+    case kMagic225_Spawn: case kMagic225Shard_Launch: case kMagic225Shard_Fall:
     case kMagicFx_CountDownFlag10: case kMeteorStrikeRock_Shake: case kMeteorStrikeRock_Hide:
     case kMeteorStrikeChip_Launch: case kMeteorStrikeChip_Rise: case kMeteorStrikeTrail_Start:
         Near(sc[9], 1);
         break;
     case kTempestGust_Drift: Near(sc[0xA], 0xB); break;
+    // TempestGust_Launch compares the whole word: 0xDF with a high byte a
+    // third of the time (control T50 stood without it)
+    case kTempestGust_Launch:
+        Near(sc[9], 1);
+        if (mh::Often()) SetWord(mh::Mem(kAbility), 0xDF + 0x100 * (1 + mh::Next() % 0xFF) * (mh::Next() % 3 == 0));
+        break;
     case kTempestGust_Fly: Near(sc[9], 0x12); break;
     case kMagic225Veil_FadeIn: Near(sc[0xA], 0xD); break;
     case kMagic225Veil_WaitBuffs: if (mh::Often()) owner[0xB] = Byte(mh::Next() % 3); break;

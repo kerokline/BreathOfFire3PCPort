@@ -37238,7 +37238,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s38.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27, 0x4F9F70..0x4F9FA2 (0x33 bytes), group S38: +9 down; at 0 Battle_SetTargetFlags(target, 0x10) and +1 on. A stack-table phase of ten overlays (MAGIC053, 118, 129, 130, 132, 223, 226 and others: magic_funcs.tsv); in MAGIC226/227's extent. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
+evidence = "disasm 2026-09-27, 0x4F9F70..0x4F9FA2 (0x33 bytes), group S38: +9 down; at 0 Battle_SetTargetFlags(target, 0x10) and +1 on. A stack-table phase of ten overlays (MAGIC053, 124, 129, 130, 132, 223, 226, 227 and two more: magic_funcs.tsv); in MAGIC226/227's extent. Fuzz only: no recorded route casts it (docs/magic_s38.md)."
 
 [[func]]
 pc = 0x4F9FB0

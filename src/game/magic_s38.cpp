@@ -823,7 +823,7 @@ S38_EXPORT void __cdecl Magic225Shard_Run(void) {
 
 // original 0x4F9AA0: +9 down; at 0 the shard starts at the acting actor's
 // sprite (0x904B3C, read once): its direction; (0x10000, 0) turned by it from
-// the sprite's position, 0x1000000 above it; heading +0x14 Math_Ratan2 toward
+// the sprite's position, +0x3C the sprite's + 0x1000000; heading +0x14 Math_Ratan2 toward
 // the owner (dx, dz as floats), Rand & 0xFF to one side or the other by bit 0
 // of +0xB; its sprite fields (size 0x10000, frame table 0x1D, layer 2, ...);
 // animation 0; speed +0xC 0xC, +9 0x10, +2 on.
@@ -1000,7 +1000,7 @@ S38_EXPORT void __cdecl MeteorStrike_Start(void) {
     Gfx_ClutStripDirty = 1;
 }
 
-// original 0x4F9F70: a phase ten overlays' stack tables hold (MAGIC053, 118,
+// original 0x4F9F70: a phase ten overlays' stack tables hold (MAGIC053, 124,
 // 129, 130, 132, 223, 226 and others): +9 down; at 0 the target flagged 0x10
 // and +1 on.
 S38_EXPORT void __cdecl MagicFx_CountDownFlag10(void) {
@@ -1042,7 +1042,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
 }
 
 // original 0x4FA030: the rock starts at the owner, its direction; lifted by
-// (0x20000, 0) turned and a height 0x9000000 over the owner's; the step
+// (0x20000, 0) turned and a height +0x14 0x9000000 added to the owner's; the step
 // (-0x1000, 0) turned, the fall +0x20 0x300000; its sprite fields (size
 // 0x10000, frame table 0x1D / 0x1A, layer 4, ...); animation 0; +4 0, +0xB 0,
 // +9 0x20, +0xA 0x10, +2 on.
@@ -1439,7 +1439,7 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Run(void) {
 }
 
 // original 0x4FABB0: +9 down; at 0 the trail starts at the owner (the rock):
-// its direction and position, 0x3000000 below its height; the rise +0x14
+// its direction and position, its height - 0x3000000; the step +0x14
 // 0x60000; +9 8, +0xA 0x10, +2 on.
 S38_EXPORT void __cdecl MeteorStrikeTrail_Start(void) {
     Dec(Sc()[9]);
@@ -1454,7 +1454,7 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Start(void) {
     Inc(Sc()[2]);
 }
 
-// The trail kept under the rock, rising by +0x14 a frame.
+// The trail at the rock's x / z, its height +0x3C down by +0x14 a frame.
 void TrailFollow() {
     SetLong(Sc() + 0x34, Long(Owner() + 0x34));
     SetLong(Sc() + 0x38, Long(Owner() + 0x38));
@@ -1462,14 +1462,14 @@ void TrailFollow() {
     AddLong(s + 0x3C, 0u - static_cast<std::uint32_t>(Long(s + 0x14)));
 }
 
-// original 0x4FAC40: kept under the rock, rising; +9 up; at 0x18 +2 on.
+// original 0x4FAC40: at the rock, its height down by +0x14; +9 up; at 0x18 +2 on.
 S38_EXPORT void __cdecl MeteorStrikeTrail_Follow(void) {
     TrailFollow();
     Inc(Sc()[9]);
     if (Sc()[9] == 0x18) Inc(Sc()[2]);
 }
 
-// original 0x4FAC90: +9 up, +0xA down by 2; kept under the rock, rising; at
+// original 0x4FAC90: +9 up, +0xA down by 2; at the rock, its height down by +0x14; at
 // +0xA 0 the owner's trail count +4 down and MAGIC219's record free (a tail
 // jmp).
 S38_EXPORT void __cdecl MeteorStrikeTrail_Fade(void) {
