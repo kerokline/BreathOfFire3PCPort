@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-27) - 61 functions ours
 (`src/game/area_w0b.cpp`, shadow name `area_w0b`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-0 mismatches in 256,000 rounds; controls in section 13. Fuzz only: no
+0 mismatches in 256,000 rounds; 94 controls planted, 94 refused by a count (section 13). Fuzz only: no
 recorded route enters any of the ten areas (section 12). No divergence.
 
 Group AR0B of round ten's second wave
@@ -322,12 +322,14 @@ shows; areas 25 and 26 `Effect_Objects`' first eight records with
 0xFE..0x02` as area 11. The choice byte `0x7DEE67` 0, 1, 2, `0xFF`, `0x80`,
 `0x7F`, `0x81`.
 
-**Result (in this worktree):** 0 mismatches in every run; area 16 100,000
-rounds, 520,305 calls; 18 12,000 / 32,000; 19 12,000 / 4,000; 20 8,000 /
-19,370; 21 12,000 / 4,285; 22 16,000 / 16,000; 23 20,000 / 32,000; 24 4,000
-/ 0; 25 4,000 / 3,044; 26 60,000 / 67,530. Every state table entry reached
-(the plate's five 758..851 times, the frame's, box's and records' 971..5,021).
-`BOF3X_SHADOW='*'`: section 13.
+**Result (in this worktree):** 0 mismatches in every run; rounds / calls to
+the stand-ins: area 16 100,000 / 517,441; 18 12,000 / 32,000; 19 12,000 /
+4,000; 20 8,000 / 19,134; 21 12,000 / 4,209; 22 16,000 / 16,000; 23 20,000 /
+32,000; 24 4,000 / 0; 25 4,000 / 3,027; 26 60,000 / 67,557 (the ten runs
+share the harness's random stream, so a change to one group moves the next
+groups' counts). Every state-table entry reached (the plate's five 750..850
+times each, the frame's, box's and records' 950..4,985). `BOF3X_SHADOW='*'`:
+exit 0, 352 self-test lines, no mismatch, `inject: 3745 ours`.
 
 ## 12. What reaches it, defects, calls across groups
 
@@ -364,4 +366,118 @@ rounds, 520,305 calls; 18 12,000 / 32,000; 19 12,000 / 4,000; 20 8,000 /
 
 ## 13. Controls
 
-(Filled in by the controls run.)
+Planted one at a time in `area_w0b.cpp` by a script (the scratch
+`controls.py`, not committed): each anchored on a string the file holds
+once; plant, rebuild (checking `area_w0b.cpp` recompiled), run
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w0b`, restore; after the last, a
+rebuild and a clean run (exit 0, 0 mismatches). **94 planted, 94 refused by
+a count** (exit 3), at least one per function. One stood on the first run:
+P10 (the hook's cell words not read again after `AreaMap_ByteAt`) - no
+disturbance reached the leader's cell words between the call and the
+re-read; the fuzz's `disturb` now moves them and its `settle` re-plants their
+record with an id that follows the words, and P10 is refused (4 rounds, the
+thinnest). X3 (the second key over seven entries) was refused in 1 round
+until the seed learnt a button word only the eighth entry answers (1,431).
+The area-16 set was run again after each fuzz change (the table's counts
+are the last run's; areas 18..26 from the first).
+
+| # | planted | refused in rounds (of 4,000; area 20 of 8,000) |
+|---|---|---|
+| P1 | PlaceMessage: state 1 handled as 2 | PlaceMessage 725 |
+| P2 | PlaceMessage: the list message set + 0x17 | PlaceMessage 806 |
+| P3 | PlaceMessage: Cond_ByteFA zero-extended | PlaceMessage 75 |
+| P4 | PlaceMessage: an unseen name 0x3E in its second dword | PlaceMessage 588 |
+| P5 | PlaceMessage: the fixed name for item 0x17 | PlaceMessage 102 |
+| P6 | PlaceMessage: the rows counted in twos | PlaceMessage 213 |
+| P7 | PlaceMessage: the held byte of the next item | PlaceMessage 572 |
+| P8 | PlaceMessage: the state not read again after the call | PlaceMessage 13 |
+| P9 | PlaceMessage: 0x9039F5 set 1 on leaving | PlaceMessage 457 |
+| P10 | PlaceMessage: the cell words not read again after the call | PlaceMessage 4 (stood on the first run; refused after the fuzz was strengthened) |
+| R1 | PlateRun: kind 1 on 0xA2 | PlateRun 1268 |
+| R2 | PlateRun: Field_ScriptFlags2 bit 11 | PlateRun 1318 |
+| R3 | PlateRun: the next state entry | PlateRun 4000 |
+| S1 | PlateStart: +0x24 = 0x81 | PlateStart 4000 |
+| S2 | PlateStart: bank 0xE | PlateStart 4000 |
+| W1 | PlateShow: kind 2 animation 2 | PlateShow 356 |
+| W2 | PlateShow: +0x18 with bit 16 | PlateShow 975 |
+| G1 | PlateGrow: step 0x1000 | PlateGrow 3999 |
+| H1 | PlateHold: the place test for kind 2 | PlateHold 458 |
+| K1 | PlateShrink: released on Field_Request 4 | PlateShrink 259 |
+| D1 | HudRun: the other entry | HudRun 4000 |
+| D2 | HudFrame: the box before the frame | HudFrame 4000 |
+| D3 | FrameStep: the neighbour entry | FrameStep 4000 |
+| F1 | FrameSlideIn: above 0x10 | FrameSlideIn 402 |
+| F2 | FrameHold: the mode byte makes state 2 | FrameHold 672 |
+| F3 | FrameSlideOut: below -0x30 | FrameSlideOut 66 |
+| D4 | BoxStep: the neighbour entry | BoxStep 4000 |
+| B1 | BoxSlideIn: below 0xC8 | BoxSlideIn 128 |
+| B2 | BoxHold: 0x59 frames | BoxHold 244 |
+| B3 | BoxSlideOut: above 0xF0 | BoxSlideOut 360 |
+| B4 | BoxLeaves: flag bit 9 | BoxSlideIn 951; BoxHold 893 |
+| X1 | DrawFrame: 0xAF withholds legend 1 | DrawFrame 225 |
+| X2 | DrawFrame: party set 0xD | DrawFrame 135 |
+| X3 | DrawFrame: the second key over seven entries | DrawFrame 1431 |
+| X4 | DrawSprite: CLUT 0x7B81 | DrawSprite 4000 |
+| X5 | DrawSprite: semi-transparent by nine bits | DrawSprite 299 |
+| X6 | DrawHud: the cap at x + 0x7F | DrawHud 2917 |
+| X7 | DrawHud: the text at y + 5 | DrawHud 2917 |
+| E1 | Record8Run: the next entry | Record8Run 4000 |
+| E2 | Record8Place: the first nudge sar 12 | Record8Place 1724 |
+| E3 | Record8Place: up for +6 == 2 | Record8Place 1506 |
+| E4 | Record8Place: +0x2A from the animation byte | Record8Place 2966 |
+| E5 | Record4Run: the other entry | Record4Run 4000 |
+| E6 | Record4MarkCell: released on 8 | Record4MarkCell 1128 |
+| E7 | Record4MarkCell: the cell one on | Record4MarkCell 2771 |
+| Z1 | DrawDrift: corner 1 z one on | DrawDrift 1666 |
+| Z2 | DrawDrift: CLUT 0x78CC | DrawDrift 855 |
+| Z3 | DrawDrift: commit 0x44 | DrawDrift 1666 |
+| A1 | Area18 init: 3 for other chapters | SetRecordByte 3095 |
+| A2 | Area18 SkipScript: +0x89 3 holds | SkipScript 1646 |
+| A3 | Area18 ClearCells: row 1 for 2 | ClearCells 4000 |
+| A4 | Area19 CameraOut: 0x900 | CameraOut 4000 |
+| A5 | Area19 CameraIn: 0xF700 | CameraIn 4000 |
+| A6 | Area19 PlaceKind2: 5 | PlaceKind2 4000 |
+| A7 | Area20: a chance taken at <= | PickFieldObject 1080 |
+| A8 | Area20: seven objects cleared | PickFieldObject 7533 |
+| A9 | Area20: the cell by & 3 | PickFieldObject 2794 |
+| A10 | Area20: the edge less 4 | PickFieldObject 8000 |
+| C1 | Area21 Pay: 0x13 is enough | ChoicePay 88 |
+| C2 | Area21 Message: the choice zero-extended | ChoiceMessage 1604 |
+| C3 | Area21 Trade: wraps at 7 | ChoiceTrade 607 |
+| C4 | Area21 Trade: 20 at a counter of 0 | ChoiceTrade 49 |
+| C5 | Area21 Trade: flag 0x13 | ChoiceTrade 672 |
+| C6 | Area22 ChoiceA: no = 0x33 | ChoiceA 392 |
+| C7 | Area22 ChoiceB: yes = 0x3D | ChoiceB 394 |
+| C8 | Area22 ChoiceC: no = 0x15 | ChoiceC 389 |
+| C9 | ChoiceSetVar: "no" on choice 2 | ChoiceA 781; ChoiceB 769; ChoiceC 789 |
+| C10 | Area22 ClearCells: (4, 9) | ClearCells 4000 |
+| C11 | ArmTailOnYes: kind 0xB | ArmTailOnYes 380 |
+| C12 | Area23 ClearCells: (0x49, 0xD) | ClearCells 4000 |
+| C13 | Area23 SetCells: 0xA0 | SetCells 4000 |
+| C14 | Area23 CameraUp: 0x11 | CameraUp 4000 |
+| C15 | Area23 CameraDown: 0x13 | CameraDown 4000 |
+| C16 | Area24: message 0xFFFE | NoMessage 4000 |
+| C17 | Area25: every eighth frame | SpawnEffect 1506 |
+| C18 | Area25: variant 1 at 0x14 | SpawnEffect 408 |
+| C19 | Area25: +0x1C = 7 | SpawnEffect 2680 |
+| C20 | Area26 ChoiceMessage: 0xBD | ChoiceMessage 348 |
+| C21 | Area26 ChoiceSetVar: 0xE | ChoiceSetVar 393 |
+| C22 | Area26 Flag29Set28Clear: the row read once | Flag29Set28Clear 53 |
+| C23 | Area26 Flag29Clear: 0x2A | Flag29Clear 4000 |
+| C24 | Area26 Flag28Set: cleared | Flag28Set 4000 |
+| C25 | Area26 Flag28Clear: 0x27 | Flag28Clear 4000 |
+| C26 | Area26 Flag2BSet: 0x2A | Flag2BSet 4000 |
+| C27 | Area26 Flag2BClear: set | Flag2BClear 4000 |
+| C28 | Area26 Flag2CSet: 0x2D | Flag2CSet 4000 |
+| C29 | Area26 Flag2CClear: the row one on | Flag2CClear 4000 |
+| C30 | Area26 GiveItem: sound 0x107 | GiveItem 4000 |
+| C31 | Area26 ResetCamera: fade 0xB | ResetCamera 4000 |
+| C32 | Area26 SpawnEffect: the slot to the leader, Sprite_Current not read again | SpawnEffect 110 |
+| C33 | Area26 Flag2ESet: 0x2F | Flag2ESet 4000 |
+| C34 | Area26 PlaceEffect: the height << 15 | PlaceEffect 3530 |
+| C35 | Area26 GiveItem: count 2 | GiveItem 4000 |
+| C36 | Area21 Trade: the counter read before the count | ChoiceTrade 672 |
+
+The thinnest: P10 (4), P8 (13, the hook's state not read again - the
+group's `disturb` moving it after `Msg_OpenScript`), C22 (53, the flag row read once -
+`disturb` moving the row pointer), C4 (49), P3 (75), F3 (66), C1 (88).

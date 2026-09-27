@@ -253,6 +253,9 @@ void PlantCell(bool random_place) {
     unsigned char* const last = Mem(at::kA16CellsEnd - 4);
     last[0] = cx[0];
     last[1] = cz[0];
+    // the sentinel's id follows the words, so a search with stale words (or
+    // none again) lands on a record of another set
+    last[3] = Mem(at::kA16NameSets + ((cx[0] ^ cz[0]) % 3) * 5)[0];
     if (random_place) {
         unsigned char* const r = Mem(at::kA16Cells + (ah::Next() % n) * 4);
         r[0] = cx[0];
@@ -263,7 +266,7 @@ void PlantCell(bool random_place) {
 // Area 16's disturbance: the cells its functions read again after a call.
 void Disturb16(U h) {
     const unsigned v = (h >> 8) & 0xFF;
-    switch ((h >> 16) % 10) {
+    switch ((h >> 16) % 12) {
     case 0: Mem(at::kMapMode)[0] = static_cast<unsigned char>(v % 4 == 0 ? v : v % 3); break;
     case 1: Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags ^ (v & 1 ? 4 : 0x1B)); break;
     case 2: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (v & 1 ? 0x100 : 0x4000)); break;
@@ -274,6 +277,7 @@ void Disturb16(U h) {
     case 7: SetWord(Mem(at::kPlace), v); break;
     case 8: Mem(at::kLeaderCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
     case 9: Mem(at::kPartySet)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
+    case 10: case 11: Mem(v & 1 ? at::kLeaderCellWordX : at::kLeaderCellWordZ)[0] = static_cast<unsigned char>(h >> 24); break;   // the settle re-plants its record
     default: break;
     }
 }
@@ -373,7 +377,13 @@ void Seed16(unsigned k) {
         Draw_PassFlags = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 8, 0x10, 0x1B, 4, 0x20, 0xE4) : ah::Next());
         // the button words with a bit of one entry's mask, or none
         if (ah::Often()) SetLong(Mem(at::kButtonMap0), static_cast<std::int32_t>(Word(Mem(at::kA16Buttons + (ah::Next() % 6) * 4)) | (ah::Next() & 0xFFFF0000u)));
-        if (ah::Often()) SetLong(Mem(at::kButtonMap6), static_cast<std::int32_t>(Word(Mem(at::kA16Buttons + (ah::Next() % 8) * 4)) | (ah::Next() & 0xFFFF0000u)));
+        if (ah::Half()) {
+            // a word only the eighth entry answers, when it has such bits
+            U others = 0;
+            for (U e = 0; e < 7; ++e) others |= Word(Mem(at::kA16Buttons + e * 4));
+            const U only = Word(Mem(at::kA16Buttons + 7 * 4)) & ~others;
+            if (only != 0) SetLong(Mem(at::kButtonMap6), static_cast<std::int32_t>(only | (ah::Next() & 0xFFFF0000u)));
+        } else if (ah::Often()) SetLong(Mem(at::kButtonMap6), static_cast<std::int32_t>(Word(Mem(at::kA16Buttons + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % 8) * 4)) | (ah::Next() & 0xFFFF0000u)));
         if (ah::Half()) SetLong(Mem(at::kButtonMap0), 0);
         if (ah::Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x1000u);
         if (ah::Half()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x4000u);
