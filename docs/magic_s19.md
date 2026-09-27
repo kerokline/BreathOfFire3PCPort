@@ -342,6 +342,19 @@ Planting **X2** found that the harness did not compare the two answering
 functions' results. `Shield_Kind` and `ShieldSpark_Alloc` now carry
 `ret_mask 0xFF`. K3 and the re-run X2 were refused with it.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) §8): 8 controls in the affected
+functions, 8 refused.** The one affected clone is `Shield_Start` (its
+`Battle_ActorIsOut` is `kFlag`); its controls S1..S8 were planted again by a
+script (plant, rebuild, recompile checked, `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=magic_s19`, restore, rebuild), rebuilt from the table: S8's
+"from the slot" as the aura task's own `+4` left as it was. All exit 3, in
+`Shield_Start` only: S1 2000, S2 980, S3 948, S4 1011, S5 1649, S6 2000, S7
+2000, S8 1640 (S4, S5 and S8 moved by a few rounds from 1084, 1655 and
+1643: the new `kFlag` draw leaves a different set of actors out). Thinnest
+S3 (948). No fuzz change. Clean self-test after: 0
+mismatches, exit 0; `BOF3X_SHADOW='*'`: exit 0.
+
 ## 7. What nothing reached
 
 No recorded route casts either spell. The combat route's traces enter no
