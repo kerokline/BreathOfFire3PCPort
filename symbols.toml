@@ -47799,3 +47799,370 @@ ctype = "unsigned char"
 count = 16
 status = "evidence"
 evidence = "read 2026-09-27, group SC7: chapter 8's cells in .data: +0 a byte (member 0's +8 by Scena08_EnterArea area 0xC, a sprite index by Scena08_Scene8 step 0x1A; Field_ChangeArea's flags at step 7), +4 / +8 dwords (a point, or Scena08_SpawnPair's two sprite indices), +0xC / +0xD the party-list bytes 0x904065 / 0x904066 kept, +0xF an effect slot waited on (runs 6, 8, 10)."
+
+# ---------------------------------------------------------------------------
+# Round 10 group SC5: scenario chapter 5 (src/game/scena_sc5.cpp, docs/scena_sc5.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x546390
+name = "Scena05_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x546390..0x54639D (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x661034]: Scena05_States (0 0x5646B0 in group SC13s block, 1 Scena05_EnterArea, 2 Scena05_Run), unchecked. Slot 0 of Scena05_Hooks, Field_ModeDispatchs call. The shape of Scena12_Frame; ours aborts outside the three entries."
+
+[[func]]
+pc = 0x5463A0
+name = "Scena05_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x5463A0..0x546AA7 (0x708 bytes): state 1: by Game_AreaNumber, re-read before each test - 0x2D (flag 0x32, not 0x3E: Flags_Set 0x3E, 0x56D6F0), 0x31 (flags 9 / 0xA: run 6, by the selector 0x90412C & 0x7F 1 / 2 / 6 call B 3, call A 5 / 6, Party_DropIn 4), 0x34 (flag 9 clear: counter 2 1..5 through a jump table of 5 at +0x6D8), 0x41 (flags 0xC / 0xD: run 0 or 9), 0x44, 0x45 (music 1 loaded and waited for), 0x4E (counter 2 0..6 through a jump table of 7 at +0x6EC: music 0x4A / 0x4B, runs 0xA / 0xD, call A 5..7, call B 2 / 3, bit 0 of 0x903DAF / 0x903E53, drop-ins), 0x4F, 0x50 (music 0x66 loaded), 0x51 (0x532ED0(0xC9.0, 0xE.0, 0x15)); every exit stores state 2. 65 E8 sites (over the harness limit: the fuzz file copies it). No PSX twin paired."
+
+[[func]]
+pc = 0x546AB0
+name = "Scena05_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x546AB0..0x546ABD (0xE bytes): movsx eax, byte MoveScript_Var7 / jmp [eax*4 + 0x661040]: Scena05_Runs (23 entries), unchecked. State 2. Ours aborts outside the table."
+
+[[func]]
+pc = 0x546AC0
+name = "Scena05_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x546AC0..0x546B77 (0xB8 bytes): run 1, steps 0..2: message 5; closed - counter 2 = 1, flag 0, Field_ChangeArea(0x44, 0x1D0000, 0x1E0000, 0x80); counter 0 0x2D - flag 1, ScriptFlags_Clear40, counters 1..3, step and run 0."
+
+[[func]]
+pc = 0x546B80
+name = "Scena05_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x546B80..0x546D59 (0x1DA bytes): run 4, a two-level switch (byte table +0x1C4, jump table of 10 at +0x19C) over steps 0..0x15: area 0x34 changes, Kind2_Place, 0x532ED0(0x3E.0, 0x20.0, 0x11), Field_StartEventBattle(0x11), Party_DropIn(0), flags 5 / 6, message 0xB; waits on counter 0 3, 0xD, 0xF, 0x14, 0x16, 8."
+
+[[func]]
+pc = 0x546D60
+name = "Scena05_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x546D60..0x547036 (0x2D7 bytes): run 5, a two-level switch on step - 1 (byte table +0x2B4, jump table of 17 at +0x270): steps 1..6 and 0x19..0x23 - messages 0xD / 0x13, drop-ins 6 and 8, area 0x34 changes (0x87, 0x89), music 0x39 / 0x69 and fades, Transition_Start(0xD), call A 0, flags 8 / 9, Field_ScriptFlags ^ 0x20."
+
+[[func]]
+pc = 0x547040
+name = "Scena05_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547040..0x547089 (0x4A bytes): run 6: step 0 at counter 0 0x18 - flag 0xA, ScriptFlags_Clear40, counters 1..3, step and run 0."
+
+[[func]]
+pc = 0x547090
+name = "Scena05_Run7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547090..0x5470D4 (0x45 bytes): run 7: step 0 message 0x26, request 2, step 1; step 1 once the request byte is not 2 - ScriptFlags_Clear40, step and run 0."
+
+[[func]]
+pc = 0x5470E0
+name = "Scena05_Run8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x5470E0..0x547237 (0x158 bytes): run 8, steps 0..6 (jump table of 7 at +0x13C): flag 0xB, Transition_Start(0xD); the wait word 0 - pass flags 0, 0x533E50, Music_FadeOutStop(0x1E); Sound_LoadStream(0) and Sound_StreamDone; Field_ChangeArea(0x31, ...), Music_Play(0x10, 8); at counter 0 0x28 flags 0xC, 0xE, 0xF set, 0x3F cleared, Field_ChangeArea(0x45, ...)."
+
+[[func]]
+pc = 0x547240
+name = "Scena05_Run9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547240..0x54742F (0x1F0 bytes): run 9, steps 0..0xC (jump table of 13 at +0x1BC), counter 0 read once on entry for steps 1 / 2 (step 1 falls into 2s test): Music_Play(1, 8), flags 0x10..0x13, Kind2_Place 3 / 0, changes into 0x2D, 0x32, 0x4E by the selector (1, 2, 6; call B 3)."
+
+[[func]]
+pc = 0x547430
+name = "Scena05_Run10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547430..0x547555 (0x126 bytes): run 10, steps 0, 1, 4: at counter 0 0x23 flag 0x18 and by flags 0x17 / 0x16 changes into area 0x4E (flags 3 / 0x83); at 3 flags 0x19, 0x14, 0x1A, counters 1..3 before ScriptFlags_Clear40."
+
+[[func]]
+pc = 0x547560
+name = "Scena05_Run11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547560..0x5475A4 (0x45 bytes): run 11: message 0 and its close, as Scena05_Run7."
+
+[[func]]
+pc = 0x5475B0
+name = "Scena05_Run13"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x5475B0..0x54781E (0x26F bytes): run 13, a two-level switch (byte table +0x25C, jump table of 11 at +0x230) over steps 0..6, 0xF, 0x11, 0x12: the message box done bit (0x7DEE44 & 2), the selector, messages 0x20 / 0x1F, a choice on counter 0 0x2B / 0x2C, flags 0x16 / 0x17, Field_ChangeArea(0x4E, 0x270000, 0xAD0000, 3)."
+
+[[func]]
+pc = 0x547820
+name = "Scena05_Run14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547820..0x547913 (0xF4 bytes): run 14, steps 0..4 (jump table of 5 at +0xE0): messages 0x23 / 0x24 by the selector, 0x25; counter 0 2 or 0xA; flag 0x1A; all four counters, step and run 0."
+
+[[func]]
+pc = 0x547920
+name = "Scena05_Run16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x547920..0x5494EF (0x1BD0 bytes): run 16, a two-level switch over steps 0..0x66 (byte table +0x1818, jump table of 59 at +0x172C) with 22 inner jump tables (6 of them two-level) on counter 3 (0x90384B, a code 1..6 / 0xB..0x10 set at steps 5 / 6 from 0x904065 / 0x904066) and the first member 0x904062 (0..6): messages 0x20..0x50, three event battles 0x12..0x14 through 0x532ED0 and Field_StartEventBattle, call A / B pairs and changes into area 0x4F, Scena05_PartyCounter, flags 0x1D..0x25 and 0x3B. 231 E8 sites (the fuzz file copies it). Step 0x44 sets flag 0x25 and stays."
+
+[[func]]
+pc = 0x5494F0
+name = "Scena05_Run17"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x5494F0..0x549A7B (0x58C bytes): run 17, steps 0..0x1E (jump table of 31 at +0x510): messages 0x22 / 0x20, a timed wait (timer 0x8034E6 to 0xC8, or 0x803150 at most 8 as s8) with Port_DroppedCall(0x10) twice (the first push 4 above it, unread), Field_StartEventBattle(0x15), changes into 0x51 / 0x4E by the selector, Party_DropIn 8 / 7, flags 0x28..0x2C, 0x3C."
+
+[[func]]
+pc = 0x549A80
+name = "Scena05_Run18"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x549A80..0x549E4F (0x3D0 bytes): run 18, steps 0..0x10 (jump table of 17 at +0x38C): area 0x50s changes by the selector, call B 0 / 1 + 3, call A 1 + 2 / 3, battle 0x16 at the leader, Party_DropIn(3), Music_Play 0x66 / 0x6A, 0x533E50, flags 0x2D..0x2F, 0x3D."
+
+[[func]]
+pc = 0x549E50
+name = "Scena05_Run19"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x549E50..0x549E97 (0x48 bytes): run 19: message 0x84 and its close, as Scena05_Run7."
+
+[[func]]
+pc = 0x549EA0
+name = "Scena05_Run20"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x549EA0..0x54A0CF (0x230 bytes): run 20, steps 0..6 (jump table of 7 at +0x214): Scena05_SpawnMember(0x91); changes into 0x4E by the selector; flags 0x30..0x32; bit 0 of 0x903B1F, 0x903DAF, 0x903E53 set; call A 3 / 2."
+
+[[func]]
+pc = 0x54A0D0
+name = "Scena05_Run21"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A0D0..0x54A147 (0x78 bytes): run 21: step 0 on the message box done bit - counter 0 1, flag 0x3A, Party_DropIn(3), Kind2_Place(0), step 1; step 1 at counter 0 0x1C - flag 0x3A cleared, ScriptFlags_Clear40, step and run 0."
+
+[[func]]
+pc = 0x54A150
+name = "Scena05_Run22"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A150..0x54A194 (0x45 bytes): run 22: message 0x4C and its close, as Scena05_Run7."
+
+[[func]]
+pc = 0x54A1A0
+name = "Scena05_PartyCounter"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A1A0..0x54A1D6 (0x37 bytes): no calls: counter 1 (0x903849) = 1 for each of the bytes 0x904062..64 that is 5, then = 2 for each that is 6. Called by Scena05_Run16 step 0x11 (E8 at 0x547BDB)."
+
+[[func]]
+pc = 0x54A1E0
+name = "Scena05_SpawnMember"
+ret = "void"
+params = "unsigned char kind"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A1E0..0x54A292 (0xB3 bytes): Sprite_Current = ObjTrio; Effect_FindFree into Sprite_Current +0xB (re-read after the call); not 0xFF: effect +0 = 1, +5 = 6, +6 = kind + 0x70, dword +0xC = 0, dword +0x10 = s8 Scena05_MemberBytes[byte 0x904062] (unchecked), words +0x2E / +0x30 from the sprite. Called by Scena05_Run20 step 0 (E8 at 0x549EBC) with 0x91."
+
+[[func]]
+pc = 0x54A2A0
+name = "Scena05_ObjectTrigger"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A2A0..0x54A2BE (0x1F bytes): slot 1 of Scena05_Hooks (0x56D6D0 pushes the object): call [0x66109C + object +0x86 * 4] (object, dword 0x929ED0), unchecked. Ours aborts outside the 9 entries."
+
+[[func]]
+pc = 0x54A2C0
+name = "Scena05_Object01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A2C0..0x54A30C (0x4D bytes): Scena05_Objects entry 1: with flag 2 clear, Flags_Set(2), ScriptFlags_Set40, run 0x15, the four counters and the step 0."
+
+[[func]]
+pc = 0x54A310
+name = "Scena05_Object02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A310..0x54A347 (0x38 bytes): Scena05_Objects entry 2: Flags_Set(0xB), ScriptFlags_Set40, run 8, the four counters and the step 0."
+
+[[func]]
+pc = 0x54A350
+name = "Scena05_Object03"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A350..0x54A377 (0x28 bytes): Scena05_Objects entry 3: ScriptFlags_Set40, run 0xC, the four counters and the step 0."
+
+[[func]]
+pc = 0x54A380
+name = "Scena05_Object04"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A380..0x54A3A7 (0x28 bytes): Scena05_Objects entries 4 and 8: ScriptFlags_Set40, run 0xD, the four counters and the step 0."
+
+[[func]]
+pc = 0x54A3B0
+name = "Scena05_Object05"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A3B0..0x54A3D2 (0x23 bytes): Scena05_Objects entry 5: ScriptFlags_Set40, run 0x10, counters 1..3 and the step 0."
+
+[[func]]
+pc = 0x54A3E0
+name = "Scena05_Object06"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A3E0..0x54A402 (0x23 bytes): Scena05_Objects entry 6: ScriptFlags_Set40, run 0x11, counters 1..3 and the step 0."
+
+[[func]]
+pc = 0x54A410
+name = "Scena05_Object07"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A410..0x54A432 (0x23 bytes): Scena05_Objects entry 7: ScriptFlags_Set40, run 0x12, counters 1..3 and the step 0."
+
+[[func]]
+pc = 0x54A440
+name = "Scena05_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A440..0x54A7F6 (0x3B7 bytes): slot 2 of Scena05_Hooks (Scenario_StepHook, x and z 16.16, signed): rectangles in areas 0x31 (run 7), 0x34 (run 4, step 0 or 0x14), 0x43 (run 0xB), 0x44 (run 1), 0x4E (runs 0x13, 0x14, 0x16) under flags 9, 0xB, 5, 0, 0x3D, 0x32; a hit ScriptFlags_Set40, the counters, step and run, al 1; else al 0."
+
+[[func]]
+pc = 0x54A800
+name = "Scena05_CellHook"
+ret = "unsigned char"
+params = "unsigned a, unsigned b"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A800..0x54A829 (0x2A bytes): slot 4 of Scena05_Hooks (0x56D7A0): 0x56D800(Scena05_CellRecords 0x6610C0, 2, a, b); negative al answers 0xFF, else jmp [0x6610CC + index * 4] with (a, b) in place, unchecked. Ours aborts outside the 2 entries."
+
+[[func]]
+pc = 0x54A830
+name = "Scena05_Cell0"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A830..0x54A898 (0x69 bytes): Scena05_CellHooks entry 0: with flag 6 set and flag 9 clear, Flags_Set(0x904030, 0x26), ScriptFlags_Set40, counters 2 and 3 0, Sound_PlayEffect(0x202), step 1, timer 0x8034E6 0, al 1; else al 0xFF."
+
+[[func]]
+pc = 0x54A8A0
+name = "Scena05_Cell1"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc5.cpp"
+evidence = "disasm 2026-09-27, group SC5 (round ten wave two; capstone recursive descent, extent agrees with tools/scenario_rows.py --unit SC5), 0x54A8A0..0x54A90A (0x6B bytes): Scena05_CellHooks entry 1: as Scena05_Cell0 with story flag 0x25 and step 0x19."
+
+[[data]]
+pc = 0x661018
+name = "Scena05_MemberBytes"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group SC5: Scena05_SpawnMember reads byte [0x661018 + byte 0x904062] (movsx) into an effects dword +0x10, unchecked (the member byte reaches past the eight into Scena05_Hooks); the same eight bytes lie at 0x6610D8 before Scena06_Hooks (not read by this band). Chapter 4s Scena04_CellHandlers ends at 0x661014."
+
+[[data]]
+pc = 0x661034
+name = "Scena05_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC5: Scena05_Frame: 0x5646B0 (group SC13s block), Scena05_EnterArea, Scena05_Run; Scena05_Runs follows."
+
+[[data]]
+pc = 0x661040
+name = "Scena05_Runs"
+ctype = "unsigned long"
+count = 23
+status = "evidence"
+evidence = "read 2026-09-27, group SC5: Scena05_Run by MoveScript_Var7: 0, 2, 3, 12, 15 the bare ret 0x437CC0; 1 Run1, 4..11 Run4..Run11, 13 Run13, 14 Run14, 16..22 Run16..Run22; Scena05_Objects follows."
+
+[[data]]
+pc = 0x66109C
+name = "Scena05_Objects"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-27, group SC5: Scena05_ObjectTrigger by object +0x86 (object, bits): 0 the bare ret 0x437CC0, 1..7 Scena05_Object01..07, 8 Scena05_Object04 again."
+
+[[data]]
+pc = 0x6610C0
+name = "Scena05_CellRecords"
+ctype = "unsigned char"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27, group SC5: two 5-byte cell records 0x56D800 reads for Scena05_CellHook (the area, the cell, as 0x56D800 reads them); two bytes of padding follow."
+
+[[data]]
+pc = 0x6610CC
+name = "Scena05_CellHooks"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group SC5: Scena05_CellHook by the record index: Scena05_Cell0, Scena05_Cell1; a zero dword and the eight bytes 0x6610D8 follow, then Scena06_Hooks."
