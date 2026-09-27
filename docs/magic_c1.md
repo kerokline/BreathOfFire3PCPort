@@ -550,6 +550,8 @@ each shows only when a disturbance lands on exactly that call.
 | X29 | Mote_End: the owner count kept | Magic213Mote_End 1,294 |
 | X30 | Mote_End: freed while the script runs | Magic213Mote_End 2,000 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 19 controls in the affected functions, 19 refused.** Selected: every control whose plant lies in `InkInk_Start`, `Magic213_Start`, `Magic213Mote_End` or `PentagramSprite_Animate` - J5..J11 (`ClearPool` / `SpawnOnActors`, shared by both starts), J29, X3..X6, X29, X30, P93..P97. Skipped: the other 195, whose plants lie in none of the four (J1..J4 are in `InkInk_Task` / `Magic213_Task` and the walk, which the section-8 list does not name). The plants were rebuilt from the table (the original `controls.py` was not committed) and run by the same loop; restored, rebuilt, clean self-test 0 mismatches (exit 0), and `BOF3X_SHADOW='*'` exit 0. Counts moved by up to 53 rounds (J9 1,097 -> 1,150 in InkInk_Start; J10 124 -> 113), each still in the functions its plant touches; the thinnest: J10 113 / 114 (InkInk_Start / Magic213_Start), P95 208, P93 210. No fuzz change.
+
 ## 11. What nothing reached
 
 No recorded route casts any of these rows (the queue's §5); nothing here has

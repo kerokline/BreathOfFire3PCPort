@@ -355,6 +355,8 @@ The thinnest (fewer than 60 rounds):
 | DS22 | DrawShadow: rim read before the calls | JumpChild_DrawShadow 57 |
 | DS23 | DrawShadow: z written after the projection's inputs | JumpChild_DrawShadow 2000 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 26 controls in the affected functions, 26 refused.** Selected: every control whose plant lies in `NueStompChild_Leap`, `_Crouch`, `_Bounce`, `_Stomp` or `_Land` - E1 (EnemyAnimation, in four of them), L1..L5, CR1, CR2, BO1..BO7 (BO1 / BO2 in `TickThrice`, which Bounce and Stomp call), ST1..ST5, LA1..LA6. Skipped: the rest, whose plants lie in none of the five (M1..M3's `Rise` is not called by them). The plants were rebuilt from the table (the original script was not committed) and run by the same plant / rebuild / self-test / restore loop; restored, rebuilt, clean self-test 0 mismatches (exit 0), and `BOF3X_SHADOW='*'` exit 0. Every count is the table's to the round (thinnest ST5 82, ST2 265): these functions reach the flag only through `Sprite_ScriptTickOnce`, whose `effect` answers from the group's own stream and has the last word, so the remixed draw changes nothing they see. No fuzz change.
+
 ## 7. What nothing reached
 
 No recorded route casts either spell (queue §5); the live check is the owner
