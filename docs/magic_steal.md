@@ -137,6 +137,19 @@ a roll at the compare with the difference at that threshold. R6 and R15
 (43, 94) are the re-reads, shown only by a recorder moving the target byte
 across the one call between the two reads.
 
+Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) §8): 22 controls in the affected
+functions, 22 refused. `SkillSteal_Roll` is the group's one section-8
+function, so R1..R22 were re-planted (from the table, by a scratch script:
+plant, rebuild, check the file recompiled, self-test, restore) and T1, T2,
+S1..S4 (the task and the start, which call no `kFlag` / `kBool` recorder)
+stand without a re-run. Every one refused by a count in `SkillSteal_Roll`
+only; the thinnest are unchanged, R1 7, R2 and R3 22, R6 43, R7 67, with R15
+82 (was 94). Most counts are the same as before; those that moved follow
+`Inventory_Add`'s new answers (R9 268, R12..R14 / R17 / R21 495, R16 488, R19
+1,505, R20 319). No fuzz change. Clean self-test after the last: 0
+mismatches, exit 0 (9,258 calls; 9,278 on the old stream).
+
 Not planted, because no fuzz can see it: `SkillSteal_Start` reading the
 owner pointer once instead of four times - nothing runs between the reads,
 so the two are the same function unless the task's own writes alias the
