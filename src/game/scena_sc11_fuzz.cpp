@@ -341,10 +341,12 @@ void Args(unsigned k, std::uint32_t* a) {
 }
 
 // After a call, two in three: a counter byte (0 or one of the values waited
-// on), the request, the wait word, Field_Kind2Hold, or the live byte of the
+// on), the request, the wait word, Field_Kind2Hold, the slot byte 0x903850
+// (a record 0..19), or the live byte of the
 // effect counter 3 names. Drawn from the hash given, never the harness's Next.
 void Disturb(std::uint32_t h) {
-    switch ((h >> 8) % 6) {
+    switch ((h >> 8) % 7) {
+    case 5: B(0x903850) = static_cast<unsigned char>((h >> 12) % kEffectCount); break;   // the slot byte, read back after Rand
     case 0: B(kCounters + (h >> 12) % 3) = kCounter0s[(h >> 16) % (sizeof kCounter0s)]; break;
     case 1: Field_Request = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : 0); break;
     case 2: MoveScript_WaitWordDA = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
