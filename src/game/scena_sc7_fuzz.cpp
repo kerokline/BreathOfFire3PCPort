@@ -377,21 +377,24 @@ std::uint32_t Coord(std::uint32_t lo, std::uint32_t hi, bool exact) {
     const std::uint32_t frac = sh::Half() ? 0 : (sh::Half() ? 0x8000 : (sh::Next() & 0xFFFF));
     return (cell & 0xFFFF) << 16 | frac;
 }
-// The hooks' (x, z) where they turn: an exact coordinate or a cell range.
-struct Hit { std::uint32_t x0, x1, z0, z1; bool x_exact, z_exact; };
+// The hooks' (x, z) where they turn, each with the area it is tested in: an
+// exact coordinate or a cell range. The seed picks one (and its area); the
+// arguments follow it.
+struct Hit { std::uint32_t area, x0, x1, z0, z1; bool x_exact, z_exact; };
 struct HookHits { const char* name; Hit hits[10]; unsigned n; };
 const HookHits kHits[] = {
-    {"Scena07_StepHook", {{0x348000, 0, 0x13, 0x16, true, false}, {0x22, 0x25, 0x3C, 0x40, false, false},
-                          {0x25, 0x26, 0x1C8000, 0, false, true}, {0x10, 0x30, 0x1C, 0x1F, false, false},
-                          {0x18, 0x2D, 0x20, 0x24, false, false}}, 5},
-    {"Scena07_ArriveHook", {{0x4A, 0x4B, 0x1F, 0x20, false, false}, {0x4A, 0x4B, 0x200000, 0, false, true}}, 2},
-    {"Scena08_StepHook", {{0x338000, 0, 0x27, 0x28, true, false}, {0x388000, 0, 0x2E, 0x31, true, false}}, 2},
-    {"Scena08_ArriveHook", {{0x1C, 0x1D, 0x2B, 0x2C, false, false}, {0x2F0000, 0, 0x1E, 0x1F, true, false},
-                            {0x2F0000, 0, 0x1F0000, 0, true, true}, {0x1B0000, 0, 0x110000, 0, true, true},
-                            {0x160000, 0, 0xD0000, 0, true, true}, {0x110000, 0, 0x130000, 0, true, true},
-                            {0x70000, 0, 0x130000, 0, true, true}, {0x1C, 0x1D, 2, 3, false, false},
-                            {0x45, 0x47, 0x37, 0x39, false, false}, {0x20, 0x25, 0xE, 0x10, false, false}}, 10},
+    {"Scena07_StepHook", {{0x4A, 0x348000, 0, 0x13, 0x16, true, false}, {0x52, 0x22, 0x25, 0x3C, 0x40, false, false},
+                          {0x55, 0x25, 0x26, 0x1C8000, 0, false, true}, {0x69, 0x10, 0x30, 0x1C, 0x1F, false, false},
+                          {0xAF, 0x18, 0x2D, 0x20, 0x24, false, false}, {0x52, 0x22, 0x25, 0x3C, 0x40, false, false}}, 6},
+    {"Scena07_ArriveHook", {{0x67, 0x4A, 0x4B, 0x1F, 0x20, false, false}, {0x67, 0x4A, 0x4B, 0x200000, 0, false, true}}, 2},
+    {"Scena08_StepHook", {{1, 0x338000, 0, 0x27, 0x28, true, false}, {0x46, 0x388000, 0, 0x2E, 0x31, true, false}}, 2},
+    {"Scena08_ArriveHook", {{1, 0x1C, 0x1D, 0x2B, 0x2C, false, false}, {0xC, 0x2F0000, 0, 0x1E, 0x1F, true, false},
+                            {0xC, 0x2F0000, 0, 0x1F0000, 0, true, true}, {0xC, 0x1B0000, 0, 0x110000, 0, true, true},
+                            {0xC, 0x160000, 0, 0xD0000, 0, true, true}, {0xC, 0x110000, 0, 0x130000, 0, true, true},
+                            {0xC, 0x70000, 0, 0x130000, 0, true, true}, {0xD, 0x1C, 0x1D, 2, 3, false, false},
+                            {0x23, 0x45, 0x47, 0x37, 0x39, false, false}, {0x2B, 0x20, 0x25, 0xE, 0x10, false, false}}, 10},
 };
+const Hit* g_hit = nullptr;   // the seed's pick for this round, or none
 
 const sh::Clone* g_clones = kClones7;
 int g_chapter = 7;
@@ -471,6 +474,15 @@ void Seed(unsigned k) {
     // an area the entry knows
     if (Named("EnterArea") && sh::Often()) SetWord(sh::Mem(at::kArea), eight ? PickArea8() : PickArea7());
     if (Named("Scena08_EnterArea") && sh::Half()) sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(SH_PICK(0, 1, 2, 5));
+    // a hook's hit and its area (the arguments follow it)
+    g_hit = nullptr;
+    for (const HookHits& h : kHits) {
+        if (std::strcmp(h.name, g_clones[k].name) != 0 || sh::Next() % 4 == 0) continue;
+        g_hit = &h.hits[sh::Next() % h.n];
+        if (sh::Next() % 8) SetWord(sh::Mem(at::kArea), g_hit->area);
+        // member 0's kind at the values the area tests compare
+        if (sh::Half()) sh::Mem(at::kLeaderKind)[0] = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3, 4, 5, 6, 7));
+    }
 }
 
 // Function k's arguments beyond the shape's: the hooks' (x, z) at the values
@@ -478,11 +490,9 @@ void Seed(unsigned k) {
 void Args(unsigned k, std::uint32_t* a) {
     g_k = k;
     const sh::Clone& c = g_clones[k];
-    for (const HookHits& h : kHits) {
-        if (std::strcmp(h.name, c.name) != 0 || !sh::Often()) continue;
-        const Hit& t = h.hits[sh::Next() % h.n];
-        a[0] = Coord(t.x0, t.x1, t.x_exact);
-        a[1] = Coord(t.z0, t.z1, t.z_exact);
+    if (g_hit && c.shape == sh::Shape::kHook) {
+        a[0] = Coord(g_hit->x0, g_hit->x1, g_hit->x_exact);
+        a[1] = Coord(g_hit->z0, g_hit->z1, g_hit->z_exact);
     }
     if (Named("_Object") && c.shape == sh::Shape::kEntry) {
         a[0] = Key(sh::SpriteRecord(sh::Next()));
