@@ -99,15 +99,27 @@ constexpr unsigned kCount = sizeof kClones / sizeof kClones[0];
 
 // The group's own functions its clones call directly: a recorder that logs
 // the chapter bytes they run with (the clones' E8s re-aimed; ours by name).
+// Scena00_ObjectHooks' one entry: a stand-in of its exact type in the table
+// itself (the seed writes it; the region puts the table back), logging the
+// object and the row the hook passes - a DataTable's handler recorder logs
+// no arguments, and the entry is also the runs' bare ret, called with none.
+// Its log slot is keyed on the hook's own address, which no clone calls.
+void __cdecl ObjectEntry(unsigned char* object, unsigned char* row) {
+    sh::Record(0x539A10, Key(object), Key(row));
+    sh::Stir();
+}
+
 #define SH_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 const sh::Callee kCallees[] = {
     {SH_OURS(Scena00_Area02), 0, {}, sh::Answer::kPhase, 0, 0},
     {SH_OURS(Scena00_Area18), 0, {}, sh::Answer::kPhase, 0, 0},
     {SH_OURS(Scena00_Steer), 0, {}, sh::Answer::kPhase, 0, 0},
+    {"Scena00_ObjectHooks[0]", 0x539A10, 0x539A10, 2, {0xFFFFFFFFu, 0xFFFFFFFFu}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
+     reinterpret_cast<const void*>(&ObjectEntry)},
 };
 #undef SH_OURS
 
-const sh::DataTable kTables[] = {{kStates, 3}, {kRuns, 12}, {kObjectHooks, 1}};
+const sh::DataTable kTables[] = {{kStates, 3}, {kRuns, 12}};
 
 // The area Scena00_Steer and Scena00_Run11 read the descriptor of: its
 // Area_Descriptors entry points at a block of the fuzz's own, whose +0xC
@@ -169,6 +181,7 @@ void Seed(unsigned k) {
     if (k == kFrameK) B(0x8034E2) = static_cast<unsigned char>(sh::Next() % 15);
     if (k == kRunK) B(kRun) = static_cast<unsigned char>(sh::Next() % 12);
     if (k == kObjectK) sh::SpriteRecord(0)[0x86] = 0;
+    SetL(kObjectHooks, Key(reinterpret_cast<const void*>(&ObjectEntry)));
     // the area Steer and Run11 read the descriptor of
     if (k == kSteerK || k == kRun11K) {
         SetW(kArea, kFakeArea);
@@ -213,6 +226,7 @@ void SelfTest() {
     g_regions[r++] = {kDescriptors + 4 * kFakeArea, 4};
     g_regions[r++] = {Key(g_desc), sizeof g_desc};
     g_regions[r++] = {Key(g_corner), sizeof g_corner};
+    g_regions[r++] = {kObjectHooks, 4};                       // Scena00_ObjectHooks, the stand-in written by the seed
     sh::Group group = {
         "scena_sc0", kClones, kCount, kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], g_regions, r, &Seed, &Disturb, 2000,
