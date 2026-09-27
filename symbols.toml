@@ -31139,3 +31139,457 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-26, group S02: ElemStrikeFx_Run's call [0x65A5D4 + 4 x byte +2]: MAGIC167's 0x4EF840, ElemStrikeFx_Start, ElemStrikeFx_Play; MAGIC006's table follows at 0x65A5E0 (0x49C4E0 is MAGIC006's)."
+
+# --- round nine group S03 (MAGIC006, MAGIC009, MAGIC012; docs/magic_s03.md) ---
+
+[[func]]
+pc = 0x49C3D0
+name = "MindSword_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C3D0..0x49C3F5 (0x26 bytes), cdecl, group S03: a two-entry stack table (MindSword_Start, BattleFx_Finish) called by byte +1, unchecked. Magic_Rows row 109, file 0x22F = MAGIC006.EMI, ability id 0x6 (Mind Sword read one id down, a hypothesis); the first function of MAGIC006's extent 0x49C3D0..0x49D831 (tools/magic_rows.py). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C400
+name = "MindSword_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C400..0x49C4B6 (0xB7 bytes), cdecl, group S03: +8 and +0x34 / +0x38 / +0x3C the owner's (0x93B940); +0xB 0, +9 0, +1 += 1; four BattleTask_Create(1, 0x53): +0x80 Sprite_Current (read after each create), +1 0, +0xB i, +9 i + 1, Sprite_Current +0xB += 1. Slot 0xFF unchecked. Entry 0 of MindSword_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C4C0
+name = "MindSwordChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C4C0..0x49C4D1 (0x12 bytes), cdecl, group S03: jmp [MindSwordChild_Kinds + 4 x byte +1], unchecked. BattleTask_Create kind 1 parameter 0x53 (tools/magic_rows.py: task kind.parameter 1.83, reached by eleven files). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C4E0
+name = "MindSwordBlade_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C4E0..0x49C556 (0x77 bytes), cdecl, group S03: a six-entry stack table (MindSwordBlade_Appear, _Spin, _Wait, _Fly, _Burst, 0x4B1740 - MAGIC060, group S12 -) called by byte +2, unchecked; then with +0 and +2 set BattleActor_UpdateScreenXY and, by +0xB (read after the call), MindSwordBlade_Draw (not 0) or MindSwordBlade_DrawLead (0). MindSwordChild_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C560
+name = "MindSwordBlade_Appear"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C560..0x49C67D (0x11E bytes), cdecl, group S03: calls BattleActor_UpdateScreenXY, Math_Ratan2 twice, Sound_PlayById: +9 -= 1; at 0 +0x34 / +0x38 the owner's, +0x3C the owner's + 0x800000; the screen point; +0xC Math_Ratan2(float(source +0x34 - +0x34), float(source +0x38 - +0x38)) of the source sprite 0x904B4C read after the call, +0x10 0; +0x14 Math_Ratan2(float(s16 source +0x2E - s16 +0x2E), float(s16 source +0x30 - s16 +0x30)), then (+0x14 - 0x200) & 0xFFF; Sound_PlayById(0x100); +9 0x20; +2 += 1. Entry 0 of MindSwordBlade_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C680
+name = "MindSwordBlade_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C680..0x49C6BB (0x3C bytes), cdecl, group S03, no calls: dword +0x14 += 0x80; +9 -= 1; at 0 +9 = +0xB + 12, +2 += 1. Entry 1 of MindSwordBlade_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C6C0
+name = "MindSwordBlade_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C6C0..0x49C6EE (0x2F bytes), cdecl, group S03: +9 -= 1; at 0 Sound_PlayById(0x101), +2 += 1. Entry 2 of MindSwordBlade_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C6F0
+name = "MindSwordBlade_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C6F0..0x49C823 (0x134 bytes), cdecl, group S03: MagicFx_StepTowardPoint((source +0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, (+0x3C + 0x800000) sar 17, an uninitialised stack word, 0x60); +0x10 = +0xC; +0xC = Math_Ratan2(float(source +0x34 - +0x34), float(source +0x38 - +0x38)); MagicFx_NearSprite(source, 0x20000) (eax tested whole): not 0, or else |(+0x10 & 0xFFF) - (+0xC & 0xFFF)| (stored in +0x10) above 0x600 and below 0xA00: +0xB 0 gets Battle_SetTargetFlags(byte 0x904B44, 0x10), and +2 += 1. Entry 3 of MindSwordBlade_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C830
+name = "MindSwordBlade_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C830..0x49C90C (0xDD bytes), cdecl, group S03: +0xB not 0: the owner's +0xB -= 1, BattleTask_FreeCurrent. 0: eight BattleTask_Create(1, 0x53) with +0x80 the owner (read after the create), +1 1, +0xB i, +9 (Rand & 15) + 1, the owner's +0xB += 1 (read after Rand); one more with +0x80 the owner, +1 2, the owner's +0xB += 1; Sound_PlayById(0x102); +9 0x10; +2 += 1. Entry 4 of MindSwordBlade_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49C910
+name = "MindSwordBlade_DrawLead"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49C910..0x49CF0F (0x600 bytes), cdecl, group S03, thirty-one calls: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x55, 0), Gfx_CommitPrim(3, 0xC); words 0x903854 8, 0x903850 / 0x903852 s16 +0x2E / +0x30; three semi-transparent G4 quads (i = 2, 4, 6): word 0x903856 = MindSword_BladeRadii[i / 2], vertices at the angles ((i + 1) sl 9, i sl 9, (i + 2) sl 9) + word +0x14, & 0xFFF (word 0x903858, read back for each cosine), radii 0x903856, 0x903854, 0x903854, the fourth the centre; x = sin x r sar 12 + 0x903850, y = cos x r sar 12 + 0x903852, as floats; shades 0x10 0x40 0x10 x 3 and 0x40 x 3; Gfx_CommitPrim(3, 0x44). Then Gpu_SetDrawMode tpage 0x35, Gfx_CommitPrim(3, 0xC) and two G4 quads: radius 0x40 at +0x200, 0x38 at +0x230 / +0x1D0, the centre, radius 0x903854 at +0x400 (a dead store of 0x400 to the angle word first) / +0; shades 0x20 0x20 0xE0 with 0xE0 x 3 / 0x80 x 3 at the centre. Every scratch word read back after each call. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49CF10
+name = "MindSwordBlade_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49CF10..0x49D2FB (0x3EC bytes), cdecl, group S03, twenty calls: MindSwordBlade_DrawLead's last part alone - Gpu_SetDrawMode tpage 0x35, Gfx_CommitPrim(3, 0xC), words 0x903854 8, 0x903850 / 0x903852 the screen point, the two G4 quads (radius 0x40 at +0x200; 0x38 at +0x230 / +0x1D0; the centre; 0x903854 at +0x400 after a dead store / +0), shades 0x10 0x10 0x60 on the outer two vertices and 0x10 0x10 0x30 on the inner, Gfx_CommitPrim(3, 0x44) each. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D300
+name = "MindSwordSpark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D300..0x49D348 (0x49 bytes), cdecl, group S03: a three-entry stack table (MindSwordSpark_Start, _Grow, 0x4A5180 - MAGIC039, group S07 -) by byte +2, unchecked; with +0 and +2 set BattleActor_UpdateScreenXY and MindSwordSpark_Draw. MindSwordChild_Kinds[1]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D350
+name = "MindSwordSpark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D350..0x49D3F1 (0xA2 bytes), cdecl, group S03: +9 -= 1; at 0 word 0x903858 = +0xB sl 9; +0x34 = (Math_Cos(that) x 3 sl 14 sar 12) + source +0x34; +0x38 the same of Math_Sin(word 0x903858 read back) and source +0x38 (read after the call); +0x3C the source's; +9 0, +0xA 4, +2 += 1. Entry 0 of MindSwordSpark_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D400
+name = "MindSwordSpark_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D400..0x49D42D (0x2E bytes), cdecl, group S03, no calls: Frame_Counter bit 0: +0xA += 1; +9 += 0x10; at 0x80 +2 += 1. Entry 1 of MindSwordSpark_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D430
+name = "MindSwordSpark_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D430..0x49D5B0 (0x181 bytes), cdecl, group S03: words 0x903854 = +9, 0x903856 = +0xA, 0x903850 / 0x903852 s16 +0x2E / +0x30; Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0); MapView_LinkPrimAt(+0x34, +0x38, 0, 0xC); a semi-transparent G4 quad at (x -+ w, y - h), (x -+ w, y) with w 0x903856, h 0x903854 (read after the calls), shades 1 1 1 at the top, 0x80 0x20 1 at the bottom; MapView_LinkPrimAt(+0x34, +0x38, 0, 0x44). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D5C0
+name = "MindSwordFlash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D5C0..0x49D615 (0x56 bytes), cdecl, group S03: a four-entry stack table (MindSwordFlash_Start, _Grow, BarrierLine_Wait, 0x4B1740 - MAGIC060 -) by byte +2, unchecked; with +0 and +2 set MagicFx_PushActorMatrix, MindSwordFlash_Draw, Gte_PopMatrix. MindSwordChild_Kinds[2]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D620
+name = "MindSwordFlash_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D620..0x49D65B (0x3C bytes), cdecl, group S03, no calls: +0x34 / +0x38 / +0x3C the source sprite's (0x904B4C); +9 0; +2 += 1. Entry 0 of MindSwordFlash_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D660
+name = "MindSwordFlash_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D660..0x49D67C (0x1D bytes), cdecl, group S03, no calls: +9 += 4; at 0x10 +2 += 1. Entry 1 of MindSwordFlash_Run's table. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D680
+name = "MindSwordFlash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D680..0x49D831 (0x1B2 bytes), cdecl, group S03: Gpu_SetDrawMode(.., 0x35), Gfx_CommitPrim(5, 0xC); words 0x903850 0x100, 0x90385A +9 sl 3, 0x90385C +9 sl 1, 0x90385E 1; SVECTORs of Prim_VertexScratch: the rim point (sin 0, cos 0) x 0x903850 sar 12; sixteen semi-transparent G3 triangles (angle 0x100..0x1000): centre 0, the last rim point, the next, Gte_RotTransPers3 (eight words pushed: the depth and flag pointers), Gte_PrimDepths3_10B, centre shade the bytes 0x90385A / C / E (read after the calls), rim 1; Gfx_CommitPrim(5, 0x34); Gpu_SetDrawMode(.., 0x15), Gfx_CommitPrim(5, 0xC). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D840
+name = "Chlorine_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D840..0x49D87D (0x3E bytes), cdecl, group S03: a five-entry stack table (Chlorine_Start, _Release, SpellFx_Countdown, Chlorine_WaitChildren, Chlorine_End) by byte +1, unchecked. Magic_Rows row 51, file 0x231 = MAGIC009.EMI, ability id 0x9 (Chlorine read one id down, a hypothesis); the first function of MAGIC009's extent 0x49D840..0x49DEEE. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D880
+name = "Chlorine_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D880..0x49D9A8 (0x129 bytes), cdecl, group S03: +0xB 0, +1 += 1; the acting actor's record (byte 0x904B34: party 0x802D40 + 0x14C i below 3, else enemy 0x93B960 + 0x128 (i - 3), unchecked) +0x4B 0xFF; BattleActor_SetAnimation(0x2C, 6); BattleTask_Create(1, 0x2A); rep movsd of the acting actor's record's first 0x80 bytes (the actor read again) into the slot; +0x80 Sprite_Current, +1 1, +2 0, +6 1, +5 0x2A; Sprite_Current +0xB += 1; Gfx_ClutStrip words 0x1A21..0x1A2F = source | 0x8000, 0x1A20 = 0, Gfx_ClutStripDirty 1; the owner's +0 |= 0x40. Entry 0 of Chlorine_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49D9B0
+name = "Chlorine_Release"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49D9B0..0x49DA45 (0x96 bytes), cdecl, group S03: +0xB 0 only: three BattleTask_Create(1, 0x2A): +0x80 Sprite_Current (read after each), +1 0, +0xB i, +9 (i sl 2) + 1, +0xB += 1; BattleActor_SetAnimation(4, 0); the owner's +0 &= 0xBF; Sound_PlayById(0x100); +9 8; +1 += 1. Entry 1 of Chlorine_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DA50
+name = "Chlorine_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DA50..0x49DA5F (0x10 bytes), cdecl, group S03, no calls: +1 += 1 once +0xB is 0. Entry 3 of Chlorine_Task; also in the stack tables of MAGIC039, MAGIC145 (Ink_Task) and MAGIC146 (InkInk_Task). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DA60
+name = "Chlorine_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DA60..0x49DA7B (0x1C bytes), cdecl, group S03: word 0x904AA8 |= 0x2004; Battle_SetTargetFlag40(byte 0x904B44); jmp BattleTask_FreeCurrent. Entry 4 of Chlorine_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DA80
+name = "ChlorineChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DA80..0x49DA91 (0x12 bytes), cdecl, group S03: jmp [ChlorineChild_Kinds + 4 x byte +1], unchecked. BattleTask_Create kind 1 parameter 0x2A (task kind.parameter 1.42). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DAA0
+name = "ChlorineCloud_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DAA0..0x49DAC8 (0x29 bytes), cdecl, group S03: call [ChlorineCloud_Steps + 4 x byte +2], unchecked; with +0 and +2 set jmp ChlorineCloud_Draw. ChlorineChild_Kinds[0]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DAD0
+name = "ChlorineCloud_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DAD0..0x49DB8E (0xBF bytes), cdecl, group S03: +9 -= 1; at 0 +8 the source sprite's (0x904B4C); +0xC / +0x10 ChlorineCloud_Offsets[+0xB] (dx, dz), unchecked; 0x446770(Sprite_Current); +0x34 / +0x38 = +0xC / +0x10 + the source's; +0x3C = the entry's dy (+0xB read again) + the source's; BattleActor_UpdateScreenXY; +0xA 0; +2 += 1. Entry 0 of ChlorineCloud_Steps. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DB90
+name = "ChlorineCloud_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DB90..0x49DBBA (0x2B bytes), cdecl, group S03, no calls: +9 += 2, +0xA += 2; at a +9 of 0x10 +2 += 1. Entry 1 of ChlorineCloud_Steps; also in the tables of eight other overlays (MAGIC145's InkPuff_Phases, MAGIC146's InkInkPuff_Phases, ...). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DBC0
+name = "ChlorineCloud_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DBC0..0x49DDF2 (0x233 bytes), cdecl, group S03: Gpu_SetDrawMode(.., 0x35), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); dword 0x903850 = +9 sl 1; a semi-transparent FT4: vertices at the angles 0x200, 0x600, 0xE00, 0xA00, x = Math_Cos x dword 0x903850 (read back) sar 12 + s16 +0x2E, y the same of Math_Sin and +0x30, as floats; Gpu_GetTPage(0, 1, 0x340, 0x100) at +0x26, Gpu_GetClut(0x20, 0x1FA) at +0x16; uv 0x80/0x20, 0xA0/0x20, 0x80/0x40, 0xA0/0x40; shade (+0xA x 10, 0, +0xA x 9) in bytes; MapView_LinkPrimAt(+0x34, +0x38, 2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DE00
+name = "ChlorineCopy_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DE00..0x49DE45 (0x46 bytes), cdecl, group S03: a four-entry stack table (ChlorineCopy_Size, _Play, _Wait, BattleFx_FreeTask) by byte +2, unchecked; with +0 set Sprite_UpdateScreen. ChlorineChild_Kinds[1]: the copy of the acting actor's record Chlorine_Start makes. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DE50
+name = "ChlorineCopy_Size"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DE50..0x49DE66 (0x17 bytes), cdecl, group S03: +9 = BattleActor_FxSizeB() (al); +2 += 1. Entry 0 of ChlorineCopy_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DE70
+name = "ChlorineCopy_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DE70..0x49DEB5 (0x46 bytes), cdecl, group S03: +9 not 0xFF: -= 1, at 0 BattleActor_PlaySound(2, 5); Sprite_ScriptTickOnce (al tested): at its end +9 8, +2 += 1. Entry 1 of ChlorineCopy_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49DEC0
+name = "ChlorineCopy_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49DEC0..0x49DEEE (0x2F bytes), cdecl, group S03, no calls: +9 -= 1; at 0 the owner's +0xB -= 1 and +2 += 1. Entry 2 of ChlorineCopy_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E000
+name = "Blitz_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E000..0x49E025 (0x26 bytes), cdecl, group S03: a two-entry stack table (Blitz_Start, Blitz_End) by byte +1, unchecked. Magic_Rows row 71, file 0x233 = MAGIC012.EMI, ability id 0xC (Blitz read one id down, a hypothesis); the first function of MAGIC012's extent 0x49E000..0x49E9E2. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E030
+name = "Blitz_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E030..0x49E1BC (0x18D bytes), cdecl, group S03: +8 and +0x34 / +0x38 / +0x3C the owner's; +0xB 0; the target byte 0x904B44 bit 0x40: for i 0..7 Battle_ActorIsOut(i + 3), else for i 0..2 Battle_ActorIsOut(i); each not out: BattleTask_Create(1, 0x37) with +0x80 Sprite_Current (read after), +3 the battle index, +4 i, +9 1 + 8 per bolt made, +0xB += 1. Gfx_ClutStrip row 26 (0x1A00..0x1AFF) = source | 0x8000, then word 0x1A00 = its source word, Gfx_ClutStripDirty 1; +1 += 1. Entry 0 of Blitz_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E1C0
+name = "Blitz_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E1C0..0x49E23E (0x7F bytes), cdecl, group S03: +0xB 0 only: the acting actor's (byte 0x904B34) word +0x98 (party 0x802DD8 + 0x14C i) or +0xA4 (enemy 0x93BA04 + 0x128 (i - 3), unchecked) shr 1, then 1 if 0; byte 0x904AA8 |= 4; jmp BattleTask_FreeCurrent. Entry 1 of Blitz_Task. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E240
+name = "BlitzBolt_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E240..0x49E251 (0x12 bytes), cdecl, group S03: jmp [BlitzBolt_TaskTable + 4 x byte +1], unchecked. BattleTask_Create kind 1 parameter 0x37 (task kind.parameter 1.55). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E260
+name = "BlitzBolt_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E260..0x49E271 (0x12 bytes), cdecl, group S03: jmp [BlitzBolt_Steps + 4 x byte +2], unchecked (twelve entries; BlitzBolt_Seek can leave +2 at 12, past them). BlitzBolt_TaskTable[0]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E280
+name = "BlitzBolt_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E280..0x49E33B (0xBC bytes), cdecl, group S03: +9 -= 1; at 0 +8 the owner's; +0xC 0x20000, +0x10 0; 0x446770(Sprite_Current); +0x34 / +0x38 = the owner's + +0xC / +0x10; word +0x3E = the owner's + 0x100; +0xB Rand & 7; +9 0x10; +0xA 0; +2 += 1. BlitzBolt_Steps[0]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E340
+name = "BlitzBolt_Seek"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E340..0x49E4E9 (0x1AA bytes), cdecl, group S03: Frame_Counter bit 0: +0xA += 1; the record by +4 (enemy 0x93B960 + 0x128 i with the target byte's 0x40, else party 0x802D40 + 0x14C i; unchecked); Battle_ActorIsOut(+3): out: +0xC / +0x10 = its (+0x34 / +0x38 sar 9) - 0x4000, +0x14 = (s16 +0x3E + 0xC0) sar 1, +2 = 11; MagicFx_StepTowardPoint of those three values taken before the call, an uninitialised word, 0x40; MagicFx_NearSprite(record, 0x8000) not 0: byte 0x904AA9 |= 0x20, Battle_SetTargetFlag40(+3), Sound_PlayById(0x203), +0xC = Math_Ratan2(float(owner +0x34 - +0x34), float(owner +0x38 - +0x38)), +0x14 0x40, +0x20 -8, +2 += 1; BattleActor_UpdateScreenXY; BlitzBolt_Draw(+0xB, 0). BlitzBolt_Steps[1, 4, 7]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E4F0
+name = "BlitzBolt_Bounce"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E4F0..0x49E58E (0x9F bytes), cdecl, group S03: +0xA += 1; +0x34 += Math_Sin(+0xC) sl 13 sar 12 (the address taken before the call), +0x38 += Math_Cos(+0xC) the same; +0x14 += +0x20; word +0x3E += word +0x14; +9 -= 1, at 0 +2 += 1; BattleActor_UpdateScreenXY; BlitzBolt_Draw(+0xB, 1). BlitzBolt_Steps[2, 5, 8]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E590
+name = "BlitzBolt_Next"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E590..0x49E69C (0x10D bytes), cdecl, group S03: Battle_ActorIsOut(+3) (al): out: +2 = 10. Else the record by +4 (as BlitzBolt_Seek) with +1 = 6: return. Else as BlitzBolt_Start's launch with +0xC 0x10000: +8 the owner's, 0x446770, +0x34 / +0x38 / word +0x3E, +0xB Rand & 7, +9 0x10, +0xA 0, +2 += 1. BlitzBolt_Steps[3, 6, 9]. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E6A0
+name = "BlitzBolt_Drift"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E6A0..0x49E71A (0x7B bytes), cdecl, group S03: Frame_Counter bit 0: +0xA += 1; MagicFx_StepTowardPoint(+0xC, +0x10, +0x14, an uninitialised word, 0x30); +9 -= 1, at 0 +2 -= 1; BattleActor_UpdateScreenXY; BlitzBolt_Draw(+0xB, 0). BlitzBolt_Steps[11], reached only from BlitzBolt_Seek's +2 = 11. Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[func]]
+pc = 0x49E720
+name = "BlitzBolt_Draw"
+ret = "void"
+params = "unsigned unused, unsigned abr"
+impl = "src/game/magic_s03.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x49E720..0x49E9E2 (0x2C3 bytes), cdecl, group S03, two words (the first never read): e = abr & 0xFF; Gpu_SetDrawMode(.., 0, 1, (e & 3) sl 5 | 0x15, 0); MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); dwords 0x903850 0x24, 0x903854 +9 sl 3; a FT4 with Gpu_SetSemiTrans(e): vertices at the angles ((+0xA - 3, - 5, + 3, + 5) & 15) sl 8 (dword 0x903858, read back for each sine), x = Math_Cos x dword 0x903850 sar 12 + s16 +0x2E, y from Math_Sin and +0x30; Gpu_GetTPage(1, e, 0x340, 0x100), Gpu_GetClut(0, 0x1FA); u +0xB sl 5 and + 0x1F, v 0 / 0x40; shade the byte 0x903854 x 3; MapView_LinkPrimAt(+0x34, +0x38, 2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s03.md)."
+
+[[data]]
+pc = 0x65A5E0
+name = "MindSwordChild_Kinds"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S03: MindSwordChild_Task's jmp [0x65A5E0 + 4 x byte +1]: MindSwordBlade_Run, MindSwordSpark_Run, MindSwordFlash_Run; MindSword_BladeRadii follows."
+
+[[data]]
+pc = 0x65A5EC
+name = "MindSword_BladeRadii"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S03: MindSwordBlade_DrawLead reads words [1..3] (index i / 2 for i 2, 4, 6) as its fan quads' far radius; word 0 unread. 0x65A5F4 (ChlorineChild_Kinds) follows."
+
+[[data]]
+pc = 0x65A5F4
+name = "ChlorineChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S03: ChlorineChild_Task's jmp [0x65A5F4 + 4 x byte +1]: ChlorineCloud_Run, ChlorineCopy_Task."
+
+[[data]]
+pc = 0x65A5FC
+name = "ChlorineCloud_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S03: ChlorineCloud_Run's call [0x65A5FC + 4 x byte +2]: ChlorineCloud_Start, ChlorineCloud_Grow, 0x4A5D50 (MAGIC040, group S07)."
+
+[[data]]
+pc = 0x65A608
+name = "ChlorineCloud_Offsets"
+ctype = "long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-26, group S03: three (dx, dz, dy) dword triples ChlorineCloud_Start reads by +0xB (0x65A608 / 0x65A60C / 0x65A610 + 12 i); BlitzBolt_TaskTable follows at 0x65A62C."
+
+[[data]]
+pc = 0x65A62C
+name = "BlitzBolt_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S03: BlitzBolt_Task's jmp [0x65A62C + 4 x byte +1]: BlitzBolt_Run; its steps follow."
+
+[[data]]
+pc = 0x65A630
+name = "BlitzBolt_Steps"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-26, group S03: BlitzBolt_Run's jmp [0x65A630 + 4 x byte +2]: BlitzBolt_Start, (BlitzBolt_Seek, _Bounce, _Next) x 3, 0x4AF490 (MAGIC058, group S11), BlitzBolt_Drift (entry 11, reached by BlitzBolt_Seek's +2 = 11). MAGIC013's table starts at 0x65A660 (0x49EBE0), which a +2 of 12 would read."
