@@ -33,11 +33,16 @@ constexpr unsigned kMemberSize = 0x14C;                             // ObjTrio's
 static_assert(kObjectSize * kObjects == Sprite_Objects_count);
 static_assert(kObjectSize * kExtra == Sprite_ObjectsExtra_count);
 
-// The high nibbles of an AreaMap_Bytes cell that stop a step: 1-5, A, B, F.
-// The original looks the nibble up in a byte table at 0x518660 (0 or 2: open,
-// 1: blocked) and jumps through 0x518654; FieldBlocked_Inject checks this mask
-// against both before it installs anything.
-constexpr std::uint16_t kBlockingNibbles = 0x8C3E;
+// The high nibbles of an AreaMap_Bytes cell that stop a step, a bit each. The
+// original looks the nibble up in a byte table at 0x518660 (0 or 2: open,
+// 1: blocked) and jumps through 0x518654; FieldBlocked_Inject reads the mask
+// from both (ReadCellTable, below) before it installs anything, so the list
+// is the image's, not a copy of it (docs/exe-table-audit.md).
+std::uint16_t ReadCellTable();
+std::uint16_t BlockingNibbles() {
+    static const std::uint16_t mask = ReadCellTable();   // read once, whoever asks first
+    return mask;
+}
 
 // Only al of a byte result is meaningful: the originals (and the recorders
 // standing in for them in the fuzz) leave the rest of eax undefined.
@@ -202,7 +207,7 @@ extern "C" unsigned char __cdecl AreaMap_BlockedWide(long x, long y, unsigned di
 // step, by the high nibble of its AreaMap_Bytes byte.
 extern "C" unsigned char __cdecl AreaMap_CellBlocked(short x, short y) {
     const unsigned nibble = (Al(g.byte_at(x, y)) >> 4) & 0xF;
-    return (kBlockingNibbles >> nibble) & 1u;
+    return (BlockingNibbles() >> nibble) & 1u;
 }
 
 // original 0x518760 (PSX FUN_801A31F4): whether the ground at (x, y) is too
@@ -613,8 +618,8 @@ void SelfTest(void* const (&theirs)[kCount]) {
 
 // The original's cell table: for each high nibble, the byte at 0x518660 +
 // nibble * 0x10 picks an entry of 0x518654, which is the `mov al, 1` at
-// 0x51864D or the `xor al, al` at 0x518650.
-void CheckCellTable() {
+// 0x51864D or the `xor al, al` at 0x518650. Anything else is a Fatal.
+std::uint16_t ReadCellTable() {
     std::uint16_t mask = 0;
     for (unsigned nibble = 0; nibble < 16; ++nibble) {
         const unsigned char index = At(0x518660 + nibble * 0x10)[0];
@@ -624,13 +629,13 @@ void CheckCellTable() {
         if (target == 0x51864D) mask = static_cast<std::uint16_t>(mask | 1u << nibble);
         else if (target != 0x518650) bof3::Fatal("field_blocked: cell jump table entry %u is 0x%X", index, (unsigned)target);
     }
-    if (mask != kBlockingNibbles) bof3::Fatal("field_blocked: the exe's blocking nibbles are 0x%04X, ours 0x%04X", mask, kBlockingNibbles);
+    return mask;
 }
 
 }  // namespace
 
 void FieldBlocked_Inject() {
-    CheckCellTable();
+    BlockingNibbles();   // a table that is not the expected shape is a Fatal now, not mid-game
     if (bof3::WantsShadow("field_blocked")) {
         void* clones[kCount];
         for (unsigned k = 0; k < kCount; ++k) {

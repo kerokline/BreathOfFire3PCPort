@@ -29,7 +29,7 @@ merged 2026-09-27 between 09:10 and 11:30). Every group: 0 mismatches,
 every control refused or an equivalent with a refused near variant, no
 harness edits. The other session on this machine added the recipe-save swap
 (`0775a49`, [`input-script.md`](input-script.md) section 1a) and planned the
-scenario and area rounds (`IDEAS.md` I23, I24). The rest is
+scenario and area rounds (`IDEAS.md` I24, I25; main took I23 for the music comparison). The rest is
 [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
@@ -110,8 +110,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.
 4. **After the spells: the next queues**, the owner's order to choose: the
-   scenario round (I23, [`takeover-queue-scenario.md`](takeover-queue-scenario.md)),
-   the area round (I24), new routes (`menu_screens.txt`, a boss, an event
+   scenario round (I24, [`takeover-queue-scenario.md`](takeover-queue-scenario.md)),
+   the area round (I25), new routes (`menu_screens.txt`, a boss, an event
    battle), the MP3 decoder's replacement (round9 doc section 3). What
    earlier rounds left unowned is listed in each group doc ("left
    original", "in no group"); the named ones are round seven's `0x43B130`
@@ -304,7 +304,7 @@ _Verified 2026-09-24._
 Nothing uncommitted of this round's. `phase-3/round-nine` is ahead of
 `origin/phase-3/round-nine` (`fb10178`) by wave five's merges and docs, and
 of `origin/main` (`b302b8d`) by round nine and the other session's
-(`0775a49` recipe saves, `7cb8df5` / `973a69d` I23 / I24). The wave briefs
+(`0775a49` recipe saves, `7cb8df5` / `973a69d` I24 / I25). The wave briefs
 are in `analysis/` (gitignored).
 
 Local only, gitignored, worth keeping:

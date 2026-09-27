@@ -796,7 +796,7 @@ What the round found on the way, each written down where it belongs:
 - **Latent defects of the original** the group docs describe, numbered in
   [`known-defects.md`](known-defects.md) from D59.
 - **Naming questions** the groups raised and left alone (their docs say
-  where): `Item_Price` `0x591C20` returns a help-line message id, not a
+  where): `Item_HelpMessage` `0x591C20` returns a help-line message id, not a
   price; `MoveScript_EffectState` `0x66972C` is the character-to-record
   byte table; `0x596A90` is a menu panel draw, not the window task
   (`Field_RunTaskRecords` `0x59E230` is); `0x42E2F0` is not the battle's

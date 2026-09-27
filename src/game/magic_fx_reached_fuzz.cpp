@@ -472,6 +472,8 @@ void Apply(const State& s) {
     g_rand_pending = g_rand_first;
 }
 
+unsigned char g_rates_exe[8];   // Steal_RateTable as the exe has it, taken before any round
+
 // Random bytes put back inside what the functions dereference.
 void Fix() {
     Sprite_Current = TaskAt(Next());
@@ -531,10 +533,8 @@ void Seed(unsigned k) {
         At(at::kTarget)[0] = static_cast<unsigned char>(Often() ? 3 + Next() % 8 : Next() % 3);
         unsigned char* const e = TargetEnemy();
         if (Often()) e[at::kStealRate] = static_cast<unsigned char>(Half() ? 1 + Next() % 7 : Next() % 8);
-        if (Often()) {   // the table as the exe has it (random bytes the rest of the time)
-            static const unsigned char kRates[8] = {0, 1, 3, 6, 12, 16, 32, 32};
-            std::memcpy(At(at::kStealRates), kRates, sizeof kRates);
-        }
+        if (Often())   // the table as the exe has it (random bytes the rest of the time)
+            std::memcpy(At(at::kStealRates), g_rates_exe, sizeof g_rates_exe);
         if (Half()) SetWord(e + at::kStealItem, Half() ? 0 : Next() % 0x100);
         const int d = static_cast<int>(MF_PICK(49, 48, 29, 28, 19, 18, 9, 8, static_cast<std::uint32_t>(-10),
                                                static_cast<std::uint32_t>(-11), static_cast<std::uint32_t>(-20),
@@ -652,6 +652,7 @@ void SelfTest() {
     for (const Region& r : g_regions) region_bytes += r.size;
     if (region_bytes != kRegionBytes)
         bof3::Fatal("magic_fx_reached: the regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
+    std::memcpy(g_rates_exe, At(at::kStealRates), sizeof g_rates_exe);
 
     void* clones[kCount];
     for (unsigned k = 0; k < kCount; ++k) {

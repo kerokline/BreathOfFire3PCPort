@@ -1,8 +1,8 @@
 # Prior art
 
-**Status:** STABLE (surveyed 2026-09-18)
+**Status:** STABLE (surveyed 2026-09-18; Severed Chains added 2026-09-26)
 
-Four projects, researched because each has already hit a wall we are walking
+Five projects, researched because each has already hit a wall we are walking
 toward. These are notes on *what they learned*, written to be useful when we are
 stuck — not summaries of what the projects are.
 
@@ -12,6 +12,7 @@ stuck — not summaries of what the projects are.
 | [`devilution.md`](devilution.md) | Our archival/living split (PLAN §6), already played out — devilution reconstructed an MSVC-era x86 binary faithfully, DevilutionX forked it into a portable, feature-adding game. |
 | [`tr1x.md`](tr1x.md) | Our phase 0. DLL injection into a running x86 Windows game, single-address redirection, and a project whose stated purpose is to *improve* the game. |
 | [`diaphora.md`](diaphora.md) | Our phase 1. A mature implementation of cross-binary function matching, with years of accumulated knowledge about which signals are trustworthy. |
+| [`severed-chains.md`](severed-chains.md) | Our phase 5. A PSX game (*Legend of Dragoon*) decompiled to a fully native Java engine with a mod loader, registries, and a script-patch pipeline that ships diffs of disassembly, not bytes. No oracle. |
 
 Each note states the project's licence and what it permits. The short version is
 in §4 below and it is not encouraging.
@@ -127,6 +128,7 @@ did* — which is the half our ledger adds.
 | TRX / TR1X | GPL-3.0 | **Read only**, same reasoning. Explicitly including line-by-line translation. |
 | Diaphora | AGPL-3.0 | **Read only.** (Running it would have been fine; the blocker is that export needs IDA, which we do not have.) |
 | devilution / DevilutionX | Sustainable Use License v1.0 (not OSI) | Non-commercial, so no conflict of *purpose* with PolyForm NC — but its own notice and modified-copy-marking duties. Vendoring means SUL text retained, "modified" notice, and a `THIRD_PARTY.md` entry. |
+| Severed Chains | AGPL-3.0 | **Read only**, as for OpenRCT2 and TRX. |
 | OpenLoco | MIT | **The only vendorable reference in the survey.** |
 
 Techniques are not copyrightable. Every note in this directory was written to be

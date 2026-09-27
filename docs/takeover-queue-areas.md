@@ -1,7 +1,7 @@
 # The area round: the area overlays enumerated from their tables, and taken wave by wave
 
 **Status:** PROPOSED (2026-09-26) - a plan, not a queue. Listed as
-[`IDEAS.md`](IDEAS.md) I24; nothing here is scheduled or cut. The method is
+[`IDEAS.md`](IDEAS.md) I25; nothing here is scheduled or cut. The method is
 the spell round's ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
 [`magic_harness.md`](magic_harness.md)) and the scenario plan's
 ([`takeover-queue-scenario.md`](takeover-queue-scenario.md)); section 1 is

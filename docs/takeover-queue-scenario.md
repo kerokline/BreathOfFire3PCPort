@@ -1,7 +1,7 @@
 # The scenario round: the banks wave by wave, on the spell round's pattern
 
 **Status:** PROPOSED (2026-09-26) - a plan, not a queue. Listed as
-[`IDEAS.md`](IDEAS.md) I23; nothing here is scheduled or cut. The
+[`IDEAS.md`](IDEAS.md) I24; nothing here is scheduled or cut. The
 functions and groups come from [`scenario-roots.md`](scenario-roots.md)
 (`tools/scenario_roots.py`); the method is the spell round's
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),

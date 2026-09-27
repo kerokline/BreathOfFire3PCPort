@@ -90,7 +90,7 @@ struct Callees {
     void (__cdecl* equip)(unsigned, unsigned, unsigned);                // Shop_Equip (ours)
     // Items and the inventory
     unsigned (__cdecl* icon_kind)(unsigned, unsigned);                  // Item_IconKind (ours)
-    unsigned (__cdecl* help_id)(unsigned, unsigned);                    // Item_Price (ours) - the help line's message
+    unsigned (__cdecl* help_id)(unsigned, unsigned);                    // Item_HelpMessage (ours) - the help line's message
     unsigned (__cdecl* base_price)(unsigned, unsigned);                 // Item_BasePrice (ours)
     unsigned short (__cdecl* inv_count)(unsigned, unsigned, unsigned);  // Inventory_Count (ours)
     unsigned char (__cdecl* inv_add)(unsigned, unsigned, unsigned);     // Inventory_Add (ours)

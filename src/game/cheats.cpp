@@ -23,8 +23,8 @@
 //
 //     Rand() & 0xFF  <  rate[enemy +0x1A] * agility tier
 //
-// with the table [0, 1, 3, 6, 12, 16, 32, 32] (0x65AC20 / 0x65C204, the
-// PSX's byte for byte) and the tier 12 .. 4 by the attacker's agility less
+// with Steal_RateTable (0x65AC20 / 0x65C204, eight rates, the PSX's byte for
+// byte; read in place, never copied - docs/exe-table-audit.md) and the tier 12 .. 4 by the attacker's agility less
 // the enemy's. The random byte's mask, `and eax, 0xFF` at 0x4B5690 and
 // 0x4F51EE, becomes `and eax, 0` - the sibling's patch - so the roll passes
 // whenever the enemy's chance was above zero. An enemy at steal level 0
