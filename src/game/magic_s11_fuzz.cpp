@@ -329,7 +329,9 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
-    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
+    // a scratch word; half the time the angle word 0x90385E, which Tornado_Spin,
+    // the band and the mote read back after a call
+    case 2: SetWord(mh::Mem(kScratch + (v % 2 ? 0xE : 2 * (v / 2 % 8))), h >> 16); break;
     case 3: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
     case 5: {
