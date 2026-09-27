@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-27, wave five merged)
+**Status:** IN PROGRESS (2026-09-27, the spell round complete and closed out)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -47,24 +47,18 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
    order to choose:
-   - **Rebinding**: many groups call later groups' functions by raw address;
-     they work (the stand-in falls back to the address) but can take names.
-     The lists are in round9 doc sections 11 and 12 (the most-held:
-     `MagicFx_FreeCurrentRecord` `0x4F6290` in thirteen groups,
-     `MagicFx_UncountAndFree` `0x4AF490` in eight,
-     `MagicFx_CountDownFlag10` `0x4F9F70` in six). Mechanical: replace the
-     `MH_AT` / `_callees.h` raw address with the header's name, rebuild, the
-     group's shadow and `'*'` headless.
-   - **`known-defects.md`**: the groups describe; nobody has numbered them.
-     Commonest: unbounded dispatch tables, `BattleTask_Create` / pool `0xFF`
-     unchecked, divides by the live-target count, loops that never end past
-     a byte bound. Notables: Paralyzer (row 123) reads address 0 in an
-     ordinary battle; Head Cracker's (128) freeze is unexplained; Blitz's
-     step past its table jumps into Snap's code on the PC (owner: keep ours);
-     wave five's are listed in round9 doc section 12 (S37's
-     `CombustionSprite_Fade` copy slip, the Combustion shake's camera
-     residue, S38's sound played 16 times a frame). The owner's calls on the
-     aborts are in the round9 doc.
+   - **Rebinding and `known-defects.md` are done** (2026-09-27 afternoon):
+     99 raw constants and 16 phase-table literals in 38 files now name
+     their targets (round9 doc section 12 "Rebinding"; what stays raw and
+     why is listed there - the unowned engine helpers `0x446770`,
+     `0x4514A0`, `0x494060`, `0x494110`, `0x4941B0`, and the S23 / S24 /
+     S29 `_callees.h` constants their fuzz keys on). The spell round's
+     defects are D89..D132 (four common classes collapsed to one entry
+     each, D89..D92; D132 is `Task_Create`'s slot from EA). Four places
+     where the group docs contradict each other are written into the
+     entries (tint table 32 or 256 records; whether ours reads a `.data`
+     dispatch in place or aborts; slot 255's address; task `0x5B`) - each
+     wants one read of the code to settle.
    - **The owner's eye**: boot, the title demo, entering a game, area
      changes, F9 (the scheduler, EA); and any spell cast - every spell group
      is fuzz-only, no route casts them. A cast from the recipe save

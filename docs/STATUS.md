@@ -46,6 +46,7 @@ re-derived:
 | 09-26 | Spell wave 3: MAGIC001..044 (S01..S08) | 377 | 2,845 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 10 |
 | 09-27 | Spell wave 4: MAGIC045..069 (S09..S15) | 320 | 3,165 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 11 |
 | 09-27 | Spell wave 5: MAGIC144..227 (S32..S38) - the spell round complete, every `Magic_Rows` overlay ours | 345 | 3,510 | `r9` re-recorded at 3,164: identical but frame 0 | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 12 |
+| 09-27 | The round closed out: raw-address calls between spell groups rebound to names (58 targets, 38 files), the defects numbered D89..D132, `origin/main` merged in | | 3,510 | `'*'` 0 mismatches | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 12, [`known-defects.md`](known-defects.md) |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
