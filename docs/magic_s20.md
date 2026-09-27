@@ -384,6 +384,8 @@ A first run (before the fuzz logged the packet at each commit and seeded the ene
 
 Not planted, because no fuzz can see them: the order of writes between two calls when nothing reads them in between (ours keeps the original's order anyway), and the original's extra flag arguments to `Gte_RotTrans` / `Gte_RotTransPers3` / `4`, which the replacements do not declare.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 15 controls in the affected functions, 15 refused** (`Magic087_Start`, `Magic088_Apply`, `Magic092_Start`: B1..B8, AA1..AA3, AM1..AM4), each by a count in the function or functions its plant touches, as before. Thinnest: B7 75 rounds, AA1 654; the rest 657 or more. Selected: every control whose plant lies in one of the group's section-8 functions; the rest of the table plants outside them and stands without a re-run. The plants are the original round's own (its scratch script's anchors and edits, each anchor checked unique). Each: plant, rebuild (the file checked recompiled), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s20`, restore, rebuild; then the clean self-test, 0 mismatches, exit 0 (`BOF3X_SHADOW='*'`: exit 0). No fuzz change; no equivalent mutant among them.
+
 ## 6. What nothing reached
 
 Everything here is fuzz only. No recorded route casts rows 29, 48 or 49

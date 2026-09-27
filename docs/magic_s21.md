@@ -333,6 +333,8 @@ A4 and KD4 were only refused after the seed gained two cases: every pool slot in
 
 Ours is faithful in both places as written. The thinnest refusals are H3 (4 rounds), SH5 (4) and SW6 (10). The re-read plants are thin by nature: SP9 (13 / 14), FS4, SS5, CP3, DB4, SH6 and SH8. Each shows only when a recorder's disturbance moves the cell during the one call between the two reads.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 14 controls in the affected functions, 14 refused** (`Inferno_Start`, `Inferno_TargetCentre`: S1..S10, C1..C4), each by a count in the function or functions its plant touches, as before. Thinnest: S4 961 rounds, S10 1,039, C4 1,042. Selected: every control whose plant lies in one of the group's section-8 functions; the rest of the table plants outside them and stands without a re-run. The plants are the original round's own (its scratch script's anchors and edits, each anchor checked unique). Each: plant, rebuild (the file checked recompiled), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s21`, restore, rebuild; then the clean self-test, 0 mismatches, exit 0 (`BOF3X_SHADOW='*'`: exit 0). No fuzz change; no equivalent mutant among them.
+
 ## 5. Defects (Capcom's, latent, kept)
 
 These are described here, not numbered. The coordinator numbers them.

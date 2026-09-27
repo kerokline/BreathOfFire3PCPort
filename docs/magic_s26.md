@@ -406,6 +406,8 @@ matching frame at once). A first run on a seed one step off the count edges
 refused G2 in 4 rounds; the seeds were moved to the edges (431 now) and the
 whole set run again.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 16 controls in the affected functions, 16 refused** (`Magic114_SpriteTick`, `Magic115_Orbit`, `_OrbitFade`, `_MoteTick`, `_MoteFade`: ST1, CI1..CI4, OB1..OB6, OF1, OF2, MTK1, MTK2, MF1), each by a count in the function or functions its plant touches, as before. Thinnest: CI2 3 rounds, CI4 73 / 82, OB1 105. Selected: every control whose plant lies in one of the group's section-8 functions (the CI rows plant in `Magic115_Circle`, which Orbit and OrbitFade share); the rest of the table plants outside them and stands without a re-run. The plants are the original round's own (its scratch script's anchors and edits, each anchor checked unique); OF1's anchor, found twice now (MoteFade has the same line), was lengthened by the function's header - the same edit. Each: plant, rebuild (the file checked recompiled), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s26`, restore, rebuild; then the clean self-test, 0 mismatches, exit 0 (`BOF3X_SHADOW='*'`: exit 0). No fuzz change; no equivalent mutant among them.
+
 ## 7. What nothing reached
 
 No recorded route casts any of these spells (the queue's §5). The live check

@@ -551,6 +551,8 @@ last record (R55 4, H72 6: the pool must fill to exactly there). The
 HolocaustBeam_Aim plants (H14..H23, 14..38) are thin because the aim runs
 only in the rounds its count-down reaches 0.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 13 controls in the affected functions, 13 refused** (`BoneDance_Hold`, `RottenBreath_Emit` / `_End`, `UtmostAttack_WaitCaster` / `_Stream` / `_End` / `_SpawnStreaks`: B8, B9, R10..R13, U4..U9, U22), each by a count in the function or functions its plant touches, as before. Thinnest: R11 34 rounds, U5 45; the rest 882 or more. Selected: every control whose plant lies in one of the group's section-8 functions; the rest of the table plants outside them and stands without a re-run. The plants are the original round's own (its scratch script's anchors and edits, each anchor checked unique). Each: plant, rebuild (the file checked recompiled), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_c2`, restore, rebuild; then the clean self-test, 0 mismatches, exit 0 (`BOF3X_SHADOW='*'`: exit 0). No fuzz change; no equivalent mutant among them.
+
 ## 11. What reaches it
 
 Nothing recorded. The combat route's traces enter no function of these
