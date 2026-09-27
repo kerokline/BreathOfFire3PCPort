@@ -244,6 +244,14 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(Key(Sprite_Current));
     return answer;
 }
+// Sprite_ScriptTickOnce answers exactly 1 (its "done") a third of the time:
+// the harness's kFlag answers a random non-zero byte, so a caller testing bit 0
+// alone (al & 0xFE) would look the same.
+std::uint32_t TickEffect(const std::uint32_t*, std::uint32_t answer) {
+    mh::Note(Key(Sprite_Current));
+    if (mh::Noise() % 3 == 0) return (answer & ~0xFFu) | 1u;
+    return answer;
+}
 // MAGIC162's line draws: the current record they draw.
 std::uint32_t NoteCurrent(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(kTransferCurrent))));
@@ -286,7 +294,7 @@ constexpr mh::Answer kP = mh::Answer::kPhase;
 #define S34_RAW(address) #address, address, address
 const mh::Callee kCallees[] = {
     // listed over the standard ones for their effects
-    {S34_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &NoteSprite},
+    {S34_OURS(Sprite_ScriptTickOnce), 0, {}, mh::Answer::kFlag, 0, 0, {}, &TickEffect},
     {S34_OURS(Sprite_UpdateScreen), 0, {}, kG, 0, 0, {}, &NoteSprite},
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map, battle_items:
     // all ours)
