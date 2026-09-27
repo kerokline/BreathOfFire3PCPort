@@ -62,14 +62,15 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
 2. **Owed by the spell round, before or after wave five** (round9 doc
    sections 6 to 10):
    - **The frame hash re-record** (above), owner away about 20 minutes.
-   - **The controls, re-run on the fixed harness.** Both `kFlag` gaps
-     are fixed in `magic_harness.cpp` (2026-09-26; [`magic_harness.md`](magic_harness.md)
-     §4) and `BOF3X_SHADOW='*'` passes headless, but the answers' stream
-     changed under every group, so a control refused by the old stream is
-     unproven on the new. The controls scripts were never committed (they
-     lived untracked in the removed agent worktrees): a re-run rebuilds
-     them from each group doc's controls table. Waves two and three's own
-     `kFlag` workarounds still pass and can stay.
+   - **The controls, re-run where the harness fix reaches.** Both `kFlag`
+     gaps are fixed in `magic_harness.cpp` (2026-09-26) and
+     `BOF3X_SHADOW='*'` passes headless. Only `kFlag` / `kBool` answers
+     changed, so only clones whose original calls one see a new stream:
+     117 of 1,372, listed by group in [`magic_harness.md`](magic_harness.md)
+     section 8 (about 530 controls; every other control stands). The
+     controls scripts were never committed (they lived untracked in the
+     removed agent worktrees): a re-run rebuilds its plants from the group
+     doc's controls table.
    - **Rebinding**: many groups call later groups' functions by raw address;
      they work (the stand-in falls back to the address) but can take names.
    - **`known-defects.md`**: the groups describe; nobody has numbered them.

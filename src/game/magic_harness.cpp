@@ -163,15 +163,21 @@ unsigned g_slot_n;
 
 std::uint32_t Cur() { return Key(Sprite_Current); }
 
-std::uint32_t Answering(const Slot& s) {
-    // Remixed, not Hash() itself: Disturb read the same Hash() at the same log
-    // length, and its "h % 3 == 0: nothing moves" would otherwise be exactly
-    // kFlag's and kBool's "answer 0" - a 0 never seen after a disturbance
-    // (found by E).
-    std::uint32_t h = Hash() * 0x2C1B3C6Du;
+// kFlag's and kBool's draw: Hash() remixed. Disturb read the same Hash() at
+// the same log length, and its "h % 3 == 0: nothing moves" would otherwise be
+// exactly their "answer 0" - a 0 never seen after a disturbance (found by E).
+// The other kinds keep Hash() itself, so a clone that calls neither sees the
+// stream it always had (and its controls stand).
+std::uint32_t Remixed(std::uint32_t h) {
+    h *= 0x2C1B3C6Du;
     h ^= h >> 12;
     h *= 0x297A2D39u;
     h ^= h >> 15;
+    return h;
+}
+
+std::uint32_t Answering(const Slot& s) {
+    const std::uint32_t h = s.answer == Answer::kFlag || s.answer == Answer::kBool ? Remixed(Hash()) : Hash();
     switch (s.answer) {
     case Answer::kByte: {
         const unsigned span = ((static_cast<unsigned>(s.hi) - s.lo) & 0xFFu) + 1;

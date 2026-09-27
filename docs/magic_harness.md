@@ -107,7 +107,9 @@ the worked example: 110 lines of group file for three functions, most of it the 
   on a remix of the call's hash, not the hash the disturbance read: with
   the same one, "nothing moved" and a flag's or bool's 0 coincided, so a 0
   was never seen after a disturbance (group E; fixed 2026-09-26, waves two
-  and three work round it in their own fuzz files and still pass). A handler's
+  and three work round it in their own fuzz files and still pass). Only
+  those two kinds use the remix; the rest answer from `Hash()` as before
+  (section 8: why that keeps most controls standing). A handler's
   recorder logs the slot and its phase bytes. `StandIn` finds a recorder
   by the pointer ours passes, or by the original's address (a callee that
   became ours, called by `MH_AT`), or through the standard set's name for
@@ -258,3 +260,51 @@ Steal needs none of the following, so none of its controls exercises them:
 `custom`, `kBool`, `kPhase`, `kThrough`, and arguments past the fourth.
 Each is its group's original code rewritten into one shape, and the first
 group to port each one is its first test.
+
+## 8. The kFlag fix's reach: which controls to re-run (2026-09-26)
+
+The fix in section 4 changed only `kFlag`'s and `kBool`'s draw; every other
+kind still answers from `Hash()` itself. Each clone's rounds draw their
+input from `Next()`, which no answer moves, so a clone whose original never
+calls a `kFlag` or `kBool` recorder sees, round for round, the stream it
+always had. A plant in it that departs from the original's calls is
+refused by the call log on either harness, and one that does not meets
+the same answers as before. **Its controls stand without a re-run.**
+
+Measured with a diagnostic build (not committed) that marked each clone
+whose original side reached a `kFlag` / `kBool` answer in any of its
+rounds, `BOF3X_SHADOW='*'` headless: **117 of 1,372 clones** in 27
+groups. C3, S05 and S28 have none. Only controls that plant in these
+functions need a re-run (by a name match of the group docs' controls
+tables, some 530 of 4,181 in the 27 groups, more where a table names a
+function short):
+
+| Group | Clones | Functions |
+|---|--:|---|
+| `magic_c1` | 4 | `InkInk_Start`, `Magic213Mote_End`, `Magic213_Start`, `PentagramSprite_Animate` |
+| `magic_c2` | 7 | `BoneDance_Hold`, `RottenBreath_Emit`, `RottenBreath_End`, `UtmostAttack_End`, `UtmostAttack_SpawnStreaks`, `UtmostAttack_Stream`, `UtmostAttack_WaitCaster` |
+| `magic_engine` | 1 | `HeadCracker_WaitTarget` |
+| `magic_lib` | 2 | `MagicFx_ApplyBuff`, `MagicFx_BuffPopup` |
+| `magic_s01` | 5 | `NueStompChild_Bounce`, `NueStompChild_Crouch`, `NueStompChild_Land`, `NueStompChild_Leap`, `NueStompChild_Stomp` |
+| `magic_s02` | 11 | `ElemStrikeCopy_Play`, `ElemStrikeFx_Play`, `ElemStrike_End`, `SuperComboDash_Hit`, `SuperComboDash_Leap`, `SuperComboDash_Return`, `SuperComboDash_Start`, `SuperComboHit_Play`, `SuperComboImage_Leap`, `SuperComboImage_Return`, `SuperComboImage_Turn` |
+| `magic_s03` | 5 | `BlitzBolt_Next`, `BlitzBolt_Seek`, `Blitz_Start`, `ChlorineCopy_Play`, `MindSwordBlade_Fly` |
+| `magic_s04` | 8 | `AirRaidImage_Bounce`, `ChargeImage_Dash`, `ChargeTrail_Dash`, `FlyingKickImage_Bounce`, `FlyingKickImage_Dive`, `KickImage_Settle`, `KickImage_Tick`, `Snap_Buff` |
+| `magic_s06` | 22 | `Magic008Blow_ReactThree`, `Magic008Blow_ReactTwo`, `Magic008Blow_Strike`, `Magic008Blow_WaitThree`, `Magic008Blow_WaitTwo`, `Magic008Dash_Follow`, `Magic008Dash_Start`, `Magic008Glow_Brighten`, `Magic008Glow_Strike`, `Magic008Glow_Wait`, `Magic008Grow_Grow`, `Magic008Grow_Strike`, `Magic008Grow_Wait`, `Magic008Mirror_Hit`, `Magic008Mirror_Size`, `Magic008Mirror_Strike`, `Magic008_Apply`, `Magic020Lead_Approach`, `Magic020Lead_Tick`, `Magic020Lead_WaitSlashes`, `Magic020Shadow_Approach`, `Magic020Slash_Play` |
+| `magic_s07` | 7 | `BonebreakChild_Burst`, `BonebreakChild_WaitScript`, `Enlighten_Apply`, `WarShoutMote_Circle`, `WarShoutMote_Fade`, `WarShoutMote_Rise`, `WarShout_Rally` |
+| `magic_s08` | 1 | `Ward_Fade` |
+| `magic_s16` | 4 | `Magic073_CountReacting`, `Magic073_Spawn`, `Magic073_Wait`, `Magic074_Spawn` |
+| `magic_s17` | 1 | `PurifyMote_End` |
+| `magic_s18` | 1 | `Buff_Fade` |
+| `magic_s19` | 1 | `Shield_Start` |
+| `magic_s20` | 3 | `Magic087_Start`, `Magic088_Apply`, `Magic092_Start` |
+| `magic_s21` | 2 | `Inferno_Start`, `Inferno_TargetCentre` |
+| `magic_s22` | 3 | `Blizzard_CenterOnTargets`, `Jolt_Start`, `Lightning_Start` |
+| `magic_s23` | 3 | `FxFunnel_Orbit`, `Quake_Heave`, `Quake_Start` |
+| `magic_s24` | 1 | `Fx105_MoteDrift` |
+| `magic_s25` | 1 | `SpellConfuse_ChildFly` |
+| `magic_s26` | 5 | `Magic114_SpriteTick`, `Magic115_MoteFade`, `Magic115_MoteTick`, `Magic115_Orbit`, `Magic115_OrbitFade` |
+| `magic_s27` | 4 | `WhelpBreathFlames_Draw`, `WhelpBreathGlow_Draw`, `WhelpBreathSprite_Hold`, `WhelpBreathSprite_Play` |
+| `magic_s29` | 1 | `ShadowSeeker_Home` |
+| `magic_s30` | 7 | `KaiserFlash_WaitLoad`, `KaiserSprite_Breathe`, `KaiserSprite_Tick`, `KaiserSprite_WaitScript`, `Kaiser_HideParty`, `Kaiser_LoadSetFile`, `Kaiser_ShowParty` |
+| `magic_s31` | 6 | `CoronaEnemy_Start`, `MainCannonBlast_Play`, `MainCannonShell_Fly`, `MainCannon_End`, `MainCannon_Fire`, `MainCannon_Start` |
+| `magic_steal` | 1 | `SkillSteal_Roll` |
