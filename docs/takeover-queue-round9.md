@@ -282,3 +282,13 @@ register** (S06: `0x4A2DC0`, `0x4A2F40` load three handlers into a register
 before storing them; the generated clone would have called Capcom's real
 handlers). A group's coverage line missing a handler is the sign. Fix with
 the jump-table bound (§9).
+
+Then **S02** (48), **S03** (44), **S08** (59), **S04** (56): 2,786 ours, S07
+outstanding.
+
+**A second harness gap, found by S03, S04 and S08 independently:** a
+`kFlag` stand-in answers only al, leaving garbage above it; a caller that
+tests the whole of eax (`MagicFx_NearSprite`, `_NearSprite3D`) then almost
+never sees 0, so its "no" branch never runs. Each group re-listed those
+callees as `kBool` in its own fuzz. Fix with the `kFlag` one: the standard
+set should list a callee by what its callers test.
