@@ -162,6 +162,8 @@
 #include "game/magic_s37.h"
 #include "game/magic_s35.h"
 #include "game/magic_s38.h"
+#include "game/area_011.h"
+#include "game/area_cell_hook.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -511,6 +513,11 @@ void InjectAll() {
                                 // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Area011_Inject();           // round 10 group ARH (area 11: two handlers and the init, the area harness's proof):
+                                // its clones' calls re-aimed at the area harness's recorders; no module patches
+                                // bytes inside its 3 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaCellHook_Inject();      // round 10 group ARH (0x56E670, the cell hook's per-area reader): its table's
+                                // handlers swapped for the fuzz only; nothing patches inside it
     InjectReport();
 }
 

@@ -40961,3 +40961,60 @@ ctype = "unsigned char"
 count = 6336
 status = "evidence"
 evidence = "read 2026-09-27, group S38: 48 records of 0x84 bytes: MeteorStrike_RecordAlloc's, walked by MeteorStrike_Task, cleared by MeteorStrike_Start; +1 0 a chip, 1 a trail (MeteorStrikeRecord_Kinds)."
+
+# --- round ten group ARH: the area harness's proof, area 11 (docs/area_011.md), and the cell hook's reader (docs/area_harness.md section 8) ---
+
+[[func]]
+pc = 0x401750
+name = "Area11_StepCameraDistance"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_011.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x401750..0x40176B (0x1C), cdecl, no calls: area 11's handler 0 (Area11_Handlers, the descriptor 0x5E2738's +0x3C; the movement-script ops 03 / DE). Camera_Distance as a signed word: above -0x1400 (cmp 0xEC00, jle), 0xA0 less (add 0xFF60); then MapView_Redraw = 2. PSX twin: the sibling's names/area_records.toml area 11 handler[0]. docs/area_011.md section 1."
+
+[[func]]
+pc = 0x401770
+name = "Area11_SpawnEffect"
+psx = 0x801F2C44
+ret = "void"
+params = "void"
+impl = "src/game/area_011.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x401770..0x4017B5 (0x46), cdecl: area 11's handler 1. Sprite_Current = ObjTrio (the leader); Effect_Spawn(1, 0, Area11_EffectKinds[byte 0x904064, the first party list's third member], the leader's words +0x2E, +0x30) - the call ops 90..95 make; an al other than 0xFF to Sprite_Current[0xB], Sprite_Current read again. PSX twin: names/area_records.toml area 11 handler[1]. docs/area_011.md section 1."
+
+[[func]]
+pc = 0x4017C0
+name = "Area11_DimBackdrop"
+psx = 0x801F2CC4
+ret = "void"
+params = "void"
+impl = "src/game/area_011.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4017C0..0x401838 (0x79), cdecl: area 11's init (the descriptor's +0x40; Area_Enter). With Flags_Test(0x904000, 0x13) and not Flags_Test(0x904000, 0x14): the header entries from AreaMap_EntryBase walked as AreaMap_HeaderPass walks them (a zero dword ends, byte +2 the step in dwords); the first of kind exactly 0x81 (AreaMap_DrawBackdrop's) gets 0x21080000 in both colour dwords +8 and +12. A step of 0 never ends (latent). PSX twin: names/area_records.toml area 11 init. docs/area_011.md section 1."
+
+[[func]]
+pc = 0x56E670
+name = "Area_CellHook"
+ret = "int"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_cell_hook.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x56E670..0x56E6B3 (0x44), cdecl, called only by 0x56D7A0 (the chapter's +0x10 cell hook, when that slot is null or answers below 0; Field_LeaderTalkTest asks it about a 0x51 cell). Walks the 8-byte (area, handler) pairs at 0x662F28 while the cursor is below 0x663008 - 28 pairs - comparing each pair's low byte, zero-extended, with the whole u16 Game_AreaNumber; none: eax 0; else call [0x662F2C + 8 * i](x, z) and movsx eax, al. docs/area_harness.md section 8."
+
+[[data]]
+pc = 0x5E2730
+name = "Area11_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: area 11's descriptor (0x5E2738, 0x667590 entry 11) +0x3C: Area11_StepCameraDistance 0x401750, Area11_SpawnEffect 0x401770; the descriptor follows at +8. The sibling's names/area_records.toml lists handler[0] and handler[1] for the PSX area 11."
+
+[[data]]
+pc = 0x5E2400
+name = "Area11_EffectKinds"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27: Area11_SpawnEffect's movzx of [member + 0x5E2400], member the byte 0x904064; eight bytes, then area 11's link list (the descriptor's +0x20, 0x5E2408). The index is a member id, unchecked; the count is the space to the link list."
