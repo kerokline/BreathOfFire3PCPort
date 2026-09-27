@@ -162,6 +162,7 @@
 #include "game/magic_s37.h"
 #include "game/magic_s35.h"
 #include "game/magic_s38.h"
+#include "game/scena_sc0.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -511,6 +512,10 @@ void InjectAll() {
                                 // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc0_Inject();          // round 10 group SCH (scenario chapter 0, the scenario harness's proof): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its three .data tables swapped
+                                // for the fuzz only; no module patches bytes inside its 19 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
     InjectReport();
 }
 
