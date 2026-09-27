@@ -22,7 +22,11 @@
 //     the palette, the status tint, the CLUT STP bits, the member sprite, the
 //     screen update) log which sprite - MAGIC151 swaps it to a party record
 //     round them - and the screen update the frame-offset table 0x9039D8 the
-//     blades swap.
+//     blades swap;
+//   - Window_Alloc and AreaMap_Elevation move the cells Accession_ApplyB reads
+//     back after them (a member's column, row and position, 0x904AB0, party
+//     record 0's +0x34 / +0x38), which the harness's disturbance reaches too
+//     rarely.
 #include <cstdint>
 #include <cstring>
 
@@ -279,6 +283,27 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     return answer;
 }
 
+// Window_Alloc (MAGIC151's window loop): the cells Accession_ApplyB reads back
+// after it - the member's column +8, row +0x89 and position +0x2E / +0x30,
+// and 0x904AB0 - moved half the time (the harness's disturbance reaches them
+// too rarely to tell a read before the call from one after it).
+std::uint32_t WindowEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const unsigned member = (a[0] & 0xFF) - 0xD;
+    if (member < 3 && mh::Noise() % 2 == 0) {
+        unsigned char* const m = mh::Mem(mh::at::kParty + member * mh::at::kPartyStride);
+        static const unsigned kFields[] = {8, 0x89, 0x2E, 0x30};
+        m[kFields[mh::Noise() % 4]] = static_cast<unsigned char>(mh::Noise());
+    }
+    if (mh::Noise() % 2 == 0) mh::Mem(0x904AB0)[0] = static_cast<unsigned char>(mh::Noise());
+    return answer;
+}
+// AreaMap_Elevation: party record 0's +0x34 / +0x38 moved half the time
+// (Accession_ApplyB reads them back after it).
+std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (mh::Noise() % 2 == 0) SetLong(mh::Mem(mh::at::kParty + 0x34 + 4 * (mh::Noise() & 1)), static_cast<std::int32_t>(mh::Noise()));
+    return answer;
+}
+
 // --- the callees the standard set lacks -----------------------------------------
 
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
@@ -301,12 +326,12 @@ const mh::Callee kCallees[] = {
     {S33_OURS(Battle_ClearActorBit), 1, {kU8}, kG, 0, 0},
     {S33_OURS(Battle_ReturnQueuedItem), 1, {kU8}, kG, 0, 0},
     {S33_OURS(Battle_RemoveFromTurnOrder), 1, {kU8}, kG, 0, 0},
-    {S33_OURS(Window_Alloc), 2, {kU8, kU8}, kG, 0, 0},
+    {S33_OURS(Window_Alloc), 2, {kU8, kU8}, kG, 0, 0, {}, &WindowEffect},
     {S33_OURS(File_LoadDone), 0, {}, mh::Answer::kFlag, 0, 0},
     {S33_OURS(LoadDatFile), 1, {kAll}, kG, 0, 0},
     {S33_OURS(Str_CopyN), 3, {kAll, kAll, kAll}, kG, 0, 0},
     {S33_OURS(BattleBanner_Add), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0},
-    {S33_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0},
+    {S33_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
     {S33_OURS(SpellSleep_PushTurnMatrix), 0, {}, kG, 0, 0},
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map, field_misc:
     // all ours)
