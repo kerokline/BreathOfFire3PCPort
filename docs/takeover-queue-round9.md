@@ -1,6 +1,6 @@
 # The ninth round's queue: what the routes still enter, and the spells
 
-**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and spell waves one and two merged: 2,468 ours; the frame hash to re-record again, the owner's eye owed
+**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and spell waves one to three merged: 2,845 ours; the frame hash to re-record again, the owner's eye owed
 
 Round eight left "76 hidden entries the three routes still enter" as the
 next queue ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Owed
@@ -302,3 +302,23 @@ table by the same 12; on the PlayStation, where each overlay loads alone,
 the entry past the table is whatever follows it in Blitz's own file. So the
 wild jump is likely an artifact of the port's linking. Ours aborts at the
 bad step, the out-of-table precedent. Reachability is unmeasured.
+
+**Wave three complete (2026-09-26 night): all eight merged, 2,468 -> 2,845
+ours (377 functions).** Each merge: the build, the group's shadow, `'*'`,
+`ledger_check`, the entry list consolidated.
+
+| Group | Doc | Taken | Controls | Refused | Not refused |
+|---|---|--:|--:|--:|---|
+| S01 | [`magic_s01.md`](magic_s01.md) | 26 | 174 | 174 | |
+| S02 | [`magic_s02.md`](magic_s02.md) | 48 | 231 | 230 | 1 equivalent |
+| S03 | [`magic_s03.md`](magic_s03.md) | 44 | 219 | 217 | 2 equivalent |
+| S04 | [`magic_s04.md`](magic_s04.md) | 56 | 307 | 307 | |
+| S05 | [`magic_s05.md`](magic_s05.md) | 29 | 126 | 126 | |
+| S06 | [`magic_s06.md`](magic_s06.md) | 56 | 203 | 202 | 1 equivalent |
+| S07 | [`magic_s07.md`](magic_s07.md) | 59 | 274 | 273 | 1 equivalent |
+| S08 | [`magic_s08.md`](magic_s08.md) | 59 | 221 | 221 | |
+
+Left: waves four (S09..S15, 320) and five (S32..S38, 345), then the owed
+list (§9, §10): the frame hash, the two `kFlag` gaps in the harness and the
+controls re-run, `magic_rows.py`'s two misses, the raw-address rebinding,
+`known-defects.md` for all three waves.
