@@ -160,6 +160,7 @@
 #include "game/magic_s34.h"
 #include "game/magic_s36.h"
 #include "game/magic_s37.h"
+#include "game/magic_s35.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -501,6 +502,10 @@ void InjectAll() {
                                 // Combustion): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its eleven .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS35_Inject();          // round 9 group S35 (MAGIC167, 168, 169: Last Resort, Cure, Benediction): its
+                                // clones' calls and stack-table immediates re-aimed at the shared harness's recorders,
+                                // its six .data tables swapped for the fuzz only; no module patches bytes inside its 46
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 
