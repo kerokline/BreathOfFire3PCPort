@@ -375,7 +375,9 @@ add_library(bof3x SHARED
   src/game/scena_sc3.cpp
   src/game/scena_sc3_fuzz.cpp
   src/game/scena_sc1.cpp
-  src/game/scena_sc1_fuzz.cpp)
+  src/game/scena_sc1_fuzz.cpp
+  src/game/scena_sc12.cpp
+  src/game/scena_sc12_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

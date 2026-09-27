@@ -42254,6 +42254,265 @@ count = 2
 status = "evidence"
 evidence = "read 2026-09-27: Scena01_CellHook jumps through it on 0x56D800's answer: Scena01_Cell twice."
 
+# ---------------------------------------------------------------------------
+# Round ten group SC12: chapter 12's first block, 0x55E4E0..0x561DB0 (docs/scena_sc12.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x55E4E0
+name = "Scena12_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55E4E0..0x55E4ED (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x6616F4] - slot 0 of chapter 12's vtable 0x6616E0 (0x662C80 entry 12), Field_ModeDispatch's call; Scena12_States: 0 0x5646B0 (group SC13's block), 1 Scena12_EnterArea, 2 Scena12_Run. The shape of Scena01_Frame / Scena16_Frame; ours aborts outside the three entries."
+
+[[func]]
+pc = 0x55E4F0
+name = "Scena12_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55E4F0..0x55EA7B (0x58C bytes, jump tables 0x55EA38 (5, behind the byte table 0x55EA4C of 10) and 0x55EA58 (9)): Scena12_States entry 1. By Game_AreaNumber (0x65, 0x79, 0x82..0x88, 0xBC; 0x10 / 0x2D / 0x41 / 0x57 / 0x73 end the run) and the counter byte 0x90384A: Draw_PassFlags, Field_ScriptFlags |= 0x16 / 0xE / 8, MapView_SetElevation (0x498, 0x200, 0x290, 0x100) with MapView_Redraw 2, Effect_FindFree kinds 0x76 / 0x77 / 0x79 / 0x7B / 0x7C, Music_LoadFile 0x8F / 0x8B waited with File_LoadDone / Task_Sleep then Music_Play, Scenario_CallA / 0x5341C0 by the selector Cond_Flags +0x19C, flags 0x24 / 0x26 / 0x28 / 0x2F; every exit stores 0x8034E2 = 2. 37 calls."
+
+[[func]]
+pc = 0x55EA80
+name = "Scena12_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55EA80..0x55EA8D (0xE bytes): movsx eax, byte 0x8034E4 (MoveScript_Var7) / jmp [eax*4 + 0x661700] - state 2, Scena12_Runs: 0 and 3 a bare ret (0x437CC0), 1 Run1, 2 Run2, 4..9 Run4..Run9. Ours aborts outside the ten entries (the next are Scena12_Objects)."
+
+[[func]]
+pc = 0x55EA90
+name = "Scena12_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55EA90..0x55EADA (0x4B bytes): run 1 - step 0xA: unless Field_Request is 2, counter 0 = 0x32, step 0xB; step 0xB: at counter 1 = 0xA, counter 1 0, ScriptFlags_Clear40, step and run 0."
+
+[[func]]
+pc = 0x55EAE0
+name = "Scena12_Run2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55EAE0..0x55EB2B (0x4C bytes): run 2 - step 0x32 Msg_OpenScript(6), step 0x3C (7), each Field_Request 2 and step 0x33; step 0x33 once the request is not 2: ScriptFlags_Clear40, step and run 0."
+
+[[func]]
+pc = 0x55EB30
+name = "Scena12_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55EB30..0x55F5BF (0xA90 bytes, jump tables 0x55F4F4 (17, behind the byte table 0x55F538 of 0x28), 0x55F560 (12), 0x55F590 (12)): run 4, steps 0..2, 0xA, 0xB, 0x14..0x1E, 0x27 - Field_ChangeArea to 0x85 / 0x65, Kind2_Place, Party_DropIn(1), messages 0xB / 0x11, flags 0x16..0x19, the 0x2000 colours at 0x80F580 greyed (step 0x17) with Gfx_ClutStripDirty, Transition_Start(4), 0x533E50, and one of the ten flags 0x1A..0x23 by the selector (step 0x1E also clears the other nine). 114 calls."
+
+[[func]]
+pc = 0x55F5C0
+name = "Scena12_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55F5C0..0x55FD67 (0x7A8 bytes, jump tables 0x55FC8C (23, behind the byte table 0x55FCE8 of 0x2E), 0x55FD18 (5, byte table 0x55FD2C of 10), 0x55FD38 (12)): run 5, steps 0..3, 5..9, 0x14..0x16, 0x19..0x1C, 0x28..0x2D - messages 2 / 0xD / 0x13, Party_DropIn (3, 9, 6, 4, 2, 8 by the area), Field_ChangeArea to 0x88 / 0x85 (by the selector), Kind2_Place, effect 0x77, flags 0x14, 0x16, 0x24..0x27 and 0x29 on Cond_Flags + 0xA0 as a literal, Transition_Start(4), and by the selector Scenario_CallA 6 / 7 after 0x5341C0 0 / 1 / 4. 54 calls."
+
+[[func]]
+pc = 0x55FD70
+name = "Scena12_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x55FD70..0x5603F7 (0x688 bytes, jump table 0x56039C of 23): run 6, steps 0..0x16 - a chain of Field_ChangeArea into area 0xBC (flags 0x80..0x8E) with the counters and the music byte 0x904CD0 (0xFF before, 0x90 / 0x8F after), Kind2_Place 0..3, flags 0x15 / 0x28 / 0x29, Cond_ByteFE 1 and an effect of kind 0x13 at (-0x370, Camera_Angles +2, 0x200) waited out, effect 0x7A, Sound_PlayEffect(0x20C), Music_FadeOutStop(0x1E), Transition_Start(0xD). 26 calls."
+
+[[func]]
+pc = 0x560400
+name = "Scena12_Run7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x560400..0x5608D3 (0x4D4 bytes, jump tables 0x56083C (18, behind the byte table 0x560884 of 0x1F) and 0x5608A4 (12)): run 7, steps 0, 1, 5, 6, 0xA..0x14, 0x1D, 0x1E - Field_ChangeArea into 0xBC, message 0xB / 0x17, ScriptFlags_Set40, Party_DropIn(0x10), Sound_PlayEffect(0x20E), Music_Play(0x8F, 8), Kind2_Place(4), Transition_Start(0xD), Music_FadeOutStop(0xA), 0x533E50, one of the flags 0x32..0x3B by the selector, flags 0x2A..0x2C, and ten AreaMap_SetByte cells (step 0x1E). 32 calls."
+
+[[func]]
+pc = 0x5608E0
+name = "Scena12_Run8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x5608E0..0x561163 (0x884 bytes, jump tables 0x5610A4 (13, behind the byte table 0x5610D8 of 0x21), 0x5610FC (7), 0x561118 (7), 0x561134 (12)): run 8, steps 0..5, 0xA, 0x14, 0x15, 0x1E..0x20 - by Cond_ByteFD (2 / 3) and the byte 0x802DC9 (2..8) message 0x18 / 0x19 / 0x1A; Transition_Start 0xD / 0xE, 0x533E50, Music_FadeOutStop(0x1E), Sound_LoadStream(0) and Sound_StreamDone, Music_Play(0x8B, 8), the flags 0x32..0x3B one-hot by the selector with Field_ChangeArea(0xBC, 0xC8000, 0xA8000, 0x95), message 0x20. 102 calls."
+
+[[func]]
+pc = 0x561170
+name = "Scena12_Run9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561170..0x561877 (0x708 bytes, jump table 0x5617E0 (26, behind the byte table 0x561848 of 0x30)): run 9, steps 0..2, 0xA..0x12, 0x14..0x16, 0x1E..0x22, 0x2B..0x2F - Party_DropIn (0, 1, 2, 7, 4, 3), Music_FadeOutStop / Music_Play(0xA4, 8), Kind2_Place, effects of kind 0x13 at camera-relative points and 0x82..0x84, messages 5 / 4 / 3 / 2 per byte of 0x904062 equal to 2 / 8 / 5 / 4, Input_Held 0x2000 / 0x3000 / 0x6000, 0x532ED0(x, 0x258000, 0x26) and 0x4410B0(0x26), flags 2, 0x2D, 0x30, 0x3F, 0x56D6F0 and Field_ChangeArea(0x7E, 0x500000, 0x1E0000, 4). 39 calls."
+
+[[func]]
+pc = 0x561880
+name = "Scena12_ObjectTrigger"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561880..0x56189E (0x1F bytes): slot 1, called by 0x56D6D0 with the object (which then stores 0xFF at its +0x86 and ignores eax): call [0x661728 + object[+0x86] * 4] (object, the dword 0x929ED0) - Scena12_Objects. Ours aborts outside its 15 entries."
+
+[[func]]
+pc = 0x5618A0
+name = "Scena12_Object06"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x5618A0..0x5618C2 (0x23 bytes): Scena12_Objects entry 6 - ScriptFlags_Set40, run 1, counters 1..3 and the step 0."
+
+[[func]]
+pc = 0x5618D0
+name = "Scena12_Object09"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x5618D0..0x5618F4 (0x25 bytes): Scena12_Objects entry 9 - ScriptFlags_Set40, step 0x14, counters 1..3 0, run 4."
+
+[[func]]
+pc = 0x561900
+name = "Scena12_Object10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561900..0x561924 (0x25 bytes): Scena12_Objects entry 10 - ScriptFlags_Set40, step 0x14, counters 1..3 0, run 5."
+
+[[func]]
+pc = 0x561930
+name = "Scena12_Object11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561930..0x561959 (0x2A bytes): Scena12_Objects entry 11 - ScriptFlags_Set40, step 2, the four counters 0, run 5."
+
+[[func]]
+pc = 0x561960
+name = "Scena12_Object12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561960..0x561982 (0x23 bytes): Scena12_Objects entry 12 - ScriptFlags_Set40, run 8, counters 1..3 and the step 0."
+
+[[func]]
+pc = 0x561990
+name = "Scena12_Object13"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561990..0x5619B4 (0x25 bytes): Scena12_Objects entry 13 - ScriptFlags_Set40, step 0x1E, counters 1..3 0, run 8."
+
+[[func]]
+pc = 0x5619C0
+name = "Scena12_Object14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x5619C0..0x5619D3 (0x14 bytes): Scena12_Objects entry 14 - ScriptFlags_Set40, step 0xA, run 1."
+
+[[func]]
+pc = 0x5619E0
+name = "Scena12_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x5619E0..0x561A20 (0x41 bytes), cdecl, al: slot 3 (Scenario_ArriveHook) - in area 0x79 with flag 0 set and x at most 0x160000 (signed): ScriptFlags_Set40, step 0x3C, run 2, 1; else 0."
+
+[[func]]
+pc = 0x561A30
+name = "Scena12_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561A30..0x561CDF (0x2B0 bytes), cdecl (edi x, esi z), al: slot 2 (Scenario_StepHook) - areas 0x86 (flag 1; ObjTrio +0x3C at most 0x2000000; four AreaMap_SetByte cells and flag 1 set), 0x85 (flag 0x19), 0x88 (flags 0x25 / 0x26, x above 0x1B0000 and z's high word 7..11 as a 16-bit unsigned test), 0xBC (flag 0x2B, three rectangles) by inclusive signed bounds: ScriptFlags_Set40, counters, the step and run 4 / 5 / 7 / 9, 1; else 0. 16 calls."
+
+[[func]]
+pc = 0x561CE0
+name = "Scena12_CellHook"
+ret = "unsigned char"
+params = "unsigned a, unsigned b"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561CE0..0x561D09 (0x2A bytes), cdecl, al: slot 4 (0x56D7A0, which tests the answer sign-extended) - 0x56D800(0x661764, 4, a, b), the Scena12_CellRecords index matching the area and the cell or 0xFF; negative: or al, 0xFF; else jmp [0x661778 + index * 4] with (a, b) in place (Scena12_CellHooks). Ours aborts outside its four entries."
+
+[[func]]
+pc = 0x561D10
+name = "Scena12_CellTalk"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561D10..0x561D4A (0x3B bytes): Scena12_CellHooks entries 0..2 - ScriptFlags_Set40, the four counters 0, step 0 (5 when the byte 0x802DC9 read after the call is 5), run 5; al 1."
+
+[[func]]
+pc = 0x561D50
+name = "Scena12_CellDoor"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc12.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC12, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC12), 0x561D50..0x561DAC (0x5D bytes): Scena12_CellHooks entry 3 - with flag 0x2A set al 0xFF; else ScriptFlags_Set40, run 7, counters 0, 1, 3 and the step 0, MoveCmd_TestFB(Sprite_Current +0x36, +0x3A), Sound_PlayEffect(0x103); al 1."
+
+[[data]]
+pc = 0x6616F4
+name = "Scena12_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC12: Scena12_Frame's jmp [0x6616F4 + state * 4]: 0x5646B0 (state 0, group SC13's block), Scena12_EnterArea, Scena12_Run; Scena12_Runs follows at 0x661700."
+
+[[data]]
+pc = 0x661700
+name = "Scena12_Runs"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27, group SC12: Scena12_Run's jmp [0x661700 + run * 4]: 0x437CC0 (ret), Run1, Run2, 0x437CC0, Run4..Run9; Scena12_Objects follows at 0x661728."
+
+[[data]]
+pc = 0x661728
+name = "Scena12_Objects"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-27, group SC12: Scena12_ObjectTrigger's call [0x661728 + object +0x86 * 4]: 0x437CC0 (ret) for 0..5, 7, 8; Scena12_Object06, 09..14; Scena12_CellRecords follows at 0x661764."
+
+[[data]]
+pc = 0x661764
+name = "Scena12_CellRecords"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-27, group SC12: four records of 5 bytes that 0x56D800 searches for Scena12_CellHook (+0 the area, +1 / +2 the first cell (a, b), +4 the run length along a, or along b with +3 bit 7; the low nibble of +3 the facing 0x802D48 or 8 for any) - the layout as 0x56D800 reads it; Scena12_CellHooks follows at 0x661778."
+
+[[data]]
+pc = 0x661778
+name = "Scena12_CellHooks"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group SC12: Scena12_CellHook's jmp [0x661778 + index * 4]: Scena12_CellTalk three times, Scena12_CellDoor; chapter 13's vtable follows at 0x661788."
 # --- round ten group ARH: the area harness's proof, area 11 (docs/area_011.md), and the cell hook's reader (docs/area_harness.md section 8) ---
 
 [[func]]
