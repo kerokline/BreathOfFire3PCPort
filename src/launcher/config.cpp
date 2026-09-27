@@ -90,8 +90,7 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         const std::string value = Trim(line.substr(eq + 1));
 
         if (key == "language") {
-            if (value == "en") cfg.language = Language::kEnglish;
-            else if (value == "original") cfg.language = Language::kOriginal;
+            if (ConfigLanguageKnown(value)) cfg.language = value;
         } else if (key == "filter") {
             if (value == "point") cfg.filter = Filter::kPoint;
             else if (value == "linear") cfg.filter = Filter::kLinear;
@@ -108,9 +107,10 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
             if (value == "0") cfg.background = false;
             else if (value == "1") cfg.background = true;
         } else if (key == "screen") {
-            if (value == "crt") cfg.crt = true, cfg.satpixie = false;
-            else if (value == "satpixie") cfg.satpixie = true, cfg.crt = false;
-            else if (value == "clean") cfg.crt = false, cfg.satpixie = false;
+            // "crt" was our own CRT look (DIV-0037), withdrawn 2026-09-27 for
+            // SatPixie; an ini that still asks for it gets the surviving CRT.
+            if (value == "satpixie" || value == "crt") cfg.satpixie = true;
+            else if (value == "clean") cfg.satpixie = false;
         } else if (key.compare(0, 9, "satpixie.") == 0) {
             const std::string name = key.substr(9);
             char* end = nullptr;
@@ -173,13 +173,12 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# Rewritten whenever the launcher's dialog is used; hand-editing works too.\r\n";
     out += "# Run bof3x-launcher --config to reopen the dialog after hiding it.\r\n";
     out += "\r\n[bof3x]\r\n";
-    out += "# original | en   (en needs tools/loc_build.py to have been run)\r\n";
-    out += std::string("language=") + (cfg.language == Language::kEnglish ? "en" : "original") +
-           "\r\n";
+    out += "# original | en | fr | de | ja   (a code needs tools/loc_build.py to have built it)\r\n";
+    out += std::string("language=") + cfg.language + "\r\n";
     out += "# linear (the port's own) | point (DIV-0012)\r\n";
     out += std::string("filter=") + (cfg.filter == Filter::kPoint ? "point" : "linear") + "\r\n";
-    out += "# clean | crt (our scanlines and glow, DIV-0037) | satpixie (the SatPixie CRT, DIV-0043)\r\n";
-    out += std::string("screen=") + (cfg.satpixie ? "satpixie" : cfg.crt ? "crt" : "clean") + "\r\n";
+    out += "# clean | satpixie (the SatPixie CRT, DIV-0043)\r\n";
+    out += std::string("screen=") + (cfg.satpixie ? "satpixie" : "clean") + "\r\n";
     out += "# the SatPixie look's parameters, the preset's names (BOF3X_SATPIXIE)\r\n";
     out += SatpixieLine(cfg.sp, "satpixie.", "\r\n");
     out += "# fullscreen (a borderless window, DIV-0032) | windowed   -> line 1 of the game's BOF3.CFG\r\n";
@@ -241,8 +240,8 @@ void ConfigApplyEnvironment(const Config& cfg) {
     wchar_t existing[64];
 
     if (GetEnvironmentVariableW(L"BOF3X_LANG", existing, 64) == 0 &&
-        cfg.language == Language::kEnglish)
-        SetEnvironmentVariableW(L"BOF3X_LANG", L"en");
+        cfg.language != kLanguageOriginal)
+        SetEnvironmentVariableA("BOF3X_LANG", cfg.language.c_str());
 
     if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
         cfg.filter == Filter::kPoint)
@@ -251,8 +250,8 @@ void ConfigApplyEnvironment(const Config& cfg) {
     if (GetEnvironmentVariableW(L"BOF3X_BACKGROUND", existing, 64) == 0 && !cfg.background)
         SetEnvironmentVariableW(L"BOF3X_BACKGROUND", L"0");
 
-    if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && (cfg.crt || cfg.satpixie))
-        SetEnvironmentVariableW(L"BOF3X_PRESENT", cfg.satpixie ? L"satpixie" : L"crt");
+    if (GetEnvironmentVariableW(L"BOF3X_PRESENT", existing, 64) == 0 && cfg.satpixie)
+        SetEnvironmentVariableW(L"BOF3X_PRESENT", L"satpixie");
 
     if (cfg.satpixie && GetEnvironmentVariableW(L"BOF3X_SATPIXIE", existing, 64) == 0) {
         std::string line = SatpixieLine(cfg.sp, "", ",");
@@ -350,12 +349,26 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
     return true;
 }
 
-bool ConfigEnglishAvailable(const std::wstring& game_dir) {
-    WIN32_FIND_DATAW fd;
-    HANDLE h = FindFirstFileW((game_dir + L"\\DAT\\en.*").c_str(), &fd);
-    if (h == INVALID_HANDLE_VALUE) return false;
-    FindClose(h);
-    return true;
+std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir) {
+    std::vector<std::string> out;
+    for (const LanguageInfo& lang : kLanguages) {
+        std::wstring pattern = game_dir + L"\\DAT\\";
+        for (const char* c = lang.code; *c; ++c) pattern += static_cast<wchar_t>(*c);
+        pattern += L".*";
+        WIN32_FIND_DATAW fd;
+        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+        if (h == INVALID_HANDLE_VALUE) continue;
+        FindClose(h);
+        out.push_back(lang.code);
+    }
+    return out;
+}
+
+bool ConfigLanguageKnown(const std::string& code) {
+    if (code == kLanguageOriginal) return true;
+    for (const LanguageInfo& lang : kLanguages)
+        if (code == lang.code) return true;
+    return false;
 }
 
 }  // namespace bof3x

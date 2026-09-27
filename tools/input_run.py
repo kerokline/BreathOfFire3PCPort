@@ -150,8 +150,8 @@ def main():
     env['BOF3X_INPUT'] = recipe
     env['BOF3X_SHOT_WAIT'] = '1'
     env['BOF3X_SHOT_DIR'] = os.path.abspath(a.out)
-    # the owner's screen=crt (DIV-0037) must not reach an A/B's captures;
-    # --env BOF3X_PRESENT=crt asks for it
+    # the owner's screen=satpixie (DIV-0043) must not reach an A/B's captures;
+    # --env BOF3X_PRESENT=satpixie asks for it
     env['BOF3X_PRESENT'] = 'clean'
     if a.lang:
         env['BOF3X_LANG'] = a.lang

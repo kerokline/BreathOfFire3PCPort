@@ -95,8 +95,10 @@ entry when fixed.
    instruction AFTER the call - the stack is cleaned several instructions
    later. Read the pushes before it.
 3. **The screen title ("Ability") has no box and sits left of centre.**
-   Unread; `0x574AB0` is called first by every Config frame and is the
-   candidate.
+   ~~Unread; `0x574AB0` is called first by every Config frame and is the
+   candidate.~~ The box: `0x574AB0` is `Menu_DrawTitleBox`, ours since the
+   sixth round. The centring: D86, **fixed as DIV-0058 on 2026-09-27** -
+   the title was centred by counting characters at 12 px.
 4. **Numerals lose their bottom row** - [`known-defects.md`](known-defects.md)
    D1, now seen on every menu screen, not only Equipment. **Fixed as
    DIV-0010, confirmed in the menu by the owner 2026-09-21** (the input

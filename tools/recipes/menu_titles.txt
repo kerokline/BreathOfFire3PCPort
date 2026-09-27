@@ -1,0 +1,41 @@
+# The adult_ryu save -> the field menu -> a shot of the top bar on each of its six titled slots (DIV-0058).
+# 0x929F00 is the menu state (2 Items .. 6 Status), 0x929F05 the top-bar
+# cursor (docs/menu-screens.md section 1). Cancel is the save's own word at
+# 0x903590 and confirm the cross bit of 0x90358E (0x43 in save 5, a US
+# layout; read from the Config screen's code, 2026-09-21).
+# save adult_ryu
+wait 480
+press start
+wait 40
+press circle
+wait 60
+wait 60           # slot 0 is the recipe save; was `press down x5` to slot 5, the same 60 frames
+press circle
+wait 40
+press circle
+wait 60
+press circle
+until 0x66C7E8 u16 == 2 timeout 1200
+wait 300
+press @0x903584          # the save's menu button
+until 0x929F00 u8 == 1 timeout 300
+wait 40
+seek right 0x929F05 u8 == 0
+wait 20
+shot bar0
+seek right 0x929F05 u8 == 1
+wait 20
+shot bar1
+seek right 0x929F05 u8 == 2
+wait 20
+shot bar2
+seek right 0x929F05 u8 == 3
+wait 20
+shot bar3
+seek right 0x929F05 u8 == 4
+wait 20
+shot bar4
+seek right 0x929F05 u8 == 5
+wait 20
+shot bar5
+end

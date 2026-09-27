@@ -153,7 +153,14 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    ([`battle_windows.md`](battle_windows.md)); the enemy names, the banner
    messages and the EX suffix are done (DIV-0053, DIV-0052); the ability names are
    the 16-byte GBK field at `0x65C4C8 + id * 0x18`
-   ([`battle_window_draw.md`](battle_window_draw.md)). Older and still open:
+   ([`battle_window_draw.md`](battle_window_draw.md)). **Staged for a
+   localisation session, 2026-09-27** (the owner's captures: the item and
+   ability lists' headers `物品` / `武器` / `攻击` and the Equip screen's
+   stat column `攻击` `防御` `智力` `速度` still Chinese under English):
+   both draws are already ours (`menu_windows.cpp`'s `kStatLabels`
+   `0x66A0F8..`; the list headers behind `0x66A220`), so each wants only a
+   `loc_build.py` chunk kind carrying the US disc's strings and a width
+   check against its box. Older and still open:
    the stat labels at `0x669CF0` (the US `Pwr` `Def` `Int` `Agl` stand
    before the verb table in `STATUS.EMI`; check `Pwr` fits the box); the
    skill list's header `龙技` `0x66A220` and the item list's `物品`; the turn
@@ -210,9 +217,9 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
     §5, [`window-modes.md`](window-modes.md) §6): the edge pixels of `rb1`
     - `BOF3X_PIXEL_OFFSET=0.498046875` against the 27 differing captures of
     the 55-shot attract A/B (`validate_rb1.sh`, about 25 minutes); the
-    owner's tuning of the CRT look (`BOF3X_CRT`, best at k = 6 borderless)
-    and of SatPixie (the Options dialog by hand, only tried by code); a
-    rescale under the CRT look (DIV-0037); the title-bar drag under
+    owner's tuning of SatPixie (the Options dialog by hand, only tried by
+    code; our own CRT look, DIV-0037, was withdrawn 2026-09-27 so its
+    tuning and rescale checks are moot); the title-bar drag under
     `BOF3X_BACKGROUND=0`; sprite edges at k = 3 / 6 looked at closely.
     Not built, loud if reached: a `Lock` of the primary or back buffer
     (`Gfx_DrawOTag` logs the first request), sub-rectangle locks, depth /

@@ -142,7 +142,7 @@ def main():
         env['BOF3X_ORIGINAL'] = a.original
     env['BOF3X_LANG'] = a.lang
     env['BOF3X_FILTER'] = a.filter
-    env['BOF3X_PRESENT'] = 'clean'   # not the owner's screen=crt (DIV-0037)
+    env['BOF3X_PRESENT'] = 'clean'   # not the owner's screen=satpixie (DIV-0043)
     launcher = a.launcher
     # --no-config: an oracle run must not stop on the settings dialog, and must
     # take the settings file's values without a human touching them

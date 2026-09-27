@@ -15,17 +15,34 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "input/bindings.h"
 
 namespace bof3x {
 
-enum class Language { kOriginal, kEnglish };
+// A language overlay the game can load (DIV-0005; French and German
+// DIV-0054, Japanese DIV-0056): BOF3X_LANG's code, and the dialog's label.
+// Built locally by tools/loc_build.py, never shipped, so the dialog offers
+// only those whose DAT\<code>.* files exist (ConfigLanguagesAvailable).
+struct LanguageInfo {
+    const char* code;
+    const wchar_t* label;
+};
+inline constexpr LanguageInfo kLanguages[] = {
+    {"en", L"English (PlayStation script)"},
+    {"fr", L"French (PlayStation script)"},
+    {"de", L"German (PlayStation script)"},
+    {"ja", L"Japanese (PlayStation script)"},
+};
+// "original" (no overlay, the port's Chinese) or one of kLanguages' codes.
+constexpr const char* kLanguageOriginal = "original";
+
 enum class Filter { kLinear, kPoint };   // the original's, and DIV-0012's
 enum class Display { kFullscreen, kWindowed };
 
 struct Config {
-    Language language = Language::kOriginal;
+    std::string language = kLanguageOriginal;
     Filter filter = Filter::kLinear;
     Display display = Display::kFullscreen;
     // BOF3.CFG line 2, Cfg_RenderMode: Capcom's set-up's device index. 0 is
@@ -44,11 +61,11 @@ struct Config {
     // its own (bof3x.window beside the dll). Not in the dialog since
     // 2026-09-23: the window is resized instead.
     int scale = 2;
-    // DIV-0037: the CRT look in the present (BOF3X_PRESENT=crt). The dialog
-    // offers it as the Look box's third entry, over the point filter.
-    bool crt = false;
     // DIV-0043: the SatPixie look (BOF3X_PRESENT=satpixie), the Look box's
-    // fourth entry, with its parameters (BOF3X_SATPIXIE). The preset's
+    // third entry, over the point filter, with its parameters
+    // (BOF3X_SATPIXIE). (Our own CRT look, DIV-0037, sat between Sharp and
+    // this until 2026-09-27, when the owner withdrew it in SatPixie's
+    // favour; an ini's screen=crt now means satpixie.) The preset's
     // defaults, but overscan off (the game's UI runs to the edge) and the
     // vignette over the whole picture (a 4:3 one leaves a wide picture's
     // bands bright).
@@ -117,8 +134,12 @@ void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg);
 // on failure.
 bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::wstring& error);
 
-// True when DAT\en.* exists in `game_dir`, i.e. tools/loc_build.py has been
-// run. The English option is offered only then.
-bool ConfigEnglishAvailable(const std::wstring& game_dir);
+// The codes of kLanguages whose DAT\<code>.* overlays exist in `game_dir`,
+// in kLanguages' order - i.e. which languages tools/loc_build.py has built.
+// The dialog offers only these.
+std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
+
+// True for "original" or a code in kLanguages.
+bool ConfigLanguageKnown(const std::string& code);
 
 }  // namespace bof3x

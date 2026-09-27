@@ -215,7 +215,6 @@ add_library(bof3x SHARED
   src/game/inventory_ops_fuzz.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
-  src/render/crt.cpp
   src/render/satpixie.cpp
   src/game/battle_window_draw.cpp
   src/game/battle_window_draw_fuzz.cpp

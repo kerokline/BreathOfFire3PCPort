@@ -1288,6 +1288,25 @@ designed in rather than bolted on.
   both edges move half a texel, the scale stays 1:1, and pixel k of the quad
   samples the centre of texel k. Positions, colours, the draw and every call
   are the original's. All Chinese and Latin text alike.
+
+  **Amended 2026-09-27: the inset follows the scale.** 0.5 is half a
+  texel, which is half a pixel only at scale 2, where the 24-texel glyph
+  fills a 24-pixel quad. The owner plays at scale 4 (a 1704 x 960 window)
+  and reported stroke bottoms "still crooked" - a `t` and an `l` a pixel
+  off in their last rows, one instance of a letter and not the next. At
+  scale 4 the quad is 48 pixels for 24 texels, so with a half-texel inset
+  every odd pixel samples a texel *edge* again, and the quad's two
+  triangles round it differently - the D17 mechanism, one level up.
+  Measured on the game's own pre-look frame of the shop's dialogue at
+  scale 4 (`tools/input_run.py tools/recipes/shop_ab.txt --env
+  BOF3X_SCALE=4`): 174 of 1,813 bright runs began one pixel left of the
+  4-pixel texel grid, all in glyphs' bottom rows. Now the inset is one
+  screen pixel in texels, `1 / scale`, per axis from `D3d_ScaleX` /
+  `D3d_ScaleY` at draw time (0.5 at scale 2, unchanged there), plus
+  `1 / 256` of a texel so that an odd scale, whose pixel centres also land
+  on edges (scale 3: pixel 1 at texel 1.0), picks the same side in both
+  triangles. `glyph_draw.cpp` `TexelInset`; the fuzz's `SameWithInset`
+  recomputes it from each round's scales. Verification below.
 - **Rationale:** the owner asked for it, 2026-09-22, after comparing the
   same line against the sibling's recompiled PSX build ("wobbly" against
   even). The sprite handlers already have a deliberate texel inset
@@ -1299,7 +1318,19 @@ designed in rather than bolted on.
   against Capcom's copy, and nothing else; 20,000 with the fix off checked
   byte for byte. 39 negative controls, all refused
   ([`glyph-draw.md`](glyph-draw.md) §5). **Confirmed in game by the owner,
-  2026-09-23**, English, point filter: "the text looks straight now".
+  2026-09-23**, English, point filter: "the text looks straight now" (at
+  scale 2 or 3 then; the scale-4 recurrence is the amendment above).
+  Amendment, 2026-09-27: the self-test's 20,000 inset rounds pass with
+  the rule recomputing the inset from each round's random scales; and the
+  shop dialogue's two boxes (`f01440`, `f01530` of the recipe) on the
+  game's own pre-look frames, every bright run's left edge and width and
+  every column run's top and height taken modulo the scale - before the
+  fix at scale 4, 236 of 3,229 runs off the grid (174 horizontal, 62
+  vertical); after it, 0 of 3,244 at scale 4, 0 of 2,433 at scale 3, 0 of
+  1,622 at scale 2, and 0 of 4,055 at scale 5 (a scale-6 window did not
+  fit the monitor and the game chose 5 - DIV-0036 - which made it the
+  second odd-scale check). **Confirmed in game by the owner the same
+  evening, at scale 4: "the lettering looks perfect so far".**
 - **Reversible?** Yes: `BOF3X_ORIGINAL=GlyphTexelCentres` (our function,
   Capcom's arithmetic) or `BOF3X_ORIGINAL=D3d_DrawGlyph` (Capcom's function).
 
@@ -1773,6 +1804,15 @@ designed in rather than bolted on.
 - **Verification:** [`crt-look.md`](crt-look.md) §4: a k = 3 capture shows
   the lines and the glow. The owner's eye owed.
 - **Reversible?** Yes: the default, `BOF3X_PRESENT=clean`, or another Look.
+
+  **Withdrawn 2026-09-27.** The owner, having played with both CRT looks:
+  "we can remove the homegrown scanline option (newpixie works much
+  better)". `src/render/crt.{h,cpp}` are deleted, `BOF3X_PRESENT=crt` is a
+  Fatal in the dll ("clean or satpixie"), and the Look box holds three
+  entries. An older `bof3x.ini`'s `screen=crt` is read as `satpixie`, so a
+  player who had the look on keeps *a* CRT rather than none. The entry
+  stays as the record of what was built (`git log -- src/render/crt.cpp`,
+  [`crt-look.md`](crt-look.md) §1-4); DIV-0043 is the CRT look now.
 
 ### F9's pause lines in the overlay's language
 
@@ -2781,3 +2821,46 @@ designed in rather than bolted on.
     rounds, `battle_windows` 66,000 rounds, all 0 mismatches.
   - **English is unchanged:** 245 of 245 files.
 - **Reversible?** play without `BOF3X_LANG`, or in any other language.
+
+### The field menu's screen title centred on its real width
+
+- **ID:** DIV-0058
+- **Date:** 2026-09-27
+- **Subsystem:** menu (only with a Latin language overlay; `MenuList_TitleBox`
+  `0x599FA0`, `src/game/menu_lists.cpp`; [`menu_lists.md`](menu_lists.md) §3)
+- **Tier:** Sensible
+- **Original behaviour:** the top bar's screen title (Items, Ability, ...,
+  the system text of `FieldMenu_TitleIds` `0x6672E4`) is drawn in a box
+  `0x48` wide with its text starting at x + `0x25` - 6 n, n the string's
+  `Text_CharCount`: centred on the box's middle for the 12-unit glyphs it
+  was written for. Under an English overlay the glyphs advance 8 (DIV-0006)
+  and the title sits left of centre - the owner's note of 2026-09-21
+  ([`menu-screens.md`](menu-screens.md) §3 item 3), read as
+  [`known-defects.md`](known-defects.md) D86, and shown again by the owner
+  2026-09-27 ("Ability", "Tactics" offset to the left in their box).
+- **New behaviour:** with `BOF3X_LANG` set to a Latin language the text
+  starts at x + `0x25` - width / 2, the width being what the pen will cover
+  (the sum of DIV-0006's advances) - the same number as before for 12-unit
+  glyphs, so Chinese and the full-width languages (DIV-0056) are placed
+  exactly as the original places them. Every read and call of the original
+  is kept; only the x differs. `g_title_centre`, patched to 1 at inject under
+  the name `MenuTitleCentre`.
+- **Rationale:** DIV-0018's for the button verbs, one row up: a caller
+  that centres by counting characters at 12 px is wrong for any narrower
+  font, and the fix is to centre on the real width.
+- **Also in the PSX version?** The US disc's own title draw centres its own
+  font; not checked how.
+- **Verification:** the menu_lists shadow self-test (the fuzz runs before the
+  patch and compares the original's arithmetic byte for byte); the
+  `menu_screens` recipe under `--lang en` with and without
+  `BOF3X_ORIGINAL=MenuTitleCentre` - both run 2026-09-27: the self-test's
+  20,000 rounds over 20 functions, 0 mismatches; and a new recipe,
+  `tools/recipes/menu_titles.txt` (the top bar itself, a shot on each of
+  its six slots - the older recipe's shots are inside the screens, where
+  the description line stands in for the title), at scale 4, English. The
+  title moved right by 6 n - width / 2 game units on every slot - 10 for
+  "Items" (n 5, 40 wide), 14 for "Ability" (n 7, 56 wide) - and sits on the
+  box's middle in the side-by-side. **Confirmed by the owner the same
+  evening: "that looks good".**
+- **Reversible?** play without `BOF3X_LANG`; `BOF3X_ORIGINAL=MenuTitleCentre`
+  keeps the overlay and the original's x.

@@ -34,11 +34,16 @@
 // MenuSlide_RightOff; ours reads the bound from the operand it patches.
 #include "game/menu_lists.h"
 
+#include <windows.h>
+
 #include <cstdint>
+#include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "game/menu_lists_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/text_advance.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -512,6 +517,27 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     r[0xB] = r[0xA];
 }
 
+// DIVERGENCE DIV-0058: under a Latin language overlay the screen title is
+// centred on the width the pen will really cover (DIV-0006's advances)
+// instead of on 12 units a character - the owner's "Ability sits left of
+// centre" (known-defects.md D86). 0 until MenuLists_Inject patches it to 1
+// under the name MenuTitleCentre, so BOF3X_ORIGINAL=MenuTitleCentre and the
+// fuzz (which runs before the patch) keep the original's arithmetic.
+unsigned char g_title_centre = 0;
+
+namespace {
+// The width the pen covers drawing `text`, in PSX pixels: DIV-0006's
+// advance per character, a byte with bit 7 and the one after it being one.
+unsigned TitleWidth(const unsigned char* text) {
+    unsigned width = 0;
+    while (*text) {
+        width += static_cast<unsigned>(TextAdvance_Of(text));
+        text += (*text & 0x80) ? 2 : 1;
+    }
+    return width;
+}
+}  // namespace
+
 // original 0x599FA0, kind 4: the state from 0x66B038, then the screen title -
 // Menu_DrawTitleBox(x, y, 0x48, 0x13, Config's colour) at the record's (+4,
 // +6) and the system text +0x10 (Msg_SystemPtr) through Text_DrawAt at (x +
@@ -521,7 +547,9 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
 //
 // As the original has it: the record is re-read after the box, after the
 // first count (for y) and after the second (for x); the text is counted
-// twice, the first answer the count, the second the offset.
+// twice, the first answer the count, the second the offset. DIV-0058 keeps
+// every read and call and changes only the x: x + 0x25 - width / 2, the
+// width in pixels - the same number as the original's for 12-unit glyphs.
 extern "C" void __cdecl MenuList_TitleBox(void) {
     Entry(at::kTitleStates, Rec()[3])();
     const unsigned char colour = Byte(at::kColour);
@@ -534,7 +562,8 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
     const unsigned y = (Word(r + 6) + 3u) & 0xFFFF;
     const unsigned width = g.char_count(text);
     r = Rec();
-    const int x = static_cast<int>((Word(r + 4) - width * 6 + 0x25u) & 0xFFFF);
+    const unsigned half = g_title_centre ? TitleWidth(text) / 2 : width * 6;
+    const int x = static_cast<int>((Word(r + 4) - half + 0x25u) & 0xFFFF);
     g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
 }
 
@@ -608,6 +637,20 @@ void MenuLists_Inject() {
     CheckSlideBound(at::kLeftOffBound, -200);
     CheckSlideBound(at::kRightOffBound, 320);
     if (bof3::WantsShadow("menu_lists")) menu_lists::SelfTest();
+    // DIVERGENCE DIV-0058: a Latin language overlay only - BOF3X_LANG set,
+    // not "original", not a full-width language (as MenuVerbs_Inject
+    // tests it): the screen title centred on its real width.
+    {
+        char lang[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("MenuTitleCentre",
+                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_title_centre)),
+                             &was, &is, 1);
+            bof3::Log("DIV-0058    menu screen title centred on its width: %s", g_title_centre ? "on" : "off");
+        }
+    }
     BOF3_INJECT(FieldMenu_Run);
     BOF3_INJECT(FieldMenu_Open);
     BOF3_INJECT(FieldMenu_TopBar);

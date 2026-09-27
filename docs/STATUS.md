@@ -233,8 +233,9 @@ What is established:
   against `QueryPerformanceCounter`).
 - **The launcher has a settings dialog** (2026-09-20, grown since;
   [`launcher-settings.md`](launcher-settings.md)), a plain Win32 `DIALOGEX`
-  with nothing vendored: language, look (texture filter, CRT, SatPixie with
-  its options dialog - DIV-0012, DIV-0037, DIV-0043), display, keep running
+  with nothing vendored: language (every built overlay language since
+  2026-09-27), look (texture filter, SatPixie with its options dialog -
+  DIV-0012, DIV-0043; our own CRT look DIV-0037 withdrawn 2026-09-27), display, keep running
   unfocused (DIV-0033), widescreen (DIV-0041), snap to whole multiples
   (DIV-0042), **Cheats...** (DIV-0045, DIV-0046) and **Controls...**
   (DIV-0050), every dialog walkable with a pad. Settings reach the DLL
@@ -338,7 +339,8 @@ What is established:
      after a review found why every traced all-original run had ended 16 s
      in (the tracer's single step saved by a `pushfd` in Capcom's
      software-renderer set-up). Then integer scaling (DIV-0036), the CRT
-     look (DIV-0037, [`crt-look.md`](crt-look.md)), **the widescreen survey
+     look (DIV-0037, [`crt-look.md`](crt-look.md); withdrawn 2026-09-27 for
+     SatPixie, DIV-0043), **the widescreen survey
      build** (DIV-0041, [`widescreen.md`](widescreen.md)) - 426 x 240, the
      view shifted the PSP's way ([`psp-widescreen.md`](psp-widescreen.md)),
      culls widened, backdrop, fades and slide-outs re-authored - **the

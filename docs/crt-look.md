@@ -1,7 +1,9 @@
 # The CRT look — scanlines and halation in the present
 
-**Status:** IN PROGRESS (2026-09-23). Built and running; the defaults are a
-first guess awaiting the owner's eye. DIV-0037.
+**Status:** WITHDRAWN (2026-09-27). Our own look, §1-4, was removed at the
+owner's request - "newpixie works much better" - and DIV-0037 carries the
+withdrawal note; its sources survive in the history (`git log -- src/render/crt.cpp`).
+§5, the SatPixie look (DIV-0043), is what remains and is current.
 
 ## 1. The decision
 
