@@ -498,6 +498,23 @@ def main():
             if not any(lo <= src < hi for lo, hi in switches):
                 fixed[tgt].append((None, 'called from %#x' % src))
 
+    # .data outside the descriptor region and the tables above naming a band
+    # start (scan 7): area-less roots too
+    fixed_words = set(range(TAIL_KINDS, TAIL_KINDS + 4 * TAIL_KIND_COUNT, 4))         | set(range(CELL_HOOKS, CELL_HOOKS + 8 * CELL_HOOK_COUNT, 4))         | set(range(WM_RECORDS, WM_RECORDS + WM_RECORD_SIZE * WM_RECORD_COUNT, 4))         | set(range(WM_HOOKS, WM_HOOKS + 4 * WM_HOOK_COUNT, 4))         | set(range(OBJ_TRIGGERS + 4, OBJ_TRIGGERS + 4 + 4 * len(triggers), 4))
+    band_set = set(band)
+    outside_data = collections.defaultdict(list)
+    for nm, v, _, raw, rsz in img.secs:
+        if nm == '.text':
+            continue
+        for off in range(0, rsz - 3, 4):
+            w = struct.unpack_from('<I', img.data, raw + off)[0]
+            if BAND_LO <= w < BAND_HI and (w in band_set or _looks_like_start(img, w)):
+                va = v + off
+                if region_lo <= va < region_hi + 0x1000 or va in fixed_words:
+                    continue
+                outside_data[w].append(va)
+                fixed[w].append((None, 'named by .data %#x' % va))
+
     # ---- discovery, the tables, the data blocks, to a fixpoint -----------
     extra = {h for h in fixed if BAND_LO <= h < BAND_HI}
     refs = None             # {.data table: the areas that read it}, from the previous round
@@ -762,27 +779,6 @@ def main():
         for n in funcs[x].tail_kinds:
             tail_armed[n].add(x)
 
-    # the completeness scans (7): calls into the band from outside, and .data
-    # outside the descriptor region naming a band start
-    fixed_words = set(range(TAIL_KINDS, TAIL_KINDS + 4 * TAIL_KIND_COUNT, 4)) \
-        | set(range(CELL_HOOKS, CELL_HOOKS + 8 * CELL_HOOK_COUNT, 4)) \
-        | set(range(WM_RECORDS, WM_RECORDS + WM_RECORD_SIZE * WM_RECORD_COUNT, 4)) \
-        | set(range(WM_HOOKS, WM_HOOKS + 4 * WM_HOOK_COUNT, 4)) \
-        | set(range(OBJ_TRIGGERS + 4, OBJ_TRIGGERS + 4 + 4 * len(triggers), 4))
-    outside_data = collections.defaultdict(list)
-    for nm, v, _, raw, rsz in img.secs:
-        if nm == '.text':
-            continue
-        for off in range(0, rsz - 3, 4):
-            w = struct.unpack_from('<I', img.data, raw + off)[0]
-            if w in sset and BAND_LO <= w < tail_lo:
-                va = v + off
-                if region_lo <= va < region_hi or va in fixed_words:
-                    continue
-                if va in (AREA_TABLE,):
-                    continue
-                outside_data[w].append(va)
-
     # ---- live reach: the route reaches of hidden functions -----------------
     live = collections.defaultdict(set)
     for f in glob.glob(os.path.join(a.analysis, 'hidden_reached_*.json')):
@@ -949,14 +945,13 @@ def main():
     print('  outside the seven: %d band starts called from outside the band, not by the hook switches (%s); %d named '
           'by .data outside the descriptor region and the tables above (%s)' % (
               len(oc), ' '.join('%#x<-%s' % (x, ','.join('%#x' % s for s in v[:2])) for x, v in sorted(oc.items())),
-              len(outside_data), ' '.join('%#x@%s' % (x, ','.join('%#x' % s for s in v[:2])) for x, v in sorted(outside_data.items())[:20])))
+              len([x for x in outside_data if x < tail_lo]), ' '.join('%#x@%s' % (x, ','.join('%#x' % s for s in v[:2]))
+                                                                  for x, v in sorted(outside_data.items()) if x < tail_lo)))
     print()
     reached = {x for x in starts if reached_by.get(x)}
-    area_less = set()
-    for k in (None,):
-        area_less |= reach.get(None, set())
-    print('reach: %d of %d functions before %#x reached by some area; %d only by area-less roots (tail kinds no code '
-          'arms, the no-world-map hook); %d reached by none' % (
+    area_less = {x for x in reach.get(None, set()) if x < tail_lo}
+    print('reach: %d of %d functions before %#x reached by some area; %d only by area-less roots (object triggers, '
+          'callers and .data outside the band, tail kinds no code arms, the no-world-map hook); %d reached by none' % (
               len(reached), len([x for x in starts if x < tail_lo]), tail_lo, len(area_less - reached),
               len([x for x in starts if x < tail_lo and x not in reached and x not in area_less])))
     ex = {k: len(v) for k, v in exclusive.items()}
