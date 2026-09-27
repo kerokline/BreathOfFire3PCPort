@@ -40961,3 +40961,510 @@ ctype = "unsigned char"
 count = 6336
 status = "evidence"
 evidence = "read 2026-09-27, group S38: 48 records of 0x84 bytes: MeteorStrike_RecordAlloc's, walked by MeteorStrike_Task, cleared by MeteorStrike_Start; +1 0 a chip, 1 a trail (MeteorStrikeRecord_Kinds)."
+
+
+# ---------------------------------------------------------------------------
+# Round 10 group SCH: the scenario engine's three chapter tables and what they
+# point at - the 20 chapter vtables and the per-chapter call tables A and B
+# (docs/scenario_harness.md, docs/scenario-roots.md section 2). Each chapter
+# group names its own chapter's state tables.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x662C80
+name = "Scenario_Hooks"
+psx = 0x801C944C
+ctype = "unsigned long"
+count = 20
+status = "evidence"
+evidence = "disasm 2026-09-27: 20 pointers, one per chapter, to the chapter's 5-slot vtable (Scena00_Hooks..Scena19_Hooks). Read at five sites, each movsx eax, byte Cond_ByteFA / mov ecx, [eax*4 + 0x662C80]: Field_ModeDispatch 0x56D690 call [ecx] (slot 0, no arguments); 0x56D6D0 push esi / call [ecx + 4] (slot 1, the object); Scenario_StepHook 0x56D700 call [ecx + 8] (x, z), movsx eax, al; Scenario_ArriveHook 0x56D750 call [ecx + 0xC] (x, z), movsx eax, al; 0x56D7A0 mov eax, [ecx + 0x10], called with (x, z) only when not 0, the answer's sign tested (jge). Unchecked chapter index. The PSX 0x801C944C (the sibling's SCENARIO.md)."
+
+[[data]]
+pc = 0x660B84
+name = "Scenario_CallATables"
+psx = 0x801CDC4C
+ctype = "unsigned long"
+count = 20
+status = "evidence"
+evidence = "disasm 2026-09-27: 20 pointers, one per chapter, to its call table A (Scena00_CallA..Scena19_CallA). Scenario_CallA 0x5341A0: movsx eax, byte Cond_ByteFA / mov edx, [eax*4 + 0x660B84] / jmp [edx + (n & 0xFF) * 4] with the caller's arguments in place; neither index checked. The tables lie back to back with the B tables from 0x65F664, so each runs to the next table's pointer. The PSX 0x801CDC4C."
+
+[[data]]
+pc = 0x660BD4
+name = "Scenario_CallBTables"
+psx = 0x801CDC9C
+ctype = "unsigned long"
+count = 20
+status = "evidence"
+evidence = "disasm 2026-09-27: 20 pointers, one per chapter, to its call table B (Scena01_CallB..Scena19_CallB); chapter 0's is 0 (no table, a call would read address 0 + n * 4). Scenario_CallB 0x5341C0, Scenario_CallA's shape through this table. The PSX 0x801CDC9C."
+
+[[data]]
+pc = 0x660CD0
+name = "Scena00_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 0's vtable, Scenario_Hooks entry 0 (.data 0x662C80): slot 0 the frame 0x537F20, slot 1 the object hook 0x539A10, slot 2 the step hook 0x539A30, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F664
+name = "Scena00_CallA"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 0's call table A, Scenario_CallATables entry 0 (.data 0x660B84): 0x519890. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F668
+name = "Scena01_CallA"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27: chapter 1's call table A, Scenario_CallATables entry 1 (.data 0x660B88): 0x5198F0, 0x519940, 0x519990. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F674
+name = "Scena01_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 1's call table B, Scenario_CallBTables entry 1 (.data 0x660BD8): 0x5199A0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x660E50
+name = "Scena02_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 2's vtable, Scenario_Hooks entry 2 (.data 0x662C88): slot 0 the frame 0x53DDA0, slot 1 the object hook 0x541D10, slot 2 the step hook 0x5420C0, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F678
+name = "Scena02_CallA"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 2's call table A, Scenario_CallATables entry 2 (.data 0x660B8C): 0x519990. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F67C
+name = "Scena02_CallB"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: chapter 2's call table B, Scenario_CallBTables entry 2 (.data 0x660BDC): 0x5199A0, 0x5199B0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x660F50
+name = "Scena03_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 3's vtable, Scenario_Hooks entry 3 (.data 0x662C8C): slot 0 the frame 0x5428C0, slot 1 the object hook 0x5449F0, slot 2 the step hook 0x544B80, slot 3 the arrive hook 0x544F40, slot 4 the cell hook 0x544FB0. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F684
+name = "Scena03_CallA"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: chapter 3's call table A, Scenario_CallATables entry 3 (.data 0x660B90): 0x519A00, 0x519A40. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F68C
+name = "Scena03_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 3's call table B, Scenario_CallBTables entry 3 (.data 0x660BE0): 0x519A50. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x660FD0
+name = "Scena04_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 4's vtable, Scenario_Hooks entry 4 (.data 0x662C90): slot 0 the frame 0x545010, slot 1 the object hook 0x546160, slot 2 the step hook 0x5461A0, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0x546340. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F690
+name = "Scena04_CallA"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: chapter 4's call table A, Scenario_CallATables entry 4 (.data 0x660B94): 0x519A60, 0x519AB0. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F698
+name = "Scena04_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 4's call table B, Scenario_CallBTables entry 4 (.data 0x660BE4): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661020
+name = "Scena05_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 5's vtable, Scenario_Hooks entry 5 (.data 0x662C94): slot 0 the frame 0x546390, slot 1 the object hook 0x54A2A0, slot 2 the step hook 0x54A440, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0x54A800. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F69C
+name = "Scena05_CallA"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-27: chapter 5's call table A, Scenario_CallATables entry 5 (.data 0x660B98): 0x519AE0, 0x519A40, 0x51A420, 0x519CB0, 0x519B20, 0x519B30, 0x519B50, 0x519B70, 0x519B90, 0x519CC0, 0x519CC0. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F6C8
+name = "Scena05_CallB"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 5's call table B, Scenario_CallBTables entry 5 (.data 0x660BE8): 0x519BA0, 0x519A50, 0x519BC0, 0x519BD0, 0x519BE0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x6610E0
+name = "Scena06_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 6's vtable, Scenario_Hooks entry 6 (.data 0x662C98): slot 0 the frame 0x54A910, slot 1 the object hook 0x54E440, slot 2 the step hook 0x54EA80, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0x54EED0. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F6DC
+name = "Scena06_CallA"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27: chapter 6's call table A, Scenario_CallATables entry 6 (.data 0x660B9C): 0x519BF0, 0x519C20, 0x519C50, 0x519C80, 0x51A420, 0x519CB0, 0x519CC0, 0x519CE0, 0x519CC0, 0x519D00. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F704
+name = "Scena06_CallB"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27: chapter 6's call table B, Scenario_CallBTables entry 6 (.data 0x660BEC): 0x519D30, 0x519D50, 0x519D70, 0x519D90, 0x519BD0, 0x519DA0, 0x519BC0, 0x519DC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x6611B8
+name = "Scena07_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 7's vtable, Scenario_Hooks entry 7 (.data 0x662C9C): slot 0 the frame 0x54F080, slot 1 the object hook 0x550B50, slot 2 the step hook 0x550D20, slot 3 the arrive hook 0x550F20, slot 4 the cell hook 0x550FD0. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F724
+name = "Scena07_CallA"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: chapter 7's call table A, Scenario_CallATables entry 7 (.data 0x660BA0): 0x519AB0, 0x519DE0. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F72C
+name = "Scena07_CallB"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: chapter 7's call table B, Scenario_CallBTables entry 7 (.data 0x660BF0): 0x519E10, 0x519E20. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661368
+name = "Scena08_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 8's vtable, Scenario_Hooks entry 8 (.data 0x662CA0): slot 0 the frame 0x551020, slot 1 the object hook 0x553690, slot 2 the step hook 0x553750, slot 3 the arrive hook 0x553810, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F734
+name = "Scena08_CallA"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-27: chapter 8's call table A, Scenario_CallATables entry 8 (.data 0x660BA4): 0x519EA0, 0x519ED0, 0x519B90, 0x519F00, 0x519F30, 0x519F70, 0x519FA0. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F750
+name = "Scena08_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 8's call table B, Scenario_CallBTables entry 8 (.data 0x660BF4): 0x519FC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x6613E8
+name = "Scena09_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 9's vtable, Scenario_Hooks entry 9 (.data 0x662CA4): slot 0 the frame 0x553B30, slot 1 the object hook 0x5570D0, slot 2 the step hook 0x557270, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0x557A20. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F754
+name = "Scena09_CallA"
+ctype = "unsigned long"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-27: chapter 9's call table A, Scenario_CallATables entry 9 (.data 0x660BA8): 0x519FD0, 0x51A000, 0x51A030, 0x51A060, 0x51A090, 0x51A0C0, 0x51A0E0, 0x51A110, 0x51A140, 0x51A170, 0x51A1D0, 0x51A200, 0x51A230, 0x51A260. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F78C
+name = "Scena09_CallB"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27: chapter 9's call table B, Scenario_CallBTables entry 9 (.data 0x660BF8): 0x5199A0, 0x51A290, 0x519D90, 0x51A2B0, 0x51A2D0, 0x51A2F0, 0x51A300, 0x519BC0, 0x519BD0, 0x51A360. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661510
+name = "Scena10_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 10's vtable, Scenario_Hooks entry 10 (.data 0x662CA8): slot 0 the frame 0x558140, slot 1 the object hook 0x55B6D0, slot 2 the step hook 0x55BB00, slot 3 the arrive hook 0x55BE70, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F7B4
+name = "Scena10_CallA"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-27: chapter 10's call table A, Scenario_CallATables entry 10 (.data 0x660BAC): 0x51A370, 0x51A3A0, 0x51A410, 0x51A420, 0x51A430, 0x51A170. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F7CC
+name = "Scena10_CallB"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27: chapter 10's call table B, Scenario_CallBTables entry 10 (.data 0x660BFC): 0x51A490, 0x519BC0, 0x51A4C0, 0x51A300. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661658
+name = "Scena11_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 11's vtable, Scenario_Hooks entry 11 (.data 0x662CAC): slot 0 the frame 0x55C040, slot 1 the object hook 0x55E170, slot 2 the step hook 0x539AC0, slot 3 the arrive hook 0x55E450, slot 4 the cell hook 0x55E4D0. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F7DC
+name = "Scena11_CallA"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-27: chapter 11's call table A, Scenario_CallATables entry 11 (.data 0x660BB0): 0x51A030, 0x51A090, 0x51A060, 0x51A030, 0x51A510, 0x51A060, 0x51A0E0, 0x51A110, 0x51A540. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F800
+name = "Scena11_CallB"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 11's call table B, Scenario_CallBTables entry 11 (.data 0x660C00): 0x5199A0, 0x519D90, 0x519BD0, 0x519BC0, 0x51A2F0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x6616E0
+name = "Scena12_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 12's vtable, Scenario_Hooks entry 12 (.data 0x662CB0): slot 0 the frame 0x55E4E0, slot 1 the object hook 0x561880, slot 2 the step hook 0x561A30, slot 3 the arrive hook 0x5619E0, slot 4 the cell hook 0x561CE0. Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F814
+name = "Scena12_CallA"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27: chapter 12's call table A, Scenario_CallATables entry 12 (.data 0x660BB4): 0x51A030, 0x51A090, 0x51A060, 0x51A030, 0x51A510, 0x51A060, 0x51A0E0, 0x51A110, 0x51A540, 0x51A570. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F83C
+name = "Scena12_CallB"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 12's call table B, Scenario_CallBTables entry 12 (.data 0x660C04): 0x5199A0, 0x519D90, 0x519BD0, 0x519BC0, 0x51A2F0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661788
+name = "Scena13_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 13's vtable, Scenario_Hooks entry 13 (.data 0x662CB4): slot 0 the frame 0x561DB0, slot 1 the object hook 0x564120, slot 2 the step hook 0x5641C0, slot 3 the arrive hook 0x5645D0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F850
+name = "Scena13_CallA"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27: chapter 13's call table A, Scenario_CallATables entry 13 (.data 0x660BB8): 0x51A5A0, 0x51A5D0, 0x51A630, 0x51A650, 0x51A6C0, 0x51A700, 0x51A760, 0x51A770. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F870
+name = "Scena13_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 13's call table B, Scenario_CallBTables entry 13 (.data 0x660C08): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661820
+name = "Scena14_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 14's vtable, Scenario_Hooks entry 14 (.data 0x662CB8): slot 0 the frame 0x5646A0, slot 1 the object hook 0x5677B0, slot 2 the step hook 0x567970, slot 3 the arrive hook 0x567A90, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F874
+name = "Scena14_CallA"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-27: chapter 14's call table A, Scenario_CallATables entry 14 (.data 0x660BBC): 0x51A780, 0x51A7B0, 0x51A7E0, 0x51A810, 0x51A890, 0x51A8E0, 0x51A930, 0x519F30, 0x51A970, 0x51A9B0, 0x51AA10, 0x51AA40, 0x51AA80. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F8A8
+name = "Scena14_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 14's call table B, Scenario_CallBTables entry 14 (.data 0x660C0C): 0x51AAF0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x6618A8
+name = "Scena15_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 15's vtable, Scenario_Hooks entry 15 (.data 0x662CBC): slot 0 the frame 0x567DC0, slot 1 the object hook 0x56AE80, slot 2 the step hook 0x56B030, slot 3 the arrive hook 0x56B100, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F8AC
+name = "Scena15_CallA"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27: chapter 15's call table A, Scenario_CallATables entry 15 (.data 0x660BC0): 0x51AB50, 0x51ABC0, 0x51ABE0, 0x51AA40. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F8BC
+name = "Scena15_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 15's call table B, Scenario_CallBTables entry 15 (.data 0x660C10): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x6619E8
+name = "Scena16_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 16's vtable, Scenario_Hooks entry 16 (.data 0x662CC0): slot 0 the frame 0x56B2A0, slot 1 the object hook 0x56C080, slot 2 the step hook 0x43C9F0, slot 3 the arrive hook 0x43C9F0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F8C0
+name = "Scena16_CallA"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 16's call table A, Scenario_CallATables entry 16 (.data 0x660BC4): 0x519890. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F8C4
+name = "Scena16_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 16's call table B, Scenario_CallBTables entry 16 (.data 0x660C14): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x661FD8
+name = "Scena17_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 17's vtable, Scenario_Hooks entry 17 (.data 0x662CC4): slot 0 the frame 0x56C130, slot 1 the object hook 0x56CB80, slot 2 the step hook 0x539AC0, slot 3 the arrive hook 0x43C9F0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F8C8
+name = "Scena17_CallA"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 17's call table A, Scenario_CallATables entry 17 (.data 0x660BC8): 0x51AC20. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F8CC
+name = "Scena17_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 17's call table B, Scenario_CallBTables entry 17 (.data 0x660C18): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x662C30
+name = "Scena18_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 18's vtable, Scenario_Hooks entry 18 (.data 0x662CC8): slot 0 the frame 0x56D510, slot 1 the object hook 0x56D530, slot 2 the step hook 0x539AC0, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F8D0
+name = "Scena18_CallA"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 18's call table A, Scenario_CallATables entry 18 (.data 0x660BCC): 0x51AC20. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F8D4
+name = "Scena18_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 18's call table B, Scenario_CallBTables entry 18 (.data 0x660C1C): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x662C58
+name = "Scena19_Hooks"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27: chapter 19's vtable, Scenario_Hooks entry 19 (.data 0x662CCC): slot 0 the frame 0x56D550, slot 1 the object hook 0x56D5C0, slot 2 the step hook 0x539AC0, slot 3 the arrive hook 0x539AC0, slot 4 the cell hook 0 (none: 0x56D7A0 tests for it). Slot 0 is called by Field_ModeDispatch every field frame, 1 by 0x56D6D0 with the object, 2 and 3 by Scenario_StepHook / Scenario_ArriveHook with (x, z) answering in al, 4 by 0x56D7A0 likewise when not 0. Scenario_NoHook is 0x539AC0."
+
+[[data]]
+pc = 0x65F8D8
+name = "Scena19_CallA"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 19's call table A, Scenario_CallATables entry 19 (.data 0x660BD0): 0x51AC20. Scenario_CallA 0x5341A0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[data]]
+pc = 0x65F8DC
+name = "Scena19_CallB"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27: chapter 19's call table B, Scenario_CallBTables entry 19 (.data 0x660C20): 0x437CC0. Scenario_CallB 0x5341C0 jumps to entry n & 0xFF with the caller's arguments in place, unchecked; the table runs to the next call table's pointer (tools/scenario_rows.py read_roots)."
+
+[[func]]
+pc = 0x5341C0
+name = "Scenario_CallB"
+ret = "void"
+params = "unsigned n"
+status = "evidence"
+evidence = "disasm 2026-09-27 (whole, 27 bytes): movsx eax, byte Cond_ByteFA / mov ecx, [esp + 4] / mov edx, [eax*4 + 0x660BD4] / and ecx, 0xFF / jmp [edx + ecx * 4] - Scenario_CallA's shape through Scenario_CallBTables: entry n of the chapter's call table B, reached with the caller's arguments in place. Chapter 0's table pointer is 0. Not taken: a naked tail jump, nobody's this round; named so the scenario harness's standard set can list it."
