@@ -43386,3 +43386,888 @@ name = "EventBattle_Records"
 status = "evidence"
 evidence = "read 2026-09-27, group SE: 4-byte records by the event battle byte 0x904AAA (record 0 all zero, 'no event battle'): +0 Field_StartEventBattle's flags byte to 0x904AE5 (0x4410CE), +1 read at 0x532EE9, +2 at 0x494513, +3 at 0x49601C / 0x496040. Its length is not established (the id is a byte; 0x904AAA's battle-side jump table 0x656954 has 24 entries)."
 
+
+# --- 2026-09-27 round ten, group CALLS: the chapter call tables' entries, 0x519890..0x51AC50 (docs/scena_calls.md) ---
+
+[[func]]
+pc = 0x5198F0
+name = "Scena01_Set934Party9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x5198F0..0x519939 (0x49 bytes), every jump internal; reached only through the call tables (1 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(9, 3, 4, 0); Field_MemberCount 0; the record of MoveScript_EffectState[9] (read after the load) +9 = 9; Party_Join(9). No PSX twin paired."
+
+[[func]]
+pc = 0x519940
+name = "Scena01_Party034"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519940..0x519982 (0x42 bytes), every jump internal; reached only through the call tables (1 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[0] +9 = 0; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0), (3), (4). No PSX twin paired."
+
+[[func]]
+pc = 0x519990
+name = "ScenaCall_Join4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519990..0x519999 (0x9 bytes), straight-line; reached only through the call tables (1 A[2], 2 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(4). No PSX twin paired."
+
+[[func]]
+pc = 0x5199A0
+name = "ScenaCall_Leave4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x5199A0..0x5199AF (0xF bytes), straight-line; reached only through the call tables (1 B[0], 2 B[0], 9 B[0], 11 B[0], 12 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(4); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x5199B0
+name = "Scena02_Leave43"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x5199B0..0x5199F9 (0x49 bytes), every jump internal; reached only through the call tables (2 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the records of MoveScript_EffectState[4] and [3] +0xB bit 0 cleared; 0x534030(4), 0x534030(3); tail 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519A00
+name = "Scena03_Set012Party0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519A00..0x519A3F (0x3F bytes), every jump internal; reached only through the call tables (3 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 2, 0); both party lists 0x904062..0x904067 = 0xFF; Field_MemberCount 0; Party_Join(0). No PSX twin paired."
+
+[[func]]
+pc = 0x519A40
+name = "ScenaCall_Join1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519A40..0x519A49 (0x9 bytes), straight-line; reached only through the call tables (3 A[1], 5 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(1). No PSX twin paired."
+
+[[func]]
+pc = 0x519A50
+name = "ScenaCall_Leave1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519A50..0x519A5F (0xF bytes), straight-line; reached only through the call tables (3 B[0], 5 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(1); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519A60
+name = "Scena04_Set015Party01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519A60..0x519AA6 (0x46 bytes), every jump internal; reached only through the call tables (4 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); both party lists 0x904062..0x904067 = 0xFF; Field_MemberCount 0; Party_Join(0), (1). No PSX twin paired."
+
+[[func]]
+pc = 0x519AB0
+name = "ScenaCall_Party015"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519AB0..0x519ADD (0x2D bytes), straight-line; reached only through the call tables (4 A[1], 7 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_MemberCount 0; Party_Join(0); Party_Join(1); Party_Join(5). No PSX twin paired."
+
+[[func]]
+pc = 0x519AE0
+name = "Scena05_ReloadJoin516"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519AE0..0x519B15 (0x35 bytes), every jump internal; reached only through the call tables (5 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[6] +0xB bit 0 set; Field_PartyLoad(0); Party_Join(5), (1), (6). No PSX twin paired."
+
+[[func]]
+pc = 0x519B20
+name = "Scena05_Join0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519B20..0x519B29 (0x9 bytes), straight-line; reached only through the call tables (5 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(0). No PSX twin paired."
+
+[[func]]
+pc = 0x519B30
+name = "Scena05_Set015ReloadJoin5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519B30..0x519B4F (0x1F bytes), straight-line; reached only through the call tables (5 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(5). No PSX twin paired."
+
+[[func]]
+pc = 0x519B50
+name = "Scena05_Set015ReloadJoin1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519B50..0x519B6F (0x1F bytes), straight-line; reached only through the call tables (5 A[6]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(1). No PSX twin paired."
+
+[[func]]
+pc = 0x519B70
+name = "Scena05_Set016ReloadJoin6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519B70..0x519B8F (0x1F bytes), straight-line; reached only through the call tables (5 A[7]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 6, 0); Field_PartyLoad(0); Party_Join(6). No PSX twin paired."
+
+[[func]]
+pc = 0x519B90
+name = "ScenaCall_Join2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519B90..0x519B99 (0x9 bytes), straight-line; reached only through the call tables (5 A[8], 8 A[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(2). No PSX twin paired."
+
+[[func]]
+pc = 0x519BA0
+name = "Scena05_Leave51"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519BA0..0x519BB6 (0x16 bytes), straight-line; reached only through the call tables (5 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(5); 0x534030(1); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519BC0
+name = "ScenaCall_Leave5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519BC0..0x519BCF (0xF bytes), straight-line; reached only through the call tables (5 B[2], 6 B[6], 9 B[7], 10 B[1], 11 B[3], 12 B[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519BD0
+name = "ScenaCall_Leave6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519BD0..0x519BDF (0xF bytes), straight-line; reached only through the call tables (5 B[3], 6 B[4], 9 B[8], 11 B[2], 12 B[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519BE0
+name = "Scena05_Leave0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519BE0..0x519BEF (0xF bytes), straight-line; reached only through the call tables (5 B[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(0); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519BF0
+name = "Scena06_Set015ReloadJoin05"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519BF0..0x519C1A (0x2A bytes), straight-line; reached only through the call tables (6 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(0); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519C20
+name = "Scena06_Set015ReloadJoin5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519C20..0x519C43 (0x23 bytes), straight-line; reached only through the call tables (6 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519C50
+name = "Scena06_Set015ReloadJoin1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519C50..0x519C73 (0x23 bytes), straight-line; reached only through the call tables (6 A[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(1); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519C80
+name = "Scena06_Set015ReloadJoin15"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519C80..0x519CAA (0x2A bytes), straight-line; reached only through the call tables (6 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_PartyLoad(0); Party_Join(1); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519CB0
+name = "ScenaCall_Join6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519CB0..0x519CB9 (0x9 bytes), straight-line; reached only through the call tables (5 A[3], 6 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(6). No PSX twin paired."
+
+[[func]]
+pc = 0x519CC0
+name = "ScenaCall_Set012ReloadJoin1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519CC0..0x519CDF (0x1F bytes), straight-line; reached only through the call tables (5 A[9], 5 A[10], 6 A[6], 6 A[8]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 2, 0); Field_PartyLoad(0); Party_Join(1). No PSX twin paired."
+
+[[func]]
+pc = 0x519CE0
+name = "Scena06_Set012ReloadJoin2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519CE0..0x519CFF (0x1F bytes), straight-line; reached only through the call tables (6 A[7]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 2, 0); Field_PartyLoad(0); Party_Join(2). No PSX twin paired."
+
+[[func]]
+pc = 0x519D00
+name = "Scena06_Set012ReloadJoin12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519D00..0x519D26 (0x26 bytes), straight-line; reached only through the call tables (6 A[9]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 2, 0); Field_PartyLoad(0); Party_Join(1); Party_Join(2). No PSX twin paired."
+
+[[func]]
+pc = 0x519D30
+name = "Scena06_Leave02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519D30..0x519D46 (0x16 bytes), straight-line; reached only through the call tables (6 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(0); 0x534030(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519D50
+name = "Scena06_Leave05"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519D50..0x519D66 (0x16 bytes), straight-line; reached only through the call tables (6 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(0); 0x534030(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519D70
+name = "Scena06_Leave06"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519D70..0x519D86 (0x16 bytes), straight-line; reached only through the call tables (6 B[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(0); 0x534030(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519D90
+name = "ScenaCall_Leave2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519D90..0x519D9F (0xF bytes), straight-line; reached only through the call tables (6 B[3], 9 B[2], 11 B[1], 12 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519DA0
+name = "Scena06_Leave62"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519DA0..0x519DB6 (0x16 bytes), straight-line; reached only through the call tables (6 B[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(6); 0x534030(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519DC0
+name = "Scena06_Leave56"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519DC0..0x519DD6 (0x16 bytes), straight-line; reached only through the call tables (6 B[7]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(5); 0x534030(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519DE0
+name = "Scena07_Party012"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519DE0..0x519E0D (0x2D bytes), straight-line; reached only through the call tables (7 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 2, 0); Field_MemberCount 0; Party_Join(0); Party_Join(1); Party_Join(2). No PSX twin paired."
+
+[[func]]
+pc = 0x519E10
+name = "Scena07_LeaveThird"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519E10..0x519E1D (0xD bytes), every jump internal; reached only through the call tables (7 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(the third field member's +0x89, ObjTrio[2] at 0x803061). No PSX twin paired."
+
+[[func]]
+pc = 0x519E20
+name = "Scena07_Leave2Out1562"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519E20..0x519E98 (0x78 bytes), every jump internal; reached only through the call tables (7 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(2); then the records of MoveScript_EffectState[1], [5], [6], [2] +0xB bit 0 cleared, each index read after the call; no palettes. No PSX twin paired."
+
+[[func]]
+pc = 0x519EA0
+name = "Scena08_Set72APartyA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519EA0..0x519EC3 (0x23 bytes), straight-line; reached only through the call tables (8 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 0xA, 0); Field_MemberCount 0; Party_Join(0xA); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519ED0
+name = "Scena08_Party7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519ED0..0x519EF5 (0x25 bytes), every jump internal; reached only through the call tables (8 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Field_MemberCount 0; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; Party_Join(7). No PSX twin paired."
+
+[[func]]
+pc = 0x519F00
+name = "Scena08_Set724Party72"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519F00..0x519F2A (0x2A bytes), straight-line; reached only through the call tables (8 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 4, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519F30
+name = "ScenaCall_Party728"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519F30..0x519F61 (0x31 bytes), straight-line; reached only through the call tables (8 A[4], 14 A[7]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 8, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); Party_Join(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x519FA0
+name = "Scena08_SetParty784"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519FA0..0x519FB5 (0x15 bytes), straight-line; reached only through the call tables (8 A[6]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 4, 0); tail Scena08_PartyJoin784 (SE). No PSX twin paired."
+
+[[func]]
+pc = 0x519FC0
+name = "Scena08_Leave2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519FC0..0x519FC9 (0x9 bytes), straight-line; reached only through the call tables (8 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(2). No PSX twin paired."
+
+[[func]]
+pc = 0x519FD0
+name = "Scena09_Set782ReloadJoin8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x519FD0..0x519FF3 (0x23 bytes), straight-line; reached only through the call tables (9 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 2, 0); Field_PartyLoad(0); Party_Join(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A000
+name = "Scena09_Set782ReloadJoin2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A000..0x51A023 (0x23 bytes), straight-line; reached only through the call tables (9 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 2, 0); Field_PartyLoad(0); Party_Join(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A030
+name = "ScenaCall_Set785ReloadJoin85"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A030..0x51A05A (0x2A bytes), straight-line; reached only through the call tables (9 A[2], 11 A[0], 11 A[3], 12 A[0], 12 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 5, 0); Field_PartyLoad(0); Party_Join(8); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A060
+name = "ScenaCall_Set785ReloadJoin5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A060..0x51A083 (0x23 bytes), straight-line; reached only through the call tables (9 A[3], 11 A[2], 11 A[5], 12 A[2], 12 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 5, 0); Field_PartyLoad(0); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A090
+name = "ScenaCall_Set785ReloadJoin8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A090..0x51A0B3 (0x23 bytes), straight-line; reached only through the call tables (9 A[4], 11 A[1], 12 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 5, 0); Field_PartyLoad(0); Party_Join(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A0C0
+name = "Scena09_ReloadJoin6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A0C0..0x51A0D6 (0x16 bytes), straight-line; reached only through the call tables (9 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Field_PartyLoad(0); Party_Join(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A0E0
+name = "ScenaCall_Set765ReloadJoin56"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A0E0..0x51A10A (0x2A bytes), straight-line; reached only through the call tables (9 A[6], 11 A[6], 12 A[6]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 6, 5, 0); Field_PartyLoad(0); Party_Join(5); Party_Join(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A110
+name = "ScenaCall_Set765ReloadJoin6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A110..0x51A133 (0x23 bytes), straight-line; reached only through the call tables (9 A[7], 11 A[7], 12 A[7]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 6, 5, 0); Field_PartyLoad(0); Party_Join(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A140
+name = "Scena09_Set765ReloadJoin5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A140..0x51A163 (0x23 bytes), straight-line; reached only through the call tables (9 A[8]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 6, 5, 0); Field_PartyLoad(0); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A170
+name = "ScenaCall_Party72Saved"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A170..0x51A1CC (0x5C bytes), every jump internal; reached only through the call tables (9 A[9], 10 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; k = 8; for each of the three saved bytes 0x903A10..0x903A12: k = the byte unless it is 7 or 2, the byte = 0; PartySet_Load(7, 2, k, 0); Field_MemberCount 0; Party_Join(7), (2), (k); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A1D0
+name = "Scena09_Set748ReloadJoin8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A1D0..0x51A1F3 (0x23 bytes), straight-line; reached only through the call tables (9 A[10]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 8, 0); Field_PartyLoad(0); Party_Join(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A200
+name = "Scena09_Set748ReloadJoin48"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A200..0x51A22A (0x2A bytes), straight-line; reached only through the call tables (9 A[11]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 8, 0); Field_PartyLoad(0); Party_Join(4); Party_Join(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A230
+name = "Scena09_Set748ReloadJoin4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A230..0x51A253 (0x23 bytes), straight-line; reached only through the call tables (9 A[12]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 8, 0); Field_PartyLoad(0); Party_Join(4); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A260
+name = "Scena09_Set748ReloadJoin7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A260..0x51A283 (0x23 bytes), straight-line; reached only through the call tables (9 A[13]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 8, 0); Field_PartyLoad(0); Party_Join(7); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A290
+name = "Scena09_Leave42"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A290..0x51A2A6 (0x16 bytes), straight-line; reached only through the call tables (9 B[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(4); 0x534030(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A2B0
+name = "Scena09_Leave28"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A2B0..0x51A2C6 (0x16 bytes), straight-line; reached only through the call tables (9 B[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(2); 0x534030(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A2D0
+name = "Scena09_Leave48"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A2D0..0x51A2E6 (0x16 bytes), straight-line; reached only through the call tables (9 B[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(4); 0x534030(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A2F0
+name = "ScenaCall_Leave8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A2F0..0x51A2FF (0xF bytes), straight-line; reached only through the call tables (9 B[5], 11 B[4], 12 B[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A300
+name = "ScenaCall_SaveAndLeave"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A300..0x51A353 (0x53 bytes), every jump internal; reached only through the call tables (9 B[6], 10 B[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; n = Field_MemberCount; for i below n: the member's +0x89 (ObjTrio + 0x14C i) into 0x903A10 + i and a 4-byte local (the caller's ecx, pushed); then each of the local's first three bytes not 7: 0x534030(it); 0x533E00. A count below 3 leaves the rest of the local as ecx had it (the entry index); a count above 4 writes over the return address (latent). No PSX twin paired."
+
+[[func]]
+pc = 0x51A360
+name = "Scena09_Leave7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A360..0x51A36F (0xF bytes), straight-line; reached only through the call tables (9 B[9]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x534030(7); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A370
+name = "Scena10_Party728"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A370..0x51A39D (0x2D bytes), straight-line; reached only through the call tables (10 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 8, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); Party_Join(8). No PSX twin paired."
+
+[[func]]
+pc = 0x51A3A0
+name = "Scena10_Party75"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A3A0..0x51A40A (0x6A bytes), every jump internal; reached only through the call tables (10 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; for i while i < Field_MemberCount (read again after every call): 0x534030(ObjTrio[i] +0x89); PartySet_Load(7, 5, 8, 0); Field_MemberCount 0; Party_Join(7), (5). 0x534030 lowers the count and moves the later members down, so the loop passes over every second member (latent). No PSX twin paired."
+
+[[func]]
+pc = 0x51A410
+name = "Scena10_Join8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A410..0x51A419 (0x9 bytes), straight-line; reached only through the call tables (10 A[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(8). No PSX twin paired."
+
+[[func]]
+pc = 0x51A420
+name = "ScenaCall_Join5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A420..0x51A429 (0x9 bytes), straight-line; reached only through the call tables (5 A[2], 6 A[4], 10 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(5). No PSX twin paired."
+
+[[func]]
+pc = 0x51A430
+name = "Scena10_RestoreSaved"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A430..0x51A485 (0x55 bytes), every jump internal; reached only through the call tables (10 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the saved bytes s0..s2 (0x903A10..0x903A12); PartySet_Load(s0, s1, s2, 0); each of s0, s1, s2 not 7: Party_Join(it); no count reset, no palettes. No PSX twin paired."
+
+[[func]]
+pc = 0x51A490
+name = "Scena10_Leave5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A490..0x51A4B4 (0x24 bytes), every jump internal; reached only through the call tables (10 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[5] +0xB bit 0 cleared; 0x534030(5); tail 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A4C0
+name = "Scena10_LeaveAll"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A4C0..0x51A503 (0x43 bytes), every jump internal; reached only through the call tables (10 B[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the three members' +0x89 copied; each not 7: 0x534030(it); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A510
+name = "ScenaCall_Set725ReloadJoin5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A510..0x51A533 (0x23 bytes), straight-line; reached only through the call tables (11 A[4], 12 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 5, 0); Field_PartyLoad(0); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A540
+name = "ScenaCall_Set742ReloadJoin42"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A540..0x51A56A (0x2A bytes), straight-line; reached only through the call tables (11 A[8], 12 A[8]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 2, 0); Field_PartyLoad(0); Party_Join(4); Party_Join(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A570
+name = "Scena12_Set752ReloadJoin25"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A570..0x51A59A (0x2A bytes), straight-line; reached only through the call tables (12 A[9]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 5, 2, 0); Field_PartyLoad(0); Party_Join(2); Party_Join(5); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A5A0
+name = "Scena13_Party765"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A5A0..0x51A5CD (0x2D bytes), straight-line; reached only through the call tables (13 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 5, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(6); Party_Join(5). No PSX twin paired."
+
+[[func]]
+pc = 0x51A5D0
+name = "Scena13_SaveParty7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A5D0..0x51A630 (0x60 bytes), every jump internal; reached only through the call tables (13 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x903A10..12 = the first list 0x904062..64 and 0x903A13..15 = the second 0x904065..67; 0x534030(0x903A10[i]) for i 0..2, each read after the last call; PartySet_Load(7, 4, 8, 0); Field_MemberCount 0; Party_Join(7); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A630
+name = "Scena13_Set758Party7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A630..0x51A64F (0x1F bytes), straight-line; reached only through the call tables (13 A[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 5, 8, 0); Field_MemberCount 0; Party_Join(7). No PSX twin paired."
+
+[[func]]
+pc = 0x51A650
+name = "Scena13_RestoreSaved"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A650..0x51A6BA (0x6A bytes), every jump internal; reached only through the call tables (13 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the saved s0..s2 (0x903A10..12); PartySet_Load(s0, s1, s2, 0); Field_MemberCount 0; Party_Join(s0), (s1), (s2); then the second list 0x904065..67 = 0x903A13..15, read after the calls. No PSX twin paired."
+
+[[func]]
+pc = 0x51A6C0
+name = "Scena13_Party758"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A6C0..0x51A6F1 (0x31 bytes), straight-line; reached only through the call tables (13 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 5, 8, 0); Field_MemberCount 0; Party_Join(7); Party_Join(5); Party_Join(8); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A700
+name = "Scena13_LeaveAllParty7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A700..0x51A75D (0x5D bytes), every jump internal; reached only through the call tables (13 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the three members' +0x89 copied; 0x534030 on each (no test); PartySet_Load(7, 4, 2, 0); Field_MemberCount 0; Party_Join(7); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A760
+name = "Scena13_Join4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A760..0x51A76F (0xF bytes), straight-line; reached only through the call tables (13 A[6]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(4); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A770
+name = "Scena13_Join2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A770..0x51A77F (0xF bytes), straight-line; reached only through the call tables (13 A[7]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A780
+name = "Scena14_Party748"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A780..0x51A7AD (0x2D bytes), straight-line; reached only through the call tables (14 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 4, 0); Field_MemberCount 0; Party_Join(7); Party_Join(4); Party_Join(8). No PSX twin paired."
+
+[[func]]
+pc = 0x51A7B0
+name = "Scena14_Party746"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A7B0..0x51A7DD (0x2D bytes), straight-line; reached only through the call tables (14 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(4); Party_Join(6). No PSX twin paired."
+
+[[func]]
+pc = 0x51A7E0
+name = "Scena14_Party756"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A7E0..0x51A80D (0x2D bytes), straight-line; reached only through the call tables (14 A[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 5, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(5); Party_Join(6). No PSX twin paired."
+
+[[func]]
+pc = 0x51A810
+name = "Scena14_SaveLeaveAllPartyA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A810..0x51A881 (0x71 bytes), every jump internal; reached only through the call tables (14 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the three members' +0x89 copied, the last that is neither 7 nor 4 also into 0x903A10; 0x534030 on each copy (no test); PartySet_Load(0xA, 0xFF, 0xFF, 0); Field_MemberCount 0; Party_Join(0xA); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A890
+name = "Scena14_Out10Party748"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A890..0x51A8D6 (0x46 bytes), every jump internal; reached only through the call tables (14 A[4]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; the record of MoveScript_EffectState[10] (Char_WhelpSlot) +0xB bit 0 cleared; PartySet_Load(7, 4, 8, 0); Field_MemberCount 0; Party_Join(7), (4), (8); tail 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A8E0
+name = "Scena14_Party015Lists785"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A8E0..0x51A927 (0x47 bytes), every jump internal; reached only through the call tables (14 A[5]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 1, 5, 0); Field_MemberCount 0; Party_Join(0), (1), (5); 0x533E00; then the second list 0x904065..67 = 7, 8, 5. No PSX twin paired."
+
+[[func]]
+pc = 0x51A930
+name = "Scena14_Party726"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A930..0x51A961 (0x31 bytes), straight-line; reached only through the call tables (14 A[6]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 6, 0); Field_MemberCount 0; Party_Join(7); Party_Join(2); Party_Join(6); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A970
+name = "Scena14_Party74First"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A970..0x51A9AA (0x3A bytes), every jump internal; reached only through the call tables (14 A[8]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 4, 0x903A10, 0); Field_MemberCount 0; Party_Join(7), (4), (0x903A10 read again after the calls); tail 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51A9B0
+name = "Scena14_SaveLeaveAllParty7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51A9B0..0x51AA0D (0x5D bytes), every jump internal; reached only through the call tables (14 A[9]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; 0x903A10..12 = the three members' +0x89; 0x534030(0x903A10[i]) for i 0..2, each read after the last call (no test); PartySet_Load(7, 8, 4, 0); Field_MemberCount 0; Party_Join(7); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51AA10
+name = "Scena14_Set726Party7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51AA10..0x51AA33 (0x23 bytes), straight-line; reached only through the call tables (14 A[10]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 2, 6, 0); Field_MemberCount 0; Party_Join(7); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51AA40
+name = "ScenaCall_Party784"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51AA40..0x51AA71 (0x31 bytes), straight-line; reached only through the call tables (14 A[11], 15 A[3]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 4, 0); Field_MemberCount 0; Party_Join(7); Party_Join(8); Party_Join(4); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51AA80
+name = "Scena14_Party74Other"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51AA80..0x51AAE8 (0x68 bytes), every jump internal; reached only through the call tables (14 A[12]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; k = the first of 0x903A10..12 that is neither 7 nor 4 (0x903A12 if all are); PartySet_Load(7, 4, k, 0); Field_MemberCount 0; Party_Join(7), (4), (k); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51AAF0
+name = "Scena14_RecountLeaveAll"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51AAF0..0x51AB43 (0x53 bytes), every jump internal; reached only through the call tables (14 B[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Field_MemberCount = the members whose +0 has bit 0, and their +0x89 copied, over all three records; each copy not 7: 0x534030(it); no palettes. No PSX twin paired."
+
+[[func]]
+pc = 0x51AB50
+name = "Scena15_LeaveAllParty7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51AB50..0x51ABB8 (0x68 bytes), every jump internal; reached only through the call tables (15 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; n = Field_MemberCount; a 4-byte local (the caller's ecx, pushed) gets the first n members' +0x89; 0x534030 on each of its first three bytes (no test); PartySet_Load(7, 4, 2, 0); Field_MemberCount 0; Party_Join(7); 0x533E00. A count below 3 leaves the rest of the local as ecx had it (the entry index); a count above 4 writes over the return address (latent). No PSX twin paired."
+
+[[func]]
+pc = 0x51ABC0
+name = "Scena15_Join42"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51ABC0..0x51ABD6 (0x16 bytes), straight-line; reached only through the call tables (15 A[1]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; Party_Join(4); Party_Join(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51ABE0
+name = "Scena15_Party782"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51ABE0..0x51AC11 (0x31 bytes), straight-line; reached only through the call tables (15 A[2]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(7, 8, 2, 0); Field_MemberCount 0; Party_Join(7); Party_Join(8); Party_Join(2); 0x533E00. No PSX twin paired."
+
+[[func]]
+pc = 0x51AC20
+name = "ScenaCall_Party034"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_calls.cpp"
+evidence = "disasm 2026-09-27, group CALLS, 0x51AC20..0x51AC4D (0x2D bytes), straight-line; reached only through the call tables (17 A[0], 18 A[0], 19 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0); Party_Join(3); Party_Join(4). No PSX twin paired."
+

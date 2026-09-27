@@ -166,6 +166,7 @@
 #include "game/area_cell_hook.h"
 #include "game/scena_sc0.h"
 #include "game/scena_se.h"
+#include "game/scena_calls.h"
 #include "game/scena_sc11.h"
 #include "game/scena_sc3.h"
 #include "game/scena_sc1.h"
@@ -543,6 +544,9 @@ void InjectAll() {
     ScenaSc12_Inject();         // round 10 group SC12 (scenario chapter 12's first block, 0x55E4E0..0x561DB0):
                                 // no module patches bytes inside its 24 (DIVERGENCE.md, cheats.cpp): order does
                                 // not matter
+    ScenaCalls_Inject();        // round 10 group CALLS (the chapter call tables' 98 entries, 0x519890..0x51AC50):
+                                // its clones' calls re-aimed at the scenario harness's recorders; no module patches
+                                // bytes inside its 98 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 
