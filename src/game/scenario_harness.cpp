@@ -280,7 +280,7 @@ const Callee kStandard[] = {
     {SH_OURS(Sprite_SetAnimationAt), 2, {kU8, kU16}, Answer::kGarbage, 0, 0},
     {SH_OURS(Sprite_SetAnimationBank), 1, {kU16}, Answer::kFlag, 0, 0},
     {SH_OURS(Sprite_FaceDirection), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {SH_THEIRS(EventObj_Face), 0, {}, Answer::kGarbage, 0, 0},
+    {SH_OURS(EventObj_Face), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_SetFlags), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_Reset), 0, {}, Answer::kGarbage, 0, 0},
     {SH_THEIRS(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},

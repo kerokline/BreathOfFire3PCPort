@@ -5830,8 +5830,9 @@ name = "EventObj_Face"
 psx = 0x801A591C
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 60 bytes, not taken over): Sprite_Current +0x4B = 0xFF; with +7 bit 3, +0x2A = bit 4 of +7 and Sprite_SetAnimation(+8), else Sprite_FaceDirection(+8). The last call of EventOp_1x / 2x. psx_pair call-anchored."
+status = "evidence"
+impl = "src/game/scena_se.cpp"
+evidence = "disasm 2026-09-22 and 2026-09-27 (group SE, round ten), 0x579D70..0x579DAC (0x3C bytes), cdecl, two calls, every jump internal: Sprite_Current +0x4B = 0xFF; Sprite_Current read again, with +7 bit 3: +0x2A = bit 4 of +7 and Sprite_SetAnimation(+8 of Sprite_Current read a third time), else Sprite_FaceDirection(+8 of the second read); both answers unread. Nine E8 callers: the placements EventOp_0x, 1x, 2x, 3x, 4x, 5x, 6x, 7x (the last call of each) and chapter 3's 0x544830 (0x544977). psx_pair call-anchored (FUN_801A591C)."
 
 [[func]]
 pc = 0x579DB0
@@ -5869,8 +5870,9 @@ name = "EventOp_0x"
 psx = 0x801A5D5C
 ret = "void"
 params = "const unsigned char *op"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 0x57A010..0x57A1D1, not taken over): EventOp_1x's placement with object +0x83 = op[0x10] (17 bytes). The default of EventScript_Op's jump table. Never reached by the attract cycle."
+status = "evidence"
+impl = "src/game/scena_se.cpp"
+evidence = "disasm 2026-09-22 and 2026-09-27 (group SE, round ten), 0x57A010..0x57A1D2 (0x1C2 bytes), cdecl, five calls, every jump internal: EventOp_1x's placement with object +0x83 = op[0x10] (17 bytes) - the count word 0x903850 signed, 30 or more nothing (a negative count places before Sprite_Objects, unchecked); Sprite_Current = Field_ActiveMember = Sprite_Objects[count]; word 0x903852 = op[1] << 8 | op[2]; EventObj_Reset, Sprite_SetAnimationBank(that word); +0 = 1, +0x34 / +0x38 the half / whole coordinates op[6..9], copied to the object's +0x8C / +0x90 (count read again), +0x94 = 0; +0x3E = AreaMap_Elevation(+0x34, +0x38); +1 op[0xA], +2 op[0xC], +8 op[0] & 0xF, +6 op[0] >> 4; the object's +0x98 / +0x9A op[4] / op[5] as words, +0x88 op[0xE] << 8 | op[0xF], +0x83 op[0x10], +0x84 op[0xB], +0xA0 0x7F; EventObj_SetFlags(op + 0xD); op[3] bit 7 sets +0 bit 5; +0x5D +0x5F +0x5E 0, +0x5C op[3] & 0xF; EventObj_Face; the count word + 1. The default of EventScript_Op's jump table (nibbles 0 and F) and 19 E8 callers: 16 in engine code (0x405770 .. 0x488C00, area and world-map placements) and three chapters' (0x5508E8 chapter 6/7, 0x5594EA chapter 9/10, 0x569752 chapter 15). psx_pair call-anchored (FUN_801A5D5C)."
 
 [[func]]
 pc = 0x57A1E0
@@ -41786,3 +41788,51 @@ ctype = "unsigned long"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-27: one entry, 0x437CC0 (a bare ret) - Scena00_ObjectHook calls entry object[0x86] with (object, the flag row), unchecked; the next word is 0 (a call past the table faults)."
+
+# --- 2026-09-27 round ten, group SE: the engine-side helpers the scenario
+# chapters share (src/game/scena_se.cpp, docs/scena_se.md). EventObj_Face and
+# EventOp_0x above gained `impl` in place. Not taken, and why: 0x520000 (one
+# of 18 copies of Field_CellPickup), 0x508000 and 0x5080A0 (a piece of the
+# 0x65E710 state table's unit) - docs/scena_se.md section 1.
+
+[[func]]
+pc = 0x4410B0
+name = "Field_StartEventBattle"
+ret = "void"
+params = "unsigned id"
+status = "evidence"
+impl = "src/game/scena_se.cpp"
+evidence = "disasm 2026-09-27, group SE, 0x4410B0..0x4410F3 (0x43 bytes), cdecl, no calls: byte 0x905BA5 (Field_ScriptFlags2's high byte) |= 0x10 - bit 12, the encounter bit the leader's state 5 clears (docs/event_leader.md); the event battle byte 0x904AAA = the argument's low byte; ObjTrio +1 (0x802D41) = 5, +2..+4 = 0; 0x904AE5 = EventBattle_Records[id] +0, 0x904AE4 = 0. eax left with that byte, which no caller reads. 53 E8 call sites in 36 functions of 14 chapters (0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15), each followed by the chapter's next state 0x8034E5 or a return. No PSX twin paired."
+
+[[func]]
+pc = 0x519F70
+name = "Scena08_PartyJoin784"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_se.cpp"
+evidence = "disasm 2026-09-27, group SE, 0x519F70..0x519F94 (0x24 bytes), no arguments read: Field_MemberCount = 0; Party_Join(7), Party_Join(8), Party_Join(4) (answers unread, the three pushes popped once); a tail jmp to 0x533E00 (per member below Field_MemberCount: Sprite_ReleaseTint and Sprite_LoadPalette - nobody's). Chapter 8's call table A entry 5 (the dword at 0x65F748, Scenario_CallA's table 0x660B84 row 8 at 0x65F734), and the tail of entry 6 (0x519FA0: PartySet_Load(7, 8, 4, 0), jmp here). No E8 caller. No PSX twin paired."
+
+[[func]]
+pc = 0x524870
+name = "Effect_SpawnAtCell"
+ret = "void"
+params = "unsigned state, unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/scena_se.cpp"
+evidence = "disasm 2026-09-27, group SE, 0x524870..0x5248E6 (0x76 bytes), cdecl, two calls, every jump internal: Effect_FindFree; 0xFF nothing; else Effect_Objects + slot * 0x80 (the slot unchecked): +0 = 1, +5 = 0x34 (the kind), +1 = the first argument's byte, +0x34 = movsx word x << 16, +0x38 = movsx word z << 16, +0x3E = AreaMap_Elevation(+0x34 read back, z) + 0x100, +0xB = 0. Called three times by each of the 18 cell-pickup copies (0x51C270 .. 0x525150, Field_CellPickup among them); none reads eax. docs/field_hidden.md called it 'an effect of kind 0x34 at a cell'. Reached from the chapters only through 0x520000, itself reached only by a coordinate the scenario walk read as code (docs/scena_se.md section 1). No PSX twin paired."
+
+[[func]]
+pc = 0x591CC0
+name = "Party_AddToLists"
+ret = "unsigned char"
+params = "unsigned member"
+status = "evidence"
+impl = "src/game/scena_se.cpp"
+evidence = "disasm 2026-09-27, group SE, 0x591CC0..0x591DA5 (0xE5 bytes), cdecl, no calls, every jump internal: the member's character record (CharacterRecords + 0xA4 * MoveScript_EffectState[member], both bytes unchecked) +0xB |= 3; Field_MemberCount below 3: the count + 1 and both party lists' slot (0x904062 / 0x904065 + the old count) = member, al 1; else the first slot i of the first list whose member's record +0xB lacks bit 1 and whose id stands at some j of the second: both take the member, al 1; none, al 0. Party_Join's list half, no sprite (docs/char-stats.md section 1 listed it). One E8 caller, chapter 6's 0x54CF00 (0x54D053), which does not read al. No PSX twin paired."
+
+[[data]]
+pc = 0x64DDEC
+name = "EventBattle_Records"
+status = "evidence"
+evidence = "read 2026-09-27, group SE: 4-byte records by the event battle byte 0x904AAA (record 0 all zero, 'no event battle'): +0 Field_StartEventBattle's flags byte to 0x904AE5 (0x4410CE), +1 read at 0x532EE9, +2 at 0x494513, +3 at 0x49601C / 0x496040. Its length is not established (the id is a byte; 0x904AAA's battle-side jump table 0x656954 has 24 entries)."
