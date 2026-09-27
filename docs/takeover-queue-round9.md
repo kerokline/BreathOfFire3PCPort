@@ -403,3 +403,42 @@ Merged so far (each: the build, the group's shadow, `'*'`, `ledger_check`
 | S36 | MAGIC172, 173, 218 | 45 | 254 of 255; M77 equivalent | [`magic_s36.md`](magic_s36.md) |
 | S37 | MAGIC219, 220/221, 222 | 60 | 331 of 334 by a count; H4 by a fault (H4b by a count); G48, G51 equivalent | [`magic_s37.md`](magic_s37.md) |
 | S35 | MAGIC167, 168, 169 | 46 | 228 of 228 (B18 by a hang, B18b by a count) | [`magic_s35.md`](magic_s35.md) |
+| S38 | MAGIC223, 225, 226/227 | 54 | 359 of 361; T17, M98 equivalent | [`magic_s38.md`](magic_s38.md) |
+
+**Wave five complete (2026-09-27 midday): all seven merged, 3,165 -> 3,510
+ours (345 functions), and with it the spell round - every overlay behind
+`Magic_Rows` is ours, 2,064 functions in 43 groups.** Every equivalent has
+a refused near variant; four groups strengthened their own fuzz after a
+first run left controls standing (S34's B27, S35's U57 with a seed change
+that re-ran its whole set, S36's four, S38's T50 / V97); none edited the
+harness. S32 found `magic_rows.py`'s row pairing reversed for MAGIC151 /
+154 (S33: 151 is row 86, 154 is row 35) and for MAGIC159 / 166 (S34: 159 is
+row 120, 166 is row 90) - the queue's "read one id down" line, not the
+code. After the wave: 3,510 `impl` entries, 34 without an
+`entries_logic.txt` line - the same 34 as section 10, none of them a spell.
+
+**Newly named shared functions**, still called by raw address elsewhere:
+`MagicFx_FreeCurrentRecord` `0x4F6290` (S37; raw in C1, C2, S02, S07, S10,
+S11, S17, S19, S21, S28, S29, S35, S38), `MagicFx_PushRecordMatrix`
+`0x4F6020` (S37; S38), `0x4F7C40` (S37; S10), `0x4F7320` (S37; S09),
+`MagicFx_CountDownFlag10` `0x4F9F70` (S38; C2, S10, S28, S30, S31, S37),
+`MeteorStrikeRock_DrawRing` `0x4FA440` (S38; S10), `0x4FA390` (S38; S37),
+`AuraBreath_InReach` `0x4F5970` (S36; S11's `kNearSprite`),
+`BattleFx_ScriptToEnd` `0x4EE560` (S34; S02), `0x4EF840` (S35; S38). The
+engine's `0x446770` (a direction turn), `0x4514A0`, `0x494060`,
+`0x494110`, `0x4941B0` are called raw by several groups and belong to no
+unit.
+
+**Defects described, not fixed** (each group doc): the common set - every
+dispatch table unchecked (ours aborts past one), `BattleTask_Create`'s
+`0xFF` unchecked in every start function - and: S33's `Accession_LoadForm*`
+fault on a null pointer for a `0x904B89` kind of 10, 19, 20 or above 25,
+and path B copies the actor's record over party member 0; S34's
+`TimedBlow_Start` indexes enemy records by the actor byte minus 3; S35's
+`Benediction_Spawn` and `LastResort_Start` would write past the image end
+on `0xFF`, `LastResortBeam_DrawSparks` never ends for a step below 1;
+S36's spark loops end on a random walk and its ribbon's gap scan has no
+limit; S37's `CombustionSprite_Fade` adds to +0x40 twice and never +0x44
+(a copy slip), and the Combustion shake leaves `Camera_Angles[0]` at
+`0xFD56`; S38's `Magic225_Spawn` plays one sound 16 times a frame, and a
+second overlapping cast clears the first's pool records.

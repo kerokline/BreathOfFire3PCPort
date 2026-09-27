@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**3,165 functions are ours** (`inject: 3165 ours` in
+**3,510 functions are ours** (`inject: 3510 ours` in
 `bof3x.log`, 2026-09-27; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
@@ -45,6 +45,7 @@ re-derived:
 | 09-26 | Spell wave 2: the cut content (C1..C3), the engine rows (E), MAGIC114..143 (S26..S31) | 465 | 2,468 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 9 |
 | 09-26 | Spell wave 3: MAGIC001..044 (S01..S08) | 377 | 2,845 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 10 |
 | 09-27 | Spell wave 4: MAGIC045..069 (S09..S15) | 320 | 3,165 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 11 |
+| 09-27 | Spell wave 5: MAGIC144..227 (S32..S38) - the spell round complete, every `Magic_Rows` overlay ours | 345 | 3,510 | `r9` re-recorded at 3,164: identical but frame 0 | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 12 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -202,10 +203,11 @@ What is established:
   byte-identical and the sibling's verifier accepts a PC save. **Both
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
-- 1,102 functions, 8 global blocks and 306 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 3,165 functions carry an `impl`,
-  one for every detour (`tools/ledger_check.py`, 2026-09-26; `Fmv_WndProc`
-  `0x59E570` was the one without, until then).
+- 3,574 functions, 8 global blocks and 922 data items named in
+  [`symbols.toml`](../symbols.toml), tiered (`tomllib`, 2026-09-27); 3,510
+  functions carry an `impl`, one for every detour (`tools/ledger_check.py`,
+  0 errors 2026-09-27; `Fmv_WndProc` `0x59E570` was the one without, until
+  2026-09-26).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
   reaches (540 of 2,936 in the attract sequence), call counts and edges, a

@@ -1,10 +1,12 @@
 # Takeover queue, round nine: the spell round
 
-**Status:** DRAFT (2026-09-25) - the queue and a proposed first wave; group
-SH (the harness and its proof, [`magic_harness.md`](magic_harness.md),
-[`magic_steal.md`](magic_steal.md)) is done on its branch, no wave group is
-cut. The owner chose the order: the harness group first, then a first wave
-of about ten spell groups, later waves in later sessions.
+**Status:** DONE (2026-09-27) - every group of the queue is merged: waves
+one to five ([`takeover-queue-round9.md`](takeover-queue-round9.md)
+sections 6, 9, 10, 11, 12), 2,064 functions in 43 groups through one
+harness ([`magic_harness.md`](magic_harness.md)). What the round still owes
+(rebinding raw-address calls to names, `known-defects.md`, the owner's eye
+on a cast) is in [`HANDOFF.md`](HANDOFF.md). The text below is the queue
+as it was planned; the extents and the row table stay the reference.
 
 The round takes every row of the effect table `Magic_Rows` (`0x64C2B8`, 151
 rows of a u16 DAT file and a code pointer; [`battle_fx_tasks.md`](battle_fx_tasks.md)
