@@ -215,7 +215,9 @@ constexpr std::uint32_t kTrailBytes = 0x1B84;
 
 // Set by the seed for the functions each matters to.
 bool g_turn = false;    // Math_Ratan2 answers near a turn bound (the flight steps)
-bool g_calm_sin = false;   // Math_Sin answers 0 fifteen times in sixteen (half of a spark's rounds)
+bool g_calm_sin = false;   // Math_Sin answers 0 or +-0x400 (half of a spark's rounds)
+bool g_grow = false;       // Battle_SetTargetFlags moves the struck byte (AuraBreathDome_Grow)
+unsigned g_reach_enemy = 3;   // AuraBreath_InReach's record, chosen by the seed
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -274,8 +276,19 @@ std::uint32_t RatanEffect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t old = static_cast<std::uint32_t>(Long(Sprite_Current + 0x10)) & 0xFFF;
     return (answer & 0xFFFFF000u) | ((old - static_cast<std::uint32_t>(d)) & 0xFFF);
 }
+// In a calm spark round: 0 seven times in eight, else +-0x400 (a radius step
+// of a quarter of the Rand draw), so the radius creeps across the loop's floor.
 std::uint32_t SinEffect(const std::uint32_t*, std::uint32_t answer) {
-    if (g_calm_sin && (mh::Noise() & 0xF) != 0) return 0;
+    if (!g_calm_sin) return answer;
+    const std::uint32_t n = mh::Noise();
+    if ((n & 7) != 0) return 0;
+    return n & 8 ? 0x400u : 0xFFFFFC00u;
+}
+// Battle_SetTargetFlags while the dome grows: a new byte in the struck entry
+// of the enemy flagged, half the time (the dome's store comes before the call
+// in the original, so what it holds after is the callee's).
+std::uint32_t FlagsEffect(const std::uint32_t* a, std::uint32_t answer) {
+    if (g_grow && (mh::Noise() & 1)) mh::Mem(0x6B4A58 + ((a[0] - 3) & 7))[0] = static_cast<unsigned char>(mh::Noise());
     return answer;
 }
 
@@ -295,6 +308,8 @@ const mh::Callee kCallees[] = {
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map, field_misc,
     // battle_items, move_cmds: all ours)
     {S36_OURS(Math_Sin), 1, {kAll}, kG, 0, 0, {}, &SinEffect},
+    // listed over the standard one for its effect
+    {S36_OURS(Battle_SetTargetFlags), 2, {kU8, 0xFFFFu}, kG, 0, 0, {}, &FlagsEffect},
     {S36_OURS(Math_Cos), 1, {kAll}, kG, 0, 0},
     {S36_OURS(Math_Ratan2), 2, {kAll, kAll}, kG, 0, 0, {}, &RatanEffect},
     {S36_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
@@ -393,6 +408,7 @@ void Seed(unsigned k) {
     Gfx_PacketNext = PrimAt(mh::Next());
     g_turn = k == kMagicBallCore_Fly || k == kMagicBallOrb_Fly || k == kIntimidateTrail_Fly;
     g_calm_sin = (k == kMagicBall_DrawSpark || k == kMagicBall_DrawSparkShort) && mh::Half();
+    g_grow = k == kAuraBreathDome_Grow;
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
@@ -414,9 +430,9 @@ void Seed(unsigned k) {
         break;
     case kMagicBallCore_Shrink: Near(sc[0xA], 1); break;
     case kMagicBallOrb_Start: case kIntimidateTrail_Fade: case kAuraBreathDome_Wait: Near(sc[9], 0); break;
-    case kMagicBallCore_Fly: Near(sc[9], 0xB); break;
+    case kMagicBallCore_Fly: Near(sc[9], 0xF); break;
     case kMagicBallOrb_Fly:
-        Near(sc[9], 0xB);
+        Near(sc[9], 0xF);
         if (mh::Often()) mh::Mem(mh::at::kTasks + sc[4] * mh::at::kTaskStride + 2)[0] = Byte(1 + mh::Next() % 2);
         break;
     case kIntimidateTrail_Start:
@@ -457,6 +473,18 @@ void Seed(unsigned k) {
             if (mh::Often()) mh::Mem(kStruck + i)[0] = 0;
         if (mh::Half()) mh::Mem(mh::at::kActor)[0] = Byte(3 + mh::Next() % 8);
         break;
+    case kAuraBreath_InReach: {
+        g_reach_enemy = 3 + mh::Next() % 8;
+        if (!mh::Often()) break;
+        unsigned char* const record = mh::EnemyOf(Byte(g_reach_enemy));
+        const int reach = static_cast<int>(mh::Next() % 0x400);
+        SetWord(mh::Mem(kScratch), static_cast<unsigned>(reach));
+        const int d = reach - 1 + static_cast<int>(mh::Next() % 3);
+        SetLong(record + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0x34)) +
+                                                         (static_cast<std::uint32_t>(d) << 9)));
+        SetLong(record + 0x38, Long(sc + 0x38));
+        break;
+    }
     case kAuraBreathDome_Fade:
         Near(sc[0x5D], 0);
         Near(sc[0xA], 0x1F);
@@ -472,25 +500,16 @@ void Seed(unsigned k) {
 }
 
 // The functions that take arguments: the sparks an angle and a jitter mask
-// (their callers' 3, 7 or 0xF most of the time); AuraBreath_InReach an
-// enemy record, whose point is put one step either side of the reach.
+// (their callers' 3, 7 or 0xF most of the time); AuraBreath_InReach the
+// enemy record the seed chose (and put one step either side of the reach:
+// memory written here, after the input is captured, would be lost).
 void Args(unsigned k, std::uint32_t* a) {
     if (k == kMagicBall_DrawSpark || k == kMagicBall_DrawSparkShort) {
         a[0] &= 0xFFFF;
         if (mh::Often()) a[1] = MH_PICK(3, 7, 0xF);
         return;
     }
-    if (k != kAuraBreath_InReach) return;
-    unsigned char* const record = mh::EnemyOf(Byte(3 + mh::Next() % 8));
-    a[0] = Key(record);
-    if (!mh::Often()) return;
-    const unsigned char* const sc = Sc();
-    const int reach = static_cast<int>(mh::Next() % 0x400);
-    SetWord(mh::Mem(kScratch), static_cast<unsigned>(reach));
-    const int d = reach - 1 + static_cast<int>(mh::Next() % 3);
-    SetLong(record + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0x34)) +
-                                                     (static_cast<std::uint32_t>(d) << 9)));
-    SetLong(record + 0x38, Long(sc + 0x38));
+    if (k == kAuraBreath_InReach) a[0] = Key(mh::EnemyOf(Byte(g_reach_enemy)));
 }
 
 }  // namespace
