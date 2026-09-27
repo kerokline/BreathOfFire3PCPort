@@ -436,12 +436,21 @@ void Disturb(std::uint32_t h) {
     }
 }
 
-// After every disturbance (two calls in three), for EnterArea only: the cells
+// After every disturbance (two calls in three), for Run15 counter 2 (below),
+// and for EnterArea the cells
 // it reads again after its calls - the area, counter 2, Cond_ByteFD and
 // ObjTrio +0x3C - each moved half the time, since the harness's disturbance
 // reaches the group's cells only one time in sixteen. Noise() is the
 // recorders' stream, the same on both passes.
 void Settle() {
+    if (g_k == kRun15) {
+        // Run 15 stores counter 2 between calls (steps 0x5E, 0x6F, 0x72,
+        // 0x78): moved half the time, so a store on the wrong side of a call
+        // shows
+        const std::uint32_t n = sh::Noise();
+        if (n & 1) B(at::kCounters + 2) = static_cast<unsigned char>(n >> 8);
+        return;
+    }
     if (g_k != kEnterArea) return;
     const std::uint32_t n = sh::Noise();
     if (n & 1) {
