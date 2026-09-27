@@ -33465,3 +33465,598 @@ ctype = "unsigned char"
 count = 8448
 status = "evidence"
 evidence = "read 2026-09-26, group S07: 64 task-like records of 0x84 bytes: Bonebreak_Start clears +0..+2, BonebreakMote_Alloc takes one by bit 0, Bonebreak_Task runs each live one as Sprite_Current (+0x80 its owner). Not named before (symbols.toml, 2026-09-26)."
+
+# --- round nine group S14: MAGIC064, MAGIC065 (its last function), MAGIC066 (docs/magic_s14.md) ---
+
+[[func]]
+pc = 0x4B3F00
+name = "Weretiger_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3F00..0x4B3F2D (0x2E bytes), group S14: a three-entry stack table (the engine 0x492750 which steps +1 on, Weretiger_Run, Weretiger_End) called by byte +1, unchecked. Magic_Rows row 77, file 0x255 = MAGIC064.EMI, ability id 0x40 (Weretiger read one id down, a hypothesis); the first function of MAGIC064 extent 0x4B3F00..0x4B54A8. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B3F30
+name = "Weretiger_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3F30..0x4B3FA5 (0x76 bytes), group S14: a twelve-entry stack table by byte +2, unchecked: _Pose, _WaitPose, _FocusActor, _Burst, 0x437CC0 (a bare ret), _Copy, _Release, 0x437CC0, _LoadForm, _FadeIn, _WaitScript, _Return. Entry 1 of Weretiger_Task. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B3FB0
+name = "Weretiger_Pose"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B3FB0..0x4B4008 (0x59 bytes), group S14: Sprite_Current the ObjTrio record by byte 0x904B34: Sprite_EnsureAnimation(its +8 + 0x38); Sprite_Current back; Sound_PlayEffect(0x100); +0xB 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4010
+name = "Weretiger_WaitPose"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4010..0x4B4055 (0x46 bytes), group S14: Sprite_ScriptTickOnce with Sprite_Current the acting member record, then back; al 0: +9 0x10; else +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4060
+name = "Weretiger_FocusActor"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4060..0x4B4135 (0xD6 bytes), group S14: +9 post-decrement, on at 0: +0x34 / +0x38 Field_Kind2X / Z, word +0x3E MapView_Elevation; Field_Kind2X / Z the member record +0x34 / +0x38; MapView_Elevation movsx AreaMap_Elevation(x, z); Weretiger_ResetMapView; BattleTask_Create(1, 0x3A) with +0x80 Sprite_Current, +1 3; +9 1, +0xA 1, +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4140
+name = "Weretiger_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4140..0x4B41BE (0x7F bytes), group S14: +0xA set: MapView_PlaceRuns, +0xA 0; +9 post-decrement, at 0: BattleTask_Create(1, 0x3A) with +0x80 Sprite_Current, +1 1; +0xB and 0xFE; Sound_PlayEffect(0x101); +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B41C0
+name = "Weretiger_Copy"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B41C0..0x4B424D (0x8E bytes), group S14: BattleTask_Create(1, 0x3A); rep movsd 0x20 dwords from the ObjTrio record by byte 0x904B34; +0x80 Sprite_Current, +1 +2 +3 0, +6 1, +5 0x3A; +9 1, +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4250
+name = "Weretiger_Release"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4250..0x4B428F (0x40 bytes), group S14: +9 not 0: down; else Sprite_ReleaseTint(dword 0x93B940), its +0 or 0x40, +9 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4290
+name = "Weretiger_LoadForm"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4290..0x4B4346 (0xB7 bytes), group S14: Sprite_Current the acting member record: Weretiger_DrawSprite (1, 2, 0x80 - +9), (0, 1, 0x80 - +9), (3, 2, +9), (2, 1, +9), +9 read from the saved task at each; Sprite_Current back; LoadDatFile by the owner word +0x2C and byte +8: 0x2EC / 0x2EF when the word is 0, 0x2ED / 0x2F0 else, the first when +8 is 0 or 1; +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4350
+name = "Weretiger_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4350..0x4B446B (0x11C bytes), group S14: the four Weretiger_DrawSprite calls of _LoadForm; +9 not 0x80: +9 += 2; else File_LoadDone (eax tested) and then Sprite_EnsureAnimation(Sprite_Current +8), Sprite_ReleaseTint(the member record), Sprite_LoadPalette(0x80D380 + Sprite_Current +5 shl 6, 0), Battle_StatusTint(member word +0x90), Sprite_SetClutStp, Sprite_Current +0 and 0xBF, Sound_PlayEffect(0x102), the task +2 on; Sprite_Current back to the task on every way out. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4470
+name = "Weretiger_WaitScript"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4470..0x4B44AA (0x3B bytes), group S14: Sprite_ScriptTickOnce with Sprite_Current the acting member record, then back; al set: +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B44B0
+name = "Weretiger_Return"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B44B0..0x4B4502 (0x53 bytes), group S14: nothing while +0xB bit 0 is set; else Field_Kind2X / Z from +0x34 / +0x38, MapView_Elevation movsx word +0x3E, Weretiger_ResetMapView, +9 0x40, +0xA 1, +1 2, +2 0. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4510
+name = "Weretiger_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4510..0x4B4585 (0x76 bytes), group S14: +0xA set: MapView_PlaceRuns, +0xA 0; +9 post-decrement, at 0: 0x904AA8 or 4, the member record dword +0x134 or 1 and byte +0x142 0, Battle_SetTargetFlag40(byte 0x904B44), a tail jmp BattleTask_FreeCurrent. Entry 2 of Weretiger_Task. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4590
+name = "WeretigerChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4590..0x4B45C5 (0x36 bytes), group S14: the kind-1 task of parameter 0x3A: a four-entry stack table by byte +1, unchecked: WeretigerCopy_Run, WeretigerBurst_Run, WeretigerImage_Run, WeretigerDim_Run. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B45D0
+name = "WeretigerCopy_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B45D0..0x4B460D (0x3E bytes), group S14: a three-entry stack table by byte +2 (WeretigerFx_Next, WeretigerCopy_Step, BattleFx_FreeTask), then Sprite_UpdateScreen while +0 is set. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4610
+name = "WeretigerCopy_Step"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4610..0x4B4635 (0x26 bytes), group S14: a two-entry stack table by byte +3: WeretigerCopy_Spawn, WeretigerCopy_Tick. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4640
+name = "WeretigerCopy_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4640..0x4B49CD (0x38E bytes), group S14: Gfx_ClutStripSource / Gfx_ClutStrip word 0xFA0 0 and 0xFA1..0xFBF 0xFFFF, Gfx_ClutStripDirty 1; Gfx_ClearRect(0x340, 0x100, 0xC0, 0x100); four BattleTask_Create(1, 0x3A) children, each a rep movsd copy of the member record with +0x80 the task, +0 and 0xBF, +1 2, +2 0, +6 1, +5 0x3A, +0xB the task +8 + 0x38 (first two) or + 0x3C, words +0x2E / +0x30 (0x20, 0x40), (0x20, 0x90), (0x80, 0x40), (0x80, 0x90), +0x24 or 0x88, +0x27 0x7B 0x7D 0x7C 0x7D; the first and third as Sprite_Current for Sprite_LoadPalette(0x80D440, 0) / (0x80D480, 1), Battle_StatusTint(member word +0x90), Sprite_SetClutStp; +3 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B49D0
+name = "WeretigerCopy_Tick"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B49D0..0x4B49F8 (0x29 bytes), group S14: Sprite_ScriptTickOnce (answer unread); the owner +2 on; +2 on; +3 0. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4A00
+name = "WeretigerBurst_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4A00..0x4B4A81 (0x82 bytes), group S14: a five-entry stack table by byte +2 (_Start, _Emit, _Grow, _WaitOwner, _End); Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x2F, 0), Gfx_CommitPrim(2, 0xC); for each of the 0xC0 records at 0x683288 (stride 0x1C) with +0 set: dword 0x684788 the record, WeretigerStreak_Run. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4A90
+name = "WeretigerBurst_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4A90..0x4B4AB0 (0x21 bytes), group S14: +0xB 0, +9 0x40, WeretigerStreak_Alloc6, +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4AC0
+name = "WeretigerBurst_Emit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4AC0..0x4B4AE1 (0x22 bytes), group S14: WeretigerStreak_Alloc6; +9 down; at 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4AF0
+name = "WeretigerBurst_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4AF0..0x4B4B26 (0x37 bytes), group S14: WeretigerStreak_Alloc6; nothing more on odd frames (byte Frame_Counter bit 0); +0xB below 0x18: up; else the owner +2 on and +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4B30
+name = "WeretigerBurst_WaitOwner"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4B30..0x4B4B47 (0x18 bytes), group S14: the owner +2 == 0xA: +2 on; a tail jmp WeretigerStreak_Alloc6. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4B50
+name = "WeretigerBurst_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4B50..0x4B4B83 (0x34 bytes), group S14: nothing while any of the 0xC0 streak records has +0 set; else the owner +0xB and 0xFE, a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4B90
+name = "WeretigerStreak_Alloc6"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4B90..0x4B4BCC (0x3D bytes), group S14: the first six streak records (0x683288, 0xC0 of 0x1C) with +0 0 get +0 1 (16-bit counters); nothing else of them set. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4BD0
+name = "WeretigerStreak_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4BD0..0x4B4BF5 (0x26 bytes), group S14: a two-entry stack table by byte +1 of the record at dword 0x684788, unchecked: WeretigerStreak_Start, WeretigerStreak_Draw. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4C00
+name = "WeretigerStreak_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4C00..0x4B4CD0 (0xD1 bytes), group S14: the record at 0x684788: word +2 Rand and 0xFFF; +0xC and +0x10 Sprite_Current +0xB shl 16; +0x14 0x32000, +0x18 0x19800; +4 / +8 the member record words +0x2E / +0x30 plus the signed bytes at 0x65ABF8 + 2 x member +8 (and + 1); +1 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B4CE0
+name = "WeretigerStreak_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B4CE0..0x4B5094 (0x3B5 bytes), group S14: the record at 0x684788 (read again after every call): +0xC += +0x14, +0x10 += +0x18, each growth x 5 / 4 toward zero; for k 0..4 WeretigerStreak_DrawLine(cos, sin of angle word +2 + k times radius +0xC sar 16, sar 12, plus words +4 / +8; the same of +0x10), Math_Sin / Math_Cos four times each; dword +0x10 and 0xFFFF0000 above 0x1C00000 (signed): +0 and +1 0. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B50A0
+name = "WeretigerStreak_DrawLine"
+ret = "void"
+params = "int x0, int y0, int x1, int y1"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B50A0..0x4B5119 (0x7A bytes), group S14: cdecl, four args read as signed words: Gpu_SetLineG2 at Gfx_PacketNext, colour (0xF0, 0x14, 0x78) and black, the points as floats at +8 / +0xC / +0x18 / +0x1C, Gpu_SetSemiTrans(1), Gfx_CommitPrim(2, 0x24). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5120
+name = "WeretigerImage_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5120..0x4B515D (0x3E bytes), group S14: a three-entry stack table by byte +2 (WeretigerImage_Play, WeretigerFx_Next, WeretigerImage_End), then Sprite_UpdateScreen while +0 is set. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5160
+name = "WeretigerImage_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5160..0x4B518B (0x2C bytes), group S14: Sprite_EnsureAnimation(+0xB); Sprite_ScriptTickOnce again until al is set; +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5190
+name = "WeretigerFx_Next"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5190..0x4B5198 (0x9 bytes), group S14: +2 on. Entry 0 of WeretigerCopy_Run and entry 1 of WeretigerImage_Run. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B51A0
+name = "WeretigerImage_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B51A0..0x4B51B2 (0x13 bytes), group S14: Sprite_ReleaseTint(Sprite_Current), a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B51C0
+name = "WeretigerDim_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B51C0..0x4B51D1 (0x12 bytes), group S14: jmp [0x65AC00 + 4 x byte +2] (WeretigerDim_Steps, four entries, unchecked). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B51E0
+name = "WeretigerDim_Down"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B51E0..0x4B5210 (0x31 bytes), group S14: +9 down; at 0xFA +2 on; AreaMap_TintClut(movsx byte +9). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5220
+name = "WeretigerDim_WaitOwner"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5220..0x4B5233 (0x14 bytes), group S14: the owner +2 == 0xA: +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5240
+name = "Weretiger_DrawSprite"
+ret = "void"
+params = "unsigned image, unsigned abr, unsigned shade"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5240..0x4B534E (0x10F bytes), group S14: cdecl, three args read as bytes: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, Gpu_GetTPage(2, abr, 0x340, 0x100), 0) and MapView_LinkPrimAt(+0x34, +0x38, 0, 0xC); Gpu_SetSprt, shade in +4..+6, x = word +0x2E - 0x20 (image above 1: - 0x28), y = word +0x30 - 0x40 as floats, u / v the bytes at 0x65AC10 + 4 x image (+0, +2), size 0x50 x 0x48, Gpu_SetSemiTrans(1), MapView_LinkPrimAt(+0x34, +0x38, 0, 0x1C); Sprite_Current read after each call. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5350
+name = "Weretiger_ResetMapView"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5350..0x4B54A7 (0x158 bytes), group S14: words at 0x905EB6 + 0x48 k and 0x905EC6 + 0x48 k cleared up to 0x929EC6; MapView_FocusX 0x7FFF - Field_Kind2X sar 8, DrawTable_Count 0, MapView_Origin (Kind2X sar 16 - 0x18, Kind2Z sar 16 + 3), MapView_FocusZ 0x8000 - Kind2Z sar 8; MapView_ElevationOffset AreaMap_Word1E or, if 0, -MapView_Elevation shl 1, MapView_ScrollX 0; MapView_ShiftRowsNext while the offset is 0x200 or more (minus 0x200 each), MapView_ShiftRowsPrev while -0x200 or less; MoveScript_F3Divisor, MoveScript_FAWord, MapView_HeightScale 0, MapView_Redraw 3; MapView_CellItems 56 x 28: word +2 0 then MapView_CellToMap(row, col, item); DrawItemPool_Free 0..0x3FF, DrawItemPool_Top 1, MapView_Column 0x1B, MapView_Row 0x37; AreaMap_BakePatches; a tail jmp AreaMap_SetupEntries. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B58F0
+name = "Item_CopyName"
+ret = "char *"
+params = "unsigned index, unsigned category"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B58F0..0x4B5997 (0xA8 bytes), group S14: cdecl, both args read as bytes: Str_CopyN(Text_Records, name, 0x10) with name NameTable_Weapons + 0x1C i for category 1, NameTable_Armour + 0x1A i for 2, NameTable_Accessories + 0x18 i for 3, NameTable_Consumables + 0x16 i for any other; eax is Str_CopyN answer. The last function of MAGIC065 (Pilfer read one id down) not ours before; called by Pilfer (0x4B57C0) and Steal (0x4F5140) on a theft. Magic_Rows row 70. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B59A0
+name = "Tsunami_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B59A0..0x4B59CD (0x2E bytes), group S14: a three-entry stack table by byte +1, unchecked: Tsunami_Start, Tsunami_Rings, Leech_WaitOrbs (MAGIC077). Magic_Rows row 17, file 0x257 = MAGIC066.EMI, ability id 0x42 (Tsunami read one id down, a hypothesis); the first function of MAGIC066 extent 0x4B59A0..0x4B66C0. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B59D0
+name = "Tsunami_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B59D0..0x4B5AA8 (0xD9 bytes), group S14: +0x34 / +0x38 / +0x3C the owner (dword 0x93B940) ones; BattleTask_Create(1, 0x11) with +0x80 Sprite_Current, +1 0; Gfx_ClutStrip row 26 (0x812980..0x812B7F) from its source with bit 15, then words 0x80F980..0x80F99F the same, then word 0x80F980 its source word plain; Gfx_ClutStripDirty 1; Sound_PlayEffect(0x100); +0xB 0, +9 0x18, +1 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5AB0
+name = "Tsunami_Rings"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5AB0..0x4B5B0D (0x5E bytes), group S14: +9 down; at 0: BattleTask_Create(1, 0x11) with +0x80 Sprite_Current, +1 1; Battle_SetTargetFlags(byte 0x904B44, 0x20); +1 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5B10
+name = "TsunamiChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5B10..0x4B5B21 (0x12 bytes), group S14: the kind-1 task of parameter 0x11: jmp [0x65AC2C + 4 x byte +1] (TsunamiChild_Kinds, two entries, unchecked). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5B30
+name = "TsunamiWave_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5B30..0x4B5B5D (0x2E bytes), group S14: call [0x65AC34 + 4 x byte +2] (TsunamiWave_Steps, five entries, unchecked); then unless the owner +0xB is 0xFF: MagicFx_PushActorMatrix, TsunamiWave_Draw, a tail jmp Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5B60
+name = "TsunamiWave_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5B60..0x4B5BCD (0x6E bytes), group S14: +0x34 Field_Kind2X + 0xFFEE0000, +0x38 Field_Kind2Z + 0x880000, +0x3C the owner +0x3C; +0xB 0x1A, +9 0x10, +0x10 0, +0x14 0xF0; +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5BD0
+name = "TsunamiWave_Advance"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5BD0..0x4B5BFD (0x2E bytes), group S14: +0x38 += 0xFFFF4000; +9 down; at 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5C00
+name = "TsunamiWave_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5C00..0x4B5C2F (0x30 bytes), group S14: +0xB down and 0x1F; +0x10 += 2; at 0x80 +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5C30
+name = "TsunamiWave_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5C30..0x4B5C6D (0x3E bytes), group S14: +0xB down and 0x1F; +0x14 and +0x10 -= 2; +0x10 at 0x20: +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5C70
+name = "TsunamiWave_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5C70..0x4B5CA5 (0x36 bytes), group S14: +0x14 -= 2, +0x10 -= 1; at 0: the owner +0xB 0xFF, a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B5CB0
+name = "TsunamiWave_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B5CB0..0x4B615A (0x4AB bytes), group S14: Gpu_SetDrawMode(0, 1, 0xB5, 0) on layer 2; scratch word 0x903850 the task +0x14; 127 POLY_FT4 (i 1..0x7F) and then, from edge 0x7E recomputed, two POLY_G4 (i 0x7F, 0x80), each edge y (-0x80 - (+0x10 sar 1)) x i, z Math_Sin(((+0xB + i) and 0x1F) shl 7) x the word sar 12, x 0 / 0x1000 in Prim_VertexScratch; FT4 shade 0x80 (step 4: +0x10 / 2 toward zero shl 3), tpage Gpu_GetTPage(1, 1, 0x340, 0x100), CLUT Gpu_GetClut(0, 0x1FA), v (0xE - ((+0xB + i) and 7)) shl 4, u 0 / 0xF8, Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(2, 0x48); G4 shade 0xC0 (step 4: x 12), the last one bright at its far edge, Gte_PrimDepths4_10B, Gfx_CommitPrim(2, 0x44); Gpu_SetDrawMode(0, 1, 0x95, 0). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B6160
+name = "TsunamiRings_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6160..0x4B6171 (0x12 bytes), group S14: jmp [0x65AC48 + 4 x byte +2] (TsunamiRings_Steps, three entries, unchecked). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B6180
+name = "TsunamiRings_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6180..0x4B6198 (0x19 bytes), group S14: dword 0x68478C 0, +9 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B61A0
+name = "TsunamiRings_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B61A0..0x4B61C0 (0x21 bytes), group S14: TsunamiRings_Draw; +9 up; at 0x60 +2 on. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B61D0
+name = "TsunamiRings_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B61D0..0x4B61F2 (0x23 bytes), group S14: TsunamiRings_Draw; +9 up; at 0x80 a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B6200
+name = "TsunamiRings_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6200..0x4B63B6 (0x1B7 bytes), group S14: Gpu_SetDrawMode(0, 1, 0x35, 0) on layer 3; for each of three 12-byte offsets at 0x65AC54 (k) and each enemy 0..7 then (again for each k) each party member 0..2 not Battle_ActorIsOut (byte index + 3 for an enemy): +0xB k, +0xA the index, +0x34 / +0x38 / +0x3C its record ones plus the offsets, TsunamiRing_PushMatrix, TsunamiRing_DrawQuads, Gte_PopMatrix; then for j 0..3 the byte 0x68478C + j up when 3 j is below +9, and 0xF at step 1; Gpu_SetDrawMode(0, 1, 0x15, 0) on layer 3. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B63C0
+name = "TsunamiRing_DrawQuads"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B63C0..0x4B6611 (0x252 bytes), group S14: for j 0..3 while 3 j is below +9 (signed) and the byte b at 0x68478C + j is below 0x10: one POLY_FT4, semi-transparent; word 0x903850 b x 4 + 0x32, 0x903854 b x 15; vertices (Math_Cos, Math_Sin of 0x200, 0x600, 0xE00, 0xA00 times the first sar 12, minus the second); tpage Gpu_GetTPage(0, 1, 0x340, 0x100), CLUT Gpu_GetClut(0, 0x1E2), uv a 0x20 square; shade 0x41 - (b shr 1) shl 2 (b read again); Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(3, 0x48). Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[func]]
+pc = 0x4B6620
+name = "TsunamiRing_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s14.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6620..0x4B66C0 (0xA1 bytes), group S14: Gte_PushMatrix; Gte_RotTrans((+0x34 sar 9 - 0x4000, +0x38 sar 9 - 0x4000, -(word +0x3E / 2)), the MATRIX translation, a flag); Gte_RotMatrix((0xC00, 0, 0)); Gte_MulMatrix0(Camera_Matrix, m, m); Gte_SetRotMatrix; Gte_SetTransMatrix. Fuzz only: no recorded route casts it (docs/magic_s14.md)."
+
+[[data]]
+pc = 0x683288
+name = "WeretigerStreak_Pool"
+ctype = "unsigned char"
+count = 0x1500
+status = "evidence"
+evidence = "read 2026-09-26, group S14: the streak pool: 0xC0 records of 0x1C bytes (+0 live, +1 the step, word +2 an angle, +4 / +8 a centre, +0xC / +0x10 two radii 16.16, +0x14 / +0x18 their growth), scanned by WeretigerBurst_Run, _End and WeretigerStreak_Alloc6; .bss, the current record pointer at 0x684788 follows."
+
+[[data]]
+pc = 0x684788
+name = "WeretigerStreak_Current"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-26, group S14: the streak record being run: written by WeretigerBurst_Run before each WeretigerStreak_Run, read again after every call by WeretigerStreak_Start and _Draw."
+
+[[data]]
+pc = 0x68478C
+name = "TsunamiRing_Phases"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S14: four ring phases: zeroed by TsunamiRings_Start (a dword), stepped by TsunamiRings_Draw, read by TsunamiRing_DrawQuads (radius, depth, shade; a ring past 0x10 not drawn)."
+
+[[data]]
+pc = 0x65ABF8
+name = "WeretigerStreak_Offsets"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-26, group S14: four (x, y) pairs of signed bytes by the acting member facing +8 (unchecked), added to its screen point by WeretigerStreak_Start; WeretigerDim_Steps follows at 0x65AC00."
+
+[[data]]
+pc = 0x65AC00
+name = "WeretigerDim_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S14: WeretigerDim_Run jmp [0x65AC00 + 4 x byte +2]: MagicFx_ClearCount9, WeretigerDim_Down, WeretigerDim_WaitOwner, FxDim_Up; non-code (WeretigerImage_UV) at 0x65AC10."
+
+[[data]]
+pc = 0x65AC10
+name = "WeretigerImage_UV"
+ctype = "unsigned char"
+count = 0x10
+status = "evidence"
+evidence = "read 2026-09-26, group S14: four 4-byte entries by image: u at +0, v at +2, read by Weretiger_DrawSprite; Steal_RateTable follows at 0x65AC20."
+
+[[data]]
+pc = 0x65AC2C
+name = "TsunamiChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S14: TsunamiChild_Task jmp [0x65AC2C + 4 x byte +1]: TsunamiWave_Run, TsunamiRings_Run; TsunamiWave_Steps follows at 0x65AC34."
+
+[[data]]
+pc = 0x65AC34
+name = "TsunamiWave_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S14: TsunamiWave_Run call [0x65AC34 + 4 x byte +2]: TsunamiWave_Start, _Advance, _Grow, _Shrink, _End; TsunamiRings_Steps follows at 0x65AC48."
+
+[[data]]
+pc = 0x65AC48
+name = "TsunamiRings_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S14: TsunamiRings_Run jmp [0x65AC48 + 4 x byte +2]: TsunamiRings_Start, _Grow, _End; zeros follow at 0x65AC54."
+
+[[data]]
+pc = 0x65AC54
+name = "TsunamiRing_Offsets"
+ctype = "long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-26, group S14: three (x, z, y) dword offsets, one a ring height, added to each actor position by TsunamiRings_Draw (loop bound 0x65AC7C)."
+
