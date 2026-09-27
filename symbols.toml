@@ -44504,3 +44504,723 @@ status = "evidence"
 impl = "src/game/scena_calls.cpp"
 evidence = "disasm 2026-09-27, group CALLS, 0x51AC20..0x51AC4D (0x2D bytes), straight-line; reached only through the call tables (17 A[0], 18 A[0], 19 A[0]: Scenario_CallA 0x5341A0 / Scenario_CallB 0x5341C0, ecx = the index at entry), no E8 or E9 caller; no argument read; PartySet_Load(0, 3, 4, 0); Field_MemberCount 0; Party_Join(0); Party_Join(3); Party_Join(4). PSX: one copy in each chapter overlay whose table holds it, by table position in docs/scena_calls.md section 2 (a hypothesis: the code is not compared)."
 
+# ---------------------------------------------------------------------------
+# World 0's first areas (0..5, 7, 8, 10, 12, 13, 15; 0x401000..0x401B80, less
+# area 11's) - round ten group AR0A (2026-09-27, docs/area_w0a.md).
+
+[[func]]
+pc = 0x401000
+name = "Area00_ChoiceVars3And6"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA000), 0x401000..0x401031 (0x32 bytes), cdecl: area 0's choice 0 (Area00_Choices[0]; MsgBox_ChoiceCommit's call). the message word 0x7DEE48 = 0xFFFF; the s8 cursor 0x7DEE67 0: variables 3 and 6 (bytes 0x903848, 0x90384B) = 0x14; 1: both 0x19; another row nothing. Not in pc_funcs / pc_hidden, so not in the tool's list: its start heuristic wants a padding or ret byte before a start, and 0x401000 is the first byte of .text. PSX twin by table (pairs_propagated.json, table-anchored, AREA000). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401040
+name = "Area00_ChoiceVar3"
+psx = 0x801F2C4C
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA000), 0x401040..0x401067 (0x28 bytes), cdecl: area 0's choice 1. message word 0xFFFF; cursor row 0: variable 3 = 0x14, 1: 0x19. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401070
+name = "Area00_FaceAsActiveMember"
+psx = 0x801F2C8C
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA000), 0x401070..0x401093 (0x24 bytes), cdecl: area 0's handler 0 (Area00_Handlers[0]) and choice 2. Sprite_Current[8] = Field_ActiveMember[0x85]; Sprite_FaceDirection(Sprite_Current[8]), Sprite_Current read again. PSX twin: names/area_records.toml area 0 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4010A0
+name = "Area00_MoveFacing"
+psx = 0x801F2CD8
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA000), 0x4010A0..0x4010C1 (0x22 bytes), cdecl: area 0's handler 1 and choice 3. MoveCmd_Move(MoveScript_Object, Sprite_Current[8]); then MoveScript_Object (read again) +7 = 2. PSX twin: area_records.toml area 0 handler[1]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4010D0
+name = "Area01_ActiveMemberToVar6"
+psx = 0x801F2C88
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA001), 0x4010D0..0x4010F3 (0x24 bytes), cdecl: area 1's handler 0 and choice 2. variable 6 (0x90384B) = (Field_ActiveMember - Sprite_Objects) / 0xA4, signed, truncated (imul 0x63E7063F, sar 6, add the sign). PSX twin: area_records.toml area 1 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401100
+name = "Area01_SpawnEffectB"
+psx = 0x801F2CD4
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA001), 0x401100..0x40114C (0x4D bytes), cdecl: area 1's handler 1 and choice 3. variable 5 (0x90384A) above 6 unsigned and Frame_Counter & 7 zero (a byte test): Effect_FindFree to the byte 0x903850; not 0xFF: the record Effect_Objects + (dword 0x903850 & 0xFF) * 0x80 gets +0 1, +5 0xB, the dword +0x1C 5, +7 3. PSX twin: area_records.toml area 1 handler[1]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401150
+name = "Area02_ChoiceArmTail"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA002), 0x401150..0x40118F (0x40 bytes), cdecl: area 2's choice 0. message word 0xFFFF; cursor row 0: byte 0x9039F5 = 5, 1: 4, another: return; then the tail kind 0x9039F3 = 5 (cl, 5 on both paths) and Flags_Set(0x904030, 0x1E). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401190
+name = "Area03_ChoiceMessage42"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA003), 0x401190..0x4011B3 (0x24 bytes), cdecl: area 3's choice 0 and handler 2. cursor byte 0: message word 0x42; else message 0x44 and the byte 0x9398CF = 6. PSX twin: area_records.toml area 3 handler[2]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4011C0
+name = "Area03_ChoiceMessage44"
+psx = 0x801F2CA8
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA003), 0x4011C0..0x4011E3 (0x24 bytes), cdecl: area 3's choices 3 and 4, handlers 5 and 6. cursor byte not 0: message 0x44 and the byte 0x9398CF = 6; 0: message 0xFFFF. PSX twins: area_records.toml area 3 handler[5] and handler[6] (0x801F2CEC), one body on the PC. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4011F0
+name = "Area03_SetCells"
+psx = 0x801F2D88
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA003), 0x4011F0..0x40122B (0x3C bytes), cdecl: area 3's handler 1. AreaMap_SetByte four times: (0x55, 0x1C, 0xC0), (0x55, 0x1D, 0xC0), (0x54, 0x1C, 0xA1), (0x54, 0x1D, 0xA1). PSX twin: area_records.toml area 3 handler[1]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401230
+name = "Area03_Trigger22"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA003), 0x401230..0x401245 (0x16 bytes), cdecl: Field_ObjectTriggers entry 22 (0x56E020 calls it with the object and 0x904030 and returns its eax); no descriptor names it: a gap, in area 3's block by address. ScriptFlags_Set40; the tail kind 0x9039F3 = 4, the byte 0x9039F5 = 0; xor al, al (eax above al ScriptFlags_Set40's leftover). The arguments are not read. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401250
+name = "Area04_ChoiceArmTail"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA004), 0x401250..0x40128F (0x40 bytes), cdecl: area 4's choice 0. message word 0xFFFF; cursor row 0: byte 0x9039F5 = 0, 1: 1, another: return; then tail kind 5 and Flags_Set(0x904030, 0x1F). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401290
+name = "Area05_ChoiceMessageA"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA005), 0x401290..0x4012A6 (0x17 bytes), cdecl: area 5's choice 2. the message word = Area05_MessagesA[s8 cursor row], unchecked. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4012B0
+name = "Area05_ChoiceMessageB"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA005), 0x4012B0..0x4012C6 (0x17 bytes), cdecl: area 5's choice 3. the message word = Area05_MessagesB[s8 cursor row], unchecked. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4012D0
+name = "Area07_PlaceKind2At1"
+psx = 0x801F2C24
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA005), 0x4012D0..0x4012D8 (0x9 bytes), cdecl: area 7's handler 1 and area 19's handler 2 (a shared body in area 5's block). Kind2_Place(1). PSX twins: area_records.toml area 7 handler[1], area 19 handler[2] (0x801F2C54). docs/area_w0a.md."
+
+[[func]]
+pc = 0x4012E0
+name = "Area07_PlaceKind2At2"
+psx = 0x801F2C44
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA005), 0x4012E0..0x4012E8 (0x9 bytes), cdecl: area 7's handler 2 and area 19's handler 3 (shared, area 5's block). Kind2_Place(2). PSX twins: area 7 handler[2], area 19 handler[3] (0x801F2C74). docs/area_w0a.md."
+
+[[func]]
+pc = 0x4012F0
+name = "Area07_PlaceKind2At3"
+psx = 0x801F2C64
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA005), 0x4012F0..0x4012F8 (0x9 bytes), cdecl: area 7's handler 3 and area 19's handler 4 (shared, area 5's block). Kind2_Place(3). PSX twins: area 7 handler[3], area 19 handler[4] (0x801F2C94). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401300
+name = "Area07_SetCells"
+psx = 0x801F2C84
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA007), 0x401300..0x4014B7 (0x1B8 bytes), cdecl: area 7's handler 4. AreaMap_SetByte 38 times, every argument an immediate (0 on twelve cells, 0x50 on twelve, 0 on fourteen more). PSX twin: area_records.toml area 7 handler[4]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4014C0
+name = "Area07_CameraShiftYLess"
+psx = 0x801F2F20
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA007), 0x4014C0..0x4014CF (0x10 bytes), cdecl: area 7's handler 6 and area 131's handler 0 (shared). Camera_ShiftY += -0xA (a 16-bit add), MapView_Redraw = 2. PSX twins: area 7 handler[6], area 131 handler[0] (0x801F2D78). docs/area_w0a.md."
+
+[[func]]
+pc = 0x4014D0
+name = "Area07_CameraShiftYMore"
+psx = 0x801F2F48
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA007), 0x4014D0..0x4014DF (0x10 bytes), cdecl: area 7's handler 7 and area 131's handler 1 (shared). Camera_ShiftY += 0xA, MapView_Redraw = 2. PSX twins: area 7 handler[7], area 131 handler[1] (0x801F2DA0). docs/area_w0a.md."
+
+[[func]]
+pc = 0x4014E0
+name = "Area08_ChoiceMessageVar3"
+psx = 0x801F42EC
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x4014E0..0x40150D (0x2E bytes), cdecl: area 8's choice 0. the message word = Area08_ChoiceMessages[s8 cursor row]; row 0: variable 3 = 1, row 1: 0. PSX twin by table (pairs_propagated.json, table-anchored). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401510
+name = "Area08_SetCells"
+psx = 0x801F434C
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401510..0x401534 (0x25 bytes), cdecl: area 8's handler 0 and choice 1. AreaMap_SetByte (0x33, 0x15, 0), (0x33, 0x16, 0), (0x32, 0x16, 0x51). PSX twin: area 8 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401540
+name = "Area08_OpenMessage54"
+psx = 0x801F4394
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401540..0x401569 (0x2A bytes), cdecl: area 8's handler 1 and choice 2. Crt_sprintf(Text_Records 0x904CE0, Area08_MessageFormat 0x5E10C0, variable 6 & 0x7F); Msg_OpenScript(0x54); Field_Request = 2. PSX twin: area 8 handler[1]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401570
+name = "Area08_OpenMessage56"
+psx = 0x801F43E0
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401570..0x4015A2 (0x33 bytes), cdecl: area 8's handler 2 and choice 3. as Area08_OpenMessage54 with Msg_OpenScript(0x56), Field_Request = 2 before Music_Play(0xA, 8). PSX twin: area 8 handler[2]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4015B0
+name = "Area08_SpawnEffect54"
+psx = 0x801F443C
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x4015B0..0x4015FE (0x4F bytes), cdecl: area 8's handler 3 and choice 4. Effect_FindFree to the byte 0x903850; not 0xFF: the record (dword 0x903850 & 0xFF) gets +0 1, +5 0x54, +0xB the index of Field_ActiveMember (read after the call) from Sprite_Objects / 0xA4. PSX twin: area 8 handler[3]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401600
+name = "Area08_CameraShiftXMore"
+psx = 0x801F4524
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401600..0x40160F (0x10 bytes), cdecl: area 8's handler 4 and choice 5. Camera_ShiftX += 0x14 (16-bit), MapView_Redraw = 2. PSX twin: area 8 handler[4]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401610
+name = "Area08_CameraShiftXLess"
+psx = 0x801F454C
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401610..0x40161F (0x10 bytes), cdecl: area 8's handler 5 and choice 6. Camera_ShiftX += -0x14, MapView_Redraw = 2. PSX twin: area 8 handler[5]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401620
+name = "Area08_Object6XMore"
+psx = 0x801F45FC
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401620..0x40162A (0xB bytes), cdecl: area 8's handler 10 and choice 11. the dword 0x7DF28C (field object 6 +0x34, its x) += 0x800. PSX twin: area 8 handler[10]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401630
+name = "Area08_Object6XLess"
+psx = 0x801F4618
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401630..0x40163A (0xB bytes), cdecl: area 8's handler 11 and choice 12. the dword 0x7DF28C -= 0x800. PSX twin: area 8 handler[11]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401640
+name = "Area08_ClearCells"
+psx = 0x801F4634
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401640..0x40166F (0x30 bytes), cdecl: area 8's handler 12 and choice 13, area 3's handler 0 (shared). AreaMap_SetByte (0x55, 0x1C, 0), (0x55, 0x1D, 0), (0x54, 0x1C, 0), (0x54, 0x1D, 0): the four cells Area03_SetCells sets. PSX twins: area 8 handler[12], area 3 handler[0] (0x801F2D30). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401670
+name = "Area05_ChoiceVar3At64"
+psx = 0x801F2CB8
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x401670..0x401697 (0x28 bytes), cdecl: area 5's choice 0, area 10's choice 0, area 15's choice 0 and handler 6 (shared, in area 8's block). message word 0xFFFF; cursor row 0: variable 3 = 0x64, 1: 0x65. PSX twin: area_records.toml area 15 handler[6]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4016A0
+name = "Area05_ChoiceVar3AtC8"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA008), 0x4016A0..0x4016C7 (0x28 bytes), cdecl: area 5's choice 1 and area 10's choice 1 (shared, in area 8's block). message word 0xFFFF; cursor row 0: variable 3 = 0xC8, 1: 0xC9. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4016D0
+name = "Area10_ChoiceMessageA"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA010), 0x4016D0..0x4016E6 (0x17 bytes), cdecl: area 10's choice 2. the message word = Area10_MessagesA[s8 cursor row], unchecked. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4016F0
+name = "Area10_ChoiceMessageB"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA010), 0x4016F0..0x401706 (0x17 bytes), cdecl: area 10's choice 3. the message word = Area10_MessagesB[s8 cursor row], unchecked. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401710
+name = "Area10_SpawnEffect1C"
+psx = 0x801F2CDC
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA010), 0x401710..0x40174F (0x40 bytes), cdecl: area 10's handler 0 and choice 4. Effect_FindFree (kept on the stack); not 0xFF: the record gets +0 1, +5 0x1C, the dwords +0x34 / +0x38 from Sprite_Current +0x34 / +0x38 (Sprite_Current read for each). PSX twin: area 10 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401840
+name = "Area12_WaitFlagE"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA012), 0x401840..0x40185F (0x20 bytes), cdecl: area 12's handler 0. Flags_Test([0x929ED0], 0xE); al 0: MoveScript_Object (read after the call) +0xA, the script position, += 0xFFFE (16-bit): the op runs again. PSX twin: area 12 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401860
+name = "Area13_ChoiceMessageVar3"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA013), 0x401860..0x40188D (0x2E bytes), cdecl: area 13's choice 0. the message word = Area13_ChoiceMessages[s8 cursor row]; row 0: variable 3 = 0xA, row 1: 0x14. PSX twin by table (pairs_propagated.json, table-anchored). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401890
+name = "Area13_ClearCells"
+psx = 0x801F2C54
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA013), 0x401890..0x4018BF (0x30 bytes), cdecl: area 13's handler 0 and choice 1. AreaMap_SetByte (0x39, 3, 0), (0x3A, 3, 0), (0x39, 2, 0), (0x3A, 2, 0). PSX twin: area 13 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4018C0
+name = "Area13_SkipUnlessLeader8"
+psx = 0x801F2CAC
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA013), 0x4018C0..0x4018D8 (0x19 bytes), cdecl: area 13's handler 1 and choice 2. Field_State[0x89] not 8: MoveScript_Object +0xA += 0xC (16-bit). PSX twin: area 13 handler[1]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4018E0
+name = "Area13_WalkToX"
+psx = 0x801F2CEC
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA013), 0x4018E0..0x401933 (0x54 bytes), cdecl: area 13's handler 2 and choice 3. d = 0x1C8000 - Sprite_Current +0x34 (32-bit; jns): +8 = 3 when the sign is clear, else 7; MoveScript_Object +7 = |d| / 0x8000 (cdq / xor / sub, then the signed divide by shift), low byte; +7 not 0: MoveCmd_Move(MoveScript_Object, Sprite_Current[8]). PSX twin: area 13 handler[2]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401940
+name = "Area13_WalkToZ"
+psx = 0x801F2D88
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA013), 0x401940..0x40198D (0x4E bytes), cdecl: area 13's handler 3 and choice 4. Sprite_Current +8 = 1 (after reading +0x38); MoveScript_Object +7 = |0x20000 - Sprite_Current +0x38| / 0x8000 as Area13_WalkToX; not 0: MoveCmd_Move(MoveScript_Object, Sprite_Current[8]). PSX twin: area 13 handler[3]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401990
+name = "Area13_TurnDirection"
+psx = 0x801F2E18
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA013), 0x401990..0x4019A0 (0x11 bytes), cdecl: area 13's handler 4 and choice 5. Sprite_Current[8] = (Sprite_Current[8] + 1) & 7. PSX twin: area 13 handler[4]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x4019B0
+name = "Area15_SetZones"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x4019B0..0x4019F4 (0x45 bytes), cdecl: area 15's init (the descriptor 0x5E5B80 +0x40). v = 2 with Field_StatusBits bit 0, else 0; the zone byte +4 of records 1 and 2 of the area's zone list ([0x668D80 + u16 Game_AreaNumber * 4], read for each; Area_ZoneAt's table), i.e. +0xC and +0x14, = v. PSX twin: area_records.toml area 15 init. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401A00
+name = "Area15_PassFlags1F"
+psx = 0x801F2CF8
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x401A00..0x401A07 (0x8 bytes), cdecl: area 15's handler 0. Draw_PassFlags = 0x1F. PSX twin: area 15 handler[0]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401A10
+name = "Area15_RunStatesA"
+psx = 0x801F2D78
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x401A10..0x401A21 (0x12 bytes), cdecl: area 15's handler 4. jmp [Area15_StatesA + Sprite_Current[4] * 4], unchecked (two entries; ours aborts past them). PSX twin: area 15 handler[4]. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401A30
+name = "Area15_StateA0"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x401A30..0x401A90 (0x61 bytes), cdecl: Area15_StatesA entry 0 (area 15's .data 0x5E5BC4). parity = bit 1 of Frame_Counter (before the call); Sprite_Current[0xA] = Rand & 7; Sprite_EnsureAnimation(Area15_PosesA[parity * 2]); Sprite_Current +0x2A = Area15_PosesA[parity * 2 + 1]; +4 = 1 (Sprite_Current read after each call); MoveScript_Object +0xA += 0xFFFE. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401AA0
+name = "Area15_StateCount"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x401AA0..0x401AE4 (0x45 bytes), cdecl: entry 1 of Area15_StatesA and Area15_StatesB. Sprite_Current[0xA] one less, at 0 before it +4 = 0; then with the u16 0x8034E6 (the scene timer) 0: +4 = 0, +0xA = 0, return; else MoveScript_Object +0xA += 0xFFFE. docs/area_w0a.md."
+
+[[func]]
+pc = 0x401AF0
+name = "Area15_RunStatesB"
+psx = 0x801F2EE8
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x401AF0..0x401B01 (0x12 bytes), cdecl: area 15's handler 5. jmp [Area15_StatesB + Sprite_Current[4] * 4], unchecked (two entries; ours aborts past them). PSX twin: area 15 handler[5] (pairs_propagated.json also lists a callers pair 0x801E5644 in another section, not this one). docs/area_w0a.md."
+
+[[func]]
+pc = 0x401B10
+name = "Area15_StateB0"
+ret = "void"
+params = "void"
+impl = "src/game/area_w0a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27 (round ten group AR0A, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA015), 0x401B10..0x401B70 (0x61 bytes), cdecl: Area15_StatesB entry 0 (0x5E5BD0). as Area15_StateA0 with Area15_PosesB. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DB304
+name = "Area00_Choices"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 0's descriptor Area0_Descriptor 0x5DB318 +0x34: Area00_ChoiceVars3And6, Area00_ChoiceVar3, Area00_FaceAsActiveMember, Area00_MoveFacing (its last two are Area00_Handlers). docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DB30C
+name = "Area00_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 0's descriptor +0x3C: Area00_FaceAsActiveMember, Area00_MoveFacing (Area00_Choices entries 2 and 3); the sibling's names/area_records.toml lists handler[0] and handler[1]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DC74C
+name = "Area01_Choices"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 1's descriptor 0x5DC760 +0x34: 0x403050 and 0x425C30 (other groups' bands), Area01_ActiveMemberToVar6, Area01_SpawnEffectB (its last two are Area01_Handlers). docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DC754
+name = "Area01_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 1's descriptor +0x3C: Area01_ActiveMemberToVar6, Area01_SpawnEffectB; area_records.toml handler[0], handler[1]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DD5C0
+name = "Area02_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 2's descriptor 0x5DD5C8 +0x34: Area02_ChoiceArmTail; no handler array. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DDB24
+name = "Area03_Handlers"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 3's descriptor 0x5DDB40 +0x3C: Area08_ClearCells, Area03_SetCells, Area03_ChoiceMessage42, 0x420850, 0x420870 (another group's band), Area03_ChoiceMessage44 twice; area_records.toml handler[0..6]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DDB2C
+name = "Area03_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 3's descriptor +0x34, Area03_Handlers from entry 2: Area03_ChoiceMessage42, 0x420850, 0x420870, Area03_ChoiceMessage44 twice. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DE898
+name = "Area04_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 4's descriptor 0x5DE8A0 +0x34: Area04_ChoiceArmTail; no handler array. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DF5EC
+name = "Area05_Choices"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 5's descriptor 0x5DF6A0 +0x34: Area05_ChoiceVar3At64, Area05_ChoiceVar3AtC8, Area05_ChoiceMessageA, Area05_ChoiceMessageB; no handler array. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DF6E4
+name = "Area05_MessagesA"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area05_ChoiceMessageA's movsx-indexed u16 table (cx = [row * 2 + 0x5DF6E4]), after the descriptor; four words to Area05_MessagesB. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5DF6EC
+name = "Area05_MessagesB"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area05_ChoiceMessageB's u16 table; four words, then zero words and area 6's data. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E0350
+name = "Area07_Handlers"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 7's descriptor 0x5E0378 +0x3C: 0x408F10, Area07_PlaceKind2At1..3, Area07_SetCells, 0x40CE10, Area07_CameraShiftYLess, Area07_CameraShiftYMore, 0x40F530; area_records.toml handler[0..8]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E1040
+name = "Area08_Choices"
+ctype = "unsigned long"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 8's descriptor 0x5E1078 +0x34: Area08_ChoiceMessageVar3, then Area08_Handlers (the choice table is the handler array from one entry before). docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E1044
+name = "Area08_Handlers"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 8's descriptor +0x3C: Area08_SetCells, _OpenMessage54, _OpenMessage56, _SpawnEffect54, _CameraShiftXMore, _CameraShiftXLess, 0x41D810, 0x409960, 0x409970, 0x40F530, _Object6XMore, _Object6XLess, _ClearCells; area_records.toml handler[0..12]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E10BC
+name = "Area08_ChoiceMessages"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area08_ChoiceMessageVar3's u16 table by the s8 cursor row; two words, then Area08_MessageFormat. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E10C0
+name = "Area08_MessageFormat"
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: the Crt_sprintf format Area08_OpenMessage54 / 56 pass with variable 6 & 0x7F, writing Text_Records; passed by address, its bytes not read here. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E2390
+name = "Area10_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 10's descriptor 0x5E23A8 +0x34: Area05_ChoiceVar3At64, Area05_ChoiceVar3AtC8, Area10_ChoiceMessageA, Area10_ChoiceMessageB, Area10_SpawnEffect1C. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E23A0
+name = "Area10_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 10's descriptor +0x3C: Area10_SpawnEffect1C (Area10_Choices entry 4); area_records.toml handler[0]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E23EC
+name = "Area10_MessagesA"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area10_ChoiceMessageA's u16 table by the s8 cursor row, right after the descriptor; four words to Area10_MessagesB. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E23F4
+name = "Area10_MessagesB"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area10_ChoiceMessageB's u16 table; four words, then zero words to Area11_EffectKinds. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E2AA4
+name = "Area12_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 12's descriptor 0x5E2AA8 +0x3C: Area12_WaitFlagE; area_records.toml handler[0]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E3FA0
+name = "Area13_Choices"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 13's descriptor 0x5E3FB8 +0x34: Area13_ChoiceMessageVar3, then Area13_Handlers. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E3FA4
+name = "Area13_Handlers"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 13's descriptor +0x3C: Area13_ClearCells, _SkipUnlessLeader8, _WalkToX, _WalkToZ, _TurnDirection; area_records.toml handler[0..4]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E3FFC
+name = "Area13_ChoiceMessages"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area13_ChoiceMessageVar3's u16 table by the s8 cursor row, right after the descriptor; two words to area 14's first table 0x5E4000. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E5B60
+name = "Area15_Handlers"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 15's descriptor 0x5E5B80 +0x3C: Area15_PassFlags1F, 0x409970, 0x409960, 0x40F530, Area15_RunStatesA, Area15_RunStatesB, Area05_ChoiceVar3At64; area_records.toml handler[0..6]. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E5B78
+name = "Area15_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: area 15's descriptor +0x34: Area05_ChoiceVar3At64. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E5BC4
+name = "Area15_StatesA"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area15_RunStatesA's jmp [Sprite_Current[4] * 4 + 0x5E5BC4], unchecked: Area15_StateA0, Area15_StateCount; then Area15_PosesA. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E5BCC
+name = "Area15_PosesA"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area15_StateA0's pairs by frame parity: +0 the animation for Sprite_EnsureAnimation, +1 the byte for Sprite_Current +0x2A. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E5BD0
+name = "Area15_StatesB"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area15_RunStatesB's table: Area15_StateB0, Area15_StateCount; then Area15_PosesB. docs/area_w0a.md."
+
+[[data]]
+pc = 0x5E5BD8
+name = "Area15_PosesB"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, round ten group AR0A: Area15_StateB0's pose pairs, as Area15_PosesA. docs/area_w0a.md."
