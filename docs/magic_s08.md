@@ -493,6 +493,16 @@ The thinnest (fewer than 60 rounds):
 | E83 | Spark_Draw: y from +0x2E | EvilEyeSpark_Draw 2000 |
 | E84 | Spark_Draw: mode at layer 1 | EvilEyeSpark_Draw 2000 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) section 8): 8 controls in the
+affected functions, 8 refused.** `Ward_Fade` is this group's one clone that
+reaches a `kFlag` / `kBool` answer (`MagicFx_ApplyBuff`, on the ability-0x2B
+path); W16..W23 are every control planted in it, rebuilt from the table.
+Each was refused in exactly the rounds it was before (W16 157, W17 486, W18
+216, W19..W22 178, W23 443): the thinnest, **W16** at 157. None is skipped:
+no other control plants in `Ward_Fade`. Clean self-test after the restore:
+0 mismatches, exit 0. No fuzz change.
+
 ## 7. What nothing reached
 
 No recorded route casts any of these spells (queue §5); the live check is

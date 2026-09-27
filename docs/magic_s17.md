@@ -340,6 +340,15 @@ other control was refused in the function it touches, or in each function
 sharing the planted helper (`TargetDone`, `Orbit`, `MoteAngle`,
 `ModeCommit4`).
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) section 8): 1 control in the
+affected functions, 1 refused.** `PurifyMote_End` is this group's one clone
+that reaches a `kFlag` / `kBool` answer (`Sprite_ScriptTickOnce`); E1 is the
+only control planted in it, rebuilt from the table (the owner's count bumped
+on the mote itself), and refused in **1,147** rounds (1,201 before). No
+other control plants in `PurifyMote_End` or in a helper it calls. Clean
+self-test after the restore: 0 mismatches, exit 0. No fuzz change.
+
 ## 5. Calls into other groups' units
 
 These go through raw addresses (`MH_AT` / a stack table's immediate / a

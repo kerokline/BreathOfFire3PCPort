@@ -285,6 +285,18 @@ restore. Counts are rounds of 2,000 for the function, in this worktree.
   instead of again for z - no call between the two reads. Its near variant
   RS17 (the target read before the bank call) is refused.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) section 8): 9 controls in the
+affected functions, 9 refused.** `HeadCracker_WaitTarget` is this group's
+one clone that reaches a `kFlag` / `kBool` answer (`Battle_ActorIsOut`);
+T1..T9 are every control planted in it (T9, `kReacting` 7, also touches
+`RestoreForm_Start`), rebuilt from the table. Each was refused in exactly the
+rounds it was before - the group's `effect` on `Battle_ActorIsOut` already
+answered from `Noise()`, not the harness's draw: the thinnest, **T4** at 37
+and **T3** at 102. Skipped: K1 and K4 (plants in `HeadCracker_Task`'s table,
+whose clone calls the phases' recorders, not `WaitTarget`). Clean self-test
+after the restore: 0 mismatches, exit 0. No fuzz change.
+
 ## 6. Latent defects (Capcom's, kept)
 
 Described, not fixed: a fix is a divergence for the owner to choose. Not
