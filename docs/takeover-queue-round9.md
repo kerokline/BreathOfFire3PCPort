@@ -401,3 +401,4 @@ Merged so far (each: the build, the group's shadow, `'*'`, `ledger_check`
 | S33 | MAGIC151, 154 | 57 | 223 of 224; A54 equivalent | [`magic_s33.md`](magic_s33.md) |
 | S34 | MAGIC158, 159, 161, 162, 166 | 47 | 265 of 267; E1, X9 equivalent | [`magic_s34.md`](magic_s34.md) |
 | S36 | MAGIC172, 173, 218 | 45 | 254 of 255; M77 equivalent | [`magic_s36.md`](magic_s36.md) |
+| S37 | MAGIC219, 220/221, 222 | 60 | 331 of 334 by a count; H4 by a fault (H4b by a count); G48, G51 equivalent | [`magic_s37.md`](magic_s37.md) |
