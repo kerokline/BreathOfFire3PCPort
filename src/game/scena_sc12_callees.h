@@ -3,9 +3,8 @@
 // its tables, and the raw addresses of the callees it reaches that nobody owns
 // yet. docs/scena_sc12.md.
 //
-// Calls into code this group does not own, by raw address (SH_AT):
-//   0x5341C0  Scenario_CallB (unnamed): jmp [[0x660BD4 + chapter * 4] + (n &
-//             0xFF) * 4], call table B's entry n - engine, nobody's this wave
+// Calls into code this group does not own, by raw address (SH_AT)
+// (Scenario_CallB 0x5341C0, named by SCH and not taken, is called by name):
 //   0x533E50  a pass over the 8 records at 0x903A70 (stride 0xA4) and the
 //             party (0x929EC0 members from 0x802DC0) - engine, nobody's
 //   0x532ED0  (x, z, kind): x and z to 0x903780 / 0x903784, a byte of the
@@ -76,7 +75,6 @@ constexpr std::uint32_t kCellHooks = 0x661778;  // Scena12_CellHooks, 4
 constexpr unsigned kCellHookCount = 4;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kCallB = 0x5341C0;
 constexpr std::uint32_t kPartyPass = 0x533E50;
 constexpr std::uint32_t kPartyPlace = 0x532ED0;
 constexpr std::uint32_t kSetBit80 = 0x56D6F0;
@@ -85,7 +83,6 @@ constexpr std::uint32_t kBattleBytes = 0x4410B0;   // group SE
 
 }  // namespace at
 
-using CallBFn = void (__cdecl*)(unsigned n);
 using VoidFn = void (__cdecl*)();
 using PlaceFn = void (__cdecl*)(int x, int z, unsigned kind);
 using CellFindFn = unsigned char (__cdecl*)(const void* records, unsigned count, unsigned a, unsigned b);

@@ -34,7 +34,6 @@
 namespace {
 
 namespace at = scena_sc12::at;
-using scena_sc12::CallBFn;
 using scena_sc12::CellEntry;
 using scena_sc12::CellFindFn;
 using scena_sc12::KindFn;
@@ -76,7 +75,7 @@ void Clear40() { SH_CALL(ScriptFlags_Clear40)(); }
 void Msg(unsigned short id) { SH_CALL(Msg_OpenScript)(id); }
 void ChangeArea(unsigned area, int x, int z, unsigned flags) { SH_CALL(Field_ChangeArea)(area, x, z, flags); }
 void CallA(unsigned n) { SH_CALL(Scenario_CallA)(n); }
-void CallB(unsigned n) { SH_AT(CallBFn, at::kCallB)(n); }
+void CallB(unsigned n) { SH_CALL(Scenario_CallB)(n); }
 void PartyPass() { SH_AT(VoidFn, at::kPartyPass)(); }
 
 // The chapter's message: Msg_OpenScript(id), the request byte 2.

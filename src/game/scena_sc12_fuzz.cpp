@@ -3,22 +3,18 @@
 //
 // The clone table (tools/scenario_rows.py --unit SC12 --clones, checked
 // against a capstone reading of every function), each clone's call shape in
-// its comment; the callees (all listed here, so each is recorded as this
-// group needs whatever the standard set holds); the four chapter tables the
-// dispatchers read in place; the regions; a seed per role; a disturbance of
-// the chapter's cells.
+// its comment; the three callees the standard set lacks or records otherwise;
+// the state and run tables swapped for recorders, and typed stand-ins written
+// into the object and cell-hook tables; the regions beyond the standard ones;
+// a seed per role; a disturbance of the chapter's cells.
 //
-// STAGE A: written against the harness contract (magic_harness's API under
-// scenario_harness / SH_, plus the Clone's `shape` that
-// tools/scenario_rows.py prints) before SCH's harness exists; stage B
-// builds it against the harness and adjusts what the real one names
-// differently.
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/scena_sc12.h"
 #include "game/scena_sc12_callees.h"
+#include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -28,7 +24,7 @@ namespace {
 
 namespace sh = scenario_harness;
 
-// tools/scenario_rows.py --unit SC12 --clones (commit 222eb0f's tool),
+// tools/scenario_rows.py --unit SC12 --clones (at 218eeec, against its symbols.toml),
 // 2026-09-27: every jump internal, nothing REFUSED. Each function's call
 // shape after its name.
 // 0x55E4E0 Scena12_Frame: 0xE bytes; +0x7 note: jmp through .data 0x6616f4, 3 code entries (a data_tables entry); root: chapter 12 slot 0, the frame (Field_ModeDispatch); shape: vtable slot 0 (the frame): no arguments
@@ -77,40 +73,121 @@ constexpr sh::CallSite kCalls5619C0[] = {{0x0, 0x57C7C0}};
 constexpr sh::CallSite kCalls5619E0[] = {{0x12, 0x57C140}, {0x28, 0x57C7C0}};
 // 0x561A30 Scena12_StepHook: 0x2B0 bytes; root: chapter 12 slot 2, the step hook (x, z), al; shape: vtable slot 2, hook (x, z) -> al
 constexpr sh::CallSite kCalls561A30[] = {{0x21, 0x57C140}, {0x61, 0x57C7C0}, {0x90, 0x579F00}, {0x9B, 0x579F00}, {0xA6, 0x579F00}, {0xB1, 0x579F00}, {0xBF, 0x57C0F0}, {0xF8, 0x57C7C0}, {0x13A, 0x57C140}, {0x166, 0x57C7C0}, {0x198, 0x57C140}, {0x1AD, 0x57C140}, {0x1CE, 0x57C7C0}, {0x1FD, 0x57C140}, {0x24D, 0x57C7C0}, {0x28C, 0x57C7C0}};
-// 0x561CE0 Scena12_CellHook: 0x2A bytes; +0x23 note: jmp through .data 0x661778, 8 code entries (a data_tables entry); root: chapter 12 slot 4, the cell hook (x, z), al; shape: vtable slot 4, hook (a, b) -> al (sign-extended by 0x56D7A0)
+// 0x561CE0 Scena12_CellHook: 0x2A bytes; +0x23 note: jmp through .data 0x661778, 4 code entries (a data_tables entry); root: chapter 12 slot 4, the cell hook (x, z), al; shape: vtable slot 4, hook (a, b) -> al (sign-extended by 0x56D7A0)
 constexpr sh::CallSite kCalls561CE0[] = {{0x11, 0x56D800}};
 // 0x561D10 Scena12_CellTalk: 0x3B bytes; shape: Scena12_CellHooks entries 0..2, (a, b) in place -> al
 constexpr sh::CallSite kCalls561D10[] = {{0x0, 0x57C7C0}};
 // 0x561D50 Scena12_CellDoor: 0x5D bytes; shape: Scena12_CellHooks entry 3, (a, b) in place -> al
 constexpr sh::CallSite kCalls561D50[] = {{0x8, 0x57C140}, {0x14, 0x57C7C0}, {0x45, 0x572650}, {0x4F, 0x587740}};
+
+// Scena12_Run4 (117 calls) and Scena12_Run8 (102) have more call sites than
+// the harness re-aims in one clone (64). So this file makes their copies
+// itself - bof3::CloneOriginal with every site re-aimed at a trampoline that
+// calls the harness's recorder for the callee (StandIn: the recorder the harness
+// stands in for it: the same log entry, disturbance and answer a re-aimed
+// site gets), the jump tables moved into the copy - and hands the harness,
+// as each one's "original", a six-byte `jmp [copy]` of its own, which the
+// harness clones like any function with no calls. Theirs is still Capcom's
+// bytes, only relocated here instead of in the harness.
+using CallTarget = std::uint32_t;
+// The recorder standing in for a callee, on either pass (SH_CALL answers the
+// real callee outside ours' pass; the copy's sites must reach the recorder
+// on theirs, as a site the harness re-aims does).
+template <typename F> F Stub(F f) {
+    return reinterpret_cast<F>(const_cast<void*>(sh::StandIn(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(f)))));
+}
+void __cdecl TFlagsSet(unsigned char* b, unsigned i) { Stub(Flags_Set)(b, i); }
+void __cdecl TFlagsClear(unsigned char* b, unsigned i) { Stub(Flags_Clear)(b, i); }
+void __cdecl TClear40() { Stub(ScriptFlags_Clear40)(); }
+void __cdecl TMsg(unsigned short id) { Stub(Msg_OpenScript)(id); }
+void __cdecl TChangeArea(unsigned area, int x, int z, unsigned flags) { Stub(Field_ChangeArea)(area, x, z, flags); }
+void __cdecl TKind2(unsigned char a) { Stub(Kind2_Place)(a); }
+unsigned __cdecl TDropIn(unsigned e) { return Stub(Party_DropIn)(e); }
+void __cdecl TMusicPlay(unsigned t, int f) { Stub(Music_Play)(t, f); }
+void __cdecl TTransition(unsigned char k) { Stub(Transition_Start)(k); }
+void __cdecl TPartyPass() { Stub(reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(at::kPartyPass)))(); }
+void __cdecl TFadeOutStop(int f) { Stub(Music_FadeOutStop)(f); }
+void __cdecl TLoadStream(unsigned id) { Stub(Sound_LoadStream)(id); }
+int __cdecl TStreamDone() { return Stub(Sound_StreamDone)(); }
+
+struct Tramp { CallTarget target; const void* to; };
+const Tramp kTramps[] = {
+    {0x57C0F0, reinterpret_cast<const void*>(&TFlagsSet)},   {0x57C110, reinterpret_cast<const void*>(&TFlagsClear)},
+    {0x57C7A0, reinterpret_cast<const void*>(&TClear40)},    {0x4976D0, reinterpret_cast<const void*>(&TMsg)},
+    {0x594E00, reinterpret_cast<const void*>(&TChangeArea)}, {0x5734F0, reinterpret_cast<const void*>(&TKind2)},
+    {0x531F90, reinterpret_cast<const void*>(&TDropIn)},     {0x587AE0, reinterpret_cast<const void*>(&TMusicPlay)},
+    {0x495040, reinterpret_cast<const void*>(&TTransition)}, {0x533E50, reinterpret_cast<const void*>(&TPartyPass)},
+    {0x587B40, reinterpret_cast<const void*>(&TFadeOutStop)}, {0x587910, reinterpret_cast<const void*>(&TLoadStream)},
+    {0x587A00, reinterpret_cast<const void*>(&TStreamDone)},
+};
+
+}  // namespace
+}  // namespace scena_sc12
+
+extern "C" {
+void* g_sc12_run4_copy = nullptr;
+void* g_sc12_run8_copy = nullptr;
+__attribute__((naked)) void Sc12Run4Theirs() { asm("jmp *_g_sc12_run4_copy"); }
+__attribute__((naked)) void Sc12Run8Theirs() { asm("jmp *_g_sc12_run8_copy"); }
+}
+
+namespace scena_sc12 {
+namespace {
+
+constexpr std::uint32_t kJmpWrapper = 6;   // FF 25 disp32
+
+void* CopyWithTramps(const char* name, std::uint32_t base, std::uint32_t size, const sh::CallSite* sites, int n,
+                     const sh::JumpTable* tables, int n_tables) {
+    static bof3::CloneCall calls[128];
+    if (n > 128) bof3::Fatal("scena_sc12: %s has %d calls", name, n);
+    for (int i = 0; i < n; ++i) {
+        const void* to = nullptr;
+        for (const Tramp& t : kTramps)
+            if (t.target == sites[i].target) to = t.to;
+        if (!to) bof3::Fatal("scena_sc12: %s: no trampoline for 0x%X", name, (unsigned)sites[i].target);
+        calls[i] = {sites[i].offset, to, sites[i].target};
+    }
+    void* copy = bof3::CloneOriginal(name, base, size, calls, n);
+    for (int i = 0; i < n_tables; ++i)
+        move_script::Relocate(copy, base, size, {tables[i].jmp_disp, tables[i].table, tables[i].entries});
+    return copy;
+}
+
+std::uint32_t Wrapper(void (*f)()) {
+    const auto* p = reinterpret_cast<const unsigned char*>(f);
+    if (p[0] != 0xFF || p[1] != 0x25) bof3::Fatal("scena_sc12: the jmp wrapper at %p is not FF 25", static_cast<const void*>(p));
+    return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+}
+
 #define SH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 const sh::Clone kClones[] = {
     {"Scena12_Frame", 0x55E4E0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Frame), 0, false, sh::Shape::kSlot},
-    {"Scena12_EnterArea", 0x55E4F0, 0x58C, kCalls55E4F0, SH_N(kCalls55E4F0), nullptr, 0, kTables55E4F0, SH_N(kTables55E4F0), reinterpret_cast<const void*>(&::Scena12_EnterArea)},
-    {"Scena12_Run", 0x55EA80, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Run)},
-    {"Scena12_Run1", 0x55EA90, 0x4B, kCalls55EA90, SH_N(kCalls55EA90), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Run1)},
-    {"Scena12_Run2", 0x55EAE0, 0x4C, kCalls55EAE0, SH_N(kCalls55EAE0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Run2)},
-    {"Scena12_Run4", 0x55EB30, 0xA90, kCalls55EB30, SH_N(kCalls55EB30), nullptr, 0, kTables55EB30, SH_N(kTables55EB30), reinterpret_cast<const void*>(&::Scena12_Run4)},
-    {"Scena12_Run5", 0x55F5C0, 0x7A8, kCalls55F5C0, SH_N(kCalls55F5C0), nullptr, 0, kTables55F5C0, SH_N(kTables55F5C0), reinterpret_cast<const void*>(&::Scena12_Run5)},
-    {"Scena12_Run6", 0x55FD70, 0x688, kCalls55FD70, SH_N(kCalls55FD70), nullptr, 0, kTables55FD70, SH_N(kTables55FD70), reinterpret_cast<const void*>(&::Scena12_Run6)},
-    {"Scena12_Run7", 0x560400, 0x4D4, kCalls560400, SH_N(kCalls560400), nullptr, 0, kTables560400, SH_N(kTables560400), reinterpret_cast<const void*>(&::Scena12_Run7)},
-    {"Scena12_Run8", 0x5608E0, 0x884, kCalls5608E0, SH_N(kCalls5608E0), nullptr, 0, kTables5608E0, SH_N(kTables5608E0), reinterpret_cast<const void*>(&::Scena12_Run8)},
-    {"Scena12_Run9", 0x561170, 0x708, kCalls561170, SH_N(kCalls561170), nullptr, 0, kTables561170, SH_N(kTables561170), reinterpret_cast<const void*>(&::Scena12_Run9)},
+    {"Scena12_EnterArea", 0x55E4F0, 0x58C, kCalls55E4F0, SH_N(kCalls55E4F0), nullptr, 0, kTables55E4F0, SH_N(kTables55E4F0), reinterpret_cast<const void*>(&::Scena12_EnterArea), 0, false, sh::Shape::kState},
+    {"Scena12_Run", 0x55EA80, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Run), 0, false, sh::Shape::kState},
+    {"Scena12_Run1", 0x55EA90, 0x4B, kCalls55EA90, SH_N(kCalls55EA90), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Run1), 0, false, sh::Shape::kState},
+    {"Scena12_Run2", 0x55EAE0, 0x4C, kCalls55EAE0, SH_N(kCalls55EAE0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Run2), 0, false, sh::Shape::kState},
+    {"Scena12_Run4", Wrapper(&Sc12Run4Theirs), kJmpWrapper, nullptr, 0, nullptr, 0, nullptr, 0,   // this file's copy (above)
+     reinterpret_cast<const void*>(&::Scena12_Run4), 0, false, sh::Shape::kState},
+    {"Scena12_Run5", 0x55F5C0, 0x7A8, kCalls55F5C0, SH_N(kCalls55F5C0), nullptr, 0, kTables55F5C0, SH_N(kTables55F5C0), reinterpret_cast<const void*>(&::Scena12_Run5), 0, false, sh::Shape::kState},
+    {"Scena12_Run6", 0x55FD70, 0x688, kCalls55FD70, SH_N(kCalls55FD70), nullptr, 0, kTables55FD70, SH_N(kTables55FD70), reinterpret_cast<const void*>(&::Scena12_Run6), 0, false, sh::Shape::kState},
+    {"Scena12_Run7", 0x560400, 0x4D4, kCalls560400, SH_N(kCalls560400), nullptr, 0, kTables560400, SH_N(kTables560400), reinterpret_cast<const void*>(&::Scena12_Run7), 0, false, sh::Shape::kState},
+    {"Scena12_Run8", Wrapper(&Sc12Run8Theirs), kJmpWrapper, nullptr, 0, nullptr, 0, nullptr, 0,   // this file's copy (above)
+     reinterpret_cast<const void*>(&::Scena12_Run8), 0, false, sh::Shape::kState},
+    {"Scena12_Run9", 0x561170, 0x708, kCalls561170, SH_N(kCalls561170), nullptr, 0, kTables561170, SH_N(kTables561170), reinterpret_cast<const void*>(&::Scena12_Run9), 0, false, sh::Shape::kState},
     {"Scena12_ObjectTrigger", 0x561880, 0x1F, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_ObjectTrigger), 0, false, sh::Shape::kObject},
-    {"Scena12_Object06", 0x5618A0, 0x23, kCalls5618A0, SH_N(kCalls5618A0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object06)},
-    {"Scena12_Object09", 0x5618D0, 0x25, kCalls5618D0, SH_N(kCalls5618D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object09)},
-    {"Scena12_Object10", 0x561900, 0x25, kCalls561900, SH_N(kCalls561900), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object10)},
-    {"Scena12_Object11", 0x561930, 0x2A, kCalls561930, SH_N(kCalls561930), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object11)},
-    {"Scena12_Object12", 0x561960, 0x23, kCalls561960, SH_N(kCalls561960), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object12)},
-    {"Scena12_Object13", 0x561990, 0x25, kCalls561990, SH_N(kCalls561990), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object13)},
-    {"Scena12_Object14", 0x5619C0, 0x14, kCalls5619C0, SH_N(kCalls5619C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object14)},
+    {"Scena12_Object06", 0x5618A0, 0x23, kCalls5618A0, SH_N(kCalls5618A0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object06), 0, false, sh::Shape::kState},
+    {"Scena12_Object09", 0x5618D0, 0x25, kCalls5618D0, SH_N(kCalls5618D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object09), 0, false, sh::Shape::kState},
+    {"Scena12_Object10", 0x561900, 0x25, kCalls561900, SH_N(kCalls561900), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object10), 0, false, sh::Shape::kState},
+    {"Scena12_Object11", 0x561930, 0x2A, kCalls561930, SH_N(kCalls561930), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object11), 0, false, sh::Shape::kState},
+    {"Scena12_Object12", 0x561960, 0x23, kCalls561960, SH_N(kCalls561960), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object12), 0, false, sh::Shape::kState},
+    {"Scena12_Object13", 0x561990, 0x25, kCalls561990, SH_N(kCalls561990), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object13), 0, false, sh::Shape::kState},
+    {"Scena12_Object14", 0x5619C0, 0x14, kCalls5619C0, SH_N(kCalls5619C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_Object14), 0, false, sh::Shape::kState},
     {"Scena12_ArriveHook", 0x5619E0, 0x41, kCalls5619E0, SH_N(kCalls5619E0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_ArriveHook), 0xFF, false, sh::Shape::kHook},
     {"Scena12_StepHook", 0x561A30, 0x2B0, kCalls561A30, SH_N(kCalls561A30), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_StepHook), 0xFF, false, sh::Shape::kHook},
     {"Scena12_CellHook", 0x561CE0, 0x2A, kCalls561CE0, SH_N(kCalls561CE0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_CellHook), 0xFF, false, sh::Shape::kHook},
     {"Scena12_CellTalk", 0x561D10, 0x3B, kCalls561D10, SH_N(kCalls561D10), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_CellTalk), 0xFF, false, sh::Shape::kHook},
     {"Scena12_CellDoor", 0x561D50, 0x5D, kCalls561D50, SH_N(kCalls561D50), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena12_CellDoor), 0xFF, false, sh::Shape::kHook},
 };
-#undef SH_N
 enum : unsigned {
     kFrame, kEnterArea, kRun, kRun1, kRun2, kRun4, kRun5, kRun6, kRun7, kRun8, kRun9, kObjectTrigger,
     kObject06, kObject09, kObject10, kObject11, kObject12, kObject13, kObject14,
@@ -121,98 +198,68 @@ static_assert(sizeof kClones / sizeof kClones[0] == kCount, "one role per clone"
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
-// A callee ours reaches by its name (Capcom's address it displaced, our
-// function), and one ours reaches by a raw address (scena_sc12_callees.h).
-#define SC12_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
+// Scena12_Objects' and Scena12_CellHooks' entries take arguments (the object
+// and the flag row; the cell (a, b)), which a DataTable's handler recorder
+// does not log. So the seed writes a stand-in of the exact type into every
+// entry, one per index (a wrong index is a different log), and the two
+// tables are regions (the harness puts them back). Each logs against the
+// dispatcher's own address, which no clone calls.
+template <unsigned I> void __cdecl ObjectEntry(unsigned char* object, std::uint32_t row) {
+    sh::Record(0x561880, I, Key(object), row);
+    sh::Stir();
+}
+template <unsigned I> unsigned char __cdecl CellEntry(unsigned a, unsigned b) {
+    sh::Record(0x561CE0, I, a, b);
+    sh::Stir();
+    return static_cast<unsigned char>(sh::Noise());
+}
+using ObjectFn = void (__cdecl*)(unsigned char*, std::uint32_t);
+using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
+const ObjectFn kObjectEntries[15] = {
+    &ObjectEntry<0>, &ObjectEntry<1>, &ObjectEntry<2>, &ObjectEntry<3>, &ObjectEntry<4>,
+    &ObjectEntry<5>, &ObjectEntry<6>, &ObjectEntry<7>, &ObjectEntry<8>, &ObjectEntry<9>,
+    &ObjectEntry<10>, &ObjectEntry<11>, &ObjectEntry<12>, &ObjectEntry<13>, &ObjectEntry<14>,
+};
+const CellFn kCellEntries[4] = {&CellEntry<0>, &CellEntry<1>, &CellEntry<2>, &CellEntry<3>};
+
+// The callees the standard set lacks, or records otherwise than this block
+// needs (docs/scenario_harness.md section 4; the group's listing stands).
 #define SC12_RAW(name, address) name, address, address
-constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
+#define SC12_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
+constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 const sh::Callee kCallees[] = {
-    // the flags: the bits pointer (0x929ED0's value, or 0x904030) and the index
-    {SC12_OURS(Flags_Test), 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
-    {SC12_OURS(Flags_Set), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Flags_Clear), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(ScriptFlags_Set40), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(ScriptFlags_Clear40), 0, {}, sh::Answer::kGarbage, 0, 0},
-    // the scene's calls
-    {SC12_OURS(Msg_OpenScript), 1, {kU16}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Field_ChangeArea), 4, {kAll, kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Scenario_CallA), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13},   // none, or one of the 20
-    {SC12_OURS(MapView_SetElevation), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Music_LoadFile), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(File_LoadDone), 0, {}, sh::Answer::kBool, 0, 0},
-    {SC12_OURS(Task_Sleep), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Music_Play), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Music_FadeOutStop), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Kind2_Place), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Party_DropIn), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Transition_Start), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Sound_PlayEffect), 1, {kU16}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Sound_LoadStream), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(Sound_StreamDone), 0, {}, sh::Answer::kBool, 0, 0},
-    {SC12_OURS(AreaMap_SetByte), 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC12_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, sh::Answer::kGarbage, 0, 0},
-    // by raw address (nobody's, or group SE's this wave)
-    {SC12_RAW("0x5341C0 Scenario_CallB", at::kCallB), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    // tested on al alone (test al, al): garbage above a 0 must not matter
+    {SC12_OURS(Flags_Test), 2, {kAll, kU8}, sh::Answer::kFlag, 0, 0},
+    // a pass over the eight records at 0x903A70 and the party
     {SC12_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC12_RAW("0x532ED0", at::kPartyPlace), 3, {kAll, kAll, kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC12_RAW("0x56D6F0", at::kSetBit80), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC12_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},   // none, or record 0..3
-    {SC12_RAW("0x4410B0", at::kBattleBytes), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    // the cell-record search: the records, the count, the cell; none or 0..3
+    {SC12_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},
+    // the log slots of the table stand-ins above (keyed on the dispatchers'
+    // own addresses, which no clone calls)
+    {"Scena12_Objects[i]", 0x561880, 0x561880, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
+     reinterpret_cast<const void*>(&ObjectEntry<0>)},
+    {"Scena12_CellHooks[i]", 0x561CE0, 0x561CE0, 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
+     reinterpret_cast<const void*>(&CellEntry<0>)},
 };
 #undef SC12_OURS
 #undef SC12_RAW
 
-// The chapter's tables, read in place by the dispatchers: swapped for recorders.
-const sh::DataTable kTables[] = {
-    {at::kStates, at::kStateCount}, {at::kRuns, at::kRunCount}, {at::kObjects, at::kObjectCount},
-    {at::kCellHooks, at::kCellHookCount},
+// The state and run tables take no arguments: swapped for recorders.
+const sh::DataTable kTables[] = {{at::kStates, at::kStateCount}, {at::kRuns, at::kRunCount}};
+
+// Beyond the standard regions: the selector, Cond_ByteFE, the music byte, the
+// CLUT run 4 greys, the tile word, the two bytes before the view focus, and
+// the two tables the seed writes stand-ins into.
+const sh::Region kRegions[] = {
+    {at::kSelector, 4},
+    {at::kCondFE, 1},
+    {at::kMusicCurrent, 1},
+    {at::kClut, at::kClutWords * 2},
+    {at::kTile, 2},
+    {0x929F0C, 8},                  // 0x929F0F and Field_Kind2Hold 0x929F12
+    {at::kObjects, 4 * at::kObjectCount},
+    {at::kCellHooks, 4 * at::kCellHookCount},
 };
-
-// Cond_Flags (0x903F90..): the story flags 0x904030, the selector 0x90412C,
-// the three bytes 0x904062.
-constexpr std::uint32_t kCondFlags = 0x903F90;
-constexpr std::uint32_t kCondFlagsSize = 0x200;
-
-alignas(16) unsigned char g_sprite[0x100];   // Sprite_Current, for Scena12_CellDoor
-alignas(16) unsigned char g_object[0x100];   // the object slot 1 is given
-
-sh::Region g_regions[32];
-unsigned g_n_regions;
-
-void AddRegion(std::uint32_t at, std::uint32_t size) {
-    if (g_n_regions >= sizeof g_regions / sizeof g_regions[0]) bof3::Fatal("scena_sc12: too many regions");
-    g_regions[g_n_regions++] = {at, size};
-}
-
-void BuildRegions() {
-    g_n_regions = 0;
-    AddRegion(0x8034E0, 0x14);              // the scenario bytes, Cond_ByteFD
-    AddRegion(at::kCounters, 0xC);          // the counters, 0x90384C.., the effect slot byte
-    AddRegion(kCondFlags, kCondFlagsSize);
-    AddRegion(at::kFlagBits, 4);
-    AddRegion(at::kArea, 2);
-    AddRegion(at::kPassFlags, 1);
-    AddRegion(at::kScriptFlags, 2);
-    AddRegion(at::kRequest, 1);
-    AddRegion(at::kWait, 2);
-    AddRegion(at::kRedraw, 1);
-    AddRegion(at::kMusicCurrent, 1);
-    AddRegion(at::kCondFE, 1);
-    AddRegion(at::kEffects, 20 * at::kEffectStride);
-    AddRegion(at::kAngleX, 4);
-    AddRegion(at::kClut, at::kClutWords * 2);
-    AddRegion(at::kClutDirty, 1);
-    AddRegion(at::kTile, 2);
-    AddRegion(at::kHold, 1);
-    AddRegion(at::kLoadByte, 1);
-    AddRegion(0x802D40, 0x14C);             // ObjTrio record 0: +0x34, +0x3C, +0x89
-    AddRegion(at::kMember1, 4);
-    AddRegion(at::kMemberState, 1);
-    AddRegion(at::kInputHeld, 2);
-    AddRegion(Key(g_sprite), sizeof g_sprite);
-    AddRegion(Key(g_object), sizeof g_object);
-}
 
 unsigned char& B(std::uint32_t a) { return *sh::Mem(a); }
 void SetW(std::uint32_t a, std::uint32_t v) {
@@ -243,11 +290,11 @@ std::uint32_t AStep(unsigned k) {
 }
 
 void Seed(unsigned k) {
-    // Every round: the flag bits' pointer into Cond_Flags, Sprite_Current at
-    // the fuzz's record, the cells the chapter compares, each most of the
-    // time at a value a branch tests.
-    SetD(at::kFlagBits, kCondFlags + 8 * 12);
-    Sprite_Current = g_sprite;
+    // The stand-ins into the two tables that take arguments.
+    for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(at::kObjects + 4 * i, KeyOf(kObjectEntries[i]));
+    for (unsigned i = 0; i < at::kCellHookCount; ++i) SetD(at::kCellHooks + 4 * i, KeyOf(kCellEntries[i]));
+    // The cells the chapter compares, each most of the time at a value a
+    // branch tests.
     if (sh::Often()) SetW(at::kArea, AnArea());
     for (unsigned c = 0; c < 3; ++c)
         if (sh::Often()) B(at::kCounters + c) = static_cast<unsigned char>(ACount());
@@ -268,9 +315,13 @@ void Seed(unsigned k) {
     if (sh::Often()) SetD(at::kObjTrioY, SH_PICK(0x2000000, 0x2000001, 0x80000000u));
     if (sh::Half()) B(at::kEffects + B(at::kCounters + 3) * at::kEffectStride) = 0;
     switch (k) {
+    case kEnterArea:   // the areas and counter 2's cases, together
+        if (sh::Often()) SetW(at::kArea, SH_PICK(0x65, 0x79, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0xBC));
+        if (sh::Often()) B(at::kCounters + 2) = static_cast<unsigned char>(SH_PICK(1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA));
+        break;
     case kFrame: B(at::kState) = static_cast<unsigned char>(sh::Next() % 3); break;
     case kRun: B(at::kRun) = static_cast<unsigned char>(sh::Next() % 10); break;
-    case kObjectTrigger: g_object[0x86] = static_cast<unsigned char>(sh::Next() % 15); break;
+    case kObjectTrigger: sh::SpriteRecord(0)[0x86] = static_cast<unsigned char>(sh::Next() % 15); break;
     case kRun1: case kRun2: case kRun4: case kRun5: case kRun6: case kRun7: case kRun8: case kRun9:
         B(at::kStep) = static_cast<unsigned char>(AStep(k));
         break;
@@ -298,53 +349,59 @@ std::uint32_t AZ() {
 
 void Args(unsigned k, std::uint32_t* a) {
     switch (k) {
-    case kObjectTrigger: a[0] = Key(g_object); break;
+    case kObjectTrigger: a[0] = Key(sh::SpriteRecord(0)); break;
     case kArriveHook:
     case kStepHook:
         a[0] = AnX();
         a[1] = AZ();
         break;
-    default: break;   // the cell hook's (a, b) random; the rest take none
+    case kCellHook:   // the cell as bytes, with garbage above half the time
+        if (sh::Half()) {
+            a[0] &= 0xFF;
+            a[1] &= 0xFF;
+        }
+        break;
+    default: break;
     }
 }
 
-// After a call, two in three: move a cell the chapter reads again after its
-// calls - a counter, the request byte, the wait word, the area, the selector,
-// the step, an effect's in-use byte, the kind-2 hold.
+// After a call, two in three (beyond the harness's own): the counters 1 and
+// 2, the area, the selector, an effect's in-use byte, the kind-2 hold.
 void Disturb(std::uint32_t h) {
     const unsigned char v = static_cast<unsigned char>(h >> 16);
-    switch ((h >> 8) % 8) {
-    case 0: B(at::kCounters + (h >> 12) % 3) = v; break;
-    case 1: B(at::kRequest) = static_cast<unsigned char>((h >> 16) % 3 == 0 ? 0 : v); break;
-    case 2: SetW(at::kWait, (h >> 16) & 1 ? 0 : h >> 16); break;
-    case 3: SetW(at::kArea, (h >> 16) & 1 ? 0xBC : 0x85 + (h >> 17) % 4); break;
-    case 4: B(at::kSelector) = static_cast<unsigned char>(7 + (h >> 16) % 12); break;
-    case 5: B(at::kStep) = v; break;
-    case 6: B(at::kEffects + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
-    default: B(at::kHold) = static_cast<unsigned char>(v & 1); break;
+    switch ((h >> 8) % 6) {
+    case 0: B(at::kCounters + 1 + (h >> 12) % 2) = v; break;
+    case 1: SetW(at::kArea, (h >> 16) & 1 ? 0xBC : 0x85 + (h >> 17) % 4); break;
+    case 2: B(at::kSelector) = static_cast<unsigned char>(7 + (h >> 16) % 12); break;
+    case 3: B(at::kEffects + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
+    case 4: B(at::kHold) = static_cast<unsigned char>(v & 1); break;
+    default: B(at::kCondFD) = static_cast<unsigned char>(2 + (v & 1)); break;
     }
 }
 
 }  // namespace
 
 void SelfTest() {
-    BuildRegions();
-    const sh::Group group = {"scena_sc12",
-                             kClones,
-                             kCount,
-                             kCallees,
-                             sizeof kCallees / sizeof kCallees[0],
-                             kTables,
-                             sizeof kTables / sizeof kTables[0],
-                             g_regions,
-                             g_n_regions,
-                             &Seed,
-                             &Disturb,
-                             0,
-                             nullptr,
-                             0,
-                             &Args};
+    g_sc12_run4_copy = CopyWithTramps("Scena12_Run4", 0x55EB30, 0xA90, kCalls55EB30, SH_N(kCalls55EB30), kTables55EB30,
+                                      SH_N(kTables55EB30));
+    g_sc12_run8_copy = CopyWithTramps("Scena12_Run8", 0x5608E0, 0x884, kCalls5608E0, SH_N(kCalls5608E0), kTables5608E0,
+                                      SH_N(kTables5608E0));
+    sh::Group group = {"scena_sc12",
+                       kClones,
+                       kCount,
+                       kCallees,
+                       sizeof kCallees / sizeof kCallees[0],
+                       kTables,
+                       sizeof kTables / sizeof kTables[0],
+                       kRegions,
+                       sizeof kRegions / sizeof kRegions[0],
+                       &Seed,
+                       &Disturb,
+                       8000};
+    group.args = &Args;
+    group.chapter = 12;
     sh::Run(group);
 }
 
 }  // namespace scena_sc12
+#undef SH_N
