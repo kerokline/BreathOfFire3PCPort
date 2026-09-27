@@ -1,11 +1,17 @@
 # The area round: the area overlays enumerated from their tables, and taken wave by wave
 
 **Status:** PROPOSED (2026-09-26) - a plan, not a queue. Listed as
-[`IDEAS.md`](IDEAS.md) I25; nothing here is scheduled or cut. The method is
-the spell round's ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
+[`IDEAS.md`](IDEAS.md) I25; the method is the spell round's
+([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
 [`magic_harness.md`](magic_harness.md)) and the scenario plan's
 ([`takeover-queue-scenario.md`](takeover-queue-scenario.md)); section 1 is
 what makes it apply to areas, and section 6 is what is different.
+**2026-09-27: the tool exists** - `tools/area_rows.py`
+([`area-rows.md`](area-rows.md), round ten's group ART). Its numbers are
+section 1a and replace section 1's where they differ; its group cut is in
+section 3. The two engine tables and the descriptor layout are named in
+`symbols.toml` (section 7 step 2, but for the cell hook `0x56E670`, group
+ARH's).
 
 ## 0. The question, and the answer in one paragraph
 
@@ -122,6 +128,37 @@ their own, with the same walker aimed at their own tables (the owner,
 2026-09-26: effect kinds and field core on their own round). This round is
 the band.
 
+## 1a. The tool's numbers (2026-09-27)
+
+`tools/area_rows.py` over the same inputs ([`area-rows.md`](area-rows.md)
+has the method). Section 1 is kept as the scratch walk measured it; where
+the two differ, this is the one to use.
+
+| | Section 1 (scratch, 2026-09-26) | The tool (2026-09-27) | Why |
+|---|--:|--:|---|
+| Starts in the band / ours | 1,457 / 66 | 1,457 / 66 listed; 1,566 after 32 dropped and 141 found | the descent keeps code after jump tables and code only a call or table names |
+| Where area code ends | `0x430000` | **`0x42D710`** | past it are 76 starts no area reaches: `BATE.EMI` 16, `BATTLE.EMI` 10 and 50 more; 41 of the band's 66 ours are there |
+| Descriptor choice / handler / init entries | 934 / 678 / 67 | 927 / 678 / 67 (808 distinct) | runs bounded by the next named table, but a descriptor's `+0x34` and `+0x3C` overlap and do not bound each other (678 against the PSX's 671: areas 75, 86) |
+| Hook-switch roots | 46 | 38 + 8 areas -> 28 + 8 handlers | read per case off the switches |
+| `0x662CE8` | 47 | 47 in the band, 50 kinds attributed to the area that arms them | slots 1, 8, 9 armed by no immediate |
+| `0x662F28` | "100 pairs", 31 | **28 records**, 17 in the band | the reader stops at `0x663008` (`MapCell_Handlers` follows) |
+| An eighth table | - | **`Field_ObjectTriggers` `0x662E20`**: 65 ids, 51 in the band | found by the tool's scan of `.data` |
+| Engine calls into the band, other `.data` naming it | - | 22 and 21 functions | area-less roots |
+| Data-block pointers / beyond the descriptors | 1,141 / 329 | 1,586 / 358 | scanned whole, `+0x34` / `+0x3C` runs excluded |
+| Data pointers the walk re-assigned | "area 33's tables" | **333, all to the area before** | every world map's tables (20 each) and many others lie after the area's own descriptor |
+| Reached by some area | 1,133 | 1,380 of the 1,490 before `0x42D710` | the other 110 by area-less roots only; none by nothing |
+| Areas with band code / with a block | 161 | 168 / 163 | |
+| Exclusive per area: median / mean / max | 3 / 5.6 / 29 | 4 / 7.7 / 46 | the world maps' after-descriptor tables no longer counted as the next area's |
+| Largest | 122, 105, 135, 174, 77, 116 | 135 (46), 121 (39), 104 (34), 75 (29), 33 (26), 45 / 65 / 88 (25) | the same cause: 122's, 105's and 116's were 121's, 104's and 115's |
+| Blocks out of order / overlapping | 1 / 3 | **0 / 0** | the same cause |
+| Shared bodies | 203 (26 by exactly eleven) | 122 (32 by exactly eleven: areas 175..185, not the world maps, which have a copy each) | |
+| Frontier / ours by name | 231 / 139 | 177 / 122 | the scratch walk expanded unlabelled engine code outside the band |
+| Groups | ~25 | 28 | section 3 |
+
+The block rule holds with no exception: every area's code is one block in
+area order. `+0x38` is null in 199 descriptors, not 200 (area 77 has a
+colour matrix).
+
 ## 2. What an area function is, to a harness
 
 One frame of field state is every input. The shapes the roots give:
@@ -160,8 +197,45 @@ boundaries fall where the catalogue's world labels change, roughly world 0
 at `0x401000..0x404000` (the attract and world-map areas), then worlds 1..4
 in order.
 
-Shared bodies (203) are keyed by address, as the spell round's 781 were:
-taking one takes it for every area that reaches it.
+Shared bodies (122 by the tool) are keyed by address, as the spell round's
+781 were: taking one takes it for every area that reaches it.
+
+**The cut** (`tools/area_rows.py --groups`, 2026-09-27; [`area-rows.md`](area-rows.md)
+section 4): whole areas in address order, one world at a time (the world is
+the area file's `BIN/WORLDnn`: areas 0..37, 38..75, 76..113, 114..151,
+152..199), about 50 functions not yet ours a group. 28 groups, 1,465
+functions to take.
+
+| Group | World | Areas | Band | Fns | Ours | To take | Bytes to take |
+|---|--:|---|---|--:|--:|--:|--:|
+| AR0A | 0 | 0..5, 7..8, 10..13, 15 | `0x401000..0x401B80` | 51 | 0 | 51 | 2,522 |
+| AR0B | 0 | 16, 18..26 | `0x401B80..0x403400` | 61 | 0 | 61 | 5,710 |
+| AR0C | 0 | 27..29, 32..37 | `0x403400..0x4053B0` | 75 | 20 | 55 | 3,973 |
+| AR1A | 1 | 38..41 | `0x4053B0..0x406650` | 48 | 0 | 48 | 4,350 |
+| AR1B | 1 | 42..47 | `0x406650..0x408FF0` | 56 | 1 | 55 | 9,732 |
+| AR1C | 1 | 48..52 | `0x408FF0..0x40AB00` | 57 | 0 | 57 | 6,480 |
+| AR1D | 1 | 53, 55..57, 59..64 | `0x40AB00..0x40B8C0` | 47 | 0 | 47 | 3,180 |
+| AR1E | 1 | 65, 67 | `0x40B8C0..0x40CEF0` | 49 | 0 | 49 | 5,233 |
+| AR1F | 1 | 68..69, 71..75 | `0x40CEF0..0x40EB90` | 59 | 0 | 59 | 6,798 |
+| AR2A | 2 | 76..82, 84 | `0x40EB90..0x40F720` | 50 | 0 | 50 | 2,564 |
+| AR2B | 2 | 85..88 | `0x40F720..0x411F10` | 68 | 2 | 66 | 9,454 |
+| AR2C | 2 | 90..92, 94 | `0x411F10..0x4135B0` | 45 | 0 | 45 | 5,406 |
+| AR2D | 2 | 95..100, 103 | `0x4135B0..0x4146C0` | 53 | 0 | 53 | 3,974 |
+| AR2E | 2 | 104..106 | `0x4146C0..0x4168E0` | 53 | 1 | 52 | 8,224 |
+| AR2F | 2 | 108, 110..113 | `0x4168E0..0x418BE0` | 53 | 0 | 53 | 8,546 |
+| AR3A | 3 | 115..119 | `0x418BE0..0x41A9D0` | 57 | 1 | 56 | 7,083 |
+| AR3B | 3 | 120..121 | `0x41A9D0..0x41C890` | 54 | 0 | 54 | 7,377 |
+| AR3C | 3 | 124..125, 127..128, 130..134 | `0x41C890..0x41DAD0` | 56 | 0 | 56 | 4,215 |
+| AR3D | 3 | 135 | `0x41DAD0..0x41EFE0` | 46 | 0 | 46 | 4,972 |
+| AR3E | 3 | 136, 139..142 | `0x41EFE0..0x420800` | 52 | 0 | 52 | 5,715 |
+| AR3F | 3 | 143..146 | `0x420800..0x4223A0` | 53 | 0 | 53 | 6,696 |
+| AR3G | 3 | 148..151 | `0x4223A0..0x4249D0` | 56 | 0 | 56 | 9,282 |
+| AR4A | 4 | 152..155, 166..167 | `0x4249D0..0x426560` | 48 | 0 | 48 | 6,618 |
+| AR4B | 4 | 168..172 | `0x426560..0x428450` | 56 | 0 | 56 | 7,486 |
+| AR4C | 4 | 173..174 | `0x428450..0x4292C0` | 39 | 0 | 39 | 3,401 |
+| AR4D | 4 | 175..187 | `0x4292C0..0x42A320` | 49 | 0 | 49 | 3,855 |
+| AR4E | 4 | 188..191 | `0x42A320..0x42BD60` | 51 | 0 | 51 | 6,367 |
+| AR4F | 4 | 192..193, 196..199 | `0x42BD60..0x42D710` | 48 | 0 | 48 | 6,219 |
 
 ## 4. The waves
 
