@@ -1,15 +1,14 @@
 // BOF3X_SHADOW=scena_sc1: scenario chapter 1's bank through the scenario
 // harness (scenario_harness.h), once at start-up. docs/scena_sc1.md section 4.
 //
-// The clone table (tools/scenario_rows.py --unit SC1 --clones, 2026-09-27,
-// checked against the reading: two of its rows, 0x53B120 and 0x53D390, are
-// the byte tables after Scena01_Scene06's and Scena01_Scene17's jump tables,
-// not code, and are dropped), each clone's call shape in its comment; the
-// callees, every one listed (the group's listing stands over the standard
-// set); the chapter's four .data tables; the regions the bank reads and
-// writes; a seed per function that puts in the step it switches on and the
-// values its steps wait for; a disturbance of the chapter's cells; and the
-// arguments of the object handlers and the hooks.
+// The clone table (tools/scenario_rows.py --unit SC1 --clones at 218eeec,
+// against the symbols before this group; checked against the reading), each
+// clone's call shape in its comment and its shape field; the callees the
+// standard set lacks, and typed stand-ins for the object and cell handler
+// tables' entries (which take arguments); the chapter's three handler tables;
+// the regions beyond the harness's standard ones; a seed per function that
+// puts in the step it switches on and the values its steps wait for; a
+// disturbance of the chapter's cells; the object handlers' arguments.
 #include <cstdint>
 #include <cstring>
 
@@ -40,7 +39,7 @@ constexpr sh::JumpTable kTables53A5E0[] = {{0x14, 0x450, 23}};
 // 0x53AA90 Scena01_Scene05: 0x191 bytes; state handler: Scena01_Runs entry 05, (void)
 constexpr sh::CallSite kCalls53AA90[] = {{0x2B, 0x4976D0}, {0x45, 0x531F90}, {0x4C, 0x4976D0}, {0x89, 0x57C7A0}, {0xAE, 0x587740}, {0xC6, 0x57C7C0}, {0xE4, 0x594E00}, {0xFD, 0x5734F0}, {0x120, 0x57C0F0}, {0x141, 0x57C7A0}, {0x15E, 0x590BB0}};
 constexpr sh::JumpTable kTables53AA90[] = {{0x1C, 0x168, 7}};
-// 0x53AC30 Scena01_Scene06: 0x4E4 bytes; state handler: Scena01_Runs entry 06, (void)
+// 0x53AC30 Scena01_Scene06: 0x500 bytes; state handler: Scena01_Runs entry 06, (void)
 constexpr sh::CallSite kCalls53AC30[] = {{0x4D, 0x57C140}, {0x5D, 0x57C7C0}, {0x81, 0x57C0F0}, {0x91, 0x531F90}, {0xB1, 0x587B40}, {0xEF, 0x57C7A0}, {0x107, 0x587AE0}, {0x115, 0x5734F0}, {0x158, 0x495040}, {0x19B, 0x5341C0}, {0x1A9, 0x57C0F0}, {0x1BF, 0x594E00}, {0x208, 0x587AE0}, {0x210, 0x589810}, {0x23A, 0x589810}, {0x2D3, 0x587740}, {0x2DA, 0x5891F0}, {0x31E, 0x5891F0}, {0x390, 0x587AE0}, {0x398, 0x589810}, {0x3C2, 0x589810}, {0x41C, 0x531F90}, {0x42F, 0x531F90}, {0x436, 0x5734F0}, {0x46B, 0x57C0F0}, {0x473, 0x57C7A0}};
 constexpr sh::JumpTable kTables53AC30[] = {{0x20, 0x4A0, 17}};
 // 0x53B130 Scena01_Scene08: 0x4B9 bytes; state handler: Scena01_Runs entry 08, (void)
@@ -78,7 +77,7 @@ constexpr sh::CallSite kCalls53D010[] = {{0x1A, 0x57C7A0}, {0x3B, 0x4976D0}};
 constexpr sh::CallSite kCalls53D070[] = {{0x18, 0x57C7A0}, {0x2E, 0x4976D0}};
 // 0x53D0C0 Scena01_Scene16: 0x45 bytes; state handler: Scena01_Runs entry 16, (void)
 constexpr sh::CallSite kCalls53D0C0[] = {{0x18, 0x57C7A0}, {0x2E, 0x4976D0}};
-// 0x53D110 Scena01_Scene17: 0x278 bytes; state handler: Scena01_Runs entry 17, (void)
+// 0x53D110 Scena01_Scene17: 0x2A0 bytes; state handler: Scena01_Runs entry 17, (void)
 constexpr sh::CallSite kCalls53D110[] = {{0x3B, 0x495040}, {0x64, 0x533E50}, {0x72, 0x587B40}, {0x7E, 0x587910}, {0x8F, 0x587A00}, {0x153, 0x495040}, {0x181, 0x57C7A0}, {0x1A9, 0x533E50}, {0x1B7, 0x587B40}, {0x1C3, 0x587910}, {0x1D4, 0x587A00}, {0x231, 0x594E00}, {0x23A, 0x587AE0}};
 constexpr sh::JumpTable kTables53D110[] = {{0x20, 0x244, 13}};
 // 0x53D3B0 Scena01_PlaceEffect: 0xB3 bytes; called directly by Scena01_Scene0D with one word (n)
@@ -120,170 +119,160 @@ constexpr sh::CallSite kCalls53DD20[] = {{0x11, 0x56D800}};
 constexpr sh::CallSite kCalls53DD50[] = {{0x8, 0x57C140}, {0x1D, 0x57C140}, {0x29, 0x57C7C0}};
 #define SC1_N(a) static_cast<int>(sizeof a / sizeof a[0])
 const sh::Clone kClones[] = {
-    {"Scena01_Start", 0x539AE0, 0x39, kCalls539AE0, SC1_N(kCalls539AE0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Start)},
-    {"Scena01_Run", 0x53A2B0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Run)},
-    {"Scena01_Scene01", 0x53A2C0, 0xB3, kCalls53A2C0, SC1_N(kCalls53A2C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene01)},
-    {"Scena01_Scene02", 0x53A380, 0x260, kCalls53A380, SC1_N(kCalls53A380), nullptr, 0, kTables53A380, SC1_N(kTables53A380), reinterpret_cast<const void*>(&::Scena01_Scene02)},
-    {"Scena01_Scene03", 0x53A5E0, 0x4AC, kCalls53A5E0, SC1_N(kCalls53A5E0), nullptr, 0, kTables53A5E0, SC1_N(kTables53A5E0), reinterpret_cast<const void*>(&::Scena01_Scene03)},
-    {"Scena01_Scene05", 0x53AA90, 0x191, kCalls53AA90, SC1_N(kCalls53AA90), nullptr, 0, kTables53AA90, SC1_N(kTables53AA90), reinterpret_cast<const void*>(&::Scena01_Scene05)},
-    {"Scena01_Scene06", 0x53AC30, 0x4E4, kCalls53AC30, SC1_N(kCalls53AC30), nullptr, 0, kTables53AC30, SC1_N(kTables53AC30), reinterpret_cast<const void*>(&::Scena01_Scene06)},
-    {"Scena01_Scene08", 0x53B130, 0x4B9, kCalls53B130, SC1_N(kCalls53B130), nullptr, 0, kTables53B130, SC1_N(kTables53B130), reinterpret_cast<const void*>(&::Scena01_Scene08)},
-    {"Scena01_Scene09", 0x53B5F0, 0x78C, kCalls53B5F0, SC1_N(kCalls53B5F0), nullptr, 0, kTables53B5F0, SC1_N(kTables53B5F0), reinterpret_cast<const void*>(&::Scena01_Scene09)},
-    {"Scena01_Scene0A", 0x53BD80, 0x294, kCalls53BD80, SC1_N(kCalls53BD80), nullptr, 0, kTables53BD80, SC1_N(kTables53BD80), reinterpret_cast<const void*>(&::Scena01_Scene0A)},
-    {"Scena01_Scene0B", 0x53C020, 0x30C, kCalls53C020, SC1_N(kCalls53C020), nullptr, 0, kTables53C020, SC1_N(kTables53C020), reinterpret_cast<const void*>(&::Scena01_Scene0B)},
-    {"Scena01_Scene0C", 0x53C330, 0x26C, kCalls53C330, SC1_N(kCalls53C330), nullptr, 0, kTables53C330, SC1_N(kTables53C330), reinterpret_cast<const void*>(&::Scena01_Scene0C)},
-    {"Scena01_Scene0D", 0x53C5A0, 0x480, kCalls53C5A0, SC1_N(kCalls53C5A0), nullptr, 0, kTables53C5A0, SC1_N(kTables53C5A0), reinterpret_cast<const void*>(&::Scena01_Scene0D)},
-    {"Scena01_Scene0E", 0x53CA20, 0x18C, kCalls53CA20, SC1_N(kCalls53CA20), nullptr, 0, kTables53CA20, SC1_N(kTables53CA20), reinterpret_cast<const void*>(&::Scena01_Scene0E)},
-    {"Scena01_Scene0F", 0x53CBB0, 0x128, kCalls53CBB0, SC1_N(kCalls53CBB0), nullptr, 0, kTables53CBB0, SC1_N(kTables53CBB0), reinterpret_cast<const void*>(&::Scena01_Scene0F)},
-    {"Scena01_Scene11", 0x53CCE0, 0x2B1, kCalls53CCE0, SC1_N(kCalls53CCE0), nullptr, 0, kTables53CCE0, SC1_N(kTables53CCE0), reinterpret_cast<const void*>(&::Scena01_Scene11)},
-    {"Scena01_Scene12", 0x53CFA0, 0x63, kCalls53CFA0, SC1_N(kCalls53CFA0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene12)},
-    {"Scena01_Scene14", 0x53D010, 0x53, kCalls53D010, SC1_N(kCalls53D010), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene14)},
-    {"Scena01_Scene15", 0x53D070, 0x45, kCalls53D070, SC1_N(kCalls53D070), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene15)},
-    {"Scena01_Scene16", 0x53D0C0, 0x45, kCalls53D0C0, SC1_N(kCalls53D0C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene16)},
-    {"Scena01_Scene17", 0x53D110, 0x278, kCalls53D110, SC1_N(kCalls53D110), nullptr, 0, kTables53D110, SC1_N(kTables53D110), reinterpret_cast<const void*>(&::Scena01_Scene17)},
-    {"Scena01_PlaceEffect", 0x53D3B0, 0xB3, kCalls53D3B0, SC1_N(kCalls53D3B0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_PlaceEffect)},
+    {"Scena01_Start", 0x539AE0, 0x39, kCalls539AE0, SC1_N(kCalls539AE0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Start), 0, false, sh::Shape::kState},
+    {"Scena01_Run", 0x53A2B0, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Run), 0, false, sh::Shape::kState},
+    {"Scena01_Scene01", 0x53A2C0, 0xB3, kCalls53A2C0, SC1_N(kCalls53A2C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene01), 0, false, sh::Shape::kState},
+    {"Scena01_Scene02", 0x53A380, 0x260, kCalls53A380, SC1_N(kCalls53A380), nullptr, 0, kTables53A380, SC1_N(kTables53A380), reinterpret_cast<const void*>(&::Scena01_Scene02), 0, false, sh::Shape::kState},
+    {"Scena01_Scene03", 0x53A5E0, 0x4AC, kCalls53A5E0, SC1_N(kCalls53A5E0), nullptr, 0, kTables53A5E0, SC1_N(kTables53A5E0), reinterpret_cast<const void*>(&::Scena01_Scene03), 0, false, sh::Shape::kState},
+    {"Scena01_Scene05", 0x53AA90, 0x191, kCalls53AA90, SC1_N(kCalls53AA90), nullptr, 0, kTables53AA90, SC1_N(kTables53AA90), reinterpret_cast<const void*>(&::Scena01_Scene05), 0, false, sh::Shape::kState},
+    {"Scena01_Scene06", 0x53AC30, 0x500, kCalls53AC30, SC1_N(kCalls53AC30), nullptr, 0, kTables53AC30, SC1_N(kTables53AC30), reinterpret_cast<const void*>(&::Scena01_Scene06), 0, false, sh::Shape::kState},
+    {"Scena01_Scene08", 0x53B130, 0x4B9, kCalls53B130, SC1_N(kCalls53B130), nullptr, 0, kTables53B130, SC1_N(kTables53B130), reinterpret_cast<const void*>(&::Scena01_Scene08), 0, false, sh::Shape::kState},
+    {"Scena01_Scene09", 0x53B5F0, 0x78C, kCalls53B5F0, SC1_N(kCalls53B5F0), nullptr, 0, kTables53B5F0, SC1_N(kTables53B5F0), reinterpret_cast<const void*>(&::Scena01_Scene09), 0, false, sh::Shape::kState},
+    {"Scena01_Scene0A", 0x53BD80, 0x294, kCalls53BD80, SC1_N(kCalls53BD80), nullptr, 0, kTables53BD80, SC1_N(kTables53BD80), reinterpret_cast<const void*>(&::Scena01_Scene0A), 0, false, sh::Shape::kState},
+    {"Scena01_Scene0B", 0x53C020, 0x30C, kCalls53C020, SC1_N(kCalls53C020), nullptr, 0, kTables53C020, SC1_N(kTables53C020), reinterpret_cast<const void*>(&::Scena01_Scene0B), 0, false, sh::Shape::kState},
+    {"Scena01_Scene0C", 0x53C330, 0x26C, kCalls53C330, SC1_N(kCalls53C330), nullptr, 0, kTables53C330, SC1_N(kTables53C330), reinterpret_cast<const void*>(&::Scena01_Scene0C), 0, false, sh::Shape::kState},
+    {"Scena01_Scene0D", 0x53C5A0, 0x480, kCalls53C5A0, SC1_N(kCalls53C5A0), nullptr, 0, kTables53C5A0, SC1_N(kTables53C5A0), reinterpret_cast<const void*>(&::Scena01_Scene0D), 0, false, sh::Shape::kState},
+    {"Scena01_Scene0E", 0x53CA20, 0x18C, kCalls53CA20, SC1_N(kCalls53CA20), nullptr, 0, kTables53CA20, SC1_N(kTables53CA20), reinterpret_cast<const void*>(&::Scena01_Scene0E), 0, false, sh::Shape::kState},
+    {"Scena01_Scene0F", 0x53CBB0, 0x128, kCalls53CBB0, SC1_N(kCalls53CBB0), nullptr, 0, kTables53CBB0, SC1_N(kTables53CBB0), reinterpret_cast<const void*>(&::Scena01_Scene0F), 0, false, sh::Shape::kState},
+    {"Scena01_Scene11", 0x53CCE0, 0x2B1, kCalls53CCE0, SC1_N(kCalls53CCE0), nullptr, 0, kTables53CCE0, SC1_N(kTables53CCE0), reinterpret_cast<const void*>(&::Scena01_Scene11), 0, false, sh::Shape::kState},
+    {"Scena01_Scene12", 0x53CFA0, 0x63, kCalls53CFA0, SC1_N(kCalls53CFA0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene12), 0, false, sh::Shape::kState},
+    {"Scena01_Scene14", 0x53D010, 0x53, kCalls53D010, SC1_N(kCalls53D010), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene14), 0, false, sh::Shape::kState},
+    {"Scena01_Scene15", 0x53D070, 0x45, kCalls53D070, SC1_N(kCalls53D070), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene15), 0, false, sh::Shape::kState},
+    {"Scena01_Scene16", 0x53D0C0, 0x45, kCalls53D0C0, SC1_N(kCalls53D0C0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Scene16), 0, false, sh::Shape::kState},
+    {"Scena01_Scene17", 0x53D110, 0x2A0, kCalls53D110, SC1_N(kCalls53D110), nullptr, 0, kTables53D110, SC1_N(kTables53D110), reinterpret_cast<const void*>(&::Scena01_Scene17), 0, false, sh::Shape::kState},
+    {"Scena01_PlaceEffect", 0x53D3B0, 0xB3, kCalls53D3B0, SC1_N(kCalls53D3B0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_PlaceEffect), 0, false, sh::Shape::kEntry},
     {"Scena01_ObjectHook", 0x53D470, 0x1D, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_ObjectHook), 0, false, sh::Shape::kObject},
-    {"Scena01_Object01", 0x53D490, 0x3E, kCalls53D490, SC1_N(kCalls53D490), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object01)},
-    {"Scena01_Object02", 0x53D4D0, 0x1E, kCalls53D4D0, SC1_N(kCalls53D4D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object02)},
-    {"Scena01_Object03", 0x53D4F0, 0x20, kCalls53D4F0, SC1_N(kCalls53D4F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object03)},
-    {"Scena01_Object04", 0x53D510, 0x20, kCalls53D510, SC1_N(kCalls53D510), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object04)},
-    {"Scena01_Object05", 0x53D530, 0x20, kCalls53D530, SC1_N(kCalls53D530), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object05)},
-    {"Scena01_Object06", 0x53D550, 0x7D, kCalls53D550, SC1_N(kCalls53D550), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object06)},
-    {"Scena01_Object07", 0x53D5D0, 0x7A, kCalls53D5D0, SC1_N(kCalls53D5D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object07)},
-    {"Scena01_Object08", 0x53D650, 0x83, kCalls53D650, SC1_N(kCalls53D650), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object08)},
-    {"Scena01_Object09", 0x53D6E0, 0x71, kCalls53D6E0, SC1_N(kCalls53D6E0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object09)},
-    {"Scena01_Object0A", 0x53D760, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0A)},
-    {"Scena01_Object0B", 0x53D770, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0B)},
-    {"Scena01_Object0C", 0x53D780, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0C)},
-    {"Scena01_Object0D", 0x53D790, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0D)},
-    {"Scena01_Object0E", 0x53D7A0, 0x2A, kCalls53D7A0, SC1_N(kCalls53D7A0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0E)},
-    {"Scena01_Object0F", 0x53D7D0, 0x1E, kCalls53D7D0, SC1_N(kCalls53D7D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0F)},
-    {"Scena01_Object10", 0x53D7F0, 0x20, kCalls53D7F0, SC1_N(kCalls53D7F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object10)},
-    {"Scena01_Object11", 0x53D810, 0x14, kCalls53D810, SC1_N(kCalls53D810), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object11)},
+    {"Scena01_Object01", 0x53D490, 0x3E, kCalls53D490, SC1_N(kCalls53D490), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object01), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object02", 0x53D4D0, 0x1E, kCalls53D4D0, SC1_N(kCalls53D4D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object02), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object03", 0x53D4F0, 0x20, kCalls53D4F0, SC1_N(kCalls53D4F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object03), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object04", 0x53D510, 0x20, kCalls53D510, SC1_N(kCalls53D510), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object04), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object05", 0x53D530, 0x20, kCalls53D530, SC1_N(kCalls53D530), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object05), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object06", 0x53D550, 0x7D, kCalls53D550, SC1_N(kCalls53D550), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object06), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object07", 0x53D5D0, 0x7A, kCalls53D5D0, SC1_N(kCalls53D5D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object07), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object08", 0x53D650, 0x83, kCalls53D650, SC1_N(kCalls53D650), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object08), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object09", 0x53D6E0, 0x71, kCalls53D6E0, SC1_N(kCalls53D6E0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object09), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object0A", 0x53D760, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0A), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object0B", 0x53D770, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0B), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object0C", 0x53D780, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0C), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object0D", 0x53D790, 0x8, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0D), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object0E", 0x53D7A0, 0x2A, kCalls53D7A0, SC1_N(kCalls53D7A0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0E), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object0F", 0x53D7D0, 0x1E, kCalls53D7D0, SC1_N(kCalls53D7D0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object0F), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object10", 0x53D7F0, 0x20, kCalls53D7F0, SC1_N(kCalls53D7F0), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object10), 0, false, sh::Shape::kEntry},
+    {"Scena01_Object11", 0x53D810, 0x14, kCalls53D810, SC1_N(kCalls53D810), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Object11), 0, false, sh::Shape::kEntry},
     {"Scena01_CellHook", 0x53DD20, 0x2A, kCalls53DD20, SC1_N(kCalls53DD20), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_CellHook), 0xFF, false, sh::Shape::kHook},
-    {"Scena01_Cell", 0x53DD50, 0x42, kCalls53DD50, SC1_N(kCalls53DD50), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Cell), 0xFF},
+    {"Scena01_Cell", 0x53DD50, 0x42, kCalls53DD50, SC1_N(kCalls53DD50), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Scena01_Cell), 0xFF, false, sh::Shape::kHook},
 };
 #undef SC1_N
 
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
+// The object handlers take (object, 0x903F98) and the cell handler (x, z): a
+// .data table's handler recorder logs no arguments, so each of their table
+// entries gets a typed stand-in of the fuzz's own, keyed on the handler's
+// address (the harness finds it before registering a handler recorder).
+// Entry 0 of Scena01_ObjectHandlers is 0x437CC0, the bare ret the runs
+// table holds too: it reads nothing, and keeps the handler recorder.
+constexpr std::uint32_t kObjectEntries[17] = {0x53D490, 0x53D4D0, 0x53D4F0, 0x53D510, 0x53D530, 0x53D550, 0x53D5D0, 0x53D650,
+                                              0x53D6E0, 0x53D760, 0x53D770, 0x53D780, 0x53D790, 0x53D7A0, 0x53D7D0, 0x53D7F0,
+                                              0x53D810};
+template <unsigned I> void __cdecl ObjectEntry(unsigned char* object, unsigned char* row) {
+    sh::Record(kObjectEntries[I], Key(object), Key(row));
+    sh::Stir();
+}
+unsigned char __cdecl CellEntry(int x, int z) {
+    sh::Record(0x53DD50, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
+    sh::Stir();
+    return static_cast<unsigned char>(sh::Noise());
+}
+
 // A callee ours reaches by its name (Capcom's address, or our function).
 #define SC1_NAMED(name) #name, ::bof3::addr::name, KeyOf(&::name)
 // One ours and the originals reach by its address alone.
 #define SC1_RAW(address) #address, address, address
+#define SC1_OBJECT(i) \
+    {"Scena01_ObjectHandlers[" #i "]", kObjectEntries[i - 1], kObjectEntries[i - 1], 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr, \
+     reinterpret_cast<const void*>(&ObjectEntry<i - 1>)}
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 const sh::Callee kCallees[] = {
-    {SC1_NAMED(Scenario_CallA), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Field_ChangeArea), 4, {kAll, kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Flags_Test), 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
-    {SC1_NAMED(Flags_Set), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Flags_Clear), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(ScriptFlags_Set40), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(ScriptFlags_Clear40), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Kind2_Place), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Party_DropIn), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Msg_OpenScript), 1, {kU16}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Transition_Start), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Sound_PlayEffect), 1, {kU16}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Sound_PlayById), 1, {kU16}, sh::Answer::kGarbage, 0, 0},   // pushed with two more words it does not read
-    {SC1_NAMED(Sound_LoadStream), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Sound_StreamDone), 0, {}, sh::Answer::kFlag, 0, 0},       // tested whole (test eax, eax)
-    {SC1_NAMED(Music_Play), 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Music_FadeOutStop), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Sprite_SetAnimation), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Sprite_FaceDirection), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    // a slot 0..0x13 (the 20 records of Effect_Objects) or 0xFF, none free
-    {SC1_NAMED(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13},
+    // what the standard set lacks
     {SC1_NAMED(Menu_DrawHand), 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Inventory_Add), 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(AreaMap_SetByte), 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
-    {SC1_NAMED(Field_ViewReset), 0, {}, sh::Answer::kGarbage, 0, 0},
-    // ours, called directly by Scena01_Scene0D
-    {SC1_NAMED(Scena01_PlaceEffect), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    // nobody's yet (scena_sc1_callees.h)
-    {SC1_RAW(0x532ED0), 3, {kAll, kAll, kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC1_NAMED(Scena01_PlaceEffect), 1, {kU8}, sh::Answer::kGarbage, 0, 0},   // ours, called directly by Scena01_Scene0D
     {SC1_RAW(0x533E50), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC1_RAW(0x5341C0), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     {SC1_RAW(0x57C550), 2, {kU16, kU8}, sh::Answer::kFlag, 0, 0},
-    {SC1_RAW(0x56D6F0), 0, {}, sh::Answer::kGarbage, 0, 0},
-    // the record's index 0 or 1, or 0xFF (0xFF..0x01 wraps): past 1 both sides fault / abort
+    // the record's index 0 or 1, or 0xFF (0xFF..0x01 wraps)
     {SC1_RAW(0x56D800), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 0x01},
-    {SC1_RAW(0x4410B0), 1, {kU8}, sh::Answer::kGarbage, 0, 0},   // group SE's
+    // the handler tables' typed stand-ins
+    SC1_OBJECT(1), SC1_OBJECT(2), SC1_OBJECT(3), SC1_OBJECT(4), SC1_OBJECT(5), SC1_OBJECT(6), SC1_OBJECT(7), SC1_OBJECT(8),
+    SC1_OBJECT(9), SC1_OBJECT(10), SC1_OBJECT(11), SC1_OBJECT(12), SC1_OBJECT(13), SC1_OBJECT(14), SC1_OBJECT(15),
+    SC1_OBJECT(16), SC1_OBJECT(17),
+    {"Scena01_CellHandlers", 0x53DD50, 0x53DD50, 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
+     reinterpret_cast<const void*>(&CellEntry)},
 };
+#undef SC1_OBJECT
 #undef SC1_RAW
 #undef SC1_NAMED
 
-// The chapter's tables, read in place (the magic harness holds tables of up
-// to 16, so the two longer ones are listed in two parts).
+// The chapter's tables, read in place.
 const sh::DataTable kTables[] = {
-    {at::kRuns, 16}, {at::kRuns + 16 * 4, 8},            // Scena01_Runs
-    {at::kObjects, 16}, {at::kObjects + 16 * 4, 2},      // Scena01_ObjectHandlers
-    {at::kCellHandlers, 2},                              // Scena01_CellHandlers
+    {at::kRuns, at::kRunCount},             // Scena01_Runs
+    {at::kObjects, at::kObjectCount},       // Scena01_ObjectHandlers
+    {at::kCellHandlers, at::kCellCount},    // Scena01_CellHandlers
 };
 
-// An object of the fuzz's own for the object hook and handlers.
-alignas(16) unsigned char g_object[0x100];
-
-// What the bank reads and writes, beyond whatever the harness holds.
+// What the bank reads and writes beyond the harness's 22 standard regions.
 const sh::Region kRegions[] = {
-    {0x8034E0, 0x14},                     // Cond_ByteFA, Field_StatusBits, the state, run, step, timer, Cond_ByteFD
-    {0x903840, 0x14},                     // Camera_Distance, the counters, the effect slot
-    {0x9039A0, 4},                        // Field_ScriptFlags
-    {0x929EC0, 0x60},                     // Field_MemberCount, 0x929EC2 / C3, Camera_Angles, the flag bank, 0x929F00 / 0C, Field_Kind2Hold
-    {0x7E11E0, 0xA00},                    // Effect_Objects, 20 records
+    {0x929F00, 0x14},                     // 0x929F00, 0x929F0C (the shop bytes), Field_Kind2Hold 0x929F12
     {0x7E11E0 + 0xFF * 0x80, 4},          // record 0xFF's first byte: Scena01_Scene02 step 4 clears it (section 6)
-    {0x802D40, 3 * 0x14C},                // the leader's, the second's and the third's records (ObjTrio)
     {0x803150, 8},                        // 0x803157
-    {0x937F88, 8},                        // Sprite_Current, MoveScript_F3Divisor
-    {0x905D98, 4},                        // Field_State
     {0x905E20, 4},                        // Cond_ByteFE
-    {0x905E60, 0xC},                      // Field_Kind2Z / X, MapView_Redraw
-    {0x7E0918, 1},                        // Draw_PassFlags
-    {0x7E1BEC, 2},                        // Input_Pressed
-    {0x66C7D8, 1},                        // Field_Request
     {0x66C7E8, 2},                        // Game_Mode
-    {0x66C810, 2},                        // MoveScript_WaitWordDA
     {0x7DEE44, 8},                        // the choice bits and word
     {0x904CD0, 1},
     {0x92BF17, 1},
     {0x669730, 1},
     {0x903A70, 8 * 0xA4},                 // the eight member records (Scena01_Scene06 step 0xF)
-    {0x903F98, 4},
-    {0x904060, 4},                        // 0x904062
-    {0, sizeof g_object},                 // g_object (the address is filled in at start-up)
 };
-sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 
 // --- the seed ------------------------------------------------------------------
 
 unsigned char* M(std::uint32_t a) { return sh::Mem(a); }
 void SetWordAt(std::uint32_t a, unsigned v) { move_script::SetWord(M(a), v); }
-unsigned char* Record(unsigned k) { return M(0x802D40 + (k % 3) * 0x14C); }
 
-// The steps each function switches on (its cases), and one past the last.
-struct Steps { const char* name; std::uint8_t steps[48]; unsigned n; };
+// The steps each function switches on (its cases, and one past the last),
+// and the pairs (step, counter 0) its waits need.
+struct Steps { const char* name; std::uint8_t steps[48]; unsigned n; std::uint8_t pairs[20][2]; unsigned n_pairs; };
 const Steps kSteps[] = {
-    {"Scena01_Scene01", {0, 1, 2, 3}, 4},
-    {"Scena01_Scene02", {0, 1, 2, 3, 4, 5, 8, 9, 0xA, 0xB, 0xC}, 11},
-    {"Scena01_Scene03", {0, 1, 2, 3, 4, 5, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}, 19},
-    {"Scena01_Scene05", {0, 1, 2, 3, 0xA, 0xB, 0xC, 0xD}, 8},
-    {"Scena01_Scene06", {0, 1, 2, 3, 4, 0xA, 0xB, 0xC, 0xD, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x19, 0x1A, 0x1B}, 20},
-    {"Scena01_Scene08", {0, 1, 2, 3, 4, 5, 6, 7, 0xE, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D}, 22},
+    {"Scena01_Scene01", {0, 1, 2, 3}, 4, {{0, 1}, {2, 0x1E}}, 2},
+    {"Scena01_Scene02", {0, 1, 2, 3, 4, 5, 8, 9, 0xA, 0xB, 0xC}, 11, {{0, 2}, {1, 4}, {2, 0xA}, {3, 1}, {9, 3}, {0xA, 1}, {0xB, 1}}, 7},
+    {"Scena01_Scene03", {0, 1, 2, 3, 4, 5, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}, 19,
+     {{2, 0x1F}, {3, 0x28}, {4, 0x2A}, {0xB, 1}, {0xD, 3}, {0x11, 0xA}, {0x12, 0xB}, {0x13, 0x10}, {0x14, 0x18}, {0x16, 0x22}}, 10},
+    {"Scena01_Scene05", {0, 1, 2, 3, 0xA, 0xB, 0xC, 0xD}, 8, {{0xC, 0x16}}, 1},
+    {"Scena01_Scene06", {0, 1, 2, 3, 4, 0xA, 0xB, 0xC, 0xD, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x19, 0x1A, 0x1B}, 20,
+     {{2, 0xC}, {3, 0x23}, {0xA, 2}, {0xB, 3}, {0xC, 0x1A}, {0x10, 1}, {0x11, 5}, {0x15, 0x1E}, {0x1A, 0xF}, {0xF, 0}, {0x12, 0}, {0x13, 0}}, 12},
+    {"Scena01_Scene08", {0, 1, 2, 3, 4, 5, 6, 7, 0xE, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D}, 22,
+     {{1, 3}, {6, 0x12}, {0xE, 0x14}, {0x13, 0xB}, {0x37, 0x1F}, {0x38, 0x20}, {0x39, 0x23}, {0x3A, 0x24}, {0x3C, 0x28}}, 9},
     {"Scena01_Scene09", {0, 1, 2, 3, 4, 5, 6, 8, 9, 0xB, 0xC, 0xD, 0xE, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
-                         0x1A, 0x1B, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2D, 0x2E}, 39},
-    {"Scena01_Scene0A", {0, 1, 2, 3, 4, 5, 0xB, 0xC, 0xD, 0x14, 0x15, 0x19, 0x1B, 0x1E, 0x1F, 0x20}, 16},
-    {"Scena01_Scene0B", {0, 1, 2, 3, 4, 5, 0xA, 0xB, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14}, 14},
-    {"Scena01_Scene0C", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB}, 12},
-    {"Scena01_Scene0D", {0, 1, 2, 3, 4, 5, 6, 7, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10, 0x11, 0x12, 0x13}, 18},
-    {"Scena01_Scene0E", {0, 1, 3, 4, 5, 6, 7, 8, 9, 0xA}, 10},
-    {"Scena01_Scene0F", {0, 1, 2, 3, 4, 5, 6}, 7},
-    {"Scena01_Scene11", {0, 1, 2, 3, 4, 5, 6, 7, 8, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}, 15},
-    {"Scena01_Scene12", {0, 1, 2}, 3},
-    {"Scena01_Scene14", {0, 1, 2}, 3},
-    {"Scena01_Scene15", {0, 1, 2}, 3},
-    {"Scena01_Scene16", {0, 1, 2}, 3},
-    {"Scena01_Scene17", {0, 1, 2, 3, 4, 5, 6, 0xA, 0xB, 0xC, 0xD, 0xE, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}, 18},
+                         0x1A, 0x1B, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2D, 0x2E}, 39,
+     {{8, 7}, {0xB, 0x1E}, {0xB, 0x32}, {0xC, 0x21}, {0xD, 0x22}, {0xE, 0x35}, {0x14, 0x3C}, {0x14, 0x46}, {0x17, 0x45}, {0x18, 4},
+      {0x19, 9}, {0x1F, 0x66}, {0x23, 0x68}, {0x24, 0x6C}, {0x25, 0x6D}, {0x27, 0x78}, {0x1A, 0}, {0x2D, 0}, {3, 0}}, 19},
+    {"Scena01_Scene0A", {0, 1, 2, 3, 4, 5, 0xB, 0xC, 0xD, 0x14, 0x15, 0x19, 0x1B, 0x1E, 0x1F, 0x20}, 16,
+     {{2, 0x14}, {0xB, 0x14}, {0xD, 0xA}, {0x15, 8}, {0x19, 0xD}, {0x1F, 0xA}}, 6},
+    {"Scena01_Scene0B", {0, 1, 2, 3, 4, 5, 0xA, 0xB, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14}, 14,
+     {{2, 1}, {3, 3}, {4, 0x12}, {0x10, 0x19}, {0x13, 0x19}}, 5},
+    {"Scena01_Scene0C", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB}, 12, {{2, 2}, {4, 5}, {5, 6}, {6, 8}, {9, 0x14}}, 5},
+    {"Scena01_Scene0D", {0, 1, 2, 3, 4, 5, 6, 7, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10, 0x11, 0x12, 0x13}, 18,
+     {{2, 6}, {3, 0x13}, {4, 0x1E}, {5, 0x28}, {6, 4}, {0xA, 0xB}, {0xB, 0xD}}, 7},
+    {"Scena01_Scene0E", {0, 1, 3, 4, 5, 6, 7, 8, 9, 0xA}, 10, {{4, 7}, {9, 0x14}}, 2},
+    {"Scena01_Scene0F", {0, 1, 2, 3, 4, 5, 6}, 7, {{0, 0x64}, {0, 0x65}}, 2},
+    {"Scena01_Scene11", {0, 1, 2, 3, 4, 5, 6, 7, 8, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}, 15,
+     {{0, 0x64}, {0, 0x65}, {2, 0xC8}, {2, 0xC9}, {5, 0x64}, {5, 0x65}, {6, 1}, {0x18, 1}}, 8},
+    {"Scena01_Scene12", {0, 1, 2}, 3, {{1, 2}}, 1},
+    {"Scena01_Scene14", {0, 1, 2}, 3, {}, 0},
+    {"Scena01_Scene15", {0, 1, 2}, 3, {}, 0},
+    {"Scena01_Scene16", {0, 1, 2}, 3, {}, 0},
+    {"Scena01_Scene17", {0, 1, 2, 3, 4, 5, 6, 0xA, 0xB, 0xC, 0xD, 0xE, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19}, 18,
+     {{0, 0x64}, {0, 0x65}, {2, 0xC8}, {2, 0xC9}, {5, 0x64}, {5, 0x65}, {0x18, 1}}, 7},
 };
 const Steps* g_steps[sizeof kClones / sizeof kClones[0]];
 
@@ -296,13 +285,12 @@ std::uint32_t CounterZero() {
 std::uint32_t EffectSlot(std::uint32_t h) { return h % 5 == 0 ? 0xFF : h % 20; }
 
 void Seed(unsigned k) {
-    // Every round: the pointers inside (Sprite_Current, Field_State at a
-    // member's record), the effect slot a real one, the member index 0..7.
-    const unsigned member = sh::Next() % 3;
-    sh::SetPointer(0x937F88, Record(member));
-    sh::SetPointer(0x905D98, Record(sh::Next()));
+    // Every round: the effect slot a real one, the member index 0..7, the
+    // object hook's index in each object the kObject shape may pass.
     M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(sh::Next()));
     M(at::kScene06Member)[0] = static_cast<unsigned char>(sh::Next() % 8);
+    for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount);
+    if (sh::Half()) sh::SetPointer(0x937F88, sh::ObjectOf(sh::Next()));   // Sprite_Current at a party object
     // The waits, each on its boundary two in three.
     if (sh::Often()) M(at::kCounters)[0] = static_cast<unsigned char>(CounterZero());
     if (sh::Half()) M(at::kCounters + 1)[0] = static_cast<unsigned char>(SH_PICK(1, 2, 3));
@@ -318,7 +306,7 @@ void Seed(unsigned k) {
     if (sh::Half()) SetWordAt(at::kChoiceWord, 2);
     if (sh::Half()) M(at::kChoiceBits)[0] |= 2;
     // The leader's cell words and position (Scena01_Scene08 / 09's places).
-    unsigned char* const lead = Record(0);
+    unsigned char* const lead = sh::ObjectOf(0);
     if (sh::Often()) move_script::SetWord(lead + 0x36, SH_PICK(0x1B, 0x1C, 0x3D, 0x3E, 0x3F, 0x41, 0x5B, 0x5C, 0x5D, 0x5E));
     if (sh::Often()) move_script::SetWord(lead + 0x3A, SH_PICK(9, 0xD, 0x23, 0x24, 0x2A, 0x2B, 0xFFFF));
     if (sh::Half()) move_script::SetLong(lead + 0x38, static_cast<std::int32_t>(SH_PICK(0x480000, 0x488000)));
@@ -328,39 +316,42 @@ void Seed(unsigned k) {
     if (sh::Half()) lead[0x4A] = 1;
     if (sh::Half()) lead[0x89] = 4;
     // The function's own.
-    const sh::Clone& c = kClones[k];
     if (g_steps[k]) {
         const Steps& s = *g_steps[k];
-        M(at::kStep)[0] = sh::Often() ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
+        const unsigned r = sh::Next() % 3;
+        if (r == 0 && s.n_pairs) {
+            const unsigned i = sh::Next() % s.n_pairs;
+            M(at::kStep)[0] = s.pairs[i][0];
+            M(at::kCounters)[0] = s.pairs[i][1];
+        } else {
+            M(at::kStep)[0] = r != 2 ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
+        }
     }
-    if (std::strcmp(c.name, "Scena01_Run") == 0) MoveScript_Var7 = static_cast<signed char>(sh::Next() % at::kRunCount);
-    if (std::strcmp(c.name, "Scena01_ObjectHook") == 0) g_object[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount);
+    if (std::strcmp(kClones[k].name, "Scena01_Run") == 0) MoveScript_Var7 = static_cast<signed char>(sh::Next() % at::kRunCount);
 }
 
-// The arguments: the object and 0x903F98 for the object hook and handlers,
-// (x, z) for the hooks, n for Scena01_PlaceEffect.
+// The arguments: an object and 0x903F98 for the object handlers, n for
+// Scena01_PlaceEffect; the hooks' (x, z) and the object hook's object are
+// the shapes' own.
 void Args(unsigned k, std::uint32_t* a) {
     const char* const n = kClones[k].name;
-    if (std::strncmp(n, "Scena01_Object", 14) == 0) {
-        a[0] = Key(g_object);
+    if (std::strncmp(n, "Scena01_Object", 14) == 0 && std::strcmp(n, "Scena01_ObjectHook") != 0) {
+        a[0] = Key(sh::SpriteRecord(a[0]));
         a[1] = at::kStartWord;
-    } else if (std::strcmp(n, "Scena01_PlaceEffect") == 0) {
-        a[0] = sh::Half() ? SH_PICK(0x92, 0x93) : a[0];
+    } else if (std::strcmp(n, "Scena01_PlaceEffect") == 0 && (a[1] & 1)) {
+        a[0] = (a[1] & 2) ? 0x93 : 0x92;
     }
-    // the hooks' (x, z): random words (0x56D800 is a recorder); the rest ignore theirs
 }
 
-// A cell of the chapter's moved after a call: what the steps read again.
+// A cell of the chapter's moved after a call, beyond the harness's own.
 void Disturb(std::uint32_t h) {
-    switch ((h >> 3) % 8) {
-    case 0: M(at::kStep)[0] = static_cast<unsigned char>(h >> 11); break;
-    case 1: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(h >> 13); break;
-    case 2: M(0x66C7D8)[0] = static_cast<unsigned char>((h >> 11) % 3); break;
-    case 3: SetWordAt(0x66C810, (h >> 11) & 1); break;
-    case 4: sh::SetPointer(0x937F88, Record(h >> 11)); break;
-    case 5: M(0x929F12)[0] = static_cast<unsigned char>((h >> 11) & 1); break;
-    case 6: M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
-    default: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
+    switch ((h >> 3) % 6) {
+    case 0: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(h >> 13); break;
+    case 1: M(0x929F12)[0] = static_cast<unsigned char>((h >> 11) & 1); break;
+    case 2: M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
+    case 3: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
+    case 4: SetWordAt(0x7E1BEC, (h >> 11) & 1 ? 0x40 : 0); break;
+    default: M(at::kCounters + 3)[0] = static_cast<unsigned char>((h >> 11) & 1 ? 0x80 : 0x14); break;
     }
 }
 
@@ -368,8 +359,6 @@ void Disturb(std::uint32_t h) {
 void Settle() {
     const unsigned char s = M(at::kEffectSlot)[0];
     if (s != 0xFF && s >= 20) M(at::kEffectSlot)[0] = static_cast<unsigned char>(s % 20);
-    const std::uint32_t cur = static_cast<std::uint32_t>(move_script::Long(M(0x937F88)));
-    if (cur < 0x802D40 || cur >= 0x802D40 + 3 * 0x14C - 0x10) sh::SetPointer(0x937F88, Record(0));
     M(at::kScene06Member)[0] &= 7;
 }
 
@@ -381,13 +370,12 @@ void SelfTest() {
         for (const Steps& s : kSteps)
             if (std::strcmp(s.name, kClones[k].name) == 0) g_steps[k] = &s;
     }
-    for (unsigned i = 0; i < sizeof kRegions / sizeof kRegions[0]; ++i) g_regions[i] = kRegions[i];
-    g_regions[sizeof kRegions / sizeof kRegions[0] - 1].at = Key(g_object);
     sh::Group g{"scena_sc1", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
-                kTables, sizeof kTables / sizeof kTables[0], g_regions, sizeof g_regions / sizeof g_regions[0],
+                kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
                 &Seed, &Disturb, 0};
     g.settle = &Settle;
     g.args = &Args;
+    g.chapter = 1;
     sh::Run(g);
 }
 

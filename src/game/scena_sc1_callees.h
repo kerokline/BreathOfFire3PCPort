@@ -54,7 +54,6 @@ constexpr std::uint32_t kShopByteC = 0x929EC2;     // u8: 1
 namespace callee {
 constexpr std::uint32_t kPartyPlace = 0x532ED0;    // void (int x, int z, unsigned facing): every member to (x, z)
 constexpr std::uint32_t kPartyRestore = 0x533E50;  // void (void): the members' records rebuilt (Char_RecalcStats)
-constexpr std::uint32_t kScenarioCallB = 0x5341C0; // void (unsigned n): the chapter's call table B, entry n
 constexpr std::uint32_t kAngleTest = 0x57C550;     // unsigned char (s16 a, s8 b): 0x57C5A0 on the two scaled; al tested
 constexpr std::uint32_t kStatusBit80 = 0x56D6F0;   // void (void): Field_StatusBits |= 0x80
 constexpr std::uint32_t kCellFind = 0x56D800;      // unsigned char (const record *, n, x, z): the record's index or 0xFF
@@ -62,7 +61,6 @@ constexpr std::uint32_t kSeHelper = 0x4410B0;      // void (unsigned char n): gr
 
 using PartyPlaceFn = void (__cdecl*)(int, int, unsigned);
 using VoidFn = void (__cdecl*)();
-using CallBFn = void (__cdecl*)(unsigned);
 using AngleTestFn = unsigned char (__cdecl*)(int, int);
 using CellFindFn = unsigned char (__cdecl*)(const unsigned char*, unsigned, int, int);
 using SeHelperFn = void (__cdecl*)(unsigned);

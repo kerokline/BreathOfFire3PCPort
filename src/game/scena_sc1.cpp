@@ -540,7 +540,7 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         Counter(2) = 4;
         Draw_PassFlags = 0;
         At(at::kMemberRecords + member * 0xA4)[0] &= 0xFE;
-        SH_AT(cl::CallBFn, cl::kScenarioCallB)(0);
+        SH_CALL(Scenario_CallB)(0);
         SetFlag(5);
         ChangeArea(8, 0x320000, 0x120000, 0x84);
         return;
