@@ -292,3 +292,13 @@ tests the whole of eax (`MagicFx_NearSprite`, `_NearSprite3D`) then almost
 never sees 0, so its "no" branch never runs. Each group re-listed those
 callees as `kBool` in its own fuzz. Fix with the `kFlag` one: the standard
 set should list a callee by what its callers test.
+
+**The owner on Blitz's past-the-table step (2026-09-26): keep ours as it
+is, no DIVERGENCE entry.** `BlitzBolt_Seek` can leave the bolt's step at 12,
+one past `BlitzBolt_Steps` ([`magic_s03.md`](magic_s03.md) §8). On the PC
+the overlays are linked in one exe, so Capcom's code then runs MAGIC013's
+`SnapWave_Run` (Snap, read one id down), which indexes its own five-entry
+table by the same 12; on the PlayStation, where each overlay loads alone,
+the entry past the table is whatever follows it in Blitz's own file. So the
+wild jump is likely an artifact of the port's linking. Ours aborts at the
+bad step, the out-of-table precedent. Reachability is unmeasured.
