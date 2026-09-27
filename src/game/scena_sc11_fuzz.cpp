@@ -311,7 +311,10 @@ void Seed(unsigned k) {
         }
         break;
     case kScene5: B(kStep) = PickOf(kSteps5); break;
-    case kScene6: B(kStep) = PickOf(kSteps6); break;
+    case kScene6:
+        B(kStep) = PickOf(kSteps6);
+        if (sh::Half()) B(kCounters + 3) = static_cast<unsigned char>(1 + sh::Next() % 2);   // step 20 tests it for 1
+        break;
     case kScene8: B(kStep) = PickOf(kSteps8); break;
     case kScene9: B(kStep) = PickOf(kSteps9); break;
     case kEnterArea:
@@ -342,11 +345,16 @@ void Args(unsigned k, std::uint32_t* a) {
 
 // After a call, two in three: a counter byte (0 or one of the values waited
 // on), the request, the wait word, Field_Kind2Hold, the slot byte 0x903850
-// (a record 0..19), or the live byte of the
+// (a record 0..19), the area, or the live byte of the
 // effect counter 3 names. Drawn from the hash given, never the harness's Next.
 void Disturb(std::uint32_t h) {
-    switch ((h >> 8) % 7) {
+    switch ((h >> 8) % 8) {
     case 5: B(0x903850) = static_cast<unsigned char>((h >> 12) % kEffectCount); break;   // the slot byte, read back after Rand
+    case 6: {   // the area, read afresh by Scena11_EnterArea after its calls
+        static const std::uint16_t kMoved[] = {0x83, 0x84, 0x88, 0x73, 0x10, 0x79};
+        Game_AreaNumber = kMoved[(h >> 12) % 6];
+        break;
+    }
     case 0: B(kCounters + (h >> 12) % 3) = kCounter0s[(h >> 16) % (sizeof kCounter0s)]; break;
     case 1: Field_Request = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : 0); break;
     case 2: MoveScript_WaitWordDA = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
