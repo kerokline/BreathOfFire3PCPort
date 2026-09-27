@@ -24,7 +24,12 @@ every overlay behind `Magic_Rows` `0x64C2B8`, 2,064 functions in 43 groups,
 through one shared fuzz harness ([`magic_harness.md`](magic_harness.md); SH
 built it, HX folded eleven groups' edits into one API). **Waves one to three
 are merged** (L, S16..S25; C1..C3, E, S26..S31; S01..S08: 1,369 functions
-since round eight). **Waves four (S09..S15) and five (S32..S38) remain.** The
+since round eight). **Waves four (S09..S15) and five (S32..S38) remain.** Before wave four
+the harness's two `kFlag` gaps were fixed and `magic_rows.py`'s table
+counts bounded (`015a3c3`, `93cc006`); the fix reaches 117 clones
+([`magic_harness.md`](magic_harness.md) section 8), and their 532 controls
+were re-run by eight agents: all refused, one (S06's A120) only after a
+seed change in `magic_s06_fuzz.cpp`. The
 other session on this machine added the recipe-save swap (`0775a49`,
 [`input-script.md`](input-script.md) section 1a) and planned the scenario
 and area rounds (`IDEAS.md` I23, I24). The rest is
@@ -62,15 +67,6 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
 2. **Owed by the spell round, before or after wave five** (round9 doc
    sections 6 to 10):
    - **The frame hash re-record** (above), owner away about 20 minutes.
-   - **The controls, re-run where the harness fix reaches.** Both `kFlag`
-     gaps are fixed in `magic_harness.cpp` (2026-09-26) and
-     `BOF3X_SHADOW='*'` passes headless. Only `kFlag` / `kBool` answers
-     changed, so only clones whose original calls one see a new stream:
-     117 of 1,372, listed by group in [`magic_harness.md`](magic_harness.md)
-     section 8 (about 530 controls; every other control stands). The
-     controls scripts were never committed (they lived untracked in the
-     removed agent worktrees): a re-run rebuilds its plants from the group
-     doc's controls table.
    - **Rebinding**: many groups call later groups' functions by raw address;
      they work (the stand-in falls back to the address) but can take names.
    - **`known-defects.md`**: the groups describe; nobody has numbered them.
@@ -86,9 +82,11 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
    - **34 owned functions have no `entries_logic.txt` line** (round9 doc
      section 10): 9 are the wall-clock exclusions, 25 to audit with the
      re-record.
-3. **Housekeeping.** The 18 wave two and three agent worktrees and their
-   branches are removed (2026-09-26). A PR for round nine when the owner
-   wants one.
+3. **Housekeeping.** A PR for round nine when the owner wants one. The
+   controls scripts of every round-nine group live in the round's first
+   session scratchpad (`C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/<group>/controls.py`),
+   not in git: a Temp folder, so copy them somewhere durable if they are to
+   outlive a cleanup.
 4. **The owner's eye on older rounds**: round seven and the world map (the
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.
