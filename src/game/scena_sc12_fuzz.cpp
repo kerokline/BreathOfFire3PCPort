@@ -289,7 +289,30 @@ std::uint32_t AStep(unsigned k) {
     }
 }
 
+// The counter-0 value each run's step waits on (read off ours), so a step's
+// action is reached, not only its wait.
+struct Wait { unsigned char run, step, count; };
+const Wait kWaits[] = {
+    {4, 2, 5}, {4, 0x15, 6}, {4, 0x18, 2}, {4, 0x19, 4},
+    {5, 6, 4}, {5, 8, 0xA}, {5, 9, 0xA}, {5, 0x15, 0x23}, {5, 0x16, 0xA}, {5, 0x1A, 0x28}, {5, 0x28, 0x14}, {5, 0x29, 0xA}, {5, 0x2B, 5},
+    {6, 2, 5}, {6, 5, 5}, {6, 6, 0xA}, {6, 8, 2}, {6, 0xA, 1}, {6, 0xB, 1}, {6, 0xC, 2}, {6, 0xE, 3}, {6, 0xF, 1}, {6, 0x10, 1},
+    {6, 0x11, 1}, {6, 0x12, 3}, {6, 0x13, 4}, {6, 0x16, 4},
+    {7, 1, 2}, {7, 0xB, 1}, {7, 0xC, 4}, {7, 0xD, 0x14}, {7, 0xF, 1}, {7, 0x10, 5}, {7, 0x1E, 1},
+    {8, 1, 0xA}, {8, 0x20, 3},
+    {9, 1, 1}, {9, 0xB, 2}, {9, 0xC, 6}, {9, 0xE, 9}, {9, 0x11, 0xE}, {9, 0x15, 0x18}, {9, 0x16, 0x19}, {9, 0x1F, 1}, {9, 0x20, 5},
+    {9, 0x22, 1}, {9, 0x2B, 2}, {9, 0x2C, 3},
+};
+unsigned RunOf(unsigned k) {
+    switch (k) {
+    case kRun4: return 4; case kRun5: return 5; case kRun6: return 6; case kRun7: return 7; case kRun8: return 8; case kRun9: return 9;
+    default: return 0;
+    }
+}
+
+unsigned g_k;
+
 void Seed(unsigned k) {
+    g_k = k;
     // The stand-ins into the two tables that take arguments.
     for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(at::kObjects + 4 * i, KeyOf(kObjectEntries[i]));
     for (unsigned i = 0; i < at::kCellHookCount; ++i) SetD(at::kCellHooks + 4 * i, KeyOf(kCellEntries[i]));
@@ -324,6 +347,10 @@ void Seed(unsigned k) {
     case kObjectTrigger: sh::SpriteRecord(0)[0x86] = static_cast<unsigned char>(sh::Next() % 15); break;
     case kRun1: case kRun2: case kRun4: case kRun5: case kRun6: case kRun7: case kRun8: case kRun9:
         B(at::kStep) = static_cast<unsigned char>(AStep(k));
+        if (sh::Often())
+            for (const Wait& w : kWaits)
+                if (w.run == RunOf(k) && w.step == B(at::kStep)) B(at::kCounters) = w.count;
+        if (k == kRun1 && sh::Half()) B(at::kCounters + 1) = 0xA;
         break;
     case kArriveHook:
         if (sh::Often()) SetW(at::kArea, 0x79);
@@ -351,9 +378,24 @@ void Args(unsigned k, std::uint32_t* a) {
     switch (k) {
     case kObjectTrigger: a[0] = Key(sh::SpriteRecord(0)); break;
     case kArriveHook:
+        a[0] = AnX();
+        a[1] = AZ();
+        break;
     case kStepHook:
         a[0] = AnX();
         a[1] = AZ();
+        if (sh::Half()) {   // one rectangle, x and z each at one of its bounds, one either side
+            static const std::uint32_t kRects[][4] = {{0x1F8000, 0x208000, 0x248000, 0x270000},
+                                                      {0x2E0000, 0x2F8000, 0x290000, 0x2A0000},
+                                                      {0x330000, 0x348000, 0x290000, 0x298000},
+                                                      {0x1C0000, 0x1D8000, 0x38000, 0x48000},
+                                                      {0x390000, 0x3A8000, 0x470000, 0x488000},
+                                                      {0x368000, 0x370000, 0x3F0000, 0x3F8000},
+                                                      {0x1B0000, 0x1B0001, 0x70000, 0xBFFFF}};   // area 0x88's
+            const std::uint32_t* r = kRects[sh::Next() % 7];
+            a[0] = r[sh::Next() % 2] + SH_PICK(0, 0, 1, 0xFFFFFFFFu);
+            a[1] = r[2 + sh::Next() % 2] + SH_PICK(0, 0, 1, 0xFFFFFFFFu);
+        }
         break;
     case kCellHook:   // the cell as bytes, with garbage above half the time
         if (sh::Half()) {
@@ -366,17 +408,34 @@ void Args(unsigned k, std::uint32_t* a) {
 }
 
 // After a call, two in three (beyond the harness's own): the counters 1 and
-// 2, the area, the selector, an effect's in-use byte, the kind-2 hold.
+// 2, the area, the selector, an effect's in-use byte, the kind-2 hold,
+// Cond_ByteFD, the byte 0x802DC9, a bit of the script flags' low byte.
 void Disturb(std::uint32_t h) {
     const unsigned char v = static_cast<unsigned char>(h >> 16);
-    switch ((h >> 8) % 6) {
+    switch ((h >> 8) % 10) {
     case 0: B(at::kCounters + 1 + (h >> 12) % 2) = v; break;
-    case 1: SetW(at::kArea, (h >> 16) & 1 ? 0xBC : 0x85 + (h >> 17) % 4); break;
+    case 1: SetW(at::kArea, (h >> 16) & 1 ? 0xBC : 0x82 + (h >> 17) % 7); break;
+    case 6: B(at::kLeaderName) = static_cast<unsigned char>((h >> 16) & 1 ? 5 : v); break;
+    case 7: B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) ^ (1u << ((h >> 16) % 8))); break;
+    case 8:
+    case 9:   // the bits this block sets and toggles: 3, 5, 7
+        B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) ^ (8u << (2 * ((h >> 16) % 3))));
+        break;
     case 2: B(at::kSelector) = static_cast<unsigned char>(7 + (h >> 16) % 12); break;
     case 3: B(at::kEffects + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
     case 4: B(at::kHold) = static_cast<unsigned char>(v & 1); break;
     default: B(at::kCondFD) = static_cast<unsigned char>(2 + (v & 1)); break;
     }
+}
+
+// After every disturbance (two calls in three), for EnterArea only: half the
+// time the area moved to one of 0x82..0x88, since it re-reads the area after
+// its calls and the harness's disturbance reaches the group's cells only one
+// time in sixteen. Noise() is the recorders' stream, the same on both passes.
+void Settle() {
+    if (g_k != kEnterArea) return;
+    const std::uint32_t n = sh::Noise();
+    if (n & 1) SetW(at::kArea, 0x82 + (n >> 8) % 7);
 }
 
 }  // namespace
@@ -399,6 +458,7 @@ void SelfTest() {
                        &Disturb,
                        8000};
     group.args = &Args;
+    group.settle = &Settle;
     group.chapter = 12;
     sh::Run(group);
 }

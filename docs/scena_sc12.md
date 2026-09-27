@@ -1,49 +1,17 @@
 # Chapter 12's first block: 0x55E4E0..0x561DB0
 
-**Status:** IN PROGRESS (2026-09-27) - stage A: 24 functions read to the
-last instruction and written (`src/game/scena_sc12.cpp`, shadow name
-`scena_sc12`), the fuzz written against the scenario harness's contract
-(`src/game/scena_sc12_fuzz.cpp`), neither built nor run yet: the module is
-not registered in `CMakeLists.txt` / `inject_all.cpp` until SCH's
-`scenario_harness` merges. No controls planted yet.
+**Status:** IN PROGRESS (2026-09-27) - 24 functions ours
+(`src/game/scena_sc12.cpp`, shadow name `scena_sc12`), fuzzed headless
+through the scenario harness ([`scenario_harness.md`](scenario_harness.md)):
+0 mismatches in 192,000 rounds (8,000 a function); 65 of 66 negative controls refused, the other an equivalent mutant whose near variant is refused. Fuzz only:
+no recorded route reaches chapter 12 (section 7).
 
 Group SC12 of round ten's first wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1,
-[`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3).
-
-## Stage A done - what stage B has to do
-
-Stage A (this commit) holds: ours, `symbols.toml` (24 `[[func]]` with `impl`,
-5 `[[data]]`), `scena_sc12_callees.h`, the fuzz file, this doc, the
-`entries_logic.txt` lines (main checkout, 24 lines). Both `.cpp` files pass
-`-fsyntax-only` (llvm-mingw, `-m32 -std=c++20 -Wall -Wextra`) against a
-private copy of `magic_harness.h` renamed to `scenario_harness` / `SH_`, with
-one addition the clone tool prints: `enum class Shape { kState, kSlot,
-kObject, kHook, kCall }` and `Clone::shape` after `calm`.
-
-Stage B, after SCH's harness merges:
-
-1. Merge `phase-3/capture-round-ten` at the harness's SHA; add
-   `src/game/scena_sc12.cpp` and `scena_sc12_fuzz.cpp` at the end of the
-   `CMakeLists.txt` list and `ScenaSc12_Inject();` (with its include) at the
-   end of `inject_all.cpp`.
-2. Build against the real `scenario_harness.h`. Expect to adjust: the name
-   and enumerators of the call shape (the fuzz uses
-   `sh::Shape::kSlot / kObject / kHook`, as `tools/scenario_rows.py`
-   prints), how a `kObject` / `kHook` clone gets its arguments (the fuzz
-   gives them through `Group::args`: the object pointer, (x, z) at the
-   hooks' bounds), and any group region the harness already holds as a
-   standard one (the fuzz lists every cell it touches, section 4; drop the
-   overlaps if the harness refuses them). Drop any callee the standard set
-   records the same way.
-3. Run `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_sc12` to 0 mismatches, then
-   `'*'`. Read the coverage line against section 4's expectation: every
-   run's steps, the four data tables' entries, both `kBool` callees'
-   loops.
-4. Plant and refuse the controls of section 5 (a script that plants,
-   rebuilds, runs, restores and rebuilds; anchors on unique strings).
-5. Fill sections 4 and 5 with counts ("in this worktree"), replace this
-   section and the status header.
+[`takeover-queue-scenario.md`](takeover-queue-scenario.md) §3), in two
+stages: stage A read and wrote everything against the harness's contract
+before the harness existed; stage B merged it (`218eeec`), registered the
+module, built, fuzzed and planted the controls.
 
 ## 1. The block, and chapter 12's roots
 
@@ -179,46 +147,180 @@ area 0x88 test takes z's high word minus 7 as a 16-bit unsigned (7..11);
 EnterArea reads the area once for each pair of its first six tests and
 afresh for every later one.
 
-## 4. The fuzz (stage B)
+## 4. The fuzz
 
-Written, not run. `scena_sc12_fuzz.cpp`: the clone table (the tool's, with
-each clone's shape in its comment and `Clone::shape` on the roots and the
-cell entries; `ret_mask 0xFF` on the three hooks and the two cell
-entries), 29 callees listed by the group (the flags, `ScriptFlags_*`, the
-messages, the area change, `Scenario_CallA`, `Effect_FindFree` as a byte
-0xFF or 0..0x13, `File_LoadDone` / `Sound_StreamDone` as bools, the six raw
-addresses, `0x56D800` as a byte 0xFF or 0..3), the four chapter tables as
-`DataTable`s, 25 regions (every cell of the callees header, the
-0x2000-colour CLUT, the 20 effect records, ObjTrio record 0, a sprite and an
-object of the fuzz's own). The seed puts each compare's values in: the
-areas the code tests, the counters' tested values, the request byte 0 / 2
-/ 6, the wait word 0, the selector 7..18, `Cond_ByteFD` 2 / 3, the byte
-`0x802DC9` 2..8, each run's case steps and one past, the state 0..2, the
-run 0..9, the object's +0x86 0..14, the hooks' (x, z) at each bound and one
-either side. The disturbance moves the counters, the request byte, the wait
-word, the area, the selector, the step, an effect's in-use byte and the
-kind-2 hold.
+`scena_sc12_fuzz.cpp`, through `scenario_harness` with `chapter = 12`:
 
-Counts: to come.
+- **The clones**: `tools/scenario_rows.py --unit SC12 --clones` at
+  `218eeec` (run against that commit's `symbols.toml`, since the tool skips
+  functions already ours), identical to stage A's reading extent for extent
+  and call for call. Shapes: slot 0 `kSlot`; the states, runs and object
+  handlers `kState`; slot 1 `kObject`; slots 2..4 and the two cell entries
+  `kHook` (compared on al).
+- **Two copies the group makes itself.** `Scena12_Run4` has 117 call sites
+  and `Scena12_Run8` 102; the harness re-aims at most 64 a clone. The fuzz
+  file copies both with `bof3::CloneOriginal`, every site re-aimed at a
+  trampoline that calls the harness's recorder for that callee
+  (`scenario_harness::StandIn`, on either pass - the same log entry,
+  disturbance and answer a harness-aimed site gets), the jump tables
+  relocated into the copy (`move_script::Relocate`); the harness is handed,
+  as each one's original, a six-byte `jmp [copy]` of the fuzz's own, which
+  it clones like a function without calls. Theirs is still Capcom's bytes.
+  A later harness with a larger call limit can take both back.
+- **Callees**: the harness's 70 standard ones, plus three the group lists:
+  `Flags_Test` as a `kFlag` (the block tests al alone, so garbage above a 0
+  must change nothing; the standard `kBool` would not show it), `0x533E50`,
+  and `0x56D800` as a byte 0xFF or 0..3; and the log slots of the table
+  stand-ins below. `Scenario_CallB` (named by SCH, not taken) is called by
+  name; `0x4410B0` stays a raw address until SE merges.
+- **Tables**: `Scena12_States` and `Scena12_Runs` swapped for recorders
+  (their entries take no arguments). `Scena12_Objects` and
+  `Scena12_CellHooks` pass arguments (the object and the flag row; the cell
+  (a, b)) that a table recorder does not log, so the seed writes a typed
+  stand-in into every entry - one per index, so a wrong index is a
+  different log - and the two tables are regions the harness puts back.
+- **Regions** beyond the harness's 22: the selector `0x90412C`,
+  `Cond_ByteFE`, the music byte `0x904CD0`, the 0x2000 colours at
+  `0x80F580`, the tile word `0x939A00`, `0x929F0C..` (the byte `0x929F0F`
+  and `Field_Kind2Hold`), and the two tables. 30 regions, 26,472 bytes.
+- **Seed**: the areas the block tests (EnterArea's paired with counter 2's
+  cases), the counters' tested values, the request byte 0 / 2 / 6, the wait
+  word 0, the selector 7..18 (bit 7 half the time), `Cond_ByteFD` 2 / 3,
+  the byte `0x802DC9` 2..8, the input words, the party bytes, ObjTrio's two
+  words at their bounds, an effect's in-use byte, each run's case steps and
+  one past, each with counter 0 at the value it waits on two times in three
+  (`kWaits`), the state 0..2, the run 0..9, the object's +0x86 0..14; the
+  hooks' (x, z) at each bound and one either side, and half the time both
+  at the bounds of one of the step hook's seven rectangles.
+- **Disturbance** beyond the harness's: counters 1 and 2, the area (0x82..
+  0x88, 0xBC), the selector, an effect's in-use byte, the kind-2 hold,
+  `Cond_ByteFD`, the byte `0x802DC9`, a bit of the script flags' low byte
+  (bits 3, 5 and 7 most often). A `settle` for EnterArea alone moves the area
+  to 0x82..0x88 half the time after every disturbance, drawing on `Noise()`.
 
-## 5. Controls (stage B)
+**Result, in this worktree** (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_sc12`,
+exit 0): 192,000 rounds, 184,091 calls to the stand-ins, **0 mismatches**.
+Coverage, the calls the originals made: `Flags_Test` 21,919,
+`ScriptFlags_Set40` 68,204, `Msg_OpenScript` 7,263, `Field_ChangeArea`
+2,191, `Party_DropIn` 2,194, `Flags_Set` 1,765, `Flags_Clear` 622,
+`Scenario_CallA` / `CallB` in the hundreds, `Effect_FindFree` ~1,000,
+`Kind2_Place` ~3,600, `AreaMap_SetByte` ~150, `MoveCmd_TestFB` ~2,700,
+`Sound_LoadStream` / `StreamDone` ~600 / ~300, `Music_LoadFile` ~110 with
+`File_LoadDone` ~170 and `Task_Sleep` ~55 (the wait loop runs), `0x4410B0`
+28, `0x532ED0` 22, `0x56D6F0` 71, `0x533E50` ~200, `0x56D800` 8,000, the
+object and cell stand-ins 8,000 / ~6,400, and every state and run table
+entry (`0x5646B0`, EnterArea, Run, the bare ret, Run1..Run9) about 800 each.
+`BOF3X_SHADOW='*'`: exit 0.
 
-To plant, one per function at least, each refused by a count: the frame's
-table base, the run's signedness; EnterArea's area 0x83 elevation, the
-0x85 selector case, the 0xBC case 6 fallthrough, the end-of-run area list;
-per run a counter value, a step value, a flag number, an area-change flag
-byte, and one selector entry; run 4's grey divisor and bit-15 keep; run 5's
-step 2 unconditional step 3; run 6's music byte after a hop; run 8's pass
-clear before the `0x929F0F` test; run 9's message order (2, 8, 5, 4); the
-step hook's inclusive bounds (one each side) and the 16-bit z test; the
-arrive hook's signed compare; the cell hook's negative test; the cell
-entries' answers; each object handler's run.
+## 5. Controls
+
+`scratchpad/sc12/controls.py` (not committed; the pattern of
+`magic_s31`'s): each mutant planted in `scena_sc12.cpp` on a unique anchor,
+rebuilt, the self-test run, restored, and rebuilt at the end. Refused =
+exit 3 on a mismatch.
+
+| Id | Mutant | Result |
+|---|---|---|
+| F1 | frame: state 1 read as 2 | refused (exit 3) |
+| F2 | run: run 4 read as 5 | refused (exit 3) |
+| F3 | object trigger: the row not passed | refused (exit 3) |
+| F4 | object trigger: index + 1 below 14 | refused (exit 3) |
+| F5 | cell hook: count 3 | refused (exit 3) |
+| F6 | cell hook: negative answers 0 | refused (exit 3) |
+| F7 | cell hook: (b, a) | refused (exit 3) |
+| H1 | arrive: x strictly below | refused (exit 3) |
+| H2 | arrive: run 1 | refused (exit 3) |
+| H3 | step: area 0x86 x lower bound +1 | refused (exit 3) |
+| H4 | step: SetByte cell 0x2E, 0x2A value 0x71 | refused (exit 3) |
+| H5 | step: ObjTrio +0x3C strict | refused (exit 3) |
+| H6 | step: area 0x85 z upper bound | refused (exit 3) |
+| H7 | step: area 0x88 z high word 7..12 | refused (exit 3) |
+| H8 | step: area 0x88 x at least | refused (exit 3) |
+| H9 | step: area 0xBC third rectangle step 5 | refused (exit 3) |
+| H10 | step: 0xBC second rectangle z top | refused (exit 3) |
+| E1 | cell talk: leader 4 | refused (exit 3) |
+| E2 | cell talk: leader read before the call | refused (exit 3) |
+| E3 | cell door: answer 1 when flagged | refused (exit 3) |
+| E4 | cell door: x and z swapped | refused (exit 3) |
+| E5 | cell door: counter 2 cleared too | refused (exit 3) |
+| O1 | object 06: run 2 | refused (exit 3) |
+| O2 | object 11: step 3 | refused (exit 3) |
+| O3 | object 13: run 7 | refused (exit 3) |
+| O4 | object 14: run before set40 | refused (exit 3) |
+| A1 | enter: area 0x83 elevation 0x499 | refused (exit 3) |
+| A2 | enter: 0x85 selector 16 CallB 3 | refused (exit 3) |
+| A3 | enter: 0xBC case 6 no pass flags | refused (exit 3) |
+| A4 | enter: area 0x57 dropped from the end list | refused (exit 3) |
+| A5 | enter: area 0x86 z bound <= | refused (exit 3) |
+| A6 | enter: no state 2 | refused (exit 3) |
+| A7 | enter: area read once for 0x82/0x83 | **equivalent** (below) |
+| A7b | enter: area read once for 0x83 / 0x84 | refused (exit 3) |
+| A7c | enter: 0x79 path keeps its counters and the area unread (near A7) | refused (exit 3) |
+| A8 | enter: music wait skipped | refused (exit 3) |
+| R1 | run1: counter 0 = 0x33 | refused (exit 3) |
+| R2 | run2: message 8 at 0x3C | refused (exit 3) |
+| R3 | run4: grey divisor 4 | refused (exit 3) |
+| R4 | run4: bit 15 dropped | refused (exit 3) |
+| R5 | run4: step 0x1E sets without clearing | refused (exit 3) |
+| R6 | run4: selector 11 picks | refused (exit 3) |
+| R7 | run4: step 0x15 area 0x66 | refused (exit 3) |
+| R8 | run5: step 2 only on request | refused (exit 3) |
+| R9 | run5: story flag through the row | refused (exit 3) |
+| R10 | run5: tile 0x67 in | refused (exit 3) |
+| R11 | run5: step 0x2C selector 15 without CallB 4 | refused (exit 3) |
+| R12 | run5: step 0x28 selector 17 flags 0x86 | refused (exit 3) |
+| R13 | run6: hop music byte 0x8F after | refused (exit 3) |
+| R14 | run6: effect +0x6C 0x201 | refused (exit 3) |
+| R15 | run6: step 0xC script flags before the sound | refused (exit 3) |
+| R16 | run6: step 4 effect byte of counter 2 | refused (exit 3) |
+| R17 | run7: SetByte 0x1D, 3 value 0xA1 | refused (exit 3) |
+| R18 | run7: step 0x14 counter 2 = 8 | refused (exit 3) |
+| R19 | run7: step 0x14 base 0x33 | refused (exit 3) |
+| R20 | run8: pass flags kept when not loaded | refused (exit 3) |
+| R21 | run8: greet fd 3 message 0x19 for even | refused (exit 3) |
+| R22 | run8: stream done not waited | refused (exit 3) |
+| R23 | run8: step 1 counter 5 keeps counter 0 | refused (exit 3) |
+| R24 | run9: message order 5 / 4 swapped | refused (exit 3) |
+| R25 | run9: input 0x6000 not tested | refused (exit 3) |
+| R26 | run9: placement kind 0x27 | refused (exit 3) |
+| R27 | run9: member word + 0x38000 | refused (exit 3) |
+| R28 | run9: step 0x2C x from angle Y | refused (exit 3) |
+| R29 | run9: step 0x2F bit 80 after the change | refused (exit 3) |
+| R30 | run9: step 0 member state 2 | refused (exit 3) |
+
+**A7 is equivalent.** EnterArea's 0x79 path (counter 2 = 2) calls
+`ScriptFlags_Clear40` and then zeroes the four counters before it reads the
+area again. With counter 2 now 0, the 0x82 and 0x83 branches it could take
+on a moved area only return; a mutant that keeps the stale 0x79 falls
+through to tests that each read the area afresh, and with no call in
+between none of them fires. Every input ends in the same state. The near
+variant A7c, which also leaves the counters alone so that 0x83's counter-2
+cases can run, is refused.
+
+Earlier passes left mutants standing because the fuzz could not reach them,
+and each was fixed in the fuzz before the final pass:
+- H10, the top z of 0xBC's second rectangle: x and z were drawn
+  independently, so they rarely landed at one rectangle's bounds together.
+  The seed now puts both inside one rectangle half the time, and H8 (area
+  0x88's x bound) came with it.
+- E2, CellTalk's leader byte read before the call: nothing moved `0x802DC9`
+  after a call. The group's disturbance now does.
+- R12 and the per-run steps' actions: a step's action is reached only when
+  counter 0 holds the value that step waits on. The seed now pairs each
+  step with that value (the table `kWaits`).
+- R15, run 6's script-flag store before the sound: the harness's flag
+  disturbance rarely hit bit 3 at that step. The group's now flips bits 3,
+  5 and 7, the ones this block sets.
+- A7b, EnterArea's area read again after `MapView_SetElevation`: the
+  group's disturbance runs only one time in sixteen of the harness's. A
+  `settle` now moves the area to one of 0x82..0x88 half the time while
+  EnterArea is fuzzed.
 
 ## 6. Cross-group calls
 
 | Callee | What | Owner | How |
 |---|---|---|---|
-| `0x5341C0` | call table B's thunk (the shape of `Scenario_CallA`) | nobody yet | raw address |
+| `0x5341C0` `Scenario_CallB` | call table B's thunk (the shape of `Scenario_CallA`) | named by SCH, not taken | by name |
 | `0x533E50` | a pass over the eight records at `0x903A70` and the party | nobody | raw |
 | `0x532ED0` | (x, z, kind): a party placement before a battle start | nobody | raw |
 | `0x56D6F0` | bit 7 of `0x8034E1` set | nobody | raw |
