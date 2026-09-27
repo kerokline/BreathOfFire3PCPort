@@ -36930,3 +36930,410 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
+
+# ---------------------------------------------------------------------------
+# Round nine group S32: MAGIC144, MAGIC150 (Magic_Rows rows 67, 72). docs/magic_s32.md.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4E9140
+name = "WallOfFire_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9140..0x4E91B4 (0x75 bytes), group S32: a two-entry stack table (WallOfFire_Start, MagicFx_EndWhenChildrenDone 0x4E5200) by byte +1, unchecked; then for each of the 48 records of WallOfFire_Pool (0x6A5680, stride 0x84) with +0 bit 0: Sprite_Current and dword 0x93B940 set to the record and its +0x80, call WallOfFireMote_Run, both put back to the values read after the phase call. Magic_Rows row 67, file 0x29A = MAGIC144.EMI (Wall of Fire read one id down, a hypothesis); the first function of MAGIC144's extent 0x4E9140..0x4E9A66. Fuzz only (BOF3X_SHADOW=magic_s32): no recorded route casts it (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E91C0
+name = "WallOfFire_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E91C0..0x4E926C (0xAD bytes), group S32: +0xB 0; +0..+2 of the 48 pool records cleared; the source pointer 0x904B4C read, then BattleTask_Create(1, 0x36) (the slot unchecked): its +0x80 Sprite_Current (read after the call), +1 0, +0x34 / +0x38 / +0x3C the source record's; +0xB 1; CLUT strip words 0x812982..0x81299E from 0x4000 bytes below with bit 15, 0x812980 cleared, Gfx_ClutStripDirty 1; +1 on. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9270
+name = "WallOfFireChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9270..0x4E9281 (0x12 bytes), group S32: jmp [0x65BDC4 + 4 x byte +1] (WallOfFireChild_TaskTable, one entry), unchecked. The kind-1 task of parameter 0x36 (analysis/magic_funcs.tsv). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9290
+name = "WallOfFireChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9290..0x4E92C2 (0x33 bytes), group S32: call [0x65BDC8 + 4 x byte +2] (WallOfFireChild_Steps, four entries), unchecked; then when +0 and +2 are set MagicFx_PushActorMatrix, WallOfFire_DrawDisc and a tail jmp to Gte_PopMatrix. Magic092_ChildRun's shape. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E92D0
+name = "WallOfFireChild_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E92D0..0x4E9366 (0x97 bytes), group S32: +9 and +0xB 0; three times WallOfFire_PoolAlloc, and for an index other than 0xFF: the record's +0x80 Sprite_Current, +0 |= 0x41, +1 1 after the first (0 for it), +2 0, +0xB the count so far, Sprite_Current +0xB up; Sound_PlayById(0x100); +2 on. Magic092_ChildSpawn without the delay. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9370
+name = "WallOfFireChild_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9370..0x4E93BF (0x50 bytes), group S32: +9 up by 2; at 0x10 Sprite_ReleaseTint and Sprite_SetTint(-8, -8, -8, 1) on the source sprite 0x904B4C, Battle_SetTargetFlag40(byte 0x904B44), +2 on. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E93C0
+name = "WallOfFireChild_WaitFlame"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E93C0..0x4E93CE (0xF bytes), group S32: +2 on when +0xB has bit 7 (set by Magic092_FlameGrow). Entry 2 of WallOfFireChild_Steps and of Magic092_ChildPhases (group S20 calls it by address). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E93D0
+name = "WallOfFireChild_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E93D0..0x4E9415 (0x46 bytes), group S32: +9 down when not 0; when +0xB is 0x80: Sprite_ReleaseTint on the source sprite, BattleActor_Flash(byte 0x904B44), the owner's +0xB down, a tail jmp to BattleTask_FreeCurrent. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9420
+name = "WallOfFire_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9420..0x4E95D0 (0x1B1 bytes), group S32: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x55, 0), Gfx_CommitPrim(5, 0xC); word 0x903850 0x180; vertex scratch +0x10 / +0x12 the sine / cosine of 0 times it >> 12; word 0x90385E +9 x 8 below 0x10, else 0x80; for angles 0x200..0x1000 step 0x200 a POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1): centre 0, the last rim point, the new one, z 0, Gte_RotTransPers3, Gte_PrimDepths3_10B, the centre shade byte 0x90385E in three channels, the rim 1, Gfx_CommitPrim(5, 0x34); then draw mode 0x15 committed. Called by WallOfFireChild_Run and by address by Magic092_ChildRun (group S20). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E95E0
+name = "WallOfFireMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E95E0..0x4E95F1 (0x12 bytes), group S32: jmp [0x65BDD8 + 4 x byte +1] (WallOfFireMote_Kinds: WallOfFireFlame_Run, WallOfFireSpark_Run), unchecked; called by WallOfFire_Task for each live pool record. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9600
+name = "WallOfFireFlame_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9600..0x4E962D (0x2E bytes), group S32: call [0x65BDE0 + 4 x byte +2] (WallOfFireFlame_Steps, four entries), unchecked; when +0 and +2 are set BattleActor_UpdateScreenXY and a tail jmp to Magic092_DrawFlame (group S20). Magic092_FlameRun's shape. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9630
+name = "WallOfFireFlame_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9630..0x4E968B (0x5C bytes), group S32: +0 &= 0xBF; +0x34 / +0x38 / +0x3C the owner's (0x93B940); +9 and +0xA 1; +2 on. Entry 0 of WallOfFireFlame_Steps and of Magic092_FlamePhases. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9690
+name = "WallOfFireFlame_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9690..0x4E96AC (0x1D bytes), group S32: +9 up by 4; at 0x11 +2 on. Entry 1 of WallOfFireFlame_Steps and of Magic092_FlamePhases. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E96B0
+name = "WallOfFireFlame_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E96B0..0x4E9716 (0x67 bytes), group S32: +9 down by 2; +0xA up when Frame_Counter bit 0 is set; at +9 1 the owner's +0xB down and bytes +0..+4 cleared. Entry 3 of WallOfFireFlame_Steps and of Magic092_FlamePhases. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9720
+name = "WallOfFireSpark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9720..0x4E976E (0x4F bytes), group S32: call [0x65BDF0 + 4 x byte +2] (WallOfFireSpark_Steps, four entries), unchecked; when +0 and +2 are set BattleActor_UpdateScreenXY, word +0x2E -= 0x10 (+0xB 1) or += 0x10, word +0x30 -= 0xC, a tail jmp to WallOfFireSpark_Draw. Magic092_SparkRun's shape. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9770
+name = "WallOfFireSpark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9770..0x4E97C0 (0x51 bytes), group S32: +0 &= 0xBF; +0x34 / +0x38 / +0x3C the owner's; +9 0; +2 on. Entry 0 of WallOfFireSpark_Steps and of Magic092_SparkPhases. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E97D0
+name = "WallOfFireSpark_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E97D0..0x4E97E3 (0x14 bytes), group S32: +2 on when the owner's +0xB has bit 7. Entry 2 of WallOfFireSpark_Steps and of Magic092_SparkPhases. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E97F0
+name = "WallOfFireSpark_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E97F0..0x4E9840 (0x51 bytes), group S32: +9 down; at 0 the owner's +0xB down and bytes +0..+4 cleared. Entry 3 of WallOfFireSpark_Steps and of Magic092_SparkPhases. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9850
+name = "WallOfFireSpark_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9850..0x4E9A0F (0x1C0 bytes), group S32: word 0x903850 (Rand & 0xF) + 0x40, word 0x90385E +9 x 10; for angles 0..0xE00 step 0x200: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0), MapView_LinkPrimAt(+0x34, +0x38, 2, 0xC); a POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1) in screen floats: the point (+0x2E, +0x30) and the rim points at the angle and the next (Math_Sin / Math_Cos x word 0x903850 >> 12 added); centre red the low byte of 0x90385E, green and blue the word / 5, rim 1; MapView_LinkPrimAt(+0x34, +0x38, 2, 0x34). Called by WallOfFireSpark_Run and by address by Magic092_SparkRun (group S20). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4E9A10
+name = "WallOfFire_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4E9A10..0x4E9A66 (0x57 bytes), group S32, no calls: the first of the 48 records of WallOfFire_Pool whose +0 lacks bit 0 gets it; its index in al, 0xFF when none. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA450
+name = "EyeBeam_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA450..0x4EA49D (0x4E bytes), group S32: a seven-entry stack table (EyeBeam_Start, _Charge, _WaitSparks, _Widen, _Fire, _Narrow, MagicFx_DoneAndFree 0x43FE80) by byte +1, unchecked. Magic_Rows row 72, file 0x29D = MAGIC150.EMI (Eye Beam read one id down, a hypothesis); the first function of MAGIC150's extent 0x4EA450..0x4EAE61. Fuzz only (BOF3X_SHADOW=magic_s32): no recorded route casts it (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA4A0
+name = "EyeBeam_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA4A0..0x4EA514 (0x75 bytes), group S32: from the current slot's (0x93B8C4) +0x80: dword 0x6A9040 its +0x34 + 0x14000, 0x6A9044 its +0x38, 0x6A9048 its +0x3C + 0x2C00000; words 0x6A9050, 0x6A9052, 0x6A9054 0; EyeBeamSparks_Clear; +9 0x3C, +1 on; Sound_PlayEffect(0x100). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA520
+name = "EyeBeam_Charge"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA520..0x4EA546 (0x27 bytes), group S32: EyeBeamSparks_Spawn, EyeBeamSparks_Draw (its al unread); +9 down; at 0 +1 on. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA550
+name = "EyeBeam_WaitSparks"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA550..0x4EA56A (0x1B bytes), group S32: EyeBeamSparks_Draw; when its al is 0, +9 4 and +1 on. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA570
+name = "EyeBeam_Widen"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA570..0x4EA5B5 (0x46 bytes), group S32: word 0x6A9050 += 0x40, 0x6A9052 += 0x60; EyeBeam_Draw; +9 down; at 0 +9 0x78, +1 on, Sound_PlayEffect(0x101). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA5C0
+name = "EyeBeam_Fire"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA5C0..0x4EA625 (0x66 bytes), group S32: word 0x6A9054 += 0xFE00; word 0x6A9050 ((Frame_Counter & 1) + 0x10) << 4; EyeBeam_Draw; +9 down; at 0 +9 4, +1 on, Battle_SetTargetFlag40(byte 0x904B44), Sound_PlayEffect(0x102). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA630
+name = "EyeBeam_Narrow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA630..0x4EA661 (0x32 bytes), group S32: word 0x6A9050 -= 0x40, 0x6A9052 -= 0x60; EyeBeam_Draw; +9 down; at 0 +1 on. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA670
+name = "EyeBeam_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA670..0x4EA6B7 (0x48 bytes), group S32: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, Gpu_GetTPage(0, 1, 0x2C0, 0x100) & 0xFFFF, 0), Gfx_CommitPrim(1, 0xC); the map camera 0x494060; EyeBeam_DrawCylinder; a tail jmp to EyeBeam_DrawSpiral. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA6C0
+name = "EyeBeam_DrawCylinder"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA6C0..0x4EA889 (0x1CA bytes), group S32: sixteen POLY_F4 (Gpu_SetPolyF4, Gpu_SetSemiTrans 1), quad i between angles 0x100 i and 0x100 (i + 1): each corner a stack vector (dword 0x6A9040, or it + 0x100000; 0x6A9044 + cos x word 0x6A9050 >> 4; 0x6A9048 + sin x the word << 4, each read after its call) projected by 0x494110 into a stack triple copied to +8, +0x14, +0x20, +0x2C; colour (0x80, 0, 0); Gfx_CommitPrim(1, 0x38) only when 0x4941B0(+8, +0x14, +0x20) is negative in ax. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA890
+name = "EyeBeam_DrawSpiral"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA890..0x4EA9C5 (0x136 bytes), group S32: the map camera 0x494060; the angle dword 0x6A9054 and x 0x6A9040 read once; point 0x6A90D4: x, 0x6A9044 + cos x word 0x6A9052 >> 4, 0x6A9048 + sin x it << 4; EyeBeam_ProjectSpiralPoint; then 0x80 times: x += step (0x1000, then 0x40 more each time), 13 dwords copied from 0x6A90D4 to 0x6A90A0 (rep movsd), the angle += 0x80, the point's x ((Rand & 0xFFF) - 0x800) << 4 + x and its z and height at the angle's low word, EyeBeam_ProjectSpiralPoint(0x6A90D4), EyeBeam_DrawSpiralSegment(0x6A90A0). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EA9D0
+name = "EyeBeam_ProjectSpiralPoint"
+ret = "void"
+params = "unsigned char *point"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EA9D0..0x4EAA0A (0x3B bytes), group S32, cdecl (point): 0x494110(point, point + 0x1C); the point's x dword -= 0x8000; 0x494110(point, point + 0x10); x += 0x10000; 0x494110(point, point + 0x28). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EAA10
+name = "EyeBeam_DrawSpiralSegment"
+ret = "void"
+params = "unsigned char *point"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAA10..0x4EAB67 (0x158 bytes), group S32, cdecl (point, the next 0x34 bytes on): a POLY_G4 (Gpu_SetPolyG4, Gpu_SetSemiTrans 1) of point +0x1C, +0x10, next +0x1C, next +0x10 (12 bytes each), colours (0x40, 0x40, 0) on the first and third, black on the others, Gfx_CommitPrim(1, 0x44); the 0x44 bytes before the new Gfx_PacketNext copied to it (rep movsd), +0x18 from point +0x28 and +0x38 from next +0x28, committed (1, 0x44); a LINE_F2 (Gpu_SetLineF2, Gpu_SetSemiTrans 1) point +0x1C to next +0x1C (the argument slot overwritten with next + 0x1C and read back), colour (0x20, 0x20, 0), Gfx_CommitPrim(1, 0x20). Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EAB70
+name = "EyeBeamSparks_Clear"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAB70..0x4EAB9D (0x2E bytes), group S32, no calls: EyeBeam_SparkCurrent 0x6A9058, then eight times the word at it cleared and it moved on 8. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EABA0
+name = "EyeBeamSparks_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EABA0..0x4EABF5 (0x56 bytes), group S32: EyeBeam_SparkCurrent walked from 0x6A9058 by 8 to the first spark whose +0 word is 0 (none of 8: returns, the cell one past); its +0 word 1, then through the cell +2 0x300, +4 (Rand & 0xFF) << 4 (the cell read after Rand), +6 8. Its eax is unread. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EAC00
+name = "EyeBeamSparks_Draw"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAC00..0x4EAD33 (0x134 bytes), group S32: EyeBeam_Draw's draw-mode packet, the map camera 0x494060; for each of the eight sparks (EyeBeam_SparkCurrent walked by 8) with a +0 word: a stack vector (0x6A9040; 0x6A9044 + cos(+4) x s16 +2 >> 4; 0x6A9048 + sin(+4) x s16 +2 << 4, the spark re-read through the cell after each call) projected by 0x494110, EyeBeamSpark_DrawDisc(the projection, word +6, 0x80, 0); +4 += 0x80, +2 -= 0x60, +6 down; al 1; at +2 0 its +0 cleared. Answers al: 1 when any spark was live. Fuzz only (docs/magic_s32.md)."
+
+[[func]]
+pc = 0x4EAD40
+name = "EyeBeamSpark_DrawDisc"
+ret = "void"
+params = "const unsigned char *centre, unsigned radius, unsigned shade, unsigned rim"
+impl = "src/game/magic_s32.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EAD40..0x4EAE61 (0x122 bytes), group S32, cdecl (centre, radius as a word, shade and rim as bytes; its two first argument slots reused as the angles): sixteen POLY_G3 (Gpu_SetPolyG3, Gpu_SetSemiTrans 1) round a projected point: the centre's two floats, and at angles a and a + 0x100 (a 0..0xF00) cos / sin x radius >> 12 fild-added to them (fadd dword), the centre's depth float to +0x10, +0x20, +0x30 (fld, fst, fst, fstp); colours (shade, 0, 0) and twice (rim, 0, 0); Gfx_CommitPrim(1, 0x34). Fuzz only (docs/magic_s32.md)."
+
+[[data]]
+pc = 0x65BDC4
+name = "WallOfFireChild_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S32: WallOfFireChild_Task's jmp [0x65BDC4 + 4 x byte +1]: WallOfFireChild_Run; WallOfFireChild_Steps follows."
+
+[[data]]
+pc = 0x65BDC8
+name = "WallOfFireChild_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S32: WallOfFireChild_Run's call [0x65BDC8 + 4 x byte +2]: WallOfFireChild_Spawn, _Tint, _WaitFlame, _End; WallOfFireMote_Kinds follows at 0x65BDD8."
+
+[[data]]
+pc = 0x65BDD8
+name = "WallOfFireMote_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S32: WallOfFireMote_Run's jmp [0x65BDD8 + 4 x byte +1]: WallOfFireFlame_Run, WallOfFireSpark_Run; WallOfFireFlame_Steps follows."
+
+[[data]]
+pc = 0x65BDE0
+name = "WallOfFireFlame_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S32: WallOfFireFlame_Run's call [0x65BDE0 + 4 x byte +2]: WallOfFireFlame_Start, _Rise, Magic092_FlameGrow (group S20), WallOfFireFlame_Fade; WallOfFireSpark_Steps follows."
+
+[[data]]
+pc = 0x65BDF0
+name = "WallOfFireSpark_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S32: WallOfFireSpark_Run's call [0x65BDF0 + 4 x byte +2]: WallOfFireSpark_Start, MagicFx_CountUp9By2 (group S30), WallOfFireSpark_Wait, _End; MAGIC145's table follows at 0x65BE00."
+
+[[data]]
+pc = 0x6A5680
+name = "WallOfFire_Pool"
+ctype = "unsigned char"
+count = 6336
+status = "evidence"
+evidence = "read 2026-09-27, group S32: 48 task-like records of 0x84 bytes (to 0x6A6F40, InkInkPuff_Pool): WallOfFire_Start clears +0..+2, WallOfFire_PoolAlloc takes one by bit 0, WallOfFire_Task runs each live one as Sprite_Current (+0x80 its owner, +1 its kind, +2 its step)."
+
+[[data]]
+pc = 0x6A9040
+name = "EyeBeam_State"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-27, group S32: MAGIC150's beam: dwords x (+0), z (+4), height (+8) set by EyeBeam_Start; words +0x10 the cylinder's radius, +0x12 the spiral's, +0x14 the spiral's angle (read as a dword by EyeBeam_DrawSpiral, only its low word used); +0x16 never written by MAGIC150."
+
+[[data]]
+pc = 0x6A9058
+name = "EyeBeam_Sparks"
+ctype = "unsigned char"
+count = 64
+status = "evidence"
+evidence = "read 2026-09-27, group S32: eight sparks of 8 bytes: word +0 live, +2 radius (0x300 down 0x60 a frame), +4 angle (up 0x80), +6 the disc radius (8 down 1); walked through EyeBeam_SparkCurrent by EyeBeamSparks_Clear, _Spawn, _Draw."
+
+[[data]]
+pc = 0x6A9098
+name = "EyeBeam_SparkCurrent"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-27, group S32: the spark being worked on, stored before each is tested and read again after every call by EyeBeamSparks_Spawn and _Draw; left one past the last (0x6A9098) after a full walk."
+
+[[data]]
+pc = 0x6A90A0
+name = "EyeBeam_SpiralPoints"
+ctype = "unsigned char"
+count = 104
+status = "evidence"
+evidence = "read 2026-09-27, group S32: two spiral points of 0x34 bytes (the previous at 0x6A90A0, the new at 0x6A90D4): dwords x, z, height at +0, +4, +8, three projected vertices (two floats and a depth) at +0x10, +0x1C, +0x28; EyeBeam_DrawSpiral copies the new over the previous each segment."
