@@ -36930,3 +36930,531 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
+
+# Round nine, group S35: MAGIC167, MAGIC168, MAGIC169 (docs/magic_s35.md).
+
+[[func]]
+pc = 0x4EF620
+name = "LastResort_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF620..0x4EF665 (0x46 bytes), group S35: no calls: a six-entry stack table (LastResort_Start, Revive_TintSource, BattleFx_Brighten, LastResort_WaitChildren, Barrier_Fade, BattleFx_Finish) called by byte +1, unchecked. Magic_Rows row 91, file 0x2A7 = MAGIC167.EMI, ability id 0xA7 (Last Resort read one id down, a hypothesis); the first function of MAGIC167's extent 0x4EF620..0x4F0666. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EF670
+name = "LastResort_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF670..0x4EF7B3 (0x144 bytes), group S35: ten calls: +8 / +0x34 / +0x38 / +0x3C from the source sprite (0x904B4C); +0xB 0, +9 0x10, +1 on; BattleTask_Create(1, 0x47) with +0x80 Sprite_Current, +1 0, +9 0, +0x34 / +0x38 / word +0x3E the task's, +0xB up; eight more BattleTask_Create(1, 0x47) with +1 1, +0xB (i & 3) << 3, +9 (i >> 2) x 0x28 + 0x11 (byte imul), +0x34..+0x3C the task's, +0xB up (the slot answers unchecked); Sound_PlayById(0x100). Entry 0 of LastResort_Task. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EF7C0
+name = "LastResort_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF7C0..0x4EF7CE (0xF bytes), group S35: no calls: +1 on when byte +0xB is 1 or less (unsigned). Entry 3 of LastResort_Task; also a stack-table entry of Snap_Task (MAGIC013) and of Magic088_Task. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EF7D0
+name = "LastResortChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF7D0..0x4EF7E1 (0x12 bytes), group S35: jmp [0x65C05C + 4 x byte +1] (LastResortChild_Kinds, two entries: LastResortRing_Run, LastResortBeam_Run), unchecked. Kind-1 task parameter 0x47, created by LastResort_Start. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EF7F0
+name = "LastResortRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF7F0..0x4EF835 (0x46 bytes), group S35: four calls: call [0x65C064 + 4 x byte +2] (LastResortRing_Steps, three entries), unchecked; while byte +0: MagicFx_PushActorMatrix, dword 0x903854 = +9 x 5, LastResortRing_DrawDisc, LastResortRing_DrawBand, a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EF840
+name = "MagicFx_WaitOwnerChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF840..0x4EF853 (0x14 bytes), group S35: no calls: +2 on when the owner's (0x93B940) byte +0xB is 1 or less (unsigned). Entry 1 of LastResortRing_Steps; reached from thirteen overlays' tables (analysis/magic_funcs.tsv). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EF860
+name = "LastResortRing_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EF860..0x4EF9F4 (0x195 bytes), group S35: thirteen call sites: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x35, 0) and Gfx_CommitPrim(5, 0xC) before and (tpage 0x15) after; sixteen semi-transparent G3 triangles (angles 0x100 apart) from the origin to two rim points of radius 0xC0 (Math_Sin / Math_Cos x 0xC0 >> 12 into Prim_VertexScratch, the previous rim point carried in +8 / +0xA), Gte_RotTransPers3, Gte_PrimDepths3_10B; the centre byte 0x903854 in three channels, the rim (byte 0x903854, dword 0x903854 / 2 toward zero, 1); Gfx_CommitPrim(5, 0x34). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFA00
+name = "LastResortRing_DrawBand"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFA00..0x4EFBF6 (0x1F7 bytes), group S35: seventeen call sites: the disc's draw-mode packets; sixteen semi-transparent G4 quads between radius 0xC0 (outer, (byte 0x903854, dword / 2, 1)) and 0x10 (Math_Sin x 0x100 >> 12; inner, (1, 1, 1)), Gte_RotTransPers4, Gte_PrimDepths4_10B, Gfx_CommitPrim(5, 0x44). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFC00
+name = "LastResortBeam_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFC00..0x4EFC4F (0x50 bytes), group S35: five calls: call [0x65C070 + 4 x byte +2] (LastResortBeam_Steps, four entries), unchecked; while bytes +0 and +2: MagicFx_PushActorMatrix, LastResortBeam_DrawColumn while +2 is below 3, LastResortBeam_DrawSparks(2) and (3), a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFC50
+name = "LastResortBeam_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFC50..0x4EFC75 (0x26 bytes), group S35: no calls: +9 down; at 0 +0xA 1 and +2 on. Entry 0 of LastResortBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFC80
+name = "LastResortBeam_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFC80..0x4EFCBC (0x3D bytes), group S35: no calls: +0xB up by 2, +9 up, +0xA up while below 0x10 (unsigned); at +9 0x18 +2 on. Entry 1 of LastResortBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFCC0
+name = "LastResortBeam_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFCC0..0x4EFCF6 (0x37 bytes), group S35: no calls: +0xB up by 2, +9 up, +0xA down; at +9 0x28 +2 on. Entry 2 of LastResortBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFD00
+name = "LastResortBeam_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFD00..0x4EFD25 (0x26 bytes), group S35: one call: +0xA up; at 0x18 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Entry 3 of LastResortBeam_Steps. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4EFD30
+name = "LastResortBeam_DrawColumn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4EFD30..0x4F0468 (0x739 bytes), group S35: thirty-four call sites: rows i = 1 .. +0xA - 1: Scratch_Swap ((+0xB - i) & 0x1F) << 7, dword 0x903850 2 (i - +9) + 0xC0, dword 0x903858 12 (i - +9); four semi-transparent G4 quads a row joining the row's ring point (Math_Sin / Math_Cos x dword 0x903850, each read after the call) to the previous row's (kept in di / bp, first from +0xB and radius (0x60 - +9) x 2), their heights built from 3 +0xA - i / 2 and running values in the frame ([esp+0x1C] 2 +0xA then the last row's, the low word of [esp+0x38] the last height); linked by MapView_LinkPrimAt at (s16 vertex x << 9 + +0x34, y << 9 + +0x38, 0) under draw-mode packets; the shade dword 0x903854 3 (0x10 - i), at step 2 3 (0x10 - min(+9 + i - 0x18, 0xF)), the edges 12 x that, the first row's lower edge (1, 1, 1). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0470
+name = "LastResortBeam_DrawSparks"
+ret = "void"
+params = "int k"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0470..0x4F0666 (0x1F7 bytes), group S35: cdecl, one argument k (2 and 3 from LastResortBeam_Run): eleven call sites: rows 1, 1 + k, ... while below +9 (at step 3 while +0xA + row is at most 0x18): Rand; the shade dword 0x903854 0x7B - 5 k n (at step 3 0x80 - 5 (+0xA + row)), stopping once 8 or less; the row's ring point as the column's, its height 12 (row - +9) + (k + 2) x row + Rand & 3 + 8 kept at or below 0; a semi-transparent TILE_1 (Gpu_SetTile1) projected by Gte_RotTransPers, Gte_StoreDepthF(+0x10), linked at the point under a draw-mode packet. k 0 or negative never ends the loop (never passed). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0670
+name = "Cure_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0670..0x4F06F0 (0x81 bytes), group S35: two calls: a six-entry stack table (Cure_Start, BattleFx_TintActor, BattleFx_Brighten, BattleFx_WaitStep4, Sparkle_End, BattleFx_Finish) called by byte +1, unchecked; then each of the 128 CureMote_Pool records with bit 0 run through CureMote_Task with CureMote_Current at it and its dword +0x28 as the owner cell 0x93B940, the owner (read once after the step) put back after each. Magic_Rows row 117, file 0x2A8 = MAGIC168.EMI, ability id 0xA8 (Cure read one id down, a hypothesis); the first function of MAGIC168's extent 0x4F0670..0x4F119E. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0700
+name = "Cure_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0700..0x4F0848 (0x149 bytes), group S35: four call sites: every CureMote_Pool record's +0..+2 cleared; +4 3; +8 / +0x34 / +0x38 / +0x3C from the source sprite; BattleActor_UpdateScreenXY; +0xB 0, +9 8, +0xA 0, +1 on; Sound_PlayById(0x100); then Cure_MoteCounts[+4] motes by CureMote_Alloc (0xFF skipped): +0x28 Sprite_Current, +1 / +2 0, +3 Rand & 3, +4 the task's +4, +7 n, +5 Cure_MoteDelays[+4] x (n >> 2) + 1 (byte imul), the task's +0xB up; the count re-read each time. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0850
+name = "CureMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0850..0x4F0861 (0x12 bytes), group S35: jmp [0x65C174 + 4 x byte +1 of the mote at CureMote_Current] (CureMote_TaskTable, one entry), unchecked. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0870
+name = "CureMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0870..0x4F08FE (0x8F bytes), group S35: four call sites: a three-entry stack table (CureMote_Wait, _Rise, _Fade) called by the mote's byte +2, unchecked; while its bit 0 and +2: CureMote_DrawStar; while +0xC & 3: CureMote_DrawRays(Frame_Counter >> 1, +6) and CureMote_DrawArcs((Frame_Counter >> 1) + 4, (+6 >> 1) + +6), the second arguments pushed with garbage above the word. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0900
+name = "CureMote_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0900..0x4F0A60 (0x161 bytes), group S35: six Rand calls: the mote's +5 down; at 0: +0x14 / +0x18 / +0x1C the owner's +0x34 / +0x38 / +0x3C, words +0x20 / +0x22 its +0x2E / +0x30; word +0x20 += CureMote_Offsets[+7 & 0x1F].x - (Rand & 7) when that is negative, else + (Rand & 7); word +0x22 -= .y + (Rand & 7) (each through the pointer taken before the Rand, the table read after it); word +8 word +0x20; word +0xA Rand & 1; word +0xC Rand; +7 (Rand & 6) + CureMote_Lifetimes[+4]; +5 0x10, +6 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0A70
+name = "CureMote_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0A70..0x4F0ADB (0x6C bytes), group S35: one call: word +0xC up; word 0x903856 (+0xC & 0x3F) << 6; word +0x20 word +8 + Math_Sin of it x 24 >> 12; word +0x22 += word +0xA; +6 up; at +7 +2 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0AE0
+name = "CureMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0AE0..0x4F0B64 (0x85 bytes), group S35: two calls: the sway of CureMote_Rise; +6 down when Frame_Counter & 3 is 0; +5 down; at 0 the owner's +0xB down and a tail jmp to CureMote_Free. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0B70
+name = "CureMote_DrawRays"
+ret = "void"
+params = "unsigned a, unsigned radius"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0B70..0x4F0CF4 (0x185 bytes), group S35: cdecl, two arguments read as u16: seven call sites: words 0x903850 / 52 the mote's screen point +0x20 / +0x22; a draw-mode packet linked at +0x14 / +0x18 layer 2; words 0x903858 / 5A / 5C +5 x 6; four semi-transparent LINE_G2 (angles (a + 8 j & 0x1F) << 7 in word 0x903856) from the point out by radius (Math_Cos / Math_Sin), as floats; inner end the shade, outer (1, 1, 1); each linked (size 0x34). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0D00
+name = "CureMote_DrawArcs"
+ret = "void"
+params = "unsigned a, unsigned radius"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0D00..0x4F0EEC (0x1ED bytes), group S35: cdecl, two arguments read as u16: nine call sites: as CureMote_DrawRays with four LINE_G3 through radius / 2 (shaded) to radius, the ends (1, 1, 1). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F0EF0
+name = "CureMote_DrawStar"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F0EF0..0x4F111E (0x22F bytes), group S35: ten call sites: a draw-mode packet linked at +0x14 / +0x18 layer 2; word 0x903854 (Rand & 3) + +6; words 0x903850 / 52 +0x20 / +0x22; words 0x903858 / 5A / 5C CureMote_Colours[(+4 x 4 + +3) x 3 + c] x +5, word 0x90385E +5; eight semi-transparent G3 triangles (angles 0x200 apart) from the point to two rim points (Math_Sin, Math_Cos x word 0x903854), as floats; each linked (size 0x34). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1120
+name = "CureMote_Alloc"
+ret = "unsigned"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1120..0x4F1169 (0x4A bytes), group S35: no calls: the first CureMote_Pool record (of 128) without bit 0, which it sets; its number in al, 0xFF when none is free (upper eax the caller's). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1170
+name = "CureMote_Free"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1170..0x4F119E (0x2F bytes), group S35: no calls: bytes +0..+4 of the mote at CureMote_Current cleared (the pointer re-read for each). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F11A0
+name = "Benediction_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F11A0..0x4F1240 (0xA1 bytes), group S35: four call sites: a four-entry stack table (Benediction_Start, _Spawn, _Wait, MagicFx_DoneAndFree) called by byte +1, unchecked; while bytes +0 and +1: BattleActor_UpdateScreenXY, Benediction_DrawHalo; then each of the 80 BenedictionMote_Pool records with bit 0 run through BenedictionMote_Task as Sprite_Current, its +0x80 as the owner cell, both put back after each. Magic_Rows row 97, file 0x2A9 = MAGIC169.EMI, ability id 0xA9 (Benediction read one id down, a hypothesis); the first function of MAGIC169's extent 0x4F11A0..0x4F1E36. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1250
+name = "Benediction_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1250..0x4F12DC (0x8D bytes), group S35: two calls: every BenedictionMote_Pool record's +0..+2 cleared; MagicFx_CenterOnSide; +0x3C up by 0xC00000; Gfx_ClutStrip row 26 (0x812980..) from its source 0x4000 below with bit 15 set, then its first word again without it; Gfx_ClutStripDirty 1; Sound_PlayById(0x100); +9 and +0xB 0, +1 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F12E0
+name = "Benediction_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F12E0..0x4F138E (0xAF bytes), group S35: one call site: +9 up; at 0x10: when byte 0x904B44 has 0x80 and the party count 0x904AB0 is not 0, BattleTask_Create(1, 8) per member (count re-read each time) with +0x80 Sprite_Current, +1 0, +4 n, +9 1 + 0x28 n (bytes), +0xB up; then +1 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1390
+name = "Benediction_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1390..0x4F13B3 (0x24 bytes), group S35: no calls: when +0xB is 0: +9 down, at 0 +1 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F13C0
+name = "Benediction_DrawHalo"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F13C0..0x4F14F2 (0x133 bytes), group S35: seven call sites: Gpu_SetDrawMode(.., 0xB5, 0) linked at +0x34 / +0x38 layer 1 (size 0xC); word 0x903856 +9 << 3; one semi-transparent POLY_FT4 from the screen point (s16 +0x2E, +0x30): (x - 0x38, y - 0x60), (x + 0x38, y - 0x60), (x - 0x38, y), (x + 0x38, y) as floats, tpage Gpu_GetTPage(1, 1, 0x340, 0x100), CLUT Gpu_GetClut(0, 0x1FA), texels (8, 8), (0x78, 8), (8, 0x68), (0x78, 0x68), the shade byte 0x903856; linked (size 0x48). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1500
+name = "BenedictionChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1500..0x4F1511 (0x12 bytes), group S35: jmp [0x65C178 + 4 x byte +1] (BenedictionChild_TaskTable, one entry), unchecked. Kind-1 task parameter 8, created by Benediction_Spawn. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1520
+name = "BenedictionChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1520..0x4F1565 (0x46 bytes), group S35: no calls: a six-entry stack table (BenedictionChild_Start, _Tint, _Brighten, ActorFx_WaitStep4, _Fade, _End) called by byte +2, unchecked. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1570
+name = "BenedictionChild_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1570..0x4F165C (0xED bytes), group S35: one call site: +9 down; at 0: +8 / +0x34 / +0x38 / +0x3C from party record +4 (0x802D40 + 0x14C x +4, unchecked); +0xB 0, +9 8, +0xA 0, +2 on; 24 motes by BenedictionMote_Alloc (0xFF skipped): +0x80 Sprite_Current, +1 0, +0xB n, +9 (n >> 2) + 0x10, +0xB up. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1660
+name = "BenedictionChild_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1660..0x4F16C3 (0x64 bytes), group S35: two calls: the member's record taken; +9 down; at 0 Sprite_ReleaseTint and Sprite_SetTint(r, 0, 0, 0, 1) on it, al to +0xA, +9 8, +2 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F16D0
+name = "BenedictionChild_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F16D0..0x4F1753 (0x84 bytes), group S35: one call: MoveScript_TintRecords + 12 x +0xA bytes +2..+4 up; +9 down; at 0 Sound_PlayById(0x101 when +4 is odd, else 0x102), +2 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1760
+name = "BenedictionChild_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1760..0x4F17F8 (0x99 bytes), group S35: two calls: the member's record taken; the tint bytes down; +9 down; at 0 Sprite_ReleaseTint(record), BattleActor_Flash(+4), +2 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1800
+name = "BenedictionChild_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1800..0x4F1845 (0x46 bytes), group S35: three calls: when +0xB is 0: the owner's +0xB down; Battle_SetTargetFlag40(+4) when Battle_ActorIsOut(+4) answers non-zero; a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1850
+name = "BenedictionMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1850..0x4F1861 (0x12 bytes), group S35: jmp [0x65C17C + 4 x byte +1] (BenedictionMote_TaskTable, one entry), unchecked. Run by Benediction_Task for each live BenedictionMote_Pool record. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1870
+name = "BenedictionMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1870..0x4F1913 (0xA4 bytes), group S35: seven call sites: a three-entry stack table (BenedictionMote_Launch, _Spiral, _Fade) by byte +2, unchecked; Gpu_SetDrawMode(.., 0x35, 0) linked at +0x34 / +0x38 layer 2; while +0 and +2: BattleActor_UpdateScreenXY, ReviveMote_Draw (MAGIC077), BenedictionMote_DrawGlow; the closing packet (tpage 0x15) linked the same. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1920
+name = "BenedictionMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1920..0x4F1A38 (0x119 bytes), group S35: six calls: +9 down; at 0: dword +0xC 8; word 0x903854 (+0xB & 0xF) << 8; +0x34 / +0x38 the owner's + Math_Sin / Math_Cos of it x dword +0xC (32-bit products); +0x3C the owner's + 0x800000; +0x14 ((Rand & 3) + 2) << 20, +0x20 +0x14 / 16; +0x5D / 5E / 5F (Rand & 7) + 6; +9 0, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1A40
+name = "BenedictionMote_Spiral"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1A40..0x4F1AF4 (0xB5 bytes), group S35: two calls: dword +0xC up by 2; the orbit of BenedictionMote_Launch; while dword +0x20 < +0x14 (signed) +0x14 -= +0x20 and +0x3C += +0x14; +9 up by 2, at 0x10 +2 on. Also reached from MAGIC077 (group S17). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1B00
+name = "BenedictionMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1B00..0x4F1BC6 (0xC7 bytes), group S35: three calls: dword +0xC up by 1; the orbit and the rise; on odd Frame_Counter +9 down, at 0 the owner's +0xB down and a tail jmp to 0x4F6290 (MAGIC219's: Sprite_Current bytes 0..4 cleared). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1BD0
+name = "BenedictionMote_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1BD0..0x4F1DD6 (0x207 bytes), group S35: eleven call sites: words 0x903850 8, 0x903852 0x14, 0x903858 / 5A / 5C signed bytes +0x5D / 5E / 5F x +9 (16-bit); eight semi-transparent G4 quads (angles 0x200 apart) round the screen point (s16 +0x2E / +0x30, read once) between radius word 0x903852 (outer, (1, 1, 1)) and 0x903850 (inner, the shade), each value read after its Math_Sin / Math_Cos call, as floats; each linked at +0x34 / +0x38 layer 2 (size 0x44). Also reached from MAGIC077 (group S17). Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[func]]
+pc = 0x4F1DE0
+name = "BenedictionMote_Alloc"
+ret = "unsigned"
+params = "void"
+impl = "src/game/magic_s35.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4F1DE0..0x4F1E36 (0x57 bytes), group S35: no calls: the first BenedictionMote_Pool record (of 80) without bit 0, which it sets; its number in al, 0xFF when none is free. Fuzz only: no recorded route casts it (docs/magic_s35.md)."
+
+[[data]]
+pc = 0x65C05C
+name = "LastResortChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group S35: LastResortChild_Task's jmp [0x65C05C + 4 x byte +1]: LastResortRing_Run, LastResortBeam_Run; LastResortRing_Steps follows."
+
+[[data]]
+pc = 0x65C064
+name = "LastResortRing_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group S35: LastResortRing_Run's call [0x65C064 + 4 x byte +2]: BarrierRing_Grow (MAGIC086), MagicFx_WaitOwnerChildren, MagicFx_CountDownRelease (MAGIC060)."
+
+[[data]]
+pc = 0x65C070
+name = "LastResortBeam_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group S35: LastResortBeam_Run's call [0x65C070 + 4 x byte +2]: LastResortBeam_Wait, _Rise, _Shrink, _End; MAGIC168's data follows at 0x65C080."
+
+[[data]]
+pc = 0x65C080
+name = "CureMote_Offsets"
+ctype = "short"
+count = 80
+status = "evidence"
+evidence = "read 2026-09-27, group S35: CureMote_Wait: s16 pairs (dx, dy) at [0x65C080 + 4 x (+7 & 0x1F)] and +2: 32 used of the 40 before CureMote_Colours."
+
+[[data]]
+pc = 0x65C120
+name = "CureMote_Colours"
+ctype = "unsigned char"
+count = 60
+status = "evidence"
+evidence = "read 2026-09-27, group S35: CureMote_DrawStar: bytes [0x65C120 + 3 x (kind x 4 + variant) + c], c 0..2: five kinds of four RGB triples (Cure_Start sets kind 3); Cure_MoteCounts follows."
+
+[[data]]
+pc = 0x65C15C
+name = "Cure_MoteCounts"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S35: Cure_Start: the motes it makes, byte [0x65C15C + kind]; five kinds, then padding."
+
+[[data]]
+pc = 0x65C164
+name = "Cure_MoteDelays"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S35: Cure_Start: a mote's first delay step, byte [0x65C164 + kind] x (n >> 2) + 1; five kinds, then padding."
+
+[[data]]
+pc = 0x65C16C
+name = "CureMote_Lifetimes"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group S35: CureMote_Wait: +7 = (Rand & 6) + byte [0x65C16C + kind]; five kinds, then padding."
+
+[[data]]
+pc = 0x65C174
+name = "CureMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S35: CureMote_Task's jmp [0x65C174 + 4 x byte +1]: CureMote_Run; MAGIC169's table follows."
+
+[[data]]
+pc = 0x65C178
+name = "BenedictionChild_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S35: BenedictionChild_Task's jmp [0x65C178 + 4 x byte +1]: BenedictionChild_Run."
+
+[[data]]
+pc = 0x65C17C
+name = "BenedictionMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S35: BenedictionMote_Task's jmp [0x65C17C + 4 x byte +1]: BenedictionMote_Run; the next overlay's table follows at 0x65C180."
+
+[[data]]
+pc = 0x6AE910
+name = "CureMote_Pool"
+ctype = "unsigned char"
+count = 5632
+status = "evidence"
+evidence = "read 2026-09-27, group S35: 128 records of 0x2C bytes (+0 bit 0 in use, +1 / +2 phases, +3 variant, +4 kind, +5..+7 counters, words +8..+0xC, +0x14..+0x1C the world point, words +0x20 / +0x22 the screen point, +0x28 the owner): Cure_Start clears +0..+2 of each, CureMote_Alloc takes one by bit 0, Cure_Task runs each live one through CureMote_Task."
+
+[[data]]
+pc = 0x6AFF10
+name = "CureMote_Current"
+ctype = "unsigned char *"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group S35: the CureMote_Pool record Cure_Task is running: CureMote_Task and every CureMote_* step read their mote through it."
+
+[[data]]
+pc = 0x6AFF18
+name = "BenedictionMote_Pool"
+ctype = "unsigned char"
+count = 10560
+status = "evidence"
+evidence = "read 2026-09-27, group S35: 80 task-shaped records of 0x84 bytes (+0 bit 0 in use, +0x80 the owner): Benediction_Start clears +0..+2 of each, BenedictionMote_Alloc takes one by bit 0, Benediction_Task runs each live one as Sprite_Current through BenedictionMote_Task."
