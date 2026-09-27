@@ -32796,3 +32796,672 @@ ctype = "unsigned char"
 count = 8448
 status = "evidence"
 evidence = "read 2026-09-26, group S04: 64 task-like records of 0x84 bytes: Snap_Start clears +0..+2 of each, SnapSpark_Alloc takes one by bit 0, Snap_Task runs each live one as Sprite_Current (+0x80 its owner) through SnapSpark_Task."
+
+# --- round 9 group S07 (docs/magic_s07.md): MAGIC021, 038, 039, 040 (Bonebreak, War Shout, Focus / Meditation, Enlighten read one id down) ---
+
+[[func]]
+pc = 0x4A3B20
+name = "Bonebreak_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3B20..0x4A3B9C (0x7D bytes), group S07: a three-entry stack table (Bonebreak_Start, MAGIC017's 0x4A13B0, MagicFx_DoneAndFree) called by byte +1, unchecked; then the 64 records of BonebreakMote_Pool walked, each with bit 0 made Sprite_Current (its +0x80 the owner) for BonebreakMote_Task, both put back from the values read after the phase call. Magic_Rows row 33, file 0x23B = MAGIC021.EMI, ability id 0x15 (Bonebreak read one id down, a hypothesis); the first function of MAGIC021's extent 0x4A3B20..0x4A4436. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3BA0
+name = "Bonebreak_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3BA0..0x4A3C79 (0xDA bytes), group S07: two calls: the pool's bytes +0..+2 cleared; +0xB 0, +1 on; BattleActor_SetAnimation(0xC, 2); BattleTask_Create(1, 9), unchecked: its slot gets the first 0x80 bytes of the acting actor's record (0x904B34 read after the create; a party record at 0..2, else the enemy's by index - 3), then +0x80 Sprite_Current, +1 and +2 0, +6 1, +5 9; +0xB up; the owner's byte +0 or 0x40. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3C80
+name = "BonebreakChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3C80..0x4A3C91 (0x12 bytes), group S07: the kind-1 task of parameter 9: a jmp through BonebreakChild_TaskTable (one entry) by byte +1, unchecked. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3CA0
+name = "BonebreakChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3CA0..0x4A3CF5 (0x56 bytes), group S07: a six-entry stack table by +2 (BattleFx_SetSize, BonebreakChild_Burst, _WaitScript, _Shade, _WaitMotes, BattleFx_FreeTask), unchecked; then Sprite_UpdateScreen while byte +0 is not 0 (Sprite_Current read after the phase). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3D00
+name = "BonebreakChild_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3D00..0x4A3D92 (0x93 bytes), group S07: three calls: Sprite_ScriptTickOnce, its answer unread; +9 down; at 0 Sound_PlayById(0x100), +9 and +0xB 0, and twelve BonebreakMote_Alloc records, the index untested: +0x80 Sprite_Current (read after each alloc), +9 (i / 2) x 3 + 1, +0xB up for each; +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3DA0
+name = "BonebreakChild_WaitScript"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3DA0..0x4A3DBF (0x20 bytes), group S07: Sprite_ScriptTickOnce; when al is not 0 Battle_SetTargetFlag40(the target byte) and +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3DC0
+name = "BonebreakChild_Shade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3DC0..0x4A3DDD (0x1E bytes), group S07: +9 below 0xC: MAGIC008's 0x4A29C0 (two screen-wide gouraud quads shaded by +9 x 16) and +9 up by 4; else +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3DE0
+name = "BonebreakChild_WaitMotes"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3DE0..0x4A3E01 (0x22 bytes), group S07: no calls: once +0xB is 0, the owner's +0xB down and +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3E10
+name = "BonebreakMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3E10..0x4A3E21 (0x12 bytes), group S07: a pool record's task: a jmp through BonebreakMote_TaskTable (one entry) by byte +1, unchecked. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3E30
+name = "BonebreakMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3E30..0x4A3E62 (0x33 bytes), group S07: a call through BonebreakMote_Steps (three entries) by +2, unchecked; then with bytes +0 and +2 not 0: BattleActor_UpdateScreenXY, BonebreakMote_DrawFan and a tail jump to BonebreakMote_DrawRing. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3E70
+name = "BonebreakMote_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3E70..0x4A3F59 (0xEA bytes), group S07: four calls: +9 down; at 0 +0x34 / +0x38 the source sprite's (0x904B4C), word +0x3E its + (Rand & 7) sl 5, word 0x903850 (0xC - that) sl 4, word 0x903854 (Rand & 7) sl 9; +0x34 += Math_Sin(0x903854) x w0x903850 sar 3 and +0x38 += Math_Cos(the same, read again) x w0x903850 sar 3 (the pointers taken before each call, the words after); +9 0, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3F60
+name = "BonebreakMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3F60..0x4A3F87 (0x28 bytes), group S07: +0xA down by 2; at 0 the owner's +0xB down and a tail jump to MAGIC219's 0x4F6290 (the record's bytes +0..+4 cleared). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A3F90
+name = "BonebreakMote_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A3F90..0x4A415F (0x1D0 bytes), group S07: nine calls: Gpu_SetDrawMode(tpage 0x35) linked at the task (MapView_LinkPrimAt layer 2, 0xC); 16 semi-transparent POLY_G3 fanned round the screen point +0x2E / +0x30 (words 0x903858 / 5A) at radius +9 x 2 (word 0x903850), the angle word 0x903854 0x100 a step, each read again after every call; centre shades (+0xA x 12, x 11, x 4), rim (x 12, x 8, x 4); each linked (layer 2, 0x34). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4160
+name = "BonebreakMote_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4160..0x4A43D6 (0x277 bytes), group S07: thirteen calls: as BonebreakMote_DrawFan with 16 POLY_G4 between radius +9 x 2 (0x903850) and +9 x 3 (0x903852); inner shades (+0xA x 12, x 6, x 4), outer 1; linked (layer 2, 0x44). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A43E0
+name = "BonebreakMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A43E0..0x4A4436 (0x57 bytes), group S07: no calls: the first of BonebreakMote_Pool's 64 records with bit 0 clear gets bit 0 and its index in al; 0xFF when all are taken (the rest of eax the caller's). Its one caller, BonebreakChild_Burst, does not test 0xFF. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4440
+name = "WarShout_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4440..0x4A446D (0x2E bytes), group S07: a three-entry stack table (WarShout_Start, WarShout_Rally, MagicFx_EndWhenChildrenDone) called by byte +1, unchecked. Magic_Rows row 121, file 0x23D = MAGIC038.EMI, ability id 0x26 (War Shout read one id down, a hypothesis); the first function of MAGIC038's extent 0x4A4440..0x4A4C06. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4470
+name = "WarShout_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4470..0x4A4561 (0xF2 bytes), group S07: three calls: MagicFx_CenterOnSide; +0x3C + 0x2000000; +0xB and +9 0, +1 on; sixteen BattleTask_Create(1, 0x59), unchecked: +0x80 Sprite_Current (read after each), +1 0, +0xB i, +9 i sl 3 + 1, +0xB up; Gfx_ClutStrip row 26's 32 words from Gfx_ClutStripSource; words 0x200..0x20F from the source with bit 15, then word 0x200 without; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4570
+name = "WarShout_Rally"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4570..0x4A46E1 (0x172 bytes), group S07: at +0xB 0: Sound_PlayById(0x101); for the target byte's bit 6 the enemies i 0..7 (Battle_ActorIsOut(i + 3)), else the party 0..2: each not out gets BattleTask_Create(1, 0x59), unchecked: +0x80 Sprite_Current, +1 1, +3 i, +4 2, +0x34 / +0x38 / +0x3C the record's (read after the create); +0xB up; +1 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A46F0
+name = "WarShoutChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A46F0..0x4A4701 (0x12 bytes), group S07: the kind-1 task of parameter 0x59: a jmp through WarShoutChild_Kinds (two entries) by byte +1, unchecked. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4710
+name = "WarShoutMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4710..0x4A474C (0x3D bytes), group S07: dword 0x9039D8 (the sprite frame-offset table) 0x8E3580; a call through WarShoutMote_Steps (five entries) by +2, unchecked; Sprite_UpdateScreen with bytes +0 and +2 not 0; 0x9039D8 0x8B3580 again. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4750
+name = "WarShoutMote_Appear"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4750..0x4A48AE (0x15F bytes), group S07: four calls: +9 down; at 0 dwords +0xC and +0x14 0; +0x34 / +0x38 the owner's + Math_Sin / Math_Cos((+0xC & 0x7F) sl 5, kept in dword 0x903850 and read again for the cos) sl 0x12 sar 0xC; +0x3C the owner's + Math_Sin((+0x14 & 0x3F) sl 6) sl 0x17 sar 0xC (owner and task read after each call); +0x25 0x1D, +0x26 0, +0x27 0x20, +0x28 0, +0x24 0, +0 or 0x20, +0x5C 1, +0x5D..+0x5F 0x80, +0x2A 0, +0x29 4, word +0x2C 0, +0x2B 0; Sprite_SetAnimation(WarShoutMote_Animations[+0xB]); +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A48B0
+name = "WarShoutMote_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A48B0..0x4A49CF (0x120 bytes), group S07: four calls: Sprite_ScriptTick, unread; +0x5D..+0x5F up by 4; +0xC up and the position the owner's + sin / cos((+0xC & 0x7F) sl 5) sl 0x11 sar 0xC; +0x14 up, dword 0x903854 0x800, +0x3C the owner's + Math_Sin((+0x14 & 0x3F) sl 6) x dword 0x903854 (read after the call); at +0x5D 0xC0: +0 and 0xDF, +0x5C..+0x5F 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A49D0
+name = "WarShoutMote_Circle"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A49D0..0x4A4AC9 (0xFA bytes), group S07: four calls: Sprite_ScriptTick; WarShoutMote_Rise's orbit step; at dword +0xC 0x100: +0 or 0x20, +0x5C 1, +0x5D..+0x5F 0xC0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4AD0
+name = "WarShoutMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4AD0..0x4A4BBB (0xEC bytes), group S07: four calls: +0x5D..+0x5F down by 4; Sprite_ScriptTick; the orbit step; +0x5D 0x80, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4BC0
+name = "WarShoutBuff_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4BC0..0x4A4BD1 (0x12 bytes), group S07: a jmp through WarShoutBuff_Steps (two entries: WarShoutBuff_Start, MagicFx_EndWithChildren) by byte +2, unchecked. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4BE0
+name = "WarShoutBuff_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4BE0..0x4A4C06 (0x27 bytes), group S07: MagicFx_BuffPopup(byte +4, byte +3), each pushed with the rest of a register above; +0xB 1, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4C10
+name = "Focus_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4C10..0x4A4C3D (0x2E bytes), group S07: a three-entry stack table (Focus_Start, MAGIC009's 0x49DA50, BattleFx_Finish) called by byte +1, unchecked. Magic_Rows row 78, file 0x23E = MAGIC039.EMI, ability ids 0x27 and 0xA3 (Focus and Meditation read one id down, a hypothesis); the first function of MAGIC039's extent 0x4A4C10..0x4A5A06. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4C40
+name = "Focus_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4C40..0x4A4D85 (0x146 bytes), group S07: four calls: +0x34 / +0x38 / +0x3C the owner's; +4 Focus_Kind's al; +0xB 0, +1 on; BattleTask_Create(1, 0x3B), unchecked: +0x80 Sprite_Current, +1 0, +4 the task's +4 - 2, +0xB up; eight more: +1 1, +4 the same, +0xB i, +9 FocusMote_Delays[i] + 9, +0xB up; Gfx_ClutStrip row 26's 32 words from the source; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4D90
+name = "Focus_Kind"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4D90..0x4A4D9F (0x10 bytes), group S07: no calls: al = (word 0x904B80 == 0xA3) + 2, the rest of eax the caller's. 0x904B80 is the ability id word (Battle_StartItemMagic stores the id there); 0xA3 is the second of the two ids that load row 78. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4DA0
+name = "FocusChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4DA0..0x4A4DB1 (0x12 bytes), group S07: the kind-1 task of parameter 0x3B: a jmp through FocusChild_Kinds (two entries) by byte +1, unchecked. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4DC0
+name = "FocusAura_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4DC0..0x4A4E2A (0x6B bytes), group S07: a six-entry stack table by +2 (FocusAura_Start, _Grow, _Swell, _Brighten, _Dim, _End), unchecked; then with +0 bit 0 and +2 not 0: MagicFx_PushActorMatrix, FocusAura_DrawRing, FocusAura_DrawDisc, Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4E30
+name = "FocusAura_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4E30..0x4A4E7E (0x4F bytes), group S07: no calls: the position the owner's; +9 0, +0xA 1, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4E80
+name = "FocusAura_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4E80..0x4A4EA5 (0x26 bytes), group S07: no calls: +9 up by 2; at 0x10 +0xA 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4EB0
+name = "FocusAura_Swell"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4EB0..0x4A4F0A (0x5B bytes), group S07: two calls: +9 up, +0xA up by 2; at 0x18 Sprite_ReleaseTint(the source sprite 0x904B4C), +0xB = Sprite_SetTint(the source, read again, 0, 0, 0, 1), +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4F10
+name = "FocusAura_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4F10..0x4A4F83 (0x74 bytes), group S07: no calls: +9 up; MoveScript_TintRecords[12 x +0xB + 2..4] up by 2; at channel +2 0x10 +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A4F90
+name = "FocusAura_Dim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A4F90..0x4A5004 (0x75 bytes), group S07: no calls: +9 up; the same three channels down by 2; at channel +2 0 +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5010
+name = "FocusAura_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5010..0x4A505F (0x50 bytes), group S07: two calls and a tail jump: +9 up, +0xA down by 2; at 0 Sprite_ReleaseTint(the source), BattleActor_Flash(the target byte), the owner's +0xB down, BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5060
+name = "FocusMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5060..0x4A50A8 (0x49 bytes), group S07: a three-entry stack table by +2 (FocusMote_Start, _Grow, _Rise), unchecked; then with +0 bit 0 and +2 not 0 BattleActor_UpdateScreenXY and FocusMote_Draw. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A50B0
+name = "FocusMote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A50B0..0x4A5159 (0xAA bytes), group S07: two calls: +9 down; at 0 word 0x90385A = +0xB sl 9; +0x34 the owner's + (Math_Cos(it) x 3) sl 0xE sar 0xC, +0x38 the owner's + the same of Math_Sin(0x90385A, read again), +0x3C the owner's; +9 0, +0xA 4, +2 on. 0x4A5180 is reached from 12 files. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5160
+name = "FocusMote_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5160..0x4A517C (0x1D bytes), group S07: no calls: +9 up by 0x10; at 0x80 +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5180
+name = "FocusMote_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5180..0x4A51B4 (0x35 bytes), group S07: a tail jump: +9 up by 8, +0xA down; at 0 the owner's +0xB down and BattleTask_FreeCurrent. Reached from 12 files (magic_funcs.tsv). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A51C0
+name = "FocusMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A51C0..0x4A539F (0x1E0 bytes), group S07: five calls: scratch words 0x903856 +9, 58 +0xA, 5A / 5C +0x2E / +0x30, 50 / 52 / 54 FocusMote_Shades[3 x +4 ..]; Gpu_SetDrawMode(tpage 0x35) linked at the task (layer 0, 0xC); one semi-transparent POLY_G4 from (x - w, y - h) to (x + w, y), shaded 1 above and the three shades below; linked (layer 0, 0x44). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A53A0
+name = "FocusAura_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A53A0..0x4A57B5 (0x416 bytes), group S07: twenty-one calls: word 0x903858 = +0xA; for the first point and 64 more (step 0x40 x i): angle ((Rand & 3) + +9 + i) & 0xF sl 8 (word 0x90385A), lift 0x903856 = (Math_Sin x w58) sl 1 sar 0xC - 6 x dword 58, radius 0x90385E = 8 x dword 58 + 0x80 - (Math_Sin(0x5A read again) x w58) sl 2 sar 0xC, outer radius 0x90385C 0x80; the last inner and outer points and the new ones in Prim_VertexScratch; a POLY_G4 behind a draw mode (tpage 0x35), shaded 1 / FocusAura_RingShades, Gte_RotTransPers4 and Gte_PrimDepths4_10B, linked at +0x34 / +0x38 each plus the new outer x sl 9 (layer 0). Shades x +9 below 0x10, else sl 4. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A57C0
+name = "FocusAura_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A57C0..0x4A5A06 (0x247 bytes), group S07: thirteen calls: a draw mode (tpage 0x35) committed to layer 5; word 0x903856 0x88; the shades FocusAura_DiscShades as the ring's; 16 POLY_G3 from (0, 0, 0) and two rim points 0x100 apart (Prim_VertexScratch, sin / cos x w56 sar 0xC), Gte_RotTransPers3 and Gte_PrimDepths3_10B, shaded 1 at the centre, committed (5, 0x34); a draw mode (tpage 0x15). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5A10
+name = "Enlighten_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5A10..0x4A5A3D (0x2E bytes), group S07: a three-entry stack table (Enlighten_Start, Enlighten_Apply, MagicFx_EndWhenChildrenDone) called by byte +1, unchecked. Magic_Rows row 79, file 0x23F = MAGIC040.EMI, ability id 0x28 (Enlighten read one id down, a hypothesis); the first function of MAGIC040's extent 0x4A5A10..0x4A6434. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5A40
+name = "Enlighten_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5A40..0x4A5B45 (0x106 bytes), group S07: three calls: +8 and the position the owner's; +0xB 0, +1 on; two BattleTask_Create(1, 0x3C), unchecked: +0x80 Sprite_Current, +1 0 then 1, +0xB up; Gfx_ClutStrip row 26's 32 words from the source; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5B50
+name = "Enlighten_Apply"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5B50..0x4A5C01 (0xB2 bytes), group S07: at +0xB 0: MagicFx_ApplyBuff(3, the target byte); BattleTask_Create(1, 0x48) (the buff popup), unchecked: +0x80 Sprite_Current, +4 3 (applied) or 8, +9 1, +0xA 0; +0xB up; +1 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5C10
+name = "EnlightenChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5C10..0x4A5C21 (0x12 bytes), group S07: the kind-1 task of parameter 0x3C: a jmp through EnlightenChild_Kinds (two entries) by byte +1, unchecked. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5C30
+name = "EnlightenRays_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5C30..0x4A5CAF (0x80 bytes), group S07: a four-entry stack table by +2 (EnlightenRays_Start, _Grow, group S20's Magic088_WaveGrow, _Fade), unchecked; then with +0 bit 0 and +2 not 0: EnlightenRays_DrawDisc; EnlightenRays_DrawLines(+9, +0xA x 3); EnlightenRays_DrawLines(+9 + 4, +0xA x 2) - bytes and words pushed with garbage above, the task read again after each call. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5CB0
+name = "EnlightenRays_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5CB0..0x4A5D15 (0x66 bytes), group S07: one call: +8 and the position the owner's; Enlighten_AnchorToActor; +9 and +0xA 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5D20
+name = "EnlightenRays_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5D20..0x4A5D48 (0x29 bytes), group S07: no calls: +9 and +0xA up; at +0xA 0x10 +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5D50
+name = "EnlightenRays_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5D50..0x4A5D83 (0x34 bytes), group S07: a tail jump: +9 up, +0xA down; at 0 the owner's +0xB down and BattleTask_FreeCurrent. Reached from 14 files (magic_funcs.tsv). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5D90
+name = "EnlightenRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5D90..0x4A5DCB (0x3C bytes), group S07: a two-entry stack table by +2 (EnlightenRing_Start, _Spread), unchecked; then with +0 bit 0 and +2 not 0 EnlightenRing_Draw. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5DD0
+name = "EnlightenRing_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5DD0..0x4A5E3E (0x6F bytes), group S07: one call: +8 and the position the owner's; Enlighten_AnchorToActor; +0xB 0xB, +9 0, +0xA 0x80, +2 on. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5E40
+name = "EnlightenRing_Spread"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5E40..0x4A5E85 (0x46 bytes), group S07: a tail jump: +0xB down, +9 up by it, +0xA down by 0xC; at +0xB 0 the owner's +0xB down and BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5E90
+name = "Enlighten_AnchorToActor"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5E90..0x4A5FBD (0x12E bytes), group S07: one call: BattleActor_UpdateScreenXY; for a target byte below 3 the party record's offset: with +0x134 bit 1 index Enlighten_AnchorIndexB[byte 0x904B89] into Enlighten_AnchorOffsetsB, else index +0x89 into Enlighten_AnchorOffsets; the (dx, dy) pair at ((+8 >> 1) + index x 2) x 4: dx added to word +0x2E for a direction 0 or 3, else subtracted; dy added to +0x30. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A5FC0
+name = "EnlightenRays_DrawLines"
+ret = "void"
+params = "unsigned first, unsigned length"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A5FC0..0x4A6118 (0x159 bytes), group S07: nine calls: words 0x903850 / 52 the screen point; a draw mode (tpage 0x35) committed to layer 3; for the byte step = first, + 8, .. while below first + 0x20: a semi-transparent LINE_G2 from the point to point + cos / sin((step & 0x1F) sl 7, word 0x903858) x (length & 0xFFFF) sar 0xC, shaded (0x80, 0x70, 0x60) to 1, committed (3, 0x24); a draw mode (tpage 0x15). From a first of 0xE0 the byte step never reaches the bound: the loop does not end. Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A6120
+name = "EnlightenRays_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A6120..0x4A62A0 (0x181 bytes), group S07: eleven calls: a draw mode (tpage 0x35) committed to layer 3; 16 semi-transparent POLY_G3 round the screen point at radius +0xA (word 0x903854), 0x200 apart, shaded 0x80 at the centre and 1 at the rim, committed (3, 0x34); a draw mode (tpage 0x15). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[func]]
+pc = 0x4A62B0
+name = "EnlightenRing_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s07.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A62B0..0x4A6434 (0x185 bytes), group S07: eleven calls: a draw mode (tpage 0x35) committed to layer 3; 32 semi-transparent LINE_F2 round the screen point at radius +9 (word 0x903854), 0x80 apart (word 0x903858, read again for each cos), grey +0xA (word 0x90385A), committed (3, 0x20); a draw mode (tpage 0x15). Fuzz only: no recorded route casts it (docs/magic_s07.md)."
+
+[[data]]
+pc = 0x65A6E8
+name = "BonebreakChild_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S07: BonebreakChild_Task's jmp [0x65A6E8 + 4 x byte +1]: BonebreakChild_Run; BonebreakMote_TaskTable follows."
+
+[[data]]
+pc = 0x65A6EC
+name = "BonebreakMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S07: BonebreakMote_Task's jmp [0x65A6EC + 4 x byte +1]: BonebreakMote_Run; BonebreakMote_Steps follows."
+
+[[data]]
+pc = 0x65A6F0
+name = "BonebreakMote_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S07: BonebreakMote_Run's call [0x65A6F0 + 4 x byte +2]: BonebreakMote_Launch, MagicFx_CountUp9By2, BonebreakMote_Fade; MAGIC038's table follows at 0x65A6FC."
+
+[[data]]
+pc = 0x65A6FC
+name = "WarShoutChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S07: WarShoutChild_Task's jmp [0x65A6FC + 4 x byte +1]: WarShoutMote_Run, WarShoutBuff_Run."
+
+[[data]]
+pc = 0x65A704
+name = "WarShoutMote_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S07: WarShoutMote_Run's call [0x65A704 + 4 x byte +2]: WarShoutMote_Appear, _Rise, _Circle, _Fade, MAGIC058's 0x4AF490; WarShoutMote_Animations follows."
+
+[[data]]
+pc = 0x65A718
+name = "WarShoutMote_Animations"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-26, group S07: WarShoutMote_Appear's Sprite_SetAnimation(byte [0x65A718 + +0xB]), +0xB 0..15 as WarShout_Start numbers the motes."
+
+[[data]]
+pc = 0x65A728
+name = "WarShoutBuff_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S07: WarShoutBuff_Run's jmp [0x65A728 + 4 x byte +2]: WarShoutBuff_Start, MagicFx_EndWithChildren."
+
+[[data]]
+pc = 0x65A730
+name = "FocusAura_DiscShades"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-26, group S07: FocusAura_DrawDisc's rim shades, three bytes at 0x65A730 + 3 x byte +4 (+4 0 or 1: Focus_Kind - 2)."
+
+[[data]]
+pc = 0x65A738
+name = "FocusMote_Shades"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-26, group S07: FocusMote_Draw's lower shades, three bytes at 0x65A738 + 3 x byte +4."
+
+[[data]]
+pc = 0x65A740
+name = "FocusAura_RingShades"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-26, group S07: FocusAura_DrawRing's outer shades, three bytes at 0x65A740 + 3 x byte +4."
+
+[[data]]
+pc = 0x65A748
+name = "FocusMote_Delays"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-26, group S07: Focus_Start: mote i's +9 = byte [0x65A748 + i] + 9, i 0..7."
+
+[[data]]
+pc = 0x65A750
+name = "FocusChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S07: FocusChild_Task's jmp [0x65A750 + 4 x byte +1]: FocusAura_Run, FocusMote_Run."
+
+[[data]]
+pc = 0x65A758
+name = "EnlightenChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S07: EnlightenChild_Task's jmp [0x65A758 + 4 x byte +1]: EnlightenRays_Run, EnlightenRing_Run."
+
+[[data]]
+pc = 0x65A760
+name = "Enlighten_AnchorOffsets"
+ctype = "short"
+count = 44
+status = "evidence"
+evidence = "read 2026-09-26, group S07: Enlighten_AnchorToActor: (dx, dy) word pairs at 0x65A760 + ((+8 >> 1) + 2 x record +0x89) x 4, 11 indices of two directions; Enlighten_AnchorOffsetsB follows."
+
+[[data]]
+pc = 0x65A7B8
+name = "Enlighten_AnchorOffsetsB"
+ctype = "short"
+count = 44
+status = "evidence"
+evidence = "read 2026-09-26, group S07: Enlighten_AnchorToActor's pairs for a record with +0x134 bit 1, indexed by Enlighten_AnchorIndexB."
+
+[[data]]
+pc = 0x65A810
+name = "Enlighten_AnchorIndexB"
+ctype = "unsigned char"
+count = 25
+status = "evidence"
+evidence = "read 2026-09-26, group S07: Enlighten_AnchorToActor: index = byte [0x65A810 + byte 0x904B89] while the record's +0x134 has bit 1; zero padding to 0x65A82C."
+
+[[data]]
+pc = 0x679B40
+name = "BonebreakMote_Pool"
+ctype = "unsigned char"
+count = 8448
+status = "evidence"
+evidence = "read 2026-09-26, group S07: 64 task-like records of 0x84 bytes: Bonebreak_Start clears +0..+2, BonebreakMote_Alloc takes one by bit 0, Bonebreak_Task runs each live one as Sprite_Current (+0x80 its owner). Not named before (symbols.toml, 2026-09-26)."
