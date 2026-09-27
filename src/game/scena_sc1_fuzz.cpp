@@ -186,6 +186,21 @@ unsigned char __cdecl CellEntry(int x, int z) {
     return static_cast<unsigned char>(sh::Noise());
 }
 
+void Disturb(std::uint32_t h);
+void Settle();
+// The effect of the busiest callees: half the time, one of the chapter's own
+// cells moved (the group's Disturb), which the harness's own disturbance
+// reaches only one call in 24 - the cells stored around a call (the step,
+// Cond_ByteFE, 0x904CD0, the effect slot) and those read again after one.
+std::uint32_t Move(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t h = sh::Noise();
+    if (h & 1) {
+        Disturb(h);
+        Settle();
+    }
+    return answer;
+}
+
 // A callee ours reaches by its name (Capcom's address, or our function).
 #define SC1_NAMED(name) #name, ::bof3::addr::name, KeyOf(&::name)
 // One ours and the originals reach by its address alone.
@@ -194,7 +209,20 @@ unsigned char __cdecl CellEntry(int x, int z) {
     {"Scena01_ObjectHandlers[" #i "]", kObjectEntries[i - 1], kObjectEntries[i - 1], 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr, \
      reinterpret_cast<const void*>(&ObjectEntry<i - 1>)}
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
+#define SC1_MOVED(name, n, ...) {SC1_NAMED(name), n, {__VA_ARGS__}, sh::Answer::kGarbage, 0, 0, {}, &Move}
 const sh::Callee kCallees[] = {
+    // standard callees with the standard masks, recorded with Move
+    SC1_MOVED(Field_ChangeArea, 4, kU16, kAll, kAll, kU8),
+    SC1_MOVED(Party_DropIn, 1, kU8),
+    SC1_MOVED(Transition_Start, 1, kU8),
+    SC1_MOVED(Sound_PlayEffect, 1, kU16),
+    SC1_MOVED(Msg_OpenScript, 1, kU16),
+    SC1_MOVED(Flags_Set, 2, kAll, kU8),
+    SC1_MOVED(ScriptFlags_Set40, 0),
+    SC1_MOVED(ScriptFlags_Clear40, 0),
+    SC1_MOVED(Kind2_Place, 1, kU8),
+    SC1_MOVED(Music_Play, 2, kAll, kAll),
+    SC1_MOVED(Music_FadeOutStop, 1, kAll),
     // what the standard set lacks
     {SC1_NAMED(Menu_DrawHand), 3, {kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
     {SC1_NAMED(Scena01_PlaceEffect), 1, {kU8}, sh::Answer::kGarbage, 0, 0},   // ours, called directly by Scena01_Scene0D
@@ -210,6 +238,7 @@ const sh::Callee kCallees[] = {
      reinterpret_cast<const void*>(&CellEntry)},
 };
 #undef SC1_OBJECT
+#undef SC1_MOVED
 #undef SC1_RAW
 #undef SC1_NAMED
 
@@ -244,7 +273,7 @@ void SetWordAt(std::uint32_t a, unsigned v) { move_script::SetWord(M(a), v); }
 struct Steps { const char* name; std::uint8_t steps[48]; unsigned n; std::uint8_t pairs[20][2]; unsigned n_pairs; };
 const Steps kSteps[] = {
     {"Scena01_Scene01", {0, 1, 2, 3}, 4, {{0, 1}, {2, 0x1E}}, 2},
-    {"Scena01_Scene02", {0, 1, 2, 3, 4, 5, 8, 9, 0xA, 0xB, 0xC}, 11, {{0, 2}, {1, 4}, {2, 0xA}, {3, 1}, {9, 3}, {0xA, 1}, {0xB, 1}}, 7},
+    {"Scena01_Scene02", {0, 1, 2, 3, 4, 5, 8, 9, 0xA, 0xB, 0xC}, 11, {{0, 2}, {1, 4}, {2, 0xA}, {3, 1}, {9, 3}, {0xA, 1}, {0xB, 1}, {4, 0}, {8, 0}}, 9},
     {"Scena01_Scene03", {0, 1, 2, 3, 4, 5, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}, 19,
      {{2, 0x1F}, {3, 0x28}, {4, 0x2A}, {0xB, 1}, {0xD, 3}, {0x11, 0xA}, {0x12, 0xB}, {0x13, 0x10}, {0x14, 0x18}, {0x16, 0x22}}, 10},
     {"Scena01_Scene05", {0, 1, 2, 3, 0xA, 0xB, 0xC, 0xD}, 8, {{0xC, 0x16}}, 1},
@@ -295,13 +324,13 @@ void Seed(unsigned k) {
     if (sh::Often()) M(at::kCounters)[0] = static_cast<unsigned char>(CounterZero());
     if (sh::Half()) M(at::kCounters + 1)[0] = static_cast<unsigned char>(SH_PICK(1, 2, 3));
     if (sh::Half()) M(at::kCounters + 2)[0] = static_cast<unsigned char>(SH_PICK(0, 0x80, 0x7F, 0xFF));
-    if (sh::Often()) M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(0x13, 0x14, 0x19, 0x2D, 0x4F, 0x80, 0x7F, 0));
+    if (sh::Often()) M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(0x12, 0x13, 0x14, 0x19, 0x2C, 0x2D, 0x4E, 0x4F, 0x80, 0x7F, 0));
     if (sh::Often()) M(0x66C7D8)[0] = static_cast<unsigned char>(SH_PICK(0, 2, 1));
     if (sh::Often()) SetWordAt(0x66C810, 0);
     if (sh::Often()) M(0x929F12)[0] = 0;
     if (sh::Half()) SetWordAt(0x7E1BEC, SH_PICK(0, 0x40, 0x41));
     if (sh::Often()) M(0x929EC0)[0] = static_cast<unsigned char>(SH_PICK(2, 3, 1, 4));
-    if (sh::Half()) SetWordAt(at::kTimer, SH_PICK(0, 1, 0x6D, 0xB3, 0xFFFF));
+    if (sh::Half()) SetWordAt(at::kTimer, SH_PICK(0, 1, 0x6C, 0x6D, 0xB2, 0xB3, 0xFFFF));
     if (sh::Half()) M(0x8034F1)[0] = 4;    // Cond_ByteFD
     if (sh::Half()) SetWordAt(at::kChoiceWord, 2);
     if (sh::Half()) M(at::kChoiceBits)[0] |= 2;
@@ -327,6 +356,17 @@ void Seed(unsigned k) {
             M(at::kStep)[0] = r != 2 ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
         }
     }
+    // The places Scena01_Scene08 step 0 and Scena01_Scene09 steps 3, 0x1A, 0x2D test.
+    if (std::strcmp(kClones[k].name, "Scena01_Scene08") == 0 && sh::Half()) {
+        M(at::kStep)[0] = 0;
+        move_script::SetWord(lead + 0x36, SH_PICK(0x1A, 0x1B, 0x1C, 0x1D));
+        move_script::SetWord(lead + 0x3A, SH_PICK(0x22, 0x23, 0x24, 0x8000));
+    }
+    if (std::strcmp(kClones[k].name, "Scena01_Scene09") == 0 && sh::Half()) {
+        M(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(3, 0x1A, 0x2D));
+        move_script::SetWord(lead + 0x36, SH_PICK(0x3C, 0x3D, 0x3E, 0x3F, 0x40, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F));
+        move_script::SetWord(lead + 0x3A, SH_PICK(0xC, 0xD, 0xE, 0x2A, 0x2B));
+    }
     if (std::strcmp(kClones[k].name, "Scena01_Run") == 0) MoveScript_Var7 = static_cast<signed char>(sh::Next() % at::kRunCount);
 }
 
@@ -343,15 +383,26 @@ void Args(unsigned k, std::uint32_t* a) {
     }
 }
 
-// A cell of the chapter's moved after a call, beyond the harness's own.
+// A cell of the chapter's moved after a call (from the harness's disturbance
+// one call in 24, from Move half the time): what the steps store around a
+// call and read again after one.
 void Disturb(std::uint32_t h) {
-    switch ((h >> 3) % 6) {
-    case 0: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(h >> 13); break;
-    case 1: M(0x929F12)[0] = static_cast<unsigned char>((h >> 11) & 1); break;
-    case 2: M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
-    case 3: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
-    case 4: SetWordAt(0x7E1BEC, (h >> 11) & 1 ? 0x40 : 0); break;
-    default: M(at::kCounters + 3)[0] = static_cast<unsigned char>((h >> 11) & 1 ? 0x80 : 0x14); break;
+    const unsigned b = (h >> 13) & 0xFF;
+    switch ((h >> 3) % 10) {
+    case 0: {
+        static const unsigned char kWaits[] = {0x14, 0x19, 0x32, 0x46, 0x65, 0x1E, 0xA, 0x22};
+        M(at::kCounters)[0] = static_cast<unsigned char>(b & 1 ? b : kWaits[(b >> 1) % 8]);
+        break;
+    }
+    case 1: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(b); break;
+    case 2: M(0x929F12)[0] = static_cast<unsigned char>((h >> 11) & 1); break;
+    case 3: M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
+    case 4: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
+    case 5: SetWordAt(0x7E1BEC, (h >> 11) & 1 ? 0x40 : 0); break;
+    case 6: M(at::kCounters + 3)[0] = static_cast<unsigned char>((h >> 11) % 3 == 0 ? 0x80 : (h >> 11) % 3 == 1 ? 0x14 : 0x19); break;
+    case 7: M(0x905E20)[0] = static_cast<unsigned char>(b); break;          // Cond_ByteFE
+    case 8: M(0x904CD0)[0] = static_cast<unsigned char>(b); break;
+    default: M(at::kStep)[0] = static_cast<unsigned char>(b); break;
     }
 }
 
