@@ -36359,3 +36359,574 @@ count = 9
 status = "evidence"
 evidence = "read 2026-09-26, group S14: three (x, z, y) dword offsets, one a ring height, added to each actor position by TsunamiRings_Draw (loop bound 0x65AC7C)."
 
+[[func]]
+pc = 0x4B66D0
+name = "Chill_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B66D0..0x4B670D (0x3E bytes), group S15: a five-entry stack table by +1 (Chill_Start, MAGIC137's Corona_Wait, Chill_WaitChildren, Chill_SpawnMarks, MAGIC131's MagicFx_EndWhenChildrenDone), called unchecked. Magic_Rows row 18's entry (file 0x258). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6710
+name = "Chill_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6710..0x4B6880 (0x171 bytes), group S15: +0xB 0, +9 0x18, +1 on; BattleTask_Create(1, 0x13) twice, unchecked: the ray (+0x80 Sprite_Current, +1 0, +8 the owner's +8) and the flash (+1 1), +0xB up for each; Gfx_ClutStrip words 0x200..0x2FF from Gfx_ClutStripSource with bit 15, words 0x1A00..0x1A1F without; Gfx_ClutStripDirty 1; with 0x904AAA set and the acting enemy's +0x100 (0x93BA60 + 0x128 x (byte 0x904B34 - 3)) 0x29, a third child: a rep movsd of that record's 0x80 bytes, +1 3, +2 0, +6 1, +5 0x13, +9 0. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6890
+name = "Chill_WaitChildren"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6890..0x4B68BD (0x2E bytes), group S15: with +0xB 0: Battle_SetTargetFlag40(byte 0x904B44), +9 0x1E, +1 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B68C0
+name = "Chill_SpawnMarks"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B68C0..0x4B6A31 (0x172 bytes), group S15: +9 down; at 0: for the eight enemies (0x904B44 bit 0x40) or else the three members, each with Battle_ActorIsOut al 0: BattleTask_Create(1, 0x13), unchecked, +0x80 Sprite_Current, +1 2, +3 the index, +4 5, +0x34 / +0x38 / +0x3C the record's (read after the create), +0xB up; +1 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6A40
+name = "ChillChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6A40..0x4B6A51 (0x12 bytes), group S15: jmp [0x65AC78 + 4 x byte +1] (ChillChild_Kinds, four entries, unchecked). Kind-1 task parameter 0x13 (magic_funcs.tsv 1.19). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6A60
+name = "ChillRay_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6A60..0x4B6A8C (0x2D bytes), group S15: call [0x65AC88 + 4 x byte +2] (ChillRay_Steps, four entries, unchecked); with byte +0 set: ChillRay_PushMatrix, ChillRay_Draw, tail jmp Gte_PopMatrix. The shape of MAGIC137's CoronaRay_Run, which calls this unit's ChillRay_Grow / _Shrink. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6A90
+name = "ChillRay_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6A90..0x4B6B1E (0x8F bytes), group S15: MagicFx_CenterOnSide; +0xC 0xFFFC0000, +0x10 0, 0x446770(Sprite_Current); +0x34 = +0xC + Field_Kind2X, +0x38 = +0x10 + Field_Kind2Z; Sound_PlayEffect(0x100); +0x14 0x2FFF, +0xB 0x34, +9 0, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6B20
+name = "ChillRay_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6B20..0x4B6B62 (0x43 bytes), group S15: +0xB += (+9 >> 6) + 1; +0xA up on an odd Frame_Counter; +9 += 2; at 0xC0 +2 on. Also CoronaRay_Steps' entry 1 (MAGIC137). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6B70
+name = "ChillRay_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6B70..0x4B6BB2 (0x43 bytes), group S15: +0xB += (+9 >> 6) + 1; +0xA down on an odd Frame_Counter; +9 -= 2; at 0x60 +2 on. Also CoronaRay_Steps' entry 2 (MAGIC137). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6BC0
+name = "ChillRay_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6BC0..0x4B6C9B (0xDC bytes), group S15: Gte_PushMatrix; the angle (0, 0, 0 / 0x400 / 0x800 / 0xC00) by +8 through a four-entry jump table at +0xCC (cmp 3 / ja: past 3 the z angle is an uninitialised stack word); the vector ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(s16 +0x3E / 2)); Gte_RotTrans (three pushed), Gte_RotMatrix, Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. The same code as MAGIC137's CoronaRay_PushMatrix. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B6CA0
+name = "ChillRay_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B6CA0..0x4B7206 (0x567 bytes), group S15: twenty-three calls: Gpu_SetDrawMode tpage 0xB5 and Gfx_CommitPrim(2, 0xC); words 0x903850 +9, 52 0x80, 54 0x200, 56 +0xA, 58 (+0xB & 0x3F) sl 6; for i = 1 while i < s16 0x903850: a POLY_GT4 (semi-transparent) between the point pairs at 0x580 / 0x280 of radius (i + 0x10) sl 5 lifted by sin(angle) x +0xA, shade 0x80 or at +2 = 3 (+9 - 0x30) / 3 sl 3, ramped over i < 16 and the last 8 (dword 0x903850 read), Gpu_GetTPage(1, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1E2), u (0x54 - ((not (Frame_Counter x 2) + i) & 0x3F)) x 3, Gte_RotTransPers4, Gte_PrimDepths4_14, Gfx_CommitPrim(2, 0x54); a closing packet tpage 0x15. CoronaRay_Draw's code with other constants. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7210
+name = "ChillFlash_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7210..0x4B7232 (0x23 bytes), group S15: call [0x65AC98 + 4 x byte +2] (ChillFlash_Steps, four entries, unchecked); with byte +0 set a tail jmp to ChillFlash_Draw. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7240
+name = "ChillFlash_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7240..0x4B7370 (0x131 bytes), group S15: Gpu_SetDrawMode tpage 0x35, Gfx_CommitPrim(2, 0xC); a POLY_G4 (Gpu_SetPolyG4, semi-transparent) over 0..319 x 0..239 (floats), its bright side by the owner's +8 bit 0; word 0x903850 = +9, word 0x903852 = +9 sl 3; the three colour bytes +9 on one side, +9 sl 3 on the other; Gfx_CommitPrim(2, 0x44); a closing packet tpage 0x15. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7380
+name = "ChillMark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7380..0x4B7391 (0x12 bytes), group S15: jmp [0x65ACA8 + 4 x byte +2] (ChillMark_Steps, two entries, unchecked). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B73A0
+name = "ChillEnemy_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B73A0..0x4B73CD (0x2E bytes), group S15: a three-entry stack table by +2 (ChillEnemy_Start, the engine's 0x43EC10, BattleFx_FreeTask), unchecked. ChillChild_Kinds' entry 3. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B73D0
+name = "ChillEnemy_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B73D0..0x4B73F6 (0x27 bytes), group S15: +0xB 0, +9 0, Sprite_SetAnimation(3), +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7400
+name = "Foretell_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7400..0x4B743D (0x3E bytes), group S15: a five-entry stack table by +1 (Foretell_Start, _Read, _Pause, _Show, _End), unchecked. Magic_Rows row 40's entry (file 0x259). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7440
+name = "Foretell_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7440..0x4B74BE (0x7F bytes), group S15: the owner's byte +8 and dwords +0x34 / +0x38 / +0x3C copied; BattleTask_Create(1, 0x1C), unchecked, +0x80 Sprite_Current, +1 0; +0xB 1, +1 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B74C0
+name = "Foretell_Read"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B74C0..0x4B787B (0x3BC bytes), group S15: with +0xB 0: a score: members 0..2 with byte +0 set: +0x91 bit 0x40 subtracts 0x18, else counted, byte +0x8A summed and a step by q = word +0x98 x 100 idiv word +0xA0 (0: -0x18; > 0, 10 .. 70: -0x15, -0x12, -0xF, -0xC, -9, -6, -3, 0; the register carried when q < 0) added; enemies with Battle_ActorIsOut al 0: counted, word +0x98 summed, a step by word +0xA4 x 100 idiv word +0xB0 (0x18; 0x15, 0x12, 0xF, 0xC, 9, 8, 3, 0) added; + (byte 0x904AB2 - enemies) x 8; + a band (0x82 .. 5, 15 bounds) of the s16 difference of the member mean (s16 sum idiv count) and the enemy mean; + s8 [0x65ACB7 + members - enemies]. By the s16 score: below 0 or at most 0x1E message 0x40, else 0x3F, 0x3E, 0x3D, 0x3C (above 0x5A; clamped at 100): BattleQueue_Push(1, 0x3C, Msg_SystemPtr(id)). Then for each enemy not out, +0xB bits 1 / 2 / 4 / 8 / 0x10 / 0x20 for bytes +0xBF / +0xC0 / +0xC1 / +0xC3 / +0xC2 at most 1 and +0xC4 at most 3; +9 0x16, +0xA 4, +1 on. A zero count or divisor faults (idiv). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7880
+name = "Foretell_Pause"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7880..0x4B78A5 (0x26 bytes), group S15: +0xA down; at 0 +0xA 0x3E, +1 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B78B0
+name = "Foretell_Show"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B78B0..0x4B78C8 (0x19 bytes), group S15: Foretell_DrawTiles; with word Input_Pressed not 0, +1 = 4. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B78D0
+name = "Foretell_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B78D0..0x4B78FC (0x2D bytes), group S15: with byte 0x939F60 0: 0x904AA8 |= 4, tail jmp BattleTask_FreeCurrent; else with s8 +9 above 0, +9 -= 8 and a tail jmp to Foretell_DrawTiles. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7900
+name = "Foretell_DrawTiles"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7900..0x4B7A09 (0x10A bytes), group S15: Gpu_SetDrawMode tpage 0x15, Gfx_CommitPrim(0, 0xC); dword 0x903850 = 0xE8, dword 0x903854 = +9; for bits 0..5 of +0xB set: Gpu_SetTile, x / y the two dwords (fild), w 8.0, h 12.0, colour bytes 0 / 2 / 4 of Foretell_TileColours' entry, Gfx_CommitPrim(0, 0x1C), x += 10; with +0xB 0 one tile of 0x60. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7A10
+name = "ForetellChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7A10..0x4B7A21 (0x12 bytes), group S15: jmp [0x65ACE0 + 4 x byte +1] (ForetellChild_Kinds, one entry, unchecked). Kind-1 task parameter 0x1C (magic_funcs.tsv 1.28). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7A30
+name = "ForetellOrb_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7A30..0x4B7A41 (0x12 bytes), group S15: jmp [0x65ACE4 + 4 x byte +2] (ForetellOrb_Steps, four entries, unchecked). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7A50
+name = "ForetellOrb_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7A50..0x4B7AD1 (0x82 bytes), group S15: the owner's +8, +0x34, +0x38 and +0x3C + 0x2000000; BattleActor_UpdateScreenXY; Sound_PlayById(0x100); +0xB 0, +9 0xF, +0xA 3, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7AE0
+name = "ForetellOrb_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7AE0..0x4B7B14 (0x35 bytes), group S15: MagicFx_PushActorMatrix, ForetellOrb_Draw, Gte_PopMatrix; +9 down; at 0 +9 0xF, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7B20
+name = "ForetellOrb_Count"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7B20..0x4B7B8B (0x6C bytes), group S15: +9 down; at 0: +9 0xF, +0xA down; not 0: Sound_PlayById(0x100), +2 back one; 0: Sound_PlayById(0x101), +0xB 0xC, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7B90
+name = "ForetellOrb_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7B90..0x4B7BC5 (0x36 bytes), group S15: MagicFx_PushActorMatrix, ForetellOrb_Draw, Gte_PopMatrix; +9 down; at 0 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7BD0
+name = "ForetellOrb_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7BD0..0x4B7D39 (0x16A bytes), group S15: Gpu_SetDrawMode tpage 0x15, Gfx_CommitPrim(2, 0xC); a POLY_FT4 (Gpu_SetPolyFT4) from (s16 +0x2E - 12, s16 +0x30 - 12) to (+12, +12), shade 0x80, Gpu_GetTPage(0, 0, 0x3C0, 0) at +0x26, Gpu_GetClut(0, 0x1E0) at +0x16, u +0xB .. +0xB + 0xB, v 0x24 .. 0x2E; Gfx_CommitPrim(2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7DE0
+name = "Influence_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7DE0..0x4B7E05 (0x26 bytes), group S15: a two-entry stack table by +1 (Influence_Start, BattleFx_Finish), unchecked. Magic_Rows row 75's entry (file 0x25A). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7E10
+name = "Influence_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7E10..0x4B7F37 (0x128 bytes), group S15: words +0x2E / +0x30 from the sprite at 0x904B4C; +0xB 0, +1 on; six BattleTask_Create(1, 0x39), unchecked: +0x80 Sprite_Current, +1 0 (three) or 1 (three), +0xB n, +9 n + 1, this task's +0xB up; Gfx_ClutStrip words 0x1A00..0x1A2F from Gfx_ClutStripSource; Gfx_ClutStripDirty 1; Sound_PlayById(0x100). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7F40
+name = "InfluenceChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7F40..0x4B7F51 (0x12 bytes), group S15: jmp [0x65ACF4 + 4 x byte +1] (InfluenceChild_Kinds, three entries, unchecked). Kind-1 task parameter 0x39 (magic_funcs.tsv 1.57). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7F60
+name = "InfluenceRight_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7F60..0x4B7FE1 (0x82 bytes), group S15: call [0x65AD00 + 4 x byte +2] (InfluenceRight_Steps, five entries, unchecked); Gpu_SetDrawMode tpage 0x35, Gfx_CommitPrim(3, 0xC); with byte +0 bit 0: +2 not 0 Influence_DrawRing and Influence_DrawTriangles, +2 above 2 Influence_DrawCross; a closing packet tpage 0x15 to layer 3. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B7FF0
+name = "InfluenceRight_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B7FF0..0x4B8059 (0x6A bytes), group S15: +9 down; at 0: dword +0xC 0xB, word +0x2E the owner's + 0x37, word +0x30 the owner's - 0x10, +9 0, +0xA 0x20, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8060
+name = "InfluenceRight_Slide"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8060..0x4B80AE (0x4F bytes), group S15: dword +0xC down, word +0x2E -= word +0xC; at 0: +0xB 0 Sound_PlayById(0x103) and +2 on, else the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B80B0
+name = "InfluenceRight_Pick"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B80B0..0x4B80DF (0x30 bytes), group S15: +9 up; at 0x10 Influence_SpawnMarks, +0xB 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B80E0
+name = "InfluenceRight_Blink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B80E0..0x4B8146 (0x67 bytes), group S15: +0xB set: +9 += 4, at 0x10 +0xB 0; clear: +9 -= 2, at 0 +0xB 1; with the owner's +0xB 1: Sound_PlayById(0x101), +9 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8150
+name = "InfluenceRight_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8150..0x4B8176 (0x27 bytes), group S15: +0xA -= 2; at 8 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8180
+name = "InfluenceLeft_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8180..0x4B81EC (0x6D bytes), group S15: call [0x65AD14 + 4 x byte +2] (InfluenceLeft_Steps, two entries, unchecked); Gpu_SetDrawMode tpage 0x35, Gfx_CommitPrim(3, 0xC); with byte +0 bit 0 and +2 not 0 Influence_DrawRing and Influence_DrawTriangles; a closing packet tpage 0x15. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B81F0
+name = "InfluenceLeft_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B81F0..0x4B8259 (0x6A bytes), group S15: as InfluenceRight_Launch with word +0x2E the owner's - 0x37. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8260
+name = "InfluenceLeft_Slide"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8260..0x4B8293 (0x34 bytes), group S15: dword +0xC down, word +0x2E += word +0xC; at 0 the owner's +0xB down and a tail jmp BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B82A0
+name = "InfluenceMark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B82A0..0x4B82B1 (0x12 bytes), group S15: jmp [0x65AD1C + 4 x byte +2] (InfluenceMark_Steps, five entries, unchecked). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B82C0
+name = "InfluenceMark_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B82C0..0x4B83CC (0x10D bytes), group S15: the record by +0xB (below 3 ObjTrio + 0x14C n, else 0x93B960 + 0x128 (n - 3)): Sprite_ReleaseTint, Sprite_SetTint(record, 0, 0, 0, 1) al to +0xA; word +0x2E the record's - 0x20, word +0x30 the record's - 0xC; then word +0x30 -= a lift byte: a member's [0x64DFC8 + 2 x +0x89] (+8 at most 1) or [0x64DFC9 + 2 x +0x89], an enemy's [0x8C564F + 0x8C x +0xF0]; +9 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B83D0
+name = "InfluenceMark_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B83D0..0x4B8432 (0x63 bytes), group S15: bytes +2 / +3 / +4 of MoveScript_TintRecords record +0xA (12 bytes) up; at +2 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8440
+name = "InfluenceMark_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8440..0x4B84EE (0xAF bytes), group S15: the three bytes down; at +2 0: with +4 0 Sound_PlayById(0x102); Tint_Release(+0xA), BattleActor_Flash(+0xB), +9 0, +0xA 4, +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B84F0
+name = "InfluenceMark_Show"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B84F0..0x4B8523 (0x34 bytes), group S15: InfluenceMark_Draw; +0xA += 4 until 0x18; +9 up; at 0x14 +2 on. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8530
+name = "InfluenceMark_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8530..0x4B8687 (0x158 bytes), group S15: Gpu_SetDrawMode tpage 0x15, Gfx_CommitPrim(2, 0xC); a POLY_FT4 from (s16 +0x2E, s16 +0x30) 0x30 wide and +0xA high, Gpu_GetTPage(0, 0, 0x380, 0x100), Gpu_GetClut(0x20, 0x1FA), u 0 / 0x40, v 0x20 / 0x20 + +0xA, shade 0x80; Gfx_CommitPrim(2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8690
+name = "Influence_DrawTriangles"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8690..0x4B8904 (0x275 bytes), group S15: words 0x903850 +0xA, 52 (+0xA >> 2) + 1, 56 / 58 0x80 - 0x30 x +0xB (+2 below 2) or 0x80 + 6 x +9 / 0x80 - 6 x +9; for angle 0, 0x400, 0x800, 0xC00 (k): the centre +0x2E + sin x w50 >> 12, +0x30 + cos x w50 >> 12 (words 5C / 5E); three POLY_G3 (Gpu_SetPolyG3, semi-transparent): the centre and the points at ((byte [0x65AD30 + j] + 16 k) & 0x3F) sl 6 and j + 1 at radius w52, colour (b56, b58, 1); Gfx_CommitPrim(3, 0x34). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8910
+name = "Influence_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8910..0x4B8A88 (0x179 bytes), group S15: words 0x903850 +0xA, 5C / 5E the screen point, 56 0x80 - 0x30 x +0xB (+2 below 2) or 0x80; for i 0..63 with (i & 0xC) 4 or 8: a LINE_F2 (Gpu_SetLineF2, semi-transparent) between angles i sl 6 and (i + 1) sl 6 at radius w50, colour b56; Gfx_CommitPrim(3, 0x20). Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8A90
+name = "Influence_DrawCross"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8A90..0x4B8BC5 (0x136 bytes), group S15: word 0x903856 0x80, 5C / 5E the screen point; two LINE_F2 (semi-transparent): x - 4 .. x + 4 at y, and y + 4 .. y - 4 at x; Gfx_CommitPrim(3, 0x20) each. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[func]]
+pc = 0x4B8BD0
+name = "Influence_SpawnMarks"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s15.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B8BD0..0x4B8D66 (0x197 bytes), group S15: for enemies 3..10 then members 0..2 not out (Battle_ActorIsOut), not byte 0x904B34 and not byte 0x904B44: an enemy with word +0xBA at most 1, byte +0x92 bit 0x20 or dword +0x114 bit 0x4000, a member with word +0xAA at most 1, +0x90 bit 0x20, or dword +0x134 bit 0x4000 or bit 0: BattleTask_Create(1, 0x39), unchecked, +0x80 the owner (0x93B940), +1 2, +4 the count so far, +0xB the index; the owner's +0xB up. Fuzz only: no recorded route casts it (docs/magic_s15.md)."
+
+[[data]]
+pc = 0x65AC78
+name = "ChillChild_Kinds"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S15: ChillChild_Task's jmp [0x65AC78 + 4 x byte +1]: ChillRay_Run, ChillFlash_Run, ChillMark_Run, ChillEnemy_Task."
+
+[[data]]
+pc = 0x65AC88
+name = "ChillRay_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S15: ChillRay_Run's call [0x65AC88 + 4 x byte +2]: ChillRay_Start, ChillRay_Grow, ChillRay_Shrink, CoronaRay_Advance (MAGIC137's)."
+
+[[data]]
+pc = 0x65AC98
+name = "ChillFlash_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S15: ChillFlash_Run's call [0x65AC98 + 4 x byte +2]: CoronaFlash_Start (MAGIC137), BarrierRing_Grow (MAGIC086), MagicFx_WaitA (MAGIC078), 0x4B1740 (MAGIC060)."
+
+[[data]]
+pc = 0x65ACA8
+name = "ChillMark_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S15: ChillMark_Run's jmp [0x65ACA8 + 4 x byte +2]: WarShoutBuff_Start (MAGIC038), MagicFx_EndWithChildren (MAGIC105)."
+
+[[data]]
+pc = 0x65ACB0
+name = "Foretell_Bias"
+ctype = "signed char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-26, group S15: Foretell_Read adds s8 [0x65ACB7 + members - enemies]: with at least one of each counted (a zero count faults first, at the idiv) the index is -7..2, bytes 0x65ACB0..0x65ACB9; 0x65ACBA / 0x65ACBB are never read."
+
+[[data]]
+pc = 0x65ACBC
+name = "Foretell_TileColours"
+ctype = "unsigned char"
+count = 36
+status = "evidence"
+evidence = "read 2026-09-26, group S15: Foretell_DrawTiles: six entries of three words, bytes 0 / 2 / 4 of entry k the colour of +0xB bit k's tile."
+
+[[data]]
+pc = 0x65ACE0
+name = "ForetellChild_Kinds"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S15: ForetellChild_Task's jmp [0x65ACE0 + 4 x byte +1]: ForetellOrb_Run."
+
+[[data]]
+pc = 0x65ACE4
+name = "ForetellOrb_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S15: ForetellOrb_Run's jmp [0x65ACE4 + 4 x byte +2]: ForetellOrb_Start, _Spin, _Count, _End."
+
+[[data]]
+pc = 0x65ACF4
+name = "InfluenceChild_Kinds"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S15: InfluenceChild_Task's jmp [0x65ACF4 + 4 x byte +1]: InfluenceRight_Run, InfluenceLeft_Run, InfluenceMark_Run."
+
+[[data]]
+pc = 0x65AD00
+name = "InfluenceRight_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S15: InfluenceRight_Run's call [0x65AD00 + 4 x byte +2]: InfluenceRight_Launch, _Slide, _Pick, _Blink, _Shrink."
+
+[[data]]
+pc = 0x65AD14
+name = "InfluenceLeft_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S15: InfluenceLeft_Run's call [0x65AD14 + 4 x byte +2]: InfluenceLeft_Launch, _Slide."
+
+[[data]]
+pc = 0x65AD1C
+name = "InfluenceMark_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S15: InfluenceMark_Run's jmp [0x65AD1C + 4 x byte +2]: InfluenceMark_Start, _Brighten, _Fade, _Show, 0x4AF490 (MAGIC058)."
+
+[[data]]
+pc = 0x65AD30
+name = "Influence_TrianglePoints"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S15: Influence_DrawTriangles: byte [0x65AD30 + j] and [+ j + 1], j 0..2, the angles (in 64ths) of each triangle's two outer points."
