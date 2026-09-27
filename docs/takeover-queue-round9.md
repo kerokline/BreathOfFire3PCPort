@@ -443,4 +443,4 @@ limit; S37's `CombustionSprite_Fade` adds to +0x40 twice and never +0x44
 `0xFD56`; S38's `Magic225_Spawn` plays one sound 16 times a frame, and a
 second overlapping cast clears the first's pool records.
 
-**Numbered (2026-09-27):** the round's latent defects - all three waves' and the scheduler's - are D89..D132 in [`known-defects.md`](known-defects.md), the common classes collapsed into one entry each, and each group doc's defects section points at its numbers.
+**Numbered (2026-09-27):** the round's latent defects - all five waves' and the scheduler's - are D89..D132 in [`known-defects.md`](known-defects.md), the common classes collapsed into one entry each, and each group doc's defects section points at its numbers.
