@@ -24,6 +24,10 @@
 //     exactly when it answers 0 (both come from one hash), and the note grows
 //     the log, so the second disturbance comes from a new hash - the kFlag
 //     blind spot of group E, worked round here;
+//   - MagicFx_NearSprite answers kBool: both callers test the whole of eax;
+//   - Battle_ActorIsOut (for BlitzBolt_Seek) and Math_Cos (for
+//     MindSwordSpark_Start) also move what their caller reads back after
+//     them: the bolt's record's point, the angle word 0x903858;
 //   - Math_Ratan2, while MindSwordBlade_Fly is fuzzed, answers half the time
 //     one step either side of 0x600 / 0xA00 from the heading it replaces;
 //   - the group's settle keeps the bolt's record index +4 inside its side's
