@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-25)
+**Status:** IN PROGRESS (2026-09-26)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,8 +15,9 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**1,465 functions of ~2,952 recorded are ours** (`inject: 1465 ours` in
-`bof3x.log`, 2026-09-25) - of roughly 10,200 real, since `pe_funcs.py` misses
+**2,845 functions are ours** (`inject: 2845 ours` in
+`bof3x.log`, 2026-09-26; the spell round counts pointer-reached starts
+the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
 ([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
 a wave; the detail - controls, batch results, the defects written down - is in
@@ -39,6 +40,10 @@ re-derived:
 | 09-24 | Round 7: the battle engine in ten groups | | 1,020 | wave 2 | [`takeover-queue-round7.md`](takeover-queue-round7.md) |
 | 09-24 | `Fmv_WndProc`, the pad's `DInput_Init` / `Pad_Read` / `DInput_Shutdown`, and `Config_DrawControllerRow` (DIV-0051) | | 1,025 | | [`controls.md`](controls.md) |
 | 09-25 | Round 8: the three routes' pointer-reached functions, the all-calls traces never armed, in 22 groups (the battle engine's phase, enemy AI, object and window states; the shop overlay, the field menu, the world map's areas, the event script's leader) | 440 | 1,465 | `r8` | [`takeover-queue-round8.md`](takeover-queue-round8.md) |
+| 09-26 | Round 9: the task scheduler (EA), the spell harness and Steal (SH), the harness folded (HX) | 11 | 1,476 | `r9` | [`takeover-queue-round9.md`](takeover-queue-round9.md) |
+| 09-26 | Spell wave 1: the effect library and MAGIC071..110 (L, S16..S25) | 527 | 2,003 | `r9` | [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) |
+| 09-26 | Spell wave 2: the cut content (C1..C3), the engine rows (E), MAGIC114..143 (S26..S31) | 465 | 2,468 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 9 |
+| 09-26 | Spell wave 3: MAGIC001..044 (S01..S08) | 377 | 2,845 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 10 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -197,8 +202,8 @@ What is established:
   converted saves load, play and re-save on PC** (owner, 2026-09-19); PC→PSX
   is still static only.
 - 1,102 functions, 8 global blocks and 306 data items named in
-  [`symbols.toml`](../symbols.toml), tiered; 1,465 functions carry an `impl`,
-  one for every detour (`tools/ledger_check.py`, 2026-09-25; `Fmv_WndProc`
+  [`symbols.toml`](../symbols.toml), tiered; 2,845 functions carry an `impl`,
+  one for every detour (`tools/ledger_check.py`, 2026-09-26; `Fmv_WndProc`
   `0x59E570` was the one without, until then).
 - **An in-process call tracer and a crash reporter** live in the injected DLL.
   The tracer ([`call-trace.md`](call-trace.md)) gives which functions a run
