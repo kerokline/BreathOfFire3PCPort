@@ -283,6 +283,15 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     mh::FillBytes(task + 0xC, 8);
     return answer;
 }
+// AreaMap_Elevation: a third of the time the height of the task slot +0xB
+// of Sprite_Current (BoneDartShadow_Follow / _Fade's dart, when inside the
+// table), so the ground and the dart's height meet and the signed compare's
+// equal case is reached (control B54).
+std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
+    const unsigned slot = Sprite_Current[0xB];
+    if (slot >= 48 || mh::Noise() % 3 != 0) return answer;
+    return (answer & 0xFFFF0000u) | move_script::Word(mh::Mem(mh::at::kTasks + slot * mh::at::kTaskStride + 0x3E));
+}
 // DreamBreath_TargetHeight writes Sprite_Current's height; its stand-in too.
 std::uint32_t HeightEffect(const std::uint32_t*, std::uint32_t answer) {
     mh::FillBytes(Sprite_Current + 0x3E, 2);
@@ -329,7 +338,7 @@ const mh::Callee kCallees[] = {
     // the sprite calls
     {S09_OURS(Sprite_ScriptTick), 0, {}, mh::Answer::kFlag, 0, 0, {}, &NoteSprite},
     {S09_OURS(Sprite_SetAnimation), 1, {kU8}, kG, 0, 0, {}, &NoteSprite},
-    {S09_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0},
+    {S09_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
     // the draw library
     {S09_OURS(Math_Sin), 1, {kAll}, kG, 0, 0, {}, &TrigEffect},
     {S09_OURS(Math_Cos), 1, {kAll}, kG, 0, 0, {}, &TrigEffect},
@@ -400,8 +409,8 @@ mh::Region g_regions[] = {
     {kVertices, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPacketBytes},                           // g_packets (filled in at start-up)
-    {0x812980, 0x20},                            // Gfx_ClutStrip 0x1A00..0x1A0F
-    {0x80E980, 0x20},                            // Gfx_ClutStripSource, the same
+    {0x812980, 0x40},                            // Gfx_ClutStrip 0x1A00..0x1A1F (a word past the head is compared)
+    {0x80E980, 0x40},                            // Gfx_ClutStripSource, the same
     {kFrameSet, 4},                              // the frame-offset table pointer
     {kAbilityId, 4},                             // the ability word 0x904B80
     {kCurrentEnemy, 4},                          // the current enemy pointer
