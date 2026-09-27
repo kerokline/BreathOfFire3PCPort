@@ -402,6 +402,12 @@ void FillPool(std::uint32_t pool, unsigned count, unsigned stride) {
     }
 }
 
+// A walk makes each live record's owner field the owner, which the harness's
+// disturbance writes through: each one a real slot.
+void FixOwners(std::uint32_t pool, unsigned count, unsigned stride, unsigned owner_at) {
+    for (unsigned i = 0; i < count; ++i) mh::SetPointer(pool + i * stride + owner_at, mh::TaskAt(mh::Next()));
+}
+
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
@@ -410,9 +416,20 @@ void Seed(unsigned k) {
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
-    case kCharm_Task: case kMagic159_Task: case kMonopolize_Task: sc[1] = Byte(mh::Next() % 2); break;
+    case kCharm_Task:
+        sc[1] = Byte(mh::Next() % 2);
+        FixOwners(kCharmPool, 64, 0x84, 0x80);
+        break;
+    case kMonopolize_Task:
+        sc[1] = Byte(mh::Next() % 2);
+        FixOwners(kMonopolizePool, 64, 0x84, 0x80);
+        break;
+    case kMagic159_Task: sc[1] = Byte(mh::Next() % 2); break;
     case kTimedBlow_Task: sc[1] = Byte(mh::Next() % 3); break;
-    case kTransfer_Task: sc[1] = Byte(mh::Next() % 6); break;
+    case kTransfer_Task:
+        sc[1] = Byte(mh::Next() % 6);
+        FixOwners(kTransferPool, 128, 0x2C, 0x28);
+        break;
     case kCharmMote_Task: case kMagic159Child_Task: case kTimedBlowCopy_Task: case kMonopolizeMote_Task: sc[1] = 0; break;
     case kTransferMote_Task: cur[1] = 0; break;
     case kCharmMote_Run: sc[2] = Byte(mh::Next() % 3); break;
