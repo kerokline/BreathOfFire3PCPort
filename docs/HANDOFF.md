@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-26)
+**Status:** IN PROGRESS (2026-09-27)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -15,7 +15,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **3,165 functions are ours** (`inject: 3165 ours, 0 left original`), on
-`phase-3/round-nine`, local, not yet a PR. Round nine
+`phase-3/round-nine`, pushed to `origin` 2026-09-27, not yet a PR. Round nine
 ([`takeover-queue-round9.md`](takeover-queue-round9.md)) re-traced the three
 routes - the "76" were 29 distinct entries, of which only the task scheduler
 was game logic (group EA, [`task_sched.md`](task_sched.md)) - and then began
@@ -53,7 +53,9 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
    The brief is `analysis/round9_wave345_brief.md` and the group lines
    `analysis/round9_wave5_groups.tsv` (gitignored - they live in the
    checkout, not in git): point the brief's `reset --hard` at the tip before
-   launching (`sed` its 40-hex SHA), spawn one Opus agent per line in a
+   launching (`sed` its 40-hex SHA) and its scratch path at your own
+   session's scratchpad (it names the wave-four session's,
+   `9e63839e-...`), spawn one Opus agent per line in a
    worktree ("read your brief ... your group is line `sNN` of ..."), and merge
    each as it reports with the routine below. Wave four's 320 used most of
    one usage window (two groups were cut after their controls and resumed).
@@ -63,10 +65,17 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
    and in `symbols.toml` **repeat the shared `[[func]]` header** when a hunk
    starts inside an entry (the S18 merge lost one); `tomllib` parse and no
    duplicate `pc`; build; the group's shadow and `BOF3X_SHADOW='*'` headless;
-   `ledger_check.py` 0 errors; `analysis/consolidate_entries.py`. The
-   earlier session's `merge_group.sh` + `keepboth.py` do all but the last
-   two (copied to this session's scratchpad; they worked for all seven of
-   wave four).
+   `ledger_check.py` 0 errors; `analysis/consolidate_entries.py`.
+   `merge_group.sh <sNN> <dir holding keepboth.py>` + `keepboth.py` do all
+   but the last two (it expects the branch `phase-3/round9-<sNN>`, which the
+   brief has each agent create); they worked for all seven of wave four.
+   Both are in `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/`
+   (and the wave-four session's `9e63839e-3d62-41b0-af67-04c4e6eecc8c/`).
+   **Expect noise while agents run**: an agent polling its controls script
+   notifies "finished, waiting on background work" many times before its
+   report; only the report (a hand-back message) means merge. A usage cut
+   shows as `failed` with the agent's last line - resume it with a message
+   naming its next step.
 2. **Owed by the spell round, before or after wave five** (round9 doc
    sections 6 to 10):
    - **The frame hash re-record** (above), owner away about 20 minutes.
@@ -89,10 +98,14 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
      section 10): 9 are the wall-clock exclusions, 25 to audit with the
      re-record.
 3. **Housekeeping.** A PR for round nine when the owner wants one. The
-   controls scripts of every round-nine group live in the round's first
-   session scratchpad (`C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/<group>/controls.py`),
-   not in git: a Temp folder, so copy them somewhere durable if they are to
-   outlive a cleanup.
+   controls scripts of every round-nine group live in session scratchpads,
+   not in git: waves one to three and the other earlier groups in
+   `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/<group>/`,
+   the kFlag re-run (`r1`..`r8`) and wave four (`s09`..`s15`) in
+   `.../9e63839e-3d62-41b0-af67-04c4e6eecc8c/scratchpad/`. A Temp folder:
+   copy them somewhere durable if they are to outlive a cleanup. About 20
+   orphaned `tail -f | grep` watchers from the first session (`c6020f3e`)
+   may still be running; harmless, stop them when that session is closed.
 4. **The owner's eye on older rounds**: round seven and the world map (the
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.
