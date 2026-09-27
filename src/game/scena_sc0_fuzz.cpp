@@ -136,7 +136,7 @@ unsigned Index(const char* name) {
     bof3::Fatal("scena_sc0: no clone %s", name);
 }
 unsigned g_k;   // the clone being seeded, for Disturb
-unsigned kEnterK, kRun5K, kStartK, kFrameK, kRunK, kSteerK, kRun11K, kObjectK, kHookK;
+unsigned kRun2K, kRun4K, kEnterK, kRun5K, kStartK, kFrameK, kRunK, kSteerK, kRun11K, kObjectK, kHookK;
 
 unsigned char& B(std::uint32_t a) { return sh::Mem(a)[0]; }
 void SetW(std::uint32_t a, unsigned v) { move_script::SetWord(sh::Mem(a), v); }
@@ -166,7 +166,7 @@ void Seed(unsigned k) {
         B(kStep) = static_cast<unsigned char>(s);
     }
     // the counters the steps wait on, each boundary in
-    if (sh::Often())
+    if (sh::Next() % 6)
         B(kCounter) = static_cast<unsigned char>(SH_PICK(1, 3, 4, 5, 7, 8, 0xA, 0xB, 0xC, 0xD, 0x11, 0x13, 0x14, 0x15, 0x1E, 0x1F, 0x24, 0x25));
     if (sh::Often())
         B(kByte4A) = static_cast<unsigned char>(SH_PICK(0, 1, 3, 9, 0x13, 0x14, 0x15, 0x17, 0x23, 0x30, 0x35, 0x38, 0x71));
@@ -190,8 +190,13 @@ void Seed(unsigned k) {
         B(kCounter) = static_cast<unsigned char>(SH_PICK(0x13, 0x14));
         B(kInput + 1) = 0;
     }
+    // the message steps that store Field_Request between two calls
+    if ((k == kRun2K || k == kRun4K) && sh::Half()) {
+        B(kStep) = k == kRun2K ? 0 : 9;
+        SetW(kWait, 0);
+    }
     // run 5's shaking steps, with something to shake
-    if (k == kRun5K && sh::Half()) {
+    if (k == kRun5K && sh::Next() % 3 == 0) {
         B(kStep) = static_cast<unsigned char>(4 + sh::Next() % 3);
         B(kByte4A) = static_cast<unsigned char>(1 + sh::Next() % 0x20);
         Frame_Counter = Frame_Counter & ~0xFu;
@@ -223,6 +228,10 @@ void Disturb(std::uint32_t h) {
         B(kByte4A) = h & 0x100 ? 3 : 0;
         return;
     }
+    if (g_k == kRun2K || g_k == kRun4K) {   // Field_Request moved off 2 by the call after the store
+        B(kRequest) = static_cast<unsigned char>(h >> 24 == 2 ? 0 : h >> 24);
+        return;
+    }
     switch ((h >> 8) % 4) {
     case 0: B(kByte4A) = b; break;
     case 1: B(kByte4B) = b; break;
@@ -237,6 +246,8 @@ void SelfTest() {
     kStartK = Index("Scena00_Start");
     kRun5K = Index("Scena00_Run5");
     kEnterK = Index("Scena00_EnterArea");
+    kRun2K = Index("Scena00_Run2");
+    kRun4K = Index("Scena00_Run4");
     kFrameK = Index("Scena00_Frame");
     kRunK = Index("Scena00_Run");
     kSteerK = Index("Scena00_Steer");
@@ -256,7 +267,7 @@ void SelfTest() {
     g_regions[r++] = {kObjectHooks, 4};                       // Scena00_ObjectHooks, the stand-in written by the seed
     sh::Group group = {
         "scena_sc0", kClones, kCount, kCallees, sizeof kCallees / sizeof kCallees[0],
-        kTables, sizeof kTables / sizeof kTables[0], g_regions, r, &Seed, &Disturb, 2000,
+        kTables, sizeof kTables / sizeof kTables[0], g_regions, r, &Seed, &Disturb, 4000,
     };
     group.args = &Args;
     group.chapter = 0;
