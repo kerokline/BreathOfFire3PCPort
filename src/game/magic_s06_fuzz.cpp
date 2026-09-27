@@ -431,7 +431,11 @@ void Seed(unsigned k) {
         }
         if (k == kMagic008Blow_ReactThree) {
             Ability(0xB);
+            // +2 at 9 (the cut's skip) half the time; a quarter of the time
+            // 7..9, so that after React the test meets 8..10 (the re-run's
+            // A120, docs/magic_s06.md section 6).
             if (mh::Half()) sc[2] = 9;
+            else if (mh::Half()) sc[2] = Byte(7 + mh::Next() % 3);
             mh::SetRandHint(mh::Half() ? 0 : 8);
         }
         break;
