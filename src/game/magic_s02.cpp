@@ -133,11 +133,10 @@ constexpr std::uint32_t kTurnOffset = 0x446770;
 using TaskFn = void (__cdecl*)(unsigned char*);
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
-// Other units' functions (docs/magic_s02.md section 3): called by address.
-constexpr std::uint32_t kImageStep = 0x4A29C0;   // MAGIC008 (S06): called by ElemStrike_Fade
-constexpr std::uint32_t kHitEnd = 0x4F6290;      // MAGIC219 (S37): SuperComboHit_Play's tail jmp
-constexpr std::uint32_t kCopyStep2 = 0x4EE560;   // MAGIC161 (S34): entry 2 of ElemStrikeCopy_Run
-constexpr std::uint32_t kFxStep0 = 0x4EF840;     // MAGIC167 (S35): entry 0 of ElemStrikeFx_Steps
+// Other units' functions (docs/magic_s02.md section 3) are ours now and called
+// by name: S06's Magic008_DrawFlash, S37's MagicFx_FreeCurrentRecord (the
+// tail jmp of SuperComboHit), S34's BattleFx_ScriptToEnd, S35's
+// MagicFx_WaitOwnerChildren.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -590,7 +589,7 @@ S02_EXPORT void __cdecl SuperComboHit_Play(void) {
     Tick();
     if (Tick() == 0) return;
     Dec(Owner()[0xB]);
-    Call0(kHitEnd);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x49B1F0: one kind-1 task of parameter 1 (the slot unchecked), a
@@ -867,7 +866,7 @@ S02_EXPORT void __cdecl ElemStrike_Hit(void) {
 // three 0: the target's record untinted, the target flashed, +1 on.
 S02_EXPORT void __cdecl ElemStrike_Fade(void) {
     if (Sc()[9] < 0xC) {
-        Call0(kImageStep);
+        Call0(bof3::addr::Magic008_DrawFlash);
         Sc()[9] = static_cast<unsigned char>(Sc()[9] + 4);
     }
     unsigned char* const s = Sc();
@@ -917,7 +916,7 @@ S02_EXPORT void __cdecl ElemStrikeChild_Task(void) {
 // BattleFx_FreeTask); the sprite's screen point updated while +0 is set.
 S02_EXPORT void __cdecl ElemStrikeCopy_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::BattleFx_SetSize, bof3::addr::ElemStrikeCopy_Play,
-                                                kCopyStep2, bof3::addr::BattleFx_FreeTask};
+                                                bof3::addr::BattleFx_ScriptToEnd, bof3::addr::BattleFx_FreeTask};
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("ElemStrikeCopy_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -937,7 +936,7 @@ S02_EXPORT void __cdecl ElemStrikeCopy_Play(void) {
 // table (0x8E3580) while a call through ElemStrikeFx_Steps (three entries) by
 // +2 runs; the battle's back.
 S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
-    static constexpr std::uint32_t kSteps[3] = {kFxStep0, bof3::addr::ElemStrikeFx_Start,
+    static constexpr std::uint32_t kSteps[3] = {bof3::addr::MagicFx_WaitOwnerChildren, bof3::addr::ElemStrikeFx_Start,
                                                 bof3::addr::ElemStrikeFx_Play};
     DrawModeCommit(0x15, 3);
     const unsigned phase = Sc()[2];

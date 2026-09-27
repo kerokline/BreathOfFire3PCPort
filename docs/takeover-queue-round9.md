@@ -429,6 +429,42 @@ engine's `0x446770` (a direction turn), `0x4514A0`, `0x494060`,
 `0x494110`, `0x4941B0` are called raw by several groups and belong to no
 unit.
 
+**Rebinding (2026-09-27, branch `phase-3/round9-rebind`).** Every raw
+constant in `src/game/magic_*.cpp` / `magic_*_callees.h` that was *called*
+(a `Call0` / `Phase` / `MH_AT`, or an entry of ours' mirror of a stack table
+dispatched through `Phase`) and whose target now has an `impl` was rebound
+to its name, 99 constants and 16 table literals in 38 files: this list and
+section 11's, plus those the enumeration found beyond them - the engine's
+`MagicFx_DoneAndFree` / `_FlagTargetEnd` / `_WaitOwnerAnim`, `BattleFx_Finish`
+/ `_FreeTask`, S03's `Chlorine_WaitChildren`, S04's `KickImage_Tick` /
+`AirRaidImage_FadeOut`, S05's `Magic017_Wait` / `Magic018Row53_Wait`, S06's
+`Magic008_DrawFlash`, S07's `FocusMote_Rise` / `EnlightenRays_Fade`, S08's
+`Berserk_WaitChildren`, S10's `SacrificeActor_Play`, S17's `Leech_WaitOrbs`,
+S18's `MagicFx_DrawDiscRadius`, S19's `BarrierRing_Hold`, S24's
+`MagicFx_EndWithChildren`, S26's `Magic114_End` / `Magic117_Brighten`, S28's
+`Port_DroppedCall` / `BreathBeam_*`, S30's `MagicFx_EndWhenChildrenDone` /
+`_CountDown9` / `_CountUp9By2`, S32's `WallOfFire*`, S35's
+`LastResort_WaitChildren` / `BenedictionMote_*`, C1's `ActorFx_TintUp` /
+`WhiteFlag_TintSource`, C2's `HolocaustBeam_Grow`, and ten of group L's. The
+form: `bof3::addr::Name` inside the existing `Call0` / `Phase` / `MH_AT`
+(the same value, so the fuzz's stand-in keys and the game's calls are
+unchanged), and `MH_CALL(Name)` for group L's callees whose prototype fits
+(`MagicFx_CenterOnSide`, `_StepToward`, `_StepAround`, `_NearSprite`,
+`_NearSprite3D`, `_ApplyBuff`, `_BuffPopup`: the harness's standard list
+maps ours to the same slot); `MagicFx_LinkByDepth`, `_StepTowardPoint`,
+`_NearPoint3D` keep the caller's `MH_AT` type (the depths as `long *`, int
+arguments) with the name as its address. **Left raw:** the engine helpers no
+unit owns (`0x446770`, `0x4514A0`, `0x494060`, `0x494110`, `0x4941B0`, and
+the unnamed `0x43EC10`, `0x435A70`, `0x435A20`, libgpu `0x5A....`); every
+`.data` table read in place, the fuzz files' `kImms` / `CallSite` / stand-in
+tables; the address constants in `magic_s23_callees.h`, `magic_s24_callees.h`
+and `magic_s29_callees.h` that the fuzz lists by address (ours now calls by
+name, the constants remain as those keys); S16's tables of its own
+functions (in no other group); and `magic_fx_reached_callees.h`'s seven
+(round eight's unit with its own `Callees` table, not a spell group).
+Self-tests: every touched group's shadow and `'*'` 0 mismatches;
+`ledger_check` 0 errors.
+
 **Defects described, not fixed** (each group doc): the common set - every
 dispatch table unchecked (ours aborts past one), `BattleTask_Create`'s
 `0xFF` unchecked in every start function - and: S33's `Accession_LoadForm*`

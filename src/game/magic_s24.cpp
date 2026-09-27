@@ -87,7 +87,7 @@ int Sin(int angle) { return MH_CALL(Math_Sin)(angle); }
 int Cos(int angle) { return MH_CALL(Math_Cos)(angle); }
 using TurnFn = void (__cdecl*)(unsigned char*);
 using AllocFn = unsigned char (__cdecl*)();
-void CentreOnTargets() { MH_AT(Handler, magic_s24::kCentreOnTargets)(); }
+void CentreOnTargets() { MH_CALL(MagicFx_CenterOnSide)(); }
 void TurnByFacing(unsigned char* task) { MH_AT(TurnFn, magic_s24::kTurnByFacing)(task); }
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 

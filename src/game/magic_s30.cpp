@@ -154,9 +154,6 @@ void Rtp4(unsigned char* prim) {
                                      &depth, &flag);
 }
 
-// MAGIC226/227's handler Venom_Task's stack table holds (group S38's).
-constexpr std::uint32_t kMagic226Phase = 0x4F9F70;
-
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
 }
@@ -200,7 +197,8 @@ void SpriteFields(unsigned char c25, unsigned char c27, unsigned char shade, uns
 // original 0x4E4420: the kind-2 task. A three-entry stack table by +1:
 // Venom_Start, MAGIC226/227's 0x4F9F70, BattleFx_Finish.
 S30_EXPORT void __cdecl Venom_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Venom_Start, kMagic226Phase, bof3::addr::BattleFx_Finish};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Venom_Start, bof3::addr::MagicFx_CountDownFlag10,
+                                                 bof3::addr::BattleFx_Finish};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Venom_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();

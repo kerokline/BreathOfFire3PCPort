@@ -14,10 +14,11 @@
 //
 // Every call goes through the harness (MH_CALL / MH_AT / Phase / a .data
 // table read in place), so the start-up fuzz can stand recorders in for ours
-// as for the originals' copies. Calls into functions other groups own - the
-// effect library's 0x4FB880 / 0x4FB9F0 / 0x4FBBD0, MAGIC169's 0x4F1BD0,
-// MAGIC219's 0x4F6290, and the phases MAGIC169's 0x4F1A40 and MAGIC060's
-// 0x4B1740 - are raw addresses.
+// as for the originals' copies. Calls into functions other groups own go by
+// name - the effect library's MagicFx_LinkByDepth / _StepToward /
+// _NearSprite3D, MAGIC169's BenedictionMote_DrawGlow, MAGIC219's
+// MagicFx_FreeCurrentRecord, and the stack-table phase MAGIC169's
+// BenedictionMote_Spiral; MAGIC060's 0x4B1740 is a .data table's entry.
 //
 // No divergence: each is a faithful replacement, except that a phase past a
 // stack table aborts where the original would call through its own stack
@@ -79,16 +80,12 @@ constexpr std::uint32_t kShellPhases = 0x65B1E4;        // 7 entries by +2
 constexpr std::uint32_t kShellAngles = 0x65B200;        // eleven dwords: the shell's longitudes, then latitudes
 constexpr std::uint32_t kOrbPhases = 0x65B228;          // 6 entries by +2
 
-// Callees other groups own, by address.
-constexpr std::uint32_t kSortPrims = 0x4FB880;     // LIBRARY: (x, z, long *depths, prims, count, stride, dy)
-constexpr std::uint32_t kSeek = 0x4FB9F0;          // LIBRARY: (target, s16 speed) Sprite_Current toward target
-constexpr std::uint32_t kNear = 0x4FBBD0;          // LIBRARY: (target, range) -> 1 within range
-constexpr std::uint32_t kMoteGlow = 0x4F1BD0;      // MAGIC169: a mote's second draw
-constexpr std::uint32_t kMoteDone = 0x4F6290;      // MAGIC219: 35 files' end of a child
+// Callees other groups own, ours now, by name: the effect library's
+// MagicFx_LinkByDepth (through SortFn: the depths as long *), _StepToward,
+// _NearSprite3D; S35's BenedictionMote_DrawGlow; S37's
+// MagicFx_FreeCurrentRecord.
 using Void = void (__cdecl*)();
 using SortFn = void (__cdecl*)(std::uint32_t, std::uint32_t, long*, unsigned char*, unsigned, unsigned, unsigned);
-using SeekFn = void (__cdecl*)(unsigned char*, int);
-using NearFn = int (__cdecl*)(unsigned char*, unsigned);
 
 void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -528,7 +525,8 @@ MS17_EXPORT void __cdecl ReviveMote_Dispatch(void) { Entry(kMoteTypes, Sprite_Cu
 // launched (+0, +2 not 0): its screen point, its fan, and MAGIC169's
 // 0x4F1BD0.
 MS17_EXPORT void __cdecl ReviveMote_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::ReviveMote_Launch, 0x4F1A40, bof3::addr::ReviveMote_Rise};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::ReviveMote_Launch, bof3::addr::BenedictionMote_Spiral,
+                                                 bof3::addr::ReviveMote_Rise};
     const unsigned phase = Sprite_Current[2];
     if (phase >= 3) bof3::Fatal("ReviveMote_Task: phase %u, past the three-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -538,7 +536,7 @@ MS17_EXPORT void __cdecl ReviveMote_Task(void) {
     if (sc[0] != 0 && sc[2] != 0) {
         MH_CALL(BattleActor_UpdateScreenXY)();
         MH_CALL(ReviveMote_Draw)();
-        MH_AT(Void, kMoteGlow)();
+        MH_AT(Void, bof3::addr::BenedictionMote_DrawGlow)();
     }
     DrawMode(0x15);
     LinkAtActor(2, 0xC);
@@ -591,7 +589,7 @@ MS17_EXPORT void __cdecl ReviveMote_Rise(void) {
     Bump(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
     Bump(Owner()[0xB], -1);
-    MH_AT(Void, kMoteDone)();
+    MH_AT(Void, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // original 0x4BD8A0: a fan of eight semi-transparent gouraud triangles round
@@ -925,11 +923,13 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
         }
     }
     sc = Sprite_Current;
-    MH_AT(SortFn, kSortPrims)(static_cast<std::uint32_t>(Long(sc + 0x34)), static_cast<std::uint32_t>(Long(sc + 0x38)),
-                              depths, first, 0x10, 0x38, 2);
+    MH_AT(SortFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(Long(sc + 0x34)),
+                                                   static_cast<std::uint32_t>(Long(sc + 0x38)), depths, first, 0x10,
+                                                   0x38, 2);
     sc = Sprite_Current;
-    MH_AT(SortFn, kSortPrims)(static_cast<std::uint32_t>(Long(sc + 0x34)), static_cast<std::uint32_t>(Long(sc + 0x38)),
-                              line_depths, line_base, 0xC, 0x38, 2);
+    MH_AT(SortFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(Long(sc + 0x34)),
+                                                   static_cast<std::uint32_t>(Long(sc + 0x38)), line_depths, line_base,
+                                                   0xC, 0x38, 2);
     Gfx_PacketNext = lines;
 }
 
@@ -1016,9 +1016,9 @@ MS17_EXPORT void __cdecl LeechOrb_Chime(void) {
 // original 0x4BE720: toward the shell (0x4FB9F0, speed 0x30), 0x10 higher a
 // frame; once within 0x1C000 of it (0x4FBBD0), +0xA 30 and +2 on.
 MS17_EXPORT void __cdecl LeechOrb_Rise(void) {
-    MH_AT(SeekFn, kSeek)(Owner(), 0x30);
+    MH_CALL(MagicFx_StepToward)(Owner(), 0x30);
     SetWord(Sprite_Current + 0x3E, Word(Sprite_Current + 0x3E) + 0x10u);
-    if (MH_AT(NearFn, kNear)(Owner(), 0x1C000) == 0) return;
+    if (MH_CALL(MagicFx_NearSprite3D)(Owner(), 0x1C000) == 0) return;
     Sprite_Current[0xA] = 0x1E;
     Bump(Sprite_Current[2]);
 }
@@ -1037,8 +1037,8 @@ MS17_EXPORT void __cdecl LeechOrb_Merge(void) {
     const unsigned char* const sc = Sprite_Current;
     unsigned char* const owner = Owner();
     unsigned char* const task = Pointer(Key(sc + 0x4C));
-    MH_AT(SeekFn, kSeek)(owner, 8);
-    if (MH_AT(NearFn, kNear)(Owner(), 0x4000) == 0) return;
+    MH_CALL(MagicFx_StepToward)(owner, 8);
+    if (MH_CALL(MagicFx_NearSprite3D)(Owner(), 0x4000) == 0) return;
     task[0xB] = 2;
     Sprite_Current[0xA] = 0;
     Bump(Sprite_Current[2]);

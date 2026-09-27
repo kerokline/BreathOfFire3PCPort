@@ -140,9 +140,8 @@ void Call1(std::uint32_t address, int a) { MH_AT(Fn1, address)(a); }
 void Call2(std::uint32_t address, unsigned a, unsigned b) { MH_AT(Fn2, address)(a, b); }
 unsigned Alloc(std::uint32_t address) { return MH_AT(FnAlloc, address)() & 0xFFu; }
 
-// The phase handlers of other units a table holds, and the one tail jump to
-// another unit (docs/magic_s35.md section 3): called by their addresses.
-constexpr std::uint32_t kFreePoolSlot = 0x4F6290;   // MAGIC219: Sprite_Current bytes 0..4 cleared
+// The one tail jump to another unit (docs/magic_s35.md section 3), S37's
+// MagicFx_FreeCurrentRecord, is ours now and called by name.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -1410,7 +1409,7 @@ S35_EXPORT void __cdecl BenedictionMote_Fade(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreePoolSlot);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4F1BD0: a ring of eight semi-transparent gouraud quads round the

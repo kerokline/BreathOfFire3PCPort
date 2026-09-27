@@ -127,11 +127,9 @@ using TaskFn = void (__cdecl*)(unsigned char*);
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
 // The phase handlers of other units a table holds (docs/magic_s03.md
-// section 3): called by their addresses.
-constexpr std::uint32_t kCountDownOwner = 0x4B1740;  // MAGIC060 (S12): +9 down, at 0 the owner's +0xB down and freed
-constexpr std::uint32_t kSparkPhase2 = 0x4A5180;     // MAGIC039 (S07)
-constexpr std::uint32_t kCloudPhase2 = 0x4A5D50;     // MAGIC040 (S07)
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;  // MAGIC058 (S11): the owner's +0xB down, the task freed
+// section 3) are ours now and named in the tables: S12's
+// MagicFx_CountDownRelease, S07's FocusMote_Rise / EnlightenRays_Fade, S11's
+// MagicFx_UncountAndFree.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -284,9 +282,9 @@ S03_EXPORT void __cdecl MindSwordChild_Task(void) {
 // _Fly, _Burst, MAGIC060's 0x4B1740); then while +0 and +2 are set the screen
 // point, and the lead blade's draw for +0xB 0, the others' for the rest.
 S03_EXPORT void __cdecl MindSwordBlade_Run(void) {
-    static constexpr std::uint32_t kSteps[6] = {bof3::addr::MindSwordBlade_Appear, bof3::addr::MindSwordBlade_Spin,
-                                                bof3::addr::MindSwordBlade_Wait,   bof3::addr::MindSwordBlade_Fly,
-                                                bof3::addr::MindSwordBlade_Burst,  kCountDownOwner};
+    static constexpr std::uint32_t kSteps[6] = {
+        bof3::addr::MindSwordBlade_Appear, bof3::addr::MindSwordBlade_Spin,  bof3::addr::MindSwordBlade_Wait,
+        bof3::addr::MindSwordBlade_Fly,    bof3::addr::MindSwordBlade_Burst, bof3::addr::MagicFx_CountDownRelease};
     const unsigned phase = Sc()[2];
     if (phase >= 6) PastTable("MindSwordBlade_Run", phase, 6);
     magic_harness::Phase(kSteps[phase])();
@@ -485,7 +483,7 @@ S03_EXPORT void __cdecl MindSwordBlade_Draw(void) {
 // spark.
 S03_EXPORT void __cdecl MindSwordSpark_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::MindSwordSpark_Start, bof3::addr::MindSwordSpark_Grow,
-                                                kSparkPhase2};
+                                                bof3::addr::FocusMote_Rise};
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("MindSwordSpark_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
@@ -556,7 +554,7 @@ S03_EXPORT void __cdecl MindSwordSpark_Draw(void) {
 // flash under the task's matrix.
 S03_EXPORT void __cdecl MindSwordFlash_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::MindSwordFlash_Start, bof3::addr::MindSwordFlash_Grow,
-                                                bof3::addr::BarrierLine_Wait, kCountDownOwner};
+                                                bof3::addr::BarrierLine_Wait, bof3::addr::MagicFx_CountDownRelease};
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("MindSwordFlash_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -724,7 +722,7 @@ S03_EXPORT void __cdecl ChlorineChild_Task(void) {
 // +2, unchecked; then while +0 and +2 are set the cloud (a tail jmp).
 S03_EXPORT void __cdecl ChlorineCloud_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::ChlorineCloud_Start, bof3::addr::ChlorineCloud_Grow,
-                                                kCloudPhase2};
+                                                bof3::addr::EnlightenRays_Fade};
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("ChlorineCloud_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
@@ -922,9 +920,10 @@ S03_EXPORT void __cdecl BlitzBolt_Task(void) {
 // 0x4AF490, _Drift.
 S03_EXPORT void __cdecl BlitzBolt_Run(void) {
     static constexpr std::uint32_t kSteps[12] = {
-        bof3::addr::BlitzBolt_Start, bof3::addr::BlitzBolt_Seek, bof3::addr::BlitzBolt_Bounce, bof3::addr::BlitzBolt_Next,
-        bof3::addr::BlitzBolt_Seek,  bof3::addr::BlitzBolt_Bounce, bof3::addr::BlitzBolt_Next, bof3::addr::BlitzBolt_Seek,
-        bof3::addr::BlitzBolt_Bounce, bof3::addr::BlitzBolt_Next, kFreeOwnerCount,             bof3::addr::BlitzBolt_Drift};
+        bof3::addr::BlitzBolt_Start, bof3::addr::BlitzBolt_Seek,         bof3::addr::BlitzBolt_Bounce,
+        bof3::addr::BlitzBolt_Next,  bof3::addr::BlitzBolt_Seek,         bof3::addr::BlitzBolt_Bounce,
+        bof3::addr::BlitzBolt_Next,  bof3::addr::BlitzBolt_Seek,         bof3::addr::BlitzBolt_Bounce,
+        bof3::addr::BlitzBolt_Next,  bof3::addr::MagicFx_UncountAndFree, bof3::addr::BlitzBolt_Drift};
     const unsigned phase = Sc()[2];
     if (phase >= 12) PastTable("BlitzBolt_Run", phase, 12);
     magic_harness::Phase(kSteps[phase])();

@@ -76,10 +76,9 @@ constexpr std::uint32_t kStreak = 0x3C;
 // primitive's vertex (docs/magic_c2.md section 5).
 constexpr std::uint32_t kSetMapCamera = 0x494060;
 constexpr std::uint32_t kProjectPoint = 0x494110;
-// Other units' functions, not ours yet (docs/magic_c2.md section 6).
-constexpr std::uint32_t kWaitCasterScript = 0x43F430;   // engine (group E): the caster's script until its end, +1 on
-constexpr std::uint32_t kCountDown9Flag10 = 0x4F9F70;   // MAGIC226/227 (group S38): +9 down, at 0 target flag 0x10, +1 on
-constexpr std::uint32_t kClearTask = 0x4F6290;          // MAGIC219 (group S37): +0..+4 of the current task cleared
+// Other units' functions (docs/magic_c2.md section 6) are ours now and called
+// by name: the engine's MagicFx_WaitOwnerAnim, S38's MagicFx_CountDownFlag10,
+// S37's MagicFx_FreeCurrentRecord.
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }
@@ -501,8 +500,8 @@ C2_EXPORT void __cdecl BoneDanceFollow_Step(void) {
 // RottenBreath_Start, the engine's 0x43F430 (the caster's script to its end),
 // RottenBreath_Emit, RottenBreath_End - then the walk of the 48 motes.
 C2_EXPORT void __cdecl RottenBreath_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {addr::RottenBreath_Start, kWaitCasterScript, addr::RottenBreath_Emit,
-                                                 addr::RottenBreath_End};
+    static constexpr std::uint32_t kPhases[4] = {addr::RottenBreath_Start, addr::MagicFx_WaitOwnerAnim,
+                                                 addr::RottenBreath_Emit, addr::RottenBreath_End};
     Step(kPhases, 4, Sc()[1], "RottenBreath_Task");
     Walk(kMotes, 48, addr::RottenBreathMote_Run);
 }
@@ -924,7 +923,8 @@ C2_EXPORT void __cdecl UtmostAttack_InitStreak(unsigned char* streak) {
 // Holocaust_Start, MAGIC226/227's 0x4F9F70 (+9 down, then target flag 0x10),
 // BattleFx_Finish - then the walk of the 64 sparks.
 C2_EXPORT void __cdecl Holocaust_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {addr::Holocaust_Start, kCountDown9Flag10, addr::BattleFx_Finish};
+    static constexpr std::uint32_t kPhases[3] = {addr::Holocaust_Start, addr::MagicFx_CountDownFlag10,
+                                                 addr::BattleFx_Finish};
     Step(kPhases, 3, Sc()[1], "Holocaust_Task");
     Walk(kSparks, 64, addr::HolocaustSpark_Task);
 }
@@ -1348,7 +1348,7 @@ C2_EXPORT void __cdecl HolocaustSpark_Fade(void) {
     Dec(Sc()[0xA]);
     if (Sc()[0xA] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kClearTask);
+    Call0(addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4E4240: a disc of eight semi-transparent gouraud triangles round

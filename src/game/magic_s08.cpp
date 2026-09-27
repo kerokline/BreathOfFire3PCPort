@@ -132,8 +132,7 @@ using TaskFn = void (__cdecl*)(unsigned char*);
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
 // The phase handler of another unit a stack table holds (docs/magic_s08.md
-// section 3): called by its address.
-constexpr std::uint32_t kGlowPhase3 = 0x4B1740;   // MAGIC060 (group S12)
+// section 3), S12's MagicFx_CountDownRelease, is ours now and named there.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -349,7 +348,7 @@ S08_EXPORT void __cdecl BerserkRing_Fade(void) {
 // bit 0 and +2: the actor matrix, the glow, the pop.
 S08_EXPORT void __cdecl BerserkGlow_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::BerserkGlow_Start, bof3::addr::MagicFx_CountUp9By2,
-                                                bof3::addr::BarrierLine_Wait, kGlowPhase3};
+                                                bof3::addr::BarrierLine_Wait, bof3::addr::MagicFx_CountDownRelease};
     StackCall(kSteps, 4, Sc()[2], "BerserkGlow_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) == 0 || s[2] == 0) return;

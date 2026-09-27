@@ -580,7 +580,7 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
     }
     if (Long(Sc() + 0xC) != 0) return;
     Dec(Owner()[0xB]);
-    MH_AT(Handler, magic_s29::kFreeRecord)();
+    MH_AT(Handler, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // original 0x4E1510: the mote's star in screen space: radius +0xA; eight

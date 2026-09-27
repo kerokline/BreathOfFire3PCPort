@@ -74,11 +74,9 @@ constexpr std::uint32_t kSqrt = 0x5A7A90;
 using SqrtFn = int (__cdecl*)(int);
 int Sqrt(int v) { return MH_AT(SqrtFn, kSqrt)(v); }
 
-// The phase handlers of other units a table holds (docs/magic_c3.md section 3).
-constexpr std::uint32_t kDoneAndFree = 0x43FE80;   // the engine's (group E): 0x904AA8 |= 4, free
-constexpr std::uint32_t kFadeOut1 = 0x4B1740;      // MAGIC060: +9 down by 1; at 0 the owner's +0xB down, free
-constexpr std::uint32_t kFadeIn2 = 0x4E5950;       // MAGIC131: +9 up by 2; at 0x10 +2 on
-constexpr std::uint32_t kFadeOut2 = 0x4B18B0;      // MAGIC060: +9 down by 2; at 0 the owner's +0xB down, free
+// The phase handlers of other units a table holds (docs/magic_c3.md section 3)
+// are ours now and named in the tables: the engine's MagicFx_DoneAndFree, S12's
+// MagicFx_CountDownRelease / _CountDown2Release, S30's MagicFx_CountUp9By2.
 
 using Fn0 = void (__cdecl*)();
 void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
@@ -126,7 +124,8 @@ void ShadePoint(int x, int y, int z, unsigned char& upper, unsigned char& lower)
 // original 0x499D80: the kind-2 task. A three-entry stack table by +1:
 // Magic002_Start, Magic002_Wait, the engine's 0x43FE80.
 C3_EXPORT void __cdecl Magic002_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic002_Start, bof3::addr::Magic002_Wait, kDoneAndFree};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic002_Start, bof3::addr::Magic002_Wait,
+                                                 bof3::addr::MagicFx_DoneAndFree};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Magic002_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();
@@ -345,7 +344,8 @@ C3_EXPORT void __cdecl Magic002Ball_Draw(int x, int y, int radius, int turn, int
 // original 0x4D6110: the kind-2 task. A three-entry stack table by +1:
 // Magic111_Start, Magic111_Wait, the engine's 0x43FE80.
 C3_EXPORT void __cdecl Magic111_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic111_Start, bof3::addr::Magic111_Wait, kDoneAndFree};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Magic111_Start, bof3::addr::Magic111_Wait,
+                                                 bof3::addr::MagicFx_DoneAndFree};
     const unsigned phase = Sc()[1];
     if (phase >= 3) PastTable("Magic111_Task", phase, 3);
     magic_harness::Phase(kPhases[phase])();
@@ -445,7 +445,7 @@ C3_EXPORT void __cdecl Magic111Double_Wait(void) {
 // +0x10 up by one and the draw (a tail jmp).
 C3_EXPORT void __cdecl Magic111Wash_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::Magic111Wash_Start, bof3::addr::BarrierRing_Grow,
-                                                bof3::addr::MagicFx_WaitA, kFadeOut1};
+                                                bof3::addr::MagicFx_WaitA, bof3::addr::MagicFx_CountDownRelease};
     const unsigned step = Sc()[2];
     if (step >= 4) PastTable("Magic111Wash_Run", step, 4);
     magic_harness::Phase(kSteps[step])();
@@ -554,7 +554,8 @@ C3_EXPORT void __cdecl Magic111Wash_Draw(void) {
 // entries) by +2 - Magic111Flash_Wait, MAGIC131's 0x4E5950, MAGIC060's
 // 0x4B18B0 -, then while +0 and +2 are set the draw (a tail jmp).
 C3_EXPORT void __cdecl Magic111Flash_Run(void) {
-    static constexpr std::uint32_t kSteps[3] = {bof3::addr::Magic111Flash_Wait, kFadeIn2, kFadeOut2};
+    static constexpr std::uint32_t kSteps[3] = {bof3::addr::Magic111Flash_Wait, bof3::addr::MagicFx_CountUp9By2,
+                                                bof3::addr::MagicFx_CountDown2Release};
     const unsigned step = Sc()[2];
     if (step >= 3) PastTable("Magic111Flash_Run", step, 3);
     magic_harness::Phase(kSteps[step])();

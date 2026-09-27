@@ -21,11 +21,12 @@
 // section 2): hypotheses, not what the reading showed; what each function
 // does is. Every call goes through the harness (MH_CALL / MH_AT / Phase), so
 // the start-up fuzz can stand recorders in for ours as for the originals'
-// copies. Calls into other groups' units (the effect library's 0x4FC0E0,
-// 0x4FBA90, 0x4FBC70; MAGIC078's 0x4BDC10; MAGIC130's 0x4E47F0, MAGIC082's
-// 0x4C0680 and MAGIC060's 0x4B1740 through the .data tables) and into the
-// unnamed engine helper 0x446770 and libgpu setters 0x5A7570 / 0x5A76F0 go by
-// raw address.
+// copies. Calls into other groups' units go by name (the effect library's
+// MagicFx_CenterOnSide, _StepTowardPoint, _NearPoint3D; MAGIC078's
+// Leech_WaitOrbs; the engine's MagicFx_DoneAndFree), or through the .data
+// tables (MAGIC130's 0x4E47F0, MAGIC082's 0x4C0680, MAGIC060's 0x4B1740);
+// calls into the unnamed engine helper 0x446770 and libgpu setters 0x5A7570 /
+// 0x5A76F0 go by raw address.
 //
 // No divergence: each is a faithful replacement, except that a dispatch past
 // its table aborts where the original would call or jump through whatever
@@ -100,18 +101,13 @@ using PrimFn = void (__cdecl*)(unsigned char*);
 // group (psx_gpu's neighbours; docs/magic_s25.md section 7).
 constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
 constexpr std::uint32_t kSetLineG4 = 0x5A76F0;
-// The effect library (group L): the effect's sprite to the middle of the
-// target side; one step of the sprite towards a point; "is the sprite within
-// a box of the point". The engine's 0x446770 turns +0xC / +0x10 by the
-// facing +8.
-constexpr std::uint32_t kCentreOnTargets = 0x4FC0E0;
-constexpr std::uint32_t kStepTowards = 0x4FBA90;
-constexpr std::uint32_t kWithin = 0x4FBC70;
+// The effect library (group L), by name: MagicFx_CenterOnSide (the effect's
+// sprite to the middle of the target side), MagicFx_StepTowardPoint (one step
+// towards a point), MagicFx_NearPoint3D ("is the sprite within a box of the
+// point"). The engine's 0x446770 turns +0xC / +0x10 by the facing +8.
 constexpr std::uint32_t kTurnByFacing = 0x446770;
-// Other units' phases in the stack tables: MAGIC078's "free once the owner's
-// +0xB is 0xFF" and the engine's "the done flag, free".
-constexpr std::uint32_t kEndWhenChildDone = 0x4BDC10;
-constexpr std::uint32_t kDoneAndFree = 0x43FE80;
+// Other units' phases in the stack tables, by name: S17's Leech_WaitOrbs
+// ("free once the owner's +0xB is 0xFF") and the engine's MagicFx_DoneAndFree.
 
 // The battle bytes these read beyond the harness's names.
 constexpr std::uint32_t kCasterRecord = 0x904B3C;   // a record pointer; its +8 is the facing
@@ -192,7 +188,7 @@ void Swing() {
 // table - SpellSleep_Start, then MAGIC078's 0x4BDC10 (free once the child has
 // set the owner's +0xB to 0xFF).
 S25_EXPORT void __cdecl SpellSleep_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::SpellSleep_Start, kEndWhenChildDone};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::SpellSleep_Start, bof3::addr::Leech_WaitOrbs};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 2) bof3::Fatal("SpellSleep_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -204,7 +200,7 @@ S25_EXPORT void __cdecl SpellSleep_Task(void) {
 // point (Field_Kind2X / Z), its height this task's + 0x4000000; sound 0x100;
 // +0xB 0; on.
 S25_EXPORT void __cdecl SpellSleep_Start(void) {
-    MH_AT(Handler, kCentreOnTargets)();
+    MH_CALL(MagicFx_CenterOnSide)();
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x19);
     const unsigned char* const caster = Pointer(kCasterRecord);
     unsigned char* const sc = Sprite_Current;
@@ -704,7 +700,7 @@ S25_EXPORT void __cdecl SpellSleep_DrawShadowFan(void) {
 // original 0x4D3EA0 (Magic_Rows row 25): phase +1 through a two-entry stack
 // table - SpellConfuse_Start, then MAGIC078's 0x4BDC10.
 S25_EXPORT void __cdecl SpellConfuse_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::SpellConfuse_Start, kEndWhenChildDone};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::SpellConfuse_Start, bof3::addr::Leech_WaitOrbs};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 2) bof3::Fatal("SpellConfuse_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -777,13 +773,13 @@ S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
 S25_EXPORT void __cdecl SpellConfuse_ChildFly(void) {
     Bump(Sprite_Current[0xA]);
     const unsigned char* sc = Sprite_Current;
-    MH_AT(void (__cdecl*)(int, int, int, int, int), kStepTowards)((Long(sc + 0x18) >> 9) - 0x4000,
-                                                                  (Long(sc + 0x1C) >> 9) - 0x4000, Long(sc + 0x20) >> 17, 0,
-                                                                  0x20);
+    MH_AT(void (__cdecl*)(int, int, int, int, int), bof3::addr::MagicFx_StepTowardPoint)(
+        (Long(sc + 0x18) >> 9) - 0x4000, (Long(sc + 0x1C) >> 9) - 0x4000, Long(sc + 0x20) >> 17, 0, 0x20);
     sc = Sprite_Current;
-    if (MH_AT(int (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t), kWithin)(
-            static_cast<std::uint32_t>(Long(sc + 0x18)), static_cast<std::uint32_t>(Long(sc + 0x1C)),
-            static_cast<std::uint32_t>(Long(sc + 0x20)), 0x8000) != 0)
+    if (MH_AT(int (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t),
+              bof3::addr::MagicFx_NearPoint3D)(static_cast<std::uint32_t>(Long(sc + 0x18)),
+                                               static_cast<std::uint32_t>(Long(sc + 0x1C)),
+                                               static_cast<std::uint32_t>(Long(sc + 0x20)), 0x8000) != 0)
         Bump(Sprite_Current[1]);
 }
 
@@ -1217,9 +1213,9 @@ S25_EXPORT void __cdecl SpellDepress_DrawVortex(int step) {
 // table - start, wait for the children, fade in, burst, fade out, then the
 // engine's 0x43FE80 (the done flag, free).
 S25_EXPORT void __cdecl SpellRagnarok_Task(void) {
-    static constexpr std::uint32_t kPhases[6] = {bof3::addr::SpellRagnarok_Start,       bof3::addr::SpellRagnarok_WaitChildren,
-                                                 bof3::addr::SpellRagnarok_FadeIn,      bof3::addr::SpellRagnarok_Burst,
-                                                 bof3::addr::SpellRagnarok_FadeOut,     kDoneAndFree};
+    static constexpr std::uint32_t kPhases[6] = {
+        bof3::addr::SpellRagnarok_Start, bof3::addr::SpellRagnarok_WaitChildren, bof3::addr::SpellRagnarok_FadeIn,
+        bof3::addr::SpellRagnarok_Burst, bof3::addr::SpellRagnarok_FadeOut,      bof3::addr::MagicFx_DoneAndFree};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 6) bof3::Fatal("SpellRagnarok_Task: phase %u, past the six-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -1234,7 +1230,7 @@ S25_EXPORT void __cdecl SpellRagnarok_Task(void) {
 // the semi-transparency bit, their first entries without it;
 // Gfx_ClutStripDirty; sound 0x100.
 S25_EXPORT void __cdecl SpellRagnarok_Start(void) {
-    MH_AT(Handler, kCentreOnTargets)();
+    MH_CALL(MagicFx_CenterOnSide)();
     Sprite_Current[8] = Pointer(at::kOwner)[8];
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x58;

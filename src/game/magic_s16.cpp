@@ -580,11 +580,13 @@ MS16_EXPORT void __cdecl Magic072_Spawn(void) { Spawn(k072, 2); }
 
 namespace {
 constexpr std::uint32_t kTask073[2] = {0x4BB000, 0x4BB170};
-constexpr std::uint32_t kTask074[2] = {0x4BBDD0, 0x4E5200};   // 0x4E5200: MAGIC131's wait-and-end (group S30's)
-// The child's six phases: its start, the actor's tint, 0x4F4DA0 (MAGIC213's
-// brighten, group C1's), the wait for four sparkles, the fade, the end.
-constexpr std::uint32_t kActor073[6] = {0x4BB210, 0x4BC110, 0x4F4DA0, 0x4BB370, 0x4BC1A0, 0x4BC260};
-constexpr std::uint32_t kActor074[6] = {0x4BBFB0, 0x4BC110, 0x4F4DA0, 0x4BB370, 0x4BC1A0, 0x4BC260};
+// MAGIC131's wait-and-end, group S30's MagicFx_EndWhenChildrenDone (0x4E5200).
+constexpr std::uint32_t kTask074[2] = {0x4BBDD0, bof3::addr::MagicFx_EndWhenChildrenDone};
+// The child's six phases: its start, the actor's tint, MAGIC213's brighten
+// (group C1's ActorFx_TintUp, 0x4F4DA0), the wait for four sparkles, the fade,
+// the end.
+constexpr std::uint32_t kActor073[6] = {0x4BB210, 0x4BC110, bof3::addr::ActorFx_TintUp, 0x4BB370, 0x4BC1A0, 0x4BC260};
+constexpr std::uint32_t kActor074[6] = {0x4BBFB0, 0x4BC110, bof3::addr::ActorFx_TintUp, 0x4BB370, 0x4BC1A0, 0x4BC260};
 constexpr std::uint32_t kActorPhases073 = 0x65B0E0;   // the child's dispatch table, read in place by +1
 constexpr std::uint32_t kActorPhases074 = 0x65B1AC;
 

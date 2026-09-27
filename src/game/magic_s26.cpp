@@ -1004,8 +1004,8 @@ S26_EXPORT void __cdecl Magic115_ChildTask(void) {
 // Magic115_OrbitPhases (four entries, the last MAGIC058's 0x4AF490) by +2,
 // unchecked; while +0 and +2 are set, the sprite's screen point.
 S26_EXPORT void __cdecl Magic115_OrbitRun(void) {
-    static constexpr std::uint32_t kPhases[4] = {addr::Magic115_OrbitStart, addr::Magic115_Orbit, addr::Magic115_OrbitFade,
-                                                 0x4AF490};
+    static constexpr std::uint32_t kPhases[4] = {addr::Magic115_OrbitStart, addr::Magic115_Orbit,
+                                                 addr::Magic115_OrbitFade, addr::MagicFx_UncountAndFree};
     SetL(Mem(kFrameSet), 0x8E3580);
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("Magic115_OrbitRun", phase, 4);
@@ -1116,8 +1116,8 @@ S26_EXPORT void __cdecl Magic115_OrbitFade(void) {
 // through Magic115_MotePhases (four entries, the last MAGIC058's 0x4AF490) by
 // +2, unchecked; while +0 and +2 are set, its screen point.
 S26_EXPORT void __cdecl Magic115_MoteRun(void) {
-    static constexpr std::uint32_t kPhases[4] = {addr::Magic115_MoteStart, addr::Magic115_MoteTick, addr::Magic115_MoteFade,
-                                                 0x4AF490};
+    static constexpr std::uint32_t kPhases[4] = {addr::Magic115_MoteStart, addr::Magic115_MoteTick,
+                                                 addr::Magic115_MoteFade, addr::MagicFx_UncountAndFree};
     SetL(Mem(kFrameSet), 0x8E3580);
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("Magic115_MoteRun", phase, 4);
@@ -1168,7 +1168,7 @@ static void TintStep(int by) {
 // (the target's flag 0x40, the done flag, free).
 S26_EXPORT void __cdecl Magic117_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::Magic117_TintSet, addr::Magic117_Brighten, addr::Magic117_Dim,
-                                                 0x43F460};
+                                                 addr::MagicFx_FlagTargetEnd};
     const unsigned phase = Sc()[1];
     if (phase >= 4) PastTable("Magic117_Task", phase, 4);
     magic_harness::Phase(kPhases[phase])();
@@ -1218,7 +1218,8 @@ S26_EXPORT void __cdecl Magic117_Dim(void) {
 // group C1's 0x49DF30 (MAGIC010: the tint set), Magic117_Darken,
 // Magic117_Lighten, group E's 0x43F460.
 S26_EXPORT void __cdecl Magic117_TaskB(void) {
-    static constexpr std::uint32_t kPhases[4] = {0x49DF30, addr::Magic117_Darken, addr::Magic117_Lighten, 0x43F460};
+    static constexpr std::uint32_t kPhases[4] = {addr::WhiteFlag_TintSource, addr::Magic117_Darken,
+                                                 addr::Magic117_Lighten, addr::MagicFx_FlagTargetEnd};
     const unsigned phase = Sc()[1];
     if (phase >= 4) PastTable("Magic117_TaskB", phase, 4);
     magic_harness::Phase(kPhases[phase])();

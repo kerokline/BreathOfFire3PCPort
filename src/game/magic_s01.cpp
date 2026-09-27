@@ -91,9 +91,8 @@ using EnemyAnimationFn = void (__cdecl*)(unsigned, unsigned);
 void EnemyAnimation(unsigned anim) { MH_AT(EnemyAnimationFn, kEnemyAnimation)(ActorByte(), anim); }
 
 // The phase handlers of other units the children's tables hold
-// (docs/magic_s01.md section 3): called by their addresses.
-constexpr std::uint32_t kFadeInFree = 0x4A0BA0;     // MAGIC015 (group S04): +0x5D..+0x5F up by 0x10; at 0xC0 the owner's +0xB down, freed
-constexpr std::uint32_t kScriptThenFade = 0x4AE3C0; // MAGIC056 (group S10): at the script's end +0 |= 0x20, +0x5C 1, +0x5D..+0x5F 0, +2 on
+// (docs/magic_s01.md section 3) are ours now and named in the tables: S04's
+// AirRaidImage_FadeOut, S10's SacrificeActor_Play.
 
 // This group's functions called directly, as the original calls them: in the
 // game the jmp Inject put there (or Capcom's code under BOF3X_ORIGINAL), in
@@ -248,10 +247,10 @@ S01_EXPORT void __cdecl NueStompChild_Task(void) {
 // are set, the sprite's screen point (Sprite_UpdateScreen).
 S01_EXPORT void __cdecl NueStompChild_Run(void) {
     static constexpr std::uint32_t kSteps[11] = {
-        bof3::addr::NueStompChild_Begin,  bof3::addr::NueStompChild_Leap,  bof3::addr::NueStompChild_Rise,
+        bof3::addr::NueStompChild_Begin,  bof3::addr::NueStompChild_Leap,   bof3::addr::NueStompChild_Rise,
         bof3::addr::NueStompChild_Drop,   bof3::addr::NueStompChild_Crouch, bof3::addr::NueStompChild_Bounce,
-        bof3::addr::NueStompChild_Hop,    bof3::addr::NueStompChild_Stomp, bof3::addr::NueStompChild_Land,
-        bof3::addr::NueStompChild_Return, kFadeInFree};
+        bof3::addr::NueStompChild_Hop,    bof3::addr::NueStompChild_Stomp,  bof3::addr::NueStompChild_Land,
+        bof3::addr::NueStompChild_Return, bof3::addr::AirRaidImage_FadeOut};
     const unsigned phase = Sc()[2];
     if (phase >= 11) PastTable("NueStompChild_Run", phase, 11);
     magic_harness::Phase(kSteps[phase])();
@@ -413,10 +412,10 @@ S01_EXPORT void __cdecl JumpChild_Task(void) {
 // are set, the sprite's screen point, and below step 5 the shadow: its matrix,
 // its disc, the matrix popped.
 S01_EXPORT void __cdecl JumpChild_Run(void) {
-    static constexpr std::uint32_t kSteps[7] = {bof3::addr::JumpChild_Begin, bof3::addr::JumpChild_Rise,
-                                                bof3::addr::JumpChild_Hover, bof3::addr::JumpChild_Return,
-                                                kScriptThenFade,             bof3::addr::JumpChild_Fade,
-                                                kFadeInFree};
+    static constexpr std::uint32_t kSteps[7] = {bof3::addr::JumpChild_Begin,     bof3::addr::JumpChild_Rise,
+                                                bof3::addr::JumpChild_Hover,     bof3::addr::JumpChild_Return,
+                                                bof3::addr::SacrificeActor_Play, bof3::addr::JumpChild_Fade,
+                                                bof3::addr::AirRaidImage_FadeOut};
     const unsigned phase = Sc()[2];
     if (phase >= 7) PastTable("JumpChild_Run", phase, 7);
     magic_harness::Phase(kSteps[phase])();

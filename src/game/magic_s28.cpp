@@ -124,13 +124,9 @@ void CallCell(const char* who, std::uint32_t table, unsigned index, unsigned ent
     reinterpret_cast<magic_harness::Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(table + 4 * index)))))();
 }
 
-// Unnamed callees of other units, called by their addresses, never bound:
-//   0x4F6290  a pool record's free (bytes +0..+4 of Sprite_Current cleared) -
-//             MAGIC219's (group S37), shared by 35 overlays;
-//   0x4F9F70  a stack-table phase: +9 down, at 0 the target flags 0x10 and +1
-//             on - MAGIC226/227's (group S38).
-constexpr std::uint32_t kRecordFree = 0x4F6290;
-constexpr std::uint32_t kCountThenHit = 0x4F9F70;
+// Callees of other units, ours now, by name: S37's MagicFx_FreeCurrentRecord
+// (a pool record's free) and S38's MagicFx_CountDownFlag10 (a stack-table
+// phase: +9 down, at 0 the target flags 0x10 and +1 on).
 using VoidFn = void (__cdecl*)();
 
 // A pool task's frame (Icebreath_Task, Thunderbreath_Task): every record with
@@ -615,7 +611,7 @@ S28_EXPORT void __cdecl BreathMote_Burst(void) {
     Dec(Sc()[0xA]);
     if (Sc()[0xA] == 0) {
         Dec(Owner()[0xB]);
-        MH_AT(VoidFn, kRecordFree)();
+        MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
         return;
     }
     MH_CALL(BreathMote_DrawBurst)();
@@ -624,7 +620,7 @@ S28_EXPORT void __cdecl BreathMote_Burst(void) {
 // original 0x4DEE40: the owner's +0xB down and the record freed.
 S28_EXPORT void __cdecl BreathMote_Free(void) {
     Dec(Owner()[0xB]);
-    MH_AT(VoidFn, kRecordFree)();
+    MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // The angle of a mote's corner j: (BreathMote_Angles[j] + +9) & 0x3F, << 6.
@@ -744,7 +740,7 @@ S28_EXPORT unsigned char __cdecl IcePool_Alloc(void) { return Alloc(kMotePool, k
 // Thunderbreath_Wait, BattleFx_Finish - then draw mode 0x35, the bolt pool
 // run through ThunderPool_Dispatch, the orb, draw mode 0x15.
 S28_EXPORT void __cdecl Thunderbreath_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {bof3::addr::Thunderbreath_Start, kCountThenHit,
+    static constexpr std::uint32_t kPhases[4] = {bof3::addr::Thunderbreath_Start, bof3::addr::MagicFx_CountDownFlag10,
                                                  bof3::addr::Thunderbreath_Wait, bof3::addr::BattleFx_Finish};
     const unsigned phase = Sc()[1];
     if (phase >= 4) PastTable("Thunderbreath_Task", phase, 4);
@@ -912,7 +908,7 @@ S28_EXPORT void __cdecl ThunderBolt_Fade(void) {
     Sc()[9] = U8(Sc()[9] - 2);
     if (Sc()[9] != 0) return;
     Dec(Owner()[0xB]);
-    MH_AT(VoidFn, kRecordFree)();
+    MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // A quad of the bolt (G4, 0x44 bytes): its first pair of corners at the
@@ -1122,7 +1118,7 @@ S28_EXPORT void __cdecl ThunderSpark_Fade(void) {
     Sc()[9] = U8(Sc()[9] - 4);
     if (Sc()[9] != 0) return;
     Dec(Owner()[0xB]);
-    MH_AT(VoidFn, kRecordFree)();
+    MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // original 0x4E0550: the spark's fan: eight G3 triangles (0x34 bytes) from
