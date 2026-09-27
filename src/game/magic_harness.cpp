@@ -164,13 +164,22 @@ unsigned g_slot_n;
 std::uint32_t Cur() { return Key(Sprite_Current); }
 
 std::uint32_t Answering(const Slot& s) {
-    const std::uint32_t h = Hash();
+    // Remixed, not Hash() itself: Disturb read the same Hash() at the same log
+    // length, and its "h % 3 == 0: nothing moves" would otherwise be exactly
+    // kFlag's and kBool's "answer 0" - a 0 never seen after a disturbance
+    // (found by E).
+    std::uint32_t h = Hash() * 0x2C1B3C6Du;
+    h ^= h >> 12;
+    h *= 0x297A2D39u;
+    h ^= h >> 15;
     switch (s.answer) {
     case Answer::kByte: {
         const unsigned span = ((static_cast<unsigned>(s.hi) - s.lo) & 0xFFu) + 1;
         return (h & 0xFFFFFF00u) | ((s.lo + (h >> 8) % span) & 0xFFu);
     }
-    case Answer::kFlag: return h % 3 == 0 ? h & 0xFFFFFF00u : h | 0x10;
+    // A 0 is half the time a whole eax of 0: a caller testing all 32 bits
+    // (MagicFx_NearSprite's; S03, S04, S08) sees it too.
+    case Answer::kFlag: return h % 3 == 0 ? (h & 0x100 ? 0u : h & 0xFFFFFF00u) : h | 0x10;
     case Answer::kBool: return h % 3 == 0 ? 0u : 1u;
     case Answer::kRand:
         // some values the CRT's never answers (negative); a third of the time

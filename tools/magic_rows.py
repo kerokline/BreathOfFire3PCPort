@@ -49,6 +49,14 @@ measurements):
    049, 133..136, 156, 157 on MAGIC004's entry) has no code of its own: the
    linker folded it whole into the other.
 
+Tables are bounded, not run to the first dword that is not code: a jump
+table at its cmp / ja (S26), a .data table at the next table's start
+(S08: symbols.toml's [[data]] and every table a band function indexes or
+loads; a cmp's immediate is a loop's end, not a table). Before 2026-09-26
+the runs spilled into the next tables and 745 functions' reached-by lists
+were too wide. A stack-table entry loaded into a register before its store
+is a clone site too (S06).
+
 Sizes are a function's own bytes - its recursive descent, jump tables
 included, to its last instruction - not the padding after it.
 
@@ -160,8 +168,11 @@ def descend(img, start, known):
                     v = op.imm & 0xFFFFFFFF
                     if img.in_text(v):
                         out.add(v)
-                    elif img.off(v) is not None and v >= 0x5C0000:
-                        tables.add(v)   # a .data table's address taken into a register
+                    elif img.off(v) is not None and v >= 0x5C0000 and m != 'cmp':
+                        # a .data table's address taken into a register; not a
+                        # cmp's, the end a loop walks to (MAGIC066's cmp edi,
+                        # 0x65AC7C lies inside MAGIC067's table at 0x65AC78)
+                        tables.add(v)
             if m == 'push':
                 pushes.append(ops[0].imm & 0xFFFFFFFF if ops[0].type == x86.X86_OP_IMM else None)
             if m == 'call':
@@ -196,8 +207,9 @@ def descend(img, start, known):
                     break
                 if op.type == x86.X86_OP_MEM and op.mem.index != 0 and img.in_text(op.mem.disp & 0xFFFFFFFF):
                     t = op.mem.disp & 0xFFFFFFFF
+                    cap = _jump_cap(img, prev)
                     n = 0
-                    while True:
+                    while n < cap:
                         w = img.u32(t + 4 * n)
                         if w is None or not (start <= w < t):
                             break
@@ -229,20 +241,68 @@ def descend(img, start, known):
             if pc in known and pc != start and pc not in seen:
                 # fell through into a known start: it is part of this one
                 false_starts.add(pc)
-    for t in tables | drefs:
-        # the code pointers stored there, while the dwords are .text addresses
-        for i in range(256):
-            w = img.u32(t + 4 * i)
-            if w is None or not img.in_text(w):
-                break
-            if BAND_LO <= w < BAND_HI:
-                out.add(w)
-    return dict(end=end, out=out, drefs=drefs, creates=creates, unknown_creates=unknown_creates,
+    return dict(end=end, out=out, drefs=drefs, tables=tables, creates=creates, unknown_creates=unknown_creates,
                 false_starts=false_starts, tail_starts=tail_starts)
+
+
+# Where a .data table starts: symbols.toml's [[data]], and every table a
+# band function indexes or takes the address of. A run of code pointers
+# stops at the next one - S08's tables sit back to back (BerserkChild_Kinds'
+# two, then CounterChild_Kinds'), and a run to the first non-code dword
+# counted 3, 5, 25, 23, 19 where the tables hold 2, 1, 1, 2, 4.
+TABLE_STARTS = set()
+
+
+def _table_run(img, t):
+    """The code pointers of the .data table at t: while the dwords are .text
+    addresses, up to the next table's start."""
+    ws = []
+    while len(ws) < 256:
+        a = t + 4 * len(ws)
+        w = img.u32(a)
+        if w is None or not img.in_text(w) or (ws and a in TABLE_STARTS):
+            break
+        ws.append(w)
+    return ws
+
+
+def read_tables(img, funcs, sym):
+    """After discovery: bound the .data tables, then add the band code each
+    function's tables store to its out."""
+    TABLE_STARTS.clear()
+    TABLE_STARTS.update(d['pc'] for d in sym.get('data', []))
+    for d in funcs.values():
+        TABLE_STARTS.update(d['tables'])
+    for d in funcs.values():
+        for t in d['tables'] | d['drefs']:
+            d['out'].update(w for w in _table_run(img, t) if BAND_LO <= w < BAND_HI)
 
 
 def _inside(t, start, pc):
     return start < t <= pc
+
+
+def _byte_table(img, prev):
+    """MSVC's two-level switch: movzx r, byte [r + T2] just before the jmp,
+    T2 in .text (not any byte load: DrawTriangle's mov cl, [eax + 0xB])."""
+    return any(p.mnemonic in ('mov', 'movzx') and len(p.operands) == 2 and p.operands[1].type == x86.X86_OP_MEM
+               and p.operands[1].size == 1 and img.in_text(p.operands[1].mem.disp & 0xFFFFFFFF) for p in prev[-3:])
+
+
+def _jump_cap(img, prev):
+    """The most entries a jmp [r*4 + T] table can have: the bound its
+    cmp / ja tests, plus one. S26's Magic114_DrawTriangle (cmp ecx, 7; ja)
+    has 8, and the run of code pointers ran on into the next table for 14.
+    Behind a byte table the cmp bounds the byte table instead: no cap."""
+    if _byte_table(img, prev):
+        return 1 << 30
+    for i in range(len(prev) - 1, -1, -1):
+        p = prev[i]
+        if p.mnemonic == 'cmp' and len(p.operands) == 2 and p.operands[1].type == x86.X86_OP_IMM:
+            if any(q.mnemonic == 'ja' for q in prev[i + 1:]):
+                return (p.operands[1].imm & 0xFFFFFFFF) + 1
+            break
+    return 1 << 30
 
 
 def _cmp_bound(prev):
@@ -315,6 +375,8 @@ def clone_sites(img, base, end):
     work = [base]
     while work:
         pc = work.pop()
+        prev = []
+        loaded = {}     # register -> (site, value): mov r32, imm32 of a .text address
         while base <= pc < end and pc not in covered:
             ins = decode(img, pc)
             if ins is None:
@@ -342,8 +404,9 @@ def clone_sites(img, base, end):
             elif m == 'jmp' and ops[0].type == x86.X86_OP_MEM:
                 t = ops[0].mem.disp & 0xFFFFFFFF
                 if base <= t < end and ops[0].mem.index != 0:
+                    cap = _jump_cap(img, prev)
                     n = 0
-                    while img.u32(t + 4 * n) is not None and base <= img.u32(t + 4 * n) < t:
+                    while n < cap and img.u32(t + 4 * n) is not None and base <= img.u32(t + 4 * n) < t:
                         work.append(img.u32(t + 4 * n))
                         n += 1
                     tables.append((pc - base + ins.size - 4, t - base, n))
@@ -359,17 +422,35 @@ def clone_sites(img, base, end):
             elif m == 'mov' and len(ops) == 2 and ops[0].type == x86.X86_OP_MEM and ops[0].mem.base == x86.X86_REG_ESP \
                     and ops[1].type == x86.X86_OP_IMM and img.in_text(ops[1].imm & 0xFFFFFFFF):
                 imms.append((pc - base + ins.size - 4, ops[1].imm & 0xFFFFFFFF))
+            elif m == 'mov' and len(ops) == 2 and ops[0].type == x86.X86_OP_MEM and ops[0].mem.base == x86.X86_REG_ESP                     and ops[1].type == x86.X86_OP_REG and ops[1].reg in loaded:
+                # a stack-table entry loaded into a register first (S06's
+                # Magic008TwoBlows_Run: mov ecx, 0x4A2FB0 ... mov [esp + k], ecx):
+                # the site is the register load's immediate
+                imms.append(loaded[ops[1].reg])
+            # what this instruction writes ends a register's load
+            if ops and ops[0].type == x86.X86_OP_REG:
+                if m == 'mov' and len(ops) == 2 and ops[1].type == x86.X86_OP_IMM and ops[0].size == 4                         and img.in_text(ops[1].imm & 0xFFFFFFFF):
+                    loaded[ops[0].reg] = (pc - base + ins.size - 4, ops[1].imm & 0xFFFFFFFF)
+                elif m not in ('cmp', 'test', 'push'):
+                    loaded = {r: v for r, v in loaded.items() if not _same_reg(ops[0].reg, r)}
+            if m in ('call',):
+                loaded = {}     # eax, ecx, edx do not survive a call; say none does
             if m in ('ret', 'retf', 'int3', 'hlt'):
                 break
+            prev.append(ins)
+            prev = prev[-6:]
             pc += ins.size
     return sorted(set(calls)), sorted(set(imms)), tables, refused
 
 
+def _same_reg(a, b):
+    """Whether two capstone registers overlap (al, ax, eax)."""
+    fam = lambda r: MD.reg_name(r)[-2:].replace('l', 'x').replace('h', 'x') if MD.reg_name(r) else r
+    return a == b or fam(a) == fam(b)
+
+
 def _code_run(img, t):
-    n = 0
-    while img.u32(t + 4 * n) is not None and img.in_text(img.u32(t + 4 * n)):
-        n += 1
-    return n
+    return len(_table_run(img, t))
 
 
 def print_clones(img, addrs, funcs, named):
@@ -458,6 +539,7 @@ def main():
     band = sorted(s for s in recorded | hidden if BAND_LO <= s < BAND_HI)
 
     funcs = discover(img, band)
+    read_tables(img, funcs, sym)
     starts = sorted(funcs)
     sset = set(starts)
 

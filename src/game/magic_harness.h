@@ -124,7 +124,8 @@ constexpr unsigned kArgs = 10;
 //   kGarbage  any eax;
 //   kByte     a byte in lo..hi with garbage above it (an index, a count; lo
 //             above hi wraps through 0xFF, so 0xFF..0x3F is "none, or 0..0x3F");
-//   kFlag     a byte of 0 (a third of the time) or not 0, garbage above;
+//   kFlag     a byte of 0 (a third of the time; half of those a whole eax
+//             of 0, half garbage above) or not 0, garbage above;
 //   kBool     a whole eax of exactly 0 (a third of the time) or 1, for a
 //             callee whose callers test all 32 bits;
 //   kRand     the harness's Rand (SetRandHint, SetRandFirst);

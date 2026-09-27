@@ -99,10 +99,15 @@ the worked example: 110 lines of group file for three functions, most of it the 
   arguments masked to what the callee reads (or hashed through `deref`),
   four to a log entry, then disturbs, then answers by its kind: garbage; a
   byte in `lo..hi` with garbage above (`BattleTask_Create`: a slot 0..47;
-  `lo` above `hi` wraps through 0xFF); a flag (0 in al a third of the time);
-  a bool; `Rand`'s answer - negative values the CRT never gives, a third of
+  `lo` above `hi` wraps through 0xFF); a flag (0 in al a third of the time,
+  half of those a whole eax of 0 for a caller that tests all 32 bits -
+  `MagicFx_NearSprite`'s, S03, S04, S08); a bool; `Rand`'s answer - negative values the CRT never gives, a third of
   the time near `SetRandHint`, the round's first exactly `SetRandFirst`;
-  then the callee's `effect`, if any, has the last word. A handler's
+  then the callee's `effect`, if any, has the last word. The answer draws
+  on a remix of the call's hash, not the hash the disturbance read: with
+  the same one, "nothing moved" and a flag's or bool's 0 coincided, so a 0
+  was never seen after a disturbance (group E; fixed 2026-09-26, waves two
+  and three work round it in their own fuzz files and still pass). A handler's
   recorder logs the slot and its phase bytes. `StandIn` finds a recorder
   by the pointer ours passes, or by the original's address (a callee that
   became ours, called by `MH_AT`), or through the standard set's name for

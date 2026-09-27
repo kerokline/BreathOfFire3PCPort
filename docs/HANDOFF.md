@@ -62,15 +62,14 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
 2. **Owed by the spell round, before or after wave five** (round9 doc
    sections 6 to 10):
    - **The frame hash re-record** (above), owner away about 20 minutes.
-   - **Two harness gaps, then every group's controls re-run**: a `kFlag`
-     stand-in answers 0 exactly when its own disturbance did nothing (E),
-     and answers only al, so a caller testing all of eax never sees 0
-     (`MagicFx_NearSprite`; S03, S04, S08). Waves two and three work round
-     both in their own fuzz files; the fix is in `magic_harness.cpp`.
-   - **`tools/magic_rows.py`'s misses**: a jump table another follows is
-     over-counted (bound it by the `cmp`; S26); stack-table handlers loaded
-     through a register are missed (S06); `.data` handler tables are
-     over-counted (S08).
+   - **The controls, re-run on the fixed harness.** Both `kFlag` gaps
+     are fixed in `magic_harness.cpp` (2026-09-26; [`magic_harness.md`](magic_harness.md)
+     §4) and `BOF3X_SHADOW='*'` passes headless, but the answers' stream
+     changed under every group, so a control refused by the old stream is
+     unproven on the new. The controls scripts were never committed (they
+     lived untracked in the removed agent worktrees): a re-run rebuilds
+     them from each group doc's controls table. Waves two and three's own
+     `kFlag` workarounds still pass and can stay.
    - **Rebinding**: many groups call later groups' functions by raw address;
      they work (the stand-in falls back to the address) but can take names.
    - **`known-defects.md`**: the groups describe; nobody has numbered them.
@@ -86,11 +85,9 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
    - **34 owned functions have no `entries_logic.txt` line** (round9 doc
      section 10): 9 are the wall-clock exclusions, 25 to audit with the
      re-record.
-3. **Housekeeping.** `git worktree list` shows 18 `.claude/worktrees/agent-*`
-   worktrees from waves two and three, all merged into `phase-3/round-nine`;
-   remove them with the owner's nod (check each for uncommitted files; on
-   Windows one fails "Permission denied" while a shell sits in it). A PR for
-   round nine when the owner wants one.
+3. **Housekeeping.** The 18 wave two and three agent worktrees and their
+   branches are removed (2026-09-26). A PR for round nine when the owner
+   wants one.
 4. **The owner's eye on older rounds**: round seven and the world map (the
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.

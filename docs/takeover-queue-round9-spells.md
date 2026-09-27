@@ -312,7 +312,9 @@ wave.
 The brief is wave two's with its lessons added (`analysis/round9_wave345_brief.md`;
 the group lines `analysis/round9_wave{3,4,5}_groups.tsv`; not committed): the
 `kFlag` blind spot worked round in each group's fuzz until the harness is
-fixed, jump-table counts checked against their `cmp`, a group `disturb`
+fixed (it was, 2026-09-26, before wave four: [`magic_harness.md`](magic_harness.md)
+§4), jump-table counts checked against their `cmp` (`magic_rows.py` bounds
+them itself since the same day), a group `disturb`
 drawing only from its hash, never `commit -a` during controls, and the
 earlier waves' shared functions called by name.
 
