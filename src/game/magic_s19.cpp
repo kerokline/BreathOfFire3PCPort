@@ -86,15 +86,13 @@ constexpr std::uint32_t kDiscPhases = 0x65B4B8;      // BarrierDisc_Phases, by +
 constexpr std::uint32_t kRingPhases = 0x65B4C4;      // BarrierRing_Phases, by +2
 constexpr std::uint32_t kLinePhases = 0x65B4DC;      // BarrierLine_Phases, by +2
 
-// Callees in other groups' units, by raw address (never bound here).
-constexpr std::uint32_t kAuraDisc = 0x4C12F0;    // MAGIC082 (S18): a disc of the given radius at the task
-constexpr std::uint32_t kPartFree = 0x4F6290;    // MAGIC219: clears bytes 0..4 of Sprite_Current (a pool slot's free)
-constexpr std::uint32_t kStatusMark = 0x4FB790;  // LIBRARY (L): a kind-1 task 0x48 for (kind, side index)
-constexpr std::uint32_t kLinkSorted = 0x4FB880;  // LIBRARY (L): count prims linked by their depths, or dropped
+// Callees in other groups' units, ours now, by name: S18's
+// MagicFx_DrawDiscRadius, S37's MagicFx_FreeCurrentRecord, the effect
+// library's MagicFx_BuffPopup and MagicFx_LinkByDepth (through LinkSortedFn:
+// the depths as long *).
 
 using Handler = void (__cdecl*)();
 using DiscFn = void (__cdecl*)(unsigned);
-using MarkFn = void (__cdecl*)(unsigned, unsigned);
 using LinkSortedFn = void (__cdecl*)(unsigned long, unsigned long, long*, unsigned char*, unsigned, unsigned, unsigned);
 
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -150,7 +148,7 @@ std::int32_t Cos(std::int32_t angle) { return MH_CALL(Math_Cos)(angle); }
 // what they were after the phase. The index is not checked by the original;
 // ours aborts past the table.
 MS19_EXPORT void __cdecl Shield_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Shield_Start, 0x4E5200};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Shield_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 2) bof3::Fatal("Shield_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -335,7 +333,7 @@ MS19_EXPORT void __cdecl ShieldAura_Fade(void) {
     MH_CALL(Sprite_ReleaseTint)(member);
     MH_CALL(BattleActor_Flash)(actor);
     const unsigned char* const now = Sprite_Current;
-    MH_AT(MarkFn, kStatusMark)(now[4], now[3]);
+    MH_CALL(MagicFx_BuffPopup)(now[4], now[3]);
     Bump(Sprite_Current[0xB]);
     Bump(Sprite_Current[2]);
 }
@@ -468,7 +466,7 @@ namespace {
 // Every crystal phase after the first: its screen point, the MAGIC082 disc
 // under it (radius `radius`), and the crystal under the actor's matrix.
 void CrystalFrame(unsigned radius) {
-    MH_AT(DiscFn, kAuraDisc)(radius);
+    MH_AT(DiscFn, bof3::addr::MagicFx_DrawDiscRadius)(radius);
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(ShieldSpark_DrawCrystal)();
     MH_CALL(Gte_PopMatrix)();
@@ -572,7 +570,7 @@ MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
-    magic_harness::Phase(kPartFree)();
+    magic_harness::Phase(bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 namespace {
@@ -642,14 +640,16 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
         Put16(kRadius, 0x30);
         cur = CrystalFace(kTopColours, step, cur, 0x50, depths);
     }
-    MH_AT(LinkSortedFn, kLinkSorted)(static_cast<unsigned long>(Long(cur + 0x34)), static_cast<unsigned long>(Long(cur + 0x38)),
-                                     depths, first, 4, 0x34, 0);
+    MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
+                                                         static_cast<unsigned long>(Long(cur + 0x38)), depths, first, 4,
+                                                         0x34, 0);
     cur = Sprite_Current;
     unsigned char* const second = Prim();
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8)
         cur = CrystalFace(kBottomColours, step, cur, static_cast<std::int16_t>(-S16(kHeight)), depths);
-    MH_AT(LinkSortedFn, kLinkSorted)(static_cast<unsigned long>(Long(cur + 0x34)), static_cast<unsigned long>(Long(cur + 0x38)),
-                                     depths, second, 4, 0x34, 0);
+    MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
+                                                         static_cast<unsigned long>(Long(cur + 0x38)), depths, second,
+                                                         4, 0x34, 0);
 }
 
 // original 0x4C2790: a free crystal slot - the first of the 24 whose byte 0
@@ -674,9 +674,9 @@ MS19_EXPORT unsigned char __cdecl ShieldSpark_Alloc(void) {
 // 0x4BDC10 (MAGIC078's: once +0xB is 0xFF, Battle_SetTargetFlag40 on the
 // target, the done flag, free). Unchecked by the original; ours aborts.
 MS19_EXPORT void __cdecl Barrier_Task(void) {
-    static constexpr std::uint32_t kPhases[6] = {bof3::addr::Barrier_Start, bof3::addr::Barrier_Tint,
+    static constexpr std::uint32_t kPhases[6] = {bof3::addr::Barrier_Start,     bof3::addr::Barrier_Tint,
                                                  bof3::addr::BattleFx_Brighten, bof3::addr::Barrier_WaitRings,
-                                                 bof3::addr::Barrier_Fade, 0x4BDC10};
+                                                 bof3::addr::Barrier_Fade,      bof3::addr::Leech_WaitOrbs};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 6) bof3::Fatal("Barrier_Task: phase %u, past the six-entry table", phase);
     magic_harness::Phase(kPhases[phase])();

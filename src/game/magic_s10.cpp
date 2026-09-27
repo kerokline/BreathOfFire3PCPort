@@ -124,7 +124,7 @@ void CopyRecord(unsigned char* to, const unsigned char* from) {
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(to + k, Long(from + k));
 }
 
-// This group's functions, and other groups' not yet ours, called by address,
+// This group's functions, and other groups' (bof3::addr), called by address,
 // as the originals call them: in the game the jmp Inject put there (or
 // Capcom's code), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
@@ -144,13 +144,10 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 constexpr std::uint32_t kEnemyAnimCurrent = 0x435A20;
 constexpr std::uint32_t kEnemyAnim = 0x435A70;
 
-// The phase handlers and callees of other units (docs/magic_s10.md section 3):
-// called by their addresses.
-constexpr std::uint32_t kCountDownFlag10 = 0x4F9F70;   // MAGIC226/227: +9 down, at 0 target flags 0x10 and +1 on
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;    // MAGIC058: the owner's +0xB down, the task freed
-constexpr std::uint32_t kPushLavaMatrix = 0x4F6020;    // MAGIC219: called before LavaburstChild_DrawGlow
-constexpr std::uint32_t kDrawLava = 0x4FA440;          // MAGIC226/227: called after it
-constexpr std::uint32_t kPoolFree = 0x4F6290;          // MAGIC219: a pool record's free (a tail jmp)
+// The phase handlers and callees of other units (docs/magic_s10.md section 3)
+// are ours now and called by name: S38's MagicFx_CountDownFlag10 and
+// MeteorStrikeRock_DrawRing, S11's MagicFx_UncountAndFree, S37's
+// MagicFx_PushRecordMatrix, MagicFx_FreeCurrentRecord and CombustionMote_Start.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -317,7 +314,8 @@ short Scaled(int v) { return static_cast<short>(Mul12(v, SS(0))); }
 // (Lavaburst_Start, MAGIC226/227's 0x4F9F70, BattleFx_Finish), then the pool
 // walked.
 S10_EXPORT void __cdecl Lavaburst_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {addr::Lavaburst_Start, kCountDownFlag10, addr::BattleFx_Finish};
+    static constexpr std::uint32_t kPhases[3] = {addr::Lavaburst_Start, addr::MagicFx_CountDownFlag10,
+                                                 addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "Lavaburst_Task");
     WalkPool();
 }
@@ -386,9 +384,9 @@ S10_EXPORT void __cdecl LavaburstChild_Run(void) {
     if ((s[0] & 1) != 0 && s[2] != 0 && s[2] < 4) {
         MH_CALL(BattleActor_UpdateScreenXY)();
         MH_CALL(Sprite_UpdateScreen)();
-        Call0(kPushLavaMatrix);
+        Call0(addr::MagicFx_PushRecordMatrix);
         Call0(addr::LavaburstChild_DrawGlow);
-        Call0(kDrawLava);
+        Call0(addr::MeteorStrikeRock_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
     SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
@@ -573,7 +571,8 @@ S10_EXPORT void __cdecl LavaburstRecord_Task(void) {
 // 0x4F7C40, _Grow, _Shrink) by +2; then while +0 and +2 are set the actor
 // matrix, the quad, the matrix popped.
 S10_EXPORT void __cdecl LavaburstRecord_Run(void) {
-    static constexpr std::uint32_t kSteps[3] = {0x4F7C40, addr::LavaburstRecord_Grow, addr::LavaburstRecord_Shrink};
+    static constexpr std::uint32_t kSteps[3] = {addr::CombustionMote_Start, addr::LavaburstRecord_Grow,
+                                                addr::LavaburstRecord_Shrink};
     Dispatch(kSteps, 3, Sc()[2], "LavaburstRecord_Run");
     const unsigned char* const s = Sc();
     if (s[0] == 0 || s[2] == 0) return;
@@ -618,7 +617,7 @@ S10_EXPORT void __cdecl LavaburstRecord_Shrink(void) {
     Dec(Sc()[0xA]);
     if (Sc()[0xA] != 0) return;
     Dec(Owner()[4]);
-    Call0(kPoolFree);
+    Call0(addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4AC840: one semi-transparent textured quad of radius 0x100 at
@@ -749,8 +748,9 @@ S10_EXPORT void __cdecl HowlingChild_Task(void) {
 // original 0x4ACD00: a six-entry stack table by +2 (_Start, _Out, _Hold,
 // _Back, _End, MAGIC058's 0x4AF490); the screen update while +0 is set.
 S10_EXPORT void __cdecl HowlingChild_Run(void) {
-    static constexpr std::uint32_t kSteps[6] = {addr::HowlingChild_Start, addr::HowlingChild_Out, addr::HowlingChild_Hold,
-                                                addr::HowlingChild_Back, addr::HowlingChild_End, kFreeOwnerCount};
+    static constexpr std::uint32_t kSteps[6] = {addr::HowlingChild_Start, addr::HowlingChild_Out,
+                                                addr::HowlingChild_Hold,  addr::HowlingChild_Back,
+                                                addr::HowlingChild_End,   addr::MagicFx_UncountAndFree};
     Dispatch(kSteps, 6, Sc()[2], "HowlingChild_Run");
     if (Sc()[0] != 0) MH_CALL(Sprite_UpdateScreen)();
 }

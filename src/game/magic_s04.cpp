@@ -110,11 +110,10 @@ using Fn0 = void (__cdecl*)();
 using ByteFn = unsigned char (__cdecl*)();
 void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 
-// Capcom's and other groups' code this group calls (docs/magic_s04.md section 3).
+// Capcom's code this group calls (docs/magic_s04.md section 3); other groups'
+// phase handlers (S35's LastResort_WaitChildren, S05's Magic018Row53_Wait,
+// S11's MagicFx_UncountAndFree) are ours now and named in the tables.
 constexpr std::uint32_t kTurnOffset = 0x446770;       // engine: +0xC / +0x10 of a task turned by its +8
-constexpr std::uint32_t kWaitChildren1 = 0x4EF7C0;    // MAGIC167 (group S35): +1 on once +0xB is 1 or less
-constexpr std::uint32_t kImageEnd = 0x4A1EC0;         // MAGIC018/019 (group S05): at +0xB 0 the FX row back, animation 4, +1 on
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;   // MAGIC058 (group S11): the owner's +0xB down, the task freed
 constexpr std::uint32_t kPolyF3 = 0x5A7570;           // libgpu SetPolyF3 by shape (code 0x20), unnamed
 using TaskFn = void (__cdecl*)(unsigned char*);
 using PrimFn = void (__cdecl*)(unsigned char*);
@@ -252,8 +251,8 @@ void WalkPool() {
 // Snap_Start, MAGIC167's 0x4EF7C0, Snap_Buff, MagicFx_EndWhenChildrenDone;
 // then the spark pool walked.
 S04_EXPORT void __cdecl Snap_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {bof3::addr::Snap_Start, kWaitChildren1, bof3::addr::Snap_Buff,
-                                                 bof3::addr::MagicFx_EndWhenChildrenDone};
+    static constexpr std::uint32_t kPhases[4] = {bof3::addr::Snap_Start, bof3::addr::LastResort_WaitChildren,
+                                                 bof3::addr::Snap_Buff, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 4, Sc()[1], "Snap_Task");
     WalkPool();
 }
@@ -657,8 +656,8 @@ S04_EXPORT unsigned char __cdecl SnapSpark_Alloc(void) {
 // Charge_Start, MAGIC018/019's 0x4A1EC0, MagicFx_DoneAndFree,
 // MagicFx_FlagTargetEnd.
 S04_EXPORT void __cdecl Charge_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {bof3::addr::Charge_Start, kImageEnd, bof3::addr::MagicFx_DoneAndFree,
-                                                 bof3::addr::MagicFx_FlagTargetEnd};
+    static constexpr std::uint32_t kPhases[4] = {bof3::addr::Charge_Start, bof3::addr::Magic018Row53_Wait,
+                                                 bof3::addr::MagicFx_DoneAndFree, bof3::addr::MagicFx_FlagTargetEnd};
     StackCall(kPhases, 4, Sc()[1], "Charge_Task");
 }
 
@@ -706,8 +705,8 @@ S04_EXPORT void __cdecl Charge_Start(void) {
 // original 0x49FCF0: the kind-2 task. A four-entry stack table by +1:
 // AirRaid_Start, 0x4A1EC0, MagicFx_DoneAndFree, MagicFx_FlagTargetEnd.
 S04_EXPORT void __cdecl AirRaid_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {bof3::addr::AirRaid_Start, kImageEnd, bof3::addr::MagicFx_DoneAndFree,
-                                                 bof3::addr::MagicFx_FlagTargetEnd};
+    static constexpr std::uint32_t kPhases[4] = {bof3::addr::AirRaid_Start, bof3::addr::Magic018Row53_Wait,
+                                                 bof3::addr::MagicFx_DoneAndFree, bof3::addr::MagicFx_FlagTargetEnd};
     StackCall(kPhases, 4, Sc()[1], "AirRaid_Task");
 }
 
@@ -953,7 +952,7 @@ S04_EXPORT void __cdecl ChargeImage_Stretch(void) {
 S04_EXPORT void __cdecl ChargeTrail_Run(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::ChargeTrail_Start, bof3::addr::KickImage_Tick,
                                                  bof3::addr::ChargeTrail_Dash, bof3::addr::KickImage_Arc,
-                                                 kFreeOwnerCount};
+                                                 bof3::addr::MagicFx_UncountAndFree};
     StackCall(kPhases, 5, Sc()[2], "ChargeTrail_Run");
     UpdateWhileLive();
 }

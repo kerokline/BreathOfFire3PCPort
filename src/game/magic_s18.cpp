@@ -55,11 +55,10 @@ constexpr std::uint32_t kClutFrom = 0x80E980, kClutTo = 0x812980;
 // library's .data, 4 bytes below FxDim_Phases; not this group's to name).
 constexpr std::uint32_t kKindByte = 0x65C39C;
 
-// The effect library's (queue group L), by address (docs/magic_s18.md section 5).
-constexpr std::uint32_t kLinkDepths = 0x4FB880;   // (x, z, depths[], prims, count, size, slot)
-constexpr std::uint32_t kKindTest = 0x4FB6F0;     // (byte, target) -> 0 / not 0
+// The effect library's (queue group L, docs/magic_s18.md section 5), by name:
+// MagicFx_LinkByDepth (through LinkDepthsFn: the depths as const long *),
+// MagicFx_ApplyBuff.
 using LinkDepthsFn = void (__cdecl*)(unsigned long, unsigned long, const long*, unsigned char*, unsigned, unsigned, unsigned);
-using KindTestFn = unsigned char (__cdecl*)(unsigned, unsigned);
 
 // The GTE calls as the originals push them: one pointer more than
 // symbols.toml's prototypes carry (a flag word the callee may write).
@@ -536,9 +535,9 @@ MS18_EXPORT void __cdecl DrainOrb_DrawDisc(void) {
 // MAGIC062's), Buff_WaitChildren, Buff_Fade, 0x4E5200 (MAGIC131's: the done
 // flag and free once +0xB is 0). Unchecked in the original; ours aborts.
 MS18_EXPORT void __cdecl Buff_Task(void) {
-    static constexpr std::uint32_t kPhases[6] = {bof3::addr::Buff_Start,        bof3::addr::BattleFx_TintActor,
-                                                 bof3::addr::BattleFx_Brighten, bof3::addr::Buff_WaitChildren,
-                                                 bof3::addr::Buff_Fade,         0x4E5200};
+    static constexpr std::uint32_t kPhases[6] = {
+        bof3::addr::Buff_Start,        bof3::addr::BattleFx_TintActor, bof3::addr::BattleFx_Brighten,
+        bof3::addr::Buff_WaitChildren, bof3::addr::Buff_Fade,          bof3::addr::MagicFx_EndWhenChildrenDone};
     CallPhase(kPhases, 6, "Buff_Task");
 }
 
@@ -616,7 +615,7 @@ MS18_EXPORT void __cdecl Buff_Fade(void) {
     MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
     const unsigned char target = Mem(at::kTarget)[0];
     const unsigned char byte = Mem(kKindByte)[SC()[4]];
-    const unsigned char suits = MH_AT(KindTestFn, kKindTest)(byte, target);
+    const unsigned char suits = MH_CALL(MagicFx_ApplyBuff)(byte, target);
     unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x48));
     unsigned char* const owner = SC();
     SetLong(t + 0x80, Ptr(owner));
@@ -966,14 +965,16 @@ MS18_EXPORT void __cdecl BuffSpike_Draw(void) {
     SpikeRow(BuffSpike_ColorsUp, true, depths);
     {
         const unsigned char* const sc = SC();
-        MH_AT(LinkDepthsFn, kLinkDepths)(static_cast<unsigned long>(Long(sc + 0x34)), static_cast<unsigned long>(Long(sc + 0x38)),
-                                         depths, up, 4, 0x34, 2);
+        MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(sc + 0x34)),
+                                                             static_cast<unsigned long>(Long(sc + 0x38)), depths, up, 4,
+                                                             0x34, 2);
     }
     unsigned char* const down = Gfx_PacketNext;
     SpikeRow(BuffSpike_ColorsDown, false, depths);
     const unsigned char* const sc = SC();
-    MH_AT(LinkDepthsFn, kLinkDepths)(static_cast<unsigned long>(Long(sc + 0x34)), static_cast<unsigned long>(Long(sc + 0x38)),
-                                     depths, down, 4, 0x34, 2);
+    MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(sc + 0x34)),
+                                                         static_cast<unsigned long>(Long(sc + 0x38)), depths, down, 4,
+                                                         0x34, 2);
 }
 
 // original 0x4C12F0 (also reached from MAGIC083): a flat disc of eight

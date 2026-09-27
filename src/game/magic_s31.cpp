@@ -131,14 +131,11 @@ using TaskFn = void (__cdecl*)(unsigned char*);
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
 // The phase handlers of other units a table holds (docs/magic_s31.md
-// section 3): called by their addresses.
-constexpr std::uint32_t kCountDownFlag10 = 0x4F9F70;   // MAGIC226/227: +9 down, at 0 target flags 0x10 and +1 on
-constexpr std::uint32_t kEndWhenNoChildren = 0x4E5200;  // MAGIC131: at +0xB 0 the done flag and free
-constexpr std::uint32_t kScriptUntilDone = 0x43EC10;    // engine: the script ticked, the sprite queued, +2 on at the done flag
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;     // MAGIC058: the owner's +0xB down, the task freed
-constexpr std::uint32_t kRayPhase1 = 0x4B6B20;          // MAGIC067
-constexpr std::uint32_t kRayPhase2 = 0x4B6B70;          // MAGIC067
-constexpr std::uint32_t kFlashPhase3 = 0x4B1740;        // MAGIC060
+// section 3): the engine's below by address; the rest ours now and named in
+// the tables (S38's MagicFx_CountDownFlag10, S30's
+// MagicFx_EndWhenChildrenDone, S11's MagicFx_UncountAndFree, S15's
+// ChillRay_Grow / _Shrink, S12's MagicFx_CountDownRelease).
+constexpr std::uint32_t kScriptUntilDone = 0x43EC10;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -220,7 +217,8 @@ void PushTurnedMatrix(const unsigned char* s, short turn) {
 // DoomBreath_Start, _Brighten, _Fade, MAGIC226/227's 0x4F9F70, _End.
 S31_EXPORT void __cdecl DoomBreath_Task(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::DoomBreath_Start, bof3::addr::DoomBreath_Brighten,
-                                                 bof3::addr::DoomBreath_Fade, kCountDownFlag10, bof3::addr::DoomBreath_End};
+                                                 bof3::addr::DoomBreath_Fade, bof3::addr::MagicFx_CountDownFlag10,
+                                                 bof3::addr::DoomBreath_End};
     const unsigned phase = Sc()[1];
     if (phase >= 5) PastTable("DoomBreath_Task", phase, 5);
     magic_harness::Phase(kPhases[phase])();
@@ -642,8 +640,8 @@ S31_EXPORT void __cdecl CoronaChild_Task(void) {
 // MAGIC067's 0x4B6B20 and 0x4B6B70, _Advance) by +2; then while +0 is set the
 // ray's matrix, the ray, the matrix popped.
 S31_EXPORT void __cdecl CoronaRay_Run(void) {
-    static constexpr std::uint32_t kSteps[4] = {bof3::addr::CoronaRay_Start, kRayPhase1, kRayPhase2,
-                                                bof3::addr::CoronaRay_Advance};
+    static constexpr std::uint32_t kSteps[4] = {bof3::addr::CoronaRay_Start, bof3::addr::ChillRay_Grow,
+                                                bof3::addr::ChillRay_Shrink, bof3::addr::CoronaRay_Advance};
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("CoronaRay_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -835,7 +833,7 @@ S31_EXPORT void __cdecl CoronaRay_Draw(void) {
 // by +2; then while +0 is set, the flash (a tail jmp).
 S31_EXPORT void __cdecl CoronaFlash_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::CoronaFlash_Start, bof3::addr::BarrierRing_Grow,
-                                                bof3::addr::MagicFx_WaitA, kFlashPhase3};
+                                                bof3::addr::MagicFx_WaitA, bof3::addr::MagicFx_CountDownRelease};
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("CoronaFlash_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -1113,7 +1111,7 @@ S31_EXPORT void __cdecl MainCannonShell_Fly(void) {
 // back.
 S31_EXPORT void __cdecl MainCannonBlast_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::MainCannonBlast_Start, bof3::addr::MainCannonBlast_Play,
-                                                kFreeOwnerCount};
+                                                bof3::addr::MagicFx_UncountAndFree};
     SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBlast));
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("MainCannonBlast_Run", phase, 3);
@@ -1155,7 +1153,8 @@ S31_EXPORT void __cdecl MainCannonBlast_Play(void) {
 // original 0x4E8660: the kind-2 task. Two entries by +1: ThunderClap_Start
 // and MAGIC131's 0x4E5200 (the done flag and free once +0xB is 0).
 S31_EXPORT void __cdecl ThunderClap_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::ThunderClap_Start, kEndWhenNoChildren};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::ThunderClap_Start,
+                                                 bof3::addr::MagicFx_EndWhenChildrenDone};
     const unsigned phase = Sc()[1];
     if (phase >= 2) PastTable("ThunderClap_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();

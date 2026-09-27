@@ -65,8 +65,7 @@ constexpr unsigned kSlashAnimationCount = 12;
 // with 0x939AD8 pointed at that enemy's record and put back).
 constexpr std::uint32_t kTurnOffset = 0x446770;
 constexpr std::uint32_t kEnemyAnimation = 0x435A70;
-// MAGIC018/019's (group S05), a phase of Magic008Dash_Run's stack table.
-constexpr std::uint32_t kDashPhase3 = 0x4A01C0;
+// Magic008Dash_Run's stack table names S04's KickImage_Tick (ours now).
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }
@@ -480,9 +479,9 @@ S06_EXPORT void __cdecl Magic008_DrawFlash(void) {
 // MAGIC018/019's 0x4A01C0, _Fade, BattleFx_FreeTask); then while +0 and +2
 // are set the screen update.
 S06_EXPORT void __cdecl Magic008Dash_Run(void) {
-    static constexpr std::uint32_t kSteps[6] = {bof3::addr::Magic008Dash_Start, bof3::addr::Magic008Dash_Follow,
-                                                bof3::addr::Magic008Dash_Strike, kDashPhase3,
-                                                bof3::addr::Magic008Dash_Fade,  bof3::addr::BattleFx_FreeTask};
+    static constexpr std::uint32_t kSteps[6] = {bof3::addr::Magic008Dash_Start,  bof3::addr::Magic008Dash_Follow,
+                                                bof3::addr::Magic008Dash_Strike, bof3::addr::KickImage_Tick,
+                                                bof3::addr::Magic008Dash_Fade,   bof3::addr::BattleFx_FreeTask};
     const unsigned phase = Sc()[2];
     if (phase >= 6) PastTable("Magic008Dash_Run", phase, 6);
     magic_harness::Phase(kSteps[phase])();

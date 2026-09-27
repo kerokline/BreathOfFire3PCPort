@@ -2,18 +2,21 @@
 // overlays of group S23 touch that have no name in symbols.toml, and the raw
 // addresses of the callees they reach in other units. docs/magic_s23.md.
 //
-// Calls into code this group does not own go through these raw addresses
-// (MH_AT) and are never bound here:
+// Calls into code this group does not own:
 //   0x446770  the record's (+0xC, +0x10) turned by its +8 (1, 2, 3 quarter
-//             turns) - engine, in no queue group
-//   0x4FBB40  Sprite_Current moved round a record by an angle - the effect
-//             library (group L)
-//   0x4FBC30  1 when Sprite_Current is within a box of a record - group L
-//   0x4FC0E0  a side's centre to Sprite_Current - group L
-// The stack tables also name SpellFx_Countdown 0x4DA3B0 (MAGIC118's, group
-// S27, called by its name) and 0x43FE80 (group E's
-// engine row 128), and SimoonFan_Phases 0x4AE0D0 / 0x4AE0F0 (MAGIC056's):
-// they are called as phases, by the address the table holds.
+//             turns) - engine, in no queue group: by this raw address (MH_AT)
+//   0x4FBB40  MagicFx_StepAround: Sprite_Current moved round a record by an
+//             angle - the effect library (group L)
+//   0x4FBC30  MagicFx_NearSprite: 1 when Sprite_Current is within a box of a
+//             record - group L
+//   0x4FC0E0  MagicFx_CenterOnSide: a side's centre to Sprite_Current - group L
+// The three of group L are ours now and called by name (MH_CALL); their
+// addresses stay below because the fuzz lists them by address (the harness
+// maps the name to the same stand-in). The stack tables also name
+// SpellFx_Countdown 0x4DA3B0 (MAGIC118's, group S27), MagicFx_DoneAndFree
+// 0x43FE80 (group E's engine row 128), and SimoonFan_Phases 0x4AE0D0 /
+// 0x4AE0F0 (MAGIC056's): they are called as phases, by the address the table
+// holds.
 #pragma once
 
 #include <cstdint>
@@ -92,16 +95,13 @@ constexpr std::uint32_t kFanPhases = 0x65B818;       // SimoonFan_Phases, 4
 
 }  // namespace at
 
-// Raw addresses of callees and phases in other units (see the top).
+// Raw addresses of callees in other units (see the top): the engine's, called
+// by it; group L's, the fuzz's keys for the stand-ins ours reaches by name.
 constexpr std::uint32_t kTurnByFacing = 0x446770;
-constexpr std::uint32_t kOrbitRecord = 0x4FBB40;
-constexpr std::uint32_t kNearRecord = 0x4FBC30;
-constexpr std::uint32_t kSideCentre = 0x4FC0E0;
-constexpr std::uint32_t kEnginePhase = 0x43FE80;     // group E's (Head Cracker's end)
+constexpr std::uint32_t kOrbitRecord = 0x4FBB40;    // MagicFx_StepAround
+constexpr std::uint32_t kNearRecord = 0x4FBC30;     // MagicFx_NearSprite
+constexpr std::uint32_t kSideCentre = 0x4FC0E0;     // MagicFx_CenterOnSide
 
 using TurnFn = void (__cdecl*)(unsigned char*);
-using OrbitFn = int (__cdecl*)(unsigned char*, int, int);
-using NearFn = int (__cdecl*)(unsigned char*, int);
-using VoidFn = void (__cdecl*)();
 
 }  // namespace magic_s23

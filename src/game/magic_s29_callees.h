@@ -3,12 +3,14 @@
 // and the raw addresses of the callees they reach in units this group does not
 // own. docs/magic_s29.md.
 //
-// Calls into code this group does not own go through these raw addresses
-// (MH_AT, or a .data table read in place) and are never bound here:
+// Calls into code this group does not own (MH_AT, or a .data table read in
+// place):
 //   0x446770  the record's (+0xC, +0x10) turned by its +8 - engine, in no
-//             queue group (as magic_s22 / magic_s23 / magic_s24 call it)
-//   0x4F6290  Sprite_Current's bytes 0..4 cleared (a pool record freed) -
-//             MAGIC219, group S37, not yet ours
+//             queue group (as magic_s22 / magic_s23 / magic_s24 call it): by
+//             this raw address
+//   0x4F6290  MagicFx_FreeCurrentRecord: Sprite_Current's bytes 0..4 cleared
+//             (a pool record freed) - MAGIC219, group S37: ours now and called
+//             by name; the constant below stays as the fuzz's key
 // and, as entries of ShadowOrb_Steps / ShadowGlow_Steps (called as phases, by
 // the address the table holds):
 //   0x4ADB50  the task put at its owner's point, +9 +0xA 0, +2 on - MAGIC056 (S10)
@@ -80,7 +82,7 @@ constexpr std::uint32_t kShadeSteps = 0x65BC20;     // ShadowMote_Steps, 4
 
 }  // namespace tbl
 
-// Other units' functions, by raw address (above).
+// Other units' functions (above): the fuzz's keys for their stand-ins.
 constexpr std::uint32_t kTurnByFacing = 0x446770;
 constexpr std::uint32_t kFreeRecord = 0x4F6290;
 

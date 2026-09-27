@@ -2,11 +2,12 @@
 // three overlays touch that are not the group's own functions, and the cells
 // they read and write. docs/magic_s24.md.
 //
-// Calls into code the group does not own go through the raw addresses below,
-// never bound here (the round's rule for calls across groups):
-//   0x4FC0E0  the targeted side's centre: the mean position of every actor of
-//             the side byte 0x904B44's 0x40 bit names that is not out, into
-//             Sprite_Current +0x34 / +0x38 / +0x3E (the effect library, group L)
+// Calls into code the group does not own:
+//   0x4FC0E0  MagicFx_CenterOnSide, the targeted side's centre: the mean
+//             position of every actor of the side byte 0x904B44's 0x40 bit
+//             names that is not out, into Sprite_Current +0x34 / +0x38 / +0x3E
+//             (the effect library, group L). Ours now and called by name; the
+//             address below stays as the fuzz's key for its stand-in.
 //   0x446770  a task's offset +0xC / +0x10 turned by its facing +8 (1, 2, 3:
 //             a quarter, a half, three quarters): engine code outside the band,
 //             in no group
@@ -16,7 +17,7 @@
 
 namespace magic_s24 {
 
-constexpr std::uint32_t kCentreOnTargets = 0x4FC0E0;
+constexpr std::uint32_t kCentreOnTargets = 0x4FC0E0;   // MagicFx_CenterOnSide (the fuzz's key)
 constexpr std::uint32_t kTurnByFacing = 0x446770;
 
 namespace cell {

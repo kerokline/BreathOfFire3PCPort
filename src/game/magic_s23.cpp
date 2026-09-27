@@ -336,7 +336,7 @@ void Spin(unsigned char* sc) {
 S23_EXPORT void __cdecl FxFunnel_Approach(void) {
     unsigned char* const record = TargetRecord();
     Spin(Sc());
-    const int angle = MH_AT(magic_s23::OrbitFn, magic_s23::kOrbitRecord)(record, 0xC000, Shl(Long(Sc() + 0x18), 6));
+    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(Long(Sc() + 0x18), 6));
     SetLong(Sc() + 0x14, angle);
     Bump(Sc()[0xA], 4);
     if (Sc()[0xA] == 0x10) Bump(Sc()[2]);
@@ -353,9 +353,9 @@ S23_EXPORT void __cdecl FxFunnel_Orbit(void) {
         unsigned char* const sc = Sc();
         SetLong(sc + 0x10, Long(sc + 0x14));
     }
-    const int angle = MH_AT(magic_s23::OrbitFn, magic_s23::kOrbitRecord)(record, 0xC000, Shl(Long(Sc() + 0x18), 6));
+    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(Long(Sc() + 0x18), 6));
     SetLong(Sc() + 0x14, angle);
-    if (MH_AT(magic_s23::NearFn, magic_s23::kNearRecord)(record, 0xC000) == 0) {
+    if (MH_CALL(MagicFx_NearSprite)(record, 0xC000) == 0) {
         {
             unsigned char* const sc = Sc();
             SetLong(sc + 0x10, (Long(sc + 0x10) & 0xFFF) - (Long(sc + 0x14) & 0xFFF));
@@ -569,7 +569,7 @@ S23_EXPORT void __cdecl Typhoon_Task(void) {
 S23_EXPORT void __cdecl Typhoon_Start(void) {
     const unsigned char facing = Facing();
     Sc()[8] = facing;
-    MH_AT(magic_s23::VoidFn, magic_s23::kSideCentre)();
+    MH_CALL(MagicFx_CenterOnSide)();
     Sc()[0xB] = 0;
     Sc()[9] = 0x30;
     Sc()[0xA] = 0;
@@ -1050,7 +1050,7 @@ S23_EXPORT void __cdecl Quake_End(void) {
 // aborts past it.
 S23_EXPORT void __cdecl Simoon_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {bof3::addr::Simoon_Start, bof3::addr::Simoon_Wait,
-                                                 magic_s23::kEnginePhase};
+                                                 bof3::addr::MagicFx_DoneAndFree};
     Dispatch("Simoon_Task", kPhases, 3);
 }
 

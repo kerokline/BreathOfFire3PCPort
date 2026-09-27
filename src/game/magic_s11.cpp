@@ -18,9 +18,9 @@
 //
 // Every call goes through the harness (MH_CALL / MH_AT / Phase / a .data
 // table read in place), so the start-up fuzz can stand recorders in for ours
-// as for the originals' copies. Calls into functions other groups own -
-// MAGIC218's 0x4F5970, MAGIC219's 0x4F6290 and the engine's 0x446770 - are
-// raw addresses.
+// as for the originals' copies. Calls into functions other groups own go by
+// name (MAGIC218's AuraBreath_InReach 0x4F5970, MAGIC219's
+// MagicFx_FreeCurrentRecord 0x4F6290), the engine's 0x446770 by raw address.
 //
 // No divergence: each is a faithful replacement, except that a phase past a
 // stack table aborts where the original would call through its own stack
@@ -79,9 +79,8 @@ constexpr std::uint32_t kFunnelPhases = 0x65AA84;   // TornadoFunnel_Phases: 4 e
 constexpr std::uint32_t kTMoteTypes = 0x65AA94;     // TornadoMote_Types: 1 entry by +1
 constexpr std::uint32_t kTMotePhases = 0x65AA98;    // TornadoMote_Phases: 4 entries by +2
 
-// Callees other groups own, by address.
-constexpr std::uint32_t kNearSprite = 0x4F5970;   // MAGIC218 (group S36): 1 when the sprite lies within word 0x903850 of Sprite_Current
-constexpr std::uint32_t kFreeRecord = 0x4F6290;   // MAGIC219 (group S37): +0..+4 of Sprite_Current cleared
+// Callees other groups own: the engine's by address; S36's AuraBreath_InReach
+// and S37's MagicFx_FreeCurrentRecord, ours now, by name.
 constexpr std::uint32_t kTurnOffset = 0x446770;   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
 using Fn0 = void (__cdecl*)();
 using NearFn = int (__cdecl*)(unsigned char*);
@@ -339,7 +338,7 @@ S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
         unsigned char* const reached = Mem(kReached + actor);
         if (reached[0] != 0) continue;
         if ((MH_CALL(Battle_ActorIsOut)(actor) & 0xFF) != 0) continue;
-        if (MH_AT(NearFn, kNearSprite)(EnemyRecord(actor)) == 0) continue;
+        if (MH_AT(NearFn, bof3::addr::AuraBreath_InReach)(EnemyRecord(actor)) == 0) continue;
         if ((static_cast<std::uint32_t>(Long(Mem(at::kActor))) & 0xFF) == actor) continue;
         reached[0] = 0xFF;
         SendMotes(actor);
@@ -349,7 +348,7 @@ S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
         unsigned char* const reached = Mem(kReached + actor);
         if (reached[0] != 0) continue;
         if ((MH_CALL(Battle_ActorIsOut)(actor) & 0xFF) != 0) continue;
-        if (MH_AT(NearFn, kNearSprite)(PartyRecord(i)) == 0) continue;
+        if (MH_AT(NearFn, bof3::addr::AuraBreath_InReach)(PartyRecord(i)) == 0) continue;
         if (Mem(at::kActor)[0] == actor) continue;
         reached[0] = 0xFF;
         SendMotes(actor);
@@ -426,7 +425,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Fade(void) {
     Dec(s[0xA]);
     if (s[0xA] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 namespace {
@@ -917,7 +916,7 @@ S11_EXPORT void __cdecl TornadoMote_Fade(void) {
     Dec(s[0xA]);
     if (s[0xA] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4B0A00: a mote's quad: a draw mode (tpage 0x35) sorted at the

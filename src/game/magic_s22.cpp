@@ -134,10 +134,9 @@ constexpr std::uint32_t kSetPolyFT3 = 0x5A7590;
 constexpr std::uint32_t kTurnOffset = 0x446770;
 using PrimFn = void (__cdecl*)(unsigned char*);
 
-// The phase handlers of other units a stack table holds (docs/magic_s22.md).
-constexpr std::uint32_t kCountDownB = 0x4C2D90;   // MAGIC086: +0xB down, at 0 +2 on
-constexpr std::uint32_t kCountDown9 = 0x4E47F0;   // MAGIC130: +9 down, at 0 +2 on
-constexpr std::uint32_t kEndWhenNoChildren = 0x4E5200;   // MAGIC131: at +0xB 0 the done flag and free
+// The phase handlers of other units a stack table holds (docs/magic_s22.md)
+// are ours now and named in the tables: S19's BarrierRing_Hold, S30's
+// MagicFx_CountDown9 and MagicFx_EndWhenChildrenDone.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -210,7 +209,8 @@ S22_EXPORT void __cdecl BlizzardShard_Task(void) {
 // actor's.
 S22_EXPORT void __cdecl BlizzardShard_Run(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::BlizzardShard_Launch, bof3::addr::BlizzardShard_Grow,
-                                                 kCountDownB, kCountDown9, bof3::addr::BlizzardShard_End};
+                                                 bof3::addr::BarrierRing_Hold, bof3::addr::MagicFx_CountDown9,
+                                                 bof3::addr::BlizzardShard_End};
     const unsigned phase = Sc()[2];
     if (phase >= 5) PastTable("BlizzardShard_Run", phase, 5);
     magic_harness::Phase(kPhases[phase])();
@@ -686,7 +686,7 @@ void BandRadius(int radius, int jitter) {
 // original 0x4C9C60: the kind-2 task. Two entries by +1: Jolt_Start and
 // MAGIC131's 0x4E5200 (the done flag and free once +0xB, the bolts left, is 0).
 S22_EXPORT void __cdecl Jolt_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Jolt_Start, kEndWhenNoChildren};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Jolt_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     const unsigned phase = Sc()[1];
     if (phase >= 2) PastTable("Jolt_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();
@@ -943,7 +943,7 @@ S22_EXPORT void __cdecl JoltBolt_DrawFlash(void) { Flash(4, false, 12, 10); }
 // original 0x4CAA70: the kind-2 task. Two entries by +1: Lightning_Start and
 // MAGIC131's 0x4E5200.
 S22_EXPORT void __cdecl Lightning_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Lightning_Start, kEndWhenNoChildren};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Lightning_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     const unsigned phase = Sc()[1];
     if (phase >= 2) PastTable("Lightning_Task", phase, 2);
     magic_harness::Phase(kPhases[phase])();

@@ -102,10 +102,8 @@ constexpr std::uint32_t kClutRowNext = 0x8129A0;
 constexpr std::uint32_t kEnemyLift = 0x8C564F;
 constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 
-constexpr std::uint32_t kLibStatChange = 0x4FB6F0;   // the effect library's (group L)
-constexpr std::uint32_t kDrawSparks = 0x4E9420;      // MAGIC144's, reached from nine overlays
-constexpr std::uint32_t kDrawSpark = 0x4E9850;       // MAGIC144's, reached from nine overlays
-using StatChangeFn = unsigned char (__cdecl*)(unsigned, unsigned);
+// Other groups' callees, ours now, by name: the effect library's
+// MagicFx_ApplyBuff, S32's WallOfFire_DrawDisc and WallOfFireSpark_Draw.
 using VoidFn = void (__cdecl*)();
 
 unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
@@ -650,10 +648,13 @@ S20_EXPORT unsigned char __cdecl Magic087_PoolAlloc(void) {
 // on once +0xB is 1 or less), _Lighten, _Apply, 0x4E5200 (MAGIC131's: the
 // done flag and free once +0xB is 0) - unchecked; ours aborts past it.
 S20_EXPORT void __cdecl Magic088_Task(void) {
-    static constexpr std::uint32_t kPhases[7] = {bof3::addr::Magic088_Start, bof3::addr::Magic088_TintOn,
-                                                 bof3::addr::Magic088_Darken, 0x4EF7C0,
-                                                 bof3::addr::Magic088_Lighten, bof3::addr::Magic088_Apply,
-                                                 0x4E5200};
+    static constexpr std::uint32_t kPhases[7] = {bof3::addr::Magic088_Start,
+                                                 bof3::addr::Magic088_TintOn,
+                                                 bof3::addr::Magic088_Darken,
+                                                 bof3::addr::LastResort_WaitChildren,
+                                                 bof3::addr::Magic088_Lighten,
+                                                 bof3::addr::Magic088_Apply,
+                                                 bof3::addr::MagicFx_EndWhenChildrenDone};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 7) bof3::Fatal("Magic088_Task: phase %u, past the seven-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -748,7 +749,7 @@ S20_EXPORT void __cdecl Magic088_Apply(void) {
     if (Sprite_Current[0xB] != 0) return;
     const unsigned char target = Mem(at::kTarget)[0];
     const unsigned char stat = Mem(kStatByVariant)[Sprite_Current[4]];
-    const bool took = MH_AT(StatChangeFn, kLibStatChange)(stat, target) != 0;
+    const bool took = MH_CALL(MagicFx_ApplyBuff)(stat, target) != 0;
     const unsigned index = MH_CALL(BattleTask_Create)(1, 0x48) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const t = Task(index);
@@ -972,7 +973,7 @@ S20_EXPORT void __cdecl Magic088_DrawWave(void) {
 // on its stack (Magic092_Start, 0x4E5200 - MAGIC131's end); then every
 // pool-B mote with +0 bit 0 run (Magic092_MoteRun) as MAGIC087's are.
 S20_EXPORT void __cdecl Magic092_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic092_Start, 0x4E5200};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic092_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     const unsigned phase = Sprite_Current[1];
     if (phase >= 2) bof3::Fatal("Magic092_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
@@ -1040,7 +1041,7 @@ S20_EXPORT void __cdecl Magic092_ChildRun(void) {
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
-    MH_AT(VoidFn, kDrawSparks)();
+    MH_AT(VoidFn, bof3::addr::WallOfFire_DrawDisc)();
     MH_CALL(Gte_PopMatrix)();
 }
 
@@ -1280,7 +1281,7 @@ S20_EXPORT void __cdecl Magic092_SparkRun(void) {
     unsigned char* const s = Sprite_Current;
     SetWord(s + 0x2E, Word(s + 0x2E) + (s[0xB] == 1 ? 0xFFF0u : 0x10u));
     SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) + 0xFFF4u);
-    MH_AT(VoidFn, kDrawSpark)();
+    MH_AT(VoidFn, bof3::addr::WallOfFireSpark_Draw)();
 }
 
 // original 0x4C62A0: pool B's alloc, as Magic087_PoolAlloc over 48 motes.

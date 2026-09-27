@@ -73,13 +73,10 @@ constexpr std::uint32_t kAnchorOffsets = 0x65A760;       // Enlighten_AnchorOffs
 constexpr std::uint32_t kAnchorOffsetsB = 0x65A7B8;      // Enlighten_AnchorOffsetsB
 constexpr std::uint32_t kAnchorIndexB = 0x65A810;        // Enlighten_AnchorIndexB: bytes
 
-// The phase handlers and callees of units not ours yet, called by address
-// (docs/magic_s07.md section 3).
-constexpr std::uint32_t kCopyEnd = 0x4A13B0;         // MAGIC017: at +0xB 0, animation 4, the owner's bit 6 cleared, +1 on
-constexpr std::uint32_t kShadeScreen = 0x4A29C0;     // MAGIC008: two screen-wide gouraud quads shaded by +9
-constexpr std::uint32_t kFreeRecord = 0x4F6290;      // MAGIC219: the current record's bytes +0..+4 cleared
-constexpr std::uint32_t kWaitChildren = 0x49DA50;    // MAGIC009: +1 on once +0xB is 0
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;  // MAGIC058: the owner's +0xB down, the task freed
+// The phase handlers and callees of other units (docs/magic_s07.md section 3)
+// are ours now and called by name: S05's Magic017_Wait, S06's
+// Magic008_DrawFlash, S37's MagicFx_FreeCurrentRecord, S03's
+// Chlorine_WaitChildren, S11's MagicFx_UncountAndFree.
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }
@@ -199,7 +196,8 @@ void RestoreRow26() {
 // owner, for BonebreakMote_Task; both put back after each (as read after the
 // phase call).
 S07_EXPORT void __cdecl Bonebreak_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Bonebreak_Start, kCopyEnd, bof3::addr::MagicFx_DoneAndFree};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Bonebreak_Start, bof3::addr::Magic017_Wait,
+                                                 bof3::addr::MagicFx_DoneAndFree};
     Dispatch(kPhases, 3, Sc()[1], "Bonebreak_Task");
     unsigned char* const self = Sprite_Current;
     const std::int32_t owner = Long(Mem(at::kOwner));
@@ -300,7 +298,7 @@ S07_EXPORT void __cdecl BonebreakChild_Shade(void) {
         Inc(Sc()[2]);
         return;
     }
-    Call0(kShadeScreen);
+    Call0(bof3::addr::Magic008_DrawFlash);
     AddB(Sc()[9], 4);
 }
 
@@ -366,7 +364,7 @@ S07_EXPORT void __cdecl BonebreakMote_Fade(void) {
     AddB(Sc()[0xA], 0xFE);
     if (Sc()[0xA] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4A3F90: a fan of 16 semi-transparent gouraud triangles round the
@@ -583,7 +581,7 @@ S07_EXPORT void __cdecl WarShoutChild_Task(void) {
 S07_EXPORT void __cdecl WarShoutMote_Run(void) {
     static constexpr std::uint32_t kSteps[5] = {bof3::addr::WarShoutMote_Appear, bof3::addr::WarShoutMote_Rise,
                                                 bof3::addr::WarShoutMote_Circle, bof3::addr::WarShoutMote_Fade,
-                                                kFreeOwnerCount};
+                                                bof3::addr::MagicFx_UncountAndFree};
     const unsigned phase = Sc()[2];
     SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 5, phase, "WarShoutMote_Run");
@@ -699,7 +697,8 @@ S07_EXPORT void __cdecl WarShoutBuff_Start(void) {
 // original 0x4A4C10: the kind-2 task. A three-entry stack table by +1:
 // Focus_Start, MAGIC009's 0x49DA50 (+1 on at +0xB 0), BattleFx_Finish.
 S07_EXPORT void __cdecl Focus_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Focus_Start, kWaitChildren, bof3::addr::BattleFx_Finish};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Focus_Start, bof3::addr::Chlorine_WaitChildren,
+                                                 bof3::addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "Focus_Task");
 }
 

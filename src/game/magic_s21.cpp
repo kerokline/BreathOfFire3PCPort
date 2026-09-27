@@ -78,12 +78,10 @@ std::int32_t L(std::uint32_t address) { return Long(Mem(address)); }
 constexpr std::uint32_t kClut = 0x812980;
 constexpr std::uint32_t kClutEnd = 0x812B80;
 
-// Unnamed callees, called by their addresses, never bound:
-//   0x4F6290  a pool slot's free (bytes +0..+4 of Sprite_Current cleared) -
-//             MAGIC219's (group S37), shared by 35 overlays;
+// Unnamed callees, called by their addresses, never bound (S37's
+// MagicFx_FreeCurrentRecord, a pool slot's free, is ours now and by name):
 //   0x5A76F0  a POLY_G4-shaped setter, code 0x5C, the four z at +0x10 ..;
 //   0x5A7570  POLY_F3's setter, code 0x20, the three z at +0x10, +0x1C, +0x28.
-constexpr std::uint32_t kSlotFree = 0x4F6290;
 constexpr std::uint32_t kSetPoly5C = 0x5A76F0;
 constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
 using VoidFn = void (__cdecl*)();
@@ -395,7 +393,7 @@ MS21_EXPORT void __cdecl FlameColumn_Fade(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
     Bump(Pointer(at::kOwner)[0xB], -1);
-    MH_AT(VoidFn, kSlotFree)();
+    MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // original 0x4C6940: a fan of sixteen gouraud triangles round the origin of
@@ -561,7 +559,7 @@ MS21_EXPORT void __cdecl FlameSpark_Fade(void) {
     Bump(Sprite_Current[0xB], -1);
     if (Sprite_Current[0xB] != 0) return;
     Bump(Pointer(at::kOwner)[0xB], -1);
-    MH_AT(VoidFn, kSlotFree)();
+    MH_AT(VoidFn, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
 
 // original 0x4C6F70: two textured quads at the spark's screen point (+0x2E,

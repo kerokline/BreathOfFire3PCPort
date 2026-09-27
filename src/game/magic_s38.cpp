@@ -138,7 +138,7 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 int Sin(int a) { return MH_CALL(Math_Sin)(a); }
 int Cos(int a) { return MH_CALL(Math_Cos)(a); }
 
-// This group's functions, and other units' not yet ours, called by address,
+// This group's functions, and other units' (bof3::addr), called by address,
 // as the originals call them: in the game the jmp Inject put there (or
 // Capcom's code), in the fuzz that address's recorder.
 using Fn0 = void (__cdecl*)();
@@ -153,10 +153,9 @@ unsigned Alloc(std::uint32_t address) { return MH_AT(ByteFn, address)() & 0xFFu;
 constexpr std::uint32_t kTurnOffset = 0x446770;
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
-// Other units' functions (docs/magic_s38.md section 3), called by address.
-constexpr std::uint32_t kFreeRecord = 0x4F6290;       // MAGIC219: +0..+4 of Sprite_Current cleared (a tail jmp)
-constexpr std::uint32_t kPushRockMatrix = 0x4F6020;   // MAGIC219: the task's matrix pushed (Lavaburst's too)
-constexpr std::uint32_t kWaitOwnerCount = 0x4EF840;   // MAGIC167: at the owner's +0xB <= 1, +2 on
+// Other units' functions (docs/magic_s38.md section 3) are ours now and
+// called by name: S37's MagicFx_FreeCurrentRecord (a tail jmp) and
+// MagicFx_PushRecordMatrix, S35's MagicFx_WaitOwnerChildren.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -308,8 +307,8 @@ S38_EXPORT void __cdecl TempestFlash_Task(void) {
 // 0x4EF840, MAGIC060's MagicFx_CountDownRelease) by +2; then while +0 is set,
 // the flash (a tail jmp).
 S38_EXPORT void __cdecl TempestFlash_Run(void) {
-    static constexpr std::uint32_t kSteps[4] = {addr::CoronaFlash_Start, addr::BarrierRing_Grow, kWaitOwnerCount,
-                                                addr::MagicFx_CountDownRelease};
+    static constexpr std::uint32_t kSteps[4] = {addr::CoronaFlash_Start, addr::BarrierRing_Grow,
+                                                addr::MagicFx_WaitOwnerChildren, addr::MagicFx_CountDownRelease};
     Dispatch(kSteps, 4, Sc()[2], "TempestFlash_Run");
     if (Sc()[0] == 0) return;
     Call0(addr::TempestFlash_Draw);
@@ -460,7 +459,7 @@ S38_EXPORT void __cdecl TempestGust_Fly(void) {
     Inc(Sc()[9]);
     if (Sc()[9] != 0x14) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4F8C30: one semi-transparent textured quad (tpage 0x55, layer 3):
@@ -943,7 +942,7 @@ S38_EXPORT void __cdecl Magic225Shard_Fall(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4F9D80: the first of the shard pool's 32 records without bit 0
@@ -1033,7 +1032,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
     if ((s[0] & 1) != 0 && s[2] != 0) {
         MH_CALL(BattleActor_UpdateScreenXY)();
         MH_CALL(Sprite_UpdateScreen)();
-        Call0(kPushRockMatrix);
+        Call0(addr::MagicFx_PushRecordMatrix);
         MH_CALL(LavaburstChild_DrawGlow)();
         Call0(addr::MeteorStrikeRock_DrawRing);
         MH_CALL(Gte_PopMatrix)();
@@ -1374,7 +1373,7 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Fall(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4FA910: one semi-transparent textured quad (tpage 0x35) linked at
@@ -1478,7 +1477,7 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Fade(void) {
     TrailFollow();
     if (Sc()[0xA] != 0) return;
     Dec(Owner()[4]);
-    Call0(kFreeRecord);
+    Call0(addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4FAD00: the trail - thirty-two semi-transparent gouraud quads

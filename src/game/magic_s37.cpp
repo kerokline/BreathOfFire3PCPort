@@ -133,10 +133,9 @@ void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 constexpr std::uint32_t kTurnOffset = 0x446770;
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
-// The phase handlers of MAGIC226/227 (group S38, not ours when this was
-// written) a table holds: called by their addresses.
-constexpr std::uint32_t kCountDownFlag10 = 0x4F9F70;   // +9 down, at 0 target flags 0x10 and +1 on
-constexpr std::uint32_t kCombustionStep4 = 0x4FA390;   // CombustionSprite_Steps entry 4
+// The phase handlers of MAGIC226/227 a table holds (S38's
+// MagicFx_CountDownFlag10 and MeteorStrikeRock_Hide) are ours now and named
+// in the tables.
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -686,7 +685,8 @@ S37_EXPORT void __cdecl MagicFx_FreeCurrentRecord(void) {
 // (GeoBreath_Start, MAGIC226/227's 0x4F9F70, BattleFx_Finish), unchecked;
 // then the pool walked through GeoBreathRecord_Task.
 S37_EXPORT void __cdecl GeoBreath_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {addr::GeoBreath_Start, kCountDownFlag10, addr::BattleFx_Finish};
+    static constexpr std::uint32_t kPhases[3] = {addr::GeoBreath_Start, addr::MagicFx_CountDownFlag10,
+                                                 addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "GeoBreath_Task");
     WalkPool(kGeoPool, kGeoRecords, addr::GeoBreathRecord_Task);
 }
@@ -1086,7 +1086,7 @@ S37_EXPORT void __cdecl CombustionChild_Task(void) {
 S37_EXPORT void __cdecl CombustionSprite_Run(void) {
     static constexpr std::uint32_t kSteps[6] = {addr::CombustionSprite_Start, addr::CombustionSprite_Fall,
                                                 addr::CombustionSprite_Shake, addr::CombustionSprite_Flash,
-                                                kCombustionStep4,             addr::CombustionSprite_Fade};
+                                                addr::MeteorStrikeRock_Hide,  addr::CombustionSprite_Fade};
     SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 6, Sc()[2], "CombustionSprite_Run");
     const unsigned char* const s = Sc();

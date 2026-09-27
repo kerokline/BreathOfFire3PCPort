@@ -44,9 +44,8 @@ constexpr unsigned kEnemyRate = 0xAA;    // u8: row of SkillSteal_RateTable
 constexpr unsigned kEnemySpeed = 0xB8;   // u16
 constexpr unsigned kThiefSpeed = 0xA8;   // u16 on the party record
 
-// The item's name into Text_Records by (item, category) - unnamed, in no
-// group (docs/magic_fx_reached.md section 10).
-constexpr std::uint32_t kItemName = 0x4B58F0;
+// The item's name into Text_Records by (item, category): S14's Item_CopyName,
+// by name (its char * answer unread; docs/magic_fx_reached.md section 10).
 using ItemNameFn = void (__cdecl*)(unsigned, unsigned);
 
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -142,7 +141,7 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Roll(void) {
         Report(0x39);
         return;
     }
-    MH_AT(ItemNameFn, kItemName)(item, category);
+    MH_AT(ItemNameFn, bof3::addr::Item_CopyName)(item, category);
     const unsigned char* const text = MH_CALL(Msg_SystemPtr)(0x38);
     MH_CALL(BattleQueue_Push)(1, 0xFF, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
     unsigned char* const after = EnemyOf(Mem(at::kTarget)[0]);

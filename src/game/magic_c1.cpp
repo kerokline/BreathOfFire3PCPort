@@ -102,15 +102,10 @@ using ByteFn = unsigned char (__cdecl*)();
 void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 
 // Capcom's and other groups' code this group calls (docs/magic_c1.md section 8).
-constexpr std::uint32_t kTurnOffset = 0x446770;    // engine: +0xC / +0x10 of a task turned by its +8
-constexpr std::uint32_t kFreeRecord = 0x4F6290;    // MAGIC219 (group S37): +0..+4 of Sprite_Current cleared
-constexpr std::uint32_t kDroppedCall = 0x4DF820;   // Port_DroppedCall, a bare ret (MAGIC124's extent)
-// Phase handlers of other units a stack table holds.
-constexpr std::uint32_t kTintUp16 = 0x4D9FD0;      // MAGIC117 (group S26): the tint +1 a frame to +9 = 0x10
-constexpr std::uint32_t kEndFlag40 = 0x43F460;     // engine row 123's end (group E): flag 0x40, done, free
-constexpr std::uint32_t kWaitChildren = 0x49DA50;  // MAGIC009 (group S03): +1 on when +0xB is 0
-constexpr std::uint32_t kEndNoChildren = 0x4E5200; // MAGIC131 (group S30): done and free when +0xB is 0
-constexpr std::uint32_t kPentagramEnd = 0x4D7BD0;  // MAGIC114 (group S26)
+constexpr std::uint32_t kTurnOffset = 0x446770;  // engine: +0xC / +0x10 of a task turned by its +8
+// Other groups' functions and the phase handlers a stack table holds are ours
+// now and called by name (bof3::addr): Port_DroppedCall (MAGIC124's extent, a
+// bare ret) and S37's MagicFx_FreeCurrentRecord among them.
 
 // The sprite frame-offset table pointer the sprite draws read (0x8B3580 the
 // battle's, 0x8E3580 the effects').
@@ -178,8 +173,8 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 // WhiteFlag_TintSource, MAGIC117's tint-up (0x4D9FD0), WhiteFlag_Untint, the
 // engine's end (0x43F460).
 C1_EXPORT void __cdecl WhiteFlag_Task(void) {
-    static constexpr std::uint32_t kPhases[4] = {bof3::addr::WhiteFlag_TintSource, kTintUp16, bof3::addr::WhiteFlag_Untint,
-                                                 kEndFlag40};
+    static constexpr std::uint32_t kPhases[4] = {bof3::addr::WhiteFlag_TintSource, bof3::addr::Magic117_Brighten,
+                                                 bof3::addr::WhiteFlag_Untint, bof3::addr::MagicFx_FlagTargetEnd};
     StackCall(kPhases, 4, Sc()[1], "WhiteFlag_Task");
 }
 
@@ -325,10 +320,10 @@ C1_EXPORT void __cdecl Magic080_DrawGlyphs(void) {
 // Start, Rings, Star, Band, Sprites, WaitSprites, WaitChildren and MAGIC114's
 // 0x4D7BD0 - then, while +0 is set, the disc under the actor's matrix.
 C1_EXPORT void __cdecl Pentagram_Task(void) {
-    static constexpr std::uint32_t kPhases[8] = {
-        bof3::addr::Pentagram_Start,   bof3::addr::Pentagram_Rings,       bof3::addr::Pentagram_Star,
-        bof3::addr::Pentagram_Band,    bof3::addr::Pentagram_Sprites,     bof3::addr::Pentagram_WaitSprites,
-        bof3::addr::Pentagram_WaitChildren, kPentagramEnd};
+    static constexpr std::uint32_t kPhases[8] = {bof3::addr::Pentagram_Start,        bof3::addr::Pentagram_Rings,
+                                                 bof3::addr::Pentagram_Star,         bof3::addr::Pentagram_Band,
+                                                 bof3::addr::Pentagram_Sprites,      bof3::addr::Pentagram_WaitSprites,
+                                                 bof3::addr::Pentagram_WaitChildren, bof3::addr::Magic114_End};
     StackCall(kPhases, 8, Sc()[1], "Pentagram_Task");
     if (Sc()[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -420,8 +415,8 @@ C1_EXPORT void __cdecl Pentagram_Band(void) {
 // sprites (children of kind 3: +4 i & 1, +9 (i >> 1) * 8 + 1, +0xB i >> 1),
 // +0xB 0, +1 on.
 C1_EXPORT void __cdecl Pentagram_Sprites(void) {
-    MH_AT(void (__cdecl*)(unsigned, unsigned), kDroppedCall)(0x14, 0x10);
-    MH_AT(void (__cdecl*)(unsigned), kDroppedCall)(0x14);
+    MH_AT(void (__cdecl*)(unsigned, unsigned), bof3::addr::Port_DroppedCall)(0x14, 0x10);
+    MH_AT(void (__cdecl*)(unsigned), bof3::addr::Port_DroppedCall)(0x14);
     if (Sc()[0xB] != 5) return;
     unsigned char* self = nullptr;
     for (unsigned i = 0; i < 6; ++i) {
@@ -849,7 +844,8 @@ C1_EXPORT void __cdecl PentagramSprite_Animate(void) {
 // Ink_Start, MAGIC009's wait for +0xB 0 (0x49DA50), the engine's end
 // (0x43F460).
 C1_EXPORT void __cdecl Ink_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Ink_Start, kWaitChildren, kEndFlag40};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Ink_Start, bof3::addr::Chlorine_WaitChildren,
+                                                 bof3::addr::MagicFx_FlagTargetEnd};
     StackCall(kPhases, 3, Sc()[1], "Ink_Task");
 }
 
@@ -1055,7 +1051,8 @@ constexpr std::uint32_t kMotePool = 0x6B2958;  // Magic213Mote_Pool
 // InkInk_Start, MAGIC009's wait (0x49DA50), the engine's end (0x43F460) -
 // then the puff pool walked (InkInkPuff_Dispatch).
 C1_EXPORT void __cdecl InkInk_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::InkInk_Start, kWaitChildren, kEndFlag40};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::InkInk_Start, bof3::addr::Chlorine_WaitChildren,
+                                                 bof3::addr::MagicFx_FlagTargetEnd};
     StackCall(kPhases, 3, Sc()[1], "InkInk_Task");
     WalkPool(kInkPool, bof3::addr::InkInkPuff_Dispatch);
 }
@@ -1152,7 +1149,7 @@ C1_EXPORT void __cdecl InkInkPuff_Fade(void) {
     Dec(Sc()[0xA]);
     if (Sc()[0xA] != 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4EA3F0: the puff pool's alloc (0x6A6F40, 64 records).
@@ -1165,7 +1162,7 @@ C1_EXPORT unsigned char __cdecl InkInkPuff_Alloc(void) { return PoolAlloc(kInkPo
 // Magic213_Start, MAGIC131's end once +0xB is 0 (0x4E5200) - then the mote
 // pool walked (Magic213Mote_Dispatch).
 C1_EXPORT void __cdecl Magic213_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic213_Start, kEndNoChildren};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic213_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 2, Sc()[1], "Magic213_Task");
     WalkPool(kMotePool, bof3::addr::Magic213Mote_Dispatch);
 }
@@ -1298,7 +1295,7 @@ C1_EXPORT void __cdecl Magic213Mote_Start(void) {
 C1_EXPORT void __cdecl Magic213Mote_End(void) {
     if (MH_CALL(Sprite_ScriptTickOnce)() == 0) return;
     Dec(Owner()[0xB]);
-    Call0(kFreeRecord);
+    Call0(bof3::addr::MagicFx_FreeCurrentRecord);
 }
 
 // original 0x4F5050: the mote pool's alloc (0x6B2958, 64 records).

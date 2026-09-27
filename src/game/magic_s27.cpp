@@ -201,8 +201,9 @@ void AtOwner() {
 // BattleFx_Finish - then, while +0 and +1 are set, the ring and the disc under
 // the actor's matrix.
 S27_EXPORT void __cdecl Burn_Task(void) {
-    static constexpr std::uint32_t kPhases[5] = {bof3::addr::Burn_Start, bof3::addr::Burn_WaitFlag, raw::kWaitOneChild,
-                                                 bof3::addr::SpellFx_Countdown, bof3::addr::BattleFx_Finish};
+    static constexpr std::uint32_t kPhases[5] = {bof3::addr::Burn_Start, bof3::addr::Burn_WaitFlag,
+                                                 bof3::addr::Berserk_WaitChildren, bof3::addr::SpellFx_Countdown,
+                                                 bof3::addr::BattleFx_Finish};
     const unsigned phase = Sc()[1];
     if (phase >= 5) PastTable("Burn_Task", phase, 5);
     magic_harness::Phase(kPhases[phase])();
@@ -599,7 +600,8 @@ S27_EXPORT void __cdecl WhelpBreathChild_Task(void) {
 // owner's +0xB is 0xFF or +2 is 0, the beam (a tail jmp).
 S27_EXPORT void __cdecl WhelpBreathBeam_Run(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::WhelpBreathBeam_Aim, bof3::addr::WhelpBreathBeam_Grow,
-                                                 raw::kBeamSweep, raw::kBeamHold, raw::kBeamFade};
+                                                 bof3::addr::BreathBeam_Hit, bof3::addr::BreathBeam_Hold,
+                                                 bof3::addr::BreathBeam_Fade};
     const unsigned phase = Sc()[2];
     if (phase >= 5) PastTable("WhelpBreathBeam_Run", phase, 5);
     magic_harness::Phase(kPhases[phase])();

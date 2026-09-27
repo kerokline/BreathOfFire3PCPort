@@ -136,10 +136,9 @@ using TaskFn = void (__cdecl*)(unsigned char*);
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
 // The phase handlers of other units a table holds (docs/magic_s15.md
-// section 3): called by their addresses.
-constexpr std::uint32_t kScriptUntilDone = 0x43EC10;   // engine: the script ticked, the sprite queued, +2 on at the done flag
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;    // MAGIC058: the owner's +0xB down, the task freed
-constexpr std::uint32_t kFlashPhase3 = 0x4B1740;       // MAGIC060
+// section 3): the engine's below by address; S11's MagicFx_UncountAndFree and
+// S12's MagicFx_CountDownRelease, ours now, named in the tables.
+constexpr std::uint32_t kScriptUntilDone = 0x43EC10;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -507,7 +506,7 @@ S15_EXPORT void __cdecl ChillRay_Draw(void) {
 // MAGIC060's 0x4B1740) by +2; then while +0 is set, the flash (a tail jmp).
 S15_EXPORT void __cdecl ChillFlash_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::CoronaFlash_Start, bof3::addr::BarrierRing_Grow,
-                                                bof3::addr::MagicFx_WaitA, kFlashPhase3};
+                                                bof3::addr::MagicFx_WaitA, bof3::addr::MagicFx_CountDownRelease};
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("ChillFlash_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
@@ -1106,7 +1105,7 @@ S15_EXPORT void __cdecl InfluenceLeft_Slide(void) {
 S15_EXPORT void __cdecl InfluenceMark_Run(void) {
     static constexpr std::uint32_t kSteps[5] = {bof3::addr::InfluenceMark_Start, bof3::addr::InfluenceMark_Brighten,
                                                 bof3::addr::InfluenceMark_Fade, bof3::addr::InfluenceMark_Show,
-                                                kFreeOwnerCount};
+                                                bof3::addr::MagicFx_UncountAndFree};
     const unsigned phase = Sc()[2];
     if (phase >= 5) PastTable("InfluenceMark_Run", phase, 5);
     magic_harness::Phase(kSteps[phase])();

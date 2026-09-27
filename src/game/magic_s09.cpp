@@ -75,16 +75,12 @@ constexpr unsigned kMoteRecords = 48;
 constexpr std::uint32_t kPollenDelays = 0x65A988;     // Pollen_Delays: 10 bytes
 constexpr std::uint32_t kPollenOffsets = 0x65A998;    // PollenMote_Offsets: (dx, dz) dword pairs
 
-// The phase handlers of other units a table holds, called by address
-// (docs/magic_s09.md section 3).
-constexpr std::uint32_t kEndWhenChildrenDone = 0x4E5200;  // MAGIC131, MagicFx_EndWhenChildrenDone (S30)
-constexpr std::uint32_t kFinish = 0x4F7350;                // BattleFx_Finish
-constexpr std::uint32_t kEndWithChildren = 0x4D1AA0;       // MAGIC104, MagicFx_EndWithChildren (S24)
-constexpr std::uint32_t kScriptUntilDone = 0x43EC10;       // engine: the script ticked, the sprite queued, +2 on at the done flag
-constexpr std::uint32_t kFreeTask = 0x4AEE90;              // BattleFx_FreeTask
-constexpr std::uint32_t kDreamPhase1 = 0x4F7320;           // MAGIC222 (S37)
-constexpr std::uint32_t kFreeOwnerCount = 0x4AF490;        // MAGIC058 (S11): the owner's +0xB down, the task freed
-constexpr std::uint32_t kHolocaustGrow = 0x4E3660;         // MAGIC129, HolocaustBeam_Grow (C2)
+// The phase handlers of other units a table holds (docs/magic_s09.md
+// section 3): the engine's below by address; the rest ours now and named in
+// the tables (S30's MagicFx_EndWhenChildrenDone, BattleFx_Finish, S24's
+// MagicFx_EndWithChildren, BattleFx_FreeTask, S37's Combustion_Wait, S11's
+// MagicFx_UncountAndFree, C2's HolocaustBeam_Grow).
+constexpr std::uint32_t kScriptUntilDone = 0x43EC10;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }
@@ -233,7 +229,7 @@ void AddSway(unsigned char* at, int v) { AddLong(at, U(ShlSar(Imul(v, 7), 12, 12
 // original 0x4A9830: the kind-2 task. A two-entry stack table by +1:
 // BoneDart_Start, MAGIC131's MagicFx_EndWhenChildrenDone.
 S09_EXPORT void __cdecl BoneDart_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::BoneDart_Start, kEndWhenChildrenDone};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::BoneDart_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     Dispatch(kPhases, 2, Sc()[1], "BoneDart_Task");
 }
 
@@ -295,7 +291,7 @@ static void BoneDartChildRun(const std::uint32_t* steps, const char* who) {
 // MAGIC058's 0x4AF490: the owner's count down, the task freed).
 S09_EXPORT void __cdecl BoneDartShaft_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::BoneDartShaft_Start, bof3::addr::BoneDartShaft_Fly,
-                                                bof3::addr::BoneDartShaft_Bounce, kFreeOwnerCount};
+                                                bof3::addr::BoneDartShaft_Bounce, bof3::addr::MagicFx_UncountAndFree};
     BoneDartChildRun(kSteps, "BoneDartShaft_Run");
 }
 
@@ -407,7 +403,7 @@ S09_EXPORT void __cdecl BoneDartShaft_Bounce(void) {
 // MAGIC058's 0x4AF490).
 S09_EXPORT void __cdecl BoneDartShadow_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::BoneDartShadow_Start, bof3::addr::BoneDartShadow_Follow,
-                                                bof3::addr::BoneDartShadow_Fade, kFreeOwnerCount};
+                                                bof3::addr::BoneDartShadow_Fade, bof3::addr::MagicFx_UncountAndFree};
     BoneDartChildRun(kSteps, "BoneDartShadow_Run");
 }
 
@@ -491,7 +487,7 @@ S09_EXPORT void __cdecl BoneDartShadow_Fade(void) {
 // ElemBreathMote_Run; both put back after each (as read after the phase
 // call).
 S09_EXPORT void __cdecl ElemBreath_Task(void) {
-    static constexpr std::uint32_t kPhases[2] = {bof3::addr::ElemBreath_Start, kFinish};
+    static constexpr std::uint32_t kPhases[2] = {bof3::addr::ElemBreath_Start, bof3::addr::BattleFx_Finish};
     Dispatch(kPhases, 2, Sc()[1], "ElemBreath_Task");
     unsigned char* const self = Sprite_Current;
     const std::int32_t owner = Long(Mem(at::kOwner));
@@ -549,7 +545,7 @@ S09_EXPORT void __cdecl ElemBreathChild_Task(void) {
 // ElemBreathEmitter_Start, _Emit, MAGIC104's MagicFx_EndWithChildren.
 S09_EXPORT void __cdecl ElemBreathEmitter_Task(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::ElemBreathEmitter_Start, bof3::addr::ElemBreathEmitter_Emit,
-                                                kEndWithChildren};
+                                                bof3::addr::MagicFx_EndWithChildren};
     Dispatch(kSteps, 3, Sc()[2], "ElemBreathEmitter_Task");
 }
 
@@ -587,7 +583,8 @@ S09_EXPORT void __cdecl ElemBreathEmitter_Emit(void) {
 // ElemBreathEnemy_Start, the engine's 0x43EC10 (the script until its done
 // flag), BattleFx_FreeTask.
 S09_EXPORT void __cdecl ElemBreathEnemy_Task(void) {
-    static constexpr std::uint32_t kSteps[3] = {bof3::addr::ElemBreathEnemy_Start, kScriptUntilDone, kFreeTask};
+    static constexpr std::uint32_t kSteps[3] = {bof3::addr::ElemBreathEnemy_Start, kScriptUntilDone,
+                                                bof3::addr::BattleFx_FreeTask};
     Dispatch(kSteps, 3, Sc()[2], "ElemBreathEnemy_Task");
 }
 
@@ -829,7 +826,8 @@ S09_EXPORT unsigned char __cdecl ElemBreathMote_Alloc(void) {
 // original 0x4AAC40: the kind-2 task. A three-entry stack table by +1:
 // DreamBreath_Start, MAGIC222's 0x4F7320, BattleFx_Finish.
 S09_EXPORT void __cdecl DreamBreath_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::DreamBreath_Start, kDreamPhase1, kFinish};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::DreamBreath_Start, bof3::addr::Combustion_Wait,
+                                                 bof3::addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "DreamBreath_Task");
 }
 
@@ -1069,7 +1067,8 @@ S09_EXPORT void __cdecl DreamBreath_TargetHeight(void) {
 // original 0x4AB3F0: the kind-2 task. A three-entry stack table by +1:
 // Pollen_Start, Pollen_Sounds, BattleFx_Finish.
 S09_EXPORT void __cdecl Pollen_Task(void) {
-    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Pollen_Start, bof3::addr::Pollen_Sounds, kFinish};
+    static constexpr std::uint32_t kPhases[3] = {bof3::addr::Pollen_Start, bof3::addr::Pollen_Sounds,
+                                                 bof3::addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "Pollen_Task");
 }
 
@@ -1126,7 +1125,8 @@ S09_EXPORT void __cdecl PollenMote_Task(void) {
 // second group C2's HolocaustBeam_Grow) by +2; then while +2 and +0 are set
 // the screen point, the fan, the ring and the dots.
 S09_EXPORT void __cdecl PollenMote_Run(void) {
-    static constexpr std::uint32_t kSteps[3] = {bof3::addr::PollenMote_Start, kHolocaustGrow, bof3::addr::PollenMote_Fade};
+    static constexpr std::uint32_t kSteps[3] = {bof3::addr::PollenMote_Start, bof3::addr::HolocaustBeam_Grow,
+                                                bof3::addr::PollenMote_Fade};
     Dispatch(kSteps, 3, Sc()[2], "PollenMote_Run");
     const unsigned char* const s = Sc();
     if (s[2] == 0 || s[0] == 0) return;
