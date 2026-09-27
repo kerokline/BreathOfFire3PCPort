@@ -41018,3 +41018,40 @@ ctype = "unsigned char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-27: Area11_SpawnEffect's movzx of [member + 0x5E2400], member the byte 0x904064; eight bytes, then area 11's link list (the descriptor's +0x20, 0x5E2408). The index is a member id, unchecked; the count is the space to the link list."
+
+# ---------------------------------------------------------------------------
+# The area round's tables - round ten, group ART (2026-09-27,
+# docs/area-rows.md, tools/area_rows.py). The engine tables the area code is
+# reached through, and the descriptor's layout.
+
+[[data]]
+pc = 0x5DB318
+name = "Area0_Descriptor"
+ctype = "unsigned char"
+count = 68
+status = "evidence"
+evidence = "read 2026-09-27, group ART: area 0's descriptor (Area_Descriptors[0]), carrying the layout all 200 share (0x44 bytes, in area order 0x5DB318..0x64AD68; the PSX's are 0x44 too, names/area_records.toml). By a census of the 35 loads of Area_Descriptors[k] in .text and the readers already ours: +0x00 placement script (Area_RunPlacement from Area_Enter; set in 200 of 200); +0x04 event / talk scripts (MoveScript_SetTurnTarget 0x517E90, Field_PassageOpen; 106); +0x08 extra-object entries of 8 bytes (EventOp_Bx; 200, all in a pool at 0x675xxx, not the area's own data); +0x0C attachment vectors, three shorts each (0x578EB0; 31); +0x10 object scripts (Field_ObjectUpdate and eight band sites; 200); +0x14 party placements (Party_DropIn; 136); +0x18 member scripts (Party_SetUpMembers, MoveScript_Group8 op 86; 136); +0x1C kind-2 scripts (Kind2_Script; 108); +0x20 links of 12 bytes (Area_LinkAt; 192); +0x24 / +0x28 alternative lists and their counts (Area_LinkAt; 12); +0x2C passages of 8 bytes (Area_PassageAhead; 95); +0x30 u8 last link index; +0x31 u8 last passage index; +0x32 u8 Field_InputFlags (Area_Enter); +0x33 u8, 0 in all 200, no reader in the census; +0x34 choice handlers by choice id (MsgBox_ChoiceCommit / MsgBox_MenuCommit; 106 areas, 927 entries, and in most areas the tail of the handler array: area 3's +0x34 is its +0x3C plus 8); +0x38 colour matrix, light pair at its +0x20 / +0x24 (Area_Enter; null in 199 areas, area 77's is 0x60ACC8 in .data - not null in the whole image as the plan had it); +0x3C handler array (MoveScript_Flow op 03, MoveScript_GroupD op DE; 119 areas, 678 entries; the PSX has 671, areas 75 and 86 the two that differ); +0x40 init, called with nothing by Area_Enter (67 areas)."
+
+[[data]]
+pc = 0x662CE8
+name = "Field_ModeTailKinds"
+ctype = "unsigned long"
+count = 64
+status = "evidence"
+evidence = "read 2026-09-27, group ART: Field_ModeTailRun 0x56D920 is jmp [0x662CE8 + s8 byte 0x9039F3 * 4], the field frame's last step. 64 slots (the 65th dword is 0x04040000, not code, then 0 and WorldMap_FieldHooks). Slot 0 is the bare ret 0x437CC0; 63 set, 47 of them in the area band 0x401000..0x42D710 and the rest engine (0x56D930, 0x56DA10, 0x56DB80, 0x56DDD0, 0x56DE30 - the world-map field-hook dispatch, slot 27 -, 0x56DE50, 0x56DF10 - slot 55 -, 0x456D50.., Port_DroppedCall). The kind byte is stored by the area code itself (mov byte [0x9039F3], n at over 200 band sites: 50 kinds armed that way; slots 1, 8 and 9 by no band immediate) and by Field_LeaderCellEvent (0x37, 0x1B). tools/area_rows.py attributes a slot to the area whose code arms it."
+
+[[data]]
+pc = 0x662E20
+name = "Field_ObjectTriggers"
+ctype = "unsigned long"
+count = 65
+status = "evidence"
+evidence = "read 2026-09-27, group ART: 0x56E020 (called by 0x56D6B0 for an object with +0x89 bit 6) calls [0x662E1C + object[+0x86] * 4](object, 0x904030), so ids 1..65 are 0x662E20..0x662F20 (a null at 0x662F24, then Area_CellHooks); id 0 would read WorldMap_FieldHooks' last entry. Unchecked. 64 distinct handlers, 51 in the area band, the rest engine (0x56E040, 0x456B20..0x456D30). Not one of the area plan's seven root tables: tools/area_rows.py's scan of .data for band starts found it."
+
+[[data]]
+pc = 0x662F28
+name = "Area_CellHooks"
+ctype = "unsigned long"
+count = 56
+status = "evidence"
+evidence = "read 2026-09-27, group ART: 28 records of 8 bytes - the area number in the low byte of +0 (the other three 0), a function at +4. 0x56E670 (the fallback of chapter vtable slot 4, called by 0x56D7A0 when the slot is null or answers negative) (group ARH names it Area_CellHook) walks it from 0x662F28 to 0x663008 comparing the byte with Game_AreaNumber (ecx counts to 0x1C: 28 records, not the plan's 100 - past 0x663008 is MapCell_Handlers) and calls [0x662F2C + i * 8](x, z), sign-extending al - each entry a hook of (x, z) answering in al, not a phase; 0 when no record matches. 28 areas, 18 distinct functions: 0x4298D0 for the eleven areas 0xAF..0xB9, and 0x4FEEB0 (area 0x6D) outside the band."
