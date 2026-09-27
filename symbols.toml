@@ -40961,3 +40961,417 @@ ctype = "unsigned char"
 count = 6336
 status = "evidence"
 evidence = "read 2026-09-27, group S38: 48 records of 0x84 bytes: MeteorStrike_RecordAlloc's, walked by MeteorStrike_Task, cleared by MeteorStrike_Start; +1 0 a chip, 1 a trail (MeteorStrikeRecord_Kinds)."
+
+# ---------------------------------------------------------------------------
+# Round 10 group SC1: scenario chapter 1 (src/game/scena_sc1.cpp, docs/scena_sc1.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x539AE0
+name = "Scena01_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x539AE0..0x539B18 (0x39 bytes), read to the last instruction: chapter 1's state 0 (Scena01_States entry 0): Scenario_CallA(0), Field_ChangeArea(9, 0x570000, 0x40000, 7), the dwords 0x903F98 and 0x903848 (the four counters) cleared, state 0x8034E2 = 1. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53A2B0
+name = "Scena01_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A2B0..0x53A2BD (0xE bytes), read to the last instruction: chapter 1's state 2 (Scena01_States entry 2): jmp [Scena01_Runs + s8 MoveScript_Var7 * 4], unchecked in the original (ours aborts past the 24 entries). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53A2C0
+name = "Scena01_Scene01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A2C0..0x53A372 (0xB3 bytes), read to the last instruction: Scena01_Runs entry 1, steps 0..2 by a sub/dec chain: changes to area 9 and 0xA on counter 0, Kind2_Place(0), flag 0. The catalogue labels it Boot: top-level modes, so the scenario walk stopped at it (frontier) - it is chapter 1's. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53A380
+name = "Scena01_Scene02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A380..0x53A5DF (0x260 bytes), read to the last instruction: Scena01_Runs entry 2, steps 0..0xB (jump table 0x53A5B0, 12; cmp 0xB / ja): area 0xA's changes, music 0xE, transitions 0xF / 0x10, sound 0x201, the last effect cleared, flag 1. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53A5E0
+name = "Scena01_Scene03"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53A5E0..0x53AA8B (0x4AC bytes), read to the last instruction: Scena01_Runs entry 3, steps 0..0x16 (jump table 0x53AA30, 23): camera distance stepped over 0x50 frames twice, Menu_DrawHand(0xD2, 0x3C, 0) until Input_Pressed, Kind2 moves, kind-0x13 effects, music 0x14 / 0x13, flags 2 and 3. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53AA90
+name = "Scena01_Scene05"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53AA90..0x53AC20 (0x191 bytes), read to the last instruction: Scena01_Runs entry 5, steps 0..2 and 0xA..0xC (byte table 0x53AC14 over 0..0xC, jump table 0x53ABF8 of 7): messages 7 / 8, sound 0x103, the change to area 8, flag 4, Inventory_Add(0, 0x22, 1). Run 5 is what Scena01_Cell starts. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53AC30
+name = "Scena01_Scene06"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53AC30..0x53B12E (0x4FF bytes), read to the last instruction: Scena01_Runs entry 6, steps 0..0x1A (byte table 0x53B114, jump table 0x53B0D0 of 17): the choice word 0x7DEE48 and story flag 4 at 0x90410C, flags 5..7, Scenario_CallB(0), the leader's animation loop (0x44 on button 0x40, 5), two effects 0x15 / 0x55. The byte table after its jump table is not a function (scenario_rows.py lists it as 0x53B120). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53B130
+name = "Scena01_Scene08"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53B130..0x53B5E8 (0x4B9 bytes), read to the last instruction: Scena01_Runs entry 8, steps 0..6, 0xE..0x13, 0x37..0x3C (byte table 0x53B5AC over 0..0x3C, jump table 0x53B55C of 20): 0x57C550 tests, timers 0x6E / 0xB4, sounds 0x200 / 0x207 / 0x204, Cond_ByteFE, flags 9 / 0xA, changes to area 0x17, the stream, message 0x13, 0x532ED0 and 0x4410B0(2). 0x53B150, 0x53B210, 0x53B450, 0x53B480, 0x53B4A0 are its cases, not starts. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53B5F0
+name = "Scena01_Scene09"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53B5F0..0x53BD7B (0x78C bytes), read to the last instruction: Scena01_Runs entry 9, steps 0..0x2D (jump table 0x53BCC4 of 46): messages 1 / 2 / 0xC, AreaMap_SetByte on eight cells, members dropped in, flags 0xC / 0xF / 0x10 / 0x12 / 0x1D / 0x3F, Sound_PlayById(0x1206), changes to area 0x16, 0x532ED0 and 0x4410B0(3), the exit test for run 0xA. 0x53B960 and 0x53BC70 are its cases. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53BD80
+name = "Scena01_Scene0A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53BD80..0x53C013 (0x294 bytes), read to the last instruction: Scena01_Runs entry 0xA, steps 0..4, 0xB..0xD, 0x14, 0x15, 0x19, 0x1E, 0x1F (byte table 0x53BFF4 over 0..0x1F, jump table 0x53BFBC of 14): message 0x18, flag 0x10 cleared, sounds 0x205 / 0x206, the change to area 0x17 by flags 0x12 / 0x14, Kind2 moves, the change to area 5. 0x53BE30 is its case. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53C020
+name = "Scena01_Scene0B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53C020..0x53C32B (0x30C bytes), read to the last instruction: Scena01_Runs entry 0xB, steps 0..4, 0xA..0x13 (jump table 0x53C2DC of 20): flags 0x19..0x1C, changes to area 7 and 0xE, two effects at the camera, message 0x20, the camera pulled in over 0x2E frames. 0x53C230 is its case. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53C330
+name = "Scena01_Scene0C"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53C330..0x53C59B (0x26C bytes), read to the last instruction: Scena01_Runs entry 0xC, steps 0..0xA (jump table 0x53C570 of 11): the change to area 5, transitions 0xE / 0xD, music 8, an effect, 0x57C550, message 4, flags 0x15 / 0x16, 0x533E50. 0x53C470 is its case. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53C5A0
+name = "Scena01_Scene0D"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53C5A0..0x53CA1F (0x480 bytes), read to the last instruction: Scena01_Runs entry 0xD, steps 0..6, 0xA..0x12 (jump table 0x53C9D4 of 19): the change to area 0, the camera pulled in over 0x14 frames, music 0, flags 0x3A..0x3D, Scena01_PlaceEffect(0x92 / 0x93), message 0x36 and the choice bit 0x7DEE44 & 2. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53CA20
+name = "Scena01_Scene0E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CA20..0x53CBAB (0x18C bytes), read to the last instruction: Scena01_Runs entry 0xE, steps 0, 3..5, 7..9 (jump table 0x53CB84 of 10): music 0x11, messages 0x10 / 0x1C, flag 0x3E, changes to area 0xD and 0xF, Field_ViewReset, then the tail jump to 0x56D6F0 (Field_StatusBits bit 7). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53CBB0
+name = "Scena01_Scene0F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CBB0..0x53CCD7 (0x128 bytes), read to the last instruction: Scena01_Runs entry 0xF, steps 0..5 (jump table 0x53CCC0 of 6): counter 0 = 0x64 / 0x65, 0x533E50, the stream (Sound_LoadStream(0), Sound_StreamDone), music 0x1B, message 0xA. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53CCE0
+name = "Scena01_Scene11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CCE0..0x53CF90 (0x2B1 bytes), read to the last instruction: Scena01_Runs entry 0x11, steps 0, 2, 3, 5..7, 0x14..0x18 (byte table 0x53CF78 over 0..0x18, jump table 0x53CF48 of 12): counter 0 = 0x64 / 0x65 / 0xC8 (Game_Mode 7, 0x929F0C = 0xFE: the shop) / 0xC9, 0x533E50, the stream, the change to area 5 by Field_MemberCount, music 7. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53CFA0
+name = "Scena01_Scene12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53CFA0..0x53D002 (0x63 bytes), read to the last instruction: Scena01_Runs entry 0x12, steps 0 and 1: music 0x1A, member 0xB dropped in; on counter 0 = 2 run 9 at step 0x2D. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D010
+name = "Scena01_Scene14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D010..0x53D062 (0x53 bytes), read to the last instruction: Scena01_Runs entry 0x14, steps 0 and 1: message 0x18, then the end. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D070
+name = "Scena01_Scene15"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D070..0x53D0B4 (0x45 bytes), read to the last instruction: Scena01_Runs entry 0x15, steps 0 and 1: message 0x34, then run 6. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D0C0
+name = "Scena01_Scene16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D0C0..0x53D104 (0x45 bytes), read to the last instruction: Scena01_Runs entry 0x16, steps 0 and 1: message 0x34, then run 0. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D110
+name = "Scena01_Scene17"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D110..0x53D3A0 (0x291 bytes), read to the last instruction: Scena01_Runs entry 0x17, steps 0, 2, 3, 5, 0xA..0xD, 0x14..0x18 (byte table 0x53D388 over 0..0x18, jump table 0x53D354 of 13; 0xD and 0x17 share a case): as Scena01_Scene11, the change to area 0xA by Field_MemberCount. The byte table is not a function (scenario_rows.py lists it as 0x53D390). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D3B0
+name = "Scena01_PlaceEffect"
+ret = "void"
+params = "unsigned char n"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D3B0..0x53D462 (0xB3 bytes), read to the last instruction: called by Scena01_Scene0D with 0x92 and 0x93: Sprite_Current = the leader's record, Effect_FindFree into its +0xB, the record live as kind 6, +6 = n + 0x70, +0x10 = the s8 at 0x660D60 by the byte 0x904062, the leader's +0x2E / +0x30 words. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D470
+name = "Scena01_ObjectHook"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D470..0x53D48C (0x1D bytes), read to the last instruction: slot 1 of Scena01_Hooks (0x660D6C), called by 0x56D6D0 with the object whose trigger fired: call [Scena01_ObjectHandlers + object[+0x86] * 4](object, 0x903F98), unchecked (ours aborts past 18); the caller reads no answer. PSX twin by table slot: SCENA01 vtable[1] 0x801FD444 (the sibling's names/scenario_records.toml). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D490
+name = "Scena01_Object01"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D490..0x53D4CD (0x3E bytes), read to the last instruction: Scena01_ObjectHandlers entry 1: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D4D0
+name = "Scena01_Object02"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D4D0..0x53D4ED (0x1E bytes), read to the last instruction: Scena01_ObjectHandlers entry 2: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D4F0
+name = "Scena01_Object03"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D4F0..0x53D50F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 3: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D510
+name = "Scena01_Object04"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D510..0x53D52F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 4: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D530
+name = "Scena01_Object05"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D530..0x53D54F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 5: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D550
+name = "Scena01_Object06"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D550..0x53D5CC (0x7D bytes), read to the last instruction: Scena01_ObjectHandlers entry 6: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D5D0
+name = "Scena01_Object07"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D5D0..0x53D649 (0x7A bytes), read to the last instruction: Scena01_ObjectHandlers entry 7: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D650
+name = "Scena01_Object08"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D650..0x53D6D2 (0x83 bytes), read to the last instruction: Scena01_ObjectHandlers entry 8: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D6E0
+name = "Scena01_Object09"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D6E0..0x53D750 (0x71 bytes), read to the last instruction: Scena01_ObjectHandlers entry 9: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D760
+name = "Scena01_Object0A"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D760..0x53D767 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 10: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D770
+name = "Scena01_Object0B"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D770..0x53D777 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 11: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D780
+name = "Scena01_Object0C"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D780..0x53D787 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 12: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D790
+name = "Scena01_Object0D"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D790..0x53D797 (0x8 bytes), read to the last instruction: Scena01_ObjectHandlers entry 13: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D7A0
+name = "Scena01_Object0E"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D7A0..0x53D7C9 (0x2A bytes), read to the last instruction: Scena01_ObjectHandlers entry 14: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D7D0
+name = "Scena01_Object0F"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D7D0..0x53D7ED (0x1E bytes), read to the last instruction: Scena01_ObjectHandlers entry 15: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D7F0
+name = "Scena01_Object10"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D7F0..0x53D80F (0x20 bytes), read to the last instruction: Scena01_ObjectHandlers entry 16: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53D810
+name = "Scena01_Object11"
+ret = "void"
+params = "unsigned char *object, unsigned char *unused"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53D810..0x53D823 (0x14 bytes), read to the last instruction: Scena01_ObjectHandlers entry 17: see docs/scena_sc1.md section 1 (a scene started, or counter 0 set). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53DD20
+name = "Scena01_CellHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DD20..0x53DD49 (0x2A bytes), read to the last instruction: slot 4 of Scena01_Hooks (0x660D78), the cell hook: 0x56D800(Scena01_Cells, 2, x, z); a negative al answers 0xFF, else jmp [Scena01_CellHandlers + al * 4] with the same arguments (unchecked; ours aborts past 2). PSX twin by table slot: SCENA01 vtable[4] 0x801FE03C. Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[func]]
+pc = 0x53DD50
+name = "Scena01_Cell"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc1.cpp"
+evidence = "disasm 2026-09-27 (capstone, recursive descent), 0x53DD50..0x53DD91 (0x42 bytes), read to the last instruction: both entries of Scena01_CellHandlers: flag 3 set and flag 4 clear, ScriptFlags_Set40, run 5 from step 0, al 1; else al 0xFF (or al, 0xFF over Flags_Test's eax). Fuzzed under BOF3X_SHADOW=scena_sc1 (docs/scena_sc1.md)."
+
+[[data]]
+pc = 0x660D88
+name = "Scena01_Runs"
+ctype = "unsigned long"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-27: Scena01_Run jumps through it on the s8 MoveScript_Var7: 0x437CC0 (a bare ret) at runs 0, 4, 7, 0x10, 0x13; Scena01_Scene01..17 at the others (0x53A2C0, 0x53A380, 0x53A5E0, 0x53AA90, 0x53AC30, 0x53B130, 0x53B5F0, 0x53BD80, 0x53C020, 0x53C330, 0x53C5A0, 0x53CA20, 0x53CBB0, 0x53CCE0, 0x53CFA0, 0x53D010, 0x53D070, 0x53D0C0, 0x53D110). It follows Scena01_States directly."
+
+[[data]]
+pc = 0x660DE8
+name = "Scena01_ObjectHandlers"
+ctype = "unsigned long"
+count = 18
+status = "evidence"
+evidence = "read 2026-09-27: Scena01_ObjectHook calls through it on the object's +0x86: 0x437CC0 (a bare ret), then Scena01_Object01..11 (0x53D490..0x53D810)."
+
+[[data]]
+pc = 0x660E30
+name = "Scena01_Cells"
+ctype = "unsigned char"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27: two 5-byte records (area, x, z, bits, count as 0x56D800 reads them) that Scena01_CellHook passes to 0x56D800 with n = 2; ctype is bytes."
+
+[[data]]
+pc = 0x660E3C
+name = "Scena01_CellHandlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27: Scena01_CellHook jumps through it on 0x56D800's answer: Scena01_Cell twice."

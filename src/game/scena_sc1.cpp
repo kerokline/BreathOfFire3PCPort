@@ -79,7 +79,6 @@ void ClearFlag(unsigned n) { SH_CALL(Flags_Clear)(Bank(), n); }
 
 // The calls every scene makes.
 void ChangeArea(unsigned area, int x, int z, unsigned flags) { SH_CALL(Field_ChangeArea)(area, x, z, flags); }
-void MusicPlay(unsigned track) { SH_CALL(Music_Play)(track, 8); }
 void MusicStop(int frames) { SH_CALL(Music_FadeOutStop)(frames); }
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 void Transition(unsigned kind) { SH_CALL(Transition_Start)(static_cast<unsigned char>(kind)); }
