@@ -40964,6 +40964,313 @@ count = 6336
 status = "evidence"
 evidence = "read 2026-09-27, group S38: 48 records of 0x84 bytes: MeteorStrike_RecordAlloc's, walked by MeteorStrike_Task, cleared by MeteorStrike_Start; +1 0 a chip, 1 a trail (MeteorStrikeRecord_Kinds)."
 
+# Round ten group SC11: scenario chapter 11, 0x55C040..0x55E4E0 (docs/scena_sc11.md)
+
+[[func]]
+pc = 0x55C040
+name = "Scena11_Frame"
+psx = 0x801F7288
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C040..0x55C04E, 14 bytes): jmp [0x66166C + s8 byte 0x8034E2 * 4], Scena11_States, unchecked. Slot 0 of chapter 11's vtable 0x661658 (0x662C80[11]); the sibling's SCENA11 record 0x801FAEDC slot 0 is 0x801F7288 (loader_records/SCENARIO.md), the twin by slot. scenario_rows.py SC11: 0xE bytes."
+
+[[func]]
+pc = 0x55C050
+name = "Scena11_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C050..0x55C05F, 15 bytes): Draw_PassFlags 0x1F, the state 0x8034E2 1. Scena11_States entry 0."
+
+[[func]]
+pc = 0x55C060
+name = "Scena11_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C060..0x55C354, 0x2F4 bytes with its 12-entry jump table at 0x55C324, cmp 0xB): Scena11_States entry 1. By Game_AreaNumber (0x65, 0x79, 0x82, 0x83, 0x84, 0x88) and counter 2 (0x90384A): the pass flags, elevations, an effect of kind 0x77; in area 0x65 with flag 0xC set and 0xE not, ScriptFlags_Set40, the counters, MoveScript_Var7 8 and the call-table entries B then A (Scenario_CallA, 0x5341C0) by (byte 0x90412C and 0x7F) - 7; areas 0x2D, 0x41, 0x57, 0x10, 0x73 clear the counters, step and MoveScript_Var7; state 2."
+
+[[func]]
+pc = 0x55C360
+name = "Scena11_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C360..0x55C36E, 14 bytes): jmp [0x661678 + s8 MoveScript_Var7 * 4], Scena11_Runs, unchecked. Scena11_States entry 2."
+
+[[func]]
+pc = 0x55C370
+name = "Scena11_Scene1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C370..0x55C74D, 0x3DD bytes; jump table 0x55C6C0, 20 entries, by the 61-byte index table 0x55C710, cmp 0x3C): Scena11_Runs entry 1. A step machine on 0x8034E5: drop-in by member 0's +8, transitions, area changes to 0x83 and 0x9C, flags 1, 2, 0, 4; steps 0x32 / 0x3C open script messages 6 / 7. pc_hidden's 0x55C390 is its case 0 (scenario_rows.py drops it)."
+
+[[func]]
+pc = 0x55C750
+name = "Scena11_Scene2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C750..0x55C7C3, 0x73 bytes): Scena11_Runs entry 2, started by Scena11_Trigger01. Step 0 Party_DropIn(0) once the message is closed; step 1 at counter 0 3 flag 5 and the end."
+
+[[func]]
+pc = 0x55C7D0
+name = "Scena11_Scene3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C7D0..0x55C975, 0x1A5 bytes; jump table 0x55C944, 8 entries, by the 17-byte index table 0x55C964, cmp 0x10): Scena11_Runs entry 3. Drop-ins 4 and 5, flags 6 and 9; step 10 asks Inventory_Count for items 0x23, 0x24, 0x56, 0x4D (all held: step 15, else script message 0x35)."
+
+[[func]]
+pc = 0x55C980
+name = "Scena11_Scene4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55C980..0x55CC48, 0x2C8 bytes; jump tables 0x55CBD8, 9 entries by the 51-byte index table 0x55CBFC, cmp 0x32, and 0x55CC30, 6 entries, cmp 5): Scena11_Runs entry 4. An effect of kind 0x34 whose +1 is Scena11_EffectRolls[Rand and 15], by that value the next step or Scena11_EffectAnimate; system message 0xD9; Inventory_Add of item 0x23 (9) and 0x56 (1), the name to Text_Records and system message 3 when full; sound 0x106."
+
+[[func]]
+pc = 0x55CC50
+name = "Scena11_EffectAnimate"
+ret = "void"
+params = "unsigned slot"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55CC50..0x55CCE7, 0x97 bytes): Sprite_Current = Effect_Objects + (slot and 0xFF) * 0x80, Sprite_SetAnimationBank(0x18), +0x24, +0x2A, +0x48, +0x5D..+0x5F 0, +0x2B up one, +0x14 0, +0x20 -8, Sprite_SetAnimation(0xE), +1 3, +2 1 - Sprite_Current read afresh for each. Called only by Scena11_Scene4 (step 0, roll 5). In pc_funcs (its 23,209-byte size there runs over the band)."
+
+[[func]]
+pc = 0x55CCF0
+name = "Scena11_Scene5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55CCF0..0x55D273, 0x583 bytes; jump table 0x55D1E8, 24 entries, by the 43-byte index table 0x55D248, cmp 0x2A): Scena11_Runs entry 5. Drop-ins 1, 3, 5, 9; area 0x44 four ways; effects of kind 0x8C, 0x8B and 6; member 0's +0x124 bit 0x40; streams 6 and 5; flags 7 and 8; item 0x24 (4). pc_hidden's 0x55CD10, 0x55CF50, 0x55CFC0, 0x55D100 and 0x55D140 are its cases 0, 9, 12, 18 and 20 (scenario_rows.py drops them)."
+
+[[func]]
+pc = 0x55D280
+name = "Scena11_Scene6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55D280..0x55D6F5, 0x475 bytes; jump table 0x55D65C, 26 entries, by the 49-byte index table 0x55D6C4, cmp 0x30): Scena11_Runs entry 6. Area 0x82 several ways, requests of 8, Port_DroppedCall(1), streams 7, 6, 2, flags 0xA, 0xB, 0xC, Music_Play(0x83, 8), 0x537480(0xFFFF, 7)."
+
+[[func]]
+pc = 0x55D700
+name = "Scena11_Scene8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55D700..0x55DFF4, 0x8F4 bytes; jump table 0x55DF54, 40 entries, cmp 0x27): Scena11_Runs entry 8, which Scena11_EnterArea starts in area 0x65. Areas 0x65, 0x84, 0x83; Kind2_Place 0, 1, 2; Camera_Distance pulled in; effects of kind 0x13 and 0x31 at (x, Camera_Angles[1], z), each waited on to free through counter 3; flags 0xE..0x12."
+
+[[func]]
+pc = 0x55E000
+name = "Scena11_Scene9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E000..0x55E168, 0x168 bytes; jump table 0x55E140, 10 entries, cmp 9): Scena11_Runs entry 9. Drop-ins 9 and 10, flag 0x13, script message 0x3F; step 9: 0x56D6F0 (Field_StatusBits or 0x80), Field_ScriptFlags xor 0x16, area 0x79."
+
+[[func]]
+pc = 0x55E170
+name = "Scena11_ObjectTrigger"
+psx = 0x801FA5B8
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E170..0x55E18F, 31 bytes): call [0x6616A0 + object[0x86] * 4] with (object, the flag bits at 0x929ED0), unchecked. Slot 1 of chapter 11's vtable (0x56D6D0 pushes the object, then sets its +0x86 to 0xFF); the sibling's SCENA11 slot 1 is 0x801FA5B8, the twin by slot."
+
+[[func]]
+pc = 0x55E190
+name = "Scena11_Trigger01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E190..0x55E1D8, 0x48 bytes): Scena11_Triggers entry 1: once (flag 5 clear): ScriptFlags_Set40, counters 1..3 and the step 0, MoveScript_Var7 2 (Scena11_Scene2), flag 5 set. Also Scena11_Runs index 11 (MoveScript_Var7 0xB)."
+
+[[func]]
+pc = 0x55E1E0
+name = "Scena11_Trigger02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E1E0..0x55E203): Scena11_Triggers entry 2: ScriptFlags_Set40, counters 1..3 0, scene 3 from step 0."
+
+[[func]]
+pc = 0x55E210
+name = "Scena11_Trigger03"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E210..0x55E233): Scena11_Triggers entry 3: scene 5 from step 0."
+
+[[func]]
+pc = 0x55E240
+name = "Scena11_Trigger04"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E240..0x55E265): Scena11_Triggers entry 4: scene 3 from step 0xA (the item check). Also Scena11_Runs index 14 (MoveScript_Var7 0xE, which triggers 12 and 13 set)."
+
+[[func]]
+pc = 0x55E270
+name = "Scena11_Trigger05"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E270..0x55E293): Scena11_Triggers entry 5: scene 6 from step 0."
+
+[[func]]
+pc = 0x55E2A0
+name = "Scena11_Trigger06"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E2A0..0x55E2C3): Scena11_Triggers entry 6: MoveScript_Var7 7 (Scena11_Runs entry 7, a bare ret) from step 0."
+
+[[func]]
+pc = 0x55E2D0
+name = "Scena11_Trigger07"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E2D0..0x55E2F3): Scena11_Triggers entry 7: scene 9 from step 0."
+
+[[func]]
+pc = 0x55E300
+name = "Scena11_Trigger08"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E300..0x55E325): Scena11_Triggers entry 8: scene 9 from step 5."
+
+[[func]]
+pc = 0x55E330
+name = "Scena11_Trigger09"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E330..0x55E355): Scena11_Triggers entry 9: MoveScript_Var7 0xA from step 0x14 (Scena11_Runs index 10 is Scena11_Triggers entry 0, a bare ret)."
+
+[[func]]
+pc = 0x55E360
+name = "Scena11_Trigger10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E360..0x55E385): Scena11_Triggers entry 10: MoveScript_Var7 0xB from step 0x14 (Scena11_Runs index 11 is Scena11_Trigger01)."
+
+[[func]]
+pc = 0x55E390
+name = "Scena11_Trigger11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E390..0x55E3BA): Scena11_Triggers entry 11: ScriptFlags_Set40, counters 0..3 0, MoveScript_Var7 0xB from step 2."
+
+[[func]]
+pc = 0x55E3C0
+name = "Scena11_Trigger12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E3C0..0x55E3E3): Scena11_Triggers entry 12: MoveScript_Var7 0xE from step 0."
+
+[[func]]
+pc = 0x55E3F0
+name = "Scena11_Trigger13"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E3F0..0x55E415): Scena11_Triggers entry 13: MoveScript_Var7 0xE from step 0x1E."
+
+[[func]]
+pc = 0x55E420
+name = "Scena11_Trigger14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E420..0x55E445): Scena11_Triggers entry 14: scene 5 from step 0x28."
+
+[[func]]
+pc = 0x55E450
+name = "Scena11_ArriveHook"
+psx = 0x801FAA74
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E450..0x55E4D0, 0x80 bytes): slot 3 of chapter 11's vtable, called by Scenario_ArriveHook, answering in al. In area 0x79 at x 0x160000 or less (signed): flag 0 set, scene 1 at step 0x3C; else scene 1 at step 0 when member 0's +8 is 0, 6 or 7, else at 0x32; ScriptFlags_Set40, al 1. Otherwise al 0. The sibling's SCENA11 slot 3 is 0x801FAA74, the twin by slot."
+
+[[func]]
+pc = 0x55E4D0
+name = "Scena11_CellHook"
+psx = 0x801FAB6C
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/scena_sc11.cpp"
+evidence = "disasm 2026-09-27 group SC11 (0x55E4D0..0x55E4D3): or al, 0xFF; ret - slot 4 of chapter 11's vtable (0x56D7A0). The sibling's SCENA11 slot 4 is 0x801FAB6C, the twin by slot."
+
+[[data]]
+pc = 0x661648
+name = "Scena11_EffectRolls"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-27, group SC11: Scena11_Scene4 step 0 stores [0x661648 + (Rand and 15)] into its effect's +1 and branches on it (0 / 4 end, 2 step 1, 5 Scena11_EffectAnimate, 1 / 3 nothing). Chapter 11's vtable follows at 0x661658."
+
+[[data]]
+pc = 0x66166C
+name = "Scena11_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC11: Scena11_Frame's jmp [0x66166C + s8 0x8034E2 * 4]: Scena11_Start, Scena11_EnterArea, Scena11_Run. Right after chapter 11's vtable (0x661658, 5 slots)."
+
+[[data]]
+pc = 0x661678
+name = "Scena11_Runs"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-27, group SC11: Scena11_Run's jmp [0x661678 + s8 MoveScript_Var7 * 4]: 0x437CC0 (a ret), Scena11_Scene1..6, 0x437CC0, Scena11_Scene8, Scena11_Scene9. Unchecked: MoveScript_Var7 10, 11 and 14, which triggers 9, 10, 11, 12 and 13 set, read Scena11_Triggers' entries 0, 1 and 4 (docs/scena_sc11.md section 6)."
+
+[[data]]
+pc = 0x6616A0
+name = "Scena11_Triggers"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-27, group SC11: Scena11_ObjectTrigger's call [0x6616A0 + object[0x86] * 4]: 0x437CC0 (a ret), Scena11_Trigger01..14; a 0 at 0x6616DC, then chapter 12's vtable at 0x6616E0."
 # --- round ten group ARH: the area harness's proof, area 11 (docs/area_011.md), and the cell hook's reader (docs/area_harness.md section 8) ---
 
 [[func]]
