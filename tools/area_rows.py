@@ -442,8 +442,12 @@ def main():
         stats = {}
         for k, d in enumerate(descs):
             f = fields[k]
-            ch = code_run(img, f[CHOICE // 4], table_starts) if f[CHOICE // 4] else []
-            hd = code_run(img, f[HANDLERS // 4], table_starts) if f[HANDLERS // 4] else []
+            # an area's handler array and choice table overlap more often than
+            # not (area 3's choice table is its handlers from [2] on): neither
+            # stops the other's run
+            own = table_starts - {f[CHOICE // 4], f[HANDLERS // 4]}
+            ch = code_run(img, f[CHOICE // 4], own) if f[CHOICE // 4] else []
+            hd = code_run(img, f[HANDLERS // 4], own) if f[HANDLERS // 4] else []
             for i, w in enumerate(ch):
                 roots[w].append((k, '+0x34[%d] choice' % i))
             for i, w in enumerate(hd):
@@ -571,7 +575,8 @@ def main():
             for fo in (CHOICE, HANDLERS):
                 t = fields[k][fo // 4]
                 if t:
-                    n = len(code_run(img, t, table_starts))
+                    own = table_starts - {fields[k][CHOICE // 4], fields[k][HANDLERS // 4]}
+                    n = len(code_run(img, t, own))
                     desc_table_words.update(range(t, t + 4 * n, 4))
         data_ptrs = []          # (address, value, desc-order owner)
         # to the last descriptor's end; past it only the tables the last
