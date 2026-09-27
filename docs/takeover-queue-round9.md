@@ -411,7 +411,7 @@ ours (345 functions), and with it the spell round - every overlay behind
 a refused near variant; four groups strengthened their own fuzz after a
 first run left controls standing (S34's B27, S35's U57 with a seed change
 that re-ran its whole set, S36's four, S38's T50 / V97); none edited the
-harness. S32 found `magic_rows.py`'s row pairing reversed for MAGIC151 /
+harness. S33 and S34 found the queue's row pairing reversed for MAGIC151 /
 154 (S33: 151 is row 86, 154 is row 35) and for MAGIC159 / 166 (S34: 159 is
 row 120, 166 is row 90) - the queue's "read one id down" line, not the
 code. After the wave: 3,510 `impl` entries, 34 without an

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-27)
+**Status:** IN PROGRESS (2026-09-27, wave five merged)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,102 +14,102 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**3,165 functions are ours** (`inject: 3165 ours, 0 left original`), on
-`phase-3/round-nine`, pushed to `origin` 2026-09-27, not yet a PR. Round nine
+**3,510 functions are ours** (`inject: 3510 ours, 0 left original`), on
+`phase-3/round-nine`, local commits past `origin`'s `fb10178` (2026-09-27
+midday), not yet a PR. Round nine
 ([`takeover-queue-round9.md`](takeover-queue-round9.md)) re-traced the three
 routes - the "76" were 29 distinct entries, of which only the task scheduler
-was game logic (group EA, [`task_sched.md`](task_sched.md)) - and then began
-**the spell round** ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)):
+was game logic (group EA, [`task_sched.md`](task_sched.md)) - and then ran
+**the spell round to completion** ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)):
 every overlay behind `Magic_Rows` `0x64C2B8`, 2,064 functions in 43 groups,
 through one shared fuzz harness ([`magic_harness.md`](magic_harness.md); SH
-built it, HX folded eleven groups' edits into one API). **Waves one to three
-are merged** (L, S16..S25; C1..C3, E, S26..S31; S01..S08: 1,369 functions
-since round eight), and **wave four** (S09..S15, 320, round9 doc section
-11) on 2026-09-27. **Wave five (S32..S38) remains.** Before wave four
-the harness's two `kFlag` gaps were fixed and `magic_rows.py`'s table
-counts bounded (`015a3c3`, `93cc006`); the fix reaches 117 clones
-([`magic_harness.md`](magic_harness.md) section 8), and their 532 controls
-were re-run by eight agents: all refused, one (S06's A120) only after a
-seed change in `magic_s06_fuzz.cpp`. The
-other session on this machine added the recipe-save swap (`0775a49`,
-[`input-script.md`](input-script.md) section 1a) and planned the scenario
-and area rounds (`IDEAS.md` I23, I24). The rest is
+built it, HX folded eleven groups' edits into one API), in five waves
+(round9 doc sections 6, 9, 10, 11, 12; wave five, S32..S38, 345 functions,
+merged 2026-09-27 between 09:10 and 11:30). Every group: 0 mismatches,
+every control refused or an equivalent with a refused near variant, no
+harness edits. The other session on this machine added the recipe-save swap
+(`0775a49`, [`input-script.md`](input-script.md) section 1a) and planned the
+scenario and area rounds (`IDEAS.md` I23, I24). The rest is
 [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
-`r9_origb`, identical on all 10,309 frames; `analysis/validate_round9_hash.sh`,
+`r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
 reference sides `--original "*,-Game_Clock"`, `renderer=1`, windowed,
-foreground held), recorded 2026-09-26 morning on 2,003 ours; `r9_ours`
-identical but frame 0, the set-up (as since `rb1`). **It is stale again**:
-wave two's S28 took `Port_DroppedCall` `0x4DF820`, which the attract path
-calls, and an owned function is armed on neither side. Re-record before
-relying on it (round9 doc section 9). `r8_*` and older are history.
+foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
+`r9_ours` (08:50, the same build) identical but frame 0, the set-up (as
+since `rb1`). Wave five's 346 functions came after it and none is on the
+attract path - every spell group is fuzz-only - so it stands for this
+build until something on the attract path is taken. `r9_*_0926` and
+`r9_orig_0927_loaded` (a side recorded under a concurrent build, four
+frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-1. **Spell wave five.** Staged in
-   [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)
-   section 6b: S32..S38 (345 functions; MAGIC227 is row 147, C3 found it).
-   The brief is `analysis/round9_wave345_brief.md` and the group lines
-   `analysis/round9_wave5_groups.tsv` (gitignored - they live in the
-   checkout, not in git): point the brief's `reset --hard` at the tip before
-   launching (`sed` its 40-hex SHA) and its scratch path at your own
-   session's scratchpad (it names the wave-four session's,
-   `9e63839e-...`), spawn one Opus agent per line in a
-   worktree ("read your brief ... your group is line `sNN` of ..."), and merge
-   each as it reports with the routine below. Wave four's 320 used most of
-   one usage window (two groups were cut after their controls and resumed).
-   **The merge routine**: merge `--no-ff`; the conflicts are always
-   both-appended in `CMakeLists.txt`, `inject_all.cpp`, `symbols.toml`,
-   `docs/README.md` - keep both, the CMake list's `)` on its last line only,
-   and in `symbols.toml` **repeat the shared `[[func]]` header** when a hunk
-   starts inside an entry (the S18 merge lost one); `tomllib` parse and no
-   duplicate `pc`; build; the group's shadow and `BOF3X_SHADOW='*'` headless;
-   `ledger_check.py` 0 errors; `analysis/consolidate_entries.py`.
-   `merge_group.sh <sNN> <dir holding keepboth.py>` + `keepboth.py` do all
-   but the last two (it expects the branch `phase-3/round9-<sNN>`, which the
-   brief has each agent create); they worked for all seven of wave four.
-   Both are in `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/`
-   (and the wave-four session's `9e63839e-3d62-41b0-af67-04c4e6eecc8c/`).
-   **Expect noise while agents run**: an agent polling its controls script
-   notifies "finished, waiting on background work" many times before its
-   report; only the report (a hand-back message) means merge. A usage cut
-   shows as `failed` with the agent's last line - resume it with a message
-   naming its next step.
-2. **Owed by the spell round, before or after wave five** (round9 doc
-   sections 6 to 10):
-   - **The frame hash re-record** (above), owner away about 20 minutes.
+1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
+   order to choose:
    - **Rebinding**: many groups call later groups' functions by raw address;
      they work (the stand-in falls back to the address) but can take names.
-     Wave four named the most-held ones (round9 doc section 11:
-     `MagicFx_UncountAndFree` `0x4AF490` in eight groups,
-     `MagicFx_CountDownRelease` `0x4B1740` in five).
+     The lists are in round9 doc sections 11 and 12 (the most-held:
+     `MagicFx_FreeCurrentRecord` `0x4F6290` in thirteen groups,
+     `MagicFx_UncountAndFree` `0x4AF490` in eight,
+     `MagicFx_CountDownFlag10` `0x4F9F70` in six). Mechanical: replace the
+     `MH_AT` / `_callees.h` raw address with the header's name, rebuild, the
+     group's shadow and `'*'` headless.
    - **`known-defects.md`**: the groups describe; nobody has numbered them.
      Commonest: unbounded dispatch tables, `BattleTask_Create` / pool `0xFF`
      unchecked, divides by the live-target count, loops that never end past
      a byte bound. Notables: Paralyzer (row 123) reads address 0 in an
      ordinary battle; Head Cracker's (128) freeze is unexplained; Blitz's
-     step past its table jumps into Snap's code on the PC (owner: keep ours).
-     The owner's calls on the aborts are in the round9 doc.
+     step past its table jumps into Snap's code on the PC (owner: keep ours);
+     wave five's are listed in round9 doc section 12 (S37's
+     `CombustionSprite_Fade` copy slip, the Combustion shake's camera
+     residue, S38's sound played 16 times a frame). The owner's calls on the
+     aborts are in the round9 doc.
    - **The owner's eye**: boot, the title demo, entering a game, area
      changes, F9 (the scheduler, EA); and any spell cast - every spell group
-     is fuzz-only, no route casts them.
+     is fuzz-only, no route casts them. A cast from the recipe save
+     (`tools/recipe_saves/adult_ryu`, `combat.txt`) would reach the first
+     spell functions ever run live.
    - **34 owned functions have no `entries_logic.txt` line** (round9 doc
-     section 10): 9 are the wall-clock exclusions, 25 to audit with the
-     re-record.
-3. **Housekeeping.** A PR for round nine when the owner wants one. The
-   controls scripts of every round-nine group live in session scratchpads,
-   not in git: waves one to three and the other earlier groups in
+     section 10, re-checked after wave five: the same 34): 9 are the
+     wall-clock exclusions, 25 to audit - the hash matched with them
+     absent, so each is covered by a host extent or off the attract path;
+     say which.
+2. **Housekeeping.** A PR for round nine when the owner wants one (push
+   first: the branch is local past `fb10178`). The controls scripts of every
+   round-nine group live in session scratchpads, not in git: waves one to
+   three and the other earlier groups in
    `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/<group>/`,
    the kFlag re-run (`r1`..`r8`) and wave four (`s09`..`s15`) in
-   `.../9e63839e-3d62-41b0-af67-04c4e6eecc8c/scratchpad/`. A Temp folder:
+   `.../9e63839e-3d62-41b0-af67-04c4e6eecc8c/scratchpad/`, wave five
+   (`s32`..`s38`, plus `merge_group.sh`, `keepboth.py`, `r9_hash_refs.sh`)
+   in `.../2837efe3-e486-4ce9-9f2f-bd50089ad35b/scratchpad/`. A Temp folder:
    copy them somewhere durable if they are to outlive a cleanup. About 20
    orphaned `tail -f | grep` watchers from the first session (`c6020f3e`)
    may still be running; harmless, stop them when that session is closed.
-4. **The owner's eye on older rounds**: round seven and the world map (the
+   The seven `phase-3/round9-s3N` branches and the agents' worktrees under
+   `.claude/worktrees/` are merged and can go.
+   **The parallel-wave routine, for the next queue** (it ran five waves
+   without change): a brief in `analysis/` (gitignored) with the tip's SHA
+   and the session's scratch path, one Opus agent per group line in a
+   worktree, merge each as it reports: merge `--no-ff`; the conflicts are
+   always both-appended in `CMakeLists.txt`, `inject_all.cpp`,
+   `symbols.toml`, `docs/README.md` - keep both, the CMake list's `)` on its
+   last line only, and in `symbols.toml` **repeat the shared `[[func]]`
+   header** when a hunk starts inside an entry; `tomllib` parse and no
+   duplicate `pc`; build; the group's shadow and `BOF3X_SHADOW='*'`
+   headless; `ledger_check.py` 0 errors; `analysis/consolidate_entries.py`.
+   `merge_group.sh <sNN> <dir holding keepboth.py>` does all but the last
+   two (it expects the branch `phase-3/round9-<sNN>`). **Expect noise while
+   agents run**: an agent polling its controls script notifies "finished,
+   waiting on background work" many times before its report; only the
+   report (a hand-back message) means merge. A usage cut shows as `failed`
+   with the agent's last line - resume it with a message naming its next
+   step. Waves of about 350 functions fit one usage window.
+3. **The owner's eye on older rounds**: round seven and the world map (the
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.
-5. **After the spells: the next queues**, the owner's order to choose: the
+4. **After the spells: the next queues**, the owner's order to choose: the
    scenario round (I23, [`takeover-queue-scenario.md`](takeover-queue-scenario.md)),
    the area round (I24), new routes (`menu_screens.txt`, a boss, an event
    battle), the MP3 decoder's replacement (round9 doc section 3). What
@@ -117,7 +117,7 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
    original", "in no group"); the named ones are round seven's `0x43B130`
    and the boss handlers at `0x656954`, round six's `0x5806F0` /
    `Save_QuickWrite`, and WinMain's run-once callees.
-6. **Localisation: four languages and what they leave.** Built 2026-09-24
+5. **Localisation: four languages and what they leave.** Built 2026-09-24
    (DIV-0054..0057; [`dialogue-localisation.md`](dialogue-localisation.md)
    sections 6 and 9). Next, in the order they bite:
    - **The owner's look in game** at French, German and Japanese.
@@ -135,7 +135,7 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
      - the title art.
    - **The launcher's language box** knows only `en` / `original`.
    - **Furigana** is idea I21, for its own branch.
-7. **Localisation: the exe's remaining Chinese**
+6. **Localisation: the exe's remaining Chinese**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §6 the open list,
    §8 the method and the chunk kinds; `BOF3X_TEXTLOG=1` gives a string's
    address). Located by round seven: the place plates want the US page
@@ -158,14 +158,14 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
    names (16-byte fields against the disc's 12, DIV-0008 - owner's call);
    a better upscale; German and French (10 glyph slots free). Saved names
    stay as they are (owner's decision).
-8. **Widescreen's debts** ([`widescreen.md`](widescreen.md) §4, §5):
+7. **Widescreen's debts** ([`widescreen.md`](widescreen.md) §4, §5):
    the oracle and the frame hash once with `BOF3X_WIDE=1`; the attract A/B
    cropped to the middle 640 columns; the sprite and object culls (§3b's
    table), the sky `0x571C85`, the message-box table; whether any area
    change still shows a black centre with live bands; the corner pop with
    the margin at 100. A live `BOF3X_SHADOW=map_layers` under the wide view
    reports the cull's divergence by design.
-9. **[`new-code-audit.md`](new-code-audit.md), with the game on hand.** The
+8. **[`new-code-audit.md`](new-code-audit.md), with the game on hand.** The
    2026-09-25 readability audit of the code new to the game left eight bugs
    confirmed by reading and not yet seen in game, ten unchecked reports and
    six open questions. Each has its check. The two the owner decides on are
@@ -178,27 +178,27 @@ relying on it (round9 doc section 9). `r8_*` and older are history.
 
 Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
 
-10. **`analysis/pairs_propagated.json` errors**: `0x445A30` / `0x44B9F0`
+9. **`analysis/pairs_propagated.json` errors**: `0x445A30` / `0x44B9F0`
    swapped, `0x44F030` paired to the wrong twin
    ([`battle_damage.md`](battle_damage.md)). Then the divergence map of
    [`attract-remaining.md`](attract-remaining.md) §5.1 (`psx_pair.py areas
    && fill && propagate`, five minutes; never use the `call-disputed` tier),
    scenario overlays, the name import as `hypothesis`.
-11. **The first receipt** ([`STATUS.md`](STATUS.md) open decisions). CI
+10. **The first receipt** ([`STATUS.md`](STATUS.md) open decisions). CI
    compiles `src/` since 2026-09-25 (`.github/workflows/build.yml`, beside the
    ledger checks in `checks.yml`). The evidence a receipt records exists: `attract_diff.py`,
    `mem_dump.py --compare`, `calltrace.py frames`, the route A/Bs.
-12. **[`IDEAS.md`](IDEAS.md) I13, save states** - the random encounter is
+11. **[`IDEAS.md`](IDEAS.md) I13, save states** - the random encounter is
     deterministic now (`combat.txt`), so save states are for what no route
     replays: bosses and event battles.
-13. **I15, the live look toggle** - the input path is read and ours
+12. **I15, the live look toggle** - the input path is read and ours
     (DIV-0050), so it wants only a key; I19 (curvature for SatPixie) beside
     it.
-14. **I18, F12 before shipping** - `Save_QuickWrite` writes a normal save to
+13. **I18, F12 before shipping** - `Save_QuickWrite` writes a normal save to
     slot 0 from anywhere, battles included; the owner keeps it for now and
     wants it disabled or a true quicksave before shipping. The recorder's
     F12 shot lands on top of it.
-15. **The display overhaul's owed checks** ([`display-overhaul.md`](display-overhaul.md)
+14. **The display overhaul's owed checks** ([`display-overhaul.md`](display-overhaul.md)
     §5, [`window-modes.md`](window-modes.md) §6): the edge pixels of `rb1`
     - `BOF3X_PIXEL_OFFSET=0.498046875` against the 27 differing captures of
     the 55-shot attract A/B (`validate_rb1.sh`, about 25 minutes); the
@@ -211,14 +211,14 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
     fog / lighting, the back buffer's `GetDC`. The set-up's pixel formats
     and caps `0xCCD` are this machine's HAL's; the backend takes any RGB
     masks.
-16. **Stage 2's regression check**: which of `MsgBox_Step`'s 23 control
+15. **Stage 2's regression check**: which of `MsgBox_Step`'s 23 control
     codes the attract sequence's eight messages use (tracer detail mode);
     nothing covers `Msg_OpenSystem` ([`attract-mode.md`](attract-mode.md) §6).
     And a check of the list the draw-order pass builds in the real game -
     I14 level 1 - with a hand-written header for the sprite object (five
     files address it by offset; [`sprite-draw-order.md`](sprite-draw-order.md)
     §5, §6).
-17. **The owner, in game** ([`USER_CHECKS.md`](USER_CHECKS.md)): with
+16. **The owner, in game** ([`USER_CHECKS.md`](USER_CHECKS.md)): with
     `BOF3X_LANG=en` - the choice lists at 8 px, item and ability menus for
     clipping, a pick-up, the masters' talk, a long area (`AREA090`,
     `175`-`185`, DIV-0007); USER_CHECKS 6's two-row title layout; a save and
@@ -233,12 +233,12 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
     `BOF3X_SHADOW=Gfx_InvalidateTextures`); DIV-0047 over a long session
     (the old bands began at 35 minutes); DIV-0039's window title (built,
     "seen at the next run" - confirm it was).
-18. **Finish reading the asset path**: the 32 callers of `LoadDatFile`, the
+17. **Finish reading the asset path**: the 32 callers of `LoadDatFile`, the
     value-sequence search for the dropped PSX sections
     ([`asset-loading-path.md`](asset-loading-path.md) §4). For I1, the PC
     block builder `0x5806F0` and the options bytes at block `+0x78`;
     PC-to-PSX is still static only.
-19. **Obligations** ([`STATUS.md`](STATUS.md)): contact TheRealBiggs; write
+18. **Obligations** ([`STATUS.md`](STATUS.md)): contact TheRealBiggs; write
     findings back to the sibling (the `0x0C` answer, `Rand` not matching).
     Still unknown, though both are ours: what the 8-byte records of
     `SpriteCell_Add` `0x5A6790` (table `0x6BEA18`, read by `0x5A32B0`) are.
@@ -301,10 +301,11 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Nothing uncommitted of this round's. `phase-3/round-nine` is local, ahead of
-`origin/main` (`b302b8d`) by round nine's commits and the other session's
-(`0775a49` recipe saves, `7cb8df5` / `973a69d` I23 / I24). Waves four and
-five's briefs are in `analysis/` (item 1).
+Nothing uncommitted of this round's. `phase-3/round-nine` is ahead of
+`origin/phase-3/round-nine` (`fb10178`) by wave five's merges and docs, and
+of `origin/main` (`b302b8d`) by round nine and the other session's
+(`0775a49` recipe saves, `7cb8df5` / `973a69d` I23 / I24). The wave briefs
+are in `analysis/` (gitignored).
 
 Local only, gitignored, worth keeping:
 
@@ -478,8 +479,15 @@ _One line each, with a pointer. Add when something costs more than an hour._
   V1): rename in the later group's files.
 - **Our own scaffolding has ceilings, and they fail like hangs**: the
   `BOF3X_ORIGINAL` / `BOF3X_SHADOW` lists (2,048 characters) and the
-  tracer's owned-function table (256) ended in a `Fatal` before the window -
-  90 minutes. Both raised; read the log when a run is slow.
+  tracer's owned-function table (256, then 2,048 - hit again at 3,165 ours
+  on 2026-09-27, now 8,192 in `calltrace.cpp`) ended in a `Fatal` before
+  the window. Read the log when a run is slow; a `Fatal` dialog blocks the
+  runner until it is dismissed.
+- **Do not build or self-test in the main checkout while a frame-hash
+  reference side records**: the `orig` side recorded under the S32 merge's
+  build made 9,675 logic frames against ~10,300 and four frames of
+  25,000..33,000 calls where its twin had 2 (`r9_orig_0927_loaded`).
+  Agents' worktree self-tests ran under every side without harm.
 - **A failed build leaves the previous `bof3x.dll`** and the self-tests pass
   on it. Read the build's output, not only the exit code.
 - **A divergence that stretches time must not stretch what the game sees**
@@ -513,5 +521,5 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## Waiting on someone else
 
-- The owner: items 3 and 15; the removal in item 1.
+- The owner: items 2 and 14; the choices in item 1.
 - TheRealBiggs - not yet contacted ([`STATUS.md`](STATUS.md) obligations).
