@@ -457,6 +457,8 @@ And `ElemStrike_Kind`'s seed now names the kind table's ids directly (E43 and E4
 | E73 | Fx_Play: update after the free too | ElemStrikeFx_Play 1333 |
 | E74 | Fx_Play: 0 counts down | ElemStrikeFx_Play 506 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 43 controls in the affected functions, 43 refused**, each by exit 3 with a count only in the functions it touches; the clean self-test after them 0 mismatches, exit 0. Selected: every control planting in one of the eleven section-8 functions - K4..K25 (`LeapSetUp`, `DashCountDown`, `LeapMove`, `GroundMove`, `BackAtStart` and the dash's phases), K36..K40, H13, H14, E23 (`TargetRecord`, used by `ElemStrike_End` too), E38..E42, E52..E54, E70..E74. Skipped: H19 (`ActorRecord`, called only by the two spawns and `ElemStrike_Start`) and H36 (the pool stride, read only by `SuperCombo_Task` and `SuperComboHit_Alloc`), neither in a section-8 function. The plants were rebuilt from the table's descriptions. The thinnest: E42 12 (was 22), E52 14 (was 24), E23 39 in `ElemStrike_End` (was 51), K39 136, K40 137. No fuzz change.
+
 ## 7. What nothing reached
 
 No recorded route casts any of these abilities (queue §5); the live check is

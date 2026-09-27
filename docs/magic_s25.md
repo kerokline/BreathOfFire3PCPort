@@ -273,6 +273,8 @@ One hundred and thirteen planted, 107 refused by a count (exit 3), each only in 
 | Q1b | Confuse_DrawQuads: cap test 0xB8 | no: equivalent - r above 0xB8 is at least 0xC0, capped to 0xC0 either way |
 | Q1c | Confuse_DrawQuads: capped at 0xC8 | Confuse_DrawQuads 332 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 3 controls in the affected functions, 3 refused** - CF1..CF3, the controls in `SpellConfuse_ChildFly` (the one section-8 function), rebuilt from the table (CF1 as the height argument `>> 16`); each by exit 3 in 2,000 rounds, only there. Clean self-test after them 0 mismatches, exit 0. No fuzz change.
+
 ## 4. What the route reaches
 
 Nothing. No recorded route casts any of these spells, and the combat route's

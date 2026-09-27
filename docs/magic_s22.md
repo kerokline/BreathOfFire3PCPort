@@ -317,6 +317,8 @@ refused neither: the vertex words those two plants change were overwritten
 by the next step before the state compare. The fuzz was fixed rather than
 the plant dropped.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 7 controls in the affected functions, 7 refused** - B26..B28 (`Blizzard_CenterOnTargets`), J1..J3 and L8 (`StartBolts`, i.e. `Jolt_Start` / `Lightning_Start`), rebuilt from the table; every one exits 3. B26 2,000, B28 1,999, J1 2,000 / 2,000, J2 1,960 / 1,956, J3 2,000, L8 2,000; B27 as before: mismatch lines in `Blizzard_CenterOnTargets` (the first at round 68), then ours' own abort. Clean self-test after them 0 mismatches, exit 0. No fuzz change.
+
 ## 7. What nothing reached
 
 No recorded route casts any of these spells: the combat route casts none

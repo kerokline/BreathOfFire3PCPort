@@ -353,6 +353,8 @@ The thinnest: S11 (1 round: `Sprite_Current` not read again after the one sound 
 | Q3 | MagicFx_DrawDiscRadius: steps of 0x100 | MagicFx_DrawDiscRadius 2000 |
 | Q4 | MagicFx_DrawDiscRadius: the triangle linked at dy 0 | MagicFx_DrawDiscRadius 2000 |
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 6 controls in the affected functions, 6 refused** - F13..F18, every control in `Buff_Fade` (the one section-8 function), rebuilt from the table; each by exit 3 with a count only in `Buff_Fade`: F13 2000, F14 448, F15 161, F16 486, F17 253, F18 486. The thinnest is F15 (was 177). Clean self-test after them 0 mismatches, exit 0. No fuzz change.
+
 ## 8. What nothing reached
 
 No recorded route casts Drain or any of the five buffs: the combat route's
