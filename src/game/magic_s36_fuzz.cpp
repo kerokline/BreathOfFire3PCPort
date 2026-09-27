@@ -18,9 +18,11 @@
 //   - Math_Ratan2 answers, while a flight step is fuzzed, a heading that turns
 //     by one step either side of 0x600 or 0xA00 from the old one half the
 //     time, so the "turned past the target" test meets both of its bounds;
-//   - Math_Sin answers 0 most of the time in half of a spark's rounds, so the
-//     spark's radius walk runs past its 32-step wave (a garbage sine ends it
-//     in a step or two);
+//   - Math_Sin answers 0 or +-0x400 in half of a spark's rounds, so the
+//     spark's radius walk creeps across its floor and runs past its 32-step
+//     wave (a garbage sine ends it in a step or two);
+//   - Battle_SetTargetFlags, while the dome grows, moves the struck byte of
+//     the enemy it flags (the dome stores it before the call);
 //   - 0x446770 (the dx / dz turn) logs the task's direction and pair and
 //     writes a new pair; AuraBreath_InReach (called by the dome) answers a
 //     whole eax of 0 or 1 and logs the reach word and the point it reads;
