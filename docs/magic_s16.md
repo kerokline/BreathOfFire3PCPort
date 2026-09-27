@@ -291,6 +291,8 @@ Seventy-two, planted one at a time by a script (the scratch `controls.py`, not c
 
 The thinnest are the re-reads: UP5 (the sparkle read again before the G3 rays; 1..2 rounds per overlay, none in 074's run), L5 (after the x `Rand`; 1 round, in 072) and AL2 (the alloc's last record; 2..7). Each shows only when the group's disturbance moves the current cell across exactly that call, or the pool fills to its last record. C1 and C2 are refused only by the answers check (the count answers in al, which the harness does not compare): 20 and 1,076 of its 10,000 rounds.
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 14 controls in the affected functions, 14 refused.** Section 8 lists `Magic073_CountReacting`, `Magic073_Spawn`, `Magic073_Wait` and `Magic074_Spawn`; the controls planting in them are S9 (`ClearPool`, shared with 071's and 072's spawns), A1..A8 (`SpawnOnActors` and the two spawns), W1, W2 and C1..C3. The rest plant only in functions whose originals call no `kFlag` / `kBool` recorder and stand. Rebuilt from the table (the scripts were never committed) and run by the same plant / rebuild / self-test / restore loop: S9 2,000 in each spawn; A1 1,090 / 1,080; A2 1,037 / 998; A3 1,661; A4 1,661 / 1,641; A5 1,637 / 1,617; A6 1,037 / 998; A7 125 / 121; A8 1,843; W1 262; W2 1,013; C3 2,000; C1 and C2 by the answers check, 20 and 1,076 of its 10,000 rounds, as before. The thinnest is A7 (121 in `Magic074_Spawn`). No fuzz change. After the last: restored, rebuilt, clean self-test exit 0, 0 mismatches.
+
 ## 6. Defects (Capcom's, latent, kept)
 
 For the coordinator to number; nothing is fixed here.
