@@ -223,6 +223,18 @@ The thinnest (fewer than 60 rounds):
 - **T2** (Start: source read after the task): 38
 - **T39** (Arcs: sorted at the point / 4): 47
 
+Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) §8): 21 controls in the affected
+functions, 21 refused. The section-8 functions are `CoronaEnemy_Start`,
+`MainCannon_Start`, `MainCannon_Fire`, `MainCannon_End`,
+`MainCannonShell_Fly` and `MainCannonBlast_Play`; their controls C56, C57,
+M2..M12, M26..M32 and M39 were re-planted from the table (the same script
+pattern) and each refused by a count in the functions it touches only, in
+the same number of rounds as before. The other 176 plant in functions that
+reach no `kFlag` / `kBool` recorder and stand. The thinnest: M6 (every
+fourth frame) 89, M28 179, M27 271. No fuzz change. Clean self-test after
+the last: 0 mismatches, exit 0.
+
 | | Planted | Refused in (rounds of 2,000) |
 |---|---|---|
 | D1 | DoomBreath_Task: entries 2/3 swapped | DoomBreath_Task 808 |

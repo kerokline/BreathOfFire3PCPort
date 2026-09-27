@@ -215,6 +215,19 @@ and **all are refused** (exit 3). The figures are mismatched rounds out of
   `Rand`, 7), K15 (a child count of exactly 1, 6), K34 (`+4` exactly 0x7A, 27),
   M29 (the pool's last record, 20).
 
+Re-run 2026-09-26 on the kFlag-fixed harness
+([`magic_harness.md`](magic_harness.md) §8): 21 controls in the affected
+functions, 21 refused. The section-8 functions are `Kaiser_HideParty`,
+`Kaiser_LoadSetFile`, `Kaiser_ShowParty`, `KaiserSprite_Tick`,
+`KaiserSprite_Breathe`, `KaiserSprite_WaitScript` and `KaiserFlash_WaitLoad`;
+their controls K11..K13, K22..K28, K46..K54, K63 and K64 were re-planted from
+the table (a scratch script: plant, rebuild, check the file recompiled,
+self-test, restore) and each refused by a count in its own function only.
+The other 148 plant in functions that reach no `kFlag` / `kBool` recorder
+and stand. The thinnest: K53 (the owner read before the child) 52, as
+before; K27 212 (was 274), K25 424, K28 295 (was 265), K22 325. No fuzz
+change. Clean self-test after the last: 0 mismatches, exit 0.
+
 | | Planted | Refused in |
 |---|---|---|
 | V1 | Venom_Task: entries 0 and 2 swapped | Venom_Task 1,369 |
