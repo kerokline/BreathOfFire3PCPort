@@ -1,11 +1,13 @@
 # The scenario chapters' shared engine-side helpers (group SE)
 
-**Status:** IN PROGRESS (2026-09-27) - stage A: six functions read to their
-last instruction and written (`src/game/scena_se.cpp`, shadow name
-`scena_se`), their fuzz file written against the scenario harness's
-contract; not built, not fuzzed, no controls yet (the harness is group SCH's,
-not merged). Three of the nine addresses the round listed are not taken
-(section 1).
+**Status:** IN PROGRESS (2026-09-27) - six functions ours
+(`src/game/scena_se.cpp`, shadow name `scena_se`), fuzzed headless through
+the scenario harness ([`scenario_harness.md`](scenario_harness.md), SCH's):
+**0 mismatches** in 12,000 rounds; **30 of 32 negative controls refused** by
+a count, the other two equivalent mutants with a near variant of each
+refused (section 5). `BOF3X_SHADOW='*'` exit 0. Fuzz only: no route is
+recorded through these. Three of the nine addresses the round listed are not
+taken (section 1).
 
 Group SE of round ten's first wave
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1,
@@ -13,41 +15,24 @@ Group SE of round ten's first wave
 helpers the banks share with the field engine", the analogue of the spell
 round's group L).
 
-## Stage A done - what stage B has to do
+## Stage B (2026-09-27)
 
-Written at stage A (branch `phase-3/round10-se`):
-`src/game/scena_se.cpp`, `scena_se.h`, `scena_se_callees.h`,
-`scena_se_fuzz.cpp`; six `symbols.toml` entries with `impl` (two edited in
-place, four new) and `[[data]] EventBattle_Records`; five lines in the main
-checkout's `entries_logic.txt`. Both `.cpp` files pass
-`i686-w64-mingw32-clang++ -fsyntax-only -m32 -std=c++20` against a private
-copy of `magic_harness.h` renamed to `scenario_harness` / `SH_`, with the one
-field SCH's tool prints added (`Clone::shape`, `Shape::kCallEntry`).
+Stage A (`94720db`) wrote the module against the harness's contract; stage
+B merged `phase-3/capture-round-ten` at `218eeec` (SCH's harness, with ARH
+and ART), and:
 
-**The branch does not link at stage A**: `event_script.cpp` names
-`EventOp_0x` and `EventObj_Face`, which `impl` now binds to ours, and the
-module is not in the build yet. Stage B fixes that by registering it.
-
-Stage B, after merging `phase-3/capture-round-ten` at SCH's harness SHA:
-
-1. Register the module: `src/game/scena_se.cpp` and `scena_se_fuzz.cpp` at
-   the end of `CMakeLists.txt`'s list, `ScenaSe_Inject();` (and its
-   `#include "game/scena_se.h"`) at the end of `inject_all.cpp`.
-2. Check the fuzz file against SCH's real header: the `Clone` field order
-   after `ours` (`ret_mask`, `calm`, `shape`), the name of the call-table
-   shape (`Shape::kCallEntry` as `scenario_rows.py` prints it), and what a
-   `kCallEntry` clone is called with (Scena08_PartyJoin784 reads no word; the
-   group's `Args` leaves its ten words random). If SCH's standard regions
-   cover some of this group's (Sprite_Current, ObjTrio, the member count,
-   Field_ScriptFlags2), drop the duplicates from `kRegions` - overlap is
-   harmless but double-counts bytes.
-3. Build, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=scena_se`, to 0 mismatches;
-   read the coverage line against section 4's expectations (every callee
-   reached; Effect_FindFree's 0xFF branch; EventOp_0x's early return).
-4. Plant and refuse the controls of section 5 (script: plant, rebuild, run,
-   restore, rebuild), fill the table, then `BOF3X_SHADOW='*'`.
-5. `tools/ledger_check.py` (0 errors), this status header, the README row's
-   counts.
+- ported the fuzz: each root's shape (`Shape::kEntry` for the five taking
+  cdecl words, `kSlot` for `EventObj_Face`), `group.chapter = 8`
+  (`Scena08_PartyJoin784`'s chapter; none of the six reads the chapter bytes
+  or the flag row), the regions and callees trimmed to what the harness's 22
+  standard regions and 70 standard callees lack (section 4);
+- moved `EventObj_Face` to `SH_OURS` in `scenario_harness.cpp`'s standard
+  set - the one sanctioned harness edit (`EventOp_0x` is not in that set);
+- registered the module at the end of `CMakeLists.txt`'s list and of
+  `inject_all.cpp`;
+- strengthened the fuzz after the first control run left C16 and C17
+  standing: an `effect` on `EventOp_0x`'s four callees moves an op byte or
+  the count after each call (section 4), and both were then refused.
 
 ## 1. The nine addresses, read
 
@@ -165,20 +150,32 @@ Every chapter group calls these by raw address this wave. By band
 
 ## 4. The fuzz (`scena_se_fuzz.cpp`)
 
-Written against the scenario harness's contract (`magic_harness`'s API one
-for one, `SH_`), not yet run. The clone table is `scenario_rows.py --unit SE
---clones` with the three untaken dropped. Every callee is listed (the
-group's listing stands over the standard set): `Effect_FindFree` answers a
-byte `0xFF..0x13` (none, or slots 0..19); `EventObj_SetFlags` is logged by
-the flags byte it reads (`deref` 1); `Sprite_SetAnimationBank` by the
-bank's 16 bits; `0x533E00` by address.
+Through the scenario harness, all six clones called with ten words (cdecl:
+the originals read at most three). The clone table is `scenario_rows.py
+--unit SE --clones` (at `218eeec` it lists only the three not taken; the six
+were printed at stage A by `222eb0f`'s copy), names given. The harness's
+standard set already holds `Effect_FindFree` (a byte `0xFF..0x13`),
+`AreaMap_Elevation`, `Sprite_SetAnimation`, `Sprite_SetAnimationBank`,
+`Sprite_FaceDirection`, `EventObj_Reset`, `EventObj_Face` and `Party_Join`.
+The group lists: `EventObj_SetFlags` logged by the flags byte it reads
+(`deref` 1); `0x533E00` by address; and `EventObj_Reset`,
+`Sprite_SetAnimationBank`, `AreaMap_Elevation` again (as the standard set
+records them) for the stir below.
 
-- **Regions**: `Field_ScriptFlags2`, the battle bytes `0x904AA0..0x904B50`,
-  the leader's head, `Effect_Objects` (20 x 0x80), `Sprite_Objects` (30 x
-  0xA4), the `Sprite_Current` and `Field_ActiveMember` cells, the count and
-  bank words `0x903850`, both party lists, `Field_MemberCount`,
-  `CharacterRecords` 0..7 (`MoveScript_EffectState`'s 24 entries name
-  records 0..7), and a 32-byte op buffer of the fuzz's own.
+- **The stir.** `EventOp_0x` reads the count word and the op's bytes again
+  after its calls; the harness reaches a group's `disturb` one disturbance
+  in sixteen, and at first the fuzz could not tell `op[3]` read before
+  `EventObj_SetFlags` from one read after it (C16, 0 of 2,000) nor the
+  count read once (C17, 30). An `effect` on its four callees now moves,
+  from the recorders' stream after each call, an op byte, `op[3]`'s bit 7
+  and low bits, or the count within the table.
+- **Regions** beyond the harness's 22 (which hold the chapter bytes,
+  `Cond_Flags` with both party lists, `Field_MemberCount`, the count word,
+  `Sprite_Current`, ObjTrio, `Sprite_Objects`, `Effect_Objects`):
+  `Field_ScriptFlags2`, the battle bytes `0x904AA0..0x904B50`, the
+  `Field_ActiveMember` cell, `CharacterRecords` 0..7
+  (`MoveScript_EffectState`'s 24 entries name records 0..7), and a 32-byte
+  op buffer of the fuzz's own: 27 regions, 11,524 bytes.
 - **Seed**: both pointer cells at a sprite object; the count 0..29, and for
   `EventOp_0x` 30 or 31 a third of the time; `op[3]` bit 7 both ways; the
   member count 0..4; list ids below 24, the second list often the first's in
@@ -186,40 +183,73 @@ bank's 16 bits; `0x533E00` by address.
   bit 1 half the time; `EventObj_Face`'s `+7` bit 3 both ways.
 - **Args**: `EventOp_0x` gets the op buffer; `Party_AddToLists` an id below
   24 with garbage above; the rest random words (the originals mask them).
-- **Disturbance** (from the hash only): the count 0..29, `Sprite_Current`,
-  one op byte, the bank word - what `EventOp_0x` reads again after its
-  calls.
+- **Disturbance** (the group's, from the hash only): the count 0..29,
+  `Sprite_Current`, one op byte, the bank word; with the harness's own
+  (`Sprite_Current` among the first four objects, the chapter bytes, the
+  wait word, and the rest of its list).
 
-Stage B records the counts here.
+**Result** (2026-09-27, in this worktree, `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=scena_se`, exit 0): 12,000 rounds over 6 functions, **20,437**
+calls to the stand-ins, **0 mismatches**, 11,524 bytes (27 regions).
+Coverage: `EventObj_SetFlags` 1305, `EventObj_Reset` 1305,
+`Sprite_SetAnimationBank` 1305, `AreaMap_Elevation` 3217, `0x533E00` 2000,
+`Party_Join` 6000, `Sprite_SetAnimation` 1019, `Sprite_FaceDirection` 981,
+`EventObj_Face` 1305, `Effect_FindFree` 2000. So `EventOp_0x` placed in 1,305
+rounds and returned early in 695; `Effect_SpawnAtCell` found no free slot in
+88 (`AreaMap_Elevation`'s 3,217 are 1,305 placements and 1,912 spawns). Under
+`BOF3X_SHADOW='*'` (every group): 20,299 calls, 0 mismatches, exit 0 - the
+count moves with the other groups' state, as round nine recorded.
 
-## 5. Controls (planned; stage B plants them)
+## 5. Controls
 
-| # | Function | Mutant | Expected |
-|---|---|---|---|
-| C1 | `Field_StartEventBattle` | `\| 0x08` for `\| 0x10` | refused (region) |
-| C2 | | leader state 4 | refused |
-| C3 | | the record's `+1` byte for `+0` | refused |
-| C4 | | `0x904AE4` left alone | refused |
-| C5 | `Scena08_PartyJoin784` | members 7, 4, 8 | refused (log) |
-| C6 | | the palette reload dropped | refused |
-| C7 | | the count left alone | refused |
-| C8 | `Effect_SpawnAtCell` | no early return on 0xFF | refused |
-| C9 | | x zero-extended, not sign-extended | refused |
-| C10 | | `+ 0xFF` for `+ 0x100` | refused |
-| C11 | | kind 0x35 | refused |
-| C12 | `EventObj_Face` | bit 5 for bit 4 into `+0x2A` | refused |
-| C13 | | the two branches swapped | refused |
-| C14 | `EventOp_0x` | `> 30` for `>= 30` | refused (count 30 seeded) |
-| C15 | | `+0x83` from `op[0x11]` | refused |
-| C16 | | `op[3]` read before `EventObj_SetFlags` | refused by the disturbance |
-| C17 | | the count read once at the top | refused by the disturbance |
-| C18 | | the bank from `op[2] << 8 \| op[1]` | refused |
-| C19 | | the count's `+ 1` dropped | refused |
-| C20 | `Party_AddToLists` | `n <= 3` | refused |
-| C21 | | bit 0 for bit 1 in the search | refused |
-| C22 | | the inner loop stops at 2 | refused |
-| C23 | | al 1 on none | refused (`ret_mask`) |
-| C24 | | `\|= 1` for `\|= 3` | refused |
+Planted one at a time in `scena_se.cpp` by a script (plant, rebuild, run,
+restore; rebuilt at the end), each anchored on a unique string. The count
+is mismatching rounds of 2,000 for the function (the first differing round
+in brackets); every refused one exited 3.
+
+| # | Function | Mutant | Mismatches |
+|---|---|---|--:|
+| C1 | `Field_StartEventBattle` | `\| 0x08` for `\| 0x10` | 1514 (0) |
+| C2 | | leader state 4 | 2000 (0) |
+| C3 | | the record's `+1` byte for `+0` | 1921 (0) |
+| C4 | | `0x904AE4` left alone | 1987 (0) |
+| C5 | `Scena08_PartyJoin784` | members 7, 4, 8 | 2000 (1) |
+| C6 | | the palette reload dropped | 2000 (1) |
+| C7 | | the member count left alone | 1597 (1) |
+| C8 | `Effect_SpawnAtCell` | FindFree called again on 0xFF | 88 (50) |
+| C9 | | x zero-extended, not sign-extended | **0: equivalent** |
+| C9b | | x as its low byte | 1908 (2) |
+| C10 | | `+ 0xFF` for `+ 0x100` | 1912 (2) |
+| C11 | | kind 0x35 | 1912 (2) |
+| C30 | | `+0xB` = 1 | 1912 (2) |
+| C12 | `EventObj_Face` | bit 5 for bit 4 into `+0x2A` | 533 (33) |
+| C13 | | the two branches swapped | 2000 (3) |
+| C25 | | `+8` of the object read before, not `Sprite_Current` re-read | **0: equivalent** |
+| C25b | | `+7` for `+8` | 1014 (9) |
+| C14 | `EventOp_0x` | `> 30` for `>= 30` | 360 (46) |
+| C15 | | `+0x83` from `op[0x11]` | 1302 (10) |
+| C16 | | `op[3]` read before `EventObj_SetFlags` | 299 (16) |
+| C17 | | the object for the count's fields not re-read | 736 (10) |
+| C18 | | the bank from `op[2] << 8 \| op[1]` | 1285 (10) |
+| C19 | | the count's `+ 1` dropped | 1305 (10) |
+| C26 | | the bank passed from the op, not the word re-read | 50 (328) |
+| C27 | | `+0x5C` = `op[3] & 7` | 654 (16) |
+| C20 | `Party_AddToLists` | `n <= 3` | 403 (35) |
+| C21 | | bit 0 for bit 1 in the search | 281 (47) |
+| C22 | | the inner loop stops at 2 | 89 (77) |
+| C23 | | al 1 on none | 513 (5) |
+| C24 | | `\|= 1` for `\|= 3` | 999 (17) |
+| C28 | | the second list's slot `n + 2` | 1184 (11) |
+| C29 | | the second list's store dropped | 299 (47) |
+
+**The two equivalent mutants:**
+
+- **C9**: `movsx` then `shl 16` keeps only the low 16 bits of the word, so
+  sign- and zero-extension give the same dword for every input. The near
+  variant C9b (the low byte only) is refused.
+- **C25**: `EventObj_Face` reads `Sprite_Current` at `0x579D79` and again at
+  `0x579D8E` with no call between, so `+8` of either is the same byte
+  whatever the state. The near variant C25b (`+7`) is refused.
 
 ## 6. Latent defects (described, not fixed)
 
@@ -247,6 +277,10 @@ Stage B records the counts here.
   `0x519FA0` next to this group's. They are small (most 0x10..0x60 bytes)
   and are a group of their own, or each chapter group's by its table - a
   cut for the coordinator.
+- **The harness's standard set lists `0x4410B0` by address** (for SC0).
+  It is now `Field_StartEventBattle`, ours; the listing still works (a
+  callee listed by address is found by the original's address), and the
+  rebinding pass can name it.
 - **`0x533E00`** (the members' palettes reloaded, `Scena08_PartyJoin784`'s
   tail) and **`0x519FA0`** are nobody's.
 - **`entries_logic.txt` has three extents too long** for addresses this

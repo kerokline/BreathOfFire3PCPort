@@ -66,17 +66,39 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 #define SE_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 
+// EventOp_0x's op, 17 bytes; the rest spare.
+alignas(16) unsigned char g_op[0x20];
+
+// EventOp_0x reads the count word and the op's bytes again after its calls.
+// The harness's disturbance reaches the group's own cells one call in
+// twenty-four, too seldom to tell a byte read before a call from one read
+// after it (controls C16, C17 were not refused at first); so each of its
+// four callees moves one of them, from the recorders' stream, after the
+// recorder has logged: an op byte, op[3]'s bit 7 and low bits, or the
+// count within the table.
+std::uint32_t StirOp(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = sh::Noise();
+    switch (n % 4) {
+    case 0: g_op[(n >> 8) % 17] = static_cast<unsigned char>(n >> 16); break;
+    case 1: SetWord(sh::Mem(at::kCount), ((n >> 8) & 0xFF) % at::kObjectCount); break;
+    case 2: g_op[3] = static_cast<unsigned char>(g_op[3] ^ (0x80 | ((n >> 8) & 0xF))); break;
+    default: break;
+    }
+    return answer;
+}
+
 const sh::Callee kCallees[] = {
     // the flags byte it reads, as it is at the call (flags[0] only)
-    {SE_OURS(EventObj_SetFlags), 1, {0}, kG, 0, 0, {1}},
+    {SE_OURS(EventObj_SetFlags), 1, {0}, kG, 0, 0, {1}, &StirOp},
+    // the standard set's listings, with the stir
+    {SE_OURS(EventObj_Reset), 0, {}, kG, 0, 0, {}, &StirOp},
+    {SE_OURS(Sprite_SetAnimationBank), 1, {0xFFFFu}, sh::Answer::kFlag, 0, 0, {}, &StirOp},
+    {SE_OURS(AreaMap_Elevation), 2, {0xFFFFFFFFu, 0xFFFFFFFFu}, kG, 0, 0, {}, &StirOp},
     // nobody's: the members' palettes reloaded
     {"0x533E00", at::kPartyPalettes, at::kPartyPalettes, 0, {}, kG, 0, 0},
 };
 
 // --- the state -------------------------------------------------------------------
-
-// EventOp_0x's op, 17 bytes; the rest spare.
-alignas(16) unsigned char g_op[0x20];
 
 // CharacterRecords' first eight: MoveScript_EffectState's 24 entries name
 // records 0..7 (read 2026-09-27), so a member id below 24 writes inside.
