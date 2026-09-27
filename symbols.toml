@@ -42513,6 +42513,239 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-27, group SC12: Scena12_CellHook's jmp [0x661778 + index * 4]: Scena12_CellTalk three times, Scena12_CellDoor; chapter 13's vtable follows at 0x661788."
+# ---------------------------------------------------------------------------
+# Round ten group SC9a: chapter 9's first block, 0x553B30..0x557170 (docs/scena_sc9a.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x553B30
+name = "Scena09_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC9a), 0x553B30..0x553B3D (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x6613FC] - slot 0 of chapter 9's vtable 0x6613E8 (0x662C80 entry 9), Field_ModeDispatch's call; Scena09_States: 0 0x5646B0 (group SC13's block), 1 Scena09_EnterArea, 2 Scena09_Run. The shape of Scena12_Frame; ours aborts outside the three entries. The sibling's scenario_records.toml gives SCENA09 vtable[0] 0x801F78D0 by table position (not read)."
+
+[[func]]
+pc = 0x553B40
+name = "Scena09_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x553B40..0x554267 (0x728 bytes, jump tables 0x554214 (12) and 0x554244 (9)): Scena09_States entry 1. By Game_AreaNumber, each test reading the area afresh: 0x25 (flags 0x2E / 0x2F; Flags_Set of row 6 0x903FC0 as a literal; run 0xF step 0xA; Scenario_CallB / CallA by the selector Cond_Flags +0x19C & 0x7F, 7..18 less 11, 12, 15), 0x27 (Kind2_Place(2) unless flag 0x30; run 0xF step 0x46), 0x29 (flag 0x32; run 0xF steps 0x3C / 0x6E by counter 2 = 1), 0x35, 0x37 (Camera_Distance + 0xA80, run 3, entries by the selector), 0x45 (run 1), 0x31 (Kind2_Place, entries, run 4, Camera_Distance + 0xB80 on counter 2 = 1, Flags_Clear 0x11), 0x64 / 0x76 / 0x77 (leave unless counter 2 = 2 / Cond_ByteFD 4 / 2; run 0xF step 0x78, run 7 with effects 0x96 / 0x95 by ObjTrio +0x3C, run 8 step 0x1E); areas 0x2D / 0x41 / 0x57 / 0x10 / 0x73 zero the four counters; every exit stores 0x8034E2 = 2. 64 calls."
+
+[[func]]
+pc = 0x554270
+name = "Scena09_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x554270..0x55427D (0xE bytes): movsx eax, byte MoveScript_Var7 / jmp [eax*4 + 0x661408] - Scena09_States entry 2. Scena09_Runs: 0, 12, 13 a bare ret (0x437CC0), 1..11 and 14..16 the runs; ours aborts outside the 17 entries (entry 17 would read 0x66144C, not code)."
+
+[[func]]
+pc = 0x554280
+name = "Scena09_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x554280..0x5542FC (0x7D bytes): Scena09_Runs entry 1, a switch on the step 0x8034E5 by decrements: 0 step 1, flag 0, Field_ChangeArea(0x45, ..., 0x86); 1 pass flags 0x1F, step 2; 2 on counter 0 = 0x11 flag 1, ScriptFlags_Clear40, step and run 0. 4 calls."
+
+[[func]]
+pc = 0x554300
+name = "Scena09_Run2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x554300..0x5544C7 (0x1C8 bytes, jump table 0x554498 (12)): Scena09_Runs entry 2, steps 0, 2, 3, 5, 6, 7, 0xA, 0xB: Field_ScriptFlags2 & 7 clear -> script flags | 8, Kind2_Place(1), Party_DropIn(5); area change into 0x31; Field_Kind2Hold clear; Music_FadeOutStop / Sound_LoadStream(3) / Sound_StreamDone / Music_Play(0x10, 8); flags 3, 4 set, 0x25 cleared. 15 calls."
+
+[[func]]
+pc = 0x5544D0
+name = "Scena09_Run3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x5544D0..0x5547EF (0x320 bytes, jump table 0x5547B8 (14)): Scena09_Runs entry 3, steps 0..0xD less 6: message 0 and drop-in 0, Transition_Start 5 / 0xD, two camera effects of kind 0x13 (the second's slot also to counter 3), a camera sweep (counter 3 to 0xD, Camera_Distance - 0x100 a step, then 0xFD80), area change into 0x37 twice, message 0x14, the stream 3, Scenario_CallA(5), flags 5 and 6, Music_Play(0x79, 8). 18 calls."
+
+[[func]]
+pc = 0x5547F0
+name = "Scena09_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x5547F0..0x554C66 (0x477 bytes, jump table 0x554BF8 (19) behind the byte table 0x554C44 of 0x23): Scena09_Runs entry 4, steps 0..2, 5, 6, 0xA..0x11, 0x1E..0x22: flags 0x26 / 0x27 set in turn at ObjTrio +0x3C at least 0x8000000 (counter 1 the branch), drop-ins 9 / 0xD, a kind 0x13 effect, a camera sweep (to 0x20, -0x5C a step), area changes into 0x31 / 0x75, MoveCmd_TestFB(0xB, 0x54), flags 7, 8, 0xB, 0x3E. 25 calls."
+
+[[func]]
+pc = 0x554C70
+name = "Scena09_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x554C70..0x554D33 (0xC4 bytes, jump table 0x554D18 (7)): Scena09_Runs entry 5, steps 0, 1, 5, 6: request not 2 -> counter 0 = 1 and Party_DropIn(0xC) or step 6; counter 0 at 9 -> flag 0x3F and the run's end (counters 1..3); at 2 -> the run's end with all four counters. 4 calls."
+
+[[func]]
+pc = 0x554D40
+name = "Scena09_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x554D40..0x5555C9 (0x88A bytes, jump table 0x55549C (49) behind the byte table 0x555560 of 0x6A): Scena09_Runs entry 6, 48 cases over steps 0..0x69: messages 0xA / 0xB / 0xD / 0xC / 0xF / 0x2B / 0x1B, drop-ins 3 / 8 / 0xA / 0xC, chains of area changes into 0x75 and 0x76, Cond_ByteFE 1..4, two camera effects whose slot counter 3 keeps and whose record's in-use byte is waited on, Transition_Start 0 / 4 / 5 / 0xD / 0xE, 0x533E50, the stream 0, Music_Play(0x61, 8), flags 0xC, 0xD, 0xF, 0x11, 0x1D. 45 calls."
+
+[[func]]
+pc = 0x5555D0
+name = "Scena09_Run7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x5555D0..0x5556C7 (0xF8 bytes, jump table 0x5556AC (7)): Scena09_Runs entry 7, steps 0, 1, 5, 6: ObjTrio record 2 +0x137 not 2 -> Party_DropIn(0); request not 2 -> flag 0x13, the run's end; Input_Pressed & Field_MenuButton clear and request 0 -> Field_ChangeArea(0x76, ..., 0x81); counter 0 at 1 and request not 2 -> the run's end. 5 calls."
+
+[[func]]
+pc = 0x5556D0
+name = "Scena09_Run8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x5556D0..0x555B70 (0x4A1 bytes, jump table 0x555AE8 (24) behind the byte table 0x555B48 of 0x29): Scena09_Runs entry 8, steps 0..6 messages 0x23..0x27, 0x21, 0x22 and 0x19 message 0x2C (then step 0xA); drop-ins 0 / 2 / 4, sounds 0x206..0x208, Cond_ByteFE, area change into 0x77, 0x532ED0 twice and Field_StartEventBattle(0x35); step 0x21 an effect of kind 6 per member listed as 7 (Sprite_Current set to its ObjTrio record, the slot to its +0xB, its +0x2E / +0x30 copied); step 0x22 messages 0x30 / 0x2F / 0x2E / 0x2D per member listed as 2 / 4 / 8 / 5; step 0x26 Field_Kind2X / Z from ObjTrio +0x34 / +0x38 and MoveScript_F3Divisor 0x20; flags 0x12, 0x17. 21 calls."
+
+[[func]]
+pc = 0x555B80
+name = "Scena09_Run9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x555B80..0x555E3B (0x2BC bytes, jump table 0x555DE0 (15) behind the byte table 0x555E1C of 0x20): Scena09_Runs entry 9, steps 0..8, 0x14..0x16, 0x1E, 0x1F: ObjTrio record 2 +0x137 not 3 -> script flags | 8, drop-in 5, Kind2_Place(1); drop-ins 6 / 9 / 8, an effect of kind 0x9A, 0x532ED0 and Field_StartEventBattle(0x36), area change into 0x77 with the music byte 0x904CD0 = 0x61, sound 0x20C, messages 0x4B / 0x4C, flags 0x1E, 0x2C. 19 calls."
+
+[[func]]
+pc = 0x556C10
+name = "Scena09_Run10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x556C10..0x556C3A (0x2B bytes): Scena09_Runs entry 10. At step 0 with the request byte not 2: Party_DropIn(1), then the run and the step 0 (no ScriptFlags_Clear40). 1 call."
+
+[[func]]
+pc = 0x556C40
+name = "Scena09_Run11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x556C40..0x5570CF (0x490 bytes, jump table 0x557064 (18) behind the byte table 0x5570AC of 0x24): Scena09_Runs entry 11, steps 0..0xE, 0x1E, 0x23: its own effect slot cell 0x6BC730 (Scena09_Slot11); camera effects of kind 0x13 (one at Cond_AngleFB), one of kind 0x2B at (0x238000, 0x1F8000) with +0x3C the AreaMap_Elevation there shifted 16; the word timer 0x8034E6 counted down from 0x5F / 0x78 / 0x5A / 0x1E; counter 0 stepped from 0x20 to 0x3B; Field_Kind2X / Z from ObjTrio +0x34 / +0x38 and Field_ViewReset; drop-ins 2 / 3 / 4, 0x56D6F0, flag 0x20. 15 calls."
+
+[[func]]
+pc = 0x555E40
+name = "Scena09_Run14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x555E40..0x555F3B (0xFC bytes, jump table 0x555F28 (5)): Scena09_Runs entry 14, steps 0..4: area change into 0x35; on counter 0 = 0xF Transition_Start(0xD), 0x533E50, Sound_LoadStream(0); the wait word and the stream; area change into 0x41; flag 0x2E, script flags ^ 0xE, the counters and the run 0. 8 calls."
+
+[[func]]
+pc = 0x555F40
+name = "Scena09_Run15"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x555F40..0x556BB6 (0xC77 bytes, jump table 0x556A14 (67) behind the byte table 0x556B20 of 0x97): Scena09_Runs entry 15, 66 cases over steps 0..0x96 in scenes of ten: drop-ins, messages 0xD7 / 0x5A / 0xA5 / 0x87 / 0x88 / 0x94 / 0x9C / 0x37, area changes into 0x25 / 0x27 / 0x29 / 0x64 / 0x3B / 0x35 / 0x2D, flags of the row and of the literal rows 0x903FC0 (6) and 0x904030 (the story flags), four camera sweeps (Camera_Distance 0x280 / 0 / 0x500 / 0), Sound_ResumeAll, the stream 2 and 0, Scenario_CallB(9), Scenario_CallA(0xD), the music byte 0x904CD0 = 0x87, Field_Request 6. 73 calls (the fuzz copies it itself, over the harness's 64)."
+
+[[func]]
+pc = 0x556BC0
+name = "Scena09_Run16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x556BC0..0x556C0D (0x4E bytes): Scena09_Runs entry 16: step 0 Party_DropIn(2), step 1; step 1 on counter 0 = 3 flag 0x24, the run's end. 3 calls."
+
+[[func]]
+pc = 0x5570D0
+name = "Scena09_ObjectTrigger"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x5570D0..0x5570EE (0x1F bytes): slot 1 of chapter 9's vtable, called by 0x56D6D0 with the object: call [0x661450 + object +0x86 * 4] (object, the dword 0x929ED0). In no start list (a vtable root; tools/scenario_rows.py adds it). The shape of Scena12_ObjectTrigger; ours aborts outside Scena09_Objects' 16 entries. The sibling's scenario_records.toml gives SCENA09 vtable[1] 0x801FC5E4 by table position (not read)."
+
+[[func]]
+pc = 0x5570F0
+name = "Scena09_Object01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x5570F0..0x557108 (0x19 bytes): Scena09_Objects entry 1, its (object, bits) unread: ScriptFlags_Set40, run 5, counter 0 and the step 0."
+
+[[func]]
+pc = 0x557110
+name = "Scena09_Object02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x557110..0x557128 (0x19 bytes): Scena09_Objects entry 2, its (object, bits) unread: ScriptFlags_Set40, counter 0 = 0, step 5, run 5."
+
+[[func]]
+pc = 0x557130
+name = "Scena09_Object03"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x557130..0x557143 (0x14 bytes): Scena09_Objects entry 3, its (object, bits) unread: ScriptFlags_Set40, step 5, run 4."
+
+[[func]]
+pc = 0x557150
+name = "Scena09_Object04"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9a.cpp"
+evidence = "disasm 2026-09-27 (round ten group SC9a), 0x557150..0x557163 (0x14 bytes): Scena09_Objects entry 4, its (object, bits) unread: ScriptFlags_Set40, run 0xA, step 0."
+
+[[data]]
+pc = 0x6613FC
+name = "Scena09_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group SC9a: Scena09_Frame's jmp [0x6613FC + state * 4]: 0x5646B0 (state 0, group SC13's block - chapter 12's state 0 too), Scena09_EnterArea, Scena09_Run; Scena09_Runs follows at 0x661408."
+
+[[data]]
+pc = 0x661408
+name = "Scena09_Runs"
+ctype = "unsigned long"
+count = 17
+status = "evidence"
+evidence = "read 2026-09-27, group SC9a: Scena09_Run's jmp [0x661408 + run * 4]: 0x437CC0 (ret) for 0, 12, 13; Scena09_Run1..Run9, Run10 0x556C10, Run11 0x556C40, Run14 0x555E40, Run15 0x555F40, Run16 0x556BC0 (the runs are not in address order). A dword 0xFF000100 follows at 0x66144C, not code and read by nothing in this band; Scena09_Objects at 0x661450."
+
+[[data]]
+pc = 0x661450
+name = "Scena09_Objects"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-27, group SC9a: Scena09_ObjectTrigger's call [0x661450 + object +0x86 * 4] (object, bits): 0x437CC0 (ret) for 0 and 12; Scena09_Object01..04; 0x55BAC0, 0x55BAE0, 0x557170, 0x557190, 0x5571B0, 0x5571D0, 0x5571F0, 0x557210, 0x557230, 0x557250 (group SC9b's block). Bytes follow at 0x661490 (not read by this band)."
+
+[[data]]
+pc = 0x6BC730
+name = "Scena09_Slot11"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "read 2026-09-27, group SC9a: Scena09_Run11's effect slot - Effect_FindFree's answer stored here (not to 0x903850 as the other runs do) and read back as the record index, in steps 1, 2, 4, 6 and 7 (step 7 waits for bit 0 of that record's +0 to clear)."
+
 # --- round ten group ARH: the area harness's proof, area 11 (docs/area_011.md), and the cell hook's reader (docs/area_harness.md section 8) ---
 
 [[func]]
