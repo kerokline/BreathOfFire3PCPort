@@ -295,6 +295,8 @@ The thinnest are the re-reads: UP5 (the sparkle read again before the G3 rays; 1
 
 ## 6. Defects (Capcom's, latent, kept)
 
+Numbered D89, D98 and D125 in [`known-defects.md`](known-defects.md).
+
 For the coordinator to number; nothing is fixed here.
 
 - **`Magic073_CountReacting` reads the wrong enemies' state.** It asks

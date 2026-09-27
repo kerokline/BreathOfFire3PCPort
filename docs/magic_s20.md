@@ -406,6 +406,8 @@ ours computes what Capcom's does.
 
 ## 7. Defects (Capcom's, latent, kept)
 
+Numbered D89, D90, D93, D96, D98 and D126 in [`known-defects.md`](known-defects.md).
+
 These are described here and not numbered; the coordinator numbers them.
 
 - **Unbounded dispatch.** None of the three stack tables and none of the

@@ -299,6 +299,8 @@ after the restore: 0 mismatches, exit 0. No fuzz change.
 
 ## 6. Latent defects (Capcom's, kept)
 
+Numbered D89 (E3), D90, D96 (E4), D102 (E1), D103 (E2, E6) and D124 (E5) in [`known-defects.md`](known-defects.md).
+
 Described, not fixed: a fix is a divergence for the owner to choose. Not
 numbered in `known-defects.md` (the coordinator's).
 

@@ -331,6 +331,8 @@ them or DIV-0045's cheat. Things to look for:
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D91, D97, D98 and D127 in [`known-defects.md`](known-defects.md).
+
 These are described here, not numbered:
 
 - **`Blizzard_CenterOnTargets` divides by zero** when every actor on the

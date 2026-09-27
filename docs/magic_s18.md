@@ -367,6 +367,8 @@ target, the tint and the flash at the end, in the kind's colours.
 
 ## 9. Defects (Capcom's, latent, kept)
 
+Numbered D89, D99 and D100 in [`known-defects.md`](known-defects.md).
+
 For the coordinator to number or not:
 
 - **Unbounded dispatch** (the known class, D59's): two stack tables and

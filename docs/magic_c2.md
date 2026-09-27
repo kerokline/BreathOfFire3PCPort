@@ -253,6 +253,8 @@ Counts depend on the build directory ([`takeover-queue-round9.md`](takeover-queu
 
 ## 8. Defects (Capcom's, latent, kept)
 
+Numbered D89, D90, D92, D93, D96 and D117 in [`known-defects.md`](known-defects.md).
+
 Described, not fixed; for the coordinator to number.
 
 - **The follower's elevation is read at (x, x).** `BoneDanceFollow_Start`

@@ -387,6 +387,8 @@ memmove (kinds 0..4's cells tile the strip, so no source half-overlaps row
 
 ## 6. Defects (Capcom's, latent, kept)
 
+Numbered D89, D90, D91, D94, D96 and D97 in [`known-defects.md`](known-defects.md).
+
 For the coordinator to number; none is new in kind.
 
 - **`MagicFx_CenterOnSide` divides by zero** when every actor of the chosen

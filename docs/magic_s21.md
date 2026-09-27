@@ -337,6 +337,8 @@ Ours is faithful in both places as written. The thinnest refusals are H3 (4 roun
 
 ## 5. Defects (Capcom's, latent, kept)
 
+Numbered D89, D91, D93 and D97 in [`known-defects.md`](known-defects.md).
+
 These are described here, not numbered. The coordinator numbers them.
 
 - **`Inferno_TargetCentre` divides by the number of live targets**, with no

@@ -420,6 +420,8 @@ is the owner casting them, with a save that has them or DIV-0045's cheat:
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D98, D100 and D101 in [`known-defects.md`](known-defects.md).
+
 Described, not numbered, nothing fixed:
 
 - **Every dispatcher's index is unchecked**: the four stack tables (+1) and

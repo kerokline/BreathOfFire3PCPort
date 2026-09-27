@@ -386,6 +386,8 @@ owner's eye.
 
 ## 7. Latent defects of the original (kept)
 
+Numbered D89, D97 and D100 in [`known-defects.md`](known-defects.md).
+
 - **The four stack tables are unbounded.** `Purify_Task` (3 entries),
   `Revive_Task` (6), `ReviveMote_Task` (3) and `Leech_Task` (2): a phase
   byte past the table calls through the caller's stack. Ours aborts.

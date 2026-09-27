@@ -696,6 +696,8 @@ battle; which fight sets that byte to 0x37 was not read.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96, D111 and D119 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the nine stack tables and the

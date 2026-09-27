@@ -415,6 +415,8 @@ number of phases their children step through).
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D97 and D107 in [`known-defects.md`](known-defects.md).
+
 Described, not numbered, not fixed:
 
 - **`Kaiser_LoadSetFile` reads through `0x64E9BC` unchecked.** The table is

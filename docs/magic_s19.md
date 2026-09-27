@@ -372,6 +372,8 @@ creates a 0x1D task with `+1` of 2. Only the fuzz reaches those five.
 
 ## 8. Latent defects of the original (kept)
 
+Numbered D89, D92, D97, D100 and D101 in [`known-defects.md`](known-defects.md).
+
 - **Unbounded dispatches.** Both stack tables are unchecked (ours aborts
   past them). The eight `.data` tables are also unchecked, and ours reads
   them in place as the original does.

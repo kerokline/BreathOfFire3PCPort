@@ -455,6 +455,8 @@ enemy's +0x100 is 0x29; which boss that is was not read.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96 and D106 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the ten stack tables and the

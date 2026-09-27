@@ -334,6 +334,8 @@ The fuzz does not reach two things:
 
 ## 6. Latent defects (Capcom's, kept; described, not numbered)
 
+Numbered D89, D93, D97 and D129 in [`known-defects.md`](known-defects.md).
+
 - **Unchecked dispatch indices.** Every stack table and `.data` dispatch
   here is unchecked, and past its table the original calls the next
   table's entries or data (section 2). Ours aborts.
