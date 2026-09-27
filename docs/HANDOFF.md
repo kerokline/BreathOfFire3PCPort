@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-27, the spell round complete and closed out)
+**Status:** IN PROGRESS (2026-09-27 evening, round ten's wave one merged)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,23 +14,22 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**3,510 functions are ours** (`inject: 3510 ours, 0 left original`), on
-`phase-3/round-nine`, local commits past `origin`'s `fb10178` (2026-09-27
-midday), not yet a PR. Round nine
-([`takeover-queue-round9.md`](takeover-queue-round9.md)) re-traced the three
-routes - the "76" were 29 distinct entries, of which only the task scheduler
-was game logic (group EA, [`task_sched.md`](task_sched.md)) - and then ran
-**the spell round to completion** ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)):
-every overlay behind `Magic_Rows` `0x64C2B8`, 2,064 functions in 43 groups,
-through one shared fuzz harness ([`magic_harness.md`](magic_harness.md); SH
-built it, HX folded eleven groups' edits into one API), in five waves
-(round9 doc sections 6, 9, 10, 11, 12; wave five, S32..S38, 345 functions,
-merged 2026-09-27 between 09:10 and 11:30). Every group: 0 mismatches,
-every control refused or an equivalent with a refused near variant, no
-harness edits. The other session on this machine added the recipe-save swap
-(`0775a49`, [`input-script.md`](input-script.md) section 1a) and planned the
-scenario and area rounds (`IDEAS.md` I24, I25; main took I23 for the music comparison). The rest is
-[`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
+**3,685 functions are ours** (`inject: 3685 ours, 0 left original`), on
+`phase-3/capture-round-ten`, local commits past `main`'s `c47f521`
+(round nine's PR #27), not yet pushed or a PR. Round ten
+([`takeover-queue-round10.md`](takeover-queue-round10.md)) opened the
+scenario round (I24) and the area round (I25) together: wave one built
+both harnesses ([`scenario_harness.md`](scenario_harness.md),
+[`area_harness.md`](area_harness.md)) and the area tool
+(`tools/area_rows.py`, [`area-rows.md`](area-rows.md)), and took 175
+functions in eight groups (round10 doc section 4) - chapters 0, 1, 3, 4,
+11 and 12's first block, the chapters' shared helpers, area 11 and the
+cell hook. Every group 0 mismatches, every control refused or an
+equivalent with a refused near variant. The five harness-dependent groups
+ran in two stages (read and write against the API contract; then fuzz
+after the harness merged) - it worked, and the next scenario wave is one
+stage. The rest is [`STATUS.md`](STATUS.md)'s wave table; do not copy it
+here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
 `r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
@@ -39,12 +38,29 @@ foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
 `r9_ours` (08:50, the same build) identical but frame 0, the set-up (as
 since `rb1`). Wave five's 346 functions came after it and none is on the
 attract path - every spell group is fuzz-only - so it stands for this
-build until something on the attract path is taken. `r9_*_0926` and
+build until something on the attract path is taken (nothing in round
+ten's wave one is). `r9_*_0926` and
 `r9_orig_0927_loaded` (a side recorded under a concurrent build, four
 frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
+0. **Round ten, wave two** ([`takeover-queue-round10.md`](takeover-queue-round10.md)
+   section 5): scenario CALLS (the call tables' block, 99 starts), SC5,
+   SC6, SC7, SC9a and a small engine group for the fifteen raw-address
+   callees nobody owns; area AR0A, AR0B, AR0C (world 0; area 33 has the
+   world-map route as its live check). The wave-one brief is
+   `analysis/round10_wave1_brief.md` with the group lines in
+   `analysis/round10_wave1_groups.tsv` (gitignored); write wave two's
+   from it with section 4's lessons folded in, and drop the two-stage
+   rule for scenario groups. Owed by wave one (section 4): the defects'
+   numbering, the rebinding pass, `pairs_propagated.json`'s `0x5455A0`.
+   The eight `phase-3/round10-*` branches and their worktrees under
+   `.claude/worktrees/agent-*` are merged and can go; the controls scripts
+   live in the agents' scratch under
+   `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/0eefe2a8-ba23-4625-9434-7c4f87a1456f/scratchpad/<group>/`
+   (copy them somewhere durable if they are to outlive a cleanup;
+   `merge_group10.sh` and `keepboth.py` are in the same folder's root).
 1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
    order to choose:
    - **Rebinding and `known-defects.md` are done** (2026-09-27 afternoon):
@@ -103,9 +119,7 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 3. **The owner's eye on older rounds**: round seven and the world map (the
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.
-4. **After the spells: the next queues**, the owner's order to choose: the
-   scenario round (I24, [`takeover-queue-scenario.md`](takeover-queue-scenario.md)),
-   the area round (I25), new routes (`menu_screens.txt`, a boss, an event
+4. **The other queues**, the owner's order to choose: new routes (`menu_screens.txt`, a boss, an event
    battle), the MP3 decoder's replacement (round9 doc section 3). What
    earlier rounds left unowned is listed in each group doc ("left
    original", "in no group"); the named ones are round seven's `0x43B130`
@@ -295,11 +309,9 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Nothing uncommitted of this round's. `phase-3/round-nine` is ahead of
-`origin/phase-3/round-nine` (`fb10178`) by wave five's merges and docs, and
-of `origin/main` (`b302b8d`) by round nine and the other session's
-(`0775a49` recipe saves, `7cb8df5` / `973a69d` I24 / I25). The wave briefs
-are in `analysis/` (gitignored).
+Nothing uncommitted of this round's. `phase-3/capture-round-ten` is ahead
+of `main` (`c47f521`) by round ten's wave one (eight merges and the round
+doc); not pushed. The wave brief is in `analysis/` (gitignored).
 
 Local only, gitignored, worth keeping:
 

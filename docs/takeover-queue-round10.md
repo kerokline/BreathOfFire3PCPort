@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-27) - wave one: SCH, ART, ARH merged (3,533 ours); SE, SC1, SC3, SC11, SC12 in stage B
+**Status:** IN PROGRESS (2026-09-27) - wave one merged whole: eight groups, 175 functions, 3,510 -> 3,685 ours; wave two to stage
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -126,3 +126,78 @@ B from `218eeec`):
 - **Tool fixes folded in** (`207ef4e`): five byte tables of two-level
   switches listed as functions (SC1 found two), and the shape name
   `kEntry`.
+
+## 4. Wave one merged (2026-09-27, 17:00..20:30)
+
+All eight groups merged into `phase-3/capture-round-ten`, one at a time,
+each with the build, the group's shadow and `BOF3X_SHADOW='*'` headless
+(exit 0 every time), `tomllib` no duplicate `pc`, `ledger_check` 0
+errors. **175 functions taken, 3,510 -> 3,685 ours.** Counts are each
+group's in its own worktree (the harness's pointers into our DLL make the
+call counts build-directory dependent, round9 doc section 6).
+
+| Group | Merge | Taken | Rounds | Controls planted / refused | Not refused | Doc |
+|---|---|--:|--:|---|---|---|
+| ARH | `8f0172c` | 4 | - | area 11: 20 / 19; cell hook 6 / 6 | 1 equivalent, its variant refused | [`area_harness.md`](area_harness.md), [`area_011.md`](area_011.md) |
+| ART | `d08471d` | 0 | - | - | - | [`area-rows.md`](area-rows.md) |
+| SCH | `218eeec` | 19 | 76,000 | 105 / 105 | | [`scenario_harness.md`](scenario_harness.md), [`scena_sc0.md`](scena_sc0.md) |
+| SE | `2c51995` | 6 | 12,000 | 32 / 30 | 2 equivalent (sign vs zero extension before `shl 16`; a byte read twice with no call between), variants refused | [`scena_se.md`](scena_se.md) |
+| SC11 | `7715486` | 30 | 240,000 | 54 / 54 (52 by a count, 2 by a fault, the fault's near variant by a count) | | [`scena_sc11.md`](scena_sc11.md) |
+| SC3 | `c0f08ba` | 50 | 100,000 | 76 / 75 | 1 equivalent (an unsigned index whose value is always 0..0x13 or 0xFF, returned before use), variant refused | [`scena_sc3.md`](scena_sc3.md) |
+| SC1 | `0d3fd2c` | 42 | 252,000 | 100 / 98 | 2 equivalent (a store overwritten after the call; two commuting xors), variants refused | [`scena_sc1.md`](scena_sc1.md) |
+| SC12 | `753dc2e` | 24 | 192,000 | 66 / 65 | 1 equivalent (an area re-read whose branches only return), variant refused | [`scena_sc12.md`](scena_sc12.md) |
+
+Every group is fuzz-only: nothing in wave one is on the attract path
+(chapter 0 is a new game's first chapter, not the demo's), so the frame
+hash reference `r9_orig` stands. The live check per chapter is the recipe
+save the plan names (scenario plan section 5); chapter 0 needs none.
+
+**What the groups learned, for the next wave's brief:**
+
+- **Controls not refused on the first run are the fuzz's fault first.**
+  Four groups (SC1, SC3, SC11, SC12) had controls stand on a first run
+  and refused every one by strengthening the fuzz: step-paired counter
+  seeds, rectangle-paired hook arguments, an `effect` that moves the
+  chapter's own cells (the harness's disturbance reaches a group cell
+  about one call in 24), a `settle` for the area-entry state, typed
+  stand-ins one per table entry, rounds raised to 6,000..8,000.
+- **One `Group` sets one chapter byte**: a two-chapter group runs two
+  `Run` calls under one shadow name (SC3).
+- **A `.data` table whose handlers take arguments** wants a typed
+  stand-in per entry, as `scena_sc0_fuzz.cpp`'s `ObjectEntry`; the
+  handler recorder logs no arguments.
+- **The harness's clone limit is 64 call sites**: `Scena12_Run4` (117)
+  and `Scena12_Run8` (102) are copied by SC12's fuzz file itself and
+  handed to the harness as a `jmp`. A later harness could raise the limit
+  and take them back.
+- **Not every start is a function**: 35 of the wave's listed starts were
+  jump-table or switch cases (SC1 13, SC11 6, SC3 5, SCH 4, plus the tool's
+  five byte tables), and 10 real functions were in no list (vtable slots
+  under a run-on `pc_hidden` start, a shared tail). `scenario_rows.py`
+  finds both kinds now.
+- **A group `disturb` from `Next()`** made 403 false mismatches (SC3), as
+  S30 did in round nine. It is in the brief; keep it there.
+- **The aborts on an unchecked index are a real behavioural edge**: SC12's
+  run dispatchers abort where movement-script op `F6` could write a run of
+  10 or more and the original would run an object handler. Nothing
+  measured reaches it; the owner's rule (no DIVERGENCE entry) stands
+  unless a route does.
+
+**Owed by the wave:** `known-defects.md` numbering for the groups' latent
+defects (unchecked dispatch tables in every chapter; SC11's run table of
+10 indexed to 0xE; SC1's effect-record clear at slot 0xFF and member write
+past 8; SC3's effect record -1; SE's negative count in `EventOp_0x`; ARH's
+header walk that never ends on a 0 step); the rebinding pass at the
+round's end; the two `entries_logic.txt` extents SE corrected
+(`0x520000` to `0x11F`, `0x5080A0` to `0x305`, applied by hand after
+`consolidate_entries.py`); the fix for `pairs_propagated.json`'s pair of
+`0x5455A0` (a jump-table case, SC3).
+
+## 5. Wave two (to stage)
+
+Scenario: **CALLS** (the call tables' block `0x519890..0x51AC50`, 99
+starts, `scenario_rows.py --unit CALLS`), SC5, SC6, SC7, SC9a (plan
+section 4); a small engine group for the fifteen raw-address callees
+nobody owns (section 3). Area: **AR0A, AR0B, AR0C** (section 3's table;
+area 33 has the world-map route as a live check). About eight groups
+again; the scenario groups are one stage now that the harness exists.
