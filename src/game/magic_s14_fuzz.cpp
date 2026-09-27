@@ -371,8 +371,8 @@ mh::Region g_regions[] = {
     {0x905EB0, 0x100},                    // the head of the entries Weretiger_ResetMapView clears
     {0x929E00, 0x130},                    // their tail; MapView_Focus*, _Elevation, _Column, _Row
     {kPool, 0x1508},                      // the streak pool, its current record, the ring phases
-    {0x80B980, 0x20},                     // Gfx_ClutStripSource row 2's first 16 words
-    {0x80F980, 0x20},                     // Gfx_ClutStrip the same
+    {0x80B980, 0x40},                     // Gfx_ClutStripSource row 2's first 32 words (16 written)
+    {0x80F980, 0x40},                     // Gfx_ClutStrip the same
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
     {0x80D4C0, 0x40},                     // Gfx_ClutStripSource words 0xFA0..0xFBF
