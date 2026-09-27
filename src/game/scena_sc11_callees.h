@@ -9,7 +9,7 @@
 namespace scena_sc11 {
 
 // --- functions outside the band, nobody's this wave ---
-constexpr std::uint32_t kCallB = 0x5341C0;         // Scenario_CallA's twin through call table B (0x660BD4[chapter]); a tail jmp
+// (0x5341C0, call table B's thunk, is named Scenario_CallB by SCH and called by name.)
 constexpr std::uint32_t kSpriteSetUp = 0x534DB0;   // (u8 k): reads Sprite_Current and k & 0xFF (its first lines only read)
 constexpr std::uint32_t kCountDown = 0x537480;     // (u16 amount, u8 k): a u16 of the 0x903A88 records, by MoveScript_EffectState[k], counted down (first lines read)
 constexpr std::uint32_t kSoundJmp = 0x587B80;      // (): a jmp to 0x5A6FF0, the sound layer

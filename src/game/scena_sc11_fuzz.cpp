@@ -84,21 +84,23 @@ constexpr sh::CallSite kCalls55E450[] = {{0x12, 0x57C140}, {0x3A, 0x57C7C0}, {0x
 
 #define SH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define SC11_CLONE(name, base, size, calls, tables) \
-    {#name, base, size, calls, SH_N(calls), nullptr, 0, tables, SH_N(tables), reinterpret_cast<const void*>(&::name)}
+    {#name, base, size, calls, SH_N(calls), nullptr, 0, tables, SH_N(tables), reinterpret_cast<const void*>(&::name), 0, false, sh::Shape::kState}
 #define SC11_CALLS(name, base, size, calls) \
-    {#name, base, size, calls, SH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name)}
-#define SC11_PLAIN(name, base, size) {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name)}
+    {#name, base, size, calls, SH_N(calls), nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0, false, sh::Shape::kState}
+#define SC11_PLAIN(name, base, size, shape) \
+    {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), 0, false, sh::Shape::shape}
 
 const sh::Clone kClones[] = {
-    SC11_PLAIN(Scena11_Frame, 0x55C040, 0xE),                                       // 0  vtable slot 0
-    SC11_PLAIN(Scena11_Start, 0x55C050, 0xF),                                       // 1  state 0
+    SC11_PLAIN(Scena11_Frame, 0x55C040, 0xE, kSlot),                                // 0  vtable slot 0
+    SC11_PLAIN(Scena11_Start, 0x55C050, 0xF, kState),                               // 1  state 0
     SC11_CLONE(Scena11_EnterArea, 0x55C060, 0x2F4, kCalls55C060, kTables55C060),   // 2  state 1
-    SC11_PLAIN(Scena11_Run, 0x55C360, 0xE),                                         // 3  state 2
+    SC11_PLAIN(Scena11_Run, 0x55C360, 0xE, kState),                                       // 3  state 2
     SC11_CLONE(Scena11_Scene1, 0x55C370, 0x3DD, kCalls55C370, kTables55C370),      // 4  run 1
     SC11_CALLS(Scena11_Scene2, 0x55C750, 0x73, kCalls55C750),                       // 5  run 2
     SC11_CLONE(Scena11_Scene3, 0x55C7D0, 0x1A5, kCalls55C7D0, kTables55C7D0),      // 6  run 3
     SC11_CLONE(Scena11_Scene4, 0x55C980, 0x2C8, kCalls55C980, kTables55C980),      // 7  run 4
-    SC11_CALLS(Scena11_EffectAnimate, 0x55CC50, 0x97, kCalls55CC50),                // 8  scene 4's call, (slot)
+    {"Scena11_EffectAnimate", 0x55CC50, 0x97, kCalls55CC50, SH_N(kCalls55CC50), nullptr, 0, nullptr, 0,   // 8  scene 4's E8, one word (slot)
+     reinterpret_cast<const void*>(&::Scena11_EffectAnimate), 0, false, sh::Shape::kEntry},
     SC11_CLONE(Scena11_Scene5, 0x55CCF0, 0x583, kCalls55CCF0, kTables55CCF0),      // 9  run 5
     SC11_CLONE(Scena11_Scene6, 0x55D280, 0x475, kCalls55D280, kTables55D280),      // 10 run 6
     SC11_CLONE(Scena11_Scene8, 0x55D700, 0x8F4, kCalls55D700, kTables55D700),      // 11 run 8
@@ -145,6 +147,17 @@ std::uint32_t NameEffect(const std::uint32_t*, std::uint32_t) {
     return KeyOf(g_name);
 }
 
+// A .data table's handler recorder logs no arguments, and Scena11_ObjectTrigger
+// passes two (the object, the flag row): while it is fuzzed, every entry of
+// Scena11_Triggers is this stand-in of the entry's own type (the seed writes
+// it, and the recorders back for every other function, which reach the table
+// through Scena11_Runs with no arguments). scena_sc0_fuzz.cpp's ObjectEntry
+// is the precedent.
+void __cdecl TriggerEntry(unsigned char* object, unsigned char* row) {
+    sh::Record(0x55E170, KeyOf(object), KeyOf(row), object[0x86]);
+    sh::Stir();
+}
+
 const sh::Callee kCallees[] = {
     // the flag bits (the pointer read from 0x929ED0 is the same on both sides)
     {SC11_OURS(Flags_Test), 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
@@ -153,7 +166,7 @@ const sh::Callee kCallees[] = {
     {SC11_OURS(ScriptFlags_Clear40), 0, {}, sh::Answer::kGarbage, 0, 0},
     // the chapter's call tables (entry n & 0xFF, no other argument read: chapter 11's entries take none)
     {SC11_OURS(Scenario_CallA), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC11_RAW("Scenario_CallB 0x5341C0", kCallB), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC11_THEIRS(Scenario_CallB), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     // the field
     {SC11_OURS(Field_ChangeArea), 4, {kAll, kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
     {SC11_OURS(Party_DropIn), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
@@ -186,6 +199,10 @@ const sh::Callee kCallees[] = {
     {SC11_OURS(Sound_StreamDone), 0, {}, sh::Answer::kBool, 0, 0},
     {SC11_THEIRS(Sound_ResumeAll), 0, {}, sh::Answer::kGarbage, 0, 0},
     {SC11_RAW("0x587B80", kSoundJmp), 0, {}, sh::Answer::kGarbage, 0, 0},
+    // Scena11_Triggers' entries while Scena11_ObjectTrigger is fuzzed: the
+    // object, the row and the object's +0x86 logged (below)
+    {"Scena11_Triggers[] (keyed on 0x55E170)", 0x55E170, 0x55E170, 2, {kAll, kAll}, sh::Answer::kGarbage, 0, 0, {}, nullptr,
+     reinterpret_cast<const void*>(&TriggerEntry)},
 };
 
 // --- the .data tables: swapped for recorders while the fuzz runs --------------------
@@ -197,36 +214,28 @@ const sh::DataTable kTables[] = {{0x66166C, 3}, {0x661678, 10}, {0x6616A0, 15}};
 // --- the state ---------------------------------------------------------------------------
 
 constexpr std::uint32_t kState = 0x8034E2, kVar7 = 0x8034E4, kStep = 0x8034E5;
-constexpr std::uint32_t kCounters = 0x903848, kFlagsPtr = 0x929ED0;
+constexpr std::uint32_t kCounters = 0x903848;
 constexpr std::uint32_t kEffects = 0x7E11E0;      // Effect_Objects: 20 records of 0x80
 constexpr unsigned kEffectCount = 20;
 
-// What the chapter writes or reads beyond the harness's standard regions (stage
-// B drops any the harness already holds): its bytes, the effect records, the
-// party's, the camera's, the object and the flag bits of the fuzz's own.
-std::uint8_t g_object[0x90];   // the object slot 1 is given; +0x86 the trigger
-std::uint8_t g_flags[0x40];    // what 0x929ED0 points at (the flag recorders log the pointer)
+// What the chapter writes or reads beyond the harness's 22 standard regions
+// (docs/scenario_harness.md section 4: the chapter bytes, the camera, the
+// counters and slot, the flag rows and row pointer, Field_ScriptFlags,
+// Sprite_Current and MoveScript_F3Divisor, Draw_PassFlags, ObjTrio,
+// Field_State, the effect records, Field_Kind2X / Z and MapView_Redraw, the
+// request, the wait word and the area are all standard).
 const sh::Region kRegions[] = {
-    {0x8034E0, 8},              // Cond_ByteFA .. the step's timer: the state, MoveScript_Var7, the step
-    {0x903840, 0x14},           // Camera_Distance .. the counters 0x903848..4B .. the slot 0x903850
-    {0x929EC8, 0xC},            // Camera_Angles, and the flag pointer 0x929ED0
-    {kEffects, 0xA00},          // Effect_Objects
-    {0x802D40, 0x3E4},          // ObjTrio: member 0's +8, +0x89, +0x124
-    {0x904CD0, 0x20},           // 0x904CD0 and Text_Records (16 bytes at 0x904CE0)
-    {0x904EE0, 1},
-    {0x90412C, 1},
-    {0x7E0918, 1},              // Draw_PassFlags
-    {0x9039A2, 2},              // Field_ScriptFlags
-    {0x905E60, 0xA},            // Field_Kind2Z, Field_Kind2X, MapView_Redraw (0x905E69)
+    {0x904CD0, 0x20},           // the byte 0x904CD0 and Text_Records (16 bytes at 0x904CE0)
+    {0x904EE0, 1},              // set 0xFF with one area change
+    {0x90412C, 1},              // the party byte of area 0x65
     {0x905E20, 1},              // Cond_ByteFE
     {0x903802, 2},              // Camera_ShiftY
-    {0x929F12, 1},              // Field_Kind2Hold
-    {0x937F88, 8},              // Sprite_Current, MoveScript_F3Divisor
-    {0x905D98, 4},              // Field_State
-    {0x66C7D8, 1},              // Field_Request
-    {0x66C810, 2},              // MoveScript_WaitWordDA
-    {0x904EFC, 2},              // Game_AreaNumber
+    {0x929F12, 2},              // Field_Kind2Hold (the standard view focus starts at 0x929F14)
 };
+constexpr std::uint32_t kTriggers = 0x6616A0;
+constexpr unsigned kTriggerCount = 15;
+std::uint32_t g_trigger_recorders[kTriggerCount];   // the harness's handler recorders in Scena11_Triggers
+bool g_have_recorders = false;
 
 unsigned char* Mem(std::uint32_t a) { return sh::Mem(a); }
 unsigned char& B(std::uint32_t a) { return sh::Mem(a)[0]; }
@@ -262,9 +271,16 @@ std::uint32_t HookX() {
 }
 
 void Seed(unsigned k) {
-    // the pointers the functions read through
-    SetLong(Mem(kFlagsPtr), static_cast<std::int32_t>(KeyOf(g_flags)));
-    SetLong(Mem(0x937F88), static_cast<std::int32_t>(sh::Half() ? 0x802D40u : kEffects + 0x80u * (sh::Next() % kEffectCount)));
+    // Scena11_Triggers: the typed stand-in while slot 1 is fuzzed, the
+    // harness's recorders otherwise (kept from the first round, when the
+    // harness has just put them there)
+    if (!g_have_recorders) {
+        for (unsigned i = 0; i < kTriggerCount; ++i)
+            g_trigger_recorders[i] = static_cast<std::uint32_t>(move_script::Long(Mem(kTriggers + 4 * i)));
+        g_have_recorders = true;
+    }
+    for (unsigned i = 0; i < kTriggerCount; ++i)
+        SetLong(Mem(kTriggers + 4 * i), static_cast<std::int32_t>(k == kObjectTrigger ? KeyOf(&TriggerEntry) : g_trigger_recorders[i]));
     // the chapter's bytes, by the values each comparison names
     B(kState) = static_cast<unsigned char>(sh::Next() % 3);
     B(kVar7) = static_cast<unsigned char>(sh::Often() ? PickOf(kVar7s) : sh::Next() % 25);
@@ -286,7 +302,14 @@ void Seed(unsigned k) {
     case kScene1: B(kStep) = PickOf(kSteps1); break;
     case kScene2: B(kStep) = PickOf(kSteps2); break;
     case kScene3: B(kStep) = PickOf(kSteps3); break;
-    case kScene4: B(kStep) = PickOf(kSteps4); sh::SetRandHint(sh::Next() & 0xF); break;
+    case kScene4:
+        B(kStep) = PickOf(kSteps4);
+        sh::SetRandHint(sh::Next() & 0xF);
+        if (sh::Half()) {   // the roll's step and the item step, with member 0's +0x89 they test
+            B(kStep) = sh::Half() ? 0 : 0x14;
+            B(0x802DC9) = sh::Often() ? (B(kStep) ? 7 : 6) : 5;
+        }
+        break;
     case kScene5: B(kStep) = PickOf(kSteps5); break;
     case kScene6: B(kStep) = PickOf(kSteps6); break;
     case kScene8: B(kStep) = PickOf(kSteps8); break;
@@ -294,8 +317,13 @@ void Seed(unsigned k) {
     case kEnterArea:
         if (sh::Often()) Game_AreaNumber = PickOf(kAreas);
         B(kCounters + 2) = PickOf(kCounter2s);
+        if (sh::Half()) {   // area 0x65's start: counter 2 at 0, the party byte 7..18 (its top bit too)
+            Game_AreaNumber = 0x65;
+            B(kCounters + 2) = 0;
+            B(0x90412C) = static_cast<unsigned char>(6 + sh::Next() % 14 + (sh::Half() ? 0x80 : 0));
+        }
         break;
-    case kObjectTrigger: g_object[0x86] = static_cast<std::uint8_t>(sh::Next() % 15); break;
+    case kObjectTrigger: sh::SpriteRecord(0)[0x86] = static_cast<std::uint8_t>(sh::Next() % kTriggerCount); break;
     case kArriveHook:
         if (sh::Often()) Game_AreaNumber = 0x79;
         break;
@@ -307,7 +335,7 @@ void Seed(unsigned k) {
 // The arguments: the object for slot 1, (x, z) for the hooks, the slot for
 // Scena11_EffectAnimate; nothing else reads its arguments.
 void Args(unsigned k, std::uint32_t* a) {
-    if (k == kObjectTrigger) a[0] = KeyOf(g_object);
+    if (k == kObjectTrigger) a[0] = KeyOf(sh::SpriteRecord(0));
     if (k == kArriveHook || k == kCellHook) a[0] = HookX();
     if (k == kEffectAnimate) a[0] = (sh::Next() & ~0xFFu) | (sh::Next() % kEffectCount);
 }
@@ -333,11 +361,12 @@ void Settle() { B(kCounters + 3) = static_cast<unsigned char>(B(kCounters + 3) %
 }  // namespace
 
 void SelfTest() {
-    const sh::Group group = {
+    sh::Group group = {
         "scena_sc11", kClones, kClonesN, kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
         &Seed, &Disturb, 2000, &Settle, 0, &Args,
     };
+    group.chapter = 11;
     sh::Run(group);
 }
 

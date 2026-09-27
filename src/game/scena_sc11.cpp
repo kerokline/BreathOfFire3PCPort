@@ -77,7 +77,7 @@ unsigned char* Flags() { return reinterpret_cast<unsigned char*>(static_cast<std
 unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
 
 void CallA(unsigned n) { SH_CALL(Scenario_CallA)(n); }
-void CallB(unsigned n) { SH_AT(void (__cdecl*)(unsigned), kCallB)(n); }
+void CallB(unsigned n) { SH_CALL(Scenario_CallB)(n); }
 unsigned char FindFree() { return SH_CALL(Effect_FindFree)(); }
 void ChangeArea(unsigned area, int x, int z, unsigned flags) { SH_CALL(Field_ChangeArea)(area, x, z, flags); }
 
