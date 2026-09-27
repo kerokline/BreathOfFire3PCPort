@@ -418,6 +418,8 @@ the other five beam overlays and six mote overlays drive them.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D92, D93, D94, D113 and D131 in [`known-defects.md`](known-defects.md).
+
 Described, not numbered:
 
 - **The beam divides by `+0xB`** (`BreathBeam_DrawTextured` / `_DrawGlow`,

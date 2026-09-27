@@ -411,6 +411,8 @@ fuzz change. Clean self-test after: 0 mismatches, exit 0;
 
 ## 7. What nothing reached, and latent defects (Capcom's, kept)
 
+Numbered D89, D90, D93, D97, D119 and D123 in [`known-defects.md`](known-defects.md).
+
 No recorded route casts either spell (queue §5). The live check is the
 owner casting them, with a save that has them or DIV-0045's cheat. What to
 look for, by reading: MAGIC125 - a beam dropping onto the target side and

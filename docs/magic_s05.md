@@ -346,6 +346,8 @@ reading, things to look for:
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96 and D99 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the six stack tables by +1, the

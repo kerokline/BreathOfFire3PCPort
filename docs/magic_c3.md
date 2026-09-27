@@ -409,6 +409,8 @@ has one. What to look for:
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96, D118 and D119 in [`known-defects.md`](known-defects.md).
+
 These are described here, not numbered:
 
 - **Neither start tests `BattleTask_Create`'s 0xFF.** With all 48 slots

@@ -170,6 +170,8 @@ the list (the same check DIV-0046's was, [`cheats.md`](cheats.md)).
 
 ## 6. Defects (Capcom's, latent, kept)
 
+Numbered already D59, D64 and D67 (round eight); nothing new numbered in [`known-defects.md`](known-defects.md).
+
 The same three CJ found in Pilfer's copy (known-defects D59, D64, D67):
 the task's stack table is unbounded (ours aborts); the rate row is the
 enemy's `+0xAA` unbounded (a row past 7 reads the bytes after the table);

@@ -305,6 +305,8 @@ has it, or with DIV-0045's cheat, and watch for:
 
 ## 6. Defects (Capcom's, latent, kept)
 
+Numbered D89, D97, D101, D106 and D119 in [`known-defects.md`](known-defects.md).
+
 These are described here, not numbered. For every dispatcher on the list,
 ours aborts past the table, as the project's precedent has it, and the fuzz
 keeps each index inside.

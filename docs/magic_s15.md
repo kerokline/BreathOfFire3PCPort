@@ -527,6 +527,8 @@ not read. Which message each score picks (the text of system messages
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D91, D96, D97 and D106 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the five stack tables and the

@@ -571,6 +571,8 @@ after: 0 mismatches, exit 0; `BOF3X_SHADOW='*'`: exit 0.
 
 ## 7. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D92, D93 and D96 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: nine stack tables and eight

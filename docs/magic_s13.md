@@ -347,6 +347,8 @@ burst of motes closing in on one of them, spinning and rising away.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96 and D123 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the task's two-entry and the

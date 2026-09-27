@@ -668,6 +668,8 @@ to look for, by reading:
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D97, D112 and D113 (`Tempest_End`'s 0x2000 bit is an open question, not numbered) in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the three stack tables and the

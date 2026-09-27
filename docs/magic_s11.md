@@ -482,6 +482,8 @@ casting them, with a save that has them or DIV-0045's cheat. By reading:
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D91, D93, D96 and D97 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the four stack tables (ours

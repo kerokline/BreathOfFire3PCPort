@@ -475,6 +475,8 @@ What the prompt's texts say is `0x66A0D8`'s data, not read here.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D92, D93, D96 and D120 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: the six stack tables and the

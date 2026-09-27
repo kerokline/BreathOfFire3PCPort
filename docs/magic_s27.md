@@ -430,6 +430,8 @@ stand in); a `BattleTask_Create` that answers 0xFF (the recorder answers
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D94, D97, D100 and D130 in [`known-defects.md`](known-defects.md).
+
 These are described here, not numbered:
 
 - **`WhelpBreathBeam_Draw` divides by +0xB unchecked** (signed `idiv`). By

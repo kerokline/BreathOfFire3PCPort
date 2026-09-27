@@ -564,6 +564,8 @@ what none of these functions decides: what the ability does to its target.
 
 ## 12. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D97, D98, D99, D114, D115, D116 and D131 in [`known-defects.md`](known-defects.md).
+
 For the coordinator to number; nothing is fixed.
 
 - **Unbounded dispatch** - every task's stack table and every `.data`

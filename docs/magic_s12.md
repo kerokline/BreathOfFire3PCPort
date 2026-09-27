@@ -621,6 +621,8 @@ Not refused:
 
 ## 8. Latent defects (described, not fixed)
 
+Numbered D89, D90, D92, D97, D100 and D105 in [`known-defects.md`](known-defects.md).
+
 - **Identify on a party member reads the "enemy" below the enemy records.**
   `Identify_Start` runs the roll whatever the target; for a member (0..2) the
   roll's enemy record is index -3..-1 - the tail of the battle task slots

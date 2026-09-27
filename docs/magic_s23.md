@@ -285,6 +285,8 @@ column and its end bound).
 
 ## 5. Latent defects (Capcom's, kept; described, not numbered)
 
+Numbered D89, D90, D94, D95, D97, D119 and D128 in [`known-defects.md`](known-defects.md).
+
 - **Quake_Heave divides by zero for a facing of 4 or more.** The divisor
   row is `(facing >> 1) * 15` into `Quake_Divisors` (two rows of 15); a
   facing of 4 or 5 reads 0x65B7D6, a 0 byte of padding, and `idiv` faults

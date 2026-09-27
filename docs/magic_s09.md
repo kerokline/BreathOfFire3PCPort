@@ -582,6 +582,8 @@ that is was not read. Which enemies have +0x8C 0x10 / 0x72 was not read.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D91, D93, D96 and D122 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: seven stack tables and eight

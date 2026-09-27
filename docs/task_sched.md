@@ -312,6 +312,8 @@ end the process. It is the first thing the live check must look at.
 
 ## 6. Defects of the original (latent, kept)
 
+Numbered D132 in [`known-defects.md`](known-defects.md).
+
 For the coordinator to number:
 
 - **`Task_Create` does not test the slot.** A slot of 4 writes the fifth

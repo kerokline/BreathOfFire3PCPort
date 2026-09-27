@@ -629,6 +629,8 @@ H20, H34, H47, X16).
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D101, D110 and D111 in [`known-defects.md`](known-defects.md).
+
 Described, not fixed; none numbered in `known-defects.md`.
 
 - **Unbounded dispatch.** All fourteen tables are indexed by a phase byte

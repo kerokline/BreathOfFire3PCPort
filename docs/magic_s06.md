@@ -457,6 +457,8 @@ look belongs with that group's rows.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96, D97, D99 and D121 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **Every dispatcher's index is unchecked**: nine stack tables and two

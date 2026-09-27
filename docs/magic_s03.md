@@ -507,6 +507,8 @@ passes the source without meeting `MagicFx_NearSprite`'s box.
 
 ## 8. Latent defects (Capcom's, kept)
 
+Numbered D89, D90, D96, D97 and D104 in [`known-defects.md`](known-defects.md).
+
 Described here, not numbered:
 
 - **`BlitzBolt_Seek` can leave +2 past `BlitzBolt_Steps`.** When the bolt's
