@@ -33465,3 +33465,627 @@ ctype = "unsigned char"
 count = 8448
 status = "evidence"
 evidence = "read 2026-09-26, group S07: 64 task-like records of 0x84 bytes: Bonebreak_Start clears +0..+2, BonebreakMote_Alloc takes one by bit 0, Bonebreak_Task runs each live one as Sprite_Current (+0x80 its owner). Not named before (symbols.toml, 2026-09-26)."
+# ---------------------------------------------------------------------------
+# Round nine, group S10: MAGIC052, MAGIC053, MAGIC054, MAGIC055, MAGIC056
+# (docs/magic_s10.md). Names are the sibling's labels read one id down
+# (Ovum, Lavaburst, Howling, Ebonfire, Sacrifice): hypotheses.
+
+[[func]]
+pc = 0x4ABCA0
+name = "Ovum_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABCA0..0x4ABCCD (0x2E bytes), group S10: a three-entry stack table (Ovum_Start, Ovum_Spawn, Ovum_End) called by byte +1, unchecked. Magic_Rows row 107, file 0x24A = MAGIC052.EMI, ability id 0x34 (Ovum read one id down, a hypothesis); the first function of MAGIC052's extent 0x4ABCA0..0x4ABF16. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABCD0
+name = "Ovum_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABCD0..0x4ABCEB (0x1C bytes), group S10: no calls: +9 8 (the count of children), +0xA 4 (the delay), +1 on. Entry 0 of Ovum_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABCF0
+name = "Ovum_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABCF0..0x4ABDC7 (0xD8 bytes), group S10: four calls: +0xA down, nothing until it was 0; then BattleTask_Create(1, 0x50) with +0x80 Sprite_Current, +1 and +2 0; Rand called and its answer dropped; word +0x2E the source sprite's (dword 0x904B4C) + Rand & 0xF, word +0x30 its - Rand & 0x1F, word +0x32 its; the child's +9 this task's +9; +9 down: while it was not 0 +0xA 8, at 0 +0xA 0x2D and +1 on. The slot index is not tested. Entry 1 of Ovum_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABDD0
+name = "Ovum_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABDD0..0x4ABDFE (0x2F bytes), group S10: two calls: +0xA down; once it was 0 Battle_SetTargetFlag40(byte 0x904B44), bit 2 of 0x904AA8, a tail jmp to BattleTask_FreeCurrent. Entry 2 of Ovum_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABE00
+name = "OvumChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABE00..0x4ABE19 (0x1A bytes), group S10: a one-entry stack table (OvumChild_Run) called by byte +1, unchecked. Kind-1 task parameter 0x50, created by Ovum_Spawn. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABE20
+name = "OvumChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABE20..0x4ABE71 (0x52 bytes), group S10: one call: dword 0x9039D8 0x8C5D80; a three-entry stack table (OvumChild_Start, MainCannonBlast_Play, BattleFx_FreeTask) by byte +2, unchecked; Sprite_UpdateScreen when byte +0 is set; dword 0x9039D8 0x8B3580. MainCannonBlast_Run (group S31) with its own first step. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABE80
+name = "OvumChild_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABE80..0x4ABF16 (0x97 bytes), group S10: two calls: sprite bytes +0x29 0, +0x25 0x1D, +0x26 0, +0x24 0x84, +0x27 0xB4, +0x28 0, word +0x2C 0, +0x2B 0, +0x2A 0; Sound_PlayById 0x102 when +9 is 0, else 0x101 when +9 is odd, else 0x100; Sprite_SetAnimation(5); +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABF20
+name = "Lavaburst_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABF20..0x4ABF9C (0x7D bytes), group S10: one call: a three-entry stack table (Lavaburst_Start, 0x4F9F70 - MAGIC226/227's count-down -, BattleFx_Finish) by byte +1, unchecked; then Sprite_Current and 0x93B940 kept, and for each of the 32 records of Lavaburst_Pool with bit 0 of +0: Sprite_Current the record, 0x93B940 its +0x80, LavaburstRecord_Task, both put back. Magic_Rows row 134, file 0x24B = MAGIC053.EMI, ability id 0x35 (Lavaburst read one id down, a hypothesis); the first function of MAGIC053's extent 0x4ABF20..0x4ACAA6. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ABFA0
+name = "Lavaburst_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABFA0..0x4AC0D6 (0x137 bytes), group S10: four calls: bytes +0..+2 of the 32 pool records cleared; MagicFx_CenterOnSide; BattleActor_UpdateScreenXY; +8 the direction of the sprite at dword 0x904B3C, turned (xor 2) when the target byte 0x904B44 has 0x40 and the actor byte 0x904B34 is below 3 or when it has not and the actor is 3 or more; +0xB 0, +9 0x10, +1 on; eight children BattleTask_Create(1, 0x5E), each +0x80 Sprite_Current (read after the create), +1 0, +4 the high nibble and +9 the byte + 1 of Lavaburst_ChildDelays[i], +0xB i, counted in +0xB; Gfx_ClutStrip row 26 (0x812980..0x812B7F) and the first 16 words of row 2 (0x80F980) from their source 0x4000 below with bit 15, then the first word of each back without it; Gfx_ClutStripDirty 1. The slot indices are not tested. Entry 0 of Lavaburst_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC0E0
+name = "LavaburstChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC0E0..0x4AC0F1 (0x12 bytes), group S10: jmp [0x65A9FC + 4 x byte +1] (LavaburstChild_TaskTable, one entry, unchecked). Kind-1 task parameter 0x5E, created by Lavaburst_Start. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC100
+name = "LavaburstChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC100..0x4AC159 (0x5A bytes), group S10: six calls: dword 0x9039D8 0x8E3580; call [0x65AA00 + 4 x byte +2] (LavaburstChild_Steps, five entries, unchecked); then while bit 0 of +0 is set and +2 is 1..3: BattleActor_UpdateScreenXY, Sprite_UpdateScreen, 0x4F6020 (MAGIC219's), LavaburstChild_DrawGlow, 0x4FA440 (MAGIC226/227's), Gte_PopMatrix; dword 0x9039D8 0x8B3580. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC160
+name = "LavaburstChild_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC160..0x4AC357 (0x1F8 bytes), group S10: seven calls: +9 down; at 0: word 0x903854 +0xB << 9, word 0x903850 (Rand & 0x10) + 0x18; +0x34 / +0x38 Math_Sin / Math_Cos of the angle x the radius (no shift) + the owner's (0x93B940); +8 the owner's; +0xC 0x20000, +0x10 0, +0x14 0x6000000 turned by 0x446770 (the engine's dx / dz turn by +8); +0x34 / +0x38 on by +0xC / +0x10, +0x3C the owner's + +0x14; +0xC 0xFFFFE000, +0x10 0, +0x20 0x600000 turned again; the sprite bytes (+0x25 0x1D, +0x27 0x1A, +0x28 1, +0x40 / +0x44 0x10000, +0x48 2, +0x5C..+0x5F 0, +0x29 4, +0x2B 1, the rest 0); Sprite_SetAnimation(0); +0xB 0, +9 and +0xA 0x10, +2 on. Entry 0 of LavaburstChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC360
+name = "LavaburstChild_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC360..0x4AC465 (0x106 bytes), group S10: eleven calls at most: +0x34 / +0x38 on by +0xC / +0x10, +0x14 down by +0x20, +0x3C the owner's + +0x14, +0xB up by 8, +9 down; at 0: Sound_PlayById 0x101 when bit 0 of +4 else 0x100; +4 0; eight times Lavaburst_PoolAlloc, and for each index not 0xFF the record's +0x80 this task, +1 0, +0xB the try's number, +4 up; Sprite_SetAnimation(1); word Camera_Angles[0] up by 0x14; +9 4, +2 on. Entry 1 of LavaburstChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC470
+name = "LavaburstChild_Shake"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC470..0x4AC4B7 (0x48 bytes), group S10: one call: Sprite_ScriptTickOnce (its answer unread); word Camera_Angles[0] up by 0x14 when bit 0 of +9 is set, else down by 0x14; +9 down; at 0 Camera_Angles[0] 0xFD56 and +2 on. Entry 2 of LavaburstChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC4C0
+name = "LavaburstChild_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC4C0..0x4AC4E3 (0x24 bytes), group S10: one call: +0xA down by 2 unless 0; Sprite_ScriptTickOnce, and when al is not 0 +2 on. Entry 3 of LavaburstChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC4F0
+name = "LavaburstChild_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC4F0..0x4AC509 (0x1A bytes), group S10: one call: when +4 (the live records) is 0, the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Entry 4 of LavaburstChild_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC510
+name = "LavaburstChild_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC510..0x4AC6AE (0x19F bytes), group S10: eleven calls: a draw-mode packet (tpage 0x55) committed to layer 5; word 0x903850 the radius +0xB, word 0x90385A +0xA x 4; then 64 semi-transparent gouraud triangles from the origin, each edge 0x40 of angle on, radius the scratch word (Math_Sin / Math_Cos x it, sar 12), projected by Gte_RotTransPers3, Gte_PrimDepths3_10B, all nine colour bytes the low byte of 0x90385A, committed to layer 5. Under LavaburstChild_Run's matrix. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC6B0
+name = "LavaburstRecord_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC6B0..0x4AC6C1 (0x12 bytes), group S10: jmp [0x65AA14 + 4 x byte +1] (LavaburstRecord_TaskTable, one entry, unchecked). The task of a Lavaburst_Pool record, run by Lavaburst_Task's walk. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC6D0
+name = "LavaburstRecord_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC6D0..0x4AC702 (0x33 bytes), group S10: three calls: call [0x65AA18 + 4 x byte +2] (LavaburstRecord_Steps: 0x4F7C40 - MAGIC222's -, LavaburstRecord_Grow, _Shrink; unchecked); then while +0 and +2 are set MagicFx_PushActorMatrix, LavaburstRecord_Draw, a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC710
+name = "LavaburstRecord_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC710..0x4AC798 (0x89 bytes), group S10: two calls: dword +0xC (the radius) up by 2; word 0x903854 +0xB << 9; +0x34 / +0x38 Math_Sin / Math_Cos of it x +0xC + the owner's; +9 down, at 0 +2 on. Entry 1 of LavaburstRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC7A0
+name = "LavaburstRecord_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC7A0..0x4AC830 (0x91 bytes), group S10: three calls: as LavaburstRecord_Grow with +0xC up by 1, then +0xA down; at 0 the owner's +4 down and a tail jmp to 0x4F6290 (MAGIC219's pool-record free). Entry 2 of LavaburstRecord_Steps. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AC840
+name = "LavaburstRecord_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AC840..0x4ACA46 (0x207 bytes), group S10: seventeen calls: a draw-mode packet (tpage 0x55) on layer 5; one semi-transparent textured quad (Gpu_SetPolyFT4) of radius 0x100 at the angles 0x200, 0x600, 0xE00, 0xA00 (Math_Cos / Math_Sin, sar 12, in Prim_VertexScratch), page (0x340, 0x100) abr 1, clut (0, 0x1E2), the texture 0x20 x 0x20 from (0, 0x80), the colour +0xA x 6; Gte_RotTransPers4, Gte_PrimDepths4_10, committed 0x48 bytes to layer 5. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACA50
+name = "Lavaburst_PoolAlloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACA50..0x4ACAA6 (0x57 bytes), group S10: no calls: the first of the 32 Lavaburst_Pool records whose +0 lacks bit 0 gets it; its index in al, 0xFF when all are taken (only al is defined). Called by LavaburstChild_Rise, which tests 0xFF. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACAB0
+name = "Howling_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACAB0..0x4ACAE5 (0x36 bytes), group S10: a four-entry stack table (Howling_Start, Simoon_Wait, MagicFx_DoneAndFree, Magic114_End) called by byte +1, unchecked. Magic_Rows row 56, file 0x24C = MAGIC054.EMI, ability id 0x36 (Howling read one id down, a hypothesis); the first function of MAGIC054's extent 0x4ACAB0..0x4ACFDA. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACAF0
+name = "Howling_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACAF0..0x4ACCD1 (0x1E2 bytes), group S10: In an event battle whose byte 0x904AAA is 0x37: Battle_SetTargetFlags(byte 0x904B44, 0x10), +1 3, +9 0x1E, done. Else +0xB 0, +1 on, and by the target's 0x40 bit: for each enemy 0..7 (0x93B960 + 0x128 i) that Battle_ActorIsOut(i + 3) does not answer for, 0x435A20(i + 3, 4) (the engine's enemy animation), for each party member 0..2 not out Sprite_SetAnimation(its +8 + 0x10) with Sprite_Current the member's record; then a child BattleTask_Create(1, 0x2C) holding a rep movsd copy of the record's first 0x80 bytes, +0x80 Sprite_Current, +1 and +2 0, +6 1, +5 0x2C, +0xB i, counted in +0xB, and the record's +0 | 0x40; Sound_PlayById(0x100). The slot index is not tested. Entry 0 of Howling_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACCE0
+name = "HowlingChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACCE0..0x4ACCF1 (0x12 bytes), group S10: jmp [0x65AA24 + 4 x byte +1] (HowlingChild_TaskTable, one entry, unchecked). Kind-1 task parameter 0x2C. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACD00
+name = "HowlingChild_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACD00..0x4ACD55 (0x56 bytes), group S10: one call: a six-entry stack table (HowlingChild_Start, _Out, _Hold, _Back, _End, 0x4AF490 - MAGIC058's owner count-down and free) by byte +2, unchecked; Sprite_UpdateScreen when +0 is set. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACD60
+name = "HowlingChild_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACD60..0x4ACE6E (0x10F bytes), group S10: no calls: +0x34, +0x38, +0x3C the record of index +0xB (unchecked): the enemy 0x93B960 + 0x128 i when the target byte has 0x40, else the party member 0x802D40 + 0x14C i; +0x40 and +0x44 0x10000, +0x48 2, dword +0xC 0xFFFFF3A0, +0x10 0x1080, +0x18 0x60, +0x1C 0xFFFFFF80; +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACE70
+name = "HowlingChild_Out"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACE70..0x4ACECD (0x5E bytes), group S10: one call: Sprite_ScriptTick (its answer unread); +0xC / +0x10 on by +0x18 / +0x1C, +0x40 / +0x44 (the sprite's scale) on by +0xC / +0x10; when +0xC is 0, +9 0x10 and +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACED0
+name = "HowlingChild_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACED0..0x4ACF09 (0x3A bytes), group S10: one call: Sprite_ScriptTick; +9 down; at 0 +0x18 0x60, +0x1C 0xFFFFFF80, +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACF10
+name = "HowlingChild_Back"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACF10..0x4ACF66 (0x57 bytes), group S10: one call: Sprite_ScriptTick; the steps of HowlingChild_Out; when +0xC is 0xC00, +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACF70
+name = "HowlingChild_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACF70..0x4ACFDA (0x6B bytes), group S10: one call: when Sprite_ScriptTickOnce answers al not 0: bit 0x40 cleared in +0 of the record of index +0xB (enemy or party by the target's 0x40 bit, read after the call), +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ACFE0
+name = "Ebonfire_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ACFE0..0x4AD03B (0x5C bytes), group S10: six calls: a three-entry stack table (Ebonfire_Start, FxDiscFan_Grow, FxDiscFan_Fade) by byte +1, unchecked; then while +0 is set: BattleActor_UpdateScreenXY, word +0x30 down by 0x10, MagicFx_DrawDisc, MagicFx_PushActorMatrix, MagicFx_DrawFan, Gte_PopMatrix. FxDiscFan_Task (0x4C4FC0) with its own start. Magic_Rows row 65, file 0x24D = MAGIC055.EMI, ability id 0x37 (Ebonfire read one id down, a hypothesis); the first function of MAGIC055's extent 0x4ACFE0..0x4AD892. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AD040
+name = "Ebonfire_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AD040..0x4AD12B (0xEC bytes), group S10: eight calls: +8, +0x34, +0x38, +0x3C the source sprite's (dword 0x904B4C, read once); +0xB 0; six rings BattleTask_Create(1, 0x34), each +0x80 Sprite_Current (read after the create) and +9 6 i + 1, counted in +0xB; words 1..15 of Gfx_ClutStrip row 26 from their source with bit 15, word 0 0, Gfx_ClutStripDirty 1; Sound_PlayById(0x100); Battle_SetTargetFlags(byte 0x904B44 read after the sound, 0x10); +9 and +0xA 1, +1 on. FxDiscFan_Start's shape, which does not copy +8. The slot index is not tested. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AD1C0
+name = "EbonfireRing_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AD1C0..0x4AD1F2 (0x33 bytes), group S10: three calls: call [FxRing_PhasesTwin + 4 x byte +1] (FxRing_Wait, _Rise, _Fade, EbonfireRing_End; unchecked); then while +0 and +1 are set MagicFx_PushActorMatrix, EbonfireRing_Draw, a tail jmp to Gte_PopMatrix. FxRing_Task (0x4C5110) with its own draw. Kind-1 task parameter 0x34. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AD300
+name = "EbonfireRing_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AD300..0x4AD342 (0x43 bytes), group S10: one call: +9 down, +0xB up by 2, +0xA up; at +0xA 0x10 the owner's +0xB 0xFF and a tail jmp to BattleTask_FreeCurrent. Entry 3 of FxRing_Phases and FxRing_PhasesTwin, after FxRing_Fade which frees the task: never reached by reading. Listed in MAGIC055's extent (analysis/magic_funcs.tsv: reached by MAGIC055 and MAGIC091). Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AD350
+name = "EbonfireRing_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AD350..0x4AD6EB (0x39C bytes), group S10: nineteen call sites: MagicFx_DrawRing (0x4C5150) instruction for instruction but the tpage: 32 semi-transparent textured gouraud quads round the origin, inner radius +9 x 4 lifted by Math_Sin(((+0xB + i) & 0xF) << 8) of +0xA x 4 + 0x40, outer radius +9 x 3, each preceded by a draw-mode packet (tpage 0x55) and sorted at the task's position moved by its inner x << 9 (MapView_LinkPrimAt, 0xC and 0x54 bytes), page (0x340, 0x100) abr 2, clut (0, 0x1FA), columns i x 4, rows (+0xB + 8) x 4 / (+0xB + 12) x 4, the rim shade 0x68 - +0xB x 3. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AD8A0
+name = "Sacrifice_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AD8A0..0x4AD8CD (0x2E bytes), group S10: a three-entry stack table (Sacrifice_Start, Sacrifice_Wait, MagicFx_DoneAndFree) called by byte +1, unchecked. Magic_Rows row 112, file 0x24E = MAGIC056.EMI, ability id 0x38 (Sacrifice read one id down, a hypothesis); the first function of MAGIC056's extent 0x4AD8A0..0x4AE7B6. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AD8D0
+name = "Sacrifice_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AD8D0..0x4ADA2A (0x15B bytes), group S10: five calls: MagicFx_CenterOnSide; +0xB and +9 0, +1 on; BattleActor_SetAnimation(8, 0); a child BattleTask_Create(1, 0x55) holding a rep movsd copy of the acting actor's record's first 0x80 bytes (the party member 0x802D40 + 0x14C a for a byte 0x904B34 of 2 or less, else the enemy 0x93B960 + 0x128 (a - 3), unchecked), +0x80 Sprite_Current, +1 3, +2 0, +6 1, +5 0x55, counted in +0xB; words 1..15 and 17..31 of Gfx_ClutStrip row 26 from their source with bit 15, words 0 and 16 0, Gfx_ClutStripDirty 1; SpriteClut_CopyToFxRow(the owner 0x93B940), al to +0x27; +0x28 and +0x24 the owner's; SpriteClut_SetStp(Sprite_Current); the owner's +0 | 0x40. The slot index is not tested. Entry 0 of Sacrifice_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADA30
+name = "Sacrifice_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADA30..0x4ADAEF (0xC0 bytes), group S10: five calls: once +0xB (the children) is 0: the owner's +0 bit 0x40 cleared; SpriteClut_RestoreFxRow; BattleActor_SetAnimation(0x1C, 0); Battle_SetTargetFlag40(byte 0x904B44); the acting actor's record (party below 3, else enemy by a - 3, unchecked): +1 6, +2 4, word +0x98 (party) / +0xA4 (enemy) 0, word +0x90 / +0x92 0x4000, Sprite_ReleaseTint of it; +1 on. Entry 1 of Sacrifice_Task. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADAF0
+name = "SacrificeChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADAF0..0x4ADB01 (0x12 bytes), group S10: jmp [0x65AA38 + 4 x byte +1] (SacrificeChild_Kinds: SacrificeRing_Run twice, SacrificeDisc_Run, SacrificeActor_Run; unchecked). Kind-1 task parameter 0x55. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADB10
+name = "SacrificeRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADB10..0x4ADB42 (0x33 bytes), group S10: three calls: call [0x65AA48 + 4 x byte +2] (SacrificeRing_Steps: SacrificeFx_TakeOwnerPos, SacrificeRing_Grow, _Fade; unchecked); then while +0 and +2 are set MagicFx_PushActorMatrix, SacrificeRing_Draw, a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADB50
+name = "SacrificeFx_TakeOwnerPos"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADB50..0x4ADB9F (0x50 bytes), group S10: no calls: +0x34, +0x38, +0x3C the owner's (0x93B940), +9 and +0xA 0, +2 on. Entry 0 of SacrificeRing_Steps and SacrificeDisc_Steps (analysis/magic_funcs.tsv: also reached by MAGIC126). Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADBA0
+name = "SacrificeRing_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADBA0..0x4ADBEE (0x4F bytes), group S10: one call: at +9 = 4 Battle_SetTargetFlags(byte 0x904B44, 0x10); word 0x903850 (the radius) +9 x 28; +9 up; at 0xC +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADBF0
+name = "SacrificeRing_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADBF0..0x4ADC35 (0x46 bytes), group S10: one call: word 0x903850 +9 x 4 + 0x120; +0xA and +9 up; at +9 0x28 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4ADC40
+name = "SacrificeRing_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ADC40..0x4AE055 (0x416 bytes), group S10: twenty-one call sites: eight bands (angle A from 0xC00 down to 0x880 by 0x80, n 1..8, row m 0x18 down to 0x11), each 32 semi-transparent textured gouraud quads round the origin between the circles of radius Math_Cos(A - 0x80) and Math_Cos(A) x the word 0x903850 (sar 12), heights Math_Sin of them; the inner and outer shades 0x81, or 0x81 - (+9 - n - 0xF) x 8 / 0x81 - (+9 - n - 0x10) x 8 (1 past 0x10) while n is below +9 - 0x10; each quad a draw-mode packet (tpage 0x35) and the quad, sorted at the task's position moved by its outer vertex << 9 (MapView_LinkPrimAt 0xC and 0x54), page (0x340, 0x100) abr 1, clut (0, 0x1FA), columns k x 8, rows (m + 0x14) x 8 / (m + 0x15) x 8. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE060
+name = "SacrificeDisc_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE060..0x4AE092 (0x33 bytes), group S10: three calls: call [0x65AA54 + 4 x byte +2] (SacrificeDisc_Steps: SacrificeFx_TakeOwnerPos, SacrificeDisc_Grow, _Hold, _Fade; unchecked); then while +0 and +2 are set MagicFx_PushActorMatrix, SacrificeDisc_Draw, a tail jmp to Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE0A0
+name = "SacrificeDisc_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE0A0..0x4AE0C9 (0x2A bytes), group S10: no calls: +0xA up by 2, +9 up; at 0xC +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE0D0
+name = "SacrificeDisc_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE0D0..0x4AE0EB (0x1C bytes), group S10: no calls: +9 up; at 0x1E +2 on (analysis/magic_funcs.tsv: also reached by MAGIC103). Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE0F0
+name = "SacrificeDisc_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE0F0..0x4AE129 (0x3A bytes), group S10: one call: +9 up unless 0x2E; +0xA down; at 0 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent (also reached by MAGIC103). Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE130
+name = "SacrificeDisc_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE130..0x4AE315 (0x1E6 bytes), group S10: thirteen call sites: a draw-mode packet (tpage 0x55) on layer 5; the radius word 0x903850 Math_Cos(0x800) x (+9 + 0x84) x 4 sar 12 past step 1, else x +9 x 48 sar 12; 16 semi-transparent gouraud triangles from the origin (angle steps 0x100), the centre colour (+0xA x 6, +0xA x 8, +0xA x 8), the rim black; Gte_RotTransPers3, Gte_PrimDepths3_10B, committed to layer 5. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE320
+name = "SacrificeActor_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE320..0x4AE393 (0x74 bytes), group S10: one call: a nine-entry stack table (SacrificeActor_Start, _Play, _Darken, _Lighten, _Split, _Wait, _Return, _End, BattleFx_FreeTask) by byte +2, unchecked; Sprite_UpdateScreen while +0 and +2 are set. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE3A0
+name = "SacrificeActor_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE3A0..0x4AE3B9 (0x1A bytes), group S10: no calls: +0x27 the owner's, +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE3C0
+name = "SacrificeActor_Play"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE3C0..0x4AE403 (0x44 bytes), group S10: one call: when Sprite_ScriptTickOnce answers al not 0: +0 | 0x20, +0x5C 1, +0x5D..+0x5F 0, +2 on (analysis/magic_funcs.tsv: also reached by MAGIC001). Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE410
+name = "SacrificeActor_Darken"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE410..0x4AE47A (0x6B bytes), group S10: no calls: +0x5D, +0x5E, +0x5F down by 0x10; at +0x5D 0x80 +0x34, +0x38, +0x3C the owner's and +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE480
+name = "SacrificeActor_Lighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE480..0x4AE4D7 (0x58 bytes), group S10: no calls: +0x5D..+0x5F up by 0x10; at +0x5D 0: +0 bit 0x20 cleared, +0x5C 0, +9 8, +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE4E0
+name = "SacrificeActor_Split"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE4E0..0x4AE61B (0x13C bytes), group S10: seven call sites: +9 down; at 0: two children BattleTask_Create(1, 0x55), +0x80 the owner 0x93B940 (not this task), +1 0 (a ring) and 2 (the disc), each counted in the owner's +0xB; Sound_PlayById(0x100); for an acting actor byte 0x904B34 below 3: Battle_PlayActorCue(0) with Field_State the member's record (put back), then, the byte read again and still below 3, Sprite_SetAnimation(the member's +8 + 0x10) with Sprite_Current the record and Sprite_SetAnimation(this task's +8 + 0x10); else 0x435A70(the actor dword, 4) (the engine's enemy animation); +9 0x1E, +2 on. The slot indices are not tested. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE620
+name = "SacrificeActor_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE620..0x4AE670 (0x51 bytes), group S10: one call: Sprite_ScriptTick (its answer unread); +9 down; at 0 +0 | 0x20, +0x5C 1, +0x5D..+0x5F 0, +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE680
+name = "SacrificeActor_Return"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE680..0x4AE758 (0xD9 bytes), group S10: four call sites: Sprite_ScriptTick; +0x5D..+0x5F down by 0x10; at +0x5D 0x80: +0x34, +0x38, +0x3C those of the sprite at dword 0x904B3C; for an actor byte below 3 Sprite_SetAnimation(the member's +8 + 0x1C) on its record and Sprite_SetAnimation(this task's +8 + 0x1C), else 0x435A70(the actor dword, 4); +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[func]]
+pc = 0x4AE760
+name = "SacrificeActor_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s10.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AE760..0x4AE7B6 (0x57 bytes), group S10: no calls: while the owner's +0xB is 1: +0x5D..+0x5F up by 0x10; at +0x5D 0 the owner's +0xB down and +2 on. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+
+[[data]]
+pc = 0x65A9F4
+name = "Lavaburst_ChildDelays"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-26, group S10: Lavaburst_Start's byte [0x65A9F4 + i] for its eight children: +4 its high nibble, +9 the byte + 1; LavaburstChild_TaskTable follows."
+
+[[data]]
+pc = 0x65A9FC
+name = "LavaburstChild_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S10: LavaburstChild_Task's jmp [0x65A9FC + 4 x byte +1]: LavaburstChild_Run; LavaburstChild_Steps follows."
+
+[[data]]
+pc = 0x65AA00
+name = "LavaburstChild_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-26, group S10: LavaburstChild_Run's call [0x65AA00 + 4 x byte +2]: LavaburstChild_Launch, _Rise, _Shake, _Settle, _End; LavaburstRecord_TaskTable follows."
+
+[[data]]
+pc = 0x65AA14
+name = "LavaburstRecord_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S10: LavaburstRecord_Task's jmp [0x65AA14 + 4 x byte +1]: LavaburstRecord_Run."
+
+[[data]]
+pc = 0x65AA18
+name = "LavaburstRecord_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S10: LavaburstRecord_Run's call [0x65AA18 + 4 x byte +2]: 0x4F7C40 (MAGIC222's), LavaburstRecord_Grow, _Shrink; HowlingChild_TaskTable follows."
+
+[[data]]
+pc = 0x65AA24
+name = "HowlingChild_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S10: HowlingChild_Task's jmp [0x65AA24 + 4 x byte +1]: HowlingChild_Run; FxRing_PhasesTwin follows."
+
+[[data]]
+pc = 0x65AA38
+name = "SacrificeChild_Kinds"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S10: SacrificeChild_Task's jmp [0x65AA38 + 4 x byte +1]: SacrificeRing_Run, SacrificeRing_Run, SacrificeDisc_Run, SacrificeActor_Run."
+
+[[data]]
+pc = 0x65AA48
+name = "SacrificeRing_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S10: SacrificeRing_Run's call [0x65AA48 + 4 x byte +2]: SacrificeFx_TakeOwnerPos, SacrificeRing_Grow, _Fade."
+
+[[data]]
+pc = 0x65AA54
+name = "SacrificeDisc_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S10: SacrificeDisc_Run's call [0x65AA54 + 4 x byte +2]: SacrificeFx_TakeOwnerPos, SacrificeDisc_Grow, _Hold, _Fade; the next overlay's data follows at 0x65AA64."
+
+[[data]]
+pc = 0x67F700
+name = "Lavaburst_Pool"
+ctype = "unsigned char"
+count = 4224
+status = "evidence"
+evidence = "read 2026-09-26, group S10: 32 task-like records of 0x84 bytes: Lavaburst_Start clears +0..+2, Lavaburst_PoolAlloc takes one by bit 0, Lavaburst_Task runs each live one as Sprite_Current (+0x80 its owner) through LavaburstRecord_Task. Not named before (symbols.toml, 2026-09-26)."
