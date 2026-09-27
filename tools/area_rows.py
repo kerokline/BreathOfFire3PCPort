@@ -365,6 +365,31 @@ def read_switch(img, fn):
     return out
 
 
+# The call shape each root table gives a function (docs/takeover-queue-areas.md
+# section 2), printed with every root so a harness knows how to call it.
+SHAPES = (
+    ('+0x34', 'void(void), a choice'),
+    ('+0x3C', 'void(void), Sprite_Current the object; DE reads Sprite_Current[8] after'),
+    ('+0x40', 'void(void), once per entry'),
+    ('step hook', 'hook (long x, long z) answering in al'),
+    ('arrive hook', 'hook (long x, long z) answering in al'),
+    ('cell hook', 'hook (long x, long z) answering in al, sign-extended by Area_CellHook'),
+    ('tail kind', 'void(void), a field-frame phase by 0x9039F3'),
+    ('object trigger', '(object, 0x904030)'),
+    ('world-map', "the world map's own shape (docs/worldmap_area.md)"),
+    ('data', "as its area's code calls it: most are state handlers, void(void)"),
+    ('called from', 'as that engine call site calls it'),
+    ('named by', "unknown: an unread table's"),
+)
+
+
+def shape_of(how):
+    for key, shape in SHAPES:
+        if key in how:
+            return shape
+    return '?'
+
+
 def load_toml(path):
     with open(path, 'rb') as f:
         return tomllib.load(f)
@@ -1048,7 +1073,7 @@ def print_clones(img, addrs, funcs, named, how, reached_by):
         calls, imms, tables, refused = mr.clone_sites(img, x, end)
         tag = '%X' % x
         name = named.get(x, 'Fn_' + tag)
-        shape = '; '.join(how.get(x, [])) or ('reached by area %s' % ','.join(map(str, sorted(reached_by.get(x, ()))))
+        shape = '; '.join('%s [%s]' % (h, shape_of(h)) for h in how.get(x, [])) or ('reached by area %s' % ','.join(map(str, sorted(reached_by.get(x, ()))))
                                              if reached_by.get(x) else 'a gap: reached by no area')
         codes = sorted(v for v in funcs[x].imms if v not in {c[1] for c in calls})
         print('// 0x%X: 0x%X bytes; %s%s%s' % (x, end - x, shape, ''.join(

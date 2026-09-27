@@ -37,7 +37,10 @@ Inputs: the exe; `analysis/pc_funcs.json` and `pc_hidden.json` (the starts),
 is the `BIN/WORLDnn` directory of its `AREAnnn.EMI`: areas 0..37, 38..75,
 76..113, 114..151, 152..199). The clone sites are
 `magic_rows.clone_sites`, imported, so a clone table means exactly what a
-spell group's did.
+spell group's did; each clone's comment line names the root tables it came
+from with the call shape each gives (a descriptor handler or choice or the
+init `void(void)`; a step, arrive or cell hook `(x, z)` answering in `al`; a
+tail kind a field-frame phase; an object trigger `(object, flags)`).
 
 ## 2. The roots
 
@@ -46,7 +49,7 @@ spell group's did.
 | `Area_Descriptors` `0x667590` -> 200 descriptors `0x5DB318..0x64AD68` | `+0x34` choice handlers, `+0x3C` handler array, `+0x40` init | choice 927 entries over 106 areas, handlers 678 over 119, inits 67; 808 distinct functions |
 | `Area_StepHook` `0x56E050` / `Area_ArriveHook` `0x56E4E0` | the bias, bound, byte index table and jump table read off each switch; each case's call | 38 areas -> 28 handlers (one, `0xAE`'s `Scenario_NoHook`, outside the band); 8 areas -> 8 |
 | `Field_ModeTailKinds` `0x662CE8` | 64 slots | 63 set, 47 in the band; attributed by the area code that stores the kind (`mov byte [0x9039F3], n`): 50 kinds armed so; slots 1, 8, 9 by nothing in the band |
-| `Area_CellHooks` `0x662F28` | 28 `(area, fn)` records, the reader's bound | 28 areas, 18 functions, 17 in the band (`0x4FEEB0`, area `0x6D`, outside) |
+| `Area_CellHooks` `0x662F28` | 28 `(area, fn)` records, the reader's bound (`0x56E670`, ARH's `Area_CellHook`); each a hook `(x, z)` answering in `al` | 28 areas, 18 functions, 17 in the band (`0x4FEEB0`, area `0x6D`, outside) |
 | `WorldMap_Records` / `WorldMap_FieldHooks` | eleven records' five code fields and area byte; twelve hooks | 64 functions, all in the band |
 | `Field_ObjectTriggers` `0x662E20` (**not in the plan**) | ids 1..65 by `object[+0x86]` | 64 functions, 51 in the band; area-less |
 | the areas' data blocks | every dword of `.data` from area 0's first table to area 199's descriptor end naming a band start, beyond the descriptor tables | 1,586 pointers, 1,228 in a `+0x34` / `+0x3C` table, **358 beyond** (270 functions) |
@@ -206,6 +209,12 @@ the reader of each), **`Field_ModeTailKinds`** `0x662CE8` (64),
 
 ## 6. How sure, and what it cannot see
 
+- **Checked against group ARH's hand reading of area 11** ([`area_011.md`](area_011.md)
+  section 5, on ARH's branch): descriptor `0x5E2738`, two handlers and the
+  init, no hook, tail kind, cell hook or data-block root, block
+  `0x401750..0x401840` of three exclusive functions, and the clone rows
+  (`0x1C` no calls; `0x46` `{0x30, 0x57CE10}`; `0x79` `{0x8, 0x57C140},
+  {0x1B, 0x57C140}`) - the tool prints exactly that. No difference.
 - The roots are read off the exe with the reader of each table checked
   (the switch bounds, the cell-hook loop bound, the trigger index). The
   handler counts agree with the PSX in every area but 75 and 86.
