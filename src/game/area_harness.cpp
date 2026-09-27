@@ -122,7 +122,11 @@ void Disturb() {
             Sprite_Current[f] = (f == 1 || f == 2) && span ? static_cast<unsigned char>(b % span) : b;
         break;
     }
-    case 4: Pointer(at::kFieldState)[(h >> 20) % at::kPartyStride] = static_cast<unsigned char>(v); break;
+    case 4: {
+        unsigned char* const leader = Pointer(at::kFieldState) + (h >> 20) % at::kPartyStride;
+        if (InRegions(leader, 1)) *leader = static_cast<unsigned char>(v);
+        break;
+    }
     case 5: Frame_Counter = h >> 6; break;
     case 6: move_script::SetWord(Mem(at::kMessage), h & 0x100 ? 0xFFFFu : h >> 16); break;
     case 7: Mem(at::kFieldRequest)[0] = b; break;

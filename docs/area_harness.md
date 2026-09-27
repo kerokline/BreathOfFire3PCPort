@@ -1,7 +1,7 @@
 # The area harness: one fuzz for every area group
 
 **Status:** IN PROGRESS (2026-09-27) - built and proved on one area (area 11,
-[`area_011.md`](area_011.md): 3 functions, 0 mismatches, @CONTROLS@) and on
+[`area_011.md`](area_011.md): 3 functions, 0 mismatches, 20 controls planted, 18 refused by a count, one refused then hung, one equivalent) and on
 the cell hook's reader `0x56E670` (section 8). Not yet used by a group that
 needs a choice handler, a step or arrive hook, a mode-tail phase or a state
 table of the area's own: the first group to use each shape is its first
@@ -141,7 +141,7 @@ byte of the leader's record, `Frame_Counter`, the message word,
 `Field_Request`, a byte of the flags, `Field_MemberCount`, a byte of one of
 the first four field objects, a byte of the camera / scratch cells, or
 (the group's `disturb`) a cell of the group's; then the group's `settle`.
-A write through `Sprite_Current` is made only when it lies in the regions.
+A write through `Sprite_Current` or `Field_State` is made only when it lies in the regions.
 
 **The recorders** answer as the spell harness's (`kGarbage`, `kByte`,
 `kFlag`, `kBool`, `kRand`, `kPhase`, `kThrough`, `effect`, `custom`,
@@ -197,7 +197,7 @@ spell groups through `magic_harness` and the area groups through this one.
 Measured in this worktree (2026-09-27; counts depend on the build
 directory): `area_011` 12,000 rounds, 10,656 calls, 0 mismatches, 16,208
 bytes (20 regions); `area_cell_hook` 20,000 rounds, 11,619 calls, 0
-mismatches. `BOF3X_SHADOW='*'`: @STAR@
+mismatches. `BOF3X_SHADOW='*'`: exit 0, every module's self-test 0 mismatches (335 self-test lines), the spell groups through `magic_harness` unchanged.
 
 ## 7. For the area groups of the next wave
 
@@ -245,4 +245,14 @@ shared one. 0 mismatches.
 
 ## 9. Controls
 
-@TABLE@
+Area 11's are [`area_011.md`](area_011.md) section 4. `Area_CellHook`'s, planted in `area_cell_hook.cpp` by the same script under `BOF3X_SHADOW=area_cell_hook`: **6 of 6 refused** by a count.
+
+| # | planted | refused in rounds (of 20,000) |
+|---|---|---|
+| C1 | the area number masked to its low byte (`0x1xx` matches) | 2,807 |
+| C2 | 27 pairs searched (the "not found" test still at 28) | 8,536 |
+| C3 | the answer zero-extended | 5,745 |
+| C4 | "not found" answers 1 | 8,536 |
+| C5 | the handler called `(z, x)` | 11,454 |
+| C6 | x masked to a byte | 5,753 |
+

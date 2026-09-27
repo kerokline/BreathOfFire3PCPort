@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-27) - three functions ours
 (`src/game/area_011.cpp`, shadow name `area_011`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)): 0 mismatches in
-12,000 rounds; @CONTROLS@ Fuzz only: no recorded route enters area 11
+12,000 rounds; 20 controls planted, 18 refused by a count, 1 refused then hung (replaced), 1 equivalent with its near variant refused (section 4). Fuzz only: no recorded route enters area 11
 (section 6). No divergence; no new defect.
 
 Group ARH of round ten's first wave
@@ -86,11 +86,35 @@ an `AreaMap_EntryBase` of `0x10..0x30F`.
 
 **Result (in this worktree):** 12,000 rounds, 10,656 calls to the
 stand-ins, 0 mismatches, 16,208 bytes of state (20 regions); coverage
-`Effect_Spawn 4000, Flags_Test 6656`. `BOF3X_SHADOW='*'`: @STAR@
+`Effect_Spawn 4000, Flags_Test 6656`. `BOF3X_SHADOW='*'`: exit 0, every module's self-test 0 mismatches (335 self-test lines), the spell groups through `magic_harness` unchanged.
 
 ## 4. Controls
 
-@TABLE@
+Planted one at a time in `area_011.cpp` by a script (the scratch `controls.py`, not committed) that plants, rebuilds, checks the file recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_011`, restores; after the last it rebuilt and ran the clean self-test (0 mismatches). **20 planted: 18 refused by a count (exit 3), one refused and then hung (A16, replaced by A16b), one equivalent (A18, with its near variant A18b refused).**
+
+| # | planted | refused in rounds (of 4,000 for the function) |
+|---|---|---|
+| A1 | handler 0: the compare `>=` for `>` | 391 |
+| A2 | handler 0: the step `0x9F` for `0xA0` | 2,268 |
+| A3 | handler 0: `MapView_Redraw = 3` | 4,000 |
+| A4 | handler 0: the redraw only when the distance steps | 1,726 |
+| A5 | handler 1: the member byte from `0x904063` | 3,579 |
+| A6 | handler 1: x and z passed swapped | 4,000 |
+| A7 | handler 1: `Effect_Spawn` kind 2 | 4,000 |
+| A8 | handler 1: the store skipped on 0, not on `0xFF` | 1,579 |
+| A9 | handler 1: the answer stored through the leader, `Sprite_Current` not read again | 113 |
+| A10 | handler 1: `Sprite_Current` not made the leader | 3,161 |
+| A11 | init: flag `0x12` for `0x13` | 4,000 |
+| A12 | init: the second flag test not negated | 1,710 |
+| A13 | init: the kind compared without bit 7 (`0x01` matches too) | 231 |
+| A14 | init: the alternate colour `+12` not written | 550 |
+| A15 | init: the colour `0x21080001` | 550 |
+| A16 | init: no `return` after the first match | refused (mismatches from round 389), then **ours hung**: the next step lands in the rewritten colour dword (`0x21080000`: kind `0x21`, step 8) and walks the random bytes to a step of 0. Killed; replaced by A16b |
+| A16b | init: the kind compared `>=` `0x81` (`0xC1` matches) | 369 |
+| A17 | init: the second flag test on `0x904001` | 2,656 |
+| A18 | init: the walk ends on `(e & 0xFFFFFF) == 0` | **0 - equivalent**: an entry whose low 24 bits are 0 has a step of 0, which never ends the original (section 6), so no input that ends the original tells them apart |
+| A18b | init: the walk ends on `(e & 0xFF00FFFF) == 0` (near A18) | 82 |
+
 
 ## 5. What `tools/area_rows.py` should print for area 11
 
