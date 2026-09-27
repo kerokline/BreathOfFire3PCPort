@@ -261,12 +261,17 @@ unsigned char* Sc() { return Sprite_Current; }
 // The group's cells a recorder may move (the harness's case 14): the current
 // mote cell to another mote, the packet pointer, a scratch or vertex word, a
 // byte of the current mote below its owner +0x1C (which the walk hands on).
+// The scratch words are the likeliest, and half of those are the launch's
+// radius and angle (+0, +4), which it reads again after Math_Sin: its one
+// re-read the fuzz would otherwise meet about once in 2,000 rounds.
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
-    switch ((h >> 8) % 5) {
+    switch ((h >> 8) % 8) {
     case 0: mh::SetPointer(kCell, Mote(v)); break;
     case 1: Gfx_PacketNext = PrimAt(v); break;
-    case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
+    case 2: case 5: case 6: case 7:
+        SetWord(mh::Mem(kScratch + (v & 0x100 ? 4 * (v & 1) : 2 * (v % 8))), h >> 16);
+        break;
     case 3: SetWord(mh::Mem(kVertex + 2 * (v % 12)), h >> 16); break;
     case 4: {
         const std::uint32_t c = static_cast<std::uint32_t>(Long(mh::Mem(kCell)));
@@ -324,7 +329,9 @@ void Seed(unsigned k) {
         sc[4] = Byte(mh::Next() % 11);
         break;
     // the burst: each counter at its threshold
-    case kBurstLaunch: Near(m[0xA], 0); break;
+    case kBurstLaunch:
+        if (mh::Often()) m[0xA] = Byte(mh::Half() ? 1 : 2);
+        break;
     case kBurstClose: {
         if (mh::Often()) m[9] = Byte(MH_PICK(0xE, 0xF, 0x10, 0x11));
         if (mh::Half()) m[4] = Byte(mh::Half() ? 0 : mh::Next() % 0x5C);
