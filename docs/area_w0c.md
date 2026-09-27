@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-27) - 52 functions ours
 (`src/game/area_w0c.cpp`, shadow name `area_w0c`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-0 mismatches in 300,000 rounds (in this worktree). CONTROLS_SUMMARY Fuzz
+0 mismatches in 312,000 rounds (in this worktree); 123 controls planted, 122 refused by a count, 1 equivalent with its near variant refused (section 4). Fuzz
 only: the combat and world-map routes enter areas 29 and 33, but reach none
 of the 52 (section 8). No divergence; the five dispatchers through an area's
 state table abort past it (section 6).
@@ -240,17 +240,144 @@ the one shadow name, one per area with its `Group::area` (27, 28, 32..37),
   word of `0x45`, `0x49`, `0x145`, `0xFF46`; a z of `0x22`, `0x26`, `0x123`,
   `0xFF23`); the wait word 0, 1, `0x100`, `0xFFFF`. The object triggers are
   called `(a field object, 0x904030)`.
+- **Three louder stand-ins** (the group's listing, an `effect`): `Field_ChangeArea` moves counter 3, `Flags_Set` the answer byte, `Msg_OpenScript` the tail state, each half the time (from `Noise`): the cells their callers read again after the call.
 - **The group's disturbance** (from the hash it is given): the tail state,
   counter 3 (at `0x20`, `0x31` or any), the answer byte, the active member
   pointer, a byte of the row pointer, the timer word.
 
-**Result (in this worktree):** RESULT_LINES
+**Result (in this worktree):** 312,000 rounds over the 52 functions (6,000 each), 252,412 calls to the stand-ins, 0 mismatches, 16,738 bytes of state (29 regions) and the log compared. Coverage: every state-table entry reached 1,949..3,014 times; `Field_ChangeArea` 314 (area 27) / 537..561 (area 37), `Msg_OpenScript` 101..112, the step hook's success (`Party_DropIn`) 377..434, `Area34_ChoiceTail5`'s tail path 608, `Tint_Release` 887, `Effect_Release` 2,126.
 
-`BOF3X_SHADOW='*'`: STAR_RESULT
+`BOF3X_SHADOW='*'`: exit 0, `inject: 3736 ours`, 350 self-test lines, no mismatch.
 
 ## 4. Controls
 
-CONTROLS_TEXT
+Planted one at a time in `area_w0c.cpp` by a script (the scratch `controls.py`, not committed) that plants on a unique anchor, rebuilds, checks `area_w0c.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w0c`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches). **123 planted: 122 refused by a count (exit 3), 1 equivalent (B4) with its near variant B4b refused.** No hang, no fault. Every one of the 52 functions has at least one control of its own; a control in a shared helper lists every function it refused in. The thinnest (C15 40, E2 37, H18 36, F7 23..25, G7 39, A12 67 / 84) test a re-read after a call: the first run refused A12, E2 and H18 in one round each, and the three stand-ins that now move the re-read cell half the time (section 3: `Field_ChangeArea`, `Flags_Set`, `Msg_OpenScript`) raised them; the table is the second run, all 123 again.
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| A1 | `Area27_ChoiceTail1` | bit 1 tested for bit 0 | 2360 |
+| A2 | `Area27_ChoiceTail2` | state 1 armed | 2792 |
+| A3 | `Area27_ChoiceCounter5or6` | answer 0 sets 6 | 453 |
+| A4 | `Area27_ChoiceCounter5Bor5A` | answer -1 for 1 | 895 |
+| A5 | `Area27_ChoiceCounter5Cor5D` | message 0xFFFE | 6000 |
+| A6 | `Area27_SpawnEffect2F` | kind 0x2E | 4830 |
+| A7 | `Area27_SpawnEffect2F` | slot 3 taken for none | 1179 |
+| A8 | `Area27_ClearCells` | one cell set to 1 | 6000 |
+| A9 | `Area27_TailDropIn1` | counter 0x21 awaited | 82 |
+| A10 | `Area27_TailDropIn2` | flags 0x8F | 158 |
+| A11 | `RunDropInTail (both)` | state 0 waits on Field_Request 3 | TailDropIn1 177, TailDropIn2 211 |
+| A12 | `RunDropInTail (both)` | counter 3 read before Field_ChangeArea | TailDropIn1 67, TailDropIn2 84 |
+| A13 | `RunDropInTail (both)` | the tail kind not cleared | TailDropIn1 103, TailDropIn2 120 |
+| A14 | `RunDropInTail (both)` | Party_DropIn(entry + 1) | TailDropIn1 576, TailDropIn2 574 |
+| A15 | `RunDropInTail (both)` | timer 0x11 | TailDropIn1 43, TailDropIn2 43 |
+| B1 | `Area28_SpawnEffect40` | kind 0x41 | 4805 |
+| B2 | `SpawnAtCell (28, 34)` | elevation << 15 | 4805 |
+| B3 | `SpawnAtCell (28, 34)` | elevation asked at (z, x) | 4805 |
+| B4 | `SpawnAtCell (28, 34)` | elevation zero-extended | **0 - equivalent**: `(s32)(s16)g << 16` and `(u32)(u16)g << 16` keep the same low 16 bits and shift the rest out, so no elevation tells them apart; B4b, the near variant, refused |
+| B4b | `SpawnAtCell (28, 34)` | elevation as a signed byte (near B4) | 4782 |
+| C1 | `Area32_ChoiceLeaderAnim` | any answer not 0 | 5082 |
+| C2 | `Area32_ChoiceLeaderAnim` | Sprite_Current left the leader | 380 |
+| C3 | `Area32_RunA` | table B's | 6000 |
+| C4 | `Area32_RunB` | the other entry | 6000 |
+| C5 | `Area32_ShadeStart` | the leader word less 1 | 6000 |
+| C6 | `Area32_ShadeStart` | Sprite_Current read before the call | 228 |
+| C7 | `Area32_ShadeStep` | Sprite_ShadeLower(7) | 6000 |
+| C8 | `Area32_ShadeStep` | state 1 when done | 3943 |
+| C9 | `Area32_TintStart` | tint alpha 2 | 6000 |
+| C10 | `Area32_TintStart` | bit 0x20 cleared too | 6000 |
+| C11 | `Area32_TintStart` | the tint slot to +0x9E | 6000 |
+| C12 | `Area32_TintStep` | the compare unsigned | 3574 |
+| C13 | `Area32_TintStep` | member +0x84 = 3 | 887 |
+| C14 | `Area32_TintStep` | member +0x8A less 4 | 5113 |
+| C15 | `Area32_TintStep` | Sprite_Current not read again after Tint_Release | 40 |
+| C16 | `Area32_SpawnEffect50Near` | timer 0x79 | 4845 |
+| C17 | `Area32_SpawnEffect50Far` | lift 0x4000 | 4752 |
+| C18 | `SpawnEffect50 (both)` | +6 from +9 | SpawnEffect50Near 4828, SpawnEffect50Far 4732 |
+| C19 | `SpawnEffect50 (both)` | +0x3C raised 0x100000 | SpawnEffect50Near 4845, SpawnEffect50Far 4752 |
+| C20 | `Area32_SpawnEffect4F` | divided by 0xA0 | 3900 |
+| C21 | `Area32_SpawnEffect4F` | the division unsigned | 1220 |
+| C22 | `Area32_SpawnEffect4E` | kind 0x4D | 4802 |
+| C23 | `SpawnFromCurrent (4E, both 50s)` | +0 = 2 | SpawnEffect50Near 4845, SpawnEffect4E 4802, SpawnEffect50Far 4752 |
+| C24 | `Area32_SpawnEffect4F` | +0 = 2 | 4790 |
+| D1 | `Area33_Record08Run` | by +2 | 3966 |
+| D2 | `Area33_Record04Run` | the other entry | 6000 |
+| D3 | `Area33_Record08Start` | bank 0x47 | 6000 |
+| D4 | `Area33_Record08Start` | +0x29 = 4 | 5998 |
+| D5 | `Area33_Record08Start` | step >> 12 | 2056 |
+| D6 | `Area33_Record08Start` | forward on variant 2 | 1938 |
+| D7 | `Area33_Record08Start` | the axis by +0x10 | 3531 |
+| D8 | `Area33_Record08Start` | z step >> 8 | 3069 |
+| D9 | `Area33_Record08Start` | +0x2A from the animation byte | 3897 |
+| D10 | `Area33_Record08Start` | +0x10 the x step | 5879 |
+| D11 | `Area33_Record08Start` | Sprite_Current not read again | 188 |
+| D12 | `Area33_Record08Start` | the step zero-extended | 1726 |
+| D13 | `Area33_Record04Start` | byte 8 releases | 2225 |
+| D14 | `Area33_Record04Start` | status bit 1 | 2285 |
+| D15 | `Area33_Record04Start` | the cell 0xA1 | 3874 |
+| D16 | `Area33_Record04Start` | x and z swapped | 3472 |
+| D17 | `Area33_Record04Start` | animation 1 | 3874 |
+| D18 | `Area33_Record04Start` | +0x2A = 1 | 3874 |
+| D19 | `Area33_Record04Start` | no WorldMap_RecordIndex | 3874 |
+| E1 | `Area34_ChoiceTail5` | sub-kinds swapped | 893 |
+| E2 | `Area34_ChoiceTail5` | the answer not read again | 37 |
+| E3 | `Area34_ChoiceTail5` | Cond_ByteFA 9 | 2420 |
+| E4 | `Area34_ChoiceTail5` | row flag 4 | 1811 |
+| E5 | `Area34_ChoiceTail5` | step 1 | 608 |
+| E6 | `Area34_ChoiceTail5` | answer 1 not armed | 455 |
+| E7 | `Area34_SkipScript` | pose 6 skips | 1974 |
+| E8 | `Area34_SkipScript` | on 0x14 | 5008 |
+| E9 | `Area34_SpawnEffect51` | no state 6 | 4810 |
+| E10 | `Area34_SpawnEffect51` | the slot not stored | 5944 |
+| E11 | `Area34_Trigger51` | flags 0x6D..0x6F | 1776 |
+| E12 | `Area34_Trigger51` | flag 0x72 | 1169 |
+| E13 | `Area34_Trigger51` | answers 1 on a clear flag | 4831 |
+| F1 | `Area35_SetCounter1` | counter 0 | 6000 |
+| F2 | `Area35_SetCounter2` | counter 3 | 6000 |
+| F3 | `Area35_SetCounter3` | counter 4 | 6000 |
+| F4 | `SetCounters (35 x3)` | bit 1 cleared too | SetCounter1 3011, SetCounter2 2994, SetCounter3 3041 |
+| F5 | `SetCounters (35 x3)` | step 0x15 | SetCounter1 6000, SetCounter2 6000, SetCounter3 6000 |
+| F6 | `SetCounters (35 x3)` | counter 2 kept | SetCounter1 5971, SetCounter2 5968, SetCounter3 5970 |
+| F7 | `SetCounters (35 x3)` | the member read after the call | SetCounter1 23, SetCounter2 25, SetCounter3 24 |
+| F8 | `Area35_HideObject` | +0 = 1 | 6000 |
+| F9 | `Area35_HideObject` | bit 0 kept | 2977 |
+| G1 | `Area36_StepHook` | Cond_ByteFD 3 | 3559 |
+| G2 | `Area36_StepHook` | flag 0x32 | 2837 |
+| G3 | `Area36_StepHook` | x span 4 | 79 |
+| G4 | `Area36_StepHook` | z from 0x22 | 190 |
+| G5 | `Area36_StepHook` | pose 5 for 6 | 157 |
+| G6 | `Area36_StepHook` | answers 3 | 377 |
+| G7 | `Area36_StepHook` | x high word as a byte | 39 |
+| G8 | `Area36_EffectRun` | the other entry | 6000 |
+| G9 | `Area36_EffectStep` | y and z swapped | 6000 |
+| H1 | `Area37_ChoiceAsk5E` | no-message 0x61 | 5546 |
+| H2 | `Area37_ChoiceConfirm60` | message 0x5F | 5563 |
+| H3 | `Area37_ChoiceAsk72` | yes-message 0x73 | 435 |
+| H4 | `Area37_ChoiceConfirm74` | message 0x75 | 5587 |
+| H5 | `Area37_ChoiceAsk86` | no-message 0x89 | 5541 |
+| H6 | `Area37_ChoiceConfirm88` | message 0x87 | 5523 |
+| H7 | `Area37_ChoiceAsk9A` | yes-message 0x9B | 467 |
+| H8 | `Area37_ChoiceConfirm9C` | message 0x9D | 5538 |
+| H9 | `ChoiceAsk (37 x4)` | mark 5 | ChoiceAsk5E 5546, ChoiceAsk72 5565, ChoiceAsk86 5541, ChoiceAsk9A 5533 |
+| H10 | `ChoiceConfirm (37 x4)` | none 0xFFFE | ChoiceConfirm60 437, ChoiceConfirm74 413, ChoiceConfirm88 477, ChoiceConfirm9C 462 |
+| H11 | `Area37_ChoiceDropIn` | Party_DropIn(2) | 434 |
+| H12 | `Area37_ChoiceDropIn` | message 0xBE | 5566 |
+| H13 | `Area37_ChoiceTail2E` | tail kind 0x2F | 425 |
+| H14 | `Area37_ChoiceTail2E` | counter 0x5E | 477 |
+| H15 | `Area37_ChoiceTail2E` | answer 3 and up as 2 | 4639 |
+| H16 | `Area37_TailLeave` | flags 0 | 561 |
+| H17 | `Area37_TailLeave` | pending kind 0xFF | 561 |
+| H18 | `Area37_TailLeave` | the state read before the message | 36 |
+| H19 | `Area37_TailLeave` | state 1 waits on Field_Request not 2 | 425 |
+| H20 | `Area37_TailLeave` | pass flags 0x1E | 562 |
+| H21 | `Area37_TailLeave` | the wait word low byte | 284 |
+| H22 | `Area37_TailLeave` | counter 3 kept | 297 |
+| H23 | `Area37_Trigger45` | sub-kind 0xA | 6000 |
+| H24 | `Area37_Trigger46` | sub-kind 0xD | 6000 |
+| H25 | `Area37_Trigger47` | sub-kind 0xF | 6000 |
+| H26 | `Area37_Trigger48` | sub-kind 0xC | 6000 |
+| H27 | `TriggerTail4 (37 x4)` | tail kind 5 | Trigger45 6000, Trigger46 6000, Trigger47 6000, Trigger48 6000 |
+| H28 | `TriggerTail4 (37 x4)` | answers 1 | Trigger45 6000, Trigger46 6000, Trigger47 6000, Trigger48 6000 |
+| H29 | `Area37_ToggleScriptFlag8` | bit 4 | 6000 |
 
 ## 5. The tables named
 

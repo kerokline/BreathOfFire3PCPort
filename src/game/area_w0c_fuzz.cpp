@@ -150,9 +150,36 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 // The callees the standard set lacks, and Effect_FindFree's answer: a slot
 // 0..3 (inside the group's Effect_Objects region) or 0xFF, none, a fifth of
 // the time. 0x4220D0 is logged by the three dwords its pointer holds.
-constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
+constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
+
+// Louder than the real callees, on purpose: after the three calls whose
+// callers read one of the group's cells again (counter 3 after
+// Field_ChangeArea in area 27's tails, the answer byte after Flags_Set in
+// Area34_ChoiceTail5, the tail state after Msg_OpenScript in
+// Area37_TailLeave), half the time that cell moves - so a copy that read it
+// before the call is told apart (the harness's disturbance reaches a group
+// cell about one call in 24).
+std::uint32_t MovesCounter3(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = ah::Noise();
+    if (n & 1) *ah::Mem(at::kCounter3) = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
+std::uint32_t MovesAnswer(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = ah::Noise();
+    if (n & 1) *ah::Mem(at::kChoiceAnswer) = static_cast<unsigned char>((n >> 8) % 4);
+    return answer;
+}
+std::uint32_t MovesTailState(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = ah::Noise();
+    if (n & 1) *ah::Mem(at::kTailState) = static_cast<unsigned char>((n >> 8) % 6 - 1);
+    return answer;
+}
+
 #define W0C_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 const ah::Callee kCallees[] = {
+    {W0C_OURS(Field_ChangeArea), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCounter3},
+    {W0C_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesAnswer},
+    {W0C_OURS(Msg_OpenScript), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &MovesTailState},
     {W0C_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03},
     {W0C_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W0C_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
