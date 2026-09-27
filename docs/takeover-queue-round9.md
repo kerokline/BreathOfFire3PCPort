@@ -366,3 +366,36 @@ arbitrary enemy kind identified; S15's `ChillRay_PushMatrix` turns by an
 uninitialised stack word past facing 3; S13's burst can skip mote 0 and
 never set its 0x10 flag; S10's `EbonfireRing_End` and S11's
 `SanctuaryMote_Slow` are unreached.
+
+## 12. Wave five (2026-09-27, from `fb10178`)
+
+Seven groups out at 08:35 (S32..S38, 345 functions; brief
+`analysis/round9_wave345_brief.md` re-pointed at `fb10178`).
+
+**The frame hash, re-recorded first** (owed since wave two's S28 took
+`Port_DroppedCall`): `analysis/validate_round9_hash.sh`, the reference
+sides `--original "*,-Game_Clock"`, `renderer=1`, windowed, foreground
+held; `ours` unfocused. The first attempt died in the tracer's own
+ceiling - `calltrace.cpp`'s owned-function table was 2,048, raised from
+256 on 2026-09-22, and 3,164 were owned - `Fatal("calltrace: more than 2048
+owned functions")` before the window; now 8,192 (`ed0cd6f`). The second
+attempt's `orig` side ran while the S32 merge was building and self-testing
+on the same machine and made 9,675 logic frames in 360 s against ~10,300
+for the other two, with four frames of 24,000..33,000 calls where both
+other sides had 2 (kept as `r9_orig_0927_loaded`); re-recorded alone.
+**Result, at 3,164 ours (`ed0cd6f`): `r9_orig` vs `r9_origb` identical on
+all 10,317 frames; `r9_orig` vs `r9_ours` identical on all 10,279 frames
+but frame 0, the set-up (as since `rb1`).** The oracle sampled in the same
+runs disagrees on 1,473 frames orig-vs-ours and 544 orig-vs-origb - it was
+sampled under `BOF3X_CALLTRACE_MODE=all`, where `attract_diff.py` is
+documented unreliable (the Traps); the hash is the arbiter. The 2026-09-26
+reference is kept as `r9_*_0926`. Do not build or self-test in the main
+checkout while a reference side records: the load shows in the frames.
+
+Merged so far (each: the build, the group's shadow, `'*'`, `ledger_check`
+0 errors, the entry list consolidated):
+
+| Group | Units | Taken | Controls refused | Doc |
+|---|---|--:|---|---|
+| S32 | MAGIC144, 150 | 36 | 155 of 159; W36, E54, E73, E84 equivalent | [`magic_s32.md`](magic_s32.md) |
+| S33 | MAGIC151, 154 | 57 | 223 of 224; A54 equivalent | [`magic_s33.md`](magic_s33.md) |
