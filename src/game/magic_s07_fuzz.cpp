@@ -291,6 +291,19 @@ std::uint32_t TickEffect(const std::uint32_t*, std::uint32_t) {
     return FreshFlag();
 }
 std::uint32_t FlagEffect(const std::uint32_t*, std::uint32_t) { return FreshFlag(); }
+// Math_Sin / Math_Cos: a quarter of the time a scratch or vertex word
+// rewritten from the stream, so every read of them again after a trig call
+// is compared (the group's own disturbance reaches one word too rarely:
+// controls F40, section 6).
+std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t h = mh::Noise();
+    if (h % 4 != 0) return answer;
+    const unsigned w = (h >> 4) % 24;
+    const auto v = static_cast<std::uint16_t>(h >> 16);
+    if (w < 8) SetWord(mh::Mem(kScratch + w * 2), v);
+    else SetWord(mh::Mem(kVertices + (w - 8) * 2), v);
+    return answer;
+}
 
 // --- the callees the standard set lacks -----------------------------------------
 
@@ -308,8 +321,8 @@ const mh::Callee kCallees[] = {
     {S07_OURS(Sprite_SetAnimation), 1, {kU8}, kG, 0, 0, {}, &NoteSprite},
     {S07_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, kG, 0, 0},
     // the draw library
-    {S07_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},
-    {S07_OURS(Math_Cos), 1, {kAll}, kG, 0, 0},
+    {S07_OURS(Math_Sin), 1, {kAll}, kG, 0, 0, {}, &TrigEffect},
+    {S07_OURS(Math_Cos), 1, {kAll}, kG, 0, 0, {}, &TrigEffect},
     {S07_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
     {S07_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {}, &LinkEffect},
     {S07_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0},
@@ -394,11 +407,20 @@ const void* SomeOwner(std::uint32_t v) {
 
 // The group's cells a function reads again after a call: Gfx_PacketNext, a
 // scratch word, a vertex word, a pool record's live bit, the owner's count
-// +0xB, the ability word, a tint byte, the frame-offset table pointer.
+// +0xB, the ability word, a tint byte, the frame-offset table pointer, an
+// actor record's position.
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     const auto word = static_cast<std::uint16_t>(h >> 16);
-    switch ((h >> 8) % 8) {
+    switch ((h >> 8) % 9) {
+    case 8: {
+        // an actor record's position (+0x34 / +0x38 / +0x3C), party 0..2 or
+        // enemy 3..10: WarShout_Rally reads it after its create (control W20)
+        const unsigned a = v % 11;
+        unsigned char* const rec = a < 3 ? mh::PartyOf(Byte(a)) : mh::EnemyOf(Byte(a));
+        SetLong(rec + 0x34 + 4 * ((v >> 4) % 3), static_cast<std::int32_t>(h));
+        break;
+    }
     case 0: Gfx_PacketNext = PacketAt(v); break;
     case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
     case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
@@ -434,7 +456,12 @@ void Seed(unsigned k) {
     Gfx_PacketNext = PacketAt(mh::Next());
     FillPool();
     if (mh::Half()) mh::Mem(mh::at::kTarget)[0] = Byte(mh::Mem(mh::at::kTarget)[0] | 0x40);
-    if (mh::Half()) SetWord(mh::Mem(kAbilityId), mh::Half() ? 0xA3 : Near(0xA3, 1, 1));
+    // the ability word: 0xA3, one either side, or 0xA3 under a high byte not 0
+    // (control F14: a byte test)
+    if (mh::Half()) {
+        const unsigned pick = mh::Next() % 3;
+        SetWord(mh::Mem(kAbilityId), pick == 0 ? 0xA3 : pick == 1 ? Near(0xA3, 1, 1) : 0xA3 | (1 + mh::Next() % 0xFF) << 8);
+    }
     unsigned char* const tint = MoveScript_TintRecords + sc[0xB] * 12u;
     switch (k) {
     // the dispatchers: an index inside the table (a phase past it aborts ours)
