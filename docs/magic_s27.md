@@ -410,6 +410,7 @@ makes), W16 (53 each: only a recorder's disturbance tells the two orders of
 read before the create, seen when the create's disturbance moves
 `Sprite_Current`).
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 12 controls in the affected functions, 12 refused** (`WhelpBreathSprite_Play` / `_Hold`, `WhelpBreathFlames_Draw`, `WhelpBreathGlow_Draw`: W46, W47, W53..W60, W73, W74), each by a count in the function or functions its plant touches, as before. Thinnest: W58 171 rounds, W59 236. Selected: every control whose plant lies in one of the group's section-8 functions; the rest of the table plants outside them and stands without a re-run. The plants are the original round's own (its scratch script's anchors and edits, each anchor checked unique). Each: plant, rebuild (the file checked recompiled), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s27`, restore, rebuild; then the clean self-test, 0 mismatches, exit 0 (`BOF3X_SHADOW='*'`: exit 0). No fuzz change; no equivalent mutant among them.
 
 ## 7. What nothing reached
 

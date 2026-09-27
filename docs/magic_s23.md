@@ -281,6 +281,8 @@ one quad whose angle is 0x1C0), S5 (`Sprite_Current` not read again after
 spiral 0's sound), M8 (a dome colour bound), Q9 and Q13 (the heave's first
 column and its end bound).
 
+**Re-run 2026-09-26 on the kFlag-fixed harness ([`magic_harness.md`](magic_harness.md) §8): 17 controls in the affected functions, 17 refused** (`FxFunnel_Orbit`, `Quake_Heave`, `Quake_Start`: F5, F7, F8, F16, T2, Q2..Q7, Q9..Q14), each by a count in the function or functions its plant touches, as before. Thinnest: F16 25 rounds, Q9 47, Q13 69, F7 87. Selected: every control whose plant lies in one of the group's section-8 functions (with F5 in `Spin` and T2 in `Facing`, helpers those functions share, and Q5 in `Semi`, which Quake_Start calls); the rest of the table plants outside them and stands without a re-run. The plants are the original round's own (its scratch script's anchors and edits, each anchor checked unique). Each: plant, rebuild (the file checked recompiled), `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s23`, restore, rebuild; then the clean self-test, 0 mismatches, exit 0 (`BOF3X_SHADOW='*'`: exit 0). No fuzz change; no equivalent mutant among them.
+
 ## 5. Latent defects (Capcom's, kept; described, not numbered)
 
 - **Quake_Heave divides by zero for a facing of 4 or more.** The divisor
