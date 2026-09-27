@@ -33774,7 +33774,7 @@ ret = "void"
 params = "void"
 impl = "src/game/magic_s10.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-26, 0x4AD040..0x4AD12B (0xEC bytes), group S10: eight calls: +8, +0x34, +0x38, +0x3C the source sprite's (dword 0x904B4C, read once); +0xB 0; six rings BattleTask_Create(1, 0x34), each +0x80 Sprite_Current (read after the create) and +9 6 i + 1, counted in +0xB; words 1..15 of Gfx_ClutStrip row 26 from their source with bit 15, word 0 0, Gfx_ClutStripDirty 1; Sound_PlayById(0x100); Battle_SetTargetFlags(byte 0x904B44 read after the sound, 0x10); +9 and +0xA 1, +1 on. FxDiscFan_Start's shape, which does not copy +8. The slot index is not tested. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
+evidence = "disasm 2026-09-26, 0x4AD040..0x4AD12B (0xEC bytes), group S10: eight calls: +8, +0x34, +0x38, +0x3C the source sprite's (dword 0x904B4C, read once); +0xB 0; six rings BattleTask_Create(1, 0x34), each +0x80 Sprite_Current (read after the create) and +9 6 i + 1, counted in +0xB; words 1..15 of Gfx_ClutStrip row 26 from their source with bit 15, word 0 0, Gfx_ClutStripDirty 1; Sound_PlayById(0x100); Battle_SetTargetFlags(byte 0x904B44 read after the sound, 0x10); +9 and +0xA 1, +1 on. FxDiscFan_Start's shape (its rings are parameter 0x16, and it reads the target before the sound). The slot index is not tested. Fuzz only: no recorded route casts it (docs/magic_s10.md)."
 
 [[func]]
 pc = 0x4AD1C0

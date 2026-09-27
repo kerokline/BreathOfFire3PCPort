@@ -324,7 +324,8 @@ S10_EXPORT void __cdecl Lavaburst_Task(void) {
 
 // original 0x4ABFA0: the pool's +0..+2 cleared; the task at the side's
 // centre and on the screen; its direction the acting actor's sprite's,
-// turned round (xor 2) when the actor and the target are on the same side;
+// turned round (xor 2) when the target's side bit names the other side from
+// the actor (0x40 with a party actor, none with an enemy);
 // +0xB 0, +9 0x10, +1 on; eight children (kind 1, 0x5E), +4 / +9 from
 // Lavaburst_ChildDelays; CLUT row 26 and the first 16 words of row 2 back
 // with their STP bits, the first word of each without.

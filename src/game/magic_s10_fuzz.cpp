@@ -302,6 +302,19 @@ std::uint32_t NoteFieldState(const std::uint32_t*, std::uint32_t answer) {
     mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(kFieldState))));
     return answer;
 }
+// Rand, Math_Sin and Math_Cos: the callers keep their angles, radii and
+// vertices in the scratch words and Prim_VertexScratch and read them again
+// after each of these calls, so a third of the time one of those words is
+// moved here (the harness's own disturbance reaches them too rarely: group
+// S10's controls L34, L36, L81 stood before this).
+std::uint32_t StirScratch(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t r = mh::Noise();
+    if (r % 3 != 0) return answer;
+    const auto v = static_cast<std::uint16_t>(mh::Noise() >> 16);
+    if (r & 0x100) SetWord(mh::Mem(0x903850 + 2 * ((r >> 12) % 8)), v);
+    else SetWord(mh::Mem(0x9037A0 + 2 * ((r >> 12) % 16)), v);
+    return answer;
+}
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
 // pair written where the real one writes.
 std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
@@ -327,8 +340,9 @@ const mh::Callee kCallees[] = {
     {S10_OURS(Battle_ActorIsOut), 1, {kU8}, mh::Answer::kFlag, 0, 0},
     {S10_OURS(Battle_PlayActorCue), 1, {kU8}, kG, 0, 0, {}, &NoteFieldState},
     // the draw library (all ours)
-    {S10_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},
-    {S10_OURS(Math_Cos), 1, {kAll}, kG, 0, 0},
+    {S10_OURS(Math_Sin), 1, {kAll}, kG, 0, 0, {}, &StirScratch},
+    {S10_OURS(Math_Cos), 1, {kAll}, kG, 0, 0, {}, &StirScratch},
+    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, mh::Answer::kRand, 0, 0, {}, &StirScratch},
     {S10_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
     {S10_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {}, &LinkEffect},
     {S10_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0},
@@ -390,8 +404,8 @@ mh::Region g_regions[] = {
     {kPool, kPoolBytes},                  // Lavaburst_Pool
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
-    {0x80F980, 0x20},                     // Gfx_ClutStrip row 2, the first 16 words
-    {0x80B980, 0x20},                     // Gfx_ClutStripSource row 2, the same
+    {0x80F980, 0x200},                    // Gfx_ClutStrip row 2 (Lavaburst writes its first 16 words)
+    {0x80B980, 0x200},                    // Gfx_ClutStripSource row 2
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
