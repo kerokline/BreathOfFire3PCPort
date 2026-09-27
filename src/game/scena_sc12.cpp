@@ -56,7 +56,6 @@ void SetPass(unsigned char v) { B(at::kPassFlags) = v; }
 unsigned char Request() { return B(at::kRequest); }
 void SetRequest(unsigned char v) { B(at::kRequest) = v; }
 bool WaitClear() { return W(at::kWait) == 0; }
-void ScriptOr(std::uint16_t v) { W(at::kScriptFlags) = static_cast<std::uint16_t>(W(at::kScriptFlags) | v); }
 void ScriptXor(std::uint16_t v) { W(at::kScriptFlags) = static_cast<std::uint16_t>(W(at::kScriptFlags) ^ v); }
 void MusicCurrent(unsigned char v) { B(at::kMusicCurrent) = v; }
 
