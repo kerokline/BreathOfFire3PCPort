@@ -150,6 +150,7 @@
 #include "game/magic_s07.h"
 #include "game/magic_s13.h"
 #include "game/magic_s11.h"
+#include "game/magic_s09.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -452,6 +453,10 @@ void InjectAll() {
                                 // stack-table immediates and three .data table runs re-aimed at the shared
                                 // harness's recorders; no module patches bytes inside its 35 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    MagicS09_Inject();          // round 9 group S09 (MAGIC045, 046/047, 048, 050: Bone Dart, Firebreath / Icebreath,
+                                // Dream Breath, Pollen / Venom Breath): its clones' calls, stack-table immediates and
+                                // eight .data tables re-aimed at the shared harness's recorders; no module patches
+                                // bytes inside its 47 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 

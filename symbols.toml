@@ -34150,3 +34150,516 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-26, group S11: TornadoMote_Task's call [0x65AA98 + 4 x byte +2]: TornadoMote_Place, TornadoMote_Rise, TornadoFx_Hold, TornadoMote_Fade."
+
+# --- round 9 group S09 (docs/magic_s09.md): MAGIC045, 046/047, 048, 050 (Bone Dart, Firebreath / Icebreath, Dream Breath, Pollen / Venom Breath read one id down) ---
+
+[[func]]
+pc = 0x4A9830
+name = "BoneDart_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9830..0x4A9855 (0x26 bytes), group S09: the kind-2 task: a two-entry stack table (BoneDart_Start, MAGIC131's MagicFx_EndWhenChildrenDone) by byte +1, unchecked. The first function of the extent. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9860
+name = "BoneDart_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9860..0x4A9990 (0x131 bytes), group S09: four calls: target 0x904B44 and actor 0x904B34 both below 3 or both above 2: Battle_SetTargetFlag40(target), 0x904AA8 bit 2, BattleTask_FreeCurrent. Else +8 and the position +0x34 / +0x38 / +0x3C the owner's; BattleTask_Create(1, 0x31) twice: the first +0x80 Sprite_Current, +1 0; the second +0x80 Sprite_Current, +1 1, +0xB the first's slot (neither answer tested for 0xFF); Gfx_ClutStripDirty 1, Gfx_ClutStrip 0x1A00..0x1A0F from Gfx_ClutStripSource with bit 15, then word 0x1A00 plain; +0xB 2, +1 on. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A99A0
+name = "BoneDartChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A99A0..0x4A99B1 (0x12 bytes), group S09: jmp [0x65A948 + 4 x byte +1] (BoneDartChild_Kinds, two entries: BoneDartShaft_Run, BoneDartShadow_Run), unchecked. Kind-1 task parameter 0x31. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A99C0
+name = "BoneDartShaft_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A99C0..0x4A99FC (0x3D bytes), group S09: dword 0x9039D8 0x8E3580; call [0x65A950 + 4 x byte +2] (BoneDartShaft_Steps, four entries, the last MAGIC058's 0x4AF490), unchecked; Sprite_UpdateScreen while +0 and +2 are set; 0x9039D8 0x8B3580. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9A00
+name = "BoneDartShaft_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9A00..0x4A9B29 (0x12A bytes), group S09: two calls: +8 the owner's; (+0xC, +0x10) (0x10000, 0) turned by the engine's 0x446770; +0x34 / +0x38 the owner's plus them, word +0x3E the owner's + 0x100; the sprite fields +0x24 4, +0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28 0, +0x29 4, +0x2A 0, +0x2B 1, word +0x2C 0, +0x40 / +0x44 0x10000, +0x48 1, +0x5C..+0x5F 0; Sprite_SetAnimation(0); +9 0, +2 on. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9B30
+name = "BoneDartShaft_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9B30..0x4A9C5B (0x12C bytes), group S09: six calls: Sprite_ScriptTick; MagicFx_StepTowardPoint to the source sprite 0x904B4C ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, (s16 +0x3E + 0xC0) sar 1, an unset stack word, 0x30); MagicFx_NearSprite(source, 0x8000), eax tested whole; at it: 0x904AA8 bit 0x2000, Battle_SetTargetFlag40(target), Sound_PlayById(0x203), +0 bit 5, +0x5C 1, +0x5D..+0x5F 0, +0xC Math_Ratan2(float (owner +0x34 - +0x34), float (owner +0x38 - +0x38)), +0x14 0x40, +0x20 -8, +9 0x10, +2 on. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9C60
+name = "BoneDartShaft_Bounce"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9C60..0x4A9D0F (0xB0 bytes), group S09: three calls: Sprite_ScriptTick on odd frames; +0x5D..+0x5F down by 6; +0x34 / +0x38 (addresses taken before each call) up by (Math_Sin / Math_Cos of +0xC shl 13) sar 12; +0x14 up by +0x20, word +0x3E up by word +0x14; +9 down, at 0 +2 on. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9D10
+name = "BoneDartShadow_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9D10..0x4A9D4C (0x3D bytes), group S09: as BoneDartShaft_Run through 0x65A960 (BoneDartShadow_Steps, four entries, the last MAGIC058's 0x4AF490). Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9D50
+name = "BoneDartShadow_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9D50..0x4A9E48 (0xF9 bytes), group S09: one call: +0x34 / +0x38 / word +0x3E the owner's; +0x24 4, +0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28 0, +0x29 4, +0x2A 0, +0x2B 0, word +0x2C 0, +0x40 / +0x44 0x10000, +0x48 1, +0 bit 5, +0x5C 2, +0x5D..+0x5F 0xC0; Sprite_SetAnimation(0); +9 0, +2 on. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9E50
+name = "BoneDartShadow_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9E50..0x4A9EF6 (0xA7 bytes), group S09: two calls: Sprite_ScriptTick; +0x34 / +0x38 the task slot's by byte +0xB (the dart; the index unchecked, 155 and above past the image); word +0x3E AreaMap_Elevation(+0x34, +0x38); the slot's +0x3C dword copied when its word +0x3E is below ours (signed); at the slot's +2 of 2, +2 on. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9F00
+name = "BoneDartShadow_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9F00..0x4A9FD8 (0xD9 bytes), group S09: two calls: Sprite_ScriptTick on odd frames; +0x5D..+0x5F down by 3; then as BoneDartShadow_Follow, on at the slot's +2 of 3. Magic_Rows row 61, file 0x244 = MAGIC045.EMI, ability id 0x2D (Bone Dart read one id down, a hypothesis); extent 0x4A9830..0x4A9FD8. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4A9FE0
+name = "ElemBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4A9FE0..0x4AA054 (0x75 bytes), group S09: the kind-2 task: a two-entry stack table (ElemBreath_Start, BattleFx_Finish) by byte +1, unchecked; then the 48 records of ElemBreath_Motes walked: each with bit 0 made Sprite_Current (its +0x80 the owner) for ElemBreathMote_Run, both put back from the values read after the phase call. The first function of the extent. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA060
+name = "ElemBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA060..0x4AA198 (0x139 bytes), group S09: three calls: ElemBreath_Motes +0..+2 of all 48 cleared; +8 and +0x34 / +0x38 / +0x3C the owner's; BattleTask_Create(1, 0x32): +0x80 Sprite_Current, +1 0; in an event battle (0x904AAA) whose current enemy (dword 0x939AD8) has +0x100 0x29 a second: +1 1; Gfx_ClutStrip 0x1A00..0x1A0F from its source with bit 15, word 0x1A00 plain, Gfx_ClutStripDirty 1; Sound_PlayById(0x100); +0xB 1, +1 on. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA1A0
+name = "ElemBreathChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA1A0..0x4AA1B1 (0x12 bytes), group S09: jmp [0x65A970 + 4 x byte +1] (ElemBreathChild_Kinds, two entries: ElemBreathEmitter_Task, ElemBreathEnemy_Task), unchecked. Kind-1 task parameter 0x32. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA1C0
+name = "ElemBreathEmitter_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA1C0..0x4AA1ED (0x2E bytes), group S09: a three-entry stack table (ElemBreathEmitter_Start, _Emit, MAGIC104's MagicFx_EndWithChildren) by byte +2, unchecked. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA1F0
+name = "ElemBreathEmitter_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA1F0..0x4AA250 (0x61 bytes), group S09: +8 and +0x34 / +0x38 / +0x3C the owner's; +0xB 0, +9 0, +2 on. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA260
+name = "ElemBreathEmitter_Emit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA260..0x4AA2EC (0x8D bytes), group S09: one call: on odd frames a mote from ElemBreathMote_Alloc (its 0xFF unchecked: record 255, 0x6861BC): +0x80 Sprite_Current, +0xB our +9, +0xA 8 below +9 0x64 else 8 - (+9 - 0x64) / 4; our +0xB up; every frame +9 up, above 0x80 +2 on. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA2F0
+name = "ElemBreathEnemy_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA2F0..0x4AA31D (0x2E bytes), group S09: a three-entry stack table (ElemBreathEnemy_Start, the engine's 0x43EC10, BattleFx_FreeTask) by byte +2, unchecked. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA320
+name = "ElemBreathEnemy_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA320..0x4AA355 (0x36 bytes), group S09: one call: Sprite_Current made the owner (not put back); its +0xB 0, +9 0; Sprite_SetAnimation(2); its +1 1 and +2 1. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA360
+name = "ElemBreathMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA360..0x4AA3A7 (0x48 bytes), group S09: a three-entry stack table (ElemBreathMote_Start, _Flow, _Fade) by byte +2, unchecked; while +0 is set ElemBreathMote_PushMatrix, _DrawFlare and Gte_PopMatrix. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA3B0
+name = "ElemBreathMote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA3B0..0x4AA505 (0x156 bytes), group S09: three calls: MagicFx_CenterOnSide; an angle Math_Ratan2(float (+0x34 - owner +0x34), float (+0x38 - owner +0x38)); +8 the owner's; by the acting enemy's byte +0x8C (0x93B9EC + (0x904B34 - 3) x 0x128, unchecked) the offset (+0xC, +0x10, +0x14): 0x10 (0x10000, 0, 0x800000), 0x72 (0x1C000, 0, 0x1000000), else (0x6000, 0, 0x400000); 0x446770 turns it; the position the owner's plus it; +0x14 the angle and 0xFFF, +9 0, +2 on. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA510
+name = "ElemBreathMote_Flow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA510..0x4AA5C7 (0xB8 bytes), group S09: five calls: word 0x903852 ((+0xB + +9) and 0x3F) shl 6; +0xC (Math_Sin of it x 300) sar 12 + +0x14; +0x34 / +0x38 (addresses taken before each call) up by the low 20 bits of 7 x Math_Sin / Math_Cos of +0xC; BattleActor_UpdateScreenXY; ElemBreathMote_Draw; +9 up, at 0x10 +2 on. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA5D0
+name = "ElemBreathMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA5D0..0x4AA6C9 (0xFA bytes), group S09: as ElemBreathMote_Flow to the draw; then +9 up, +0xA down; at 0 the owner's +0xB down and +0..+4 0 (the record free). Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA6D0
+name = "ElemBreathMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA6D0..0x4AA97D (0x2AE bytes), group S09: fifteen calls: a draw-mode packet (tpage 0x35) linked at the task (MapView_LinkPrimAt, layer 2); a semi-transparent POLY_GT4 at Gfx_PacketNext: radius word 0x903850 (+9 below 8: (+9 + 1) x 6, else +9 x 2 + 0x20), centre words 0x903854 / 0x903856 the screen point +0x2E / +0x30, shade word 0x903858 +0xA x 20, the four corners at angles 0xC00, 0x800, 0, 0x400 (sin x, cos y, the scratch read again after each call) as floats; Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), uv 1 / 0x1F; linked, size 0x54. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AA980
+name = "ElemBreathMote_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AA980..0x4AAA23 (0xA4 bytes), group S09: six calls: Gte_PushMatrix; RotTrans of ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(owner s16 +0x3E / 2)), RotMatrix of (0, 0, 0), MulMatrix0 by Camera_Matrix, SetRotMatrix, SetTransMatrix of one MATRIX on the stack. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAA30
+name = "ElemBreathMote_DrawFlare"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAA30..0x4AABDB (0x1AC bytes), group S09: thirteen calls: a draw-mode packet (tpage 0x55) committed to layer 5; radius word 0x903850 (+9 + 6) x 10, shade word 0x903858 +0xA x 6; eight semi-transparent POLY_G3 fans from the origin in Prim_VertexScratch (angles 0x200 apart, each edge sin / cos x radius, the scratch read again after every call) through Gte_RotTransPers3 and Gte_PrimDepths3_10B, committed to layer 5 (size 0x34); a closing draw-mode packet (tpage 0x15). Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AABE0
+name = "ElemBreathMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AABE0..0x4AAC36 (0x57 bytes), group S09: the first of ElemBreath_Motes' 48 records with bit 0 clear gets it, its index in al (the rest of eax the caller's); 0xFF when all are taken. Magic_Rows rows 62 and 63, files 0x245 / 0x246 = MAGIC046 / MAGIC047.EMI (one copy of code), ability ids 0x2E / 0x2F (Firebreath / Icebreath read one id down, a hypothesis); extent 0x4A9FE0..0x4AAC36. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAC40
+name = "DreamBreath_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAC40..0x4AAC6D (0x2E bytes), group S09: the kind-2 task: a three-entry stack table (DreamBreath_Start, MAGIC222's 0x4F7320, BattleFx_Finish) by byte +1, unchecked. The first function of the extent. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAC70
+name = "DreamBreath_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAC70..0x4AAD40 (0xD1 bytes), group S09: twelve calls: +0xB 0; +8 and +0x34 / +0x38 / +0x3C the owner's; +9 0xA, +1 on; twelve motes BattleTask_Create(1, 0x1E) (answers unchecked): +0x80 Sprite_Current, +1 0, +0xB the mote's index i, +9 ((i xor 0xF) + 0x1D) shl 3 in a byte, +8 ours; our +0xB up each. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAD50
+name = "DreamBreathMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAD50..0x4AAD61 (0x12 bytes), group S09: jmp [0x65A978 + 4 x byte +1] (DreamBreathMote_TaskTable, one entry: DreamBreathMote_Run), unchecked. Kind-1 task parameter 0x1E. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAD70
+name = "DreamBreathMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAD70..0x4AADA2 (0x33 bytes), group S09: call [0x65A97C + 4 x byte +2] (DreamBreathMote_Steps, three entries), unchecked; while +2 and +0 are set DreamBreathMote_PushMatrix, _Draw and a tail jmp to Gte_PopMatrix. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AADB0
+name = "DreamBreathMote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AADB0..0x4AAEAB (0xFC bytes), group S09: three calls: +9 down; at 0 DreamBreath_TargetHeight; (0x10000, 0) turned by 0x446770 onto the owner's position; the destination +0xC / +0x10 (0x80000, 0) turned plus Field_Kind2X / Field_Kind2Z, +0x14 our s16 +0x3E + 0x100; word +0x3E the owner's + 0x100; +9 0, +0xA 0, +2 on. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAEB0
+name = "DreamBreathMote_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAEB0..0x4AAF42 (0x93 bytes), group S09: two calls: +9 up; MagicFx_StepTowardPoint((+0xC sar 9) - 0x4000, (+0x10 sar 9) - 0x4000, +0x14 sar 1, an unset stack word, 0x10); +0xA up to 0x10; MagicFx_NearPoint3D(+0xC, +0x10, +0x3C, 0x60000), eax tested whole: +2 on. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAF50
+name = "DreamBreathMote_Land"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAF50..0x4AAFCC (0x7D bytes), group S09: two calls: MagicFx_StepTowardPoint as DreamBreathMote_Fly; +9 up, +0xA down; at 0 the owner's +0xB down and BattleTask_FreeCurrent. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AAFD0
+name = "DreamBreathMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AAFD0..0x4AB24B (0x27C bytes), group S09: a draw-mode packet (tpage 0x35) linked at the task; radii words 0x903852 +9 x 4 and 0x903854 +9 x 6 (past +9 8 plus Rand and 0xF), shades 0x903856 +0xA x 8 and 0x903858 +0xA x 4; 32 semi-transparent POLY_G4 of a band between the two radii in the y-z plane (angles 0x80 apart, Prim_VertexScratch, the scratch read again after every call) through Gte_RotTransPers4 and Gte_PrimDepths4_10B, each linked at the task (size 0x44). Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB250
+name = "DreamBreathMote_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB250..0x4AB323 (0xD4 bytes), group S09: seven calls: Gte_PushMatrix; the angle Math_Ratan2(float (+0x10 - +0x38), float (+0xC - +0x34)) and 0xFFF; RotTrans of ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, -(s16 +0x3E / 2)), RotMatrix of (0, 0, angle), MulMatrix0 by Camera_Matrix, SetRotMatrix, SetTransMatrix of one MATRIX on the stack. Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB330
+name = "DreamBreath_TargetHeight"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB330..0x4AB3EB (0xBC bytes), group S09: up to eight calls: dwords 0x903850 / 0x903854 0; with target bit 0x40 the eight enemies (Battle_ActorIsOut(3..10), al tested), else the three party members: each one in adds its s16 +0x3E to 0x903850 and 1 to 0x903854 (both read again after every call); word +0x3E the quotient (idiv: no one in faults). Magic_Rows row 41, file 0x247 = MAGIC048.EMI, ability id 0x30 (Dream Breath read one id down, a hypothesis); extent 0x4AAC40..0x4AB3EB. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB3F0
+name = "Pollen_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB3F0..0x4AB41D (0x2E bytes), group S09: the kind-2 task: a three-entry stack table (Pollen_Start, Pollen_Sounds, BattleFx_Finish) by byte +1, unchecked. The first function of the extent. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB420
+name = "Pollen_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB420..0x4AB517 (0xF8 bytes), group S09: twelve calls: +0xB 0; MagicFx_CenterOnSide; +8 and +0x34 / +0x38 the owner's; +9 0, +0xB 0, +1 on; ten motes BattleTask_Create(1, 4) (answers unchecked): +0x80 Sprite_Current, +1 0, +0xB the index i, +9 byte [Pollen_Delays + i] + 1, +8 and +0x34 / +0x38 / +0x3C ours; our +0xB up each; Sound_PlayById(0x100). Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB520
+name = "Pollen_Sounds"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB520..0x4AB563 (0x44 bytes), group S09: Sound_PlayById(0x101) at +9 8 and 0x18, (0x102) at 0x10; +9 up, at 0x19 +1 on. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB570
+name = "PollenMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB570..0x4AB581 (0x12 bytes), group S09: jmp [0x65A994 + 4 x byte +1] (PollenMote_TaskTable, one entry: PollenMote_Run), unchecked. Kind-1 task parameter 4. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB590
+name = "PollenMote_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB590..0x4AB5C7 (0x38 bytes), group S09: call [0x65A9E8 + 4 x byte +2] (PollenMote_Steps, three entries, the second group C2's HolocaustBeam_Grow), unchecked; while +2 and +0 are set BattleActor_UpdateScreenXY, PollenMote_DrawFan, _DrawRing and a tail jmp to _DrawSparks. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB5D0
+name = "PollenMote_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB5D0..0x4AB67C (0xAD bytes), group S09: two calls: +9 down; at 0 (+0xC, +0x10) the pair of PollenMote_Offsets by +0xB (unchecked, read in place) turned by 0x446770, the position that plus Field_Kind2X / Field_Kind2Z; the first mote (+0xB 0) Battle_SetTargetFlags(target, 0x10); +9 0x20, +0xA 2, +2 on. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB680
+name = "PollenMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB680..0x4AB6B3 (0x34 bytes), group S09: +0xA up, +9 down; at 0 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB6C0
+name = "PollenMote_DrawFan"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB6C0..0x4AB8D2 (0x213 bytes), group S09: per sixteenth of a turn: a draw-mode packet (tpage 0x35) linked at the task; a semi-transparent POLY_G3 in screen space from the point +0x2E / +0x30 to two points at radius dword 0x903850 (+0xA) by Math_Sin / Math_Cos, as floats; shades dword 0x903858 (+9 x 3 for ability word 0x904B80 0x32, else x 5) and 0x90385C (+9) in an order the ability word picks; linked, size 0x34. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4AB8E0
+name = "PollenMote_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AB8E0..0x4ABB6A (0x28B bytes), group S09: per sixteenth of a turn: a draw-mode packet (tpage 0x35); a semi-transparent POLY_G4 between radii dword 0x903850 (+0xA) and 0x903854 (+0xA + +0xA shr 1) round the point +0x2E / +0x30, as floats; shades 0x903858 (+9 x 4 for ability word 0x32, else x 6) and 0x90385C (+9), the outer edge's order by the ability word, the inner 1; linked, size 0x44. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[func]]
+pc = 0x4ABB70
+name = "PollenMote_DrawSparks"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s09.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4ABB70..0x4ABC95 (0x126 bytes), group S09: per sixteenth of a turn: a draw-mode packet (tpage 0x35); a semi-transparent TILE_1 at radius dword 0x903850 (+0xA x 3) round the point +0x2E / +0x30, as floats; colour 0x903858 (+9 x 6) and 0x90385C (+9) in an order the ability word 0x904B80 picks; linked, size 0x14. Magic_Rows row 31, file 0x249 = MAGIC050.EMI, ability ids 0x32 / 0x33 (Pollen / Venom Breath read one id down, a hypothesis); extent 0x4AB3F0..0x4ABC95. Fuzz only: no recorded route casts it (docs/magic_s09.md)."
+
+[[data]]
+pc = 0x65A948
+name = "BoneDartChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S09: BoneDartChild_Task's jmp by +1: BoneDartShaft_Run, BoneDartShadow_Run; BoneDartShaft_Steps follows."
+
+[[data]]
+pc = 0x65A950
+name = "BoneDartShaft_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S09: BoneDartShaft_Run's call by +2: BoneDartShaft_Start, _Fly, _Bounce, MAGIC058's 0x4AF490; BoneDartShadow_Steps follows."
+
+[[data]]
+pc = 0x65A960
+name = "BoneDartShadow_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S09: BoneDartShadow_Run's call by +2: BoneDartShadow_Start, _Follow, _Fade, MAGIC058's 0x4AF490; ElemBreathChild_Kinds follows."
+
+[[data]]
+pc = 0x65A970
+name = "ElemBreathChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S09: ElemBreathChild_Task's jmp by +1: ElemBreathEmitter_Task, ElemBreathEnemy_Task; MAGIC048's table follows."
+
+[[data]]
+pc = 0x65A978
+name = "DreamBreathMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S09: DreamBreathMote_Task's jmp by +1: DreamBreathMote_Run; DreamBreathMote_Steps follows."
+
+[[data]]
+pc = 0x65A97C
+name = "DreamBreathMote_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S09: DreamBreathMote_Run's call by +2: DreamBreathMote_Start, _Fly, _Land; MAGIC050's Pollen_Delays follows."
+
+[[data]]
+pc = 0x65A988
+name = "Pollen_Delays"
+ctype = "unsigned char"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-26, group S09: Pollen_Start: mote i's +9 is byte [0x65A988 + i] + 1, i 0..9; two padding bytes, then PollenMote_TaskTable."
+
+[[data]]
+pc = 0x65A994
+name = "PollenMote_TaskTable"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S09: PollenMote_Task's jmp by +1: PollenMote_Run; PollenMote_Offsets follows."
+
+[[data]]
+pc = 0x65A998
+name = "PollenMote_Offsets"
+ctype = "long"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-26, group S09: PollenMote_Start: (dx, dz) dword pairs by +0xB, ten motes, read in place (the index unchecked); PollenMote_Steps follows."
+
+[[data]]
+pc = 0x65A9E8
+name = "PollenMote_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S09: PollenMote_Run's call by +2: PollenMote_Start, group C2's HolocaustBeam_Grow, PollenMote_Fade; MAGIC051's data follows at 0x65A9F4."
+
+[[data]]
+pc = 0x67DE40
+name = "ElemBreath_Motes"
+ctype = "unsigned char"
+count = 6336
+status = "evidence"
+evidence = "read 2026-09-26, group S09: 48 task-shaped records of 0x84 bytes (+0 bit 0 in use, +0x80 the owner): ElemBreath_Start clears +0..+2, ElemBreathMote_Alloc takes one, ElemBreath_Task runs each live one as Sprite_Current. Follows EvilEyeBeam_Trails (0x67DD40, 0x100 bytes)."
