@@ -1,6 +1,6 @@
 # The scenario round: the banks wave by wave, on the spell round's pattern
 
-**Status:** PROPOSED (2026-09-26) - a plan, not a queue. Listed as
+**Status:** IN PROGRESS (2026-09-27) - wave one cut and merged on this plan ([`takeover-queue-round10.md`](takeover-queue-round10.md) sections 1, 3, 4): the harness ([`scenario_harness.md`](scenario_harness.md)), the tool `tools/scenario_rows.py`, chapters 0, 1, 3, 4, 11, 12's first block and the shared helpers; the call tables' block `0x519890..0x51AC50` (99 starts) is a group the plan lacked. The text below is the plan as written; counts by band replace section 3's closure counts.
 [`IDEAS.md`](IDEAS.md) I24; nothing here is scheduled or cut. The
 functions and groups come from [`scenario-roots.md`](scenario-roots.md)
 (`tools/scenario_roots.py`); the method is the spell round's
