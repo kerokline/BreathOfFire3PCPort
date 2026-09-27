@@ -124,6 +124,9 @@ def read_roots(img):
     return roots
 
 
+CALLS_RANGE = [0, 0]        # set by main: the call tables' engine-side block
+
+
 def band_of(x):
     for name, ranges, _ in BANDS:
         for lo, hi in ranges:
@@ -131,7 +134,48 @@ def band_of(x):
                 return name
     if x in SE_ADDRS:
         return 'SE'
+    if CALLS_RANGE[0] <= x < CALLS_RANGE[1]:
+        return 'CALLS'
     return None
+
+
+def drop_byte_tables(img, funcs):
+    """MSVC's two-level switch keeps its byte table in .text after the jump
+    table: movzx r, byte [r + T2] / jmp [r*4 + T]. magic_rows.py's descent
+    counts it only when a cmp bounds it, so the code-after-a-table rule can
+    take T2 for a function (SC1: 0x53B120, 0x53D390). Every start that lies
+    in a byte table a function loads from is dropped, and that function's
+    extent runs over the table (to its cmp's bound, else to the next start).
+    Returns the dropped starts."""
+    tables = []     # (T2, owner, bound or None)
+    for s in sorted(funcs):
+        end = funcs[s]['end']
+        o = img.off(s)
+        if o is None:
+            continue
+        prev = []
+        for ins in magic_rows.MD.disasm(img.data[o:o + (end - s)], s):
+            ops = ins.operands
+            if ins.mnemonic in ('mov', 'movzx') and len(ops) == 2 and ops[1].type == magic_rows.x86.X86_OP_MEM \
+                    and ops[1].size == 1 and (ops[1].mem.index != 0 or ops[1].mem.base != 0):
+                t2 = ops[1].mem.disp & 0xFFFFFFFF
+                if img.in_text(t2):
+                    b = magic_rows._cmp_bound(prev)
+                    tables.append((t2, s, b + 1 if b is not None and b < 0x400 else None))
+            prev = (prev + [ins])[-6:]
+    dropped = []
+    starts = sorted(funcs)
+    for t2, owner, n in tables:
+        nxt = [x for x in starts if x > owner and x not in dropped]
+        for f in nxt:
+            if t2 <= f < (t2 + n if n else t2 + 0x100) and funcs[f].get('found'):
+                dropped.append(f)
+        bound = t2 + n if n else next((x for x in nxt if x >= t2 and x not in dropped), t2)
+        if owner in funcs:
+            funcs[owner]['end'] = max(funcs[owner]['end'], bound)
+    for f in dropped:
+        funcs.pop(f, None)
+    return sorted(set(dropped))
 
 
 def main():
@@ -145,6 +189,8 @@ def main():
     ap.add_argument('--unit', help='print one band (SE, SC0, SC1, SC2a, ... SC17) function by function')
     ap.add_argument('--clones', action='store_true',
                     help="with --unit: print the band's functions not yet ours as scenario_harness clone tables (C++)")
+    ap.add_argument('--with-ours', action='store_true',
+                    help='with --clones: print the functions already ours too (a taken group re-checking its table)')
     ap.add_argument('--quiet', action='store_true', help='write the TSV, print only the totals')
     a = ap.parse_args()
 
@@ -167,7 +213,7 @@ def main():
                 root_of[s].append((c, SLOT_USE[k], SLOT_SHAPE[k]))
         for kind in ('A', 'B'):
             for i, s in enumerate(r[kind][1]):
-                root_of[s].append((c, 'call table %s entry %d' % (kind, i), 'kCallEntry'))
+                root_of[s].append((c, 'call table %s entry %d' % (kind, i), 'kEntry'))
     root_starts = set(root_of)
 
     twins = {}
@@ -182,10 +228,20 @@ def main():
     listed = recorded | hidden | added | root_starts
     bank = sorted(s for s in listed if BANK_LO <= s < BANK_HI)
     funcs = magic_rows.discover(img, bank)
+    # the call tables' block: the engine-side code call tables A and B point
+    # at (0x519890..), outside every chapter's band - a unit of its own, CALLS
+    entries = sorted({e for r in roots.values() for kind in ('A', 'B') for e in r[kind][1]})
+    calls_lo = min(e for e in entries if e >= 0x519000)
+    later = sorted(s for s in listed if s > max(entries))
+    calls_hi = later[0] if later else max(entries) + 0x100
+    CALLS_RANGE[:] = [calls_lo, calls_hi]
+    magic_rows.BAND_LO, magic_rows.BAND_HI = calls_lo, calls_hi
+    funcs.update(magic_rows.discover(img, sorted(s for s in listed if calls_lo <= s < calls_hi)))
     # the SE helpers and chapter 15's 0x537580, each alone
     all_known = set(listed)
     for x in SE_ADDRS + [CH15_OUTSIDE]:
         funcs[x] = magic_rows.descend(img, x, all_known)
+    dropped_bytes = drop_byte_tables(img, funcs)
     magic_rows.read_tables(img, funcs, sym)
     starts = sorted(funcs)
     dropped = sorted(set(bank) - set(funcs))
@@ -199,7 +255,8 @@ def main():
                 + ('T' if x in root_starts else '') + ('S' if funcs[x].get('found') else ''))
 
     bands = collections.OrderedDict()
-    for name, ranges, chapters in BANDS[:1] + [('SE', [], 'shared helpers')] + BANDS[1:]:
+    for name, ranges, chapters in BANDS[:1] + [('SE', [], 'shared helpers')] + BANDS[1:] + [
+            ('CALLS', [tuple(CALLS_RANGE)], 'the call tables engine-side block')]:
         fs = [s for s in starts if band_of(s) == name]
         bands[name] = dict(ranges=ranges, chapters=chapters, funcs=fs)
 
@@ -218,7 +275,7 @@ def main():
         if u is None:
             sys.exit('no band %s (the bands: %s)' % (a.unit, ', '.join(bands)))
         if a.clones:
-            print_clones(img, [x for x in u['funcs'] if x not in ours], funcs, named, root_of)
+            print_clones(img, [x for x in u['funcs'] if a.with_ours or x not in ours], funcs, named, root_of)
             return
         rng = ', '.join('%#x..%#x' % r for r in u['ranges']) or ' '.join('%#x' % x for x in SE_ADDRS)
         print('%s  chapters %s  %s  %d functions, %#x bytes, %d ours, %d not walked' % (
@@ -236,6 +293,9 @@ def main():
           % (BANK_LO, BANK_HI, len(bank), len(dropped), ' '.join('%#x' % x for x in dropped), len(found),
              ' '.join('%#x' % x for x in found)))
     print('extents overlapping the next start: %d %s' % (len(overlaps), ' '.join('%#x>%#x' % o for o in overlaps)))
+    print('byte tables of two-level switches taken for code and dropped: %s' % (
+        ' '.join('%#x' % x for x in dropped_bytes) or 'none'))
+    print('the call tables block CALLS %#x..%#x (engine-side, outside every chapter band)' % tuple(CALLS_RANGE))
     print('roots in no start list: %s' % (' '.join('%#x' % x for x in sorted(root_starts - recorded - hidden - added)
                                                    if BANK_LO <= x < BANK_HI) or 'none'))
     if not a.quiet:
