@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-27). All 44 functions are ours
 (`src/game/magic_s12.cpp`, shadow name `magic_s12`), fuzzed headless through
 the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
-it: 0 mismatches over 88,000 rounds. CONTROLS_SUMMARY Nothing recorded casts
+it: 0 mismatches over 88,000 rounds. 346 of 348 negative controls refused by a count (exit 3); 2 equivalent, recorded with their reasons and a refused near variant each. Nothing recorded casts
 these spells, so this is fuzz only until the owner sees them cast.
 
 Round nine, fourth spell wave, group S12
@@ -217,11 +217,17 @@ rounds each, with no harness edits; what the harness lacks is built in
   high byte the category half the time; `Identify_DrawElements` its caller's
   (0x66, 0x54) half the time; `CeleritySpark_DrawDisc` its callers' radii.
 - **Disturb** (the group's case): `Gfx_PacketNext`, a scratch byte, a vertex
-  word, a tint byte, `Input_Pressed`, a dword of the seen bits.
+  word, a tint byte, `Input_Pressed`, a dword of the seen bits, and the
+  target enemy's byte +0x8F (0 half the time). The last was added after the
+  first controls run: control E26 (`Identify_DrawEnemy` reading +0x8F before
+  a `Text_CharCount` call instead of after it) stood, because the harness's
+  own disturbance writes one random byte of the target's record and almost
+  never makes that one change between 0 and not 0. With it E26 is refused,
+  and every control was run again on the changed fuzz (the table below).
 
 Result in this worktree (2026-09-27):
 
-    shadow      magic_s12 self-test: 88000 rounds over 44 functions (2000 each), 1062954 calls to the stand-ins,
+    shadow      magic_s12 self-test: 88000 rounds over 44 functions (2000 each), 1062956 calls to the stand-ins,
                 0 MISMATCHES; 22906 bytes of state (19 regions) and the stand-ins' log compared
 
 Every callee listed and every handler the tables and immediates name was
@@ -231,7 +237,372 @@ run: the harness's pointers into the DLL move a few branches, 0 mismatches).
 
 ## 6. Controls
 
-CONTROLS_TEXT
+348 plants, each put in `magic_s12.cpp` one at a time by a script (not committed: `controls.py` and `run_controls.py` in `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/9e63839e-3d62-41b0-af67-04c4e6eecc8c/scratchpad/s12/`, S31's pattern; plants of several edits are lists) that planted, rebuilt, checked the build had recompiled the file, ran `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s12`, and restored; after the last it restored, rebuilt and ran the clean self-test (0 mismatches). **346 of 348 refused**, each by exit 3 with its mismatch counts in the table (two runs: the first, before the +0x8F disturbance, left E26 standing; this table is the second, on the committed fuzz). The I-, R-, M-, W-, D-, E-, T-, L- controls are Identify's task, roll, seen bits and panel; C-, F-, K-, V-, X-, Q-, N-, B- its children; G-, S-, A-, Z-, P- Celerity's task and stats; H-, RD-, BD-, SR-, SF-, SY-, SP-, O-, DR-, DD- its ring and sparks.
+
+The thinnest (fewest rounds to the first difference):
+
+- **T8** (DrawItem: the category's low word): 1
+- **R9** (Roll: below -4): 4
+- **E26** (DrawEnemy: +0x8F read before text 1 is counted): 4
+- **I21** (ShowUntilInput: the input's low byte only): 5
+- **R11** (Roll: below -16): 5
+- **R5** (Roll: 15 inclusive): 6
+
+Not refused:
+
+- **D16** (DrawCentredCounted: the count's low word): equivalent: Text_CharCount is declared returning unsigned char, so the `& 0xFF` the plant drops was already a no-op in the source; its near variant D16b (`& 0x0F`) is refused
+- **S20** (Start: the source read again for x): equivalent: no call lies between the entry's read of the source pointer and this one, so reading it again cannot differ; its near variant S20b (read after the ring's create) is refused
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| I1 | Identify_Task: entries 0/1 swapped | Identify_Task 801 |
+| I2 | Identify_Task: entries 2/3 swapped | Identify_Task 775 |
+| I3 | CallPhase: the phase from +2 (both tasks) | Identify_Task 1591, Celerity_Task 1682 |
+| I4 | Start: first child parameter 0x13 | Identify_Start 2000 |
+| I5 | Start: first child +1 1 | Identify_Start 1961 |
+| I6 | Start: second child +1 2 | Identify_Start 2000 |
+| I7 | Start: no roll | Identify_Start 2000 |
+| I8 | Start: +0xB 1 | Identify_Start 2000 |
+| I9 | Start: second child owned by itself | Identify_Start 1951 |
+| I10 | WaitOpen: at 3 | Identify_WaitOpen 1482 |
+| I11 | WaitOpen: child +1 3 | Identify_WaitOpen 998 |
+| I12 | WaitOpen: +9 0x11 | Identify_WaitOpen 998 |
+| I13 | WaitOpen: +9 on the child | Identify_WaitOpen 975 |
+| I14 | WaitOpen: parameter 0x13 | Identify_WaitOpen 998 |
+| I15 | DrawPanel: member below 4 | Identify_ShowTimed 126, Identify_ShowUntilInput 140 |
+| I16 | DrawPanel: member / enemy swapped | Identify_ShowTimed 2000, Identify_ShowUntilInput 2000 |
+| I17 | ShowTimed: +9 not down | Identify_ShowTimed 2000 |
+| I18 | ShowTimed: on at 1 | Identify_ShowTimed 980 |
+| I19 | ShowUntilInput: the test inverted | Identify_ShowUntilInput 2000 |
+| I20 | ShowUntilInput: +0xB 0x84 | Identify_ShowUntilInput 1014 |
+| I21 | ShowUntilInput: the input's low byte only | Identify_ShowUntilInput 5 |
+| I22 | End: at 0x81 | Identify_End 1493 |
+| I23 | End: done bit 3 | Identify_End 700 |
+| I24 | ShowUntilInput: the panel after the test | Identify_ShowUntilInput 987 |
+| R1 | Roll: enemy word +0x9A | Identify_Roll 112 |
+| R2 | Roll: actor byte +0x8B | Identify_Roll 105 |
+| R3 | Roll: the gap reversed | Identify_Roll 215 |
+| R4 | Roll: top chance 15 | Identify_Roll 24 |
+| R5 | Roll: 15 inclusive | Identify_Roll 6 |
+| R6 | Roll: below 11 | Identify_Roll 8 |
+| R7 | Roll: chance 11 below 5 | Identify_Roll 14 |
+| R8 | Roll: 0 inclusive | Identify_Roll 8 |
+| R9 | Roll: below -4 | Identify_Roll 4 |
+| R10 | Roll: chance 5 below -10 | Identify_Roll 14 |
+| R11 | Roll: below -16 | Identify_Roll 5 |
+| R12 | Roll: hit at the chance | Identify_Roll 91 |
+| R13 | Roll: Rand & 0x1F | Identify_Roll 92 |
+| R14 | Roll: seen shows 2 | Identify_Roll 1340 |
+| R15 | Roll: the hit ignored | Identify_Roll 187 |
+| R16 | Roll: +0x8E | Identify_Roll 133 |
+| R17 | Roll: not marked | Identify_Roll 158 |
+| R18 | Roll: a miss shows | Identify_Roll 502 |
+| R19 | Roll: WasSeen before Rand | Identify_Roll 2000 |
+| R20 | Roll: +0x8F of the first target (not read again) | Identify_Roll 16 |
+| R21 | Roll: seen tested whole | Identify_Roll 1340 |
+| M1 | MarkSeen: kind +0x8D | Identify_MarkSeen 1522 |
+| M2 | MarkSeen: dword by kind >> 4 | Identify_MarkSeen 1301 |
+| M3 | MarkSeen: bit kind & 15 | Identify_MarkSeen 714 |
+| M4 | MarkSeen: xor | Identify_MarkSeen 968 |
+| M5 | MarkSeen: target - 2 | Identify_MarkSeen 1495 |
+| W1 | WasSeen: bit kind & 30 | Identify_WasSeen 486 |
+| W2 | WasSeen: inverted | Identify_WasSeen 2000 |
+| W3 | WasSeen: kind +0x8D | Identify_WasSeen 979 |
+| W4 | WasSeen: answers 2 | Identify_WasSeen 980 |
+| W5 | WasSeen: the next dword | Identify_WasSeen 1030 |
+| D1 | DrawMember: +0x88 zeroed and kept | Identify_DrawMember 2000 |
+| D2 | DrawMember: not zeroed | Identify_DrawMember 1919 |
+| D3 | DrawMember: put back without reading the target again | Identify_DrawMember 160 |
+| D4 | DrawMember: put back before the draw | Identify_DrawMember 1919 |
+| D5 | DrawMember: name y 0x31 | Identify_DrawMember 2000 |
+| D6 | DrawMember: name count 6 | Identify_DrawMember 2000 |
+| D7 | DrawMember: name at +0x81 | Identify_DrawMember 2000 |
+| D8 | DrawMember: text 1 at y 0x45 | Identify_DrawMember 2000 |
+| D9 | DrawMember: marks at x 0x71 | Identify_DrawMember 2000 |
+| D10 | DrawMember: label 1 count 4 | Identify_DrawMember 2000 |
+| D11 | DrawMember: a mark for label 2 | Identify_DrawMember 2000 |
+| D12 | DrawMember: text 2 at y 0x8B | Identify_DrawMember 2000 |
+| D13 | DrawMember: last marks at y 0xAD | Identify_DrawMember 2000 |
+| D14 | DrawCentredCounted: centred on 0x9F | Identify_DrawMember 2000 |
+| D15 | DrawCentred: five a character | Identify_DrawMember 1911, Identify_DrawEnemy 1899 |
+| D16 | DrawCentredCounted: the count's low word | equivalent: Text_CharCount is declared returning unsigned char, so the `& 0xFF` the plant drops was already a no-op in the source; its near variant D16b (`& 0x0F`) is refused |
+| D16b | DrawCentredCounted: the count's low 4 bits (D16's near variant) | Identify_DrawMember 804 |
+| D17 | DrawMember: marks count 7 | Identify_DrawMember 2000 |
+| E1 | DrawEnemy: record by target - 2 | Identify_DrawEnemy 2000 |
+| E3 | DrawEnemy: +0x8E | Identify_DrawEnemy 1044 |
+| E4 | DrawEnemy: the test inverted | Identify_DrawEnemy 2000 |
+| E5 | DrawEnemy: elements at x 0x67 | Identify_DrawEnemy 959 |
+| E6 | DrawEnemy: elements at y 0x55 | Identify_DrawEnemy 959 |
+| E7 | DrawEnemy: first number +0x94 | Identify_DrawEnemy 959 |
+| E8 | DrawEnemy: second number +0x96 | Identify_DrawEnemy 959 |
+| E9 | DrawEnemy: number at x 0x71 | Identify_DrawEnemy 959 |
+| E10 | DrawEnemy: second number count 6 | Identify_DrawEnemy 959 |
+| E11 | DrawEnemy: label 1 at y 0x65 | Identify_DrawEnemy 959 |
+| E12 | DrawEnemy: name at y 0x2F (identified) | Identify_DrawEnemy 959 |
+| E13 | DrawEnemy: text 1 count + 1 (identified) | Identify_DrawEnemy 959 |
+| E14 | DrawEnemy: text 1 centred on 0xA1 (not identified) | Identify_DrawEnemy 1041 |
+| E15 | DrawEnemy: label 1 for label 2 (not identified) | Identify_DrawEnemy 1041 |
+| E16 | DrawEnemy: text 2 at y 0x8B | Identify_DrawEnemy 2000 |
+| E17 | DrawEnemy: first item +0xAA | Identify_DrawEnemy 2000 |
+| E18 | DrawEnemy: second item +0xAE | Identify_DrawEnemy 2000 |
+| E19 | DrawEnemy: first item without the upper half | Identify_DrawEnemy 2000 |
+| E20 | DrawEnemy: second item without the upper half | Identify_DrawEnemy 2000 |
+| E21 | DrawEnemy: category from the low byte | Identify_DrawEnemy 1993 |
+| E22 | DrawEnemy: first item at y 0x99 | Identify_DrawEnemy 2000 |
+| E23 | DrawEnemy: second item at y 0xAD | Identify_DrawEnemy 2000 |
+| E24 | DrawEnemy: first number a byte | Identify_DrawEnemy 953 |
+| E25 | DrawEnemy: the format one byte on | Identify_DrawEnemy 959 |
+| E26 | DrawEnemy: +0x8F read before text 1 is counted | Identify_DrawEnemy 4 |
+| E27 | DrawEnemy: second item's upper half from the text | Identify_DrawEnemy 2000 |
+| T1 | DrawItem: marks when +4 is 1 | Identify_DrawItem 1328 |
+| T2 | DrawItem: marks count 9 | Identify_DrawItem 1151 |
+| T3 | DrawItem: weapons stride 27 | Identify_DrawItem 94 |
+| T4 | DrawItem: armour stride 25 | Identify_DrawItem 91 |
+| T5 | DrawItem: accessories stride 23 | Identify_DrawItem 98 |
+| T6 | DrawItem: consumables stride 21 | Identify_DrawItem 564 |
+| T7 | DrawItem: categories 1 and 2 swapped | Identify_DrawItem 185 |
+| T8 | DrawItem: the category's low word | Identify_DrawItem 1 |
+| T9 | DrawItem: item & 0x7F | Identify_DrawItem 426 |
+| T10 | DrawItem: the count alone | Identify_DrawItem 849 |
+| T11 | DrawItem: the count over the category | Identify_DrawItem 849 |
+| T12 | DrawItem: centred on 0xA1 | Identify_DrawItem 849 |
+| T13 | DrawItem: answers nothing | Identify_DrawItem 849 |
+| T14 | DrawItem: category 3 as consumables | Identify_DrawItem 98 |
+| L1 | DrawElements: resistances 4 and 5 swapped | Identify_DrawElements 777 |
+| L2 | DrawElements: weak at 2 | Identify_DrawElements 1040 |
+| L3 | DrawElements: the sixth weak at 2 | Identify_DrawElements 261 |
+| L4 | DrawElements: dim 0x31 | Identify_DrawElements 1999 |
+| L5 | DrawElements: the scratch dim 0x31 | Identify_DrawElements 1999 |
+| L6 | DrawElements: bright 0x81 | Identify_DrawElements 1801 |
+| L7 | DrawElements: bottom y + 0xD | Identify_DrawElements 2000 |
+| L8 | DrawElements: right x + 0xD | Identify_DrawElements 2000 |
+| L9 | DrawElements: step 0x15 | Identify_DrawElements 2000 |
+| L10 | DrawElements: glyph byte whole | Identify_DrawElements 2000 |
+| L11 | DrawElements: neighbouring glyph | Identify_DrawElements 2000 |
+| L12 | DrawElements: clut row 0x1E1 | Identify_DrawElements 2000 |
+| L13 | DrawElements: u 0xD | Identify_DrawElements 2000 |
+| L14 | DrawElements: committed 0x24 | Identify_DrawElements 2000 |
+| L15 | DrawElements: record by target - 2 | Identify_DrawElements 1825 |
+| L16 | DrawElements: the target read again per glyph | Identify_DrawElements 683 |
+| L17 | DrawElements: five glyphs | Identify_DrawElements 2000 |
+| L18 | DrawElements: top y + 1 | Identify_DrawElements 2000 |
+| C1 | IdentifyChild_Task: by +2 | IdentifyChild_Task 1361 |
+| C2 | IdentifyDim_Run: drawn with +2 0 | IdentifyDim_Run 284 |
+| C3 | IdentifyDim_Run: drawn with +0 0 | IdentifyDim_Run 738 |
+| C4 | IdentifyDisc_Run: drawn with +2 0 | IdentifyDisc_Run 263 |
+| C5 | IdentifyDisc_Run: draws the dim | IdentifyDisc_Run 742 |
+| C6 | IdentifyTint_Task: by +1 | IdentifyTint_Task 1320 |
+| C7 | IdentifyDim_Run: the step by +1 | IdentifyDim_Run 1486 |
+| F1 | FadeIn: at 0x11 | IdentifyDim_FadeIn 991 |
+| F2 | FadeIn: owner 2 | IdentifyDim_FadeIn 446 |
+| F3 | FadeIn: +1 on | IdentifyDim_FadeIn 446 |
+| K1 | CountDownRelease: the owner up | MagicFx_CountDownRelease 477 |
+| K2 | CountDownRelease: at 1 | MagicFx_CountDownRelease 1005 |
+| K3 | CountDownRelease: not freed | MagicFx_CountDownRelease 479 |
+| V1 | DimDraw: tpage 0x56 | IdentifyDim_Draw 2000 |
+| V2 | DimDraw: the tile on layer 2 | IdentifyDim_Draw 2000 |
+| V3 | DimDraw: height 239.0 | IdentifyDim_Draw 2000 |
+| V4 | DimDraw: width 322.0 | IdentifyDim_Draw 2000 |
+| V5 | DimDraw: opaque | IdentifyDim_Draw 2000 |
+| V6 | DimDraw: grey from +0xA | IdentifyDim_Draw 1995 |
+| V7 | DimDraw: green + 1 | IdentifyDim_Draw 2000 |
+| V8 | DimDraw: last mode 0x16 | IdentifyDim_Draw 2000 |
+| V9 | DimDraw: the scratch not written | IdentifyDim_Draw 2000 |
+| X1 | WaitDim: at 2 | IdentifyDisc_WaitDim 1462 |
+| X2 | WaitDim: +9 1 | IdentifyDisc_WaitDim 953 |
+| X3 | Grow: at 0x1F | IdentifyDisc_Grow 1020 |
+| X4 | Grow: owner 3 | IdentifyDisc_Grow 505 |
+| X5 | WaitClose: at 0x84 | IdentifyFx_WaitClose 1459 |
+| X6 | WaitClose: from 0x83 up | IdentifyFx_WaitClose 490 |
+| X7 | CountDown2Release: by 1 | MagicFx_CountDown2Release 2000 |
+| X8 | CountDown2Release: the owner kept | MagicFx_CountDown2Release 824 |
+| Q1 | DiscDraw: radius x 2 | IdentifyDisc_Draw 2000 |
+| Q2 | DiscDraw: radius + 7 | IdentifyDisc_Draw 2000 |
+| Q3 | DiscDraw: second corner + 0xF | IdentifyDisc_Draw 2000 |
+| Q4 | DiscDraw: third corner - 3 | IdentifyDisc_Draw 2000 |
+| Q5 | DiscDraw: angle mask 0x3F | IdentifyDisc_Draw 1756 |
+| Q6 | DiscDraw: angle << 6 | IdentifyDisc_Draw 2000 |
+| Q7 | DiscDraw: the cosine's angle not read back | IdentifyDisc_Draw 15 |
+| Q8 | DiscDraw: the radius not read back for x | IdentifyDisc_Draw 452 |
+| Q9 | DiscDraw: centre x 0x9F | IdentifyDisc_Draw 2000 |
+| Q10 | DiscDraw: centre y 0x79 | IdentifyDisc_Draw 2000 |
+| Q11 | DiscDraw: grey / 4 | IdentifyDisc_Draw 1955 |
+| Q12 | DiscDraw: grey x 5 | IdentifyDisc_Draw 1977 |
+| Q13 | DiscDraw: committed 0x40 | IdentifyDisc_Draw 2000 |
+| Q14 | DiscDraw: last corner unshaded | IdentifyDisc_Draw 2000 |
+| Q15 | DiscDraw: +9 read once | IdentifyDisc_Draw 380 |
+| Q16 | DiscDraw: y by the sine | IdentifyDisc_Draw 2000 |
+| N1 | TintStart: blue 1 | IdentifyTint_Start 2000 |
+| N2 | TintStart: alpha 0 | IdentifyTint_Start 2000 |
+| N3 | TintStart: the record into +0xA | IdentifyTint_Start 1999 |
+| N4 | TintStart: +9 1 | IdentifyTint_Start 2000 |
+| N5 | TintStart: not released | IdentifyTint_Start 2000 |
+| N6 | TintStart: the actor's sprite tinted | IdentifyTint_Start 2000 |
+| B1 | Brighten: bit 1 of the frame | IdentifyTint_Brighten 1001 |
+| B2 | Brighten: green not up | IdentifyTint_Brighten 972 |
+| B3 | Brighten: at 9 | IdentifyTint_Brighten 969 |
+| B4 | Brighten: red at stride 11 | IdentifyTint_Brighten 969 |
+| B5 | Brighten: green tested | IdentifyTint_Brighten 584 |
+| N7 | Dim: red not down | IdentifyTint_Dim 1031 |
+| N8 | Dim: back to step 0 | IdentifyTint_Dim 703 |
+| N9 | Dim: at 1 | IdentifyTint_Dim 937 |
+| N10 | Dim: bit 0x40 | IdentifyTint_Dim 999 |
+| N11 | Dim: the actor flashed | IdentifyTint_Dim 426 |
+| N12 | Dim: the owner up | IdentifyTint_Dim 456 |
+| N13 | Dim: bit 1 of the frame | IdentifyTint_Dim 1012 |
+| G1 | Celerity_Task: entries 2/3 swapped | Celerity_Task 646 |
+| G2 | Celerity_Task: entries 4/5 swapped | Celerity_Task 671 |
+| S1 | Start: facing from +9 | Celerity_Start 1916 |
+| S2 | Start: z from +0x3C | Celerity_Start 2000 |
+| S3 | Start: +9 0x11 | Celerity_Start 1889 |
+| S4 | Start: +0xB 1 | Celerity_Start 1770 |
+| S5 | Start: ring parameter 0x4B | Celerity_Start 2000 |
+| S6 | Start: ring +9 1 | Celerity_Start 1845 |
+| S7 | Start: ring z from x | Celerity_Start 2000 |
+| S8 | Start: ring not counted | Celerity_Start 1784 |
+| S9 | Start: spark +1 2 | Celerity_Start 2000 |
+| S10 | Start: spark +4 its +0xB | Celerity_Start 2000 |
+| S11 | Start: spark +0xB + 1 | Celerity_Start 2000 |
+| S12 | Start: spark +9 without + 1 | Celerity_Start 2000 |
+| S13 | Start: spark +0xA the task's +0xA | Celerity_Start 1993 |
+| S14 | Start: three sparks | Celerity_Start 2000 |
+| S15 | Start: 15 + 15 CLUT words | Celerity_Start 2000 |
+| S16 | Start: second CLUT half from +0x22 | Celerity_Start 2000 |
+| S17 | Start: dirty 2 | Celerity_Start 2000 |
+| S18 | Start: sound 0x101 | Celerity_Start 2000 |
+| S19 | Start: spark owned by itself | Celerity_Start 2000 |
+| S20 | Start: the source read again for x | equivalent: no call lies between the entry's read of the source pointer and this one, so reading it again cannot differ; its near variant S20b (read after the ring's create) is refused |
+| S20b | Start: the ring's x from the source, read after the create (S20's near variant) | Celerity_Start 115 |
+| A1 | Apply: red at stride 11 | Celerity_Apply 1987 |
+| A2 | Apply: blue not down | Celerity_Apply 2000 |
+| A3 | Apply: +9 not down | Celerity_Apply 2000 |
+| A4 | Apply: at 1 | Celerity_Apply 1001 |
+| A5 | Apply: the actor flashed | Celerity_Apply 446 |
+| A6 | Apply: the next stat | Celerity_Apply 480 |
+| A7 | Apply: popup parameter 0x49 | Celerity_Apply 480 |
+| A8 | Apply: popup +4 i + 1 | Celerity_Apply 480 |
+| A9 | Apply: popup +9 5i | Celerity_Apply 480 |
+| A10 | Apply: popup +0xA 12i + 2 | Celerity_Apply 480 |
+| A11 | Apply: popups not counted | Celerity_Apply 480 |
+| A12 | Apply: three stats | Celerity_Apply 480 |
+| A13 | Apply: phase not on | Celerity_Apply 480 |
+| A14 | Apply: popup before the stat | Celerity_Apply 480 |
+| A15 | Apply: the tint not released | Celerity_Apply 480 |
+| Z1 | End: byte 6 | Celerity_End 1019 |
+| Z2 | End: at 1 | Celerity_End 1022 |
+| Z3 | End: no done bit | Celerity_End 485 |
+| P1 | ApplyStat: a member below 4 | Celerity_ApplyStat 172 |
+| P2 | ApplyStat: member record + 0x120 | Celerity_ApplyStat 551 |
+| P3 | ApplyStat: enemy record + 0x100 | Celerity_ApplyStat 1449 |
+| P4 | ApplyStat: +4 not cleared | Celerity_ApplyStat 2000 |
+| P5 | ApplyStat: +8 1 | Celerity_ApplyStat 2000 |
+| P6 | ApplyStat: the step two bytes on | Celerity_ApplyStat 1568 |
+| P7 | ApplyStat: records of 0x14 | Celerity_ApplyStat 1074 |
+| P8 | ApplyStat: the cell + 0x15 | Celerity_ApplyStat 1293 |
+| P9 | ApplyStat: 100 clamped | Celerity_ApplyStat 221 |
+| P10 | ApplyStat: clamp 99 | Celerity_ApplyStat 429 |
+| P11 | ApplyStat: -100 clamped | Celerity_ApplyStat 146 |
+| P12 | ApplyStat: clamp -99 | Celerity_ApplyStat 178 |
+| P13 | ApplyStat: no stat change call | Celerity_ApplyStat 1393 |
+| P14 | ApplyStat: the call on a clamp too | Celerity_ApplyStat 429 |
+| P15 | ApplyStat: the change told for the actor | Celerity_ApplyStat 1258 |
+| P16 | ApplyStat: the cell unsigned | Celerity_ApplyStat 824 |
+| P17 | ApplyStat: the stat's low nibble | Celerity_ApplyStat 341 |
+| H1 | CelerityChild_Task: by +2 | CelerityChild_Task 1042 |
+| H2 | Ring_Run: drawn with +0 0 | CelerityRing_Run 962 |
+| H3 | Ring_Run: band before disc | CelerityRing_Run 1038 |
+| H4 | Ring_Run: the step by +1 | CelerityRing_Run 1359 |
+| H5 | Ring_Run: not popped | CelerityRing_Run 1038 |
+| RD1 | RingDisc: tpage 0x36 | CelerityRing_DrawDisc 2000 |
+| RD2 | RingDisc: centre x 4 | CelerityRing_DrawDisc 1986 |
+| RD3 | RingDisc: Rand & 7 | CelerityRing_DrawDisc 1712 |
+| RD4 | RingDisc: rim + 2 | CelerityRing_DrawDisc 1991 |
+| RD5 | RingDisc: first radius << 8 | CelerityRing_DrawDisc 1998 |
+| RD6 | RingDisc: fifteen triangles | CelerityRing_DrawDisc 2000 |
+| RD7 | RingDisc: steps of 0x80 | CelerityRing_DrawDisc 2000 |
+| RD8 | RingDisc: centre z 1 | CelerityRing_DrawDisc 2000 |
+| RD9 | RingDisc: opaque | CelerityRing_DrawDisc 2000 |
+| RD10 | RingDisc: quad depths | CelerityRing_DrawDisc 2000 |
+| RD11 | RingDisc: rim green from blue | CelerityRing_DrawDisc 1530 |
+| RD12 | RingDisc: committed 0x30 | CelerityRing_DrawDisc 2000 |
+| RD13 | RingDisc: centre from byte 7 | CelerityRing_DrawDisc 1989 |
+| RD14 | RingDisc: last mode layer 4 | CelerityRing_DrawDisc 2000 |
+| RD15 | RingDisc: +9 not read again after Rand | CelerityRing_DrawDisc 196 |
+| BD1 | RingBand: inner radius << 6 | CelerityRing_DrawBand 1995 |
+| BD2 | RingBand: outer radius << 7 | CelerityRing_DrawBand 1994 |
+| BD3 | RingBand: outer copied from inner | CelerityRing_DrawBand 2000 |
+| BD4 | RingBand: outer z 1 | CelerityRing_DrawBand 2000 |
+| BD5 | RingBand: inner colour on the outer edge | CelerityRing_DrawBand 2000 |
+| BD6 | RingBand: outer 2 | CelerityRing_DrawBand 2000 |
+| BD7 | RingBand: committed 0x40 | CelerityRing_DrawBand 2000 |
+| BD8 | RingBand: seventeen quads | CelerityRing_DrawBand 2000 |
+| BD9 | RingBand: projected as three | CelerityRing_DrawBand 2000 |
+| BD10 | RingBand: tpage 0x34 | CelerityRing_DrawBand 2000 |
+| SR1 | Spark_Run: by +1 | CeleritySpark_Run 1644 |
+| SR2 | Rise: disc 0x19 | CeleritySpark_Rise 2000 |
+| SR3 | Rise: speed -15 | CeleritySpark_Rise 418 |
+| SR4 | Rise: acceleration 5 | CeleritySpark_Rise 418 |
+| SR5 | Rise: +0xA 9 | CeleritySpark_Rise 418 |
+| SR6 | Fall: 0x1D - +0xB | CeleritySpark_Fall 397 |
+| SR7 | Fall: disc 0x20 | CeleritySpark_Fall 2000 |
+| SF1 | SparkFrame: Rand & 7 | CeleritySpark_Rise 1006, CeleritySpark_Fall 1019, CeleritySpark_Orbit 1002 |
+| SF2 | SparkFrame: drawn before the matrix | CeleritySpark_Rise 2000, CeleritySpark_Fall 2000, CeleritySpark_Orbit 2000 |
+| SY1 | SparkFly: bit 1 of the frame | CeleritySpark_Rise 1209, CeleritySpark_Fall 1236 |
+| SY2 | SparkFly: speed less the acceleration | CeleritySpark_Rise 2000, CeleritySpark_Fall 2000 |
+| SY3 | SparkFly: height by +0x16 | CeleritySpark_Rise 2000, CeleritySpark_Fall 2000 |
+| SY4 | SparkFly: at 1 | CeleritySpark_Rise 862, CeleritySpark_Fall 813 |
+| SP1 | Spin: wide below 6 | CeleritySpark_Spin 63 |
+| SP2 | Spin: wide 0x41 | CeleritySpark_Spin 237 |
+| SP3 | Spin: up every fourth | CeleritySpark_Spin 82 |
+| SP4 | Spin: up to 5 | CeleritySpark_Spin 303 |
+| SP5 | Spin: the angle less the spin | CeleritySpark_Spin 1822 |
+| SP6 | Spin: sound for the second | CeleritySpark_Spin 93 |
+| SP7 | Spin: sound 0x102 | CeleritySpark_Spin 39 |
+| SP8 | Spin: +0x14 9 | CeleritySpark_Spin 141 |
+| SP9 | Spin: +0x20 7 | CeleritySpark_Spin 141 |
+| SP10 | Spin: +0x10 16 | CeleritySpark_Spin 141 |
+| SP11 | Spin: spin up 2 | CeleritySpark_Spin 317 |
+| SP12 | Spin: at spin 3 | CeleritySpark_Spin 531 |
+| O1 | Orbit: +0x10 up 3 | CeleritySpark_Orbit 2000 |
+| O2 | Orbit: +0xB up 1 | CeleritySpark_Orbit 2000 |
+| O3 | Orbit: angle mask 0x3F | CeleritySpark_Orbit 1002 |
+| O4 | Orbit: radius + 0xB1 | CeleritySpark_Orbit 1997 |
+| O5 | Orbit: x sar 4 | CeleritySpark_Orbit 2000 |
+| O6 | Orbit: z from the owner's x | CeleritySpark_Orbit 2000 |
+| O7 | Orbit: at 0x11 | CeleritySpark_Orbit 729 |
+| O8 | Orbit: disc 0x21 | CeleritySpark_Orbit 2000 |
+| O9 | Orbit: the spin into +0xB | CeleritySpark_Orbit 1992 |
+| DR1 | SparkDraw: apex 0x51 | CeleritySpark_Draw 2000 |
+| DR2 | SparkDraw: radius 0x31 | CeleritySpark_Draw 2000 |
+| DR3 | SparkDraw: second angle + 7 | CeleritySpark_Draw 2000 |
+| DR4 | SparkDraw: colour row i + 1 | CeleritySpark_Draw 2000 |
+| DR5 | SparkDraw: blue from green | CeleritySpark_Draw 1680 |
+| DR6 | SparkDraw: semi-transparent | CeleritySpark_Draw 2000 |
+| DR7 | SparkDraw: packet step 0x30 | CeleritySpark_Draw 2000 |
+| DR8 | SparkDraw: three a row | CeleritySpark_Draw 2000 |
+| DR9 | SparkDraw: first row linked as three | CeleritySpark_Draw 2000 |
+| DR10 | SparkDraw: second row bias 3 | CeleritySpark_Draw 2000 |
+| DR11 | SparkDraw: the rows' tables swapped | CeleritySpark_Draw 2000 |
+| DR12 | SparkDraw: second link x / z swapped | CeleritySpark_Draw 2000 |
+| DR13 | SparkDraw: tpage 0x35 | CeleritySpark_Draw 2000 |
+| DR14 | SparkDraw: second row not turned down | CeleritySpark_Draw 2000 |
+| DR15 | SparkDraw: centre y 1 | CeleritySpark_Draw 2000 |
+| DR16 | SparkDraw: index word + 1 | CeleritySpark_Draw 2000 |
+| DR17 | SparkDraw: first link at the task's z twice | CeleritySpark_Draw 2000 |
+| DD1 | SparkDisc: radius a byte | CeleritySpark_DrawDisc 628 |
+| DD2 | SparkDisc: colours by 4 x +4 | CeleritySpark_DrawDisc 1661 |
+| DD3 | SparkDisc: green from blue | CeleritySpark_DrawDisc 1573 |
+| DD4 | SparkDisc: steps of 0x100 | CeleritySpark_DrawDisc 2000 |
+| DD5 | SparkDisc: centre y from +0x2E | CeleritySpark_DrawDisc 2000 |
+| DD6 | SparkDisc: rim 2 | CeleritySpark_DrawDisc 2000 |
+| DD7 | SparkDisc: triangle linked 0x30 | CeleritySpark_DrawDisc 2000 |
+| DD8 | SparkDisc: triangle dy 3 | CeleritySpark_DrawDisc 2000 |
+| DD9 | SparkDisc: mode linked 0x10 | CeleritySpark_DrawDisc 2000 |
+| DD10 | SparkDisc: first rim x sar 11 | CeleritySpark_DrawDisc 2000 |
+| DD11 | SparkDisc: second rim y by the sine | CeleritySpark_DrawDisc 2000 |
+| DD12 | SparkDisc: seven triangles | CeleritySpark_DrawDisc 2000 |
+| DD13 | SparkDisc: opaque | CeleritySpark_DrawDisc 2000 |
+| DD14 | SparkDisc: centre red from green | CeleritySpark_DrawDisc 1289 |
 
 ## 7. What nothing reached
 
