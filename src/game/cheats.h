@@ -20,3 +20,7 @@ std::uint32_t Cheats_ZennyMultiplier();
 // not BOF3X_ORIGINAL=Cheat_StealAlways). Read from those bytes after the
 // patch, so ours rolls exactly as the patched original would.
 std::uint32_t Cheats_PilferRollMask();
+
+// The same for Steal's roll, ours since round nine (SkillSteal_Roll,
+// src/game/magic_steal.cpp): the byte at 0x4F51EF after the patch.
+std::uint32_t Cheats_StealRollMask();

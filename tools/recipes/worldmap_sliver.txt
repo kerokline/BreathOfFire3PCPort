@@ -1,4 +1,5 @@
 # The world-map route cut at frame 1260 for a bisect of the purple sliver (analysis/attract/worldmap_batch.log): one shot on the map.
+# save town
 wait 60
 hold start 3
 wait 81
@@ -6,12 +7,7 @@ hold start 3
 wait 45
 hold r2 4
 wait 36
-hold down 3
-wait 7
-hold down 3
-wait 8
-hold down 2
-wait 19
+wait 42           # slot 0 is the recipe save; was three downs to slot 3, the same 42 frames
 hold r2 4
 wait 15
 hold r2 5

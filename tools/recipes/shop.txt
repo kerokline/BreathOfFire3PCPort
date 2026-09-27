@@ -1,6 +1,7 @@
 # Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
 # recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
 # language, since text timing differs between them. F12 wrote the shots.
+# save town
 wait 61
 hold start 4
 wait 79
@@ -8,12 +9,7 @@ hold start 5
 wait 42
 hold r2 4
 wait 37
-hold down 2
-wait 3
-hold down 3
-wait 2
-hold down 4
-wait 14
+wait 28           # slot 0 is the recipe save; was three downs to slot 3, the same 28 frames
 hold r2 5
 wait 19
 hold r2 2

@@ -1,11 +1,12 @@
-# Save 5 (adult Ryu, Lv 38) loaded to its field, then four shots of the view
+# The adult_ryu save (adult Ryu, Lv 38; was slot 5) loaded to its field, then four shots of the view
 # 45 frames apart - the field A/B of docs/sprite-draw-order.md sections 15-16.
+# save adult_ryu
 wait 480
 press start
 wait 40
 press circle
 wait 60
-press down x5
+wait 60           # slot 0 is the recipe save; was `press down x5` to slot 5, the same 60 frames
 press circle
 wait 40
 press circle

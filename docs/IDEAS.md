@@ -68,6 +68,8 @@ rule ([`README.md`](README.md)) here too.
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26) |
+| I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | open; planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) (owner, 2026-09-26) |
+| I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | open; planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) (owner, 2026-09-26) |
 
 ---
 
@@ -950,3 +952,84 @@ difference (intros replayed or lost on loop) in an afternoon.
 
 ### Outcome
 _(2026-09-26) open; method written._
+## I24 — The scenario round: the chapter banks wave by wave
+
+**Ask (2026-09-26):** the owner, after the chapter tables were walked
+([`scenario-roots.md`](scenario-roots.md)): take the scenario banks over
+"in a wave-by-wave approach like we're doing with the magic calls", and for
+now document the plan and list it here.
+**Kind:** engine
+**Feasibility:** HIGH   **Gated on:** nobody - the function list is a
+script's output; the live check per chapter wants a recipe save the owner
+records, which can follow the fuzz rather than precede it.
+
+### What already exists
+- The list: 638 functions from the three chapter-indexed tables (`0x662C80`
+  vtables, `0x660B84` / `0x660BD4` call tables), 17 already ours, in one
+  band `0x537F20..0x56C080` in chapter order; `tools/scenario_roots.py`
+  reproduces it and names every engine function the banks call (232).
+- The pattern: the spell round's whole-overlay groups, its shared harness
+  (`magic_harness`, [`magic_harness.md`](magic_harness.md)), its per-group
+  docs and controls; chapter 16 already taken over the same way
+  ([`field-modes.md`](field-modes.md)) as the template for a chapter's
+  state machine.
+- The catalogue's reason for ranking the banks last - discovery needing
+  saves - is gone (scenario-roots §6).
+
+### What is missing
+- A harness for the three call shapes (vtable slot, call-table entry, state
+  handler) over one frame of scenario state, from `magic_harness`.
+- Names for the 20 vtables and the call and state tables in `symbols.toml`.
+- One small chapter read whole to fix the harness's state table.
+
+### First concrete step
+Read SC0 (chapter 0, 23 functions at `0x537F20..0x539A30`) to its last
+instruction and list the state it reads and the engine functions it calls;
+then the harness, proved on SC0. The plan, groups and waves:
+[`takeover-queue-scenario.md`](takeover-queue-scenario.md).
+
+### Outcome
+_(2026-09-26) open; planned, not scheduled._
+
+## I25 — The area round: the area overlays enumerated from their tables
+
+**Ask (2026-09-26):** the owner: take the area overlays over "in a
+programmatic manner instead of by singleton discovery - similar to how
+we're doing magic captures and plan to do scenario capture"; then, after
+the measurement, write the plan up on that shape with the effect-kind and
+field-core code on rounds of their own, and a clean tool as the first step.
+**Kind:** engine
+**Feasibility:** HIGH   **Gated on:** nobody - the roots are seven tables
+and the areas' data blocks, all in the exe; the live check per world wants a
+recorded walk the owner makes after the fuzz.
+
+### What already exists
+- The measurement: a scratch re-aim of `tools/scenario_roots.py` at the
+  area descriptor table `0x667590` and six more tables reaches 1,133 of the
+  1,457 starts in the band `0x401000..0x430000`, and the per-area blocks
+  come out in area order (1 of 161 out of order), so the block rule of
+  `magic_rows.py` applies ([`takeover-queue-areas.md`](takeover-queue-areas.md) §1).
+- The pattern: the spell round's whole-overlay groups and shared harness,
+  the scenario plan's call shapes; DA's world-map areas and `Area29_*` /
+  `Area33_*` already taken the singleton way.
+- Ground truth per root: the sibling's `names/area_records.toml`, 728
+  pairs.
+
+### What is missing
+- `tools/area_rows.py`, the clean tool (the scratch copy is not in the
+  repo and splits the data blocks approximately).
+- Names for the two unnamed engine tables `0x662CE8` and `0x662F28` and the
+  cell hook `0x56E670`.
+- An `area_harness` for the six call shapes over one field frame.
+
+### First concrete step
+Write `tools/area_rows.py` and let its report replace the plan's numbers;
+then the harness, proved on a world 0 area the attract cycle enters. The
+plan, groups and waves: [`takeover-queue-areas.md`](takeover-queue-areas.md).
+The effect-kind (`0x460000..0x48FFFF`, through `EffectKind18_States`) and
+field-core (`0x500000..0x52FFFF`, through the tables at `0x65E000..`)
+functions the catalogue labels "Area overlays" are **not** this round's;
+each is a round of its own with the same walker.
+
+### Outcome
+_(2026-09-26) open; planned, not scheduled._

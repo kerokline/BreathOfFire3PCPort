@@ -1,7 +1,8 @@
 # Scripted input: walking the game to a screen unattended
 
 **Status:** WORKING (verified 2026-09-21; extended 2026-09-23 with recorded
-routes, §5a, and 2026-09-24 with captures the game writes itself, §3)
+routes, §5a, 2026-09-24 with captures the game writes itself, §3, and
+2026-09-26 with recipe saves swapped into slot 0, §1a)
 
 The owner asked for a way for an agent to reach menus and screens while nobody
 is at the keyboard, and to capture them. This is it: a **recipe** of pad
@@ -47,16 +48,93 @@ Recipes in `tools/recipes/`:
 |---|---|--:|
 | `title_timeline.txt` | no input; a shot every 60 frames from launch | 601 |
 | `config_screen.txt` | title menu, then Config with the cursor on each of its seven rows | 838 |
-| `field_menu.txt` | save 5 loaded, the field, the menu, each top-bar slot | ~1,400 |
+| `field_menu.txt` | the `adult_ryu` save loaded, the field, the menu, each top-bar slot | ~1,400 |
 | `battle_commands.txt` | NEW GAME, the opening scene's dialogue, its scripted battle; each command of the cross held, the skill list opened, the skill used | ~3,200 |
-| `menu_screens.txt` | save 5, into Items, Ability, Equipment, Tactics and Status and out again, each checked on the menu state | ~1,700 |
-| `field_view.txt` | save 5 loaded to its field; four shots of the view, 45 frames apart | 1,400 |
-| `camera_rotate.txt` | save 5 loaded to its field; R1 held with left, then right (60 frames each, the view turns about 31 degrees and springs back on release), R1 alone, left alone, L1 with left - the camera branch of `AreaMap_Frame` (docs/map-layers.md) | 1,850 |
+| `menu_screens.txt` | `adult_ryu`, into Items, Ability, Equipment, Tactics and Status and out again, each checked on the menu state | ~1,700 |
+| `field_view.txt` | `adult_ryu` loaded to its field; four shots of the view, 45 frames apart | 1,400 |
+| `camera_rotate.txt` | `adult_ryu` loaded to its field; R1 held with left, then right (60 frames each, the view turns about 31 degrees and springs back on release), R1 alone, left alone, L1 with left - the camera branch of `AreaMap_Frame` (docs/map-layers.md) | 1,850 |
 | `attract_cycle.txt` | no input; the attract sequence, a shot every 200 frames from 1,530 to 12,330 (each shot holds 30 frames) | 14,150 |
-| `shop.txt` / `shop_ab.txt` | recorded (§5a): save 3, the item and weapon shops, the inn, the save menu; `_ab` has a shot every 90 frames | 3,157 |
-| `worldMapAndAreaTransition.txt` / `_ab.txt` | recorded by the owner 2026-09-23: save 3, out of the town to the world map (Yraall Region, two place plates), into an area, the map again, two adjacent areas ([`world-map.md`](world-map.md)); `_ab` has a shot every 60 frames | 2,143 |
-| `combat.txt` / `combat_ab.txt` | recorded by the owner 2026-09-23: slot 0 (an F12 save in the field), a few steps, a random encounter, the fight - the command cross, a spell, a heal, a steal attempt, the item list - to "You won the battle!"; `_ab` has a shot every 60 frames. **Deterministic**: two playbacks under our build, 43 of 43 captures identical, the encounter at the same frame and the same damage every turn (`analysis/shots/combat_a`, `combat_b`) - the exe imports no `srand` or `time`, so the CRT's `rand` starts from its fixed seed, and the encounter test counts steps ([`event-ops.md`](event-ops.md), `Field_EncounterDue`). The battle start the handoff was waiting for. | 2,620 |
-| `worldmap_sliver.txt` | the route above cut at frame 1260 with one shot on the map - a one-minute check of the compass needle (DIV-0044) | 1,260 |
+| `shop.txt` / `shop_ab.txt` | recorded (§5a): the `town` save, the item and weapon shops, the inn, the save menu; `_ab` has a shot every 90 frames | 3,157 |
+| `worldMapAndAreaTransition.txt` / `_ab.txt` | recorded by the owner 2026-09-23: `town`, out of the town to the world map (Yraall Region, two place plates), into an area, the map again, two adjacent areas ([`world-map.md`](world-map.md)); `_ab` has a shot every 60 frames | 2,143 |
+| `combat.txt` / `combat_ab.txt` | recorded by the owner 2026-09-23: the `combat` save (an F12 save in the field), a few steps, a random encounter, the fight - the command cross, a spell, a heal, a steal attempt, the item list - to "You won the battle!"; `_ab` has a shot every 60 frames. **Deterministic**: two playbacks under our build, 43 of 43 captures identical, the encounter at the same frame and the same damage every turn (`analysis/shots/combat_a`, `combat_b`) - the exe imports no `srand` or `time`, so the CRT's `rand` starts from its fixed seed, and the encounter test counts steps ([`event-ops.md`](event-ops.md), `Field_EncounterDue`). The battle start the handoff was waiting for. | 2,620 |
+| `worldmap_sliver.txt` | the route above (`town`) cut at frame 1260 with one shot on the map - a one-minute check of the compass needle (DIV-0044) | 1,260 |
+
+## 1a. Recipe saves: slot 0 is swapped for the load (2026-09-26)
+
+The owner asked for the game's slots back: the menu recipes had loaded slot
+5 and the routes slot 3, and those slots could not be played in without
+breaking the recipes. Now **a recipe's save lives in `tools/recipe_saves/`**,
+named by a header line the game's parser reads as a comment:
+
+```
+# save adult_ryu        -> tools/recipe_saves/adult_ryu.DAT
+```
+
+`input_run.py` (`tools/recipe_saves.py`, `Slot0`) renames the owner's
+`BISLPS00.DAT` into `bof3/.recipe_slot0/`, copies the recipe save in as slot
+0, launches - and **hands slot 0 back the moment the game has loaded it**:
+`LoadMenu_Read` (ours, `src/game/save_menu.cpp`) logs `save loaded slot 0`
+when the checksum passes, the runner sees the line, removes the copy and
+puts the owner's file back while the game runs on. A loaded game reads the
+file no more (the owner's point): the block is in memory, and the file is
+only opened again by a save menu's listing. If the line never comes - a
+failed load, a crash - the hand-back happens when the game has exited,
+whatever the run's end (`with`). Either way **the recipe save itself is
+never changed by a run**, and anything the recipe saved over slot 0 before
+the hand-back goes with the copy.
+
+So every recipe that loads a save **opens slot 0**: the hand-written ones
+replaced `press down x5` with `wait 60`, the recorded ones their three downs
+with a `wait` of the same frames, so no frame moved (the `_ab` files were
+regenerated with `recipe_shots.py`: 3,157 / 2,143 / 2,620 frames and 35 / 35
+/ 43 shots as before, the only lines changed the downs). A recipe with no
+`# save` header - the title recipes, NEW GAME - leaves slot 0 alone;
+`--save NAME` overrides the header, `--no-save` skips the swap.
+
+Details that matter:
+
+- **The backup leaves the saves' directory.** `Save_ListFiles` matches
+  `BISLPS??.DAT` with `_findfirst`, which also sees 8.3 aliases, and its
+  table is unbounded ([`save-files.md`](save-files.md) §2); a
+  `BISLPS00.DAT.bak` beside the saves is not safely invisible to it. A
+  subdirectory of the game directory is, and it keeps the lock with the
+  game rather than the checkout, so worktrees running against the main
+  checkout's `bof3/` share one lock. A worktree also finds the saves
+  beside that game directory (`../tools/recipe_saves/` of it), or under
+  `BOF3X_RECIPE_SAVES`.
+- **Runs queue on the lock, not on each other.** `.recipe_slot0/lock.json`
+  names the run holding slot 0 (pid, recipe, whether slot 0 existed). A
+  second run waits for the hand-back - about a minute from launch, the logo
+  videos and the title - then swaps its own save in; `--slot0-wait` bounds
+  the wait (300 s). A lock whose pid is gone is a run that died: the backup
+  goes back first. `python tools/recipe_saves.py restore` does that by hand;
+  `list` shows the saves, which recipes use each, any lock, and every
+  `BOF3.exe` up with whether it is scripted.
+- **The player's game is never swapped under.** An unattended game marks
+  itself: `dllmain.cpp` creates the event `Localof3x_unattended_<pid>`
+  when `BOF3X_INPUT` or `BOF3X_SELFTEST_ONLY` is set, and the runner opens
+  it per `BOF3.exe` it finds. One without the marker - the owner's game,
+  a `BOF3X_RECORD` session - refuses the swap, since that game read its slot
+  list at start-up and may open a save menu on the file. Scripted games and
+  headless self-tests are never waited on. `--slot0-shared` overrides the
+  refusal.
+- **Two things a recipe must not do after its load**, now that the owner's
+  file is back under it: save into slot 0 from the save menu, or press F12
+  (`Save_QuickWrite`, always slot 0) - both would write over the owner's
+  save. None of today's recipes save at all (`shop.txt` opens the save menu
+  and leaves), and playback sends pad words, never F12. A recipe that
+  captures a save menu shows the owner's slot 0 in it, not the recipe's.
+- A save's contents do not encode its slot - the converted saves of
+  [`save-interchange.md`](save-interchange.md) loaded from whichever slot
+  they were written to - so `import SLOT NAME` is a plain copy, and the
+  three saves in use (`adult_ryu` from slot 5, `town` from slot 3, `combat`
+  from slot 0) were copied on 2026-09-26 without re-saving. The first run of
+  each recipe under the swap is still owed
+  ([`tools/recipe_saves/README.md`](../tools/recipe_saves/README.md)).
+- Save files are game data: `tools/recipe_saves/*.DAT` is gitignored, and
+  a checkout without them fails before launch with the `import` line to run.
+  The log line and the marker event are instrumentation, like the tracer's:
+  no ledger entry, nothing of the game's changes.
 
 ## 2. How it works
 

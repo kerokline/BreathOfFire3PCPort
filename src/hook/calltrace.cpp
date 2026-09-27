@@ -94,7 +94,7 @@ Pending g_pending[kMaxThreads];
 // the same question with BOF3X_ORIGINAL set and without: that is what makes
 // original-vs-ours comparable (docs/call-trace.md section 7).
 constexpr std::uint32_t kOwnedCaller = 0xFFFFFFFFu;
-constexpr int kMaxOwnedRanges = 2048;  // 326 ours after the second parallel round, 2026-09-22
+constexpr int kMaxOwnedRanges = 8192;  // 3,165 ours after spell wave four, 2026-09-27 (2,048 hit at 3,165)
 struct Range {
     std::uint32_t lo, hi;
 };
@@ -331,8 +331,15 @@ void CallTrace_Start(void* dll_module) {
             if (size == 0) Fatal("calltrace: %s gives no size for owned function 0x%08X", list, (unsigned)addr);
             if (g_owned_ranges == kMaxOwnedRanges) Fatal("calltrace: more than %d owned functions", kMaxOwnedRanges);
             g_owned_range[g_owned_ranges++] = {addr, addr + size};
-            ++skipped;
-            continue;
+            // Task_RunAll is the frame counter, so it stays armed when it is
+            // ours (docs/task_sched.md section 5): a frame is still an arrival
+            // at 0x5A98A0 from WinMain - the int3 then sits on the detour's jmp
+            // and the step re-arms it at our function's first instruction.
+            // It makes no call, so its owned range above changes no caller.
+            if (addr != addr::Task_RunAll) {
+                ++skipped;
+                continue;
+            }
         }
         if (g_entries == kMaxEntries) Fatal("calltrace: more than %d entries in %s", kMaxEntries, list);
         g_entry[g_entries++] = addr;
@@ -409,7 +416,9 @@ void CallTrace_Start(void* dll_module) {
     if (!VirtualProtect(At(lo), hi - lo, PAGE_EXECUTE_READWRITE, &old))
         Fatal("calltrace: VirtualProtect(.text) failed, error %lu", GetLastError());
 
-    auto frame_entry = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Task_RunAll));
+    // The address, not the name: once Task_RunAll is ours the name is our
+    // function in bof3x.dll, and WinMain's call still arrives here.
+    const std::uint32_t frame_entry = addr::Task_RunAll;
     // Hits are written out from the Task_RunAll breakpoint, so without it
     // nothing would ever reach the file.
     if (Find(frame_entry) < 0)

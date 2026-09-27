@@ -8,6 +8,8 @@
 // process after the injects, and Fatal skips its message box.
 #include <windows.h>
 
+#include <cwchar>
+
 #include "hook/calltrace.h"
 #include "hook/crash.h"
 #include "hook/detour.h"
@@ -22,6 +24,15 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::Log("bof3x attached to process %lu", GetCurrentProcessId());
         bof3::VerifyImage();
         bof3::Crash_Start(module);
+        if (GetEnvironmentVariableA("BOF3X_INPUT", nullptr, 0) > 0 ||
+            GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) {
+            // An unattended run - a recipe or a headless self-test - marks itself
+            // for tools/recipe_saves.py, which swaps slot 0 under such games but
+            // never under the player's. The handle lives as long as the process.
+            wchar_t name[64];
+            std::swprintf(name, 64, L"Local\\bof3x_unattended_%lu", GetCurrentProcessId());
+            CreateEventW(nullptr, TRUE, FALSE, name);
+        }
         bof3::InjectAll();
         if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) {
             // Every inject and start-up self-test has run; the game never starts.

@@ -97,8 +97,15 @@ the PlayStation, with the skill hacked into a player's list. The PC's
 behaviour is unread.
 
 Four rows have an overlay and are loaded by no ability in `magic.toml`:
-rows 2, 7, 119 and 147. They may be item or enemy magic through the item
-row table, which was not checked, or cut content.
+rows 2, 7, 119 and 147. Checked 2026-09-26 against the item row table
+`0x64B274` and the whole ability row table `0x64C1D0`
+([`magic_c3.md`](magic_c3.md) §1):
+
+- **row 119** is item magic, category 0 index 32;
+- **row 147** is ability `0xE3` (227), one past the sibling's list: its
+  record duplicates 226's, and its file is `MAGIC227`;
+- **rows 2 and 7** are reached by no index inside either table on the PC:
+  unreachable, so cut content or a leftover.
 
 ## 3. What this changes for the spell round
 
@@ -112,7 +119,12 @@ harness, fuzz-only. This page gives it three things:
    puts the skill in a list, if at all.
 3. **Two rows to read first**: the engine-side 123 and 128. If ours
    reproduces a freeze or a crash, that is a defect to write down, and a
-   living project may fix it (a divergence, ledgered).
+   living project may fix it (a divergence, ledgered). Read 2026-09-25,
+   [`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §3:
+   row 123 reads an event-battle-only pointer of the current enemy
+   unconditionally (a crash if it is 0 in an ordinary battle - not
+   measured), row 128 has three unbounded waits on the target's reaction
+   state (a freeze candidate). Neither is taken yet.
 
 ## 4. The Sunder loop, as a divergence to come
 
@@ -139,4 +151,6 @@ The mapping is a few lines of Python over `bof3/BOF3.exe`'s `Magic_Rows`
 (151 rows of a u16 file id and a code pointer at `0x64C2B8`) and the
 sibling's `names/magic.toml`, with a skill's name taken from the label one
 id lower. It was run in the session scratchpad and not kept as a tool; the
-spell round's harness group should make it one (`tools/magic_rows.py`).
+spell round's harness group made it one: `tools/magic_rows.py`
+(2026-09-25), which also finds each overlay's PC extent
+([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §1).

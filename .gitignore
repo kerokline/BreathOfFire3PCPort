@@ -42,6 +42,11 @@ layout.bin
 /dumps/
 /textures_dump/
 
+# The saves recipes load (tools/recipe_saves.py): copies of the owner's slots,
+# game data like any save. Only the README is tracked.
+/tools/recipe_saves/*
+!/tools/recipe_saves/README.md
+
 # ---------------------------------------------------------------------------
 # Analysis scratch
 # ---------------------------------------------------------------------------

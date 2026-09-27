@@ -1,0 +1,2 @@
+bof3x-launcher: self-test only, game pid 33040
+bof3x-launcher: self-test only, game process exit code 3221225477

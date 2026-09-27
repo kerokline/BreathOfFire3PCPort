@@ -1,8 +1,9 @@
 # The menu backdrop at every kind Config can set (0..3) and at kinds a corrupted
 # save could hold (4..255), for Menu_DrawBackdrop 0x575690 (docs/menu-windows.md).
-# The first 360 frames of shop.txt load save 3 into the inn; then the field menu,
+# The first 360 frames of shop.txt load the town save (was slot 3) into the inn; then the field menu,
 # and 0x903A5B (Config "Background") poked. Run with BOF3X_ORIGINAL=Menu_DrawBackdrop
 # so that Capcom's code draws the kinds ours refuses. Riskiest kinds last.
+# save town
 wait 61
 hold start 4
 wait 79
@@ -10,12 +11,7 @@ hold start 5
 wait 42
 hold r2 4
 wait 37
-hold down 2
-wait 3
-hold down 3
-wait 2
-hold down 4
-wait 14
+wait 28           # slot 0 is the recipe save; was three downs to slot 3, the same 28 frames
 hold r2 5
 wait 19
 hold r2 2

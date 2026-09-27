@@ -949,6 +949,10 @@ extern "C" void __cdecl LoadMenu_Read(void) {
     }
     PutWord(at::kScriptFlags, Byte(at::kScriptFlagsSaved));
     if ((sum & 0xFFFF) == (stored & 0xFFFF)) {
+        // Instrumentation, not behaviour: tools/input_run.py hands slot 0 back
+        // on this line (docs/input-script.md section 1a) - the file is not
+        // read again until a save menu lists the slots.
+        bof3::Log("save        loaded slot %X (%s)", (unsigned)slot, reinterpret_cast<const char*>(At(at::kPath)));
         SetState(6);
         return;
     }

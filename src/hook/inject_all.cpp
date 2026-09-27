@@ -117,6 +117,51 @@
 #include "game/mode_states.h"
 #include "game/shop_states2.h"
 #include "game/map_field_objects.h"
+#include "game/task_sched.h"
+#include "game/magic_steal.h"
+#include "game/magic_lib.h"
+#include "game/magic_s16.h"
+#include "game/magic_s18.h"
+#include "game/magic_s21.h"
+#include "game/magic_s24.h"
+#include "game/magic_s17.h"
+#include "game/magic_s19.h"
+#include "game/magic_s22.h"
+#include "game/magic_s23.h"
+#include "game/magic_s25.h"
+#include "game/magic_s20.h"
+#include "game/magic_engine.h"
+#include "game/magic_c3.h"
+#include "game/magic_s29.h"
+#include "game/magic_s31.h"
+#include "game/magic_s28.h"
+#include "game/magic_s27.h"
+#include "game/magic_s26.h"
+#include "game/magic_s30.h"
+#include "game/magic_c2.h"
+#include "game/magic_c1.h"
+#include "game/magic_s01.h"
+#include "game/magic_s06.h"
+#include "game/magic_s05.h"
+#include "game/magic_s02.h"
+#include "game/magic_s03.h"
+#include "game/magic_s08.h"
+#include "game/magic_s04.h"
+#include "game/magic_s07.h"
+#include "game/magic_s13.h"
+#include "game/magic_s11.h"
+#include "game/magic_s09.h"
+#include "game/magic_s10.h"
+#include "game/magic_s12.h"
+#include "game/magic_s14.h"
+#include "game/magic_s15.h"
+#include "game/magic_s32.h"
+#include "game/magic_s33.h"
+#include "game/magic_s34.h"
+#include "game/magic_s36.h"
+#include "game/magic_s37.h"
+#include "game/magic_s35.h"
+#include "game/magic_s38.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -303,6 +348,169 @@ void InjectAll() {
     MapFieldObjects_Inject();   // round 8 group DD: every call of its clones re-aimed at a recorder and its jump
                                 // table relocated in the copy; no module patches bytes inside its sixteen: order
                                 // does not matter
+    TaskSched_Inject();         // round 9 group EA: the scheduler unit 0x5A98A0..0x5A9A21 cloned whole (it calls
+                                // nothing) and run on the fuzz's own stacks; no module patches bytes inside it:
+                                // order does not matter (other clones' calls to Task_Sleep and the rest are
+                                // re-aimed at their own recorders, and a call site keeps its target either way)
+    MagicSteal_Inject();        // round 9 group SH (the spell harness): its clones' calls and stack-table immediates
+                                // re-aimed at the shared harness's recorders; after Cheats_Inject, whose DIV-0046
+                                // patch inside 0x4F5140 ours reads back and the copy carries: otherwise order
+                                // does not matter
+    MagicLib_Inject();          // round 9 group L (the effect library): its clones' calls and the popup tasks'
+                                // stack-table immediates re-aimed at the shared harness's recorders; no module
+                                // patches bytes inside its 25: order does not matter
+    MagicS16_Inject();          // round 9 group S16 (MAGIC071..074): its clones' calls, stack-table immediates and
+                                // four .data dispatch cells re-aimed at the harness's recorders; no module patches
+                                // bytes inside its sixty (DIV-0046's masks are Pilfer's and Steal's): order does
+                                // not matter
+    MagicS18_Inject();          // round 9 group S18 (MAGIC079 / MAGIC082 through the spell harness): its clones' calls,
+                                // stack-table immediates and eight .data tables re-aimed at recorders; no module
+                                // patches bytes inside its 42: order does not matter
+    MagicS21_Inject();          // round 9 group S21 (MAGIC093..095, the spell harness): no module patches bytes
+                                // inside its 48 (DIVERGENCE.md, cheats.cpp); its clones' calls, stack-table
+                                // immediates and .data tables re-aimed at the harness's recorders: order does
+                                // not matter
+    MagicS24_Inject();          // round 9 group S24 (MAGIC104..106): no patch in its band; its calls into group L
+                                // and the engine go through raw addresses re-aimed at the harness's recorders
+    MagicS17_Inject();          // round 9 group S17 (MAGIC075 / 077 / 078): its clones' calls, stack-table
+                                // immediates and .data handler tables re-aimed at the shared harness's recorders;
+                                // no module patches bytes inside its 48: order does not matter
+    MagicS19_Inject();          // round 9 group S19 (MAGIC083, MAGIC086): its clones' calls, stack-table immediates
+                                // and eight .data handler tables re-aimed at the shared harness's recorders; no
+                                // module patches bytes inside its 43: order does not matter
+    MagicS22_Inject();          // round 9 group S22 (MAGIC096..099: Blizzard, Jolt, Lightning, Myollnir): its
+                                // clones' calls, stack-table immediates and .data handler tables re-aimed at the
+                                // shared harness's recorders, three through its own; no module patches bytes inside
+                                // its 56: order does not matter
+    MagicS23_Inject();          // round 9 group S23 (Cyclone, Typhoon, Quake, Simoon): its clones' calls re-aimed at
+                                // the harness's recorders, or left on the GTE / GPU library both sides call; after
+                                // every module it calls through (psx_gte*, psx_gpu, map_cells, world_map); no
+                                // module patches bytes inside its 51: otherwise order does not matter
+    MagicS25_Inject();          // round 9 group S25 (MAGIC107..110): its clones' calls, stack-table immediates and
+                                // the one jump table re-aimed at the shared harness's recorders; no module patches
+                                // bytes inside its 56: order does not matter
+    MagicS20_Inject();          // round 9 group S20 (MAGIC087, 088, 092): its clones' calls, stack-table immediates
+                                // and jump table re-aimed or moved, its thirteen .data tables swapped for the
+                                // fuzz only; no module patches bytes inside its 51: order does not matter
+    MagicEngine_Inject();       // round 9 group E (the engine-side rows 0, 108, 123, 126, 128 and Head Cracker's
+                                // rock): its clones' calls and stack-table immediates re-aimed at the shared
+                                // harness's recorders; no module patches bytes inside its 22: order does not matter
+    MagicC3_Inject();           // round 9 group C3 (MAGIC002, MAGIC111: the overlays no ability loads): its clones'
+                                // calls and stack-table immediates re-aimed, its three .data tables swapped for the
+                                // fuzz only; no module patches bytes inside its 20: order does not matter
+    MagicS29_Inject();          // round 9 group S29 (MAGIC125, 126: DivineBreath, ShadowBreath): its clones' calls,
+                                // stack-table immediates and eleven .data handler tables re-aimed at the shared
+                                // harness's recorders, _ftol left to the copy; no module patches bytes inside its
+                                // 49: order does not matter
+    MagicS31_Inject();          // round 9 group S31 (MAGIC132, 137, 138, 143): its clones' calls, stack-table
+                                // immediates and jump table re-aimed or moved, its eight .data tables swapped for
+                                // the fuzz only; no module patches bytes inside its 51: order does not matter
+    MagicS28_Inject();          // round 9 group S28 (MAGIC122..124: Firebreath, Icebreath, ThundrBreath, and
+                                // Port_DroppedCall 0x4DF820): its clones' calls and stack-table immediates re-aimed
+                                // at the shared harness's recorders, its seven .data tables swapped for the fuzz
+                                // only; after every module whose fuzz clones a caller of 0x4DF820 (they re-aim that
+                                // site themselves); DIV-0011 re-aims four calls to it, bytes outside it
+    MagicS27_Inject();          // round 9 group S27 (MAGIC118, 120, 121): its clones' calls, stack-table immediates
+                                // and two jump tables re-aimed or moved, its six .data tables swapped for the fuzz
+                                // only; no module patches bytes inside its 47: order does not matter
+    MagicS26_Inject();          // round 9 group S26 (MAGIC114, 115, 117): its clones' calls, stack-table immediates,
+                                // jump tables and seven .data tables re-aimed or moved for the fuzz only; no module
+                                // patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS30_Inject();          // round 9 group S30 (MAGIC130, MAGIC131): its clones' calls, stack-table immediates and
+                                // eleven .data tables re-aimed at the shared harness's recorders; no module patches
+                                // bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicC2_Inject();           // round 9 group C2 (MAGIC057, 081, 116, 129: Bone Dance, RottenBreath, UtmostAttack,
+                                // Holocaust): its clones' calls, stack-table immediates and .data handler tables
+                                // re-aimed at the shared harness's recorders; no module patches bytes inside its 64:
+                                // order does not matter
+    MagicC1_Inject();           // round 9 group C1 (MAGIC010, 080, 113, 145, 146, 213: the unfinished skills): its
+                                // clones' calls, stack-table immediates and fifteen .data tables re-aimed at the
+                                // shared harness's recorders; no module patches bytes inside its 62: order does
+                                // not matter
+    MagicS01_Inject();          // round 9 group S01 (MAGIC001: rows 1 and 105, Nue Stomp and Jump): its clones'
+                                // calls and stack-table immediates re-aimed at the shared harness's recorders, its
+                                // one .data table swapped for the fuzz only; no module patches bytes inside its 26
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS06_Inject();          // round 9 group S06 (MAGIC008, MAGIC020): its clones' calls, stack-table immediates
+                                // and two .data tables re-aimed at the shared harness's recorders; no module patches
+                                // bytes inside its 56 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS05_Inject();          // round 9 group S05 (MAGIC017, MAGIC018/019): its clones' calls, stack-table
+                                // immediates and one .data table re-aimed at the shared harness's recorders; no
+                                // module patches bytes inside its 29 (DIVERGENCE.md, cheats.cpp): order does not
+                                // matter
+    MagicS02_Inject();          // round 9 group S02 (MAGIC003: Super Combo; MAGIC004, the code of ten Strike and Claw
+                                // files): its clones' calls, stack-table immediates and jump table re-aimed or moved,
+                                // its four .data tables swapped for the fuzz only; no module patches bytes inside its
+                                // 48 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS03_Inject();          // round 9 group S03 (MAGIC006, 009, 012: Mind Sword, Chlorine, Blitz): its clones'
+                                // calls and stack-table immediates re-aimed at the shared harness's recorders, its
+                                // five .data tables swapped for the fuzz only; no module patches bytes inside its
+                                // 44 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS08_Inject();          // round 9 group S08 (MAGIC041, 042, 043, 044): its clones' calls, stack-table
+                                // immediates and seven .data tables re-aimed at the shared harness's recorders; no
+                                // module patches bytes inside its 59 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS04_Inject();          // round 9 group S04 (MAGIC013, MAGIC015 with 016 folded: Snap, Charge, Flying Kick,
+                                // Air Raid): its clones' calls, stack-table immediates, two jump tables and five
+                                // .data tables re-aimed or moved for the fuzz only; no module patches bytes inside
+                                // its 56 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS07_Inject();          // round 9 group S07 (MAGIC021, 038, 039, 040: Bonebreak, War Shout, Focus,
+                                // Enlighten): its clones' calls, stack-table immediates and eight .data tables
+                                // re-aimed at the shared harness's recorders; no module patches bytes inside its 59
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS13_Inject();          // round 9 group S13 (MAGIC063: Sudden Death): its clones' calls and stack-table
+                                // immediates re-aimed at the shared harness's recorders, its four .data tables
+                                // swapped for the fuzz only; no module patches bytes inside its 25 (DIVERGENCE.md,
+    MagicS11_Inject();          // round 9 group S11 (MAGIC058, 059: Sanctuary, Tornado): its clones' calls,
+                                // stack-table immediates and three .data table runs re-aimed at the shared
+                                // harness's recorders; no module patches bytes inside its 35 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    MagicS09_Inject();          // round 9 group S09 (MAGIC045, 046/047, 048, 050: Bone Dart, Firebreath / Icebreath,
+                                // Dream Breath, Pollen / Venom Breath): its clones' calls, stack-table immediates and
+                                // eight .data tables re-aimed at the shared harness's recorders; no module patches
+                                // bytes inside its 47 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS10_Inject();          // round 9 group S10 (MAGIC052..056: Ovum, Lavaburst, Howling, Ebonfire,
+                                // Sacrifice): its clones' calls, stack-table immediates and nine .data tables
+                                // re-aimed at the shared harness's recorders; no module patches bytes inside its 60
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS12_Inject();          // round 9 group S12 (MAGIC060, MAGIC062: Identify, Celerity): its clones' calls,
+                                // stack-table immediates, one jump table and seven .data tables re-aimed or moved
+                                // for the fuzz only; no module patches bytes inside its 44 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    MagicS14_Inject();          // round 9 group S14 (MAGIC064, 066 and MAGIC065's last: Weretiger, Pilfer,
+                                // Tsunami): its clones' calls, stack-table immediates and four .data tables re-aimed
+                                // at the shared harness's recorders; no module patches bytes inside its 57 (DIVERGENCE.md,
+                                // cheats.cpp: DIV-0046 patches Pilfer's 0x4B5691, not ours): order does not matter
+    MagicS15_Inject();          // round 9 group S15 (MAGIC067, 068, 069: Chill, Foretell, Influence): its clones'
+                                // calls, stack-table immediates and jump table re-aimed or moved, its ten .data
+                                // tables swapped for the fuzz only; no module patches bytes inside its 52
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS32_Inject();          // round 9 group S32 (MAGIC144, 150: Wall of Fire, Eye Beam): its clones' calls and
+                                // stack-table immediates re-aimed at the shared harness's recorders, its five .data
+                                // tables swapped for the fuzz only; no module patches bytes inside its 36
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS33_Inject();          // round 9 group S33 (MAGIC151, 154: Accession, Mighty Chop): its clones' calls
+                                // and stack-table immediates re-aimed, its seven .data tables swapped for the
+                                // fuzz only; no module patches bytes inside its 57 (DIVERGENCE.md, cheats.cpp)
+    MagicS34_Inject();          // round 9 group S34 (MAGIC158, 159, 161, 162, 166: Charm, (no label), Timed Blow,
+                                // Transfer, Monopolize): its clones' calls and stack-table immediates re-aimed at the
+                                // shared harness's recorders, its eight .data tables swapped for the fuzz only; no
+                                // module patches bytes inside its 47 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS36_Inject();          // round 9 group S36 (MAGIC172, 173, 218: Magic Ball, Intimidate, Aura Breath): its
+                                // clones' calls and stack-table immediates re-aimed, its eight .data tables swapped
+                                // for the fuzz only; no module patches bytes inside its 45 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    MagicS37_Inject();          // round 9 group S37 (MAGIC219, 220/221, 222: Magma Breath, Geo / Gaea's Breath,
+                                // Combustion): its clones' calls and stack-table immediates re-aimed at the shared
+                                // harness's recorders, its eleven .data tables swapped for the fuzz only; no module
+                                // patches bytes inside its 60 (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS35_Inject();          // round 9 group S35 (MAGIC167, 168, 169: Last Resort, Cure, Benediction): its
+                                // clones' calls and stack-table immediates re-aimed at the shared harness's recorders,
+                                // its six .data tables swapped for the fuzz only; no module patches bytes inside its 46
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS38_Inject();          // round 9 group S38 (MAGIC223, 225, 226/227: Tempest / Hurricane, an unlabelled id,
+                                // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
+                                // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module
+                                // patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 

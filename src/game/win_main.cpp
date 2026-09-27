@@ -661,7 +661,11 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 SpriteCell_Reset();
                 if (g_fps_log) QueryPerformanceCounter(&q2);
                 if (!Game_Paused) {
-                    Task_RunAll();
+                    // Through the original's entry, not straight to ours: the
+                    // call tracer counts a frame as an arrival at 0x5A98A0,
+                    // whose first five bytes jmp to our Task_RunAll (or, under
+                    // BOF3X_ORIGINAL, are Capcom's). docs/task_sched.md section 5.
+                    bof3::orig::Task_RunAll();
                 } else {
                     const unsigned char* const* lines = (Title_LogoState == 0 && Title_Fade == 0) ? Pause_LinesGame : Pause_LinesTitle;
                     // DIV-0038: the English lines are centred on their width

@@ -1,14 +1,15 @@
-# Save 5 -> field menu -> into each top-bar screen and back out.
+# The adult_ryu save (was slot 5) -> field menu -> into each top-bar screen and back out.
 # 0x929F00 is the menu state (2 Items .. 6 Status), 0x929F05 the top-bar
 # cursor (docs/menu-screens.md section 1). Cancel is the save's own word at
 # 0x903590 and confirm the cross bit of 0x90358E (0x43 in save 5, a US
 # layout; read from the Config screen's code, 2026-09-21).
+# save adult_ryu
 wait 480
 press start
 wait 40
 press circle
 wait 60
-press down x5
+wait 60           # slot 0 is the recipe save; was `press down x5` to slot 5, the same 60 frames
 press circle
 wait 40
 press circle
