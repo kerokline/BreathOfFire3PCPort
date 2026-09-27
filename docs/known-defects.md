@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-25 — eighty-five entries, D1..D88 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 and D87 candidates; D59, D66 and D68 abort in ours where the original would crash))
+**Status:** IN PROGRESS (2026-09-27 — one hundred and twenty-nine entries, D1..D132 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 and D87 candidates; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -1958,5 +1958,990 @@ control 14 plants the fix and is refused.
 and stores 0x52, so an x landing exactly on 0x53 sits there a frame and goes
 on to 0x73, then 0x52; the window rests at 0x52. `0x59CB90` (step 3, in no
 group) has the same pair. Harmless; ours keeps it.
+
+**Status:** latent.
+
+## D89 — The spell overlays' dispatch indices are never checked (latent; ours aborts past a stack table)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, by every group of the spell round (the forty-three docs
+below; the round's summaries in [`takeover-queue-round9.md`](takeover-queue-round9.md)
+§7, §11, §12). D59's class, in the overlays behind `Magic_Rows`; one entry
+for the class, the groups' docs carry the tables.
+
+**Established:** each task, child and record dispatcher indexes its table by
+a phase byte (`+1`, `+2`, `+3`) with no bound. Past a stack-built table the
+original calls through its own return address and the caller's frame; past
+a `.data` table it runs the next table's entries - on the PC often another
+overlay's code, since the overlays are linked into one image (D104 is the
+one case found reachable by reading). **Ours aborts past every stack
+table** (the precedent, [`magic_fx_reached.md`](magic_fx_reached.md) §3).
+For the `.data` tables the docs' wording differs: C2, S11, S19 and S20 say
+ours reads them in place as the original does (D59's rule); most other
+groups say "ours aborts" of their stack and `.data` tables together. Which
+each group's code does for a `.data` index was not re-read for this entry.
+No index past a table was seen or found reachable, except Blitz's (D104).
+
+Tables per group, as the docs count them (stack / `.data`):
+
+- L ([`magic_lib.md`](magic_lib.md) §6): the popup tasks' stack tables (a
+  phase past 3).
+- E ([`magic_engine.md`](magic_engine.md) §6, E3): every dispatcher;
+  `HeadCrackerRock_Task` has a one-entry table.
+- C1 ([`magic_c1.md`](magic_c1.md) §12): every task's stack table and every
+  `.data` dispatcher (not counted).
+- C2 ([`magic_c2.md`](magic_c2.md) §8): every `Step`'s stack table, and
+  `.data` tables that overlap (`HolocaustBeam_Types` entry 1 is
+  `HolocaustBeam_Phases` entry 0; `HolocaustSpark_Phases` entry 3 is
+  MAGIC130 code).
+- C3 ([`magic_c3.md`](magic_c3.md) §8): four stack tables, the child kinds
+  by `+1`, the wash's and the flash's `.data` tables by `+2`.
+- S01 4 / 2 (`JumpChild_Task`'s one-entry table is followed by other data);
+  S02 6 / 4; S03 7 / 5; S04 6 / 5; S05 6 stack by `+1`, a ten-entry table by
+  `+2`, a one-entry `.data` table (past it, MAGIC008's); S06 9 / 2; S07 9 / 8;
+  S08 7 / 7; S09 7 / 8; S10 9 / 9; S11 4 / 6; S12 2 / 7; S13 the task's two-
+  and the child's five-entry stack tables / 4 (a child `+1` of 1 would run
+  `SuddenDeathMote_Kinds[0]`); S14 7 stack, the streak record's by `+1` / 4;
+  S15 5 / 10.
+- S16 ([`magic_s16.md`](magic_s16.md) §6): the task's (6 or 2), the child's
+  and the update's stack tables; `.data` tables that overlap (a child `+1`
+  of 1 runs the sparkle update, 2 runs MAGIC075's code).
+- S17 4 (`Purify_Task` 3, `Revive_Task` 6, `ReviveMote_Task` 3,
+  `Leech_Task` 2) / 5 (`ReviveHalo_Phases` past 3 reads the mote-count
+  bytes as a pointer); S18 2 / 8; S19 2 / 8; S20 3 / 13; S21 3 / 7; S22 ten
+  in all (a one-entry task table's index 1 reads the next overlay's table);
+  S23 every stack table (not counted).
+- S24 ([`magic_s24.md`](magic_s24.md) §6): every table (not counted);
+  `Fx105_ChildPhases` has one entry (a `+1` of 1 jumps to the words of
+  `Fx105_OrbAngles`).
+- S25 ([`magic_s25.md`](magic_s25.md) §6): task tables of 2, 2, 4 and 6;
+  child tables of 4 and 6; `SpellRagnarok_ChildKinds` (3; phase 3 jumps into
+  `SpellRagnarok_SpritePhases`' first entry, MAGIC130's code); sprite, ring
+  and spark tables of 5, 4 and 2.
+- S26 4 / 7 (back to back: `Magic115_MotePhases` runs on into MAGIC118's);
+  S27 every table (`DragonBreathChild_Kinds` has one entry; index 1 reaches
+  `DragonBreathBeam_Aim`); S28 3 / 7 (`BreathBeam_Phases` index 1 runs
+  `BreathBeam_Aim`); S29 sixteen tables; S30 2 / 11; S31 10 / 8; S32 2 / 5;
+  S33 8 / 7; S34 6 / 8; S35 6 / 6; S36 3 / 8; S37 fourteen tables; S38 3 / 13.
+- Steal ([`magic_steal.md`](magic_steal.md) §6): the task's stack table -
+  already D59's, as CJ found it in Pilfer's copy.
+
+**Status:** latent. Blitz's is the only one found reachable (D104).
+
+## D90 — The spell starts never test `BattleTask_Create`'s "none free" (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, by 34 of the round's groups (below). D60's class.
+
+**Established:** with all 48 battle task slots taken, `BattleTask_Create`
+answers `0xFF`, and the creators below write the child's fields (and in
+several a 0x80-byte copy of an actor record) into "slot 255",
+`0x93A000 + 255 x 0x84` = `0x94237C` (its owner word `+0x80` is the
+`0x9423FC` most docs give), past the image's end `0x93F000` - an access
+violation unless something is mapped there (D60: at start-up `0x940000..` is
+reserved, not committed). **Ours writes the same addresses** in every group;
+the fuzzes' recorders answer 0..47, since `0xFF` would fault both sides.
+Creators per group, with the docs' call counts:
+
+- L: `MagicFx_BuffPopup` `0x4FB790`. E: `HeadCracker_Drop` `0x43FDC0` (and a
+  rock counted that never lands: D103).
+- C1: Pentagram's creates (four counted children in phases 1..3, six sprites
+  in phase 4; D99). C2: `BoneDance_Cast`, `RottenBreath_Emit`,
+  `RottenBreathCloud_Start`, `Holocaust_Start` (`BoneDance_Spawn` tests it).
+  C3: `Magic002_Start` `0x499DB0`, `Magic111_Start` `0x4D6140` (a 0x80-byte
+  copy, three times).
+- S01: both starts. S02: `SuperCombo_SpawnDash`, `_SpawnImages` (4),
+  `ElemStrike_Start` (2). S03: `MindSword_Start`, `MindSwordBlade_Burst` (9),
+  `Chlorine_Start` (with its copy), `Chlorine_Release`, `Blitz_Start`. S04:
+  `Snap_Start`, `Snap_Buff`, `Charge_Start` (5), `AirRaid_Start` (3),
+  `FlyingKick_Start` (the images copy 0x80 bytes). S05: all six starts. S06:
+  `Magic008_Start`, `Magic008_Apply`, `Magic020_Start` (5), `Magic020_Darken`
+  (8). S07: `Bonebreak_Start`, `WarShout_Start` and `_Rally`, `Focus_Start`,
+  `Enlighten_Start` and `_Apply`. S08: `Berserk_Start` (9), `Counter_Start`,
+  `Ward_Fade`, `EvilEye_Start` (2) (`EvilEyeBeam_Trail` tests it).
+- S09: `BoneDart_Start` (2), `ElemBreath_Start` (2), `DreamBreath_Start` (12),
+  `Pollen_Start` (10); `BoneDartShadow_Follow` / `_Fade` then index the task
+  slots by the dart's unchecked slot. S10: `Ovum_Spawn`, `Lavaburst_Start`
+  (8), `Howling_Start` (with a copy), `Ebonfire_Start` (6), `Sacrifice_Start`
+  (with a copy), `SacrificeActor_Split` (2). S11: `Sanctuary_Start`,
+  `Tornado_Start`. S12: `Identify_Start`, `Identify_WaitOpen`,
+  `Celerity_Start`, `Celerity_Apply`. S13: `SuddenDeath_Spawn`. S14:
+  `Weretiger_FocusActor`, `_Burst`, `_Copy`, `WeretigerCopy_Spawn` (4),
+  `Tsunami_Start`, `Tsunami_Rings`. S15: `Chill_Start` (3),
+  `Chill_SpawnMarks`, `Foretell_Start`, `Influence_Start` (6),
+  `Influence_SpawnMarks`.
+- S20: `Magic087_Start`, `Magic088_Start`, `Magic088_Apply`,
+  `Magic092_Start`. S23: the four starts. S26: `Magic114_Launch`,
+  `_TrailSpawn` (2), `Magic115_Start`, `Magic115_Orbit`. S27: `Burn_Start`,
+  `WhelpBreath_Start`, `WhelpBreath_WaitBeam`, `DragonBreath_Start`. S28:
+  `Firebreath_Start` `0x4DD8E0`. S29: `DivineBreath_Start`,
+  `ShadowBreath_Start`, `ShadowSeeker_Burst` `0x4E28C0`.
+- S31: `DoomBreath_Start`, `Corona_Start` (3), `MainCannonShell_Fly`,
+  `ThunderClap_Start` (only `MainCannon_Fire` tests it). S32:
+  `WallOfFire_Start` `0x4E91C0`. S33: `Accession_ActorScript`, the
+  controller's three, `AccessionOrb_Emit`, `MightyChop_Start`,
+  `MightyChop_Throw`. S34: `Magic159_Start`, `TimedBlow_Start` `0x4EE310`.
+  S35: `LastResort_Start` (9), `Benediction_Spawn`. S36: `MagicBall_Start`
+  (9), `Intimidate_Start` (2), `IntimidateTrail_Fly`, `AuraBreath_Start`;
+  `MagicBallOrb_Fly` then reads the slot its `+4` names, so every orb would
+  read past the image too. S37: `GeoBreath_Start`, `Combustion_Start`,
+  `CombustionSprite_Fall` (8), `CombustionSprite_Flash`. S38:
+  `Tempest_Start` `0x4F86C0`, `Magic225_Start` `0x4F8FD0`,
+  `MeteorStrike_Start` `0x4F9E60` (`Magic225_Apply` `0x4F9130` tests it,
+  after applying the stat: a full table loses the popup, not the buff).
+
+The docs of S16..S19, S21, S22, S24, S25 and S30 name no unchecked
+`BattleTask_Create`. The overlays' own pools are D93.
+
+**Status:** latent: 48 live battle tasks at a cast were not seen.
+
+## D91 — Spell effects divide by the live-target count (latent; ours aborts at 0)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups L, S09, S11, S15, S21 and S22 (below).
+
+**Established:** each centres or scales an effect by an `idiv` by the number
+of live actors on a side, with no zero test: with every actor of that side
+out the original raises an integer-divide fault, a crash. **Ours aborts with
+a message** at the same point. **The owner, 2026-09-26: no DIVERGENCE
+entry** - the original faults there, so no reachable case behaves better in
+it, and normal play is expected never to cast at an empty side
+([`takeover-queue-round9.md`](takeover-queue-round9.md) §6).
+
+- `MagicFx_CenterOnSide` `0x4FC0E0` (L, [`magic_lib.md`](magic_lib.md) §6).
+- `DreamBreath_TargetHeight` `0x4AB330` (S09, [`magic_s09.md`](magic_s09.md) §8).
+- `Tornado_AverageHeight` `0x4B0CB0`, the opposite side (S11,
+  [`magic_s11.md`](magic_s11.md) §8).
+- `Foretell_Read` `0x4B74C0` (S15, [`magic_s15.md`](magic_s15.md) §8): by
+  counts that can be 0 (no present member without `+0x91` bit 0x40, no
+  enemy in) and by record words that can be 0 (a counted member's `+0xA0`,
+  an enemy's `+0xB0`).
+- `Inferno_TargetCentre` `0x4C7320` (S21, [`magic_s21.md`](magic_s21.md) §5).
+- `Blizzard_CenterOnTargets` `0x4C9AF0` (S22, [`magic_s22.md`](magic_s22.md) §8).
+
+**Status:** latent. Unmeasured: a trace of a fight where the last enemy
+dies to a multi-target spell would settle whether any cast meets it.
+
+## D92 — Spell loops bounded only by a byte or a random walk (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups C2, S02, S07, S08, S12, S19, S28 and S36 (below).
+
+**Established:** a loop or fade whose end depends on a byte reaching a
+value, or on a random walk falling below a floor:
+
+- **Never ends:**
+  - `EnlightenRays_DrawLines` `0x4A5FC0` (S07, [`magic_s07.md`](magic_s07.md)
+    §7): a byte step (`add bl, 8`) compared with the dword first + 0x20; for
+    a first step of 0xE0 or more the loop commits lines forever. Its first
+    step runs 0..0x30 in play. Kept in ours.
+  - `CounterMark_DrawSpokes` `0x4A7220` (S08, [`magic_s08.md`](magic_s08.md)
+    §8): the same for a first angle of 0xE0 or more. **Ours aborts.**
+  - `HolocaustBeam_Draw` `0x4E3740` (C2, [`magic_c2.md`](magic_c2.md) §8): a
+    byte counter against `+0xA` + 1 as a dword; at `+0xA` 0xFF it wraps and
+    loops forever. `HolocaustBeam_Grow` stops `+0xA` at 0x10. Kept.
+  - `ThunderBolt_Draw` `0x4DFAE0` (S28, [`magic_s28.md`](magic_s28.md) §8):
+    the same at `+0xA` 0xFF; its steps keep `+0xA` in 0..0x14. Kept.
+  - `ElemStrike_Fade` `0x49BE30` (S02, [`magic_s02.md`](magic_s02.md) §8):
+    an odd tint byte steps 1 -> 0xFF and never reaches 0. All 36 bytes of the
+    kind table are even (read 2026-09-26). Kept.
+  - `MagicBall_DrawSpark` `0x4F2F20` / `_DrawSparkShort` `0x4F3140` (S36,
+    [`magic_s36.md`](magic_s36.md) §8): loop until a random walk (a radius
+    stepped by `sin(wave) x (Rand & mask) >> 12` over a 32-step wave whose
+    sum is about 0) falls below its floor - unbounded in principle, one more
+    line drawn a step. Faithful.
+- **Wraps, then ends late:**
+  - `Barrier_Fade` `0x4C29C0` (S19, [`magic_s19.md`](magic_s19.md) §8):
+    tint levels starting at 0 wrap to 0xFF and the fade runs 255 more
+    frames; `BattleFx_Brighten` raises them first.
+  - `MagicFx_CountDown2Release` `0x4B18B0` (S12, [`magic_s12.md`](magic_s12.md)
+    §8): an odd `+9` wraps and ends 128 frames later; Identify's disc leaves
+    it even.
+
+`LastResortBeam_DrawSparks` is D109.
+
+**Status:** latent: by reading, the games' own values stay inside in each.
+
+## D93 — Spell pools' "none free" writes record 255 inside the image (latent, silent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27; first S09 ([`magic_s09.md`](magic_s09.md) §8, round nine
+§11), then C2, S02, S07, S11, S20, S21, S24, S28 and S29.
+
+**Established:** an overlay's own record pool answers `0xFF` when full, and
+these callers write "record 255" untested. Unlike D90 the record lies inside
+the image (in `.data`'s zero-filled tail, which some docs call `.bss`), so
+the original **does not fault: it silently overwrites** whatever lives
+there. Ours writes the same bytes.
+
+- S09: `ElemBreathEmitter_Emit` `0x4AA260` with `ElemBreathMote_Alloc`
+  `0x4AABE0`: `0x6861BC` (+0x80, +0xA, +0xB). By reading far fewer than the
+  48 records are live at once.
+- C2: `RottenBreathCloud_Emit` `0x4BFBD0` and `HolocaustBeam_Emit`
+  `0x4E3680`: `0x696534` and `0x6AB0B4`, in other overlays' storage (about
+  21 of 48 and 25 of 64 live by reading).
+- S02: `SuperCombo_SpawnHits` `0x49B390` with `SuperComboHit_Alloc`:
+  `0x67ED3C`; not reached (the pool is emptied first, the count stops at
+  0x20).
+- S07: `BonebreakChild_Burst` `0x4A3D00` with `BonebreakMote_Alloc`:
+  `0x681F3C`; unreachable (12 of 64, the pool cleared first).
+- S11: both pools' callers: `0x688AFC`, `0x689D9C`; not reachable as written.
+- S20: `Magic087_ChildSpawn` `0x4C3740` and `_ChildRing` `0x4C3870`: pool A's
+  record 255 lies inside pool B (`Magic092_ChildSpawn` tests it).
+- S21: `Inferno_Start` `0x4C6380` with `FlamePool_Alloc`: past the pool's 32;
+  only a second flame effect at the same time could fill it.
+- S24: `Fx106_Start` `0x4D24C0` with `Fx106_SparkAlloc`: `0x1FE0` bytes past
+  the pool's start, beyond its `0xC00`; the start empties the pool and takes
+  exactly 96.
+- S28: `Icebreath_Start` `0x4DE980` (90 of 90) and `Thunderbreath_Start`
+  `0x4DF580` (32 of 64): cannot fail as used (the other side is D113).
+- S29: `DivineBurst_Shrink` `0x4E1110` and `ShadowSeeker_Burst` `0x4E28C0`:
+  `0x6A7FAC` and `0x6A3D10`; one cast fills 64 once.
+
+Not defects, noted by the docs: S10's `Lavaburst_PoolAlloc`, S13's
+`SuddenDeathMote_Alloc`, S35's and S37's pools are tested by their callers
+(S13's skip has a consequence: D123); S16's allocators cannot answer
+128..254; S32's eight spark cells are exactly enough.
+
+**Status:** latent; a single cast does not fill any of them by reading.
+
+## D94 — Spell draws divide by a table byte or a record byte with no zero test (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, groups L, S23, S27 and S28.
+
+**Established:**
+
+- The CLUT helpers (L, [`magic_lib.md`](magic_lib.md) §6): the row is
+  `index / SpriteClut_Divisors[kind]`, which holds 0 for kinds 5..7 (a
+  divide fault), and kinds 8 and up read past the tables; `+0x28` is
+  unchecked. What kinds sprites carry is not measured; the doc does not say
+  what ours does at a 0.
+- `Quake_Heave` `0x4CE500` (S23, [`magic_s23.md`](magic_s23.md) §5): the
+  divisor row is `(facing >> 1) * 15` into `Quake_Divisors` (two rows); a
+  facing of 4 or 5 reads a 0 byte of padding and `idiv` faults when a cell of
+  the block lies inside the area. **Ours stops with a `Fatal` naming the
+  facing.** `Quake_FacingOffsets` is read past its four pairs the same way.
+- `WhelpBreathBeam_Draw` `0x4DB0D0` (S27, [`magic_s27.md`](magic_s27.md) §8)
+  divides by `+0xB` (signed); by reading never 0 while it draws. **Ours
+  aborts.**
+- `BreathBeam_DrawTextured` `0x4DDCE0` / `_DrawGlow` `0x4DE370` (S28,
+  [`magic_s28.md`](magic_s28.md) §8): four `idiv` by `+0xB` a step. MAGIC122's
+  steps keep it at 1 or more; the five other overlays that drive
+  `BreathBeam_Run` were not read for it. **Ours aborts.**
+
+**Status:** latent.
+
+## D95 — Spell scans with no end test (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S08, S23 and S36. D74's class.
+
+**Established:**
+
+- EvilEye's trail draws (S08, [`magic_s08.md`](magic_s08.md) §8) scan for the
+  first point not erased with no bound, relying on a point before the end
+  not being 0xFFFF; the first segment's heading reads the point after it
+  even when that lies past `+0xA`.
+- The ribbons' gap scan (S36, [`magic_s36.md`](magic_s36.md) §8) walks from
+  point `+0xB` while the x word is 0xFFFF with no limit; a trail all gaps
+  runs on into `Magic213Mote_Pool` and beyond. It only reads. Whether `_Fade`
+  can make a trail all gaps before it is freed is not measured.
+- Quake's cell walks (S23, [`magic_s23.md`](magic_s23.md) §5): a cell run
+  that does not land on its end runs away; the area data decides.
+
+**Status:** latent.
+
+## D96 — Battle actor records indexed by the actor byte, unchecked (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, by most of the round's groups; the one wave five named,
+S34's `TimedBlow_Start` ([`magic_s34.md`](magic_s34.md) §8), stands for the
+class.
+
+**Established:** an effect indexes the enemy records by the acting actor
+byte - 3, or the party records by the actor byte, or either by a child's
+byte naming an actor, with no bound. An enemy index above 10 reads past the
+eight enemy records; a party actor (0..2) taken as an enemy reads a
+"record" 0x128..0x378 bytes below `0x93B960`, among the battle task slots;
+an enemy actor taken as a party member reads (and in some writes) past the
+three party records. Several copy 0x80 bytes from there into a new task
+slot. Ours reads and writes the same addresses.
+
+- `TimedBlow_Start` `0x4EE310` (S34): enemy records by actor - 3, above 10,
+  with a 0x80-byte copy.
+- **Writes:** `RestoreForm_Start` `0x452620` (E, E4: an enemy actor writes
+  +1..+4 past the three members, inside the image); MAGIC064 (S14: reads,
+  copies and writes `Weretiger_End`'s +0x134 / +0x142 past the party
+  records for an enemy actor); `Accession_*` (S33: D108).
+- **Party actor read as an enemy:** S01's row 1 cast by a party member
+  (`0x435A70` animates a task-slot "record" as the current enemy);
+  `HolocaustBeam_Aim` `0x4E3410` (C2: the beam's near end from
+  `0x93B5FC..`); `ElemBreathMote_Start` (S09, the enemy's +0x8C);
+  `Chill_Start` `0x4B6710` (S15) and `Corona_Start` `0x4E7450` (S31: the
+  0x80-byte copy may overlap the new slot; ours copies dword by dword,
+  forward, as `rep movsd` does) - these two reached only in an event battle.
+- **Actor - 3 unchecked above 10:** `Magic111_Start` (C3); S01's starts;
+  S02's actor and target copies; `Chlorine_Start`, `Blitz_End` (S03); S04's
+  images; S05's actor record; `Magic008_Start`, `Magic020_Start` and the
+  reactions' state reads (S06); `Bonebreak_Start` (S07); `EvilEyeBeam_Start`
+  (S08); `Sacrifice_Start` / `_Wait` (S10); `MainCannonShell_Aim` / `_Fly`
+  (S31); `MightyChop_Start` `0x4ED100` (S33, with the overlapping copy).
+- **By a child's byte:** S03's bolts by +4; `HowlingChild_Start` / `_End`
+  by +0xB (S10); `SanctuaryMote_Wait` by +0xB - 3 (S11);
+  `SuddenDeathChild_Start` by +4 - 3 (S13); `InfluenceMark_Start` by +0xB
+  (S15); `Magic092_ChildTint` / `_ChildEnd` and `Magic088_Apply` (S20);
+  `BenedictionChild_*` by +4 into the party records (S35: below the party
+  count `0x904AB0`); `MagicFx_ApplyBuff` and `BuffPopupAt_Start` past 10 (L).
+
+In each the creator writes only in-range values by reading.
+
+**Status:** latent.
+
+## D97 — Spell value tables indexed unchecked (latent, reads)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups L, C1, S03, S04, S06, S08, S11, S12, S14, S17, S19,
+S21..S25, S27, S29, S30, S33..S36 and S38. D64's class.
+
+**Established:** a table of angles, offsets, colours, names or counts in
+`.data` indexed by a record byte with no bound; past the table the original
+reads the next table's bytes as values - a wrong value, not a fault. Ours
+reads the same bytes (where a group aborts instead, it is said).
+
+- L: `BuffPopup_Draw`'s icon (9 cells, by the caller's whole kind byte),
+  `MagicFx_FormationOffset`'s two indices.
+- C1: `PentagramRing_Radii[+0xB]`, the puffs' offset rows `[+0xB]`.
+- S03: `ChlorineCloud_Start`'s offsets by +0xB (**ours aborts past 2**).
+- S04: `SnapWave_FacingPhase` by the facing, `AirRaidImage_ShadeSteps` by
+  +0xB.
+- S06: two data tables by +0xB.
+- S08: `CounterMark_Place` (the form byte `0x904B89` into the 28-byte
+  `CounterMark_FormIndex`, then the 22-pair tables); `WardMote_PushMatrix`'s
+  `WardMote_Tilts` by the direction; the trail (+4 x 32 + point).
+- S11: `Tornado_FacingPhase` by the facing (four entries).
+- S12: `Identify_DrawItem` past the name tables (a wrong name).
+- S14: `WeretigerStreak_Start`'s offset pairs by the facing,
+  `Weretiger_DrawSprite`'s UV entries; `Item_CopyName` checks neither index
+  nor category (0 or above 3 reads the consumable names).
+- S17: `ReviveHalo_Spawn`'s count table by +4. S19: the colour tables by
+  `+4`. S21: `IceShard_Draw`'s jitter bytes by `+0xB >> 1` (+ k). S22:
+  `BlizzardShard_Launch` / `_Grow` / `Blizzard_Start` by +4.
+- S23: `FxSpiral_Turns[+4]`, `FxSpiral_Tilts[2 * +8]`,
+  `SimoonDust_Offsets[+0xB]`. S24: `Fx105_OrbAngles` / `_OrbColours` by +4.
+  S25: `SpellDepress_Start`'s corner (`0x904AAC` xor 2),
+  `SpellRagnarok_SparkInit`'s row by +0xB.
+- S27: `WhelpBreath_GlowAngles` (4 bytes) by the direction. S29:
+  `ShadowSeeker_Colours` by +0xB.
+- S30: the party-set index (`0x90412C & 0xFF`, bit 7 kept: a wrong file
+  index), `VenomRing_ScreenY` by +0xB, the mote tables by +7;
+  `Kaiser_ReloadParty` / `Kaiser_ShowParty` walk the members by
+  `Field_MemberCount`, unbounded by the three records (D85's shape).
+- S33: `0x904B89` into `0x64ECB0`; `AccessionSpark_Angles` by +4.
+- S34: `TransferMote_Colours` by +4 x 4 + +3. S35: `CureMote_Colours` by
+  kind x 4 + variant.
+- S36: `MagicBallOrb_Shades` by +0xB; `IntimidateTrail_*`'s points by +4 and
+  +0xA / +0xB - these **write**, into `Magic213Mote_Pool` and on, for a +4
+  past 1.
+- S38: `TempestGust_Angles` by the owner's direction (past 3, a code pointer
+  of `Magic225Veil_TaskTable`, then the burst colours).
+
+**Status:** latent: each group found its creators writing in-range values.
+
+## D98 — Tint record indices taken from `Sprite_SetTint` unchecked (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, groups C1, S16, S20, S22 and S26.
+
+**Established:** effects keep the byte `Sprite_SetTint` answered and index
+`MoveScript_TintRecords` (12-byte records) by it later, unchecked; D60
+records that `Sprite_SetTint` answers `0xFF` when no record is free.
+`Magic088_Darken` `0x4C46B0` / `_Lighten` `0x4C4700` (S20), `ActorFx_Untint`
+`0x4BC1A0` (S16, as MAGIC070's `Sparkle_End`), `Myollnir_Darken` `0x4CBA00`
+(S22), MAGIC115's +0xA and MAGIC117's +0xB (S26), and C1's tint record
+`+0xB` / `+0xA`. **The docs disagree on the table's size:** S16 and S20
+(and D60) count 32 records, so `0xFF` writes 223 records past them; C1
+("3,072 bytes") and S26 ("256 records") say every byte lands inside it.
+Not re-measured here. Ours indexes the same.
+
+**Status:** latent; the size owes one reading of `Sprite_SetTint`.
+
+## D99 — Spell waits with no limit or on an exact count (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups C1, S05, S06, S14, S18 and S32 (Head Cracker's
+waits are D103).
+
+**Established:** each wait ends only when a count or a flag reaches one
+value, with no frame limit; a count left short (an unchecked create, D90) or
+passed between two runs freezes the effect, and `BattleFx_Finish` then never
+ends the spell.
+
+- Pentagram (C1, `Pentagram_Task` `0x4D67F0`, [`magic_c1.md`](magic_c1.md)
+  §12): phases 5 and 6 wait for `+0xB` to be exactly 6 and exactly 0x80.
+- Rows 5, 6, 54 and 68 wait for `+0xB` to reach 0xFF, rows 53 and 43 for 0
+  (S05, [`magic_s05.md`](magic_s05.md) §8).
+- `Magic008Blow_ReactTwo` / `_ReactThree` wait while the target's state is
+  6, Head Cracker's shape (S06, [`magic_s06.md`](magic_s06.md) §8).
+- `WeretigerImage_Play` `0x4B5160` ticks the image's script to its end in
+  one call: a script that never ends hangs the frame (S14,
+  [`magic_s14.md`](magic_s14.md) §8).
+- Drain (S18, `Drain_Task` `0x4BEB50`, [`magic_s18.md`](magic_s18.md) §9):
+  types 2 and 3 wait for the owner's child count to *equal* 2 and 3; by the
+  counters they see it in a window of a few frames.
+- Wall of Fire (S32, `WallOfFireChild_WaitFlame` `0x4E93C0`,
+  [`magic_s32.md`](magic_s32.md) §8): the child and both sparks wait for bit 7
+  of the child's +0xB, which only the flame sets; if the flame's record
+  were not allocated nothing would set it. MAGIC092's child has the same
+  shape.
+
+Ours keeps each.
+
+**Status:** latent; none is reached by reading.
+
+## D100 — Stack indices and phases read again across calls (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S12, S17, S18, S19, S26, S27 and S33.
+
+**Established:** an index into a stack array, or a phase, is read once
+before a call and again after it; nothing the callees do moves it in the
+game, but a callee that did would store outside the array (into the
+original's own frame) or dispatch another phase.
+
+- `CeleritySpark_Draw` `0x4B28B0` (S12) and `BuffSpike_Draw` `0x4C0E30`
+  (S18): `+9` read again after the GTE calls indexes a four-entry depth
+  array. **Ours aborts outside 0..3.**
+- `ShieldSpark_DrawCrystal` `0x4C22D0` (S19): the same with `+9`. **Ours
+  aborts.** `BarrierRing_Draw` `0x4C2E30` (S19): "stands up" (`+2`) tested
+  twice a segment; a change before any standing segment would link an
+  uninitialised stack dword. **Ours aborts.**
+- `Magic114_DrawTriangle` `0x4D7D00` (S26): the eight keys by +0xB read
+  after the projection; 8 or more writes past the ring's frame array.
+- `Identify_DrawMember` `0x4B1090` (S12): restores the name byte through the
+  target read again after two calls.
+- Phases read after two calls: `Leech_Task` `0x4BDAC0` (S17),
+  `WhelpBreathSprite_Run` `0x4DB7A0` (S27), `MightyChopBlade_Run`
+  `0x4ED330` (S33).
+
+**Status:** latent; unreachable by reading.
+
+## D101 — Uninitialised bits passed as arguments (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S19, S25, S26 and S37.
+
+**Established:** `Shield_Start` `0x4C14F0` passes `Battle_ActorIsOut` a stack
+dword whose upper bytes are uninitialised, and `ShieldAura_Fade` `0x4C1940`
+passes register garbage above the bytes to `BattleActor_Flash` and
+`0x4FB790` (S19); `Magic114_DrawRays` `0x4D91A0` passes `MapView_LinkPrimAt`
+a dword with three garbage bytes (S26); `SpellConfuse_ChildFly` `0x4D4080`
+passes a VECTOR by value with its pad word unset (S25);
+`MagmaBreathRecord_Fly` `0x4F5E40` passes an uninitialised stack word as
+`MagicFx_StepTowardPoint`'s fourth argument (S37). Every callee reads only
+the bytes that were set (read: `0x4456C0`, `0x4FB6F0`), or never the
+argument. Ours passes what the callees read.
+
+**Status:** latent, harmless.
+
+## D102 — Paralyzer (row 123) reads through address 0 in an ordinary battle (candidate)
+
+**Seen:** not seen here; TCRF reports the skill "crashes the game". Found by
+reading the code while taking it over, 2026-09-26, group E
+([`magic_engine.md`](magic_engine.md) §6, E1;
+[`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §3).
+
+**Established:** `Paralyzer_Start` `0x43F3E0` (row 123's task
+`Paralyzer_Task` `0x43F3B0`, ability id `0x8B`) plays a sound cue from
+`word [[0x939AD8] + 0xF8]`: the enemy object `BattleEnemy_RunAll` ran last,
+not the caster, and its `+0xF8` cue-table pointer. A byte-pattern scan of
+`.text` for every `mov dword [r32 + 0xF8], ...` finds 62 stores, all of cue
+tables (`0x64C7A0..0x64DCD4`), all in the event-battle set-ups
+(`0x437A55..0x4400D0`); the ordinary enemy set-up (`0x494570`, `0x4946C0`)
+never writes `+0xF8`, and every other reader tests the event-battle byte
+first. The enemy records lie in `.data`'s zero-filled tail, so `+0xF8` is 0
+at start. So in a session where no event battle has yet written that enemy
+slot, the first Paralyzer reads a word at address 0: an access violation.
+After an event battle it plays that boss's cue instead (nothing clears the
+pointer). **Ours reads through the same pointer, unchecked, and faults where
+the original does.** Not measured: a block clear through a pointer computed
+elsewhere would not show in the scan; the check is one read of `0x93BA58`
+(+ 0x128 n) in an ordinary battle, or the owner casting it.
+
+**Status:** candidate (the TCRF crash, explained by reading); fixing it is a
+divergence for the owner to choose.
+
+## D103 — Head Cracker's (row 128) freeze is not explained by reading (candidate)
+
+**Seen:** not seen here; TCRF reports the skill "freezes the game" when
+hacked into a player's list and cast on an ordinary enemy. Read 2026-09-26,
+group E ([`magic_engine.md`](magic_engine.md) §6, E2 and E6;
+[`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md) §3).
+
+**Established:** `HeadCracker_Task` `0x43FC80` (ability id `0x80`) has three
+unbounded waits:
+
+1. `HeadCracker_WaitCaster` `0x43FD80`: the caster's animation 2 until
+   `Sprite_ScriptTickOnce` answers 1 - at the script's end or any jump, so
+   not a freeze by reading.
+2. `HeadCracker_WaitTarget` `0x43FE00` for the rocks: `+0xA` counts rocks
+   created and not landed; `HeadCracker_Drop` `0x43FDC0` does not test
+   `BattleTask_Create`'s `0xFF` (D90), so with 48 slots taken it counts a
+   rock that never lands - a freeze, if the write past the image does not
+   fault first.
+3. `HeadCracker_WaitTarget` for the reaction, while the target's `+1` is 6:
+   by reading it ends for a state-0 enemy (`EnemyOp_HitEnd`) and for a
+   member (`0x441D80`). It does not for an enemy in another state (the boss
+   and event tables `EnemyOp_StepsB..F`; D..F not read), or for a target
+   byte with a side bit (`0x40` / `0x80`), which `HeadCracker_WaitTarget`,
+   `HeadCrackerRock_Start` `0x43FF00` and `Battle_ActorIsOut` index as an
+   enemy past the eight records (past the image for `0x40`).
+
+So **TCRF's case (a member caster, a state-0 target) is not explained**; the
+candidates are the side-bit target and an enemy in a non-zero state. Ours is
+faithful. The check is live: cast it with the cheat (DIV-0045) with a watch
+on `0x904B44`, the caster's and target's `+1`, and the task's `+1` / `+0xA`.
+
+**Status:** candidate, cause open.
+
+## D104 — Blitz's bolt can step past its table into Snap's code (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S03 ([`magic_s03.md`](magic_s03.md) §8;
+[`takeover-queue-round9.md`](takeover-queue-round9.md) §10).
+
+**Established:** `BlitzBolt_Seek` `0x49E340`, when the bolt's actor is out,
+sets `+2` to 11 (`BlitzBolt_Drift`) and goes on to its step and near test;
+if the bolt is also within 0x8000 of that actor that frame, the near branch
+runs too and moves `+2` on to 12. The next frame `BlitzBolt_Run` `0x49E260`
+jumps through `BlitzBolt_Steps[12]` (`0x65A630`, twelve entries), which is
+MAGIC013's table's first entry, `0x49EBE0` - `SnapWave_Run` (Snap, a name
+read one id down) - which indexes its own five-entry table by the same 12.
+On the PlayStation, where each overlay loads alone, the entry past the table
+is whatever follows it in Blitz's own file, so the wild jump is likely an
+artifact of the port's linking. The likely case is a target knocked out by
+an earlier bolt while this one is on its way; not measured. **Ours aborts at
+the bad step.** **The owner, 2026-09-26: keep ours as it is, no DIVERGENCE
+entry.**
+
+**Status:** latent; ours aborts where the original runs another spell's code.
+
+## D105 — Identify on a party member can mark an arbitrary enemy kind identified (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group S12 ([`magic_s12.md`](magic_s12.md) §8).
+
+**Established:** `Identify_Start` `0x4B0D90` runs its roll whatever the
+target; for a member (0..2) the roll's enemy record is index -3..-1, the
+tail of the battle task slots (`0x93B960 - 3 x 0x128`). Its "level"
+(`+0x98`) is whatever a task left there, and if its `+0x8F` is not 0 and the
+roll hits, `Identify_MarkSeen` `0x4B0FF0` sets the seen bit of the "kind" at
+its `+0x8C`. Whether the skill can target a member is not measured. Faithful
+in ours.
+
+**Status:** latent.
+
+## D106 — The matrix pushers turn by uninitialised stack words past direction 3 (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S15 ([`magic_s15.md`](magic_s15.md) §8), S04
+([`magic_s04.md`](magic_s04.md) §8), S25 ([`magic_s25.md`](magic_s25.md) §6)
+and S31 ([`magic_s31.md`](magic_s31.md) §8).
+
+**Established:** each builds a rotation from a four-entry jump table on the
+direction byte; a direction past 3 goes to the common tail with the angle
+words never written, so the matrix is built from whatever was on the stack.
+`ChillRay_PushMatrix` `0x4B6BC0` (S15: the ray's +8 comes from the owner's
++8 in `Chill_Start`), `SnapWave_PushMatrixA` / `_B` (S04: +8 written only by
+`SnapWave_Start`), `SpellConfuse_PushFacingMatrix` `0x4D41B0` (S25) and
+`CoronaRay_PushMatrix` `0x4E77D0` (S31). **Ours aborts on a direction past
+3.** Whether a live owner's direction can be past 3 is not measured.
+
+**Status:** latent.
+
+## D107 — Null entries in the form table `0x64E9BC` (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S30 ([`magic_s30.md`](magic_s30.md) §8) and S33
+([`magic_s33.md`](magic_s33.md) §8; round nine §12).
+
+**Established:** `0x64E9BC` holds 26 pointer pairs indexed by `0x904B89`
+(8-byte entries); entries 10, 19 and 20 are null (read 2026-09-26).
+`Kaiser_LoadSetFile` `0x4E5090` (S30) reads through the entry unchecked: a
+word at address `2 x party set`, an access violation. **Ours aborts with a
+message there.** `Accession_LoadFormA` `0x4EB0F0` / `_LoadFormB` `0x4EB2E0`
+(S33) dereference the pair at once: a kind of 10, 19 or 20 (or past 25,
+past the table) faults - on both sides, by S33's harness note (its seed
+keeps to the 23 non-null kinds). Whether `0x904B89` can hold those values
+while these spells run is not measured.
+
+**Status:** latent.
+
+## D108 — Accession's path B copies an enemy actor's "record" over party member 0 (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group S33 ([`magic_s33.md`](magic_s33.md) §8).
+
+**Established:** `Accession_*` index the acting member as a party record
+unchecked (0..2 by design); an enemy actor would make them read and write
+past party record 4, and `Accession_ApplyB` `0x4EB350` would copy that over
+party record 0. Ours does the same.
+
+**Status:** latent.
+
+## D109 — `LastResortBeam_DrawSparks` never ends for a step of 0 or below (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group S35 ([`magic_s35.md`](magic_s35.md) §8).
+
+**Established:** `LastResortBeam_DrawSparks` `0x4F0470` loops with a row
+that does not advance past `+9` and a shade that does not fall when its step
+k is 0 or below. Its only callers pass 2 and 3. Ours keeps it (the fuzz
+passes k of 2 or 3, else 1..6).
+
+**Status:** latent, unreachable by reading.
+
+## D110 — `CombustionSprite_Fade` scales one axis twice and the other never (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group S37 ([`magic_s37.md`](magic_s37.md) §8).
+
+**Established:** `CombustionSprite_Fade` `0x4F76E0` adds 0x1000 and then
+0x800 to the dword `+0x40` and never touches `+0x44`, which every start sets
+to the same 0x10000 - read as a copy slip for `+0x44`: the sprite would
+stretch in one direction as it fades. Ours keeps it. Unmeasured on screen.
+
+**Status:** latent (visible, if it shows, as a one-way stretch).
+
+## D111 — Two spell shakes leave the camera's first angle at 0xFD56 (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S37 ([`magic_s37.md`](magic_s37.md) §8) and S10
+([`magic_s10.md`](magic_s10.md) §8).
+
+**Established:** `CombustionSprite_Shake` `0x4F75E0` and
+`LavaburstChild_Shake` `0x4AC470` rock `Camera_Angles[0]` relative to its
+value and then end by setting it to 0xFD56, whatever it was before the
+spell. A battle whose camera angle is not 0xFD56 there would keep the new
+one (a jump). Whether any battle's camera differs was not measured. Ours
+keeps it.
+
+**Status:** latent.
+
+## D112 — `Magic225_Spawn` plays one sound sixteen times in a frame (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group S38 ([`magic_s38.md`](magic_s38.md) §8).
+
+**Established:** `Magic225_Spawn` `0x4F9090` plays sound 0x100 once before
+each of its sixteen shards, in one frame. Whether the sound layer merges
+them was not measured (D84's shape). Ours keeps it.
+
+**Status:** latent.
+
+## D113 — A second cast of the same overlay clears the first's pool (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S38 ([`magic_s38.md`](magic_s38.md) §8) and S28
+([`magic_s28.md`](magic_s28.md) §8).
+
+**Established:** each overlay's record pool is cleared by its own start
+(`Tempest_Start` `0x4F86C0`, `Magic225_Start` `0x4F8FD0`,
+`MeteorStrike_Start` `0x4F9E60`; `Icebreath_Start` `0x4DE980`,
+`Thunderbreath_Start` `0x4DF580`), and the casts share one pool. A second
+cast while the first still runs clears the first's records, whose owner
+then never sees its count reach 0 - a wait without end (S38). Whether two
+casts can overlap in play was not measured. Ours keeps it.
+
+**Status:** latent.
+
+## D114 — Ink Ink's and MAGIC213's children read the target's side late (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group C1 ([`magic_c1.md`](magic_c1.md) §12).
+
+**Established:** `InkInkActor_Start` `0x4EA130` and `Magic213Actor_Start`
+`0x4F4C80` find their actor's record from the target byte's 0x40 when the
+child starts (after a delay of up to 16 x 7 + 1 frames), not when it was
+spawned; if the byte changes in between, a party index is read as an enemy
+(inside the task slots) or an enemy index as a party member (past the
+three). Whether the target byte changes during an effect is not measured.
+Ours keeps it.
+
+**Status:** latent.
+
+## D115 — Pentagram leaves row 26's CLUT with the STP bit set (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group C1 ([`magic_c1.md`](magic_c1.md) §4, §12).
+
+**Established:** `Pentagram_Start` `0x4D6860` sets the STP bit on row 26's
+first sixteen CLUT entries; nothing in MAGIC113 puts them back (MAGIC213's
+start copies them back from the source, and others may). Not measured in
+play. Ours keeps it.
+
+**Status:** latent.
+
+## D116 — Row 27 in battle draws at the field's kind-2 point (latent, intent open)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group C1 ([`magic_c1.md`](magic_c1.md) §3, §12).
+
+**Established:** `Magic080_Start` `0x4FC360` places the task at
+`Field_Kind2X` / `Field_Kind2Z` (`0x905E64` / `0x905E60`, names that are
+hypotheses in `symbols.toml`) with the map's elevation there, whatever those
+hold in battle. By design or not was not read. Ours keeps it.
+
+**Status:** latent; possibly intended.
+
+## D117 — A Bone Dance follower would stand at the ground height of (x, x) (latent, unreachable)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group C2 ([`magic_c2.md`](magic_c2.md) §8).
+
+**Established:** `BoneDanceFollow_Start` `0x4AEF00` and `_Step` `0x4AEFE0`
+push the dword `+0x34` for both of `AreaMap_Elevation`'s arguments, where
+the bone's fall pushes `+0x38` then `+0x34`. No creator in MAGIC057 starts a
+follower, so it is unreachable by reading. Ours keeps it; control B44 (the
+fix) is refused.
+
+**Status:** latent, unreachable.
+
+## D118 — `Magic002_Start` overwrites its row task's owner pointer (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group C3 ([`magic_c3.md`](magic_c3.md) §8).
+
+**Established:** `Magic002_Start` `0x499DB0` writes the ball's address into
+the current slot's `+0x80` (through `0x93B8C4`), which is the row task's own
+owner pointer: the owner is lost for the rest of the effect. Nothing after
+reads the owner (`Magic002_Wait` reads the field as the ball; `0x43FE80`
+does not read it). Ours keeps it.
+
+**Status:** latent, harmless.
+
+## D119 — Dead or overwritten computations in the spell overlays (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups C3, S08, S10, S23, S25 and S29.
+
+**Established:** each computes something that is discarded or never runs;
+ours keeps each.
+
+- `Magic002Ball_Draw` `0x499FF0` (C3, [`magic_c3.md`](magic_c3.md) §8):
+  `Gpu_GetTPage` gets `(0x3C0, 0x100, 0, 0)`, which looks like libgpu's
+  `(tp, abr, x, y)` given as `(x, y, tp, abr)` - no difference, the quads
+  are untextured; the turn is read as its low byte, so the ball does not
+  turn while it flies; the pole's shade is computed ten times and every
+  point's z never read.
+- `EvilEyeSpark_Grow` `0x4A9510` / `_Fade` `0x4A9550` (S08): call `Rand` and
+  drop its answer; the bit 0 test after it sets flags nothing reads (by the
+  shape, a left / right jitter that lost its branch).
+- `EbonfireRing_End` `0x4AD300` (S10, [`magic_s10.md`](magic_s10.md) §8) is
+  dead code; if it ran it would set the owner's ring count to 0xFF and
+  `FxDiscFan_Fade` would never see 0 rings.
+- `FxFunnel_Wait` `0x4CCB10` (S23, [`magic_s23.md`](magic_s23.md) §5): the
+  turned offset is overwritten by the owner's position, so the heading is
+  `Math_Ratan2(0, 0)` every time, a constant (control F4 unrefusable).
+- `SpellRagnarok_DrawScreenTint` `0x4D55C0` (S25): a dead store to
+  `0x903854`.
+- `ShadowBreath_Task` `0x4E19A0` (S29): leaves `ShadowMote_Current` at the
+  last live record; nothing else reads it.
+
+**Status:** latent, harmless.
+
+## D120 — `SuperCombo_ReadButton` compares the whole pressed word (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S02 ([`magic_s02.md`](magic_s02.md) §8).
+
+**Established:** `SuperCombo_ReadButton` `0x49A960` compares the whole
+`Input_Pressed` word, so the right button pressed together with any other
+bit counts as a miss and ends the prompt. Whether that is felt in play
+depends on whether `Input_Pressed` holds edges or levels, not measured.
+Ours keeps it.
+
+**Status:** latent; the owner's feel to judge.
+
+## D121 — Magic008's reactions cancel an upload they did not check was queued (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S06 ([`magic_s06.md`](magic_s06.md) §8).
+
+**Established:** `Magic008Blow_ReactTwo` `0x4A2E50` / `_ReactThree`
+`0x4A3020` take `Gfx_UploadQueueCount` down by one after
+`Sprite_SetAnimation` and zero that entry, assuming the call queued one. If
+it did not (the enqueuer `0x5894D0` skips a record with +0 bit 1; whether
+`Sprite_SetAnimation` always reaches it was not read), an earlier entry is
+dropped; at a count of 0 the count wraps to 255 and the three 20-entry
+arrays are written 235 entries past their end. Not measured whether a
+member's double can reach it. Ours keeps it.
+
+**Status:** latent.
+
+## D122 — `ElemBreathEnemy_Start` ends its parent breath early (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group S09 ([`magic_s09.md`](magic_s09.md) §8).
+
+**Established:** `ElemBreathEnemy_Start` `0x4AA320` leaves `Sprite_Current`
+at the breath task (not put back), zeroes the breath task's count +0xB and
+sets its +1 to 1 (`BattleFx_Finish`). So, by reading, in that event battle
+the breath ends (the done flag, the task freed) the frame its second child
+starts, while the emitter and its motes run on, and the emitter's own end
+(`MagicFx_EndWithChildren`) later counts down the freed task's +0xB. Not
+measured. Ours keeps it.
+
+**Status:** latent.
+
+## D123 — One designated child carries the effect's payload (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups S13 ([`magic_s13.md`](magic_s13.md) §8) and S29
+([`magic_s29.md`](magic_s29.md) §7).
+
+**Established:**
+
+- Sudden Death's burst (S13): 92 burst motes plus up to ten orbit motes can
+  ask for more than the pool's 96; `SuddenDeathMote_Alloc` `0x4B3E80`
+  answers 0xFF and the caller skips the mote (checked). If mote 0 is the one
+  skipped, `SuddenDeathBurst_Close` `0x4B3500`'s
+  `Battle_SetTargetFlags(..., 0x10)` - made by mote 0 only - is never
+  called. Not measured.
+- `ShadowSeeker_Burst` `0x4E28C0` (S29) does nothing but step on for a
+  seeker whose `+0xB` is not 0; if seeker 0 were freed early (nothing seen
+  does it) no orb, glow, motes or target flag would come.
+
+Ours keeps both.
+
+**Status:** latent.
+
+## D124 — A reused record keeps its last tenant's fields (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26..27, groups E ([`magic_engine.md`](magic_engine.md) §6, E5) and
+S14 ([`magic_s14.md`](magic_s14.md) §8).
+
+**Established:** `HeadCrackerRock_Start` `0x43FF00`'s rock starts 0x800 above
+the height word its slot's previous tenant left (`BattleTask_Create` does
+not clear `+0x3E`). `WeretigerStreak_Alloc6` `0x4B4B90` does not set a
+record's step `+1`, relying on the previous streak's end
+(`WeretigerStreak_Draw` clears +0 and +1); a record left live with another
+`+1` would dispatch past the two-entry table (D89). Ours keeps both.
+
+**Status:** latent.
+
+## D125 — `Magic073_CountReacting` reads the wrong enemies' state (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S16 ([`magic_s16.md`](magic_s16.md) §6).
+
+**Established:** `Magic073_CountReacting` `0x4BBCE0` asks
+`Battle_ActorIsOut(i + 3)` for i 0..7 and then reads the state byte at
+`0x93BCD9 + 0x128 i` - enemy 0's state byte `0x93B961` plus three records.
+So enemy i's liveness gates enemy i + 3's reaction state, and for i 5..7 the
+byte is past the eight enemy records (`0x93C2B1..`, near the message queue
+`0x93C2A0`). MAGIC073's end therefore waits on the wrong enemies'
+reactions; whether that ever holds the effect up is not measured (a watch
+on `0x904AA8` bit 2 in a live cast). The party half is right. Ours keeps
+the original's index; control C2 (the fix) is refused. The PSX's was not
+compared.
+
+**Status:** latent.
+
+## D126 — `Magic088_Variant` rewrites the ability id (latent, intent open)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S20 ([`magic_s20.md`](magic_s20.md) §7).
+
+**Established:** `Magic088_Variant` `0x4C4830` rewrites the ability id
+`0x112` to `0x5A` when the side byte is not 4 - a presentation effect
+mutating battle state. Whether it is meant is not known. Ours keeps it.
+
+**Status:** latent; possibly intended.
+
+## D127 — Jolt and Lightning take task slot 0's position when no bolt was made (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S22 ([`magic_s22.md`](magic_s22.md) §8).
+
+**Established:** `Jolt_Start` `0x4C9C90` / `Lightning_Start` `0x4CAAA0` keep
+a slot index that starts at 0 and is not checked, so with every target out
+(no bolt made) the task takes task slot 0's position. Harmless; ours keeps
+it.
+
+**Status:** latent, harmless.
+
+## D128 — `Quake_End` loses a map code 0x28 (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S23 ([`magic_s23.md`](magic_s23.md) §5).
+
+**Established:** `Quake_Start` `0x4CE140` turns cell code 0 into 0x28 and
+`Quake_End` `0x4CEA20` turns 0x28 back into 0, so a cell prim that was 0x28
+before the spell comes back as 0. Whether any battle map has such a cell
+was not checked. Ours keeps it.
+
+**Status:** latent.
+
+## D129 — Fx104's whirl 0 outlives its parent and writes into a freed slot (candidate)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S24 ([`magic_s24.md`](magic_s24.md) §6), which calls it a
+defect candidate.
+
+**Established:** `Fx104_WhirlEnd` `0x4D0850` and `Fx104_BurstShrink`
+`0x4D1320` signal by index, not by count: each writes its own index into the
+parent's `+0xB`, and the parent moves on at 7. Whirl i's delay starts at 2i;
+whirl 0's at 0, and `Fx104_WhirlDelay` `0x4D0790` decrements before it
+tests, so it wraps to 255 frames. Whirl 7 ends first (about 38 frames), the
+parent goes on, burst 7 ends the parent at about 170 frames, and whirl 0
+draws until about 280 and then writes its `+0xB` through its owner pointer,
+into a task slot freed and possibly reused. On screen a lone late whirl (a
+guess). The live check: a cast of row 14 with a watch on the task slots.
+Ours keeps it.
+
+**Status:** candidate.
+
+## D130 — `BurnFlame_Draw` sorts by x in both x and z (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S27 ([`magic_s27.md`](magic_s27.md) §8).
+
+**Established:** `BurnFlame_Draw` `0x4DA540` sorts each quad at the task
+moved by its first point's x in both x and z (the z uses x, not the point's
+second coordinate) - by reading a slip in the source. Ours keeps the depth
+order it gives.
+
+**Status:** latent.
+
+## D131 — The kind-1 battle task `0x5B` never ends by itself (latent, open)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-26, group S28 ([`magic_s28.md`](magic_s28.md) §2, §8).
+
+**Established:** the battle kind-1 task table's entry 91 (`0x5B`) is
+`0x4DF820`, `Port_DroppedCall`, the linker's shared empty function: a task
+with that handler does nothing each frame and never frees itself.
+`tools/magic_rows.py` lists it as reached by MAGIC113 through that entry;
+S28 left what MAGIC113 does about it to group C1. C1's doc
+([`magic_c1.md`](magic_c1.md) §4, §8) reads `0x4DF820` in `Pentagram_Sprites`
+`0x4D6B70` as two direct dropped calls a frame, not as a task created - the
+two readings were not put together.
+
+**Status:** latent; whether such a task is ever created is open.
+
+## D132 — `Task_Create` does not test its slot, and the task stacks have no guard (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-25, round nine's scheduler group ([`task_sched.md`](task_sched.md)
+§6; [`takeover-queue-round9.md`](takeover-queue-round9.md) §4).
+
+**Established:** `Task_Create` `0x5A9914` does not test the slot: a slot of
+4 writes the fifth "record" over `Task_CurrentOffset` / `Task_SchedulerEsp`
+(`0x66C850` / `0x66C854`), and the next landing loads a garbage `esp`. Every
+caller passes a constant 0..2. **Ours aborts on a slot past 3.** The task
+stacks (0x4000 bytes each) have no guard; kept, it is the layout
+([`SCAFFOLDING.md`](SCAFFOLDING.md) §3).
 
 **Status:** latent.
