@@ -33755,3 +33755,398 @@ name = "SuddenDeath_CurrentMote"
 ctype = "unsigned char *"
 status = "evidence"
 evidence = "read 2026-09-26, group S13: the mote SuddenDeath_Task's walk is running; every mote step reads it again after each call."
+
+[[func]]
+pc = 0x4AF040
+name = "Sanctuary_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF040..0x4AF0BC (0x7D bytes), group S11: the kind-2 task of Magic_Rows row 82: +1 through a three-entry stack table (Sanctuary_Start, _Message, _End); then each record of SanctuaryMote_Pool with +0 bit 0 run through SanctuaryMote_Dispatch, Sprite_Current the record and 0x93B940 its +0x80, both put back after each. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF0C0
+name = "Sanctuary_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF0C0..0x4AF18F (0xD0 bytes), group S11: one call pair: SanctuaryMote_Pool +0..+2 of all 36 cleared, Sanctuary_Reached (11 bytes) cleared; the owner's +8 and +0x34 / +0x38 / +0x3C copied; +0xB 0, +1 on; BattleTask_Create(1, 0x3F) with +0x80 Sprite_Current and +1 0, +0xB up; Sound_PlayById(0x100). Entry 0 of Sanctuary_Task. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF190
+name = "Sanctuary_Message"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF190..0x4AF1B8 (0x29 bytes), group S11: at +0xB 0: BattleQueue_Push(1, 0x3C, Msg_SystemPtr(0x14)), +1 on. Entry 1 of Sanctuary_Task. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF1C0
+name = "Sanctuary_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF1C0..0x4AF1E3 (0x24 bytes), group S11: at byte 0x939F60 0: Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 bit 2, tail jmp BattleTask_FreeCurrent. Entry 2 of Sanctuary_Task. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF1F0
+name = "SanctuaryRing_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF1F0..0x4AF201 (0x12 bytes), group S11: jmp [0x65AA68 + 4 x byte +1] (SanctuaryRing_Types, one entry, unchecked). Kind-1 task parameter 0x3F (battle_fx_tasks kind table 1.63), created by Sanctuary_Start. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF210
+name = "SanctuaryRing_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF210..0x4AF257 (0x48 bytes), group S11: +2 through a three-entry stack table (SanctuaryRing_Start, _Spread, MagicFx_UncountAndFree); while +0 is set MagicFx_PushActorMatrix, SanctuaryRing_Draw, Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF260
+name = "SanctuaryRing_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF260..0x4AF2C2 (0x63 bytes), group S11: no calls: the owner's +8 and +0x34 / +0x38 / +0x3C copied, dword +0xC 8, +0xA 0x10, +2 on. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF2D0
+name = "SanctuaryRing_Spread"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF2D0..0x4AF481 (0x1B2 bytes), group S11: dword +0xC += 0x20, word 0x903850 its low word; for battle index 3..10 then 0..2: not yet in Sanctuary_Reached, not Battle_ActorIsOut, 0x4F5970(record) not 0 (MAGIC218, eax tested whole) and not byte 0x904B34: the reached byte 0xFF and two motes from SanctuaryMote_Alloc (unchecked) with +0x80 the owner, +1 0, +0xB the index, +9 1 and 13, the owner's +0xB up each; +2 on at +0xC above 0x600 (signed). Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF490
+name = "MagicFx_UncountAndFree"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF490..0x4AF49C (0xD bytes), group S11: the owner's (0x93B940) +0xB down, tail jmp BattleTask_FreeCurrent. Entry 2 of SanctuaryRing_Task's stack table; ten files' tables hold it (magic_funcs.tsv; groups S03, S04, S07, S26, S31 call it by address). Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF4A0
+name = "SanctuaryMote_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF4A0..0x4AF4B1 (0x12 bytes), group S11: jmp [0x65AA6C + 4 x byte +1] (SanctuaryMote_Types, one entry, unchecked). Called by Sanctuary_Task for each live pool record. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF4C0
+name = "SanctuaryMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF4C0..0x4AF50D (0x4E bytes), group S11: +2 through a three-entry stack table (SanctuaryMote_Wait, _Slow, _Fade); while +0 and +2 are set MagicFx_PushActorMatrix, SanctuaryMote_Draw, Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF510
+name = "SanctuaryMote_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF510..0x4AF611 (0x102 bytes), group S11: no calls: +9 down; at 0 +0x34 / +0x38 / +0x3C from the actor +0xB's record (party below 3, else enemy by index - 3, unchecked), dwords +0xC and +0x18 0x10, +0xA 0x10, +2 up twice (SanctuaryMote_Slow skipped). Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF620
+name = "SanctuaryMote_Slow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF620..0x4AF64A (0x2B bytes), group S11: no calls: dword +0xC += +0x18, +0x18 down, at +0x18 0x10 +2 on. Entry 1 of SanctuaryMote_Task's table; unreached, since SanctuaryMote_Wait moves +2 from 0 to 2. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF650
+name = "SanctuaryMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF650..0x4AF69C (0x4D bytes), group S11: dword +0xC += +0x18; on odd Frame_Counter: +0x18 and +0xA down, at +0xA 0 the owner's +0xB down and tail jmp 0x4F6290 (MAGIC219, the record freed). Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF6A0
+name = "SanctuaryRing_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF6A0..0x4AF8C1 (0x222 bytes), group S11: seventeen distinct call sites: word 0x903850 +0xC + 0x80, 0x903852 +0xC; draw mode tpage 0x35 and Gfx_CommitPrim(5, 0xC); 64 semi-transparent G4 quads at angles 0x40..0x1000, vertex scratch edges (Math_Sin / Math_Cos x radius sar 12), outer shade 0x60, inner 1, Gte_RotTransPers4, Gte_PrimDepths4_10B, Gfx_CommitPrim(5, 0x44); draw mode tpage 0x15 and its commit. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AF8D0
+name = "SanctuaryMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AF8D0..0x4AFB1F (0x250 bytes), group S11: SanctuaryRing_Draw's shape: word 0x903854 +0xA x 6 (the outer shade, its low byte read at each use), radii +0xC + 0x40 and +0xC, 16 quads at angles 0x100..0x1000. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AFB20
+name = "SanctuaryMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AFB20..0x4AFB76 (0x57 bytes), group S11: no calls: the first of SanctuaryMote_Pool's 36 records with bit 0 clear gets bit 0 and its index in al; 0xFF when all are taken (the rest of eax the caller's). Its one caller, SanctuaryRing_Spread, does not test 0xFF. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AFB80
+name = "Tornado_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AFB80..0x4AFBF9 (0x7A bytes), group S11: the kind-2 task of Magic_Rows row 83: +1 through a two-entry stack table (Tornado_Start, Tornado_Spin); BattleActor_UpdateScreenXY; then each record of TornadoMote_Pool with +0 bit 0 run through TornadoMote_Dispatch, Sprite_Current the record and 0x93B940 its +0x80, both put back after each. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AFC00
+name = "Tornado_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AFC00..0x4AFE6A (0x26B bytes), group S11: TornadoMote_Pool +0..+2 of all 24 cleared; +0xB 0; BattleTask_Create(1, 0x40) with +0x80 Sprite_Current, +1 0, +0xB up; three rings of eight motes from TornadoMote_Alloc (unchecked): +9 8i, 8i+2, 8i+4, +0xB 3, 2, 1, dword +0xC 0x80, 0xC0, 0x100, dword +0x14 0x800000, 0x400000, 0; Gfx_ClutStrip row 26 from its source with bit 15, cell 0 without, byte 0x904AA9 bit 1, Gfx_ClutStripDirty 1; +8 the byte +8 of the record at dword 0x904B3C; dwords +0xC 0x40000, +0x10 0 turned by 0x446770; +0x18 / +0x1C the field point Field_Kind2X / Z plus them; +0x34 / +0x38 those plus Math_Sin / Math_Cos(0) shl 6; Tornado_AverageHeight; Sound_PlayById(0x100); +9 the byte at 0x65AA70 + 4 x +8 (unchecked); +1 on. Entry 0 of Tornado_Task. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AFE70
+name = "Tornado_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AFE70..0x4AFEF2 (0x83 bytes), group S11: +9 up; word 0x90385E (+9 shl 4); +0x34 = Math_Sin of it shl 6 + +0x18, +0x38 = Math_Cos of word 0x90385E read back shl 6 + +0x1C; at +0xB 0 Battle_SetTargetFlag40(byte 0x904B44), 0x904AA8 bit 2, tail jmp BattleTask_FreeCurrent. Entry 1 of Tornado_Task. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AFF00
+name = "TornadoFunnel_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AFF00..0x4AFF11 (0x12 bytes), group S11: jmp [0x65AA80 + 4 x byte +1] (TornadoFunnel_Types, one entry, unchecked). Kind-1 task parameter 0x40 (battle_fx_tasks kind table 1.64), created by Tornado_Start. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4AFF20
+name = "TornadoFunnel_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4AFF20..0x4B0116 (0x1F7 bytes), group S11: call [0x65AA84 + 4 x byte +2] (TornadoFunnel_Phases, four entries, unchecked); while +0 and +2 are set TornadoFunnel_PushMatrix, sixteen TornadoFunnel_DrawBand(angle, radius): (k - +9) and 0x3F with 0x20 for k 0, 8, 0x10, 0x18, -0x20, -0x18, -0x10, -8, ((k - +9) x 2) and 0x3F with 0x50 for k 2, 6, 0xA, 0xE, -0xE, -0xA, -6, -2, +9 read before each; tail jmp Gte_PopMatrix. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0120
+name = "TornadoFunnel_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0120..0x4B013C (0x1D bytes), group S11: no calls: +9 and +0xA 0, +2 on. Entry 0 of TornadoFunnel_Phases. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0140
+name = "TornadoFunnel_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0140..0x4B0169 (0x2A bytes), group S11: no calls: +9 up, +0xA += 2, at +0xA 0x20 +2 on. Entry 1 of TornadoFunnel_Phases. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0170
+name = "TornadoFunnel_PushMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0170..0x4B0243 (0xD4 bytes), group S11: six calls: Gte_PushMatrix; +0x34 / +0x38 and word +0x3E the owner's; Gte_RotTrans of (x sar 9 - 0x4000, z sar 9 - 0x4000, -(s16 +0x3E / 2) toward zero) into the stack MATRIX's translation, Gte_RotMatrix of (0, 0, 0), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0250
+name = "TornadoFunnel_DrawBand"
+ret = "void"
+params = "unsigned angle, unsigned radius"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0250..0x4B07F4 (0x5A5 bytes), group S11: thirty call sites: draw mode tpage 0x35 linked at the funnel (dy 2, size 0xC); words 0x903850..0x90385A radius + 0x32, + 0x1A, radius, 0xFF40, 0xFFA0, 0; Scratch_Swap +0xA x 3; word 0x90385E (angle and 0x3F) shl 6; three points (Math_Sin / Math_Cos x each radius sar 12, y plus Math_Cos of a frame angle shl 7 sar 12); 15 steps of the angle up one, radii up 0xD, heights down 0x40, each two semi-transparent G4 quads through Gte_RotTransPers4, Gte_PrimDepths4_10B and MapView_LinkPrimAt(x, z, 2, 0x44), shaded 1 and Scratch_Swap's low byte. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0800
+name = "TornadoMote_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0800..0x4B0811 (0x12 bytes), group S11: jmp [0x65AA94 + 4 x byte +1] (TornadoMote_Types, one entry, unchecked). Called by Tornado_Task for each live pool record. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0820
+name = "TornadoMote_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0820..0x4B0914 (0xF5 bytes), group S11: call [0x65AA98 + 4 x byte +2] (TornadoMote_Phases, four entries, unchecked); while +0 and +2 are set: word 0x90385E ((+9 x 3) and 0x3F) shl 6; word 0x903850 +0xC + (Math_Sin((Frame_Counter and 0xF) shl 6) shl 4 sar 12); +0x34 / +0x38 the owner's plus Math_Cos / Math_Sin x that sar 3; the cell +0x38 (taken before the call) += Math_Cos((Frame_Counter and 0x3F) shl 6) shl 7 sar 3; BattleActor_UpdateScreenXY; TornadoMote_Draw. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0920
+name = "TornadoMote_Place"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0920..0x4B0967 (0x48 bytes), group S11: no calls: +0x34 / +0x38 the owner's, +0x3C the owner's + dword +0x14, +0xA 0, +2 on. Entry 0 of TornadoMote_Phases. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0970
+name = "TornadoMote_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0970..0x4B0998 (0x29 bytes), group S11: no calls: +9 and +0xA up, at +0xA 0x20 +2 on. Entry 1 of TornadoMote_Phases. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B09A0
+name = "TornadoFx_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B09A0..0x4B09BB (0x1C bytes), group S11: no calls: +9 up, at 0xA0 +2 on. Entry 2 of both TornadoFunnel_Phases and TornadoMote_Phases. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B09C0
+name = "TornadoMote_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B09C0..0x4B09F3 (0x34 bytes), group S11: +9 up, +0xA down; at 0 the owner's +0xB down and tail jmp 0x4F6290 (MAGIC219, the record freed). Entry 3 of TornadoMote_Phases. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0A00
+name = "TornadoMote_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0A00..0x4B0C49 (0x24A bytes), group S11: fifteen call sites: draw mode tpage 0x35 linked at the mote; a semi-transparent FT4: word 0x903850 0x20, corners Math_Cos / Math_Sin(0xD00, 0xA00, 0x200, 0x600) x 0x20 sar 12 plus s16 +0x2E / +0x30 as floats, Gpu_GetTPage(0, 1, 0x340, 0x100), Gpu_GetClut(0, 0x1FA), uv (0,0) (0x1F,0) (0,0x20) (0x1F,0x20), shade Scratch_Swap = +0xB x +0xA; MapView_LinkPrimAt(x, z, 2, 0x48). Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0C50
+name = "TornadoMote_Alloc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0C50..0x4B0CA6 (0x57 bytes), group S11: no calls: the first of TornadoMote_Pool's 24 records with bit 0 clear gets bit 0 and its index in al; 0xFF when all are taken (the rest of eax the caller's). Its one caller, Tornado_Start, does not test 0xFF. Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[func]]
+pc = 0x4B0CB0
+name = "Tornado_AverageHeight"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s11.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0CB0..0x4B0D42 (0x93 bytes), group S11: Battle_ActorIsOut per actor: acting actor (byte 0x904B34) below 3, the sum of s16 +0x3E of the eight enemies not out, else of the three members; word +0x3E of Sprite_Current the sum idiv the count (a divide by zero at count 0; ours aborts). Fuzz only: no recorded route casts it (docs/magic_s11.md)."
+
+[[data]]
+pc = 0x680780
+name = "SanctuaryMote_Pool"
+ctype = "unsigned char"
+count = 4752
+status = "evidence"
+evidence = "read 2026-09-26, group S11: 36 task-like records of 0x84 bytes: Sanctuary_Start clears +0..+2, SanctuaryMote_Alloc takes one by bit 0, Sanctuary_Task runs each live one as Sprite_Current (+0x80 its owner)."
+
+[[data]]
+pc = 0x681A10
+name = "Sanctuary_Reached"
+ctype = "unsigned char"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-26, group S11: one byte per battle index 0..10: Sanctuary_Start clears them, SanctuaryRing_Spread sets 0xFF when it sends an actor its motes."
+
+[[data]]
+pc = 0x681A20
+name = "TornadoMote_Pool"
+ctype = "unsigned char"
+count = 3168
+status = "evidence"
+evidence = "read 2026-09-26, group S11: 24 task-like records of 0x84 bytes: Tornado_Start clears +0..+2, TornadoMote_Alloc takes one by bit 0, Tornado_Task runs each live one as Sprite_Current (+0x80 its owner)."
+
+[[data]]
+pc = 0x65AA68
+name = "SanctuaryRing_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S11: SanctuaryRing_Dispatch's jmp [0x65AA68 + 4 x byte +1]: SanctuaryRing_Task."
+
+[[data]]
+pc = 0x65AA6C
+name = "SanctuaryMote_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S11: SanctuaryMote_Dispatch's jmp [0x65AA6C + 4 x byte +1]: SanctuaryMote_Task."
+
+[[data]]
+pc = 0x65AA70
+name = "Tornado_FacingPhase"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S11: Tornado_Start: +9 = the low byte of dword [0x65AA70 + 4 x +8], the facing unchecked (four angles, 0x40 apart)."
+
+[[data]]
+pc = 0x65AA80
+name = "TornadoFunnel_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S11: TornadoFunnel_Dispatch's jmp [0x65AA80 + 4 x byte +1]: TornadoFunnel_Task."
+
+[[data]]
+pc = 0x65AA84
+name = "TornadoFunnel_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S11: TornadoFunnel_Task's call [0x65AA84 + 4 x byte +2]: TornadoFunnel_Reset, TornadoFunnel_Grow, TornadoFx_Hold, EnlightenRays_Fade (group S07)."
+
+[[data]]
+pc = 0x65AA94
+name = "TornadoMote_Types"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-26, group S11: TornadoMote_Dispatch's jmp [0x65AA94 + 4 x byte +1]: TornadoMote_Task."
+
+[[data]]
+pc = 0x65AA98
+name = "TornadoMote_Phases"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S11: TornadoMote_Task's call [0x65AA98 + 4 x byte +2]: TornadoMote_Place, TornadoMote_Rise, TornadoFx_Hold, TornadoMote_Fade."
