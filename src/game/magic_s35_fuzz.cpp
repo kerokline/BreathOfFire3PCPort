@@ -372,6 +372,20 @@ void Seed(unsigned k) {
         cur[2] = Byte(mh::Next() % 3);
         if (mh::Half()) cur[0xC] &= 0xFC;
         break;
+    // the allocators: half the time one record free, the last a third of
+    // those (the pool's boundary)
+    case kCureMote_Alloc:
+        if (mh::Half()) {
+            const unsigned free = mh::Next() % 3 == 0 ? kCureCount - 1 : mh::Next() % kCureCount;
+            for (unsigned n = 0; n < kCureCount; ++n) CureRecord(n)[0] = Byte(n == free ? CureRecord(n)[0] & 0xFE : CureRecord(n)[0] | 1);
+        }
+        break;
+    case kBenedictionMote_Alloc:
+        if (mh::Half()) {
+            const unsigned free = mh::Next() % 3 == 0 ? kBlessCount - 1 : mh::Next() % kBlessCount;
+            for (unsigned n = 0; n < kBlessCount; ++n) BlessRecord(n)[0] = Byte(n == free ? BlessRecord(n)[0] & 0xFE : BlessRecord(n)[0] | 1);
+        }
+        break;
     // the counters: at their thresholds
     case kLastResort_WaitChildren: sc[0xB] = Byte(mh::Next() % 3); break;
     case kMagicFx_WaitOwnerChildren: mh::Pointer(mh::at::kOwner)[0xB] = Byte(mh::Next() % 3); break;
