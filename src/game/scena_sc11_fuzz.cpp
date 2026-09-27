@@ -270,7 +270,10 @@ std::uint32_t HookX() {
     }
 }
 
+unsigned g_k;   // the clone being seeded, for Disturb
+
 void Seed(unsigned k) {
+    g_k = k;
     // Scena11_Triggers: the typed stand-in while slot 1 is fuzzed, the
     // harness's recorders otherwise (kept from the first round, when the
     // harness has just put them there)
@@ -299,7 +302,10 @@ void Seed(unsigned k) {
     if (sh::Often()) B(0x802DC9) = PickOf<std::uint8_t, 4>({6, 7, 5, 8});
     // the step, by the function's switch
     switch (k) {
-    case kScene1: B(kStep) = PickOf(kSteps1); break;
+    case kScene1:
+        B(kStep) = PickOf(kSteps1);
+        if (sh::Half()) B(kCounters) = PickOf<std::uint8_t, 4>({1, 2, 3, 0x14});   // the values its steps wait on
+        break;
     case kScene2: B(kStep) = PickOf(kSteps2); break;
     case kScene3: B(kStep) = PickOf(kSteps3); break;
     case kScene4:
@@ -324,6 +330,9 @@ void Seed(unsigned k) {
             Game_AreaNumber = 0x65;
             B(kCounters + 2) = 0;
             B(0x90412C) = static_cast<unsigned char>(6 + sh::Next() % 14 + (sh::Half() ? 0x80 : 0));
+        } else if (sh::Half()) {   // area 0x83's counter 1: the elevation, then the area read afresh
+            Game_AreaNumber = 0x83;
+            B(kCounters + 2) = 1;
         }
         break;
     case kObjectTrigger: sh::SpriteRecord(0)[0x86] = static_cast<std::uint8_t>(sh::Next() % kTriggerCount); break;
@@ -348,7 +357,8 @@ void Args(unsigned k, std::uint32_t* a) {
 // (a record 0..19), the area, or the live byte of the
 // effect counter 3 names. Drawn from the hash given, never the harness's Next.
 void Disturb(std::uint32_t h) {
-    switch ((h >> 8) % 8) {
+    // Scena11_EnterArea: the area moved half the time (what its fresh reads see)
+    switch (g_k == kEnterArea && (h & 0x800) ? 6u : (h >> 8) % 8) {
     case 5: B(0x903850) = static_cast<unsigned char>((h >> 12) % kEffectCount); break;   // the slot byte, read back after Rand
     case 6: {   // the area, read afresh by Scena11_EnterArea after its calls
         static const std::uint16_t kMoved[] = {0x83, 0x84, 0x88, 0x73, 0x10, 0x79};
@@ -374,7 +384,7 @@ void SelfTest() {
     sh::Group group = {
         "scena_sc11", kClones, kClonesN, kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-        &Seed, &Disturb, 2000, &Settle, 0, &Args,
+        &Seed, &Disturb, 8000, &Settle, 0, &Args,
     };
     group.chapter = 11;
     sh::Run(group);
