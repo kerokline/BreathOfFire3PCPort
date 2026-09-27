@@ -522,7 +522,7 @@ The thinnest (fewer than 60 rounds of 2,000):
 | FR1 | Free: +4 kept | TransferMote_Free 1989 |
 | FR2 | Free: the next record | TransferMote_Free 2000 |
 | E2 | Monopolize launch: Transfer colours (E1 near variant) | MonopolizeMote_Launch 517 |
-| X9b | Transfer_Start: none at 0x3C or below (X9 near variant) | Transfer_Start 1915 |
+| X9b | Transfer_Start: none at or below the kind-4 count (X9 near variant) | Transfer_Start 1915 |
 
 ## 7. What nothing reached
 
