@@ -188,6 +188,7 @@ unsigned char __cdecl CellEntry(int x, int z) {
 
 void Disturb(std::uint32_t h);
 void Settle();
+const char* g_name = "";   // the clone being fuzzed, for Disturb
 // The effect of the busiest callees: half the time, one of the chapter's own
 // cells moved (the group's Disturb), which the harness's own disturbance
 // reaches only one call in 24 - the cells stored around a call (the step,
@@ -314,6 +315,7 @@ std::uint32_t CounterZero() {
 std::uint32_t EffectSlot(std::uint32_t h) { return h % 5 == 0 ? 0xFF : h % 20; }
 
 void Seed(unsigned k) {
+    g_name = kClones[k].name;
     // Every round: the effect slot a real one, the member index 0..7, the
     // object hook's index in each object the kObject shape may pass.
     M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(sh::Next()));
@@ -367,6 +369,11 @@ void Seed(unsigned k) {
         move_script::SetWord(lead + 0x36, SH_PICK(0x3C, 0x3D, 0x3E, 0x3F, 0x40, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F));
         move_script::SetWord(lead + 0x3A, SH_PICK(0xC, 0xD, 0xE, 0x2A, 0x2B));
     }
+    if (std::strcmp(kClones[k].name, "Scena01_Scene0D") == 0 && sh::Half()) {
+        M(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(0xC, 0xF, 0x12));
+        M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(0x14, 0x19, 0x13));
+        if (sh::Often()) M(at::kChoiceBits)[0] |= 2;
+    }
     if (std::strcmp(kClones[k].name, "Scena01_Run") == 0) MoveScript_Var7 = static_cast<signed char>(sh::Next() % at::kRunCount);
 }
 
@@ -388,10 +395,13 @@ void Args(unsigned k, std::uint32_t* a) {
 // call and read again after one.
 void Disturb(std::uint32_t h) {
     const unsigned b = (h >> 13) & 0xFF;
+    unsigned b2 = 0;
     switch ((h >> 3) % 10) {
     case 0: {
         static const unsigned char kWaits[] = {0x14, 0x19, 0x32, 0x46, 0x65, 0x1E, 0xA, 0x22};
-        M(at::kCounters)[0] = static_cast<unsigned char>(b & 1 ? b : kWaits[(b >> 1) % 8]);
+        // Scena01_Scene09 steps 0xB and 0x14 test counter 0 again after the first test's calls
+        if (std::strcmp(g_name, "Scena01_Scene09") == 0 && (b & 1)) b2 = (b & 2) ? 0x32 : 0x46;
+        M(at::kCounters)[0] = static_cast<unsigned char>(b2 ? b2 : b & 1 ? b : kWaits[(b >> 1) % 8]);
         break;
     }
     case 1: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(b); break;
@@ -399,7 +409,10 @@ void Disturb(std::uint32_t h) {
     case 3: M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(h >> 11)); break;
     case 4: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
     case 5: SetWordAt(0x7E1BEC, (h >> 11) & 1 ? 0x40 : 0); break;
-    case 6: M(at::kCounters + 3)[0] = static_cast<unsigned char>((h >> 11) % 3 == 0 ? 0x80 : (h >> 11) % 3 == 1 ? 0x14 : 0x19); break;
+    case 6:   // Scena01_Scene0D steps 0xF and 0x12 read counter 3 again after the first end's calls
+        M(at::kCounters + 3)[0] = static_cast<unsigned char>(std::strcmp(g_name, "Scena01_Scene0D") == 0 ? 0x19
+                                                             : (h >> 11) % 3 == 0 ? 0x80 : (h >> 11) % 3 == 1 ? 0x14 : 0x19);
+        break;
     case 7: M(0x905E20)[0] = static_cast<unsigned char>(b); break;          // Cond_ByteFE
     case 8: M(0x904CD0)[0] = static_cast<unsigned char>(b); break;
     default: M(at::kStep)[0] = static_cast<unsigned char>(b); break;
@@ -423,7 +436,7 @@ void SelfTest() {
     }
     sh::Group g{"scena_sc1", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
                 kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                &Seed, &Disturb, 0};
+                &Seed, &Disturb, 6000};   // 6,000 rounds a function: the steps are many and each wait is narrow
     g.settle = &Settle;
     g.args = &Args;
     g.chapter = 1;
