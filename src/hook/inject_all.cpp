@@ -148,6 +148,7 @@
 #include "game/magic_s08.h"
 #include "game/magic_s04.h"
 #include "game/magic_s07.h"
+#include "game/magic_s11.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -443,6 +444,10 @@ void InjectAll() {
                                 // Enlighten): its clones' calls, stack-table immediates and eight .data tables
                                 // re-aimed at the shared harness's recorders; no module patches bytes inside its 59
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    MagicS11_Inject();          // round 9 group S11 (MAGIC058, 059: Sanctuary, Tornado): its clones' calls,
+                                // stack-table immediates and three .data table runs re-aimed at the shared
+                                // harness's recorders; no module patches bytes inside its 35 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
     InjectReport();
 }
 
