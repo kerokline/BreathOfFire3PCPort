@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-26). All 56 functions are ours
 (`src/game/magic_s04.cpp`, shadow name `magic_s04`), fuzzed headless through
 the shared harness ([`magic_harness.md`](magic_harness.md)) without edits to
-it: 0 mismatches over 112,000 rounds. CONTROLS_SUMMARY Nothing recorded casts
+it: 0 mismatches over 112,000 rounds. 307 of 307 negative controls refused, 306 by a count and one by a fault (its variant by a count). Nothing recorded casts
 these spells, so this is fuzz only until the owner sees them cast.
 
 Round nine, third spell wave, group S04
@@ -225,20 +225,347 @@ rounds each, with no harness edits; what the harness lacks is built in
 
 Result in this worktree (2026-09-26):
 
-    shadow      magic_s04 self-test: 112000 rounds over 56 functions (2000 each), 1072437 calls to the stand-ins,
+    shadow      magic_s04 self-test: 112000 rounds over 56 functions (2000 each), 1072246 calls to the stand-ins,
                 0 MISMATCHES; 28180 bytes of state (15 regions) and the stand-ins' log compared
 
 Every callee listed and every handler was called by the originals
 (coverage line in `build/bof3x.log`; the thinnest, `Battle_SetTargetFlags`,
 54 calls - `SnapWave_Burst`'s first swing). `BOF3X_SHADOW='*'`: exit 0
-(1,071,337 stand-in calls for this group in that run: the harness's pointers
+(1,071,119 stand-in calls for this group in that run: the harness's pointers
 into the DLL move a few branches, 0 mismatches).
 
 ## 6. Controls
 
-CONTROLS_TEXT
+307 plants, each put in `magic_s04.cpp` one at a time by a script (not committed) that planted, rebuilt, checked the build had recompiled the file, ran `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=magic_s04`, restored; after the last it restored, rebuilt and ran the clean self-test (0 mismatches). **307 of 307 refused**: 306 by exit 3 with a count only in the functions the plant touches, one (S4, the pool walk's owner read from +0x7C) by an access violation on both sides - a garbage owner the recorders write through - so its near variant S4b (the owner cell not set at all) was planted and refused by a count. No equivalent mutant was planted; none was left standing.
 
-CONTROLS_TABLE
+One control was not refused at first: C124 (`AirRaidImage_Bounce`'s height compare `>=` made `>`). The seed put the image's +0x3C either side of the source's, but the function adds the rise to +0x3E, the high word of that dword, before comparing; the seed now puts it there after the rise, and the controls of the two bounces and the shared rise were run again (the table is the second run).
+
+The S- controls are Snap_Task / Start, B- Snap_Buff, W- the wave, R- its rings, SP- the sparks, C- MAGIC015. The thinnest (fewer than 60 rounds):
+
+- **B9** (Buff: +0xB of the task read before the create): Snap_Buff 11
+- **W20** (Burst: flags 0x11): SnapWave_Burst 54
+- **W21** (Burst: flags at +0xA 3): SnapWave_Burst 55
+- **R17** (Ring: depths after the colours): SnapWave_DrawRingA 25
+- **R17** (Ring: depths after the colours): SnapWave_DrawRingB 24
+- **SP8** (Launch: source re-read for the height): SnapSpark_Launch 16
+- **SP33** (Alloc: 63 records): SnapSpark_Alloc 8
+- **C39** (FlyingKick_End: bit cleared after the animation): FlyingKick_End 25
+- **C83** (AirRaidImage_Run: shadow below step 6): AirRaidImage_Run 36
+- **C84** (AirRaidImage_Run: ground below step 3): AirRaidImage_Run 36
+- **C113** (Dive: task not read again after the hit): AirRaidImage_Dive 17
+- **C114** (hit: party below 4): AirRaidImage_Dive 53
+- **C121** (Bounce: first image stop at 1): AirRaidImage_Bounce 49
+- **C122** (Bounce: +9 held at 0x11): AirRaidImage_Bounce 8
+
+| | Planted | Refused in (rounds of 2,000) |
+|---|---|---|
+| S1 | Snap_Task: entries 1/2 swapped | Snap_Task 995 |
+| S2 | walk: live bit 3 | Snap_Task 1510 |
+| S3 | walk: owner not put back | Snap_Task 1623 |
+| S4 | walk: owner from +0x7C | an access violation on both sides (exit 0xC0000005); S4b refused by a count |
+| S4b | walk: the owner cell left as it was | Snap_Task 1992 |
+| S5 | Start: +2 not cleared | Snap_Start 2000 |
+| S6 | Start: +8 from the source's +9 | Snap_Start 1975 |
+| S7 | Start: +0x3C from +0x38 | Snap_Start 2000 |
+| S8 | Start: second CLUT with STP | Snap_Start 2000 |
+| S9 | Start: 15 CLUT words | Snap_Start 2000 |
+| S10 | Start: dirty 2 | Snap_Start 2000 |
+| S11 | Start: parameter 0x2A | Snap_Start 2000 |
+| S12 | Start: +0xB 3 | Snap_Start 2000 |
+| S13 | Start: child +0x80 the owner | Snap_Start 1772 |
+| B1 | Buff: out test inverted | Snap_Buff 2000 |
+| B2 | Buff: stat 2 | Snap_Buff 646 |
+| B3 | Buff: parameter 0x49 | Snap_Buff 441 |
+| B4 | Buff: +4 5 | Snap_Buff 441 |
+| B5 | Buff: +9 0x19 | Snap_Buff 441 |
+| B6 | Buff: +0xA 3 | Snap_Buff 441 |
+| B7 | Buff: target read once, before the out test | Snap_Buff 171 |
+| B8 | Buff: the task read before the calls for +1 | Snap_Buff 206 |
+| B9 | Buff: +0xB of the task read before the create | Snap_Buff 11 |
+| W1 | Wave_Run: step + 1 | SnapWave_Run 2000 |
+| W2 | Wave_Run: drawn on +1 | SnapWave_Run 971 |
+| W3 | Wave_Run: ring B twice | SnapWave_Run 1026 |
+| W4 | Wave_Task: the spark's table | SnapWave_Task 2000 |
+| W5 | Wave_Start: facing from +9 | SnapWave_Start 1980 |
+| W6 | Wave_Start: offset 0x20001 | SnapWave_Start 1990 |
+| W7 | Wave_Start: height + 0x1000001 | SnapWave_Start 1986 |
+| W8 | Wave_Start: z from the owner's x | SnapWave_Start 2000 |
+| W9 | Wave_Start: step 0xFFFFA001 | SnapWave_Start 1992 |
+| W10 | Wave_Start: +9 0x11 | SnapWave_Start 2000 |
+| W11 | Wave_Start: +0xA 5 | SnapWave_Start 2000 |
+| W12 | Wave_Start: +4 1 | SnapWave_Start 2000 |
+| W13 | Burst: +9 down by 3 | SnapWave_Burst 2000 |
+| W14 | Burst: 31 sparks | SnapWave_Burst 472 |
+| W15 | Burst: 0x3F taken for none | SnapWave_Burst 172 |
+| W16 | Burst: +0 or 0x40 | SnapWave_Burst 351 |
+| W17 | Burst: +0xB i + 1 | SnapWave_Burst 472 |
+| W18 | Burst: +9 Rand & 7 + 2 | SnapWave_Burst 472 |
+| W19 | Burst: spark owner the owner | SnapWave_Burst 472 |
+| W20 | Burst: flags 0x11 | SnapWave_Burst 54 |
+| W21 | Burst: flags at +0xA 3 | SnapWave_Burst 55 |
+| W22 | Burst: step 0x3001 | SnapWave_Burst 467 |
+| W23 | Burst: sound 0x101 | SnapWave_Burst 472 |
+| W24 | Burst: +0xB of the task read before Rand | SnapWave_Burst 292 |
+| W25 | Swing: limit 0xE | SnapWave_Swing 152 |
+| W26 | Swing: short swing at +0xA 2 | SnapWave_Swing 310 |
+| W27 | Swing: +9 up by 3 | SnapWave_Swing 2000 |
+| W28 | Swing: sound 0x202 | SnapWave_Swing 151 |
+| W29 | Swing: owner's +0xA down | SnapWave_Swing 151 |
+| W30 | Swing: +2 on, not back | SnapWave_Swing 500 |
+| W31 | Swing: the actor flagged | SnapWave_Swing 135 |
+| W32 | Swing: step 0xFFFFA800 | SnapWave_Swing 500 |
+| W33 | End: waits on +0xA | SnapWave_End 1043 |
+| W34 | End: counts +5 | SnapWave_End 1042 |
+| W35 | End: owner not counted down | SnapWave_End 241 |
+| W36 | MatrixA: facing 0 0x41 | SnapWave_PushMatrixA 498 |
+| W37 | MatrixA: facing 1 about y | SnapWave_PushMatrixA 505 |
+| W38 | MatrixA: facing 2 sl 5 | SnapWave_PushMatrixA 531 |
+| W39 | MatrixA: facing 3 about z | SnapWave_PushMatrixA 460 |
+| W40 | MatrixA: height + 0x21 | SnapWave_PushMatrixA 989 |
+| W41 | MatrixB: facing 0 about x | SnapWave_PushMatrixB 509 |
+| W42 | MatrixB: facing 3 sl 7 | SnapWave_PushMatrixB 499 |
+| W43 | MatrixB: height from +0x3C | SnapWave_PushMatrixB 2000 |
+| W44 | pushes: x sar 8 | SnapWave_PushMatrixA 2000, SnapWave_PushMatrixB 2000, SnapSpark_PushMatrix 2000, KickImage_PushMatrixGround 1999, KickImage_PushMatrixSource 2000 |
+| W45 | pushes: z - 0x3FFF | SnapWave_PushMatrixA 2000, SnapWave_PushMatrixB 2000, SnapSpark_PushMatrix 2000, KickImage_PushMatrixGround 2000, KickImage_PushMatrixSource 2000 |
+| W46 | pushes: halving by sar | SnapWave_PushMatrixA 498, SnapWave_PushMatrixB 494, SnapSpark_PushMatrix 530, KickImage_PushMatrixGround 509, KickImage_PushMatrixSource 490 |
+| W47 | pushes: camera on the right | SnapWave_PushMatrixA 2000, SnapWave_PushMatrixB 2000, SnapSpark_PushMatrix 2000, KickImage_PushMatrixGround 2000, KickImage_PushMatrixSource 2000 |
+| W48 | pushes: rotation from the translation | SnapWave_PushMatrixA 2000, SnapWave_PushMatrixB 2000, SnapSpark_PushMatrix 2000, KickImage_PushMatrixGround 2000, KickImage_PushMatrixSource 2000 |
+| R1 | Ring: tpage 0x36 | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R2 | Ring: shade x 13 | SnapWave_DrawRingA 1980, SnapWave_DrawRingB 1982 |
+| R3 | Ring: first radius sl 7 | SnapWave_DrawRingA 1999, SnapWave_DrawRingB 1996 |
+| R4 | Ring: first angle sl 6 | SnapWave_DrawRingA 1572, SnapWave_DrawRingB 1555 |
+| R5 | Ring: first x from the cosine | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R6 | Ring: first y cos of the radius cell | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R7 | Ring: first z Sin(1) | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R8 | Ring: 15 quads | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R9 | Ring: first edge the other way | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R10 | Ring: v2 z the y | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R11 | Ring: angle mask 0x3F | SnapWave_DrawRingA 1315, SnapWave_DrawRingB 1288 |
+| R12 | Ring: height step i & 7 | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R13 | Ring: second edge 2 dz | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R14 | Ring: near colour 2 | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R15 | Ring: far colour from 0x903859 | SnapWave_DrawRingA 1992, SnapWave_DrawRingB 1996 |
+| R16 | Ring: linked 0x40 | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R17 | Ring: depths after the colours | SnapWave_DrawRingA 25, SnapWave_DrawRingB 24 |
+| R18 | RingA: 0x40 below | SnapWave_DrawRingA 2000 |
+| R19 | RingB: 0x60 above | SnapWave_DrawRingB 2000 |
+| R20 | Ring: v1 x the y | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R21 | Ring: radius sar 11 | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R22 | Ring: projected at 0x14 | SnapWave_DrawRingA 2000, SnapWave_DrawRingB 2000 |
+| R23 | Ring: the facing read before the sine | SnapWave_DrawRingA 698, SnapWave_DrawRingB 695 |
+| SP1 | Spark_Task: the wave's table | SnapSpark_Task 2000 |
+| SP2 | Spark_Run: steps swapped | SnapSpark_Run 2000 |
+| SP3 | Spark_Run: +9 not tested | SnapSpark_Run 473 |
+| SP4 | Spark_Run: the matrix twice | SnapSpark_Run 521 |
+| SP5 | Launch: angle sl 6 | SnapSpark_Launch 477 |
+| SP6 | Launch: x sar 8 | SnapSpark_Launch 486 |
+| SP7 | Launch: z from the source's x | SnapSpark_Launch 486 |
+| SP8 | Launch: source re-read for the height | SnapSpark_Launch 16 |
+| SP9 | Launch: rise Rand & 0xF | SnapSpark_Launch 240 |
+| SP10 | Launch: fall -11 | SnapSpark_Launch 486 |
+| SP11 | Launch: +9 0x11 | SnapSpark_Launch 486 |
+| SP12 | Launch: z cos of the radius cell | SnapSpark_Launch 486 |
+| SP13 | Fly: x sl 9 | SnapSpark_Fly 2000 |
+| SP14 | Fly: x through the task read after the call | SnapSpark_Fly 71 |
+| SP15 | Fly: z sar 10 | SnapSpark_Fly 2000 |
+| SP16 | Fly: rise from +0x16 | SnapSpark_Fly 2000 |
+| SP17 | Fly: +0..+3 cleared | SnapSpark_Fly 485 |
+| SP18 | Fly: owner not counted down | SnapSpark_Fly 486 |
+| SP19 | Fly: fall from +0x24 | SnapSpark_Fly 2000 |
+| SP20 | Spark matrix: sl 5 | SnapSpark_PushMatrix 1997 |
+| SP21 | Spark matrix: height + 1 | SnapSpark_PushMatrix 987 |
+| SP22 | Spark draw: tpage 0x34 | SnapSpark_Draw 2000 |
+| SP23 | Spark draw: SetPolyG3 | SnapSpark_Draw 2000 |
+| SP24 | Spark draw: radius sl 5 | SnapSpark_Draw 1993 |
+| SP25 | Spark draw: corner 0x556 | SnapSpark_Draw 2000 |
+| SP26 | Spark draw: v1 z 1 | SnapSpark_Draw 1999 |
+| SP27 | Spark draw: v2 y from the sine | SnapSpark_Draw 2000 |
+| SP28 | Spark draw: projected at 0x10 | SnapSpark_Draw 2000 |
+| SP29 | Spark draw: colour Rand & 0x1F | SnapSpark_Draw 1573 |
+| SP30 | Spark draw: two colour bytes | SnapSpark_Draw 2000 |
+| SP31 | Spark draw: linked 0x28 | SnapSpark_Draw 2000 |
+| SP32 | Spark draw: depths 3_10B | SnapSpark_Draw 2000 |
+| SP33 | Alloc: 63 records | SnapSpark_Alloc 8 |
+| SP34 | Alloc: takes with 3 | SnapSpark_Alloc 755 |
+| SP35 | Alloc: none 0xFE | SnapSpark_Alloc 491 |
+| SP36 | Alloc: free by bit 1 | SnapSpark_Alloc 1650 |
+| C1 | Charge_Task: entries 1/2 swapped | Charge_Task 1006 |
+| C2 | AirRaid_Task: entries 2/3 swapped | AirRaid_Task 1022 |
+| C3 | FlyingKick_Task: MAGIC018's end | FlyingKick_Task 488 |
+| C4 | Charge_Start: +9 1 | Charge_Start 1720 |
+| C5 | Charge_Start: animation argument 3 | Charge_Start 2000 |
+| C6 | Charge_Start: three trails | Charge_Start 2000 |
+| C7 | Charge_Start: n xor 2 | Charge_Start 2000 |
+| C8 | Charge_Start: trail +1 2 | Charge_Start 2000 |
+| C9 | Charge_Start: +9 back + 2 | Charge_Start 2000 |
+| C10 | Charge_Start: +0xB back + 1 | Charge_Start 2000 |
+| C11 | Charge_Start: dasher +1 1 | Charge_Start 1999 |
+| C12 | Charge_Start: trail +6 2 | Charge_Start 2000 |
+| C13 | Charge_Start: owner bit 0x20 | Charge_Start 1513 |
+| C14 | palette: +0x28 from +0x29 | Charge_Start 1992, AirRaid_Start 1867, FlyingKick_Start 1994 |
+| C15 | palette: +0x25 | Charge_Start 1998, AirRaid_Start 1877, FlyingKick_Start 2000 |
+| C16 | palette: row copied from the task | Charge_Start 1762, AirRaid_Start 1744, FlyingKick_Start 1742 |
+| C17 | images: 0x7C bytes copied | Charge_Start 2000, AirRaid_Start 2000, FlyingKick_Start 2000 |
+| C18 | images: party below 2 | Charge_Start 467, AirRaid_Start 435, FlyingKick_Start 387 |
+| C19 | images: enemy index - 2 | Charge_Start 858, AirRaid_Start 845, FlyingKick_Start 798 |
+| C20 | images: actor read before the create | Charge_Start 293, AirRaid_Start 196, FlyingKick_Start 73 |
+| C21 | Charge_Start: task read before the create | Charge_Start 233 |
+| C22 | Charge_Start: dasher not counted | Charge_Start 1968 |
+| C23 | AirRaid_Start: entry 31 kept | AirRaid_Start 2000 |
+| C24 | AirRaid_Start: two images | AirRaid_Start 2000 |
+| C25 | AirRaid_Start: +1 3 | AirRaid_Start 2000 |
+| C26 | AirRaid_Start: +0xB number + 1 | AirRaid_Start 2000 |
+| C27 | AirRaid_Start: +9 delay + 1 | AirRaid_Start 2000 |
+| C28 | AirRaid_Start: sound 0x101 | AirRaid_Start 2000 |
+| C29 | AirRaid_Start: +0xB 1 | AirRaid_Start 1831 |
+| C30 | AirRaid_Start: +1 by 2 | AirRaid_Start 2000 |
+| C31 | FlyingKick_Start: height dword +0x3C | FlyingKick_Start 1705 |
+| C32 | FlyingKick_Start: animation argument 1 | FlyingKick_Start 2000 |
+| C33 | FlyingKick_Start: +1 2 | FlyingKick_Start 2000 |
+| C34 | FlyingKick_Start: +9 1 | FlyingKick_Start 1998 |
+| C35 | FlyingKick_Start: +0xB 2 | FlyingKick_Start 1895 |
+| C36 | FlyingKick_End: at +0xB 1 | FlyingKick_End 1040 |
+| C37 | FlyingKick_End: mask 0xBE | FlyingKick_End 451 |
+| C38 | FlyingKick_End: animation argument 1 | FlyingKick_End 1015 |
+| C39 | FlyingKick_End: bit cleared after the animation | FlyingKick_End 25 |
+| C40 | KickImage_Task: kind + 1 | KickImage_Task 2000 |
+| C41 | ChargeImage_Run: Wait / Squash swapped | ChargeImage_Run 463 |
+| C42 | image runs: +2 not tested | ChargeImage_Run 145, ChargeTrail_Run 212, AirRaidImage_Run 156, FlyingKickImage_Run 141 |
+| C43 | by side: party below 2 | ChargeImage_Start 368, ChargeTrail_Start 104 |
+| C44 | by side: enemy by 3 | ChargeImage_Start 792, ChargeTrail_Start 207 |
+| C45 | ChargeImage_Start: +0x2B 2 | ChargeImage_Start 2000 |
+| C46 | owner point: height from +0x38 | ChargeImage_Start 2000, ChargeImage_Squash 496, ChargeTrail_Start 500, KickImage_Settle 396 |
+| C47 | Tick: on at 0 | KickImage_Tick 2000 |
+| C48 | ChargeImage_Dash: speed 0x61 | ChargeImage_Dash 2000 |
+| C49 | ChargeImage_Dash: near 0xC001 | ChargeImage_Dash 2000 |
+| C50 | ChargeImage_Dash: cry 1 | ChargeImage_Dash 831 |
+| C51 | ChargeImage_Dash: flag before the sound | ChargeImage_Dash 1335 |
+| C52 | aim: Ratan2 (dz, dx) | ChargeImage_Dash 1162, ChargeTrail_Dash 1160 |
+| C53 | aim: +0x14 0x41 | ChargeImage_Dash 1335, ChargeTrail_Dash 1336 |
+| C54 | aim: +0x20 -9 | ChargeImage_Dash 1335, ChargeTrail_Dash 1336 |
+| C55 | aim: +9 0x11 | ChargeImage_Dash 1335, ChargeTrail_Dash 1336 |
+| C56 | aim: dz from the task's x | ChargeImage_Dash 1335, ChargeTrail_Dash 1336 |
+| C57 | aim: angle + 1 | ChargeImage_Dash 1335, ChargeTrail_Dash 1336 |
+| C58 | Arc: x sl 12 | KickImage_Arc 2000 |
+| C59 | Arc: cos of +0x10 | KickImage_Arc 2000 |
+| C60 | Arc: x through the task read after the call | KickImage_Arc 61 |
+| C61 | rise and fall: from +0x16 | KickImage_Arc 2000, AirRaidImage_Rise 1472, AirRaidImage_Bounce 1542, FlyingKickImage_Rise 2000, FlyingKickImage_Bounce 1362 |
+| C62 | rise and fall: fall from +0x1C | KickImage_Arc 2000, AirRaidImage_Rise 2000, AirRaidImage_Bounce 2000, FlyingKickImage_Rise 2000, FlyingKickImage_Bounce 2000 |
+| C63 | Arc: on at +9 1 | KickImage_Arc 960 |
+| C64 | Wait: owner's +0xB 2 | ChargeImage_Wait 1292 |
+| C65 | Wait: +0x48 3 | ChargeImage_Wait 1118 |
+| C66 | Wait: +9 9 | ChargeImage_Wait 1118 |
+| C67 | Squash: x scale - 0x1FFF | ChargeImage_Squash 2000 |
+| C68 | Squash: y scale + 0x3001 | ChargeImage_Squash 2000 |
+| C69 | Squash: lift 0x21 | ChargeImage_Squash 1580 |
+| C70 | Squash: +9 7 | ChargeImage_Squash 496 |
+| C71 | Stretch: x scale + 0x2001 | ChargeImage_Stretch 2000 |
+| C72 | Stretch: y scale - 0x2FFF | ChargeImage_Stretch 2000 |
+| C73 | Stretch: owner not counted down | ChargeImage_Stretch 491 |
+| C74 | ChargeTrail_Run: Dash / Arc swapped | ChargeTrail_Run 799 |
+| C75 | ChargeTrail_Run: BattleFx_FreeTask last | ChargeTrail_Run 400 |
+| C76 | Trail_Start: bit 0x10 | ChargeTrail_Start 438 |
+| C77 | Trail_Start: shade x 0x15 | ChargeTrail_Start 499 |
+| C78 | Trail_Start: two shade bytes | ChargeTrail_Start 498 |
+| C79 | Trail_Start: +0x2B 1 | ChargeTrail_Start 500 |
+| C80 | Trail_Start: +0x5C 2 | ChargeTrail_Start 500 |
+| C81 | Trail_Dash: turn when not near | ChargeTrail_Dash 2000 |
+| C82 | Trail_Dash: toward the owner | ChargeTrail_Dash 1515 |
+| C83 | AirRaidImage_Run: shadow below step 6 | AirRaidImage_Run 36 |
+| C84 | AirRaidImage_Run: ground below step 3 | AirRaidImage_Run 36 |
+| C85 | AirRaidImage_Run: shadow on +0xA | AirRaidImage_Run 149 |
+| C86 | shadow: not drawn | AirRaidImage_Run 149, FlyingKickImage_Run 288 |
+| C87 | AirRaidImage_Run: Dive / Bounce swapped | AirRaidImage_Run 587 |
+| C88 | AirRaidImage_Start: +0x2B 2 | AirRaidImage_Start 235 |
+| C89 | AirRaidImage_Start: blue 0xC1 | AirRaidImage_Start 235 |
+| C90 | AirRaidImage_Start: fall -3 | AirRaidImage_Start 522 |
+| C91 | AirRaidImage_Start: rise 0x81 | AirRaidImage_Start 522 |
+| C92 | AirRaidImage_Start: +9 0x11 | AirRaidImage_Start 522 |
+| C93 | AirRaidImage_Start: +0x27 from +0x26 | AirRaidImage_Start 522 |
+| C94 | Rise: radius 0x1801 | AirRaidImage_Rise 2000 |
+| C95 | Rise: x scale - 0x7FF | AirRaidImage_Rise 2000 |
+| C96 | Rise: y scale + 0x1001 | AirRaidImage_Rise 2000 |
+| C97 | Rise: height + 0xC01 | AirRaidImage_Rise 527 |
+| C98 | Rise: step round the source | AirRaidImage_Rise 417 |
+| C99 | Rise: x from the source's z | AirRaidImage_Rise 528 |
+| C100 | Turn: at 5 | AirRaidImage_Turn 1005 |
+| C101 | Turn: y scale 0x18001 | AirRaidImage_Turn 518 |
+| C102 | Turn: red 0xFE - | AirRaidImage_Turn 254 |
+| C103 | Turn: green sl 3 | AirRaidImage_Turn 250 |
+| C104 | Turn: first red 0x31 | AirRaidImage_Turn 264 |
+| C105 | Turn: first blue 0xC1 | AirRaidImage_Turn 264 |
+| C106 | Turn: x scale 0x8001 | AirRaidImage_Turn 518 |
+| C107 | Dive: radius 0x2001 | AirRaidImage_Dive 2000 |
+| C108 | Dive: down 0xBF | AirRaidImage_Dive 2000 |
+| C109 | Dive: at 0x15 | AirRaidImage_Dive 1023 |
+| C110 | Dive: rise 0x49 | AirRaidImage_Dive 532 |
+| C111 | Dive: +0x48 1 | AirRaidImage_Dive 532 |
+| C112 | Dive: the hit for the later images | AirRaidImage_Dive 532 |
+| C113 | Dive: task not read again after the hit | AirRaidImage_Dive 17 |
+| C114 | hit: party below 4 | AirRaidImage_Dive 53, FlyingKickImage_Dive 253 |
+| C115 | hit: flag last | AirRaidImage_Dive 270, FlyingKickImage_Dive 1368 |
+| C116 | Bounce: red by the second byte | AirRaidImage_Bounce 1331 |
+| C117 | Bounce: green by the first byte | AirRaidImage_Bounce 1334 |
+| C118 | Bounce: stop at 0x81 | AirRaidImage_Bounce 206 |
+| C119 | Bounce: first image red - 4 | AirRaidImage_Bounce 333 |
+| C120 | Bounce: first image green + 5 | AirRaidImage_Bounce 333 |
+| C121 | Bounce: first image stop at 1 | AirRaidImage_Bounce 49 |
+| C122 | Bounce: +9 held at 0x11 | AirRaidImage_Bounce 8 |
+| C123 | Bounce: round the source sprite | AirRaidImage_Bounce 997 |
+| C124 | Bounce: below or at the source | AirRaidImage_Bounce 174 |
+| C125 | Bounce: falling at 0 | AirRaidImage_Bounce 83 |
+| C126 | Bounce: owner not counted down | AirRaidImage_Bounce 385 |
+| C127 | Bounce: red left 1 | AirRaidImage_Bounce 84 |
+| C128 | Bounce: height from the source's +0x38 | AirRaidImage_Bounce 84 |
+| C129 | Bounce: no tick | AirRaidImage_Bounce 2000 |
+| C130 | Settle: down 0xF | KickImage_Settle 1487 |
+| C131 | Settle: green + 0xF1 | KickImage_Settle 1487 |
+| C132 | Settle: owner's +0xB 2 | KickImage_Settle 664 |
+| C133 | Settle: at 0x90 | KickImage_Settle 606 |
+| C134 | Settle: on when the tick says 0 | KickImage_Settle 602 |
+| C135 | AirRaid FadeOut: up 0x11 | AirRaidImage_FadeOut 2000 |
+| C136 | AirRaid FadeOut: at 0xB0 | AirRaidImage_FadeOut 551 |
+| C137 | shade up: blue + 1 | AirRaidImage_FadeOut 1999, FlyingKickImage_FadeOut 2000 |
+| C138 | FlyingKickImage_Run: shadow below step 5 | FlyingKickImage_Run 70 |
+| C139 | FlyingKickImage_Run: ground below step 2 | FlyingKickImage_Run 100 |
+| C140 | FlyingKickImage_Run: Bounce / Settle swapped | FlyingKickImage_Run 560 |
+| C141 | Kick Start: fall -15 | FlyingKickImage_Start 2000 |
+| C142 | Kick Start: +0xA 8 | FlyingKickImage_Start 2000 |
+| C143 | Kick Start: rise 0x81 | FlyingKickImage_Start 2000 |
+| C144 | Kick Start: +9 0x15 | FlyingKickImage_Start 2000 |
+| C145 | Kick Rise: radius 0x3801 | FlyingKickImage_Rise 2000 |
+| C146 | Kick Rise: +9 kept | FlyingKickImage_Rise 2000 |
+| C147 | Kick Rise: on at +0xA 1 | FlyingKickImage_Rise 974 |
+| C148 | Kick Dive: +9 up to 0x13 | FlyingKickImage_Dive 464 |
+| C149 | Kick Dive: the flat test | FlyingKickImage_Dive 2000 |
+| C150 | Kick Dive: fall -7 | FlyingKickImage_Dive 1363 |
+| C151 | Kick Dive: speed 0x5F | FlyingKickImage_Dive 2000 |
+| C152 | Kick Bounce: frame bit 1 | FlyingKickImage_Bounce 467 |
+| C153 | Kick Bounce: +9 up to 0x15 | FlyingKickImage_Bounce 155 |
+| C154 | Kick Bounce: bit 0x40 | FlyingKickImage_Bounce 368 |
+| C155 | Kick Bounce: blue left 1 | FlyingKickImage_Bounce 440 |
+| C156 | Kick Bounce: radius 0x2001 | FlyingKickImage_Bounce 2000 |
+| C157 | Kick Bounce: rising above 0 | FlyingKickImage_Bounce 84 |
+| C158 | Kick FadeOut: owner not counted down | FlyingKickImage_FadeOut 473 |
+| C159 | Kick FadeOut: +2 by 2 | FlyingKickImage_FadeOut 473 |
+| C160 | Ground: elevation not cut to 16 bits | KickImage_PushMatrixGround 1259 |
+| C161 | Ground: elevation (z, x) | KickImage_PushMatrixGround 2000 |
+| C162 | Ground: turned 1 about z | KickImage_PushMatrixGround 2000 |
+| C163 | Source matrix: the image's height | KickImage_PushMatrixSource 2000 |
+| C164 | Shadow: tpage 0x56 | KickImage_DrawShadow 2000 |
+| C165 | Shadow: slot 4 | KickImage_DrawShadow 2000 |
+| C166 | Shadow: radius x 8 | KickImage_DrawShadow 1987 |
+| C167 | Shadow: seven triangles | KickImage_DrawShadow 2000 |
+| C168 | Shadow: centre 0x81 | KickImage_DrawShadow 2000 |
+| C169 | Shadow: rim 2 | KickImage_DrawShadow 2000 |
+| C170 | Shadow: committed 0x30 | KickImage_DrawShadow 2000 |
+| C171 | Shadow: closing tpage 0x16 | KickImage_DrawShadow 2000 |
+| C172 | Shadow: previous rim (z, x) | KickImage_DrawShadow 1989 |
+| C173 | Shadow: centre height 1 | KickImage_DrawShadow 2000 |
+| C174 | Shadow: rim x by word 0x903852 | KickImage_DrawShadow 2000 |
+| C175 | Shadow: projected at 0x14 | KickImage_DrawShadow 2000 |
+| C176 | Shadow: first rim Cos(1) | KickImage_DrawShadow 2000 |
+| C177 | Shadow: radius read before the draw mode | KickImage_DrawShadow 132 |
 
 ## 7. What nothing reached
 

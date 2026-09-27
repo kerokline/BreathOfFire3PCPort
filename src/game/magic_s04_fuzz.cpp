@@ -540,9 +540,13 @@ void Seed(unsigned k) {
             SetLong(sc + 0x14, rise - 8);
             SetLong(sc + 0x20, 8 - (mh::Next() % 3));
         }
+        // the height either side of the source's after the rise is added to
+        // its high word (+0x3E): the compare sees +0x3C once it has moved
         if (mh::Often()) {
             unsigned char* const src = mh::Pointer(mh::at::kSource);
-            SetLong(sc + 0x3C, Long(src + 0x3C) + static_cast<std::int32_t>(mh::Next() % 5) - 2);
+            const std::uint32_t moved = (static_cast<std::uint32_t>(Long(sc + 0x14)) + static_cast<std::uint32_t>(Long(sc + 0x20))) << 16;
+            const std::uint32_t at = static_cast<std::uint32_t>(Long(src + 0x3C)) + mh::Next() % 3 - 1;
+            SetLong(sc + 0x3C, static_cast<std::int32_t>(at - moved));
         }
         if (mh::Half()) Frame_Counter &= ~1u;
         break;
