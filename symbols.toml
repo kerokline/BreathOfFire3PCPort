@@ -35288,3 +35288,479 @@ ctype = "unsigned char"
 count = 4224
 status = "evidence"
 evidence = "read 2026-09-26, group S10: 32 task-like records of 0x84 bytes: Lavaburst_Start clears +0..+2, Lavaburst_PoolAlloc takes one by bit 0, Lavaburst_Task runs each live one as Sprite_Current (+0x80 its owner) through LavaburstRecord_Task. Not named before (symbols.toml, 2026-09-26)."
+
+[[func]]
+pc = 0x4B0D50
+name = "Identify_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0D50..0x4B0D8D (0x3E bytes), group S12, cdecl: a five-entry stack table (Identify_Start, _WaitOpen, _ShowTimed, _ShowUntilInput, _End) called by byte +1, unchecked. Magic_Rows row 39's entry; the first function of the extent. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0D90
+name = "Identify_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0D90..0x4B0DFF (0x70 bytes), group S12, cdecl: two children BattleTask_Create(1, 0x12) (the slot byte, untested): +0x80 Sprite_Current (read after each create), +1 0 (the dim) and 1 (the disc); Identify_Roll; +0xB 0; +1 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0E00
+name = "Identify_WaitOpen"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0E00..0x4B0E45 (0x46 bytes), group S12, cdecl: once +0xB is 2 (the disc has grown): a third child BattleTask_Create(1, 0x12) with +1 2 (the target's tint), +0x80 Sprite_Current; the task's +9 0x10; +1 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0E50
+name = "Identify_ShowTimed"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0E50..0x4B0E81 (0x32 bytes), group S12, cdecl: the panel (Identify_DrawMember for a target byte 0x904B44 below 3, else Identify_DrawEnemy); +9 down; at 0 +1 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0E90
+name = "Identify_ShowUntilInput"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0E90..0x4B0EC0 (0x31 bytes), group S12, cdecl: the panel as Identify_ShowTimed; once the word Input_Pressed is not 0: +0xB 0x83 (the children close) and +1 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0ED0
+name = "Identify_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0ED0..0x4B0EE7 (0x18 bytes), group S12, cdecl: once +0xB is 0x80 (three children have ended): 0x904AA8 |= 4, jmp BattleTask_FreeCurrent. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0EF0
+name = "Identify_Roll"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0EF0..0x4B0FE2 (0xF3 bytes), group S12, cdecl: the chance: the acting member's byte +0x8A (party record by the byte 0x904B34) less the target enemy's word +0x98 (by 0x904B44 - 3, whole); 16 at 15 or more, then 14 / 12 / 10 / 8 / 6 / 4 / 2 below 15 / 10 / 5 / 0 / -5 / -10 / -15; hit when Rand & 0xF is below it. Identify_WasSeen non-zero: +4 1. Else a hit on an enemy whose byte +0x8F (target read again) is not 0: Identify_MarkSeen, +4 1; else +4 0. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B0FF0
+name = "Identify_MarkSeen"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B0FF0..0x4B103C (0x4D bytes), group S12, cdecl: the target enemy's byte +0x8C (its kind) as a bit of the 256-bit array at 0x9040A8: dword [0x9040A8 + 4 x (k >> 5)] |= 1 << (k & 31). MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1040
+name = "Identify_WasSeen"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1040..0x4B108C (0x4D bytes), group S12, cdecl: the same bit tested: al 1 when set, else 0 (eax (k >> 5) with al replaced: 0 or 1 whole). MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1090
+name = "Identify_DrawMember"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1090..0x4B11ED (0x15E bytes), group S12, cdecl: the panel for a party target (0x904B44 below 3): the member's name (record +0x80, +0x89 zeroed for the draw and put back through the target byte read again), centred at y 0x30 (x 0xA0 - 6 x Text_CharCount, count 5); the text at 0x66A3E0 centred at y 0x44; then question marks and the two labels in place of every value, the text at 0x66A3E8 centred at y 0x8A and two rows of question marks at y 0x98 and 0xAC. Thirteen Text_DrawAt, three Text_CharCount. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B11F0
+name = "Identify_DrawEnemy"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B11F0..0x4B141A (0x22B bytes), group S12, cdecl: the panel for an enemy target (record by the byte 0x904B44 - 3, once): the name (+0x80) and the text at 0x66A3E0 as Identify_DrawMember's; with +0x8F not 0 Identify_DrawElements(0x66, 0x54), the words +0x96 and +0x94 through Crt_sprintf(stack buffer, the format at 0x65AB08) at (0x70, 0x64) and (0x70, 0x78) with their labels; with +0x8F 0 question marks. Then the text at 0x66A3E8 at y 0x8A and Identify_DrawItem for the words +0xA8 (y 0x98) and +0xAC (y 0xAC), each passed whole in eax - the previous callee's upper half above the word - with its high byte as the category. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1420
+name = "Identify_DrawItem"
+ret = "const unsigned char *"
+params = "unsigned item, unsigned category, int y"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1420..0x4B151C (0xFD bytes), group S12, cdecl: with +4 of Sprite_Current 0: question marks at (0x70, y), count 8. Else the item's name by the category's low byte - 1 NameTable_Weapons (28-byte records), 2 NameTable_Armour (26), 3 NameTable_Accessories (24), any other NameTable_Consumables (22) - by item & 0xFF, centred (0xA0 - 6 x Text_CharCount), its count the item argument's dword with the count in its low byte (the al store over the argument slot). Answers Text_DrawAt's answer. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1520
+name = "Identify_DrawElements"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1520..0x4B16B7 (0x198 bytes), group S12, cdecl: six 12 x 12 glyph quads (Gpu_SetCode6C) at x + 0x14 i, y: glyph word +0x16 from the two-byte code the pointer table 0x66A398 holds ((b0 & 0x7F) << 8 + b1), clut Gpu_GetClut(0, 0x1E0), shade 0x80 when the target enemy's (0x904B44 - 3, once) byte +0xBF / +0xC0 / +0xC1 / +0xC3 / +0xC2 is 1 or less (+0xC4: 3 or less), else 0x30 (the dword 0x903854 too); Gfx_CommitPrim(2, 0x28) each. Jump table 0x4B16A0, six entries (cmp 5). MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B16C0
+name = "IdentifyChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B16C0..0x4B16D1 (0x12 bytes), group S12, cdecl: the children (kind 1, parameter 0x12): jmp [IdentifyChild_Kinds + 4 x +1], unchecked. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B16E0
+name = "IdentifyDim_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B16E0..0x4B1708 (0x29 bytes), group S12, cdecl: call [IdentifyDim_Steps + 4 x +2], unchecked; then while +0 and +2 are set, a tail jmp to IdentifyDim_Draw. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1710
+name = "IdentifyDim_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1710..0x4B173A (0x2B bytes), group S12, cdecl: +9 up; at 0x10 the owner's +0xB 1 and +2 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1740
+name = "MagicFx_CountDownRelease"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1740..0x4B1766 (0x27 bytes), group S12, cdecl: +9 down; at 0 the owner's (0x93B940) +0xB down - one child fewer - and a tail jmp to BattleTask_FreeCurrent. A child's last phase in sixteen files' tables (analysis/magic_funcs.tsv): IdentifyDim_Steps, CelerityRing_Steps, BuffRing_Phases (MAGIC082), CoronaFlash_Steps (MAGIC137); held as a raw constant by groups C3, S03, S08 and S31. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1770
+name = "IdentifyDim_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1770..0x4B180E (0x9F bytes), group S12, cdecl: a draw mode (tpage 0x55) committed to layer 3; one semi-transparent Gpu_SetTile over the screen (0, 0, 320.0, 240.0 as float dwords), grey +9 (the dword 0x903854 too), Gfx_CommitPrim(3, 0x1C); the mode back (tpage 0x15). MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1810
+name = "IdentifyDisc_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1810..0x4B1838 (0x29 bytes), group S12, cdecl: call [IdentifyDisc_Steps + 4 x +2], unchecked; then while +0 and +2 are set, a tail jmp to IdentifyDisc_Draw. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1840
+name = "IdentifyDisc_WaitDim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1840..0x4B185D (0x1E bytes), group S12, cdecl: once the owner's +0xB is 1 (the dim is in): +9 0, +2 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1860
+name = "IdentifyDisc_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1860..0x4B188A (0x2B bytes), group S12, cdecl: +9 up; at 0x1E the owner's +0xB 2 and +2 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1890
+name = "IdentifyFx_WaitClose"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1890..0x4B18A3 (0x14 bytes), group S12, cdecl: once the owner's +0xB is 0x83 (Identify_ShowUntilInput saw input): +2 up. In IdentifyDim_Steps and IdentifyDisc_Steps. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B18B0
+name = "MagicFx_CountDown2Release"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B18B0..0x4B18D7 (0x28 bytes), group S12, cdecl: +9 down by 2; at 0 the owner's +0xB down and a tail jmp to BattleTask_FreeCurrent (an odd +9 wraps through 0xFF). IdentifyDisc_Steps' last; reached also from MAGIC111 and MAGIC172 (analysis/magic_funcs.tsv). MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B18E0
+name = "IdentifyDisc_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B18E0..0x4B1B3F (0x260 bytes), group S12, cdecl: a draw mode (tpage 0x55) on layer 3; one semi-transparent POLY_G4 on screen round (0xA0, 0x78): radius 3 x (+9 + 6) (the dword 0x903850), corners at angles ((+9 + 6 / + 0xE / - 2 / - 0xA) & 31) << 7 (the dword 0x903858, read back for the cosine), x Math_Sin, y Math_Cos, times the radius >> 12, as floats; grey (+9 / 3) x 6 (the dword 0x903854); Gfx_CommitPrim(3, 0x44); the mode back. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1B40
+name = "IdentifyTint_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1B40..0x4B1B51 (0x12 bytes), group S12, cdecl: the third child: jmp [IdentifyTint_Steps + 4 x +2], unchecked. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1B60
+name = "IdentifyTint_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1B60..0x4B1B9C (0x3D bytes), group S12, cdecl: Sprite_ReleaseTint on the target's sprite (0x904B4C), then Sprite_SetTint(it, 0, 0, 0, 1) into +0xB; +9 0, +2 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1BA0
+name = "IdentifyTint_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1BA0..0x4B1C02 (0x63 bytes), group S12, cdecl: on odd frames the tint record MoveScript_TintRecords[+0xB]'s three colour bytes (+2..+4) up one; at red 8, +2 up. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1C10
+name = "IdentifyTint_Dim"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1C10..0x4B1CAA (0x9B bytes), group S12, cdecl: on odd frames the three bytes down one; at red 0, +2 1 (IdentifyTint_Brighten again: a pulse). Once the owner's +0xB has bit 0x80: Sprite_ReleaseTint on the target's sprite, BattleActor_Flash(target byte), the owner's +0xB down, a tail jmp to BattleTask_FreeCurrent. MAGIC060 (row 39, Identify read one id down, a hypothesis), extent 0x4B0D50..0x4B1CAA. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1CB0
+name = "Celerity_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1CB0..0x4B1CF5 (0x46 bytes), group S12, cdecl: a six-entry stack table (Celerity_Start, BattleFx_TintActor, BattleFx_Brighten, Buff_WaitChildren - MAGIC082's -, Celerity_Apply, Celerity_End) called by byte +1, unchecked. Magic_Rows row 95's entry; the first function of the extent. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1D00
+name = "Celerity_Start"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1D00..0x4B1E64 (0x165 bytes), group S12, cdecl: the target's sprite (0x904B4C, read once) +8 and +0x34..+0x3C to the task; +0xB 0, +9 0x10, +1 up. Five children BattleTask_Create(1, 0x4A), +0x80 Sprite_Current (read after each), +0xB counting them: the ring (+1 0, +9 0, the task's position) and four sparks (+1 1, +4 0..3, +0xB 0 / 8 / 0x10 / 0x18, +9 that + 1, +0xA the task's +9). CLUT row 26's first 32 words from Gfx_ClutStripSource (0x80E980 to 0x812980), Gfx_ClutStripDirty 1, Sound_PlayById(0x100). Buff_Start's shape (MAGIC082) without Buff_Kind. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B1F40
+name = "Celerity_Apply"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B1F40..0x4B2031 (0xF2 bytes), group S12, cdecl: the tint record MoveScript_TintRecords[+0xA]'s colour bytes down one, +9 down; at 0: Sprite_ReleaseTint on the target's sprite, BattleActor_Flash(target byte), then for i 0..3: Celerity_ApplyStat(MagicFx_BuffStats[i]) and a child BattleTask_Create(1, 0x48) (+0x80 Sprite_Current, +4 i, +9 5i + 1, +0xA 12i + 1), +0xB up; +1 up. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2040
+name = "Celerity_End"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2040..0x4B205F (0x20 bytes), group S12, cdecl: once +0xB is 0: 0x904AA8 |= 4, the byte 0x90465C 5, a tail jmp to BattleTask_FreeCurrent. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2060
+name = "Celerity_ApplyStat"
+ret = "void"
+params = "unsigned stat"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2060..0x4B2112 (0xB3 bytes), group S12, cdecl: 0x904B60 = the target's result record (party record + 0x124 below 3, else enemy record + 0x104 by 0x904B44 - 3); its words +4 / +6 and byte +8 0; the byte +0x14 + (stat & 0xFF) plus the signed step at 0x65C4DB + 0x18 x the word 0x904B80 (NameTable_Abilities' record +3): above 100 made 100, below -100 made -100 (0x9C), else stored and 0x453300(target byte) called (the engine's, unnamed: a stat change, as in MagicFx_ApplyBuff's 0x44F650). MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2120
+name = "CelerityChild_Task"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2120..0x4B2131 (0x12 bytes), group S12, cdecl: the children (kind 1, parameter 0x4A): jmp [CelerityChild_Kinds + 4 x +1], unchecked. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2140
+name = "CelerityRing_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2140..0x4B2171 (0x32 bytes), group S12, cdecl: call [CelerityRing_Steps + 4 x +2], unchecked; then while +0 is set: MagicFx_PushActorMatrix, CelerityRing_DrawDisc, CelerityRing_DrawBand, a tail jmp to Gte_PopMatrix. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2180
+name = "CelerityRing_DrawDisc"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2180..0x4B2377 (0x1F8 bytes), group S12, cdecl: a draw mode (tpage 0x35) on layer 5; sixteen semi-transparent POLY_G3 (Gte_RotTransPers3 of the vertex scratch, Gte_PrimDepths3_10B) from the centre to radius 0x80 (sin / cos << 7 >> 12, angle steps 0x100); the centre grey +9 x 5 (word 0x903856), the rim (Rand & 3 + 3) x +9 per channel (words 0x903858 / 0x90385A / 0x90385C, one Rand each, which CelerityRing_DrawBand reads); Gfx_CommitPrim(5, 0x34) each; the mode back (tpage 0x15). BuffRing_DrawDisc's shape with random colours. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2380
+name = "CelerityRing_DrawBand"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2380..0x4B256A (0x1EB bytes), group S12, cdecl: a draw mode (tpage 0x35) on layer 5; sixteen semi-transparent POLY_G4 from radius 0x80 to 0x100 (Gte_RotTransPers4, Gte_PrimDepths4_10B); the inner edge the words 0x903858 / 0x90385A / 0x90385C CelerityRing_DrawDisc left, the outer 1 1 1; Gfx_CommitPrim(5, 0x44) each; the mode back. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2570
+name = "CeleritySpark_Run"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2570..0x4B2581 (0x12 bytes), group S12, cdecl: a spark: jmp [CeleritySpark_Steps + 4 x +2], unchecked. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2590
+name = "CeleritySpark_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2590..0x4B2624 (0x95 bytes), group S12, cdecl: BuffSpike_Arc (MAGIC082) instruction for instruction but its two callees: BattleActor_UpdateScreenXY, CeleritySpark_DrawDisc(Rand & 3 + 0x18), the actor matrix round CeleritySpark_Draw; +9 up on odd frames, +0x14 += +0x20, the word +0x3E += the word +0x14, +0xA down; at 0 +0x14 -16, +0x20 4, +0xA 8, +2 up. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2630
+name = "CeleritySpark_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2630..0x4B26B1 (0x82 bytes), group S12, cdecl: BuffSpike_Arc2's shape: the same frame and flight; at +0xA 0, +0xA 0x1C - +0xB and +2 up. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B26C0
+name = "CeleritySpark_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B26C0..0x4B2793 (0xD4 bytes), group S12, cdecl: BuffSpike_Spin's shape: the disc 0x40 once the dword +0xC is 4 and +0xA below 5, else 0x18; +0x10 up and every eighth +0xC up until 4; +9 plus +0xC; at 4 +0xA down, at 0 Sound_PlayById(0x101) for the first spark (+0xB 0), +0x10 / +0x14 / +0x20 8, +2 up. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B27A0
+name = "CeleritySpark_Orbit"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B27A0..0x4B28A3 (0x104 bytes), group S12, cdecl: BuffSpike_Orbit's shape: the disc 0x20; +0x10 up 4; +9 plus +0xC; +0xB up 2; the spark at the owner's x / z plus sin / cos((+0xB & 31) << 7) x (+0xA x +0x10 + 0xB0) >> 3; +0xA up; at 0x10 the owner's +0xB down, a tail jmp to BattleTask_FreeCurrent. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B28B0
+name = "CeleritySpark_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B28B0..0x4B2D68 (0x4B9 bytes), group S12, cdecl: BuffSpike_Draw instruction for instruction but its colour tables (CeleritySpark_ColorsUp / _ColorsDown): two rows of four POLY_G3, each depth (Gte_RotAverage3) into a four-entry stack array by (a - +9) / 8 read again, each row to MagicFx_LinkByDepth(x, z, depths, first packet, 4, 0x34, 2). MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[func]]
+pc = 0x4B2D70
+name = "CeleritySpark_DrawDisc"
+ret = "void"
+params = "unsigned radius"
+impl = "src/game/magic_s12.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-26, 0x4B2D70..0x4B2F34 (0x1C5 bytes), group S12, cdecl: the word 0x903850 the radius; CeleritySpark_DiscColors[3 x +4] to the words 0x903858 / 0x90385A / 0x90385C; eight semi-transparent POLY_G3 on screen at the task's +0x2E / +0x30 (angle steps 0x200), each after a draw mode (tpage 0x35) linked at the task's x / z (MapView_LinkPrimAt(.., 2, 0xC), then 0x34); the centre those colours, the rim 1 1 1. MagicFx_DrawDiscRadius's shape (MAGIC082) with a coloured centre. MAGIC062 (row 95, Celerity read one id down, a hypothesis), extent 0x4B1CB0..0x4B2F34. Fuzz only (BOF3X_SHADOW=magic_s12): no recorded route casts it (docs/magic_s12.md)."
+
+[[data]]
+pc = 0x65AAD0
+name = "IdentifyChild_Kinds"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S12: IdentifyChild_Task's jmp [0x65AAD0 + 4 x byte +1]: IdentifyDim_Run, IdentifyDisc_Run, IdentifyTint_Task."
+
+[[data]]
+pc = 0x65AADC
+name = "IdentifyDim_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S12: IdentifyDim_Run's call [0x65AADC + 4 x byte +2]: MagicFx_ClearCount9 (MAGIC131's), IdentifyDim_FadeIn, IdentifyFx_WaitClose, MagicFx_CountDownRelease."
+
+[[data]]
+pc = 0x65AAEC
+name = "IdentifyDisc_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-26, group S12: IdentifyDisc_Run's call [0x65AAEC + 4 x byte +2]: IdentifyDisc_WaitDim, IdentifyDisc_Grow, IdentifyFx_WaitClose, MagicFx_CountDown2Release."
+
+[[data]]
+pc = 0x65AAFC
+name = "IdentifyTint_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S12: IdentifyTint_Task's jmp [0x65AAFC + 4 x byte +2]: IdentifyTint_Start, IdentifyTint_Brighten, IdentifyTint_Dim; the number format at 0x65AB08 follows."
+
+[[data]]
+pc = 0x65AB0C
+name = "CeleritySpark_ColorsUp"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-26, group S12: CeleritySpark_Draw's first row: bytes [0x65AB0C + 3 x (i + 4 x +4)] +0 / +1 / +2, i 0..3, +4 0..3 (Celerity_Start's sparks): 48 bytes, the next table at +0x30."
+
+[[data]]
+pc = 0x65AB3C
+name = "CeleritySpark_ColorsDown"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-26, group S12: CeleritySpark_Draw's second row, the same shape; the next table at +0x30."
+
+[[data]]
+pc = 0x65AB6C
+name = "CeleritySpark_DiscColors"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-26, group S12: CeleritySpark_DrawDisc's centre: bytes [0x65AB6C + 3 x +4] +0 / +1 / +2; CelerityChild_Kinds follows."
+
+[[data]]
+pc = 0x65AB78
+name = "CelerityChild_Kinds"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-26, group S12: CelerityChild_Task's jmp [0x65AB78 + 4 x byte +1]: CelerityRing_Run, CeleritySpark_Run."
+
+[[data]]
+pc = 0x65AB80
+name = "CelerityRing_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-26, group S12: CelerityRing_Run's call [0x65AB80 + 4 x byte +2]: BarrierRing_Grow (MAGIC086's), BuffRing_Wait (MAGIC082's), MagicFx_CountDownRelease."
+
+[[data]]
+pc = 0x65AB8C
+name = "CeleritySpark_Steps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-26, group S12: CeleritySpark_Run's jmp [0x65AB8C + 4 x byte +2]: MagicFx_WaitA (MAGIC078's), ShieldSpark_Place (MAGIC083's), CeleritySpark_Rise, _Fall, _Spin, _Orbit; MAGIC063's table follows at 0x65ABA4."
