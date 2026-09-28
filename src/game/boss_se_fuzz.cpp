@@ -147,13 +147,23 @@ bool Wants(const char* run) {
     return only == nullptr || *only == 0 || std::strcmp(only, run) == 0;
 }
 
+// The two event hooks read the script bits 0x904AAD again after a task or a
+// message: the standard disturbance reaches them only through Disturb's one
+// case in eighty, so for set-ups 25 and 26 a quarter of the disturbances also
+// flip one of its bits (Noise: the same on both passes).
+void SettleScript() {
+    const U n = bh::Noise();
+    if (n % 4 == 0) B(at::kScript) ^= static_cast<unsigned char>(1u << ((n >> 8) % 8));
+}
+
 void RunGroup(const char* run, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables,
-              void (*seed)(unsigned), int fight, int kind, unsigned rounds = 6000) {
+              void (*seed)(unsigned), int fight, int kind, unsigned rounds = 6000, void (*settle)() = nullptr) {
     if (!Wants(run)) return;
     g_clones = clones;
     bh::Group g{"boss_se", clones, n, kCallees, BH_COUNT(kCallees), tables, n_tables, kRegions, BH_COUNT(kRegions), seed,
                 &Disturb, rounds};
     g.args = &Args;
+    g.settle = settle;
     g.fight = fight;
     g.kind = kind;
     bh::Run(g);
@@ -378,7 +388,8 @@ void SeedB25(unsigned k) {
         const U pick = bh::Next() % 10;
         g_code = pick < 3 ? 0 : pick < 9 ? 3 : BH_PICK(1, 2, 4, 5, 6, 0xFF, 0x80);
         const auto bits = static_cast<unsigned char>(bh::Next());
-        const U step = bh::Next() % 7;
+        const U pick_step = bh::Next() % 9;
+        const U step = pick_step >= 7 ? 5 : pick_step;
         switch (step) {
         case 0: B(at::kScript) = static_cast<unsigned char>(bits & ~0x20u); break;
         case 1: B(at::kScript) = static_cast<unsigned char>((bits | 0x20) & ~0x10u); break;
@@ -392,9 +403,14 @@ void SeedB25(unsigned k) {
         B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? (step < 2 && bh::Often() ? 1 + 2 * step : BH_PICK(1, 3, 0, 2, 5))
                                                                : bh::Next());
         B(at::kStep) = static_cast<unsigned char>(bh::Often() ? 0 : bh::Next());
-        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? (bh::Half() ? BH_PICK(4, 6) : bh::Next() % 8) : bh::Next());
-        B(at::kMember0State1) = static_cast<unsigned char>(bh::Often() ? BH_PICK(2, 6, 2, 6, 0, 3) : bh::Next());
-        B(at::kMember0State2) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0, 1, 2) : bh::Next());
+        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? (step == 5 || bh::Half() ? BH_PICK(4, 6, 4, 6, 5, 3) : bh::Next() % 8)
+                                                                   : bh::Next());
+        // member 0's +1 / +2: the two pairs the last step tests, their crossings, or any
+        static const U kPairs[][2] = {{6, 1}, {2, 0}, {6, 1}, {2, 0}, {6, 0}, {2, 1}, {3, 0}, {6, 2}, {1, 0}};
+        const U* const pair = kPairs[bh::Next() % BH_COUNT(kPairs)];
+        const bool any = !bh::Often();
+        B(at::kMember0State1) = static_cast<unsigned char>(any ? bh::Next() : pair[0]);
+        B(at::kMember0State2) = static_cast<unsigned char>(any ? bh::Next() : pair[1]);
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kFlags) | 0x40 : B(at::kFlags) & ~0x40u);
         break;
     }
@@ -462,8 +478,8 @@ void SelfTest() {
     RunGroup("k30", kClonesK30, BH_COUNT(kClonesK30), kTablesK30, BH_COUNT(kTablesK30), &SeedK30, 25, 30);
     RunGroup("k31", kClonesK31, BH_COUNT(kClonesK31), kTablesK31, BH_COUNT(kTablesK31), &SeedK31, 25, 31);
     RunGroup("k32", kClonesK32, BH_COUNT(kClonesK32), kTablesK32, BH_COUNT(kTablesK32), &SeedK32, 25, 32);
-    RunGroup("b25", kClonesB25, BH_COUNT(kClonesB25), nullptr, 0, &SeedB25, 25, -1, 8000);
-    RunGroup("b26", kClonesB26, BH_COUNT(kClonesB26), nullptr, 0, &SeedB26, 26, -1, 8000);
+    RunGroup("b25", kClonesB25, BH_COUNT(kClonesB25), nullptr, 0, &SeedB25, 25, -1, 8000, &SettleScript);
+    RunGroup("b26", kClonesB26, BH_COUNT(kClonesB26), nullptr, 0, &SeedB26, 26, -1, 8000, &SettleScript);
 }
 
 }  // namespace boss_se
