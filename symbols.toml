@@ -42746,6 +42746,679 @@ ctype = "unsigned char"
 status = "evidence"
 evidence = "read 2026-09-27, group SC9a: Scena09_Run11's effect slot - Effect_FindFree's answer stored here (not to 0x903850 as the other runs do) and read back as the record index, in steps 1, 2, 4, 6 and 7 (step 7 waits for bit 0 of that record's +0 to clear)."
 
+# ---------------------------------------------------------------------------
+# Round ten group SC9b: chapter 9's tail and chapter 10, 0x557170..0x55C040 (docs/scena_sc9b.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x557170
+name = "Scena09_Object07"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b, capstone; extent agrees with tools/scenario_rows.py --unit SC9b), 0x557170..0x557180 (0x11 bytes): Scena09_Objects entry 7 (group SC9a's table, read there in place), its (object, bits) unread: Flags_Set(the row 0x929ED0 points at, 0xE)."
+
+[[func]]
+pc = 0x557190
+name = "Scena09_Object08"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557190..0x5571A3 (0x14 bytes): Scena09_Objects entry 8, its (object, bits) unread: ScriptFlags_Set40, run 6, step 0x64."
+
+[[func]]
+pc = 0x5571B0
+name = "Scena09_Object09"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5571B0..0x5571C0 (0x11 bytes): Scena09_Objects entry 9: Flags_Set(row, 0x10)."
+
+[[func]]
+pc = 0x5571D0
+name = "Scena09_Object10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5571D0..0x5571E0 (0x11 bytes): Scena09_Objects entry 10: Flags_Set(row, 0x14)."
+
+[[func]]
+pc = 0x5571F0
+name = "Scena09_Object11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5571F0..0x557203 (0x14 bytes): Scena09_Objects entry 11: ScriptFlags_Set40, run 8, step 0xF."
+
+[[func]]
+pc = 0x557210
+name = "Scena09_Object13"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557210..0x557223 (0x14 bytes): Scena09_Objects entry 13 (entry 12 is a bare ret): ScriptFlags_Set40, run 0xF, step 0."
+
+[[func]]
+pc = 0x557230
+name = "Scena09_Object14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557230..0x557243 (0x14 bytes): Scena09_Objects entry 14: ScriptFlags_Set40, run 0xF, step 0x14."
+
+[[func]]
+pc = 0x557250
+name = "Scena09_Object15"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557250..0x557263 (0x14 bytes): Scena09_Objects entry 15: ScriptFlags_Set40, run 0xF, step 0x28."
+
+[[func]]
+pc = 0x557270
+name = "Scena09_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557270..0x557A15 (0x7A6 bytes, 43 calls): slot 2 of chapter 9's vtable 0x6613E8, the step hook (x, z) answering in al. By Game_AreaNumber, read again after each block's calls: 0x25, 0x27, 0x29, 0x2E, 0x31, 0x3B, 0x77 test two flags and a rectangle of x / z (signed dwords) and start a run (ScriptFlags_Set40, counters, step, run; 1); area 0x29's first rectangle tests x == 0x400000 or x <= 0x408000 (so any x up to 0x408000); area 0x52 with Cond_ByteFD 0 tests the cell words (the arguments' high halves reloaded from the stack) and ObjTrio +0x8 (stored to 0x903850) and +0x89. Else 0. The sibling's scenario_records.toml gives SCENA09 vtable[2] 0x801FC91C by table position (not read)."
+
+[[func]]
+pc = 0x557A20
+name = "Scena09_CellHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557A20..0x557A49 (0x2A bytes): slot 4 of chapter 9's vtable: 0x56D800(Scena09_Cells 0x661490, 0xE, x, z); al negative answers 0xFF; else jmp [0x6614D8 + movsx al * 4] with (x, z) in place (Scena09_CellHooks, 14 entries; ours aborts outside them). The shape of Scena12_CellHook. SCENA09 vtable[4] 0x801FD280 by table position (not read)."
+
+[[func]]
+pc = 0x557A50
+name = "Scena09_Cell00"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557A50..0x557AAE (0x5F bytes): Scena09_CellHooks entry 0 (reached by a tail jump, its (x, z) unread): ObjTrio +0x89 not 5: run 6 at step 0; else flag 0xC clear: step 0x14, set: step 5 (ScriptFlags_Set40 first each time); al 1."
+
+[[func]]
+pc = 0x557AB0
+name = "Scena09_Cell01"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557AB0..0x557B68 (0xB9 bytes): Scena09_CellHooks entry 1: ObjTrio +0x89 not 5: run 6 at 0; else the first of flags 0xC / 0xE / 0xD clear: step 2 / 3 / 0x1E, none: 5; run 6; al 1."
+
+[[func]]
+pc = 0x557B70
+name = "Scena09_Cell02"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557B70..0x557C28 (0xB9 bytes): Scena09_CellHooks entry 2: as entry 1 with flags 0xE / 0x10 / 0xF and steps 2 / 3 / 0x28."
+
+[[func]]
+pc = 0x557C30
+name = "Scena09_Cell03"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557C30..0x557D19 (0xEA bytes): Scena09_CellHooks entry 3: as entry 1 with flags 0x10 / 0x12 / 0x1D / 0x11 and steps 2 / 3 / 0x32 (counter 0 cleared) / 7, else 5."
+
+[[func]]
+pc = 0x557D20
+name = "Scena09_Cell04"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557D20..0x557DCA (0xAB bytes): Scena09_CellHooks entry 4: ObjTrio +0x89 not 5: run 6 at 0; flags 0xC / 0xE / 0xD clear: step 2 / 3 / 6 (run 6); all set: Cond_ByteFE 2 and nothing else; al 1."
+
+[[func]]
+pc = 0x557DD0
+name = "Scena09_Cell05"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557DD0..0x557E7A (0xAB bytes): Scena09_CellHooks entry 5: as entry 4 with flags 0xD / 0x10 / 0xF and Cond_ByteFE 3."
+
+[[func]]
+pc = 0x557E80
+name = "Scena09_Cell06"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557E80..0x557ED0 (0x51 bytes): Scena09_CellHooks entry 6: flag 0x3D clear: run 8 at step 5; set: run 8 at 0 and flag 0x18 (the row read after ScriptFlags_Set40); al 1."
+
+[[func]]
+pc = 0x557EE0
+name = "Scena09_Cell07"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557EE0..0x557F30 (0x51 bytes): Scena09_CellHooks entry 7: as entry 6 with step 1 and flag 0x19."
+
+[[func]]
+pc = 0x557F40
+name = "Scena09_Cell08"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557F40..0x557F90 (0x51 bytes): Scena09_CellHooks entry 8: as entry 6 with step 2 and flag 0x1A."
+
+[[func]]
+pc = 0x557FA0
+name = "Scena09_Cell09"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x557FA0..0x557FF0 (0x51 bytes): Scena09_CellHooks entry 9: as entry 6 with step 3 and flag 0x1B."
+
+[[func]]
+pc = 0x558000
+name = "Scena09_Cell10"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558000..0x558050 (0x51 bytes): Scena09_CellHooks entry 10: as entry 6 with step 4 and flag 0x1C."
+
+[[func]]
+pc = 0x558060
+name = "Scena09_Cell11"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558060..0x5580A7 (0x48 bytes): Scena09_CellHooks entry 11: flag 0x3D clear: Flags_Set 0x3D and Sound_PlayEffect(0x203); set: run 8 at step 6; al 1."
+
+[[func]]
+pc = 0x5580B0
+name = "Scena09_Cell12"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5580B0..0x5580DC (0x2D bytes): Scena09_CellHooks entry 12: flag 0x2C clear: run 9 at step 0x14, al 1; set: al 0xFF."
+
+[[func]]
+pc = 0x5580E0
+name = "Scena09_Cell13"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5580E0..0x558132 (0x53 bytes): Scena09_CellHooks entry 13: flag 0x33 set: al 0xFF; else run 0xF at step 0x32 (ObjTrio +0x89 = 4, counter 0 cleared before ScriptFlags_Set40) or 0x34; al 1."
+
+[[func]]
+pc = 0x558140
+name = "Scena10_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558140..0x55814D (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x661588] - slot 0 of chapter 10's vtable 0x661510 (0x662C80 entry 10). Scena10_States: 0 0x5646B0 (group SC13's block, chapters 9 and 12's state 0 too), 1 Scena10_EnterArea, 2 Scena10_Run; ours aborts outside the three. SCENA10 vtable[0] 0x801F7F50 by table position (not read)."
+
+[[func]]
+pc = 0x558150
+name = "Scena10_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558150..0x55854E (0x3FF bytes, 39 calls): Scena10_States entry 1. By Game_AreaNumber (each test reads it again) and Cond_ByteFD: 0x52 (flag 0x33 cleared; Scena10_StartRun1), 0x5E (flag 0x17, two AreaMap_SetByte at (0x31 / 0x32, 0x1A)), 0x62 (leaves at once unless Cond_ByteFD 0; Scenario_CallA(0), Party_DropIn(1)), 0x69 (story flag 0x4F through the literal 0x904030, flag 0x36), 0x78 (drop-ins 2 / 7 / 6, Field_ScriptFlags bit 4, Scenario_CallA(5)), 0x79 (the camera words, Kind2_Place(0); ObjTrio +0xB cleared), 0x80 (leaves unless Cond_ByteFD 3; flag 0xC), 0x83 (sound 0x205 / 0x204, the shake flag 0x6BC734), 0x84 (a camera effect on 0x6BC735); every exit stores 0x8034E2 = 2. PSX twin 0x801F74A0 (pairs_propagated.json, callers) - a hypothesis, not read."
+
+[[func]]
+pc = 0x558550
+name = "Scena10_StartRun1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558550..0x5585E6 (0x97 bytes): called by Scena10_EnterArea in area 0x52 - ScriptFlags_Set40, Party_DropIn(0), Field_Kind2X / Z 0x490000 / 0x560000, Field_ViewReset, Camera_Angles 0xFDC4, Effect_FindFree to 0x6BC735 and a kind 0x13 camera effect (-0x2EC, Camera_Angles +2, 0x31E, life 0x80), Music_LoadFile(0x7A), run 1 step 0. PSX twin 0x801F7A50 (pairs_propagated.json, call-anchored) - a hypothesis."
+
+[[func]]
+pc = 0x5585F0
+name = "Scena10_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5585F0..0x5585FD (0xE bytes): movsx eax, byte MoveScript_Var7 / jmp [eax*4 + 0x661594] - Scena10_States entry 2. Scena10_Runs: 0 a bare ret (0x437CC0), 1..7, 8 and 9 are 0 (a jump to address 0), 10..13; ours aborts outside the 14 and on a 0 entry."
+
+[[func]]
+pc = 0x558600
+name = "Scena10_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558600..0x558953 (0x354 bytes, jump table 0x558920 (13)): Scena10_Runs entry 1, steps 0..0xC: the effect on 0x6BC735 (bit 0 of its +0, the cell not tested for 0xFF), counts 5 / 6 / 7 / 9 / 0x19, a camera effect, File_LoadDone, Transition_Start 0 and 1, Field_ChangeArea into 0x42 and 0x52, the 0x2000 colours of Gfx_ClutStrip 0x80F580 greyed (Scena12_Run4's loop) and Gfx_ClutStripDirty, Field_Kind2X / Z and MoveScript_F3Divisor 0x20, flag 5, a kind 0x20 effect at Sprite_Objects' +0x34 / +0x38 with +0x3C the elevation + 0x80 shifted 16, flag 6 and the run's end."
+
+[[func]]
+pc = 0x558960
+name = "Scena10_Run2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558960..0x558FB3 (0x654 bytes, jump table 0x558F4C (26)): Scena10_Runs entry 2, steps 0..0x19: LoadDatFile(0x301), the word timer 0x8034E6, a message by Scena10_MsgByMemberB, effects of kinds 0x68 / 0x61 (+6, +7) / 0x62 / 0x69 / 0x64 on 0x903850, Field_ChangeArea into 0x62 twice, Music_Play(0x7B, 8), Music_FadeOut(0xC8) after the step store, Music_FadeOutStop(1), transitions, message 0x13, flag 8. Not in any start list (a table entry; the lists hold two of its cases, 0x5589A0 and 0x558CC0)."
+
+[[func]]
+pc = 0x558FC0
+name = "Scena10_Run3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x558FC0..0x5594CB (0x50C bytes, jump table 0x559474 (22)): Scena10_Runs entry 3, steps 0..5 and 0xA..0x15: camera effects on 0x6BC735 (Camera_Angles / Cond_AngleFB), a message by Scena10_MsgByMemberC (0xFFFF: a 0xF timer instead), Party_DropIn 0 / 1, Field_ChangeArea into 0x80, 0x591900(9), 0x587B80, Sound_LoadStream(2), 0x903A10 / 14 cleared, the stream, Sound_ResumeAll, a kind 0x5D effect, Scenario_CallB(0), Scena10_SpriteOp, flags 0xA / 0xB. Not in any start list (a table entry)."
+
+[[func]]
+pc = 0x5594D0
+name = "Scena10_SpriteOp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x5594D0..0x5594F0 (0x21 bytes): called by Scena10_Run3 - 0x57CD90 (the first free Sprite_Objects index, 0xFF none) zero-extended to the word 0x903850; not 0xFF: EventOp_0x(0x6615D0, Scena10_SpriteScript). Not in any start list (a direct call)."
+
+[[func]]
+pc = 0x559500
+name = "Scena10_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x559500..0x5598F3 (0x3F4 bytes, byte table 0x5598D4 (32) over the jump table 0x559890 (17)): Scena10_Runs entry 4, steps 0..4, 6, 8..0xA, 0x14..0x18, 0x1E, 0x1F: messages 0x26 / 0x27 / 0x28 by flag 0xF and Scena10_HasItem4Eto55, a kind 0x5E effect, Scena10_TallyMet, drop-ins 3 / 4 / 7 / 8, Task_Sleep(1), Scenario_CallA(0), Field_ChangeArea into 0x58 / 0x4B, flags 0xD / 0xE / 0x10 / 0x11. Not in any start list (a table entry)."
+
+[[func]]
+pc = 0x559900
+name = "Scena10_HasItem4Eto55"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x559900..0x559920 (0x21 bytes): called by Scena10_Run4 - Inventory_Count(0, 0x4E + i, 0) for i 0..7 until al is not 0 (the item pushed as eax with al set, garbage above); answers the last call's eax."
+
+[[func]]
+pc = 0x559930
+name = "Scena10_TallyMet"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x559930..0x559963 (0x34 bytes): called by Scena10_Run4 - al 1 when the bytes 0x903A10 / 12 / 13 / 15 / 17 are at least 2 / 3 / 2 / 1 / 2 (unsigned), else 0; the bytes Scena10_Run7 step 1 fills with the members' +0x89."
+
+[[func]]
+pc = 0x559970
+name = "Scena10_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x559970..0x559B1B (0x1AC bytes, jump table 0x559AF0 (11)): Scena10_Runs entry 5, steps 0..6, 8..0xA: Music_FadeOut(0x20), Camera_Distance stepped by -5 to 0xFD80 then by +0xA to 0, Draw_OtSlot 4 and Draw_SortOnX 0, 0x532ED0(0x220000, 0x1A8000, 0x24), a message by Scena10_MsgByMemberA, sound 0x207 and Field_StartEventBattle(0x24), flag 2, Field_ChangeArea into 0x4B. The start list's 0x559AD0 is its step 0xA case (so pairs_propagated.json's pair for 0x559AD0 is wrong)."
+
+[[func]]
+pc = 0x559B20
+name = "Scena10_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x559B20..0x55AA02 (0xFB0 bytes with its jump table 0x55AA04 (51) to 0x55AACF; 120 calls): Scena10_Runs entry 6, steps 0..0x32; every exit calls Scena10_Shake. Transitions, Field_ChangeArea into 0x80, 0x79, 0x84 (twice), 0x5E; Scenario_CallA 1 / 2 / 3, CallB 1; the kind-2 sprite (Field_Kind2X / Z and Sprite_Kind2 +0x34 / +0x38 / +0x3E) moved with Field_ViewReset and AreaMap_Elevation or MapView_SetElevation; camera effects of kinds 0x13 / 0x18 / 0x31 on 0x6BC735; the shake flag 0x6BC734; Cond_ByteFE 0x23; sounds, Music_FadeOutStop(4), Music_Play(0x86, 0x10), Music_FadeOut(8), Sound_ResumeAll; message 0x96; flags 0x14, 0x16, 0x17. Not in any start list (a table entry)."
+
+[[func]]
+pc = 0x55AAD0
+name = "Scena10_Shake"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55AAD0..0x55AAFA (0x2B bytes): called by runs 6, 7, 12 - with 0x6BC734 set, MapView_Redraw 2 and Camera_ShiftY 0x903802 += 4 * (s8) Scena10_ShakeSteps[Frame_Counter & 3]. Not in any start list (a direct call)."
+
+[[func]]
+pc = 0x55AB00
+name = "Scena10_Run7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55AB00..0x55AEBF (0x414 bytes with its jump table 0x55AEC0 (21)): Scena10_Runs entry 7, steps 0..7, 0xA..0xF, 0x14: no member with +0x137 = 3 (Field_MemberCount of them), the members' +0x89 copied to 0x903A10.. (the count read after Transition_Start, unbounded), Scenario_CallB(2), flag 0x12 and Field_ChangeArea into 0x79 / 0x83, the camera words, a kind 0x31 effect, flag 0x18, File_LoadDone, Scenario_CallA(4), flag 9 of the literal row 0x904657 by flag 0x1A, 0x56D6F0. Steps 6..0xE call Scena10_Shake; the shared exit calls it when the step, read there, is above 6. Not in any start list (a table entry)."
+
+[[func]]
+pc = 0x55AF20
+name = "Scena10_Run10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55AF20..0x55AF56 (0x37 bytes): Scena10_Runs entry 10 (after the two 0 entries 8 and 9; the walk stopped at them, so no list had it): step 1 and the request byte not 2 - Party_DropIn(2), flag 0x34, the run and step 0."
+
+[[func]]
+pc = 0x55AF60
+name = "Scena10_Run11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55AF60..0x55AF8B (0x2C bytes): Scena10_Runs entry 11 (not walked, as entry 10): step 0x23 - ScriptFlags_Clear40, Party_DropIn(4), counter 0 0x20, the run and step 0."
+
+[[func]]
+pc = 0x55AF90
+name = "Scena10_Run12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55AF90..0x55B18F (0x200 bytes with its jump table 0x55B178 (6)): Scena10_Runs entry 12 (not walked, as entry 10), steps 0..5: message 2, Input_Held, Party_DropIn(0), the shake flag and Scena10_Shake, story flag 0x4F cleared, Field_Kind2Z's whole part moved by 7 and back, MoveScript_F3Divisor from Field_MoveSpeeds +3 shifted 3, Cond_ByteFE 1 / 2 / 0, camera effects on 0x903850, Field_Kind2Hold, flag 0x35."
+
+[[func]]
+pc = 0x55B190
+name = "Scena10_Run13"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B190..0x55B54D (0x3BE bytes, byte table 0x55B534 (26) over the jump table 0x55B4F0 (17)): Scena10_Runs entry 13 (not walked, as entry 10), steps 0, 1, 5, 8, 0xA, 0xB, 0xF..0x13, 0x15..0x19: flags 0x38..0x3D, Field_ChangeArea into 0x78 twice, Field_ScriptFlags bit 4, drop-ins 3 / 4 / 5, Scenario_CallB(3), message 0x3A, effects of kinds 0x43 / 0x6B (the slot in a local), Draw_OtSlot / Draw_SortOnX, 0x532ED0 at ObjTrio +0x34 / +0x38 and Field_StartEventBattle(0x23)."
+
+[[func]]
+pc = 0x55B550
+name = "Scena10_MsgByMemberA"
+ret = "unsigned short"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B550..0x55B5CD (0x7E bytes): called by Scena10_Run5 - for each of the 4 bytes at 0x6615E8 in order, the first member (Field_MemberCount of ObjTrio) whose +0x89 equals it answers the word at 0x6615EC of that index; none: ax 0."
+
+[[func]]
+pc = 0x55B5D0
+name = "Scena10_MsgByMemberB"
+ret = "unsigned short"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B5D0..0x55B64D (0x7E bytes): called by Scena10_Run2 - as Scena10_MsgByMemberA over the 5 bytes at 0x6615F4 and the words at 0x6615FC; none: 0."
+
+[[func]]
+pc = 0x55B650
+name = "Scena10_MsgByMemberC"
+ret = "unsigned short"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B650..0x55B6CE (0x7F bytes): called by Scena10_Run3 - as Scena10_MsgByMemberA over the 3 bytes at 0x661608 and the words at 0x66160C; none: ax 0xFFFF."
+
+[[func]]
+pc = 0x55B6D0
+name = "Scena10_ObjectTrigger"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B6D0..0x55B6EE (0x1F bytes): slot 1 of chapter 10's vtable, called by 0x56D6D0 with the object: call [0x661614 + object +0x86 * 4] (object, the dword 0x929ED0). Scena10_Objects has 13 entries, entry 10 is 0; ours aborts outside them and on the 0. SCENA10 vtable[1] 0x801FD464 by table position (not read)."
+
+[[func]]
+pc = 0x55B6F0
+name = "Scena10_Object00"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B6F0..0x55B6FD (0xE bytes): Scena10_Objects entry 0, its (object, bits) unread: ScriptFlags_Set40, Party_DropIn(1)."
+
+[[func]]
+pc = 0x55B700
+name = "Scena10_Object01"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B700..0x55B70D (0xE bytes): Scena10_Objects entry 1: ScriptFlags_Set40, Party_DropIn(4)."
+
+[[func]]
+pc = 0x55B710
+name = "Scena10_Object02"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B710..0x55B723 (0x14 bytes): Scena10_Objects entry 2: ScriptFlags_Set40, run 2, step 0."
+
+[[func]]
+pc = 0x55B730
+name = "Scena10_Object03"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B730..0x55B748 (0x19 bytes): Scena10_Objects entry 3: ScriptFlags_Set40, run 3, step 0xA, counter 0 0xA."
+
+[[func]]
+pc = 0x55B750
+name = "Scena10_Object04"
+ret = "void"
+params = "unsigned char *object, unsigned bits"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B750..0x55B786 (0x37 bytes): Scena10_Objects entry 4 (object, bits): Party_DropIn(0), then the object's +1 = 4, +0x84 = 2, +0x83 = 5, word +0x8A = 0, flag 0xF (the row from 0x929ED0, not the bits argument)."
+
+[[func]]
+pc = 0x55B790
+name = "Scena10_Object05"
+ret = "void"
+params = "unsigned char *object, unsigned bits"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B790..0x55B8A2 (0x113 bytes): Scena10_Objects entry 5 (object, bits): the Scena10_Pickups record (of 16) whose zero-extended words +2 / +4 equal Sprite_Current's sign-extended +0x36 / +0x3A; its +1 + 0x4E to the sprite's +0xB; Item_NamePtr(0, item) and its 16 bytes to Text_Records 0x904CE0; Inventory_Add(0, item, 1) (a fourth word 0 pushed, unread; Sprite_Current read again before each call): added - flag 0x20 + the record's +0, Msg_OpenSystem(2), sound 0x106, the object's word +0x8A + 1, ScriptFlags_Set40; not - Msg_OpenSystem(3); the request byte 2. PSX twin 0x801FB5C0 (pairs_propagated.json, callers) - a hypothesis."
+
+[[func]]
+pc = 0x55B8B0
+name = "Scena10_PickupPose"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B8B0..0x55B955 (0xA6 bytes): named by no chapter table - area 75's descriptor (0x60AA98) +0x34 choice 10 and +0x3C handler 8 (0x60AA80), and area 86's (0x611C38) +0x3C handler 0 (0x611C30); the walk did not reach it (the scenario tools read chapter tables only). The Scena10_Pickups record at Sprite_Current's (x, z): flag 0x20 + its +0 set - the sprite's +0 cleared; clear - Sprite_SetAnimation(its +1) and the sprite's +0x2A cleared."
+
+[[func]]
+pc = 0x55B960
+name = "Scena10_PickupEffect"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B960..0x55B9D0 (0x71 bytes): area 75's +0x34 choice 11 / +0x3C handler 9 (0x60AA84) and area 86's +0x3C handler 1 (0x611C34); not walked (as Scena10_PickupPose). Sprite_Current's +0xB kept, Effect_FindFree into it; a slot: kind 0x5D, +6 the kept byte, +7 0 (the index read again from the sprite for each store); none: the kept byte put back and MoveScript_Object's word +0xA less 2."
+
+[[func]]
+pc = 0x55B9E0
+name = "Scena10_Object06"
+ret = "void"
+params = "unsigned char *object, unsigned bits"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55B9E0..0x55BA16 (0x37 bytes): Scena10_Objects entry 6: Party_DropIn(0xA), the object posed as entry 4's with +0x83 = 0x1E, flag 0x13."
+
+[[func]]
+pc = 0x55BA20
+name = "Scena10_Object07"
+ret = "void"
+params = "unsigned char *object, unsigned bits"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BA20..0x55BA56 (0x37 bytes): Scena10_Objects entry 7: Party_DropIn(0xB), +0x83 = 0x1F, flag 0x13."
+
+[[func]]
+pc = 0x55BA60
+name = "Scena10_Object08"
+ret = "void"
+params = "unsigned char *object, unsigned bits"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BA60..0x55BA95 (0x36 bytes): Scena10_Objects entry 8: ScriptFlags_Set40, Party_DropIn(1), flag 0x15, the step byte + 1 (read after the calls), the object's word +0x8A + 1."
+
+[[func]]
+pc = 0x55BAA0
+name = "Scena10_Object09"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BAA0..0x55BAB0 (0x11 bytes): Scena10_Objects entry 9: Flags_Set(row, 0x19)."
+
+[[func]]
+pc = 0x55BAC0
+name = "Scena10_Object11"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BAC0..0x55BAD3 (0x14 bytes): Scena10_Objects entry 11 and Scena09_Objects entry 5 (shared by the two chapters): ScriptFlags_Set40, run 0xA, step 1."
+
+[[func]]
+pc = 0x55BAE0
+name = "Scena10_Object12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BAE0..0x55BAFB (0x1C bytes): Scena10_Objects entry 12 and Scena09_Objects entry 6: Sprite_Current's +0 cleared, ScriptFlags_Set40, run 0xD, step 5."
+
+[[func]]
+pc = 0x55BB00
+name = "Scena10_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BB00..0x55BE6B (0x36C bytes, 23 calls): slot 2 of chapter 10's vtable, the step hook (x, z) in al. By the area (read again before each block), Cond_ByteFD, flags, the whole x and the cell words (the arguments' high halves, 16-bit unsigned compares): 0x4B (run 4 step 0x1E), 0x52 (ObjTrio +0x8 to 0x903850; group SC7's Scena07_PartyHas89State2 called at 0x55BBB1: 0 - counter 0 0x10; else flag 0x33, run 0xB step 0x23; then flag 7 at x 0x458000), 0x78 (a member with +0x89 = 2: flag 0x37, Field_ChangeArea into 0x78, run 0xD step 0; run 0xD step 0xA), 0x80 (ObjTrio +0x8 0..2: run 4 step 0x14; run 4 step 0 and flag 0xC cleared). The walk's immediate 0x520000 at 0x55BE2B is this hook's x compare, not a code pointer. SCENA10 vtable[2] 0x801FDB14 by table position (not read)."
+
+[[func]]
+pc = 0x55BE70
+name = "Scena10_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc9b.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC9b), 0x55BE70..0x55C03F (0x1D0 bytes, 15 calls): slot 3 of chapter 10's vtable, the arrive hook (x, z) in al. Areas 0x3A (flags 8 / 9, story flag 0x43 through 0x904030, counter 0 0xA), 0x69 (Cond_ByteFD 0, the z cell word signed above 0x1C: run 0xC), 0x78 (Cond_ByteFD 5, x 0x250000 and z 0x748000: run 0xD step 0xF - then on to the area 0x80 test, so al 0 unless that hits), 0x80 (runs 3 and 4). SCENA10 vtable[3] 0x801FE00C by table position (not read)."
+
+[[data]]
+pc = 0x661490
+name = "Scena09_Cells"
+ctype = "unsigned char"
+count = 70
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: the 14 cell records of 5 bytes Scena09_CellHook hands 0x56D800 (push 0x661490, push 0xE), back to back between Scena09_Objects and Scena09_CellHooks."
+
+[[data]]
+pc = 0x6614D8
+name = "Scena09_CellHooks"
+ctype = "unsigned long"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: Scena09_CellHook's jmp [0x6614D8 + index * 4]: Scena09_Cell00..Cell13 (0x557A50..0x5580E0, in order); Scena10_Hooks follows at 0x661510."
+
+[[data]]
+pc = 0x661528
+name = "Scena10_Pickups"
+ctype = "unsigned char"
+count = 96
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: 16 records of 6 bytes (a flag index less 0x20, an item less 0x4E, the x and z words) searched by Scena10_Object05 and Scena10_PickupPose at Sprite_Current's +0x36 / +0x3A; after the vtable's 8 bytes of 0 at 0x661520; Scena10_States follows at 0x661588."
+
+[[data]]
+pc = 0x661588
+name = "Scena10_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: Scena10_Frame's jmp [0x661588 + state * 4]: 0x5646B0 (group SC13's block), Scena10_EnterArea, Scena10_Run."
+
+[[data]]
+pc = 0x661594
+name = "Scena10_Runs"
+ctype = "unsigned long"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: Scena10_Run's jmp [0x661594 + run * 4]: 0x437CC0 (ret), Scena10_Run1..Run7, 0 and 0 for runs 8 and 9, Scena10_Run10..Run13 (0x55AF20, 0x55AF60, 0x55AF90, 0x55B190); a further dword 0 at 0x6615CC, then Scena10_SpriteScript's bytes."
+
+[[data]]
+pc = 0x6615D0
+name = "Scena10_SpriteScript"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: the event-op bytes Scena10_SpriteOp hands EventOp_0x (push 0x6615D0); runs to Scena10_ShakeSteps."
+
+[[data]]
+pc = 0x6615E4
+name = "Scena10_ShakeSteps"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: Scena10_Shake's movsx cx, byte [Frame_Counter & 3 + 0x6615E4], shifted 2 onto Camera_ShiftY."
+
+[[data]]
+pc = 0x6615E8
+name = "Scena10_MsgKindsA"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: 4 member bytes, then at 0x6615EC 4 message-id words, for Scena10_MsgByMemberA."
+
+[[data]]
+pc = 0x6615F4
+name = "Scena10_MsgKindsB"
+ctype = "unsigned char"
+count = 18
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: 5 member bytes (and 3 of padding), then at 0x6615FC 5 message-id words, for Scena10_MsgByMemberB."
+
+[[data]]
+pc = 0x661608
+name = "Scena10_MsgKindsC"
+ctype = "unsigned char"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: 3 member bytes (and 1 of padding), then at 0x66160C 3 message-id words, for Scena10_MsgByMemberC; Scena10_Objects follows at 0x661614."
+
+[[data]]
+pc = 0x661614
+name = "Scena10_Objects"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: Scena10_ObjectTrigger's call [0x661614 + object +0x86 * 4] (object, bits): Scena10_Object00..Object09, 0 for 10, Scena10_Object11 and Object12 (also Scena09_Objects 5 and 6). Scena11_EffectRolls follows at 0x661648."
+
+[[data]]
+pc = 0x6BC734
+name = "Scena10_Shaking"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: set and cleared by chapter 10's area entry and runs 6, 7, 12; Scena10_Shake moves the camera while it is not 0."
+
+[[data]]
+pc = 0x6BC735
+name = "Scena10_Slot"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "read 2026-09-28, group SC9b: chapter 10's own effect slot - Effect_FindFree's answer stored here by its area entry, Scena10_StartRun1 and runs 1, 3, 4, 6, 7, and read back as the record index (bit 0 or all of that record's +0 waited on, the cell never tested for 0xFF)."
+
 # --- round ten group ARH: the area harness's proof, area 11 (docs/area_011.md), and the cell hook's reader (docs/area_harness.md section 8) ---
 
 [[func]]
