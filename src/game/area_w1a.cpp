@@ -14,6 +14,8 @@
 // recorders in for ours as for the originals' copies.
 #include "game/area_w1a.h"
 
+#include "game/draw_pool.h"
+
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
@@ -520,7 +522,8 @@ extern "C" void __cdecl Area40_DrawGrid(void) {
             static constexpr unsigned kTo[8] = {0x8, 0xC, 0x14, 0x18, 0x20, 0x24, 0x2C, 0x30};
             for (unsigned i = 0; i < 8; ++i) {
                 const U half = (Gfx_BufferIndex == 0 ? 1u : 0u) + item * 2u;
-                X87Copy(p + kTo[i], Mem(at::kDrawItems + half * at::kDrawItemStride + kFrom[i]));
+                X87Copy(p + kTo[i], Mem(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(draw_pool::Items())) +
+                                        half * at::kDrawItemStride + kFrom[i]));   // DIV-0062: the pool's array
             }
             const std::int32_t pulse = static_cast<std::int32_t>((Frame_Counter >> 1) & 0xF) - 8;
             const auto grey = static_cast<unsigned char>((pulse < 0 ? -pulse : pulse) * 0x1F);

@@ -25,6 +25,8 @@
 // (docs/magic_fx_reached.md section 3, the precedent).
 #include "game/magic_s14.h"
 
+#include "game/draw_pool.h"
+
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -832,13 +834,12 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
 // its top 1; column 0x1B, row 0x37; AreaMap_BakePatches; AreaMap_SetupEntries
 // (a tail jmp).
 S14_EXPORT void __cdecl Weretiger_ResetMapView(void) {
-    for (std::uint32_t a = 0x905EC6;;) {
-        for (int n = 0; n < 2; ++n) {
-            SetWord(Mem(a - 0x10), 0);
-            SetWord(Mem(a), 0);
-            a += 0x48;
-        }
-        if (a >= 0x929EC6) break;
+    // The original walks 0x905EC6 up to 0x929EC6, every half of its 1,024
+    // items; DIV-0062's pool is read through its pointer and count instead.
+    for (unsigned q = 0; q < draw_pool::Count() * 2; ++q) {
+        unsigned char* const half = draw_pool::Items() + q * 0x48u;
+        SetWord(half + 0x36, 0);
+        SetWord(half + 0x46, 0);
     }
     const std::int32_t x = Field_Kind2X;
     const std::int32_t z = Field_Kind2Z;
@@ -876,7 +877,7 @@ S14_EXPORT void __cdecl Weretiger_ResetMapView(void) {
             MH_CALL(MapView_CellToMap)(row, col, item);
         }
     }
-    for (unsigned k = 0; k < 0x400; ++k) DrawItemPool_Free[k] = static_cast<unsigned short>(k);
+    for (unsigned k = 0; k < draw_pool::Count(); ++k) draw_pool::Free()[k] = static_cast<unsigned short>(k);   // DIV-0062: the pool's size
     DrawItemPool_Top = 1;
     MapView_Column = 0x1B;
     MapView_Row = 0x37;

@@ -24,10 +24,14 @@
 // its upper bits as C++ computes them.
 #include "game/battle_draw.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
+#include "game/text_advance.h"
 #include "game/battle_draw_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -229,6 +233,27 @@ extern "C" long __cdecl D3d_DrawLineG3(const unsigned char* prim) {
 // character count, "%3d/%3d" of Inventory_CountUsed and the room (0x20 for
 // category 4, else 0x80), the arrows by +0x10's bits 1 and 0, the countdown
 // stepped down, the frame's pieces and the scroll bar over 0x80 entries.
+// DIVERGENCE DIV-0059: the item and skill lists' title (the field menu's
+// and the battle's - "Examine" while a skill targets, the owner 2026-09-27)
+// is placed by the originals at 6 * (13 - n) into the 0x99-wide box: centred
+// on x + 78 for 12-unit glyphs, left of centre for DIV-0006's 8-unit ones.
+// Under a Latin overlay ours centres on the width the pen covers. 0 until
+// BattleDraw_Inject patches it to 1 under the name BattleListTitleCentre,
+// so BOF3X_ORIGINAL=BattleListTitleCentre and the fuzz (before the patch)
+// keep the originals' arithmetic.
+unsigned char g_list_title_centre = 0;
+
+namespace {
+// The x of the title within its window: the original's 6 * (13 - n), or
+// under DIV-0059 the same centre, x + 78, less half the real width.
+int ListTitleX(const unsigned char* label, int n) {
+    if (!g_list_title_centre) return 6 * (13 - n);
+    int width = 0;
+    for (const unsigned char* t = label; *t; t += (*t & 0x80) ? 2 : 1) width += TextAdvance_Of(t);
+    return 78 - width / 2;
+}
+}  // namespace
+
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, w[9], Byte(kColour));
     unsigned char offset = 0, moving = 0;
@@ -273,7 +298,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         const unsigned char* const label = At(Long(At(kItemLabels + w[0xA] * 4u)));
         const int y = static_cast<int>(Word(w + 6)) + 7;
         const unsigned n = g.char_count(label);
-        g.text_draw_at(static_cast<int>(6 * (13 - static_cast<int>(n)) + static_cast<int>(Word(w + 4))), y, grey,
+        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(Word(w + 4))), y, grey,
                        0x10, label);
     }
     {
@@ -361,7 +386,7 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
             At(Word(w + 0x14) != 0 ? Long(At(kSkillLabelAlt)) : Long(At(kSkillLabels + w[0xB] * 4u)));
         const int y = static_cast<int>(Word(w + 6)) + 7;
         const U length = static_cast<U>(std::strlen(reinterpret_cast<const char*>(label)));
-        g.text_draw_at(static_cast<int>(6 * (13 - length) + Word(w + 4)), y, 0, 0x10, label);
+        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + Word(w + 4)), y, 0, 0x10, label);
     }
     g.pieces(Word(w + 4), Word(w + 6), At((w[9] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
     g.pieces(Word(w + 4), Word(w + 6), At((w[9] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
@@ -408,6 +433,19 @@ extern "C" void __cdecl AreaMap_TintClut(int level) {
 
 void BattleDraw_Inject() {
     if (bof3::WantsShadow("battle_draw")) battle_draw::SelfTest();
+    // DIVERGENCE DIV-0059: a Latin language overlay only, as MenuLists_Inject
+    // tests it for DIV-0058.
+    {
+        char lang[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("BattleListTitleCentre",
+                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),
+                             &was, &is, 1);
+            bof3::Log("DIV-0059    list titles centred on their width: %s", g_list_title_centre ? "on" : "off");
+        }
+    }
     BOF3_INJECT(D3d_DrawPolyG3);
     BOF3_INJECT(D3d_DrawLineG2);
     BOF3_INJECT(D3d_DrawLineG3);

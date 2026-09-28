@@ -8,6 +8,8 @@
 // alone. docs/field-misc.md.
 #pragma once
 
+#include "game/draw_pool.h"
+
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
@@ -49,7 +51,10 @@ inline U AreaMap_CellBaseAt() { return Of(&AreaMap_CellBase); }
 inline U AreaMap_CornersAt() { return Of(&AreaMap_Corners); }
 inline U AreaMap_HeaderAt() { return Of(AreaMap_Header); }
 inline U AreaMap_PatchBaseAt() { return Of(&AreaMap_PatchBase); }
-inline U DrawItemsAt() { return Of(DrawItems); }
+// DIV-0062: the item array is the pool's, wherever it is now.
+inline U DrawItemsAt() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(draw_pool::Items())); }
+inline U ItemFaceB() { return DrawItemsAt() + 0x7E; }   // kItemFaceB, live
+inline U ItemFaceA() { return DrawItemsAt() + 0x8E; }   // kItemFaceA, live
 inline U Draw_OtSlotAt() { return Of(&Draw_OtSlot); }
 inline U Gfx_BufferIndexAt() { return Of(&Gfx_BufferIndex); }
 inline U Gfx_ClutStripDirtyAt() { return Of(&Gfx_ClutStripDirty); }

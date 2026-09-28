@@ -95,6 +95,14 @@ start-up fuzz compares the original bounds; a live `BOF3X_SHADOW=map_layers`
 under `BOF3X_WIDE=1` will report the terrain cull's divergence as mismatches,
 by design.
 
+**Found 2026-09-27, the owner's coast route: the wider cull ran the
+draw-item pool dry.** The cull keeps about half as many cells again as the
+original's, a cutscene pan asks for them all at once, and the pool's 1,024
+items were sized for `[-50, 370]`: cells refused an item are not drawn, their
+walls show through as blue faces, and one refused every frame stays missing.
+Fixed by DIV-0062, the pool doubled (its array below 16 MB, reserved by the
+launcher). The narrow view already peaked at 855 of 1,023 in that scene.
+
 ### 3c. Full-frame fills and fades
 
 Anything that fills `(0, 0, 320, 240)` - fades to black, flashes, the

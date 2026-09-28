@@ -190,6 +190,7 @@
 namespace bof3 {
 
 void InjectAll() {
+    DrawPool_Reserve();         // DIV-0062: the draw-item pool's room below 16 MB, before anything else is placed
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     MapCells_Inject();          // likewise
     FileIo_Inject();
@@ -609,6 +610,8 @@ void InjectAll() {
                                 // cheats.cpp): order does not matter
     ScenaSc2_Inject();          // round 10 group SC2 (scenario chapter 2's bank, 0x53DDA0..0x5428C0): no module
                                 // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
+    DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
+                                // which all compared the original's arrays (draw_pool.h)
     InjectReport();
 }
 
