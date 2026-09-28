@@ -409,8 +409,33 @@ void PlaceInZone(unsigned member) {
     move_script::SetLong(record + 0x38, Around(zone[1], zone[3]));
 }
 
+// A cell switch's (x, z) and the leader's pose: record i's exactly, or one
+// field off by one, a high byte above the cell byte half the time. The seed
+// draws the record and sets the pose (the arguments are drawn after the
+// round's state is captured, so a write there would be lost); the arguments
+// then follow the seed's draw.
+const unsigned char* g_switch = nullptr;   // the record drawn, or none
+unsigned g_switch_off = 0;                 // 0 none off, 1 x off, 2 z off, 3 the pose off
+void SeedSwitch(std::uint32_t table, unsigned stride, unsigned count, unsigned char pose_mask) {
+    g_switch = nullptr;
+    if (!ah::Often()) return;
+    g_switch = ah::Mem(table + (ah::Next() % count) * stride);
+    g_switch_off = ah::Half() ? 1 + ah::Next() % 3 : 0;
+    const auto pose = static_cast<unsigned char>(g_switch[2] & pose_mask);
+    B(at::kLeaderPose) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0x10)) : pose;
+}
+void CellArgs(std::uint32_t* a) {
+    if (!g_switch) return;
+    const unsigned char* const r = g_switch;
+    a[0] = (ah::Half() ? ah::Next() & 0xFFFFFF00u : 0) | r[0];
+    a[1] = (ah::Half() ? ah::Next() & 0xFFFFFF00u : 0) | r[1];
+    if (g_switch_off == 1) a[0] = (a[0] & ~0xFFu) | static_cast<unsigned char>(r[0] + (ah::Half() ? 1 : 0xFF));
+    if (g_switch_off == 2) a[1] = (a[1] & ~0xFFu) | static_cast<unsigned char>(r[1] + (ah::Half() ? 1 : 0xFF));
+}
+
 void Seed49(unsigned k) {
     Common();
+    if (k == k49Cell) SeedSwitch(at::kArea49CellSwitches, 4, at::kArea49CellSwitchCount, 0xFF);
     switch (k) {
     case k49Choice0: case k49Choice1: SeedAnswer(); break;
     case k49Step:
@@ -447,30 +472,13 @@ void Seed49(unsigned k) {
     default: break;
     }
 }
-// A cell switch's (x, z) and the leader's pose: record i's exactly, or one
-// field off by one, a high byte above the cell byte half the time.
-void CellArgs(std::uint32_t* a, const unsigned char* r, unsigned char pose) {
-    a[0] = (ah::Half() ? ah::Next() & 0xFFFFFF00u : 0) | r[0];
-    a[1] = (ah::Half() ? ah::Next() & 0xFFFFFF00u : 0) | r[1];
-    B(at::kLeaderPose) = pose;
-    if (ah::Half()) {
-        switch (ah::Next() % 3) {
-        case 0: a[0] = (a[0] & ~0xFFu) | static_cast<unsigned char>(r[0] + (ah::Half() ? 1 : 0xFF)); break;
-        case 1: a[1] = (a[1] & ~0xFFu) | static_cast<unsigned char>(r[1] + (ah::Half() ? 1 : 0xFF)); break;
-        default: B(at::kLeaderPose) = static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0x10)); break;
-        }
-    }
-}
 void Args49(unsigned k, std::uint32_t* a) {
     if (k == k49Step) {
         if (ah::Often()) a[0] = AH_PICK(0x4D8000, 0x4D8000, 0x4D8001, 0x4D7FFF, 0x14D8000, 0x4D0000);
     } else if (k == k49Zone) {
         a[0] = ah::Often() ? ah::Next() % 3 | (ah::Half() ? ah::Next() & 0xFFFFFF00u : 0) : ah::Next() % 8;
     } else if (k == k49Cell) {
-        if (ah::Often()) {
-            const unsigned char* const r = ah::Mem(at::kArea49CellSwitches + (ah::Next() % at::kArea49CellSwitchCount) * 4u);
-            CellArgs(a, r, r[2]);
-        }
+        CellArgs(a);
     }
 }
 
@@ -584,14 +592,31 @@ void Seed52(unsigned k) {
         if (ah::Next() % 10 == 0) Field_MemberCount = 0;
         break;
     }
-    case k52Tail:
-        if (ah::Often())
-            B(at::kTailState) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xA, 0xB, 0x14, 0x15, 0x16, 0x28, 0x29, 0x2A, 0x2D, 0x2E, 0x2F, 3,
-                                                               9, 0xC, 0x13, 0x17, 0x27, 0x2B, 0x2C, 0x30, 0x31, 0xFF, 0x80, 0x7F));
-        if (ah::Often()) move_script::SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 2, 3, 4, 5, 0, 0x10, 0xFFFF));
-        if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 5));
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x1E, 0x28, 0x1D, 0x1F, 0x27, 0x29, 0));
+    case k52Hook: SeedSwitch(at::kArea52CellSwitches, 5, at::kArea52CellSwitchCount, 0x0F); break;
+    case k52Tail: {
+        // each state the tables reach, its neighbours and the out-of-range
+        // sides; then the cell that state waits on, at its value two times
+        // in three and beside it otherwise (step-paired)
+        static const std::uint32_t kStates[] = {0, 1, 2, 0xA, 0xB, 0x14, 0x15, 0x16, 0x28, 0x29, 0x2A, 0x2D, 0x2E, 0x2F,
+                                                0, 1, 2, 0xA, 0xB, 0x14, 0x15, 0x16, 0x28, 0x29, 0x2A, 0x2D, 0x2E, 0x2F,
+                                                3, 9, 0xC, 0x13, 0x17, 0x27, 0x2B, 0x2C, 0x30, 0x31, 0xFF, 0x80, 0x7F};
+        const auto state = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
+        B(at::kTailState) = state;
+        const bool on = ah::Often();
+        switch (state) {
+        case 1: case 0x15: case 0x29:   // the timer less 1 below 4
+            move_script::SetWord(ah::Mem(at::kTailTimer), on ? AH_PICK(1, 2, 3, 4, 0) : AH_PICK(5, 6, 0x10, 0xFFFF));
+            break;
+        case 2: case 0x16: case 0x2A:   // the timer less 1 at 0
+            move_script::SetWord(ah::Mem(at::kTailTimer), on ? 1 : AH_PICK(0, 2, 0x101, 0xFFFF));
+            break;
+        case 0xB: Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 5, 3) : 2); break;
+        case 0x2E: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x1E : AH_PICK(0x1D, 0x1F, 0x9E, 0)); break;
+        case 0x2F: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x28 : AH_PICK(0x27, 0x29, 0xA8, 0)); break;
+        default: break;
+        }
         break;
+    }
     default: break;
     }
 }
@@ -600,10 +625,7 @@ void Args52(unsigned k, std::uint32_t* a) {
         a[0] = Key(&g_cells[0]);
         a[1] = Key(&g_cells[1]);
     } else if (k == k52Hook) {
-        if (ah::Often()) {
-            const unsigned char* const r = ah::Mem(at::kArea52CellSwitches + (ah::Next() % at::kArea52CellSwitchCount) * 5u);
-            CellArgs(a, r, static_cast<unsigned char>(r[2] & 0xF));
-        }
+        CellArgs(a);
     }
 }
 
