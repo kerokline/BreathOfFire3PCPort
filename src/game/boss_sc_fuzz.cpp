@@ -185,8 +185,10 @@ U BitsEffect(const U*, U answer) {
     return answer;
 }
 U SceneEffect(const U*, U answer) {
+    // half the time only: the end hooks store the byte before the call, and
+    // an effect that always overwrote it would hide that store
     const U n = bh::Noise();
-    Mem(at::kMoveCounter)[0] = static_cast<unsigned char>(n & 1 ? 0x14 : n >> 8);
+    if (n & 2) Mem(at::kMoveCounter)[0] = static_cast<unsigned char>(n & 1 ? 0x14 : n >> 8);
     return answer;
 }
 U CharEffect(const U*, U answer) {
@@ -317,7 +319,7 @@ void Seed(unsigned k) {
     // --- the dispatchers: the other state bytes inside their tables
     case 0x4396B0: OtherStates(1, 12, 6, 4); break;
     case 0x439730: OtherStates(2, 12, 6, 4); break;
-    case 0x439750: OtherStates(3, 12, 6, 4); break;
+    case 0x439750: OtherStates(3, 12, 4, 4); break;   // +2 below 4: a plant reading it lands in the table
     case 0x439E00: OtherStates(1, 12, 3, 3); break;
     case 0x439E70: OtherStates(2, 12, 3, 3); break;
     case 0x439B10: case 0x439C60: case 0x43A360: case 0x43A3D0: case 0x43A4D0: OtherStates(1, 12, 0, 0); break;
