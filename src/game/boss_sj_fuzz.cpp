@@ -172,17 +172,18 @@ void DisturbKind(U h) { B(at::kActor) = static_cast<unsigned char>(3 + (h >> 16)
 void SeedTask(unsigned k) {
     unsigned char* const s = Sprite_Current;
     const U base = g_cur[k].base;
-    s[1] = static_cast<unsigned char>(bh::Next() % 7);
-    s[2] = static_cast<unsigned char>(bh::Next() % (base == 0x440DA0 ? 3 : base == 0x43FAE0 ? 3 : 2));
-    if (base == 0x43FAC0) s[1] = 0;
+    // the four slots the harness picks a task among (Sprite_Current is one of
+    // them, and the owner may be another or the same: its state bytes last)
     for (unsigned t = 0; t < 4; ++t) bh::TaskAt(t)[1] = static_cast<unsigned char>(bh::Next() % 7);
     SetWord(Mem(at::kPoseIndex), static_cast<unsigned>(bh::Often() ? BH_PICK(0, 9, 7, 8, 1, 2, 4, 5) : bh::Next() % 10));
     unsigned char* const o = Owner();
     o[0xB] = static_cast<unsigned char>(bh::Half() ? 0 : Byte({1, 0x80, 0xFF}));
-    o[1] = Byte({2, 2, 2, 1, 3, 0x82});
+    o[1] = static_cast<unsigned char>(bh::Often() ? 2 : bh::Next() % 7);
     o[0x48] = static_cast<unsigned char>(bh::Half() ? 0 : Byte({1, 0x80}));
     SetLong(o + 0x40, static_cast<std::int32_t>(bh::Often() ? BH_PICK(0x10000, 0x18000, 0, 1, 0xFFFF0000u, 0xFFFFFFFFu, 0x7FFF0000, 0x8000) : bh::Next()));
     SetLong(o + 0x44, static_cast<std::int32_t>(bh::Often() ? BH_PICK(0x10000, 0x18000, 0, 1, 0xFFFF0000u, 0xFFFFFFFFu, 0x7FFF0000, 0x8000) : bh::Next()));
+    s[1] = static_cast<unsigned char>(base == 0x43FAC0 ? 0 : bh::Next() % 7);
+    s[2] = static_cast<unsigned char>(bh::Next() % (base == 0x440DA0 ? 3 : base == 0x43FAE0 ? 3 : 2));
     // D>Lord's task: the count +9 at its ends, enemy 0's record index
     switch (base) {
     case 0x43FB60: s[9] = Byte({0, 0, 1, 2, 0xFF, 0xFF, 0xFE}); break;
@@ -199,7 +200,9 @@ void SeedTask(unsigned k) {
 void DisturbTask(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 4) {
-    case 0: Owner()[1] = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
+    // below 7: the owner may be one of the four slots the disturbance moves
+    // Sprite_Current among, and BossMyriaFx_Follow indexes by +1 after a call
+    case 0: Owner()[1] = static_cast<unsigned char>(v & 1 ? 2 : (v >> 1) % 7); break;
     case 1: Owner()[0xB] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 2: SetWord(Mem(at::kPoseIndex), v % 10); break;
     default: B(at::kFlags) = static_cast<unsigned char>(B(at::kFlags) ^ 4); break;
