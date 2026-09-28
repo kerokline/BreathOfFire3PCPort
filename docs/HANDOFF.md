@@ -134,7 +134,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    original", "in no group"); the named ones are round seven's `0x43B130`
    and the boss handlers at `0x656954`, round six's `0x5806F0` /
    `Save_QuickWrite`, and WinMain's run-once callees.
-5. **Localisation: four languages and what they leave.** Built 2026-09-24
+5. **Localisation: four languages and what they leave.** The owner's
+   decision (2026-09-28 night): the open localisation items below are
+   **their own branch and effort, after the area round finishes** - not
+   folded into a takeover wave.
+    Built 2026-09-24
    (DIV-0054..0057; [`dialogue-localisation.md`](dialogue-localisation.md)
    sections 6 and 9). Next, in the order they bite:
    - **The owner's look in game** at French, German and Japanese.
