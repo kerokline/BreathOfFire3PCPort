@@ -70,6 +70,16 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    --force` and `git branch -D phase-3/round10-ar1a` / `-ar1c` once it is
    gone. **Round ten's PR**: push and open one when the owner wants; the
    branch carries the other session's `368b84f` and `f669cce` too.
+0b. **Round eleven is staged: the boss round** (the owner, 2026-09-28,
+   after the area round finishes). Plan and cut:
+   [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
+   `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)); IDEAS I26. 525
+   functions in eleven groups, two waves (BH + BSA..BSE, then BSF..BSJ);
+   before the first cut: name the two tables and the kind-3 dispatcher,
+   write `boss_harness` from `magic_harness`, prove it on BH and BSA. Brief
+   drafted at `analysis/round11_wave1_brief.md` (group lines
+   `analysis/round11_wave1_groups.tsv`, gitignored); it names the round-ten
+   tip and wants the harness's doc filled in once it exists.
 1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
    order to choose:
    - **Rebinding and `known-defects.md` are done** (2026-09-27 afternoon):
