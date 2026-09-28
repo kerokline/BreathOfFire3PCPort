@@ -81,6 +81,19 @@ std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
     }
     return answer;
 }
+// BossActor_Clear louder than the real one: it also moves a byte of party
+// member 0's +0x34 / +0x38, which set-up 33's end hook reads after it.
+std::uint32_t ClearEffect(const std::uint32_t*, std::uint32_t answer) {
+    const U n = bh::Noise();
+    if (n % 2) Mem(n & 2 ? at::kMember0X : at::kMember0Z)[(n >> 2) % 4] ^= static_cast<unsigned char>(1 + (n >> 8) % 0xFF);
+    return answer;
+}
+// Sound_PlayEffect louder than the real one: it also flips bit 2 of 0x904AAD
+// half the time, which kind 40's flash reads again after it.
+std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (bh::Noise() % 2) Mem(at::kScript)[0] ^= 4;
+    return answer;
+}
 // The GTE stand-ins of kind 40's quad: a result from the inputs and the noise,
 // written where the real callee writes (magic_s01_fuzz.cpp's shape), so the
 // floats the draw computes from them are compared.
@@ -124,6 +137,9 @@ const bh::Callee kCallees[] = {
      {}, &CreateEffect},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
+    {"BossActor_Clear", ::bof3::addr::BossActor_Clear, KeyOf(&::BossActor_Clear), 1, {kU8}, bh::Answer::kGarbage, 0, 0, {}, &ClearEffect},
+    {"Sound_PlayEffect", ::bof3::addr::Sound_PlayEffect, KeyOf(&::Sound_PlayEffect), 1, {0xFFFF}, bh::Answer::kGarbage, 0, 0, {},
+     &SoundEffect},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"BossMikba_DrawQuad", 0x43E290, KeyOf(&::BossMikba_DrawQuad), 1, {0xFFF}, bh::Answer::kGarbage, 0, 0},
     {"Gte_RotMatrixYXZ", ::bof3::addr::Gte_RotMatrixYXZ, KeyOf(&::Gte_RotMatrixYXZ), 2, {0, 0}, bh::Answer::kGarbage, 0, 0, {6},
@@ -193,12 +209,13 @@ bool Wants(const char* run) {
 }
 
 void RunGroup(const char* run, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables,
-              void (*seed)(unsigned), int fight, int kind, unsigned rounds = 6000) {
+              void (*seed)(unsigned), int fight, int kind, unsigned rounds = 6000, void (*settle)() = nullptr) {
     if (!Wants(run)) return;
     g_clones = clones;
     bh::Group g{"boss_sg", clones, n, kCallees, BSG_COUNT(kCallees), tables, n_tables, kRegions, BSG_COUNT(kRegions), seed,
                 &Disturb, rounds};
     g.args = &Args;
+    g.settle = settle;
     g.fight = fight;
     g.kind = kind;
     bh::Run(g);
@@ -349,6 +366,21 @@ const bh::Clone kClonesF6[] = {
 };
 const bh::DataTable kTablesF6[] = {{Key(BossWeretigrFx_Steps), 2}, {Key(BossWeretigrFx_MainSteps), 7}, {Key(BossWeretigrFx_TrailSteps), 2}};
 
+// F6 and kind 40 read Sprite_Current again after their calls (its +0, +2, +9,
+// +0xB): the standard disturbance re-points it one call in 24, so a quarter
+// of the disturbances also re-point it (at another of the four task slots,
+// or enemies) and, for F6, a quarter flip its +0 between 0 and not (Noise:
+// the same on both passes).
+void SettleF6() {
+    const U n = bh::Noise();
+    if (n % 4 == 0) Sprite_Current = bh::TaskAt(n >> 8);
+    else if (n % 4 == 1) Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] ? 0 : 1 + (n >> 8) % 0xFF);
+}
+void SettleK40() {
+    const U n = bh::Noise();
+    if (n % 4 == 0) Sprite_Current = bh::EnemyAt(n >> 8);
+}
+
 U Signed32() { return BSG_PICK(0, 1, 0xFFFFFFFFu, 0x7FFFFFFF, 0x80000000u, 0x1000000, 0xFF000000u, 0x4000000, 0x28, 0x10); }
 unsigned char ActorByte() { return static_cast<unsigned char>(bh::Often() ? 3 + bh::Next() % 8 : bh::Next() % 3); }
 
@@ -458,8 +490,8 @@ void SelfTest() {
     RunGroup("k38", kClonesK38, BSG_COUNT(kClonesK38), kTablesK38, BSG_COUNT(kTablesK38), &SeedDeathKind, 32, 38);
     RunGroup("b32", kClonesB32, BSG_COUNT(kClonesB32), nullptr, 0, &SeedB32, 32, -1);
     RunGroup("b33", kClonesB33, BSG_COUNT(kClonesB33), nullptr, 0, &SeedB33, 33, -1);
-    RunGroup("f6", kClonesF6, BSG_COUNT(kClonesF6), kTablesF6, BSG_COUNT(kTablesF6), &SeedF6, 33, -1);
-    RunGroup("k40", kClonesK40, BSG_COUNT(kClonesK40), kTablesK40, BSG_COUNT(kTablesK40), &SeedK40, 34, 40);
+    RunGroup("f6", kClonesF6, BSG_COUNT(kClonesF6), kTablesF6, BSG_COUNT(kTablesF6), &SeedF6, 33, -1, 6000, &SettleF6);
+    RunGroup("k40", kClonesK40, BSG_COUNT(kClonesK40), kTablesK40, BSG_COUNT(kTablesK40), &SeedK40, 34, 40, 6000, &SettleK40);
 }
 
 }  // namespace boss_sg
