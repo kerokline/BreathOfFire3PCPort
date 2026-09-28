@@ -206,14 +206,16 @@ void Seed(unsigned k) {
         const unsigned base = sh::Next() % 0x300;
         AreaMap_Header[0] = static_cast<unsigned char>(width);
         SetWord(Mem(kHeightBase), base);
-        const unsigned z = sh::Next() % 0x41;
-        const int lo = -static_cast<int>(width * z + base * 4);
+        // z an s16 either side of 0 (a negative row still inside the layer when the base is past it)
+        int z = static_cast<int>(sh::Next() % 0x61) - 0x20;
+        if (z < 0 && static_cast<int>(width) * -z > static_cast<int>(base) * 4) z = -z;
+        const int lo = -(static_cast<int>(width) * z + static_cast<int>(base) * 4);
         const int hi = static_cast<int>(kLayerSize) - 1 + lo;
         int x = PickOf(0, 1, sh::Next() % 0x100);
         if (sh::Next() % 4 == 0) x = sh::Half() ? lo : lo + static_cast<int>(sh::Next() % 0x100);
         if (x > hi) x = hi;
         g_a[0] = static_cast<std::uint32_t>(x);
-        g_a[1] = z;
+        g_a[1] = static_cast<std::uint32_t>(z);
         break;
     }
     case kTurn:
@@ -236,12 +238,14 @@ void Seed(unsigned k) {
             if (sh::Half()) Sound_Channels[i] = 0;
         break;
     case kVolume: {
-        // cues 0..23 of banks 1..6: each voice dword 0 or a voice 0..63 (garbage above now and then)
+        // cues 0..23 of banks 1..6: each voice dword 0 or a voice 0..63 (now and then any byte, past
+        // the bank's 64 voices; garbage above now and then)
         for (unsigned b = 0; b < 6; ++b)
             for (unsigned c = 0; c < 24; ++c)
                 for (unsigned v = 0; v < 4; ++v) {
                     unsigned char* const d = Mem(kSoundBanks + b * at::kBankStride + c * 16 + 4 * v);
-                    const std::uint32_t voice = sh::Next() % 64 | (sh::Next() % 8 == 0 ? sh::Next() & 0xFFFFFF00u : 0);
+                    const std::uint32_t voice = (sh::Next() % 8 == 0 ? sh::Next() % 0x100 : sh::Next() % 64) |
+                                                (sh::Next() % 8 == 0 ? sh::Next() & 0xFFFFFF00u : 0);
                     SetLong(d, static_cast<std::int32_t>(sh::Half() ? 0 : voice));
                 }
         break;
