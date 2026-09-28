@@ -507,6 +507,49 @@ std::uint32_t AnArea(std::uint32_t r) {
 std::uint32_t AnFD() { return SH_PICK(0, 1, 2, 3, 4, 5, 6); }
 std::uint32_t AMember() { return SH_PICK(2, 4, 5, 6, 7, 8, 9); }
 
+// A coordinate: a 16-bit cell with a fraction (0 half the time), the cell at
+// a range's edge or one either side.
+std::uint32_t Cell(unsigned lo, unsigned n) {
+    const std::uint32_t c = sh::Often() ? SH_PICK(0, 1) * (n - 1) + lo + SH_PICK(0, 0, 0xFFFFFFFFu, 1) : lo + sh::Next() % (n + 2) - 1;
+    return (c & 0xFFFF) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
+}
+// A whole coordinate at a bound, one either side, or a cell off.
+std::uint32_t Exact(std::uint32_t v) { return v + SH_PICK(0, 0, 0, 1, 0xFFFFFFFFu, 0x10000); }
+
+// Each hook's rectangles, with the area and Cond_ByteFD (0xFF any) they are
+// tested in. kind 0: x exact, z by its cell; 1: x and z by their cells; 2: x
+// below a bound (signed), z by its cell; 3: x by its cell, z below a bound.
+struct Rect { unsigned short area; unsigned char fd, kind; std::uint32_t x; unsigned xn; std::uint32_t z; unsigned zn; };
+const Rect kStep13[] = {{0x56, 1, 0, 0x428000, 0, 0x3A, 2}, {0x70, 4, 1, 0x36, 3, 0x32, 4},    {0x7F, 0, 0, 0x38000, 0, 6, 3},
+                        {0x8F, 0, 0, 0x3B8000, 0, 0x1F, 4}, {0x8F, 1, 0, 0x428000, 0, 0x64, 3}, {0x90, 2, 1, 0x25, 1, 0x1D, 2},
+                        {0x91, 0xFF, 1, 0xA, 2, 0x62, 3},   {0x97, 0xFF, 0, 0x148000, 0, 0x12, 9}, {0x9B, 0, 0, 0x28000, 0, 0x30, 2}};
+const Rect kArrive13[] = {{0x8F, 0, 1, 0x2E, 1, 0x1F, 4}, {0x91, 5, 1, 0x40, 2, 0x6A, 1}};
+const Rect kStep14[] = {{0x94, 4, 0, 0x738000, 0, 0x36, 2}, {0xBF, 0xFF, 1, 0x10, 0x40, 0x10, 0x40}};
+const Rect kArrive14[] = {{0x8D, 0, 2, 0x4F8000, 0, 7, 8},    {0x8D, 0, 2, 0x498000, 0, 9, 4},    {0x8D, 0, 2, 0x408000, 0, 9, 4},
+                          {0x8D, 1, 2, 0x398000, 0, 0x31, 4}, {0x8D, 1, 2, 0x2D8000, 0, 0x31, 4}, {0x8E, 1, 3, 0x13, 4, 0x1D8000, 0},
+                          {0x8E, 3, 2, 0x2C8000, 0, 0x26, 4}, {0x94, 0, 1, 0x12, 3, 0x1C, 1},     {0xAC, 0, 2, 0xB8000, 0, 0x3F, 2},
+                          {0xBF, 0, 1, 0x1D, 5, 0x14, 2}};
+const Rect* g_rect = nullptr;   // the rectangle Seed chose for this round's hook, or none
+
+// Seed's half of a hook's round: a rectangle, its area and Cond_ByteFD.
+void PickRect(const Rect* r, unsigned n) {
+    g_rect = sh::Often() ? &r[sh::Next() % n] : nullptr;
+    if (!g_rect) return;
+    if (sh::Often()) SetW(at::kArea, g_rect->area);
+    if (g_rect->fd != 0xFF && sh::Often()) B(at::kCondFD) = g_rect->fd;
+}
+// Args' half: x and z at the rectangle's edges.
+void AtRect(std::uint32_t* a) {
+    if (!g_rect) return;
+    const Rect& q = *g_rect;
+    switch (q.kind) {
+    case 0: a[0] = Exact(q.x); a[1] = Cell(q.z, q.zn); break;
+    case 1: a[0] = Cell(q.x, q.xn); a[1] = Cell(q.z, q.zn); break;
+    case 2: a[0] = Exact(q.x) - SH_PICK(0, 0x10000, 0x8000); a[1] = Cell(q.z, q.zn); break;
+    default: a[0] = Cell(q.x, q.xn); a[1] = Exact(q.z) - SH_PICK(0, 0x10000, 0x8000); break;
+    }
+}
+
 // The in-use byte of an effect record 0 (its effect over).
 void Effect0(unsigned slot) { B(at::kEffects + (slot & 0xFF) * at::kEffectStride) = 0; }
 
@@ -544,7 +587,20 @@ void Seed(unsigned k) {
     if (sh::Half()) B(at::kKind2X + 4) = 5;   // 0x905E68
     if (sh::Half()) SetD(at::kFocusX, 0x77FF);
     if (sh::Often()) B(at::kEffects) = static_cast<unsigned char>(sh::Next() & 0xBF);
+    g_rect = nullptr;
     switch (g_chapter * 100 + k) {
+    case 1300 + k13StepHook: PickRect(kStep13, sizeof kStep13 / sizeof kStep13[0]); break;
+    case 1300 + k13ArriveHook: PickRect(kArrive13, sizeof kArrive13 / sizeof kArrive13[0]); break;
+    case 1400 + k14StepHook: PickRect(kStep14, sizeof kStep14 / sizeof kStep14[0]); break;
+    case 1400 + k14ArriveHook: PickRect(kArrive14, sizeof kArrive14 / sizeof kArrive14[0]); break;
+    case 1300 + k13EnterArea:   // the areas and Cond_ByteFD values it tests, together
+        if (sh::Often()) SetW(at::kArea, SH_PICK(0x56, 0x58, 0x70, 0x7E, 0x8F, 0x90, 0x91, 0xC2));
+        if (sh::Often()) B(at::kCondFD) = static_cast<unsigned char>(SH_PICK(0, 1, 2, 4));
+        break;
+    case 1400 + k14EnterArea:
+        if (sh::Often()) SetW(at::kArea, SH_PICK(0xB, 0x2B, 0x67, 0x78, 0x8D, 0x8E, 0x90, 0x93, 0x96, 0xAC, 0xBD, 0xBF, 0xC1, 0xC5));
+        if (sh::Often()) B(at::kCondFD) = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3));
+        break;
     case 1300 + k13Frame: case 1400 + k14Frame: B(at::kState) = static_cast<unsigned char>(sh::Next() % 3); break;
     case 1300 + k13Run: B(at::kRun) = static_cast<unsigned char>(sh::Next() % at::kRunCount13); break;
     case 1400 + k14Run: B(at::kRun) = static_cast<unsigned char>(sh::Next() % at::kRunCount14); break;
@@ -578,42 +634,9 @@ void Seed(unsigned k) {
     }
 }
 
-// A coordinate: a 16-bit cell with a fraction (0 half the time), the cell at
-// a range's edge or one either side.
-std::uint32_t Cell(unsigned lo, unsigned n) {
-    const std::uint32_t c = sh::Often() ? SH_PICK(0, 1) * (n - 1) + lo + SH_PICK(0, 0, 0xFFFFFFFFu, 1) : lo + sh::Next() % (n + 2) - 1;
-    return (c & 0xFFFF) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
-}
-// A whole x at a bound, one either side, or a cell.
-std::uint32_t Exact(std::uint32_t v) { return v + SH_PICK(0, 0, 0, 1, 0xFFFFFFFFu, 0x10000); }
-
-struct Rect { unsigned char kind; std::uint32_t x; unsigned xn; unsigned z, zn; };
-// kind 0: x exact, z by its cell; 1: x and z by their cells; 2: x below a
-// bound (signed), z by its cell; 3: x by its cell, z below a bound.
-const Rect kStep13[] = {{0, 0x428000, 0, 0x3A, 2}, {1, 0x36, 3, 0x32, 4}, {0, 0x38000, 0, 6, 3},   {0, 0x3B8000, 0, 0x1F, 4},
-                        {0, 0x428000, 0, 0x64, 3}, {1, 0x25, 1, 0x1D, 2}, {1, 0xA, 2, 0x62, 3}, {0, 0x148000, 0, 0x12, 9},
-                        {0, 0x28000, 0, 0x30, 2}};
-const Rect kArrive13[] = {{1, 0x2E, 1, 0x1F, 4}, {1, 0x40, 2, 0x6A, 1}};
-const Rect kStep14[] = {{0, 0x738000, 0, 0x36, 2}, {1, 0x10, 0x40, 0x10, 0x40}};
-const Rect kArrive14[] = {{2, 0x4F8000, 0, 7, 8},    {2, 0x498000, 0, 9, 4},    {2, 0x408000, 0, 9, 4}, {2, 0x398000, 0, 0x31, 4},
-                          {2, 0x2D8000, 0, 0x31, 4}, {3, 0x13, 4, 0x1D8000, 0}, {2, 0x2C8000, 0, 0x26, 4}, {1, 0x12, 3, 0x1C, 1},
-                          {2, 0xB8000, 0, 0x3F, 2},  {1, 0x1D, 5, 0x14, 2}};
-void AtRect(const Rect* r, unsigned n, std::uint32_t* a) {
-    const Rect& q = r[sh::Next() % n];
-    switch (q.kind) {
-    case 0: a[0] = Exact(q.x); a[1] = Cell(q.z, q.zn); break;
-    case 1: a[0] = Cell(q.x, q.xn); a[1] = Cell(q.z, q.zn); break;
-    case 2: a[0] = Exact(q.x) - SH_PICK(0, 0x10000, 0x8000); a[1] = Cell(q.z, q.zn); break;
-    default: a[0] = Cell(q.x, q.xn); a[1] = Exact(q.z) - SH_PICK(0, 0x10000, 0x8000); break;
-    }
-}
-
 void Args(unsigned k, std::uint32_t* a) {
     switch (g_chapter * 100 + k) {
-    case 1300 + k13StepHook: if (sh::Often()) AtRect(kStep13, sizeof kStep13 / sizeof kStep13[0], a); break;
-    case 1300 + k13ArriveHook: if (sh::Often()) AtRect(kArrive13, sizeof kArrive13 / sizeof kArrive13[0], a); break;
-    case 1400 + k14StepHook: if (sh::Often()) AtRect(kStep14, sizeof kStep14 / sizeof kStep14[0], a); break;
-    case 1400 + k14ArriveHook: if (sh::Often()) AtRect(kArrive14, sizeof kArrive14 / sizeof kArrive14[0], a); break;
+    case 1300 + k13StepHook: case 1300 + k13ArriveHook: case 1400 + k14StepHook: case 1400 + k14ArriveHook: AtRect(a); break;
     case 1300 + k13Caption:
         a[0] = (a[0] & 0xFFFF0000u) | g_index;
         a[1] = (a[1] & 0xFFFFFF00u) | (g_seconds & 0xFF);
@@ -632,10 +655,10 @@ void Args(unsigned k, std::uint32_t* a) {
 // After a call, two in three (beyond the harness's own), from the hash given:
 // counter 3, the area, Cond_ByteFD, a slot cell, an effect's in-use byte, who
 // leads, the facing, the script flags' bits 3 and 4, the member count, the
-// word 0x802290.
+// word 0x802290, the word 0x903850 (a caption's clock), Field_StatusBits bit 0.
 void Disturb(std::uint32_t h) {
     const unsigned char v = static_cast<unsigned char>(h >> 16);
-    switch ((h >> 8) % 11) {
+    switch ((h >> 8) % 13) {
     case 0: B(at::kCounters + 3) = (h >> 16) & 1 ? static_cast<unsigned char>(0x18 + (h >> 17) % 0x1A) : v; break;
     case 1: SetW(at::kArea, AnArea(h >> 16)); break;
     case 2: B(at::kCondFD) = static_cast<unsigned char>((h >> 16) % 7); break;
@@ -646,6 +669,8 @@ void Disturb(std::uint32_t h) {
     case 7: B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) ^ (8u << ((h >> 16) & 1))); break;
     case 8: B(at::kMemberCount) = static_cast<unsigned char>((h >> 16) % 4); break;
     case 9: SetW(at::kExtraWord, (h >> 16) & 1 ? 0x70 : 0x91); break;
+    case 10: SetW(at::kSlotWord, (h >> 16) % 0x40); break;
+    case 11: B(at::kStatusBits) = static_cast<unsigned char>(B(at::kStatusBits) ^ 1); break;
     default: B(at::kFacing) = static_cast<unsigned char>((h >> 16) & 1 ? 0 : 6 + ((h >> 17) & 1)); break;
     }
 }
@@ -666,7 +691,7 @@ void RunChapter(int chapter, const sh::Clone* clones, unsigned n, const sh::Data
                 const sh::Region* regions, unsigned n_regions, const char* shadow) {
     g_chapter = chapter;
     sh::Group group = {shadow, clones, n, kCallees, sizeof kCallees / sizeof kCallees[0], tables, n_tables, regions, n_regions,
-                       &Seed, &Disturb, 6000};
+                       &Seed, &Disturb, 16000};
     group.args = &Args;
     group.settle = &Settle;
     group.chapter = chapter;
