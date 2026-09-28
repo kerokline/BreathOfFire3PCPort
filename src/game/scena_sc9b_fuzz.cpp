@@ -573,6 +573,10 @@ const sh::Region kRegions10[] = {
     {at::kHold, 1},
     {at::kMoveSpeed3, 1},
     {at::kObjects10, 4 * at::kObject10Count},
+    // the pickup records, random each round (the image's words are all below
+    // 0x8000, so only random ones tell the zero-extended record word from the
+    // sign-extended sprite word: control B5d)
+    {at::kPickups, 6 * at::kPickupCount},
 };
 
 unsigned RunOf(unsigned k) {
