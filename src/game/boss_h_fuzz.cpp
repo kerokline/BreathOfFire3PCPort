@@ -13,6 +13,8 @@
 // Boss_Nop through their kinds' hook tables.
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/boss_h.h"
@@ -230,9 +232,11 @@ void ArgsOps(unsigned k, U* a) {
 
 // What the helpers read again after a call: the enemies' status bytes (read
 // once, before the calls: moving them shows a re-read), the grid's width
-// (read for each corner), the leader's flags and target.
+// (read for each corner), the leader's flags and target, the chapter's flag
+// bits pointer (read before each Flags call).
 void DisturbOps(U h) {
-    switch ((h >> 8) % 5) {
+    switch ((h >> 8) % 6) {
+    case 5: bh::SetPointer(at::kFlagBits, Mem(bh::at::kCondFlags + 8 * ((h >> 16) % 40))); break;
     case 0: Mem(at::kEnemy1Status)[1] = static_cast<unsigned char>(h >> 16); break;
     case 1: Mem(at::kEnemy2Status)[1] = static_cast<unsigned char>(h >> 16); break;
     case 2: Mem(at::kMapHeader)[0] = static_cast<unsigned char>((h >> 16) % 0x40); break;
@@ -266,24 +270,31 @@ void SeedHooks(unsigned k) {
         Mem(at::kBattleEnd)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
 }
 
+// BOF3X_BH_RUN=torast|ops|hooks runs that one alone (the controls script's
+// shortcut); unset, all three run.
+bool Wants(const char* run) {
+    const char* const only = std::getenv("BOF3X_BH_RUN");
+    return only == nullptr || *only == 0 || std::strcmp(only, run) == 0;
+}
+
 }  // namespace
 
 void SelfTest() {
-    {
+    if (Wants("torast")) {
         bh::Group g{"boss_h", kClonesTorast, BH_COUNT(kClonesTorast), kCalleesTorast, BH_COUNT(kCalleesTorast), kTablesTorast,
                     BH_COUNT(kTablesTorast), nullptr, 0, &SeedTorast, nullptr, 6000};
         g.args = &ArgsTorast;
         g.fight = 8;
         bh::Run(g);
     }
-    {
+    if (Wants("ops")) {
         bh::Group g{"boss_h", kClonesOps, BH_COUNT(kClonesOps), kCalleesOps, BH_COUNT(kCalleesOps), nullptr, 0, kRegionsOps,
                     BH_COUNT(kRegionsOps), &SeedOps, &DisturbOps, 6000};
         g.args = &ArgsOps;
         g.fight = 18;
         bh::Run(g);
     }
-    {
+    if (Wants("hooks")) {
         bh::Group g{"boss_h", kClonesHooks, BH_COUNT(kClonesHooks), nullptr, 0, nullptr, 0, nullptr, 0, &SeedHooks, nullptr, 4000};
         bh::Run(g);
     }
