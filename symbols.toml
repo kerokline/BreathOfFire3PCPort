@@ -57430,3 +57430,815 @@ ctype = "signed char"
 count = 8
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR2C): Effect_Spawn third argument of Area94_SpawnKind4AtMember0E by 0x904062, unchecked. docs/area_w2c.md."
+
+[[func]]
+pc = 0x40CEF0
+name = "Area68_ChoiceMessageA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40CEF0..0x40CF1D (0x2E bytes), cdecl: area 68 +0x34[0] (Area68_Choices), a choice: the message word Area68_ChoiceMessages[s8 answer] (unchecked, in .data); answer 0: counter 0 (0x903848) = 0x14; 1: counter 0 = 3. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40CF20
+name = "Area68_ChoiceMessageB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40CF20..0x40CF4D (0x2E bytes), cdecl: area 68 +0x34[1]: the message word Area68_ChoiceMessages[2 + s8 answer]; answer 0: counter 0 = 0; 1: counter 0 = 0xFF. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40CF50
+name = "Area68_ChoiceAskCount"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40CF50..0x40CF92 (0x43 bytes), cdecl: area 68 +0x34[2]: answer not 0: message 0x84 and the byte 0x9398CF = 6; 0: Inventory_CountUsed(1) (al, unsigned) at 0xF or more message 0x82, else 0x83 and 0x9398CF = 6. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40CFA0
+name = "Area68_ChoiceAnswer84"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40CFA0..0x40CFC3 (0x24 bytes), cdecl: area 68 +0x34[5], [6] and area 50 +0x34[3], [4] (a shared body, in area 68's block): answer not 0: message 0x84, 0x9398CF = 6; 0: message 0xFFFF. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40CFD0
+psx = 0x801F3A18
+name = "Area68_SpawnKind4AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40CFD0..0x40D011 (0x42 bytes), cdecl: area 68 +0x3C[0] (Area68_Handlers): Sprite_Current = party record 1; Effect_Spawn(4, 0, Area68_EffectKinds4[party list 1's first byte], record 1's words +0x2E, +0x30); an answer other than 0xFF to Sprite_Current[0xB] (re-read). PSX twin: names/area_records.toml area 68 (0x801F3A18). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D020
+psx = 0x801F3A98
+name = "Area68_SpawnKind4AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D020..0x40D065 (0x46 bytes), cdecl: area 68 +0x3C[1]: the same for party record 2 and list 2. PSX twin: names/area_records.toml area 68 (0x801F3A98). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D070
+psx = 0x801F3B18
+name = "Area68_GlideRunA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D070..0x40D081 (0x12 bytes), cdecl: area 68 +0x3C[2]: jmp [Area68_GlideStatesA + Sprite_Current[4] * 4], the state unchecked (2 entries; ours aborts past them). PSX twin: names/area_records.toml area 68 (0x801F3B18). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D090
+name = "Area68_GlideBegin10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D090..0x40D0B1 (0x22 bytes), cdecl: Area68_GlideStatesA[0] and Area68_GlideStatesB[0]: Sprite_Current[0xA] = 0x10, [4] = 1; the word Field_State +0x12E plus 0xFFFE. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D0C0
+name = "Area68_GlideStepA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D0C0..0x40D121 (0x62 bytes), cdecl: Area68_GlideStatesA[1]: count Sprite_Current[0xA] 0: [4] = 0; else x +0x34 += s8 Area68_GlideStepsA[count & 0xF] << 11, z +0x38 += -(that) << 11, the count less 1, Field_State +0x12E plus 0xFFFE. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D130
+psx = 0x801F3C2C
+name = "Area68_GlideRunB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D130..0x40D141 (0x12 bytes), cdecl: area 68 +0x3C[3]: jmp through Area68_GlideStatesB by Sprite_Current[4] (unchecked). PSX twin: names/area_records.toml area 68 (0x801F3C2C). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D150
+name = "Area68_GlideStepB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D150..0x40D1B1 (0x62 bytes), cdecl: Area68_GlideStatesB[1]: Area68_GlideStepA's body over Area68_GlideStepsB. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D1C0
+psx = 0x801F3D40
+name = "Area68_SpawnKind1AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D1C0..0x40D201 (0x42 bytes), cdecl: area 68 +0x3C[4]: Area68_SpawnKind4AtMember1's body with kind 1 over Area68_EffectKinds. PSX twin: names/area_records.toml area 68 (0x801F3D40). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D210
+psx = 0x801F3DC0
+name = "Area68_SpawnKind1AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D210..0x40D255 (0x46 bytes), cdecl: area 68 +0x3C[5]: kind 1, party record 2. PSX twin: names/area_records.toml area 68 (0x801F3DC0). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D260
+psx = 0x801F3E48
+name = "Area68_SpawnKind3AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D260..0x40D2A1 (0x42 bytes), cdecl: area 68 +0x3C[7]: kind 3, party record 1 (+0x3C[6] is the shared ret 0x437CC0). PSX twin: names/area_records.toml area 68 (0x801F3E48). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D2B0
+psx = 0x801F3EC8
+name = "Area68_SpawnKind3AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D2B0..0x40D2F5 (0x46 bytes), cdecl: area 68 +0x3C[8]: kind 3, party record 2. PSX twin: names/area_records.toml area 68 (0x801F3EC8). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D300
+name = "Area68_Trigger25"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA068), 0x40D300..0x40D35D (0x5E bytes), cdecl: Field_ObjectTriggers id 25 (its arguments not read; no descriptor names it: a gap in area 68's block): ScriptFlags_Set40; the object at [0x903804] (re-read for each store) +1 = 4, +0x83 = 5, word +0x8A = 0; tail kind 4, sub-kind 3; counter 3 = its index among Sprite_Objects (signed / 0xA4). al 0. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D360
+psx = 0x801F2C04
+name = "Area69_GlideRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA069), 0x40D360..0x40D371 (0x12 bytes), cdecl: area 69 +0x3C[0] (Area69_Handlers): jmp through Area69_GlideStates by Sprite_Current[4] (unchecked). PSX twin: names/area_records.toml area 69 (0x801F2C04). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D380
+name = "Area69_GlideBegin40"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA069), 0x40D380..0x40D3A1 (0x22 bytes), cdecl: Area69_GlideStates[0] and area 79's state table 0x60EC80[0] (a shared body, in area 69's block): Area68_GlideBegin10's body with 0x40. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D3B0
+name = "Area69_GlideStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA069), 0x40D3B0..0x40D411 (0x62 bytes), cdecl: Area69_GlideStates[1]: Area68_GlideStepA's body over Area69_GlideSteps. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D420
+psx = 0x801F2C04
+name = "Area71_SpawnEffect3C"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA071), 0x40D420..0x40D479 (0x5A bytes), cdecl: area 71 +0x3C[0] (Area71_Handlers): Effect_FindFree to the byte 0x903850; a slot (the dword there & 0xFF): +0 = 1, +5 = 0x3C, +0xB = Field_ActiveMember's index among Sprite_Objects; Sound_PlayEffect(0x207). PSX twin: names/area_records.toml area 71 (0x801F2C04). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D480
+psx = 0x801F2CF4
+name = "Area71_SpawnEffect25"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA071), 0x40D480..0x40D4A9 (0x2A bytes), cdecl: area 71 +0x3C[1]: the same slot, +0 = 1, +5 = 0x25. PSX twin: names/area_records.toml area 71 (0x801F2CF4). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D4B0
+psx = 0x801F2D2C
+name = "Area72_PlaceRandomObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA072), 0x40D4B0..0x40D57A (0xCB bytes), cdecl: area 72 +0x40 init: a jmp over 11 nops; Rand() & 0x3F walked down Area72_Weights (8), the first it falls below chosen (none: 8); Sprite_Objects 0..7 but it get +0 = 0; the chosen one at Area72_Cells[Rand() & 7] (bytes << 16), +0x3E = AreaMap_Elevation there; Field_EdgeBits = the dword 0x802E74 less 5 either way. PSX twin: names/area_records.toml area 72 (0x801F2D2C). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D580
+psx = 0x801F2D2C
+name = "Area73_PlaceRandomObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA073), 0x40D580..0x40D64A (0xCB bytes), cdecl: area 73 +0x40 init: Area72_PlaceRandomObject's code over Area73_Cells / Area73_Weights (the PSX pairs both areas with one entry). PSX twin: names/area_records.toml area 73 (0x801F2D2C). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D650
+psx = 0x801F2C04
+name = "Area74_ChoiceAsk92"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA074), 0x40D650..0x40D68D (0x3E bytes), cdecl: area 74 +0x34[0] = +0x3C[2]: answer not 0: message 0x94, 0x9398CF = 6; 0: the byte 0x90409C bit 0x20 (story flag 0x365) message 0x92, else 0x93 and 0x9398CF = 6. PSX twin: names/area_records.toml area 74 (0x801F2C04). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D690
+psx = 0x801F2CC0
+name = "Area74_ChoiceAnswer94"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA074), 0x40D690..0x40D6B3 (0x24 bytes), cdecl: area 74 +0x34[3], [4] = +0x3C[5], [6] (the PSX has two bodies, 0x801F2CC0 and 0x801F2D04): answer not 0: message 0x94, 0x9398CF = 6; 0: message 0xFFFF. PSX twin: names/area_records.toml area 74 (0x801F2CC0). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D6C0
+psx = 0x801F2D48
+name = "Area74_PushToggleRow7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA074), 0x40D6C0..0x40D78B (0xCC bytes), cdecl: area 74 +0x3C[0]: Field_ActiveMember +0x80 bit 0 cleared; leader +0x89 at 2, Sprite_Current[9] 0, leader direction (+8 & 7) 5 or 1: Sprite_Current[8] = it; unless Field_ObjectBlockedAhead(the active member): its +0x87 = 3, MoveCmd_Move(MoveScript_Object, direction); direction 5: Cond row 7 flag 6 set ? cleared : flag 5 set; direction 1: flag 6 set; Sound_PlayEffect(leader dword +0x2C + 0x100). PSX twin: names/area_records.toml area 74 (0x801F2D48). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D790
+psx = 0x801F2E74
+name = "Area74_ClearMemberBit0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA074), 0x40D790..0x40D79C (0xD bytes), cdecl: area 74 +0x3C[1], and three entries of Area_ObjectHandler's fallback table 0x660CA0 (0x660CA8, 0x660CB0, 0x660CC8): Field_ActiveMember +0x80 bit 0 cleared. PSX twin: names/area_records.toml area 74 (0x801F2E74). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D7A0
+name = "Area74_Trigger28"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA074), 0x40D7A0..0x40D7B5 (0x16 bytes), cdecl: Field_ObjectTriggers id 28 (arguments not read; a gap in area 74's block): ScriptFlags_Set40, tail kind 4 with sub-kind 7. al 0. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D7C0
+psx = 0x801F317C
+name = "Area75_DropIn0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D7C0..0x40D7C8 (0x9 bytes), cdecl: area 75 +0x34[2] = +0x3C[0]: Party_DropIn(0). PSX twin: names/area_records.toml area 75 (0x801F317C). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D7D0
+psx = 0x801F319C
+name = "Area75_ArmTail30"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D7D0..0x40D7E3 (0x14 bytes), cdecl: area 75 +0x34[3] = +0x3C[1]: ScriptFlags_Set40, tail kind 0x1E at state 0 (Area75_TailPresses). PSX twin: names/area_records.toml area 75 (0x801F319C). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D7F0
+psx = 0x801F31D0
+name = "Area75_MarkObjectB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D7F0..0x40D813 (0x24 bytes), cdecl: area 75 +0x34[4] = +0x3C[2]: the byte 0x93C351 = Field_ActiveMember's index among Sprite_Objects. PSX twin: names/area_records.toml area 75 (0x801F31D0). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D820
+psx = 0x801F321C
+name = "Area75_MarkObjectA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D820..0x40D843 (0x24 bytes), cdecl: area 75 +0x34[5] = +0x3C[3]: the byte 0x93C350, the same way. PSX twin: names/area_records.toml area 75 (0x801F321C). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D850
+psx = 0x801F3268
+name = "Area75_ShowEffects"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D850..0x40D875 (0x26 bytes), cdecl: area 75 +0x34[6] = +0x3C[4]: Effect_Objects[0x93C34E] and [0x93C34F] +1 = 2. PSX twin: names/area_records.toml area 75 (0x801F3268). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D880
+psx = 0x801F32C8
+name = "Area75_PoseObject5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D880..0x40D89E (0x1F bytes), cdecl: area 75 +0x34[7] = +0x3C[5]: Sprite_Objects[5] +0x83 = 7, word +0x8A = 0, +0x84 = 2, +1 = 4. PSX twin: names/area_records.toml area 75 (0x801F32C8). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D8A0
+psx = 0x801F32FC
+name = "Area75_SpawnFive"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D8A0..0x40D91F (0x80 bytes), cdecl: area 75 +0x34[8] = +0x3C[6]: five times Sprite_FindFree to the word 0x903850; a slot: EventOp_0x(Area75_SpawnOps + 0x11 i), the new Sprite_Current at the entry one's x + 0x30000, z, dword +0x3C, its +0xB = i; Sprite_Current and Field_ActiveMember put back. PSX twin: names/area_records.toml area 75 (0x801F32FC). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D920
+psx = 0x801F33D0
+name = "Area75_FlyRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D920..0x40D931 (0x12 bytes), cdecl: area 75 +0x34[9] = +0x3C[7]: jmp through Area75_FlyStates by Sprite_Current[4] (unchecked). PSX twin: names/area_records.toml area 75 (0x801F33D0). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D940
+name = "Area75_FlyBegin"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D940..0x40D973 (0x34 bytes), cdecl: Area75_FlyStates[0]: Sprite_Current dword +0x14 = Area75_FlyHeights[its +0xB] (unchecked, .data), +0x2B = 3, +4 = 1; MoveScript_Object word +0xA plus 0xFFFE. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D980
+name = "Area75_FlyStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D980..0x40D9EA (0x6B bytes), cdecl: Area75_FlyStates[1]: Sprite_Current +0x5D at 0x80: +0 = 0; else +0x5D less 8, +0x5E / +0x5F plus 0xF8, x +0x34 += +0xC, z +0x38 += +0x10, word +0x3E += word +0x14, MoveScript_Object +0xA plus 0xFFFE. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40D9F0
+name = "Area75_DrainEffects"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40D9F0..0x40DA53 (0x64 bytes), cdecl: area 75 +0x34[12] = +0x3C[10]: (Frame_Counter & 3) == 0 taken from the dwords +0xC of Effect_Objects[0x93C34E] and [0x93C34F]; counter 0 below 0x20: MoveScript_Object +0xA plus 0xFFFE. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DA60
+name = "Area75_FollowRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DA60..0x40DA71 (0x12 bytes), cdecl: area 75 +0x34[13] = +0x3C[11]: jmp through Area75_FollowStates by Sprite_Current[4] (unchecked). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DA80
+name = "Area75_FollowBegin"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DA80..0x40DAA1 (0x22 bytes), cdecl: Area75_FollowStates[0]: Sound_PlayById(0x200); MoveScript_Object +0xA plus 0xFFFE; Sprite_Current[4] = 1. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DAB0
+name = "Area75_FollowStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DAB0..0x40DADD (0x2E bytes), cdecl: Area75_FollowStates[1]: Field_Request not 0: Sprite_Current z +0x38 = Field_Kind2Z, MoveScript_Object +0xA plus 0xFFFE; 0: Sprite_Current[4] = 0. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DAE0
+name = "Area75_FollowKind2Z"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DAE0..0x40DB10 (0x31 bytes), cdecl: area 75 +0x34[14] = +0x3C[12]: Field_Request 5: Sound_PlayEffect(0x207); else Sprite_Current z = Field_Kind2Z, MoveScript_Object +0xA plus 0xFFFE. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DB20
+name = "Area75_ChoiceStart14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DB20..0x40DB4A (0x2B bytes), cdecl: area 75 +0x34[0]: answer 0: message 0x19, tail state 0x14, counter 0 = 0x15; else message 0x1A. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DB50
+name = "Area75_ChoiceStartF"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DB50..0x40DB83 (0x34 bytes), cdecl: area 75 +0x34[1]: answer 0: message 0xFFFF, tail state 0xF, the word 0x9039F6 = 0x1E, counter 0 = 0x14; else message 0x18. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40DB90
+name = "Area75_TailPresses"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40DB90..0x40E11F (0x590 bytes), cdecl: Field_ModeTailKinds[30] (armed by Area75_ArmTail30): by the s8 0x9039F4 through the byte table 0x40E0FC (36) and the jump table 0x40E09C (24 entries, 0x40E000 among them) inside the function; the exit tail-jumps to Area75_PhaseRun when the state it ends on is 6..0xE. States 0..4 and 0x1F..0x23 fades (Transition_Start, MoveScript_WaitWordDA), two Field_ChangeArea(0x4B, ...) and story flag 0x41; 5..0xD three press rounds by counter 0 and the two counters 0x93C34A / 0x93C34C; 0xF a timer back to 4; 0x14 / 0x15 a round from a choice; 0x1E the counts' words bumped. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E120
+name = "Area75_StepHook"
+ret = "int"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E120..0x40E15B (0x3C bytes), cdecl: Area_StepHook's case for area 75: unless Cond row 10 flag 2 (Flags_Test), x at 0x1B0000 or less (signed) and u16(z high word - 0x38) below 4: ScriptFlags_Set40, counter 3 = 0xA, al 1; else al 0. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E160
+name = "Area75_Trigger41"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E160..0x40E17C (0x1D bytes), cdecl: Field_ObjectTriggers id 41 (arguments not read; a gap in area 75's block): ScriptFlags_Set40, tail kind 0x2C at state 0, sub-kind 0xC. al 0. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E180
+name = "Area75_ResetPresses"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E180..0x40E1B1 (0x32 bytes), cdecl: called by Area75_TailPresses (states 5, 0xD, 0x14): the bytes 0x93C340, 346, 347, 348, 352, 353 zeroed; the words 0x93C34C and 0x93C34A = 0x5DC. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E1C0
+name = "Area75_PhaseRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E1C0..0x40E1D5 (0x16 bytes), cdecl: called by Area75_TailPresses's state 0x15 and tail-jumped to by its exit: call [Area75_Phases + byte 0x93C340 * 4] (unchecked; 5 entries, ours aborts past them), then jmp Area75_DrawCounters. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E1E0
+name = "Area75_PhaseDeal"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E1E0..0x40E32B (0x14C bytes), cdecl: Area75_Phases[1]: the player's counter 0x93C34A at 0x1F4 or less: Sound_PlayEffect(0x201), object B's animation Area75_MoveAnims[move * 4 + 2], phase 4; else both press counts 0, the rhythm row Area75_Rows[Rand() & 0xF], the list position on (past the list's count a new list Area75_NextList[Rand() & 0xF] at 0), the move and its frames from the list's pair, object B's animation by (old, new move), Sound_PlayEffect(0x201), phase 2. The list byte indexes Area75_Lists unchecked (ours aborts where the pointer would be read past it). docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E330
+name = "Area75_PhasePlay"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E330..0x40E3BC (0x8D bytes), cdecl: Area75_Phases[2]: by the move 0x93C343 - 0: Area75_OtherPress, Area75_EarlyPress; 1: Area75_PlayerPress; 2: Area75_OtherPress, Area75_PlayerPress; else Area75_EarlyPress; the frames word 0x93C344 less 1, at 0 phase 1 (the flags' bit 8 clear) or the frames 0x2710; without bit 8 phase 3 on more than 3 presses out of turn, more than 0x1E idle frames or the counters more than 0xC8 apart. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E3C0
+name = "Area75_PhaseMissed"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E3C0..0x40E3D6 (0x17 bytes), cdecl: Area75_Phases[3]: Cond row 10 flag 1 set; tail state 0x1E. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E3E0
+name = "Area75_PhaseReached"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E3E0..0x40E471 (0x92 bytes), cdecl: Area75_Phases[4]: story flag 0x41 cleared; Cond_ByteFA 0xA: Cond row 10 flag 0 set, tail kind and state 0, the byte 0x8034E5 0, object B +0x83 = 4 and word +0x8A 0, MoveScript_Var7 5, object A +0x83 = 5 and word +0x8A 0, Party_DropIn(5), counter 0 = 0x1E. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E480
+name = "Area75_OtherPress"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E480..0x40E515 (0x96 bytes), cdecl: called by Area75_PhasePlay (moves 0, 2): Area75_Rhythm[row * 15 + frames % 15] not 0: Sound_PlayEffect(0x202), the word 0x93C34C plus 0xFFFC - Rand() % 2, Effect_Objects[0x93C34E] +0xC less 1, Sprite_Current = object A, its +0x4A = 1, jmp Sprite_ScriptTick. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E520
+name = "Area75_PlayerPress"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E520..0x40E593 (0x74 bytes), cdecl: called by Area75_PhasePlay (moves 1, 2): Input_Pressed bit 0x20: Sound_PlayEffect(0x202), the word 0x93C34A plus 0xFFFC - Rand() % 2, Sprite_Current = the leader's record, its +0x4A = 1, Effect_Objects[0x93C34F] +0xC less 1, Sprite_ScriptTick, 0x93C348 = 0; else 0x93C348 + 1. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E5A0
+name = "Area75_EarlyPress"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E5A0..0x40E5E7 (0x48 bytes), cdecl: called by Area75_PhasePlay (move 0 and moves past 2): unless 0x93C346 bit 8, Input_Pressed bit 0x20: Sprite_Current = the leader's record, +0x4A = 1, Effect_Objects[0x93C34F] +0xC less 1, Sprite_ScriptTick, 0x93C347 + 1. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E5F0
+name = "Area75_DrawCounters"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E5F0..0x40E744 (0x155 bytes), cdecl: jmp'd to by Area75_PhaseRun: unless 0x93C346 bit 1, each counter (0x93C34A, then 0x93C34C) in an Area75_DrawWindow (0x18 / 0x90, 0x20, 0x54, 0x11, 0), Crt_sprintf(0x904BA0, Area75_CounterFormat, word / 100, word % 100 as bytes), Text_DrawAt(0x1E / 0x96, 0x22, colour 2 if the counters are more than 0x96 apart else 0, 6, 0x904BA0), the text only on frames with Frame_Counter & 0xC under bit 4. The colour is pushed as a dword with the original's stack above its byte. docs/area_w1f.md."
+
+[[func]]
+pc = 0x40E750
+name = "Area75_DrawWindow"
+ret = "void"
+params = "int x, int y, int w, int h, int flag"
+status = "evidence"
+impl = "src/game/area_w1f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA075), 0x40E750..0x40EB8E (0x43F bytes), cdecl: called by Area75_DrawCounters and by area 42's tail 0x406A30 (group AR1B, a raw address there): a window - a draw-mode primitive (RECT 0, 0xF0, 0x10, 0x10 before it), four semi-transparent FT4 quads with float corners (the left edge, two middle halves of (w + 1 - 4) >> 1, the right edge), shade 0xFF / 0xAC and texture page 0x2F / 0xF by flag, Gpu_GetClut(flag * 32 + 0x10, 0x1E1); a second draw mode (RECT 0, 0, 0x100, 0x100); Menu_DrawOutline(x + 2, y + 2, w - 4, h - 4, flag). The float constants 0x5C41B8 / BC / C0 (1, 3, 2). docs/area_w1f.md."
+
+[[data]]
+pc = 0x607D64
+name = "Area68_ChoiceMessages"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area68_ChoiceMessageA / B read words [s8 answer] from +0 and +4: two pairs; Area68_Choices follows at 0x607D6C. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607D6C
+name = "Area68_Choices"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 68's descriptor 0x607D88 +0x34: 0x40CEF0, 0x40CF20, 0x40CF50, two of area 50's block's (0x420850, 0x420870), 0x40CFA0 twice. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607D40
+name = "Area68_Handlers"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 68's descriptor +0x3C: nine handlers, entry 6 the shared ret 0x437CC0. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607060
+name = "Area68_EffectKinds4"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area68_SpawnKind4AtMember1 / 2 read [party list byte] (unchecked); Area68_EffectKinds starts 12 bytes on, so 12 is the room, not a measured count. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60706C
+name = "Area68_EffectKinds"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): the kind 1 and kind 3 spawns read [party list byte] (unchecked); count by analogy with Area68_EffectKinds4. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607DCC
+name = "Area68_GlideStatesA"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area68_GlideRunA jumps [+ Sprite_Current[4] * 4]: Area68_GlideBegin10, Area68_GlideStepA; Area68_GlideStepsA follows. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607DD4
+name = "Area68_GlideStepsA"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area68_GlideStepA reads [count & 0xF] as signed bytes. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607DE4
+name = "Area68_GlideStatesB"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area68_GlideRunB's: Area68_GlideBegin10, Area68_GlideStepB. docs/area_w1f.md."
+
+[[data]]
+pc = 0x607DEC
+name = "Area68_GlideStepsB"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area68_GlideStepB's steps. docs/area_w1f.md."
+
+[[data]]
+pc = 0x608E90
+name = "Area69_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 69's descriptor 0x608E98 +0x3C: Area69_GlideRun. docs/area_w1f.md."
+
+[[data]]
+pc = 0x608EDC
+name = "Area69_GlideStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area69_GlideRun's: Area69_GlideBegin40, Area69_GlideStep. docs/area_w1f.md."
+
+[[data]]
+pc = 0x608EE4
+name = "Area69_GlideSteps"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area69_GlideStep's steps. docs/area_w1f.md."
+
+[[data]]
+pc = 0x609350
+name = "Area71_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 71's descriptor 0x609358 +0x3C. docs/area_w1f.md."
+
+[[data]]
+pc = 0x609410
+name = "Area72_Cells"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area72_PlaceRandomObject: eight (x, z) byte pairs, [Rand() & 7]. docs/area_w1f.md."
+
+[[data]]
+pc = 0x609420
+name = "Area72_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area72_PlaceRandomObject walks Rand() & 0x3F down these eight. docs/area_w1f.md."
+
+[[data]]
+pc = 0x6094E0
+name = "Area73_Cells"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area73_PlaceRandomObject's cells. docs/area_w1f.md."
+
+[[data]]
+pc = 0x6094F0
+name = "Area73_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area73_PlaceRandomObject's weights. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60A2A0
+name = "Area74_Handlers"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 74's descriptor 0x60A2C0 +0x3C; entries 2..6 are Area74_Choices. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60A2A8
+name = "Area74_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 74's descriptor +0x34 (the tail of Area74_Handlers): 0x40D650, 0x420850, 0x420870, 0x40D690 twice. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AA58
+name = "Area75_Choices"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 75's descriptor 0x60AA98 +0x34: 0x40DB20, 0x40DB50, then Area75_Handlers' thirteen. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AA60
+name = "Area75_Handlers"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): area 75's descriptor +0x3C; entries 8 and 9 are 0x55B8B0 / 0x55B960 (engine block). The descriptor's +0x40 init is the shared ret 0x437CC0. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AAE0
+name = "Area75_SpawnOps"
+ctype = "unsigned char"
+count = 85
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_SpawnFive passes EventOp_0x the five records of 0x11 bytes. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AB38
+name = "Area75_FlyStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_FlyRun's: Area75_FlyBegin, Area75_FlyStep. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AB40
+name = "Area75_FlyHeights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_FlyBegin reads [Sprite_Current[0xB]] (unchecked); 8 is the room before Area75_FollowStates. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AB48
+name = "Area75_FollowStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_FollowRun's: Area75_FollowBegin, Area75_FollowStep. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AB50
+name = "Area75_Phases"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_PhaseRun calls [+ byte 0x93C340 * 4]: the shared ret 0x437CC0, Area75_PhaseDeal, Area75_PhasePlay, Area75_PhaseMissed, Area75_PhaseReached. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60AB88
+name = "Area75_Lists"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_PhaseDeal: three (pointer, count) records of 8 bytes by the byte 0x93C352; each list holds (move + 1, frames) byte pairs. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60ABA0
+name = "Area75_Rows"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_PhaseDeal: the rhythm row [Rand() & 0xF]. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60ABB0
+name = "Area75_NextList"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_PhaseDeal: the next list [Rand() & 0xF]. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60ABC0
+name = "Area75_MoveAnims"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_PhaseDeal: object B's animation [old move * 4 + new move] (unchecked; 16 is the room before Area75_Rhythm). docs/area_w1f.md."
+
+[[data]]
+pc = 0x60ABD0
+name = "Area75_Rhythm"
+ctype = "unsigned char"
+count = 30
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_OtherPress: [row * 15 + frames % 15]; two rows counted from Area75_Rows' values, the index unchecked. docs/area_w1f.md."
+
+[[data]]
+pc = 0x60ABF0
+name = "Area75_CounterFormat"
+ctype = "char"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1F): Area75_DrawCounters' Crt_sprintf format (two numbers); length not measured. docs/area_w1f.md."
