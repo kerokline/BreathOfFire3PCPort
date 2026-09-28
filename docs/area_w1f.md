@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 59 functions ours
 (`src/game/area_w1f.cpp`, shadow name `area_w1f`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-0 mismatches in 354,000 rounds (in this worktree); CONTROLS_SUMMARY (section 4).
+0 mismatches in 354,000 rounds (in this worktree); 374 controls planted, 371 refused by a count, 3 equivalent (each with a refused variant) (section 4).
 Fuzz only: no recorded route reaches the band (section 8). No divergence;
 where the original jumps or calls through a pointer read past a table ours
 aborts with a message (section 6).
@@ -302,15 +302,402 @@ state tables `Area68_GlideStatesA` / `B`, `Area69_GlideStates`,
   75's cells, a counter word, `Input_Pressed`, the wait word.
 
 **Result (in this worktree):** 354,000 rounds over the 59 functions (6,000
-each), COVERAGE_CALLS calls to the stand-ins, 0 mismatches, 17,291 bytes of
+each), 447,616 calls to the stand-ins, 0 mismatches, 17,291 bytes of
 state (34 regions) and the log compared. Coverage: every callee each
-function can reach was called - COVERAGE_LINE.
+function can reach was called, and every state-table entry - e.g. the glide
+states 2,939..6,082 each, area 74's `MoveCmd_Move` 355 (the push past all
+its gates), `Flags_Clear` 123 (the toggle's clear), `Inventory_CountUsed`
+931, area 75's phases 1,148..1,227 each (the shared `ret` 1,211),
+`Area75_ResetPresses` 428, `Field_ChangeArea` 425, `Sound_StreamDone` 138,
+`Music_FadeOutStop` 158, `Msg_OpenScript` 331, `Area75_DrawWindow` 9,058,
+`Gpu_GetClut` 24,000.
 
 `BOF3X_SHADOW='*'`: STAR_RESULT.
 
 ## 4. Controls
 
-CONTROLS_TEXT
+Planted one at a time in `area_w1f.cpp` by a script (the scratch `controls.py`, not committed) that plants on an anchor it checks is unique, rebuilds, checks `area_w1f.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w1f`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches in all seven runs). **374 planted, 371 refused by a count (exit 3), 3 equivalent** (each with a near variant planted and refused), no hang, no fault. Every one of the 59 functions has at least one control of its own; a control in a shared helper lists every function it refused in.
+
+A first pass (371 planted) left six standing. Three were the fuzz's fault and were refused after two fixes: the harness returns from a `kPhase` recorder before it runs the callee's `effect`, so the louder stand-ins listed on `Area75_ResetPresses`, `_PhaseRun`, `_OtherPress` and `_PlayerPress` never moved anything (F15, F45; now `kGarbage` with no arguments); `Gfx_CommitPrim`'s effect moved the packet cursor by exactly the size, so a cursor cached across it matched (N35; now one call in five moves it by another amount). The other three are equivalent (below). **For the harness doc:** a `kPhase` callee's `effect` is ignored.
+
+The thinnest: F44 1 (Area75_TailPresses), E42 10 (Area75_FollowStep), N37 10 (Area75_DrawWindow), M14 15 (Area75_DrawCounters), F70 19 (Area75_TailPresses); the tail's re-reads after a call are the thin ones, reached when a louder stand-in moves the cell.
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| H1 | `RunState (x5)` | the other state | Area68_GlideRunA 6000, Area68_GlideRunB 6000 |
+| H2 | `SpawnAtMember (68 x6)` | z from +0x2E | Area68_SpawnKind4AtMember1 6000, Area68_SpawnKind4AtMember2 5999, Area68_SpawnKind1AtMember1 6000, Area68_SpawnKind1AtMember2 6000, Area68_SpawnKind3AtMember1 6000, Area68_SpawnKind3AtMember2 6000 |
+| H3 | `SpawnAtMember (68 x6)` | none 0xFE | Area68_SpawnKind4AtMember1 2421, Area68_SpawnKind4AtMember2 2432, Area68_SpawnKind1AtMember1 2412, Area68_SpawnKind1AtMember2 2375, Area68_SpawnKind3AtMember1 2364, Area68_SpawnKind3AtMember2 2302 |
+| H4 | `SpawnAtMember (68 x6)` | the other member made current | Area68_SpawnKind4AtMember1 5762, Area68_SpawnKind4AtMember2 5766, Area68_SpawnKind1AtMember1 5772, Area68_SpawnKind1AtMember2 5774, Area68_SpawnKind3AtMember1 5762, Area68_SpawnKind3AtMember2 5776 |
+| H5 | `SpawnAtMember (68 x6)` | kinds index + 1 | Area68_SpawnKind4AtMember1 3951, Area68_SpawnKind4AtMember2 4018, Area68_SpawnKind1AtMember1 4412, Area68_SpawnKind1AtMember2 4410, Area68_SpawnKind3AtMember1 4354, Area68_SpawnKind3AtMember2 4435 |
+| H6 | `SpawnAtMember (68 x6)` | the record, not Sprite_Current re-read | Area68_SpawnKind4AtMember1 156, Area68_SpawnKind4AtMember2 169, Area68_SpawnKind1AtMember1 147, Area68_SpawnKind1AtMember2 154, Area68_SpawnKind3AtMember1 152, Area68_SpawnKind3AtMember2 154 |
+| H7 | `GlideBegin (68, 69)` | script word less 3 | Area68_GlideBegin10 6000 |
+| H8 | `GlideBegin (68, 69)` | state 2 | Area68_GlideBegin10 6000 |
+| H9 | `GlideStep (x3)` | state 1 at count 0 | Area68_GlideStepA 1201, Area68_GlideStepB 1163 |
+| H10 | `GlideStep (x3)` | x step by count & 7 | equivalent: the three glide step tables repeat every 4 bytes (`FF 00 01 00`), so `& 7` reads what `& 0xF` reads; variant H10b (`& 0xE`) refused |
+| H11 | `GlideStep (x3)` | x step << 12 | Area68_GlideStepA 2122, Area68_GlideStepB 2118 |
+| H12 | `GlideStep (x3)` | z step not negated | Area68_GlideStepA 2122, Area68_GlideStepB 2118 |
+| H13 | `GlideStep (x3)` | count less 2 | Area68_GlideStepA 4799, Area68_GlideStepB 4837 |
+| H14 | `GlideStep (x3)` | script word less 4 | Area68_GlideStepA 4799, Area68_GlideStepB 4837 |
+| H15 | `ObjectIndex (x5)` | divided by 0xA3 | Area71_SpawnEffect3C 2032 |
+| P1 | `PlaceRandomObject (72, 73)` | below or at the weight | Area72_PlaceRandomObject 546 |
+| P2 | `PlaceRandomObject (72, 73)` | Rand & 0x1F | Area72_PlaceRandomObject 2130 |
+| P3 | `PlaceRandomObject (72, 73)` | the others' +1 cleared | Area72_PlaceRandomObject 6000 |
+| P4 | `PlaceRandomObject (72, 73)` | seven objects cleared | Area72_PlaceRandomObject 5858 |
+| P5 | `PlaceRandomObject (72, 73)` | z from the next pair | Area72_PlaceRandomObject 5998 |
+| P6 | `PlaceRandomObject (72, 73)` | Rand & 3 | Area72_PlaceRandomObject 3004 |
+| P7 | `PlaceRandomObject (72, 73)` | ground to +0x3C | Area72_PlaceRandomObject 6000 |
+| P8 | `PlaceRandomObject (72, 73)` | edge bits less 4 | Area72_PlaceRandomObject 6000 |
+| P9 | `PlaceRandomObject (72, 73)` | chosen 7 not placed | Area72_PlaceRandomObject 106 |
+| P10 | `PlaceRandomObject (72, 73)` | elevation at (z, x) | Area72_PlaceRandomObject 5218 |
+| P11 | `Area73_PlaceRandomObject` | area 72's cells | Area73_PlaceRandomObject 6000 |
+| P12 | `Area72_PlaceRandomObject` | weights + 1 | Area72_PlaceRandomObject 2848 |
+| A1 | `Area68_ChoiceMessageA` | counter 0x15 | Area68_ChoiceMessageA 926 |
+| A2 | `Area68_ChoiceMessageA` | counter 4 | Area68_ChoiceMessageA 856 |
+| A3 | `Area68_ChoiceMessageA` | the answer unsigned | Area68_ChoiceMessageA 1938 |
+| A4 | `Area68_ChoiceMessageB` | table + 6 | Area68_ChoiceMessageB 5479 |
+| A5 | `Area68_ChoiceMessageB` | counter 0xFE | Area68_ChoiceMessageB 922 |
+| A6 | `Area68_ChoiceMessageB` | counter 1 at answer 0 | Area68_ChoiceMessageB 876 |
+| A7 | `Area68_ChoiceAskCount` | above 0xF | Area68_ChoiceAskCount 124 |
+| A8 | `Area68_ChoiceAskCount` | message 0x85 | Area68_ChoiceAskCount 259 |
+| A9 | `Area68_ChoiceAskCount` | category 2 | Area68_ChoiceAskCount 931 |
+| A10 | `Area68_ChoiceAnswer84` | none 0xFFFE | Area68_ChoiceAnswer84 858 |
+| A11 | `Area68_ChoiceAnswer84` | mark 7 | Area68_ChoiceAnswer84 5142 |
+| A12 | `Area68_SpawnKind4AtMember1` | kind 5 | Area68_SpawnKind4AtMember1 6000 |
+| A13 | `Area68_SpawnKind4AtMember2` | the other table | Area68_SpawnKind4AtMember2 3201 |
+| A14 | `Area68_SpawnKind1AtMember1` | kind 2 | Area68_SpawnKind1AtMember1 6000 |
+| A15 | `Area68_SpawnKind1AtMember2` | member 1 | Area68_SpawnKind1AtMember2 6000 |
+| A16 | `Area68_SpawnKind3AtMember1` | kind 4's table | Area68_SpawnKind3AtMember1 3214 |
+| A17 | `Area68_SpawnKind3AtMember2` | kind 7 | Area68_SpawnKind3AtMember2 6000 |
+| A18 | `Area68_GlideRunA` | table B | Area68_GlideRunA 2939 |
+| A19 | `Area68_GlideRunB` | table A | Area68_GlideRunB 2979 |
+| A20 | `Area68_GlideBegin10` | count 0x11 | Area68_GlideBegin10 6000 |
+| A21 | `Area68_GlideStepA` | steps B | Area68_GlideStepA 2122 |
+| A22 | `Area68_GlideStepB` | steps A | Area68_GlideStepB 2118 |
+| A23 | `Area68_Trigger25` | +1 = 5 | Area68_Trigger25 6000 |
+| A24 | `Area68_Trigger25` | +0x83 = 4 | Area68_Trigger25 6000 |
+| A25 | `Area68_Trigger25` | word +0x8A = 1 | Area68_Trigger25 6000 |
+| A26 | `Area68_Trigger25` | sub-kind 4 | Area68_Trigger25 6000 |
+| A27 | `Area68_Trigger25` | counter 3 the index + 1 | Area68_Trigger25 6000 |
+| A28 | `Area68_Trigger25` | the focus read before ScriptFlags_Set40 | Area68_Trigger25 2902 |
+| A29 | `Area68_Trigger25` | answers 1 | Area68_Trigger25 6000 |
+| A30 | `Area68_Trigger25` | tail kind 5 | Area68_Trigger25 6000 |
+| B1 | `Area69_GlideBegin40` | count 0x41 | Area69_GlideBegin40 6000 |
+| B2 | `Area69_GlideStep` | area 68's steps | equivalent: `Area69_GlideSteps` holds the same 16 bytes as `Area68_GlideStepsA`; variant B2b (the table + 1) refused |
+| B3 | `Area69_GlideRun` | area 68's table | Area69_GlideRun 6000 |
+| C1 | `Area71_SpawnEffect3C` | kind 0x3D | Area71_SpawnEffect3C 3983 |
+| C2 | `Area71_SpawnEffect3C` | member + 1 | Area71_SpawnEffect3C 3983 |
+| C3 | `Area71_SpawnEffect3C` | sound 0x208 | Area71_SpawnEffect3C 3983 |
+| C4 | `Area71_SpawnEffect3C` | the member read before Effect_FindFree | Area71_SpawnEffect3C 1920 |
+| C5 | `Area71_SpawnEffect25` | none not stored | Area71_SpawnEffect25 1970 |
+| C6 | `Area71_SpawnEffect25` | kind 0x26 | Area71_SpawnEffect25 4020 |
+| C7 | `Area71_SpawnEffect25` | +0 = 2 | Area71_SpawnEffect25 4020 |
+| C8 | `Area71_SpawnEffect3C` | +0 = 3 | Area71_SpawnEffect3C 3983 |
+| D1 | `Area74_ChoiceAsk92` | bit 0x10 | Area74_ChoiceAsk92 439 |
+| D2 | `Area74_ChoiceAsk92` | message 0x91 | Area74_ChoiceAsk92 450 |
+| D3 | `Area74_ChoiceAsk92` | mark 5 | Area74_ChoiceAsk92 445 |
+| D4 | `Area74_ChoiceAnswer94` | none 0xFFFE | Area74_ChoiceAnswer94 910 |
+| D5 | `Area74_ChoiceAnswer94` | message 0x95 | Area74_ChoiceAnswer94 5090 |
+| D6 | `Area74_ChoiceAsk92` | message 0x96 for an answer | Area74_ChoiceAsk92 5105 |
+| D7 | `Area74_PushToggleRow7` | bit 1 cleared too | Area74_PushToggleRow7 3006 |
+| D8 | `Area74_PushToggleRow7` | pose 3 | Area74_PushToggleRow7 1378 |
+| D9 | `Area74_PushToggleRow7` | direction & 0xF | Area74_PushToggleRow7 540 |
+| D10 | `Area74_PushToggleRow7` | +0xA tested | Area74_PushToggleRow7 1053 |
+| D11 | `Area74_PushToggleRow7` | direction 2 for 1 | Area74_PushToggleRow7 552 |
+| D12 | `Area74_PushToggleRow7` | turned to direction + 1 | Area74_PushToggleRow7 1038 |
+| D13 | `Area74_PushToggleRow7` | +0x87 = 4 | Area74_PushToggleRow7 355 |
+| D14 | `Area74_PushToggleRow7` | the member not read again | Area74_PushToggleRow7 160 |
+| D15 | `Area74_PushToggleRow7` | moved direction ^ 4 | Area74_PushToggleRow7 355 |
+| D16 | `Area74_PushToggleRow7` | flag 7 tested | Area74_PushToggleRow7 189 |
+| D17 | `Area74_PushToggleRow7` | flag 7 cleared | Area74_PushToggleRow7 123 |
+| D18 | `Area74_PushToggleRow7` | flag 4 set | Area74_PushToggleRow7 66 |
+| D19 | `Area74_PushToggleRow7` | the next row's flag 6 | Area74_PushToggleRow7 166 |
+| D20 | `Area74_PushToggleRow7` | sound + 0x101 | Area74_PushToggleRow7 355 |
+| D21 | `Area74_PushToggleRow7` | direction 1 toggles | Area74_PushToggleRow7 355 |
+| D22 | `Area74_PushToggleRow7` | blocked test inverted | Area74_PushToggleRow7 1056 |
+| D23 | `Area74_ClearMemberBit0` | bit 1 | Area74_ClearMemberBit0 4435 |
+| D24 | `Area74_Trigger28` | sub-kind 8 | Area74_Trigger28 6000 |
+| D25 | `Area74_Trigger28` | tail kind 5 | Area74_Trigger28 6000 |
+| D26 | `Area74_Trigger28` | answers 1 | Area74_Trigger28 6000 |
+| E1 | `Area75_DropIn0` | entry 1 | Area75_DropIn0 6000 |
+| E2 | `Area75_ArmTail30` | kind 0x1F | Area75_ArmTail30 6000 |
+| E3 | `Area75_ArmTail30` | state 1 | Area75_ArmTail30 6000 |
+| E4 | `Area75_MarkObjectB` | object A's cell | Area75_MarkObjectB 5999 |
+| E5 | `Area75_MarkObjectA` | index + 1 | Area75_MarkObjectA 6000 |
+| E6 | `Area75_ShowEffects` | the other's +2 | Area75_ShowEffects 5993 |
+| E7 | `Area75_ShowEffects` | the player's = 3 | Area75_ShowEffects 6000 |
+| E8 | `Area75_PoseObject5` | object 6 | Area75_PoseObject5 6000 |
+| E9 | `Area75_PoseObject5` | +0x83 = 6 | Area75_PoseObject5 6000 |
+| E10 | `Area75_PoseObject5` | +0x84 = 3 | Area75_PoseObject5 6000 |
+| E11 | `Area75_PoseObject5` | +1 = 5 | Area75_PoseObject5 6000 |
+| E12 | `Area75_PoseObject5` | word +0x8A = 1 | Area75_PoseObject5 6000 |
+| E13 | `Area75_SpawnFive` | four | Area75_SpawnFive 6000 |
+| E14 | `Area75_SpawnFive` | x + 0x20000 | Area75_SpawnFive 5966 |
+| E15 | `Area75_SpawnFive` | records of 0x10 | Area75_SpawnFive 5920 |
+| E16 | `Area75_SpawnFive` | +0xB = i + 1 | Area75_SpawnFive 5961 |
+| E17 | `Area75_SpawnFive` | the slot stored as a byte | Area75_SpawnFive 5976 |
+| E18 | `Area75_SpawnFive` | none ends the loop | Area75_SpawnFive 4794 |
+| E19 | `Area75_SpawnFive` | the active member not put back | Area75_SpawnFive 4976 |
+| E20 | `Area75_SpawnFive` | Sprite_Current not put back | Area75_SpawnFive 4912 |
+| E21 | `Area75_SpawnFive` | z from +0x3C | Area75_SpawnFive 5970 |
+| E22 | `Area75_SpawnFive` | Sprite_Current read before the op | Area75_SpawnFive 5038 |
+| E23 | `Area75_FlyRun` | the follow table | Area75_FlyRun 6000 |
+| E24 | `Area75_FlyBegin` | height index + 1 | Area75_FlyBegin 4734 |
+| E25 | `Area75_FlyBegin` | +0x2B = 4 | Area75_FlyBegin 6000 |
+| E26 | `Area75_FlyBegin` | state 2 | Area75_FlyBegin 6000 |
+| E27 | `Area75_FlyBegin` | script back 3 | Area75_FlyBegin 6000 |
+| E28 | `Area75_FlyStep` | 0x80 or more | Area75_FlyStep 1493 |
+| E29 | `Area75_FlyStep` | +0 = 1 | Area75_FlyStep 2966 |
+| E30 | `Area75_FlyStep` | less 9 | Area75_FlyStep 3034 |
+| E31 | `Area75_FlyStep` | +0x5E plus 0xF7 | Area75_FlyStep 3034 |
+| E32 | `Area75_FlyStep` | +0x5F plus 0xF0 | Area75_FlyStep 3034 |
+| E33 | `Area75_FlyStep` | x plus +0x10 | Area75_FlyStep 3034 |
+| E34 | `Area75_FlyStep` | z plus +0xC | Area75_FlyStep 3034 |
+| E35 | `Area75_FlyStep` | word +0x16 | Area75_FlyStep 3034 |
+| E36 | `Area75_DrainEffects` | one frame in eight | Area75_DrainEffects 706 |
+| E37 | `Area75_DrainEffects` | at 0x20 too | Area75_DrainEffects 796 |
+| E38 | `Area75_DrainEffects` | the other slot ^ 1 second | Area75_DrainEffects 1043 |
+| E39 | `Area75_FollowRun` | the fly table | Area75_FollowRun 6000 |
+| E40 | `Area75_FollowBegin` | sound 0x201 | Area75_FollowBegin 6000 |
+| E41 | `Area75_FollowBegin` | state 0 | Area75_FollowBegin 6000 |
+| E42 | `Area75_FollowStep` | request above 1 | Area75_FollowStep 10 |
+| E43 | `Area75_FollowStep` | state 1 | Area75_FollowStep 3014 |
+| E44 | `Area75_FollowStep` | x set | Area75_FollowStep 2986 |
+| E45 | `Area75_FollowKind2Z` | request 4 | Area75_FollowKind2Z 2205 |
+| E46 | `Area75_FollowKind2Z` | sound 0x206 | Area75_FollowKind2Z 1445 |
+| E47 | `Area75_FollowKind2Z` | script back 4 | Area75_FollowKind2Z 4555 |
+| E48 | `Area75_ChoiceStart14` | message 0x1B | Area75_ChoiceStart14 5092 |
+| E49 | `Area75_ChoiceStart14` | state 0x13 | Area75_ChoiceStart14 908 |
+| E50 | `Area75_ChoiceStart14` | counter 0x16 | Area75_ChoiceStart14 908 |
+| E51 | `Area75_ChoiceStart14` | message 0x1A for 0 | Area75_ChoiceStart14 908 |
+| E52 | `Area75_ChoiceStartF` | message 0x17 | Area75_ChoiceStartF 5151 |
+| E53 | `Area75_ChoiceStartF` | state 0xE | Area75_ChoiceStartF 849 |
+| E54 | `Area75_ChoiceStartF` | timer 0x1F | Area75_ChoiceStartF 849 |
+| E55 | `Area75_ChoiceStartF` | counter 0x13 | Area75_ChoiceStartF 849 |
+| E56 | `Area75_ChoiceStartF` | message 0xFFFE | Area75_ChoiceStartF 849 |
+| F1 | `Area75_TailPresses` | phase run below 8 | Area75_TailPresses 258 |
+| F2 | `Area75_TailPresses` | phase run from 5 | Area75_TailPresses 226 |
+| F3 | `Area75_TailPresses` | state 0 Transition_Start(2) | Area75_TailPresses 198 |
+| F4 | `Area75_TailPresses` | state 1 pass flags 1 | Area75_TailPresses 128 |
+| F5 | `Area75_TailPresses` | state 2 flag 0x42 | Area75_TailPresses 206 |
+| F6 | `Area75_TailPresses` | state 2 area flags 0x83 | Area75_TailPresses 206 |
+| F7 | `Area75_TailPresses` | state 2 music 0x59 | Area75_TailPresses 206 |
+| F8 | `Area75_TailPresses` | state 2 row flag 2 | Area75_TailPresses 206 |
+| F9 | `Area75_TailPresses` | state 2 counter 0x14 | Area75_TailPresses 131 |
+| F10 | `Area75_TailPresses` | state 3 pass flags 0x1E | Area75_TailPresses 152 |
+| F11 | `Area75_TailPresses` | state 4 counter 2 | Area75_TailPresses 164 |
+| F12 | `Area75_TailPresses` | state 1 waits above 1 | Area75_TailPresses 24 |
+| F13 | `Area75_TailPresses` | state 5 at 4 | Area75_TailPresses 171 |
+| F14 | `Area75_TailPresses` | state 5 flag 0x10 | Area75_TailPresses 111 |
+| F15 | `Area75_TailPresses` | state 5 object read before the reset | Area75_TailPresses 33 |
+| F16 | `Area75_TailPresses` | state 5 +0x2A = 2 | Area75_TailPresses 155 |
+| F17 | `Area75_TailPresses` | state 5 animation 3 | Area75_TailPresses 155 |
+| F18 | `Area75_TailPresses` | state 6 at 0x578 too | Area75_TailPresses 58 |
+| F19 | `Area75_TailPresses` | state 6 phase 1 | Area75_TailPresses 85 |
+| F20 | `Area75_TailPresses` | state 7 at 7 | Area75_TailPresses 188 |
+| F21 | `Area75_TailPresses` | state 7 move 2 | Area75_TailPresses 158 |
+| F22 | `Area75_TailPresses` | state 8 the other counter | Area75_TailPresses 78 |
+| F23 | `Area75_TailPresses` | state 8 counter + 2 | Area75_TailPresses 77 |
+| F24 | `Area75_TailPresses` | state 9 at 8 | Area75_TailPresses 196 |
+| F25 | `Area75_TailPresses` | state 9 message 0x18 | Area75_TailPresses 173 |
+| F26 | `Area75_TailPresses` | state 9 flags read before the message | Area75_TailPresses 77 |
+| F27 | `Area75_TailPresses` | state 9 flag 2 | Area75_TailPresses 135 |
+| F28 | `Area75_TailPresses` | state 9 request 3 | Area75_TailPresses 166 |
+| F29 | `Area75_TailPresses` | state 0xA waits on 3 | Area75_TailPresses 98 |
+| F30 | `OpenMoveA (75 tail)` | row 1 | Area75_TailPresses 145 |
+| F31 | `OpenMoveA (75 tail)` | +0x2A = 0 | Area75_TailPresses 145 |
+| F32 | `OpenMoveA (75 tail)` | object B | Area75_TailPresses 73 |
+| F33 | `Area75_TailPresses` | state 0xB below 0x96 | Area75_TailPresses 41 |
+| F34 | `Area75_TailPresses` | state 0xB no count | Area75_TailPresses 102 |
+| F35 | `Area75_TailPresses` | state 0xC at 0x47F | Area75_TailPresses 27 |
+| F36 | `Area75_TailPresses` | state 0xD at 0xB | Area75_TailPresses 167 |
+| F37 | `Area75_TailPresses` | state 0xD to 0xF | Area75_TailPresses 141 |
+| F38 | `Area75_TailPresses` | state 0xF above 1 | Area75_TailPresses 20 |
+| F39 | `Area75_TailPresses` | state 0xF back to 5 | Area75_TailPresses 154 |
+| F40 | `Area75_TailPresses` | state 0x14 frames 0x77 | Area75_TailPresses 132 |
+| F41 | `Area75_TailPresses` | state 0x14 object A twice | Area75_TailPresses 63 |
+| F42 | `Area75_TailPresses` | state 0x14 object B +0x2A = 1 | Area75_TailPresses 132 |
+| F43 | `Area75_TailPresses` | state 0x14 sound 0x202 | Area75_TailPresses 132 |
+| F44 | `Area75_TailPresses` | state 0x14 object B read before the first animation | Area75_TailPresses 1 |
+| F45 | `Area75_TailPresses` | state 0x15 not read again | Area75_TailPresses 40 |
+| F46 | `Area75_TailPresses` | state 0x1E word + 2 | Area75_TailPresses 223 |
+| F47 | `Area75_TailPresses` | state 0x1E leader word + 2 | Area75_TailPresses 223 |
+| F48 | `Area75_TailPresses` | state 0x1E to 0x20 | Area75_TailPresses 223 |
+| F49 | `Area75_TailPresses` | state 0x1F at 0x1B | Area75_TailPresses 165 |
+| F50 | `Area75_TailPresses` | state 0x1F fade 0x21 | Area75_TailPresses 141 |
+| F51 | `Area75_TailPresses` | state 0x1F Transition_Start(1) | Area75_TailPresses 141 |
+| F52 | `Area75_TailPresses` | state 0x20 fade 0xB | Area75_TailPresses 158 |
+| F53 | `Area75_TailPresses` | state 0x20 stream 7 | Area75_TailPresses 158 |
+| F54 | `Area75_TailPresses` | state 0x20 message 0x1C | Area75_TailPresses 158 |
+| F55 | `Area75_TailPresses` | state 0x20 pass flags 1 | Area75_TailPresses 158 |
+| F56 | `Area75_TailPresses` | state 0x21 al only | Area75_TailPresses 22 |
+| F57 | `Area75_TailPresses` | state 0x21 to 0x23 | Area75_TailPresses 108 |
+| F58 | `Area75_TailPresses` | state 0x21 waits on 1 | Area75_TailPresses 102 |
+| F59 | `Area75_TailPresses` | state 0x22 flag 0x40 | Area75_TailPresses 219 |
+| F60 | `Area75_TailPresses` | state 0x22 z + 1 | Area75_TailPresses 219 |
+| F61 | `Area75_TailPresses` | state 0x23 counter 0 | Area75_TailPresses 132 |
+| F62 | `Area75_TailPresses` | state 0x23 kind 1 | Area75_TailPresses 133 |
+| F63 | `Area75_TailPresses` | state 0x23 Transition_Start(0) | Area75_TailPresses 133 |
+| F64 | `Area75_TailPresses` | state 0x23 ends on 6 | Area75_TailPresses 133 |
+| F65 | `Area75_TailPresses` | state 0x10 a case | Area75_TailPresses 118 |
+| F66 | `Area75_TailPresses` | the state unsigned & 0x3F | Area75_TailPresses 78 |
+| F67 | `Area75_TailPresses` | state 0 to 8 | Area75_TailPresses 198 |
+| F68 | `Area75_TailPresses` | state 3 waits on 1 | Area75_TailPresses 179 |
+| F69 | `Area75_TailPresses` | state 4 does not wait | Area75_TailPresses 58 |
+| F70 | `Area75_TailPresses` | state 0x20 waits above 0xFF | Area75_TailPresses 19 |
+| F71 | `Area75_TailPresses` | state 0x23 does not wait | Area75_TailPresses 69 |
+| F72 | `Area75_TailPresses` | state 6 no count | Area75_TailPresses 84 |
+| F73 | `Area75_TailPresses` | state 0xC phase 2 | Area75_TailPresses 90 |
+| G1 | `Area75_StepHook` | flag 3 | Area75_StepHook 6000 |
+| G2 | `Area75_StepHook` | x at 0x1B0000 refused | Area75_StepHook 83 |
+| G3 | `Area75_StepHook` | x unsigned | Area75_StepHook 135 |
+| G4 | `Area75_StepHook` | five rows | Area75_StepHook 163 |
+| G5 | `Area75_StepHook` | from 0x37 | Area75_StepHook 292 |
+| G6 | `Area75_StepHook` | z high word as a byte | Area75_StepHook 161 |
+| G7 | `Area75_StepHook` | counter 3 = 0xB | Area75_StepHook 477 |
+| G8 | `Area75_StepHook` | answers 2 | Area75_StepHook 477 |
+| G9 | `Area75_StepHook` | z from x | Area75_StepHook 477 |
+| G10 | `Area75_Trigger41` | kind 0x2D | Area75_Trigger41 6000 |
+| G11 | `Area75_Trigger41` | sub-kind 0xD | Area75_Trigger41 6000 |
+| G12 | `Area75_Trigger41` | state 1 | Area75_Trigger41 6000 |
+| G13 | `Area75_Trigger41` | answers 1 | Area75_Trigger41 6000 |
+| K1 | `Area75_ResetPresses` | other counter 0x5DD | Area75_ResetPresses 6000 |
+| K2 | `Area75_ResetPresses` | player counter 0x5DB | Area75_ResetPresses 6000 |
+| K3 | `Area75_ResetPresses` | list 1 | Area75_ResetPresses 6000 |
+| K4 | `Area75_ResetPresses` | position 1 | Area75_ResetPresses 6000 |
+| K5 | `Area75_ResetPresses` | idle 1 | Area75_ResetPresses 6000 |
+| K6 | `Area75_ResetPresses` | flags 8 | Area75_ResetPresses 6000 |
+| K7 | `Area75_ResetPresses` | early 2 | Area75_ResetPresses 6000 |
+| K8 | `Area75_PhaseRun` | no counters drawn | Area75_PhaseRun 6000 |
+| K9 | `Area75_PhaseRun` | the next phase | Area75_PhaseRun 6000 |
+| K10 | `Area75_PhaseDeal` | below 0x1F4 | Area75_PhaseDeal 1597 |
+| K11 | `Area75_PhaseDeal` | animation + 3 | Area75_PhaseDeal 2187 |
+| K12 | `Area75_PhaseDeal` | phase 3 at the end | Area75_PhaseDeal 2345 |
+| K13 | `Area75_PhaseDeal` | early 1 | Area75_PhaseDeal 3655 |
+| K14 | `Area75_PhaseDeal` | rows & 7 | Area75_PhaseDeal 1292 |
+| K15 | `Area75_PhaseDeal` | position + 2 | Area75_PhaseDeal 1105 |
+| K16 | `Area75_PhaseDeal` | past the count | Area75_PhaseDeal 954 |
+| K17 | `Area75_PhaseDeal` | next list from the rows | Area75_PhaseDeal 1740 |
+| K18 | `Area75_PhaseDeal` | position not stored at a new list | Area75_PhaseDeal 2318 |
+| K19 | `Area75_PhaseDeal` | move not less 1 | Area75_PhaseDeal 3628 |
+| K20 | `Area75_PhaseDeal` | frames + 1 | Area75_PhaseDeal 3655 |
+| K21 | `Area75_PhaseDeal` | animation index transposed | Area75_PhaseDeal 2565 |
+| K22 | `Area75_PhaseDeal` | sound 0x202 | Area75_PhaseDeal 3655 |
+| K23 | `Area75_PhaseDeal` | phase 1 after a deal | Area75_PhaseDeal 3655 |
+| K24 | `Area75_PhaseDeal` | +0x2A = 1 at the end | Area75_PhaseDeal 1722 |
+| K25 | `Area75_PhaseDeal` | the next list's pointer | Area75_PhaseDeal 3286 |
+| K26 | `Area75_PhaseDeal` | the list read before the row's Rand | Area75_PhaseDeal 52 |
+| K27 | `Area75_PhasePlay` | move 0 presses reversed | Area75_PhasePlay 1453 |
+| K28 | `Area75_PhasePlay` | move 1 early | Area75_PhasePlay 1472 |
+| K29 | `Area75_PhasePlay` | move 2 without the player | Area75_PhasePlay 1557 |
+| K30 | `Area75_PhasePlay` | others the player | Area75_PhasePlay 1518 |
+| K31 | `Area75_PhasePlay` | phase 0 at the end | Area75_PhasePlay 47 |
+| K32 | `Area75_PhasePlay` | frames 0x270F | Area75_PhasePlay 324 |
+| K33 | `Area75_PhasePlay` | bit 4 for 8 | Area75_PhasePlay 2312 |
+| K34 | `Area75_PhasePlay` | more than 2 | Area75_PhasePlay 111 |
+| K35 | `Area75_PhasePlay` | idle at 0x1E | Area75_PhasePlay 88 |
+| K36 | `Area75_PhasePlay` | gap 0xC9 | Area75_PhasePlay 55 |
+| K37 | `Area75_PhasePlay` | phase 2 for 3 | Area75_PhasePlay 4166 |
+| K38 | `Area75_PhasePlay` | flags read before the presses | Area75_PhasePlay 118 |
+| K39 | `Area75_PhasePlay` | frames less 2 | Area75_PhasePlay 6000 |
+| K40 | `Area75_PhaseMissed` | flag 2 | Area75_PhaseMissed 6000 |
+| K41 | `Area75_PhaseMissed` | state 0x1F | Area75_PhaseMissed 6000 |
+| K42 | `Area75_PhaseReached` | story flag 0x42 | Area75_PhaseReached 6000 |
+| K43 | `Area75_PhaseReached` | chapter 0xB | Area75_PhaseReached 2456 |
+| K44 | `Area75_PhaseReached` | row flag 1 | Area75_PhaseReached 1664 |
+| K45 | `Area75_PhaseReached` | objects read before the flag | Area75_PhaseReached 142 |
+| K46 | `Area75_PhaseReached` | B +0x83 = 5 | Area75_PhaseReached 1620 |
+| K47 | `Area75_PhaseReached` | A +0x83 = 6 | Area75_PhaseReached 1664 |
+| K48 | `Area75_PhaseReached` | Var7 4 | Area75_PhaseReached 1664 |
+| K49 | `Area75_PhaseReached` | step 1 | Area75_PhaseReached 1664 |
+| K50 | `Area75_PhaseReached` | drop-in 6 | Area75_PhaseReached 1664 |
+| K51 | `Area75_PhaseReached` | counter 0x1F | Area75_PhaseReached 1664 |
+| K52 | `Area75_PhaseReached` | kind 1 | Area75_PhaseReached 1664 |
+| K53 | `Area75_PhaseReached` | B at A | Area75_PhaseReached 1620 |
+| K54 | `Area75_PhaseReached` | A word 1 | Area75_PhaseReached 1664 |
+| K55 | `Area75_PhaseReached` | B word 1 | Area75_PhaseReached 1620 |
+| L1 | `Area75_OtherPress` | mod 14 | Area75_OtherPress 2699 |
+| L2 | `Area75_OtherPress` | rows of 16 | Area75_OtherPress 2316 |
+| L3 | `Area75_OtherPress` | sound 0x203 | Area75_OtherPress 3511 |
+| L4 | `RandHalf (75 x2)` | & 1 for % 2 | equivalent: `rand()` never answers a negative value, so `% 2` and `& 1` agree (the harness's negative answers are multiples of 4); variant L4b (`% 3`) refused |
+| L5 | `DropCounter (75 x2)` | less 5 | Area75_OtherPress 3503, Area75_PlayerPress 2959 |
+| L6 | `Area75_OtherPress` | the player's counter | Area75_OtherPress 3511 |
+| L7 | `Area75_OtherPress` | the player's effect | Area75_OtherPress 2630 |
+| L8 | `Area75_OtherPress` | +0x4A = 2 | Area75_OtherPress 3511 |
+| L9 | `Area75_OtherPress` | object B | Area75_OtherPress 3389 |
+| L10 | `Area75_OtherPress` | the slot read before Rand | Area75_OtherPress 146 |
+| L11 | `DrainEffect (75 x3)` | less 2 | Area75_OtherPress 3511, Area75_PlayerPress 2974, Area75_EarlyPress 2285 |
+| L12 | `Area75_PlayerPress` | idle + 2 | Area75_PlayerPress 3026 |
+| L13 | `Area75_PlayerPress` | idle 1 after a press | Area75_PlayerPress 2974 |
+| L14 | `Area75_PlayerPress` | the other's counter | Area75_PlayerPress 2974 |
+| L15 | `Area75_PlayerPress` | the other's effect | Area75_PlayerPress 2230 |
+| L16 | `Area75_PlayerPress` | +0x4A = 2 | Area75_PlayerPress 2973 |
+| L17 | `Pressed20 (75 x2)` | bit 0x10 | Area75_PlayerPress 2981, Area75_EarlyPress 2342 |
+| L18 | `Area75_PlayerPress` | the slot read before Rand | Area75_PlayerPress 214 |
+| L19 | `Area75_PlayerPress` | sound 0x201 | Area75_PlayerPress 2974 |
+| L20 | `Area75_PlayerPress` | the leader + 1 record | Area75_PlayerPress 2853 |
+| L21 | `Area75_EarlyPress` | bit 0x10 | Area75_EarlyPress 1516 |
+| L22 | `Area75_EarlyPress` | early + 2 | Area75_EarlyPress 2285 |
+| L23 | `Area75_EarlyPress` | +0x4A = 3 | Area75_EarlyPress 2285 |
+| L24 | `Area75_EarlyPress` | the next record | Area75_EarlyPress 2170 |
+| L25 | `Area75_EarlyPress` | the other's effect | Area75_EarlyPress 1724 |
+| M1 | `Area75_DrawCounters` | blink by bit 8 | Area75_DrawCounters 588 |
+| M2 | `Area75_DrawCounters` | blink flag 2 | Area75_DrawCounters 550 |
+| M3 | `Area75_DrawCounters` | colour below 0x96 | Area75_DrawCounters 641 |
+| M4 | `Area75_DrawCounters` | colour 3 | Area75_DrawCounters 2040 |
+| M5 | `Area75_DrawCounters` | hidden by bit 2 | Area75_DrawCounters 2955 |
+| M6 | `Area75_DrawCounters` | window x 0x19 | Area75_DrawCounters 4529 |
+| M7 | `Area75_DrawCounters` | second window 0x12 high | Area75_DrawCounters 4529 |
+| M8 | `Area75_DrawCounters` | tens | Area75_DrawCounters 4495 |
+| M9 | `Area75_DrawCounters` | mod 10 | Area75_DrawCounters 4055 |
+| M10 | `Area75_DrawCounters` | second / 99 | Area75_DrawCounters 1688 |
+| M11 | `Area75_DrawCounters` | text x 0x1F | Area75_DrawCounters 3976 |
+| M12 | `Area75_DrawCounters` | second text y 0x23 | Area75_DrawCounters 3976 |
+| M13 | `Area75_DrawCounters` | five characters | Area75_DrawCounters 3976 |
+| M14 | `Area75_DrawCounters` | the second counter read first | Area75_DrawCounters 15 |
+| M15 | `Area75_DrawCounters` | the second text always | Area75_DrawCounters 553 |
+| M16 | `Area75_DrawCounters` | the first counter the other's | Area75_DrawCounters 3805 |
+| N1 | `Area75_DrawWindow` | shade 0xAD | Area75_DrawWindow 1983 |
+| N2 | `Area75_DrawWindow` | texture page 0xE | Area75_DrawWindow 6000 |
+| N3 | `Area75_DrawWindow` | CLUT x + 0x11 | Area75_DrawWindow 6000 |
+| N4 | `Area75_DrawWindow` | rect y 0xF1 | Area75_DrawWindow 6000 |
+| N5 | `Area75_DrawWindow` | rect w 0x11 | Area75_DrawWindow 6000 |
+| N6 | `Area75_DrawWindow` | first draw mode dtd 0 | Area75_DrawWindow 6000 |
+| N7 | `Area75_DrawWindow` | first commit 0xD | Area75_DrawWindow 6000 |
+| N8 | `Area75_DrawWindow` | left v2 h - 1 | Area75_DrawWindow 6000 |
+| N9 | `Area75_DrawWindow` | y + 1 for y + 2 | Area75_DrawWindow 6000 |
+| N10 | `Area75_DrawWindow` | bottom less 2 | Area75_DrawWindow 6000 |
+| N11 | `Area75_DrawWindow` | left x2 at x + 2 | Area75_DrawWindow 6000 |
+| N12 | `Area75_DrawWindow` | left u1 3 | Area75_DrawWindow 6000 |
+| N13 | `Area75_DrawWindow` | left u3 1 | Area75_DrawWindow 6000 |
+| N14 | `Area75_DrawWindow` | left v0 1 | Area75_DrawWindow 6000 |
+| N15 | `Area75_DrawWindow` | half by / 2 | Area75_DrawWindow 752 |
+| N16 | `Area75_DrawWindow` | odd from w | Area75_DrawWindow 6000 |
+| N17 | `Area75_DrawWindow` | middle x + 3 | Area75_DrawWindow 6000 |
+| N18 | `Area75_DrawWindow` | middle-left u1 + 1 | Area75_DrawWindow 6000 |
+| N19 | `Area75_DrawWindow` | right half without the odd pixel | Area75_DrawWindow 3216 |
+| N20 | `Area75_DrawWindow` | right half u without odd | Area75_DrawWindow 3216 |
+| N21 | `Area75_DrawWindow` | right edge x - 1 | Area75_DrawWindow 6000 |
+| N22 | `Area75_DrawWindow` | right edge y2 less 2 | Area75_DrawWindow 6000 |
+| N23 | `Area75_DrawWindow` | right v1 h + 1 | Area75_DrawWindow 6000 |
+| N24 | `Area75_DrawWindow` | right v3 h - 3 | Area75_DrawWindow 6000 |
+| N25 | `Area75_DrawWindow` | right y1 at y | Area75_DrawWindow 6000 |
+| N26 | `Area75_DrawWindow` | right v1 3 | Area75_DrawWindow 6000 |
+| N27 | `Area75_DrawWindow` | second rect w 0xFF | Area75_DrawWindow 6000 |
+| N28 | `Area75_DrawWindow` | outline w - 3 | Area75_DrawWindow 6000 |
+| N29 | `Area75_DrawWindow` | outline h - 5 | Area75_DrawWindow 6000 |
+| N30 | `Area75_DrawWindow` | outline x + 3 | Area75_DrawWindow 6000 |
+| N31 | `Area75_DrawWindow` | y whole | Area75_DrawWindow 1985 |
+| N32 | `Area75_DrawWindow` | h + 1 whole | Area75_DrawWindow 1987 |
+| N33 | `Area75_DrawWindow` | right edge texture page + 1 | Area75_DrawWindow 6000 |
+| N34 | `Area75_DrawWindow` | second draw mode page 0x9C | Area75_DrawWindow 6000 |
+| N35 | `Area75_DrawWindow` | middle cursor not read again | Area75_DrawWindow 1199 |
+| N36 | `Area75_DrawWindow` | a left store before the setters | Area75_DrawWindow 5980 |
+| N37 | `Area75_DrawWindow` | the flag whole for the page | Area75_DrawWindow 10 |
+| N38 | `Area75_DrawWindow` | x whole | Area75_DrawWindow 2048 |
+| N39 | `Area75_DrawWindow` | w + 1 whole | Area75_DrawWindow 2346 |
+| H10b | `GlideStep (x3)` | x step by count & 0xE | Area68_GlideStepA 2677, Area68_GlideStepB 2719 |
+| B2b | `Area69_GlideStep` | steps + 1 | Area69_GlideStep 4223 |
+| L4b | `RandHalf (75 x2)` | % 3 for % 2 | Area75_OtherPress 2322, Area75_PlayerPress 2057 |
 
 ## 5. The tables named
 
