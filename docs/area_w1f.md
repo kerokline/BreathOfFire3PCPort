@@ -312,7 +312,8 @@ its gates), `Flags_Clear` 123 (the toggle's clear), `Inventory_CountUsed`
 `Music_FadeOutStop` 158, `Msg_OpenScript` 331, `Area75_DrawWindow` 9,058,
 `Gpu_GetClut` 24,000.
 
-`BOF3X_SHADOW='*'`: STAR_RESULT.
+`BOF3X_SHADOW='*'`: exit 0, `inject: 4613 ours`, 411 self-test lines, no
+mismatch (in this worktree, first run).
 
 ## 4. Controls
 
