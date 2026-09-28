@@ -117,7 +117,14 @@ const ah::Clone kClones42[] = {
 enum : unsigned { k42Choice, k42Start, k42ClearMember, k42Touch12, k42Touch13, k42Touch14, k42Touch15, k42CheckAll, k42Tail, k42Step, k42Init };
 static_assert(k42Init + 1 == AH_COUNT(kClones42), "area 42's seeding indices");
 
+// Flags_Test of the bank 0x9040CC moves Area42_Rank (a stand-in louder than
+// the callee), so Area42_CheckAll's re-read of the rank after a miss shows.
+U RankEffect(const U* a, U answer) {
+    if (a[0] == at::kFlagsCC) Mem(at::kRank)[0] = static_cast<unsigned char>(ah::Noise() % 3);
+    return answer;
+}
 const ah::Callee kCallees42[] = {
+    {"Flags_Test", bof3::addr::Flags_Test, KeyOf(&::Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &RankEffect, nullptr},
     {"Area42_CheckAll", 0x4068D0, 0x4068D0, 0, {}, ah::Answer::kPhase, 0, 0},
     {"window 0x40E750", kDrawWindow, kDrawWindow, 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"free object 0x57CD90", kFreeObject, kFreeObject, 0, {}, ah::Answer::kByte, 0xFF, 0x1D},
@@ -290,8 +297,14 @@ const ah::Callee kCallees44[] = {
     {"Sprite_FindNearby", bof3::addr::Sprite_FindNearby, KeyOf(&::Sprite_FindNearby), 0, {}, ah::Answer::kByte, 0x1C, 0x21},
     kSet40, kClear40,
 };
+// Area 44's gate and switch tables (0x5F7074..0x5F7095), randomised as a
+// region and put back to the exe's bytes two rounds in three.
+constexpr U kA44Tables = at::kA44Gate0, kA44TablesBytes = at::kA44SwitchesEnd - at::kA44Gate0;
+unsigned char g_a44_tables[kA44TablesBytes];
+const ah::Region kRegions44[] = {{kA44Tables, kA44TablesBytes}};
 unsigned g_switch44 = 0;   // the switch record this round's hook arguments aim at
 void Seed44(unsigned k) {
+    if (ah::Often()) std::memcpy(Mem(kA44Tables), g_a44_tables, sizeof g_a44_tables);
     Mem(at::kCells44)[0] = static_cast<unsigned char>(ah::Next());
     switch (k) {
     case k44Init:
@@ -823,12 +836,13 @@ void SelfTest() {
     std::memcpy(g_a45_tables, Mem(at::kA45PlateAnims), sizeof g_a45_tables);
     std::memcpy(g_a45_dirs, Mem(at::kA45Directions), sizeof g_a45_dirs);
     std::memcpy(g_a45_drift, Mem(at::kA45DriftUBase), sizeof g_a45_drift);
+    std::memcpy(g_a44_tables, Mem(kA44Tables), sizeof g_a44_tables);
 
     if (Wants(42)) RunArea(42, kClones42, Count(kClones42), kCallees42, AH_COUNT(kCallees42), nullptr, 0, kRegions42, AH_COUNT(kRegions42),
             &Seed42, &Disturb42, &Args42, 6000);
     if (Wants(43)) RunArea(43, kClones43, Count(kClones43), kCallees43, AH_COUNT(kCallees43), kTables43, AH_COUNT(kTables43), kRegions43,
             AH_COUNT(kRegions43), &Seed43, &Disturb43, &Args43, 4000);
-    if (Wants(44)) RunArea(44, kClones44, Count(kClones44), kCallees44, AH_COUNT(kCallees44), nullptr, 0, nullptr, 0, &Seed44, &Disturb44,
+    if (Wants(44)) RunArea(44, kClones44, Count(kClones44), kCallees44, AH_COUNT(kCallees44), nullptr, 0, kRegions44, AH_COUNT(kRegions44), &Seed44, &Disturb44,
             &Args44, 6000);
     if (Wants(45)) {
         ah::Group g{"area_w1b", kClones45, Count(kClones45), kCallees45, AH_COUNT(kCallees45), kTables45, AH_COUNT(kTables45),
