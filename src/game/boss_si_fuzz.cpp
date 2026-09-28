@@ -126,7 +126,7 @@ void SeedStates(unsigned k) {
     const bh::Clone& c = g_clones[k];
     for (unsigned i = 1; i <= 4; ++i) {
         if (c.shape == S::kDispatch && i == c.state_at) continue;
-        if (bh::Often()) Sprite_Current[i] = Byte(bh::Next() % g_small);
+        Sprite_Current[i] = Byte(bh::Next() % g_small);
     }
 }
 
