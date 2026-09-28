@@ -209,6 +209,18 @@
 #include "game/area_w4b.h"
 #include "game/area_w4e.h"
 #include "game/area_w4f.h"
+#include "game/boss_h.h"
+#include "game/boss_sb.h"
+#include "game/boss_sa.h"
+#include "game/boss_spawn.h"
+#include "game/boss_sd.h"
+#include "game/boss_sc.h"
+#include "game/boss_se.h"
+#include "game/boss_si.h"
+#include "game/boss_sh.h"
+#include "game/boss_sj.h"
+#include "game/boss_sg.h"
+#include "game/boss_sf.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -724,6 +736,55 @@ void InjectAll() {
                                 // its clones' calls re-aimed at the area harness's recorders, areas 197 and 198's
                                 // state tables swapped for the fuzz only; no module patches bytes inside its 49
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSpawn_Inject();         // round 11 group BH (the boss set-ups' spawn helpers, 0x4948E0..0x494A7D): its
+                                // clones' calls re-aimed at the boss harness's recorders; no module patches bytes
+                                // inside its 6 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossH_Inject();             // round 11 group BH (the boss band's 20 shared helpers, 0x437CA0..0x440829): its
+                                // clones' calls re-aimed at the boss harness's recorders, kinds 8..11's shared
+                                // tables swapped and six kinds' dispatchers driven with a clone planted in their
+                                // tables for the fuzz only; no module patches bytes inside its 20 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    BossSd_Inject();            // round 11 group BSD (fights 17..21 and kinds 18, 21..27, 0x43A590..0x43B74A): its
+                                // clones' calls re-aimed at the boss harness's recorders, its kinds' step, action
+                                // and hook tables swapped for the fuzz only; no module patches bytes inside its 52
+    BossSb_Inject();            // round 11 group BSB (fights 4..10 and 13, kinds 3, 4, 5 and 8..11, 0x438290..0x43A022):
+                                // its clones' calls re-aimed at the boss harness's recorders, its kinds' state and
+                                // hook tables swapped for the fuzz only; no module patches bytes inside its 52
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSa_Inject();            // round 11 group BSA (fights 1, 2, 3, 39 and kinds 1, 2, 6, 7, 39, 46,
+                                // 0x437A10..0x43D662): its clones' calls re-aimed at the boss harness's recorders,
+                                // the six kinds' state and hook tables swapped for the fuzz only; no module patches
+                                // bytes inside its 49 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSc_Inject();            // round 11 group BSC (fights 11, 12, 14, 15, 16, 46 and kinds 12..17, 53,
+                                // 0x439410..0x43A589): its clones' calls re-aimed at the boss harness's recorders,
+                                // seven kinds' tables swapped for the fuzz only; no module patches bytes inside
+                                // its 53 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSe_Inject();            // round 11 group BSE (fights 22..26, 30, 48 and kinds 28..32, 55, 0x43B5B0..0x43E7A0):
+                                // its clones' calls re-aimed at the boss harness's recorders, the kinds' state and
+                                // hook tables swapped for the fuzz only; no module patches bytes inside its 52
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSi_Inject();            // round 11 group BSI (fights 37, 38, 40, 42, 44, 45, 49..51, 53, kinds 45, 47, 49,
+                                // 51, 52, 56..58, 60 and Arwan's task, 0x43ECC0..0x43F79B): its clones' calls
+                                // re-aimed at the boss harness's recorders, the kinds' state and hook tables swapped
+                                // for the fuzz only; no module patches bytes inside its 50 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    BossSh_Inject();            // round 11 group BSH (fights 34..36, 41, 43, 47, kinds 41..44, 48, 50, 54 and the
+                                // kind-3 slot 3, 0x43DEF0..0x43ECBF): its clones' calls re-aimed at the boss
+                                // harness's recorders, the kinds' state and hook tables swapped for the fuzz only;
+                                // no module patches bytes inside its 46 (DIVERGENCE.md, cheats.cpp): order does not
+                                // matter
+    BossSj_Inject();            // round 11 group BSJ (fights 52, 54, 55, kinds 59, 61, effect slots 4 and 5,
+                                // 0x43F7A0..0x441087): its clones' calls re-aimed at the boss harness's recorders,
+                                // the kinds' and tasks' tables swapped for the fuzz only; no module patches bytes
+                                // inside its 44 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSg_Inject();            // round 11 group BSG (fights 29, 31..33, kinds 34..38 and 40, the effect task F6,
+                                // 0x43CDE0..0x43E535): its clones' calls re-aimed at the boss harness's recorders, its
+                                // kinds' and F6's tables swapped for the fuzz only; no module patches bytes inside its
+                                // 53 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSf_Inject();            // round 11 group BSF (fights 27, 28, kinds 33 and 62, fight 26's count task and the
+                                // Gazer's effect task, 0x43C480..0x4406D7): its clones' calls re-aimed at the boss
+                                // harness's recorders, the kinds' and tasks' tables swapped for the fuzz only; no
+                                // module patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

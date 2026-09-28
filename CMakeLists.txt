@@ -454,7 +454,32 @@ add_library(bof3x SHARED
   src/game/area_w4e.cpp
   src/game/area_w4e_fuzz.cpp
   src/game/area_w4f.cpp
-  src/game/area_w4f_fuzz.cpp)
+  src/game/area_w4f_fuzz.cpp
+  src/game/boss_harness.cpp
+  src/game/boss_spawn.cpp
+  src/game/boss_spawn_fuzz.cpp
+  src/game/boss_h.cpp
+  src/game/boss_h_fuzz.cpp
+  src/game/boss_sd.cpp
+  src/game/boss_sd_fuzz.cpp
+  src/game/boss_sb.cpp
+  src/game/boss_sb_fuzz.cpp
+  src/game/boss_sa.cpp
+  src/game/boss_sa_fuzz.cpp
+  src/game/boss_sc.cpp
+  src/game/boss_sc_fuzz.cpp
+  src/game/boss_se.cpp
+  src/game/boss_se_fuzz.cpp
+  src/game/boss_si.cpp
+  src/game/boss_si_fuzz.cpp
+  src/game/boss_sh.cpp
+  src/game/boss_sh_fuzz.cpp
+  src/game/boss_sj.cpp
+  src/game/boss_sj_fuzz.cpp
+  src/game/boss_sg.cpp
+  src/game/boss_sg_fuzz.cpp
+  src/game/boss_sf.cpp
+  src/game/boss_sf_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

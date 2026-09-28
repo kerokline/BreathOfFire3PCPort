@@ -9,9 +9,21 @@ here as they land; the round doc stays as the record of what was found.
 
 **Landed 2026-09-28, from a cloud session without the game files** (branch
 `claude/round-10-cleanup-handoff-qtwcrk`; verified by the i686 build,
-`ledger_check.py`, `gen_symbols.py` and `tables.py check` - the shadow
-self-tests, the frame hash and the route A/Bs need `BOF3.exe` and are the
-owner's to run at the tip): item 1's rebinding of every raw constant whose
+`ledger_check.py`, `gen_symbols.py` and `tables.py check`; merged as PR #29,
+`6b70e71`). **The game-side checks ran at that tip on 2026-09-28 afternoon
+and pass**: `BOF3X_SHADOW='*'` headless exit 0 at 5,706 ours,
+`ledger_check.py` 0 errors, the frame hash against `r9_orig` 1 of 10,303
+frames differing (frame 0, the set-up, as since `rb1`;
+`analysis/calltrace/r11_ours`), the oracle 387 of 8,991 frames (the
+`r9_ours` kind, 1,473 there), and the three route A/Bs at their round-eight
+baselines - combat 5 of 43 identical with 15 pixels at most, shop 5 of 35
+with 2..46 (one frame the inn's slot-0 play time, written by the other
+side's own end-of-route save), world map 7 of 35 - **once** the scripts'
+`DIVS` off-lists carried the four 09-27 divergences (DIV-0058..0061:
+`MenuTitleCentre`, `BattleListTitleCentre`, `BattleResultExpLayout`,
+`BattleBannerCentre`) and the scratch launcher's ini had `cheat.steal=0`;
+the first runs showed exactly those two things and nothing else
+(`analysis/shots/*_r11*`). Landed: item 1's rebinding of every raw constant whose
 target is ours (234 in 41 files, the round-nine form); item 2 in full
 (D133..D161); item 4's `--no-write`; item 5 in full; item 7's merge-script
 note in HANDOFF. **Left**, each marked below: item 1's `SH_CALL` form with

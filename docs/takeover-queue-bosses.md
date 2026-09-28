@@ -1,6 +1,6 @@
 # The boss round: the BOSS overlays enumerated from the engine's three root sets, and taken wave by wave
 
-**Status:** PROPOSED (2026-09-28) - a plan and a cut, not a queue. Listed as
+**Status:** TAKEN (2026-09-28 evening) - run as round eleven in two waves, every group merged: [`takeover-queue-round11.md`](takeover-queue-round11.md) is the record (what the round corrected in this plan is its section 4). Written as a plan and a cut: Listed as
 [`IDEAS.md`](IDEAS.md) I26; the method is the spell round's
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
 [`magic_harness.md`](magic_harness.md)) and the area round's

@@ -15,8 +15,8 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**5,706 functions are ours** (`inject: 5706 ours` in
-`bof3x.log`, 2026-09-28; the spell round counts pointer-reached starts
+**6,237 functions are ours** (`inject: 6237 ours` in
+`bof3x.log`, 2026-09-28 evening; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
 ([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
@@ -54,6 +54,8 @@ re-derived:
 | 09-28 | Round 10 wave 5: world 2's areas 104..113 (AR2E, AR2F) - **world 2 complete** - and world 3's areas 115..146 (AR3A..AR3F) | 422 | 5,358 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 16 |
 | 09-28 | Round 10 wave 6: world 3's areas 148..151 (AR3G) and world 4 (AR4A..AR4F) - **the area round complete**, every area overlay ours; with the scenario round, round ten took 2,195 functions in 47 groups | 348 | 5,706 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 19 |
 | 09-28 | Round 10's cleanup, the part a session without the game can do ([`round-10-cleanup.md`](round-10-cleanup.md)): every raw address whose target is ours rebound to its name (234 constants, 41 files, values unchanged), the round's defects numbered D133..D161 with the docs' contradictions written into the entries, the harness docs' five notes, `area_rows.py --no-write` | 0 | 5,706 | the i686 build and the repository checks; the shadow self-tests, hash and A/Bs are owed at the tip | [`known-defects.md`](known-defects.md) D133..D161 |
+| 09-28 | Round 11 wave 1 (the boss round, [`takeover-queue-bosses.md`](takeover-queue-bosses.md)): the boss harness and the band's 20 shared helpers plus the six spawn helpers (BH), then fights 1..26, 30, 39, 46, 48 and their kinds (BSA..BSE, chapters 0..7) | 284 | 5,990 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round11.md`](takeover-queue-round11.md) section 2 |
+| 09-28 | Round 11 wave 2: fights 27..29, 31..38, 40..45, 47, 49..55 and their kinds, Myria, and the boss effect tasks (BSF..BSJ) - **the boss round complete**, every BOSS overlay's code ours; round eleven took 531 functions in 11 groups | 247 | 6,237 | `'*'` 0 mismatches, fuzz only; the hash and combat A/B at the tip in section 8 | [`takeover-queue-round11.md`](takeover-queue-round11.md) section 3 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -387,10 +389,12 @@ What is established:
      through one fuzz harness, every spell overlay (D89..D132); round ten,
      through two more harnesses built on the same pattern, every chapter
      bank (the scenario round, I24) and every area overlay of worlds 0..4
-     (the area round, I25) - **5,706 ours**, fuzz-only beyond the recorded
-     routes, the round's debts in [`round-10-cleanup.md`](round-10-cleanup.md)
-     and its defects D133..D161. Round eleven, the boss overlays, is planned
-     and cut ([`takeover-queue-bosses.md`](takeover-queue-bosses.md), I26).
+     (the area round, I25), the round's debts in [`round-10-cleanup.md`](round-10-cleanup.md)
+     and its defects D133..D161; round eleven, through a fourth harness,
+     every BOSS overlay's code (the boss round, I26,
+     [`takeover-queue-round11.md`](takeover-queue-round11.md)) - **6,237
+     ours**, fuzz-only beyond the recorded routes, round eleven's debts in
+     that doc's section 7.
 
    What is next is [`HANDOFF.md`](HANDOFF.md)'s to say.
 2. **Then the text swap** - [`dialogue-localisation.md`](dialogue-localisation.md):
