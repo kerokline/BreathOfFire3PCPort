@@ -49,11 +49,20 @@ bh::Clone Row(const char* name, U base, U size, const bh::CallSite* calls, int n
     return c;
 }
 
+// Boss_SetByLeaderId's stand-in, louder than the real one: it also moves the
+// chapter step, so an end hook that stores the step on the wrong side of the
+// call (set-up 20 stores it before, 18 and 19 after) is seen in every round
+// that reaches it, not only when the disturbance happens to move the step.
+std::uint32_t PickEffect(const std::uint32_t*, std::uint32_t answer) {
+    Mem(at::kChapterStep)[0] = static_cast<unsigned char>(bh::Noise());
+    return answer;
+}
+
 // BH's three callees the set-ups and kind 26 call directly (not in the
 // standard set).
 const bh::Callee kCallees[] = {
     {"BossMap_UpdateFromEnemies", 0x43B180, KeyOf(&::BossMap_UpdateFromEnemies), 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"Boss_SetByLeaderId", 0x43B130, KeyOf(&::Boss_SetByLeaderId), 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"Boss_SetByLeaderId", 0x43B130, KeyOf(&::Boss_SetByLeaderId), 0, {}, bh::Answer::kGarbage, 0, 0, {}, &PickEffect},
     {"BossMap_SetCorners", 0x43B0D0, KeyOf(&::BossMap_SetCorners), 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
 };
 
@@ -69,12 +78,11 @@ unsigned char StatusByte() {
 }
 unsigned char EndByte() { return static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82, 0xFE) : bh::Next()); }
 
-// A dispatcher's other state bytes inside their tables most of the time, so a
-// dispatcher reading the wrong byte lands on another entry (a count) rather
-// than past its table (a Fatal); never the byte the harness drew.
+// A dispatcher's other state bytes inside its table, so a dispatcher reading
+// the wrong byte lands on another entry (a count) rather than past its table
+// (a Fatal); never the byte the harness drew. The dispatchers read no other.
 void OtherStates(unsigned drawn, unsigned below) {
     unsigned char* const s = Sprite_Current;
-    if (!bh::Often()) return;
     for (unsigned b = 1; b <= 4; ++b)
         if (b != drawn) s[b] = static_cast<unsigned char>(bh::Next() % below);
 }
@@ -109,10 +117,11 @@ bool Wants(const char* unit) {
 }
 
 void RunGroup(const char* unit, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables, void (*seed)(unsigned),
-              void (*args)(unsigned, U*), int fight, int kind, unsigned phase_span = 0) {
+              void (*args)(unsigned, U*), int fight, int kind, unsigned phase_span = 0, void (*settle)() = nullptr) {
     if (!Wants(unit)) return;
     bh::Group g{"boss_sd", clones, n, kCallees, BSD_COUNT(kCallees), tables, n_tables, kRegions, BSD_COUNT(kRegions), seed, &Disturb, 6000};
     g.phase_span = phase_span;
+    g.settle = settle;
     g.args = args;
     g.fight = fight;
     g.kind = kind;
@@ -257,6 +266,17 @@ void SeedK26(unsigned k) {
     default: break;
     }
 }
+// After every disturbance: every enemy's +1 back inside BossDodai_Steps. The
+// standard disturbance's "a byte of the current enemy's record" can write +1
+// of the object Sprite_Current points at (phase_span holds only its field
+// case), and the dispatcher reads +1 after its Flags_Test: past the table the
+// original jumps through the next .data dwords and ours aborts.
+void SettleK26() {
+    for (unsigned i = 0; i < bh::at::kEnemyCount; ++i) {
+        unsigned char* const e = bh::EnemyAt(i);
+        if (e[1] >= 12) e[1] = static_cast<unsigned char>(e[1] % 12);
+    }
+}
 void ArgsK26(unsigned k, U* a) {
     if (kClonesK26[k].shape == S::kEnemyHook) a[0] = HookWord(a[0]);
 }
@@ -338,7 +358,7 @@ void SelfTest() {
     RunGroup("K21", kClonesK21, BSD_COUNT(kClonesK21), kTablesK21, BSD_COUNT(kTablesK21), &SeedK21, &ArgsKind<kClonesK21>, 18, 21);
     RunGroup("K22", kClonesK22, BSD_COUNT(kClonesK22), kTablesK22, BSD_COUNT(kTablesK22), &SeedK22, &ArgsKind<kClonesK22>, 18, 22);
     RunGroup("K23", kClonesK23, BSD_COUNT(kClonesK23), kTablesK23, BSD_COUNT(kTablesK23), &SeedK23, &ArgsKind<kClonesK23>, 18, 23);
-    RunGroup("K26", kClonesK26, BSD_COUNT(kClonesK26), kTablesK26, BSD_COUNT(kTablesK26), &SeedK26, &ArgsK26, 18, 26, 12);
+    RunGroup("K26", kClonesK26, BSD_COUNT(kClonesK26), kTablesK26, BSD_COUNT(kTablesK26), &SeedK26, &ArgsK26, 18, 26, 12, &SettleK26);
     RunGroup("K24", kClonesK24, BSD_COUNT(kClonesK24), kTablesK24, BSD_COUNT(kTablesK24), &SeedK24, &ArgsKind<kClonesK24>, 21, 24);
     RunGroup("B18", kClonesB18, BSD_COUNT(kClonesB18), nullptr, 0, &SeedSetup, &ArgsSetup<kClonesB18, 0, 5>, 18, -1);
     RunGroup("B19", kClonesB19, BSD_COUNT(kClonesB19), nullptr, 0, &SeedSetup, &ArgsSetup<kClonesB19, 0, 5>, 19, -1);
