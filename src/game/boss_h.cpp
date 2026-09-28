@@ -31,6 +31,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
 
 #include "bof3/symbols.gen.h"
 #include "game/boss_h_callees.h"
@@ -56,6 +57,8 @@ void PutFloat(unsigned char* p, std::int32_t v) {
     const float f = static_cast<float>(v);   // fild / fstp: nearest, as cvtsi2ss
     std::memcpy(p, &f, sizeof f);
 }
+// A named .data table's address (symbols.gen.h binds the name to a typed pointer).
+template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // jmp [table + 4 * Sprite_Current[at]]: the table's `entries` handlers, a
 // Fatal past them (the original jumps through whatever follows).
@@ -65,13 +68,14 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned at) {
         bof3::Fatal("%s: state byte +%u is %u, past the %u entries of 0x%X - the original jumps through the dword after "
                     "(docs/boss_h.md section 6)",
                     who, at, state, entries, (unsigned)table);
-    boss_harness::Phase(static_cast<U>(Long(At(table + 4 * state))))();
+    // the entry as read: the fuzz swaps the table's cells for its recorders
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * state)))))();
 }
 
 // Kinds 8..11's colours: three bytes a kind from BossTorast_Colours (kind 8's
 // at its start); the original indexes by the kind unchecked, so another kind
 // reads the .data around it.
-const unsigned char* KindColour(unsigned kind) { return At(bof3::addr::BossTorast_Colours + 3 * (kind - 8)); }
+const unsigned char* KindColour(unsigned kind) { return At(AddressOf(BossTorast_Colours) + 3 * (kind - 8)); }
 
 }  // namespace
 
@@ -152,19 +156,19 @@ extern "C" void __cdecl BossOp_Death(void) {
 // EnemyOp_ActBegin, 0x436BC0, BossTorast_DeathDispatch, 0x436F00) - the
 // generic EnemyOp_ActSubs but for its death, entry 4.
 extern "C" void __cdecl BossTorast_ActDispatch(void) {
-    Dispatch("BossTorast_ActDispatch", bof3::addr::BossTorast_ActSubs, 6, 2);
+    Dispatch("BossTorast_ActDispatch", AddressOf(BossTorast_ActSubs), 6, 2);
 }
 
 // original 0x438ED0: BossTorast_ActSubs 4: by +3 through BossTorast_DeathSubs
 // (2: BossTorast_DeathFxDispatch, BossOp_ScriptTick).
 extern "C" void __cdecl BossTorast_DeathDispatch(void) {
-    Dispatch("BossTorast_DeathDispatch", bof3::addr::BossTorast_DeathSubs, 2, 3);
+    Dispatch("BossTorast_DeathDispatch", AddressOf(BossTorast_DeathSubs), 2, 3);
 }
 
 // original 0x438EF0: BossTorast_DeathSubs 0: by +4 through
 // BossTorast_DeathFxSteps (4: Start, Flash, RingGrow, RingShrink).
 extern "C" void __cdecl BossTorast_DeathFxDispatch(void) {
-    Dispatch("BossTorast_DeathFxDispatch", bof3::addr::BossTorast_DeathFxSteps, 4, 4);
+    Dispatch("BossTorast_DeathFxDispatch", AddressOf(BossTorast_DeathFxSteps), 4, 4);
 }
 
 // original 0x438F10: step 0: +9 and +0xA = 0x40, Sound_PlayEffect(0x601), and
@@ -303,9 +307,9 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
         bof3::Fatal("BossMap_SetCorners(%u, %u): past BossMap_CornerCells (2) or BossMap_CornerValues (3) - the "
                     "original reads whatever follows (docs/boss_h.md section 6)",
                     cell, value);
-    const std::int32_t v = Long(At(bof3::addr::BossMap_CornerValues + 4 * value));
-    const U x = At(bof3::addr::BossMap_CornerCells + 2 * cell)[0];
-    const U y = At(bof3::addr::BossMap_CornerCells + 2 * cell + 1)[0];
+    const std::int32_t v = Long(At(AddressOf(BossMap_CornerValues) + 4 * value));
+    const U x = At(AddressOf(BossMap_CornerCells) + 2 * cell)[0];
+    const U y = At(AddressOf(BossMap_CornerCells) + 2 * cell + 1)[0];
     for (U j = 0; j < 2; ++j)
         for (U i = 0; i < 2; ++i) {
             const U width = At(at::kMapHeader)[0];

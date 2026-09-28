@@ -37,9 +37,9 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 #define BH_FN(name) reinterpret_cast<const void*>(&::name)
 
 // The .data tables and cells the helpers name (symbols.toml).
-constexpr U kActSubs = bof3::addr::BossTorast_ActSubs;          // 0x64CAD4, 6
-constexpr U kDeathSubs = bof3::addr::BossTorast_DeathSubs;      // 0x64CAEC, 2
-constexpr U kDeathFxSteps = bof3::addr::BossTorast_DeathFxSteps;   // 0x64CAF4, 4
+const U kActSubs = Key(BossTorast_ActSubs);            // 0x64CAD4, 6
+const U kDeathSubs = Key(BossTorast_DeathSubs);        // 0x64CAEC, 2
+const U kDeathFxSteps = Key(BossTorast_DeathFxSteps);  // 0x64CAF4, 4
 
 // ===========================================================================
 // Kinds 8..11's death chain
@@ -122,6 +122,12 @@ void SeedTorast(unsigned k) {
     if (bh::Often()) e[0x100] = static_cast<unsigned char>(8 + bh::Next() % 4);
     switch (k) {
     case kFlash:
+        // Kinds 46 and 47's "colours" are the bytes of the Flash's own via cell
+        // 0x64CAF8 (0x64CA6C + 3 * kind): the harness plants the copy there on
+        // one pass and ours on the other, so the two would read different
+        // colours - the plant's artefact, not the function's (docs/boss_harness.md
+        // section 6). Any other kind.
+        if (e[0x100] == 46 || e[0x100] == 47) e[0x100] ^= 0x80;
         s[0xA] = Count();
         s[9] = bh::Half() ? s[0xA] : Count();
         break;

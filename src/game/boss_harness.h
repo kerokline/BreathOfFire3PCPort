@@ -61,7 +61,7 @@ constexpr std::uint32_t kStep = 0x904AA1;           // u8: the phase's step (5's
 constexpr std::uint32_t kSubStep = 0x904AA2;        // u8
 constexpr std::uint32_t kFlags = 0x904AA8;          // u16: the round flags
 constexpr std::uint32_t kFight = 0x904AAA;          // u8: the event battle - Boss_SetupTable's index; 0 none
-constexpr std::uint32_t kEnemyCount = 0x904AB2;     // u8
+constexpr std::uint32_t kEnemyTotal = 0x904AB2;     // u8: the enemies set up
 constexpr std::uint32_t kEnemiesLeft = 0x904AB3;    // u8: Battle_EnemyDefeated counts it down
 constexpr std::uint32_t kMusicFlags = 0x904AE5;     // u8: bit 0x40 keeps the battle's music
 constexpr std::uint32_t kBattleEnd = 0x904AE8;      // u8: bit 0 the loss, bit 1 the win (the last enemy fallen)
@@ -140,11 +140,13 @@ template <typename F> inline F Call(F callee) {
 // An unnamed one, by its address: BH_AT(void (__cdecl*)(), 0x446E20)().
 #define BH_AT(type, address) ::boss_harness::Call(reinterpret_cast<type>(static_cast<std::uintptr_t>(address)))
 
-// A handler a boss function dispatches to through a table (a kind's state
-// table in .data, a stack table's immediate): called by the address the table
-// holds, which in the game is Capcom's function or the jmp Inject put there to
-// ours. A hook stored in a cell (0x904B64..6C, an enemy's +0xF4) is called
-// through the cell itself, not through Phase: the fuzz keeps recorders there.
+// A handler a boss function reaches by an address in its own code (a stack
+// table's immediate, a direct call to a function of its group): called by that
+// address, which in the game is Capcom's function or the jmp Inject put there
+// to ours. A handler read from a .data table (a kind's state table, a hook
+// table) is called as read - the fuzz swaps the table's cells for recorders
+// (DataTable) - and so is a hook stored in a cell (0x904B64..6C, an enemy's
+// +0xF4): the fuzz keeps recorders there.
 using Handler = void (__cdecl*)();
 inline Handler Phase(std::uint32_t address) { return BH_AT(Handler, address); }
 // A handler that answers in al (a kind's state that tail-jumps to
