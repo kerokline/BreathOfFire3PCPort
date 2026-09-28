@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 53 functions ours
 (`src/game/area_w3f.cpp`, shadow name `area_w3f`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-0 mismatches in 318,000 rounds (in this worktree); CONTROLS_SUMMARY (section 4). Fuzz only:
+0 mismatches in 318,000 rounds (in this worktree); 321 controls planted, 320 refused by a count, 1 not refused (the fuzz's disturbance hides it; its variants refused) (section 4). Fuzz only:
 no recorded route reaches the band (section 8). No divergence; the three
 two-state dispatchers abort past their tables, where the original would jump
 into data (section 6).
@@ -91,10 +91,10 @@ Nine handlers (`Area144_Handlers` `0x631748`); its two choices
 | PC | Name | Size | Root | Shape | What |
 |---|---|--:|---|---|---|
 | `0x420DD0` | `Area144_SceneByRowFlags` | `0x1CA` | handler 0 (PSX `0x801F3818`) | kHandler | the chapter row's flags `0x17..0x1B`, the first clear, and the leader's `+0x89` pick the script object's `+3` (2; 3 / 4; 5 / 6 / 7; 8 / 9 / `0xA`; `0xC` / `0xD`), setting the row's flag on three of them; the script position stored `0xFFFE` every way out |
-| `0x420FA0` | `Area144_WalkToZ1D8` | `0x55` | handler 1 (PSX `0x801F3A20`) | kHandler | d = (`0x1D8000` - z) >> 15; not 0: the script object's `+7` = |d|, the running object's direction 1 (d < 0) or 5, `MoveCmd_Move` that way |
+| `0x420FA0` | `Area144_WalkToZ1D8` | `0x55` | handler 1 (PSX `0x801F3A20`) | kHandler | d = (`0x1D8000` - z) >> 15; not 0: the script object's `+7` = abs(d), the running object's direction 1 (d < 0) or 5, `MoveCmd_Move` that way |
 | `0x421000` | `Area144_SkipIfMember3Is4` | `0x14` | handler 2 (PSX `0x801F3AB4`) | kHandler | the third party record's `+0x89` 4: the script position + 3 |
 | `0x421020` | `Area144_SkipIfMember3Is2` | `0x14` | handler 3 (PSX `0x801F3AEC`) | kHandler | the same with 2 |
-| `0x421040` | `Area144_WalkToZ1C0` | `0x46` | handler 4 (PSX `0x801F3B24`) | kHandler | d = (`0x1C0000` - z) >> 15; not 0: direction 1, `+7` = |d|, `MoveCmd_Move`; `Field_ScriptFlags` bit 8 either way |
+| `0x421040` | `Area144_WalkToZ1C0` | `0x46` | handler 4 (PSX `0x801F3B24`) | kHandler | d = (`0x1C0000` - z) >> 15; not 0: direction 1, `+7` = abs(d), `MoveCmd_Move`; `Field_ScriptFlags` bit 8 either way |
 | `0x421090` | `Area144_SpawnEffect85` | `0x5B` | handler 5 (PSX `0x801F3BAC`) | kHandler | an effect of kind `0x85`, `+6` the active member's index in `Sprite_Objects`; none: the script back 2 |
 | `0x4210F0` | `Area144_MoveKind2Here` | `0x3E` | handler 6 (PSX `0x801F3C78`) | kHandler | the kind-2 object (`Sprite_Kind2`) to the running object's (x, z, y), its `+0x84` the script object's `+4`, `+0x87` 1; `MoveCmd_MoveKind2(3)` |
 | `0x421130` | `Area144_ChoiceCounter1E` | `0x1C` | choice 0 = handler 7 (PSX `0x801F3CE4`) | kChoice | message `0xFFFF`; counter 0 `0x23` for an answer, else `0x1E` |
@@ -285,20 +285,349 @@ The shared bodies run under the area whose block holds them.
   states that do nothing, negative bytes, with the cell each state waits on
   at its value two times in three (counter 3 0 or `0x40`, the timer 0 or
   beside, `Field_Kind2Hold`, the wait word); the trails' timer at, below and
-  past each leg's length with any high word; the record at 1, 2, 0, 3 and a
+  past each leg's length with any high word, and the start's at 4..6 and
+  0x36..0x38 (its end); the record at 1, 2, 0, 3 and a
   high byte; the CLUT shift at 0..5, `0x1F..0x21`, `0x101` and any.
 - **The group's disturbance** (from the hash it is given): the tail state,
   counter 3 (0 or `0x40` half the time), the timer, the three pointers,
   `Field_Kind2Hold`, the wait word, `Cond_ByteFE`, the answer.
 
 **Result (in this worktree):** 318,000 rounds over the 53 functions (6,000
-each), 2,793,6xx calls to the stand-ins, 0 mismatches. COVERAGE_LINE
+each), 2,794,536 calls to the stand-ins, 0 mismatches. Coverage: every callee each function can reach was called - e.g. the cylinders' 48 primitives a call (`MapView_LinkPrimAt` 288,000 in each cylinder's run), `Msg_OpenScript` 3,878 (area 143) and 11,464 (area 145's three), `Party_DropIn` 57..144 per hook, `Field_ChangeArea` 485 from tail kind 20, the trails 222 / 4,873 / 2,271 / 1,329 and `Area145_SpawnTrail` 24,000, the drop's two states 2,950 / 3,050, the effect kinds' states about 3,000 each.
 
-`BOF3X_SHADOW='*'`: STAR_LINE
+`BOF3X_SHADOW='*'`: exit 0, `inject: 4989 ours` (one below the 4,990 `impl` lines, the off-by-one the round doc section 10 notes), 452 self-test lines, 744 of them with a mismatch count and every one 0. Not re-run: it did not die silently.
 
 ## 4. Controls
 
-CONTROLS_SECTION
+Planted one at a time in `area_w3f.cpp` by a script (the scratch `controls.py`, not committed) that plants on an anchor it checks is unique, rebuilds, checks `area_w3f.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w3f`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches in all four runs). **321 planted, 320 refused by a count (exit 3), 1 not refused** (A80), no hang, no fault. Every one of the 53 functions has at least one control of its own; a control in a helper shared across areas (`GlowCylinder`, `MessageByMember`, `PoseStanding`, `DropIn`, `ArmTail`, `StateEntry`, `TrailLeg`, ...) is refused in the first area's run, whose Fatal ends the self-test.
+
+- **A80** (`Frame_Counter ^= 2` before the cylinder) was not refused and is not an equivalent mutant: the cylinder makes about a hundred calls, and the harness's disturbance (two calls in three) rewrites `Frame_Counter` whole in most rounds, so the flipped bit is gone before the state is compared, while the cylinder itself reads only bit 0. Its variants A80b and D12b (bit 0 flipped, in each copy) are refused.
+- **C132** (`t <= 0x37` as `< 0x37` in `Area145_TrailStart`) stood on the first run: the timer seed never picked 0x37. The seed now picks the length's edge (4..6) and the end's (0x36..0x38, with a high word) half the time; C132 and the other `TrailStart` controls (C128..C135) were run again on it, all refused (the counts below are that run's).
+- The thinnest: D12 (A80's plant in area 146's copy) was refused in only 2 rounds, the rare rounds where no disturbance reached `Frame_Counter` - the same blindness as A80, so its variant D12b is the one to trust; then the step hooks' span and mask controls (11..40 rounds: the hooks need four conditions at once) and two of tail kind 20's state 0xC exits (19); every other control needs more than 40.
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| A1 | `Area143_ChoiceAsk52` | compare 0x3FFFE | Area143_ChoiceAsk52 300 |
+| A2 | `Area143_ChoiceAsk52` | message 0x51 | Area143_ChoiceAsk52 204 |
+| A3 | `Area143_ChoiceAsk52` | mark 7 | Area143_ChoiceAsk52 951 |
+| A4 | `Area143_ChoiceAsk52` | message 0x55 | Area143_ChoiceAsk52 951 |
+| A5 | `Area143_ChoiceAsk52` | dword masked to 20 bits | Area143_ChoiceAsk52 226 |
+| A6 | `Area143_ChoiceAsk52` | answer message 0x56 | Area143_ChoiceAsk52 4845 |
+| A7 | `Area143_ChoiceYesMark3` | answer 1 only | Area143_ChoiceYesMark3 4285 |
+| A8 | `Area143_ChoiceYesMark3` | message 0xFFFE | Area143_ChoiceYesMark3 6000 |
+| A9 | `Area143_ChoiceYesMark3` | mark 4 | Area143_ChoiceYesMark3 4884 |
+| A10 | `Area143_ChoiceYesMark5` | mark 6 | Area143_ChoiceYesMark5 4916 |
+| A11 | `Area143_ChoiceYesMark5` | the other mark byte | Area143_ChoiceYesMark5 4916 |
+| A12 | `Area143_ChoiceAsk54` | message 0x57 | Area143_ChoiceAsk54 4812 |
+| A13 | `Area143_ChoiceAsk54` | else 0xFFFD | Area143_ChoiceAsk54 1188 |
+| A14 | `Area143_ChoiceMessage49` | yes 0x4B | Area143_ChoiceMessage49 4804 |
+| A15 | `Area143_ChoiceMessage49` | answer 1 only | Area143_ChoiceMessage49 4213 |
+| A16 | `Area143_ChoiceRun8` | message 0x4D | Area143_ChoiceRun8 4871 |
+| A17 | `Area143_ChoiceRun8` | asks 0x45 | Area143_ChoiceRun8 407 |
+| A18 | `Area143_ChoiceRun8` | message read before the call | Area143_ChoiceRun8 215 |
+| A19 | `Area143_ChoiceRun8` | Var7 9 | Area143_ChoiceRun8 1129 |
+| A20 | `Area143_ChoiceRun8` | step 9 | Area143_ChoiceRun8 263 |
+| A21 | `Area143_ChoiceRun8` | message 0x4A | Area143_ChoiceRun8 263 |
+| A22 | `Area143_ChoiceRun8` | word +0x8C | Area143_ChoiceRun8 263 |
+| A23 | `Area143_ChoiceRun8` | else step 0xB | Area143_ChoiceRun8 866 |
+| A24 | `Area143_ChangeArea70` | area 0x71 | Area143_ChangeArea70 6000 |
+| A25 | `Area143_ChangeArea70` | flags 0x80 | Area143_ChangeArea70 6000 |
+| A26 | `MessageByMember (143, 145 x3)` | three keys | Area143_MessageByMember 975 |
+| A27 | `MessageByMember (143, 145 x3)` | one record more | Area143_MessageByMember 1365 |
+| A28 | `MessageByMember (143, 145 x3)` | request 3 | Area143_MessageByMember 3878 |
+| A29 | `MessageByMember (143, 145 x3)` | next message | Area143_MessageByMember 3878 |
+| A30 | `MessageByMember (143, 145 x3)` | byte +0x88 | Area143_MessageByMember 3873 |
+| A31 | `Area143_MessageByMember` | area 145 messages | Area143_MessageByMember 3878 |
+| A32 | `Area143_SkipIfLeader89Is7` | value 6 | Area143_SkipIfLeader89Is7 2466 |
+| A33 | `Area143_SkipIfLeader89Is7` | script + 2 | Area143_SkipIfLeader89Is7 1673 |
+| A34 | `Area143_StepHook` | FD 2 | Area143_StepHook 220 |
+| A35 | `Area143_StepHook` | x span 2 | Area143_StepHook 51 |
+| A36 | `Area143_StepHook` | z from 0x65 | Area143_StepHook 73 |
+| A37 | `Area143_StepHook` | z as a byte | Area143_StepHook 37 |
+| A38 | `Area143_StepHook` | Party_DropIn(1) | Area143_StepHook 144 |
+| A39 | `PoseStanding (143, 145, 146)` | pose 5 for 6 | Area143_StepHook 67 |
+| A40 | `DropIn (143, 145, 146)` | counter 0 = 1 | Area143_StepHook 143 |
+| A41 | `DropIn (143, 145, 146)` | answers 2 | Area143_StepHook 144 |
+| A42 | `Area143_Trigger50` | kind 5 | Area143_Trigger50 6000 |
+| A43 | `Area143_Trigger50` | sub-kind 0xE | Area143_Trigger50 6000 |
+| A44 | `Area143_Trigger50` | state 6 | Area143_Trigger50 2541 |
+| A45 | `Area143_Trigger50` | FE 2 | Area143_Trigger50 2541 |
+| A46 | `Area143_Trigger50` | FE read before the call | Area143_Trigger50 1571 |
+| A47 | `Area143_Trigger50` | answers 1 | Area143_Trigger50 6000 |
+| A48 | `Area143_ClutShiftRight` | shift & 0xF | Area143_ClutShiftRight 306 |
+| A49 | `Area143_ClutShiftRight` | red 4 bits | Area143_ClutShiftRight 3577 |
+| A50 | `Area143_ClutShiftRight` | bit 15 dropped | Area143_ClutShiftRight 6000 |
+| A51 | `Area143_ClutShiftRight` | stored a word on | Area143_ClutShiftRight 6000 |
+| A52 | `Area143_ClutShiftRight` | ten rows | Area143_ClutShiftRight 6000 |
+| A53 | `Area143_ClutShiftRight` | dirty 2 | Area143_ClutShiftRight 6000 |
+| A54 | `Area143_ClutShiftRight` | red and green swapped | Area143_ClutShiftRight 3577 |
+| A55 | `Area143_ClutShiftRight` | answers 1 | Area143_ClutShiftRight 6000 |
+| A56 | `Area143_ClutShiftRight` | blue shifted once more | Area143_ClutShiftRight 4013 |
+| A57 | `Area143_EffectB3Run` | state ^ 1 | Area143_EffectB3Run 6000 |
+| A58 | `StateEntry (143, 145, 146)` | entry ^ 1 | Area143_EffectB3Run 6000 |
+| A59 | `CylinderAtCurrent (143, 146)` | y from +0x40 | Area143_EffectB3Cylinder 6000 |
+| A60 | `Area143_EffectB3Cylinder` | the other copy | Area143_EffectB3Cylinder 6000 |
+| A61 | `GlowCylinder (143, 146)` | radius halved | Area143_DrawGlowCylinder 6000 |
+| A62 | `GlowCylinder (143, 146)` | first top 0x4000000 | Area143_DrawGlowCylinder 6000 |
+| A63 | `GlowCylinder (143, 146)` | top + 1 | Area143_DrawGlowCylinder 6000 |
+| A64 | `GlowCylinder (143, 146)` | angle step 0x80 | Area143_DrawGlowCylinder 6000 |
+| A65 | `GlowCylinder (143, 146)` | fifteen quads | Area143_DrawGlowCylinder 6000 |
+| A66 | `GlowCylinder (143, 146)` | grey + 4 | Area143_DrawGlowCylinder 6000 |
+| A67 | `GlowCylinder (143, 146)` | down over 4..10 | Area143_DrawGlowCylinder 6000 |
+| A68 | `GlowCylinder (143, 146)` | down by 2 | Area143_DrawGlowCylinder 6000 |
+| A69 | `GlowCylinder (143, 146)` | first packet dtd 0 | Area143_DrawGlowCylinder 6000 |
+| A70 | `GlowCylinder (143, 146)` | not semi-transparent | Area143_DrawGlowCylinder 6000 |
+| A71 | `GlowCylinder (143, 146)` | abr 2 | Area143_DrawGlowCylinder 6000 |
+| A72 | `GlowCylinder (143, 146)` | quad linked at (z, x) | Area143_DrawGlowCylinder 6000 |
+| A73 | `GlowCylinder (143, 146)` | vertex 1 the old bottom | Area143_DrawGlowCylinder 6000 |
+| A74 | `GlowCylinder (143, 146)` | vertex 1 blue left | Area143_DrawGlowCylinder 6000 |
+| A75 | `GlowCylinder (143, 146)` | tpage 24 bits | Area143_DrawGlowCylinder 6000 |
+| A76 | `GlowCylinder (143, 146)` | frame counter read before the calls | Area143_DrawGlowCylinder 473 |
+| A77 | `GlowCylinder (143, 146)` | no map camera | Area143_DrawGlowCylinder 6000 |
+| A78 | `GlowCylinder (143, 146)` | y from z | Area143_DrawGlowCylinder 6000 |
+| A79 | `GlowCylinder (143, 146)` | draw-mode dy 1 | Area143_DrawGlowCylinder 6000 |
+| A80 | `Area143_DrawGlowCylinder` | frame counter moved | not refused: the harness disturbance rewrites Frame_Counter over the cylinder's ~100 calls, so bit 1 flipped before them is lost (the cylinder reads bit 0 only); variant A80b refused |
+| B1 | `Area144_SceneByRowFlags` | first flag 0x16 | Area144_SceneByRowFlags 6000 |
+| B2 | `Area144_SceneByRowFlags` | scene 1 | Area144_SceneByRowFlags 2012 |
+| B3 | `Area144_SceneByRowFlags` | leader 3 | Area144_SceneByRowFlags 256 |
+| B4 | `Area144_SceneByRowFlags` | sets 0x19 | Area144_SceneByRowFlags 167 |
+| B5 | `Area144_SceneByRowFlags` | else scene 2 | Area144_SceneByRowFlags 1131 |
+| B6 | `Area144_SceneByRowFlags` | who 7 | Area144_SceneByRowFlags 240 |
+| B7 | `Area144_SceneByRowFlags` | else 4 | Area144_SceneByRowFlags 664 |
+| B8 | `Area144_SceneByRowFlags` | else 7 | Area144_SceneByRowFlags 451 |
+| B9 | `Area144_SceneByRowFlags` | leader 8 | Area144_SceneByRowFlags 112 |
+| B10 | `Area144_SceneByRowFlags` | sets 0x1A | Area144_SceneByRowFlags 56 |
+| B11 | `Area144_SceneByRowFlags` | position 0xFFFD | Area144_SceneByRowFlags 6000 |
+| B12 | `Area144_SceneByRowFlags` | else 0xB | Area144_SceneByRowFlags 344 |
+| B13 | `Area144_SceneByRowFlags` | byte +2 | Area144_SceneByRowFlags 5239 |
+| B14 | `Area144_SceneByRowFlags` | fourth flag 0x1C | Area144_SceneByRowFlags 1779 |
+| B15 | `Area144_WalkToZ1D8` | target 0x1D0000 | Area144_WalkToZ1D8 6000 |
+| B16 | `Area144_WalkToZ1D8` | direction 4 | Area144_WalkToZ1D8 2233 |
+| B17 | `Area144_WalkToZ1D8` | abs(d + 1) | Area144_WalkToZ1D8 4801 |
+| B18 | `StepsToZ (144 x2)` | shift 14 | Area144_WalkToZ1D8 4332, Area144_WalkToZ1C0 4464 |
+| B19 | `Magnitude (144 x2)` | no absolute value | Area144_WalkToZ1D8 2561, Area144_WalkToZ1C0 2577 |
+| B20 | `Area144_SkipIfMember3Is4` | value 5 | Area144_SkipIfMember3Is4 1513 |
+| B21 | `Area144_SkipIfMember3Is2` | value 3 | Area144_SkipIfMember3Is2 1517 |
+| B22 | `SkipIf (144 x2)` | script + 4 | Area144_SkipIfMember3Is4 1027, Area144_SkipIfMember3Is2 978 |
+| B23 | `Area144_WalkToZ1C0` | target 0x1C8000 | Area144_WalkToZ1C0 6000 |
+| B24 | `Area144_WalkToZ1C0` | direction 2 | Area144_WalkToZ1C0 4821 |
+| B25 | `Area144_WalkToZ1C0` | flag 0x10 | Area144_WalkToZ1C0 4473 |
+| B26 | `Area144_WalkToZ1C0` | byte +6 | Area144_WalkToZ1C0 4821 |
+| B27 | `Area144_SpawnEffect85` | stride 0xA0 | Area144_SpawnEffect85 2521 |
+| B28 | `Area144_SpawnEffect85` | kind 0x86 | Area144_SpawnEffect85 4749 |
+| B29 | `Area144_SpawnEffect85` | index + 1 | Area144_SpawnEffect85 4749 |
+| B30 | `Area144_SpawnEffect85` | none: script - 1 | Area144_SpawnEffect85 1251 |
+| B31 | `Area144_SpawnEffect85` | floor division | Area144_SpawnEffect85 135 |
+| B32 | `Area144_SpawnEffect85` | member read before the search | Area144_SpawnEffect85 2175 |
+| B33 | `Area144_MoveKind2Here` | x from z | Area144_MoveKind2Here 6000 |
+| B34 | `Area144_MoveKind2Here` | script +5 | Area144_MoveKind2Here 5977 |
+| B35 | `Area144_MoveKind2Here` | +0x87 2 | Area144_MoveKind2Here 6000 |
+| B36 | `Area144_MoveKind2Here` | direction 4 | Area144_MoveKind2Here 6000 |
+| B37 | `Area144_MoveKind2Here` | y to +0x40 | Area144_MoveKind2Here 6000 |
+| B38 | `Area144_ChoiceCounter1E` | yes 0x22 | Area144_ChoiceCounter1E 4803 |
+| B39 | `Area144_ChoiceCounter1E` | no 0x1F | Area144_ChoiceCounter1E 1197 |
+| B40 | `Area144_ChoiceCounter1E` | message 0xFFFE | Area144_ChoiceCounter1E 6000 |
+| B41 | `Area144_ChoiceDropIn` | yes: entry 4 | Area144_ChoiceDropIn 4889 |
+| B42 | `Area144_ChoiceDropIn` | counter 6 | Area144_ChoiceDropIn 1110 |
+| B43 | `Area144_ChoiceDropIn` | entry 7 | Area144_ChoiceDropIn 1111 |
+| B44 | `Area144_ChoiceDropIn` | Var7 8 | Area144_ChoiceDropIn 1111 |
+| B45 | `Area144_ChoiceDropIn` | step 0x15 | Area144_ChoiceDropIn 1111 |
+| B46 | `Area144_ChoiceDropIn` | answer 1 only | Area144_ChoiceDropIn 4331 |
+| C1 | `Area145_ChoiceRun3` | counter 9 | Area145_ChoiceRun3 4799 |
+| C2 | `Area145_ChoiceRun3` | Var7 4 | Area145_ChoiceRun3 1201 |
+| C3 | `Area145_ChoiceRun3` | counter 0xB | Area145_ChoiceRun3 1201 |
+| C4 | `Area145_ChoiceRun3` | step 0xB | Area145_ChoiceRun3 1201 |
+| C5 | `Area145_ChoiceRun3` | message 0xFFFE | Area145_ChoiceRun3 6000 |
+| C6 | `Area145_PartyRecord16` | stride 0xA0 | Area145_PartyRecord16 3204 |
+| C7 | `Area145_PartyRecord16` | index + 1 | Area145_PartyRecord16 6000 |
+| C8 | `Area145_PartyRecord16` | records of 8 | Area145_PartyRecord16 2420 |
+| C9 | `Area145_PartyRecord16` | +2 0x11 | Area145_PartyRecord16 2993 |
+| C10 | `Area145_PartyRecord16` | +1 1 | Area145_PartyRecord16 2993 |
+| C11 | `Area145_PartyRecord16` | dword +8 | Area145_PartyRecord16 2993 |
+| C12 | `Area145_PartyRecord16` | bit 4 | Area145_PartyRecord16 4568 |
+| C13 | `Area145_PartyRecord16` | floor division | Area145_PartyRecord16 3150 |
+| C14 | `Area145_RunDrop` | state ^ 1 | Area145_RunDrop 6000 |
+| C15 | `Area145_DropStart` | bit 0x80 cleared | Area145_DropStart 4284 |
+| C16 | `Area145_DropStart` | ground + 0x7C0 | Area145_DropStart 5999 |
+| C17 | `Area145_DropStart` | +0xC 1 | Area145_DropStart 5969 |
+| C18 | `Area145_DropStart` | fall -7 | Area145_DropStart 6000 |
+| C19 | `Area145_DropStart` | state 2 | Area145_DropStart 5966 |
+| C20 | `Area145_DropStart` | animation 0x3C | Area145_DropStart 6000 |
+| C21 | `Area145_DropStart` | bit 0x20 | Area145_DropStart 4603 |
+| C22 | `Area145_DropStart` | stride 0x140 | Area145_DropStart 172 |
+| C23 | `Area145_DropStart` | times 0x15 | Area145_DropStart 2804 |
+| C24 | `Area145_DropStart` | script - 1 | Area145_DropStart 6000 |
+| C25 | `Area145_DropStart` | object read before the ground | Area145_DropStart 2688 |
+| C26 | `Area145_DropStart` | script object read before the animation | Area145_DropStart 2193 |
+| C27 | `Area145_DropStart` | floor division | Area145_DropStart 215 |
+| C28 | `Area145_DropFall` | fall from +0x24 | Area145_DropFall 5162 |
+| C29 | `Area145_DropFall` | no step tick | Area145_DropFall 6000 |
+| C30 | `Area145_DropFall` | lands at equal | Area145_DropFall 1062 |
+| C31 | `Area145_DropFall` | unsigned compare | Area145_DropFall 1471 |
+| C32 | `Area145_DropFall` | ground + 1 | Area145_DropFall 2508 |
+| C33 | `Area145_DropFall` | +0x20 1 | Area145_DropFall 2508 |
+| C34 | `Area145_DropFall` | state 3 | Area145_DropFall 2492 |
+| C35 | `Area145_DropFall` | animation 0x38 | Area145_DropFall 2508 |
+| C36 | `Area145_DropFall` | script +1 5 | Area145_DropFall 2508 |
+| C37 | `Area145_DropFall` | script - 1 | Area145_DropFall 3492 |
+| C38 | `Area145_DropFall` | object read before the ground | Area145_DropFall 1772 |
+| C39 | `Area145_MessageByMember1` | messages 5 | Area145_MessageByMember1 3807 |
+| C40 | `Area145_MessageByMember5` | messages B | Area145_MessageByMember5 3791 |
+| C41 | `Area145_MessageByMemberB` | keys 1 | Area145_MessageByMemberB 2284 |
+| C42 | `Area145_GiveKeyItemB` | item 0xC | Area145_GiveKeyItemB 6000 |
+| C43 | `Area145_GiveKeyItemB` | 12 bytes | Area145_GiveKeyItemB 6000 |
+| C44 | `Area145_GiveKeyItemB` | add 0xC | Area145_GiveKeyItemB 6000 |
+| C45 | `Area145_GiveKeyItemB` | system 3 | Area145_GiveKeyItemB 6000 |
+| C46 | `Area145_GiveKeyItemB` | request 3 | Area145_GiveKeyItemB 6000 |
+| C47 | `Area145_GiveKeyItemB` | name + 1 | Area145_GiveKeyItemB 6000 |
+| C48 | `Area145_SkipIfKeyItemB` | item 0xC | Area145_SkipIfKeyItemB 6000 |
+| C49 | `Area145_SkipIfKeyItemB` | script + 2 | Area145_SkipIfKeyItemB 3983 |
+| C50 | `Area145_Trigger40` | kind 0x2D | Area145_Trigger40 6000 |
+| C51 | `Area145_Trigger40` | sub-kind 0xE | Area145_Trigger40 6000 |
+| C52 | `ArmTail (145, 146)` | state 1 | Area145_Trigger40 6000 |
+| C53 | `ArmTail (145, 146)` | answers 1 | Area145_Trigger40 6000 |
+| C54 | `Area145_StepHook` | FD 1 | Area145_StepHook 80 |
+| C55 | `Area145_StepHook` | z 0x98001 | Area145_StepHook 91 |
+| C56 | `Area145_StepHook` | x span 3 | Area145_StepHook 20 |
+| C57 | `Area145_StepHook` | leader from 0x1C | Area145_StepHook 47 |
+| C58 | `Area145_StepHook` | state 0x18 | Area145_StepHook 80 |
+| C59 | `Area145_StepHook` | kind 0x15 | Area145_StepHook 80 |
+| C60 | `Area145_StepHook` | answers 2 | Area145_StepHook 80 |
+| C61 | `Area145_StepHook` | FD 5 | Area145_StepHook 1367 |
+| C62 | `Area145_StepHook` | flag 0x2E | Area145_StepHook 880 |
+| C63 | `Area145_StepHook` | x span 2 | Area145_StepHook 18 |
+| C64 | `Area145_StepHook` | z from 0x63 | Area145_StepHook 18 |
+| C65 | `Area145_StepHook` | Party_DropIn(2) | Area145_StepHook 49 |
+| C66 | `Area145_StepHook` | z masked to 20 bits | Area145_StepHook 15 |
+| C67 | `Area145_CellHook` | six records | Area145_CellHook 5523 |
+| C68 | `Area145_CellHook` | pose as a nibble | Area145_CellHook 349 |
+| C69 | `Area145_CellHook` | flag 8 | Area145_CellHook 477 |
+| C70 | `Area145_CellHook` | row 14 | Area145_CellHook 477 |
+| C71 | `Area145_CellHook` | state from +2 | Area145_CellHook 306 |
+| C72 | `Area145_CellHook` | kind 0x13 | Area145_CellHook 306 |
+| C73 | `Area145_CellHook` | answers 2 | Area145_CellHook 306 |
+| C74 | `Area145_CellHook` | x and z swapped | Area145_CellHook 477 |
+| C75 | `Area145_CellHook` | none answers 1 | Area145_CellHook 5523 |
+| C76 | `Area145_Tail20` | state 6 dropped | Area145_Tail20 224 |
+| C77 | `Area145_Tail20` | counter 3 state + 1 | Area145_Tail20 633 |
+| C78 | `Area145_Tail20` | state 9 | Area145_Tail20 633 |
+| C79 | `Area145_Tail20` | waits on 1 | Area145_Tail20 156 |
+| C80 | `Area145_Tail20` | flag 0x2B | Area145_Tail20 189 |
+| C81 | `Area145_Tail20` | sound 0x201 | Area145_Tail20 189 |
+| C82 | `Area145_Tail20` | Kind2_Place(1) | Area145_Tail20 189 |
+| C83 | `Area145_Tail20` | state 0xC | Area145_Tail20 153 |
+| C84 | `Area145_Tail20` | y 0x261 | Area145_Tail20 153 |
+| C85 | `Area145_Tail20` | x - 0x319 | Area145_Tail20 153 |
+| C86 | `Kind13 (145 x2)` | kind 0x14 | Area145_Tail20 303 |
+| C87 | `Kind13 (145 x2)` | +9 0x31 | Area145_Tail20 303 |
+| C88 | `Kind13 (145 x2)` | angle + 1 | Area145_Tail20 303 |
+| C89 | `CameraAngle1 (145)` | angle zero-extended | Area145_Tail20 143 |
+| C90 | `Area145_Tail20` | waits on 0x41 | Area145_Tail20 167 |
+| C91 | `Area145_Tail20` | state 0xD | Area145_Tail20 150 |
+| C92 | `Area145_Tail20` | timer 1 | Area145_Tail20 149 |
+| C93 | `Area145_Tail20` | sound 0x203 | Area145_Tail20 150 |
+| C94 | `Area145_Tail20` | timer + 2 | Area145_Tail20 227 |
+| C95 | `Area145_Tail20` | waits on 2 | Area145_Tail20 150 |
+| C96 | `Area145_Tail20` | flag 0x2E | Area145_Tail20 77 |
+| C97 | `Area145_Tail20` | state 0x1D | Area145_Tail20 19 |
+| C98 | `Area145_Tail20` | sound 0x208 | Area145_Tail20 19 |
+| C99 | `Area145_Tail20` | state 0x13 | Area145_Tail20 132 |
+| C100 | `Area145_Tail20` | y 0x201 | Area145_Tail20 150 |
+| C101 | `Area145_Tail20` | Kind2Z + 1 | Area145_Tail20 150 |
+| C102 | `Area145_Tail20` | Kind2X the leader z | Area145_Tail20 150 |
+| C103 | `Area145_Tail20` | state 0x16 | Area145_Tail20 150 |
+| C104 | `Area145_Tail20` | counter 3 = 1 | Area145_Tail20 141 |
+| C105 | `Area145_Tail20` | clears 0x2D | Area145_Tail20 191 |
+| C106 | `Area145_Tail20` | leader +1 3 | Area145_Tail20 186 |
+| C107 | `Area145_Tail20` | leader +3 1 | Area145_Tail20 186 |
+| C108 | `Area145_Tail20` | timer 0x18 | Area145_Tail20 186 |
+| C109 | `Area145_Tail20` | flags 0x83 | Area145_Tail20 146 |
+| C110 | `Area145_Tail20` | tests 0x2F | Area145_Tail20 146 |
+| C111 | `Area145_Tail20` | sound 0x20D | Area145_Tail20 51 |
+| C112 | `TimerOut (145)` | timer - 2 | Area145_Tail20 211 |
+| C113 | `Disarm (145)` | kind 1 | Area145_Tail20 462 |
+| C114 | `Area145_Tail20` | transition 7 | Area145_Tail20 222 |
+| C115 | `Area145_Tail20` | Kind2X + 1 | Area145_Tail20 222 |
+| C116 | `Area145_Tail20` | waits on 1 | Area145_Tail20 167 |
+| C117 | `Area145_Tail20` | kind 0x3D | Area145_Tail20 121 |
+| C118 | `Area145_Tail20` | state 0x21 | Area145_Tail20 144 |
+| C119 | `Area145_Tail20` | timer 0x1D | Area145_Tail20 153 |
+| C120 | `Area145_Tail20` | state 0x23 | Area145_Tail20 140 |
+| C121 | `Area145_Tail20` | sets 0x2C | Area145_Tail20 189 |
+| C122 | `Area145_Tail20` | flags 0x81 | Area145_Tail20 189 |
+| C123 | `Area145_Tail20` | timer 0x59 | Area145_Tail20 160 |
+| C124 | `Area145_Tail20` | flags 2 | Area145_Tail20 136 |
+| C125 | `Area145_Tail20` | back to 0x15 | Area145_Tail20 136 |
+| C126 | `Area145_Tail20` | state 0x20 waits on 1 | Area145_Tail20 189 |
+| C127 | `SpawnSlot (145)` | slot + 1 kept | Area145_Tail20 522, Area145_SpawnTrail 6000 |
+| C128 | `Area145_TrailStart` | length 4 | Area145_TrailStart 4873 |
+| C129 | `Area145_TrailStart` | half steps | Area145_TrailStart 5809 |
+| C130 | `Area145_TrailStart` | from 4 | Area145_TrailStart 569 |
+| C131 | `Area145_TrailStart` | sound at 6 | Area145_TrailStart 1154 |
+| C132 | `Area145_TrailStart` | to 0x36 | Area145_TrailStart 724 |
+| C133 | `Area145_TrailStart` | past: 3 | Area145_TrailStart 746 |
+| C134 | `Area145_TrailStart` | leg 0 at t + 1 | Area145_TrailStart 4873 |
+| C135 | `Area145_TrailStart` | z0 + 1 | Area145_TrailStart 6000 |
+| C136 | `Area145_TrailLeg0` | record 1's quarter | Area145_TrailLeg0 4189 |
+| C137 | `Area145_TrailLeg0` | t - 6 | Area145_TrailLeg0 4340 |
+| C138 | `Area145_TrailLeg0` | length from +2 | Area145_TrailLeg0 5280 |
+| C139 | `Area145_TrailLeg0` | x0 + 1 | Area145_TrailLeg0 6000 |
+| C140 | `Area145_TrailLeg0` | leg 1 at d + 1 | Area145_TrailLeg0 2234 |
+| C141 | `Area145_TrailLeg0` | z from +0x3C | Area145_TrailLeg0 6000 |
+| C142 | `Area145_TrailLeg0` | sound 0x207 | Area145_TrailLeg0 171 |
+| C143 | `Upto (145 x3)` | length - 1 | Area145_TrailLeg0 4076, Area145_TrailLeg1 2889, Area145_TrailLeg2 4704 |
+| C144 | `AlongX (145 x3)` | x steps halved | Area145_TrailLeg0 5582, Area145_TrailLeg1 1917, Area145_TrailLeg2 5597 |
+| C145 | `AlongZ (145 x3)` | next direction's dz | Area145_TrailLeg0 2832, Area145_TrailLeg1 1917, Area145_TrailLeg2 3710 |
+| C146 | `Quarter (145 x3)` | bits 10..11 | Area145_TrailLeg0 4161, Area145_TrailLeg1 2925, Area145_TrailLeg2 2823 |
+| C147 | `Area145_TrailLeg1` | tables swapped | Area145_TrailLeg1 5662 |
+| C148 | `Area145_TrailLeg1` | bias 6 | Area145_TrailLeg1 4593 |
+| C149 | `TrailLeg (145 x2)` | record 2 special | Area145_TrailLeg1 2842, Area145_TrailLeg2 2717 |
+| C150 | `TrailLeg (145 x2)` | x0 and z0 swapped | Area145_TrailLeg1 4131, Area145_TrailLeg2 4061 |
+| C151 | `TrailLeg (145 x2)` | no next: 0 | Area145_TrailLeg1 1607 |
+| C152 | `TrailLeg (145 x2)` | next + 1 | Area145_TrailLeg1 1282 |
+| C153 | `TrailLeg (145 x2)` | record & 0x7F | Area145_TrailLeg1 80, Area145_TrailLeg2 95 |
+| C154 | `TrailLeg (145 x2)` | z0 from +0x3C | Area145_TrailLeg1 4131, Area145_TrailLeg2 4061 |
+| C155 | `Area145_TrailLeg2` | bias 9 | Area145_TrailLeg2 1661 |
+| C156 | `Area145_TrailLeg2` | answers the length | Area145_TrailLeg2 2995 |
+| C157 | `Area145_TrailLeg2` | tables swapped | Area145_TrailLeg2 5597 |
+| C158 | `Area145_SpawnTrail` | kind 0x40 | Area145_SpawnTrail 4804 |
+| C159 | `Area145_SpawnTrail` | x1 from z1 | Area145_SpawnTrail 4804 |
+| C160 | `Area145_SpawnTrail` | +0x20 + 1 | Area145_SpawnTrail 4804 |
+| C161 | `Area145_SpawnTrail` | +0x14 0x400000 | Area145_SpawnTrail 4804 |
+| C162 | `Area145_SpawnTrail` | none answers 2 | Area145_SpawnTrail 1196 |
+| C163 | `Area145_SpawnTrail` | answers 1 | Area145_SpawnTrail 4804 |
+| C164 | `Area145_SpawnTrail` | x0 to +8 | Area145_SpawnTrail 4804 |
+| C165 | `Area145_DrawGradient` | skips on 1 | Area145_DrawGradient 2982 |
+| C166 | `Area145_DrawGradient` | tpage 0x96 | Area145_DrawGradient 3029 |
+| C167 | `Area145_DrawGradient` | slot 6 | Area145_DrawGradient 3029 |
+| C168 | `Area145_DrawGradient` | width 322 | Area145_DrawGradient 3029 |
+| C169 | `Area145_DrawGradient` | blue 0xFE | Area145_DrawGradient 3029 |
+| C170 | `Area145_DrawGradient` | bottom blue 0x21 | Area145_DrawGradient 3029 |
+| C171 | `Area145_DrawGradient` | semi-transparent | Area145_DrawGradient 3029 |
+| C172 | `Area145_DrawGradient` | size 0x40 | Area145_DrawGradient 3029 |
+| C173 | `Area145_DrawGradient` | y1 1 | Area145_DrawGradient 3029 |
+| C174 | `Area145_DrawGradient` | green 0xC9 | Area145_DrawGradient 3029 |
+| C175 | `Area145_ClearTint` | +0x48 1 | Area145_ClearTint 6000 |
+| C176 | `Area145_ClearTint` | pointer + 1 | Area145_ClearTint 6000 |
+| D1 | `Area146_LeaderBit138OtSlot` | bit 1 cleared too | Area146_LeaderBit138OtSlot 3006 |
+| D2 | `Area146_LeaderBit138OtSlot` | byte +0x28 | Area146_LeaderBit138OtSlot 5999 |
+| D3 | `Area146_StepHook` | FD 2 | Area146_StepHook 2440 |
+| D4 | `Area146_StepHook` | flag 0x34 | Area146_StepHook 1627 |
+| D5 | `Area146_StepHook` | x from 0x45 | Area146_StepHook 40 |
+| D6 | `Area146_StepHook` | z span 4 | Area146_StepHook 11 |
+| D7 | `Area146_StepHook` | Party_DropIn(1) | Area146_StepHook 102 |
+| D8 | `Area146_Trigger32` | sub-kind 5 | Area146_Trigger32 6000 |
+| D9 | `Area146_Trigger32` | kind 0x2B | Area146_Trigger32 6000 |
+| D10 | `Area146_EffectB4Run` | state ^ 1 | Area146_EffectB4Run 6000 |
+| D11 | `Area146_EffectB4Cylinder` | the other copy | Area146_EffectB4Cylinder 6000 |
+| D12 | `Area146_DrawGlowCylinder` | frame counter moved | Area146_DrawGlowCylinder 2 |
+| D13 | `Area146_ClearFlag46` | flag 0x47 | Area146_ClearFlag46 6000 |
+| D14 | `Area146_ClearFlag46` | FE 1 | Area146_ClearFlag46 6000 |
+| D15 | `Area146_ToExtraObject0` | z from y | Area146_ToExtraObject0 6000 |
+| D16 | `Area146_ToExtraObject0` | x to +0x30 | Area146_ToExtraObject0 6000 |
+| D17 | `Area146_ToExtraObject0` | record 1's y | Area146_ToExtraObject0 6000 |
+| A80b | `Area143_DrawGlowCylinder` | frame counter bit 0 flipped (A80 variant) | Area143_DrawGlowCylinder 4831 |
+| D12b | `Area146_DrawGlowCylinder` | frame counter bit 0 flipped (D12 variant) | Area146_DrawGlowCylinder 4840 |
 
 ## 5. The tables named
 

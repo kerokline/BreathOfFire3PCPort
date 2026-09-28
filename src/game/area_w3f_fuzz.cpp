@@ -597,7 +597,10 @@ void Args145(unsigned k, std::uint32_t* a) {
         if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(B(rec + 2) & 0xF);
         break;
     }
-    case k145TrailStart: a[0] = TrailTimer(0) | 0; break;
+    case k145TrailStart:
+        // the length's edge (5) and the end's (0x37): at, below and past each
+        a[0] = ah::Half() ? TrailTimer(0) : AH_PICK(4, 5, 6, 0x36, 0x37, 0x38, 0x10037, 0xFFFF0037u);
+        break;
     case k145Leg0: a[0] = TrailTimer(5); break;
     case k145Leg1: case k145Leg2:
         a[0] = TrailTimer(k == k145Leg1 ? 5 : 10);
