@@ -590,13 +590,22 @@ void Seed167(unsigned k) {
         Mem(at::kScriptVar5)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 0x80) : ah::Next());
         break;
     case kTail: {
-        // every state, the range's edges and the sign
-        Mem(at::kTailState)[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 0x21 : AH_PICK(0x20, 0x21, 0x22, 0x7F, 0x80, 0xFF, 0xE0));
-        static const U kWaits[] = {0x18, 0x64, 0x74, 0, 0x44, 0x54};
-        Mem(at::kScriptVar6)[0] = static_cast<unsigned char>(ah::Often() ? kWaits[ah::Next() % 6] + AH_PICK(0, 0, 0, 1, 0xFF) : ah::Next());
+        // a state with a body two rounds in three (each with its wait value
+        // in variable 6 two times in three, or one off), else every state,
+        // the range's edges and the sign
+        static const unsigned kBodies[][2] = {{0, 0x100}, {1, 0x18}, {5, 0x100}, {6, 0x100}, {0xA, 0x64}, {0xB, 0x74},
+                                              {0xC, 0}, {0x14, 0x44}, {0x15, 0x100}, {0x18, 0x54}, {0x1E, 0x100},
+                                              {0x1F, 0x100}, {0x20, 0x100}};
+        const unsigned* const body = kBodies[ah::Next() % 13];
+        if (ah::Often()) {
+            Mem(at::kTailState)[0] = static_cast<unsigned char>(body[0]);
+        } else {
+            Mem(at::kTailState)[0] = static_cast<unsigned char>(ah::Half() ? ah::Next() % 0x21 : AH_PICK(0x20, 0x21, 0x22, 0x7F, 0x80, 0xFF, 0xE0));
+        }
+        if (body[1] < 0x100 && ah::Often()) Mem(at::kScriptVar6)[0] = static_cast<unsigned char>(body[1] + (ah::Often() ? 0 : AH_PICK(1, 0xFF)));
         Mem(at::kScriptVar5)[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 3 : AH_PICK(3, 0x80, 0xFF));
         SetWord(Mem(at::kTailTimer), ah::Often() ? AH_PICK(1, 1, 2, 0, 0xFFFF, 0x1E) : ah::Next());
-        SetWord(Mem(kWaitWordDA), ah::Half() ? 0 : AH_PICK(1, 0x100, 0xFFFF));
+        SetWord(Mem(kWaitWordDA), ah::Half() ? 0 : AH_PICK(1, 0x100, 0xFFFF, 0x8000));
         break;
     }
     case kInit167:
@@ -650,7 +659,7 @@ void Disturb167(U h) {
 void Run167() {
     std::memcpy(g_switch, Mem(kFzSwitch), 4);
     ah::Group g{"area_w4a", kClones167, AH_COUNT(kClones167), kCallees167, AH_COUNT(kCallees167), nullptr, 0,
-                g_regions167, AH_COUNT(g_regions167), &Seed167, &Disturb167, 6000};
+                g_regions167, AH_COUNT(g_regions167), &Seed167, &Disturb167, 8000};
     g.args = &Args167;
     g.area = 167;
     ah::Run(g);
