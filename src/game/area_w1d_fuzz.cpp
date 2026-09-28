@@ -181,7 +181,8 @@ unsigned char* EffectRecord(std::uint32_t v) { return ah::Mem(at::kEffectObjects
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 
 // Louder than the real callees, on purpose (each only half the time, from
-// Noise): after these calls the callers read a cell again - the answer byte
+// Noise): after these calls the callers read a cell again - the active
+// member and the focus pointer after ScriptFlags_Set40, the answer byte
 // after MoveCmd_TestFB and Flags_Set (area 56's choices), counter 0 and Cond
 // row 3's second byte after Sound_PlayEffect (area 62's tail stores the
 // counter before the sound; area 56's choice 14 reads the byte after it),
@@ -196,6 +197,14 @@ std::uint32_t MovesAnswer(const std::uint32_t*, std::uint32_t answer) {
 std::uint32_t MovesCurrent(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
     if (n & 1) Sprite_Current = n & 0x100 ? ah::PartyOf(static_cast<unsigned char>(n >> 9)) : ah::Object((n >> 9) & 3);
+    return answer;
+}
+// ScriptFlags_Set40: area 62's handler reads the active member again after
+// it, area 59's trigger 24 the focus pointer.
+std::uint32_t Set40Effect(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = ah::Noise();
+    if (n & 1) ah::SetPointer(at::kActiveMember, MemberRecord(n >> 8));
+    if (n & 2) ah::SetPointer(at::kFocusObject, FocusRecord(n >> 12));
     return answer;
 }
 std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -230,7 +239,7 @@ std::uint32_t NameEffect(const std::uint32_t*, std::uint32_t) {
 #define W1D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define W1D_THEIRS(name) #name, KeyOf(name), KeyOf(name)
 const ah::Callee kCallees[] = {
-    {W1D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W1D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &Set40Effect},
     {W1D_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0, {}, &MovesAnswer},
     {W1D_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesAnswer},
