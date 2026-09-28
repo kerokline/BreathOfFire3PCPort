@@ -419,16 +419,16 @@ U At16(U high, U low) { return (high & 0xFFFF) << 16 | (low & 0xFFFF); }
 // A high word on or beside [lo, lo + n): each inside, one either side, a
 // high byte above it (the compares are 16-bit), anything.
 U Around(U lo, unsigned n) {
-    switch (ah::Next() % 5) {
-    case 0: case 1: return lo + ah::Next() % n;
-    case 2: return ah::Half() ? lo - 1 : lo + n;
-    case 3: return (lo + ah::Next() % n) | 0x100u;
+    switch (ah::Next() % 7) {
+    case 0: case 1: case 2: case 3: return lo + ah::Next() % n;
+    case 4: return ah::Half() ? lo - 1 : lo + n;
+    case 5: return (lo + ah::Next() % n) | 0x100u;
     default: return ah::Next();
     }
 }
 // The leader's pose: each the hooks accept, and beside them.
 void SeedPose() {
-    if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 0, 7, 6, 1, 5, 8, 0x80, 0x87));
+    if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 0, 7, 6, 0, 7, 6, 1, 5, 8, 0x80, 0x87));
 }
 // An object trigger is called (a field object, 0x904030).
 void ArgsTrigger(std::uint32_t* a) {
