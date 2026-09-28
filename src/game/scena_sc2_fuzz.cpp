@@ -657,6 +657,12 @@ void Disturb(std::uint32_t h) {
     static const unsigned char kTwo[] = {3, 0, 1, 6};
     const unsigned b = (h >> 13) & 0xFF;
     const unsigned c = h >> 21;
+    // The door helpers read the leader's cell x again after each call: for
+    // them, half of every disturbance puts the leader on a door cell.
+    if ((h & 0x100) && std::strncmp(g_name, "Scena02_Door", 12) == 0) {
+        DoorCell(c);
+        return;
+    }
     switch ((h >> 3) % 10) {
     case 0: M(at::kCounters)[0] = static_cast<unsigned char>(b & 1 ? b : kWaits[c % sizeof kWaits]); break;
     case 1: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(b); break;
