@@ -311,8 +311,13 @@ const ah::Region kRegions199[] = {
 };
 #undef W4F_BASE_REGIONS
 
+// The area whose run this is (the group's disturbance writes one cell that is
+// a region of one area only).
+int g_area = 0;
+
 // Every round: the pointers the areas follow put back inside the regions.
-void Common(unsigned) {
+void Common(int area) {
+    g_area = area;
     ah::SetPointer(at::kScriptObject, ScriptRecord(ah::Next()));
     ah::SetPointer(at::kFocusObject, FocusRecord(ah::Next()));
     SetMember(ah::Next());
@@ -323,7 +328,14 @@ void Common(unsigned) {
 // 24 - drawn only from h (area_harness.h: a group disturb never draws Next).
 void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
-    switch ((h >> 8) % 11) {
+    switch ((h >> 8) % 13) {
+    // cells read on both sides of a call: the status bits (areas 192 and
+    // 193's tails), character record 0's level byte (area 192's init)
+    case 11: Field_StatusBits = v; break;
+    case 12:
+        // the character records are a region of area 192's run only
+        if (g_area == 192) B(at::kChar0Byte1E) = static_cast<unsigned char>(h & 0x100 ? 4 + (v & 1) + (v & 2) * 2 : v);
+        break;
     case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x100 ? v % 0x20 : v); break;
     case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? v % 5 : v); break;
     case 2: B(at::kCounter1) = static_cast<unsigned char>(h & 0x100 ? 0 : v); break;
@@ -376,7 +388,7 @@ void SeedTail(const U* states, unsigned n) {
 
 // ---- area 192 ----
 void Seed192(unsigned k) {
-    Common(k);
+    Common(192);
     switch (k) {
     case k192Focus: SeedAnswer(6); break;
     case k192TailState: SeedAnswer(3); break;
@@ -424,7 +436,7 @@ void Args192(unsigned k, std::uint32_t* a) {
 
 // ---- area 193 ----
 void Seed193(unsigned k) {
-    Common(k);
+    Common(193);
     switch (k) {
     case k193Message: SeedAnswer(6); break;
     case k193RunOnYes: case k193Fill: case k193Focus: SeedAnswer(4); break;
@@ -450,12 +462,12 @@ void Args193(unsigned k, std::uint32_t* a) {
 
 // ---- areas 196 and 197 ----
 void Seed196(unsigned k) {
-    Common(k);
+    Common(196);
     if (k == k196Search0) SeedMemberKeys(at::kArea196Keys0);
     if (k == k196Search1) SeedMemberKeys(at::kArea196Keys1);
 }
 void Seed197(unsigned k) {
-    Common(k);
+    Common(197);
     if (k <= k197Search6) {
         SeedMemberKeys(at::kArea197Keys0 + k * at::kKeysStride);
         return;
@@ -492,7 +504,7 @@ void Args197(unsigned k, std::uint32_t* a) {
 
 // ---- area 198 ----
 void Seed198(unsigned k) {
-    Common(k);
+    Common(198);
     switch (k) {
     case k198Sink: {
         unsigned char* const object = ah::Pointer(at::kScriptObject);
@@ -538,8 +550,8 @@ void Seed198(unsigned k) {
 }
 
 // ---- area 199 ----
-void Seed199(unsigned k) {
-    Common(k);
+void Seed199(unsigned) {
+    Common(199);
     SeedAnswer(3);
 }
 
