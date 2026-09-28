@@ -5,7 +5,7 @@
 52 functions ours (`src/game/boss_sd.cpp`, shadow `boss_sd`), each read to
 its last instruction with capstone and fuzzed through the boss harness
 ([`boss_harness.md`](boss_harness.md)), one `Run` per unit: 0 mismatches in
-@@ROUNDS@@ rounds. @@CONTROLS@@ Fuzz only: no recorded route reaches a boss
+312,000 rounds. 115 controls planted: 114 refused by a count, one equivalent with its near variant refused (section 5). Fuzz only: no recorded route reaches a boss
 fight. No divergence.
 
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
@@ -151,16 +151,52 @@ directly (`BossMap_UpdateFromEnemies`, `Boss_SetByLeaderId`,
 `0x903848..0x90384B` and the kept words `0x939A14..0x939A1B` are the group's
 regions.
 
-@@RUNS@@
+| Run | Fight, kind | Clones | Rounds | Calls (the originals', this worktree) | Result |
+|---|---|--:|--:|--:|---|
+| K18 | 17, 18 | 4 | 24,000 | 24,000 | 0 mismatches |
+| B17 | 17 | 2 | 12,000 | 6,000 | 0 mismatches |
+| K21 | 18, 21 | 3 | 18,000 | 31,972 | 0 mismatches |
+| K22 | 18, 22 | 3 | 18,000 | 32,043 | 0 mismatches |
+| K23 | 18, 23 | 3 | 18,000 | 26,033 | 0 mismatches |
+| K26 | 18, 26 | 9 | 54,000 | 79,841 | 0 mismatches |
+| K24 | 21, 24 | 5 | 30,000 | 42,000 | 0 mismatches |
+| B18 | 18 | 4 | 24,000 | 42,712 | 0 mismatches |
+| B19 | 19 | 4 | 24,000 | 42,691 | 0 mismatches |
+| B20 | 20 | 4 | 24,000 | 42,581 | 0 mismatches |
+| K25 | 21, 25 | 3 | 18,000 | 18,000 | 0 mismatches |
+| B21 | 21 | 4 | 24,000 | 73,928 | 0 mismatches |
+| K27 | 22, 27 | 4 | 24,000 | 30,000 | 0 mismatches |
+
+312,000 rounds. **Coverage** (the originals' calls): every entry of every
+`DataTable` (`phase 0x...` about 500 each for a step table's entries, about
+1,000 for an action table's, 2,000..6,000 for the hook tables'), and every
+callee - e.g. K26: `BossMap_SetCorners` 6,000, `AreaMap_Elevation` 12,000,
+`Flags_Test` 14,019, `Rand` / `Sound_PlayById` 2,911, `Port_DroppedCall`
+1,053; B18: `BossMap_UpdateFromEnemies` 3,885, `Boss_SetByLeaderId` 846,
+`0x446DE0` 3,247, `0x446E00` 1,907, `0x446E20` 846, `BossActor_CopyFrom` /
+`_ClearBit40` 14,732, `Flags_Test` 2,517; B21: `Battle_ActorIsOut` 37,928,
+`BossActor_Find` 6,000, `BossActor_Clear` 12,000. Counts are this
+worktree's (they move with the build directory; judge by 0 mismatches).
+
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final
+build): exit 0, 839 `Run`s, 0 mismatches; it passed first time (no silent
+death).
 
 **Seeds.** The dispatchers: the harness draws the state byte below its
 table; the seed puts the other state bytes inside it too, so a dispatcher
 reading the wrong byte lands on another entry (a count) rather than past
 the table (a Fatal). `BossDodai_Dispatch` calls `Flags_Test` before it
 dispatches, and the disturbance may point `Sprite_Current` at another
-enemy: its seed puts every enemy's `+1` below 12 and the Run's
-`phase_span` is 12 (the first run without it faulted on both sides, the
-original first - the harness's section 6 trap, met through a re-read). The
+enemy: its seed puts every enemy's `+1` below 12, the Run's `phase_span`
+is 12, and its `settle` puts every enemy's `+1` back below 12 after each
+disturbance (the first run without them faulted on both sides, the original
+first; the second, with only the seed and `phase_span`, had ours abort in a
+round where the standard disturbance's "a byte of the current enemy's
+record" wrote `+1` of the object `Sprite_Current` points at - that case does
+not honour `phase_span`). `Boss_SetByLeaderId`'s stand-in is louder than the
+real one: it also moves the chapter step `0x8034E5`, so set-up 20's order
+(the step stored before the call, 18 and 19's after) is seen in every round
+that reaches it (control D88: 17 rounds without, 765 with). The
 hooks: the harness's word 0..2, with garbage above the byte half the time
 (the entries receive the whole word). The event hooks: the codes they test
 (0 and 5; 3 for set-up 21) half the time, garbage above the byte half the
@@ -181,8 +217,11 @@ D10, D75..D77, D103). The shapes BSD used: `kSetup`, `kEnd`, `kExit`,
 in the group's file. One thing a stage-B group should know: a `kDispatch`
 that calls out before it dispatches re-reads `Sprite_Current` after the
 call, and the standard disturbance re-points it at another enemy whose
-state byte the harness did not draw - seed every enemy's state byte, and
-set `phase_span`.
+state byte the harness did not draw - seed every enemy's state byte, set
+`phase_span`, and `settle` the state bytes, because the standard
+disturbance's case 11 (a byte of the current enemy's record) writes `+1..+4`
+of that enemy past `phase_span`. Worth folding into the harness (case 11
+could skip `+1..+4`, or honour `phase_span` as the field case does).
 
 ## 5. Controls
 
@@ -192,7 +231,137 @@ run (`BOF3X_SHADOW=boss_sd`, `BOF3X_BSD_RUN` the unit), restore; one rebuild
 at the end. The rounds column is the planted function's mismatched rounds
 (of 6,000).
 
-@@CONTROLS_TABLE@@
+| # | Function | Plant | Refused |
+|---|---|---|---|
+| D1 | `BossMutant_Dispatch` | by +2 | 5378 rounds |
+| D2 | `BossMutant_Dispatch` | the word not forwarded (0) | 1039 rounds |
+| D3 | `BossMutant_Enter` | +0xFC and +0xF8 swapped | 6000 rounds |
+| D4 | `BossMutant_Enter` | kind 21's hook stored | 6000 rounds |
+| D5 | `BossMutant_Enter` | +1 = 1 | 5970 rounds |
+| D6 | `BossMutant_Enter` | the tick's answer dropped | 4021 rounds |
+| D7 | `BossMutant_ActDispatch` | by +3 | 4722 rounds |
+| D8 | `BossMutant_Hook` | the word's low byte only forwarded | 2976 rounds |
+| D9 | `Boss17_Setup` | exit hook BossHook_ExitClearActor0 | 6000 rounds |
+| D10 | `Boss17_Setup` | end and exit swapped | 6000 rounds |
+| D11 | `Boss17_End` | counter 0x15 | 3235 rounds |
+| D12 | `Boss17_End` | the win by bit 0 | 3801 rounds |
+| D13 | `Boss17_End` | counter 1 (0x903849) | 3235 rounds |
+| D14 | `Boss21_End` | counter 0xB | 3277 rounds |
+| D15 | `BossClaw_Enter` | flag 0x34 | 6000 rounds |
+| D16 | `BossClaw_Enter` | animation 3 | 6000 rounds |
+| D17 | `BossCawer_Enter` | +1 = 2 | 5940 rounds |
+| D18 | `BossPatrio_Enter` | +0xF8 kind 22's | 6000 rounds |
+| D19 | `BossClaw_Enter` | +0xA6 from 0x939A1A | 4016 rounds |
+| D20 | `BossClaw_Enter` | 0x939AD8 read before the Flags_Test | 131 rounds |
+| D21 | `BossCawer_Enter` | Flags_Clear for Flags_Set | 1984 rounds |
+| D22 | `BossPatrio_Enter` | the kept words not restored | 4011 rounds |
+| D23b | `BossClaw_Hook` | the next entry (mod 3) | 6000 rounds |
+| D24 | `BossCawer_Hook` | the word's low half forwarded | 2965 rounds |
+| D25 | `BossPatrio_Hook` | the word + 0x100 | 6000 rounds |
+| D26c | `BossClaw_Dispatch` | by +3 | 5480 rounds |
+| D27 | `BossCawer_Dispatch` | the word not forwarded | 451 rounds |
+| D28 | `BossPatrio_Dispatch` | by +4 | 5439 rounds |
+| D29 | `BossDodai_Dispatch` | +5 == 5 | 2084 rounds |
+| D30 | `BossDodai_Dispatch` | flag 0x35 | 1037 rounds |
+| D31 | `BossDodai_Dispatch` | the other slot's tables swapped | 4963 rounds |
+| D32 | `BossDodai_Dispatch` | Sprite_Current of before the call | 225 rounds |
+| D33 | `BossDodai_Enter` | flag 0x23 not asked | 2039 rounds |
+| D34 | `BossDodai_Enter` | the kept HP swapped | 5305 rounds |
+| D35 | `BossDodai_Enter` | +8 |= 1 | 728 rounds |
+| D36 | `BossDodai_Enter` | +5 == 4 for the +0xFC | 1887 rounds |
+| D37 | `BossDodai_Enter` | Sprite_Current of before the calls | 44 rounds |
+| D38 | `BossDodai_Enter` | +0xF8 0x64CF74 | 6000 rounds |
+| D39 | `BossDodai_ActDispatch` | by +3 | 4631 rounds |
+| D40 | `BossDodai_Death` | value 1 | 6000 rounds |
+| D41 | `BossDodai_Death` | cells swapped | 6000 rounds |
+| D42 | `BossDodai_Death` | defeat before the animation | 6000 rounds |
+| D43 | `BossDodai_Death` | enemy 0's x and z swapped | 6000 rounds |
+| D44 | `BossDodai_Death` | the leader's ground a dword | 6000 rounds |
+| D45 | `BossDodai_Death` | +1 = 4 | 6000 rounds |
+| D46 | `BossDodai_Death` | +0 &= 0x3F | 3025 rounds |
+| D47 | `BossDodai_HitPoseDispatch` | by +1 | 2653 rounds |
+| D48b | `BossDodai_HitShake` | << 8 | 2978 rounds |
+| D49b | `BossDodai_HitShake` | bit 1 of the frame | 2936 rounds |
+| D50b | `BossDodai_Hook` | the next entry (mod 3) | 6000 rounds |
+| D51 | `BossHook_ActKindNone` | kind 1 | 6000 rounds |
+| D52 | `BossDodai_HitSound` | < 0 (0 sounds) | 656 rounds |
+| D53 | `BossDodai_HitSound` | the word unsigned | 2361 rounds |
+| D54 | `BossDodai_HitSound` | Rand's bit 1 | 1236 rounds |
+| D55 | `BossDodai_HitSound` | the sounds swapped | 2983 rounds |
+| D56 | `BossEmitai_Dispatch` | by +2 | 5426 rounds |
+| D57 | `BossEmitai_Enter` | +1 = 3 | 5964 rounds |
+| D58c | `BossEmitai_ActDispatch` | by +1 | 4733 rounds |
+| D59 | `BossEmitai_Death` | +0x2A = 1 | 5999 rounds |
+| D60 | `BossEmitai_Death` | bit 0x100 | 4491 rounds |
+| D61 | `BossEmitai_Death` | animation 5 | 6000 rounds |
+| D62 | `BossEmitai_Death` | Sprite_Current of before the call | 200 rounds |
+| D63 | `BossEmitai_Death` | 0x939AD8 of before the calls | 309 rounds |
+| D64b | `BossEmitai_Hook` | the next entry (mod 3) | 6000 rounds |
+| D65 | `BossGolem_Dispatch` | the word + 1 forwarded | 955 rounds |
+| D66 | `BossGolem_Enter` | the hook + 1 | 6000 rounds |
+| D67 | `BossGolem_Hook` | the word's low byte only | 2965 rounds |
+| D68 | `BossGarr_Dispatch` | by +2 | 5468 rounds |
+| D69 | `BossGarr_Enter` | bank 0x152 | 6000 rounds |
+| D70 | `BossGarr_Enter` | +0x2A before the bank | 187 rounds |
+| D71 | `BossGarr_Enter` | animation 1 | 6000 rounds |
+| D72 | `BossGarr_Enter` | +1 = 2 | 5940 rounds |
+| D73c | `BossGarr_ActDispatch` | by +4 | 4681 rounds |
+| D74b | `BossGarr_Hook` | entry 0 for every word (the three are BareRet) | NOT REFUSED - equivalent: the three entries of `BossGarr_Hooks` are `BareRet`, so which one runs is unobservable (and the lost check is only the past-3 abort); D74c, the same hook forwarding a changed word, refused |
+| D74c | `BossGarr_Hook` | the word's low half forwarded | 2976 rounds |
+| D75 | `Boss18_Setup` | event and exit swapped | 6000 rounds |
+| D76 | `Boss19_Setup` | set-up 18's end hook | 6000 rounds |
+| D77 | `Boss20_Setup` | set-up 18's exit hook | 6000 rounds |
+| D78 | `Boss18_Event` | phase 4 for 5 | 2381 rounds |
+| D79 | `Boss18_Event` | the whole word compared | 1913 rounds |
+| D80 | `Boss18_Event` | enemy 0 by 0x2000 | 197 rounds |
+| D81 | `Boss18_Event` | enemy 1 sets 0x904AAD bit 0 | 650 rounds |
+| D82 | `Boss18_Event` | the update on the win bit only | 160 rounds |
+| D83 | `Boss18_Event` | al 1 after phase 0 | 1925 rounds |
+| D84 | `Boss19_Event` | phase ^ 5 | 2840 rounds |
+| D85 | `Boss20_Event` | phase + 1 | 4294 rounds |
+| D86 | `Boss18_End` | the win's steps swapped | 3283 rounds |
+| D87 | `Boss19_End` | step 0x22 | 1469 rounds |
+| D88 | `Boss20_End` | the step after the pick | 765 rounds |
+| D89 | `Boss18_End` | the win's step by bit 0 | 2091 rounds |
+| D90 | `Boss18_End` | step 2 by bit 1 | 1684 rounds |
+| D91 | `Boss18_End` | flag 0x25 | 928 rounds |
+| D92 | `Boss18_End` | 0x3A and 0x1C swapped | 767 rounds |
+| D93 | `Boss18_End` | step 2 for step 3 | 784 rounds |
+| D94 | `Boss18_End` | the kept HP words swapped | 6000 rounds |
+| D95 | `Boss18_End` | +0xA6 from +0xA8 | 6000 rounds |
+| D96 | `Boss18_End` | the words kept on the win only | 2594 rounds |
+| D97 | `Boss18_Exit` | enemy 0 by 0x2000 | 3246 rounds |
+| D98 | `Boss18_Exit` | enemy 0's pose, not place | 2635 rounds |
+| D99 | `Boss18_Exit` | actor 4 from enemy 1 | 6000 rounds |
+| D100 | `Boss18_Exit` | tag 1 | 2635 rounds |
+| D101 | `Boss19_Exit` | tag 2 | 2635 rounds |
+| D102 | `Boss20_Exit` | tag 0 | 2635 rounds |
+| D103 | `Boss21_Setup` | exit and event swapped | 6000 rounds |
+| D104 | `Boss21_Event` | phase 4 | 3869 rounds |
+| D105 | `Boss21_Event` | members 0..1 | 3415 rounds |
+| D106 | `Boss21_Event` | the members' bit 0x20 | 1970 rounds |
+| D107 | `Boss21_Event` | the enemies' +0x93 | 3114 rounds |
+| D108 | `Boss21_Event` | enemies 3..9 | 3415 rounds |
+| D109 | `Boss21_Event` | al 1 after phase 3 | 3415 rounds |
+| D110 | `Boss21_Exit` | Sprite_Current not set | 5344 rounds |
+| D111 | `Boss21_Exit` | animation 5 | 6000 rounds |
+| D112 | `Boss21_Exit` | actor 3 cleared | 6000 rounds |
+| D113 | `Boss21_Exit` | +0x2B | 6000 rounds |
+| D114 | `Boss21_Exit` | bit 0x40 of actor 1 | 6000 rounds |
+
+Two runs, on the final seeds; the table is the second. Superseded plants of
+the first run, not in the table: four hook plants that stepped the word to 3
+(`code ^ 1`, `code ^ 2`) and three dispatcher plants that moved the table by
+one entry but shrank its count - each hit the dispatcher's own past-the-table
+`Fatal` (loud, but a Fatal proves less than a count), replaced by D23b,
+D50b, D64b (the next entry mod 3), D74b / D74c, and D26c, D58c, D73c (a
+different state byte); three plants that pointed a dispatcher at another
+kind's table crashed on ours' side (that table's cells are not swapped in the
+Run, so ours ran Capcom's entries for real) and were replaced the same way;
+D48 / D49's anchor was not unique (D48b / D49b). The thinnest refusals are
+the re-read plants (D20 131 rounds, D32 225, D37 44, D62 200, D63 309, D70
+187: the disturbance moving `Sprite_Current` or `0x939AD8` in a call) and
+D82 (160), D80 (197).
 
 ## 6. Latent defects (Capcom's, kept)
 
