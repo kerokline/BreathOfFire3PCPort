@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 52 functions ours
 (`src/game/area_w2e.cpp`, shadow name `area_w2e`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)): 0 mismatches in
-270,600 rounds (five `Run`s, section 6); @@CONTROLS_SUMMARY@@ (section 9).
+270,600 rounds (five `Run`s, section 6); 252 controls planted, 250 refused by a count and 2 equivalent with near variants refused (section 9).
 Fuzz only: no recorded route reaches any of the 52 (section 8). No
 divergence.
 
@@ -223,13 +223,13 @@ minimap, `105`, `106`.
 
 **Result (in this worktree):** 0 mismatches in every run; rounds / calls to
 the stand-ins: the world-map copy 72,000 / 142,543; area 104's own 144,000 /
-1,387,359; its minimap 600 / 3,312,000; area 105 18,000 / 2,892; area 106
-36,000 / 50,077. Coverage lines show every state table entry reached (the
+1,387,587; its minimap 600 / 3,312,000; area 105 18,000 / 2,869; area 106
+36,000 / 50,113. Coverage lines show every state table entry reached (the
 plate states about 800 each, frame and box states about 1,000,
 `Area104_LeaderStep` 2,966, the kind-`0x5C` states 1,173..3,766), area 121's
 paths (`Area104_ObjectAhead121` 218 calls), the idle's pose and step
 (`Area104_PoseByCharge` 216, `Field_JumpCheckHeight` 137), tail 36 armed 258
-times. `BOF3X_SHADOW='*'`: exit 0, 452 self-test lines, no mismatch or Fatal,
+times. `BOF3X_SHADOW='*'`: exit 0, 453 self-test lines, no mismatch or Fatal,
 `inject: 4988 ours` (all 52 of this group's injected; 4,936 before).
 
 ## 7. Latent defects (described, not fixed; the fuzz keeps inside them)
@@ -299,4 +299,281 @@ times. `BOF3X_SHADOW='*'`: exit 0, 452 self-test lines, no mismatch or Fatal,
 
 ## 9. Controls
 
-@@CONTROLS@@
+Planted one at a time in `area_w2e.cpp` (and, for the table constants,
+`area_w2e_callees.h`) by a script (the scratch `controls.py`, not committed):
+each anchored on a string the file holds once; plant, rebuild, run the
+covering group alone (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w2e
+BOF3X_AR2E_AREA=1040 / 1041 / 1042 / 105 / 106`), restore; after the last, a
+rebuild and a clean full run (exit 0, 0 mismatches in all five runs). **252
+planted, 250 refused by a count** (exit 3), at least one per function; **2
+equivalent** (no input can tell them apart), each with a near variant
+refused. None stood.
+
+A first pass of 250 (before the fuzz's last strengthening) stood on six:
+D8 and Q1 (the equivalents; D8b / Q1b were added), H9, H10, H11 (the step's
+held-key tail: the arrive hook's stand-in answered `kFlag`-style bytes, but
+the step tests all of eax, so the path past it ran too seldom, and the held
+word rarely held one key of one source alone - the arrive hook now answers a
+whole 0 five calls in six and the seed plants a single key of each source),
+and Z36 (the world map's state tables were swapped from `kWm104`'s own
+constants, so a wrong table address moved the swap with it; the
+`DataTable`s now use the fuzz's literal addresses). The table is the second
+pass (in this worktree; rounds of a function's 4,000 for the map, 6,000
+otherwise, 600 for the minimap).
+
+| # | Area | planted | refused in rounds |
+|---|---|---|---|
+| # | Area | planted | refused in rounds |
+|---|---|---|---|
+| A1 | 104 | Init: flags 0x100 | Area104_Init 4515 |
+| A2 | 104 | Init: tail kind 0x29 | Area104_Init 6000 |
+| A3 | 104 | Init: key item 0xB | Area104_Init 6000 |
+| A4 | 104 | Init: Cond_ByteFE + 2 | Area104_Init 2047 |
+| A5 | 104 | Init: state 3 | Area104_Init 3953 |
+| A6 | 104 | Init: no minimap | Area104_Init 3953 |
+| B1 | 104 | PlaceMessage: message 5 | Area104_PlaceMessage 1135 |
+| B2 | 104 | PlaceMessage: 0x9039F5 kept | Area104_PlaceMessage 750 |
+| B3 | 104 | PlaceMessage: request 3 | Area104_PlaceMessage 1135 |
+| B4 | 104 | PlaceMessage: state 1 waits on 3 | Area104_PlaceMessage 426 |
+| C1 | 104 | LeaderRun: the other state | Area104_LeaderRun 6000 |
+| C2 | 104 | LeaderRun: no charge tail | Area104_LeaderRun 6000 |
+| D1 | 104 | Idle: flags bit 9 | Area104_LeaderIdle 1273 |
+| D2 | 104 | Idle: flags2 bit 5 | Area104_LeaderIdle 1317 |
+| D3 | 104 | Idle: actor bit 4 | Area104_LeaderIdle 271 |
+| D4 | 104 | Idle: +0x137 for +0x136 | Area104_LeaderIdle 787 |
+| D5 | 104 | Idle: talk test skipped | Area104_LeaderIdle 1497 |
+| D6 | 104 | Idle: full charge 0x3F | Area104_LeaderIdle 156 |
+| D7 | 104 | Idle: stop keeps +9 | Area104_LeaderIdle 291 |
+| D8 | 104 | Idle: turn wrap past 3 | equivalent: at a difference of exactly 3 the original wraps the smaller facing by 8 (a difference of 5) and neither limits; D8b refused |
+| D8b | 104 | Idle: turn wrap past 1 | Area104_LeaderIdle 32 |
+| D9 | 104 | Idle: limit at 1 | Area104_LeaderIdle 40 |
+| D10 | 104 | Idle: limit the other way | Area104_LeaderIdle 40 |
+| D11 | 104 | Idle: facing & 3 | Area104_LeaderIdle 158 |
+| D12 | 104 | Idle: target 0xFF steps | Area104_LeaderIdle 132 |
+| D13 | 104 | Idle: blocked pose 2 | Area104_LeaderIdle 264 |
+| D14 | 104 | Idle: push keeps +2 | Area104_LeaderIdle 205 |
+| D15 | 104 | Idle: pose 3 turns | Area104_LeaderIdle 95 |
+| D16 | 104 | Idle: step +9 - 2 | Area104_LeaderIdle 117 |
+| D17 | 104 | Idle: step +0x137 2 | Area104_LeaderIdle 117 |
+| D18 | 104 | Idle: pressed ignored | Area104_LeaderIdle 130 |
+| E1 | 104 | Ahead121: area 0x78 | Area104_ObjectAhead121 4487 |
+| E2 | 104 | Ahead121: one step in x | Area104_ObjectAhead121 3164 |
+| E3 | 104 | Ahead121: z by the x step | Area104_ObjectAhead121 3397 |
+| E4 | 104 | Ahead121: margin 0 | Area104_ObjectAhead121 3998 |
+| E5 | 104 | Ahead121: +0x80 bit 1 | Area104_ObjectAhead121 434 |
+| E6 | 104 | Ahead121: facing & 3 | Area104_ObjectAhead121 315 |
+| E7 | 104 | Ahead121: step keeps +9 | Area104_ObjectAhead121 2289 |
+| E8 | 104 | Ahead121: extra records from 0x1D | Area104_ObjectAhead121 315 |
+| F1 | 104 | TurnToFree: none 0xFE | Area104_TurnToFree 684 |
+| F2 | 104 | TurnToFree: seven turns | Area104_TurnToFree 2105 |
+| F3 | 104 | TurnToFree: margin 1 | Area104_TurnToFree 5306 |
+| F4 | 104 | TurnToFree: turns back | Area104_TurnToFree 4453 |
+| F5 | 104 | TurnToFree: answers 2 | Area104_TurnToFree 3486 |
+| G1 | 104 | StartOn121: area 0x7A | Area104_StartOnObject121 4528 |
+| G2 | 104 | StartOn121: margin 0 | Area104_StartOnObject121 4052 |
+| G3 | 104 | StartOn121: answers 2 | Area104_StartOnObject121 2757 |
+| G4 | 104 | StartOn121: z as x | Area104_StartOnObject121 4052 |
+| H1 | 104 | Step: +0x137 2 first | Area104_LeaderStep 4989 |
+| H2 | 104 | Step: input flag bit 1 | Area104_LeaderStep 1127 |
+| H3 | 104 | Step: exit 0xAE | Area104_LeaderStep 187 |
+| H4 | 104 | Step: flags from 0x905B89 | Area104_LeaderStep 106 |
+| H5 | 104 | Step: 0x937F98 0xB | Area104_LeaderStep 106 |
+| H6 | 104 | Step: link 0xC1 | Area104_LeaderStep 187 |
+| H7 | 104 | Step: edge facing 3 | Area104_LeaderStep 257 |
+| H8 | 104 | Step: arrive z from +0x3C | Area104_LeaderStep 2140 |
+| H9 | 104 | Step: keys 0xE000 | Area104_LeaderStep 90 |
+| H10 | 104 | Step: held key no idle | Area104_LeaderStep 607 |
+| H11 | 104 | Step: flags2 bit 7 | Area104_LeaderStep 345 |
+| H12 | 104 | Step: no tick while counting | Area104_LeaderStep 3754 |
+| H13 | 104 | Step: 0x904EE0 1 | Area104_LeaderStep 106 |
+| H14 | 104 | Step: area link x from +0x3A | Area104_LeaderStep 91 |
+| I1 | 104 | StopMotion: pose 4 | Area104_StopMotion 6000 |
+| I2 | 104 | StopMotion: +0x14 kept | Area104_StopMotion 6000 |
+| I3 | 104 | StopMotion: FAWord kept | Area104_StopMotion 6000 |
+| J1 | 104 | PoseByCharge: 0x3F | Area104_PoseByCharge 133 |
+| J2 | 104 | PoseByCharge: button word 0 | Area104_PoseByCharge 1617 |
+| K1 | 104 | Charge: hold 0x1F | Area104_LeaderCharge 162 |
+| K2 | 104 | Charge: drain 3 from 0x30 | Area104_LeaderCharge 65 |
+| K3 | 104 | Charge: stepping drains d | Area104_LeaderCharge 333 |
+| K4 | 104 | Charge: odd frames bit 1 | Area104_LeaderCharge 108 |
+| K5 | 104 | Charge: clamp 0x3F | Area104_LeaderCharge 552 |
+| K6 | 104 | Charge: hold - 2 | Area104_LeaderCharge 3977 |
+| K7 | 104 | Charge: climbs to 0x3F | Area104_LeaderCharge 91 |
+| K8 | 104 | Charge: drain 2 from 0x20 | Area104_LeaderCharge 54 |
+| L1 | 104 | Kind5CRun: the next state | Area104_Kind5CRun 6000 |
+| M1 | 104 | Kind5CStart: facing from +9 | Area104_Kind5CStart 5783 |
+| M2 | 104 | Kind5CStart: entry + 0xC | Area104_Kind5CStart 6000 |
+| M3 | 104 | Kind5CStart: tint 0x81 | Area104_Kind5CStart 6000 |
+| M4 | 104 | Kind5CStart: +1 + 2 | Area104_Kind5CStart 6000 |
+| M5 | 104 | Kind5CStart: area 0x69 | Area104_Kind5CStart 4453 |
+| M6 | 104 | Kind5CStart: three | Area104_Kind5CStart 4733 |
+| M7 | 104 | Kind5CStart: kind 0x5D | Area104_Kind5CStart 4733 |
+| M8 | 104 | Kind5CStart: state 2 | Area104_Kind5CStart 4733 |
+| M9 | 104 | Kind5CStart: delays k << 2 | Area104_Kind5CStart 4733 |
+| N1 | 104 | Follow: z from x | Area104_Kind5CFollow 6000 |
+| N2 | 104 | Follow: height kept | Area104_Kind5CFollow 4987 |
+| N3 | 104 | Follow: pass flags 0x13 | Area104_Kind5CFollow 610 |
+| N4 | 104 | Follow: status bit 5 | Area104_Kind5CFollow 2179 |
+| N5 | 104 | Follow: front bar 0x3F - charge | Area104_Kind5CFollow 725 |
+| N6 | 104 | Follow: blink bit 2 | Area104_Kind5CFollow 684 |
+| N7 | 104 | Follow: hold byte from +0xB | Area104_Kind5CFollow 726 |
+| O1 | 104 | Gauge: CLUT >> 3 | Area104_DrawGauge 6000 |
+| O2 | 104 | Gauge: right edge 227 | Area104_DrawGauge 6000 |
+| O3 | 104 | Gauge: bottom 40 | Area104_DrawGauge 6000 |
+| O4 | 104 | Gauge: u + 5 | Area104_DrawGauge 6000 |
+| O5 | 104 | Gauge: commit 0x44 | Area104_DrawGauge 6000 |
+| O6 | 104 | Gauge: bars' u swapped | Area104_DrawGauge 6000 |
+| O7 | 104 | Gauge: width & 0x7F | Area104_DrawGauge 1646 |
+| P1 | 104 | Turn: second test ^ 2 | Area104_Kind5CTurn 2151 |
+| P2 | 104 | Turn: facing not stored | Area104_Kind5CTurn 1294 |
+| Q1 | 104 | TurnStep: wrap past 3 | equivalent: at a difference of exactly 3 the wrap makes it 5, unwrapped it stays 3 - both answer 0; Q1b refused |
+| Q1b | 104 | TurnStep: wrap past 1 | Area104_Kind5CTurnStep 313 |
+| Q2 | 104 | TurnStep: spin 0x41 | Area104_Kind5CTurnStep 1283 |
+| Q3 | 104 | TurnStep: +9 7 | Area104_Kind5CTurnStep 2569 |
+| Q4 | 104 | TurnStep: +1 3 | Area104_Kind5CTurnStep 2585 |
+| Q5 | 104 | TurnStep: equal turns | Area104_Kind5CTurnStep 1026 |
+| Q6 | 104 | TurnStep: the wrap signed | Area104_Kind5CTurnStep 21 |
+| R1 | 104 | Spin: & 0x7FF | Area104_Kind5CSpin 2949 |
+| R2 | 104 | Spin: +1 = 2 | Area104_Kind5CSpin 1328 |
+| S1 | 104 | Rise: + 0x400000 | Area104_Kind5CRise 1352 |
+| S2 | 104 | Rise: +1 + 2 | Area104_Kind5CRise 1352 |
+| S3 | 104 | Rise: z from y | Area104_Kind5CRise 1352 |
+| T1 | 104 | Tail40: message 5 | Area104_Tail40 247 |
+| T2 | 104 | Tail40: area 0x78 | Area104_Tail40 234 |
+| T3 | 104 | Tail40: flags 0xFEFF | Area104_Tail40 112 |
+| T4 | 104 | Tail40: flag test 0x5C | Area104_Tail40 221 |
+| T5 | 104 | Tail40: message 2 for 3 | Area104_Tail40 116 |
+| T6 | 104 | Tail40: kind 0x6B | Area104_Tail40 179 |
+| T7 | 104 | Tail40: 0x18 seconds | Area104_Tail40 179 |
+| T8 | 104 | Tail40: music 0x95 | Area104_Tail40 240 |
+| T9 | 104 | Tail40: state 4 as 3 | Area104_Tail40 146 |
+| T10 | 104 | Tail40: x and z swapped | Area104_Tail40 179 |
+| T11 | 104 | Tail40: +0 = 1 | Area104_Tail40 179 |
+| U1 | 104 | Countdown: request 4 releases | Area104_Kind6ACountdown 699 |
+| U2 | 104 | Countdown: leader state 0xB | Area104_Kind6ACountdown 806 |
+| U3 | 104 | Countdown: 0x1E frames | Area104_Kind6ACountdown 84 |
+| U4 | 104 | Countdown: box w 0x47 | Area104_Kind6ACountdown 5990 |
+| U5 | 104 | Countdown: outline h 0xE | Area104_Kind6ACountdown 5990 |
+| U6 | 104 | Countdown: digit held to 3 | Area104_Kind6ACountdown 489 |
+| U7 | 104 | Countdown: frames % 3 * 2 | Area104_Kind6ACountdown 3343 |
+| U8 | 104 | Countdown: blink below 9 | Area104_Kind6ACountdown 248 |
+| U9 | 104 | Countdown: centre x 0x24 | Area104_Kind6ACountdown 5990 |
+| U10 | 104 | Countdown: centre y 0xB0 | Area104_Kind6ACountdown 5990 |
+| U11 | 104 | Countdown: radius & 3 | Area104_Kind6ACountdown 2983 |
+| U12 | 104 | Countdown: step 0xAB | Area104_Kind6ACountdown 5990 |
+| U13 | 104 | Countdown: green 1 | Area104_Kind6ACountdown 5990 |
+| U14 | 104 | Countdown: 5 not released | Area104_Kind6ACountdown 688 |
+| U15 | 104 | Countdown: dz - dx | Area104_Kind6ACountdown 5990 |
+| U16 | 104 | Countdown: seconds before frames | Area104_Kind6ACountdown 645 |
+| V1 | 104 | Panel: CLUT 0x7BC7 | Area104_DrawPanel 6000 |
+| V2 | 104 | Panel: 301.0 | Area104_DrawPanel 6000 |
+| V3 | 104 | Panel: blue 0xB9 | Area104_DrawPanel 6000 |
+| V4 | 104 | Panel: x1 and y0 swapped | Area104_DrawPanel 6000 |
+| V5 | 104 | Panel: every fourth frame | Area104_DrawPanel 200 |
+| V6 | 104 | Panel: 0x109E | Area104_DrawPanel 688 |
+| V7 | 104 | Panel: three triangles | Area104_DrawPanel 6000 |
+| W1 | 104 (minimap) | Minimap: header 0x45 | Area104_BuildMinimap 600 |
+| W2 | 104 (minimap) | Minimap: nibbles swapped | Area104_BuildMinimap 600 |
+| W3 | 104 (minimap) | Minimap: rows to 0x50 | Area104_BuildMinimap 600 |
+| W4 | 104 (minimap) | Minimap: upload y 0x101 | Area104_BuildMinimap 600 |
+| W5 | 104 (minimap) | Minimap: CLUT 0xDC01 | Area104_BuildMinimap 600 |
+| W6 | 104 (minimap) | Minimap: count kept | Area104_BuildMinimap 600 |
+| W7 | 104 (minimap) | Minimap: dirty kept | Area104_BuildMinimap 600 |
+| X1 | 104 | Shade: 0x40 2 | Area104_MinimapShade 290 |
+| X2 | 104 | Shade: 0xC0 3 | Area104_MinimapShade 317 |
+| X3 | 104 | Shade: 0x50 1 | Area104_MinimapShade 318 |
+| Y1 | 104 | Trigger36: kind 0x2D | Area104_Trigger36 6000 |
+| Y2 | 104 | Trigger36: argument 8 | Area104_Trigger36 6000 |
+| Y3 | 104 | Trigger36: answers 1 | Area104_Trigger36 6000 |
+| Z1 | 104 (map) | PlateRun: 0xA0 kind 3 | Area104_PlateRun 208 |
+| Z2 | 104 (map) | PlateRun: bit 11 | Area104_PlateRun 1635 |
+| Z3 | 104 (map) | PlateRun: the next state | Area104_PlateRun 4000 |
+| Z4 | 104 (map) | PlateShow: kind 2 animation 2 | Area104_PlateShow 336 |
+| Z5 | 104 (map) | PlateShow: +9 7 | Area104_PlateShow 2047 |
+| Z6 | 104 (map) | PlateShow: the pad byte | Area104_PlateShow 673 |
+| Z7 | 104 (map) | PlateGrow: step 0x1000 | Area104_PlateGrow 3999 |
+| Z8 | 104 (map) | PlateGrow: no pin | Area104_PlateGrow 4000 |
+| Z9 | 104 (map) | PlateHold: Game_Mode 2 holds | Area104_PlateHold 786 |
+| Z10 | 104 (map) | PlateHold: request 4 | Area104_PlateHold 370 |
+| Z11 | 104 (map) | PlateShrink: back to 2 | Area104_PlateShrink 596 |
+| Z12 | 104 (map) | PlateShrink: released on 4 | Area104_PlateShrink 262 |
+| Z13 | 104 (map) | HudRun: the other entry | Area104_HudRun 4000 |
+| Z14 | 104 (map) | HudFrame: the box first | Area104_HudFrame 4000 |
+| Z15 | 104 (map) | FrameStep: the next entry | Area104_FrameStep 4000 |
+| Z16 | 104 (map) | FrameSlideIn: above 0x11 | Area104_FrameSlideIn 368 |
+| Z17 | 104 (map) | FrameHold: mode 3 | Area104_FrameHold 662 |
+| Z18 | 104 (map) | FrameSlideOut: -0x2F | Area104_FrameSlideOut 75 |
+| Z19 | 104 (map) | BoxStep: the next entry | Area104_BoxStep 4000 |
+| Z20 | 104 (map) | BoxSlideIn: 0xC7 | Area104_BoxSlideIn 115 |
+| Z21 | 104 (map) | BoxHold: 0x59 frames | Area104_BoxHold 245 |
+| Z22 | 104 (map) | BoxSlideOut: 0xF1 | Area104_BoxSlideOut 359 |
+| Z23 | 104 (map) | BoxLeaves: bit 9 | Area104_BoxSlideIn 976; Area104_BoxHold 896 |
+| Z24 | 104 (map) | DrawFrame: second key over seven | Area104_DrawFrame 2 |
+| Z25 | 104 (map) | DrawFrame: legend 3 y + 0x17 | Area104_DrawFrame 2562 |
+| Z26 | 104 (map) | DrawFrame: party set & 0xFF | Area104_DrawFrame 79 |
+| Z27 | 104 (map) | DrawSprite: CLUT 0x7B81 | Area104_DrawSprite 4000 |
+| Z28 | 104 (map) | DrawSprite: semi by & 0x7F | Area104_DrawSprite 6 |
+| Z29 | 104 (map) | DrawHud: cap at x + 0x7F | Area104_DrawHud 2895 |
+| Z30 | 104 (map) | DrawHud: label & 0xFFF | Area104_DrawHud 2746 |
+| Z31 | 104 (map) | kWm104: sprites from the second | Area104_DrawSprite 3979 |
+| Z32 | 104 (map) | kWm104: buttons from the second | Area104_DrawFrame 725 |
+| Z33 | 104 (map) | kWm104: plate animations from the zero record | Area104_PlateShow 342 |
+| Z34 | 104 (map) | kWm104: label from 0x803584 | Area104_DrawHud 2895 |
+| Z35 | 104 (map) | PlateShow: +0x44 0x8000 | Area104_PlateShow 2054 |
+| Z36 | 104 (map) | kWm104: frame states from the box's | Area104_FrameStep 4000 |
+| Z37 | 104 (map) | kWm104: FrameHold draws through DrawHud | Area104_FrameHold 4000; Area104_FrameSlideOut 4000 |
+| Z38 | 104 (map) | BoxHold: +0xB kept at 0x5A | Area104_BoxHold 1254 |
+| a1 | 105 | Tail61: message 2 | Area105_Tail61 1133 |
+| a2 | 105 | Tail61: state 2 | Area105_Tail61 1133 |
+| a3 | 105 | Tail61: kind kept | Area105_Tail61 911 |
+| a4 | 105 | Step105: chapter 0xB | Area105_StepHook 170 |
+| a5 | 105 | Step105: Cond_ByteFD ignored | Area105_StepHook 2377 |
+| a6 | 105 | Step105: facing 2 passes | Area105_StepHook 36 |
+| a7 | 105 | Step105: 0x1E | Area105_StepHook 60 |
+| a8 | 105 | Step105: z unsigned | Area105_StepHook 217 |
+| a9 | 105 | Step105: kind 0x3E | Area105_StepHook 303 |
+| a10 | 105 | Step105: facing not stored | Area105_StepHook 1211 |
+| a11 | 105 | Step105: answers 2 | Area105_StepHook 303 |
+| a12 | 105 | Init105: from 0x58 | Area105_Init 824 |
+| a13 | 105 | Init105: set when not 0 | Area105_Init 1382 |
+| a14 | 105 | Init105: cleared on 2 | Area105_Init 381 |
+| a15 | 105 | Init105: set 0x50 | Area105_Init 285 |
+| a16 | 105 | Init105: from a byte | Area105_Init 493 |
+| b1 | 106 | Handler0: bit 1 | Area106_Handler0 4454 |
+| b2 | 106 | Handler0: by +0x88 | Area106_Handler0 2963 |
+| b3 | 106 | Handler0: Cond_ByteFE 2 | Area106_Handler0 2633 |
+| b4 | 106 | Flags106: 0xB0000 | Area106_PlaceByFlags 3217 |
+| b5 | 106 | Flags106: + 3 | Area106_PlaceByFlags 1750 |
+| b6 | 106 | Flags106: 0x601 | Area106_PlaceByFlags 1467 |
+| b7 | 106 | Flags106: 0x230000 | Area106_PlaceByFlags 1534 |
+| b8 | 106 | Flags106: 0x301 | Area106_PlaceByFlags 1249 |
+| b9 | 106 | Flags106: flag 0x50 | Area106_PlaceByFlags 6000 |
+| b10 | 106 | Flags106: 0x110000 | Area106_PlaceByFlags 1249 |
+| b11 | 106 | Pair106: the bits swapped | Area106_PlaceByPair 2960 |
+| b12 | 106 | Pair106: | 0x4000 | Area106_PlaceByPair 6000 |
+| b13 | 106 | Pair106: z from x | Area106_PlaceByPair 5962 |
+| b14 | 106 | Pair106: + 6 | Area106_PlaceByPair 3289 |
+| b15 | 106 | Pair106: 0x281 | Area106_PlaceByPair 2711 |
+| b16 | 106 | Pair106: + k | Area106_PlaceByPair 2161 |
+| b17 | 106 | Tail36: state 3 for 2 | Area106_Tail36 582 |
+| b18 | 106 | Tail36: DropIn(entry + 1) | Area106_Tail36 1749 |
+| b19 | 106 | Tail36: kind kept | Area106_Tail36 1742 |
+| b20 | 106 | Tail36: 0xA sets 0x53 | Area106_Tail36 301 |
+| b21 | 106 | Tail36: 0xE clears 0x53 | Area106_Tail36 297 |
+| b22 | 106 | Tail36: 0x11 for 0x10 | Area106_Tail36 591 |
+| b23 | 106 | Step106: Cond_ByteFD ignored | Area106_StepHook 2006 |
+| b24 | 106 | Step106: z 0x248001 | Area106_StepHook 68 |
+| b25 | 106 | Step106: four columns | Area106_StepHook 24 |
+| b26 | 106 | Step106: state 1 | Area106_StepHook 65 |
+| b27 | 106 | Step106: z 0xA8001 | Area106_StepHook 75 |
+| b28 | 106 | Step106: 0x10 and 0xC swapped | Area106_StepHook 86 |
+| b29 | 106 | Step106: 0x268000 in z | Area106_StepHook 32 |
+| b30 | 106 | Step106: rows from 0x16 | Area106_StepHook 25 |
+| b31 | 106 | Step106: x 0x188001 | Area106_StepHook 44 |
+| b32 | 106 | Step106: range a byte | Area106_StepHook 148 |
+| b33 | 106 | Step106: 0x53 for 0x52 | Area106_StepHook 2142 |
+| b34 | 106 | Step106: answers 2 | Area106_StepHook 36 |
+| b35 | 106 | Arm36: kind 0x25 | Area106_ArmTail36 6000 |
+| b36 | 106 | Arm36: state + 1 | Area106_ArmTail36 6000 |
+| b37 | 106 | Step106: 0x258001 | Area106_StepHook 98 |
+| b38 | 106 | Step106: 0xE for 0x53 | Area106_StepHook 32 |
