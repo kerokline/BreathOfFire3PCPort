@@ -611,10 +611,10 @@ void InjectAll() {
                                 // cheats.cpp): order does not matter
     ScenaSc2_Inject();          // round 10 group SC2 (scenario chapter 2's bank, 0x53DDA0..0x5428C0): no module
                                 // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
-    DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
-                                // which all compared the original's arrays (draw_pool.h)
     ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
                                 // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
+    DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
+                                // which all compared the original's arrays (draw_pool.h)
     InjectReport();
 }
 
