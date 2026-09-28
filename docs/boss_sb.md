@@ -4,7 +4,7 @@
 wave one, stage B. 52 functions ours (`src/game/boss_sb.cpp`, shadow
 `boss_sb`), each read to its last instruction with capstone and fuzzed
 through the boss harness ([`boss_harness.md`](boss_harness.md)), 15 `Run`s,
-0 mismatches; CONTROLS_SUMMARY. Fuzz only: no recorded route reaches a boss
+0 mismatches; 124 controls planted, 124 refused by a count, none by a `Fatal`, none equivalent. Fuzz only: no recorded route reaches a boss
 fight. The first group to use the harness's `kSetup` shape (section 3).
 
 Enemy and fight names below are `tools/boss_rows.py --disc`'s (the US disc's
@@ -154,7 +154,8 @@ of behaviour:
   original's `jmp` answers whatever the entry answers).
 - **Past a table ours aborts** with a `Fatal` naming the function, where the
   original jumps through the dword after (round9 doc section 6); nothing
-  reached it.
+  reached it. Likewise where an exit hook's `BossActor_Find` answers null
+  (section 6).
 
 ## 3. The fuzz
 
@@ -164,7 +165,20 @@ runs one):
 
 | Run | Fight, kind | Clones (shape) | `.data` tables swapped | Result (this worktree) |
 |---|---|---|---|---|
-| RESULTS_TABLE |
+| `k03` | 5, 3 | `BossEngineer_Dispatch` (`kDispatch`, `+1` < 12), `_Enter`, `_ActDispatch` (`+2` < 6), `_HitDispatch` (`+2` < 3), `_HitStart`, `_HitStep`, `_Hook` | `BossEngineer_Steps`, `_ActSubs`, `_HitSteps`, `_Hooks` (one word) | 56,000 rounds, 63,752 calls, 0 mismatches |
+| `k04` | 7, 4 | `BossWorker_Dispatch`, `_Enter`, `_Hook` | `BossWorker_Steps`, `_Hooks` | 24,000 rounds, 24,000 calls, 0 |
+| `k05` | 7, 5 | `BossOperator_Dispatch`, `_Enter`, `_Hook`, `_HookHit` (`kEnemyHook`) | `BossOperator_Steps`, `_Hooks` | 32,000, 24,000, 0 |
+| `k08`..`k11` | 8, 8..11 | each kind's `_Dispatch`, `_Enter`, `_Hook` | each kind's `_Steps`, `_Hooks` | 24,000 rounds, 24,000 calls, 0 mismatches each |
+| `b04` | 4 | `Boss04_Setup` (`kSetup`), `_Event` (`kEvent`, its jump table moved into the copy), `_Exit` (`kExit`), `_End` (`kEnd`) | | 32,000, 56,128, 0 |
+| `b05` | 5 | `Boss05_Setup`, `_Event`, `_End`, `_Exit` | | 32,000, 56,120, 0 |
+| `b06` | 6 | `Boss06_Setup`, `_Event`, `_Exit` | | 24,000, 48,424, 0 |
+| `b07` | 7 | `Boss07_Setup`, `_Event`, `_End`, `_Exit` | | 32,000, 24,741, 0 |
+| `b13` | 13 | `Boss13_Setup`, `_End` | | 16,000, 8,000, 0 |
+| `b08`, `b09`, `b10` | 8, 9, 10 | each set-up's `_Setup`, `_End`, `_Exit` | | 24,000 rounds, 40,000 calls, 0 mismatches each |
+
+416,000 rounds in all. Kinds 8..11 run with fight 8 (their code does not read the fight byte; which of set-ups
+8..11 spawns which kind is the data's, [`takeover-queue-bosses.md`](takeover-queue-bosses.md) section 7); kind 3 with
+fight 5 (its step compares the byte with 5); kinds 4 and 5 with fight 7.
 
 Every dispatcher is `kDispatch` with its state byte drawn below its table
 (`+1` below 12; kind 3's `+2` below 6 and 3); every state 0 and kind 3's hit
@@ -204,20 +218,143 @@ three stores land in the compared battle bytes and in the hooks the harness
 logs after the call, and a swapped literal is refused on the first round
 (S1..S8, 8,000 rounds each). `kEnd`, `kExit` and `kEvent` were BH's.
 
-**Coverage** (the originals' calls, this worktree): COVERAGE_TEXT
+**Coverage** (the originals' calls, this worktree): kind 3: every entry of its four tables (`phase 0x4382B0` 688 .. `BareRet` 8,000 through the hook), `BattleEnemy_SetAnimation` 8,000, `AreaMap_Elevation` / `Sprite_SetAnimation` / `Sprite_SetAnimationBank` 2,584 (the step's zero path), `Sprite_ScriptTick` 16,000, `Port_DroppedCall` 1,284; each of kinds 4, 5, 8..11: every entry of its `+1` table (about 650 each) and of its hook table (`BossOperator_HookHit` 2,639 through the hook); set-ups 4..6: `0x446E20` 8,000, the spawn helpers about 8,000 each (the exit hooks' pose path) and `BossActor_ClearBit40` 16,000; set-up 7: `BattleBanner_Add` / `Str_CopyN` 247 (the banner), `0x446E20` 8,000; set-up 13: `0x446DE0` 3,117, `0x446E20` 4,883; set-ups 8..10: `0x446DE0` about 3,100, `0x446E00` about 4,900, the exit hooks' calls 8,000 each. Counts move with the build directory; judge by 0 mismatches and controls refused.
 
-`BOF3X_SHADOW='*'` (every group of every harness): STAR_TEXT
+`BOF3X_SHADOW='*'` (every group of every harness): exit 0 on the final build, every earlier group's fuzz passing, BSB's fifteen `Run`s with 0 mismatches; it passed first time (no silent death).
 
 ## 4. Controls
 
 `controls.py` (the group's scratch script): each control one textual change
 to `boss_sb.cpp` (anchored on strings that occur once), then rebuild, run
 the one `BOF3X_BSB_RUN` it belongs to, restore, and at the end rebuild.
-CONTROLS_INTRO
+Run twice; the table is the second run, on the final seeds. **124 planted, 124 refused**, every one by a count (the planted function's mismatched rounds), at least one in each of the 52 functions (52 names in the table). On the first run eight plants that swapped a dispatcher's table for another kind's crashed both passes (the other table's entries are not recorders in that run, so the real functions ran on the fuzz's garbage): the fuzz's fault, not a refusal. They were replaced by "the table one entry on" (K1, K5, W1, O1, T1, T4, T7, T10), whose entries are all recorders of the run. The thinnest refusals: E8 (27), E12 (57), N4 (78), E5 (95), F1 (109), E4 (133) - the event hooks' phase 1 needs the phase code, the actor, the command kind and the command id together, and the re-read plants (N4, X21, K9, K15) need the disturbance to move the cell in the call.
 
 | # | Function | Plant | Refused |
 |---|---|---|---|
-CONTROLS_TABLE
+| K1 | `BossEngineer_Dispatch` | the table one entry on | 8000 rounds |
+| K2 | `BossEngineer_Dispatch` | the word not passed on | 1284 rounds |
+| K3 | `BossEngineer_Enter` | the hook of kind 4 | 8000 rounds |
+| K4 | `BossEngineer_Enter` | the hit animation table | 8000 rounds |
+| K5 | `BossEngineer_ActDispatch` | the table one entry on | 8000 rounds |
+| K6 | `BossEngineer_HitDispatch` | the table one entry on | 8000 rounds |
+| K7 | `BossEngineer_HitStart` | animation 5 | 8000 rounds |
+| K8 | `BossEngineer_HitStart` | the wait 0x3D | 8000 rounds |
+| K9 | `BossEngineer_HitStart` | Sprite_Current read before the call | 316 rounds |
+| K10 | `BossEngineer_HitStep` | fight 4 for 5 | 1597 rounds |
+| K11 | `BossEngineer_HitStep` | the step 0x10000 | 2584 rounds |
+| K12 | `BossEngineer_HitStep` | the shift count masked to 3 bits | 318 rounds |
+| K13 | `BossEngineer_HitStep` | 0x904AE8 bit 3 | 1899 rounds |
+| K14 | `BossEngineer_HitStep` | the first animation table | 2584 rounds |
+| K15 | `BossEngineer_HitStep` | Sprite_Current of before the calls for +5 / +2 | 188 rounds |
+| K16 | `BossEngineer_HitStep` | the flip inverted | 2583 rounds |
+| K17 | `BossEngineer_HitStep` | the elevation of (z, x) | 2584 rounds |
+| K18 | `BossEngineer_HitStep` | no tick on the count path | 5416 rounds |
+| K19 | `BossEngineer_Hook` | the word's low byte passed on | 4021 rounds |
+| W1 | `BossWorker_Dispatch` | the table one entry on | 8000 rounds |
+| W2 | `BossWorker_Enter` | kind 5's hook | 8000 rounds |
+| W3 | `BossWorker_Enter` | kind 5's cue table | 8000 rounds |
+| W4 | `BossWorker_Hook` | the word's low byte passed on | 4066 rounds |
+| O1 | `BossOperator_Dispatch` | the table one entry on | 8000 rounds |
+| O2 | `BossOperator_Enter` | +8 = 1 | 7948 rounds |
+| O3 | `BossOperator_Enter` | kind 4's hook | 8000 rounds |
+| O4 | `BossOperator_Enter` | state 3 | 7954 rounds |
+| O5 | `BossOperator_Hook` | the word's low byte passed on | 4064 rounds |
+| O6 | `BossOperator_HookHit` | the word +6 | 8000 rounds |
+| O7 | `BossOperator_HookHit` | the source block 0x904B4C | 7941 rounds |
+| T1 | `BossTorast_Dispatch` | the table one entry on | 8000 rounds |
+| T2 | `BossTorast_Enter` | kind 9's hook | 8000 rounds |
+| T3 | `BossTorast_Hook` | the word's low byte passed on | 4066 rounds |
+| T4 | `BossKassen_Dispatch` | the table one entry on | 8000 rounds |
+| T5 | `BossKassen_Enter` | kind 10's hook | 8000 rounds |
+| T6 | `BossKassen_Hook` | the word's low byte passed on | 4066 rounds |
+| T7 | `BossGaltel_Dispatch` | the table one entry on | 8000 rounds |
+| T8 | `BossGaltel_Enter` | the cue table as the animation table | 8000 rounds |
+| T9 | `BossGaltel_Hook` | the word's low byte passed on | 4066 rounds |
+| T10 | `BossDoksen_Dispatch` | the table one entry on | 8000 rounds |
+| T11 | `BossDoksen_Enter` | kind 8's hook | 8000 rounds |
+| T12 | `BossDoksen_Hook` | the word's low byte passed on | 4066 rounds |
+| S1 | `Boss04_Setup` | set-up 5's event hook | 8000 rounds |
+| S2 | `Boss05_Setup` | set-up 4's end hook | 8000 rounds |
+| S3 | `Boss06_Setup` | set-up 4's exit hook | 8000 rounds |
+| E1 | `Boss04_Event` | the phase code plus one | 2313 rounds |
+| E2 | `Boss05_Event` | the phase code plus one | 2318 rounds |
+| E3 | `Boss06_Event` | the phase code plus one | 2327 rounds |
+| E4 | `Boss04_Event` | phase 0 sets bit 1 | 133 rounds |
+| E5 | `Boss04_Event` | round flag bit 0x20 | 95 rounds |
+| E6 | `Boss04_Event` | command kind 5 | 291 rounds |
+| E7 | `Boss04_Event` | command id 0x79 | 275 rounds |
+| E8 | `Boss04_Event` | the id byte, not the word | 27 rounds |
+| E9 | `Boss05_Event` | enemy 1's +0xB0 = 2 | 260 rounds |
+| E10 | `Boss05_Event` | enemy 0's HP 0 | 260 rounds |
+| E11 | `Boss06_Event` | phase 1 keeps the leader bit | 141 rounds |
+| E12 | `Boss06_Event` | the leader down at HP 1 | 57 rounds |
+| E13 | `Boss04_Event` | phase 5 target 0x41 | 335 rounds |
+| E14 | `Boss05_Event` | phase 5 without its test | 183 rounds |
+| E15 | `Boss06_Event` | phase 6 sets bit 2 | 574 rounds |
+| E16 | `Boss04_Event` | the phase code masked to 3 bits | 557 rounds |
+| E17 | `Boss04_Event` | phase 3 as phase 4 | 400 rounds |
+| E18 | `Boss04_Event` | the actor 1 | 295 rounds |
+| N1 | `Boss04_End` | 0x92BF18 = 6 | 3936 rounds |
+| N2 | `Boss05_End` | 0x92BF18 = 9 | 4022 rounds |
+| N3 | `Boss04_End` | 0x904AE5 |= 0x40 | 2994 rounds |
+| N4 | `Boss05_End` | the step written before the call | 78 rounds |
+| N5 | `Boss04_End` | the step up by 2 | 3973 rounds |
+| N6 | `Boss05_End` | bit 1 for the loss | 3947 rounds |
+| N7 | `Boss07_End` | the run 7 | 3951 rounds |
+| N8 | `Boss07_End` | 0x904AE8 |= 0x18 | 2291 rounds |
+| N9 | `Boss07_End` | Music_Track 5 | 3978 rounds |
+| N10 | `Boss07_End` | Draw_PassFlags 1 | 3978 rounds |
+| N11 | `Boss07_End` | 0x92BF18 = 3 on the other way | 3978 rounds |
+| N12 | `Boss07_End` | the step 0x33 on the loss | 3944 rounds |
+| N13 | `Boss13_End` | variable 3 = 0x31 | 8000 rounds |
+| N14 | `Boss13_End` | 0x92BF18 = 4 | 4878 rounds |
+| N15 | `Boss13_End` | the win the other way out | 3122 rounds |
+| N16 | `Boss13_End` | bit 0 for the win | 4042 rounds |
+| N17 | `Boss08_End` | variable 3 = 0x12 | 3184 rounds |
+| N18 | `Boss09_End` | variable 3 = 0x21 | 3184 rounds |
+| N19 | `Boss10_End` | variable 3 = 0x31 | 3184 rounds |
+| N20 | `Boss08_End` | bit 0 for the win | 4060 rounds |
+| N21 | `Boss09_End` | the step 3 on the other way | 4816 rounds |
+| X1 | `Boss04_Exit` | the flip 0 | 3928 rounds |
+| X2 | `Boss05_Exit` | tags 3 and 4 | 8000 rounds |
+| X3 | `Boss04_Exit` | bank 0x5E | 3928 rounds |
+| X4 | `Boss05_Exit` | the pose copied (mode 0) | 4047 rounds |
+| X5 | `Boss04_Exit` | +0x48 = 1 | 3921 rounds |
+| X6 | `Boss05_Exit` | the actor of Find kept past the calls | 580 rounds |
+| X7 | `Boss04_Exit` | +0x5A from +0x58 | 3928 rounds |
+| X8 | `Boss05_Exit` | the loss clears one actor twice | 3953 rounds |
+| X9 | `Boss06_Exit` | actor 5 the flip 0 | 3966 rounds |
+| X10 | `Boss06_Exit` | z from y | 3966 rounds |
+| X11 | `Boss06_Exit` | the loss clears actor 4 twice | 4034 rounds |
+| X12 | `Boss06_Exit` | enemy 0's place | 3966 rounds |
+| X13 | `Boss06_Exit` | actor 5 from enemy 0 | 3966 rounds |
+| X14 | `Boss07_Exit` | actor 2 | 8000 rounds |
+| X15 | `Boss08_Exit` | the flip set | 7971 rounds |
+| X16 | `Boss09_Exit` | no flip | 7971 rounds |
+| X17 | `Boss10_Exit` | actor 3 | 8000 rounds |
+| X18 | `Boss08_Exit` | bank 0x84 | 8000 rounds |
+| X19 | `Boss09_Exit` | animation 1 | 8000 rounds |
+| X20 | `Boss10_Exit` | enemy 1's words | 8000 rounds |
+| X21 | `Boss09_Exit` | the flip before the bank | 348 rounds |
+| S4 | `Boss07_Setup` | set-up 13's end hook | 8000 rounds |
+| S5 | `Boss13_Setup` | the event hook BareRet | 8000 rounds |
+| S6 | `Boss08_Setup` | set-up 9's exit hook | 8000 rounds |
+| S7 | `Boss09_Setup` | set-up 10's end hook | 8000 rounds |
+| S8 | `Boss10_Setup` | set-up 8's exit hook | 8000 rounds |
+| F1 | `Boss07_Event` | 0x904AE8 |= 6 | 109 rounds |
+| F2 | `Boss07_Event` | 0x11 bytes copied | 260 rounds |
+| F3 | `Boss07_Event` | the banner timer 0x1F | 260 rounds |
+| F4 | `Boss07_Event` | 0x8031F3 = 2 | 260 rounds |
+| F5 | `Boss07_Event` | animation 0x2D | 260 rounds |
+| F6 | `Boss07_Event` | the countdown 0x3B | 260 rounds |
+| F7 | `Boss07_Event` | al 0xFE | 306 rounds |
+| F8 | `Boss07_Event` | phase 2 by bit 3 | 364 rounds |
+| F9 | `Boss07_Event` | member 1 the sprite | 247 rounds |
+| F10 | `Boss07_Event` | phase 5 | 260 rounds |
+| F11 | `Boss07_Event` | phase 4 does phase 6 | 423 rounds |
+| F12 | `Boss07_Event` | the step 1 | 260 rounds |
+| F13 | `Boss07_Event` | the countdown not stored | 377 rounds |
+| F14 | `Boss07_Event` | the leader bit kept on phase 1 | 140 rounds |
 
 ## 5. What nothing reached
 
@@ -243,23 +380,23 @@ and whether a scene can lack an actor its exit hook finds by tag
   (`Sprite_Current = Find(tag)` then stores at `+0x48`, `+0x2A`, `+0x58`,
   `+0x5A`, `+0x34..+0x3C`): with no actor carrying the tag the original
   writes near address 0 - BH's spawn writers' defect ([`boss_h.md`](boss_h.md)
-  section 6) in the set-ups' own code. Ours writes where the original does:
-  the stand-in never answers null, so this path is not fuzzed, and ours does
-  not test the answer either (a test would be a divergence of the null case,
-  which the original faults on).
+  section 6) in the set-ups' own code (it faults first inside
+  `Sprite_SetAnimationBank`, which reads `Sprite_Current`). Ours aborts with
+  a `Fatal` naming the hook and the tag (`FindActor`), as BH's spawn writers
+  do; the stand-in never answers null, so the path is not fuzzed.
 - **Kind 3's shift** `1 << (+5 & 0x1F)` into a byte: a slot `+5` of 8 or more
   sets no bit in `0x904AAD`. Enemy slots are 0..7, so only a corrupt `+5`
   reaches it; kept.
 - **The event hooks read the command `[0x904B40]` without a test**: phase 1
-  dereferences it whenever the actor is 0 and the kind 4. The battle engine
-  sets it for every command (battle_damage.md); an event battle with no
-  command yet at phase 1 would read through a stale or null pointer. Not
-  reached by any reading here.
+  dereferences it whenever the actor is 0 and the kind 4. Whether the
+  engine always sets it before phase 1 was not read; a null or stale
+  pointer there would fault or read garbage. Ours reads it as the original
+  does.
 - **`Boss08_Exit` .. `Boss10_Exit` copy enemy 0's pose words onto actors 0,
   1 and 2 alike** (`0x93B9B8` / `0x93B9BA` in all three), where the set-ups
   4..6 pose each actor from its own enemy. Kept as read; whether that is
-  intended (each of set-ups 8..10 has one enemy, the tool's rows: one kind
-  per fight) is the data's, not the code's.
+  intended (enemy 0 may be each fight's only enemy) is the formation data's,
+  not read here - a question for the owner, not a defect until answered.
 
 ## 7. Calls across groups
 
