@@ -70,7 +70,7 @@ rule ([`README.md`](README.md)) here too.
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
 | I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | **built 2026-09-27..28** in round ten's six waves - every area overlay of worlds 0..4 ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) |
-| I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | open; planned and cut in [`takeover-queue-bosses.md`](takeover-queue-bosses.md), tool `tools/boss_rows.py` (owner, 2026-09-28) |
+| I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
 
 ---
 

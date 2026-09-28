@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-28 evening, round ten merged as PR #28; its cleanup half done from a cloud session - the game-side half and round eleven next)
+**Status:** IN PROGRESS (2026-09-28 night, round eleven merged on its branch and its tip's live checks run; the round's cleanup and the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,23 +14,21 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**5,706 functions are ours** (`inject: 5706 ours, 0 left original`);
-round ten is on `main` (PR #28, `3e8d531`), and its cleanup's first half
-on `claude/round-10-cleanup-handoff-qtwcrk` (item 0). **Round ten is complete**
-([`takeover-queue-round10.md`](takeover-queue-round10.md)): six waves,
-2,195 functions in 47 groups, 3,510 -> 5,706. The scenario round (I24)
-took every chapter bank 0..19, the shared helpers, the call tables'
-block and the engine callees they reach (SX, SX2) through
-[`scenario_harness.md`](scenario_harness.md); the area round (I25) took
-every area overlay of worlds 0..4 through
-[`area_harness.md`](area_harness.md). Every group 0 mismatches, every
-control refused or an equivalent with a refused near variant (one
-exception explained, section 16); everything fuzz-only - the live check
-per chapter and per area is the owner's. Merges are verified in a
-detached worktree with its own build (round10 doc section 10). The
-round's debts are the end of section 19; round eleven (the boss round)
-is staged (item 0b). The rest is [`STATUS.md`](STATUS.md)'s wave table;
-do not copy it here.
+**6,237 functions are ours** (`inject: 6237 ours, 0 left original`);
+`main` is round ten plus its cleanup (PR #28, PR #29, `6b70e71`), and
+**round eleven, the boss round, is complete on
+`phase-3/capture-round-eleven`** ([`takeover-queue-round11.md`](takeover-queue-round11.md)):
+two waves, 531 functions in 11 groups, 5,706 -> 6,237, every BOSS
+overlay's code ours through [`boss_harness.md`](boss_harness.md). Round
+ten before it took every chapter bank and every area overlay
+([`takeover-queue-round10.md`](takeover-queue-round10.md)); round nine
+every spell. Every group 0 mismatches, every control refused or an
+equivalent with a refused near variant; everything fuzz-only - the live
+check per chapter, per area and per fight is the owner's. Merges are
+verified in a detached worktree with its own build. Round eleven's debts
+are its doc's section 7 (item 0); round ten's are
+[`round-10-cleanup.md`](round-10-cleanup.md) (item 0a). The rest is
+[`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
 `r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
@@ -46,7 +44,29 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-0. **Round ten's debts** - the list is [`round-10-cleanup.md`](round-10-cleanup.md),
+0. **Round eleven, the boss round, is complete on its branch** (tip
+   `639ea9c` before the record's commits; [`takeover-queue-round11.md`](takeover-queue-round11.md)):
+   BH alone in stage A built the harness, BSA..BSE then BSF..BSJ ran in
+   parallel, every merge verified by its own build and `'*'` in the
+   detached worktree; 531 functions, 1,494 controls. **Next, in order:**
+   the tip's live checks written into the round doc's section 8 (run at
+   the end of 2026-09-28: the hash's ours side against `r9_orig` and the
+   combat A/B from a launcher copy with `cheat.steal=0`; the boss band is
+   off both routes, so both are expected at their baselines); the PR to
+   `main`; then the round's debts, section 7 there - the harness
+   fold-backs (six shapes every stage-B group worked around), the
+   rebinding pass (the round-ten form; the inbound list is there), the
+   defects numbered (the common classes collapsed as round nine's were;
+   set-up 25's HP/AP bytes is a fix candidate for the owner, set-ups
+   8..10's posing a question for them), `boss_rows.py --no-write`, the
+   owner's open set-ups, the eleven merged `phase-3/round11-*` branches
+   and agent worktrees removed. A cloud session can do all but the live
+   parts, as round ten's cleanup did. The routine that ran both waves:
+   `merge_group11.sh <group> <scratch>` (`MOD=boss_<group>`) and the
+   filled briefs in the session-`08306a9f` scratchpad
+   (`.../08306a9f-084c-46a9-903b-012248764b0f/scratchpad/`), the
+   template `analysis/round11_wave1_brief.md`.
+0a. **Round ten's debts** - the list is [`round-10-cleanup.md`](round-10-cleanup.md),
    its status header says what landed and what is left. **Landed
    2026-09-28 on `claude/round-10-cleanup-handoff-qtwcrk`** (a cloud
    session without the game files; verified by the i686 build,
@@ -82,42 +102,6 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    (also `verify/` and `play/`). Every agent worktree and
    `phase-3/round10-*` branch is merged and removed; round ten is `main`
    (PR #28, `3e8d531`).
-0b. **Round eleven is running: the boss round**, on
-   `phase-3/capture-round-eleven` from `main` at `6b70e71`. **Wave one is
-   merged** (2026-09-28 evening, tip `5d295d7`, **5,990 ours**): BH
-   (`79dafce`: the harness `boss_harness.*` + [`boss_harness.md`](boss_harness.md),
-   the 20 shared helpers `boss_h`, the six spawn helpers `boss_spawn`, the
-   tables and hooks named), then BSD, BSB, BSA, BSC, BSE in merge order
-   (`e4b9673`, `8bda604`, `68999ff`, `c34997c`, `5d295d7`), each verified in
-   the detached worktree - 284 functions, every group 0 mismatches, 88 +
-   115 + 124 + 139 + 145 + 145 controls with every one refused or an
-   equivalent with a refused near variant. BH corrected the plan:
-   `0x904B64` is called once from `BattleEnd_AwaitMemberTasks`, not per
-   frame, and the enemy objects are at `0x93B960`, `0x93B9E0` their
-   working view. **Owed to the harness at the round's end** (every stage-B
-   group worked around them in its own fuzz file; fold back once no agent
-   builds against it): the kind dispatchers must forward the caller's
-   stack word and return the entry's eax (`Port_DroppedCall` sits in the
-   `+1` tables); the standard disturbance's case 11 ignores `phase_span`
-   (BSD); `Port_DroppedCall` with 0 arguments, `DataTable` order with
-   `BareRet` in tables of different `nargs` (BSA); louder stand-ins for
-   `Msg_OpenScript`, `Scenario_CallA`, `Battle_OpenMsgWindow`, `0x446DE0`
-   (BSC), `Battle_RemoveFromTurnOrder` (BSE). Open for the owner: which of
-   fights 2 and 3 is Nue's area 22 or 23; B46; set-ups 8..10 posing every
-   actor from enemy 0's words (BSB); set-up 25's HP/AP saved as bytes and
-   restored as words (BSE, a fix candidate). **Wave two (BSF..BSJ) runs
-   from `5d295d7`**; merge each with `merge_group11.sh <group> <scratch>`
-   (`MOD=boss_<group>`) from the session-`08306a9f` scratchpad, where the
-   briefs `brief_<group>.md` are. The six `phase-3/round11-*` branches
-   and agent worktrees of wave one are merged and can go. Plan and cut:
-   [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
-   `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)); IDEAS I26. 525
-   functions in eleven groups, two waves (BH + BSA..BSE, then BSF..BSJ);
-   before the first cut: name the two tables and the kind-3 dispatcher,
-   write `boss_harness` from `magic_harness`, prove it on BH and BSA. Brief
-   drafted at `analysis/round11_wave1_brief.md` (group lines
-   `analysis/round11_wave1_groups.tsv`, gitignored); it names the round-ten
-   tip and wants the harness's doc filled in once it exists.
 1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
    order to choose:
    - **Rebinding and `known-defects.md` are done** (2026-09-27 afternoon):
@@ -376,10 +360,11 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Nothing uncommitted. Round ten is merged (PR #28); the cleanup branch
-`claude/round-10-cleanup-handoff-qtwcrk` (item 0) is pushed and wants the
-game-side checks before its PR. The wave briefs are in
-`analysis/` (gitignored). **The other session works in the main checkout
+Nothing uncommitted. Round eleven is complete on
+`phase-3/capture-round-eleven` (the owner pushes; the PR to `main` is
+next, after its section-8 live checks are written in). The wave briefs
+are in `analysis/` (the template) and the session-`08306a9f` scratchpad
+(the filled ones). **The other session works in the main checkout
 on this branch**: check `git status` before a commit, and never build in
 `build/` while its game runs (merges do not need to).
 
