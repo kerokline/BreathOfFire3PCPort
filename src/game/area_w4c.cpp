@@ -121,7 +121,7 @@ void EffectA2(const char* who, unsigned char state) {
 
 // Area 174's effects of kinds 0xA1 and 0xA3 (handlers 10 and 19):
 // Effect_FindFree into the running object's +0xB; none: the script back 2. A
-// slot: +0 = 1, kind +5, +6 = 1, +7 = 0, +0xB = 1, dword +0x2C = the running
+// slot: +0 = 1, kind +5, +6 = 1, +7 = 0, +0xB = 1, dword +0x4C = the running
 // object.
 void EffectOnObject(const char* who, unsigned char kind) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
@@ -136,7 +136,7 @@ void EffectOnObject(const char* who, unsigned char kind) {
     EffectAt(who, cur[0xB])[6] = 1;
     EffectAt(who, cur[0xB])[7] = 0;
     EffectAt(who, cur[0xB])[0xB] = 1;
-    SetLong(EffectAt(who, cur[0xB]) + 0x2C, static_cast<std::int32_t>(Key(cur)));
+    SetLong(EffectAt(who, cur[0xB]) + 0x4C, static_cast<std::int32_t>(Key(cur)));
 }
 
 // The running script's bytes as areas 174 and 198's handlers read them: the

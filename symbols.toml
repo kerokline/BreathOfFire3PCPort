@@ -63698,7 +63698,7 @@ ret = "void"
 params = "void"
 status = "evidence"
 impl = "src/game/area_w4c.cpp"
-evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428C10..0x428C90 (0x81 bytes), cdecl: area 174 +0x3C[10]: Effect_FindFree to +0xB; none: script back 2; a slot: +0 = 1, +5 = 0xA1, +6 = 1, +7 = 0, +0xB = 1, dword +0x2C = Sprite_Current (PSX twin 0x801F43FC, names/area_records.toml). docs/area_w4c.md."
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428C10..0x428C90 (0x81 bytes), cdecl: area 174 +0x3C[10]: Effect_FindFree to +0xB; none: script back 2; a slot: +0 = 1, +5 = 0xA1, +6 = 1, +7 = 0, +0xB = 1, dword +0x4C = Sprite_Current (PSX twin 0x801F43FC, names/area_records.toml). docs/area_w4c.md."
 
 [[func]]
 pc = 0x428CA0
