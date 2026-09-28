@@ -183,6 +183,7 @@
 #include "game/area_w1b.h"
 #include "game/scena_sc9b.h"
 #include "game/area_w1c.h"
+#include "game/area_w2b.h"
 #include "game/scena_sc15.h"
 #include "game/scena_sc2.h"
 #include "game/scena_sc13.h"
@@ -624,6 +625,10 @@ void InjectAll() {
     AreaW2a_Inject();           // round 10 group AR2A (world 2, areas 76..82 and 84, 0x40EB90..0x40F720): its clones'
                                 // calls re-aimed at the area harness's recorders, area 79's state table swapped for
                                 // the fuzz only; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW2b_Inject();           // round 10 group AR2B (world 2, areas 85..88, 0x40F720..0x411F10): its clones' calls
+                                // re-aimed at the area harness's recorders, the world maps' state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 66 (DIVERGENCE.md, cheats.cpp):
                                 // order does not matter
     ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
                                 // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
