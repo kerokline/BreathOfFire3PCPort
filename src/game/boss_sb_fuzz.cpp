@@ -70,7 +70,7 @@ void SeedEvent() {
     Mem(at::kCommandKind)[0] = Byte(bh::Often() ? 4 : BH_PICK(3, 5, 0x84, 0, 0x44));
     unsigned char* const command = bh::SpriteRecord(bh::Next()) + 4 * (bh::Next() % 16);
     bh::SetPointer(at::kCommand, command);
-    SetWord(command + 2, bh::Often() ? BH_PICK(0x78, 0x78, 0x77, 0x79, 0x178, 0xF8, 0) : bh::Next() & 0xFFFF);
+    SetWord(command + 2, bh::Often() ? 0x78 : bh::Half() ? BH_PICK(0x77, 0x79, 0x178, 0xF8, 0x7078, 0) : bh::Next() & 0xFFFF);
     Mem(0x904AA8)[0] = Byte(bh::Half() ? bh::Next() | 0x40 : bh::Next() & ~0x40u);
     Mem(at::kTarget)[0] = Byte(bh::Half() ? 0 : BH_PICK(1, 3, 0x40, 0x80, 0xFF));
     Mem(at::kPoseBits)[0] = Byte(bh::Half() ? bh::Next() | 1 : bh::Next() & ~1u);
@@ -281,7 +281,7 @@ bool Wants(const char* run) {
     return only == nullptr || *only == 0 || std::strcmp(only, run) == 0;
 }
 
-constexpr unsigned kRounds = 6000;
+constexpr unsigned kRounds = 8000;
 
 void RunKind(const char* run, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables,
              void (*seed)(unsigned), void (*args)(unsigned, U*), int fight, int kind) {
