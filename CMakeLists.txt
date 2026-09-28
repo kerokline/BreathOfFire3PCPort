@@ -436,7 +436,9 @@ add_library(bof3x SHARED
   src/game/area_w3f.cpp
   src/game/area_w3f_fuzz.cpp
   src/game/area_w3e.cpp
-  src/game/area_w3e_fuzz.cpp)
+  src/game/area_w3e_fuzz.cpp
+  src/game/area_w3d.cpp
+  src/game/area_w3d_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
