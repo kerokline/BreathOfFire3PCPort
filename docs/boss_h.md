@@ -111,6 +111,10 @@ Coverage (the originals' calls, `torast`): `BossTorast_DrawRing` 12,000,
 1,994, `BossActor_ClearBit40` 4,000, `BossActor_Clear` 4,000. Counts are this
 worktree's (they move with the build directory; judge by 0 mismatches).
 
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final
+build): exit 0, BH's four `Run`s with the counts above; it passed first time
+both times it was run (no silent death).
+
 ## 4. Controls
 
 `python controls.py` (the group's scratch script): each control one textual change to ours, anchored on a string that occurs once, then rebuild, run (`BOF3X_SHADOW=boss_h` with `BOF3X_BH_RUN` its run, or `boss_spawn`), restore, rebuild. Run twice; the table is the second run, on the final seeds. **88 planted, 86 refused**: 83 by a count (the rounds column is the planted function's mismatched rounds), three by a `Fatal` (H36, H37, H37b: a dispatcher reading the wrong state byte finds it past its table in the rounds where the seed leaves that byte random, and aborts - loud, but a Fatal proves less than a count); **two equivalent**, each with a near variant refused: H6 (`BossActor_ClearBit40(0x100)`: the helper reads the tag's low byte, so 0x100 is 0 - no input can tell them apart; H6b refused) and H17 (`BossMap_SetCorners` with i and j swapped writes the same four cells with the same dword - the set is symmetric; H17b, the diagonal only, refused). The thinnest refusals are the re-read plants (H11, H14, H40, H44, H58: 83..357 rounds, the disturbance moving `Sprite_Current` or `0x939AD8` in a call) and S6 (the "none" answer, 1,323 rounds once the seed took the tag away in a third of the rounds: 12 before).
