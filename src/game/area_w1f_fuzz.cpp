@@ -210,7 +210,12 @@ unsigned char* RunningRecord(U v) { return v & 1 ? ah::PartyOf(static_cast<unsig
 
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 
-U CommitEffect(const U* a, U answer) { Advance(a[1] & 0xFF); return answer; }
+// Gfx_CommitPrim moves the cursor by the size; one call in five by another
+// amount (louder than the real one, so a cursor cached across it shows).
+U CommitEffect(const U* a, U answer) {
+    Advance(ah::Noise() % 5 ? a[1] & 0xFF : (a[1] & 0xFF) + 4 * (1 + ah::Noise() % 4));
+    return answer;
+}
 // The primitive setters write the primitive's bytes, so a store the caller
 // makes before the call (where the original makes it after) shows.
 U PolyEffect(const U* a, U answer) {
@@ -322,11 +327,13 @@ U EffectSlotEffect(const U* a, U answer) {
 #define W1F_THEIRS(name) #name, KeyOf(name), KeyOf(name)
 const ah::Callee kCallees[] = {
     // the group's own, called directly
-    {W1F_OURS(Area75_ResetPresses), 0, {}, ah::Answer::kPhase, 0, 0, {}, &ResetEffect},
-    {W1F_OURS(Area75_PhaseRun), 0, {}, ah::Answer::kPhase, 0, 0, {}, &PhaseRunEffect},
+    // kGarbage, not kPhase, where an effect is listed: the harness's kPhase
+    // recorder returns before it runs a callee's effect
+    {W1F_OURS(Area75_ResetPresses), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ResetEffect},
+    {W1F_OURS(Area75_PhaseRun), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &PhaseRunEffect},
     {W1F_OURS(Area75_DrawCounters), 0, {}, ah::Answer::kPhase, 0, 0},
-    {W1F_OURS(Area75_OtherPress), 0, {}, ah::Answer::kPhase, 0, 0, {}, &MovesCells},
-    {W1F_OURS(Area75_PlayerPress), 0, {}, ah::Answer::kPhase, 0, 0, {}, &MovesCells},
+    {W1F_OURS(Area75_OtherPress), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
+    {W1F_OURS(Area75_PlayerPress), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
     {W1F_OURS(Area75_EarlyPress), 0, {}, ah::Answer::kPhase, 0, 0},
     {W1F_OURS(Area75_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // named, beyond the standard set
