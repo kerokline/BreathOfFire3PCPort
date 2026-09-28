@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-27 night) - wave one merged (3,685 ours); wave two staged, eight groups, 419 functions
+**Status:** IN PROGRESS (2026-09-28) - waves one and two merged: 592 functions, 3,510 -> 4,102 ours; wave three to stage
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -224,3 +224,89 @@ section 4); a small engine group for the fifteen raw-address callees
 nobody owns (section 3). Area: **AR0A, AR0B, AR0C** (section 3's table;
 area 33 has the world-map route as a live check). About eight groups
 again; the scenario groups are one stage now that the harness exists.
+
+## 7. Wave two merged (2026-09-27 night to 2026-09-28)
+
+All eight groups merged into `phase-3/capture-round-ten`, one at a time,
+each with the build, the group's shadow and `BOF3X_SHADOW='*'` headless
+(exit 0), `tomllib` no duplicate `pc`, `ledger_check` 0 errors. **417
+functions taken, 3,685 -> 4,102 ours.** No agent was cut this wave; the
+first to report (CALLS) finished in half an hour, the last (SC5) in an
+hour. Counts are each group's in its worktree.
+
+| Group | Merge | Taken | Rounds | Controls planted / refused | Not refused | Doc |
+|---|---|--:|--:|---|---|---|
+| CALLS | `eed855c` | 98 | - | 106 / 106 | | [`scena_calls.md`](scena_calls.md) |
+| SC9a | `c436bfa` | 22 | 132,000 | 86 / 86 | | [`scena_sc9a.md`](scena_sc9a.md) |
+| AR0A | `2b09501` | 49 | 294,000 | 98 / 97 | 1 equivalent (two pose tables with identical bytes), variant refused | [`area_w0a.md`](area_w0a.md) |
+| SC6 | `f58d38f` | 48 | 288,000 | 92 / 92 | | [`scena_sc6.md`](scena_sc6.md) |
+| AR0B | `ba9ac60` | 61 | 256,000 | 94 / 94 | | [`area_w0b.md`](area_w0b.md) |
+| AR0C | `d36a5ff` | 52 | 312,000 | 123 / 122 | 1 equivalent (sign vs zero extension before `<< 16`), variant refused | [`area_w0c.md`](area_w0c.md) |
+| SC7 | `c13d392` | 52 | 312,000 | 58 / 57 | 1 equivalent (a pool pointer's index the same by 0xA0 or 0xA4), variant refused | [`scena_sc7.md`](scena_sc7.md) |
+| SC5 | `8e83993` | 35 | 700,000 | 110 / 110 | | [`scena_sc5.md`](scena_sc5.md) |
+
+**A scaffolding ceiling fell at SC5's merge**: `detour.cpp`'s
+owned-function table held 4,096 and the merge made 4,102; the self-test
+died with `FATAL: Scena05_Object06: more than 4096 injected functions`
+after SC5's own fuzz had passed. Raised to 16,384 (`b5800c9`; about
+10,200 real functions in the exe). The other session's `368b84f` had left
+`DIVERGENCE.md`'s status line one short of DIV-0058; fixed at `8e4fcd7`
+(SC6 fixed it too; the merge took one).
+
+**Fuzz-only, again.** AR0C read the combat and world-map routes' traces:
+they reach none of its 52 (only round seven's and eight's functions in
+areas 29 and 33 are on them), so the route A/Bs would show only that
+nothing else moved. Not run this wave; worth one run of
+`validate_combat.sh` and the world-map A/B when the owner is away, since
+the base now also carries `368b84f`'s menu and glyph changes.
+
+**What the wave found:**
+
+- **Chapters 6, 7 and 8 share no code.** The plan's "7 and 8 run 6's
+  shared tail" was the walk over-reading chapter 6's jump table
+  `0x6611A8` past its 4 entries into `Scena07_Hooks`, and chapter 7's
+  cell table into `Scena08_Hooks` (SC6, SC7 independently). Each chapter
+  has its own vtable, scenes and runs.
+- **The CALLS block is party changes only**: 100 entries, every one a
+  party change (join, drop, reorder, palette reload); two read the
+  caller's `ecx` (the entry index) through a naked entry and overwrite
+  the return address at a member count above 4 (ours aborts after doing
+  what the original does).
+- **`pairs_propagated.json` pairs jump-table cases** as functions:
+  `0x5455A0` (SC3), `0x54AAD0` (nine PSX addresses, SC6), `0x551E40`,
+  `0x553070` (SC7). One fix for the pairing tool, owed.
+- **The area tool's two gaps** (AR0A, AR0C): its start rule wants a
+  padding or `ret` byte before a start, so `0x401000` - the first byte of
+  `.text`, area 0's choice 0 - is in no list; and its tail-kind scan reads
+  immediates only, so a kind armed through a register (`mov al, 1 ... mov
+  [0x9039F3], al`, area 27's choice 0 arming `0x403570`) is a gap. Both
+  owed to `tools/area_rows.py`.
+- **Area 16 is area 33's world-map code compiled again** with its own
+  tables (a capstone compare differs only in jump targets and table
+  addresses), plus one field hook of its own; the eleven world-map areas
+  are eleven copies on the disc and mostly one here (DA), but not all.
+- **Raw-address callees nobody owns**, now about twenty across the waves:
+  section 3's fifteen plus `0x534030` (removes a member), `0x533E00`
+  (reloads the members' palettes), `0x591BC0` / `0x591BE0` / `0x591B60`
+  (money take, money give, inventory take), `0x498DE0` (the level-up
+  routine, round nine's boundary), `0x591900`. A group for wave three.
+- **Inbound calls from later blocks**: `0x55BBB1` (chapter 10, SC9b) into
+  `Scena07_PartyHas89State2`; area 77's handler `0x40F090` into
+  `Scena06_Leap` (the four starts chapter 6's walk missed). For the
+  rebinding pass.
+
+**Owed by the wave:** the defects' numbering (`known-defects.md`) for
+both waves' latent defects; the rebinding pass; the two `area_rows.py`
+fixes; the pairing tool's jump-table cases; the route A/Bs above.
+
+## 8. Wave three (to stage)
+
+Scenario: SC2a + SC2b (chapter 2, 71 functions - one group or two),
+SC9b (63), SC13 (51), SC15 with SC16's one leftover (29), and **SX**, the
+engine callees nobody owns (about twenty, section 7; read each whole,
+some may belong to larger engine units - decline those as SE did).
+SC17 (chapters 17..19, 60 starts none of which the walk reached) wants
+one reading before it is a group: the plan says stubs, the tool says 4.9
+KiB of code. Area: world 1's first groups as `area_rows.py --groups` cuts
+them (AR1A 48, AR1B 55 with the world-map route in area 45, then AR1C
+on). About eight groups, ~400 functions; every group one stage.
