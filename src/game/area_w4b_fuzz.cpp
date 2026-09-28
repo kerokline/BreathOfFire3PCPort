@@ -498,10 +498,30 @@ void Disturb(U h) {
 void SeedAnswer() {
     if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 3, 3, 4, 0xFF, 0x80, 0x81, 0x7F));
 }
-// A tail state from `states`, or anything.
-void SeedState(const std::uint32_t* states, unsigned n) {
+// A tail state from `states`, or anything; answered as a signed state.
+int SeedState(const std::uint32_t* states, unsigned n) {
     B(at::kTailState) = static_cast<unsigned char>(ah::Often() ? ah::Pick(states, n) : ah::Next());
+    return static_cast<signed char>(B(at::kTailState));
 }
+// A byte a state waits on: its value two times in three (`on`), else one
+// either side of it or anything.
+unsigned char Waited(unsigned char on) {
+    if (ah::Often()) return on;
+    switch (ah::Next() % 3) {
+    case 0: return static_cast<unsigned char>(on + 1);
+    case 1: return static_cast<unsigned char>(on - 1);
+    default: return static_cast<unsigned char>(ah::Next());
+    }
+}
+// A word timer on or beside `on`.
+unsigned WaitedWord(unsigned on) {
+    if (ah::Often()) return on;
+    return ah::Half() ? on + (ah::Half() ? 1u : 0xFFFFu) : ah::Next() & 0xFFFF;
+}
+// Field_Request 2 or not, half and half.
+void SeedRequest() { Field_Request = static_cast<unsigned char>(ah::Half() ? 2 : AH_PICK(0, 1, 3, 5, 0x82)); }
+// The DA wait word 0 two times in three.
+void SeedWait() { SetWord(ah::Mem(at::kWaitWord), ah::Often() ? 0 : AH_PICK(1, 0x100, 0xFFFF)); }
 // A 16.16 word with the high word `high` and any low word.
 U At16(U high, U low) { return (high & 0xFFFF) << 16 | (low & 0xFFFF); }
 // A high word on or beside [lo, lo + 3): each inside, one either side, a
@@ -565,9 +585,11 @@ void Seed168(unsigned k) {
     case k168Focus: case k168KeyC: case k168KeyD: case k168Flag8F: case k168Arm10: case k168Msg: SeedAnswer(); break;
     case k168Tail: {
         static const std::uint32_t kStates[] = {0, 1, 10, 11, 12, 0, 1, 10, 11, 12, 2, 9, 13, 0xFF, 0x80, 0x8C};
-        SeedState(kStates, sizeof kStates / sizeof kStates[0]);
-        if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3, 0x82));
-        if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(1, 2, 0, 3, 0x81, 0x82));
+        const int state = SeedState(kStates, sizeof kStates / sizeof kStates[0]);
+        SeedRequest();
+        if (state == 11) B(at::kCounter0) = Waited(1);
+        else if (state == 12) B(at::kCounter0) = Waited(2);
+        else if (ah::Half()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(1, 2, 0));
         break;
     }
     default: break;
@@ -585,8 +607,8 @@ void Seed169(unsigned k) {
     case k169Tail: {
         static const std::uint32_t kStates[] = {0, 1, 2, 3, 0, 1, 2, 3, 4, 0xFF, 0x80, 0x83};
         SeedState(kStates, sizeof kStates / sizeof kStates[0]);
-        if (ah::Often()) SetWord(ah::Mem(at::kWaitWord), ah::Half() ? 0 : AH_PICK(1, 0x100, 0xFFFF));
-        if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3, 0x82));
+        SeedWait();
+        SeedRequest();
         break;
     }
     default: break;
@@ -609,11 +631,23 @@ void Seed170(unsigned k) {
     case k170Tail: {
         static const std::uint32_t kStates[] = {0,  1,  5,  6,  10, 11, 15, 16, 20, 21, 25, 26, 29, 30, 40, 41, 42, 43, 44, 45,
                                                 50, 52, 53, 55, 60, 2,  31, 51, 54, 59, 61, 62, 0xFF, 0x80, 0xBC};
-        SeedState(kStates, sizeof kStates / sizeof kStates[0]);
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x24, 0x44, 0x64, 0, 0x23, 0x25, 0x43, 0x65, 1, 0x80));
-        if (ah::Often()) SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 0xFF, 0, 2, 0x101, 0x1FF, 0xFFFF, 0x1E));
-        if (ah::Often()) B(at::kKind2Hold) = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
-        if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 2, 1, 3, 0x80));
+        const int state = SeedState(kStates, sizeof kStates / sizeof kStates[0]);
+        // the counter each wait wants: 0x24 for 1 / 6, 0x44 for 11 / 16, 0x64
+        // for 21 / 26, 0 for 29 / 30
+        switch (state) {
+        case 1: case 6: B(at::kCounter3) = Waited(0x24); break;
+        case 11: case 16: B(at::kCounter3) = Waited(0x44); break;
+        case 21: case 26: B(at::kCounter3) = Waited(0x64); break;
+        case 29: case 30: B(at::kCounter3) = Waited(0); break;
+        default: B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x24, 0x44, 0x64, 0, 1)); break;
+        }
+        // the timer: 1 or 0xFF (state 41), 1 (43 / 44 count down to 0)
+        if (state == 41) SetWord(ah::Mem(at::kTailTimer), ah::Half() ? WaitedWord(1) : WaitedWord(0xFF));
+        else if (state == 43 || state == 44) SetWord(ah::Mem(at::kTailTimer), WaitedWord(1));
+        else SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 0xFF, 0, 0x1E));
+        B(at::kKind2Hold) = static_cast<unsigned char>(ah::Often() ? 0 : ah::Next() | 1);
+        if (state == 53) Field_Request = static_cast<unsigned char>(ah::Often() ? 0 : AH_PICK(1, 2, 0x80));
+        else SeedRequest();
         break;
     }
     case k170Step:
@@ -662,10 +696,10 @@ void Seed171(unsigned k) {
     case k171Tail: {
         static const std::uint32_t kStates[] = {0, 1, 2, 3, 10, 20, 21, 0, 1, 2, 3, 10, 20, 21, 4, 9, 11, 19, 22, 0xFF, 0x80, 0x95};
         SeedState(kStates, sizeof kStates / sizeof kStates[0]);
-        if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(3, 3, 2, 4));
-        if (ah::Often()) SetWord(ah::Mem(at::kWaitWord), ah::Half() ? 0 : AH_PICK(1, 0x100, 0xFFFF));
-        if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3, 0x82));
-        if (ah::Often()) B(at::kLeader137) = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
+        Cond_ByteFD = Waited(3);
+        SeedWait();
+        SeedRequest();
+        B(at::kLeader137) = Waited(0);
         break;
     }
     case k171Step:
@@ -714,7 +748,7 @@ void Seed172(unsigned k) {
     case k172Tail: {
         static const std::uint32_t kStates[] = {0, 1, 5, 6, 0, 1, 5, 6, 2, 3, 4, 7, 0xFF, 0x80};
         SeedState(kStates, sizeof kStates / sizeof kStates[0]);
-        if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x14, 0x14, 0x13, 0x15, 0x94));
+        B(at::kCounter3) = Waited(0x14);
         break;
     }
     case k172Step:
