@@ -221,7 +221,8 @@ U ElevationEffect(const U*, U answer) {
         unsigned char* const e = ah::Mem(at::kEffectObjects + ((n >> 4) % 4) * at::kEffectStride);
         SetLong(e + 0x34, static_cast<std::int32_t>(n));
     }
-    if (n % 5 == 0) return (answer & 0xFFFF0000u) | AH_PICK(0x7FFF, 0x8000, 0xFFFF, 0, 0xFE00, 0x7E00);
+    static const U kEdges[] = {0x7FFF, 0x8000, 0xFFFF, 0, 0xFE00, 0x7E00};
+    if (n % 5 == 0) return (answer & 0xFFFF0000u) | kEdges[(n >> 24) % 6];
     return answer;
 }
 // Effect_FindFree: a slot of the first four or none (0xFF); the calls after it
@@ -304,8 +305,11 @@ U PatchEffect(const U* a, U answer) {
 // Flags_Set / Flags_Clear move the chapter byte now and then (the init reads
 // it after the patch chain).
 U MovesChapter(const U*, U answer) {
+    // (from Noise only: an effect runs on both passes, and AH_PICK draws on the
+    // harness's Next(), which would shift every later draw of one pass)
+    static const signed char kChapters[] = {10, 11, 0, 0x7F, -0x80, 9, 12};
     const U n = ah::Noise();
-    if (n % 4 == 0) Cond_ByteFA = static_cast<signed char>(AH_PICK(10, 11, 0, 0x7F, 0x80, 9, 12));
+    if (n % 4 == 0) Cond_ByteFA = kChapters[(n >> 8) % 7];
     return answer;
 }
 const ah::Callee kCallees128[] = {
