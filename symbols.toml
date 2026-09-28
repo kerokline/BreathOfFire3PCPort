@@ -67680,7 +67680,7 @@ name = "Boss_SetupTable"
 ctype = "unsigned long"
 count = 56
 status = "evidence"
-evidence = "pe_disasm 2026-09-28 (round eleven group BH): Battle_InitBossEncounter 0x4942A0 calls 0x494500, then jmp [eax*4 + 0x656954] at 0x4942AC with eax the event-battle byte 0x904AAA: 56 set-ups by fight id, entry 0 the bare ret Boss_Nop, every other entry a function of the boss band 0x437A00..0x441000 that stores the three hooks BattleHook_End / _Exit / _Event and returns (tools/boss_rows.py, docs/boss-rows.md). The PSX's Boss_EntryTable 0x800B2048 (the sibling's docs/loader_records/BOSS.md section 3), entered by one jalr. docs/takeover-queue-bosses.md section 1.2."
+evidence = "pe_disasm 2026-09-28 (round eleven group BH): Battle_InitBossEncounter 0x4942A0 calls 0x494500, then jmp [eax*4 + 0x656954] at 0x4942AC with eax the event-battle byte 0x904AAA: 56 set-ups by fight id, entry 0 the bare ret BareRet, every other entry a function of the boss band 0x437A00..0x441000 that stores the three hooks BattleHook_End / _Exit / _Event and returns (tools/boss_rows.py, docs/boss-rows.md). The PSX's Boss_EntryTable 0x800B2048 (the sibling's docs/loader_records/BOSS.md section 3), entered by one jalr. docs/takeover-queue-bosses.md section 1.2."
 
 [[data]]
 pc = 0x64B088
@@ -67709,7 +67709,7 @@ pc = 0x904B6C
 name = "BattleHook_Event"
 ctype = "unsigned long"
 status = "evidence"
-evidence = "pe_xref / disasm 2026-09-28 (round eleven group BH): a function pointer stored by the boss set-ups (62 references) and called with one word, a phase code, while 0x904AAA is set: 3 from Battle_PhaseDispatch (phase not 0), 6 from Battle_Init, 1 / 4 / 0 / 5 from the action phases, 2 from BattleRoundEnd_NextRound, which reads its al (0xFF holds the round). BossHook_EventNone (al 0) fills it for 39 set-ups. docs/boss_harness.md section 2."
+evidence = "pe_xref / disasm 2026-09-28 (round eleven group BH): a function pointer stored by the boss set-ups (62 references) and called with one word, a phase code, while 0x904AAA is set: 3 from Battle_PhaseDispatch (phase not 0), 6 from Battle_Init, 1 / 4 / 0 / 5 from the action phases, 2 from BattleRoundEnd_NextRound, which reads its al (0xFF holds the round). BareRetZero (al 0) fills it for 39 set-ups. docs/boss_harness.md section 2."
 
 [[func]]
 pc = 0x4357D0
@@ -67717,7 +67717,7 @@ name = "BattleBossFx_Dispatch"
 ret = "void"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-28 (round eleven group BH), 0x4357D0..0x435825 (0x56 bytes), cdecl: BattleTask_RunAll's fourth kind (+6 == 3): call [esp + 4 * byte +5 of the slot 0x93B8C4] through an eight-entry stack table - Boss_Nop, 0x499EB0, 0x43CA20, 0x43EB80, 0x43FAC0, 0x440830, 0x43D6D0, 0x43F5F0 - unchecked. Slots 2..7 are the boss band's effect tasks (tools/boss_rows.py units F2..F7), 1 is not in the band. Named, not taken: engine code of no round-eleven group. docs/takeover-queue-bosses.md section 1.2."
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4357D0..0x435825 (0x56 bytes), cdecl: BattleTask_RunAll's fourth kind (+6 == 3): call [esp + 4 * byte +5 of the slot 0x93B8C4] through an eight-entry stack table - BareRet, 0x499EB0, 0x43CA20, 0x43EB80, 0x43FAC0, 0x440830, 0x43D6D0, 0x43F5F0 - unchecked. Slots 2..7 are the boss band's effect tasks (tools/boss_rows.py units F2..F7), 1 is not in the band. Named, not taken: engine code of no round-eleven group. docs/takeover-queue-bosses.md section 1.2."
 
 [[func]]
 pc = 0x437CA0
@@ -67730,7 +67730,7 @@ evidence = "disasm 2026-09-28 (round eleven group BH, capstone to the last instr
 
 [[func]]
 pc = 0x437CC0
-name = "Boss_Nop"
+name = "BareRet"
 ret = "void"
 params = "void"
 impl = "src/game/boss_h.cpp"
@@ -67874,7 +67874,7 @@ evidence = "disasm 2026-09-28 (round eleven group BH), 0x43B550..0x43B597 (0x48 
 
 [[func]]
 pc = 0x43C9F0
-name = "BossHook_EventNone"
+name = "BareRetZero"
 ret = "unsigned char"
 params = "unsigned code"
 impl = "src/game/boss_h.cpp"

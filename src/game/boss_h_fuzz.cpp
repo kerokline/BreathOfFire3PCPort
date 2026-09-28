@@ -10,7 +10,7 @@
 // and the helper planted in that entry - BossTorast_ActDispatch through each
 // of kinds 8..11's dispatchers, the chain below it through its own
 // dispatchers, the state helpers through kinds 6 and 21's, the enemy hook and
-// Boss_Nop through their kinds' hook tables.
+// BareRet through their kinds' hook tables.
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -122,6 +122,16 @@ void SeedTorast(unsigned k) {
     unsigned char* const e = bh::Pointer(bh::at::kEnemyCurrent);
     // the kind whose colour is drawn: 8..11 mostly (the table's four), else any
     if (bh::Often()) e[0x100] = static_cast<unsigned char>(8 + bh::Next() % 4);
+    // the dispatchers' other state bytes inside the tables most of the time,
+    // so a dispatcher reading the wrong byte lands on another entry (a count)
+    // rather than past its table (a Fatal); never the byte the harness drew
+    // or the via plants
+    if (k <= kAct11 && bh::Often()) {
+        s[3] = static_cast<unsigned char>(bh::Next() % 6);
+        s[4] = static_cast<unsigned char>(bh::Next() % 6);
+    }
+    if (k == kDeath && bh::Often()) s[4] = static_cast<unsigned char>(bh::Next() % 2);
+    if (k == kDeathFx && bh::Often()) s[2] = static_cast<unsigned char>(bh::Next() % 4);
     switch (k) {
     case kFlash:
         // Kinds 46 and 47's "colours" are the bytes of the Flash's own via cell
@@ -175,7 +185,7 @@ const bh::Clone kClonesOps[] = {
     Via("BossHook_RetargetMember0", 0x43A750, 0x11, nullptr, 0, BH_FN(BossHook_RetargetMember0), S::kEnemyHook, 0, 1, 0, 0x43A740,
         0x64CFA8, 0, 0),
     // kind 8's hook table (0x4390E0 by the hook's word, BSB's), entry 0
-    Via("Boss_Nop", 0x437CC0, 0x1, nullptr, 0, BH_FN(Boss_Nop), S::kEnemyHook, 0, 1, 0, 0x4390E0, 0x64CB04, 0, 0),
+    Via("BareRet", 0x437CC0, 0x1, nullptr, 0, BH_FN(BareRet), S::kEnemyHook, 0, 1, 0, 0x4390E0, 0x64CB04, 0, 0),
     {"BossMap_SetCorners", 0x43B0D0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(BossMap_SetCorners), 0, false, S::kCallee},
     {"Boss_SetByLeaderId", 0x43B130, 0x50, nullptr, 0, nullptr, 0, kTables43B130, BH_N(kTables43B130), BH_FN(Boss_SetByLeaderId), 0, false,
      S::kCallee},
@@ -254,7 +264,7 @@ constexpr bh::CallSite kCalls43EB60[] = {{0x10, 0x446DE0}, {0x15, 0x446E00}};
 constexpr bh::CallSite kCalls440820[] = {{0x2, 0x4949D0}};
 
 const bh::Clone kClonesHooks[] = {
-    {"BossHook_EventNone", 0x43C9F0, 0x3, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(BossHook_EventNone), 0xFF, false, S::kEvent},
+    {"BareRetZero", 0x43C9F0, 0x3, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(BareRetZero), 0xFF, false, S::kEvent},
     {"BossHook_EndPickWay", 0x43EB60, 0x1A, kCalls43EB60, BH_N(kCalls43EB60), nullptr, 0, nullptr, 0, BH_FN(BossHook_EndPickWay), 0, false,
      S::kEnd},
     {"BossHook_ExitClearActor0", 0x43A4A0, 0x9, kCalls43A4A0, BH_N(kCalls43A4A0), nullptr, 0, nullptr, 0, BH_FN(BossHook_ExitClearActor0), 0,

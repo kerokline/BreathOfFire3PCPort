@@ -101,7 +101,7 @@ compared state holds both sides' stores, and they must be equal.
    (another stage-B group's this wave) by raw address in
    `<module>_callees.h`. BH's 26 are ours once BH merges: call them by name
    (`BH_CALL(BossActor_Clear)(0)`, `BH_CALL(BossMap_SetCorners)(1, 0)`); the
-   ones your tables hold (`BossOp_ScriptTick`, `BossOp_Death`, `Boss_Nop`,
+   ones your tables hold (`BossOp_ScriptTick`, `BossOp_Death`, `BareRet`,
    ...) are table entries like any other ([`boss_h.md`](boss_h.md) section 1
    lists them).
 3. **The fuzz**, `src/game/<module>_fuzz.cpp`: per fight id or kind, a
@@ -372,7 +372,7 @@ the writes through it are compared; `0x446E20` is a standard recorder.
 |---|---|---|
 | `0x438E50` | `jmp [0x64CAA4 + 4 * Sprite_Current +1]` - the kind's `+1` table, 12 entries (state 0 `0x438E70`, then `EnemyOp_*` and BH's `BossTorast_ActDispatch` at 6) | `kDispatch`, `state_at 1`, `states 12` |
 | `0x438E70` | state 0: `0x939AD8 +0xFC = 0x64CA90`, `+0xF4 = 0x4390E0`, `+0xF8 = 0x64CA9C`, `Sprite_Current +1 = 2`, `jmp Sprite_ScriptTick` | `kState`, `ret_mask 0xFF`, calls `{{0x38, 0x5893A0}}` |
-| `0x4390E0` | the `+0xF4` hook: `jmp [0x64CB04 + 4 * (word & 0xFF)]`, 3 entries (all `Boss_Nop`) | `kEnemyHook` |
+| `0x4390E0` | the `+0xF4` hook: `jmp [0x64CB04 + 4 * (word & 0xFF)]`, 3 entries (all `BareRet`) | `kEnemyHook` |
 
 ```cpp
 const bh::DataTable kTables08[] = {{0x64CAA4, 12}, {0x64CB04, 3, 4, 1}};   // the +1 table; the hook table, one word

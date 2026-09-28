@@ -5,8 +5,8 @@
 // harness (boss_harness.h). Round eleven group BH; docs/boss_h.md has them one
 // row each.
 //
-//   - two fillers: Boss_Nop (the bare ret in 455 hook and table slots,
-//     engine-wide) and BossHook_EventNone (an event hook answering al 0);
+//   - two fillers: BareRet (the bare ret in 455 hook and table slots,
+//     engine-wide) and BareRetZero (an event hook answering al 0);
 //   - four hooks: the end hook that picks the way out, two exit hooks that
 //     clear the actor tagged 0, and an enemy hook that retargets;
 //   - the state helpers several kinds' tables share: tick the sprite's
@@ -84,12 +84,12 @@ const unsigned char* KindColour(unsigned kind) { return At(AddressOf(BossTorast_
 // original 0x437CC0: a bare ret. Boss_SetupTable[0], every hook slot a set-up
 // leaves empty, and 455 references engine-wide (the effect dispatchers' slot
 // 0, the kinds' tables, field tables).
-extern "C" void __cdecl Boss_Nop(void) {}
+extern "C" void __cdecl BareRet(void) {}
 
 // original 0x43C9F0: xor al, al; ret - the event hook (0x904B6C) of 39
 // set-ups: al 0, so BattleRoundEnd_NextRound's "al 0xFF holds the round"
 // never holds. The original clears al alone; ours all of eax (callers read al).
-extern "C" unsigned char __cdecl BossHook_EventNone(unsigned) { return 0; }
+extern "C" unsigned char __cdecl BareRetZero(unsigned) { return 0; }
 
 // --- the hooks ---------------------------------------------------------------------
 
@@ -365,7 +365,7 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
 void BossH_Inject() {
     if (bof3::WantsShadow("boss_h")) boss_h::SelfTest();
     BOF3_INJECT(BossOp_ScriptTick);
-    BOF3_INJECT(Boss_Nop);
+    BOF3_INJECT(BareRet);
     BOF3_INJECT(BossTorast_ActDispatch);
     BOF3_INJECT(BossTorast_DeathDispatch);
     BOF3_INJECT(BossTorast_DeathFxDispatch);
@@ -381,7 +381,7 @@ void BossH_Inject() {
     BOF3_INJECT(Boss_SetByLeaderId);
     BOF3_INJECT(BossMap_UpdateFromEnemies);
     BOF3_INJECT(BossOp_Death);
-    BOF3_INJECT(BossHook_EventNone);
+    BOF3_INJECT(BareRetZero);
     BOF3_INJECT(BossHook_EndPickWay);
     BOF3_INJECT(BossHook_ExitActor0Bit40);
 }

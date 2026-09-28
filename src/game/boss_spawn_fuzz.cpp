@@ -55,6 +55,12 @@ void Seed(unsigned k) {
             const U pick = bh::Next() % 5;
             r[0xC] = static_cast<unsigned char>(pick == 0 ? g_tag : pick == 1 ? g_tag + 1 : pick == 2 ? g_tag - 1 : r[0xC]);
         }
+        // a third of the rounds, no record carries it (the 0xFF answer)
+        if (bh::Next() % 3 == 0)
+            for (unsigned i = 0; i < 8; ++i) {
+                unsigned char* const r = Mem(bh::at::kEnemyData + i * bh::at::kEnemyDataStride);
+                if (r[0xC] == g_tag) r[0xC] ^= 0x80;
+            }
         return;
     }
     // the field actors: some carry the tag with type 7, some the tag with
@@ -68,6 +74,13 @@ void Seed(unsigned k) {
         default: break;
         }
     }
+    // a third of the rounds, no actor carries it (null, 0xFF - the finders'
+    // other answer; the writers are handed the standard stand-in's object)
+    if (bh::Next() % 3 == 0)
+        for (unsigned i = 0; i < bh::at::kObjectCount; ++i) {
+            unsigned char* const o = bh::Object(i);
+            if (o[6] == 7 && o[0x9E] == g_tag) o[0x9E] ^= 0x80;
+        }
 }
 
 void Args(unsigned k, U* a) {
