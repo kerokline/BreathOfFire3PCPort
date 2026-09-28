@@ -56,10 +56,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    D133..D161 with the wave docs' contradictions written into the entries
    for one read each (D133's three dispatcher policies, D135's record-255
    split, the rest listed under item 2 there), the harness docs' five
-   notes, `area_rows.py --no-write`. **First thing with the game on hand,
-   at that branch's tip:** `BOF3X_SHADOW='*'` headless (the rebinding
-   should be invisible to it: every value is the same), `ledger_check.py`,
-   the frame hash against `r9_orig` and the route A/Bs (item 6). Then the
+   notes, `area_rows.py --no-write`. Merged as PR #29 (`6b70e71`); **its
+   game-side checks ran at that tip on 2026-09-28 afternoon and pass**
+   (the cleanup doc's status header has the figures: `'*'` headless,
+   `ledger_check.py`, the hash against `r9_orig` frame 0 only, the three
+   route A/Bs at their round-eight baselines). Then the
    owner's order to choose among what is left: the `SH_CALL` form with the
    five `scenario_harness.cpp` rows moved to `SH_OURS` in one commit, the
    world-map body shared once (D143 names the five copies in ours), the
@@ -81,8 +82,18 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    (also `verify/` and `play/`). Every agent worktree and
    `phase-3/round10-*` branch is merged and removed; round ten is `main`
    (PR #28, `3e8d531`).
-0b. **Round eleven is staged: the boss round** (the owner, 2026-09-28,
-   after the area round finishes). Plan and cut:
+0b. **Round eleven is running: the boss round**, on
+   `phase-3/capture-round-eleven` from `main` at `6b70e71`. **BH merged
+   2026-09-28 afternoon** (`79dafce`, 5,732 ours: the harness
+   `boss_harness.*` + [`boss_harness.md`](boss_harness.md), the 20 shared
+   helpers `boss_h`, the six spawn helpers as `boss_spawn`, the tables and
+   hooks named - it corrected the plan: `0x904B64` is called once from
+   `BattleEnd_AwaitMemberTasks`, not per frame, and the enemy objects are
+   at `0x93B960`, `0x93B9E0` their working view). **BSA..BSE run in
+   parallel from `79dafce`**; merge each with `merge_group11.sh <group>
+   <scratch>` (`MOD=boss_<group>`) from the session-`08306a9f` scratchpad,
+   where the filled briefs `brief_<group>.md` also are. Wave two (BSF..BSJ)
+   wants briefs cut from the same template. Plan and cut:
    [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
    `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)); IDEAS I26. 525
    functions in eleven groups, two waves (BH + BSA..BSE, then BSF..BSJ);
@@ -384,6 +395,16 @@ Local only, gitignored, worth keeping:
 
 _One line each, with a pointer. Add when something costs more than an hour._
 
+- **A route A/B's off-list and scratch ini go stale**: the three
+  `validate_*.sh` scripts' `DIVS` lists lacked the four 09-27 centring
+  and layout divergences (DIV-0058..0061), and a scratch launcher ini
+  copied from an older session had `cheat.steal=1` - the 2026-09-28 combat
+  A/B "stole" and every banner differed by a few hundred pixels until both
+  were fixed. After a DIV that moves pixels, add its `BOF3X_ORIGINAL` name
+  to the scripts; check the ini's `cheat.*` lines before a combat run; and
+  `validate_shop.sh` must pin `BOF3X_WIDE=0 BOF3X_SCALE=2` and a launcher
+  copy like the other two or ours writes 1704 x 960 frames against 640 x
+  480 grabs (fixed in the local copy).
 - **A spell fuzz's call counts depend on the build directory**: the harness
   stores pointers into our DLL in game memory, so a worktree and the main
   checkout take different branches (Steal: 9,278 against 9,850, 0 mismatches
