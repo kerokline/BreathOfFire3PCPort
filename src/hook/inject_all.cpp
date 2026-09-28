@@ -184,6 +184,7 @@
 #include "game/scena_sc9b.h"
 #include "game/area_w1c.h"
 #include "game/scena_sc15.h"
+#include "game/scena_sc2.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -606,6 +607,8 @@ void InjectAll() {
                                 // re-aimed at the area harness's recorders, areas 39 and 41's state tables swapped
                                 // for the fuzz only; no module patches bytes inside its 48 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    ScenaSc2_Inject();          // round 10 group SC2 (scenario chapter 2's bank, 0x53DDA0..0x5428C0): no module
+                                // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 
