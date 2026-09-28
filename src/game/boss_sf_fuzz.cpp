@@ -64,16 +64,7 @@ U Above() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 // Battle_RemoveFromTurnOrder is louder than the real one: Boss27_End reads the
 // member's +0x90 and +8 after it, and the next member's +0 - the effect moves
 // them (boss_se_fuzz.cpp's, for the same loop in Boss26_End).
-std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
-    const U n = bh::Noise();
-    unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(n % 3));
-    switch ((n >> 4) % 3) {
-    case 0: p[0x91] ^= 0x40; break;
-    case 1: p[8] = static_cast<unsigned char>(n >> 8); break;
-    default: p[0] ^= 1; break;
-    }
-    return answer;
-}
+// (bh::TurnOrderEffect: the harness's since round eleven's cleanup folded this group's copy)
 
 // Set-up 27's hooks read the script bits 0x904AAD again after a call
 // (Boss27_Event's code 2 after Sprite_EnsureAnimation, Boss27_End after the
@@ -128,7 +119,7 @@ const bh::Callee kCallees[] = {
     {"BossActor_ClearBit40", ::bof3::addr::BossActor_ClearBit40, KeyOf(&::BossActor_ClearBit40), 1, {kU8}, bh::Answer::kGarbage, 0, 0, {},
      &ClearBitEffect},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
-     bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
+     bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"Crt_sprintf", KeyOf(Crt_sprintf), KeyOf(Crt_sprintf), 3, {kAll, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"AreaMap_Elevation", ::bof3::addr::AreaMap_Elevation, KeyOf(&::AreaMap_Elevation), 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0, {},
      &GroundEffect},
@@ -152,11 +143,7 @@ const bh::Region kRegions[] = {
 // A dispatcher's other state bytes inside its table, so a dispatcher reading
 // the wrong byte lands on another entry (a count) rather than past its table
 // (a Fatal); never the byte the harness drew.
-void OtherStates(unsigned drawn, unsigned below) {
-    unsigned char* const s = Sprite_Current;
-    for (unsigned b = 1; b <= 4; ++b)
-        if (b != drawn) s[b] = static_cast<unsigned char>(bh::Next() % below);
-}
+using bh::OtherStates;   // the harness's since round eleven's cleanup folded this group's copy (the same draws)
 
 // A down-counter's byte: its ends, 1 (the step to 0) and any.
 unsigned char Counter() { return static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 1, 2, 6, 0x1E, 0xFF, 0x80) : bh::Next()); }

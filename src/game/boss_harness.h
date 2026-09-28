@@ -189,7 +189,10 @@ struct JumpTable { std::uint32_t jmp_disp, table, entries; };
 //   kEnemyHook an enemy's +0xF4: one word, 0, 1 or 2 (0x435BF5, 0x4367EE,
 //              EnemyRunAll), drawn; Sprite_Current and 0x939AD8 the enemy.
 //   kTask      an effect task: BattleTask_RunAll's slot (Sprite_Current and
-//              0x93B8C4 a task slot); void (void).
+//              0x93B8C4 a task slot); void (void). With Clone::states set, the
+//              byte at state_at is drawn below it each round, after the seed
+//              (so the task's own byte wins when its owner is Sprite_Current
+//              itself - BSJ's first fault, round 11 doc section 5.5).
 //   kCallee    not a root: a function its unit calls directly (arguments the
 //              group's args, answer its ret_mask); Sprite_Current an enemy.
 // After every call the three hooks 0x904B64..0x904B6C are read back and
@@ -234,7 +237,17 @@ struct Clone {
     // For a kDispatch: the byte of Sprite_Current it dispatches by (1..4) and
     // how many entries its table has - the byte is drawn below that each round,
     // before the seed (a byte past the table would run whatever follows it, on
-    // both sides). 0: left to the fill and the seed.
+    // both sides). For a kTask the same, drawn after the seed (Shape above).
+    // 0: left to the fill and the seed. The other state bytes are the seed's:
+    // OtherStates below draws them inside their tables.
+    //
+    // A kDispatch's contract (round 11 doc section 5.1): the original's `jmp`
+    // leaves the caller's stack word and the entry's eax in place, so ours
+    // hands its first argument on to the entry and answers the entry's eax.
+    // Port_DroppedCall (the standard listing, one argument) is what refuses a
+    // dropped word when it sits in the table; ret_mask 0xFF compares the
+    // answer. A group whose ours does not forward lists Port_DroppedCall with
+    // 0 arguments itself (BSA, BSE) - an override, not the rule.
     std::uint8_t state_at = 1;
     std::uint8_t states = 0;
     Via via = {};
@@ -267,7 +280,10 @@ enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kBool, kRand, kPhase,
 // `address` the original's, the one clones call. masks[i] is what of argument
 // i the callee reads (a pointer into the caller's stack differs between the
 // passes: mask it 0, or deref it). deref / effect / custom as in
-// magic_harness.h.
+// magic_harness.h. An effect that makes a stand-in louder by moving a cell
+// the caller may have stored before the call must Note() the old value
+// first, or the store is wiped rather than compared (BSH's 0x446DE0, round
+// 11 doc section 5.3; EndWinEffect below is that form).
 using Effect = std::uint32_t (*)(const std::uint32_t* args, std::uint32_t answer);
 struct Callee {
     const char* name;
@@ -289,6 +305,11 @@ struct Callee {
 //           1: logged with the handler's entry).
 // A table with a flag header (bytes, FF padding, then pointers) is listed
 // from its first pointer.
+// Order matters when one address sits in tables with different nargs (BareRet
+// in a hook table and a state table): the first-listed table's nargs stands,
+// and an address that is also a Callee takes the Callee's. Run logs every
+// such conflict ("handler ... in tables with nargs"); list the table whose
+// nargs the run wants first (BSA's k39, BSF's K33, BSI's k58 do).
 struct DataTable {
     std::uint32_t at;
     unsigned entries;
@@ -345,6 +366,12 @@ unsigned char* TaskAt(unsigned k);        // one of the first four task slots
 unsigned char* Object(unsigned k);        // field object k % 30 (Sprite_Objects)
 unsigned char* SpriteRecord(unsigned k);  // one of the harness's two records of 0x140 bytes
 unsigned char* Packets();                 // the harness's packet buffer (Gfx_PacketNext points into it)
+// The dispatched byte's neighbours drawn inside their tables (round 11 doc
+// section 5.2), for a seed: the first writes Sprite_Current's +1..+4 but
+// `drawn` below `below`; the second +1..+3 but `at`, each below its own bound
+// (0: left alone). Both were every stage-B group's static copy, folded here.
+void OtherStates(unsigned drawn, unsigned below);
+void OtherStates(unsigned at, unsigned n1, unsigned n2, unsigned n3);
 // The recorder a hook cell holds at the round's start (at::kHookEnd /
 // kHookExit / kHookEvent, or 0 for the enemies' +0xF4): for a seed that
 // moved a cell and wants it back.
@@ -363,5 +390,17 @@ void Note(std::uint32_t a, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32
 void NoteBytes(const void* p, unsigned n);
 void FillBytes(void* p, unsigned n);
 std::uint32_t HashBytes(const void* p, unsigned n);
+
+// --- the louder stand-ins the stage-B groups wrote, folded (round 11 doc 5.3) ----
+// Each is an Effect a group listing names, or the standard set's (kStandard).
+std::uint32_t TurnOrderEffect(const std::uint32_t*, std::uint32_t);   // Battle_RemoveFromTurnOrder: moves a party record's +0x91 bit 0x40, +8 or +0
+std::uint32_t EndWinEffect(const std::uint32_t*, std::uint32_t);      // 0x446DE0: Notes the chapter step, then moves it
+std::uint32_t ScriptBitsEffect(const std::uint32_t*, std::uint32_t);  // Msg_OpenScript: moves the script bits 0x904AAD half the time
+std::uint32_t MoveCounterEffect(const std::uint32_t*, std::uint32_t); // Scenario_CallA: moves 0x903848 half the time (a group region)
+std::uint32_t BannerCharEffect(const std::uint32_t*, std::uint32_t);  // Battle_OpenMsgWindow: moves the banner's character 0x66972D (a group region)
+// BattleTask_Create answering "none" (0xFF) a third of the time: opt in by
+// listing the callee with it - seven originals index by the answer untested
+// (known-defects D163), and ours aborts where they would write past the pool.
+std::uint32_t CreateMayFail(const std::uint32_t*, std::uint32_t);
 
 }  // namespace boss_harness

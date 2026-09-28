@@ -73,21 +73,12 @@ bh::Clone Disp(const char* name, U base, const void* ours, std::uint8_t at, std:
 // moves them (as boss_se_fuzz.cpp's). 0x441090 (nobody's) takes two whole
 // words; BossMyriaFx_Follow, the group's own called directly by the task's
 // states, is a kPhase recorder (it logs the sprite it ran for).
-std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
-    const U n = bh::Noise();
-    unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(n % 3));
-    switch ((n >> 4) % 3) {
-    case 0: p[0x91] ^= 0x40; break;
-    case 1: p[8] = static_cast<unsigned char>(n >> 8); break;
-    default: p[0] ^= 1; break;
-    }
-    return answer;
-}
+// (bh::TurnOrderEffect: the harness's since round eleven's cleanup folded this group's copy)
 
 const bh::Callee kCallees[] = {
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
-     bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
+     bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"0x441090", at::kRoundHigh, at::kRoundHigh, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"BossMyriaFx_Follow", 0x440EF0, 0x440EF0, 0, {}, bh::Answer::kPhase, 0, 0},
 };
@@ -131,12 +122,7 @@ void SeedEnd() {
 // A dispatcher's other state bytes inside their tables, so a dispatcher reading
 // the wrong byte lands on another entry (a count) rather than past its table
 // (a Fatal); the byte the harness drew is left alone.
-void OtherStates(unsigned at, unsigned n1, unsigned n2, unsigned n3) {
-    unsigned char* const s = Sprite_Current;
-    const unsigned n[4] = {0, n1, n2, n3};
-    for (unsigned b = 1; b <= 3; ++b)
-        if (b != at && n[b]) s[b] = static_cast<unsigned char>(bh::Next() % n[b]);
-}
+using bh::OtherStates;   // the harness's since round eleven's cleanup folded this group's copy (the same draws)
 
 // --- kinds 59 and 61 ---------------------------------------------------------------
 

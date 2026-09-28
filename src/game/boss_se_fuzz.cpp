@@ -66,23 +66,14 @@ bh::Clone Disp(const char* name, U base, const void* ours, std::uint8_t at, std:
 // member's +0x90 and +8 after it, and the next member's +0 - the effect moves
 // them. The two engine functions nobody owns: 0x437450 (the sound, a word) and
 // 0x4376A0 (the action's end).
-std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
-    const U n = bh::Noise();
-    unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(n % 3));
-    switch ((n >> 4) % 3) {
-    case 0: p[0x91] ^= 0x40; break;
-    case 1: p[8] = static_cast<unsigned char>(n >> 8); break;
-    default: p[0] ^= 1; break;
-    }
-    return answer;
-}
+// (bh::TurnOrderEffect: the harness's since round eleven's cleanup folded this group's copy)
 
 const bh::Callee kCallees[] = {
     {"Port_DroppedCall", ::bof3::addr::Port_DroppedCall, KeyOf(&::Port_DroppedCall), 0, {}, bh::Answer::kGarbage, 0, 0},
     {"Battle_CopyEnemyData", ::bof3::addr::Battle_CopyEnemyData, KeyOf(&::Battle_CopyEnemyData), 2, {kU8, kU8}, bh::Answer::kGarbage, 0, 0},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
-     bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
+     bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0},
     {"0x4376A0", at::kEnemyActEnd, at::kEnemyActEnd, 0, {}, bh::Answer::kGarbage, 0, 0},
 };

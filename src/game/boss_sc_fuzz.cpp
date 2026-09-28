@@ -180,28 +180,18 @@ const bh::Clone kB15[] = {
 // scene byte after Scenario_CallA and 0x446DE0 (the exit and end hooks), the
 // banner's character after Battle_OpenMsgWindow. Each moves its cell from
 // Noise(), so a read moved across the call is refused.
-U BitsEffect(const U*, U answer) {
-    if (bh::Noise() & 1) Mem(at::kFightFlags)[0] = static_cast<unsigned char>(bh::Noise());
-    return answer;
-}
-U SceneEffect(const U*, U answer) {
-    // half the time only: the end hooks store the byte before the call, and
-    // an effect that always overwrote it would hide that store
-    const U n = bh::Noise();
-    if (n & 2) Mem(at::kMoveCounter)[0] = static_cast<unsigned char>(n & 1 ? 0x14 : n >> 8);
-    return answer;
-}
-U CharEffect(const U*, U answer) {
-    Mem(at::kBannerChar)[0] = static_cast<unsigned char>(bh::Noise());
-    return answer;
-}
+// (bh::ScriptBitsEffect, bh::MoveCounterEffect and bh::BannerCharEffect: the
+// harness's since round eleven's cleanup folded this group's BitsEffect,
+// SceneEffect and CharEffect - the same draws; the two group cells are this
+// group's regions, which the harness's forms require)
 
 const bh::Callee kCallees[] = {
-    {"Msg_OpenScript", bof3::addr::Msg_OpenScript, KeyOf(&::Msg_OpenScript), 1, {0xFFFF}, bh::Answer::kGarbage, 0, 0, {}, &BitsEffect},
-    {"Scenario_CallA", bof3::addr::Scenario_CallA, KeyOf(&::Scenario_CallA), 1, {kAll}, bh::Answer::kGarbage, 0, 0, {}, &SceneEffect},
+    {"Msg_OpenScript", bof3::addr::Msg_OpenScript, KeyOf(&::Msg_OpenScript), 1, {0xFFFF}, bh::Answer::kGarbage, 0, 0, {}, &bh::ScriptBitsEffect},
+    {"Scenario_CallA", bof3::addr::Scenario_CallA, KeyOf(&::Scenario_CallA), 1, {kAll}, bh::Answer::kGarbage, 0, 0, {},
+     &bh::MoveCounterEffect},
     {"Battle_OpenMsgWindow", bof3::addr::Battle_OpenMsgWindow, KeyOf(&::Battle_OpenMsgWindow), 0, {}, bh::Answer::kGarbage, 0, 0, {},
-     &CharEffect},
-    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &SceneEffect},
+     &bh::BannerCharEffect},
+    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::MoveCounterEffect},
     // engine code nobody owns (boss_sc_callees.h)
     {"0x455290", at::kSlotStart, at::kSlotStart, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"0x454A80", at::kSlotsReleaseFor, at::kSlotsReleaseFor, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
@@ -248,12 +238,7 @@ unsigned char* E() { return bh::Pointer(bh::at::kEnemyCurrent); }
 // A dispatcher's other state bytes inside their tables, so a
 // dispatcher reading the wrong byte lands on another entry (a count) rather
 // than past its table (a Fatal); the byte the harness drew is left alone.
-void OtherStates(unsigned at, unsigned n1, unsigned n2, unsigned n3) {
-    unsigned char* const s = Sprite_Current;
-    const unsigned n[4] = {0, n1, n2, n3};
-    for (unsigned b = 1; b <= 3; ++b)
-        if (b != at && n[b]) s[b] = static_cast<unsigned char>(bh::Next() % n[b]);
-}
+using bh::OtherStates;   // the harness's since round eleven's cleanup folded this group's copy (the same draws)
 
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
