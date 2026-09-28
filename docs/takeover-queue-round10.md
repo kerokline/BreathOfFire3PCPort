@@ -707,3 +707,24 @@ a world-map area) and world 4 as `area_rows.py --groups` cuts it at the
 tip (AR4A 48 with world-map area 152, AR4B 56, AR4C 39, AR4D 49, AR4E
 51, AR4F 48): seven groups, 347 functions. Wave five's brief with
 section 16 folded in.
+
+## 18. Wave six staged (2026-09-28 evening, from the tip after `33ea585`)
+
+Seven groups, one stage each, area only - the last of the area round.
+Counts are `tools/area_rows.py --groups` at this tip (its world-3 row is
+`AR3` now; the remainder is AR3G here). Brief
+`analysis/round10_wave6_brief.md` (wave five's with section 16 folded
+in), group lines `analysis/round10_wave6_groups.tsv` (gitignored).
+Entries snapshot `analysis/calltrace/entries_logic_0928_prewave10_6.txt`.
+
+| Group | What | Band | To take | Module |
+|---|---|---|--:|---|
+| AR3G | world 3: areas 148..151 (151 is a world-map area) | `0x4223A0..0x4249D0` | 56 | `area_w3g` |
+| AR4A | world 4: areas 152..155, 166..167 (152 is a world-map area) | `0x4249D0..0x426560` | 48 | `area_w4a` |
+| AR4B | world 4: areas 168..172 | `0x426560..0x428450` | 56 | `area_w4b` |
+| AR4C | world 4: areas 173..174 | `0x428450..0x4292C0` | 39 | `area_w4c` |
+| AR4D | world 4: areas 175..187 | `0x4292C0..0x42A320` | 49 | `area_w4d` |
+| AR4E | world 4: areas 188..191 | `0x42A320..0x42BD60` | 51 | `area_w4e` |
+| AR4F | world 4: areas 192..193, 196..199 (`0x42D710`, called from `0x517330`, ends the band) | `0x42BD60..0x42D710` | 48 | `area_w4f` |
+
+347 functions.
