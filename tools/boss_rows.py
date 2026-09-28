@@ -127,6 +127,9 @@ def main():
     ap.add_argument('--groups', action='store_true', help='print the proposed groups')
     ap.add_argument('--group-size', type=int, default=50, help='functions not yet ours a group aims at (default 50)')
     ap.add_argument('--quiet', action='store_true', help='write the TSVs, print only the totals')
+    ap.add_argument('--no-write', action='store_true',
+                    help='do not write boss_rows.tsv / boss_funcs.tsv into --analysis (a read-only run: the canonical '
+                         'cut is boss_funcs_0928_4554.tsv, and a run at a later symbols.toml recuts the group column)')
     ap.add_argument('--disc', help="the US disc's .cue: with it the report names every kind from the areas' enemy records")
     a = ap.parse_args()
 
@@ -321,8 +324,15 @@ def main():
             group_of.setdefault(f, g['name'])
 
     # ---- the TSVs -----------------------------------------------------------
-    os.makedirs(a.analysis, exist_ok=True)
-    with open(os.path.join(a.analysis, 'boss_rows.tsv'), 'w', newline='', encoding='utf-8') as fh:
+    # --no-write (round eleven's cleanup, takeover-queue-round11.md section 4):
+    # the TSVs are recut from the current symbols.toml, so a run once the
+    # functions are ours overwrites the canonical cut; the read-only run
+    # sends them to os.devnull, as area_rows.py's does.
+    rows_tsv = os.path.join(a.analysis, 'boss_rows.tsv')
+    funcs_tsv = os.path.join(a.analysis, 'boss_funcs.tsv')
+    if not a.no_write:
+        os.makedirs(a.analysis, exist_ok=True)
+    with open(rows_tsv if not a.no_write else os.devnull, 'w', newline='', encoding='utf-8') as fh:
         w = csv.writer(fh, delimiter='\t')
         w.writerow(['unit', 'root', 'how', 'lo', 'hi', 'fns', 'excl', 'take', 'bytes', 'tables', 'frontier', 'file', 'group', 'funcs'])
         for r in rows:
@@ -331,7 +341,7 @@ def main():
                         len(r['excl']), len(r['take']), r['bytes'], ' '.join('%#x' % t for t in r['tables']),
                         ' '.join('%#x' % t for t in r['frontier']), id_file.get(i, ''),
                         group_of.get(r['root'], ''), ' '.join('%#x' % f for f in r['funcs'])])
-    with open(os.path.join(a.analysis, 'boss_funcs.tsv'), 'w', newline='', encoding='utf-8') as fh:
+    with open(funcs_tsv if not a.no_write else os.devnull, 'w', newline='', encoding='utf-8') as fh:
         w = csv.writer(fh, delimiter='\t')
         w.writerow(['start', 'size', 'units', 'kind', 'group', 'ours', 'name', 'label', 'combat', 'tables'])
         for f in starts:
@@ -387,6 +397,8 @@ def main():
         len(fr_all), sum(1 for t in fr_all if t in ours),
         ' '.join('%#x:%s' % (t, named[t]) for t in sorted(fr_all) if t in named and t not in ours),
         ' '.join('%#x' % t for t in sorted(fr_all) if t not in named)))
+    if a.no_write:
+        print('\n(--no-write: %s, %s not written)' % (rows_tsv, funcs_tsv))
     if not a.quiet:
         print('\nunit   root      how                      span               fns excl take bytes tables file')
         for r in rows:
