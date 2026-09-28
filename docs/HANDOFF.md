@@ -46,8 +46,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-0. **Round ten's debts** ([`takeover-queue-round10.md`](takeover-queue-round10.md),
-   the end of section 19), the owner's order to choose; the two that
+0. **Round ten's debts** - the list is [`round-10-cleanup.md`](round-10-cleanup.md)
+   (from the round doc's section 19), for a session of its own; the owner's order to choose; the two that
    unblock the rest are the defects' numbering (all six waves describe,
    none numbers - `known-defects.md`) and the rebinding pass (every
    `AH_AT` / `SH_AT` into a name now that everything they reach is ours;
