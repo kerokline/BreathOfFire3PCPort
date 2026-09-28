@@ -180,7 +180,7 @@ original does in registers, none observable:
 
 `BOF3X_SHADOW=boss_sh`, `src/game/boss_sh_fuzz.cpp`, one `Run` per unit
 (`BOF3X_BSH_RUN=k48|b34|...|k44` runs one). The kinds' `+1`, `+2` and hook
-tables are `DataTable`s (21; the hook tables with one argument word, listed
+tables are `DataTable`s (17; the hook tables with one argument word, listed
 first, and the effect task's one-entry table with its word, so the
 dispatcher's hand-on is seen where no entry reads it); the stack table of
 `BossAnglerFx_Run` is three `Imm`s (the harness re-aims them at recorders).
