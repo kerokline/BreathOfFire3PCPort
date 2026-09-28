@@ -63511,3 +63511,486 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR2F): area 113 descriptor 0x620010 +0x34: Area113_ChoiceAsk, 0x420850, 0x420870 (another block), Area61_ChoiceMark4 twice. docs/area_w2f.md."
+
+# --- 2026-09-28 (round ten, wave six), group AR4D: world 4, areas 175..187 (src/game/area_w4d.cpp)
+
+[[func]]
+pc = 0x4292C0
+name = "Area175_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4292C0..0x42931C (0x5C bytes), cdecl: area 175 +0x34[27] (descriptor 0x642450): areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word; ours one body behind eleven names. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429320
+name = "Area175_ClampXToKind2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429320..0x429336 (0x16 bytes), cdecl: choice 30 = handler 1 (areas 175..185's descriptors all name it) (PSX 0x801F3348; area 175's 0x801F3FDC): Field_Kind2X at 0x2E0000 or less (signed): Sprite_Current x +0x34 = it. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429340
+name = "Area175_SlideOrPlace"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429340..0x4293B9 (0x79 bytes), cdecl: area 175 handler 2 = choice 31 (PSX 0x801F400C): Field_Request 2: Sprite_Current x += Area175_SlideSteps[Frame_Counter & 0xF] << 11, z -= the same (object and counter read again), Field_ActiveMember word +0x8A less 2; else x 0x2C0000, z 0x5C0000, +4 0 (Sprite_Current read again for each). docs/area_w4d.md."
+
+[[func]]
+pc = 0x4293C0
+name = "Area175_SpawnEffect1F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4293C0..0x42943F (0x7F bytes), cdecl: area 175 handler 3 = choice 32 (PSX 0x801F40AC): Effect_FindFree to Sprite_Current +0xB (read again after); 0xFF: Field_ActiveMember word +0x8A less 2; else that Effect_Objects record +0 1, +5 0x1F, (0x2E0000, 0x5C0000) +0x3C 0x1A00000, the slot read again from +0xB for each. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429440
+name = "Area175_GlideRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429440..0x429452 (0x12 bytes), cdecl: area 175 handler 4 = choice 33 (PSX 0x801F4204): jmp [Sprite_Current[4] * 4 + 0x6424A4] (Area175_GlideStates, 2 entries; unchecked, ours aborts past). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429460
+name = "Area175_GlideBegin20"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429460..0x429474 (0x14 bytes), cdecl: Area175_GlideStates[0]: Sprite_Current +0xA 0x20, +4 1 (read again). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429480
+name = "Area175_GlideStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429480..0x4294E2 (0x62 bytes), cdecl: Area175_GlideStates[1]: +0xA less 1; 0: +4 0; else x += Area175_GlideSteps[+0xA & 0xF] << 11, z -= the same (Sprite_Current read again for z), Field_ActiveMember word +0x8A less 2. docs/area_w4d.md."
+
+[[func]]
+pc = 0x4294F0
+name = "Area175_SpawnEffect39"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4294F0..0x429534 (0x44 bytes), cdecl: area 175 handler 5 = choice 34 (PSX 0x801F431C): Effect_FindFree; a slot: +0 1, +5 0x39, words +0x2E / +0x30 Sprite_Current's (read again for each). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429540
+name = "Area175_OpenScriptMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429540..0x4295A7 (0x67 bytes), cdecl: area 175 handler 6 = choice 35 (PSX 0x801F439C): the byte two past MoveScript_Object word +0xA in Area_Descriptors[Game_AreaNumber] +0x10 script [object +3] indexes Area175_ScriptMessages (words, unchecked): Msg_OpenScript; Field_Request 2, the object's +0 bit 0x10 cleared and 0x20 set, word +0xA on 1 (read again for each); ours aborts on an area past 200. docs/area_w4d.md."
+
+[[func]]
+pc = 0x4295B0
+name = "Area175_PoseAnimA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4295B0..0x4295DB (0x2B bytes), cdecl: area 175 handler 7 = choice 36 (PSX 0x801F446C): MoveScript_Object +0 bit 0x40; Sprite_Current +7 bit 8, +0 bit 0x10 (read again); Sprite_SetAnimation(0xA). docs/area_w4d.md."
+
+[[func]]
+pc = 0x4295E0
+name = "Area175_Trigger64"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4295E0..0x429622 (0x42 bytes), cdecl: Field_ObjectTriggers id 64 (a gap of the tool, area 175's block): object +1 4, +0x84 2, +0x83 0xD, word +0x8A 0; Flags_Set(0x904030, 0x95); Party_DropIn(4); counter 0 0x903848 cleared; al 0. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429630
+name = "Area175_ChoiceAskZenny6F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429630..0x42967D (0x4D bytes), cdecl: choice 10 (areas 175..185's descriptors all name it): answer 0: message 0x6F, tail sub-kind 0x9039F5 0; Party_Zenny 0x904058 at 0x1F4 or more (unsigned): 0x7D, sub-kind 1; else 0x7C and the focus object 0x903804 +0x86 0xFF. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429680
+name = "Area175_ChoiceMessage9F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429680..0x429699 (0x19 bytes), cdecl: choice 19 (areas 175..185's descriptors all name it): message 0x9F + (answer not 0). docs/area_w4d.md."
+
+[[func]]
+pc = 0x4296A0
+name = "Area176_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4296A0..0x4296FC (0x5C bytes), cdecl: area 176 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429700
+name = "Area176_ChoiceCount3E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429700..0x429730 (0x30 bytes), cdecl: choice 5 (areas 175..185's descriptors all name it): answer 0: message 0xFFFF, the facility byte 0x939A40 0; else 0x5F and 0x939A3E plus 1 (read before the message). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429730
+name = "Area177_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429730..0x42978C (0x5C bytes), cdecl: area 177 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429790
+name = "Area177_ChoiceMessageF9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429790..0x4297A5 (0x15 bytes), cdecl: choice 26 (areas 175..185's descriptors all name it): message 0xF9, 0xF8 for an answer not 0 (neg; sbb; add). docs/area_w4d.md."
+
+[[func]]
+pc = 0x4297B0
+name = "Area178_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4297B0..0x42980C (0x5C bytes), cdecl: area 178 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429810
+name = "Area178_PlaySound201"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429810..0x42981C (0xC bytes), cdecl: choice 29 = handler 0 (areas 175..185's descriptors all name it) (PSX 0x801F3328; area 175's 0x801F3FBC): Sound_PlayById(0x201). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429820
+name = "Area178_ChoiceMessageEF"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429820..0x42983A (0x1A bytes), cdecl: choice 22 (areas 175..185's descriptors all name it): message 0xEF; 0x939A3E = 1 + (answer not 0). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429840
+name = "Area179_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429840..0x42989C (0x5C bytes), cdecl: area 179 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x4298A0
+name = "Area179_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4298A0..0x4298CA (0x2A bytes), cdecl: the +0x40 init (areas 175..185's descriptors all name it) (PSX 0x801F32D8; area 175's 0x801F44D8): Cond_ByteFA above 7 (signed): engine 0x455450 (nobody's); 0x9046CF 0; Cond_ByteFD not 0: Sound_PlayEffect(0x20C). docs/area_w4d.md."
+
+[[func]]
+pc = 0x4298D0
+name = "Area179_CellHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4298D0..0x429908 (0x38 bytes), cdecl: Area_CellHooks' handler for areas 0xAF..0xB9: the x word 0x3F, z word 0xE and leader pose 0x802D48 1: tail kind 0x1A (Cond_ByteFA above 7, signed) or 6, al 1; else al 0. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429910
+name = "Area179_ChoiceVar8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429910..0x42992C (0x1C bytes), cdecl: choice 0 (areas 175..185's descriptors all name it): message 0xFFFF; 0x8034E5 = 2 + (answer 0). docs/area_w4d.md."
+
+[[func]]
+pc = 0x429930
+name = "Area180_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429930..0x42998C (0x5C bytes), cdecl: area 180 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429990
+name = "Area180_ChoiceStoreAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429990..0x4299A4 (0x14 bytes), cdecl: choice 24 (areas 175..185's descriptors all name it): message 0xFFFF; 0x939A3D = the answer. docs/area_w4d.md."
+
+[[func]]
+pc = 0x4299B0
+name = "Area181_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x4299B0..0x429A0C (0x5C bytes), cdecl: area 181 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429A10
+name = "Area181_ChoiceCounter0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429A10..0x429A40 (0x30 bytes), cdecl: choice 1 (areas 175..185's descriptors all name it): message 0xFFFF; answer 0: counter 0 0x903848 0x28, 0x8034E5 0x15; else 0x32, 0x19. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429A40
+name = "Area182_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429A40..0x429A9C (0x5C bytes), cdecl: area 182 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429AA0
+name = "Area183_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429AA0..0x429AFC (0x5C bytes), cdecl: area 183 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429B00
+name = "Area183_ChoiceMessage78"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429B00..0x429B38 (0x38 bytes), cdecl: choice 20 (areas 175..185's descriptors all name it): answer 0: message 0x78, 0x939A40 0xB; else 0x72, 0xC; 0x939A3F 0 either way. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429B40
+name = "Area184_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429B40..0x429B9C (0x5C bytes), cdecl: area 184 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429BA0
+name = "Area184_ChoiceMessage5A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429BA0..0x429BC9 (0x29 bytes), cdecl: choice 2 (areas 175..185's descriptors all name it): answer 1: message 0x5A and the focus object +0x86 0xFF; else 0xFFFF. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429BD0
+name = "Area184_ChoiceTailState1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429BD0..0x429BF5 (0x25 bytes), cdecl: choice 3 (areas 175..185's descriptors all name it): answer 1: message 0x5F and tail state 0x9039F4 1; else 0xFFFF. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429C00
+name = "Area184_ChoiceMessage7A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429C00..0x429C29 (0x29 bytes), cdecl: choice 6 (areas 175..185's descriptors all name it): answer 0: message 0x7A; else 0x6E and the focus object +0x86 0xFF. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429C30
+name = "Area184_ChoiceMessage77"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429C30..0x429C54 (0x24 bytes), cdecl: choice 9 (areas 175..185's descriptors all name it): answer 0: message 0xFFFF; else 0x77 and 0x939A40 0xA. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429C60
+name = "Area184_ChoiceAskZenny7F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429C60..0x429CA8 (0x48 bytes), cdecl: choice 14 (areas 175..185's descriptors all name it): answer not 0: message 0x7B, 0x939A41 1; Party_Zenny at 0x1F4 or more: 0x7F, 0; else 0x7C, 1. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429CB0
+name = "Area184_ChoiceMessage89"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429CB0..0x429CD4 (0x24 bytes), cdecl: choice 15 (areas 175..185's descriptors all name it): answer 0: message 0x89; else 0x88 and 0x939A3E 2. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429CE0
+name = "Area184_ChoiceMessageF7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429CE0..0x429D09 (0x29 bytes), cdecl: choice 21 (areas 175..185's descriptors all name it): answer 0: message 0xFFFF; else 0xF7 and the focus object +0x86 0xFF. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429D10
+name = "Area185_ChoiceMessageByAnswer"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429D10..0x429D6C (0x5C bytes), cdecl: area 185 +0x34[27]: areas 175..185's choice 27, one byte-for-byte copy per area but for its jump table's address (+0x48): the answer read signed, 0..4 message 0xFA, 0xFB, 0xFC, 0xFD, 0xF9 through the five-entry table; anything else (negative is above 4 unsigned) leaves the message word. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429D70
+name = "Area185_ChoiceSetFacility0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429D70..0x429DB1 (0x41 bytes), cdecl: choice 28 (areas 175..185's descriptors all name it): answer 0 or 1: message 0xFFFF and 0x939A3C the answer; else 0x2A1 and the focus object +0x86 0xFF. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429DC0
+name = "Area185_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429DC0..0x429E20 (0x60 bytes), cdecl: Area_StepHook's case for areas 175..185 (event_ops.cpp kStepHandlers): x's high word less 0x41 and z's less 0x14 at most 3 (16-bit): 0x9046CF set: Sound_PlayEffect(0x20C), the byte cleared, Field_ChangeArea(word 0x904150, 0x904148, 0x90414C, 4); off the square 0x9046CF 1; al 0 always. docs/area_w4d.md."
+
+[[func]]
+pc = 0x429E20
+name = "Area185_DrawTileField"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x429E20..0x429FFC (0x1DC bytes), cdecl: EffectKind18_States[103] (0x654208; a gap of the tool, Sprite_Current an effect record): MapView_ScreenXY (-12544.0, -14848.0); draw mode tpage 0xB5 dtd 1 linked (0xC); 32 rows (r = 0, -8 .. -0xF8, u = 0, 0x10 .. 0x1F0) of 8 semi-transparent TILE_1s: shade (r - (Frame_Counter & 7) + 0x17F) >> 1 (blue, red and green a quarter), the vertex ((sin a * m * 5) >> 16 + screen x, (cos a * m * 5) >> 16 + screen y, -0x340 - sin(5m) >> 5) with a = 0x100 + k * 0x200, m = (Frame_Counter & 0xF) + u, x87 and _ftol 0x5B9550, Gte_RotTransPers into the tile, Gte_StoreDepthF at +0x10, linked (0x14); draw mode tpage 0xB5 linked last. docs/area_w4d.md."
+
+[[func]]
+pc = 0x42A000
+name = "Area186_TailShift"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x42A000..0x42A17C (0x17C bytes), cdecl: Field_ModeTailKinds[39] (armed by Area186_Start): the s8 state through the byte table 0x42A170 (12) and jump table 0x42A15C (5) in the body: 0 and 0xA MapView_FocusZ 0x4400 / 0x6C00: Field_Kind2Z, Sprite_ObjectsExtra 0 z and Sprite_Kind2 z less / plus 0x1E0000, MapView_Origin word 2 less / plus 0x1E, focus 0x6200 / 0x4E00, MapView_FillCells; the timer 0x9039F6 down, at 0 counter 3 0x1C, timer 0xF, state 1 / 0xB; 1 and 0xB the timer down, at 0 Field_ChangeArea(0xAD, 0x120000, 0x460000, 0x81) / (0xAD, 0x310000, 0x600000, 0x82), kind and state 0. docs/area_w4d.md."
+
+[[func]]
+pc = 0x42A180
+name = "Area186_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x42A180..0x42A1B4 (0x34 bytes), cdecl: area 186 +0x40 init (PSX 0x801F2F24): Flags_Test(0x904030, 0x58): 0x905E68 1: Area186_Start(0xA); 2: Area186_Start(0). docs/area_w4d.md."
+
+[[func]]
+pc = 0x42A1C0
+name = "Area186_Start"
+ret = "void"
+params = "unsigned char state"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x42A1C0..0x42A23B (0x7B bytes), cdecl: called by Area186_Init: Camera_Angles (0x100, 0, 0), Camera_Distance 0x100; Sprite_ObjectsExtra 0 x 0x48000; state 0: z 0xA0000, +0x83 1, Kind2_Place(0); else z 0x640000, +0x83 2, Kind2_Place(1); tail state = state, timer 0x96, kind 0x27. docs/area_w4d.md."
+
+[[func]]
+pc = 0x42A240
+name = "Area187_ChoiceFocusPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x42A240..0x42A27C (0x3C bytes), cdecl: area 187 +0x34[0] (descriptor 0x645A70; choice 1 is Area130_ChoiceTailState2): the answer read signed picks a byte pair of Area187_FocusPairs 0x645A5C (unchecked, in .data): the focus object's dwords +0x18 / +0x1C the two bytes (focus and answer read again for the second); message 0xFFFF between. docs/area_w4d.md."
+
+[[func]]
+pc = 0x42A280
+name = "Area187_Trigger14"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x42A280..0x42A28A (0xA bytes), cdecl: Field_ObjectTriggers id 14 (a gap of the tool, area 187's block): tail kind 0x1D; al 0. docs/area_w4d.md."
+
+[[func]]
+pc = 0x42A290
+name = "Area187_TailMessage2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4D), 0x42A290..0x42A314 (0x84 bytes), cdecl: Field_ModeTailKinds[29] (a gap of the tool, armed by Area187_Trigger14): the s8 state 0: ScriptFlags_Set40, Msg_OpenScript(2), Field_Request 2, state (read again) + 1; 1: Field_Request not 2: jmp Area131_DisarmTail; 2: Field_Request not 2: Area131_DisarmTail, 0x904152 0, Flags_Clear(0x904030, 0x77), Field_ChangeArea(word 0x904150, 0x904148, 0x90414C, 4). docs/area_w4d.md."
+
+[[data]]
+pc = 0x642494
+name = "Area175_SlideSteps"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4D): Area175_SlideOrPlace steps x and z by its signed bytes by Frame_Counter & 0xF (a period-4 pattern); Area175_GlideStates follows. docs/area_w4d.md."
+
+[[data]]
+pc = 0x6424A4
+name = "Area175_GlideStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4D): Area175_GlideRun jumps through it by Sprite_Current[4]: Area175_GlideBegin20, Area175_GlideStep; Area175_GlideSteps follows. docs/area_w4d.md."
+
+[[data]]
+pc = 0x6424AC
+name = "Area175_GlideSteps"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4D): Area175_GlideStep steps x and z by its signed bytes by +0xA & 0xF. docs/area_w4d.md."
+
+[[data]]
+pc = 0x6424BC
+name = "Area175_ScriptMessages"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4D): Area175_OpenScriptMessage opens the word its script operand byte indexes (unchecked; four words shipped, then zeros). docs/area_w4d.md."
+
+[[data]]
+pc = 0x645A5C
+name = "Area187_FocusPairs"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4D): Area187_ChoiceFocusPair gives the focus object's dwords +0x18 / +0x1C the byte pair its answer (signed) indexes; the choice table 0x645A68 follows. docs/area_w4d.md."
