@@ -248,6 +248,7 @@ void Args86(unsigned k, U* a) {
             a[0] = Mem(r)[0] | (ah::Half() ? 0 : ah::Next() & 0xFFFFFF00u);
             a[1] = Mem(r + 1)[0] | (ah::Half() ? 0 : ah::Next() & 0xFFFFFF00u);
             if (ah::Half()) a[ah::Next() & 1] += ah::Half() ? 1 : 0xFFFFFFFFu;
+            else if (ah::Half()) a[ah::Next() & 1] ^= 0x80;   // bit 7 alone (the switches' bytes are all below it)
         } else {
             a[0] = ah::Next();
             a[1] = ah::Next();
@@ -482,6 +483,20 @@ const ah::DataTable kTables88[] = {
     {at::kWm88.box_states, 4},   {at::kWm88.record8_states, 3}, {at::kWm88.record4_states, 2},
 };
 
+// --- the fuzz's own literal table addresses (read off the exe, docs/area_w2b.md
+// section 4): the seed plants and the regions are built from these, never from
+// the kWm87 / kWm88 ours reads, so a wrong constant in ours shows. The state
+// tables' DataTables and the callees stay on kWm87 / kWm88 (a wrong one there
+// moves the swapped entries away from what ours reads, which shows too).
+struct Fz {
+    U plate_anims, plate_anims_end, cells, place_messages, place_messages_end, name_sets;
+    unsigned set_stride;
+    U directions, drift_u, buttons;
+    unsigned cell_records;
+};
+constexpr Fz kFz87 = {0x611C98, 0x611CC0, 0x611CC0, 0x6124CC, 0x61260C, 0x61260C, 5, 0x6126D4, 0x6126F4, 0x6126B0, 4};
+constexpr Fz kFz88 = {0x612700, 0x61271C, 0x61271C, 0x612E94, 0x612F74, 0x612F74, 12, 0x613050, 0x613070, 0x61302C, 3};
+
 // --- the regions: the harness's plus the copy's tables (only the tables: the
 // descriptor data between the cell records and the place rows is left alone)
 
@@ -490,11 +505,11 @@ enum : unsigned { kRegPackets = 3, kRegItems = 7, kRegNames = 8 };
     {at::kMapMode, 1}, {0x7E0918, 1}, {0x7E0670, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2}, \
     {at::kButtonMap0, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names}, {at::kTextRecords, text_bytes},  \
     {at::kAreaText, 4}, {at::kFlag3A79, 1},                                                              \
-    {at::kWm##nn.plate_anims, at::kWm##nn.plate_anims_end - at::kWm##nn.plate_anims},                   \
-    {at::kWm##nn.cells, 4 * (cell_records)},                                                             \
-    {at::kWm##nn.place_messages, at::kWm##nn.place_messages_end - at::kWm##nn.place_messages},          \
-    {at::kWm##nn.name_sets, 3 * at::kWm##nn.set_stride},                                                 \
-    {at::kWm##nn.directions, 0x18}, {at::kWm##nn.drift_u, 0xC}
+    {kFz##nn.plate_anims, kFz##nn.plate_anims_end - kFz##nn.plate_anims},                   \
+    {kFz##nn.cells, 4 * (cell_records)},                                                             \
+    {kFz##nn.place_messages, kFz##nn.place_messages_end - kFz##nn.place_messages},          \
+    {kFz##nn.name_sets, 3 * kFz##nn.set_stride},                                                 \
+    {kFz##nn.directions, 0x18}, {kFz##nn.drift_u, 0xC}
 // Area 87's cell region takes its zero record (the fourth); area 88's has
 // none, its fourth record is the descriptor's data: its region stops at the
 // third and its sentinel is planted there.
@@ -511,12 +526,12 @@ Saved g_saved87, g_saved88;
 
 // The copy the running group is (set before each Run; the harness calls
 // the seed and the disturbance synchronously).
-const WorldMapTables* g_t = &at::kWm87;
+const Fz* g_t = &kFz87;
 Saved* g_saved = &g_saved87;
 
-unsigned CellRecords() { return g_t == &at::kWm87 ? 4u : 3u; }
+unsigned CellRecords() { return g_t->cell_records; }
 
-void SaveTables(const WorldMapTables& t, Saved& s) {
+void SaveTables(const Fz& t, Saved& s) {
     std::memcpy(s.anims, Mem(t.plate_anims), t.plate_anims_end - t.plate_anims);
     std::memcpy(s.cells, Mem(t.cells), 0x10);
     std::memcpy(s.messages, Mem(t.place_messages), t.place_messages_end - t.place_messages);
@@ -531,7 +546,7 @@ unsigned char* Obj() { return Sprite_Current; }
 // (the search has no bound): the last record (the sentinel) always, a
 // random one when asked.
 void PlantCell(bool random_place) {
-    const WorldMapTables& t = *g_t;
+    const Fz& t = *g_t;
     unsigned char* const cx = Mem(at::kLeaderCellWordX);
     unsigned char* const cz = Mem(at::kLeaderCellWordZ);
     cx[1] = 0;
@@ -567,14 +582,41 @@ void DisturbWm(U h) {
     default: break;
     }
 }
+// The leader's cell words as the seed left them: after a disturbance moves
+// one, the settle plants (old x, new z) in record 0 and (new x, old z) in
+// record 1, each with another set's id than the sentinel's, so a read of a
+// stale word finds a record (and another name set) instead of running off.
+unsigned char g_cx0, g_cz0;
 void SettleWm() {
     unsigned char* const o = Obj();
     if (o[1] >= 5) o[1] = static_cast<unsigned char>(o[1] % 5);
     PlantCell(false);
+    const Fz& t = *g_t;
+    const unsigned char cx = Mem(at::kLeaderCellWordX)[0], cz = Mem(at::kLeaderCellWordZ)[0];
+    if (cx == g_cx0 && cz == g_cz0) return;
+    const unsigned char sentinel = Mem(t.cells + (CellRecords() - 1) * 4)[3];
+    const auto other = [&t, sentinel](unsigned k) {
+        const unsigned char id = Mem(t.name_sets + (k % 3) * t.set_stride)[0];
+        return id != sentinel ? id : Mem(t.name_sets + ((k + 1) % 3) * t.set_stride)[0];
+    };
+    // the current words' record must stay the first match: plant a stale
+    // pair only where it differs from the current one
+    if (g_cx0 != cx) {
+        unsigned char* const r0 = Mem(t.cells);
+        r0[0] = g_cx0;
+        r0[1] = cz;
+        r0[3] = other(cx);
+    }
+    if (g_cz0 != cz) {
+        unsigned char* const r1 = Mem(t.cells + 4);
+        r1[0] = cx;
+        r1[1] = g_cz0;
+        r1[3] = other(cz + 1u);
+    }
 }
 
 void SeedWm(unsigned k) {
-    const WorldMapTables& t = *g_t;
+    const Fz& t = *g_t;
     const Saved& s = *g_saved;
     unsigned char* const o = Obj();
     Gfx_PacketNext = g_packets + (ah::Next() % 4) * 4;
@@ -586,6 +628,8 @@ void SeedWm(unsigned k) {
     if (ah::Often()) std::memcpy(Mem(t.drift_u), s.drift, sizeof s.drift);
     o[1] = static_cast<unsigned char>(o[1] % 5);
     PlantCell(true);
+    g_cx0 = Mem(at::kLeaderCellWordX)[0];
+    g_cz0 = Mem(at::kLeaderCellWordZ)[0];
     const unsigned rows = (t.place_messages_end - t.place_messages) / 0x20;
     const unsigned anims = (t.plate_anims_end - t.plate_anims) / 4;
     const auto leave = [o] {
@@ -719,7 +763,7 @@ void ArgsWm(unsigned k, U* a) {
     }
 }
 
-void RunWorldMap(int area, const WorldMapTables& t, Saved& saved, const ah::Clone* clones, unsigned n, const ah::Callee* callees,
+void RunWorldMap(int area, const Fz& t, Saved& saved, const ah::Clone* clones, unsigned n, const ah::Callee* callees,
                  unsigned n_callees, const ah::DataTable* tables, ah::Region* regions, unsigned n_regions) {
     regions[kRegPackets].at = Key(g_packets);
     regions[kRegItems].at = Key(g_items);
@@ -744,8 +788,8 @@ bool Wants(int area) {
 }  // namespace
 
 void SelfTest() {
-    SaveTables(at::kWm87, g_saved87);
-    SaveTables(at::kWm88, g_saved88);
+    SaveTables(kFz87, g_saved87);
+    SaveTables(kFz88, g_saved88);
 
     if (Wants(85)) {
         ah::Group g{"area_w2b", kClones85, AH_COUNT(kClones85), kCallees85, AH_COUNT(kCallees85), nullptr, 0,
@@ -762,10 +806,10 @@ void SelfTest() {
         ah::Run(g);
     }
     if (Wants(87))
-        RunWorldMap(87, at::kWm87, g_saved87, kClones87, AH_COUNT(kClones87), kCallees87, AH_COUNT(kCallees87), kTables87,
+        RunWorldMap(87, kFz87, g_saved87, kClones87, AH_COUNT(kClones87), kCallees87, AH_COUNT(kCallees87), kTables87,
                     g_regions87, AH_COUNT(g_regions87));
     if (Wants(88))
-        RunWorldMap(88, at::kWm88, g_saved88, kClones88, AH_COUNT(kClones88), kCallees88, AH_COUNT(kCallees88), kTables88,
+        RunWorldMap(88, kFz88, g_saved88, kClones88, AH_COUNT(kClones88), kCallees88, AH_COUNT(kCallees88), kTables88,
                     g_regions88, AH_COUNT(g_regions88));
 }
 

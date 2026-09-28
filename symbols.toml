@@ -53308,7 +53308,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F720..0X40F774 (0X55), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 0 (descriptor 0x6117A8 +0x3C; PSX handler[0] 0x801F373C, names/area_records.toml). MoveScript_Object[7] = (Sprite_Current +0x34 - 0x160000) sar 15 as a byte; MoveCmd_MoveKind2(7); then Sprite_Current +0x14 = 0, MoveScript_FAWord = 0, MoveScript_Object +0 |= 0x40 (both pointers read again after the call), Field_Kind2Z = 0x3E0000 and Sprite_Current +0x38 = 0x3E0000. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F720..0x40F774 (0x55), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 0 (descriptor 0x6117A8 +0x3C; PSX handler[0] 0x801F373C, names/area_records.toml). MoveScript_Object[7] = (Sprite_Current +0x34 - 0x160000) sar 15 as a byte; MoveCmd_MoveKind2(7); then Sprite_Current +0x14 = 0, MoveScript_FAWord = 0, MoveScript_Object +0 |= 0x40 (both pointers read again after the call), Field_Kind2Z = 0x3E0000 and Sprite_Current +0x38 = 0x3E0000. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F780
@@ -53318,7 +53318,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F780..0X40F827 (0XA8), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 1 (PSX 0x801F37C0). MoveScript_Var7 6 and byte 0x8034E5 0xC: Sprite_Current +0 bit 6 cleared, Field_MemberSprite(2, 2), Sprite_SetAnimation(1). Else for party records 0 .. Field_MemberCount - 1 (a byte counter, the count read again each turn, unchecked against the three records) whose +0x89 is 2: +0x34 / +0x38 / +0x3C copied to Sprite_Current (read again each); then the script word MoveScript_Object +0xA - 2. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F780..0x40F827 (0xA8), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 1 (PSX 0x801F37C0). MoveScript_Var7 6 and byte 0x8034E5 0xC: Sprite_Current +0 bit 6 cleared, Field_MemberSprite(2, 2), Sprite_SetAnimation(1). Else for party records 0 .. Field_MemberCount - 1 (a byte counter, the count read again each turn, unchecked against the three records) whose +0x89 is 2: +0x34 / +0x38 / +0x3C copied to Sprite_Current (read again each); then the script word MoveScript_Object +0xA - 2. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F830
@@ -53328,7 +53328,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F830..0X40F846 (0X17), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 2 (PSX 0x801F38D0). Sprite_Current +6 = 7, Field_ActiveMember +0x9E = 0. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F830..0x40F846 (0x17), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 2 (PSX 0x801F38D0). Sprite_Current +6 = 7, Field_ActiveMember +0x9E = 0. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F850
@@ -53338,7 +53338,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F850..0X40F8B1 (0X62), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 3 (PSX 0x801F38F0). Sprite_Current (read after the call) +0xB = Effect_FindFree(); 0xFF: the script word MoveScript_Object +0xA - 2. Else Effect_Objects[slot] +0 = 1, +5 = 0x47, +0xB = 1 (the slot re-read from +0xB for each store, unchecked; ours aborts past the 20 records), Sound_PlayEffect(0x200). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F850..0x40F8B1 (0x62), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 3 (PSX 0x801F38F0). Sprite_Current (read after the call) +0xB = Effect_FindFree(); 0xFF: the script word MoveScript_Object +0xA - 2. Else Effect_Objects[slot] +0 = 1, +5 = 0x47, +0xB = 1 (the slot re-read from +0xB for each store, unchecked; ours aborts past the 20 records), Sound_PlayEffect(0x200). docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F8C0
@@ -53348,7 +53348,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F8C0..0X40F921 (0X62), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 4 (PSX 0x801F39F4). Area85_SpawnEffect47A's shape with the effect's +0xB = 0. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F8C0..0x40F921 (0x62), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 4 (PSX 0x801F39F4). Area85_SpawnEffect47A's shape with the effect's +0xB = 0. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F930
@@ -53358,7 +53358,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F930..0X40F95E (0X2F), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 5 (PSX 0x801F3AF8). Sprite_Current +0x24 bit 0 cleared; Sprite_SetAnimationBank(0x184); Sprite_SetAnimation(0); +0x2A = 1; +0 |= 0x10. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F930..0x40F95E (0x2F), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 5 (PSX 0x801F3AF8). Sprite_Current +0x24 bit 0 cleared; Sprite_SetAnimationBank(0x184); Sprite_SetAnimation(0); +0x2A = 1; +0 |= 0x10. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F960
@@ -53368,7 +53368,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F960..0X40F986 (0X27), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 6 (PSX 0x801F3B5C). 0x454A80(Sprite_Current) (releases the object's Field_Slots), 0x455290(Sprite_Current, 0x611814) (a Field_Slots record for the movement script 0x611814; its answer not read), Sprite_SetAnimation(0). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F960..0x40F986 (0x27), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 6 (PSX 0x801F3B5C). 0x454A80(Sprite_Current) (releases the object's Field_Slots), 0x455290(Sprite_Current, 0x611814) (a Field_Slots record for the movement script 0x611814; its answer not read), Sprite_SetAnimation(0). docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F990
@@ -53378,7 +53378,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F990..0X40F99C (0XD), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 7 and area 198's handler 3 (0x649C9C), one body in area 85's block (PSX 0x801F3BA4 for area 85, 0x801F2FD0 for area 198). 0x454A80(Sprite_Current). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F990..0x40F99C (0xD), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 7 and area 198's handler 3 (0x649C9C), one body in area 85's block (PSX 0x801F3BA4 for area 85, 0x801F2FD0 for area 198). 0x454A80(Sprite_Current). docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F9A0
@@ -53388,7 +53388,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F9A0..0X40F9AA (0XB), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 8 (PSX 0x801F3BCC). The word Sprite_Current +0x3E += 0x18. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F9A0..0x40F9AA (0xB), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 8 (PSX 0x801F3BCC). The word Sprite_Current +0x3E += 0x18. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F9B0
@@ -53398,7 +53398,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F9B0..0X40F9C4 (0X15), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 9 (PSX 0x801F3BEC). Sound_PlayEffect(0x201) unless Field_Request is 5. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F9B0..0x40F9C4 (0x15), cdecl, capstone to the last instruction, group AR2B. Area85_Handlers 9 (PSX 0x801F3BEC). Sound_PlayEffect(0x201) unless Field_Request is 5. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F9D0
@@ -53408,7 +53408,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F9D0..0X40F9D8 (0X9), cdecl, capstone to the last instruction, group AR2B. Area 85's init (+0x40; PSX 0x801F3C1C). Area85_ClutShift(-8). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F9D0..0x40F9D8 (0x9), cdecl, capstone to the last instruction, group AR2B. Area 85's init (+0x40; PSX 0x801F3C1C). Area85_ClutShift(-8). docs/area_w2b.md."
 
 [[func]]
 pc = 0x40F9E0
@@ -53417,7 +53417,7 @@ ret = "void"
 params = "int delta"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40F9E0..0X40FA83 (0XA4), cdecl, capstone to the last instruction, group AR2B. Called by Area85_Init with -8 and by engine code at 0x478649 (an effect state 0x478640 with its record's dword +0x10; that table 0x6545B8 is outside the band). For the 256 words of CLUT row 6 as loaded (0x80C180 = Gfx_ClutStripSource + 0xC00): each 5-bit channel not 0 plus delta, 0 at or below 0, 0x1F above (signed 32-bit), bit 15 kept, stored to the live strip's row 6 (0x810180 = Gfx_ClutStrip + 0xC00); then Gfx_ClutStripDirty = 1. No calls, every jump internal. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40F9E0..0x40FA83 (0xA4), cdecl, capstone to the last instruction, group AR2B. Called by Area85_Init with -8 and by engine code at 0x478649 (an effect state 0x478640 with its record's dword +0x10; that table 0x6545B8 is outside the band). For the 256 words of CLUT row 6 as loaded (0x80C180 = Gfx_ClutStripSource + 0xC00): each 5-bit channel not 0 plus delta, 0 at or below 0, 0x1F above (signed 32-bit), bit 15 kept, stored to the live strip's row 6 (0x810180 = Gfx_ClutStrip + 0xC00); then Gfx_ClutStripDirty = 1. No calls, every jump internal. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FA90
@@ -53426,7 +53426,7 @@ ret = "unsigned char"
 params = "unsigned x, unsigned z"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FA90..0X40FB6A (0XDB), cdecl, capstone to the last instruction, group AR2B. Area_CellHooks' handler for area 86 (through Area_CellHook), (x, z) in, al out. The first of Area86_Switches' three (x, z, facing, flag) records whose x and z are the arguments' low bytes and whose facing is the leader's +8 (byte 0x802D48); none al 0. For each cell of the switch's rectangle in Area86_Rects (x0 <= x < x1, z0 <= z < z1, far bounds read again each turn) Area86_MemberNear(x, z) answering 0..0x7F (signed al >= 0) is al 0; story flag 0x1C set is al 0; else 0x57C160(0x904030, the flag byte - pushed with Flags_Test's eax above it) toggles it, Sound_PlayEffect(0x200), 0x469FE0(0xF) (an effect of kind 4, which sets flag 0x1C), al 1. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FA90..0x40FB6A (0xDB), cdecl, capstone to the last instruction, group AR2B. Area_CellHooks' handler for area 86 (through Area_CellHook), (x, z) in, al out. The first of Area86_Switches' three (x, z, facing, flag) records whose x and z are the arguments' low bytes and whose facing is the leader's +8 (byte 0x802D48); none al 0. For each cell of the switch's rectangle in Area86_Rects (x0 <= x < x1, z0 <= z < z1, far bounds read again each turn) Area86_MemberNear(x, z) answering 0..0x7F (signed al >= 0) is al 0; story flag 0x1C set is al 0; else 0x57C160(0x904030, the flag byte - pushed with Flags_Test's eax above it) toggles it, Sound_PlayEffect(0x200), 0x469FE0(0xF) (an effect of kind 4, which sets flag 0x1C), al 1. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FB70
@@ -53435,7 +53435,7 @@ ret = "unsigned char"
 params = "unsigned x, unsigned z"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FB70..0X40FC01 (0X92), cdecl, capstone to the last instruction, group AR2B. Called by Area86_SwitchHook. The first party record 0 .. Field_MemberCount - 1 (a byte, signed compare, unchecked against the three records) with +0 not 0 whose (dword +0xC) * (byte +9) - (x << 16) + (dword +0x34) and the same in z with +0x10 / +0x38 are both, as absolute values (cdq / xor / sub), below ((byte +0x70) + 2) << 15: its index in al (eax above it the last absolute value). None: eax the count | 0xFF. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FB70..0x40FC01 (0x92), cdecl, capstone to the last instruction, group AR2B. Called by Area86_SwitchHook. The first party record 0 .. Field_MemberCount - 1 (a byte, signed compare, unchecked against the three records) with +0 not 0 whose (dword +0xC) * (byte +9) - (x << 16) + (dword +0x34) and the same in z with +0x10 / +0x38 are both, as absolute values (cdq / xor / sub), below ((byte +0x70) + 2) << 15: its index in al (eax above it the last absolute value). None: eax the count | 0xFF. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FC10
@@ -53445,7 +53445,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FC10..0X40FC32 (0X23), cdecl, capstone to the last instruction, group AR2B. Area 86's init (+0x40; PSX 0x801F3604, area_pairs.json's disagreeing area 86: the PC descriptor has two handlers 0x55B8B0 / 0x55B960 where the PSX has none). With the s8 Cond_ByteFA below 0xD: AreaMap_SetByte(0xB, 9, 0x50), AreaMap_SetByte(0xB, 0xA, 0x50). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FC10..0x40FC32 (0x23), cdecl, capstone to the last instruction, group AR2B. Area 86's init (+0x40; PSX 0x801F3604, area_pairs.json's disagreeing area 86: the PC descriptor has two handlers 0x55B8B0 / 0x55B960 where the PSX has none). With the s8 Cond_ByteFA below 0xD: AreaMap_SetByte(0xB, 9, 0x50), AreaMap_SetByte(0xB, 0xA, 0x50). docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FC40
@@ -53455,7 +53455,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FC40..0X40FC53 (0X14), cdecl, capstone to the last instruction, group AR2B. The init (+0x40) of areas 65 (0x6046D0) and 87 (0x612488), one body in area 86's block by address (PSX 0x801F2C38 for both). The word 0x802290 (the previous area, docs/mode-flow.md) 0x3C: Field_ScriptFlags &= 0xDFFF. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FC40..0x40FC53 (0x14), cdecl, capstone to the last instruction, group AR2B. The init (+0x40) of areas 65 (0x6046D0) and 87 (0x612488), one body in area 86's block by address (PSX 0x801F2C38 for both). The word 0x802290 (the previous area, docs/mode-flow.md) 0x3C: Field_ScriptFlags &= 0xDFFF. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FC60
@@ -53464,7 +53464,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FC60..0X40FDD3 (0X174), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlaceMessage (0X407B40) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_FieldHooks entry 4: two states on the s8 0x9039F4 - place messages by (row * 16 + Cond_ByteFA) on a 0xA1 cell, else the cell record's name set's item names to Text_Records and Msg_OpenScript(set + 0x16); state 1 waits for Field_Request not 2 and clears the three bytes. Ten place rows 0x6124CC, cell records 0x611CC0 (searched with no bound), three name sets of (id, 4 items) 0x61260C, four text rows. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FC60..0x40FDD3 (0x174), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlaceMessage (0x407B40) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_FieldHooks entry 4: two states on the s8 0x9039F4 - place messages by (row * 16 + Cond_ByteFA) on a 0xA1 cell, else the cell record's name set's item names to Text_Records and Msg_OpenScript(set + 0x16); state 1 waits for Field_Request not 2 and clears the three bytes. Ten place rows 0x6124CC, cell records 0x611CC0 (searched with no bound), three name sets of (id, 4 items) 0x61260C, four text rows. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FDE0
@@ -53473,7 +53473,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FDE0..0X40FEB5 (0XD6), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateRun (0X407CC0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +0 (effect kind 0): the cell ahead of the leader, the plate kind +0xB by AreaMap_ByteAt (0xA1 / 0xA0 / 0xAE / flag bit 12), then Area87_PlateStates by +1 (ours aborts past five). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FDE0..0x40FEB5 (0xD6), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateRun (0x407CC0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +0 (effect kind 0): the cell ahead of the leader, the plate kind +0xB by AreaMap_ByteAt (0xA1 / 0xA0 / 0xAE / flag bit 12), then Area87_PlateStates by +1 (ours aborts past five). docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FEC0
@@ -53482,7 +53482,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FEC0..0X40FF10 (0X51), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateStart (0X407DA0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the bank). Area87_PlateStates 0: +0x24 = 0x80, Sprite_SetAnimationBank(0X156), +0x29 = 5, +0x2A / +0x5D..+0x5F = 0, +1 = 1. The bank is pushed as an imm32 (area 45's 0x3B an imm8), which is why the function is 0x51 bytes. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FEC0..0x40FF10 (0x51), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateStart (0x407DA0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the bank). Area87_PlateStates 0: +0x24 = 0x80, Sprite_SetAnimationBank(0x156), +0x29 = 5, +0x2A / +0x5D..+0x5F = 0, +1 = 1. The bank is pushed as an imm32 (area 45's 0x3B an imm8), which is why the function is 0x51 bytes. docs/area_w2b.md."
 
 [[func]]
 pc = 0x40FF20
@@ -53491,7 +53491,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X40FF20..0X410061 (0X142), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShow (0X407DF0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 1: +7 = +0xB; kind 1 the animation of Area87_PlateAnims' entry for the place 0x937F82 (searched with no bound), kinds 2..4 animations 3, 0, 1; +0x40 / +0x44 / +0x48 / +9, Sprite_SetAnimation, +1 = 2. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x40FF20..0x410061 (0x142), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShow (0x407DF0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 1: +7 = +0xB; kind 1 the animation of Area87_PlateAnims' entry for the place 0x937F82 (searched with no bound), kinds 2..4 animations 3, 0, 1; +0x40 / +0x44 / +0x48 / +9, Sprite_SetAnimation, +1 = 2. docs/area_w2b.md."
 
 [[func]]
 pc = 0x410070
@@ -53500,7 +53500,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410070..0X4100B0 (0X41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateGrow (0X407F40) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 2: WorldMap_PinSprite, +0x40 += 0x2000 for eight frames, then state 3; Sprite_QueueOverlay. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410070..0x4100B0 (0x41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateGrow (0x407F40) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 2: WorldMap_PinSprite, +0x40 += 0x2000 for eight frames, then state 3; Sprite_QueueOverlay. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4100C0
@@ -53509,7 +53509,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4100C0..0X410117 (0X58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateHold (0X407F90) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 3: WorldMap_PinSprite; unless Game_Mode is 1, leaves (state 4) on a kind change, Field_Request 5 or a place change; Sprite_QueueOverlay. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4100C0..0x410117 (0x58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateHold (0x407F90) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 3: WorldMap_PinSprite; unless Game_Mode is 1, leaves (state 4) on a kind change, Field_Request 5 or a place change; Sprite_QueueOverlay. docs/area_w2b.md."
 
 [[func]]
 pc = 0x410120
@@ -53518,7 +53518,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410120..0X41016F (0X50), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShrink (0X407FF0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 4: WorldMap_PinSprite, +0x40 -= 0x2000; at 0 Effect_Release on Field_Request 5, else back to state 1; Sprite_QueueOverlay before. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410120..0x41016F (0x50), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShrink (0x407FF0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_PlateStates 4: WorldMap_PinSprite, +0x40 -= 0x2000; at 0 Effect_Release on Field_Request 5, else back to state 1; Sprite_QueueOverlay before. docs/area_w2b.md."
 
 [[func]]
 pc = 0x410170
@@ -53527,7 +53527,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410170..0X410181 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudRun (0X408040) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +0xC (effect kind 0x58): jmp [Area87_HudStates + +1 * 4] (WorldMapHud_Start, Area87_HudFrame; ours aborts past two). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410170..0x410181 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudRun (0x408040) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +0xC (effect kind 0x58): jmp [Area87_HudStates + +1 * 4] (WorldMapHud_Start, Area87_HudFrame; ours aborts past two). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410190
@@ -53536,7 +53536,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410190..0X410199 (0XA), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudFrame (0X408060) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_HudStates 1: call Area87_FrameStep; jmp Area87_BoxStep. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410190..0x410199 (0xA), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudFrame (0x408060) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_HudStates 1: call Area87_FrameStep; jmp Area87_BoxStep. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4101A0
@@ -53545,7 +53545,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4101A0..0X4101B1 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameStep (0X408070) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area87_HudFrame: jmp [Area87_FrameStates + +2 * 4] (WorldMap_FrameWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4101A0..0x4101B1 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameStep (0x408070) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area87_HudFrame: jmp [Area87_FrameStates + +2 * 4] (WorldMap_FrameWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4101C0
@@ -53554,7 +53554,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4101C0..0X4101E0 (0X21), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideIn (0X408090) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_FrameStates 1: the word +0x2E += 0x10, at 0x10 (s16) +2 + 1; a tail jump to Area87_FrameHold. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4101C0..0x4101E0 (0x21), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideIn (0x408090) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_FrameStates 1: the word +0x2E += 0x10, at 0x10 (s16) +2 + 1; a tail jump to Area87_FrameHold. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4101F0
@@ -53563,7 +53563,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4101F0..0X410217 (0X28), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameHold (0X4080C0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_FrameStates 2: the mode byte 0x9045FA 2 makes +2 = 3; Area87_DrawFrame(0x10, the word +0x2E, pushed with a stale high half). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4101F0..0x410217 (0x28), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameHold (0x4080C0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_FrameStates 2: the mode byte 0x9045FA 2 makes +2 = 3; Area87_DrawFrame(0x10, the word +0x2E, pushed with a stale high half). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410220
@@ -53572,7 +53572,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410220..0X410260 (0X41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideOut (0X4080F0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_FrameStates 3: the word +0x2E -= 0x10, at -0x30 +2 = 0; unless the mode byte is 2, +2 = 1; Area87_DrawFrame(0x10, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410220..0x410260 (0x41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideOut (0x4080F0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_FrameStates 3: the word +0x2E -= 0x10, at -0x30 +2 = 0; unless the mode byte is 2, +2 = 1; Area87_DrawFrame(0x10, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410270
@@ -53581,7 +53581,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410270..0X410281 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxStep (0X408140) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area87_HudFrame: jmp [Area87_BoxStates + +3 * 4] (WorldMapHud_BoxWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410270..0x410281 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxStep (0x408140) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area87_HudFrame: jmp [Area87_BoxStates + +3 * 4] (WorldMapHud_BoxWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410290
@@ -53590,7 +53590,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410290..0X4102F1 (0X62), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideIn (0X408160) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_BoxStates 1: y +0x30 -= 10, at 0xC8 +3 + 1; the box's leave test +3 = 3; Area87_DrawHud(0x5C, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410290..0x4102F1 (0x62), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideIn (0x408160) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_BoxStates 1: y +0x30 -= 10, at 0xC8 +3 + 1; the box's leave test +3 = 3; Area87_DrawHud(0x5C, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410300
@@ -53599,7 +53599,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410300..0X41036D (0X6E), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxHold (0X4081D0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_BoxStates 2: while +0xB is 0 count +9 to 0x5A then +0xB + 1; the leave test +3 + 1; Area87_DrawHud(0x5C, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410300..0x41036D (0x6E), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxHold (0x4081D0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_BoxStates 2: while +0xB is 0 count +9 to 0x5A then +0xB + 1; the leave test +3 + 1; Area87_DrawHud(0x5C, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410370
@@ -53608,7 +53608,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410370..0X4103C6 (0X57), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideOut (0X408240) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_BoxStates 3: y +0x30 += 10, at 0xF0 +3 = 0; unless the mode byte, Field_Request 2 or flag bit 8, +3 = 1; Area87_DrawHud(0x5C, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410370..0x4103C6 (0x57), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideOut (0x408240) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_BoxStates 3: y +0x30 += 10, at 0xF0 +3 = 0; unless the mode byte, Field_Request 2 or flag bit 8, +3 = 1; Area87_DrawHud(0x5C, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4103D0
@@ -53617,7 +53617,7 @@ ret = "void"
 params = "int x, int y"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4103D0..0X410594 (0X1C5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawFrame (0X4082A0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by the frame states: the dial page - Area87_DrawSprite for the dial, three legends and two keys over Area87_Buttons (six, then eight entries), then WorldMap_DrawNeedle. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4103D0..0x410594 (0x1C5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawFrame (0x4082A0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by the frame states: the dial page - Area87_DrawSprite for the dial, three legends and two keys over Area87_Buttons (six, then eight entries), then WorldMap_DrawNeedle. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4105A0
@@ -53626,7 +53626,7 @@ ret = "void"
 params = "int x, int y, unsigned index"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4105A0..0X41065B (0XBC), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawSprite (0X408470) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). One SPRT of the dial page from Area87_Sprites by index & 0xFF (unchecked), CLUT 0x7B80, after a draw-mode primitive; Gfx_CommitPrim(1, 0x1C). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4105A0..0x41065B (0xBC), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawSprite (0x408470) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). One SPRT of the dial page from Area87_Sprites by index & 0xFF (unchecked), CLUT 0x7B80, after a draw-mode primitive; Gfx_CommitPrim(1, 0x1C). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410660
@@ -53635,7 +53635,7 @@ ret = "void"
 params = "int x, int y"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410660..0X4106B7 (0X58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawHud (0X4086D0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the label cell). Called by the box states: the region box (sprites 4, 5) and Text_DrawAt of 0x803580 + the low word of the dword 0x803580 (area 45's reads 0x803584, area 16's 0x803588). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410660..0x4106B7 (0x58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawHud (0x4086D0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the label cell). Called by the box states: the region box (sprites 4, 5) and Text_DrawAt of 0x803580 + the low word of the dword 0x803580 (area 45's reads 0x803584, area 16's 0x803588). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4106C0
@@ -53644,7 +53644,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4106C0..0X4106D1 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Run (0X408730) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +8 (effect kind 0x16): jmp [Area87_Record8States + +1 * 4] (0x4253C0, Area87_Record8Place, 0x40C490; ours aborts past three). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4106C0..0x4106D1 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Run (0x408730) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +8 (effect kind 0x16): jmp [Area87_Record8States + +1 * 4] (0x4253C0, Area87_Record8Place, 0x40C490; ours aborts past three). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4106E0
@@ -53653,7 +53653,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4106E0..0X410833 (0X154), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Place (0X408750) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_Record8States 1: Sprite_SetAnimationBank(0x46), the effect placed at the leader moved by Area87_Directions[+8] (unchecked), Sprite_SetAnimation of Area87_Record8Anims[+8], Sprite_UpdateScreen. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4106E0..0x410833 (0x154), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Place (0x408750) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_Record8States 1: Sprite_SetAnimationBank(0x46), the effect placed at the leader moved by Area87_Directions[+8] (unchecked), Sprite_SetAnimation of Area87_Record8Anims[+8], Sprite_UpdateScreen. docs/area_w2b.md."
 
 [[func]]
 pc = 0x410840
@@ -53662,7 +53662,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410840..0X410851 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4Run (0X4088B0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +4 (effect kind 0xE): jmp [Area87_Record4States + +1 * 4] (Area87_Record4MarkCell, Area45_Record4Tick; ours aborts past two). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410840..0x410851 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4Run (0x4088B0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +4 (effect kind 0xE): jmp [Area87_Record4States + +1 * 4] (Area87_Record4MarkCell, Area45_Record4Tick; ours aborts past two). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410860
@@ -53671,7 +53671,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410860..0X410914 (0XB5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4MarkCell (0X4088D0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_Record4States 0: 0x903A79 9 or Field_StatusBits bit 0 Effect_Release; else WorldMap_RecordIndex, Sprite_SetAnimationBank(0x205), the map byte of Area87_Cells[+0xB] (unchecked) set to 0xA0, Sprite_SetAnimation(0), +1 = 1. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410860..0x410914 (0xB5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4MarkCell (0x4088D0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area87_Record4States 0: 0x903A79 9 or Field_StatusBits bit 0 Effect_Release; else WorldMap_RecordIndex, Sprite_SetAnimationBank(0x205), the map byte of Area87_Cells[+0xB] (unchecked) set to 0xA0, Sprite_SetAnimation(0), +1 = 1. docs/area_w2b.md."
 
 [[func]]
 pc = 0x410920
@@ -53680,7 +53680,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410920..0X410D81 (0X462), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawDrift (0X4089A0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +0x10 (through WorldMap_RecordHook10): the drift layer - one textured square through the GTE and a grid of map-item quads with u / v from Area87_DriftUV (unchecked), docs/worldmap_area.md section 4. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410920..0x410D81 (0x462), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawDrift (0x4089A0) instruction for instruction over area 87's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[4] +0x10 (through WorldMap_RecordHook10): the drift layer - one textured square through the GTE and a grid of map-item quads with u / v from Area87_DriftUV (unchecked), docs/worldmap_area.md section 4. docs/area_w2b.md."
 
 [[func]]
 pc = 0x410D90
@@ -53689,7 +53689,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410D90..0X410F07 (0X178), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlaceMessage (0X407B40) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the name-set stride above). WorldMap_FieldHooks entry 5: two states on the s8 0x9039F4 - place messages by (row * 16 + Cond_ByteFA) on a 0xA1 cell, else the cell record's name set's item names to Text_Records and Msg_OpenScript(set + 0x16); state 1 waits for Field_Request not 2 and clears the three bytes. Seven place rows 0x612E94, cell records 0x61271C (searched with no bound), three name sets of (id, 11 items) 0x612F74 - a stride of 12 where area 45's is 5 (lea ecx, [ebp + ebp*2]; lea edi, [ecx*4 + 0x612F75]: the four bytes the function is longer) - and eleven text rows (0x904CE0..0x904E40, area 45's four). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410D90..0x410F07 (0x178), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlaceMessage (0x407B40) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the name-set stride above). WorldMap_FieldHooks entry 5: two states on the s8 0x9039F4 - place messages by (row * 16 + Cond_ByteFA) on a 0xA1 cell, else the cell record's name set's item names to Text_Records and Msg_OpenScript(set + 0x16); state 1 waits for Field_Request not 2 and clears the three bytes. Seven place rows 0x612E94, cell records 0x61271C (searched with no bound), three name sets of (id, 11 items) 0x612F74 - a stride of 12 where area 45's is 5 (lea ecx, [ebp + ebp*2]; lea edi, [ecx*4 + 0x612F75]: the four bytes the function is longer) - and eleven text rows (0x904CE0..0x904E40, area 45's four). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410F10
@@ -53698,7 +53698,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410F10..0X410FE5 (0XD6), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateRun (0X407CC0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +0 (effect kind 0): the cell ahead of the leader, the plate kind +0xB by AreaMap_ByteAt (0xA1 / 0xA0 / 0xAE / flag bit 12), then Area88_PlateStates by +1 (ours aborts past five). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410F10..0x410FE5 (0xD6), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateRun (0x407CC0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +0 (effect kind 0): the cell ahead of the leader, the plate kind +0xB by AreaMap_ByteAt (0xA1 / 0xA0 / 0xAE / flag bit 12), then Area88_PlateStates by +1 (ours aborts past five). docs/area_w2b.md."
 
 [[func]]
 pc = 0x410FF0
@@ -53707,7 +53707,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X410FF0..0X411040 (0X51), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateStart (0X407DA0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the bank). Area88_PlateStates 0: +0x24 = 0x80, Sprite_SetAnimationBank(0X157), +0x29 = 5, +0x2A / +0x5D..+0x5F = 0, +1 = 1. The bank is pushed as an imm32 (area 45's 0x3B an imm8), which is why the function is 0x51 bytes. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x410FF0..0x411040 (0x51), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateStart (0x407DA0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the bank). Area88_PlateStates 0: +0x24 = 0x80, Sprite_SetAnimationBank(0x157), +0x29 = 5, +0x2A / +0x5D..+0x5F = 0, +1 = 1. The bank is pushed as an imm32 (area 45's 0x3B an imm8), which is why the function is 0x51 bytes. docs/area_w2b.md."
 
 [[func]]
 pc = 0x411050
@@ -53716,7 +53716,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411050..0X411191 (0X142), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShow (0X407DF0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 1: +7 = +0xB; kind 1 the animation of Area88_PlateAnims' entry for the place 0x937F82 (searched with no bound), kinds 2..4 animations 3, 0, 1; +0x40 / +0x44 / +0x48 / +9, Sprite_SetAnimation, +1 = 2. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411050..0x411191 (0x142), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShow (0x407DF0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 1: +7 = +0xB; kind 1 the animation of Area88_PlateAnims' entry for the place 0x937F82 (searched with no bound), kinds 2..4 animations 3, 0, 1; +0x40 / +0x44 / +0x48 / +9, Sprite_SetAnimation, +1 = 2. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4111A0
@@ -53725,7 +53725,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4111A0..0X4111E0 (0X41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateGrow (0X407F40) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 2: WorldMap_PinSprite, +0x40 += 0x2000 for eight frames, then state 3; Sprite_QueueOverlay. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4111A0..0x4111E0 (0x41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateGrow (0x407F40) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 2: WorldMap_PinSprite, +0x40 += 0x2000 for eight frames, then state 3; Sprite_QueueOverlay. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4111F0
@@ -53734,7 +53734,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4111F0..0X411247 (0X58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateHold (0X407F90) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 3: WorldMap_PinSprite; unless Game_Mode is 1, leaves (state 4) on a kind change, Field_Request 5 or a place change; Sprite_QueueOverlay. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4111F0..0x411247 (0x58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateHold (0x407F90) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 3: WorldMap_PinSprite; unless Game_Mode is 1, leaves (state 4) on a kind change, Field_Request 5 or a place change; Sprite_QueueOverlay. docs/area_w2b.md."
 
 [[func]]
 pc = 0x411250
@@ -53743,7 +53743,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411250..0X41129F (0X50), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShrink (0X407FF0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 4: WorldMap_PinSprite, +0x40 -= 0x2000; at 0 Effect_Release on Field_Request 5, else back to state 1; Sprite_QueueOverlay before. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411250..0x41129F (0x50), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_PlateShrink (0x407FF0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_PlateStates 4: WorldMap_PinSprite, +0x40 -= 0x2000; at 0 Effect_Release on Field_Request 5, else back to state 1; Sprite_QueueOverlay before. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4112C0
@@ -53752,7 +53752,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4112C0..0X4112D1 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudRun (0X408040) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +0xC (effect kind 0x58): jmp [Area88_HudStates + +1 * 4] (WorldMapHud_Start, Area88_HudFrame; ours aborts past two). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4112C0..0x4112D1 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudRun (0x408040) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +0xC (effect kind 0x58): jmp [Area88_HudStates + +1 * 4] (WorldMapHud_Start, Area88_HudFrame; ours aborts past two). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4112E0
@@ -53761,7 +53761,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4112E0..0X4112E9 (0XA), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudFrame (0X408060) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_HudStates 1: call Area88_FrameStep; jmp Area88_BoxStep. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4112E0..0x4112E9 (0xA), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_HudFrame (0x408060) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_HudStates 1: call Area88_FrameStep; jmp Area88_BoxStep. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4112F0
@@ -53770,7 +53770,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4112F0..0X411301 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameStep (0X408070) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area88_HudFrame: jmp [Area88_FrameStates + +2 * 4] (WorldMap_FrameWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4112F0..0x411301 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameStep (0x408070) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area88_HudFrame: jmp [Area88_FrameStates + +2 * 4] (WorldMap_FrameWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
 
 [[func]]
 pc = 0x411340
@@ -53779,7 +53779,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411340..0X411360 (0X21), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideIn (0X408090) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_FrameStates 1: the word +0x2E += 0x10, at 0x10 (s16) +2 + 1; a tail jump to Area88_FrameHold. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411340..0x411360 (0x21), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideIn (0x408090) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_FrameStates 1: the word +0x2E += 0x10, at 0x10 (s16) +2 + 1; a tail jump to Area88_FrameHold. docs/area_w2b.md."
 
 [[func]]
 pc = 0x411370
@@ -53788,7 +53788,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411370..0X411397 (0X28), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameHold (0X4080C0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_FrameStates 2: the mode byte 0x9045FA 2 makes +2 = 3; Area88_DrawFrame(0x10, the word +0x2E, pushed with a stale high half). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411370..0x411397 (0x28), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameHold (0x4080C0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_FrameStates 2: the mode byte 0x9045FA 2 makes +2 = 3; Area88_DrawFrame(0x10, the word +0x2E, pushed with a stale high half). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4113A0
@@ -53797,7 +53797,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4113A0..0X4113E0 (0X41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideOut (0X4080F0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_FrameStates 3: the word +0x2E -= 0x10, at -0x30 +2 = 0; unless the mode byte is 2, +2 = 1; Area88_DrawFrame(0x10, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4113A0..0x4113E0 (0x41), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_FrameSlideOut (0x4080F0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_FrameStates 3: the word +0x2E -= 0x10, at -0x30 +2 = 0; unless the mode byte is 2, +2 = 1; Area88_DrawFrame(0x10, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4113F0
@@ -53806,7 +53806,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4113F0..0X411401 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxStep (0X408140) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area88_HudFrame: jmp [Area88_BoxStates + +3 * 4] (WorldMapHud_BoxWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4113F0..0x411401 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxStep (0x408140) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by Area88_HudFrame: jmp [Area88_BoxStates + +3 * 4] (WorldMapHud_BoxWait, SlideIn, Hold, SlideOut; ours aborts past four). docs/area_w2b.md."
 
 [[func]]
 pc = 0x411410
@@ -53815,7 +53815,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411410..0X411471 (0X62), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideIn (0X408160) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_BoxStates 1: y +0x30 -= 10, at 0xC8 +3 + 1; the box's leave test +3 = 3; Area88_DrawHud(0x5C, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411410..0x411471 (0x62), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideIn (0x408160) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_BoxStates 1: y +0x30 -= 10, at 0xC8 +3 + 1; the box's leave test +3 = 3; Area88_DrawHud(0x5C, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x411480
@@ -53824,7 +53824,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411480..0X4114ED (0X6E), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxHold (0X4081D0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_BoxStates 2: while +0xB is 0 count +9 to 0x5A then +0xB + 1; the leave test +3 + 1; Area88_DrawHud(0x5C, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411480..0x4114ED (0x6E), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxHold (0x4081D0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_BoxStates 2: while +0xB is 0 count +9 to 0x5A then +0xB + 1; the leave test +3 + 1; Area88_DrawHud(0x5C, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4114F0
@@ -53833,7 +53833,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4114F0..0X411546 (0X57), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideOut (0X408240) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_BoxStates 3: y +0x30 += 10, at 0xF0 +3 = 0; unless the mode byte, Field_Request 2 or flag bit 8, +3 = 1; Area88_DrawHud(0x5C, y). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4114F0..0x411546 (0x57), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_BoxSlideOut (0x408240) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_BoxStates 3: y +0x30 += 10, at 0xF0 +3 = 0; unless the mode byte, Field_Request 2 or flag bit 8, +3 = 1; Area88_DrawHud(0x5C, y). docs/area_w2b.md."
 
 [[func]]
 pc = 0x411550
@@ -53842,7 +53842,7 @@ ret = "void"
 params = "int x, int y"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411550..0X411714 (0X1C5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawFrame (0X4082A0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by the frame states: the dial page - Area88_DrawSprite for the dial, three legends and two keys over Area88_Buttons (six, then eight entries), then WorldMap_DrawNeedle. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411550..0x411714 (0x1C5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawFrame (0x4082A0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Called by the frame states: the dial page - Area88_DrawSprite for the dial, three legends and two keys over Area88_Buttons (six, then eight entries), then WorldMap_DrawNeedle. docs/area_w2b.md."
 
 [[func]]
 pc = 0x411720
@@ -53851,7 +53851,7 @@ ret = "void"
 params = "int x, int y, unsigned index"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411720..0X4117DB (0XBC), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawSprite (0X408470) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). One SPRT of the dial page from Area88_Sprites by index & 0xFF (unchecked), CLUT 0x7B80, after a draw-mode primitive; Gfx_CommitPrim(1, 0x1C). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411720..0x4117DB (0xBC), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawSprite (0x408470) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). One SPRT of the dial page from Area88_Sprites by index & 0xFF (unchecked), CLUT 0x7B80, after a draw-mode primitive; Gfx_CommitPrim(1, 0x1C). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4117E0
@@ -53860,7 +53860,7 @@ ret = "void"
 params = "int x, int y"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4117E0..0X411837 (0X58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawHud (0X4086D0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the label cell). Called by the box states: the region box (sprites 4, 5) and Text_DrawAt of 0x803580 + the low word of the dword 0x803580 (area 45's reads 0x803584, area 16's 0x803588). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4117E0..0x411837 (0x58), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawHud (0x4086D0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ, and the label cell). Called by the box states: the region box (sprites 4, 5) and Text_DrawAt of 0x803580 + the low word of the dword 0x803580 (area 45's reads 0x803584, area 16's 0x803588). docs/area_w2b.md."
 
 [[func]]
 pc = 0x411840
@@ -53869,7 +53869,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411840..0X411851 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Run (0X408730) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +8 (effect kind 0x16): jmp [Area88_Record8States + +1 * 4] (0x4253C0, Area88_Record8Place, 0x40C490; ours aborts past three). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411840..0x411851 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Run (0x408730) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +8 (effect kind 0x16): jmp [Area88_Record8States + +1 * 4] (0x4253C0, Area88_Record8Place, 0x40C490; ours aborts past three). docs/area_w2b.md."
 
 [[func]]
 pc = 0x411860
@@ -53878,7 +53878,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411860..0X4119B3 (0X154), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Place (0X408750) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_Record8States 1: Sprite_SetAnimationBank(0x46), the effect placed at the leader moved by Area88_Directions[+8] (unchecked), Sprite_SetAnimation of Area88_Record8Anims[+8], Sprite_UpdateScreen. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411860..0x4119B3 (0x154), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record8Place (0x408750) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_Record8States 1: Sprite_SetAnimationBank(0x46), the effect placed at the leader moved by Area88_Directions[+8] (unchecked), Sprite_SetAnimation of Area88_Record8Anims[+8], Sprite_UpdateScreen. docs/area_w2b.md."
 
 [[func]]
 pc = 0x4119C0
@@ -53887,7 +53887,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4119C0..0X4119D1 (0X12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4Run (0X4088B0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +4 (effect kind 0xE): jmp [Area88_Record4States + +1 * 4] (Area88_Record4MarkCell, Area45_Record4Tick; ours aborts past two). docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4119C0..0x4119D1 (0x12), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4Run (0x4088B0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +4 (effect kind 0xE): jmp [Area88_Record4States + +1 * 4] (Area88_Record4MarkCell, Area45_Record4Tick; ours aborts past two). docs/area_w2b.md."
 
 [[func]]
 pc = 0x4119E0
@@ -53896,7 +53896,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X4119E0..0X411A94 (0XB5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4MarkCell (0X4088D0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_Record4States 0: 0x903A79 9 or Field_StatusBits bit 0 Effect_Release; else WorldMap_RecordIndex, Sprite_SetAnimationBank(0x205), the map byte of Area88_Cells[+0xB] (unchecked) set to 0xA0, Sprite_SetAnimation(0), +1 = 1. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x4119E0..0x411A94 (0xB5), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_Record4MarkCell (0x4088D0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). Area88_Record4States 0: 0x903A79 9 or Field_StatusBits bit 0 Effect_Release; else WorldMap_RecordIndex, Sprite_SetAnimationBank(0x205), the map byte of Area88_Cells[+0xB] (unchecked) set to 0xA0, Sprite_SetAnimation(0), +1 = 1. docs/area_w2b.md."
 
 [[func]]
 pc = 0x411AA0
@@ -53905,7 +53905,7 @@ ret = "void"
 params = "void"
 impl = "src/game/area_w2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0X411AA0..0X411F01 (0X462), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawDrift (0X4089A0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +0x10 (through WorldMap_RecordHook10): the drift layer - one textured square through the GTE and a grid of map-item quads with u / v from Area88_DriftUV (unchecked), docs/worldmap_area.md section 4. docs/area_w2b.md."
+evidence = "disasm 2026-09-28, 0x411AA0..0x411F01 (0x462), cdecl, capstone to the last instruction, group AR2B. Area 45's Area45_DrawDrift (0x4089A0) instruction for instruction over area 88's tables (a capstone compare of the pair: the same instructions, only jump targets, calls to its own copies and table operands differ). WorldMap_Records[5] +0x10 (through WorldMap_RecordHook10): the drift layer - one textured square through the GTE and a grid of map-item quads with u / v from Area88_DriftUV (unchecked), docs/worldmap_area.md section 4. docs/area_w2b.md."
 
 [[data]]
 pc = 0x61177C
