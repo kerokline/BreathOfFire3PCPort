@@ -68000,3 +68000,620 @@ params = "unsigned tag"
 impl = "src/game/boss_spawn.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-28 (round eleven group BH), 0x494A60..0x494A7D (0x1E bytes), one call: BossActor_Find(tag)'s bytes +0..+4 zeroed, untested (null faults; ours aborts). Called by 7 boss units. docs/boss_h.md section 5."
+
+[[func]]
+pc = 0x437A10
+name = "BossGary_Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437A10..0x437A21 (0x12 bytes): jmp [BossGary_Steps + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). BossKind_Table[6]: kind 6 (Gary, area 24 - tools/boss_rows.py --disc), fight 1's. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437A30
+name = "BossGary_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437A30..0x437A6C (0x3D bytes): BossGary_Steps 0: 0x939AD8's +0xFC = BossGary_Anims, +0xF4 = BossGary_Hook, +0xF8 = BossGary_Cues (0x939AD8 read before each store), Sprite_Current +1 = 2, jmp Sprite_ScriptTick (E9 at +0x38; its al the answer). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437A70
+name = "BossGary_ActDispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437A70..0x437A81 (0x12 bytes): BossGary_Steps 6: jmp [BossGary_ActSubs + 4 * Sprite_Current +2], unchecked (ours aborts past 6). EnemyOp_ActDispatch's shape over the kind's own table. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437A90
+name = "BossGary_EndDispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437A90..0x437AA1 (0x12 bytes): BossGary_Steps 11 (the generic table's EnemyOp_HitPose): jmp [BossGary_EndSteps + 4 * Sprite_Current +2], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437AB0
+name = "BossGary_EndStart"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437AB0..0x437ACB (0x1C bytes): BossGary_EndSteps 0, two calls: BattleEnemy_SetAnimation(4), MoveCmd_TestFB(0x63, 0x14) (answer not read), Sprite_Current (read after) +2 up by one. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437AD0
+name = "BossGary_EndAwait"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437AD0..0x437B55 (0x86 bytes): BossGary_EndSteps 1, five calls: when the word 0x904B7E (BossMogu_EndStart's count) is 0: Sprite_Current +0x38 += 0x8000, +0x3E = AreaMap_Elevation(+0x34, +0x38), Sprite_SetAnimationBank(0x5F), 0x939AD8's +0xFC = BossGary_AnimsEnd, +0x2A = 0, Sprite_SetAnimation(1), 0x904AE8 |= 4 (read after the call), MoveCmd_TestFB(0x64, 0x14), +2 up by one (Sprite_Current read again after each call); every frame jmp Sprite_ScriptTick. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437B60
+name = "BossGary_Hook"
+ret = "unsigned"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437B60..0x437B6F (0x10 bytes): kind 6's +0xF4 hook (stored by BossGary_Enter): jmp [BossGary_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437B70
+name = "BossMogu_Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437B70..0x437B81 (0x12 bytes): jmp [BossMogu_Steps + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). BossKind_Table[7]: kind 7 (Mogu, area 24 - tools/boss_rows.py --disc), fight 1's. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437B90
+name = "BossMogu_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437B90..0x437BCC (0x3D bytes): BossMogu_Steps 0: 0x939AD8's +0xFC = BossMogu_Anims, +0xF4 = BossMogu_Hook, +0xF8 = BossMogu_Cues, Sprite_Current +1 = 2, jmp Sprite_ScriptTick (E9 at +0x38). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437BD0
+name = "BossMogu_ActDispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437BD0..0x437BE1 (0x12 bytes): BossMogu_Steps 6: jmp [BossMogu_ActSubs + 4 * Sprite_Current +2], unchecked (ours aborts past 6). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437BF0
+name = "BossMogu_EndDispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437BF0..0x437C01 (0x12 bytes): BossMogu_Steps 11: jmp [BossMogu_EndSteps + 4 * Sprite_Current +2], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437C10
+name = "BossMogu_EndStart"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437C10..0x437C2B (0x1C bytes): BossMogu_EndSteps 0, one call: BattleEnemy_SetAnimation(4), the word 0x904B7E = 0x3C, Sprite_Current (read after the call) +2 up by one. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437C30
+name = "BossMogu_EndCount"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437C30..0x437C9C (0x6D bytes): BossMogu_EndSteps 1, four calls: the word 0x904B7E down by one; at 0: Sprite_Current +0x38 += 0x8000, +0x3E = AreaMap_Elevation(+0x34, +0x38), Sprite_SetAnimationBank(0x5F), 0x939AD8's +0xFC = BossMogu_AnimsEnd, +0x2A = 0, Sprite_SetAnimation(0), +2 up by one; every frame jmp Sprite_ScriptTick. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437CB0
+name = "BossMogu_Hook"
+ret = "unsigned"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437CB0..0x437CBF (0x10 bytes): kind 7's +0xF4 hook: jmp [BossMogu_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437CD0
+name = "Boss01_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437CD0..0x437CEE (0x1F bytes): Boss_SetupTable[1] (id 1, BOSS001, area 24 row 4: Gary and Mogu, kinds 6 and 7 - tools/boss_rows.py --disc): BattleHook_End = Boss01_End, BattleHook_Exit = Boss01_Exit, BattleHook_Event = Boss01_Event. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437CF0
+name = "Boss01_Event"
+ret = "unsigned char"
+params = "unsigned phase"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437CF0..0x437DD7 (0xE8 bytes): fight 1's event hook, a 7-entry jump table by the phase code's low byte (at +0xCC), al 0 on every path: 0 - with 0x904AA8 bit 0x40 and 0x904B44 0, 0x904AAD |= 1; 1 - with 0x904B34 0, 0x904B35 4 and the u16 +2 of [0x904B40] 0x78, enemies 0 and 1's words +0xA4 and +0xB0 = 1 and the leader's +0x134 bit 1 cleared; 5 - with 0x904AAD bit 0, the leader's +0x126 = 0x78, +0x125 = 4, 0x904B35 = 4, +0x124 = 0x40, 0x904B44 = 0x40; 6 - the leader's +0x134 bit 1 set; 2..4 and above 6 nothing. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437DE0
+name = "Boss01_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437DE0..0x437E06 (0x27 bytes): fight 1's end hook: 0x904AE8 bit 0 (the loss) - 0x8034E4 = 6 and 0x8034E5 = 0x32; else 0x8034E5 up by one; then jmp 0x446E20 (0x904AA0 = 5, 0x904AA1 = 3, 0x904AA2 = 0). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437E10
+name = "Boss01_Exit"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437E10..0x437ED8 (0xC9 bytes): fight 1's exit hook, ten calls: for tags 6 and 7 with enemies 0 (0x93B960) and 1 (0x93BA88): BossActor_ClearBit40(tag), BossActor_CopyFrom(tag, the enemy, 1), Sprite_Current = BossActor_Find(tag), Sprite_SetAnimationBank(0x5F), +0x2A = +0x48 = 0, Sprite_SetAnimation(1 / 0), then +0x58 / +0x5A the enemy's words (Sprite_Current read again at each store). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437EE0
+name = "BossNue_Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437EE0..0x437EF1 (0x12 bytes): jmp [BossNue_Steps + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). BossKind_Table[1]: kind 1 (Nue, area 23 - tools/boss_rows.py --disc). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437F00
+name = "BossNue_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437F00..0x437F3C (0x3D bytes): BossNue_Steps 0: 0x939AD8's +0xFC = BossNue_Anims, +0xF4 = BossNue_Hook, +0xF8 = BossNue_Cues, Sprite_Current +1 = 2, jmp Sprite_ScriptTick. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437F40
+name = "BossNue_EndDispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437F40..0x437F51 (0x12 bytes): BossNue_Steps 9: jmp [BossNue_EndSteps + 4 * Sprite_Current +2], unchecked (ours aborts past 2). docs/boss_sa.md."
+
+[[func]]
+pc = 0x437F60
+name = "BossNue_EndPose"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437F60..0x437F72 (0x13 bytes): BossNue_EndSteps 0: Sprite_SetAnimation(6), Sprite_Current (read after) +2 up by one. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437F80
+name = "BossNue_EndMove"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437F80..0x437FE3 (0x64 bytes): BossNue_EndSteps 1, five calls: Sprite_ScriptTickOnce (answer not read); MoveCmd_OpE9(0x7DEF00 + BossActor_Index(0) * 0xA4, 0, -14, 0x40, 0xFC00, 0xFF, 0); its al not 0 - ret; else Battle_ClearActorBit(Sprite_Current +5), 0x904AE8 |= 2 (the win), jmp Effect_Release. docs/boss_sa.md."
+
+[[func]]
+pc = 0x437FF0
+name = "BossNue_Hook"
+ret = "unsigned"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x437FF0..0x437FFF (0x10 bytes): kind 1's +0xF4 hook: jmp [BossNue_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438000
+name = "BossNue_HookPick"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438000..0x43802C (0x2D bytes): BossNue_Hooks 0 (the hook's call with 0 at the action pick, 0x435BF5): 0x939AD8's HP +0xA4 == 0xFFFF - 0x904B35 = 3, Sprite_Current +4 = 0, Sound_PlayById(0x602). The word is not read. (0x00438000 also occurs as a dword in unrelated code and data: .text 0x54EDA6, 0x5577FA, 0x5669AE; .rdata 0x5C4995; .data 0x5F5F7F, 0x5F7EBB, 0x600853 - none a reference.) docs/boss_sa.md."
+
+[[func]]
+pc = 0x438030
+name = "BossNue_HookHit"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438030..0x43806F (0x40 bytes): BossNue_Hooks 1 and BossWeretigr_Hooks 1 (the hook's call with 1 at the hit, 0x4367EE): with 0x939AD8's u16 HP +0xA4 less the s16 +0x108 at or below its u16 +0xB0 >> 2 (a signed compare): 0x904AAD |= 1, HP = 0xFFFF. The word is not read. The one function two units share (K01, K39). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438070
+name = "BossNue2_Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438070..0x438081 (0x12 bytes): jmp [BossNue2_Steps + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). BossKind_Table[2]: kind 2 (Nue, area 22 - tools/boss_rows.py --disc). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438090
+name = "BossNue2_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438090..0x4380CC (0x3D bytes): BossNue2_Steps 0: 0x939AD8's +0xFC = BossNue_Anims, +0xF4 = BossNue2_Hook, +0xF8 = BossNue_Cues (kind 1's two tables), Sprite_Current +1 = 2, jmp Sprite_ScriptTick. docs/boss_sa.md."
+
+[[func]]
+pc = 0x4380D0
+name = "BossNue2_ActDispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x4380D0..0x4380E1 (0x12 bytes): BossNue2_Steps 6: jmp [BossNue2_ActSubs + 4 * Sprite_Current +2], unchecked (ours aborts past 6). docs/boss_sa.md."
+
+[[func]]
+pc = 0x4380F0
+name = "BossNue2_Hook"
+ret = "unsigned"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x4380F0..0x4380FF (0x10 bytes): kind 2's +0xF4 hook: jmp [BossNue2_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438100
+name = "BossSample1_Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438100..0x438111 (0x12 bytes): jmp [BossSample1_Steps + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). BossKind_Table[46]: kind 46 (Sample 1, area 158 - tools/boss_rows.py --disc). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438120
+name = "BossSample1_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438120..0x438170 (0x51 bytes): BossSample1_Steps 0: 0x939AD8's +0xFC = BossNue_Anims, +0xF4 = BossSample1_Hook, +0xF8 = BossSample1_Cues, then its +0x114 |= 8, Sprite_Current +1 = 2, jmp Sprite_ScriptTick (E9 at +0x4C). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438180
+name = "BossSample1_Hook"
+ret = "unsigned"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438180..0x43818F (0x10 bytes): kind 46's +0xF4 hook: jmp [BossSample1_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x438190
+name = "Boss02_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438190..0x4381AE (0x1F bytes): Boss_SetupTable[2] (id 2, BOSS002, row 7 of area 22, 23 or 158 - tools/boss_rows.py --disc leaves which; the kinds before it are Nue (1, 2) and Sample 1 (46); the code never reads 0x904AAA): BattleHook_End = Boss02_End, BattleHook_Exit = BareRet, BattleHook_Event = Boss02_Event. docs/boss_sa.md."
+
+[[func]]
+pc = 0x4381B0
+name = "Boss02_Event"
+ret = "unsigned char"
+params = "unsigned phase"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x4381B0..0x4381D5 (0x26 bytes): fight 2's event hook: phase code low byte 0 with 0x904AE8 bit 1 - the window records' pass byte 0x802D20 = 2 and Msg_OpenScript(0x19); al 0. docs/boss_sa.md."
+
+[[func]]
+pc = 0x4381E0
+name = "Boss02_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x4381E0..0x43820A (0x2B bytes): fight 2's end hook: 0x904AE8 & 6 zero - jmp 0x446E00; else BossActor_Clear(0), MoveScript counter 0x903848 = 0x24, Music_Track = 0x1B, jmp 0x446DE0. docs/boss_sa.md."
+
+[[func]]
+pc = 0x438210
+name = "Boss03_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438210..0x43822E (0x1F bytes): Boss_SetupTable[3] (id 3, BOSS002 row 7; which area as Boss02_Setup): BattleHook_End = Boss03_End, BattleHook_Exit = BossHook_ExitActor0Bit40, BattleHook_Event = BareRetZero. docs/boss_sa.md."
+
+[[func]]
+pc = 0x438230
+name = "Boss03_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438230..0x438261 (0x32 bytes): fight 3's end hook: 0x904AE8 & 6 zero - jmp 0x446E00; else BossActor_CopyFrom(0, 0x93B960, 0), 0x903848 = 0x6D, Music_Track = 0x18, jmp 0x446DE0. docs/boss_sa.md."
+
+[[func]]
+pc = 0x438270
+name = "Boss39_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x438270..0x43828E (0x1F bytes): Boss_SetupTable[39] (id 39, BOSS002 row 7; chapter 15's register-passed call, docs/takeover-queue-bosses.md section 5): BattleHook_End = BossHook_EndPickWay, BattleHook_Exit = BareRet, BattleHook_Event = BareRetZero. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D3D0
+name = "BossWeretigr_Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D3D0..0x43D3E1 (0x12 bytes): jmp [BossWeretigr_Steps + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). BossKind_Table[39]: kind 39 (Weretigr, area 35 - tools/boss_rows.py --disc), fight 33's (BOSS033); in group BSA because its hook table shares BossNue_HookHit. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D3F0
+name = "BossWeretigr_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D3F0..0x43D42C (0x3D bytes): BossWeretigr_Steps 0: 0x939AD8's +0xFC = BossWeretigr_Anims, +0xF4 = BossWeretigr_Hook, +0xF8 = BossWeretigr_Cues, Sprite_Current +1 = 2, jmp Sprite_ScriptTick. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D430
+name = "BossWeretigr_State4Dispatch"
+ret = "unsigned"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D430..0x43D441 (0x12 bytes): BossWeretigr_Steps 4 (the generic table's 0x4365D0, the turn's start): jmp [BossWeretigr_State4Steps + 4 * Sprite_Current +2], unchecked (ours aborts past 5). docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D450
+name = "BossWeretigr_State4Fx"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D450..0x43D4FE (0xAF bytes): BossWeretigr_State4Steps 0, one call: n = BattleTask_Create(3, 6) (al); in slot n (0x93A000 + n * 0x84): the first 0x80 bytes of enemy object 0x93B960 + (0x904B34 - 3) * 0x128 (rep movsd), +6 = 3, +5 = 6, +1..+4 = 0, +0xB = n, +0x80 = Sprite_Current; then Sprite_Current +9 = n, +0xA = 0x10, +0 |= 0x40, +2 up by one. The task is BattleBossFx_Dispatch's slot 6. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D500
+name = "BossWeretigr_State4Cue"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D500..0x43D552 (0x53 bytes): BossWeretigr_State4Steps 1, two calls: Sprite_Current +0xA down by one; at 0: 0x437450(the u16 at [0x939AD8 +0xF8]) and 0x437450(that u16 + 4) (0x939AD8 and +0xF8 read again; 0x437450 plays the cue unless 0xFFFF), +2 up by one. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D560
+name = "BossWeretigr_State4End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D560..0x43D57B (0x1C bytes): BossWeretigr_State4Steps 2, two calls: with Sprite_Current +0 bit 0x40 clear, 0x904AA8 |= 4, 0x4376F0(), jmp 0x4376A0 (+1 = 2, +2 = 0, Battle_ClearActorBit(+5): the turn closed). docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D580
+name = "BossWeretigr_EndPose"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D580..0x43D592 (0x13 bytes): BossWeretigr_State4Steps 3: Sprite_SetAnimation(0), Sprite_Current (read after) +2 up by one. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D5A0
+name = "BossWeretigr_EndMove"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D5A0..0x43D623 (0x84 bytes): BossWeretigr_State4Steps 4, five calls: BossNue_EndMove's walk (Sprite_ScriptTickOnce, MoveCmd_OpE9 on the actor tagged 0, al not 0 - ret; Battle_ClearActorBit(+5)); then 0x904AE8 |= 2 and the experience 0x904AEC += 0x939AD8's u16 +0x96 (both read after the calls), jmp Effect_Release. docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D630
+name = "BossWeretigr_Hook"
+ret = "unsigned"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D630..0x43D63F (0x10 bytes): kind 39's +0xF4 hook: jmp [BossWeretigr_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3). docs/boss_sa.md."
+
+[[func]]
+pc = 0x43D640
+name = "BossWeretigr_HookPick"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sa.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSA), 0x43D640..0x43D661 (0x22 bytes): BossWeretigr_Hooks 0 (the action pick): HP +0xA4 == 0xFFFF - 0x904B35 = 3, Sprite_Current +4 = 0 (BossNue_HookPick without its cue). The word is not read. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C770
+name = "BossGary_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 6's +0xFC animation bytes (BattleEnemy_SetAnimation reads them), stored by BossGary_Enter; to BossGary_AnimsEnd. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C77C
+name = "BossGary_AnimsEnd"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 6's +0xFC after its scripted end, stored by BossGary_EndAwait; to BossMogu_Anims. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C788
+name = "BossMogu_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 7's +0xFC animation bytes, stored by BossMogu_Enter. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C794
+name = "BossMogu_AnimsEnd"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 7's +0xFC after its scripted end, stored by BossMogu_EndCount. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C7A0
+name = "BossGary_Cues"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 6's +0xF8 cue words (the generic turn steps play them through 0x437450), stored by BossGary_Enter. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C7A8
+name = "BossMogu_Cues"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 7's +0xF8 cue words, stored by BossMogu_Enter; BossGary_Steps follows. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C7F8
+name = "BossGary_EndSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): jumped through by BossGary_EndDispatch by +2: BossGary_EndStart, BossGary_EndAwait, BossOp_ScriptTick (BossGary_Hooks follows). docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C804
+name = "BossGary_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 6's +0xF4 hook table, by the hook's word: BareRet three times. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C858
+name = "BossMogu_EndSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): jumped through by BossMogu_EndDispatch by +2: BossMogu_EndStart, BossMogu_EndCount, BossOp_ScriptTick. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C864
+name = "BossMogu_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 7's +0xF4 hook table: BareRet three times. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C870
+name = "BossNue_Anims"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): the +0xFC animation bytes of kinds 1, 2 and 46 (stored by BossNue_Enter, BossNue2_Enter, BossSample1_Enter); to BossNue_Cues. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C880
+name = "BossNue_Cues"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): the +0xF8 cue words of kinds 1 and 2 (BossNue_Enter, BossNue2_Enter). docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C888
+name = "BossSample1_Cues"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 46's +0xF8 cue words (BossSample1_Enter); BossNue_Steps follows. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C8C0
+name = "BossNue_EndSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): jumped through by BossNue_EndDispatch by +2: BossNue_EndPose, BossNue_EndMove. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C8C8
+name = "BossNue_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 1's +0xF4 hook table by the word: BossNue_HookPick, BossNue_HookHit, BareRet. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C91C
+name = "BossNue2_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 2's +0xF4 hook table: BareRet three times. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64C958
+name = "BossSample1_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 46's +0xF4 hook table: BareRet three times (the next kind's bytes follow). docs/boss_sa.md."
+
+[[data]]
+pc = 0x64D638
+name = "BossWeretigr_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 39's +0xFC animation bytes (BossWeretigr_Enter). docs/boss_sa.md."
+
+[[data]]
+pc = 0x64D644
+name = "BossWeretigr_Cues"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 39's +0xF8 cue words (BossWeretigr_Enter; BossWeretigr_State4Cue plays the first and the first + 4). docs/boss_sa.md."
+
+[[data]]
+pc = 0x64D650
+name = "BossWeretigr_Steps"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): the state table of BossKind_Table[39] BossWeretigr_Dispatch by +1: EnemyOp_Steps' shape with BossWeretigr_Enter at 0, BossWeretigr_State4Dispatch at 4 and BareRet at 5. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64D680
+name = "BossWeretigr_State4Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): jumped through by BossWeretigr_State4Dispatch by +2: State4Fx, State4Cue, State4End, EndPose, EndMove. docs/boss_sa.md."
+
+[[data]]
+pc = 0x64D694
+name = "BossWeretigr_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSA): kind 39's +0xF4 hook table: BossWeretigr_HookPick, BossNue_HookHit, BareRet (the next kind's table follows at 0x64D6A0). docs/boss_sa.md."
