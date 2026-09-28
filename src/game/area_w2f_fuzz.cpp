@@ -440,7 +440,8 @@ void Seed108(unsigned k) {
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
         break;
     case k108Hook:
-        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(ah::Next() % 8);
+        // the cells' direction is 7 in the image; the pose compared whole
+        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(7, 7, 7, 6, 0, 0x17, 0x87));
         break;
     case k108Tail: {
         B(at::kTailState) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 6, 9, 0, 1, 2, 3, 4, 5, 9, 0xA, 0xFF, 0x80, 7));
@@ -470,9 +471,18 @@ void Args108(unsigned k, U* a) {
 }
 
 // ---- area 110 ----
-void Seed110(unsigned k) {
+void Seed110(unsigned) {
     Common();
-    if (ah::Often()) std::memcpy(ah::Mem(at::kArea110Weights), g_weights110, sizeof g_weights110);
+    // the image's weights (they sum to 0x40, so a roll always falls below
+    // one), small weights (0..9 each: the walk reaches the eighth weight and
+    // runs past it, "none"), or the random fill
+    switch (ah::Next() % 3) {
+    case 0: std::memcpy(ah::Mem(at::kArea110Weights), g_weights110, sizeof g_weights110); break;
+    case 1:
+        for (unsigned i = 0; i < 8; ++i) B(at::kArea110Weights + i) = static_cast<unsigned char>(ah::Next() % 10);
+        break;
+    default: break;
+    }
     if (ah::Often()) std::memcpy(ah::Mem(at::kArea110Cells), g_cells110, sizeof g_cells110);
 }
 
@@ -565,7 +575,8 @@ void Seed111(unsigned k) {
         if (ah::Often()) ah::Pointer(at::kScriptObject)[4] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
         break;
     case k111Tail:
-        B(at::kTailState) = static_cast<unsigned char>(AH_PICK(1, 3, 5, 7, 0xA, 0x14, 0x15, 0x16, 0x17, 0x18, 0xA, 0x15, 0x17, 0, 2, 0x19, 0xFF, 0x80));
+        B(at::kTailState) = static_cast<unsigned char>(
+            AH_PICK(1, 3, 5, 7, 0xA, 0x14, 0x15, 0x16, 0x17, 0x18, 0xA, 0x15, 0x16, 0x17, 0x18, 0x16, 0, 2, 0x19, 0xFF, 0x80));
         if (ah::Often()) SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 2, 0, 0x101));
         if (ah::Often()) B(at::kKind2Hold) = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
         break;
@@ -590,12 +601,28 @@ void Seed111(unsigned k) {
 // and gates each way, the final cell's; the helpers' arguments.
 void Args111(unsigned k, U* a) {
     if (k == k111Arrive) {
-        if (!ah::Often()) return;
-        const U hx = AH_PICK(0x15, 0x16, 0x17, 0x2F, 0x30, 0x31, 0x1F, 0x20, 0x21, 0x25, 0x26, 0x27, 0x22, 0x23, 0x24, 0x28, 0x2A);
-        const U hz = AH_PICK(0x161, 0x162, 0x163, 0x17B, 0x17C, 0x17D, 0x16B, 0x16C, 0x16D, 0x171, 0x172, 0x173, 0x16E, 0x16F, 0x170, 0x16A, 0x150);
-        a[0] = hx << 15 | (ah::Next() & 0x7FFF);
-        a[1] = hz << 15 | (ah::Next() & 0x7FFF);
-        if (ah::Next() % 8 == 0) a[0] |= 0x80000000u;
+        // one of the eight edges (the coordinate on it, or one beside; the
+        // other inside its span, or one past either end), the final cell's
+        // high words, or anything
+        struct EdgeCase {
+            bool on_x;
+            U at, lo, span;
+        };
+        static const EdgeCase kEdges[] = {{true, 0x16, 0x162, 0x1B}, {true, 0x30, 0x162, 0x1B}, {false, 0x162, 0x16, 0x1B},
+                                          {false, 0x17C, 0x16, 0x1B}, {true, 0x20, 0x16E, 3},     {true, 0x26, 0x16E, 3},
+                                          {false, 0x16C, 0x22, 3},    {false, 0x172, 0x22, 3}};
+        const unsigned pick = ah::Next() % 11;
+        if (pick < 8) {
+            const EdgeCase& e = kEdges[pick];
+            const U on = ah::Next() % 4 == 0 ? e.at + (ah::Half() ? 1 : static_cast<U>(-1)) : e.at;
+            const unsigned r = ah::Next() % 6;
+            const U other = r == 0 ? e.lo - 1 : r == 1 ? e.lo + e.span : e.lo + ah::Next() % e.span;
+            a[0] = (e.on_x ? on : other) << 15 | (ah::Next() & 0x7FFF);
+            a[1] = (e.on_x ? other : on) << 15 | (ah::Next() & 0x7FFF);
+        } else if (pick < 10) {
+            a[0] = At16(AH_PICK(0x11, 0x12, 0x11, 0x12, 0x10, 0x13, 0x111), a[0]);
+            a[1] = At16(AH_PICK(0xB7, 0xB8, 0xB7, 0xB8, 0xB6, 0xB9, 0x1B7), a[1]);
+        }
         return;
     }
     if (k == k111ArmTail) {
@@ -636,8 +663,8 @@ void Seed112(unsigned k) {
         break;
     case k112Flags34: case k112Message13: case k112ClearFlags: SeedAnswer(); break;
     case k112Step:
-        if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(3, 3, 2, 4, 0x83));
-        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 1, 5, 8, 0x80, 3));
+        if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(3, 3, 3, 2, 4, 0x83));
+        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 0, 7, 6, 1, 5, 8, 0x80, 3));
         break;
     case k112CellHook:
         if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(3, 0, 1, 2, 4, 7, 0x83));
@@ -713,7 +740,7 @@ void SelfTest() {
     g_regions[kPointRegion].at = Key(g_points);
     std::memcpy(g_weights110, ah::Mem(at::kArea110Weights), sizeof g_weights110);
     std::memcpy(g_cells110, ah::Mem(at::kArea110Cells), sizeof g_cells110);
-    constexpr unsigned kRounds = 6000;
+    constexpr unsigned kRounds = 8000;
     RunArea(108, kClones108, sizeof kClones108 / sizeof kClones108[0], kTables108, sizeof kTables108 / sizeof kTables108[0], &Seed108, &Args108,
             kRounds);
     RunArea(110, kClones110, sizeof kClones110 / sizeof kClones110[0], nullptr, 0, &Seed110, nullptr, kRounds);
