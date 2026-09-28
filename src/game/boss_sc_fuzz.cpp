@@ -295,8 +295,8 @@ void Seed(unsigned k) {
     case 0x4396B0: OtherStates(1, 12, 6, 4); break;
     case 0x439730: OtherStates(2, 12, 6, 4); break;
     case 0x439750: OtherStates(3, 12, 6, 4); break;
-    case 0x439E00: OtherStates(1, 12, 3, 0); break;
-    case 0x439E70: OtherStates(2, 12, 3, 0); break;
+    case 0x439E00: OtherStates(1, 12, 3, 3); break;
+    case 0x439E70: OtherStates(2, 12, 3, 3); break;
     case 0x439B10: case 0x439C60: case 0x43A360: case 0x43A3D0: case 0x43A4D0: OtherStates(1, 12, 0, 0); break;
     default:
         break;
