@@ -216,6 +216,7 @@
 #include "game/boss_sd.h"
 #include "game/boss_sc.h"
 #include "game/boss_se.h"
+#include "game/boss_si.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -758,6 +759,11 @@ void InjectAll() {
                                 // its clones' calls re-aimed at the boss harness's recorders, the kinds' state and
                                 // hook tables swapped for the fuzz only; no module patches bytes inside its 52
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSi_Inject();            // round 11 group BSI (fights 37, 38, 40, 42, 44, 45, 49..51, 53, kinds 45, 47, 49,
+                                // 51, 52, 56..58, 60 and Arwan's task, 0x43ECC0..0x43F79B): its clones' calls
+                                // re-aimed at the boss harness's recorders, the kinds' state and hook tables swapped
+                                // for the fuzz only; no module patches bytes inside its 50 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
