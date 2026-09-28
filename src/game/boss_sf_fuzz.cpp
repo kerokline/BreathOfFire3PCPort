@@ -75,6 +75,23 @@ std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 
+// Set-up 27's hooks read the script bits 0x904AAD again after a call
+// (Boss27_Event's code 2 after Sprite_EnsureAnimation, Boss27_End after the
+// party loop, Boss27_Exit between its spawn-helper calls): these callees'
+// stand-ins flip one of its bits, louder than the real ones (which do not
+// touch it), so a read taken before the call is refused whenever it is
+// reached, not only when the disturbance happens to move the byte.
+// BossActor_ClearBit40 keeps the standard stand-in's own effect (a field
+// object's bit 0x40 flipped).
+std::uint32_t ScriptEffect(const std::uint32_t*, std::uint32_t answer) {
+    B(at::kScript) ^= static_cast<unsigned char>(1u << (bh::Noise() % 8));
+    return answer;
+}
+std::uint32_t ClearBitEffect(const std::uint32_t* a, std::uint32_t answer) {
+    bh::Object(bh::Noise() % 4)[0] ^= 0x40;
+    return ScriptEffect(a, answer);
+}
+
 // AreaMap_Elevation answers the ground; the Gazer effect compares its signed
 // low word + 0x200 / 0x400 / 0x1000 with the running sprite's +0x3E. A third
 // of the time the answer puts that sum at +0x3E, one below or one above (the
@@ -89,7 +106,7 @@ std::uint32_t GroundEffect(const std::uint32_t*, std::uint32_t answer) {
     return (answer & 0xFFFF0000u) | (static_cast<U>(ground) & 0xFFFFu);
 }
 
-// Beyond the standard set: Port_DroppedCall with no words (it sits in both
+// Beyond the standard set: the four louder stand-ins above; Port_DroppedCall with no words (it sits in both
 // kinds' +1 tables; reached through a dispatcher's jmp it "reads" the stack
 // word of the dispatcher's caller - boss_sa.md section 3); Sprite_PoseFromSet
 // and Battle_RemoveFromTurnOrder as set-up 26's loop has them (the pose a
@@ -102,7 +119,14 @@ std::uint32_t GroundEffect(const std::uint32_t*, std::uint32_t answer) {
 // directly.
 const bh::Callee kCallees[] = {
     {"Port_DroppedCall", ::bof3::addr::Port_DroppedCall, KeyOf(&::Port_DroppedCall), 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0, {},
+     &ScriptEffect},
+    {"Sprite_EnsureAnimation", ::bof3::addr::Sprite_EnsureAnimation, KeyOf(&::Sprite_EnsureAnimation), 1, {kU8}, bh::Answer::kFlag, 0, 0, {},
+     &ScriptEffect},
+    {"BossActor_CopyFrom", ::bof3::addr::BossActor_CopyFrom, KeyOf(&::BossActor_CopyFrom), 3, {kU8, kAll, kU8}, bh::Answer::kGarbage, 0, 0, {},
+     &ScriptEffect},
+    {"BossActor_ClearBit40", ::bof3::addr::BossActor_ClearBit40, KeyOf(&::BossActor_ClearBit40), 1, {kU8}, bh::Answer::kGarbage, 0, 0, {},
+     &ClearBitEffect},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
     {"Crt_sprintf", KeyOf(Crt_sprintf), KeyOf(Crt_sprintf), 3, {kAll, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
