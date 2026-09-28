@@ -48661,20 +48661,22 @@ evidence = "disasm 2026-09-27, 0x408F20..0x408F5F (0x40), cdecl, capstone to the
 [[func]]
 pc = 0x408F60
 name = "Area47_PlaceAtStart"
+psx = 0x801F38F4
 ret = "void"
 params = "void"
 impl = "src/game/area_w1b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27, 0x408F60..0x408FBB (0x5C), cdecl, capstone to the last instruction, group AR1B. Area 47's handler 0 (Area47_Handlers): Sprite_Current +0x34 = Field_Kind2X = 0x120000, +0x38 = Field_Kind2Z = 0x240000; Field_ViewReset; word +0x3E = 0x1220; MapView_SetElevation(that word, pushed with Field_ViewReset's edx above it - read as its low 16 bits); Camera_Angles[0] = 0xFB76, [2] = 0xF8. docs/area_w1b.md."
+evidence = "disasm 2026-09-27, 0x408F60..0x408FBB (0x5C), cdecl, capstone to the last instruction, group AR1B. Area 47's handler 0 (Area47_Handlers) (PSX twin: area_records.toml area 47 handler[0]): Sprite_Current +0x34 = Field_Kind2X = 0x120000, +0x38 = Field_Kind2Z = 0x240000; Field_ViewReset; word +0x3E = 0x1220; MapView_SetElevation(that word, pushed with Field_ViewReset's edx above it - read as its low 16 bits); Camera_Angles[0] = 0xFB76, [2] = 0xF8. docs/area_w1b.md."
 
 [[func]]
 pc = 0x408FC0
 name = "Area47_SpawnEffect3D"
+psx = 0x801F396C
 ret = "void"
 params = "void"
 impl = "src/game/area_w1b.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27, 0x408FC0..0x408FE7 (0x28), cdecl, capstone to the last instruction, group AR1B. Area 47's handler 1: Effect_FindFree; a slot: +0 = 1, +5 = 0x3D. docs/area_w1b.md."
+evidence = "disasm 2026-09-27, 0x408FC0..0x408FE7 (0x28), cdecl, capstone to the last instruction, group AR1B. Area 47's handler 1 (PSX twin: area_records.toml area 47 handler[1]): Effect_FindFree; a slot: +0 = 1, +5 = 0x3D. docs/area_w1b.md."
 
 [[data]]
 pc = 0x5F6274
