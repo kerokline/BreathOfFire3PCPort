@@ -57,7 +57,12 @@ constexpr ah::CallSite kCalls40B5E0[] = {{0x1D, 0x57C7C0}};
 constexpr ah::CallSite kCalls40B620[] = {{0x29, 0x57C7A0}, {0x52, 0x591680}, {0x80, 0x590BB0}, {0x96, 0x587740},
                                          {0x9C, 0x497710}, {0xA8, 0x57C0F0}, {0xC0, 0x497710}, {0xE2, 0x587740}};
 // ---- areas 63, 64 ----
-constexpr ah::CallSite kCallsPlace[] = {{0x12, 0x5B93D2}, {0x4D, 0x5B93D2}, {0x98, 0x5720C0}};   // 0x40B720, 0x40B7F0
+// Each init's first instruction is Capcom's own `jmp +0x10` over eleven nops
+// (the exe as shipped), which CloneOriginal reads as a patched entry: the
+// clones start at the jump's target (0x40B730, 0x40B800), the body every
+// call runs, and the offsets below are from there (the whole function's
+// 0x12, 0x4D, 0x98 less 0x10).
+constexpr ah::CallSite kCallsPlace[] = {{0x2, 0x5B93D2}, {0x3D, 0x5B93D2}, {0x88, 0x5720C0}};
 
 #define W1D_CLONE(name, base, size, calls, n, ret, shape) \
     {#name, base, size, calls, n, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::name), ret, false, ah::Shape::shape}
@@ -134,10 +139,10 @@ const ah::Clone kClones62[] = {
 };
 enum : unsigned { k62Arm, k62Tail };
 const ah::Clone kClones63[] = {
-    W1D_CLONE(Area63_InitPlaceObject, 0x40B720, 0xCB, kCallsPlace, AH_N(kCallsPlace), 0x0, kInit),
+    W1D_CLONE(Area63_InitPlaceObject, 0x40B730, 0xBB, kCallsPlace, AH_N(kCallsPlace), 0x0, kInit),
 };
 const ah::Clone kClones64[] = {
-    W1D_CLONE(Area64_InitPlaceObject, 0x40B7F0, 0xCB, kCallsPlace, AH_N(kCallsPlace), 0x0, kInit),
+    W1D_CLONE(Area64_InitPlaceObject, 0x40B800, 0xBB, kCallsPlace, AH_N(kCallsPlace), 0x0, kInit),
 };
 #undef W1D_CLONE
 #undef AH_N
