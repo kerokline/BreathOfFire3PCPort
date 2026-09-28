@@ -61664,3 +61664,620 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR3F): jumped through by Area146_EffectB4Run by the record's +1: Area59_EffectGround, Area146_EffectB4Cylinder. docs/area_w3f.md."
+
+[[func]]
+pc = 0x41EFE0
+name = "Area136_ChoiceTail19Sub0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41EFE0..0x41F00C (0x2D bytes), cdecl: area 136 +0x34[0]: the answer 0x7DEE67 read, message word 0xFFFF; answer 0: ScriptFlags_Set40, tail kind 0x13, state 0, sub-kind 0x9039F5 = 0. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F010
+name = "Area136_ChoiceTail19Sub1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F010..0x41F03C (0x2D bytes), cdecl: area 136 +0x34[1]: as +0x34[0] with sub-kind 1. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F040
+name = "Area136_ChoiceMessage2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F040..0x41F062 (0x23 bytes), cdecl: area 136 +0x34[2]: the message word from Area136_ChoiceMessages2 by the signed answer; answer 0: counter 0 (0x903848) = 6. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F070
+name = "Area136_ChoiceMessage3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F070..0x41F092 (0x23 bytes), cdecl: area 136 +0x34[3]: as +0x34[2] with Area136_ChoiceMessages3. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F0A0
+psx = 0x801F2D68
+name = "Area136_MoveUntilLimit"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F0A0..0x41F0F2 (0x53 bytes), cdecl: area 136 +0x34[4] = +0x3C[0]: Sprite_Current +0x38 plus Field_DirectionSteps[+8 & 7] z (dwords) at most Area136_ZLimits[sub-kind] << 16 unsigned: script object +7 = 1, MoveCmd_Move(it, 5), script position - 2. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F100
+psx = 0x801F2E08
+name = "Area136_CellsRow51"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F100..0x41F124 (0x25 bytes), cdecl: area 136 +0x34[5] = +0x3C[1]: AreaMap_SetByte(9, 0x59..0x5B, 0x51). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F130
+psx = 0x801F2E50
+name = "Area136_SpawnMember1Kind2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F130..0x41F171 (0x42 bytes), cdecl: area 136 +0x34[6] = +0x3C[2]: Sprite_Current = party record 1 (0x802E8C); Effect_Spawn(2, 0, Area136_EffectByCharA[party slot 1 0x904063], its words +0x2E, +0x30); a slot to Sprite_Current +0xB (read again). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F180
+psx = 0x801F2ED0
+name = "Area136_SpawnMember2Kind2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F180..0x41F1C5 (0x46 bytes), cdecl: area 136 +0x34[7] = +0x3C[3]: as +0x3C[2] with party record 2 (0x802FD8) and party slot 2 (0x904064). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F1D0
+psx = 0x801F2F50
+name = "Area136_SpawnMember1Kind1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F1D0..0x41F211 (0x42 bytes), cdecl: area 136 +0x34[8] = +0x3C[4]: as +0x3C[2] with kind 1 and Area136_EffectByCharB. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F220
+psx = 0x801F2FD0
+name = "Area136_CellsRow10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F220..0x41F244 (0x25 bytes), cdecl: area 136 +0x34[9] = +0x3C[5]: AreaMap_SetByte(9, 0x59..0x5B, 0x10). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F250
+psx = 0x801F3018
+name = "Area136_Counter0ByTile"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F250..0x41F274 (0x25 bytes), cdecl: area 136 +0x34[10] = +0x3C[6]: counter 0 = 0xA when the low byte of the word 0x939A00 is 0x62..0x66, else 0x1E. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F280
+psx = 0x801F3048
+name = "Area136_SpawnMember1Kind3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F280..0x41F2C1 (0x42 bytes), cdecl: area 136 +0x34[11] = +0x3C[7]: as +0x3C[2] with kind 3 and Area136_EffectByCharB. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F2D0
+psx = 0x801F30C8
+name = "Area136_SpawnLeaderKind1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F2D0..0x41F311 (0x42 bytes), cdecl: area 136 +0x34[12] = +0x3C[8]: as +0x3C[2] with the leader record 0x802D40, kind 1, Area136_EffectByCharB by party slot 1. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F320
+psx = 0x801F3170
+name = "Area136_ShiftCameraUp2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F320..0x41F331 (0x12 bytes), cdecl: area 136 +0x34[14] = +0x3C[10]; area 119 +0x34[2] = +0x3C[1], area 131 +0x3C[7], area 188 +0x34[5] = +0x3C[1]: Camera_ShiftY + 2, MapView_Redraw 2. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F340
+name = "Area136_Tail19"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F340..0x41F4DD (0x19E bytes), cdecl: Field_ModeTailKinds 19: the signed state 0..13 through the byte map 0x41F4D0 and the 8-entry jump table 0x41F4B0 (both inside the extent): KeyItem_Has(6) to state 10 or 1; messages 0x83 / 0x82; Flags_Toggle(story, 0x29); Party_DropIn(0); counter 3 at 0x28 Field_ChangeArea(0x88, ...) by sub-kind; counter 3 at 0 disarm and Flags_Clear(row, 0x2E). docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F4E0
+psx = 0x801F33BC
+name = "Area136_InitExtraObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F4E0..0x41F50E (0x2F bytes), cdecl: area 136 +0x40: the byte 0x905E68 at 1 with Cond_ByteFD 4: 0x802083 = 2; at 4 with Cond_ByteFD 1: = 4. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F510
+psx = 0x801F42F4
+name = "Area139_FlagIfLeader89Is5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F510..0x41F54D (0x3E bytes), cdecl: area 139 +0x3C[0]: Field_ActiveMember +0x80 bit 0 cleared; leader +0x89 5: story flag 0x4D, MoveCmd_TestFB(4, 0xD), Sprite_Current +0 = 0. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F550
+name = "Area139_CellHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F550..0x41F5B2 (0x63 bytes), cdecl: Area_CellHooks for area 0x8B: the first of Area139_CellEntries with x, z bytes and direction nibble matching (x, z) and the leader pose byte: Flags_Toggle(story, its flag), Sound_PlayEffect(0x204), al 1; none al 0. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F5C0
+psx = 0x801F3D4C
+name = "Area140_ChoiceArmTail41"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F5C0..0x41F5F3 (0x34 bytes), cdecl: area 140 +0x34[0] = +0x3C[2]: answer 0 message 4; 1 ScriptFlags_Set40, tail kind 0x29 state 0, message 0xFFFF; else message 0xFFFF. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F600
+psx = 0x801F3DAC
+name = "Area140_FlagIfLeader89Is567"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F600..0x41F645 (0x46 bytes), cdecl: area 140 +0x3C[0]: Field_ActiveMember +0x80 bit 0 cleared; leader +0x89 5, 6 or 7: story flag 0x54, MoveCmd_TestFB(2, 7), Sprite_Current +0 = 0. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F650
+psx = 0x801F3E30
+name = "Area140_FollowAndAct"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F650..0x41F781 (0x132 bytes), cdecl: area 140 +0x3C[1]: story flag 0x66 clear script + 4; set: faces the leader direction, the cell ahead by the steps at 0x66971C; leader stepping and +0x137 1: Area140_BlockedAhead, a rectangle test and MoveCmd_Move, else Sprite_FaceDirection; the button 0x90358C in Input_Pressed: script object bit 0x40, +7 bit 8, Sprite_SetAnimation and +0x2A from Area140_ActPoses by quadrant, Area140_CellHook(ahead); else script + 4. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F790
+name = "Area140_BlockedAhead"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F790..0x41F7BD (0x2E bytes), cdecl: called by Area140_FollowAndAct only: Field_ObjectBlockedAhead(Field_ActiveMember) 0: al 0; else al 1 unless AreaMap_ByteAt(x, z) is 0x89. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F7C0
+name = "Area140_Tail41"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F7C0..0x41F95F (0x1A0 bytes), cdecl: Field_ModeTailKinds 41: the signed state 0..11 through the 12-entry jump table 0x41F930 (inside the extent): party drop-in, Field_ScriptFlags | 0x1270, leader +0x48, flag 0x66; Camera_Distance to 0x680 by 0x40; while Field_Request 0 Input_Held saved to 0x903850 and its high nibble remapped by Area140_ButtonRemap; back to 0 by 0x40; disarm with Field_ZoneCounterRoll(0); message 1. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F960
+name = "Area140_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F960..0x41F9A1 (0x42 bytes), cdecl: Area_StepHook case for area 0x8C: Cond_ByteFD 0, story flag 0x66, x 0x558000 exactly, z high word - 0xA below 2 (16-bit): ScriptFlags_Set40, state 5; al 0 always. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41F9B0
+name = "Area140_CellHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41F9B0..0x41FB5D (0x1AE bytes), cdecl: Area_CellHooks for area 0x8C and Area140_FollowAndAct: the matching one of Area140_CellEntries (8 of 6 bytes); its flag set al 0; its rectangle (Area140_CellRects) holding any member one timed step on: tail 0x29 state 0xA, al 0; else flag set, MoveCmd_TestFB, an effect of kind 0x71 when +4, Sound_PlayEffect(0x204), al 1. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FB60
+name = "Area140_Trigger18"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FB60..0x41FB6E (0xF bytes), cdecl: Field_ObjectTriggers id 18 (a gap of the tool): ScriptFlags_Set40, state 5; al 0. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FB70
+name = "Area140_Effect71Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FB70..0x41FB81 (0x12 bytes), cdecl: Effect_KindHandlers[0x71] (0x655514; a gap of the tool): jmp through Area140_Effect71States by Sprite_Current[1]. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FB90
+name = "Area140_Effect71Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FB90..0x41FBA3 (0x14 bytes), cdecl: Area140_Effect71States[0]: +9 = 0xD2, +1 = 1. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FBB0
+name = "Area140_Effect71Count"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FBB0..0x41FBDF (0x30 bytes), cdecl: Area140_Effect71States[1]: +9 - 1; at 0 or Field_Request 5: +1 = 2. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FBE0
+name = "Area140_Effect71End"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FBE0..0x41FC0E (0x2F bytes), cdecl: Area140_Effect71States[2]: Flags_Clear(story, +0xB), MoveCmd_TestFB(+0x36, +0x3A words), tail jmp Effect_Release. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FC10
+psx = 0x801F3588
+name = "Area141_ShadeOff"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FC10..0x41FC4E (0x3F bytes), cdecl: area 141 +0x34[2] = +0x3C[0]: Sprite_Current +0 bit 0x20 cleared, +0x5F..+0x5C = 0, Sprite_ReleaseTint(it). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FC50
+psx = 0x801F35E4
+name = "Area141_MoveToX45"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FC50..0x41FCA6 (0x57 bytes), cdecl: area 141 +0x34[3] = +0x3C[1]: d = (x - 0x450000) sar 15; not 0: script object +7 = |d|, +8 = 7, MoveCmd_MoveKind2 for Sprite_Kind2 else MoveCmd_Move(script object, 7). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FCB0
+psx = 0x801F3688
+name = "Area141_RunShadeDown"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FCB0..0x41FCC1 (0x12 bytes), cdecl: area 141 +0x34[4] = +0x3C[2]: jmp through Area141_ShadeDownStates by Sprite_Current[4] (unchecked; indices 2 and 3 read Area141_ShadeUpStates, which follows). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FCD0
+name = "Area141_ShadeDownStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FCD0..0x41FD11 (0x42 bytes), cdecl: Area141_ShadeDownStates[0]: +0 bit 0x20, +0x5F..+0x5D 0xC4, +0x5C 1, Area141_ShadeDownStep, +4 = 1. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FD20
+name = "Area141_ShadeDownStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FD20..0x41FDA8 (0x89 bytes), cdecl: Area141_ShadeDownStates[1]: x += +0xC, z += +0x10; +0x5D..+0x5F not 0x80 less 2; all 0x80: +0 bit 0x40, +4 = 0; else script position - 2. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FDB0
+psx = 0x801F3838
+name = "Area141_RunShadeUp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FDB0..0x41FDC1 (0x12 bytes), cdecl: area 141 +0x34[5] = +0x3C[3]: jmp through Area141_ShadeUpStates by Sprite_Current[4] (unchecked). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FDD0
+name = "Area141_ShadeUpStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FDD0..0x41FE1D (0x4E bytes), cdecl: Area141_ShadeUpStates[0]: +0 bit 0x20 set, 0x40 cleared, +0x5C 1, +0x5F..+0x5D 0x80, Area141_ShadeUpStep, +4 = 1. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FE20
+name = "Area141_ShadeUpStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FE20..0x41FED1 (0xB2 bytes), cdecl: Area141_ShadeUpStates[1]: x += +0xC, z += +0x10; +0x5D..+0x5F below 0xC0 signed plus 4; all 0xC0: bit 0x20 cleared, +0x5C..+0x5F and +4 = 0; else Field_ActiveMember word +0x8A - 2. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FEE0
+name = "Area141_ChoiceFlag7D"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FEE0..0x41FF34 (0x55 bytes), cdecl: area 141 +0x34[0]: story flag 0x7D; answer (read after) 0: ScriptFlags_Set40, Kind2_Place(3), Area141_PaintCells(run 8, 0), tail kind 0x34 state 0x32, message 5; else message 6. docs/area_w3e.md."
+
+[[func]]
+pc = 0x41FF40
+psx = 0x801F3B04
+name = "Area141_InitCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x41FF40..0x420050 (0x111 bytes), cdecl: area 141 +0x40: by Cond_ByteFD (read three times) 0: runs 0, 1 on; 1: runs 2..7 in pairs, on while story flags 0x7A / 0x7B / 0x7C are clear; 2: run 8 on (Area141_PaintCells). PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420060
+name = "Area141_Tail52"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420060..0x42035B (0x2FC bytes), cdecl: Field_ModeTailKinds 52: the signed state 0..0x33 through the byte map 0x420328 and the 15-entry jump table 0x4202EC (inside the extent): messages 3 and 4, a 16-bit timer to 0x1C2 or a button, Kind2_Place(2), flags 0x7A / 0x7B / 0x7C with runs off and a 0x3C timer, Field_Kind2X / Z from the leader, the message flag bit 0x80, Cond_ByteFE, disarm. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420360
+name = "Area141_CellHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420360..0x4203BB (0x5C bytes), cdecl: Area_CellHooks for area 0x8D: the matching one of Area141_CellEntries: ScriptFlags_Set40, tail kind 0x34 at its state byte, al 1; none al 0. docs/area_w3e.md."
+
+[[func]]
+pc = 0x4203C0
+name = "Area141_Trigger57"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x4203C0..0x420428 (0x69 bytes), cdecl: Field_ObjectTriggers id 57 (a gap of the tool): by the object word +0x88: 0xC000 runs 0 and 1 off; 0xC001 ScriptFlags_Set40, Party_HealJoined, tail 0x34 state 0; 0xC002 ScriptFlags_Set40, tail 0x34 state 0xA; al 0. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420430
+name = "Area141_PaintCells"
+ret = "void"
+params = "const unsigned char *run, unsigned on"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420430..0x4204C9 (0x9A bytes), cdecl: called by area 141 choice 0, init, tail 52, trigger 57: n = run[2] & 0x7F cells from (run[0], run[1]), along x with bit 0x80 else along z, each AreaMap_SetByte to run[3] when on (a byte) else run[4]. docs/area_w3e.md."
+
+[[func]]
+pc = 0x4204D0
+name = "Area141_PlacePairAnimated"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x4204D0..0x420579 (0xAA bytes), cdecl: called by 0x567145 (chapter 14; a gap of the tool): two Sprite_FindFree objects (the first let go when there is no second), EventOp_6x on 0x62F630 and 0x62F640 with the word 0x903850 their index, Sprite_SetAnimationAt(0x6B, 0) and (0x58, 0). docs/area_w3e.md."
+
+[[func]]
+pc = 0x420580
+name = "Area141_PlaceOneAnimated"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420580..0x4205C9 (0x4A bytes), cdecl: called by 0x567179 (a gap): one Sprite_FindFree object, EventOp_6x on 0x62F650, Sprite_SetAnimationAt(3, 0). docs/area_w3e.md."
+
+[[func]]
+pc = 0x4205D0
+name = "Area141_PlacePair6x"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x4205D0..0x420663 (0x94 bytes), cdecl: called by 0x5648B2 (a gap): two objects as Area141_PlacePairAnimated, EventOp_6x on 0x62F660 and 0x62F670, no animations. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420670
+name = "Area141_PlacePair0x"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420670..0x420703 (0x94 bytes), cdecl: called by 0x5671AC (a gap): two objects, EventOp_0x on 0x62F680 and 0x62F691. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420710
+name = "Area141_PlaceOne0x"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420710..0x420750 (0x41 bytes), cdecl: called by 0x5671E0 (a gap): one object, EventOp_0x on 0x62F6A8. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420760
+psx = 0x801F3414
+name = "Area142_RunWait"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420760..0x420771 (0x12 bytes), cdecl: area 142 +0x3C[0]: jmp through Area142_States by Sprite_Current[4]. PSX twin: names/area_records.toml. docs/area_w3e.md."
+
+[[func]]
+pc = 0x420780
+name = "Area142_WaitRequest3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x420780..0x4207B3 (0x34 bytes), cdecl: Area142_States[0]: counter 0 at 1 nothing; else Field_Request 3: +0 bit 0x40, +4 = 1; script position - 2. docs/area_w3e.md."
+
+[[func]]
+pc = 0x4207C0
+name = "Area142_WaitRequestEnd"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3E), 0x4207C0..0x4207FB (0x3C bytes), cdecl: Area142_States[1]: Field_Request not 3: +0 bit 0x40 cleared, Sprite_SetAnimation(+8), +4 = 0; script position - 2. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EA74
+name = "Area136_ChoiceMessages2"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area136_ChoiceMessage2: the message word by the signed answer (unchecked). docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EA78
+name = "Area136_ChoiceMessages3"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area136_ChoiceMessage3: the message word by the signed answer (unchecked). docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EA7C
+name = "Area136_ZLimits"
+ctype = "unsigned char"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area136_MoveUntilLimit: the z limit (<< 16) by the sub-kind 0x9039F5 (unchecked; sub-kinds 0 and 1 are the two the choices set). docs/area_w3e.md."
+
+[[data]]
+pc = 0x62DAA0
+name = "Area136_EffectByCharA"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area136_SpawnMember1Kind2 / Member2Kind2: Effect_Spawn b by the party slot character (unchecked; 12 up to Area136_EffectByCharB). docs/area_w3e.md."
+
+[[data]]
+pc = 0x62DAAC
+name = "Area136_EffectByCharB"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area136_SpawnMember1Kind1 / Member1Kind3 / LeaderKind1: Effect_Spawn b by the party slot 1 character (unchecked; count not measured past 12). docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EDBC
+name = "Area139_CellEntries"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area139_CellHook: 2 entries of 4 bytes (x, z, direction nibble, story flag), the loop bound 0x62EDC5. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EFDC
+name = "Area140_ActPoses"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area140_FollowAndAct: 4 pairs (animation, +0x2A) by (direction >> 1) & 3. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EFE4
+name = "Area140_ButtonRemap"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area140_Tail41 state 2: Input_Held high nibble replaced by the low nibble of [high nibble]. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62EFF8
+name = "Area140_CellEntries"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area140_CellHook: 8 entries of 6 bytes (x, z, direction nibble, story flag, effect, rectangle index), the loop bound 0x62F029. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62F028
+name = "Area140_CellRects"
+ctype = "unsigned short"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area140_CellHook: (x, z) words by the entry rectangle index (unchecked; index 0 means none). docs/area_w3e.md."
+
+[[data]]
+pc = 0x62F038
+name = "Area140_Effect71States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area140_Effect71Run jumps through it by Sprite_Current[1]: Area140_Effect71Start, Count, End; a zero dword follows. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62F5E8
+name = "Area141_CellRuns"
+ctype = "unsigned char"
+count = 45
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area141_PaintCells records: 9 of 5 bytes (x, z, count | 0x80 along x, value on, value off) named by pointer from area 141 code. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62F618
+name = "Area141_ShadeDownStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area141_RunShadeDown jumps through it by Sprite_Current[4]: Area141_ShadeDownStart, Step; Area141_ShadeUpStates follows, so indices 2 and 3 reach its states. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62F620
+name = "Area141_ShadeUpStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area141_RunShadeUp jumps through it by Sprite_Current[4]: Area141_ShadeUpStart, Step; Area141_CellEntries (data) follows. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62F628
+name = "Area141_CellEntries"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area141_CellHook: 2 entries of 4 bytes (x, z, direction nibble, tail state), the loop bound 0x62F631. docs/area_w3e.md."
+
+[[data]]
+pc = 0x62FCDC
+name = "Area142_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3E): Area142_RunWait jumps through it by Sprite_Current[4]: Area142_WaitRequest3, WaitRequestEnd; a zero dword follows. docs/area_w3e.md."
