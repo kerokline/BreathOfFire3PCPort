@@ -34,8 +34,8 @@ constexpr U kObject0X = 0x7DEEB4;         // Sprite_Objects[0] +0x34
 constexpr U kObject1X = 0x7DEF58;         // Sprite_Objects[1] +0x34
 constexpr U kEffectStride = 0x80;
 
-// --- area 65's tables (the world-map copy's, in its data block after area
-// 66's descriptor 0x604B70... read only by area 65's code) ---------------------
+// --- area 65's tables (the world-map copy's, in its own data block
+// 0x6043C8..0x604963 around its descriptor; read only by area 65's code) ------
 constexpr U kA65PlateAnims = 0x6043C8;    // (u16 place, u8 animation, u8) x 11, searched with NO bound
 constexpr U kA65Cells = 0x6043F4;         // (u8 x, u8 z, u8, u8 id) x 182, searched with NO bound
 constexpr U kA65CellsEnd = 0x6046CC;      // then area 65's choice table (1) and its descriptor 0x6046D0..0x604713
