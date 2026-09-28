@@ -10,6 +10,7 @@
 // compare of the pairs - and its group is area 16's with area 45's tables.
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 
@@ -235,9 +236,13 @@ void Seed43(unsigned k) {
     unsigned char* const o = Sprite_Current;
     if (k == k43Run) o[4] = static_cast<unsigned char>(ah::Next() % 2);
     if (k == k43TintSettle) {
-        // each tint byte at 0x80, one step above it, or anything
-        for (const U off : {0x5Du, 0x5Eu, 0x5Fu})
-            if (ah::Often()) o[off] = static_cast<unsigned char>(AH_PICK(0x80, 0x80, 0x82, 0x81, 0x7F, 0x84, 0xC0));
+        // each tint byte at 0x80, one step above it, or anything; half the
+        // time all three at 0x80 or 0x82 (the release)
+        const bool settle = ah::Half();
+        for (const U off : {0x5Du, 0x5Eu, 0x5Fu}) {
+            if (settle) o[off] = static_cast<unsigned char>(ah::Half() ? 0x80 : 0x82);
+            else if (ah::Often()) o[off] = static_cast<unsigned char>(AH_PICK(0x80, 0x80, 0x82, 0x81, 0x7F, 0x84, 0xC0));
+        }
     }
 }
 // Area 43's disturbance: Field_ActiveMember (read after Sprite_SetTint and
@@ -415,8 +420,6 @@ U TextureEffect(const U* a, U answer) {
     if (InPackets(a[1], 0x18)) Mem(a[1])[0x16] = static_cast<unsigned char>(a[0]);
     return answer;
 }
-// Inventory_Count: its word 0 a quarter of the time (garbage above).
-U CountEffect(const U*, U answer) { return (answer & 3) == 0 ? answer & 0xFFFF0000u : answer; }
 
 // Gte_RotTransPers4's listing: the vectors' eight bytes each, the corners'
 // addresses, the two locals not logged (stack addresses differ).
@@ -804,6 +807,13 @@ void RunArea(int area, const ah::Clone* clones, unsigned n, const ah::Callee* ca
     ah::Run(g);
 }
 
+// BOF3X_AR1B_AREA=n runs area n's group alone (the controls script's
+// shortcut); unset, every area runs.
+bool Wants(int area) {
+    const char* const only = std::getenv("BOF3X_AR1B_AREA");
+    return only == nullptr || *only == 0 || std::atoi(only) == area;
+}
+
 }  // namespace
 
 void SelfTest() {
@@ -814,13 +824,13 @@ void SelfTest() {
     std::memcpy(g_a45_dirs, Mem(at::kA45Directions), sizeof g_a45_dirs);
     std::memcpy(g_a45_drift, Mem(at::kA45DriftUBase), sizeof g_a45_drift);
 
-    RunArea(42, kClones42, Count(kClones42), kCallees42, AH_COUNT(kCallees42), nullptr, 0, kRegions42, AH_COUNT(kRegions42),
+    if (Wants(42)) RunArea(42, kClones42, Count(kClones42), kCallees42, AH_COUNT(kCallees42), nullptr, 0, kRegions42, AH_COUNT(kRegions42),
             &Seed42, &Disturb42, &Args42, 6000);
-    RunArea(43, kClones43, Count(kClones43), kCallees43, AH_COUNT(kCallees43), kTables43, AH_COUNT(kTables43), kRegions43,
+    if (Wants(43)) RunArea(43, kClones43, Count(kClones43), kCallees43, AH_COUNT(kCallees43), kTables43, AH_COUNT(kTables43), kRegions43,
             AH_COUNT(kRegions43), &Seed43, &Disturb43, &Args43, 4000);
-    RunArea(44, kClones44, Count(kClones44), kCallees44, AH_COUNT(kCallees44), nullptr, 0, nullptr, 0, &Seed44, &Disturb44,
+    if (Wants(44)) RunArea(44, kClones44, Count(kClones44), kCallees44, AH_COUNT(kCallees44), nullptr, 0, nullptr, 0, &Seed44, &Disturb44,
             &Args44, 6000);
-    {
+    if (Wants(45)) {
         ah::Group g{"area_w1b", kClones45, Count(kClones45), kCallees45, AH_COUNT(kCallees45), kTables45, AH_COUNT(kTables45),
                     g_regions45, AH_COUNT(g_regions45), &Seed45, &Disturb45, 4000};
         g.settle = &Settle45;
@@ -829,9 +839,9 @@ void SelfTest() {
         g.area = 45;
         ah::Run(g);
     }
-    RunArea(46, kClones46, Count(kClones46), kCallees46, AH_COUNT(kCallees46), nullptr, 0, nullptr, 0, &Seed46, &Disturb46,
+    if (Wants(46)) RunArea(46, kClones46, Count(kClones46), kCallees46, AH_COUNT(kCallees46), nullptr, 0, nullptr, 0, &Seed46, &Disturb46,
             &Args46, 4000);
-    RunArea(47, kClones47, Count(kClones47), kCallees47, AH_COUNT(kCallees47), nullptr, 0, kRegions47, AH_COUNT(kRegions47),
+    if (Wants(47)) RunArea(47, kClones47, Count(kClones47), kCallees47, AH_COUNT(kCallees47), nullptr, 0, kRegions47, AH_COUNT(kRegions47),
             nullptr, nullptr, nullptr, 4000);
 }
 
