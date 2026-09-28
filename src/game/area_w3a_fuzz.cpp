@@ -59,7 +59,6 @@ const ah::Callee kSpawn = {"Effect_Spawn", KeyOf(Effect_Spawn), KeyOf(Effect_Spa
 // docs/area_w3a.md): never the constants ours reads, so a wrong one in ours
 // shows.
 constexpr U kFzCursor = 0x7DEE67;
-constexpr U kFzCounter0 = 0x903848;
 constexpr U kFzLeaderDir = 0x802D48;
 constexpr U kFzPartyList = 0x904062;
 constexpr U kFzZenny = 0x904058;
