@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-28 — one hundred and fifty-eight entries, D1..D161 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful))
+**Status:** IN PROGRESS (2026-09-28 — one hundred and seventy entries, D1..D173 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -3923,5 +3923,264 @@ another amount one call in five to tell the two apart). `Area104_BuildMinimap`
   and the stop cell 0, never the cell the object ends in.
 - `Area170_Trigger56` `0x4274C0` pushes a fourth word (0) to
   `Inventory_Add`, which takes three (harmless under cdecl).
+
+**Status:** latent, harmless by reading.
+
+## D162 — The boss band's dispatchers, hook tables and stack tables index unchecked (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, every round-eleven group ([`boss_h.md`](boss_h.md) §6,
+[`boss_sa.md`](boss_sa.md)..[`boss_sj.md`](boss_sj.md) §6, [`boss_sc.md`](boss_sc.md) §7).
+The round-nine and round-ten classes D89 and D133, in the boss band.
+
+**Established:** every kind's per-frame dispatcher (`BossKind_Table`
+`0x64B088`'s entries) jumps through its `.data` state table by the enemy's
+state byte `+1` (twelve entries; the second-level tables six, four or three)
+and every hook (`+0xF4`) through a three-entry table by the low byte of the
+engine's word, both unchecked. The tables lie end to end, so a stray state
+runs the next table's handler rather than faulting at once. The same shape
+in the effect tasks' stack tables (`BossAnglerFx_Run` by `+2`, past 2 the
+caller's return address; the Arwan task's by `+1`, past 3 its caller's
+frame; `BossMyriaFx_Follow` indexing `BossMyriaFx_Drift` by `+1`; Myria's
+effect indexing a ten-byte pose table by the 16-bit word `0x904B7E`, of
+which 10 and 11 read the frame's unset bytes and 12 and up the saved
+registers - D170) and in `BossMap_SetCorners` (a cell past 1, a value past
+2). Nothing in the kinds' own code stores a state byte out of range; the
+generic `EnemyOp_*` entries they share set them. Ours aborts with a
+message naming the function and the index (the owner's rule for an
+unchecked index into a table ours owns); the fuzz's seeds stop at the
+table's end.
+
+**Status:** latent; ours aborts where the original would jump wild.
+
+## D163 — `BattleTask_Create`'s "no slot" answer untested in seven boss effects (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups BSA, BSF, BSH, BSI and BSJ (their docs' §6).
+
+**Established:** `BossWeretigr_State4Fx` (BSA), `BossGazer_State4Wait`,
+`BossGazerFx_BounceStart` and `BossMyria_SpawnFx` (BSF),
+`BossAngler_HookSpawnFx` (BSH), `BossArwan_State4Fx` (BSI) and
+`BossDLord_HookFx` (BSJ) write the slot `BattleTask_Create` answers
+without a test. With all 48 slots taken it answers 0xFF, and the original
+writes `0x84` bytes (or the owner byte, or an enemy object's `0x80` bytes and
+six more) at `0x93A000 + 0xFF * 0x84` = `0x9423FC`, past the pool (which ends
+at `0x93B8C0`) and past the image. Myria's entrance creates three at once
+and every action pick one more; the Arwan, with its task never running,
+waits in state 4 step 1 for good. Ours aborts with a `Fatal` at the slot.
+Whether a fight can fill the pool is not measured - the BSE and BSG
+harness stand-in answering 0xFF (the round doc's section 5) is what the
+controls refused on.
+
+**Status:** latent; ours aborts where the original would write past the pool.
+
+## D164 — Exit hooks and spawn writers write through `BossActor_Find`'s null answer (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups BH, BSA, BSB, BSC, BSD, BSH and BSJ (their docs' §6;
+[`boss_sc.md`](boss_sc.md) §7).
+
+**Established:** `BossActor_Find` `0x4948E0` answers null when no field actor
+carries the tag. BH's spawn writers `BossActor_ClearBit40`,
+`BossActor_CopyFrom` (for `what` 0 and 1) and `BossActor_Clear` use the
+answer without a test (22, 9 and 7 units call them, with constant tags where
+read: the exit hooks' 0, Boss01's 6 and 7), and the set-ups' own exit hooks
+do the same in their own code: `Boss08_Exit`..`Boss10_Exit` (BSB, stores at
+`+0x48`, `+0x2A`, `+0x58`, `+0x5A`, `+0x34..+0x3C` - the original faults first
+inside `Sprite_SetAnimationBank`, which reads `Sprite_Current`),
+`Boss11_Exit` and `Boss16_Exit` (BSC, each preceded by the same tag's
+`BossActor_ClearBit40`, so the second write is unreachable), `Boss21_Exit`
+(BSD, `+0x2A`), `Boss34_Exit` (BSH). `Boss52_Exit` (BSJ) stores the null into
+`Field_ActiveMember` and `Sprite_Current` and calls `Sprite_SetAnimation` on
+it, dereferencing nothing itself, so ours does the same there. BSA's end walk
+trusts `BossActor_Index(0)` likewise: 0xFF with no actor tagged 0 hands
+`MoveCmd_OpE9` `0x7DEF00 + 0xFF * 0xA4` = `0x80925C`, far past the 30 field
+objects (kept: the pointer is only passed on). Whether a scene can lack its
+actor is each area's data, not read. The one caller outside the band,
+`0x494570`, tests the answer. Ours aborts with a message naming the hook
+and the tag; the stand-in never answers null, so the path is not fuzzed.
+
+**Status:** latent; ours aborts where the original would write near address 0.
+
+## D165 — Boss code reads by an index or actor it does not check (latent, kept)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups BH, BSA, BSF, BSG, BSH, BSI and BSJ (their docs' §6).
+Kept in each: none indexes a table ours owns or writes past one, so a
+`Fatal` would end a game the original survives.
+
+**Established:**
+
+- `BossTorast_Colours` is read by the kind unchecked: a kind outside 8..11
+  gets neighbouring `.data` (only kinds 8..11 reach these steps, through
+  their own tables).
+- F6 (Weretigr's turn, BSG) reads the byte pair at `0x64E4F4 + 2 *
+  (0x904AAC & 0xFF)` - four pairs, a facing past 3 reads what follows (the
+  table is engine code's, shared) - and indexes the enemy objects by
+  `target - 3` and `actor - 3`: with a member (0..2) acting, the finish's
+  `&= 0xBF` would land in the task slots before the enemy objects. In the
+  fight the actor is Weretigr itself.
+- The task spawns copy by an actor they do not check: `BossWeretigr_State4Fx`
+  (BSA) copies `(0x904B34 - 3) * 0x128` from the enemies' base, not
+  `Sprite_Current`'s object; `BossAngler_HookSpawnFx` (BSH) and
+  `BossDLord_HookFx` (BSJ) the same by `actor - 3` - with a member acting
+  the source is 0x128..0x378 bytes below the enemies, inside the task
+  slots, and the task starts as a copy of task memory. `BossMyria_SpawnFx`
+  (BSF) copies enemy 0's object and names enemy 0 the owner whichever enemy
+  runs it; `BossArwanFx_Start` (BSI) takes its count from enemy 0's `+0xF0`,
+  not its owner's. In the game each is presumably enemy 0 or acting on its
+  own turn (not measured).
+- The ability records are indexed by the whole word `0x904B80`
+  (`BossMyria_ActPick`, `_State7Start`, `_State8TickUnless`, `_State8Check`,
+  BSF): an id past the table reads the `.data` after it.
+- `Boss27_Event` (BSF) reads the actor at `0x904ACB + 0x904AE2` unchecked
+  (the turn order one before its cursor); only an actor 0..2 is acted on.
+- The enemy-data reads trust `+0xF0` (`BossArwanFx_Start`, BSI;
+  `BossDLordFx_Start`, BSJ, as `BattleActor_FxSize` does): an index past the
+  area's eight records reads up to `0x8CE1C6`, still inside `.data`.
+  `Battle_CopyEnemyData` sets it to the record's slot, so it is 0..7 in play.
+- `Boss34_Event` (BSH) indexes the party by the byte `0x675F08`, written only
+  by `Boss34_Setup` with 0..2 and 0 at start: when no member matches
+  `0x669730` the fight marks member 0.
+- `Boss01_Event` (BSA) and BSB's event hooks read the command `[0x904B40]`
+  at phase 1 without a test; the action phase sets the pointer before it
+  calls the hook (whether always was not read).
+- `Boss16_Event` and `Boss16_End` (BSC) name enemy 2 by address (`0x93BBB0`)
+  and pose it as Nina's without checking the kind at that slot; row 7 of
+  `BOSS013`'s area decides.
+
+**Status:** latent, kept.
+
+## D166 — Set-up 25 saves member 0's HP and AP as bytes and restores them as words (latent; a fix candidate)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BSE ([`boss_se.md`](boss_se.md) §6).
+
+**Established:** `Boss25_Setup` stores the low byte of `+0x98` and of `+0x9A`
+(`mov al, byte ptr [0x802DD8]` into `0x675F05`) and `Boss25_End` writes them
+back zero-extended (`movzx ax, byte ptr [0x675F05]`): a member-0 HP or AP
+above 255 comes back as its value mod 256 after the fight. Whether the
+fight's member 0 can have that much, and what the PSX did, were not read.
+Kept as read; **the owner decides** - saving the words is a two-instruction
+change and would be a DIVERGENCE entry.
+
+**Status:** latent; a candidate for a fix.
+
+## D167 — Set-ups 8..10's exit hooks pose every actor from enemy 0's words (latent, intent open)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BSB ([`boss_sb.md`](boss_sb.md) §6).
+
+**Established:** `Boss08_Exit`..`Boss10_Exit` copy enemy 0's pose words
+(`0x93B9B8` / `0x93B9BA`) onto actors 0, 1 and 2 alike, where set-ups 4..6
+pose each actor from its own enemy. Kept as read. Whether that is intended
+(enemy 0 may be each fight's only enemy) is the formation data's, not read -
+**a question for the owner**, not a defect until answered.
+
+**Status:** latent, intent open.
+
+## D168 — Kind 42 (Torch) points its animation table at never-written `.data` (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BSH ([`boss_sh.md`](boss_sh.md) §6).
+
+**Established:** the Torch's entry points the enemy's `+0xFC` at `0x675F0C`,
+twelve bytes of `.data` that nothing in the exe writes (a scan of the exe for
+the address finds only this store) and that are zero in the file - so every
+animation byte the generic states read for the Torch is 0. The other six
+kinds of the group point at tables in the kinds' `.data` block beside their
+state tables. A PSX overlay's data section the port's link did not carry over
+is the obvious reading, not proven: the sibling's `BOSS035` image was not
+compared. Ours stores the same address.
+
+**Status:** latent; a comparison with the PSX overlay is owed.
+
+## D169 — `BossTorast_DrawRing` draws its ring twice (latent, kept)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BH ([`boss_h.md`](boss_h.md) §6).
+
+**Established:** 64 points at `i * 0x80` are two laps of the 4096-step circle,
+and the rim's second corner is point `(i + 1) & 0x1F`, so triangles 32..63 are
+triangles 0..31 again, each semi-transparent: the ring is blended twice. Kept
+(it is the look the original gives; a lap of 32 would halve the cost and
+change the blend).
+
+**Status:** latent, kept.
+
+## D170 — Myria's effect indexes a ten-byte pose table by a 16-bit word (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BSJ ([`boss_sj.md`](boss_sj.md) §6).
+
+**Established:** every state's pose is `table[0x904B7E]` with the table ten
+bytes of a twelve-byte frame: 10 and 11 read the frame's two unset bytes, 12
+and up the saved registers and the caller's stack. Kind 62 (BSF's) writes the
+word from a byte argument (`0x440630`) or as 8 or 0; whether it stays below
+10 in the fight is kind 62's callers', not read. Ours aborts at 10 (the D162
+rule).
+
+**Status:** latent; ours aborts.
+
+## D171 — Kind 30's entry copies enemy data record 0xFF when no record carries tag 0x59 (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BSE ([`boss_se.md`](boss_se.md) §6).
+
+**Established:** in fight 0x1A `BossBeyd_Enter` passes
+`EnemyData_FindByTag(0x59)` to `Battle_CopyEnemyData` untested; "none" is
+0xFF, and the copy reads `0x8C55C8 + 0xFF * 0x8C`, far past the eight records.
+Whether the area's data always carries the tag is the data's, not read.
+
+**Status:** latent.
+
+## D172 — Set-up 25's exit copies up to 255 bytes into the party list (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group BSE ([`boss_se.md`](boss_se.md) §6).
+
+**Established:** the exit copies up to 255 bytes from `0x939A10` into the
+party list `0x904065` by the byte `0x939A02`; its writer was not read, so
+whether it stays within the list is not known.
+
+**Status:** latent.
+
+## D173 — Small slips in the boss band, each read once (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups BSA, BSB, BSC, BSD, BSF, BSG and BSI (their docs' §6;
+[`boss_sc.md`](boss_sc.md) §7). Kept in each; none is known to show.
+
+**Established:**
+
+- Kind 3's shift `1 << (+5 & 0x1F)` into a byte (BSB): a slot `+5` of 8 or
+  more sets no bit in `0x904AAD`; enemy slots are 0..7.
+- `BossAmalgam_Enter` (BSC) drops `0x455290`'s "no slot free" answer (al
+  0xFF): with all eight field slots in use the script is simply not started,
+  and `BossAmalgam_DeathEnd`'s release finds nothing to free.
+- `BossAmalgam_DeathMelt` (BSC) ends on `+0x20 == 0x56` exactly, stepping by 2
+  from 0: an odd row (never stored by the code) would melt until the dword
+  wraps.
+- `BossNina_HookAct` (BSC) decrements `0x904AE2` without a floor, and
+  `BossSunder_HookAct`'s 0x2A line on bit 5 sets no bit, so it opens again at
+  every action pick while bit 5 stays set. The hit hooks of Balio and Sunder
+  floor HP at 1: neither fight ends through a hit; the end hook's win bit
+  was not traced to its setter.
+- Kinds 21..23 and 26 (BSD) restore HP from `0x939A14..0x939A1B` when their
+  flag is set, and only set-ups 18..20's end hooks write those words: a flag
+  set without that hook having run in the same process would restore zeros.
+  Where the flags are set, and whether the words survive a load, was not read.
+- `Boss26Fx_DrawCount` (BSF) prints `0x15 - turn` unclamped; `Boss26_Event`
+  sets `0x904AE8` bit 2 at turn 0x15, which presumably ends the fight first.
+- Set-up 32's end hook (BSG) and `Boss26_End` (BSE) wrap the pose as a byte:
+  a member `+8` above 0xE3 poses from the start of the set.
+- `Boss38_Setup` (BSI) leaves `Sprite_Current` at enemy 7's object and relies
+  on `MagicFx_CenterOnSide`, which divides by the count of enemies not out:
+  with all eight out at set-up the original divides by zero (ours aborts
+  there, round nine's `magic_lib.cpp`).
+- `BossDodai_Dispatch` (BSD) rewrites the enemy's `+0xFC` every frame from a
+  chapter flag before the step reads it, and `BossMyria_State4Wait` (BSF)
+  never moves Myria on itself (the slot-5 tasks do) - not defects, noted so
+  the next reader does not look for them.
 
 **Status:** latent, harmless by reading.
