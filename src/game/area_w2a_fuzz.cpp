@@ -220,6 +220,10 @@ const ah::Region kRegions[] = {
     {at::kFlagRow, 4},
     {at::kCameraShiftY, 2},
     {at::kByteFE, 1},
+    // Effect_Objects "record" 0xFF, past the 20: where a helper that took
+    // Effect_FindFree's none for a slot would write (+0, +5, +0x34, +0x38).
+    // The originals never do; a region here lets the fuzz see one that did.
+    {at::kEffectObjects + 0xFF * at::kEffectStride, 0x40},
 };
 
 // Every round: the pointers the areas follow put back inside the regions.
