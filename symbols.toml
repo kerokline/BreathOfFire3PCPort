@@ -48166,3 +48166,719 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-27, group SC5: Scena05_CellHook by the record index: Scena05_Cell0, Scena05_Cell1; a zero dword and the eight bytes 0x6610D8 follow, then Scena06_Hooks."
+
+# --- round ten group AR1B: world 1, areas 42..47 (docs/area_w1b.md) ---
+
+[[func]]
+pc = 0x406650
+name = "Area42_ChoiceMessage"
+psx = 0x801F3D90
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406650..0x406666 (0x17), cdecl, capstone to the last instruction, group AR1B. Area 42's choice 0 (descriptor 0x5F6290 +0x34 0x5F628C) and handler 6 (the choice table is the handler array's tail). The message word 0x7DEE48 = Area42_Messages[(s8) choice 0x7DEE67], unchecked. PSX twin: area_records.toml area 42 choice[0] / handler[6]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406670
+name = "Area42_StartTimer"
+psx = 0x801F3DBC
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406670..0x4066E7 (0x78), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 0 (Area42_Handlers). Field_ActiveMember +0x80 bit 0 cleared; when MoveScript_EffectState[the leader's +0x89] is 1 and story flags 0xB and 0x11 are clear: flag 0xB set, byte Field_ScriptFlags |= 0x20, the mode tail armed (0x9039F3 = 7, 0x9039F4 = 0xA, word 0x9039F6 = 0x384). PSX twin: area 42 handler[0]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4066F0
+name = "Area42_ClearMemberFlag"
+psx = 0x801F3E80
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4066F0..0x40670C (0x1D), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 1: Flags_Clear(0x904030, (u8)(Field_ActiveMember +0xA0 + 0x10)). PSX twin: area 42 handler[1]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406710
+name = "Area42_Touch12"
+psx = 0x801F3EB8
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406710..0x406777 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 2: Field_ActiveMember +0x80 bit 0 cleared; when MoveScript_EffectState[leader +0x89] is 1 and story flag 0x12 is clear: flag 0x12 set, Area42_CheckAll (answer not read), and unless flag 0xB, Field_ActiveMember's word +0x8A + 1. Handlers 3..5 (0x406780, 0x4067F0, 0x406860) are the same with flags 0x13..0x15. PSX twin: area 42 handler[2]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406780
+name = "Area42_Touch13"
+psx = 0x801F3F6C
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406780..0x4067E7 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 3: Area42_Touch12's body for story flag 0x13. PSX twin: area 42 handler[3]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4067F0
+name = "Area42_Touch14"
+psx = 0x801F4020
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4067F0..0x406857 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 4: Area42_Touch12's body for story flag 0x14. PSX twin: area 42 handler[4]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406860
+name = "Area42_Touch15"
+psx = 0x801F40D4
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406860..0x4068C7 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 42's handler 5: Area42_Touch12's body for story flag 0x15. PSX twin: area 42 handler[5]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4068D0
+name = "Area42_CheckAll"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4068D0..0x406A28 (0x159), cdecl, capstone to the last instruction, group AR1B. Called by Area42_Touch12..15 (no root of its own). al 0 unless story flags 0x12..0x15 are set and 0x11 clear; then ScriptFlags_Set40, the tail to kind 7 state 0 with 0x9039F5 = 0x3C, Area42_Rank = 2 / 1 / 0 for (u8)(word 0x9039F6 / 30) above / at / below 5; the first of the 30 Sprite_Objects with +0 bit 0, +6 == 9, +5 in 0x5C..0x5E whose flag 0x5C + rank of 0x9040CC is set (the rank re-read after each miss) gets Sprite_SetAnimation(1) as Sprite_Current, then Sprite_Current = Field_ActiveMember; al 1. area_pairs.json pairs it with PSX 0x801F4188 (not disassembled). docs/area_w1b.md."
+
+[[func]]
+pc = 0x406A30
+name = "Area42_TimerTail"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406A30..0x406DD7 (0x3A8), cdecl, capstone to the last instruction, group AR1B. Field_ModeTailKinds slot 7 (armed by Area42_StartTimer and Area42_CheckAll). A switch on the s8 0x9039F4 through the 11-entry jump table 0x406DAC inside the function: 0 the time drawn for 0x9039F5 frames (0x40E750 window, Crt_sprintf to 0x904BA0 of the word 0x9039F6's seconds and hundredths, Text_DrawAt(0x82, 0x30, 2 below ten seconds else 0, 5, ...)), then as 1; 1 Field_Kind2X / Z = 0x150000 / 0x190000, MoveScript_F3Divisor 0x40, state 2; 2 once Field_Kind2Hold is 0 a kind-0x13 effect (CameraTurn_Run) to -770, state 3; 3 once it ends story flag 0x11, state 9; 4 a turn to -682, state 5; 5 once it ends Field_Kind2X / Z = the leader's, state 6; 6 once Field_Kind2Hold is 0 flag 0xB cleared, ScriptFlags_Clear40, Field_ScriptFlags bit 5 cleared, the tail ended; 10 the countdown (Rand() & 3 added to the hundredths, colour blinking by the word's bit 2 below ten seconds), at 0 flags 0xB, 0x12..0x15 cleared and the tail ended; 7..9 nothing. area_pairs.json: PSX 0x801F4A00. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406DE0
+name = "Area42_StepHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406DE0..0x406E80 (0xA1), cdecl, capstone to the last instruction, group AR1B. Area_StepHook's handler for area 42, (x, z) 16.16 in, al out. z == 0x308000 with x's high word 0x7B..0x7C, or z == 0x368000 with 0x1D..0x1F: story flags 0x11, 0xB, 0x12..0x15 cleared, Field_ScriptFlags bit 5 cleared, and the tail ended when 0x9039F3 (read after the calls) is 7. al 0 always. area_pairs.json: PSX 0x801F4AF4. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406E90
+name = "Area42_Init"
+psx = 0x801F5070
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406E90..0x406F72 (0xE3), cdecl, capstone to the last instruction, group AR1B. Area 42's init (+0x40). Cond_ByteFD 0: unless story flag 0x11, Area42_Rank = the first i of 0..2 whose flag 0x5C + i of 0x9040CC is clear (2 when none); 0x57CD90's free field object to the word 0x903850 and, unless 0xFF, EventOp_9x(Area42_Placements + rank * 13). Cond_ByteFD (read again) 1: Effect_FindFree to the byte 0x903850; a slot: +0 = 1, +5 = 0x28, +6 = 2, +0xC / +0x10 = 0x418000 / 0x108000, +0x18 / +0x1C = 0x4D8000 / 0x108000. PSX twin: area 42 init. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406F80
+name = "Area43_ObjectRun"
+psx = 0x801F2C04
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406F80..0x406F91 (0x12), cdecl, capstone to the last instruction, group AR1B. Area 43's handler 0 (Area43_Handlers): jmp [Sprite_Current[4] * 4 + Area43_States] (ours aborts past its two entries). PSX twin: area 43 handler[0]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x406FA0
+name = "Area43_TintStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x406FA0..0x407016 (0x77), cdecl, capstone to the last instruction, group AR1B. Area43_States 0: Field_ActiveMember +0x9F = Sprite_SetTint(Sprite_Current, 0, 0, 0, 1); Sprite_Current +0 bit 5, tint bytes +0x5F / +0x5E / +0x5D = 0xC0, +0x5C = 1, +0x48 = 2, +4 = 1; Field_ActiveMember's word +0x8A - 2 (the script op held to run again). area_pairs.json: PSX 0x801F2C48. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407020
+name = "Area43_TintSettle"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407020..0x4070C6 (0xA7), cdecl, capstone to the last instruction, group AR1B. Area43_States 1: each tint byte +0x5D..+0x5F not yet 0x80 less 2; +0x40 and +0x44 + 0x800; all three at 0x80: Tint_Release(Field_ActiveMember +0x9F), +0 bit 6, +4 = 0; else Field_ActiveMember's word +0x8A - 2. area_pairs.json: PSX 0x801F2D0C. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4070D0
+name = "Area43_SpawnEffect37"
+psx = 0x801F2E28
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4070D0..0x407137 (0x68), cdecl, capstone to the last instruction, group AR1B. Area 43's handler 1: Effect_FindFree to the byte 0x903850; a slot: +0 = 1, +5 = 0x37, word +0x2C = 0x64, +9 = 1, +6 = 0, +0x34 / +0x38 Sprite_Current's, +0x3C Sprite_Current's + 0x800000. PSX twin: area 43 handler[1]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407140
+name = "Area43_SetUpObject"
+psx = 0x801F2FBC
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407140..0x4071D1 (0x92), cdecl, capstone to the last instruction, group AR1B. Area 43's handler 2: Sprite_ReleaseTint(Sprite_Current), Sprite_SetAnimationBank(0x1BD), Sprite_SetAnimation(0), +0x2A = 0, +0x40 = +0x44 = 0xE000, Field_ActiveMember +0x9F = Sprite_SetTint(Sprite_Current, 0, 0, 0, 1), +0x5C = 1, tint bytes = 0x14, +0x2B = 3. PSX twin: area 43 handler[2]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4071E0
+name = "Area43_Trigger58"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4071E0..0x407202 (0x23), cdecl, capstone to the last instruction, group AR1B. Field_ObjectTriggers id 58 ((object, 0x904030), neither read; a gap function by tools/area_rows.py, in area 43's block by address): Flags_Set(0x904030, 0x7F), MoveCmd_TestFB(0x44, 0xB) (answer not read), Sound_PlayEffect(0x103). docs/area_w1b.md."
+
+[[func]]
+pc = 0x407210
+name = "Area44_Init"
+psx = 0x801F2CB0
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407210..0x40731A (0x10B), cdecl, capstone to the last instruction, group AR1B. Area 44's init (+0x40). Cond_ByteFD 0 or 2: bytes 0x90384A / 0x90384B zeroed, story flags 0x16 / 0x17 cleared. 1: Sprite_ObjectsExtra 0 and 1 at the cells Area44_Gate0[0x90384B & 3] and Area44_Gate1[(0x90384B >> 4) & 3] (words +0x34 / +0x38 = 0x8000, +0x36 / +0x3A the cell, +0x3E = 0x80, +0x80 bit 7), then Area44_SetGates. PSX twin: area 44 init. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407320
+name = "Area44_SetGates"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407320..0x40754D (0x22E), cdecl, capstone to the last instruction, group AR1B. Called by Area44_Init and both gate tails. Gate A (0x90384B & 3) and gate B ((>> 4) & 3) as 24 AreaMap_SetByte calls: A 0 / 1 / other opens (0) x 0x3C..0x3D rows 0xA..0xB, x 0x40..0x41 rows 0xA..0xB, or x 0x3C..0x3D rows 0xE..0xF and closes (0x10) the others; B likewise over x 0x3E..0x3F rows 0xC..0xD, rows 8..9 and x 0x3A..0x3B rows 0xC..0xD. The x pushed with the caller's esi / edi high halves (AreaMap_SetByte reads the s16). docs/area_w1b.md."
+
+[[func]]
+pc = 0x407550
+name = "Area44_SwitchHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407550..0x4075CB (0x7C), cdecl, capstone to the last instruction, group AR1B. Area_CellHooks' handler for area 44 (through Area_CellHook), (x, z) in, al out. The first of Area44_Switches' four records (x, z, facing, flag, kind) whose x and z bytes are the cell's and facing & 0xF the leader's +8: 0x57C160 toggles the story flag, Sound_PlayEffect(0x200), ScriptFlags_Set40, 0x9039F3 = the kind (8 or 9, stored through a register: tools/area_rows.py's tail-kind gap), 0x9039F4 = 0; al 1. None: al 0. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4075D0
+name = "Area44_GateTailA"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4075D0..0x4077E0 (0x211), cdecl, capstone to the last instruction, group AR1B. Field_ModeTailKinds slot 8 (armed by Area44_SwitchHook through a register; a gap function by the tool). Gates read once; a switch on the s8 0x9039F4 through the byte table 0x4077CC and the six-entry jump table 0x4077B4 inside the function: 0 gate A moved by Area44_PushParty(3, 0) or (7, 0) when story flag 0x16 is set / clear for A 0 / 1 (sound 0x201, state 1), else state 10; 1 once extra object 0's +9 is 0 Area44_SetGates, then 10; 10 gate B moved by Area44_PushParty(1, 1) or (5, 1) (sound 0x20E after state 1, else 0x201; state 11), else sound 0x202 after state 1 and state 20; 11 once extra object 1's +9 is 0 Area44_SetGates, sound 0x202, state 20; 20 the tail ended, ScriptFlags_Clear40. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4077F0
+name = "Area44_PushParty"
+ret = "void"
+params = "unsigned direction, unsigned k"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4077F0..0x407932 (0x143), cdecl, capstone to the last instruction, group AR1B. Called by both gate tails; (direction, k) bytes. Sprite_ObjectsExtra k's step +0xC / +0x10 = Field_DirectionSteps[direction] >> 2, +0x14 = 0, +9 = 0x20; each party record m from 1 below Field_MemberCount (re-read): Sprite_Current = it, and when (s8)(Sprite_FindNearby() - 0x1E) == k a running step finished (+0x34..+0x3C += +9 * the step), the object's step copied, +9 = 0x20, +1 = +2 = 1. Sprite_Current is left at the last record. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407940
+name = "Area44_GateTailB"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407940..0x407B38 (0x1F9), cdecl, capstone to the last instruction, group AR1B. Field_ModeTailKinds slot 9 (armed by Area44_SwitchHook through a register; a gap function by the tool): Area44_GateTailA's shape for story flag 0x17 with gate B first (Area44_PushParty(7, 1) / (3, 1) for B 0 / 2; waits on extra object 1) and gate A second ((5, 0) / (1, 0) for A 0 / 2; waits on extra object 0); a byte table 0x407B24 and a six-entry jump table 0x407B0C inside the function. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407B40
+name = "Area45_PlaceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407B40..0x407CB3 (0x174), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlaceMessage (0x401B80) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): WorldMap_FieldHooks entry 2 (area 45 is WorldMap_Records[2]); rows Area45_PlaceMessages (11; 11 for none), cells Area45_Cells, sets Area45_NameSets. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407CC0
+name = "Area45_PlateRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407CC0..0x407D95 (0xD6), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlateRun (0x401D00) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): WorldMap_Records[2] +0; Area45_PlateStates by +1 (ours aborts past 5). docs/area_w1b.md."
+
+[[func]]
+pc = 0x407DA0
+name = "Area45_PlateStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407DA0..0x407DED (0x4E), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlateStart (0x401DE0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_PlateStates 0; Sprite_SetAnimationBank(0x3B) where area 16 and 33 share one body with 0xF - the one instruction that differs. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407DF0
+name = "Area45_PlateShow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407DF0..0x407F31 (0x142), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlateShow (0x401E30) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_PlateStates 1; Area45_PlateAnims searched with no bound. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407F40
+name = "Area45_PlateGrow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407F40..0x407F80 (0x41), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlateGrow (0x401F80) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_PlateStates 2. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407F90
+name = "Area45_PlateHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407F90..0x407FE7 (0x58), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlateHold (0x401FD0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_PlateStates 3. docs/area_w1b.md."
+
+[[func]]
+pc = 0x407FF0
+name = "Area45_PlateShrink"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x407FF0..0x40803F (0x50), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_PlateShrink (0x402030) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_PlateStates 4. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408040
+name = "Area45_HudRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408040..0x408051 (0x12), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_HudRun (0x402080) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): WorldMap_Records[2] +0xC; Area45_HudStates by +1 (ours aborts past 2). docs/area_w1b.md."
+
+[[func]]
+pc = 0x408060
+name = "Area45_HudFrame"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408060..0x408069 (0xA), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_HudFrame (0x4020A0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_HudStates 1: call Area45_FrameStep, jmp Area45_BoxStep. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408070
+name = "Area45_FrameStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408070..0x408081 (0x12), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_FrameStep (0x4020B0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): called by Area45_HudFrame; Area45_FrameStates by +2 (ours aborts past 4). docs/area_w1b.md."
+
+[[func]]
+pc = 0x408090
+name = "Area45_FrameSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408090..0x4080B0 (0x21), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_FrameSlideIn (0x4020D0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_FrameStates 1. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4080C0
+name = "Area45_FrameHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4080C0..0x4080E7 (0x28), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_FrameHold (0x402100) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_FrameStates 2 and Area45_FrameSlideIn tail jump. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4080F0
+name = "Area45_FrameSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4080F0..0x408130 (0x41), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_FrameSlideOut (0x402130) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_FrameStates 3. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408140
+name = "Area45_BoxStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408140..0x408151 (0x12), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_BoxStep (0x402180) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_HudFrame tail jump; Area45_BoxStates by +3 (ours aborts past 4). docs/area_w1b.md."
+
+[[func]]
+pc = 0x408160
+name = "Area45_BoxSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408160..0x4081C1 (0x62), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_BoxSlideIn (0x4021A0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_BoxStates 1. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4081D0
+name = "Area45_BoxHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4081D0..0x40823D (0x6E), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_BoxHold (0x402210) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_BoxStates 2. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408240
+name = "Area45_BoxSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408240..0x408296 (0x57), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_BoxSlideOut (0x402280) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_BoxStates 3. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4082A0
+name = "Area45_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4082A0..0x408464 (0x1C5), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_DrawFrame (0x4022E0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): called by the frame states; Area45_Buttons (six, then eight entries), WorldMap_DrawNeedle. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408470
+name = "Area45_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408470..0x40852B (0xBC), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_DrawSprite (0x4024B0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): called by the two draws; Area45_Sprites by index & 0xFF. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4086D0
+name = "Area45_DrawHud"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4086D0..0x408727 (0x58), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_DrawHud (0x402570) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): called by the box states; the region label at 0x803580 + the word of 0x803584, where area 16 reads 0x803588 - the one operand besides the tables that differs. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408730
+name = "Area45_Record8Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408730..0x408741 (0x12), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_Record8Run (0x4025D0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): WorldMap_Records[2] +8; Area45_Record8States by +1 (ours aborts past 3). docs/area_w1b.md."
+
+[[func]]
+pc = 0x408750
+name = "Area45_Record8Place"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408750..0x4088A3 (0x154), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_Record8Place (0x4025F0) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_Record8States 1; Area45_Directions and Area45_Record8Anims by +8 unchecked. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4088B0
+name = "Area45_Record4Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4088B0..0x4088C1 (0x12), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_Record4Run (0x402750) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): WorldMap_Records[2] +4; Area45_Record4States by +1 (ours aborts past 2). docs/area_w1b.md."
+
+[[func]]
+pc = 0x4088D0
+name = "Area45_Record4MarkCell"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4088D0..0x408984 (0xB5), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_Record4MarkCell (0x402770) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): Area45_Record4States 0; Area45_Cells by +0xB unchecked. docs/area_w1b.md."
+
+[[func]]
+pc = 0x4089A0
+name = "Area45_DrawDrift"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x4089A0..0x408E01 (0x462), cdecl, capstone to the last instruction, group AR1B. Area 16's Area16_DrawDrift (0x402830) instruction for instruction over area 45's tables (a capstone compare: the same instructions, only jump targets, calls to its own copies and table operands differ): WorldMap_Records[2] +0x10; Area45_DriftUV by +0xB - 2 unchecked. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408990
+name = "Area45_Record4Tick"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408990..0x408999 (0xA), cdecl, capstone to the last instruction, group AR1B. The record +4 state 1 of ten world maps (areas 16, 33, 45, 65, 87, 88, 115, 121, 151, 152 name it in their record-4 state tables; one body, in area 45's block): call Sprite_ScriptTick (al not read), jmp Sprite_UpdateScreenSlot. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408E10
+name = "Area46_DropTail"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408E10..0x408EAB (0x9C), cdecl, capstone to the last instruction, group AR1B. Field_ModeTailKinds slot 11 (armed by Area46_StepHook). A switch on the s8 0x9039F4 through the byte table 0x408EA0 and the five-entry jump table 0x408E8C inside the function: 0 state 1; 1 once byte 0x903849 is 2, ScriptFlags_Clear40, 0x903849 = 0, the tail ended (0x9039F3 / F4 zeroed); 10 Party_DropIn(1), state 11; 11 once 0x903849 is 0, ScriptFlags_Clear40, the tail ended. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408EB0
+name = "Area46_StepHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408EB0..0x408F04 (0x55), cdecl, capstone to the last instruction, group AR1B. Area_StepHook's handler for area 46, (x, z) 16.16 in, al out: z at most 0x218000 (signed), x's high word 0xE..0x10 and KeyItem_Has(4) 0: ScriptFlags_Set40, 0x903849 = 1, 0x9039F3 = 0xB, 0x9039F4 = 0xA when the s8 Cond_ByteFA is at least 8 else 0; al 1. Otherwise al 0. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408F10
+name = "Area46_PlaceKind2At0"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408F10..0x408F18 (0x9), cdecl, capstone to the last instruction, group AR1B. Handler 0 of areas 7, 14 and 46 (one body, in area 46's block): Kind2_Place(0). PSX twin: area_records.toml area 46 handler[0]. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408F20
+name = "Area46_Trigger54"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408F20..0x408F5F (0x40), cdecl, capstone to the last instruction, group AR1B. Field_ObjectTriggers id 54 ((object, 0x904030), neither read; a gap function by the tool, in area 46's block by address): Flags_Set(0x904030, 0x70); when flags 0x6D..0x70 are all set, Flags_Set 0x71. al 0. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408F60
+name = "Area47_PlaceAtStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408F60..0x408FBB (0x5C), cdecl, capstone to the last instruction, group AR1B. Area 47's handler 0 (Area47_Handlers): Sprite_Current +0x34 = Field_Kind2X = 0x120000, +0x38 = Field_Kind2Z = 0x240000; Field_ViewReset; word +0x3E = 0x1220; MapView_SetElevation(that word, pushed with Field_ViewReset's edx above it - read as its low 16 bits); Camera_Angles[0] = 0xFB76, [2] = 0xF8. docs/area_w1b.md."
+
+[[func]]
+pc = 0x408FC0
+name = "Area47_SpawnEffect3D"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-27, 0x408FC0..0x408FE7 (0x28), cdecl, capstone to the last instruction, group AR1B. Area 47's handler 1: Effect_FindFree; a slot: +0 = 1, +5 = 0x3D. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F6274
+name = "Area42_Handlers"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: area 42's descriptor 0x5F6290 +0x3C: StartTimer, ClearMemberFlag, Touch12..15, ChoiceMessage; its +0x34 choice table 0x5F628C is entry 6. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F62D4
+name = "Area42_Messages"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area42_ChoiceMessage's messages by the s8 choice (unchecked); Area42_Placements follows. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F62E0
+name = "Area42_Placements"
+ctype = "unsigned char"
+count = 39
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: three 13-byte event-op 9x records (EventOp_9x's operand), Area42_Init's by Area42_Rank (unchecked); the time format 0x5F6308 follows. docs/area_w1b.md."
+
+[[data]]
+pc = 0x675A00
+name = "Area42_Rank"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: area 42's result 0..2: Area42_CheckAll sets it from the countdown's seconds, Area42_Init from the bank 0x9040CC's flags 0x5C..0x5E, and it picks the placement record and the flag tested. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F6A18
+name = "Area43_Handlers"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: area 43's descriptor 0x5F6A28 +0x3C: ObjectRun, SpawnEffect37, SetUpObject. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F6A6C
+name = "Area43_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area43_ObjectRun by Sprite_Current[4]: TintStart, TintSettle; a zero dword follows. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7074
+name = "Area44_Gate0"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (x, z) x 4: Sprite_ObjectsExtra 0's cell by gate A (0x90384B & 3), Area44_Init. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F707C
+name = "Area44_Gate1"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (x, z) x 4: Sprite_ObjectsExtra 1's cell by gate B ((0x90384B >> 4) & 3), Area44_Init; the fourth pair is Area44_Switches' first x, z. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7082
+name = "Area44_Switches"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (x, z, facing, story flag, tail kind) x 4: Area44_SwitchHook's search (kinds 8 and 9). docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7098
+name = "Area45_PlateAnims"
+ctype = "unsigned char"
+count = 40
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (u16 place, u8 animation, u8) x 10: Area45_PlateShow searches it with no bound (area 16's Area16_PlateAnims). docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F70C0
+name = "Area45_Cells"
+ctype = "unsigned char"
+count = 1060
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (u8 x, u8 z, u8, u8 id) x 265: Area45_PlaceMessage searches it (no bound); Area45_Record4MarkCell indexes it by +0xB (unchecked). docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F74E4
+name = "Area45_PlaceMessages"
+ctype = "unsigned char"
+count = 352
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: 11 rows of 0x20 (u16 place, 15 u16 messages): Area45_PlaceMessage's 0xA1 branch by row * 16 + (s8) Cond_ByteFA. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7644
+name = "Area45_NameSets"
+ctype = "unsigned char"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: 3 records of (u8 id, u8 item x 4): Area45_PlaceMessage's name lists; set 3 (none found) reads Area45_PlateStates' bytes. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7654
+name = "Area45_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area45_PlateRun by +1: PlateStart, PlateShow, PlateGrow, PlateHold, PlateShrink. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7668
+name = "Area45_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area45_HudRun by +1: WorldMapHud_Start (shared), Area45_HudFrame. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7670
+name = "Area45_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area45_FrameStep by +2: WorldMap_FrameWait (shared), FrameSlideIn, FrameHold, FrameSlideOut. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7680
+name = "Area45_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area45_BoxStep by +3: WorldMapHud_BoxWait (shared), BoxSlideIn, BoxHold, BoxSlideOut. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7690
+name = "Area45_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (w, h, u, v) x 22: Area45_DrawSprite by index & 0xFF unchecked. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F76E8
+name = "Area45_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (u16 mask, u8 sprite, u8) x 6: Area45_DrawFrame's keys; the second legend reads eight entries, the last two Area45_Record8States' words. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7700
+name = "Area45_Record8States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area45_Record8Run by +1: 0x4253C0, Area45_Record8Place, 0x40C490 (the world-map copies' shared states, other groups'). docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F770C
+name = "Area45_Directions"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (s16 dx, s16 dz) x 4: Area45_Record8Place by +8 unchecked. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F771C
+name = "Area45_Record8Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: (u8 animation, u8 +0x2A) x 4: Area45_Record8Place by +8 unchecked. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7724
+name = "Area45_Record4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: Area45_Record4Run by +1: Area45_Record4MarkCell, Area45_Record4Tick. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F772C
+name = "Area45_DriftUV"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: three byte rows of 4 (u base, v base, cell size) by +0xB - 2: Area45_DrawDrift (unchecked). docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F7E54
+name = "Area46_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: area 46's descriptor 0x5F7E58 +0x3C: Area46_PlaceKind2At0. docs/area_w1b.md."
+
+[[data]]
+pc = 0x5F8324
+name = "Area47_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-27, group AR1B: area 47's descriptor 0x5F8330 +0x3C: PlaceAtStart, SpawnEffect3D. docs/area_w1b.md."
