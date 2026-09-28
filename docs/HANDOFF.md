@@ -48,11 +48,9 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    `639ea9c` before the record's commits; [`takeover-queue-round11.md`](takeover-queue-round11.md)):
    BH alone in stage A built the harness, BSA..BSE then BSF..BSJ ran in
    parallel, every merge verified by its own build and `'*'` in the
-   detached worktree; 531 functions, 1,494 controls. **Next, in order:**
-   the tip's live checks written into the round doc's section 8 (run at
-   the end of 2026-09-28: the hash's ours side against `r9_orig` and the
-   combat A/B from a launcher copy with `cheat.steal=0`; the boss band is
-   off both routes, so both are expected at their baselines); the PR to
+   detached worktree; 531 functions, 1,494 controls. **The tip's live checks
+   pass** (section 8 there: the hash against `r9_orig` frame 0 only, the
+   combat A/B at round eight's baseline). **Next, in order:** the PR to
    `main`; then the round's debts, section 7 there - the harness
    fold-backs (six shapes every stage-B group worked around), the
    rebinding pass (the round-ten form; the inbound list is there), the

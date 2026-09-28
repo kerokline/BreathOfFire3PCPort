@@ -176,6 +176,18 @@ by the event-battle set-ups, so both are expected at their baselines.
    the controls scripts live in the session-`08306a9f` scratchpad
    (`<group>/`), a Temp folder.
 
-## 8. The tip's live checks
+## 8. The tip's live checks (2026-09-28, 17:59..18:15, at `639ea9c`)
 
-_Filled in by the coordinator after the runs._
+Run from a launcher copy of the tip's build (`cheat.steal=0`, the four
+09-27 divergences in the scripts' off-list - [`round-10-cleanup.md`](round-10-cleanup.md)
+status header says why both matter):
+
+| Check | Result |
+|---|---|
+| Frame hash, ours unfocused against `r9_orig` (`analysis/calltrace/r11tip_ours`) | 1 of 10,318 frames differ: frame 0, the set-up, as since `rb1` |
+| Oracle, `r9_orig` vs `r11tip_ours` | 392 frames disagree (the `r9_ours` kind: 1,473 there, 387 at `6b70e71`) |
+| Combat A/B (`analysis/shots/combat_r11tip_*`, `validate_combat.sh`) | 5 of 43 identical, 15 pixels at most - round eight's baseline |
+
+So nothing the round took is on the attract path or the ordinary
+encounter's, as the plan said; the boss band waits for the owner's
+recipe saves (section 6).
