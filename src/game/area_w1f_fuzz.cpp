@@ -230,9 +230,11 @@ U SemiEffect(const U* a, U answer) {
 // focus object after ScriptFlags_Set40 (area 68's trigger reads it four
 // times); area 75's cells after the calls its functions read them again
 // after.
+void MoveCell(U n);
 U MovesCurrent(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Sprite_Current = RunningRecord(n >> 8);
+    if (n & 2) MoveCell(n >> 12);
     return answer;
 }
 U MovesMember(const U*, U answer) {
@@ -253,7 +255,7 @@ U Set40Effect(const U*, U answer) {
 }
 // Area 75's cells, kept to what indexes a table or a record.
 void MoveCell(U n) {
-    switch ((n >> 4) % 8) {
+    switch ((n >> 4) % 10) {
     case 0: B(at::kObjectA) = static_cast<unsigned char>((n >> 8) % 30); break;
     case 1: B(at::kObjectB) = static_cast<unsigned char>((n >> 8) % 30); break;
     case 2: B(at::kOtherEffect) = static_cast<unsigned char>((n >> 8) % 4); break;
@@ -261,6 +263,8 @@ void MoveCell(U n) {
     case 4: B(at::kPressFlags) = static_cast<unsigned char>(n >> 8); break;
     case 5: B(at::kMove) = static_cast<unsigned char>((n >> 8) % 4); break;
     case 6: B(at::kList) = static_cast<unsigned char>((n >> 8) % 3); break;
+    case 7: SetWord(ah::Mem(at::kPlayerCounter), n >> 12); break;
+    case 8: SetWord(ah::Mem(at::kOtherCounter), n >> 12); break;
     default: B(at::kListPos) = static_cast<unsigned char>((n >> 8) % 8); break;
     }
 }
@@ -280,6 +284,14 @@ U ResetEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) B(at::kObjectA) = static_cast<unsigned char>((n >> 8) % 30);
     if (n & 2) B(at::kPressFlags) = static_cast<unsigned char>(n >> 16);
+    return answer;
+}
+// Area75_PhaseRun: the tail state its caller reads again (the real phases 3
+// and 4 set it to 0x1E and 0).
+U PhaseRunEffect(const U*, U answer) {
+    static const unsigned char kStates[] = {0x1E, 0, 6, 0xE, 0x15, 0xF};
+    const U n = ah::Noise();
+    if (n & 1) B(at::kTailState) = kStates[(n >> 8) % 6];
     return answer;
 }
 // Msg_OpenScript: the flags byte the tail's state 9 reads after it.
@@ -311,7 +323,7 @@ U EffectSlotEffect(const U* a, U answer) {
 const ah::Callee kCallees[] = {
     // the group's own, called directly
     {W1F_OURS(Area75_ResetPresses), 0, {}, ah::Answer::kPhase, 0, 0, {}, &ResetEffect},
-    {W1F_OURS(Area75_PhaseRun), 0, {}, ah::Answer::kPhase, 0, 0},
+    {W1F_OURS(Area75_PhaseRun), 0, {}, ah::Answer::kPhase, 0, 0, {}, &PhaseRunEffect},
     {W1F_OURS(Area75_DrawCounters), 0, {}, ah::Answer::kPhase, 0, 0},
     {W1F_OURS(Area75_OtherPress), 0, {}, ah::Answer::kPhase, 0, 0, {}, &MovesCells},
     {W1F_OURS(Area75_PlayerPress), 0, {}, ah::Answer::kPhase, 0, 0, {}, &MovesCells},
@@ -453,11 +465,9 @@ void Seed69(unsigned k) {
 void Seed71(unsigned) { Common(); }
 
 // ---- areas 72, 73 ----
-void Seed72(unsigned) {
-    Common();
-    // two rounds in three the shipped weights (Common); else each weight any
-    // byte half the time, so the walk also runs off the table's end
-}
+// Two rounds in three the shipped weights (Common); else the harness's random
+// bytes, so the walk also runs off the table's end ("none chosen").
+void Seed72(unsigned) { Common(); }
 
 // ---- area 74 ----
 void Seed74(unsigned k) {
@@ -469,9 +479,10 @@ void Seed74(unsigned k) {
         if (k == k74Ask92 && ah::Half()) B(at::kFlagByte9C) = static_cast<unsigned char>(B(at::kFlagByte9C) ^ 0x20);
         break;
     case k74Push:
-        if (ah::Often()) B(at::kLeaderByte89) = static_cast<unsigned char>(AH_PICK(2, 2, 1, 3, 0x82));
-        if (ah::Often()) Sprite_Current[9] = 0;
-        if (ah::Often()) B(at::kLeaderDir) = static_cast<unsigned char>((B(at::kLeaderDir) & 0xF8) | AH_PICK(5, 1, 5, 1, 0, 3, 4, 6));
+        // each gate passed four times in five, so the move is reached often
+        if (ah::Next() % 5) B(at::kLeaderByte89) = static_cast<unsigned char>(AH_PICK(2, 2, 2, 1, 3, 0x82));
+        if (ah::Next() % 5) Sprite_Current[9] = 0;
+        if (ah::Next() % 5) B(at::kLeaderDir) = static_cast<unsigned char>((B(at::kLeaderDir) & 0xF8) | AH_PICK(5, 1, 5, 1, 5, 1, 0, 3, 4, 6));
         break;
     default: break;
     }
@@ -593,7 +604,7 @@ void Args75(unsigned k, U* a) {
         // 1 or any
         a[0] = ah::Often() ? a[0] % 0x140 : a[0];
         a[1] = ah::Often() ? a[1] % 0xF0 : a[1];
-        a[2] = ah::Often() ? AH_PICK(0x54, 0x48, 0x10, 3, 4, 5, 0x55) : a[2];
+        a[2] = ah::Often() ? AH_PICK(0x54, 0x48, 0x10, 3, 4, 5, 0x55, 0, 1, 2, 0xFFFF) : a[2];
         a[3] = ah::Often() ? AH_PICK(0x11, 0x10, 2, 3, 0xFF) : a[3];
         a[4] = ah::Often() ? AH_PICK(0, 0, 1, 2) : a[4];
         break;
