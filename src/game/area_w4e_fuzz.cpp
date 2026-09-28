@@ -314,6 +314,12 @@ U StepMoveEffect(const U*, U answer) {
     if (n & 2) MoveCurrent(n >> 4);
     return answer;
 }
+// Area189_ExitButton / _MenuButton answer in al: 0 three times in four (the
+// control goes on), else a set bit; garbage above either way.
+U ButtonAnswer(const U*, U answer) {
+    const U n = ah::Noise();
+    return n % 4 != 0 ? answer & 0xFFFFFF00u : answer | 1u;
+}
 // Char_RecalcStats: area 189's raise reads the next record's byte after it.
 U RecalcEffect(const U*, U answer) {
     const U n = ah::Noise();
@@ -356,17 +362,18 @@ const ah::Callee kCallees[] = {
     {"HeightAt_511C10", at::kHeightAt, at::kHeightAt, 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &HeightEffect},
     {"RestoreRecords_42C2D0", at::kRestoreRecords, at::kRestoreRecords, 0, {}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly
+    // (kPhase: logs the object it ran for, like a handler; it runs no effect)
     {W4E_OURS(Area189_ZeroSpeeds), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {W4E_OURS(Area189_LeaderHalt), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {W4E_OURS(Area189_ExitButton), 0, {}, ah::Answer::kFlag, 0, 0},
-    {W4E_OURS(Area189_MenuButton), 0, {}, ah::Answer::kFlag, 0, 0},
+    {W4E_OURS(Area189_LeaderHalt), 0, {}, ah::Answer::kPhase, 0, 0},
+    {W4E_OURS(Area189_ExitButton), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ButtonAnswer},
+    {W4E_OURS(Area189_MenuButton), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &ButtonAnswer},
     {W4E_OURS(Area189_TurnInput), 0, {}, ah::Answer::kByte, 0x00, 0x03},
     {W4E_OURS(Area189_StepBegin), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StepBeginEffect},
     {W4E_OURS(Area189_StepMove), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StepMoveEffect},
-    {W4E_OURS(Area189_StepArrive), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {W4E_OURS(Area189_LeaderControl), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {W4E_OURS(Area189_RaiseByte1E), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {W4E_OURS(Area189_DrainHp), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W4E_OURS(Area189_StepArrive), 0, {}, ah::Answer::kPhase, 0, 0},
+    {W4E_OURS(Area189_LeaderControl), 0, {}, ah::Answer::kPhase, 0, 0},
+    {W4E_OURS(Area189_RaiseByte1E), 0, {}, ah::Answer::kPhase, 0, 0},
+    {W4E_OURS(Area189_DrainHp), 0, {}, ah::Answer::kPhase, 0, 0},
     // a, who, b, c: the three bytes read (the pushes carry stale bits), who
     // not at all
     {W4E_OURS(Area191_TalkMessageB), 4, {kU8, 0, kU8, kU8}, ah::Answer::kGarbage, 0, 0},
@@ -575,6 +582,17 @@ void Seed189(unsigned k) {
             Field_EdgeBits = static_cast<unsigned short>(pace + AH_PICK(0xFFFE, 0xFFFF, 0, 1, 0xFFFE));
         }
         if (ah::Half()) Field_InputHeld = 0;
+        if (ah::Half()) {
+            // half the rounds aimed at the walk's end: no message on the way
+            // (the frame word and the reserve quiet, no request), the flags
+            // clear, the step count at the pace
+            SetWord(ah::Mem(at::kWalkFrames), ah::Next() % 0x1D0);
+            B(at::kWalkReserve) = 0;
+            Field_Request = 0;
+            Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x120u);
+            const U pace = Word(ah::Mem(at::kLeaderPace));
+            Field_EdgeBits = static_cast<unsigned short>(pace + (ah::Half() ? 0xFFFFu : 0u));
+        }
         break;
     }
     case k189Exit:
