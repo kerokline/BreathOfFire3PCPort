@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 48 functions ours
 (`src/game/area_w1a.cpp`, shadow name `area_w1a`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-0 mismatches in 288,000 rounds (in this worktree); CONTROLS_SUMMARY (section 4).
+0 mismatches in 288,000 rounds (in this worktree); 180 controls planted, 180 refused by a count (section 4).
 Fuzz only: no recorded route reaches the band (section 8). No divergence;
 the two dispatchers through an area's state table abort past it (section 6).
 
@@ -237,13 +237,198 @@ rounds per function, the real descriptors and tables in place.
   pointer, `0x903804`, `Field_ActiveMember`, a party-list byte,
   `Field_ScriptFlags`, `MoveScript_Object`, `Gfx_BufferIndex`.
 
-**Result (in this worktree):** RESULT_LINE
+**Result (in this worktree):** 288,000 rounds over the 48 functions (6,000 each; areas 38 / 39 / 40 / 41: 24,000 / 72,000 / 102,000 / 90,000), 1,061,583 calls to the stand-ins, 0 mismatches, 23,795 bytes of state (35 regions) and the log compared. Coverage: both state-table entries of area 39 2,941..3,059 times, the four of area 41 1,482..1,540; `0x591900` (no `0xE` key item) 947; `Area40_PuzzleSolved` 332 calls from the hook, `Area40_MarkBehind` 172, `Area40_ClearGrid` 504, `Area40_DrawGrid` 1,161 from the tail, `Area40_TileLit` 69,376 (from the hook and `PuzzleSolved`), `Party_DropIn` 194 (area 40) / 12,000 (area 41), `0x591B60` 1,352, `Inventory_Add` 350.
 
-`BOF3X_SHADOW='*'`: STAR_LINE
+`BOF3X_SHADOW='*'`: exit 0, `inject: 4149 ours`, 383 self-test lines, no mismatch (a first attempt died with no `Fatal` while a round-nine spell group was cloning, before any area group ran; the re-run passed, and the same build had passed `'*'` before the controls).
 
 ## 4. Controls
 
-CONTROLS_TEXT
+Planted one at a time in `area_w1a.cpp` by a script (the scratch `controls.py` and `control_list.py`, not committed) that plants on a unique anchor, rebuilds, checks `area_w1a.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w1a`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches). **180 planted, 180 refused by a count (exit 3).** No hang, no fault, no equivalent. Every one of the 48 functions has at least one control of its own; a control in a shared helper lists every function it refused in.
+
+The first run refused 179: C58 (`Area40_TileLit` taking a diagonal of `0x38` as inside) stood, because the fuzz drew the row and the diagonal inside or outside the ring together, so an edge diagonal never met an inside row. The arguments now draw the two apart (section 3); the table is the second run, all 180 again under the final fuzz. The thinnest: A10 19, B16 93, C4 84, C30 59, C32 114, C34 10, C41 19, C43 81, C50 98, C52 23, C53 28, C55 71, C58 55, C62 50, C102 61 (each a boundary or a re-read after a call; the louder stand-ins of section 3 carry the re-reads).
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| A1 | `Area38_ClearCells` | cell z 0x1C set to 1 | 6000 |
+| A2 | `Area38_SetCellsC0` | value 0xC1 | 6000 |
+| A3 | `SpawnForMember (both)` | +6 = 4 | SpawnEffectMember1 3116, SpawnEffectMember2 3194 |
+| A4 | `SpawnForMember (both)` | +0x30 from +0x2E | SpawnEffectMember1 3116, SpawnEffectMember2 3194 |
+| A5 | `SpawnForMember (both)` | the list byte not read again (table[0]) | SpawnEffectMember1 373, SpawnEffectMember2 413 |
+| A6 | `Area38_SpawnEffectMember1` | record 2 | 2509 |
+| A7 | `Area38_SpawnEffectMember2` | list byte 1 | 4003 |
+| A8 | `SpawnForMember (both)` | Sprite_Current read before Effect_FindFree | SpawnEffectMember1 1363, SpawnEffectMember2 1461 |
+| A9 | `SpawnForMember (both)` | +0xC = 1 | SpawnEffectMember1 3116, SpawnEffectMember2 3194 |
+| A10 | `SpawnForMember (both)` | the step zero-extended | SpawnEffectMember1 19, SpawnEffectMember2 39 |
+| B1 | `Area39_Run` | the other entry | 6000 |
+| B2 | `Area39_DriftStart` | +0xA = 0x41 | 6000 |
+| B3 | `Area39_DriftStart` | state 2 | 6000 |
+| B4 | `Area39_DriftStep` | x step << 10 | 2455 |
+| B5 | `Area39_DriftStep` | z step not negated | 2455 |
+| B6 | `Area39_DriftStep` | at 0 state 1 | 1055 |
+| B7 | `MemberStep (39 x3)` | less 1 | DriftStart 6000, DriftStep 4945, SpawnEffect36 1227 |
+| B8 | `Area39_SpawnEffect36` | kind 0x37 | 4773 |
+| B9 | `Area39_SpawnEffect36` | +9 = 1 | 4773 |
+| B10 | `Area39_ClearCells` | x 0x45 | 6000 |
+| B11 | `Area39_SetCells51` | value 0x50 | 6000 |
+| B12 | `Area39_SetCells50` | z 0xE | 6000 |
+| B13 | `Area39_PlayMusicA3` | frames 9 | 6000 |
+| B14 | `Area39_SetScriptFlag8` | bit 4 | 4551 |
+| B15 | `Area39_SwapKeyItemE` | becomes 5 | 5053 |
+| B16 | `Area39_SwapKeyItemE` | 31 bytes searched | 93 |
+| B17 | `Area39_SwapKeyItemE` | adds 5 | 947 |
+| B18 | `Area39_FadeOutMusic` | frames 0x1F | 6000 |
+| B19 | `Area39_Counter1Not4` | against 5 | 2021 |
+| C1 | `Area40_PlaceObject` | scratch word high byte 1 | 5993 |
+| C2 | `Area40_PlaceObject` | none is 0xFE | 188 |
+| C3 | `Area40_PlaceObject` | position back 1 | 188 |
+| C4 | `Area40_PlaceObject` | MoveScript_Object read before the call | 84 |
+| C5 | `Area40_PlaceObject` | op + 1 | 5812 |
+| C6 | `Area40_NudgeObject` | by 0x4000 | 1548 |
+| C7 | `Area40_NudgeObject` | +0x89 of 3 | 2360 |
+| C8 | `Area40_ChoiceFlag5` | 0x1D for answer 0 | 993 |
+| C9 | `Area40_ChoiceFlag5` | flag 4 | 6000 |
+| C10 | `Area40_ChoiceFlag5` | bit 3 kept | 3024 |
+| C11 | `Area40_ChoiceFlag5` | Field_StatusBits read before the call | 2980 |
+| C12 | `Area40_ChoiceFlag5` | message 0xFFFE | 5736 |
+| C13 | `Lever (40 x4)` | sound 0x204 | ChoiceLeverB 1014, ChoiceLeverA 1031, ChoiceLever9 1041, ChoiceLever8 1030 |
+| C14 | `Lever (40 x4)` | answer 1 too | ChoiceLeverB 465, ChoiceLeverA 510, ChoiceLever9 511, ChoiceLever8 458 |
+| C15 | `Area40_ChoiceLeverB` | flag 0xA | 1014 |
+| C16 | `Area40_ChoiceLeverA` | flag 9 | 1031 |
+| C17 | `Area40_ChoiceLever9` | flag 8 | 1041 |
+| C18 | `Area40_ChoiceLever8` | flag 7 | 1030 |
+| C19 | `Lever (40 x4)` | no Area40_SetGate | ChoiceLeverB 1014, ChoiceLeverA 1031, ChoiceLever9 1041, ChoiceLever8 1030 |
+| C20 | `Area40_SetGate` | opens on 6 | 2264 |
+| C21 | `Area40_SetGate` | answers 2 | 1468 |
+| C22 | `Gate (SetGate, Init)` | z from 2 | SetGate 6000, Init 5342 |
+| C23 | `Gate (SetGate, Init)` | x 0x43 a row down | SetGate 6000, Init 5342 |
+| C24 | `Gate (SetGate, Init)` | 6 rows | SetGate 6000, Init 5342 |
+| C25 | `Area40_ChoiceTail16` | message 0x3D | 185 |
+| C26 | `Area40_ChoiceTail16` | leader +0x89 of 3 | 351 |
+| C27 | `Area40_ChoiceTail16` | tail kind 0x11 | 277 |
+| C28 | `Area40_ChoiceTail16` | armed over kind 1 | 147 |
+| C29 | `TailOff (ChoiceTail16, TailPuzzle)` | bit 1 kept | ChoiceTail16 2490, TailPuzzle 2698 |
+| C30 | `Area40_TailPuzzle` | flag set: state 0xB | 59 |
+| C31 | `Area40_TailPuzzle` | Party_DropIn(3) | 194 |
+| C32 | `Area40_TailPuzzle` | flag 0x2000 | 114 |
+| C33 | `Area40_TailPuzzle` | counter 0x64 awaited | 240 |
+| C34 | `Area40_TailPuzzle` | flags | 4 | 10 |
+| C35 | `Area40_TailPuzzle` | request not 1 | 599 |
+| C36 | `Area40_TailPuzzle` | top nibble >> 13 | 239 |
+| C37 | `Area40_TailPuzzle` | keeps 11 bits | 201 |
+| C38 | `Area40_TailPuzzle` | scratch word + 1 | 364 |
+| C39 | `Area40_TailPuzzle` | area 0x29 | 1035 |
+| C40 | `Area40_TailPuzzle` | Cond_ByteFD 7 stays | 1131 |
+| C41 | `Area40_TailPuzzle` | state 3 after the counter | 19 |
+| C42 | `Area40_TailPuzzle` | no draw | 1161 |
+| C43 | `Area40_TailPuzzle` | the state read before the calls | 81 |
+| C44 | `Area40_ArriveHook` | Cond_ByteFD 5 | 2192 |
+| C45 | `Area40_ArriveHook` | leader +0x2C | 2017 |
+| C46 | `Area40_ArriveHook` | tail kind 0x11 | 558 |
+| C47 | `Area40_ArriveHook` | lit tests FB | 172 |
+| C48 | `Area40_ArriveHook` | MarkBehind a cell further | 172 |
+| C49 | `Area40_ArriveHook` | sound 0x206 | 172 |
+| C50 | `Area40_ArriveHook` | the off loop by columns | 98 |
+| C51 | `Area40_ArriveHook` | solved does not stop | 234 |
+| C52 | `InGrid (hook, MarkBehind)` | z span 5 | ArriveHook 23, MarkBehind 287 |
+| C53 | `Area40_ArriveHook` | the cell x a byte | 28 |
+| C54 | `Area40_ArriveHook` | no ClearGrid | 504 |
+| C55 | `Area40_TileLit` | row 0x38 inside | 71 |
+| C56 | `Area40_TileLit` | row + 2 | 767 |
+| C57 | `Area40_TileLit` | wraps by 0x37 | 363 |
+| C58 | `Area40_TileLit` | diagonal 0x38 inside | 55 |
+| C59 | `Area40_TileLit` | column + 2 | 813 |
+| C60 | `Area40_TileLit` | column wraps by 0x1B | 402 |
+| C61 | `Area40_TileLit` | the neighbouring column | 815 |
+| C62 | `Area40_TileLit` | a one-record run empty | 50 |
+| C63 | `Area40_TileLit` | kind 0x26 for 0x25 | 267 |
+| C64 | `Area40_TileLit` | entry mask 0xF001 | 583 |
+| C65 | `Area40_TileLit` | answers entry & 3 | 548 |
+| C66 | `Area40_TileLit` | patch index + 1 | 620 |
+| C67 | `Area40_TileLit` | the origin z from x | 584 |
+| C68 | `Area40_PuzzleSolved` | pattern by columns | 4237 |
+| C69 | `Area40_PuzzleSolved` | flag 0x28 | 2858 |
+| C70 | `Area40_PuzzleSolved` | cell 0xA2 | 2858 |
+| C71 | `Area40_PuzzleSolved` | state 0xB | 2835 |
+| C72 | `Area40_PuzzleSolved` | FB at x 0x93 | 2858 |
+| C73 | `Area40_PuzzleSolved` | answers 3 | 2858 |
+| C74 | `Area40_ClearGrid` | value 1 | 6000 |
+| C75 | `Area40_ClearGrid` | column by column | 6000 |
+| C76 | `Area40_MarkBehind` | direction & 3 | 1334 |
+| C77 | `Area40_MarkBehind` | z step from x | 1658 |
+| C78 | `Area40_MarkBehind` | value 0x51 | 1679 |
+| C79 | `Area40_MarkBehind` | ahead, not behind | 1804 |
+| C80 | `Area40_DrawGrid` | byte 0x51 | 6000 |
+| C81 | `Area40_DrawGrid` | item 1 skipped | 5999 |
+| C82 | `Area40_DrawGrid` | semi-trans 0 | 6000 |
+| C83 | `Area40_DrawGrid` | corner 4 floats swapped | 6000 |
+| C84 | `Area40_DrawGrid` | the other half | 6000 |
+| C85 | `Area40_DrawGrid` | pulse - 7 | 6000 |
+| C86 | `Area40_DrawGrid` | times 0x1E | 5895 |
+| C87 | `Area40_DrawGrid` | green + 1 | 6000 |
+| C88 | `Area40_DrawGrid` | size 0x30 | 6000 |
+| C89 | `Area40_DrawGrid` | floats copied as bytes (a signalling NaN kept) | 253 |
+| C90 | `Area40_DrawGrid` | the packet read once | 5993 |
+| C91 | `Area40_Init` | Cond_ByteFD 2 skips the gate | 1309 |
+| C92 | `Area40_Init` | nibble mask 0xE0 | 2691 |
+| C93 | `Area40_Init` | Cond_ByteFD 5 closes | 2615 |
+| C94 | `Area40_Init` | cell 0x51 | 901 |
+| C95 | `Area40_Init` | zone 7 | 210 |
+| C96 | `Area40_Init` | Cond_ByteFD 3 | 210 |
+| C97 | `Area40_Init` | bit 13 | 159 |
+| C98 | `Area40_Init` | counter 0 = 1 | 210 |
+| C99 | `Area40_Init` | zone 5 lights | 2255 |
+| C100 | `Area40_Init` | the unset cells lit | 1805 |
+| C101 | `Area40_Init` | Cond_ByteFD not read again | 2587 |
+| C102 | `Area40_Init` | the zone not read again | 61 |
+| D1 | `Area41_ChoiceDropIn12` | Party_DropIn(2) on 0 | 973 |
+| D2 | `Area41_ChoiceDropIn12` | counter 0x15 | 5027 |
+| D3 | `Area41_ChoiceDropIn12` | counter 0xB | 973 |
+| D4 | `Area41_ChoiceDropIn34` | counter 0x1F | 980 |
+| D5 | `Area41_ChoiceDropIn34` | the byte after | 5020 |
+| D6 | `Area41_ChoiceDropIn34` | the pointer read before the call | 2431 |
+| D7 | `Area41_ChoiceDropIn34` | counter 0x29 | 5020 |
+| D8 | `Area41_ChoiceGiveItem` | the message index & 1 | 4441 |
+| D9 | `Area41_ChoiceGiveItem` | flag 7 tested | 1019 |
+| D10 | `Area41_ChoiceGiveItem` | sound 0x107 | 337 |
+| D11 | `Area41_ChoiceGiveItem` | count 2 | 337 |
+| D12 | `Area41_ChoiceGiveItem` | the row not read again | 264 |
+| D13 | `Area41_ChoiceGiveItem` | answer 1 gives | 540 |
+| D14 | `Area41_ChoiceTrade` | message 0x61 | 326 |
+| D15 | `Area41_ChoiceTrade` | items in another order | 549 |
+| D16 | `Area41_ChoiceTrade` | counts the equipped | 1012 |
+| D17 | `Area41_ChoiceTrade` | takes 2 | 326 |
+| D18 | `Area41_ChoiceTrade` | message 0x60 when short | 686 |
+| D19 | `Area41_ChoiceTrade` | mark 7 on no | 4988 |
+| D20 | `Area41_ChoiceConfirm64` | message 0x65 | 4951 |
+| D21 | `Area41_ChoiceConfirm64` | none 0xFFFE | 1049 |
+| D22 | `Area41_Run` | the next entry | 6000 |
+| D23 | `Area41_TintStart` | step 0x4001 | 5966 |
+| D24 | `Area41_TintStart` | +0xA = 8 | 6000 |
+| D25 | `Area41_TintStart` | Sprite_Current read before the call | 199 |
+| D26 | `Area41_TintStart` | state 2 | 6000 |
+| D27 | `Area41_TintRise` | state 1 at 0 | 1535 |
+| D28 | `Area41_Slide` | state 2 at 0 | 1635 |
+| D29 | `CountDown (Rise, Slide)` | +0xA = 9 | TintRise 1535, Slide 1635 |
+| D30 | `CountDown (Rise, Slide)` | at 1 | TintRise 2335, Slide 2442 |
+| D31 | `LeaderStep (41 x4)` | less 3 | TintStart 6000, TintRise 6000, Slide 6000, TintFall 4439 |
+| D32 | `Area41_Slide` | by +0x10 | 6000 |
+| D33 | `Area41_TintFall` | down 3 | 6000 |
+| D34 | `Area41_TintFall` | state 1 at 0 | 1561 |
+| D35 | `Area41_TintFall` | the leader stepped at 0 too | 1561 |
+| D36 | `Area41_TintUp` | up 3 | 6000 |
+| D37 | `TintBy (Fall, Up)` | two bytes | TintFall 6000, TintUp 6000 |
+| D38 | `TintBy (Fall, Up)` | index from +0x148 | TintFall 5973, TintUp 5974 |
+| D39 | `TintBy (Fall, Up)` | moves +0x38 | TintFall 6000, TintUp 6000 |
+| D40 | `Area41_ClearCells` | z 0x26 | 6000 |
+| D41 | `Area41_PlaceKind2` | kind 9 | 6000 |
+| D42 | `Area41_Trigger29` | sub-kind 0xB | 6000 |
+| D43 | `Area41_Trigger29` | tail kind 5 | 6000 |
+| D44 | `Area41_Trigger29` | answers 1 | 6000 |
+| D45 | `Area41_TriggerFlag` | id from +0x87 | 5714 |
+| D46 | `Area41_TriggerFlag` | sound 0x202 | 6000 |
+| D47 | `Area41_TriggerFlag` | answers 1 | 6000 |
+| D48 | `Area41_ChoiceDropIn12` | message 0xFFFE | 5745 |
+| D49 | `Area41_ChoiceDropIn34` | Party_DropIn(5) | 5020 |
 
 ## 5. The tables named
 
