@@ -193,10 +193,21 @@ U Set40Effect(const U*, U answer) {
     if (n & 1) SetMember(n >> 4);
     return answer;
 }
-// Flags_Set: area 192's tail reads Field_StatusBits after it (state 4).
+// Flags_Set, Flags_Clear, Field_ChangeArea: the tails of areas 192 and 193
+// read Field_StatusBits after them (area 192's states 4 and 0x1E, area 193's
+// state 0xC).
 U FlagsSetEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Field_StatusBits = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
+// Flags_Test: area 192's init reads character record 0's level byte before
+// it (a region of area 192's run only); the rest as Flags_Set.
+int g_area_of_run = 0;
+U FlagsTestEffect(const U* a, U answer) {
+    const U n = ah::Noise();
+    if ((n & 6) == 2 && g_area_of_run == 192) ah::Mem(at::kChar0Byte1E)[0] = static_cast<unsigned char>(n >> 16);
+    FlagsSetEffect(a, answer);
     return answer;
 }
 // Effect_FindFree: the spawns read the active member after it; a slot of the
@@ -250,12 +261,13 @@ const ah::Callee kCallees[] = {
     {W4F_OURS(Sound_StreamDone), 0, {}, ah::Answer::kFlag, 0, 0},
     // tested in al: kFlag's garbage above a 0 tells an eax test (the standard
     // set's kBool would not)
-    {W4F_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kFlag, 0, 0},
+    {W4F_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kFlag, 0, 0, {}, &FlagsTestEffect},
+    {W4F_OURS(Flags_Clear), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &FlagsSetEffect},
     {W4F_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &FlagsSetEffect},
     {W4F_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     // the area as a word, the flags as a byte (Field_ChangeArea reads no more;
     // area 192's tail pushes the return point's area from cx)
-    {W4F_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {W4F_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &FlagsSetEffect},
     {W4F_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kGarbage, 0, 0, {}, &ByteAtEffect},
     {W4F_OURS(Sprite_FindFree), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &SpriteSlotEffect},
     {W4F_OURS(EventOp_0x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &EventOpEffect},
@@ -330,6 +342,7 @@ int g_area = 0;
 // Every round: the pointers the areas follow put back inside the regions.
 void Common(int area) {
     g_area = area;
+    g_area_of_run = area;
     ah::SetPointer(at::kScriptObject, ScriptRecord(ah::Next()));
     ah::SetPointer(at::kFocusObject, FocusRecord(ah::Next()));
     SetMember(ah::Next());
@@ -369,7 +382,12 @@ void SeedAnswer(unsigned n) {
     B(at::kChoiceAnswer) = static_cast<unsigned char>(r < 5 ? ah::Next() % n : r == 5 ? n : r == 6 ? 0xFF : ah::Next());
 }
 // A 16.16 word with the high word `high` and any low word, or a low word 0.
-U At16(U high, U low) { return (high & 0xFFFF) << 16 | (ah::Half() ? 0 : low & 0xFFFF); }
+// The low word 0 half the time, else one with a zero low byte (the hook tests
+// the whole word), or any.
+U At16(U high, U low) {
+    const U w = ah::Half() ? 0 : ah::Half() ? (low & 0xFF00u) | 0x100u : low & 0xFFFF;
+    return (high & 0xFFFF) << 16 | w;
+}
 // A high word on or beside [lo, lo + n): each inside, one either side, a high
 // byte above it (the compares are 16-bit), anything.
 U Around(U lo, unsigned n) {
@@ -416,9 +434,9 @@ void Seed192(unsigned k) {
     case k192Init: {
         // the rank byte around its compares (5, 7, 8), the level byte of
         // every record around its (5, 8, 9)
-        if (ah::Often()) B(at::kByte90405E) = static_cast<unsigned char>(AH_PICK(4, 5, 6, 7, 8, 9, 0x80, 0xFF, 0));
+        if (ah::Often()) B(at::kByte90405E) = static_cast<unsigned char>(AH_PICK(4, 5, 5, 6, 7, 8, 9, 0x80, 0xFF, 0));
         for (unsigned r = 0; r < at::kCharCount; ++r)
-            if (ah::Often()) B(at::kCharRecords + r * at::kCharStride + 0x1E) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 6, 7, 8, 9, 10, 0xFF));
+            if (ah::Often()) B(at::kCharRecords + r * at::kCharStride + 0x1E) = static_cast<unsigned char>(AH_PICK(3, 4, 5, 5, 6, 7, 8, 8, 9, 9, 10, 0xFF));
         break;
     }
     case k192Restore:
