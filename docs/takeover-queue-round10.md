@@ -565,3 +565,27 @@ world-map area 121, AR3C 56, AR3D 46 - area 135 alone, the largest area,
 AR3E 52, AR3F 53 with `0x4220D0`, AR3G 56). Eight groups is about 430;
 seven (through AR3E) is 369. Wave four's brief with section 13 folded
 in; the merge script with `one_grow.py` from the start.
+
+## 15. Wave five staged (2026-09-28 afternoon, from the tip after `62d069f`)
+
+Eight groups, one stage each, area only. Counts are `tools/area_rows.py
+--groups` at this tip (its world-2 rows are `AR2A` / `AR2B` now that
+areas 76..103 are ours; the groups are named on from the merged
+`area_w2a`..`w2d`). Brief `analysis/round10_wave5_brief.md` (wave four's
+with section 13 folded in), group lines `analysis/round10_wave5_groups.tsv`
+(gitignored). Entries snapshot
+`analysis/calltrace/entries_logic_0928_prewave10_5.txt` (6,532 lines).
+AR3G (areas 148..151, 56) waits for wave six with world 4.
+
+| Group | What | Band | To take | Module |
+|---|---|---|--:|---|
+| AR2E | world 2: areas 104..106 (104 is a world-map area on the world-map route) | `0x4146C0..0x4168E0` | 52 | `area_w2e` |
+| AR2F | world 2: areas 108, 110..113 | `0x4168E0..0x418BE0` | 53 | `area_w2f` |
+| AR3A | world 3: areas 115..119 (115 is a world-map area on the world-map route; `WorldMapHud_Start` `0x419110` is ours already) | `0x418BE0..0x41A9D0` | 56 | `area_w3a` |
+| AR3B | world 3: areas 120..121 (121 is a world-map area, 51 functions) | `0x41A9D0..0x41C890` | 54 | `area_w3b` |
+| AR3C | world 3: areas 124..125, 127..128, 130..134 | `0x41C890..0x41DAD0` | 56 | `area_w3c` |
+| AR3D | world 3: area 135 alone, the largest area | `0x41DAD0..0x41EFE0` | 46 | `area_w3d` |
+| AR3E | world 3: areas 136, 139..142 | `0x41EFE0..0x420800` | 52 | `area_w3e` |
+| AR3F | world 3: areas 143..146 (`0x4220D0`, called by AR1D and AR2D by raw address, is in this band) | `0x420800..0x4223A0` | 53 | `area_w3f` |
+
+422 functions.
