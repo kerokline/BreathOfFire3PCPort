@@ -76,14 +76,17 @@ std::uint32_t PartyEffect(const std::uint32_t*, std::uint32_t answer) {
 // and the original pushes a register whose upper bytes are leftovers), and the
 // four engine functions nobody owns, with their arities (boss_sh_callees.h).
 // Louder than the real ones where the caller reads a cell again after the
-// call: 0x446DE0 moves the chapter step (Boss34_End increments it after the
-// call); AbilityList_Add moves the picked member 0x675F08 (read again before
+// call: 0x446DE0 logs the chapter step and moves it (Boss34_End increments
+// it after the call); AbilityList_Add moves the picked member 0x675F08 (read again before
 // the second call); 0x437450, 0x4376F0 and BattleEnemy_ScriptTick re-point
 // Sprite_Current at an enemy a third of the time (the Angler's steps read it
 // again after each). BattleTask_Create answers one of the last three slots a
 // third of the time, where the spawn hook's copy from below the enemies (an
 // actor 0..2) overlaps its destination and rep movsd's forward order shows.
 std::uint32_t StepEffect(const std::uint32_t*, std::uint32_t answer) {
+    // the step as the caller left it logged first: the store before the call
+    // (set-ups 35 and 36) is compared, not wiped
+    bh::Note(Mem(0x8034E5)[0]);
     Mem(0x8034E5)[0] = static_cast<unsigned char>(bh::Noise());
     return answer;
 }
