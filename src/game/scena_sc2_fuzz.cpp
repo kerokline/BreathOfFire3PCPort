@@ -293,6 +293,12 @@ std::uint32_t Move(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 
+// 0x590C90's effect: the eight member records noted.
+std::uint32_t NoteMembers(const std::uint32_t*, std::uint32_t answer) {
+    sh::Note(sh::HashBytes(sh::Mem(at::kMemberRecords), 8 * at::kMemberStride));
+    return answer;
+}
+
 // A callee ours reaches by its name (Capcom's address, or our function).
 #define SC2_NAMED(name) #name, ::bof3::addr::name, KeyOf(&::name)
 // One ours and the originals reach by its address alone.
@@ -323,7 +329,9 @@ const sh::Callee kCallees[] = {
     // engine callees nobody owns (group SX's this wave; 0x57C600 nobody's)
     {SC2_RAW(0x533E50), 0, {}, sh::Answer::kGarbage, 0, 0, {}, &Move},
     {SC2_RAW(0x587B80), 0, {}, sh::Answer::kGarbage, 0, 0},
-    {SC2_RAW(0x590C90), 4, {kU8, kAll, kU8, kAll}, sh::Answer::kGarbage, 0, 0},
+    // louder than a plain recorder: it notes the member records, so a clear
+    // moved across the call (Scena02_StripMember) shows
+    {SC2_RAW(0x590C90), 4, {kU8, kAll, kU8, kAll}, sh::Answer::kGarbage, 0, 0, {}, &NoteMembers},
     {SC2_RAW(0x591B60), 4, {kU8, kU8, kU8, kAll}, sh::Answer::kGarbage, 0, 0},
     {SC2_RAW(0x591BC0), 2, {kAll, kAll}, sh::Answer::kFlag, 0, 0},
     {SC2_RAW(0x591BE0), 2, {kAll, kU8}, sh::Answer::kGarbage, 0, 0},
@@ -485,6 +493,18 @@ std::int32_t Edge(std::int32_t lo, std::int32_t hi) {
     }
 }
 
+// The leader on door cell h % 4 (Scena02_DoorStart's three, the first twice:
+// x, z, +0x4B, +8).
+void DoorCell(std::uint32_t h) {
+    static const std::uint8_t kDoor[4][4] = {{0x44, 0x3F, 0x42, 1}, {0x46, 0x3E, 0x45, 7}, {0x44, 0x3E, 0x43, 3}, {0x45, 0x3F, 0x42, 1}};
+    const std::uint8_t* const d = kDoor[h % 4];
+    unsigned char* const lead = sh::ObjectOf(0);
+    move_script::SetWord(lead + 0x36, d[0]);
+    move_script::SetWord(lead + 0x3A, d[1]);
+    lead[0x4B] = d[2];
+    lead[8] = d[3];
+}
+
 void Seed(unsigned k) {
     g_name = kClones[k].name;
     g_box = nullptr;
@@ -555,9 +575,36 @@ void Seed(unsigned k) {
         M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(0, 1, 2, 0xFF));
     }
     if (Is(k, "Scena02_Run")) MoveScript_Var7 = static_cast<signed char>(sh::Next() % at::kRunCount);
-    if (Is(k, "Scena02_EnterArea")) {
-        SetWordAt(0x904EFC, Area());
+    if (Is(k, "Scena02_EnterArea")) {   // each area it tests equally, and area 0xD's Cond_ByteFD
+        SetWordAt(0x904EFC, SH_PICK(0, 3, 5, 0xB, 0xD, 0xF, 0x10, 0x12, 0x16, 0x17, 0x1A, 0x1B, 0x1C, 0x1D, 0x2D, 0x5A, 0x11));
         M(at::kCounters + 2)[0] = static_cast<unsigned char>(sh::Next() % 8);
+        if (sh::Half()) M(0x8034F1)[0] = static_cast<unsigned char>(SH_PICK(1, 0, 2));
+    }
+    // Scena02_Scene08 step 8: the leader on one of its three cells, the z
+    // word at the bound or one past it.
+    if (Is(k, "Scena02_Scene08") && sh::Half()) {
+        static const std::uint16_t kCells[3][3] = {{4, 5, 4}, {8, 9, 8}, {0xC, 0xD, 4}};
+        const unsigned c = sh::Next() % 3;
+        M(at::kStep)[0] = 8;
+        if (sh::Often()) M(at::kLeadMember)[0] = 0;
+        move_script::SetWord(lead + 0x36, kCells[c][sh::Next() & 1]);
+        move_script::SetWord(lead + 0x3A, kCells[c][2] + (sh::Next() % 3 == 0 ? 1 : 0));
+        lead[0x4B] = static_cast<unsigned char>(sh::Often() ? 0x42 : 0x43);
+        lead[8] = static_cast<unsigned char>(sh::Often() ? 1 : 2);
+    }
+    // The door helpers: the leader on one of the door cells, one field off a
+    // third of the time; the first member 0, 3 or neither.
+    if ((Is(k, "Scena02_DoorStart") || Is(k, "Scena02_DoorSound")) && sh::Often()) {
+        DoorCell(sh::Next());
+        if (sh::Often()) M(at::kLeadMember)[0] = static_cast<unsigned char>(SH_PICK(0, 3, 4, 1));
+        if (sh::Next() % 3 == 0) {
+            switch (sh::Next() % 4) {
+            case 0: move_script::SetWord(lead + 0x36, SH_PICK(0x43, 0x47, 0x46, 0x44)); break;
+            case 1: move_script::SetWord(lead + 0x3A, SH_PICK(0x3D, 0x3E, 0x3F, 0x40)); break;
+            case 2: lead[0x4B] = static_cast<unsigned char>(SH_PICK(0x42, 0x43, 0x45, 0x44)); break;
+            default: lead[8] = static_cast<unsigned char>(SH_PICK(1, 3, 7, 2)); break;
+            }
+        }
     }
     if (Is(k, "Scena02_Scene00") && sh::Often()) SetWordAt(0x904EFC, 0x1A);
     if (Is(k, "Scena02_StepHook") && sh::Often()) {
@@ -619,7 +666,10 @@ void Disturb(std::uint32_t h) {
     case 5: M(at::kChoiceBits)[0] ^= 2; break;
     case 6: M(at::kCounters + 2)[0] = static_cast<unsigned char>(b & 1 ? b : kTwo[c % sizeof kTwo]); break;
     case 7: M(at::kLeadMember)[0] = static_cast<unsigned char>(b & 1 ? b : 0); break;
-    case 8: move_script::SetWord(sh::ObjectOf(0) + 0x36, b & 1 ? 0x44 + (b >> 1) % 3 : b); break;
+    case 8:   // the leader's cell: the door helpers read its x again after each call
+        if (b & 1) DoorCell(b >> 1);
+        else move_script::SetWord(sh::ObjectOf(0) + 0x36, b);
+        break;
     default: M(at::kStep)[0] = static_cast<unsigned char>(b); break;
     }
 }
