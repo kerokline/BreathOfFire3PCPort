@@ -209,6 +209,13 @@ const ah::Region kRegions[] = {
     {at::kScriptObject, 4},
     {at::kActiveMember, 4},
     {at::kChoiceByte3C, 4},
+    // Cond_ByteFE (the tail's state 10 sets it; not a harness region)
+    {0x905E20, 1},
+    // the +0x89 bytes of records 3..5 after the party's: area 173's member
+    // search reads them for a Field_MemberCount past 3
+    {at::kParty89 + 3 * at::kPartyStride, 1},
+    {at::kParty89 + 4 * at::kPartyStride, 1},
+    {at::kParty89 + 5 * at::kPartyStride, 1},
 };
 
 // The slice the running Run seeds (its first index in kClones) and its area.
@@ -267,7 +274,11 @@ void SeedTail() {
     case 0xA: B(at::kCounter3) = static_cast<unsigned char>(on ? 0x20 : AH_PICK(0x1F, 0x21, 0xA0, 0)); break;
     case 0xB: SetWord(ah::Mem(at::kTailTimer), on ? 1 : AH_PICK(0, 2, 0x101, 0x8001, 0xFFFF)); break;
     case 0xC: B(at::kCounter3) = static_cast<unsigned char>(on ? 0 : AH_PICK(1, 0x80, 0xFF, 0x24)); break;
-    default: break;
+    default:
+        // the empty states with each live state's counter value, so a state
+        // run as its neighbour shows
+        if (on) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(0x18, 0x20, 0, 0));
+        break;
     }
 }
 
@@ -290,7 +301,7 @@ void Seed(unsigned slice_k) {
     switch (k) {
     case kMsgA: case kMsgB: {
         static const U kIds[] = {5, 8, 4, 2, 5, 8, 4, 2, 0, 1, 3, 6, 9, 0x85};
-        for (unsigned m = 0; m < 3; ++m)
+        for (unsigned m = 0; m < 6; ++m)
             if (ah::Often()) B(at::kParty89 + m * at::kPartyStride) = static_cast<unsigned char>(ah::Pick(kIds, sizeof kIds / sizeof kIds[0]));
         if (!ah::Often()) Field_MemberCount = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5));
         break;
