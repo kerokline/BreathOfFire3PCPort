@@ -211,6 +211,23 @@ U EffectSlotEffect(const U*, U answer) {
     const U n = ah::Noise();
     return (answer & 0xFFFFFF00u) | (n % 3 == 0 ? 0xFFu : (n >> 4) % at::kEffectCount);
 }
+// MapView_GroundAt's answers this round (the seed picks): 0 garbage, 1 every
+// ground 0x8000 as s16, 2 near the s16 edges.
+unsigned g_groundMode;
+// MapView_GroundAt: the round's mode (g_groundMode): garbage, every ground
+// 0x8000 as s16 (so the highest keeps its start), or near the s16 edges.
+U GroundEffect(const U* a, U answer) {
+    MovesCurrent(a, answer);
+    const U n = ah::Noise();
+    switch (g_groundMode) {
+    case 1: return (answer & 0xFFFF0000u) | 0x8000u;
+    case 2: {
+        static const U kEdges[] = {0x8000, 0x8001, 0x7FFF, 0xFFFF, 0, 0x8002};
+        return (answer & 0xFFFF0000u) | (n % 7 == 6 ? n >> 16 : kEdges[n % 7]);
+    }
+    default: return answer;
+    }
+}
 // Sprite_FindFree: 0..29 or none (a third of the time).
 U SpriteSlotEffect(const U*, U answer) {
     const U n = ah::Noise();
@@ -254,7 +271,7 @@ const ah::Callee kCallees[] = {
     // standard ones listed again: what the callee reads, or what the caller reads after
     {W3D_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kGarbage, 0, 0, {}, &ByteAtEffect},
     {W3D_OURS(AreaMap_SetByte), 3, {kU16, kU16, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {W3D_OURS(MapView_GroundAt), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {W3D_OURS(MapView_GroundAt), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &GroundEffect},
     {W3D_OURS(Flags_Clear), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
     {W3D_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
 };
@@ -283,7 +300,14 @@ const ah::Region kRegions[] = {
     {at::kArea135MapFlags, 1},
     {at::kInitBit, 1},
     {at::kPoolWords, 4},
+    {at::kArea135Routes, at::kArea135RouteCount * at::kArea135RouteStride},
 };
+
+// The exe's own routes, put back two rounds in three (the shipped table has
+// 0xFF in both target cells or neither, and no no-target route shares its
+// cell with a later one: the others reach those cases).
+unsigned char g_routes[at::kArea135RouteCount * at::kArea135RouteStride];
+
 
 // Every round: the script object inside the regions, the effect slot inside
 // the 20 records, the tail's sub byte a field object's index.
@@ -292,6 +316,8 @@ void Common() {
     B(at::kEffectSlot) = static_cast<unsigned char>(ah::Next() % at::kEffectCount);
     B(at::kTailSub) = static_cast<unsigned char>(ah::Next() % at::kObjectCount);
     if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(0, 4, 6, 7, 4, 1, 5, 3, 0x84));
+    if (ah::Often()) std::memcpy(ah::Mem(at::kArea135Routes), g_routes, sizeof g_routes);
+    g_groundMode = 0;
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -376,8 +402,21 @@ void Seed(unsigned k) {
         // the marker's cell at a route's (read from the image's table) two
         // rounds in three, its target cells sometimes 0xFF
         if (ah::Often()) {
-            const unsigned char* const r = ah::Mem(at::kArea135Routes + (ah::Next() % at::kArea135RouteCount) * at::kArea135RouteStride);
-            SetWord(ah::Mem(at::kMarkerCellX), r[0]);
+            const U i = ah::Next() % at::kArea135RouteCount;
+            unsigned char* const r = ah::Mem(at::kArea135Routes + i * at::kArea135RouteStride);
+            if (ah::Half()) {
+                // one target cell 0xFF or the other, and a later route at the
+                // same cell
+                if (ah::Half()) r[ah::Half() ? 3 : 5] = 0xFF;
+                if (i + 1 < at::kArea135RouteCount && ah::Half()) {
+                    unsigned char* const later =
+                        ah::Mem(at::kArea135Routes + (i + 1 + ah::Next() % (at::kArea135RouteCount - 1 - i)) * at::kArea135RouteStride);
+                    later[0] = r[0];
+                    later[1] = r[1];
+                }
+            }
+            // the cell words with a high byte now and then (read as words)
+            SetWord(ah::Mem(at::kMarkerCellX), r[0] | (ah::Next() % 4 == 0 ? 0x100u << (ah::Next() % 8) : 0u));
             SetWord(ah::Mem(at::kMarkerCellZ), ah::Often() ? r[1] : r[1] + 1u);
         }
         break;
@@ -390,6 +429,16 @@ void Seed(unsigned k) {
         break;
     case kRestore5: case kStamp: Field_Request = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0)); break;
     case kJump:
+        // every record the running object can become (the party records, the
+        // first four field objects) on a jump cell half the time, so a
+        // stand-in that moves it lands on another
+        for (unsigned m = 0; m < 7; ++m) {
+            if (ah::Half()) continue;
+            unsigned char* const o = m < 3 ? ah::PartyOf(static_cast<unsigned char>(m)) : ah::Object(m - 3);
+            const U i = ah::Next() % 4;
+            SetLong(o + 0x34, static_cast<std::int32_t>(static_cast<U>(B(at::kArea135JumpCells + i * 2)) << 16 | 0x8000));
+            SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(B(at::kArea135JumpCells + i * 2 + 1)) << 16 | 0x8000));
+        }
         // the running object on one of the four cells two rounds in three
         if (ah::Often()) {
             const U i = ah::Next() % 4;
@@ -424,6 +473,7 @@ void Seed(unsigned k) {
         B(at::kLeaderDir) = static_cast<unsigned char>(ah::Often() ? e[2] & 0xF : AH_PICK(0x17, 0x11, 0, 3, 0xF7));
         break;
     }
+    case kFallFloor: g_groundMode = AH_PICK(0, 1, 1, 2); break;
     case kTail: SeedTail(); break;
     case kInit:
         Cond_ByteFD = static_cast<unsigned char>(AH_PICK(0, 4, 4, 6, 7, 1, 5, 0x84));
@@ -434,6 +484,16 @@ void Seed(unsigned k) {
         // half the time (it is skipped)
         g_cellX = ah::Next() & 0x3FF8000u;
         g_cellZ = ah::Next() & 0x3FF8000u;
+        if (ah::Half()) {
+            // one object alone at the cell (object 29 half the time), in use
+            // and of kind 0xA
+            unsigned char* const o = ah::Object(ah::Half() ? 29 : ah::Next() % at::kObjectCount);
+            o[0] = static_cast<unsigned char>(o[0] | 1);
+            o[6] = 0xA;
+            SetLong(o + 0x34, static_cast<std::int32_t>(g_cellX));
+            SetLong(o + 0x38, static_cast<std::int32_t>(g_cellZ));
+            break;
+        }
         for (unsigned i = 0; i < at::kObjectCount; ++i) {
             if (ah::Next() % 5 == 0) continue;
             unsigned char* const o = ah::Object(i);
@@ -523,6 +583,7 @@ void SelfTest() {
     ah::Group g{"area_w3d", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],
                 kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], &Seed,
                 &Disturb, kRounds};
+    std::memcpy(g_routes, ah::Mem(at::kArea135Routes), sizeof g_routes);
     g.args = &Args;
     g.area = 135;
     ah::Run(g);
