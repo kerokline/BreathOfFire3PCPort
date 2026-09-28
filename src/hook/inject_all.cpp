@@ -186,6 +186,7 @@
 #include "game/scena_sc15.h"
 #include "game/scena_sc2.h"
 #include "game/scena_sc13.h"
+#include "game/area_w2c.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -611,6 +612,10 @@ void InjectAll() {
                                 // cheats.cpp): order does not matter
     ScenaSc2_Inject();          // round 10 group SC2 (scenario chapter 2's bank, 0x53DDA0..0x5428C0): no module
                                 // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW2c_Inject();           // round 10 group AR2C (world 2, areas 90..92 and 94, 0x411F10..0x4135B0): its clones'
+                                // calls re-aimed at the area harness's recorders, area 91's state table swapped for
+                                // the fuzz only; no module patches bytes inside its 45 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module

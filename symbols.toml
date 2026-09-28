@@ -53297,3 +53297,598 @@ ctype = "unsigned char"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-28, group SC13: the effect slot chapter 14 takes (Scena14_SpawnEffect, Run2, Run4, Run6) and waits on."
+
+# --- round ten group AR2C: world 2, areas 90..92 and 94, 0x411F10..0x4135B0 (docs/area_w2c.md) ---
+
+[[func]]
+pc = 0x411F10
+name = "Area90_ChoiceFocusPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x411F10..0x411F4B (0x3C bytes), cdecl: area 90 +0x34[0] (Area90_Choices), its only function: message word 0xFFFF; the object 0x903804 points at (the talked-to object) gets dword +0x18 = Area90_FocusPairs[2a] and +0x1C = [2a + 1], bytes zero-extended, a the s8 answer 0x7DEE67 (unchecked); the pointer and the answer read again for the second store. docs/area_w2c.md."
+
+[[func]]
+pc = 0x411F50
+name = "Area91_ChoiceTakeItem59"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x411F50..0x411FA7 (0x58 bytes), cdecl: area 91 +0x34[0]: answer byte not 0: message 7 and the byte 0x9398CF = 6; 0: Inventory_Count(0, 0x59, 0) as a word not 0: Inventory_Remove(0, 0x59, 1) (a fourth word 0 pushed) and message 5; else message 6 and 0x9398CF = 6. docs/area_w2c.md."
+
+[[func]]
+pc = 0x411FB0
+name = "Area91_ChoiceMessage7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x411FB0..0x411FD3 (0x24 bytes), cdecl: area 91 +0x34[3] and +0x34[4]: answer byte not 0: message 7 and 0x9398CF = 6; 0: message 0xFFFF. docs/area_w2c.md."
+
+[[func]]
+pc = 0x411FE0
+psx = 0x801F2D6C
+name = "Area91_ObjectRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x411FE0..0x411FF1 (0x12 bytes), cdecl: area 91 +0x3C[0], its only handler (PSX 0x801F2D6C, sibling names/area_records.toml): jmp [Area91_States + Sprite_Current[4] * 4], unchecked. Six states; the seventh dword is the +0x3C array whose entry is this handler (state 6 loops forever), 7 and above the descriptor words. Ours aborts past 5. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412000
+name = "Area91_State0CheckItem57"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412000..0x41205B (0x5C bytes), cdecl: Area91_States 0: party list byte 0x904062 not 6 or 3: Field_ActiveMember +0x80 bit 0 cleared. Else Inventory_Count(0, 0x57, 0) as a word 0: Cond_ByteFE = 1, the member bit cleared (the member read before that store), Sound_PlayEffect(0x201); not 0: ScriptFlags_Set40, Sprite_Current +4 + 1. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412060
+name = "Area91_State1Arm"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412060..0x412091 (0x32 bytes), cdecl: Area91_States 1: the leader record byte +0x137 (0x802E77) 0: Sound_PlayEffect(0x200), then Sprite_Current (read again for each) +0xA = 0, +0xB = 0, +4 + 1. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4120A0
+name = "Area91_State2Grow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4120A0..0x412139 (0x9A bytes), cdecl: Area91_States 2: Sprite_Current +0xA + 1; at 0x1E: Flags_Test(0x904030, 0x6B) 0 - Flags_Set it and Party_DropIn(0), else Party_DropIn(1); Sprite_Current put back, Field_Kind2X 0x1F8000, Field_Kind2Z 0x1A0000, MoveScript_F3Divisor 0x20, +4 + 1, Sprite_Current read again. Always Area91_DrawGlow(+0xA * 10, 0xFF) (the word pushed with a stale high half). docs/area_w2c.md."
+
+[[func]]
+pc = 0x412140
+name = "Area91_DrawGlow"
+ret = "void"
+params = "unsigned radius, unsigned colour"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412140..0x412300 (0x1C1 bytes), cdecl: called by Area91_States 2..5 (a gap of the tool, reached by area 91). Gte_PushMatrix; a stack MATRIX: translation Gte_RotTrans of (0xCFC0, 0xCD00, 0x80) into its +0x14, rotation Gte_RotMatrix of (0, 0, 0), Gte_MulMatrix0(Camera_Matrix, it, it), Gte_SetRotMatrix, Gte_SetTransMatrix; Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x3E, 0), MapView_LinkPrimAt(0x1F8000, 0x1A0000, 2, 0xC). 32 POLY_G3 (a from 0 by 0x80): Prim_VertexScratch centre 0, rim (cos a * r) >> 12, (sin a * r) >> 12 at a and a + 0x80 (r the first argument word), Gpu_SetPolyG3, Gpu_SetSemiTrans 1, Gte_RotTransPers3 into the prim +8 / +0x18 / +0x28, Gte_PrimDepths3_10B, colour (c, c, 0) / 0 / 0 (c the second argument byte), MapView_LinkPrimAt(.., 2, 0x34). Gte_PopMatrix. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412310
+name = "Area91_State3Place"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412310..0x4123C9 (0xBA bytes), cdecl: Area91_States 3: Field_Kind2Hold 0: Sprite_Current (read again for each) +0x70 = 0, +0x34 = 0x1F8000, +0x38 = 0x1A0000, word +0x3E = 0xFF00, +0 bit 6 cleared, +4 + 1; with that object the 32 words of Gfx_ClutStrip row +0x27 (read each pass) zeroed, Gfx_ClutStripDirty + 1, +0xB = 0, Sprite_Current +0xA = 2. Always Area91_DrawGlow(0x12C, 0xFF). docs/area_w2c.md."
+
+[[func]]
+pc = 0x4123D0
+name = "Area91_State4RevealClut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4123D0..0x4124F5 (0x126 bytes), cdecl: Area91_States 4: +0xA - 1; R = +0x27 << 5, b = +0xB: Gfx_ClutStripSource words R + b and R - b + 0x1F (each (w >> 1) & 0x3DEF while +0xA is not 0) to the same Gfx_ClutStrip words, the second place from the bytes read again. +0xA 0: +0xA = 2, +0xB + 1, at 0x10 +0xA = 0x1E and +4 + 1 (Sprite_Current read again). Gfx_ClutStripDirty + 1; Area91_DrawGlow(0x12C, 0xFF). b past 0x1F leaves the row (unchecked). docs/area_w2c.md."
+
+[[func]]
+pc = 0x412500
+name = "Area91_State5Shrink"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412500..0x412566 (0x67 bytes), cdecl: Area91_States 5: +0xA - 1; at 0: counter 0x90384B = 1, +4 = 0, Field_ActiveMember +0x80 bit 0 cleared and word +0x8A + 1 (the member read again), ScriptFlags_Clear40, Sprite_Current read again. Always Area91_DrawGlow(+0xA * 10, 0xFF). docs/area_w2c.md."
+
+[[func]]
+pc = 0x412570
+name = "Area91_Trigger49"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412570..0x412585 (0x16 bytes), cdecl: Field_ObjectTriggers id 49 (a gap of the tool, area 91 block): ScriptFlags_Set40; tail kind 0x9039F3 = 4 (engine 0x56D930), sub-kind 0x9039F5 = 0x10; al 0. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412590
+name = "Area91_EffectRings"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412590..0x412899 (0x30A bytes), cdecl: EffectKind18_States entry 71 (0x654188; a gap of the tool, area 91 block), Sprite_Current an effect record. Cond_ByteFE 0: nothing. Else the place (+0x34, +0x38 sar 9, less 0x4000, height 0x80) through Gte_RotTransPers into MapView_ScreenXY; draw mode tpage 0xB5 dtd 1 linked; +9 + 4. Rings k = 0..2: r = max(+9 - 0x20k, 0), c = clamp(0x10k - +9 + 0xC8, 0, 0xFF); 64 LINE_F2 (c/2, c/2, c) on an ellipse ((sin a * r) sar 14, (cos a * r) sar 15), Gte_StoreDepthF +0x10 copied to +0x1C; 16 TILE_1 (c, c, c) at ((sin t * r) sar 13, (cos t * r) sar 14 - r/2), t = (Frame_Counter & 0xF) * 16 * Area91_RingTurns[k] + 0x100i; x87 fild / fadd / fstp. Draw mode tpage 0xB5 linked; last c 0: Cond_ByteFE = 0. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4128A0
+name = "Area92_ChoiceRunStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4128A0..0x41293E (0x9F bytes), cdecl: area 92 +0x34[0]: message word Area92_ChoiceMessages[a] (a the s8 answer, unchecked); a 2 / 3 / 4: ScriptFlags_Set40, counters 0x903848..4B = 0, 0x8034E5 = 0xA / 0x1E / 0x14, MoveScript_Var7 = 8. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412940
+name = "Area92_ChoiceRun0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412940..0x412989 (0x4A bytes), cdecl: area 92 +0x34[1]: message word 0x614EC8[a] (s8); answer byte 0: ScriptFlags_Set40, the four counters and 0x8034E5 = 0, MoveScript_Var7 = 8. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412990
+name = "Area92_ChoiceRun28"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412990..0x4129DA (0x4B bytes), cdecl: area 92 +0x34[2]: message word 0x614ECC[a] (s8); answer byte 0: ScriptFlags_Set40, counters 0, 0x8034E5 = 0x28, MoveScript_Var7 = 8. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4129E0
+name = "Area92_ChoiceRunByFlag1B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4129E0..0x412A9F (0xC0 bytes), cdecl: area 92 +0x34[3]: message word 0x614ED0[a] (s8); a 0: ScriptFlags_Set40, counters 0, 0x8034E5 = 0x3C, MoveScript_Var7 = 7; a 1: Flags_Test(the row 0x929ED0 points at, 0x1B) 0 - step 0x12, else 0x23, Var7 7. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412AA0
+psx = 0x801F2E9C
+name = "Area92_SpawnKind4AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412AA0..0x412B4C (0xAD bytes), cdecl: area 92 +0x3C[0] = +0x34[4] (PSX 0x801F2E9C): Effect_Spawn written out - Sprite_Current = ObjTrio record 0; Effect_FindFree to +0xB (before the test); not 0xFF: the record (Effect_Objects + slot * 0x80, slot read again for each store) +0 = 1, +5 = 6, +6 = 4, +0xC = 0, +0x10 = (s8) Area92_EffectArgs4[0x904062], words +0x2E / +0x30 from the party record. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412B50
+psx = 0x801F304C
+name = "Area92_SpawnKind3AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412B50..0x412BFC (0xAD bytes), cdecl: area 92 +0x3C[1] (PSX 0x801F304C): Area92_SpawnKind4AtMember0 with +6 = 3 and Area92_EffectArgs3 by 0x904062, record 0. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412C00
+psx = 0x801F31FC
+name = "Area92_SpawnKind3AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412C00..0x412CAC (0xAD bytes), cdecl: area 92 +0x3C[2] (PSX 0x801F31FC): the same, +6 = 3, record 1 (0x802E8C), Area92_EffectArgs3 by 0x904063. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412CB0
+psx = 0x801F33AC
+name = "Area92_SpawnKind3AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412CB0..0x412D60 (0xB1 bytes), cdecl: area 92 +0x3C[3] (PSX 0x801F33AC): the same, +6 = 3, record 2 (0x802FD8), Area92_EffectArgs3 by the dword 0x904064 masked to its byte. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412D70
+psx = 0x801F355C
+name = "Area92_SpawnKind1AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412D70..0x412E1C (0xAD bytes), cdecl: area 92 +0x3C[4] (PSX 0x801F355C): the same, +6 = 1, record 0, Area92_EffectArgs1 by 0x904062. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412E20
+psx = 0x801F3708
+name = "Area92_SpawnKind1AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412E20..0x412ECC (0xAD bytes), cdecl: area 92 +0x3C[5] (PSX 0x801F3708): the same, +6 = 1, record 1, Area92_EffectArgs1 by 0x904063. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412ED0
+psx = 0x801F38B4
+name = "Area92_SpawnKind1AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412ED0..0x412F80 (0xB1 bytes), cdecl: area 92 +0x3C[6] (PSX 0x801F38B4): the same, +6 = 1, record 2, Area92_EffectArgs1 by the dword 0x904064 masked. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412F90
+psx = 0x801F3A60
+name = "Area92_PlayMusic3D"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412F90..0x412F9C (0xD bytes), cdecl: area 92 +0x3C[7] = +0x34[11] (PSX 0x801F3A60): Music_Play(0x3D, 8). docs/area_w2c.md."
+
+[[func]]
+pc = 0x412FA0
+name = "Area92_Trigger37"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412FA0..0x412FBC (0x1D bytes), cdecl: Field_ObjectTriggers id 37 (a gap of the tool, area 92 block): ScriptFlags_Set40; tail kind 0x9039F3 = 0x2C, state 0x9039F4 = 0, sub-kind 0x9039F5 = 0xB; al 0. docs/area_w2c.md."
+
+[[func]]
+pc = 0x412FC0
+psx = 0x801F2C04
+name = "Area94_ChoiceMessage0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412FC0..0x412FD6 (0x17 bytes), cdecl: area 94 +0x34[0] = +0x3C[13] (PSX 0x801F2C04): message word Area94_ChoiceMessages[a] (s8 answer, unchecked). docs/area_w2c.md."
+
+[[func]]
+pc = 0x412FE0
+psx = 0x801F2C30
+name = "Area94_ChoiceMessage1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x412FE0..0x412FF6 (0x17 bytes), cdecl: area 94 +0x34[1] = +0x3C[14] (PSX 0x801F2C30): message word 0x616DC0[a] (s8). docs/area_w2c.md."
+
+[[func]]
+pc = 0x413000
+psx = 0x801F2C5C
+name = "Area94_ChoiceSetFlag15"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413000..0x41302A (0x2B bytes), cdecl: area 94 +0x34[2] = +0x3C[15] (PSX 0x801F2C5C): message word 0x616DCC[a] (s8); a 1: Flags_Set(the row 0x929ED0 points at, 0x15). docs/area_w2c.md."
+
+[[func]]
+pc = 0x413030
+psx = 0x801F2CB4
+name = "Area94_ChoiceRunByFlags16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413030..0x413102 (0xD3 bytes), cdecl: area 94 +0x34[3] = +0x3C[16] (PSX 0x801F2CB4): message word 0x616DD0[a] (s8); a 1: row flag 0x16 clear - Flags_Set it (the row read again), ScriptFlags_Set40, MoveScript_Var7 7, counters 0, 0x8034E5 = 0; set - flag 0x1A clear: step 0x19, set: 0x32, Var7 7. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413110
+psx = 0x801F2DC4
+name = "Area94_ChoiceRunByFlag20"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413110..0x4131C0 (0xB1 bytes), cdecl: area 94 +0x34[4] = +0x3C[17] (PSX 0x801F2DC4): message word 0x616DD4[a] (s8); a 1: ScriptFlags_Set40, counters 0, 0x8034E5 = 0x32, Var7 7; a 2: row flag 0x20 clear - Var7 9, step 0; set - step 2, Var7 9. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4131D0
+psx = 0x801F2ED0
+name = "Area94_SpawnKind2AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4131D0..0x413211 (0x42 bytes), cdecl: area 94 +0x3C[0] (PSX 0x801F2ED0): Sprite_Current = ObjTrio record 0; Effect_Spawn(2, 0, Area94_EffectArgsA[0x904062], record words +0x2E, +0x30) (the byte and words pushed with stale high bits); al not 0xFF: Sprite_Current (read again) +0xB = al. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413220
+psx = 0x801F2F50
+name = "Area94_SpawnKind3AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413220..0x413261 (0x42 bytes), cdecl: area 94 +0x3C[1] (PSX 0x801F2F50): the same, kind 3, record 1, Area94_EffectArgsA by 0x904063. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413270
+psx = 0x801F2FD0
+name = "Area94_SpawnKind3AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413270..0x4132B5 (0x46 bytes), cdecl: area 94 +0x3C[2] (PSX 0x801F2FD0): the same, kind 3, record 2, Area94_EffectArgsA by the dword 0x904064 masked. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4132C0
+psx = 0x801F3050
+name = "Area94_SpawnKind4AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4132C0..0x413301 (0x42 bytes), cdecl: area 94 +0x3C[3] (PSX 0x801F3050): the same, kind 4, record 0, Area94_EffectArgsB by 0x904062. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413310
+psx = 0x801F30D0
+name = "Area94_ClearCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413310..0x413334 (0x25 bytes), cdecl: area 94 +0x3C[4] (PSX 0x801F30D0): AreaMap_SetByte(0x52, 0x32, 0), (0x52, 0x33, 0), (0x52, 0x34, 0). docs/area_w2c.md."
+
+[[func]]
+pc = 0x413340
+psx = 0x801F3118
+name = "Area94_SpawnKind1AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413340..0x413381 (0x42 bytes), cdecl: area 94 +0x3C[5] (PSX 0x801F3118): the Effect_Spawn shape, kind 1, record 1, Area94_EffectArgsC by 0x904063. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413390
+psx = 0x801F3198
+name = "Area94_SpawnKind1AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413390..0x4133D5 (0x46 bytes), cdecl: area 94 +0x3C[6] (PSX 0x801F3198): the same, kind 1, record 2, Area94_EffectArgsC by 0x904064 masked. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4133E0
+psx = 0x801F3218
+name = "Area94_Counter1FromLeaderPose"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4133E0..0x4133EA (0xB bytes), cdecl: area 94 +0x3C[7] (PSX 0x801F3218), also area 131 +0x3C[8] and area 133 +0x3C[3] (the tool, shared): counter 0x903849 = the leader byte +8 (0x802D48). docs/area_w2c.md."
+
+[[func]]
+pc = 0x4133F0
+psx = 0x801F3230
+name = "Area94_SpawnKind3AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4133F0..0x413431 (0x42 bytes), cdecl: area 94 +0x3C[8] (PSX 0x801F3230): the Effect_Spawn shape, kind 3, record 0, Area94_EffectArgsD by 0x904062. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413440
+psx = 0x801F32B0
+name = "Area94_SpawnKind4AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413440..0x413481 (0x42 bytes), cdecl: area 94 +0x3C[9] (PSX 0x801F32B0): the same, kind 4, record 1, Area94_EffectArgsB by 0x904063. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413490
+psx = 0x801F3330
+name = "Area94_SpawnKind4AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413490..0x4134D5 (0x46 bytes), cdecl: area 94 +0x3C[10] (PSX 0x801F3330): the same, kind 4, record 2, Area94_EffectArgsB by 0x904064 masked. docs/area_w2c.md."
+
+[[func]]
+pc = 0x4134E0
+psx = 0x801F33B0
+name = "Area94_GiveKeyItem7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x4134E0..0x4134F7 (0x18 bytes), cdecl: area 94 +0x3C[11] (PSX 0x801F33B0): KeyItem_Add(7), then Flags_Set(the row 0x929ED0 points at, read after the call, 0x1E). docs/area_w2c.md."
+
+[[func]]
+pc = 0x413500
+psx = 0x801F33E0
+name = "Area94_SpawnKind4AtMember0E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413500..0x413541 (0x42 bytes), cdecl: area 94 +0x3C[12] (PSX 0x801F33E0): the Effect_Spawn shape, kind 4, record 0, Area94_EffectArgsE by 0x904062. docs/area_w2c.md."
+
+[[func]]
+pc = 0x413550
+psx = 0x801F3460
+name = "Area94_InitPatches"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2C), 0x413550..0x4135AD (0x5E bytes), cdecl: area 94 +0x40 (PSX 0x801F3460): the word 0x802290 (the previous area) 0x79: Flags_Set(0x904030, 0x42), Flags_Clear(0x904030, 0x43), then from AreaMap_Header + (the dword AreaMap_PatchBase & 0xFFFF) * 4 while the dword is not 0: AreaMap_ApplyPatch(entry), entry += ((the dword read again) >> 16) * 4 + 4. No bound: a chain without a zero dword runs on. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614584
+name = "Area90_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 90 descriptor 0x614588 +0x34; its one entry is Area90_ChoiceFocusPair. The descriptor +0x3C is null and +0x40 is 0x437CC0 (another block shared ret), where the PSX descriptor 0x801F40EC names an init of its own (0x801F2C5C). docs/area_w2c.md."
+
+[[data]]
+pc = 0x6145CC
+name = "Area90_FocusPairs"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): byte pairs Area90_ChoiceFocusPair reads by the s8 answer ([0x6145CC + 2a], [0x6145CD + 2a]), unchecked; six pairs before 0x6145D8, a dword area 91 descriptor names. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614714
+name = "Area91_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 91 descriptor 0x614748 +0x34. Entries 0 Area91_ChoiceTakeItem59, 3 and 4 Area91_ChoiceMessage7; 1 and 2 are 0x420850 and 0x420870 (another block). docs/area_w2c.md."
+
+[[data]]
+pc = 0x614728
+name = "Area91_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Area91_ObjectRun jumps through it by Sprite_Current[4], unchecked: 0x412000, 0x412060, 0x4120A0, 0x412310, 0x4123D0, 0x412500 (Area91_State0..5). The next dword is Area91_Handlers (tools/area_rows.py counts it as a seventh code entry). docs/area_w2c.md."
+
+[[data]]
+pc = 0x614740
+name = "Area91_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 91 descriptor 0x614748 +0x3C; its one entry is Area91_ObjectRun. docs/area_w2c.md."
+
+[[data]]
+pc = 0x61478C
+name = "Area91_RingTurns"
+ctype = "signed char"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Area91_EffectRings multiplies the frame counter by [0x61478C + ring] (movsx) for rings 0..2; the byte after area 91 descriptor (0x614748 + 0x44). docs/area_w2c.md."
+
+[[data]]
+pc = 0x614790
+name = "Area92_EffectArgs3"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Area92_SpawnKind3AtMember0..2 read (s8) [0x614790 + party list byte] into the effect record +0x10, unchecked (as Area49_EffectKinds). After area 91 descriptor, read only by area 92 code. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614798
+name = "Area92_EffectArgs1"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Area92_SpawnKind1AtMember0..2 read (s8) [0x614798 + party list byte], unchecked. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614E44
+name = "Area92_Choices"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 92 descriptor 0x614E78 +0x34. Entries 0..3 its choices, 4..11 Area92_Handlers (here the +0x3C array is the tail of the +0x34 table). docs/area_w2c.md."
+
+[[data]]
+pc = 0x614E54
+name = "Area92_Handlers"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 92 descriptor 0x614E78 +0x3C; entries 0..6 the spawns, 7 Area92_PlayMusic3D; a null dword after. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614EBC
+name = "Area92_ChoiceMessages"
+ctype = "unsigned short"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): message words by the s8 answer, unchecked: Area92_ChoiceRunStep [0x614EBC + 2a] (six), Area92_ChoiceRun0 0x614EC8, Area92_ChoiceRun28 0x614ECC, Area92_ChoiceRunByFlag1B 0x614ED0 (two each). docs/area_w2c.md."
+
+[[data]]
+pc = 0x614ED4
+name = "Area92_EffectArgs4"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Area92_SpawnKind4AtMember0 reads (s8) [0x614ED4 + party list byte], unchecked. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614F78
+name = "Area94_EffectArgsA"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Effect_Spawn third argument of Area94_SpawnKind2AtMember0, Kind3AtMember1, Kind3AtMember2 by a party list byte, unchecked; after area 93 descriptor (which names no code), read only by area 94 code. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614F80
+name = "Area94_EffectArgsB"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Effect_Spawn third argument of Area94_SpawnKind4AtMember0, 1, 2 by a party list byte, unchecked. docs/area_w2c.md."
+
+[[data]]
+pc = 0x614F88
+name = "Area94_EffectArgsC"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Effect_Spawn third argument of Area94_SpawnKind1AtMember1 and 2 by a party list byte, unchecked. docs/area_w2c.md."
+
+[[data]]
+pc = 0x616D24
+name = "Area94_Handlers"
+ctype = "unsigned long"
+count = 18
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 94 descriptor 0x616D70 +0x3C; entries 0..12 its handlers, 13..17 its five choices (Area94_Choices is the array tail). docs/area_w2c.md."
+
+[[data]]
+pc = 0x616D58
+name = "Area94_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): area 94 descriptor 0x616D70 +0x34, the last five entries of Area94_Handlers. docs/area_w2c.md."
+
+[[data]]
+pc = 0x616DB4
+name = "Area94_ChoiceMessages"
+ctype = "unsigned short"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): message words by the s8 answer, unchecked: choice 0 [0x616DB4 + 2a], 1 0x616DC0, 2 0x616DCC, 3 0x616DD0, 4 0x616DD4 (to 0x616DDB). docs/area_w2c.md."
+
+[[data]]
+pc = 0x616DDC
+name = "Area94_EffectArgsD"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Effect_Spawn third argument of Area94_SpawnKind3AtMember0 by 0x904062, unchecked. docs/area_w2c.md."
+
+[[data]]
+pc = 0x616DE4
+name = "Area94_EffectArgsE"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2C): Effect_Spawn third argument of Area94_SpawnKind4AtMember0E by 0x904062, unchecked. docs/area_w2c.md."
