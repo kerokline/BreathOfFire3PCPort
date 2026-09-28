@@ -595,3 +595,9 @@ would jump through data or to address 0):
   zero-extended and the sprite's sign-extended, so a record word of 0x8000
   or above never matches (none of the sixteen records has one, measured
   2026-09-28; a behaviour, not a fault).
+
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D153 (hooks without the script flag) in
+[`known-defects.md`](known-defects.md).

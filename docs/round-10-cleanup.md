@@ -1,11 +1,24 @@
 # Round ten's cleanup: the debts the scenario and area rounds left
 
-**Status:** TODO (2026-09-28) - the list for a session of its own, after
-round ten's PR. Every item is owed by
+**Status:** IN PROGRESS (2026-09-28) - the list for a session of its own,
+after round ten's PR. Every item is owed by
 [`takeover-queue-round10.md`](takeover-queue-round10.md) (sections 10, 13,
 16 and 19 name the evidence); nothing here changes game behaviour, so no
 DIVERGENCE entry is expected unless an item says so. Cross off items
 here as they land; the round doc stays as the record of what was found.
+
+**Landed 2026-09-28, from a cloud session without the game files** (branch
+`claude/round-10-cleanup-handoff-qtwcrk`; verified by the i686 build,
+`ledger_check.py`, `gen_symbols.py` and `tables.py check` - the shadow
+self-tests, the frame hash and the route A/Bs need `BOF3.exe` and are the
+owner's to run at the tip): item 1's rebinding of every raw constant whose
+target is ours (234 in 41 files, the round-nine form); item 2 in full
+(D133..D161); item 4's `--no-write`; item 5 in full; item 7's merge-script
+note in HANDOFF. **Left**, each marked below: item 1's `SH_CALL` form with
+the harness rows moved, the world-map body shared once, and the linker
+folds' calls by name where a fold's owner header has no prototype; item 3
+whole; item 4's tool fixes that want the exe to test; item 6 whole; item
+7's scratchpad copies.
 
 Round ten took 2,195 functions in 47 groups over six waves (3,510 ->
 5,706 ours), every group fuzz-only through `scenario_harness` and
@@ -60,6 +73,27 @@ in each `docs/scena_*.md` / `docs/area_*.md`); the round doc's sections
 Verify by the build, `BOF3X_SHADOW='*'` headless, `ledger_check.py`,
 and the frame hash (item 6).
 
+**Done (2026-09-28, `a1f2d71`):** every raw constant in the scenario and
+area groups' `_callees.h` headers and `.cpp` tables whose target has an
+`impl` reads `bof3::addr::<Name>` inside the same `constexpr` / `SH_AT` /
+`AH_AT` / table entry - 234 constants in 41 files, the round-nine form
+(round9 doc section 12: the same value, so the fuzz files' stand-in keys
+and the game's calls are unchanged; each file says so beside its include).
+That covers the engine groups' callees, the area 104 / 121 and 151 / 152
+folds, `0x4220D0`, `0x40E750`, `0x42C2D0`, `0x42BA90`, `0x42C0A0`,
+`kArea141a..e`, `0x420A90` and `0x56FCA0` from AR3G. Left raw on purpose:
+the fuzz files' `CallSite` / `Imm` / `kCallees` tables (the keys),
+coordinates and bounds that equal a function's address (`0x4D8000`,
+`0x558000`, `0x518000`, `0x401000`), the engine callees of item 3, and
+`scenario_harness.cpp`'s five raw standard rows. **Left:** the `SH_CALL(Name)`
+form and the standard-set rows moved to `SH_OURS` in one commit (they
+change the fuzz's keys: `StandIn` resolves a raw key through the row's
+`address` either way, but a named key with a raw row is a `Fatal` - so the
+pair wants a `BOF3X_SHADOW='*'` run the cloud session cannot make); the
+`kStepHandlers` / `kArriveHandlers` and table entries read in place (no
+rebinding needed, as above); the world-map body shared once (a refactor of
+five copies with no fuzz to prove it here; D143 names the copies).
+
 ## 2. The defects' numbering
 
 Six waves describe latent defects in their docs and number none
@@ -83,6 +117,27 @@ back to back (AR3D, AR3E, AR4B), `Area53_Trigger42`'s undefined answer
 Four places where wave docs contradict each other were noted for the
 spell round (round9 doc section 12); read for the same here.
 
+**Done (2026-09-28):** D133..D161 in [`known-defects.md`](known-defects.md)
+- the classes collapsed to one entry each (D133 the dispatchers, D134 the
+tables back to back, D135 `Effect_FindFree`'s none, D136 the unchecked
+bytes and counts, D137 the divides, D143 the world-map copies' searches,
+D144 the walks, D146, D147, D153, D154, D155, D161) and the owner's four
+their own (D138 the bare-`ret` inits, now eight areas: 56, 75, 90, 108,
+145, 148, 153, 154; D139 sound effect 0; D140 the s8 turn step; D141 the
+bank-0 cue), with `Area53_Trigger42` D142 and the rest D145, D148..D152,
+D156..D160. Every group doc's defects section names its numbers. **The
+contradictions, written into the entries for one read of the code each:**
+three dispatcher policies (abort outside the table: SC1, SC2, SC5, SC6,
+SC9a, SC9b, SC12, SC13 and every area group but AR0B; abort only at a
+non-code word: SC0, SC15; read in place: SC3, SC7, SC11 and AR0B's area 16
+- D133); a record-255 write reproduced by AR3B and aborted by AR3D / AR4C
+for the same shared body (D135); "overlap" meaning adjacency in SC0 / SC12
+but not in SC1 (D134); AR3B's "eight tables" against its six plus three
+(D133); `Area111_ArmTailAtLeaderCell`'s record-14 address `0x8028F0`
+against the stride's `0x802900` (D136); area 16's buttons table with no
+overread where 45 / 87 / 88's read eight (D134); the "none chosen" weights
+read for areas 72 / 73 / 124 / 125 but not area 20 (D154).
+
 ## 3. A small engine group for the callees nobody owns
 
 Raw after the round (each group's doc says who calls it): `0x454A80`,
@@ -97,6 +152,9 @@ states), `0x511C10` (the map height), `0x441090` (a 16.16 round-up),
 `0x4849A0`, `0x432750`, `0x459720`, `0x464E40`. One group as SX / SX2
 were (`docs/scena_sx2.md` the model); decline what belongs to a larger
 unit.
+
+**Left** (wants the binary to read): none of it can be done without
+`BOF3.exe`.
 
 ## 4. The tools
 
@@ -119,10 +177,14 @@ unit.
   triggers; sections 13, 19).
 - The tool writes `area_rows.tsv` / `area_funcs.tsv` into the
   `--analysis` directory it reads, from the running checkout's
-  `symbols.toml`: a `--no-write` flag (section 13).
+  `symbols.toml`: a `--no-write` flag (section 13). **Done (2026-09-28,
+  untested against the exe: the flag only skips the two writes).**
 - `pairs_propagated.json` pairs jump-table cases as functions
   (`0x5455A0`, `0x54AAD0`, `0x551E40`, `0x553070`, `0x559AD0`,
   `0x53DF10`) and has HANDOFF item 9's swaps.
+
+**Left:** every other fix here changes what the tools read off the exe,
+and each wants a run against it to show the row it now finds.
 
 ## 5. The harness docs
 
@@ -148,6 +210,11 @@ For [`magic_harness.md`](magic_harness.md) /
 - `BOF3X_SHADOW='*'` died silently twice in wave three (exit 127, no
   Fatal) and never since; a note in SCAFFOLDING's self-test section.
 
+**Done (2026-09-28, `3a50354`):** the first five in
+[`magic_harness.md`](magic_harness.md) §5 (each checked against the
+harness sources; the scenario and area docs point at them), the last in
+[`SCAFFOLDING.md`](SCAFFOLDING.md) §2.
+
 ## 6. The live side
 
 - **The frame hash**: `analysis/validate_round9_hash.sh` against
@@ -161,6 +228,8 @@ For [`magic_harness.md`](magic_harness.md) /
   88, 104, 115) and the combat route (area 29).
 - **The `inject:` count one short of the `impl` count** (5,706 against
   5,707, since before wave two): one read of `InjectReport`.
+
+**Left:** all of it needs the game.
 
 ## 7. Housekeeping
 
@@ -180,3 +249,6 @@ For [`magic_harness.md`](magic_harness.md) /
   the start: `DrawPool_Grow` is the last inject line, and keep-both
   doubles or misplaces it whenever a branch forked before a reorder
   (sections 13, 16).
+
+**Left:** the copies and the deletions are on the owner's machine; the
+merge-script note is in HANDOFF's routine.

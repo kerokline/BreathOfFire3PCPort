@@ -53,6 +53,7 @@ re-derived:
 | 09-28 | Round 10 wave 4: the second engine group (SX2, 13), world 1's areas 53..75 (AR1D..AR1F) - **world 1 complete** - and world 2's areas 76..103 (AR2A..AR2D) | 382 | 4,936 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 13 |
 | 09-28 | Round 10 wave 5: world 2's areas 104..113 (AR2E, AR2F) - **world 2 complete** - and world 3's areas 115..146 (AR3A..AR3F) | 422 | 5,358 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 16 |
 | 09-28 | Round 10 wave 6: world 3's areas 148..151 (AR3G) and world 4 (AR4A..AR4F) - **the area round complete**, every area overlay ours; with the scenario round, round ten took 2,195 functions in 47 groups | 348 | 5,706 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 19 |
+| 09-28 | Round 10's cleanup, the part a session without the game can do ([`round-10-cleanup.md`](round-10-cleanup.md)): every raw address whose target is ours rebound to its name (234 constants, 41 files, values unchanged), the round's defects numbered D133..D161 with the docs' contradictions written into the entries, the harness docs' five notes, `area_rows.py --no-write` | 0 | 5,706 | the i686 build and the repository checks; the shadow self-tests, hash and A/Bs are owed at the tip | [`known-defects.md`](known-defects.md) D133..D161 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer

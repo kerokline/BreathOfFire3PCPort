@@ -656,6 +656,11 @@ Described, not fixed:
   caller's (both callees read only the low word or byte);
   `Area136_Counter0ByTile` stores counter 0 twice for a tile above `0x66`.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D147 (uninitialised bytes),
+D159 (party slot 1) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 52 starts, extents, call sites, the

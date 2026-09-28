@@ -364,6 +364,11 @@ exit 0, 352 self-test lines, no mismatch, `inject: 3745 ours`.
   `004022E0 1C5` and `004024B0 BC`, were there); `004020B0 12` and `00402570
   58` are smaller than the host lines `004020B0 227` and `00402570 1240`.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D143 (the world-map copies'
+searches), D154 (dead branches) in [`known-defects.md`](known-defects.md).
+
 ## 13. Controls
 
 Planted one at a time in `area_w0b.cpp` by a script (the scratch

@@ -232,6 +232,12 @@ mismatch or Fatal, `inject: 4620 ours` (all 66 of this group's injected;
    indexes, the unchecked `.data` dispatches (ours aborts past each of the
    six tables, as AR0C's and AR1B's do).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D143 (the world-map copies' searches) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. What reaches it, calls across groups
 
 - **Reach - no recorded route reaches any of the 66.** The world-map

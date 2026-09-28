@@ -228,6 +228,11 @@ called by name. No SE helper is called.
 
 For the coordinator to number; nothing is fixed here.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D155 (steps with no exit) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. The controls
 
 Fifty-four, planted one at a time by a script (the scratch `controls.py`, not

@@ -476,6 +476,11 @@ Described, not fixed:
 - **`Area41_TintUp` / `TintFall`** index `MoveScript_TintRecords` by
   `Field_State +0x149` unchecked (as ops `C1` / `C2` do).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D144 (the unbounded walks),
+D161 (small slips) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Dropped:** none. **Added:** none. Every gap between the band's 48

@@ -583,6 +583,11 @@ Described, not fixed:
 - **Tail kind 39's states 2..9** do nothing forever; `Area186_Start` arms
   only 0 and `0xA`.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D146 (the stale message
+word), D155 (steps with no exit) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 49 starts, extents, call sites,

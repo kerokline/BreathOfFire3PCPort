@@ -431,6 +431,11 @@ Described, not fixed:
 - **`Area53_Trigger42` answers whatever `ScriptFlags_Set40` left in eax**
   (section 2); nothing read here uses it.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D136 (reads and writes by an
+unchecked byte or count), D138 (the bare-`ret` inits), D142
+(`Area53_Trigger42`'s answer) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 47 starts, extents, call sites,

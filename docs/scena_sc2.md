@@ -548,6 +548,11 @@ re-run them after any.
   it, where every other start sets it. Faithful; whether the scenes then
   run with the player's control is not measured.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D153 (hooks without the
+script flag) in [`known-defects.md`](known-defects.md).
+
 ## 7. Calls across groups (raw addresses, for the round's rebinding)
 
 | Address | What | Owner |

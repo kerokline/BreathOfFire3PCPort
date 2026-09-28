@@ -347,6 +347,11 @@ in `area_w0a_callees.h`, not named here.
   not an object index. Not checked against the PSX twins (`0x801F2C88`,
   `0x801F443C`), where the objects may be contiguous; kept as read.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count) in
+[`known-defects.md`](known-defects.md).
+
 ## 8. Calls across groups
 
 None by raw address. Every callee is named: ours (`AreaMap_SetByte`,

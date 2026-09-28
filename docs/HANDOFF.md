@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-28, round ten complete: the scenario round and the area round both merged; the round's debts and round eleven next)
+**Status:** IN PROGRESS (2026-09-28 evening, round ten merged as PR #28; its cleanup half done from a cloud session - the game-side half and round eleven next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,9 +14,9 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**5,706 functions are ours** (`inject: 5706 ours, 0 left original`), on
-`phase-3/capture-round-ten`, local commits past `main`'s `c47f521`
-(round nine's PR #27), not yet pushed or a PR. **Round ten is complete**
+**5,706 functions are ours** (`inject: 5706 ours, 0 left original`);
+round ten is on `main` (PR #28, `3e8d531`), and its cleanup's first half
+on `claude/round-10-cleanup-handoff-qtwcrk` (item 0). **Round ten is complete**
 ([`takeover-queue-round10.md`](takeover-queue-round10.md)): six waves,
 2,195 functions in 47 groups, 3,510 -> 5,706. The scenario round (I24)
 took every chapter bank 0..19, the shared helpers, the call tables'
@@ -46,31 +46,41 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-0. **Round ten's debts** - the list is [`round-10-cleanup.md`](round-10-cleanup.md)
-   (from the round doc's section 19), for a session of its own; the owner's order to choose; the two that
-   unblock the rest are the defects' numbering (all six waves describe,
-   none numbers - `known-defects.md`) and the rebinding pass (every
-   `AH_AT` / `SH_AT` into a name now that everything they reach is ours;
-   the area 104 / 121 and 151 / 152 linker folds; the harness
-   standard-set column moves in the same commit; the world-map body,
-   five copies in ours, shared once). Then a small engine group for the
-   callees nobody owns (section 19's list), the tool fixes, the harness
-   doc's notes, the frame hash and the route A/Bs when the owner is
-   away. The routine that ran six waves: a brief in `analysis/`
-   (`round10_wave6_brief.md` is the latest), one Opus agent per group in
-   a worktree, `merge_group10v.sh <group> <scratch>` (`MOD=<module>`; it
-   merges in the main checkout, runs `keepboth.py` and `one_grow.py`,
-   then builds and self-tests in the detached worktree
-   `<old scratch>/verify`), one merge at a time in the background, about
-   ten minutes each. Scratch: the merge scripts and waves four to six's
-   `<group>/` controls scripts in
+0. **Round ten's debts** - the list is [`round-10-cleanup.md`](round-10-cleanup.md),
+   its status header says what landed and what is left. **Landed
+   2026-09-28 on `claude/round-10-cleanup-handoff-qtwcrk`** (a cloud
+   session without the game files; verified by the i686 build,
+   `ledger_check.py`, `gen_symbols.py`, `tables.py check`): the rebinding of
+   every raw constant whose target is ours (234 in 41 files, the round-nine
+   form - values unchanged, so the fuzz keys stand), the defects numbered
+   D133..D161 with the wave docs' contradictions written into the entries
+   for one read each (D133's three dispatcher policies, D135's record-255
+   split, the rest listed under item 2 there), the harness docs' five
+   notes, `area_rows.py --no-write`. **First thing with the game on hand,
+   at that branch's tip:** `BOF3X_SHADOW='*'` headless (the rebinding
+   should be invisible to it: every value is the same), `ledger_check.py`,
+   the frame hash against `r9_orig` and the route A/Bs (item 6). Then the
+   owner's order to choose among what is left: the `SH_CALL` form with the
+   five `scenario_harness.cpp` rows moved to `SH_OURS` in one commit, the
+   world-map body shared once (D143 names the five copies in ours), the
+   small engine group for the callees nobody owns (item 3), the tool fixes
+   that want the exe (item 4), the recipe saves per chapter and the live
+   check per area, the scratchpad copies (item 7). The routine that ran
+   six waves: a brief in `analysis/` (`round10_wave6_brief.md` is the
+   latest), one Opus agent per group in a worktree, `merge_group10v.sh
+   <group> <scratch>` (`MOD=<module>`; it merges in the main checkout, runs
+   `keepboth.py` and `one_grow.py` - **the `one_grow.py` step belongs in
+   the next round's merge script from the start**: `DrawPool_Grow` is the
+   last inject line and keep-both doubles or misplaces it whenever a
+   branch forked before a reorder - then builds and self-tests in the
+   detached worktree `<old scratch>/verify`), one merge at a time in the
+   background, about ten minutes each. Scratch: the merge scripts and waves
+   four to six's `<group>/` controls scripts in
    `.../71e258cd-639f-4084-8bfa-60f9e4a9ffda/scratchpad/`; waves one to
    three's in `.../0eefe2a8-ba23-4625-9434-7c4f87a1456f/scratchpad/`
    (also `verify/` and `play/`). Every agent worktree and
-   `phase-3/round10-*` branch is merged and removed. **Round ten's PR**:
-   push and open one when the owner wants; the branch carries the other
-   session's commits (`368b84f`, `f669cce`, round eleven's `44348f7`,
-   `154272f`) too.
+   `phase-3/round10-*` branch is merged and removed; round ten is `main`
+   (PR #28, `3e8d531`).
 0b. **Round eleven is staged: the boss round** (the owner, 2026-09-28,
    after the area round finishes). Plan and cut:
    [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
@@ -340,9 +350,9 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Nothing uncommitted of this round's. `phase-3/capture-round-ten` is ahead
-of `main` (`c47f521`) by round ten's six waves (47 merges, the round
-doc) and the other session's commits; not pushed. The wave briefs are in
+Nothing uncommitted. Round ten is merged (PR #28); the cleanup branch
+`claude/round-10-cleanup-handoff-qtwcrk` (item 0) is pushed and wants the
+game-side checks before its PR. The wave briefs are in
 `analysis/` (gitignored). **The other session works in the main checkout
 on this branch**: check `git status` before a commit, and never build in
 `build/` while its game runs (merges do not need to).

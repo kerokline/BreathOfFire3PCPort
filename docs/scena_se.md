@@ -267,6 +267,11 @@ in brackets); every refused one exited 3.
 - **`Field_StartEventBattle` reads `EventBattle_Records` by a whole byte**,
   the table's length unknown.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D135 (`Effect_FindFree`'s none as a slot), D136 (reads
+and writes by an unchecked byte or count) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. Found on the way
 
 - **The chapter call tables' entries live outside every band.** 100 of the

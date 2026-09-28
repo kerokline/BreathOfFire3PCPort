@@ -298,6 +298,12 @@ record-4 about 2,000; area 116's effect states 2,963 / 3,037); area 116's
    fourth dword it never writes (a stale word; the callee reads three -
    ours passes 0), as `Area100_EffectB7Ring`.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D136 (reads and writes by an
+unchecked byte or count), D143 (the world-map copies' searches), D147
+(uninitialised bytes), D161 (small slips) in
+[`known-defects.md`](known-defects.md).
+
 ## 8. What reaches it, calls across groups
 
 - **Reach - no recorded route reaches any of the 56.** The world-map

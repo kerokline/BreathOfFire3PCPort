@@ -371,6 +371,12 @@ table, so none aborts; every unchecked index is reproduced.
   from the layer.
 - **`KeyItem_Remove(0)`** clears the first empty slot and answers 1.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D134 (tables back to back), D135 (`Effect_FindFree`'s
+none as a slot), D136 (reads and writes by an unchecked byte or count), D140
+(the turn steps as s8), D141 (`Sound_SetCueVolume` bank 0), D161 (small slips)
+in [`known-defects.md`](known-defects.md).
+
 ## 7. Found on the way
 
 - **`0x57C650`**, the thirteenth (section 1), and the two left beside the

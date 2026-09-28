@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-09-27 — one hundred and twenty-nine entries, D1..D132 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful))
+**Status:** IN PROGRESS (2026-09-28 — one hundred and fifty-eight entries, D1..D161 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -2948,3 +2948,980 @@ stacks (0x4000 bytes each) have no guard; kept, it is the layout
 ([`SCAFFOLDING.md`](SCAFFOLDING.md) §3).
 
 **Status:** latent.
+
+## D133 — The chapter banks' and area blocks' dispatch tables are never checked (latent; ours aborts past most, three chapter groups and one world-map copy read on)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, by nearly every group of the scenario and area rounds
+([`takeover-queue-round10.md`](takeover-queue-round10.md) §10, §13, §16,
+§19; the group docs below). D59's class in the chapter banks (`Scena*`) and
+the area overlays (`Area*`); one entry for the class, the groups' docs carry
+the tables.
+
+**Established:** every chapter's frame, run, object and cell dispatcher
+indexes its `.data` table by a signed state or run byte, the object's
+`+0x86` or the cell search's answer with no bound, and every area's state
+machine by `Sprite_Current[4]`, an effect record's `+1` or a phase byte the
+same way. Past a table the original jumps through the next table's entries
+(the state tables run straight into the run tables in most chapters, D134),
+through data (a step table, a descriptor, a 0 dword) or, in a stack-built
+table, through its own return address. **What ours does differs by group**,
+each citing round nine's rule (round9 doc §6) - the four places where the
+docs contradict each other, for one read of the code to settle:
+
+- *Aborts for any index outside the table's own entries, code beyond it or
+  not*: SC1 (`Scena01_Run` `0x53A2B0`, `_ObjectHook` `0x53D470`, `_CellHook`
+  `0x53DD20`; [`scena_sc1.md`](scena_sc1.md) §3), SC2 (`Scena02_Frame`
+  `0x53DDA0`, `_Run` `0x53E3D0`, `_ObjectHook` `0x541D10`; [`scena_sc2.md`](scena_sc2.md)
+  §3), SC5, SC6, SC9a, SC9b (which also aborts on a 0 entry: chapter 10's
+  runs 8 and 9 and object 10 are nulls, D66's shape), SC12 and SC13 (each
+  doc's §2): a movement script storing a run past the table by op `F6`
+  "would stop here where the original ran the next table's entry".
+- *Aborts only where the word read is not code* (`CodeAt`): SC0
+  (`Scena00_Frame` `0x537F20`, `_Run` `0x5384F0`, `_ObjectHook` `0x539A10`;
+  a state of 3..14 runs the run handler the original runs,
+  [`scena_sc0.md`](scena_sc0.md) §7) and SC15 (every frame, run, object hook
+  and `Scena17_EndTask` `0x56D3B0` of chapters 15..19,
+  [`scena_sc15.md`](scena_sc15.md) §7).
+- *Reads in place, no abort, as the original*: SC3 ([`scena_sc3.md`](scena_sc3.md)
+  §7 "ours reads them in place the same"), SC7 ([`scena_sc7.md`](scena_sc7.md)
+  §7, silent on ours; `scena_sc7.cpp` has no bound) and SC11
+  ([`scena_sc11.md`](scena_sc11.md) §6: `Scena11_ObjectTrigger` `0x55E170`'s
+  index 15 is a call to address 0 and 16 and up chapter 12's vtable; and the
+  chapter's own triggers 9..13 set `MoveScript_Var7` to 0xA, 0xB and 0xE past
+  `Scena11_Runs`' ten entries, so `Scena11_Run` `0x55C360` reads
+  `Scena11_Triggers` as runs - the one chapter whose own code writes a
+  past-end index). `scena_sc3.cpp`, `scena_sc7.cpp` and `scena_sc11.cpp` hold
+  no `Fatal`.
+- *The area blocks* abort with a message past each table (the owner's rule,
+  no DIVERGENCE entry) in every group but one: AR0A (`0x401A10` /
+  `0x401AF0`), AR0C (`Area32_RunA` `0x4038C0` / `_RunB` `0x403960`,
+  `Area33_Record08Run` `0x404680`, `_Record04Run` `0x404800`,
+  `Area36_EffectRun` `0x404FE0`), AR1A (`Area39_Run` `0x405590`, `Area41_Run`
+  `0x4063D0`), AR1B (`Area43_ObjectRun` `0x406F80` and area 45's six), AR1D
+  (`Area56_FallRun` `0x40B080`, `Area59_EffectRun` `0x40B4D0`), AR1E (area
+  65's six), AR1F (`Area68_GlideRunA` `0x40D070`, `_GlideRunB` `0x40D130`,
+  `Area69_GlideRun` `0x40D360`, `Area75_FlyRun` `0x40D920`, `_FollowRun`
+  `0x40DA60`, `Area75_PhaseRun` `0x40E1C0`), AR2A (`Area79_ObjectState`
+  `0x40F410`), AR2B (areas 87 and 88's six each), AR2C (`Area91_ObjectRun`
+  `0x411FE0`: state 6 is the `+0x3C` array's one entry, the dispatcher
+  itself - a hang; 7 and up the descriptor's words - a fault), AR2D
+  (`Area99_RunDrift` `0x413D50`, `_RunLeap` `0x413DF0`, `Area100_EffectB7Run`
+  `0x414490`), AR2E (area 104's four, `Area104_LeaderRun` `0x415020`'s two
+  and `Area104_Kind5CStates`' five), AR2F (`Area108_FadeRun` `0x416F10`,
+  `Area112_EffectRun` `0x418860`), AR3A (area 115's six and
+  `Area116_EffectB8Run` `0x419E20`), AR3B (area 121's eight by its doc, plus
+  `Area121_CameraRun` `0x41AA50`, `_LeaderRun` `0x41B9D0`, `_Kind5CRun`
+  `0x41C190` by its function rows - the count wants one read of
+  `area_w3b.cpp`), AR3D (`Area135_QueueRun` `0x41E110`, `_WalkRun`
+  `0x41E260`, `_LiftRun` `0x41E370`, `_SpawnRun` `0x41E420`, each given the
+  count of code pointers its original reaches, D134), AR3E
+  (`Area140_Effect71Run` `0x41FB70`, `Area142_RunWait` `0x420760`,
+  `Area141_RunShadeUp` `0x41FDB0`, `_RunShadeDown` `0x41FCB0`), AR3F
+  (`Area143_EffectB3Run` `0x420B00`, `Area146_EffectB4Run` `0x422080`,
+  `Area145_RunDrop` `0x421220` - whose own landed state, 2, is past its
+  two-entry table: the script's re-calls keep it from running there,
+  "not measured in play"), AR3G (area 151's six, `Area148_BeamRun`
+  `0x422840`), AR4A (area 152's six), AR4B (`Area172_RunFall` `0x427C10`,
+  `_RunSlide` `0x427DF0`, `Area172_EffectA5Run` `0x428200`; D134), AR4D
+  (`Area175_GlideRun` `0x429440`), AR4E (`Area189_LeaderRun` `0x42A8B0`,
+  `Area191_RunScale` `0x42B680`), AR4F (`Area197_RunShake` `0x42CCA0`,
+  `Area198_EffectA6Run` `0x42D4B0`). **AR0B's area 16 reads on** through
+  its six tables (`Area16_PlateRun` `0x401D00`, `_HudRun` `0x402080`,
+  `_FrameStep` `0x4020B0`, `_BoxStep` `0x402180`, `_Record8Run` `0x4025D0`,
+  `_Record4Run` `0x402750`; `area_w0b.cpp` has no `Fatal`,
+  [`area_w1b.md`](area_w1b.md) §9 says so) where every other world-map copy
+  (45, 65, 87, 88, 104, 115, 121, 151, 152) aborts - the same body, two
+  ports.
+- *Stack-built tables* (D59's aborting form): `Area174_FadeRun` `0x428F90`
+  by the object's `+4` (AR4C), `Area104_DrawGauge` `0x415940` by `bar & 0xFF`
+  (AR2E), `Area193_ChoiceMessageState` `0x42C470` by the choice answer (a
+  negative answer reads below the stack pointer, 3 the return address's low
+  word; AR4F); ours aborts in each.
+
+By reading, no chapter or area writes an index past its own table except
+chapter 11's triggers (above) and area 145's drop (above); the movement
+script's op `F6` can store any run. **Ours writes the same states**; the
+aborts differ only where the original would run past.
+
+**Status:** latent; the three policies are unreconciled.
+
+## D134 — Tables laid back to back in the chapter banks and area blocks (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC0, SC2, SC5, SC6, SC7, SC9a, SC9b, SC11, SC12,
+SC13, SC15, SX, SX2, AR0A, AR0B, AR1A, AR1B, AR1E, AR2A, AR2B, AR2C, AR2D,
+AR2E, AR3D, AR3E, AR4A, AR4B, AR4C, AR4D, AR4E, AR4F (their docs' defects
+sections). What D133's past-end index reaches, and what an unchecked byte
+index (D136) reads.
+
+**Established:** the linker laid the tables of one chapter or area end to
+end with nothing between them, so a read past one is a read of the next:
+
+- **States into runs:** in most chapters `Scena<NN>_States` (3 entries) is
+  followed at once by `Scena<NN>_Runs`, so a state of 3 runs run 0 (`Scena09`,
+  `Scena10`, `Scena12`: "the state table's entry 3 is the run table's entry
+  0, exactly as chapter 16's"; `Scena00_States` `0x660CE4` / `_Runs`
+  `0x660CF0` "one run of words"; `Scena07_States` `0x6611CC` running into
+  `_Runs` `0x6611D8`). [`scena_sc1.md`](scena_sc1.md) §2 says chapter 1's
+  do "not overlap" of the same adjacency (`0x660D7C` then `0x660D88`) - the
+  docs' word "overlap" means adjacency, and SC1's sentence contradicts the
+  others' usage, not their layout.
+- **Runs and objects into the next table:** `Scena05_Runs` (23) into
+  `Scena05_Objects`; `Scena11_Runs` `0x661678` (10) into `Scena11_Triggers`
+  `0x6616A0` and those into chapter 12's vtable at `0x6616DC`; `Scena13_Runs`
+  `0x6617A8` (9) and `Scena14_Runs` `0x661840` (10) into the next tables;
+  `Scena10_Objects` `0x661614` (13) into `Scena11_EffectRolls` `0x661648`;
+  `Scena04_ObjectHandlers` `0x661004` (1) into `Scena04_Cells` `0x661008`;
+  `Scena09_Runs` `0x661408` (17) into `0x66144C` and `Scena09_Objects`
+  `0x661450` (16) into the bytes at `0x661490`.
+- **Byte tables into hooks:** `Scena00_StartSteps` `0x660D30` (8) into
+  `Scena00_InputAnims` `0x660D38`; `Scena02_EffectX` `0x660E48` (8 s8) into
+  `Scena02_Hooks`; `Scena05_MemberBytes` `0x661018` (8) into `Scena05_Hooks`;
+  `Scena06_MemberBytes` `0x6610D8` (8) into `Scena06_Hooks`.
+- **The staff roll:** `Scena17_RollLines` `0x661A20` holds 351 lines and a
+  -1, and `Scena17_ScrollRoll` `0x56D110` reads 367 (the window draws
+  fifteen lines after the top one): indices 352..366 are zeros, one more
+  line pointer at 356, and at 366 `Scena17_Hooks`' first word, which
+  `Scena17_DrawLine` `0x56D1A0` draws as a string - `0x56C130`'s code bytes
+  (in this process the detour's `jmp`) at y 309..330, below the screen.
+  `Scena17_DrawLine`'s glyph index is unchecked against the 64 widths of
+  `Scena17_GlyphWidths` `0x66208C`: any character outside its classes reads a
+  width from `Scena17_EndSteps` `0x6620CC` and the strings after it.
+- **Area state tables:** area 135's four are contiguous (`Area135_QueueStates`
+  `0x62DA0C` (2), `Area135_QueueCells` `0x62DA14`, `_WalkStates` `0x62DA18`
+  (2), `_LiftStates` `0x62DA20` (9), `_SpawnStates` `0x62DA44` (2), then a
+  zero), so the walk's states 2..12 run the lift's and the spawn's handlers
+  and the lift's 9 and 10 the spawn's - 13 and 11 code pointers, which ours
+  reaches and aborts past (AR3D, [`area_w3d.md`](area_w3d.md) §1.4, §6);
+  area 172's fall table `0x63EF14` (2) runs into its slide table `0x63EF1C`
+  (2), that into `Area172_DriftSteps` `0x63EF24` (16 signed bytes), and its
+  effect table `0x63EF34` (3) into area 173's data block `0x63EF40` -
+  `Area172_FallStep` `0x427CB0` lands at state 2, so `Area172_RunFall`
+  `0x427C10` runs the slide's code (kept, ours too) and `Area172_RunSlide`
+  `0x427DF0` on such an object reads four drift steps as an address outside
+  `.text` (a fault; ours aborts) (AR4B, [`area_w4b.md`](area_w4b.md) §6);
+  `Area141_ShadeDownStates` `0x62F618` into `_ShadeUpStates` `0x62F620` into
+  `Area141_CellEntries` `0x62F628` (AR3E); `Area32_StatesA` into `_StatesB`
+  (AR0C); `Area104_LeaderStates` `0x61BC28` into `_Kind5CStates` `0x61BC30`
+  (AR2E); `Area175_GlideStates` `0x6424A4` into `_GlideSteps` `0x6424AC`
+  (AR4D); `Area189_LeaderStates` `0x6475A0` into `Area189_StepVectors`
+  (`0xFFFFF4B0` first; AR4E); `Area197_ShakeStates` `0x649818` into
+  `_ShakeSteps` `0x649820` (AR4F); `Area79_States` into `Area79_SlideSteps`
+  (AR2A); `Area99_DriftSteps` after area 99's tables (AR2D).
+- **Choice arrays into handler arrays:** area 167's choices `0x63C510` are
+  five dwords before its handlers `0x63C524`, so choices 5..15 are handlers
+  0..10 (AR4A, [`area_w4a.md`](area_w4a.md) §1); area 148's choices
+  `0x635364` start two dwords before its handlers `0x63536C` (AR3G §1);
+  `Field_ObjectTriggers` `0x662E1C`'s id 0 is `WorldMap_FieldHooks[11]` =
+  `Area97_FlagIfKeyItem5` `0x4139E0`, so an object with trigger id 0 would
+  set story flag `0x23` when key item 5 is held (AR2D).
+- **Data read as the next table's:** the world-map copies' name set 3 (an
+  id in no set) reads `Area<NN>_PlateStates`' code pointers as item ids
+  (areas 16, 45, 87, 88, 115: D143); `Area152_PlaceRows` `0x637344`'s row 3
+  is `Area152_PlateStates` `0x6373A4`, the message id then half a code
+  pointer (AR4A); `Area174_PoseTables` (3) into `Area174_StepDeltas` (AR4C);
+  `Area191_TalkMessagesA` / `B` `0x647C24` / `0x647C54` and
+  `Area192_TalkMessages` `0x647F68` / `_TalkMessagesF` `0x647F98` /
+  `_TalkWho` `0x647FC8`, each read into the next for a "who" in none of its
+  keys (AR4E, AR4F); `Area65_Cells` `0x6043F4` (182) into area 65's choice
+  table (AR1E); `Area41_GiveMessages` (2) into `Area41_States` (AR1A);
+  `Area111`'s 28-byte grid `0x675C00` into areas 112 and 113's descriptor
+  records at `0x675C20` (a write, AR2F, D136); the engine's
+  `BattleFormation_Offsets` (16 pairs) into `BattleFormation_Anims` and
+  `Inventory_Remove`'s list pointers into the consumables' names (SX2, SX;
+  D136).
+- **The world-map copies' buttons:** `Area45_Buttons` `0x5F76E8` and areas
+  87 / 88's are six entries of which "the second legend reads eight"; area
+  16's doc gives `Area16_Buttons` `0x5E5FF0` as 6 x 4 with no overread of
+  the same code (AR0B against AR1B / AR2B).
+
+**Status:** latent. Each read stays inside the image by reading; the two
+that would not (area 172's slide at state 2, area 91's state 7 and up) are
+D133's aborts.
+
+## D135 — `Effect_FindFree`'s "none" is stored and used as a slot in the chapters and areas (latent; ours aborts in some, writes the same in others)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC1, SC3, SC7, SC9a, SC9b, SC11, SC13, SC15, SX2,
+AR1B, AR2B, AR2C, AR2E, AR3B, AR3D, AR3G, AR4A, AR4C, AR4E (their docs'
+defects sections). D60's class in the field; D93 is the spell overlays'
+version.
+
+**Established:** `Effect_FindFree` answers 0..19 or `0xFF`. A scene or
+handler that keeps the answer in a byte and reads or writes the record it
+names without testing `0xFF` reaches "record 255", `Effect_Objects +
+0xFF x 0x80` = `0x7E9160`, `0x7F80` bytes past the twenty records (which end
+at `0x7E1BE0`) - inside the image's `.bss`, so a silent read or write, not a
+fault; kept in an s8 it is record -1, `0x7E1160`, before the pool.
+
+- **Chapter writes:** `Scena01_Scene02` `0x53A380` step 4 clears byte 0 of
+  the record slot `0x903850` names (whatever the last writer of that scratch
+  cell stored); `Scena07_TakeEffect49` `0x550CE0` answers record 255 when
+  none is free and `Scena07_Scene6` `0x54FFE0` writes a byte and nine dwords
+  through it (`0x7E9160 + 6..+0x23`, `+0x34..+0x3F`); `Scena11_Scene5`
+  `0x55CCF0` step 9 stores the slot into member 0's `+0xB` through
+  `Sprite_Current`; `Scena14_Run4` `0x565BF0` step 0x10 writes `+1` of the
+  record `Scena14_Slot` `0x6BC73C` names; `Scena15_Run2` `0x568980` step 1
+  writes 2 to `0x7E9161` and `Scena15_Run4` `0x5690C0` step 0xB counts that
+  byte up when the slot byte `0x6BC743` is `0xFF`. **Ours writes the same
+  places** (the fuzzes' recorders answer 0..19).
+- **Chapter reads** (waits on the record's live bit): `Scena04_Scene1`
+  `0x545340` step 4 (the s8 `0x8034E3`: record -1 before the pool; SC3),
+  `Scena07_Scene4` `0x54FB40` and `Scena08_Scene6` / `8` / `10` (`0x552120`,
+  `0x5525B0`, `0x552EF0`; SC7), `Scena09_Run11` `0x556C40` step 7 (only a
+  failed take in step 6 leaves `Scena09_Slot11` `0x6BC730` so, and step 6
+  does not advance on one: unreachable; SC9a), `Scena10_Slot` `0x6BC735` in
+  runs 1, 3, 4 and 6 (`0x558600`, `0x558FC0`, `0x559500`, `0x559B20`; four
+  waits follow a store that does advance on `0xFF`; SC9b), chapters 13 and
+  14's waits on `Scena13_Slot` `0x6BC738` / `Scena14_Slot` (SC13),
+  `Scena15_Run1` / `3` / `6` (`0x568650`, `0x568A70`, `0x569F20`; SC15). A
+  read only, both sides the same.
+- **Area writes, ours aborts:** `Area85_SpawnEffect47A` / `B` index
+  `Effect_Objects` by the slot they stored in `+0xB` (AR2B, ours aborts past
+  twenty); `Area104_Kind5CStart` `0x4157A0` spawns four effects without
+  testing none and `Area104_Tail40` `0x415BE0` tests none but sign-extends
+  the slot (AR2E, ours aborts outside 0..19); area 135's tail
+  `Area135_Tail18` `0x41E630` writes through the slot `0x675CC0` in six
+  states after `Area135_ChoiceStartTail14` `0x41DB40` stored none there (the
+  original writes `0x7E9161` in each; AR3D, ours aborts at 20 or more);
+  `Area174_EffectState3` `0x4289E0` writes `+1`, `+0x5D`, `+0x5E` of the
+  record the object's `+0xB` names after `Area174_Effect9DSub0` `0x4288D0`,
+  `_EffectA2State0` / `_State2` `0x428B80` / `0x428D50`, `_EffectA1`
+  `0x428C10` or `_EffectA3` `0x429120` stored none (AR4C, ours aborts;
+  "which script orders the handlers is not read").
+- **Area writes, ours reproduces:** `Area121_Kind5CStart` `0x41C1B0`'s four
+  stores land in record 255 with no free slot (AR3B, "S09's breath pool is
+  the precedent" - D93's silent case). **The docs contradict each other
+  here**: AR3B reproduces the write to `0x7E9160` as "a silent write into
+  mapped memory", AR3D and AR4C abort on the same write "past the 20
+  records"; the shared body (`Area104_Kind5CStart` `0x4157A0` is the same
+  code in area 104's copy, where ours aborts) has two ports.
+- **Area reads:** `Area42_TimerTail` `0x406A30` (tail kind 7) states 3 and
+  5 test the record `0x9039F5` names after states 2 and 4 stored none there
+  - the tail waits on bit 0 of the byte at `Effect_Objects + 0x7F80` (AR1B);
+  `Area148_Tail31` `0x422510` state 0xB reads by the same shared byte, which
+  every tail kind writes (AR3G); `Area188_WalkWhileZUnder` `0x42A450` reads
+  `Area188_ZLimits` `0x647530` (2 bytes) by a sub-kind that
+  `Area188_ChoiceByChapter` `0x42A380` sets to `0xFF` - the byte at
+  `0x64762F` (AR4E). Area 92's spawns `Area92_SpawnKind4AtMember0`
+  `0x412AA0` .. `_SpawnKind1AtMember2` `0x412ED0` store the slot before the
+  test, so a full pool leaves `0xFF` in the party record's `+0xB` where
+  `Effect_Spawn`'s callers leave the old slot (op `9F` waits on it; AR2C).
+- **`Sprite_ObjectAt`'s none, the same shape:** `Area121_PushObject`
+  `0x41BC60` indexes `Sprite_ObjectsExtra` by the answer less `0x1E`: with
+  the push button held and no object two steps ahead it reads "extra record
+  `0xE1`" (`0x80B0A4`, in `.bss` before `Gfx_ClutStripSource`) and, when
+  that byte's low three bits equal the leader's facing, sets bit 0 of
+  `0x80B124` - **reachable in area 121's leader state 12 whenever a push
+  meets no object**, reproduced (AR3B, [`area_w3b.md`](area_w3b.md) §7.1);
+  its copy `Area104_ObjectAhead121` `0x4152B0` is dead in area 104 and ours
+  aborts there (AR2E). Area 135's tail states `0x1B` / `0x1D` write the field
+  object the sub byte names; `0x1D` does not test `0xFF` (AR3D, ours aborts).
+- **Tested but consequential:** `Effect_HoldFlag1C` `0x469FE0` with every
+  record in use sets nothing, and its callers do their work first
+  (`Area49_CellHook` toggles the switch's flag before the call), so a switch
+  fired with all twenty records busy has no cool-down and can fire again
+  next frame (SX2). `Area152_Record8Spawn` `0x4253C0` (record-8 state 0 of
+  all ten world maps) stops on `0xFF` and ours also aborts on 20..254, which
+  `Effect_FindFree` never answers (AR4A).
+- **Not cases**, though their docs say "unchecked": the spawns of AR2D,
+  AR2F, AR3C, AR3E, AR3F, AR4D and AR4F, and SE's `Effect_SpawnAtCell`
+  `0x524870`, all test `0xFF` (SE's control C8 refused a second `FindFree`
+  on `0xFF`); "unchecked" there means no range test below 20.
+
+**Status:** latent: twenty live effect records at a spawn were not seen.
+The AR3B / AR3D policy split is one read to settle.
+
+## D136 — Reads and writes by a signed choice byte, a party list byte or the member count, unchecked (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, by every group of the scenario and area rounds but SC12
+(their docs' defects sections). One entry for the class; where a read stays
+inside `.data` ours reads the same, where a write would leave what it
+indexes ours aborts (each group's doc says which).
+
+**Established:**
+
+- **The choice tables by the s8 answer.** Every `Area<NN>_Choice*` handler
+  that picks a message word or a focus pair by the message box's answer
+  indexes its table by the signed byte with no bound: a negative answer
+  reads before the table, one past its rows the words after (D134). Areas
+  0..15's tables, 21, 26, 41 (`Area41_ChoiceGiveItem` `0x406280`), 42, 49,
+  53, 57, 67, 68, 77..81 (area 79's choice 3 reads before its bound), 90,
+  92, 94, 100, 117, 130, 133, 136, 150, 153, 154, 166, 168, 187, 188, 191,
+  192, 193 and chapter 0's `Scena00_StartSteps` `0x660D30` by `Cond_ByteFD`.
+  All in `.data`; kept.
+- **The effect-kind and argument tables by a party list byte** (a character
+  id, 0..7 in play): the `Area<NN>_Spawn*AtMember*` handlers of areas 11,
+  26, 49, 57, 67, 68, 77, 92, 94, 117..119, 130, 133..136, 175;
+  `Scena03_SpawnAtMember` `0x544830`, `Scena05_SpawnMember` `0x54A1E0`
+  (`Scena05_MemberBytes` `0x661018`), `Scena06_LeaderEffect` `0x54E2F0` and
+  `Scena06_Run14` `0x54D4F0` (`Scena06_MemberBytes` `0x6610D8`),
+  `Scena02_PlaceEffect70` / `68` `0x541B90` / `0x541C50` (`Scena02_EffectX`
+  `0x660E48`). Kept.
+- **Member records by a whole byte:** `CharacterRecords + 0xA4 x
+  MoveScript_EffectState[k]` in the call tables, chapters 6, 8 and 14
+  (`Scena08_Scene1` / `11` `0x551590` / `0x553050`, `Scena14_Run2` / `3`
+  `0x565240` / `0x565910` step 0x11 / 9 by `0x669734`), `Scena01_Scene06`
+  `0x53AC30` step 0xF (a byte of 8 or more clears a bit in `Cond_Flags`
+  `0x903F90`), `Scena02_StripMember` `0x542080` (ten bytes at `0x903AEE +
+  0xA4 x member`; its caller passes 3 and 4), `Party_AddToLists` `0x591CC0`
+  (an id of 24 or more reads past `MoveScript_EffectState`'s 24 and ORs 3
+  into a record the byte after names; SE), `Char_LevelUp` `0x498DE0`
+  (`CharacterRecords` and `Char_ExpTable`; SX), `Member_SetState2_8`
+  `0x57C8A0`, `AbilityList_ForType` `0x591EC0`, `Party_PlaceInFormation`
+  `0x532FD0` (a formation past `BattleFormation_Offsets`' 16 pairs; at
+  `0x904060` = `0xFF` with two members the group wraps to 0; SX2),
+  `Area191_TalkMessage` `0x42BA90`, `Area192_TalkMessage` `0x42C0A0` (the
+  level byte of a record past the eight), `Area144_SpawnEffect85`
+  `0x421090`.
+- **Walks to `Field_MemberCount`, unchecked against `ObjTrio`'s three** (1..3
+  in the field): reads in `Area85_FollowMember2`, `Area86_MemberNear`,
+  `Area103_FirstListedMember` `0x414540`, `Area108_PlaceScene` `0x4169A0`,
+  `Area112_TalkByMember` `0x418400`, `Area112_MemberNearBoxes` `0x4187C0`,
+  `Area135_PartyInBox` `0x41EEF0`, `Area148_MemberMessageA` / `B` `0x4223A0`
+  / `0x422430`, `Area173_MessageByMemberA` / `B` `0x428450` / `0x4284E0`,
+  area 145's member search; **writes** in `Area117_MembersFrame` /
+  `Area118_MembersFrame` `0x41A0A0` / `0x41A410` (`+0x128`, `+9`, `+8` past
+  the three; a member index of 8 or more is never marked, the mask being an
+  8-bit shift), `Area192_RestoreCharacters` `0x42C2D0` (`0xA4` bytes a
+  record into the party's `+0x80` blocks), `Scena14_Run7` `0x5670E0` step
+  0x17 (`0xA4` bytes into ObjTrio per member after the leader),
+  `Scena06_Run08` `0x54C480` step 0 (the count's bytes from `0x904065` to
+  `0x939A10`: above 3 the flag bytes after the list), `Scena10_Run7`
+  `0x55AB00` step 1 (from ObjTrio `+0x89` to `0x903A10..`; above 8 past what
+  `Scena10_TallyMet` `0x559930` reads), `Party_HealJoined` `0x533E50` and
+  `Party_PlaceForBattle` `0x532ED0` (ObjTrio records past the three; SX),
+  and D150's two. `Party_Join` compares the count with 3 before adding
+  (`0x533F2A`); what else writes it was not surveyed.
+- **`Area_Descriptors[Game_AreaNumber]`** with no bound at 200:
+  `Scena00_Steer` `0x539950` and `Scena00_Run11` `0x5395D0` (a write through
+  the block's `+0xC`), `Area77_LeapStep` `0x40F090`, `Area104_Kind5CStart`
+  `0x4157A0` (runs only in area `0x68`), `Area121_Kind5CStart` `0x41C1B0`,
+  `Area175_OpenScriptMessage` `0x429540`: **ours aborts past 199** in each.
+- **A movement-script counter as an effect index:** `Scena01_Scene03`
+  `0x53A5E0` step 0x15, `Scena02_Scene09` `0x53F120` step 3 and
+  `Scena09_Run6` `0x554D40` steps 0x22 / 0x2C wait on `Effect_Objects[counter
+  3]`, the slot the step before stored, which a script counter op between
+  moves to any of 256 records; `Scena08_Scene4` `0x551DE0` reads the sprite
+  counter 3 names. Reads only.
+- **A pointer divided by `0xA4` into a byte:** `Scena08_Scene8` `0x5525B0`
+  step 0x1A (from the pointer `0x903804`, a signed division, any pointer;
+  step 0x1B then clears `Sprite_Objects[Scena08_Kept]` `0x6BC720`),
+  `Area59_Trigger24` `0x40B470`, `Area68_Trigger25` `0x40D300`,
+  `Area98_Trigger44` `0x413C20` (counter 3 from the focus object: one of the
+  four extra objects or the leader gives an index past the thirty), area
+  75's object bytes `0x93C350` / `0x93C351` from `ObjectIndex(Field_ActiveMember)`
+  (`Area75_MarkObjectA` / `B` `0x40D820` / `0x40D7F0`; then indexed for
+  writes by area 75's handlers), and `Area01_ActiveMemberToVar6` `0x4010D0`
+  / `Area08_SpawnEffect54` `0x4015B0`, which divide `Field_ActiveMember -
+  Sprite_Objects` by `0xA4` though `Field_ActiveMember` points into
+  `Sprite_ObjectsExtra` `0x802000` - not a whole number of records after
+  `Sprite_Objects` on the PC (`0x23180 / 0xA4` = 876.5), so the answer is
+  `0x6C` plus the slot, not an object index (AR0A: "not checked against the
+  PSX twins `0x801F2C88`, `0x801F443C`, where the objects may be
+  contiguous").
+- **Other unchecked indexes that write** (ours aborts where the write would
+  leave what it indexes): `Area16_Record4MarkCell` `0x402770` and
+  `Area33_Record04Start` `0x404820` (`Area<NN>_Cells` by `+0xB`, then
+  `AreaMap_Bytes[width * z + x]` with no bound; kept, the fuzz seeds the width
+  small), `Area44_PushParty` `0x4077F0` (`Field_DirectionSteps`,
+  `Sprite_ObjectsExtra`; aborts), `Area111_PlaceMemberInGrid` `0x4178F0`
+  (`0x675C00 + x / 2 + z * 4` for an object off the 28-byte grid; aborts),
+  `Area111_StepToExtra` `0x417C10` (the extra objects by a dword `+0x18`;
+  aborts outside `.data`), `Area111_ArmTailAtLeaderCell` `0x418130` (a leader
+  cell of nibble 0 writes extra record `0xFF`'s `+8` at `0x80C364`, a wall
+  record 14's - the doc gives `0x8028F0`, the stride gives `0x802900`; kept),
+  `Area145_PartyRecord16` `0x4211C0` (`MoveScript_PartyRecords` record i for
+  any byte: records 6 and 7 lie over `Cond_ByteFA..0x8034FF`; kept),
+  `Area104_BuildMinimap` `0x416020` (the upload queue at
+  `Gfx_UploadQueueCount` unchecked against twenty; aborts), `Area42_Init`
+  `0x406E90` (by `Area42_Rank` `0x675A00`, 0..2 by both writers),
+  `Scena13_Run6` `0x5633F0` step 0x19 (a byte through the pointer
+  `0x903804`), `AreaMap_SetHeight` `0x572620` (any s16 x, z; SX2).
+- **Engine reads by a whole byte:** `Field_StartEventBattle` `0x4410B0`
+  (`EventBattle_Records`, length unknown; SE), `Inventory_Remove` `0x591B60`
+  (a category above 4 takes the count list's pointers and the consumables'
+  names as lists, D35's neighbourhood; SX), `MapView_FillCells` `0x56FCA0`
+  (wraps only at the exact edge: a row above 0x37 or a column above 0x1B
+  counts on past the table; SX), `Sprite_FlashClut` `0x534DB0` (a colour of 4
+  or more reads its own frame - the return address's halves, then the
+  caller's; every caller passes 0..2 or a byte of `Field_FloorDamage`'s
+  table; **ours aborts**; SX), `EventOp_0x` `0x57A010` (the count word
+  compared signed, `cmp ax, 0x1E; jge`, so `0x8000..0xFFFF` indexes
+  `Sprite_Objects` backwards; `EventOp_1x` / `2x` share it; SE),
+  `Scena15_Battles` `0x6618C0` by `Scena15_BattleSetup` `0x568510`'s n and the
+  effect's `+0xB`, `Area121_PushObject`'s facing byte into
+  `Field_DirectionSteps` and `Area121_LeaderControl` `0x41B9F0`'s `Field_State
+  +0x148` into `Field_ActorStates` (as `event_ops.cpp`'s leader code),
+  `Area148_BeamStart` `0x422860`'s unmasked `+0xB` as a facing and
+  `Area148_BeamTurnMembers` `0x422A50`'s `+9 >> 3`, `Area189_StepBegin`
+  `0x42ADB0`'s whole facing byte into sixteen vectors (kept below 16 by its
+  writers), `Area48_ToggleFlagD` / `_BumpCount` `0x409040` / `0x409080` and
+  `Area108_FlagIfEffectState5` `0x416EC0` (`MoveScript_EffectState`, 24
+  bytes, by the leader's `+0x89`), `Area41_TintUp` / `_TintFall` `0x406560` /
+  `0x4064C0` (`MoveScript_TintRecords` by `Field_State +0x149`, as ops `C1` /
+  `C2`), `Area40_DrawGrid` `0x405ED0` (`DrawItems`, `0x24000` bytes, by
+  `MapView_ItemAt`'s answer up to `0xFFF`), area 91's CLUT rows by the
+  object's bytes (`Area91_State4RevealClut` `0x4123D0`, `_State3Place`
+  `0x412310`: past `0x1F` the rows either side, past the strip's end for the
+  last), `Area75_FlyHeights` by `+0xB`, `_MoveAnims` by `old * 4 + new`,
+  `_Rhythm` by `row * 15 + frames % 15`, `Area77_Leaps` by the script's
+  operand and the running area's `+0x10` script table by the script object's
+  `+3` (`Area77_LeapStep` `0x40F090`, as the movement-script engine indexes
+  them), `Area175_OpenScriptMessage` `0x429540` (the operand by `+3` / `+0xA`,
+  then `Area175_ScriptMessages` `0x6424BC` by it), `Area174_TurnRightToScript`
+  / `_TurnLeftToScript` / `_FaceAwayFromLeader` `0x428DE0` / `0x428E70` /
+  `0x428F00` (`Area174_PoseTables` by a script byte), `Area16_Record8Place`
+  `0x4025F0` and `Area33_Record08Start` `0x4046A0` (direction and animation
+  tables by `+8`), `Area130_TailGiveItem` `0x41D0E0` (an item by the byte
+  `0x903F6A` nothing in its band writes; past 5 gives nothing but still opens
+  message `0x49` with `Text_Records`' previous contents), `Area136_ZLimits`
+  by the sub-kind, `Area140_CellRects` by the entry's rectangle byte, the
+  cell steps `0x66971C` by the direction times 2, effect kind `0xA6`'s `+7`
+  and `+6` into `Area198_EffectA6Records` `0x649E00` (3 of 8),
+  `Area135_LeaveByExit` `0x41DC60`'s exit, `_QueueStepX` `0x41E1E0`'s count,
+  `_SpawnCopy` `0x41E440`'s record. Kept: every one stays in the image.
+
+**Status:** latent.
+
+## D137 — The chapter and area code divides by a byte that can be 0 (latent; ours aborts at 0)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC6, SX, AR2D, AR3D and AR4E. D91's class outside the
+spells; ours aborts with a message at each, as there.
+
+**Established:**
+
+- `Scena06_LeapStart` `0x54E7D0` indexes `Field_MoveSpeeds` (6 bytes) by
+  the object's `+4`: 6 or 7 read a 0 (the leap ends at once, al 0); 8 reads
+  `0x40`, so `16 / speed` frames a step is 0 and the division by frames x
+  steps faults. Area 77's handler `0x40F090` passes the movement-script
+  object, whose `+4` the leap reads as the speed index. `Scena06_LeapAir`
+  `0x54E8E0` divides 16 by the speed again at every new step with no test:
+  a speed of 0 there (the object's `+4` changed to 0, 6 or 7 during the
+  leap) faults ([`scena_sc6.md`](scena_sc6.md) §6).
+- `Camera_EaseAngleFB` `0x57C6B0` divides by the speed x 4 (or x 8) as a
+  byte - 0 for a `Field_MoveSpeeds` entry of `0x40` (or `0x20` / `0x40` at
+  x 8) or a second argument of 0 - and faults on `-2^31 / -1`; SC0's two
+  calls pass 10 and 15. A negative multiplier leaves a negative frame count
+  that counts down through 2^32 frames: reproduced ([`scena_sx.md`](scena_sx.md)
+  §6).
+- `Area95_LeapArc` `0x413750` divides by the running object's `+9` (a timed
+  move's frames; 0 faults). `Area99_LeapStart` `0x413E10` divides 16 by
+  `Field_MoveSpeeds[3]` and then by four times the quotient (a speed of 0,
+  or above 16, faults); `Field_MoveSpeeds[3]` is non-zero in the image and
+  no writer of it was found, so area 99's cannot fault in practice
+  ([`area_w2d.md`](area_w2d.md) §6).
+- `Area135_FallTo` `0x41EBE0` divides by its frame count `+9` = `(|d / 128|
+  << 4)` as a byte (`idiv ebx` at `0x41EC18`): 0 whenever the height is
+  within 127 of the object's `+0x3E`, or `|d / 128|` is a multiple of 16.
+  Handler 10 `Area135_Fall780` `0x41E040` falls to `0x780` and handler 9
+  `Area135_FallToFloor` `0x41DF60` to a ground or an object top: **an object
+  already at, or within 127 of, that height faults the original with a
+  divide error** ([`area_w3d.md`](area_w3d.md) §6) - the one case here the
+  geometry alone reaches.
+- `Area189_StepBegin` `0x42ADB0` sets `+9` to 8, calls the height helper
+  `0x511C10` (which writes only its own arguments) and divides by `+9` read
+  again: 8 in the game, 0 only from a stand-in ([`area_w4e.md`](area_w4e.md)
+  §6).
+
+**Status:** latent. **The owner, 2026-09-26, for D91: no DIVERGENCE entry**
+where the original faults; the same reading was applied here.
+
+## D138 — Eight area inits are a bare `ret` on the PC where the PSX descriptor has one (PC only, latent)
+
+**Seen:** not seen in play; found by reading the descriptor tables while
+taking the areas over, 2026-09-27..28, groups AR1D, AR1F, AR2C, AR2F, AR3F,
+AR3G and AR4A ([`takeover-queue-round10.md`](takeover-queue-round10.md) §16,
+§19). For the owner and the divergence map.
+
+**Established:** the descriptors' `+0x40` (the init) of areas 56, 75, 90,
+108, 145, 148, 153 and 154 all point at `0x437CC0`, the linker's shared
+`ret` (the entry the chapters' object tables use for "nothing"), where the
+sibling's `names/area_records.toml` gives each PSX descriptor an init of its
+own: area 56 `0x801F3464` ([`area_w1d.md`](area_w1d.md) §1), area 75
+`0x801F4FB4` ([`area_w1f.md`](area_w1f.md) §1; the PSX also lists 8 handlers
+where the PC has 13), area 90 `0x801F2C5C` ([`area_w2c.md`](area_w2c.md) §1;
+area 90's `+0x3C` is null too), area 108 `0x801F56E0` ([`area_w2f.md`](area_w2f.md)
+§1), area 145 `0x801F5324` ([`area_w3f.md`](area_w3f.md) §1, §6), area 148
+`0x801F4274` ([`area_w3g.md`](area_w3g.md) §1, §6), areas 153 and 154 both
+`0x801F2C5C` ([`area_w4a.md`](area_w4a.md) §1). What each PSX init does was
+not read; "either the port moved its work elsewhere or dropped it" (AR3F).
+The PSX addresses repeat across areas (`0x801F2C5C` is area 90's and areas
+153 / 154's) because each overlay loads at the same base. Nothing in the
+bands stands in for them; ours has nothing to inject at a `ret`.
+
+**Status:** latent, PC only; unread on the PSX side. A DIVERGENCE entry
+would restore an init the port dropped, once one is read and found to do
+something a player sees.
+
+## D139 — Area 198's handler 9 always plays sound effect 0 (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group AR4F ([`area_w4f.md`](area_w4f.md) §1, §6).
+
+**Established:** `Area198_SpawnDrops` `0x42D280` (area 198's handler 9, PSX
+`0x801F35FC`), every eighth frame with counter 0 above 2 and `+0xB`'s bits
+0..2 clear, calls `Sound_PlayEffect` with an argument computed by `and eax,
+8; add eax, 0x203; neg eax; sbb eax, eax; inc eax`: the value before `neg`
+is never 0, so the result is always 0. What the PSX twin passes and what
+`Sound_PlayEffect(0)` does on the PC are not read; ours plays 0 too. For
+the owner's ear in area 198.
+
+**Status:** latent.
+
+## D140 — The camera turn steps take the step as an s8, and the turn test does not wrap (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group SX2 ([`scena_sx2.md`](scena_sx2.md) §6).
+
+**Established:** `Camera_TurnStep` `0x57C5A0` and `Camera_TurnStepFB`
+`0x57C650` read their step as a signed byte, though the degree wrappers
+`Camera_TurnToDegrees` `0x57C550` and `Camera_TurnFBToDegrees` `0x57C600`
+pass `x * 4096 / 360` as a dword: a step of 12 degrees or more (136 and up)
+turns the other way, and its end test runs the other way too. Every caller
+passes 2 or -2 degrees (22 steps). The end test compares `angle & 0xFFF`
+with the target as numbers, without wrapping, so a step whose sign points
+the long way round (a positive step toward a smaller target) ends the turn
+at once and snaps the angle to the target. Reproduced.
+
+**Status:** latent; by reading, no caller reaches either.
+
+## D141 — `Sound_SetCueVolume` of a cue with bank bits 0 reads before `Sound_Banks` (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group SX2 ([`scena_sx2.md`](scena_sx2.md) §6).
+
+**Established:** `Sound_SetCueVolume` `0x587890` indexes `Sound_Banks` by
+the cue's bank bits with no test: bank 0 reads `0x384` bytes before
+`Sound_Banks` for the cue and its voices and hands whatever non-zero dword
+it finds there to `SetVolume` as a buffer; banks 7..15 read past the six
+records. Its one caller passes `0x207` / `0x208` (bank 2). Reproduced.
+
+**Status:** latent.
+
+## D142 — `Area53_Trigger42` answers whatever `ScriptFlags_Set40` left in eax (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group AR1D ([`area_w1d.md`](area_w1d.md) §1, §2, §6).
+
+**Established:** object trigger 42, `Area53_Trigger42` `0x40AB40`, calls
+`ScriptFlags_Set40` and returns without setting `al`; its caller `0x56E020`
+returns that eax to `Field_ObjectTrigger` `0x56D6B0`, which returns it too
+(neither reads it; their callers were not read). Capcom's `ScriptFlags_Set40`
+leaves `Field_StatusBits | 0x40` in `al`; ours (group C's, declared `void`)
+leaves whatever its compiled code does. Ours calls it through a pointer
+typed to return `unsigned` and returns that - exactly what the original
+returns with either `ScriptFlags_Set40` in place - and the fuzz compares it
+(`ret_mask 0xFF`). Its siblings `Area55_Trigger23` `0x40ABF0` and
+`Area61_Trigger21` `0x40B5C0` answer al 0.
+
+**Status:** latent; nothing read uses the answer.
+
+## D143 — The world-map copies inherit area 33's searches and reads with no bound (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups AR0B, AR1B, AR1E, AR2B, AR2E, AR3A, AR3B, AR3G and
+AR4A (their docs' defects sections). D74's shape in the other ten copies of
+one body (areas 16, 45, 65, 87, 88, 104, 115, 121, 151, 152 over their own
+tables; [`takeover-queue-round10.md`](takeover-queue-round10.md) §19).
+
+**Established:** each copy's `Area<NN>_PlaceMessage` (`0x401B80`, `0x407B40`,
+`0x40B8C0`, `0x40FC60`, `0x410D90`, `0x418BE0`, `0x424A30`, ...) searches
+its cell table and its plate animation table with no end test: a leader
+cell in no record reads on through `.data` (area 87's `0x611CC0` ends in a
+zero record that stops the search only for cell (0, 0); area 88's `0x61271C`
+and area 121's `0x6236A0` and 151's `0x636A84` run straight into the
+descriptor's data), and a place in no plate entry the same (area 104's
+table is one entry and a zero, 121's four, 151's seven, 152's three). A
+found cell whose id is in neither name set reads "set 3" from the plate
+state table's code pointers as item ids (D134). `Area<NN>_Record4MarkCell`
+indexes the cells by `+0xB` and writes `AreaMap_Bytes[width * z + x]` with
+no bound, and `_Record8Place` reads its direction and animation tables by
+`+8` (D136). The dispatches are D133's (area 16's copy reads on, the rest
+abort). The shared bodies `Area152_PlateStart` `0x424BA0` (area 151's plate
+state 0) and `Area152_Record8Spawn` `0x4253C0` (record-8 state 0 of all ten)
+are one function each in ours. Kept: the fuzz keeps inside the tables, and
+the world-map route plays areas 33, 45, 88, 104 and 115 without meeting one.
+
+**Status:** latent. Sharing the five copies of the body in ours once is
+[`round-10-cleanup.md`](round-10-cleanup.md) item 1's last bullet.
+
+## D144 — Walks over a map header or a patch chain that never end on a bad entry (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups ARH ([`area_011.md`](area_011.md) §6), AR1A
+([`area_w1a.md`](area_w1a.md) §6), AR1C ([`area_w1c.md`](area_w1c.md) §6)
+and AR2C ([`area_w2c.md`](area_w2c.md) §6). D74's class; `MoveCmd_TestFB`'s
+hazard ([`field-misc.md`](field-misc.md)).
+
+**Established:** `Area11_DimBackdrop` `0x4017C0` and `Area51_TintBackdrop`
+`0x409DA0` walk the area's map header as `AreaMap_HeaderPass` does - a zero
+dword ends it, byte `+2` is the step in dwords - and never end on an entry
+of another kind whose step byte is 0. `Area94_InitPatches` `0x413550` walks
+a patch chain with no bound: a chain with no zero dword runs on through
+memory (AR2C cites the same function for a different failure than ARH and
+AR1C describe: the step-0 case and the no-terminator case are two hazards
+of one walk). `Area40_TileLit` `0x405BF0` has `MoveCmd_TestFB`'s shape: a
+record step of 0, or one that steps past the run's last dword, walks on for
+ever (reads only: a hang, not a fault); it also assumes `MapView_Row` /
+`MapView_Column` keep the ring cell inside `MapView_Cells` after one wrap.
+Ours walks on as the original; the fuzzes build steps of 1..3 and chains
+that end.
+
+**Status:** latent: the shipped headers and chains are well-formed by
+reading.
+
+## D145 — The PC keeps an area's `.data` across visits where the PSX reloads the overlay (PC only, latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups AR1C ([`area_w1c.md`](area_w1c.md) §6) and AR2F
+([`area_w2f.md`](area_w2f.md) §6).
+
+**Established:** two area blocks write their own `.data`: `Area52_TailBlock`
+`0x40A670` sets byte `+1` of the descriptor's first extra-object entry
+(`0x5FE049`) to 0 when a timed scene begins and `0xFF` when it ends;
+`Area108_TailPlace` `0x417210` moves `Area108_Model`'s flags byte and its 33
+records' corners by the scene. On the PSX the overlay is reloaded with the
+area, so each visit starts from the disc's bytes; on the PC every overlay is
+linked into one image and the value stays until the next write, so a later
+entry to area 52 sees the last scene's byte and a second visit to area 108
+starts from the last scene's positions. Not measured in play; the fuzzes
+seed both.
+
+**Status:** latent, PC only. A DIVERGENCE entry would reset the two on
+entry, if a second visit is found to differ.
+
+## D146 — Choices that leave the message word as they found it (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups AR0C ([`area_w0c.md`](area_w0c.md) §6), AR2A
+([`area_w2a.md`](area_w2a.md) §6) and AR4D ([`area_w4d.md`](area_w4d.md) §6).
+
+**Established:** `Area37_ChoiceTail2E` `0x4051F0` (choice 21) leaves the
+message word for an answer of 3 or more where every other choice there
+writes it; `Area79_ChoiceCounter3` `0x40F2E0` leaves it on every path where
+the other choices store `0xFFFF` or a word; choice 27 of areas 175..185
+(`Area175_ChoiceMessageByAnswer` .. `Area185_ChoiceMessageByAnswer`,
+`0x4292C0` .. `0x429D10`, eleven copies) leaves it for an answer outside
+0..4. `MsgBox_ChoiceCommit` reads the word after the choice
+([`item-use.md`](item-use.md) §5), so it sees the message before the choice.
+Faithful; what the commit then does with a stale word is not read.
+
+**Status:** latent.
+
+## D147 — Uninitialised bytes passed on in the chapter banks and area blocks (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups CALLS, SC15, AR1F, AR2F, AR3A, AR3E and AR4A (their
+docs' defects sections). D101's class.
+
+**Established:** `ScenaCall_SaveAndLeave` `0x51A300` and
+`Scena15_LeaveAllParty7` `0x51AB50` gather the field members' ids in a
+4-byte local that is the caller's pushed `ecx` and read three bytes whatever
+the count, so with fewer than three members the rest are `ecx`'s bytes -
+through the call tables the entry's index (chapter 9's B[6], chapter 10's
+B[3], chapter 15's A[0]), so `Party_Remove` `0x534030` is handed 6, 3 or 0;
+ours reproduces it through a naked entry. `Area75_DrawCounters` `0x40E5F0`
+pushes the colour as a dword whose upper bytes are its own stack
+(`Text_DrawString` reads the low byte). `Area108_PlaceScene` `0x4169A0`'s
+drop-in argument has the stack in its upper bytes (`Party_DropIn` reads the
+byte). `Area116_EffectB8Ring` `0x419E40` hands `Area146_DrawGlowCylinder`
+`0x4220D0` a 16-byte block whose fourth dword it never writes; the callee
+reads three, and ours passes 0, as `Area100_EffectB7Ring` `0x4144B0` does.
+`Area152_Record8Spawn` `0x4253C0` reads its count as a stack dword with
+three unwritten bytes (masked to the nibble). `Area140_CellHook` `0x41F9B0`
+reuses its argument slots for the member count and a predicted x that no
+caller reads; `Area140_StepHook` `0x41F960` reads z's high word as a dword
+at `[esp + 0xA]` that runs into the caller's frame; `Area140_FollowAndAct`
+`0x41F650` passes x and z in registers whose high halves are the caller's.
+The staff roll's draws (`Scena17_DrawLine` `0x56D1A0`) carry s16 x and y in
+registers whose upper bits are whatever they held; only the low 16 bits are
+read. Ours computes the same low bits and the fuzzes compare only them.
+
+**Status:** latent, harmless by reading.
+
+## D148 — `Scena08_EnterArea` sets the wrong flag in area 0x15 (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group SC7 ([`scena_sc7.md`](scena_sc7.md) §7).
+
+**Established:** where run 10's scene is armed in area 0x15 (flags 0xF and
+0x13 set, 0x14 not), `Scena08_EnterArea` `0x5510A0` pushes `0x14`, then `dl`
+= the low byte of the row pointer, then the row, and calls `Flags_Set`, which
+takes two arguments: it sets flag (row pointer & 0xFF) of the row - with
+chapter 8's row `0x903FD0` flag 0xD0, bit 0 of `0x903FEA` (chapter 11's row,
+its flag 0x10) - and never 0x14. `Scena08_Scene10` `0x552EF0` sets flag 0x14
+itself at its end (step 0xC), so a finished scene does not repeat; left
+unfinished, it arms again on the next entry. Kept (control E8b shows the fuzz
+tells it apart); the PSX twin `0x801FA3E4` (a hypothesis) is not read.
+
+**Status:** latent.
+
+## D149 — `Scena10_Party75` sends every second member away (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group CALLS ([`scena_calls.md`](scena_calls.md) §6).
+
+**Established:** `Scena10_Party75` `0x51A3A0` sends member `i` away while
+`i < Field_MemberCount`, rereading the count after each call; `Party_Remove`
+`0x534030` lowers the count and moves the later field members down one, so
+with three members the first and third leave and the second stays, in the
+lists and on the field, when the new party joins. Kept.
+
+**Status:** latent; whether chapter 10 ever reaches it with three members is
+not measured (no route plays chapter 10).
+
+## D150 — A member count above 4 smashes the return address of two call-table entries (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group CALLS ([`scena_calls.md`](scena_calls.md) §6, §7).
+
+**Established:** `ScenaCall_SaveAndLeave` `0x51A300` and
+`Scena15_LeaveAllParty7` `0x51AB50` copy `Field_MemberCount` member ids into
+a 4-byte local (D147): a fifth byte lands on the return address and more on
+the caller's frame, and the original returns to what it wrote. Ours does
+everything the original does before that return and aborts with a message
+(the owner's rule for an unchecked index; the fuzz's seed stops at 4, since
+the clone would jump through the smashed return). `Party_Join` compares the
+count with 3 before it adds a member (`0x533F2A`); what else writes the
+count was not surveyed.
+
+**Status:** latent.
+
+## D151 — `Char_LoseHp` tests the wrong record for low HP (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group SX ([`scena_sx.md`](scena_sx.md) §6).
+
+**Established:** `Char_LoseHp` `0x537480` hurts the member its argument
+names but sets the `0x2000` state bit from the HP of the record `Field_State
++0x148` names, and marks `Field_State +0x90`. When `Field_Bit80Tick` hurts a
+member other than the one `Field_State` is (its bit-0x80 walk over the party
+list), the leader's HP decides. Reproduced; whether it shows is the owner's
+to see (poison or floor damage on a party member who is not the leader).
+
+**Status:** latent.
+
+## D152 — `Party_Remove` of an id in no list writes slot `count` (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27, group SX ([`scena_sx.md`](scena_sx.md) §6).
+
+**Established:** `Party_Remove` `0x534030`, handed an id that is in neither
+list, writes `0xFF` at the list's slot `count` (the second list's slot 3 is
+`0x904068`; the first list's slot 3 is the second list's slot 0), and at a
+count of 0 clears `+0` of the `0x14C` bytes before `ObjTrio` (`0x802BF4`)
+and passes `Member_ClearState(0xFF)`. D147 and D149 are callers that can
+hand it such an id. Reproduced.
+
+**Status:** latent.
+
+## D153 — Hooks and choices that arm a scene without `ScriptFlags_Set40`, or answer 0 after arming (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC2, SC9b, AR2F, AR4B and AR4E (their docs' defects
+sections).
+
+**Established:** each is the odd path of a hook whose other paths set the
+script flag and answer 1:
+
+- `Scena02_StepHook` `0x5420C0`: area 0x1B's run 0xA from the rectangle at z
+  `0x1C8000` (member count 2, flag 0xF clear) and run 0xF at x `0x208000`
+  (flag 0x18 clear) set the run and answer 1 without `ScriptFlags_Set40`,
+  where every other start sets it ("whether the scenes then run with the
+  player's control is not measured").
+- `Scena09_StepHook` `0x557270`: area 0x29's rectangle is open on the left
+  (its x test is `je` then `jg` where every other rectangle tests a lower
+  bound with `jl`), so any x up to `0x408000` with z in `0x270000..0x288000`
+  starts run 0xF at step 0x64.
+- `Scena10_ArriveHook` `0x55BE70`: the area-0x78 hit starts run 0xD at step
+  0xF and then falls to the area-0x80 test instead of returning 1, so the
+  caller sees no hook while the run is started.
+- `Area111_ArriveHook` `0x417ED0` answers 0 on every path, even when it arms
+  the tail.
+- `Area170_StepHook` `0x427270` at x `0x218000` writes tail kind 37 and state
+  60 without `ScriptFlags_Set40` and answers 0; state 60 itself calls
+  `ScriptFlags_Clear40`. `Area172_ChoiceFlag12` `0x428090` calls
+  `ScriptFlags_Set40` on answer 0 but arms tail kind 35 only when Cond row
+  14's flag `0x12` is set, and otherwise writes `MoveScript_Var7` and leaves
+  the flag to whoever clears it next.
+- `Area188_ChoiceByChapter` `0x42A380` arms tail kind 10 without
+  `ScriptFlags_Set40` past chapter 12, where every other arming there sets
+  it; `Area143_Trigger50` `0x420A60` arms tail kind 4 without its state when
+  `Cond_ByteFE` is already set, so the state byte is the last tail's. What
+  the engine's tail kinds 4 and 10 do with that is not read.
+
+Reproduced in each; what `Area_ArriveHook`'s caller does with a 0 is not
+read.
+
+**Status:** latent.
+
+## D154 — Dead branches in the chapter banks and area blocks (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC1, SC0, AR0B, AR1F, AR2C, AR3B and AR3C. D119's
+class.
+
+**Established:** chapter 1's object handlers 6..9 (`Scena01_Object06`..`09`
+`0x53D550`, `0x53D5D0`, `0x53D650`, `0x53D6E0`) test the facing with `setne
+dl; xor edx, 4`, which is 4 or 5 and never 0, so the `je` past the turn is
+never taken: the sprite always turns to the leader's facing ^ 4. The "none
+chosen" exit of the random placers `Area20_PickFieldObject` `0x402DB0`
+(`Area20_Weights` `0x5E6C4C`, not read), `Area72_PlaceRandomObject`
+`0x40D4B0`, `Area73_PlaceRandomObject` `0x40D580`, and areas 124 / 125's
+inits (`Area124_Weights` `0x6265BC`, `Area125_Weights` `0x6266F8`) is
+unreachable with the shipped weights, which sum to 64 against a roll of
+`Rand & 0x3F`. `Area91_EffectRings` `0x412590`'s clamp to `0xFF` cannot fire
+(the colour is at most `0x20 + 0xC8`). `Area121_Kind5CStart` `0x41C1B0`
+tests area `0x68` for the key item, but `0x462B60` never sends area 104 to
+this copy. `Scena00_Run5` `0x538B10` uses `Rand % 3` as a shift count, where
+a negative `Rand` (the CRT's never is) would shift the byte out.
+`Scena00_Run11` `0x5395D0` step 5 sets the timer to 0 and then decrements
+it (0xFFFF) when the counter `0x903849` passes 0x1E, so the step changes to
+6 only by its other test. Kept.
+
+**Status:** latent, harmless.
+
+## D155 — Steps and tail states with no exit of their own (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC5, SC11, SC13, AR3F, AR4B, AR4D and AR4E.
+
+**Established:**
+
+- Two chapter-11 steps run on into the next step's test, a missing `break`
+  by the shape: `Scena11_Scene1` `0x55C370` step 11 with `Field_Kind2Hold`
+  set runs step 12's counter test, `Scena11_Scene8` `0x55D700` step 7 with its
+  effect live runs step 8's (both only test and set the next step).
+  `Scena11_Scene8` step 14 goes on with a full effect pool; `Scena11_Scene4`
+  `0x55C980` step 0 takes a new effect every frame its roll is one the switch
+  does not act on (every shipped roll is one it acts on).
+- `Scena13_Run7` `0x563A20` step 0x16 waits on a timer that never counted
+  down in its band.
+- `Scena05_Run16` `0x547920` step 0x44 sets flag 0x25 every frame and keeps
+  the step; no code in the band stores step 0x44 (it is an entry the
+  movement script's step and run ops write, "not a defect on this reading,
+  only unexplained").
+- `Area145_Tail20` `0x4216D0` state 0xA, with no effect slot free, runs
+  story flag `0x2C`, sound `0x200` and `Kind2_Place(0)` again every frame
+  until one frees.
+- `Area170_Tail37` `0x426C90`: state 51 has no case and state 53 no exit of
+  its own (it swaps the held input's top nibble through `Area170_InputSwap`
+  `0x63D63C` every frame `Field_Request` is 0); both wait on area 170's
+  choice 3 `Area170_ChoiceState52Or55` `0x426BF0`, "reads as intended".
+- `Area187_TailMessage2` `0x42A290`'s state 2 is set by nothing in its band;
+  `Area186_TailShift` `0x42A000`'s states 2..9 do nothing for ever
+  (`Area186_Start` `0x42A1C0` arms only 0 and 0xA); `Area191_Tail53`
+  `0x42B7F0`'s state 1 waits on nothing but a re-arming (choice 5 at 0x1E,
+  the step hook at 0).
+
+Reproduced in each; what writes the states from outside (a message script's
+op, the movement script) is not read.
+
+**Status:** latent.
+
+## D156 — `Area189_DrainHp` revives a record at 0 HP (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group AR4E ([`area_w4e.md`](area_w4e.md) §6).
+
+**Established:** `Area189_DrainHp` `0x42B510`'s floor (an HP at most d
+becomes 1) turns an HP of 0 into 1 for each of the seven records it walks.
+Faithful; what the game does with a fallen member drained back to 1 HP is
+not measured.
+
+**Status:** latent; the one entry here a player could notice in area 189.
+
+## D157 — The item `0x5B` top-up wraps past sixteen (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups AR3G ([`area_w3g.md`](area_w3g.md) §6) and AR4F
+([`area_w4f.md`](area_w4f.md) §1).
+
+**Established:** `Area150_ChoiceFill5B` `0x4236D0` and its twin
+`Area193_ChoiceFill5B` `0x42C3E0` top the party up to sixteen of item `0x5B`
+by `Inventory_Add(0, 0x5B, 0x10 - Inventory_Count(0, 0x5B, 0))` with the
+difference taken as a byte: holding more than sixteen makes the count wrap
+to 240..255 and hands that to `Inventory_Add`. AR4F's doc lists the body's
+shape but not the wrap. Reproduced.
+
+**Status:** latent; whether more than sixteen can be held is not read.
+
+## D158 — Cell hooks compare a nibble with the whole facing byte (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group AR4A ([`area_w4a.md`](area_w4a.md) §7; the same shape in
+AR3D's and AR3G's function rows).
+
+**Established:** `Area167_CellHook` `0x4264A0` compares a nibble with the
+leader's whole facing byte, so a facing with any of bits 4..7 set never
+matches; `Area148_SwitchHook` `0x4227E0` ([`area_w3g.md`](area_w3g.md) §2)
+and `Area135_CellHook` `0x41E580` ([`area_w3d.md`](area_w3d.md) §1) do the
+same, unlisted by their docs. Reproduced (the fuzz plants such facings);
+whether the facing byte ever carries high bits on those cells is not read.
+
+**Status:** latent.
+
+## D159 — `Area136_SpawnLeaderKind1` reads party slot 1 for the leader (latent, intent open)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, group AR3E ([`area_w3e.md`](area_w3e.md) §6).
+
+**Established:** `Area136_SpawnLeaderKind1` `0x41F2D0` reads party slot 1's
+character for the leader's record, where its siblings read the slot of the
+record they use; the leader's own slot is `0x904062`. Kept as read; whether
+Capcom meant slot 0 is not known (the PSX twin `0x801F30C8` was not
+compared).
+
+**Status:** latent, intent open.
+
+## D160 — Draw slips in the area blocks (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-28, groups AR2E ([`area_w2e.md`](area_w2e.md) §7) and AR3G
+([`area_w3g.md`](area_w3g.md) §6).
+
+**Established:** `Area148_DrawBeamBand` `0x422D90` builds its second quad at
+the first's pointer + `0x44`, not at `Gfx_PacketNext`, assuming
+`MapView_LinkPrimAt` moved the pointer by exactly the size (ours writes where
+the original writes; the fuzz's `Gfx_CommitPrim` stand-in moves the cursor by
+another amount one call in five to tell the two apart). `Area104_BuildMinimap`
+`0x416020`'s image is 69 rows where its header says `0x44` (68).
+
+**Status:** latent.
+
+## D161 — Small slips in the chapter banks and area blocks, each read once (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-27..28, groups SC6, SX2, AR1A, AR1C, AR2A, AR2F, AR3A and AR4B
+(their docs' defects sections). Kept in each; none is known to show.
+
+**Established:**
+
+- `Scena06_Run16` `0x54DED0` gives record 7's equipment byte + 1: a byte of
+  `0xFF` gives item 0, which `Inventory_Add` refuses, and the run ends as if
+  the inventory were full.
+- `KeyItem_Remove(0)` `0x591920` clears the first empty slot and answers 1.
+- `Area38_SpawnEffectMember1` / `2` `0x405410` / `0x4054D0` leave
+  `Sprite_Current` on party record 1 / 2, so the movement-script op that ran
+  the handler then reads the party record's byte `+8` (op `DE`) where it
+  would read its own object's (the spawns of areas 49, 57, 68 and 77 do the
+  same, unlisted as a defect by their docs).
+- `Area49_EffectFrame` `0x409480` and `Area117_MembersFrame` /
+  `Area118_MembersFrame` `0x41A0A0` / `0x41A410` leave `Field_State` at the
+  last member's record (they put back `Sprite_Current` only).
+- `Area52_ShiftBlockXBack` `0x40AA20` ignores `Area52_BlockCell` `0x40A2F0`'s
+  answer: with counter 3 at 0 the helper backs the script up by 2 and
+  answers 0, and the handler takes the column and moves the object anyway
+  (its three sibling callers return).
+- `Area79_StateSlide` `0x40F430` writes `Field_State`'s word `+0x12E`,
+  whatever object is sliding.
+- `Area111_SlideMark` `0x4176B0`'s two map calls mark the start cell `0x10`
+  and the stop cell 0, never the cell the object ends in.
+- `Area170_Trigger56` `0x4274C0` pushes a fourth word (0) to
+  `Inventory_Add`, which takes three (harmless under cdecl).
+
+**Status:** latent, harmless by reading.

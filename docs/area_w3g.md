@@ -240,6 +240,13 @@ reproduced as the original makes it and described here.
 7. **Area 148's init is a bare `ret`** where the PSX has one (section 1): for
    the owner's divergence map, not a defect of the PC code as it stands.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D135 (`Effect_FindFree`'s none
+as a slot), D136 (reads and writes by an unchecked byte or count), D138 (the
+bare-`ret` inits), D143 (the world-map copies' searches), D157 (the top-up
+wrap), D158 (nibble against facing), D160 (draw slips) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. The fuzz
 
 `BOF3X_SHADOW=area_w3g` (`src/game/area_w3g_fuzz.cpp`): five `Run` calls

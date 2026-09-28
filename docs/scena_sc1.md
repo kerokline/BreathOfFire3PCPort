@@ -374,6 +374,12 @@ again, so re-run them after any.
   current sprite always turns to the leader's facing ^ 4, whatever it faced.
 - **The three dispatch tables are unchecked** (section 3); ours aborts.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D154 (dead branches) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. Calls across groups (raw addresses, for the round's rebinding)
 
 | Address | What | Owner |

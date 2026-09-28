@@ -786,6 +786,12 @@ original would jump into data.
   it writes `MoveScript_Var7` and leaves the script flag to whoever clears
   it next. Whether the movement script does is not read here.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D153 (hooks without the
+script flag), D155 (steps with no exit), D161 (small slips) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 The tool's 56 starts are 56 functions: no jump-table or switch case among

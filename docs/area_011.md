@@ -142,3 +142,7 @@ nothing refused. Frontier: `Effect_Spawn` (Capcom's), `Flags_Test` (ours).
   wave; `Flags_Test` is ours by name.
 - `analysis/calltrace/entries_logic.txt`: `00401750 1C`, `00401770 46`,
   `004017C0 79` appended.
+
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D136 (reads and writes by an unchecked byte or count),
+D144 (the unbounded walks) in [`known-defects.md`](known-defects.md).

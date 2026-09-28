@@ -401,6 +401,11 @@ that `MoveScript_EffectState` byte (one stir in eight, one byte in 24).
   every member through `ObjTrio + 0x14C i` for `i` up to the count, as
   wave one's groups found elsewhere.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D136 (reads and writes by an unchecked byte or count),
+D147 (uninitialised bytes), D149 (every second member), D150 (the smashed
+return) in [`known-defects.md`](known-defects.md).
+
 ## 7. What nothing reached
 
 - A member count above 4 in `0x51A300` / `0x51AB50` (the abort): the seed

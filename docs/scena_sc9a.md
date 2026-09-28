@@ -381,3 +381,8 @@ Latent, described and kept (never fixed):
 - **Run 11's step 7** indexes `Effect_Objects` by `Scena09_Slot11` without
   testing it for `0xFF`: only a failed `Effect_FindFree` in step 6 would leave
   it so, and step 6 does not advance on one.
+
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count) in [`known-defects.md`](known-defects.md).

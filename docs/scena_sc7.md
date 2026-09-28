@@ -367,6 +367,12 @@ No divergence and no ledger entry: every function is a faithful
 replacement. `DIVERGENCE.md` and `cheats.cpp` name no address of the band
 (grep 2026-09-27).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D148 (the wrong flag) in
+[`known-defects.md`](known-defects.md).
+
 ## 8. What reaches it
 
 Nothing recorded: no route plays chapters 7 or 8 (the owner's recipe saves
