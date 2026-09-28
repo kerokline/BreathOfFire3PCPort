@@ -63511,3 +63511,628 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR2F): area 113 descriptor 0x620010 +0x34: Area113_ChoiceAsk, 0x420850, 0x420870 (another block), Area61_ChoiceMark4 twice. docs/area_w2f.md."
+
+# ---------------------------------------------------------------------------
+# Round ten group AR4E: world 4, areas 188..191, 0x42A320..0x42BD60
+# (docs/area_w4e.md). Read with capstone 2026-09-28; extents the tool's
+# (tools/area_rows.py area_funcs.tsv), agreeing with the reading.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x42A320
+name = "Area188_ChoiceTail43A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A320..0x42A34D (0x2D bytes), cdecl: area 188 +0x34[0] (pairs_propagated table-anchored 0x801F4618): message 0xFFFF; answer 0: ScriptFlags_Set40, tail kind 43 (Area188_Tail43) at state 0, sub-kind 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A350
+name = "Area188_ChoiceTail43B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A350..0x42A37D (0x2D bytes), cdecl: area 188 +0x34[1] (table-anchored 0x801F4670): the same with sub-kind 1. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A380
+name = "Area188_ChoiceByChapter"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A380..0x42A3DA (0x5A bytes), cdecl: area 188 +0x34[2] (table-anchored 0x801F46CC): message 0xFFFF; Cond_ByteFA (s8) above 12: answer 0 arms tail kind 10 (engine 0x56DB80) at state 0, sub-kind 0xFF, no ScriptFlags_Set40; else answer (s8) 0: ScriptFlags_Set40, counter 0 = 0xA; 1: ScriptFlags_Set40, counter 0 = 5. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A3E0
+name = "Area188_ChoiceFocusPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A3E0..0x42A449 (0x69 bytes), cdecl: area 188 +0x34[3] (table-anchored 0x801F477C): the focus object 0x903804 +0x18 / +0x1C = Area188_FocusPairs[answer (s8, unchecked)] bytes as dwords, message 0xFFFF; Cond_ByteFA at most 12 and answer 1: byte 0x929F0F 0, ScriptFlags_Set40, step 0x14, MoveScript_Var7 8. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A450
+name = "Area188_WalkWhileZUnder"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A450..0x42A4A3 (0x53 bytes), cdecl: area 188 +0x3C[0] = +0x34[4] (PSX 0x801F4840, names/area_records.toml): the first dword of the direction record 0x6697B4 + (+8 & 7) * 8 plus the running object z, unsigned at most Area188_ZLimits[tail sub-kind] << 16: the script object +7 = 1, MoveCmd_Move(script object, 5), the script back 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A4B0
+name = "Area188_ShiftCameraDown2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A4B0..0x42A4C0 (0x10 bytes), cdecl: area 188 +0x3C[2] = +0x34[6] (PSX 0x801F4908); also area 119 +0x34[3] = +0x3C[2], area 131 +0x3C[6], area 136 +0x34[13] = +0x3C[9] (a shared body, the tool shared row): Camera_ShiftY - 2, MapView_Redraw 2 (Area136_ShiftCameraUp2 mirrored). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A4C0
+name = "Area188_PatchCellsA0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A4C0..0x42A4F0 (0x30 bytes), cdecl: area 188 +0x3C[4] = +0x34[8] (PSX 0x801F494C): AreaMap_SetByte (0xF, 0x3C) and (0x10, 0x3C) to 0, (0xF, 0x3B) and (0x10, 0x3B) to 0x51. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A4F0
+name = "Area188_PatchCellsA1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A4F0..0x42A52C (0x3C bytes), cdecl: area 188 +0x3C[5] = +0x34[9] (PSX 0x801F49A4): the same four cells to 0xC0, 0xC0, 0xA1, 0xA1. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A530
+name = "Area188_PatchCellsB0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A530..0x42A560 (0x30 bytes), cdecl: area 188 +0x3C[6] = +0x34[10] (PSX 0x801F49FC): (0x1C, 3) and (0x1D, 3) to 0, (0x1F, 0x15) and (0x1F, 0x16) to 0x50. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A560
+name = "Area188_PatchCellsB1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A560..0x42A59C (0x3C bytes), cdecl: area 188 +0x3C[7] = +0x34[11] (PSX 0x801F4A54): (0x1C, 3) and (0x1D, 3) to 0xC0, (0x20, 0x15) and (0x20, 0x16) to 0xA1. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A5A0
+name = "Area188_ClearCellsC"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A5A0..0x42A5E6 (0x46 bytes), cdecl: area 188 +0x3C[8] = +0x34[12] (PSX 0x801F4AAC): six cells to 0: (0x38, 0x47), (0x38, 0x48), (0x39, 0x47), (0x39, 0x48), (0x37, 0x3F), (0x37, 0x40). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A5F0
+name = "Area188_SpawnEffectB9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A5F0..0x42A618 (0x28 bytes), cdecl: area 188 +0x3C[9] = +0x34[13] (PSX 0x801F4B24): Effect_FindFree; not 0xFF: the record +0 = 1, +5 = 0xB9 (effect kind 0xB9). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A620
+name = "Area188_Tail43"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A620..0x42A79A (0x17A bytes), cdecl: Field_ModeTailKinds[43]: by the s8 state through a byte table of 14 (+0x16C) into a jump table of 8 (+0x14C), both inside the extent: 0 state 0xA with key item 6 else 1; 1 message 0x83 once Field_Request is not 2, state 2; 2 disarms (kind, state, sub 0, ScriptFlags_Clear40); 0xA message 0x82, story flag 0x69 toggled, state 0xB; 0xB Party_DropIn(6), state 0xC; 0xC once counter 3 is 0x28 Field_ChangeArea(0xBC, 0x330000, 0x470000, 0x87) for sub-kind 0 else (0xBC, 0x80000, 0x220000, 0x88), state 0xD; 0xD once counter 3 is 0 disarms. Others nothing. 8 calls. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A7A0
+name = "Area188_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA188), 0x42A7A0..0x42A7CF (0x2F bytes), cdecl: area 188 +0x40 (PSX 0x801F4D88): byte 0x905E68 1 with Cond_ByteFD 4: Sprite_ObjectsExtra record 0 +0x83 = 0xC; 0x905E68 4 with Cond_ByteFD 1: 0xE. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A7D0
+name = "Area189_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A7D0..0x42A7EE (0x1E bytes), cdecl: area 189 +0x40 (PSX 0x801F4C38): story flag 0x82 set: Draw_PassFlags 0x1F. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A7F0
+name = "Area189_ChoiceTail50A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A7F0..0x42A816 (0x26 bytes), cdecl: area 189 +0x34[0]: message 0xFFFF; answer 0: ScriptFlags_Set40, tail kind 50 (Area189_Tail50) at state 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A820
+name = "Area189_ChoiceTail50B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A820..0x42A846 (0x26 bytes), cdecl: area 189 +0x34[1]: the same at state 1. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A850
+name = "Area189_Tail50"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A850..0x42A8AF (0x5F bytes), cdecl: Field_ModeTailKinds[50]: once Field_Request is not 2: ScriptFlags_Clear40, Field_StatusBits bit 0 cleared; state not 0 Field_ChangeArea(0x96, 0x180000, 0x300000, 1) else (0xC1, 0x1A8000, 0x1C0000, 1); kind and state 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A8B0
+name = "Area189_LeaderRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A8B0..0x42A8C2 (0x12 bytes), cdecl: Field_LeaderStates[13] (0x66094C; pairs_propagated table-anchored 0x801F4D9C, a hypothesis): jmp through Area189_LeaderStates by Sprite_Current +2, unchecked (ours aborts past the five). A gap of the tool, in area 189 block. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42A8D0
+name = "Area189_LeaderStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42A8D0..0x42AA77 (0x1A7 bytes), cdecl: Area189_LeaderStates 0 (pairs_propagated callers 0x801F4DE0, section b880f463 = AREA189.EMI; the tool files it under area 190 by its table, whose EMI has 4 code bytes): Gte_SetGeomOffset(0xA0, 0xB9), Gte_SetGeomScreen(0x12C), Camera_Angles[0] 0xFD12, facing +8 = byte 0x904153, Camera_Distance 0xF280, MapView_Redraw 4, Cond_AngleFB low word ((2 - it) & 0xF) << 8, Field_Kind2X / Z, +0x3C = the height 0x511C10(x, z) << 16, Area189_ZeroSpeeds, +0x24 / +0x4B 0, Field_EdgeBits 0; the pace (Rand() & 0x1F) + 0x96 doubled by a member with Actor_EquipCount(m, 3, 0x15), halved by (m, 3, 0x14), doubled with Cond_ByteFF 0, to the word 0x802E74; story flags 0x75, 0x76, 0x8B..0x8E cleared; +2 + 1. 14 calls. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42AA80
+name = "Area189_LeaderProject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AA80..0x42AB82 (0x102 bytes), cdecl: Area189_LeaderStates 1 (gap15 0x801F5038): Prim_VertexScratch from Field_Kind2X / Z (((v - 1) & 0xFFFFFF) + 1 >> 9, - 0x4000) and -(s16 +0x3E / 2); Gte_RotTransPers to MapView_ScreenXY (four arguments pushed); Gte_StoreDepthF(+0x7C); +0x78 = the float at 0x903824 through fld / fstp; +0x14 = 1; Cond_Flags row 14 bit 9 set and bit 0xA clear: Effect_Objects[0] bit 6, +2 = 3, +0x10 = -0x2000, +9 = 0x78, word 0x8034E6 0x3C; else +2 = 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42AB90
+name = "Area189_LeaderControl"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AB90..0x42AD25 (0x195 bytes), cdecl: Area189_LeaderStates 2 (gap15 0x801F518C) and Area189_StepArrive tail: nothing under Field_ScriptFlags bit 8, Field_ScriptFlags2 bit 6, Field_Request, Area189_ExitButton or Area189_MenuButton; Area189_TurnInput 0: +9 = 0 and the halt; 1: Field_State +0x137 = 1, Cond_AngleFB low word (+ s8 +0xB) & 0xFFF, +2 = 4; 2: Area189_StepBegin, the point +9 steps on by blocks (high word, low byte cleared, signed): x 0x1000..0x1400 and z from 0x1800 message 2; row 14 bit 4 with x 0x1500..0x1900 and z at most 0xE00 message 3 (request 2, the halt); else +9 - 1, Area189_StepMove, +0x137 = 1, +2 = 3. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42AD30
+name = "Area189_LeaderStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AD30..0x42AD58 (0x28 bytes), cdecl: Area189_LeaderStates 3 (gap15 0x801F53E4): Field_State +0x137 = 1; +9 at 0 a tail jump to Area189_StepArrive, else +9 - 1 and a tail jump to Area189_StepMove. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42AD60
+name = "Area189_LeaderTurn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AD60..0x42ADAD (0x4D bytes), cdecl: Area189_LeaderStates 4 (gap15 0x801F5440): Cond_AngleFB low word = (it + s8 +0xB) & 0xFFF; equal to ((2 - +8) & 0xF) << 8: Field_State +0x137 = 0, +2 = 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42ADB0
+name = "Area189_StepBegin"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42ADB0..0x42AE2A (0x7A bytes), cdecl: called by Area189_LeaderControl (gap15 0x801F54B0): +9 = 8; +0xC / +0x10 = Area189_StepVectors[+8] doubled (the byte unchecked); +0x14 = ((height 0x511C10 at the point +9 steps on) << 16 - +0x3C) / +9, idiv by the byte read again after the call (ours aborts on 0). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42AE30
+name = "Area189_StepMove"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AE30..0x42AE7A (0x4A bytes), cdecl: called by Area189_LeaderControl and Area189_LeaderStep (gap15 0x801F559C): x += +0xC, Field_Kind2X = x; z += +0x10, Field_Kind2Z = z; +0x3C += +0x14; MapView_Redraw 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42AE80
+name = "Area189_StepArrive"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42AE80..0x42B2EC (0x46C bytes), cdecl: tail-jumped to by Area189_LeaderStep at +9 = 0 (callers 0x801F5600): Area189_ZeroSpeeds; the frame word 0x90405C + 1 and Field_EdgeBits + 1; at 0x1E0 message 5 (Cond_ByteFF and Field_StatusBits bit 0 cleared), at 0x3C0 message 6 (both set, the count 0x90405E + 1, the word 0); the reserve 0x90405F counted down (3 or 1), at 0 message 1; with none an event each (Rand() & 7) + 20 * Cond_ByteFF + 7 steps: the fifth Area189_RaiseByte1E, Cond_ByteFE 2, sound 0x10B, the others Area189_DrainHp, Cond_ByteFE 1, sound 0x108; with row 14 bit 4 clear the blocks x 0x1600 / 0x1700 and z at most 0x1000 Scena14_LeaveToC4; Scenario_ArriveHook; the blocks clamped to x 0xA00..0x1E00, z 0xE00..0x1800; after the pace (word 0x802E74) in steps story flags 0x75, 0x76, 0x8B..0x8E by six blocks and Field_ChangeArea(0x7D, 0x190000, 0x190000, 4) with the facing jittered; a held button goes straight on (tail jump to Area189_LeaderControl), else Area189_LeaderHalt. 26 calls. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B2F0
+name = "Area189_LeaderHalt"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B2F0..0x42B316 (0x26 bytes), cdecl: called and tail-jumped to by Area189_LeaderControl and Area189_StepArrive (gap15 0x801F5D20): Area189_ZeroSpeeds; +0x4B = 0; Field_State +0x137 = 0; +2 = 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B320
+name = "Area189_ExitButton"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B320..0x42B3F1 (0xD1 bytes), cdecl: called by Area189_LeaderControl (gap15 0x801F5D6C): Input_Pressed bit 11: the pending place Area189_ExitPlaces[Cond_ByteFF 0] (area, x, z bytes << 16), flags 4; the leader x, z and Game_AreaNumber to 0x904148 / 0x90414C / 0x904150, byte 0x904152 + 1; the facing (Area189_FacingJitter[Rand() & 3] + +8) & 0xF to 0x904153; Field_ChangeArea; al 1. Else al 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B400
+name = "Area189_MenuButton"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B400..0x42B43A (0x3A bytes), cdecl: called by Area189_LeaderControl (gap15 0x801F5EA8): Field_MenuButton against Input_Pressed outside Field_ScriptFlags bit 6: Sound_PlayEffect(0x105), Field_Request 1, +2 = 2, al 1; else al 0 (Area121_MenuButton the same but +2 = 0). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B440
+name = "Area189_ZeroSpeeds"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B440..0x42B45E (0x1E bytes), cdecl: called by Area189_LeaderStart, Area189_StepArrive, Area189_LeaderHalt (call-anchored 0x801F5F20): Sprite_Current +0xC, +0x10, +0x14 = 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B460
+name = "Area189_TurnInput"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B460..0x42B4D7 (0x77 bytes), cdecl: called by Area189_LeaderControl: Input_Held bit 12: +0x4B = 1, al 2; bit 13: +0x4B = 2, +8 + 1, +0xB = 0xF0; else bit 15: +0x4B = 3, +8 - 1, +0xB = 0x10; either +8 &= 0xF, al 1; none al 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B4E0
+name = "Area189_RaiseByte1E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B4E0..0x42B50C (0x2C bytes), cdecl: called by Area189_StepArrive: for seven CharacterRecords (0xA4 each), the byte +0x1E below 9: + 1 and Char_RecalcStats(record). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B510
+name = "Area189_DrainHp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA189), 0x42B510..0x42B54F (0x3F bytes), cdecl: called by Area189_StepArrive: for seven CharacterRecords, d = (word +0x40 * 2 + 0x32) / 100; the word +0x18 above d: - d, else 1 (0 included). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B550
+name = "Area191_ChoiceMessage68"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B550..0x42B568 (0x18 bytes), cdecl: areas 191 and 192 +0x34[0] (table-anchored 0x801F2F18): message 0x68 for answer 0, else 0xFFFF. In the tool block of area 190 by address. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B570
+name = "Area191_ChoiceFocusPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B570..0x42B5AC (0x3C bytes), cdecl: area 191 +0x34[2] (table-anchored 0x801F2F94): the focus object +0x18 / +0x1C = Area191_FocusPairs[answer (s8)], message 0xFFFF (Area188_ChoiceFocusPair first half, its own table). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B5B0
+name = "Area191_ChoiceMessage6C"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B5B0..0x42B5C8 (0x18 bytes), cdecl: areas 191 and 192 +0x34[3] (table-anchored 0x801F2FEC): message 0x6C for answer 0, else 0xFFFF. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B5D0
+name = "Area191_ChoiceTail53"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B5D0..0x42B60E (0x3E bytes), cdecl: area 191 +0x34[5] (table-anchored 0x801F3054): message 0xFFFF; answer 1: ScriptFlags_Set40, tail kind 53 (Area191_Tail53) at state 0x1E; 2: ScriptFlags_Set40, MoveScript_Var7 1, step 0x14. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B610
+name = "Area191_MemberNext"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B610..0x42B636 (0x26 bytes), cdecl: areas 191 and 192 +0x3C[0] = +0x34[6] (PSX 0x801F30DC): ScriptFlags_Set40; Field_ActiveMember +0x80 bit 0 cleared, word +0x8A + 1. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B640
+name = "Area191_MemberNextRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B640..0x42B674 (0x34 bytes), cdecl: area 191 +0x3C[1] = +0x34[7] (PSX 0x801F3130): Area191_MemberNext body, then MoveScript_Var7 2, step 0x19. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B680
+name = "Area191_RunScale"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B680..0x42B692 (0x12 bytes), cdecl: area 191 +0x3C[2] = +0x34[8] (PSX 0x801F31A0): jmp through Area191_ScaleStates by Sprite_Current +4, unchecked (ours aborts past the three). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B6A0
+name = "Area191_ScaleStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B6A0..0x42B70A (0x6A bytes), cdecl: Area191_ScaleStates 0: +0x48 = 2, +0x40 / +0x44 = 0x10000, +0xA = 0xFF, dword +0x70 = 1, +0x5D..+0x5F = 0x50, 0x3C, 0, +4 = 1, the script back 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B710
+name = "Area191_ScaleGrow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B710..0x42B778 (0x68 bytes), cdecl: Area191_ScaleStates 1: x += +0xC, +0x40 and +0x44 + 0x2000, +0xA - 1; low two bits 0: +4 = 2; +0xA 0: +4 = 0, else the script back 2. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B780
+name = "Area191_ScaleShrink"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B780..0x42B7E8 (0x68 bytes), cdecl: Area191_ScaleStates 2: the same with - 0x2000 and +4 = 1. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B7F0
+name = "Area191_Tail53"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B7F0..0x42B9E7 (0x1F7 bytes), cdecl: Field_ModeTailKinds[53]: by the s8 state through a byte table of 31 (+0x1D8) into a jump table of 8 (+0x1B8), both inside the extent: 0 message 0x6D, request 2, state 1 (1 does nothing); 2 Transition_Start(0), state 3; 3 once MoveScript_WaitWordDA is 0: Draw_PassFlags 0, Sound_StopMusic, 0x42C2D0, Sound_LoadStream(0), state 4; 4 once Sound_StreamDone: story flag 0x82, the walk counters reset, count + 1, Field_StatusBits bit 0, state 0xA; 0xA Field_ChangeArea(saved area, x, z, 4), Field_ScriptFlags2 bit 6, 0x904152 0, flag 0x77 cleared, disarm; 0x14 disarm; 0x1E Field_ChangeArea(0x96, 0x180000, 0x300000, 1) and the same, Field_StatusBits bit 0 cleared. 14 calls. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42B9F0
+name = "Area191_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42B9F0..0x42BA85 (0x95 bytes), cdecl: Area_StepHook case for area 0xBF (0x56E2B2): AreaMap_ByteAt at (x, z) high words, and the cells after in x, z and both when the low words are not 0, counted where it answers 0xA6; any: ScriptFlags_Set40, tail kind 53 state 0, al 1; else al 0. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42BA90
+name = "Area191_TalkMessage"
+ret = "unsigned short"
+params = "unsigned who"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BA90..0x42BBAB (0x11B bytes), cdecl: called raw by chapter code 0x5677F3, 0x567833, 0x567873, 0x5678B3, 0x5678F3 (SC13) and 0x56AEE1 (SC15): i = index of the member byte in Area191_TalkKeys (5 none), a = 9i, b = the walk count 0x90405E at most 8, c = CharacterRecords[MoveScript_EffectState[who]] +0x1E; row 14 bit 0xA: Area191_TalkMessageB(a, who, b, c); else a + 8 (c from 8), + 7 (c above 4, b below 7) or + Area191_TalkSteps[b]; ax the byte of Area191_TalkMessagesB (chapter row flag 2) or _A. A gap of the tool. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42BBB0
+name = "Area191_TalkMessageB"
+ret = "unsigned short"
+params = "unsigned a, unsigned who, unsigned b, unsigned c"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BBB0..0x42BBEB (0x3B bytes), cdecl: called by Area191_TalkMessage: a + Area191_TalkStepsC[b] for c below 5, else a + 8; ax the byte of Area191_TalkMessagesC by it; who not read. A gap of the tool. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42BBF0
+name = "Area191_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BBF0..0x42BCD4 (0xE4 bytes), cdecl: area 191 +0x40 (PSX 0x801F3964), with 0x42BC20 (its tail-jumped body, a separate start reached by nothing else; the tool reads one function to 0x42BCD3): nothing with Cond_ByteFA 0xE and the chapter row flag 5, nor with story flag 0x77; list k from CharacterRecords[0] +0x1E and row 14 bit 0xA (2 / 1 / walk count at least 5); six Sprite_FindFree slots to DamageScratch, each not 0xFF EventOp_0x(Area191_ObjectLists[k] + 0x11 n). docs/area_w4e.md."
+
+[[func]]
+pc = 0x42BCE0
+name = "Area191_Kind18Flag77"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BCE0..0x42BD25 (0x45 bytes), cdecl: EffectKind18_States[77] (0x6541A0): story flag 0x77 set: the walk frame word, 0x929EC1, 0x9036D0 0, count 0x90405E + 1, Field_StatusBits bit 0, a tail jump to Effect_Release. A gap of the tool. docs/area_w4e.md."
+
+[[func]]
+pc = 0x42BD30
+name = "Area191_ChoiceRun1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4e.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4E, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA191), 0x42BD30..0x42BD56 (0x26 bytes), cdecl: areas 191 and 192 +0x34[1] (table-anchored 0x801F2F40): message 0xFFFF; answer 0: ScriptFlags_Set40, MoveScript_Var7 1, step 0x14. docs/area_w4e.md."
+
+[[data]]
+pc = 0x64743C
+name = "Area188_Choices"
+ctype = "unsigned long"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): area 188 descriptor 0x6474E0 +0x34: 0..3 its choices, 4.. the handler array from +0x3C[0] (choice 4 + n = handler n). docs/area_w4e.md."
+
+[[data]]
+pc = 0x64744C
+name = "Area188_Handlers"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): area 188 descriptor +0x3C: Area188_WalkWhileZUnder, Area136_ShiftCameraUp2 (0x41F320), Area188_ShiftCameraDown2, Area80_ResetCameraShift (0x40F530), the four patches, Area188_ClearCellsC, Area188_SpawnEffectB9. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647524
+name = "Area188_FocusPairs"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area188_ChoiceFocusPair: six byte pairs by the answer, stored at the focus object +0x18 / +0x1C. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647530
+name = "Area188_ZLimits"
+ctype = "unsigned char"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area188_WalkWhileZUnder: the z limit (<< 16) by the tail sub-kind (0 or 1, set by choices 0 and 1); read unchecked. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647550
+name = "Area189_Choices"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): area 189 descriptor 0x647558 +0x34: Area189_ChoiceTail50A, _B. docs/area_w4e.md."
+
+[[data]]
+pc = 0x64759C
+name = "Area189_FacingJitter"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area189_ExitButton, Area189_StepArrive: -1, 0, 1, 0 by Rand() & 3, added to the facing. docs/area_w4e.md."
+
+[[data]]
+pc = 0x6475A0
+name = "Area189_LeaderStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area189_LeaderRun (Field_LeaderStates[13]) jumps through it by Sprite_Current +2: _LeaderStart, _LeaderProject, _LeaderControl, _LeaderStep, _LeaderTurn; the next dword is the step vectors. docs/area_w4e.md."
+
+[[data]]
+pc = 0x6475B4
+name = "Area189_StepVectors"
+ctype = "long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area189_StepBegin: an (x, z) dword pair a facing, doubled into the running speeds; indexed by the whole facing byte. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647634
+name = "Area189_ExitPlaces"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area189_ExitButton: two (area, x, z) byte triples by Cond_ByteFF 0. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647BA4
+name = "Area191_Choices"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): area 191 descriptor 0x647BC8 +0x34: 0..5 its choices (4 is 0x42BDA0, area 192 block), 6..8 the handler array. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647BBC
+name = "Area191_Handlers"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): area 191 descriptor +0x3C: Area191_MemberNext, _MemberNextRun, _RunScale. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C0C
+name = "Area191_FocusPairs"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_ChoiceFocusPair: six byte pairs by the answer. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C18
+name = "Area191_ScaleStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_RunScale jumps through it by Sprite_Current +4: _ScaleStart, _ScaleGrow, _ScaleShrink; the next bytes are Area191_TalkMessagesA. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C24
+name = "Area191_TalkMessagesA"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_TalkMessage: the message by a = 9i + offset (up to 53, running into the next table). docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C54
+name = "Area191_TalkMessagesB"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_TalkMessage with the chapter row flag 2. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C84
+name = "Area191_TalkKeys"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_TalkMessage: the five member bytes it finds the talker among. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C8C
+name = "Area191_TalkSteps"
+ctype = "unsigned char"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_TalkMessage: the offset by the walk count (at most 8). docs/area_w4e.md."
+
+[[data]]
+pc = 0x647C9C
+name = "Area191_TalkMessagesC"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_TalkMessageB: the message by its offset. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647CCC
+name = "Area191_TalkStepsC"
+ctype = "unsigned char"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_TalkMessageB: the offset by the walk count. docs/area_w4e.md."
+
+[[data]]
+pc = 0x647E18
+name = "Area191_ObjectLists"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4E): Area191_Init: three lists of six 17-byte EventOp_0x records (0x647CE0, 0x647D48, 0x647DB0). docs/area_w4e.md."
