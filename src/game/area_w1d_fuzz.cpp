@@ -210,7 +210,11 @@ std::uint32_t Set40Effect(const std::uint32_t*, std::uint32_t answer) {
 std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
     if (n & 1) B(at::kCounter0) = static_cast<unsigned char>(n >> 8);
-    if (n & 2) B(at::kCondRow3 + 1) = static_cast<unsigned char>(n & 4 ? (n >> 16) : ((n >> 16) & 1 ? 0x7F : 0xFF));
+    if (n & 2) {
+        // all seven flags (bit 7 either way), one of them clear, or any
+        static const unsigned char kRow[] = {0x7F, 0xFF, 0x7F, 0xFF, 0x3F, 0xBF, 0x7E, 0x5F, 0x77, 0};
+        B(at::kCondRow3 + 1) = n & 4 ? static_cast<unsigned char>(n >> 16) : kRow[(n >> 16) % 10];
+    }
     return answer;
 }
 // The ground under the running object (after it may have moved): a third of
@@ -224,9 +228,13 @@ std::uint32_t GroundEffect(const std::uint32_t* a, std::uint32_t answer) {
     return (answer & 0xFFFF0000u) | static_cast<std::uint16_t>(height + (n >> 8) % 3 - 1);
 }
 // Inventory_Count answers a word its caller tests whole: 0 (garbage above) a
-// third of the time.
+// third of the time, a zero low byte under a non-zero high byte another
+// third (a byte test would read that as none).
 std::uint32_t CountAnswer(const std::uint32_t*, std::uint32_t answer) {
-    return ah::Noise() % 3 == 0 ? answer & 0xFFFF0000u : answer;
+    const std::uint32_t n = ah::Noise();
+    if (n % 3 == 0) return answer & 0xFFFF0000u;
+    if (n % 3 == 1) return (answer & 0xFFFF0000u) | (1 + (n >> 8) % 0xFF) << 8;
+    return answer;
 }
 // Item_NamePtr answers a pointer the tail copies 16 bytes from: a buffer of
 // noise the same on both passes.
