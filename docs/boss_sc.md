@@ -5,7 +5,7 @@
 All 53 functions of the group are ours (`src/game/boss_sc.cpp`, shadow name
 `boss_sc`), each read to its last instruction with capstone and fuzzed
 through the boss harness ([`boss_harness.md`](boss_harness.md)) without
-edits to it: 13 `Run`s, 312,000 rounds, 0 mismatches. CONTROLS_SUMMARY Fuzz
+edits to it: 13 `Run`s, 318,000 rounds, 0 mismatches. 145 controls planted, all refused by a count (one, C128b, an equivalent mutant the harness refuses for its own reason - section 6). Fuzz
 only: no recorded route reaches a boss fight.
 
 Enemy and fight names below are `tools/boss_rows.py --disc`'s (the US disc's
@@ -225,14 +225,30 @@ drawn below the table: `+1` below 12, Amalgam's `+2` below 6 and `+3` below
 answers the sprite), `kCallee` (the two draws). No `kTask` (the group has no
 effect task) and no `Clone::via` (every function is reachable directly).
 The kinds' tables are `DataTable`s; the group's callees beyond the standard
-set are `0x455290`, `0x454A80` and the two draws (a byte each). Regions
+set are `0x455290`, `0x454A80` and the two draws (a byte each), and four
+standard ones listed again with an effect louder than the real callee
+(`Msg_OpenScript` moves `0x904AAD`, `Scenario_CallA` and `0x446DE0` the
+scene byte half the time, `Battle_OpenMsgWindow` the banner's character:
+the cells their callers read again after the call). Regions
 beyond the battle frame: the move-script counters `0x903848`, `0x9039A2`,
 `0x904131`, `0x92BF18`, `0x675F00`, `0x802D20`, `0x66972D`. 6,000 rounds
 each.
 
 | Run | Fight, kind | Clones | Rounds | Calls | Result |
 |---|---|--:|--:|--:|---|
-RUN_TABLE
+| `b11` | fight 11 | 3 | 18,000 | 30,000 | 0 mismatches |
+| `k12` | fight 12, kind 12 | 11 | 66,000 | 156,000 | 0 mismatches |
+| `b12` | fight 12 | 2 | 12,000 | 6,000 | 0 mismatches |
+| `k13` | fight 16, kind 13 | 5 | 30,000 | 25,018 | 0 mismatches |
+| `k14` | fight 16, kind 14 | 5 | 30,000 | 25,170 | 0 mismatches |
+| `k17` | fight 16, kind 17 | 8 | 48,000 | 72,072 | 0 mismatches |
+| `b16` | fight 16 | 4 | 24,000 | 54,242 | 0 mismatches |
+| `k15` | fight 14, kind 15 | 3 | 18,000 | 18,000 | 0 mismatches |
+| `k53` | fight 14, kind 53 | 3 | 18,000 | 18,000 | 0 mismatches |
+| `b14` | fight 14 | 2 | 12,000 | 6,000 | 0 mismatches |
+| `b46` | fight 46 | 1 | 6,000 | 0 | 0 mismatches |
+| `k16` | fight 15, kind 16 | 3 | 18,000 | 18,000 | 0 mismatches |
+| `b15` | fight 15 | 3 | 18,000 | 12,000 | 0 mismatches |
 
 (This worktree's counts; they move with the build directory.)
 
@@ -255,18 +271,162 @@ time), the wait count, the banner's character, member 1's flags - what the
 functions read again after a call.
 
 `BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final
-build): STAR_RESULT
+build): exit 0, all 839 self-test lines 0 mismatches, BSC's 13 `Run`s among them with the counts above; it passed first time both times it was run (no silent death).
 
 ## 6. Controls
 
 `python controls.py` (the group's scratch script): each control one textual
 change to `boss_sc.cpp`, anchored on a string that occurs once, then
 rebuild, run the unit (`BOF3X_BSC_RUN`), restore, rebuild. Every one of the
-53 functions has at least one. CONTROLS_DETAIL
+53 functions has at least one. Run three times; the table is the third run, on the final seeds. **145 planted, 145 refused by a count, none by a Fatal**, one of them (C128b) equivalent in the game. The first run found what the seeds lacked: four dispatcher plants reading the wrong state byte found it past the table (a Fatal, now counts: the other state bytes are seeded inside their tables), six plants that dispatched through another kind's table ran that kind's unswapped code and crashed (replaced by "the table one entry on"), and the re-read plants were thin (3 and 5 rounds for the action hooks' bits re-read after `Msg_OpenScript`): `Msg_OpenScript`, `Scenario_CallA`, `Battle_OpenMsgWindow` and `0x446DE0` got stand-ins that move the cell their caller reads again. The second run showed the scene stand-in overwrote the end hooks' own store and hid five scene-byte plants: it now moves the byte half the time. The thinnest refusals now: C69 (117 rounds), C104 (143 rounds), C103 (150 rounds), C101 (199 rounds), C80 (201 rounds), C71 (209 rounds).
 
 | # | Function | Plant | Refused |
 |---|---|---|---|
-CONTROLS_TABLE
+| C1 | `Boss11_Setup` | the event hook BareRet | 6000 rounds |
+| C2 | `Boss11_End` | scene 0x45 | 1463 rounds |
+| C3 | `Boss11_Exit` | the actor tagged 2 | 6000 rounds |
+| C4 | `Boss11_Exit` | bank 0x84 | 6000 rounds |
+| C5 | `Boss11_Exit` | the pose words swapped | 6000 rounds |
+| C6 | `Boss11_Exit` | Sprite_Current read before the calls | 501 rounds |
+| C7 | `BossAmalgam_Dispatch` | by +2 | 5442 rounds |
+| C8 | `BossAmalgam_Dispatch` | the stack word not handed on | 967 rounds |
+| C9 | `BossAmalgam_Enter` | +0xF8 four on | 6000 rounds |
+| C10 | `BossAmalgam_Enter` | Balio's hook | 6000 rounds |
+| C11 | `BossAmalgam_Enter` | the script one on | 6000 rounds |
+| C12 | `BossAmalgam_Enter` | state 3 | 5956 rounds |
+| C13 | `BossAmalgam_Enter` | Sprite_ScriptTickOnce | 6000 rounds |
+| C14 | `BossAmalgam_ActDispatch` | by +3 | 4489 rounds |
+| C15 | `BossAmalgam_DeathDispatch` | by +2 | 4446 rounds |
+| C16 | `BossAmalgam_DeathTick` | step 2 | 4006 rounds |
+| C17 | `BossAmalgam_DeathTick` | al 1 when not done | 1994 rounds |
+| C18 | `BossAmalgam_DeathStart` | bit 3 | 4513 rounds |
+| C19 | `BossAmalgam_DeathStart` | w and h swapped | 6000 rounds |
+| C20 | `BossAmalgam_DeathStart` | x unsigned | 3000 rounds |
+| C21 | `BossAmalgam_DeathStart` | +0x30 = 0x42 | 5967 rounds |
+| C22 | `BossAmalgam_DeathStart` | +0x24 |= 0x80 | 3072 rounds |
+| C23 | `BossAmalgam_DeathStart` | Sprite_Current not read after the call | 231 rounds |
+| C24 | `BossAmalgam_DeathStart` | sound 0x602 | 6000 rounds |
+| C25 | `BossAmalgam_DeathMelt` | up by 1 | 6000 rounds |
+| C26 | `BossAmalgam_DeathMelt` | at 0x56 and above | 4318 rounds |
+| C27 | `BossAmalgam_DeathMelt` | the row from +0x21 | 5547 rounds |
+| C28 | `BossAmalgam_DeathMelt` | Sprite_Current read before the second draw | 224 rounds |
+| C29 | `BossAmalgam_DeathEnd` | bit 8 | 4492 rounds |
+| C30 | `BossAmalgam_DeathEnd` | +3 = 1 | 6000 rounds |
+| C31 | `BossAmalgam_DeathEnd` | 0x939AD8 for the sprite | 1711 rounds |
+| C32 | `BossAmalgam_Hook` | the word handed on masked | 2988 rounds |
+| C33 | `BossAmalgam_DrawSprite` | x - 0x27 | 219 rounds |
+| C34 | `BossAmalgam_DrawSprite` | h 0x55 | 6000 rounds |
+| C35 | `BossAmalgam_DrawSprite` | size 0x18 | 6000 rounds |
+| C36 | `BossAmalgam_DrawSprite` | dtd 1 | 6000 rounds |
+| C37 | `BossAmalgam_DrawSprite` | y with +0x1C subtracted | 6000 rounds |
+| C38 | `BossAmalgam_DrawSprite` | v halved | 5935 rounds |
+| C39 | `BossAmalgam_DrawStreak` | the first tpage | 5999 rounds |
+| C40 | `BossAmalgam_DrawStreak` | right + 0x48 | 1142 rounds |
+| C41 | `BossAmalgam_DrawStreak` | u 0x67 at corner 3 | 6000 rounds |
+| C42 | `BossAmalgam_DrawStreak` | size 0x40 | 6000 rounds |
+| C43 | `BossAmalgam_DrawStreak` | corner 1 y 1 | 6000 rounds |
+| C44 | `BossAmalgam_DrawStreak` | the packet read before the commit | 6000 rounds |
+| C45 | `Boss12_Setup` | exit hook BossHook_ExitClearActor0 | 6000 rounds |
+| C46 | `Boss12_End` | bit 2 | 2680 rounds |
+| C47 | `Boss12_End` | scene 0x24 | 1493 rounds |
+| C48 | `Boss12_End` | bit 0 for the win | 3535 rounds |
+| C49 | `BossBalio_Dispatch` | the table one entry on | 6000 rounds |
+| C50 | `BossBalio_Enter` | bank 0xEF | 6000 rounds |
+| C51 | `BossBalio_Enter` | fight 16 for 13 (shared with Sunder) | 2022 rounds |
+| C52 | `BossBalio_Enter` | no +0xB0 (shared with Sunder) | 1320 rounds |
+| C53 | `BossBalio_Enter` | +0x2A = 2 (shared with Sunder) | 6000 rounds |
+| C54 | `BossBalio_Hook` | Sunder's hook table | 6000 rounds |
+| C55 | `BossBalio_HookAct` | line 0x27 | 537 rounds |
+| C56 | `BossBalio_HookAct` | action 0 | 510 rounds |
+| C57 | `BossBalio_HookAct` | bit 2 for bit 1 | 493 rounds |
+| C58 | `BossBalio_HookAct` | the bits not re-read after the call | 242 rounds |
+| C59 | `BossBalio_HookAct` | bit 4 set | 446 rounds |
+| C60 | `BossBalio_HookAct` | fight 13 | 1252 rounds |
+| C61 | `BossBalio_HookHit` | the floor 2 (shared with Sunder) | 1287 rounds |
+| C62 | `BossSunder_Dispatch` | the table one entry on | 6000 rounds |
+| C63 | `BossSunder_Enter` | bank 0xEE | 6000 rounds |
+| C64 | `BossSunder_Enter` | Balio's +0xF8 | 6000 rounds |
+| C65 | `BossSunder_Hook` | the word handed on masked | 2972 rounds |
+| C66 | `BossSunder_HookAct` | line 0x28 first | 488 rounds |
+| C67 | `BossSunder_HookAct` | bit 1 for bit 0 | 843 rounds |
+| C68 | `BossSunder_HookAct` | action 0 | 509 rounds |
+| C69 | `BossSunder_HookAct` | the bits not re-read after the call | 117 rounds |
+| C70 | `BossSunder_HookAct` | bit 5 for bit 4 | 252 rounds |
+| C71 | `BossSunder_HookHit` | actor 8 and above | 209 rounds |
+| C72 | `BossSunder_HookHit` | +0x108 = 1 whatever it was | 307 rounds |
+| C73 | `BossSunder_HookHit` | any fight | 261 rounds |
+| C74 | `BossNina_Dispatch` | the stack word not handed on | 996 rounds |
+| C75 | `BossNina_Enter` | +8 = 2 | 6000 rounds |
+| C76 | `BossNina_Enter` | the second animation bytes | 6000 rounds |
+| C77 | `BossNina_WalkDispatch` | by +3 | 4018 rounds |
+| C78 | `BossNina_WalkStart` | animation 3 | 6000 rounds |
+| C79 | `BossNina_WalkStart` | bit 1 cleared too | 2985 rounds |
+| C80 | `BossNina_WalkStart` | Sprite_Current read before the call | 201 rounds |
+| C81 | `BossNina_WalkStep` | bit 6 | 2955 rounds |
+| C82 | `BossNina_WalkStep` | step 0x10000 | 2998 rounds |
+| C83 | `BossNina_WalkStep` | one tick | 2999 rounds |
+| C84 | `BossNina_WalkStep` | +3 up | 3001 rounds |
+| C85 | `BossNina_Hook` | Balio's hook table | 6000 rounds |
+| C86 | `BossNina_HookAct` | action 0 with bit 0 | 2577 rounds |
+| C87 | `BossNina_HookAct` | down by 2 | 2766 rounds |
+| C88 | `BossNina_HookAct` | target 5 | 657 rounds |
+| C89 | `BossNina_HookAct` | 0x904AE2 up | 657 rounds |
+| C90 | `BossNina_HookAct` | action 2 | 657 rounds |
+| C91 | `BossNina_HookHit` | slot 2 | 6000 rounds |
+| C92 | `BossNina_HookHit` | +0x29 = 5 | 6000 rounds |
+| C93 | `BossNina_HookHit` | animation +8 + 3 | 6000 rounds |
+| C94 | `BossNina_HookHit` | nine bytes (shared with Boss16_Event) | 6000 rounds |
+| C95 | `BossNina_HookHit` | message 0x26 (shared) | 6000 rounds |
+| C96 | `BossNina_HookHit` | the character read before the call (shared) | 5972 rounds |
+| C97 | `BossNina_HookHit` | layer 1 (shared) | 6000 rounds |
+| C98 | `Boss16_Setup` | Rand & 3 | 3051 rounds |
+| C99 | `Boss16_Setup` | end and exit swapped | 6000 rounds |
+| C100 | `Boss16_Event` | the whole word | 671 rounds |
+| C101 | `Boss16_Event` | enemy 1's bit 0x4000 | 199 rounds |
+| C102 | `Boss16_Event` | bit 2 | 907 rounds |
+| C103 | `Boss16_Event` | target bit 7 | 150 rounds |
+| C104 | `Boss16_Event` | action 3 | 143 rounds |
+| C105 | `Boss16_Event` | the wait count not tested | 528 rounds |
+| C106 | `Boss16_Event` | enemy 1 as the sprite | 509 rounds |
+| C107 | `Boss16_Event` | Nina's first animation bytes | 535 rounds |
+| C108 | `Boss16_Event` | al 1 for the other codes | 1102 rounds |
+| C109 | `Boss16_End` | scene 0x15 | 1512 rounds |
+| C110 | `Boss16_End` | enemy 2's word | 3040 rounds |
+| C111 | `Boss16_End` | step 2 for 3 | 2960 rounds |
+| C112 | `Boss16_End` | bit 6 cleared too | 2998 rounds |
+| C113 | `Boss16_End` | 0x30 | 6000 rounds |
+| C114 | `Boss16_End` | animation 2 | 1511 rounds |
+| C115 | `Boss16_End` | scene 0x51 | 2938 rounds |
+| C116 | `Boss16_Exit` | the two words swapped | 913 rounds |
+| C117 | `Boss16_Exit` | bit 1 for bit 0 | 1507 rounds |
+| C118 | `Boss16_Exit` | bit 5 for 6 | 950 rounds |
+| C119 | `Boss16_Exit` | actor 1 bank 0xEE | 3016 rounds |
+| C120 | `Boss16_Exit` | actor 1 from enemy 0's +0x58 | 2346 rounds |
+| C121 | `Boss16_Exit` | 6 and 7 swapped | 6000 rounds |
+| C122 | `Boss16_Exit` | the scene byte read before the call | 1480 rounds |
+| C123 | `Boss16_Exit` | bit 5 | 4471 rounds |
+| C124 | `Boss16_Exit` | bit 0 for the win | 3708 rounds |
+| C125 | `BossRocky_Dispatch` | the table one entry on | 6000 rounds |
+| C126 | `BossRocky_Enter` | Sample 8's +0xF8 | 6000 rounds |
+| C127 | `BossRocky_Enter` | state 1 | 5972 rounds |
+| C128 | `BossRocky_Hook` | the word handed on masked | 2959 rounds |
+| C128b | `BossRocky_Hook` | Sample 8's hook table (all BareRet as Rocky's: equivalent?) | 6000 rounds - by the harness only: Sample 8's table is not swapped in the `k15` run, so its real `BareRet` runs where Rocky's recorder stood; in the game the two tables hold the same three `BareRet`s, so the mutant is **equivalent** (C128 is its near variant) |
+| C129 | `BossSample8_Dispatch` | the table one entry on | 6000 rounds |
+| C130 | `BossSample8_Enter` | bit 2 | 4519 rounds |
+| C131 | `BossSample8_Enter` | Rocky's hook | 6000 rounds |
+| C132 | `BossSample8_Hook` | the word handed on masked | 2959 rounds |
+| C133 | `Boss14_Setup` | exit hook BossHook_ExitActor0Bit40 | 6000 rounds |
+| C134 | `Boss14_End` | scene 0xD | 1493 rounds |
+| C135 | `Boss14_End` | bit 0 for the win (shared) | 3535 rounds |
+| C136 | `Boss14_End` | the scene stored after the call (shared) | 1517 rounds |
+| C137 | `Boss46_Setup` | the event hook BareRet | 6000 rounds |
+| C138 | `BossPooch_Dispatch` | the table one entry on | 6000 rounds |
+| C139 | `BossPooch_Enter` | the two byte tables swapped | 6000 rounds |
+| C140 | `BossPooch_Enter` | Sprite_ScriptTickOnce | 6000 rounds |
+| C141 | `BossPooch_Hook` | the word handed on masked | 2959 rounds |
+| C142 | `Boss15_Setup` | exit hook BossHook_ExitClearActor0 | 6000 rounds |
+| C143 | `Boss15_End` | scene 0x4C | 1463 rounds |
+| C144 | `Boss15_Exit` | tag 0 | 6000 rounds |
 
 ## 7. Latent defects (Capcom's, kept)
 
