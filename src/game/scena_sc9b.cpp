@@ -475,7 +475,8 @@ void GreyClut() {
 
 // Run 6's body; the run then calls Scena10_Shake on every way out.
 void Run6Body() {
-    switch (Step()) {
+    const unsigned char step = Step();   // the case the jump table picked
+    switch (step) {
     case 0:
         B(at::kShaking) = 0;
         Transition(0);
@@ -638,14 +639,14 @@ void Run6Body() {
         return;
     case 0x17:   // and 0x1B: the kind-2 sprite to (0x24, 0x2E), its height the map's
     case 0x1B:
-        if (Counter(0) != (Step() == 0x17 ? 3 : 8)) return;
+        if (Counter(0) != (step == 0x17 ? 3 : 8)) return;
         SetPass(0);
         B(at::kShaking) = 0;
         Kind2At(0x240000, 0x2E0000);
         ViewReset();
         W(at::kSpriteKind2Y) = static_cast<std::uint16_t>(Elevation(S32(at::kKind2X), S32(at::kKind2Z)));
         SetTimer(4);
-        SetStep(Step() == 0x17 ? 0x18 : 0x1C);
+        SetStep(step == 0x17 ? 0x18 : 0x1C);
         return;
     case 0x18:
     case 0x1A:
@@ -654,19 +655,19 @@ void Run6Body() {
     case 0x2C:
         if (!TimerDone()) return;
         SetPass(0x1F);
-        SetStep(static_cast<unsigned char>(Step() + 1));
+        SetStep(static_cast<unsigned char>(step + 1));
         BumpCounter();
         return;
-    case 0x19:   // and 0x1F, 0x2B: the kind-2 sprite to (5, 0x46)
+    case 0x19:   // and 0x1F: the kind-2 sprite to (5, 0x46), its height the map's
     case 0x1F:
-        if (Counter(0) != (Step() == 0x19 ? 6 : 0xD)) return;
+        if (Counter(0) != (step == 0x19 ? 6 : 0xD)) return;
         SetPass(0);
         B(at::kShaking) = 1;
         Kind2At(0x50000, 0x460000);
         ViewReset();
         W(at::kSpriteKind2Y) = static_cast<std::uint16_t>(Elevation(S32(at::kKind2X), S32(at::kKind2Z)));
         SetTimer(4);
-        SetStep(static_cast<unsigned char>(Step() + 1));
+        SetStep(static_cast<unsigned char>(step + 1));
         return;
     case 0x1D:
         if (Counter(0) != 0xB) return;
