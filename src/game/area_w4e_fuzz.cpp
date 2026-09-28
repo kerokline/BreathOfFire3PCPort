@@ -237,9 +237,27 @@ U SoundEffect(const U*, U answer) {
 // kind 53 the walk count and Field_StatusBits after flag 0x82.
 U FlagsSetEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) MoveCurrent(n >> 4);
+    if (n & 1) {
+        // the new running object half the time on one of the walk's marked
+        // blocks (the arrival compares it with the later marks)
+        MoveCurrent(n >> 4);
+        if (n & 8) {
+            static const std::uint16_t kMarks[][2] = {{0xB00, 0xF00}, {0x1500, 0x1100}, {0xC00, 0x1400}, {0x1000, 0x1100}, {0x1D00, 0x1700}, {0x1400, 0x1400}};
+            const U m = (n >> 20) % 6;
+            SetWord(Sprite_Current + 0x36, kMarks[m][0] | ((n >> 12) & 0xFF));
+            SetWord(Sprite_Current + 0x3A, kMarks[m][1] | ((n >> 24) & 0xFF));
+        }
+    }
     if (n & 2) B(at::kWalkCount) = static_cast<unsigned char>(n >> 16);
     if (n & 4) Field_StatusBits = static_cast<unsigned char>(n >> 24);
+    return answer;
+}
+// Flags_Test: area 191's init reads actor record 0's byte +0x1E after its
+// first two tests (the answer stays the harness's kBool).
+U FlagsTestEffect(const U*, U answer) {
+    const U n = ah::Noise();
+    static const unsigned char kLevels[] = {4, 5, 8, 9, 0};
+    if (n % 4 == 0) B(at::kCharByte1E) = kLevels[(n >> 8) % 5];
     return answer;
 }
 // Flags_Clear: tail kind 53's state 0x1E reads Field_StatusBits after it.
@@ -337,6 +355,7 @@ const ah::Callee kCallees[] = {
     {W4E_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &FlagsSetEffect},
     {W4E_OURS(Flags_Clear), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &FlagsClearEffect},
     {W4E_OURS(Flags_Toggle), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {W4E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsTestEffect},
     {W4E_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     // the area a word, the flags a byte (the pushes carry stale bits above them)
     {W4E_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0},
@@ -582,6 +601,11 @@ void Seed189(unsigned k) {
             Field_EdgeBits = static_cast<unsigned short>(pace + AH_PICK(0xFFFE, 0xFFFF, 0, 1, 0xFFFE));
         }
         if (ah::Half()) Field_InputHeld = 0;
+        if (ah::Half()) {
+            // the button test by its bits: sparse button words, one held bit
+            SetLong(ah::Mem(at::kButtonMap0), static_cast<std::int32_t>(AH_PICK(0, 0x40, 0x20, 0x400000, 0x200040, 0x10, 0x100000)));
+            Field_InputHeld = static_cast<unsigned short>(AH_PICK(0x1000, 0x2000, 0x8000, 0x4000, 0x40, 0x20, 0x10, 0));
+        }
         if (ah::Half()) {
             // half the rounds aimed at the walk's end: no message on the way
             // (the frame word and the reserve quiet, no request), the flags
