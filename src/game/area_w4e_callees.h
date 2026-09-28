@@ -117,12 +117,12 @@ constexpr std::uint32_t kDamageScratch = 0x903850;     // DamageScratch (the slo
 constexpr std::uint32_t kArea188FocusPairs = 0x647524;   // Area188_FocusPairs, 6 x 2 bytes
 constexpr std::uint32_t kArea188ZLimits = 0x647530;      // Area188_ZLimits, bytes
 // Area 189: the leader's five states (Field_LeaderStates[13] jumps through
-// them by Sprite_Current +2), the walk's eight step vectors (x, z dwords a
+// them by Sprite_Current +2), the walk's sixteen step vectors (x, z dwords a
 // facing), the exit button's two places (area, x, z bytes), the facing
 // jitter (four s8).
 constexpr std::uint32_t kArea189LeaderStates = 0x6475A0; // Area189_LeaderStates, 5
 constexpr unsigned kArea189LeaderStateCount = 5;
-constexpr std::uint32_t kArea189StepVectors = 0x6475B4;  // Area189_StepVectors, 8 x 8 bytes
+constexpr std::uint32_t kArea189StepVectors = 0x6475B4;  // Area189_StepVectors, 16 x 8 bytes
 constexpr std::uint32_t kArea189ExitPlaces = 0x647634;   // Area189_ExitPlaces, 2 x 3 bytes
 constexpr std::uint32_t kArea189FacingJitter = 0x64759C; // Area189_FacingJitter, 4 bytes
 // Area 191: its choice 2's byte pairs, the scale's three states (by +4), the

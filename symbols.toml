@@ -64037,9 +64037,9 @@ evidence = "read 2026-09-28 (round ten group AR4E): Area189_LeaderRun (Field_Lea
 pc = 0x6475B4
 name = "Area189_StepVectors"
 ctype = "long"
-count = 16
+count = 32
 status = "evidence"
-evidence = "read 2026-09-28 (round ten group AR4E): Area189_StepBegin: an (x, z) dword pair a facing, doubled into the running speeds; indexed by the whole facing byte. docs/area_w4e.md."
+evidence = "read 2026-09-28 (round ten group AR4E): Area189_StepBegin: sixteen (x, z) dword pairs, one a facing (a circle of radius 0x1000), doubled into the running speeds; indexed by the whole facing byte. docs/area_w4e.md."
 
 [[data]]
 pc = 0x647634

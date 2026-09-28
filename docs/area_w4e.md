@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 51 functions ours
 (`src/game/area_w4e.cpp`, shadow name `area_w4e`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area
-with code: 0 mismatches in 306,000 rounds (in this worktree); CONTROLS_SUMMARY
+with code: 0 mismatches in 306,000 rounds (in this worktree); 424 controls planted, 423 refused by a count, 1 refused by the abort past a table (its variant refused by a count)
 (section 4). Fuzz only: no recorded route reaches the band (section 8). No
 divergence; the two state dispatchers abort past their tables and area 189's
 step aborts on a divisor of 0, where the original would jump into data or
@@ -345,19 +345,450 @@ place.
   0 divisor, ours aborts; neither can be compared).
 
 **Result (in this worktree):** 306,000 rounds over the 51 functions (6,000
-each), 449,859 calls to the stand-ins (145,023 / 209,688 / 95,168), 0
+each), 450,840 calls to the stand-ins (145,023 / 210,170 / 95,647), 0
 mismatches. Coverage: every callee each function can reach was called - e.g.
-`Area189_StepBegin` 389 (from the control), `Area189_TurnInput` 1,557, the
+`Area189_StepBegin` 389 (from the control), `Area189_TurnInput` 1,557 (the second-to-last run), the
 marks' `Flags_Set` 110, `Scena14_LeaveToC4` 62, `Area189_RaiseByte1E` 780 /
 `_DrainHp` 283, `Field_ChangeArea` 107 (area 188) / 10,380 (189) / 660 (191),
 `Sound_StopMusic` and `0x42C2D0` 167, `Area191_TalkMessageB` 3,975, every
 leader and scale state about 1,150..2,050.
 
-STAR_RESULT
+`BOF3X_SHADOW='*'`: exit 0, `inject: 5409 ours` (one below the 5,410 `impl` lines, the off-by-one the round doc section 10 notes), 490 self-test lines, 787 mismatch counts and every one 0. It did not die silently; not re-run.
 
 ## 4. Controls
 
-CONTROLS_TEXT
+Planted one at a time in `area_w4e.cpp` by a script (the scratch `controls.py`, not committed) that plants on an anchor it checks is unique, rebuilds, checks `area_w4e.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w4e`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches in all three runs). **424 planted, 423 refused by a count (exit 3), 1 refused by a fault** (B15: ours aborts past the leader states' table; its variant B15b, kept inside the table, is refused by a count). No hang. Every one of the 51 functions has at least one control of its own; a control in a helper shared across functions (`FocusPair`, `SetCells`, `ArmTail`, `ClearTail3`, `SetRun`, `ScaleTick`, `ScriptBack2`, `JitterFacing`, `ChangeToPending`, `Block`, `BlockWord`, `SetAngleFB`) is refused in the first function's run, whose Fatal ends the self-test.
+
+- **Four stood on the first run** and were the fuzz's fault: B164 (the running object not read again after a mark's `Flags_Set`) needed the stand-in to put the moved object on a later mark's block; B171 / B172 (the held-button mask, the second button word) needed sparse button words and one held bit; C111 (area 191's init reading record 0's max-HP scale after its first flag test) needed a `Flags_Test` listing whose effect moves that byte. The fuzz does each now (section 3); all 347 controls of areas 189 and 191 were run again on it, every one refused (the counts below are that run's; area 188's are the first run's).
+- **The thinnest**: area 189's box-edge controls in `Area189_LeaderControl` (B79..B87, B92: 2..11 rounds of 6,000) - the box test runs only when `Area189_TurnInput` answers 2 and both buttons answer 0 in one round and the step count lands the point on an edge; then C66 (the step hook's x low word, 7), B161 and B182 (the pace's end, 9). Every other control needs more than 11.
+- **Equivalent mutants**: none.
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| A1 | `Area188_ChoiceTail43A` | state 1 | Area188_ChoiceTail43A 785 |
+| A2 | `Area188_ChoiceTail43A` | sub-kind 2 | Area188_ChoiceTail43A 785 |
+| A3 | `Area188_ChoiceTail43A` | kind 0x2C | Area188_ChoiceTail43A 785 |
+| A4 | `Area188_ChoiceTail43A` | message 0xFFFE | Area188_ChoiceTail43A 5962 |
+| A5 | `Area188_ChoiceTail43A` | answer 1 | Area188_ChoiceTail43A 1516 |
+| A6 | `Area188_ChoiceTail43B` | sub-kind 0 | Area188_ChoiceTail43B 710 |
+| A7 | `Area188_ChoiceTail43B` | answer inverted | Area188_ChoiceTail43B 6000 |
+| A8 | `Area188_ChoiceByChapter` | chapter 13 | Area188_ChoiceByChapter 200 |
+| A9 | `Area188_ChoiceByChapter` | kind 0xB | Area188_ChoiceByChapter 266 |
+| A10 | `Area188_ChoiceByChapter` | sub-kind 0xFE | Area188_ChoiceByChapter 266 |
+| A11 | `Area188_ChoiceByChapter` | answer 1 arms | Area188_ChoiceByChapter 528 |
+| A12 | `Area188_ChoiceByChapter` | counter 0xB | Area188_ChoiceByChapter 494 |
+| A13 | `Area188_ChoiceByChapter` | counter 6 | Area188_ChoiceByChapter 471 |
+| A14 | `Area188_ChoiceByChapter` | answer masked to 7 bits | Area188_ChoiceByChapter 227 |
+| A15 | `Area188_ChoiceByChapter` | chapter unsigned | Area188_ChoiceByChapter 341 |
+| A16 | `Area188_ChoiceByChapter` | message 0xFFFD | Area188_ChoiceByChapter 5968 |
+| A17 | `Area188_ChoiceFocusPair` | area 191's pairs | Area188_ChoiceFocusPair 5501 |
+| A18 | `Area188_ChoiceFocusPair` | chapter 11 | Area188_ChoiceFocusPair 114 |
+| A19 | `Area188_ChoiceFocusPair` | answer 2 | Area188_ChoiceFocusPair 678 |
+| A20 | `Area188_ChoiceFocusPair` | byte 1 | Area188_ChoiceFocusPair 441 |
+| A21 | `Area188_ChoiceFocusPair` | step 0x15 | Area188_ChoiceFocusPair 441 |
+| A22 | `Area188_ChoiceFocusPair` | Var7 9 | Area188_ChoiceFocusPair 441 |
+| A23 | `FocusPair (188, 191)` | field +0x14 | Area188_ChoiceFocusPair 6000 |
+| A24 | `FocusPair (188, 191)` | first the second byte | Area188_ChoiceFocusPair 4669 |
+| A25 | `FocusPair (188, 191)` | second the first byte | Area188_ChoiceFocusPair 4669 |
+| A26 | `FocusPair (188, 191)` | answer unsigned | Area188_ChoiceFocusPair 1648 |
+| A27 | `FocusPair (188, 191)` | a byte store | Area188_ChoiceFocusPair 6000 |
+| A28 | `FocusPair (188, 191)` | message 0xFFFC | Area188_ChoiceFocusPair 5974 |
+| A29 | `Area188_WalkWhileZUnder` | facing & 3 | Area188_WalkWhileZUnder 625 |
+| A30 | `Area188_WalkWhileZUnder` | at the limit stops | Area188_WalkWhileZUnder 544 |
+| A31 | `Area188_WalkWhileZUnder` | signed compare | Area188_WalkWhileZUnder 1835 |
+| A32 | `Area188_WalkWhileZUnder` | count 2 | Area188_WalkWhileZUnder 1337 |
+| A33 | `Area188_WalkWhileZUnder` | direction 4 | Area188_WalkWhileZUnder 1337 |
+| A34 | `Area188_WalkWhileZUnder` | sub-kind & 1 | Area188_WalkWhileZUnder 957 |
+| A35 | `Area188_WalkWhileZUnder` | x for z | Area188_WalkWhileZUnder 1338 |
+| A36 | `Area188_WalkWhileZUnder` | script object not read again | Area188_WalkWhileZUnder 615 |
+| A37 | `ScriptBack2 (188, 191 x4)` | back 3 | Area188_WalkWhileZUnder 1337 |
+| A38 | `Area188_ShiftCameraDown2` | shift 1 | Area188_ShiftCameraDown2 6000 |
+| A39 | `Area188_ShiftCameraDown2` | redraw 3 | Area188_ShiftCameraDown2 6000 |
+| A40 | `Area188_PatchCellsA0` | value 0x52 | Area188_PatchCellsA0 6000 |
+| A41 | `Area188_PatchCellsA0` | z 0x3C | Area188_PatchCellsA0 6000 |
+| A42 | `Area188_PatchCellsA1` | z 0x3A | Area188_PatchCellsA1 6000 |
+| A43 | `Area188_PatchCellsA1` | value 0xC1 | Area188_PatchCellsA1 6000 |
+| A44 | `Area188_PatchCellsB0` | z 0x17 | Area188_PatchCellsB0 6000 |
+| A45 | `Area188_PatchCellsB0` | x 0x1C twice | Area188_PatchCellsB0 6000 |
+| A46 | `Area188_PatchCellsB1` | z 4 | Area188_PatchCellsB1 6000 |
+| A47 | `Area188_PatchCellsB1` | value 0xA0 | Area188_PatchCellsB1 6000 |
+| A48 | `Area188_ClearCellsC` | z 0x41 | Area188_ClearCellsC 6000 |
+| A49 | `Area188_ClearCellsC` | five cells | Area188_ClearCellsC 6000 |
+| A50 | `SetCells (188 x5)` | (z, x) | Area188_PatchCellsA0 6000, Area188_PatchCellsA1 6000, Area188_PatchCellsB0 6000, Area188_PatchCellsB1 6000, Area188_ClearCellsC 6000 |
+| A51 | `Area188_SpawnEffectB9` | state 2 | Area188_SpawnEffectB9 4766 |
+| A52 | `Area188_SpawnEffectB9` | kind 0xBA | Area188_SpawnEffectB9 4766 |
+| A53 | `Area188_SpawnEffectB9` | next record | Area188_SpawnEffectB9 4766 |
+| A54 | `Area188_Tail43` | key item 7 | Area188_Tail43 598 |
+| A55 | `Area188_Tail43` | else 2 | Area188_Tail43 207 |
+| A56 | `Area188_Tail43` | held 0xB | Area188_Tail43 391 |
+| A57 | `Area188_Tail43` | message 0x84 | Area188_Tail43 435 |
+| A58 | `Area188_Tail43` | to state 3 | Area188_Tail43 435 |
+| A59 | `Area188_Tail43` | waits on request 1 | Area188_Tail43 267 |
+| A60 | `Area188_Tail43` | message 0x81 | Area188_Tail43 380 |
+| A61 | `Area188_Tail43` | flag 0x6A | Area188_Tail43 380 |
+| A62 | `Area188_Tail43` | to state 0xC | Area188_Tail43 380 |
+| A63 | `Area188_Tail43` | drop-in 7 | Area188_Tail43 387 |
+| A64 | `Area188_Tail43` | counter 0x29 | Area188_Tail43 163 |
+| A65 | `Area188_Tail43` | x and z swapped | Area188_Tail43 22 |
+| A66 | `Area188_Tail43` | flags 0x89 | Area188_Tail43 85 |
+| A67 | `Area188_Tail43` | sub-kind 1 test | Area188_Tail43 58 |
+| A68 | `Area188_Tail43` | to state 0xE | Area188_Tail43 107 |
+| A69 | `Area188_Tail43` | counter at most 1 | Area188_Tail43 47 |
+| A70 | `ClearTail3 (188 x2)` | sub-kind 1 | Area188_Tail43 498 |
+| A71 | `Area188_Tail43` | state & 0x7F | Area188_Tail43 526 |
+| A72 | `Area188_Tail43` | state 0xA does not wait | Area188_Tail43 216 |
+| A73 | `Area188_Tail43` | state 2 clears after the call | Area188_Tail43 97 |
+| A74 | `Area188_Init` | FD 5 | Area188_Init 253 |
+| A75 | `Area188_Init` | value 0xD | Area188_Init 164 |
+| A76 | `Area188_Init` | mode 3 | Area188_Init 175 |
+| A77 | `Area188_Init` | value 0xF | Area188_Init 176 |
+| A78 | `Area188_Init` | mode 2 | Area188_Init 244 |
+| B1 | `Area189_Init` | flag 0x83 | Area189_Init 6000 |
+| B2 | `Area189_Init` | pass flags 0x1E | Area189_Init 3966 |
+| B3 | `Area189_ChoiceTail50A` | kind 0x33 | Area189_ChoiceTail50A 715 |
+| B4 | `Area189_ChoiceTail50A` | message 0xFFFE | Area189_ChoiceTail50A 5970 |
+| B5 | `Area189_ChoiceTail50B` | answer 1 | Area189_ChoiceTail50B 1506 |
+| B6 | `Area189_ChoiceTail50B` | state 2 | Area189_ChoiceTail50B 741 |
+| B7 | `ArmTail (188 x2, 189 x2, 191)` | state | 0x10 | Area188_ChoiceTail43A 785, Area188_ChoiceTail43B 710 |
+| B8 | `Area189_Tail50` | bit 1 cleared too | Area189_Tail50 2027 |
+| B9 | `Area189_Tail50` | area 0x97 | Area189_Tail50 2545 |
+| B10 | `Area189_Tail50` | flags 2 | Area189_Tail50 1425 |
+| B11 | `Area189_Tail50` | state read before the call | Area189_Tail50 984 |
+| B12 | `Area189_Tail50` | bits read before the call | Area189_Tail50 1972 |
+| B13 | `Area189_Tail50` | state 1 after | Area189_Tail50 3970 |
+| B14 | `Area189_Tail50` | waits on any request | Area189_Tail50 2340 |
+| B15 | `Area189_LeaderRun` | by +1 | refused by a fault: ours aborts past the five entries (`+1` is any byte); variant B15b refused by a count |
+| B16 | `Area189_LeaderRun` | the next state | Area189_LeaderRun 6000 |
+| B17 | `Area189_LeaderStart` | offset y 0xB8 | Area189_LeaderStart 6000 |
+| B18 | `Area189_LeaderStart` | screen 0x12D | Area189_LeaderStart 6000 |
+| B19 | `Area189_LeaderStart` | angle 0xFD13 | Area189_LeaderStart 6000 |
+| B20 | `Area189_LeaderStart` | distance 0xF281 | Area189_LeaderStart 5964 |
+| B21 | `Area189_LeaderStart` | redraw 5 | Area189_LeaderStart 6000 |
+| B22 | `Area189_LeaderStart` | 3 - facing | Area189_LeaderStart 6000 |
+| B23 | `Area189_LeaderStart` | mask 7 | Area189_LeaderStart 1895 |
+| B24 | `SetAngleFB (189 x3)` | a dword store | Area189_LeaderStart 6000, Area189_LeaderControl 382, Area189_LeaderTurn 3980 |
+| B25 | `Area189_LeaderStart` | kind-2 x and z swapped | Area189_LeaderStart 6000 |
+| B26 | `Area189_LeaderStart` | height at (z, x) | Area189_LeaderStart 6000 |
+| B27 | `Area189_LeaderStart` | height << 15 | Area189_LeaderStart 6000 |
+| B28 | `Area189_LeaderStart` | the object read before the height call | Area189_LeaderStart 2739 |
+| B29 | `Area189_LeaderStart` | +0x24 1 | Area189_LeaderStart 5996 |
+| B30 | `Area189_LeaderStart` | +0x4B 1 | Area189_LeaderStart 5996 |
+| B31 | `Area189_LeaderStart` | edge count 1 | Area189_LeaderStart 6000 |
+| B32 | `Area189_LeaderStart` | pace + 0x97 | Area189_LeaderStart 5720 |
+| B33 | `Area189_LeaderStart` | rand & 0x3F | Area189_LeaderStart 3024 |
+| B34 | `Area189_LeaderStart` | party list 1 | Area189_LeaderStart 6000 |
+| B35 | `Area189_LeaderStart` | item 0x16 | Area189_LeaderStart 4488 |
+| B36 | `Area189_LeaderStart` | kind 2 | Area189_LeaderStart 4488 |
+| B37 | `Area189_LeaderStart` | quadrupled | Area189_LeaderStart 3768 |
+| B38 | `Area189_LeaderStart` | quartered | Area189_LeaderStart 3774 |
+| B39 | `Area189_LeaderStart` | doubled per member | Area189_LeaderStart 2298 |
+| B40 | `Area189_LeaderStart` | FF inverted | Area189_LeaderStart 6000 |
+| B41 | `Area189_LeaderStart` | pace + 1 | Area189_LeaderStart 5999 |
+| B42 | `Area189_LeaderStart` | flag 0x8F | Area189_LeaderStart 6000 |
+| B43 | `Area189_LeaderStart` | flag 0x74 | Area189_LeaderStart 6000 |
+| B44 | `Area189_LeaderStart` | state + 2 | Area189_LeaderStart 6000 |
+| B45 | `Area189_LeaderStart` | the next byte | Area189_LeaderStart 4473 |
+| B46 | `Area189_LeaderStart` | facing & 0xF | Area189_LeaderStart 3809 |
+| B47 | `Area189_LeaderStart` | one member fewer | Area189_LeaderStart 2190 |
+| B48 | `Area189_LeaderStart` | the object not read again | Area189_LeaderStart 5060 |
+| B49 | `Area189_LeaderProject` | >> 8 | Area189_LeaderProject 5916 |
+| B50 | `Area189_LeaderProject` | mask 23 bits | Area189_LeaderProject 4652 |
+| B51 | `Area189_LeaderProject` | - 0x3000 | Area189_LeaderProject 6000 |
+| B52 | `Area189_LeaderProject` | floor for toward 0 | Area189_LeaderProject 1609 |
+| B53 | `Area189_LeaderProject` | not negated | Area189_LeaderProject 4737 |
+| B54 | `Area189_LeaderProject` | z from x | Area189_LeaderProject 5570 |
+| B55 | `Area189_LeaderProject` | depth to +0x78 | Area189_LeaderProject 6000 |
+| B56 | `Area189_LeaderProject` | no x87 (NaN kept signalling) | Area189_LeaderProject 769 |
+| B57 | `Area189_LeaderProject` | x for y | Area189_LeaderProject 6000 |
+| B58 | `Area189_LeaderProject` | +0x14 2 | Area189_LeaderProject 5999 |
+| B59 | `Area189_LeaderProject` | bit 8 | Area189_LeaderProject 6000 |
+| B60 | `Area189_LeaderProject` | bit 0xB | Area189_LeaderProject 3976 |
+| B61 | `Area189_LeaderProject` | bit 5 | Area189_LeaderProject 962 |
+| B62 | `Area189_LeaderProject` | state 4 | Area189_LeaderProject 1304 |
+| B63 | `Area189_LeaderProject` | speed -0x1000 | Area189_LeaderProject 1304 |
+| B64 | `Area189_LeaderProject` | count 0x77 | Area189_LeaderProject 1304 |
+| B65 | `Area189_LeaderProject` | word 0x3D | Area189_LeaderProject 1304 |
+| B66 | `Area189_LeaderProject` | else state 1 | Area189_LeaderProject 4696 |
+| B67 | `Area189_LeaderProject` | the object read before the depth call | Area189_LeaderProject 2659 |
+| B68 | `Area189_LeaderProject` | vertex + 1 | Area189_LeaderProject 6000 |
+| B69 | `Area189_LeaderControl` | flag bit 9 | Area189_LeaderControl 1677 |
+| B70 | `Area189_LeaderControl` | flags2 bit 7 | Area189_LeaderControl 1701 |
+| B71 | `Area189_LeaderControl` | request 2 only | Area189_LeaderControl 1323 |
+| B72 | `Area189_LeaderControl` | menu button ignored | Area189_LeaderControl 524 |
+| B73 | `Area189_LeaderControl` | count 1 | Area189_LeaderControl 396 |
+| B74 | `Area189_LeaderControl` | angle & 0x7FF | Area189_LeaderControl 176 |
+| B75 | `Area189_LeaderControl` | turn zero-extended | Area189_LeaderControl 199 |
+| B76 | `Area189_LeaderControl` | state 5 | Area189_LeaderControl 382 |
+| B77 | `Area189_LeaderControl` | leader +0x136 | Area189_LeaderControl 382 |
+| B78 | `Area189_LeaderControl` | steps on 3 | Area189_LeaderControl 811 |
+| B79 | `Area189_LeaderControl` | one step more in x | Area189_LeaderControl 7 |
+| B80 | `Area189_LeaderControl` | x from 0x1100 | Area189_LeaderControl 2 |
+| B81 | `Area189_LeaderControl` | x to 0x1300 | Area189_LeaderControl 3 |
+| B82 | `Area189_LeaderControl` | z from 0x1900 | Area189_LeaderControl 3 |
+| B83 | `Area189_LeaderControl` | message 4 | Area189_LeaderControl 11 |
+| B84 | `Area189_LeaderControl` | bit 5 | Area189_LeaderControl 400 |
+| B85 | `Area189_LeaderControl` | x from 0x1600 | Area189_LeaderControl 2 |
+| B86 | `Area189_LeaderControl` | x to 0x1800 | Area189_LeaderControl 3 |
+| B87 | `Area189_LeaderControl` | z to 0xD00 | Area189_LeaderControl 4 |
+| B88 | `Area189_LeaderControl` | message 2 for 3 | Area189_LeaderControl 15 |
+| B89 | `Area189_LeaderControl` | count - 2 | Area189_LeaderControl 384 |
+| B90 | `Area189_LeaderControl` | leader +0x137 2 | Area189_LeaderControl 385 |
+| B91 | `Area189_LeaderControl` | state 4 after the step | Area189_LeaderControl 385 |
+| B92 | `Block (189 LeaderControl)` | mask 0xFFF0 | Area189_LeaderControl 8 |
+| B93 | `Block (189 LeaderControl)` | unsigned block | Area189_LeaderControl 21 |
+| B94 | `Area189_LeaderControl` | the object read before the step begins | Area189_LeaderControl 24 |
+| B95 | `Area189_LeaderStep` | arrives at 1 | Area189_LeaderStep 605 |
+| B96 | `Area189_LeaderStep` | count - 2 | Area189_LeaderStep 4745 |
+| B97 | `Area189_LeaderStep` | leader +0x137 0 | Area189_LeaderStep 5999 |
+| B98 | `Area189_LeaderTurn` | 2 + facing | Area189_LeaderTurn 2120 |
+| B99 | `Area189_LeaderTurn` | target at or below | Area189_LeaderTurn 2119 |
+| B100 | `Area189_LeaderTurn` | state 3 | Area189_LeaderTurn 2424 |
+| B101 | `Area189_LeaderTurn` | angle & 0x1FFF | Area189_LeaderTurn 1594 |
+| B102 | `Area189_LeaderTurn` | angle + 1 | Area189_LeaderTurn 6000 |
+| B103 | `Area189_StepBegin` | eight steps as seven | Area189_StepBegin 5984 |
+| B104 | `Area189_StepBegin` | x speed << 2 | Area189_StepBegin 5388 |
+| B105 | `Area189_StepBegin` | z speed from x | Area189_StepBegin 5406 |
+| B106 | `Area189_StepBegin` | z from x | Area189_StepBegin 6000 |
+| B107 | `Area189_StepBegin` | height at (z, x) | Area189_StepBegin 6000 |
+| B108 | `Area189_StepBegin` | count read before the height call | Area189_StepBegin 2475 |
+| B109 | `Area189_StepBegin` | unsigned division | Area189_StepBegin 2822 |
+| B110 | `Area189_StepBegin` | rise from z | Area189_StepBegin 6000 |
+| B111 | `Area189_StepBegin` | facing & 7 | Area189_StepBegin 1904 |
+| B112 | `Area189_StepMove` | kind-2 x from z | Area189_StepMove 6000 |
+| B113 | `Area189_StepMove` | y by the z speed | Area189_StepMove 6000 |
+| B114 | `Area189_StepMove` | kind-2 z from x | Area189_StepMove 6000 |
+| B115 | `Area189_StepMove` | redraw 3 | Area189_StepMove 6000 |
+| B116 | `Area189_StepArrive` | frame 0x1E1 | Area189_StepArrive 603 |
+| B117 | `Area189_StepArrive` | reserve + 9 | Area189_StepArrive 284 |
+| B118 | `Area189_StepArrive` | FF 2 | Area189_StepArrive 324 |
+| B119 | `Area189_StepArrive` | bit 1 | Area189_StepArrive 253 |
+| B120 | `Area189_StepArrive` | message 7 | Area189_StepArrive 378 |
+| B121 | `Area189_StepArrive` | frame word not read again | Area189_StepArrive 53 |
+| B122 | `Area189_StepArrive` | frame word 1 | Area189_StepArrive 375 |
+| B123 | `Area189_StepArrive` | count + 2 | Area189_StepArrive 513 |
+| B124 | `Area189_StepArrive` | message 5 for 6 | Area189_StepArrive 513 |
+| B125 | `Area189_StepArrive` | FF 0 at 0x3C0 | Area189_StepArrive 511 |
+| B126 | `Area189_StepArrive` | bits | 3 | Area189_StepArrive 269 |
+| B127 | `Area189_StepArrive` | two a step | Area189_StepArrive 502 |
+| B128 | `Area189_StepArrive` | two with FF | Area189_StepArrive 1520 |
+| B129 | `Area189_StepArrive` | below 0 | Area189_StepArrive 51 |
+| B130 | `Area189_StepArrive` | steps 1 | Area189_StepArrive 2171 |
+| B131 | `Area189_StepArrive` | message 0 | Area189_StepArrive 190 |
+| B132 | `Area189_StepArrive` | FF * 21 | Area189_StepArrive 15 |
+| B133 | `Area189_StepArrive` | + 8 | Area189_StepArrive 37 |
+| B134 | `Area189_StepArrive` | rand & 15 | Area189_StepArrive 102 |
+| B135 | `Area189_StepArrive` | at the limit counts on | Area189_StepArrive 37 |
+| B136 | `Area189_StepArrive` | the sixth | Area189_StepArrive 210 |
+| B137 | `Area189_StepArrive` | FE 3 | Area189_StepArrive 819 |
+| B138 | `Area189_StepArrive` | sound 0x10C | Area189_StepArrive 819 |
+| B139 | `Area189_StepArrive` | events 1 | Area189_StepArrive 819 |
+| B140 | `Area189_StepArrive` | FE 0 | Area189_StepArrive 331 |
+| B141 | `Area189_StepArrive` | sound 0x109 | Area189_StepArrive 331 |
+| B142 | `Area189_StepArrive` | events read before the sound | Area189_StepArrive 158 |
+| B143 | `Area189_StepArrive` | raise for drain | Area189_StepArrive 331 |
+| B144 | `Area189_StepArrive` | request 1 | Area189_StepArrive 1420 |
+| B145 | `Area189_StepArrive` | bit 5 | Area189_StepArrive 4676 |
+| B146 | `Area189_StepArrive` | x block 0x1800 | Area189_StepArrive 49 |
+| B147 | `Area189_StepArrive` | z to 0xF00 | Area189_StepArrive 26 |
+| B148 | `Area189_StepArrive` | the object read before the flag call | Area189_StepArrive 161 |
+| B149 | `Area189_StepArrive` | hook (z, x) | Area189_StepArrive 4610 |
+| B150 | `Area189_StepArrive` | hook answer al only | Area189_StepArrive 1130 |
+| B151 | `Area189_StepArrive` | the object not read again after the hook | Area189_StepArrive 983 |
+| B152 | `Area189_StepArrive` | x edge 0x800 | Area189_StepArrive 38 |
+| B153 | `Area189_StepArrive` | z by 0x80 | Area189_StepArrive 1098 |
+| B154 | `Area189_StepArrive` | x edge 0x2000 | Area189_StepArrive 35 |
+| B155 | `Area189_StepArrive` | z edge past 0x1900 | Area189_StepArrive 44 |
+| B156 | `BlockWord (189 StepArrive)` | unsigned block | Area189_StepArrive 1294 |
+| B157 | `Area189_StepArrive` | flags low byte | Area189_StepArrive 45 |
+| B158 | `Area189_StepArrive` | flag bit 4 | Area189_StepArrive 967 |
+| B159 | `Area189_StepArrive` | past the pace | Area189_StepArrive 830 |
+| B160 | `Area189_StepArrive` | edge count 1 | Area189_StepArrive 1901 |
+| B161 | `Area189_StepArrive` | mark flag 0x74 | Area189_StepArrive 9 |
+| B162 | `Area189_StepArrive` | mark z 0x1500 | Area189_StepArrive 22 |
+| B163 | `Area189_StepArrive` | mark z 0x1200 | Area189_StepArrive 17 |
+| B164 | `Area189_StepArrive` | the object not read again after a mark | Area189_StepArrive 12 |
+| B165 | `Area189_StepArrive` | area 0x7C | Area189_StepArrive 1901 |
+| B166 | `Area189_StepArrive` | x 0x180000 | Area189_StepArrive 1899 |
+| B167 | `Area189_StepArrive` | flags 5 | Area189_StepArrive 1901 |
+| B168 | `Area189_StepArrive` | x or z marks | Area189_StepArrive 273 |
+| B169 | `Area189_StepArrive` | flag bit 9 | Area189_StepArrive 76 |
+| B170 | `Area189_StepArrive` | flags2 bit 7 | Area189_StepArrive 78 |
+| B171 | `Area189_StepArrive` | buttons | 0xA000 | Area189_StepArrive 18 |
+| B172 | `Area189_StepArrive` | the second button word | Area189_StepArrive 15 |
+| B173 | `Area189_StepArrive` | halts for goes on | Area189_StepArrive 119 |
+| B174 | `Area189_StepArrive` | kind-2 x from z | Area189_StepArrive 2322 |
+| B175 | `Area189_StepArrive` | redraw 4 | Area189_StepArrive 2322 |
+| B176 | `Area189_StepArrive` | frames + 2 | Area189_StepArrive 5858 |
+| B177 | `Area189_StepArrive` | edge + 2 | Area189_StepArrive 4100 |
+| B178 | `Area189_StepArrive` | halt for zero speeds | Area189_StepArrive 6000 |
+| B179 | `JitterFacing (189 x2)` | facing & 7 | Area189_StepArrive 937, Area189_ExitButton 2232 |
+| B180 | `JitterFacing (189 x2)` | rand & 1 | Area189_StepArrive 319, Area189_ExitButton 718 |
+| B181 | `JitterFacing (189 x2)` | the object read before Rand | Area189_StepArrive 60, Area189_ExitButton 126 |
+| B182 | `ChangeToPending (189 x2)` | x and z swapped | Area189_StepArrive 9, Area189_ExitButton 4475 |
+| B183 | `ChangeToPending (189 x2)` | flags + 1 | Area189_StepArrive 1901, Area189_ExitButton 4475 |
+| B184 | `Area189_LeaderHalt` | +0x4B 1 | Area189_LeaderHalt 6000 |
+| B185 | `Area189_LeaderHalt` | leader +0x137 1 | Area189_LeaderHalt 6000 |
+| B186 | `Area189_LeaderHalt` | state 0 | Area189_LeaderHalt 6000 |
+| B187 | `Area189_LeaderHalt` | the object read before the call | Area189_LeaderHalt 2676 |
+| B188 | `Area189_ExitButton` | bit 10 | Area189_ExitButton 3002 |
+| B189 | `Area189_ExitButton` | places swapped | Area189_ExitButton 4475 |
+| B190 | `Area189_ExitButton` | flags 5 | Area189_ExitButton 4475 |
+| B191 | `Area189_ExitButton` | area from x | Area189_ExitButton 4475 |
+| B192 | `Area189_ExitButton` | x << 15 | Area189_ExitButton 4475 |
+| B193 | `Area189_ExitButton` | z from x | Area189_ExitButton 4468 |
+| B194 | `Area189_ExitButton` | saved x from z | Area189_ExitButton 4475 |
+| B195 | `Area189_ExitButton` | area + 1 | Area189_ExitButton 4474 |
+| B196 | `Area189_ExitButton` | count + 2 | Area189_ExitButton 4474 |
+| B197 | `Area189_ExitButton` | answers 2 | Area189_ExitButton 4475 |
+| B198 | `Area189_MenuButton` | held for pressed | Area189_MenuButton 2235 |
+| B199 | `Area189_MenuButton` | flag bit 5 | Area189_MenuButton 1501 |
+| B200 | `Area189_MenuButton` | sound 0x106 | Area189_MenuButton 2290 |
+| B201 | `Area189_MenuButton` | request 2 | Area189_MenuButton 2290 |
+| B202 | `Area189_MenuButton` | state 0 | Area189_MenuButton 2290 |
+| B203 | `Area189_MenuButton` | the object read before the sound | Area189_MenuButton 1054 |
+| B204 | `Area189_MenuButton` | answers 3 | Area189_MenuButton 2290 |
+| B205 | `Area189_ZeroSpeeds` | +0x18 | Area189_ZeroSpeeds 6000 |
+| B206 | `Area189_ZeroSpeeds` | x speed 1 | Area189_ZeroSpeeds 6000 |
+| B207 | `Area189_TurnInput` | bit 11 | Area189_TurnInput 2748 |
+| B208 | `Area189_TurnInput` | answers 3 | Area189_TurnInput 2318 |
+| B209 | `Area189_TurnInput` | turn + 2 | Area189_TurnInput 1404 |
+| B210 | `Area189_TurnInput` | step 0xF1 | Area189_TurnInput 1404 |
+| B211 | `Area189_TurnInput` | bit 14 | Area189_TurnInput 1138 |
+| B212 | `Area189_TurnInput` | step 0x11 | Area189_TurnInput 709 |
+| B213 | `Area189_TurnInput` | facing & 7 | Area189_TurnInput 1014 |
+| B214 | `Area189_TurnInput` | pose 4 | Area189_TurnInput 709 |
+| B215 | `Area189_TurnInput` | pose 1 for 2 | Area189_TurnInput 1404 |
+| B216 | `Area189_TurnInput` | bit 15 first | Area189_TurnInput 729 |
+| B217 | `Area189_TurnInput` | answers 2 | Area189_TurnInput 2113 |
+| B218 | `Area189_RaiseByte1E` | below 8 | Area189_RaiseByte1E 3316 |
+| B219 | `Area189_RaiseByte1E` | six records | Area189_RaiseByte1E 1830 |
+| B220 | `Area189_RaiseByte1E` | record + 0x1E | Area189_RaiseByte1E 5691 |
+| B221 | `Area189_RaiseByte1E` | + 2 | Area189_RaiseByte1E 5607 |
+| B222 | `Area189_DrainHp` | + 0x31 | Area189_DrainHp 468 |
+| B223 | `Area189_DrainHp` | / 99 | Area189_DrainHp 5887 |
+| B224 | `Area189_DrainHp` | above d or at it | Area189_DrainHp 3812 |
+| B225 | `Area189_DrainHp` | to 0 | Area189_DrainHp 5931 |
+| B226 | `Area189_DrainHp` | bound +0x3E | Area189_DrainHp 5989 |
+| B227 | `Area189_DrainHp` | eight records | Area189_DrainHp 5998 |
+| C1 | `Area191_ChoiceMessage68` | message 0x69 | Area191_ChoiceMessage68 732 |
+| C2 | `Area191_ChoiceMessage68` | answer 1 as 0 | Area191_ChoiceMessage68 730 |
+| C3 | `Area191_ChoiceMessage6C` | message 0x6D | Area191_ChoiceMessage6C 730 |
+| C4 | `Area191_ChoiceMessage6C` | else 0xFFFE | Area191_ChoiceMessage6C 5270 |
+| C5 | `Area191_ChoiceFocusPair` | area 188's pairs | Area191_ChoiceFocusPair 5506 |
+| C6 | `Area191_ChoiceTail53` | state 0x1F | Area191_ChoiceTail53 728 |
+| C7 | `Area191_ChoiceTail53` | kind 0x36 | Area191_ChoiceTail53 728 |
+| C8 | `Area191_ChoiceTail53` | answer 3 | Area191_ChoiceTail53 1099 |
+| C9 | `Area191_ChoiceTail53` | run on 1 | Area191_ChoiceTail53 356 |
+| C10 | `SetRun (191 x4)` | Var7 + 1 | Area191_ChoiceTail53 356, Area191_MemberNextRun 6000, Area191_ChoiceRun1 725 |
+| C11 | `SetRun (191 x4)` | step + 1 | Area191_ChoiceTail53 356, Area191_MemberNextRun 6000, Area191_ChoiceRun1 725 |
+| C12 | `Area191_ChoiceTail53` | Var7 2 | Area191_ChoiceTail53 356 |
+| C13 | `Area191_ChoiceTail53` | message 0xFFFB | Area191_ChoiceTail53 5955 |
+| C14 | `Area191_MemberNext` | bit 1 | Area191_MemberNext 4499 |
+| C15 | `Area191_MemberNext` | word + 2 | Area191_MemberNext 6000 |
+| C16 | `Area191_MemberNext` | the member read before the call | Area191_MemberNext 2117 |
+| C17 | `Area191_MemberNextRun` | step 0x18 | Area191_MemberNextRun 6000 |
+| C18 | `Area191_MemberNextRun` | Var7 3 | Area191_MemberNextRun 6000 |
+| C19 | `Area191_MemberNextRun` | word +0x8C | Area191_MemberNextRun 6000 |
+| C20 | `Area191_RunScale` | by +2 | Area191_RunScale 3985 |
+| C21 | `Area191_RunScale` | the next state | Area191_RunScale 6000 |
+| C22 | `Area191_ScaleStart` | +0x48 3 | Area191_ScaleStart 6000 |
+| C23 | `Area191_ScaleStart` | scale x 0x10001 | Area191_ScaleStart 6000 |
+| C24 | `Area191_ScaleStart` | scale y 0x20000 | Area191_ScaleStart 6000 |
+| C25 | `Area191_ScaleStart` | count 0xFE | Area191_ScaleStart 6000 |
+| C26 | `Area191_ScaleStart` | a byte store | Area191_ScaleStart 6000 |
+| C27 | `Area191_ScaleStart` | +0x5D 0x51 | Area191_ScaleStart 6000 |
+| C28 | `Area191_ScaleStart` | +0x5E 0x3D | Area191_ScaleStart 6000 |
+| C29 | `Area191_ScaleStart` | +0x5F 1 | Area191_ScaleStart 6000 |
+| C30 | `Area191_ScaleStart` | state 2 | Area191_ScaleStart 6000 |
+| C31 | `ScaleTick (191 x2)` | x by +0x10 | Area191_ScaleGrow 6000, Area191_ScaleShrink 6000 |
+| C32 | `ScaleTick (191 x2)` | y scale the other way | Area191_ScaleGrow 6000, Area191_ScaleShrink 6000 |
+| C33 | `ScaleTick (191 x2)` | flip every 8 | Area191_ScaleGrow 691, Area191_ScaleShrink 795 |
+| C34 | `ScaleTick (191 x2)` | done state 3 | Area191_ScaleGrow 506, Area191_ScaleShrink 472 |
+| C35 | `ScaleTick (191 x2)` | count - 2 | Area191_ScaleGrow 6000, Area191_ScaleShrink 6000 |
+| C36 | `Area191_ScaleGrow` | flips to 1 | Area191_ScaleGrow 938 |
+| C37 | `Area191_ScaleShrink` | step -0x1000 | Area191_ScaleShrink 6000 |
+| C38 | `Area191_Tail53` | message 0x6E | Area191_Tail53 493 |
+| C39 | `Area191_Tail53` | request 3 | Area191_Tail53 493 |
+| C40 | `Area191_Tail53` | to state 2 | Area191_Tail53 493 |
+| C41 | `Area191_Tail53` | transition 1 | Area191_Tail53 320 |
+| C42 | `Area191_Tail53` | to state 4 | Area191_Tail53 320 |
+| C43 | `Area191_Tail53` | wait word low byte | Area191_Tail53 65 |
+| C44 | `Area191_Tail53` | pass flags 1 | Area191_Tail53 180 |
+| C45 | `Area191_Tail53` | stream 1 | Area191_Tail53 180 |
+| C46 | `Area191_Tail53` | to state 5 | Area191_Tail53 180 |
+| C47 | `Area191_Tail53` | stream answer al only | Area191_Tail53 168 |
+| C48 | `Area191_Tail53` | flag 0x83 | Area191_Tail53 296 |
+| C49 | `Area191_Tail53` | count read before the call | Area191_Tail53 152 |
+| C50 | `Area191_Tail53` | count + 2 | Area191_Tail53 296 |
+| C51 | `Area191_Tail53` | to state 0xB | Area191_Tail53 296 |
+| C52 | `Area191_Tail53` | frame word 1 | Area191_Tail53 296 |
+| C53 | `Area191_Tail53` | flags 5 | Area191_Tail53 327 |
+| C54 | `Area191_Tail53` | x and z swapped | Area191_Tail53 327 |
+| C55 | `Area191_Tail53` | flags2 bit 7 | Area191_Tail53 239 |
+| C56 | `Area191_Tail53` | flag 0x78 | Area191_Tail53 327 |
+| C57 | `Area191_Tail53` | saved place read before the call | Area191_Tail53 168 |
+| C58 | `Area191_Tail53` | kind 1 at 0x14 | Area191_Tail53 309 |
+| C59 | `Area191_Tail53` | flags 2 | Area191_Tail53 314 |
+| C60 | `Area191_Tail53` | bit 1 cleared too | Area191_Tail53 161 |
+| C61 | `Area191_Tail53` | bits read before the call | Area191_Tail53 161 |
+| C62 | `Area191_Tail53` | state & 0x7F | Area191_Tail53 401 |
+| C63 | `Area191_Tail53` | restore before the music | Area191_Tail53 180 |
+| C64 | `Area191_Tail53` | waits on request 1 | Area191_Tail53 236 |
+| C65 | `Area191_StepHook` | cell 0xA5 | Area191_StepHook 1494 |
+| C66 | `Area191_StepHook` | x low byte | Area191_StepHook 7 |
+| C67 | `Area191_StepHook` | z + 2 | Area191_StepHook 3978 |
+| C68 | `Area191_StepHook` | diagonal z | Area191_StepHook 2962 |
+| C69 | `Area191_StepHook` | state 1 | Area191_StepHook 4294 |
+| C70 | `Area191_StepHook` | answers 2 | Area191_StepHook 4294 |
+| C71 | `Area191_StepHook` | x and z swapped | Area191_StepHook 4519 |
+| C72 | `Area191_StepHook` | x >> 15 | Area191_StepHook 3044 |
+| C73 | `Area191_StepHook` | two cells needed | Area191_StepHook 2341 |
+| C74 | `Area191_StepHook` | kind 0x36 | Area191_StepHook 4294 |
+| C75 | `Area191_TalkMessage` | four keys | Area191_TalkMessage 3344 |
+| C76 | `Area191_TalkMessage` | rows of 8 | Area191_TalkMessage 5451 |
+| C77 | `Area191_TalkMessage` | count at most 7 | Area191_TalkMessage 2029 |
+| C78 | `Area191_TalkMessage` | byte +0x1F | Area191_TalkMessage 4273 |
+| C79 | `Area191_TalkMessage` | record by the member byte | Area191_TalkMessage 1974 |
+| C80 | `Area191_TalkMessage` | b and c swapped | Area191_TalkMessage 3702 |
+| C81 | `Area191_TalkMessage` | bit 0xB | Area191_TalkMessage 6000 |
+| C82 | `Area191_TalkMessage` | c above 8 | Area191_TalkMessage 180 |
+| C83 | `Area191_TalkMessage` | c from 4 | Area191_TalkMessage 78 |
+| C84 | `Area191_TalkMessage` | b below 8 | Area191_TalkMessage 17 |
+| C85 | `Area191_TalkMessage` | + 6 | Area191_TalkMessage 152 |
+| C86 | `Area191_TalkMessage` | the other steps' table | Area191_TalkMessage 629 |
+| C87 | `Area191_TalkMessage` | row flag 3 | Area191_TalkMessage 2018 |
+| C88 | `Area191_TalkMessage` | the next message | Area191_TalkMessage 686 |
+| C89 | `Area191_TalkMessage` | + 9 | Area191_TalkMessage 746 |
+| C90 | `Area191_TalkMessage` | member & 7 | Area191_TalkMessage 2345 |
+| C91 | `Area191_TalkMessage` | the byte after | Area191_TalkMessage 2422 |
+| C92 | `Area191_TalkMessageB` | c below 6 | Area191_TalkMessageB 486 |
+| C93 | `Area191_TalkMessageB` | the other steps' table | Area191_TalkMessageB 1190 |
+| C94 | `Area191_TalkMessageB` | + 7 | Area191_TalkMessageB 2306 |
+| C95 | `Area191_TalkMessageB` | table B's messages | Area191_TalkMessageB 5623 |
+| C96 | `Area191_TalkMessageB` | c as a word | Area191_TalkMessageB 1546 |
+| C97 | `Area191_Init` | chapter 0xF | Area191_Init 1834 |
+| C98 | `Area191_Init` | row flag 4 | Area191_Init 1191 |
+| C99 | `Area191_Init` | flag 0x76 | Area191_Init 5163 |
+| C100 | `Area191_Init` | list 2 from 8 | Area191_Init 58 |
+| C101 | `Area191_Init` | list 1 from 6 | Area191_Init 15 |
+| C102 | `Area191_Init` | count from 4 | Area191_Init 12 |
+| C103 | `Area191_Init` | list 1 with bit 0xA | Area191_Init 895 |
+| C104 | `Area191_Init` | bit 0xB | Area191_Init 1718 |
+| C105 | `Area191_Init` | five objects | Area191_Init 1718 |
+| C106 | `Area191_Init` | a byte store | Area191_Init 1705 |
+| C107 | `Area191_Init` | none 0xFE | Area191_Init 308 |
+| C108 | `Area191_Init` | the next record | Area191_Init 1718 |
+| C109 | `Area191_Init` | list k & 1 | Area191_Init 1251 |
+| C110 | `Area191_Init` | record 1's byte | Area191_Init 497 |
+| C111 | `Area191_Init` | level read after the flag call | Area191_Init 218 |
+| C112 | `Area191_Kind18Flag77` | flag 0x78 | Area191_Kind18Flag77 6000 |
+| C113 | `Area191_Kind18Flag77` | count + 3 | Area191_Kind18Flag77 3953 |
+| C114 | `Area191_Kind18Flag77` | bit 1 | Area191_Kind18Flag77 2940 |
+| C115 | `Area191_Kind18Flag77` | events 1 | Area191_Kind18Flag77 3953 |
+| C116 | `Area191_Kind18Flag77` | not released | Area191_Kind18Flag77 3953 |
+| C117 | `Area191_ChoiceRun1` | answer 1 | Area191_ChoiceRun1 1480 |
+| C118 | `Area191_ChoiceRun1` | step 0x15 | Area191_ChoiceRun1 725 |
+| B15b | `Area189_LeaderRun` | by +1, kept in the table | Area189_LeaderRun 4783 |
 
 ## 5. The tables named
 
