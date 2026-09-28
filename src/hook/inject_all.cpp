@@ -615,8 +615,6 @@ void InjectAll() {
     ScenaSx2_Inject();          // round 10 group SX2 (the engine callees nobody owned after SX, thirteen): its
                                 // clones' calls re-aimed at the scenario harness's recorders; no module patches
                                 // bytes inside its 13 (DIVERGENCE.md, cheats.cpp): order does not matter
-    DrawPool_Grow();           // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
-                                // which all compared the original's arrays (draw_pool.h)
     ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
                                 // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
