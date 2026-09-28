@@ -60,6 +60,20 @@ constexpr U kPacketCell = 0x7E0670;       // Gfx_PacketNext
 constexpr U kVertices = 0x9037A0;         // Prim_VertexScratch
 constexpr U kGameMode = 0x66C7E8;
 constexpr U kCondFE = 0x905E20;           // Cond_ByteFE
+constexpr U kGteMatrix = 0x7DE4A0;        // Gte_Matrix: the GTE's current rotation and translation
+constexpr U kCameraMatrix = 0x905E40;     // Camera_Matrix
+
+// A MATRIX of identity rotation (0x1000 on the diagonal) and translation t.
+void SetIdentity(U at, std::int32_t tx, std::int32_t ty, std::int32_t tz) {
+    unsigned char* const m = Mem(at);
+    std::memset(m, 0, 0x20);
+    SetWord(m + 0, 0x1000);
+    SetWord(m + 8, 0x1000);
+    SetWord(m + 0x10, 0x1000);
+    SetLong(m + 0x14, tx);
+    SetLong(m + 0x18, ty);
+    SetLong(m + 0x1C, tz);
+}
 
 const ah::Callee kSet40 = {"ScriptFlags_Set40", bof3::addr::ScriptFlags_Set40, KeyOf(&::ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0};
 const ah::Callee kClear40 = {"ScriptFlags_Clear40", bof3::addr::ScriptFlags_Clear40, KeyOf(&::ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0};
@@ -520,7 +534,7 @@ U StepTargetAnswer(const U*, U answer) {
     static const U kT[] = {0, 0, 0, 1, 0xFF, 2, 3, 5, 0xFE};
     const U n = ah::Noise();
     if (g_walk && n % 3 != 0) return (n >> 8) % 4 == 0 ? (answer & 0xFFFFFF00u) : 0u;
-    return (answer & 0xFFFFFF00u) | kT[n % 9];
+    return (answer & 0xFFFFFF00u) | kT[(n >> 4) % 9];
 }
 // Field_LeaderPushObjects: an object to push half the time.
 U PushAnswer(const U*, U answer) {
@@ -550,10 +564,11 @@ U LeaderCellAnswer(const U*, U answer) {
 // call: the stand-in turns it by 0, +-1, +-2, +-3, 4 or to anything, and
 // answers "turned" or not.
 U TurnEffect(const U*, U answer) {
-    static const U kD[] = {0, 1, 0xFF, 2, 0xFE, 3, 0xFD, 4, 5};
+    static const U kD[] = {0, 1, 0xFF, 2, 0xFE, 3, 0xFD, 4, 5, 0xFA, 0xF6, 6, 10};
     const U n = ah::Noise();
     unsigned char* const o = Sprite_Current;
-    if (n % 3 != 0) o[8] = static_cast<unsigned char>(n % 11 == 0 ? (n >> 8) : o[8] + kD[(n >> 4) % 9]);
+    static const U kSigned[] = {0x7F, 0x80, 0x81, 0xFE, 0x02, 0x7C, 0x83};
+    if (n % 3 != 0) o[8] = static_cast<unsigned char>(n % 11 == 0 ? (n >> 8) : n % 7 == 0 ? kSigned[(n >> 8) % 7] : o[8] + kD[(n >> 4) % 13]);
     return (answer & 0xFFFFFF00u) | ((n >> 12) % 3 == 0 ? 0u : 1u);
 }
 // 0x415680 leaves the pace in Field_State +0x128 (3 or 4), which the leader
@@ -606,7 +621,7 @@ void SeedLeader(unsigned k) {
     g_exit = ah::Half() ? kExitNone : ah::Next() % (kExitNone + 1);
     g_walk = k == kLControl;
     // the facing a direction (the table has eight), now and then a whole byte
-    o[8] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 8 : ah::Next());
+    o[8] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 8 : ah::Half() ? AH_PICK(0x7F, 0x80, 0x81, 0xF9, 0xFE, 0xFF, 0x7D) : ah::Next());
     // the push button and the held keys, sharing a bit half the time
     const U button = ah::Often() ? (1u << (ah::Next() % 16)) : ah::Next() & 0xFFFF;
     SetWord(Mem(at::kButtonMap1), button);
@@ -621,7 +636,7 @@ void SeedLeader(unsigned k) {
         Field_ScriptFlags2 = static_cast<unsigned short>(stop == 1 ? Field_ScriptFlags2 | 0x40u : Field_ScriptFlags2 & ~0x40u);
         Field_Request = static_cast<unsigned char>(stop == 2 ? AH_PICK(1, 2, 0x80, 0xFF) : 0);
         o[0xA] = static_cast<unsigned char>(stop == 3 ? AH_PICK(1, 0x80, 0xFF) : 0);
-        Field_InputHeld = static_cast<unsigned short>(ah::Half() ? 0 : ah::Next() | 1);
+        Field_InputHeld = static_cast<unsigned short>(ah::Half() ? 0 : ah::Often() ? AH_PICK(1, 1, 2, 0x8000, 0xFFFF) : ah::Next() | 1);
         Field_State[0x148] = static_cast<unsigned char>(ah::Next() % 4);
         for (unsigned r = 0; r < 4; ++r)
             Mem(kActorStates + r * 0xA4)[0] = static_cast<unsigned char>(ah::Half() ? 0x20 | ah::Next() : ah::Next() & ~0x20u);
@@ -756,7 +771,7 @@ const ah::DataTable kTablesFx[] = {{at::kKind5CStates, 5}};
 enum : unsigned { kRegFxPackets = 3 };
 ah::Region g_regionsFx[] = {
     {kDrawPass, 1}, {kPacketCell, 4}, {kVertices, 0x20}, {0, kPacketBytes}, {kEffects, 20 * 0x80}, {kEffect255, 0x10},
-    {kCondFE, 1}, {at::kBandHeights, 4},
+    {kCondFE, 1}, {at::kBandHeights, 4}, {kGteMatrix, 0x20}, {kCameraMatrix, 0x20},
 };
 unsigned char g_heights[4];
 
@@ -788,7 +803,11 @@ void SeedFx(unsigned k) {
         o[0xA] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 8, 0xFF) : ah::Next());
         break;
     case kFRingRise:
-        SetWord(o + 0x3E, ah::Often() ? AH_PICK(0x270, 0x271, 0x26F, 0x280, 0, 0xFFF0, 0x7FF0, 0x8000, 0x100) : ah::Next());
+        SetWord(o + 0x3E, ah::Often() ? AH_PICK(0x270, 0x271, 0x26F, 0x280, 0, 0xFFF0, 0x7FF0, 0x8000, 0x100, 0xFFE1, 0x8001, 0xFFFF, 0xFF01) : ah::Next());
+        // the GTE and the camera at identity half the time (a translation
+        // off the ring so the depth is sane), else the random fill
+        if (ah::Half()) SetIdentity(kGteMatrix, 0, 0, 0);
+        if (ah::Half()) SetIdentity(kCameraMatrix, static_cast<std::int32_t>(ah::Next() % 0x100), static_cast<std::int32_t>(ah::Next() % 0x100), 0x400 + static_cast<std::int32_t>(ah::Next() % 0x400));
         if (ah::Half()) {
             // positions the GTE maps near the screen, and anything
             SetLong(o + 0x34, static_cast<std::int32_t>(0x800000 + (ah::Next() & 0xFFFFF)));
