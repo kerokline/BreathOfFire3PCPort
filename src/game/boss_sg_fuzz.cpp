@@ -88,10 +88,11 @@ std::uint32_t ClearEffect(const std::uint32_t*, std::uint32_t answer) {
     if (n % 2) Mem(n & 2 ? at::kMember0X : at::kMember0Z)[(n >> 2) % 4] ^= static_cast<unsigned char>(1 + (n >> 8) % 0xFF);
     return answer;
 }
-// Sound_PlayEffect louder than the real one: it also flips bit 2 of 0x904AAD
+// Sound_PlayEffect louder than the real one: it also flips a bit of 0x904AAD
 // half the time, which kind 40's flash reads again after it.
 std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
-    if (bh::Noise() % 2) Mem(at::kScript)[0] ^= 4;
+    const U n = bh::Noise();
+    if (n % 2) Mem(at::kScript)[0] ^= static_cast<unsigned char>(1u << ((n >> 1) % 8));
     return answer;
 }
 // The GTE stand-ins of kind 40's quad: a result from the inputs and the noise,

@@ -4,7 +4,7 @@
 wave two. 53 functions of `0x43CDE0..0x43E535` ours (`src/game/boss_sg.cpp`,
 shadow `boss_sg`), each read to its last instruction with capstone and fuzzed
 through the boss harness ([`boss_harness.md`](boss_harness.md)), eleven
-`Run`s, 0 mismatches; CONTROLS_SUMMARY (section 4). The first user of the
+`Run`s, 0 mismatches; 148 controls planted, 145 refused by a count, 1 refused by a fault with its near variant refused by a count, 2 equivalent with their near variants refused (section 4). The first user of the
 harness's `kTask` shape (F6). Fuzz only: no recorded route reaches a boss
 fight.
 
@@ -174,7 +174,32 @@ drawn below their table, entries and death steps `kState`, hooks
 kind's `+1`, `+2`, `+3` and hook tables and F6's three are `DataTable`s
 (hook tables with one word, listed first).
 
-RUNS_TABLE
+| Run | Fight, kind | Clones | Rounds | Calls | Result (this worktree) |
+|---|---|---|--:|--:|---|
+| `k34` | 29, 34 | dispatcher, entry, hook | 6,000 each | 18,000 | 0 mismatches |
+| `b29` | 29 | set-up, end | 6,000 | 6,000 | 0 |
+| `k35` | 30, 35 | dispatcher, entry, hook | 6,000 | 18,000 | 0 |
+| `k36` | 30, 36 | dispatcher, entry, hook | 6,000 | 18,000 | 0 |
+| `k37` | 31, 37 | five | 6,000 | 42,000 | 0 |
+| `b31` | 31 | set-up, end, exit | 6,000 | 24,000 | 0 |
+| `k38` | 32, 38 | five | 6,000 | 42,000 | 0 |
+| `b32` | 32 | set-up, end, exit | 6,000 | 42,948 | 0 |
+| `b33` | 33 | set-up, end | 6,000 | 10,143 | 0 |
+| `f6` | 33 | twelve (`kTask`) | 6,000 | 128,265 | 0 |
+| `k40` | 34, 40 | twelve | 6,000 | 207,680 | 0 |
+
+426,000 rounds in all. Coverage (the originals' calls, this worktree): every
+entry of every `DataTable` (the generic entries about 500 each, the action
+tables' about 1,000); `b32`: `Battle_RemoveFromTurnOrder` /
+`Sprite_PoseFromSet` 9,474; `f6`: `Sprite_ScriptTickOnce` about 46,000,
+`Sprite_SetAnimation` about 24,600, `Sprite_UpdateScreen` about 11,900,
+`BattleTask_Create` / `MagicFx_StepToward` / `MagicFx_NearSprite3D` 6,000,
+`Battle_SetTargetFlag40` about 5,000, `BattleTask_FreeCurrent` about 6,800;
+`k40`: `BossMikba_DrawQuad` 12,000, `Gte_RotTrans` 24,000, the other GTE /
+GPU calls 6,000 each, `Sound_PlayEffect` about 7,500, `BattleWin_DrawTileRgb`
+about 3,100, `Battle_EnemyDefeated` about 5,000, `phase 0x437CA0`
+(`BossOp_ScriptTick`) about 830. Counts move with the build directory; judge
+by 0 mismatches.
 
 **`kTask` works as documented** - the first user of the shape: `Sprite_Current`
 is one of the first four task slots, `0x93B8C4` the same two times in three,
@@ -193,7 +218,10 @@ louder than the real one (BSE's effect: set-up 32's loop reads the member's
 `+0x90` and `+8` after it, and the next member's `+0`); `Sprite_PoseFromSet`
 with its pose masked to a byte (BSE's listing); `BossActor_Clear` louder than
 the real one (it also moves a byte of party member 0's `+0x34` / `+0x38`,
-which set-up 33's end hook reads after it); `BossMikba_DrawQuad` (the group's
+which set-up 33's end hook reads after it); `Sound_PlayEffect` louder than
+the real one (it flips a bit of `0x904AAD` half the time, which kind 40's
+flash reads again after it - G110: 11 rounds without, 715 with);
+`BossMikba_DrawQuad` (the group's
 own, one word masked 0xFFF); and the five GTE calls of the quad with their
 stack pointers masked and their vectors by their bytes (`Gte_RotMatrixYXZ`
 the angles, 6; `Gte_SetRotMatrix` the matrix, 18; `Gte_TransMatrix` the
@@ -218,9 +246,9 @@ the compared state); the flight's fall `+0x20` with `+0x14` one fall short of
 0xFF, 0xBF; set-up 32's members' `+0` bit 0 and `+8` where the byte add wraps.
 **`Disturb`** moves `0x904AAD`, member 0's `+0x34` / `+0x38`, a member's
 `+0x91` / `+0` / `+8`, `Sprite_Current`'s `+0xC` / `+0x10` / `+0x18` /
-`+0x1C`, the facing and `Field_Kind2X` / `Z`; F6's `settle` STAR_SETTLE.
+`+0x1C`, the facing and `Field_Kind2X` / `Z`; F6's `settle` re-points `Sprite_Current` at another of the four task slots a quarter of the time and flips its `+0` between 0 and not another quarter, and kind 40's re-points it at another enemy a quarter of the time (both from `Noise`): the steps read `Sprite_Current` again after their calls, and the standard disturbance moves it about one call in 24 (the first controls run refused G60 in 3 rounds and G113 in 14 without them; section 4 is the second run).
 
-STAR_LINE
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final build): exit 0, every `MISMATCHES` line of the log 0 (901, BSG's eleven among them), no Fatal; it passed first time (no silent death).
 
 ## 4. Controls
 
@@ -230,9 +258,158 @@ the one `Run` that holds the function, restore, rebuild at the end. A
 dispatcher's plant is made in the shared `Dispatch` / `TaskSteps` helper,
 keyed on the function's name (the next entry of its table); a shared
 helper's plant (`Idle`, `Fallen`, `ActorZero`, `Shade`) is counted against
-the function whose `Run` it ran in. CONTROLS_SUMMARY.
+the function whose `Run` it ran in. 148 controls planted, 145 refused by a count, 1 refused by a fault with its near variant refused by a count, 2 equivalent with their near variants refused.
 
-CONTROLS_TABLE
+| # | Function | Plant | Refused |
+|---|---|---|---|
+| G1 | `BossDolphin_Dispatch` | the next entry | 6000 rounds |
+| G2 | `BossDolphin_Enter` | kind 35's hook installed | 6000 rounds |
+| G3 | `BossDolphin_Enter` | +0xFC and +0xF8 swapped | 6000 rounds |
+| G4 | `BossDolphin_Hook` | the word's second byte flipped | 6000 rounds |
+| G5 | `BossDolphin_Enter` | state 3 (Idle) | 5964 rounds |
+| G6 | `BossDolphin_Enter` | al | 1 (Idle) | 4036 rounds |
+| G7 | `BossDolphin_Dispatch` | the caller's word not handed on (Dispatch) | 961 rounds |
+| G8 | `Boss29_Setup` | exit BareRet | 6000 rounds |
+| G9 | `Boss29_End` | step 0x1D | 2635 rounds |
+| G10 | `Boss29_End` | track 0x63 | 2691 rounds |
+| G11 | `Boss29_End` | the win by bit 0 | 3280 rounds |
+| G12 | `BossGisshan_Dispatch` | the next entry | 6000 rounds |
+| G13 | `BossGisshan_Enter` | kind 36's animation bytes | 6000 rounds |
+| G14 | `BossGisshan_Hook` | the word's second byte flipped | 6000 rounds |
+| G15 | `BossScylla_Dispatch` | the next entry | 6000 rounds |
+| G16 | `BossScylla_Enter` | kind 35's sound words | 6000 rounds |
+| G17 | `BossScylla_Hook` | the word's second byte flipped | 6000 rounds |
+| G18 | `BossGarr2_Dispatch` | the next entry | 6000 rounds |
+| G19 | `BossGarr2_Enter` | kind 38's hook | 6000 rounds |
+| G20 | `BossGarr2_ActDispatch` | the next entry | 6000 rounds |
+| G21 | `BossGarr2_Death` | animation 2 | 6000 rounds |
+| G22 | `BossGarr2_Death` | +0x2A on the Sprite_Current of before the call | 190 rounds |
+| G23 | `BossGarr2_Death` | +0x110 bit 13 (Fallen) | 4456 rounds |
+| G24 | `BossGarr2_Death` | +1 = 4 (Fallen) | 6000 rounds |
+| G25 | `BossGarr2_Death` | Sprite_Current's +0x110 for 0x939AD8's (Fallen) | 1905 rounds |
+| G26 | `BossGarr2_Hook` | the word's second byte flipped | 6000 rounds |
+| G27 | `Boss31_Setup` | end and exit swapped | 6000 rounds |
+| G28 | `Boss31_End` | step 0x15 | 2631 rounds |
+| G29 | `Boss31_End` | 0x904AE5 bit 7 cleared too | 1678 rounds |
+| G30 | `Boss31_End` | the win by bit 0 or 1 | 1532 rounds |
+| G31 | `Boss31_Exit` | +0x2A = 2 | 6000 rounds |
+| G32 | `Boss31_Exit` | Field_ActiveMember not set (ActorZero) | 6000 rounds |
+| G33 | `Boss31_Exit` | bit 0x40 of actor 1 (ActorZero) | 6000 rounds |
+| G34 | `Boss31_Exit` | animation 2 | 6000 rounds |
+| G35 | `BossDZombie_Dispatch` | the next entry | 6000 rounds |
+| G36 | `BossDZombie_Enter` | +0x114 bit 4 | 4457 rounds |
+| G37 | `BossDZombie_Enter` | kind 37's hook | 6000 rounds |
+| G38 | `BossDZombie_ActDispatch` | the next entry | 6000 rounds |
+| G39 | `BossDZombie_Death` | animation 1 | 6000 rounds |
+| G40 | `BossDZombie_Death` | +0x2A = 1 as kind 37's | 5977 rounds |
+| G41 | `BossDZombie_Hook` | the word's second byte flipped | 6000 rounds |
+| G42 | `Boss32_Setup` | set-up 31's exit hook | 6000 rounds |
+| G43 | `Boss32_End` | +0x90 read before the call | 995 rounds |
+| G44 | `Boss32_End` | +0x1D | 3401 rounds |
+| G45 | `Boss32_End` | member bit 1 | 4243 rounds |
+| G46 | `Boss32_End` | track 0x6C | 4881 rounds |
+| G47 | `Boss32_End` | step 0xF | 4754 rounds |
+| G48 | `Boss32_End` | 0x904AE8 bit 2 for 3 | 3607 rounds |
+| G49 | `Boss32_End` | size 0x1000 | 4709 rounds |
+| G50 | `Boss32_End` | members 0 and 1 only | 3008 rounds |
+| G51 | `Boss32_Exit` | animation 1 | 6000 rounds |
+| G52 | `Boss33_Setup` | exit BareRetZero | 6000 rounds |
+| G53 | `Boss33_End` | bit 1 only | 1517 rounds |
+| G54 | `Boss33_End` | x and z swapped | 4158 rounds |
+| G55 | `Boss33_End` | x read before the call | 1040 rounds |
+| G56 | `Boss33_End` | step 9 | 4079 rounds |
+| G57 | `Boss33_End` | actor 1 | 4158 rounds |
+| G58 | `BossWeretigrFx_Task` | the other entry | 6000 rounds |
+| G59 | `BossWeretigrFx_Main` | the next entry (TaskSteps) | 6000 rounds |
+| G60 | `BossWeretigrFx_Main` | +0 of the Sprite_Current of before the call (TaskSteps) | 60 rounds (also BossWeretigrFx_Trail 51) |
+| G61 | `BossWeretigrFx_Begin` | 0x2000000 | 6000 rounds |
+| G62 | `BossWeretigrFx_Begin` | +0xB on the Sprite_Current of before the call | 905 rounds |
+| G63 | `BossWeretigrFx_AwaitPose` | animation 2 | 4030 rounds |
+| G64 | `BossWeretigrFx_Rise` | <= for < | 1300 rounds |
+| G65 | `BossWeretigrFx_Rise` | step 0x800000 | 2315 rounds |
+| G66 | `BossWeretigrFx_Rise` | target 2 an enemy | 601 rounds |
+| G67 | `BossWeretigrFx_Rise` | +8 ^= 1 | 1248 rounds |
+| G68 | `BossWeretigrFx_Rise` | z from Field_Kind2X | 3685 rounds |
+| G69 | `BossWeretigrFx_Rise` | facing ^ 1 for a member | 1050 rounds |
+| G70 | `BossWeretigrFx_Rise` | z from the pair's first byte | 2895 rounds |
+| G71 | `BossWeretigrFx_Rise` | +2 on the Sprite_Current of before the call | 530 rounds |
+| G72 | `BossWeretigrFx_Rise` | the z offset unsigned | 534 rounds |
+| G73 | `BossWeretigrFx_Strike` | 0xFE for none | refused by a fault (ours copies the trail into slot 255, past the 48; G73b (slot 47 for none) refused by a count) |
+| G73b | `BossWeretigrFx_Strike` | slot 47 taken for none | 96 rounds |
+| G74 | `BossWeretigrFx_Strike` | 0x7C bytes copied | 3957 rounds |
+| G75 | `BossWeretigrFx_Strike` | slot 5 | 4037 rounds |
+| G76 | `BossWeretigrFx_Strike` | the trail's +1 = 0 | 4035 rounds |
+| G77 | `BossWeretigrFx_Strike` | +0xB down past 0 | 899 rounds |
+| G78 | `BossWeretigrFx_Strike` | +0 bit 7 cleared too | 1630 rounds |
+| G79 | `BossWeretigrFx_Strike` | speed 0x40 | 2048 rounds |
+| G80 | `BossWeretigrFx_Strike` | the target not read again (enemy) | 157 rounds |
+| G81 | `BossWeretigrFx_Strike` | the flag's target not read again | 595 rounds |
+| G82 | `BossWeretigrFx_Strike` | target 3 a member | 1008 rounds |
+| G83 | `BossWeretigrFx_Strike` | owner the trail itself | 3957 rounds |
+| G84 | `BossWeretigrFx_Strike` | the answer's low byte (member) | 343 rounds |
+| G85 | `BossWeretigrFx_Leap` | an arithmetic shift for / 16 | 3367 rounds |
+| G86 | `BossWeretigrFx_Leap` | +0x14 = 0x41 | 4027 rounds |
+| G87 | `BossWeretigrFx_Leap` | +0x20 = -7 | 4027 rounds |
+| G88 | `BossWeretigrFx_Leap` | the enemy's +0x38 for +0x3C | 4027 rounds |
+| G89 | `BossWeretigrFx_Leap` | the whole answer tested | NOT REFUSED (equivalent: ours' `Sprite_ScriptTickOnce` is declared `unsigned char`, so the whole answer is its low byte and `== 0` tests the same bit pattern; G89b (bit 0 ignored) refused) |
+| G89b | `BossWeretigrFx_Leap` | the answer's low nibble tested | 254 rounds |
+| G90 | `BossWeretigrFx_Fly` | -0x3F | 3961 rounds |
+| G91 | `BossWeretigrFx_Fly` | the dword add before the word add | NOT REFUSED (equivalent: the word at `+0x3E` is the high half of the dword at `+0x3C`, and two additions mod 2^32 commute; G91b (the word add on `+0x3C`) refused) |
+| G91b | `BossWeretigrFx_Fly` | the word add on +0x3C | 5964 rounds |
+| G92 | `BossWeretigrFx_Fly` | +0x38 by +0xC | 6000 rounds |
+| G93 | `BossWeretigrFx_Finish` | Sprite_Current not put back | 4205 rounds |
+| G94 | `BossWeretigrFx_Finish` | bit 7 for bit 6 | 4502 rounds |
+| G95 | `BossWeretigrFx_Finish` | animation 1 | 6000 rounds |
+| G96 | `BossWeretigrFx_Trail` | the other entry (TaskSteps) | 6000 rounds |
+| G97 | `BossWeretigrFx_TrailBegin` | +0x5C = 2 | 6000 rounds |
+| G98 | `BossWeretigrFx_TrailBegin` | shade * 0xF1 (Shade) | 5971 rounds (also BossWeretigrFx_TrailFade 5981) |
+| G99 | `BossWeretigrFx_TrailBegin` | +9 = 7 | 5971 rounds |
+| G100 | `BossWeretigrFx_TrailFade` | freed at 1 | 1402 rounds |
+| G101 | `BossWeretigrFx_TrailFade` | +9 of the Sprite_Current of before the call | 893 rounds |
+| G102 | `BossMikba_Dispatch` | the next entry | 6000 rounds |
+| G103 | `BossMikba_Enter` | kind 34's hook | 6000 rounds |
+| G104 | `BossMikba_ActDispatch` | the next entry | 6000 rounds |
+| G105 | `BossMikba_DeathDispatch` | the next entry | 6000 rounds |
+| G106 | `BossMikba_DeathWait` | +0xA = 0x21 | 4030 rounds |
+| G107 | `BossMikba_DeathWait` | +9 = 0x41 | 4030 rounds |
+| G108 | `BossMikba_DeathFlash` | sound 0x600 | 1632 rounds |
+| G109 | `BossMikba_DeathFlash` | bit 3 tested | 1601 rounds |
+| G110 | `BossMikba_DeathFlash` | 0x904AAD read before the call | 715 rounds |
+| G111 | `BossMikba_DeathFlash` | size 0xC | 3154 rounds |
+| G112 | `BossMikba_DeathFlash` | +0xA quartered | 2664 rounds |
+| G113 | `BossMikba_DeathFlash` | +9 of the Sprite_Current of before the calls | 67 rounds |
+| G114 | `BossMikba_DeathFlash` | +9 down by two | 2846 rounds |
+| G115 | `BossMikba_DeathOpen` | width 0xC1 | 6000 rounds |
+| G116 | `BossMikba_DeathOpen` | +0xC = 0xBF | 5992 rounds |
+| G117 | `BossMikba_DeathOpen` | +0x18 from +0x30 | 6000 rounds |
+| G118 | `BossMikba_DeathOpen` | +0x24 |= 0x80 | 2962 rounds |
+| G119 | `BossMikba_DeathOpen` | the turn from +0xA | 5978 rounds |
+| G120 | `BossMikba_DeathOpen` | +0x1C zero-extended | 2995 rounds |
+| G121 | `BossMikba_DeathSpread` | +0xC above 0x27 | 452 rounds |
+| G122 | `BossMikba_DeathSpread` | frame bit 1 | 1374 rounds |
+| G123 | `BossMikba_DeathSpread` | +0x10 at 0x28 too | 435 rounds |
+| G124 | `BossMikba_DeathSpread` | frame & 3 | 708 rounds |
+| G125 | `BossMikba_DeathSpread` | 0x3F | 501 rounds |
+| G126 | `BossMikba_DeathSpread` | +0xA signed | 1601 rounds |
+| G127 | `BossMikba_DeathLoad` | bank 0x1C0 | 6000 rounds |
+| G128 | `BossMikba_DeathLoad` | +0x24 &= 0x7F | 2979 rounds |
+| G129 | `BossMikba_DeathLoad` | file 0xD1 | 6000 rounds |
+| G130 | `BossMikba_DeathEnd` | +2 = 5 | 5015 rounds |
+| G131 | `BossMikba_DeathEnd` | the answer's low byte | 1011 rounds |
+| G132 | `BossMikba_Hook` | the word's second byte flipped | 6000 rounds |
+| G133 | `BossMikba_DrawQuad` | turn << 3 | 6000 rounds |
+| G134 | `BossMikba_DrawQuad` | the corners' z 0 | 5999 rounds |
+| G135 | `BossMikba_DrawQuad` | y - 0x27 | 641 rounds |
+| G136 | `BossMikba_DrawQuad` | +0x18 of the Sprite_Current of before RotTrans | 3212 rounds |
+| G137 | `BossMikba_DrawQuad` | v 0x67 | 6000 rounds |
+| G138 | `BossMikba_DrawQuad` | size 0x44 | 6000 rounds |
+| G139 | `BossMikba_DrawQuad` | abr 1 | 6000 rounds |
+| G140 | `BossMikba_DrawQuad` | blue 0x7F | 6000 rounds |
+| G141 | `BossMikba_DrawQuad` | corners 2 and 3 swapped | 5928 rounds |
+| G142 | `BossMikba_DrawQuad` | an arithmetic shift for / 2 | 3330 rounds |
+| G143 | `BossMikba_DrawQuad` | the page not masked to a word | 6000 rounds |
+| G144 | `BossMikba_DrawQuad` | the translation vector not zero | 6000 rounds |
+| G145 | `BossMikba_DrawQuad` | Gte_SetTransMatrix dropped | 6000 rounds |
 
 ## 5. What nothing reached
 
