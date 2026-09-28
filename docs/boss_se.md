@@ -4,7 +4,7 @@
 wave one, stage B. 52 functions of `0x43B5B0..0x43E7A0` ours
 (`src/game/boss_se.cpp`, shadow `boss_se`), each read to its last instruction
 with capstone and fuzzed through the boss harness ([`boss_harness.md`](boss_harness.md)),
-thirteen `Run`s, 0 mismatches; CONTROLS_SUMMARY. Fuzz only: no recorded
+thirteen `Run`s, 0 mismatches; 145 controls planted, 141 refused by a count, 4 equivalent with their near variants refused (section 4). Fuzz only: no recorded
 route reaches a boss fight.
 
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
@@ -159,7 +159,37 @@ dispatchers `kDispatch` with their state byte drawn below the table, entries
 `kState`, the hooks and their entries `kEnemyHook`. Every kind's `+1`,
 `+2`, step-5 and hook tables are `DataTable`s (hook tables with one word).
 
-RUN_TABLE
+| Run | Fight, kind | Clones | Rounds | Calls | Result (this worktree) |
+|---|---|---|--:|--:|---|
+| `b22` | 22 | set-up, end, exit | 6,000 each | 30,000 | 0 mismatches |
+| `k28` | 23, 28 | dispatcher, entry, hook | 6,000 | 18,000 | 0 |
+| `b23` | 23 | set-up, exit | 4,000 | 12,000 | 0 |
+| `b30` | 30 | set-up, end | 6,000 | 6,000 | 0 |
+| `k29` | 24, 29 | dispatcher, entry, hook | 6,000 | 18,000 | 0 |
+| `k55` | 48, 55 | dispatcher, entry, hook | 6,000 | 18,000 | 0 |
+| `b24` | 24 | set-up, end, exit | 6,000 | 12,000 | 0 |
+| `b48` | 48 | set-up | 4,000 | 0 (it calls nothing) | 0 |
+| `k30` | 25, 30 | seven | 6,000 | 49,867 | 0 |
+| `k31` | 25, 31 | six | 6,000 | 42,000 | 0 |
+| `k32` | 25, 32 | eleven | 6,000 | 86,216 | 0 |
+| `b25` | 25 | set-up, event, end, exit | 8,000 | 20,210 | 0 |
+| `b26` | 26 | set-up, event, end, exit | 8,000 | 47,434 | 0 |
+
+370,000 rounds in all. Coverage (the originals' calls, this worktree, the
+first build): every entry of every `DataTable` (`phase 0x4363B0` ..
+`phase 0x437420` about 500 each, the kinds' own entries likewise); `k30`:
+`Battle_CopyEnemyData` / `EnemyData_FindByTag` 2,153, `Msg_OpenScript`
+2,390, `BossActor_ClearBit40` 1,171; `k32`: `0x437450` 1,080, `0x4376A0` /
+`Battle_SetTargetFlag40` / `Rand` 3,952, `BattleTask_Create` 1,280;
+`b25`: `Msg_OpenScript` about 3,300, `BattleEnemy_SetAnimation` about
+1,200, `BattleTask_Create` about 380; `b26`: `Sprite_PoseFromSet` /
+`Battle_RemoveFromTurnOrder` about 15,500, `BattleTask_Create` about 400.
+Counts move with the build directory; judge by 0 mismatches.
+
+**`kSetup` works as documented**: the seven set-ups' stores land in the
+compared hook cells and the logged read-back, and a set-up storing the
+wrong hook was refused in every round it ran (C1, C18, C21, C35, C41, C123).
+Nothing in the shape was missing. `kTask` is not used by this group.
 
 **Callees added to the standard set** (group listings, registered first):
 `Port_DroppedCall` with no argument (it sits in every `+1` table; Capcom's
@@ -195,9 +225,155 @@ and variable 3.
 change to ours anchored on a string that occurs once, rebuild, the one `Run`
 that holds the function, restore, rebuild at the end. A dispatcher's plant is
 made in the shared `Dispatch` helper, keyed on the function's name (the next
-entry of its table). CONTROLS_DETAIL
+entry of its table). Run twice; the table is the second run, on the final seeds. **145 controls planted, 141 refused by a count, 4 equivalent with their near variants refused (section 4).** The thinnest refusals: C90b 23, C126b 24, C125 43, C105 44, C113 58, C111 60, C61 66, C116 69 - the re-read plants (a cell read before a call, refused only when the disturbance moves it in that call) and set-up 25's last step.
 
-CONTROLS_TABLE
+| # | Function | Plant | Refused |
+|---|---|---|---|
+| C1 | `Boss22_Setup` | the exit hook the end hook | 6000 rounds |
+| C2 | `Boss22_End` | variable 3 = 0xD | 5947 rounds |
+| C3 | `Boss22_End` | 0x904AE5 bit 7 cleared too | 2972 rounds |
+| C4 | `Boss22_End` | track 0x6B | 6000 rounds |
+| C5 | `Boss22_End` | 0x92BF18 = 2 | 6000 rounds |
+| C6 | `Boss22_End` | 0x904AE8 bit 2 for bit 3 | 4754 rounds |
+| C7 | `Boss22_Exit` | bank 0xAB | 6000 rounds |
+| C8 | `Boss22_Exit` | +0x2A on the Sprite_Current of before the call | 215 rounds |
+| C9 | `Boss22_Exit` | bit 0x40 of actor 1 | 6000 rounds |
+| C10 | `Boss22_Exit` | animation 7 | 6000 rounds |
+| C11 | `BossBully_Dispatch` | the next entry | 6000 rounds |
+| C12 | `BossBully_Enter` | +5 at 4 for the B animations | 1984 rounds |
+| C13 | `BossBully_Enter` | +5 at 5 for sounds B | 1476 rounds |
+| C14 | `BossBully_Enter` | Stallion's hook installed | 6000 rounds |
+| C15 | `BossBully_Enter` | al | 1 | 3996 rounds |
+| C16 | `BossBully_Enter` | state 3 | 5965 rounds |
+| C17 | `BossBully_Hook` | the entry given the masked word | 2965 rounds |
+| C18 | `Boss23_Setup` | BossHook_EndPickWay for 0x43B730 | 4000 rounds |
+| C19 | `BossHook_ExitClearActors012` | actor 3 for 2 | 4000 rounds |
+| C20 | `BossHook_ExitClearActors012` | 0 and 1 swapped | 4000 rounds |
+| C21 | `Boss30_Setup` | event BareRet | 6000 rounds |
+| C22 | `Boss30_End` | variable 3 up by two | 3013 rounds |
+| C23 | `Boss30_End` | step 0xB | 2979 rounds |
+| C24 | `Boss30_End` | track 0x5B | 3040 rounds |
+| C25 | `Boss30_End` | the win by bit 0 | 3476 rounds |
+| C26 | `BossStallion_Dispatch` | the next entry | 6000 rounds |
+| C27 | `BossStallion_Enter` | +0xFC and +0xF8 swapped | 6000 rounds |
+| C28 | `BossStallion_Enter` | +2 for +1 | 6000 rounds |
+| C29 | `BossStallion_Hook` | the word's second byte flipped | 6000 rounds |
+| C30 | `BossSample10_Dispatch` | the next entry | 6000 rounds |
+| C31 | `BossSample10_Enter` | +0x114 bit 4 | 4606 rounds |
+| C32 | `BossSample10_Enter` | Stallion's hook | 6000 rounds |
+| C33 | `BossSample10_Enter` | Sprite_ScriptTickOnce | 6000 rounds |
+| C34 | `BossSample10_Hook` | the word's second byte flipped | 6000 rounds |
+| C35 | `Boss24_Setup` | set-up 22's exit hook | 6000 rounds |
+| C36 | `Boss24_End` | variable 3 = 6 | 2976 rounds |
+| C37 | `Boss24_End` | 0x904AE8 | 0xA | NOT REFUSED (equivalent: on the win path 0x904AE8 already has bit 1, so `| 0xA` is `| 8` (no input tells them apart); C37b (`| 0xC`) refused) |
+| C37b | `Boss24_End` | 0x904AE8 | 0xC | 2378 rounds |
+| C38 | `Boss24_End` | track 0x45 | 3002 rounds |
+| C39 | `Boss24_End` | the win by bit 0 or 1 | 1433 rounds |
+| C40 | `Boss24_Exit` | actor 4 | 6000 rounds |
+| C41 | `Boss48_Setup` | exit BareRetZero | 4000 rounds |
+| C42 | `BossBeyd_Dispatch` | the next entry | 6000 rounds |
+| C43 | `BossBeyd_Enter` | fight 0x19 for 0x1A | 2674 rounds |
+| C44 | `BossBeyd_Enter` | tag 0x5A | 2253 rounds |
+| C45 | `BossBeyd_Enter` | kind 31 | 2253 rounds |
+| C46 | `BossBeyd_Enter` | 0x939AD8 read before the copy | 104 rounds |
+| C47 | `BossBeyd_Enter` | +0xB4 from 0x903F12 (CarryStats) | 2253 rounds |
+| C48 | `BossBeyd_Enter` | slot 1 | 2253 rounds |
+| C49 | `BossBeyd_ActDispatch` | the next entry | 6000 rounds |
+| C50 | `BossBeyd_Death` | message 0x21 | 2373 rounds |
+| C51 | `BossBeyd_Death` | fight 0x1A | 2682 rounds |
+| C52 | `BossBeyd_Death` | +1 = 4 (Death) | 5985 rounds |
+| C53 | `BossBeyd_Death` | +0x2A on the Sprite_Current of before the call (Death) | 241 rounds |
+| C54 | `BossBeyd_Death` | 0x802D20 = 3 (Message) | 2373 rounds |
+| C55 | `BossBeyd_Hook` | the word's second byte flipped | 6000 rounds |
+| C56 | `BossBeyd_HookPick` | 0x904AE2 at 2 or above | 158 rounds |
+| C57 | `BossBeyd_HookPick` | 0x904B35 = 2 | 2215 rounds |
+| C58 | `BossBeyd_HookPick` | bit 2 cleared | 1400 rounds |
+| C59 | `BossBeyd_HookPick` | fight 0x1A | 2442 rounds |
+| C60 | `BossBeyd_HookTick` | the wait word's low byte only | 1236 rounds |
+| C61 | `BossBeyd_HookTick` | the round flags read before the call | 66 rounds |
+| C62 | `BossBeyd_HookTick` | Draw_PassFlags = 1 | 1164 rounds |
+| C63 | `BossBeyd_HookTick` | the flags' high byte cleared | 1157 rounds |
+| C64 | `BossBeyd2_Dispatch` | the next entry | 6000 rounds |
+| C65 | `BossBeyd2_Enter` | +8 = 2 | 6000 rounds |
+| C66 | `BossBeyd2_Enter` | +8 on the Sprite_Current of before the call | 232 rounds |
+| C67 | `BossBeyd2_Enter` | kind 30's hook | 6000 rounds |
+| C68 | `BossBeyd2_Enter` | +0x8F = 0 | 6000 rounds |
+| C69 | `BossBeyd2_ActDispatch` | the next entry | 6000 rounds |
+| C70 | `BossBeyd2_Death` | animation 0xE | 6000 rounds |
+| C71 | `BossBeyd2_Hook` | the word's second byte flipped | 6000 rounds |
+| C72 | `BossBeyd2_HookTarget4` | target 5 | 6000 rounds |
+| C73 | `BossZig_Dispatch` | the next entry | 6000 rounds |
+| C74 | `BossZig_Enter` | +8 = 2 | 5969 rounds |
+| C75 | `BossZig_Enter` | al ^ 1 | 6000 rounds |
+| C76 | `BossZig_Idle` | bit 4 for bit 5 | 1729 rounds |
+| C77 | `BossZig_Idle` | +0x110 bit 2 | 2130 rounds |
+| C78 | `BossZig_Idle` | Sprite_Current read before the tick | 218 rounds |
+| C79 | `BossZig_Idle` | animation 0xB | 1645 rounds |
+| C80 | `BossZig_Step5Dispatch` | the other entry | 6000 rounds |
+| C81 | `BossZig_Step5Count` | at 1 | 1668 rounds |
+| C82 | `BossZig_Step5Count` | the second sound word | 1097 rounds |
+| C83 | `BossZig_Step5Count` | +2 up by two | 1097 rounds |
+| C84 | `BossZig_Step5Count` | +9 on the Sprite_Current of before the tick | 215 rounds |
+| C85 | `BossZig_Step5Fire` | Rand & 7 | 615 rounds |
+| C86 | `BossZig_Step5Fire` | bit 6 | 929 rounds |
+| C87 | `BossZig_Step5Fire` | task parameter 3 | 1352 rounds |
+| C88 | `BossZig_Step5Fire` | bit 3 | 2827 rounds |
+| C89 | `BossZig_Step5Fire` | the actor for the target | 3701 rounds |
+| C90 | `BossZig_Step5Fire` | 0x904AAD read again after the flags store | NOT REFUSED (equivalent: 0x904AA8 and 0x904AAD are different bytes, so reading 0x904AAD again after the flags store reads the same value; C90b (read before the two calls) refused) |
+| C90b | `BossZig_Step5Fire` | 0x904AAD read before the two calls | 23 rounds |
+| C91 | `BossZig_ActDispatch` | the next entry | 6000 rounds |
+| C92 | `BossZig_Death` | animation 0xC | 6000 rounds |
+| C93 | `BossZig_Hook` | the word's second byte flipped | 6000 rounds |
+| C94 | `BossZig_HookPick` | target 4 | 2583 rounds |
+| C95 | `BossZig_HookPick` | 0x904B35 = 1 | 3417 rounds |
+| C96 | `BossZig_HookHit` | bit 4 | 4519 rounds |
+| C97 | `Boss25_Setup` | AP saved for HP | 7973 rounds |
+| C98 | `Boss25_Setup` | 0x904AE4 = 2 | 8000 rounds |
+| C99 | `Boss25_Setup` | AP from max HP | 8000 rounds |
+| C100 | `Boss25_Setup` | HP's high byte saved | 7976 rounds |
+| C101 | `Boss25_Event` | turn by >> 2 | 2250 rounds |
+| C102 | `Boss25_Event` | message 0x1E at 3 | 250 rounds |
+| C103 | `Boss25_Event` | skill 0x47 | 190 rounds |
+| C104 | `Boss25_Event` | enemy 0's HP 2 | 220 rounds |
+| C105 | `Boss25_Event` | 0x904AAD not read again after the task | 44 rounds |
+| C106 | `Boss25_Event` | the order's last 3 | 212 rounds |
+| C107 | `Boss25_Event` | the order's length 6 | 212 rounds |
+| C108 | `Boss25_Event` | the step not tested | 102 rounds |
+| C109 | `Boss25_Event` | bits 0 and 1 set | 655 rounds |
+| C110 | `Boss25_Event` | enemy 1 | 855 rounds |
+| C111 | `Boss25_Event` | 0x904B35 = 0xFE | 60 rounds |
+| C112 | `Boss25_Event` | member state 3 | 96 rounds |
+| C113 | `Boss25_Event` | round 5 | 58 rounds |
+| C114 | `Boss25_Event` | al 1 on the last path | 128 rounds |
+| C115 | `Boss25_Event` | +0xBC = 0x65 | 212 rounds |
+| C116 | `Boss25_Event` | 0x802D20 = 3 at round 2 | 69 rounds |
+| C117 | `Boss25_End` | AP from the saved HP | 7978 rounds |
+| C118 | `Boss25_End` | step 5 | 7831 rounds |
+| C119 | `Boss25_Exit` | Field_MemberCount = 2 | 8000 rounds |
+| C120 | `Boss25_Exit` | the count read before the call | 70 rounds |
+| C121 | `Boss25_Exit` | whole dwords only | 5198 rounds |
+| C122 | `Boss26_Setup` | 0x939A04 = 1 | 8000 rounds |
+| C123 | `Boss26_Setup` | set-up 25's event hook | 8000 rounds |
+| C124 | `Boss26_Setup` | 0x939A0C = 1 | 8000 rounds |
+| C125 | `Boss26_Event` | member 2 not summed | 43 rounds |
+| C126 | `Boss26_Event` | 0 summed | NOT REFUSED (equivalent: a word of 0 adds 0 and returns, which is what the original's fall-through does for a member target; C126b (-1 summed) refused) |
+| C126b | `Boss26_Event` | -1 summed | 24 rounds |
+| C127 | `Boss26_Event` | bit 7 only | 123 rounds |
+| C128 | `Boss26_Event` | count up by two | 326 rounds |
+| C129 | `Boss26_Event` | negative summed | 122 rounds |
+| C130 | `Boss26_Event` | enemy 0 state 3 | 104 rounds |
+| C131 | `Boss26_Event` | 0x904AE2 1 or above | 163 rounds |
+| C132 | `Boss26_Event` | the turn's low byte | 135 rounds |
+| C133 | `Boss26_Event` | bits 4 and 5 | 188 rounds |
+| C134 | `Boss26_Event` | enemy 0's flag bit 0 | 341 rounds |
+| C135 | `Boss26_End` | +0x1D | 5522 rounds |
+| C136 | `Boss26_End` | +0x90 read before the call | 1607 rounds |
+| C137 | `Boss26_End` | bit 1 | 6985 rounds |
+| C138 | `Boss26_End` | variable 3 = 5 | 7926 rounds |
+| C139 | `Boss26_End` | the pose not wrapped to a byte (equivalent?) | NOT REFUSED (equivalent: Sprite_PoseFromSet reads the animation's low byte only (Sprite_SetFrameQueueUpload's frame & 0xFF, the +0x4B byte compare) and the recorder masks it so; C135 (+0x1D) refused) |
+| C140 | `Boss26_End` | size 0x1000 | 7677 rounds |
+| C141 | `BossHook_ExitTransition4` | round-flag bit 0 | 5735 rounds |
+| C142 | `BossHook_ExitTransition4` | transition 5 | 8000 rounds |
 
 ## 5. What nothing reached
 
