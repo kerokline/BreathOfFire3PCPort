@@ -58242,3 +58242,567 @@ ctype = "char"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR1F): Area75_DrawCounters' Crt_sprintf format (two numbers); length not measured. docs/area_w1f.md."
+
+[[func]]
+pc = 0x4146C0
+name = "Area104_Init"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4146C0..0x4146FC (0x3D), cdecl, capstone to the last instruction, group AR2E. area 104's init (descriptor 0x61BB38 +0x40; PSX 0x801F2E8C, names/area_records.toml): Field_ScriptFlags |= 0x140, mode-tail kind 40 armed; without key item 0xA the tail state 0 and Cond_ByteFE + 1, with it Area104_BuildMinimap and state 2. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414700
+name = "Area104_PlaceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414700..0x414755 (0x56), cdecl, capstone to the last instruction, group AR2E. WorldMap_FieldHooks 0x662DF0 entry 6 (PSX 0x801F2F0C): the s8 0x9039F4 - 0: ScriptFlags_Set40, Msg_OpenScript(4), + 1 and Field_Request 2; 1: once Field_Request is not 2, ScriptFlags_Clear40 and 0x9039F3..F5 zeroed. Area 104's own (areas 87 / 88 name the place). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414760
+name = "Area104_PlateRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414760..0x414835 (0xD6), cdecl, capstone to the last instruction, group AR2E. WorldMap_Records record 6 +0 (PSX 0x801F2FB0). Area 87's Area87_PlateRun (0x40FDE0) instruction for instruction (a capstone compare: only the state table operand 0x61BB7C differs): the cell kind ahead of the leader, then Area104_PlateStates by +1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414840
+name = "Area104_PlateShow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414840..0x414981 (0x142), cdecl, capstone to the last instruction, group AR2E. Area104_PlateStates 1. Area87_PlateShow (0x40FF20) instruction for instruction over Area104_PlateAnims 0x61B4F0 (searched with no bound). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414990
+name = "Area104_PlateGrow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414990..0x4149D0 (0x41), cdecl, capstone to the last instruction, group AR2E. Area104_PlateStates 2. Area87_PlateGrow (0x410070), identical. docs/area_w2e.md."
+
+[[func]]
+pc = 0x4149E0
+name = "Area104_PlateHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4149E0..0x414A37 (0x58), cdecl, capstone to the last instruction, group AR2E. Area104_PlateStates 3. Area87_PlateHold (0x4100C0), identical. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414A40
+name = "Area104_PlateShrink"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414A40..0x414A8F (0x50), cdecl, capstone to the last instruction, group AR2E. Area104_PlateStates 4. Area87_PlateShrink (0x410120), identical. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414A90
+name = "Area104_HudRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414A90..0x414AA1 (0x12), cdecl, capstone to the last instruction, group AR2E. record 6 +0xC (PSX 0x801F34E0): Area104_HudStates 0x61BB90 by +1 (Area87_HudRun's shape). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414AB0
+name = "Area104_HudFrame"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414AB0..0x414AB9 (0xA), cdecl, capstone to the last instruction, group AR2E. Area104_HudStates 1: call Area104_FrameStep, jmp Area104_BoxStep. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414AC0
+name = "Area104_FrameStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414AC0..0x414AD1 (0x12), cdecl, capstone to the last instruction, group AR2E. Area104_FrameStates 0x61BB98 by +2, a tail jump. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414AE0
+name = "Area104_FrameSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414AE0..0x414B00 (0x21), cdecl, capstone to the last instruction, group AR2E. Area104_FrameStates 1 (Area87_FrameSlideIn's), then a tail jump to Area104_FrameHold. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414B10
+name = "Area104_FrameHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414B10..0x414B37 (0x28), cdecl, capstone to the last instruction, group AR2E. Area104_FrameStates 2: mode byte 2 makes +2 3; Area104_DrawFrame(0x10, +0x2E). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414B40
+name = "Area104_FrameSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414B40..0x414B80 (0x41), cdecl, capstone to the last instruction, group AR2E. Area104_FrameStates 3 (Area87_FrameSlideOut's). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414B90
+name = "Area104_BoxStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414B90..0x414BA1 (0x12), cdecl, capstone to the last instruction, group AR2E. Area104_BoxStates 0x61BBA8 by +3, a tail jump (entry 0 WorldMapHud_BoxWait 0x414BB0). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414BF0
+name = "Area104_BoxSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414BF0..0x414C51 (0x62), cdecl, capstone to the last instruction, group AR2E. Area104_BoxStates 1 (Area87_BoxSlideIn's), drawing through Area104_DrawHud. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414C60
+name = "Area104_BoxHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414C60..0x414CCD (0x6E), cdecl, capstone to the last instruction, group AR2E. Area104_BoxStates 2 (Area87_BoxHold's). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414CD0
+name = "Area104_BoxSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414CD0..0x414D26 (0x57), cdecl, capstone to the last instruction, group AR2E. Area104_BoxStates 3 (Area87_BoxSlideOut's). docs/area_w2e.md."
+
+[[func]]
+pc = 0x414D30
+name = "Area104_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414D30..0x414EF4 (0x1C5), cdecl, capstone to the last instruction, group AR2E. Area87_DrawFrame (0x4103D0) instruction for instruction over Area104_Buttons 0x61BC10 (the second legend's eight entries end in Area104_LeaderStates' two code pointers), drawing through Area104_DrawSprite. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414F00
+name = "Area104_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414F00..0x414FBB (0xBC), cdecl, capstone to the last instruction, group AR2E. Area87_DrawSprite (0x4105A0) instruction for instruction over Area104_Sprites 0x61BBB8. docs/area_w2e.md."
+
+[[func]]
+pc = 0x414FC0
+name = "Area104_DrawHud"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x414FC0..0x415017 (0x58), cdecl, capstone to the last instruction, group AR2E. Area87_DrawHud (0x410660), identical but its two calls: the label's offset the low word of 0x803580. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415020
+name = "Area104_LeaderRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415020..0x415036 (0x17), cdecl, capstone to the last instruction, group AR2E. leader state 12 in area 104 (0x660918[12] = 0x52FE90 tail-jumps here when Game_AreaNumber is 0x68, to area 121's 0x41B9D0 otherwise): Area104_LeaderStates 0x61BC28 by the leader's +2 (call), then a tail jump to Area104_LeaderCharge. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415040
+name = "Area104_LeaderIdle"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415040..0x4152AA (0x26B), cdecl, capstone to the last instruction, group AR2E. Area104_LeaderStates 0: the leader at rest - early outs, the input tests (Field_LeaderCellEvent, area 121's 0x41C0A0, Field_LeaderTalkTest, 0x41C0E0), the turn keys 0x41C110, a turn limited to a step either side of the old facing, then Field_LeaderStepTarget / Field_LeaderPushObjects / Area104_PoseByCharge and the step start (Field_JumpStart, Field_JumpCheckHeight, Field_LeaderStepTick, +2 = 1). docs/area_w2e.md."
+
+[[func]]
+pc = 0x4152B0
+name = "Area104_ObjectAhead121"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4152B0..0x4153E2 (0x133), cdecl, capstone to the last instruction, group AR2E. called by Area104_LeaderIdle; nothing unless Game_AreaNumber is 0x79 (area 121's code). The object two direction steps ahead (Sprite_ObjectAt): with the charge button held and facing the leader its +0x80 |= 1; else Area104_TurnToFree and a step. Sprite_ObjectsExtra indexed by the object unchecked (none reads 0xE1 records past). docs/area_w2e.md."
+
+[[func]]
+pc = 0x4153F0
+name = "Area104_TurnToFree"
+ret = "unsigned char"
+params = "unsigned x, unsigned z, unsigned object"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4153F0..0x415458 (0x69), cdecl, capstone to the last instruction, group AR2E. object 0xFF answers 0; else +8 = 0x41BE10(x, z, object) and up to eight turns of +8 until Field_LeaderStepTarget is 0 and Sprite_ObjectAt(x, z, 0) is none (al 1); eight: al 0. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415460
+name = "Area104_StartOnObject121"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415460..0x4154D0 (0x71), cdecl, capstone to the last instruction, group AR2E. called first by Area104_LeaderIdle; al 0 unless Game_AreaNumber is 0x79. The object at the leader's own place handed to Area104_TurnToFree; 1: a step starts, al 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x4154E0
+name = "Area104_LeaderStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4154E0..0x415636 (0x157), cdecl, capstone to the last instruction, group AR2E. Area104_LeaderStates 1: Field_State +0x137 = 1; +9 counts the step out through Field_LeaderStepTick; then the tick functions, the exit cell 0xAF (Field_ChangeArea to the pending area) and link cell 0xC0 (Area_LinkAt), Field_EdgeBits, Area104_StopMotion, Scenario_ArriveHook, Field_Bit80Tick, and a held key a tail jump to Area104_LeaderIdle. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415640
+name = "Area104_StopMotion"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415640..0x415675 (0x36), cdecl, capstone to the last instruction, group AR2E. Field_State +0x128 = 3; +0xC, +0x10, +0x14 = 0; MoveScript_F3Divisor and MoveScript_FAWord 0. Also called by area 121's code (0x41BADE, 0x41C020). docs/area_w2e.md."
+
+[[func]]
+pc = 0x415680
+name = "Area104_PoseByCharge"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415680..0x4156B9 (0x3A), cdecl, capstone to the last instruction, group AR2E. Field_State +0x128 = 4 with the charge button (word 0x903582) held and +0xB below 0x40, else 3. Also called by area 121's code (0x41BBEE). docs/area_w2e.md."
+
+[[func]]
+pc = 0x4156C0
+name = "Area104_LeaderCharge"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4156C0..0x415777 (0xB8), cdecl, capstone to the last instruction, group AR2E. the tail of Area104_LeaderRun and of area 121's controller (jmp at 0x41B9E2): +0xA counts a hold down; held, +0xB rises to 0x40 (then +0xA 0x1E); released it drains by 3 / 2 / 1 (halved while stepping, odd frames the rest); held to 0..0x40 as an s8. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415780
+name = "Area104_Kind5CRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415780..0x415791 (0x12), cdecl, capstone to the last instruction, group AR2E. effect kind 0x5C in area 104 (Effect_KindHandlers[0x5C] 0x462B60 jumps here when Game_AreaNumber is 0x68, to area 121's 0x41C190 otherwise): Area104_Kind5CStates 0x61BC30 by +1, a tail jump. docs/area_w2e.md."
+
+[[func]]
+pc = 0x4157A0
+name = "Area104_Kind5CStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4157A0..0x415850 (0xB1), cdecl, capstone to the last instruction, group AR2E. Area104_Kind5CStates 0: +8 the leader's facing, Sprite_InitFromEntry(Area_Descriptors[area] +8 + 8), tint 0x80, +1 + 1, Area104_Kind5CFollow; with key item 0xA (area 0x68) four more kind-0x5C effects in state 3 with delays 0, 8, 0x10, 0x18 (Effect_FindFree unchecked). docs/area_w2e.md."
+
+[[func]]
+pc = 0x415860
+name = "Area104_Kind5CFollow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415860..0x41593A (0xDB), cdecl, capstone to the last instruction, group AR2E. the companion at the leader's place (Sprite_UpdateScreenA), then the charge gauge: area 121's frame 0x41C350 and Area104_DrawGauge bars by Field_StatusBits bit 6 and the leader's +0xA / +0xB. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415940
+name = "Area104_DrawGauge"
+ret = "void"
+params = "unsigned width, unsigned bar"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415940..0x415A03 (0xC4), cdecl, capstone to the last instruction, group AR2E. one POLY_FT4 at x 228..228 + (width & 0xFF), y 29..39, u / CLUT from a two-entry stack table by bar & 0xFF (unchecked: bar 2 and up read the return address); Gfx_CommitPrim(2, 0x48). Also called by area 121's code (0x41C2E1..0x41C342). docs/area_w2e.md."
+
+[[func]]
+pc = 0x415A10
+name = "Area104_Kind5CTurn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415A10..0x415A63 (0x54), cdecl, capstone to the last instruction, group AR2E. Area104_Kind5CStates 1: the companion's +8 against the leader's facing through Area104_Kind5CTurnStep (then with +8 ^ 4); settled, the facing = +8 and Area104_Kind5CFollow. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415A70
+name = "Area104_Kind5CTurnStep"
+ret = "unsigned char"
+params = "unsigned from, unsigned to"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415A70..0x415B3A (0xCB), cdecl, capstone to the last instruction, group AR2E. the low bytes, over the 8-step wrap: more than two steps apart or equal al 0; else one step (+0x14 = -+0x40, +8 -+ 1, & 7), the leader's facing, +9 = 8, Area104_Kind5CSpin, +1 = 2, al 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415B40
+name = "Area104_Kind5CSpin"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415B40..0x415B87 (0x48), cdecl, capstone to the last instruction, group AR2E. Area104_Kind5CStates 2: +0x6C += +0x14, & 0xFFF; +9 - 1; at 0 +1 = 1 and a tail jump to Area104_Kind5CTurn, else to Area104_Kind5CFollow. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415B90
+name = "Area104_Kind5CRise"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415B90..0x415BDA (0x4B), cdecl, capstone to the last instruction, group AR2E. Area104_Kind5CStates 3: +0xA counts a delay out; then the leader's place with +0x3C + 0x800000, area 121's 0x41C5B0, +1 + 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415BE0
+name = "Area104_Tail40"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415BE0..0x415D4B (0x16C), cdecl, capstone to the last instruction, group AR2E. Field_ModeTailKinds 0x662CE8 entry 40 (0x662D88), armed by Area104_Init: by the s8 0x9039F4 0..3 once Field_Request is 0 - message 1; Field_ChangeArea(0x79, 0x190000, 0x2D0000, 7); story flag 0x5B and message 2 or 3; the countdown effect (kind 0x6A, Effect_FindFree's slot sign-extended unchecked) and music 0x94. An in-function jump table of four. docs/area_w2e.md."
+
+[[func]]
+pc = 0x415D50
+name = "Area104_Kind6ACountdown"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x415D50..0x41601B (0x2CC), cdecl, capstone to the last instruction, group AR2E. Effect_KindHandlers 0x655350 entry 0x6A (0x6554F8): Field_Request 5 releases it; else with the leader in state 12, +0xA frames and +9 seconds count down, out: Field_ChangeArea(0x79, 0x190000, 0x2D0000, 7) and Effect_Release. Draws Menu_DrawBox / Menu_DrawOutline, Crt_sprintf into 0x904BA0 by the format 0x61BC74, Text_DrawFont12, Area104_DrawPanel, and a ring of 24 POLY_F3 (0x5A7570) round the leader's place. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416020
+name = "Area104_BuildMinimap"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416020..0x4160D7 (0xB8), cdecl, capstone to the last instruction, group AR2E. called by Area104_Init (PSX 0x801F6564, analysis/pairs_propagated.json by call): a 4-bit image of the cells z 0xD..0x51, x 5..0x54 by Area104_MinimapShade into Gfx_UnpackScratch, queued for upload at (0x380, 0x100) (Gfx_UploadQueueCount unchecked against its twenty slots), four CLUT words at 0x811440, Gfx_ClutStripDirty + 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x4160E0
+name = "Area104_MinimapShade"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4160E0..0x4161EC (0x10D), cdecl, capstone to the last instruction, group AR2E. (PSX 0x801F66C8, by call) AreaMap_ByteAt(x, z): 0x00 / 0xAF / 0xC0 al 0, 0x10 / 0x50 1, 0x40 2, any other 3 (a byte table of 0xC1 and a jump table of four in the function). docs/area_w2e.md."
+
+[[func]]
+pc = 0x4161F0
+name = "Area104_DrawPanel"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4161F0..0x41633D (0x14E), cdecl, capstone to the last instruction, group AR2E. called by Area104_Kind6ACountdown (a gap of the tool): one semi-transparent POLY_FT4 (CLUT 0x7BC6, tpage 0x1E) and four POLY_F3 (0x5A7570) from Area104_PanelTris 0x61BC44; every eighth frame the CLUT word 0x811446 0x109F / 8 and Gfx_ClutStripDirty + 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416340
+name = "Area104_Trigger36"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416340..0x41635C (0x1D), cdecl, capstone to the last instruction, group AR2E. Field_ObjectTriggers 0x662EAC id 36: ScriptFlags_Set40, tail kind 0x2C state 0 argument 9; al 0. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416360
+name = "Area105_Tail61"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416360..0x4163A4 (0x45), cdecl, capstone to the last instruction, group AR2E. Field_ModeTailKinds entry 61 (0x662DDC), armed by Area105_StepHook: the s8 0x9039F4 - 0 Msg_OpenScript(1), Field_Request 2, state 1; 1 once Field_Request is not 2, ScriptFlags_Clear40 and 0x9039F3 / F4 zeroed. docs/area_w2e.md."
+
+[[func]]
+pc = 0x4163B0
+name = "Area105_StepHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4163B0..0x4163F8 (0x49), cdecl, capstone to the last instruction, group AR2E. area 105's step hook (Area_StepHook, call at 0x56E122), (x, z) 16.16 in, al out: chapter (s8 Cond_ByteFA) 0xA or more or Cond_ByteFD set al 0; the leader's facing stored at 0x903850; facing 0..2 or z's high word (s16) at or below 0x1D al 0; else ScriptFlags_Set40, tail kind 61 state 0, al 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416400
+name = "Area105_Init"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416400..0x41643A (0x3B), cdecl, capstone to the last instruction, group AR2E. area 105's init (descriptor 0x61BD70 +0x40; PSX 0x801F32B8): from area 0x57 (word 0x802290), story flag 0x4F set when Cond_ByteFD is 0, then cleared when it is 1. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416440
+name = "Area106_Handler0"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416440..0x416475 (0x36), cdecl, capstone to the last instruction, group AR2E. area 106's handler 0 (Area106_Handlers 0x61C664; PSX 0x801F38E8): Field_ActiveMember +0x80 bit 0 cleared; MoveScript_EffectState 0x66972C by the leader's +0x89 at 0: Cond_ByteFE 1 and Sprite_Current +0 = 0. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416480
+name = "Area106_PlaceByFlags"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416480..0x41654E (0xCF), cdecl, capstone to the last instruction, group AR2E. area 106's handler 1 (PSX 0x801F3940): the running object placed by story flags 0x51 / 0x4F at one of three cells with its +0x3E, and the script word advanced by 2, 4 or not. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416550
+name = "Area106_PlaceByPair"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416550..0x4165FE (0xAF), cdecl, capstone to the last instruction, group AR2E. area 106's handler 2 (PSX 0x801F3A60): k = flag 0x52 | flag 0x53 << 1 picks a cell of Area106_Cells 0x61C6B4 ((x << 16) | 0x8000); flag 0x4F: +0x3E 0x850 and the script + 8, else 0x280 and + 2k. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416600
+name = "Area106_Tail36"
+ret = "void"
+params = "void"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416600..0x416760 (0x161), cdecl, capstone to the last instruction, group AR2E. Field_ModeTailKinds entry 36 (0x662D78), armed by Area106_ArmTail36: states 0, 2, 0xA, 0xC, 0xE, 0x10 (a byte table of 0x11 and a jump table of seven in the function) - Party_DropIn(0..5), the tail cleared, story flags 0x51 / 0x52 / 0x53 set or cleared. docs/area_w2e.md."
+
+[[func]]
+pc = 0x416770
+name = "Area106_StepHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x416770..0x4168B3 (0x144), cdecl, capstone to the last instruction, group AR2E. area 106's step hook (Area_StepHook, call at 0x56E132), (x, z) 16.16: with Cond_ByteFD 0, five cells by story flags 0x4F / 0x51 / 0x52 / 0x53 arm tail 36 (Area106_ArmTail36) with states 0, 2, 0xC / 0x10, 0xE, 0xA, al 1; else al 0. docs/area_w2e.md."
+
+[[func]]
+pc = 0x4168C0
+name = "Area106_ArmTail36"
+ret = "void"
+params = "unsigned state"
+impl = "src/game/area_w2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4168C0..0x4168D5 (0x16), cdecl, capstone to the last instruction, group AR2E. called by Area106_StepHook: ScriptFlags_Set40, tail kind 36 with the state byte. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BB7C
+name = "Area104_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: 0x41ACD0 (area 121's band), Area104_PlateShow, _PlateGrow, _PlateHold, _PlateShrink; Area104_PlateRun's by +1. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BB90
+name = "Area104_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: WorldMapHud_Start, Area104_HudFrame; Area104_HudRun's by +1. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BB98
+name = "Area104_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: WorldMap_FrameWait, Area104_FrameSlideIn, _FrameHold, _FrameSlideOut; Area104_FrameStep's by +2. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BBA8
+name = "Area104_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: WorldMapHud_BoxWait, Area104_BoxSlideIn, _BoxHold, _BoxSlideOut; Area104_BoxStep's by +3. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BC28
+name = "Area104_LeaderStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: Area104_LeaderIdle, Area104_LeaderStep; Area104_LeaderRun's by the leader's +2 (the next dwords are Area104_Kind5CStates). docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BC30
+name = "Area104_Kind5CStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: Area104_Kind5CStart, _Kind5CTurn, _Kind5CSpin, _Kind5CRise, 0x41C5B0 (area 121's); Area104_Kind5CRun's by +1. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61B4F0
+name = "Area104_PlateAnims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: (u16 place, u8 animation, u8): one entry (place 0x65) then a zero record; Area104_PlateShow searches it with no bound. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BBB8
+name = "Area104_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: (w, h, u, v) by index: Area104_DrawSprite. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BC10
+name = "Area104_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: (u16 mask, u8 sprite, u8): Area104_DrawFrame's key search (the second legend reads eight, the last two Area104_LeaderStates). docs/area_w2e.md."
+
+[[data]]
+pc = 0x61BC44
+name = "Area104_PanelTris"
+ctype = "unsigned char"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: (x0, x1, x2, y0, y1, y2) s16 rows: Area104_DrawPanel's triangles (then the countdown's format 0x61BC74). docs/area_w2e.md."
+
+[[data]]
+pc = 0x61C664
+name = "Area106_Handlers"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: area 106 descriptor 0x61C670 +0x3C: Area106_Handler0, _PlaceByFlags, _PlaceByPair. docs/area_w2e.md."
+
+[[data]]
+pc = 0x61C6B4
+name = "Area106_Cells"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR2E: (u8 x, u8 z) pairs: Area106_PlaceByPair's by story flags 0x52 | 0x53 << 1. docs/area_w2e.md."
