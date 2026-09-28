@@ -59787,3 +59787,648 @@ ctype = "unsigned long"
 count = 16
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[134] +0x3C (entry 9 is Area80_ResetCameraShift; 12 and 13 both Area134_Effect90AtObject). docs/area_w3c.md."
+
+# --- round 10 group AR3B: world 3, areas 120..121 (src/game/area_w3b.cpp, docs/area_w3b.md) ---
+
+[[func]]
+pc = 0x41A9D0
+name = "Area120_ChoiceVar3A"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41A9D0..0x41A9EB (0x1C), cdecl, capstone to the last instruction, group AR3B. Area120_Choices 0 (descriptor 0x623648 +0x34). The message word 0x7DEE48 = 0xFFFF; movement-script variable 3 (0x903848) = 0x14 when the choice byte 0x7DEE67 is not 0, else 0xA (neg / sbb / and 0xA / add 0xA). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41A9F0
+name = "Area120_ChoiceVar3B"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41A9F0..0x41AA0B (0x1C), cdecl, capstone to the last instruction, group AR3B. Area120_Choices 1. The message word = 0xFFFF; variable 3 = 0x1E when the choice byte is not 0, else 0x28 (and 0xF6 / add 0x28). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AA10
+name = "Area120_ChoiceStartRun13"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AA10..0x41AA46 (0x37), cdecl, capstone to the last instruction, group AR3B. Area120_Choices 2. Choice 0: the message word = 0xFFFF, the word +0x8A of the record the pointer 0x903804 names + 1, MoveScript_Var7 = 0xD, its step 0x8034E5 = 8. Else the message word = 0x35. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AA50
+name = "Area121_CameraRun"
+psx = 0x801F2C3C
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AA50..0x41AA61 (0x12), cdecl, capstone to the last instruction, group AR3B. Area121_Handlers 0 (descriptor 0x6245D8 +0x3C; PSX handler[0] 0x801F2C3C, names/area_records.toml). jmp [Area121_CameraStates + (Sprite_Current +4) * 4], unchecked (ours aborts past two). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AA70
+name = "Area121_CameraFar"
+psx = 0x801F2C80
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AA70..0x41AA8D (0x1E), cdecl, capstone to the last instruction, group AR3B. Area121_CameraStates 0 (PSX 0x801F2C80, pairs_propagated gap pairing). Camera_Distance = 0xFBDC; Sprite_Current +4 = 1; the script word MoveScript_Object +0xA - 2. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AA90
+name = "Area121_CameraApproach"
+psx = 0x801F2CBC
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AA90..0x41AACF (0x40), cdecl, capstone to the last instruction, group AR3B. Area121_CameraStates 1 (PSX 0x801F2CBC). Camera_Distance (s16) below 0x5DC: + 0x40, the script word - 2, MapView_Redraw = 2. Else Camera_Distance = 0x5DC, Sprite_Current +4 = 0, MapView_Redraw = 2. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AAD0
+name = "Area121_StartRun4"
+psx = 0x801F2D30
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AAD0..0x41AB37 (0x68), cdecl, capstone to the last instruction, group AR3B. Area121_Handlers 1 (PSX 0x801F2D30). Field_ActiveMember +0x80 bit 0 cleared, +0x83 = 0, word +0x8A = 0 (the pointer read again for each); Sound_PlayEffect(0x217); ScriptFlags_Set40; bytes 0x903848..0x90384B and 0x8034E5 = 0; MoveScript_Var7 = 4. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AB40
+name = "Area121_SpawnEffectBA"
+psx = 0x801F2DC0
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AB40..0x41AB67 (0x28), cdecl, capstone to the last instruction, group AR3B. Area121_Handlers 2 (PSX 0x801F2DC0). Effect_FindFree; not 0xFF: Effect_Objects[slot] +0 = 1, +5 = 0xBA (the slot unchecked against the twenty). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AB70
+name = "Area121_PlaceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AB70..0x41ABE3 (0x74), cdecl, capstone to the last instruction, group AR3B. Area 121's field hook (area 87's Area87_PlaceMessage 0x40FC60 is another body). WorldMap_FieldHooks entry 8 (0x662E10). NOT area 87's body (0x174 bytes): two states on the s8 0x9039F4 - state 0 ScriptFlags_Set40, the index of the place 0x937F82 in Area121_Places' four words (4 none), Msg_OpenScript(index + 1), 0x9039F4 (read after the call) + 1, Field_Request = 2; state 1 waits for Field_Request not 2, ScriptFlags_Clear40 and 0x9039F3..0x9039F5 = 0. No cell, name set or AreaMap_ByteAt. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41ABF0
+name = "Area121_PlateRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41ABF0..0x41ACC5 (0xD6), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_PlateRun (0x40FDE0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[8] +0 (0x6539F0; effect kind 0): the cell ahead of the leader, the plate kind +0xB by AreaMap_ByteAt (0xA1 / 0xA0 / 0xAE / flag bit 12), then Area121_PlateStates by +1 (ours aborts past five). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41ACD0
+name = "Area121_PlateStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41ACD0..0x41AD20 (0x51), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_PlateStart (0x40FEC0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ, and the bank). Area121_PlateStates 0, and area 104's plate state 0 (its table 0x61BB7C names this body): +0x24 = 0x80, Sprite_SetAnimationBank(0x158) (area 87's 0x156), +0x29 = 5, +0x2A / +0x5D..+0x5F = 0, +1 = 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AD30
+name = "Area121_PlateShow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AD30..0x41AE71 (0x142), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_PlateShow (0x40FF20) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_PlateStates 1: +7 = +0xB; kind 1 the animation of Area121_PlateAnims' entry for the place 0x937F82 (searched with no bound), kinds 2..4 animations 3, 0, 1; +0x40 / +0x44 / +0x48 / +9, Sprite_SetAnimation, +1 = 2. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AE80
+name = "Area121_PlateGrow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AE80..0x41AEC0 (0x41), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_PlateGrow (0x410070) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_PlateStates 2: WorldMap_PinSprite, +0x40 += 0x2000 for eight frames, then state 3; Sprite_QueueOverlay. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AED0
+name = "Area121_PlateHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AED0..0x41AF27 (0x58), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_PlateHold (0x4100C0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_PlateStates 3: WorldMap_PinSprite; unless Game_Mode is 1, leaves (state 4) on a kind change, Field_Request 5 or a place change; Sprite_QueueOverlay. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AF30
+name = "Area121_PlateShrink"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AF30..0x41AF7F (0x50), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_PlateShrink (0x410120) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_PlateStates 4: WorldMap_PinSprite, +0x40 -= 0x2000; at 0 Effect_Release on Field_Request 5, else back to state 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AF80
+name = "Area121_HudRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AF80..0x41AF91 (0x12), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_HudRun (0x410170) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[8] +0xC (0x6539FC; effect kind 0x58): jmp [Area121_HudStates + +1 * 4] (WorldMapHud_Start, Area121_HudFrame; ours aborts past two). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AFA0
+name = "Area121_HudFrame"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AFA0..0x41AFA9 (0xA), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_HudFrame (0x410190) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_HudStates 1: call Area121_FrameStep; jmp Area121_BoxStep. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AFB0
+name = "Area121_FrameStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AFB0..0x41AFC1 (0x12), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_FrameStep (0x4101A0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Called by Area121_HudFrame: jmp [Area121_FrameStates + +2 * 4] (ours aborts past four). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41AFD0
+name = "Area121_FrameSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41AFD0..0x41AFF0 (0x21), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_FrameSlideIn (0x4101C0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_FrameStates 1: the word +0x2E += 0x10, at 0x10 +2 + 1; a tail jump to Area121_FrameHold. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B000
+name = "Area121_FrameHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B000..0x41B027 (0x28), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_FrameHold (0x4101F0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_FrameStates 2: the map mode 2 makes +2 = 3; Area121_DrawFrame(0x10, +0x2E). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B030
+name = "Area121_FrameSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B030..0x41B070 (0x41), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_FrameSlideOut (0x410220) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_FrameStates 3: +0x2E -= 0x10, at -0x30 +2 = 0; unless the mode is 2, +2 = 1; Area121_DrawFrame(0x10, y). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B080
+name = "Area121_BoxStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B080..0x41B091 (0x12), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_BoxStep (0x410270) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Called by Area121_HudFrame: jmp [Area121_BoxStates + +3 * 4] (ours aborts past four). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B0A0
+name = "Area121_BoxSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B0A0..0x41B101 (0x62), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_BoxSlideIn (0x410290) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_BoxStates 1: +0x30 -= 10, at 0xC8 +3 + 1; when the box leaves +3 = 3; Area121_DrawHud(0x5C, y). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B110
+name = "Area121_BoxHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B110..0x41B17D (0x6E), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_BoxHold (0x410300) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_BoxStates 2: +9 counts to 0x5A while +0xB is 0, then +0xB + 1; the box's leave test; Area121_DrawHud(0x5C, y). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B180
+name = "Area121_BoxSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B180..0x41B1D6 (0x57), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_BoxSlideOut (0x410370) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_BoxStates 3: +0x30 += 10, at 0xF0 +3 = 0; unless the mode / Field_Request 2 / flag bit 8, +3 = 1; Area121_DrawHud. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B1E0
+name = "Area121_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B1E0..0x41B3A4 (0x1C5), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_DrawFrame (0x4103D0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). The dial page through Area121_DrawSprite over Area121_Buttons (six entries; the second legend reads eight), the needle WorldMap_DrawNeedle. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B3B0
+name = "Area121_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B3B0..0x41B46B (0xBC), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_DrawSprite (0x4105A0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). One SPRT of Area121_Sprites by index & 0xFF (unchecked), CLUT 0x7B80, committed to slot 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B470
+name = "Area121_DrawHud"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B470..0x41B4C7 (0x58), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_DrawHud (0x410660) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). The region box (sprites 4, 5) and Text_DrawAt of 0x803580 + the low word of the dword 0x803580 (areas 87 and 88's label cell). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B4D0
+name = "Area121_Record8Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B4D0..0x41B4E1 (0x12), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_Record8Run (0x4106C0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[8] +8 (0x6539F8): jmp [Area121_Record8States + +1 * 4] (0x4253C0, Area121_Record8Place, 0x40C490; ours aborts past three). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B4F0
+name = "Area121_Record8Place"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B4F0..0x41B643 (0x154), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_Record8Place (0x4106E0) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_Record8States 1: Sprite_SetAnimationBank(0x46), the position from the leader nudged by Area121_Directions by +8, Sprite_SetAnimation of Area121_Record8Anims, Sprite_UpdateScreen. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B650
+name = "Area121_Record4Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B650..0x41B661 (0x12), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_Record4Run (0x410840) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[8] +4 (0x6539F4): jmp [Area121_Record4States + +1 * 4] (Area121_Record4MarkCell, Area45_Record4Tick; ours aborts past two). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B670
+name = "Area121_Record4MarkCell"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B670..0x41B724 (0xB5), cdecl, capstone to the last instruction, group AR3B. Area 87's Area87_Record4MarkCell (0x410860) instruction for instruction over area 121's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area121_Record4States 0: Effect_Release on 0x903A79 9 or Field_StatusBits bit 0; else WorldMap_RecordIndex, bank 0x205, and the map byte of Area121_Cells' record +0xB (unchecked) set to 0xA0. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B730
+name = "Area121_DrawDrift"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B730..0x41B9C4 (0x295), cdecl, capstone to the last instruction, group AR3B. WorldMap_Records[8] +0x10 (0x653A00) and area 104's record 6 +0x10 (0x6539C8): one body. NOT area 87's (0x462 bytes). Once (+2 == 0) the word +0x3A += Frame_Counter & 0xF. Under Draw_PassFlags bit 2, b = +0xB: +0x38 += b << 10; +0x3A = -8 above AreaMap_Header[1] + 8; within 25 cells of the leader in x OR z: about ((+0x34 >> 9) - 0x3FC0, (+0x38 >> 9) - 0x3FC0) a flat POLY_FT4 square of half-side (4 - b) << 8 at height 0 (Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture((b - 2) | 0xBB28A100, prim, 1), Gfx_CommitPrim(5, 0x48)), then one at height 0xFD00 of half-side ((4 - b) << 8) + |15 - (Frame_Counter & 0x1F)| (texture (b - 2) | 0xBB509100, Gfx_CommitPrim(4, 0x48)). No map items, no UV table. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B9D0
+name = "Area121_LeaderRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B9D0..0x41B9E6 (0x17), cdecl, capstone to the last instruction, group AR3B. Jumped to by 0x52FE9F: Field_LeaderStates[12] 0x52FE90 is `cmp Game_AreaNumber, 0x68; jne; jmp 0x415020; jmp 0x41B9D0` (area 104 its own copy, every other area this one). call [Area121_LeaderStates + (Sprite_Current +2) * 4] (ours aborts past two), then a tail jump to 0x4156C0 (area 104's block). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41B9F0
+name = "Area121_LeaderControl"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41B9F0..0x41BC5A (0x26B), cdecl, capstone to the last instruction, group AR3B. Area121_LeaderStates 0, and Area121_LeaderStep's tail. Returns early on Area121_StepOffObject, Field_ScriptFlags bit 8, Field_ScriptFlags2 bit 6, Field_Request, Sprite_Current +0xA; Field_State +0x136 = 0 with any Field_InputHeld unless Field_ActorStates[Field_State +0x148] (0xA4 each, unchecked) bit 5; early again on Field_LeaderCellEvent, Area121_MenuButton, Field_LeaderTalkTest, Area121_Request4Button. Area121_TurnInput and the push button (word 0x903582 & Input_Held): neither, or +0xB 0x40, halts (+8 back, +0x137 = 0, 0x415640, +9 = +2 = 0); the button keeps the old facing; a new facing turns one step toward it (signed compares, +8 around the wrap), +8 &= 7. Field_LeaderStepTarget 1 / 0xFF blocks (+0x128 = 3); 0: Field_LeaderPushObjects then Area121_PushObject, else 0x415680 (the pace) and at pace 4 a facing change is undone; else Field_JumpStart, Field_JumpCheckHeight, +9 - 1, Field_LeaderStepTick, +0x137 = +2 = 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41BC60
+name = "Area121_PushObject"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41BC60..0x41BD92 (0x133), cdecl, capstone to the last instruction, group AR3B. Called by Area121_LeaderControl. Area 0x79 only: k = Sprite_ObjectAt(two Field_DirectionSteps[+8] steps ahead - the whole byte - , 1); with the push button held and object k's +8 & 7 the leader's +8, its +0x80 |= 1 (Sprite_Objects k, or Sprite_ObjectsExtra k - 0x1E: none, 0xFF, is 'extra record 0xE1' at 0x80B0A4, read and written); else Area121_StepAround(x, z, k) answering: Field_JumpStart, +9 - 1, Field_LeaderStepTick, Field_State +0x137 = +2 = 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41BDA0
+name = "Area121_StepAround"
+ret = "unsigned char"
+params = "long x, long z, unsigned k"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41BDA0..0x41BE08 (0x69), cdecl, capstone to the last instruction, group AR3B. Called by Area121_PushObject and Area121_StepOffObject. k's low byte 0xFF: al 0. Else +8 = Area121_DirectionTo(x, z, k); up to eight turns: Field_LeaderStepTarget 0 and Sprite_ObjectAt(x, z, 0) 0xFF answer al 1, else +8 = (+8 + 1) & 7; al 0 after eight. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41BE10
+name = "Area121_DirectionTo"
+ret = "unsigned char"
+params = "long x, long z, unsigned k"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41BE10..0x41BEB1 (0xA2), cdecl, capstone to the last instruction, group AR3B. Called by Area121_StepAround and by area 104's code at 0x415406 (one body, in area 121's block). Object k (low byte; Sprite_Objects below 0x1E, else Sprite_ObjectsExtra k - 0x1E, unchecked): by the signs of x - +0x34 and z - +0x38: (-,-) 0, (-,+) 6, (-,0) 7, (+,+) 4, (+,-) 2, (+,0) 3, (0,+) 5, (0,-/0) 1. No calls. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41BEC0
+name = "Area121_StepOffObject"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41BEC0..0x41BF30 (0x71), cdecl, capstone to the last instruction, group AR3B. Called first by Area121_LeaderControl. Area 0x79 only: Area121_StepAround(Sprite_Current +0x34, +0x38, Sprite_ObjectAt(+0x34, +0x38, 1)) answering: the step (Field_JumpStart, +9 - 1, Field_LeaderStepTick, +0x137 = +2 = 1), al 1. Else al 0. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41BF40
+name = "Area121_LeaderStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41BF40..0x41C096 (0x157), cdecl, capstone to the last instruction, group AR3B. Area121_LeaderStates 1. Field_State +0x137 = 1; +9 counts down through Field_LeaderStepTick (a tail jump). At 0: Field_Bit20Tick, Field_FloorDamage; with Field_InputFlags bit 0 the cell (words +0x36, +0x3A) by AreaMap_ByteAt: 0xAF Field_ChangeArea(word 0x937F82, dword 0x903860, dword 0x90384C, byte 0x905B88), 0x904EE0 = 0, 0x937F98 = 0xC; 0xC0 Area_LinkAt. Field_EdgeBits + 1 (+ 2 for facings 2, 6); 0x415640; Scenario_ArriveHook(+0x34, +0x38) not 0: +2 = 0. Else Field_Bit80Tick; outside Field_ScriptFlags bit 8 / Field_ScriptFlags2 bit 6, Field_InputHeld & (word 0x903582 | word 0x903580 | 0xF000): a tail jump to Area121_LeaderControl; else +0x137 = +2 = 0. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C0A0
+name = "Area121_MenuButton"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C0A0..0x41C0D9 (0x3A), cdecl, capstone to the last instruction, group AR3B. Called by Area121_LeaderControl and by area 104's code at 0x4150C4. Field_MenuButton & Input_Pressed outside Field_ScriptFlags bit 6: Sound_PlayEffect(0x105), Field_Request = 1, Sprite_Current +2 = 0, al 1; else al 0. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C0E0
+name = "Area121_Request4Button"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C0E0..0x41C10F (0x30), cdecl, capstone to the last instruction, group AR3B. Called by Area121_LeaderControl and by area 104's code at 0x4150DE. Outside Field_ScriptFlags bit 13, word 0x903586 & Field_InputHeld: Field_Request = 4, +2 = 0, al 1; else al 0. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C110
+name = "Area121_TurnInput"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C110..0x41C181 (0x72), cdecl, capstone to the last instruction, group AR3B. Called by Area121_LeaderControl and by area 104's code at 0x4150F4. Input_Held bit 14: +8 ^= 4; else bit 13: +8 + 1; else bit 15: +8 - 1; else bit 12: +8 kept; each +8 &= 7 and al 1. None: al 0. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C190
+name = "Area121_Kind5CRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C190..0x41C1A1 (0x12), cdecl, capstone to the last instruction, group AR3B. Jumped to by 0x462B6F: Effect_KindHandlers[0x5C] 0x462B60 is `cmp Game_AreaNumber, 0x68; jne; jmp 0x415780; jmp 0x41C190`. jmp [Area121_Kind5CStates + (Sprite_Current +1) * 4] (ours aborts past five). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C1B0
+name = "Area121_Kind5CStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C1B0..0x41C260 (0xB1), cdecl, capstone to the last instruction, group AR3B. Area121_Kind5CStates 0. +8 = the leader's +8; Sprite_InitFromEntry(Area_Descriptors[Game_AreaNumber] +8's dword + 8) (ours aborts past 200 or on a null descriptor); +0x5D..+0x5F = 0x80; +1 + 1; Area121_Kind5CFollow. Unless area 0x68 without KeyItem_Has(0xA): four Effect_FindFree slots (unchecked: 0xFF is record 255 at 0x7E9160) get +0 = 1, +5 = 0x5C, +1 = 3, +0xA = 0, 8, 0x10, 0x18. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C270
+name = "Area121_Kind5CFollow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C270..0x41C34A (0xDB), cdecl, capstone to the last instruction, group AR3B. Area121_Kind5CStart / _Kind5CFace / _Kind5CTurn. The leader's +0x34, +0x38, word +0x3E to Sprite_Current; Sprite_UpdateScreenA; then a tail jump to 0x41C2B0 (a body only this jump reaches, taken inside): under Draw_PassFlags & 0x1B the gauge - Area121_GaugeSprite(0xDC, 0x10, n) and 0x415940 rows: Field_StatusBits bit 6 n 0, rows (0x40, 0), (0x40, 1); leader +0xA 0: n 0, rows (0x40, 0), (0x40 - leader +0xB, 1); else n 1 / 2 by Frame_Counter bit 1, row (0x40, 0). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C350
+name = "Area121_GaugeSprite"
+ret = "void"
+params = "int x, int y, unsigned n"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C350..0x41C3D6 (0x87), cdecl, capstone to the last instruction, group AR3B. Called by Area121_Kind5CFollow and by area 104's code at 0x4158C8, 0x415902, 0x415920. Gpu_SetDrawMode(prim, 0, 0, 0x9C, 0), Gfx_CommitPrim(2, 0xC); a SPRT at (s16 x, s16 y) as floats, u 0, v (n << 5) + 0x78, 0x50 x 0x20, CLUT 0x7B80, colour 0x80; Gfx_CommitPrim(2, 0x1C). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C3E0
+name = "Area121_Kind5CFace"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C3E0..0x41C433 (0x54), cdecl, capstone to the last instruction, group AR3B. Area121_Kind5CStates 1, and Area121_Kind5CTurn's tail. +8 not the leader's: Area121_Kind5CTurnStep(+8, leader) or (+8 ^ 4, leader) answering returns; neither: the leader's +8 = +8. Then a tail jump to Area121_Kind5CFollow. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C440
+name = "Area121_Kind5CTurnStep"
+ret = "unsigned char"
+params = "unsigned a, unsigned b"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C440..0x41C50A (0xCB), cdecl, capstone to the last instruction, group AR3B. Called by Area121_Kind5CFace. a, b bytes; more than 2 apart the smaller + 8; still more than 2 apart or equal: al 0. Else +0x14 = -0x40 and +8 - 1 (a above) or 0x40 and +8 + 1; +8 &= 7; the leader's +8 = +8; +9 = 8; Area121_Kind5CTurn; +1 = 2; al 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C510
+name = "Area121_Kind5CTurn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C510..0x41C557 (0x48), cdecl, capstone to the last instruction, group AR3B. Area121_Kind5CStates 2. +0x6C += +0x14, & 0xFFF; +9 - 1; at 0 +1 = 1 and a tail jump to Area121_Kind5CFace, else to Area121_Kind5CFollow. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C560
+name = "Area121_RingWait"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C560..0x41C5AA (0x4B), cdecl, capstone to the last instruction, group AR3B. Area121_Kind5CStates 3. +0xA counts down; at 0 the leader's +0x34, +0x38 and +0x3C + 0x800000; Area121_RingRise; +1 + 1. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C5B0
+name = "Area121_RingRise"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C5B0..0x41C78A (0x1DB), cdecl, capstone to the last instruction, group AR3B. Area121_Kind5CStates 4, area 104's table 0x61BC40 and its code at 0x415BC7 (one body). Word +0x3E += 0x10, above 0x280 +1 = 3. Under Draw_PassFlags & 0x1B: Gte_PushMatrix; Gte_RotTrans((+0x34 >> 9) - 0x4000, (+0x38 >> 9) - 0x4000, -(h / 2)) into a matrix's translation, Gte_RotMatrix(0), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix; a semi-transparent POLY_FT4 diamond of radius (h >> 7) * 10 + 0x10 (u 0xE0..0xFE, v 0x30..0x4E, CLUT 0x78CA, tpage 0x3B) through Gte_RotTransPers4, Gte_PrimDepths4_10, colour 0x80, MapView_LinkPrimAt(+0x34, +0x38, 1, 0x48); Gte_PopMatrix. docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C790
+name = "Area121_DrawTopBand"
+ret = "void"
+params = "void"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C790..0x41C86C (0xDD), cdecl, capstone to the last instruction, group AR3B. EffectKind18_States entry 70 (0x654184). Cond_ByteFE 1 or 2 and Draw_PassFlags bit 2: Gpu_SetDrawMode(prim, 0, 1, 0x95, 0) committed to slot 7; an opaque POLY_G4 (0,0) (320,0) (0,h) (320,h), h Area121_BandHeights[Cond_ByteFE], top colour (0x48, 0x38, 0xFF), bottom white; Gfx_CommitPrim(7, 0x44). docs/area_w3b.md."
+
+[[func]]
+pc = 0x41C870
+name = "Area121_Trigger38"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/area_w3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x41C870..0x41C88C (0x1D), cdecl, capstone to the last instruction, group AR3B. Field_ObjectTriggers id 38 (0x662EB4; (object, 0x904030) ignored). ScriptFlags_Set40; 0x9039F3 = 0x2C (Field_ModeTailKinds[0x2C] 0x56DE50, the world map's field hook runner), 0x9039F4 = 0, 0x9039F5 = 0xE; al 0. docs/area_w3b.md."
+
+[[data]]
+pc = 0x62363C
+name = "Area120_Choices"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: area 120's descriptor 0x623648 +0x34: Area120_ChoiceVar3A, _ChoiceVar3B, _ChoiceStartRun13 (area 120 has no handler table and no init). docs/area_w3b.md."
+
+[[data]]
+pc = 0x6245C8
+name = "Area121_Handlers"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: area 121's descriptor 0x6245D8 +0x3C: Area121_CameraRun, _StartRun4, _SpawnEffectBA (its +0x34 choice table 0x6245D4 holds 0x41D270, outside the band; no init). docs/area_w3b.md."
+
+[[data]]
+pc = 0x62461C
+name = "Area121_CameraStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: Area121_CameraFar, Area121_CameraApproach; Area121_CameraRun's by Sprite_Current +4. docs/area_w3b.md."
+
+[[data]]
+pc = 0x624624
+name = "Area121_Places"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: the four places Area121_PlaceMessage looks the place 0x937F82 up in (message index + 1). docs/area_w3b.md."
+
+[[data]]
+pc = 0x623690
+name = "Area121_PlateAnims"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: (u16 place, u8 animation, u8) x 4: Area121_PlateShow searches it with no bound. docs/area_w3b.md."
+
+[[data]]
+pc = 0x6236A0
+name = "Area121_Cells"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: (u8 x, u8 z, u8, u8) x 1, then zeros: Area121_Record4MarkCell by +0xB, unchecked. docs/area_w3b.md."
+
+[[data]]
+pc = 0x62462C
+name = "Area121_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: Area121_PlateStart, _PlateShow, _PlateGrow, _PlateHold, _PlateShrink; Area121_PlateRun's by +1. docs/area_w3b.md."
+
+[[data]]
+pc = 0x624640
+name = "Area121_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: WorldMapHud_Start (shared), Area121_HudFrame. docs/area_w3b.md."
+
+[[data]]
+pc = 0x624648
+name = "Area121_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: WorldMap_FrameWait (shared), Area121_FrameSlideIn, _FrameHold, _FrameSlideOut. docs/area_w3b.md."
+
+[[data]]
+pc = 0x624658
+name = "Area121_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: WorldMapHud_BoxWait (shared), Area121_BoxSlideIn, _BoxHold, _BoxSlideOut. docs/area_w3b.md."
+
+[[data]]
+pc = 0x624668
+name = "Area121_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: (w, h, u, v) x 22: Area121_DrawSprite by index & 0xFF, unchecked. docs/area_w3b.md."
+
+[[data]]
+pc = 0x6246C0
+name = "Area121_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: (u16 mask, u8 sprite, u8) x 6: Area121_DrawFrame's keys; the second legend reads eight (the first two Area121_Record8States' words). docs/area_w3b.md."
+
+[[data]]
+pc = 0x6246D8
+name = "Area121_Record8States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: 0x4253C0 and 0x40C490 (the copies' shared states, other groups') around Area121_Record8Place. docs/area_w3b.md."
+
+[[data]]
+pc = 0x6246E4
+name = "Area121_Directions"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: (s16 dx, s16 dz) x 4 by +8, unchecked: Area121_Record8Place. docs/area_w3b.md."
+
+[[data]]
+pc = 0x6246F4
+name = "Area121_Record8Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: (u8 animation, u8 +0x2A) x 4 by +8, unchecked: Area121_Record8Place. docs/area_w3b.md."
+
+[[data]]
+pc = 0x6246FC
+name = "Area121_Record4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: Area121_Record4MarkCell, Area45_Record4Tick (shared). docs/area_w3b.md."
+
+[[data]]
+pc = 0x624704
+name = "Area121_LeaderStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: Area121_LeaderControl, Area121_LeaderStep; Area121_LeaderRun's by Sprite_Current +2 (the tool's 7 runs into the next table). docs/area_w3b.md."
+
+[[data]]
+pc = 0x62470C
+name = "Area121_Kind5CStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: Area121_Kind5CStart, _Kind5CFace, _Kind5CTurn, _RingWait, _RingRise; Area121_Kind5CRun's by Sprite_Current +1. docs/area_w3b.md."
+
+[[data]]
+pc = 0x624720
+name = "Area121_BandHeights"
+ctype = "unsigned char"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR3B: by Cond_ByteFE 1..2 (entry 0 never read): Area121_DrawTopBand's bottom edge. docs/area_w3b.md."
