@@ -503,11 +503,16 @@ void Args40(unsigned k, U* a) {
         break;
     case k40TileLit: {
         // (x, z) less the origin: a row and a diagonal of the same parity,
-        // inside the ring two times in three, else at or past its edges
-        const bool inside = ah::Often();
-        const int row = inside ? static_cast<int>(ah::Next() % 0x38) : static_cast<int>(AH_PICK(0xFFFFFFFF, 0x38, 0x39, 0x100));
-        int diagonal = inside ? static_cast<int>(ah::Next() % 0x38) : static_cast<int>(AH_PICK(0xFFFFFFFF, 0x38, 0, 0x37));
-        if ((diagonal ^ row) & 1) diagonal += diagonal > 0 ? -1 : 1;
+        // each inside the ring two times in three (drawn apart, so one can
+        // sit on its edge while the other is inside), else at or past its
+        // edges; the parity is mended on an inside one, kept inside
+        const bool row_in = ah::Often(), diagonal_in = ah::Often();
+        int row = row_in ? static_cast<int>(ah::Next() % 0x38) : static_cast<int>(AH_PICK(0xFFFFFFFF, 0x38, 0x39, 0x100));
+        int diagonal = diagonal_in ? static_cast<int>(ah::Next() % 0x38) : static_cast<int>(AH_PICK(0xFFFFFFFF, 0x38, 0, 0x37));
+        if ((diagonal ^ row) & 1) {
+            if (row_in) row += row > 0 ? -1 : 1;
+            else diagonal += diagonal > 0 ? -1 : 1;
+        }
         const int dx = (row + diagonal) / 2, dz = (row - diagonal) / 2;
         a[0] = (a[0] & 0xFFFF0000u) | static_cast<std::uint16_t>(MapView_Origin[0] + dx);
         a[1] = (a[1] & 0xFFFF0000u) | static_cast<std::uint16_t>(MapView_Origin[1] + dz);
