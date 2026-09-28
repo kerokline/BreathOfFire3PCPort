@@ -13,6 +13,9 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
 
 namespace field_misc {
 
@@ -40,7 +43,7 @@ constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, the low word read
 constexpr U kRhwNumerator = 0x5C4610;  // float 0.1
 constexpr U kDevice = 0x7CC350;        // D3d_Device
-constexpr U kRetOnly = 0x437CC0;       // a bare ret
+constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 
 // The named data, by the address its symbols.gen.h macro names (the macros are
 // typed lvalues or pointers, so bof3::addr's constants are shadowed by them).

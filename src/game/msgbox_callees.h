@@ -12,6 +12,11 @@
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
 #include <cstring>
 
 namespace msgbox {
@@ -66,12 +71,12 @@ constexpr std::uint32_t kEffectTable = 0x658E98;   // 4-byte records: kind, s8 o
 constexpr std::uint32_t kTextSpeed = 0x903A58;     // s8, the player's message-speed option
 
 // --- Callees that are not ours and have no name in symbols.toml -----------
-constexpr std::uint32_t kRetOnly = 0x437CC0;       // a bare ret: effect kind 0, the only one the attract reaches
+constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;       // a bare ret: effect kind 0, the only one the attract reaches
 constexpr std::uint32_t kEffectDraw = 0x4987E0;    // the stepper's own glyph draw under flag 8 (unread; still 12 px)
-constexpr std::uint32_t kPageArrow = 0x498D20;     // draws the "more" arrow every other 32 frames
-constexpr std::uint32_t kChoiceCommit = 0x4981C0;  // state 4 sub 5: an indirect call through Area_Descriptors +0x34
-constexpr std::uint32_t kMenuCommit = 0x4983C0;    // state 5 sub 3: the same, for a menu
-constexpr std::uint32_t kAutoRepeat = 0x461EB0;    // the pad auto-repeat on Input_Held (docs/msgbox.md section 3)
+constexpr std::uint32_t kPageArrow = bof3::addr::MsgBox_DrawArrow;     // draws the "more" arrow every other 32 frames
+constexpr std::uint32_t kChoiceCommit = bof3::addr::MsgBox_ChoiceCommit;  // state 4 sub 5: an indirect call through Area_Descriptors +0x34
+constexpr std::uint32_t kMenuCommit = bof3::addr::MsgBox_MenuCommit;    // state 5 sub 3: the same, for a menu
+constexpr std::uint32_t kAutoRepeat = bof3::addr::Input_AutoRepeat;    // the pad auto-repeat on Input_Held (docs/msgbox.md section 3)
 
 struct Callees {
     void (__cdecl* state[8])();     // MsgBox_StateDispatch's eight, 0x497B30..0x498470

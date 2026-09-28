@@ -69,7 +69,10 @@ bh::Clone Via(const char* name, U base, U size, const bh::CallSite* calls, int n
 
 // Kinds 8..11's dispatchers (BossKind_Table[8..11], BSB's) and the cell of
 // their +1 tables that state 6 selects.
-constexpr U kKindDispatch[4] = {0x438E50, 0x4390F0, 0x439160, 0x4391D0};
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
+// via dispatchers by name, the same values; the clones' own addresses (the keys) stay raw.
+constexpr U kKindDispatch[4] = {bof3::addr::BossTorast_Dispatch, bof3::addr::BossKassen_Dispatch,
+                                bof3::addr::BossGaltel_Dispatch, bof3::addr::BossDoksen_Dispatch};
 constexpr U kKindState6[4] = {0x64CABC, 0x64CB28, 0x64CB64, 0x64CBA0};
 
 const bh::Clone kClonesTorast[] = {
@@ -177,15 +180,16 @@ constexpr bh::CallSite kCalls43B180[] = {{0x17, 0x57C0F0}, {0x28, 0x589330}, {0x
 const bh::Clone kClonesOps[] = {
     // kind 21's dispatcher (0x43A660, BSD's) at state 1
     Via("BossOp_EnterTick", 0x43A720, 0x13, kCalls43A720, BH_N(kCalls43A720), BH_FN(BossOp_EnterTick), S::kState, 0, 1, 0,
-        0x43A660, 0x64CF7C, 1, 1),
+        bof3::addr::BossClaw_Dispatch, 0x64CF7C, 1, 1),
     // kind 6's +2 dispatcher (0x437A70, BSA's) at +2 = 4
-    Via("BossOp_Death", 0x43B550, 0x48, kCalls43B550, BH_N(kCalls43B550), BH_FN(BossOp_Death), S::kState, 0, 1, 0, 0x437A70, 0x64C7F0,
-        2, 4),
+    Via("BossOp_Death", 0x43B550, 0x48, kCalls43B550, BH_N(kCalls43B550), BH_FN(BossOp_Death), S::kState, 0, 1, 0,
+        bof3::addr::BossGary_ActDispatch, 0x64C7F0, 2, 4),
     // kind 21's hook table (0x43A740 by the hook's word, BSD's), entry 0
-    Via("BossHook_RetargetMember0", 0x43A750, 0x11, nullptr, 0, BH_FN(BossHook_RetargetMember0), S::kEnemyHook, 0, 1, 0, 0x43A740,
-        0x64CFA8, 0, 0),
+    Via("BossHook_RetargetMember0", 0x43A750, 0x11, nullptr, 0, BH_FN(BossHook_RetargetMember0), S::kEnemyHook, 0, 1, 0,
+        bof3::addr::BossClaw_Hook, 0x64CFA8, 0, 0),
     // kind 8's hook table (0x4390E0 by the hook's word, BSB's), entry 0
-    Via("BareRet", 0x437CC0, 0x1, nullptr, 0, BH_FN(BareRet), S::kEnemyHook, 0, 1, 0, 0x4390E0, 0x64CB04, 0, 0),
+    Via("BareRet", 0x437CC0, 0x1, nullptr, 0, BH_FN(BareRet), S::kEnemyHook, 0, 1, 0, bof3::addr::BossTorast_Hook, 0x64CB04,
+        0, 0),
     {"BossMap_SetCorners", 0x43B0D0, 0x57, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(BossMap_SetCorners), 0, false, S::kCallee},
     {"Boss_SetByLeaderId", 0x43B130, 0x50, nullptr, 0, nullptr, 0, kTables43B130, BH_N(kTables43B130), BH_FN(Boss_SetByLeaderId), 0, false,
      S::kCallee},

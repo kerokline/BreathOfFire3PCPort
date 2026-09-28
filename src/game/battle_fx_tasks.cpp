@@ -39,10 +39,15 @@ Handler H(std::uint32_t address) { return Fn<Handler>(address); }
 }  // namespace
 
 const Callees kOriginals = {
-    {H(0x437CC0), H(0x432B70), H(0x432F90), H(0x433190), H(0x4332B0), H(0x433380), H(0x433460),
-     H(0x4337F0), H(0x43C740), H(0x4348E0), H(0x434B90), H(0x433970), H(0x433B80), H(0x434D70),
+    // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
+    // entries the boss round made ours read their names (BareRet in both stack tables,
+    // Boss26Fx_Dispatch - BattleFx_Dispatch's slot 8, group BSF's); the values are
+    // unchanged. The rest keep the round-eight form, raw (the fuzz's kFxImm / kMagicImm
+    // key on the same values).
+    {H(bof3::addr::BareRet), H(0x432B70), H(0x432F90), H(0x433190), H(0x4332B0), H(0x433380), H(0x433460),
+     H(0x4337F0), H(bof3::addr::Boss26Fx_Dispatch), H(0x4348E0), H(0x434B90), H(0x433970), H(0x433B80), H(0x434D70),
      H(0x434F40), H(0x452680), H(0x452AD0), H(0x434310), H(0x452B60)},
-    {H(0x437CC0), H(0x49AB60), H(0x4FB260), H(0x4D6E30), H(0x4AB570), H(0x4C0620), H(0x4A8360), H(0x4D80C0),
+    {H(bof3::addr::BareRet), H(0x49AB60), H(0x4FB260), H(0x4D6E30), H(0x4AB570), H(0x4C0620), H(0x4A8360), H(0x4D80C0),
      H(0x4F1500), H(0x4A3C80), H(0x4CCAA0), H(0x4D0730), H(0x4CBAE0), H(0x4BDC40), H(0x4CAC40), H(0x4DAF00),
      H(0x4D5780), H(0x4B5B10), H(0x4B16C0), H(0x4B6A40), H(0x4C9E30), H(0x4C75B0), H(0x4C5110), H(0x4C8970),
      H(0x4F3640), H(0x4D2E30), H(0x4D3F30), H(0x4CDA00), H(0x4B7A10), H(0x4C2A50), H(0x4AAD50), H(0x4A2460),

@@ -8,12 +8,17 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace sprt_draw {
 
 using U = std::uint32_t;
 
 // A bare `ret` (24 callers); each handler calls it twice with a 1 pushed.
-constexpr U kRetOnly = 0x437CC0;
+constexpr U kRetOnly = bof3::addr::BareRet;
 
 // Data the handlers read, all Capcom's addresses (docs/sprt-draw.md section 2).
 constexpr U kScaleX = 0x7C9F4C;        // D3d_ScaleX, float

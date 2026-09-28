@@ -158,7 +158,7 @@ void EndByWin(unsigned char scene) {
 
 // original 0x439410: Boss_SetupTable[11]: BattleHook_End = Boss11_End,
 // _Exit = Boss11_Exit, _Event = BareRetZero.
-extern "C" void __cdecl Boss11_Setup(void) { StoreHooks(0x439430, 0x439450, 0x43C9F0); }
+extern "C" void __cdecl Boss11_Setup(void) { StoreHooks(bof3::addr::Boss11_End, bof3::addr::Boss11_Exit, bof3::addr::BareRetZero); }
 
 // original 0x439430: won: 0x903848 = 0x44 and a tail jump to 0x446DE0; else
 // to 0x446E00.
@@ -190,7 +190,7 @@ extern "C" unsigned long __cdecl BossAmalgam_Dispatch(unsigned long through) {
 // BossAmalgam_SlotScripts) - a field slot script for the sprite -, +1 = 2 on
 // Sprite_Current read after the call, and a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossAmalgam_Enter(void) {
-    StoreKindTables(0x64CBC4, 0x4398D0, 0x64CBD0);
+    StoreKindTables(0x64CBC4, bof3::addr::BossAmalgam_Hook, 0x64CBD0);
     BH_AT(void (__cdecl*)(unsigned char*, U), at::kSlotStart)(Sprite_Current, 0x64CC14);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -341,7 +341,7 @@ extern "C" void __cdecl BossAmalgam_DrawStreak(unsigned v) {
 
 // original 0x4398E0: Boss_SetupTable[12]: End = Boss12_End, Exit = BareRet,
 // Event = BareRetZero.
-extern "C" void __cdecl Boss12_Setup(void) { StoreHooks(0x439900, 0x437CC0, 0x43C9F0); }
+extern "C" void __cdecl Boss12_Setup(void) { StoreHooks(bof3::addr::Boss12_End, bof3::addr::BareRet, bof3::addr::BareRetZero); }
 
 // original 0x439900: won (0x904AE8 bit 1, the byte read once): 0x903848 =
 // 0x23, 0x904AE8 = the byte | 8, a tail jump to 0x446DE0; else to 0x446E00.
@@ -391,7 +391,7 @@ extern "C" unsigned long __cdecl BossBalio_Dispatch(unsigned long through) {
 
 // original 0x439B30: state 0 (BalioSunderEnter above): BossBalio_Anims,
 // BossBalio_Hook, BossBalio_F8, bank 0xEE.
-extern "C" void __cdecl BossBalio_Enter(void) { BalioSunderEnter(0x64CC88, 0x439BC0, 0x64CCB8, 0xEE); }
+extern "C" void __cdecl BossBalio_Enter(void) { BalioSunderEnter(0x64CC88, bof3::addr::BossBalio_Hook, 0x64CCB8, 0xEE); }
 
 // original 0x439BC0: the +0xF4 hook: by the word's low byte through
 // BossBalio_Hooks (3: BossBalio_HookAct, BossBalio_HookHit, BareRet).
@@ -426,7 +426,7 @@ extern "C" unsigned long __cdecl BossSunder_Dispatch(unsigned long through) {
 
 // original 0x439C80: state 0: BossSunder_Anims, BossSunder_Hook,
 // BossSunder_F8, bank 0xEF.
-extern "C" void __cdecl BossSunder_Enter(void) { BalioSunderEnter(0x64CC94, 0x439D10, 0x64CCC0, 0xEF); }
+extern "C" void __cdecl BossSunder_Enter(void) { BalioSunderEnter(0x64CC94, bof3::addr::BossSunder_Hook, 0x64CCC0, 0xEF); }
 
 // original 0x439D10: the +0xF4 hook: through BossSunder_Hooks (3:
 // BossSunder_HookAct, BossSunder_HookHit, BareRet).
@@ -475,7 +475,7 @@ extern "C" unsigned long __cdecl BossNina_Dispatch(unsigned long through) {
 // original 0x439E20: state 0: the tables (BossNina_Anims, BossNina_Hook,
 // BossNina_F8), +8 = 1, +1 = 2.
 extern "C" void __cdecl BossNina_Enter(void) {
-    StoreKindTables(0x64CCA0, 0x439EE0, 0x64CCC8);
+    StoreKindTables(0x64CCA0, bof3::addr::BossNina_Hook, 0x64CCC8);
     Sprite_Current[8] = 1;
     Sprite_Current[1] = 2;
 }
@@ -555,7 +555,7 @@ extern "C" void __cdecl BossNina_HookHit(unsigned) {
 // original 0x43A030: Boss_SetupTable[16]: End = Boss16_End, Exit = Boss16_Exit,
 // Event = Boss16_Event; the wait count 0x675F00 = (Rand() & 2) + 8.
 extern "C" void __cdecl Boss16_Setup(void) {
-    StoreHooks(0x43A190, 0x43A230, 0x43A060);
+    StoreHooks(bof3::addr::Boss16_End, bof3::addr::Boss16_Exit, bof3::addr::Boss16_Event);
     B(at::kWaitTurns) = static_cast<unsigned char>((BH_CALL(Rand)() & 2) + 8);
 }
 
@@ -672,7 +672,7 @@ extern "C" unsigned long __cdecl BossRocky_Dispatch(unsigned long through) {
 // original 0x43A380: state 0: the tables (BossRocky_Anims, BossRocky_Hook,
 // BossRocky_F8), +1 = 2, a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossRocky_Enter(void) {
-    StoreKindTables(0x64CD90, 0x43A3C0, 0x64CD9C);
+    StoreKindTables(0x64CD90, bof3::addr::BossRocky_Hook, 0x64CD9C);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -689,7 +689,7 @@ extern "C" unsigned long __cdecl BossSample8_Dispatch(unsigned long through) {
 // BossSample8_Hook, BossSample8_F8), 0x939AD8's +0x114 |= 8, +1 = 2, a tail
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample8_Enter(void) {
-    StoreKindTables(0x64CD90, 0x43A450, 0x64CDA4);
+    StoreKindTables(0x64CD90, bof3::addr::BossSample8_Hook, 0x64CDA4);
     unsigned char* const e = Enemy();
     SetLong(e + 0x114, static_cast<std::int32_t>(L(e + 0x114) | 8));
     Sprite_Current[1] = 2;
@@ -707,14 +707,18 @@ extern "C" unsigned long __cdecl BossSample8_Hook(unsigned long word) {
 
 // original 0x43A460: Boss_SetupTable[14]: End = Boss14_End, Exit =
 // BossHook_ExitClearActor0, Event = BareRetZero.
-extern "C" void __cdecl Boss14_Setup(void) { StoreHooks(0x43A480, 0x43A4A0, 0x43C9F0); }
+extern "C" void __cdecl Boss14_Setup(void) {
+    StoreHooks(bof3::addr::Boss14_End, bof3::addr::BossHook_ExitClearActor0, bof3::addr::BareRetZero);
+}
 
 // original 0x43A480: won: 0x903848 = 0xC, 0x446DE0; else 0x446E00.
 extern "C" void __cdecl Boss14_End(void) { EndByWin(0xC); }
 
 // original 0x43A4B0: Boss_SetupTable[46]: End = BossHook_EndPickWay, Exit =
 // BareRet, Event = BareRetZero.
-extern "C" void __cdecl Boss46_Setup(void) { StoreHooks(0x43EB60, 0x437CC0, 0x43C9F0); }
+extern "C" void __cdecl Boss46_Setup(void) {
+    StoreHooks(bof3::addr::BossHook_EndPickWay, bof3::addr::BareRet, bof3::addr::BareRetZero);
+}
 
 // ============================================================================
 // Kind 16 (Pooch, area 26) and fight 15 (BOSS015, area 26 row 6)
@@ -728,7 +732,7 @@ extern "C" unsigned long __cdecl BossPooch_Dispatch(unsigned long through) {
 // original 0x43A4F0: state 0: the tables (BossPooch_Anims, BossPooch_Hook,
 // BossPooch_F8), +1 = 2, a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossPooch_Enter(void) {
-    StoreKindTables(0x64CE24, 0x43A530, 0x64CE30);
+    StoreKindTables(0x64CE24, bof3::addr::BossPooch_Hook, 0x64CE30);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -738,7 +742,7 @@ extern "C" unsigned long __cdecl BossPooch_Hook(unsigned long word) { return Hoo
 
 // original 0x43A540: Boss_SetupTable[15]: End = Boss15_End, Exit =
 // Boss15_Exit, Event = BareRetZero.
-extern "C" void __cdecl Boss15_Setup(void) { StoreHooks(0x43A560, 0x43A580, 0x43C9F0); }
+extern "C" void __cdecl Boss15_Setup(void) { StoreHooks(bof3::addr::Boss15_End, bof3::addr::Boss15_Exit, bof3::addr::BareRetZero); }
 
 // original 0x43A560: won: 0x903848 = 0x4B, 0x446DE0; else 0x446E00.
 extern "C" void __cdecl Boss15_End(void) { EndByWin(0x4B); }

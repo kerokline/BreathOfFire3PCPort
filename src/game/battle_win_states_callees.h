@@ -12,6 +12,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace battle_win_states {
 
 namespace at {
@@ -32,16 +37,21 @@ constexpr std::uint32_t kEnemies = 0x93B9E0;       // EnemyWorkingRecords, strid
 constexpr std::uint32_t kEnemyStride = 0x128;
 constexpr std::uint32_t kMembers = 0x802D40;       // ObjTrio: the battle's party objects, stride 0x14C
 constexpr std::uint32_t kMemberStride = 0x14C;
-constexpr std::uint32_t kBareRet = 0x437CC0;       // a bare `ret`: the idle states' handler
+constexpr std::uint32_t kBareRet = bof3::addr::BareRet;       // a bare `ret`: the idle states' handler
 
 // The stack tables, as the originals build them (each `mov [esp + 4 i], imm32`).
-constexpr std::uint32_t kKinds[8] = {0x597000, 0x597090, 0x5971B0, 0x597200, 0x597320, 0x5975D0, 0x597C70, 0x597D50};
-constexpr std::uint32_t kPartyStates[3] = {0x597030, 0x597070, kBareRet};
-constexpr std::uint32_t kCrossStates[3] = {0x5970C0, 0x597160, kBareRet};
-constexpr std::uint32_t kLabelStates[3] = {kBareRet, 0x5971E0, kBareRet};
-constexpr std::uint32_t kBannerStates[3] = {kBareRet, 0x597230, kBareRet};
-constexpr std::uint32_t kEnemyStates[4] = {0x597400, 0x5974C0, 0x597510, kBareRet};
-constexpr std::uint32_t kMemberStates[3] = {0x5976D0, 0x597850, 0x5978B0};
+constexpr std::uint32_t kKinds[8] = {bof3::addr::BattleWin_PartyRowStates,   bof3::addr::BattleWin_CrossStates,
+                                     bof3::addr::BattleWin_LabelStates,      bof3::addr::BattleWin_BannerStates,
+                                     bof3::addr::BattleWin_EnemyGaugeStates, bof3::addr::BattleWin_MemberGaugeStates,
+                                     bof3::addr::BattleWin_BannerRun,        bof3::addr::BattleWin_MessageRun};
+constexpr std::uint32_t kPartyStates[3] = {bof3::addr::BattleWin_PartyRowSlideIn, bof3::addr::BattleWin_PartyRowDraw, kBareRet};
+constexpr std::uint32_t kCrossStates[3] = {bof3::addr::BattleWin_CrossGrow, bof3::addr::BattleWin_CrossFrame, kBareRet};
+constexpr std::uint32_t kLabelStates[3] = {kBareRet, bof3::addr::BattleWin_LabelFrame, kBareRet};
+constexpr std::uint32_t kBannerStates[3] = {kBareRet, bof3::addr::BattleWin_BannerFrame, kBareRet};
+constexpr std::uint32_t kEnemyStates[4] = {bof3::addr::BattleWin_EnemyGaugeOpen, bof3::addr::BattleWin_EnemyGaugeFrame,
+                                           bof3::addr::BattleWin_EnemyTargetFrame, kBareRet};
+constexpr std::uint32_t kMemberStates[3] = {bof3::addr::BattleWin_MemberGaugeOpen, bof3::addr::BattleWin_MemberGaugeWait,
+                                            bof3::addr::BattleWin_MemberTargetFrame};
 
 }  // namespace at
 
