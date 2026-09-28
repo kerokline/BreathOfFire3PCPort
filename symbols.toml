@@ -48166,3 +48166,559 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-27, group SC5: Scena05_CellHook by the record index: Scena05_Cell0, Scena05_Cell1; a zero dword and the eight bytes 0x6610D8 follow, then Scena06_Hooks."
+
+# ---------------------------------------------------------------------------
+# Round ten group AR1A: world 1, areas 38..41, 0x4053B0..0x406650
+# (docs/area_w1a.md). Read with capstone 2026-09-28; extents by recursive
+# descent, agreeing with tools/area_rows.py area_funcs.tsv.
+
+[[func]]
+pc = 0x4053B0
+name = "Area38_ClearCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4053B0..0x4053D4 (0x25 bytes), cdecl: area 38 +0x3C[0] (Area38_Handlers; PSX 0x801F2C04): AreaMap_SetByte(0xC, z, 0) for z 0x1E, 0x1C, 0x1D, in that order. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4053E0
+name = "Area38_SetCellsC0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4053E0..0x40540D (0x2E bytes), cdecl: area 38 +0x3C[1] (PSX 0x801F2C4C): the same three cells set to 0xC0. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405410
+name = "Area38_SpawnEffectMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405410..0x4054C9 (0xBA bytes), cdecl: area 38 +0x3C[2] (PSX 0x801F2C94): with the party-list byte 0x904063 0, Sprite_Current = party record 1 (0x802E8C, left so) and its +0xB = Effect_FindFree(); a slot not 0xFF: the effect record +0 = 1, +5 = 6, +6 = 3, dword +0xC = 0, dword +0x10 = the signed byte Area38_EffectBytes[0x904063 read again], words +0x2E / +0x30 the record words +0x2E / +0x30. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4054D0
+name = "Area38_SpawnEffectMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4054D0..0x40558D (0xBE bytes), cdecl: area 38 +0x3C[3] (PSX 0x801F2E60): the same for the party-list byte 0x904064 and party record 2 (0x802FD8). docs/area_w1a.md."
+
+[[func]]
+pc = 0x405590
+name = "Area39_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405590..0x4055A1 (0x12 bytes), cdecl: area 39 +0x3C[0] (PSX 0x801F2C04): jmp [Sprite_Current[4] * 4 + 0x5F3EA4] (Area39_States, 2 entries; unchecked there, ours aborts past 2). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4055B0
+name = "Area39_DriftStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4055B0..0x4055D1 (0x22 bytes), cdecl: Area39_States[0]: the object +0xA = 0x40, +4 = 1; Field_ActiveMember word +0x8A less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4055E0
+name = "Area39_DriftStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4055E0..0x405641 (0x62 bytes), cdecl: Area39_States[1]: +0xA 0: +4 = 0. Else +0x34 += Area39_DriftSteps[+0xA & 0xF] << 11 and +0x38 += -(that byte, read again) << 11 (signed bytes), +0xA less 1 (Sprite_Current read for each), Field_ActiveMember word +0x8A less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405650
+name = "Area39_SpawnEffect36"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405650..0x405690 (0x41 bytes), cdecl: area 39 +0x3C[3] (PSX 0x801F2D54): Effect_FindFree(); a slot: +0 = 1, +5 = 0x36, +9 = 0; none: Field_ActiveMember word +0x8A less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4056A0
+name = "Area39_ClearCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4056A0..0x4056B9 (0x1A bytes), cdecl: area 39 +0x3C[4] (PSX 0x801F2DE4): AreaMap_SetByte(0x43, 0x36, 0), (0x44, 0x36, 0). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4056C0
+name = "Area39_SetCells51"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4056C0..0x4056D9 (0x1A bytes), cdecl: area 39 +0x3C[5] (PSX 0x801F2E1C): AreaMap_SetByte(0x58, 0xD, 0x51), (0x59, 0xD, 0x51). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4056E0
+name = "Area39_SetCells50"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4056E0..0x4056F9 (0x1A bytes), cdecl: area 39 +0x3C[6] (PSX 0x801F2E54): the same cells, 0x50. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405700
+name = "Area39_PlayMusicA3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405700..0x40570F (0x10 bytes), cdecl: area 39 +0x3C[10] (PSX 0x801F2EC4): Music_Play(0xA3, 8). docs/area_w1a.md."
+
+[[func]]
+pc = 0x405710
+name = "Area39_SetScriptFlag8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405710..0x405717 (0x8 bytes), cdecl: area 39 +0x3C[11] (PSX 0x801F2EEC): Field_ScriptFlags low byte |= 8. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405720
+name = "Area39_SwapKeyItemE"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405720..0x405740 (0x21 bytes), cdecl: area 39 +0x3C[12] (PSX 0x801F2F0C): the first of the 32 key-item bytes 0x904554 that is 0xE becomes 4; none: 0x591900(4) (group SX, a raw address: the first free key-item byte). docs/area_w1a.md."
+
+[[func]]
+pc = 0x405750
+name = "Area39_FadeOutMusic"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405750..0x405758 (0x9 bytes), cdecl: area 39 +0x3C[13] (PSX 0x801F2F68) and area 130 +0x3C[4] (a shared body, taken once): Music_FadeOutStop(0x1E). docs/area_w1a.md."
+
+[[func]]
+pc = 0x405760
+name = "Area39_Counter1Not4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405760..0x40576F (0x10 bytes), cdecl: area 39 +0x3C[14] (PSX 0x801F2F94): counter 1 0x903849 = (the party-list byte 0x904062 != 4). docs/area_w1a.md."
+
+[[func]]
+pc = 0x405770
+name = "Area40_PlaceObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405770..0x40579E (0x2F bytes), cdecl: area 40 +0x34[8] = +0x3C[0] (PSX 0x801F2C04): 0x57CD90() (group SX: a free Sprite_Objects index, 0xFF none) zero-extended to the word 0x903850; 0xFF: MoveScript_Object word +0xA less 2; else EventOp_0x(Area40_PlaceOp 0x5F4C2C). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4057A0
+name = "Area40_NudgeObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4057A0..0x4057BA (0x1B bytes), cdecl: area 40 +0x34[9] = +0x3C[1] (PSX 0x801F2C74): Field_State +0x89 of 2: Sprite_Current dword +0x34 += 0x8000. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4057C0
+name = "Area40_ChoiceFlag5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4057C0..0x405801 (0x42 bytes), cdecl: area 40 +0x34[0]: 0x8034E5 = 0x1C (answer 0) or 0x1E, message 0xFFFF; Flags_Set(the row pointer 0x929ED0, 5); then Field_ScriptFlags &= 0xFF77 and Field_StatusBits (read after the call) &= 0xBF. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405810
+name = "Area40_ChoiceLeverB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405810..0x405840 (0x31 bytes), cdecl: area 40 +0x34[1]: message 0xFFFF; answer 0: Flags_Set(0x903FB0, 0xB), Area40_SetGate(), Sound_PlayEffect(0x203). docs/area_w1a.md."
+
+[[func]]
+pc = 0x405850
+name = "Area40_ChoiceLeverA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405850..0x405880 (0x31 bytes), cdecl: area 40 +0x34[2]: the same with flag 0xA. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405890
+name = "Area40_ChoiceLever9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405890..0x4058C0 (0x31 bytes), cdecl: area 40 +0x34[3]: the same with flag 9. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4058D0
+name = "Area40_ChoiceLever8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4058D0..0x405900 (0x31 bytes), cdecl: area 40 +0x34[4]: the same with flag 8. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405910
+name = "Area40_SetGate"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405910..0x4059AA (0x9B bytes), cdecl: called by the four lever choices: the low nibble of Cond_Flags byte 0x903FB1 of 5: the 28 cells x 0x41..0x44 by z 3..9 set to 0, al 1; else to 0xA4, al 0 (the z pushed with a stale high half; AreaMap_SetByte reads 16 bits). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4059B0
+name = "Area40_ChoiceTail16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4059B0..0x405A09 (0x5A bytes), cdecl: area 40 +0x34[5]: message 0xFFFF; answer not 0: Field_ScriptFlags &= 0xEFF9, tail kind and state 0. Answer 0: the leader +0x89 (0x802DC9) of 2: message 0x3C; else with no tail armed ScriptFlags_Set40, tail kind 0x10 at state 0. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405A10
+name = "Area40_TailPuzzle"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405A10..0x405AF7 (0xE8 bytes), cdecl: Field_ModeTailKinds entry 0x10 (armed by Area40_ChoiceTail16): by the s8 state 0x9039F4 - 0: ScriptFlags_Clear40; story flag 0x27 clear: Party_DropIn(4), Field_ScriptFlags |= 0x1000, state 1; set: state 0xA. 1: counter 0 at 0x63: Field_ScriptFlags |= 6, counter 0 = 0, state 2. 2: Field_Request 0: the word 0x903850 = Input_Held and Input_Held top nibble remapped through Area40_InputMap; then Area40_DrawGrid. Then (every state) unless area 0x28, state not 0xA and Cond_ByteFD 6: Field_ScriptFlags &= 0xEFF9, tail kind and state 0. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405B00
+name = "Area40_ArriveHook"
+ret = "unsigned char"
+params = "unsigned long x, unsigned long z"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405B00..0x405BE1 (0xE2 bytes), cdecl: Area_ArriveHook case for area 40: Cond_ByteFD 6, Field_State +0x2B 0, story flag 0x27 clear and tail kind 0x10: Area40_ClearGrid; the cell (x, z high words) inside 0x94..0x97 by 0x20..0x23: Area40_TileLit picks MoveCmd_TestFC (lit) or MoveCmd_TestFB, Area40_MarkBehind(x, z), Sound_PlayEffect(0x205). Outside: unless Area40_PuzzleSolved, MoveCmd_TestFC on all 16 grid cells. al 0 always. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405BF0
+name = "Area40_TileLit"
+ret = "unsigned char"
+params = "unsigned long x, unsigned long z"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405BF0..0x405D27 (0x138 bytes), cdecl: called by the arrive hook and Area40_PuzzleSolved with (x, z) words: the view ring cell (the words less MapView_Origin, MapView_Row / MapView_Column, MapView_Cells, as MoveCmd_TestFB finds it); its run of area-block records (count the high word of the dword before it, each record stepping by its byte +2 until the step lands on the last dword); the first record of kind 0x23..0x25 whose patch entry (low word + AreaMap_PatchBase) has (entry & 0xF000) 0x8000 answers entry & 1. Else al 0. Reads only. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405D30
+name = "Area40_PuzzleSolved"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405D30..0x405E20 (0xF1 bytes), cdecl: called by the arrive hook: Area40_TileLit of each of the 16 grid cells against Area40_Pattern (row by z); any differing: al 0. All: story flag 0x27, cells (0x92, 0x1C), (0x93, 0x1C) 0xA1 and (0x92, 0x1D), (0x93, 0x1D) 0xC0, tail state 0xA, MoveCmd_TestFB(0x92, 0x1D), Sound_PlayEffect(0x103), al 1. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405E30
+name = "Area40_ClearGrid"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405E30..0x405E71 (0x42 bytes), cdecl: called by the arrive hook: AreaMap_SetByte(0x94 + c, 0x20 + r, 0) over the 4 x 4 grid, r outer. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405E80
+name = "Area40_MarkBehind"
+ret = "void"
+params = "unsigned long x, unsigned long z"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405E80..0x405ECD (0x4E bytes), cdecl: called by the arrive hook: the high words of x and z less the cell step of the leader direction (byte 0x802D48 & 7, the signed byte pairs at 0x66971C), written back over its own arguments; inside the grid: AreaMap_SetByte(x, z, 0x50) with the dwords as they then are. docs/area_w1a.md."
+
+[[func]]
+pc = 0x405ED0
+name = "Area40_DrawGrid"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x405ED0..0x4060B3 (0x1E4 bytes), cdecl: called by Area40_TailPuzzle state 2: each grid cell whose AreaMap_ByteAt is 0x50 and with a map item (MapView_ItemAt, not 0): a flat quad at Gfx_PacketNext (Gpu_SetPolyF4, Gpu_SetSemiTrans 1), its four corners the item half (DrawItems, 0x48 bytes, by the item and Gfx_BufferIndex 0) floats through fld / fstp, the three colour bytes |((Frame_Counter >> 1) & 0xF) - 8| * 0x1F, MapView_LinkPrimAt(x << 16, z << 16, 0, 0x38). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4060C0
+name = "Area40_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4060C0..0x4061FA (0x13B bytes), cdecl: area 40 +0x40 (PSX 0x801F3A00): Cond_ByteFD not 1: the nibble of 0x903FB1 cleared and the 28 gate cells 0xA4. Cond_ByteFD 6 with story flag 0x27 clear: cells (0x92/0x93, 0x1D) 0 and (0x92/0x93, 0x1C) 0x50. The entry zone byte 0x905E68 6 with Cond_ByteFD 2: Field_ScriptFlags &= 0xEFFF, Flags_Clear 0x27, counter 0 = 0 (not 2: return). The zone 4: MoveCmd_TestFB on each grid cell whose Area40_Pattern byte is set. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406200
+name = "Area41_ChoiceDropIn12"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406200..0x406235 (0x36 bytes), cdecl: area 41 +0x34[0]: message 0xFFFF; answer 0: Party_DropIn(1), counter 1 = 0xA; else Party_DropIn(2), counter 1 = 0x14. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406240
+name = "Area41_ChoiceDropIn34"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406240..0x40627D (0x3E bytes), cdecl: area 41 +0x34[1]: answer 0: Party_DropIn(3), counter 1 = 0x1E; else Party_DropIn(4), the byte the pointer 0x903804 names (read after the call) = 0, counter 1 = 0x28. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406280
+name = "Area41_ChoiceGiveItem"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406280..0x4062D7 (0x58 bytes), cdecl: area 41 +0x34[3]: message = Area41_GiveMessages[s8 answer] (unchecked); answer 0 with flag 6 of the row 0x929ED0 clear: Sound_PlayEffect(0x106), Inventory_Add(0, 0x28, 1) (a fourth word 0 pushed), Flags_Set(the row read again, 6). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4062E0
+name = "Area41_ChoiceTrade"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4062E0..0x40639B (0xBC bytes), cdecl: area 41 +0x34[4]: answer 0: Inventory_Count(0, n, 0) of 0x49, 0x3F, 0x27, 0x1D all not 0 (words): 0x591B60(0, n, 1, 0) for each (group SX, a raw address: the inventory take) and message 0x62; else message 0x63. Answer not 0: 0x64. 0x63 and 0x64 set the byte 0x9398CF = 6. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4063A0
+name = "Area41_ChoiceConfirm64"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4063A0..0x4063C3 (0x24 bytes), cdecl: area 41 +0x34[7] and [8]: answer not 0: message 0x64, 0x9398CF = 6; else message 0xFFFF. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4063D0
+name = "Area41_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4063D0..0x4063E1 (0x12 bytes), cdecl: area 41 +0x34[12] = +0x3C[2] (PSX 0x801F3E3C): jmp [Sprite_Current[4] * 4 + 0x5F5F58] (Area41_States, 4 entries; ours aborts past 4). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4063F0
+name = "Area41_TintStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4063F0..0x406423 (0x34 bytes), cdecl: Area41_States[0]: +0xC = 0x4000, Area41_TintUp, then (Sprite_Current read again) +0xA = 7, +4 = 1; Field_State word +0x12E less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406430
+name = "Area41_TintRise"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406430..0x406469 (0x3A bytes), cdecl: Area41_States[1]: Area41_TintUp; +0xA less 1, at 0: +0xA = 8, +4 = 2; Field_State word +0x12E less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406470
+name = "Area41_Slide"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406470..0x4064B5 (0x46 bytes), cdecl: Area41_States[2]: +0x34 += +0xC; +0xA less 1, at 0: +0xA = 8, +4 = 3; Field_State word +0x12E less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4064C0
+name = "Area41_TintFall"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4064C0..0x406558 (0x99 bytes), cdecl: Area41_States[3]: +0x34 += +0xC; MoveScript_TintRecords[Field_State +0x149] bytes +2..+4 less 2 each; +0xA less 1, at 0: +4 = 0 (and no more); else Field_State word +0x12E less 2. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406560
+name = "Area41_TintUp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406560..0x4065C3 (0x64 bytes), cdecl: called by Area41_TintStart and TintRise: Sprite_Current +0x34 += +0xC; MoveScript_TintRecords[Field_State +0x149] bytes +2..+4 plus 2 each. docs/area_w1a.md."
+
+[[func]]
+pc = 0x4065D0
+name = "Area41_ClearCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4065D0..0x4065E9 (0x1A bytes), cdecl: area 41 +0x34[13] = +0x3C[3] (PSX 0x801F41F8): AreaMap_SetByte(0x40, 0x28, 0), (0x40, 0x27, 0). docs/area_w1a.md."
+
+[[func]]
+pc = 0x4065F0
+name = "Area41_PlaceKind2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x4065F0..0x4065F8 (0x9 bytes), cdecl: area 41 +0x34[14] = +0x3C[4] (PSX 0x801F4230): Kind2_Place(8). docs/area_w1a.md."
+
+[[func]]
+pc = 0x406600
+name = "Area41_Trigger29"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406600..0x406615 (0x16 bytes), cdecl: Field_ObjectTriggers id 29 ((object, 0x904030), ignored; a gap: no area descriptor names it): ScriptFlags_Set40, tail kind 4 with sub-kind 0x9039F5 = 0xA; al 0. docs/area_w1a.md."
+
+[[func]]
+pc = 0x406620
+name = "Area41_TriggerFlag"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1A), 0x406620..0x40664C (0x2D bytes), cdecl: Field_ObjectTriggers ids 59 and 60 (a gap, as 29): Flags_Set(0x904030, the byte 0x5F5F2D + object +0x86 - Area41_TriggerFlags for 59 and 60), Sound_PlayEffect(0x201); al 0. docs/area_w1a.md."
+
+[[data]]
+pc = 0x5F14E8
+name = "Area38_EffectBytes"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area38_SpawnEffectMember1 / 2 read the signed byte at 0x5F14E8 + a party-list byte (0x904063 / 0x904064, a character id; CharacterRecords holds eight) into the effect record dword +0x10. Unchecked. Area 38 data, before its descriptor 0x5F2208."
+
+[[data]]
+pc = 0x5F21F4
+name = "Area38_Handlers"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): area 38 descriptor 0x5F2208 +0x3C: Area38_ClearCells, SetCellsC0, SpawnEffectMember1, SpawnEffectMember2; a zero follows."
+
+[[data]]
+pc = 0x5F3E20
+name = "Area39_Handlers"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): area 39 descriptor 0x5F3E60 +0x3C: 0 Area39_Run, 1 / 2 0x413C80 / 0x413CA0 (another group), 3 SpawnEffect36, 4 ClearCells, 5 SetCells51, 6 SetCells50, 7 / 8 the bare ret 0x437CC0, 9 0x40B2D0 (another group), 10 PlayMusicA3, 11 SetScriptFlag8, 12 SwapKeyItemE, 13 FadeOutMusic, 14 Counter1Not4."
+
+[[data]]
+pc = 0x5F3EA4
+name = "Area39_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area39_Run by Sprite_Current[4]: Area39_DriftStart, Area39_DriftStep; Area39_DriftSteps follows."
+
+[[data]]
+pc = 0x5F3EAC
+name = "Area39_DriftSteps"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area39_DriftStep by +0xA & 0xF: a signed step, shifted left 11, added to +0x34 and subtracted from +0x38."
+
+[[data]]
+pc = 0x5F4BB0
+name = "Area40_Choices"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): area 40 descriptor 0x5F4BD8 +0x34: 0 ChoiceFlag5, 1..4 ChoiceLeverB, A, 9, 8, 5 ChoiceTail16, 6 0x425C30 and 7 0x403050 (other groups), 8 PlaceObject, 9 NudgeObject; its last two are Area40_Handlers."
+
+[[data]]
+pc = 0x5F4BD0
+name = "Area40_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): area 40 descriptor +0x3C: Area40_PlaceObject, Area40_NudgeObject (the tail of Area40_Choices)."
+
+[[data]]
+pc = 0x5F4C1C
+name = "Area40_Pattern"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): the 4 x 4 grid (cells x 0x94..0x97, z 0x20..0x23), row by z: Area40_PuzzleSolved compares each cell Area40_TileLit with its byte; Area40_Init lights the cells whose byte is not 0."
+
+[[data]]
+pc = 0x5F4C2C
+name = "Area40_PlaceOp"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): the event op Area40_PlaceObject hands EventOp_0x (an op of the 0x group, read by EventOp_0x)."
+
+[[data]]
+pc = 0x5F4C40
+name = "Area40_InputMap"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area40_TailPuzzle state 2: Input_Held top nibble replaced by this byte (its low nibble survives the word store) by the old top nibble."
+
+[[data]]
+pc = 0x5F5ED4
+name = "Area41_Choices"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): area 41 descriptor 0x5F5F10 +0x34: 0 ChoiceDropIn12, 1 ChoiceDropIn34, 2 0x425C30 (another group), 3 ChoiceGiveItem, 4 ChoiceTrade, 5 / 6 0x420850 / 0x420870 (another group), 7 and 8 ChoiceConfirm64, 9 0x403050 (area 22), 10 / 11 0x413C80 / 0x413CA0, 12 Area41_Run, 13 ClearCells, 14 PlaceKind2; from 10 on it is Area41_Handlers."
+
+[[data]]
+pc = 0x5F5EFC
+name = "Area41_Handlers"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): area 41 descriptor +0x3C: 0x413C80, 0x413CA0 (another group), Area41_Run, Area41_ClearCells, Area41_PlaceKind2 (the tail of Area41_Choices)."
+
+[[data]]
+pc = 0x5F5F54
+name = "Area41_GiveMessages"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area41_ChoiceGiveItem: the message word by the signed answer (0 and 1; any other answer reads on either side, unchecked)."
+
+[[data]]
+pc = 0x5F5F58
+name = "Area41_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area41_Run by Sprite_Current[4]: TintStart, TintRise, Slide, TintFall; Area41_TriggerFlags follows."
+
+[[data]]
+pc = 0x5F5F68
+name = "Area41_TriggerFlags"
+ctype = "unsigned char"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1A): Area41_TriggerFlag reads 0x5F5F2D + object +0x86: for ids 59 and 60 these two story-flag numbers."
