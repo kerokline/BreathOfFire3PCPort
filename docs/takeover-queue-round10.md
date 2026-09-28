@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-28) - waves one and two merged: 592 functions, 3,510 -> 4,102 ours; wave three to stage
+**Status:** IN PROGRESS (2026-09-28) - waves one and two merged (4,102 ours); wave three staged, eight groups, ~393 functions
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -299,7 +299,28 @@ the base now also carries `368b84f`'s menu and glyph changes.
 both waves' latent defects; the rebinding pass; the two `area_rows.py`
 fixes; the pairing tool's jump-table cases; the route A/Bs above.
 
-## 8. Wave three (to stage)
+## 9. Wave three staged (2026-09-28, from the tip after `481fe76`)
+
+Eight groups, one stage each. Counts are the tools' at this tip. Brief
+`analysis/round10_wave3_brief.md` (wave two's with sections 4 and 7
+folded in, and a rule that an agent kills a hung self-test only by the
+pid its launcher printed, since the owner may be playing from the same
+`BOF3.exe`), group lines `analysis/round10_wave3_groups.tsv` (gitignored).
+
+| Group | What | Band | To take | Module |
+|---|---|---|--:|---|
+| SC2 | chapter 2, both halves of the plan's split | `0x53DDA0..0x5428C0` | 71 | `scena_sc2` |
+| SC9b | chapter 9's tail and chapter 10 | `0x557170..0x55C040` | 63 | `scena_sc9b` |
+| SC13 | chapter 12's tail, chapters 13 and 14 | `0x561DB0..0x567DC0` | 51 | `scena_sc13` |
+| SC15 | chapter 15 (with `0x537580`), SC16's leftover slot `0x56C080`, and a reading of chapters 17..19's block `0x56C130..0x56D5E0` (60 starts the walk never reached: taken if it is chapter code, reported if not) | `0x567DC0..0x56B2A0` | 29 (+ up to 60) | `scena_sc15` |
+| SX | the engine callees nobody owns: `0x498DE0`, `0x532ED0`, `0x533E00`, `0x533E50`, `0x534030`, `0x534DB0`, `0x537480`, `0x56D6F0`, `0x56D800`, `0x56FCA0`, `0x57C550`, `0x57C6B0`, `0x57CD90`, `0x587B80`, `0x590C90`, `0x591900`, `0x591B60`, `0x591BC0`, `0x591BE0` | nineteen addresses | 19 | `scena_sx` |
+| AR1A | world 1: areas 38..41 | `0x4053B0..0x406650` | 48 | `area_w1a` |
+| AR1B | world 1: areas 42..47 (45 is a world-map area; the world-map route enters it) | `0x406650..0x408FF0` | 55 | `area_w1b` |
+| AR1C | world 1: areas 48..52 | `0x408FF0..0x40AB00` | 57 | `area_w1c` |
+
+393 functions, plus whatever chapters 17..19 turn out to hold.
+
+## 8. Wave three (as listed before staging)
 
 Scenario: SC2a + SC2b (chapter 2, 71 functions - one group or two),
 SC9b (63), SC13 (51), SC15 with SC16's one leftover (29), and **SX**, the
