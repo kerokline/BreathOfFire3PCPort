@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 49 functions ours
 (`src/game/area_w4f.cpp`, shadow name `area_w4f`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area
-with code: 0 mismatches in 294,000 rounds (in this worktree); @CONTROLS@
+with code: 0 mismatches in 294,000 rounds (in this worktree); 346 controls planted, 343 refused by a count, 3 equivalent mutants each with a refused variant (section 4).
 Fuzz only: no recorded route reaches the band (section 8). No divergence; the
 two two-state dispatchers abort past their tables and area 193's choice 4
 past its three-row stack table, where the original would jump into data or
@@ -313,7 +313,11 @@ spawner), though its states sit in area 199's data.
   the harness shares one recorder by address).
 - **Louder stand-ins** (each part of the time, from `Noise`):
   `ScriptFlags_Set40` and `Effect_FindFree` move `Field_ActiveMember` (area
-  193's handler 0 and the effect spawns read it after); `EventOp_0x` moves
+  193's handler 0 and the effect spawns read it after); `Flags_Set`,
+  `Flags_Clear`, `Field_ChangeArea` and `Flags_Test` move `Field_StatusBits`
+  (the tails of areas 192 and 193 read it on both sides of those calls), and
+  `Flags_Test` in area 192's run also character record 0's level byte (the
+  init reads it before the call); `EventOp_0x` moves
   `Sprite_Current` (the placement makes the new object current; the drop
   writes it after); `Sprite_SetAnimationAt` and `MoveCmd_Move` move
   `MoveScript_Object`; `Sprite_ScriptTick` / `Sprite_QueueOverlay` move
@@ -327,14 +331,15 @@ spawner), though its states sit in area 199's data.
   and `MoveScript_WaitWordDA` in every area; area 192 the eight character
   records (`0x520` bytes), `0x929EC1`, `0x9036D0`, `Draw_PassFlags`; area 193
   the last three and `0x937F98`; area 196 `Cond_ByteFE`; areas 197 and 198
-  all twenty `Effect_Objects` records.
+  all twenty `Effect_Objects` records and the record an unchecked slot of
+  `0xFF` would write (`0x7E9160`, past the pool).
 - **Seeds:** each choice's answer at every row it has, one past, a negative
   byte and anything (area 193's choice 4 at its three rows only: ours aborts
   past them); the tails at every state their tables name, their neighbours,
   the states that do nothing and negative bytes, with `Field_Request` 2 or
   not and the wait word 0 or not; the step hooks' cells on, beside and past
   their exact values and high-word spans (area 192's with the low words 0
-  half the time; area 197's `Cond_ByteFD` 4 mostly); the talk's `who` one of
+  half the time, else a low word with a zero low byte or any; area 197's `Cond_ByteFD` 4 mostly); the talk's `who` one of
   the five ids (or one beside), the rank byte `0x90405E` around 5, 7 and 8,
   each character record's level byte around 5, 8 and 9 (the init's too); the
   talk B's index a row start, its rank 0..8 or any, its level around 5; each
@@ -356,20 +361,375 @@ spawner), though its states sit in area 199's data.
   `Field_StatusBits`, and in area 192's run character record 0's level byte.
 
 **Result (in this worktree):** 294,000 rounds over the 49 functions (6,000
-each), 292,799 calls to the stand-ins, 0 mismatches. Coverage: every callee
+each), 293,145 calls to the stand-ins, 0 mismatches. Coverage: every callee
 each function can reach was called - e.g. area 192's run `AreaMap_ByteAt`
-13,443, `Flags_Test` 22,077, `EventOp_0x` 8,018 and `Area192_TalkMessageB`
-3,946, `Field_ChangeArea` 684 from tail 54; area 193's `Field_ChangeArea` 737,
-`Music_Play` 391, `Inventory_Add` 663; area 197's `Msg_OpenScript` 26,982
-over its seven searches, the shake's two states 3,014 / 2,986; area 198's
-`Area198_SpawnDrop` 5,949, `Rand` 15,280, `0x441090` 12,000,
-`Area198_EffectA6Follow` 9,013.
+13,413, `Flags_Test` 22,009, `EventOp_0x` 8,142 and `Area192_TalkMessageB`
+4,037, `Field_ChangeArea` 681 from tail 54; area 193's `Field_ChangeArea` 696,
+`Music_Play` 374, `Inventory_Add` 649; area 197's `Msg_OpenScript` 27,169
+over its seven searches, the shake's two states 2,971 / 3,029; area 198's
+`Area198_SpawnDrop` 6,040, `Rand` 15,358, `0x441090` 12,000,
+`Area198_EffectA6Follow` 9,061.
 
-@STAR@
+`BOF3X_SHADOW='*'`: exit 0, `inject: 5407 ours` (one below the 5,408 `impl`
+lines, the off-by-one the round doc section 10 notes), 493 self-test lines, 790
+of them with a mismatch count and every one 0. Run three times (after the
+first fuzz and twice on the final one); it did not die silently.
 
 ## 4. Controls
 
-@CONTROLS_TABLE@
+Planted one at a time in `area_w4f.cpp` by a script (the scratch `controls.py`, not committed) that plants on an anchor it checks is unique, rebuilds, checks `area_w4f.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w4f`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches in all six runs). **346 planted, 343 refused by a count (exit 3), 3 not refused - each an equivalent mutant with a refused near variant**; no hang, no fault. Every one of the 49 functions has at least one control of its own; a control in a helper shared across functions (`MessageByMember`, `FocusPair`, `ShakeXZ`, `ArmTail`, `StateEntry`, ...) is refused in the first function's run, whose Fatal ends the self-test.
+
+- **Four runs.** The first (the table's plants but the three variants) left five standing: A33 (`Field_StatusBits` read before `Flags_Set` in tail 54's state 4) - the fuzz's `Flags_Set` was the standard quiet one; E39 (the kind-`0xAC` spawn testing `0xFE` for none) - the write to record 255 lies past the pool, outside every region. The fuzz then gained a `Flags_Set` that moves the status bits and `Effect_Objects + 0xFF * 0x80` (`0x7E9160`) as a region of areas 197 and 198; the second run refused both, but three read-order plants were refused in only 1..4 rounds (A45, A88, B28: only the group's rare disturbance moved the cells they read). `Flags_Clear` and `Field_ChangeArea` now move the status bits and `Flags_Test` record 0's level byte (in area 192's run), the step hook's seed gives z low words with a zero low byte, and the init's seeds sit on the rank and level edges more often; a third run of the fifteen affected controls refused each in 145..187 rounds, and the fourth, of all 346 on the final fuzz, gives the table's counts. A7, D10 and D13 stood on every run: equivalent (the table says why), their variants A7b, D10b, D13b refused.
+- The thinnest: A80 7, A81 14, A65 23, D37 24, D43 33, B39 39 rounds; every other control needs more than 39.
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| A1 | `FocusPair (192, 193)` | first byte of the pair +1 | Area192_ChoiceFocusPair 4775 |
+| A2 | `FocusPair (192, 193)` | +0x14 for +0x18 | Area192_ChoiceFocusPair 6000 |
+| A3 | `FocusPair (192, 193)` | +0x20 for +0x1C | Area192_ChoiceFocusPair 6000 |
+| A4 | `FocusPair (192, 193)` | message 0xFFFE | Area192_ChoiceFocusPair 6000 |
+| A5 | `FocusPair (192, 193)` | answer unsigned | Area192_ChoiceFocusPair 1639 |
+| A6 | `Area192_ChoiceFocusPair` | area 193's pairs | Area192_ChoiceFocusPair 3336 |
+| A7 | `FocusPair (192, 193)` | focus not read again | not refused: equivalent - the focus pointer is read again with no call between, and the only store between (the focus object's `+0x18`) cannot reach the pointer cell `0x903804`; variant A7b refused |
+| A8 | `Area192_ChoiceTailState` | answer 0 state 3 | Area192_ChoiceTailState 826 |
+| A9 | `Area192_ChoiceTailState` | answer 1 state 0xB | Area192_ChoiceTailState 828 |
+| A10 | `Area192_ChoiceTailState` | else state 0x15 | Area192_ChoiceTailState 4346 |
+| A11 | `Area192_ChoiceTailState` | state 0xA for 2 | Area192_ChoiceTailState 1655 |
+| A12 | `Area192_ChoiceTailState` | message 0xFFFE | Area192_ChoiceTailState 6000 |
+| A13 | `Area192_ChoiceArmTail54` | state 0x1F | Area192_ChoiceArmTail54 594 |
+| A14 | `Area192_ChoiceArmTail54` | kind 0x37 | Area192_ChoiceArmTail54 594 |
+| A15 | `Area192_ChoiceArmTail54` | Var7 2 | Area192_ChoiceArmTail54 655 |
+| A16 | `Area192_ChoiceArmTail54` | step 0x15 | Area192_ChoiceArmTail54 655 |
+| A17 | `Area192_ChoiceArmTail54` | tail on 3 | Area192_ChoiceArmTail54 1223 |
+| A18 | `Area192_ChoiceArmTail54` | run on 2 or more | Area192_ChoiceArmTail54 4134 |
+| A19 | `Area192_ChoiceArmTail54` | message 0xFFFE | Area192_ChoiceArmTail54 5960 |
+| A20 | `ArmTail (192, 193, 197)` | kind and state swapped | Area192_ChoiceArmTail54 594, Area192_StepHook 4414 |
+| A21 | `ArmRun (192, 193, 197)` | Var7 + 1 | Area192_ChoiceArmTail54 655 |
+| A22 | `Area192_Tail54` | message 0x6E | Area192_Tail54 458 |
+| A23 | `Area192_Tail54` | state 0 to 2 | Area192_Tail54 458 |
+| A24 | `Area192_Tail54` | state 2 waits on 3 | Area192_Tail54 70 |
+| A25 | `Area192_Tail54` | transition 1 | Area192_Tail54 382 |
+| A26 | `Area192_Tail54` | state 2 to 4 | Area192_Tail54 382 |
+| A27 | `Area192_Tail54` | wait word low byte | Area192_Tail54 66 |
+| A28 | `Area192_Tail54` | pass flags 1 | Area192_Tail54 132 |
+| A29 | `Area192_Tail54` | restore before the music stops | Area192_Tail54 132 |
+| A30 | `Area192_Tail54` | stream 1 | Area192_Tail54 132 |
+| A31 | `Area192_Tail54` | stream test on al | Area192_Tail54 69 |
+| A32 | `Area192_Tail54` | flag 0x83 | Area192_Tail54 401 |
+| A33 | `Area192_Tail54` | status read before the call | Area192_Tail54 203 |
+| A34 | `Area192_Tail54` | word 0x1E1 | Area192_Tail54 401 |
+| A35 | `Area192_Tail54` | status & 0xFC | Area192_Tail54 191 |
+| A36 | `Area192_Tail54` | state 4 to 0xB | Area192_Tail54 401 |
+| A37 | `Area192_Tail54` | x and z swapped | Area192_Tail54 337 |
+| A38 | `Area192_Tail54` | flags 5 | Area192_Tail54 337 |
+| A39 | `Area192_Tail54` | area as a byte | Area192_Tail54 336 |
+| A40 | `Area192_Tail54` | byte +0xB for +0xA | Area192_Tail54 337 |
+| A41 | `Area192_Tail54` | bit 5 | Area192_Tail54 248 |
+| A42 | `Area192_Tail54` | state 0x14 without Clear40 | Area192_Tail54 362 |
+| A43 | `Area192_Tail54` | flags 2 | Area192_Tail54 344 |
+| A44 | `Area192_Tail54` | area 0x95 | Area192_Tail54 344 |
+| A45 | `Area192_Tail54` | status read before the call | Area192_Tail54 184 |
+| A46 | `Area192_Tail54` | status & 0x7E | Area192_Tail54 177 |
+| A47 | `Area192_Tail54` | flag 0x78 | Area192_Tail54 344 |
+| A48 | `Disarm (192, 193)` | kind 1 | Area192_Tail54 1043 |
+| A49 | `Area192_StepHook` | cell 0xA7 | Area192_StepHook 1619 |
+| A50 | `Area192_StepHook` | second cell diagonal | Area192_StepHook 2960 |
+| A51 | `Area192_StepHook` | z low byte | Area192_StepHook 1490 |
+| A52 | `Area192_StepHook` | diagonal on x alone | Area192_StepHook 1492 |
+| A53 | `Area192_StepHook` | state 1 | Area192_StepHook 4414 |
+| A54 | `Area192_StepHook` | answers 2 | Area192_StepHook 4414 |
+| A55 | `Area192_StepHook` | x + 2 | Area192_StepHook 2960 |
+| A56 | `Area192_StepHook` | x shift 15 | Area192_StepHook 2999 |
+| A57 | `Area192_TalkMessage` | four ids | Area192_TalkMessage 2734 |
+| A58 | `Area192_TalkMessage` | rows of 8 | Area192_TalkMessage 5445 |
+| A59 | `Area192_TalkMessage` | rank cap 7 | Area192_TalkMessage 2371 |
+| A60 | `Area192_TalkMessage` | byte +0x1F | Area192_TalkMessage 4273 |
+| A61 | `Area192_TalkMessage` | flag 0xB | Area192_TalkMessage 6000 |
+| A62 | `Area192_TalkMessage` | rank and level swapped | Area192_TalkMessage 3652 |
+| A63 | `Area192_TalkMessage` | level 9 | Area192_TalkMessage 168 |
+| A64 | `Area192_TalkMessage` | level above 5 | Area192_TalkMessage 58 |
+| A65 | `Area192_TalkMessage` | rank below 8 | Area192_TalkMessage 23 |
+| A66 | `Area192_TalkMessage` | plus 6 | Area192_TalkMessage 121 |
+| A67 | `Area192_TalkMessage` | next step | Area192_TalkMessage 86 |
+| A68 | `Area192_TalkMessage` | row flag 3 | Area192_TalkMessage 1963 |
+| A69 | `Area192_TalkMessage` | one table | Area192_TalkMessage 1150 |
+| A70 | `Area192_TalkMessage` | record of who + 1 | Area192_TalkMessage 4246 |
+| A71 | `Area192_TalkMessage` | plus 9 | Area192_TalkMessage 860 |
+| A72 | `Area192_TalkMessageB` | level below 6 | Area192_TalkMessageB 1012 |
+| A73 | `Area192_TalkMessageB` | rank & 7 | Area192_TalkMessageB 690 |
+| A74 | `Area192_TalkMessageB` | plus 7 | Area192_TalkMessageB 4024 |
+| A75 | `Area192_TalkMessageB` | next message | Area192_TalkMessageB 5861 |
+| A76 | `Area192_TalkMessageB` | level as a dword | Area192_TalkMessageB 1976 |
+| A77 | `Area192_TalkMessageB` | base + 1 | Area192_TalkMessageB 5861 |
+| A78 | `Area192_Init` | flag 0x78 | Area192_Init 6000 |
+| A79 | `Area192_Init` | level 10 | Area192_Init 92 |
+| A80 | `Area192_Init` | level 6 | Area192_Init 7 |
+| A81 | `Area192_Init` | byte 6 | Area192_Init 14 |
+| A82 | `Area192_Init` | flagged level 4 | Area192_Init 76 |
+| A83 | `Area192_Init` | five ops | Area192_Init 2046 |
+| A84 | `Area192_Init` | none 0xFE | Area192_Init 1869 |
+| A85 | `Area192_Init` | ops of 0x10 | Area192_Init 2036 |
+| A86 | `Area192_Init` | set & 1 | Area192_Init 1572 |
+| A87 | `Area192_Init` | index & 0x7F | Area192_Init 690 |
+| A88 | `Area192_Init` | level read after the call | Area192_Init 124 |
+| A89 | `Area192_Init` | flag branches swapped | Area192_Init 687 |
+| A90 | `Area192_RestoreCharacters` | seven records | Area192_RestoreCharacters 2935 |
+| A91 | `Area192_RestoreCharacters` | bit 1 | Area192_RestoreCharacters 5980 |
+| A92 | `Area192_RestoreCharacters` | HP from +0x22 | Area192_RestoreCharacters 5982 |
+| A93 | `Area192_RestoreCharacters` | AP from +0x20 | Area192_RestoreCharacters 5982 |
+| A94 | `Area192_RestoreCharacters` | word +0x12 | Area192_RestoreCharacters 5982 |
+| A95 | `Area192_RestoreCharacters` | one member fewer | Area192_RestoreCharacters 5261 |
+| A96 | `Area192_RestoreCharacters` | a dword short | Area192_RestoreCharacters 5261 |
+| A97 | `Area192_RestoreCharacters` | party +0x84 | Area192_RestoreCharacters 5261 |
+| A98 | `Area192_RestoreCharacters` | record of id + 1 | Area192_RestoreCharacters 4487 |
+| A99 | `Area192_RestoreCharacters` | next list byte | Area192_RestoreCharacters 4645 |
+| A100 | `Area192_Effect18Release77` | flag 0x76 | Area192_Effect18Release77 6000 |
+| A101 | `ResetWord1E0 (192)` | word 0x1F0 | Area192_Effect18Release77 3996 |
+| A102 | `ResetWord1E0 (192)` | byte 1 | Area192_Effect18Release77 3996 |
+| A103 | `Area192_Effect18Release77` | bit 1 | Area192_Effect18Release77 2996 |
+| A104 | `Area192_Effect18Release77` | no release | Area192_Effect18Release77 3996 |
+| B1 | `Area193_ChoiceMessage` | other table | Area193_ChoiceMessage 5746 |
+| B2 | `MessageByAnswer (193 x3)` | answer unsigned | Area193_ChoiceMessage 1747, Area193_ChoiceRunOnYes 1681, Area193_ChoiceFill5B 1679 |
+| B3 | `Area193_ChoiceRunOnYes` | step 1 | Area193_ChoiceRunOnYes 683 |
+| B4 | `Area193_ChoiceRunOnYes` | on 2 | Area193_ChoiceRunOnYes 1289 |
+| B5 | `Area193_ChoiceRunOnYes` | Var7 2 | Area193_ChoiceRunOnYes 683 |
+| B6 | `Area193_ChoiceRunOnYes` | other table | Area193_ChoiceRunOnYes 5307 |
+| B7 | `Area193_ChoiceFill5B` | on any answer | Area193_ChoiceFill5B 4709 |
+| B8 | `Area193_ChoiceFill5B` | counts 0x5C | Area193_ChoiceFill5B 649 |
+| B9 | `Area193_ChoiceFill5B` | to 0xF | Area193_ChoiceFill5B 649 |
+| B10 | `Area193_ChoiceFill5B` | count not a byte | Area193_ChoiceFill5B 604 |
+| B11 | `Area193_ChoiceFill5B` | adds 0x5A | Area193_ChoiceFill5B 649 |
+| B12 | `Area193_ChoiceFill5B` | sound 0x107 | Area193_ChoiceFill5B 649 |
+| B13 | `Area193_ChoiceFill5B` | other table | Area193_ChoiceFill5B 5207 |
+| B14 | `Area193_ChoiceFill5B` | count high byte | Area193_ChoiceFill5B 644 |
+| B15 | `Area193_ChoiceFocusPair` | area 192's pairs | Area193_ChoiceFocusPair 2797 |
+| B16 | `Area193_ChoiceMessageState` | row 1 message 0x1F | Area193_ChoiceMessageState 1963 |
+| B17 | `Area193_ChoiceMessageState` | row 2 state 0x11 | Area193_ChoiceMessageState 2011 |
+| B18 | `Area193_ChoiceMessageState` | row 0 state 0xD | Area193_ChoiceMessageState 2026 |
+| B19 | `Area193_ChoiceMessageState` | row 2 message 0xFFFE | Area193_ChoiceMessageState 2011 |
+| B20 | `Area193_MemberBit0Leader7` | bits 0..1 cleared | Area193_MemberBit0Leader7 2922 |
+| B21 | `Area193_MemberBit0Leader7` | leader 6 | Area193_MemberBit0Leader7 2365 |
+| B22 | `Area193_MemberBit0Leader7` | script + 2 | Area193_MemberBit0Leader7 1546 |
+| B23 | `Area193_MemberBit0Leader7` | member not read again | Area193_MemberBit0Leader7 713 |
+| B24 | `Area193_Tail57` | message 0x1D | Area193_Tail57 403 |
+| B25 | `Area193_Tail57` | state 0xC | Area193_Tail57 403 |
+| B26 | `Area193_Tail57` | flags 3 | Area193_Tail57 320 |
+| B27 | `Area193_Tail57` | z 0x17FF8000 | Area193_Tail57 320 |
+| B28 | `Area193_Tail57` | status read before the call | Area193_Tail57 160 |
+| B29 | `Area193_Tail57` | byte +0xB 3 | Area193_Tail57 320 |
+| B30 | `Area193_Tail57` | word 1 | Area193_Tail57 320 |
+| B31 | `Area193_Tail57` | byte 0xF1 | Area193_Tail57 320 |
+| B32 | `Area193_Tail57` | 0x90405E 1 | Area193_Tail57 320 |
+| B33 | `Area193_Tail57` | bit 1 | Area193_Tail57 226 |
+| B34 | `Area193_Tail57` | x and z swapped | Area193_Tail57 376 |
+| B35 | `Area193_Tail57` | no flag clear | Area193_Tail57 376 |
+| B36 | `Area193_Tail57` | bit 7 | Area193_Tail57 262 |
+| B37 | `Area193_Tail57` | waits on 1 | Area193_Tail57 122 |
+| B38 | `Area193_Tail57` | state 0x14 on request 2 | Area193_Tail57 297 |
+| B39 | `Area193_Tail57` | messages swapped | Area193_Tail57 39 |
+| B40 | `Area193_Tail57` | flag 4 | Area193_Tail57 39 |
+| B41 | `Area193_Tail57` | state 0x16 | Area193_Tail57 39 |
+| B42 | `Area193_Tail57` | no heal | Area193_Tail57 486 |
+| B43 | `Area193_Tail57` | state 0x17 | Area193_Tail57 486 |
+| B44 | `Area193_Tail57` | counter 2 | Area193_Tail57 367 |
+| B45 | `Area193_Tail57` | frames 0x11 | Area193_Tail57 374 |
+| B46 | `Area193_Tail57` | transition 2 | Area193_Tail57 374 |
+| B47 | `Area193_Tail57` | pass flags 0x1E | Area193_Tail57 374 |
+| B48 | `Area193_Tail57` | row flag 4 | Area193_Tail57 374 |
+| B49 | `Area193_Tail57` | flag 0x8B | Area193_Tail57 374 |
+| B50 | `Area193_Tail57` | waits on 5 | Area193_Tail57 87 |
+| B51 | `Area193_StepHook` | no z 0x18000 | Area193_StepHook 290 |
+| B52 | `Area193_StepHook` | x 0x18001 | Area193_StepHook 452 |
+| B53 | `Area193_StepHook` | z 0x338001 | Area193_StepHook 481 |
+| B54 | `Area193_StepHook` | state 0xB | Area193_StepHook 1426 |
+| B55 | `Area193_StepHook` | x low word | Area193_StepHook 176 |
+| B56 | `Area193_Init` | flag 0x8B | Area193_Init 6000 |
+| B57 | `Area193_Init` | pass flags 1 | Area193_Init 3980 |
+| B58 | `Area193_Init` | state 0x15 | Area193_Init 3980 |
+| B59 | `Area193_Init` | pending 2 | Area193_Init 2020 |
+| B60 | `Area193_Init` | kind 0x3A | Area193_Init 3980 |
+| C1 | `MessageByMember (196 x2, 197 x7)` | three keys | Area196_MessageByMember0 594, Area196_MessageByMember1 949 |
+| C2 | `MessageByMember (196 x2, 197 x7)` | one record more | Area196_MessageByMember0 1322, Area196_MessageByMember1 1385 |
+| C3 | `MessageByMember (196 x2, 197 x7)` | request 3 | Area196_MessageByMember0 3800, Area196_MessageByMember1 3847 |
+| C4 | `MessageByMember (196 x2, 197 x7)` | next message | Area196_MessageByMember0 3800, Area196_MessageByMember1 3847 |
+| C5 | `MessageByMember (196 x2, 197 x7)` | messages a byte on | Area196_MessageByMember0 3800, Area196_MessageByMember1 3847 |
+| C6 | `MessageByMember (196 x2, 197 x7)` | byte +0x8A | Area196_MessageByMember0 3815, Area196_MessageByMember1 3838 |
+| C7 | `MessageByMember (196 x2, 197 x7)` | goes on after a match | Area196_MessageByMember0 1387, Area196_MessageByMember1 1373 |
+| C8 | `Area196_MessageByMember0` | handler 1's tables | Area196_MessageByMember0 3800 |
+| C9 | `Area196_MessageByMember1` | handler 0's tables | Area196_MessageByMember1 3847 |
+| C10 | `Area196_SetCondFE` | FE 2 | Area196_SetCondFE 6000 |
+| C11 | `Area197_MessageByMember0` | handler 1's tables | Area197_MessageByMember0 3911 |
+| C12 | `Area197_MessageByMember1` | handler 2's tables | Area197_MessageByMember1 3840 |
+| C13 | `Area197_MessageByMember2` | handler 3's tables | Area197_MessageByMember2 3889 |
+| C14 | `Area197_MessageByMember3` | handler 4's tables | Area197_MessageByMember3 3905 |
+| C15 | `Area197_MessageByMember4` | handler 5's tables | Area197_MessageByMember4 3919 |
+| C16 | `Area197_MessageByMember5` | handler 6's tables | Area197_MessageByMember5 3807 |
+| C17 | `Area197_MessageByMember6` | handler 5's tables | Area197_MessageByMember6 3898 |
+| D1 | `Area197_RunShake` | state ^ 1 | Area197_RunShake 6000 |
+| D2 | `StateEntry (197, 198)` | entry ^ 1 | Area197_RunShake 6000 |
+| D3 | `Area197_ShakeStart` | count 3 | Area197_ShakeStart 6000 |
+| D4 | `Area197_ShakeStart` | state 2 | Area197_ShakeStart 6000 |
+| D5 | `Area197_ShakeStart` | script - 1 | Area197_ShakeStart 6000 |
+| D6 | `Area197_ShakeStep` | ends at state 1 | Area197_ShakeStep 851 |
+| D7 | `ShakeXZ (197, 198)` | x shift 10 | Area197_ShakeStep 2588 |
+| D8 | `ShakeXZ (197, 198)` | z the same sign | Area197_ShakeStep 2588 |
+| D9 | `ShakeStep (197, 198)` | step phase + 1 | Area197_ShakeStep 5149 |
+| D10 | `ShakeStep (197, 198)` | nibble & 7 (a period-4 table) | not refused: equivalent - both shake step tables repeat every 4 bytes, so a nibble `& 7` picks the same step as `& 0xF`; variant D10b refused |
+| D11 | `Area197_ShakeStep` | count - 2 | Area197_ShakeStep 5149 |
+| D12 | `Area197_ShakeStep` | word +0x8C | Area197_ShakeStep 5149 |
+| D13 | `ShakeXZ (197, 198)` | object not read again | not refused: equivalent - `Sprite_Current` is read again with no call between, and the only store between (the object's `+0x34`) cannot reach the pointer cell; variant D13b refused |
+| D14 | `Area197_SpawnEffect92` | kind 0x93 | Area197_SpawnEffect92 4059 |
+| D15 | `Area197_SpawnEffect92` | +0x30 0xFFE3 | Area197_SpawnEffect92 4059 |
+| D16 | `Area197_SpawnEffect92` | +0x29 7 | Area197_SpawnEffect92 4059 |
+| D17 | `Area197_SpawnEffect92` | +0xC | Area197_SpawnEffect92 4059 |
+| D18 | `Area197_SpawnEffect92` | +0x2E 1 | Area197_SpawnEffect92 4059 |
+| D19 | `MemberIndex (197, 198)` | floor division | Area197_SpawnEffect92 85 |
+| D20 | `MemberIndex (197, 198)` | stride 0xA0 | Area197_SpawnEffect92 125 |
+| D21 | `Area197_SpawnEffect92` | member read before the search | Area197_SpawnEffect92 1748 |
+| D22 | `Area197_SpawnEffect92` | +0 2 | Area197_SpawnEffect92 4059 |
+| D23 | `Area197_Tail51` | drop-in 1 | Area197_Tail51 879 |
+| D24 | `Area197_Tail51` | state 2 | Area197_Tail51 879 |
+| D25 | `Area197_Tail51` | counter 0x23 | Area197_Tail51 540 |
+| D26 | `Area197_Tail51` | flag 0x56 | Area197_Tail51 351 |
+| D27 | `Area197_Tail51` | area 0xAB | Area197_Tail51 351 |
+| D28 | `Area197_Tail51` | flags 0x83 | Area197_Tail51 351 |
+| D29 | `Area197_Tail51` | state 0x1F | Area197_Tail51 351 |
+| D30 | `Area197_Tail51` | state 2 drops in | Area197_Tail51 446 |
+| D31 | `Area197_StepHook` | FD 3 | Area197_StepHook 562 |
+| D32 | `Area197_StepHook` | z 0x738001 | Area197_StepHook 105 |
+| D33 | `Area197_StepHook` | x span 2 | Area197_StepHook 73 |
+| D34 | `Area197_StepHook` | no x 0x58000 | Area197_StepHook 81 |
+| D35 | `Area197_StepHook` | z span 2 | Area197_StepHook 60 |
+| D36 | `Area197_StepHook` | x 0xD8001 | Area197_StepHook 59 |
+| D37 | `Area197_StepHook` | key row span 3 | Area197_StepHook 24 |
+| D38 | `Area197_StepHook` | key item 0xE | Area197_StepHook 59 |
+| D39 | `Area197_StepHook` | key item 0xC | Area197_StepHook 380 |
+| D40 | `Area197_StepHook` | state 1 | Area197_StepHook 244 |
+| D41 | `Area197_StepHook` | step 0x15 | Area197_StepHook 159 |
+| D42 | `Area197_StepHook` | Var7 6 | Area197_StepHook 159 |
+| D43 | `Area197_StepHook` | x span as an int | Area197_StepHook 33 |
+| D44 | `Area197_StepHook` | x shift 15 | Area197_StepHook 247 |
+| D45 | `Area197_StepHook` | answers 2 | Area197_StepHook 159 |
+| E1 | `Area198_StartSlotScript0` | handler 11's script | Area198_StartSlotScript0 6000 |
+| E2 | `Area198_StartSlotScript0` | +0x2A 2 | Area198_StartSlotScript0 6000 |
+| E3 | `Area198_StartSlotScript0` | animation 1 | Area198_StartSlotScript0 6000 |
+| E4 | `ReleaseSlots (198)` | object + 1 | Area198_StartSlotScript0 6000, Area198_ReleaseOnRequest5 1213, Area198_StartSlotScript11 6000 |
+| E5 | `StartSlot (198)` | script + 4 | Area198_StartSlotScript0 6000, Area198_StartSlotScript11 6000 |
+| E6 | `Area198_SinkFade` | sinks 0xF | Area198_SinkFade 6000 |
+| E7 | `Area198_SinkFade` | up to 0x80 | Area198_SinkFade 395 |
+| E8 | `Area198_SinkFade` | every eighth | Area198_SinkFade 1224 |
+| E9 | `Area198_SinkFade` | bits 3..4 | Area198_SinkFade 914 |
+| E10 | `Area198_SinkFade` | start - 1 | Area198_SinkFade 2064 |
+| E11 | `Area198_SinkFade` | script object not read again | Area198_SinkFade 977 |
+| E12 | `Area198_SinkFade` | +2 by 2 | Area198_SinkFade 4064 |
+| E13 | `Area198_SinkFade` | fade from -0x27F | Area198_SinkFade 312 |
+| E14 | `Area198_SinkFade` | floor 0x7F | Area198_SinkFade 1812 |
+| E15 | `Area198_SinkFade` | two channels | Area198_SinkFade 3318 |
+| E16 | `Area198_SinkFade` | counter at 0xF610 | Area198_SinkFade 311 |
+| E17 | `Area198_SinkFade` | counter + 2 | Area198_SinkFade 311 |
+| E18 | `Area198_SinkFade` | at 0xF380 too | Area198_SinkFade 350 |
+| E19 | `Area198_SinkFade` | script - 3 | Area198_SinkFade 4064 |
+| E20 | `Area198_SinkFade` | +2 set 1 | Area198_SinkFade 1936 |
+| E21 | `Area198_SinkFade` | unsigned compare | Area198_SinkFade 1667 |
+| E22 | `Area198_SinkFade` | fade by 2 | Area198_SinkFade 3660 |
+| E23 | `Area198_SpawnEffectsA6` | records 0, 1, 2 | Area198_SpawnEffectsA6 4778 |
+| E24 | `Area198_SpawnEffectsA6` | kind 0xA5 | Area198_SpawnEffectsA6 5794 |
+| E25 | `Area198_SpawnEffectsA6` | +8 | Area198_SpawnEffectsA6 5794 |
+| E26 | `Area198_SpawnEffectsA6` | two effects | Area198_SpawnEffectsA6 6000 |
+| E27 | `Area198_SpawnEffectsA6` | stops at none | Area198_SpawnEffectsA6 3376 |
+| E28 | `Area198_SpawnEffectsA6` | +0 3 | Area198_SpawnEffectsA6 5794 |
+| E29 | `Area198_Shake` | x and z steps phase + 1 | Area198_Shake 5620 |
+| E30 | `Area198_Shake` | height shift 3 | Area198_Shake 3015 |
+| E31 | `Area198_Shake` | count - 2 | Area198_Shake 5982 |
+| E32 | `Area198_Shake` | script - 4 | Area198_Shake 5996 |
+| E33 | `Area198_Shake` | kind 0xAB | Area198_Shake 2035 |
+| E34 | `Area198_Shake` | counter 1 left 1 | Area198_Shake 3019 |
+| E35 | `Area198_Shake` | +0x5F 0xC1 | Area198_Shake 3019 |
+| E36 | `Area198_Shake` | +0x5C | Area198_Shake 3019 |
+| E37 | `Area198_Shake` | brightens by 4 | Area198_Shake 2963 |
+| E38 | `Area198_Shake` | skips 8 | Area198_Shake 1958 |
+| E39 | `Area198_Shake` | none 0xFE | Area198_Shake 984 |
+| E40 | `Area198_Shake` | height the other way | Area198_Shake 3015 |
+| E41 | `Area198_WalkToX190` | shift 14 | Area198_WalkToX190 4412 |
+| E42 | `Area198_WalkToX190` | target 0x198000 | Area198_WalkToX190 6000 |
+| E43 | `Area198_WalkToX190` | no absolute value | Area198_WalkToX190 2656 |
+| E44 | `Area198_WalkToX190` | direction 4 | Area198_WalkToX190 4812 |
+| E45 | `Area198_WalkToX190` | byte +7 | Area198_WalkToX190 4799 |
+| E46 | `Area198_WalkToX190` | z for x | Area198_WalkToX190 5984 |
+| E47 | `Area198_ReleaseOnRequest5` | request 4 | Area198_ReleaseOnRequest5 1826 |
+| E48 | `Area198_ReleaseOnRequest5` | script - 1 | Area198_ReleaseOnRequest5 4787 |
+| E49 | `Area198_ReleaseOnRequest5` | steps back after the release too | Area198_ReleaseOnRequest5 1213 |
+| E50 | `Area198_SpawnDrops` | every fourth frame | Area198_SpawnDrops 214 |
+| E51 | `Area198_SpawnDrops` | counter above 1 | Area198_SpawnDrops 412 |
+| E52 | `Area198_SpawnDrops` | sound 0x203 | Area198_SpawnDrops 1931 |
+| E53 | `Area198_SpawnDrops` | bits 0..1 | Area198_SpawnDrops 213 |
+| E54 | `Area198_SpawnDrops` | second above 4 | Area198_SpawnDrops 794 |
+| E55 | `Area198_SpawnDrops` | script - 1 | Area198_SpawnDrops 6000 |
+| E56 | `Area198_SpawnDrop` | +0x14 9 | Area198_SpawnDrop 3951 |
+| E57 | `Area198_SpawnDrop` | +9 0x11 | Area198_SpawnDrop 3868 |
+| E58 | `Area198_SpawnDrop` | height - 5 | Area198_SpawnDrop 3951 |
+| E59 | `Area198_SpawnDrop` | +0x2B 2 | Area198_SpawnDrop 3951 |
+| E60 | `Area198_SpawnDrop` | a mod 13 | Area198_SpawnDrop 3725 |
+| E61 | `Area198_SpawnDrop` | b + 0xC | Area198_SpawnDrop 3952 |
+| E62 | `Area198_SpawnDrop` | or | Area198_SpawnDrop 3076 |
+| E63 | `Area198_SpawnDrop` | a below 0x19 | Area198_SpawnDrop 154 |
+| E64 | `Area198_SpawnDrop` | x shift 15 | Area198_SpawnDrop 3952 |
+| E65 | `Area198_SpawnDrop` | z from a | Area198_SpawnDrop 3830 |
+| E66 | `Area198_SpawnDrop` | +0xB by 2 | Area198_SpawnDrop 6000 |
+| E67 | `Area198_SpawnDrop` | not put back | Area198_SpawnDrop 2136 |
+| E68 | `Area198_SpawnDrop` | index + 1 | Area198_SpawnDrop 5979 |
+| E69 | `Area198_SpawnDrop` | op + 1 | Area198_SpawnDrop 3952 |
+| E70 | `Area198_SpawnDrop` | +0x10 1 | Area198_SpawnDrop 3952 |
+| E71 | `Area198_SpawnDrop` | b below 0x16 | Area198_SpawnDrop 149 |
+| E72 | `Area198_SpawnEffectA7` | kind 0xA8 | Area198_SpawnEffectA7 4055 |
+| E73 | `Area198_SpawnEffectA7` | x from z | Area198_SpawnEffectA7 4055 |
+| E74 | `Area198_SpawnEffectA7` | y + 0x100000 | Area198_SpawnEffectA7 4055 |
+| E75 | `Area198_SpawnEffectA7` | script - 1 | Area198_SpawnEffectA7 1945 |
+| E76 | `Area198_SpawnEffectA7` | kept at +0xC | Area198_SpawnEffectA7 6000 |
+| E77 | `Area198_SpawnEffectA7` | +0 2 | Area198_SpawnEffectA7 4055 |
+| E78 | `Area198_StartSlotScript11` | bit 6 | Area198_StartSlotScript11 4535 |
+| E79 | `Area198_StartSlotScript11` | handler 0's script | Area198_StartSlotScript11 6000 |
+| E80 | `Area198_StartSlotScript11` | +0x2B | Area198_StartSlotScript11 6000 |
+| E81 | `Area198_StartSlotScript11` | animation 2 | Area198_StartSlotScript11 6000 |
+| E82 | `Area198_EffectA6Run` | state ^ 1 | Area198_EffectA6Run 6000 |
+| E83 | `Area198_EffectA6Start` | x from z | Area198_EffectA6Start 4366 |
+| E84 | `Area198_EffectA6Start` | y of object +6 | Area198_EffectA6Start 5449 |
+| E85 | `Area198_EffectA6Start` | bank from +2 | Area198_EffectA6Start 5941 |
+| E86 | `Area198_EffectA6Start` | +0x48 2 | Area198_EffectA6Start 6000 |
+| E87 | `Area198_EffectA6Start` | +0x24 1 | Area198_EffectA6Start 6000 |
+| E88 | `Area198_EffectA6Start` | +0x2A 1 | Area198_EffectA6Start 6000 |
+| E89 | `Area198_EffectA6Start` | animation from +7 | Area198_EffectA6Start 3121 |
+| E90 | `Area198_EffectA6Start` | state 2 | Area198_EffectA6Start 5967 |
+| E91 | `Area198_EffectA6Start` | no state 1 | Area198_EffectA6Start 6000 |
+| E92 | `A6Record (198)` | records of 4 | Area198_EffectA6Start 4710, Area198_EffectA6Follow 5664 |
+| E93 | `ObjectAt (198)` | stride 0xA0 | Area198_EffectA6Start 4244, Area198_EffectA6Follow 4306 |
+| E94 | `Area198_EffectA6Follow` | +0 from +1 | Area198_EffectA6Follow 4357 |
+| E95 | `Area198_EffectA6Follow` | calls swapped | Area198_EffectA6Follow 6000 |
+| E96 | `Area198_EffectA6Follow` | +0x5C from +0x5D | Area198_EffectA6Follow 4407 |
+| E97 | `Area198_EffectA6Follow` | +0x27 from +0x26 | Area198_EffectA6Follow 4395 |
+| E98 | `Area198_EffectA6Follow` | +0x48 from +0x49 | Area198_EffectA6Follow 4397 |
+| E99 | `Area198_EffectA6Follow` | +0x44 from +0x40 | Area198_EffectA6Follow 4421 |
+| E100 | `Area198_EffectA6Follow` | +0x32 from +0x30 | Area198_EffectA6Follow 4421 |
+| E101 | `Area198_EffectA6Follow` | +0x60 from +0x64 | Area198_EffectA6Follow 4421 |
+| E102 | `Area198_EffectA6Follow` | +0x29 7 | Area198_EffectA6Follow 6000 |
+| E103 | `Area198_EffectA6Follow` | +0x48 exactly 1 | Area198_EffectA6Follow 2253 |
+| E104 | `Area198_EffectA6Follow` | x scale from +0x44 | Area198_EffectA6Follow 2264 |
+| E105 | `Area198_EffectA6Follow` | sign negated | Area198_EffectA6Follow 2264 |
+| E106 | `Area198_EffectA6Follow` | x into +0x30 | Area198_EffectA6Follow 2264 |
+| E107 | `Area198_EffectA6Follow` | z by the x scale | Area198_EffectA6Follow 2022 |
+| E108 | `Area198_EffectA6Follow` | object read after the call | Area198_EffectA6Follow 82 |
+| E109 | `Area198_EffectA6Follow` | x shift 15 | Area198_EffectA6Follow 3180 |
+| E110 | `Area198_EffectA6Follow` | sign 0x8000 | Area198_EffectA6Follow 3736 |
+| E111 | `Area198_EffectA6Follow` | scale unsigned | Area198_EffectA6Follow 1007 |
+| E112 | `RoundHigh (198)` | arguments swapped | Area198_EffectA6Follow 6000 |
+| E113 | `Area198_EffectA6Follow` | the next object | Area198_EffectA6Follow 4443 |
+| E114 | `Area198_EffectA6Follow` | +0x2E + 1 | Area198_EffectA6Follow 5928 |
+| F1 | `Area199_ChoiceStepIfAnswer` | answer 1 only | Area199_ChoiceStepIfAnswer 4354 |
+| F2 | `Area199_ChoiceStepIfAnswer` | step 2 | Area199_ChoiceStepIfAnswer 5111 |
+| F3 | `Area199_ChoiceStepIfAnswer` | message 0xFFFE | Area199_ChoiceStepIfAnswer 6000 |
+| A7b | `FocusPair (192, 193)` | second answer + 1 (A7 variant) | Area192_ChoiceFocusPair 2851 |
+| D10b | `ShakeStep (197, 198)` | nibble & 6 (D10 variant) | Area197_ShakeStep 2561 |
+| D13b | `ShakeXZ (197, 198)` | z from x (D13 variant) | Area197_ShakeStep 5149 |
 
 ## 5. The tables named
 
