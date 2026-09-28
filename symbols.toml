@@ -68000,3 +68000,691 @@ params = "unsigned tag"
 impl = "src/game/boss_spawn.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-28 (round eleven group BH), 0x494A60..0x494A7D (0x1E bytes), one call: BossActor_Find(tag)'s bytes +0..+4 zeroed, untested (null faults; ours aborts). Called by 7 boss units. docs/boss_h.md section 5."
+
+# ---------------------------------------------------------------------------
+# Round eleven group BSE: fights 22..26, 30, 48 and kinds 28..32, 55 (docs/boss_se.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x43B5B0
+name = "Boss22_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B5B0..0x43B5CE (0x1F bytes), no calls: Boss_SetupTable[22] (id 22: BOSS022, area 80 row 7, kind 27 Garr - tools/boss_rows.py --disc): BattleHook_End = Boss22_End, BattleHook_Exit = Boss22_Exit, BattleHook_Event = BareRetZero. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B5D0
+name = "Boss22_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B5D0..0x43B604 (0x35 bytes), tail jmp 0x446E20: set-up 22's end hook: movement-script variable 3 (0x903848) = 0xC, 0x904AE8 |= 8, 0x904AE5 &= 0xBF, Music_Track = 0x6A, 0x92BF18 = 3, then the end phase's step 3 whatever the battle's end. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B610
+name = "Boss22_Exit"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B610..0x43B64A (0x3B bytes), four calls: set-up 22's exit hook: BossActor_ClearBit40(0), Sprite_Current = BossActor_Find(0) (untested), Sprite_SetAnimationBank(0xAA), Sprite_Current re-read +0x2A = 0 and +0x48 = 0, Sprite_SetAnimation(6). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B650
+name = "BossBully_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B650..0x43B661 (0x12 bytes): BossKind_Table[28] (kind 28: Bully 1..3, area 67 - the tool's names): jmp [BossBully_States + 4 * Sprite_Current +1], unchecked (ours aborts past its 12). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B670
+name = "BossBully_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B670..0x43B6FE (0x8F bytes), tail jmp Sprite_ScriptTick: kind 28 state 0: 0x939AD8 +0xFC = BossBully_AnimsB when Sprite_Current +5 is 3, else BossBully_AnimsA; +0xF8 by +5 read again (3 / 4 / other: BossBully_SoundsA / B / C); +0xF4 = BossBully_Hook; +1 = 2; al Sprite_ScriptTick's. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B700
+name = "BossBully_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B700..0x43B70F (0x10 bytes): kind 28's +0xF4 hook: jmp [BossBully_Hooks + 4 * (word & 0xFF)], unchecked (ours aborts past 3); the entry gets the caller's word. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B710
+name = "Boss23_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B710..0x43B72E (0x1F bytes), no calls: Boss_SetupTable[23] (id 23: BOSS023, area 67 row 7, kind 28): end 0x43B730 (set-up 21's too, group BSD's), exit BossHook_ExitClearActors012, event BareRetZero. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B750
+name = "BossHook_ExitClearActors012"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B750..0x43B768 (0x19 bytes), three calls: the exit hook of set-ups 23 and 30: BossActor_Clear(0), (1), (2). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B770
+name = "BossStallion_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B770..0x43B781 (0x12 bytes): BossKind_Table[29] (kind 29: Stallion, area 67): jmp [BossStallion_States + 4 * Sprite_Current +1], unchecked (ours aborts past 12). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B790
+name = "BossStallion_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B790..0x43B7CC (0x3D bytes), tail jmp Sprite_ScriptTick: kind 29 state 0: 0x939AD8 +0xFC = BossStallion_Anims, +0xF4 = BossStallion_Hook, +0xF8 = BossStallion_Sounds; Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B7D0
+name = "BossStallion_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B7D0..0x43B7DF (0x10 bytes): kind 29's +0xF4 hook through BossStallion_Hooks (3, BareRet each), unchecked (ours aborts). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B7E0
+name = "BossSample10_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B7E0..0x43B7F1 (0x12 bytes): BossKind_Table[55] (kind 55: Sample10..12, area 166): jmp [BossSample10_States + 4 * +1], unchecked (ours aborts past 12). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B800
+name = "BossSample10_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B800..0x43B850 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 55 state 0: Stallion's +0xFC / +0xF8 tables, +0xF4 = BossSample10_Hook, 0x939AD8 +0x114 |= 8, +1 = 2; al Sprite_ScriptTick's. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B860
+name = "BossSample10_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B860..0x43B86F (0x10 bytes): kind 55's +0xF4 hook through BossSample10_Hooks (3, BareRet each), unchecked (ours aborts). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B870
+name = "Boss24_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B870..0x43B88E (0x1F bytes), no calls: Boss_SetupTable[24] (id 24: BOSS024, area 67 row 6, kinds 29 and 55 by the file): end Boss24_End, exit Boss24_Exit, event BareRetZero. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B890
+name = "Boss24_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B890..0x43B8B7 (0x28 bytes), tail jmps 0x446DE0 / 0x446E00: set-up 24's end hook: won (0x904AE8 bit 1) - variable 3 = 5, 0x904AE8 |= 8, Music_Track = 0x44, step 1; else step 2. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B8C0
+name = "Boss24_Exit"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B8C0..0x43B8C8 (9 bytes), one call: set-up 24's exit hook: BossActor_Clear(3). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B8D0
+name = "Boss48_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B8D0..0x43B8EE (0x1F bytes), no calls: Boss_SetupTable[48] (id 48: BOSS024, area 166 row 7 - chapter 15's register-passed ids): end BossHook_EndPickWay, exit BareRet, event BareRetZero. docs/boss_se.md."
+
+[[func]]
+pc = 0x43B8F0
+name = "BossBeyd_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B8F0..0x43B901 (0x12 bytes): BossKind_Table[30] (kind 30: Beyd, area 92): jmp [BossBeyd_States + 4 * +1], unchecked (ours aborts past 12). docs/boss_se.md."
+
+[[func]]
+pc = 0x43B910
+name = "BossBeyd_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43B910..0x43BA0D (0xFE bytes), three calls: kind 30 state 0: +0xFC BossBeyd_Anims, +0xF4 BossBeyd_Hook, +0xF8 BossBeyd_Sounds, +1 = 2, Sprite_ScriptTick called (answer dropped); in fight 0x1A only Battle_CopyEnemyData(0, EnemyData_FindByTag(0x59)), 0x939AD8 +0x8F = 1, +0x100 = 0x1E, HP +0xA4 / +0xD0 / +0xB0 from the word 0x903F0C, +0xD4 / +0xB4 from 0x903F10, +0xD6 / +0xB6 from 0x903F12. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BA10
+name = "BossBeyd_ActDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BA10..0x43BA21 (0x12 bytes): kind 30 state 6: jmp [BossBeyd_ActSubs + 4 * Sprite_Current +2], unchecked (ours aborts past 6). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BA30
+name = "BossBeyd_Death"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BA30..0x43BA8E (0x5F bytes), four calls: kind 30's death (+2 entry 4): Sprite_EnsureAnimation(0xF), Sprite_Current +0x2A = 0, Sprite_ScriptTickOnce, Battle_EnemyDefeated, +0 &= 0xBF, +1 = 3, +2 = +3 = 0; in fight 0x19 then 0x802D20 = 2 and Msg_OpenScript(0x20). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BA90
+name = "BossBeyd_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BA90..0x43BA9F (0x10 bytes): kind 30's +0xF4 hook through BossBeyd_Hooks (3: BossBeyd_HookPick, BareRet, BossBeyd_HookTick), unchecked (ours aborts). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BAA0
+name = "BossBeyd_HookPick"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BAA0..0x43BAC6 (0x27 bytes), no calls: kind 30 hook entry 0: in fight 0x19, 0x904AE2 >= 1 clears 0x939AD8 +0x110 bit 1, and 0x904B35 = 1. The word is not read. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BAD0
+name = "BossBeyd_HookTick"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BAD0..0x43BAFD (0x2E bytes), one call: kind 30 hook entry 2 (BattleEnemy_RunAll's): with 0x904AA8 bit 1 and MoveScript_WaitWordDA 0, BossActor_ClearBit40(0), the word 0x904AA8 &= 0xFFFD, Draw_PassFlags = 0. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BB00
+name = "BossBeyd2_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BB00..0x43BB11 (0x12 bytes): BossKind_Table[31] (kind 31: Beyd, area 92 - the second of the two Beyd kinds): jmp [BossBeyd2_States + 4 * +1], unchecked (ours aborts past 12). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BB20
+name = "BossBeyd2_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BB20..0x43BBFB (0xDC bytes), one call: kind 31 state 0: kind 30's +0xFC / +0xF8 tables, +0xF4 BossBeyd2_Hook, +1 = 2, Sprite_ScriptTick called (answer dropped), Sprite_Current +8 = 1, 0x939AD8 +0x8F = 1 and the seven HP and stat words from 0x903F0C / 0x903F10 / 0x903F12 in every fight. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BC00
+name = "BossBeyd2_ActDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BC00..0x43BC11 (0x12 bytes): kind 31 state 6: jmp [BossBeyd2_ActSubs + 4 * +2], unchecked (ours aborts past 6). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BC20
+name = "BossBeyd2_Death"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BC20..0x43BC66 (0x47 bytes), three calls: kind 31's death (+2 entry 4): BossBeyd_Death without the fight's message. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BC70
+name = "BossBeyd2_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BC70..0x43BC7F (0x10 bytes): kind 31's +0xF4 hook through BossBeyd2_Hooks (3: BossBeyd2_HookTarget4, BareRet, BareRet), unchecked (ours aborts). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BC80
+name = "BossBeyd2_HookTarget4"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BC80..0x43BC87 (8 bytes): kind 31 hook entry 0: the target 0x904B44 = 4. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BC90
+name = "BossZig_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BC90..0x43BCA1 (0x12 bytes): BossKind_Table[32] (kind 32: Zig, area 92): jmp [BossZig_States + 4 * +1], unchecked (ours aborts past 12). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BCB0
+name = "BossZig_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BCB0..0x43BCF6 (0x47 bytes), tail jmp Sprite_ScriptTick: kind 32 state 0: +0xFC BossZig_Anims, +0xF4 BossZig_Hook, +0xF8 BossZig_Sounds, Sprite_Current +8 = 3, +1 = 2; al Sprite_ScriptTick's. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BD00
+name = "BossZig_Idle"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BD00..0x43BD3F (0x40 bytes), two calls: kind 32 state 2: 0x904AAD bit 3 set and bit 5 clear - Sprite_EnsureAnimation(0xC); else BattleEnemy_SetAnimation(8 with 0x939AD8 +0x110 bit 1, else 0); then BattleEnemy_ScriptTick and Sprite_Current +1 up by one. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BD40
+name = "BossZig_Step5Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BD40..0x43BD51 (0x12 bytes): kind 32 state 5: jmp [BossZig_Step5Subs + 4 * +2], unchecked (ours aborts past 2). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BD60
+name = "BossZig_Step5Count"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BD60..0x43BD9E (0x3F bytes), two calls: kind 32 step 5, +2 = 0: BattleEnemy_ScriptTick; +9 down by one; at 0 the sound 0x437450(the word at 0x939AD8 +0xF8) and +2 up by one. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BDA0
+name = "BossZig_Step5Fire"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BDA0..0x43BDEB (0x4C bytes), four calls and a tail jmp 0x4376A0: kind 32 step 5, +2 = 1: when BattleEnemy_ScriptTick answers al not 0, Battle_SetTargetFlag40(0x904B44); Rand & 3 zero - 0x904AA8 |= 0x80, 0x904AAD |= 0x10, BattleTask_Create(0, 2); then 0x904AA8 |= 4 and the action's end 0x4376A0. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BDF0
+name = "BossZig_ActDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BDF0..0x43BE01 (0x12 bytes): kind 32 state 6: jmp [BossZig_ActSubs + 4 * +2], unchecked (ours aborts past 6). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BE10
+name = "BossZig_Death"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BE10..0x43BE56 (0x47 bytes), three calls: kind 32's death (+2 entry 4): as BossBeyd2_Death with animation 0xD. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BE60
+name = "BossZig_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BE60..0x43BE6F (0x10 bytes): kind 32's +0xF4 hook through BossZig_Hooks (3: BossZig_HookPick, BossZig_HookHit, BareRet), unchecked (ours aborts). docs/boss_se.md."
+
+[[func]]
+pc = 0x43BE70
+name = "BossZig_HookPick"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BE70..0x43BE88 (0x19 bytes): kind 32 hook entry 0: without 0x904AAD bit 3 the target 0x904B44 = 3, with it 0x904B35 = 0. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BE90
+name = "BossZig_HookHit"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BE90..0x43BE97 (8 bytes): kind 32 hook entry 1: 0x904AAD |= 0x20. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BEA0
+name = "Boss25_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BEA0..0x43BEF5 (0x56 bytes), no calls: Boss_SetupTable[25] (id 25: BOSS025, area 92 row 7, kinds 30..32): member 0's HP +0x98 and AP +0x9A low bytes saved to 0x675F05 / 0x675F04 and the words set from +0xA0 / +0xA2; end Boss25_End, exit Boss25_Exit, event Boss25_Event; 0x904AE4 = 3. docs/boss_se.md."
+
+[[func]]
+pc = 0x43BF00
+name = "Boss25_Event"
+ret = "unsigned char"
+params = "unsigned code"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43BF00..0x43C17C (0x27D bytes), nine calls: set-up 25's event hook by the code's low byte, al 0 always: code 0 the turn counter and member 0's scripted action by 0x904AE2 (messages 0x1B..0x1F), code 3 the script bits 0x904AAD (a task, the turn order 0, 3, 0, 3, 0, 3, 0, messages 0x19 / 0x1A, enemy 0's animation 8, round-flag bit 6 by member 0's state). docs/boss_se.md."
+
+[[func]]
+pc = 0x43C180
+name = "Boss25_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43C180..0x43C1A8 (0x29 bytes), tail jmp 0x446E20: set-up 25's end hook: member 0's HP and AP words = the two saved bytes, 0x8034E5 = 4, step 3. docs/boss_se.md."
+
+[[func]]
+pc = 0x43C1B0
+name = "Boss25_Exit"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43C1B0..0x43C1F9 (0x4A bytes), one call: set-up 25's exit hook: 0x904AA8 |= 2, Transition_Start(4), Field_MemberCount = 3 and the byte 0x939A02 bytes of 0x939A10 copied to the party list 0x904065. docs/boss_se.md."
+
+[[func]]
+pc = 0x43C200
+name = "Boss26_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43C200..0x43C22F (0x30 bytes), no calls: Boss_SetupTable[26] (id 26: BOSS025, area 92 row 7): end Boss26_End, exit BossHook_ExitTransition4, event Boss26_Event; the dwords 0x939A08, 0x939A04 and the byte 0x939A0C = 0. docs/boss_se.md."
+
+[[func]]
+pc = 0x43C230
+name = "Boss26_Event"
+ret = "unsigned char"
+params = "unsigned code"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43C230..0x43C35A (0x12B bytes, then its four-entry jump table 0x43C35C): set-up 26's event hook by the code's low byte, al 0 always: 0 sums the targeted member's +0x128 (enemy 0 acting) or enemy 0's +0x108 into 0x939A08 / 0x939A04, or counts 0x939A0C; 1 enemy 0 to state 2 at 0x904AE2 1; 2 0x904AE8 |= 4 at turn 0x15; 3 BattleTask_Create(0, 8) once. docs/boss_se.md."
+
+[[func]]
+pc = 0x43C370
+name = "Boss26_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43C370..0x43C474 (0x105 bytes), seven calls: set-up 26's end hook: each party member with +0 bit 0 - Battle_RemoveFromTurnOrder(+5), Sprite_Current = it, Sprite_PoseFromSet(+8 + 0x1C or + 4 by +0x90 bit 14, 0x8C5D80, 0x1800); variable 3 = 4; step 3. docs/boss_se.md."
+
+[[func]]
+pc = 0x43CF80
+name = "Boss30_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43CF80..0x43CF9E (0x1F bytes), no calls: Boss_SetupTable[30] (id 30: BOSS030, area 103 row 7, kinds 35 and 36 - group BSG's): end Boss30_End, exit BossHook_ExitClearActors012, event BareRetZero. docs/boss_se.md."
+
+[[func]]
+pc = 0x43CFA0
+name = "Boss30_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43CFA0..0x43CFCD (0x2E bytes), calls 0x446DE0, tail jmp 0x446E00: set-up 30's end hook: won - 0x8034E5 = 0xC, variable 3 up by one, step 1, Music_Track = 0x5A; else step 2. docs/boss_se.md."
+
+[[func]]
+pc = 0x43E790
+name = "BossHook_ExitTransition4"
+ret = "void"
+params = "void"
+impl = "src/game/boss_se.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSE), 0x43E790..0x43E79F (0x10 bytes), one call: the exit hook of set-ups 26 and 35 (35 is group BSH's, 0x43E740 stores it): 0x904AA8 |= 2, Transition_Start(4). docs/boss_se.md."
+
+[[data]]
+pc = 0x64D1C0
+name = "BossBully_AnimsA"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 28's +0xFC animation bytes for a sprite whose +5 is not 3 (BossBully_Enter; read by BattleEnemy_SetAnimation). docs/boss_se.md."
+
+[[data]]
+pc = 0x64D1CC
+name = "BossBully_AnimsB"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 28's +0xFC animation bytes for +5 at 3. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D1D8
+name = "BossBully_SoundsA"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 28's +0xF8 sound words for +5 at 3 (the words 0x437450 plays, 0xFFFF none, when the generic states read them). docs/boss_se.md."
+
+[[data]]
+pc = 0x64D1E0
+name = "BossBully_SoundsB"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 28's +0xF8 sound words for +5 at 4. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D1E8
+name = "BossBully_SoundsC"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 28's +0xF8 sound words for any other +5. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D1F0
+name = "BossBully_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBully_Dispatch's table by Sprite_Current +1: BossBully_Enter, then the generic enemy states (Port_DroppedCall at 1 and 10). docs/boss_se.md."
+
+[[data]]
+pc = 0x64D220
+name = "BossBully_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBully_Hook's table by the word: BareRet three times. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D22C
+name = "BossStallion_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kinds 29 and 55's +0xFC animation bytes. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D238
+name = "BossStallion_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kinds 29 and 55's +0xF8 sound words. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D240
+name = "BossStallion_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossStallion_Dispatch's table by +1: BossStallion_Enter, then the generic states. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D270
+name = "BossStallion_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossStallion_Hook's table: BareRet three times. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D27C
+name = "BossSample10_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossSample10_Dispatch's table by +1: BossSample10_Enter, then the generic states. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D2AC
+name = "BossSample10_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossSample10_Hook's table: BareRet three times. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D2B8
+name = "BossBeyd_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kinds 30 and 31's +0xFC animation bytes. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D2C4
+name = "BossZig_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 32's +0xFC animation bytes. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D2D0
+name = "BossBeyd_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kinds 30 and 31's +0xF8 sound words. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D2D8
+name = "BossZig_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): kind 32's +0xF8 sound words (the first read by BossZig_Step5Count). docs/boss_se.md."
+
+[[data]]
+pc = 0x64D2E0
+name = "BossBeyd_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBeyd_Dispatch's table by +1: BossBeyd_Enter, the generic states, BossBeyd_ActDispatch at 6. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D310
+name = "BossBeyd_ActSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBeyd_ActDispatch's table by +2: EnemyOp_ActSubs with BossBeyd_Death at 4. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D328
+name = "BossBeyd_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBeyd_Hook's table: BossBeyd_HookPick, BareRet, BossBeyd_HookTick. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D334
+name = "BossBeyd2_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBeyd2_Dispatch's table by +1: BossBeyd2_Enter, the generic states, BossBeyd2_ActDispatch at 6. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D364
+name = "BossBeyd2_ActSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBeyd2_ActDispatch's table by +2: EnemyOp_ActSubs with BossBeyd2_Death at 4. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D37C
+name = "BossBeyd2_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossBeyd2_Hook's table: BossBeyd2_HookTarget4, BareRet, BareRet. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D388
+name = "BossZig_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossZig_Dispatch's table by +1: BossZig_Enter, Port_DroppedCall, BossZig_Idle, the generic 3 and 4, BossZig_Step5Dispatch, BossZig_ActDispatch, the generic 7..11. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D3B8
+name = "BossZig_Step5Subs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossZig_Step5Dispatch's table by +2: BossZig_Step5Count, BossZig_Step5Fire (which ends through 0x4376A0, +1 = 2 and +2 = 0). docs/boss_se.md."
+
+[[data]]
+pc = 0x64D3C0
+name = "BossZig_ActSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossZig_ActDispatch's table by +2: EnemyOp_ActSubs with BossZig_Death at 4. docs/boss_se.md."
+
+[[data]]
+pc = 0x64D3D8
+name = "BossZig_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSE): BossZig_Hook's table: BossZig_HookPick, BossZig_HookHit, BareRet. docs/boss_se.md."
