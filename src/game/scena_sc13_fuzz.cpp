@@ -523,6 +523,7 @@ struct Rect { unsigned short area; unsigned char fd, kind; std::uint32_t x; unsi
 const Rect kStep13[] = {{0x8F, 1, 1, 0x25, 1, 0x1D, 2},   // area 0x90's cell tested first in 0x8F
                         {0x56, 1, 0, 0x428000, 0, 0x3A, 2}, {0x70, 4, 1, 0x36, 3, 0x32, 4},    {0x7F, 0, 0, 0x38000, 0, 6, 3},
                         {0x8F, 0, 0, 0x3B8000, 0, 0x1F, 4}, {0x8F, 1, 0, 0x428000, 0, 0x64, 3}, {0x90, 2, 1, 0x25, 1, 0x1D, 2},
+                        {0x90, 2, 1, 0x25, 1, 0x1D, 2},     {0x90, 2, 1, 0x25, 1, 0x1D, 2},   // weighted: four branches by who leads
                         {0x91, 0xFF, 1, 0xA, 2, 0x62, 3},   {0x97, 0xFF, 0, 0x148000, 0, 0x12, 9}, {0x9B, 0, 0, 0x28000, 0, 0x30, 2}};
 const Rect kArrive13[] = {{0x8F, 0, 1, 0x2E, 1, 0x1F, 4}, {0x91, 5, 1, 0x40, 2, 0x6A, 1}};
 const Rect kStep14[] = {{0x94, 4, 0, 0x738000, 0, 0x36, 2}, {0xBF, 0xFF, 1, 0x10, 0x40, 0x10, 0x40}};
@@ -590,7 +591,10 @@ void Seed(unsigned k) {
     if (sh::Often()) B(at::kEffects) = static_cast<unsigned char>(sh::Next() & 0xBF);
     g_rect = nullptr;
     switch (g_chapter * 100 + k) {
-    case 1300 + k13StepHook: PickRect(kStep13, sizeof kStep13 / sizeof kStep13[0]); break;
+    case 1300 + k13StepHook:
+        PickRect(kStep13, sizeof kStep13 / sizeof kStep13[0]);
+        if (sh::Often()) B(at::kLeaderName) = static_cast<unsigned char>(SH_PICK(2, 5, 6, 7, 8));   // area 0x90's drop-ins
+        break;
     case 1300 + k13ArriveHook: PickRect(kArrive13, sizeof kArrive13 / sizeof kArrive13[0]); break;
     case 1400 + k14StepHook: PickRect(kStep14, sizeof kStep14 / sizeof kStep14[0]); break;
     case 1400 + k14ArriveHook: PickRect(kArrive14, sizeof kArrive14 / sizeof kArrive14[0]); break;
@@ -690,6 +694,9 @@ void Settle() {
     if ((n & 0x30) == 0x30) B(at::kStatusBits) = static_cast<unsigned char>(B(at::kStatusBits) ^ (1u << ((n >> 20) & 7)));
     // the object pointer chapter 13's run 6 reads again after its calls
     if ((n & 0xC0) == 0xC0) sh::SetPointer(at::kCamObject, sh::SpriteRecord(n >> 24));
+    // the chapter's slot byte, which the scenes read again after a call: a
+    // quarter of the time
+    if ((n & 0x300) == 0x300) B(g_chapter == 13 ? at::kSlot13 : at::kSlot14) = static_cast<unsigned char>((n >> 24) % 0x14);
     const bool rereads = g_chapter == 13 ? (g_k == k13EnterArea || g_k == k13StepHook || g_k == k13ArriveHook)
                                          : (g_k == k14EnterArea || g_k == k14StepHook || g_k == k14ArriveHook);
     if (!rereads) return;
