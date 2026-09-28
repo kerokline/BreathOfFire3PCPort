@@ -3,7 +3,9 @@
 **Status:** IN PROGRESS (2026-09-28) - eighteen functions ours
 (`src/game/scena_sx.cpp`, shadow name `scena_sx`), fuzzed headless through
 the scenario harness ([`scenario_harness.md`](scenario_harness.md)):
-**0 mismatches** in 54,000 rounds; controls in section 5. One of the
+**0 mismatches** in 54,000 rounds; **67 of 67 negative controls refused**
+(66 by a count, one by a fault with its near variant refused by a count;
+section 5). `BOF3X_SHADOW='*'` exit 0. One of the
 nineteen addresses the round listed is not taken (`0x587B80`, section 1).
 Fuzz only: no route is recorded through these.
 
@@ -263,19 +265,111 @@ hand. A tool gap for `scenario_rows.py` / `magic_rows.descend`: a forward
 
 **Result** (2026-09-28, in this worktree, `BOF3X_SELFTEST_ONLY=1
 BOF3X_SHADOW=scena_sx`, exit 0): 54,000 rounds over 18 functions,
-4,772,729 calls to the stand-ins, **0 mismatches**, 29,664 bytes (32
-regions). Coverage: `AbilityList_Add` 17,396 (the level-ups' abilities),
-`Char_RecalcStats` 14,103, `Sprite_ReleaseTint` / `Sprite_LoadPalette`
-5,220, `Party_JoinReset` 3,000, `Member_ClearState` 3,000,
+4,771,325 calls to the stand-ins, **0 mismatches**, 29,664 bytes (32
+regions). Coverage: `AbilityList_Add` 16,074 (the level-ups' abilities),
+`Char_RecalcStats` 14,087, `Sprite_ReleaseTint` / `Sprite_LoadPalette`
+5,191, `Party_JoinReset` 3,000, `Member_ClearState` 3,000,
 `MapView_CellToMap` 4,704,000, `MapView_PlaceRuns` 3,000,
-`Sound_PlayEffect` 3,000, `0x532FD0` 5,403, `Sprite_EnsureAnimation`
-5,403, `0x591EC0` 984, `0x57C5A0` 3,000.
+`Sound_PlayEffect` 3,000, `0x532FD0` 5,385, `Sprite_EnsureAnimation`
+5,385, `0x591EC0` 1,012, `0x57C5A0` 3,000.
 
-STAR_RESULT
+Under `BOF3X_SHADOW='*'` (every group of every harness): 54,000 rounds,
+0 mismatches, exit 0 (the call count moves with the other groups' state,
+as round nine recorded).
 
 ## 5. Controls
 
-CONTROLS
+Planted one at a time in `scena_sx.cpp` by a script (plant, rebuild, run,
+restore; rebuilt at the end), each anchored on a unique string. The count
+is mismatching rounds of 3,000 for the function (the function's first
+differing round in brackets); every refused one exited 3 but C61.
+
+| # | Function | Mutant | Mismatches |
+|---|---|---|--:|
+| C1 | `Char_LevelUp` | sum >= exp | 798 (0) |
+| C2 |  | stat +0x44 from the low nibble | 282 (16) |
+| C3 |  | cap 998 | 2027 (0) |
+| C4 |  | row +6 twice | 934 (0) |
+| C5 |  | stop at 98 | 279 (7) |
+| C6 |  | a negative gain made positive | 1594 (0) |
+| C7 | `Party_PlaceForBattle` | the record +2 | 2454 (0) |
+| C8 |  | the search stops at 2 | 1976 (1) |
+| C9 |  | z from +0x34 | 2756 (1) |
+| C10 |  | the animation dword zero-extended | 2756 (1) |
+| C11 |  | x passed, not re-read | 134 (3) |
+| C12 | `Party_ReloadPalettes` | palettes 0x20 apart | 1718 (3) |
+| C13 |  | Sprite_Current not set | 2001 (0) |
+| C14 |  | the count read once | 508 (5) |
+| C15 | `Party_HealJoined` | bit 1 for bit 0 | 2987 (0) |
+| C16 |  | +0x2E read before the call | 9 (272) |
+| C17 |  | AP from +0x20 | 2985 (0) |
+| C18 |  | the second list | 1598 (1) |
+| C19 |  | the state word kept | 2985 (0) |
+| C20 | `Party_Remove` | the second list searched one short | 1678 (0) |
+| C21 |  | +0x27 0x77 + slot | 734 (1) |
+| C22 |  | 0x904060 cleared at 4 or more | 192 (22) |
+| C23 |  | Member_ClearState(count) | 3000 (0) |
+| C24 |  | the count not re-read after the call | 236 (45) |
+| C25 |  | +0x148 the id itself | 572 (1) |
+| C26 | `Sprite_FlashClut` | colour 2 0x0201 | 791 (6) |
+| C27 |  | word 0 too | 3000 (0) |
+| C28 |  | the dirty flag not set | 2990 (0) |
+| C29 |  | +0x138 \|= 4 | 2237 (0) |
+| C30 | `Char_LoseHp` | HP equal to the amount goes to 0 | 183 (50) |
+| C31 |  | a half, not a quarter | 300 (16) |
+| C32 |  | the member tested, not Field_State +0x148 | 1828 (1) |
+| C33 |  | Field_State +0x90 \|= 0x1000 | 1389 (0) |
+| C34 | `Field_SetStatus80` | \| 0x40 | 2216 (0) |
+| C35 | `Field_CellTriggerAt` | facing 8 only | 74 (54) |
+| C36 |  | the z run one on | 53 (33) |
+| C37 |  | the run stops before k 0 | 50 (63) |
+| C38 |  | the x run tests z against +1 | 84 (13) |
+| C39 |  | the area word as a byte | 81 (19) |
+| C40 | `MapView_FillCells` | rows wrap at 0x36 | 2514 (1) |
+| C41 |  | the column read once | 3000 (0) |
+| C42 |  | row and column indexes swapped | 3000 (0) |
+| C43 | `Camera_TurnToDegrees` | the angle & 0x7FF | 1495 (1) |
+| C44 |  | the step unsigned | 1465 (0) |
+| C45 | `Camera_EaseAngleFB` | al 1 on the last frame | 319 (1) |
+| C46 |  | mode 5 for 6 | 387 (5) |
+| C47 |  | the step from angle & 0xFFF | 611 (5) |
+| C48 |  | the accumulator from the masked angle | 1199 (3) |
+| C49 |  | the high word >> 15 | 1520 (0) |
+| C50 |  | speed 0 sets the angle masked | 179 (4) |
+| C51 | `Sprite_FindFree` | the last record never | 43 (34) |
+| C52 |  | none answers 0xFE | 490 (0) |
+| C53 | `AbilityList_Add` | nine member slots | 11 (144) |
+| C54 |  | 127 shared slots | 5 (140) |
+| C55 |  | the list by `shared`, not `which` | 1012 (4) |
+| C56 |  | `shared` as a word | 1006 (4) |
+| C57 | `KeyItem_Add` | 31 slots | 70 (90) |
+| C58 |  | the item \| 1 | 965 (0) |
+| C59 | `Inventory_Remove` | all of a stack refused | 443 (0) |
+| C60 |  | the id kept at a count of 1 | 200 (18) |
+| C61 |  | category 3 as the key items | fault (0xC0000005: category 4's null count list read), exit 0xC0000005 |
+| C61b |  | category 3 skips the counts | 391 (4) |
+| C62 |  | 127 slots | 6 (918) |
+| C63 | `Zenny_Sub` | the exact amount refused | 457 (3) |
+| C64 | `Zenny_Add` | the cap itself refused | 430 (2) |
+| C65 |  | the tally on flag not 0 | 2523 (0) |
+| C66 |  | not capped | 1732 (0) |
+
+**67 planted, 67 refused**: 66 by a count, C61 by a fault. C61 (category
+3 taken for the key items) sends category 4 down the count path, which
+reads its null count-list pointer - an access violation in the self-test,
+not a count; its near variant C61b (category 3 skips the count path) is
+refused by a count. No equivalent mutant. The low counts (C16, C53, C54,
+C62: 5..11 rounds) are single-slot or single-cell edges the seed reaches
+rarely (a hole at the last slot of a full list, a re-read after
+`Char_RecalcStats` whose byte the stir moves); each is still refused.
+
+**A seeding trap met on the way**: the first control run left C60 standing
+and C59 / C62 at 4 rounds, because `Inventory_Remove`'s `args` planted the
+item into the list - and the harness captures the state *before* the
+arguments, so every pass's `Apply` wiped the plant. The plant moved into
+`Seed` (the arguments kept in `g_inv` for `args`), and C60 was refused (200
+rounds), C59 443. Every control above is from the run after that change.
+A group whose `args` writes memory has the same trap.
 
 ## 6. Latent defects (described, not fixed)
 
