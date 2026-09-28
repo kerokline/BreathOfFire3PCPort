@@ -63511,3 +63511,597 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR2F): area 113 descriptor 0x620010 +0x34: Area113_ChoiceAsk, 0x420850, 0x420870 (another block), Area61_ChoiceMark4 twice. docs/area_w2f.md."
+
+# --- round 10 group AR4A: world 4, areas 152..155, 166..167 (src/game/area_w4a.cpp, docs/area_w4a.md) ---
+
+[[func]]
+pc = 0x4249D0
+name = "Area152_Init"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4249D0..0x424A27 (0x58), cdecl, capstone to the last instruction, group AR4A. area 152 +0x40, the init (PSX 0x801F2C38): story flags 0x75, 0x76, 0x8B, 0x8C, 0x8D, 0x8E cleared in that order (Flags_Clear on 0x904030). docs/area_w4a.md."
+
+[[func]]
+pc = 0x424A30
+name = "Area152_PlaceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424A30..0x424AB6 (0x87), cdecl, capstone to the last instruction, group AR4A. WorldMap_FieldHooks entry 10 (0x662E18; PSX hook 0x801F2CA8). Area 152's own field hook, neither area 87's (0x174) nor area 121's (0x74): two states on the s8 0x9039F4 - state 0 ScriptFlags_Set40, the row of the place 0x937F82 among Area152_PlaceRows' three (3 none: the plate state table), Msg_OpenScript(the row's word (row << 4) + (s8) Cond_ByteFA, unchecked), 0x9039F4 (read after the call) + 1, Field_Request = 2; state 1 waits for Field_Request not 2, ScriptFlags_Clear40, 0x9039F3..0x9039F5 = 0. No cell, name set or AreaMap_ByteAt. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424AC0
+name = "Area152_PlateRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424AC0..0x424B95 (0xD6), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_PlateRun (0x40FDE0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[10] +0 (PSX 0x801F2DB0): the kind by AreaMap_ByteAt of the cell ahead, Area152_PlateStates by +1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424BA0
+name = "Area152_PlateStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424BA0..0x424BF0 (0x51), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_PlateStart (0x40FEC0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ, and the bank). Area152_PlateStates 0, and area 151's plate state 0 (its table 0x6371A4 names this body): +0x24 = 0x80, Sprite_SetAnimationBank(0x1D1), +0x29 = 5, +0x2A / +0x5D..+0x5F = 0, +1 = 1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424C00
+name = "Area152_PlateShow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424C00..0x424D41 (0x142), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_PlateShow (0x40FF20) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_PlateStates 1: the plate animation by the place (Area152_PlateAnims, searched with no bound) or kind. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424D50
+name = "Area152_PlateGrow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424D50..0x424D90 (0x41), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_PlateGrow (0x410070) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_PlateStates 2. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424DA0
+name = "Area152_PlateHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424DA0..0x424DF7 (0x58), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_PlateHold (0x4100C0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_PlateStates 3. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424E00
+name = "Area152_PlateShrink"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424E00..0x424E4F (0x50), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_PlateShrink (0x410120) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_PlateStates 4. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424E50
+name = "Area152_HudRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424E50..0x424E61 (0x12), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_HudRun (0x410170) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[10] +0xC (PSX 0x801F32E0): Area152_HudStates by +1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424E70
+name = "Area152_HudFrame"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424E70..0x424E79 (0xA), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_HudFrame (0x410190) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_HudStates 1: call Area152_FrameStep, jmp Area152_BoxStep. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424E80
+name = "Area152_FrameStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424E80..0x424E91 (0x12), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_FrameStep (0x4101A0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_FrameStates by +2 (a tail jump). docs/area_w4a.md."
+
+[[func]]
+pc = 0x424EA0
+name = "Area152_FrameSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424EA0..0x424EC0 (0x21), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_FrameSlideIn (0x4101C0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_FrameStates 1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424ED0
+name = "Area152_FrameHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424ED0..0x424EF7 (0x28), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_FrameHold (0x4101F0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_FrameStates 2. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424F00
+name = "Area152_FrameSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424F00..0x424F40 (0x41), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_FrameSlideOut (0x410220) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_FrameStates 3. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424F50
+name = "Area152_BoxStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424F50..0x424F61 (0x12), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_BoxStep (0x410270) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_BoxStates by +3 (a tail jump). docs/area_w4a.md."
+
+[[func]]
+pc = 0x424F70
+name = "Area152_BoxSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424F70..0x424FD1 (0x62), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_BoxSlideIn (0x410290) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_BoxStates 1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x424FE0
+name = "Area152_BoxHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x424FE0..0x42504D (0x6E), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_BoxHold (0x410300) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_BoxStates 2. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425050
+name = "Area152_BoxSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425050..0x4250A6 (0x57), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_BoxSlideOut (0x410370) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_BoxStates 3. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4250B0
+name = "Area152_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4250B0..0x425274 (0x1C5), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_DrawFrame (0x4103D0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ): the dial frame over Area152_Buttons. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425280
+name = "Area152_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425280..0x42533B (0xBC), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_DrawSprite (0x4105A0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ): a SPRT from Area152_Sprites. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425340
+name = "Area152_DrawHud"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425340..0x425397 (0x58), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_DrawHud (0x410660) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ): the region box, its label offset the low word of 0x803580 (as areas 87, 88 and 121). docs/area_w4a.md."
+
+[[func]]
+pc = 0x4253A0
+name = "Area152_Record8Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4253A0..0x4253B1 (0x12), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_Record8Run (0x4106C0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[10] +8 (PSX 0x801F4038): Area152_Record8States by +1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4253C0
+name = "Area152_Record8Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4253C0..0x42546C (0xAD), cdecl, capstone to the last instruction, group AR4A. the record +8 effect's state 0 of every world map: the record-8 state tables of areas 16, 33, 45, 65, 87, 88, 115, 121, 151 and 152 name this one body (in area 152's block). Field_StatusBits bit 0: Effect_Release. Else only when Frame_Counter & 0x3FF is 0: r = Rand() & 0x33, n = r & 0xF (0..3); up to n Effect_FindFree slots (0xFF ends it, slot unchecked) get +0 = 1, kind +5 = 0x16, +1 = 1, +6 = the count, +8 = r >> 4, word +0x3E = AreaMap_Elevation(leader +0x34, +0x38) + 0x400. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425470
+name = "Area152_Record8Place"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425470..0x4255C3 (0x154), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_Record8Place (0x4106E0) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_Record8States 1: over Area152_Directions and Area152_Record8Anims. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4255D0
+name = "Area152_Record4Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4255D0..0x4255E1 (0x12), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_Record4Run (0x410840) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[10] +4 (PSX 0x801F448C): Area152_Record4States by +1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4255F0
+name = "Area152_Record4MarkCell"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4255F0..0x4256A4 (0xB5), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_Record4MarkCell (0x410860) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area152_Record4States 0: the cell record +0xB (Area152_Cells, two, unchecked) marked 0xA0 in the map. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4256B0
+name = "Area152_DrawDrift"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4256B0..0x425B11 (0x462), cdecl, capstone to the last instruction, group AR4A. Area 87's Area87_DrawDrift (0x410920) instruction for instruction over area 152's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records[10] +0x10 (PSX 0x801F4628): area 87's drift (a square and the map-item grid), not area 121's two squares; u / v / size from Area152_DriftUV. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425B20
+name = "Area153_ChoiceFocusPair"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425B20..0x425B5B (0x3C), cdecl, capstone to the last instruction, group AR4A. area 153 +0x34[0], a choice (Area90_ChoiceFocusPair's shape): message 0xFFFF; the dwords +0x18 / +0x1C of the object the pointer 0x903804 names = the bytes Area153_ChoicePairs[s8 answer * 2] and [* 2 + 1] (zero-extended; the pointer and the answer read again for the second; unchecked). docs/area_w4a.md."
+
+[[func]]
+pc = 0x425B60
+name = "Area154_ChoiceFocusPair"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425B60..0x425B9B (0x3C), cdecl, capstone to the last instruction, group AR4A. area 154 +0x34[0], a choice: Area153_ChoiceFocusPair's body over Area154_ChoicePairs 0x638994. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425BA0
+name = "Area155_ChoiceGiveItem4D"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425BA0..0x425C27 (0x88), cdecl, capstone to the last instruction, group AR4A. area 155 +0x34[0], a choice: answer byte 2 - Item_NamePtr(1, 0x4D)'s 16 bytes to Text_Records row 0, Inventory_Add(1, 0x4D, 1) (a fourth word 0 pushed, never read) answering al not 0: Sound_PlayEffect(0x106), message 0xB, Flags_Set(0x903FF8, 1). Else, or not added: message 0xA, Flags_Set(0x903FF8, 1). docs/area_w4a.md."
+
+[[func]]
+pc = 0x425C30
+name = "Area155_ChoiceArmTail10"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425C30..0x425C57 (0x28), cdecl, capstone to the last instruction, group AR4A. in area 155's block; the choice of seven areas (area 1 +0x34[1], 23 [1], 40 [6], 41 [2], 143 [7], 166 [0], 168 [2]): message 0xFFFF; answer byte 0: tail kind 0x9039F3 = 0xA (0x56DB80), state 0, argument 0xFF. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425C60
+name = "Area166_ChoiceFocusPair"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425C60..0x425CBE (0x5F), cdecl, capstone to the last instruction, group AR4A. area 166 +0x34[1], a choice: message 0xFFFF; answer byte 3: ScriptFlags_Set40, tail kind 0xA, state 5, argument 0xFF; then the focus object's +0x18 / +0x1C from Area166_ChoicePairs by the s8 answer (read again after the call). docs/area_w4a.md."
+
+[[func]]
+pc = 0x425CC0
+name = "Area167_ChoiceTail32At15"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425CC0..0x425CF7 (0x38), cdecl, capstone to the last instruction, group AR4A. area 167 +0x34[0], a choice: message 0xFFFF; answer byte 2 nothing; else variable 5 (0x90384A) = (answer != 0) + 1, ScriptFlags_Set40, variable 6 (0x90384B) = 0x40, tail kind 0x20 (Area167_Tail32) at state 0x15. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425D00
+name = "Area167_ChoiceTail32At14Even"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425D00..0x425D38 (0x39), cdecl, capstone to the last instruction, group AR4A. area 167 +0x34[1], a choice: message 0xFFFF; answer byte 2 nothing; else variable 5 = 2 (answer not 0) or 0 (neg / sbb / and 2), ScriptFlags_Set40, variable 6 = 0x40, tail kind 0x20 at state 0x14. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425D40
+name = "Area167_ChoiceTail32At14"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425D40..0x425D76 (0x37), cdecl, capstone to the last instruction, group AR4A. area 167 +0x34[2], a choice: as Area167_ChoiceTail32At14Even with variable 5 = (answer != 0). docs/area_w4a.md."
+
+[[func]]
+pc = 0x425D80
+name = "Area167_ChoiceTail32AtA"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425D80..0x425DAC (0x2D), cdecl, capstone to the last instruction, group AR4A. area 167 +0x34[3] and [4], a choice: message 0xFFFF; answer byte 0: ScriptFlags_Set40, variable 6 = 0x60, tail kind 0x20 at state 0xA. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425DB0
+name = "Area167_SetByteFE2"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425DB0..0x425DB7 (0x8), cdecl, capstone to the last instruction, group AR4A. area 167 handler 0 = choice 5 (PSX 0x801F3F14); also area 77's handler 20 / choice 22 and area 148's handler 3 / choice 5: Cond_ByteFE = 2. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425DC0
+name = "Area167_HeightBy4B4C"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425DC0..0x425E9D (0xDE), cdecl, capstone to the last instruction, group AR4A. area 167 handler 2 = choice 7 (PSX 0x801F3F58): Cond_ByteFD 2 - flag 0x4C set: cleared, MoveScript_Object +3 = 5, word +0xA = 0xFFFE; flag 0x4B clear: Sprite_Current word +0x3E = 0xFDC0, +0 |= 0x40. Then (read again) 1 - flag 0x4C set: cleared, +3 = 4, word 0xFFFE; flag 0x4B set: +0x3E = 0x9C0, +0 |= 0x40. Else +0x3E = 0x3C0. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425EA0
+name = "Area167_Toggle4BUnlessLow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425EA0..0x425ECE (0x2F), cdecl, capstone to the last instruction, group AR4A. area 167 handler 3 = choice 8 (PSX 0x801F4080): Sprite_Current word +0x3E 0x3C0: MoveScript_Object word +0xA + 8; else +0 bit 6 cleared, Flags_Toggle(0x904030, 0x4B). docs/area_w4a.md."
+
+[[func]]
+pc = 0x425ED0
+name = "Area167_Skip3Unless4B"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425ED0..0x425EED (0x1E), cdecl, capstone to the last instruction, group AR4A. area 167 handler 4 = choice 9 (PSX 0x801F40F4): flag 0x4B clear: MoveScript_Object word +0xA + 3. docs/area_w4a.md."
+
+[[func]]
+pc = 0x425EF0
+name = "Area167_HeightBy48To4A"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x425EF0..0x42600D (0x11E), cdecl, capstone to the last instruction, group AR4A. area 167 handler 5 = choice 10 (PSX 0x801F4140): Cond_ByteFD 2 - flag 0x4A set: cleared, MoveScript_Object word +0xA = 0xFFFE, +3 = 7 (byte 0x905E68 0) or 8; flag 0x48 clear: Sprite_Current +0x3E = 0x9C0 (flag 0x49 clear) or 0xFDC0, +0 |= 0x40. Then (read again) 1 - flag 0x4A set: cleared, +3 = 7, word 0xFFFE; flag 0x49 clear: +0x3E = 0x9C0, +0 |= 0x40. Else +0x3E = 0x3C0. docs/area_w4a.md."
+
+[[func]]
+pc = 0x426010
+name = "Area167_Flags48By49"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x426010..0x426093 (0x84), cdecl, capstone to the last instruction, group AR4A. area 167 handler 6 = choice 11 (PSX 0x801F42C4): Sprite_Current word +0x3E 0x3C0: MoveScript_Object word +0xA + 8; else +0 bit 6 cleared and by Cond_ByteFD (read once) 1: flag 0x48 set, 0x49 cleared; 2: 0x48 cleared, 0x49 set; 3: both cleared. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4260A0
+name = "Area167_Skip3ByChapter"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4260A0..0x4260D2 (0x33), cdecl, capstone to the last instruction, group AR4A. area 167 handler 7 = choice 12 (PSX 0x801F43B8): Cond_ByteFD 2 - variable 5 not 0: done, else MoveScript_Object word +0xA + 3; then Cond_ByteFD (read again) 1: + 3. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4260E0
+name = "Area167_SetByteFE10"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4260E0..0x4260E7 (0x8), cdecl, capstone to the last instruction, group AR4A. area 167 handler 10 = choice 15 (PSX 0x801F4480): Cond_ByteFE = 0x10. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4260F0
+name = "Area167_Tail32"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4260F0..0x42643F (0x350), cdecl, capstone to the last instruction, group AR4A. Field_ModeTailKinds[32] (0x662D68): a switch on the s8 0x9039F4 (above 0x20 unsigned nothing) through the byte table 0x426440 and the jump table 0x426408 (14) inside the function: state 0 Party_DropIn(0); 1 on variable 6 0x18 Field_ChangeArea(0x95, 0x80000, 0xC0000, 0x81); 5 / 6 a sound and a countdown 0x9039F6; 0xA / 0xB / 0xC party drop-in 5, a change to area 0xA7 by Cond_ByteFD, flags 0x4B / 0x4C; 0x14 / 0x15 drop-ins 2 / 8; 0x18 a change to area 0xA7 by variable 5 and flags 0x48..0x4A; 0x1E..0x20 a wait on MoveScript_WaitWordDA, Cond_ByteFE = 0x20, a countdown, flag 0x90, Field_ChangeArea(0xA8, 0x150000, 0x40000, 7), Field_ScriptFlags2 bit 6. docs/area_w4a.md section 6 has every case. docs/area_w4a.md."
+
+[[func]]
+pc = 0x426470
+name = "Area167_ArriveHook"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x426470..0x42649D (0x2E), cdecl, capstone to the last instruction, group AR4A. Area_ArriveHook's case for area 167: z's high word 0x66 and x's high word - 0x14 below 3 (u16): ScriptFlags_Set40, tail kind 0x20 at state 0, al 1; else al 0. docs/area_w4a.md."
+
+[[func]]
+pc = 0x4264A0
+name = "Area167_CellHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x4264A0..0x42650B (0x6C), cdecl, capstone to the last instruction, group AR4A. Area_CellHooks' entry for area 167: the one switch record 0x63C594 (x, z, facing & 0xF, flag) against the argument bytes and the leader's whole facing byte; none al 0, else Flags_Toggle(0x904030, its flag), ScriptFlags_Set40, tail kind 0x20 at state 5, al 1. docs/area_w4a.md."
+
+[[func]]
+pc = 0x426510
+name = "Area167_Init"
+ret = "void"
+params = "void"
+impl = "src/game/area_w4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x426510..0x42655C (0x4D), cdecl, capstone to the last instruction, group AR4A. area 167 +0x40, the init (PSX 0x801F49F0): Cond_ByteFD 0, flag 0x8F set and 0x90 clear: Camera_Distance = 0x980, tail kind 0x20 at state 0x1E. docs/area_w4a.md."
+
+[[data]]
+pc = 0x637344
+name = "Area152_PlaceRows"
+ctype = "unsigned short"
+count = 48
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_PlaceMessage: three rows of 0x20 bytes (u16 place, fifteen u16 messages by the chapter byte), searched in bounds; the row count 3 (none) reads the plate state table as row 3. docs/area_w4a.md."
+
+[[data]]
+pc = 0x637288
+name = "Area152_PlateAnims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_PlateShow: (u16 place, u8 animation, u8) x 3, searched with no bound. docs/area_w4a.md."
+
+[[data]]
+pc = 0x637294
+name = "Area152_Cells"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_Record4MarkCell by +0xB (unchecked): (x, z, -, -) x 2, then the descriptor's +0x20 data; WorldMap_Records[10] +0x14 names it. docs/area_w4a.md."
+
+[[data]]
+pc = 0x6373A4
+name = "Area152_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_PlateStart, _PlateShow, _PlateGrow, _PlateHold, _PlateShrink; Area152_PlateRun's by +1. docs/area_w4a.md."
+
+[[data]]
+pc = 0x6373B8
+name = "Area152_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: WorldMapHud_Start (shared), Area152_HudFrame; Area152_HudRun's by +1. docs/area_w4a.md."
+
+[[data]]
+pc = 0x6373C0
+name = "Area152_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: WorldMap_FrameWait (shared), Area152_FrameSlideIn, _FrameHold, _FrameSlideOut; Area152_FrameStep's by +2. docs/area_w4a.md."
+
+[[data]]
+pc = 0x6373D0
+name = "Area152_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: WorldMapHud_BoxWait (shared), Area152_BoxSlideIn, _BoxHold, _BoxSlideOut; Area152_BoxStep's by +3. docs/area_w4a.md."
+
+[[data]]
+pc = 0x6373E0
+name = "Area152_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_DrawSprite: (w, h, u, v) x 22 by the index byte. docs/area_w4a.md."
+
+[[data]]
+pc = 0x637438
+name = "Area152_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_DrawFrame: (u16 mask, u8 sprite, u8) x 6; the second legend reads eight (the seventh and eighth are Area152_Record8States' words). docs/area_w4a.md."
+
+[[data]]
+pc = 0x637450
+name = "Area152_Record8States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_Record8Spawn (every world map's state 0), Area152_Record8Place, Area65_Record8Move; Area152_Record8Run's by +1. docs/area_w4a.md."
+
+[[data]]
+pc = 0x63745C
+name = "Area152_Directions"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_Record8Place: (s16 x, s16 z) x 4 by +8. docs/area_w4a.md."
+
+[[data]]
+pc = 0x63746C
+name = "Area152_Record8Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_Record8Place: (animation, +0x2A) x 4 by +8. docs/area_w4a.md."
+
+[[data]]
+pc = 0x637474
+name = "Area152_Record4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_Record4MarkCell, Area45_Record4Tick (shared); Area152_Record4Run's by +1. docs/area_w4a.md."
+
+[[data]]
+pc = 0x63747C
+name = "Area152_DriftUV"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area152_DrawDrift: u base, v base, cell size (four bytes each) by +0xB - 2. docs/area_w4a.md."
+
+[[data]]
+pc = 0x63841C
+name = "Area153_ChoicePairs"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area153_ChoiceFocusPair: byte pairs by the s8 answer (unchecked; the count is the choices', not read here). docs/area_w4a.md."
+
+[[data]]
+pc = 0x638994
+name = "Area154_ChoicePairs"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area154_ChoiceFocusPair: byte pairs by the s8 answer (unchecked). docs/area_w4a.md."
+
+[[data]]
+pc = 0x63A79C
+name = "Area166_ChoicePairs"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area166_ChoiceFocusPair: byte pairs by the s8 answer (unchecked). docs/area_w4a.md."
+
+[[data]]
+pc = 0x63C510
+name = "Area167_Choices"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: area 167 descriptor 0x63C550 +0x34: Area167_ChoiceTail32At15, _At14Even, _At14, _AtA twice, then Area167_Handlers from its first entry (choices 5..15 are handlers 0..10). docs/area_w4a.md."
+
+[[data]]
+pc = 0x63C524
+name = "Area167_Handlers"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: area 167 descriptor +0x3C: Area167_SetByteFE2, Area146_ClearFlag46, Area167_HeightBy4B4C, _Toggle4BUnlessLow, _Skip3Unless4B, _HeightBy48To4A, _Flags48By49, _Skip3ByChapter, Area146_ToExtraObject0, 0x42C8A0 (group AR4F's), Area167_SetByteFE10. docs/area_w4a.md."
+
+[[data]]
+pc = 0x63C594
+name = "Area167_Switch"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR4A: Area167_CellHook: one (x, z, facing in the low nibble, story flag) record, searched in bounds. docs/area_w4a.md."
