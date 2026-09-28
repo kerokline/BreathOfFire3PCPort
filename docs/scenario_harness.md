@@ -209,6 +209,13 @@ load path is not covered by this proof (`Scena00_Start` waits on
 - **Run the real load.** `Task_Sleep`, `File_LoadDone`, `LoadDatFile` are
   recorders; `Scenario_Start(n)` has no harness path yet.
 
+
+The round-ten notes in [`magic_harness.md`](magic_harness.md) §5 (an `args`
+hook that writes memory is lost, a `kPhase` callee's `effect` never runs,
+effects draw from `Noise()` only, an entry `jmp` refused by `CloneOriginal`,
+a clone past 64 call sites copied by the fuzz file) hold here too: SX, SC12
+and SC5 met them through this harness.
+
 ## 6. Shadow name and self-test
 
 The harness has no shadow name of its own: each group's is its module's

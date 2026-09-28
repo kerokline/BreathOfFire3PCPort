@@ -188,6 +188,14 @@ Everything the spell harness cannot ([`magic_harness.md`](magic_harness.md)
 - **Know what the flags mean.** A flag test's answer is the recorder's; a
   group whose function reads `Cond_Flags` directly seeds each bit it tests.
 
+
+The round-ten notes in [`magic_harness.md`](magic_harness.md) §5 (an `args`
+hook that writes memory is lost, a `kPhase` callee's `effect` never runs,
+effects draw from `Noise()` only, an entry `jmp` refused by `CloneOriginal`,
+a clone past 64 call sites copied by the fuzz file) hold here too: AR1F,
+AR3C and the areas whose inits open with a `jmp` met them through this
+harness.
+
 ## 6. Shadow name and self-test
 
 The harness has no shadow name of its own: each group's is its module's

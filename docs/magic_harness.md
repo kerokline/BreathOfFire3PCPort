@@ -178,6 +178,41 @@ standard set.
   arguments are what the group says. A wrong mask hides a difference in
   the bits masked off; a wrong count logs garbage the same on both sides.
 
+
+**Learned in round ten** (2026-09-28, [`round-10-cleanup.md`](round-10-cleanup.md)
+item 5; the three harnesses share the round loop and the recorders, so each
+holds for [`scenario_harness.md`](scenario_harness.md) and
+[`area_harness.md`](area_harness.md) too):
+
+- **An `args` hook that writes memory is lost.** The round captures the
+  input state right after `seed` and before the arguments are drawn
+  (`Capture(input)` precedes `group.args` in every `Run`), and `Apply`
+  restores that state for each pass: a plant that must change memory goes
+  in `Seed`; `args` is for the argument words only (SX kept the words its
+  seed chose in a global for `args`, [`scena_sx.md`](scena_sx.md) §5).
+- **A `kPhase` callee never runs its `effect`.** The recorder for a
+  `kPhase` answer logs, disturbs and returns before the `effect` call; a
+  louder stand-in on a phase callee wants `kGarbage` with no arguments
+  (AR1F, [`area_w1f.md`](area_w1f.md) §5: four stand-ins silently dead
+  until switched).
+- **Effects and every group callback draw from `Noise()` only**, never
+  `MH_PICK` / `AH_PICK` / `SH_PICK` or `Next()`: those advance the round's
+  shared draw, and an effect runs on both passes, so the passes diverge
+  (AR3C: 1,727 false mismatches in area 128, [`area_w3c.md`](area_w3c.md)
+  §4; the `disturb` rule of section 4 generalised).
+- **`CloneOriginal` refuses an entry that opens with a `jmp`** (an `E9`
+  not listed as a call site reads as a patch). Capcom's own inits of areas
+  63, 64, 72, 73, 110, 124, 125 and 192 open with a 5-byte `jmp` over
+  eleven `nop`s: clone from the `jmp`'s target (the body, `+0x10`), with
+  the clone table's offsets from there ([`area_w1d.md`](area_w1d.md) §4).
+  `BOF3_INJECT` has no such guard, so ours is injected at the entry as
+  usual.
+- **A clone with more than 64 call sites is copied by the fuzz file
+  itself** (`bof3::CloneOriginal` with every site re-aimed at a trampoline
+  into `StandIn`, the jump tables relocated), and the harness is handed a
+  six-byte `jmp [copy]` as the original: SC12 and SC5 are the models
+  ([`scena_sc12.md`](scena_sc12.md) §4, [`scena_sc5.md`](scena_sc5.md) §4).
+
 ## 6. Shadow name and self-test
 
 The harness has no shadow name of its own: each group's is its module's

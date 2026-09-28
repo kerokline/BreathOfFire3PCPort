@@ -19,7 +19,10 @@ python tools/area_rows.py --exe .../bof3/BOF3.exe --analysis .../analysis \
 
 The flags are `magic_rows.py`'s (`--exe`, `--analysis`, `--sibling`,
 `--symbols`, `--unit`, `--clones`, `--quiet`) plus `--groups` and
-`--group-size` (default 50). It writes `analysis/area_rows.tsv` (an area a
+`--group-size` (default 50), and `--no-write` (2026-09-28: a read-only run -
+the TSVs are written from the running checkout's `symbols.toml` into the
+`--analysis` directory the tool reads, so a worktree's run overwrote the main
+checkout's; [`round-10-cleanup.md`](round-10-cleanup.md) item 4). It writes `analysis/area_rows.tsv` (an area a
 line: its descriptor, root counts, closure, exclusive functions, unit, group,
 the routes that reach it, every start of its block) and
 `analysis/area_funcs.tsv` (a function a line: start, size, unit, `exclusive` /

@@ -415,6 +415,8 @@ def main():
     ap.add_argument('--groups', action='store_true', help='print the proposed groups')
     ap.add_argument('--group-size', type=int, default=50, help='functions not yet ours a group aims at (default 50)')
     ap.add_argument('--quiet', action='store_true', help='write the TSVs, print only the totals')
+    ap.add_argument('--no-write', action='store_true',
+                    help='do not write area_rows.tsv / area_funcs.tsv into --analysis (a read-only run, e.g. from a worktree whose symbols.toml differs)')
     a = ap.parse_args()
 
     img = mr.Image(a.exe)
@@ -848,10 +850,12 @@ def main():
     def source(x):
         return ('R' if x in recorded else '') + ('H' if x in hidden else '') + ('S' if x in found else '')
 
-    os.makedirs(a.analysis, exist_ok=True)
-    rows_tsv = os.path.join(a.analysis, 'area_rows.tsv')
     unit_by_area = {k: u for u in units for k in u['areas']}
-    with open(rows_tsv, 'w', encoding='utf-8') as f:
+    rows_tsv = os.path.join(a.analysis, 'area_rows.tsv')
+    funcs_tsv = os.path.join(a.analysis, 'area_funcs.tsv')
+    if not a.no_write:
+        os.makedirs(a.analysis, exist_ok=True)
+    with open(rows_tsv if not a.no_write else os.devnull, 'w', encoding='utf-8') as f:
         f.write('area\tworld\tdescriptor\tchoice\thandlers\tinit\tstep_hook\tarrive_hook\tcell_hook\ttail_kinds\t'
                 'world_map_record\tdata_roots\tclosure\texclusive\tunit\tgroup\tfirst\tlast\tfunctions\tbytes\tours\t'
                 'live\tfunction_starts (addr:size, * ours)\n')
@@ -871,8 +875,7 @@ def main():
                 '%#x' % u['funcs'][0] if u else '', '%#x' % u['funcs'][-1] if u else '',
                 len(u['funcs']) if u else '', u['bytes'] if u else '', len(u['ours']) if u else '', ','.join(lv),
                 ','.join('%X:%X%s' % (x, funcs[x].end - x, '*' if x in ours else '') for x in u['funcs']) if u else ''))
-    funcs_tsv = os.path.join(a.analysis, 'area_funcs.tsv')
-    with open(funcs_tsv, 'w', encoding='utf-8') as f:
+    with open(funcs_tsv if not a.no_write else os.devnull, 'w', encoding='utf-8') as f:
         f.write('start\tsize\tunit\tblock\tgroup\tsource\tours\treached_by\troots\tlive\tcatalogue\n')
         for x in starts:
             u = unit_of(x)
@@ -1036,7 +1039,10 @@ def main():
             print('%-24s %#-9x %#-9x %4d %4d %7d %4d  %s' % (
                 u['name'][:24], u['lo'], u['hi'], len(u['funcs']), sum(ex.get(k, 0) for k in u['areas']),
                 u['bytes'], len(u['ours']), u.get('group', '')))
-    print('\nwrote %s, %s' % (rows_tsv, funcs_tsv))
+    if a.no_write:
+        print('\n(--no-write: %s, %s not written)' % (rows_tsv, funcs_tsv))
+    else:
+        print('\nwrote %s, %s' % (rows_tsv, funcs_tsv))
 
 
 def print_groups(groups, funcs, live):
