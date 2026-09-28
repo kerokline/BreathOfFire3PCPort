@@ -105,13 +105,14 @@ void SeedHp(bool quarter) {
 // The Run's clones (RunKind sets it): a dispatcher's other state bytes are
 // seeded inside its table most of the time, so a dispatcher that read the
 // wrong byte would land on another entry (a count) rather than past its table
-// (a Fatal). Never the byte the harness drew.
+// (a Fatal). Every round: the handlers' recorders log the four bytes, and a
+// byte past a table is a Fatal on both sides. Never the byte the harness drew.
 const bh::Clone* g_clones;
 void SeedStates(unsigned k) {
     const bh::Clone& c = g_clones[k];
     if (c.shape != S::kDispatch || c.states == 0) return;
     for (unsigned b = 1; b <= 4; ++b)
-        if (b != c.state_at && bh::Often()) Sprite_Current[b] = static_cast<unsigned char>(bh::Next() % c.states);
+        if (b != c.state_at) Sprite_Current[b] = static_cast<unsigned char>(bh::Next() % c.states);
 }
 
 // Kinds 1 and 39's end walk: MoveCmd_OpE9's answer is the standard kFlag;
@@ -361,6 +362,15 @@ void SeedWeretigr(unsigned k) {
         break;
     }
 }
+// What State4Cue reads again after its first cue: the word at 0x939AD8's
+// +0xF8 (every enemy's +0xF8 is the same harness record, so the standard
+// disturbance moving 0x939AD8 does not show a re-read). From the hash only.
+void DisturbWeretigr(U h) {
+    if ((h >> 8) % 3 != 0) return;
+    unsigned char* const e = bh::Pointer(bh::at::kEnemyCurrent);
+    SetWord(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(move_script::Long(e + 0xF8)))), h >> 16);
+}
+
 void ArgsWeretigr(unsigned k, U* a) {
     if (k == kWHook || k == kWPick) HookWord(a);
 }
@@ -373,10 +383,10 @@ bool Wants(const char* run) {
 }
 
 void RunKind(const char* run, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables, void (*seed)(unsigned),
-             void (*args)(unsigned, U*), int fight, int kind) {
+             void (*args)(unsigned, U*), int fight, int kind, void (*disturb)(U) = nullptr) {
     if (!Wants(run)) return;
     g_clones = clones;
-    bh::Group g{"boss_sa", clones, n, kCallees, SA_COUNT(kCallees), tables, n_tables, kRegions, SA_COUNT(kRegions), seed, nullptr, 6000};
+    bh::Group g{"boss_sa", clones, n, kCallees, SA_COUNT(kCallees), tables, n_tables, kRegions, SA_COUNT(kRegions), seed, disturb, 6000};
     g.args = args;
     g.fight = fight;
     g.kind = kind;
@@ -401,7 +411,8 @@ void SelfTest() {
     RunKind("b2", kClones02, SA_COUNT(kClones02), nullptr, 0, &SeedBoss002, &Args02, 2, -1);
     RunKind("b3", kClones03, SA_COUNT(kClones03), nullptr, 0, &SeedBoss002, nullptr, 3, -1);
     RunKind("b39", kClones39, SA_COUNT(kClones39), nullptr, 0, &SeedBoss002, nullptr, 39, -1);
-    RunKind("k39", kClonesWeretigr, SA_COUNT(kClonesWeretigr), kTablesWeretigr, SA_COUNT(kTablesWeretigr), &SeedWeretigr, &ArgsWeretigr, 33, 39);
+    RunKind("k39", kClonesWeretigr, SA_COUNT(kClonesWeretigr), kTablesWeretigr, SA_COUNT(kTablesWeretigr), &SeedWeretigr, &ArgsWeretigr, 33, 39,
+            &DisturbWeretigr);
 }
 
 }  // namespace boss_sa
