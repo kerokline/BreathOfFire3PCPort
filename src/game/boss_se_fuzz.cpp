@@ -101,8 +101,11 @@ const bh::Region kRegions[] = {
     {0x66C810, 4},               // MoveScript_WaitWordDA
 };
 
-// The clones of the run in progress, for Args.
+// The clones of the run in progress, for Args; the code Boss25_Event's seed
+// picked for the round (a seed plants, Args hands it over: an args hook's
+// writes to memory would be lost, docs/boss_harness.md section 6).
 const bh::Clone* g_clones = nullptr;
+U g_code = 0;
 
 unsigned char& B(U address) { return Mem(address)[0]; }
 U Above() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
@@ -115,7 +118,7 @@ void Args(unsigned k, U* a) {
     if (c.shape == S::kEnemyHook) {
         a[0] = Above() | (bh::Next() % 3);
     } else if (c.base == 0x43BF00) {
-        a[0] = Above() | BH_PICK(0, 3, 0, 3, 1, 2, 4, 5, 6, 0xFF, 0x80, 0x103);
+        a[0] = Above() | g_code;
     } else if (c.base == 0x43C230) {
         a[0] = Above() | BH_PICK(0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 0xFF, 0x80);
     }
@@ -365,16 +368,31 @@ const bh::Clone kClonesB25[] = {
     Row("Boss25_End", 0x43C180, 0x29, kCalls43C180, BH_N(kCalls43C180), BH_FN(Boss25_End), 0, S::kEnd),
     Row("Boss25_Exit", 0x43C1B0, 0x4A, kCalls43C1B0, BH_N(kCalls43C1B0), BH_FN(Boss25_Exit), 0, S::kExit),
 };
+// Boss25_Event's code 3 walks the script bits 0x904AAD in turn: the seed
+// picks the step a round is aimed at (each bit before it set, it clear, the
+// rest random) and the phase and step that step tests, or any; code 0 walks
+// the round's count 0..7.
 void SeedB25(unsigned k) {
     switch (k) {
     case 1: {
-        // the script bits: each of 0x20, 0x10, 1, 2, 4 set or clear, so every
-        // step of code 3 is reached; the phase, its step and the round
-        static const U kBits[] = {0, 0x20, 0x30, 0x31, 0x33, 0x37, 0x17, 0x07, 0x36, 0x35, 0x3F, 0xFF, 0xC7};
-        B(at::kScript) = static_cast<unsigned char>(bh::Often() ? kBits[bh::Next() % BH_COUNT(kBits)] : bh::Next());
-        B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 3, 3, 0, 2, 5) : bh::Next());
+        const U pick = bh::Next() % 10;
+        g_code = pick < 3 ? 0 : pick < 9 ? 3 : BH_PICK(1, 2, 4, 5, 6, 0xFF, 0x80);
+        const auto bits = static_cast<unsigned char>(bh::Next());
+        const U step = bh::Next() % 7;
+        switch (step) {
+        case 0: B(at::kScript) = static_cast<unsigned char>(bits & ~0x20u); break;
+        case 1: B(at::kScript) = static_cast<unsigned char>((bits | 0x20) & ~0x10u); break;
+        case 2: B(at::kScript) = static_cast<unsigned char>((bits | 0x30) & ~1u); break;
+        case 3: B(at::kScript) = static_cast<unsigned char>((bits | 0x31) & ~2u); break;
+        case 4: B(at::kScript) = static_cast<unsigned char>((bits | 0x33) & ~4u); break;
+        case 5: B(at::kScript) = static_cast<unsigned char>(bits | 0x37); break;
+        default: B(at::kScript) = bits; break;
+        }
+        // the task's phase 1 for step 0, the order's phase 3 for step 1
+        B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? (step < 2 && bh::Often() ? 1 + 2 * step : BH_PICK(1, 3, 0, 2, 5))
+                                                               : bh::Next());
         B(at::kStep) = static_cast<unsigned char>(bh::Often() ? 0 : bh::Next());
-        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
+        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? (bh::Half() ? BH_PICK(4, 6) : bh::Next() % 8) : bh::Next());
         B(at::kMember0State1) = static_cast<unsigned char>(bh::Often() ? BH_PICK(2, 6, 2, 6, 0, 3) : bh::Next());
         B(at::kMember0State2) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0, 1, 2) : bh::Next());
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kFlags) | 0x40 : B(at::kFlags) & ~0x40u);
