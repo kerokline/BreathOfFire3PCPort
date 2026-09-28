@@ -192,6 +192,7 @@
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
 #include "game/area_w2d.h"
+#include "game/area_w2e.h"
 #include "game/area_w2c.h"
 #include "game/area_w1f.h"
 #include "game/area_w3a.h"
@@ -661,6 +662,10 @@ void InjectAll() {
     AreaW3b_Inject();           // round 10 group AR3B (world 3, areas 120..121, 0x41A9D0..0x41C890): its clones'
                                 // calls re-aimed at the area harness's recorders, area 121's .data state tables
                                 // swapped for the fuzz only; no module patches bytes inside its 54 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW2e_Inject();           // round 10 group AR2E (world 2, areas 104..106, 0x4146C0..0x4168E0): its clones'
+                                // calls re-aimed at the area harness's recorders, area 104's six .data state tables
+                                // swapped for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
     AreaW1f_Inject();           // round 10 group AR1F (world 1, areas 68..69 and 71..75, 0x40CEF0..0x40EB90): its clones'
                                 // calls re-aimed at the area harness's recorders, its .data state tables swapped for
