@@ -75,15 +75,48 @@ std::uint32_t PartyEffect(const std::uint32_t*, std::uint32_t answer) {
 // the animation's low byte - Sprite_SetFrameQueueUpload takes frame & 0xFF -
 // and the original pushes a register whose upper bytes are leftovers), and the
 // four engine functions nobody owns, with their arities (boss_sh_callees.h).
+// Louder than the real ones where the caller reads a cell again after the
+// call: 0x446DE0 moves the chapter step (Boss34_End increments it after the
+// call); AbilityList_Add moves the picked member 0x675F08 (read again before
+// the second call); 0x437450, 0x4376F0 and BattleEnemy_ScriptTick re-point
+// Sprite_Current at an enemy a third of the time (the Angler's steps read it
+// again after each). BattleTask_Create answers one of the last three slots a
+// third of the time, where the spawn hook's copy from below the enemies (an
+// actor 0..2) overlaps its destination and rep movsd's forward order shows.
+std::uint32_t StepEffect(const std::uint32_t*, std::uint32_t answer) {
+    Mem(0x8034E5)[0] = static_cast<unsigned char>(bh::Noise());
+    return answer;
+}
+std::uint32_t PickedEffect(const std::uint32_t*, std::uint32_t answer) {
+    Mem(at::kPicked)[0] = static_cast<unsigned char>(bh::Noise() % 3);
+    return answer;
+}
+std::uint32_t SpriteEffect(const std::uint32_t*, std::uint32_t answer) {
+    const U n = bh::Noise();
+    if (n % 3 == 0) Sprite_Current = bh::EnemyAt(n >> 8);
+    return answer;
+}
+std::uint32_t SlotEffect(const std::uint32_t*, std::uint32_t answer) {
+    const U n = bh::Noise();
+    return n % 3 == 0 ? (answer & 0xFFFFFF00u) | (45 + (n >> 8) % 3) : answer;
+}
+
 const bh::Callee kCallees[] = {
+    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &StepEffect},
+    {"AbilityList_Add", ::bof3::addr::AbilityList_Add, KeyOf(&::AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, bh::Answer::kFlag, 0, 0,
+     {}, &PickedEffect},
+    {"BattleEnemy_ScriptTick", ::bof3::addr::BattleEnemy_ScriptTick, KeyOf(&::BattleEnemy_ScriptTick), 0, {}, bh::Answer::kFlag, 0, 0,
+     {}, &SpriteEffect},
+    {"BattleTask_Create", ::bof3::addr::BattleTask_Create, KeyOf(&::BattleTask_Create), 2, {kU8, kU8}, bh::Answer::kByte, 0, 47, {},
+     &SlotEffect},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &PartyEffect},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll},
      bh::Answer::kGarbage, 0, 0, {}, &PartyEffect},
     {"0x446700", at::kOrderFront, at::kOrderFront, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
-    {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0},
+    {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
     {"0x4376A0", at::kEnemyActEnd, at::kEnemyActEnd, 0, {}, bh::Answer::kGarbage, 0, 0},
-    {"0x4376F0", at::kEnemyActChance, at::kEnemyActChance, 0, {}, bh::Answer::kGarbage, 0, 0},
+    {"0x4376F0", at::kEnemyActChance, at::kEnemyActChance, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
 };
 
 // The cells beyond the harness's battle frame the 46 read or write.
@@ -365,7 +398,7 @@ void SeedK43(unsigned k) {
         const U pick = bh::Next() % 9;
         s[1] = static_cast<unsigned char>(pick < 6 ? 7 : pick == 6 ? 6 : pick == 7 ? 7 : bh::Next());
         s[2] = static_cast<unsigned char>(pick < 6 ? 1 : pick == 6 ? 1 : pick == 7 ? BH_PICK(0, 2, 0x81) : bh::Next());
-        B(bh::at::kActor) = static_cast<unsigned char>(bh::Often() ? 3 + bh::Next() % 8 : bh::Next() % 11);
+        B(bh::at::kActor) = static_cast<unsigned char>(bh::Half() ? 3 + bh::Next() % 8 : bh::Next() % 11);
         break;
     }
     default: break;
