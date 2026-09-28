@@ -4,7 +4,7 @@
 (`src/game/scena_sc13.cpp`, shadow name `scena_sc13`), fuzzed headless
 through the scenario harness ([`scenario_harness.md`](scenario_harness.md)),
 two runs (chapter 13's 23 with `Cond_ByteFA` 13, chapter 14's 28 with 14):
-0 mismatches in 816,000 rounds (16,000 a function); CONTROLS_LINE. Fuzz only:
+0 mismatches in 816,000 rounds (16,000 a function); 238 of 240 negative controls refused by a count, the other two equivalent mutants whose near variants are refused. Fuzz only:
 no recorded route reaches chapters 13 or 14 (section 8).
 
 Group SC13 of round ten's third wave
@@ -303,9 +303,9 @@ and chapter 14's with 14:
   `Flags_Test`.
 
 **Result, in this worktree** (`BOF3X_SELFTEST_ONLY=1
-BOF3X_SHADOW=scena_sc13`, exit 0, at `6e0b7a3`): chapter 13, 368,000
-rounds, 514,907 calls to the stand-ins, **0 mismatches**; chapter 14,
-448,000 rounds, 492,187 calls, **0 mismatches**. Every callee of the group's list and
+BOF3X_SHADOW=scena_sc13`, exit 0, at `cf0ea5a`): chapter 13, 368,000
+rounds, 513,825 calls to the stand-ins, **0 mismatches**; chapter 14,
+448,000 rounds, 491,458 calls, **0 mismatches**. Every callee of the group's list and
 every table entry is reached (coverage in the log); the thinnest:
 `Scenario_CallB` 54 (area 0xBF of
 chapter 14's enter-area, behind three flags), `0x4205D0` 68, `Field_ViewReset`
@@ -319,7 +319,283 @@ entry about 1,500..5,400 times. `BOF3X_SHADOW='*'`: exit 0.
 planted in `scena_sc13.cpp` on a unique anchor, rebuilt, the self-test run,
 restored, and rebuilt at the end. Refused = exit 3 on a mismatch.
 
-CONTROLS_TABLE
+| Id | Mutant | Result |
+|---|---|---|
+| F1 | frame13: state 1 read as 2 | refused (exit 3) |
+| F2 | run13: run 3 read as 4 | refused (exit 3) |
+| F3 | objtrig13: the row not passed | refused (exit 3) |
+| F4 | objtrig13: index + 1 below 3 | refused (exit 3) |
+| S1 | start13: story flag 0x44 | refused (exit 3) |
+| S2 | start13: state 2 | refused (exit 3) |
+| E1 | enter13: 0x56 word 0x71 | refused (exit 3) |
+| E2 | enter13: 0x58 angle 0xFD2B | refused (exit 3) |
+| E3 | enter13: 0x70 FD 3 | refused (exit 3) |
+| E4 | enter13: 0x7E run 2 | refused (exit 3) |
+| E5 | enter13: 0x8F life 0xFE | refused (exit 3) |
+| E6 | enter13: 0x8F area code arg 2 | refused (exit 3) |
+| E7 | enter13: 0x90 fade 0x11 | refused (exit 3) |
+| E8 | enter13: 0x91 FD 4 drop-in 7 | refused (exit 3) |
+| E9 | enter13: 0xC2 distance 0xF201 | refused (exit 3) |
+| E10 | enter13: 0xC2 flag 5 for 4 | refused (exit 3) |
+| E11 | enter13: state 1 at the end | refused (exit 3) |
+| E12 | enter13: 0x56 second test FD 1 | refused (exit 3) |
+| E13 | enter13: 0x90 FD read once (before the flag) | refused (exit 3) |
+| P1 | pair: the first record kept when the second fails | refused (exit 3) |
+| P2 | pair: slot word b for a | refused (exit 3) |
+| P3 | pairB: records 3 / 2 | refused (exit 3) |
+| R1a | run1: counter 9 | refused (exit 3) |
+| R1b | run1: area x 0x4E8000 | refused (exit 3) |
+| R1c | run1: bit 3 cleared after Clear40 | refused (exit 3) |
+| R2a | run2: counter 4 | refused (exit 3) |
+| R2b | run2: kind 0x76 | refused (exit 3) |
+| R2c | run2: stream 1 | refused (exit 3) |
+| R2d | run2: transition 0xA | refused (exit 3) |
+| R2e | run2: flags 0x82 | refused (exit 3) |
+| R3a | run3: step 0 z 0x298 | refused (exit 3) |
+| R3b | run3: step 1 offset 0xF000 | refused (exit 3) |
+| R3c | run3: 0x591920 arg 0xC | refused (exit 3) |
+| R3d | run3: request set before the message | refused (exit 3) |
+| R3e | run3: track 0x5D | refused (exit 3) |
+| R3f | run3: timer 0x45 | refused (exit 3) |
+| R3g | run3: elevation (z, x) | refused (exit 3) |
+| R3h | run3: step 0xD request tested before the effect | refused (exit 3) |
+| R4a | run4: step 0x1E pass 0 | refused (exit 3) |
+| R4b | run4: step 0x1E step 0 | refused (exit 3) |
+| R4c | run4: spawn arg 6 | refused (exit 3) |
+| R4d | run4: effect arg of the next member | refused (exit 3) |
+| R4e | run4: request after the fade | refused (exit 3) |
+| R4f | run4: flags 0x80 | refused (exit 3) |
+| R4g | run4: offset 0xFE00 | refused (exit 3) |
+| T1 | tones: no absolute value | refused (exit 3) |
+| T2 | tones: shift 4 | refused (exit 3) |
+| T3 | tones: 0xCB0 | refused (exit 3) |
+| T4 | tones: angle not masked | refused (exit 3) |
+| R5a | run5: held bit 0x1000 | refused (exit 3) |
+| R5b | run5: turn 0x20 | refused (exit 3) |
+| R5c | run5: bound 0x4A1 | refused (exit 3) |
+| R5d | run5: bound 0x4DF | refused (exit 3) |
+| R5e | run5: pressed 0x10 | refused (exit 3) |
+| R5f | run5: effect +0x3C | refused (exit 3) |
+| R5g | run5: counter read before Music_Play | refused (exit 3) |
+| R5h | run5: step 1 dial 0x7FF | refused (exit 3) |
+| R5i | run5: slot word 0x7FF | refused (exit 3) |
+| R6a | run6: effect x from angle Y | refused (exit 3) |
+| R6b | run6: counter 0xF | refused (exit 3) |
+| R6c | run6: step 6 z 0x200 | refused (exit 3) |
+| R6d | run6: script bit 0x20 | refused (exit 3) |
+| R6e | run6: object byte 1 | refused (exit 3) |
+| R6f | run6: z to +0x3C | refused (exit 3) |
+| R6g | run6: bit 4 cleared before Clear40 | refused (exit 3) |
+| R6h | run6: clear 0x22 | refused (exit 3) |
+| R6i | run6: step 0x1A pass kept | refused (exit 3) |
+| R6j | run6: object pointer read once | refused (exit 3) |
+| C1 | caption: 31 frames a second | refused (exit 3) |
+| C2 | caption: past the total only | refused (exit 3) |
+| C3 | caption: fade-in bound 0x1F | refused (exit 3) |
+| C4 | caption: text + 0 | refused (exit 3) |
+| C5 | caption: last fade strict | refused (exit 3) |
+| C6 | caption: the clock not re-read | refused (exit 3) |
+| R7a | run7: caption 6 for 4 seconds | refused (exit 3) |
+| R7b | run7: effect x -0x2EB | refused (exit 3) |
+| R7c | run7: timer 0x12B | refused (exit 3) |
+| R7d | run7: step 9 pass kept | refused (exit 3) |
+| R7e | run7: distance + 0x48 | refused (exit 3) |
+| R7f | run7: step 0x16 at 1 | refused (exit 3) |
+| R7g | run7: kind 0x26 | refused (exit 3) |
+| R7h | run7: counter after the drop-in | refused (exit 3) |
+| R7i | run7: step 8 transition first | refused (exit 3) |
+| R8a | run8: record 0 +0x137 | refused (exit 3) |
+| R8b | run8: message 0x4F | refused (exit 3) |
+| R8c | run8: no 0x56D6F0 | refused (exit 3) |
+| R8d | run8: counter 0x29 | refused (exit 3) |
+| O1 | object00: +0x88 | refused (exit 3) |
+| O2 | object01: step 6 | refused (exit 3) |
+| O3 | object02: run 7 | refused (exit 3) |
+| O4 | object03: 0x12 | refused (exit 3) |
+| H1 | step13: 0x56 z range 3 | refused (exit 3) |
+| H2 | step13: 0x70 facing 5 | refused (exit 3) |
+| H3 | step13: 0x7F x 0x38001 | refused (exit 3) |
+| H4 | step13: 0x8F run 8 step 6 | refused (exit 3) |
+| H5 | step13: 0x90 facing not stored | refused (exit 3) |
+| H6 | step13: 0x90 drop-in 1 for others | refused (exit 3) |
+| H7 | step13: 0x90 leader 6 | refused (exit 3) |
+| H8 | step13: 0x91 story flag 0x2E | refused (exit 3) |
+| H9 | step13: 0x97 z range 8 | refused (exit 3) |
+| H10 | step13: 0x9B x 0x28001 | refused (exit 3) |
+| H11 | step13: facing not loaded outside 0x70 | refused (exit 3) |
+| H12 | step13: 0x8F FD 1 reload dropped | refused (exit 3) |
+| A1 | arrive13: x 0x2F | refused (exit 3) |
+| A2 | arrive13: z 0x6B | refused (exit 3) |
+| A3 | arrive13: TestFB x 0x41 | refused (exit 3) |
+| A4 | arrive13: 0x91 answers 1 | refused (exit 3) |
+| G1 | frame14: state 1 read as 2 | refused (exit 3) |
+| G2 | run14: run 2 read as 3 | refused (exit 3) |
+| G3 | objtrig14: the row not passed | refused (exit 3) |
+| G4 | state0: state 2 | refused (exit 3) |
+| GC1 | grey: divisor 4 | refused (exit 3) |
+| GC2 | grey: bit 15 dropped | refused (exit 3) |
+| GC3 | grey: dirty 2 | refused (exit 3) |
+| SE1 | spawn14: z zero-extended | refused (exit 3) |
+| SE2 | spawn14: +0xC life | refused (exit 3) |
+| SE3 | spawn14: answers 2 | refused (exit 3) |
+| SE4 | spawn14: chapter 13s slot cell | refused (exit 3) |
+| X1 | enter14: 0xB pass 1 | refused (exit 3) |
+| X2 | enter14: 0x2B kind 0x23 | refused (exit 3) |
+| X3 | enter14: 0x8D life 0xF1 | refused (exit 3) |
+| X4 | enter14: 0x8D flag 0x19 | refused (exit 3) |
+| X5 | enter14: 0x8E step 5 | refused (exit 3) |
+| X6 | enter14: 0x96 FE 2 | refused (exit 3) |
+| X7 | enter14: 0x96 timer 0x3D | refused (exit 3) |
+| X8 | enter14: 0xAC exit at FD 1 | refused (exit 3) |
+| X9 | enter14: 0xAC y + 1 | refused (exit 3) |
+| X10 | enter14: 0xAC kind 0x99 | refused (exit 3) |
+| X11 | enter14: 0xBD bit 0x20 | refused (exit 3) |
+| X12 | enter14: 0xBF clear 4 | refused (exit 3) |
+| X13 | enter14: 0xC5 byte 4 | refused (exit 3) |
+| X14 | enter14: state 1 at the end | refused (exit 3) |
+| X15 | enter14: 0xBF CallB 1 | refused (exit 3) |
+| U1 | run1_14: music byte + 1 | refused (exit 3) |
+| U2 | run1_14: status bits read before the change | refused (exit 3) |
+| U3 | run1_14: hand y 0x29 | refused (exit 3) |
+| U4 | run1_14: z 0x401 | refused (exit 3) |
+| U5 | run1_14: clear 2 | refused (exit 3) |
+| U6 | run1_14: story 0x78 | refused (exit 3) |
+| U7 | run1_14: 0x904152 = 1 | refused (exit 3) |
+| V1 | run2_14: divisor 239 | refused (exit 3) |
+| V2 | run2_14: bound 0xB5 | refused (exit 3) |
+| V3 | run2_14: divisor 181 | refused (exit 3) |
+| V4 | run2_14: kind 0x24 | refused (exit 3) |
+| V5 | run2_14: step 3 at 1 | refused (exit 3) |
+| V6 | run2_14: record +0x1E 8 | refused (exit 3) |
+| V7 | run2_14: two of the item | refused (exit 3) |
+| V8 | run2_14: step 0x23 + 2 | refused (exit 3) |
+| V9 | run2_14: 0x904153 = 3 | refused (exit 3) |
+| V10 | run2_14: run 4 at the end | refused (exit 3) |
+| V11 | run2_14: step 1 distance from 0xF1 | refused (exit 3) |
+| L1 | leave: record 2 +0x25 | refused (exit 3) |
+| L2 | leave: run 3 | refused (exit 3) |
+| L3 | leave: flags 0x81 | refused (exit 3) |
+| L4 | leave: status bits read before Set40 | refused (exit 3) |
+| W1 | run3_14: entry byte 5 | refused (exit 3) |
+| W2 | run3_14: record +0x1D | refused (exit 3) |
+| W3 | run3_14: counter cleared after the flag | refused (exit 3) |
+| W4 | run3_14: counter 0x1C | refused (exit 3) |
+| W5 | run3_14: counter before the transition | refused (exit 3) |
+| SV1 | scroll: focus 0x7800 | refused (exit 3) |
+| SV2 | scroll: origin + 0x15 | refused (exit 3) |
+| SV3 | scroll: extra + 0x130000 | refused (exit 3) |
+| SV4 | scroll: elevation at the old x | refused (exit 3) |
+| SV5 | scroll: SetElevation h + 1 | refused (exit 3) |
+| SK1 | shake: index & 1 | refused (exit 3) |
+| SK2 | shake: amount 9 bits | refused (exit 3) |
+| SK3 | shake: redraw 3 | refused (exit 3) |
+| Y1 | run4_14: counter 3 0x19 | refused (exit 3) |
+| Y2 | run4_14: effect +1 = 3 | refused (exit 3) |
+| Y3 | run4_14: divisor >> 1 | refused (exit 3) |
+| Y4 | run4_14: step 0x19 | refused (exit 3) |
+| Y5 | run4_14: counter 3 + 2 | refused (exit 3) |
+| Y6 | run4_14: counter 3 = 0x21 | refused (exit 3) |
+| Y7 | run4_14: step 0x12 request 1 | refused (exit 3) |
+| Y8 | run4_14: x 0xFCBD | refused (exit 3) |
+| Y9 | run4_14: step 0x10 slot read before the message | refused (exit 3) |
+| Z1 | run5_14: counter 3 | refused (exit 3) |
+| Z2 | run5_14: distance + 0x59 | refused (exit 3) |
+| Z3 | run5_14: step 0xD no shake while counting | refused (exit 3) |
+| Z4 | run5_14: stream 3 | refused (exit 3) |
+| Z5 | run5_14: bit 3 cleared after the flag | refused (exit 3) |
+| Z6 | run5_14: battle 0x33 | refused (exit 3) |
+| Z7 | run5_14: step 0xC effect kind 0x8F | refused (exit 3) |
+| TB1 | talk: one member more | refused (exit 3) |
+| TB2 | talk: none answers 0xFFFE | refused (exit 3) |
+| TB3 | talk: three bytes | refused (exit 3) |
+| TB4 | talk: request not set | refused (exit 3) |
+| Q1 | run6_14: second lines first | refused (exit 3) |
+| Q2 | run6_14: counter after the talk | refused (exit 3) |
+| Q3 | run6_14: member 5 | refused (exit 3) |
+| Q4 | run6_14: slot word not stepped | refused (exit 3) |
+| Q5 | run6_14: step 0x10 does not fall through | refused (exit 3) |
+| Q6 | run6_14: grey step read before the calls | refused (exit 3) |
+| Q7 | run6_14: hold 0x3B | refused (exit 3) |
+| Q8 | run6_14: 0x55 z 0x430000 | refused (exit 3) |
+| Q9 | run6_14: step 0x40 record 0 | refused (exit 3) |
+| Q10 | run6_14: music byte 9 | refused (exit 3) |
+| Q11 | run6_14: sprite mode 0xF | refused (exit 3) |
+| Q12 | run6_14: frames 9 | refused (exit 3) |
+| Q13 | run6_14: +1 = 4 | refused (exit 3) |
+| Q14 | run6_14: fade step read before the call | refused (exit 3) |
+| N1 | run7_14: step 1 area code 0x420580 | refused (exit 3) |
+| N2 | run7_14: fade 5 | refused (exit 3) |
+| N3 | run7_14: pass 0x1E | refused (exit 3) |
+| N4 | run7_14: view byte 2 | refused (exit 3) |
+| N5 | records: +0x2D | refused (exit 3) |
+| N6 | records: n < 1 | **equivalent** (below) |
+| N6b | records: n <= 2 (near N6) | refused (exit 3) |
+| N13b | cell effect: elevation a signed byte (near N13) | refused (exit 3) |
+| N7 | records: party list + 0 | refused (exit 3) |
+| N8 | records: from record 2 | refused (exit 3) |
+| N9 | run7_14: slot 5 | refused (exit 3) |
+| N10 | run7_14: counter after the flag | refused (exit 3) |
+| N11 | run7_14: kind 0x96 | refused (exit 3) |
+| N12 | cell effect: + 0x81 | refused (exit 3) |
+| N13 | cell effect: elevation unsigned | **equivalent** (below) |
+| N14 | records: slot word n stored before | refused (exit 3) |
+| J1 | objects14: area 0xC1 | refused (exit 3) |
+| J2 | object02_14: who 3 | refused (exit 3) |
+| J3 | object05_14: step 6 | refused (exit 3) |
+| J4 | object06_14: step 0x1D | refused (exit 3) |
+| J5 | object07_14: +0x8C | refused (exit 3) |
+| J6 | objects14: request not set | refused (exit 3) |
+| K1 | step14: x 0x738001 | refused (exit 3) |
+| K2 | step14: byte 0xA7 | refused (exit 3) |
+| K3 | step14: second cell (x + 1, z + 1) | refused (exit 3) |
+| K4 | step14: z fraction from x | refused (exit 3) |
+| K5 | step14: step 0x15 | refused (exit 3) |
+| K6 | step14: FD 3 | refused (exit 3) |
+| I1 | arrive14: bound 0x4F8001 | refused (exit 3) |
+| I2 | arrive14: z range 7 | refused (exit 3) |
+| I3 | arrive14: z bound 0x1D8001 | refused (exit 3) |
+| I4 | arrive14: x16 0x14 | refused (exit 3) |
+| I5 | arrive14: z16 0x1D | refused (exit 3) |
+| I6 | arrive14: 0xAC run 5 | refused (exit 3) |
+| I7 | arrive14: flag 8 for 9 | refused (exit 3) |
+| I8 | arrive14: story 0x7B | refused (exit 3) |
+| I9 | arrive14: fade 9 | refused (exit 3) |
+| I10 | arrive14: 0x94 answers 0 | refused (exit 3) |
+
+**N6 is equivalent.** Chapter 14's run 7 step 0x17 stores 1 to the byte
+`0x903850`, returns when the member count is at most 1, and otherwise
+stores the count there and copies a record per member after the leader.
+The mutant (`n < 1`) differs only at a count of exactly 1, where it goes on
+to store the count - 1, the same byte - and to a copy loop of no passes.
+Every input ends in the same state. Its near variant N6b (`n <= 2`, which
+skips the copy for two members) is refused.
+
+**N13 is equivalent.** The field effect's `+0x3C` is (the elevation's low
+word + 0x80) << 16; reading that word unsigned instead of signed changes
+the sum by 0x10000, which the shift by 16 pushes out of the dword. No
+input can tell them apart. Its near variant N13b (the elevation as a signed
+byte) is refused.
+
+**How the fuzz got here.** The first full pass (at `37dba3d`) left eight of
+238 standing: E13 (`Cond_ByteFD` re-read after `Flags_Set` in area 0x90),
+R6j (the object pointer `0x903804` re-read after `AreaMap_Elevation`), H12
+(the step hook's facing re-loaded after a flag test in 0x8F and stored in
+0x90), U2 and L4 (`Field_StatusBits` read after an area change or
+`ScriptFlags_Set40`), Q6 (an exit of -1 once, refused by a count on its
+own re-run), and the equivalent N6 and N13. Each was the fuzz's fault: the
+group's disturbance reaches its cells about one call in 24. The `settle`
+now moves the status bits (any bit - the functions set or clear bit 0
+afterwards, so moving bit 0 alone hid U2 and L4), the object pointer, and
+for the re-reading functions `Cond_ByteFD` and the facing; the step hook
+got a rectangle testing area 0x90's cell in 0x8F and a settle that moves
+0x8F / FD 1 and 0x90 / FD 2 together. A second full pass (at `6e0b7a3`)
+refused all of those and left H7 (area 0x90's drop-in by who leads, a
+four-flag path) and Y9 (the slot byte re-read after `Msg_OpenScript`):
+area 0x90's rectangle is now weighted three times with the leader byte
+seeded to the values it tests, and the settle moves the chapter's slot
+byte a quarter of the time. The final pass, above, is at `cf0ea5a` (the
+committed fuzz): 238 of 240 refused, every one by a count (exit 3), none
+by a hang, and the two equivalents.
 
 ## 7. Cross-group calls
 
