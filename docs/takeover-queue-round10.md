@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-28) - four waves merged, 1,426 functions, 3,510 -> 4,936 ours; **the scenario round is complete**; the area round has worlds 0 and 1 whole and world 2 to area 103
+**Status:** IN PROGRESS (2026-09-28) - five waves merged, 1,848 functions, 3,510 -> 5,358 ours; **the scenario round is complete**; the area round has worlds 0, 1 and 2 whole and world 3 to area 146
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -589,3 +589,121 @@ AR3G (areas 148..151, 56) waits for wave six with world 4.
 | AR3F | world 3: areas 143..146 (`0x4220D0`, called by AR1D and AR2D by raw address, is in this band) | `0x420800..0x4223A0` | 53 | `area_w3f` |
 
 422 functions.
+
+## 16. Wave five merged (2026-09-28 afternoon to evening)
+
+All eight groups merged, one at a time, each merge commit built and
+self-tested in the detached verification worktree (`merge_group10v.sh`
+with `one_grow.py`, which now also pins the one `DrawPool_Grow` block
+directly before `InjectReport`). **422 functions taken, 4,936 -> 5,358
+ours.** Counts are each group's in its worktree. World 2 is complete;
+world 3 has AR3G (areas 148..151, 56) to take.
+
+| Group | Merge | Taken | Rounds | Controls planted / refused | Not refused | Doc |
+|---|---|--:|--:|---|---|---|
+| AR3A | `194f778` | 56 | 262,000 | 197 / 196 (194 by a count, 2 by a fault, variants by a count) | 1 equivalent (area 117's one switch record is at (0x22, 0x22), so (z, x) reads the same), the plant under area 118 refused | [`area_w3a.md`](area_w3a.md) |
+| AR3C | `06adbd7` | 56 | 336,000 | 226 / 222 | 3 equivalent, 1 outside what the harness holds (a 15-bit mask on a patch base, the area block is 8 KiB); each with a refused variant | [`area_w3c.md`](area_w3c.md) |
+| AR3B | `a9aa689` | 54 | 294,000 | 246 / 246 (245 by a count, 1 by the harness's Fatal for an unlisted call, its variant by a count) | | [`area_w3b.md`](area_w3b.md) |
+| AR2E | `43e006f` | 52 | (five `Run`s) | 252 / 250 | 2 equivalent (a turn difference of exactly 3), variants refused | [`area_w2e.md`](area_w2e.md) |
+| AR3F | `8e4c7e4` | 53 | 318,000 | 321 / 320 | 1 not equivalent and not refused: a `Frame_Counter ^= 2` the harness's disturbance rewrites across the cylinder's ~100 calls; its bit-0 variants refused in both copies | [`area_w3f.md`](area_w3f.md) |
+| AR3E | `313c2d9` | 52 | 312,000 | 343 / 342 | 1 equivalent, variant refused | [`area_w3e.md`](area_w3e.md) |
+| AR3D | `3ebf5b0` | 46 | 276,000 | 334 / 333 (326 by a count, 7 by a fault) | 1 equivalent (a mask on bits no output reaches), variant refused | [`area_w3d.md`](area_w3d.md) |
+| AR2F | `a2c8752` | 53 | 424,000 | 348 / 348 (346 by a count, 2 by a hang, variants by a count) | | [`area_w2f.md`](area_w2f.md) |
+
+**What the wave found:**
+
+- **The world-map body is now copied three times in ours** (AR2B's sits
+  in an anonymous namespace; AR2E and AR3A copied it over their own
+  table structs; AR3B's area 121 differs in two bodies). Copies seven to
+  nine read (104, 115, 121 against 87 / 88): 104 has no plate bank
+  constant (its plate state 0 is `0x41ACD0`, in area 121's block) and its
+  own place hook; 115 differs in the plate bank `0x1C7` and its name sets;
+  121 has a different field hook (`0x74` bytes, no name sets), a
+  different `DrawDrift` (two squares, no map items) and plate bank
+  `0x158`. Sharing one body is the rebinding pass's, or a tidy-up group's.
+- **The linker folded areas 104 and 121**: identical code of area 104's
+  is held once, in area 121's block (AR3B's band), so AR2E calls
+  `PlateStart`, `DrawDrift`, `DirectionTo`, `MenuButton`,
+  `Request4Button`, `TurnInput`, `GaugeSprite`, `RingRise` by raw
+  address (`0x41BE10`, `0x41C0A0`, `0x41C0E0`, `0x41C110`, `0x41C350`,
+  `0x41C5B0`, `0x41ACD0`, `0x41B730`), and AR3B calls area 104's
+  `LeaderCharge`, `StopMotion`, `PoseByCharge`, `DrawGauge` the same way
+  (`0x415640`, `0x415680`, `0x4156C0`, `0x415940`). Engine leader state
+  12 (`0x52FE90`) and effect kind `0x5C` (`0x462B60`) split by area
+  number between the two. Both directions are the rebinding pass's.
+- **`0x4220D0` is `Area146_DrawGlowCylinder`** (a ring of 16
+  semi-transparent quads); `0x420B50` is area 143's own copy, differing
+  only in its stack frame, ours one body behind both names. Callers by
+  raw address: `area_w0c` (`0x405022`), `area_w1d` (`0x40B542`),
+  `area_w2d` (`0x4144D2`), areas 112 and 116's effect states, engine
+  `0x475CE2` and `0x47EF32`. `0x420A90` is `Area143_ClutShiftRight`,
+  called raw from `scena_sc13_callees.h`.
+- **More engine twins between areas**: area 116's step hook is
+  `Area100_StepHook` two constants apart and its ring
+  `Area100_EffectB7Ring`; area 112's `0x418880` is that ring byte for
+  byte but the call displacement; areas 110, 124 and 125's inits are
+  areas 72 / 73's code over their own tables (with the `jmp` over eleven
+  `nop`s); area 134's handlers 12 and 13 are one body here where the
+  PSX has two.
+- **Effects and stand-ins draw from `Noise()` only**, never
+  `AH_PICK` / `Next()`: AR3C's first run had 1,727 false mismatches from
+  an effect on `Next()` (the `disturb` rule of section 4 applies to
+  every group callback). For the harness doc.
+- **AR3D's tables run into each other**: the four state tables at
+  `0x62DA0C..0x62DA4B` sit back to back, so the walk dispatcher reads
+  13 entries and the lift 11 because each runs on into the next;
+  `0x41FCB0`'s table (AR3E) runs into a shade-up table, whose two
+  reachable entries are real code and kept. The area 135 descriptor's
+  choice array starts four dwords before its handler array (choices
+  4..23 are handlers 0..19).
+- **`area_rows.py` misses this wave**: the table at `0x624704` has 2
+  entries, not 7 (AR3B), as at `0x614728` (section 13); `0x41C2B0` is
+  reached only by `0x41C270`'s own tail `jmp` (one function, AR3B);
+  fourteen gaps were real functions reached by triggers, tail kinds,
+  effect kinds and calls (AR2E 2, AR2F 6, AR3E 8).
+- **`Area145_Init` is a bare `ret` on the PC** (`0x437CC0`) where the
+  PSX has one at `0x801F5324` (AR3F) - for the owner and the divergence
+  map.
+- **Raw-address callees nobody owns, after wave five**: `0x5A7570` (a
+  POLY_F3 setter, AR2E), `0x494060` / `0x494110` (the map camera set-up
+  and a point-to-vertex projection, AR3F; the same unowned helpers the
+  spell round left raw), `0x46D710` / `0x46D770` (AR3D's spawn states),
+  `0x5B9450` (the CRT `strncpy`, AR3C), `0x454A80` / `0x455290` (AR2B).
+- **Inbound calls for the rebinding pass** (beyond the two folds above):
+  engine `0x46D7A9` / `0x46D7B6` into `Area117_MembersFrame` /
+  `Area118_MembersFrame`; `0x456E29`, `0x4570C9`, `0x457362`, `0x457582`,
+  `0x4575CE` (inside `Field_RunSlot`) into `Area131_DisarmTail`;
+  `0x52FE9A` / `0x52FE9F` and `0x462B6A` / `0x462B6F` into areas 104 and
+  121's leader and kind-`0x5C` runs; SC13's five placers `kArea141a..e`
+  (`0x5648B2`, `0x567145`, `0x567179`, `0x5671AC`, `0x5671E0`);
+  `Effect_KindHandlers` `0x6554F8` into `Area104_Kind6ACountdown`;
+  `Area_StepHook`'s `kStepHandlers` (`0x419DA0`, `0x41E5E0`, `0x41F960`,
+  `0x420A10`, `0x4215B0`, `0x422000`, `0x56E122` / `0x56E132` / `0x56E142`
+  / `0x56E162`) and `kArriveHandlers` (`0x56E53B` into
+  `Area111_ArriveHook`); the tables of other areas name
+  `Area116_ToArea100`, `Area130_ChoiceTailState2` (every world map),
+  `Area134_CameraShiftXReset`, `0x41F320`, `Area116_EffectB8Run`,
+  `EffectKind18_States` 70 / 95 (read in place, no rebinding).
+- **`DrawPool_Grow` slipped again at the AR1F merge** (section 13's
+  fix kept one copy but not last); pinned at `03e9484`, and
+  `one_grow.py` now moves the block before `InjectReport` on every
+  merge.
+- **`BOF3X_SHADOW='*'` did not die silently for any group** (eight
+  first runs, exit 0). The `inject:` count stays one short of `impl`.
+
+**Owed by the round so far:** the defects' numbering for all five waves;
+the rebinding pass (every `AH_AT` / `SH_AT` into the engine groups, the
+chapter blocks and the area blocks; the two area 104 / 121 folds; the
+harness standard-set column moves together with it); the tool fixes
+(sections 10 and 13, plus the two-entry tables and the tail-`jmp`
+case); the harness doc's `kPhase`, `args` and `Noise()`-only notes; the
+pairing tool's cases; the route A/Bs when the owner is away; the recipe
+saves per chapter; the world-map body shared once.
+
+## 17. Wave six (to stage)
+
+Area only, the last of the area round: AR3G (areas 148..151, 56; 151 is
+a world-map area) and world 4 as `area_rows.py --groups` cuts it at the
+tip (AR4A 48 with world-map area 152, AR4B 56, AR4C 39, AR4D 49, AR4E
+51, AR4F 48): seven groups, 347 functions. Wave five's brief with
+section 16 folded in.
