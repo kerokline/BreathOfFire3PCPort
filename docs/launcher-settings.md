@@ -73,9 +73,8 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 
 | Setting | Where it goes | Mechanism |
 |---|---|---|
-| Language | `BOF3X_LANG` in the child's environment | ours — DIV-0005, [`dialogue-localisation.md`](dialogue-localisation.md) |
-| Look (was "Texture filter"): Smooth, Sharp, CRT, SatPixie - four entries (`config_dialog.cpp`) | `BOF3X_FILTER=point` for Sharp and both CRT looks; `screen=` in the ini | ours — DIV-0012 |
-| Look: CRT - scanlines and glow (2026-09-23) | `BOF3X_PRESENT=crt` (`screen=crt`) | ours — DIV-0037; [`crt-look.md`](crt-look.md) |
+| Language: "Chinese (PC script)", then every overlay language whose `DAT\<code>.*` files exist - `en`, `fr`, `de`, `ja` in that order (2026-09-27; English only before) | `BOF3X_LANG=<code>` in the child's environment; `language=<code>` in the ini | ours — DIV-0005, DIV-0054, DIV-0056, [`dialogue-localisation.md`](dialogue-localisation.md) |
+| Look (was "Texture filter"): Smooth, Sharp, SatPixie - three entries (`config_dialog.cpp`; four until 2026-09-27, when our own CRT look, DIV-0037, was withdrawn) | `BOF3X_FILTER=point` for Sharp and SatPixie; `screen=` in the ini (`screen=crt` from an older ini reads as `satpixie`) | ours — DIV-0012 |
 | Display (fullscreen/windowed) | line 1 of `<game>\BOF3.CFG` | **the original's own input**, `Cfg_Load` `0x4FD030` |
 | Renderer | line 2 of `BOF3.CFG` | the original's, same reader |
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
@@ -158,9 +157,9 @@ left out here, and the key and pad lists are cut short:
 
 ```ini
 [bof3x]
-language=original          # original | en
+language=original          # original | en | fr | de | ja (whichever loc_build.py has built)
 filter=linear              # linear | point
-screen=clean               # clean | crt (DIV-0037) | satpixie (DIV-0043)
+screen=clean               # clean | satpixie (DIV-0043); crt (DIV-0037, withdrawn) reads as satpixie
 satpixie.acc_modulate=0.65 # ... fourteen satpixie.* lines, the preset's names
 display=fullscreen         # fullscreen (a borderless window) | windowed -> BOF3.CFG line 1
 snap=1                     # DIV-0042

@@ -162,11 +162,59 @@
 #include "game/magic_s37.h"
 #include "game/magic_s35.h"
 #include "game/magic_s38.h"
+#include "game/area_011.h"
+#include "game/area_cell_hook.h"
+#include "game/area_w0b.h"
+#include "game/scena_sc0.h"
+#include "game/scena_se.h"
+#include "game/scena_calls.h"
+#include "game/scena_sc11.h"
+#include "game/scena_sc3.h"
+#include "game/scena_sc1.h"
+#include "game/scena_sc12.h"
+#include "game/scena_sc9a.h"
+#include "game/area_w0a.h"
+#include "game/scena_sc6.h"
+#include "game/area_w0c.h"
+#include "game/area_w1a.h"
+#include "game/scena_sc7.h"
+#include "game/scena_sc5.h"
+#include "game/scena_sx.h"
+#include "game/area_w1b.h"
+#include "game/scena_sc9b.h"
+#include "game/area_w1c.h"
+#include "game/area_w2b.h"
+#include "game/scena_sc15.h"
+#include "game/scena_sc2.h"
+#include "game/scena_sc13.h"
+#include "game/scena_sx2.h"
+#include "game/area_w1e.h"
+#include "game/area_w2a.h"
+#include "game/area_w1d.h"
+#include "game/area_w2d.h"
+#include "game/area_w2e.h"
+#include "game/area_w2c.h"
+#include "game/area_w1f.h"
+#include "game/area_w3a.h"
+#include "game/area_w3c.h"
+#include "game/area_w3b.h"
+#include "game/area_w3f.h"
+#include "game/area_w3e.h"
+#include "game/area_w3d.h"
+#include "game/area_w3g.h"
+#include "game/area_w2f.h"
+#include "game/area_w4a.h"
+#include "game/area_w4c.h"
+#include "game/area_w4d.h"
+#include "game/area_w4b.h"
+#include "game/area_w4e.h"
+#include "game/area_w4f.h"
 #include "hook/detour.h"
 
 namespace bof3 {
 
 void InjectAll() {
+    DrawPool_Reserve();         // DIV-0062: the draw-item pool's room below 16 MB, before anything else is placed
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     MapCells_Inject();          // likewise
     FileIo_Inject();
@@ -511,6 +559,173 @@ void InjectAll() {
                                 // MeteorStrike): its clones' calls and stack-table immediates re-aimed at the shared
                                 // harness's recorders, its thirteen .data tables swapped for the fuzz only; no module
                                 // patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    Area011_Inject();           // round 10 group ARH (area 11: two handlers and the init, the area harness's proof):
+                                // its clones' calls re-aimed at the area harness's recorders; no module patches
+                                // bytes inside its 3 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaCellHook_Inject();      // round 10 group ARH (0x56E670, the cell hook's per-area reader): its table's
+                                // handlers swapped for the fuzz only; nothing patches inside it
+    AreaW0b_Inject();           // round 10 group AR0B (world 0's areas 16 and 18..26): its clones' calls re-aimed at
+                                // the area harness's recorders, area 16's six .data state tables swapped for the fuzz
+                                // only; no module patches bytes inside its 61 (DIVERGENCE.md, cheats.cpp): order does
+                                // not matter
+    ScenaSc0_Inject();          // round 10 group SCH (scenario chapter 0, the scenario harness's proof): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its three .data tables swapped
+                                // for the fuzz only; no module patches bytes inside its 19 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    ScenaSe_Inject();           // round 10 group SE (the chapters' shared engine-side helpers, six): its clones'
+                                // calls re-aimed at the scenario harness's recorders; no module patches bytes
+                                // inside its 6 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc11_Inject();         // round 10 group SC11 (scenario chapter 11): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its three .data tables swapped for the fuzz only; no module
+                                // patches bytes inside its 30 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc3_Inject();          // round 10 group SC3 (scenario chapters 3 and 4): its clones' calls re-aimed at the
+                                // scenario harness's recorders, its tables swapped for the fuzz only; no module
+                                // patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc1_Inject();          // round 10 group SC1 (scenario chapter 1's bank): its clones' calls re-aimed at the
+                                // scenario harness's recorders, its three .data tables swapped for the fuzz only;
+                                // no module patches bytes inside its 42: order does not matter
+    ScenaSc12_Inject();         // round 10 group SC12 (scenario chapter 12's first block, 0x55E4E0..0x561DB0):
+                                // no module patches bytes inside its 24 (DIVERGENCE.md, cheats.cpp): order does
+                                // not matter
+    ScenaCalls_Inject();        // round 10 group CALLS (the chapter call tables' 98 entries, 0x519890..0x51AC50):
+                                // its clones' calls re-aimed at the scenario harness's recorders; no module patches
+                                // bytes inside its 98 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc9a_Inject();         // round 10 group SC9a (scenario chapter 9's first block, 0x553B30..0x557170):
+                                // no module patches bytes inside its 22 (DIVERGENCE.md, cheats.cpp): order does
+                                // not matter
+    AreaW0a_Inject();           // round 10 group AR0A (world 0's areas 0..5, 7, 8, 10, 12, 13, 15): its clones' calls
+                                // re-aimed at the area harness's recorders, area 15's two state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp):
+    ScenaSc6_Inject();          // round 10 group SC6 (scenario chapter 6's bank, 0x54A910..0x54F080): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its tables swapped for the
+                                // fuzz only; no module patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW0c_Inject();           // round 10 group AR0C (world 0, areas 27..29 and 32..37): its clones' calls
+                                // re-aimed at the area harness's recorders, its five .data state tables swapped
+                                // for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    ScenaSc7_Inject();          // round 10 group SC7 (scenario chapters 7 and 8, 0x54F080..0x553B30): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its tables swapped for the
+                                // fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    ScenaSc5_Inject();          // round 10 group SC5 (scenario chapter 5's bank, 0x546390..0x54A910): no module
+                                // patches bytes inside its 35 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSx_Inject();           // round 10 group SX (the engine callees the chapters and areas call by raw address,
+                                // eighteen): its clones' calls re-aimed at the scenario harness's recorders; no
+                                // module patches bytes inside its 18 (DIVERGENCE.md, cheats.cpp): order does not
+    AreaW1b_Inject();           // round 10 group AR1B (world 1, areas 42..47): its clones' calls re-aimed at the
+                                // area harness's recorders, its .data state tables swapped for the fuzz only; no
+                                // module patches bytes inside its 55 (DIVERGENCE.md, cheats.cpp): order does not
+                                // matter
+    ScenaSc9b_Inject();         // round 10 group SC9b (scenario chapter 9's tail and chapter 10, 0x557170..0x55C040):
+                                // its clones' calls re-aimed at the scenario harness's recorders, its tables swapped
+                                // for the fuzz only; no module patches bytes inside its 63 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW1c_Inject();           // round 10 group AR1C (world 1, areas 48..52, 0x408FF0..0x40AB00): its clones' calls
+                                // re-aimed at the area harness's recorders; no module patches bytes inside its 57
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSc15_Inject();         // round 10 group SC15 (scenario chapter 15, 0x567DC0..0x56B2A0 and 0x537580; chapter 16's
+                                // slot 1 0x56C080; chapters 17..19, 0x56C130..0x56D5E0): its clones' calls re-aimed at
+                                // the scenario harness's recorders, its tables swapped for the fuzz only; no module
+                                // patches bytes inside its 89 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW1a_Inject();           // round 10 group AR1A (world 1, areas 38..41, 0x4053B0..0x406650): its clones' calls
+                                // re-aimed at the area harness's recorders, areas 39 and 41's state tables swapped
+                                // for the fuzz only; no module patches bytes inside its 48 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    ScenaSc2_Inject();          // round 10 group SC2 (scenario chapter 2's bank, 0x53DDA0..0x5428C0): no module
+                                // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenaSx2_Inject();          // round 10 group SX2 (the engine callees nobody owned after SX, thirteen): its
+                                // clones' calls re-aimed at the scenario harness's recorders; no module patches
+                                // bytes inside its 13 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW1e_Inject();           // round 10 group AR1E (world 1, areas 65 and 67, 0x40B8C0..0x40CEF0): its clones'
+                                // calls re-aimed at the area harness's recorders, area 65's state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW2a_Inject();           // round 10 group AR2A (world 2, areas 76..82 and 84, 0x40EB90..0x40F720): its clones'
+                                // calls re-aimed at the area harness's recorders, area 79's state table swapped for
+                                // the fuzz only; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW2b_Inject();           // round 10 group AR2B (world 2, areas 85..88, 0x40F720..0x411F10): its clones' calls
+                                // re-aimed at the area harness's recorders, the world maps' state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 66 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW1d_Inject();           // round 10 group AR1D (world 1, areas 53, 55..57, 59..64, 0x40AB00..0x40B8C0): its
+                                // clones' calls re-aimed at the area harness's recorders, areas 56 and 59's state
+                                // tables and areas 63 / 64's weights swapped for the fuzz only; no module patches
+                                // bytes inside its 47 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW2d_Inject();           // round 10 group AR2D (world 2, areas 95..100 and 103, 0x4135B0..0x4146C0): its
+                                // clones' calls re-aimed at the area harness's recorders, areas 99 and 100's state
+                                // tables swapped for the fuzz only; no module patches bytes inside its 53
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW2c_Inject();           // round 10 group AR2C (world 2, areas 90..92 and 94, 0x411F10..0x4135B0): its clones'
+                                // calls re-aimed at the area harness's recorders, area 91's state table swapped for
+                                // the fuzz only; no module patches bytes inside its 45 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
+                                // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW3a_Inject();           // round 10 group AR3A (world 3, areas 115..119, 0x418BE0..0x41A9D0): its clones' calls
+                                // re-aimed at the area harness's recorders, area 115's and 116's .data state tables
+                                // swapped for the fuzz only; no module patches bytes inside its 56 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW3c_Inject();           // round 10 group AR3C (world 3, areas 124..125, 127..128, 130..134, 0x41C890..0x41DAD0):
+                                // its clones' calls re-aimed at the area harness's recorders; no module patches bytes
+                                // inside its 56 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW3b_Inject();           // round 10 group AR3B (world 3, areas 120..121, 0x41A9D0..0x41C890): its clones'
+                                // calls re-aimed at the area harness's recorders, area 121's .data state tables
+                                // swapped for the fuzz only; no module patches bytes inside its 54 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW2e_Inject();           // round 10 group AR2E (world 2, areas 104..106, 0x4146C0..0x4168E0): its clones'
+                                // calls re-aimed at the area harness's recorders, area 104's six .data state tables
+                                // swapped for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW3f_Inject();           // round 10 group AR3F (world 3, areas 143..146, 0x420800..0x4223A0): its clones'
+                                // calls re-aimed at the area harness's recorders, its .data state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 53 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW3e_Inject();           // round 10 group AR3E (world 3, areas 136 and 139..142, 0x41EFE0..0x420800): its
+                                // clones' calls re-aimed at the area harness's recorders, the state tables of areas
+                                // 140..142 swapped for the fuzz only; no module patches bytes inside its 52
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW3d_Inject();           // round 10 group AR3D (world 3, area 135, 0x41DAD0..0x41EFE0): its clones' calls
+                                // re-aimed at the area harness's recorders, its four .data state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 46 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW2f_Inject();           // round 10 group AR2F (world 2, areas 108 and 110..113, 0x4168E0..0x418BE0): its
+                                // clones' calls re-aimed at the area harness's recorders, areas 108 and 112's state
+                                // tables swapped for the fuzz only; no module patches bytes inside its 53
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW1f_Inject();           // round 10 group AR1F (world 1, areas 68..69 and 71..75, 0x40CEF0..0x40EB90): its clones'
+                                // calls re-aimed at the area harness's recorders, its .data state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 59 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW3g_Inject();           // round 10 group AR3G (world 3, areas 148..151, 0x4223A0..0x4249D0): its clones'
+                                // calls re-aimed at the area harness's recorders, its .data state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 56 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW4a_Inject();           // round 10 group AR4A (world 4, areas 152..155 and 166..167, 0x4249D0..0x426560): its
+                                // clones' calls re-aimed at the area harness's recorders, area 152's six .data state
+                                // tables swapped for the fuzz only; no module patches bytes inside its 48
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW4c_Inject();           // round 10 group AR4C (world 4, areas 173..174 and six choices of areas 175..185,
+                                // 0x428450..0x4292C0): its clones' calls re-aimed at the area harness's recorders; no
+                                // module patches bytes inside its 39 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW4d_Inject();           // round 10 group AR4D (world 4, areas 175..187, 0x4292C0..0x42A320): its clones'
+                                // calls re-aimed at the area harness's recorders, area 175's glide states swapped
+                                // for the fuzz only; no module patches bytes inside its 49 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW4b_Inject();           // round 10 group AR4B (world 4, areas 168..172, 0x426560..0x428450): its clones'
+                                // calls re-aimed at the area harness's recorders, area 172's two .data state tables
+                                // swapped for the fuzz only; no module patches bytes inside its 56 (DIVERGENCE.md,
+    AreaW4e_Inject();           // round 10 group AR4E (world 4, areas 188..191, 0x42A320..0x42BD60): its clones'
+                                // calls re-aimed at the area harness's recorders, areas 189 and 191's state tables
+                                // swapped for the fuzz only; no module patches bytes inside its 51 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    AreaW4f_Inject();           // round 10 group AR4F (world 4, areas 192..193 and 196..199, 0x42BD60..0x42D710):
+                                // its clones' calls re-aimed at the area harness's recorders, areas 197 and 198's
+                                // state tables swapped for the fuzz only; no module patches bytes inside its 49
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
+    DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
+                                // which all compared the original's arrays (draw_pool.h)
     InjectReport();
 }
 

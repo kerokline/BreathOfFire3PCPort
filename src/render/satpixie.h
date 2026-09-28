@@ -21,8 +21,8 @@
 namespace render {
 
 // Compiles the passes and makes the intermediate textures of the target's
-// size. `k` is the target's scale (unused by the look itself; kept for the
-// contract CrtInit has).
+// size. `k` is the target's scale (unused by the look itself; kept from the
+// contract our own CRT look's CrtInit had, DIV-0037, withdrawn 2026-09-27).
 void SatpixieInit(ID3D11Device* device, U target_w, U target_h, U k);
 
 // DIV-0042: the target changed size; the textures follow.

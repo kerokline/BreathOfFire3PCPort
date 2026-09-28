@@ -15,8 +15,8 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**3,510 functions are ours** (`inject: 3510 ours` in
-`bof3x.log`, 2026-09-27; the spell round counts pointer-reached starts
+**5,706 functions are ours** (`inject: 5706 ours` in
+`bof3x.log`, 2026-09-28; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
 ([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
@@ -47,6 +47,12 @@ re-derived:
 | 09-27 | Spell wave 4: MAGIC045..069 (S09..S15) | 320 | 3,165 | | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 11 |
 | 09-27 | Spell wave 5: MAGIC144..227 (S32..S38) - the spell round complete, every `Magic_Rows` overlay ours | 345 | 3,510 | `r9` re-recorded at 3,164: identical but frame 0 | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 12 |
 | 09-27 | The round closed out: raw-address calls between spell groups rebound to names (58 targets, 38 files), the defects numbered D89..D132, `origin/main` merged in | | 3,510 | `'*'` 0 mismatches | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 12, [`known-defects.md`](known-defects.md) |
+| 09-27 | Round 10 wave 1: the scenario harness and chapter 0 (SCH), the area harness, area 11 and the cell hook (ARH), the area tool (ART), the chapters' shared helpers (SE), chapters 1, 3+4, 11, 12's first block (SC1, SC3, SC11, SC12) | 175 | 3,685 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 4 |
+| 09-27..28 | Round 10 wave 2: the chapter call tables' block (CALLS), chapters 5, 6, 7+8, 9's first block (SC5, SC6, SC7, SC9a), world 0's areas (AR0A, AR0B, AR0C) | 417 | 4,102 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 7 |
+| 09-28 | Round 10 wave 3: chapters 2, 9's tail + 10, 12's tail + 13 + 14, 15..19 (the staff roll), the engine callees (SX), world 1's areas 38..52 (AR1A..AR1C) - **the scenario round complete**, every chapter bank ours | 451 | 4,554 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 10 |
+| 09-28 | Round 10 wave 4: the second engine group (SX2, 13), world 1's areas 53..75 (AR1D..AR1F) - **world 1 complete** - and world 2's areas 76..103 (AR2A..AR2D) | 382 | 4,936 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 13 |
+| 09-28 | Round 10 wave 5: world 2's areas 104..113 (AR2E, AR2F) - **world 2 complete** - and world 3's areas 115..146 (AR3A..AR3F) | 422 | 5,358 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 16 |
+| 09-28 | Round 10 wave 6: world 3's areas 148..151 (AR3G) and world 4 (AR4A..AR4F) - **the area round complete**, every area overlay ours; with the scenario round, round ten took 2,195 functions in 47 groups | 348 | 5,706 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 19 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -232,8 +238,9 @@ What is established:
   against `QueryPerformanceCounter`).
 - **The launcher has a settings dialog** (2026-09-20, grown since;
   [`launcher-settings.md`](launcher-settings.md)), a plain Win32 `DIALOGEX`
-  with nothing vendored: language, look (texture filter, CRT, SatPixie with
-  its options dialog - DIV-0012, DIV-0037, DIV-0043), display, keep running
+  with nothing vendored: language (every built overlay language since
+  2026-09-27), look (texture filter, SatPixie with its options dialog -
+  DIV-0012, DIV-0043; our own CRT look DIV-0037 withdrawn 2026-09-27), display, keep running
   unfocused (DIV-0033), widescreen (DIV-0041), snap to whole multiples
   (DIV-0042), **Cheats...** (DIV-0045, DIV-0046) and **Controls...**
   (DIV-0050), every dialog walkable with a pad. Settings reach the DLL
@@ -337,7 +344,8 @@ What is established:
      after a review found why every traced all-original run had ended 16 s
      in (the tracer's single step saved by a `pushfd` in Capcom's
      software-renderer set-up). Then integer scaling (DIV-0036), the CRT
-     look (DIV-0037, [`crt-look.md`](crt-look.md)), **the widescreen survey
+     look (DIV-0037, [`crt-look.md`](crt-look.md); withdrawn 2026-09-27 for
+     SatPixie, DIV-0043), **the widescreen survey
      build** (DIV-0041, [`widescreen.md`](widescreen.md)) - 426 x 240, the
      view shifted the PSP's way ([`psp-widescreen.md`](psp-widescreen.md)),
      culls widened, backdrop, fades and slide-outs re-authored - **the

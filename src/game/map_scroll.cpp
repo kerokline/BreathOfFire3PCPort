@@ -1,5 +1,7 @@
 #include "game/map_scroll.h"
 
+#include "game/draw_pool.h"
+
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -212,8 +214,10 @@ extern "C" void __cdecl Field_ViewReset(void) {
     g.geom_screen(0x3E8);
     g.geom_offset(0xA0, 0x78);
     g.back_color(0x78, 0x78, 0x78);
-    for (unsigned q = 0; q < 0x800; ++q) {
-        unsigned char* const quad = DrawItems + q * 0x48u;
+    // Every item's two halves - 0x800 of them in the original; DIV-0062's
+    // pool has twice as many, and a half never primed here draws as garbage.
+    for (unsigned q = 0; q < draw_pool::Count() * 2; ++q) {
+        unsigned char* const quad = draw_pool::Items() + q * 0x48u;
         g.set_poly_ft4(quad);
         g.set_shade_tex(quad, 0);
         SetWord(quad + 0x36, 0);
@@ -231,7 +235,7 @@ extern "C" void __cdecl Field_ViewReset(void) {
     // Draw item 0 - the "none" index - has its eight screen points cleared.
     for (const unsigned at : {0x08u, 0x0Cu, 0x18u, 0x1Cu, 0x28u, 0x2Cu, 0x38u, 0x3Cu, 0x50u, 0x54u, 0x60u, 0x64u, 0x70u,
                               0x74u, 0x80u, 0x84u})
-        SetDword(DrawItems + at, 0);
+        SetDword(draw_pool::Items() + at, 0);
     MapView_FocusX = static_cast<long>(0x7FFF - (kind2_x >> 8));
     MapView_FocusZ = static_cast<long>(0x8000 - (kind2_z >> 8));
     MapView_Origin[1] = static_cast<short>((kind2_z >> 16) + 3);
@@ -269,7 +273,7 @@ extern "C" void __cdecl Field_ViewReset(void) {
             g.cell_to_map(row, column, cell);
         }
     }
-    for (unsigned i = 0; i < 0x400; ++i) DrawItemPool_Free[i] = static_cast<unsigned short>(i);
+    for (unsigned i = 0; i < draw_pool::Count(); ++i) draw_pool::Free()[i] = static_cast<unsigned short>(i);   // DIV-0062: the pool's size
     DrawItemPool_Top = 1;
     MapView_Column = 0x1B;
     MapView_Row = 0x37;

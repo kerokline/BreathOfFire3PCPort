@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-27, the spell round complete and closed out)
+**Status:** IN PROGRESS (2026-09-28, round ten complete: the scenario round and the area round both merged; the round's debts and round eleven next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,23 +14,23 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**3,510 functions are ours** (`inject: 3510 ours, 0 left original`), on
-`phase-3/round-nine`, local commits past `origin`'s `fb10178` (2026-09-27
-midday), not yet a PR. Round nine
-([`takeover-queue-round9.md`](takeover-queue-round9.md)) re-traced the three
-routes - the "76" were 29 distinct entries, of which only the task scheduler
-was game logic (group EA, [`task_sched.md`](task_sched.md)) - and then ran
-**the spell round to completion** ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)):
-every overlay behind `Magic_Rows` `0x64C2B8`, 2,064 functions in 43 groups,
-through one shared fuzz harness ([`magic_harness.md`](magic_harness.md); SH
-built it, HX folded eleven groups' edits into one API), in five waves
-(round9 doc sections 6, 9, 10, 11, 12; wave five, S32..S38, 345 functions,
-merged 2026-09-27 between 09:10 and 11:30). Every group: 0 mismatches,
-every control refused or an equivalent with a refused near variant, no
-harness edits. The other session on this machine added the recipe-save swap
-(`0775a49`, [`input-script.md`](input-script.md) section 1a) and planned the
-scenario and area rounds (`IDEAS.md` I24, I25; main took I23 for the music comparison). The rest is
-[`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
+**5,706 functions are ours** (`inject: 5706 ours, 0 left original`), on
+`phase-3/capture-round-ten`, local commits past `main`'s `c47f521`
+(round nine's PR #27), not yet pushed or a PR. **Round ten is complete**
+([`takeover-queue-round10.md`](takeover-queue-round10.md)): six waves,
+2,195 functions in 47 groups, 3,510 -> 5,706. The scenario round (I24)
+took every chapter bank 0..19, the shared helpers, the call tables'
+block and the engine callees they reach (SX, SX2) through
+[`scenario_harness.md`](scenario_harness.md); the area round (I25) took
+every area overlay of worlds 0..4 through
+[`area_harness.md`](area_harness.md). Every group 0 mismatches, every
+control refused or an equivalent with a refused near variant (one
+exception explained, section 16); everything fuzz-only - the live check
+per chapter and per area is the owner's. Merges are verified in a
+detached worktree with its own build (round10 doc section 10). The
+round's debts are the end of section 19; round eleven (the boss round)
+is staged (item 0b). The rest is [`STATUS.md`](STATUS.md)'s wave table;
+do not copy it here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
 `r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
@@ -39,12 +39,48 @@ foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
 `r9_ours` (08:50, the same build) identical but frame 0, the set-up (as
 since `rb1`). Wave five's 346 functions came after it and none is on the
 attract path - every spell group is fuzz-only - so it stands for this
-build until something on the attract path is taken. `r9_*_0926` and
+build until something on the attract path is taken (nothing in round
+ten's six waves is). `r9_*_0926` and
 `r9_orig_0927_loaded` (a side recorded under a concurrent build, four
 frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
+0. **Round ten's debts** - the list is [`round-10-cleanup.md`](round-10-cleanup.md)
+   (from the round doc's section 19), for a session of its own; the owner's order to choose; the two that
+   unblock the rest are the defects' numbering (all six waves describe,
+   none numbers - `known-defects.md`) and the rebinding pass (every
+   `AH_AT` / `SH_AT` into a name now that everything they reach is ours;
+   the area 104 / 121 and 151 / 152 linker folds; the harness
+   standard-set column moves in the same commit; the world-map body,
+   five copies in ours, shared once). Then a small engine group for the
+   callees nobody owns (section 19's list), the tool fixes, the harness
+   doc's notes, the frame hash and the route A/Bs when the owner is
+   away. The routine that ran six waves: a brief in `analysis/`
+   (`round10_wave6_brief.md` is the latest), one Opus agent per group in
+   a worktree, `merge_group10v.sh <group> <scratch>` (`MOD=<module>`; it
+   merges in the main checkout, runs `keepboth.py` and `one_grow.py`,
+   then builds and self-tests in the detached worktree
+   `<old scratch>/verify`), one merge at a time in the background, about
+   ten minutes each. Scratch: the merge scripts and waves four to six's
+   `<group>/` controls scripts in
+   `.../71e258cd-639f-4084-8bfa-60f9e4a9ffda/scratchpad/`; waves one to
+   three's in `.../0eefe2a8-ba23-4625-9434-7c4f87a1456f/scratchpad/`
+   (also `verify/` and `play/`). Every agent worktree and
+   `phase-3/round10-*` branch is merged and removed. **Round ten's PR**:
+   push and open one when the owner wants; the branch carries the other
+   session's commits (`368b84f`, `f669cce`, round eleven's `44348f7`,
+   `154272f`) too.
+0b. **Round eleven is staged: the boss round** (the owner, 2026-09-28,
+   after the area round finishes). Plan and cut:
+   [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
+   `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)); IDEAS I26. 525
+   functions in eleven groups, two waves (BH + BSA..BSE, then BSF..BSJ);
+   before the first cut: name the two tables and the kind-3 dispatcher,
+   write `boss_harness` from `magic_harness`, prove it on BH and BSA. Brief
+   drafted at `analysis/round11_wave1_brief.md` (group lines
+   `analysis/round11_wave1_groups.tsv`, gitignored); it names the round-ten
+   tip and wants the harness's doc filled in once it exists.
 1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
    order to choose:
    - **Rebinding and `known-defects.md` are done** (2026-09-27 afternoon):
@@ -103,15 +139,17 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 3. **The owner's eye on older rounds**: round seven and the world map (the
    compass needle, DIV-0044; the sky's bands, DIV-0041); a fight under full
    ownership - ask whether the 2026-09-24 combat-route play counts.
-4. **After the spells: the next queues**, the owner's order to choose: the
-   scenario round (I24, [`takeover-queue-scenario.md`](takeover-queue-scenario.md)),
-   the area round (I25), new routes (`menu_screens.txt`, a boss, an event
+4. **The other queues**, the owner's order to choose: new routes (`menu_screens.txt`, a boss, an event
    battle), the MP3 decoder's replacement (round9 doc section 3). What
    earlier rounds left unowned is listed in each group doc ("left
    original", "in no group"); the named ones are round seven's `0x43B130`
    and the boss handlers at `0x656954`, round six's `0x5806F0` /
    `Save_QuickWrite`, and WinMain's run-once callees.
-5. **Localisation: four languages and what they leave.** Built 2026-09-24
+5. **Localisation: four languages and what they leave.** The owner's
+   decision (2026-09-28 night): the open localisation items below are
+   **their own branch and effort, after the area round finishes** - not
+   folded into a takeover wave.
+    Built 2026-09-24
    (DIV-0054..0057; [`dialogue-localisation.md`](dialogue-localisation.md)
    sections 6 and 9). Next, in the order they bite:
    - **The owner's look in game** at French, German and Japanese.
@@ -139,7 +177,14 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    ([`battle_windows.md`](battle_windows.md)); the enemy names, the banner
    messages and the EX suffix are done (DIV-0053, DIV-0052); the ability names are
    the 16-byte GBK field at `0x65C4C8 + id * 0x18`
-   ([`battle_window_draw.md`](battle_window_draw.md)). Older and still open:
+   ([`battle_window_draw.md`](battle_window_draw.md)). **Staged for a
+   localisation session, 2026-09-27** (the owner's captures: the item and
+   ability lists' headers `物品` / `武器` / `攻击` and the Equip screen's
+   stat column `攻击` `防御` `智力` `速度` still Chinese under English):
+   both draws are already ours (`menu_windows.cpp`'s `kStatLabels`
+   `0x66A0F8..`; the list headers behind `0x66A220`), so each wants only a
+   `loc_build.py` chunk kind carrying the US disc's strings and a width
+   check against its box. Older and still open:
    the stat labels at `0x669CF0` (the US `Pwr` `Def` `Int` `Agl` stand
    before the verb table in `STATUS.EMI`; check `Pwr` fits the box); the
    skill list's header `龙技` `0x66A220` and the item list's `物品`; the turn
@@ -196,9 +241,9 @@ Ordered; reasoning lives in [`STATUS.md`](STATUS.md), not here.
     §5, [`window-modes.md`](window-modes.md) §6): the edge pixels of `rb1`
     - `BOF3X_PIXEL_OFFSET=0.498046875` against the 27 differing captures of
     the 55-shot attract A/B (`validate_rb1.sh`, about 25 minutes); the
-    owner's tuning of the CRT look (`BOF3X_CRT`, best at k = 6 borderless)
-    and of SatPixie (the Options dialog by hand, only tried by code); a
-    rescale under the CRT look (DIV-0037); the title-bar drag under
+    owner's tuning of SatPixie (the Options dialog by hand, only tried by
+    code; our own CRT look, DIV-0037, was withdrawn 2026-09-27 so its
+    tuning and rescale checks are moot); the title-bar drag under
     `BOF3X_BACKGROUND=0`; sprite edges at k = 3 / 6 looked at closely.
     Not built, loud if reached: a `Lock` of the primary or back buffer
     (`Gfx_DrawOTag` logs the first request), sub-rectangle locks, depth /
@@ -295,11 +340,12 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Nothing uncommitted of this round's. `phase-3/round-nine` is ahead of
-`origin/phase-3/round-nine` (`fb10178`) by wave five's merges and docs, and
-of `origin/main` (`b302b8d`) by round nine and the other session's
-(`0775a49` recipe saves, `7cb8df5` / `973a69d` I24 / I25). The wave briefs
-are in `analysis/` (gitignored).
+Nothing uncommitted of this round's. `phase-3/capture-round-ten` is ahead
+of `main` (`c47f521`) by round ten's six waves (47 merges, the round
+doc) and the other session's commits; not pushed. The wave briefs are in
+`analysis/` (gitignored). **The other session works in the main checkout
+on this branch**: check `git status` before a commit, and never build in
+`build/` while its game runs (merges do not need to).
 
 Local only, gitignored, worth keeping:
 
@@ -472,10 +518,11 @@ _One line each, with a pointer. Add when something costs more than an hour._
   name is bound twice. **Group names collide** across groups (W / Y, Z /
   V1): rename in the later group's files.
 - **Our own scaffolding has ceilings, and they fail like hangs**: the
-  `BOF3X_ORIGINAL` / `BOF3X_SHADOW` lists (2,048 characters) and the
+  `BOF3X_ORIGINAL` / `BOF3X_SHADOW` lists (2,048 characters), the
   tracer's owned-function table (256, then 2,048 - hit again at 3,165 ours
-  on 2026-09-27, now 8,192 in `calltrace.cpp`) ended in a `Fatal` before
-  the window. Read the log when a run is slow; a `Fatal` dialog blocks the
+  on 2026-09-27, now 8,192 in `calltrace.cpp`) and the detour's owned
+  table (4,096, hit at 4,097 on 2026-09-27, now 16,384 in `detour.cpp`)
+  ended in a `Fatal` before the window. Read the log when a run is slow; a `Fatal` dialog blocks the
   runner until it is dismissed.
 - **Do not build or self-test in the main checkout while a frame-hash
   reference side records**: the `orig` side recorded under the S32 merge's

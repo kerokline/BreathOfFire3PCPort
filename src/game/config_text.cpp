@@ -194,6 +194,14 @@ extern "C" const unsigned char* __cdecl ConfigText_DrawSelected(int x, int y, in
 
 void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag != 0) bof3::Fatal("config chunk tag is 0x%X, expected 0", (unsigned)tag);
+    // FIRST.DAT's overlay is walked again when the game returns to the title
+    // (F9 twice in play, the owner 2026-09-27) and its text is the same; the
+    // controller pointers and the label sites below already name ours by
+    // then, and checking them against the original's values stopped the
+    // game ("controller pointer 0 holds ..."). As PauseText_Apply has it.
+    static bool applied = false;
+    if (applied) return;
+    applied = true;
     const std::uint8_t* p = payload;
     const std::uint8_t* const end = payload + size;
 

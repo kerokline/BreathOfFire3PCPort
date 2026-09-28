@@ -277,9 +277,16 @@ A run comparing pixels against an all-original reference will differ on every
 frame with text unless `GlyphTexelCentres` is listed; the frame hash and the
 call counts are unaffected (the same calls, the same order).
 
-Only at scale 2.0 is it exactly texel centres; the scale was 2.0 in every mode
+~~Only at scale 2.0 is it exactly texel centres; the scale was 2.0 in every mode
 seen. At another scale the quad is not 1:1 anyway and half a texel is still
-closer to right than the edge.
+closer to right than the edge.~~ **Wrong, 2026-09-27:** at scale 4 (DIV-0042
+gives the scale to the window, and the owner's is 1704 x 960) a half-texel
+inset puts every odd pixel's sample back on a texel edge, and the two
+triangles disagree in the glyph's bottom rows - the owner's "crooked" `t` and
+`l` bottoms, measured on the game's own pre-look frame. The inset is now
+`1 / scale + 1 / 256` texels per axis, from the scale at draw time
+(`TexelInset`), which is 0.5 + 1/256 at scale 2; DIV-0025's amendment has the
+numbers.
 
 ## 7. DIV-0027: the Yes / No chooser
 

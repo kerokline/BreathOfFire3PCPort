@@ -42,9 +42,8 @@ made reachable. Most are switches in the launcher; the originals stay available.
   fitted to the height (DIV-0036, DIV-0042); **widescreen 426 x 240**, the view
   widened the way Capcom's PSP release did it (DIV-0041); FMVs in the window
   (DIV-0035).
-- **Looks**: the port's smooth filter, a sharp point filter (DIV-0012), or two
-  CRT looks — our own scanlines and halation (DIV-0037), and the SatPixie
-  shader with an options dialog (DIV-0043).
+- **Looks**: the port's smooth filter, a sharp point filter (DIV-0012), or the
+  SatPixie CRT shader with an options dialog (DIV-0043).
 - **Controls**: modern pads through SDL3, with a Nintendo-layout toggle
   (DIV-0050); keyboard and pad bindings set in the launcher by pressing the
   input; the Config panel's controller icons as the PlayStation drew them

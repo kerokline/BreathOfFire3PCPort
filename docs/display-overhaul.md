@@ -215,10 +215,11 @@ centred; borders are black". Reversible with `k = 2` and a 640 x 480 window.
 ### 4c. Shaders and filtering
 
 **Decided 2026-09-23** (the owner): no preset loader - a pre-packaged look
-built into the dll. The first is the CRT look ([`crt-look.md`](crt-look.md),
+built into the dll. The first was the CRT look ([`crt-look.md`](crt-look.md),
 DIV-0037): our own shaders, since the model the owner named
-(`crt-easymode-halation`) is GPL. The rest of this section is the plan as it
-stood before the decision.
+(`crt-easymode-halation`) is GPL - withdrawn 2026-09-27 once the owner had
+compared it with SatPixie (DIV-0043), which is the look now. The rest of this
+section is the plan as it stood before the decision.
 
 The present pass takes a preset: a pixel shader file under a directory the
 launcher knows (`shaders/`), compiled at start-up with `D3DCompile`, with the
@@ -346,7 +347,8 @@ build of the same tree). Half a day for the answer.
    / one CRT, the hotkey, the launcher box. **Built 2026-09-23** except the
    hotkey: the CRT look (DIV-0037, [`crt-look.md`](crt-look.md)) and a
    second, SatPixie (DIV-0043), chosen in the launcher's Look box
-   (`screen=`, `BOF3X_PRESENT`); no live toggle key yet
+   (`screen=`, `BOF3X_PRESENT`). **2026-09-27: the first withdrawn**, the
+   owner preferring SatPixie; no live toggle key yet
    ([`IDEAS.md`](IDEAS.md) I15).
 6. **Widescreen** (4d): the PSP answer first (a survey, half a day), then the
    ours-side cull and anchor changes under a toggle as a survey build, then

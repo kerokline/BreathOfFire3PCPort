@@ -215,7 +215,6 @@ add_library(bof3x SHARED
   src/game/inventory_ops_fuzz.cpp
   src/render/render_shim.cpp
   src/render/render_d3d11.cpp
-  src/render/crt.cpp
   src/render/satpixie.cpp
   src/game/battle_window_draw.cpp
   src/game/battle_window_draw_fuzz.cpp
@@ -359,7 +358,103 @@ add_library(bof3x SHARED
   src/game/magic_s35.cpp
   src/game/magic_s35_fuzz.cpp
   src/game/magic_s38.cpp
-  src/game/magic_s38_fuzz.cpp)
+  src/game/magic_s38_fuzz.cpp
+  src/game/area_harness.cpp
+  src/game/area_011.cpp
+  src/game/area_011_fuzz.cpp
+  src/game/area_cell_hook.cpp
+  src/game/area_cell_hook_fuzz.cpp
+  src/game/area_w0b.cpp
+  src/game/area_w0b_fuzz.cpp
+  src/game/scenario_harness.cpp
+  src/game/scena_sc0.cpp
+  src/game/scena_sc0_fuzz.cpp
+  src/game/scena_se.cpp
+  src/game/scena_se_fuzz.cpp
+  src/game/scena_sc11.cpp
+  src/game/scena_sc11_fuzz.cpp
+  src/game/scena_sc3.cpp
+  src/game/scena_sc3_fuzz.cpp
+  src/game/scena_sc1.cpp
+  src/game/scena_sc1_fuzz.cpp
+  src/game/scena_sc12.cpp
+  src/game/scena_sc12_fuzz.cpp
+  src/game/scena_calls.cpp
+  src/game/scena_calls_fuzz.cpp
+  src/game/scena_sc9a.cpp
+  src/game/scena_sc9a_fuzz.cpp
+  src/game/area_w0a.cpp
+  src/game/area_w0a_fuzz.cpp
+  src/game/scena_sc6.cpp
+  src/game/scena_sc6_fuzz.cpp
+  src/game/area_w0c.cpp
+  src/game/area_w0c_fuzz.cpp
+  src/game/scena_sc7.cpp
+  src/game/scena_sc7_fuzz.cpp
+  src/game/scena_sc5.cpp
+  src/game/scena_sc5_fuzz.cpp
+  src/game/scena_sx.cpp
+  src/game/scena_sx_fuzz.cpp
+  src/game/area_w1b.cpp
+  src/game/area_w1b_fuzz.cpp
+  src/game/scena_sc9b.cpp
+  src/game/scena_sc9b_fuzz.cpp
+  src/game/area_w1c.cpp
+  src/game/area_w1c_fuzz.cpp
+  src/game/scena_sc15.cpp
+  src/game/scena_sc15_fuzz.cpp
+  src/game/area_w1a.cpp
+  src/game/area_w1a_fuzz.cpp
+  src/game/scena_sc2.cpp
+  src/game/scena_sc2_fuzz.cpp
+  src/game/scena_sc13.cpp
+  src/game/scena_sc13_fuzz.cpp
+  src/game/scena_sx2.cpp
+  src/game/scena_sx2_fuzz.cpp
+  src/game/area_w1e.cpp
+  src/game/area_w1e_fuzz.cpp
+  src/game/area_w2a.cpp
+  src/game/area_w2a_fuzz.cpp
+  src/game/area_w2b.cpp
+  src/game/area_w2b_fuzz.cpp
+  src/game/area_w1d.cpp
+  src/game/area_w1d_fuzz.cpp
+  src/game/area_w2d.cpp
+  src/game/area_w2d_fuzz.cpp
+  src/game/area_w2c.cpp
+  src/game/area_w2c_fuzz.cpp
+  src/game/area_w1f.cpp
+  src/game/area_w1f_fuzz.cpp
+  src/game/area_w3a.cpp
+  src/game/area_w3a_fuzz.cpp
+  src/game/area_w3c.cpp
+  src/game/area_w3c_fuzz.cpp
+  src/game/area_w3b.cpp
+  src/game/area_w3b_fuzz.cpp
+  src/game/area_w2e.cpp
+  src/game/area_w2e_fuzz.cpp
+  src/game/area_w3f.cpp
+  src/game/area_w3f_fuzz.cpp
+  src/game/area_w3e.cpp
+  src/game/area_w3e_fuzz.cpp
+  src/game/area_w3d.cpp
+  src/game/area_w3d_fuzz.cpp
+  src/game/area_w2f.cpp
+  src/game/area_w2f_fuzz.cpp
+  src/game/area_w3g.cpp
+  src/game/area_w3g_fuzz.cpp
+  src/game/area_w4a.cpp
+  src/game/area_w4a_fuzz.cpp
+  src/game/area_w4c.cpp
+  src/game/area_w4c_fuzz.cpp
+  src/game/area_w4d.cpp
+  src/game/area_w4d_fuzz.cpp
+  src/game/area_w4b.cpp
+  src/game/area_w4b_fuzz.cpp
+  src/game/area_w4e.cpp
+  src/game/area_w4e_fuzz.cpp
+  src/game/area_w4f.cpp
+  src/game/area_w4f_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

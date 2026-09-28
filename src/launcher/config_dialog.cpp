@@ -22,8 +22,16 @@ namespace {
 
 struct DialogState {
     Config* cfg;
-    bool english_available;
+    // The overlay languages found in DAT\ (ConfigLanguagesAvailable): the
+    // Language box holds "Original" and then these, in this order.
+    std::vector<std::string> languages;
 };
+
+const wchar_t* LanguageLabel(const std::string& code) {
+    for (const LanguageInfo& lang : kLanguages)
+        if (code == lang.code) return lang.label;
+    return L"?";
+}
 
 void AddItem(HWND dlg, int id, const wchar_t* text) {
     SendDlgItemMessageW(dlg, id, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text));
@@ -114,24 +122,26 @@ void Tick(HWND dlg) {
 void Populate(HWND dlg, const DialogState& state) {
     const Config& cfg = *state.cfg;
 
-    AddItem(dlg, IDC_LANGUAGE, L"Original (Chinese)");
-    if (state.english_available) {
-        AddItem(dlg, IDC_LANGUAGE, L"English (PlayStation script)");
-        SetDlgItemTextW(dlg, IDC_LANGNOTE, L"");
-    } else {
+    AddItem(dlg, IDC_LANGUAGE, L"Chinese (PC script)");
+    int selected = 0;
+    for (size_t i = 0; i < state.languages.size(); ++i) {
+        AddItem(dlg, IDC_LANGUAGE, LanguageLabel(state.languages[i]));
+        if (state.languages[i] == cfg.language) selected = static_cast<int>(i) + 1;
+    }
+    if (state.languages.empty()) {
         // Offering an option that cannot work is worse than explaining why it
         // is missing. The overlays are built, not shipped.
         SetDlgItemTextW(dlg, IDC_LANGNOTE,
-                        L"No DAT\\en.* overlays; build them with tools/loc_build.py.");
+                        L"No DAT\\<lang>.* overlays; build them with tools/loc_build.py.");
+    } else {
+        SetDlgItemTextW(dlg, IDC_LANGNOTE, L"");
     }
-    const bool english = cfg.language == Language::kEnglish && state.english_available;
-    Select(dlg, IDC_LANGUAGE, english ? 1 : 0);
+    Select(dlg, IDC_LANGUAGE, selected);
 
     AddItem(dlg, IDC_FILTER, L"Smooth - bilinear (original)");
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
-    AddItem(dlg, IDC_FILTER, L"CRT - scanlines and glow");
     AddItem(dlg, IDC_FILTER, L"CRT - SatPixie (newpixie fork, MIT)");
-    Select(dlg, IDC_FILTER, cfg.satpixie ? 3 : cfg.crt ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
+    Select(dlg, IDC_FILTER, cfg.satpixie ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
     EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), cfg.satpixie);
 
     AddItem(dlg, IDC_DISPLAY, L"Fullscreen - borderless window");
@@ -152,12 +162,15 @@ void Populate(HWND dlg, const DialogState& state) {
 // The inverse of Populate. Every look but the first takes the point filter
 // (the CRT look is "over the point filter", config.h); renderer 1 is
 // Direct3D, 0 Software (config.h, Cfg_RenderMode).
-void ReadBack(HWND dlg, Config& cfg) {
-    cfg.language = Selected(dlg, IDC_LANGUAGE) == 1 ? Language::kEnglish : Language::kOriginal;
+void ReadBack(HWND dlg, const DialogState& state) {
+    Config& cfg = *state.cfg;
+    const int lang = Selected(dlg, IDC_LANGUAGE);
+    cfg.language = lang >= 1 && static_cast<size_t>(lang) <= state.languages.size()
+                       ? state.languages[static_cast<size_t>(lang) - 1]
+                       : kLanguageOriginal;
     const int look = Selected(dlg, IDC_FILTER);
     cfg.filter = look >= 1 ? Filter::kPoint : Filter::kLinear;
-    cfg.crt = look == 2;
-    cfg.satpixie = look == 3;
+    cfg.satpixie = look == 2;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
     cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
     cfg.snap = IsDlgButtonChecked(dlg, IDC_SNAP) == BST_CHECKED;
@@ -693,7 +706,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         switch (LOWORD(wp)) {
         case IDOK: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-            ReadBack(dlg, *state->cfg);
+            ReadBack(dlg, *state);
             EndDialog(dlg, 1);
             return TRUE;
         }
@@ -701,7 +714,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             EndDialog(dlg, 0);
             return TRUE;
         case IDC_FILTER:
-            if (HIWORD(wp) == CBN_SELCHANGE) EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), Selected(dlg, IDC_FILTER) == 3);
+            if (HIWORD(wp) == CBN_SELCHANGE) EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), Selected(dlg, IDC_FILTER) == 2);
             return TRUE;
         case IDC_LOOKOPTIONS: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
@@ -734,7 +747,7 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icc);
 
-    DialogState state{&cfg, ConfigEnglishAvailable(game_dir)};
+    DialogState state{&cfg, ConfigLanguagesAvailable(game_dir)};
     padnav::SetMap(cfg.bindings.pad);
     const INT_PTR result = DialogBoxParamW(GetModuleHandleW(nullptr),
                                            MAKEINTRESOURCEW(IDD_CONFIG), nullptr, Proc,

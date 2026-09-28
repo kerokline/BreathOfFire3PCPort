@@ -26,6 +26,7 @@
 
 #include <cstdio>
 #include <cwchar>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -115,8 +116,29 @@ std::string Sha256Hex(const std::wstring& path) {
     return hex;
 }
 
+// DIV-0062: the draw-item pool's room. The pool's items are linked into the
+// game's ordering table by 24-bit addresses, so its array must sit below
+// 16 MB - and by the time the DLL runs, the child's low memory is cut up by
+// its heaps and mapped files (the largest gap measured 2026-09-27 was
+// 128 KB). Here the child is suspended with only its image and ntdll mapped,
+// so the block is taken at the first free candidate and stamped; the DLL
+// looks for the stamp at the same candidates (src/game/draw_pool.cpp).
+// Failing quietly is right: the DLL then keeps the original's pool and says so.
+void ReserveDrawPoolIn(HANDLE process) {
+    static const char kStamp[] = "BOF3X-DRAWPOOL-2048";
+    static const std::uint32_t kCandidates[] = {0x00F00000, 0x00E00000, 0x00D00000, 0x00C00000, 0x00B00000, 0x00A00000};
+    for (std::uint32_t at : kCandidates) {
+        void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), 2048 * 0x90,
+                                     MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (!block) continue;
+        if (WriteProcessMemory(process, block, kStamp, sizeof kStamp, nullptr)) return;
+        VirtualFreeEx(process, block, 0, MEM_RELEASE);
+    }
+}
+
 // Runs LoadLibraryW(dll) inside `process` and returns only once it has.
 void LoadDllInto(HANDLE process, const std::wstring& dll) {
+    ReserveDrawPoolIn(process);
     SIZE_T bytes = (dll.size() + 1) * sizeof(wchar_t);
     void* remote = VirtualAllocEx(process, nullptr, bytes, MEM_COMMIT | MEM_RESERVE,
                                   PAGE_READWRITE);

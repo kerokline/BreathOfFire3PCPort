@@ -384,8 +384,8 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
             if (item != 0) {
                 U index;
                 if (face == 0) index = item;
-                else if (face == 1) index = Word(At(kItemFaceA + item * 0x90u));
-                else index = Word(At(kItemFaceB + item * 0x90u));
+                else if (face == 1) index = Word(At(at::ItemFaceA() + item * 0x90u));
+                else index = Word(At(at::ItemFaceB() + item * 0x90u));
                 unsigned char* const half = At(ItemHalf(index));
                 g.set_texture(Long(record + static_cast<U>(c) * 4u + 4u), half, 1);
             }
@@ -435,8 +435,8 @@ extern "C" void __cdecl MapCell_FlatOverlay(int faces, unsigned item) {
         g.set_poly_f4(packet);
         U index;
         if (bit == 1) index = item;
-        else if (bit == 2) index = Word(At(kItemFaceA + item * 0x90u));
-        else index = Word(At(kItemFaceB + item * 0x90u));
+        else if (bit == 2) index = Word(At(at::ItemFaceA() + item * 0x90u));
+        else index = Word(At(at::ItemFaceB() + item * 0x90u));
         const unsigned char* const src = At(ItemHalf(index));
         for (U corner = 0; corner < 4; ++corner) {
             PutLong(packet + 8 + corner * 0xC, Long(src + 8 + corner * 0x10));

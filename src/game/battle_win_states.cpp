@@ -28,10 +28,15 @@
 // computes the same way.
 #include "game/battle_win_states.h"
 
+#include <windows.h>
+
 #include <cstdint>
+#include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_win_states_callees.h"
+#include "game/lang_layout.h"
+#include "game/text_advance.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -303,6 +308,26 @@ extern "C" void __cdecl BattleWin_LabelFrame() {
 // narrow one the small box at (x, y) and the text at x + 6 (6 - n), 8
 // characters; y + 3, colour +0xA, through Text_DrawAt. The record is re-read
 // after the count and after the box.
+//
+// DIVERGENCE DIV-0061: under a Latin language overlay the text is centred
+// on the width the pen covers (DIV-0006's advances) about the same middle -
+// x + 0x26 wide, x + 0x24 narrow - instead of by 6 units a glyph: the
+// owner's "Green Apple" and "Flare" left of centre, 2026-09-27. 0 until
+// BattleWinStates_Inject patches it to 1 under the name BattleBannerCentre,
+// so BOF3X_ORIGINAL=BattleBannerCentre and the fuzz keep the original's x.
+unsigned char g_banner_centre = 0;
+
+namespace {
+// The text's x within the banner: the original's count arithmetic, or under
+// DIV-0061 the same middle less half the real width.
+unsigned BannerTextX(unsigned x, unsigned n, bool wide, const unsigned char* text) {
+    if (!g_banner_centre) return wide ? x - 6 * n + 0x26 : x + 6 * (6 - n);
+    unsigned width = 0;
+    for (const unsigned char* t = text; *t; t += (*t & 0x80) ? 2 : 1) width += static_cast<unsigned>(TextAdvance_Of(t));
+    return x + (wide ? 0x26u : 0x24u) - width / 2;
+}
+}  // namespace
+
 extern "C" void __cdecl BattleWin_BannerFrame() {
     unsigned char* w = Current();
     const auto text = [](std::uint32_t off) {
@@ -323,13 +348,8 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     // eax: the record offset with its low byte replaced by the colour
     const unsigned colour = (o & ~0xFFu) | At(at::kBanners + 0xA + o)[0];
     const unsigned ty = static_cast<std::uint16_t>(Word(w + 6) + 3);
-    if (wide) {
-        const unsigned tx = static_cast<std::uint16_t>(Word(w + 4) - 6 * n + 0x26);
-        g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), 0x12, text(o));
-    } else {
-        const unsigned tx = static_cast<std::uint16_t>(Word(w + 4) + 6 * (6 - n));
-        g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), 8, text(o));
-    }
+    const unsigned tx = static_cast<std::uint16_t>(BannerTextX(Word(w + 4), n, wide, text(o)));
+    g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), wide ? 0x12 : 8, text(o));
 }
 
 // ===========================================================================
@@ -489,6 +509,19 @@ extern "C" void __cdecl BattleWin_MemberTargetFrame() {
 void BattleWinStates_Inject() {
     g = kOriginals;
     if (bof3::WantsShadow("battle_win_states")) SelfTest();
+    // DIVERGENCE DIV-0061: a Latin language overlay only, as MenuLists_Inject
+    // tests it for DIV-0058.
+    {
+        char lang[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("BattleBannerCentre",
+                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_banner_centre)),
+                             &was, &is, 1);
+            bof3::Log("DIV-0061    action banners centred on their width: %s", g_banner_centre ? "on" : "off");
+        }
+    }
 
     BOF3_INJECT(BattleWin_Run);
     BOF3_INJECT(BattleWin_PartyRowStates);

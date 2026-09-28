@@ -1,5 +1,7 @@
 #include "game/map_layers.h"
 
+#include "game/draw_pool.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -56,9 +58,9 @@ unsigned Width() { return AreaMap_Header[0]; }
 short Height(unsigned char corner) { return static_cast<short>(-S8(corner) * 16); }
 
 unsigned char* Corners() { return reinterpret_cast<unsigned char*>(&AreaMap_Corners); }
-unsigned char* Item(unsigned index) { return DrawItems + index * 0x90u; }
+unsigned char* Item(unsigned index) { return draw_pool::Items() + index * 0x90u; }
 // A draw item's quad for buffer `buffer`: items hold one per display buffer.
-unsigned char* Quad(unsigned index, unsigned buffer) { return DrawItems + (buffer + index * 2u) * 0x48u; }
+unsigned char* Quad(unsigned index, unsigned buffer) { return draw_pool::Items() + (buffer + index * 2u) * 0x48u; }
 
 // DrawLayers dword `slot * 2 + 1`: the last link of list (slot - buffer) / 2
 // mod 3 of layer slot / 6 - the layers are six (first, last) pairs, three
@@ -251,7 +253,19 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         const unsigned short got = g.alloc();
         SetWord(cell + 2, got);
         index = got;
-        if (index == 0) return;
+        if (index == 0) {
+            // Diagnostic only, no behaviour: the pool had no item for this cell,
+            // so it is not drawn this frame - the owner's coast glitch of
+            // 2026-09-27, which DIV-0062's larger pool answers; kept so a
+            // recurrence names itself.
+            static unsigned logged = 0;
+            if (logged < 200) {
+                ++logged;
+                bof3::Log("map_layers: no draw item for cell %u,%u layer %u at frame %u", (unsigned)cell[0], (unsigned)cell[1],
+                          layer, (unsigned)Frame_Counter);
+            }
+            return;
+        }
         corner = MapView_CornerPtr;
         item = Item(index);
         // A side item for each neighbour whose near corners stand lower -
@@ -312,6 +326,16 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
             if (*scratch > biased) *scratch = biased;
         }
         const std::uint32_t key = ((layer << 8) | *scratch) << 16;
+        // Diagnostic only, no behaviour: the byte count wraps at 256 and the
+        // table's first entries are overwritten (the coast, 2026-09-27).
+        if (DrawTable_Count == 0xFF) {
+            static unsigned logged = 0;
+            if (logged < 100) {
+                ++logged;
+                bof3::Log("map_layers: draw table full (256) at frame %u, cell %u,%u layer %u", (unsigned)Frame_Counter,
+                          (unsigned)cell[0], (unsigned)cell[1], layer);
+            }
+        }
         DrawTable[DrawTable_Count] = key | (Word(cell + 2) & 0xFFFu);
         DrawTable_Count = static_cast<unsigned char>(DrawTable_Count + 1);
     } else {                    // list 0 of this layer

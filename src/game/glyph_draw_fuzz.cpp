@@ -195,16 +195,25 @@ void RandomVertices() {
 
 // DIV-0025's rule for one block of four vertices: every byte the original's,
 // but each tu and tv its value plus 1/64 exactly.
+// Capcom's tu is float(2u / 32), exact, so 2u = tu * 32 recovers the byte;
+// ours must be float((2u + TexelInset(scale)) / 32) with the round's own
+// scales (still in place at compare time: Restore(g_start) put them back),
+// the same double arithmetic as the draw's, and nothing else may differ.
 bool SameWithInset(const unsigned char* ours, const unsigned char* theirs) {
+    const double inv32 = *reinterpret_cast<const double*>(At(0x5C4618));
+    float sx, sy;
+    std::memcpy(&sx, At(d3d_fuzz::kScaleX), 4);
+    std::memcpy(&sy, At(d3d_fuzz::kScaleY), 4);
+    const double inset[2] = {TexelInset(sx), TexelInset(sy)};
     for (U i = 0; i < 4; ++i) {
         const unsigned char* a = ours + i * 0x20;
         const unsigned char* b = theirs + i * 0x20;
         if (std::memcmp(a, b, 0x18) != 0) return false;
-        for (U k = 0x18; k < 0x20; k += 4) {
+        for (U k = 0; k < 2; ++k) {
             float fa, fb;
-            std::memcpy(&fa, a + k, 4);
-            std::memcpy(&fb, b + k, 4);
-            const float want = fb + 1.0f / 64.0f;
+            std::memcpy(&fa, a + 0x18 + k * 4, 4);
+            std::memcpy(&fb, b + 0x18 + k * 4, 4);
+            const float want = static_cast<float>((static_cast<double>(fb) * 32.0 + inset[k]) * inv32);
             if (std::memcmp(&fa, &want, 4) != 0) return false;
         }
     }

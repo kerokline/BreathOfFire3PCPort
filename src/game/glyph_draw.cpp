@@ -36,6 +36,21 @@ Callees g = kOriginals;
 
 float g_texel_inset = 0.0f;
 
+// DIV-0025, amended 2026-09-27: the inset in texture texels that puts a
+// screen pixel's sample at its own centre. The quad is 12 game units times
+// `scale` pixels wide and shows 24 texels (each PSX texel doubled), so a
+// pixel is 2 / scale texels and half of one is 1 / scale: 0.5 at scale 2
+// (the 2026-09-22 value, exact there and wrong elsewhere - at scale 4 every
+// odd pixel sampled a texel edge and the quad's two triangles rounded it
+// differently, the owner's crooked stroke bottoms). Plus 1/256 of a texel
+// so that an odd scale, whose pixel centres also land on edges (scale 3:
+// pixel 1 at texel 1.0), samples the same side in both triangles. The
+// fuzz's SameWithInset recomputes exactly this.
+double TexelInset(double scale) {
+    if (!(scale > 0.0)) scale = scale < 0.0 ? -scale : 1.0;   // a negative or NaN scale still draws
+    return 1.0 / scale + 1.0 / 256.0;
+}
+
 namespace {
 
 using U = std::uint32_t;
@@ -110,15 +125,18 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     // each PSX texel as 2 x 2) times the double 1/32 at 0x5C4618 - the 24 x 24
     // glyph in a 32 x 32 surface. Capcom's add nothing to 2u: every screen
     // pixel then samples exactly on the edge between two texels (D17).
-    // DIV-0025 adds g_texel_inset, 0.5 - the texel's centre - on both the near
-    // and the far edge, so the 1:1 scale is kept. All values exact in float.
+    // DIV-0025 adds the pixel-centre inset (TexelInset, per axis from the
+    // scale) on both the near and the far edge, so the texel-per-pixel scale
+    // is kept; g_texel_inset is the switch (GlyphTexelCentres), 0 for
+    // Capcom's arithmetic.
     const double inv32 = *reinterpret_cast<const double*>(At(kInv32));
-    const double inset = g_texel_inset;
+    const double inset_u = g_texel_inset != 0.0f ? TexelInset(GetFloat(kScaleX)) : 0.0;
+    const double inset_v = g_texel_inset != 0.0f ? TexelInset(GetFloat(kScaleY)) : 0.0;
     for (U i = 0; i < 4; ++i) {
         unsigned char* out = v + i * 0x20;
         const unsigned char* in = prim + i * 8;
-        PutFloat(out + 0x18, static_cast<float>((2.0 * in[0xC] + inset) * inv32));
-        PutFloat(out + 0x1C, static_cast<float>((2.0 * in[0xD] + inset) * inv32));
+        PutFloat(out + 0x18, static_cast<float>((2.0 * in[0xC] + inset_u) * inv32));
+        PutFloat(out + 0x1C, static_cast<float>((2.0 * in[0xD] + inset_v) * inv32));
     }
 
     // The glyph's texture (its return is not read), then the state: two calls
@@ -198,5 +216,6 @@ void GlyphDraw_Inject() {
     bof3::PatchBytes("GlyphTexelCentres",
                      static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&glyph_draw::g_texel_inset)),
                      was_bytes, is_bytes, 4);
-    bof3::Log("DIV-0025    glyph texels: (2u + %.1f) / 32", static_cast<double>(glyph_draw::g_texel_inset));
+    bof3::Log("DIV-0025    glyph texels: (2u + 1/scale + 1/256) / 32, %s (0.5 at every scale until 2026-09-27)",
+              glyph_draw::g_texel_inset != 0.0f ? "on" : "off");
 }

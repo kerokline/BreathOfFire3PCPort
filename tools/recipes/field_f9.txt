@@ -1,0 +1,18 @@
+# The adult_ryu save loaded to its field, then a long idle for a driver that presses F9 twice (the title reload of FIRST.DAT; DIV-0015 fix 2026-09-27).
+# 45 frames apart - the field A/B of docs/sprite-draw-order.md sections 15-16.
+# save adult_ryu
+wait 480
+press start
+wait 40
+press circle
+wait 60
+wait 60           # slot 0 is the recipe save; was `press down x5` to slot 5, the same 60 frames
+press circle
+wait 40
+press circle
+wait 60
+press circle
+until 0x66C7E8 u16 == 2 timeout 1200
+wait 300
+wait 3600
+end

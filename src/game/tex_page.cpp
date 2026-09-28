@@ -18,6 +18,8 @@
 // vtables exactly as the original's do, one call each, in its order.
 #include "game/tex_page.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 
@@ -319,6 +321,28 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     U slot = 0;
     for (U e = kPageCache + ((p * 3) << 8); slot < 0x20; ++slot, e += kEntryBytes)
         if (At(e)[0] == 0) break;
+    // Diagnostic only, no behaviour: a page with no free entry (the original
+    // draws the primitive untextured, D3d_BindTexture with a 0) is logged, the
+    // first 64 times; BOF3X_TEXPAGELOG=1 logs every build.
+    {
+        static bool want = false, asked = false;
+        static unsigned full_logged = 0;
+        if (!asked) {
+            char text[8];
+            want = GetEnvironmentVariableA("BOF3X_TEXPAGELOG", text, sizeof text) != 0;
+            asked = true;
+        }
+        if (slot == 0x20 && full_logged < 64) {
+            ++full_logged;
+            bof3::Log("tex_page: page %u FULL (32 entries) at frame %u: clut 0x%X mode %u key %d,%d %dx%d", (unsigned)p,
+                      (unsigned)Frame_Counter, (unsigned)clut, (unsigned)m, (int)Short(kTexKey), (int)Short(kTexKey + 2),
+                      (int)Short(kTexKey + 4), (int)Short(kTexKey + 6));
+        } else if (want && slot != 0x20) {
+            bof3::Log("tex_page: build page %u slot %u frame %u clut 0x%X mode %u key %d,%d %dx%d", (unsigned)p, (unsigned)slot,
+                      (unsigned)Frame_Counter, (unsigned)clut, (unsigned)m, (int)Short(kTexKey), (int)Short(kTexKey + 2),
+                      (int)Short(kTexKey + 4), (int)Short(kTexKey + 6));
+        }
+    }
     if (slot == 0x20) return 0;
     const U src = Source(p, m, Short(kTexKey), Short(kTexKey + 2));
     Desc desc;

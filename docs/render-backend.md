@@ -7,8 +7,9 @@ of §5 is the record of how close.
 
 **What followed** (noted 2026-09-24): the target made wider for the 426 x 240
 picture (DIV-0041, [`widescreen.md`](widescreen.md)); `k` taken from the
-window as it resizes (DIV-0042); the two looks in the present (DIV-0037,
-[`crt-look.md`](crt-look.md); DIV-0043); the zero-depth corner clamp in the
+window as it resizes (DIV-0042); the looks in the present (DIV-0037,
+[`crt-look.md`](crt-look.md), withdrawn 2026-09-27; DIV-0043, the one that
+remains); the zero-depth corner clamp in the
 backend's `DrawPrimitive` (DIV-0044); and the released-surface snapshot fix
 found in the DIV-0048 runs (the last section below).
 

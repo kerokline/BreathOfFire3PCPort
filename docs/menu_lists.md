@@ -153,8 +153,10 @@ n, n the `Text_CharCount` of the string. That is the case
 predicts - "a caller that centres text by counting characters at 12 px
 would now sit left of centre" - and a candidate for the owner's "the screen
 title sits left of centre" ([`menu-screens.md`](menu-screens.md) section 3
-item 3). Not translated or re-centred here; ours draws what the original
-draws.
+item 3). ~~Not translated or re-centred here; ours draws what the original
+draws.~~ **Re-centred 2026-09-27, DIV-0058:** under a Latin overlay ours
+starts the text at x + `0x25` - width / 2, the width from DIV-0006's
+advances; everything else, and every other language, as the original.
 
 The skill list's and the item list's headers are not in this group.
 

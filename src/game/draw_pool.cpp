@@ -1,5 +1,7 @@
 #include "game/draw_pool.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -8,10 +10,16 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+namespace draw_pool {
+unsigned char* g_items = DrawItems;
+unsigned short* g_free = DrawItemPool_Free;
+unsigned g_count = DrawItemPool_Free_count;
+}  // namespace draw_pool
+
 namespace {
 
-constexpr unsigned kMask = DrawItemPool_Free_count - 1;
-static_assert(kMask == 0x3FF);
+static_assert(DrawItemPool_Free_count == 1024);
+constexpr unsigned kMask = DrawItemPool_Free_count - 1;   // the original's ring, for the self-test's edges
 
 // --- BOF3X_SHADOW=draw_pool: a differential fuzz, once at start-up -------------
 // Neither function calls anything and every jump stays inside, so byte-copies
@@ -142,8 +150,8 @@ void SelfTestReleaseCell(ReleaseCellFn theirs) {
 extern "C" unsigned short __cdecl DrawItemPool_Alloc(void) {
     const unsigned short top = DrawItemPool_Top;
     if (top == 0) return 0;
-    const unsigned short index = DrawItemPool_Free[top];
-    DrawItemPool_Top = static_cast<unsigned short>((top + 1) & kMask);
+    const unsigned short index = draw_pool::Free()[top];
+    DrawItemPool_Top = static_cast<unsigned short>((top + 1) & draw_pool::Mask());
     return index;
 }
 
@@ -154,9 +162,9 @@ extern "C" unsigned short __cdecl DrawItemPool_Alloc(void) {
 // top is what is left in eax. No caller read so far uses that; it is returned
 // because it is free to.
 extern "C" unsigned __cdecl DrawItemPool_Release(unsigned short index) {
-    const unsigned top = (DrawItemPool_Top - 1u) & kMask;
+    const unsigned top = (DrawItemPool_Top - 1u) & draw_pool::Mask();
     DrawItemPool_Top = static_cast<unsigned short>(top);
-    DrawItemPool_Free[top] = index;
+    draw_pool::Free()[top] = index;
     return top;
 }
 
@@ -175,7 +183,7 @@ extern "C" void __cdecl DrawItemPool_ReleaseCell(unsigned char* cell) {
     if (index == 0) return;
     DrawItemPool_Release(static_cast<unsigned short>(index));
     std::memset(cell + 2, 0, 2);
-    unsigned char* const item = DrawItems + index * 0x90;
+    unsigned char* const item = draw_pool::Items() + index * 0x90;
     for (const unsigned at : {0x7Eu, 0x8Eu}) {
         std::uint16_t owned;
         std::memcpy(&owned, item + at, sizeof owned);
@@ -205,4 +213,114 @@ void DrawPool_Inject() {
     BOF3_INJECT(DrawItemPool_Alloc);
     BOF3_INJECT(DrawItemPool_Release);
     BOF3_INJECT(DrawItemPool_ReleaseCell);
+}
+
+// DIVERGENCE DIV-0062: the pool doubled. The original's 1,024 items (index
+// 0 never handed out) were enough for its [-50, 370] terrain cull; the wide
+// view's cull (DIV-0041) keeps half as many cells again, and a cutscene pan
+// over the Yraall coast ran the pool dry at frame 523 of the owner's route
+// (200 cells a second refused an item and drawn as nothing - their walls
+// showing through as blue parallelograms), some for good. Measured
+// 2026-09-27: the narrow view peaks at 855 of 1,023 in the same scene, the
+// wide one wraps the counter. Now 2,048 items and a 2,048-word free queue in
+// the dll; the index is 12 bits in the cell word, so nothing else changes
+// shape. The thirteen sites in Capcom's code that name the item array as an
+// immediate (a raw scan of .text, each confirmed by disassembly) are re-aimed,
+// and the one bound AreaMap_FrameAreaBD compares its bump index with
+// (`cmp word [Top], 0x400` at 0x510878) is raised to 0x800. Runs last, after
+// every self-test.
+namespace {
+unsigned char* g_low_items = nullptr;
+}  // namespace
+
+// The first thing InjectAll does, before any clone or fuzz array is placed:
+// the item array's room below 16 MB is easiest to find then (by the end of
+// the injects the range is cut up by our own allocations - measured
+// 2026-09-27: the largest gap left was 192 KB).
+void DrawPool_Reserve() {
+    constexpr std::uint32_t kBytes = 2048 * 0x90;
+    static const char kStamp[] = "BOF3X-DRAWPOOL-2048";
+    static const std::uint32_t kCandidates[] = {0x00F00000, 0x00E00000, 0x00D00000, 0x00C00000, 0x00B00000, 0x00A00000};
+    unsigned char* items = nullptr;
+    // The launcher's block, stamped, at one of the candidates (launcher.cpp).
+    for (std::uint32_t at : kCandidates) {
+        MEMORY_BASIC_INFORMATION mbi;
+        auto* p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(at));
+        if (VirtualQuery(p, &mbi, sizeof mbi) == 0) continue;
+        if (mbi.State != MEM_COMMIT || mbi.Type != MEM_PRIVATE || mbi.BaseAddress != p || mbi.RegionSize < kBytes) continue;
+        if (std::memcmp(p, kStamp, sizeof kStamp) != 0) continue;
+        items = p;
+        break;
+    }
+    // Started without the launcher: the first free region of the size below
+    // 16 MB, if the address space still has one.
+    for (std::uint32_t at = 0x10000; at + kBytes <= 0x1000000 && !items;) {
+        MEMORY_BASIC_INFORMATION mbi;
+        if (VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(at)), &mbi, sizeof mbi) == 0) break;
+        const auto region = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(mbi.BaseAddress));
+        const std::uint32_t end = region + static_cast<std::uint32_t>(mbi.RegionSize);
+        if (mbi.State == MEM_FREE && end - at >= kBytes) {
+            const std::uint32_t want = (at + 0xFFFF) & ~0xFFFFu;   // allocation granularity
+            if (want + kBytes <= end)
+                items = static_cast<unsigned char*>(VirtualAlloc(reinterpret_cast<void*>(static_cast<std::uintptr_t>(want)), kBytes,
+                                                                 MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
+        }
+        at = end;
+    }
+    if (items) std::memset(items, 0, kBytes);
+    g_low_items = items;
+    if (items)
+        bof3::Log("DIV-0062    draw-item pool's room at 0x%08X (%u KB, below 16 MB)", (unsigned)reinterpret_cast<std::uintptr_t>(items),
+                  kBytes / 1024);
+}
+
+void DrawPool_Grow() {
+    constexpr unsigned kCount = 2048;
+    constexpr std::uint32_t kBytes = kCount * 0x90;
+    // The items are linked into the ordering table by 24-bit addresses (the
+    // PlayStation's tag; d3d_list.cpp masks a link to 24 bits), so the array
+    // must sit below 16 MB, as everything of Capcom's does. The first free
+    // region of the size between 0xA00000 and 0x1000000 (VirtualQuery); none
+    // leaves the original's pool, said loudly, rather than a link that
+    // truncates (the first build of this crashed in Gfx_DrawOTag).
+    unsigned char* const items = g_low_items;
+    if (!items) {
+        bof3::Log("DIV-0062    no free %u KB below 16 MB for the draw-item pool: the original's 1,024 items stay", kBytes / 1024);
+        return;
+    }
+    static unsigned short free_list[kCount];
+    for (unsigned i = 0; i < kCount; ++i) free_list[i] = static_cast<unsigned short>(i);
+    const auto base = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(items));
+    struct Site {
+        std::uint32_t at;       // where the 4-byte immediate sits
+        std::uint32_t was;      // the original's value there
+        std::uint32_t offset;   // into the item: 0, 0x7E or 0x8E
+    };
+    static const Site kSites[] = {
+        {0x486EBD, 0x905E80, 0},    {0x509930, 0x905E80, 0},    {0x5109FC, 0x905E80, 0},
+        {0x51242A, 0x905E80, 0},    {0x512607, 0x905E80, 0},    {0x5139C2, 0x905E80, 0},
+        {0x513BAC, 0x905E80, 0},    {0x513C41, 0x905E80, 0},    {0x5098F4, 0x905EFE, 0x7E},
+        {0x5098FB, 0x905EFE, 0x7E}, {0x513B9B, 0x905EFE, 0x7E}, {0x509909, 0x905F0E, 0x8E},
+        {0x509910, 0x905F0E, 0x8E},
+    };
+    for (const Site& s : kSites) {
+        std::uint8_t was[4], is[4];
+        const std::uint32_t now = base + s.offset;
+        std::memcpy(was, &s.was, 4);
+        std::memcpy(is, &now, 4);
+        bof3::PatchBytes("DrawPool", s.at, was, is, 4);
+    }
+    static const std::uint8_t was16[2] = {0x00, 0x04}, is16[2] = {0x00, 0x08};
+    bof3::PatchBytes("DrawPool", 0x51087F, was16, is16, 2);
+    // BOF3X_ORIGINAL=DrawPool: PatchBytes left every site alone (and said so);
+    // read the first back, and leave the arrays the original's too.
+    std::uint32_t first;
+    std::memcpy(&first, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(kSites[0].at)), 4);
+    if (first == kSites[0].was) return;
+    draw_pool::g_items = items;
+    draw_pool::g_free = free_list;
+    draw_pool::g_count = kCount;
+    DrawItemPool_Top = 1;
+    bof3::Log("DIV-0062    draw-item pool %u items (was %u), the item array at 0x%08X", kCount,
+              (unsigned)DrawItemPool_Free_count, (unsigned)base);
 }

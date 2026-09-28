@@ -70,6 +70,7 @@ rule ([`README.md`](README.md)) here too.
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | open; planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) (owner, 2026-09-26) |
 | I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | open; planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) (owner, 2026-09-26) |
+| I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | open; planned and cut in [`takeover-queue-bosses.md`](takeover-queue-bosses.md), tool `tools/boss_rows.py` (owner, 2026-09-28) |
 
 ---
 
@@ -1033,3 +1034,46 @@ each is a round of its own with the same walker.
 
 ### Outcome
 _(2026-09-26) open; planned, not scheduled._
+
+## I26 — The boss round: the BOSS overlays enumerated from the engine's three root sets
+
+**Ask (2026-09-28):** the owner: after the scenario and area takeovers the
+boss scripts are the next biggest target - stage them "like we did area",
+for round eleven; check the sibling for what it knows about the bosses
+(it has met three or four more than this project has) to validate the
+shape and the entry points; one fight is within reach of a recipe save,
+the whole sweep is not.
+**Kind:** engine
+**Feasibility:** HIGH   **Gated on:** the area round finishing (round ten's
+remaining waves); the live check per fight wants a recipe save the owner
+records after the fuzz.
+
+### What already exists
+- The tool, `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)): the
+  three root sets (`Boss_SetupTable` `0x656954` by the event-battle byte,
+  `BossKind_Table` `0x64B088` by the enemy's kind, the effect dispatchers'
+  stack slots) reach all 541 functions of the band `0x437A00..0x441000`;
+  525 to take in 123 units (55 set-ups, 61 kinds, 7 effect tasks) plus 20
+  shared helpers; the set-ups' address order is the sibling's file order.
+- The engine side: every caller of the roots and of the three hooks
+  `0x904B64..6C` is ours (BG, round 7, `EnemyRunAll`, `BattleTask_RunAll`).
+- Ground truth on the sibling: `docs/loader_records/BOSS.md` (the same
+  56-entry table, entered by one `jalr`; 55 of 55 entries inside their
+  file's section), `names/boss_records.toml` (id to file), twelve BOSS
+  images resident across its sessions; no function inside a BOSS overlay
+  named.
+
+### What is missing
+- Names for the two tables, the kind-3 dispatcher `0x4357D0` and the hooks;
+  the `EnemyOp_StepsB..F` tables re-attributed to kinds 1 and 2.
+- A `boss_harness` for the eight call shapes over one battle frame.
+- Recipe saves before each fight (the owner's, after the fuzz).
+
+### First concrete step
+Name the tables (BH's), write the harness from `magic_harness`, prove it on
+BH and BSA; then wave one (BH, BSA..BSE, 278 functions) and wave two
+(BSF..BSJ, 247). The plan, groups and waves:
+[`takeover-queue-bosses.md`](takeover-queue-bosses.md).
+
+### Outcome
+_(2026-09-28) open; planned and cut, not scheduled - after the area round._

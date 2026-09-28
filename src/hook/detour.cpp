@@ -18,7 +18,7 @@ int g_enabled = 0;
 int g_disabled = 0;
 
 // Every address passed to Inject, both directions, for IsOwned.
-constexpr int kMaxOwned = 4096;
+constexpr int kMaxOwned = 16384;  // 4,096 hit at 4,097 ours (round 10 SC5 merge, 2026-09-27); ~10,200 real functions in the exe
 std::uint32_t g_owned[kMaxOwned];
 
 // A name, `*` for every name, or `-NAME` to take one back out: `*,-LoadDatFile`

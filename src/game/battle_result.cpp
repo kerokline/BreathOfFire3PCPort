@@ -23,10 +23,14 @@
 // totals 0x904AEC / 0x904AF0 that these functions read.
 #include "game/battle_result.h"
 
+#include <windows.h>
+
 #include <cstdint>
+#include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_result_callees.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -404,23 +408,37 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpS
 // a register the caller left (ecx, esi) - 0x5982D0, Text_DrawAt and
 // Text_DrawFont12 read those arguments as words, and ours passes them
 // zero-extended; 0x598810 reads its slot as a byte.
+//
+// DIVERGENCE DIV-0060: under a Latin language overlay the line takes the US
+// release's layout - the EXP still to go right-aligned before the sentence,
+// the sentence, the next level at the right edge: "%6d" at 0x36, the
+// message at 0x82, "%2d" at 0x114 (read off the owner's photograph of the
+// US screen, 2026-09-27; the level-99 message at 0x82 too). The Chinese
+// layout puts the sentence at 0x55 and the level at 0x85, which the US
+// sentence "EXP to next level:" (144 units) runs over - the owner's "a
+// digit hidden in 'next'". Same calls, same order, other x. 0 until
+// BattleResult_Inject patches it to 1 under the name BattleResultExpLayout.
+unsigned char g_exp_layout_us = 0;
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_DrawExp(void) {
     const unsigned char* const w = CurrentWindow();
     g.draw_frame(0x14, 0x28, 0x118, w[9]);
+    const bool us = g_exp_layout_us != 0;
+    const int x_msg = us ? 0x82 : 0x55, x_level = us ? 0x114 : 0x85, x_exp = us ? 0x36 : 0xE3;
     unsigned char y = 0x2C;
     for (unsigned char slot = 0; slot < Byte(at::kPartyCount); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
         unsigned char* const m = Member(slot);
         g.text_draw_at(0x19, y, 0, 5, m);
         const unsigned level = m[0xA];
         if (level == 0x63) {
-            g.text_draw_at(0x55, y, 0, 0xFF, g.msg_system(0x41));
+            g.text_draw_at(x_msg, y, 0, 0xFF, g.msg_system(0x41));
             continue;
         }
         g.crt_sprintf(Text(at::kText2), Format(at::kFormat2d), level + 1);
-        g.text_draw_font12(0x85, y, 0, At(at::kText2));
+        g.text_draw_font12(x_level, y, 0, At(at::kText2));
         g.crt_sprintf(Text(at::kText2), Format(at::kFormat6d), g.exp_to_next(slot));
-        g.text_draw_font12(0xE3, y, 0, At(at::kText2));
-        g.text_draw_at(0x55, y, 0, 0xFF, g.msg_system(0x15));
+        g.text_draw_font12(x_exp, y, 0, At(at::kText2));
+        g.text_draw_at(x_msg, y, 0, 0xFF, g.msg_system(0x15));
     }
 }
 
@@ -456,6 +474,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
 
 void BattleResult_Inject() {
     if (bof3::WantsShadow("battle_result")) battle_result::SelfTest();
+    // DIVERGENCE DIV-0060: a Latin language overlay only, as MenuLists_Inject
+    // tests it for DIV-0058.
+    {
+        char lang[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("BattleResultExpLayout",
+                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_exp_layout_us)),
+                             &was, &is, 1);
+            bof3::Log("DIV-0060    EXP line in the US layout: %s", g_exp_layout_us ? "on" : "off");
+        }
+    }
     BOF3_INJECT(BattleResult_SplitExp);
     BOF3_INJECT(BattleResult_OpenExpWindow);
     BOF3_INJECT(BattleResult_ExpWaitHeld);

@@ -40,6 +40,8 @@ extern Callees g;
 // 0 is Capcom's (the texel edge), 0.5 the texel centre. 0 until
 // GlyphDraw_Inject sets it; the fuzz sets it itself.
 extern float g_texel_inset;
+// The inset the draw uses when the switch is on: 1 / scale + 1 / 256 texels.
+double TexelInset(double scale);
 
 void SelfTest();   // glyph_draw_fuzz.cpp
 

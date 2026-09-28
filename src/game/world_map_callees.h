@@ -10,6 +10,8 @@
 // section 7.
 #pragma once
 
+#include "game/draw_pool.h"
+
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
@@ -82,7 +84,7 @@ inline U Camera_AnglesAt() { return Of(Camera_Angles); }
 inline U Prim_VertexScratchAt() { return Of(Prim_VertexScratch); }
 inline U MapView_OriginAt() { return Of(MapView_Origin); }
 inline U Gfx_BufferIndexAt() { return Of(&Gfx_BufferIndex); }
-inline U DrawItemsAt() { return Of(DrawItems); }
+inline U DrawItemsAt() { return static_cast<U>(reinterpret_cast<std::uintptr_t>(draw_pool::Items())); }   // DIV-0062
 }  // namespace at
 
 struct Callees {

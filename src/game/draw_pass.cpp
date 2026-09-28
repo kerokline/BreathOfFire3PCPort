@@ -1,5 +1,7 @@
 #include "game/draw_pass.h"
 
+#include "game/draw_pool.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -293,7 +295,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                 if (Draw_PassFlags & 4) {
                     const auto at = [item] {
                         return static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(
-                            DrawItems + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u));
+                            draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u));
                     };
                     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at());
                     Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at()));
