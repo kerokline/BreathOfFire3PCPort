@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 39 functions ours
 (`src/game/area_w4c.cpp`, shadow name `area_w4c`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), four `Run`s (areas
-173, 174, 175 and 198): @RESULT@ Fuzz only: no recorded route reaches either
+173, 174, 175 and 198): 0 mismatches in 246,000 rounds (in this worktree); 261 controls planted, 252 refused by a count, 2 by a fault, 7 equivalent (each with a refused variant) (section 4). Fuzz only: no recorded route reaches either
 area (section 5). No divergence; where the original writes through an effect
 slot past the 20 effect records or calls through its two-entry stack table
 past its end, ours aborts with a message (section 6).
@@ -174,20 +174,292 @@ listed under the first `Run` that refuses it.
 - **Regions beyond the field frame:** `MoveScript_TintRecords` through the 20
   effect records as one block (`0x7E0700..0x7E1BE0`, with `Sprite_Kind2`
   between), the script object pointer, `Field_ActiveMember`, area 175's two
-  bytes `0x939A3C..0x939A3F`@REGIONS@.
+  bytes `0x939A3C..0x939A3F`, `Cond_ByteFE` (`0x905E20`, which the tail's state 10 sets), and the `+0x89` bytes of the three records after the party's (the member search reads them for a count past 3) - 28 regions with the harness's, 21,568 bytes.
 - **Every round:** the script object at a field object, a party record or the
   running object itself; `Field_ActiveMember` at a field object, one of the
   four extra objects or a party record.
-- **Seeds:** @SEEDS@
+- **Seeds:** the party members' `+0x89` (the six records the member search can reach) at the lists' bytes or beside them, `Field_MemberCount` 0..5 a third of the time; `Field_State +0x89` at 2 and beside; `Field_ActiveMember` for the `0x9D` effects at any address half the time (a difference of either sign from `Sprite_Objects`, it is not read through); every tail state 0, 1, `0xA..0xC` and the empty or out-of-range ones (2, 5, 9, `0xD`, `0x7F`, `0x80`, `0xF4`, `0xFF`) with counter 3 at the value the state waits on two times in three and beside it otherwise (the empty states given `0x18`, `0x20` or 0), `Cond_ByteFD` 2 or not for state 1, the timer at 1, 0, 2, `0x101`, `0x8001`, `0xFFFF`; the arrive hook's zone 1, 2 or other, z exact, the other zone's, one off, a high-word off or any, x's high word at each end of its window and one past it (a low word or none); `Field_Request` 5 and beside; the effect slot in `+0xB` inside the 20; the sink's word at `0xA14` and beside and its three bytes at the signed edges (`0xBF`, `0xC0`, `0x80`, `0x7F`, ...); the script object's `+3` inside the running area's script table (37 for 174, 15 for 198) and its `+0xA` small half the time; the word `+0x58` at 2 and beside; `Field_State +0x130` pointed into the area block with the byte it reads planted and the limit byte `0x903848` one below, at, one above, or far; the turns' direction at the script's byte, one off either way or any; the pose helper's table one of the three real ones two rounds in three (else the area block) and any direction; the fade state 0 or 1, the tint index under 32 half the time and its byte at `0x1E` and beside; `+0x5D` at `0x80` and beside; the choice answers 0, 1, 2, `0xFF`, `0x80`, `0x7F`, `0x10`.
 - **The group's disturbance** (from the hash it is given): the tail state,
   counter 3, the script object, `Field_ActiveMember`, the word timer,
   `Cond_ByteFD`.
 
-@FUZZRESULT@
+**Result (in this worktree):** area 173 54,000 rounds, 27,185 calls to the stand-ins; area 174 144,000 rounds, 102,801 calls; area 175 36,000 rounds (the choices call nothing); area 198 12,000 rounds, 7,351 calls - 246,000 rounds, 0 mismatches, 21,568 bytes of state (28 regions) and the log compared. Coverage: every callee each function can reach was called - `Party_DropIn` 328, `Field_ChangeArea` / `Flags_Set` 450, `Flags_Clear` 467, `ScriptFlags_Set40` 373 (the arrive hook's matches), `Msg_OpenScript` 7,117, `Area174_SetPose` 15,367, `0x454A80` 8,038, `0x455290` 6,000, both stack states (`0x428FC0` 3,003, `0x429080` 2,997).
+
+`BOF3X_SHADOW='*'`: exit 0, `inject: 5397 ours`, 491 self-test lines, no mismatch (in this worktree, first run; no silent death).
 
 ## 4. Controls
 
-@CONTROLS@
+Planted one at a time in `area_w4c.cpp` by a script (the scratch `controls.py`, not committed) that plants on an anchor it checks is unique, rebuilds, checks `area_w4c.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w4c`, restores; after the last it rebuilt and ran the clean self-test (exit 0, 0 mismatches). **261 planted (256, then five near variants), 254 refused (exit 3 or a fault) - 252 by a count, 2 by a fault (each with a variant refused by a count) - and 7 equivalent**, each with a near variant or a neighbouring control refused by a count. No hang. Five of the seven were planted as equivalence checks (C32, C71, C79, C127, C197); C19 and C167 are equivalent by the shipped data. Every one of the 39 functions has at least one control of its own; a control in a shared helper lists every function it refused in, within the first `Run` that refused it (section 3).
+
+A first pass left three standing that were the fuzz's fault and were refused after it was strengthened: `Cond_ByteFE` (`0x905E20`, which the tail's state 10 sets) was in no compared region (C50); the `+0x89` bytes of the records after the party's, which the member search reads for a `Field_MemberCount` past 3, were outside the regions, so their constant bytes never matched a member byte (C17: three one-byte regions now, seeded with the lists' bytes); the tail's empty states were never given the counter value a live state waits on, so "state 13 runs state 12" never showed (C63).
+
+The thinnest (under the final fuzz where re-planted): C4 18 (the member index's rounding of a negative difference), C123 35 (`Area174_SinkAndBrighten`'s member word as a byte), C56 36 (`Area173_Tail38` state 11 done at 1), C67 37 (the arrive hook's z by its high word), C70 42 (its window tested signed), C59 49, C62 53 (the tail's state 9 run as 10: 1 round on the first pass, before the empty states were given the live states' counter values).
+
+Counts are in this worktree; the second and later passes ran on the strengthened fuzz, the first-pass counts on the fuzz before it (regions and seeds only added since, so each first-pass refusal stands).
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| C1 | `EffectAt (every effect handler)` | effect stride 0x7C | Area173_Effect9DSub0 3870, Area173_Effect9DSub1 3757 |
+| C2 | `ActiveMemberIndex (0x9D handlers)` | the index divided unsigned | Area173_Effect9DSub0 461, Area173_Effect9DSub1 480 |
+| C3 | `ActiveMemberIndex (0x9D handlers)` | the index one on | Area173_Effect9DSub0 4074, Area173_Effect9DSub1 3970 |
+| C4 | `ActiveMemberIndex (0x9D handlers)` | the division as >> 2 then / 41 (rounds differently for negatives) | Area173_Effect9DSub0 5, Area173_Effect9DSub1 11 on the first pass; Area173_Effect9DSub0 11, Area173_Effect9DSub1 7 under the final fuzz |
+| C5 | `Effect9D (all four)` | +0 = 2 | Area173_Effect9DSub0 4074, Area173_Effect9DSub1 3970 |
+| C6 | `Effect9D (all four)` | kind 0x9C | Area173_Effect9DSub0 4074, Area173_Effect9DSub1 3970 |
+| C7 | `Effect9D (all four)` | the index to +0xC | Area173_Effect9DSub0 4074, Area173_Effect9DSub1 3969 |
+| C8 | `Effect9D (all four)` | word +0x30 0xA4 | Area173_Effect9DSub0 4074, Area173_Effect9DSub1 3970 |
+| C9 | `Effect9D (all four)` | word +0x2E stored as a byte | Area173_Effect9DSub0 4056, Area173_Effect9DSub1 3947 |
+| C10 | `MessageByMember (A and B)` | three pairs searched | Area173_MessageByMemberA 655, Area173_MessageByMemberB 677 |
+| C11 | `MessageByMember (A and B)` | one member more | Area173_MessageByMemberA 819, Area173_MessageByMemberB 791 |
+| C12 | `MessageByMember (A and B)` | member 0 skipped | Area173_MessageByMemberA 1683, Area173_MessageByMemberB 1640 |
+| C13 | `MessageByMember (A and B)` | Field_Request 3 | Area173_MessageByMemberA 3461, Area173_MessageByMemberB 3439 |
+| C14 | `MessageByMember (A and B)` | the search goes on after a match | Area173_MessageByMemberA 801, Area173_MessageByMemberB 778 |
+| C15 | `MessageByMember (A and B)` | message words indexed by bytes | Area173_MessageByMemberA 2359, Area173_MessageByMemberB 2369 |
+| C16 | `MessageByMember (A and B)` | member byte +0x8A | Area173_MessageByMemberA 3492, Area173_MessageByMemberB 3472 |
+| C17 | `MessageByMember (A and B)` | the count clamped to 3 | not refused on the first pass (the fuzz's fault, below); after it: Area173_MessageByMemberA 152, Area173_MessageByMemberB 154 |
+| C18 | `Area173_MessageByMemberA` | A opens B's messages | Area173_MessageByMemberA 3461 |
+| C19 | `Area173_MessageByMemberB` | B searches A's members (the same bytes) | equivalent: `Area173_MembersA` and `_MembersB` hold the same four bytes; V1 (B's list one byte on) refused |
+| C20 | `Area173_MessageByMemberB` | B opens A's messages | Area173_MessageByMemberB 3439 |
+| C21 | `Area173_PlaceObject` | x 0x168001 | Area173_PlaceObject 6000 |
+| C22 | `Area173_PlaceObject` | y 0x5000001 | Area173_PlaceObject 6000 |
+| C23 | `Area173_PlaceObject` | the test at 3 | Area173_PlaceObject 3030 |
+| C24 | `Area173_PlaceObject` | z else 0x7A0001 | Area173_PlaceObject 3970 |
+| C25 | `Area173_PlaceObject` | z then 0x7A8001 | Area173_PlaceObject 2030 |
+| C26 | `Area173_PlaceObject` | direction 2 | Area173_PlaceObject 6000 |
+| C27 | `Area173_ScriptOnIfMember2` | the test inverted | Area173_ScriptOnIfMember2 6000 |
+| C28 | `Area173_ScriptOnIfMember2` | on 2 | Area173_ScriptOnIfMember2 2035 |
+| C29 | `Area173_ScriptOnIfMember2` | the running object's byte | Area173_ScriptOnIfMember2 1721 |
+| C30 | `Area173_Effect9DSub0` | +6 = 1 | Area173_Effect9DSub0 4074 |
+| C31 | `Area173_Effect9DSub0` | word +0x2E 0xD | Area173_Effect9DSub0 4074 |
+| C32 | `Area173_Effect9DSub0` | none also 0xFE (equivalent-check: the stand-in never answers 0xFE) | equivalent: `Effect_FindFree` answers a slot 0..19 or `0xFF`, never `0xFE`; V5 (a slot of 0 taken as none) refused |
+| C33 | `Area173_Effect9DSub1` | +6 = 0 | Area173_Effect9DSub1 3970 |
+| C34 | `Area173_Effect9DSub1` | word +0x2E 0x18 | Area173_Effect9DSub1 3970 |
+| C35 | `Area173_Effect9DSub1` | +0xB 0 | Area173_Effect9DSub1 3921 |
+| C36 | `Area173_Tail38` | Party_DropIn(1) | Area173_Tail38 375 |
+| C37 | `Area173_Tail38` | state 0 -> 2 | Area173_Tail38 375 |
+| C38 | `Area173_Tail38` | state 1 waits for 0x19 | Area173_Tail38 518 |
+| C39 | `Area173_Tail38` | state 1 at 0x18 or more | Area173_Tail38 121 |
+| C40 | `Area173_Tail38` | area 0xBB | Area173_Tail38 460 |
+| C41 | `Area173_Tail38` | x 0x48001 | Area173_Tail38 460 |
+| C42 | `Area173_Tail38` | zone 1 picks the z | Area173_Tail38 245 |
+| C43 | `Area173_Tail38` | z 0xA0001 | Area173_Tail38 156 |
+| C44 | `Area173_Tail38` | z 0x640001 | Area173_Tail38 304 |
+| C45 | `Area173_Tail38` | flags 0x81 | Area173_Tail38 460 |
+| C46 | `Area173_Tail38` | flag 0x59 set | Area173_Tail38 460 |
+| C47 | `Area173_Tail38` | state 1 keeps the kind | Area173_Tail38 458 |
+| C48 | `Area173_Tail38` | state 1 leaves state 1 | Area173_Tail38 460 |
+| C49 | `Area173_Tail38` | state 10 waits for 0x21 | Area173_Tail38 545 |
+| C50 | `Area173_Tail38` | Cond_ByteFE 2 | not refused on the first pass (the fuzz's fault, below); after it: Area173_Tail38 467 |
+| C51 | `Area173_Tail38` | timer 0x1F | Area173_Tail38 489 |
+| C52 | `Area173_Tail38` | timer stored as a byte | Area173_Tail38 488 |
+| C53 | `Area173_Tail38` | state 10 -> 12 | Area173_Tail38 489 |
+| C54 | `Area173_Tail38` | timer less 2 | Area173_Tail38 705 |
+| C55 | `Area173_Tail38` | timer counted as a byte | Area173_Tail38 184 |
+| C56 | `Area173_Tail38` | state 11 done at 1 too | Area173_Tail38 36 |
+| C57 | `Area173_Tail38` | counter 3 = 0x25 | Area173_Tail38 485 |
+| C58 | `Area173_Tail38` | state 11 stays | Area173_Tail38 485 |
+| C59 | `Area173_Tail38` | state 12 at 1 too | Area173_Tail38 49 |
+| C60 | `Area173_Tail38` | flag 0x57 cleared | Area173_Tail38 509 |
+| C61 | `Area173_Tail38` | state 12 keeps its state | Area173_Tail38 509 |
+| C62 | `Area173_Tail38` | state 9 runs state 10 | Area173_Tail38 1 on the first pass; Area173_Tail38 53 under the final fuzz |
+| C63 | `Area173_Tail38` | state 13 runs state 12 | not refused on the first pass (the fuzz's fault, below); after it: Area173_Tail38 128 |
+| C64 | `Area173_Tail38` | the state masked to 7 bits (0x80 | 1 runs 1) | Area173_Tail38 356 |
+| C65 | `Area173_ArriveHook` | zone 3 for 1 | Area173_ArriveHook 262 |
+| C66 | `Area173_ArriveHook` | z 0x460001 | Area173_ArriveHook 189 |
+| C67 | `Area173_ArriveHook` | z high word only | Area173_ArriveHook 37 |
+| C68 | `Area173_ArriveHook` | x from 0x10 | Area173_ArriveHook 89 |
+| C69 | `Area173_ArriveHook` | x through 0x14 | Area173_ArriveHook 54 |
+| C70 | `Area173_ArriveHook` | a signed test (below 0x11 passes) | Area173_ArriveHook 42 |
+| C71 | `Area173_ArriveHook` | zone 2 test as written (equivalent check: unreachable for 1) | equivalent: zone 1 has taken the first branch already; C72 (zone 3 for 2) refused |
+| C72 | `Area173_ArriveHook` | zone 3 for 2 | Area173_ArriveHook 179 |
+| C73 | `Area173_ArriveHook` | z 0x600001 | Area173_ArriveHook 196 |
+| C74 | `Area173_ArriveHook` | x from 0x31 | Area173_ArriveHook 98 |
+| C75 | `Area173_ArriveHook` | x to 0x31 | Area173_ArriveHook 56 |
+| C76 | `Area173_ArriveHook` | x >> 15 | Area173_ArriveHook 350 |
+| C77 | `Area173_ArriveHook` | kind 0x27 | Area173_ArriveHook 350 |
+| C78 | `Area173_ArriveHook` | state 1 | Area173_ArriveHook 350 |
+| C79 | `Area173_ArriveHook` | answer 0x101 (equivalent check: al 1) | equivalent: the arrive hook's answer is read in al (`Area_ArriveHook`, the harness's `ret_mask 0xFF`); C80 (answer 2) refused |
+| C80 | `Area173_ArriveHook` | answer 2 | Area173_ArriveHook 350 |
+| C81 | `Area173_ArriveHook` | ScriptFlags_Set40 not called | Area173_ArriveHook 350 |
+| C82 | `Area173_Init` | the test inverted | Area173_Init 6000 |
+| C83 | `Area173_Init` | flag 0x59 | Area173_Init 6000 |
+| C84 | `Area173_Init` | kind 0x25 | Area173_Init 3991 |
+| C85 | `Area173_Init` | state 0xB | Area173_Init 3991 |
+| C86 | `Area174_RestartSlotScript` | +0x2A = 2 | Area174_RestartSlotScript 6000 |
+| C87 | `Area174_RestartSlotScript` | animation 8 | Area174_RestartSlotScript 6000 |
+| C88 | `Area174_RestartSlotScript` | the script one byte on | Area174_RestartSlotScript 6000 |
+| C89 | `Area174_RestartSlotScript` | released for Field_State | Area174_RestartSlotScript 5034 |
+| C90 | `Area174_RestartSlotScript` | +0x2A after the animation call | Area174_RestartSlotScript 2675 |
+| C91 | `Area174_RestartSlotScript` | the object not read again after the release | Area174_RestartSlotScript 2666 |
+| C92 | `Area174_WaitWhileRequest5` | request 4 | Area174_WaitWhileRequest5 3046 |
+| C93 | `Area174_WaitWhileRequest5` | back 1 | Area174_WaitWhileRequest5 2047 |
+| C94 | `Area174_WaitWhileRequest5` | request 5 or more | Area174_WaitWhileRequest5 1969 |
+| C95 | `Area174_Effect9DSub0` | +6 = 1 | Area174_Effect9DSub0 3983 |
+| C96 | `Area174_Effect9DSub0` | n * 25 | Area174_Effect9DSub0 3914 |
+| C97 | `Area174_Effect9DSub0` | + 0xD | Area174_Effect9DSub0 3983 |
+| C98 | `Area174_Effect9DSub0` | none not stored in +0xB | Area174_Effect9DSub0 2007 |
+| C99 | `Area174_Effect9DSub0` | the slot to +0xC | Area174_Effect9DSub0 6000 |
+| C100 | `Area174_Effect9DSub0` | n + 1 | Area174_Effect9DSub0 3983 |
+| C101 | `Area174_Effect9DSub1` | +6 = 0 | Area174_Effect9DSub1 4042 |
+| C102 | `Area174_Effect9DSub1` | + 0xB | Area174_Effect9DSub1 4042 |
+| C103 | `Area174_Effect9DSub1` | n masked to 7 bits | Area174_Effect9DSub1 1515 |
+| C104 | `Area174_Effect9DSub1` | +0xB written too | Area174_Effect9DSub1 4030 |
+| C105 | `Area174_EffectState3` | +1 = 4 | Area174_EffectState3 6000 |
+| C106 | `Area174_EffectState3` | +0x5D 0x71 | Area174_EffectState3 6000 |
+| C107 | `Area174_EffectState3` | +0x5E 0x31 | Area174_EffectState3 6000 |
+| C108 | `Area174_EffectState3` | +0x5C for +0x5D | Area174_EffectState3 6000 |
+| C109 | `Area174_EffectState3` | the slot from +0xA | Area174_EffectState3 5675 |
+| C110 | `Area174_SinkAndBrighten` | y less 0x13 | Area174_SinkAndBrighten 6000 |
+| C111 | `Area174_SinkAndBrighten` | at -0x40 too | Area174_SinkAndBrighten 956 |
+| C112 | `Area174_SinkAndBrighten` | an unsigned test | Area174_SinkAndBrighten 3578 |
+| C113 | `Area174_SinkAndBrighten` | +1 | Area174_SinkAndBrighten 3084 |
+| C114 | `Area174_SinkAndBrighten` | +0x5F not raised | Area174_SinkAndBrighten 1424 |
+| C115 | `Area174_SinkAndBrighten` | +0x5D not raised | Area174_SinkAndBrighten 1451 |
+| C116 | `Area174_SinkAndBrighten` | done at 0xA01 | Area174_SinkAndBrighten 1993 |
+| C117 | `Area174_SinkAndBrighten` | done at 0xA00 or below | Area174_SinkAndBrighten 2094 |
+| C118 | `Area174_SinkAndBrighten` | bit 4 cleared | Area174_SinkAndBrighten 1008 |
+| C119 | `Area174_SinkAndBrighten` | +0x5C = 1 | Area174_SinkAndBrighten 1364 |
+| C120 | `Area174_SinkAndBrighten` | +0x5D kept | Area174_SinkAndBrighten 1266 |
+| C121 | `Area174_SinkAndBrighten` | the member word less 3 | Area174_SinkAndBrighten 4636 |
+| C122 | `Area174_SinkAndBrighten` | the running object's word | Area174_SinkAndBrighten 4363 |
+| C123 | `Area174_SinkAndBrighten` | the member word as a byte | Area174_SinkAndBrighten 34 on the first pass; Area174_SinkAndBrighten 35 under the final fuzz |
+| C124 | `ScriptBase (7, 8, 13..15)` | the script by +2 | by a fault (the script object's unseeded `+2` byte indexes past the 37 scripts, and both sides read through a dword that is not a pointer); V3 refused by a count |
+| C125 | `ScriptBase (7, 8, 13..15)` | the descriptor's +0x14 | Area174_ScriptAnimationAt 5836, Area174_ScriptAnimationOn2 1260, Area174_TurnRightToScript 5256, Area174_TurnLeftToScript 5287, Area174_FaceAwayFromLeader 5278 |
+| C126 | `ScriptBase (7, 8, 13..15)` | area 174 always (the area 198 Run tells) | Area174_ScriptAnimationAt 5928, Area174_ScriptAnimationOn2 1300 |
+| C127 | `ScriptBase (7, 8, 13..15)` | the area number as a byte (equivalent check: seeded areas are below 0x100) | equivalent: `Game_AreaNumber` is an area below 200 when an area handler runs; C126 (area 174 always) refused by the area 198 `Run` |
+| C128 | `Area174_ScriptAnimationAt` | pose byte +1 | Area174_ScriptAnimationAt 5286 |
+| C129 | `Area174_ScriptAnimationAt` | animation byte +3 | Area174_ScriptAnimationAt 5187 |
+| C130 | `Area174_ScriptAnimationAt` | start + 0x58 less 1 | Area174_ScriptAnimationAt 6000 |
+| C131 | `Area174_ScriptAnimationAt` | start from +0x5A | Area174_ScriptAnimationAt 6000 |
+| C132 | `Area174_ScriptAnimationAt` | on 3 | Area174_ScriptAnimationAt 6000 |
+| C133 | `Area174_ScriptAnimationAt` | the object not read again after the call | Area174_ScriptAnimationAt 2735 |
+| C134 | `Area174_ScriptAnimationAt` | the offset as a byte | Area174_ScriptAnimationAt 3008 |
+| C135 | `Area174_ScriptAnimationOn2` | at 3 | Area174_ScriptAnimationOn2 2026 |
+| C136 | `Area174_ScriptAnimationOn2` | the word as a byte | Area174_ScriptAnimationOn2 696 |
+| C137 | `Area174_ScriptAnimationOn2` | back 1 | Area174_ScriptAnimationOn2 4705 |
+| C138 | `Area174_ScriptAnimationOn2` | start 1 | Area174_ScriptAnimationOn2 1295 |
+| C139 | `Area174_ScriptAnimationOn2` | animation byte +1 | Area174_ScriptAnimationOn2 1119 |
+| C140 | `Area174_ScriptAnimationOn2` | pose byte +4 | Area174_ScriptAnimationOn2 1099 |
+| C141 | `Area174_ScriptAnimationOn2` | on 4 | Area174_ScriptAnimationOn2 1295 |
+| C142 | `EffectA2 (9, 12)` | +0 = 3 | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C143 | `EffectA2 (9, 12)` | kind 0xA3 | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C144 | `EffectA2 (9, 12)` | x from z | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C145 | `EffectA2 (9, 12)` | z + 1 | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C146 | `EffectA2 (9, 12)` | y + 0x1000001 | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C147 | `EffectA2 (9, 12)` | y + 0x100000 | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C148 | `EffectA2 (9, 12)` | the state to +2 | Area174_EffectA2State0 4001, Area174_EffectA2State2 4026 |
+| C149 | `EffectA2 (9, 12)` | none: back 3 | Area174_EffectA2State0 1999, Area174_EffectA2State2 1974 |
+| C150 | `EffectA2 (9, 12)` | the object read before the call | Area174_EffectA2State0 2662, Area174_EffectA2State2 2700 |
+| C151 | `Area174_EffectA2State0` | state 1 | Area174_EffectA2State0 4001 |
+| C152 | `Area174_EffectA2State2` | state 0 | Area174_EffectA2State2 4026 |
+| C153 | `EffectOnObject (10, 19)` | +6 = 2 | Area174_EffectA1 3990, Area174_EffectA3 4040 |
+| C154 | `EffectOnObject (10, 19)` | +7 = 1 | Area174_EffectA1 3990, Area174_EffectA3 4040 |
+| C155 | `EffectOnObject (10, 19)` | +0xB = 0 | Area174_EffectA1 3990, Area174_EffectA3 4040 |
+| C156 | `EffectOnObject (10, 19)` | +0x4C Field_State | Area174_EffectA1 3312, Area174_EffectA3 3357 |
+| C157 | `EffectOnObject (10, 19)` | the object to +0x48 | Area174_EffectA1 3990, Area174_EffectA3 4040 |
+| C158 | `EffectOnObject (10, 19)` | the kind to +4 | Area174_EffectA1 3990, Area174_EffectA3 4040 |
+| C159 | `EffectOnObject (10, 19)` | none: the script not moved | Area174_EffectA1 2010, Area174_EffectA3 1960 |
+| C160 | `Area174_EffectA1` | kind 0xA0 | Area174_EffectA1 3990 |
+| C161 | `Area174_EffectA3` | kind 0xA1 | Area174_EffectA3 4040 |
+| C162 | `Area174_StepByScript` | at the limit too | Area174_StepByScript 666 |
+| C163 | `Area174_StepByScript` | a signed test | Area174_StepByScript 2686 |
+| C164 | `Area174_StepByScript` | x step << 10 | Area174_StepByScript 675 |
+| C165 | `Area174_StepByScript` | x step zero-extended | Area174_StepByScript 317 |
+| C166 | `Area174_StepByScript` | z step not negated | Area174_StepByScript 675 |
+| C167 | `Area174_StepByScript` | x index & 7 | equivalent: `Area174_StepDeltas` repeats with period 4, so `& 7` reads what `& 0xF` reads; V2 (`& 0xE`) refused |
+| C168 | `Area174_StepByScript` | z index one on | Area174_StepByScript 1378 |
+| C169 | `Area174_StepByScript` | +0xA less 2 | Area174_StepByScript 1378 |
+| C170 | `Area174_StepByScript` | Field_State +0x12E less 1 | Area174_StepByScript 1378 |
+| C171 | `Area174_StepByScript` | the script object back, not Field_State | Area174_StepByScript 1378 |
+| C172 | `Area174_StepByScript` | the script at +0x12C | by a fault (`Field_State +0x12C` is not the seeded pointer; both sides fault); V4 refused by a count |
+| C173 | `Area174_StepByScript` | byte +1 | Area174_StepByScript 1296 |
+| C174 | `Area174_StepByScript` | the limit from 0x903849 | Area174_StepByScript 1329 |
+| C175 | `Area174_StepByScript` | x masked to 0xFFFF0000 | Area174_StepByScript 2336 |
+| C176 | `Area174_StepByScript` | z masked to 0xFFFFC000 | Area174_StepByScript 2297 |
+| C177 | `Area174_StepByScript` | on 2 | Area174_StepByScript 4622 |
+| C178 | `TurnToScript (13, 14)` | compared with byte +3 | Area174_TurnRightToScript 1155, Area174_TurnLeftToScript 1210 |
+| C179 | `TurnToScript (13, 14)` | there: on 1 | Area174_TurnRightToScript 1280, Area174_TurnLeftToScript 1338 |
+| C180 | `TurnToScript (13, 14)` | the turn & 0xF | Area174_TurnRightToScript 2318, Area174_TurnLeftToScript 2509 |
+| C181 | `TurnToScript (13, 14)` | the pose table by byte +2 | Area174_TurnRightToScript 4028, Area174_TurnLeftToScript 3903 |
+| C182 | `TurnToScript (13, 14)` | back 1 | Area174_TurnRightToScript 4720, Area174_TurnLeftToScript 4662 |
+| C183 | `TurnToScript (13, 14)` | the pose direction one on | Area174_TurnRightToScript 4720, Area174_TurnLeftToScript 4662 |
+| C184 | `PoseTable (13..15)` | the pose table one on | Area174_TurnRightToScript 4485, Area174_TurnLeftToScript 4431, Area174_FaceAwayFromLeader 5650 |
+| C185 | `Area174_TurnRightToScript` | turns left | Area174_TurnRightToScript 4720 |
+| C186 | `Area174_TurnLeftToScript` | turns two back | Area174_TurnLeftToScript 4662 |
+| C187 | `Area174_FaceAwayFromLeader` | ^ 2 | Area174_FaceAwayFromLeader 6000 |
+| C188 | `Area174_FaceAwayFromLeader` | the leader's +9 | Area174_FaceAwayFromLeader 5981 |
+| C189 | `Area174_FaceAwayFromLeader` | the pose table by byte +3 | Area174_FaceAwayFromLeader 5108 |
+| C190 | `Area174_FaceAwayFromLeader` | on 2 | Area174_FaceAwayFromLeader 6000 |
+| C191 | `Area174_FaceAwayFromLeader` | the script object not read again after the call | Area174_FaceAwayFromLeader 2597 |
+| C192 | `Area174_SetPose` | direction + 1 | Area174_SetPose 5969 |
+| C193 | `Area174_SetPose` | d << 2 | Area174_SetPose 5554 |
+| C194 | `Area174_SetPose` | the index not wrapped to a byte | Area174_SetPose 1442 |
+| C195 | `Area174_SetPose` | +0x2A from pose[2] | Area174_SetPose 5316 |
+| C196 | `Area174_SetPose` | animation pose[1] | Area174_SetPose 5480 |
+| C197 | `Area174_SetPose` | kept pointer for +8 (equivalent check: no call before) | equivalent: no call lies between the read of `Sprite_Current` and the `+8` store; C198 (the object not read again after the call) refused |
+| C198 | `Area174_SetPose` | the object not read again after the call | Area174_SetPose 2682 |
+| C199 | `Area174_FadeRun` | the two states swapped | Area174_FadeRun 6000 |
+| C200 | `Area174_FadeRun` | the state from +5 | Area174_FadeRun 3078 |
+| C201 | `Area174_FadeRun` | state 0 always | Area174_FadeRun 2926 |
+| C202 | `Area174_FadeTintUp` | y + 9 | Area174_FadeTintUp 6000 |
+| C203 | `Area174_FadeTintUp` | at 0x1E too | Area174_FadeTintUp 522 |
+| C204 | `Area174_FadeTintUp` | an unsigned test | Area174_FadeTintUp 1995 |
+| C205 | `Area174_FadeTintUp` | +2 by 3 | Area174_FadeTintUp 3697 |
+| C206 | `Area174_FadeTintUp` | +3 by 1 | Area174_FadeTintUp 3697 |
+| C207 | `Area174_FadeTintUp` | +5 for +4 | Area174_FadeTintUp 3697 |
+| C208 | `Area174_FadeTintUp` | stride 11 | Area174_FadeTintUp 5020 |
+| C209 | `Area174_FadeTintUp` | the index from +0x9E | Area174_FadeTintUp 5068 |
+| C210 | `Area174_FadeTintUp` | back 1 while it tints | Area174_FadeTintUp 3697 |
+| C211 | `Area174_FadeTintUp` | bit 4 | Area174_FadeTintUp 1718 |
+| C212 | `Area174_FadeTintUp` | +0x5C = 2 | Area174_FadeTintUp 2303 |
+| C213 | `Area174_FadeTintUp` | +0x5F = 0xC1 | Area174_FadeTintUp 2303 |
+| C214 | `Area174_FadeTintUp` | state 2 | Area174_FadeTintUp 2303 |
+| C215 | `Area174_FadeTintUp` | the last step not moved back | Area174_FadeTintUp 2303 |
+| C216 | `Area174_FadeOut` | y + 7 | Area174_FadeOut 6000 |
+| C217 | `Area174_FadeOut` | done at 0x84 | Area174_FadeOut 1667 |
+| C218 | `Area174_FadeOut` | done at 0x80 or below | Area174_FadeOut 2589 |
+| C219 | `Area174_FadeOut` | bit 5 | Area174_FadeOut 622 |
+| C220 | `Area174_FadeOut` | state 1 kept | Area174_FadeOut 819 |
+| C221 | `Area174_FadeOut` | +0x5D less 3 | Area174_FadeOut 5181 |
+| C222 | `Area174_FadeOut` | +0x5E less 3 | Area174_FadeOut 5181 |
+| C223 | `Area174_FadeOut` | +0x5F from +0x5E | Area174_FadeOut 5158 |
+| C224 | `Area174_FadeOut` | the script not moved | Area174_FadeOut 5181 |
+| C225 | `Area174_ReleaseOnRequest5` | the test inverted | Area174_ReleaseOnRequest5 6000 |
+| C226 | `Area174_ReleaseOnRequest5` | released for Field_State | Area174_ReleaseOnRequest5 1685 |
+| C227 | `Area174_ReleaseOnRequest5` | request 6 | Area174_ReleaseOnRequest5 3010 |
+| C228 | `Area174_LoadPalette` | rows of 0x20 | Area174_LoadPalette 5981 |
+| C229 | `Area174_LoadPalette` | the row from +6 | Area174_LoadPalette 5972 |
+| C230 | `Area174_LoadPalette` | palette 2 | Area174_LoadPalette 6000 |
+| C231 | `Area174_LoadPalette` | one row on | Area174_LoadPalette 6000 |
+| C232 | `Area174_WaitLoad` | the test inverted | Area174_WaitLoad 6000 |
+| C233 | `Area174_WaitLoad` | al tested, not eax | Area174_WaitLoad 1006 |
+| C234 | `Area174_WaitLoad` | back 1 | Area174_WaitLoad 999 |
+| C235 | `Area174_ChoiceByteE5` | 0x1F | Area174_ChoiceByteE5 4500 |
+| C236 | `Area174_ChoiceByteE5` | 0xB | Area174_ChoiceByteE5 1500 |
+| C237 | `Area174_ChoiceByteE5` | answer 1 as 0 | Area174_ChoiceByteE5 760 |
+| C238 | `Area174_ChoiceByteE5` | to 0x8034E4 | Area174_ChoiceByteE5 5999 |
+| C239 | `Area174_ChoiceByteE5` | message 0xFFFE | Area174_ChoiceByteE5 6000 |
+| C240 | `Area175_ChoiceMessage62` | swapped | Area175_ChoiceMessage62 6000 |
+| C241 | `Area175_ChoiceMessage62` | answer 1 as 0 | Area175_ChoiceMessage62 747 |
+| C242 | `Area175_ChoiceMessage62` | negative answers as 0 | Area175_ChoiceMessage62 1547 |
+| C243 | `Area175_ChoiceMessage70` | 0x71 | Area175_ChoiceMessage70 4541 |
+| C244 | `Area175_ChoiceMessage70` | none 0xFF | Area175_ChoiceMessage70 1459 |
+| C245 | `Area175_ChoiceMessage70` | only answer 1 | Area175_ChoiceMessage70 3830 |
+| C246 | `Area175_ChoiceMessage7E` | 0x7F | Area175_ChoiceMessage7E 4448 |
+| C247 | `Area175_ChoiceMessage7E` | swapped | Area175_ChoiceMessage7E 6000 |
+| C248 | `Area175_ChoiceMessage8A` | 0x8B | Area175_ChoiceMessage8A 4488 |
+| C249 | `Area175_ChoiceMessage8A` | answer & 0x7F | Area175_ChoiceMessage8A 800 |
+| C250 | `Area175_ChoiceStore3C` | answer + 1 | Area175_ChoiceStore3C 6000 |
+| C251 | `Area175_ChoiceStore3C` | to 0x939A3D | Area175_ChoiceStore3C 6000 |
+| C252 | `Area175_ChoiceStore3C` | the message not written | Area175_ChoiceStore3C 2048 |
+| C253 | `Area175_ChoiceByte3E` | answer 1 | Area175_ChoiceByte3E 2196 |
+| C254 | `Area175_ChoiceByte3E` | the byte 1 | Area175_ChoiceByte3E 1446 |
+| C255 | `Area175_ChoiceByte3E` | message 0xF8 | Area175_ChoiceByte3E 4554 |
+| C256 | `Area175_ChoiceByte3E` | the byte 5 | Area175_ChoiceByte3E 4554 |
+| V1 | `Area173_MessageByMemberB` | B searches its members one on (variant of C19) | Area173_MessageByMemberB 3352 |
+| V2 | `Area174_StepByScript` | x index & 0xE (variant of C167) | Area174_StepByScript 660 |
+| V3 | `ScriptBase (7, 8, 13..15)` | the script by +3 / 2 (variant of C124, inside the table) | Area174_ScriptAnimationAt 5602, Area174_ScriptAnimationOn2 1312, Area174_TurnRightToScript 5094, Area174_TurnLeftToScript 5059, Area174_FaceAwayFromLeader 5077 |
+| V4 | `Area174_StepByScript` | the script pointer + 1 (variant of C172) | Area174_StepByScript 1288 |
+| V5 | `Area173_Effect9DSub0` | slot 0 taken as none (variant of C32) | Area173_Effect9DSub0 202 |
 
 ## 5. What nothing reached
 
