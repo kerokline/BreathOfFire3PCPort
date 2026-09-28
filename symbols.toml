@@ -64825,3 +64825,454 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-09-28, group AR4A: Area167_CellHook: one (x, z, facing in the low nibble, story flag) record, searched in bounds. docs/area_w4a.md."
+
+[[func]]
+pc = 0x428450
+name = "Area173_MessageByMemberA"
+psx = 0x801F48C4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x428450..0x4284DA (0x8b bytes), cdecl: area 173 +0x3C[1]: over the four member bytes of Area173_MembersA, the first some party member below Field_MemberCount has at +0x89 (unsigned member loop, unchecked): Msg_OpenScript(Area173_MessagesA word), Field_Request = 2 (PSX twin 0x801F48C4, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4284E0
+name = "Area173_MessageByMemberB"
+psx = 0x801F4988
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x4284E0..0x42856A (0x8b bytes), cdecl: area 173 +0x3C[2]: the same over Area173_MembersB / Area173_MessagesB (PSX twin 0x801F4988, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428570
+name = "Area173_PlaceObject"
+psx = 0x801F4A4C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x428570..0x4285C5 (0x56 bytes), cdecl: area 173 +0x3C[3]: Sprite_Current x = 0x168000, y = 0x5000000, z = 0x7A8000 when Field_State +0x89 is 2 else 0x7A0000, +8 = 1 (PSX twin 0x801F4A4C, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4285D0
+name = "Area173_ScriptOnIfMember2"
+psx = 0x801F4A9C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x4285D0..0x4285E7 (0x18 bytes), cdecl: area 173 +0x3C[4], also area 128 +0x34[3] / +0x3C[1] (one body, in area 173 block): Field_State +0x89 at 2: MoveScript_Object u16 +0xA += 1 (PSX twin 0x801F4A9C, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4285F0
+name = "Area173_Effect9DSub0"
+psx = 0x801F4ADC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x4285F0..0x428656 (0x67 bytes), cdecl: area 173 +0x3C[5]: Effect_FindFree; a slot: +0 = 1, +5 = 0x9D, +6 = 0, +0xB = (Field_ActiveMember - Sprite_Objects) / 0xA4 (signed, truncating; a byte), word +0x2E = 0xC, +0x30 = 0xA5 (PSX twin 0x801F4ADC, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428660
+name = "Area173_Effect9DSub1"
+psx = 0x801F4BB0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x428660..0x4286C6 (0x67 bytes), cdecl: area 173 +0x3C[6]: the same with +6 = 1 (PSX twin 0x801F4BB0, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4286D0
+name = "Area173_Tail38"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x4286D0..0x4287DC (0x10d bytes), cdecl: Field_ModeTailKinds[38] (0x662D80): s8 state 0..12 by the byte table 0x4287D0 and jump table 0x4287B8 (6) in its extent; 0 Party_DropIn(0), state 1; 1 counter 3 (0x90384B) at 0x18: Field_ChangeArea(0xBA, 0x48000, Cond_ByteFD 2 ? 0xA0000 : 0x640000, 0x80), Flags_Set 0x58, disarmed; 10 counter 3 at 0x20: Cond_ByteFE = 1, word timer 0x9039F6 = 0x1E, state 11; 11 the timer less 1, at 0 counter 3 = 0x24, state 12; 12 counter 3 at 0: Flags_Clear 0x58, disarmed; 2..9 and the rest return. docs/area_w4c.md."
+
+[[func]]
+pc = 0x4287E0
+name = "Area173_ArriveHook"
+ret = "int"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x4287E0..0x428833 (0x54 bytes), cdecl: Area_ArriveHook case (call at 0x56E5A9): zone 1 with z exactly 0x460000 and u16 (x >> 16) - 0x11 below 3, or zone 2 with z 0x600000 and (x >> 16) - 0x30 below 3: ScriptFlags_Set40, tail kind 0x26 state 0, al 1; else al 0. docs/area_w4c.md."
+
+[[func]]
+pc = 0x428840
+name = "Area173_Init"
+psx = 0x801F4E90
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA173), 0x428840..0x428861 (0x22 bytes), cdecl: area 173 +0x40: Flags_Test(story flags, 0x58) (al): tail kind 0x26 at state 0xA (PSX twin 0x801F4E90, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428870
+name = "Area174_RestartSlotScript"
+psx = 0x801F3C8C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428870..0x4288A0 (0x31 bytes), cdecl: area 174 +0x3C[0]: 0x454A80(Sprite_Current); 0x455290(Sprite_Current re-read, Area174_SlotScript); Sprite_Current +0x2A = 1; Sprite_SetAnimation(9) (PSX twin 0x801F3C8C, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4288B0
+name = "Area174_WaitWhileRequest5"
+psx = 0x801F3D40
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4288B0..0x4288C4 (0x15 bytes), cdecl: area 174 +0x3C[2]: Field_Request 5: MoveScript_Object u16 +0xA -= 2 (PSX twin 0x801F3D40, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4288D0
+name = "Area174_Effect9DSub0"
+psx = 0x801F3D78
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4288D0..0x42895D (0x8e bytes), cdecl: area 174 +0x3C[3]: Effect_FindFree; a slot: +0 = 1, +5 = 0x9D, +6 = 0, +0xB the Field_ActiveMember index byte n, word +0x2E = n * 24 + 0xC, +0x30 = 0xA5; Sprite_Current +0xB = the slot (0xFF too) (PSX twin 0x801F3D78, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428960
+name = "Area174_Effect9DSub1"
+psx = 0x801F3E68
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428960..0x4289D3 (0x74 bytes), cdecl: area 174 +0x3C[4]: the same with +6 = 1, +0xB of Sprite_Current not written (PSX twin 0x801F3E68, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4289E0
+name = "Area174_EffectState3"
+psx = 0x801F3F4C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4289E0..0x428A12 (0x33 bytes), cdecl: area 174 +0x3C[5]: the effect in Sprite_Current +0xB (unchecked): +1 = 3, +0x5D = 0x70, +0x5E = 0x30 (PSX twin 0x801F3F4C, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428A20
+name = "Area174_SinkAndBrighten"
+psx = 0x801F3FFC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428A20..0x428AAC (0x8d bytes), cdecl: area 174 +0x3C[6]: word +0x3E -= 0x14; bytes +0x5D..+0x5F below -0x40 (signed) += 2; word at 0xA00: +0 &= 0xDF, +0x5C..+0x5F = 0; else Field_ActiveMember word +0x8A -= 2 (PSX twin 0x801F3FFC, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428AB0
+name = "Area174_ScriptAnimationAt"
+psx = 0x801F4100
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428AB0..0x428B0C (0x5d bytes), cdecl: area 174 +0x3C[7], also area 198 +0x3C[1] (one body): script = [Area_Descriptors[Game_AreaNumber] +0x10][MoveScript_Object +3] + u16 +0xA; Sprite_SetAnimationAt(script[2], word +0x58 - 2); +0x2A = script[3]; +0xA += 2 (PSX twin 0x801F4100, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428B10
+name = "Area174_ScriptAnimationOn2"
+psx = 0x801F41A8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428B10..0x428B79 (0x6a bytes), cdecl: area 174 +0x3C[8], also area 198 +0x3C[2] (one body): word +0x58 at 2: Sprite_SetAnimationAt(script[2], 0), +0x2A = script[3], +0xA += 2; else +0xA -= 2 (PSX twin 0x801F41A8, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428B80
+name = "Area174_EffectA2State0"
+psx = 0x801F4278
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428B80..0x428C0E (0x8f bytes), cdecl: area 174 +0x3C[9]: Effect_FindFree to Sprite_Current +0xB; none: script back 2; a slot: +0 = 1, +5 = 0xA2, x / z dwords the object, y + 0x1000000, +1 = 0 (PSX twin 0x801F4278, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428C10
+name = "Area174_EffectA1"
+psx = 0x801F43FC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428C10..0x428C90 (0x81 bytes), cdecl: area 174 +0x3C[10]: Effect_FindFree to +0xB; none: script back 2; a slot: +0 = 1, +5 = 0xA1, +6 = 1, +7 = 0, +0xB = 1, dword +0x4C = Sprite_Current (PSX twin 0x801F43FC, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428CA0
+name = "Area174_StepByScript"
+psx = 0x801F4594
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428CA0..0x428D44 (0xa5 bytes), cdecl: area 174 +0x3C[11]: b = byte +2 of Field_State +0x130 script at MoveScript_Object u16 +0xA; byte 0x903848 below b: x += Area174_StepDeltas[+0xA & 0xF] << 11, z -= it << 11, +0xA -= 1, Field_State word +0x12E -= 2; else x, z &= 0xFFFF8000, script on 1 (PSX twin 0x801F4594, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428D50
+name = "Area174_EffectA2State2"
+psx = 0x801F4688
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428D50..0x428DDE (0x8f bytes), cdecl: area 174 +0x3C[12]: as Area174_EffectA2State0 with +1 = 2 (PSX twin 0x801F4688, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428DE0
+name = "Area174_TurnRightToScript"
+psx = 0x801F4810
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428DE0..0x428E69 (0x8a bytes), cdecl: area 174 +0x3C[13]: direction +8 at the script byte +2: +0xA += 2 (the object read at entry); else +8 = (+8 + 1) & 7, Area174_SetPose(Area174_PoseTables[script byte +3], +8), script back 2 (PSX twin 0x801F4810, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428E70
+name = "Area174_TurnLeftToScript"
+psx = 0x801F48EC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428E70..0x428EF9 (0x8a bytes), cdecl: area 174 +0x3C[14]: the same with (+8 - 1) & 7 (PSX twin 0x801F48EC, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428F00
+name = "Area174_FaceAwayFromLeader"
+psx = 0x801F49C8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428F00..0x428F4F (0x50 bytes), cdecl: area 174 +0x3C[15]: Area174_SetPose(Area174_PoseTables[script byte +2], leader direction 0x802D48 ^ 4); script on 1 (PSX twin 0x801F49C8, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428F50
+name = "Area174_SetPose"
+ret = "void"
+params = "const unsigned char *poses, unsigned direction"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428F50..0x428F8D (0x3e bytes), cdecl: called by handlers 13..15: Sprite_Current +8 = the direction byte; i = (direction << 1) & 0xFF; Sprite_SetAnimation(poses[i]); Sprite_Current (re-read) +0x2A = poses[i + 1] read after the call. docs/area_w4c.md."
+
+[[func]]
+pc = 0x428F90
+name = "Area174_FadeRun"
+psx = 0x801F4AB4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428F90..0x428FB5 (0x26 bytes), cdecl: area 174 +0x3C[16]: call [esp + Sprite_Current[4] * 4] over a two-entry stack table (0x428FC0, 0x429080), unchecked (PSX twin 0x801F4AB4, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x428FC0
+name = "Area174_FadeTintUp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x428FC0..0x429079 (0xba bytes), cdecl: Area174_FadeRun state 0: word +0x3E += 8; MoveScript_TintRecords[Field_ActiveMember +0x9F] +2 below 0x1E (signed): +2, +3, +4 += 2, script back 2; else +0 |= 0x20, +0x5C = 1, +0x5D..+0x5F = 0xC0, +4 = 1, script back 2. docs/area_w4c.md."
+
+[[func]]
+pc = 0x429080
+name = "Area174_FadeOut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429080..0x4290D3 (0x54 bytes), cdecl: Area174_FadeRun state 1: word +0x3E += 8; +0x5D at 0x80: +0 |= 0x40, +4 = 0; else +0x5D, +0x5E, +0x5F -= 4, script back 2. docs/area_w4c.md."
+
+[[func]]
+pc = 0x4290E0
+name = "Area174_ReleaseOnRequest5"
+psx = 0x801F4D1C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4290E0..0x4290F5 (0x16 bytes), cdecl: area 174 +0x3C[17]: Field_Request 5: 0x454A80(Sprite_Current) (PSX twin 0x801F4D1C, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x429100
+name = "Area174_LoadPalette"
+psx = 0x801F4D54
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429100..0x42911E (0x1f bytes), cdecl: area 174 +0x3C[18]: Sprite_LoadPalette(0x80D380 + Sprite_Current[5] * 0x40, 1) (PSX twin 0x801F4D54, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x429120
+name = "Area174_EffectA3"
+psx = 0x801F4D90
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429120..0x4291A0 (0x81 bytes), cdecl: area 174 +0x3C[19]: as Area174_EffectA1 with kind 0xA3 (PSX twin 0x801F4D90, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4291B0
+name = "Area174_WaitLoad"
+psx = 0x801F4F28
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4291B0..0x4291C4 (0x15 bytes), cdecl: area 174 +0x3C[20]: File_LoadDone 0 (all of eax): script back 2 (PSX twin 0x801F4F28, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4291D0
+name = "Area174_ChoiceByteE5"
+psx = 0x801F4F6C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4291D0..0x4291EB (0x1c bytes), cdecl: area 174 +0x34[0] = +0x3C[21]: message 0xFFFF; byte 0x8034E5 = answer (0x7DEE67) not 0 ? 0x1E : 0xA (PSX twin 0x801F4F6C, names/area_records.toml). docs/area_w4c.md."
+
+[[func]]
+pc = 0x4291F0
+name = "Area175_ChoiceMessage62"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x4291F0..0x429206 (0x17 bytes), cdecl: choice 4 of areas 175..185 (their +0x34 tables; body in this band): message = 0x62 + (answer not 0). docs/area_w4c.md."
+
+[[func]]
+pc = 0x429210
+name = "Area175_ChoiceMessage70"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429210..0x429229 (0x1a bytes), cdecl: choices 7 and 8 of areas 175..185: message = answer 0 ? 0xFFFF : 0x70. docs/area_w4c.md."
+
+[[func]]
+pc = 0x429230
+name = "Area175_ChoiceMessage7E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429230..0x429249 (0x1a bytes), cdecl: choices 11 and 12 of areas 175..185: message = answer 0 ? 0xFFFF : 0x7E. docs/area_w4c.md."
+
+[[func]]
+pc = 0x429250
+name = "Area175_ChoiceMessage8A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429250..0x429269 (0x1a bytes), cdecl: choices 16 and 17 of areas 175..185: message = answer 0 ? 0xFFFF : 0x8A. docs/area_w4c.md."
+
+[[func]]
+pc = 0x429270
+name = "Area175_ChoiceStore3C"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429270..0x429283 (0x14 bytes), cdecl: choice 23 of areas 175..185: message 0xFFFF; byte 0x939A3C = the answer. docs/area_w4c.md."
+
+[[func]]
+pc = 0x429290
+name = "Area175_ChoiceByte3E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w4c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR4C, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA174), 0x429290..0x4292BA (0x2b bytes), cdecl: choice 25 of areas 175..185: answer 0: message 0xFFFF, byte 0x939A3E = 0; else message 0xF7, the byte 4. docs/area_w4c.md."
+
+[[data]]
+pc = 0x63FFAC
+name = "Area173_MembersA"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area173_MessageByMemberA: four member bytes matched against party records +0x89. docs/area_w4c.md."
+
+[[data]]
+pc = 0x63FFB0
+name = "Area173_MessagesA"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area173_MessageByMemberA: the message word for each member byte. docs/area_w4c.md."
+
+[[data]]
+pc = 0x63FFB8
+name = "Area173_MembersB"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area173_MessageByMemberB: four member bytes. docs/area_w4c.md."
+
+[[data]]
+pc = 0x63FFBC
+name = "Area173_MessagesB"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area173_MessageByMemberB: the message word for each. docs/area_w4c.md."
+
+[[data]]
+pc = 0x63FF48
+name = "Area173_Handlers"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): area 173 descriptor 0x63FF68 +0x3C: 0x42C8A0 (another band), then Area173_MessageByMemberA .. Area173_Effect9DSub1. docs/area_w4c.md."
+
+[[data]]
+pc = 0x6415F4
+name = "Area174_Handlers"
+ctype = "unsigned long"
+count = 22
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): area 174 descriptor 0x641650 +0x3C: Area174_RestartSlotScript, 0x42D250 (another band), then handlers 2..21 of this band; +0x34 (0x641648) is its entry 21. docs/area_w4c.md."
+
+[[data]]
+pc = 0x6416BC
+name = "Area174_SlotScript"
+ctype = "unsigned char"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area174_RestartSlotScript hands it to 0x455290 as a movement script (its length not read). docs/area_w4c.md."
+
+[[data]]
+pc = 0x641730
+name = "Area174_PoseTables"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area174_TurnRightToScript / TurnLeftToScript / FaceAwayFromLeader: pointers to (animation, +0x2A) pairs by direction, indexed by a script byte unchecked (a byte past 2 reads Area174_StepDeltas as a pointer). docs/area_w4c.md."
+
+[[data]]
+pc = 0x64173C
+name = "Area174_StepDeltas"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR4C): Area174_StepByScript: x += d << 11, z -= d << 11 by the object +0xA & 0xF. docs/area_w4c.md."
