@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-28, round ten's waves one and two merged)
+**Status:** IN PROGRESS (2026-09-28, round ten's three waves merged; the scenario round complete)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,21 +14,23 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**4,102 functions are ours** (`inject: 4102 ours, 0 left original`), on
+**4,554 functions are ours** (`inject: 4554 ours, 0 left original`), on
 `phase-3/capture-round-ten`, local commits past `main`'s `c47f521`
 (round nine's PR #27), not yet pushed or a PR. Round ten
-([`takeover-queue-round10.md`](takeover-queue-round10.md)) runs the
-scenario round (I24) and the area round (I25) together through two
-harnesses ([`scenario_harness.md`](scenario_harness.md),
-[`area_harness.md`](area_harness.md)) and two tools
-(`tools/scenario_rows.py`, `tools/area_rows.py`). Two waves are merged,
-592 functions in sixteen groups: chapters 0, 1, 3..9 (9's first block),
-11, 12's first block, the chapters' shared helpers and the call tables'
-block; world 0's areas whole. Every group 0 mismatches, every control
-refused or an equivalent with a refused near variant; everything
-fuzz-only (no route reaches any of it). Wave three is listed (round10
-doc section 8). The rest is [`STATUS.md`](STATUS.md)'s wave table; do not
-copy it here.
+([`takeover-queue-round10.md`](takeover-queue-round10.md)) has merged
+three waves, 1,044 functions in 24 groups. **The scenario round (I24) is
+complete**: every chapter bank 0..19 including the staff roll, the
+shared helpers, the call tables' block and the engine callees they
+reach, through [`scenario_harness.md`](scenario_harness.md); the live
+check per chapter (recipe saves) is the owner's to record. The area round
+(I25) has world 0 and areas 38..52 of world 1 through
+[`area_harness.md`](area_harness.md), about 1,180 functions to go. Every
+group 0 mismatches, every control refused or an equivalent with a refused
+near variant; everything fuzz-only. Since wave three, merges are verified
+in a detached worktree with its own build (round10 doc section 10), so a
+running game or the other session's work in the main checkout no longer
+collides. Wave four is listed (section 11). The rest is
+[`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
 `r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
@@ -38,31 +40,36 @@ foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
 since `rb1`). Wave five's 346 functions came after it and none is on the
 attract path - every spell group is fuzz-only - so it stands for this
 build until something on the attract path is taken (nothing in round
-ten's two waves is). `r9_*_0926` and
+ten's three waves is). `r9_*_0926` and
 `r9_orig_0927_loaded` (a side recorded under a concurrent build, four
 frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-0. **Round ten, wave three** ([`takeover-queue-round10.md`](takeover-queue-round10.md)
-   section 8): chapter 2, SC9b, SC13, SC15, the engine callees nobody
-   owns (SX), one reading of SC17, and world 1's first area groups. Stage
-   it from `analysis/round10_wave2_brief.md` (the group lines in
-   `analysis/round10_wave2_groups.tsv`, gitignored) with section 7's
-   findings folded in; run the tools at the tip for the counts; every
-   group is one stage. Owed by the two waves (sections 4 and 7): the
-   defects' numbering, the rebinding pass, two `area_rows.py` fixes, the
-   pairing tool's jump-table cases, and one run of the combat and
-   world-map route A/Bs when the owner is away (the base carries the
-   other session's `368b84f` too). The merge script is
-   `merge_group10.sh` + `keepboth.py` in this session's scratchpad
-   (`.../0eefe2a8-ba23-4625-9434-7c4f87a1456f/scratchpad/`; `MOD=<module>`
-   for a module not named `scena_<group>`); the controls scripts are in
-   `<that folder>/<group>/`. SC5's worktree
-   (`.claude/worktrees/agent-a38ca71ca088f5854`, branch
-   `phase-3/round10-sc5`) is merged but locked by a leftover agent
-   process: `git worktree remove --force --force` once it is gone. The
-   other fifteen wave branches and worktrees are removed.
+0. **Round ten, wave four** ([`takeover-queue-round10.md`](takeover-queue-round10.md)
+   section 11): area only - world 1's remainder, world 2's first groups,
+   and SX2 (twelve engine callees). Stage from
+   `analysis/round10_wave3_brief.md` (group lines
+   `analysis/round10_wave3_groups.tsv`, gitignored) with section 10's
+   findings folded in; run `tools/area_rows.py --groups` at the tip for
+   the cut (its letters shift as areas become ours). Merge with
+   `merge_group10v.sh <group> <scratch>` (`MOD=area_w<N><x>`): it merges in
+   the main checkout, then builds and self-tests the merge commit in the
+   detached worktree `<scratch>/verify` (`git worktree list` shows it;
+   recreate with `git worktree add --detach <path> <sha>` and `cmake
+   --preset i686` there if it is gone). Owed by the three waves (sections
+   4, 7, 10): the defects' numbering, the rebinding pass (with the
+   harness standard-set column moves, together), three tool fixes, the
+   pairing tool's jump-table cases, one run of the route A/Bs when the
+   owner is away, the `inject` / `impl` one-off. Scratch:
+   `.../0eefe2a8-ba23-4625-9434-7c4f87a1456f/scratchpad/` holds the merge
+   scripts, `<group>/` the controls scripts, `play/` a launcher copy the
+   owner plays from while agents run. Two merged worktrees
+   (`agent-a107d3219a43d7788` AR1C, `agent-ab518ae931371e088` AR1A) are
+   locked by a leftover agent process: `git worktree remove --force
+   --force` and `git branch -D phase-3/round10-ar1a` / `-ar1c` once it is
+   gone. **Round ten's PR**: push and open one when the owner wants; the
+   branch carries the other session's `368b84f` and `f669cce` too.
 1. **Owed by the spell round** (round9 doc sections 6 to 12), the owner's
    order to choose:
    - **Rebinding and `known-defects.md` are done** (2026-09-27 afternoon):
@@ -319,9 +326,11 @@ _Verified 2026-09-24._
 ## In flight / uncommitted
 
 Nothing uncommitted of this round's. `phase-3/capture-round-ten` is ahead
-of `main` (`c47f521`) by round ten's two waves (sixteen merges, the round
-doc, the other session's `368b84f`); not pushed. The wave briefs are in
-`analysis/` (gitignored).
+of `main` (`c47f521`) by round ten's three waves (24 merges, the round
+doc) and the other session's two commits; not pushed. The wave briefs
+are in `analysis/` (gitignored). **The other session works in the main
+checkout on this branch**: check `git status` before a commit, and never
+build in `build/` while its game runs (merges do not need to).
 
 Local only, gitignored, worth keeping:
 

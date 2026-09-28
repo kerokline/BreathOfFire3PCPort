@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**4,102 functions are ours** (`inject: 4102 ours` in
+**4,554 functions are ours** (`inject: 4554 ours` in
 `bof3x.log`, 2026-09-28; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
@@ -49,6 +49,7 @@ re-derived:
 | 09-27 | The round closed out: raw-address calls between spell groups rebound to names (58 targets, 38 files), the defects numbered D89..D132, `origin/main` merged in | | 3,510 | `'*'` 0 mismatches | [`takeover-queue-round9.md`](takeover-queue-round9.md) section 12, [`known-defects.md`](known-defects.md) |
 | 09-27 | Round 10 wave 1: the scenario harness and chapter 0 (SCH), the area harness, area 11 and the cell hook (ARH), the area tool (ART), the chapters' shared helpers (SE), chapters 1, 3+4, 11, 12's first block (SC1, SC3, SC11, SC12) | 175 | 3,685 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 4 |
 | 09-27..28 | Round 10 wave 2: the chapter call tables' block (CALLS), chapters 5, 6, 7+8, 9's first block (SC5, SC6, SC7, SC9a), world 0's areas (AR0A, AR0B, AR0C) | 417 | 4,102 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 7 |
+| 09-28 | Round 10 wave 3: chapters 2, 9's tail + 10, 12's tail + 13 + 14, 15..19 (the staff roll), the engine callees (SX), world 1's areas 38..52 (AR1A..AR1C) - **the scenario round complete**, every chapter bank ours | 451 | 4,554 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 10 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer

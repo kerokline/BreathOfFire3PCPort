@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-28) - waves one and two merged (4,102 ours); wave three staged, eight groups, ~393 functions
+**Status:** IN PROGRESS (2026-09-28) - three waves merged, 1,044 functions, 3,510 -> 4,554 ours; **the scenario round is complete**; the area round has world 0 and half of world 1
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -331,3 +331,97 @@ one reading before it is a group: the plan says stubs, the tool says 4.9
 KiB of code. Area: world 1's first groups as `area_rows.py --groups` cuts
 them (AR1A 48, AR1B 55 with the world-map route in area 45, then AR1C
 on). About eight groups, ~400 functions; every group one stage.
+
+## 10. Wave three merged (2026-09-28)
+
+All eight groups merged, one at a time. From SX on, each merge commit was
+built and self-tested in a **detached verification worktree** with its
+own build directory (`<scratch>/verify`, `merge_group10v.sh`), because
+the main checkout's DLL was held by a running game and the other session
+had uncommitted work there; the main checkout's build is not touched by a
+merge any more. **451 functions taken, 4,102 -> 4,554 ours.** Counts are
+each group's in its worktree.
+
+| Group | Merge | Taken | Rounds | Controls planted / refused | Not refused | Doc |
+|---|---|--:|--:|---|---|---|
+| SX | `f4dae2c` | 18 of 19 | 54,000 | 67 / 67 (66 by a count, 1 by a fault, its variant by a count) | | [`scena_sx.md`](scena_sx.md) |
+| AR1B | `47e31db` | 55 | 254,000 | 166 / 165 | 1 equivalent (`| 1` sets bit 0 either way), variant refused | [`area_w1b.md`](area_w1b.md) |
+| SC9b | `6c3f0ee` | 63 | 378,000 | 165 / 165 | | [`scena_sc9b.md`](scena_sc9b.md) |
+| AR1C | `f4f73b5` | 57 | 342,000 | 185 / 185 | | [`area_w1c.md`](area_w1c.md) |
+| SC15 | `f442722` | 89 | 516,000 | 96 / 96 (2 by a fault, variants by a count) | | [`scena_sc15.md`](scena_sc15.md) |
+| AR1A | (after `f442722`) | 48 | 288,000 | 180 / 180 | | [`area_w1a.md`](area_w1a.md) |
+| SC2 | (after AR1A) | 72 | 432,000 | 235 / 234 | 1 equivalent (an early return nothing after can tell from going on), variant refused | [`scena_sc2.md`](scena_sc2.md) |
+| SC13 | `8c49f87` | 51 | 816,000 | 240 / 238 | 2 equivalent, variants refused | [`scena_sc13.md`](scena_sc13.md) |
+
+**The scenario round is complete.** `scenario_rows.py` at `8c49f87`
+lists 0 to take in every band: chapters 0..19 (SC0..SC17), the shared
+helpers (SE; its three declined addresses are other units'), the call
+tables' block (CALLS) and the engine callees (SX; `0x587B80` declined,
+named `Sound_StopMusic`). Sixteen groups over three waves, all fuzz-only;
+the live check per chapter (a recipe save played through the chapter
+under both sides, scenario plan §5) is still owed and is the owner's to
+record.
+
+**What the wave found:**
+
+- **Chapters 17..19 are the staff roll**, not stubs: 60 functions the
+  walk never reached because the catalogue labels `0x56AD80..0x56D5DF`
+  "Event script" by address range (SC15). Chapter 17's vtable points at
+  them; the roll is a 351-line scroller with its own font, rays, fade and
+  letterbox, then an end task back to chapter 15's area 0x8F, then
+  `Boot_Task`. `Scena17_EndTask` never returns; the fuzz runs both sides
+  under `__builtin_setjmp` with a `Task_Sleep` stand-in that longjmps.
+- **`0x5646B0` is a shared state 0** (sets the state byte to 1) used by
+  eight chapters' tables; it lies in chapter 14's block, so SC13 owns it
+  as `ScenaShared_State0`.
+- **A third world-map copy**: area 45 is area 16's code instruction for
+  instruction (two constants differ: the plate's animation bank, the
+  region label's cell). Areas 16, 33, 45 are read whole now; the other
+  eight copies (65, 87, 88, 104, 115, 121, 151, 152) will be the same.
+- **The tools' misses this wave**: `magic_rows._cmp_bound` misses a `cmp
+  reg, reg` bound, so `scenario_rows.py` dropped a real function
+  (`0x5413D0`, SC2) as a byte table and ran a neighbour's extent over it;
+  `area_rows.py` gaps `0x4075D0` / `0x407940` / `0x4077F0` are area 44's,
+  armed through a register (AR1B); `0x56FCA0`'s descent stopped at 0x10
+  because the entry jumps over its own loop head (SX). Three fixes owed.
+- **`pairs_propagated.json` pairs more jump-table cases**: `0x559AD0`
+  (SC9b), `0x53DF10` twice (SC2).
+- **An `args` hook that writes memory is lost** - the harness captures
+  the state before the arguments; a plant that must change memory goes in
+  `Seed` (SX). For the harness doc.
+- **`BOF3X_SHADOW='*'` died silently once each for two agents** (AR1A,
+  AR1C's merge check: exit 127, no Fatal) while a round-nine spell group
+  was cloning, and passed on the re-run every time. Not understood; the
+  owner's game and several agents' self-tests were running at once. Watch
+  for a third.
+- **Raw-address callees nobody owns, after SX**: `0x532FD0`, `0x591EC0`,
+  `0x57C5A0`, `0x57C600` (a turn test beside `Camera_TurnToDegrees`),
+  `0x57C160` (a story-flag toggle), `0x572620`, `0x57C8A0`, `0x469FE0`,
+  `0x587860`, `0x587890`, `0x591920`, `0x5A7730`. A second engine group.
+- **Inbound calls from engine and area code** for the rebinding pass:
+  `0x46D79C` (effect kind 0x70) into `Area49_EffectFrame`; areas 16 and 33
+  into `Area45_Record4Tick`; area 7 into `Area46_PlaceKind2At0`; area 77
+  into `Scena06_Leap`.
+- **The other session's commits ride on this branch** (`368b84f`,
+  `f669cce`: DIV-0059..0062, four routes); each left `DIVERGENCE.md`'s
+  status count behind, fixed at `8e4fcd7` and `a3c4fde`. The `inject:`
+  count is one short of the `impl` count (4,554 against 4,555) since
+  before wave two; unexplained, small, owed a look.
+
+**Owed by the round so far:** the defects' numbering for all three waves;
+the rebinding pass (every `SH_AT` / `AH_AT` into SE, SX, CALLS and the
+chapter blocks; the harness's standard-set columns for `0x4410B0`,
+`0x532ED0`, `0x57C6B0`, `0x56FCA0`, `0x56D6F0` move to `SH_OURS` at the
+same time - switching one without the other breaks the raw calls, SX);
+the three tool fixes; the pairing tool's cases; the route A/Bs when the
+owner is away; the recipe saves per chapter.
+
+## 11. Wave four (to stage)
+
+Area only from here: world 1's remainder (areas 53..75, about 155
+functions, three groups as `area_rows.py --groups` cuts them at the tip -
+its letters shift as areas become ours), world 2's first groups (AR2A
+50, AR2B 66 with the world-map route in area 88, AR2C 45, AR2D 53, AR2E
+52 with area 104 on the world-map route, AR2F 53), and **SX2**, the twelve
+engine callees above. About eight groups, ~400 functions; wave two's
+brief with sections 7 and 10 folded in.
