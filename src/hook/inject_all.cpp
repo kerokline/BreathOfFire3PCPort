@@ -185,6 +185,7 @@
 #include "game/area_w1c.h"
 #include "game/scena_sc15.h"
 #include "game/scena_sc2.h"
+#include "game/scena_sc13.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -612,6 +613,8 @@ void InjectAll() {
                                 // patches bytes inside its 72 (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
+    ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
+                                // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
     InjectReport();
 }
 
