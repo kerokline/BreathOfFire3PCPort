@@ -520,7 +520,8 @@ std::uint32_t Exact(std::uint32_t v) { return v + SH_PICK(0, 0, 0, 1, 0xFFFFFFFF
 // tested in. kind 0: x exact, z by its cell; 1: x and z by their cells; 2: x
 // below a bound (signed), z by its cell; 3: x by its cell, z below a bound.
 struct Rect { unsigned short area; unsigned char fd, kind; std::uint32_t x; unsigned xn; std::uint32_t z; unsigned zn; };
-const Rect kStep13[] = {{0x56, 1, 0, 0x428000, 0, 0x3A, 2}, {0x70, 4, 1, 0x36, 3, 0x32, 4},    {0x7F, 0, 0, 0x38000, 0, 6, 3},
+const Rect kStep13[] = {{0x8F, 1, 1, 0x25, 1, 0x1D, 2},   // area 0x90's cell tested first in 0x8F
+                        {0x56, 1, 0, 0x428000, 0, 0x3A, 2}, {0x70, 4, 1, 0x36, 3, 0x32, 4},    {0x7F, 0, 0, 0x38000, 0, 6, 3},
                         {0x8F, 0, 0, 0x3B8000, 0, 0x1F, 4}, {0x8F, 1, 0, 0x428000, 0, 0x64, 3}, {0x90, 2, 1, 0x25, 1, 0x1D, 2},
                         {0x91, 0xFF, 1, 0xA, 2, 0x62, 3},   {0x97, 0xFF, 0, 0x148000, 0, 0x12, 9}, {0x9B, 0, 0, 0x28000, 0, 0x30, 2}};
 const Rect kArrive13[] = {{0x8F, 0, 1, 0x2E, 1, 0x1F, 4}, {0x91, 5, 1, 0x40, 2, 0x6A, 1}};
@@ -675,16 +676,37 @@ void Disturb(std::uint32_t h) {
     }
 }
 
-// After every disturbance: for the functions that read the area again after
-// their calls (the enter-area states and the hooks), half the time the area
-// moved to one of the chapter's, drawing on Noise() (the recorders' stream,
-// the same on both passes).
+// After every disturbance, drawing on Noise() (the recorders' stream, the
+// same on both passes): for every function, Field_StatusBits bit 0 flipped a
+// quarter of the time and the object pointer 0x903804 moved a quarter of the
+// time; for the functions that read the area again after their calls (the
+// enter-area states and the hooks), the area moved to one of the chapter's,
+// Cond_ByteFD and the facing moved, each half the time.
 void Settle() {
+    const std::uint32_t n = sh::Noise();
+    // a bit of Field_StatusBits, which chapter 14's trips read again after
+    // their area change or ScriptFlags_Set40 (and then set or clear bit 0):
+    // a quarter of the time
+    if ((n & 0x30) == 0x30) B(at::kStatusBits) = static_cast<unsigned char>(B(at::kStatusBits) ^ (1u << ((n >> 20) & 7)));
+    // the object pointer chapter 13's run 6 reads again after its calls
+    if ((n & 0xC0) == 0xC0) sh::SetPointer(at::kCamObject, sh::SpriteRecord(n >> 24));
     const bool rereads = g_chapter == 13 ? (g_k == k13EnterArea || g_k == k13StepHook || g_k == k13ArriveHook)
                                          : (g_k == k14EnterArea || g_k == k14StepHook || g_k == k14ArriveHook);
     if (!rereads) return;
-    const std::uint32_t n = sh::Noise();
+    // chapter 13's step hook half the time between its areas 0x8F and 0x90
+    // at Cond_ByteFD 1 / 2 (it loads the facing in one and stores it in the
+    // other)
+    if (g_chapter == 13 && g_k == k13StepHook && (n & 8)) {
+        const bool second = (n >> 8) & 1;
+        SetW(at::kArea, second ? 0x90 : 0x8F);
+        B(at::kCondFD) = static_cast<unsigned char>(second ? 2 : 1);
+        B(at::kFacing) = static_cast<unsigned char>((n >> 16) & 1 ? 0 : 5 + (n >> 17) % 3);
+        return;
+    }
     if (n & 1) SetW(at::kArea, AnArea(n >> 8));
+    // Cond_ByteFD and the facing, read again after the flag tests
+    if (n & 2) B(at::kCondFD) = static_cast<unsigned char>((n >> 12) % 6);
+    if (n & 4) B(at::kFacing) = static_cast<unsigned char>((n >> 16) & 1 ? 0 : 5 + (n >> 17) % 3);
 }
 
 void RunChapter(int chapter, const sh::Clone* clones, unsigned n, const sh::DataTable* tables, unsigned n_tables,
