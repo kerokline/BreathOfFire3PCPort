@@ -5,7 +5,7 @@
 B. 49 functions ours (`src/game/boss_sa.cpp`, shadow `boss_sa`), each read
 to its last instruction with capstone and fuzzed through the boss harness
 ([`boss_harness.md`](boss_harness.md)) without edits to it: ten `Run`s,
-0 mismatches. CONTROLS_SUMMARY Fuzz only: no recorded route
+0 mismatches; 139 controls planted, 139 refused, every one by a count (section 4). Fuzz only: no recorded route
 reaches a boss fight.
 
 The group's units (`tools/boss_rows.py --groups`, 2026-09-28): `K06`, `K07`,
@@ -196,6 +196,9 @@ function, the harness unedited.
 | `b39` | 39 | `kSetup` | - | 6,000 | no calls (the three stores, read back), 0 mismatches |
 | `k39` | 33, 39 | 2 dispatchers, 6 states, the hook and its entry | `BossWeretigr_Steps`, `_State4Steps`, `_Hooks` (1 word) | 60,000 | 69,586 calls, 0 mismatches |
 
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final
+build): exit 0, first time (no silent death).
+
 **First users of `kSetup`.** The shape needed nothing more: a set-up's three
 stores land in the compared battle bytes and in the hooks the harness logs
 after the call; `b39`'s only function makes no call and is compared on those
@@ -219,8 +222,10 @@ back is needed, but the coordinator may want these as harness defaults):
   group that calls them).
 
 **Seeds.** Every dispatcher's other state bytes drawn inside its table
-(`SeedStates`), so that a dispatcher reading the wrong byte lands on another
-entry. The hook word: 0..2 with garbage above the byte half the time (the
+(`SeedStates`, every round), so that a dispatcher reading the wrong byte
+lands on another entry. Kind 39's `disturb` rewrites the cue word at the
+current enemy's `+0xF8` a third of the time (every enemy's `+0xF8` is the
+same harness record, so moving `0x939AD8` alone cannot show a re-read). The hook word: 0..2 with garbage above the byte half the time (the
 dispatchers index by the low byte, the entries get the whole word; the hook
 tables' `BareRet` logs it). HP: `0xFFFF` / `0xFFFE` / 0 for the picks; for the
 hit, the maximum small or any, the signed damage -100..499 or any, and HP
@@ -237,7 +242,177 @@ acting actor 3..10 two times in three (the harness draws 0..2), `+0xA` at 1,
 
 ## 4. Controls
 
-CONTROLS_TABLE
+`python controls.py` (the group's scratch script): each control one textual
+change to ours, anchored on a string that occurs once in `boss_sa.cpp`, then
+rebuild, run (`BOF3X_SHADOW=boss_sa`, `BOF3X_BSA_RUN` its run), restore,
+rebuild. Run twice; the table is the second run, on the final seeds. **139
+planted, 139 refused, every one by a count** (the planted function's
+mismatched rounds; a plant in a shared helper - `EndStep`, `EndWalk`,
+`PickSpent`, `HookDispatch`, `EndByBits`, `SetHooks` - is listed under the
+function its run tests).
+
+The first run refused 125 by a count, 13 by a `Fatal` and left one: the
+dispatchers read by the wrong state byte (A1, A6, A7, B1, B3, B4, D1, D3, E1,
+E3, F1, J1, J3) found it past their tables in the rounds where the seed left
+it random, and the hook plants "the word + 1" (A20, E4, F4, J25) ran word 2
+past a three-entry table. The seed now draws every other state byte inside
+the dispatcher's table every round (the recorders log all four, and a byte
+past a table is a `Fatal` on both sides), and the hook plants take the next
+entry (A20, J25) or flip bit 8 of the word (E4, F4). J16 (the cue word read
+once) went unrefused: every enemy's `+0xF8` is the same harness record, so
+the standard disturbance moving `0x939AD8` never changed the word; the
+group's `disturb` now rewrites the word at the current enemy's `+0xF8`. The
+thinnest refusals are the re-read plants (A16 86, B6, A9, D5: 195..464
+rounds) and `Boss01_Event`'s phase-1 plants (C4..C7, C14: 7..51 rounds - the
+branch needs the actor 0, kind 4 and the id 0x78 at once).
+
+A20 ("the next entry" of Gary's hook table) is equivalent in the game - all
+three entries are `BareRet`, which reads nothing - and refused here only
+because the hook table's recorder logs the word it is handed; its near
+variants A21 (the entry handed the index) and B11 (bit 8 of the word
+flipped) are refused on what the entries receive.
+
+| # | Function | Plant | Refused (rounds of 6,000) |
+|---|---|---|--:|
+| A1 | `BossGary_Dispatch` | by +3 | 5424 |
+| A2 | `BossGary_Enter` | the end animations | 6000 |
+| A3 | `BossGary_Enter` | Mogu's hook | 6000 |
+| A4 | `BossGary_Enter` | state 3 (every Enter) | 5965 |
+| A5 | `BossGary_Enter` | the cues a word on (every Enter) | 6000 |
+| A6 | `BossGary_ActDispatch` | by +3 | 4667 |
+| A7 | `BossGary_EndDispatch` | by +1 | 4052 |
+| A8 | `BossGary_EndStart` | x and z swapped | 6000 |
+| A9 | `BossGary_EndStart` | Sprite_Current read before the calls | 412 |
+| A10 | `BossGary_EndStart` | animation 2 | 6000 |
+| A11 | `BossGary_EndAwait` | the count at 1 as 0 | 325 |
+| A12 | `BossGary_EndAwait` | bit 1 for bit 2 | 1657 |
+| A13 | `BossGary_EndAwait` | x 0x63 | 2293 |
+| A14 | `BossGary_EndAwait` | a quarter step (EndStep) | 2293 |
+| A15 | `BossGary_EndAwait` | x and z swapped (EndStep) | 2293 |
+| A16 | `BossGary_EndAwait` | Sprite_Current read before the call (EndStep) | 85 |
+| A17 | `BossGary_EndAwait` | +0x2B (EndStep) | 2293 |
+| A18 | `BossGary_EndAwait` | bank 0x5E (EndStep) | 2293 |
+| A19 | `BossGary_EndAwait` | no step | 2282 |
+| A20 | `BossGary_Hook` | the next entry | 6000 |
+| A21 | `BossGary_Hook` | the entry gets the index (HookDispatch) | 3017 |
+| B1 | `BossMogu_Dispatch` | by +2 | 5397 |
+| B2 | `BossMogu_Enter` | Gary's cues | 6000 |
+| B3 | `BossMogu_ActDispatch` | by +1 | 4662 |
+| B4 | `BossMogu_EndDispatch` | by +4 | 3959 |
+| B5 | `BossMogu_EndStart` | count 0x3B | 6000 |
+| B6 | `BossMogu_EndStart` | Sprite_Current read before the call | 214 |
+| B7 | `BossMogu_EndCount` | at 1 as at 0 | 342 |
+| B8 | `BossMogu_EndCount` | animation 1 | 2297 |
+| B9 | `BossMogu_EndCount` | a byte count | 2662 |
+| B10 | `BossMogu_EndCount` | the first animations | 2297 |
+| B11 | `BossMogu_Hook` | the word bit 8 flipped | 6000 |
+| C1 | `Boss01_Setup` | end and exit swapped | 6000 |
+| C2 | `Boss01_Event` | phase 0: bit 1 | 166 |
+| C3 | `Boss01_Event` | phase 0: or | 172 |
+| C4 | `Boss01_Event` | phase 1: id 0x79 | 44 |
+| C5 | `Boss01_Event` | phase 1: +0xB2 | 32 |
+| C6 | `Boss01_Event` | phase 1: bit 0 cleared | 26 |
+| C7 | `Boss01_Event` | phase 1: actor 1 too | 7 |
+| C8 | `Boss01_Event` | phase 5: id 0x77 | 406 |
+| C9 | `Boss01_Event` | phase 5: target 0x41 | 406 |
+| C10 | `Boss01_Event` | phase 6: bit 2 | 567 |
+| C11 | `Boss01_Event` | al 1 at phase 3 | 767 |
+| C12 | `Boss01_Event` | phase 4 for 5 | 800 |
+| C13 | `Boss01_Event` | the code by 16 bits | 449 |
+| C14 | `Boss01_Event` | phase 1: kind 5 | 51 |
+| C15 | `Boss01_End` | run 7 | 2954 |
+| C16 | `Boss01_End` | bit 1 for bit 0 | 3630 |
+| C17 | `Boss01_End` | step 2 | 6000 |
+| C18 | `Boss01_End` | step 0x33 | 2965 |
+| C19 | `Boss01_Exit` | animation 1 for tag 7 | 6000 |
+| C20 | `Boss01_Exit` | the pose, not the place | 6000 |
+| C21 | `Boss01_Exit` | +0x49 | 6000 |
+| C22 | `Boss01_Exit` | +0x5A from +0x58 | 6000 |
+| C23 | `Boss01_Exit` | bank 0x60 | 6000 |
+| C24 | `Boss01_Exit` | tag 6 twice | 6000 |
+| C25 | `Boss01_Exit` | the actor found again | 6000 |
+| D1 | `BossNue_Dispatch` | by +3 | 5393 |
+| D2 | `BossNue_Enter` | kind 2's hook | 6000 |
+| D3 | `BossNue_EndDispatch` | by +1 | 2970 |
+| D4 | `BossNue_EndPose` | animation 7 | 6000 |
+| D5 | `BossNue_EndPose` | Sprite_Current read before the call | 215 |
+| D6 | `BossNue_EndMove` | f 1 (EndWalk) | 6000 |
+| D7 | `BossNue_EndMove` | al signed (EndWalk) | 1973 |
+| D8 | `BossNue_EndMove` | tag 1 (EndWalk) | 6000 |
+| D9 | `BossNue_EndMove` | stride 0xA0 (EndWalk) | 5809 |
+| D10 | `BossNue_EndMove` | +4 (EndWalk) | 1965 |
+| D11 | `BossNue_EndMove` | the loss bit | 1427 |
+| D12 | `BossNue_EndMove` | Sprite_ScriptTick (EndWalk) | 6000 |
+| D13 | `BossNue_EndMove` | b -13 (EndWalk) | 6000 |
+| D14 | `BossNue_Hook` | the hit as the pick (HookDispatch) | 2013 |
+| D15 | `BossNue_HookPick` | cue 0x601 | 1538 |
+| D16 | `BossNue_HookPick` | kind 4 (PickSpent) | 1538 |
+| D17 | `BossNue_HookPick` | +3 (PickSpent) | 1538 |
+| D18 | `BossNue_HookPick` | 0xFFFE too (PickSpent) | 472 |
+| D19 | `BossNue_HookHit` | the damage unsigned | 1567 |
+| D20 | `BossNue_HookHit` | a half | 1227 |
+| D21 | `BossNue_HookHit` | below, not at or below | 1003 |
+| D22 | `BossNue_HookHit` | HP 0xFFFE | 2465 |
+| D23 | `BossNue_HookHit` | bits 0 and 1 | 1209 |
+| D24 | `BossNue_HookHit` | HP at +0xA6 | 2367 |
+| D25 | `BossNue_Hook` | the word masked | 3004 |
+| E1 | `BossNue2_Dispatch` | by +2 | 5418 |
+| E2 | `BossNue2_Enter` | Sample 1's cues | 6000 |
+| E3 | `BossNue2_ActDispatch` | by +1 | 4682 |
+| E4 | `BossNue2_Hook` | the word bit 8 flipped | 6000 |
+| E5 | `BossNue2_Enter` | the animations a byte on | 6000 |
+| F1 | `BossSample1_Dispatch` | by +2 | 5415 |
+| F2 | `BossSample1_Enter` | bit 4 | 4561 |
+| F3 | `BossSample1_Enter` | kind 2's hook | 6000 |
+| F4 | `BossSample1_Hook` | the word bit 8 flipped | 6000 |
+| F5 | `BossSample1_Enter` | Sprite_Current's +0x114 | 1351 |
+| G1 | `Boss02_Setup` | exit BareRetZero | 6000 |
+| G2 | `Boss02_Event` | the code by 16 bits | 595 |
+| G3 | `Boss02_Event` | pass 1 | 1171 |
+| G4 | `Boss02_Event` | message 0x1A | 1171 |
+| G5 | `Boss02_Event` | bits 1 or 2 | 418 |
+| G6 | `Boss02_End` | bit 1 only (EndByBits) | 1111 |
+| G7 | `Boss02_End` | track 0x1C | 3779 |
+| G8 | `Boss02_End` | tag 1 | 3779 |
+| G9 | `Boss02_End` | no clear (EndByBits) | 3779 |
+| G10 | `Boss02_End` | step 3 (EndByBits) | 3779 |
+| G11 | `Boss02_End` | counter 0x25 | 3779 |
+| G12 | `Boss02_Event` | al 0xFF | 6000 |
+| H1 | `Boss03_Setup` | event BareRet | 6000 |
+| H2 | `Boss03_End` | the place | 3837 |
+| H3 | `Boss03_End` | track 0x19 | 3837 |
+| H4 | `Boss03_End` | enemy 1 | 3837 |
+| H5 | `Boss03_End` | counter 0x6C | 3837 |
+| I1 | `Boss39_Setup` | exit BareRetZero | 6000 |
+| I2 | `Boss39_Setup` | the end hook not stored (SetHooks) | 6000 |
+| I3 | `Boss39_Setup` | fight 1's end | 6000 |
+| J1 | `BossWeretigr_Dispatch` | by +3 | 5426 |
+| J2 | `BossWeretigr_Enter` | the cues a word on | 6000 |
+| J3 | `BossWeretigr_State4Dispatch` | by +3 | 4797 |
+| J4 | `BossWeretigr_State4Fx` | parameter 5 | 6000 |
+| J5 | `BossWeretigr_State4Fx` | the actor less 2 | 6000 |
+| J6 | `BossWeretigr_State4Fx` | a dword short | 6000 |
+| J7 | `BossWeretigr_State4Fx` | slot 7 | 6000 |
+| J8 | `BossWeretigr_State4Fx` | +0xC | 6000 |
+| J9 | `BossWeretigr_State4Fx` | count 0x11 | 6000 |
+| J10 | `BossWeretigr_State4Fx` | bit 0x20 | 4496 |
+| J11 | `BossWeretigr_State4Fx` | the owner 0x939AD8 | 2032 |
+| J12 | `BossWeretigr_State4Fx` | +2 = 1 | 6000 |
+| J13 | `BossWeretigr_State4Fx` | the slot masked to 5 bits | 1982 |
+| J14 | `BossWeretigr_State4Cue` | down by 2 | 6000 |
+| J15 | `BossWeretigr_State4Cue` | the second + 2 | 1362 |
+| J16 | `BossWeretigr_State4Cue` | the cue read once | 24 |
+| J17 | `BossWeretigr_State4Cue` | the step before the cues | 1349 |
+| J18 | `BossWeretigr_State4End` | bit 0x20 | 3056 |
+| J19 | `BossWeretigr_State4End` | bit 3 | 3102 |
+| J20 | `BossWeretigr_State4End` | the calls swapped | 4470 |
+| J21 | `BossWeretigr_EndPose` | animation 1 | 6000 |
+| J22 | `BossWeretigr_EndMove` | a byte of experience | 2021 |
+| J23 | `BossWeretigr_EndMove` | +0x94 (the gold) | 2025 |
+| J24 | `BossWeretigr_EndMove` | bits 0 and 1 | 960 |
+| J25 | `BossWeretigr_Hook` | the next entry | 6000 |
+| J26 | `BossWeretigr_HookPick` | Nue's cue too | 1475 |
+| J27 | `BossWeretigr_EndMove` | a tick more | 2025 |
 
 ## 5. What nothing reached
 
