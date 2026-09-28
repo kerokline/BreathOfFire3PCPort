@@ -63511,3 +63511,723 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR2F): area 113 descriptor 0x620010 +0x34: Area113_ChoiceAsk, 0x420850, 0x420870 (another block), Area61_ChoiceMark4 twice. docs/area_w2f.md."
+
+[[func]]
+pc = 0x4223A0
+name = "Area148_MemberMessageA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4223A0..0X42242A (0X8B bytes), cdecl, capstone to the last instruction. area 148 handler 4 and choice 6 (PSX handler[4] 0x801F3A20 by names/area_records.toml): the first of the member ids 0x6353D8 (outer loop, four) that party record 0 .. Field_MemberCount - 1 has at +0x89 (inner loop, the count read once): Msg_OpenScript(its word from 0x6353DC), Field_Request 2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422430
+name = "Area148_MemberMessageB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422430..0X4224BA (0X8B bytes), cdecl, capstone to the last instruction. area 148 handler 5 and choice 7 (PSX handler[5] 0x801F3AE4): Area148_MemberMessageA's body over the ids 0x6353E4 and messages 0x6353E8. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4224C0
+name = "Area148_ChoiceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4224C0..0X4224D5 (0X16 bytes), cdecl, capstone to the last instruction. area 148 choice 0: the message word 6 when the cursor byte 0x7DEE67 is not 0, else 4 (neg / sbb / and 2 / add 4). docs/area_w3g.md."
+
+[[func]]
+pc = 0x4224E0
+name = "Area148_ChoiceSetFlag59"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4224E0..0X42250B (0X2C bytes), cdecl, capstone to the last instruction. area 148 choice 1: cursor 0: message 5 (stored before the call), Flags_Set(0x904030, 0x59); else message 0xFFFF. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422510
+name = "Area148_Tail31"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422510..0X42278D (0X27E bytes), cdecl, capstone to the last instruction. Field_ModeTailKinds[31] (0x662D64): a switch on the s8 0x9039F4 through the byte table 0x422778 (22) and the case table 0x422750 (10, in the function): 0 Party_DropIn(0); 1 waits on 0x90384B 0x18, flag 0x46, Field_ChangeArea(0x95); 0xA..0xE two effect-kind-0x13 flashes (Effect_FindFree, slot in 0x9039F5), Kind2_Place(2), flag 0x5A, the u16 timer 0x9039F6; 0x14 / 0x15 flag 0x6A toggled, Sound 0x204, Gfx_ClutAdjust by the flag, Draw_PassFlags 0 then 0x1F after 15 frames. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422790
+name = "Area148_ArriveHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422790..0X4227BD (0X2E bytes), cdecl, capstone to the last instruction. Area_ArriveHook's case for area 148 (called from 0x56E551): z high word 0x1C and x high word 0x12..0x14 (16-bit): ScriptFlags_Set40, tail kind 31 state 0, al 1; else al 0. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4227C0
+name = "Area148_Trigger17"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4227C0..0X4227D5 (0X16 bytes), cdecl, capstone to the last instruction. Field_ObjectTriggers id 17 (the dword at 0x662E60): ScriptFlags_Set40, tail kind 31 at state 0xA; al 0. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4227E0
+name = "Area148_SwitchHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4227E0..0X42283B (0X5C bytes), cdecl, capstone to the last instruction. Area_CellHooks pair 24 (area 0x94, 0x662FEC): the record 0x6353F0 (one: x, z, facing nibble, tail state) matching the argument bytes and the leader facing byte: ScriptFlags_Set40, tail kind 31 at the record state (0x14), al 1; none al 0. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422840
+name = "Area148_BeamRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422840..0X422851 (0X12 bytes), cdecl, capstone to the last instruction. Effect_KindHandlers[0x7E] (the dword at 0x655548): jmp through Area148_BeamStates 0x6353F4 (3) by Sprite_Current[1]. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422860
+name = "Area148_BeamStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422860..0X4228AE (0X4F bytes), cdecl, capstone to the last instruction. effect kind 0x7E state 0: +8 = +0xB, the word +0x3E + 0xC0, Area148_BeamAhead, +8 = (+8 + 3) & 7, Area148_BeamVelocity, +6 2, +9 0x50, +1 1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4228B0
+name = "Area148_BeamSweep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4228B0..0X42296B (0XBC bytes), cdecl, capstone to the last instruction. effect kind 0x7E state 1: Field_Request set: only Area148_DrawBeam; else the point +0x18 / +0x1C moved by +0xC / +0x10, +9 - 1, the draw, Area148_BeamTurnMembers; at +9 0 the facing + 2, the velocity, +9 0x50, +0xA = Rand() idiv 45 remainder, not 0: +9 - 1 and state 2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422970
+name = "Area148_BeamPause"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422970..0X4229B5 (0X46 bytes), cdecl, capstone to the last instruction. effect kind 0x7E state 2: the draw, the member turn, +0xA - 1; at 0 +9 + 1 and state 1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4229C0
+name = "Area148_BeamAhead"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4229C0..0X422A1C (0X5D bytes), cdecl, capstone to the last instruction. called by the beam: (+0x18, +0x1C) = (+0x34, +0x38) + 5 x Field_DirectionSteps[+8] (unchecked); +0x20 = AreaMap_Elevation there (low word, signed) shl 16. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422A20
+name = "Area148_BeamVelocity"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422A20..0X422A4C (0X2D bytes), cdecl, capstone to the last instruction. called by the beam: +0xC / +0x10 = the walk deltas 0x6696DC by +8 (unchecked), each shl 1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x422A50
+name = "Area148_BeamTurnMembers"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422A50..0X422B48 (0XF9 bytes), cdecl, capstone to the last instruction. called by the beam: +0x3C set to +0x20 for two Party_MemberAt(x, z, 0) asks at cells from 0x635414 by 0x635400[(+9 shr 3) * 2 + k] + (+8 & 6) * 4, then put back; a member found with Field_ScriptFlags2 bits 10 / 12 clear and Field_Request 0: its facing made odd, stored when its +1 is 1, Member_SetState2_8(member, 2). docs/area_w3g.md."
+
+[[func]]
+pc = 0x422B50
+name = "Area148_DrawBeam"
+ret = "void"
+params = "const long *from, const long *ahead"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422B50..0X422D81 (0X232 bytes), cdecl, capstone to the last instruction. called by the beam states: nothing unless Draw_PassFlags and flag 0x6A; draw mode (dtd 1), the map camera 0x494060, a LINE_F2 between the two points projected by 0x494110 (colour by +6 from 0x6353CC), Math_Ratan2 of the vertex differences through _ftol 0x5B9550, the screen sizes 0x4941E0 of (0x40, 0) at each end + (Frame_Counter & 1), Area148_DrawBeamFan and Area148_DrawBeamBand (the band's last four stack words are the fan's own argument slots), draw mode (dtd 0). docs/area_w3g.md."
+
+[[func]]
+pc = 0x422D90
+name = "Area148_DrawBeamBand"
+ret = "void"
+params = "int x0, int y0, int r1, int a1, int x1, int y1, int r2, int a2"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422D90..0X422FE1 (0X252 bytes), cdecl, capstone to the last instruction. called by Area148_DrawBeam: two semi-transparent POLY_G4 quads (the second a copy of the first at +0x44), the two ends in the beam colour, the black vertices at r1 (cos, sin)(a1 or a1 + 0x800) shr 12 and r2 (cos, sin)(a2 + 0x800 or a2) shr 12, every argument its low word signed; each linked (0x44). docs/area_w3g.md."
+
+[[func]]
+pc = 0x422FF0
+name = "Area148_DrawBeamFan"
+ret = "void"
+params = "int x, int y, int r, int a"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X422FF0..0X42315B (0X16C bytes), cdecl, capstone to the last instruction. called by Area148_DrawBeam: eight semi-transparent POLY_G3 triangles at Gfx_PacketNext, the centre in the beam colour, the rim black at r (cos, sin)(a + k 0x100) shr 12 (half a turn), each linked (0x34). docs/area_w3g.md."
+
+[[func]]
+pc = 0x423160
+name = "Area149_DustRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423160..0X423171 (0X12 bytes), cdecl, capstone to the last instruction. area 149 handler 1 (PSX 0x801F2EFC): jmp through Area149_DustStates 0x6361FC (4) by Sprite_Current[4]. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423180
+name = "Area149_DustNear880"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423180..0X4231C0 (0X41 bytes), cdecl, capstone to the last instruction. area 149 dust state 0: Camera_Distance (s16) below 0x880: extra record 0 +0x84 1, counter 0x903848 0xA, Sound_PlayEffect(1), +4 + 1; Area149_SpawnDust(-4), MoveScript_Object word +0xA - 2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4231D0
+name = "Area149_DustNear680"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4231D0..0X423224 (0X55 bytes), cdecl, capstone to the last instruction. area 149 dust state 1: below 0x680 counter 0xF, Sound_PlayEffect(0), +4 + 1; extra record 0 x below Field_Kind2X + 0x20000: its +0x84 3; Area149_SpawnDust(-3), the op again. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423230
+name = "Area149_DustAtZero"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423230..0X423283 (0X54 bytes), cdecl, capstone to the last instruction. area 149 dust state 2: Camera_Distance 0: counter 0x14, Sound_PlayEffect(1), +4 + 1; the same mark; Area149_SpawnDust(-2), the op again. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423290
+name = "Area149_DustHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423290..0X4232A5 (0X16 bytes), cdecl, capstone to the last instruction. area 149 dust state 3: Area149_SpawnDust(-1), the op again. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4232B0
+name = "Area149_SpawnDust"
+ret = "void"
+params = "signed char dx"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4232B0..0X42337B (0XCC bytes), cdecl, capstone to the last instruction. called by the dust states: nothing when Frame_Counter & 3; else twice an Effect_FindFree slot of kind 0x37 at (Field_Kind2X + dx shl 16, Field_Kind2Z + 0x10000 / - 0x10000), +0x2C 0x2C0, +0x3E AreaMap_Elevation, +9 1, +6 / +7 0, +0x29 6. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423380
+name = "Area149_ViewShiftBack"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423380..0X423449 (0XCA bytes), cdecl, capstone to the last instruction. called by Scena15_Runs (0x56ABC4, step 0x33): MapView_FocusX 0x63FF: Sprite_Kind2 x, Field_Kind2X - 0x140000, MapView_Origin - 0x14, focus 0x77FF, AreaMap_Elevation to Sprite_Kind2 +0x3E, MapView_SetElevation, 0x56FCA0, every live kind-0x37 effect of the twenty moved, extra record 0 moved. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423450
+name = "Area149_Tail33"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423450..0X42361C (0X1CD bytes), cdecl, capstone to the last instruction. Field_ModeTailKinds[33] (0x662D6C): by the s8 0x9039F4 through 0x423610 (13) and the case table 0x4235FC (5): 0 the map shifted on (focus 0x77FF to 0x63FF) and the timer to state 2; 2 Field_ChangeArea(0xA7, 0x280000, 0x630000, 0x81); 0xA shifted back and the timer to 0xC; 0xC Field_ChangeArea(0x94, 0xA0000, 0x190000, 0x81); 0x90384B 0x20 and the tail disarmed before each change. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423620
+name = "Area149_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423620..0X4236C3 (0XA4 bytes), cdecl, capstone to the last instruction. area 149 init (+0x40; PSX 0x801F36CC): from area 0x94 (0x802290) extra record 0 x + 0x16 cells, +0x83 1, +0x8A 0, its elevation, Cond_ByteFE 1, flag 0x11 of the bank 0x904000: tail kind 33 state 0, the timer 0x5A; from area 0xA7 +0x8A 0, +0x83 and Cond_ByteFE 2, tail kind 33 state 0xA, the timer 0x5A. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4236D0
+name = "Area150_ChoiceFill5B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4236D0..0X423718 (0X49 bytes), cdecl, capstone to the last instruction. area 150 choice 0: the message from 0x636A5C by the s8 cursor (unchecked); cursor 0: Inventory_Add(0, 0x5B, 16 - Inventory_Count(0, 0x5B, 0) as a byte), Sound_PlayEffect(0x106) when it answers not 0. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423720
+name = "Area150_ChoiceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423720..0X423736 (0X17 bytes), cdecl, capstone to the last instruction. area 150 choice 1: the message from 0x636A60 by the s8 cursor (unchecked). docs/area_w3g.md."
+
+[[func]]
+pc = 0x423740
+name = "Area150_ChoiceTailState"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423740..0X42375B (0X1C bytes), cdecl, capstone to the last instruction. area 150 choice 2: no message; 0x9039F4 = 0xE when the cursor is not 0, else 0xC. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423760
+name = "Area150_Tail58"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423760..0X423908 (0X1A9 bytes), cdecl, capstone to the last instruction. Field_ModeTailKinds[58] (0x662DD0): by the s8 0x9039F4 - 0xA through 0x4238FC (13) and the case table 0x4238E0 (7): 0xA message 0x2D; 0xC Field_ChangeArea(0xBD, 0x17800000, 0xF000000, 0xA) and nine stores; 0xE disarm; 0x14 message 0x25 / 0x20 by flag 3 of 0x904000; 0x15 Party_HealJoined, Sound_LoadStream(0); 0x16 on Sound_StreamDone Music_Play(0x95, 0x10), Transition_Start(1), flags cleared. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423910
+name = "Area150_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423910..0X423942 (0X33 bytes), cdecl, capstone to the last instruction. Area_StepHook's case for area 150 (called from 0x56E1B2): x high word 0x17..0x1C and z high word 0x33..0x38 (16-bit): ScriptFlags_Set40, tail kind 58 state 0xA, al 1; else al 0. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423950
+name = "Area151_PlaceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423950..0X423A7A (0X12B bytes), cdecl, capstone to the last instruction. WorldMap_FieldHooks[9]: NOT area 87's body: its 0xA1 branch is area 87's, the other has no cell search and no name-set search - the one name set 0x63719C (id 0x10, five items) into five Text_Records rows, Msg_OpenScript(0x16). docs/area_w3g.md."
+
+[[func]]
+pc = 0x423A80
+name = "Area151_PlateRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423A80..0X423B55 (0XD6 bytes), cdecl, capstone to the last instruction. Area87's Area87_PlateRun (0x40FDE0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). WorldMap_Records record 9 +0: the plate's run through Area151_PlateStates by +1 (state 0 is 0x424BA0, area 152's block, bank 0x1D1). docs/area_w3g.md."
+
+[[func]]
+pc = 0x423B60
+name = "Area151_PlateShow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423B60..0X423CA1 (0X142 bytes), cdecl, capstone to the last instruction. Area87's Area87_PlateShow (0x40FF20) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). plate state 1: Area151_PlateAnims searched with no bound. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423CB0
+name = "Area151_PlateGrow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423CB0..0X423CF0 (0X41 bytes), cdecl, capstone to the last instruction. Area87's Area87_PlateGrow (0x410070) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). plate state 2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423D00
+name = "Area151_PlateHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423D00..0X423D57 (0X58 bytes), cdecl, capstone to the last instruction. Area87's Area87_PlateHold (0x4100C0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). plate state 3. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423D60
+name = "Area151_PlateShrink"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423D60..0X423DAF (0X50 bytes), cdecl, capstone to the last instruction. Area87's Area87_PlateShrink (0x410120) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). plate state 4. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423DB0
+name = "Area151_HudRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423DB0..0X423DC1 (0X12 bytes), cdecl, capstone to the last instruction. Area87's Area87_HudRun (0x410170) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). record 9 +0xC: Area151_HudStates by +1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423DD0
+name = "Area151_HudFrame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423DD0..0X423DD9 (0XA bytes), cdecl, capstone to the last instruction. Area87's Area87_HudFrame (0x410190) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). HUD state 1: Area151_FrameStep then a tail jump to Area151_BoxStep. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423DE0
+name = "Area151_FrameStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423DE0..0X423DF1 (0X12 bytes), cdecl, capstone to the last instruction. Area87's Area87_FrameStep (0x4101A0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area151_FrameStates by +2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423E00
+name = "Area151_FrameSlideIn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423E00..0X423E20 (0X21 bytes), cdecl, capstone to the last instruction. Area87's Area87_FrameSlideIn (0x4101C0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). frame state 1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423E30
+name = "Area151_FrameHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423E30..0X423E57 (0X28 bytes), cdecl, capstone to the last instruction. Area87's Area87_FrameHold (0x4101F0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). frame state 2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423E60
+name = "Area151_FrameSlideOut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423E60..0X423EA0 (0X41 bytes), cdecl, capstone to the last instruction. Area87's Area87_FrameSlideOut (0x410220) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). frame state 3. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423EB0
+name = "Area151_BoxStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423EB0..0X423EC1 (0X12 bytes), cdecl, capstone to the last instruction. Area87's Area87_BoxStep (0x410270) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). Area151_BoxStates by +3. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423ED0
+name = "Area151_BoxSlideIn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423ED0..0X423F31 (0X62 bytes), cdecl, capstone to the last instruction. Area87's Area87_BoxSlideIn (0x410290) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). box state 1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423F40
+name = "Area151_BoxHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423F40..0X423FAD (0X6E bytes), cdecl, capstone to the last instruction. Area87's Area87_BoxHold (0x410300) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). box state 2. docs/area_w3g.md."
+
+[[func]]
+pc = 0x423FB0
+name = "Area151_BoxSlideOut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X423FB0..0X424006 (0X57 bytes), cdecl, capstone to the last instruction. Area87's Area87_BoxSlideOut (0x410370) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). box state 3. docs/area_w3g.md."
+
+[[func]]
+pc = 0x424010
+name = "Area151_DrawFrame"
+ret = "void"
+params = "int x, int y"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X424010..0X4241D4 (0X1C5 bytes), cdecl, capstone to the last instruction. Area87's Area87_DrawFrame (0x4103D0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). the dial frame. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4241E0
+name = "Area151_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4241E0..0X42429B (0XBC bytes), cdecl, capstone to the last instruction. Area87's Area87_DrawSprite (0x4105A0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). one sprite of the dial page from Area151_Sprites. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4242A0
+name = "Area151_DrawHud"
+ret = "void"
+params = "int x, int y"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4242A0..0X4242F7 (0X58 bytes), cdecl, capstone to the last instruction. Area87's Area87_DrawHud (0x410660) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). the region box, label cell 0x803580 as area 87. docs/area_w3g.md."
+
+[[func]]
+pc = 0x424300
+name = "Area151_Record8Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X424300..0X424311 (0X12 bytes), cdecl, capstone to the last instruction. Area87's Area87_Record8Run (0x4106C0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). record 9 +8: Area151_Record8States by +1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x424320
+name = "Area151_Record8Place"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X424320..0X424473 (0X154 bytes), cdecl, capstone to the last instruction. Area87's Area87_Record8Place (0x4106E0) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). record-8 state 1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x424480
+name = "Area151_Record4Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X424480..0X424491 (0X12 bytes), cdecl, capstone to the last instruction. Area87's Area87_Record4Run (0x410840) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). record 9 +4: Area151_Record4States by +1. docs/area_w3g.md."
+
+[[func]]
+pc = 0x4244A0
+name = "Area151_Record4MarkCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X4244A0..0X424554 (0XB5 bytes), cdecl, capstone to the last instruction. Area87's Area87_Record4MarkCell (0x410860) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). record-4 state 0: Area151_Cells by +0xB unchecked. docs/area_w3g.md."
+
+[[func]]
+pc = 0x424560
+name = "Area151_DrawDrift"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3g.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3G), 0X424560..0X4249C1 (0X462 bytes), cdecl, capstone to the last instruction. Area87's Area87_DrawDrift (0x410920) instruction for instruction over area 151's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ). record 9 +0x10: the drift layer, Area151_DriftUV. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353CC
+name = "Area148_BeamColours"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): (r, g, b) by the beam effect's +6 (Area148_DrawBeam and its fan and band; +6 is set to 2), read unchecked. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353D8
+name = "Area148_MemberIdsA"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_MemberMessageA's member ids, then its four u16 messages at 0x6353DC. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353DC
+name = "Area148_MessagesA"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_MemberMessageA's messages by the member id's index. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353E4
+name = "Area148_MemberIdsB"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_MemberMessageB's member ids. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353E8
+name = "Area148_MessagesB"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_MemberMessageB's messages. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353F0
+name = "Area148_Switch"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_SwitchHook's one record: x, z, facing (low nibble), the tail state it arms (0x14). docs/area_w3g.md."
+
+[[data]]
+pc = 0x6353F4
+name = "Area148_BeamStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): effect kind 0x7E's states by Sprite_Current[1]: Area148_BeamStart, Area148_BeamSweep, Area148_BeamPause. docs/area_w3g.md."
+
+[[data]]
+pc = 0x635400
+name = "Area148_TurnSteps"
+ctype = "signed char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_BeamTurnMembers: a pair of indexes into Area148_TurnCells by +9 shr 3. docs/area_w3g.md."
+
+[[data]]
+pc = 0x635414
+name = "Area148_TurnCells"
+ctype = "signed char"
+count = 64
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area148_BeamTurnMembers: (dx, dz) cell offsets; indexed by (a step byte + (+8 & 6) * 4) * 2, unchecked. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6361FC
+name = "Area149_DustStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area149_DustRun by Sprite_Current[4]: Area149_DustNear880, Area149_DustNear680, Area149_DustAtZero, Area149_DustHold. docs/area_w3g.md."
+
+[[data]]
+pc = 0x636A5C
+name = "Area150_MessagesA"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area150_ChoiceFill5B's messages by the s8 cursor (unchecked; runs on into Area150_MessagesB). docs/area_w3g.md."
+
+[[data]]
+pc = 0x636A60
+name = "Area150_MessagesB"
+ctype = "unsigned short"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area150_ChoiceMessage's messages by the s8 cursor (unchecked). docs/area_w3g.md."
+
+[[data]]
+pc = 0x636A68
+name = "Area151_PlateAnims"
+ctype = "unsigned char"
+count = 28
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): (u16 place, u8 animation, u8) x 7: Area151_PlateShow searches it with no bound. docs/area_w3g.md."
+
+[[data]]
+pc = 0x636A84
+name = "Area151_Cells"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): one (x, z, -, id 0x10) record, then the descriptor's +0x20 data: Area151_Record4MarkCell by +0xB, unchecked. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6370BC
+name = "Area151_PlaceMessages"
+ctype = "unsigned char"
+count = 224
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): 7 rows of 0x20 (u16 place, fifteen u16 messages): Area151_PlaceMessage by the place and Cond_ByteFA. docs/area_w3g.md."
+
+[[data]]
+pc = 0x63719C
+name = "Area151_NameSet"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): the place hook's one name set: id 0x10 and five item bytes (the hook reads the items only). docs/area_w3g.md."
+
+[[data]]
+pc = 0x6371A4
+name = "Area151_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): 0x424BA0 (area 152's block, bank 0x1D1), Area151_PlateShow, _PlateGrow, _PlateHold, _PlateShrink. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6371B8
+name = "Area151_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): WorldMapHud_Start, Area151_HudFrame. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6371C0
+name = "Area151_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): WorldMap_FrameWait, Area151_FrameSlideIn, _FrameHold, _FrameSlideOut. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6371D0
+name = "Area151_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): WorldMapHud_BoxWait, Area151_BoxSlideIn, _BoxHold, _BoxSlideOut. docs/area_w3g.md."
+
+[[data]]
+pc = 0x6371E0
+name = "Area151_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): (w, h, u, v) x 22: Area151_DrawSprite by the index byte, unchecked. docs/area_w3g.md."
+
+[[data]]
+pc = 0x637238
+name = "Area151_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): (u16 mask, u8 sprite, u8) x 6: Area151_DrawFrame's keys (the second legend reads eight, into Area151_Record8States). docs/area_w3g.md."
+
+[[data]]
+pc = 0x637250
+name = "Area151_Record8States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): 0x4253C0, Area151_Record8Place, Area65_Record8Move. docs/area_w3g.md."
+
+[[data]]
+pc = 0x63725C
+name = "Area151_Directions"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): (s16 x, s16 z) x 4: Area151_Record8Place by +8. docs/area_w3g.md."
+
+[[data]]
+pc = 0x63726C
+name = "Area151_Record8Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): (animation, +0x2A) x 4: Area151_Record8Place by +8. docs/area_w3g.md."
+
+[[data]]
+pc = 0x637274
+name = "Area151_Record4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): Area151_Record4MarkCell, Area45_Record4Tick. docs/area_w3g.md."
+
+[[data]]
+pc = 0x63727C
+name = "Area151_DriftUV"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3G): u, v and size bytes (4 each) by +0xB - 2: Area151_DrawDrift. docs/area_w3g.md."
