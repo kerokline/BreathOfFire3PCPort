@@ -477,8 +477,18 @@ const ah::Clone kClones155[] = {
 };
 const ah::Clone kClones166[] = {W4A_C(Area166_ChoiceFocusPair, 0x425C60, 0x5F, kCalls425C60, S::kChoice)};
 
+// Inventory_Add's al as the choice tests it (test al, al): 0 a third of the
+// time, else 1, 0x80 (the sign bit alone), 0x10 or any byte; garbage above.
+U AddEffect(const U*, U answer) {
+    static const U kAl[] = {0, 0, 1, 0x80, 0x10, 0x100};
+    const U n = ah::Noise();
+    const U al = kAl[n % 6] == 0x100 ? (n >> 8) & 0xFF : kAl[n % 6];
+    return (answer & 0xFFFFFF00u) | al;
+}
+
 const ah::Callee kCalleesChoice[] = {
     kSet40,
+    {"Inventory_Add", bof3::addr::Inventory_Add, KeyOf(&::Inventory_Add), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &AddEffect, nullptr},
     {"Item_NamePtr", bof3::addr::Item_NamePtr, KeyOf(&::Item_NamePtr), 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0, {}, &NameEffect, nullptr},
 };
 
