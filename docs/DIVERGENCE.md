@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 58 entries, DIV-0001..0058)
+**Status:** IN PROGRESS (opened 2026-09-18; 62 entries, DIV-0001..0062)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
