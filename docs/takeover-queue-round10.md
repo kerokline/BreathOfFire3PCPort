@@ -425,3 +425,31 @@ its letters shift as areas become ours), world 2's first groups (AR2A
 52 with area 104 on the world-map route, AR2F 53), and **SX2**, the twelve
 engine callees above. About eight groups, ~400 functions; wave two's
 brief with sections 7 and 10 folded in.
+
+## 12. Wave four staged (2026-09-28 morning, from the tip after `1279927`)
+
+Eight groups, one stage each, area only plus the second engine group.
+Counts are `tools/area_rows.py --groups` at this tip (its world-1
+letters shifted as areas 38..52 became ours: the tool's `AR1A` now spans
+areas 38..64 with 47 to take, all past `0x40AB00`; the groups here are
+named on from the merged `area_w1a`..`w1c` so the module names stay
+distinct). Brief `analysis/round10_wave4_brief.md` (wave three's with
+section 10 folded in), group lines `analysis/round10_wave4_groups.tsv`
+(gitignored). Entries snapshot
+`analysis/calltrace/entries_logic_0928_prewave10_4.txt` (6,182 lines).
+AR2E (areas 104..106, 52, area 104 on the world-map route) and AR2F
+(108, 110..113, 53) are listed for wave five with world 3's first groups,
+to keep this wave near the 350 that fits one usage window.
+
+| Group | What | Band | To take | Module |
+|---|---|---|--:|---|
+| AR1D | world 1: areas 53, 55..57, 59..64 | `0x40AB00..0x40B8C0` | 47 | `area_w1d` |
+| AR1E | world 1: areas 65, 67 (65 is a world-map area, the fourth copy of 16 / 33 / 45) | `0x40B8C0..0x40CEF0` | 49 | `area_w1e` |
+| AR1F | world 1: areas 68..69, 71..75 | `0x40CEF0..0x40EB90` | 59 | `area_w1f` |
+| AR2A | world 2: areas 76..82, 84 | `0x40EB90..0x40F720` | 50 | `area_w2a` |
+| AR2B | world 2: areas 85..88 (87 and 88 are world-map areas; the world-map route enters 88; `WorldMap_PinSprite` and `WorldMap_FrameWait` in the band are ours already) | `0x40F720..0x411F10` | 66 | `area_w2b` |
+| AR2C | world 2: areas 90..92, 94 | `0x411F10..0x4135B0` | 45 | `area_w2c` |
+| AR2D | world 2: areas 95..100, 103 | `0x4135B0..0x4146C0` | 53 | `area_w2d` |
+| SX2 | the engine callees nobody owns after SX (section 10): `0x469FE0`, `0x532FD0`, `0x572620`, `0x57C160`, `0x57C5A0`, `0x57C600`, `0x57C8A0`, `0x587860`, `0x587890`, `0x591920`, `0x591EC0`, `0x5A7730` | twelve addresses | 12 | `scena_sx2` |
+
+381 functions.
