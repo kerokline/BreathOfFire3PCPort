@@ -49752,3 +49752,685 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-27, group AR1B: area 47's descriptor 0x5F8330 +0x3C: PlaceAtStart, SpawnEffect3D. docs/area_w1b.md."
+
+# ---------------------------------------------------------------------------
+# Round ten group AR1C: world 1, areas 48..52, 0x408FF0..0x40AB00
+# (docs/area_w1c.md). Read with capstone 2026-09-28; extents are
+# tools/area_rows.py's (area_funcs.tsv), each checked against the reading.
+
+[[func]]
+pc = 0x408FF0
+name = "Area48_ChoiceCounterBOr1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x408FF0..0x409030 (0x41 bytes), cdecl: area 48 +0x34[0] (Area48_Choices), a choice: message word 0xFFFF; the answer byte 0x7DEE67 with bit 0 clear: counter 0x903848 = 0xB, Sound_PlayEffect(0x205); set: counter = 1, ScriptFlags_Clear40, MoveScript_Var7 0x8034E4 and 0x8034E5 = 0. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409040
+psx = 0x801F4804
+name = "Area48_ToggleFlagD"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409040..0x409073 (0x34 bytes), cdecl: area 48 +0x34[1] and +0x3C[0] (Area48_Handlers): Field_ActiveMember +0x80 bit 0 cleared; MoveScript_EffectState[byte 0x802DC9, the leader +0x89] (unchecked) at 1: 0x57C160(0x904030, 0xD), a story-flag toggle (bits[i >> 3] ^= 1 << (i & 7)). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409080
+psx = 0x801F4864
+name = "Area48_BumpCount"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409080..0x4090BF (0x40 bytes), cdecl: area 48 +0x34[2] and +0x3C[1]: as Area48_ToggleFlagD test; the byte 0x92BEE7 + 1 while below 8, then Sound_PlayEffect(0x20D). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4090C0
+psx = 0x801F48DC
+name = "Area48_MoveScriptObject5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4090C0..0x409162 (0xA3 bytes), cdecl: area 48 +0x34[3] and +0x3C[2]: Sprite_Current[8] = 5; MoveScript_Object[7] = (u8)(byte 0x92BEE7 << 2); not 0: MoveScript_ObjectKind() == 2 (whole eax): MoveCmd_MoveKind2(Sprite_Current[8]), MoveScript_FAWord 0, object bit 0x40; else MoveCmd_Move(MoveScript_Object, Sprite_Current[8]) and object bit 0x80. Then Sprite_Current +0x14 = 0 and word +0x3E = 0x480. Pointers re-read after each call. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409170
+psx = 0x801F49C8
+name = "Area48_MoveScriptObject1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409170..0x409212 (0xA3 bytes), cdecl: area 48 +0x34[4] and +0x3C[3]: Area48_MoveScriptObject5 with direction 1 (the bodies differ only in that immediate). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409220
+psx = 0x801F4AB4
+name = "Area48_PoseByCount"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409220..0x4092A6 (0x87 bytes), cdecl: area 48 +0x34[5] and +0x3C[4]: Field_ActiveMember +0x83 by the byte 0x92BEE7 (2: 6, 6: 7, 8: 8, else 9) and its word +0x8A = 0xFFFE. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4092B0
+psx = 0x801F4B40
+name = "Area48_ResetCount"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4092B0..0x4092C3 (0x14 bytes), cdecl: area 48 +0x34[6] and +0x3C[5]: the byte 0x92BEE7 = 0 and the byte 0x803490 |= 1. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4092D0
+name = "Area48_TailDropIn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4092D0..0x40933A (0x6B bytes), cdecl: Field_ModeTailKinds slot 3 (0x662CF4), armed only by Area48_ArriveHook: by the sub-kind 0x9039F5 - 1: Party_DropIn by the byte 0x92BEE7 (2: 6, 6: 7, 8: 1, else 8); 0: Party_DropIn(0) and the sub-kind read again; then 2: Party_DropIn(2). Always ScriptFlags_Clear40 and 0x9039F3..F5 = 0. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409340
+name = "Area48_ArriveHook"
+ret = "int"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409340..0x4093CA (0x8B bytes), cdecl: Area_ArriveHook case for area 48 (the tool, area_rows.py): x and z 16.16, their high words compared as u16: x_hi 0x17 and z_hi - 0xD below 2; z_hi 6 or z exactly 0x58000 with x_hi - 0xC below 2; z_hi 0xB or z 0xA8000 with x_hi - 0x13 below 2 - each (all three tested) arms tail kind 3 with sub-kind 0 / 1 / 2 and ScriptFlags_Set40. al 0. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4093D0
+psx = 0x801F4D2C
+name = "Area48_InitSound"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4093D0..0x4093E4 (0x15 bytes), cdecl: area 48 +0x40 (the init): Cond_ByteFD 5: Sound_PlayEffect(0x20C). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4093F0
+name = "Area49_ChoiceMessageFlag3B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4093F0..0x40941B (0x2C bytes), cdecl: area 49 +0x34[0] (Area49_Choices), a choice: message word = Area49_ChoiceMessages[movsx answer] (0x5FBC3C + 2 * s8, unchecked); answer 0: Flags_Set([0x929ED0], 0x3B), the chapter row. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409420
+name = "Area49_ChoiceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409420..0x409436 (0x17 bytes), cdecl: area 49 +0x34[1], a choice: message word = word [0x5FBC40 + 2 * s8 answer] (Area49_ChoiceMessages + 4, unchecked). docs/area_w1c.md."
+
+[[func]]
+pc = 0x409440
+name = "Area49_StepHook"
+ret = "int"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409440..0x40945A (0x1B bytes), cdecl: Area_StepHook case for area 49: x exactly 0x4D8000 and Cond_ByteFD 0: Area49_SwapFlags2To3. al 0 (z unread). docs/area_w1c.md."
+
+[[func]]
+pc = 0x409460
+name = "Area49_SwapFlags2To3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409460..0x40947B (0x1C bytes), cdecl: called by Area49_StepHook and Area49_EffectFrame: Flags_Clear(0x904030, 2), Flags_Set(0x904030, 3). docs/area_w1c.md."
+
+[[func]]
+pc = 0x409480
+name = "Area49_EffectFrame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409480..0x409755 (0x2D6 bytes), cdecl: a gap of the tool (reached by no area table): called only from engine code at 0x46D79C, effect kind 0x70 handler 0x46D780 (Effect_KindHandlers +0x1C0, 0x655510) for Game_AreaNumber 0x31; Sprite_Current the effect record, its +0xB a member mask. Field_Request 5 and the area not word 0x937F82: Area49_SwapFlags2To3. Else Field_ScriptFlags &= 0xDFFF and per member m below Field_MemberCount (re-read per member): Sprite_Current = Field_State = ObjTrio + m * 0x14C; Flags_Test(0x903FD8, 0x25) or Flags_Test(0x903FB8, 0x3A) or Area49_MemberZone(m) 0xFF: m bit cleared in the mask and Field_ScriptFlags2; in a zone and bit clear: unless (Field_ScriptFlags2 | Field_ScriptFlags) has the bit, Field_State +0x128 = 2, +9 = 0, bit set in both, +8 = Area49_Zones[zone] byte 4, ^4 if Flags_Test(0x904030, byte 5), Sprite_EnsureAnimation(+8); bit set: +9 0: Field_JumpSetUp (and Field_JumpCamera for m 0), else turn to the zone direction (steps +0xC/+0x10/+0x14 negated, +9 = 8 - +9) if it differs; Field_LeaderStepTick, +9 - 1, Sprite_ScriptTick, byte 0x9039A3 |= 0x20. Then Field_Request 5: flags &= 0xDFFF again; Sprite_Current restored (Field_State left). docs/area_w1c.md."
+
+[[func]]
+pc = 0x409760
+name = "Area49_MemberZone"
+ret = "unsigned char"
+params = "unsigned member"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409760..0x4097C9 (0x6A bytes), cdecl: called by Area49_EffectFrame: ObjTrio + (member & 0xFF) * 0x14C; the first of the 7 six-byte Area49_Zones records with x0 << 16 <= +0x34 <= x1 << 16 and z0 << 16 <= +0x38 <= z1 << 16 (signed); eax the index, or 0xFF (or al, 0xFF after the loop). Loop bound cmp ecx, 0x5FBB9C. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4097D0
+name = "Area49_CellHook"
+ret = "int"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4097D0..0x40984C (0x7D bytes), cdecl: Area_CellHooks entry for area 0x31 (0x662F28): the first of 9 four-byte Area49_CellSwitches records (loop bound 0x5FBC69) with x byte, z byte and byte 2 equal to the leader byte 0x802D48; none: al 0. Flags_Test(0x904030, 0x1C): 0. Else 0x57C160(0x904030, record byte 3), 0x469FE0(0xF), Sound_PlayEffect(0x202), al 1. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409850
+psx = 0x801F3288
+name = "Area49_SetRowFlag3F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409850..0x409860 (0x11 bytes), cdecl: area 49 +0x34[2] and +0x3C[0] (Area49_Handlers): Flags_Set([0x929ED0], 0x3F). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409870
+psx = 0x801F32B0
+name = "Area49_ClearCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409870..0x4098B5 (0x46 bytes), cdecl: area 49 +0x34[3] and +0x3C[1]: AreaMap_SetByte(x, z, 0) for x 0x29..0x2B of z 0x5B, then of z 0x5C. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4098C0
+psx = 0x801F3328
+name = "Area49_SetCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4098C0..0x409917 (0x58 bytes), cdecl: area 49 +0x34[4] and +0x3C[2]: AreaMap_SetByte x 0x29..0x2B, z 0x5B value 0xC0, then z 0x5C value 0xA1. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409920
+psx = 0x801F33A0
+name = "Area49_Counter1If4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409920..0x409930 (0x11 bytes), cdecl: area 49 +0x34[5] and +0x3C[3]: byte 0x904063 == 4: counter 0x903849 = 1. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409940
+psx = 0x801F33C4
+name = "Area49_Counter2If4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409940..0x409950 (0x11 bytes), cdecl: area 49 +0x34[6] and +0x3C[4]: byte 0x904064 == 4: counter 0x90384A = 1. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409960
+psx = 0x801F33E8
+name = "Area49_ShiftCameraUp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409960..0x40996F (0x10 bytes), cdecl: area 49 +0x3C[5]; also areas 8, 15, 26, 77, 80, 131 (tool: shared): Camera_ShiftY += 0x14, MapView_Redraw = 2. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409970
+psx = 0x801F3410
+name = "Area49_ShiftCameraDown"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409970..0x40997F (0x10 bytes), cdecl: area 49 +0x3C[6]; also areas 8, 15, 26, 80, 131: Camera_ShiftY -= 0x14, MapView_Redraw = 2. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409980
+psx = 0x801F3454
+name = "Area49_SpawnAtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409980..0x4099C1 (0x42 bytes), cdecl: area 49 +0x34[10] and +0x3C[8]: Sprite_Current = ObjTrio; Effect_Spawn(4, 0, Area49_EffectKinds[byte 0x904062], word 0x802D6E, word 0x802D70); not 0xFF: Sprite_Current[0xB] = it (Sprite_Current re-read). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x4099D0
+psx = 0x801F34D4
+name = "Area49_SpawnAtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x4099D0..0x409A11 (0x42 bytes), cdecl: area 49 +0x34[11] and +0x3C[9]: Area49_SpawnAtMember0 for party record 1 (0x802E8C, words +0x2E / +0x30) and byte 0x904063. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409A20
+psx = 0x801F3554
+name = "Area49_SpawnAtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409A20..0x409A65 (0x46 bytes), cdecl: area 49 +0x34[12] and +0x3C[10]: for party record 2 (0x802FD8) and byte 0x904064 (read as a dword, masked). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409A70
+psx = 0x801F35D4
+name = "Area49_ClearCellsB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409A70..0x409A89 (0x1A bytes), cdecl: area 49 +0x34[13] and +0x3C[11]: AreaMap_SetByte(0xB, 0x55, 0), (0xC, 0x55, 0). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409A90
+psx = 0x801F360C
+name = "Area49_SpawnEffect6C"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409A90..0x409B18 (0x89 bytes), cdecl: area 49 +0x34[14] and +0x3C[12]: leader byte 0x802DC9 == 5: Effect_FindFree, a slot gets +0 = 1 and kind +5 = 0x6C; Sound_PlayEffect(0x209); Field_ActiveMember (read after) +0x80 bit 0 cleared; AreaMap_SetByte(0xB / 0xC, 0x55, 0xC0); counter 0x903848 = 0, MoveScript_Var7 = 4, 0x8034E5 = 0x1E. Else only the member bit. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409B20
+psx = 0x801F376C
+name = "Area49_SpawnKind3AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409B20..0x409B65 (0x46 bytes), cdecl: area 49 +0x34[19] and +0x3C[17]: Area49_SpawnAtMember2 with Effect_Spawn kind 3. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409B70
+psx = 0x801F37EC
+name = "Area49_ClearCellsC"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409B70..0x409BCE (0x5F bytes), cdecl: area 49 +0x34[20] and +0x3C[18]: AreaMap_SetByte(x, z, 0) for x 0x4D, z 0x22..0x25, then x 0x4E. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409BD0
+psx = 0x801F3884
+name = "Area49_RunStep5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409BD0..0x409C0A (0x3B bytes), cdecl: area 49 +0x34[21] and +0x3C[19]: Field_ActiveMember +0x80 bit 0 cleared; leader byte 0x802DC9 == 6: ScriptFlags_Set40, MoveScript_Var7 = 4, 0x8034E5 = 5. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409C10
+psx = 0x801F3908
+name = "Area49_RunStep6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409C10..0x409C4A (0x3B bytes), cdecl: area 49 +0x34[22] and +0x3C[20]: Area49_RunStep5 with step 6. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409C50
+name = "Area50_ChoiceAsk82"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409C50..0x409C8D (0x3E bytes), cdecl: area 50 +0x34[0] (Area50_Choices), a choice: answer not 0: message 0x84, byte 0x9398CF = 6; 0: byte 0x9045FB >= 0x1E (unsigned) message 0x82, else 0x83 and 0x9398CF = 6. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409C90
+psx = 0x801F2D48
+name = "Area50_SetCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409C90..0x409CBF (0x30 bytes), cdecl: area 50 +0x3C[0] (Area50_Handlers): AreaMap_SetByte(8, z, 0x10) for z 0x25..0x28. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409CC0
+name = "Area50_Trigger43"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409CC0..0x409CD3 (0x14 bytes), cdecl: Field_ObjectTriggers id 43 (0x662EC8; a gap of the tool, area 50 block): ScriptFlags_Set40; mov al, 4 stored to 0x9039F3 and 0x9039F5 (tail kind 4 armed through a register, the tool scan gap; kind 4 is 0x56D930, engine); al 0. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409CE0
+psx = 0x801F2C04
+name = "Area51_MemberAtObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409CE0..0x409D25 (0x46 bytes), cdecl: area 51 +0x34[1] and +0x3C[0] (Area51_Handlers): Party_MemberAt(Sprite_Current +0x34, +0x38, +0x70); not 0xFF, Field_ScriptFlags2 bit 0x1000 clear, Field_Request 0: 0x57C8A0(member, 1) (party record +1 = 2, +2 = 8, +3 = 0, +0xB = 1). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409D30
+psx = 0x801F2C7C
+name = "Area51_PlaceAtMember"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409D30..0x409D74 (0x45 bytes), cdecl: area 51 +0x34[2] and +0x3C[1]: p = Field_ActiveMember - 0x668 (ten 0xA4 records back); Sprite_Current +0x34 / +0x38 = p +0x34 / +0x38 (Sprite_Current re-read per store); word +0x3E = AreaMap_Elevation(+0x34, +0x38) - 0x40. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409D80
+name = "Area51_ChoiceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409D80..0x409D94 (0x15 bytes), cdecl: area 51 +0x34[0] (Area51_Choices), a choice: neg / sbb / and 0xED / add 0x14: message word 1 for an answer not 0, 0x14 for 0. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409DA0
+psx = 0x801F2D00
+name = "Area51_TintBackdrop"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409DA0..0x409E18 (0x79 bytes), cdecl: area 51 +0x40 (the init): Flags_Test(0x904000, 0x13) set and (0x904000, 0x14) clear: from AreaMap_Header + AreaMap_EntryBase * 4, the first dword with top byte 0x81 gets +0xC then +8 = 0x04214E73; a zero dword ends; byte 2 is the step in dwords (a 0 step on another kind loops forever). Area11_DimBackdrop 0x4017C0 with its own colour. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409E20
+psx = 0x801F3280
+name = "Area52_StashBlock"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409E20..0x409F14 (0xF5 bytes), cdecl: area 52 +0x3C[0] (Area52_Handlers): Field_Request 5: MoveScript_Object word +0xA - 2. Else Sprite_Current +0x18 / +0x1C = 0; x, z = high words of +0x34 / +0x38 less 0x8000; for columns x, x + 1 (shift 0, 8): 0x572620(col, row, 0x10), +0x18 |= AreaMap_ByteAt(col, z) << shift, AreaMap_SetByte(col, z, 0x11), the same for z + 1 into +0x1C. Sprite_Current read after each layer call. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x409F20
+psx = 0x801F3414
+name = "Area52_ShiftBlockZ"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x409F20..0x40A06C (0x14D bytes), cdecl: area 52 +0x3C[1]: Area52_BlockCell(&x, &z) answering: row z given back (0x572620 layer 0, AreaMap_SetByte from +0x18 byte and +0x18 sar 8 for x, x + 1); +0x18 = +0x1C, +0x1C = 0; row z + 2 taken into +0x1C (layer 0x10, AreaMap_ByteAt or-ed at 0 / 8, map 0x11); Sprite_Current[8] = 5, MoveCmd_Move(MoveScript_Object, 5), MoveScript_Object[7] = 2. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A070
+psx = 0x801F35A0
+name = "Area52_ResetBlock"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A070..0x40A1C3 (0x154 bytes), cdecl: area 52 +0x3C[2]: Sprite_Current +0x34 == 0x118000 and +0x38 == 0x298000: columns 0x11, 0x12 of rows 0x29, 0x2A given back (layer 0, map byte from +0x18 / +0x1C sar 0 / 8); +0x18 = +0x1C = 0; +0x38 = 0x78000; then columns 0x11, 0x12 of high(+0x38 - 0x8000) taken as Area52_StashBlock. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A1D0
+psx = 0x801F37A8
+name = "Area52_MoveBlockA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A1D0..0x40A25A (0x8B bytes), cdecl: area 52 +0x3C[3]: Area52_BlockCell answering; counter 0x90384B 0xA: Sprite_Current +0x34 not 0x688000: Area52_DropColumn(x, z), MoveScript_Object +0xA + 6; 0x14: Area52_ShiftBlockX(x, z) and, +0x34 (re-read) 0x858000, +0xA + 3 and tail state 0x9039F4 = 0x2D. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A260
+psx = 0x801F3894
+name = "Area52_MoveBlockB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A260..0x40A2EA (0x8B bytes), cdecl: area 52 +0x3C[4]: Area52_MoveBlockA with the stop 0x668000. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A2F0
+name = "Area52_BlockCell"
+ret = "unsigned char"
+params = "long *x, long *z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A2F0..0x40A347 (0x58 bytes), cdecl: called by area 52 handlers 1, 3, 4, 8: *x = Sprite_Current +0x34 - 0x8000, *z = +0x38 - 0x8000; Field_Request 5: Area52_RestoreBlock(*x re-read, z). Counter 0x90384B 0: MoveScript_Object word +0xA - 2, al 0; else al 1. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A350
+name = "Area52_ShiftBlockX"
+ret = "void"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A350..0x40A445 (0xF6 bytes), cdecl: called by Area52_MoveBlockA / B, (x, z) whose high words it reads: column x given back from the low bytes of +0x18 / +0x1C (layer 0), both sar 8, column x + 2 taken into their high bytes (layer 0x10, ByteAt << 8, map 0x11); Sprite_Current[8] = 3, MoveCmd_Move(MoveScript_Object, 3), its +7 = 2. Writes its own argument slots (x + 2, z + 1) as scratch. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A450
+name = "Area52_DropColumn"
+ret = "void"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A450..0x40A4B3 (0x64 bytes), cdecl: called by Area52_MoveBlockA / B: column high(x) + 1 given back from +0x18 / +0x1C sar 8 (layer 0 first), then both << 8. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A4C0
+name = "Area52_RestoreBlock"
+ret = "void"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A4C0..0x40A52B (0x6C bytes), cdecl: called by Area52_BlockCell: columns high(x), high(x) + 1 of rows high(z), + 1 given back (layer 0, map byte from +0x18 / +0x1C sar 0 / 8). docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A530
+name = "Area52_CellHook"
+ret = "int"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A530..0x40A5BF (0x90 bytes), cdecl: Area_CellHooks entry for area 0x34: the first of 4 five-byte Area52_CellSwitches records (bound 0x5FE105) with x byte, z byte and byte 2 & 0xF equal to the leader byte 0x802D48; none: al 0. Else ScriptFlags_Set40, tail kind 0x9039F3 = 0xF, state = record byte 4; Area52_PartyInRect: state 0xA, al 1; else 0x57C160(0x904030, record byte 3), Sound_PlayEffect(0x202), al 1. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A5C0
+name = "Area52_PartyInRect"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A5C0..0x40A663 (0xA4 bytes), cdecl: called by Area52_CellHook: rectangle Area52_Rects[state 0x9039F4 != 0] (x0, z0, w, d bytes); a member m below Field_MemberCount (read once) with (u16)(word +0x36 - x0) < w and (u16)(word +0x3A - z0) < d: al 1; else 0. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A670
+name = "Area52_TailBlock"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A670..0x40A93F (0x2D0 bytes), cdecl: Field_ModeTailKinds slot 15 (0x662D24), armed by Area52_CellHook: movsx state 0x9039F4 above 0x2F (unsigned) returns; byte table +0x2A0 (0x30) into a 15-entry jump table +0x264. 0 / 0x14 / 0x28: counter 0x90384B = 1 / 0xA / 0x14, byte 0x5FE049 = 0, word 0x9039F6 = 0x10, state + 1; 1 / 0x15 / 0x29: word - 1 below 4 (u16): counter 0, state + 1; 2 / 0x16 / 0x2A: word - 1 at 0: Flags_Clear(0x904030, 0x24 / 0x26 / 0x25), 0x5FE049 = 0xFF, ScriptFlags_Clear40, kind and state 0. 0xA: Msg_OpenScript(0x39), Field_Request 2, state 0xB; 0xB: Field_Request not 2: ScriptFlags_Clear40, kind and state 0. 0x2D: counter 0, state 0x2E; 0x2E: counter 0x1E: 0x40A940, state 0x2F; 0x2F: counter 0x28: 0x572620 / AreaMap_SetByte at (0x86, 0x11..0x12) 0 / 0 and (0x87, 0x11..0x12) 0 / 0x10, word 0xA, state 0x29. Others return. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A940
+name = "Area52_SpawnEffect48BJump"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A940..0x40A944 (0x5 bytes), cdecl: called by Area52_TailBlock state 0x2E: a 5-byte jmp 0x40A9C0 (Area52_SpawnEffect48B); its own start (the tool lists it, extent 5). docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A950
+psx = 0x801F4268
+name = "Area52_ClearFlag25"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A950..0x40A95F (0x10 bytes), cdecl: area 52 +0x3C[5]: Flags_Clear(0x904030, 0x25). PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A960
+psx = 0x801F4290
+name = "Area52_SpawnEffect48A"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A960..0x40A9B6 (0x57 bytes), cdecl: area 52 +0x3C[6]: Effect_FindFree; a slot gets +0x38 = 0x110000, +0x34 = 0x880000, +0 = 1, +5 = 0x48, +0xB = 8, +0x3C = movsx(AreaMap_Elevation(+0x34, +0x38)) << 8. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40A9C0
+psx = 0x801F431C
+name = "Area52_SpawnEffect48B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40A9C0..0x40AA16 (0x57 bytes), cdecl: area 52 +0x3C[7], and 0x40A940 jumps here: Area52_SpawnEffect48A at (0x890000, 0x118000), +0xB = 0x10. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[func]]
+pc = 0x40AA20
+psx = 0x801F43B0
+name = "Area52_ShiftBlockXBack"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1C), 0x40AA20..0x40AAF2 (0xD3 bytes), cdecl: area 52 +0x3C[8]: Area52_BlockCell (its answer not read); column high(x) - 1 of rows z, z + 1: layer 0x10, AreaMap_ByteAt or-ed into +0x18 / +0x1C low bytes (no shift), map 0x11; Sprite_Current[8] = 7, MoveCmd_Move(MoveScript_Object, 7), MoveScript_Object[7] = 2. PSX twin: names/area_records.toml. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5F988C
+name = "Area48_Choices"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 48 descriptor 0x5F98A8 +0x34: MsgBox_ChoiceCommit by choice id. Entries 1..6 are Area48_Handlers (the +0x3C array starts one entry later). docs/area_w1c.md."
+
+[[data]]
+pc = 0x5F9890
+name = "Area48_Handlers"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 48 descriptor +0x3C (movement-script ops 03 / DE): Area48_ToggleFlagD .. Area48_ResetCount. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5F98F0
+name = "Area49_EffectKinds"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): Area49_SpawnAtMember0..2 and Area49_SpawnKind3AtMember2 read byte [0x5F98F0 + party list byte] as Effect_Spawn third argument, unchecked; the count is Area11_EffectKinds by analogy (member ids), not measured. After area 48 descriptor end, read only by area 49 code. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FBB70
+name = "Area49_Zones"
+ctype = "unsigned char"
+count = 42
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): Area49_MemberZone walks 7 records of 6 bytes (x0, z0, x1, z1 bytes, compared << 16) to 0x5FBB9C; Area49_EffectFrame reads bytes 4 (direction) and 5 (story flag) by the zone index. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FBB9C
+name = "Area49_Choices"
+ctype = "unsigned long"
+count = 23
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 49 descriptor 0x5FBBF8 +0x34. Entries 2..22 are Area49_Handlers; 9 and 18 are 0x40F530, 15 0x437CC0, 16 0x414090, 17 0x414080 (other blocks shared bodies). docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FBBA4
+name = "Area49_Handlers"
+ctype = "unsigned long"
+count = 21
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 49 descriptor +0x3C: see Area49_Choices (entries 7, 13..16 other blocks). docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FBC3C
+name = "Area49_ChoiceMessages"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): message words by the s8 answer: Area49_ChoiceMessageFlag3B reads [0x5FBC3C + 2 * answer], Area49_ChoiceMessage [0x5FBC40 + 2 * answer]; unchecked. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FBC44
+name = "Area49_CellSwitches"
+ctype = "unsigned char"
+count = 36
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): Area49_CellHook walks 9 records of 4 bytes (x, z, pose, story flag), bound 0x5FBC69. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FCB68
+name = "Area50_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 50 descriptor 0x5FCD48 +0x34: Area50_ChoiceAsk82, then 0x420850, 0x420870, 0x40CFA0 twice (other blocks). docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FCD40
+name = "Area50_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 50 descriptor +0x3C: Area50_SetCells. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FD440
+name = "Area51_Choices"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 51 descriptor 0x5FD450 +0x34: Area51_ChoiceMessage, then Area51_Handlers (the +0x3C array is its tail). docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FD444
+name = "Area51_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 51 descriptor +0x3C: Area51_MemberAtObject, Area51_PlaceAtMember. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FE048
+name = "Area52_ExtraObjects"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 52 descriptor 0x5FE080 +0x08 (extra-object entries of 8 bytes, EventOp_Bx): two entries before Area52_Handlers; Area52_TailBlock writes entry 0 byte +1 (0 shown, 0xFF hidden). Area 52 +0x08 is in its own data here, not the 0x675xxx pool. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FE058
+name = "Area52_Handlers"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): area 52 descriptor +0x3C: Area52_StashBlock .. Area52_ShiftBlockXBack (no +0x34 table). docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FE0E8
+name = "Area52_Rects"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): Area52_PartyInRect: two records of 4 bytes (x0, z0, width, depth) by the tail state being non-zero. docs/area_w1c.md."
+
+[[data]]
+pc = 0x5FE0F0
+name = "Area52_CellSwitches"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1C): Area52_CellHook walks 4 records of 5 bytes (x, z, pose in the low nibble, story flag, tail state), bound 0x5FE105. docs/area_w1c.md."
