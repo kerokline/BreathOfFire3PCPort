@@ -78,6 +78,9 @@ constexpr std::uint32_t kKind2X = 0x905E64;            // Field_Kind2X
 constexpr std::uint32_t kPacketNext = 0x7E0670;        // Gfx_PacketNext
 constexpr std::uint32_t kCameraMatrix = 0x905E40;      // Camera_Matrix
 constexpr std::uint32_t kGteMatrix = 0x7DE4A0;         // Gte_Matrix
+constexpr std::uint32_t kGteNearZ = 0x7DE498;          // Gte_NearZ
+constexpr std::uint32_t kGteProjDistance = 0x7DE780;   // Gte_ProjDistance
+constexpr std::uint32_t kGteOffsetY = 0x7DE78C;        // Gte_OffsetY, then Gte_OffsetX (0x7DE790)
 constexpr std::uint32_t kPatchBase = 0x8CB5A8;         // AreaMap_PatchBase
 constexpr std::uint32_t kMapHeader = 0x8CB580;         // AreaMap_Header
 

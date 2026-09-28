@@ -335,8 +335,33 @@ ah::Region g_regions91[] = {
     {at::kScreenX, 8},
     {at::kCameraMatrix, 0x20},
     {at::kGteMatrix, 0x20},
+    {at::kGteNearZ, 4},
+    {at::kGteProjDistance, 4},
+    {at::kGteOffsetY, 8},
 };
 const ah::DataTable kTables91[] = {{at::kArea91States, at::kArea91StateCount}};
+
+// A rotation matrix the camera could hold: nine s16 within +-0x1000 (the
+// random fill's are up to eight times that, which throws every point of the
+// glow to one pixel).
+void SeedRotation(unsigned char* m) {
+    for (unsigned i = 0; i < 9; ++i) SetWord(m + i * 2, static_cast<U>(static_cast<std::int32_t>(ah::Next() % 0x2001) - 0x1000));
+}
+// The glow's projection: a camera matrix and the GTE's as the field leaves
+// them (rotations within +-0x1000, the GTE's translation putting the glow's
+// centre a few thousand units in front), a projection distance, a near plane
+// and a screen offset - two rounds in three; the random fill else.
+void SeedProjection() {
+    if (!ah::Often()) return;
+    SeedRotation(ah::Mem(at::kCameraMatrix));
+    SeedRotation(ah::Mem(at::kGteMatrix));
+    for (unsigned i = 0; i < 3; ++i)
+        SetLong(ah::Mem(at::kGteMatrix + 0x14 + i * 4), static_cast<std::int32_t>(ah::Next() % 0x8000) - 0x4000 + (i == 2 ? 0x6000 : 0));
+    SetLong(ah::Mem(at::kGteProjDistance), static_cast<std::int32_t>(0x100 + ah::Next() % 0x300));
+    SetLong(ah::Mem(at::kGteNearZ), static_cast<std::int32_t>(ah::Next() % 0x100));
+    SetLong(ah::Mem(at::kGteOffsetY), static_cast<std::int32_t>(ah::Next() % 0x100));
+    SetLong(ah::Mem(at::kGteOffsetY + 4), static_cast<std::int32_t>(ah::Next() % 0x200));
+}
 
 void Seed91(unsigned k) {
     ah::SetPointer(at::kActiveMember, SomeRecord(ah::Next()));
@@ -367,6 +392,7 @@ void Seed91(unsigned k) {
     case k91S5:
         o[0xA] = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 1, 2, 0) : ah::Next());
         break;
+    case k91Glow: SeedProjection(); break;
     case k91Rings:
         // Cond_ByteFE 0 a quarter of the time; +9 at each ring's radius and
         // colour edges (+4 on the way in), the last colour's 0 above 0xE4
