@@ -156,7 +156,8 @@ enum : unsigned {
     kInit, kPlaceMessage,
     kLeaderRun, kLeaderIdle, kObjectAhead, kTurnToFree, kStartOnObject, kLeaderStep, kStopMotion, kPoseByCharge,
     kLeaderCharge, kKind5CRun, kKind5CStart, kKind5CFollow, kDrawGauge, kKind5CTurn, kKind5CTurnStep, kKind5CSpin,
-    kKind5CRise, kTail40, kCountdown, kBuildMinimap, kMinimapShade, kDrawPanel, kTrigger36,
+    kKind5CRise, kTail40, kCountdown, kMinimapShade, kDrawPanel, kTrigger36,
+    kBuildMinimap,   // its own Run (each round calls the shade 5,520 times)
 };
 
 // Effect_FindFree: a slot of the twenty, or none a quarter of the time -
@@ -512,12 +513,14 @@ const ah::Clone kClones104[] = {
     W2E_C(Area104_Kind5CRise, 0x415B90, 0x4B, kCalls415B90, S::kState),
     W2E_T(Area104_Tail40, 0x415BE0, 0x16C, kCalls415BE0, kTables415BE0, S::kTail, 0),
     W2E_C(Area104_Kind6ACountdown, 0x415D50, 0x2CC, kCalls415D50, S::kState),
-    W2E_C(Area104_BuildMinimap, 0x416020, 0xB8, kCalls416020, S::kCallee),
     W2E_T(Area104_MinimapShade, 0x4160E0, 0x10D, kCalls4160E0, kTables4160E0, S::kCallee, 0xFF),
     W2E_C(Area104_DrawPanel, 0x4161F0, 0x14E, kCalls4161F0, S::kCallee),
     W2E_A(Area104_Trigger36, 0x416340, 0x1D, kCalls416340, S::kCallee),
 };
 static_assert(kTrigger36 + 1 == AH_COUNT(kClones104), "area 104's seeding indices");
+const ah::Clone kClonesMinimap[] = {
+    W2E_C(Area104_BuildMinimap, 0x416020, 0xB8, kCalls416020, S::kCallee),
+};
 
 const ah::DataTable kTables104[] = {{at::kA104LeaderStates, at::kA104LeaderStateCount}, {at::kA104Kind5CStates, at::kA104Kind5CStateCount}};
 
@@ -711,6 +714,8 @@ void Args104(unsigned k, U* a) {
     default: break;
     }
 }
+void SeedMinimap(unsigned) { Seed104(kBuildMinimap); }
+
 // Area 104's disturbance (from h only): the tail state, the charge bytes,
 // the facings, the button words.
 void Disturb104(U h) {
@@ -850,7 +855,8 @@ void Disturb10x(U h) {
 }
 
 // BOF3X_AR2E_AREA=n runs area n's groups alone (the controls script's
-// shortcut; 1040 is area 104's world-map copy alone); unset, every area runs.
+// shortcut; 1040 is area 104's world-map copy alone, 1041 its own code, 1042
+// its minimap); unset, every area runs.
 bool Wants(int area) {
     const char* const only = std::getenv("BOF3X_AR2E_AREA");
     return only == nullptr || *only == 0 || std::atoi(only) == area;
@@ -871,13 +877,22 @@ void SelfTest() {
         g.area = 104;
         ah::Run(g);
     }
-    if (Wants(104)) {
+    if (Wants(104) || Wants(1041) || Wants(1042)) {
         std::memcpy(g_regions104, kRegions104, sizeof kRegions104);
         g_regions104[kReg104Packets].at = Key(g_packets);
+    }
+    if (Wants(104) || Wants(1041)) {
         ah::Group g{"area_w2e", kClones104, AH_COUNT(kClones104), kCallees, AH_COUNT(kCallees), kTables104, AH_COUNT(kTables104),
                     g_regions104, AH_COUNT(g_regions104), &Seed104, &Disturb104, kRounds};
         g.settle = &Settle104;
         g.args = &Args104;
+        g.area = 104;
+        ah::Run(g);
+    }
+    if (Wants(104) || Wants(1042)) {
+        ah::Group g{"area_w2e", kClonesMinimap, AH_COUNT(kClonesMinimap), kCallees, AH_COUNT(kCallees), kTables104, AH_COUNT(kTables104),
+                    g_regions104, AH_COUNT(g_regions104), &SeedMinimap, &Disturb104, 600};
+        g.settle = &Settle104;
         g.area = 104;
         ah::Run(g);
     }
