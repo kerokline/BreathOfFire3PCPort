@@ -726,9 +726,16 @@ extern "C" void __cdecl Battle_InitEncounterKind(void) {
 // original 0x4942A0 (0x800A8B10): 0x494500, then a tail jump through the
 // handler table 0x656954 by the boss index (read again, unchecked). The 24
 // handlers read no arguments (each sets 0x904B64..0x904B6C or returns).
+// Logs the fight: the id byte 0x904AAA and the set-up it enters, so a play
+// session says which Boss_SetupTable entry ran (docs/takeover-queue-round11.md
+// section 4, the set-ups whose fight the code does not settle). A log line
+// only; the game sees nothing of it. The battle_sprites fuzz reaches this
+// about 3,000 times per self-test, so expect that many lines there.
 extern "C" void __cdecl Battle_InitBossEncounter(void) {
     g.boss_common();
-    const std::uint32_t handler = static_cast<std::uint32_t>(Long(At(at::kBossHandlers + At(at::kBoss)[0] * 4u)));
+    const unsigned id = At(at::kBoss)[0];
+    const std::uint32_t handler = static_cast<std::uint32_t>(Long(At(at::kBossHandlers + id * 4u)));
+    bof3::Log("boss encounter: id %u (0x%02X) -> set-up 0x%08X", id, id, static_cast<unsigned>(handler));
     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(handler))();
 }
 
