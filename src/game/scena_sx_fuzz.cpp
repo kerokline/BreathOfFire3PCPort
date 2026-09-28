@@ -110,6 +110,9 @@ template <typename... T> std::uint32_t PickOf(T... v) {
 unsigned char* Rec(unsigned n) { return Mem(bof3::addr::CharacterRecords + (n & 7) * at::kRecordStride); }
 unsigned char* Obj(unsigned n) { return ObjTrio + (n % 3) * at::kObjStride; }
 
+// Inventory_Remove's category, item and count, chosen by the seed.
+std::uint32_t g_inv[3];
+
 // Field_CellTriggerAt's table: eight 5-byte records of the fuzz's own.
 alignas(16) unsigned char g_cells[0x28];
 
@@ -300,6 +303,30 @@ void Seed(unsigned k) {
         }
         break;
     }
+    case kInvRemove: {
+        // a category 0..4, the item planted at a slot (no earlier slot holds
+        // it) two times in three, its stack at, above or below the count
+        const unsigned cat = sh::Next() % 5;
+        const std::uint32_t ids = static_cast<std::uint32_t>(Long(move_script::At(bof3::addr::Inventory_IdLists + 4 * cat)));
+        const unsigned slot = sh::Next() % (cat == 4 ? 0x20 : 0x80);
+        auto item = static_cast<unsigned char>(1 + sh::Next() % 0xFF);
+        unsigned n = PickOf(1, 1, 2, 1 + sh::Next() % 99, sh::Next() % 0x100);
+        if (sh::Often()) {
+            for (unsigned i = 0; i < slot; ++i)
+                if (Mem(ids + i)[0] == item) Mem(ids + i)[0] = static_cast<unsigned char>(item + 1 == 0 ? 1 : item + 1);
+            Mem(ids + slot)[0] = item;
+            if (cat != 4) {
+                const std::uint32_t counts = static_cast<std::uint32_t>(Long(move_script::At(bof3::addr::Inventory_CountLists + 4 * cat)));
+                Mem(counts + slot)[0] = static_cast<unsigned char>(PickOf(n, n, n + 1, n - 1, n + sh::Next() % 20, sh::Next()));
+            }
+        }
+        if (sh::Next() % 8 == 0) item = 0;
+        if (sh::Next() % 10 == 0) n = 0;
+        g_inv[0] = cat;
+        g_inv[1] = item;
+        g_inv[2] = n & 0xFF;
+        break;
+    }
     case kZennySub:
     case kZennyAdd:
         SetLong(Mem(bof3::addr::Party_Zenny),
@@ -344,26 +371,12 @@ void Args(unsigned k, std::uint32_t* a) {
         a[2] = (a[2] & 0xFFFFFF00u) | (sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
         break;
     case kKeyItem: break;
-    case kInvRemove: {
-        const unsigned cat = sh::Next() % 5;
-        a[0] = hi | cat;
-        const std::uint32_t ids = static_cast<std::uint32_t>(Long(move_script::At(bof3::addr::Inventory_IdLists + 4 * cat)));
-        const unsigned slot = sh::Next() % 0x80;
-        unsigned char item = static_cast<unsigned char>(sh::Next());
-        if (sh::Often() && (cat != 4 || slot < 0x20)) {
-            if (item == 0) item = 1;
-            Mem(ids + slot)[0] = item;   // planted; an earlier slot may hold it too
-        }
-        a[1] = (a[1] & 0xFFFFFF00u) | (sh::Next() % 8 == 0 ? 0 : item);
-        unsigned n = 1 + sh::Next() % 99;
-        if (cat != 4) {
-            const std::uint32_t counts = static_cast<std::uint32_t>(Long(move_script::At(bof3::addr::Inventory_CountLists + 4 * cat)));
-            const unsigned have = Mem(counts + slot)[0];
-            if (sh::Often()) n = PickOf(have, have + 1, have > 0 ? have - 1 : 0, have / 2 + 1);
-        }
-        a[2] = (a[2] & 0xFFFFFF00u) | (sh::Next() % 10 == 0 ? 0 : n & 0xFF);
+    case kInvRemove:
+        // chosen, and the item planted, by the seed (the state is captured before the arguments)
+        a[0] = hi | g_inv[0];
+        a[1] = (a[1] & 0xFFFFFF00u) | g_inv[1];
+        a[2] = (a[2] & 0xFFFFFF00u) | g_inv[2];
         break;
-    }
     case kZennySub:
     case kZennyAdd: {
         const auto money = static_cast<std::uint32_t>(Long(Mem(bof3::addr::Party_Zenny)));
