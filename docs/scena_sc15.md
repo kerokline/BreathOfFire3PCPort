@@ -476,6 +476,12 @@ in the harness's standard set.
   draw's eax); only the low 16 bits are ever read. Ours computes the same low
   bits and the fuzz compares only them.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D147 (uninitialised bytes) in
+[`known-defects.md`](known-defects.md).
+
 ## 8. What reaches it
 
 No recorded route plays chapters 15, 17, 18 or 19 - the catalogue's reach

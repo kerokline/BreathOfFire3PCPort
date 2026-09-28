@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** DONE (2026-09-28) - six waves merged, 2,195 functions, 3,510 -> 5,706 ours; **the scenario round and the area round are both complete**: every chapter bank and every area overlay is ours, fuzz-only; the debts are listed at the end of section 19
+**Status:** DONE (2026-09-28) - six waves merged, 2,195 functions, 3,510 -> 5,706 ours; **the scenario round and the area round are both complete**: every chapter bank and every area overlay is ours, fuzz-only; merged as PR #28 (`3e8d531`); the debts are listed at the end of section 19 and worked in [`round-10-cleanup.md`](round-10-cleanup.md)
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -814,4 +814,5 @@ doc's `kPhase`, `args` and `Noise()`-only notes; the pairing tool's
 cases; the route A/Bs and the frame hash when the owner is away
 (nothing taken is on the attract path, so the hash should stand); the
 recipe saves per chapter and the live check per area; the bare-`ret`
-inits for the owner.
+inits for the owner. Gathered as [`round-10-cleanup.md`](round-10-cleanup.md),
+whose status header says what has landed since.

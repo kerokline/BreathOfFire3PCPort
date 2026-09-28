@@ -203,6 +203,12 @@ reproduced as the original makes it and described here.
    dead in this copy (the folded body is shared; area 104's own `0x415780`
    is AR2E's).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D135 (`Effect_FindFree`'s none
+as a slot), D136 (reads and writes by an unchecked byte or count), D143 (the
+world-map copies' searches), D154 (dead branches) in
+[`known-defects.md`](known-defects.md).
+
 ## 8. What reaches it, calls across groups
 
 - **Reach - no recorded route reaches any of the 54.** A scan of every

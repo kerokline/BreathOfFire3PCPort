@@ -788,6 +788,11 @@ Described, not fixed:
 - **The drop's cell loop** draws again while a < `0x1A` and b < `0x15`; with
   the CRT's `rand` (0..`0x7FFF`) it ends with probability about 0.7 a draw.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D139 (sound effect 0), D157
+(the top-up wrap) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading but one: 48 starts, extents, call

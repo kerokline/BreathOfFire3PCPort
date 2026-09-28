@@ -578,6 +578,11 @@ Described, not fixed:
   `Area97_FlagIfKeyItem5` (story flag `0x23` when key item 5 is held). Not
   measured in play.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D137 (divides by 0) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 53 starts, extents, call sites,

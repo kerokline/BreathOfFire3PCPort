@@ -125,6 +125,14 @@ Because nothing is shared but the read-only `BOF3.exe`, several checkouts
 A self-test that *hangs* still hangs: kill it by the printed pid, never by
 image name, which would end every other checkout's run too.
 
+**A run that dies silently** - exit 127, no `Fatal`, no self-test lines -
+is not a pass: `BOF3X_SHADOW='*'` did that once each for two agents in
+round ten's wave three (2026-09-28, while a spell group was cloning under
+a running game and several concurrent self-tests) and passed on the re-run
+every time; not understood, never seen since
+([`takeover-queue-round10.md`](takeover-queue-round10.md) §10). Read the
+exit code, re-run on 127, and treat a third one as a bug to catch.
+
 ## 3. One name, bound once
 
 For every function in `symbols.toml` that has a signature, the bare name is

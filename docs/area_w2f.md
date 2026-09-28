@@ -857,6 +857,13 @@ Described, not fixed:
   tail; what `Area_ArriveHook`'s caller does with the answer is not read
   here.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D138 (the bare-`ret` inits),
+D145 (`.data` kept across visits), D147 (uninitialised bytes), D153 (hooks
+without the script flag), D161 (small slips) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 53 starts, extents, call sites,

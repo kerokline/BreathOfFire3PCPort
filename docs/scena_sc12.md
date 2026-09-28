@@ -336,3 +336,7 @@ No latent defect found: every index the block writes stays inside its table,
 every loop is bounded, and the one wait (`File_LoadDone`) is the engine's
 usual load wait. The table aborts of section 2 are the only departure, and
 only for indices the block never writes.
+
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back) in
+[`known-defects.md`](known-defects.md).

@@ -6,6 +6,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc3 {
 
 namespace at {
@@ -92,16 +98,16 @@ constexpr std::uint32_t kCellHandlers4 = 0x661010;  // Scena04_CellHandlers, 1 e
 // Callees nobody owns this wave, by address (docs/scena_sc3.md section 6).
 // SE's two shared helpers and SCH's Scenario_CallB are raw here until the
 // round's rebinding pass.
-constexpr std::uint32_t kLeaderState5 = 0x4410B0;     // group SE: (u8) - member 0's +1 = 5, 0x904AAA = the byte, 0x905BA5 |= 0x10
-constexpr std::uint32_t kEventObjFace = 0x579D70;     // group SE: EventObj_Face (Sprite_Current's facing)
+constexpr std::uint32_t kLeaderState5 = bof3::addr::Field_StartEventBattle;     // group SE: (u8) - member 0's +1 = 5, 0x904AAA = the byte, 0x905BA5 |= 0x10
+constexpr std::uint32_t kEventObjFace = bof3::addr::EventObj_Face;     // group SE: EventObj_Face (Sprite_Current's facing)
 constexpr std::uint32_t kCallB = 0x5341C0;            // Scenario_CallB (SCH names it), the caller's arguments in place
-constexpr std::uint32_t kPlaceParty = 0x532ED0;       // (x, z, u8): the party placed at a point
-constexpr std::uint32_t kPartyRestore = 0x533E50;     // (): the party's records refreshed (Char_RecalcStats)
-constexpr std::uint32_t kStatusBit80 = 0x56D6F0;      // (): Field_StatusBits |= 0x80
-constexpr std::uint32_t kCellFind = 0x56D800;         // (records, n, x, z): the cell record matched, 0xFF none
-constexpr std::uint32_t kSpriteFindFree = 0x57CD90;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
+constexpr std::uint32_t kPlaceParty = bof3::addr::Party_PlaceForBattle;       // (x, z, u8): the party placed at a point
+constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;     // (): the party's records refreshed (Char_RecalcStats)
+constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;      // (): Field_StatusBits |= 0x80
+constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;         // (records, n, x, z): the cell record matched, 0xFF none
+constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
 constexpr std::uint32_t kMusicStop = 0x587B80;        // (): the music buffer stopped (jmp 0x5A6FF0)
-constexpr std::uint32_t kItemEvent = 0x590C90;        // (u8 id, x, u8, y): 0x97 with the effect state's byte
-constexpr std::uint32_t kKeyItemAdd = 0x591900;       // (u8): into the first free of 32 bytes at 0x904554
+constexpr std::uint32_t kItemEvent = bof3::addr::AbilityList_Add;        // (u8 id, x, u8, y): 0x97 with the effect state's byte
+constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;       // (u8): into the first free of 32 bytes at 0x904554
 
 }  // namespace scena_sc3

@@ -408,6 +408,11 @@ A group whose `args` writes memory has the same trap.
 - **`MapView_FillCells` wraps only at the exact edge**: a `MapView_Row`
   above 0x37 or a column above 0x1B counts on past the table.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D136 (reads and writes by an unchecked byte or count),
+D137 (divides by 0), D151 (`Char_LoseHp`), D152 (`Party_Remove`) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. Found on the way
 
 - **`Char_ExpTable`'s row bytes** `+2..+7` are the level-up's stat gains

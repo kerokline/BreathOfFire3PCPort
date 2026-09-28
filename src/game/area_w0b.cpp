@@ -21,6 +21,10 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/area_harness.h"
 #include "game/area_w0b_callees.h"
 #include "game/move_script_bytes.h"
@@ -49,8 +53,10 @@ signed char Choice() { return static_cast<signed char>(At(at::kChoice)[0]); }
 
 // Area 16's own functions another of them calls directly, by their original
 // addresses (each is patched to ours; the fuzz stands a recorder in).
-constexpr U kFrameStep16 = 0x4020B0, kFrameHold16 = 0x402100, kBoxStep16 = 0x402180;
-constexpr U kDrawFrame16 = 0x4022E0, kDrawSprite16 = 0x4024B0, kDrawHud16 = 0x402570;
+constexpr U kFrameStep16 = bof3::addr::Area16_FrameStep, kFrameHold16 = bof3::addr::Area16_FrameHold,
+    kBoxStep16 = bof3::addr::Area16_BoxStep;
+constexpr U kDrawFrame16 = bof3::addr::Area16_DrawFrame, kDrawSprite16 = bof3::addr::Area16_DrawSprite,
+    kDrawHud16 = bof3::addr::Area16_DrawHud;
 using DrawAt = void (__cdecl*)(int, int);
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 

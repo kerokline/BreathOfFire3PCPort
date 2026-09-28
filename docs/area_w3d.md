@@ -676,6 +676,12 @@ each is a latent defect of Capcom's, described, not fixed.
   1, and `Area135_PartyInBox` past the three party records when
   `Field_MemberCount` is above 3.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D137 (divides by 0), D158 (nibble against facing) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. Starts, the tool and the tables
 
 46 starts, 46 functions: every start the tool lists is a function entered at

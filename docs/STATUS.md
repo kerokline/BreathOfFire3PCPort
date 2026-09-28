@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-26)
+**Status:** IN PROGRESS (2026-09-28)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -53,6 +53,7 @@ re-derived:
 | 09-28 | Round 10 wave 4: the second engine group (SX2, 13), world 1's areas 53..75 (AR1D..AR1F) - **world 1 complete** - and world 2's areas 76..103 (AR2A..AR2D) | 382 | 4,936 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 13 |
 | 09-28 | Round 10 wave 5: world 2's areas 104..113 (AR2E, AR2F) - **world 2 complete** - and world 3's areas 115..146 (AR3A..AR3F) | 422 | 5,358 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 16 |
 | 09-28 | Round 10 wave 6: world 3's areas 148..151 (AR3G) and world 4 (AR4A..AR4F) - **the area round complete**, every area overlay ours; with the scenario round, round ten took 2,195 functions in 47 groups | 348 | 5,706 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 19 |
+| 09-28 | Round 10's cleanup, the part a session without the game can do ([`round-10-cleanup.md`](round-10-cleanup.md)): every raw address whose target is ours rebound to its name (234 constants, 41 files, values unchanged), the round's defects numbered D133..D161 with the docs' contradictions written into the entries, the harness docs' five notes, `area_rows.py --no-write` | 0 | 5,706 | the i686 build and the repository checks; the shadow self-tests, hash and A/Bs are owed at the tip | [`known-defects.md`](known-defects.md) D133..D161 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -380,6 +381,16 @@ What is established:
      panel's PlayStation icon column (DIV-0051) - 1,025 ours. Steps 1..3 of
      its plan are done and confirmed; step 4, the in-game binding screen, is
      [`IDEAS.md`](IDEAS.md) I20.
+   - **The pointer-reached rounds, eight to ten** (2026-09-25..28; the wave
+     table above): round eight took the 440 functions the three routes enter
+     that no all-calls trace had armed; round nine the task scheduler and,
+     through one fuzz harness, every spell overlay (D89..D132); round ten,
+     through two more harnesses built on the same pattern, every chapter
+     bank (the scenario round, I24) and every area overlay of worlds 0..4
+     (the area round, I25) - **5,706 ours**, fuzz-only beyond the recorded
+     routes, the round's debts in [`round-10-cleanup.md`](round-10-cleanup.md)
+     and its defects D133..D161. Round eleven, the boss overlays, is planned
+     and cut ([`takeover-queue-bosses.md`](takeover-queue-bosses.md), I26).
 
    What is next is [`HANDOFF.md`](HANDOFF.md)'s to say.
 2. **Then the text swap** - [`dialogue-localisation.md`](dialogue-localisation.md):
@@ -492,9 +503,10 @@ Launcher, detour layer, generated symbol header, one toolchain. Described in
 
 What phase 0 deliberately did not build: register-argument thunks for
 non-standard MSVC6 conventions (wait for the first real case), a progress
-report, the Ghidra round-trip (phase 1), and any CI — there is still no
-workflow that compiles `src/`, and the receipt policy below now has something
-to bite on.
+report, the Ghidra round-trip (phase 1), and any CI — at the time no
+workflow compiled `src/` (one has since 2026-09-25, `.github/workflows/build.yml`
+beside the ledger checks in `checks.yml`), and the receipt policy below now has
+something to bite on.
 
 ## A stated goal worth recording now
 
@@ -554,8 +566,9 @@ an unrecognised disc can be named rather than guessed at.
   hashes of the vectors used. CI validates structure and freshness only — it
   never needs a byte of game data. **Still not built** - it was deferred while
   there was no `src/` and no harness; both exist now (the oracle, the memory
-  dump, the frame hash), so it is owed, as is a CI workflow that compiles
-  `src/` (`.github/workflows/` holds only the DCO check).
+  dump, the frame hash), so it is owed. The CI workflow that compiles `src/`
+  exists since 2026-09-25 (`.github/workflows/build.yml`, with the ledger and
+  symbol checks in `checks.yml` beside the DCO check); the receipt does not.
 - **Size floors for the matcher.** [`bsim-evaluation.md`](bsim-evaluation.md)
   shows tiny wrappers and very large functions are unreliable; nine pairs is too
   few to fit a cutoff.

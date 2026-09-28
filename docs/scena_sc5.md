@@ -400,3 +400,8 @@ Latent, described and kept:
   moves it on; not a defect on this reading, only unexplained here.
 - The table aborts of section 2 are the only departure, and only for
   indices the bank never writes.
+
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D155 (steps with no exit) in
+[`known-defects.md`](known-defects.md).

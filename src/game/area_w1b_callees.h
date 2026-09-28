@@ -16,6 +16,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w1b {
 namespace at {
 
@@ -116,8 +122,8 @@ constexpr U kMsgMode = kTailKind, kMsgState = kTailState, kMsgArg = kTailArg;
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kDrawWindow = 0x40E750;
-constexpr std::uint32_t kFreeObject = 0x57CD90;
-constexpr std::uint32_t kFlagsToggle = 0x57C160;
+constexpr std::uint32_t kDrawWindow = bof3::addr::Area75_DrawWindow;
+constexpr std::uint32_t kFreeObject = bof3::addr::Sprite_FindFree;
+constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
 
 }  // namespace area_w1b

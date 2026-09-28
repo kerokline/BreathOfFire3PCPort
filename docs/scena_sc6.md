@@ -442,6 +442,11 @@ original would jump into data or fault):
   `MoveScript_EffectState[k]`) are indexed unchecked, as SE found for
   `Party_AddToLists`.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D137 (divides by 0), D161
+(small slips) in [`known-defects.md`](known-defects.md).
+
 ## 7. What nothing reached
 
 No route was played (headless self-tests only, per the wave's brief), and

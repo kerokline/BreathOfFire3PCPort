@@ -1,6 +1,6 @@
 # The ninth round's queue: what the routes still enter, and the spells
 
-**Status:** IN PROGRESS (2026-09-25) - the routes re-traced; EA, SH, HX and spell waves one to three merged: 2,845 ours; the frame hash to re-record again, the owner's eye owed
+**Status:** DONE (2026-09-27; merged as PR #27) - the routes re-traced; EA, SH, HX and the five spell waves merged, 3,510 ours, the spell round complete (section 12: rebinding and D89..D132); the frame hash re-recorded at 3,164 (`r9_orig`, HANDOFF); the owner's eye on any cast still owed
 
 Round eight left "76 hidden entries the three routes still enter" as the
 next queue ([`takeover-queue-round8.md`](takeover-queue-round8.md) "Owed

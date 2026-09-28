@@ -756,6 +756,11 @@ Described, not fixed:
 - **Areas 72 / 73's "none chosen" path is dead** with the shipped weights
   (they sum to `0x40`).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D136 (reads and writes by an
+unchecked byte or count), D138 (the bare-`ret` inits), D147 (uninitialised
+bytes), D154 (dead branches) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 59 starts, extents, call sites, the

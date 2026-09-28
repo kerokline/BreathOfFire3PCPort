@@ -471,6 +471,11 @@ Described, not fixed; each is kept faithfully (the reads stay inside
   byte masks, so a member count above 8 would never mark or clear the rest
   (the count is 1..3 in the field).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D136 (reads and writes by an unchecked byte or count),
+D144 (the unbounded walks), D145 (`.data` kept across visits), D161 (small
+slips) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 57 starts, extents, call sites,

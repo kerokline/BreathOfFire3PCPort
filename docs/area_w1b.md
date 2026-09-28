@@ -349,6 +349,12 @@ lines, no mismatch, `inject: 4156 ours` (all 55 of this group's injected).
   `00407320 22E`, `004077F0 143`, `00408070 12`, `004086D0 58`,
   `00408EB0 55` are smaller than host lines already there.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D143 (the world-map copies' searches) in
+[`known-defects.md`](known-defects.md).
+
 ## 10. Controls
 
 Planted one at a time in `area_w1b.cpp` by a script (the scratch

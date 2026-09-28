@@ -1,6 +1,6 @@
 # The scenario harness: one fuzz for every scenario group
 
-**Status:** IN PROGRESS (2026-09-27) - built and proved on chapter 0
+**Status:** MEASURED (2026-09-28; every scenario group of round ten ran through it, 0 mismatches each, [`takeover-queue-round10.md`](takeover-queue-round10.md)) - built and proved on chapter 0
 ([`scena_sc0.md`](scena_sc0.md): 19 functions, 0 mismatches in 76,000
 rounds, 105 of 105 controls refused). Round ten group SCH
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1).
@@ -208,6 +208,13 @@ load path is not covered by this proof (`Scena00_Start` waits on
   group re-lists a callee it needs recorded otherwise (its listing stands).
 - **Run the real load.** `Task_Sleep`, `File_LoadDone`, `LoadDatFile` are
   recorders; `Scenario_Start(n)` has no harness path yet.
+
+
+The round-ten notes in [`magic_harness.md`](magic_harness.md) §5 (an `args`
+hook that writes memory is lost, a `kPhase` callee's `effect` never runs,
+effects draw from `Noise()` only, an entry `jmp` refused by `CloneOriginal`,
+a clone past 64 call sites copied by the fuzz file) hold here too: SX, SC12
+and SC5 met them through this harness.
 
 ## 6. Shadow name and self-test
 

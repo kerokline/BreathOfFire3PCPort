@@ -645,3 +645,9 @@ Latent, described and kept (none fixed):
   (0xFF), a record past `Effect_Objects`.
 - The table aborts of section 2 are the only departure from the originals,
   and only for indices the band never writes.
+
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D155 (steps with no exit) in
+[`known-defects.md`](known-defects.md).

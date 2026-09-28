@@ -1,6 +1,6 @@
 # Breath of Fire III — Chinese PC Port: renovation & uplift plan
 
-**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19; a progress note in §5 and one line in §6, 2026-09-24). Scoping document.
+**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19; a progress note in §5 and one line in §6, 2026-09-24; the §5 note brought to round ten, 2026-09-28). Scoping document.
 
 **Update 2026-09-18:** §8 step 2 — the load-bearing experiment — has been run and
 **passed**, twice (text engine, then battle engine). See [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md).
@@ -351,7 +351,14 @@ behind DirectX 6's objects (DIV-0031), and the pad read among them. Several
 phase-5 items arrived early, as §6's risk suggested they should: a working
 borderless fullscreen and a resizable window (DIV-0032), integer scaling
 (DIV-0036, DIV-0042), and a 426 x 240 wide picture as a survey build
-(DIV-0041).
+(DIV-0041). **As of 2026-09-28:** 5,706 functions ours of roughly 10,200 -
+every function the recorded routes reach, every spell overlay, every chapter
+bank and every area overlay, the last three through fuzz harnesses that run
+Capcom's byte-copy beside ours in the process ([`magic_harness.md`](magic_harness.md)
+and its two siblings); the boss overlays are the next round. The phase-3
+exit test below is long passed; what remains of Capcom's code is catalogued
+in [`remaining-catalog.md`](remaining-catalog.md) (its counts of 2026-09-25)
+and the round docs' "left original" lists.
 
 ### Phase 0 — Our own scaffolding (weeks)
 Write a minimal loader and detour layer of our own: get code into the process,

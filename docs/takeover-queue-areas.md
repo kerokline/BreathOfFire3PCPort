@@ -1,6 +1,6 @@
 # The area round: the area overlays enumerated from their tables, and taken wave by wave
 
-**Status:** DONE (2026-09-28) - every area overlay of worlds 0..4 is ours over round ten's six waves ([`takeover-queue-round10.md`](takeover-queue-round10.md) sections 4, 7, 10, 13, 16, 19): the harness ([`area_harness.md`](area_harness.md)), the tool `tools/area_rows.py` ([`area-rows.md`](area-rows.md), group ART; its numbers are section 1a and its group cut section 3), 27 area groups plus ARH / ART. Still owed: the live check per area (the owner's), the rebinding pass (the linker folds between areas 104 / 121 and 151 / 152, the world-map body shared once), the defects' numbering, the tool fixes. Listed as [`IDEAS.md`](IDEAS.md) I25. The text below is the plan as written.
+**Status:** DONE (2026-09-28) - every area overlay of worlds 0..4 is ours over round ten's six waves ([`takeover-queue-round10.md`](takeover-queue-round10.md) sections 4, 7, 10, 13, 16, 19): the harness ([`area_harness.md`](area_harness.md)), the tool `tools/area_rows.py` ([`area-rows.md`](area-rows.md), group ART; its numbers are section 1a and its group cut section 3), 27 area groups plus ARH / ART. Still owed: the live check per area (the owner's), the world-map body shared once and the tool fixes that want the exe; the rebinding (the linker folds included) and the defects' numbering (D133..D161) landed 2026-09-28 ([`round-10-cleanup.md`](round-10-cleanup.md)). Listed as [`IDEAS.md`](IDEAS.md) I25. The text below is the plan as written.
 
 ## 0. The question, and the answer in one paragraph
 

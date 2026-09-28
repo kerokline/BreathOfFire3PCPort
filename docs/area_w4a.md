@@ -233,6 +233,13 @@ as the original makes it.
    byte**: a facing byte with any of bits 4..7 set never matches.
    Reproduced (the fuzz plants such facings).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D138 (the bare-`ret` inits), D143 (the world-map copies'
+searches), D147 (uninitialised bytes), D158 (nibble against facing) in
+[`known-defects.md`](known-defects.md).
+
 ## 8. What reaches it, calls across groups
 
 - **Reach - no recorded route reaches any of the 48.** A scan of every

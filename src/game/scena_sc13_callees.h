@@ -26,6 +26,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc13 {
 
 namespace at {
@@ -125,23 +131,23 @@ constexpr std::uint32_t kObjects14 = 0x661884;  // Scena14_Objects, 8
 constexpr unsigned kObjectCount14 = 8;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = 0x533E50;
-constexpr std::uint32_t kPartyPlace = 0x532ED0;
-constexpr std::uint32_t kSetBit80 = 0x56D6F0;
-constexpr std::uint32_t kViewShift = 0x56FCA0;
-constexpr std::uint32_t kFreeSprite = 0x57CD90;
+constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
+constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
+constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
+constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;
+constexpr std::uint32_t kFreeSprite = bof3::addr::Sprite_FindFree;
 constexpr std::uint32_t kSound587B80 = 0x587B80;
-constexpr std::uint32_t kParty591900 = 0x591900;
-constexpr std::uint32_t kVoiceLevel = 0x587890;
-constexpr std::uint32_t kFindByte = 0x591920;
-constexpr std::uint32_t kArea143 = 0x420A90;
-constexpr std::uint32_t kArea141a = 0x4204D0;
-constexpr std::uint32_t kArea141b = 0x420580;
-constexpr std::uint32_t kArea141c = 0x4205D0;
-constexpr std::uint32_t kArea141d = 0x420670;
-constexpr std::uint32_t kArea141e = 0x420710;
-constexpr std::uint32_t kArea191 = 0x42BA90;
-constexpr std::uint32_t kArea192 = 0x42C0A0;
+constexpr std::uint32_t kParty591900 = bof3::addr::KeyItem_Add;
+constexpr std::uint32_t kVoiceLevel = bof3::addr::Sound_SetCueVolume;
+constexpr std::uint32_t kFindByte = bof3::addr::KeyItem_Remove;
+constexpr std::uint32_t kArea143 = bof3::addr::Area143_ClutShiftRight;
+constexpr std::uint32_t kArea141a = bof3::addr::Area141_PlacePairAnimated;
+constexpr std::uint32_t kArea141b = bof3::addr::Area141_PlaceOneAnimated;
+constexpr std::uint32_t kArea141c = bof3::addr::Area141_PlacePair6x;
+constexpr std::uint32_t kArea141d = bof3::addr::Area141_PlacePair0x;
+constexpr std::uint32_t kArea141e = bof3::addr::Area141_PlaceOne0x;
+constexpr std::uint32_t kArea191 = bof3::addr::Area191_TalkMessage;
+constexpr std::uint32_t kArea192 = bof3::addr::Area192_TalkMessage;
 
 }  // namespace at
 

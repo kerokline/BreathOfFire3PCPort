@@ -578,6 +578,10 @@ Described, not fixed (none is new in kind):
   (`0x903F6A`); a value past 5 gives nothing but still opens message
   `0x49` with the previous contents of `Text_Records`.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D136 (reads and writes by an unchecked byte or count),
+D154 (dead branches) in [`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 56 starts, extents, call sites,

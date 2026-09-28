@@ -201,6 +201,11 @@ shared `0x4253C0` and `Area65_Record8Move` included - and record 4's two -
    character id, unchecked (a byte, so at most 255 past: image data, no
    fault; ours reads the same).
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D136
+(reads and writes by an unchecked byte or count), D143 (the world-map copies'
+searches) in [`known-defects.md`](known-defects.md).
+
 ## 6. What reaches it, calls across groups
 
 - **Reach:** no recorded route reaches the band - `hidden_reached_combat`,

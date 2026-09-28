@@ -19,6 +19,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc9a {
 
 namespace at {
@@ -75,9 +81,9 @@ constexpr std::uint32_t kObjects = 0x661450;    // Scena09_Objects, 16
 constexpr unsigned kObjectCount = 16;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = 0x533E50;
-constexpr std::uint32_t kPartyPlace = 0x532ED0;
-constexpr std::uint32_t kSetBit80 = 0x56D6F0;
+constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
+constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
+constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
 
 }  // namespace at
 

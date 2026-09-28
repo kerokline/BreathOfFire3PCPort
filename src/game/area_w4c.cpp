@@ -20,6 +20,10 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/area_harness.h"
 #include "game/area_w4c_callees.h"
 #include "game/move_script_bytes.h"
@@ -176,7 +180,7 @@ void TurnToScript(unsigned char step) {
 
 // Area 174's fade states (0x428FC0 and 0x429080), by the running object's +4
 // through a two-entry table on the stack.
-constexpr U kFadeStates[2] = {0x428FC0, 0x429080};
+constexpr U kFadeStates[2] = {bof3::addr::Area174_FadeTintUp, bof3::addr::Area174_FadeOut};
 
 }  // namespace
 

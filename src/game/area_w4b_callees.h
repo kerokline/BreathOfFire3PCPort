@@ -7,6 +7,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w4b {
 namespace at {
 
@@ -114,8 +120,8 @@ struct Rects {
     std::uint32_t fn_rect; // the copy's own rectangle search (called by address)
 };
 constexpr unsigned kRectStride = 5;
-constexpr Rects kRects169 = {"Area169", 0x63CA3C, 2, 0x4269F0};
-constexpr Rects kRects171 = {"Area171", 0x63D84C, 2, 0x4278B0};
+constexpr Rects kRects169 = {"Area169", 0x63CA3C, 2, bof3::addr::Area169_MemberRect};
+constexpr Rects kRects171 = {"Area171", 0x63D84C, 2, bof3::addr::Area171_MemberRect};
 // Area 170: the four input directions its tail's state 53 swaps, by the held
 // word's top nibble (16 bytes).
 constexpr std::uint32_t kArea170InputSwap = 0x63D63C;

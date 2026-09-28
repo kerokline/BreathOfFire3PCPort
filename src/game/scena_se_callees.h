@@ -4,10 +4,16 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_se::at {
 
 // Callees nobody owns, called through the harness by address (SH_AT).
-constexpr std::uint32_t kPartyPalettes = 0x533E00;    // void(): per member below Field_MemberCount, Sprite_Current = the
+constexpr std::uint32_t kPartyPalettes = bof3::addr::Party_ReloadPalettes;    // void(): per member below Field_MemberCount, Sprite_Current = the
                                                       // member (ObjTrio + 0x14C i), Sprite_ReleaseTint and
                                                       // Sprite_LoadPalette(0x80D380 + 0x40 i, 0); nobody's
 

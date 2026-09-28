@@ -846,6 +846,13 @@ Described, not fixed:
   band moves the state from 1 but a re-arming (area 191's choice 5 at
   `0x1E`, the step hook at 0); what else does is not read.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D137 (divides by 0), D153 (hooks without the script flag),
+D155 (steps with no exit), D156 (the drain) in
+[`known-defects.md`](known-defects.md).
+
 ## 7. What the tool listed, against the reading
 
 - **Every row agrees** with the reading: 51 starts, extents, call sites, the

@@ -1,6 +1,6 @@
 # The area harness: one fuzz for every area group
 
-**Status:** IN PROGRESS (2026-09-27) - built and proved on one area (area 11,
+**Status:** MEASURED (2026-09-28; all 27 area groups of round ten ran through it, 0 mismatches each, [`takeover-queue-round10.md`](takeover-queue-round10.md)) - built and proved on one area (area 11,
 [`area_011.md`](area_011.md): 3 functions, 0 mismatches, 20 controls planted, 18 refused by a count, one refused then hung, one equivalent) and on
 the cell hook's reader `0x56E670` (section 8). Not yet used by a group that
 needs a choice handler, a step or arrive hook, a mode-tail phase or a state
@@ -187,6 +187,14 @@ Everything the spell harness cannot ([`magic_harness.md`](magic_harness.md)
   index inside, or a region of the group's.
 - **Know what the flags mean.** A flag test's answer is the recorder's; a
   group whose function reads `Cond_Flags` directly seeds each bit it tests.
+
+
+The round-ten notes in [`magic_harness.md`](magic_harness.md) §5 (an `args`
+hook that writes memory is lost, a `kPhase` callee's `effect` never runs,
+effects draw from `Noise()` only, an entry `jmp` refused by `CloneOriginal`,
+a clone past 64 call sites copied by the fuzz file) hold here too: AR1F,
+AR3C and the areas whose inits open with a `jmp` met them through this
+harness.
 
 ## 6. Shadow name and self-test
 

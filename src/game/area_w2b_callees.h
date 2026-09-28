@@ -21,6 +21,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w2b {
 namespace at {
 
@@ -109,7 +115,8 @@ constexpr WorldMapTables kWm87 = {
     0x6126C8, 0x6126D4, 0x6126E4, 0x6126EC,
     0x6126F4, 0x6126F8, 0x6126FC,
     0x803580, 0x156,
-    0x4101A0, 0x4101F0, 0x410270, 0x4103D0, 0x4105A0, 0x410660,
+    bof3::addr::Area87_FrameStep, bof3::addr::Area87_FrameHold, bof3::addr::Area87_BoxStep,
+    bof3::addr::Area87_DrawFrame, bof3::addr::Area87_DrawSprite, bof3::addr::Area87_DrawHud,
 };
 
 // Area 88: record 5 (0x65399C), field hook entry 5; its descriptor 0x612E50
@@ -125,7 +132,8 @@ constexpr WorldMapTables kWm88 = {
     0x613044, 0x613050, 0x613060, 0x613068,
     0x613070, 0x613074, 0x613078,
     0x803580, 0x157,
-    0x4112F0, 0x411370, 0x4113F0, 0x411550, 0x411720, 0x4117E0,
+    bof3::addr::Area88_FrameStep, bof3::addr::Area88_FrameHold, bof3::addr::Area88_BoxStep,
+    bof3::addr::Area88_DrawFrame, bof3::addr::Area88_DrawSprite, bof3::addr::Area88_DrawHud,
 };
 
 }  // namespace at
@@ -133,7 +141,7 @@ constexpr WorldMapTables kWm88 = {
 // The unowned callees (above).
 constexpr std::uint32_t kSlotsReleaseFor = 0x454A80;
 constexpr std::uint32_t kSlotStart = 0x455290;
-constexpr std::uint32_t kFlagsToggle = 0x57C160;
-constexpr std::uint32_t kSpawnKind4 = 0x469FE0;
+constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
+constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
 
 }  // namespace area_w2b

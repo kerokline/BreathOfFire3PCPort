@@ -259,6 +259,12 @@ times. `BOF3X_SHADOW='*'`: exit 0, 453 self-test lines, no mismatch or Fatal,
 7. Record 6's null `+4`, `+8`, `+0x14` (D66's note): not called by this
    band's code.
 
+**Numbered 2026-09-28** ([`round-10-cleanup.md`](round-10-cleanup.md) item 2):
+the defects above are D133 (the dispatchers), D134 (tables back to back), D135
+(`Effect_FindFree`'s none as a slot), D136 (reads and writes by an unchecked
+byte or count), D143 (the world-map copies' searches), D147 (uninitialised
+bytes), D160 (draw slips) in [`known-defects.md`](known-defects.md).
+
 ## 8. What reaches it, calls across groups
 
 - **Reach - no recorded route reaches any of the 52.**

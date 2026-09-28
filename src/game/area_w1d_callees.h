@@ -7,6 +7,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w1d {
 namespace at {
 
@@ -98,7 +104,7 @@ constexpr std::uint32_t kArea64Weights = 0x604378;
 // 0x4220D0 (0x27A bytes, area band, group AR3F's block; area_w0c's
 // kPositionHook): takes a pointer to three dwords (x, z, y) - area 59's
 // effect step hands it the object's position on the stack.
-constexpr std::uint32_t kPositionHook = 0x4220D0;
+constexpr std::uint32_t kPositionHook = bof3::addr::Area146_DrawGlowCylinder;
 
 }  // namespace at
 }  // namespace area_w1d

@@ -27,6 +27,10 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/move_script_bytes.h"
 #include "game/scena_sc7_callees.h"
 #include "game/scenario_harness.h"
@@ -1396,8 +1400,8 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
         if (!Flag(6)) {
             Set40();
             DropIn(3);
-            Kind2At(0x518000, 0x1E8000);
-            SetElevationAt(0x518000, 0x1E8000);
+            Kind2At(bof3::addr::Field_ObjectInHome, 0x1E8000);
+            SetElevationAt(bof3::addr::Field_ObjectInHome, 0x1E8000);
             SH_CALL(Field_ViewReset)();
             Sprite(0)[1] = 4;
             Sprite(1)[1] = 4;

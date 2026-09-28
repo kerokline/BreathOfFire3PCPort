@@ -1,6 +1,6 @@
 # What is not ours, by what it is part of
 
-**Status:** IN PROGRESS (2026-09-25)
+**Status:** IN PROGRESS (2026-09-25; the counts are that day's, 1,024 ours - rounds nine and ten have since taken the spell overlays, the chapter banks and the area overlays, 5,706 ours by 2026-09-28: rerun `tools/remaining_catalog.py` before shaping a wave from these numbers)
 
 The takeover queues so far were built from *reach*: what a traced run entered
 that was not ours ([`call-trace.md`](call-trace.md) §9,

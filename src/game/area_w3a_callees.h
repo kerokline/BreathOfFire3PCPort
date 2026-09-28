@@ -13,6 +13,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w3a {
 namespace at {
 
@@ -92,7 +98,8 @@ constexpr WorldMapTables kWm115 = {
     0x6203BC, 0x6203C8, 0x6203D8, 0x6203E0,
     0x6203E8, 0x6203EC, 0x6203F0,
     0x803580, 0x1C7,
-    0x419140, 0x419190, 0x419210, 0x419370, 0x419540, 0x419600,
+    bof3::addr::Area115_FrameStep, bof3::addr::Area115_FrameHold, bof3::addr::Area115_BoxStep,
+    bof3::addr::Area115_DrawFrame, bof3::addr::Area115_DrawSprite, bof3::addr::Area115_DrawHud,
 };
 
 // --- area 116's (its descriptor 0x620620) -----------------------------------------
@@ -108,9 +115,9 @@ struct TwinTables {
     U fn_member_rect;                 // the copy's MemberRect, called by its MembersFrame
 };
 // Area 117: its descriptor 0x6215B0; the rectangle 0x6215A8, the switch 0x62160C.
-constexpr TwinTables kTw117 = {"Area117", 0x6215A8, 0x6215AE, 0x62160C, 0x621610, 1, 0x41A2D0};
+constexpr TwinTables kTw117 = {"Area117", 0x6215A8, 0x6215AE, 0x62160C, 0x621610, 1, bof3::addr::Area117_MemberRect};
 // Area 118: its descriptor 0x621DF8; the rectangle 0x621DF0, the switch 0x621E3C.
-constexpr TwinTables kTw118 = {"Area118", 0x621DF0, 0x621DF6, 0x621E3C, 0x621E40, 1, 0x41A640};
+constexpr TwinTables kTw118 = {"Area118", 0x621DF0, 0x621DF6, 0x621E3C, 0x621E40, 1, bof3::addr::Area118_MemberRect};
 
 // --- the member-spawn handlers' tables (12 bytes each, by a member's id) -------
 constexpr U kSpawnTable117A = 0x620670;   // area 117's handler 0
@@ -130,6 +137,6 @@ constexpr U kA117Choice2Cases = 0x41A080;   // 5 entries, in the function's own 
 }  // namespace at
 
 // The unowned callee (above).
-constexpr std::uint32_t kRingAt = 0x4220D0;
+constexpr std::uint32_t kRingAt = bof3::addr::Area146_DrawGlowCylinder;
 
 }  // namespace area_w3a

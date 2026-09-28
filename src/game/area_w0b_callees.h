@@ -16,6 +16,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
+
 namespace area_w0b {
 namespace at {
 
@@ -97,8 +103,8 @@ constexpr U kA26EffectKinds = 0x5EC5E8;   // u8 by the first member id, unchecke
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kMoneyTake = 0x591BC0;
-constexpr std::uint32_t kMoneyGive = 0x591BE0;
-constexpr std::uint32_t kInventoryTake = 0x591B60;
+constexpr std::uint32_t kMoneyTake = bof3::addr::Zenny_Sub;
+constexpr std::uint32_t kMoneyGive = bof3::addr::Zenny_Add;
+constexpr std::uint32_t kInventoryTake = bof3::addr::Inventory_Remove;
 
 }  // namespace area_w0b

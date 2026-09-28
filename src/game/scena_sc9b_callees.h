@@ -18,6 +18,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc9b {
 
 namespace at {
@@ -108,12 +114,12 @@ constexpr std::uint32_t kShaking = 0x6BC734;    // u8 Scena10_Shaking: Scena10_S
 constexpr std::uint32_t kSlot10 = 0x6BC735;     // u8 Scena10_Slot: the chapter's effect slot
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kCellFind = 0x56D800;
-constexpr std::uint32_t kPartyPlace = 0x532ED0;
-constexpr std::uint32_t kSetBit80 = 0x56D6F0;
-constexpr std::uint32_t kKeyItemAdd = 0x591900;
+constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
+constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
+constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
+constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;
 constexpr std::uint32_t kMusicStop = 0x587B80;
-constexpr std::uint32_t kSpriteFindFree = 0x57CD90;
+constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;
 
 }  // namespace at
 

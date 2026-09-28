@@ -4,14 +4,20 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_calls::at {
 
 // Callees nobody owns, called through the harness by address (SH_AT).
-constexpr std::uint32_t kLeave = 0x534030;      // void(unsigned id): member `id` (its byte) leaves - Party_JoinReset, the id
+constexpr std::uint32_t kLeave = bof3::addr::Party_Remove;      // void(unsigned id): member `id` (its byte) leaves - Party_JoinReset, the id
                                                 // taken out of both party lists 0x904065.. / 0x904062.. (the later ones
                                                 // moved up, 0xFF behind), the field objects after it moved down one
                                                 // (ObjTrio, 0x14C each), Member_ClearState, Field_MemberCount - 1; nobody's
-constexpr std::uint32_t kPalettes = 0x533E00;   // void(): per member below Field_MemberCount, Sprite_Current = the member
+constexpr std::uint32_t kPalettes = bof3::addr::Party_ReloadPalettes;   // void(): per member below Field_MemberCount, Sprite_Current = the member
                                                 // (ObjTrio + 0x14C i), Sprite_ReleaseTint and Sprite_LoadPalette(0x80D380 +
                                                 // 0x40 i, 0); nobody's (scena_se_callees.h kPartyPalettes)
 

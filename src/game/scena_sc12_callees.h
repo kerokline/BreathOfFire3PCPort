@@ -21,6 +21,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc12 {
 
 namespace at {
@@ -75,11 +81,11 @@ constexpr std::uint32_t kCellHooks = 0x661778;  // Scena12_CellHooks, 4
 constexpr unsigned kCellHookCount = 4;
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = 0x533E50;
-constexpr std::uint32_t kPartyPlace = 0x532ED0;
-constexpr std::uint32_t kSetBit80 = 0x56D6F0;
-constexpr std::uint32_t kCellFind = 0x56D800;
-constexpr std::uint32_t kBattleBytes = 0x4410B0;   // group SE
+constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
+constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
+constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
+constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
+constexpr std::uint32_t kBattleBytes = bof3::addr::Field_StartEventBattle;   // group SE
 
 }  // namespace at
 
