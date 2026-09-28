@@ -193,6 +193,12 @@ U Set40Effect(const U*, U answer) {
     if (n & 1) SetMember(n >> 4);
     return answer;
 }
+// Flags_Set: area 192's tail reads Field_StatusBits after it (state 4).
+U FlagsSetEffect(const U*, U answer) {
+    const U n = ah::Noise();
+    if (n & 1) Field_StatusBits = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
 // Effect_FindFree: the spawns read the active member after it; a slot of the
 // first four records or none.
 U EffectSlotEffect(const U*, U answer) {
@@ -245,6 +251,7 @@ const ah::Callee kCallees[] = {
     // tested in al: kFlag's garbage above a 0 tells an eax test (the standard
     // set's kBool would not)
     {W4F_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kFlag, 0, 0},
+    {W4F_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &FlagsSetEffect},
     {W4F_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     // the area as a word, the flags as a byte (Field_ChangeArea reads no more;
     // area 192's tail pushes the return point's area from cx)
@@ -298,13 +305,18 @@ const ah::Region kRegions196[] = {
     W4F_BASE_REGIONS,
     {at::kCondByteFE, 1},
 };
+// Areas 197 and 198 also hold the record an unchecked slot of 0xFF would
+// write (Effect_Objects + 0xFF << 7, 0x7E9160: past the pool), so a spawn
+// that took "none" for a slot is seen.
 const ah::Region kRegions197[] = {
     W4F_BASE_REGIONS,
     {at::kEffectObjects, at::kEffectCount * at::kEffectStride},
+    {at::kEffectObjects + 0xFF * at::kEffectStride, at::kEffectStride},
 };
 const ah::Region kRegions198[] = {
     W4F_BASE_REGIONS,
     {at::kEffectObjects, at::kEffectCount * at::kEffectStride},
+    {at::kEffectObjects + 0xFF * at::kEffectStride, at::kEffectStride},
 };
 const ah::Region kRegions199[] = {
     W4F_BASE_REGIONS,
