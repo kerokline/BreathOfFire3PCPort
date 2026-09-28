@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 66 functions ours
 (`src/game/area_w2b.cpp`, shadow name `area_w2b`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-RESULTS_LINE. Fuzz only: no recorded route reaches any of the 66 (section 7).
+0 mismatches in 272,000 rounds; 147 controls planted, 146 refused by a count and one by a fault with its near variant refused by a count (section 8). Fuzz only: no recorded route reaches any of the 66 (section 7).
 No divergence.
 
 Group AR2B of round ten's fourth wave
@@ -205,7 +205,17 @@ group alone (the controls script's shortcut).
   the last cell record (area 87's zero record, area 88's third); the text
   rows' region `0x80` bytes for area 87, `0x160` for area 88's eleven.
 
-**Result (in this worktree):** RESULTS_TABLE
+**Result (in this worktree):** 0 mismatches in every run;
+rounds / calls to the stand-ins in the `'*'` run: area 85 48,000 / 51,325;
+86 24,000 / 9,383; 87 100,000 / 520,715; 88 100,000 / 536,833 (the four
+runs share the harness's random stream, so a change to one group moves the
+next groups' counts). Every state-table entry reached (the coverage
+lines' phase counts: each copy's plate states 772..837, frame and box
+states about 1,000 each and the holds about 5,000, record-8 states about
+1,330, record-4 about 2,000); area 86's switch toggles 121 times, its flag
+test reached 365 times. `BOF3X_SHADOW='*'`: exit 0, 409 self-test lines, no
+mismatch or Fatal, `inject: 4620 ours` (all 66 of this group's injected;
+4,554 before).
 
 ## 6. Latent defects (described, not fixed; the fuzz keeps inside them)
 
@@ -252,4 +262,179 @@ group alone (the controls script's shortcut).
 
 ## 8. Controls
 
-CONTROLS_SECTION
+Planted one at a time in `area_w2b.cpp` (and, for the table constants,
+`area_w2b_callees.h`) by a script (the scratch `controls.py`, not
+committed): each anchored on a string the file holds once; plant, rebuild
+(checking `area_w2b.cpp` recompiled), run the area's group alone
+(`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w2b BOF3X_AR2B_AREA=n`), restore;
+after the last, a rebuild and a clean full run (exit 0, 0 mismatches in all
+four runs). The world-map body, shared by areas 87 and 88, is planted
+under area 87; each copy's own entries, table constants and wrappers under
+its own area. **147 planted, 146 refused by a count** (exit 3), at least
+one per function; **1 refused by a fault** (C62: area 87's plate table
+moved on an entry - the unbounded search then reads on through `.data`,
+as the original's would with a place in no entry), its near variant C62b
+refused by a count. None stood.
+
+A first run of the set (before the fuzz's last strengthening) stood on
+two: B4 (the cell hook's z masked to 7 bits - every switch's z byte is
+below `0x80` and no argument carried bit 7 alone; the arguments now flip it
+one draw in eight) and C62 (the fuzz planted the place and built its
+regions from the same `kWm87` constants ours reads, so a wrong table
+address moved both; the fuzz now has its own literal table addresses,
+`kFz87` / `kFz88`). C6 (the place hook's x not read again after the call)
+and D16 were refused by faults on that run (a stale cell word matched no
+record and the search ran off); the settle now plants the stale pairs as
+records of another name set, and both are refused by a count. The table is
+the second run (in this worktree; rounds of a function's 4,000, 6,000 in
+area 86).
+
+| # | Area | planted | refused in rounds |
+|---|--:|---|---|
+| A1 | 85 | Kind2Walk: step count >> 14 | Area85_Kind2Walk 2962 |
+| A2 | 85 | Kind2Walk: direction 6 | Area85_Kind2Walk 4000 |
+| A3 | 85 | Kind2Walk: +0x18 zeroed | Area85_Kind2Walk 4000 |
+| A4 | 85 | Kind2Walk: bit 5 | Area85_Kind2Walk 3020 |
+| A5 | 85 | Kind2Walk: Kind2Z 0x3E0001 | Area85_Kind2Walk 4000 |
+| A6 | 85 | Kind2Walk: MoveScript_Object not read again after the call | Area85_Kind2Walk 41 |
+| A7 | 85 | Follow: run 7 | Area85_FollowMember2 427 |
+| A8 | 85 | Follow: step 0xD | Area85_FollowMember2 404 |
+| A9 | 85 | Follow: slot 1 | Area85_FollowMember2 273 |
+| A10 | 85 | Follow: member 1 | Area85_FollowMember2 1942 |
+| A11 | 85 | Follow: +0x3C not copied | Area85_FollowMember2 1650 |
+| A12 | 85 | Follow: script word - 3 | Area85_FollowMember2 3727 |
+| A13 | 85 | Follow: bit 7 cleared | Area85_FollowMember2 215 |
+| A14 | 85 | Follow: one record more | Area85_FollowMember2 680 |
+| A15 | 85 | SetType7: 6 | Area85_SetType7 4000 |
+| A16 | 85 | SetType7: +0x9F | Area85_SetType7 4000 |
+| A17 | 85 | Spawn: kind 0x48 | Area85_SpawnEffect47A 3797; Area85_SpawnEffect47B 3780 |
+| A18 | 85 | SpawnA: +0xB 2 | Area85_SpawnEffect47A 3797 |
+| A19 | 85 | SpawnB: +0xB 1 | Area85_SpawnEffect47B 3780 |
+| A20 | 85 | Spawn: sound 0x201 | Area85_SpawnEffect47A 3797; Area85_SpawnEffect47B 3780 |
+| A21 | 85 | Spawn: none, script word - 1 | Area85_SpawnEffect47A 203; Area85_SpawnEffect47B 220 |
+| A22 | 85 | SetUpObject: bank 0x185 | Area85_SetUpObject 4000 |
+| A23 | 85 | SetUpObject: +0x2A 2 | Area85_SetUpObject 4000 |
+| A24 | 85 | SetUpObject: bit 1 | Area85_SetUpObject 2974 |
+| A25 | 85 | StartSlot: script + 4 | Area85_StartSlotScript 4000 |
+| A26 | 85 | StartSlot: animation 1 | Area85_StartSlotScript 4000 |
+| A27 | 85 | ReleaseSlots: the active member | Area85_ReleaseSlots 3410 |
+| A28 | 85 | Raise18: 0x17 | Area85_Raise18 4000 |
+| A29 | 85 | Sound201: request 4 | Area85_Sound201 1364 |
+| A30 | 85 | Sound201: sound 0x202 | Area85_Sound201 3093 |
+| A31 | 85 | Init: -7 | Area85_Init 4000 |
+| A32 | 85 | Shift: 1 clamps to 0 | Area85_ClutShift 709 |
+| A33 | 85 | Shift: clamp 0x1E | Area85_ClutShift 1767 |
+| A34 | 85 | Shift: channel 0 moved too | Area85_ClutShift 1994 |
+| A35 | 85 | Shift: bit 14 kept | Area85_ClutShift 4000 |
+| A36 | 85 | Shift: dirty 2 | Area85_ClutShift 4000 |
+| A37 | 85 | Shift: 255 words | Area85_ClutShift 4000 |
+| A38 | 85 | Shift: g from bit 6 | Area85_ClutShift 2476 |
+| B1 | 86 | SwitchHook: facing & 7 | Area86_SwitchHook 41 |
+| B2 | 86 | SwitchHook: none answers 1 | Area86_SwitchHook 5600 |
+| B3 | 86 | SwitchHook: two switches searched | Area86_SwitchHook 5600 |
+| B4 | 86 | SwitchHook: z & 0x7F | Area86_SwitchHook 168 |
+| B5 | 86 | SwitchHook: x1 inclusive | Area86_SwitchHook 187 |
+| B6 | 86 | SwitchHook: z from z0 + 1 | Area86_SwitchHook 400 |
+| B7 | 86 | SwitchHook: member 0 ignored | Area86_SwitchHook 63 |
+| B8 | 86 | SwitchHook: the answer unsigned | Area86_SwitchHook 363 |
+| B9 | 86 | SwitchHook: flag 0x1D | Area86_SwitchHook 187 |
+| B10 | 86 | SwitchHook: the facing byte toggled | Area86_SwitchHook 63 |
+| B11 | 86 | SwitchHook: effect 0xE | Area86_SwitchHook 63 |
+| B12 | 86 | SwitchHook: al 2 | Area86_SwitchHook 63 |
+| B13 | 86 | SwitchHook: (z, x) asked | Area86_SwitchHook 400 |
+| B14 | 86 | MemberNear: +1 tested | Area86_MemberNear 315 |
+| B15 | 86 | MemberNear: reach + 3 | Area86_MemberNear 1467 |
+| B16 | 86 | MemberNear: x at the reach | Area86_MemberNear 310 |
+| B17 | 86 | MemberNear: z at the reach | Area86_MemberNear 334 |
+| B18 | 86 | MemberNear: steps from +8 | Area86_MemberNear 1631 |
+| B19 | 86 | MemberNear: z from +0x3C | Area86_MemberNear 1635 |
+| B20 | 86 | MemberNear: none 0xFE | Area86_MemberNear 4364 |
+| B21 | 86 | MemberNear: x not absolute | Area86_MemberNear 333 |
+| B22 | 86 | Init86: chapter 0xC | Area86_Init 556 |
+| B23 | 86 | Init86: 0x51 | Area86_Init 3328 |
+| B24 | 86 | Init86: x 0xA | Area86_Init 3328 |
+| B25 | 86 | Init87: area 0x3D | Area87_Init 1442 |
+| B26 | 86 | Init87: bit 14 | Area87_Init 1148 |
+| B27 | 86 | Init87: the area a byte | Area87_Init 1003 |
+| B28 | 86 | MemberNear: the count signed | Area86_MemberNear 192 |
+| C1 | 87 | PlaceMessage: state 2 handled as 1 | Area87_PlaceMessage 777 |
+| C2 | 87 | PlaceMessage: waits on 3 | Area87_PlaceMessage 265 |
+| C3 | 87 | PlaceMessage: 0x9039F5 kept | Area87_PlaceMessage 511 |
+| C4 | 87 | PlaceMessage: 0xA0 a place | Area87_PlaceMessage 292 |
+| C5 | 87 | PlaceMessage: Cond_ByteFA zero-extended | Area87_PlaceMessage 63 |
+| C6 | 87 | PlaceMessage: x not read again | Area87_PlaceMessage 5 |
+| C9 | 87 | PlaceMessage: 0xFE ends | Area87_PlaceMessage 194 |
+| C10 | 87 | PlaceMessage: unseen name | Area87_PlaceMessage 604 |
+| C11 | 87 | PlaceMessage: key item 0x17 | Area87_PlaceMessage 141 |
+| C12 | 87 | PlaceMessage: name + 0x37 | Area87_PlaceMessage 730 |
+| C13 | 87 | PlaceMessage: set + 0x17 | Area87_PlaceMessage 789 |
+| C14 | 87 | PlaceMessage: request 3 | Area87_PlaceMessage 991 |
+| C15 | 87 | PlateRun: 0xA0 kind 3 | Area87_PlateRun 323 |
+| C16 | 87 | PlateRun: bit 11 | Area87_PlateRun 1277 |
+| C17 | 87 | PlateRun: the next state | Area87_PlateRun 4000 |
+| C18 | 87 | PlateStart: bank + 1 | Area87_PlateStart 4000 |
+| C19 | 87 | PlateStart: +0x29 4 | Area87_PlateStart 4000 |
+| C20 | 87 | PlateShow: kind 2 animation 2 | Area87_PlateShow 352 |
+| C21 | 87 | PlateShow: +9 7 | Area87_PlateShow 2029 |
+| C22 | 87 | PlateShow: +0x44 | Area87_PlateShow 2033 |
+| C23 | 87 | PlateGrow: step 0x1000 | Area87_PlateGrow 3999 |
+| C24 | 87 | PlateHold: request 4 | Area87_PlateHold 346 |
+| C25 | 87 | PlateHold: Game_Mode 2 holds | Area87_PlateHold 825 |
+| C26 | 87 | PlateShrink: released on 4 | Area87_PlateShrink 294 |
+| C27 | 87 | PlateShrink: back to 2 | Area87_PlateShrink 598 |
+| C28 | 87 | HudRun87: the other entry | Area87_HudRun 4000 |
+| C29 | 87 | HudFrame87: the box first | Area87_HudFrame 4000 |
+| C30 | 87 | FrameStep87: the next entry | Area87_FrameStep 4000 |
+| C31 | 87 | FrameSlideIn: above 0x10 | Area87_FrameSlideIn 389 |
+| C32 | 87 | FrameHold: mode 3 | Area87_FrameHold 691 |
+| C33 | 87 | FrameSlideOut: below -0x30 | Area87_FrameSlideOut 53 |
+| C34 | 87 | BoxStep87: the next entry | Area87_BoxStep 4000 |
+| C35 | 87 | BoxSlideIn: below 0xC8 | Area87_BoxSlideIn 119 |
+| C36 | 87 | BoxHold: 0x59 frames | Area87_BoxHold 229 |
+| C37 | 87 | BoxSlideOut: above 0xF0 | Area87_BoxSlideOut 344 |
+| C38 | 87 | BoxLeaves: bit 9 | Area87_BoxSlideIn 1006; Area87_BoxHold 882 |
+| C39 | 87 | DrawFrame: second key over seven | Area87_DrawFrame 1458 |
+| C40 | 87 | DrawFrame: legend 3 y + 0x17 | Area87_DrawFrame 2533 |
+| C41 | 87 | DrawFrame: party set & 0xFF | Area87_DrawFrame 51 |
+| C42 | 87 | DrawSprite: CLUT 0x7B81 | Area87_DrawSprite 4000 |
+| C43 | 87 | DrawSprite: semi by & 0x7F | Area87_DrawSprite 3 |
+| C44 | 87 | DrawHud: cap at x + 0x7F | Area87_DrawHud 2931 |
+| C45 | 87 | DrawHud: label & 0xFFF | Area87_DrawHud 2753 |
+| C46 | 87 | Record8Place: bank 0x47 | Area87_Record8Place 4000 |
+| C47 | 87 | Record8Place: first nudge sar 12 | Area87_Record8Place 1724 |
+| C48 | 87 | Record8Place: up for +6 2 | Area87_Record8Place 1511 |
+| C49 | 87 | Record4MarkCell: cell 0xA1 | Area87_Record4MarkCell 2707 |
+| C50 | 87 | Record4MarkCell: released on 8 | Area87_Record4MarkCell 1155 |
+| C51 | 87 | Record4MarkCell: bank 0x204 | Area87_Record4MarkCell 2707 |
+| C52 | 87 | DrawDrift: wrap to -7 | Area87_DrawDrift 1674 |
+| C53 | 87 | DrawDrift: x within 24 | Area87_DrawDrift 497 |
+| C54 | 87 | DrawDrift: CLUT 0x78CC | Area87_DrawDrift 862 |
+| C55 | 87 | DrawDrift: commit 0x44 | Area87_DrawDrift 1659 |
+| C56 | 87 | DrawDrift: size from the u table | Area87_DrawDrift 861 |
+| C57 | 87 | DrawDrift: +0x38 by b << 9 | Area87_DrawDrift 3032 |
+| C58 | 87 | Record8Run87: the next entry | Area87_Record8Run 4000 |
+| C59 | 87 | Record4Run87: the other entry | Area87_Record4Run 4000 |
+| C60 | 87 | kWm87: bank 0x157 | Area87_PlateStart 4000 |
+| C61 | 87 | kWm87: nine place rows | Area87_PlaceMessage 68 |
+| C62 | 87 | kWm87: plate animations from the second | a fault (exit 0xC0000005): the search runs off `.data`; its variant C62b by a count |
+| C62b | 87 | PlateShow: the animation from the pad byte | Area87_PlateShow 999 |
+| C63 | 87 | kWm87: sprites from the second | Area87_DrawSprite 4000 |
+| C64 | 87 | kWm87: drift size from the next | Area87_DrawDrift 772 |
+| C65 | 87 | PlateGrow: no pin | Area87_PlateGrow 4000 |
+| D1 | 88 | PlaceMessage88: sets of 5 | Area88_PlaceMessage 553 |
+| D2 | 88 | PlaceMessage88: four rows | Area88_PlaceMessage 437 |
+| D3 | 88 | PlateStart88: area 87's bank | Area88_PlateStart 4000 |
+| D4 | 88 | DrawSprite88: area 87's sprites | Area88_DrawSprite 1452 |
+| D5 | 88 | DrawDrift88: area 87's UV | Area88_DrawDrift 475 |
+| D6 | 88 | HudRun88: the other entry | Area88_HudRun 4000 |
+| D7 | 88 | Record4MarkCell88: area 87's cells | Area88_Record4MarkCell 2680 |
+| D8 | 88 | FrameStep88: the next entry | Area88_FrameStep 4000 |
+| D9 | 88 | Record8Run88: the next entry | Area88_Record8Run 4000 |
+| D10 | 88 | Record4Run88: the other entry | Area88_Record4Run 4000 |
+| D11 | 88 | BoxStep88: the next entry | Area88_BoxStep 4000 |
+| D12 | 88 | HudFrame88: the box first | Area88_HudFrame 4000 |
+| D13 | 88 | kWm88: bank 0x156 | Area88_PlateStart 4000 |
+| D14 | 88 | kWm88: ten text rows | Area88_PlaceMessage 418 |
+| D15 | 88 | kWm88: six place rows | Area88_PlaceMessage 60 |
+| D16 | 88 | kWm88: directions from the second word | Area88_Record8Place 3967 |
+| D17 | 88 | PlaceMessage88: area 87's tables | Area88_PlaceMessage 973 |
