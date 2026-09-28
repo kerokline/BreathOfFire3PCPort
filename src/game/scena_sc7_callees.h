@@ -6,6 +6,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc7 {
 
 namespace at {
@@ -116,14 +122,14 @@ constexpr std::uint32_t kObjects8 = 0x6613D8;     // Scena08_ObjectHandlers, 3 e
 }  // namespace at
 
 // Callees nobody owns this wave, by address (docs/scena_sc7.md section 6).
-constexpr std::uint32_t kPlaceParty = 0x532ED0;       // (x, z, u8): the party placed at a point for an event battle
-constexpr std::uint32_t kPartyRestore = 0x533E50;     // (): the party's records refreshed
-constexpr std::uint32_t kStatusBit80 = 0x56D6F0;      // (): Field_StatusBits |= 0x80
-constexpr std::uint32_t kCellFind = 0x56D800;         // (records, n, x, z): the cell record matched, negative none
-constexpr std::uint32_t kSpriteFindFree = 0x57CD90;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
+constexpr std::uint32_t kPlaceParty = bof3::addr::Party_PlaceForBattle;       // (x, z, u8): the party placed at a point for an event battle
+constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;     // (): the party's records refreshed
+constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;      // (): Field_StatusBits |= 0x80
+constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;         // (records, n, x, z): the cell record matched, negative none
+constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
 constexpr std::uint32_t kMusicStop = 0x587B80;        // (): the music buffer stopped
-constexpr std::uint32_t kKeyItemAdd = 0x591900;       // (u8): into the first free of 32 bytes at 0x904554
-constexpr std::uint32_t kCall591BE0 = 0x591BE0;       // (0xBB8, 0): chapter 8 run 4 calls it once (not read here)
-constexpr std::uint32_t kCall498DE0 = 0x498DE0;       // (4): chapter 8's join calls it before the record's stats (not read here)
+constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;       // (u8): into the first free of 32 bytes at 0x904554
+constexpr std::uint32_t kCall591BE0 = bof3::addr::Zenny_Add;       // (0xBB8, 0): chapter 8 run 4 calls it once (not read here)
+constexpr std::uint32_t kCall498DE0 = bof3::addr::Char_LevelUp;       // (4): chapter 8's join calls it before the record's stats (not read here)
 
 }  // namespace scena_sc7

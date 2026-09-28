@@ -8,6 +8,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w2a {
 namespace at {
 
@@ -104,11 +110,11 @@ constexpr std::uint32_t kArea81ChoiceMessages = 0x60FDD4;   // Area81_ChoiceMess
 // 0x57C160 (0x1F bytes): (bits, index) - bits[index >> 3] ^= 1 << (index & 7),
 // the index a byte: Flags_Set / Flags_Clear's sibling that toggles
 // (docs/area_w1c.md section 9). Engine.
-constexpr std::uint32_t kFlagsToggle = 0x57C160;
+constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
 // 0x469FE0 (0x3C bytes): (v) - Effect_FindFree; a free slot gets +0 = 1,
 // kind +5 = 4, +9 = v, and story flag 0x1C is set (docs/area_w1c.md
 // section 9). Engine.
-constexpr std::uint32_t kSpawnKind4 = 0x469FE0;
+constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
 
 }  // namespace at
 }  // namespace area_w2a

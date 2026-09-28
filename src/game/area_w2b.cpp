@@ -35,6 +35,10 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/area_harness.h"
 #include "game/area_w2b_callees.h"
 #include "game/move_script_bytes.h"
@@ -68,9 +72,9 @@ Handler StateEntry(const char* who, const char* what, U table, unsigned count, u
 }
 
 // Area 85's shift of CLUT row 6, called by its init by the original address.
-constexpr U kClutShift85 = 0x40F9E0;
+constexpr U kClutShift85 = bof3::addr::Area85_ClutShift;
 // Area 86's member test, called by its cell hook.
-constexpr U kMemberNear86 = 0x40FB70;
+constexpr U kMemberNear86 = bof3::addr::Area86_MemberNear;
 using ShiftFn = void (__cdecl*)(int);
 using NearFn = unsigned char (__cdecl*)(unsigned, unsigned);
 using ObjectFn = void (__cdecl*)(unsigned char*);

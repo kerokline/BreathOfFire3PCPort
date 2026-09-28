@@ -37,6 +37,10 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/move_script_bytes.h"
 #include "game/scena_sc15_callees.h"
 #include "game/scenario_harness.h"
@@ -153,8 +157,8 @@ constexpr uint32_t kStates19 = 0x662C6C;    // Scena19_States, 3
 constexpr uint32_t kRuns19 = 0x662C78;      // Scena19_Runs, 1
 constexpr uint32_t kObjects19 = 0x662C7C;   // Scena19_Objects, 1
 
-constexpr uint32_t kBootTask = 0x496B60;    // Boot_Task's address, as the original pushes it
-constexpr uint32_t kEndTask = 0x56D3B0;     // Scena17_EndTask's, likewise
+constexpr uint32_t kBootTask = bof3::addr::Boot_Task;    // Boot_Task's address, as the original pushes it
+constexpr uint32_t kEndTask = bof3::addr::Scena17_EndTask;     // Scena17_EndTask's, likewise
 
 constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 

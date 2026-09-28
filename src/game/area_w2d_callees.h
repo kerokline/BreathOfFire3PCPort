@@ -7,6 +7,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w2d {
 namespace at {
 
@@ -96,13 +102,13 @@ constexpr std::uint32_t kArea103Shake = 0x61B4E8;        // Area103_Shake, 4 byt
 // 0x57C160 (0x1F bytes): (bits, index) - bits[index >> 3] ^= 1 << (index & 7),
 // the index a byte: Flags_Set / Flags_Clear's sibling that toggles. Engine;
 // group SX2's this wave.
-constexpr std::uint32_t kFlagsToggle = 0x57C160;
+constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
 // 0x4220D0 (0x27A bytes): (const long* point) - reads the point's three
 // dwords (x, z, y) and builds positions about it with Math_Cos / Math_Sin
 // and the frame counter (its first 0x100 bytes read here; the rest is its
 // owner's). World 3's area code (the tool's AREA146, group AR3F), called by
 // the effect states of areas 36, 59, 100, 112, 116 and 146.
-constexpr std::uint32_t kRingAt = 0x4220D0;
+constexpr std::uint32_t kRingAt = bof3::addr::Area146_DrawGlowCylinder;
 
 }  // namespace at
 }  // namespace area_w2d

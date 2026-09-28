@@ -27,6 +27,10 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/area_harness.h"
 #include "game/area_w1e_callees.h"
 #include "game/move_script_bytes.h"
@@ -60,8 +64,10 @@ Handler StateEntry(const char* who, U table, unsigned count, unsigned index) {
 }
 
 // Area 65's own functions another of them calls directly.
-constexpr U kFrameStep65 = 0x40BDF0, kFrameHold65 = 0x40BE40, kBoxStep65 = 0x40BEC0;
-constexpr U kDrawFrame65 = 0x40C020, kDrawSprite65 = 0x40C1F0, kDrawHud65 = 0x40C2B0;
+constexpr U kFrameStep65 = bof3::addr::Area65_FrameStep, kFrameHold65 = bof3::addr::Area65_FrameHold,
+    kBoxStep65 = bof3::addr::Area65_BoxStep;
+constexpr U kDrawFrame65 = bof3::addr::Area65_DrawFrame, kDrawSprite65 = bof3::addr::Area65_DrawSprite,
+    kDrawHud65 = bof3::addr::Area65_DrawHud;
 using DrawAt = void (__cdecl*)(int, int);
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 

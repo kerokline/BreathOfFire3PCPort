@@ -21,6 +21,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w3g {
 namespace at {
 
@@ -139,7 +145,8 @@ constexpr WorldMapTables kWm151 = {
     0x637250, 0x63725C, 0x63726C, 0x637274,
     0x63727C, 0x637280, 0x637284,
     0x803580,
-    0x423DE0, 0x423E30, 0x423EB0, 0x424010, 0x4241E0, 0x4242A0,
+    bof3::addr::Area151_FrameStep, bof3::addr::Area151_FrameHold, bof3::addr::Area151_BoxStep,
+    bof3::addr::Area151_DrawFrame, bof3::addr::Area151_DrawSprite, bof3::addr::Area151_DrawHud,
 };
 
 }  // namespace at
@@ -148,6 +155,6 @@ constexpr WorldMapTables kWm151 = {
 constexpr std::uint32_t kSetMapCamera = 0x494060;
 constexpr std::uint32_t kProjectPoint = 0x494110;
 constexpr std::uint32_t kScreenSize = 0x4941E0;
-constexpr std::uint32_t kViewShift = 0x56FCA0;
+constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;
 
 }  // namespace area_w3g

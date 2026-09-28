@@ -8,6 +8,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w2f {
 namespace at {
 
@@ -145,7 +151,7 @@ constexpr std::uint32_t kDataEnd = 0x93D6EC;
 // and the frame counter (docs/area_w2d.md section 9). World 3's area code
 // (group AR3F's band this wave), called by the effect states of areas 36,
 // 59, 100, 112, 116 and 146.
-constexpr std::uint32_t kRingAt = 0x4220D0;
+constexpr std::uint32_t kRingAt = bof3::addr::Area146_DrawGlowCylinder;
 
 }  // namespace at
 }  // namespace area_w2f

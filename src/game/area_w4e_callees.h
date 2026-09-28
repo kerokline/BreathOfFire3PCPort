@@ -7,6 +7,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w4e {
 namespace at {
 
@@ -153,7 +159,7 @@ constexpr std::uint32_t kHeightAt = 0x511C10;
 // then each of Field_MemberCount's party lists' actors is copied whole (0xA4
 // bytes) to its party record's +0x80. Called raw by area 191's tail kind 53,
 // state 3.
-constexpr std::uint32_t kRestoreRecords = 0x42C2D0;
+constexpr std::uint32_t kRestoreRecords = bof3::addr::Area192_RestoreCharacters;
 
 }  // namespace at
 }  // namespace area_w4e

@@ -7,6 +7,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w1c {
 namespace at {
 
@@ -101,17 +107,17 @@ constexpr unsigned kArea52CellSwitchCount = 4;
 
 // 0x57C160 (0x1F bytes): (bits, index) - bits[index >> 3] ^= 1 << (index & 7),
 // the index a byte: Flags_Set / Flags_Clear's sibling that toggles. Engine.
-constexpr std::uint32_t kFlagsToggle = 0x57C160;
+constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
 // 0x572620 (0x2F bytes): (x, z, value) - AreaMap_Header[HeightBase * 4 +
 // width * z + x] = value, x and z sign-extended words, value a byte: the
 // area block's second byte layer, as AreaMap_SetByte writes the first. Engine.
-constexpr std::uint32_t kSetLayerByte = 0x572620;
+constexpr std::uint32_t kSetLayerByte = bof3::addr::AreaMap_SetHeight;
 // 0x57C8A0 (0x35 bytes): (member, v) - party record member's +1 = 2, +2 = 8,
 // +3 = 0, +0xB = v; both arguments bytes. Engine.
-constexpr std::uint32_t kMemberSetState = 0x57C8A0;
+constexpr std::uint32_t kMemberSetState = bof3::addr::Member_SetState2_8;
 // 0x469FE0 (0x3C bytes): (v) - Effect_FindFree; a free slot gets +0 = 1,
 // kind +5 = 4, +9 = v, and story flag 0x1C is set. Engine.
-constexpr std::uint32_t kSpawnKind4 = 0x469FE0;
+constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
 
 }  // namespace at
 }  // namespace area_w1c

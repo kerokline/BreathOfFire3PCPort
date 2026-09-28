@@ -40,6 +40,10 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/area_harness.h"
 #include "game/area_w2e_callees.h"
 #include "game/move_script_bytes.h"
@@ -82,22 +86,22 @@ unsigned char* EffectRecord(const char* who, std::int32_t slot) {
 
 // The group's own functions another of them calls directly (by address, so
 // that the fuzz's recorder stands in and each is tested alone).
-constexpr U kLeaderIdle = 0x415040;
-constexpr U kObjectAhead121 = 0x4152B0;
-constexpr U kTurnToFree = 0x4153F0;
-constexpr U kStartOnObject121 = 0x415460;
-constexpr U kStopMotion = 0x415640;
-constexpr U kPoseByCharge = 0x415680;
-constexpr U kLeaderCharge = 0x4156C0;
-constexpr U kKind5CFollow = 0x415860;
-constexpr U kDrawGauge = 0x415940;
-constexpr U kKind5CTurn = 0x415A10;
-constexpr U kKind5CTurnStep = 0x415A70;
-constexpr U kKind5CSpin = 0x415B40;
-constexpr U kDrawPanel = 0x4161F0;
-constexpr U kBuildMinimap = 0x416020;
-constexpr U kMinimapShade = 0x4160E0;
-constexpr U kArmTail36 = 0x4168C0;
+constexpr U kLeaderIdle = bof3::addr::Area104_LeaderIdle;
+constexpr U kObjectAhead121 = bof3::addr::Area104_ObjectAhead121;
+constexpr U kTurnToFree = bof3::addr::Area104_TurnToFree;
+constexpr U kStartOnObject121 = bof3::addr::Area104_StartOnObject121;
+constexpr U kStopMotion = bof3::addr::Area104_StopMotion;
+constexpr U kPoseByCharge = bof3::addr::Area104_PoseByCharge;
+constexpr U kLeaderCharge = bof3::addr::Area104_LeaderCharge;
+constexpr U kKind5CFollow = bof3::addr::Area104_Kind5CFollow;
+constexpr U kDrawGauge = bof3::addr::Area104_DrawGauge;
+constexpr U kKind5CTurn = bof3::addr::Area104_Kind5CTurn;
+constexpr U kKind5CTurnStep = bof3::addr::Area104_Kind5CTurnStep;
+constexpr U kKind5CSpin = bof3::addr::Area104_Kind5CSpin;
+constexpr U kDrawPanel = bof3::addr::Area104_DrawPanel;
+constexpr U kBuildMinimap = bof3::addr::Area104_BuildMinimap;
+constexpr U kMinimapShade = bof3::addr::Area104_MinimapShade;
+constexpr U kArmTail36 = bof3::addr::Area106_ArmTail36;
 
 using AnswerFn = unsigned char (__cdecl*)();
 using TurnToFreeFn = unsigned char (__cdecl*)(U, U, U);

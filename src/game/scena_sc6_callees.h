@@ -32,6 +32,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc6 {
 
 namespace at {
@@ -106,12 +112,12 @@ constexpr unsigned kCellHandlerCount = 4;
 constexpr std::uint32_t kBareRet = 0x437CC0;    // a bare ret: Runs[0], Objects[0], CellHandlers[1]
 
 // Callees nobody owns (above).
-constexpr std::uint32_t kPartyPass = 0x533E50;
-constexpr std::uint32_t kPartyPlace = 0x532ED0;
-constexpr std::uint32_t kSetBit80 = 0x56D6F0;
-constexpr std::uint32_t kCellFind = 0x56D800;
-constexpr std::uint32_t kKeyItemPut = 0x591900;
-constexpr std::uint32_t kZennyAdd = 0x591BE0;
+constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;
+constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
+constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
+constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
+constexpr std::uint32_t kKeyItemPut = bof3::addr::KeyItem_Add;
+constexpr std::uint32_t kZennyAdd = bof3::addr::Zenny_Add;
 constexpr std::uint32_t kSoundJmp = 0x587B80;
 
 }  // namespace at

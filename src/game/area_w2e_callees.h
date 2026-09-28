@@ -26,6 +26,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w2e {
 namespace at {
 
@@ -142,18 +148,19 @@ constexpr WorldMapTables kWm104 = {
     0x61BB7C, 0x61BB90, 0x61BB98, 0x61BBA8,
     0x61BBB8, 0x61BC10,
     0x803580,
-    0x414AC0, 0x414B10, 0x414B90, 0x414D30, 0x414F00, 0x414FC0,
+    bof3::addr::Area104_FrameStep, bof3::addr::Area104_FrameHold, bof3::addr::Area104_BoxStep,
+    bof3::addr::Area104_DrawFrame, bof3::addr::Area104_DrawSprite, bof3::addr::Area104_DrawHud,
 };
 
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kTurnToward121 = 0x41BE10;
-constexpr std::uint32_t kMenuButton121 = 0x41C0A0;
-constexpr std::uint32_t kHoldButton121 = 0x41C0E0;
-constexpr std::uint32_t kTurnKeys121 = 0x41C110;
-constexpr std::uint32_t kGaugeFrame121 = 0x41C350;
-constexpr std::uint32_t kKind5CState4 = 0x41C5B0;
+constexpr std::uint32_t kTurnToward121 = bof3::addr::Area121_DirectionTo;
+constexpr std::uint32_t kMenuButton121 = bof3::addr::Area121_MenuButton;
+constexpr std::uint32_t kHoldButton121 = bof3::addr::Area121_Request4Button;
+constexpr std::uint32_t kTurnKeys121 = bof3::addr::Area121_TurnInput;
+constexpr std::uint32_t kGaugeFrame121 = bof3::addr::Area121_GaugeSprite;
+constexpr std::uint32_t kKind5CState4 = bof3::addr::Area121_RingRise;
 constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
 
 }  // namespace area_w2e

@@ -28,6 +28,10 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/area_harness.h"
 #include "game/area_w1b_callees.h"
 #include "game/move_script_bytes.h"
@@ -65,13 +69,16 @@ Handler StateEntry(const char* who, U table, unsigned count, unsigned index) {
 
 // Area 42's and 44's own functions another of them calls directly, by their
 // original addresses (each is patched to ours; the fuzz stands a recorder in).
-constexpr U kCheckAll42 = 0x4068D0, kSetGates44 = 0x407320, kPushParty44 = 0x4077F0;
+constexpr U kCheckAll42 = bof3::addr::Area42_CheckAll, kSetGates44 = bof3::addr::Area44_SetGates,
+    kPushParty44 = bof3::addr::Area44_PushParty;
 using CheckAllFn = unsigned char (__cdecl*)();
 using PushPartyFn = void (__cdecl*)(unsigned, unsigned);
 
 // Area 45's (area 16's copy's) own functions another of them calls directly.
-constexpr U kFrameStep45 = 0x408070, kFrameHold45 = 0x4080C0, kBoxStep45 = 0x408140;
-constexpr U kDrawFrame45 = 0x4082A0, kDrawSprite45 = 0x408470, kDrawHud45 = 0x4086D0;
+constexpr U kFrameStep45 = bof3::addr::Area45_FrameStep, kFrameHold45 = bof3::addr::Area45_FrameHold,
+    kBoxStep45 = bof3::addr::Area45_BoxStep;
+constexpr U kDrawFrame45 = bof3::addr::Area45_DrawFrame, kDrawSprite45 = bof3::addr::Area45_DrawSprite,
+    kDrawHud45 = bof3::addr::Area45_DrawHud;
 using DrawAt = void (__cdecl*)(int, int);
 using DrawSpriteAt = void (__cdecl*)(int, int, unsigned);
 

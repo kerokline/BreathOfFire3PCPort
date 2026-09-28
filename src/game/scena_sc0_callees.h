@@ -6,6 +6,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 #include "game/scenario_harness.h"
 
 namespace scena_sc0 {
@@ -49,15 +55,15 @@ constexpr std::uint32_t kCorner = 0x92A0C0;       // MapView_CornerPtr
 
 // --- callees nobody owns, by address -----------------------------------------
 // SE's (round ten): an event battle's set-up by index.
-constexpr std::uint32_t kEventBattle = 0x4410B0;
+constexpr std::uint32_t kEventBattle = bof3::addr::Field_StartEventBattle;
 // Nobody's: x, z and an index - an event battle's party placement (0x903780 / 84).
-constexpr std::uint32_t kPlaceParty = 0x532ED0;
+constexpr std::uint32_t kPlaceParty = bof3::addr::Party_PlaceForBattle;
 // Nobody's: the camera turned toward an s16 angle at an s8 speed; al 1 while turning.
-constexpr std::uint32_t kTurnCamera = 0x57C6B0;
+constexpr std::uint32_t kTurnCamera = bof3::addr::Camera_EaseAngleFB;
 // Nobody's: the view shift after a focus test (PSX 0x80155154).
-constexpr std::uint32_t kViewShift = 0x56FCA0;
+constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;
 // Nobody's: Field_StatusBits |= 0x80.
-constexpr std::uint32_t kStatus80 = 0x56D6F0;
+constexpr std::uint32_t kStatus80 = bof3::addr::Field_SetStatus80;
 
 inline void EventBattle(unsigned n) { SH_AT(void (__cdecl*)(unsigned), kEventBattle)(n); }
 inline void PlaceParty(std::uint32_t x, std::uint32_t z, unsigned n) {

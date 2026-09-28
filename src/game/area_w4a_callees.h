@@ -11,6 +11,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w4a {
 namespace at {
 
@@ -87,7 +93,8 @@ constexpr WorldMapTables kWm152 = {
     0x637450, 0x63745C, 0x63746C, 0x637474,
     0x63747C, 0x637480, 0x637484,
     0x803580, 0x1D1,
-    0x424E80, 0x424ED0, 0x424F50, 0x4250B0, 0x425280, 0x425340,
+    bof3::addr::Area152_FrameStep, bof3::addr::Area152_FrameHold, bof3::addr::Area152_BoxStep,
+    bof3::addr::Area152_DrawFrame, bof3::addr::Area152_DrawSprite, bof3::addr::Area152_DrawHud,
 };
 
 // --- the other areas' own ---------------------------------------------------------

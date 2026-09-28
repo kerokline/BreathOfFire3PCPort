@@ -22,6 +22,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w3b {
 namespace at {
 
@@ -113,32 +119,33 @@ constexpr WorldMapTables kWm121 = {
     0x624668, 0x6246C0,
     0x6246D8, 0x6246E4, 0x6246F4, 0x6246FC,
     0x803580, 0x158,
-    0x41AFB0, 0x41B000, 0x41B080, 0x41B1E0, 0x41B3B0, 0x41B470,
+    bof3::addr::Area121_FrameStep, bof3::addr::Area121_FrameHold, bof3::addr::Area121_BoxStep,
+    bof3::addr::Area121_DrawFrame, bof3::addr::Area121_DrawSprite, bof3::addr::Area121_DrawHud,
 };
 
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kLeaderHalt104 = 0x415640;
-constexpr std::uint32_t kLeaderPace104 = 0x415680;
-constexpr std::uint32_t kLeaderCharge104 = 0x4156C0;
-constexpr std::uint32_t kGaugeRow104 = 0x415940;
+constexpr std::uint32_t kLeaderHalt104 = bof3::addr::Area104_StopMotion;
+constexpr std::uint32_t kLeaderPace104 = bof3::addr::Area104_PoseByCharge;
+constexpr std::uint32_t kLeaderCharge104 = bof3::addr::Area104_LeaderCharge;
+constexpr std::uint32_t kGaugeRow104 = bof3::addr::Area104_DrawGauge;
 
 // Area 121's own functions another of them calls directly (by the original
 // address, so the fuzz can stand a recorder in).
-constexpr std::uint32_t kPushObject = 0x41BC60;
-constexpr std::uint32_t kStepAround = 0x41BDA0;
-constexpr std::uint32_t kDirectionTo = 0x41BE10;
-constexpr std::uint32_t kStepOffObject = 0x41BEC0;
-constexpr std::uint32_t kLeaderControl = 0x41B9F0;
-constexpr std::uint32_t kMenuButton = 0x41C0A0;
-constexpr std::uint32_t kRequest4Button = 0x41C0E0;
-constexpr std::uint32_t kTurnInput = 0x41C110;
-constexpr std::uint32_t kKind5CFollow = 0x41C270;
-constexpr std::uint32_t kGaugeSprite = 0x41C350;
-constexpr std::uint32_t kKind5CFace = 0x41C3E0;
-constexpr std::uint32_t kKind5CTurnStep = 0x41C440;
-constexpr std::uint32_t kKind5CTurn = 0x41C510;
-constexpr std::uint32_t kRingRise = 0x41C5B0;
+constexpr std::uint32_t kPushObject = bof3::addr::Area121_PushObject;
+constexpr std::uint32_t kStepAround = bof3::addr::Area121_StepAround;
+constexpr std::uint32_t kDirectionTo = bof3::addr::Area121_DirectionTo;
+constexpr std::uint32_t kStepOffObject = bof3::addr::Area121_StepOffObject;
+constexpr std::uint32_t kLeaderControl = bof3::addr::Area121_LeaderControl;
+constexpr std::uint32_t kMenuButton = bof3::addr::Area121_MenuButton;
+constexpr std::uint32_t kRequest4Button = bof3::addr::Area121_Request4Button;
+constexpr std::uint32_t kTurnInput = bof3::addr::Area121_TurnInput;
+constexpr std::uint32_t kKind5CFollow = bof3::addr::Area121_Kind5CFollow;
+constexpr std::uint32_t kGaugeSprite = bof3::addr::Area121_GaugeSprite;
+constexpr std::uint32_t kKind5CFace = bof3::addr::Area121_Kind5CFace;
+constexpr std::uint32_t kKind5CTurnStep = bof3::addr::Area121_Kind5CTurnStep;
+constexpr std::uint32_t kKind5CTurn = bof3::addr::Area121_Kind5CTurn;
+constexpr std::uint32_t kRingRise = bof3::addr::Area121_RingRise;
 
 }  // namespace area_w3b

@@ -8,6 +8,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace area_w0c {
 namespace at {
 
@@ -87,7 +93,7 @@ constexpr unsigned kArea36EffectStateCount = 2;
 // dwords (a position); called by area 36's effect state 1 and from engine
 // code at 0x475CE2 / 0x47EF32. Unread here: a raw address until its group
 // names it.
-constexpr std::uint32_t kPositionHook = 0x4220D0;
+constexpr std::uint32_t kPositionHook = bof3::addr::Area146_DrawGlowCylinder;
 
 }  // namespace at
 }  // namespace area_w0c

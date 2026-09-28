@@ -8,6 +8,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
+// every constant here whose target is ours reads bof3::addr::<Name>. The values
+// are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
+// of the wave that wrote them.
 namespace scena_sc1 {
 namespace at {
 
@@ -52,12 +58,12 @@ constexpr std::uint32_t kShopByteC = 0x929EC2;     // u8: 1
 
 // Callees no group owns (SH_AT), with the types the originals call them by.
 namespace callee {
-constexpr std::uint32_t kPartyPlace = 0x532ED0;    // void (int x, int z, unsigned facing): every member to (x, z)
-constexpr std::uint32_t kPartyRestore = 0x533E50;  // void (void): the members' records rebuilt (Char_RecalcStats)
-constexpr std::uint32_t kAngleTest = 0x57C550;     // unsigned char (s16 a, s8 b): 0x57C5A0 on the two scaled; al tested
-constexpr std::uint32_t kStatusBit80 = 0x56D6F0;   // void (void): Field_StatusBits |= 0x80
-constexpr std::uint32_t kCellFind = 0x56D800;      // unsigned char (const record *, n, x, z): the record's index or 0xFF
-constexpr std::uint32_t kSeHelper = 0x4410B0;      // void (unsigned char n): group SE's (round ten wave one)
+constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;    // void (int x, int z, unsigned facing): every member to (x, z)
+constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;  // void (void): the members' records rebuilt (Char_RecalcStats)
+constexpr std::uint32_t kAngleTest = bof3::addr::Camera_TurnToDegrees;     // unsigned char (s16 a, s8 b): 0x57C5A0 on the two scaled; al tested
+constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;   // void (void): Field_StatusBits |= 0x80
+constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;      // unsigned char (const record *, n, x, z): the record's index or 0xFF
+constexpr std::uint32_t kSeHelper = bof3::addr::Field_StartEventBattle;      // void (unsigned char n): group SE's (round ten wave one)
 
 using PartyPlaceFn = void (__cdecl*)(int, int, unsigned);
 using VoidFn = void (__cdecl*)();
