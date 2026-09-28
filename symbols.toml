@@ -53438,3 +53438,628 @@ pc = 0x6698B0
 name = "Formation_SlotVectors"
 status = "evidence"
 evidence = "read 2026-09-28, group SX2: rows of two dwords (dx, dz) by group * 3 + slot, the group 0x904060 (+1 at two members, +4 at three); Party_PlaceInFormation multiplies them by BattleFormation_Offsets' quarter-scales. Its length is not established (the index is unchecked)."
+
+[[func]]
+pc = 0x40B8C0
+name = "Area65_PlaceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40B8C0..0x40BA37 (0x178), cdecl, capstone to the last instruction, group AR1E. WorldMap_FieldHooks entry 3 (area 65 is WorldMap_Records[3]). Area 45's Area45_PlaceMessage (0x407B40) over area 65's tables but for the name sets' shape: two 6-byte sets (id, five items) at 0x604874, 2 for none, and FIVE Text_Records rows (0x904CE0..0x904D80; area 45's three 5-byte sets over four rows); rows Area65_PlaceMessages (11), cells Area65_Cells (unbounded search). Four more bytes than area 45's copy (the * 6 row arithmetic), its last two call sites at +0x117 / +0x158. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BA40
+name = "Area65_PlateRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BA40..0x40BB15 (0xD6), cdecl, capstone to the last instruction, group AR1E. WorldMap_Records[3] +0. Area 45's Area45_PlateRun (0x407CC0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); Area65_PlateStates 0x604880 by +1 (ours aborts past 5). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BB20
+name = "Area65_PlateStart"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BB20..0x40BB6D (0x4E), cdecl, capstone to the last instruction, group AR1E. Area65_PlateStates 0. Area 45's Area45_PlateStart (0x407DA0) but for the bank: Sprite_SetAnimationBank(0x53) where area 45 pushes 0x3B and area 16 0xF. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BB70
+name = "Area65_PlateShow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BB70..0x40BCB1 (0x142), cdecl, capstone to the last instruction, group AR1E. Area65_PlateStates 1. Area 45's Area45_PlateShow (0x407DF0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); Area65_PlateAnims 0x6043C8 searched with no bound. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BCC0
+name = "Area65_PlateGrow"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BCC0..0x40BD00 (0x41), cdecl, capstone to the last instruction, group AR1E. Area65_PlateStates 2. Area 45's Area45_PlateGrow (0x407F40) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BD10
+name = "Area65_PlateHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BD10..0x40BD67 (0x58), cdecl, capstone to the last instruction, group AR1E. Area65_PlateStates 3. Area 45's Area45_PlateHold (0x407F90) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BD70
+name = "Area65_PlateShrink"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BD70..0x40BDBF (0x50), cdecl, capstone to the last instruction, group AR1E. Area65_PlateStates 4. Area 45's Area45_PlateShrink (0x407FF0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BDC0
+name = "Area65_HudRun"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BDC0..0x40BDD1 (0x12), cdecl, capstone to the last instruction, group AR1E. WorldMap_Records[3] +0xC: jmp [Area65_HudStates 0x604894 + +1 * 4] - WorldMapHud_Start, Area65_HudFrame (ours aborts past 2). Area 45's 0x408040. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BDE0
+name = "Area65_HudFrame"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BDE0..0x40BDE9 (0xA), cdecl, capstone to the last instruction, group AR1E. Area65_HudStates 1: call Area65_FrameStep 0x40BDF0; jmp Area65_BoxStep 0x40BEC0. Area 45's 0x408060. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BDF0
+name = "Area65_FrameStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BDF0..0x40BE01 (0x12), cdecl, capstone to the last instruction, group AR1E. called by Area65_HudFrame: jmp [Area65_FrameStates 0x60489C + +2 * 4] (ours aborts past 4). Area 45's 0x408070. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BE10
+name = "Area65_FrameSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BE10..0x40BE30 (0x21), cdecl, capstone to the last instruction, group AR1E. Area65_FrameStates 1. Area 45's Area45_FrameSlideIn (0x408090) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BE40
+name = "Area65_FrameHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BE40..0x40BE67 (0x28), cdecl, capstone to the last instruction, group AR1E. Area65_FrameStates 2. Area 45's Area45_FrameHold (0x4080C0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BE70
+name = "Area65_FrameSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BE70..0x40BEB0 (0x41), cdecl, capstone to the last instruction, group AR1E. Area65_FrameStates 3. Area 45's Area45_FrameSlideOut (0x4080F0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BEC0
+name = "Area65_BoxStep"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BEC0..0x40BED1 (0x12), cdecl, capstone to the last instruction, group AR1E. called by Area65_HudFrame: jmp [Area65_BoxStates 0x6048AC + +3 * 4] (ours aborts past 4). Area 45's 0x408140. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BEE0
+name = "Area65_BoxSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BEE0..0x40BF41 (0x62), cdecl, capstone to the last instruction, group AR1E. Area65_BoxStates 1. Area 45's Area45_BoxSlideIn (0x408160) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BF50
+name = "Area65_BoxHold"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BF50..0x40BFBD (0x6E), cdecl, capstone to the last instruction, group AR1E. Area65_BoxStates 2. Area 45's Area45_BoxHold (0x4081D0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40BFC0
+name = "Area65_BoxSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40BFC0..0x40C016 (0x57), cdecl, capstone to the last instruction, group AR1E. Area65_BoxStates 3. Area 45's Area45_BoxSlideOut (0x408240) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C020
+name = "Area65_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C020..0x40C1E4 (0x1C5), cdecl, capstone to the last instruction, group AR1E. called by Area65_FrameHold / _FrameSlideOut. Area 45's Area45_DrawFrame (0x4082A0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); buttons Area65_Buttons (the second legend reads eight entries), the needle WorldMap_DrawNeedle. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C1F0
+name = "Area65_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C1F0..0x40C2AB (0xBC), cdecl, capstone to the last instruction, group AR1E. called by Area65_DrawFrame / _DrawHud. Area 45's Area45_DrawSprite (0x408470) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); Area65_Sprites 0x6048BC by index & 0xFF unchecked. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C2B0
+name = "Area65_DrawHud"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C2B0..0x40C307 (0x58), cdecl, capstone to the last instruction, group AR1E. called by the three box states. Area 45's Area45_DrawHud (0x4086D0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ), the region label from area 45's cell 0x803584 (area 16's copy reads 0x803588). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C310
+name = "Area65_Record8Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C310..0x40C321 (0x12), cdecl, capstone to the last instruction, group AR1E. WorldMap_Records[3] +8: jmp [Area65_Record8States 0x60492C + +1 * 4] - 0x4253C0 (shared, AR4A's), Area65_Record8Place, Area65_Record8Move (ours aborts past 3). Area 45's 0x408730. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C330
+name = "Area65_Record8Place"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C330..0x40C483 (0x154), cdecl, capstone to the last instruction, group AR1E. Area65_Record8States 1. Area 45's Area45_Record8Place (0x408750) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); Area65_Directions / Area65_Record8Anims by +8 unchecked. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C490
+name = "Area65_Record8Move"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C490..0x40C4DA (0x4B), cdecl, capstone to the last instruction, group AR1E. the record +8 effect's state 2 of ten world maps (the Record8States tables of areas 16, 33, 45, 65, 87, 88, 115, 121, 151, 152 name it; one body in area 65's block, a gap the TSV's start list missed, the tool's rows list it): +0xB 0 and +0 bit 7 clear set +0xB = 1; +0xB set and +0 bit 7 set: tail jump Effect_Release; else +0x34 += +0xC, +0x38 += +0x10, Sprite_ScriptTick (answer not read), tail jump Sprite_UpdateScreen. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C4E0
+name = "Area65_Record4Run"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C4E0..0x40C4F1 (0x12), cdecl, capstone to the last instruction, group AR1E. WorldMap_Records[3] +4: jmp [Area65_Record4States 0x604950 + +1 * 4] - Area65_Record4MarkCell, Area45_Record4Tick 0x408990 (shared, AR1B's) (ours aborts past 2). Area 45's 0x4088B0. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C500
+name = "Area65_Record4MarkCell"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C500..0x40C5B4 (0xB5), cdecl, capstone to the last instruction, group AR1E. Area65_Record4States 0. Area 45's Area45_Record4MarkCell (0x4088D0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); the cell record Area65_Cells[+0xB] unchecked. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40C5C0
+name = "Area65_DrawDrift"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40C5C0..0x40CA21 (0x462), cdecl, capstone to the last instruction, group AR1E. WorldMap_Records[3] +0x10. Area 45's Area45_DrawDrift (0x4089A0) instruction for instruction over area 65's tables (a capstone compare: only jump targets, calls to its own copies and table operands differ); Area65_DriftUV by +0xB - 2 unchecked. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CA30
+name = "Area67_ChoiceMark6"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CA30..0x40CA52 (0x23), cdecl, capstone to the last instruction, group AR1E. area 67's choice 0 (descriptor 0x607000 +0x34 = 0x606FF4): message word 0x7DEE48 = Area67_MessagesA 0x607044 by the s8 choice (unchecked); choice 5 also sets the byte 0x903848 to 6. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CA60
+name = "Area67_ChoiceMessage"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CA60..0x40CA76 (0x17), cdecl, capstone to the last instruction, group AR1E. area 67's choice 1: message = Area67_MessagesB 0x607050 by the s8 choice (unchecked). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CA80
+name = "Area67_ChoiceMark5"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CA80..0x40CAA6 (0x27), cdecl, capstone to the last instruction, group AR1E. area 67's choice 2: message = Area67_MessagesC 0x60705C by the s8 choice (unchecked); choices 0 and 1 (signed tests) also set 0x903848 to 5. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CAB0
+name = "Area67_SetBit24"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CAB0..0x40CAB9 (0xA), cdecl, capstone to the last instruction, group AR1E. area 67's handler 0 (Area67_Handlers 0x606F20; also area 108's array; PSX 0x801F3EC4): Sprite_Current +0x24 |= 0x10. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CAC0
+name = "Area67_Object0XUp"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CAC0..0x40CACA (0xB), cdecl, capstone to the last instruction, group AR1E. area 67's handler 1 (also in area 131's array; PSX 0x801F3EE4): Sprite_Objects[0] +0x34 (0x7DEEB4) += 0x800. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CAD0
+name = "Area67_SpawnEffect2D"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CAD0..0x40CB0F (0x40), cdecl, capstone to the last instruction, group AR1E. area 67's handler 2 (PSX 0x801F3F00): Effect_FindFree; a slot: +0 = 1, kind +5 = 0x2D, +0x34 / +0x38 = Sprite_Current's. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CB10
+name = "Area67_Member0SpawnAt"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CB10..0x40CB55 (0x46), cdecl, capstone to the last instruction, group AR1E. area 67's handler 3 (PSX 0x801F3F80): Sprite_Current = the leader's record; Effect_SpawnAt(3, 0, Area67_SpawnAtArg 0x604BB8[party list byte 0x904062], the record's +0x34, +0x38, +0x3C); an answer other than 0xFF to Sprite_Current +0xB. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CB60
+name = "Area67_Member1SpawnAt"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CB60..0x40CBA5 (0x46), cdecl, capstone to the last instruction, group AR1E. area 67's handler 4 (PSX 0x801F400C): Area67_Member0SpawnAt's shape for member 1 (record 0x802E8C, id 0x904063). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CBB0
+name = "Area67_Member2SpawnAt"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CBB0..0x40CBF8 (0x49), cdecl, capstone to the last instruction, group AR1E. area 67's handler 5 (PSX 0x801F4098): the same for member 2 (record 0x802FD8, id 0x904064 read as a dword & 0xFF). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CC00
+name = "Area67_Member0Spawn3"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CC00..0x40CC41 (0x42), cdecl, capstone to the last instruction, group AR1E. area 67's handler 6 (PSX 0x801F4124): Sprite_Current = the leader's record; Effect_Spawn(3, 0, Area67_SpawnAtArg[id], the words +0x2E, +0x30); an answer other than 0xFF to Sprite_Current +0xB. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CC50
+name = "Area67_Member1Spawn3"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CC50..0x40CC91 (0x42), cdecl, capstone to the last instruction, group AR1E. area 67's handler 7 (PSX 0x801F41A4): Area67_Member0Spawn3's shape for member 1. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CCA0
+name = "Area67_Member2Spawn3"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CCA0..0x40CCE5 (0x46), cdecl, capstone to the last instruction, group AR1E. area 67's handler 8 (PSX 0x801F4224): the same for member 2. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CCF0
+name = "Area67_Member0Spawn1"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CCF0..0x40CD31 (0x42), cdecl, capstone to the last instruction, group AR1E. area 67's handler 9 (PSX 0x801F42A4): Effect_Spawn kind 1 at the leader's record with Area67_SpawnArgB 0x604BC0[id]; the answer as Member0Spawn3. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CD40
+name = "Area67_Member1Spawn1"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CD40..0x40CD81 (0x42), cdecl, capstone to the last instruction, group AR1E. area 67's handler 10 (PSX 0x801F4324): the same for member 1. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CD90
+name = "Area67_Member2Spawn1"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CD90..0x40CDD5 (0x46), cdecl, capstone to the last instruction, group AR1E. area 67's handler 11 (PSX 0x801F43A4): the same for member 2. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CDE0
+name = "Area67_Object0XDown"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CDE0..0x40CDEA (0xB), cdecl, capstone to the last instruction, group AR1E. area 67's handler 12 (also in area 131's array; PSX 0x801F4424): Sprite_Objects[0] +0x34 -= 0x800. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CDF0
+name = "Area67_Object1XUp"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CDF0..0x40CDFA (0xB), cdecl, capstone to the last instruction, group AR1E. area 67's handler 13 (PSX 0x801F4440): Sprite_Objects[1] +0x34 (0x7DEF58) += 0x800. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CE00
+name = "Area67_Object1XDown"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CE00..0x40CE0A (0xB), cdecl, capstone to the last instruction, group AR1E. area 67's handler 14 (PSX 0x801F445C): Sprite_Objects[1] +0x34 -= 0x800. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CE10
+name = "Area67_MusicFade10"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CE10..0x40CE18 (0x9), cdecl, capstone to the last instruction, group AR1E. handler 15 of areas 67, 7, 19 and 130 (one body, in area 67's block; PSX 0x801F4478): Music_FadeOutStop(10). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CE20
+name = "Area67_LeaderSpawn4"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CE20..0x40CE61 (0x42), cdecl, capstone to the last instruction, group AR1E. area 67's handler 16 (PSX 0x801F449C): Effect_Spawn kind 4 at the leader's record with Area67_SpawnArgC 0x604BC8[id]; the answer as Member0Spawn3. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CE70
+name = "Area67_ResetOn6"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CE70..0x40CEBE (0x4F), cdecl, capstone to the last instruction, group AR1E. area 67's handler 17 (PSX 0x801F451C): Field_ActiveMember +0x80 bit 0 cleared; when the leader's +0x89 is 6: ScriptFlags_Set40, MoveScript_Var7 = 4, bytes 0x903848..0x90384B and 0x8034E5 zeroed. docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CEC0
+name = "Area67_ClearCell"
+ret = "void"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CEC0..0x40CECE (0xF), cdecl, capstone to the last instruction, group AR1E. area 67's handler 18 (PSX 0x801F45BC): AreaMap_SetByte(0x25, 0xB, 0). docs/area_w1e.md."
+
+[[func]]
+pc = 0x40CED0
+name = "Area67_Trigger31"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/area_w1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28, 0x40CED0..0x40CEEC (0x1D), cdecl, capstone to the last instruction, group AR1E. Field_ObjectTriggers id 31 (0x662E98; called (object, 0x904030), neither read; a gap function by the tool's start list, in area 67's block by address): ScriptFlags_Set40, tail kind 0x9039F3 = 0x2C (engine 0x56DE50), state 0x9039F4 = 0, 0x9039F5 = 1; al 0. docs/area_w1e.md."
+
+[[data]]
+pc = 0x6043C8
+name = "Area65_PlateAnims"
+ctype = "unsigned char"
+count = 44
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: (u16 place, u8 animation, u8) x 11, searched by Area65_PlateShow with no bound. docs/area_w1e.md."
+
+[[data]]
+pc = 0x6043F4
+name = "Area65_Cells"
+ctype = "unsigned char"
+count = 728
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: (u8 x, u8 z, u8, u8 id) x 182, searched by Area65_PlaceMessage with no bound and indexed by Area65_Record4MarkCell's +0xB unchecked; area 65's choice table 0x6046CC and descriptor 0x6046D0 follow. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604714
+name = "Area65_PlaceMessages"
+ctype = "unsigned short"
+count = 176
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: 11 rows of 0x20: u16 place, fifteen u16 messages by the s8 chapter; Area65_PlaceMessage. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604874
+name = "Area65_NameSets"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: 2 records of (u8 id, u8 item x 5): Area65_PlaceMessage's name sets (area 45's are 3 of 5 bytes); the set none, 2, reads Area65_PlateStates' first bytes. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604880
+name = "Area65_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area65_PlateRun by +1: Area65_PlateStart, _PlateShow, _PlateGrow, _PlateHold, _PlateShrink. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604894
+name = "Area65_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area65_HudRun by +1: WorldMapHud_Start (shared), Area65_HudFrame. docs/area_w1e.md."
+
+[[data]]
+pc = 0x60489C
+name = "Area65_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area65_FrameStep by +2: WorldMap_FrameWait (shared), Area65_FrameSlideIn, _FrameHold, _FrameSlideOut. docs/area_w1e.md."
+
+[[data]]
+pc = 0x6048AC
+name = "Area65_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area65_BoxStep by +3: WorldMapHud_BoxWait (shared), Area65_BoxSlideIn, _BoxHold, _BoxSlideOut. docs/area_w1e.md."
+
+[[data]]
+pc = 0x6048BC
+name = "Area65_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: (w, h, u, v) x 22: Area65_DrawSprite by index & 0xFF unchecked. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604914
+name = "Area65_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: (u16 mask, u8 sprite, u8) x 6: Area65_DrawFrame's legend keys (the second legend reads eight, into Area65_Record8States). docs/area_w1e.md."
+
+[[data]]
+pc = 0x60492C
+name = "Area65_Record8States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area65_Record8Run by +1: 0x4253C0 (shared, AR4A's), Area65_Record8Place, Area65_Record8Move (shared by ten world maps). docs/area_w1e.md."
+
+[[data]]
+pc = 0x604938
+name = "Area65_Directions"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: (dx, dz) x 4: Area65_Record8Place by +8 unchecked. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604948
+name = "Area65_Record8Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: (animation, +0x2A) x 4: Area65_Record8Place by +8 unchecked. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604950
+name = "Area65_Record4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area65_Record4Run by +1: Area65_Record4MarkCell, Area45_Record4Tick (shared). docs/area_w1e.md."
+
+[[data]]
+pc = 0x604958
+name = "Area65_DriftUV"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: u base, v base, cell size - four each by +0xB - 2: Area65_DrawDrift. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604BB8
+name = "Area67_SpawnAtArg"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: the effect argument by a member's character id (unchecked): Area67_Member*SpawnAt and _Member*Spawn3; in area 66's data block after its descriptor 0x604B70, read only by area 67's handlers. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604BC0
+name = "Area67_SpawnArgB"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: the same for Area67_Member*Spawn1. docs/area_w1e.md."
+
+[[data]]
+pc = 0x604BC8
+name = "Area67_SpawnArgC"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: the same for Area67_LeaderSpawn4. docs/area_w1e.md."
+
+[[data]]
+pc = 0x606F20
+name = "Area67_Handlers"
+ctype = "unsigned long"
+count = 19
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: area 67's descriptor 0x607000 +0x3C: Area67_SetBit24 .. Area67_ClearCell (0x40CAB0..0x40CEC0); its movement scripts follow. docs/area_w1e.md."
+
+[[data]]
+pc = 0x606FF4
+name = "Area67_Choices"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: area 67's descriptor +0x34: Area67_ChoiceMark6, Area67_ChoiceMessage, Area67_ChoiceMark5. docs/area_w1e.md."
+
+[[data]]
+pc = 0x607044
+name = "Area67_MessagesA"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area67_ChoiceMark6's messages by the s8 choice, unchecked. docs/area_w1e.md."
+
+[[data]]
+pc = 0x607050
+name = "Area67_MessagesB"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area67_ChoiceMessage's, unchecked. docs/area_w1e.md."
+
+[[data]]
+pc = 0x60705C
+name = "Area67_MessagesC"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28, group AR1E: Area67_ChoiceMark5's, unchecked. docs/area_w1e.md."
