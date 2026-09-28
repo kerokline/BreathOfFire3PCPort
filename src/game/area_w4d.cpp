@@ -101,8 +101,8 @@ bool HasZenny500() { return static_cast<U>(Long(Mem(at::kZenny))) >= 0x1F4; }
 
 // Area 175's handler 2 and its glide step: x += step << 11, z -= step << 11
 // (the step a signed byte of `steps` by `index & 0xF`), each through
-// `object`; the z step read with `index2` (the originals read the index again
-// for the z half).
+// `object`; the callers pass the object and the index read again for the z
+// half, as the originals read them.
 void SlideBy(unsigned char* object, U steps, unsigned index) {
     const std::int32_t step = static_cast<signed char>(B(steps + (index & 0xF)));
     AddLong(object + 0x34, static_cast<U>(step) << 11);

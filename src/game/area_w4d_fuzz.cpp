@@ -358,6 +358,9 @@ const ah::Callee kCallees[] = {
 // angles.
 ah::Region g_regions[] = {
     {at::kEffectObjects, at::kEffectCount * at::kEffectStride},
+    // effect "record" 0xFF, where a spawn that took the miss for a slot
+    // would write (control A37 stood until this was compared)
+    {at::kEffectObjects + 0xFF * at::kEffectStride, at::kEffectStride},
     {at::kActiveMember, 4},
     {at::kScriptObject, 4},
     {at::kFocusObject, 4},
