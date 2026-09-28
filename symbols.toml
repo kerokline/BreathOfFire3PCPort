@@ -48166,3 +48166,562 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-27, group SC5: Scena05_CellHook by the record index: Scena05_Cell0, Scena05_Cell1; a zero dword and the eight bytes 0x6610D8 follow, then Scena06_Hooks."
+
+# ---------------------------------------------------------------------------
+# Round ten group SC13: chapters 13 and 14, 0x561DB0..0x567DC0 (docs/scena_sc13.md)
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x561DB0
+name = "Scena13_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x561DB0..0x561DBD (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x66179C] - slot 0 of chapter 13s vtable Scena13_Hooks 0x661788 (0x662C80 entry 13), Field_ModeDispatchs call; Scena13_States: 0 Scena13_Start, 1 Scena13_EnterArea, 2 Scena13_Run. The shape of Scena12_Frame; ours aborts outside the three entries."
+
+[[func]]
+pc = 0x561DC0
+name = "Scena13_Start"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x561DC0..0x561DFA (0x3B bytes): Scena13_States entry 0: ScriptFlags_Set40, Draw_PassFlags 0x1F, the party pass 0x533E50, Scenario_CallA(0), story flag 0x43 set and 0x42 cleared through the literal 0x904030, state 1. 5 calls."
+
+[[func]]
+pc = 0x561E00
+name = "Scena13_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x561E00..0x56227D (0x47E bytes): Scena13_States entry 1, by Game_AreaNumber 0x56, 0x58, 0x70, 0x7E, 0x8F, 0x90, 0x91, 0xC2 and Cond_ByteFD: flags 0 / 2..4 / 7 / 8 / 0xB..0xE / 0x11..0x13 / 0x17 / 0x1F, drop-ins, call-table A entries 1, 2, 4..6, camera angles and distance, camera effects of kind 0x13 / 0x31 through its slot cell Scena13_Slot 0x6BC738, the area code 0x420A90(1 / 0), Music_FadeOut, runs 1 / 3 / 4 / 7, Scena13_SpawnPairA / B in area 0xC2. Area 0x56 at FD 1 with the word 0x802290 not 0x70, 0x58 with it not 0x91, 0x70 at FD not 4 jump straight to the end; every exit stores state 2. 46 calls."
+
+[[func]]
+pc = 0x562280
+name = "Scena13_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x562280..0x56228D (0xE bytes): movsx eax, byte 0x8034E4 / jmp [eax*4 + 0x6617A8] - state 2, Scena13_Runs: 0 a bare ret (0x437CC0), 1..8 Run1..Run8. Ours aborts outside the nine entries (the next dword is 0, then Scena13_EventOps)."
+
+[[func]]
+pc = 0x562290
+name = "Scena13_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x562290..0x5623FF (0x170 bytes): jump table 0x5623E8 (6): run 1, steps 0..5 - a camera effect, a transition at counter 0 = 8, Task_Sleep and Field_Request 6, flag 0 and Field_ChangeArea(0x7E), the transition back, Field_ScriptFlags bit 3 cleared, the runs end. 7 calls."
+
+[[func]]
+pc = 0x562400
+name = "Scena13_Run2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x562400..0x5626F7 (0x2F8 bytes): jump table 0x5626C8 (12): run 2, steps 0..0xB - three area changes into 0xC2 with effects of kind 0x75 (Scena13_Slot) and Music_FadeOutStop(8), flags 2..5, a 0x78-frame hold, Scenario_CallA(3) and Sound_LoadStream(0) waited with Sound_StreamDone, the party pass 0x533E50 and Field_ChangeArea(0x97), Transition_Start(0xB), the runs end. 21 calls."
+
+[[func]]
+pc = 0x562700
+name = "Scena13_SpawnPairA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x562700..0x562793 (0x94 bytes): two free Sprite_Objects records by 0x57CD90 (the first +0 = 1 before the second is looked for, back to 0 when there is none); then for each its slot to the word 0x903850 and EventOp_6x on Scena13_EventOps records 0 (0x6617D0) and 1 (0x6617E0). Called by Scena13_EnterArea in area 0xC2. 4 calls."
+
+[[func]]
+pc = 0x5627A0
+name = "Scena13_SpawnPairB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5627A0..0x562833 (0x94 bytes): Scena13_SpawnPairA with Scena13_EventOps records 2 (0x6617F0) and 3 (0x661800). Called by Scena13_EnterArea in area 0xC2. 4 calls."
+
+[[func]]
+pc = 0x562840
+name = "Scena13_Run3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x562840..0x562CE8 (0x4A9 bytes): byte table 0x562CD0 (0x19) behind jump table 0x562C90 (16): run 3, steps 0..5, 0xA..0xD, 0x14..0x18 - camera effects with MapView_ElevationOffset moved by 0xF800 / 0x800 and Cond_ByteFE, flag 7, drop-in 7, 0x591920(0xB) and Kind2_Place(2), message 0x18 and 0x19 with the kind-2 sprite placed at (0xA0000, 0x620000), Field_ViewReset and a transition, flag 9 and area 0x91 (Music_Track 0x5C), area 0x58, a timed effect of kind 0x80, area 0x70, flag 0xB. 20 calls."
+
+[[func]]
+pc = 0x562CF0
+name = "Scena13_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x562CF0..0x56308F (0x3A0 bytes): byte table 0x563070 (0x20) behind jump table 0x56302C (17): run 4, steps 0, 1, 0xA, 0xB, 0x14..0x1F - message 0x12; Effect_SpawnAt(4, 5, MoveScript_EffectArg[the leader], ObjTrio +0x34 / +0x38 / +0x3C) to Scena13_Slot and flag 0xD when it ends; a chain of area changes 0x56 / 0x58 with messages 2, 0xA, 0x14, flags 0xE / 0xF, MoveCmd_TestFB(0xC, 9), Music_FadeOut / FadeOutStop. ebx holds the switch bound 0x1F throughout, so step 0x1E stores 0x1F to Draw_PassFlags and to the step. 21 calls."
+
+[[func]]
+pc = 0x563090
+name = "Scena13_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x563090..0x56338F (0x300 bytes): jump table 0x56334C (17): run 5, steps 0..3, 5, 6, 0xA..0x10 - a dial: the dword Sprite_ObjectsExtra record 1 + 0x6C turned by 0x10 while Input_Held bit 0x2000 / 0x8000 is held, Scena13_ToneLevels following it, until Input_Pressed bit 0x20; 0x4A0..0x4E0 goes on to step 0xA (sounds 0x20A / 0x209, drop-in 2, MoveCmd_TestFB(0xA, 8), an effect of kind 0x7F, Sound_LoadStream(5) and message 5, Music_Play(Music_Track, 0x20), flag 0x10), anything else to 5 (drop-in 1). 21 calls."
+
+[[func]]
+pc = 0x563390
+name = "Scena13_ToneLevels"
+ret = "void"
+params = "unsigned angle"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x563390..0x5633EB (0x5C bytes): two sound voices levels from the dial angle a (16-bit): 0x587890(0x208, |Math_Sin((a - 0x4C0) >> 1)| >> 5 & 0xFFFF) and (0x207, the same of (a - 0xCC0) >> 1). Called by Scena13_Run5. 4 calls."
+
+[[func]]
+pc = 0x5633F0
+name = "Scena13_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5633F0..0x563A13 (0x624 bytes): jump table 0x563998 (31): run 6, steps 0..0xF, 0x14, 0x15, 0x19..0x1E - area changes within 0x8F, camera effects of kind 0x13 / 0x31 / 0x81 through Scena13_Slot and counter 0 stepped on each ending, flags 0x11 / 0x12 / 0x14..0x16 / 0x20..0x22, message 0x14 / 0x26 / 0x2A, sound 0x205; step 0x19 calls Scenario_CallA(7) and drops member 7 in, copying +0x34 / +0x38 of the object 0x903804 points at into ObjTrio record 2 with its elevation, then that objects +0 byte 0. 33 calls."
+
+[[func]]
+pc = 0x563A20
+name = "Scena13_Run7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x563A20..0x563F17 (0x4F8 bytes): jump table 0x563EA0 (30): run 7, steps 0..0xA, 0x14..0x1A, 0x1C, 0x1D - four captions (Scena13_Caption 6 / 7 / 8 / 9 for 5, 5, 10, 5 seconds) on the word timer 0x8034E6, transitions 0 / 7 / 6 / 1, Music_Play(0x6F, 0x10), a camera effect of kind 0x31; then a battle - Camera_Distance swung by 0x50 a frame, an effect of kind 0x87, Field_Kind2X / Z (0x240000, 0x1C8000) with Field_ViewReset, 0x532ED0(0x288000, 0x1D8000, 0x25), Field_StartEventBattle(0x25); drop-in 7, an effect of kind 0x86, flags 0x17 / 0x1A. Step 0x16 waits for the timer at 0 without counting it down. 21 calls."
+
+[[func]]
+pc = 0x563F20
+name = "Scena13_Caption"
+ret = "void"
+params = "unsigned index, unsigned seconds"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x563F20..0x563FD8 (0xB9 bytes): a caption: the index to the word 0x7DEE48, total = seconds * 30 - 1 to 0x903852, the clock total - timer 0x8034E6 to 0x903850 (16-bit); while the clock is below the total, Text_DrawAt(0x50, 0x3C, 0, 0xFF, 0x803582 + the word at 0x803580 + index * 2) and then (the clock re-read) ClutStrip_FadeTo(clock) below 0x20, ClutStrip_Restore at 0x20, ClutStrip_FadeTo(total - clock) in the last 0x20; the clock at the total ClutStrip_Restore (a tail jump), past it nothing. Called by Scena13_Run7. 5 calls."
+
+[[func]]
+pc = 0x563FE0
+name = "Scena13_Run8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x563FE0..0x56411F (0x140 bytes): jump table 0x5640F0 (12): run 8, steps 0, 4..6, 8, 0xA, 0xB - with ObjTrio records 1 and 2 + 0x137 both 0, drop-in 0xA and flag 0x1D; messages 1 / 0x4E; at counter 0 = 0x28 Field_ChangeArea(0x97), flag 0x1E, the runs end and 0x56D6F0. 8 calls."
+
+[[func]]
+pc = 0x564120
+name = "Scena13_ObjectTrigger"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564120..0x56413E (0x1F bytes): slot 1 of Scena13_Hooks, called by 0x56D6D0 with the object: call [0x661810 + object +0x86 * 4] (object, [0x929ED0]) - Scena13_Objects, 4 entries; ours aborts past them."
+
+[[func]]
+pc = 0x564140
+name = "Scena13_Object00"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564140..0x56414B (0xC bytes): Scena13_Objects entry 0: the objects word +0x8A + 1."
+
+[[func]]
+pc = 0x564150
+name = "Scena13_Object01"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564150..0x564163 (0x14 bytes): Scena13_Objects entry 1: ScriptFlags_Set40, run 3, step 5."
+
+[[func]]
+pc = 0x564170
+name = "Scena13_Object02"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564170..0x564183 (0x14 bytes): Scena13_Objects entry 2: ScriptFlags_Set40, run 6, step 0x19."
+
+[[func]]
+pc = 0x564190
+name = "Scena13_Object03"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564190..0x5641BA (0x2B bytes): Scena13_Objects entry 3: flag 0x1C (through 0x929ED0, not its argument), ScriptFlags_Set40, the bytes 0x9039F3..F5 = 0x2C, 0, 0x11."
+
+[[func]]
+pc = 0x5641C0
+name = "Scena13_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5641C0..0x5645CA (0x40B bytes): slot 2 of Scena13_Hooks, the step hook (x, z 16.16; x compared whole or by its high word, z by its high word): areas 0x56, 0x70, 0x7F, 0x8F, 0x90, 0x91, 0x97, 0x9B by Cond_ByteFD, flags and cells - runs 4 (0x14, 0), 6 (0x14, 0), 8 (5, 4), 3 (0x14), 2; area 0x7F sets flag 6; area 0x90 stores the leader facing byte 0x802D48 (as last loaded into al) to 0x903850 and drops a member in by who leads (0x802DC9) and flags 0x18..0x1A, counter 0 = 1; the facing 0, 6 or 7 gates areas 0x70, 0x90, 0x91. Answers al 1 when it starts something. 24 calls."
+
+[[func]]
+pc = 0x5645D0
+name = "Scena13_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5645D0..0x564697 (0xC8 bytes): slot 3 of Scena13_Hooks, the arrive hook (x, z by their high words): area 0x8F at FD 0 with flag 0x1C set and 0x1D clear, x 0x2E, z 0x1F..0x22 - run 8 step 0, al 1; area 0x91 at FD 5 with flag 0xA clear, x 0x40..0x41, z 0x6A - flag 0xA and MoveCmd_TestFB(0x40, 0x6B), al 0. 6 calls."
+
+[[func]]
+pc = 0x5646A0
+name = "Scena14_Frame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5646A0..0x5646AD (0xE bytes): movsx eax, byte 0x8034E2 / jmp [eax*4 + 0x661834] - slot 0 of chapter 14s vtable Scena14_Hooks 0x661820 (0x662C80 entry 14); Scena14_States: 0 ScenaShared_State0, 1 Scena14_EnterArea, 2 Scena14_Run. Ours aborts outside the three entries."
+
+[[func]]
+pc = 0x5646B0
+name = "ScenaShared_State0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5646B0..0x5646B7 (0x8 bytes): mov byte 0x8034E2, 1 / ret: state 0 of chapters 5, 9, 10, 12, 14, 15, 18 and 19 - the only function eight chapter state tables share (0x661034, 0x6613FC, 0x661588, 0x6616F4, 0x661834, 0x661924, 0x662C44, 0x662C6C hold it; a byte search of the image finds no other reference). Its address lies in chapter 14s block, between Scena14_Frame and Scena14_EnterArea."
+
+[[func]]
+pc = 0x5646C0
+name = "Scena14_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5646C0..0x564E00 (0x741 bytes): Scena14_States entry 1, by Game_AreaNumber 0xB, 0x2B, 0x67, 0x78, 0x8D, 0x8E, 0x90, 0x93, 0x96, 0xAC, 0xBD, 0xBF, 0xC1, 0xC5 and Cond_ByteFD: flags, drop-ins, call-table A entries 0..0xC and B 0, party placements 0x532ED0 with kinds 0x22 / 0x1E / 0x25, Scena14_SpawnEffect camera effects, Scena14_GreyClut in area 0xB, the area code 0x4205D0, Cond_ByteFD 3 and Cond_ByteFE 1 in area 0x96, Effect_Objects record 0 bit 6 in 0xBD, the field effect at (0x1C8000, 0x268000) of kind 0x98, runs 2 / 5 / 7. Area 0xAC at FD not 0 jumps to the end; every exit stores state 2. 87 calls."
+
+[[func]]
+pc = 0x564E10
+name = "Scena14_GreyClut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564E10..0x564E7F (0x70 bytes): the 0x2000 colours of Gfx_ClutStrip 0x80F580 greyed (each the mean of its three 5-bit channels, sum / 3 by the multiply 0x55555556, in all three; bit 15 kept), Gfx_ClutStripDirty 1. The shape of Scena12_Run4 step 0x17s grey."
+
+[[func]]
+pc = 0x564E80
+name = "Scena14_SpawnEffect"
+ret = "unsigned char"
+params = "unsigned kind, unsigned x, unsigned y, unsigned z, unsigned life, unsigned w"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564E80..0x564EE6 (0x67 bytes): Effect_FindFree to Scena14_Slot 0x6BC73C; for a slot +0 = 1, +5 = kind, the dwords +0x64 / +0x68 / +0x6C the sign-extended words x / y / z, +0xC = w, +9 = life, al 1; none, al 0. 1 call."
+
+[[func]]
+pc = 0x564EF0
+name = "Scena14_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564EF0..0x564EFD (0xE bytes): movsx eax, byte 0x8034E4 / jmp [eax*4 + 0x661840] - state 2, Scena14_Runs: 0, 8, 9 a bare ret (0x437CC0), 1..7 Run1..Run7. Ours aborts outside the ten entries (Scena14_ShakeOffsets follows)."
+
+[[func]]
+pc = 0x564F00
+name = "Scena14_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x564F00..0x565235 (0x336 bytes): byte table 0x56521C (0x1A) behind jump table 0x5651F4 (10): run 1, steps 0..7, 0x14, 0x19 - drop-in 1, flag 1 and the trip to area 0xBD (Field_StatusBits bit 0 set, the music byte 0x904CD0 = Music_Track, 0x904153 = 2, 0x90405C = 0), messages 0x12..0x14 each with a camera effect, Menu_DrawHand(0x98, 0x28 / 0x38 / 0x10, 0) while Field_Request is 2, back to area 0xC1 (bit 0 cleared); steps 0x14 / 0x19 clear story flag 0x77 or set flags 2 / 3, set story flag 0x8A and end. 20 calls."
+
+[[func]]
+pc = 0x565240
+name = "Scena14_Run2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x565240..0x565873 (0x634 bytes): jump table 0x5657E0 (37): run 2, steps 0..8, 0xA..0x11, 0x14, 0x15, 0x19, 0x1D, 0x1E, 0x20..0x24 - Camera_Distance pulled out over 0xF0 frames ((0xF0 - timer) * 1900 / 240, signed), the three party objects +0x48 = 1, 0x532ED0 kind 0x25, sounds 0x202 / 0x200 / 0x201 with Scena14_Shake(4) and Cond_ByteFE 1..3, Camera_Distance timer * 1900 / 180 below 0xB4, 0x532ED0 kind 0x31 and Field_StartEventBattle(0x31); area 0xBF with flags 4 / 5, message 0x70, the record 0x903A70 + [0x669734] * 0xA4 (+0x1E = 9, +0x18 = 1), flag 6; message 0x7D; with ObjTrio +0x137 at 0 drop-in 3, flag 8 and Inventory_Add(0, 0x5A, 1); flag 9 and drop-in 4; an effect of kind 0x91; the trip to 0xBD and back to 0x96 with message 4 while ObjTrio +9 counts up. 31 calls."
+
+[[func]]
+pc = 0x565880
+name = "Scena14_Shake"
+ret = "void"
+params = "unsigned amount"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x565880..0x5658A7 (0x28 bytes): MapView_Redraw 2; Camera_ShiftY 0x903802 += Scena14_ShakeOffsets[Frame_Counter & 3] (signed byte) * the byte amount, 16-bit."
+
+[[func]]
+pc = 0x5658B0
+name = "Scena14_LeaveToC4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5658B0..0x565909 (0x5A bytes): reached by no table, call or pointer (a byte search of the image for its address finds nothing; tools/scenario_rows.py marks it not walked): bit 0 of ObjTrio records 1 and 2 + 0x24 cleared, Field_ChangeArea(0xC4, 0x298000, 0x168000, 0x80), ScriptFlags_Set40, run 2 step 0, Field_StatusBits bit 0 cleared. 2 calls."
+
+[[func]]
+pc = 0x565910
+name = "Scena14_Run3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x565910..0x565BE7 (0x2D8 bytes): jump table 0x565BB4 (13): run 3, steps 0..0xC - area changes within 0x96 at counter 0 = 2 / 8 / 0xA / 0x18 / 0x1B (flags 0xA / 0xB), a timed transition, message 0x15, the record 0x903A70 + [0x669734] * 0xA4 +0x1E = 0, the party pass 0x533E50, Task_Sleep and Field_Request 6, flag 0xC and area 0x96 again, Field_ScriptFlags bit 3 cleared. 17 calls."
+
+[[func]]
+pc = 0x565BF0
+name = "Scena14_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x565BF0..0x565FFF (0x410 bytes): jump table 0x565F9C (25): run 4, steps 0..2, 0xA..0x18 - flag 0x10 and area 0x94 with two camera effects, drop-in 3, a transition at counter 3 (0x90384B) = 0x18 (ebx holds the switch bound 0x18), message 0x14, story flag 0x46 and area 0x95 (music byte 0x27), an effect of kind 0x8D and Scena14_ScrollView each frame through message 1 (the effects +1 = 2), MoveScript_F3Divisor halved, message 2, area 0xA7 (counter 3 = 0x20), Music_LoadFile(0x8C), at counter 3 = 0x31 and File_LoadDone counter 3 + 1 and flag 0x11; step 0x17 stores ebx, 0x18, as the step. 24 calls."
+
+[[func]]
+pc = 0x566000
+name = "Scena14_ScrollView"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x566000..0x566082 (0x83 bytes): with MapView_FocusX exactly 0x77FF: MapView_Origin + 0x14, the kind-2 sprite +0x34 and Field_Kind2X + 0x140000, MapView_FocusX 0x63FF, the kind-2 sprite +0x3E = AreaMap_Elevation(Field_Kind2X, Field_Kind2Z) and MapView_SetElevation(it), the view shift 0x56FCA0, Sprite_ObjectsExtra record 0 +0x34 + 0x140000 and +0x3E its elevation. Called by Scena14_Run4. 4 calls."
+
+[[func]]
+pc = 0x566090
+name = "Scena14_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x566090..0x566459 (0x3CA bytes): byte table 0x566438 (0x22) behind jump table 0x5663EC (19): run 5, steps 0..2, 5..7, 0xA..0xE, 0x10, 0x14, 0x15, 0x1E..0x21 - two camera effects, Kind2_Place(1), flag 0xE and a 0x78 hold, 0x532ED0 kind 0x25, Camera_Distance swung by 0x58 with Scena14_Shake(4), an effect of kind 0x8E, Field_StartEventBattle(0x32), flag 0xF, message 0x1C, drop-in 3, 0x587B80, Sound_LoadStream(2), 0x591900(0xD) and message 0x1D waited with Sound_StreamDone, Sound_ResumeAll. 22 calls."
+
+[[func]]
+pc = 0x566460
+name = "Scena14_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x566460..0x56703F (0xBE0 bytes): jump table 0x566F18 (74): run 6, steps 0..7, 0xA..0x49 - Scena14_TalkByMember twice (Scena14_TalkWho / TalkLines), a camera effect, flag 0x12; drop-in 5 then 6 or 7 by whether a member leads as 4; an effect of kind 0x94, flag 0x13 and area 0xB; seven visits (areas 0x33, 0x43, 0x55, 0x2B, 0x67, 0x78, 0x90), each an area change, Scena14_GreyClut and a transition, a hold, a fade and a message, the step + 1 read afresh after each call; area 0xAC, three effects of kind 0x94 with sound 0x208 and ObjTrio bit 6, area 0x8D, Music_LoadFile(0x50), flag 0x14, Music_Play(0x50, 8). 52 calls."
+
+[[func]]
+pc = 0x567040
+name = "Scena14_TalkByMember"
+ret = "unsigned short"
+params = "const unsigned char *who, const unsigned short *lines"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567040..0x5670D2 (0x93 bytes): for the first i of 4 whose byte who[i] equals any members ObjTrio +0x89 (members below Field_MemberCount, read once), Msg_OpenScript(lines[i]), Field_Request 2, ax lines[i]; none, ax 0xFFFF. Called by Scena14_Run6, which ignores the answer. 1 call."
+
+[[func]]
+pc = 0x5670E0
+name = "Scena14_Run7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5670E0..0x5677AB (0x6CC bytes): jump table 0x567728 (33): run 7, steps 0..7, 0xA..0x1A, 0x1E..0x20 - steps 0..5 each a flag, a drop-in and the area codes 0x4204D0 / 0x420580 / 0x420670 / 0x420710 object set-up; a fade on counter 0 = 7; Music_Play(0x9F, 8); 0x532ED0 kind 0x25 and Field_StartEventBattle(0x33); area 0xAC, the field effects of kind 0x97 / 0x98 at (0x1C8000, 0x268000); message 0x22, Scenario_CallA(0xB); step 0x17 sets Draw_OtSlot 4 and Draw_SortOnX 0, drops member 0xA in, places the party (kind 0x22), restores records 1..7 at 0x903A70 (+0xB bit 0: +0x1C = +0x2E, +0x18 = +0x20, +0x1A = +0x22, +0x10 = 0) and copies 0xA4 bytes of the record MoveScript_EffectState names into each following members ObjTrio +0x80, then Field_StartEventBattle(0x34); flag 0x1F; 0x587B80, Sound_LoadStream(2), 0x591900(0xC), message 0x2A, Sound_ResumeAll, 0x56D6F0 and flag 0x31. 53 calls."
+
+[[func]]
+pc = 0x5677B0
+name = "Scena14_ObjectTrigger"
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5677B0..0x5677CE (0x1F bytes): slot 1 of Scena14_Hooks: call [0x661884 + object +0x86 * 4] (object, [0x929ED0]) - Scena14_Objects, 8 entries; ours aborts past them."
+
+[[func]]
+pc = 0x5677D0
+name = "Scena14_Object00"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5677D0..0x567808 (0x39 bytes): Scena14_Objects entry 0: Msg_OpenScript of the line the area code picks for 8 - 0x42C0A0(8) in area 0xC0, else 0x42BA90(8) - and Field_Request 2. 4 calls."
+
+[[func]]
+pc = 0x567810
+name = "Scena14_Object01"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567810..0x567848 (0x39 bytes): Scena14_Objects entry 1: Scena14_Object00 for 4. 4 calls."
+
+[[func]]
+pc = 0x567850
+name = "Scena14_Object02"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567850..0x567888 (0x39 bytes): Scena14_Objects entry 2: Scena14_Object00 for 2. 4 calls."
+
+[[func]]
+pc = 0x567890
+name = "Scena14_Object03"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567890..0x5678C8 (0x39 bytes): Scena14_Objects entry 3: Scena14_Object00 for 5. 4 calls."
+
+[[func]]
+pc = 0x5678D0
+name = "Scena14_Object04"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x5678D0..0x567908 (0x39 bytes): Scena14_Objects entry 4: Scena14_Object00 for 6. 4 calls."
+
+[[func]]
+pc = 0x567910
+name = "Scena14_Object05"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567910..0x567921 (0x12 bytes): Scena14_Objects entry 5: ScriptFlags_Set40, run 5, step 5."
+
+[[func]]
+pc = 0x567930
+name = "Scena14_Object06"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567930..0x56794E (0x1F bytes): Scena14_Objects entry 6: ScriptFlags_Set40, run 5, step 0x1E, the objects word +0x8A + 1."
+
+[[func]]
+pc = 0x567950
+name = "Scena14_Object07"
+ret = "void"
+params = "unsigned char *object, unsigned int bits"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567950..0x56796E (0x1F bytes): Scena14_Objects entry 7: ScriptFlags_Set40, run 7, step 0x1E, +0x8A + 1."
+
+[[func]]
+pc = 0x567970
+name = "Scena14_StepHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567970..0x567A86 (0x117 bytes): slot 2 of Scena14_Hooks: area 0x94 at FD 4 (else al 0 at once) with flag 0x10 clear, x exactly 0x738000, z 0x36..0x37 - run 4 step 0; area 0xBF with flag 5 set - the cell byte 0xA6 under the step by AreaMap_ByteAt at (x, z), and (x + 1, z) / (x, z + 1) / (x + 1, z + 1) where the fractions are not 0, starts run 2 at step 0x14. al 1 when it starts one, else 0. 8 calls."
+
+[[func]]
+pc = 0x567A90
+name = "Scena14_ArriveHook"
+ret = "unsigned char"
+params = "int x, int z"
+status = "evidence"
+impl = "src/game/scena_sc13.cpp"
+evidence = "disasm 2026-09-28 (round ten group SC13, capstone recursive descent; extent agrees with tools/scenario_rows.py --unit SC13), 0x567A90..0x567DBE (0x32F bytes): slot 3 of Scena14_Hooks: rectangles (x whole and signed below a bound, z by its high word; area 0x8Es first x by its high word and z whole) start runs 7 (0..5, 0xA), 6 (0xA), 4 (0xA), 2 (0x1D) in areas 0x8D (story flag 0x7A at FD 1), 0x8E, 0xAC, 0x94, 0xBF; area 0x8E at FD 3 also Music_FadeOutStop(0xA) and Music_LoadFile(0x9F). Only 0x94 and 0xBF answer al 1; FD not 0 in 0x94 / 0xAC / 0xBF answers 0 at once. 24 calls."
+
+[[data]]
+pc = 0x66179C
+name = "Scena13_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena13_Frames jmp [0x66179C + state * 4]: Scena13_Start, Scena13_EnterArea, Scena13_Run; Scena13_Runs follows at 0x6617A8."
+
+[[data]]
+pc = 0x6617A8
+name = "Scena13_Runs"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena13_Runs jmp [0x6617A8 + run * 4]: 0x437CC0 (ret), Scena13_Run1..Run8; a 0 dword, then Scena13_EventOps."
+
+[[data]]
+pc = 0x6617D0
+name = "Scena13_EventOps"
+ctype = "unsigned char"
+count = 64
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: four 16-byte event-op records EventOp_6x runs for Scena13_SpawnPairA (0, 1) and Scena13_SpawnPairB (2, 3), the object slot in the word 0x903850; Scena13_Objects follows at 0x661810."
+
+[[data]]
+pc = 0x661810
+name = "Scena13_Objects"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena13_ObjectTriggers call [0x661810 + object +0x86 * 4] (object, bits): Scena13_Object00..03; Scena14_Hooks follows at 0x661820."
+
+[[data]]
+pc = 0x661834
+name = "Scena14_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena14_Frames jmp [0x661834 + state * 4]: ScenaShared_State0, Scena14_EnterArea, Scena14_Run; Scena14_Runs follows at 0x661840."
+
+[[data]]
+pc = 0x661840
+name = "Scena14_Runs"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena14_Runs jmp [0x661840 + run * 4]: 0x437CC0 (ret), Scena14_Run1..Run7, 0x437CC0 twice; Scena14_ShakeOffsets follows at 0x661868."
+
+[[data]]
+pc = 0x661868
+name = "Scena14_ShakeOffsets"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena14_Shakes movsx [0x661868 + (Frame_Counter & 3)]: the camera offsets of a shake; Scena14_TalkWho follows at 0x66186C."
+
+[[data]]
+pc = 0x66186C
+name = "Scena14_TalkWho"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: two lists of 4 member bytes (ObjTrio +0x89 values) Scena14_Run6 hands Scena14_TalkByMember (0x66186C at step 2, 0x661870 at step 5); Scena14_TalkLines follows at 0x661874."
+
+[[data]]
+pc = 0x661874
+name = "Scena14_TalkLines"
+ctype = "unsigned short"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: the message ids paired with Scena14_TalkWho, two lists of 4 (0x661874, 0x66187C); Scena14_Objects follows at 0x661884."
+
+[[data]]
+pc = 0x661884
+name = "Scena14_Objects"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: Scena14_ObjectTriggers call [0x661884 + object +0x86 * 4] (object, bits): Scena14_Object00..07; a 0 dword, then Scena15_Hooks 0x6618A8."
+
+[[data]]
+pc = 0x6BC738
+name = "Scena13_Slot"
+ctype = "unsigned char"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: the effect slot chapter 13s scenes take with Effect_FindFree and test (+0 bit 0) to wait for the effect to end: Scena13_EnterArea, Run1, Run2, Run3, Run4 (Effect_SpawnAts answer), Run6, Run7."
+
+[[data]]
+pc = 0x6BC73C
+name = "Scena14_Slot"
+ctype = "unsigned char"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC13: the effect slot chapter 14 takes (Scena14_SpawnEffect, Run2, Run4, Run6) and waits on."
