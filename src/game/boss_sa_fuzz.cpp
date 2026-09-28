@@ -102,6 +102,18 @@ void SeedHp(bool quarter) {
     SetWord(e + 0xA4, static_cast<U>(left + static_cast<std::int16_t>(dmg)) & 0xFFFF);
 }
 
+// The Run's clones (RunKind sets it): a dispatcher's other state bytes are
+// seeded inside its table most of the time, so a dispatcher that read the
+// wrong byte would land on another entry (a count) rather than past its table
+// (a Fatal). Never the byte the harness drew.
+const bh::Clone* g_clones;
+void SeedStates(unsigned k) {
+    const bh::Clone& c = g_clones[k];
+    if (c.shape != S::kDispatch || c.states == 0) return;
+    for (unsigned b = 1; b <= 4; ++b)
+        if (b != c.state_at && bh::Often()) Sprite_Current[b] = static_cast<unsigned char>(bh::Next() % c.states);
+}
+
 // Kinds 1 and 39's end walk: MoveCmd_OpE9's answer is the standard kFlag;
 // the field actor's index BossActor_Index answers 0xFF..29.
 
@@ -146,10 +158,12 @@ void SeedCount(U end) {
     SetWord(Mem(at::kEndCount), bh::Often() ? (bh::Half() ? end : BH_PICK(0, 1, 2, 0xFFFF, 0x3C, 0x100)) : bh::Next() & 0xFFFF);
 }
 void SeedGary(unsigned k) {
+    SeedStates(k);
     if (k == kEndStep) SeedCount(0);
     if (k == kEndStep || k == kEndStart) Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 4, 6, 0xFB});
 }
 void SeedMogu(unsigned k) {
+    SeedStates(k);
     if (k == kEndStep) SeedCount(1);
 }
 void ArgsKind(unsigned k, U* a) {
@@ -228,6 +242,7 @@ const bh::DataTable kTablesNue[] = {{Key(BossNue_Hooks), 3, 4, 1}, {Key(BossNue_
 enum : unsigned { kNueDispatch, kNueEnter, kNueEnd, kNuePose, kNueMove, kNueHook, kNuePick, kNueHit };
 
 void SeedNue(unsigned k) {
+    SeedStates(k);
     if (k == kNuePick) SeedHp(false);
     if (k == kNueHit) SeedHp(true);
     if (k == kNueMove) Mem(at::kBattleEnd)[0] = Byte({0, 2, 0xFD, 0xFF});
@@ -322,6 +337,7 @@ const bh::DataTable kTablesWeretigr[] = {
 enum : unsigned { kWDispatch, kWEnter, kWState4, kWFx, kWCue, kWEnd, kWPose, kWMove, kWHook, kWPick };
 
 void SeedWeretigr(unsigned k) {
+    SeedStates(k);
     unsigned char* const s = Sprite_Current;
     switch (k) {
     case kWFx:
@@ -359,6 +375,7 @@ bool Wants(const char* run) {
 void RunKind(const char* run, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables, void (*seed)(unsigned),
              void (*args)(unsigned, U*), int fight, int kind) {
     if (!Wants(run)) return;
+    g_clones = clones;
     bh::Group g{"boss_sa", clones, n, kCallees, SA_COUNT(kCallees), tables, n_tables, kRegions, SA_COUNT(kRegions), seed, nullptr, 6000};
     g.args = args;
     g.fight = fight;
@@ -366,7 +383,7 @@ void RunKind(const char* run, const bh::Clone* clones, unsigned n, const bh::Dat
     bh::Run(g);
 }
 
-void NoSeed(unsigned) {}
+void SeedKind(unsigned k) { SeedStates(k); }
 
 }  // namespace
 
@@ -378,9 +395,9 @@ void SelfTest() {
     // tool leaves which is which; their code never reads 0x904AAA)
     RunKind("k1", kClonesNue, SA_COUNT(kClonesNue), kTablesNue, SA_COUNT(kTablesNue), &SeedNue, &ArgsNue, 3, 1);
     g_last_hook = SA_COUNT(kClonesNue2) - 1;
-    RunKind("k2", kClonesNue2, SA_COUNT(kClonesNue2), kTablesNue2, SA_COUNT(kTablesNue2), &NoSeed, &ArgsLastHook, 2, 2);
+    RunKind("k2", kClonesNue2, SA_COUNT(kClonesNue2), kTablesNue2, SA_COUNT(kTablesNue2), &SeedKind, &ArgsLastHook, 2, 2);
     g_last_hook = SA_COUNT(kClonesSample1) - 1;
-    RunKind("k46", kClonesSample1, SA_COUNT(kClonesSample1), kTablesSample1, SA_COUNT(kTablesSample1), &NoSeed, &ArgsLastHook, 39, 46);
+    RunKind("k46", kClonesSample1, SA_COUNT(kClonesSample1), kTablesSample1, SA_COUNT(kTablesSample1), &SeedKind, &ArgsLastHook, 39, 46);
     RunKind("b2", kClones02, SA_COUNT(kClones02), nullptr, 0, &SeedBoss002, &Args02, 2, -1);
     RunKind("b3", kClones03, SA_COUNT(kClones03), nullptr, 0, &SeedBoss002, nullptr, 3, -1);
     RunKind("b39", kClones39, SA_COUNT(kClones39), nullptr, 0, &SeedBoss002, nullptr, 39, -1);
