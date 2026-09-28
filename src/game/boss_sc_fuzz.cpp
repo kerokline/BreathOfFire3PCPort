@@ -249,7 +249,7 @@ void Seed(unsigned k) {
     // --- fight 16's event hook
     case 0x43A060:
         Mem(at::kFightFlags)[0] = Byte({0, 1, 0x40, 0x41, 8, 0xBE, 0xBF});
-        Mem(at::kWaitTurns)[0] = Byte({0, 0, 1, 8, 0xA, 0x80});
+        Mem(at::kWaitTurns)[0] = bh::Half() ? 0 : Byte({1, 8, 0xA, 0x80});
         Mem(at::kActor)[0] = Byte({0, 0, 0, 1, 3, 0x80});
         Mem(at::kTarget)[0] = Byte({0x40, 0x44, 0x4, 0, 0xBF, 0xC0});
         Mem(at::kEnemy0 + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
@@ -304,11 +304,14 @@ void Seed(unsigned k) {
 }
 
 // The words: a hook's (the index 0..2 the harness drew) and the event hook's
-// code with garbage above the byte half the time (the originals read the low
+// code (0..2, the codes it acts on, two times in three; else the harness's
+// 0..6) with garbage above the byte half the time (the originals read the low
 // byte); the draws' row byte likewise, from the rows the melt reaches (0..0x56
 // in twos) or any.
 void Args(unsigned k, U* a) {
     const bh::Clone& c = g_cur[k];
+    // fight 16's event hook acts on codes 0..2 only: those most of the time
+    if (c.shape == S::kEvent && bh::Often()) a[0] = bh::Next() % 3;
     if (c.shape == S::kEnemyHook || c.shape == S::kEvent) {
         if (bh::Half()) a[0] |= bh::Next() & 0xFFFFFF00u;
     } else if (c.shape == S::kCallee) {
