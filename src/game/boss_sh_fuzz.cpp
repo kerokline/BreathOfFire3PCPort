@@ -109,19 +109,22 @@ void OtherStates(unsigned drawn, unsigned below) {
 }
 
 // An enemy hook's word 0..2 (the three callers') with garbage above half the
-// time - the hooks mask it, their entries get it whole; an event hook's code,
-// the ones each reads at twice the others' rate; a dispatcher's word as drawn
-// (handed on to the entry: Port_DroppedCall's recorder logs its byte).
-U g_codes[2] = {0, 0};   // the event hook's favoured codes for the run in progress
+// time - the hooks mask it, their entries get it whole; an event hook's code
+// as its seed picked it (the seed aims the round's other inputs at that
+// code's path; an args hook cannot write memory, docs/boss_harness.md section
+// 6), with garbage above half the time; a dispatcher's word as drawn (handed
+// on to the entry: Port_DroppedCall's recorder logs its byte).
+U g_code = 0;
 void Args(unsigned k, U* a) {
     const bh::Clone& c = g_clones[k];
     if (c.shape == S::kEnemyHook) {
         a[0] = Above() | (a[0] & 0xFF);
     } else if (c.shape == S::kEvent) {
-        const U pick = bh::Next() % 8;
-        a[0] = Above() | (pick < 3 ? g_codes[0] : pick < 6 ? g_codes[1] : bh::Next() % 7);
+        a[0] = Above() | g_code;
     }
 }
+// An event hook's code: `mine` two times in three, else any 0..6 or a byte past them.
+U Code(U mine) { return bh::Often() ? mine : bh::Half() ? bh::Next() % 7 : bh::Next() & 0xFF; }
 
 // What the 46 read again after a call that the standard disturbance does not
 // move: set-up 34's picked member (after the first AbilityList_Add) and script
@@ -209,13 +212,15 @@ void SeedB34(unsigned k) {
         break;
     }
     case 1: {
-        g_codes[0] = 1;
-        g_codes[1] = 5;
+        // code 5's tests (round-flag bit 15, script bit 0, the member's +0x91
+        // bit 0x20) and code 1's (script bits 0 and 1, the actor): each passed
+        // or failed on its own, aimed at the code the round is called with
+        g_code = Code(bh::Half() ? 1 : 5);
         SeedPicked();
         const unsigned char picked = B(at::kPicked);
-        // round-flag bit 15, the script bits 0 and 1, the member's +0x91 bit 0x20, the actor
-        B(at::kFlags + 1) = static_cast<unsigned char>(bh::Half() ? B(at::kFlags + 1) & 0x7F : B(at::kFlags + 1) | 0x80);
-        B(at::kScript) = static_cast<unsigned char>((bh::Next() & 0xFC) | (bh::Often() ? 1 : bh::Next() & 3));
+        B(at::kFlags + 1) = static_cast<unsigned char>(bh::Often() ? B(at::kFlags + 1) & 0x7F : B(at::kFlags + 1) | 0x80);
+        const U bits = g_code == 1 ? (bh::Often() ? 1 : bh::Next() & 3) : (bh::Often() ? 0 : bh::Next() & 3);
+        B(at::kScript) = static_cast<unsigned char>((bh::Next() & 0xFC) | bits);
         for (unsigned m = 0; m < 3; ++m) {
             unsigned char& f = B(at::kPartyFlags91 + m * at::kPartyStride);
             f = static_cast<unsigned char>(bh::Half() ? f | 0x20 : f & ~0x20u);
@@ -289,10 +294,7 @@ const bh::Clone kB35[] = {
 void SeedEnd(unsigned k) {
     const bh::Clone& c = g_clones[k];
     if (c.shape == S::kEnd || c.shape == S::kEvent) B(at::kBattleEnd) = EndByte();
-    if (c.shape == S::kEvent) {
-        g_codes[0] = 0;
-        g_codes[1] = 0;
-    }
+    if (c.shape == S::kEvent) g_code = Code(0);
 }
 
 const bh::Clone kB47[] = {
