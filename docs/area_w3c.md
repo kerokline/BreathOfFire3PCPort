@@ -3,7 +3,9 @@
 **Status:** IN PROGRESS (2026-09-28) - 56 functions ours
 (`src/game/area_w3c.cpp`, shadow name `area_w3c`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), one `Run` per area:
-0 mismatches in 336,000 rounds (in this worktree); CONTROLS_SUMMARY. Fuzz only:
+0 mismatches in 336,000 rounds (in this worktree); 226 controls planted, 222
+refused by a count, 4 not refused (3 equivalent, 1 beyond the harness's
+8 KiB of the area block), each with a near variant refused (section 4). Fuzz only:
 no recorded route reaches the band (section 8). No divergence, no abort
 added: the band has no dispatch through a `.data` table and no divide
 (section 6).
@@ -225,7 +227,8 @@ descriptors and tables in place. `Area130_ChoiceTailState2` runs under 130,
 - **Louder stand-ins** (an `effect`, from `Noise` only): `Effect_Spawn`,
   `Effect_FindFree`, `Flags_Set` and `MoveCmd_TestFB` (area 127) move
   `Sprite_Current`; area 131's `ScriptFlags_Set40` moves the focus pointer
-  and now and then the tail state, its `Msg_OpenScript` the tail state;
+  and now and then the tail state, its `Msg_OpenScript` the tail state, its
+`Flags_Clear` assigns `Field_ScriptFlags` (added for control D30);
   area 128's `Flags_Set` / `Flags_Clear` move the chapter byte (read after
   the patch walk); `AreaMap_ApplyPatch` rewrites the entry's step (read
   again after the call); `AreaMap_Elevation` moves an effect record's x and
@@ -261,19 +264,277 @@ descriptors and tables in place. `Area130_ChoiceTailState2` runs under 130,
   list bytes, the packet cursor, the pass flags, `Cond_ByteFE`.
 
 **Result (in this worktree):** 336,000 rounds over the 56 functions (6,000
-each), COUNTS_LINE, 0 mismatches. Coverage: every callee each function can
-reach was called - e.g. `Effect_Spawn` 60,000 (area 130) / 36,000 (134),
-`Port_DroppedCall` 12,000, `Item_NamePtr` / `strncpy` / `Inventory_Add` 457
-each (tail kind 63's give), `Msg_OpenScript` 669 (130) and 639 (131),
-`Field_ChangeArea` 534 (128) and 715 (131), `Party_DropIn` 518,
-`Area131_DisarmTail` 1,107, `AreaMap_ApplyPatch` 16,361, `Effect_Release`
-2,051, the gradient's draw 2,736.
+each), 314,895 calls to the stand-ins, 0 mismatches (the final fuzz, the
+`'*'` run's nine lines). Coverage: every callee each function can reach was
+called - e.g. `Effect_Spawn` 60,000 (area 130) / 36,000 (134),
+`Port_DroppedCall` 12,000, `Item_NamePtr` / `strncpy` / `Inventory_Add` 428
+each (tail kind 63's give), `Msg_OpenScript` 647 (130) and 624 (131),
+`Field_ChangeArea` 487 (128) and 697 (131), `Party_DropIn` 494,
+`Area131_DisarmTail` 1,113, `AreaMap_ApplyPatch` 16,144, `Effect_Release`
+1,969, the gradient's draw 2,773.
 
-STAR_LINE
+`BOF3X_SHADOW='*'` (on the final fuzz): exit 0, `inject: 4992 ours` (one
+below the 4,993 `impl` lines, the off-by-one the round doc section 10
+notes), 456 self-test lines, no mismatch. It did not die silently on either
+of its two runs.
 
 ## 4. Controls
 
-CONTROLS_TEXT
+Planted one at a time in `area_w3c.cpp` by a script (the scratch
+`controls.py`, not committed) that checks every anchor occurs once, plants,
+rebuilds, checks `area_w3c.cpp` recompiled, runs `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=area_w3c`, restores; after the last it rebuilt and ran the clean
+self-test (exit 0, 0 mismatches in all nine runs). **226 planted, 222
+refused by a count (exit 3), 4 not refused**, each with a near variant
+refused: P13 (areas 124 and 125's tables hold the same bytes: equivalent;
+P11 / P12 refused), D30 (the xor of `Field_ScriptFlags` moved after the
+disarm: the xor touches bits 1, 2 and 4, the disarm's `ScriptFlags_Clear40`
+bit 8, and nothing between reads the word - equivalent; re-run as D30r after
+area 131's `Flags_Clear` stand-in was made to assign the word, still
+standing; its variant D30b, the xor after `Flags_Clear`, refused), E12 (the
+ground zero-extended: the `<< 16` drops the extension - equivalent; E12b, a
+signed byte, refused), and B37 (the patch base masked to 15 bits: the seed
+keeps the base below `0x6E0`, and a base with bit 15 would index 128 KiB past
+the 8 KiB of the area block the harness holds - not observable by this
+harness; B37b, 10 bits, refused). No hang, no fault. Every one of the 56
+functions has at least one control of its own. A control in a helper shared
+across areas is refused in the first area's run, whose Fatal ends the
+self-test. The thinnest: B28b (23 rounds; the object's `+0x8A` incremented as
+a byte differs only when its low byte is `0xFF`), the tail give's pick
+controls C35 / C36 / C37 / C49 (77..93; one item of six, under a step and a
+request that must both let it through); the rest need 300 rounds or more.
+The one fuzz change made for a control (D30) is in the committed fuzz, and
+the clean run and `'*'` above are on it.
+
+| # | Function | Planted | Refused in rounds (of 6,000 per function) |
+|---|---|---|---|
+| P1 | `PlaceRandomObject (124, 125)` | `AH_CALL(Rand)() & 0x1F)` | Area124_PlaceRandomObject 2818 |
+| P2 | `PlaceRandomObject (124, 125)` | `if (roll <= weight) break;` | Area124_PlaceRandomObject 840 |
+| P3 | `PlaceRandomObject (124, 125)` | `if (k != chosen) ObjectAt(k)[0] = 1;` | Area124_PlaceRandomObject 6000 |
+| P4 | `PlaceRandomObject (124, 125)` | `AH_CALL(Rand)() & 3)` | Area124_PlaceRandomObject 3029 |
+| P5 | `PlaceRandomObject (124, 125)` | `B(cells + pick * 2 + 1)) << 15)` | Area124_PlaceRandomObject 6000 |
+| P6 | `PlaceRandomObject (124, 125)` | `SetWord(object + 0x3C,` | Area124_PlaceRandomObject 6000 |
+| P7 | `PlaceRandomObject (124, 125)` | `Long(Mem(at::kLeaderZone)) - 4)` | Area124_PlaceRandomObject 6000 |
+| P8 | `PlaceRandomObject (124, 125)` | `for (unsigned k = 0; k < 7; ++k)` | Area124_PlaceRandomObject 5592 |
+| P9 | `PlaceRandomObject (124, 125)` | `AH_CALL(AreaMap_Elevation)(z, Long(object + 0x34))` | Area124_PlaceRandomObject 4842 |
+| P10 | `PlaceRandomObject (124, 125)` | `roll = static_cast<unsigned char>(roll - weight + 1);` | Area124_PlaceRandomObject 1562 |
+| P11 | `Area124_PlaceRandomObject` | `PlaceRandomObject(at::kArea124Cells, at::kArea124Weights + 1); }` | Area124_PlaceRandomObject 3506 |
+| P12 | `Area125_PlaceRandomObject` | `PlaceRandomObject(at::kArea125Cells + 2, at::kArea125Weights); }` | Area125_PlaceRandomObject 6000 |
+| P13 | `Area124_PlaceRandomObject` | `PlaceRandomObject(at::kArea125Cells, at::kArea125Weights); }` | not refused: equivalent (areas 124 and 125 hold the same bytes in both tables); P11, P12 refused |
+| A1 | `Area127_ClearActive80` | `member[0x80] & 0xFC` | Area127_ClearActive80 3047 |
+| A2 | `Area127_ClearActive80` | `if (B(at::kLeader89) != 4) return;` | Area127_ClearActive80 2024 |
+| A3 | `Area127_ClearActive80` | `AH_CALL(Flags_Set)(StoryFlags(), 0x33);` | Area127_ClearActive80 1313 |
+| A4 | `Area127_ClearActive80` | `AH_CALL(MoveCmd_TestFB)(0x33, 0x4E);` | Area127_ClearActive80 1313 |
+| A5 | `Area127_ClearActive80` | `Sprite_Current[1] = 0;` | Area127_ClearActive80 1313 |
+| A6 | `Area127_ClearActive80` | Sprite_Current read before the calls | Area127_ClearActive80 898 |
+| A7 | `Area127_ClearActive80` | `if (static_cast<signed char>(B(at::kLeader89)) < 5) return;` | Area127_ClearActive80 1602 |
+| B1 | `Area128_ChoiceStep3` | `B(at::kVar7Step) = 9;` | Area128_ChoiceStep3 5185 |
+| B2 | `Area128_ChoiceStep3` | `SetWord(Focus() + 0x8A, 0xC);` | Area128_ChoiceStep3 815 |
+| B3 | `Area128_ChoiceStep3` | `B(at::kCounter0) = 0xE;` | Area128_ChoiceStep3 815 |
+| B4 | `Area128_ChoiceStep3` | `B(at::kVar7Step) = 4;` | Area128_ChoiceStep3 815 |
+| B5 | `Area128_ChoiceStep3` | `if (answer > 1) {` | Area128_ChoiceStep3 552 |
+| B6 | `Area128_ChoiceStep3` | `SetMessage(0xFFFE);` | Area128_ChoiceStep3 6000 |
+| B7 | `Area128_ChoiceArmTail56` | `B(at::kTailState) = 0xB;` | Area128_ChoiceArmTail56 823 |
+| B8 | `Area128_ChoiceArmTail56` | `SetMessage(0x4A);` | Area128_ChoiceArmTail56 823 |
+| B9 | `Area128_ChoiceArmTail56` | `B(at::kTailKind) = 0x39;` | Area128_ChoiceArmTail56 823 |
+| B10 | `Area128_ChoiceArmTail56` | a line removed: `AH_CALL(ScriptFlags_Set40)();` | Area128_ChoiceArmTail56 823 |
+| B10b | `Area128_ChoiceArmTail56` | `if (B(at::kChoiceAnswer) > 1) {` | Area128_ChoiceArmTail56 580 |
+| B11 | `Area128_PlaceObject` | `SetLong(Sprite_Current + 0x34, 0x4E8001);` | Area128_PlaceObject 6000 |
+| B12 | `Area128_PlaceObject` | `SetLong(Sprite_Current + 0x3C, 1);` | Area128_PlaceObject 6000 |
+| B13 | `Area128_PlaceObject` | `if (Field_State[0x89] == 3)` | Area128_PlaceObject 2048 |
+| B14 | `Area128_PlaceObject` | `0x88001);` | Area128_PlaceObject 1353 |
+| B15 | `Area128_PlaceObject` | `0x80001);` | Area128_PlaceObject 4647 |
+| B16 | `Area128_PlaceObject` | `Sprite_Current[8] = 2;` | Area128_PlaceObject 6000 |
+| B17 | `Area128_TailLeave56` | `if (Field_Request == 3) return;` | Area128_TailLeave56 496 |
+| B18 | `Area128_TailLeave56` | `AH_CALL(Party_DropIn)(7);` | Area128_TailLeave56 518 |
+| B19 | `Area128_TailLeave56` | `Flags_Set)(StoryFlags(), 0x87)` | Area128_TailLeave56 518 |
+| B20 | `Area128_TailLeave56` | `} else if (state == 0xB) {` | Area128_TailLeave56 821 |
+| B21 | `Area128_TailLeave56` | `Flags_Set)(StoryFlags(), 0x8A)` | Area128_TailLeave56 534 |
+| B22 | `Area128_TailLeave56` | `Field_ChangeArea)(0x79, 0x1A0000, 0x2A0000, 7)` | Area128_TailLeave56 534 |
+| B23 | `Area128_TailLeave56` | `Field_ChangeArea)(0x79, 0x2A0000, 0x1A0000, 6)` | Area128_TailLeave56 534 |
+| B24 | `Area128_TailLeave56` | `B(at::kTailState) = 1;` | Area128_TailLeave56 1052 |
+| B24b | `Area128_TailLeave56` | `B(at::kTailKind) = 1;` | Area128_TailLeave56 1052 |
+| B24c | `Area128_TailLeave56` | a line removed: `AH_CALL(ScriptFlags_Clear40)();` | Area128_TailLeave56 518 |
+| B25 | `Area128_Trigger61` | `AddWord(object + 0x8A, 2);` | Area128_Trigger61 6000 |
+| B26 | `Area128_Trigger61` | `return 1;` | Area128_Trigger61 6000 |
+| B27 | `Area128_Trigger61` | `B(at::kTailKind) = 0x37;` | Area128_Trigger61 6000 |
+| B28 | `Area128_Trigger61` | `B(at::kTailState) = 1;` | Area128_Trigger61 6000 |
+| B28b | `Area128_Trigger61` | `object[0x8A] = static_cast<unsigned char>(object[0x8A] + 1);` | Area128_Trigger61 23 |
+| B29 | `Area128_InitPatches` | `if (Word(Mem(at::kLastArea)) == 0x78) {` | Area128_InitPatches 4401 |
+| B29b | `Area128_InitPatches` | `if (B(at::kLastArea) == 0x79) {` | Area128_InitPatches 412 |
+| B30 | `Area128_InitPatches` | `Flags_Set)(StoryFlags(), 0x44);` | Area128_InitPatches 4018 |
+| B31 | `Area128_InitPatches` | `Flags_Clear)(StoryFlags(), 0x41);` | Area128_InitPatches 4018 |
+| B32 | `Area128_InitPatches` | `if (Cond_ByteFA <= 11) return;` | Area128_InitPatches 974 |
+| B33 | `Area128_InitPatches` | `if (static_cast<unsigned char>(Cond_ByteFA) <= 10) return;` | Area128_InitPatches 1313 |
+| B34 | `Area128_InitPatches` | `Flags_Test)(StoryFlags(), 0x42) == 0` | Area128_InitPatches 2747 |
+| B35 | `Area128_InitPatches` | `AreaMap_SetByte)(0x20, 0x3A, 0xA2);` | Area128_InitPatches 1880 |
+| B36 | `Area128_InitPatches` | `AreaMap_SetByte)(0x1F, 0x38, 0xC0);` | Area128_InitPatches 1880 |
+| B37 | `Area128_InitPatches` | `& 0x7FFF) * 4u;` | not refused: the harness keeps the base below 0x6E0 (bit 15 would index 128 KiB past its 8 KiB of the block); variant B37b refused |
+| B38 | `Area128_InitPatches` | `>> 16) * 4u + 8u;` | Area128_InitPatches 3254 |
+| B39 | `Area128_InitPatches` | the step read before ApplyPatch | Area128_InitPatches 2533 |
+| B40 | `Area128_InitPatches` | returns after the chain (no cell test) | Area128_InitPatches 1818 |
+| C1 | `Area130_ChoiceRunStep` | `kArea130ChoiceMessages + static_cast<U>(answer) * 2u + 2u)));` | Area130_ChoiceRunStep 5913 |
+| C2 | `Area130_ChoiceRunStep` | `const int answer = B(at::kChoiceAnswer);` | Area130_ChoiceRunStep 1861 |
+| C3 | `Area130_ChoiceRunStep` | `B(at::kVar7) = 7;` | Area130_ChoiceRunStep 875 |
+| C4 | `Area130_ChoiceRunStep` | `B(at::kCounter3) = 1;` | Area130_ChoiceRunStep 875 |
+| C5 | `Area130_ChoiceRunStep` | `} else if (answer == 2) {` | Area130_ChoiceRunStep 1144 |
+| C6 | `Area130_ChoiceRunStep` | `B(at::kVar7Step) = 0xB;` | Area130_ChoiceRunStep 875 |
+| C7 | `SpawnAtMember (130 x10, 133, 134 x6)` | `const auto z = static_cast<short>(Word(record + 0x32));` | Area130_SpawnKind4AtMember0 6000, Area130_SpawnKind3AtMember0 5999, Area130_SpawnKind3AtMember1 6000, Area130_SpawnKind3AtMember2 6000, Area130_SpawnKind1AtMember1 5999, Area130_SpawnKind1AtMember2 6000, Area130_SpawnKind4AtMember1 6000, Area130_SpawnKind4AtMember2 6000, Area130_SpawnKind5AtMember1 6000, Area130_SpawnKind5AtMember2 6000 |
+| C8 | `SpawnAtMember (130 x10, 133, 134 x6)` | `B(args + 1 + B(at::kPartyList0 + member))` | Area130_SpawnKind4AtMember0 4624, Area130_SpawnKind3AtMember0 4674, Area130_SpawnKind3AtMember1 4669, Area130_SpawnKind3AtMember2 4777, Area130_SpawnKind1AtMember1 4738, Area130_SpawnKind1AtMember2 4697, Area130_SpawnKind4AtMember1 5233, Area130_SpawnKind4AtMember2 5245, Area130_SpawnKind5AtMember1 5148, Area130_SpawnKind5AtMember2 5215 |
+| C9 | `SpawnAtMember (130 x10, 133, 134 x6)` | `if (slot != 0xFE) Sprite_Current[0xB] = slot;` | Area130_SpawnKind4AtMember0 2436, Area130_SpawnKind3AtMember0 2400, Area130_SpawnKind3AtMember1 2386, Area130_SpawnKind3AtMember2 2400, Area130_SpawnKind1AtMember1 2408, Area130_SpawnKind1AtMember2 2425, Area130_SpawnKind4AtMember1 2379, Area130_SpawnKind4AtMember2 2335, Area130_SpawnKind5AtMember1 2384, Area130_SpawnKind5AtMember2 2438 |
+| C10 | `SpawnAtMember (130 x10, 133, 134 x6)` | `if (slot != 0xFF) PartyAt(member)[0xB] = slot;` | Area130_SpawnKind4AtMember0 2043, Area130_SpawnKind3AtMember0 2093, Area130_SpawnKind3AtMember1 2154, Area130_SpawnKind3AtMember2 2102, Area130_SpawnKind1AtMember1 2072, Area130_SpawnKind1AtMember2 2049, Area130_SpawnKind4AtMember1 2099, Area130_SpawnKind4AtMember2 2116, Area130_SpawnKind5AtMember1 2018, Area130_SpawnKind5AtMember2 2048 |
+| C11 | `SpawnAtMember (130 x10, 133, 134 x6)` | `Effect_Spawn)(kind, 1,` | Area130_SpawnKind4AtMember0 6000, Area130_SpawnKind3AtMember0 6000, Area130_SpawnKind3AtMember1 6000, Area130_SpawnKind3AtMember2 6000, Area130_SpawnKind1AtMember1 6000, Area130_SpawnKind1AtMember2 6000, Area130_SpawnKind4AtMember1 6000, Area130_SpawnKind4AtMember2 6000, Area130_SpawnKind5AtMember1 6000, Area130_SpawnKind5AtMember2 6000 |
+| C12 | `SpawnAtMember (130 x10, 133, 134 x6)` | `const auto x = static_cast<short>(Word(record + 0x2C));` | Area130_SpawnKind4AtMember0 6000, Area130_SpawnKind3AtMember0 6000, Area130_SpawnKind3AtMember1 5998, Area130_SpawnKind3AtMember2 6000, Area130_SpawnKind1AtMember1 6000, Area130_SpawnKind1AtMember2 6000, Area130_SpawnKind4AtMember1 6000, Area130_SpawnKind4AtMember2 6000, Area130_SpawnKind5AtMember1 5999, Area130_SpawnKind5AtMember2 6000 |
+| C13 | `Area130_SpawnKind4AtMember0` | `SpawnAtMember(0, 5, at::kArea130EffectArgsA)` | Area130_SpawnKind4AtMember0 6000 |
+| C14 | `Area130_SpawnKind3AtMember0` | `SpawnAtMember(0, 2, at::kArea130EffectArgsB)` | Area130_SpawnKind3AtMember0 6000 |
+| C15 | `Area130_SpawnKind3AtMember1` | `SpawnAtMember(2, 3, at::kArea130EffectArgsB)` | Area130_SpawnKind3AtMember1 6000 |
+| C16 | `Area130_SpawnKind3AtMember2` | `SpawnAtMember(2, 4, at::kArea130EffectArgsB)` | Area130_SpawnKind3AtMember2 6000 |
+| C17 | `Area130_SpawnKind1AtMember1` | `SpawnAtMember(1, 1, at::kArea130EffectArgsC)` | Area130_SpawnKind1AtMember1 1958 |
+| C18 | `Area130_SpawnKind1AtMember2` | `SpawnAtMember(2, 2, at::kArea130EffectArgsB)` | Area130_SpawnKind1AtMember2 6000 |
+| C19 | `Area130_SpawnKind4AtMember1` | `SpawnAtMember(0, 4, at::kArea130EffectArgsC)` | Area130_SpawnKind4AtMember1 6000 |
+| C20 | `Area130_SpawnKind4AtMember2` | `SpawnAtMember(2, 4, at::kArea130EffectArgsA)` | Area130_SpawnKind4AtMember2 2269 |
+| C21 | `Area130_SpawnKind5AtMember1` | `SpawnAtMember(1, 6, at::kArea130EffectArgsC)` | Area130_SpawnKind5AtMember1 6000 |
+| C22 | `Area130_SpawnKind5AtMember2` | `SpawnAtMember(1, 5, at::kArea130EffectArgsC)` | Area130_SpawnKind5AtMember2 6000 |
+| C23 | `Area130_DroppedCall1` | `AH_CALL(Port_DroppedCall)(2); }` | Area130_DroppedCall1 6000 |
+| C24 | `Area130_DroppedCallTrack83` | `AH_CALL(Port_DroppedCall)(1);` | Area130_DroppedCallTrack83 6000 |
+| C25 | `Area130_DroppedCallTrack83` | `Music_Track = 0x84;` | Area130_DroppedCallTrack83 6000 |
+| C26 | `EffectAtObject (130, 134 x3)` | `e[5] = static_cast<unsigned char>(kind + 1);` | Area130_Effect78AtObject 4762 |
+| C27 | `EffectAtObject (130, 134 x3)` | `e[1] = 0;` | Area130_Effect78AtObject 4743 |
+| C28 | `EffectAtObject (130, 134 x3)` | `SetLong(e + 0x38, Long(Sprite_Current + 0x3C));` | Area130_Effect78AtObject 4762 |
+| C29 | `EffectAtObject (130, 134 x3)` | `e[0] = 2;` | Area130_Effect78AtObject 4762 |
+| C30 | `Area130_Effect78AtObject` | `EffectAtObject(0x79, false)` | Area130_Effect78AtObject 4762 |
+| C31 | `Area130_GiveKeyItem10` | `KeyItem_Add)(0xB)` | Area130_GiveKeyItem10 6000 |
+| C32 | `Area130_Trigger65` | `B(at::kTailKind) = 0x3E;` | Area130_Trigger65 6000 |
+| C33 | `Area130_Trigger65` | `B(at::kTailSub) = 1;` | Area130_Trigger65 6000 |
+| C34 | `Area130_Trigger65` | `return 1;` | Area130_Trigger65 6000 |
+| C34b | `Area130_Trigger65` | a line removed: `AH_CALL(ScriptFlags_Set40)();` | Area130_Trigger65 6000 |
+| C35 | `Area130_TailGiveItem` | `{0, 0xF}, {0, 7}` | Area130_TailGiveItem 93 |
+| C36 | `Area130_TailGiveItem` | `{3, 0x18}}` | Area130_TailGiveItem 77 |
+| C37 | `Area130_TailGiveItem` | `if (pick < 5) {` | Area130_TailGiveItem 77 |
+| C38 | `Area130_TailGiveItem` | `reinterpret_cast<const char*>(name), 0x11);` | Area130_TailGiveItem 457 |
+| C39 | `Area130_TailGiveItem` | `AH_CALL(Inventory_Add)(category, item, 2);` | Area130_TailGiveItem 457 |
+| C40 | `Area130_TailGiveItem` | `B(at::kTextRecords2F) = 1;` | Area130_TailGiveItem 669 |
+| C41 | `Area130_TailGiveItem` | `Msg_OpenScript)(0x4A);` | Area130_TailGiveItem 669 |
+| C42 | `Area130_TailGiveItem` | `B(at::kVar7Step) = 2;` | Area130_TailGiveItem 669 |
+| C43 | `Area130_TailGiveItem` | `} else if (step == 2) {` | Area130_TailGiveItem 951 |
+| C44 | `Area130_TailGiveItem` | `Sound_PlayEffect)(0x107);` | Area130_TailGiveItem 624 |
+| C45 | `Area130_TailGiveItem` | `Flags_Set)(StoryFlags(), 0x99);` | Area130_TailGiveItem 624 |
+| C46 | `Area130_TailGiveItem` | `B(at::kTailSub) = 1;` | Area130_TailGiveItem 624 |
+| C47 | `Area130_TailGiveItem` | `if (Field_Request == 3) return;` | Area130_TailGiveItem 702 |
+| C48 | `Area130_TailGiveItem` | the name copied after Inventory_Add | Area130_TailGiveItem 457 |
+| C49 | `Area130_TailGiveItem` | `{1, 0x15}, {1, 0x11}` | Area130_TailGiveItem 88 |
+| C50 | `Area130_TailGiveItem` | `Field_Request = 1;` | Area130_TailGiveItem 669 |
+| C51 | `Area130_TailGiveItem` | `B(at::kTailKind) = 1;` | Area130_TailGiveItem 624 |
+| C52 | `Area130_ChoiceTailState2` | `B(at::kTailState) = 3;` | Area130_ChoiceTailState2 808 |
+| C53 | `Area130_ChoiceTailState2` | `if (B(at::kChoiceAnswer) == 1) B(at::kTailState) = 2;` | Area130_ChoiceTailState2 1371 |
+| C54 | `Area130_ChoiceTailState2` | `SetMessage(0xFFFE);` | Area130_ChoiceTailState2 6000 |
+| D1 | `Area131_ChoiceFocusStepA` | `SetMessage(0xD);` | Area131_ChoiceFocusStepA 852 |
+| D2 | `Area131_ChoiceFocusStepA` | `FocusScene(0xB, 4);` | Area131_ChoiceFocusStepA 852 |
+| D3 | `Area131_ChoiceFocusStep0` | `FocusScene(0, 3);` | Area131_ChoiceFocusStep0 850 |
+| D4 | `FocusScene (131 x2)` | `first[1] = 5;` | Area131_ChoiceFocusStepA 852, Area131_ChoiceFocusStep0 850 |
+| D5 | `FocusScene (131 x2)` | `Focus()[0x84] = 3;` | Area131_ChoiceFocusStepA 852, Area131_ChoiceFocusStep0 850 |
+| D6 | `FocusScene (131 x2)` | `SetWord(Focus() + 0x8A, 1);` | Area131_ChoiceFocusStepA 852, Area131_ChoiceFocusStep0 850 |
+| D7 | `FocusScene (131 x2)` | `B(at::kVar7) = 8;` | Area131_ChoiceFocusStepA 852, Area131_ChoiceFocusStep0 850 |
+| D7b | `FocusScene (131 x2)` | `B(at::kCounter0) = 1;` | Area131_ChoiceFocusStepA 852, Area131_ChoiceFocusStep0 850 |
+| D8 | `Area131_ChoiceFocusStep0` | `SetMessage(0xFFFE);` | Area131_ChoiceFocusStep0 5969 |
+| D9 | `Area131_ChoiceFocusStepA` | a line removed: `AH_CALL(ScriptFlags_Set40)();` | Area131_ChoiceFocusStepA 852 |
+| D9b | `Area131_ChoiceFocusStepA` | `if (B(at::kChoiceAnswer) > 1) {` | Area131_ChoiceFocusStepA 585 |
+| D9c | `Area131_ChoiceFocusStep0` | a line removed: `AH_CALL(ScriptFlags_Set40)();` | Area131_ChoiceFocusStep0 850 |
+| D8b | `FocusScene (131 x2)` | `unsigned char* const first = PartyAt(0);` | Area131_ChoiceFocusStepA 709, Area131_ChoiceFocusStep0 697 |
+| D10 | `Area131_CameraShiftYLess1E` | `Camera_ShiftY - 0x1D);` | Area131_CameraShiftYLess1E 6000 |
+| D11 | `Area131_CameraShiftYMore1E` | `Camera_ShiftY + 0x1F);` | Area131_CameraShiftYMore1E 6000 |
+| D12 | `Area131_CameraShiftYLess1E` | `MapView_Redraw = 3;` | Area131_CameraShiftYLess1E 6000 |
+| D12b | `Area131_CameraShiftYMore1E` | `MapView_Redraw = 1;` | Area131_CameraShiftYMore1E 6000 |
+| D13 | `Area131_Trigger15` | `B(at::kTailKind) = 0x23;` | Area131_Trigger15 6000 |
+| D14 | `Area131_Trigger15` | `return 1;` | Area131_Trigger15 6000 |
+| D15 | `Area131_DisarmTail` | `B(at::kTailSub) = 1;` | Area131_DisarmTail 6000 |
+| D16 | `Area131_DisarmTail` | a line removed: `AH_CALL(ScriptFlags_Clear40)();` | Area131_DisarmTail 6000 |
+| D17 | `Area131_DisarmTail` | `B(at::kTailState) = 1;` | Area131_DisarmTail 6000 |
+| D18 | `Area131_TailLeave34` | `AH_CALL(Msg_OpenScript)(3);` | Area131_TailLeave34 639 |
+| D19 | `Area131_TailLeave34` | `B(at::kTailState) + 2);` | Area131_TailLeave34 639 |
+| D20 | `Area131_TailLeave34` | the state read before Msg_OpenScript | Area131_TailLeave34 324 |
+| D21 | `Area131_TailLeave34` | `if (Field_Request == 2) AH_CALL(Area131_DisarmTail)();` | Area131_TailLeave34 686 |
+| D22 | `Area131_TailLeave34` | `if (Field_Request != 2) B(at::kTailState) = 4;` | Area131_TailLeave34 350 |
+| D23 | `Area131_TailLeave34` | `Field_ScriptFlags ^ 0x17` | Area131_TailLeave34 715 |
+| D24 | `Area131_TailLeave34` | `B(at::kCampFlag) = 1;` | Area131_TailLeave34 715 |
+| D25 | `Area131_TailLeave34` | `Flags_Clear)(StoryFlags(), 0x78)` | Area131_TailLeave34 715 |
+| D26 | `Area131_TailLeave34` | `Field_ChangeArea)(0x79, 0x1A0000, 0x350000, 2)` | Area131_TailLeave34 715 |
+| D27 | `Area131_TailLeave34` | `switch (static_cast<U>(static_cast<std::int32_t>(state)) & 0x7F) {` | Area131_TailLeave34 324 |
+| D28 | `Area131_TailLeave34` | `Field_Request = 3;` | Area131_TailLeave34 639 |
+| D29 | `Area131_TailLeave34` | a line removed: `AH_CALL(ScriptFlags_Set40)();` | Area131_TailLeave34 639 |
+| D30 | `Area131_TailLeave34` | the xor after the disarm | not refused: equivalent (the xor touches bits 1, 2, 4 of the word; the disarm's Clear40 bit 8; nothing between reads it); variant D30b refused |
+| D31 | `Area131_TailLeave34` | `if (Field_Request != 1) B(at::kTailState) = 3;` | Area131_TailLeave34 384 |
+| E1 | `Area132_AnimByBit4` | `(Sprite_Current[8] & 8) ? 0x40 : 0x41` | Area132_AnimByBit4 3315 |
+| E2 | `Area132_AnimByBit4` | `(Sprite_Current[8] & 4) ? 0x42 : 0x41` | Area132_AnimByBit4 3304 |
+| E3 | `Area132_AnimByBit4` | `(Sprite_Current[8] & 4) ? 0x40 : 0x43` | Area132_AnimByBit4 2696 |
+| E4 | `Area132_Effect73` | `EffectAtCell(0x73, 0x2A0001, 0x1D0000, 0, -1, 0, 0)` | Area132_Effect73 4828 |
+| E5 | `Area132_Effect73` | `EffectAtCell(0x72, 0x2A0000, 0x1D0000, 0, -1, 0, 0)` | Area132_Effect73 4828 |
+| E6 | `Area132_Effect73` | `EffectAtCell(0x73, 0x2A0000, 0x1D0000, 1, -1, 0, 0)` | Area132_Effect73 4828 |
+| E7 | `Area132_Effect73Pair` | `EffectAtCell(0x73, 0x2E0000, 0x1C0000, 1, 1, 0x100, -0x8000)` | Area132_Effect73Pair 3856 |
+| E8 | `Area132_Effect73Pair` | `EffectAtCell(0x73, 0x2F0000, 0x1C0000, 1, 1, 0x200, -0x8000)` | Area132_Effect73Pair 4693 |
+| E9 | `Area132_Effect73Pair` | `EffectAtCell(0x73, 0x2F0000, 0x1C0000, 1, 0, 0x200, -0x7000)` | Area132_Effect73Pair 4693 |
+| E9b | `Area132_Effect73Pair` | `EffectAtCell(0x73, 0x2E0000, 0x1D0000, 1, 1, 0x200, -0x8000)` | Area132_Effect73Pair 4818 |
+| E10 | `Area132_Effect74` | `EffectAtCell(0x74, 0x2B0000, 0x290000, -1, -1, 0, 0)` | Area132_Effect74 4784 |
+| E11 | `Area132_Effect74` | `EffectAtCell(0x74, 0x2B0000, 0x280000, 0, -1, 0, 0)` | Area132_Effect74 4762 |
+| E11b | `Area132_Effect74` | `EffectAtCell(0x75, 0x2B0000, 0x280000, -1, -1, 0, 0)` | Area132_Effect74 4784 |
+| E12 | `EffectAtCell (132 x3)` | `static_cast<std::int32_t>(static_cast<unsigned short>(ground)) + lift` | not refused: equivalent (the << 16 drops the extension); variant E12b refused |
+| E13 | `EffectAtCell (132 x3)` | `const U moved = static_cast<U>(xx) + static_cast<U>(shift);` | Area132_Effect73Pair 691 |
+| E14 | `EffectAtCell (132 x3)` | `e[0] = 2;` | Area132_Effect73 4828, Area132_Effect73Pair 5767, Area132_Effect74 4784 |
+| E15 | `EffectAtCell (132 x3)` | `AH_CALL(AreaMap_Elevation)(zz, xx);` | Area132_Effect73 4828, Area132_Effect73Pair 5767, Area132_Effect74 4784 |
+| E16 | `Area132_ClearFE` | `Cond_ByteFE = 1; }` | Area132_ClearFE 6000 |
+| E17 | `Area132_EffectGradient` | `if (Cond_ByteFE != 0) AH_CALL(Effect_Release)();` | Area132_EffectGradient 6000 |
+| E18 | `Area132_EffectGradient` | `if ((Draw_PassFlags & 8) == 0) return;` | Area132_EffectGradient 3250 |
+| E19 | `Area132_EffectGradient` | `Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x96, 0);` | Area132_EffectGradient 2736 |
+| E20 | `Area132_EffectGradient` | `Gfx_CommitPrim)(7, 0xD);` | Area132_EffectGradient 2736 |
+| E21 | `Area132_EffectGradient` | Gfx_PacketNext read before the first commit | Area132_EffectGradient 2187 |
+| E22 | `Area132_EffectGradient` | `Gpu_SetSemiTrans)(p, 1);` | Area132_EffectGradient 2736 |
+| E23 | `Area132_EffectGradient` | `SetFloat(p + 0x2C, 199.0f);` | Area132_EffectGradient 2736 |
+| E24 | `Area132_EffectGradient` | `p[0x15] = 0xC9;` | Area132_EffectGradient 2736 |
+| E25 | `Area132_EffectGradient` | `SetFloat(p + 0x18, 321.0f);` | Area132_EffectGradient 2736 |
+| E26 | `Area132_EffectGradient` | `p[0x36] = 0x21;` | Area132_EffectGradient 2736 |
+| E27 | `Area132_EffectGradient` | `Gfx_CommitPrim)(7, 0x40);` | Area132_EffectGradient 2736 |
+| E28 | `Area132_EffectGradient` | `SetLong(p + 0x08, 1);` | Area132_EffectGradient 2736 |
+| E29 | `Area132_EffectGradient` | a store before Gpu_SetPolyG4 / SetSemiTrans | Area132_EffectGradient 2736 |
+| E30 | `Area132_EffectGradient` | `p[0x06] = 0xFE;` | Area132_EffectGradient 2736 |
+| E31 | `Area132_EffectGradient` | `p[0x25] = 1;` | Area132_EffectGradient 2736 |
+| F1 | `Area133_ChoiceFocusPair` | `B(at::kArea133ChoicePairs + static_cast<U>(Answer()) * 2u + 2u);` | Area133_ChoiceFocusPair 6000 |
+| F2 | `Area133_ChoiceFocusPair` | `SetLong(focus + 0x14, first);` | Area133_ChoiceFocusPair 6000 |
+| F3 | `Area133_ChoiceFocusPair` | `static_cast<U>(Answer()) * 2u));` | Area133_ChoiceFocusPair 5577 |
+| F4 | `Area133_ChoiceFocusPair` | `if (Answer() != 3) return;` | Area133_ChoiceFocusPair 2301 |
+| F5 | `Area133_ChoiceFocusPair` | `B(at::kLoad0F) = 1;` | Area133_ChoiceFocusPair 1595 |
+| F6 | `Area133_ChoiceFocusPair` | `Draw_PassFlags = 1;` | Area133_ChoiceFocusPair 1595 |
+| F7 | `Area133_ChoiceFocusPair` | `B(at::kVar7Step) = 0x1F;` | Area133_ChoiceFocusPair 1595 |
+| F8 | `Area133_ChoiceFocusPair` | `B(at::kVar7) = 5;` | Area133_ChoiceFocusPair 1595 |
+| F9 | `Area133_ChoiceFocusPair` | `B(at::kArea133ChoicePairs + static_cast<U>(B(at::kChoiceAnswer)) * 2u);` | Area133_ChoiceFocusPair 827 |
+| F10 | `Area133_ChoiceFocusPair` | `SetMessage(0xFFFE);` | Area133_ChoiceFocusPair 5916 |
+| F11 | `Area133_ChoiceFocusPair` | a line removed: `AH_CALL(ScriptFlags_Set40)();` | Area133_ChoiceFocusPair 1595 |
+| F12 | `Area133_SpawnKind3AtMember0` | `SpawnAtMember(0, 4, at::kArea133EffectArgs)` | Area133_SpawnKind3AtMember0 6000 |
+| F13 | `Area133_SpawnKind3AtMember0` | `SpawnAtMember(0, 3, at::kArea133EffectArgs + 1)` | Area133_SpawnKind3AtMember0 4773 |
+| G1 | `Area134_SpawnKind4AtMember0` | `SpawnAtMember(0, 5, at::kArea134EffectArgsB)` | Area134_SpawnKind4AtMember0 6000 |
+| G2 | `Area134_SpawnKind1AtMember0` | `SpawnAtMember(0, 2, at::kArea134EffectArgsA)` | Area134_SpawnKind1AtMember0 6000 |
+| G3 | `Area134_SpawnKind3AtMember1` | `SpawnAtMember(1, 2, at::kArea134EffectArgsA)` | Area134_SpawnKind3AtMember1 6000 |
+| G4 | `Area134_SpawnKind3AtMember2` | `SpawnAtMember(1, 3, at::kArea134EffectArgsA)` | Area134_SpawnKind3AtMember2 6000 |
+| G5 | `Area134_SpawnKind1AtMember1` | `SpawnAtMember(1, 1, at::kArea134EffectArgsB)` | Area134_SpawnKind1AtMember1 2668 |
+| G6 | `Area134_SpawnKind1AtMember2` | `SpawnAtMember(2, 0, at::kArea134EffectArgsA)` | Area134_SpawnKind1AtMember2 6000 |
+| G7 | `Area134_CameraShiftXMore2` | `Camera_ShiftX + 3);` | Area134_CameraShiftXMore2 6000 |
+| G8 | `Area134_CameraShiftXLess2` | `Camera_ShiftX - 1);` | Area134_CameraShiftXLess2 6000 |
+| G9 | `Area134_CameraShiftXReset` | `Camera_ShiftX = 1;` | Area134_CameraShiftXReset 6000 |
+| G10 | `Area134_CameraShiftYMore8` | `Camera_ShiftY + 9);` | Area134_CameraShiftYMore8 6000 |
+| G11 | `Area134_CameraShiftYLess8` | `Camera_ShiftY - 7);` | Area134_CameraShiftYLess8 6000 |
+| G12 | `Area134_CameraShiftXMore2` | `MapView_Redraw = 3;` | Area134_CameraShiftXMore2 6000 |
+| G13 | `Area134_CameraShiftXReset` | `MapView_Redraw = 1;` | Area134_CameraShiftXReset 6000 |
+| G14 | `Area134_CameraShiftYMore8` | `MapView_Redraw = 0;` | Area134_CameraShiftYMore8 6000 |
+| G14b | `Area134_CameraShiftXLess2` | `MapView_Redraw = 1;` | Area134_CameraShiftXLess2 6000 |
+| G14c | `Area134_CameraShiftYLess8` | `MapView_Redraw = 3;` | Area134_CameraShiftYLess8 6000 |
+| G15 | `Area134_Effect90AtObject` | `EffectAtObject(0x90, false)` | Area134_Effect90AtObject 4771 |
+| G16 | `Area134_Effect93AtObject` | `EffectAtObject(0x94, false)` | Area134_Effect93AtObject 4733 |
+| G17 | `Area134_Effect99AtObject` | `EffectAtObject(0x98, false)` | Area134_Effect99AtObject 4806 |
+| G18 | `Area134_Effect90AtObject` | `EffectAtObject(0x91, true)` | Area134_Effect90AtObject 4791 |
+| G19 | `Area134_Effect93AtObject` | `EffectAtObject(0x93, true)` | Area134_Effect93AtObject 4716 |
+| B37b | `Area128_InitPatches` | `& 0x3FF) * 4u;` | Area128_InitPatches 1742 |
+| D30b | `Area131_TailLeave34` | the xor after Flags_Clear (variant of D30) | Area131_TailLeave34 388 |
+| E12b | `EffectAtCell (132 x3)` | `static_cast<std::int32_t>(static_cast<signed char>(ground)) + lift` | Area132_Effect73 4501, Area132_Effect73Pair 5541, Area132_Effect74 4453 |
+| D30r | `Area131_TailLeave34` | D30 re-run, Flags_Clear assigning the word | D30 again with Flags_Clear assigning the word: still not refused (equivalent) |
 
 ## 5. The tables named
 

@@ -422,11 +422,18 @@ void Disturb130(U h) {
 // Area 131
 // ===========================================================================
 
+// Flags_Clear sets Field_ScriptFlags half the time (tail kind 34's state 3
+// toggles bits of it before the call; an assignment, so the order shows).
+U SetsScriptFlags(const U*, U answer) {
+    const U n = ah::Noise();
+    if (n & 1) Field_ScriptFlags = static_cast<unsigned short>(n >> 8);
+    return answer;
+}
 const ah::Callee kCallees131[] = {
     {W3C_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesFocus},
     {W3C_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W3C_OURS(Msg_OpenScript), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &MovesTailState},
-    {W3C_OURS(Flags_Clear), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {W3C_OURS(Flags_Clear), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &SetsScriptFlags},
     {W3C_OURS(Field_ChangeArea), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called by the tail (a call and a tail jmp)
     {W3C_OURS(Area131_DisarmTail), 0, {}, ah::Answer::kPhase, 0, 0},
