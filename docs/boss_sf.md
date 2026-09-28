@@ -526,6 +526,6 @@ the two kinds are reached through `Boss_SetupTable` / `BossKind_Table`
 
 ## 9. For `analysis/calltrace/entries_logic.txt`
 
-Appended to the main checkout's file (2026-09-28): 53 new lines, one a
-function (the extents of section 2). `00440630 29` was already there and
+Appended to the main checkout's file (2026-09-28): 53 new lines, a function
+each (the extents of section 2). `00440630 29` was already there and
 exact; `00440660 77` fixes the host line `00440660 258`.
