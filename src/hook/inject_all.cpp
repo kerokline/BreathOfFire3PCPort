@@ -191,6 +191,7 @@
 #include "game/area_w1e.h"
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
+#include "game/area_w2d.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -635,6 +636,10 @@ void InjectAll() {
                                 // clones' calls re-aimed at the area harness's recorders, areas 56 and 59's state
                                 // tables and areas 63 / 64's weights swapped for the fuzz only; no module patches
                                 // bytes inside its 47 (DIVERGENCE.md, cheats.cpp): order does not matter
+    AreaW2d_Inject();           // round 10 group AR2D (world 2, areas 95..100 and 103, 0x4135B0..0x4146C0): its
+                                // clones' calls re-aimed at the area harness's recorders, areas 99 and 100's state
+                                // tables swapped for the fuzz only; no module patches bytes inside its 53
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
     ScenaSc13_Inject();         // round 10 group SC13 (scenario chapters 13 and 14, 0x561DB0..0x567DC0): no module
                                 // patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
