@@ -2236,8 +2236,11 @@ designed in rather than bolted on.
   leaves at `0x4B5691` read back after `Cheats_Inject`, so it rolls as the
   patched original does; the patch is still made, so
   `BOF3X_ORIGINAL=Steal_Start` keeps the cheat too. The fuzz passes with the
-  variable set and unset. Steal's step `0x4F5140` is still Capcom's and
-  still patched.
+  variable set and unset. Steal's step `0x4F5140` was still Capcom's and
+  still patched at the time; **since round nine (2026-09-25, group SH) it is
+  ours** as `SkillSteal_Roll` (`magic_steal.cpp`), and ours reads the mask
+  back from the patched original's byte (`Cheats_StealRollMask`), so the
+  cheat behaves the same with either side in place.
 - **Reversible?** Yes: the switch off, `BOF3X_STEAL` unset, or
   `BOF3X_ORIGINAL=Cheat_StealAlways`.
 

@@ -115,8 +115,7 @@ frames of 25,000 calls) are history; `r8_*` and older too.
      wall-clock exclusions, 25 to audit - the hash matched with them
      absent, so each is covered by a host extent or off the attract path;
      say which.
-2. **Housekeeping.** A PR for round nine when the owner wants one (push
-   first: the branch is local past `fb10178`). The controls scripts of every
+2. **Housekeeping.** Round nine is merged (PR #27). The controls scripts of every
    round-nine group live in session scratchpads, not in git: waves one to
    three and the other earlier groups in
    `C:/Users/kerok/AppData/Local/Temp/claude/C--Users-kerok-Documents-GitHub-BreathOfFire3PCPort/c6020f3e-435b-4b37-a18c-94d1c71f583a/scratchpad/<group>/`,

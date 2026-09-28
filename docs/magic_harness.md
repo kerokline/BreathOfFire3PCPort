@@ -1,6 +1,6 @@
 # The spell harness: one fuzz for every spell group
 
-**Status:** IN PROGRESS (2026-09-26) - built and proved on one overlay
+**Status:** MEASURED (2026-09-28; every spell group of round nine ran through it, 0 mismatches each, and the scenario and area harnesses of round ten are copies of it) - built and proved on one overlay
 (Steal's, [`magic_steal.md`](magic_steal.md): 3 functions, 28 of 28
 controls refused). The first spell wave's eleven groups each extended it on
 their own branch; group HX folded those extensions into one harness

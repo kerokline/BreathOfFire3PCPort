@@ -1,6 +1,6 @@
 # The area harness: one fuzz for every area group
 
-**Status:** IN PROGRESS (2026-09-27) - built and proved on one area (area 11,
+**Status:** MEASURED (2026-09-28; all 27 area groups of round ten ran through it, 0 mismatches each, [`takeover-queue-round10.md`](takeover-queue-round10.md)) - built and proved on one area (area 11,
 [`area_011.md`](area_011.md): 3 functions, 0 mismatches, 20 controls planted, 18 refused by a count, one refused then hung, one equivalent) and on
 the cell hook's reader `0x56E670` (section 8). Not yet used by a group that
 needs a choice handler, a step or arrive hook, a mode-tail phase or a state

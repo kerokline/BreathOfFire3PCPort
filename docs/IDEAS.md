@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-09-26; 23 entries, I1..I23 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-09-28; 26 entries, I1..I26 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -68,8 +68,8 @@ rule ([`README.md`](README.md)) here too.
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
 | I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26) |
-| I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | open; planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) (owner, 2026-09-26) |
-| I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | open; planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) (owner, 2026-09-26) |
+| I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
+| I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | **built 2026-09-27..28** in round ten's six waves - every area overlay of worlds 0..4 ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) |
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | open; planned and cut in [`takeover-queue-bosses.md`](takeover-queue-bosses.md), tool `tools/boss_rows.py` (owner, 2026-09-28) |
 
 ---
@@ -991,6 +991,7 @@ then the harness, proved on SC0. The plan, groups and waves:
 
 ### Outcome
 _(2026-09-26) open; planned, not scheduled._
+_(2026-09-28) built: round ten's waves one to three took every chapter bank, the shared helpers, the call tables' block and the engine callees through `scenario_harness` ([`takeover-queue-round10.md`](takeover-queue-round10.md) §4, §7, §10); the live check per chapter is the owner's._
 
 ## I25 — The area round: the area overlays enumerated from their tables
 
@@ -1034,6 +1035,7 @@ each is a round of its own with the same walker.
 
 ### Outcome
 _(2026-09-26) open; planned, not scheduled._
+_(2026-09-28) built: round ten's six waves took every area overlay of worlds 0..4 through `area_harness` and `tools/area_rows.py` ([`takeover-queue-round10.md`](takeover-queue-round10.md) §4..§19); the live check per area is the owner's, the world-map body shared once is [`round-10-cleanup.md`](round-10-cleanup.md) item 1._
 
 ## I26 — The boss round: the BOSS overlays enumerated from the engine's three root sets
 

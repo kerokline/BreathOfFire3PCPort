@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-09-26)
+**Status:** IN PROGRESS (2026-09-28)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -381,6 +381,16 @@ What is established:
      panel's PlayStation icon column (DIV-0051) - 1,025 ours. Steps 1..3 of
      its plan are done and confirmed; step 4, the in-game binding screen, is
      [`IDEAS.md`](IDEAS.md) I20.
+   - **The pointer-reached rounds, eight to ten** (2026-09-25..28; the wave
+     table above): round eight took the 440 functions the three routes enter
+     that no all-calls trace had armed; round nine the task scheduler and,
+     through one fuzz harness, every spell overlay (D89..D132); round ten,
+     through two more harnesses built on the same pattern, every chapter
+     bank (the scenario round, I24) and every area overlay of worlds 0..4
+     (the area round, I25) - **5,706 ours**, fuzz-only beyond the recorded
+     routes, the round's debts in [`round-10-cleanup.md`](round-10-cleanup.md)
+     and its defects D133..D161. Round eleven, the boss overlays, is planned
+     and cut ([`takeover-queue-bosses.md`](takeover-queue-bosses.md), I26).
 
    What is next is [`HANDOFF.md`](HANDOFF.md)'s to say.
 2. **Then the text swap** - [`dialogue-localisation.md`](dialogue-localisation.md):
@@ -493,9 +503,10 @@ Launcher, detour layer, generated symbol header, one toolchain. Described in
 
 What phase 0 deliberately did not build: register-argument thunks for
 non-standard MSVC6 conventions (wait for the first real case), a progress
-report, the Ghidra round-trip (phase 1), and any CI — there is still no
-workflow that compiles `src/`, and the receipt policy below now has something
-to bite on.
+report, the Ghidra round-trip (phase 1), and any CI — at the time no
+workflow compiled `src/` (one has since 2026-09-25, `.github/workflows/build.yml`
+beside the ledger checks in `checks.yml`), and the receipt policy below now has
+something to bite on.
 
 ## A stated goal worth recording now
 
@@ -555,8 +566,9 @@ an unrecognised disc can be named rather than guessed at.
   hashes of the vectors used. CI validates structure and freshness only — it
   never needs a byte of game data. **Still not built** - it was deferred while
   there was no `src/` and no harness; both exist now (the oracle, the memory
-  dump, the frame hash), so it is owed, as is a CI workflow that compiles
-  `src/` (`.github/workflows/` holds only the DCO check).
+  dump, the frame hash), so it is owed. The CI workflow that compiles `src/`
+  exists since 2026-09-25 (`.github/workflows/build.yml`, with the ledger and
+  symbol checks in `checks.yml` beside the DCO check); the receipt does not.
 - **Size floors for the matcher.** [`bsim-evaluation.md`](bsim-evaluation.md)
   shows tiny wrappers and very large functions are unreliable; nine pairs is too
   few to fit a cutoff.

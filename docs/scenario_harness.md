@@ -1,6 +1,6 @@
 # The scenario harness: one fuzz for every scenario group
 
-**Status:** IN PROGRESS (2026-09-27) - built and proved on chapter 0
+**Status:** MEASURED (2026-09-28; every scenario group of round ten ran through it, 0 mismatches each, [`takeover-queue-round10.md`](takeover-queue-round10.md)) - built and proved on chapter 0
 ([`scena_sc0.md`](scena_sc0.md): 19 functions, 0 mismatches in 76,000
 rounds, 105 of 105 controls refused). Round ten group SCH
 ([`takeover-queue-round10.md`](takeover-queue-round10.md) §1).
