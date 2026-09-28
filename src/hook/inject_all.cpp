@@ -210,6 +210,7 @@
 #include "game/area_w4e.h"
 #include "game/area_w4f.h"
 #include "game/boss_h.h"
+#include "game/boss_sb.h"
 #include "game/boss_spawn.h"
 #include "game/boss_sd.h"
 #include "hook/detour.h"
@@ -738,6 +739,9 @@ void InjectAll() {
     BossSd_Inject();            // round 11 group BSD (fights 17..21 and kinds 18, 21..27, 0x43A590..0x43B74A): its
                                 // clones' calls re-aimed at the boss harness's recorders, its kinds' step, action
                                 // and hook tables swapped for the fuzz only; no module patches bytes inside its 52
+    BossSb_Inject();            // round 11 group BSB (fights 4..10 and 13, kinds 3, 4, 5 and 8..11, 0x438290..0x43A022):
+                                // its clones' calls re-aimed at the boss harness's recorders, its kinds' state and
+                                // hook tables swapped for the fuzz only; no module patches bytes inside its 52
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
