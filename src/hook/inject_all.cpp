@@ -211,6 +211,7 @@
 #include "game/area_w4f.h"
 #include "game/boss_h.h"
 #include "game/boss_spawn.h"
+#include "game/boss_sd.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -734,6 +735,10 @@ void InjectAll() {
                                 // tables swapped and six kinds' dispatchers driven with a clone planted in their
                                 // tables for the fuzz only; no module patches bytes inside its 20 (DIVERGENCE.md,
                                 // cheats.cpp): order does not matter
+    BossSd_Inject();            // round 11 group BSD (fights 17..21 and kinds 18, 21..27, 0x43A590..0x43B74A): its
+                                // clones' calls re-aimed at the boss harness's recorders, its kinds' step, action
+                                // and hook tables swapped for the fuzz only; no module patches bytes inside its 52
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
