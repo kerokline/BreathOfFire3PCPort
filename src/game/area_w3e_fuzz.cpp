@@ -225,6 +225,13 @@ std::uint32_t FlagsTestEffect(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 
+// The event ops take their object from the word 0x903850 (scena_se.cpp):
+// the value each call sees is part of what it does.
+std::uint32_t NotesObjectWord(const std::uint32_t*, std::uint32_t answer) {
+    ah::Note(Word(ah::Mem(at::kScratch850)));
+    return answer;
+}
+
 #define W3E_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 #define W3E_THEIRS(name) #name, KeyOf(name), KeyOf(name)
 const ah::Callee kCallees[] = {
@@ -238,8 +245,9 @@ const ah::Callee kCallees[] = {
     {W3E_OURS(Effect_Release), 0, {}, ah::Answer::kGarbage, 0, 0},
     // any of the thirty field objects, or none
     {W3E_OURS(Sprite_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x1D},
-    {W3E_THEIRS(EventOp_6x), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {W3E_OURS(EventOp_0x), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
+    // the ops read the object word 0x903850: logged with each call
+    {W3E_THEIRS(EventOp_6x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &NotesObjectWord},
+    {W3E_OURS(EventOp_0x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &NotesObjectWord},
     {W3E_OURS(Flags_Toggle), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsTestEffect},
     {W3E_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},
@@ -254,7 +262,8 @@ const ah::Callee kCallees[] = {
     {W3E_OURS(Party_HealJoined), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(Field_ZoneCounterRoll), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly
-    {W3E_OURS(Area140_BlockedAhead), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},
+    // answers 0 or 1 (its two returns)
+    {W3E_OURS(Area140_BlockedAhead), 2, {kU16, kU16}, ah::Answer::kByte, 0x00, 0x01},
     {W3E_OURS(Area140_CellHook), 2, {kU8, kU8}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(Area141_ShadeDownStep), 0, {}, ah::Answer::kPhase, 0, 0},
     {W3E_OURS(Area141_ShadeUpStep), 0, {}, ah::Answer::kPhase, 0, 0},
@@ -279,6 +288,9 @@ const ah::Region kRegions[] = {
     {at::kKind2Hold, 1},
     {at::kCondByteFE, 1},
     {at::kSpriteKind2, at::kObjectStride},
+    // effect "slot 0xFF": where a spawn whose none test failed would write
+    // (Effect_Objects + 0xFF << 7), so such a write is compared
+    {at::kEffectObjects + 0xFFu * at::kEffectStride, at::kEffectStride},
 };
 
 // Which area and function the round is running (set by the seeds; read by
@@ -537,7 +549,7 @@ void Seed141(unsigned k) {
         if (ah::Often()) SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 0, 2, 0x1C1, 0x1C0, 0x1C2, 0xFFFF, 0x3C));
         if (ah::Often()) SetWord(ah::Mem(at::kInputHeld + 4), ah::Half() ? 0 : 1u << (ah::Next() % 16));
         if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
-        if (ah::Often()) B(at::kKind2Hold) = static_cast<unsigned char>(ah::Half() ? 0 : 1 + ah::Next() % 0xFF);
+        if (ah::Often()) B(at::kKind2Hold) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0x80));
         break;
     }
     case k141Cell: SeedCellPose(at::kArea141Cells, at::kArea141CellCount, 4); break;
