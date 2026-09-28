@@ -27,6 +27,7 @@
 #include "game/boss_sj.h"
 
 #include <cstdint>
+#include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"

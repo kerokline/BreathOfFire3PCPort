@@ -62,7 +62,10 @@ bh::Clone Disp(const char* name, U base, const void* ours, std::uint8_t at, std:
 // ===========================================================================
 
 // Port_DroppedCall sits in both kinds' +1 tables (entries 1 and 10): a bare
-// ret, listed with no arguments (docs/boss_sa.md section 3). Sprite_PoseFromSet
+// ret, left to the standard listing (its byte logged): the dispatchers hand
+// the caller's word on as the original's jmp leaves it, so both passes give
+// it the harness's word and a dispatcher that dropped it is refused on
+// states 1 and 10 (docs/boss_sc.md section 1.2). Sprite_PoseFromSet
 // reads the animation's low byte and Battle_RemoveFromTurnOrder the actor's
 // (the originals push a register whose upper bytes are a callee's leftovers).
 // Battle_RemoveFromTurnOrder is louder than the real one: the end hooks read
@@ -82,7 +85,6 @@ std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
 }
 
 const bh::Callee kCallees[] = {
-    {"Port_DroppedCall", ::bof3::addr::Port_DroppedCall, KeyOf(&::Port_DroppedCall), 0, {}, bh::Answer::kGarbage, 0, 0},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
