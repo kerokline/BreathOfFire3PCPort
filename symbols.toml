@@ -48166,3 +48166,198 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-27, group SC5: Scena05_CellHook by the record index: Scena05_Cell0, Scena05_Cell1; a zero dword and the eight bytes 0x6610D8 follow, then Scena06_Hooks."
+
+
+# --- 2026-09-28 round ten, group SX: the engine callees the chapter and area groups call by raw address (docs/scena_sx.md) ---
+
+[[func]]
+pc = 0x498DE0
+psx = 0x801AEDD4
+name = "Char_LevelUp"
+ret = "void"
+params = "unsigned index"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x498DE0..0x498FD2 (0x1F3 bytes), cdecl, every jump internal: the record CharacterRecords + 0xA4 * (index and 0xFF), unchecked; its EXP +0xC (compared signed, jg) against the running sum of the u16 at +0 of Char_ExpTable rows id * 99 + 1.. gives the new level (99 at most); nothing at level +0xA 99 or when not higher; else per level gained, from the old level's row: stat words +0x40, +0x42 from row bytes +2, +3, +0x44, +0x46 from +4 high and low nibble, +0x48, +0x4A from +5, each plus the signed bias byte +0x89..+0x8E, never below 0, the 16-bit word capped at 999; then 0x590C90 (AbilityList_Add) of row +6 and of row +7 with the index dword, 0, 0. Then +0xA = the level and Char_RecalcStats(record). Callers BattleResult_Setup (0x431D70) and SC7's 0x553630. PSX twin 0x801AEDD4, the sibling's Char_LevelUp (pairs_propagated callers and call-anchored); the name agrees with the reading."
+
+[[func]]
+pc = 0x532ED0
+name = "Party_PlaceForBattle"
+ret = "void"
+params = "int x, int z, unsigned formation"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x532ED0..0x532FC8 (0xF9 bytes), cdecl, every jump internal: x, z (16.16) to 0x903780 / 0x903784, 0x904AAC = EventBattle_Records[formation and 0xFF] +1; with Field_MemberCount (read again each pass) members: Field_State = Sprite_Current = ObjTrio record i, slot j = the index of its +0x89 in the second party list 0x904065 (3 if absent), written into the low byte of the third argument's stack slot and passed as that dword to 0x532FD0(x, z, slot) (the dwords re-read); Sprite_Current +0x34 / +0x38 to 0x7E06E0 + 8 j, +0x48 = 0, +8 = BattleFormation_Anims[0x904AAC], Sprite_EnsureAnimation of it with Sprite_Current's upper bytes in the dword. 58 E8 sites in 13 chapter bands. No PSX twin paired."
+
+[[func]]
+pc = 0x533E00
+name = "Party_ReloadPalettes"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x533E00..0x533E47 (0x48 bytes), every jump internal: for i below Field_MemberCount (read again each pass): Sprite_Current = ObjTrio record i, Sprite_ReleaseTint(the record), Sprite_LoadPalette(0x80D380 + 0x40 i, 0). 63 E8 / E9 sites, all in the CALLS block 0x519890..0x51AC50 (53 of them tail jmps), plus SE's Scena08_PartyJoin784. No PSX twin paired."
+
+[[func]]
+pc = 0x533E50
+name = "Party_HealJoined"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x533E50..0x533EE3 (0x94 bytes), every jump internal: each of the 8 CharacterRecords with +0xB bit 0: +0x1E = 0, Char_RecalcStats(record), +0x1C = +0x2E, HP +0x18 = +0x20, AP +0x1A = +0x22, word +0x10 = 0; then for i below Field_MemberCount (read once) 0x29 dwords from the record MoveScript_EffectState[first list 0x904062 byte i] (unchecked) to ObjTrio record i +0x80. 51 E8 sites: 11 chapter bands, five area overlays, Field_ModeTailRun. Party_RestoreAll 0x580630 (the inn) is the larger cousin. No PSX twin paired."
+
+[[func]]
+pc = 0x534030
+name = "Party_Remove"
+ret = "void"
+params = "unsigned member"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x534030..0x534195 (0x166 bytes), cdecl, every jump internal: Party_JoinReset; the member byte's slot in the second list 0x904065 (the count when absent, unchecked) = 0xFF and bubbled to the end below count - 1; its slot in the first list 0x904062 = 0xFF; while s < Field_MemberCount - 1, a 0xFF slot takes the next id, the next ObjTrio record copied over (0x53 dwords; Sprite_Current it), +5 = s, +0x26 = s * 0x50, +0x27 = s + 0x78, +0x4B = 0xFF, +0x148 = MoveScript_EffectState[+0x89]. Then ObjTrio record count - 1 +0 = 0 (0x802BF4 at a count of 0), Member_ClearState(count - 1), and by the count read again: 3 - 0x904060 = 0 if at least 3; 2 - 0x904060 = 0; the count one less. 41 E8 / E9 sites, all in the CALLS block. No PSX twin paired."
+
+[[func]]
+pc = 0x534DB0
+psx = 0x801C4084
+name = "Sprite_FlashClut"
+ret = "void"
+params = "unsigned colour"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x534DB0..0x534E45 (0x96 bytes), cdecl, every jump internal: four words 0x0010, 0x4010, 0x0210, 0x4000 built on its stack and indexed by the argument's low byte (4 and above read its own frame: ours aborts); words 1..31 of Gfx_ClutStrip row Sprite_Current +0x27 (read once) = that colour, Gfx_ClutStripDirty = 1, Sound_PlayEffect(0x108), Field_State +0x138 |= 8 (read after the call). 13 E8 sites: the nine field-action copies (push 0), Field_FloorDamage, Field_Bit80Tick (push 1), 0x505480 (push 2), SC11. PSX 0x801C4084 (pairs_propagated call-anchored)."
+
+[[func]]
+pc = 0x537480
+psx = 0x80168AB4
+name = "Char_LoseHp"
+ret = "unsigned"
+params = "unsigned amount, unsigned member"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x537480..0x5374F7 (0x78 bytes), cdecl, no calls: the member byte's record (MoveScript_EffectState, unchecked) HP +0x18 minus the amount when HP is above its word (16-bit, unsigned), else HP 1; eax the amount taken (the argument whole, or HP - 1). Then the record Field_State +0x148 names: HP at most (+0x20 >> 2) sets bit 0x2000 of its word +0x10 (Field_ActorStates) and of Field_State word +0x90. 14 E8 sites: the nine field-action copies, 0x534C20, Field_Bit80Tick (twice; reads ax), SC11 twice. PSX 0x80168AB4 (pairs_propagated call)."
+
+[[func]]
+pc = 0x56D6F0
+name = "Field_SetStatus80"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x56D6F0..0x56D6F7 (8 bytes): Field_StatusBits |= 0x80, eax untouched. 16 E8 / E9 sites in 13 chapter bands. No PSX twin paired."
+
+[[func]]
+pc = 0x56D800
+name = "Field_CellTriggerAt"
+ret = "unsigned"
+params = "unsigned char *table, unsigned count, unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x56D800..0x56D8AF (0xB0 bytes), cdecl, no calls: count (a byte) 5-byte records at table; per record, for k from +4 - 1 down to 0 while +0 (zero-extended) equals Game_AreaNumber: with +3 bit 7, x byte == +1 and z byte == +2 + k; else x byte == +1 + k and z byte == +2 (the sums 32-bit). A match whose facing +3 and 0xF is 8 or the byte 0x802D48 (the leader's +8) answers the record's index in eax; else the next record. None: eax 0xFF. 8 E8 sites, the chapters' cell hooks with their Scena05_CellRecords-style tables. No PSX twin paired."
+
+[[func]]
+pc = 0x56FCA0
+psx = 0x80155154
+name = "MapView_FillCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x56FCA0..0x56FD16 (0x77 bytes; the entry jumps over its loop head 0x56FCB0, where scenario_rows.py's descent stops): from MapView_Row + 1 for 56 rows (0x37 wraps to 0), each from MapView_Column + 1 (re-read each row; 0x1B wraps to 0) for 28 columns: MapView_CellToMap(row index, column index, MapView_CellItems + 4 * (row * 28 + column)); then MapView_PlaceRuns. A row or column outside the table is not wrapped. 9 E8 / E9 sites: SC0, SC13, SC16 (a tail jmp), areas 149 and 185. PSX 0x80155154 (pairs_propagated call; docs/field-modes.md)."
+
+[[func]]
+pc = 0x57C550
+name = "Camera_TurnToDegrees"
+ret = "unsigned"
+params = "unsigned angle, unsigned step"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x57C550..0x57C596 (0x47 bytes), cdecl: 0x57C5A0(angle, step) with the angle (s16) and step (s8) each x 4096 / 360 truncated (imul 0xB60B60B7 / add / sar 8 / add sign), the angle and 0xFFF; answers 0x57C5A0's eax (al 1 while Camera_Angles[0] is turning). 3 E8 sites, all SC1. No PSX twin paired."
+
+[[func]]
+pc = 0x57C6B0
+name = "Camera_EaseAngleFB"
+ret = "unsigned char"
+params = "unsigned angle, unsigned frames"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x57C6B0..0x57C79D (0xEE bytes), cdecl, no calls: with frames left 0x905B9C: the 16.16 accumulator 0x905B98 += step 0x905B78, its high word to Cond_AngleFB, one frame less, al 1 while any are left. Else with Field_MoveSpeeds[Sprite_Kind2 +0x84] 0: Cond_AngleFB = the angle (s16 x 4096 / 360), al 0. Else frames = 0x80 / (speed x 4, or x 8 unless Sprite_Kind2 +8 is 2 or 6, a byte; idiv), times the s8 second argument, to 0x905B9C; 0x905B98 = Cond_AngleFB (s16) << 16; step = ((angle - (Cond_AngleFB and 0x7FF)) << 16) / frames; al 1. Divides by 0 for a byte product of 0 or a second argument of 0 (ours aborts). 2 E8 sites, SC0's 0x5394B0. No PSX twin paired."
+
+[[func]]
+pc = 0x57CD90
+psx = 0x8015D438
+name = "Sprite_FindFree"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x57CD90..0x57CDBF (0x30 bytes), no calls: al the first of the 30 Sprite_Objects records whose +0 is 0, else 0xFF (the rest of eax the caller's). 36 E8 sites: chapter bands SC3, SC7, SC9b, SC13, SC15; areas; four engine functions. PSX 0x8015D438 (pairs_propagated call-anchored)."
+
+[[func]]
+pc = 0x587B80
+name = "Sound_StopMusic"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-28, group SX (read, not taken): a 5-byte jmp to 0x5A6FF0, which is byte for byte Music_Stop 0x5A7050 (Music_Buffer's GetStatus into a local, then Stop when playing; the local is the caller's ecx when GetStatus fails). Sound_PauseAll tail-jumps to 0x5A6FF0 too. Left to the sound module with Sound_ResumeAll's thunk 0x587B90: a C replacement of the thunk would lose the ecx the jmp hands on. 21 E8 / E9 sites (docs/scena_sx.md section 3)."
+
+[[func]]
+pc = 0x590C90
+psx = 0x80165BCC
+name = "AbilityList_Add"
+ret = "unsigned char"
+params = "unsigned id, unsigned member, unsigned shared, unsigned which"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x590C90..0x590CDE (0x4F bytes), cdecl, every jump internal: id byte 0 - al 0; shared byte 0 - the list 0x591EC0(member, id, which) (one of the member record's four 10-byte lists +0x60 / +0x6A / +0x74 / +0x7E by the id's class byte, or its ObjTrio copy's when which is not 0), 10 slots; else the list 0x904574, 128 slots; the first 0 slot takes the id byte, al 1; none, al 0. 13 E8 sites: Char_LevelUp twice, Battle_SettleFlag8, SC2b, SC3, five engine functions. PSX 0x80165BCC, the sibling's AbilityList_Add (pairs_propagated gap44)."
+
+[[func]]
+pc = 0x591900
+psx = 0x80166B10
+name = "KeyItem_Add"
+ret = "unsigned char"
+params = "unsigned item"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x591900..0x59191F (0x20 bytes), cdecl, no calls: the first 0 byte of the 32-byte key-item list 0x904554 (Inventory_IdLists[4]) takes the item byte, al 1; full, al 0 (upper eax the list pointer's). 12 E8 sites: chapter bands SC3, SC6, SC7, SC9b, SC13; areas. PSX 0x80166B10 (pairs_propagated call-anchored)."
+
+[[func]]
+pc = 0x591B60
+psx = 0x80166F30
+name = "Inventory_Remove"
+ret = "unsigned char"
+params = "unsigned category, unsigned item, unsigned count"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x591B60..0x591BBC (0x5D bytes), cdecl, no calls: item or count byte 0 - al 0; the id and count lists Inventory_IdLists / Inventory_CountLists[category and 0xFF] (unbounded, as Inventory_Add reads them), the item's first of 128 slots, none - al 0; category byte 4 - the id cleared, al 1 (the null count list unread); else a count below the argument's byte - al 0; else the count less, the id cleared at 0, al 1. 29 E8 sites (chapters, areas, Shop_Equip, engine). PSX 0x80166F30, the sibling's Inventory_Remove (pairs_propagated call-disputed; the name agrees with the reading)."
+
+[[func]]
+pc = 0x591BC0
+psx = 0x80166FCC
+name = "Zenny_Sub"
+ret = "unsigned char"
+params = "unsigned amount"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x591BC0..0x591BDB (0x1C bytes), cdecl, no calls: Party_Zenny (u32) at least the amount (jb, unsigned) - less by it, al 1; else al 0 (upper eax the amount's). 4 E8 sites: SC2b three times, AR0B's Area21_ChoicePay. PSX 0x80166FCC, the sibling's Zenny_Sub (pairs_propagated gap15)."
+
+[[func]]
+pc = 0x591BE0
+psx = 0x80166FFC
+name = "Zenny_Add"
+ret = "unsigned char"
+params = "unsigned amount, unsigned tally"
+status = "evidence"
+impl = "src/game/scena_sx.cpp"
+evidence = "disasm 2026-09-28, group SX, 0x591BE0..0x591C19 (0x3A bytes), cdecl, no calls: Party_Zenny += amount (u32, wrapping); with the second argument's byte 0 the dword 0x904138 += amount too; then Party_Zenny above 9,999,999 (unsigned) is 9,999,999 and al 0, else al 1. 15 E8 sites: BattleResult_ZennyTick twice, SC6, SC7, SC2b, SC15's 0x537580 six times, AR0B, engine. PSX 0x80166FFC, the sibling's Zenny_Add (pairs_propagated call-anchored)."
+
+[[data]]
+pc = 0x904058
+name = "Party_Zenny"
+status = "evidence"
+evidence = "read 2026-09-28, group SX: the u32 Zenny_Sub / Zenny_Add change (capped at 9,999,999); Menu_DrawMoneyBox's value in the menus and shops, BattleResultWin_DrawZenny's."
+
+[[data]]
+pc = 0x660B3C
+name = "BattleFormation_Anims"
+status = "evidence"
+evidence = "read 2026-09-28, group SX: bytes by the event battle's formation 0x904AAC (EventBattle_Records +1); Party_PlaceForBattle gives each member's sprite +8 this animation (0x532F93). Its length is not established; 0x660B1C, the byte pairs 0x532FD0 reads by the same formation, lies before it."
