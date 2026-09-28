@@ -72046,3 +72046,611 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-28 (round eleven group BSI): BossArwan_Hook's table by the word's low byte: BareRet x3. docs/boss_si.md."
+
+# --- round eleven group BSH (docs/boss_sh.md): fights 34, 35, 36, 41, 43, 47 and kinds 41..44, 48, 50, 54, the kind-3 dispatcher's slot 3 ---
+
+[[func]]
+pc = 0x43DEF0
+name = "BossSample3_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43DEF0..0x43DF01 (0x12 bytes), BossKind_Table[48] (Sample 3, area 160): jmp [BossSample3_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43DF10
+name = "BossSample3_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43DF10..0x43DF60 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 48 state 0: 0x939AD8's +0xFC = 0x64D6CC (kind 40 Mikba's byte table), +0xF4 = BossSample3_Hook, +0xF8 = 0x64D6D8 (kind 40's) (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43DF70
+name = "BossSample3_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43DF70..0x43DF7F (0x10 bytes), kind 48's +0xF4 hook: jmp [BossSample3_Hooks + 4 * (word & 0xFF)], 3 entries (all BareRet). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43DF80
+name = "Boss34_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43DF80..0x43DFC0 (0x41 bytes), no calls: Boss_SetupTable[34] (id 34: BOSS034 row 7, the image of kinds 40 Mikba (area 43) and 48 Sample 3 (area 160) - tools/boss_rows.py --disc; chapter 15's ids 39..48 are the Sample fights, so 34 is taken to be area 43's, not proven): the byte 0x669730 against each party member's +0x148 (0..2), the last match's index into 0x675F08; BattleHook_End = Boss34_End, _Exit = Boss34_Exit, _Event = Boss34_Event. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43DFD0
+name = "Boss34_Event"
+ret = "unsigned char"
+params = "unsigned code"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43DFD0..0x43E0BD (0xEE bytes), calls 0x446700, AbilityList_Add twice: set-up 34's event hook, al 0. Code 5: unless round-flag bit 15, 0x904AAD bit 0 or the picked member's (0x675F08) +0x91 bit 0x20 - 0x904AAD |= 1, 0x446700(the dword 0x675F08) (the member to the front of the round's order). Code 1: 0x904AAD bit 0 set, bit 1 clear, the actor the picked member - acting kind 0x904B35 = 4, the action record 0x904B40's +1 = 4 and word +2 = 0x40, the target = the member, 0x904B80 = 0x40, 0x904AAD |= 2, AbilityList_Add(0x40, 4, 0, 0) and (0x40, the member over the first answer's upper bytes, 0, 1). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E0C0
+name = "Boss34_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E0C0..0x43E207 (0x148 bytes), calls Battle_RemoveFromTurnOrder, Sprite_PoseFromSet (three each), AbilityList_Add twice, 0x446DE0, tail jmp 0x446E00: set-up 34's end hook. Won (0x904AE8 bit 1): each party member with +0 bit 0 out of the turn order and posed from 0x8C5D80 (+8 + 0x1C with +0x90 bit 14, else + 4), made Sprite_Current; unless 0x904AAD bit 1 the two AbilityList_Add calls of the event hook; 0x904AE8 |= 8; 0x446DE0; the chapter step 0x8034E5 incremented after it. Else step 2. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E210
+name = "Boss34_Exit"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E210..0x43E261 (0x52 bytes), calls BossActor_ClearBit40, BossActor_Find, Sprite_SetAnimationBank, Sprite_SetAnimation: set-up 34's exit hook: the actor tagged 0 made Sprite_Current, bank 0x1C1, animation 8, +0x2A = 1, its words +0x58 / +0x5A = enemy 0's (the answer untested: ours aborts on null). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E270
+name = "Boss41_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E270..0x43E28E (0x1F bytes), no calls: Boss_SetupTable[41] (id 41: BOSS034 row 7 by the tool, chapter 15's; kind 48 Sample 3 by the id-to-kind pattern of ids 39..48, not proven): BattleHook_End = BossHook_EndPickWay, _Exit = BareRet, _Event = BareRetZero. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E540
+name = "BossGaist_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E540..0x43E551 (0x12 bytes), BossKind_Table[41] (Gaist, area 120): jmp [BossGaist_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E560
+name = "BossGaist_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E560..0x43E5B0 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 41 state 0: 0x939AD8's +0xFC = BossGaist_Anims, +0xF4 = BossGaist_Hook, +0xF8 = BossGaist_Sounds (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E5C0
+name = "BossGaist_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E5C0..0x43E5CF (0x10 bytes), kind 41's +0xF4 hook: jmp [BossGaist_Hooks + 4 * (word & 0xFF)], 3 entries (BareRet, BareRet, BossGaist_HookClearBit1). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E5D0
+name = "BossGaist_HookClearBit1"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E5D0..0x43E5F3 (0x24 bytes), no calls: BossGaist_Hooks 2 (BattleEnemy_RunAll's call): with round-flag bit 1 (0x904AA8) set and MoveScript_WaitWordDA 0, the bit cleared (a word and) and Draw_PassFlags = 0. The word is not read. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E600
+name = "BossTorch_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E600..0x43E611 (0x12 bytes), BossKind_Table[42] (Torch, area 120): jmp [BossTorch_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E620
+name = "BossTorch_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E620..0x43E670 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 42 state 0: 0x939AD8's +0xFC = 0x675F0C (12 bytes of .data nothing in the exe writes), +0xF4 = BossTorch_Hook, +0xF8 = BossTorch_Sounds (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E680
+name = "BossTorch_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E680..0x43E68F (0x10 bytes), kind 42's +0xF4 hook: jmp [BossTorch_Hooks + 4 * (word & 0xFF)], 3 entries (BossTorch_HookTarget3, BareRet, BareRet). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E690
+name = "BossTorch_HookTarget3"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E690..0x43E697 (0x8 bytes), no calls: BossTorch_Hooks 0 (the action pick's call): the target 0x904B44 = 3 (enemy 0). The word is not read. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E6A0
+name = "BossSample9_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E6A0..0x43E6B1 (0x12 bytes), BossKind_Table[54] (Sample 9, area 165): jmp [BossSample9_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E6C0
+name = "BossSample9_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E6C0..0x43E710 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 54 state 0: 0x939AD8's +0xFC = BossGaist_Anims, +0xF4 = BossSample9_Hook, +0xF8 = BossGaist_Sounds (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E720
+name = "BossSample9_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E720..0x43E72F (0x10 bytes), kind 54's +0xF4 hook: jmp [BossSample9_Hooks + 4 * (word & 0xFF)], 3 entries (all BareRet). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E730
+name = "Boss35_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E730..0x43E74E (0x1F bytes), no calls: Boss_SetupTable[35] (id 35: BOSS035 row 7, kinds 41 Gaist and 42 Torch, area 120, and 54 Sample 9, area 165, by tools/boss_rows.py --disc; the image is BOSS047's too by section md5; 35 taken to be area 120's): BattleHook_End = Boss35_End, _Exit = BossHook_ExitTransition4 (0x43E790, group BSE's), _Event = Boss35_Event. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E750
+name = "Boss35_Event"
+ret = "unsigned char"
+params = "unsigned code"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E750..0x43E76F (0x20 bytes), calls Battle_ActorIsOut: set-up 35's event hook: code 0 (low byte) and Battle_ActorIsOut(3) al not 0 - 0x904AE8 |= 2 (the win). al 0. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E770
+name = "Boss35_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E770..0x43E789 (0x1A bytes), tail jmps 0x446DE0 / 0x446E00: set-up 35's end hook: won (0x904AE8 bit 1) - chapter step 0x8034E5 = 0x15, step 1; else step 2. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E7A0
+name = "Boss47_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E7A0..0x43E7BE (0x1F bytes), no calls: Boss_SetupTable[47] (id 47: BOSS047, one image with BOSS035; chapter 15's; kind 54 Sample 9 by the id-to-kind pattern of ids 39..48, not proven - one of the plan's five open set-ups): BattleHook_End = BossHook_EndPickWay, _Exit = BareRet, _Event = BareRetZero. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E7C0
+name = "BossAngler_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E7C0..0x43E7D1 (0x12 bytes), BossKind_Table[43] (Angler, area 75): jmp [BossAngler_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns (BossAngler_AdvanceDispatch at 4, BossAngler_RetreatDispatch at 5). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E7E0
+name = "BossAngler_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E7E0..0x43E830 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 43 state 0: 0x939AD8's +0xFC = BossAngler_Anims, +0xF4 = BossAngler_Hook, +0xF8 = BossAngler_Sounds (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E840
+name = "BossAngler_AdvanceDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E840..0x43E851 (0x12 bytes), BossAngler_States / BossSample5_States 4 (kinds 43 and 50): jmp [BossAngler_AdvanceSteps + 4 * Sprite_Current +2], 2 entries; the caller's word and the entry's eax handed on. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E860
+name = "BossAngler_AdvanceStart"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E860..0x43E8BD (0x5E bytes), calls BattleEnemy_SetAnimation(2), BattleEnemy_ScriptTick: state 4 step 0: Sprite_Current +9 = the byte +0x8A of the area's enemy data record 0x939AD8's +0xF0 names (0x8C5652 + 0x8C * index); then the dword +0x18 = +0x34 + 0x30000, +0xC = 0x4000, +2 up (Sprite_Current read again for each). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E8C0
+name = "BossAngler_Advance"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E8C0..0x43E94E (0x8F bytes), calls 0x437450, Battle_SetTargetFlag40, 0x4376F0, tail jmp BattleEnemy_ScriptTick: state 4 step 1: +9 down, at 0 the first word of 0x939AD8's +0xF8 to 0x437450; the dword +0x34 += +0xC; at +0x34 == +0x18 the target flagged, 0x4376F0, +0x18 -= 0x30000, +1 up, +2 = 0. al the tick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E950
+name = "BossAngler_RetreatDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E950..0x43E961 (0x12 bytes), BossAngler_States / BossSample5_States 5 (kinds 43 and 50): jmp [BossAngler_RetreatSteps + 4 * Sprite_Current +2], 2 entries; the caller's word and the entry's eax handed on. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E970
+name = "BossAngler_Retreat"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E970..0x43E996 (0x27 bytes), tail jmp BattleEnemy_ScriptTick: state 5 step 0: the dword +0x34 -= +0xC; at +0x34 == +0x18, +2 up. al the tick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E9A0
+name = "BossAngler_RetreatEnd"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E9A0..0x43E9B0 (0x11 bytes), calls BattleEnemy_ScriptTick, tail jmp 0x4376A0: state 5 step 1: the tick, round-flag bit 2 set (BattleFx_ScriptUntilDone's done flag), the action's end. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E9C0
+name = "BossAngler_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E9C0..0x43E9CF (0x10 bytes), kind 43's +0xF4 hook: jmp [BossAngler_Hooks + 4 * (word & 0xFF)], 3 entries (BareRet, BareRet, BossAngler_HookSpawnFx). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43E9D0
+name = "BossAngler_HookSpawnFx"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43E9D0..0x43EA61 (0x92 bytes), calls BattleTask_Create(3, 3): hook entry 2 of kinds 43 and 50 (BattleEnemy_RunAll's call): with Sprite_Current +1 == 7 and +2 == 1, a task of the kind-3 dispatcher's slot 3 (BossAnglerFx_Dispatch) whose first 0x80 bytes are the acting actor's enemy object (0x93B960 + 0x128 * (0x904B34 - 3), rep movsd), then its +1, +2, +9 = 0, +5, +6, +0x29 = 3. The answer 0xFF (none free) unchecked: ours aborts. The word is not read. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EA70
+name = "BossSample5_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EA70..0x43EA81 (0x12 bytes), BossKind_Table[50] (Sample 5, area 162): jmp [BossSample5_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns (the Angler's states 4 and 5). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EA90
+name = "BossSample5_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EA90..0x43EAE0 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 50 state 0: 0x939AD8's +0xFC = BossAngler_Anims, +0xF4 = BossSample5_Hook, +0xF8 = BossAngler_Sounds (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EAF0
+name = "BossSample5_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EAF0..0x43EAFF (0x10 bytes), kind 50's +0xF4 hook: jmp [BossSample5_Hooks + 4 * (word & 0xFF)], 3 entries (BareRet, BareRet, BossAngler_HookSpawnFx). docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EB00
+name = "Boss36_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EB00..0x43EB1E (0x1F bytes), no calls: Boss_SetupTable[36] (id 36: BOSS036 row 7, kinds 43 Angler (area 75) and 50 Sample 5 (area 162) by tools/boss_rows.py --disc; 36 taken to be area 75's): BattleHook_End = Boss36_End, _Exit = BareRet, _Event = BareRetZero. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EB20
+name = "Boss36_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EB20..0x43EB39 (0x1A bytes), tail jmps 0x446DE0 / 0x446E00: set-up 36's end hook: won (0x904AE8 bit 1) - chapter step 0x8034E5 = 8, step 1; else step 2. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EB40
+name = "Boss43_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EB40..0x43EB5E (0x1F bytes), no calls: Boss_SetupTable[43] (id 43: BOSS036 row 7 by the tool, chapter 15's; kind 50 Sample 5 by the id-to-kind pattern, not proven): BattleHook_End = BossHook_EndPickWay, _Exit = BareRet, _Event = BareRetZero. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EB80
+name = "BossAnglerFx_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EB80..0x43EB91 (0x12 bytes), BattleBossFx_Dispatch's slot 3 (the task BossAngler_HookSpawnFx starts): jmp [BossAnglerFx_States + 4 * Sprite_Current +1], 1 entry; the caller's word and the entry's eax handed on. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EBA0
+name = "BossAnglerFx_Run"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EBA0..0x43EBCD (0x2E bytes), no rel32 calls: by Sprite_Current +2 through a stack table of three - BossAnglerFx_Start, BattleFx_ScriptUntilDone, BattleFx_FreeTask; call [esp + 4 * +2] unchecked (ours aborts past 2); the entry's eax the answer. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EBD0
+name = "BossAnglerFx_Start"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EBD0..0x43EC00 (0x31 bytes), calls Sprite_SetAnimation(1), Sprite_ScriptTick, Sprite_QueueOverlay: step 0: +0xB and +9 = 0, animation 1, the tick and the overlay, +2 up. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EC10
+name = "BattleFx_ScriptUntilDone"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EC10..0x43EC2B (0x1C bytes), calls Sprite_ScriptTick, Sprite_QueueOverlay: step 1 of the Angler's task and of three spell tasks' stack tables (magic_s09, s15, s31 name it by address): the tick and the overlay; with round-flag bit 2 (0x904AA8, the enemy action's done flag), +2 up. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EC30
+name = "BossElder_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EC30..0x43EC41 (0x12 bytes), BossKind_Table[44] (Elder, area 144): jmp [BossElder_States + 4 * Sprite_Current +1], 12 entries; the jmp leaves the caller's stack word to the entry and its eax the answer, which ours hands on and returns. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43EC50
+name = "BossElder_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43EC50..0x43ECA0 (0x51 bytes), tail jmp Sprite_ScriptTick: kind 44 state 0: 0x939AD8's +0xFC = BossElder_Anims, +0xF4 = BossElder_Hook, +0xF8 = BossElder_Sounds (0x939AD8 read for each), its dword +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43ECB0
+name = "BossElder_Hook"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/boss_sh.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSH), 0x43ECB0..0x43ECBF (0x10 bytes), kind 44's +0xF4 hook: jmp [BossElder_Hooks + 4 * (word & 0xFF)], 3 entries (all BareRet). docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D750
+name = "BossSample3_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossSample3_Dispatch's table by +1: BossSample3_Enter, then the generic states (EnemyOp_Steps' entries 1..11). docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D780
+name = "BossSample3_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossSample3_Hook's table: BareRet three times. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D78C
+name = "BossGaist_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kinds 41 and 54's +0xFC animation bytes. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D798
+name = "BossGaist_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kinds 41 and 54's +0xF8 sound words. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D7A0
+name = "BossTorch_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kind 42's +0xF8 sound words (every one 0xFFFF, the value 0x437450 skips). docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D7A8
+name = "BossGaist_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossGaist_Dispatch's table by +1: BossGaist_Enter, then the generic states. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D7D8
+name = "BossGaist_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossGaist_Hook's table: BareRet, BareRet, BossGaist_HookClearBit1. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D7E4
+name = "BossTorch_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossTorch_Dispatch's table by +1: BossTorch_Enter, then the generic states. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D814
+name = "BossTorch_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossTorch_Hook's table: BossTorch_HookTarget3, BareRet, BareRet. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D820
+name = "BossSample9_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossSample9_Dispatch's table by +1: BossSample9_Enter, then the generic states. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D850
+name = "BossSample9_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossSample9_Hook's table: BareRet three times. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D85C
+name = "BossAngler_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kinds 43 and 50's +0xFC animation bytes. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D868
+name = "BossAngler_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kinds 43 and 50's +0xF8 sound words (BossAngler_Advance plays the first). docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D870
+name = "BossAngler_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossAngler_Dispatch's table by +1: BossAngler_Enter, the generic 1..3, BossAngler_AdvanceDispatch, BossAngler_RetreatDispatch, the generic 6..11. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8A0
+name = "BossAngler_AdvanceSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossAngler_AdvanceDispatch's table by +2: BossAngler_AdvanceStart, BossAngler_Advance. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8A8
+name = "BossAngler_RetreatSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossAngler_RetreatDispatch's table by +2: BossAngler_Retreat, BossAngler_RetreatEnd. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8B0
+name = "BossAngler_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossAngler_Hook's table: BareRet, BareRet, BossAngler_HookSpawnFx. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8BC
+name = "BossSample5_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossSample5_Dispatch's table by +1: BossSample5_Enter and BossAngler_States' entries 1..11. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8EC
+name = "BossSample5_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossSample5_Hook's table: BareRet, BareRet, BossAngler_HookSpawnFx. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8F8
+name = "BossAnglerFx_States"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossAnglerFx_Dispatch's table by +1: BossAnglerFx_Run (kind 44's byte tables follow). docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D8FC
+name = "BossElder_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kind 44's +0xFC animation bytes. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D908
+name = "BossElder_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): kind 44's +0xF8 sound words. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D910
+name = "BossElder_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossElder_Dispatch's table by +1: BossElder_Enter, then the generic states. docs/boss_sh.md."
+
+[[data]]
+pc = 0x64D940
+name = "BossElder_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSH): BossElder_Hook's table: BareRet three times. docs/boss_sh.md."
