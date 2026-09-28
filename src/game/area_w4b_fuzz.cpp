@@ -349,6 +349,20 @@ U GroundEffect(const U*, U answer) {
     if (n & 2) answer = (answer & 0xFFFF0000u) | ((Word(Sprite_Current + 0x3E) + (n >> 8) % 3 - 1) & 0xFFFFu);
     return answer;
 }
+// Area172_SlideStep: writes the running object's +0, +4 and tint bytes
+// +0x5C..+0x5F (the real one does), then moves Sprite_Current now and then -
+// so a tint store the slide start makes before the call shows.
+U SlideStepEffect(const U*, U answer) {
+    const U n = ah::Noise();
+    if (n & 1) {
+        unsigned char* const o = Sprite_Current;
+        o[0] = static_cast<unsigned char>(n >> 8);
+        o[4] = static_cast<unsigned char>(n >> 12);
+        for (unsigned k = 0x5C; k <= 0x5F; ++k) o[k] = static_cast<unsigned char>(n >> (k - 0x50));
+    }
+    if (n & 2) MoveCurrent(n >> 3);
+    return answer;
+}
 // Sprite_SetAnimation: the script object (area 172's fall writes its +1
 // after) and Sprite_Current.
 U AnimationEffect(const U*, U answer) { return MovesScriptObject(nullptr, answer); }
@@ -431,7 +445,7 @@ const ah::Callee kCallees[] = {
     // byte; 0xFF, 0 or 1), the slide step, the two draws (the low words)
     {W4B_OURS(Area169_MemberRect), 1, {kU8}, ah::Answer::kByte, 0xFF, 0x01, {}, &RectEffect},
     {W4B_OURS(Area171_MemberRect), 1, {kU8}, ah::Answer::kByte, 0xFF, 0x01, {}, &RectEffect},
-    {W4B_OURS(Area172_SlideStep), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
+    {W4B_OURS(Area172_SlideStep), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &SlideStepEffect},
     {W4B_OURS(Area172_DrawPanel), 2, {kU16, kU16}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W4B_OURS(Area172_DrawShade), 2, {kU16, kU16}, ah::Answer::kGarbage, 0, 0},
 };
@@ -563,6 +577,9 @@ void SeedMembers(U rects) {
         }
         if (ah::Half()) record[8] = r[4];
         if (ah::Half()) record[9] = 0;
+        // a position inside with the sign bit set (the compares are signed)
+        if (ah::Next() % 6 == 0) SetLong(record + 0x34, static_cast<std::int32_t>((static_cast<U>(r[0] + 1) << 16) | 0x80000000u));
+        if (ah::Next() % 6 == 0) SetLong(record + 0x38, static_cast<std::int32_t>((static_cast<U>(r[1] + 1) << 16) | 0x80000000u));
     }
     if (ah::Half()) Sprite_Current[0xB] = static_cast<unsigned char>(ah::Next() & 7);
     if (ah::Often()) Field_ScriptFlags2 = static_cast<unsigned short>(ah::Next() & (ah::Half() ? 7 : 0xFFFF));
@@ -719,6 +736,10 @@ void Args171(unsigned k, std::uint32_t* a) {
         if (ah::Half()) a[1] &= 0xFFFF0000u;
         if (ah::Half()) a[0] |= 0xFFFFu;
         if (ah::Half()) a[1] |= 0xFFFFu;
+        // a fraction of one bit, low or high
+        static const U kFractions[] = {1, 0x8000, 2, 0x7FFF};
+        if (ah::Next() % 4 == 0) a[0] = (a[0] & 0xFFFF0000u) | kFractions[ah::Next() % 4];
+        if (ah::Next() % 4 == 0) a[1] = (a[1] & 0xFFFF0000u) | kFractions[ah::Next() % 4];
     }
 }
 
