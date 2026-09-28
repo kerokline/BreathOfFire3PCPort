@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-28, round ten's five waves merged; the scenario round complete, worlds 0..2 complete)
+**Status:** IN PROGRESS (2026-09-28, round ten complete: the scenario round and the area round both merged; the round's debts and round eleven next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,24 +14,23 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**5,358 functions are ours** (`inject: 5358 ours, 0 left original`), on
+**5,706 functions are ours** (`inject: 5706 ours, 0 left original`), on
 `phase-3/capture-round-ten`, local commits past `main`'s `c47f521`
-(round nine's PR #27), not yet pushed or a PR. Round ten
-([`takeover-queue-round10.md`](takeover-queue-round10.md)) has merged
-five waves, 1,848 functions in 40 groups. **The scenario round (I24) is
-complete**: every chapter bank 0..19 including the staff roll, the
-shared helpers, the call tables' block and the engine callees they
-reach (SX, SX2), through [`scenario_harness.md`](scenario_harness.md);
-the live check per chapter (recipe saves) is the owner's to record. The
-area round (I25) has worlds 0, 1 and 2 whole and world 3 to area 146
-through [`area_harness.md`](area_harness.md), 347 functions to go (AR3G
-and world 4, one wave). Every group 0 mismatches, every control refused
-or an equivalent with a refused near variant (one exception explained,
-section 16); everything fuzz-only. Merges are verified in a detached
-worktree with its own build (round10 doc section 10), so a running game
-or the other session's work in the main checkout does not collide. Wave
-six is listed (section 17). The rest is [`STATUS.md`](STATUS.md)'s wave
-table; do not copy it here.
+(round nine's PR #27), not yet pushed or a PR. **Round ten is complete**
+([`takeover-queue-round10.md`](takeover-queue-round10.md)): six waves,
+2,195 functions in 47 groups, 3,510 -> 5,706. The scenario round (I24)
+took every chapter bank 0..19, the shared helpers, the call tables'
+block and the engine callees they reach (SX, SX2) through
+[`scenario_harness.md`](scenario_harness.md); the area round (I25) took
+every area overlay of worlds 0..4 through
+[`area_harness.md`](area_harness.md). Every group 0 mismatches, every
+control refused or an equivalent with a refused near variant (one
+exception explained, section 16); everything fuzz-only - the live check
+per chapter and per area is the owner's. Merges are verified in a
+detached worktree with its own build (round10 doc section 10). The
+round's debts are the end of section 19; round eleven (the boss round)
+is staged (item 0b). The rest is [`STATUS.md`](STATUS.md)'s wave table;
+do not copy it here.
 
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
 `r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
@@ -41,39 +40,37 @@ foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
 since `rb1`). Wave five's 346 functions came after it and none is on the
 attract path - every spell group is fuzz-only - so it stands for this
 build until something on the attract path is taken (nothing in round
-ten's five waves is). `r9_*_0926` and
+ten's six waves is). `r9_*_0926` and
 `r9_orig_0927_loaded` (a side recorded under a concurrent build, four
 frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-0. **Round ten, wave six, the last of the area round** ([`takeover-queue-round10.md`](takeover-queue-round10.md)
-   section 17): AR3G and world 4, seven groups, 347 functions. Stage
-   from `analysis/round10_wave5_brief.md` (group lines
-   `analysis/round10_wave5_groups.tsv`, gitignored) with section 16's
-   findings folded in; run `tools/area_rows.py --groups` at the tip for
-   the cut. Merge with `merge_group10v.sh <group> <scratch>`
-   (`MOD=area_w<N><x>`): it merges in the main checkout, runs
-   `keepboth.py` and `one_grow.py` (one `DrawPool_Grow`, pinned before
-   `InjectReport`), then builds and self-tests the merge commit in the
-   detached worktree `<old scratch>/verify` (`git worktree list` shows
-   it; recreate with `git worktree add --detach <path> <sha>` and `cmake
-   --preset i686` there if it is gone). A merge takes about ten
-   minutes: run it in the background, one at a time (the worktree is
-   shared). After the round: the debts listed at the end of section 16
-   (the defects' numbering, the rebinding pass with the area 104 / 121
-   folds and the world-map body shared once, the tool fixes, the harness
-   doc's notes, the route A/Bs, the recipe saves). Scratch: the merge
-   scripts (`merge_group10v.sh`, `keepboth.py`, `one_grow.py`,
-   `verify_tip.sh`, `closeout_wave*.py`) and waves four and five's
+0. **Round ten's debts** ([`takeover-queue-round10.md`](takeover-queue-round10.md),
+   the end of section 19), the owner's order to choose; the two that
+   unblock the rest are the defects' numbering (all six waves describe,
+   none numbers - `known-defects.md`) and the rebinding pass (every
+   `AH_AT` / `SH_AT` into a name now that everything they reach is ours;
+   the area 104 / 121 and 151 / 152 linker folds; the harness
+   standard-set column moves in the same commit; the world-map body,
+   five copies in ours, shared once). Then a small engine group for the
+   callees nobody owns (section 19's list), the tool fixes, the harness
+   doc's notes, the frame hash and the route A/Bs when the owner is
+   away. The routine that ran six waves: a brief in `analysis/`
+   (`round10_wave6_brief.md` is the latest), one Opus agent per group in
+   a worktree, `merge_group10v.sh <group> <scratch>` (`MOD=<module>`; it
+   merges in the main checkout, runs `keepboth.py` and `one_grow.py`,
+   then builds and self-tests in the detached worktree
+   `<old scratch>/verify`), one merge at a time in the background, about
+   ten minutes each. Scratch: the merge scripts and waves four to six's
    `<group>/` controls scripts in
    `.../71e258cd-639f-4084-8bfa-60f9e4a9ffda/scratchpad/`; waves one to
    three's in `.../0eefe2a8-ba23-4625-9434-7c4f87a1456f/scratchpad/`
-   (also `verify/` and `play/`). Wave five's agent worktrees and
-   `phase-3/round10-*` branches are merged and removed. **Round ten's
-   PR**: push and open one when the owner wants; the branch carries the
-   other session's commits (`368b84f`, `f669cce`, round eleven's
-   `44348f7`, `154272f`) too.
+   (also `verify/` and `play/`). Every agent worktree and
+   `phase-3/round10-*` branch is merged and removed. **Round ten's PR**:
+   push and open one when the owner wants; the branch carries the other
+   session's commits (`368b84f`, `f669cce`, round eleven's `44348f7`,
+   `154272f`) too.
 0b. **Round eleven is staged: the boss round** (the owner, 2026-09-28,
    after the area round finishes). Plan and cut:
    [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
@@ -344,7 +341,7 @@ _Verified 2026-09-24._
 ## In flight / uncommitted
 
 Nothing uncommitted of this round's. `phase-3/capture-round-ten` is ahead
-of `main` (`c47f521`) by round ten's five waves (40 merges, the round
+of `main` (`c47f521`) by round ten's six waves (47 merges, the round
 doc) and the other session's commits; not pushed. The wave briefs are in
 `analysis/` (gitignored). **The other session works in the main checkout
 on this branch**: check `git status` before a commit, and never build in

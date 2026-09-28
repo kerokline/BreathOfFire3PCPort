@@ -15,7 +15,7 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**5,358 functions are ours** (`inject: 5358 ours` in
+**5,706 functions are ours** (`inject: 5706 ours` in
 `bof3x.log`, 2026-09-28; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
@@ -52,6 +52,7 @@ re-derived:
 | 09-28 | Round 10 wave 3: chapters 2, 9's tail + 10, 12's tail + 13 + 14, 15..19 (the staff roll), the engine callees (SX), world 1's areas 38..52 (AR1A..AR1C) - **the scenario round complete**, every chapter bank ours | 451 | 4,554 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 10 |
 | 09-28 | Round 10 wave 4: the second engine group (SX2, 13), world 1's areas 53..75 (AR1D..AR1F) - **world 1 complete** - and world 2's areas 76..103 (AR2A..AR2D) | 382 | 4,936 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 13 |
 | 09-28 | Round 10 wave 5: world 2's areas 104..113 (AR2E, AR2F) - **world 2 complete** - and world 3's areas 115..146 (AR3A..AR3F) | 422 | 5,358 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 16 |
+| 09-28 | Round 10 wave 6: world 3's areas 148..151 (AR3G) and world 4 (AR4A..AR4F) - **the area round complete**, every area overlay ours; with the scenario round, round ten took 2,195 functions in 47 groups | 348 | 5,706 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round10.md`](takeover-queue-round10.md) section 19 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer

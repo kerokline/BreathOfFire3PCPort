@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-28) - five waves merged, 1,848 functions, 3,510 -> 5,358 ours; **the scenario round is complete**; the area round has worlds 0, 1 and 2 whole and world 3 to area 146
+**Status:** DONE (2026-09-28) - six waves merged, 2,195 functions, 3,510 -> 5,706 ours; **the scenario round and the area round are both complete**: every chapter bank and every area overlay is ours, fuzz-only; the debts are listed at the end of section 19
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -728,3 +728,90 @@ Entries snapshot `analysis/calltrace/entries_logic_0928_prewave10_6.txt`.
 | AR4F | world 4: areas 192..193, 196..199 (`0x42D710`, called from `0x517330`, ends the band) | `0x42BD60..0x42D710` | 48 | `area_w4f` |
 
 347 functions.
+
+## 19. Wave six merged - the area round complete (2026-09-28 night)
+
+All seven groups merged, one at a time, each merge commit built and
+self-tested in the detached verification worktree. **348 functions
+taken, 5,358 -> 5,706 ours.** Counts are each group's in its worktree.
+`area_rows.py --groups` at the tip lists 0 to take in worlds 1..4 and 3
+in world 0 (declined by round eight's DA as other units', unchanged).
+
+| Group | Merge | Taken | Rounds | Controls planted / refused | Not refused | Doc |
+|---|---|--:|--:|---|---|---|
+| AR3G | `88c2d19` | 56 | 288,000 | 296 / 295 | 1 equivalent (a 16-bit value made unsigned then `<< 16`), variant refused | [`area_w3g.md`](area_w3g.md) |
+| AR4A | `4e5cab3` | 48 | 272,000 | 224 / 224 (221 by a count, 3 by our own abort past a jump table, variants by a count) | | [`area_w4a.md`](area_w4a.md) |
+| AR4C | `1a24b1d` | 39 | 246,000 | 261 / 254 (252 by a count, 2 by a fault, variants by a count) | 7 equivalent (five planted as equivalence checks; area 173's two member lists are the same bytes; a step table with period 4), each with a refused variant | [`area_w4c.md`](area_w4c.md) |
+| AR4D | (after `1a24b1d`) | 49 | 12.39M calls | 286 / 279 | 6 equivalent (period-4 step tables, a signed / unsigned read above 4, two re-reads with no call between), variants refused; 1 no-op plant replaced and refused | [`area_w4d.md`](area_w4d.md) |
+| AR4B | (after AR4D) | 56 | 336,000 | 368 / 365 | 3 equivalent (a store read back with no call between, a byte test with no call between, a period-4 drift table), variants refused | [`area_w4b.md`](area_w4b.md) |
+| AR4E | `a137481` | 51 | | 424 / 424 (423 by a count, 1 by our abort past the leader-state table, variant by a count) | 346 / 343 | [`area_w4e.md`](area_w4e.md) |
+| AR4F | `520fae3` | 49 (the tool's `0x42D4D0` is two: a state ending in a `jmp` with displacement 0, and `0x42D580`) | |  | 3 equivalent (two pointer re-reads with no call between, a period-4 step table), variants refused | [`area_w4f.md`](area_w4f.md) |
+
+**The area round is complete.** Worlds 0..4, 200 descriptors, every
+function the tool's walk and the agents' readings found in
+`0x401000..0x42D710`, over six waves and 27 area groups plus ARH / ART
+(wave one). All fuzz-only: the world-map route plays areas 33, 45, 88,
+104 and 115's copies and the combat route area 29; nothing else is
+played by a recorded route. The live check per area is the owner's.
+
+**What the wave found:**
+
+- **The last two world-map copies** (151, 152 against 87): 151's place
+  hook has no cell or name-set search (one fixed set, five rows); 152's
+  field hook is a third body (area 121's short shape, message by
+  `Cond_ByteFA`); 151 has no plate start of its own - plate state 0 is
+  `0x424BA0` in area 152's block (bank `0x1D1`), a linker fold, as
+  `Area152_Record8Spawn` `0x4253C0` is record-8 state 0 for all ten
+  world maps. The world-map body exists five times in ours (AR2B, AR2E,
+  AR3A, AR3B, AR3G on AR3A's); sharing one is owed.
+- **Bare-`ret` inits on the PC where the PSX has code**: areas 145,
+  148, 153 and 154 all point at `0x437CC0` (PSX `0x801F5324`,
+  `0x801F4274`, `0x801F2C5C`). For the owner and the divergence map.
+- **Tables running into each other, again**: area 172's fall table
+  (`0x63EF14`) into its slide table (`0x63EF1C`); the fall dispatcher
+  keeps the run-on entries it can reach, the others abort past their
+  entries.
+- **Eleven areas one body**: areas 175..185 share one init, two
+  handlers, the cell and step hooks and a choice table but entry 27,
+  whose eleven copies differ only in their jump-table address (ours one
+  body behind eleven names, AR4D). Areas 169 and 171 share area 117's
+  member frame without the facing turn (AR4B).
+- **`0x42D710` is not area code** (AR4F): game mode 9's frame step `0x517330` calls it, and it jumps by the byte `0x929F00` through the table `0x64ADAC` (right after area 199's descriptor) into BATE.EMI's code - that overlay's dispatcher, not taken. **Area 190 has no code**: the fifteen functions the tool files under it are area 189's leader-state-13 walk (`Field_LeaderStates[13]` = `0x42A8B0`, AR4E). Area 198's handler 9 always plays sound effect 0 (its `neg` / `sbb` / `inc` chain is always 0) - for the owner.
+- **x87 in an area**: area 148's searchlight draw goes through `_ftol`
+  (`0x5B9550`); ours reproduces it in inline asm (AR3G).
+- **`area_rows.py` misses this wave**: `area_funcs.tsv` short by three
+  (AR3G: a trigger, an effect-kind handler, a function SC15 calls);
+  eight gaps that were triggers, tail kinds and effect-kind states (AR4D
+  4, AR4F and AR4E per their docs).
+- **Raw-address callees nobody owns, after the area round**: `0x486D60`
+  (a map set-up, `void (void)`, AR4B), `0x455450` (a field reset, AR4D),
+  `0x4941E0` (a screen size at a point, AR3G), `0x511C10` (the map height, AR4E), `0x441090` (a 16.16 round-up, AR4F), `0x56FCA0` (ours since SX
+  - AR3G's raw call wants rebinding), plus section 16's list
+  (`0x454A80`, `0x455290`, `0x5A7570`, `0x494060`, `0x494110`,
+  `0x46D710`, `0x46D770`, `0x5B9450`). One small engine group would
+  close them.
+- **Inbound calls for the rebinding pass**: `0x56ABC4` (SC15
+  `kViewShift`) into `Area149_ViewShiftBack`; `0x56E567`, `0x56E551`,
+  `0x56E5A9`, `0x56E1B2`, `0x56E202..0x56E2A2` (`kStepHandlers` /
+  `kArriveHandlers` in `event_ops.cpp`) into the step and arrive hooks of
+  areas 148, 150, 167, 173, 175..185 and AR4B's five; `0x46D7C3` /
+  `0x46D7D0` into areas 169 / 171's member frames; the tables of other
+  areas name `Area155_ChoiceArmTail10`, `Area167_SetByteFE2`,
+  `Area152_PlateStart`, `Area152_Record8Spawn`, `0x4285D0`, `0x428AB0`,
+  `0x428B10`, `0x4291F0..0x429290`, `0x42C8A0`, `0x425C30` (read in
+  place, no rebinding).
+- **`BOF3X_SHADOW='*'` did not die silently for any group**; the
+  `inject:` count stays one short of `impl`.
+
+**Owed by the round, now that both queues are complete** (the pick-up
+list in `HANDOFF.md`): the defects' numbering for all six waves; the
+rebinding pass (every `AH_AT` / `SH_AT` into the engine groups, the
+chapter blocks and the area blocks; the area 104 / 121 and 151 / 152
+folds; the harness standard-set column moves together with it; the
+world-map body shared once); a small engine group for the callees
+nobody owns; the tool fixes (sections 10, 13, 16 and above); the harness
+doc's `kPhase`, `args` and `Noise()`-only notes; the pairing tool's
+cases; the route A/Bs and the frame hash when the owner is away
+(nothing taken is on the attract path, so the hash should stand); the
+recipe saves per chapter and the live check per area; the bare-`ret`
+inits for the owner.

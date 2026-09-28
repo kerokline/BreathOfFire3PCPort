@@ -1,17 +1,6 @@
 # The area round: the area overlays enumerated from their tables, and taken wave by wave
 
-**Status:** PROPOSED (2026-09-26) - a plan, not a queue. Listed as
-[`IDEAS.md`](IDEAS.md) I25; the method is the spell round's
-([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md),
-[`magic_harness.md`](magic_harness.md)) and the scenario plan's
-([`takeover-queue-scenario.md`](takeover-queue-scenario.md)); section 1 is
-what makes it apply to areas, and section 6 is what is different.
-**2026-09-27: the tool exists** - `tools/area_rows.py`
-([`area-rows.md`](area-rows.md), round ten's group ART). Its numbers are
-section 1a and replace section 1's where they differ; its group cut is in
-section 3. The two engine tables and the descriptor layout are named in
-`symbols.toml` (section 7 step 2, but for the cell hook `0x56E670`, group
-ARH's).
+**Status:** DONE (2026-09-28) - every area overlay of worlds 0..4 is ours over round ten's six waves ([`takeover-queue-round10.md`](takeover-queue-round10.md) sections 4, 7, 10, 13, 16, 19): the harness ([`area_harness.md`](area_harness.md)), the tool `tools/area_rows.py` ([`area-rows.md`](area-rows.md), group ART; its numbers are section 1a and its group cut section 3), 27 area groups plus ARH / ART. Still owed: the live check per area (the owner's), the rebinding pass (the linker folds between areas 104 / 121 and 151 / 152, the world-map body shared once), the defects' numbering, the tool fixes. Listed as [`IDEAS.md`](IDEAS.md) I25. The text below is the plan as written.
 
 ## 0. The question, and the answer in one paragraph
 
