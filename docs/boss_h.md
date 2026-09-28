@@ -6,7 +6,7 @@ units share (`src/game/boss_h.cpp`, shadow `boss_h`) and the six spawn
 helpers every set-up calls (`src/game/boss_spawn.cpp`, shadow `boss_spawn`),
 each read to its last instruction with capstone and fuzzed through the boss
 harness BH built ([`boss_harness.md`](boss_harness.md)), 0 mismatches;
-CONTROLS_SUMMARY. Fuzz only: no recorded route reaches a boss fight (the
+88 controls planted, 86 refused, 2 equivalent with their near variants refused (section 4). Fuzz only: no recorded route reaches a boss fight (the
 combat route is an ordinary encounter). Also named: `Boss_SetupTable`,
 `BossKind_Table`, the kind-3 dispatcher `BattleBossFx_Dispatch`, the three
 hooks, and the eight tables round seven called `EnemyOp_StepsB..F` /
@@ -73,8 +73,8 @@ caller reads `al` (`ret_mask 0xFF`, as every function answering in `al`).
 
 | Run | Clones | Shape and how driven | Rounds | Result (this worktree) |
 |---|---|---|--:|---|
-| `torast`, fight 8 | `BossTorast_ActDispatch` four times (through each of kinds 8..11's dispatchers `0x438E50`, `0x4390F0`, `0x439160`, `0x4391D0` at state 6), `_DeathDispatch` (through `0x438EB0` at `+2 = 4`), `_DeathFxDispatch` (through `0x438ED0` at `+3 = 0`), `BossOp_ScriptTick` (through `0x438ED0` at `+3 = 1`), the four steps (through `0x438EF0` at `+4 = 0..3`), `_DrawRing` (`kCallee`) | the dispatchers `kDispatch` with their state byte drawn below 6 / 2 / 4; the three shared tables `DataTable`s | 6,000 each | 72,000 rounds, **2,003,541** calls, 0 mismatches |
-| `ops`, fight 18 | `BossOp_EnterTick` (through kind 21's `0x43A660` at state 1), `BossOp_Death` (through kind 6's `0x437A70` at `+2 = 4`), `BossHook_RetargetMember0` (through kind 21's hook table `0x43A740`, word 0), `BareRet` (through kind 8's hook table `0x4390E0`, word 0), `BossMap_SetCorners`, `Boss_SetByLeaderId`, `BossMap_UpdateFromEnemies` (`kCallee`) | the map block `0x8CB580..+0x4400` and `0x92BF18` as regions | 6,000 each | 42,000 rounds, 50,898 calls, 0 mismatches |
+| `torast`, fight 8 | `BossTorast_ActDispatch` four times (through each of kinds 8..11's dispatchers `0x438E50`, `0x4390F0`, `0x439160`, `0x4391D0` at state 6), `_DeathDispatch` (through `0x438EB0` at `+2 = 4`), `_DeathFxDispatch` (through `0x438ED0` at `+3 = 0`), `BossOp_ScriptTick` (through `0x438ED0` at `+3 = 1`), the four steps (through `0x438EF0` at `+4 = 0..3`), `_DrawRing` (`kCallee`) | the dispatchers `kDispatch` with their state byte drawn below 6 / 2 / 4; the three shared tables `DataTable`s | 6,000 each | 72,000 rounds, **2,003,623** calls, 0 mismatches |
+| `ops`, fight 18 | `BossOp_EnterTick` (through kind 21's `0x43A660` at state 1), `BossOp_Death` (through kind 6's `0x437A70` at `+2 = 4`), `BossHook_RetargetMember0` (through kind 21's hook table `0x43A740`, word 0), `BareRet` (through kind 8's hook table `0x4390E0`, word 0), `BossMap_SetCorners`, `Boss_SetByLeaderId`, `BossMap_UpdateFromEnemies` (`kCallee`) | the map block `0x8CB580..+0x4400` and `0x92BF18` as regions | 6,000 each | 42,000 rounds, 50,952 calls, 0 mismatches |
 | `hooks` | `BareRetZero` (`kEvent`), `BossHook_EndPickWay` (`kEnd`), the two exit hooks (`kExit`) | | 4,000 each | 16,000 rounds, 12,000 calls, 0 mismatches |
 
 **Seeds.** The chain: the current enemy's kind 8..11 two times in three;
@@ -113,7 +113,98 @@ worktree's (they move with the build directory; judge by 0 mismatches).
 
 ## 4. Controls
 
-CONTROLS_TABLE
+`python controls.py` (the group's scratch script): each control one textual change to ours, anchored on a string that occurs once, then rebuild, run (`BOF3X_SHADOW=boss_h` with `BOF3X_BH_RUN` its run, or `boss_spawn`), restore, rebuild. Run twice; the table is the second run, on the final seeds. **88 planted, 86 refused**: 83 by a count (the rounds column is the planted function's mismatched rounds), three by a `Fatal` (H36, H37, H37b: a dispatcher reading the wrong state byte finds it past its table in the rounds where the seed leaves that byte random, and aborts - loud, but a Fatal proves less than a count); **two equivalent**, each with a near variant refused: H6 (`BossActor_ClearBit40(0x100)`: the helper reads the tag's low byte, so 0x100 is 0 - no input can tell them apart; H6b refused) and H17 (`BossMap_SetCorners` with i and j swapped writes the same four cells with the same dword - the set is symmetric; H17b, the diagonal only, refused). The thinnest refusals are the re-read plants (H11, H14, H40, H44, H58: 83..357 rounds, the disturbance moving `Sprite_Current` or `0x939AD8` in a call) and S6 (the "none" answer, 1,323 rounds once the seed took the tag away in a third of the rounds: 12 before).
+
+| # | Function | Plant | Refused |
+|---|---|---|---|
+| S1 | `EnemyData_FindByTag` | the tag masked to 7 bits | 880 rounds |
+| S2 | `EnemyData_FindByTag` | seven records | 110 rounds |
+| S3 | `EnemyData_FindByTag` | none answers 0xFE | 1786 rounds |
+| S4 | `BossActor_Find` | the next object | 2636 rounds |
+| S5 | `BossActor_Find` | the tag at +0x9D (Find and Index) | 2671 rounds |
+| S6 | `BossActor_Index` | none answers 0 | 1323 rounds |
+| S7 | `BossActor_ClearBit40` | bit 0x80 cleared too | 2002 rounds |
+| S8 | `BossActor_CopyFrom` | mode 2 copies the pose | 412 rounds |
+| S9 | `BossActor_CopyFrom` | the place without +0x3C | 862 rounds |
+| S10 | `BossActor_CopyFrom` | bit 0x40 of +7 | 725 rounds |
+| S11 | `BossActor_CopyFrom` | +0x5A from +0x58 | 965 rounds |
+| S12 | `BossActor_CopyFrom` | the whole word as the mode | 887 rounds |
+| S13 | `BossActor_Clear` | four bytes | 3986 rounds |
+| H1 | `BareRetZero` | al 0xFF | 4000 rounds |
+| H2 | `BossHook_EndPickWay` | bit 0 for the win | 2434 rounds |
+| H3 | `BossHook_EndPickWay` | step 6 | 1906 rounds |
+| H4 | `BossHook_EndPickWay` | the other way out for the win | 1941 rounds |
+| H5 | `BossHook_ExitClearActor0` | tag 1 | 4000 rounds |
+| H6 | `BossHook_ExitActor0Bit40` | tag 0x100 (the word logged masked: equivalent?) | NOT REFUSED |
+| H6b | `BossHook_ExitActor0Bit40` | the other spawn helper | 4000 rounds |
+| H7 | `BareRet` | a store | 5981 rounds |
+| H8 | `BossHook_RetargetMember0` | 4 and above | 3054 rounds |
+| H9 | `BossHook_RetargetMember0` | target 4 | 1339 rounds |
+| H10 | `BossOp_EnterTick` | state 3 | 4086 rounds |
+| H11 | `BossOp_EnterTick` | Sprite_Current read before the call | 140 rounds |
+| H12 | `BossOp_EnterTick` | Sprite_ScriptTick | 6000 rounds |
+| H13 | `BossOp_Death` | bit 8 | 4525 rounds |
+| H14 | `BossOp_Death` | 0x939AD8 read before the calls | 357 rounds |
+| H15 | `BossOp_Death` | +3 = 1 | 6000 rounds |
+| H16 | `BossOp_Death` | no tick | 6000 rounds |
+| H17 | `BossMap_SetCorners` | i and j swapped | NOT REFUSED |
+| H17b | `BossMap_SetCorners` | the diagonal only | 5535 rounds |
+| H18 | `BossMap_SetCorners` | the value by the cell | 3949 rounds |
+| H19 | `BossMap_SetCorners` | the height byte | 5987 rounds |
+| H20 | `BossMap_SetCorners` | a row down | 5535 rounds |
+| H21 | `Boss_SetByLeaderId` | id 5 as 6 | 530 rounds |
+| H22 | `Boss_SetByLeaderId` | id 2 as 1 | 510 rounds |
+| H23 | `BossMap_UpdateFromEnemies` | the status byte +0x92 | 5206 rounds |
+| H24 | `BossMap_UpdateFromEnemies` | flag 0x35 | 3474 rounds |
+| H25 | `BossMap_UpdateFromEnemies` | the animations swapped | 4973 rounds |
+| H26 | `BossMap_UpdateFromEnemies` | enemy 2 the cell 1 | 3538 rounds |
+| H27 | `BossMap_UpdateFromEnemies` | enemy 2 by enemy 1's status | 3922 rounds |
+| H28 | `BossMap_UpdateFromEnemies` | the flag bits pointer read once, before the loop | 38 rounds |
+| H29 | `BossMap_UpdateFromEnemies` | bit 2 | 2926 rounds |
+| H30 | `BossMap_UpdateFromEnemies` | the x for the y | 2970 rounds |
+| H31 | `BossMap_UpdateFromEnemies` | a dword stored | 6000 rounds |
+| H32 | `BossMap_UpdateFromEnemies` | x and z swapped | 6000 rounds |
+| H33 | `BossMap_UpdateFromEnemies` | bit 0x80 for 0x40 | 4506 rounds |
+| H34 | `BossOp_ScriptTick` | Sprite_ScriptTickOnce | 6000 rounds |
+| H35 | `BossOp_ScriptTick` | al 1 | 6000 rounds |
+| H36 | `BossTorast_ActDispatch` | by +3 | a Fatal: BossTorast_ActDispatch: state byte +3 is 18, past the 6 entries of 0x64CAD4 |
+| H37 | `BossTorast_DeathDispatch` | by +4 | a Fatal: BossTorast_DeathDispatch: state byte +4 is 119, past the 2 entries of 0x64CAEC |
+| H37b | `BossTorast_DeathDispatch` | by +2 (the via planted 4: a Fatal) | a Fatal: BossTorast_DeathDispatch: state byte +2 is 4, past the 2 entries of 0x64CAEC |
+| H38 | `BossTorast_DeathFxDispatch` | by +3 | 4495 rounds |
+| H39 | `BossTorast_DeathFxStart` | interval 0x41 | 5971 rounds |
+| H40 | `BossTorast_DeathFxStart` | Sprite_Current read before the call | 237 rounds |
+| H41 | `BossTorast_DeathFxStart` | sound 0x611 | 6000 rounds |
+| H42 | `BossTorast_DeathFxFlash` | red shifted one more | 2796 rounds |
+| H43 | `BossTorast_DeathFxFlash` | blue shifted one less | 2779 rounds |
+| H44 | `BossTorast_DeathFxFlash` | the interval on the Sprite_Current of before the call | 111 rounds |
+| H45 | `BossTorast_DeathFxFlash` | down by 2 | 2903 rounds |
+| H46 | `BossTorast_DeathFxFlash` | next step at 1 | 422 rounds |
+| H47 | `BossTorast_DeathFxFlash` | size 0xC | 3097 rounds |
+| H48 | `BossTorast_DeathFxFlash` | the next kind | 3065 rounds |
+| H49 | `BossTorast_DeathFxRingGrow` | at 0x2C | 1088 rounds |
+| H50 | `BossTorast_DeathFxRingGrow` | up by 3 | 5457 rounds |
+| H51 | `BossTorast_DeathFxRingGrow` | +0x48 = 1 | 539 rounds |
+| H52 | `BossTorast_DeathFxRingGrow` | +0x44 = 0x8000 | 543 rounds |
+| H53 | `BossTorast_DeathFxRingGrow` | Sprite_Current read before the ring | 208 rounds |
+| H54 | `BossTorast_DeathFxRingShrink` | 0 counts as above | 604 rounds |
+| H55 | `BossTorast_DeathFxRingShrink` | down by 0x1000 | 4369 rounds |
+| H56 | `BossTorast_DeathFxRingShrink` | state 5 | 673 rounds |
+| H57 | `BossTorast_DeathFxRingShrink` | +3 = 1 | 670 rounds |
+| H58 | `BossTorast_DeathFxRingShrink` | Sprite_Current not read after the calls | 83 rounds |
+| H59 | `BossTorast_DeathFxRingShrink` | bank 0x84 | 673 rounds |
+| H60 | `BossTorast_DeathFxRingShrink` | down by 3 | 5327 rounds |
+| H61 | `BossTorast_DrawRing` | sar 11 | 5687 rounds |
+| H62 | `BossTorast_DrawRing` | the mask 0x3F | 5687 rounds |
+| H63 | `BossTorast_DrawRing` | angle step 0x40 | 6000 rounds |
+| H64 | `BossTorast_DrawRing` | red 0xFE at the centre | 6000 rounds |
+| H65 | `BossTorast_DrawRing` | corner 2 red from green | 5999 rounds |
+| H66 | `BossTorast_DrawRing` | x 0x380 | 6000 rounds |
+| H67 | `BossTorast_DrawRing` | size 0x30 | 6000 rounds |
+| H68 | `BossTorast_DrawRing` | the packet pointer read once | 6000 rounds |
+| H69 | `BossTorast_DrawRing` | opaque | 6000 rounds |
+| H70 | `BossTorast_DrawRing` | point i's x for its y | 5687 rounds |
+| H71 | `BossTorast_DrawRing` | the tpage masked to 12 bits | 5602 rounds |
+| H72 | `BossTorast_DrawRing` | the centre x unsigned | 5776 rounds |
 
 ## 5. The spawn helpers (`boss_spawn`)
 
@@ -156,9 +247,10 @@ never null), so their null fault (section 6) is not reached.
 - **The spawn writers write through a null pointer.** `BossActor_ClearBit40`,
   `BossActor_CopyFrom` (for `what` 0 and 1) and `BossActor_Clear` use
   `BossActor_Find`'s answer without a test; with no field actor carrying the
-  tag the original writes near address 0 and faults. 38 call sites in the
-  band hand them constant tags (the exit hooks' 0, 6, 7 ...); whether a
-  scene can lack its actor is the area's data, not read. Ours aborts with a
+  tag the original writes near address 0 and faults. 22, 9 and 7 units of
+  the band call them, with constant tags where read (the exit hooks' 0,
+  Boss01's 6 and 7); whether a scene can lack its actor is the area's data,
+  not read. Ours aborts with a
   message naming the function and the tag. The one caller outside the band,
   `0x494570` (`0x494500`'s encounter set-up), tests the answer.
 - **The dispatchers and `BossMap_SetCorners` index unchecked**: a state byte
