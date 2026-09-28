@@ -72654,3 +72654,495 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-28 (round eleven group BSH): BossElder_Hook's table: BareRet three times. docs/boss_sh.md."
+
+[[func]]
+pc = 0x43F7A0
+name = "BossDLord_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F7A0..0x43F7B1 (0x12 bytes): BossKind_Table[59] (D>Lord, area 172 - tools/boss_rows.py --disc): jmp [BossDLord_States + 4 * Sprite_Current +1], 12 entries; the caller's stack word handed on, the entry's eax the answer. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F7C0
+name = "BossDLord_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F7C0..0x43F810 (0x51 bytes): kind 59 state 0, tail jmp Sprite_ScriptTick: 0x939AD8 +0xFC = BossDLord_Anims, +0xF4 = BossDLord_Hook, +0xF8 = BossDLord_Sounds (0x939AD8 read for each store), +0x114 |= 8, Sprite_Current +1 = 2; al Sprite_ScriptTick's. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F820
+name = "BossDLord_ActDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F820..0x43F831 (0x12 bytes): BossDLord_States 6: jmp [BossDLord_ActSubs + 4 * Sprite_Current +2], 6 entries (EnemyOp_ActSubs with BossDLord_Death at 4). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F840
+name = "BossDLord_Death"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F840..0x43F891 (0x52 bytes): BossDLord_ActSubs 4, three calls: Sprite_EnsureAnimation(3), Sprite_ScriptTickOnce, Battle_EnemyDefeated; then 0x939AD8 +0x110 |= 0x1000, Sprite_Current +0 &= 0xBF, +1 = 3, +2 = 0, +3 = 0 (al 0, read by nobody). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F8A0
+name = "BossDLord_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F8A0..0x43F8AF (0x10 bytes): kind 59's +0xF4 hook: jmp [BossDLord_Hooks + 4 * (word & 0xFF)], 3 entries, the word handed on whole. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F8B0
+name = "BossDLord_HookFx"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F8B0..0x43F94D (0x9E bytes): BossDLord_Hooks 2 (BattleEnemy_RunAll's word): with Sprite_Current +1 = 7, +2 = 1 and +9 = 0, BattleTask_Create(3, 4) - BattleBossFx_Dispatch's slot 4, BossDLordFx_Dispatch - and the 0x80 bytes of the acting enemy's object (0x93B960 + (0x904B34 - 3) * 0x128) copied into the slot by dwords, then its +1 = 0, +2 = 0, +6 = 3, +5 = 4, +9 = 0, +0x29 = 3; the slot answered 0xFF (none free) indexes past the 48 (latent). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F950
+name = "Boss52_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F950..0x43F96E (0x1F bytes): Boss_SetupTable[52] (id 52, D>Lord, BOSS052, area 172 row 7 - tools/boss_rows.py): BattleHook_End = Boss52_End, BattleHook_Exit = Boss52_Exit, BattleHook_Event = BareRetZero. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43F970
+name = "Boss52_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43F970..0x43FA86 (0x117 bytes): set-up 52's end hook: without 0x904AE8 bit 1 a tail jmp to 0x446E00 (the end phase's step 2); with it each party member with +0 bit 0 - Battle_RemoveFromTurnOrder(+5), Sprite_Current = it, Sprite_PoseFromSet(+8 + (0x1C with +0x90 bit 14, else 4), 0x8C5D80, 0x1800) (+0x90 and +8 read after the first call) - then the chapter step 0x8034E5 = 0x1A and a tail jmp to 0x446DE0 (step 1). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FA90
+name = "Boss52_Exit"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FA90..0x43FAB2 (0x23 bytes): set-up 52's exit hook: BossActor_ClearBit40(0); BossActor_Find(0) into Field_ActiveMember and Sprite_Current; Sprite_SetAnimation(5). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FAC0
+name = "BossDLordFx_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FAC0..0x43FAD1 (0x12 bytes): BattleBossFx_Dispatch slot 4 (a task BossDLord_HookFx creates): jmp [BossDLordFx_States + 4 * Sprite_Current +1], 1 entry. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FAE0
+name = "BossDLordFx_StepDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FAE0..0x43FB0D (0x2E bytes): BossDLordFx_States 0: a three-entry stack table by Sprite_Current +2 - BossDLordFx_Start, BossDLordFx_Count, BattleFx_FreeTask. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FB10
+name = "BossDLordFx_Start"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FB10..0x43FB5A (0x4B bytes): the task's step 0, three calls: Sprite_Current +0xB = 0, +9 = the byte at 0x8C5652 + 0x8C * enemy 0's +0xF0 (its data record's +0x8A, BattleActor_FxSize's cell); Sprite_SetAnimation(4), Sprite_ScriptTick, Sprite_QueueOverlay; +2 up by one (Sprite_Current read after the calls). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FB60
+name = "BossDLordFx_Count"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FB60..0x43FBA9 (0x4A bytes): the task's step 1, three calls: +9 at 0xFF nothing, at 0 Sound_PlayEffect(0x603) and +9 = 0xFF (Sprite_Current read after the call), else +9 down by one; Sprite_ScriptTick, Sprite_QueueOverlay; with round-flag bit 2 (0x904AA8) +2 up by one. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FBB0
+name = "BossShroom_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FBB0..0x43FBC1 (0x12 bytes): BossKind_Table[61] (Shroom, area 119): jmp [BossShroom_States + 4 * Sprite_Current +1], 12 entries (the generic enemy states after its entry); the word handed on, the entry's eax the answer. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FBD0
+name = "BossShroom_Enter"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FBD0..0x43FC20 (0x51 bytes): kind 61 state 0, tail jmp Sprite_ScriptTick: 0x939AD8 +0xFC = BossShroom_Anims, +0xF4 = BossShroom_Hook, +0xF8 = BossShroom_Sounds, +0x114 |= 8, Sprite_Current +1 = 2. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FC30
+name = "BossShroom_Hook"
+ret = "void"
+params = "unsigned word"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FC30..0x43FC3F (0x10 bytes): kind 61's +0xF4 hook: jmp [BossShroom_Hooks + 4 * (word & 0xFF)], 3 entries (BareRet each). docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FC40
+name = "Boss54_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FC40..0x43FC5E (0x1F bytes): Boss_SetupTable[54] (id 54, Shroom, BOSS054, area 119 row 6): BattleHook_End = Boss54_End, BattleHook_Exit = BareRet, BattleHook_Event = BareRetZero. docs/boss_sj.md."
+
+[[func]]
+pc = 0x43FC60
+name = "Boss54_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x43FC60..0x43FC79 (0x1A bytes): set-up 54's end hook: with 0x904AE8 bit 1 movement-script variable 3 (0x903848) = 0x32 and a tail jmp to 0x446DE0, else to 0x446E00. docs/boss_sj.md."
+
+[[func]]
+pc = 0x4406E0
+name = "Boss55_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x4406E0..0x4406FE (0x1F bytes): Boss_SetupTable[55] (id 55, Myria, BOSS055, area 198 row 7; kind 62 is group BSF's): BattleHook_End = Boss55_End, BattleHook_Exit = BossHook_ExitActor0Bit40, BattleHook_Event = BareRetZero. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440700
+name = "Boss55_End"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440700..0x44081E (0x11F bytes): set-up 55's end hook: without 0x904AE8 bit 1 a tail jmp to 0x446E00; with it the party posed as Boss52_End's, the chapter step 0x8034E5 = 0xF, 0x446E20 called (step 3, not a tail), then Music_Track = 0xFF. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440830
+name = "BossMyriaFx_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440830..0x44084B (0x1C bytes): BattleBossFx_Dispatch slot 5 (a task Myria's 0x440660 creates, group BSF's): 0x939AD8 = enemy 0's object, then jmp [BossMyriaFx_States + 4 * Sprite_Current +1], 7 entries. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440850
+name = "BossMyriaFx_State0"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440850..0x440875 (0x26 bytes): BossMyriaFx_States 0: a two-entry stack table by Sprite_Current +2 - BossMyriaFx_State0Enter, BossMyriaFx_State0Loop. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440880
+name = "BossMyriaFx_State0Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440880..0x4408B7 (0x38 bytes): step 0, two calls: Sprite_SetAnimationBank(0x30D); Sprite_Current (read after) +0x48 = 0, +0x24 = 0, dword +0x3C = 0; BossMyriaFx_State0Loop called; +2 up by one (read after). docs/boss_sj.md."
+
+[[func]]
+pc = 0x4408C0
+name = "BossMyriaFx_State0Loop"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x4408C0..0x440921 (0x62 bytes): step 1, four calls: with the owner's (0x93B940) +0xB set, Sprite_SetAnimation of a ten-byte stack table (0, 1, 1, 1, 0, 1, 1, 1, 1, 1) by the word 0x904B7E (unchecked: 10 and above read the frame's own garbage and the caller's stack - ours aborts); BattleEnemy_ScriptTick, Sprite_QueueOverlay, BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440930
+name = "BossMyriaFx_State1"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440930..0x440955 (0x26 bytes): BossMyriaFx_States 1: a two-entry stack table by Sprite_Current +2 - BossMyriaFx_State1Enter, BossMyriaFx_State1Loop. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440960
+name = "BossMyriaFx_State1Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440960..0x440997 (0x38 bytes): step 0, two calls: Sprite_SetAnimationBank(0x30C); Sprite_Current (read after) +0x48 = 0, +0x24 = 0, dword +0x3C = 0; BossMyriaFx_State1Loop called; +2 up by one (read after). docs/boss_sj.md."
+
+[[func]]
+pc = 0x4409A0
+name = "BossMyriaFx_State1Loop"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x4409A0..0x440A03 (0x64 bytes): step 1, four calls: with the owner's (0x93B940) +0xB set, Sprite_SetAnimation of a ten-byte stack table (1, 3, 5, 3, 3, 3, 3, 3, 3, 3) by the word 0x904B7E (unchecked: 10 and above read the frame's own garbage and the caller's stack - ours aborts); BattleEnemy_ScriptTick, Sprite_QueueOverlay, BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440A10
+name = "BossMyriaFx_State2"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440A10..0x440A35 (0x26 bytes): BossMyriaFx_States 2: a two-entry stack table by Sprite_Current +2 - BossMyriaFx_State2Enter, BossMyriaFx_State2Loop. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440A40
+name = "BossMyriaFx_State2Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440A40..0x440A77 (0x38 bytes): step 0, two calls: Sprite_SetAnimationBank(0x30C); Sprite_Current (read after) +0x48 = 0, +0x24 = 0, dword +0x3C = 0; BossMyriaFx_State2Loop called; +2 up by one (read after). docs/boss_sj.md."
+
+[[func]]
+pc = 0x440A80
+name = "BossMyriaFx_State2Loop"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440A80..0x440AE3 (0x64 bytes): step 1, four calls: with the owner's (0x93B940) +0xB set, Sprite_SetAnimation of a ten-byte stack table (0, 2, 4, 2, 2, 2, 2, 2, 2, 2) by the word 0x904B7E (unchecked: 10 and above read the frame's own garbage and the caller's stack - ours aborts); BattleEnemy_ScriptTick, Sprite_QueueOverlay, BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440AF0
+name = "BossMyriaFx_State3"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440AF0..0x440B15 (0x26 bytes): BossMyriaFx_States 3: stack table by +2 - BossMyriaFx_State3Enter, BossMyriaFx_State3Wait. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440B20
+name = "BossMyriaFx_State3Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440B20..0x440BA5 (0x86 bytes): step 0, five calls: Sprite_SetAnimationBank(0x30D); +0x48 = 0, +0x24 = 0, +0x3C = 0; Sprite_SetAnimation of a ten-byte stack table (0, 2, 0, 4, 0, 5, 0, 0, 0, 0) by the word 0x904B7E (ours aborts at 10 and above); BattleEnemy_ScriptTickOnce, Sprite_QueueOverlay, BossMyriaFx_Follow; +2 up by one. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440BB0
+name = "BossMyriaFx_State3Wait"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440BB0..0x440BCE (0x1F bytes): step 1: BattleEnemy_ScriptTick; with the owner's +1 at 2 a tail jmp to BattleTask_FreeCurrent, else Sprite_QueueOverlay and a tail jmp to BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440BD0
+name = "BossMyriaFx_State4"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440BD0..0x440BF5 (0x26 bytes): BossMyriaFx_States 4: stack table by +2 - BossMyriaFx_State4Enter, BossMyriaFx_State4Wait. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440C00
+name = "BossMyriaFx_State4Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440C00..0x440C83 (0x84 bytes): step 0, five calls: bank 0x318; +0x48, +0x24, +0x3C = 0; Sprite_SetAnimation of (0, 0, 5, 0, 0, 0, 0, 0, 0, 0) by 0x904B7E; BattleEnemy_ScriptTickOnce, Sprite_QueueOverlay, BossMyriaFx_Follow; +2 up by one. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440C90
+name = "BossMyriaFx_State4Wait"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440C90..0x440CBD (0x2E bytes): step 1: when BattleEnemy_ScriptTickOnce answers al not 0 the owner's +1 up by one and +2 = 0, a tail jmp to BattleTask_FreeCurrent; else Sprite_QueueOverlay and a tail jmp to BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440CC0
+name = "BossMyriaFx_State5"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440CC0..0x440CE5 (0x26 bytes): BossMyriaFx_States 5: stack table by +2 - BossMyriaFx_State5Enter, BossMyriaFx_State5Wait. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440CF0
+name = "BossMyriaFx_State5Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440CF0..0x440D75 (0x86 bytes): step 0, five calls: bank 0x318; +0x48, +0x24, +0x3C = 0; Sprite_SetAnimation of (0, 0, 0, 0, 4, 0, 0, 2, 0, 3) by 0x904B7E; BattleEnemy_ScriptTick, Sprite_QueueOverlay, BossMyriaFx_Follow; +2 up by one. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440D80
+name = "BossMyriaFx_State5Wait"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440D80..0x440D9E (0x1F bytes): step 1: with the owner's +1 at 2 a tail jmp to BattleTask_FreeCurrent; else BattleEnemy_ScriptTick, Sprite_QueueOverlay, a tail jmp to BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440DA0
+name = "BossMyriaFx_State6"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440DA0..0x440DCD (0x2E bytes): BossMyriaFx_States 6: a three-entry stack table by +2 - BossMyriaFx_State6Enter, BossMyriaFx_State6Loop, BossMyriaFx_State6Wait. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440DD0
+name = "BossMyriaFx_State6Enter"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440DD0..0x440E55 (0x86 bytes): step 0, five calls: bank 0x318; +0x48, +0x24, +0x3C = 0; Sprite_SetAnimation of (0, 0, 0, 0, 0, 0, 0, 2, 1, 3) by 0x904B7E; BattleEnemy_ScriptTick, Sprite_QueueOverlay, BossMyriaFx_Follow; +2 up by one. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440E60
+name = "BossMyriaFx_State6Loop"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440E60..0x440ECD (0x6E bytes): step 1, four calls: with the owner's +0xB set, Sprite_SetAnimation of the same table by 0x904B7E and +2 up by one (Sprite_Current read after the call); BattleEnemy_ScriptTick, Sprite_QueueOverlay, BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440ED0
+name = "BossMyriaFx_State6Wait"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440ED0..0x440EEF (0x20 bytes): step 2: when BattleEnemy_ScriptTickOnce answers al not 0 the owner's +2 up by one and a tail jmp to BattleTask_FreeCurrent; else Sprite_QueueOverlay and a tail jmp to BossMyriaFx_Follow. docs/boss_sj.md."
+
+[[func]]
+pc = 0x440EF0
+name = "BossMyriaFx_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/boss_sj.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BSJ, capstone to the last instruction), 0x440EF0..0x441086 (0x197 bytes): 0x440EF0..0x441087 (0x197 bytes: 0x44103A, which the tool's cut calls a function, is its own branch - a je at +0xFD, the esi it pushed popped there; no other reference to it in the image): the owner's (0x93B940) +0, +0x48, dwords +0x40 / +0x44, +0x27, +0x28, +0x2A, words +0x2E / +0x30 / +0x32 and +0x5C..+0x5F copied to Sprite_Current; then by its +0x48: set, the words +0x2E / +0x30 += 0x441090(s16 BossMyriaFx_Drift x / y [+1] * dword +0x40 / +0x44, that dword); clear, += 0x441090(the s16 << 16, 0x10000) - the second on the Sprite_Current of after the first call, each add into the word of the Sprite_Current read before its call. The same shape as Area198_EffectA6Follow 0x42D580. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DBEC
+name = "BossDLord_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): kind 59's +0xFC animation bytes (BossDLord_Enter; read by BattleEnemy_SetAnimation). docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DBF8
+name = "BossDLord_Sounds"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): kind 59's +0xF8 sound words (BossDLord_Enter). docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC00
+name = "BossDLord_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossDLord_Dispatch's table by Sprite_Current +1: BossDLord_Enter, then the generic enemy states (Port_DroppedCall at 1 and 10) with BossDLord_ActDispatch at 6. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC30
+name = "BossDLord_ActSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossDLord_ActDispatch's table by +2: EnemyOp_ActSubs with BossDLord_Death at 4. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC48
+name = "BossDLord_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossDLord_Hook's table: BareRet, BareRet, BossDLord_HookFx. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC54
+name = "BossDLordFx_States"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossDLordFx_Dispatch's table by +1: BossDLordFx_StepDispatch. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC58
+name = "BossShroom_Anims"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): kind 61's +0xFC animation bytes (BossShroom_Enter). docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC64
+name = "BossShroom_Sounds"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): kind 61's +0xF8 sound words (BossShroom_Enter), to the next table. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DC70
+name = "BossShroom_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossShroom_Dispatch's table by +1: BossShroom_Enter, then the generic enemy states (EnemyOp_ActDispatch at 6, Port_DroppedCall at 1 and 10). docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DCA0
+name = "BossShroom_Hooks"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossShroom_Hook's table: BareRet x3. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DCAC
+name = "BossMyriaFx_Drift"
+ctype = "short"
+count = 14
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossMyriaFx_Follow's s16 (x, y) pair per task state 0..6 (by Sprite_Current +1), scaled by +0x40 / +0x44 or taken whole. docs/boss_sj.md."
+
+[[data]]
+pc = 0x64DDD0
+name = "BossMyriaFx_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BSJ): BossMyriaFx_Dispatch's table by +1: BossMyriaFx_State0..6. docs/boss_sj.md."

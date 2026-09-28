@@ -218,6 +218,7 @@
 #include "game/boss_se.h"
 #include "game/boss_si.h"
 #include "game/boss_sh.h"
+#include "game/boss_sj.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -770,6 +771,10 @@ void InjectAll() {
                                 // harness's recorders, the kinds' state and hook tables swapped for the fuzz only;
                                 // no module patches bytes inside its 46 (DIVERGENCE.md, cheats.cpp): order does not
                                 // matter
+    BossSj_Inject();            // round 11 group BSJ (fights 52, 54, 55, kinds 59, 61, effect slots 4 and 5,
+                                // 0x43F7A0..0x441087): its clones' calls re-aimed at the boss harness's recorders,
+                                // the kinds' and tasks' tables swapped for the fuzz only; no module patches bytes
+                                // inside its 44 (DIVERGENCE.md, cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
