@@ -58610,7 +58610,7 @@ ret = "unsigned char"
 params = "unsigned x, unsigned z"
 impl = "src/game/area_w2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28, 0x4160E0..0x4161EC (0x10D), cdecl, capstone to the last instruction, group AR2E. (PSX 0x801F66C8, by call) AreaMap_ByteAt(x, z): 0x00 / 0xAF / 0xC0 al 0, 0x10 / 0x50 1, 0x40 2, any other 3 (a byte table of 0xC1 and a jump table of four in the function). docs/area_w2e.md."
+evidence = "disasm 2026-09-28, 0x4160E0..0x4161EC (0x10D), cdecl, capstone to the last instruction, group AR2E. (PSX 0x801F66C8, by call) AreaMap_ByteAt(x, z): 0x00 / 0xAF / 0xC0 al 0, 0x40 1, 0x10 / 0x50 2, any other 3 (a byte table of 0xC1 picks one of four cases; the jump table lists them 0, 2, 1, 3). docs/area_w2e.md."
 
 [[func]]
 pc = 0x4161F0

@@ -103,6 +103,7 @@ constexpr ah::CallSite kCalls4168C0[] = {{0x0, 0x57C7C0}};
 // louder stand-ins and the settle).
 int g_area = 0;
 unsigned g_k = 0;
+unsigned g_case06 = 0;   // area 106's step hook: the cell case the seed planted flags for
 
 // ===========================================================================
 // The fuzz's own memory: a packet buffer, the stand-ins' effects
@@ -199,6 +200,35 @@ U MovesCurrent(const U*, U answer) {
     if ((n & 6) == 2) Sprite_Current[8] = static_cast<unsigned char>(n >> 12);
     return answer;
 }
+// A test that ends its caller when it answers: 0 five calls in six (so the
+// callers' later paths run), else a non-zero byte; garbage above either way.
+U MostlyNo(const U*, U answer) {
+    const U n = ah::Noise();
+    return (answer & 0xFFFFFF00u) | (n % 6 != 0 ? 0u : ((n >> 8) | 1u) & 0xFF);
+}
+// Field_LeaderStepTarget: 0 (free) half the time, 1 and 0xFF (the two the
+// idle stops on) and another byte a sixth each; the running object moved as
+// MovesCurrent does.
+U StepTargetAnswer(const U* a, U answer) {
+    const U n = ah::Noise();
+    static const U kV[] = {0, 0, 0, 1, 0xFF, 2};
+    answer = (answer & 0xFFFFFF00u) | (kV[n % 6] == 2 ? ((n >> 8) | 2u) & 0xFF : kV[n % 6]);
+    return MovesCurrent(a, answer);
+}
+// Field_LeaderPushObjects: 0 or a non-zero byte, half and half; the running
+// object moved as MovesCurrent does.
+U HalfNo(const U* a, U answer) {
+    const U n = ah::Noise();
+    return MovesCurrent(a, (answer & 0xFFFFFF00u) | ((n & 1) != 0 ? 0u : ((n >> 8) | 1u) & 0xFF));
+}
+// Flags_Test on the story flags: three calls in four the bit as it stands
+// (a whole eax of 0 or 1, as the real one), else the recorder's own answer -
+// so that a seed can plant the flags a path wants.
+U FlagsAnswer(const U* a, U answer) {
+    const U n = ah::Noise();
+    if (a[0] != at::kStoryFlags || n % 4 == 0) return answer;
+    return (Mem(at::kStoryFlags + (a[1] & 0xFF) / 8)[0] >> (a[1] & 7)) & 1;
+}
 // The kind 0x5C turn test's stand-in: answers 0 two calls in three, and
 // moves the facings both callers read after it.
 U TurnStepEffect(const U*, U answer) {
@@ -222,13 +252,17 @@ const ah::Callee kCallees[] = {
     {W2E_OURS(Gpu_SetSprt), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &SprtEffect, nullptr},
     {W2E_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &DrawModeEffect, nullptr},
     {W2E_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kGarbage, 0, 0, {}, &ByteAtEffect, nullptr},
+    // the cell words pushed with stale bits above them
+    {W2E_OURS(Field_CellHasEvent), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},
     {W2E_OURS(WorldMap_PinSprite), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W2E_OURS(WorldMap_DrawNeedle), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W2E_OURS(Effect_Release), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W2E_OURS(Effect_FindFree), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &FindFreeAnswer, nullptr},
     {W2E_OURS(Sprite_ObjectAt), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &ObjectAtAnswer, nullptr},
     {W2E_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {W2E_OURS(Scenario_ArriveHook), 2, {kAll, kAll}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent, nullptr},
+    {W2E_OURS(Scenario_ArriveHook), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_OURS(Field_LeaderCellEvent), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_OURS(Field_LeaderTalkTest), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
     // the x and z words pushed with stale bits above the byte it reads
     {W2E_OURS(Area_LinkAt), 2, {kU8, kU8}, ah::Answer::kFlag, 0, 0},
     {W2E_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
@@ -239,12 +273,13 @@ const ah::Callee kCallees[] = {
     // the area word and the flag byte pushed with stale bits above them (it
     // reads a u16 and a byte, window_task.cpp)
     {W2E_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0},
-    {W2E_OURS(Field_LeaderStepTarget), 0, {}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent, nullptr},
-    {W2E_OURS(Field_LeaderPushObjects), 0, {}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent, nullptr},
+    {W2E_OURS(Field_LeaderStepTarget), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StepTargetAnswer, nullptr},
+    {W2E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsAnswer, nullptr},
+    {W2E_OURS(Field_LeaderPushObjects), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &HalfNo, nullptr},
     // area 121's (AR3B's band this wave), by raw address
     {W2E_RAW("0x41BE10", kTurnToward121), 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7, {}, &MovesCurrent, nullptr},
-    {W2E_RAW("0x41C0A0", kMenuButton121), 0, {}, ah::Answer::kFlag, 0, 0},
-    {W2E_RAW("0x41C0E0", kHoldButton121), 0, {}, ah::Answer::kFlag, 0, 0},
+    {W2E_RAW("0x41C0A0", kMenuButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_RAW("0x41C0E0", kHoldButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
     {W2E_RAW("0x41C110", kTurnKeys121), 0, {}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent, nullptr},
     {W2E_RAW("0x41C350", kGaugeFrame121), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W2E_RAW("0x41C5B0", kKind5CState4), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
@@ -255,7 +290,7 @@ const ah::Callee kCallees[] = {
     {W2E_RAW("Area104_LeaderIdle", 0x415040), 0, {}, ah::Answer::kPhase, 0, 0},
     {W2E_RAW("Area104_ObjectAhead121", 0x4152B0), 0, {}, ah::Answer::kPhase, 0, 0},
     {W2E_RAW("Area104_TurnToFree", 0x4153F0), 3, {kAll, kAll, kU8}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent, nullptr},
-    {W2E_RAW("Area104_StartOnObject121", 0x415460), 0, {}, ah::Answer::kFlag, 0, 0},
+    {W2E_RAW("Area104_StartOnObject121", 0x415460), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
     {W2E_RAW("Area104_StopMotion", 0x415640), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
     {W2E_RAW("Area104_PoseByCharge", 0x415680), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &PoseEffect, nullptr},
     {W2E_RAW("Area104_LeaderCharge", 0x4156C0), 0, {}, ah::Answer::kPhase, 0, 0},
@@ -549,15 +584,15 @@ void Seed104(unsigned k) {
         // each early test at its value or beside it
         if (ah::Often()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x100u);
         if (ah::Often()) B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) & ~0x40u);
-        if (ah::Often()) Field_Request = 0;
-        if (ah::Often()) o[0xA] = 0;
+        if (ah::Next() % 6 != 0) Field_Request = 0;
+        if (ah::Next() % 6 != 0) o[0xA] = 0;
         if (ah::Half()) SetWord(Mem(at::kFieldInputHeld), 0);
         if (ah::Half()) Field_State[0x148] = static_cast<unsigned char>(ah::Next() % 4);
         for (unsigned a = 0; a < 4; ++a)
             if (ah::Half()) B(at::kActorStates + a * at::kActorStride) = static_cast<unsigned char>(ah::Next() ^ (ah::Half() ? 0x20 : 0));
         button();
         o[8] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 8 : ah::Next());
-        if (ah::Often()) o[0xB] = static_cast<unsigned char>(AH_PICK(0x40, 0x40, 0x3F, 0, 0x41, 0xC0));
+        if (ah::Often()) o[0xB] = static_cast<unsigned char>(AH_PICK(0x40, 0x3F, 0, 0x41, 0xC0, 0x10));
         break;
     case kObjectAhead:
     case kStartOnObject:
@@ -573,7 +608,7 @@ void Seed104(unsigned k) {
     case kTurnToFree:
         break;
     case kLeaderStep:
-        if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(0, 0, 0, 1, 2, 0xFF));
+        if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(0, 0, 0, 0, 1, 2, 0xFF));
         if (ah::Often()) B(at::kFieldInputFlags) = static_cast<unsigned char>(ah::Next() | 1);
         if (ah::Often()) o[8] = static_cast<unsigned char>(AH_PICK(2, 6, 0, 1, 3, 4, 5, 7, 0x82));
         if (ah::Often()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x100u);
@@ -758,9 +793,21 @@ void Seed106(unsigned k) {
     case k106Tail:
         B(at::kTailState) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 2, 0xA, 0xC, 0xE, 0x10, 1, 3, 4, 8, 0xB, 0x11, 0xFF, 0x80) : ah::Next());
         break;
-    case k106Step:
+    case k106Step: {
         B(at::kCondFD) = static_cast<unsigned char>(ah::Often() ? 0 : AH_PICK(1, 0x80));
+        // the case: 0 (0x4F, not 0x51), 1 (0x4F and 0x51), 2 / 3 (0x52, with
+        // 0x53 or not), 4 (0x53 only), 5 (none of them)
+        g_case06 = ah::Next() % 6;
+        static const unsigned char kFlags[6][4] = {{1, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 1, 1}, {0, 0, 1, 0}, {0, 0, 0, 1}, {0, 0, 0, 0}};
+        static const unsigned kIds[4] = {0x4F, 0x51, 0x52, 0x53};
+        for (unsigned i = 0; i < 4; ++i) {
+            if (!ah::Often()) continue;
+            unsigned char& byte = Mem(at::kStoryFlags + kIds[i] / 8)[0];
+            const auto bit = static_cast<unsigned char>(1u << (kIds[i] & 7));
+            byte = static_cast<unsigned char>(kFlags[g_case06][i] ? byte | bit : byte & ~bit);
+        }
         break;
+    }
     default: break;
     }
 }
@@ -782,7 +829,9 @@ void Args106(unsigned k, U* a) {
         }
     };
     const auto exact = [](U v) { return ah::Often() ? v : AH_PICK(1, 0x8000, 0x10000, 0xFFFFFFFFu) + v; };
-    switch (ah::Next() % 5) {
+    // the seed's case's cell two rounds in three, another's otherwise
+    static const unsigned kCell[6] = {0, 1, 2, 2, 3, 4};
+    switch (ah::Often() ? kCell[g_case06] : ah::Next() % 5) {
     case 0: a[1] = exact(0x248000); a[0] = At16(near(0x11, 3), a[0]); break;
     case 1: a[1] = exact(0xA8000); a[0] = At16(near(0x12, 2), a[0]); break;
     case 2: a[1] = exact(0x258000); a[0] = At16(near(0x1A, 2), a[0]); break;

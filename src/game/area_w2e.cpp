@@ -1279,14 +1279,15 @@ extern "C" void __cdecl Area104_BuildMinimap(void) {
 
 // original 0x4160E0 (x, z) -> al (called by Area104_BuildMinimap; PSX
 // 0x801F66C8): the shade of AreaMap_ByteAt(x, z) - 0x00, 0xAF and 0xC0 are
-// 0, 0x10 and 0x50 are 1, 0x40 is 2, any other 3 (a byte-indexed table of
-// 0xC1 in the code, then a jump table of four).
+// 0, 0x40 is 1, 0x10 and 0x50 are 2, any other 3 (a byte-indexed table of
+// 0xC1 in the code picks one of four cases, and the jump table lists them
+// 0, 2, 1, 3: 0x41610D, 0x416113, 0x416110, 0x416116).
 extern "C" unsigned char __cdecl Area104_MinimapShade(U x, U z) {
     const unsigned char cell = AH_CALL(AreaMap_ByteAt)(static_cast<short>(x), static_cast<short>(z));
     switch (cell) {
     case 0x00: case 0xAF: case 0xC0: return 0;
-    case 0x10: case 0x50: return 1;
-    case 0x40: return 2;
+    case 0x40: return 1;
+    case 0x10: case 0x50: return 2;
     default: return 3;
     }
 }
