@@ -20,6 +20,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace battle_flow {
 
 namespace at {
@@ -57,7 +62,8 @@ constexpr std::uint32_t kDropItems = 0x904AF4;     // u16 x 16 (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;    // u8 x 16 (PSX 0x80146350)
 constexpr std::uint32_t kTurnGate = 0x904B34;      // u8, BattleEnemy_Chance70's "3 or more" gate
 constexpr std::uint32_t kFormation = 0x904B35;     // u8, BattleEnemy_Chance70's "4" gate
-constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int): set by 0x437CC0 (0x437CF0, 0x438450, 0x43C9F0 ...); called with 3
+constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int): BattleHook_Event, stored by the boss set-ups (Boss_SetupTable 0x656954:
+                                                   // Boss01_Event 0x437CF0, Boss04_Event 0x438450, BareRetZero 0x43C9F0 ...); called with 3
 constexpr std::uint32_t kMagicId = 0x904B80;       // u16: the item or ability the magic loaders were given
 constexpr std::uint32_t kActorAt = 0x904B8A;       // u8 (PSX 0x801463C6)
 constexpr std::uint32_t kAnimGate = 0x904B8E;      // u8 (PSX 0x801463CA)
@@ -78,9 +84,9 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 
 // Callees with no name in symbols.gen.h: other groups' functions this round,
 // called by address (the round's cross-group rule).
-constexpr std::uint32_t kRemoveFromTurnOrder = 0x446650;  // group BE's; PSX Battle_RemoveFromTurnOrder 0x801DD114
-constexpr std::uint32_t kSetFlagBit = 0x494ED0;           // group BG's; ORs bit (n & 0x1F) into dword 0x904068 + (n >> 5) * 4
-constexpr std::uint32_t kClearTurnBit = 0x446FD0;         // group BF's; word 0x904B82 &= ~(1 << n)
+constexpr std::uint32_t kRemoveFromTurnOrder = bof3::addr::Battle_RemoveFromTurnOrder;  // group BE's; PSX Battle_RemoveFromTurnOrder 0x801DD114
+constexpr std::uint32_t kSetFlagBit = bof3::addr::Battle_SetEnemyKindFlag;           // group BG's; ORs bit (n & 0x1F) into dword 0x904068 + (n >> 5) * 4
+constexpr std::uint32_t kClearTurnBit = bof3::addr::Battle_ClearActorBit;         // group BF's; word 0x904B82 &= ~(1 << n)
 
 using Handler = void (__cdecl*)();
 

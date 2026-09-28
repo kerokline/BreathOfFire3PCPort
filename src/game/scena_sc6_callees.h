@@ -33,6 +33,9 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
 
 // Rebound 2026-09-28 (round ten's cleanup, docs/round-10-cleanup.md item 1):
 // every constant here whose target is ours reads bof3::addr::<Name>. The values
@@ -109,7 +112,7 @@ constexpr std::uint32_t kCells = 0x661194;      // Scena06_Cells, 4 x 5 bytes
 constexpr unsigned kCellCount = 4;
 constexpr std::uint32_t kCellHandlers = 0x6611A8;  // Scena06_CellHandlers, 4
 constexpr unsigned kCellHandlerCount = 4;
-constexpr std::uint32_t kBareRet = 0x437CC0;    // a bare ret: Runs[0], Objects[0], CellHandlers[1]
+constexpr std::uint32_t kBareRet = bof3::addr::BareRet;    // a bare ret: Runs[0], Objects[0], CellHandlers[1]
 
 // Callees nobody owns (above).
 constexpr std::uint32_t kPartyPass = bof3::addr::Party_HealJoined;

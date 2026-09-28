@@ -13,6 +13,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace window_kinds {
 
 namespace at {
@@ -43,12 +48,12 @@ constexpr std::uint32_t kScratch = 0x903850;       // DamageScratch's byte 0; th
 }  // namespace at
 
 // The callees with no name of their own in symbols.gen.h.
-constexpr std::uint32_t kNop = 0x437CC0;           // a bare `ret` (symbols.toml, Battle_ElementAffinity's note)
+constexpr std::uint32_t kNop = bof3::addr::BareRet;           // a bare `ret` (symbols.toml, Battle_ElementAffinity's note)
 // Record handler 4's six kinds, by record byte +2. Slots 2 and 3 are not
 // immediates: the original stores eax (0) there - two holes in the table.
 // 0x598570 and 0x5986C0 are group CD's (round eight); 0x597FA0 and 0x5984B0
 // are in no group and unread. All four stay Capcom's here.
-constexpr std::uint32_t kResultKinds[6] = {0x597FA0, 0x5984B0, 0, 0, 0x598570, 0x5986C0};
+constexpr std::uint32_t kResultKinds[6] = {0x597FA0, 0x5984B0, 0, 0, bof3::addr::BattleResultWin_ExpState, bof3::addr::BattleResultWin_ZennyState};
 
 using Handler = void (__cdecl*)();
 

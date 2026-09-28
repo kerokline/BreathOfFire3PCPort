@@ -7,10 +7,16 @@
 // The callees of other groups of the seventh round are called by raw address
 // (docs/takeover-queue-round7.md, "The rule for calls across groups"): group
 // BD's skill helpers 0x57DA70, 0x57DC90, 0x5918A0, 0x591DB0 and 0x591E50,
-// under BattleMenu_DrawSkillList. Never bound or renamed here.
+// under BattleMenu_DrawSkillList - still called by address; since round
+// eleven's cleanup the constants read the addresses by their names.
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
 
 namespace battle_draw {
 
@@ -23,7 +29,7 @@ constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, the low word read
 constexpr U kRhwNumerator = 0x5C4610;  // float 0.1: rhw = 0.1 / z
 constexpr U kDevice = 0x7CC350;        // D3d_Device, an IDirect3DDevice3 *
-constexpr U kRetOnly = 0x437CC0;       // a bare ret
+constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 
 // --- the battle menu's lists ---------------------------------------------------
 constexpr U kColour = 0x903A5A;        // s8: the window colour (Config), a CLUT row
@@ -48,11 +54,11 @@ constexpr U kTitleBit0Off = 0x66B4BC, kTitleBit0On = 0x66B4D4;   // by bit 0
 constexpr U kStatusBits = 0x8034E1;    // Field_StatusBits: bit 0 holds the tint off
 
 // Group BD's (round 7), by address: never bound here.
-constexpr U kSkillUsable = 0x57DA70;   // (mode, member, id) -> al: whether the row is usable
-constexpr U kSkillRow = 0x57DC90;      // (x, y, colour, icon, record, cost, dim): one row
-constexpr U kSkillIcon = 0x5918A0;     // (id) -> al: the row's icon kind (0x663D70[al])
-constexpr U kSkillCost = 0x591DB0;     // (member, id, 1) -> al: the number drawn at x + 0x6D
-constexpr U kSkillList = 0x591E50;     // (member, kind, battle) -> a 10-byte list of skill ids
+constexpr U kSkillUsable = bof3::addr::Skill_CanUse;   // (mode, member, id) -> al: whether the row is usable
+constexpr U kSkillRow = bof3::addr::Menu_DrawSkillRow;      // (x, y, colour, icon, record, cost, dim): one row
+constexpr U kSkillIcon = bof3::addr::Skill_FlagIndex;     // (id) -> al: the row's icon kind (0x663D70[al])
+constexpr U kSkillCost = bof3::addr::Skill_ApCost;     // (member, id, 1) -> al: the number drawn at x + 0x6D
+constexpr U kSkillList = bof3::addr::Char_AbilityList;     // (member, kind, battle) -> a 10-byte list of skill ids
 
 struct Callees {
     // the Direct3D helpers (ours, d3d_draw.cpp) and the bare ret

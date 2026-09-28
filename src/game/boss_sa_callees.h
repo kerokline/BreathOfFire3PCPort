@@ -24,6 +24,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace boss_sa {
 namespace at {
 
@@ -62,22 +67,22 @@ constexpr U kLeaderFlags = 0x802E74;      // +0x134 (u32): bit 1
 // The hooks the set-ups store (BattleHook_End / _Exit / _Event), and the
 // enemies' +0xF4 hooks the kinds' state 0 stores: the originals' addresses,
 // which in the game are Capcom's function or the jmp Inject put there to ours.
-constexpr U kBoss01End = 0x437DE0;
-constexpr U kBoss01Exit = 0x437E10;
-constexpr U kBoss01Event = 0x437CF0;
-constexpr U kBoss02End = 0x4381E0;
-constexpr U kBoss02Event = 0x4381B0;
-constexpr U kBoss03End = 0x438230;
-constexpr U kBareRet = 0x437CC0;          // BareRet (BH's)
-constexpr U kBareRetZero = 0x43C9F0;      // BareRetZero (BH's)
-constexpr U kEndPickWay = 0x43EB60;       // BossHook_EndPickWay (BH's)
-constexpr U kExitActor0Bit40 = 0x440820;  // BossHook_ExitActor0Bit40 (BH's)
-constexpr U kGaryHook = 0x437B60;
-constexpr U kMoguHook = 0x437CB0;
-constexpr U kNueHook = 0x437FF0;
-constexpr U kNue2Hook = 0x4380F0;
-constexpr U kSample1Hook = 0x438180;
-constexpr U kWeretigrHook = 0x43D630;
+constexpr U kBoss01End = bof3::addr::Boss01_End;
+constexpr U kBoss01Exit = bof3::addr::Boss01_Exit;
+constexpr U kBoss01Event = bof3::addr::Boss01_Event;
+constexpr U kBoss02End = bof3::addr::Boss02_End;
+constexpr U kBoss02Event = bof3::addr::Boss02_Event;
+constexpr U kBoss03End = bof3::addr::Boss03_End;
+constexpr U kBareRet = bof3::addr::BareRet;          // BareRet (BH's)
+constexpr U kBareRetZero = bof3::addr::BareRetZero;      // BareRetZero (BH's)
+constexpr U kEndPickWay = bof3::addr::BossHook_EndPickWay;       // BossHook_EndPickWay (BH's)
+constexpr U kExitActor0Bit40 = bof3::addr::BossHook_ExitActor0Bit40;  // BossHook_ExitActor0Bit40 (BH's)
+constexpr U kGaryHook = bof3::addr::BossGary_Hook;
+constexpr U kMoguHook = bof3::addr::BossMogu_Hook;
+constexpr U kNueHook = bof3::addr::BossNue_Hook;
+constexpr U kNue2Hook = bof3::addr::BossNue2_Hook;
+constexpr U kSample1Hook = bof3::addr::BossSample1_Hook;
+constexpr U kWeretigrHook = bof3::addr::BossWeretigr_Hook;
 
 // --- the callees nobody owns ------------------------------------------------
 constexpr U kPlayCue = 0x437450;          // (unsigned id) Sound_PlayEffect unless 0xFFFF

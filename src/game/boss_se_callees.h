@@ -19,6 +19,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace boss_se {
 namespace at {
 
@@ -45,7 +50,7 @@ constexpr U kTurn = 0x904B90;             // u32: the turn counter (battle_phase
 constexpr U kHookEnd = 0x904B64;          // BattleHook_End
 constexpr U kHookExit = 0x904B68;         // BattleHook_Exit
 constexpr U kHookEvent = 0x904B6C;        // BattleHook_Event
-constexpr U kEnd21 = 0x43B730;            // set-up 21 / 23's end hook (BSD's)
+constexpr U kEnd21 = bof3::addr::Boss21_End;            // set-up 21 / 23's end hook (BSD's)
 
 // --- the enemies' objects (0x93B960 + n * 0x128), the offsets used ------------
 constexpr U kCurrentEnemy = 0x939AD8;     // the enemy BattleEnemy_RunAll is running

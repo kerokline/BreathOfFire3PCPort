@@ -27,6 +27,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace boss_sh {
 namespace at {
 
@@ -47,7 +52,7 @@ constexpr U kWord80 = 0x904B80;           // u16: set to 0x40 beside the action 
 constexpr U kHookEnd = 0x904B64;          // BattleHook_End
 constexpr U kHookExit = 0x904B68;         // BattleHook_Exit
 constexpr U kHookEvent = 0x904B6C;        // BattleHook_Event
-constexpr U kExitTransition4 = 0x43E790;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
+constexpr U kExitTransition4 = bof3::addr::BossHook_ExitTransition4;  // BossHook_ExitTransition4 (BSE's): set-up 35's exit hook
 
 // --- set-up 34's member pick ------------------------------------------------------
 constexpr U kPickId = 0x669730;           // u8: the byte a member's +0x148 is compared with (written by scenario code)

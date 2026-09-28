@@ -158,7 +158,7 @@ unsigned char Pose(const char* who, const unsigned char (&poses)[10]) {
     return poses[i];
 }
 
-constexpr U kFollow = 0x440EF0;   // BossMyriaFx_Follow, called directly by the states
+constexpr U kFollow = bof3::addr::BossMyriaFx_Follow;   // BossMyriaFx_Follow, called directly by the states
 
 // Myria's effect, steps 0 of states 0..2: Sprite_SetAnimationBank(bank); the
 // Sprite_Current of after the call +0x48 = 0, +0x24 = 0, the dword +0x3C = 0;
@@ -343,7 +343,7 @@ extern "C" void __cdecl BossDLordFx_Dispatch(void) { DispatchTask("BossDLordFx_D
 // original 0x43FAE0: BossDLordFx_States 0: by +2 through a stack table of
 // BossDLordFx_Start, BossDLordFx_Count, BattleFx_FreeTask.
 extern "C" void __cdecl BossDLordFx_StepDispatch(void) {
-    static const U kSteps[] = {0x43FB10, 0x43FB60, 0x4AEE90};
+    static const U kSteps[] = {bof3::addr::BossDLordFx_Start, bof3::addr::BossDLordFx_Count, bof3::addr::BattleFx_FreeTask};
     Steps("BossDLordFx_StepDispatch", kSteps, 3);
 }
 
@@ -455,10 +455,10 @@ extern "C" void __cdecl BossMyriaFx_Dispatch(void) {
 // State 0: a stack table by +2 of Enter / Loop (0x440850); Enter (0x440880):
 // bank 0x30D; Loop (0x4408C0): poses 0, 1, 1, 1, 0, 1, 1, 1, 1, 1.
 extern "C" void __cdecl BossMyriaFx_State0(void) {
-    static const U kSteps[] = {0x440880, 0x4408C0};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State0Enter, bof3::addr::BossMyriaFx_State0Loop};
     Steps("BossMyriaFx_State0", kSteps, 2);
 }
-extern "C" void __cdecl BossMyriaFx_State0Enter(void) { FxEnter(0x30D, 0x4408C0); }
+extern "C" void __cdecl BossMyriaFx_State0Enter(void) { FxEnter(0x30D, bof3::addr::BossMyriaFx_State0Loop); }
 extern "C" void __cdecl BossMyriaFx_State0Loop(void) {
     static const unsigned char kPoses[10] = {0, 1, 1, 1, 0, 1, 1, 1, 1, 1};
     FxLoop("BossMyriaFx_State0Loop", kPoses);
@@ -467,10 +467,10 @@ extern "C" void __cdecl BossMyriaFx_State0Loop(void) {
 // State 1 (0x440930): Enter (0x440960) bank 0x30C; Loop (0x4409A0) poses 1, 3,
 // 5, 3, 3, 3, 3, 3, 3, 3.
 extern "C" void __cdecl BossMyriaFx_State1(void) {
-    static const U kSteps[] = {0x440960, 0x4409A0};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State1Enter, bof3::addr::BossMyriaFx_State1Loop};
     Steps("BossMyriaFx_State1", kSteps, 2);
 }
-extern "C" void __cdecl BossMyriaFx_State1Enter(void) { FxEnter(0x30C, 0x4409A0); }
+extern "C" void __cdecl BossMyriaFx_State1Enter(void) { FxEnter(0x30C, bof3::addr::BossMyriaFx_State1Loop); }
 extern "C" void __cdecl BossMyriaFx_State1Loop(void) {
     static const unsigned char kPoses[10] = {1, 3, 5, 3, 3, 3, 3, 3, 3, 3};
     FxLoop("BossMyriaFx_State1Loop", kPoses);
@@ -479,10 +479,10 @@ extern "C" void __cdecl BossMyriaFx_State1Loop(void) {
 // State 2 (0x440A10): Enter (0x440A40) bank 0x30C; Loop (0x440A80) poses 0, 2,
 // 4, 2, 2, 2, 2, 2, 2, 2.
 extern "C" void __cdecl BossMyriaFx_State2(void) {
-    static const U kSteps[] = {0x440A40, 0x440A80};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State2Enter, bof3::addr::BossMyriaFx_State2Loop};
     Steps("BossMyriaFx_State2", kSteps, 2);
 }
-extern "C" void __cdecl BossMyriaFx_State2Enter(void) { FxEnter(0x30C, 0x440A80); }
+extern "C" void __cdecl BossMyriaFx_State2Enter(void) { FxEnter(0x30C, bof3::addr::BossMyriaFx_State2Loop); }
 extern "C" void __cdecl BossMyriaFx_State2Loop(void) {
     static const unsigned char kPoses[10] = {0, 2, 4, 2, 2, 2, 2, 2, 2, 2};
     FxLoop("BossMyriaFx_State2Loop", kPoses);
@@ -493,7 +493,7 @@ extern "C" void __cdecl BossMyriaFx_State2Loop(void) {
 // the owner's +1 at 2 (read after the call) a tail jump to
 // BattleTask_FreeCurrent, else Sprite_QueueOverlay and BossMyriaFx_Follow.
 extern "C" void __cdecl BossMyriaFx_State3(void) {
-    static const U kSteps[] = {0x440B20, 0x440BB0};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State3Enter, bof3::addr::BossMyriaFx_State3Wait};
     Steps("BossMyriaFx_State3", kSteps, 2);
 }
 extern "C" void __cdecl BossMyriaFx_State3Enter(void) {
@@ -514,7 +514,7 @@ extern "C" void __cdecl BossMyriaFx_State3Wait(void) {
 // answers al not 0, the owner's +1 up by one and +2 = 0 and a tail jump to
 // BattleTask_FreeCurrent; else Sprite_QueueOverlay and BossMyriaFx_Follow.
 extern "C" void __cdecl BossMyriaFx_State4(void) {
-    static const U kSteps[] = {0x440C00, 0x440C90};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State4Enter, bof3::addr::BossMyriaFx_State4Wait};
     Steps("BossMyriaFx_State4", kSteps, 2);
 }
 extern "C" void __cdecl BossMyriaFx_State4Enter(void) {
@@ -537,7 +537,7 @@ extern "C" void __cdecl BossMyriaFx_State4Wait(void) {
 // tail jump to BattleTask_FreeCurrent; else BattleEnemy_ScriptTick,
 // Sprite_QueueOverlay, BossMyriaFx_Follow.
 extern "C" void __cdecl BossMyriaFx_State5(void) {
-    static const U kSteps[] = {0x440CF0, 0x440D80};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State5Enter, bof3::addr::BossMyriaFx_State5Wait};
     Steps("BossMyriaFx_State5", kSteps, 2);
 }
 extern "C" void __cdecl BossMyriaFx_State5Enter(void) {
@@ -562,7 +562,8 @@ extern "C" void __cdecl BossMyriaFx_State5Wait(void) {
 // tail jump to BattleTask_FreeCurrent, else Sprite_QueueOverlay and
 // BossMyriaFx_Follow.
 extern "C" void __cdecl BossMyriaFx_State6(void) {
-    static const U kSteps[] = {0x440DD0, 0x440E60, 0x440ED0};
+    static const U kSteps[] = {bof3::addr::BossMyriaFx_State6Enter, bof3::addr::BossMyriaFx_State6Loop,
+                               bof3::addr::BossMyriaFx_State6Wait};
     Steps("BossMyriaFx_State6", kSteps, 3);
 }
 extern "C" void __cdecl BossMyriaFx_State6Enter(void) {
