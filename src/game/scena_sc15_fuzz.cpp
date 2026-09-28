@@ -58,7 +58,7 @@ constexpr std::uint32_t kState = 0x8034E2, kPart = 0x8034E3, kRun = 0x8034E4, kS
 constexpr std::uint32_t kByteFD = 0x8034F1;
 constexpr std::uint32_t kCounter0 = 0x903848, kCounter3 = 0x90384B;
 constexpr std::uint32_t kWait = 0x66C810, kRequest = 0x66C7D8, kArea = 0x904EFC;
-constexpr std::uint32_t kEffects = 0x7E11E0, kSprites = 0x7DEE80;
+constexpr std::uint32_t kEffects = 0x7E11E0;
 constexpr std::uint32_t kDistance = 0x903840;
 constexpr std::uint32_t kPartyByte = 0x90412C;
 constexpr std::uint32_t kShakeShift = 0x6BC740, kShakeOn = 0x6BC741, kKept = 0x6BC742, kSlot = 0x6BC743;
@@ -66,7 +66,6 @@ constexpr std::uint32_t kRollLine = 0x6BC744, kRollScroll = 0x6BC746, kRollSkip 
 constexpr std::uint32_t kInputHeld = 0x7E1BE8, kInputPressed = 0x7E1BEC;
 constexpr std::uint32_t kHold = 0x929F12, kElevation = 0x929F1C;
 constexpr std::uint32_t kGameStep = 0x66C7EA;
-constexpr std::uint32_t kFrame = 0x937F94;
 constexpr std::uint32_t kPacketNext = 0x7E0670;
 constexpr std::uint32_t kRecordTable = 0x7E0880;   // the pointer Scena15_RecordWord reads
 
@@ -490,7 +489,6 @@ ObjectTable g_objects15 = {0x6619AC, 12, {}, false};
 
 // The steps each run's switch holds (and a few beside them, which do nothing).
 constexpr std::uint8_t kSteps1[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 0x13, 0x14, 0x15, 0x19, 0x1A};
-constexpr std::uint8_t kSteps2[] = {0, 1, 2, 3, 4, 5, 6};
 constexpr std::uint8_t kSteps3[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xF, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C,
                                     0x1E, 0x1F, 0x20, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x32, 0x33, 0x34, 0x35};
 constexpr std::uint8_t kCounters3[] = {0xB, 0xC, 0xE, 0x13, 3, 5, 6, 2, 0, 1};
