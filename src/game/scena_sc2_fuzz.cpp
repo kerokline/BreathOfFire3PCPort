@@ -602,15 +602,22 @@ void Args(unsigned k, std::uint32_t* a) {
 // one call in 24, from Move half the time): what the steps store around a
 // call and read again after one.
 void Disturb(std::uint32_t h) {
+    // Every choice from h alone: the harness's Next() would draw differently
+    // on the two passes' call counts (SC3's 403 false mismatches).
+    static const unsigned char kWaits[] = {1, 3, 5, 6, 8, 0xC, 0x14, 0x18, 0x1A, 0x22, 0x27, 0x31, 0x3C, 0x46, 0x4B, 0x5C, 0x64, 0x65, 0xA2,
+                                           0xBE, 0xC8, 0xC9, 0x1E, 0x2B};
+    static const unsigned char kThree[] = {2, 6, 0xB, 0x4B, 0xF, 0};
+    static const unsigned char kTwo[] = {3, 0, 1, 6};
     const unsigned b = (h >> 13) & 0xFF;
+    const unsigned c = h >> 21;
     switch ((h >> 3) % 10) {
-    case 0: M(at::kCounters)[0] = static_cast<unsigned char>(b & 1 ? b : CounterZero()); break;
+    case 0: M(at::kCounters)[0] = static_cast<unsigned char>(b & 1 ? b : kWaits[c % sizeof kWaits]); break;
     case 1: M(at::kCounters + ((h >> 11) & 3))[0] = static_cast<unsigned char>(b); break;
     case 2: M(0x929F12)[0] = static_cast<unsigned char>((h >> 11) & 1); break;
-    case 3: M(at::kCounters + 3)[0] = static_cast<unsigned char>(b & 1 ? b : SH_PICK(2, 6, 0xB, 0x4B, 0xF)); break;
+    case 3: M(at::kCounters + 3)[0] = static_cast<unsigned char>(b & 1 ? b : kThree[c % sizeof kThree]); break;
     case 4: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
     case 5: M(at::kChoiceBits)[0] ^= 2; break;
-    case 6: M(at::kCounters + 2)[0] = static_cast<unsigned char>(b & 1 ? b : SH_PICK(3, 0, 1)); break;
+    case 6: M(at::kCounters + 2)[0] = static_cast<unsigned char>(b & 1 ? b : kTwo[c % sizeof kTwo]); break;
     case 7: M(at::kLeadMember)[0] = static_cast<unsigned char>(b & 1 ? b : 0); break;
     case 8: move_script::SetWord(sh::ObjectOf(0) + 0x36, b & 1 ? 0x44 + (b >> 1) % 3 : b); break;
     default: M(at::kStep)[0] = static_cast<unsigned char>(b); break;
