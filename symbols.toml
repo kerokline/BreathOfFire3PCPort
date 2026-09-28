@@ -59056,3 +59056,734 @@ ctype = "unsigned long"
 count = 12
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR3A): area 119's +0x3C: Area119_Spawn1AtLeader, 0x41F320 (group AR3E's band), 0x42A4B0, Area80_ResetCameraShift, six spawns, the flag pair. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41C890
+psx = 0x801F2D2C
+name = "Area124_PlaceRandomObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41C890..0x41C95A (0xCB bytes), cdecl: area 124 +0x40 init: a jmp over 11 nops; area 72s code (Area72_PlaceRandomObject) over Area124_Weights (8) and Area124_Cells (8 pairs): Rand() & 0x3F walked down the weights, the first it falls below chosen (none: 8); Sprite_Objects 0..7 but it get +0 = 0; the chosen one at Area124_Cells[Rand() & 7] (bytes << 16), +0x3E = AreaMap_Elevation there; Field_EdgeBits = the dword 0x802E74 less 5 either way. PSX twin: names/area_records.toml (0x801F2D2C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41C960
+psx = 0x801F362C
+name = "Area125_PlaceRandomObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41C960..0x41CA2A (0xCB bytes), cdecl: area 125 +0x40 init: area 124s code over Area125_Weights / Area125_Cells (a jmp over 11 nops first). PSX twin: names/area_records.toml (0x801F362C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CA30
+psx = 0x801F2C04
+name = "Area127_ClearActive80"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CA30..0x41CA6D (0x3E bytes), cdecl: area 127 +0x3C[0] handler: Field_ActiveMember byte +0x80 bit 0 cleared; the leader byte +0x89 (0x802DC9) 5: story flag 0x32, MoveCmd_TestFB(0x4E, 0x33), Sprite_Current (read after) +0 = 0. PSX twin: names/area_records.toml (0x801F2C04). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CA70
+name = "Area128_ChoiceStep3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CA70..0x41CAA6 (0x37 bytes), cdecl: area 128 +0x34[0] choice: the answer 0x7DEE67 read, the message 0x7DEE48 = 0xFFFF; answer 0: the focus object (0x903804) word +0x8A = 0xB, counter 0 (0x903848) = 0xF, the step byte 0x8034E5 = 3; else the step 8. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CAB0
+name = "Area128_ChoiceArmTail56"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CAB0..0x41CADF (0x30 bytes), cdecl: area 128 +0x34[1] choice: answer 0: ScriptFlags_Set40, tail kind 0x9039F3 = 0x38 (56) at state 0xA, message 0x49; else message 0xFFFF. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CAE0
+psx = 0x801F3030
+name = "Area128_PlaceObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CAE0..0x41CB35 (0x56 bytes), cdecl: area 128 +0x34[2] choice = +0x3C[0] handler: Sprite_Current (read again for each store) +0x34 = 0x4E8000, +0x3C = 0, +0x38 = 0x88000 when Field_State +0x89 is 2 else 0x80000, +8 = 1; no message. PSX twin: names/area_records.toml (0x801F3030). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CB40
+name = "Area128_TailLeave56"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CB40..0x41CBC5 (0x86 bytes), cdecl: Field_ModeTailKinds[56] (armed by Area128_ChoiceArmTail56, Area128_Trigger61): state 0 and Field_Request not 2: ScriptFlags_Clear40, Party_DropIn(6), story flag 0x88, the tail kind and state 0; state 0xA and the request not 2: ScriptFlags_Clear40, story flag 0x89, Field_ChangeArea(0x79, 0x2A0000, 0x1A0000, 7), the tail kind and state 0; else nothing. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CBD0
+name = "Area128_Trigger61"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CBD0..0x41CBF0 (0x21 bytes), cdecl: Field_ObjectTriggers id 61 (a gap of the tool, area 128 block): ScriptFlags_Set40; tail kind 0x38 at state 0; the object word +0x8A + 1; al 0. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CC00
+psx = 0x801F31D0
+name = "Area128_InitPatches"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CC00..0x41CCB4 (0xB5 bytes), cdecl: area 128 +0x40 init: the previous area (u16 0x802290) 0x79: story flag 0x43 set, 0x42 cleared, the AreaMap_PatchBase chain applied through AreaMap_ApplyPatch (area 94s walk); then Cond_ByteFA (signed) above 10 and story flag 0x43: cells (0x1F, 0x39), (0x20, 0x39) = 0xC0, (0x1F, 0x3A), (0x20, 0x3A) = 0xA1. PSX twin: names/area_records.toml (0x801F31D0). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CCC0
+psx = 0x801F35B0
+name = "Area130_ChoiceRunStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CCC0..0x41CD0C (0x4D bytes), cdecl: area 130 +0x34[0] choice = +0x3C[16] handler: the message word Area130_ChoiceMessages[s8 answer] (unchecked); answer 0: counters 0..3 = 0, the step byte 0xA, MoveScript_Var7 6; answer 1: counter 0 = 0. PSX twin: names/area_records.toml (0x801F35B0). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CD10
+psx = 0x801F363C
+name = "Area130_SpawnKind4AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CD10..0x41CD51 (0x42 bytes), cdecl: area 130 +0x3C[0] handler: Sprite_Current = ObjTrio record 0; Effect_Spawn(4, 0, Area130_EffectArgsA[0x904062], record words +0x2E, +0x30) (the byte and words pushed with stale high bits); al not 0xFF: Sprite_Current (read again) +0xB = al. PSX twin: names/area_records.toml (0x801F363C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CD60
+psx = 0x801F36BC
+name = "Area130_SpawnKind3AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CD60..0x41CDA1 (0x42 bytes), cdecl: area 130 +0x3C[1] handler: kind 3 at record 0, Area130_EffectArgsB (as Area130_SpawnKind4AtMember0). PSX twin: names/area_records.toml (0x801F36BC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CDB0
+psx = 0x801F3760
+name = "Area130_DroppedCall1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CDB0..0x41CDB8 (0x9 bytes), cdecl: area 130 +0x3C[3] handler: Port_DroppedCall(1). PSX twin: names/area_records.toml (0x801F3760). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CDC0
+psx = 0x801F37B8
+name = "Area130_DroppedCallTrack83"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CDC0..0x41CDD1 (0x12 bytes), cdecl: area 130 +0x3C[5] handler: Port_DroppedCall(0), Music_Track = 0x83. PSX twin: names/area_records.toml (0x801F37B8). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CDE0
+psx = 0x801F37F0
+name = "Area130_SpawnKind3AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CDE0..0x41CE21 (0x42 bytes), cdecl: area 130 +0x3C[6] handler: kind 3 at record 1 by list byte 0x904063, Area130_EffectArgsB. PSX twin: names/area_records.toml (0x801F37F0). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CE30
+psx = 0x801F3870
+name = "Area130_SpawnKind3AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CE30..0x41CE75 (0x46 bytes), cdecl: area 130 +0x3C[7] handler: kind 3 at record 2 by list byte 0x904064, Area130_EffectArgsB. PSX twin: names/area_records.toml (0x801F3870). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CE80
+psx = 0x801F38F0
+name = "Area130_Effect78AtObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CE80..0x41CECB (0x4C bytes), cdecl: area 130 +0x3C[8] handler: Effect_FindFree; a slot: the record +0 = 1, +5 = 0x78, +0x34 / +0x38 / +0x3C = Sprite_Current (read again for each) +0x34 / +0x38 / +0x3C. PSX twin: names/area_records.toml (0x801F38F0). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CED0
+psx = 0x801F397C
+name = "Area130_SpawnKind1AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CED0..0x41CF11 (0x42 bytes), cdecl: area 130 +0x3C[9] handler: kind 1 at record 1, Area130_EffectArgsB. PSX twin: names/area_records.toml (0x801F397C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CF20
+psx = 0x801F39FC
+name = "Area130_SpawnKind1AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CF20..0x41CF65 (0x46 bytes), cdecl: area 130 +0x3C[10] handler: kind 1 at record 2, Area130_EffectArgsB. PSX twin: names/area_records.toml (0x801F39FC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CF70
+psx = 0x801F3A7C
+name = "Area130_SpawnKind4AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CF70..0x41CFB1 (0x42 bytes), cdecl: area 130 +0x3C[11] handler: kind 4 at record 1, Area130_EffectArgsC. PSX twin: names/area_records.toml (0x801F3A7C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41CFC0
+psx = 0x801F3AFC
+name = "Area130_SpawnKind4AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41CFC0..0x41D005 (0x46 bytes), cdecl: area 130 +0x3C[12] handler: kind 4 at record 2, Area130_EffectArgsC. PSX twin: names/area_records.toml (0x801F3AFC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D010
+psx = 0x801F3B7C
+name = "Area130_SpawnKind5AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D010..0x41D051 (0x42 bytes), cdecl: area 130 +0x3C[13] handler: kind 5 at record 1, Area130_EffectArgsC. PSX twin: names/area_records.toml (0x801F3B7C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D060
+psx = 0x801F3BFC
+name = "Area130_SpawnKind5AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D060..0x41D0A5 (0x46 bytes), cdecl: area 130 +0x3C[14] handler: kind 5 at record 2, Area130_EffectArgsC. PSX twin: names/area_records.toml (0x801F3BFC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D0B0
+psx = 0x801F3C7C
+name = "Area130_GiveKeyItem10"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D0B0..0x41D0B8 (0x9 bytes), cdecl: area 130 +0x3C[15] handler: KeyItem_Add(0xA). PSX twin: names/area_records.toml (0x801F3C7C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D0C0
+name = "Area130_Trigger65"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D0C0..0x41D0D5 (0x16 bytes), cdecl: Field_ObjectTriggers id 65 (a gap of the tool, area 130 block): ScriptFlags_Set40; tail kind 0x3F (63) with sub-kind 0x9039F5 = 0 (the state is the step byte 0x8034E5); al 0. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D0E0
+name = "Area130_TailGiveItem"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D0E0..0x41D26B (0x18C bytes), cdecl: Field_ModeTailKinds[63] (a gap of the tool, armed by Area130_Trigger65): by the step byte 0x8034E5: 0 and Field_Request not 2 - by the byte 0x903F6A (0..5, a jump table of 6 at +0x174; else none) one of six (category, item): strncpy(Text_Records, Item_NamePtr(category, item), 0x10) (the CRT at 0x5B9450), Inventory_Add(category, item, 1) (a fourth word 0 pushed); then Text_Records +0x2F = 0, Msg_OpenScript(0x49), the request 2, the step 1. 1 and the request not 2: sound 0x106, story flag 0x98, ScriptFlags_Clear40, the tail kind and sub-kind 0. Else nothing. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D270
+name = "Area130_ChoiceTailState2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D270..0x41D289 (0x1A bytes), cdecl: the choice 0 of world-map areas 16, 33, 45, 65, 87, 88, 115, 121, 151, 152; area 131 +0x34[1]; area 187 +0x34[1]; area 33 +0x3C[2], area 121 +0x3C[3] (area 130 block): answer 0: the tail state 0x9039F4 = 2; the message 0xFFFF. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D290
+name = "Area131_ChoiceFocusStepA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D290..0x41D2F9 (0x6A bytes), cdecl: area 131 +0x34[2] choice: answer 0: ScriptFlags_Set40; counter 0 = 0, MoveScript_Var7 7, the step 0xA; the focus object (read again for each) +1 = 4, +0x84 = 2, +0x83 = 4, word +0x8A = 0; message 0xC. Else message 0xFFFF. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D300
+name = "Area131_ChoiceFocusStep0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D300..0x41D35D (0x5E bytes), cdecl: area 131 +0x34[3] choice: the message 0xFFFF; answer 0: ScriptFlags_Set40; counter 0 = 0, MoveScript_Var7 7, the step 0; the focus object +1 = 4, +0x84 = 2, +0x83 = 2, word +0x8A = 0. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D360
+psx = 0x801F2E18
+name = "Area131_CameraShiftYLess1E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D360..0x41D36F (0x10 bytes), cdecl: area 131 +0x3C[4] handler: Camera_ShiftY - 0x1E, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F2E18). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D370
+psx = 0x801F2E40
+name = "Area131_CameraShiftYMore1E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D370..0x41D37F (0x10 bytes), cdecl: area 131 +0x3C[5] handler: Camera_ShiftY + 0x1E, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F2E40). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D380
+name = "Area131_Trigger15"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D380..0x41D389 (0xA bytes), cdecl: Field_ObjectTriggers id 15 (a gap of the tool, area 131 block): tail kind 0x22 (34); al 0. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D390
+name = "Area131_TailLeave34"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D390..0x41D42B (0x9C bytes), cdecl: Field_ModeTailKinds[34] (a gap of the tool, armed by Area131_Trigger15): by the s8 tail state (a jump table of 4 at +0x8C; negative or above 3 nothing): 0 - ScriptFlags_Set40, Msg_OpenScript(2), the state (read after) + 1, Field_Request 2; 1 and the request not 2 - Area131_DisarmTail (a tail jmp); 2 and the request not 2 - state 3; 3 - Field_ScriptFlags ^ 0x16, Area131_DisarmTail, the byte 0x904152 = 0, story flag 0x77 cleared, Field_ChangeArea(0x79, 0x1A0000, 0x350000, 3). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D430
+name = "Area131_DisarmTail"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D430..0x41D446 (0x17 bytes), cdecl: called by Area131_TailLeave34 and by the engine at 0x456E29, 0x4570C9, 0x457362, 0x457582, 0x4575CE (inside Field_RunSlot as symbols.toml bounds it): ScriptFlags_Clear40; the tail kind, state and sub-kind 0x9039F3..F5 = 0. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D450
+psx = 0x801F3A24
+name = "Area132_AnimByBit4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D450..0x41D46E (0x1F bytes), cdecl: area 132 +0x3C[0] handler: Sprite_Current +8 bit 4: Sprite_SetAnimation(0x40), else 0x41. PSX twin: names/area_records.toml (0x801F3A24). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D470
+psx = 0x801F3A64
+name = "Area132_Effect73"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D470..0x41D4C6 (0x57 bytes), cdecl: area 132 +0x3C[1] handler: Effect_FindFree; a slot: z +0x38 = 0x1D0000, x +0x34 = 0x2A0000 (each read back), +0 = 1, +5 = 0x73, +1 = 0; +0x3C = (s16 AreaMap_Elevation(x, z)) << 16. PSX twin: names/area_records.toml (0x801F3A64). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D4D0
+psx = 0x801F3AEC
+name = "Area132_Effect73Pair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D4D0..0x41D5A2 (0xD3 bytes), cdecl: area 132 +0x3C[2] handler: two records of kind 0x73 as Area132_Effect73: at (0x2E0000, 0x1C0000) with +1 = 1, +0xB = 1 and at (0x2F0000, 0x1C0000) with +1 = 1, +0xB = 0; each +0x3C = (ground + 0x200) << 16 and +0x34 (read after the call) - 0x8000. PSX twin: names/area_records.toml (0x801F3AEC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D5B0
+psx = 0x801F3C1C
+name = "Area132_Effect74"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D5B0..0x41D602 (0x53 bytes), cdecl: area 132 +0x3C[3] handler: one record of kind 0x74 at (0x2B0000, 0x280000) on the ground; +1 not written. PSX twin: names/area_records.toml (0x801F3C1C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D610
+psx = 0x801F3CA0
+name = "Area132_ClearFE"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D610..0x41D617 (0x8 bytes), cdecl: area 132 +0x3C[4] handler: Cond_ByteFE = 0. PSX twin: names/area_records.toml (0x801F3CA0). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D620
+name = "Area132_EffectGradient"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D620..0x41D6C9 (0xAA bytes), cdecl: EffectKind18_States entry 95 (0x6541E8; a gap of the tool, area 132 block), Sprite_Current an effect record: Cond_ByteFE 0: Effect_Release. Draw_PassFlags bit 2: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x95, 0), Gfx_CommitPrim(7, 0xC); at Gfx_PacketNext (read again) Gpu_SetPolyG4, Gpu_SetSemiTrans(0), corners (0, 0), (320, 0), (0, 200), (320, 200) as floats, colours (0, 0xC8, 0xFF) above and (0, 0, 0x20) below; Gfx_CommitPrim(7, 0x44): a screen-wide gradient. docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D6D0
+psx = 0x801F2C1C
+name = "Area133_ChoiceFocusPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D6D0..0x41D738 (0x69 bytes), cdecl: area 133 +0x34[0] choice = +0x3C[4] handler: the focus object dwords +0x18 / +0x1C = Area133_ChoicePairs[s8 answer] bytes 0 / 1 (unchecked; the focus pointer and the answer read again), the message 0xFFFF; answer 2: the byte 0x929F0F = 0, ScriptFlags_Set40, Draw_PassFlags = 0, the step 0x1E, MoveScript_Var7 4. PSX twin: names/area_records.toml (0x801F2C1C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D740
+psx = 0x801F2CEC
+name = "Area133_SpawnKind3AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D740..0x41D781 (0x42 bytes), cdecl: area 133 +0x3C[0] handler: kind 3 at record 0, Area133_EffectArgs (as Area130_SpawnKind4AtMember0). PSX twin: names/area_records.toml (0x801F2CEC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D790
+psx = 0x801F5114
+name = "Area134_SpawnKind4AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D790..0x41D7D1 (0x42 bytes), cdecl: area 134 +0x3C[0] handler: kind 4 at record 0, Area134_EffectArgsB. PSX twin: names/area_records.toml (0x801F5114). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D7E0
+psx = 0x801F5194
+name = "Area134_CameraShiftXMore2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D7E0..0x41D7F1 (0x12 bytes), cdecl: area 134 +0x3C[1] handler: Camera_ShiftX + 2, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F5194). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D800
+psx = 0x801F51BC
+name = "Area134_CameraShiftXLess2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D800..0x41D80F (0x10 bytes), cdecl: area 134 +0x3C[2] handler: Camera_ShiftX - 2, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F51BC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D810
+psx = 0x801F51E4
+name = "Area134_CameraShiftXReset"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D810..0x41D820 (0x11 bytes), cdecl: area 134 +0x3C[3] handler; area 8 +0x34[7] = +0x3C[6]: Camera_ShiftX = 0, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F51E4). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D830
+psx = 0x801F5200
+name = "Area134_SpawnKind1AtMember0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D830..0x41D871 (0x42 bytes), cdecl: area 134 +0x3C[4] handler: kind 1 at record 0, Area134_EffectArgsA. PSX twin: names/area_records.toml (0x801F5200). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D880
+psx = 0x801F5280
+name = "Area134_CameraShiftYMore8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D880..0x41D88F (0x10 bytes), cdecl: area 134 +0x3C[5] handler: Camera_ShiftY + 8, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F5280). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D890
+psx = 0x801F52A8
+name = "Area134_CameraShiftYLess8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D890..0x41D89F (0x10 bytes), cdecl: area 134 +0x3C[6] handler: Camera_ShiftY - 8, MapView_Redraw 2. PSX twin: names/area_records.toml (0x801F52A8). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D8A0
+psx = 0x801F52D0
+name = "Area134_SpawnKind3AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D8A0..0x41D8E1 (0x42 bytes), cdecl: area 134 +0x3C[7] handler: kind 3 at record 1, Area134_EffectArgsA. PSX twin: names/area_records.toml (0x801F52D0). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D8F0
+psx = 0x801F5350
+name = "Area134_SpawnKind3AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D8F0..0x41D935 (0x46 bytes), cdecl: area 134 +0x3C[8] handler: kind 3 at record 2, Area134_EffectArgsA. PSX twin: names/area_records.toml (0x801F5350). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D940
+psx = 0x801F53EC
+name = "Area134_SpawnKind1AtMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D940..0x41D981 (0x42 bytes), cdecl: area 134 +0x3C[10] handler: kind 1 at record 1, Area134_EffectArgsA. PSX twin: names/area_records.toml (0x801F53EC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D990
+psx = 0x801F546C
+name = "Area134_SpawnKind1AtMember2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D990..0x41D9D5 (0x46 bytes), cdecl: area 134 +0x3C[11] handler: kind 1 at record 2, Area134_EffectArgsA. PSX twin: names/area_records.toml (0x801F546C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41D9E0
+psx = 0x801F54EC
+name = "Area134_Effect90AtObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41D9E0..0x41DA2F (0x50 bytes), cdecl: area 134 +0x3C[12] and +0x3C[13] handlers (the PSX has two functions there, 0x801F54EC and 0x801F557C): Effect_FindFree; a slot: +0 = 1, +5 = 0x90, +1 = 0, x / z / y copied from Sprite_Current (read again for each). PSX twin: names/area_records.toml (0x801F54EC). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41DA30
+psx = 0x801F560C
+name = "Area134_Effect93AtObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41DA30..0x41DA7B (0x4C bytes), cdecl: area 134 +0x3C[14] handler: as Area130_Effect78AtObject, kind 0x93. PSX twin: names/area_records.toml (0x801F560C). docs/area_w3c.md."
+
+[[func]]
+pc = 0x41DA80
+psx = 0x801F5698
+name = "Area134_Effect99AtObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3c.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3C, capstone to the last instruction; extent agrees with tools/area_rows.py), 0x41DA80..0x41DACB (0x4C bytes), cdecl: area 134 +0x3C[15] handler: as Area130_Effect78AtObject, kind 0x99. PSX twin: names/area_records.toml (0x801F5698). docs/area_w3c.md."
+
+[[data]]
+pc = 0x6265AC
+name = "Area124_Cells"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area124_PlaceRandomObject: 8 (x, z) byte pairs by Rand() & 7. docs/area_w3c.md."
+
+[[data]]
+pc = 0x6265BC
+name = "Area124_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area124_PlaceRandomObject: the draw walks Rand() & 0x3F down them (they sum to 64 in the image). docs/area_w3c.md."
+
+[[data]]
+pc = 0x6266E8
+name = "Area125_Cells"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area125_PlaceRandomObject: 8 (x, z) byte pairs. docs/area_w3c.md."
+
+[[data]]
+pc = 0x6266F8
+name = "Area125_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area125_PlaceRandomObject: 8 weights (sum 64). docs/area_w3c.md."
+
+[[data]]
+pc = 0x626FE0
+name = "Area127_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[127] +0x3C. docs/area_w3c.md."
+
+[[data]]
+pc = 0x627A74
+name = "Area128_Choices"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[128] +0x34 (entry 3 is 0x4285D0, another block). docs/area_w3c.md."
+
+[[data]]
+pc = 0x627A7C
+name = "Area128_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[128] +0x3C, the tail of the choices (entry 1 is 0x4285D0). docs/area_w3c.md."
+
+[[data]]
+pc = 0x627B50
+name = "Area130_EffectArgsA"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Effect_Spawn third argument of Area130_SpawnKind4AtMember0 by a party list byte, unchecked. docs/area_w3c.md."
+
+[[data]]
+pc = 0x627B5C
+name = "Area130_EffectArgsB"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Effect_Spawn third argument of area 130 handlers 1, 6, 7, 9, 10 by a party list byte, unchecked. docs/area_w3c.md."
+
+[[data]]
+pc = 0x627B68
+name = "Area130_EffectArgsC"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Effect_Spawn third argument of area 130 handlers 11..14 by a party list byte, unchecked. docs/area_w3c.md."
+
+[[data]]
+pc = 0x628C38
+name = "Area130_Handlers"
+ctype = "unsigned long"
+count = 17
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[130] +0x3C (entries 2 and 4 are Area67_MusicFade10 and Area39_FadeOutMusic). docs/area_w3c.md."
+
+[[data]]
+pc = 0x628C78
+name = "Area130_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[130] +0x34. docs/area_w3c.md."
+
+[[data]]
+pc = 0x628CC4
+name = "Area130_ChoiceMessages"
+ctype = "unsigned short"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area130_ChoiceRunStep: the message word by the s8 answer, unchecked. docs/area_w3c.md."
+
+[[data]]
+pc = 0x629898
+name = "Area131_Choices"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[131] +0x34 (entry 0 is 0x437CC0, outside the band). docs/area_w3c.md."
+
+[[data]]
+pc = 0x6298E4
+name = "Area131_Handlers"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[131] +0x3C (entries 0..3 are areas 7 and 49s camera shifts, 6 and 7 other blocks, 8 Area94_Counter1FromLeaderPose, 9 and 10 area 67s). docs/area_w3c.md."
+
+[[data]]
+pc = 0x62A580
+name = "Area132_Handlers"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[132] +0x3C. docs/area_w3c.md."
+
+[[data]]
+pc = 0x62A5E0
+name = "Area133_EffectArgs"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Effect_Spawn third argument of Area133_SpawnKind3AtMember0 by a party list byte, unchecked; after area 132s descriptor. docs/area_w3c.md."
+
+[[data]]
+pc = 0x62AF88
+name = "Area133_Handlers"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[133] +0x3C (entries 1..3 are Area100_ShiftCameraDown4, Area100_ShiftCameraUp4, Area94_Counter1FromLeaderPose). docs/area_w3c.md."
+
+[[data]]
+pc = 0x62AF98
+name = "Area133_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[133] +0x34, the tail of the handlers. docs/area_w3c.md."
+
+[[data]]
+pc = 0x62B604
+name = "Area133_ChoicePairs"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area133_ChoiceFocusPair: 6 byte pairs by the s8 answer, unchecked. docs/area_w3c.md."
+
+[[data]]
+pc = 0x62B610
+name = "Area134_EffectArgsA"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Effect_Spawn third argument of area 134 handlers 4, 7, 8, 10, 11 by a party list byte, unchecked; after area 133s descriptor. docs/area_w3c.md."
+
+[[data]]
+pc = 0x62B61C
+name = "Area134_EffectArgsB"
+ctype = "signed char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Effect_Spawn third argument of Area134_SpawnKind4AtMember0 by a party list byte, unchecked. docs/area_w3c.md."
+
+[[data]]
+pc = 0x62C0E0
+name = "Area134_Handlers"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3C): Area_Descriptors[134] +0x3C (entry 9 is Area80_ResetCameraShift; 12 and 13 both Area134_Effect90AtObject). docs/area_w3c.md."
