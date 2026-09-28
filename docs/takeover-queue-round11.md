@@ -133,6 +133,10 @@ by the event-battle set-ups, so both are expected at their baselines.
 
 ## 7. Debts (the round's cleanup)
 
+**The cleanup's own list, with what landed, is
+[`round-11-cleanup.md`](round-11-cleanup.md)** (2026-09-28: items 1..4 from a
+cloud session, the `'*'` run at the tip owed); this section stays as written.
+
 1. **Harness fold-backs** - every stage-B and wave-two group worked around
    these in its own fuzz file; fold them into `boss_harness.*` now that no
    agent builds against it, and re-run `'*'`: the dispatcher shape

@@ -19,6 +19,16 @@ so that a boss group writes only its functions, a list and its seeds.
 this harness has its own recorder pool, its own `g_active`, its own standard
 set, and all four run in one process (`BOF3X_SHADOW='*'`).
 
+**Since round eleven's cleanup (2026-09-28,
+[`round-11-cleanup.md`](round-11-cleanup.md) section 1)** the harness carries
+what stage B worked around: `OtherStates` (two overloads) for the seeds, the
+louder standard stand-ins (`Battle_RemoveFromTurnOrder`, `0x446DE0`,
+`Msg_OpenScript`, `Scenario_CallA`, `Battle_OpenMsgWindow`) and the opt-in
+`CreateMayFail`, `Clone::states` honoured for a `kTask` (drawn after the
+seed), the disturbance's case 11 below `phase_span`, and a log line for a
+handler listed in tables with different `nargs`. The `'*'` run at that tip is
+owed; the cleanup doc says which groups' counts it may move.
+
 **Read this first if you are a stage-B group (BSA..BSE, then BSF..BSJ):**
 section 3 is the recipe, section 8 a worked set-up and a worked kind, section
 6 the traps already paid for.
@@ -164,8 +174,9 @@ compared state holds both sides' stores, and they must be equal.
   **the three hook cells their recorders**, `0x929ED0` a row of
   `Cond_Flags`, `Gfx_PacketNext` the packet buffer; `0x904AAA` =
   `Group::fight`; the current enemy's `+0x100` = `Group::kind`; a
-  `kDispatch`'s state byte below `Clone::states`; the seed; a `via`'s state
-  byte. Then the arguments (the shape's, then the group's `args`), theirs,
+  `kDispatch`'s state byte below `Clone::states`; the seed; a `kTask`'s
+  state byte below `Clone::states` (after the seed, so it wins over an
+  owner that is the slot itself); a `via`'s state byte. Then the arguments (the shape's, then the group's `args`), theirs,
   ours, compare.
 - **The disturbance** (two calls in three, after the recorder logs):
   `Sprite_Current` (an enemy, or a slot for `kTask`), `0x939AD8`, the owner,
@@ -174,7 +185,8 @@ compared state holds both sides' stores, and they must be equal.
   `+8..+0xB`, `+0x2E`, `+0x30`, `+0x48`, `+0x4A`, `+0x4B`, `+0x92`; the state
   bytes kept below `phase_span` when the group sets it), a byte of the
   current enemy's record (**never** `+0xF4..+0x100`: its hook, its tables
-  and its kind are pointers and an index the originals follow), the
+  and its kind are pointers and an index the originals follow; its state
+  bytes `+1..+4` below `phase_span` too, since the cleanup), the
   chapter's run or step, the battle-end byte `0x904AE8`, the fight byte
   (to `Group::fight` or one of the values boss code compares it with: 0x10,
   0x19, 0x1A, 0x25), or the group's `disturb`; then the group's `settle`.
@@ -213,17 +225,22 @@ changes hands fails at start-up with a line saying so and moves column.
 | Callee | Args (masks) | Answer |
 |---|---|---|
 | `BattleTask_Create` | kind, parameter (bytes) | a slot 0..47 |
-| `BattleTask_FreeCurrent`, `Battle_EnemyDefeated`, `Battle_OpenMsgWindow`, `BattleFx_FreeTask` | - | garbage |
-| `BattleEnemy_SetAnimation`, `Battle_RemoveFromTurnOrder`, `Battle_ClearActorBit`, `Battle_SetTargetFlag40`, `Transition_Start`, `Port_DroppedCall` | a byte | garbage |
+| `BattleTask_FreeCurrent`, `Battle_EnemyDefeated`, `BattleFx_FreeTask` | - | garbage |
+| `Battle_OpenMsgWindow` | - | garbage; **its effect moves the banner's character `0x66972D`** when that cell is one of the group's regions (`BannerCharEffect`, BSC's) |
+| `BattleEnemy_SetAnimation`, `Battle_ClearActorBit`, `Battle_SetTargetFlag40`, `Transition_Start`, `Port_DroppedCall` | a byte | garbage |
+| `Battle_RemoveFromTurnOrder` | a byte | garbage; **its effect moves a party record's `+0x91` bit 0x40, `+8` or `+0`** - the end hooks read them after (`TurnOrderEffect`, the five groups' copy) |
+| `BattleTask_Create` with `CreateMayFail` listed by the group | | a slot, or **0xFF a third of the time** (opt-in: seven originals index by the answer untested, D163) |
 | `BattleEnemy_ScriptTick`, `BattleEnemy_ScriptTickOnce`, `File_LoadDone` | - | flag |
 | `Battle_ActorIsOut` | a byte | flag |
 | `BattleWin_DrawMediumBox` (2), `BattleWin_DrawTileRgb` (5), `BattleBanner_Add` (5), `Battle_CopyEnemyData` (2), `Battle_LoadSoundByKey` (2, flag), `LoadDatFile` (1) | whole words | garbage |
-| `0x446DE0`, `0x446E00`, `0x446E20` (unnamed, nobody's: `0x904AA0 = 5`, `0x904AA2 = 0`, `0x904AA1` = 1 / 2 / 3 - the end phase's steps) | - | garbage |
+| `0x446DE0`, `0x446E00`, `0x446E20` (unnamed, nobody's: `0x904AA0 = 5`, `0x904AA2 = 0`, `0x904AA1` = 1 / 2 / 3 - the end phase's steps) | - | garbage; **`0x446DE0`'s effect Notes the chapter step `0x8034E5`, then moves it** (`EndWinEffect`, BSH's form: the store before the call is compared, not wiped) |
 | `EnemyData_FindByTag`, `BossActor_Index` (BH's) | the tag (a byte) | a byte 0xFF..7 / 0xFF..0x1D |
 | `BossActor_Find` (BH's) | the tag | **a pointer to one of field objects 0..3 (in the compared state), never null** - its callers write through it without a test |
 | `BossActor_ClearBit40` (BH's) | the tag | garbage; its effect flips bit 0x40 of one of field objects 0..3 (louder than the real one) |
 | `BossActor_CopyFrom` (3: tag, from, what), `BossActor_Clear` (1) (BH's) | | garbage |
-| `Msg_OpenScript`, `Msg_SystemPtr` (a short; answers a pointer), `Text_DrawAt` (5), `Text_DrawFont12` (4), `Str_CopyN` (3), `Field_MemberSprite` (2), `Scenario_CallA` (1), `AreaMap_Elevation` (2), `AbilityList_Add` (4, flag) | | garbage unless said |
+| `Msg_OpenScript` | a short | garbage; **its effect moves the script bits `0x904AAD` half the time** (`ScriptBitsEffect`, BSC's) |
+| `Scenario_CallA` | a word | garbage; **its effect moves the move counter `0x903848` half the time** when that cell is one of the group's regions (`MoveCounterEffect`, BSC's) |
+| `Msg_SystemPtr` (a short; answers a pointer), `Text_DrawAt` (5), `Text_DrawFont12` (4), `Str_CopyN` (3), `Field_MemberSprite` (2), `AreaMap_Elevation` (2), `AbilityList_Add` (4, flag) | | garbage unless said |
 | `MoveCmd_TestFB` (two shorts), `Flags_Set` / `Flags_Clear` / `Flags_Test` (bits, a byte; `Flags_Test` a bool), `MoveCmd_OpE9` (theirs, 7), `Crt_sprintf` (theirs, 4) | | |
 | `Sound_PlayEffect`, `Sound_PlayById` | a short | garbage |
 | `Sprite_UpdateScreen`, `Sprite_QueueOverlay`, `Effect_Release` | - | garbage |
@@ -292,6 +309,23 @@ with its arity (a missing callee is a `Fatal` naming its address).
   or `BH_PICK` (the passes would diverge); an `args` hook that writes memory
   is lost (the input state is captured before it: plant in `Seed`, keep a
   global for `args`, as `boss_spawn_fuzz.cpp`'s `g_tag`).
+- **An effect that overwrites a cell the caller may have stored before the
+  call wipes the store** instead of comparing it: `Note()` the old value
+  first (`EndWinEffect`; BSH's `0x446DE0` left two controls unrefused until
+  it did, round 11 doc section 5.3).
+- **A handler address in two `DataTable`s with different `nargs`** takes
+  the first-listed table's; a `Callee`'s `nargs` wins over a table's. `Run`
+  logs each such conflict once; BSA's k39, BSF's K33 and BSI's k58 rely on
+  the order (`BareRet` in a hook table and a state table), so list the
+  table whose `nargs` the run wants first.
+- **A `kDispatch`'s ours forwards the caller's word and answers the entry's
+  eax** (the original's `jmp` leaves both in place); the standard
+  `Port_DroppedCall` at one argument refuses a dropped word. A group whose
+  ours does not forward overrides the listing with 0 arguments (BSA, BSE).
+- **The other state bytes are the seed's**: `OtherStates(drawn, below)` /
+  `OtherStates(at, n1, n2, n3)` draw them inside their tables, or a hook
+  plant runs past its table and refuses only by a Fatal (BSA's 13, BSI's
+  first 18).
 
 ## 7. Seeds that matter for boss code
 
