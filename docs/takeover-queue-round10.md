@@ -1,6 +1,6 @@
 # The tenth round's queue: the scenario banks and the area overlays, wave by wave
 
-**Status:** IN PROGRESS (2026-09-28) - three waves merged, 1,044 functions, 3,510 -> 4,554 ours; **the scenario round is complete**; the area round has world 0 and half of world 1
+**Status:** IN PROGRESS (2026-09-28) - four waves merged, 1,426 functions, 3,510 -> 4,936 ours; **the scenario round is complete**; the area round has worlds 0 and 1 whole and world 2 to area 103
 
 Round nine took every spell overlay through one harness
 ([`takeover-queue-round9-spells.md`](takeover-queue-round9-spells.md)).
@@ -453,3 +453,115 @@ to keep this wave near the 350 that fits one usage window.
 | SX2 | the engine callees nobody owns after SX (section 10): `0x469FE0`, `0x532FD0`, `0x572620`, `0x57C160`, `0x57C5A0`, `0x57C600`, `0x57C8A0`, `0x587860`, `0x587890`, `0x591920`, `0x591EC0`, `0x5A7730` | twelve addresses | 12 | `scena_sx2` |
 
 381 functions.
+
+## 13. Wave four merged (2026-09-28, morning to early afternoon)
+
+All eight groups merged, one at a time, each merge commit built and
+self-tested in the detached verification worktree (`merge_group10v.sh`,
+now with `one_grow.py`: see below). **382 functions taken, 4,554 -> 4,936
+ours.** Counts are each group's in its worktree. World 1 is complete
+(316 of 316, `area_rows.py --groups` at `ad4390d`); world 2 has 105 to
+take (areas 104..106, 108, 110..113).
+
+| Group | Merge | Taken | Rounds | Controls planted / refused | Not refused | Doc |
+|---|---|--:|--:|---|---|---|
+| SX2 | `52dfc7e` (fixed `9a30492`) | 13 of 12 listed (+ `0x57C650`) | 39,000 | 56 / 56 (54 by a count, 2 by a fault, their variants by a count) | | [`scena_sx2.md`](scena_sx2.md) |
+| AR1E | `aff2f40` (fixed `8602ae2`) | 49 | 196,000 | 95 / 95 (93 by a count, 2 by a fault, variant by a count) | | [`area_w1e.md`](area_w1e.md) |
+| AR2A | `9e57156` | 50 | 300,000 | 145 / 144 | 1 equivalent (a step table with period 4), variant refused | [`area_w2a.md`](area_w2a.md) |
+| AR2B | `f9b7a1f` | 66 | 272,000 | 147 / 147 (146 by a count, 1 by a fault, variant by a count) | | [`area_w2b.md`](area_w2b.md) |
+| AR1D | `3ee8864` | 47 | 282,000 | 136 / 135 | 1 equivalent (a zero-extension a `<< 16` drops), variants refused | [`area_w1d.md`](area_w1d.md) |
+| AR2D | `1f4f25e` | 53 | 318,000 | 255 / 254 | 1 equivalent (a drift table with period 4), variant refused | [`area_w2d.md`](area_w2d.md) |
+| AR2C | `d141ff2` | 45 | 270,000 | 176 / 175 | 1 equivalent (a product with the identity, either order), variant refused | [`area_w2c.md`](area_w2c.md) |
+| AR1F | `ad4390d` | 59 | 354,000 | 374 / 371 | 3 equivalent (two period-4 step tables; `rand() % 2` against `& 1`), variants refused | [`area_w1f.md`](area_w1f.md) |
+
+**What the wave found:**
+
+- **`DrawPool_Grow` must stay last in `inject_all.cpp`** and wave three's
+  SC13 merge had appended its inject after it (an agent noticed, SX2).
+  Moved before it at `4c621b1`; but every wave-four branch forked before
+  that, so keep-both doubled the `DrawPool_Grow` block on the SX2 and
+  AR1E merges and the second call failed loudly (`FATAL: DrawPool: the 4
+  bytes at 0x00486EBD are not the ones expected`), both self-tests exit
+  3. Fixed by hand twice, then `one_grow.py` in the merge script keeps
+  only the last block. A merge script for the next round wants the same
+  step from the start.
+- **SX2 took thirteen**: `0x57C650` (`Camera_TurnStepFB`, `0x57C5A0`'s
+  twin, called only by `0x57C600`) was in no list. None declined:
+  `0x587860` (`Sound_StopChannels`) is its own function beside
+  `Sound_PauseAll` `0x587C30`. Two tables named: `BattleFormation_Offsets`
+  `0x660B1C`, `Formation_SlotVectors` `0x6698B0`.
+- **World-map copies four to six read** (65, 87, 88 against 45): the
+  same code; the plate bank (`0x53`; `0x156` / `0x157`), the label cell
+  (`0x803584`; `0x803580`), and the place hook's name sets (area 65 two
+  six-byte sets over five rows, so `0x178` bytes and its last two call
+  sites 4 bytes on; area 88 12-byte sets over 11 rows; area 45 three
+  five-byte sets over four). `0x40C490` (`Area65_Record8Move`) is the
+  record `+8` effect's state 2 shared by all ten world maps' tables;
+  `0x40FC40` (`Area87_Init`) is areas 65 and 87's shared init. AR2B's
+  ours is one body with a table struct per copy.
+- **Capcom's own `jmp` over eleven `nop`s** opens areas 63, 64, 72 and
+  73's inits: `CloneOriginal` refuses the entry as already patched, so
+  the fuzz clones from the body `0x10` on; `BOF3_INJECT` has no such
+  guard (AR1D, AR1F).
+- **The harness's `kPhase` callee never runs its `effect`** (the recorder
+  returns first): louder stand-ins were silently dead until switched to
+  `kGarbage` (AR1F). For the harness doc.
+- **`area_rows.py` misses**: it counts 7 entries in the state table at
+  `0x614728` where the seventh dword is the handler array (AR2C); it reads
+  s16 coordinate pairs in areas 6, 9, 24, 67, 122, 123 as pointers to
+  `0x40FDE0` / `0x40FF20` (AR2B); `area_funcs.tsv` listed 43 of AR1E's 49
+  (the six are shared handler bodies and a trigger the rows list). An
+  agent's `area_rows.py` run rewrote the shared `analysis/area_funcs.tsv`
+  with its worktree's symbols once (restored) - the tool writes where it
+  reads; a `--no-write` is owed.
+- **The brief's `+0x38` note was wrong** (AR1F): area 77's descriptor
+  sets it (`0x60ACC8`, the colour matrix), not area 75's; the tool's
+  roots line had it right.
+- **`0x4139E0` is both `WorldMap_FieldHooks[11]`** (the "no world map"
+  entry) and object trigger id 0 (AR2D).
+- **Raw-address callees nobody owns, after SX2**: `0x454A80`, `0x455290`
+  (release and start of `Field_Slots` scripts, AR2B); `0x4220D0` (AR3F's
+  block, called by AR1D and AR2D). And SX2's inbound callers nobody owns:
+  `0x4FEEB0`, `0x46BF80`, `0x46C100`, `0x482930`, `0x4703F0`, `0x4712E0`,
+  `0x4849A0`, `0x432750`, `0x459720`, `0x464E40`.
+- **Inbound calls for the rebinding pass**: SX2's twelve from AR2A (area
+  77: `0x469FE0`, `0x57C160`), AR2B (area 86, the same two), AR2D (area
+  99: `0x57C160`), and every merged caller in `scena_sx2.md` §3; engine
+  `0x478649` into `Area85_ClutShift`; `Area42_TimerTail` (AR1B) into
+  `Area75_DrawWindow` `0x40E750` at `0x406A9F` / `0x406CDB`; `Area_StepHook`
+  (`event_ops.cpp` `kStepHandlers`) into `Area76_StepDisarmTail5`,
+  `Area97_StepHook`, `Area100_StepHook`, `0x40B410`; `0x56E0F5` into
+  `Area76_StepDisarmTail5`; the tables of other areas name `0x40C490`,
+  `0x40CAB0`, `0x40CAC0`, `0x40CDE0`, `0x40CE10`, `0x40B2D0`, `0x40B2E0`,
+  `0x40B4F0`, `0x40B590`, `Area80_ResetCameraShift`,
+  `Area94_Counter1FromLeaderPose`, `Area68_ChoiceAnswer84`,
+  `Area69_GlideBegin40`, `0x40D790` (read in place, no rebinding).
+- **`Area53_Trigger42` answers whatever `ScriptFlags_Set40` left in
+  eax**; ours of that is `void`, so the value was undefined before this
+  group (AR1D) - a latent read of an undefined answer, for the defects.
+- **`BOF3X_SHADOW='*'` did not die silently for any group this wave**
+  (eight first runs, exit 0).
+- **The `inject:` count stays one short of the `impl` count** (4,936
+  against 4,937).
+- **The other session staged round eleven** (the boss round,
+  [`takeover-queue-bosses.md`](takeover-queue-bosses.md)) on this branch
+  during the wave (`44348f7`, `154272f`).
+
+**Owed by the round so far:** the defects' numbering for all four waves;
+the rebinding pass (every `SH_AT` / `AH_AT` into SE, SX, SX2, CALLS, the
+chapter blocks and the area blocks; the harness standard-set column
+moves together with it); the tool fixes (section 10's three, plus the
+state-table count, the coordinate-pair false positive and `--no-write`);
+the harness doc's `kPhase` / `args` notes; the pairing tool's cases; the
+route A/Bs when the owner is away; the recipe saves per chapter.
+
+## 14. Wave five (to stage)
+
+Area only: world 2's remainder (AR2E: areas 104..106, 52, area 104 on the
+world-map route; AR2F: 108, 110..113, 53 - the tool's `AR2A` / `AR2B`
+rows at `ad4390d`) and world 3's first groups as `area_rows.py --groups`
+cuts them (AR3A 56 with world-map area 115 on the route, AR3B 54 with
+world-map area 121, AR3C 56, AR3D 46 - area 135 alone, the largest area,
+AR3E 52, AR3F 53 with `0x4220D0`, AR3G 56). Eight groups is about 430;
+seven (through AR3E) is 369. Wave four's brief with section 13 folded
+in; the merge script with `one_grow.py` from the start.
