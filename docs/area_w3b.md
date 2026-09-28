@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-09-28) - 54 functions ours
 (`src/game/area_w3b.cpp`, shadow name `area_w3b`), fuzzed headless through
 the area harness ([`area_harness.md`](area_harness.md)), five `Run` calls:
-0 mismatches in 294,000 rounds; CONTROLS_SUMMARY (section 10). Fuzz only: no
+0 mismatches in 294,000 rounds; 246 controls planted, 245 refused by a count, 1 by a Fatal (section 10). Fuzz only: no
 recorded route reaches any of the 54 (section 8). No divergence.
 
 Group AR3B of round ten's fifth wave
@@ -283,8 +283,8 @@ the leader, 1212 the effects; the controls script's shortcut).
 
 **Result (in this worktree):** 0 mismatches in every run; rounds / calls to
 the stand-ins in the `'*'` run: area 120 18,000 / 0; handlers 30,000 /
-24,000; world map 100,000 / 196,773; leader 80,000 / 169,895; effects 66,000
-/ 127,090. Every state-table entry reached (the plate states about 800 each,
+24,000; world map 100,000 / 196,773; leader 80,000 / 169,865; effects 66,000
+/ 127,366. Every state-table entry reached (the plate states about 800 each,
 frame and box states about 1,000, record-8 about 1,300, the camera states
 about 3,000, the leader's step state 3,924, the effect's states 1,180..);
 `0x415680` 589 calls, `Field_JumpCheckHeight` 452, `Field_ChangeArea` 323,
@@ -293,4 +293,280 @@ mismatch or Fatal, `inject: 4990 ours` (all 54 injected; 4,936 before).
 
 ## 10. Controls
 
-CONTROLS_TEXT
+Planted one at a time in `area_w3b.cpp` (and, for the table constants,
+`area_w3b_callees.h`) by a script (the scratch `controls3b.py`, not
+committed): each anchored on a string the file holds once; plant, rebuild
+(checking `area_w3b.cpp` recompiled), run the control's group alone
+(`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=area_w3b BOF3X_AR3B_GROUP=n`), restore;
+after the last, a rebuild and a clean full run (exit 0, 0 mismatches in all
+five runs). The world-map controls are AR2B's set (their ids kept, `C..`)
+where the body is area 87's, plus area 121's own (`G..`, `J..`). **246 controls planted, 245 refused by a count, 1 by a Fatal.**
+
+A first run of the set (before the fuzz's last strengthening) had 238 of 245
+refused and seven standing, each the fuzz's fault: H9 (`Field_InputHeld`
+never exactly 1), H22 and H24 (`Field_LeaderStepTarget`'s stand-in chose its
+table by `n % 3 == 0` and indexed it by `n % 9`, so it could only answer 0,
+1 or 3 - never `0xFF` or 2), I44, I45, I52, I53 (the ring's matrix chain ran
+over whatever GTE and camera matrices the earlier tests had left - often
+zero, which flattens a one-unit shift, a small rotation or a missing
+translation - and no odd negative height). The fuzz now indexes the table
+independently, plants 1, 2, `0x8000` and `0xFFFF`, holds `Gte_Matrix` and
+`Camera_Matrix` as regions seeded to identity half the time, and plants odd
+negative heights; the seven are refused by a count. A second run stood on
+one more, H17 (the turn's wrap compare made unsigned), refused in the first:
+a brute force of all 65,536 (old, new) facing pairs finds 60 that tell the
+two apart, every one an old facing 0..7 and a new one 6 or 10 below it -
+steps the turn stand-in did not take; it takes them now. G16 (the box drawing
+through `DrawSprite` instead of `DrawHud`) is refused by the harness's Fatal
+for an unlisted call; its near variant G16b (through `DrawFrame`) by a
+count. The table is the third run (in this worktree; rounds of a
+function's 6,000, 4,000 in the world map, 8,000 in the leader).
+
+| # | group | planted | refused in rounds |
+|---|---|---|---|
+| E1 | 120 | Var3A: 0xB | Area120_ChoiceVar3A 1391 |
+| E2 | 120 | Var3A: 0x15 | Area120_ChoiceVar3A 4609 |
+| E3 | 120 | Var3B: 0x1F | Area120_ChoiceVar3B 4683 |
+| E4 | 120 | Var3B: 0x29 | Area120_ChoiceVar3B 1317 |
+| E5 | 120 | Var3A: message 0xFFFE | Area120_ChoiceVar3A 6000 |
+| E6 | 120 | Var3B: variable 4 | Area120_ChoiceVar3B 6000 |
+| E7 | 120 | Run13: message 0x36 | Area120_ChoiceStartRun13 4685 |
+| E8 | 120 | Run13: + 2 | Area120_ChoiceStartRun13 1315 |
+| E9 | 120 | Run13: run 0xC | Area120_ChoiceStartRun13 1315 |
+| E10 | 120 | Run13: step 9 | Area120_ChoiceStartRun13 1315 |
+| E11 | 120 | Run13: choice 1 starts the run | Area120_ChoiceStartRun13 623 |
+| E12 | 120 | Run13: the message kept | Area120_ChoiceStartRun13 456 |
+| E13 | 120 | Run13: +0x8C | Area120_ChoiceStartRun13 1315 |
+| F1 | 121 h | CameraRun: the other state | Area121_CameraRun 6000 |
+| F2 | 121 h | CameraFar: 0xFBDD | Area121_CameraFar 6000 |
+| F3 | 121 h | CameraFar: +4 2 | Area121_CameraFar 6000 |
+| F4 | 121 h | CameraFar: the op not again | Area121_CameraFar 6000 |
+| F5 | 121 h | Approach: at 0x5DC too | Area121_CameraApproach 470 |
+| F6 | 121 h | Approach: + 0x41 | Area121_CameraApproach 3705 |
+| F7 | 121 h | Approach: ends at 0x5DD | Area121_CameraApproach 2295 |
+| F8 | 121 h | Approach: redraw 3 at the end | Area121_CameraApproach 2295 |
+| F9 | 121 h | Approach: redraw 1 on the way | Area121_CameraApproach 3705 |
+| F10 | 121 h | ScriptAgain: - 1 | Area121_CameraFar 6000; Area121_CameraApproach 3705 |
+| F11 | 121 h | StartRun4: bit 1 too | Area121_StartRun4 2931 |
+| F12 | 121 h | StartRun4: +0x84 | Area121_StartRun4 6000 |
+| F13 | 121 h | StartRun4: +0x88 | Area121_StartRun4 6000 |
+| F14 | 121 h | StartRun4: sound 0x218 | Area121_StartRun4 6000 |
+| F15 | 121 h | StartRun4: variable 6 kept | Area121_StartRun4 5969 |
+| F16 | 121 h | StartRun4: run 5 | Area121_StartRun4 6000 |
+| F17 | 121 h | StartRun4: step 1 | Area121_StartRun4 6000 |
+| F18 | 121 h | StartRun4: no Set40 | Area121_StartRun4 6000 |
+| F19 | 121 h | SpawnBA: slot 19 as none | Area121_SpawnEffectBA 273 |
+| F20 | 121 h | SpawnBA: kind 0xBB | Area121_SpawnEffectBA 5698 |
+| F21 | 121 h | SpawnBA: +0 2 | Area121_SpawnEffectBA 5698 |
+| G1 | 121 map | PlaceMessage: index from 1 | Area121_PlaceMessage 1005 |
+| G2 | 121 map | PlaceMessage: index + 2 | Area121_PlaceMessage 1005 |
+| G3 | 121 map | PlaceMessage: three places | Area121_PlaceMessage 534 |
+| G4 | 121 map | PlaceMessage: state 2 handled as 1 | Area121_PlaceMessage 746 |
+| G5 | 121 map | PlaceMessage: waits on 3 | Area121_PlaceMessage 257 |
+| G6 | 121 map | PlaceMessage: 0x9039F5 kept | Area121_PlaceMessage 491 |
+| G7 | 121 map | PlaceMessage: request 3 | Area121_PlaceMessage 1005 |
+| G8 | 121 map | kWm121: places from the second | Area121_PlaceMessage 1005 |
+| G9 | 121 map | kWm121: bank 0x157 | Area121_PlateStart 4000 |
+| G10 | 121 map | kWm121: plate animations from the second | Area121_PlateShow 337 |
+| G11 | 121 map | kWm121: cells from the second | Area121_Record4MarkCell 2772 |
+| G12 | 121 map | kWm121: sprites from the second | Area121_DrawSprite 4000 |
+| G13 | 121 map | kWm121: directions from the second | Area121_Record8Place 4000 |
+| G14 | 121 map | kWm121: record-8 animations from the second | Area121_Record8Place 3875 |
+| G15 | 121 map | kWm121: buttons from the second | Area121_DrawFrame 1154 |
+| G16 | 121 map | kWm121: the box draws a sprite | a Fatal: area_harness: Area121_BoxSlideIn calls 0x41B470, which no stand-in covers: list it in the group's callees |
+| G16b | 121 map | BoxSlideIn: draws the frame | Area121_BoxSlideIn 4000 |
+| C15 | 121 map | PlateRun: 0xA0 kind 3 | Area121_PlateRun 332 |
+| C16 | 121 map | PlateRun: bit 11 | Area121_PlateRun 1289 |
+| C17 | 121 map | PlateRun: the next state | Area121_PlateRun 4000 |
+| C18 | 121 map | PlateStart: bank + 1 | Area121_PlateStart 4000 |
+| C19 | 121 map | PlateStart: +0x29 4 | Area121_PlateStart 4000 |
+| C20 | 121 map | PlateShow: kind 2 animation 2 | Area121_PlateShow 351 |
+| C21 | 121 map | PlateShow: +9 7 | Area121_PlateShow 2055 |
+| C22 | 121 map | PlateShow: +0x44 | Area121_PlateShow 2068 |
+| C62b | 121 map | PlateShow: the animation from the pad byte | Area121_PlateShow 1036 |
+| C23 | 121 map | PlateGrow: step 0x1000 | Area121_PlateGrow 4000 |
+| C65 | 121 map | PlateGrow: no pin | Area121_PlateGrow 4000 |
+| C24 | 121 map | PlateHold: request 4 | Area121_PlateHold 376 |
+| C25 | 121 map | PlateHold: Game_Mode 2 holds | Area121_PlateHold 831 |
+| C26 | 121 map | PlateShrink: released on 4 | Area121_PlateShrink 315 |
+| C27 | 121 map | PlateShrink: back to 2 | Area121_PlateShrink 587 |
+| C28 | 121 map | HudRun: the other entry | Area121_HudRun 4000 |
+| C29 | 121 map | HudFrame: the box first | Area121_HudFrame 4000 |
+| C30 | 121 map | FrameStep: the next entry | Area121_FrameStep 4000 |
+| C31 | 121 map | FrameSlideIn: above 0x10 | Area121_FrameSlideIn 350 |
+| C32 | 121 map | FrameHold: mode 3 | Area121_FrameHold 684 |
+| C33 | 121 map | FrameSlideOut: below -0x30 | Area121_FrameSlideOut 60 |
+| C34 | 121 map | BoxStep: the next entry | Area121_BoxStep 4000 |
+| C35 | 121 map | BoxSlideIn: below 0xC8 | Area121_BoxSlideIn 119 |
+| C36 | 121 map | BoxHold: 0x59 frames | Area121_BoxHold 258 |
+| C37 | 121 map | BoxSlideOut: above 0xF0 | Area121_BoxSlideOut 362 |
+| C38 | 121 map | BoxLeaves: bit 9 | Area121_BoxSlideIn 985; Area121_BoxHold 824 |
+| C39 | 121 map | DrawFrame: second key over seven | Area121_DrawFrame 1463 |
+| C40 | 121 map | DrawFrame: legend 3 y + 0x17 | Area121_DrawFrame 2488 |
+| C41 | 121 map | DrawFrame: party set & 0xFF | Area121_DrawFrame 65 |
+| C42 | 121 map | DrawSprite: CLUT 0x7B81 | Area121_DrawSprite 4000 |
+| C43 | 121 map | DrawSprite: semi by & 0x7F | Area121_DrawSprite 5 |
+| C44 | 121 map | DrawHud: cap at x + 0x7F | Area121_DrawHud 2945 |
+| C45 | 121 map | DrawHud: label & 0xFFF | Area121_DrawHud 2749 |
+| C46 | 121 map | Record8Place: bank 0x47 | Area121_Record8Place 4000 |
+| C47 | 121 map | Record8Place: first nudge sar 12 | Area121_Record8Place 1656 |
+| C48 | 121 map | Record8Place: up for +6 2 | Area121_Record8Place 1480 |
+| C49 | 121 map | Record4MarkCell: cell 0xA1 | Area121_Record4MarkCell 2799 |
+| C50 | 121 map | Record4MarkCell: released on 8 | Area121_Record4MarkCell 1116 |
+| C51 | 121 map | Record4MarkCell: bank 0x204 | Area121_Record4MarkCell 2799 |
+| C58 | 121 map | Record8Run: the next entry | Area121_Record8Run 4000 |
+| C59 | 121 map | Record4Run: the other entry | Area121_Record4Run 4000 |
+| C52 | 121 map | DrawDrift: wrap to -7 | Area121_DrawDrift 1630 |
+| C53 | 121 map | DrawDrift: x within 24 | Area121_DrawDrift 490 |
+| C55 | 121 map | DrawDrift: raised commit 0x44 | Area121_DrawDrift 1727 |
+| C57 | 121 map | DrawDrift: +0x38 by b << 9 | Area121_DrawDrift 3075 |
+| J1 | 121 map | DrawDrift: flat texture | Area121_DrawDrift 882 |
+| J2 | 121 map | DrawDrift: flat commit 0x44 | Area121_DrawDrift 1727 |
+| J3 | 121 map | DrawDrift: side << 7 | Area121_DrawDrift 1589 |
+| J4 | 121 map | DrawDrift: raised height 0xFE00 | Area121_DrawDrift 1727 |
+| J5 | 121 map | DrawDrift: pulse & 0xF | Area121_DrawDrift 834 |
+| J6 | 121 map | DrawDrift: flat height 1 | Area121_DrawDrift 1727 |
+| J7 | 121 map | DrawDrift: x - 0x3FC1 | Area121_DrawDrift 1727 |
+| J8 | 121 map | DrawDrift: v1 z + r | Area121_DrawDrift 1701 |
+| J9 | 121 map | DrawDrift: pass bit 1 | Area121_DrawDrift 1969 |
+| H1 | 121 leader | LeaderRun: the other state | Area121_LeaderRun 8000 |
+| H2 | 121 leader | LeaderRun: no charge | Area121_LeaderRun 8000 |
+| H3 | 121 leader | Control: flag bit 9 | Area121_LeaderControl 2121 |
+| H4 | 121 leader | Control: flag2 bit 7 | Area121_LeaderControl 2186 |
+| H5 | 121 leader | Control: request 1 goes on | Area121_LeaderControl 206 |
+| H6 | 121 leader | Control: +0xB tested | Area121_LeaderControl 3067 |
+| H7 | 121 leader | Control: actor bit 4 | Area121_LeaderControl 856 |
+| H8 | 121 leader | Control: actor from +0x147 | Area121_LeaderControl 822 |
+| H9 | 121 leader | Control: held 1 ignored | Area121_LeaderControl 220 |
+| H10 | 121 leader | Control: old read after the turn | Area121_LeaderControl 1313 |
+| H11 | 121 leader | Control: charge 0x41 halts | Area121_LeaderControl 362 |
+| H12 | 121 leader | Control: both needed | Area121_LeaderControl 1167 |
+| H13 | 121 leader | Control: halt +0x137 1 | Area121_LeaderControl 710 |
+| H14 | 121 leader | Control: halt +9 1 | Area121_LeaderControl 710 |
+| H15 | 121 leader | Control: the button undone | Area121_LeaderControl 837 |
+| H16 | 121 leader | Control: wrap from 2 | Area121_LeaderControl 57 |
+| H17 | 121 leader | Control: wrap compared unsigned | Area121_LeaderControl 34 |
+| H18 | 121 leader | Control: old + 7 | Area121_LeaderControl 68 |
+| H19 | 121 leader | Control: turn from 2 on | Area121_LeaderControl 222 |
+| H20 | 121 leader | Control: turn the other way | Area121_LeaderControl 152 |
+| H21 | 121 leader | Control: & 0xF | Area121_LeaderControl 186 |
+| H22 | 121 leader | Control: 0xFF not blocked | Area121_LeaderControl 57 |
+| H23 | 121 leader | Control: blocked pace 2 | Area121_LeaderControl 119 |
+| H24 | 121 leader | Control: target 2 walks | Area121_LeaderControl 42 |
+| H25 | 121 leader | Control: push +2 1 | Area121_LeaderControl 538 |
+| H26 | 121 leader | Control: pace 3 undoes | Area121_LeaderControl 298 |
+| H27 | 121 leader | Control: no height check | Area121_LeaderControl 458 |
+| H28 | 121 leader | Control: step +2 2 | Area121_LeaderControl 458 |
+| H29 | 121 leader | Push: area 0x78 | Area121_PushObject 6353 |
+| H30 | 121 leader | Push: x one step | Area121_PushObject 4632 |
+| H31 | 121 leader | Push: z three steps | Area121_PushObject 4474 |
+| H32 | 121 leader | Push: margin 0 | Area121_PushObject 5842 |
+| H33 | 121 leader | Push: facing & 3 | Area121_PushObject 186 |
+| H34 | 121 leader | Push: bit 1 | Area121_PushObject 257 |
+| H35 | 121 leader | ObjectRecord: the extra from 0x1D | Area121_PushObject 40; Area121_DirectionTo 635 |
+| H36 | 121 leader | Push: (z, x) asked | Area121_PushObject 5498 |
+| H37 | 121 leader | StepAround: none 0xFE | Area121_StepAround 717 |
+| H38 | 121 leader | StepAround: seven turns | Area121_StepAround 4240 |
+| H39 | 121 leader | StepAround: margin 1 | Area121_StepAround 6991 |
+| H40 | 121 leader | StepAround: turns back | Area121_StepAround 3725 |
+| H41 | 121 leader | DirectionTo: (-,0) 6 | Area121_DirectionTo 648 |
+| H42 | 121 leader | DirectionTo: (+,0) 4 | Area121_DirectionTo 509 |
+| H43 | 121 leader | DirectionTo: (0,0) 5 | Area121_DirectionTo 276 |
+| H44 | 121 leader | DirectionTo: z from +0x3C | Area121_DirectionTo 4546 |
+| H45 | 121 leader | StepOff: area 0x7A | Area121_StepOffObject 6418 |
+| H46 | 121 leader | StepOff: margin 0 | Area121_StepOffObject 5870 |
+| H47 | 121 leader | StepOff: al 2 | Area121_StepOffObject 3852 |
+| H48 | 121 leader | Step: +0x136 | Area121_LeaderStep 7997 |
+| H49 | 121 leader | Step: - 2 | Area121_LeaderStep 5802 |
+| H50 | 121 leader | Step: input bit 1 | Area121_LeaderStep 1109 |
+| H51 | 121 leader | Step: 0xAE changes area | Area121_LeaderStep 504 |
+| H52 | 121 leader | Step: x and z swapped | Area121_LeaderStep 349 |
+| H53 | 121 leader | Step: 0xD | Area121_LeaderStep 349 |
+| H54 | 121 leader | Step: 0x904EE0 1 | Area121_LeaderStep 349 |
+| H55 | 121 leader | Step: link on 0xC1 | Area121_LeaderStep 435 |
+| H56 | 121 leader | Step: link (z, x) | Area121_LeaderStep 291 |
+| H57 | 121 leader | Step: facing 5 counts twice | Area121_LeaderStep 350 |
+| H58 | 121 leader | Step: + 2 | Area121_LeaderStep 1822 |
+| H59 | 121 leader | Step: the hook's al only | Area121_LeaderStep 420 |
+| H60 | 121 leader | Step: 0xE000 | Area121_LeaderStep 24 |
+| H61 | 121 leader | Step: button word 6 | Area121_LeaderStep 127 |
+| H62 | 121 leader | Step: end +2 1 | Area121_LeaderStep 741 |
+| H63 | 121 leader | Step: no halt | Area121_LeaderStep 1822 |
+| H64 | 121 leader | Menu: sound 0x106 | Area121_MenuButton 2000 |
+| H65 | 121 leader | Menu: request 2 | Area121_MenuButton 2000 |
+| H66 | 121 leader | Menu: flag bit 7 | Area121_MenuButton 2007 |
+| H67 | 121 leader | Menu: held, not pressed | Area121_MenuButton 1997 |
+| H68 | 121 leader | Request4: flag bit 12 | Area121_Request4Button 1948 |
+| H69 | 121 leader | Request4: button word 1 | Area121_Request4Button 1906 |
+| H70 | 121 leader | Request4: request 5 | Area121_Request4Button 1970 |
+| H71 | 121 leader | Turn: ^ 5 | Area121_TurnInput 2620 |
+| H72 | 121 leader | Turn: + 2 | Area121_TurnInput 2064 |
+| H73 | 121 leader | Turn: bit 11 | Area121_TurnInput 1645 |
+| H74 | 121 leader | Turn: bit 8 keeps | Area121_TurnInput 613 |
+| H75 | 121 leader | Turn: & 0xF | Area121_TurnInput 1562 |
+| I1 | 121 fx | Kind5CRun: the next state | Area121_Kind5CRun 6000 |
+| I2 | 121 fx | Start: facing from +9 | Area121_Kind5CStart 5725 |
+| I3 | 121 fx | Start: entry + 0xC | Area121_Kind5CStart 6000 |
+| I4 | 121 fx | Start: +0x5E 0x81 | Area121_Kind5CStart 5998 |
+| I5 | 121 fx | Start: + 2 | Area121_Kind5CStart 6000 |
+| I6 | 121 fx | Start: key item 0xB | Area121_Kind5CStart 1339 |
+| I7 | 121 fx | Start: area 0x69 | Area121_Kind5CStart 1347 |
+| I8 | 121 fx | Start: three rings | Area121_Kind5CStart 5558 |
+| I9 | 121 fx | Start: kind 0x5D | Area121_Kind5CStart 5558 |
+| I10 | 121 fx | Start: rings at state 4 | Area121_Kind5CStart 5558 |
+| I11 | 121 fx | Start: delays by 4 | Area121_Kind5CStart 5558 |
+| I12 | 121 fx | Follow: height from +0x3C | Area121_Kind5CFollow 6000 |
+| I13 | 121 fx | Follow: status bit 5 | Area121_Kind5CFollow 1931 |
+| I14 | 121 fx | Follow: row 0x3F | Area121_Kind5CFollow 2092 |
+| I15 | 121 fx | Follow: 0x3F - charge | Area121_Kind5CFollow 1057 |
+| I16 | 121 fx | Follow: blink by bit 0 | Area121_Kind5CFollow 546 |
+| I17 | 121 fx | Follow: +0xB tested | Area121_Kind5CFollow 1053 |
+| I18 | 121 fx | Follow: pass 0x1A | Area121_Kind5CFollow 686 |
+| I19 | 121 fx | Gauge: v by << 4 | Area121_GaugeSprite 4712 |
+| I20 | 121 fx | Gauge: width 0x51 | Area121_GaugeSprite 6000 |
+| I21 | 121 fx | Gauge: commit 0x18 | Area121_GaugeSprite 6000 |
+| I22 | 121 fx | Gauge: y unsigned | Area121_GaugeSprite 2324 |
+| I23 | 121 fx | Face: only above | Area121_Kind5CFace 1324 |
+| I24 | 121 fx | Face: ^ 2 | Area121_Kind5CFace 2137 |
+| I25 | 121 fx | Face: the leader from +9 | Area121_Kind5CFace 1387 |
+| I26 | 121 fx | TurnStep: a + 7 | Area121_Kind5CTurnStep 196 |
+| I27 | 121 fx | TurnStep: b + 7 | Area121_Kind5CTurnStep 643 |
+| I28 | 121 fx | TurnStep: within 3 | Area121_Kind5CTurnStep 491 |
+| I29 | 121 fx | TurnStep: -0x41 | Area121_Kind5CTurnStep 1169 |
+| I30 | 121 fx | TurnStep: 0x41 | Area121_Kind5CTurnStep 2286 |
+| I31 | 121 fx | TurnStep: 7 frames | Area121_Kind5CTurnStep 3433 |
+| I32 | 121 fx | TurnStep: state 3 | Area121_Kind5CTurnStep 3456 |
+| I33 | 121 fx | TurnStep: the leader not turned | Area121_Kind5CTurnStep 2672 |
+| I34 | 121 fx | TurnStep: wrap from 2 | Area121_Kind5CTurnStep 1208 |
+| I35 | 121 fx | Turn: & 0x7FF | Area121_Kind5CTurn 3098 |
+| I36 | 121 fx | Turn: back to 2 | Area121_Kind5CTurn 1344 |
+| I37 | 121 fx | Turn: minus | Area121_Kind5CTurn 4496 |
+| I38 | 121 fx | Turn: follows at 0 | Area121_Kind5CTurn 1344 |
+| I39 | 121 fx | RingWait: - 2 | Area121_RingWait 4383 |
+| I40 | 121 fx | RingWait: + 0x400000 | Area121_RingWait 1617 |
+| I41 | 121 fx | RingWait: + 2 | Area121_RingWait 1617 |
+| I42 | 121 fx | RingRise: + 0x11 | Area121_RingRise 6000 |
+| I43 | 121 fx | RingRise: at 0x280 | Area121_RingRise 275 |
+| I44 | 121 fx | RingRise: x - 0x3FFF | Area121_RingRise 168 |
+| I45 | 121 fx | RingRise: h >> 1 | Area121_RingRise 563 |
+| I46 | 121 fx | RingRise: radius + 0x11 | Area121_RingRise 4126 |
+| I47 | 121 fx | RingRise: CLUT 0x78CB | Area121_RingRise 4126 |
+| I48 | 121 fx | RingRise: v 0x4F | Area121_RingRise 4126 |
+| I49 | 121 fx | RingRise: opaque | Area121_RingRise 4126 |
+| I50 | 121 fx | RingRise: link dy 2 | Area121_RingRise 4126 |
+| I51 | 121 fx | RingRise: v1 y + r | Area121_RingRise 4126 |
+| I52 | 121 fx | RingRise: a rotation | Area121_RingRise 602 |
+| I53 | 121 fx | RingRise: no translation set | Area121_RingRise 2412 |
+| I54 | 121 fx | Band: 3 drawn | Area121_DrawTopBand 247 |
+| I55 | 121 fx | Band: mode 0x96 | Area121_DrawTopBand 1058 |
+| I56 | 121 fx | Band: 319 wide | Area121_DrawTopBand 1058 |
+| I57 | 121 fx | Band: green 0x39 | Area121_DrawTopBand 1058 |
+| I58 | 121 fx | Band: semi | Area121_DrawTopBand 1058 |
+| I59 | 121 fx | Band: the next height | Area121_DrawTopBand 1058 |
+| I60 | 121 fx | Band: commit 0x40 | Area121_DrawTopBand 1058 |
+| I61 | 121 fx | Band: pass bit 3 | Area121_DrawTopBand 1038 |
+| I62 | 121 fx | Trigger: kind 0x2D | Area121_Trigger38 6000 |
+| I63 | 121 fx | Trigger: arg 0xF | Area121_Trigger38 6000 |
+| I64 | 121 fx | Trigger: state 1 | Area121_Trigger38 6000 |
+| I65 | 121 fx | Trigger: al 1 | Area121_Trigger38 6000 |
+| I66 | 121 fx | Trigger: no Set40 | Area121_Trigger38 6000 |
