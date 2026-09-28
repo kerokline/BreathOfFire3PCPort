@@ -5,7 +5,7 @@
 functions ours (`src/game/boss_sh.cpp`, shadow `boss_sh`), each read to its
 last instruction with capstone and fuzzed through the boss harness
 ([`boss_harness.md`](boss_harness.md)), one `Run` per unit: 0 mismatches in
-@ROUNDS@ rounds. @CONTROLS@ Fuzz only: no recorded route reaches a boss
+298,000 rounds. 127 controls planted: 126 refused by a count, one by its own `Fatal` with its near variant refused by a count (section 5). Fuzz only: no recorded route reaches a boss
 fight. No divergence.
 
 Enemy and fight names are `tools/boss_rows.py --disc`'s (the US disc's area
@@ -189,7 +189,24 @@ byte, `0x437450` a word, `0x4376A0`, `0x4376F0`) and two louder stand-ins
 (section below). The group's regions: `0x669730`, `0x675F08..0x675F17`,
 `MoveScript_WaitWordDA`, `Draw_PassFlags`.
 
-@RUNTABLE@
+| Run | Fight, kind | Clones | Rounds | Calls (the originals', this worktree) | Result |
+|---|---|--:|--:|--:|---|
+| k48 | 41, 48 | 3 | 18,000 | 18,000 | 0 mismatches |
+| b34 | 34 | 4 | 32,000 | 63,271 | 0 mismatches |
+| b41 | 41 | 1 | 4,000 | 0 | 0 mismatches |
+| k41 | 35, 41 | 4 | 24,000 | 18,000 | 0 mismatches |
+| k42 | 35, 42 | 4 | 24,000 | 18,000 | 0 mismatches |
+| k54 | 47, 54 | 3 | 18,000 | 18,000 | 0 mismatches |
+| b35 | 35 | 3 | 18,000 | 10,132 | 0 mismatches |
+| b47 | 47 | 1 | 4,000 | 0 | 0 mismatches |
+| k43 | 36, 43 | 10 | 80,000 | 102,829 | 0 mismatches |
+| k50 | 43, 50 | 3 | 18,000 | 18,000 | 0 mismatches |
+| b36 | 36 | 2 | 12,000 | 6,000 | 0 mismatches |
+| b43 | 43 | 1 | 4,000 | 0 | 0 mismatches |
+| f3 | 36, - (`kTask`) | 4 | 24,000 | 42,000 | 0 mismatches |
+| k44 | 38, 44 | 3 | 18,000 | 18,000 | 0 mismatches |
+
+298,000 rounds; 0 mismatches on the first run and on every run since.
 
 **Seeds.** Every dispatcher's other state bytes are drawn inside its table
 (the round's lesson: a wrong-byte plant then counts rather than Fatals). The
@@ -218,9 +235,33 @@ bit 0x40 (`Boss34_End`), the wait word. **Louder stand-ins**:
 `Battle_RemoveFromTurnOrder` and `Sprite_PoseFromSet` each move a random
 member's `+0x91` bit 0x40, `+8` or `+0` bit 0 (`Boss34_End` reads the member's
 `+0x90` after the first and the next member's `+0` after the second);
-@LOUDER@
+`0x446DE0` logs the chapter step and then moves it (`Boss34_End`
+increments it after the call; set-ups 35 and 36 store it before - the log
+keeps that store compared, where a plain move would wipe it: the second
+controls run's H67 and H113 went unrefused until it logged); `AbilityList_Add` moves the
+picked member (read again before its second call); `0x437450`, `0x4376F0`
+and `BattleEnemy_ScriptTick` re-point `Sprite_Current` at an enemy a third
+of the time (the Angler's steps read it again after each); and
+`BattleTask_Create` answers one of the last three slots a third of the time,
+where a copy from below the enemies (an actor 0..2) overlaps its
+destination and `rep movsd`'s forward order shows (control H104).
 
-@COVERAGE@
+**Coverage** (the originals' calls, the `'*'` run, this worktree): every
+entry of every `DataTable` (`phase 0x...` about 500 each for a `+1`
+table's entries, 2,000..6,000 for the hook tables', about 4,000 for the
+Angler's `+2` tables') and every callee - e.g. b34: `AbilityList_Add` 7,130,
+`Battle_RemoveFromTurnOrder` / `Sprite_PoseFromSet` 7,539, `0x446700` 1,063,
+`0x446DE0` 4,034, `0x446E00` 3,966, `BossActor_Find` / `_ClearBit40` 8,000;
+k43: `BattleEnemy_ScriptTick` 32,000, `BattleTask_Create` 5,356, `0x437450`
+2,299, `0x4376F0` / `Battle_SetTargetFlag40` 3,587, `0x4376A0` 8,000; f3:
+`BattleFx_FreeTask` 1,980, `Sprite_QueueOverlay` 12,000, `phase 0x43EBD0`
+2,023, `phase 0x43EC10` 1,997; b35: `Battle_ActorIsOut` 4,132. The three
+one-function set-up runs (b41, b47, b43) call nothing: their stores are the
+compared state and the logged hooks. Counts are this worktree's (they move
+with the build directory; judge by 0 mismatches).
+
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final
+build): exit 0, 0 mismatches; it passed first time (no silent death).
 
 **The harness, for the coordinator.** BSH is the first user of `kTask`
 (the four functions of the effect task): it needed nothing more - the slot
@@ -240,9 +281,144 @@ at the end. The rounds column is the planted function's mismatched rounds
 (of 6,000, 8,000 for B34 and K43, 4,000 for B41 / B47 / B43). Plants in the
 shared helpers (`Enter`, `Dispatch`, `HookDispatch`, `GiveAbility40`,
 `EndWithStep`) are run on one unit and named after the function the table
-shows.
+shows. Two runs, on the final seeds; the table is the second (the set-up
+units' controls run a third time after `0x446DE0`'s stand-in was made to log
+the step, section 4). The thinnest refusals are the ordering and re-read
+plants - H104 (82 rounds: the copy's order shows only where source and slot
+overlap), H97 (132), H107 (233), H44 (606), H82 (704) - and the flag tests
+reached through a third of a third of the rounds (H53 400, H18 487). The first
+run's H30 (11 rounds) and H38 (85) were the fuzz's: the louder
+`AbilityList_Add` and `0x446DE0` stand-ins raised them to 1,573 and 4,043.
 
-@CONTROLTABLE@
+| # | Function | Plant | Refused |
+|---|---|---|---|
+| H1 | `BossSample3_Dispatch` | by +2 | 5447 rounds |
+| H2 | `BossSample3_Dispatch` | the word + 1 forwarded | 972 rounds |
+| H3 | `BossSample3_Enter` | +0xFC and +0xF8 swapped | 6000 rounds |
+| H4 | `BossSample3_Enter` | kind 54's hook stored | 6000 rounds |
+| H5 | `BossSample3_Hook` | the word ^ 0x100 forwarded | 6000 rounds |
+| H6 | `BossGaist_Enter` | Enter: +0x114 |= 0x18 | 2926 rounds |
+| H7 | `BossGaist_Enter` | Enter: +1 = 1 | 5970 rounds |
+| H8 | `BossGaist_Enter` | Enter: the tick's answer dropped | 4011 rounds |
+| H9 | `BossGaist_Enter` | Enter: +0x110 |= 8 | 4502 rounds |
+| H10 | `BossGaist_Dispatch` | Dispatch: the entry's answer dropped | 5974 rounds |
+| H11 | `BossGaist_Hook` | HookDispatch: the word's low byte only forwarded | 3025 rounds |
+| H12 | `Boss34_Setup` | the first match wins | 3970 rounds |
+| H13 | `Boss34_Setup` | members 0..1 | 3873 rounds |
+| H14 | `Boss34_Setup` | end and exit swapped | 8000 rounds |
+| H15 | `Boss34_Setup` | the members' +0x147 | 6257 rounds |
+| H16 | `Boss34_Event` | round-flag bit 14 | 804 rounds |
+| H17 | `Boss34_Event` | code 4 for 5 | 1131 rounds |
+| H18 | `Boss34_Event` | the member's bit 0x10 | 487 rounds |
+| H19 | `Boss34_Event` | the next member put first | 1057 rounds |
+| H20 | `Boss34_Event` | script bit 2 set | 1051 rounds |
+| H21 | `Boss34_Event` | code 1 tests bit 2 | 846 rounds |
+| H22 | `Boss34_Event` | the actor against the picked & 1 | 896 rounds |
+| H23 | `Boss34_Event` | acting kind 3 | 1499 rounds |
+| H24 | `Boss34_Event` | the action record +2 = 4 | 1494 rounds |
+| H25 | `Boss34_Event` | the word +4 | 1499 rounds |
+| H26 | `Boss34_Event` | target 3 | 1379 rounds |
+| H27 | `Boss34_Event` | 0x904B80 a dword | 1499 rounds |
+| H28 | `Boss34_Event` | GiveAbility40: the member word the byte alone | 1257 rounds (also Boss34_End 1673) |
+| H29 | `Boss34_End` | GiveAbility40: member 3 first | 2014 rounds (also Boss34_Event 1499) |
+| H30 | `Boss34_End` | GiveAbility40: the picked member read before the first call | 1573 rounds (also Boss34_Event 1157) |
+| H31 | `Boss34_End` | the members' bit 1 | 3572 rounds |
+| H32 | `Boss34_End` | +0x90 read before the call | 837 rounds |
+| H33 | `Boss34_End` | +0x90 bit 15 | 2760 rounds |
+| H34 | `Boss34_End` | size 0x1000 | 3909 rounds |
+| H35 | `Boss34_End` | Sprite_Current not set | 3567 rounds |
+| H36 | `Boss34_End` | the abilities by bit 0 | 2005 rounds |
+| H37 | `Boss34_End` | 0x904AE8 bit 4 | 3435 rounds |
+| H38 | `Boss34_End` | the step incremented before the call | 4043 rounds |
+| H39 | `Boss34_End` | the members' +4 | 3907 rounds |
+| H40 | `Boss34_Exit` | bank 0x1C2 | 8000 rounds |
+| H41 | `Boss34_Exit` | +0x2A = 0 | 8000 rounds |
+| H42 | `Boss34_Exit` | +0x58 from enemy 0's +0x5A | 8000 rounds |
+| H43 | `Boss34_Exit` | animation before the bank | 8000 rounds |
+| H44 | `Boss34_Exit` | Sprite_Current of before the calls for +0x2A | 606 rounds |
+| H45 | `Boss41_Setup` | exit BareRetZero | 4000 rounds |
+| H46 | `Boss47_Setup` | end Boss36_End | 4000 rounds |
+| H47 | `Boss43_Setup` | event BareRet | 4000 rounds |
+| H48 | `BossGaist_Dispatch` | by +3 | 5408 rounds |
+| H49 | `BossGaist_Enter` | +0xF8 Torch's | 6000 rounds |
+| H50 | `BossGaist_Hook` | the next entry (mod 3) | 6000 rounds |
+| H51 | `BossGaist_HookClearBit1` | bit 2 tested | 776 rounds |
+| H52 | `BossGaist_HookClearBit1` | the wait word's low byte | 842 rounds |
+| H53 | `BossGaist_HookClearBit1` | bits 1 and 2 cleared | 400 rounds |
+| H54 | `BossGaist_HookClearBit1` | Draw_PassFlags = 1 | 788 rounds |
+| H55 | `BossTorch_Dispatch` | by +2 | 5462 rounds |
+| H56 | `BossTorch_Enter` | +0xFC 0x675F08 | 6000 rounds |
+| H57 | `BossTorch_Hook` | the next entry (mod 3) | 6000 rounds |
+| H58 | `BossTorch_HookTarget3` | target 4 | 6000 rounds |
+| H59 | `BossSample9_Dispatch` | the word ^ 0x80 forwarded | 972 rounds |
+| H60 | `BossSample9_Enter` | Gaist's hook stored | 6000 rounds |
+| H61 | `BossSample9_Hook` | the word ^ 0x100 forwarded | 6000 rounds |
+| H62 | `Boss35_Setup` | exit BareRet | 6000 rounds |
+| H63 | `Boss35_Event` | code 1 | 4276 rounds |
+| H64 | `Boss35_Event` | actor 4 | 4127 rounds |
+| H65 | `Boss35_Event` | bit 0 set | 2277 rounds |
+| H66 | `Boss35_Event` | the whole word compared | 2076 rounds |
+| H67 | `Boss35_End` | step 0x16 | 2923 rounds |
+| H68 | `Boss35_End` | EndWithStep: the win by bit 0 | 3494 rounds |
+| H69 | `Boss35_End` | EndWithStep: the other way out for the win | 2984 rounds |
+| H70 | `BossAngler_Dispatch` | by +2 | 7226 rounds |
+| H71 | `BossAngler_Enter` | +0xFC and +0xF8 swapped | 8000 rounds |
+| H72 | `BossAngler_AdvanceDispatch` | by +1 | 3995 rounds |
+| H73 | `BossAngler_AdvanceDispatch` | the retreat's table | 8000 rounds |
+| H74 | `BossAngler_AdvanceStart` | record stride 0x8B | 4610 rounds |
+| H75 | `BossAngler_AdvanceStart` | animation 3 | 8000 rounds |
+| H76 | `BossAngler_AdvanceStart` | goal + 0x20000 | 8000 rounds |
+| H77 | `BossAngler_AdvanceStart` | step 0x2000 | 8000 rounds |
+| H78 | `BossAngler_AdvanceStart` | the goal written through Sprite_Current of before the calls | 2671 rounds |
+| H79 | `BossAngler_AdvanceStart` | +2 up by 2 | 8000 rounds |
+| H80 | `BossAngler_Advance` | the sound at 1 | 3018 rounds |
+| H81 | `BossAngler_Advance` | the second sound word | 2270 rounds |
+| H82 | `BossAngler_Advance` | Sprite_Current not read again after the sound | 704 rounds |
+| H83 | `BossAngler_Advance` | step from +0x10 | 8000 rounds |
+| H84 | `BossAngler_Advance` | arrived at >= | 2081 rounds |
+| H85 | `BossAngler_Advance` | the actor flagged | 3317 rounds |
+| H86 | `BossAngler_Advance` | goal - 0x20000 | 3676 rounds |
+| H87 | `BossAngler_Advance` | 0x4376F0 not called | 3676 rounds |
+| H88 | `BossAngler_Advance` | +1 up by 2 | 3662 rounds |
+| H89 | `BossAngler_Advance` | +2 = 1 | 3652 rounds |
+| H90 | `BossAngler_Advance` | the tick's answer dropped | 5312 rounds |
+| H91 | `BossAngler_Advance` | the goal through Sprite_Current of before the calls | 1276 rounds |
+| H92 | `BossAngler_RetreatDispatch` | by +3 | 4056 rounds |
+| H93 | `BossAngler_Retreat` | +0x34 up | 6885 rounds |
+| H94 | `BossAngler_Retreat` | +1 up at the goal | 3979 rounds |
+| H95 | `BossAngler_Retreat` | the tick's answer dropped | 5417 rounds |
+| H96 | `BossAngler_RetreatEnd` | bit 3 set | 5769 rounds |
+| H97 | `BossAngler_RetreatEnd` | the flag set before the tick | 132 rounds |
+| H98 | `BossAngler_Hook` | the next entry (mod 3) | 8000 rounds |
+| H99 | `BossAngler_HookSpawnFx` | +1 == 6 | 6230 rounds |
+| H100 | `BossAngler_HookSpawnFx` | +2 == 0 | 5588 rounds |
+| H101 | `BossAngler_HookSpawnFx` | parameter 2 | 5300 rounds |
+| H102 | `BossAngler_HookSpawnFx` | actor - 2 | 5300 rounds |
+| H103 | `BossAngler_HookSpawnFx` | 0x7C bytes | 5300 rounds |
+| H104 | `BossAngler_HookSpawnFx` | memmove for the forward copy | 82 rounds |
+| H105 | `BossAngler_HookSpawnFx` | +0x28 = 3 | 5299 rounds |
+| H106 | `BossAngler_HookSpawnFx` | +6 = 2 | 5300 rounds |
+| H107 | `BossAngler_HookSpawnFx` | the actor read before the call | 233 rounds |
+| H108 | `BossAngler_HookSpawnFx` | +0xA = 0 | 5300 rounds |
+| H109 | `BossSample5_Dispatch` | by +2 | 5447 rounds |
+| H110 | `BossSample5_Enter` | the Angler's hook stored | 6000 rounds |
+| H111 | `BossSample5_Hook` | the next entry (mod 3) | 6000 rounds |
+| H112 | `Boss36_Setup` | end Boss35_End | 6000 rounds |
+| H113 | `Boss36_End` | step 9 | 2999 rounds |
+| H114 | `BossAnglerFx_Dispatch` | the word + 1 forwarded | 6000 rounds |
+| H115 | `BossAnglerFx_Dispatch` | by +2 | by its own `Fatal` (the byte +2 past the one entry in the rounds where the seed leaves it not 0; a one-entry table has no other entry to land on) - H115b, a near variant, refused by a count |
+| H115b | `BossAnglerFx_Dispatch` | the word not forwarded (0) | 6000 rounds |
+| H116 | `BossAnglerFx_Run` | steps 0 and 1 swapped | 3991 rounds |
+| H117 | `BossAnglerFx_Run` | by +1 | 3948 rounds |
+| H118 | `BossAnglerFx_Run` | the free's answer dropped | 2000 rounds |
+| H119 | `BossAnglerFx_Start` | +0xC = 0 | 6000 rounds |
+| H120 | `BossAnglerFx_Start` | animation 2 | 6000 rounds |
+| H121 | `BossAnglerFx_Start` | the overlay not queued | 6000 rounds |
+| H122 | `BattleFx_ScriptUntilDone` | bit 3 | 3012 rounds |
+| H123 | `BattleFx_ScriptUntilDone` | overlay before the tick | 6000 rounds |
+| H124 | `BossElder_Dispatch` | by +4 | 5432 rounds |
+| H125 | `BossElder_Enter` | +0xF8 the Angler's | 6000 rounds |
+| H126 | `BossElder_Hook` | the word's low byte only | 2984 rounds |
 
 ## 6. Latent defects (Capcom's, kept)
 
@@ -276,8 +452,8 @@ shows.
 - **Kind 42 (Torch) points `+0xFC` at `0x675F0C`**, twelve bytes of `.data`
   that nothing in the exe writes (a scan of the exe for the address finds
   only this store) and that are zero in the file - so every animation byte
-  the generic states read for the Torch is 0. Every other kind of the band
-  points at a table in the kinds' `.data` block (`0x64C7B0..0x64DDEC`). A
+  the generic states read for the Torch is 0. The other six kinds here point
+  at tables in the kinds' `.data` block beside their state tables. A
   PSX overlay's data section that the port's link did not carry over is the
   obvious reading, not proven: the sibling's `BOSS035` image was not
   compared.
