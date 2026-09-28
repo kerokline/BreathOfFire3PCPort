@@ -48166,3 +48166,1055 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-27, group SC5: Scena05_CellHook by the record index: Scena05_Cell0, Scena05_Cell1; a zero dword and the eight bytes 0x6610D8 follow, then Scena06_Hooks."
+
+# Round ten group SC15: scenario chapter 15 (0x567DC0..0x56B2A0 and 0x537580), chapter 16's slot 1
+# 0x56C080, chapters 17..19 (0x56C130..0x56D5E0) (docs/scena_sc15.md)
+
+[[func]]
+pc = 0x537580
+name = "Scena15_RecordWord"
+ret = "unsigned"
+params = "unsigned index"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x537580..0x537593, 0x14 bytes): the word at [0x7E0880] + (index & 0xFFFF) * 8, eax zero-extended. Callers 0x48A57A and 0x48A59D (area code, testing 0x261 and 0x308) and 0x569BBC (Scena15_Run5, 0x308); E8 scan of .text. Placed before chapter 0's block; chapter 15's by its one scenario caller. scenario_rows.py SC15: 0x14 bytes."
+
+[[func]]
+pc = 0x567DC0
+name = "Scena15_Frame"
+psx = 0x801F9CAC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x567DC0..0x567DCD, 14 bytes): jmp [0x661924 + s8 byte 0x8034E2 * 4], Scena15_States, unchecked. Slot 0 of Scena15_Hooks 0x6618A8; the sibling's SCENA15 record 0x801FE5F4 slot 0 is 0x801F9CAC (names/scenario_records.toml), the twin by slot."
+
+[[func]]
+pc = 0x567DD0
+name = "Scena15_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x567DD0..0x56850A, 0x73B bytes, 69 calls, no jump table): Scena15_States entry 1. Game_AreaNumber read afresh at each test: areas 2, 0x2D, 0x95, 0x98 (pass flags, camera distance, an effect of kind 0x31 by Scena15_PlaceEffect), 0x9E..0xA6 (on Cond_ByteFD 0 and 1 a flag of the row or Scena15_BattleSetup 0..9; 0xA4 and 0xA6 with the byte not 0 go straight to the end), 0xAC, 0xAD (Cond_ByteFD 2 only: flag 0, markers, call-table entry 3, Party_DropIn), 0xAE, 0xBD (row 14 flag 1: Effect_Objects[0] bit 0x40), 0xC6 (two effects, the shake shift 4); state 2."
+
+[[func]]
+pc = 0x568510
+name = "Scena15_BattleSetup"
+ret = "void"
+params = "unsigned n"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x568510..0x5685CD, 0xBE bytes): ScriptFlags_Set40, counter 0x903848 = 1, Effect_FindFree into 0x6BC743 and a kind-0x89 record with +0xB = n; Field_Kind2X / Z from Scena15_Battles[n & 0xFF] +0 / +2 (s16 << 8, unchecked); Field_ViewReset; 0x904EF0 = 0; Party_DropIn(0); 0x905BA4 & 0xFFEF; 0x532ED0(+4 << 8, +6 << 8, +9); Draw_OtSlot 4; MoveScript_Var7 2, step 0. Called by Scena15_EnterArea only (ten E8 sites)."
+
+[[func]]
+pc = 0x5685D0
+name = "Scena15_PlaceEffect"
+ret = "unsigned char"
+params = "unsigned kind, int x, int y, int z, unsigned nine, unsigned long twelve"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x5685D0..0x568632, 0x63 bytes): Effect_FindFree into 0x6BC743; none: al 0; else +0 = 1, +5 = kind, +0x64 / +0x68 / +0x6C the s16 x, y, z, +0xC the dword, +9 the byte, al 1. Ten E8 callers, all chapter 15's runs and set-up."
+
+[[func]]
+pc = 0x568640
+name = "Scena15_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x568640..0x56864D, 14 bytes): jmp [0x661930 + s8 MoveScript_Var7 * 4], Scena15_Runs, unchecked. Scena15_States entry 2."
+
+[[func]]
+pc = 0x568650
+name = "Scena15_Run1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x568650..0x568975, 0x326 bytes: code, the 10-entry jump table 0x568934 and the 26-byte case table 0x56895C, cmp 0x19): Scena15_Runs entry 1. Steps 0..7, 0x14 and 0x19: area 0xBD, three script messages 0x12..0x14 between two kind-0x13 effects, Menu_DrawHand while each is open, area 0xC1; 0x14 / 0x19 area 0xC1 facing 0x83 / 0x84. 0x5687A0 (a pc_funcs start) is its case 5."
+
+[[func]]
+pc = 0x568980
+name = "Scena15_Run2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x568980..0x568A6F, 0xF0 bytes with the 6-entry jump table 0x568A58): Scena15_Runs entry 2, the event battle: a held button, the effect's +1, Field_StartEventBattle(Scena15_Battles[effect +0xB] +9), the record's flag +8 set."
+
+[[func]]
+pc = 0x568A70
+name = "Scena15_Run3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x568A70..0x5690B0, 0x641 bytes: code, the 29-entry jump table 0x569008 and the 53-byte case table 0x56907C, cmp 0x34): Scena15_Runs entry 3. Files 0x302, effects, markers (Scena15_SpawnMarker), Party_DropIn 5..8 while each answers, messages, area changes 0x58, 0xAE, 0x3A, 2, flags 1..8 of the row."
+
+[[func]]
+pc = 0x5690C0
+name = "Scena15_Run4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x5690C0..0x56972F, 0x670 bytes with the 25-entry jump table 0x5696CC): Scena15_Runs entry 4. File 0x303, a flying kind-0x88 effect, PartySet_LoadSecond with the party byte 0x90412C kept in 0x6BC742, call-table entry 0 and PartySet_LoadFirst, Scena15_EventObjects, areas 0xC4, 0x2D, 0xAE, 0x98, message 0x1E, flags 9..0xB."
+
+[[func]]
+pc = 0x569730
+name = "Scena15_EventObjects"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x569730..0x569790, 0x61 bytes): three EventOp_0x records at 0x661950 (0x11 apart) and two EventOp_6x records at 0x661988 (0x10 apart), each with 0x57CD90 (the first free Sprite_Objects record, 0xFF none) into the word 0x903850 first and skipped on 0xFF. Called by Scena15_Run4 (0x56938A)."
+
+[[func]]
+pc = 0x5697A0
+name = "Scena15_Run5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x5697A0..0x569D97, 0x5F8 bytes with the 37-entry jump table 0x569D04): Scena15_Runs entry 5. Effects, file 0x82, a kind-0x1D effect on the ground, area 0xAC, messages 0x2B / 0x2D / 0x65, the CLUT strip to grey (Scena15_ClutToGrey), Input_Held bit 11 then 0x587860 and Task_Restart(Boot_Task); the object whose record word is 0x308 (Scena15_RecordWord) given +0x83 0x24; call-table entry 1, request 6, area 0xC6."
+
+[[func]]
+pc = 0x569DA0
+name = "Scena15_ClutToGrey"
+ret = "void"
+params = "unsigned snap"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x569DA0..0x569F11, 0x172 bytes): the 32 rows of Gfx_ClutStrip but row 0xB, each colour's grey (r + g + b) / 3; snap (a byte) not 0: the colour set grey with bit 15 kept; else each channel one step toward it (+1, or +0xFFFF in 32 bits). Gfx_ClutStripDirty 1. Called by Scena15_Run5 (0x569A18, 0x569A2D)."
+
+[[func]]
+pc = 0x569F20
+name = "Scena15_Run6"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x569F20..0x56AD73, 0xE54 bytes, 118 calls, with the 55-entry jump table 0x56AC98): Scena15_Runs entry 6. Every step ends in Scena15_Shake(byte 0x6BC740). Files 0x304 / 0x305, eight effects, 0x532ED0, event battle 0x37, Scena15_RandomPause, messages 0xA / 0x6B / 0xC, areas 0xAE, 0xC6, 0xAD, 0x95, the view shift 0x423380 on step 0x33, then area 0xC7, Field_ScriptFlags bit 0x800 off and 0x56D6F0. 0x56A0E0, 0x56A580, 0x56A770 and 0x56AB10 (catalogue starts) are its cases."
+
+[[func]]
+pc = 0x56AD80
+name = "Scena15_RandomPause"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AD80..0x56ADB3, 0x34 bytes): byte 0x6BC742 not 0: counted down; else counter 0x903849 = 1 and the byte ((Rand() % 0x26) + 0x2A) / 2 (idiv and a signed halving). Called by Scena15_Run6 (four sites)."
+
+[[func]]
+pc = 0x56ADC0
+name = "Scena15_Shake"
+ret = "void"
+params = "unsigned shift"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56ADC0..0x56ADED, 0x2E bytes): with byte 0x6BC741 set, MapView_Redraw 2 and Camera_ShiftY += Scena15_ShakeSteps[Frame_Counter & 3] (s8) << the shift byte. Called by Scena15_Run6 after every step (53 sites)."
+
+[[func]]
+pc = 0x56ADF0
+name = "Scena15_SpawnMarker"
+ret = "unsigned char"
+params = "long x, long z, unsigned six, unsigned seven, unsigned eleven"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56ADF0..0x56AE76, 0x87 bytes): Effect_FindFree; none al 0; else +0 = 1, +5 = 0x9E, +0x34 = x, +0x38 = z, +0x3C = (AreaMap_Elevation(+0x34, z) + 0x200) << 16, +6 / +7 / +0xB the bytes, al 1. Five callers in Scena15_EnterArea and Scena15_Run3."
+
+[[func]]
+pc = 0x56AE80
+name = "Scena15_ObjectTrigger"
+psx = 0x801FDD80
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AE80..0x56AE9E, 0x1F bytes): call [0x6619AC + object +0x86 * 4] (object, [0x929ED0]), Scena15_Objects, unchecked. Slot 1 of Scena15_Hooks; the SCENA15 record's slot 1 is 0x801FDD80, the twin by slot."
+
+[[func]]
+pc = 0x56AEA0
+name = "Scena15_ObjectTalk"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AEA0..0x56AEF6, 0x57 bytes): Scena15_Objects entries 0..4. Scena15_TalkWho[object +0x86] written into the low byte of the object argument's slot and that dword handed to 0x42C0A0 in area 0xC0, else 0x42BA90; their eax to Msg_OpenScript; Field_Request 2."
+
+[[func]]
+pc = 0x56AF00
+name = "Scena15_Object05"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AF00..0x56AF13, 0x14 bytes): Scena15_Objects entry 5: ScriptFlags_Set40, MoveScript_Var7 3, step 0x32."
+
+[[func]]
+pc = 0x56AF20
+name = "Scena15_Object06"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AF20..0x56AF47, 0x28 bytes): entry 6: ScriptFlags_Set40, flag 0xD of [0x929ED0], Party_DropIn(0xB), object word +0x8A + 1."
+
+[[func]]
+pc = 0x56AF50
+name = "Scena15_Object07"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AF50..0x56AF77, 0x28 bytes): entry 7: ScriptFlags_Set40, flag 0xE, Party_DropIn(0xC), +0x8A + 1."
+
+[[func]]
+pc = 0x56AF80
+name = "Scena15_Object08"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AF80..0x56AFA0, 0x21 bytes): entry 8: ScriptFlags_Set40, flag 0xC, +0x8A + 1."
+
+[[func]]
+pc = 0x56AFB0
+name = "Scena15_Object09"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AFB0..0x56AFD7, 0x28 bytes): entry 9: ScriptFlags_Set40, flag 0x10, Party_DropIn(0xE), +0x8A + 1."
+
+[[func]]
+pc = 0x56AFE0
+name = "Scena15_Object10"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56AFE0..0x56B007, 0x28 bytes): entry 10: ScriptFlags_Set40, flag 0xF, Party_DropIn(0xD), +0x8A + 1."
+
+[[func]]
+pc = 0x56B010
+name = "Scena15_Object11"
+ret = "void"
+params = "unsigned char *object, unsigned char *row"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56B010..0x56B020, 0x11 bytes): entry 11: ScriptFlags_Set40, +0x8A + 1."
+
+[[func]]
+pc = 0x56B030
+name = "Scena15_StepHook"
+psx = 0x801FE024
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56B030..0x56B0FE, 0xCF bytes): slot 2 of Scena15_Hooks, (x, z) 16.16. Area 0xAD: Cond_ByteFD 1, flag 1 clear, z above 0x470000: run 3 step 0xF; Cond_ByteFD 2, story flag 0x81 clear, x's cell (s16) above 0x2C, z's cell 0x78..0x7F: run 3 step 0. Area 0xAE, Cond_ByteFD 0, x 0x418000, z's cell 0x22..0x24: run 4 step 0, al 1. Else al 0. The SCENA15 record's slot 2 is 0x801FE024."
+
+[[func]]
+pc = 0x56B100
+name = "Scena15_ArriveHook"
+psx = 0x801FE18C
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56B100..0x56B29E, 0x19F bytes): slot 3 of Scena15_Hooks, al always 0. Area 0xAE only, by the first of flags 2, 4, 5 clear: run 3 at step 0x14 / 0x1E / 0x28 on a rectangle each; all set: x 0x310000 and z's cell 0x27..0x28, run 5 at step 5 when flags 0xC, 0xE, 0xD, 0xF, 0x10 are all set, else step 0. The SCENA15 record's slot 3 is 0x801FE18C."
+
+[[func]]
+pc = 0x56C080
+name = "Scena16_ObjectTrigger"
+psx = 0x801F8344
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C080..0x56C09E, 0x1F bytes): call [0x661A1C + object +0x86 * 4] (object, [0x929ED0]), Scena16_Objects (one entry, 0x43C9F0), unchecked. Slot 1 of Scena16_Hooks; the SCENA16 record's slot 1 is 0x801F8344 (docs/field-modes.md)."
+
+[[func]]
+pc = 0x56C130
+name = "Scena17_Frame"
+psx = 0x801F775C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C130..0x56C13D, 14 bytes): jmp [0x661FEC + s8 0x8034E2 * 4], Scena17_States, unchecked. Slot 0 of Scena17_Hooks; pairs_propagated 0x801F775C (table-anchored, SCENA17), the SCENA17 record's slot 0."
+
+[[func]]
+pc = 0x56C140
+name = "Scena17_Start"
+psx = 0x801F7798
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C140..0x56C17D, 0x3E bytes): Scena17_States entry 0: Gfx_ClutStripRestore, Gfx_ClutStripDirty 1, Draw_PassFlags 0x1F, Field_ChangeArea(0xC7, 0xB60000, 0x128000, 7), dword 0x903848 = 0, state 1. pairs_propagated 0x801F7798 (table-anchored)."
+
+[[func]]
+pc = 0x56C180
+name = "Scena17_EnterArea"
+psx = 0x801F77FC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C180..0x56C235, 0xB6 bytes): Scena17_States entry 1: in area 0xC7 ScriptFlags_Set40, ObjTrio_SetBit40, angles 0xFD1C / 0x12C, MapView_SetElevation(0x300), AreaMap_Frame, Field_ObjectsScreen, Field_DrawFrame, Gpu_SetDrawMove of (0, Gfx_BufferIndex * 240, 320, 240) to (0x2C0, 0) and Gfx_CommitPrim(5, 0x18); then pass flags 0, Port_DroppedCall(2), state 2, part 0x8034E3 = 1. pairs_propagated 0x801F77FC."
+
+[[func]]
+pc = 0x56C240
+name = "Scena17_Run"
+psx = 0x801F78E4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C240..0x56C24D, 14 bytes): jmp [0x661FF8 + s8 0x8034E3 * 4], Scena17_Parts, unchecked. Scena17_States entry 2. pairs_propagated 0x801F78E4."
+
+[[func]]
+pc = 0x56C250
+name = "Scena17_Intro"
+psx = 0x801F7928
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C250..0x56C262, 0x13 bytes): call [0x662008 + s8 MoveScript_Var7 * 4] (Scena17_Part1Steps, unchecked), then jmp Scena17_DrawLetterbox. Scena17_Parts entry 1. pairs_propagated 0x801F7928."
+
+[[func]]
+pc = 0x56C270
+name = "Scena17_Intro00"
+psx = 0x801F796C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C270..0x56C2C6, 0x57 bytes): Scena17_Part1Steps entry 0: wait word 0: kind-2 sprite at (0xB00000, 0x138000), Field_ViewReset, Cond_ByteFE 4, Music_LoadFile(0x96), Transition_Start(1), Scena17_DrawFade(0, 0x80), next step. pairs_propagated 0x801F796C (SCENA17)."
+
+[[func]]
+pc = 0x56C2D0
+name = "Scena17_Intro01"
+psx = 0x801F79F4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C2D0..0x56C305, 0x36 bytes): Scena17_Part1Steps entry 1: wait word 0 and File_LoadDone: 0x8034E5 = 0x5A, next step; the fade drawn. pairs_propagated 0x801F79F4 (SCENA17)."
+
+[[func]]
+pc = 0x56C310
+name = "Scena17_Intro02"
+psx = 0x801F7A50
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C310..0x56C34F, 0x40 bytes): Scena17_Part1Steps entry 2: 0x8034E5 counted down, at 0 Music_Play(0x96, 8), next step, 0x8034E5 = 0x1E; the fade drawn. pairs_propagated 0x801F7A50 (SCENA17)."
+
+[[func]]
+pc = 0x56C350
+name = "Scena17_Intro03"
+psx = 0x801F7ACC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C350..0x56C3AC, 0x5D bytes): Scena17_Part1Steps entry 3: counted down, at 0 x 0x940000, MoveScript_F3Divisor 0x20, 0x8034E5 = 0x80, angles 0xFE96 / 0x200, pass flags 0x1F, next step; the fade drawn. pairs_propagated 0x801F7ACC (SCENA17)."
+
+[[func]]
+pc = 0x56C3B0
+name = "Scena17_Intro04"
+psx = 0x801F7B68
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C3B0..0x56C3D6, 0x27 bytes): Scena17_Part1Steps entry 4: counted down, the fade drawn on at the count, at 0 (read again) the next step. pairs_propagated 0x801F7B68 (SCENA17)."
+
+[[func]]
+pc = 0x56C3E0
+name = "Scena17_Intro05"
+psx = 0x801F7BD0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C3E0..0x56C3FF, 0x20 bytes): Scena17_Part1Steps entry 5: Field_Kind2Hold 0: x 0x8C0000, next step. pairs_propagated 0x801F7BD0 (SCENA17)."
+
+[[func]]
+pc = 0x56C400
+name = "Scena17_Intro06"
+psx = 0x801F7C08
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C400..0x56C42E, 0x2F bytes): Scena17_Part1Steps entry 6: angle 0 - 5 a frame; Field_Kind2Hold (read first) 0: x 0x540000, counter 3 0xA, next step. pairs_propagated 0x801F7C08 (SCENA17)."
+
+[[func]]
+pc = 0x56C430
+name = "Scena17_Intro07"
+psx = 0x801F7C5C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C430..0x56C461, 0x32 bytes): Scena17_Part1Steps entry 7: Field_Kind2Hold 0 and counter 3 0x14: MoveScript_F3Divisor 0x10, x 0x3C0000, next step. pairs_propagated 0x801F7C5C (SCENA17)."
+
+[[func]]
+pc = 0x56C470
+name = "Scena17_Intro08"
+psx = 0x801F7CB4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C470..0x56C4BA, 0x4B bytes): Scena17_Part1Steps entry 8: Field_Kind2Hold 0: MapView_SetElevation(AreaMap_Elevation(x, z)), next step, x 0x2E0000; else MapView_Elevation - 1 on odd frames. pairs_propagated 0x801F7CB4 (SCENA17)."
+
+[[func]]
+pc = 0x56C4C0
+name = "Scena17_Intro09"
+psx = 0x801F7D50
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C4C0..0x56C549, 0x8A bytes): Scena17_Part1Steps entry 9: Field_Kind2Hold 0: the elevation set, x 0x260000, Cond_ByteFE 1, MoveScript_FAWord = (AreaMap_Elevation(0x260000, z) - MapView_Elevation) / 128, next step; else MapView_Elevation + 2 and + 1 more every fourth frame. pairs_propagated 0x801F7D50 (SCENA17)."
+
+[[func]]
+pc = 0x56C550
+name = "Scena17_Intro10"
+psx = 0x801F7E3C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C550..0x56C5AC, 0x5D bytes): Scena17_Part1Steps entry 10: Field_Kind2Hold 0: the elevation set, MoveScript_F3Divisor 0x10, x 0x190000, MoveScript_FAWord 0, next step; else angle 0 - 1, Camera_Distance - 6. pairs_propagated 0x801F7E3C (SCENA17)."
+
+[[func]]
+pc = 0x56C5B0
+name = "Scena17_Intro11"
+psx = 0x801F7EE4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C5B0..0x56C5EB, 0x3C bytes): Scena17_Part1Steps entry 11: Field_Kind2Hold 0: Cond_ByteFE 2, next step; else MapView_Elevation + 2 to at most 0x540. pairs_propagated 0x801F7EE4 (SCENA17)."
+
+[[func]]
+pc = 0x56C5F0
+name = "Scena17_Intro12"
+psx = 0x801F7F4C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C5F0..0x56C60C, 0x1D bytes): Scena17_Part1Steps entry 12: counter 3 0x64: Cond_ByteFE 3, next step. pairs_propagated 0x801F7F4C (SCENA17)."
+
+[[func]]
+pc = 0x56C610
+name = "Scena17_Intro13"
+psx = 0x801F7F84
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C610..0x56C63E, 0x2F bytes): Scena17_Part1Steps entry 13: MapView_Elevation + 0x10; past 0xCC0 0x8034E5 = 0xF and next step; MapView_Redraw 2. pairs_propagated 0x801F7F84 (SCENA17)."
+
+[[func]]
+pc = 0x56C640
+name = "Scena17_Intro14"
+psx = 0x801F7FDC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C640..0x56C664, 0x25 bytes): Scena17_Part1Steps entry 14: counted down, at 0 Transition_Start(0xD), next step. pairs_propagated 0x801F7FDC (SCENA17)."
+
+[[func]]
+pc = 0x56C670
+name = "Scena17_Intro15"
+psx = 0x801F8038
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C670..0x56C6AC, 0x3D bytes): Scena17_Part1Steps entry 15: wait word 0: Music_FadeOutStop(0xA), Music_Track 0xFF, pass flags 0, Cond_ByteFE 6, part + 1, MoveScript_Var7 0. pairs_propagated 0x801F8038 (SCENA17)."
+
+[[func]]
+pc = 0x56C6B0
+name = "Scena17_Roll"
+psx = 0x801F80D0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C6B0..0x56C6C2, 0x13 bytes): call [0x662048 + s8 MoveScript_Var7 * 4] (Scena17_Part2Steps, unchecked), then jmp Scena17_DrawLetterbox. Scena17_Parts entry 2. pairs_propagated 0x801F80D0."
+
+[[func]]
+pc = 0x56C6D0
+name = "Scena17_Roll0"
+psx = 0x801F8114
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C6D0..0x56C6ED, 0x1E bytes): Scena17_Part2Steps entry 0: Sound_LoadStream(8), the roll's line word 0x6BC744 and scroll 0x6BC746 0, next step. pairs_propagated 0x801F8114 (SCENA17)."
+
+[[func]]
+pc = 0x56C6F0
+name = "Scena17_Roll1"
+psx = 0x801F8158
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C6F0..0x56C71C, 0x2D bytes): Scena17_Part2Steps entry 1: Scena17_ScrollRoll; Sound_StreamDone (eax) and its al both set: Transition_Start(0xD), next step. pairs_propagated 0x801F8158 (SCENA17)."
+
+[[func]]
+pc = 0x56C720
+name = "Scena17_Roll2"
+psx = 0x801F81B8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C720..0x56C742, 0x23 bytes): Scena17_Part2Steps entry 2: wait word 0: MoveScript_Var7 0, part + 1; else jmp Scena17_ScrollRoll. pairs_propagated 0x801F81B8 (SCENA17)."
+
+[[func]]
+pc = 0x56C750
+name = "Scena17_Outro"
+psx = 0x801F8204
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C750..0x56C75D, 14 bytes): jmp [0x662054 + s8 MoveScript_Var7 * 4], Scena17_Part3Steps, unchecked. Scena17_Parts entry 3. pairs_propagated 0x801F8204."
+
+[[func]]
+pc = 0x56C760
+name = "Scena17_Outro00"
+psx = 0x801F8240
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C760..0x56C7A9, 0x4A bytes): Scena17_Part3Steps entry 0: kind-2 sprite at (0x258000, 0x1B0000), Field_ViewReset, Transition_Start(1), Task_Sleep(1), pass flags 0x1F, Music_Play(0xA0, 8), next step. pairs_propagated 0x801F8240 (SCENA17)."
+
+[[func]]
+pc = 0x56C7B0
+name = "Scena17_Outro01"
+psx = 0x801F82BC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C7B0..0x56C7DC, 0x2D bytes): Scena17_Part3Steps entry 1: wait word 0: 0x8034E5 = 0, next step; Scena17_DrawRays(0, 0xFF). pairs_propagated 0x801F82BC (SCENA17)."
+
+[[func]]
+pc = 0x56C7E0
+name = "Scena17_Outro02"
+psx = 0x801F8308
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C7E0..0x56C82D, 0x4E bytes): Scena17_Part3Steps entry 2: 0x8034E5 + 1; at 0x32 next step, 0x8034E5 = 0x96, rays 0x1F4; else rays at the count times 10. pairs_propagated 0x801F8308 (SCENA17)."
+
+[[func]]
+pc = 0x56C830
+name = "Scena17_Outro03"
+psx = 0x801F8384
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C830..0x56C86A, 0x3B bytes): Scena17_Part3Steps entry 3: counted down, at 0 counter 3 0x6E, 0x8034E5 = 0x46, next step; rays 0x1F4. pairs_propagated 0x801F8384 (SCENA17)."
+
+[[func]]
+pc = 0x56C870
+name = "Scena17_Outro04"
+psx = 0x801F83F0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C870..0x56C896, 0x27 bytes): Scena17_Part3Steps entry 4: counted down, at 0 next step; rays 0x1F4. pairs_propagated 0x801F83F0 (SCENA17)."
+
+[[func]]
+pc = 0x56C8A0
+name = "Scena17_Outro05"
+psx = 0x801F844C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C8A0..0x56C8F0, 0x51 bytes): Scena17_Part3Steps entry 5: 0x8034E5 + 2; at 0x46 or more next step, 0 and rays 0x4B0; else rays (count + 0x32) * 10. pairs_propagated 0x801F844C (SCENA17)."
+
+[[func]]
+pc = 0x56C900
+name = "Scena17_Outro06"
+psx = 0x801F84C8
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C900..0x56C949, 0x4A bytes): Scena17_Part3Steps entry 6: 0x8034E5 + 2; at 0x7F or more next step, 0, rays at level 0x80; else level 0xFF - count. pairs_propagated 0x801F84C8 (SCENA17)."
+
+[[func]]
+pc = 0x56C950
+name = "Scena17_Outro07"
+psx = 0x801F853C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C950..0x56C9E0, 0x91 bytes): Scena17_Part3Steps entry 7: 0x8034E5 + 1; at 0x80 counter 3 0x3C, 0x8034E5 = 0x1E, the skip byte 0x6BC747 0, next step, LoadDatFile(0x15C), the panel at 0x80; else the panel at the count; rays 0x4B0 at 0x80. pairs_propagated 0x801F853C (SCENA17)."
+
+[[func]]
+pc = 0x56C9F0
+name = "Scena17_Outro08"
+psx = 0x801F85DC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56C9F0..0x56CA5C, 0x6D bytes): Scena17_Part3Steps entry 8: Input_Pressed bit 0x20 sets the skip byte; File_LoadDone and 0x8034E5 counted to 0: counter 3 counted down, not 0 0x8034E5 = 0x1E, 0 next step; rays and panel. pairs_propagated 0x801F85DC (SCENA17)."
+
+[[func]]
+pc = 0x56CA60
+name = "Scena17_Outro09"
+psx = 0x801F86AC
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CA60..0x56CAB7, 0x58 bytes): Scena17_Part3Steps entry 9: Input_Pressed bit 0x20 or the skip byte: Music_FadeOut(0x10), Transition_Start(0xD), next step; rays and panel. pairs_propagated 0x801F86AC (SCENA17)."
+
+[[func]]
+pc = 0x56CAC0
+name = "Scena17_Outro10"
+psx = 0x801F8758
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CAC0..0x56CB2B, 0x6C bytes): Scena17_Part3Steps entry 10: wait word 0: Music_FadeOutStop(0xA), Music_Track 0xFF, Port_DroppedCall(0), pass flags 0, script message 1, next step, request 2; rays and panel. pairs_propagated 0x801F8758 (SCENA17)."
+
+[[func]]
+pc = 0x56CB30
+name = "Scena17_Outro11"
+psx = 0x801F8818
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CB30..0x56CB59, 0x2A bytes): Scena17_Part3Steps entry 11: request not 2: 0x8034E5 0 the next step, else 0x587860 and Task_Restart(Boot_Task). pairs_propagated 0x801F8818 (SCENA17)."
+
+[[func]]
+pc = 0x56CB60
+name = "Scena17_Outro12"
+psx = 0x801F888C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CB60..0x56CB77, 0x18 bytes): Scena17_Part3Steps entry 12: part and MoveScript_Var7 0, Task_Restart(0x56D3B0, Scena17_EndTask). pairs_propagated 0x801F888C (SCENA17)."
+
+[[func]]
+pc = 0x56CB80
+name = "Scena17_ObjectTrigger"
+psx = 0x801F88C4
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CB80..0x56CB9E, 0x1F bytes): call [0x662088 + object +0x86 * 4] (object, [0x929ED0]), Scena17_Objects (one entry, 0x43C9F0), unchecked. Slot 1 of Scena17_Hooks; the SCENA17 record's slot 1 is 0x801F88C4 (pairs_propagated agrees)."
+
+[[func]]
+pc = 0x56CBA0
+name = "Scena17_DrawFade"
+psx = 0x801F8914
+ret = "void"
+params = "unsigned on, unsigned level"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CBA0..0x56CCE3, 0x144 bytes): on (a byte) set: draw mode tpage 0x14B, a semi-transparent TILE 320.0 x 240.0 at level * 2; then under tpages 0x12B and 0x12F two SPRTs 256 x 240 at 0.0 and 64 x 240 at 256.0 at level, semi-transparent by on; each to OT slot 2 (Gfx_CommitPrim). pairs_propagated 0x801F8914 (call-anchored)."
+
+[[func]]
+pc = 0x56CCF0
+name = "Scena17_DrawRays"
+psx = 0x801F8B58
+ret = "void"
+params = "unsigned radius, unsigned level"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CCF0..0x56CFE2, 0x2F3 bytes, 28 calls): Gte_PushMatrix; the kind-2 sprite's point ((x sar 9) - 0x4000, (z sar 9) - 0x4000, -(elevation / 2)) by Gte_RotTrans into a matrix's translation, Gte_RotMatrix of (0, 0, 0), Gte_MulMatrix0 with Camera_Matrix, set; draw mode (dtd, tpage 0x40); for 32 angles 0x80 apart a POLY_G3 (centre, rim at radius & 0xFFFF) and a POLY_F4 (rim to 1600) at level through Gte_RotTransPers3, both semi-transparent to OT slot 2, the quad's first corners copied from the triangle's; Gte_PopMatrix. pairs_propagated 0x801F8B58."
+
+[[func]]
+pc = 0x56CFF0
+name = "Scena17_DrawLetterbox"
+psx = 0x801F8F38
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56CFF0..0x56D061, 0x72 bytes): two black TILEs 320.0 x 30.0 at y 0.0 and 210.0 to OT slot 1. Tail-jumped to by Scena17_Intro and Scena17_Roll. pairs_propagated 0x801F8F38 (gap)."
+
+[[func]]
+pc = 0x56D070
+name = "Scena17_DrawPanel"
+psx = 0x801F8FF4
+ret = "void"
+params = "int x, int y, unsigned level, unsigned semi"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D070..0x56D10E, 0x9F bytes): with Draw_PassFlags set, draw mode tpage 0xBD, a SPRT 64 x 32 at (x, y) (s16 to float) from (0, 0), CLUT 0x7B40, at level, semi by the byte, to OT slot 2. pairs_propagated 0x801F8FF4."
+
+[[func]]
+pc = 0x56D110
+name = "Scena17_ScrollRoll"
+psx = 0x801F93D4
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D110..0x56D190, 0x81 bytes): the sixteen lines Scena17_RollLines[u16 0x6BC744 + i] (-1 and 0 skipped) drawn by Scena17_DrawLine at (0x10, 22 * i - scroll byte 0x6BC746, the subtrahend's upper 16 bits the line pointer's); the top line -1: al 1; else the scroll + 1, at 0x16 the next line, al 0. pairs_propagated 0x801F93D4."
+
+[[func]]
+pc = 0x56D1A0
+name = "Scena17_DrawLine"
+psx = 0x801F9238
+ret = "void"
+params = "int x, int y, const unsigned char *text"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D1A0..0x56D2CC, 0x12D bytes with the 5-entry jump table 0x56D298 and the 33-byte case table 0x56D2AC): draw mode tpage 0x3F to OT slot 1; per character: space 12 pixels, bang and a digit the palette, hash and a byte glyph byte + 4, at-sign Scena17_DrawLogo and 88 pixels, A..Z glyphs 0..25, anything else c - 0x47; each glyph by Scena17_DrawGlyph and x + Scena17_GlyphWidths[glyph]. pairs_propagated 0x801F9238."
+
+[[func]]
+pc = 0x56D2D0
+name = "Scena17_DrawGlyph"
+ret = "void"
+params = "int x, int y, unsigned palette, unsigned glyph"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D2D0..0x56D343, 0x74 bytes): 0x5A7730 (a 16 x 16 SPRT) at (x, y) (s16 to float), level 0x80, CLUT 0x7B80 | palette & 0x3F, u = glyph << 4, v = glyph & 0xF0, to OT slot 1. Called by Scena17_DrawLine (two sites)."
+
+[[func]]
+pc = 0x56D350
+name = "Scena17_DrawLogo"
+ret = "void"
+params = "int x, int y"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D350..0x56D3AF, 0x60 bytes): a SPRT 88 x 18 at (x, y) from (0, 0x40), CLUT 0x7B85, level 0x80, to OT slot 1. Called by Scena17_DrawLine."
+
+[[func]]
+pc = 0x56D3B0
+name = "Scena17_EndTask"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D3B0..0x56D3DD, 0x2E bytes): a task entry (pushed to Task_Restart by Scena17_Outro12, the only reference, 0x56CB63): Game_Step 0, Task_ClearPrivate, Window_ResetAll, then for ever call [0x6620CC + u16 Game_Step * 4] (Scena17_EndSteps, unchecked) and Task_Sleep(1). Never returns."
+
+[[func]]
+pc = 0x56D3E0
+name = "Scena17_EndReturn"
+psx = 0x801F954C
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D3E0..0x56D4C1, 0xE2 bytes): Scena17_EndSteps entry 0: story flag 0x92, flags 9..0x16 of row 0x904008 cleared, 0x533E50, Game_AreaNumber 0x8F, ScriptFlags_Clear40, member 0 at (0xF0000, 0x218000) +8 = 3, Music_Track 0x6F, Cond_ByteFA 15 and 0x8034E3..E5 0, 0x929F00 0, 0x929F0C 0xFE, 0x929EC2 1, 0x929EC3 0, 0x66C7DA 1, LoadDatFile(0x31B) and Task_Sleep(1) until File_LoadDone, Gfx_ClutStripCopyRow 1 and 2, Game_Step + 1, the strip dirty. pairs_propagated 0x801F954C (callers)."
+
+[[func]]
+pc = 0x56D4D0
+name = "Scena17_EndField"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D4D0..0x56D4D9, 0xA bytes): Scena17_EndSteps entry 1: Field_RunTaskRecords, jmp ShopMode_Dispatch."
+
+[[func]]
+pc = 0x56D4E0
+name = "Scena17_EndRestart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D4E0..0x56D506, 0x27 bytes): Scena17_EndSteps entry 2: the four counters 0x903848.. 0, 0x587860, Task_Restart(Boot_Task)."
+
+[[func]]
+pc = 0x56D510
+name = "Scena18_Frame"
+psx = 0x801F6C04
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D510..0x56D51D, 14 bytes): jmp [0x662C44 + s8 0x8034E2 * 4], Scena18_States (0x5646B0, Scena18_EnterArea, Scena18_Run), unchecked. Slot 0 of Scena18_Hooks; the SCENA18 record's slot 0 is 0x801F6C04."
+
+[[func]]
+pc = 0x56D520
+name = "Scena18_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D520..0x56D52D, 14 bytes): jmp [0x662C50 + s8 MoveScript_Var7 * 4], Scena18_Runs (one entry, the bare ret 0x437CC0), unchecked. Scena18_States entry 2."
+
+[[func]]
+pc = 0x56D530
+name = "Scena18_ObjectTrigger"
+psx = 0x801F6CAC
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D530..0x56D54E, 0x1F bytes): call [0x662C54 + object +0x86 * 4] (object, [0x929ED0]), Scena18_Objects (one entry, 0x437CC0), unchecked. Slot 1 of Scena18_Hooks; the SCENA18 record's slot 1 is 0x801F6CAC."
+
+[[func]]
+pc = 0x56D550
+name = "Scena19_Frame"
+psx = 0x801F6C04
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D550..0x56D55D, 14 bytes): jmp [0x662C6C + s8 0x8034E2 * 4], Scena19_States (0x5646B0, Scena18_EnterArea, Scena19_Run), unchecked. Slot 0 of Scena19_Hooks; the SCENA19 record's slot 0 is 0x801F6C04 (its own overlay's)."
+
+[[func]]
+pc = 0x56D560
+name = "Scena18_EnterArea"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D560..0x56D567, 8 bytes): state 0x8034E2 = 2. Scena18_States and Scena19_States entry 1 (both tables)."
+
+[[func]]
+pc = 0x56D570
+name = "Scena19_Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D570..0x56D57D, 14 bytes): jmp [0x662C78 + s8 MoveScript_Var7 * 4], Scena19_Runs (one entry, Scena19_Run0), unchecked. Scena19_States entry 2."
+
+[[func]]
+pc = 0x56D580
+name = "Scena19_Run0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D580..0x56D5B0, 0x31 bytes): Scena19_Runs entry 0: Input_Pressed bit 8: Effect_FindFree and a kind-0x2F record."
+
+[[func]]
+pc = 0x56D5C0
+name = "Scena19_ObjectTrigger"
+psx = 0x801F6D10
+ret = "void"
+params = "unsigned char *object"
+status = "evidence"
+impl = "src/game/scena_sc15.cpp"
+evidence = "disasm 2026-09-28 group SC15 (0x56D5C0..0x56D5DE, 0x1F bytes): call [0x662C7C + object +0x86 * 4] (object, [0x929ED0]), Scena19_Objects (one entry, 0x437CC0), unchecked. Slot 1 of Scena19_Hooks; the SCENA19 record's slot 1 is 0x801F6D10."
+
+[[data]]
+pc = 0x661924
+name = "Scena15_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena15_Frame's jmp [0x661924 + s8 0x8034E2 * 4]: 0x5646B0 (state 1; SC13's band), Scena15_EnterArea, Scena15_Run."
+
+[[data]]
+pc = 0x661930
+name = "Scena15_Runs"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena15_Run's jmp [0x661930 + s8 MoveScript_Var7 * 4]: 0x437CC0 (ret), Scena15_Run1..6. Scena15_EventOps follows."
+
+[[data]]
+pc = 0x6618C0
+name = "Scena15_Battles"
+ctype = "unsigned char"
+count = 100
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: ten 10-byte records: +0 / +2 the kind-2 sprite's x / z (s16, << 8), +4 / +6 the party's (0x532ED0), +8 the flag Scena15_Run2 sets, +9 the event battle (Field_StartEventBattle) and the party's kind; indexed by Scena15_BattleSetup's n and the effect's +0xB, unchecked. Scena15_States follows."
+
+[[data]]
+pc = 0x661950
+name = "Scena15_EventOps"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: three 0x11-byte EventOp_0x records (0x661950..0x661982) and, at 0x661988, two 0x10-byte EventOp_6x records: Scena15_EventObjects' placements."
+
+[[data]]
+pc = 0x6619A8
+name = "Scena15_ShakeSteps"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena15_Shake's step by Frame_Counter & 3, shifted by its argument."
+
+[[data]]
+pc = 0x6619AC
+name = "Scena15_Objects"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena15_ObjectTrigger by object +0x86 (object, row): 0..4 Scena15_ObjectTalk, 5..11 Scena15_Object05..11."
+
+[[data]]
+pc = 0x6619DC
+name = "Scena15_TalkWho"
+ctype = "unsigned char"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena15_ObjectTalk's byte by object +0x86 0..4, handed to 0x42C0A0 / 0x42BA90."
+
+[[data]]
+pc = 0x6BC740
+name = "Scena15_Bytes"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: chapters 15's and 17's own bytes, read by no other code (dword scan of .text): +0 the shake's shift, +1 the shake on, +2 run 4's kept party byte and run 6's pause count, +3 the effect slot the runs wait on, +4 (u16) the roll's first line, +6 its scroll, +7 the roll skipped."
+
+[[data]]
+pc = 0x661A1C
+name = "Scena16_Objects"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena16_ObjectTrigger by object +0x86: 0x43C9F0 (al 0); a 0 dword follows, then Scena17_RollLines."
+
+[[data]]
+pc = 0x661A20
+name = "Scena17_RollLines"
+ctype = "unsigned long"
+count = 367
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_ScrollRoll's lines: 351 string pointers or 0 (a blank line), -1 at index 351 (0x661F9C); the drawn window runs 15 past the line at the top, so indices 352..366 are read too - 0x661FA0..0x661FD4 (zeros and one more string pointer) and index 366, Scena17_Hooks' first word (0x56C130, read as a string off screen)."
+
+[[data]]
+pc = 0x661FEC
+name = "Scena17_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_Frame's table: Scena17_Start, Scena17_EnterArea, Scena17_Run. Right after Scena17_Hooks."
+
+[[data]]
+pc = 0x661FF8
+name = "Scena17_Parts"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_Run's table on s8 0x8034E3: 0x437CC0, Scena17_Intro, Scena17_Roll, Scena17_Outro."
+
+[[data]]
+pc = 0x662008
+name = "Scena17_Part1Steps"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_Intro's table on s8 MoveScript_Var7: Scena17_Intro00..15."
+
+[[data]]
+pc = 0x662048
+name = "Scena17_Part2Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_Roll's table: Scena17_Roll0..2."
+
+[[data]]
+pc = 0x662054
+name = "Scena17_Part3Steps"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_Outro's table: Scena17_Outro00..12."
+
+[[data]]
+pc = 0x662088
+name = "Scena17_Objects"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_ObjectTrigger's table: 0x43C9F0."
+
+[[data]]
+pc = 0x66208C
+name = "Scena17_GlyphWidths"
+ctype = "unsigned char"
+count = 64
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_DrawLine's advance per glyph (0x40 bytes; a glyph index past it reads Scena17_EndSteps and the strings after, unchecked)."
+
+[[data]]
+pc = 0x6620CC
+name = "Scena17_EndSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena17_EndTask's table on u16 Game_Step: Scena17_EndReturn, Scena17_EndField, Scena17_EndRestart; the roll's strings follow."
+
+[[data]]
+pc = 0x662C44
+name = "Scena18_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena18_Frame's table: 0x5646B0, Scena18_EnterArea, Scena18_Run."
+
+[[data]]
+pc = 0x662C50
+name = "Scena18_Runs"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena18_Run's table: 0x437CC0."
+
+[[data]]
+pc = 0x662C54
+name = "Scena18_Objects"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena18_ObjectTrigger's table: 0x437CC0. Scena19_Hooks follows."
+
+[[data]]
+pc = 0x662C6C
+name = "Scena19_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena19_Frame's table: 0x5646B0, Scena18_EnterArea, Scena19_Run."
+
+[[data]]
+pc = 0x662C78
+name = "Scena19_Runs"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena19_Run's table: Scena19_Run0."
+
+[[data]]
+pc = 0x662C7C
+name = "Scena19_Objects"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28, group SC15: Scena19_ObjectTrigger's table: 0x437CC0. Scenario_Hooks 0x662C80 follows."
