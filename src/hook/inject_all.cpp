@@ -209,6 +209,8 @@
 #include "game/area_w4b.h"
 #include "game/area_w4e.h"
 #include "game/area_w4f.h"
+#include "game/boss_h.h"
+#include "game/boss_spawn.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -724,6 +726,14 @@ void InjectAll() {
                                 // its clones' calls re-aimed at the area harness's recorders, areas 197 and 198's
                                 // state tables swapped for the fuzz only; no module patches bytes inside its 49
                                 // (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossSpawn_Inject();         // round 11 group BH (the boss set-ups' spawn helpers, 0x4948E0..0x494A7D): its
+                                // clones' calls re-aimed at the boss harness's recorders; no module patches bytes
+                                // inside its 6 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossH_Inject();             // round 11 group BH (the boss band's 20 shared helpers, 0x437CA0..0x440829): its
+                                // clones' calls re-aimed at the boss harness's recorders, kinds 8..11's shared
+                                // tables swapped and six kinds' dispatchers driven with a clone planted in their
+                                // tables for the fuzz only; no module patches bytes inside its 20 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

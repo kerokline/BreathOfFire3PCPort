@@ -100,6 +100,16 @@ runs the next table's entries (no op checks its index).
 | `EnemyOp_ActSubsB` / `C` / `E` | `0x64C7E0` / `0x64C840` / `0x64C904` | 6 each | the step-6 ops of those tables, by `+2` | `EnemyOp_ActSubs` with `0x43B550` for the death |
 | `EnemyOp_StepsD` / `E` / `F` | `0x64C890` / `0x64C8D4` / `0x64C928` | 12 each | jumps inside `0x437CC0`'s extent (the event hooks [`battle_flow.md`](battle_flow.md) names) | `EnemyOp_Steps` with their own entries |
 
+**Renamed in round eleven** ([`boss_h.md`](boss_h.md) section 7, 2026-09-28):
+these eight are the boss kinds' own state tables, each jumped through by a
+`BossKind_Table` dispatcher - `EnemyOp_StepsB` / `ActSubsB` are kind 6's
+(`BossGary_Steps` / `_ActSubs`), `C` kind 7's (`BossMogu_*`), `StepsD` kind
+1's (`BossNue_Steps`), `StepsE` / `ActSubsE` kind 2's (`BossNue2_*`),
+`StepsF` kind 46's (`BossSample1_Steps`); "states 7 and 8" above are
+`BossKind_Table` entries 6 and 7, and "`0x437CC0`'s extent" was the
+dispatchers of kinds 1, 2 and 46 (`0x437CC0` itself is a one-byte `ret`,
+`BareRet`). The old names stay in the evidence strings.
+
 Two more tables sit after `EnemyOp_Act5Subs`, at `0x64B250` and `0x64B25C`
 (`pe_xref.py`: a jmp at `0x43703B` and a call at `0x43718B`). Their extents
 were not read, and they are not named.

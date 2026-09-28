@@ -12967,67 +12967,67 @@ evidence = "pe_xref.py 2026-09-25: the jmp of 0x436F00 (0x436F0B, nobody's; Enem
 
 [[data]]
 pc = 0x64C7B0
-name = "EnemyOp_StepsB"
+name = "BossGary_Steps"
 ctype = "unsigned long"
 count = 12
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x437A1B (inside the enemy state 7 handler 0x437A10, nobody's), by +1: EnemyOp_Steps with 0x437A30 and 0x4DF820 (a bare ret) for entries 0 and 1, 0x437A70 (whose jmp 0x437A7B goes through EnemyOp_ActSubsB) for 6 and 0x437A90 for 11 (0x64C7E0 is the next table's)."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_StepsB (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 6 (Gary, area 24): the state table of BossKind_Table[6] 0x437A10 by +1. The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x437A1B (inside the enemy state 7 handler 0x437A10, nobody's), by +1: EnemyOp_Steps with 0x437A30 and 0x4DF820 (a bare ret) for entries 0 and 1, 0x437A70 (whose jmp 0x437A7B goes through EnemyOp_ActSubsB) for 6 and 0x437A90 for 11 (0x64C7E0 is the next table's)."
 
 [[data]]
 pc = 0x64C7E0
-name = "EnemyOp_ActSubsB"
+name = "BossGary_ActSubs"
 ctype = "unsigned long"
 count = 6
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp of 0x437A70 (0x437A7B, nobody's; EnemyOp_StepsB entry 6), by +2: EnemyOp_ActSubs with 0x43B550 for entry 4: 0x436700 0x436720 0x436700 0x436BC0 0x43B550 0x436F00."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_ActSubsB (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 6 (Gary): the +2 table of its state 6 (0x437A70). The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp of 0x437A70 (0x437A7B, nobody's; EnemyOp_StepsB entry 6), by +2: EnemyOp_ActSubs with 0x43B550 for entry 4: 0x436700 0x436720 0x436700 0x436BC0 0x43B550 0x436F00."
 
 [[data]]
 pc = 0x64C810
-name = "EnemyOp_StepsC"
+name = "BossMogu_Steps"
 ctype = "unsigned long"
 count = 12
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x437B7B (inside state 8 0x437B70, nobody's), by +1: as EnemyOp_StepsB with 0x437B90, 0x437BD0 and 0x437BF0 for entries 0, 6 and 11."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_StepsC (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 7 (Mogu, area 24): the state table of BossKind_Table[7] 0x437B70 by +1. The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x437B7B (inside state 8 0x437B70, nobody's), by +1: as EnemyOp_StepsB with 0x437B90, 0x437BD0 and 0x437BF0 for entries 0, 6 and 11."
 
 [[data]]
 pc = 0x64C840
-name = "EnemyOp_ActSubsC"
+name = "BossMogu_ActSubs"
 ctype = "unsigned long"
 count = 6
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x437BDB (nobody's), by +2: as EnemyOp_ActSubsB."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_ActSubsC (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 7 (Mogu): the +2 table of its state 6 (0x437BD0). The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x437BDB (nobody's), by +2: as EnemyOp_ActSubsB."
 
 [[data]]
 pc = 0x64C890
-name = "EnemyOp_StepsD"
+name = "BossNue_Steps"
 ctype = "unsigned long"
 count = 12
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x437EEB (inside 0x437CC0's extent - the event hooks docs/battle_flow.md names - nobody's), by +1: 0x437F00 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437F40 0x4DF820 0x437420."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_StepsD (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 1 (Nue, area 23): the state table of BossKind_Table[1] 0x437EE0 by +1. The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x437EEB (inside 0x437CC0's extent - the event hooks docs/battle_flow.md names - nobody's), by +1: 0x437F00 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437F40 0x4DF820 0x437420."
 
 [[data]]
 pc = 0x64C8D4
-name = "EnemyOp_StepsE"
+name = "BossNue2_Steps"
 ctype = "unsigned long"
 count = 12
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x43807B (inside 0x437CC0's extent), by +1: 0x438090 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4380D0 0x437030 0x437180 0x437240 0x4DF820 0x437420."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_StepsE (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 2 (Nue, area 22): the state table of BossKind_Table[2] 0x438070 by +1. The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x43807B (inside 0x437CC0's extent), by +1: 0x438090 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4380D0 0x437030 0x437180 0x437240 0x4DF820 0x437420."
 
 [[data]]
 pc = 0x64C904
-name = "EnemyOp_ActSubsE"
+name = "BossNue2_ActSubs"
 ctype = "unsigned long"
 count = 6
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x4380DB (inside 0x437CC0's extent), by +2: as EnemyOp_ActSubsB."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_ActSubsE (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 2 (Nue): the +2 table of its state 6 (0x4380D0). The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x4380DB (inside 0x437CC0's extent), by +2: as EnemyOp_ActSubsB."
 
 [[data]]
 pc = 0x64C928
-name = "EnemyOp_StepsF"
+name = "BossSample1_Steps"
 ctype = "unsigned long"
 count = 12
 status = "evidence"
-evidence = "pe_xref.py 2026-09-25: the jmp at 0x43810B (inside 0x437CC0's extent), by +1: 0x438120 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437240 0x4DF820 0x437420."
+evidence = "Renamed 2026-09-28 by round eleven group BH from EnemyOp_StepsF (round seven's name, which read it as the generic enemy state's; the old name is kept here as the alias): Kind 46 (Sample 1, area 158): the state table of BossKind_Table[46] 0x438100 by +1. The dispatcher is the kind's own, entered through BossKind_Table (docs/boss_h.md section 7). Before: pe_xref.py 2026-09-25: the jmp at 0x43810B (inside 0x437CC0's extent), by +1: 0x438120 0x4DF820 0x4363B0 0x4363E0 0x4365D0 0x436620 0x4366E0 0x437030 0x437180 0x437240 0x4DF820 0x437420."
 
 [[func]]
 pc = 0x437470
@@ -67671,3 +67671,332 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR4F): jumped through by Area198_EffectA6Run by the record's +1: Area198_EffectA6Start, Area198_EffectA6Follow. After area 198's descriptor (0x649CC0), so the tool files it under area 199. docs/area_w4f.md."
+
+# --- round eleven, group BH: the boss band's roots, hooks and shared helpers (docs/boss_h.md, docs/boss_harness.md) ---
+
+[[data]]
+pc = 0x656954
+name = "Boss_SetupTable"
+ctype = "unsigned long"
+count = 56
+status = "evidence"
+evidence = "pe_disasm 2026-09-28 (round eleven group BH): Battle_InitBossEncounter 0x4942A0 calls 0x494500, then jmp [eax*4 + 0x656954] at 0x4942AC with eax the event-battle byte 0x904AAA: 56 set-ups by fight id, entry 0 the bare ret BareRet, every other entry a function of the boss band 0x437A00..0x441000 that stores the three hooks BattleHook_End / _Exit / _Event and returns (tools/boss_rows.py, docs/boss-rows.md). The PSX's Boss_EntryTable 0x800B2048 (the sibling's docs/loader_records/BOSS.md section 3), entered by one jalr. docs/takeover-queue-bosses.md section 1.2."
+
+[[data]]
+pc = 0x64B088
+name = "BossKind_Table"
+ctype = "unsigned long"
+count = 63
+status = "evidence"
+evidence = "pe_disasm 2026-09-28 (round eleven group BH): BattleEnemy_RunAll's event-battle table - call [0x64B088 + kind * 4] (0x435876) with the kind the byte +0x100 of 0x939AD8's object - BattleEnemy_States one entry on, the same dwords (so entry 0 is BattleEnemy_States[1], a null). 63 dwords to the first that is not a .text address ([63] is bytes); 61 are dispatchers in the boss band (mov al, [Sprite_Current + 1]; jmp [eax * 4 + the kind's state table]), kinds 19 and 20 are Port_DroppedCall. Battle_CopyEnemyData fills +0x100 from the enemy data record's +0x88. docs/takeover-queue-bosses.md sections 1.2 and 7."
+
+[[data]]
+pc = 0x904B64
+name = "BattleHook_End"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "pe_xref / disasm 2026-09-28 (round eleven group BH): a function pointer stored by the boss set-ups (57 references, every store an immediate of the boss band, and BattleHook_Area189Script by 0x436110) and called call [0x904B64] with nothing pushed from BattleEnd_AwaitMemberTasks 0x431464, once, as the battle's way out is picked - in an event battle the hook picks it (BossHook_EndPickWay: 0x904AA1 1 or 2 through 0x446DE0 / 0x446E00). The plan's 'per-frame script' was a guess the caller does not bear out (docs/boss_harness.md section 2)."
+
+[[data]]
+pc = 0x904B68
+name = "BattleHook_Exit"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "pe_xref / disasm 2026-09-28 (round eleven group BH): a function pointer stored by the boss set-ups (57 references) and called call [0x904B68] with nothing pushed from BattleEnd_ExitHook 0x4317B9 on the way out, once File_LoadDone answers. The boss exit hooks place, pose, show or clear the field actors the fight used (BossActor_*). docs/boss_harness.md section 2."
+
+[[data]]
+pc = 0x904B6C
+name = "BattleHook_Event"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "pe_xref / disasm 2026-09-28 (round eleven group BH): a function pointer stored by the boss set-ups (62 references) and called with one word, a phase code, while 0x904AAA is set: 3 from Battle_PhaseDispatch (phase not 0), 6 from Battle_Init, 1 / 4 / 0 / 5 from the action phases, 2 from BattleRoundEnd_NextRound, which reads its al (0xFF holds the round). BareRetZero (al 0) fills it for 39 set-ups. docs/boss_harness.md section 2."
+
+[[func]]
+pc = 0x4357D0
+name = "BattleBossFx_Dispatch"
+ret = "void"
+params = "void"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4357D0..0x435825 (0x56 bytes), cdecl: BattleTask_RunAll's fourth kind (+6 == 3): call [esp + 4 * byte +5 of the slot 0x93B8C4] through an eight-entry stack table - BareRet, 0x499EB0, 0x43CA20, 0x43EB80, 0x43FAC0, 0x440830, 0x43D6D0, 0x43F5F0 - unchecked. Slots 2..7 are the boss band's effect tasks (tools/boss_rows.py units F2..F7), 1 is not in the band. Named, not taken: engine code of no round-eleven group. docs/takeover-queue-bosses.md section 1.2."
+
+[[func]]
+pc = 0x437CA0
+name = "BossOp_ScriptTick"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH, capstone to the last instruction), 0x437CA0..0x437CA4 (5 bytes): jmp Sprite_ScriptTick - its al the answer. A state entry of the tables of kinds 3, 6, 7, 40 and 8..11 (BossTorast_DeathSubs 1) and seven dwords of .data past the kinds' tables (0x65FA9C..0x6600AC, not read). Fuzz only (BOF3X_SHADOW=boss_h, through kinds 8..11's death dispatcher). docs/boss_h.md."
+
+[[func]]
+pc = 0x437CC0
+name = "BareRet"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x437CC0 (1 byte): ret. Boss_SetupTable[0], every hook a set-up leaves empty, the effect dispatchers' slot 0 (BattleFx_Dispatch, BattleMagicFx_Dispatch, BattleBossFx_Dispatch), the kinds' tables and hook tables, field tables; 455 references engine-wide by a raw scan for its rel32 and imm32. docs/battle_flow.md's 'hooks stored by 0x437CC0' was the pe_funcs extent running on into the set-ups. docs/boss_h.md."
+
+[[func]]
+pc = 0x438EB0
+name = "BossTorast_ActDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x438EB0..0x438EC1 (0x12 bytes): jmp [BossTorast_ActSubs + 4 * Sprite_Current +2], unchecked (ours aborts past its 6). Entry 6 of the +1 tables of kinds 8, 9, 10, 11 (Torast, Kassen, Galtel, Doksen - tools/boss_rows.py --disc; area 27, set-ups 8..11) - the four share this chain; named for the first. EnemyOp_ActDispatch's shape over the kinds' own table. docs/boss_h.md."
+
+[[func]]
+pc = 0x438ED0
+name = "BossTorast_DeathDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x438ED0..0x438EE1 (0x12 bytes): jmp [BossTorast_DeathSubs + 4 * Sprite_Current +3], unchecked (ours aborts past its 2). BossTorast_ActSubs entry 4, the death (EnemyOp_ActSubs 4 is EnemyOp_DeathDispatch). docs/boss_h.md."
+
+[[func]]
+pc = 0x438EF0
+name = "BossTorast_DeathFxDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x438EF0..0x438F01 (0x12 bytes): jmp [BossTorast_DeathFxSteps + 4 * Sprite_Current +4], unchecked (ours aborts past its 4). BossTorast_DeathSubs entry 0. docs/boss_h.md."
+
+[[func]]
+pc = 0x438F10
+name = "BossTorast_DeathFxStart"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x438F10..0x438F39 (0x2A bytes), one call: Sprite_Current +9 and +0xA = 0x40, Sound_PlayEffect(0x601), +4 of Sprite_Current read after the call up by one. BossTorast_DeathFxSteps 0. docs/boss_h.md."
+
+[[func]]
+pc = 0x438F40
+name = "BossTorast_DeathFxFlash"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x438F40..0x438FC5 (0x86 bytes), one call: when Sprite_Current +9 equals +0xA, BattleWin_DrawTileRgb(0, 0, 0xB, the 15-bit colour of 0x939AD8's kind byte +0x100 in BossTorast_Colours (bytes 0x64CA6C + 3 * kind, unchecked), 1) and +0xA of Sprite_Current read after it halved (shr); otherwise +9 down by one. Then +4 up by one when +9 is 0 - a flash at halving intervals from 0x40. BossTorast_DeathFxSteps 1. docs/boss_h.md."
+
+[[func]]
+pc = 0x438FD0
+name = "BossTorast_DeathFxRingGrow"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x438FD0..0x439024 (0x55 bytes), two calls: BossTorast_DrawRing(Sprite_Current +9); then at +9 == 0x30: +0x48 = 2, the dwords +0x40 / +0x44 = 0x10000, Sound_PlayEffect(0x602), +4 up by one; otherwise +9 up by 4. BossTorast_DeathFxSteps 2. docs/boss_h.md."
+
+[[func]]
+pc = 0x439030
+name = "BossTorast_DeathFxRingShrink"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x439030..0x4390DD (0xAE bytes), four calls: BossTorast_DrawRing(Sprite_Current +9); then at +9 == 0: +0x48 = 0, Sprite_SetAnimationBank(0x83), Sprite_SetAnimation(0), Battle_EnemyDefeated, and on Sprite_Current read after them +0 &= 0xBF, +1 = 6, +2 = 4, +3 up by one, +4 = 0; otherwise +9 down by 4 and the s32 +0x40 / +0x44 each down by 0x2000 while above 0, else 0. BossTorast_DeathFxSteps 3. docs/boss_h.md."
+
+[[func]]
+pc = 0x4394A0
+name = "BossTorast_DrawRing"
+ret = "void"
+params = "unsigned radius"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4394A0..0x4396AE (0x20F bytes), eight calls: 64 points (Math_Sin / Math_Cos of i * 0x80, times the radius byte, sar 12 - two laps); Gpu_GetTPage(0, 0, 0x3C0, 0), Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, tpage & 0xFFFF, 0 - the fifth word a push GetTPage's add esp leaves), Gfx_CommitPrim(3, 0xC); then 64 times at Gfx_PacketNext: Gpu_SetPolyG3, colour 0 white, colours 1 and 2 the kind's (BossTorast_Colours), the corners as floats (fild / fstp) - Sprite_Current (+0x2E, +0x30), + point i, + point (i + 1) & 0x1F - Gpu_SetSemiTrans(prim, 1), Gfx_CommitPrim(3, 0x34). Called by the ring steps only. docs/boss_h.md."
+
+[[func]]
+pc = 0x43A4A0
+name = "BossHook_ExitClearActor0"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43A4A0..0x43A4A8 (9 bytes): BossActor_Clear(0). BattleHook_Exit of set-ups 14, 28, 29 (the immediates at 0x43A470, 0x43C9E0, 0x43CE60). docs/boss_h.md."
+
+[[func]]
+pc = 0x43A720
+name = "BossOp_EnterTick"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43A720..0x43A732 (0x13 bytes), one call: Sprite_ScriptTickOnce; al not 0: Sprite_Current (read after) +1 = 2. Entry 1 (state 1) of the +1 tables of kinds 21, 22 and 27 (0x64CF78, 0x64CFB4, 0x64D16C). docs/boss_h.md."
+
+[[func]]
+pc = 0x43A750
+name = "BossHook_RetargetMember0"
+ret = "void"
+params = "unsigned code"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43A750..0x43A760 (0x11 bytes): when the leader's +0x124 (0x802E64, the member's target) is 4, the battle target 0x904B44 = 5. Entry 0 of the +0xF4 hook tables of kinds 21, 22, 23 (0x64CFA8, 0x64CFE4, 0x64D020; the hook called with 0 by 0x435BF5); its word not read. docs/boss_h.md."
+
+[[func]]
+pc = 0x43B0D0
+name = "BossMap_SetCorners"
+ret = "void"
+params = "unsigned cell, unsigned value"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43B0D0..0x43B126 (0x57 bytes), no calls: AreaMap_Corners[width * (y + j) + x + i] = BossMap_CornerValues[value] for i, j in 0..1, (x, y) the bytes BossMap_CornerCells[cell], width the byte AreaMap_Header +0 read for each. Both indexes whole dwords, unchecked (ours aborts past 2 and 3). Called by kind 26's 0x43AA70 (cell by +5 == 4, value 2) and BossMap_UpdateFromEnemies. docs/boss_h.md."
+
+[[func]]
+pc = 0x43B130
+name = "Boss_SetByLeaderId"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43B130..0x43B17F (0x50 bytes with its seven-entry jump table at +0x34): by the leader's character id 0x802DC9 (above 6: nothing): 0 / 1 / 5 / 6 set the byte 0x92BF18 to 0x2C / 0x2D / 0x2E / 0x2F, 2..4 nothing. Called five times by set-ups 18..20's hooks before 0x446E20; what 0x92BF18 selects (read by field code 0x532EB4) was not read. docs/boss_h.md."
+
+[[func]]
+pc = 0x43B180
+name = "BossMap_UpdateFromEnemies"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43B180..0x43B27D (0xFE bytes), twelve calls: for enemy objects 1 (0x93BA88) then 2 (0x93BBB0), unless +0x93 has 0x40: with 0x20 flag 0x34 (0x33) of [0x929ED0] set, Sprite_Current = the enemy, Sprite_EnsureAnimation(3), BossMap_SetCorners(1 (0), 1); without, the flag cleared, Sprite_EnsureAnimation(2), BossMap_SetCorners(.., 0). Then the words +0x3E of enemy 0 and of the leader = AreaMap_Elevation of their +0x34 / +0x38, and with the leader's +0x134 bit 1, 0x939B1C = its +0x3C. Called by set-ups 18..20's event hooks with phase 5. docs/boss_h.md."
+
+[[func]]
+pc = 0x43B550
+name = "BossOp_Death"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43B550..0x43B597 (0x48 bytes), two calls: Sprite_ScriptTickOnce (answer not read), Battle_EnemyDefeated, 0x939AD8's +0x110 |= 0x1000, Sprite_Current +0 &= 0xBF, +1 = 3, +2 = 0, +3 = 0. Entry 4 (the death) of the +2 tables of kinds 2, 3, 6, 7, 18, 27 (BossGary_ActSubs, BossMogu_ActSubs, BossNue2_ActSubs, 0x64C9B4, 0x64CEE0, 0x64D19C). docs/boss_h.md."
+
+[[func]]
+pc = 0x43C9F0
+name = "BareRetZero"
+ret = "unsigned char"
+params = "unsigned code"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43C9F0..0x43C9F2 (3 bytes): xor al, al; ret. BattleHook_Event of 39 set-ups (47 references, some in field .data tables 0x6619F0..0x663B80): al 0 whatever the phase code, so BattleRoundEnd_NextRound's round goes on. The original clears al only; ours all of eax. docs/boss_h.md."
+
+[[func]]
+pc = 0x43EB60
+name = "BossHook_EndPickWay"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x43EB60..0x43EB79 (0x1A bytes), two tail jumps: 0x904AE8 bit 1 (the win): 0x8034E5 = 5 and jmp 0x446DE0 (0x904AA0 = 5, 0x904AA1 = 1, 0x904AA2 = 0); otherwise jmp 0x446E00 (the same with 0x904AA1 = 2). BattleHook_End of ten set-ups (39..48 by the tool: chapter 15's). docs/boss_h.md."
+
+[[func]]
+pc = 0x440820
+name = "BossHook_ExitActor0Bit40"
+ret = "void"
+params = "void"
+impl = "src/game/boss_h.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x440820..0x440828 (9 bytes): BossActor_ClearBit40(0). BattleHook_Exit of set-ups 3, 17, 55 (the immediates at 0x438220, 0x43A630, 0x4406F0). docs/boss_h.md."
+
+[[data]]
+pc = 0x64CA84
+name = "BossTorast_Colours"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BH): kinds 8..11's colours, three bytes (r, g, b) a kind, read by BossTorast_DeathFxFlash and BossTorast_DrawRing at 0x64CA6C + 3 * kind (their code writes it as 0x64CA6C / 0x64CA6D and 0x64CA86 + 3 * (kind - 8)); the kind byte is not checked, so another kind reads the .data around. Kind 8's table header follows. docs/boss_h.md."
+
+[[data]]
+pc = 0x64CAD4
+name = "BossTorast_ActSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BH): jumped through by BossTorast_ActDispatch by Sprite_Current +2: EnemyOp_ActBegin, EnemyOp_HitDispatch, EnemyOp_ActBegin, 0x436BC0, BossTorast_DeathDispatch, 0x436F00 - EnemyOp_ActSubs with kinds 8..11's death for entry 4. docs/boss_h.md."
+
+[[data]]
+pc = 0x64CAEC
+name = "BossTorast_DeathSubs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BH): jumped through by BossTorast_DeathDispatch by +3: BossTorast_DeathFxDispatch, BossOp_ScriptTick. docs/boss_h.md."
+
+[[data]]
+pc = 0x64CAF4
+name = "BossTorast_DeathFxSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BH): jumped through by BossTorast_DeathFxDispatch by +4: BossTorast_DeathFxStart, _DeathFxFlash, _DeathFxRingGrow, _DeathFxRingShrink. Kind 8's +0xF4 hook table 0x64CB04 (by 0x4390E0) follows. docs/boss_h.md."
+
+[[data]]
+pc = 0x64D090
+name = "BossMap_CornerCells"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BH): BossMap_SetCorners' two block corners, (x, y) byte pairs by its first argument. docs/boss_h.md."
+
+[[data]]
+pc = 0x64D094
+name = "BossMap_CornerValues"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round eleven group BH): BossMap_SetCorners' three corner dwords (a height byte repeated in each), by its second argument; kind 24's table header follows at 0x64D0A0. docs/boss_h.md."
+
+[[func]]
+pc = 0x4948E0
+name = "EnemyData_FindByTag"
+ret = "unsigned char"
+params = "unsigned tag"
+impl = "src/game/boss_spawn.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4948E0..0x494919 (0x3A bytes), no calls: the index 0..7 of the first of the loaded area's eight enemy data records (0x8C55C8 + i * 0x8C) whose byte +0xC equals the tag's low byte, or 0xFF - in al, the caller's upper eax kept. Called by two boss units. docs/boss_h.md section 5."
+
+[[func]]
+pc = 0x494920
+name = "BossActor_Find"
+ret = "unsigned char *"
+params = "unsigned tag"
+impl = "src/game/boss_spawn.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x494920..0x49497C (0x5D bytes), no calls: the first of the 30 field objects (Sprite_Objects 0x7DEE80, stride 0xA4) whose type +6 is 7 and whose +0x9E is the tag's low byte, or null. Called by 15 boss units (which write through it untested: docs/boss_h.md section 6), the three below, and 0x494570 (which tests it). docs/boss_h.md section 5."
+
+[[func]]
+pc = 0x494980
+name = "BossActor_Index"
+ret = "unsigned char"
+params = "unsigned tag"
+impl = "src/game/boss_spawn.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x494980..0x4949C1 (0x42 bytes), no calls: BossActor_Find's search answering the index 0..29 in al, or 0xFF (the caller's upper eax kept). Called by two boss units. docs/boss_h.md section 5."
+
+[[func]]
+pc = 0x4949D0
+name = "BossActor_ClearBit40"
+ret = "void"
+params = "unsigned tag"
+impl = "src/game/boss_spawn.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4949D0..0x4949E4 (0x15 bytes), one call: BossActor_Find(tag)'s +0 &= 0xBF, the answer untested (null faults; ours aborts). Called by 22 boss units. docs/boss_h.md section 5."
+
+[[func]]
+pc = 0x4949F0
+name = "BossActor_CopyFrom"
+ret = "void"
+params = "unsigned tag, const unsigned char *from, unsigned what"
+impl = "src/game/boss_spawn.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4949F0..0x494A55 (0x66 bytes), one call: p = BossActor_Find(tag); by what's low byte - 0: from's +0x4B, the dwords +0x50 / +0x54, the words +0x58 / +0x5A to p's, p +7 |= 0x20; 1: the dwords +0x34 / +0x38 / +0x3C; else nothing. p untested (null faults for 0 and 1; ours aborts). Called by 9 boss units, Boss01's exit hook with (6, enemy 0, 1) and (7, enemy 1, 1). docs/boss_h.md section 5."
+
+[[func]]
+pc = 0x494A60
+name = "BossActor_Clear"
+ret = "void"
+params = "unsigned tag"
+impl = "src/game/boss_spawn.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x494A60..0x494A7D (0x1E bytes), one call: BossActor_Find(tag)'s bytes +0..+4 zeroed, untested (null faults; ours aborts). Called by 7 boss units. docs/boss_h.md section 5."
