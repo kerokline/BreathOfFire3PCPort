@@ -58242,3 +58242,671 @@ ctype = "char"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR1F): Area75_DrawCounters' Crt_sprintf format (two numbers); length not measured. docs/area_w1f.md."
+
+# --- round ten group AR3F: world 3, areas 143..146, 0x420800..0x4223A0 (docs/area_w3f.md) ---
+
+[[func]]
+pc = 0x420800
+name = "Area143_ChoiceAsk52"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420800..0x420840 (0x41 bytes), cdecl: area 143 +0x34[0] (Area143_Choices): answer byte 0x7DEE67 not 0: message word 0x54 and the byte 0x9398CF = 6; 0: the dword 0x904650 equal to 0x3FFFF: message 0x52; else message 0x53 and 0x9398CF = 6. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420850
+name = "Area143_ChoiceYesMark3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420850..0x420869 (0x1A bytes), cdecl: area 143 +0x34[1], and the choice / handler tables of areas 3, 37, 41, 50, 55, 59, 61, 68, 74, 91, 98, 113 and 116 (tools/area_rows.py shared row): answer byte not 0: the byte 0x9398D1 = 3; message 0xFFFF either way. No reader of 0x9398D1 read. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420870
+name = "Area143_ChoiceYesMark5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420870..0x420889 (0x1A bytes), cdecl: area 143 +0x34[2] and the same fourteen areas' tables: answer byte not 0: 0x9398D1 = 5; message 0xFFFF either way. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420890
+name = "Area143_ChoiceAsk54"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420890..0x4208B3 (0x24 bytes), cdecl: area 143 +0x34[3] and [4]: answer not 0: message 0x54 and 0x9398CF = 6; 0: message 0xFFFF. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4208C0
+name = "Area143_ChoiceMessage49"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x4208C0..0x4208D6 (0x17 bytes), cdecl: area 143 +0x34[5]: message 0x49 + (answer not 0), a word. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4208E0
+name = "Area143_ChoiceRun8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x4208E0..0x420934 (0x55 bytes), cdecl: area 143 +0x34[6]: answer not 0: message 0x4C. 0: ScriptFlags_Set40; the message word (read after the call) 0x44: MoveScript_Var7 8, the byte 0x8034E5 8, message 0x4B and the focus object's (0x903804) word +0x8A + 1; else Var7 8, 0x8034E5 0xA, message 0xFFFF. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420940
+psx = 0x801F3C10
+name = "Area143_ChangeArea70"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420940..0x420959 (0x1A bytes), cdecl: area 143 +0x3C[0] = +0x34[9], area 145 +0x3C[2] = +0x34[3], area 146 +0x3C[0] (PSX 0x801F3C10, 0x801F3FD8, 0x801F2C04 by names/area_records.toml): Field_ChangeArea(0x70, 0xC8000, 0x580000, 0x81). docs/area_w3f.md."
+
+[[func]]
+pc = 0x420960
+psx = 0x801F3C74
+name = "Area143_MessageByMember"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420960..0x4209EA (0x8B bytes), cdecl: area 143 +0x3C[2] = +0x34[11] (PSX 0x801F3C74): for each of Area143_MemberKeys (4 bytes) in turn, each of Field_MemberCount's party records (count read once, unsigned, not bounded by 3): the first whose +0x89 is the key: Msg_OpenScript(Area143_MemberMessages[key]) and Field_Request 2. None: nothing. Areas 145's handlers 4..6 are the same body with their own tables. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4209F0
+psx = 0x801F3D38
+name = "Area143_SkipIfLeader89Is7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x4209F0..0x420A08 (0x19 bytes), cdecl: area 143 +0x3C[3] = +0x34[12], also area 197 +0x3C[9] (PSX 0x801F3D38): Field_State +0x89 equal to 7: MoveScript_Object word +0xA (the script position) + 3. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420A10
+name = "Area143_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420A10..0x420A5A (0x4B bytes), cdecl: Area_StepHook's case for area 0x8F (x at +4, z at +8): Cond_ByteFD 1, (x high word - 0x37) below 3 and (z high word - 0x64) below 3 as 16-bit, the leader's pose byte 0x802D48 0, 7 or 6: counter 0x903848 = 0, Party_DropIn(0), al 1. Else al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420A60
+name = "Area143_Trigger50"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420A60..0x420A8C (0x2D bytes), cdecl: Field_ObjectTriggers[50] (a gap of the tool, in area 143's block), its (object, flags) unread: ScriptFlags_Set40; Cond_ByteFE read after the call; tail kind 0x9039F3 = 4 (engine) and sub-kind 0x9039F5 = 0xF; Cond_ByteFE 0: set to 1 and the tail state 0x9039F4 = 5 (else the state is left). al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420A90
+name = "Area143_ClutShiftRight"
+ret = "unsigned char"
+params = "unsigned shift"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420A90..0x420AF9 (0x6A bytes), cdecl: called only by chapter 12's scene code (0x562027 and 0x5620BA, with 1; scena_sc13 calls it by raw address): for the 11 x 256 CLUT words from 0x80BB80 (Gfx_ClutStripSource + 0x600) while the pointer is below 0x80D180 (signed): each 5-bit channel shifted right by the argument's low byte (x86 masks the count to 5 bits), bit 15 kept, stored 0x4000 on (Gfx_ClutStrip + 0x600); then Gfx_ClutStripDirty = 1, al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420B00
+name = "Area143_EffectB3Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420B00..0x420B11 (0x12 bytes), cdecl: Effect_KindHandlers entry 0xB3 (0x65561C): jmp [Area143_EffectStates + Sprite_Current[1] * 4], unchecked; ours aborts past its two entries. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420B20
+name = "Area143_EffectB3Cylinder"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420B20..0x420B4A (0x2B bytes), cdecl: Area143_EffectStates[1] (state 0 is Area59_EffectGround 0x40B4F0): the running record's dwords +0x34, +0x38, +0x3C copied to a stack vector and handed to Area143_DrawGlowCylinder. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420B50
+name = "Area143_DrawGlowCylinder"
+ret = "void"
+params = "const long *point"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA143), 0x420B50..0x420DCA (0x27B bytes), cdecl: called only by Area143_EffectB3Cylinder: the map camera (0x494060); a ring of 16 POLY_G4, semi-transparent (abr 1), about the point's (x, z) at radius (Math_Cos / Math_Sin << 9) >> 4, each quad's four vertices projected by 0x494110 from (x, z, y) and (x, z, y + 0x8000000) at the previous and the new angle (+0x100 a quad); vertex grey (Frame_Counter & 1) + 8 << 2, stepping by 4 each quad (down over quads 4..11, up otherwise); each linked by MapView_LinkPrimAt (0x44) between a draw-mode packet with dtd 1 and one with dtd 0 (tpage Gpu_GetTPage(0, 1, 0x3C0, 0), 0xC each). Area 146's 0x4220D0 is the same code with another stack frame (capstone compare: 118 of 205 instructions differ only in stack offsets and register choice). docs/area_w3f.md."
+
+[[func]]
+pc = 0x420DD0
+psx = 0x801F3818
+name = "Area144_SceneByRowFlags"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x420DD0..0x420F99 (0x1CA bytes), cdecl: area 144 +0x3C[0] (PSX 0x801F3818): by the chapter row's (the pointer at 0x929ED0) flags 0x17..0x1B, the first clear, and the leader's +0x89 (0x802DC9): MoveScript_Object +3 = 2; 3 or 4 (with flag 0x18 set); 5, 6 or 7 (with 0x19 set); 8, 9 or 0xA; 0xC or 0xD (with 0x1B set); all set: +3 left. The script position word = 0xFFFE (stored, not added) every way out, twice on the first. The object pointer read again after every call. docs/area_w3f.md."
+
+[[func]]
+pc = 0x420FA0
+psx = 0x801F3A20
+name = "Area144_WalkToZ1D8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x420FA0..0x420FF4 (0x55 bytes), cdecl: area 144 +0x3C[1] (PSX 0x801F3A20): d = (0x1D8000 - Sprite_Current +0x38) >> 15 (32-bit, arithmetic); not 0: MoveScript_Object +7 = |d|, Sprite_Current +8 = 1 (d negative) or 5, MoveCmd_Move(the script object, +8). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421000
+psx = 0x801F3AB4
+name = "Area144_SkipIfMember3Is4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x421000..0x421013 (0x14 bytes), cdecl: area 144 +0x3C[2] (PSX 0x801F3AB4): the third party record's +0x89 (0x803061) 4: the script position + 3. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421020
+psx = 0x801F3AEC
+name = "Area144_SkipIfMember3Is2"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x421020..0x421033 (0x14 bytes), cdecl: area 144 +0x3C[3] (PSX 0x801F3AEC): 0x803061 equal to 2: the script position + 3. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421040
+psx = 0x801F3B24
+name = "Area144_WalkToZ1C0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x421040..0x421085 (0x46 bytes), cdecl: area 144 +0x3C[4] (PSX 0x801F3B24): d = (0x1C0000 - Sprite_Current +0x38) >> 15; not 0: Sprite_Current +8 = 1, MoveScript_Object +7 = |d|, MoveCmd_Move(the script object, +8). Then the byte 0x9039A2 (Field_ScriptFlags) | 8 either way. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421090
+psx = 0x801F3BAC
+name = "Area144_SpawnEffect85"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x421090..0x4210EA (0x5B bytes), cdecl: area 144 +0x3C[5] (PSX 0x801F3BAC): Effect_FindFree; 0xFF: the script position - 2. Else the record +0 = 1, +5 = 0x85, +6 = (Field_ActiveMember - Sprite_Objects) / 0xA4 (signed, truncated; magic 0x63E7063F). docs/area_w3f.md."
+
+[[func]]
+pc = 0x4210F0
+psx = 0x801F3C78
+name = "Area144_MoveKind2Here"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x4210F0..0x42112D (0x3E bytes), cdecl: area 144 +0x3C[6] (PSX 0x801F3C78): Sprite_Kind2 +0x34, +0x38, +0x3C = Sprite_Current's; +0x84 = MoveScript_Object +4; +0x87 = 1; MoveCmd_MoveKind2(3). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421130
+psx = 0x801F3CE4
+name = "Area144_ChoiceCounter1E"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x421130..0x42114B (0x1C bytes), cdecl: area 144 +0x34[0] = +0x3C[7] (PSX 0x801F3CE4): message 0xFFFF; counter 0x903848 = 0x23 for an answer not 0, else 0x1E. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421150
+psx = 0x801F3D14
+name = "Area144_ChoiceDropIn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA144), 0x421150..0x42118A (0x3B bytes), cdecl: area 144 +0x34[1] = +0x3C[8] (PSX 0x801F3D14): message 0xFFFF; answer 0: counter 0x903848 = 5, Party_DropIn(6), MoveScript_Var7 7, 0x8034E5 0x14; else Party_DropIn(5). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421190
+name = "Area145_ChoiceRun3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421190..0x4211BD (0x2E bytes), cdecl: area 145 +0x34[0]: message 0xFFFF; answer not 0: counter 0x903848 = 8; 0: MoveScript_Var7 3, counter 0 0xA, 0x8034E5 0xA. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4211C0
+psx = 0x801F3CE4
+name = "Area145_PartyRecord16"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x4211C0..0x421217 (0x58 bytes), cdecl: area 145 +0x3C[0] = +0x34[1] (PSX 0x801F3CE4): i = (Field_ActiveMember - Sprite_ObjectsExtra) / 0xA4 (signed, truncated) as a byte, to 0x903851; MoveScript_PartyRecords record i (16 bytes): +2 = 0x10, +1 = 0, dword +0xC = 0x200 / (s8) +2 read back (0x20); MoveScript_Object +0 | 8. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421220
+psx = 0x801F3DCC
+name = "Area145_RunDrop"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421220..0x421231 (0x12 bytes), cdecl: area 145 +0x3C[1] = +0x34[2] (PSX 0x801F3DCC): jmp [Area145_DropStates + Sprite_Current[4] * 4], unchecked; ours aborts past its two entries. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421240
+name = "Area145_DropStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421240..0x4212ED (0xAE bytes), cdecl: Area145_DropStates[0]: Sprite_Current +0 & 0xBF; word +0x3E = MapView_GroundAt(+0x34, +0x38) + 0x7D0; +0xC, +0x10, +0x14 = 0; +0x20 = -8; +4 = 1 (Sprite_Current read again for every store); Sprite_SetAnimation(0x3B); MoveScript_Object +0 | 0x40, +1 = ((Field_State - ObjTrio) / 0x14C) x 0x14 as a byte (imul cl); the script position - 2. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4212F0
+name = "Area145_DropFall"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x4212F0..0x421367 (0x78 bytes), cdecl: Area145_DropStates[1]: +0x14 += +0x20; Field_LeaderStepTick; MapView_GroundAt(+0x34, +0x38) as s16 above the s16 +0x3E: +0x3E = it, +0x14 and +0x20 0, +4 = 2, Sprite_SetAnimation(0x39), MoveScript_Object +1 = 4; else the script position - 2. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421370
+psx = 0x801F403C
+name = "Area145_MessageByMember1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421370..0x4213FA (0x8B bytes), cdecl: area 145 +0x3C[4] = +0x34[5] (PSX 0x801F403C): Area143_MessageByMember's body with Area145_MemberKeys1 (0x6336EC) and its messages (0x6336F0). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421400
+psx = 0x801F4100
+name = "Area145_MessageByMember5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421400..0x42148A (0x8B bytes), cdecl: area 145 +0x3C[5] = +0x34[6] (PSX 0x801F4100): the same with 0x6336F8 / 0x6336FC. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421490
+psx = 0x801F41C4
+name = "Area145_MessageByMemberB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421490..0x42151A (0x8B bytes), cdecl: area 145 +0x3C[6] = +0x34[7] (PSX 0x801F41C4): the same with 0x633704 / 0x633708. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421520
+psx = 0x801F4288
+name = "Area145_GiveKeyItemB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421520..0x421564 (0x45 bytes), cdecl: area 145 +0x3C[7] = +0x34[8] (PSX 0x801F4288): the 16 bytes at Item_NamePtr(4, 0xB) copied to Text_Records dword by dword; KeyItem_Add(0xB); Msg_OpenSystem(2); Field_Request 2. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421570
+psx = 0x801F4304
+name = "Area145_SkipIfKeyItemB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421570..0x421588 (0x19 bytes), cdecl: area 145 +0x3C[8] = +0x34[9] (PSX 0x801F4304): KeyItem_Has(0xB) not 0: the script position + 3. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421590
+name = "Area145_Trigger40"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421590..0x4215AC (0x1D bytes), cdecl: Field_ObjectTriggers[40] (a gap of the tool), its arguments unread: ScriptFlags_Set40; tail kind 0x2C (engine), state 0, sub-kind 0xF. al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4215B0
+name = "Area145_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x4215B0..0x421653 (0xA4 bytes), cdecl: Area_StepHook's case for area 0x91: Cond_ByteFD 0: z exactly 0x98000, (x high - 0x1B) and (the leader's word 0x802D76 - 0x1B) below 2 as 16-bit: ScriptFlags_Set40, tail kind 20 (0x14) at state 0x19, al 1. Cond_ByteFD 4: Flags_Test(0x904030, 0x2D), (x high - 9) and (z high - 0x62) below 3, the pose 0, 7 or 6: counter 0 = 0, Party_DropIn(3), al 1. Else al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421660
+name = "Area145_CellHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421660..0x4216CE (0x6F bytes), cdecl: Area_CellHooks' record for area 0x91 (through Area_CellHook): the first of Area145_CellRecords' seven (x byte, z byte, pose in the low nibble, a state) matching the low bytes of x and z and the leader's pose byte (read once): Flags_Test(0x903FF8 = Cond_Flags row 13, 9) set: ScriptFlags_Set40, the tail state = the record's +3 (read after the call), kind 20, al 1. None or clear: al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4216D0
+name = "Area145_Tail20"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x4216D0..0x421B1A (0x44B bytes), cdecl: Field_ModeTailKinds[20]: by the s8 state - 2 through a byte table of 35 (+0x428) into a jump table of 18 (+0x3E0), both inside the extent: states 2, 4, 6 (armed by the cell hook) counter 3 = the state, state 8; 8 waits for counter 3 = 0 and disarms (ScriptFlags_Clear40); 0xA story flag 0x2C, sound 0x200, Kind2_Place(0), an effect of kind 0x13 (slot at 0x903850; none: stays); 0xB waits for counter 3 = 0x40 (timer 0, sound 0x204); 0xC timer + 1 and Area145_TrailStart(timer): 1 waits, 0 with flag 0x2D clear sounds 0x205 / 0x207 and state 0x1E, else sound 0x205 and state 0x14; 0x14 a kind 0x13 effect, Field_Kind2X / Z the leader's; 0x15 waits for Field_Kind2Hold; 0x16 clears 0x2C and disarms; 0x19..0x1A the leader's +1..+3, 0x17 frames, Field_ChangeArea(0x91, 0x3B8000, 0x5D0000, 0x82), flag 0x2E (sound 0x20C the first time); 0x1E..0x24 Transition_Start 8 and 9, a kind 0x3E effect, waits on Field_Kind2Hold / MoveScript_WaitWordDA / the timer, flag 0x2D, two area 0x91 changes, back to 0x16. Every other state (0, 1, 3, 5, 7, 9, 0xD..0x13, 0x17, 0x18, 0x1B..0x1D, above 0x24, negative) does nothing. 25 calls. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421B20
+name = "Area145_TrailStart"
+ret = "unsigned char"
+params = "unsigned t"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421B20..0x421B86 (0x67 bytes), cdecl: called by Area145_Tail20 with the timer word: the start trail Area145_SpawnTrail(0x428000, 0x638000, 0x428000 - min(t, 5) << 16, 0x638000); t (16-bit) below 5: al 1; 5: sound 0x206; 5 and above: Area145_TrailLeg0(t), al its answer while t is at most 0x37, 2 past it. docs/area_w3f.md."
+
+[[func]]
+pc = 0x421B90
+name = "Area145_TrailLeg0"
+ret = "unsigned char"
+params = "unsigned t"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421B90..0x421C84 (0xF5 bytes), cdecl: called by Area145_TrailStart: record q of Area145_TrailLegs0 (q = Sprite_ObjectsExtra record 0's dword +0x6C >> 9 & 3); d = t - 5 (16-bit); the trail from (0x3D8000, 0x638000) to record 0's (x, z) + min(d, length) x the cell delta (0x66971C, s8 << 16) of the leg's direction; d below the length or no next: al 1; else sound 0x206 at d equal to the length and Area145_TrailLeg1(t - 5, next). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421C90
+name = "Area145_TrailLeg1"
+ret = "unsigned char"
+params = "unsigned t, unsigned k"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421C90..0x421DAA (0x11B bytes), cdecl: called by Area145_TrailLeg0: extra object record k (low byte): table Area145_TrailLegs1A for k 1, 1B else, record by k's quarter (+0x6C >> 9 & 3; stored over the argument's low byte); d = t - 5; the trail from record k's (x, z) along the leg; d below the length or no next: al 1; else sound 0x206 at equality and Area145_TrailLeg2(t - 5, next). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421DB0
+name = "Area145_TrailLeg2"
+ret = "unsigned char"
+params = "unsigned t, unsigned k"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421DB0..0x421E9B (0xEC bytes), cdecl: called by Area145_TrailLeg1: the same with Area145_TrailLegs2A / 2B and d = t - 10; d below the length: al 1, else al the record's +2 (0 or 2). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421EA0
+name = "Area145_SpawnTrail"
+ret = "unsigned char"
+params = "long x0, long z0, long x1, long z1"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421EA0..0x421F07 (0x68 bytes), cdecl: called by the four trail functions: Effect_FindFree to 0x903850; 0xFF: al 1. Else the record +0 = 1, +5 = 0x3F, +0xC x0, +0x10 z0, +0x18 x1, +0x1C z1, +0x20 and +0x14 0x500000; al 0 (the callers ignore it). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421F10
+name = "Area145_DrawGradient"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421F10..0x421FAB (0x9C bytes), cdecl: EffectKind18_States entry 96 (0x6541EC; a gap of the tool, in area 145's block): Cond_ByteFE not 0: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x95, 0), Gfx_CommitPrim(7, 0xC); a POLY_G4 at Gfx_PacketNext, Gpu_SetSemiTrans 0, vertices (0, 0), (320, 240) as floats in the PC's 0x10-byte vertex layout, colour (0, 0xC8, 0xFF) above and (0, 0, 0x20) below; Gfx_CommitPrim(7, 0x44). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421FB0
+psx = 0x801F4008
+name = "Area145_ClearTint"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA145), 0x421FB0..0x421FC6 (0x17 bytes), cdecl: area 145 +0x3C[3] = +0x34[4], also +0x3C[1] of areas 36, 59, 100, 112, 116, 146 and area 143 +0x34[10] (PSX 0x801F4008 for area 145): Sprite_Current +0x48 = 0; Sprite_ReleaseTint(Sprite_Current read again). docs/area_w3f.md."
+
+[[func]]
+pc = 0x421FD0
+psx = 0x801F2C68
+name = "Area146_LeaderBit138OtSlot"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x421FD0..0x421FF2 (0x23 bytes), cdecl: area 146 +0x3C[2] (PSX 0x801F2C68): Field_State +0x138 bit 0 cleared; Sprite_Current +0x29 = Draw_OtSlot. docs/area_w3f.md."
+
+[[func]]
+pc = 0x422000
+name = "Area146_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x422000..0x42205D (0x5E bytes), cdecl: Area_StepHook's case for area 0x92: Cond_ByteFD 1, Flags_Test(0x904030, 0x33), (x high - 0x44) and (z high - 0x2A) below 3 as 16-bit, the pose 0, 7 or 6: counter 0 = 0, Party_DropIn(0), al 1. Else al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x422060
+name = "Area146_Trigger32"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x422060..0x42207C (0x1D bytes), cdecl: Field_ObjectTriggers[32] (a gap), its arguments unread: ScriptFlags_Set40; tail kind 0x2C, state 0, sub-kind 4. al 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x422080
+name = "Area146_EffectB4Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x422080..0x422091 (0x12 bytes), cdecl: Effect_KindHandlers entry 0xB4 (0x655620): jmp [Area146_EffectStates + Sprite_Current[1] * 4], unchecked; ours aborts past its two. docs/area_w3f.md."
+
+[[func]]
+pc = 0x4220A0
+name = "Area146_EffectB4Cylinder"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x4220A0..0x4220CA (0x2B bytes), cdecl: Area146_EffectStates[1] (state 0 Area59_EffectGround): the running record's +0x34, +0x38, +0x3C to a stack vector, Area146_DrawGlowCylinder(&vector). docs/area_w3f.md."
+
+[[func]]
+pc = 0x4220D0
+name = "Area146_DrawGlowCylinder"
+ret = "void"
+params = "const long *point"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x4220D0..0x422349 (0x27A bytes), cdecl: Area143_DrawGlowCylinder's code in another stack frame (the prim stores and calls the same, in the same order). Called by Area146_EffectB4Cylinder and by the like effect states of areas 36 (0x405022), 59 (0x40B542), 100 (0x4144D2), 112 and 116 and by engine effect states at 0x475CE2 and 0x47EF32 (the tool's shared row). docs/area_w3f.md."
+
+[[func]]
+pc = 0x422350
+name = "Area146_ClearFlag46"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x422350..0x422366 (0x17 bytes), cdecl: area 148 +0x3C[1] = +0x34[3], area 167 +0x3C[1] = +0x34[6] (in area 146's block; no area 146 table names it): Flags_Clear(0x904030, 0x46); Cond_ByteFE = 0. docs/area_w3f.md."
+
+[[func]]
+pc = 0x422370
+name = "Area146_ToExtraObject0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3f.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3F, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA146), 0x422370..0x42239B (0x2C bytes), cdecl: area 148 +0x3C[2] = +0x34[4], area 149 +0x3C[0], area 167 +0x3C[8] = +0x34[13] (in area 146's block): Sprite_Current +0x34, +0x38, +0x3C = Sprite_ObjectsExtra record 0's, Sprite_Current read again for each. docs/area_w3f.md."
+
+[[data]]
+pc = 0x630C48
+name = "Area143_Choices"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 143 descriptor 0x630C80 +0x34: 13 choice handlers; entries 9..12 are Area143_Handlers 0..3; 7 is 0x425C30 (world 4's block), 8 Area22_ArmTailOnYes, 10 Area145_ClearTint. docs/area_w3f.md."
+
+[[data]]
+pc = 0x630C6C
+name = "Area143_Handlers"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 143 descriptor +0x3C: Area143_ChangeArea70, Area145_ClearTint, Area143_MessageByMember, Area143_SkipIfLeader89Is7 (PSX 0x801F3C10, 0x801F3C40, 0x801F3C74, 0x801F3D38). docs/area_w3f.md."
+
+[[data]]
+pc = 0x630CC4
+name = "Area143_MemberKeys"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): read by Area143_MessageByMember: the four +0x89 values it looks for among the party records, in order. docs/area_w3f.md."
+
+[[data]]
+pc = 0x630CC8
+name = "Area143_MemberMessages"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): read by Area143_MessageByMember: the message word for each key. docs/area_w3f.md."
+
+[[data]]
+pc = 0x630CD0
+name = "Area143_EffectStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): jumped through by Area143_EffectB3Run by the record's +1: Area59_EffectGround, Area143_EffectB3Cylinder; the next dword is not code. docs/area_w3f.md."
+
+[[data]]
+pc = 0x631748
+name = "Area144_Handlers"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 144 descriptor 0x631770 +0x3C: 0x420DD0..0x421150; entries 7 and 8 are Area144_Choices. docs/area_w3f.md."
+
+[[data]]
+pc = 0x631764
+name = "Area144_Choices"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 144 descriptor +0x34: Area144_ChoiceCounter1E, Area144_ChoiceDropIn (the tail of Area144_Handlers). docs/area_w3f.md."
+
+[[data]]
+pc = 0x633670
+name = "Area145_Choices"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 145 descriptor 0x6336A0 +0x34: Area145_ChoiceRun3, then Area145_Handlers' eleven. docs/area_w3f.md."
+
+[[data]]
+pc = 0x633674
+name = "Area145_Handlers"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 145 descriptor +0x3C: 0x4211C0, 0x421220, Area143_ChangeArea70, Area145_ClearTint, 0x421370, 0x421400, 0x421490, 0x421520, 0x421570, Area57_StopMusic, Area57_ResumeSound. docs/area_w3f.md."
+
+[[data]]
+pc = 0x6336E4
+name = "Area145_DropStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): jumped through by Area145_RunDrop by Sprite_Current[4]: Area145_DropStart, Area145_DropFall; the next dword is not code. docs/area_w3f.md."
+
+[[data]]
+pc = 0x6336EC
+name = "Area145_MemberKeys1"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_MessageByMember1's keys; its four message words follow at 0x6336F0. docs/area_w3f.md."
+
+[[data]]
+pc = 0x6336F8
+name = "Area145_MemberKeys5"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_MessageByMember5's keys; messages at 0x6336FC. docs/area_w3f.md."
+
+[[data]]
+pc = 0x633704
+name = "Area145_MemberKeysB"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_MessageByMemberB's keys; messages at 0x633708. docs/area_w3f.md."
+
+[[data]]
+pc = 0x633710
+name = "Area145_CellRecords"
+ctype = "unsigned char"
+count = 28
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_CellHook's seven records of 4 bytes (x, z, pose in the low nibble, the tail state it arms), walked while the cursor is below 0x63372D. docs/area_w3f.md."
+
+[[data]]
+pc = 0x63372C
+name = "Area145_TrailLegs0"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_TrailLeg0's four legs of 4 bytes (direction, length, next, pad) by extra object 0's quarter. docs/area_w3f.md."
+
+[[data]]
+pc = 0x63373C
+name = "Area145_TrailLegs1A"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_TrailLeg1's legs for extra object 1. docs/area_w3f.md."
+
+[[data]]
+pc = 0x63374C
+name = "Area145_TrailLegs1B"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_TrailLeg1's legs for any other record. docs/area_w3f.md."
+
+[[data]]
+pc = 0x63375C
+name = "Area145_TrailLegs2A"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_TrailLeg2's legs for extra object 1 (+2 its answer). docs/area_w3f.md."
+
+[[data]]
+pc = 0x63376C
+name = "Area145_TrailLegs2B"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): Area145_TrailLeg2's legs for any other record. docs/area_w3f.md."
+
+[[data]]
+pc = 0x6340C0
+name = "Area146_Handlers"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): area 146 descriptor 0x6340D0 +0x3C: Area143_ChangeArea70, Area145_ClearTint, Area146_LeaderBit138OtSlot (PSX 0x801F2C04, 0x801F2C34, 0x801F2C68). docs/area_w3f.md."
+
+[[data]]
+pc = 0x634114
+name = "Area146_EffectStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3F): jumped through by Area146_EffectB4Run by the record's +1: Area59_EffectGround, Area146_EffectB4Cylinder. docs/area_w3f.md."
