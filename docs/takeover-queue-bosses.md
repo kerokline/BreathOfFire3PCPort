@@ -293,9 +293,94 @@ transition hook arms is not), and the chapter-state writes
   in it are ours (Paralyzer, Head Cracker) and the tool keeps them in their
   groups' counts as "ours".
 
-## 7. Before the first cut
+## 7. Naming the units: every kind has a name in the data
 
-1. **The tool** - done: `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)).
+The owner asked (2026-09-28) whether the boss code touches the names the
+player sees, so the functions could be named after the boss. **The boss
+code never touches a name; the name is the area's, and the link is a
+byte the tool can follow.** By reading:
+
+- `EnemyRunAll` `0x435830` dispatches `BossKind_Table` by the enemy's
+  working record byte `+0x100` (`mov al, [ecx + 0x100]; call [eax*4 +
+  0x64B088]` at `0x435870`).
+- `Battle_CopyEnemyData` `0x4946C0` fills that byte from the enemy data
+  record's `+0x88` (`mov cl, [edx + 0x8C5650]; mov [eax + 0x93BA60], cl` at
+  `0x494883`; `0x8C5650 - 0x8C55C8 = 0x88`), the same record whose first 12
+  bytes are the name ([`battle_sprites.md`](battle_sprites.md) §3,
+  DIV-0053).
+- The enemy data is the area's: `AREAnnn.DAT`'s chunk at arena `0xC2000`,
+  the US disc's `AREAnnn.EMI` section `0x800E4000` (stride `0x88`, an 8-byte
+  name, the kind byte at `+0x84`).
+- A set-up's fight is a formation row of the area it is fought in:
+  `0x494500` reads `EventBattle_Records[id] +2` and spawns the row
+  `0x8C5580 + 9 * row` of the loaded area.
+
+So `tools/boss_rows.py --disc <the US .cue>` names every kind from the 200
+area files: **62 of 62 kinds in the band resolve to one enemy name** (or
+one name family: `Dodai 1` / `Dodai 2`, `Bully 1..3`, `Sample10..12`), and
+each name appears in exactly one or two areas. The set-ups follow from the
+block rule: **a file's kinds precede its set-ups in address order**, so a
+set-up's enemies are the kinds since the last set-up of another file, and
+its area is the one whose row (the record's `+2`) carries them - which
+checks out row for row where one file has several fights (`BOSS004`'s
+three set-ups are rows 7, 6, 5 of area 24, all kind 3; `BOSS008`'s four are
+rows 7..4 of area 27, kinds 8..11 one each; `BOSS024`'s two are area 67 row
+6 and area 166 row 7).
+
+The kinds, from the tool's output of 2026-09-28 (the US disc's names, as
+the tool prints them):
+
+| Kinds | Enemy | Area |
+|---|---|--:|
+| 1, 2 | Nue (two fights) | 23, 22 |
+| 3 | Engineer, Foreman, Miner (one script) | 24 |
+| 4, 5 | Worker, Operator | 2, 32 |
+| 6, 7 | Gary, Mogu | 24 |
+| 8..11 | Torast, Kassen, Galtel, Doksen | 27 |
+| 12 | Amalgam | 28 |
+| 13, 14, 17 | Balio, Sunder, Nina | 11, 41 |
+| 15, 16 | Rocky, Pooch | 26 |
+| 18 | Mutant | 52 |
+| 21, 22, 23, 26 | Claw, Cawer, Patrio, Dodai 1 / 2 | 79 |
+| 24, 25 | Emitai, Golem | 81 |
+| 27, 37 | Garr (two fights) | 80, 85 |
+| 28, 29 | Bully 1..3, Stallion | 67 |
+| 30, 31, 32 | Beyd (twice), Zig | 92 |
+| 33 | Gazer | 77 |
+| 34 | Dolphin | 175 |
+| 35, 36 | Gisshan, Scylla / Charyb | 103 |
+| 38 | D>Zombie | 108 |
+| 39 | Weretigr | 35 |
+| 40 | Mikba | 43 |
+| 41, 42 | Gaist, Torch | 120 |
+| 43 | Angler | 75 |
+| 44 | Elder | 144 |
+| 45 | Ammonite | 134 |
+| 46..55 | Sample 1..12 (chapter 15's ids 39..48) | 158..166 |
+| 56, 57 | Manmo, Chimera | 196, 197 |
+| 58 | Arwan | 142 |
+| 59 | D>Lord | 172 |
+| 60, 61 | HugeSlug, Shroom | 119 |
+| 62 | Myria | 198 |
+
+**So the round names by enemy**: `BossNue_*` for kinds 1 and 2's scripts
+(`BossNue2_*` where two scripts differ), `BossBalio_*`, `BossMyria_*`; a
+set-up `Boss<id>_Setup` with the fight in its evidence string ("id 12,
+Amalgam, area 28 row 7"). What the tool leaves to the reader: set-ups of
+one file that share kinds and a row (`BOSS002`'s ids 2, 3 and 39: Nue at
+areas 22 and 23 and Sample 1 at 158 - the shared code branches on
+`0x904AAA`, and chapter 15 owns id 39), and the five set-ups with no kinds
+of their own (`B19`, `B20`, `B27`, `B46`, `B47`: the sibling's dedup says
+`BOSS046` is `BOSS014`'s image, so `B46` is Rocky's or Sample 8's by its
+row). Those the reader settles from the code's compares and the chapter's
+call site, or the owner from play; the other fifty are the tool's. Nothing
+here is stated from memory of the game: every name is the disc's, and the
+tool reproduces the table.
+
+## 8. Before the first cut
+
+1. **The tool** - done: `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)),
+   with `--disc` for the names (section 7).
 2. **Name the tables** in `symbols.toml`: `Boss_SetupTable` `0x656954` (56),
    `BossKind_Table` `0x64B088` (63), the kind-3 dispatcher `0x4357D0`, and
    the hooks `0x904B64` / `0x904B68` / `0x904B6C` as `[[data]]`; rename

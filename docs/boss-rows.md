@@ -14,6 +14,7 @@ python tools/boss_rows.py --exe .../bof3/BOF3.exe --analysis .../analysis \
     ... --unit K01                                   -> one unit, function by function (B12, K07, F2, FB8, H)
     ... --unit B01 --clones                          -> clone tables (C++, magic_harness's API)
     ... --groups                                     -> the group table (markdown)
+    ... --disc "CDImage/Breath of Fire III (USA).cue"  -> every kind's enemy name and every set-up's fight
 ```
 
 The flags are `area_rows.py`'s (`--exe`, `--analysis`, `--sibling`,
@@ -79,6 +80,20 @@ closure is the band.
 The set-ups' entries in address order are the sibling's file order
 (`boss_records.toml`) wherever ids share a file, which is the block rule's
 check: the PC linked the images in disc order.
+
+## 3a. The names (`--disc`)
+
+The working record's `+0x100`, the byte `EnemyRunAll` dispatches
+`BossKind_Table` by, is copied by `Battle_CopyEnemyData` from the enemy
+data record's `+0x88`, and the enemy data is the area's (US `AREAnnn.EMI`
+section `0x800E4000`, stride `0x88`, name 8 bytes, kind `+0x84`). With the
+US disc's `.cue` the tool reads all 200 area files and prints every kind
+with its enemy name and areas, then every set-up with its file
+(`boss_records.toml`), its record row (`EventBattle_Records[id] +2`), the
+kinds of its file (a file's kinds precede its set-ups in address order)
+and the areas whose row carries them. 62 of 62 kinds resolve; 50 of 55
+set-ups resolve to one fight (the plan's section 7 lists the five that do
+not and why).
 
 ## 4. What it does not do
 

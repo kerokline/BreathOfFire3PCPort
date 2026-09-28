@@ -127,6 +127,7 @@ def main():
     ap.add_argument('--groups', action='store_true', help='print the proposed groups')
     ap.add_argument('--group-size', type=int, default=50, help='functions not yet ours a group aims at (default 50)')
     ap.add_argument('--quiet', action='store_true', help='write the TSVs, print only the totals')
+    ap.add_argument('--disc', help="the US disc's .cue: with it the report names every kind from the areas' enemy records")
     a = ap.parse_args()
 
     ar.BAND_LO, ar.BAND_HI = BAND_LO, BAND_HI
@@ -398,6 +399,8 @@ def main():
             by_chapter['%#x' % (pc & ~0xFFF)].append(v)
         print('\nField_StartEventBattle sites: %d; ids by 4 KiB page of the caller: %s' % (
             len(sites), '; '.join('%s: %s' % (p, ','.join('?' if v is None else str(v) for v in vs)) for p, vs in sorted(by_chapter.items()))))
+    if a.disc:
+        print_names(a.disc, img, rows, cut, id_file)
     if a.groups:
         print('\n| Group | Units | Band | Fns | Ours | To take | Bytes to take |')
         print('|---|---|---|--:|--:|--:|--:|')
@@ -406,6 +409,71 @@ def main():
                 g['name'], _unit_ranges(g['units']), g['lo'], g['hi'], len(g['funcs']),
                 len(g['funcs']) - len(g['take']), len(g['take']), g['bytes']))
         print('\n%d groups, %d functions to take' % (len(cut), sum(len(g['take']) for g in cut)))
+
+
+ENEMY_DEST, ENEMY_HEAD, ENEMY_COUNT = 0x800E4000, 0x48, 8     # the area's enemy records (DIV-0053)
+DONOR_STRIDE, DONOR_NAME, DONOR_KIND = 0x88, 8, 0x84           # US EMI: 8-byte name; the PC's stride is 0x8C, name 12, kind +0x88
+RECORDS = 0x64DDEC                                             # EventBattle_Records: +2 the formation row
+
+
+def print_names(cue, img, rows, cut, id_file):
+    """Which enemy each kind is. The working record's state byte +0x100, the
+    index EnemyRunAll dispatches BossKind_Table by, is copied by
+    Battle_CopyEnemyData 0x4946C0 from the enemy data record's +0x88
+    (`mov cl, [edx + 0x8C5650]; mov [eax + 0x93BA60], cl`, 0x494883), and
+    the enemy data is the area's (0x800E4000 in every AREAnnn.EMI). So the
+    US disc's area files name every kind in English; a set-up's fight is the
+    area whose formation row (EventBattle_Records[id] +2) carries the kinds
+    that follow the set-up in address order."""
+    import psx_disc     # noqa  the sibling-shaped disc reader in tools/
+    import loc_build    # noqa  emi_sections
+    disc = psx_disc.Disc(cue)
+    kind_names, kind_areas, row_kinds = collections.defaultdict(set), collections.defaultdict(set), {}
+    for area in range(200):
+        world = min(area // 38, 4)
+        try:
+            blob = disc.read('BIN/WORLD%02d/AREA%03d.EMI' % (world, area))
+        except Exception:
+            continue
+        sec = [s for d, s in loc_build.emi_sections(blob) if d == ENEMY_DEST]
+        if not sec:
+            continue
+        p = sec[0]
+        recs = []
+        for k in range(ENEMY_COUNT):
+            r = p[ENEMY_HEAD + DONOR_STRIDE * k:ENEMY_HEAD + DONOR_STRIDE * (k + 1)]
+            recs.append((r[:DONOR_NAME].split(bytes([0]))[0].decode('latin1').replace(chr(255), ' '), r[DONOR_KIND]))
+        for nm, k in recs:
+            if k:
+                kind_names[k].add(nm)
+                kind_areas[k].add(area)
+        for rw in range(4, 8):
+            ks = {recs[sl][1] for sl in p[9 * rw:9 * rw + 8] if sl != 0xFF and recs[sl][1]}
+            if ks:
+                row_kinds[(area, rw)] = ks
+    print('')
+    print("kinds by the areas' enemy records (US disc):")
+    for k in sorted(kind_names):
+        print('  K%02d %-28s areas %s' % (k, ', '.join(sorted(kind_names[k])), ' '.join(map(str, sorted(kind_areas[k])))))
+    print('')
+    print("set-ups: the record's row, the kinds before it in address order (since the previous set-up), and the areas whose row carries them:")
+    order = sorted((r for r in rows if r['unit'][0] in 'BK'), key=lambda r: r['root'])   # by root: a shared body can lie far below
+    for i, r in enumerate(order):
+        if r['unit'][0] != 'B':
+            continue
+        bid = int(r['unit'][1:])
+        rw = img.u8(RECORDS + 4 * bid + 2)
+        ks = []      # a file's kinds precede its set-ups: the kinds since the last set-up of another file
+        for prv in reversed(order[:i]):
+            if prv['unit'][0] == 'B':
+                if id_file.get(int(prv['unit'][1:])) != id_file.get(bid):
+                    break
+                continue
+            ks.append(int(prv['unit'][1:]))
+        ks.reverse()
+        areas = sorted(a for (a, w), kk in row_kinds.items() if w == rw and kk & set(ks))
+        names = sorted({n for k in ks for n in kind_names.get(k, ())})
+        print('  B%02d %-8s row %d kinds %-18s %-34s areas %s' % (bid, id_file.get(bid, ''), rw, ' '.join('K%02d' % k for k in ks) or '-', ', '.join(names) or '-', ' '.join(map(str, areas)) or '-'))
 
 
 def _unit_ranges(us):
