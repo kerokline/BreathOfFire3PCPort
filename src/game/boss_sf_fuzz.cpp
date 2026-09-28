@@ -223,7 +223,7 @@ void Args(unsigned k, U* a) {
     if (c.shape == S::kEnemyHook) {
         a[0] = Above() | (a[0] & 0xFF);
     } else if (c.base == 0x43C4A0) {
-        a[0] = Above() | BH_PICK(0, 0, 0, 2, 2, 2, 1, 3, 4, 5, 6, 0x80, 0xFF, 0x100);
+        a[0] = Above() | BH_PICK(0, 0, 0, 0, 0, 0, 2, 2, 2, 1, 3, 4, 5, 6, 0x80, 0xFF, 0x100);
     } else if (c.shape == S::kCallee) {
         for (unsigned i = 0; i < 3; ++i) a[i] = Above() | (bh::Half() ? bh::Next() % 8 : bh::Next() & 0xFF);
     }
@@ -257,18 +257,23 @@ const bh::Clone kClonesB27[] = {
 };
 
 // The battle-end byte 0 half the time (the event hook's deep path needs it),
-// else its bit 2 and others; the two enemies' +0x92 bit 0x4000 (their +0x93
-// bit 6) each clear two times in three; the turn order's cursor small and the
-// actors before it members, enemies or none; the members' +0x130 low bits and
-// +0 bit 0, their +0x91 bit 6 (the pose).
+// else a single bit (bit 0 the one the deep path's test must not ignore, bit
+// 2 the one code 2 tests) or others; the script bits with bit 3 clear half the
+// time (the deep path's second test); the two enemies' +0x92 bit 0x4000
+// (their +0x93 bit 6) each clear five times in six; the turn order's cursor
+// small and the actor before it a member two times in three, else an enemy or
+// none; the members' +0x130 low bits clear half the time.
 void SeedB27(unsigned) {
-    B(at::kBattleEnd) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Often() ? BH_PICK(4, 1, 2, 5, 0xFB, 0xFF) : bh::Next());
+    B(at::kBattleEnd) = static_cast<unsigned char>(bh::Half() ? 0 : bh::Often() ? BH_PICK(1, 1, 4, 2, 5, 0x80, 0xFB, 0xFF) : bh::Next());
     if (bh::Often()) B(at::kScript) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 0x10, 0x20, 0x28, 0x18, 8, 1, 2, 4, 7) : bh::Next());
-    B(at::kEnemy0Status + 1) = static_cast<unsigned char>(bh::Often() ? B(at::kEnemy0Status + 1) & 0xBF : B(at::kEnemy0Status + 1) | 0x40);
-    B(at::kEnemy1Status + 1) = static_cast<unsigned char>(bh::Often() ? B(at::kEnemy1Status + 1) & 0xBF : B(at::kEnemy1Status + 1) | 0x40);
+    if (bh::Half()) B(at::kScript) &= 0xF7;
+    B(at::kEnemy0Status + 1) = static_cast<unsigned char>(bh::Next() % 6 ? B(at::kEnemy0Status + 1) & 0xBF : B(at::kEnemy0Status + 1) | 0x40);
+    B(at::kEnemy1Status + 1) = static_cast<unsigned char>(bh::Next() % 6 ? B(at::kEnemy1Status + 1) & 0xBF : B(at::kEnemy1Status + 1) | 0x40);
     const unsigned cursor = bh::Often() ? bh::Next() % 12 : bh::Next() & 0xFF;
     B(at::kCursor) = static_cast<unsigned char>(cursor);
-    if (cursor < 0xD5) B(at::kOrderBefore + cursor) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 2, 3, 4, 0xFF) : bh::Next());
+    if (cursor < 0xD5)
+        B(at::kOrderBefore + cursor) =
+            static_cast<unsigned char>(bh::Often() ? bh::Next() % 3 : bh::Often() ? BH_PICK(3, 4, 0xFF, 0x80) : bh::Next());
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
         if (bh::Half()) p[0x130] = static_cast<unsigned char>(p[0x130] & 0xFC);
