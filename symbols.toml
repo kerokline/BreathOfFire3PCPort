@@ -55603,3 +55603,598 @@ ctype = "unsigned char"
 count = 12
 status = "evidence"
 evidence = "read 2026-09-28, group AR2B: u base, v base, cell size (4 bytes each) by +0xB - 2, unchecked: Area88_DrawDrift. docs/area_w2b.md."
+
+[[func]]
+pc = 0x40AB00
+name = "Area53_ChoiceFocusPair"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AB00..0x40AB3B (0x3c bytes), cdecl: area 53 +0x34[0]: message 0xFFFF; the dwords +0x18 / +0x1C of the object the pointer 0x903804 names = the bytes Area53_ChoicePairs[s8 answer * 2] and [* 2 + 1] (zero-extended; the pointer and the answer read again for the second; unchecked). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AB40
+name = "Area53_Trigger42"
+ret = "unsigned"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AB40..0x40AB5A (0x1b bytes), cdecl: Field_ObjectTriggers id 42 ((object, 0x904030) from 0x56E020, both ignored; in area 53's block by address): ScriptFlags_Set40, tail kind 0x9039F3 = 0x2C, state 0x9039F4 = 0, sub-kind 0x9039F5 = 0xA. No al of its own: eax is ScriptFlags_Set40's (Capcom's leaves Field_StatusBits | 0x40 in al), passed on. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AB60
+name = "Area55_ChoiceTakeItem8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AB60..0x40ABB7 (0x58 bytes), cdecl: area 55 +0x34[0]: answer 0 - Inventory_Count(0, 8, 0) word not 0: Inventory_Remove(0, 8, 1) (a fourth push of 0) and message 0x22; 0: message 0x23 and 0x9398CF = 6; another answer: message 0x24 and the mark. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40ABC0
+name = "Area55_ChoiceMark24"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40ABC0..0x40ABE3 (0x24 bytes), cdecl: area 55 +0x34[3] and [4]: an answer not 0: message 0x24 and 0x9398CF = 6; 0: message 0xFFFF. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40ABF0
+name = "Area55_Trigger23"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40ABF0..0x40AC05 (0x16 bytes), cdecl: Field_ObjectTriggers id 23 ((object, 0x904030), both ignored): ScriptFlags_Set40, tail kind 4 with sub-kind 2; al 0. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AC10
+name = "Area56_ChoicePoseFlag8"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AC10..0x40AC7A (0x6b bytes), cdecl: area 56 +0x34[0]: message 0xFFFF; answer 0 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 1 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0x8); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AC80
+name = "Area56_ChoicePoseFlag9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AC80..0x40ACEA (0x6b bytes), cdecl: area 56 +0x34[1]: message 0xFFFF; answer 0 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 1 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0x9); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40ACF0
+name = "Area56_ChoicePoseFlagA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40ACF0..0x40AD5A (0x6b bytes), cdecl: area 56 +0x34[2]: message 0xFFFF; answer 0 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 1 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0xa); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AD60
+name = "Area56_ChoicePoseFlagB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AD60..0x40ADCA (0x6b bytes), cdecl: area 56 +0x34[3]: message 0xFFFF; answer 1 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 0 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0xb); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40ADD0
+name = "Area56_ChoicePoseFlagC"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40ADD0..0x40AE3A (0x6b bytes), cdecl: area 56 +0x34[4]: message 0xFFFF; answer 0 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 1 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0xc); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AE40
+name = "Area56_ChoicePoseFlagD"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AE40..0x40AEAA (0x6b bytes), cdecl: area 56 +0x34[5]: message 0xFFFF; answer 1 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 0 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0xd); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AEB0
+name = "Area56_ChoicePoseFlagE"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AEB0..0x40AF1A (0x6b bytes), cdecl: area 56 +0x34[6]: message 0xFFFF; answer 0 (read first): the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A) (answer not read); answer 1 (read again): Flags_Set(Cond_Flags row 3 0x903FA8, 0xe); answer (read again) not 2: Sound_PlayEffect(0x208). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AF20
+name = "Area56_ChoiceMessage9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AF20..0x40AF37 (0x18 bytes), cdecl: area 56 +0x34[7]: the message word 0x9 when the answer byte is 0, else 0xFFFF (neg / sbb / and / add). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AF40
+name = "Area56_ChoiceMessageA"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AF40..0x40AF57 (0x18 bytes), cdecl: area 56 +0x34[8]: the message word 0xa when the answer byte is 0, else 0xFFFF (neg / sbb / and / add). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AF60
+name = "Area56_ChoiceMessageB"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AF60..0x40AF77 (0x18 bytes), cdecl: area 56 +0x34[9]: the message word 0xb when the answer byte is 0, else 0xFFFF (neg / sbb / and / add). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AF80
+name = "Area56_ChoiceMessageC"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AF80..0x40AF99 (0x1a bytes), cdecl: area 56 +0x34[10]: the message word 0xc when the answer byte is 2, else 0xFFFF (neg / sbb / and / add). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AFA0
+name = "Area56_ChoiceMessageD"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AFA0..0x40AFB9 (0x1a bytes), cdecl: area 56 +0x34[11]: the message word 0xd when the answer byte is 1, else 0xFFFF (neg / sbb / and / add). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AFC0
+name = "Area56_ChoiceMessageE"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AFC0..0x40AFD9 (0x1a bytes), cdecl: area 56 +0x34[12]: the message word 0xe when the answer byte is 1, else 0xFFFF (neg / sbb / and / add). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40AFE0
+name = "Area56_ChoicePoseOn1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40AFE0..0x40B01E (0x3f bytes), cdecl: area 56 +0x34[13]: message 0xFFFF; answer 1: the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB(the leader's words +0x36, +0x3A). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B020
+name = "Area56_ChoicePoseIfAllFlags"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B020..0x40B077 (0x58 bytes), cdecl: area 56 +0x34[14]: message 0xFFFF; answer 0: Sound_PlayEffect(0x208), then byte 0x903FA9 (Cond_Flags row 3 flags 8..0xF) & 0x7F at 0x7F: the leader's +1 = 2, +2 = 7, +3 = 0 and MoveCmd_TestFB at the leader's cell. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B080
+psx = 0x801F3284
+name = "Area56_FallRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B080..0x40B091 (0x12 bytes), cdecl: area 56 +0x34[15] = +0x3C[0]: jmp [Sprite_Current[4] * 4 + 0x600BE4] (Area56_FallStates, 3 entries, the next dword data; unchecked - ours aborts past 3). PSX twin 0x801F3284 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B0A0
+name = "Area56_FallBegin"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B0A0..0x40B111 (0x72 bytes), cdecl: Area56_FallStates[0]: Sprite_Current +0 &= 0xBF; word +0x3E = MapView_GroundAt(+0x34, +0x38) + 0x7D0; +0xC, +0x10, +0x14 = 0, +0x20 = -8, +4 = 1 (Sprite_Current read afresh for each); Field_State word +0x12E += 0xFFFE. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B120
+name = "Area56_FallStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B120..0x40B1AF (0x90 bytes), cdecl: Area56_FallStates[1]: +0x14 += +0x20; Field_LeaderStepTick; ground = MapView_GroundAt(+0x34, +0x38); ground above the word +0x3E (signed 16-bit): +0x3E = ground, +0x14 = +0x20 = 0, +4 = 2; then +5 at 0 and bit 3 of neither Field_ScriptFlags2's nor Field_ScriptFlags' low byte: MapView_SetElevation(+0x3E, a word with garbage above); Field_State word +0x12E += 0xFFFE. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B1B0
+name = "Area56_FallEnd"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B1B0..0x40B1C2 (0x13 bytes), cdecl: Area56_FallStates[2]: Field_ScriptFlags2 &= 0xFDFF, Sprite_Current +4 = 0 (the pointer read first). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B1D0
+name = "Area56_Trigger52"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B1D0..0x40B20F (0x40 bytes), cdecl: Field_ObjectTriggers id 52 ((object, 0x904030), both ignored; in area 56's block by address): Flags_Set(0x904030, 0x6E); Flags_Test 0x6D..0x70, the first clear returns; all set: Flags_Set(0x904030, 0x71). al 0 (area 34's trigger 51 with 0x6E). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B210
+psx = 0x801F2C04
+name = "Area57_ChoiceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B210..0x40B226 (0x17 bytes), cdecl: area 57 +0x34[0] = +0x3C[4]: the message word = Area57_ChoiceMessages[s8 answer] (unchecked). PSX twin 0x801F2C04 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B230
+psx = 0x801F2C30
+name = "Area57_SpawnKind2AtLeader"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B230..0x40B271 (0x42 bytes), cdecl: area 57 +0x3C[0]: Sprite_Current = the leader's record 0x802D40 (left so); Effect_Spawn(2, 0, Area57_EffectKinds2[the byte 0x904062], the leader's words +0x2E, +0x30); an answer not 0xFF to Sprite_Current (read again) +0xB. PSX twin 0x801F2C30 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B280
+psx = 0x801F2CB0
+name = "Area57_SpawnKind4AtLeader"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B280..0x40B2C1 (0x42 bytes), cdecl: area 57 +0x3C[1]: as Area57_SpawnKind2AtLeader with kind 4 and Area57_EffectKinds4. PSX twin 0x801F2CB0 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B2D0
+psx = 0x801F2D30
+name = "Area57_StopMusic"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B2D0..0x40B2D4 (0x5 bytes), cdecl: area 57 +0x3C[2], also area 39 +0x3C[9], area 108 +0x34[16] / +0x3C[13], area 145 +0x34[10] / +0x3C[9]: a 5-byte jmp Sound_StopMusic. PSX twin 0x801F2D30 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B2E0
+psx = 0x801F2D58
+name = "Area57_ResumeSound"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B2E0..0x40B2E4 (0x5 bytes), cdecl: area 57 +0x3C[3], also area 108 +0x34[17] / +0x3C[14], area 145 +0x34[11] / +0x3C[10]: a 5-byte jmp Sound_ResumeAll. PSX twin 0x801F2D58 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B2F0
+name = "Area57_Trigger53"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B2F0..0x40B32F (0x40 bytes), cdecl: Field_ObjectTriggers id 53 ((object, 0x904030), both ignored; in area 57's block by address): as Area56_Trigger52 with Flags_Set(0x904030, 0x6F) first. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B330
+name = "Area59_ChoiceMessage2or4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B330..0x40B353 (0x24 bytes), cdecl: area 59 +0x34[0]: answer 0: message 2; else message 4 and 0x9398CF = 6. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B360
+psx = 0x801F2D90
+name = "Area59_ClearCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B360..0x40B3A5 (0x46 bytes), cdecl: area 59 +0x3C[2]: AreaMap_SetByte(x, 8, 0) then (x, 9, 0) for x 0x47..0x49. PSX twin 0x801F2D90 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B3B0
+psx = 0x801F2E08
+name = "Area59_SetCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B3B0..0x40B407 (0x58 bytes), cdecl: area 59 +0x3C[3]: the same cells, row 8 0xC0, row 9 0xA1. PSX twin 0x801F2E08 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B410
+name = "Area59_StepHook"
+ret = "int"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B410..0x40B46D (0x5e bytes), cdecl: Area_StepHook's case for area 59 (event_ops kStepHandlers): Cond_ByteFD 2 and Flags_Test(0x904030, 0x33): the high words of x and z ((u16)(x_hi - 0x46) < 3, (u16)(z_hi - 0x29) < 3) and the leader's byte 0x802D48 of 0, 7 or 6: counter 0x903848 = 0, Party_DropIn(0), al 1. Else al 0. Area36_StepHook with z 0x29. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B470
+name = "Area59_Trigger24"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B470..0x40B4CC (0x5d bytes), cdecl: Field_ObjectTriggers id 24 ((object, 0x904030), both ignored): ScriptFlags_Set40; through the pointer 0x903804 (read afresh each time) +1 = 4, +0x83 = 0, word +0x8A = 0; tail kind 4, sub-kind 5, counter 0x90384B = (pointer - Sprite_Objects) / 0xA4 (signed, truncated; the low byte). al 0. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B4D0
+name = "Area59_EffectRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B4D0..0x40B4E1 (0x12 bytes), cdecl: Effect_KindHandlers entry 0xB6 (the dword 0x655628; in area 59's block by address): jmp [Sprite_Current[1] * 4 + 0x603CDC] (Area59_EffectStates: 0 Area59_EffectGround, 1 Area59_EffectStep; the next dword 0; ours aborts past 2). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B4F0
+name = "Area59_EffectGround"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B4F0..0x40B51C (0x2d bytes), cdecl: Area59_EffectStates[0], and entry 0 of areas 36, 100, 112, 116, 143 and 146's effect state tables: Sprite_Current +0x3C = (s16)AreaMap_Elevation(+0x34, +0x38) << 16; +1 incremented (Sprite_Current read afresh after the call). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B520
+name = "Area59_EffectStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B520..0x40B54A (0x2b bytes), cdecl: Area59_EffectStates[1]: the dwords +0x34, +0x38, +0x3C copied to a 16-byte stack frame, 0x4220D0(&frame) (group AR3F's, a raw address; it reads the three dwords). Area36_EffectStep instruction for instruction. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B550
+psx = 0x801F3310
+name = "Area60_InitScriptFlag2000"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B550..0x40B557 (0x8 bytes), cdecl: area 60 +0x40 init: byte 0x9039A3 |= 0x20 (Field_ScriptFlags bit 0x2000). PSX twin 0x801F3310 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B560
+name = "Area61_ChoiceClearZenny"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B560..0x40B58D (0x2e bytes), cdecl: area 61 +0x34[0]: answer 0: Party_Zenny (the u32 0x904058) = 0 and message 2; else message 3 and 0x9398CF = 6. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B590
+name = "Area61_ChoiceMark4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B590..0x40B5B3 (0x24 bytes), cdecl: area 61 +0x34[3] and [4], also areas 59, 113 and 116's +0x34[3] and [4]: an answer not 0: message 4 and 0x9398CF = 6; 0: message 0xFFFF. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B5C0
+name = "Area61_Trigger21"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B5C0..0x40B5D5 (0x16 bytes), cdecl: Field_ObjectTriggers id 21 ((object, 0x904030), both ignored): ScriptFlags_Set40, tail kind 4 with sub-kind 1; al 0. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B5E0
+psx = 0x801F2C04
+name = "Area62_ArmTailGiveItem"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B5E0..0x40B61C (0x3d bytes), cdecl: area 62 +0x3C[0]: Field_ActiveMember +0x80 &= 0xFE; the leader's byte 0x802DC9 at 6: ScriptFlags_Set40, tail kind 0x2A at state 0, the word +0x8A of Field_ActiveMember (read after the call) + 1. PSX twin 0x801F2C04 (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B620
+name = "Area62_TailGiveItem59"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B620..0x40B712 (0xf3 bytes), cdecl: Field_ModeTailKinds[0x2A], by the s8 state 0x9039F4 (a sub / dec chain): 0 counter 0x903848 = 0xA, Sound_PlayEffect(0x10D), state 1; 1 once the counter is 0xB: Item_NamePtr(0, 0x59)'s 16 bytes to Text_Records 0x904CE0, Inventory_Add(0, 0x59, 1) - added: Sound_PlayEffect(0x106), Msg_OpenSystem(2), Flags_Set(0x904030, 0x68); not: Msg_OpenSystem(3) - Field_Request 2, state 2; 2 once Field_Request is not 2: ScriptFlags_Clear40, counter, kind, state 0; others return. docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B720
+psx = 0x801F2D2C
+name = "Area63_InitPlaceObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B720..0x40B7EA (0xcb bytes), cdecl: area 63 +0x40 init: a 5-byte jmp over 11 nops; Rand & 0x3F walked through the 8 weights Area63_Weights (the first above what is left; none: 8); byte +0 of field objects 0..7 but that one cleared; the one (if below 8) put at Area63_Positions[Rand & 7] (bytes << 16 to +0x34 / +0x38), word +0x3E = AreaMap_Elevation there; Field_EdgeBits = the leader's dword 0x802E74 - 5. PSX twin 0x801F2D2C (names/area_records.toml). docs/area_w1d.md."
+
+[[func]]
+pc = 0x40B7F0
+psx = 0x801F2D2C
+name = "Area64_InitPlaceObject"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w1d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR1D), 0x40B7F0..0x40B8BA (0xcb bytes), cdecl: area 64 +0x40 init: Area63_InitPlaceObject with Area64_Positions / Area64_Weights (the same bytes). PSX twin 0x801F2D2C (names/area_records.toml). docs/area_w1d.md."
+
+[[data]]
+pc = 0x5FEA8C
+name = "Area53_Choices"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 53's descriptor +0x34 (0x5FEA98): Area53_ChoiceFocusPair, then 0x437CC0 (a shared ret); +0x3C and +0x40 are 0x437CC0 too. docs/area_w1d.md."
+
+[[data]]
+pc = 0x5FEADC
+name = "Area53_ChoicePairs"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area53_ChoiceFocusPair: byte pairs by the s8 choice answer (the count is the bytes before the next item read, not a bound the code checks). docs/area_w1d.md."
+
+[[data]]
+pc = 0x6007C0
+name = "Area55_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 55's descriptor +0x34 (0x6007D8): Area55_ChoiceTakeItem8, 0x420850, 0x420870 (another block's), Area55_ChoiceMark24 twice. docs/area_w1d.md."
+
+[[data]]
+pc = 0x600B4C
+name = "Area56_Choices"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 56's descriptor +0x34 (0x600BA0): Area56_ChoicePoseFlag8..E, Area56_ChoiceMessage9..E, Area56_ChoicePoseOn1, Area56_ChoicePoseIfAllFlags, Area56_FallRun. docs/area_w1d.md."
+
+[[data]]
+pc = 0x600B88
+name = "Area56_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 56's descriptor +0x3C: Area56_FallRun. docs/area_w1d.md."
+
+[[data]]
+pc = 0x600BE4
+name = "Area56_FallStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area56_FallRun's jmp table by Sprite_Current[4] (right after the descriptor): Area56_FallBegin, Area56_FallStep, Area56_FallEnd; the next dword is not code. docs/area_w1d.md."
+
+[[data]]
+pc = 0x60210C
+name = "Area57_Handlers"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 57's descriptor +0x3C (0x602928): Area57_SpawnKind2AtLeader, Area57_SpawnKind4AtLeader, Area57_StopMusic, Area57_ResumeSound, Area57_ChoiceMessage. docs/area_w1d.md."
+
+[[data]]
+pc = 0x60211C
+name = "Area57_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 57's descriptor +0x34: Area57_ChoiceMessage. docs/area_w1d.md."
+
+[[data]]
+pc = 0x60296C
+name = "Area57_ChoiceMessages"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area57_ChoiceMessage: message words by the s8 answer (6 words before Area57_EffectKinds2; unchecked). docs/area_w1d.md."
+
+[[data]]
+pc = 0x602978
+name = "Area57_EffectKinds2"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area57_SpawnKind2AtLeader: Effect_Spawn's third argument by the byte 0x904062 (by analogy with Area49_EffectKinds: the index is a party list byte). docs/area_w1d.md."
+
+[[data]]
+pc = 0x602980
+name = "Area57_EffectKinds4"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area57_SpawnKind4AtLeader: as Area57_EffectKinds2. docs/area_w1d.md."
+
+[[data]]
+pc = 0x603C58
+name = "Area59_Handlers"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 59's descriptor +0x3C (0x603C98): 0x419D80, 0x421FB0 (other blocks'), Area59_ClearCells, Area59_SetCells. docs/area_w1d.md."
+
+[[data]]
+pc = 0x603C78
+name = "Area59_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 59's descriptor +0x34: Area59_ChoiceMessage2or4, 0x420850, 0x420870, Area61_ChoiceMark4 twice. docs/area_w1d.md."
+
+[[data]]
+pc = 0x603CDC
+name = "Area59_EffectStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area59_EffectRun's jmp table by Sprite_Current[1] (right after the descriptor): Area59_EffectGround, Area59_EffectStep; then a 0 dword. docs/area_w1d.md."
+
+[[data]]
+pc = 0x6040A0
+name = "Area61_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 61's descriptor +0x34 (0x6040B8): Area61_ChoiceClearZenny, 0x420850, 0x420870, Area61_ChoiceMark4 twice. docs/area_w1d.md."
+
+[[data]]
+pc = 0x6041D8
+name = "Area62_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): area 62's descriptor +0x3C (0x6041E0): Area62_ArmTailGiveItem. docs/area_w1d.md."
+
+[[data]]
+pc = 0x604298
+name = "Area63_Positions"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area63_InitPlaceObject: eight (x, z) cell byte pairs by Rand & 7. docs/area_w1d.md."
+
+[[data]]
+pc = 0x6042A8
+name = "Area63_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area63_InitPlaceObject: eight weights walked by Rand & 0x3F; they sum to 64, so the 'none' path is never taken with them. The Japanese PSX overlay's AREA063 holds the same 24 bytes in the same order. docs/area_w1d.md."
+
+[[data]]
+pc = 0x604368
+name = "Area64_Positions"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area64_InitPlaceObject: as Area63_Positions (the same bytes). docs/area_w1d.md."
+
+[[data]]
+pc = 0x604378
+name = "Area64_Weights"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR1D): Area64_InitPlaceObject: as Area63_Weights (the same bytes). docs/area_w1d.md."
