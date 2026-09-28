@@ -201,6 +201,7 @@
 #include "game/area_w3f.h"
 #include "game/area_w3e.h"
 #include "game/area_w3d.h"
+#include "game/area_w3g.h"
 #include "game/area_w2f.h"
 #include "hook/detour.h"
 
@@ -690,6 +691,10 @@ void InjectAll() {
     AreaW1f_Inject();           // round 10 group AR1F (world 1, areas 68..69 and 71..75, 0x40CEF0..0x40EB90): its clones'
                                 // calls re-aimed at the area harness's recorders, its .data state tables swapped for
                                 // the fuzz only; no module patches bytes inside its 59 (DIVERGENCE.md, cheats.cpp):
+                                // order does not matter
+    AreaW3g_Inject();           // round 10 group AR3G (world 3, areas 148..151, 0x4223A0..0x4249D0): its clones'
+                                // calls re-aimed at the area harness's recorders, its .data state tables swapped for
+                                // the fuzz only; no module patches bytes inside its 56 (DIVERGENCE.md, cheats.cpp):
                                 // order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
