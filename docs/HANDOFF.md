@@ -83,17 +83,33 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    `phase-3/round10-*` branch is merged and removed; round ten is `main`
    (PR #28, `3e8d531`).
 0b. **Round eleven is running: the boss round**, on
-   `phase-3/capture-round-eleven` from `main` at `6b70e71`. **BH merged
-   2026-09-28 afternoon** (`79dafce`, 5,732 ours: the harness
-   `boss_harness.*` + [`boss_harness.md`](boss_harness.md), the 20 shared
-   helpers `boss_h`, the six spawn helpers as `boss_spawn`, the tables and
-   hooks named - it corrected the plan: `0x904B64` is called once from
-   `BattleEnd_AwaitMemberTasks`, not per frame, and the enemy objects are
-   at `0x93B960`, `0x93B9E0` their working view). **BSA..BSE run in
-   parallel from `79dafce`**; merge each with `merge_group11.sh <group>
-   <scratch>` (`MOD=boss_<group>`) from the session-`08306a9f` scratchpad,
-   where the filled briefs `brief_<group>.md` also are. Wave two (BSF..BSJ)
-   wants briefs cut from the same template. Plan and cut:
+   `phase-3/capture-round-eleven` from `main` at `6b70e71`. **Wave one is
+   merged** (2026-09-28 evening, tip `5d295d7`, **5,990 ours**): BH
+   (`79dafce`: the harness `boss_harness.*` + [`boss_harness.md`](boss_harness.md),
+   the 20 shared helpers `boss_h`, the six spawn helpers `boss_spawn`, the
+   tables and hooks named), then BSD, BSB, BSA, BSC, BSE in merge order
+   (`e4b9673`, `8bda604`, `68999ff`, `c34997c`, `5d295d7`), each verified in
+   the detached worktree - 284 functions, every group 0 mismatches, 88 +
+   115 + 124 + 139 + 145 + 145 controls with every one refused or an
+   equivalent with a refused near variant. BH corrected the plan:
+   `0x904B64` is called once from `BattleEnd_AwaitMemberTasks`, not per
+   frame, and the enemy objects are at `0x93B960`, `0x93B9E0` their
+   working view. **Owed to the harness at the round's end** (every stage-B
+   group worked around them in its own fuzz file; fold back once no agent
+   builds against it): the kind dispatchers must forward the caller's
+   stack word and return the entry's eax (`Port_DroppedCall` sits in the
+   `+1` tables); the standard disturbance's case 11 ignores `phase_span`
+   (BSD); `Port_DroppedCall` with 0 arguments, `DataTable` order with
+   `BareRet` in tables of different `nargs` (BSA); louder stand-ins for
+   `Msg_OpenScript`, `Scenario_CallA`, `Battle_OpenMsgWindow`, `0x446DE0`
+   (BSC), `Battle_RemoveFromTurnOrder` (BSE). Open for the owner: which of
+   fights 2 and 3 is Nue's area 22 or 23; B46; set-ups 8..10 posing every
+   actor from enemy 0's words (BSB); set-up 25's HP/AP saved as bytes and
+   restored as words (BSE, a fix candidate). **Wave two (BSF..BSJ) runs
+   from `5d295d7`**; merge each with `merge_group11.sh <group> <scratch>`
+   (`MOD=boss_<group>`) from the session-`08306a9f` scratchpad, where the
+   briefs `brief_<group>.md` are. The six `phase-3/round11-*` branches
+   and agent worktrees of wave one are merged and can go. Plan and cut:
    [`takeover-queue-bosses.md`](takeover-queue-bosses.md); tool
    `tools/boss_rows.py` ([`boss-rows.md`](boss-rows.md)); IDEAS I26. 525
    functions in eleven groups, two waves (BH + BSA..BSE, then BSF..BSJ);
