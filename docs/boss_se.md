@@ -217,7 +217,7 @@ The event and hook words carry garbage above their low byte half the time.
 **`Disturb`** moves `0x904AAD`, the copy count, a member's `+0x91`, `0x904AE2`
 and variable 3.
 
-`BOF3X_SHADOW='*'` (every group of every harness, this worktree): STAR_RESULT
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the final build): exit 0, BSE's thirteen `Run`s with the figures above and every other group's 0 mismatches; it passed first time both times it was run (no silent death).
 
 ## 4. Controls
 
