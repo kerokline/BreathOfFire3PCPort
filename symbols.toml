@@ -58242,3 +58242,817 @@ ctype = "char"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR1F): Area75_DrawCounters' Crt_sprintf format (two numbers); length not measured. docs/area_w1f.md."
+
+# --- round ten group AR3A: world 3, areas 115..119 (0x418BE0..0x41A9D0), docs/area_w3a.md ---
+
+[[func]]
+pc = 0x418BE0
+name = "Area115_PlaceMessage"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X418BE0..0X418D57 (0X178 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlaceMessage (0X410D90) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ; and the name sets' stride 6 where area 88's is 12, the text rows' end 0x904D80 where 88's is 0x904E40)). WorldMap_FieldHooks[7]: the place hook - the place's message, or the found cell record's name set (six-byte sets, five items) into five Text_Records rows and Msg_OpenScript. docs/area_w3a.md."
+
+[[func]]
+pc = 0x418D60
+name = "Area115_PlateRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X418D60..0X418E35 (0XD6 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlateRun (0X410F10) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). WorldMap_Records[7] +0: the plate's cell kind by AreaMap_ByteAt, then Area115_PlateStates by +1. docs/area_w3a.md."
+
+[[func]]
+pc = 0x418E40
+name = "Area115_PlateStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X418E40..0X418E90 (0X51 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlateStart (0X410FF0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ; and the bank 0x1C7 where area 88's is 0x157)). plate state 0: Sprite_SetAnimationBank(0x1C7) and the sprite's bytes. docs/area_w3a.md."
+
+[[func]]
+pc = 0x418EA0
+name = "Area115_PlateShow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X418EA0..0X418FE1 (0X142 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlateShow (0X411050) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). plate state 1: the animation by the kind, a place's from Area115_PlateAnims searched with no bound. docs/area_w3a.md."
+
+[[func]]
+pc = 0x418FF0
+name = "Area115_PlateGrow"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X418FF0..0X419030 (0X41 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlateGrow (0X4111A0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). plate state 2: WorldMap_PinSprite, the scale up 8 frames, a tail jump to Sprite_QueueOverlay. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419040
+name = "Area115_PlateHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419040..0X419097 (0X58 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlateHold (0X4111F0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). plate state 3: WorldMap_PinSprite, the leave test, Sprite_QueueOverlay. docs/area_w3a.md."
+
+[[func]]
+pc = 0x4190A0
+name = "Area115_PlateShrink"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X4190A0..0X4190EF (0X50 bytes), cdecl, capstone to the last instruction. Area 88's Area88_PlateShrink (0X411250) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). plate state 4: WorldMap_PinSprite, the scale down, Effect_Release on Field_Request 5. docs/area_w3a.md."
+
+[[func]]
+pc = 0x4190F0
+name = "Area115_HudRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X4190F0..0X419101 (0X12 bytes), cdecl, capstone to the last instruction. Area 88's Area88_HudRun (0X4112C0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). WorldMap_Records[7] +0xC: Area115_HudStates by +1 (unchecked in the original; ours aborts past 2). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419130
+name = "Area115_HudFrame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419130..0X419139 (0XA bytes), cdecl, capstone to the last instruction. Area 88's Area88_HudFrame (0X4112E0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). HUD state 1: Area115_FrameStep, then a tail jump to Area115_BoxStep. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419140
+name = "Area115_FrameStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419140..0X419151 (0X12 bytes), cdecl, capstone to the last instruction. Area 88's Area88_FrameStep (0X4112F0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). Area115_FrameStates by +2 (ours aborts past 4). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419160
+name = "Area115_FrameSlideIn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419160..0X419180 (0X21 bytes), cdecl, capstone to the last instruction. Area 88's Area88_FrameSlideIn (0X411340) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). frame state 1: +0x2E += 0x10, a tail jump to FrameHold. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419190
+name = "Area115_FrameHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419190..0X4191B7 (0X28 bytes), cdecl, capstone to the last instruction. Area 88's Area88_FrameHold (0X411370) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). frame state 2: Area115_DrawFrame(0x10, +0x2E). docs/area_w3a.md."
+
+[[func]]
+pc = 0x4191C0
+name = "Area115_FrameSlideOut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X4191C0..0X419200 (0X41 bytes), cdecl, capstone to the last instruction. Area 88's Area88_FrameSlideOut (0X4113A0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). frame state 3: +0x2E -= 0x10, Area115_DrawFrame. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419210
+name = "Area115_BoxStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419210..0X419221 (0X12 bytes), cdecl, capstone to the last instruction. Area 88's Area88_BoxStep (0X4113F0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). Area115_BoxStates by +3 (ours aborts past 4). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419230
+name = "Area115_BoxSlideIn"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419230..0X419291 (0X62 bytes), cdecl, capstone to the last instruction. Area 88's Area88_BoxSlideIn (0X411410) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). box state 1: +0x30 -= 10, the leave test, Area115_DrawHud(0x5C, y). docs/area_w3a.md."
+
+[[func]]
+pc = 0x4192A0
+name = "Area115_BoxHold"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X4192A0..0X41930D (0X6E bytes), cdecl, capstone to the last instruction. Area 88's Area88_BoxHold (0X411480) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). box state 2: the 0x5A-frame hold, the leave test, Area115_DrawHud. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419310
+name = "Area115_BoxSlideOut"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419310..0X419366 (0X57 bytes), cdecl, capstone to the last instruction. Area 88's Area88_BoxSlideOut (0X4114F0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). box state 3: +0x30 += 10, Area115_DrawHud. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419370
+name = "Area115_DrawFrame"
+ret = "void"
+params = "int x, int y"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419370..0X419534 (0X1C5 bytes), cdecl, capstone to the last instruction. Area 88's Area88_DrawFrame (0X411550) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). the dial frame: legends, keys from Area115_Buttons, WorldMap_DrawNeedle. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419540
+name = "Area115_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned index"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419540..0X4195FB (0XBC bytes), cdecl, capstone to the last instruction. Area 88's Area88_DrawSprite (0X411720) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). one SPRT of Area115_Sprites by index & 0xFF (unchecked). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419600
+name = "Area115_DrawHud"
+ret = "void"
+params = "int x, int y"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419600..0X419657 (0X58 bytes), cdecl, capstone to the last instruction. Area 88's Area88_DrawHud (0X4117E0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). the region box and its label from 0x803580 + the low word of the dword 0x803580. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419660
+name = "Area115_Record8Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419660..0X419671 (0X12 bytes), cdecl, capstone to the last instruction. Area 88's Area88_Record8Run (0X411840) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). WorldMap_Records[7] +8: Area115_Record8States by +1 (ours aborts past 3). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419680
+name = "Area115_Record8Place"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419680..0X4197D3 (0X154 bytes), cdecl, capstone to the last instruction. Area 88's Area88_Record8Place (0X411860) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). record-8 state 1: the marker placed by Area115_Directions / Area115_Record8Anims. docs/area_w3a.md."
+
+[[func]]
+pc = 0x4197E0
+name = "Area115_Record4Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X4197E0..0X4197F1 (0X12 bytes), cdecl, capstone to the last instruction. Area 88's Area88_Record4Run (0X4119C0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). WorldMap_Records[7] +4: Area115_Record4States by +1 (ours aborts past 2). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419800
+name = "Area115_Record4MarkCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419800..0X4198B4 (0XB5 bytes), cdecl, capstone to the last instruction. Area 88's Area88_Record4MarkCell (0X4119E0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). record-4 state 0: the map byte of Area115_Cells' record +0xB set to 0xA0. docs/area_w3a.md."
+
+[[func]]
+pc = 0x4198C0
+name = "Area115_DrawDrift"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X4198C0..0X419D21 (0X462 bytes), cdecl, capstone to the last instruction. Area 88's Area88_DrawDrift (0X411AA0) instruction for instruction over area 115's tables (a capstone compare of the pair: only jump targets, calls to its own copies and table operands differ)). WorldMap_Records[7] +0x10: the drift layer, u / v from Area115_DriftUV (unchecked). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419D30
+name = "Area116_ChoicePay10000"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419D30..0X419D7B (0X4C bytes), cdecl, capstone to the last instruction: area 116's choice 0 (0x620608): the cursor 0x7DEE67 not 0: message 4 and the byte 0x9398CF 6; else Party_Zenny 10,000 or more (unsigned): message 2 and 10,000 taken; less: message 3 and 0x9398CF 6. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419D80
+name = "Area116_ToArea100"
+psx = 0x801F2D54
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419D80..0X419D99 (0X1A bytes), cdecl, capstone to the last instruction: handler 0 of areas 116, 36 and 59 (their +0x3C[0]): Field_ChangeArea(0x64, 0x460000, 0x340000, 0x81). PSX 0x801F2D54 by area 116's table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419DA0
+name = "Area116_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419DA0..0X419DFD (0X5E bytes), cdecl, capstone to the last instruction: Area_StepHook's case for area 116, Area100_StepHook 0x414330 with two constants moved: Cond_ByteFD 2, story flag 0x33, x high word - 0x46 below 3 and z high word - 0x33 below 3 (16-bit), leader pose 0/7/6: counter 0 0, Party_DropIn(0), al 1; else al 0. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419E00
+name = "Area116_Trigger26"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419E00..0X419E15 (0X16 bytes), cdecl, capstone to the last instruction: Field_ObjectTriggers id 26 (a gap of the tool): ScriptFlags_Set40, tail kind 4 with argument 8 (0x9039F4 not written); al 0. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419E20
+name = "Area116_EffectB8Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419E20..0X419E31 (0X12 bytes), cdecl, capstone to the last instruction: Effect_KindHandlers[0xB8] (0x655630; a gap of the tool): Area116_EffectStates by Sprite_Current[1] (unchecked in the original; ours aborts past 2). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419E40
+name = "Area116_EffectB8Ring"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419E40..0X419E6A (0X2B bytes), cdecl, capstone to the last instruction: Area116_EffectStates[1]; Area100_EffectB7Ring 0x4144B0 instruction for instruction: the running record's +0x34 / +0x38 / +0x3C copied to the stack and handed to 0x4220D0 (group AR3F's). docs/area_w3a.md."
+
+[[func]]
+pc = 0x419E70
+name = "Area117_Spawn3AtMember2"
+psx = 0x801F3D70
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419E70..0X419EB5 (0X46 bytes), cdecl, capstone to the last instruction: area 117's handler 0 (0x621588): Effect_Spawn(3, 0, Area117_SpawnKinds3 0x620670[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F3D70 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419EC0
+name = "Area117_Spawn4AtMember2"
+psx = 0x801F3DF0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419EC0..0X419F05 (0X46 bytes), cdecl, capstone to the last instruction: area 117's handler 1: Effect_Spawn(4, 0, Area117_SpawnKinds45 0x62067C[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F3DF0 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419F10
+name = "Area117_Spawn5AtMember2"
+psx = 0x801F3E70
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419F10..0X419F55 (0X46 bytes), cdecl, capstone to the last instruction: area 117's handler 2: Effect_Spawn(5, 0, Area117_SpawnKinds45 0x62067C[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F3E70 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419F60
+name = "Area117_Spawn2AtMember2"
+psx = 0x801F3EF0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419F60..0X419FA5 (0X46 bytes), cdecl, capstone to the last instruction: area 117's handler 3: Effect_Spawn(2, 0, Area117_SpawnKinds2 0x620688[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F3EF0 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419FB0
+name = "Area117_Trigger33"
+psx = 0x801F3F70
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419FB0..0X419FCC (0X1D bytes), cdecl, capstone to the last instruction: Field_ObjectTriggers id 33 (a gap of the tool): ScriptFlags_Set40, tail kind 0x2C state 0 sub-kind 5; al 0. PSX 0x801F3F70 by the gap. docs/area_w3a.md."
+
+[[func]]
+pc = 0x419FD0
+name = "Area117_ChoiceArmTailA"
+psx = 0x801F3FB0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X419FD0..0X419FF7 (0X28 bytes), cdecl, capstone to the last instruction: area 117's choice 0 and handler 4: message 0xFFFF; the cursor 0 arms tail kind 0xA (state 0, argument 0x1C). PSX 0x801F3FB0 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A000
+name = "Area117_ChoiceMessage1"
+psx = 0x801F3FF0
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A000..0X41A031 (0X32 bytes), cdecl, capstone to the last instruction: choice 1 and handler 5: the message Area117_Messages1 0x6215F4[the cursor, s8, unchecked]; a cursor 0..4: counter 0 0xA, Sound_PlayEffect(0x205). PSX 0x801F3FF0 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A040
+name = "Area117_ChoiceMessage2"
+psx = 0x801F4048
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A040..0X41A093 (0X54 bytes), cdecl, capstone to the last instruction: choice 2 and handler 6 (0x54 bytes with its five-entry jump table at 0x41A080): the message Area117_Messages2 0x621600[the cursor, s8, unchecked]; a cursor 0..4 (unsigned): 2 counter 0 0x14, else counter 0 0xA and Sound_PlayEffect(0x205). PSX 0x801F4048 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A0A0
+name = "Area117_MembersFrame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A0A0..0X41A2C2 (0X223 bytes), cdecl, capstone to the last instruction: called every field frame in the area by 0x46D780 (0x46D7A9): the party members walking a rectangle - Field_ScriptFlags bit 13 cleared; per member below Field_MemberCount (read again each member): Field_State and Sprite_Current the record, Area117_MemberRect; out of it the caller's +0xB mark and Field_ScriptFlags2 bit cleared; in it and unmarked (and the bit in neither flag word) +0x128 = 2, +9 = 0, marked, +8 the rectangle's facing (^ 4 by its story flag), Sprite_EnsureAnimation; marked: +9 0 Field_JumpSetUp (and Field_JumpCamera for member 0), else the facing turned (+0xC, +0x10, +0x14 negated, +9 = 8 - +9), then Field_LeaderStepTick, +9 - 1, Sprite_ScriptTick, bit 13 set. Field_Request 5 clears bit 13; Sprite_Current put back. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A2D0
+name = "Area117_MemberRect"
+ret = "unsigned char"
+params = "unsigned member"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A2D0..0X41A339 (0X6A bytes), cdecl, capstone to the last instruction: called by Area117_MembersFrame (a gap of the tool): party record member & 0xFF's +0x34 / +0x38 against Area117_Rects' one (x0, z0, x1, z1) (cell bytes << 16, signed, inclusive): its index, or 0xFF. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A340
+name = "Area117_SwitchHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A340..0X41A3BC (0X7D bytes), cdecl, capstone to the last instruction: Area_CellHooks' entry for area 0x75: the (x, z) bytes and the leader's facing against Area117_Switches's one record; none al 0; story flag 0x1C set al 0; else Flags_Toggle of its flag (0x85), Effect_HoldFlag1C(0xF), Sound_PlayEffect(0x203), al 1. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A3C0
+name = "Area118_Spawn1AtLeader"
+psx = 0x801F4B88
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A3C0..0X41A401 (0X42 bytes), cdecl, capstone to the last instruction: area 118's handler 0 (0x621DE0): Effect_Spawn(1, 0, Area118_SpawnKinds 0x621610[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 0; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F4B88 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A410
+name = "Area118_MembersFrame"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A410..0X41A632 (0X223 bytes), cdecl, capstone to the last instruction: Area117_MembersFrame 0x41A0A0 instruction for instruction over area 118's tables; called every field frame in the area by 0x46D780 (0x46D7B6): the party members walking a rectangle - Field_ScriptFlags bit 13 cleared; per member below Field_MemberCount (read again each member): Field_State and Sprite_Current the record, Area118_MemberRect; out of it the caller's +0xB mark and Field_ScriptFlags2 bit cleared; in it and unmarked (and the bit in neither flag word) +0x128 = 2, +9 = 0, marked, +8 the rectangle's facing (^ 4 by its story flag), Sprite_EnsureAnimation; marked: +9 0 Field_JumpSetUp (and Field_JumpCamera for member 0), else the facing turned (+0xC, +0x10, +0x14 negated, +9 = 8 - +9), then Field_LeaderStepTick, +9 - 1, Sprite_ScriptTick, bit 13 set. Field_Request 5 clears bit 13; Sprite_Current put back. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A640
+name = "Area118_MemberRect"
+ret = "unsigned char"
+params = "unsigned member"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A640..0X41A6A9 (0X6A bytes), cdecl, capstone to the last instruction: Area117_MemberRect over Area118_Rects (a gap of the tool, called by Area118_MembersFrame): its index, or 0xFF. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A6B0
+name = "Area118_SwitchHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A6B0..0X41A72C (0X7D bytes), cdecl, capstone to the last instruction: Area117_SwitchHook over area 118's table; Area_CellHooks' entry for area 0x76: the (x, z) bytes and the leader's facing against Area118_Switches's one record; none al 0; story flag 0x1C set al 0; else Flags_Toggle of its flag (0x85), Effect_HoldFlag1C(0xF), Sound_PlayEffect(0x203), al 1. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A730
+name = "Area119_Spawn1AtLeader"
+psx = 0x801F4138
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A730..0X41A771 (0X42 bytes), cdecl, capstone to the last instruction: area 119's handler 0 / choice 1 (0x622AE8): Effect_Spawn(1, 0, Area119_SpawnKindsA 0x621E40[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 0; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F4138 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A780
+name = "Area119_Spawn4AtLeader"
+psx = 0x801F4224
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A780..0X41A7C1 (0X42 bytes), cdecl, capstone to the last instruction: area 119's handler 4 / choice 5: Effect_Spawn(4, 0, Area119_SpawnKindsA 0x621E40[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 0; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F4224 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A7D0
+name = "Area119_Spawn1AtLeaderB"
+psx = 0x801F42A4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A7D0..0X41A811 (0X42 bytes), cdecl, capstone to the last instruction: area 119's handler 5 / choice 6: Effect_Spawn(1, 0, Area119_SpawnKindsB 0x621E4C[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 0; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F42A4 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A820
+name = "Area119_Spawn1AtMember1"
+psx = 0x801F4324
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A820..0X41A861 (0X42 bytes), cdecl, capstone to the last instruction: area 119's handler 6 / choice 7: Effect_Spawn(1, 0, Area119_SpawnKindsB 0x621E4C[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 1; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F4324 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A870
+name = "Area119_Spawn1AtMember2"
+psx = 0x801F43A4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A870..0X41A8B5 (0X46 bytes), cdecl, capstone to the last instruction: area 119's handler 7 / choice 8: Effect_Spawn(1, 0, Area119_SpawnKindsB 0x621E4C[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F43A4 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A8C0
+name = "Area119_Spawn3AtMember2"
+psx = 0x801F4424
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A8C0..0X41A905 (0X46 bytes), cdecl, capstone to the last instruction: area 119's handler 8 / choice 9: Effect_Spawn(3, 0, Area119_SpawnKindsB 0x621E4C[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F4424 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A910
+name = "Area119_Spawn4AtMember2"
+psx = 0x801F44A4
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A910..0X41A955 (0X46 bytes), cdecl, capstone to the last instruction: area 119's handler 9 / choice 10: Effect_Spawn(4, 0, Area119_SpawnKindsA 0x621E40[the member's id from the first party list, unchecked], the record's words +0x2E, +0x30) with Sprite_Current made party record 2; an answer other than 0xFF to Sprite_Current[0xB] (read again). Area11_SpawnEffect's shape. PSX 0X801F44A4 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A960
+name = "Area119_SetRowFlag3C"
+psx = 0x801F4524
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A960..0X41A97A (0X1B bytes), cdecl, capstone to the last instruction: area 119's handler 10 / choice 11: Flags_Set(the chapter's row [0x929ED0], 0x3C), Sound_PlayEffect(0x203). PSX 0x801F4524 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A980
+name = "Area119_ClearRowFlag3C"
+psx = 0x801F4554
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A980..0X41A99A (0X1B bytes), cdecl, capstone to the last instruction: handler 11 / choice 12: Flags_Clear(the chapter's row, 0x3C), Sound_PlayEffect(0x203). PSX 0x801F4554 by the table. docs/area_w3a.md."
+
+[[func]]
+pc = 0x41A9A0
+name = "Area119_ChoiceCounter0"
+psx = 0x801F4584
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3a.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3A), 0X41A9A0..0X41A9C7 (0X28 bytes), cdecl, capstone to the last instruction: area 119's choice 0: message 0xFFFF; the cursor (s8) 0: counter 0 0xA, 1: 0x14. PSX 0x801F4584 by the table's anchor. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620148
+name = "Area115_PlateAnims"
+ctype = "unsigned char"
+count = 20
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (u16 place, u8 animation, u8) x 5: Area115_PlateShow searches it with no bound. docs/area_w3a.md."
+
+[[data]]
+pc = 0x62015C
+name = "Area115_Cells"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (x, z, -, id) x 2, then a zero record: the place hook's search (no bound) and Area115_Record4MarkCell's; WorldMap_Records[7] +0x14. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620218
+name = "Area115_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 115's +0x34: one entry, 0x41D270 (group AR3C's band). docs/area_w3a.md."
+
+[[data]]
+pc = 0x620264
+name = "Area115_PlaceMessages"
+ctype = "unsigned short"
+count = 80
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): rows of 0x20 (u16 place, fifteen u16 messages) x 5: the place hook's message by the place's row * 16 + Cond_ByteFA. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620304
+name = "Area115_NameSets"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (id, 5 items) x 2: the place hook's items for the found cell's id; no match reads a third set from Area115_PlateStates' bytes. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620310
+name = "Area115_PlateStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area115_PlateRun jumps through it by +1: Area115_PlateStart, PlateShow, PlateGrow, PlateHold, PlateShrink. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620324
+name = "Area115_HudStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area115_HudRun by +1: WorldMapHud_Start, Area115_HudFrame. docs/area_w3a.md."
+
+[[data]]
+pc = 0x62032C
+name = "Area115_FrameStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area115_FrameStep by +2: WorldMap_FrameWait, Area115_FrameSlideIn, FrameHold, FrameSlideOut. docs/area_w3a.md."
+
+[[data]]
+pc = 0x62033C
+name = "Area115_BoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area115_BoxStep by +3: WorldMapHud_BoxWait, Area115_BoxSlideIn, BoxHold, BoxSlideOut. docs/area_w3a.md."
+
+[[data]]
+pc = 0x62034C
+name = "Area115_Sprites"
+ctype = "unsigned char"
+count = 88
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (w, h, u, v) x 22: Area115_DrawSprite by index & 0xFF, unchecked. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6203A4
+name = "Area115_Buttons"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (u16 mask, u8 sprite, u8) x 6: Area115_DrawFrame's keys; the second legend reads eight (into Area115_Record8States). docs/area_w3a.md."
+
+[[data]]
+pc = 0x6203BC
+name = "Area115_Record8States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area115_Record8Run by +1: 0x4253C0, Area115_Record8Place, Area65_Record8Move. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6203C8
+name = "Area115_Directions"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (s16, s16) x 4: Area115_Record8Place by +8, unchecked. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6203D8
+name = "Area115_Record8Anims"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (animation, +0x2A) x 4: Area115_Record8Place by +8. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6203E0
+name = "Area115_Record4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area115_Record4Run by +1: Area115_Record4MarkCell, Area45_Record4Tick. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6203E8
+name = "Area115_DriftUV"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): u, v and size bytes by +0xB - 2 (three of four each): Area115_DrawDrift, unchecked. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6205F0
+name = "Area116_Handlers"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 116's +0x3C: Area116_ToArea100, 0x421FB0 (group AR3F's band). docs/area_w3a.md."
+
+[[data]]
+pc = 0x620608
+name = "Area116_Choices"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 116's +0x34: Area116_ChoicePay10000, 0x420850, 0x420870 (group AR3F's band), Area61_ChoiceMark4 twice. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620664
+name = "Area116_EffectStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area116_EffectB8Run jumps through it by Sprite_Current[1]: Area59_EffectGround (group AR1D's, shared by the effect tables of several areas), Area116_EffectB8Ring. docs/area_w3a.md."
+
+[[data]]
+pc = 0x620670
+name = "Area117_SpawnKinds3"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area117_Spawn3AtMember2's Effect_Spawn byte by member 2's id (unchecked; 12 is the room before the next table). docs/area_w3a.md."
+
+[[data]]
+pc = 0x62067C
+name = "Area117_SpawnKinds45"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area117_Spawn4AtMember2 and Spawn5AtMember2's byte by member 2's id (unchecked). docs/area_w3a.md."
+
+[[data]]
+pc = 0x620688
+name = "Area117_SpawnKinds2"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area117_Spawn2AtMember2's byte by member 2's id (unchecked; the length not measured past 12). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621588
+name = "Area117_Handlers"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 117's +0x3C: the four spawns, Area117_ChoiceArmTailA, ChoiceMessage1, ChoiceMessage2, Area22_ArmTailOnYes. docs/area_w3a.md."
+
+[[data]]
+pc = 0x621598
+name = "Area117_Choices"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 117's +0x34: Area117_ChoiceArmTailA, ChoiceMessage1, ChoiceMessage2, Area22_ArmTailOnYes. docs/area_w3a.md."
+
+[[data]]
+pc = 0x6215A8
+name = "Area117_Rects"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (x0, z0, x1, z1, facing, flag) x 1: Area117_MemberRect's rectangle, Area117_MembersFrame's facing and story flag (0x85). docs/area_w3a.md."
+
+[[data]]
+pc = 0x6215F4
+name = "Area117_Messages1"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area117_ChoiceMessage1's message by the cursor (s8, unchecked). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621600
+name = "Area117_Messages2"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area117_ChoiceMessage2's message by the cursor (s8, unchecked). docs/area_w3a.md."
+
+[[data]]
+pc = 0x62160C
+name = "Area117_Switches"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (x, z, facing, flag) x 1: Area117_SwitchHook's floor switch (flag 0x85). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621610
+name = "Area118_SpawnKinds"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area118_Spawn1AtLeader's Effect_Spawn byte by the leader's id (unchecked). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621DE0
+name = "Area118_Handlers"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 118's +0x3C: Area118_Spawn1AtLeader. docs/area_w3a.md."
+
+[[data]]
+pc = 0x621DF0
+name = "Area118_Rects"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (x0, z0, x1, z1, facing, flag) x 1: Area118_MemberRect / Area118_MembersFrame's (flag 0x85). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621E3C
+name = "Area118_Switches"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): (x, z, facing, flag) x 1: Area118_SwitchHook's (flag 0x85). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621E40
+name = "Area119_SpawnKindsA"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area119_Spawn1AtLeader, Spawn4AtLeader and Spawn4AtMember2's byte by the member's id (unchecked). docs/area_w3a.md."
+
+[[data]]
+pc = 0x621E4C
+name = "Area119_SpawnKindsB"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): Area119_Spawn1AtLeaderB, Spawn1AtMember1, Spawn1AtMember2 and Spawn3AtMember2's byte (unchecked). docs/area_w3a.md."
+
+[[data]]
+pc = 0x622AE4
+name = "Area119_Choices"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 119's +0x34: Area119_ChoiceCounter0, then the twelve handlers of Area119_Handlers (which starts one entry on). docs/area_w3a.md."
+
+[[data]]
+pc = 0x622AE8
+name = "Area119_Handlers"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3A): area 119's +0x3C: Area119_Spawn1AtLeader, 0x41F320 (group AR3E's band), 0x42A4B0, Area80_ResetCameraShift, six spawns, the flag pair. docs/area_w3a.md."
