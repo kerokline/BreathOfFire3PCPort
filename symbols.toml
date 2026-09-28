@@ -53297,3 +53297,641 @@ ctype = "unsigned char"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-28, group SC13: the effect slot chapter 14 takes (Scena14_SpawnEffect, Run2, Run4, Run6) and waits on."
+
+# ---------------------------------------------------------------------------
+# Round ten group AR2D: world 2, areas 95..100 and 103, 0x4135B0..0x4146C0
+# (docs/area_w2d.md). Read with capstone 2026-09-28; extents the tool's
+# (tools/area_rows.py area_funcs.tsv), agreeing with the reading.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4135B0
+psx = 0x801F351C
+name = "Area95_TurnAtCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4135B0..0x4135ED (0x3E bytes), cdecl: area 95 +0x3C[4] (Area95_Handlers): Sprite_Current word +0x3A 0x3A and word +0x36 - 0x40 (16 bits) 0: +8 = 3, 2: +8 = 7, then jmp 0x4137D0 (Area95_TurnAndMove); else MoveScript_Object word +0xA + 2. Byte for byte area 96's 0x413860. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4135F0
+psx = 0x801F30E8
+name = "Area95_WaitEffectAtCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4135F0..0x413664 (0x75 bytes), cdecl: areas 95 and 96 +0x3C[0] (area 96 PSX 0x801F3078): the first of Effect_Objects' 20 records with +0 bit 0 and words +0x36 0x41, +0x3A 0x3A: script position - 2; none: the leader's byte +0x137 (0x802E77) set: script position - 2 and ScriptFlags_Set40; clear: Party_DropIn(0). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413670
+psx = 0x801F31F8
+name = "Area95_SpawnEffect37"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413670..0x413741 (0xD2 bytes), cdecl: areas 95 and 96 +0x3C[1] (area 96 PSX 0x801F3188): Effect_FindFree; 0xFF: Field_ActiveMember word +0x8A - 2. A slot (unchecked shl 7): +0 1, +5 0x37, +0x34 0x410000, +0x38 0x3C8000, +0x3C 0x2000000, word +0x2C 0x58, +9 1, +6 0, +7 0x12, +0x29 6; Sound_PlayEffect(0x202); Game_AreaNumber 0x60: story flag 0x20; else s8 Cond_ByteFA < 7: 0x21, else 0x22. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413750
+psx = 0x801F336C
+name = "Area95_LeapArc"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413750..0x4137CB (0x7C bytes), cdecl: areas 95 and 96 +0x3C[2] (area 96 PSX 0x801F32FC): MoveScript_Object +7 = 1, MoveCmd_Move(it, 5); n = Sprite_Current +9: AreaMap_Elevation(+0x34 + +0xC * n, +0x38 + +0x10 * n); Sprite_Current read again: +0x14 = (s16 ground - s16 +0x3E + 0xE0) idiv n (n 0 faults; ours aborts); MoveScript_PartyRecords +4 (dword) 0x40, +1 = +9. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4137D0
+psx = 0x801F3450
+name = "Area95_TurnAndMove"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4137D0..0x413856 (0x87 bytes), cdecl: areas 95 and 96 +0x3C[3] (area 96 PSX 0x801F33E0); the tail jmp of 0x4135B0 and 0x413860: MoveScript_Object +4 = 1 and bit 0x40, Sprite_Current +7 bit 8, Sprite_SetAnimation(8 + (+8 & 7)), MoveScript_Object +7 = 2; direction 7: MoveCmd_Move(the script object, 3) and +8 = 3; else 7 and 7. Every pointer read again after each call. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413860
+psx = 0x801F34AC
+name = "Area96_TurnAtCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413860..0x41389D (0x3E bytes), cdecl: area 96 +0x3C[4] (Area96_Handlers): area 95's Area95_TurnAtCell (0x4135B0) byte for byte, its own copy in area 96's block: the same jmp 0x4137D0. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4138A0
+psx = 0x801F35A4
+name = "Area96_ToggleCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4138A0..0x4138CD (0x2E bytes), cdecl: areas 95 and 96 +0x3C[5] (area 96 PSX 0x801F3534): AreaMap_ByteAt(0x41, 0x39) 0: AreaMap_SetByte(0x41, 0x39, 0x10); else (0x41, 0x39, 0). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4138D0
+psx = 0x801F35F0
+name = "Area96_FaceBack"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4138D0..0x4138E6 (0x17 bytes), cdecl: areas 95 and 96 +0x3C[6] (area 96 PSX 0x801F3580): Sprite_Current +8 = 3 when it is 7, else 7 (setne / dec / and -4 / add 7; only cl stored). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4138F0
+psx = 0x801F3618
+name = "Area96_SnapElevation"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4138F0..0x413939 (0x4A bytes), cdecl: areas 95 and 96 +0x3C[7] (area 96 PSX 0x801F35A8): AreaMap_Elevation(the leader's +0x34, +0x38) sign-extended; MapView_Elevation equal: 0x20 less, else set to it; MapView_Redraw + 2. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413940
+name = "Area97_TailWaitCounter3"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413940..0x41397F (0x40 bytes), cdecl: Field_ModeTailKinds[13] (armed by Area97_StepHook): by the s8 0x9039F4: 0 - ScriptFlags_Set40, state 1; 1 - counter 3 (0x90384B) 2: ScriptFlags_Clear40, counter 3, 0x9039F3 and 0x9039F4 zeroed. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413980
+name = "Area97_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413980..0x4139D0 (0x51 bytes), cdecl: Area_StepHook's case for area 97: z (dword [esp+8]) <= 0x3A0000 signed, x's high word - 0x30 below 3 (16-bit), leader pose 0x802D48 0/1/2 and KeyItem_Has(5) 0: state 0, counter 3 1, tail kind 0xD, al 1; else al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4139E0
+name = "Area97_FlagIfKeyItem5"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4139E0..0x4139FF (0x20 bytes), cdecl: WorldMap_FieldHooks[11], the no-world-map entry tail kind 27 (0x56DE30) jumps to; in area 97's block (a gap of the tool): KeyItem_Has(5): story flag 0x23 set; al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413A00
+psx = 0x801F59F4
+name = "Area98_ChoiceFlag9"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413A00..0x413A40 (0x41 bytes), cdecl: area 98 +0x34[0] = +0x3C[1] (Area98_Handlers): message 0x7DEE48 0xFFFF, Flags_Set(0x904654, 9); the answer 0x7DEE67 (read after) 0: counter 1 0; else Flags_Set(the chapter row [0x929ED0], 0x1A), counter 1 1. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413A50
+psx = 0x801F5AC8
+name = "Area98_ChoiceAsk2F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413A50..0x413A73 (0x24 bytes), cdecl: area 98 +0x34[3], [4] = +0x3C[4], [5] (PSX 0x801F5AC8, 0x801F5B0C): answer not 0: message 0x2F and 0x9398CF 6; 0: message 0xFFFF. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413A80
+psx = 0x801F5B50
+name = "Area98_ChoiceArmTail45"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413A80..0x413AA5 (0x26 bytes), cdecl: area 98 +0x34[5] = +0x3C[6]: answer read, message 0xFFFF; answer 0: ScriptFlags_Set40, tail kind 0x2D state 0. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413AB0
+psx = 0x801F5BA0
+name = "Area98_SpawnEffect37"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413AB0..0x413B81 (0xD2 bytes), cdecl: area 98 +0x3C[0]: Sprite_Current +0xB = Effect_FindFree; not 0xFF: the record (+0xB read again for each store) +0 1, +5 0x37, +0x34 / +0x38 / +0x3C the object's, word +0x2C 0x11D, +6 0, +7 0, +0x29 2, +9 1; Sound_PlayEffect(0x206). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413B90
+psx = 0x801F5DD0
+name = "Area98_InitCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413B90..0x413BB0 (0x21 bytes), cdecl: area 98 +0x40: AreaMap_SetByte(4 + i, 5, 0x50) for i 0..3 (the pushed x's high half is the previous answer's; the callee reads a word). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413BC0
+name = "Area98_TailChangeArea62"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413BC0..0x413C1F (0x60 bytes), cdecl: Field_ModeTailKinds[45] (armed by Area98_ChoiceArmTail45): state 0 and Field_Request not 2: 0x904148 / 0x90414C the leader's x, z, 0x904150 Game_AreaNumber; Field_ChangeArea(0x62, 0x380000, 0x2C0000, 1); ScriptFlags_Clear40, kind and state 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413C20
+name = "Area98_Trigger44"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413C20..0x413C7C (0x5D bytes), cdecl: Field_ObjectTriggers id 44 (a gap of the tool, area 98's block): ScriptFlags_Set40; the focus object [0x903804] (read again for each) +1 4, +0x83 0, word +0x8A 0; tail kind 4 (engine 0x56D930), sub-kind 9, counter 3 = (focus - Sprite_Objects) / 0xA4 (signed, by the magic 0x63E7063F); al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413C80
+psx = 0x801F2C04
+name = "Area98_CameraDistanceFF00"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413C80..0x413C90 (0x11 bytes), cdecl: area 39 +0x3C[1], area 41 +0x34[10] = +0x3C[0], area 99 +0x3C[0] (PSX twin area 99's): Camera_Distance 0xFF00, MapView_Redraw 2. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413CA0
+psx = 0x801F2C24
+name = "Area98_CameraDistance0"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413CA0..0x413CB0 (0x11 bytes), cdecl: area 39 +0x3C[2], area 41 +0x34[11] = +0x3C[1], area 99 +0x3C[1] (PSX twin area 99's): Camera_Distance 0, MapView_Redraw 2. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413CC0
+psx = 0x801F2C40
+name = "Area99_TurnSoundEffect1B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413CC0..0x413D49 (0x8A bytes), cdecl: area 99 +0x3C[2] (Area99_Handlers): Sprite_Current +8 even: (+8 - 1) & 7; Sound_PlayEffect(word +0x2C + 0x100); Sprite_EnsureAnimation(0x42 + (+8 - 1) / 2, signed); Field_State +0x124 bit 0x40; +0xB = Effect_FindFree, not 0xFF: +0 1, +5 0x1B. Sprite_Current read again after each call. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413D50
+psx = 0x801F2D68
+name = "Area99_RunDrift"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413D50..0x413D61 (0x12 bytes), cdecl: area 99 +0x3C[3]: jmp [Sprite_Current[4] * 4 + 0x619C3C] (Area99_DriftStates, 2 entries; unchecked, ours aborts past). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413D70
+name = "Area99_DriftStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413D70..0x413D91 (0x22 bytes), cdecl: Area99_DriftStates[0]: Sprite_Current +0xA 0x48, +4 1; Field_ActiveMember word +0x8A - 2. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413DA0
+name = "Area99_DriftStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413DA0..0x413DE4 (0x45 bytes), cdecl: Area99_DriftStates[1]: +0xA 0: +4 0. Else +0x38 += -(s8 Area99_DriftSteps[+0xA & 0xF]) << 11, +0xA - 1, Field_ActiveMember word +0x8A - 2. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413DF0
+psx = 0x801F2E58
+name = "Area99_RunLeap"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413DF0..0x413E01 (0x12 bytes), cdecl: area 99 +0x3C[4]: jmp [Sprite_Current[4] * 4 + 0x619C54] (Area99_LeapStates, 2 entries; unchecked, ours aborts past). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413E10
+name = "Area99_LeapStart"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413E10..0x413EB0 (0xA1 bytes), cdecl: Area99_LeapStates[0]: speed = Field_MoveSpeeds[3]; +9 0, +0xB 3, +0xA = 16 idiv speed, +0x14 0x4200, +0xC = 0x20000 idiv (+0xA * 4), +0x10 = 0xFFFE8000 idiv (+0xA * 4) (a speed of 0 or above 16 faults; ours aborts); +0xA 0xE, +4 1; Field_State word +0x12E - 2. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413EC0
+name = "Area99_LeapStep"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413EC0..0x413F47 (0x88 bytes), cdecl: Area99_LeapStates[1]: +0x34 += +0xC, +0x38 += +0x10, word +0x3E += +0x14 sar 8, +0x14 -= 0x700, +0xA - 1; old +0x14 > 0 and new < 0: Sprite_EnsureAnimation(0x51); +0xA below 1: +4 0, else Field_State word +0x12E - 2. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413F50
+psx = 0x801F30A8
+name = "Area99_ToggleRowFlag1F"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413F50..0x413F60 (0x11 bytes), cdecl: area 99 +0x3C[5]: 0x57C160(the chapter row [0x929ED0], 0x1F): the flag toggled. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413F70
+psx = 0x801F30D0
+name = "Area99_InitCell"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413F70..0x413FBC (0x4D bytes), cdecl: area 99 +0x40: Cond_ByteFD 1: Flags_Test(0x903FA8, 0x1C) and not (0x1D): AreaMap_SetByte(0x23, 0x4F, 0x51); else (0x23, 0x4F, 0x50). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x413FC0
+psx = 0x801F34FC
+name = "Area100_ChangeAreaByFlags"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x413FC0..0x414067 (0xA8 bytes), cdecl: area 100 +0x3C[0] (Area100_Handlers): Flags_Test(0x94) != 0 | (Flags_Test(0x93) != 0) << 1: 0 Field_ChangeArea(0x3B, 0x478000, 0x2A0000, 0x81), 1 (0x24, 0x478000, 0x240000, 0x81), 2 (0x74, 0x478000, 0x340000, 0x81), 3 (0x70, 0xC8000, 0x580000, 0x81). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414070
+psx = 0x801F3608
+name = "Area100_SetFlag45"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414070..0x41407F (0x10 bytes), cdecl: area 100 +0x3C[2]: story flag 0x45 set. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414080
+psx = 0x801F3630
+name = "Area100_ShiftCameraUp4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414080..0x41408F (0x10 bytes), cdecl: area 49 +0x34[17] = +0x3C[15], area 100 +0x3C[3], area 133 +0x3C[2] (PSX twin area 100's): Camera_ShiftY + 4, MapView_Redraw 2. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414090
+psx = 0x801F3658
+name = "Area100_ShiftCameraDown4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414090..0x41409F (0x10 bytes), cdecl: area 49 +0x34[16] = +0x3C[14], area 100 +0x3C[4], area 133 +0x3C[1] (PSX twin area 100's): Camera_ShiftY - 4, MapView_Redraw 2. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4140A0
+psx = 0x801F369C
+name = "Area100_SpawnEffect9B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4140A0..0x4140E8 (0x49 bytes), cdecl: area 100 +0x3C[6]: Cond_ByteFE 1, MoveCmd_TestFB(0x4A, 0x2F); Effect_FindFree, a slot: +0 1, +5 0x9B, +0x34 0x460000, +0x38 0x340000. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4140F0
+psx = 0x801F3724
+name = "Area100_SpawnEffectB7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4140F0..0x414138 (0x49 bytes), cdecl: area 100 +0x3C[7]: as Area100_SpawnEffect9B with kind 0xB7 (Effect_KindHandlers[0xB7] is Area100_EffectB7Run). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414140
+psx = 0x801F37AC
+name = "Area100_ChoiceFlags93"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414140..0x41423B (0xFC bytes), cdecl: area 100 +0x34[0] = +0x3C[8]; its jump table 0x41422C (4 entries) inside: message = Area100_ChoiceMessages[s8 answer] (unchecked, in .data); answer 1: clear 0x93, set 0x94, 0x33; 2: clear 0x93, 0x94, set 0x33; 3: KeyItem_Has(6): set 0x93, 0x94, 0x33, else message 9 and clear 0x33; 4: nothing; other: set 0x93, clear 0x94, set 0x33. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414240
+name = "Area100_TailEffect9B"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414240..0x41432F (0xF0 bytes), cdecl: Field_ModeTailKinds[28] (armed by Area100_Trigger13; a gap of the tool); its jump table 0x41431C (5) inside: by the s8 state (unsigned above 4: nothing): 0 Kind2_Place(0), 1; 1 counter 0 1: an effect 0x9B at (0x460000, 0x340000) if a slot, timer 0x9039F6 0x1E, 2; 2 timer - 1 at 0: 3, counter 0 + 1; 3 counter 0 0: Msg_OpenScript(3), Field_Request 2, 4; 4 Field_Request not 2: ScriptFlags_Clear40, kind and state 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414330
+name = "Area100_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414330..0x41438D (0x5E bytes), cdecl: Area_StepHook's case for area 100: Cond_ByteFD 3, story flag 0x33, x high word - 0x45 below 3 and z high word - 0x33 below 3 (16-bit), leader pose 0/7/6: counter 0 0, Party_DropIn(0), al 1; else al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414390
+name = "Area100_Trigger16"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414390..0x4143EC (0x5D bytes), cdecl: Field_ObjectTriggers id 16 (a gap of the tool): story flag 0x45, MoveCmd_TestFB(0x4A, 0x1E), Sound_PlayEffect(0x109), AreaMap_SetByte 0xA1 at (0x49, 0x1E), (0x49, 0x1F), (0x4D, 0x33), (0x4D, 0x34); al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4143F0
+name = "Area100_Trigger13"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4143F0..0x41441D (0x2E bytes), cdecl: Field_ObjectTriggers id 13 (a gap of the tool): story flag 0x40, MoveCmd_TestFB(0x4A, 0x2F), ScriptFlags_Set40, tail kind 0x1C state 0; al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414420
+name = "Area100_Trigger30"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414420..0x41443C (0x1D bytes), cdecl: Field_ObjectTriggers id 30 (a gap of the tool): ScriptFlags_Set40, tail kind 0x2C (engine 0x56DE50) state 0 sub-kind 2; al 0. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414440
+psx = 0x801F3C2C
+name = "Area100_InitCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414440..0x414482 (0x43 bytes), cdecl: area 100 +0x40: story flag 0x45 clear: AreaMap_SetByte 0x50 at (0x49, 0x1E), (0x49, 0x1F), (0x4D, 0x33), (0x4D, 0x34). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414490
+name = "Area100_EffectB7Run"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414490..0x4144A1 (0x12 bytes), cdecl: Effect_KindHandlers[0xB7] (0x65562C; a gap of the tool): jmp [Sprite_Current[1] * 4 + 0x61AB40] (Area100_EffectStates, 2 entries; unchecked, ours aborts past). docs/area_w2d.md."
+
+[[func]]
+pc = 0x4144B0
+name = "Area100_EffectB7Ring"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4144B0..0x4144DA (0x2B bytes), cdecl: Area100_EffectStates[1]: the running record's +0x34, +0x38, +0x3C copied to a stack vector, 0x4220D0(&vector) (world 3's, group AR3F). docs/area_w2d.md."
+
+[[func]]
+pc = 0x4144E0
+psx = 0x801F560C
+name = "Area103_TalkByMember"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4144E0..0x414530 (0x51 bytes), cdecl: area 103 +0x3C[0] (Area103_Handlers): MoveScript_Object word +8 = (Area103_FirstListedMember as a byte) + 2 (16 bits), MoveScript_SetTurnTarget(it), its bit 0x10 cleared; Sprite_Current +7 bit 4: its bit 0x20 cleared, else set. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414540
+name = "Area103_FirstListedMember"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414540..0x4145AF (0x70 bytes), cdecl: called by Area103_TalkByMember: the first i of 0..2 with Area103_MemberKeys[i] equal to some member's +0x89 (members below Field_MemberCount, read once), else al 0xFF. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4145B0
+psx = 0x801F5738
+name = "Area103_SkipIfLeader89"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4145B0..0x4145C9 (0x1A bytes), cdecl: area 103 +0x3C[1]: Field_State +0x89 not 0: MoveScript_Object word +0xA + 0x17. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4145D0
+psx = 0x801F5778
+name = "Area103_CountIfLeader89Zero"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4145D0..0x4145E5 (0x16 bytes), cdecl: area 103 +0x3C[2]: Field_State +0x89 0: counter 0 + 1. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4145F0
+psx = 0x801F57B4
+name = "Area103_ShakeElevation"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4145F0..0x414614 (0x25 bytes), cdecl: area 103 +0x3C[3]: MapView_Redraw 2, MapView_Elevation += s8 Area103_Shake[Frame_Counter & 3] * 8. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414620
+psx = 0x801F57FC
+name = "Area103_Ground"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414620..0x41463F (0x20 bytes), cdecl: area 103 +0x3C[4]: Sprite_Current word +0x3E = AreaMap_Elevation(+0x34, +0x38) (the object read again). PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x414640
+psx = 0x801F5834
+name = "Area103_SpawnEffect4D"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x414640..0x414697 (0x58 bytes), cdecl: area 103 +0x3C[5]: Effect_FindFree; a slot: +0 1, +5 0x4D, +0x34 / +0x38 / +0x3C the running object's; 0xFF: MoveScript_Object word +0xA - 2. PSX twin: names/area_records.toml. docs/area_w2d.md."
+
+[[func]]
+pc = 0x4146A0
+name = "Area103_Trigger35"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+status = "evidence"
+impl = "src/game/area_w2d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR2D), 0x4146A0..0x4146BC (0x1D bytes), cdecl: Field_ObjectTriggers id 35 (a gap of the tool): ScriptFlags_Set40, tail kind 0x2C state 0 sub-kind 8; al 0. docs/area_w2d.md."
+
+[[data]]
+pc = 0x617568
+name = "Area95_Handlers"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 95 descriptor 0x617588 +0x3C: Area95_WaitEffectAtCell, Area95_SpawnEffect37, Area95_LeapArc, Area95_TurnAndMove, Area95_TurnAtCell, Area96_ToggleCell, Area96_FaceBack, Area96_SnapElevation (no +0x34, no init). docs/area_w2d.md."
+
+[[data]]
+pc = 0x617D28
+name = "Area96_Handlers"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 96 descriptor 0x617D48 +0x3C: area 95's eight but entry 4, Area96_TurnAtCell (area 95's copy). docs/area_w2d.md."
+
+[[data]]
+pc = 0x618390
+name = "Area98_Handlers"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 98 descriptor 0x6183B0 +0x3C: Area98_SpawnEffect37, then Area98_Choices' six (entries 2 and 3 0x420850 / 0x420870, other blocks'). docs/area_w2d.md."
+
+[[data]]
+pc = 0x618394
+name = "Area98_Choices"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 98 descriptor +0x34, the tail of Area98_Handlers: Area98_ChoiceFlag9, 0x420850, 0x420870, Area98_ChoiceAsk2F twice, Area98_ChoiceArmTail45. docs/area_w2d.md."
+
+[[data]]
+pc = 0x619BDC
+name = "Area99_Handlers"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 99 descriptor 0x619BF8 +0x3C: Area98_CameraDistanceFF00, Area98_CameraDistance0, Area99_TurnSoundEffect1B, Area99_RunDrift, Area99_RunLeap, Area99_ToggleRowFlag1F. docs/area_w2d.md."
+
+[[data]]
+pc = 0x619C3C
+name = "Area99_DriftStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area99_RunDrift jumps through it by Sprite_Current[4]: Area99_DriftStart, Area99_DriftStep; Area99_DriftSteps follows. docs/area_w2d.md."
+
+[[data]]
+pc = 0x619C44
+name = "Area99_DriftSteps"
+ctype = "signed char"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area99_DriftStep's signed step by +0xA & 0xF (a repeating four). docs/area_w2d.md."
+
+[[data]]
+pc = 0x619C54
+name = "Area99_LeapStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area99_RunLeap jumps through it by Sprite_Current[4]: Area99_LeapStart, Area99_LeapStep. docs/area_w2d.md."
+
+[[data]]
+pc = 0x61AAC8
+name = "Area100_Handlers"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 100 descriptor 0x61AAF0 +0x3C: Area100_ChangeAreaByFlags, 0x421FB0 (another block's), Area100_SetFlag45, Area100_ShiftCameraUp4, Area100_ShiftCameraDown4, 0x40F530 (another block's), Area100_SpawnEffect9B, Area100_SpawnEffectB7, Area100_ChoiceFlags93. docs/area_w2d.md."
+
+[[data]]
+pc = 0x61AAE8
+name = "Area100_Choices"
+ctype = "unsigned long"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 100 descriptor +0x34, the last entry of Area100_Handlers: Area100_ChoiceFlags93. docs/area_w2d.md."
+
+[[data]]
+pc = 0x61AB34
+name = "Area100_ChoiceMessages"
+ctype = "unsigned short"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area100_ChoiceFlags93's message word by the s8 answer 0..4 (unchecked: a negative answer reads before it, inside .data). docs/area_w2d.md."
+
+[[data]]
+pc = 0x61AB40
+name = "Area100_EffectStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area100_EffectB7Run jumps through it by Sprite_Current[1]: 0x40B4F0 (area 59's block, group AR1D, shared by seven areas' effect tables), Area100_EffectB7Ring. docs/area_w2d.md."
+
+[[data]]
+pc = 0x61B488
+name = "Area103_Handlers"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): area 103 descriptor 0x61B4A0 +0x3C: Area103_TalkByMember .. Area103_SpawnEffect4D. docs/area_w2d.md."
+
+[[data]]
+pc = 0x61B4E4
+name = "Area103_MemberKeys"
+ctype = "unsigned char"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area103_FirstListedMember compares each with the members' +0x89 byte. docs/area_w2d.md."
+
+[[data]]
+pc = 0x61B4E8
+name = "Area103_Shake"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR2D): Area103_ShakeElevation's step by Frame_Counter & 3, times 8. docs/area_w2d.md."
