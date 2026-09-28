@@ -58242,3 +58242,521 @@ ctype = "char"
 count = 1
 status = "evidence"
 evidence = "read 2026-09-28 (round ten group AR1F): Area75_DrawCounters' Crt_sprintf format (two numbers); length not measured. docs/area_w1f.md."
+
+[[func]]
+pc = 0x41DAD0
+name = "Area135_ChoiceStartTail"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DAD0..0x41DAF5 (0x26 bytes), cdecl: area 135 +0x34[0] (choice): message 0xFFFF; answer 0x7DEE67 0: ScriptFlags_Set40, tail kind 0x12 (Area135_Tail18) at state 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DB00
+name = "Area135_ChoiceCount"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DB00..0x41DB3B (0x3c bytes), cdecl: area 135 +0x34[1] (choice): message 0x84; the tail sub byte 0x9039F5 = the answer + 1, Crt_sprintf(Text_Records, Area08_MessageFormat, it); the marker 0x8021EC +0x83 = the answer + 4. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DB40
+name = "Area135_ChoiceStartTail14"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DB40..0x41DBA2 (0x63 bytes), cdecl: area 135 +0x34[2] (choice): the s8 answer 0 / 1: ScriptFlags_Set40, tail kind 0x12 at state 0x14, Effect_FindFree to the byte 0x675CC0 (0xFF stored too); a slot: +0 = 1, +5 = 0x66, +6 = the answer. Message 0xFFFF. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DBB0
+name = "Area135_ChoiceFlag37"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DBB0..0x41DBDA (0x2b bytes), cdecl: area 135 +0x34[3] (choice): message 0xFFFF; answer 0 Flags_Set, else Flags_Clear, story flag 0x37. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DBE0
+name = "Area135_ClearFlagC"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DBE0..0x41DBF6 (0x17 bytes), cdecl: area 135 +0x34[4] = +0x3C[0] (PSX 0x801F40F8, names/area_records.toml): Flags_Clear story flag 0xC, the tail sub byte 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DC00
+name = "Area135_RiseInZone4"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DC00..0x41DC21 (0x22 bytes), cdecl: area 135 +0x3C[1] (PSX 0x801F4128): Cond_ByteFD 4: Sprite_Current word +0x3E += word +0x14, MoveScript_Object word +0xA less 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DC30
+name = "Area135_RiseElsewhere"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DC30..0x41DC51 (0x22 bytes), cdecl: area 135 +0x3C[2] (PSX 0x801F4178): the same when Cond_ByteFD is not 4. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DC60
+name = "Area135_LeaveByExit"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DC60..0x41DCDD (0x7e bytes), cdecl: area 135 +0x3C[3] (PSX 0x801F41C8): Field_ChangeArea(0x87, x << 16, z << 16, 0x81) from the byte pair [MoveScript_Object[3] - 6] of Area135_ExitsZone4 (zone 4) or Area135_Exits; Sprite_Kind2 +0x80 |= 8. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DCE0
+name = "Area135_MarkerRoute"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DCE0..0x41DDF9 (0x11a bytes), cdecl: area 135 +0x3C[4] (PSX 0x801F4270): each of the 16 Area135_Routes at the marker 0x8021EC's cell: no target: script back 4 (leader: counter 3 = 8); else +0x24 &= 0xDF, +2 = 0, MoveCmd_OpF7(x, z, 0x10, MoveScript_Object), its +7 = 1, +8 the direction; leader: Field_Kind2X / Z and the F3 divisor 0x20. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DE00
+name = "Area135_ToMarker"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DE00..0x41DE52 (0x53 bytes), cdecl: area 135 +0x3C[5] (PSX 0x801F4464): Sprite_Current Sprite_Kind2: Field_Kind2X / Z = the marker's x / z, F3 divisor 0x20; else its x, z, y dwords = the marker's. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DE60
+name = "Area135_FaceLeaderDir"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DE60..0x41DE9F (0x40 bytes), cdecl: area 135 +0x3C[6] (PSX 0x801F44E0): Field_State's party index (signed / 0x14C, a byte) not 0: +8 = the leader's direction, Sprite_SetAnimation(+8). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DEA0
+name = "Area135_HeldMove1"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DEA0..0x41DEF2 (0x53 bytes), cdecl: area 135 +0x3C[7] (PSX 0x801F456C): word +0x3A at 7 or more (signed) and Input_Held bit 0x20: +8 = 1, MoveScript_Object +7 = 2, MoveCmd_Move, +0x14 = 0, script back 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DF00
+name = "Area135_HeldMove7"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DF00..0x41DF52 (0x53 bytes), cdecl: area 135 +0x3C[8] (PSX 0x801F460C): the same on word +0x36 at 6, direction 7. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41DF60
+name = "Area135_FallToFloor"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41DF60..0x41E036 (0xd7 bytes), cdecl: area 135 +0x3C[9] (PSX 0x801F46AC): the highest MapView_GroundAt (s16) over 4 x 2 points (x - 0x18000, z - 0x8000, steps 0x10000; MapView_HeightScale 1 each); Area135_ObjectAtCell(x, z) to 0x9039F5; found: Area135_FallTo(AreaMap_Elevation + 0x280), else Area135_FallTo(highest + 0x180). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E040
+name = "Area135_Fall780"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E040..0x41E04B (0xc bytes), cdecl: area 135 +0x3C[10] (PSX 0x801F4828): Area135_FallTo(0x780). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E050
+name = "Area135_StampCellsRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E050..0x41E054 (0x5 bytes), cdecl: area 135 +0x3C[11] (PSX 0x801F4848): jmp Area135_StampCells. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E060
+name = "Area135_RestoreCellsRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E060..0x41E064 (0x5 bytes), cdecl: area 135 +0x3C[12] (PSX 0x801F4868): jmp Area135_RestoreCells. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E070
+name = "Area135_RestoreOnRequest5"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E070..0x41E089 (0x1a bytes), cdecl: area 135 +0x3C[13] (PSX 0x801F4888): Field_Request 5: jmp Area135_RestoreCells; else script back 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E090
+name = "Area135_JumpByOccupied"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E090..0x41E108 (0x79 bytes), cdecl: area 135 +0x3C[14] (PSX 0x801F48DC): the first of the four Area135_JumpCells the object stands on with an object there (Area135_ObjectAtCell) stops the count; MoveScript_Object word +0xA += 3 x the count. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E110
+name = "Area135_QueueRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E110..0x41E121 (0x12 bytes), cdecl: area 135 +0x3C[15] (PSX 0x801F49A8): jmp [Area135_QueueStates + Sprite_Current[4] * 4] (unchecked; ours aborts past the 2 code pointers). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E130
+name = "Area135_QueueStepZ"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E130..0x41E1D2 (0xa3 bytes), cdecl: Area135_QueueStates[0]: n = Area135_CountQueue; +8 = 5; MoveScript_Object +7 = ((n << 17) - z + 0xC8000) >> 15, negative: negated and +8 ^= 4; not 0: MoveCmd_Move, +0x14 = 0; state + 1, script back 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E1E0
+name = "Area135_QueueStepX"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E1E0..0x41E25B (0x7c bytes), cdecl: Area135_QueueStates[1]: n = Area135_CountQueue; 4: nothing; else +8 = 3, +7 = ((Area135_QueueCells[n] << 16 | 0x8000) - x) >> 15; not 0: MoveCmd_Move, +0x14 = 0; state 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E260
+name = "Area135_WalkRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E260..0x41E271 (0x12 bytes), cdecl: area 135 +0x3C[16] (PSX 0x801F4BD4): jmp [Area135_WalkStates + Sprite_Current[4] * 4] (unchecked; the table runs on into Area135_LiftStates and Area135_SpawnStates: 13 code pointers, ours aborts past them). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E280
+name = "Area135_WalkToX"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E280..0x41E307 (0x88 bytes), cdecl: Area135_WalkStates[0]: +8 = 7; +7 = (x - 0x1C8000) >> 15, negative: +8 ^= 4 and negated; MoveCmd_Move, +0x14 = 0, state + 1, script back 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E310
+name = "Area135_WalkToZ"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E310..0x41E360 (0x51 bytes), cdecl: Area135_WalkStates[1]: +8 = 5; +7 = (0x148000 - z) >> 15; MoveCmd_Move, +0x14 = 0, state 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E370
+name = "Area135_LiftRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E370..0x41E381 (0x12 bytes), cdecl: area 135 +0x3C[17] (PSX 0x801F4D88): jmp [Area135_LiftStates + Sprite_Current[4] * 4] (11 code pointers to the table after, ours aborts past them). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E390
+name = "Area135_LiftUp"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E390..0x41E3BC (0x2d bytes), cdecl: Area135_LiftStates[0], [3], [4], [7]: MapView_Elevation += 4, MapView_Redraw = 2, state + 1, script back 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E3C0
+name = "Area135_LiftDown"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E3C0..0x41E3EC (0x2d bytes), cdecl: Area135_LiftStates[1], [2], [5], [6]: MapView_Elevation -= 4, MapView_Redraw = 2, state + 1, script back 2. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E3F0
+name = "Area135_LiftDone"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E3F0..0x41E419 (0x2a bytes), cdecl: Area135_LiftStates[8]: at x 0x168000 and z 0x128000 script on by 1; state 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E420
+name = "Area135_SpawnRun"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E420..0x41E431 (0x12 bytes), cdecl: area 135 +0x3C[18] (PSX 0x801F4ED4): jmp [Area135_SpawnStates + Sprite_Current[4] * 4] (2; ours aborts past them). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E440
+name = "Area135_SpawnCopy"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E440..0x41E4D2 (0x93 bytes), cdecl: Area135_SpawnStates[0]: script back 2; Sprite_FindFree to the word 0x903850; a slot: Area135_RestoreCells, EventOp_9x(Area135_SpawnOps + 13 x 0x9039F5), the new object given the old one's x, z, y, the old one current again, 0x46D710, +0xA = +9, +9 = 0, state + 1. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E4E0
+name = "Area135_SpawnCountdown"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E4E0..0x41E526 (0x47 bytes), cdecl: Area135_SpawnStates[1]: script back 2; +0xA less 1; it was 0: +0 = 0, state 0; else +9 = +0xA, 0x46D770, +9 = 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E530
+name = "Area135_SpawnKind1AtLeader"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E530..0x41E571 (0x42 bytes), cdecl: area 135 +0x3C[19] (PSX 0x801F50B0): Sprite_Current = the leader; Effect_Spawn(1, 0, Area135_EffectKinds[party list 1], the leader's words +0x2E / +0x30); a slot to +0xB. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E580
+name = "Area135_CellHook"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E580..0x41E5DB (0x5c bytes), cdecl: the cell hook's pair for area 0x87 (0x662F5C, docs/area_harness.md section 8): the first of Area135_CellEntries (2) matching the x / z bytes and the leader's direction (the entry's low nibble): ScriptFlags_Set40, tail state the entry's, kind 0x12, al 1; else al 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E5E0
+name = "Area135_StepHook"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E5E0..0x41E629 (0x4a bytes), cdecl: Area_StepHook's case for area 135 (0x56E162): Cond_ByteFD 4, 6 or 7, story flag 0xC (Flags_Test) and Area135_NearMarker(x, z): Party_DropIn(0), al 1; else al 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41E630
+name = "Area135_Tail18"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41E630..0x41EB33 (0x504 bytes), cdecl: Field_ModeTailKinds[18]: the s8 0x9039F4 through the byte table 0x41EB14 (32) and the jump table 0x41EAC8 (19) inside the extent (code to 0x41EAC6). States 0/1 a key item, message 0x81 and stream 2; 5/6 Area135_PartyInBox or a flag 0x2A toggle and a wait; 0xA/0xB message 0x83/0x84 on flag 0xC; 0x14..0x1F the camera glide and a button-driven sequence on counter 3, the effect in 0x675CC0 and the object in 0x9039F5. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EB40
+name = "Area135_Init"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EB40..0x41EBD8 (0x99 bytes), cdecl: area 135 +0x40 (PSX 0x801F5A44): zone 4 entered from zone 1 (0x905E68): EventOp_Bx(Area135_InitOp), Flags_Clear 0xC, the zone re-read, 0x9039F5 = 0; zone 4: 0x8034B0 |= 1; zone 4, 6, 7: the marker's +0 = 1; zone 0: Effect_FindFree, a slot +0 = 1, +5 = 0x53, +0x18 = 0, +0x1C = 6; counter 3 = 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EBE0
+name = "Area135_FallTo"
+ret = "void"
+params = "unsigned height"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EBE0..0x41EC33 (0x54 bytes), cdecl: called by handlers 9, 10: d = s16(height - word +0x3E); +9 = (|d / 128| << 4) byte; +0x14 = d / +9 (idiv: +9 of 0 faults; ours aborts); +0x10, +0xC = 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EC40
+name = "Area135_ObjectAtCell"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EC40..0x41ECA7 (0x68 bytes), cdecl: the first field object 0..29 in use (+0 bit 0), not Sprite_Current, kind +6 = 0xA, at exactly (x, z): al its index, else 0xFF. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41ECB0
+name = "Area135_CountQueue"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41ECB0..0x41ECEA (0x3b bytes), cdecl: Area135_ObjectAtCell(0x208000, 0xC8000 + n << 17) for n 0..3 until one is empty: al n (0..4). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41ECF0
+name = "Area135_StampCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41ECF0..0x41EDDE (0xef bytes), cdecl: Field_Request 5: script back 2; else the 2 x 2 cells under x - 0x8000, z - 0x8000: +0x20 = 0, each AreaMap_SetHeight(0x10), AreaMap_ByteAt or'd into +0x20 (bytes 0..3), AreaMap_SetByte(0x11). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EDE0
+name = "Area135_RestoreCells"
+ret = "void"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EDE0..0x41EE65 (0x86 bytes), cdecl: the 2 x 2 cells at the object's own x, z: AreaMap_SetHeight(0), AreaMap_SetByte(+0x20 >> 0 / 16 / 8 / 24). docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EE70
+name = "Area135_NearMarker"
+ret = "unsigned char"
+params = "long x, long z"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EE70..0x41EEE0 (0x71 bytes), cdecl: r = (Sprite_Current +0x70 byte + the marker's + 2) << 15; |x - +9 * stepX - markerX| < r and the same for z (the marker 0x8021EC: +9, +0xC, +0x10, +0x34, +0x38): al 1, else 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EEF0
+name = "Area135_PartyInBox"
+ret = "unsigned char"
+params = "void"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EEF0..0x41EF50 (0x61 bytes), cdecl: a party record below Field_MemberCount with cell x word +0x36 0x2C / 0x2D and z word +0x3A 0x30..0x37: al 1, else 0. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EF60
+name = "Area135_Kind2ToObject0"
+ret = "void"
+params = "unsigned divisor"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EF60..0x41EF9D (0x3e bytes), cdecl: Field_Kind2X / Z = Sprite_ObjectsExtra[0] x / z (0x802034 / 0x802038); the word divisor not 0 also MoveScript_F3Divisor. docs/area_w3d.md."
+
+[[func]]
+pc = 0x41EFA0
+name = "Area135_OpenMessage"
+ret = "void"
+params = "unsigned id"
+status = "evidence"
+impl = "src/game/area_w3d.cpp"
+evidence = "disasm 2026-09-28 (round ten group AR3D, capstone to the last instruction; extent agrees with tools/area_rows.py --unit AREA135), 0x41EFA0..0x41EFD0 (0x31 bytes), cdecl: Msg_OpenScript(the id byte); 0x905B84 = MessagePools; Window_FreeCurrent; 0x803164 / 0x803166 = 0x3C0 / 0xAA0. docs/area_w3d.md."
+
+[[data]]
+pc = 0x62D984
+name = "Area135_ExitsZone4"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_LeaveByExit: (x, z) cell byte pairs by MoveScript_Object[3] - 6 in zone 4 (unchecked). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62D98C
+name = "Area135_Exits"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_LeaveByExit: the pairs outside zone 4 (unchecked). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62D994
+name = "Area135_Routes"
+ctype = "unsigned char"
+count = 112
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_MarkerRoute: 16 records of 7 bytes (the marker cell x, z; target x half flag, cell; z half flag, cell; direction). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA04
+name = "Area135_JumpCells"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_JumpByOccupied: four (x, z) cell bytes. docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA0C
+name = "Area135_QueueStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_QueueRun jumps through [Sprite_Current[4]]: Area135_QueueStepZ, Area135_QueueStepX. docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA14
+name = "Area135_QueueCells"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_QueueStepX: the row's x cell by Area135_CountQueue (unchecked). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA18
+name = "Area135_WalkStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_WalkRun jumps through [Sprite_Current[4]]: Area135_WalkToX, Area135_WalkToZ; read on unchecked into Area135_LiftStates and Area135_SpawnStates (13 code pointers to the zero at 0x62DA4C). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA20
+name = "Area135_LiftStates"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_LiftRun jumps through [Sprite_Current[4]]: Area135_LiftUp / LiftDown (up, down, down, up, up, down, down, up), Area135_LiftDone; read on into Area135_SpawnStates (11 code pointers). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA44
+name = "Area135_SpawnStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_SpawnRun jumps through [Sprite_Current[4]]: Area135_SpawnCopy, Area135_SpawnCountdown. docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA50
+name = "Area135_SpawnOps"
+ctype = "unsigned char"
+count = 52
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_SpawnCopy: EventOp_9x records of 13 bytes by 0x9039F5 (four read here; the index unchecked). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA84
+name = "Area135_CellEntries"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_CellHook: two entries (x, z, direction nibble, tail state). docs/area_w3d.md."
+
+[[data]]
+pc = 0x62DA8C
+name = "Area135_InitOp"
+ctype = "unsigned char"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_Init: the EventOp_Bx record (zone 4 entered from zone 1); length not measured. docs/area_w3d.md."
+
+[[data]]
+pc = 0x62C168
+name = "Area135_EffectKinds"
+ctype = "unsigned char"
+count = 1
+status = "evidence"
+evidence = "read 2026-09-28 (round ten group AR3D): Area135_SpawnKind1AtLeader: the effect kind by party list 1's byte (unchecked; length not measured). docs/area_w3d.md."
