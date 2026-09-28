@@ -207,6 +207,24 @@ U MostlyNo(const U*, U answer) {
     const U n = ah::Noise();
     return (answer & 0xFFFFFF00u) | (n % 6 != 0 ? 0u : ((n >> 8) | 1u) & 0xFF);
 }
+// Area 121's turn keys (0x41C110): as the real one, most calls turn the
+// running object's +8 by ^ 4, + 1 or - 1 (& 7) and answer 1, or answer 0;
+// a quarter of the calls turn it two to six steps (answering 1) - the real
+// keys never do, but Area104_LeaderIdle's limit on a turn of more than one
+// step is only reached so.
+U TurnKeysEffect(const U*, U answer) {
+    const U n = ah::Noise();
+    unsigned char* const o = Sprite_Current;
+    const U hi = answer & 0xFFFFFF00u;
+    switch (n % 8) {
+    case 0: o[8] = static_cast<unsigned char>((o[8] ^ 4) & 7); return hi | 1;
+    case 1: o[8] = static_cast<unsigned char>((o[8] + 1) & 7); return hi | 1;
+    case 2: o[8] = static_cast<unsigned char>((o[8] - 1) & 7); return hi | 1;
+    case 3: case 4: return hi;
+    case 5: o[8] = static_cast<unsigned char>((n >> 8) & 7); return hi | (((n >> 12) | 1) & 0xFF);
+    default: o[8] = static_cast<unsigned char>((o[8] + 2 + (n >> 8) % 5) & 7); return hi | 1;
+    }
+}
 // Field_LeaderStepTarget: 0 (free) half the time, 1 and 0xFF (the two the
 // idle stops on) and another byte a sixth each; the running object moved as
 // MovesCurrent does.
@@ -229,6 +247,12 @@ U FlagsAnswer(const U* a, U answer) {
     const U n = ah::Noise();
     if (a[0] != at::kStoryFlags || n % 4 == 0) return answer;
     return (Mem(at::kStoryFlags + (a[1] & 0xFF) / 8)[0] >> (a[1] & 7)) & 1;
+}
+// Scenario_ArriveHook answers an int the step tests whole (test eax, eax):
+// a whole eax of 0 five calls in six, else anything not 0.
+U ArriveAnswer(const U*, U answer) {
+    const U n = ah::Noise();
+    return n % 6 != 0 ? 0u : (answer | 1u);
 }
 // The kind 0x5C turn test's stand-in: answers 0 two calls in three, and
 // moves the facings both callers read after it.
@@ -261,7 +285,7 @@ const ah::Callee kCallees[] = {
     {W2E_OURS(Effect_FindFree), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &FindFreeAnswer, nullptr},
     {W2E_OURS(Sprite_ObjectAt), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &ObjectAtAnswer, nullptr},
     {W2E_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {W2E_OURS(Scenario_ArriveHook), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
+    {W2E_OURS(Scenario_ArriveHook), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &ArriveAnswer, nullptr},
     {W2E_OURS(Field_LeaderCellEvent), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
     {W2E_OURS(Field_LeaderTalkTest), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
     // the x and z words pushed with stale bits above the byte it reads
@@ -281,7 +305,7 @@ const ah::Callee kCallees[] = {
     {W2E_RAW("0x41BE10", kTurnToward121), 3, {kAll, kAll, kU8}, ah::Answer::kByte, 0, 7, {}, &MovesCurrent, nullptr},
     {W2E_RAW("0x41C0A0", kMenuButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
     {W2E_RAW("0x41C0E0", kHoldButton121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MostlyNo, nullptr},
-    {W2E_RAW("0x41C110", kTurnKeys121), 0, {}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent, nullptr},
+    {W2E_RAW("0x41C110", kTurnKeys121), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &TurnKeysEffect, nullptr},
     {W2E_RAW("0x41C350", kGaugeFrame121), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W2E_RAW("0x41C5B0", kKind5CState4), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent, nullptr},
     // an engine GPU setter nobody owns (POLY_F3)
@@ -345,9 +369,10 @@ enum : unsigned {
 };
 static_assert(kDrawHud + 1 == AH_COUNT(kClonesWm), "the world map's seeding indices");
 
-const ah::DataTable kTablesWm[] = {
-    {at::kWm104.plate_states, 5}, {at::kWm104.hud_states, 2}, {at::kWm104.frame_states, 4}, {at::kWm104.box_states, 4},
-};
+// The four state tables from the fuzz's own literals (read off the exe):
+// were they kWm104's, a wrong table constant in ours would move the swap
+// with it and stand.
+const ah::DataTable kTablesWm[] = {{0x61BB7C, 5}, {0x61BB90, 2}, {0x61BB98, 4}, {0x61BBA8, 4}};
 
 // The fuzz's own literal table addresses (read off the exe, docs/area_w2e.md
 // section 2): the seed plants and the regions come from these, never from the
@@ -522,7 +547,7 @@ const ah::Clone kClonesMinimap[] = {
     W2E_C(Area104_BuildMinimap, 0x416020, 0xB8, kCalls416020, S::kCallee),
 };
 
-const ah::DataTable kTables104[] = {{at::kA104LeaderStates, at::kA104LeaderStateCount}, {at::kA104Kind5CStates, at::kA104Kind5CStateCount}};
+const ah::DataTable kTables104[] = {{0x61BC28, 2}, {0x61BC30, 5}};   // the fuzz's literals, as the world map's
 
 // Beyond the field frame: the effect records, the minimap's image, upload
 // queue and CLUT words, the cells the band writes outside the harness's
@@ -594,7 +619,8 @@ void Seed104(unsigned k) {
         for (unsigned a = 0; a < 4; ++a)
             if (ah::Half()) B(at::kActorStates + a * at::kActorStride) = static_cast<unsigned char>(ah::Next() ^ (ah::Half() ? 0x20 : 0));
         button();
-        o[8] = static_cast<unsigned char>(ah::Often() ? ah::Next() % 8 : ah::Next());
+        if (ah::Half()) SetLong(Mem(at::kInputHeld), static_cast<std::int32_t>(ah::Next() & ~static_cast<U>(Word(Mem(at::kButtonCharge)))));
+        o[8] = static_cast<unsigned char>(ah::Next() % 6 != 0 ? ah::Next() % 8 : ah::Next());
         if (ah::Often()) o[0xB] = static_cast<unsigned char>(AH_PICK(0x40, 0x3F, 0, 0x41, 0xC0, 0x10));
         break;
     case kObjectAhead:
@@ -616,9 +642,16 @@ void Seed104(unsigned k) {
         if (ah::Often()) o[8] = static_cast<unsigned char>(AH_PICK(2, 6, 0, 1, 3, 4, 5, 7, 0x82));
         if (ah::Often()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x100u);
         if (ah::Often()) B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) & ~0x40u);
-        if (ah::Half()) SetWord(Mem(at::kButtonCharge), 0);
-        if (ah::Half()) SetWord(Mem(at::kButtonMap0), 0);
-        if (ah::Half()) SetWord(Mem(at::kFieldInputHeld), ah::Half() ? 0 : AH_PICK(0x1000, 0x8000, 0x0800));
+        // the held word one key of one source alone (0xF000's four bits, a
+        // bit of either button word), the others clear of it; or none
+        SetWord(Mem(at::kButtonCharge), ah::Half() ? 0 : ah::Next() & 0x0FFF);
+        SetWord(Mem(at::kButtonMap0), ah::Half() ? 0 : ah::Next() & 0x0FFF);
+        switch (ah::Next() % 4) {
+        case 0: SetWord(Mem(at::kFieldInputHeld), AH_PICK(0x1000, 0x2000, 0x4000, 0x8000)); break;
+        case 1: SetWord(Mem(at::kFieldInputHeld), Word(Mem(at::kButtonCharge)) & (0u - Word(Mem(at::kButtonCharge)))); break;
+        case 2: SetWord(Mem(at::kFieldInputHeld), Word(Mem(at::kButtonMap0)) & (0u - Word(Mem(at::kButtonMap0)))); break;
+        default: SetWord(Mem(at::kFieldInputHeld), ah::Half() ? 0 : ah::Next() & 0x0FFF & ~static_cast<U>(Word(Mem(at::kButtonCharge)) | Word(Mem(at::kButtonMap0)))); break;
+        }
         break;
     case kPoseByCharge:
     case kLeaderCharge:
