@@ -170,6 +170,18 @@ void EndChapter(unsigned char pick) {
     BH_AT(Handler, at::kEndThird)();
 }
 
+// BossActor_Find(tag) into Sprite_Current. The original writes through the
+// answer untested; with no field actor carrying the tag it writes near
+// address 0 and faults. Ours aborts there with a message (the owner's rule,
+// round9 doc section 6; docs/boss_sb.md section 6), as BH's spawn writers do.
+void FindActor(const char* who, unsigned tag) {
+    unsigned char* const actor = BH_CALL(BossActor_Find)(tag);
+    if (actor == nullptr)
+        bof3::Fatal("%s: no field actor carries tag %u - the original writes through the null answer (docs/boss_sb.md section 6)",
+                    who, tag);
+    Sprite_Current = actor;
+}
+
 // Field actor `tag` posed from an enemy: bit 0x40 cleared, the enemy's place
 // copied, Sprite_Current = the actor, animation bank 0x5F, +0x48 = 0, the
 // flip +0x2A, animation 1, and the enemy's words +0x58 / +0x5A (Sprite_Current
@@ -177,7 +189,7 @@ void EndChapter(unsigned char pick) {
 void PoseActor(unsigned tag, U enemy, U pose, unsigned char flip) {
     BH_CALL(BossActor_ClearBit40)(tag);
     BH_CALL(BossActor_CopyFrom)(tag, At(enemy), 1);
-    Sprite_Current = BH_CALL(BossActor_Find)(tag);
+    FindActor("PoseActor", tag);
     BH_CALL(Sprite_SetAnimationBank)(0x5F);
     Sprite_Current[0x48] = 0;
     Sprite_Current[0x2A] = flip;
@@ -202,7 +214,7 @@ void ExitPosePair(unsigned tag0, unsigned char flip) {
 // (the flip 1 in 9 and 10), animation 0, enemy 0's words +0x58 / +0x5A.
 void ExitPoseOne(unsigned tag, bool flip) {
     BH_CALL(BossActor_ClearBit40)(tag);
-    Sprite_Current = BH_CALL(BossActor_Find)(tag);
+    FindActor("ExitPoseOne", tag);
     BH_CALL(Sprite_SetAnimationBank)(0x83);
     if (flip) Sprite_Current[0x2A] = 1;
     BH_CALL(Sprite_SetAnimation)(0);
