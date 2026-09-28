@@ -191,7 +191,7 @@ or any; D>Lord's count at 0, 1, 2, 0xFE, 0xFF; enemy 0's record index
 below 8 two times in three. `DisturbTask` moves the owner's `+1` (below 7)
 and `+0xB`, the pose word, round-flag bit 2. `phase_span` 7 for the tasks.
 
-`BOF3X_SHADOW='*'` (every group of every harness, this worktree): @STAR@
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree): exit 0 on the final build, BSJ's seven Runs among 897 self-test lines each with 0 mismatches; it passed first time both times it was run (before and after the last fuzz change; no silent death).
 
 ## 4. Controls
 
