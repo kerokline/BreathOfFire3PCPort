@@ -64,23 +64,11 @@ U Picked(const U* values, unsigned n) { return bh::Often() ? bh::Pick(values, n)
 // BattleTask_Create answers "none" (0xFF) a third of the time - F6's strike
 // tests for it - and a slot 0..47 otherwise (the standard listing never
 // answers none).
-std::uint32_t CreateEffect(const std::uint32_t*, std::uint32_t answer) {
-    const U n = bh::Noise();
-    return (answer & 0xFFFFFF00u) | (n % 3 == 0 ? 0xFFu : (n >> 8) % 48);
-}
+// (bh::CreateMayFail, the harness's opt-in since round eleven's cleanup folded this group's copy)
 // Battle_RemoveFromTurnOrder louder than the real one: set-up 32's end hook
 // reads the member's +0x90 and +8 after it, and the next member's +0 - the
 // effect moves them (BSE's Boss26_End, the same loop).
-std::uint32_t RemoveEffect(const std::uint32_t*, std::uint32_t answer) {
-    const U n = bh::Noise();
-    unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(n % 3));
-    switch ((n >> 4) % 3) {
-    case 0: p[0x91] ^= 0x40; break;
-    case 1: p[8] = static_cast<unsigned char>(n >> 8); break;
-    default: p[0] ^= 1; break;
-    }
-    return answer;
-}
+// (bh::TurnOrderEffect: the harness's since round eleven's cleanup folded this group's copy)
 // BossActor_Clear louder than the real one: it also moves a byte of party
 // member 0's +0x34 / +0x38, which set-up 33's end hook reads after it.
 std::uint32_t ClearEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -135,9 +123,9 @@ std::uint32_t RotTransEffect(const std::uint32_t* a, std::uint32_t answer) {
 // vectors by their bytes.
 const bh::Callee kCallees[] = {
     {"BattleTask_Create", ::bof3::addr::BattleTask_Create, KeyOf(&::BattleTask_Create), 2, {kU8, kU8}, bh::Answer::kByte, 0, 47,
-     {}, &CreateEffect},
+     {}, &bh::CreateMayFail},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
-     bh::Answer::kGarbage, 0, 0, {}, &RemoveEffect},
+     bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"BossActor_Clear", ::bof3::addr::BossActor_Clear, KeyOf(&::BossActor_Clear), 1, {kU8}, bh::Answer::kGarbage, 0, 0, {}, &ClearEffect},
     {"Sound_PlayEffect", ::bof3::addr::Sound_PlayEffect, KeyOf(&::Sound_PlayEffect), 1, {0xFFFF}, bh::Answer::kGarbage, 0, 0, {},
      &SoundEffect},
@@ -196,11 +184,7 @@ void Disturb(U h) {
 // A dispatcher's other state bytes inside its own table, so a dispatcher
 // reading the wrong byte lands on another entry (a count) rather than past
 // its table (a Fatal); never the byte the harness drew.
-void OtherStates(unsigned drawn, unsigned below) {
-    unsigned char* const s = Sprite_Current;
-    for (unsigned b = 1; b <= 4; ++b)
-        if (b != drawn) s[b] = static_cast<unsigned char>(bh::Next() % below);
-}
+using bh::OtherStates;   // the harness's since round eleven's cleanup folded this group's copy (the same draws)
 
 unsigned char EndByte() { return static_cast<unsigned char>(BSG_PICK(0, 1, 2, 3, 4, 6, 0xFD, 0xF9, 0x82, 0x84, 8, 0xA)); }
 

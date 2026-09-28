@@ -60,16 +60,7 @@ unsigned char& B(U address) { return Mem(address)[0]; }
 // ones: Boss34_End reads the member's +0x90 dword after the first and the
 // next member's +0 after the second (and +8 of a member it has not reached) -
 // the effect moves one of them in a random member.
-std::uint32_t PartyEffect(const std::uint32_t*, std::uint32_t answer) {
-    const U n = bh::Noise();
-    unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(n % 3));
-    switch ((n >> 4) % 3) {
-    case 0: p[0x91] ^= 0x40; break;
-    case 1: p[8] = static_cast<unsigned char>(n >> 8); break;
-    default: p[0] ^= 1; break;
-    }
-    return answer;
-}
+// (bh::TurnOrderEffect: the harness's since round eleven's cleanup folded this group's copy)
 
 // The group's callees: the two with louder effects (Sprite_PoseFromSet reads
 // the animation's low byte - Sprite_SetFrameQueueUpload takes frame & 0xFF -
@@ -83,13 +74,7 @@ std::uint32_t PartyEffect(const std::uint32_t*, std::uint32_t answer) {
 // again after each). BattleTask_Create answers one of the last three slots a
 // third of the time, where the spawn hook's copy from below the enemies (an
 // actor 0..2) overlaps its destination and rep movsd's forward order shows.
-std::uint32_t StepEffect(const std::uint32_t*, std::uint32_t answer) {
-    // the step as the caller left it logged first: the store before the call
-    // (set-ups 35 and 36) is compared, not wiped
-    bh::Note(Mem(0x8034E5)[0]);
-    Mem(0x8034E5)[0] = static_cast<unsigned char>(bh::Noise());
-    return answer;
-}
+// (0x446DE0's StepEffect is bh::EndWinEffect, the standard's, since round eleven's cleanup folded it)
 std::uint32_t PickedEffect(const std::uint32_t*, std::uint32_t answer) {
     Mem(at::kPicked)[0] = static_cast<unsigned char>(bh::Noise() % 3);
     return answer;
@@ -105,7 +90,7 @@ std::uint32_t SlotEffect(const std::uint32_t*, std::uint32_t answer) {
 }
 
 const bh::Callee kCallees[] = {
-    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &StepEffect},
+    {"0x446DE0", at::kEndWin, at::kEndWin, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &bh::EndWinEffect},
     {"AbilityList_Add", ::bof3::addr::AbilityList_Add, KeyOf(&::AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, bh::Answer::kFlag, 0, 0,
      {}, &PickedEffect},
     {"BattleEnemy_ScriptTick", ::bof3::addr::BattleEnemy_ScriptTick, KeyOf(&::BattleEnemy_ScriptTick), 0, {}, bh::Answer::kFlag, 0, 0,
@@ -113,9 +98,9 @@ const bh::Callee kCallees[] = {
     {"BattleTask_Create", ::bof3::addr::BattleTask_Create, KeyOf(&::BattleTask_Create), 2, {kU8, kU8}, bh::Answer::kByte, 0, 47, {},
      &SlotEffect},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
-     bh::Answer::kGarbage, 0, 0, {}, &PartyEffect},
+     bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"Sprite_PoseFromSet", ::bof3::addr::Sprite_PoseFromSet, KeyOf(&::Sprite_PoseFromSet), 3, {kU8, kAll, kAll},
-     bh::Answer::kGarbage, 0, 0, {}, &PartyEffect},
+     bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
     {"0x446700", at::kOrderFront, at::kOrderFront, 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"0x437450", at::kEnemySound, at::kEnemySound, 1, {kU16}, bh::Answer::kGarbage, 0, 0, {}, &SpriteEffect},
     {"0x4376A0", at::kEnemyActEnd, at::kEnemyActEnd, 0, {}, bh::Answer::kGarbage, 0, 0},
@@ -138,11 +123,7 @@ U Above() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 // A dispatcher's other state bytes inside its table, so a dispatcher reading
 // the wrong byte lands on another entry (a count) rather than past its table
 // (a Fatal); never the byte the harness drew.
-void OtherStates(unsigned drawn, unsigned below) {
-    unsigned char* const s = Sprite_Current;
-    for (unsigned b = 1; b <= 4; ++b)
-        if (b != drawn) s[b] = static_cast<unsigned char>(bh::Next() % below);
-}
+using bh::OtherStates;   // the harness's since round eleven's cleanup folded this group's copy (the same draws)
 
 // An enemy hook's word 0..2 (the three callers') with garbage above half the
 // time - the hooks mask it, their entries get it whole; an event hook's code

@@ -81,11 +81,7 @@ unsigned char EndByte() { return static_cast<unsigned char>(bh::Often() ? BH_PIC
 // A dispatcher's other state bytes inside its table, so a dispatcher reading
 // the wrong byte lands on another entry (a count) rather than past its table
 // (a Fatal); never the byte the harness drew. The dispatchers read no other.
-void OtherStates(unsigned drawn, unsigned below) {
-    unsigned char* const s = Sprite_Current;
-    for (unsigned b = 1; b <= 4; ++b)
-        if (b != drawn) s[b] = static_cast<unsigned char>(bh::Next() % below);
-}
+using bh::OtherStates;   // the harness's since round eleven's cleanup folded this group's copy (the same draws)
 
 // A hook's word: 0..2 (the harness's draw) with garbage above the byte half
 // the time; an event hook's phase code, the ones the hook tests more often.

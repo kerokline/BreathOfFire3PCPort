@@ -162,7 +162,11 @@ void Disturb() {
         unsigned off = (h >> 20) % at::kEnemyStride;
         if (off >= 0xF4 && off <= 0x100) off -= 0x80;
         unsigned char* const e = CurrentEnemy();
-        if (InRegions(e + off, 1)) e[off] = static_cast<unsigned char>(v);
+        // a state byte +1..+4 stays below phase_span, as in cases 9 and 10
+        // (round 11 doc section 5.4: BSD's kind 26 saw a real Fatal here)
+        const unsigned span = g_group ? g_group->phase_span : 0;
+        if (InRegions(e + off, 1))
+            e[off] = static_cast<unsigned char>(off >= 1 && off <= 4 && span ? v % span : v);
         break;
     }
     case 12: Mem(h & 0x100 ? at::kChapterRun : at::kChapterStep)[0] = b; break;
@@ -297,7 +301,67 @@ std::uint32_t ActorBitEffect(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 
+}  // namespace
+
+// --- the stage-B groups' louder stand-ins, folded (boss_harness.h) -------------
+
+// Battle_RemoveFromTurnOrder: the end hooks of set-ups 26, 27, 32, 34 and 52
+// read the member's +0x90 and +8 after it, and the next member's +0 - moved
+// in a random member (BSE's RemoveEffect, then BSF, BSG, BSH, BSJ's copies).
+std::uint32_t TurnOrderEffect(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = Noise();
+    unsigned char* const p = PartyOf(static_cast<unsigned char>(n % 3));
+    switch ((n >> 4) % 3) {
+    case 0: p[0x91] ^= 0x40; break;
+    case 1: p[8] = static_cast<unsigned char>(n >> 8); break;
+    default: p[0] ^= 1; break;
+    }
+    return answer;
+}
+// 0x446DE0 (the end phase's step 1): the step as the caller left it is
+// logged first - set-ups 35 and 36 store it before the call, and Boss34_End
+// increments it after - then moved (BSH's StepEffect; BSC's form moved the
+// move counter instead, MoveCounterEffect).
+std::uint32_t EndWinEffect(const std::uint32_t*, std::uint32_t answer) {
+    Note(Mem(at::kChapterStep)[0]);
+    Mem(at::kChapterStep)[0] = static_cast<unsigned char>(Noise());
+    return answer;
+}
+// Msg_OpenScript: set-up 27's hooks read the script bits 0x904AAD again after
+// it (BSC's BitsEffect). In the battle frame, so every group's.
+std::uint32_t ScriptBitsEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (Noise() & 1) Mem(0x904AAD)[0] = static_cast<unsigned char>(Noise());
+    return answer;
+}
+// Scenario_CallA: the move counter 0x903848, half the time only - the end
+// hooks store it before the call, and an effect that always overwrote it would
+// hide the store (BSC's SceneEffect). The cell is a group region: outside one
+// the effect draws nothing, so a group that does not list it fuzzes as before.
+std::uint32_t MoveCounterEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (!InRegions(Mem(0x903848), 1)) return answer;
+    const std::uint32_t n = Noise();
+    if (n & 2) Mem(0x903848)[0] = static_cast<unsigned char>(n & 1 ? 0x14 : n >> 8);
+    return answer;
+}
+// Battle_OpenMsgWindow: the banner's character 0x66972D, read after by the
+// event hooks (BSC's CharEffect). A group region, as above.
+std::uint32_t BannerCharEffect(const std::uint32_t*, std::uint32_t answer) {
+    if (!InRegions(Mem(0x66972D), 1)) return answer;
+    Mem(0x66972D)[0] = static_cast<unsigned char>(Noise());
+    return answer;
+}
+// BattleTask_Create answering none (BSG's CreateEffect): F6's strike tests for
+// it; the seven that do not (D163) abort in ours, so this is opt-in.
+std::uint32_t CreateMayFail(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = Noise();
+    return (answer & 0xFFFFFF00u) | (n % 3 == 0 ? 0xFFu : (n >> 8) % 48);
+}
+
+namespace {
+
 // --- the standard callees -------------------------------------------------------
+// The louder forms (above) are the standard since round eleven's cleanup; the
+// groups that listed their own keep them (a group's listing stands).
 //
 // The boss band's frontier (tools/boss_rows.py, 2026-09-28: 117 functions, the
 // callees the helpers reach added): every one with a signature in
@@ -324,10 +388,10 @@ const Callee kStandard[] = {
     {BH_OURS(BattleEnemy_ScriptTickOnce), 0, {}, Answer::kFlag, 0, 0},
     {BH_OURS(Battle_EnemyDefeated), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(BattleWin_DrawMediumBox), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Battle_OpenMsgWindow), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_OpenMsgWindow), 0, {}, Answer::kGarbage, 0, 0, {}, &BannerCharEffect},
     {BH_OURS(BattleWin_DrawTileRgb), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Battle_ActorIsOut), 1, {kU8}, Answer::kFlag, 0, 0},
-    {BH_OURS(Battle_RemoveFromTurnOrder), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_RemoveFromTurnOrder), 1, {kU8}, Answer::kGarbage, 0, 0, {}, &TurnOrderEffect},
     {BH_OURS(Battle_LoadSoundByKey), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
     {BH_OURS(Battle_ClearActorBit), 1, {kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(BattleBanner_Add), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
@@ -340,7 +404,7 @@ const Callee kStandard[] = {
     {BH_OURS(Port_DroppedCall), 1, {kU8}, Answer::kGarbage, 0, 0},
     // the battle's way out, the hooks' tail jumps (engine code nobody owns):
     // 0x904AA0 = 5 and 0x904AA2 = 0, with 0x904AA1 = 1 (the win), 2, 3
-    {"0x446DE0", 0x446DE0, 0x446DE0, 0, {}, Answer::kGarbage, 0, 0},
+    {"0x446DE0", 0x446DE0, 0x446DE0, 0, {}, Answer::kGarbage, 0, 0, {}, &EndWinEffect},
     {"0x446E00", 0x446E00, 0x446E00, 0, {}, Answer::kGarbage, 0, 0},
     {"0x446E20", 0x446E20, 0x446E20, 0, {}, Answer::kGarbage, 0, 0},
     // the spawn helpers (boss_spawn.cpp): the field actors a set-up finds by tag
@@ -351,13 +415,13 @@ const Callee kStandard[] = {
     {BH_OURS(BossActor_CopyFrom), 3, {kU8, kAll, kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(BossActor_Clear), 1, {kU8}, Answer::kGarbage, 0, 0},
     // messages, text, the field
-    {BH_OURS(Msg_OpenScript), 1, {kU16}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Msg_OpenScript), 1, {kU16}, Answer::kGarbage, 0, 0, {}, &ScriptBitsEffect},
     {BH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0},   // answers a pointer: a caller that follows it wants an effect
     {BH_OURS(Text_DrawAt), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // answers a pointer
     {BH_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Str_CopyN), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Field_MemberSprite), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Scenario_CallA), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Scenario_CallA), 1, {kAll}, Answer::kGarbage, 0, 0, {}, &MoveCounterEffect},
     {BH_OURS(AreaMap_Elevation), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, Answer::kFlag, 0, 0},
     {BH_OURS(Flags_Set), 2, {kAll, kU8}, Answer::kGarbage, 0, 0},
@@ -436,7 +500,13 @@ void Register(const Callee& c) {
 }
 unsigned RegisterHandler(std::uint32_t address, unsigned nargs, const char* name = "handler") {
     for (unsigned i = 0; i < g_slot_n; ++i)
-        if (g_slots[i].address == address) return i;
+        if (g_slots[i].address == address) {
+            // the first listing stands (boss_harness.h, DataTable); said once
+            if (g_slots[i].handler && g_slots[i].nargs != nargs)
+                bof3::Log("shadow      %s: handler 0x%X in tables with nargs %u and %u: the first stands", g_group->shadow,
+                          (unsigned)address, g_slots[i].nargs, nargs);
+            return i;
+        }
     if (g_slot_n == kSlots) bof3::Fatal("boss_harness: more than %u stand-ins", kSlots);
     Slot& s = g_slots[g_slot_n++];
     s = {};
@@ -623,6 +693,17 @@ void Record(std::uint32_t address, std::uint32_t a, std::uint32_t b, std::uint32
     bof3::Fatal("boss_harness: a custom stand-in records 0x%X, which no callee lists", (unsigned)address);
 }
 void Stir() { Disturb(); }
+void OtherStates(unsigned drawn, unsigned below) {
+    unsigned char* const s = Sprite_Current;
+    for (unsigned b = 1; b <= 4; ++b)
+        if (b != drawn) s[b] = static_cast<unsigned char>(Next() % below);
+}
+void OtherStates(unsigned at, unsigned n1, unsigned n2, unsigned n3) {
+    unsigned char* const s = Sprite_Current;
+    const unsigned n[4] = {0, n1, n2, n3};
+    for (unsigned b = 1; b <= 3; ++b)
+        if (b != at && n[b]) s[b] = static_cast<unsigned char>(Next() % n[b]);
+}
 std::uint32_t Noise() {
     std::uint32_t h = Hash() ^ (++g_salt * 0x9E3779B9u);
     h ^= h >> 16;
@@ -774,6 +855,8 @@ void Run(const Group& group) {
         g_seed = Next();
         g_rand_hint = Next();
         if (group.seed) group.seed(k);
+        if (c.shape == Shape::kTask && c.states && InRegions(Sprite_Current + c.state_at, 1))
+            Sprite_Current[c.state_at] = static_cast<unsigned char>(Next() % c.states);
         if (c.via.dispatcher && c.via.state_at && InRegions(Sprite_Current + c.via.state_at, 1))
             Sprite_Current[c.via.state_at] = c.via.state;
         Capture(input);
