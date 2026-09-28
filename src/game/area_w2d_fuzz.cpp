@@ -342,12 +342,12 @@ void SeedAnswer() {
 // A 16.16 word with the high word `high` and any low word.
 std::uint32_t At16(std::uint32_t high, std::uint32_t low) { return (high & 0xFFFF) << 16 | (low & 0xFFFF); }
 // A high word on or beside [lo, lo + 3): each inside, one either side, a
-// high byte (the compares are 16-bit), anything.
+// high byte above it (the compares are 16-bit, not 8), anything.
 std::uint32_t Around3(std::uint32_t lo) {
     switch (ah::Next() % 5) {
     case 0: case 1: return lo + ah::Next() % 3;
     case 2: return ah::Half() ? lo - 1 : lo + 3;
-    case 3: return (lo + ah::Next() % 3) | 0x10000u;
+    case 3: return (lo + ah::Next() % 3) | 0x100u;
     default: return ah::Next();
     }
 }
