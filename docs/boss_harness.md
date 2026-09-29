@@ -1,6 +1,19 @@
 # The boss harness: one fuzz for every boss group
 
-**Status:** MEASURED (2026-09-28) - built by group BH of round eleven's wave
+**Status:** MEASURED (2026-09-28, widened the same night) - **round twelve's
+battle groups (BE1..BE7): read section 10 first.** Group EH widened the
+harness to the battle engine's address runs at the round's base `430f34b`
+(four engine shapes, `Clone::state_cell` / `Via::state_cell`,
+`Group::engine` with its regions, pointers, disturbance and 120 standard
+callees, 115 of them new: with the boss set they cover all 160 functions the
+308 call outside themselves), proved
+by a self-test of its own with Capcom's code on both sides
+(`boss_harness_eh`: 11 functions, 44,000 rounds, 0 mismatches, nine controls
+all refused by a count) and by every boss group's counts unchanged under
+`BOF3X_SHADOW='*'` (section 10.8). What follows up to section 9 is round
+eleven's harness, unchanged for a boss group.
+
+Round eleven's status: MEASURED (2026-09-28) - built by group BH of round eleven's wave
 one, stage A, and proved on BH's own 26 functions: the 20 shared helpers
 ([`boss_h.md`](boss_h.md), three `Run`s, 0 mismatches) and the six spawn
 helpers ([`boss_h.md`](boss_h.md) section 5, one `Run`, 0 mismatches), with
@@ -434,3 +447,385 @@ The harness has no shadow name of its own: each group's is its module's
 (`boss_h`, `boss_spawn` for BH). `BOF3X_SHADOW='*'` runs every group of
 every harness. BH's figures (this worktree, 2026-09-28): section 3 of
 [`boss_h.md`](boss_h.md).
+
+## 10. Round twelve: the battle engine's groups
+
+Group EH of round twelve's wave one, stage A (2026-09-28 night, the round's
+base `430f34b`, tree-identical to `7e382c3`), for the seven battle groups
+BE1..BE7 ([`takeover-queue-field-battle.md`](takeover-queue-field-battle.md)
+section 3; the 308 rows `BE*` of `analysis/round12_cut.tsv` are the
+authority). EH took no function. **A boss group sees none of this**: every
+addition is a field with a default that reproduces round eleven's harness,
+and every new draw, region and stand-in is behind `Group::engine` or a new
+shape - section 10.8 shows every boss group's counts unchanged.
+
+### 10.1 What changed, in one table
+
+| What | Where | A boss group |
+|---|---|---|
+| Four shapes: `kStep`, `kWindow`, `kMember`, `kHelper` (10.3) | `Shape`, appended after `kCallee` | never uses them (a Fatal without `engine`) |
+| `Clone::state_cell`: the dispatched byte at an absolute address (a step table's `0x904AA2`, BATE's `0x929F01`) for `kDispatch`, `kStep` (before the seed) and `kTask` (after it) | appended after `Clone::via`, default 0 | 0: `Sprite_Current[state_at]` as before |
+| `Via::state_cell`: plant through a dispatcher that indexes by an absolute byte | appended after `Via::state`, default 0 | 0: as before |
+| `Group::engine`: the engine frame (regions 10.4, pointers, the disturbance's case 12, `kEngineStandard` 10.5) | appended after `Group::kind`, default false | false: the boss frame exactly |
+| The bands: `at::kBossBand`, `at::kEngineBands`, `InEngineBands` (10.2) | `boss_harness.h` | not consulted |
+| Capacity: 512 stand-ins (256), 64 regions (40), 128 KiB of state (64) | `boss_harness.cpp` | capacity only: no draw moves |
+| The MISMATCH report names the first differing log entry's recorder and its words on each side (the first three times) | `Run` | a log line more on a difference, nothing on a pass |
+| Engine helpers for seeds: `WindowAt`, `CurrentWindow`, `TextBuffer`; engine effects `WindowAllocEffect`, `WindowFreeEffect`, `TextPtrEffect`, `SprintfEffect`, `TextArg0/3/4Effect`, `BannerTextEffect` | `boss_harness.h` | unused |
+
+### 10.2 The band, and every place it was a test
+
+The plan said the band constant `0x437A00..0x441000` becomes the union of
+the battle runs. The harness never tested it: the constant lived in a
+comment of `boss_harness.h` and in `tools/boss_rows.py`. Every place an
+address range decides something, and what each accepts now:
+
+| Place | Test | Accepts |
+|---|---|---|
+| `Run`, per clone (new) | an engine group's clone must lie in `at::kEngineBands` - `0x42D7A0..0x4552F6` (BATE's windows to the last debt row `0x455290`'s 0x66 bytes), `0x4CEB40..0x4CF4A4` (BMAGIC's four), `0x597FC0..0x59DB61` (the battle windows) - else a Fatal naming it (a cut mistake). A clone outside the image (a group's six-byte `jmp [copy]` wrapper, section 6) is not checked | every `BE*` row of the cut; the boss band lies inside the first run |
+| `Register` | a callee listed by address must lie in `.text` `0x401000..0x5C3000`; one listed by name must not (it is ours) | all three runs (`0x59DB61 < 0x5C3000`) |
+| `Readable` (new, the text effects) | a string argument is followed only inside the compared state, the text buffer, the loaded image (`SizeOfImage` from its header) or this thread's stack | - |
+| `Clone::via`, handlers, `CloneOriginal` | no range test | - |
+| `tools/boss_rows.py` `BAND_LO` / `BAND_HI` | the boss round's enumeration from its three root sets | unchanged: it cuts boss units, not engine bands; round twelve's clone tables are `tools/band_rows.py` (group RT) |
+| `docs/boss-rows.md`, `takeover-queue-bosses.md` | the boss band as a fact of round eleven | unchanged |
+
+### 10.3 The call shapes of the 308
+
+How each of the 308 is reached (capstone over each cut extent; every dword of
+the image equal to the entry, classified; `pc_funcs.json`'s callers):
+
+| Group | through a `.data` table | a stack table's immediate | called directly | not a function |
+|---|--:|--:|--:|--:|
+| BE1 | 28 (BATE by `0x929F00..02`; the phase steps by `0x904AA2..AA4`; `BattleResult_*Steps`) | - | 11 | - |
+| BE2 | 15 (`EnemyOp_*`, by an enemy's `+1..+3`) | 21 (`BattleFx_Dispatch` slots and their own sub-tables by `+1`) | 12 | - |
+| BE3 | 41 (`EnemyOp_*`; `BattleObj_*` by a member's `+1` / `+2`) | - | 6 | - |
+| BE4 | 25 (`BattleItemCmd_*` by `0x904AA4`) | - | 31 | - |
+| BE5 | 39 (the Dragon run's step tables at `0x64ECE8..` by `0x904AA4`; `Effect_Handlers` slots) | - | 7 | 1 (`0x44B8D0`) |
+| BE6 | 15 (`0x64F0D0` by a task's `+1`; BMAGIC's `MapCell_Handlers` slots) | 3 | 21 | 1 (`0x452460`) |
+| BE7 | 1 | 20 (window handlers by the record's `+2` / `+3`) | 10 | - |
+
+Round eleven's nine shapes cover the enemy states (`kState` / `kDispatch`,
+`Sprite_Current` an enemy) and the effect tasks (`kTask`, now with
+`state_cell` too). What they did not cover, and the shape added for it:
+
+| Shape | Reached by (in the 308) | How the engine calls it | What the harness does |
+|---|---|---|---|
+| `kStep` | a phase, menu or mode step table indexed by an absolute byte: `Battle_InputSteps` / `BattleAction_KindSteps` / `BattleItemCmd_*` by `0x904AA2` / `AA3` / `AA4`, BATE's by `0x929F00..02`, the Dragon run's by `0x904AA4`; `Effect_Handlers` slots | the dispatcher's `jmp [table + 4 * byte cell]`: `void (void)` | `Sprite_Current` a party member or an enemy (half and half); with `states` and `state_cell`, that byte drawn below `states` before the seed. Its dispatcher is a `kDispatch` with the same `state_cell` |
+| `kWindow` | a window's state handler: `Window_Handler4Kinds`' stack table, a window dispatcher's own (`0x598890`, `0x597FA0`, `0x598DC0` ...) | `mov ecx, [0x905B84]; call [esp + 4 * byte [ecx + 2 or 3]]`: `void (void)` | `0x905B84` one of the 22 window records (every engine round); with `states`, the record's byte `state_at` drawn below it before the seed (the dispatcher's immediates are its `Imm`s) |
+| `kMember` | a battle object's state: `BattleObj_StateTable` by `+1`, its sub-tables (`BattleObj_SwingSubs`, `_CastDoneSubs`, `_State12Subs`) by `+2` | `BattleObj_RunState`: `void (void)`, `Sprite_Current` a member's ObjTrio record | `Sprite_Current` a party member, `Field_State` the same member three times in four; with `states`, `Sprite_Current[state_at]` drawn below it before the seed |
+| `kHelper` | a cdecl helper its callers call directly: the action's begin (`0x435AB0..`), damage (`0x446110`, `0x4461B0`), the target picker `0x447F40`, the transformation's helpers, buffs, BMAGIC's slots (three words: `DrawLayer_Open`'s record, byte 1, byte 0), the window draws (`0x5982D0`, `0x599780` ...) | 0..10 words, `eax` / `al` / `ax` out | the group's `args` (garbage otherwise), the answer by `ret_mask` (0xFF al, 0xFFFF ax, 0xFFFFFFFF eax); `Sprite_Current` a member or an enemy - `kCallee`'s contract in the engine frame |
+
+Every engine round also points `0x905B84` at a window record, `Field_State`
+at a member, the menu actor `0x939EC4` at a member and its command record
+`0x939FA0` at that member's `+0x124`, the acting sprites `0x904B3C` /
+`0x904B40` at the harness's two records, the result record `0x904B60` at a
+member's or an enemy's `+0x104` (every pointer cell the 308 dereference that
+the boss frame did not set: a `mov r32, [abs]` followed by a memory operand
+on r32, scanned over the 308), and puts a NUL every 16th byte of the text
+buffer. The engine disturbance (case 12, which is the chapter bytes' for a
+boss group) repoints `0x905B84`, moves a byte of that record (`+2` / `+3`
+below `phase_span` when set), repoints `Field_State`, the menu actor and its
+record, moves a step byte `0x904AA1..AA4` (below `phase_span` when set), or
+repoints the result record. A group's `disturb` is still case 14.
+
+**Worked example 1: a cdecl helper**, `0x4457F0` (BE4, not hidden, 0xB1
+bytes; its callers `Battle_SpawnActorCopies`, `ItemMenu_CanUseSelected` and
+`0x447F40`): one word, of which it uses the low byte - an actor, searched
+downward within its side (0..2, 3..10) with `Battle_ActorIsOut` at each, the
+argument slot itself the counter and pushed whole; answers an actor in `al`,
+0xFF for none. The name below is a placeholder; BE4 names it. The clone row, the args hook and the
+group, as a BE4 agent would paste them:
+
+```cpp
+namespace bh = boss_harness;
+using S = bh::Shape;
+constexpr bh::CallSite kCalls4457F0[] = {{0x17, 0x4456C0}, {0x42, 0x4456C0}, {0x6A, 0x4456C0}, {0x93, 0x4456C0}};
+const bh::Clone kClones[] = {
+    {"Battle_FindTarget", 0x4457F0, 0xB1, kCalls4457F0, 4, nullptr, 0, nullptr, 0, BH_FN(Battle_FindTarget), 0xFF, false, S::kHelper},
+};
+// the actor byte: the party's 0..2, the enemies' 3..10 and beyond, garbage above it half the time
+void Args(unsigned, std::uint32_t* a) {
+    a[0] = (bh::Half() ? bh::Next() & 0xFFFFFF00u : 0) | (bh::Often() ? bh::Next() % 13 : bh::Next() & 0xFF);
+}
+bh::Group g{"battle_e4", kClones, 1, nullptr, 0, nullptr, 0, nullptr, 0, nullptr, nullptr, 6000};
+g.args = &Args;
+g.engine = true;
+bh::Run(g);
+```
+
+`Battle_ActorIsOut` is a standard recorder (a byte, `kFlag`), so its answer
+is 0 a third of the time and the loops' every exit is reached; ours calls it
+`BH_CALL(Battle_ActorIsOut)(actor)` and answers the byte. The self-test runs
+exactly this row (10.8): 4,000 rounds, 0 mismatches, control 8 (`cmp bl, 4`
+for 3) refused in 139.
+
+**Worked example 2: a hidden state handler and its dispatcher**, `0x441A30`
+and `0x441A10` (BE3, both hidden in `BattleObj_PickPose` `0x4412B0`'s
+catalogue extent). `0x441A10` is `jmp [0x64E07C + 4 * Sprite_Current[+2]]`
+(`BattleObj_StateTable` entry 6 of `0x64DFE0` reaches it by `+1`); `0x441A30`
+is entry 0 and 2 of `0x64E07C`: `Sprite_Current +0x4B` and `+0x58` into
+`Field_State +0x12F` and `+0x140`, `+4 = 0`, `+2 = 1`. `BattleObj_StateTable`
+has states 0..12 ([`battle_obj_states.md`](battle_obj_states.md)); seed a
+member's other state bytes inside their tables (`OtherStates`).
+
+```cpp
+const bh::DataTable kTables[] = {{0x64E07C, 2}};   // count from the code, not the tool: the self-test draws the first two
+const bh::Clone kClones[] = {
+    {"BattleObj_Swing2Dispatch", 0x441A10, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(BattleObj_Swing2Dispatch), 0, false, S::kMember, 2, 2},
+    {"BattleObj_Swing2Enter", 0x441A30, 0x3E, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(BattleObj_Swing2Enter), 0, false, S::kMember},
+};
+bh::Group g{"battle_e3", kClones, 2, nullptr, 0, kTables, 1, nullptr, 0, &Seed, nullptr, 6000};
+g.engine = true;
+bh::Run(g);
+```
+
+Ours of the dispatcher reads the cell and calls it as read (section 2),
+aborting past its table's length; ours of the handler writes through
+`Sprite_Current` and `Field_State`, each re-read where the original re-reads
+it. The names here are placeholders; BE3 names them. The
+self-test runs both (4,000 rounds each, 0 mismatches; control 4, `+2 = 2`,
+refused in all 4,000).
+
+A step, for completeness: `0x42F5E0` is `jmp [0x64AEB4 + 4 * byte 0x904AA3]`
+over five entries (`0x42F5F0 .. 0x42FAB0`; the sixth dword is `0x76767676`,
+not code), so `{..., S::kDispatch, 1, 5, {}, 0x904AA3}` with
+`DataTable {0x64AEB4, 5}`, and its entries are `kStep`s; driving `0x42F640`
+through it is `Via {0x42F5E0, 0x64AEB8, 0, 1, 0x904AA3}`.
+
+### 10.4 The regions and seeds
+
+Standard for an engine group (three or more of BE1..BE7 touch each; the
+touches are absolute operands and `base + disp` operands over each extent):
+
+| Region | Size | What | Groups |
+|---|--:|---|---|
+| `0x803160` `WindowRecords` | 22 x 0x24 | the window records (`+0x93` window 4's `+3` is written by four groups) | BE1..BE6 |
+| `0x905B84` | 4 | the record a window handler runs for (a pointer, set every round) | BE7 (every `kWindow`) |
+| `0x905D98` `Field_State` | 4 | a member (a pointer, set every round) | BE2, BE3, BE4 |
+| `0x903A50..0x903B24` | 0xD4 | `DrawItemPool_Top`'s tail `0x903A5A`, `CharacterRecords`' `0x903A70`, `Field_ActorStates[0]` | BE1..BE4, BE6, BE7 |
+| `0x9045FC..0x904654` | 0x58 | the 18 dwords at `0x904608` and their neighbours | BE2, BE5, BE6, BE7 |
+| `0x939EC0..0x939F60` | 0xA0 | the menu actor `0x939EC4` (a pointer, set), the transformation's cells `0x939EE0..0x939EF2` | BE3..BE7 |
+| `0x939F64..0x93A000` | 0x9C | `0x939F86`, `0x939F9B`, the command record `0x939FA0` (a pointer, set), `0x939FC0..`, `0x939FFC` | BE3, BE4, BE5 |
+| `0x929F00..0x929F20` | 0x20 | BATE's mode bytes, `0x929F04` / `06`, `Field_Kind2Hold`, `MapView_Elevation` | BE1, BE4, BE7 |
+| `0x7E1BE8` | 8 | `Input_Held`, `Input_Pressed` | BE1, BE4, BE5 |
+| `0x90358C` | 8 | `Field_ConfirmButtons`, `Field_CancelButtons` | BE1, BE4, BE5 |
+| the text buffer | 0x200 | strings `TextPtrEffect` answers, NUL-ended every 16 bytes | the engine stand-ins |
+
+The boss frame's regions stay under them (the party, the enemies, the task
+slots, the battle bytes to `0x904BA0`, `Cond_Flags`, the enemy rows, the
+packet pointer ...): the party (all seven groups), the battle bytes (all
+seven), `Sprite_Current` (all seven), the enemies (five), the task slots and
+the slot / owner cells (four each), `Gfx_PacketNext` (four) were already there.
+
+**A group lists it** (fewer than three groups, or a buffer only one reads):
+BATE's sprintf buffer `0x904BA0` and its `0x675E94..0x675EC0` cells (BE1),
+`Text_Records` `0x904D00..0x904D0C` (BE1, the result screen), `0x802D24`
+(BE1), `0x675ECC..0x675ED4` (BE2), `0x675F18..0x675F1D` and `0x939A60` (BE4 /
+BE5), `0x675F48..0x675F57`, `Field_Slots` `0x9035C0`, `Prim_VertexScratch`,
+`MapView_ScreenXY`, the matrices `0x5C41FC..0x5C4210` (BE6's BMAGIC),
+`0x7E01B8` (`Input_AutoRepeat`'s latch, written by BE4 and BE5 directly),
+the draw pool `DrawItemPool_Top` `0x9039D4` and `Draw_OtSlot` `0x92BF19`
+(the window draws append through stand-ins; only BE2 writes `0x9039D8`, only
+BE6 reads the slot), `0x939A04..0x939A0C` (BE1), `0x939C14` (BE2),
+`0x903850..0x903852` and `MoveScript_FAWord` (BE4). Seeds that matter, from
+the reads: the step bytes `0x904AA1..AA4` at their tables' lengths and one
+past (a dispatcher by one is a `kDispatch` with `state_cell` - never let a
+seed draw past a table); a window record's `+2` / `+3` inside the handler's
+stack table (`kWindow` `states`); a member's `+1` / `+2` inside
+`BattleObj_StateTable` and its sub-tables; the word `0x904B82`
+at 0 (`0x42F640`); a `kHelper`'s words inside the tables they index
+(`0x446D90` reads `0x656B14[word >> 8]`).
+
+### 10.5 The standard callees of the battle runs
+
+`kEngineStandard` in `boss_harness.cpp`, registered for an engine group only
+and **before** `kStandard`, so its louder forms stand. The frontier: every
+rel32 call or tail `jmp` from the 308 extents to a function outside them -
+**160 functions**, all covered by `kEngineStandard` + `kStandard` (a scratch
+check against the source, 0 missing). By family (masks are what the callee
+reads: a byte or short where its first read of the word is one, capstone):
+
+| Family | Callees | Answer / effect |
+|---|---|---|
+| text (the louder forms) | `Msg_SystemPtr` (short), `Item_NamePtr` (2 bytes) | **`TextPtrEffect`**: a NUL-ended string of the text buffer (the caller follows it) |
+| | `Crt_sprintf` (dst **mask 0**, fmt, one value) | **`SprintfEffect`**: the format's first 15 bytes and a NUL into dst when dst is the compared state or the stack, noted; a static buffer outside the regions is left alone and the format noted |
+| | `Text_DrawAt`, `Text_DrawSmall` (text **mask 0**) | **`TextArg4Effect`**: the string noted (hash, length; "unreadable" for a pointer outside `Readable`), the answer where it ends |
+| | `Text_DrawFont8`, `Text_DrawFont12` (text mask 0) | `TextArg3Effect`: noted |
+| | `Text_CharCount` (mask 0) | `kByte` 0..17 and the string noted |
+| | `BattleBanner_Add` (text mask 0), `BattleBanner_Set`, `_ShowName`, `_ClearAll`, `Item_HelpMessage` | `BannerTextEffect` for `_Add`; garbage |
+| windows | `Window_Alloc` (slot, kind byte) | **`WindowAllocEffect`**: the record claimed as the real one (byte 0 free: 1, `+1` kind, `+2` / `+3` 0, the slot; else 0xFF) |
+| | `Window_FreeCurrent` | **`WindowFreeEffect`**: `+0`, `+2`, `+3` of `0x905B84`'s record zeroed |
+| | `Window_ResetAll`, `ItemMenu_FreeWindows` | garbage |
+| menu and window draws | `Menu_DrawPiece` (two shorts), `_DrawPieces`, `_DrawBox` (the flags and the colour bytes: callers load the colour into `al` only - the self-test's first finding), `_DrawBorder`, `_DrawBackdrop`, `_DrawHand` (the third word unused: mask 0), `_DrawIcon`, `_DrawIcon8`, `_DrawScrollBar`; `BattleWin_DrawCommandLabel`, `_DrawCommandCross`, `_DrawPartyStatus`, `_DrawQuadF4`, `_DrawLineAdd`, `_DrawLineHalf`; `Gpu_GetClut`, `Gpu_SetLineF2` / `F3` / `F4`, `Gpu_SetPolyG4`, `Gpu_SetTile`, `Gpu_SetShadeTex`, `Prim_SetTexture` | garbage |
+| input | `Input_AutoRepeat` (a short) | garbage |
+| the battle engine | `BattleObj_ScriptTick`, `_ScriptTickOnce` (`kFlag`); `BattleObj_PickPose`, `_EndAction`; `BattleQueue_Push`; `BattleTask_ClearAll`; `Battle_ApplyDamage`, `_CalcDamage`, `_BuildTurnOrder`, `_ClearActingFlags`, `_ClearStatus`, `_PlayActorCue`, `_PlayHitSound`, `_ReturnQueuedItem`, `_SetActorBit`, `_SetDamagePopup`, `_SetHitPopup`, `_StatusTint`; `Effect_ApplyResult`; `Formation_ApplyStatMods`; `Char_RecalcStats`; `Field_SlotRelease`; `Gfx_ClutStripCopyRow`; `MapView_SetElevation` | garbage |
+| | `Battle_DefaultTarget` | `kByte` 0xFF..10 |
+| | `Battle_ReturnTrue`, `Battle_RollPendingFlag`, `EnemyAI_RowDone`, `Area_TestCondition` | `kFlag` |
+| | `Battle_WrapIndex` | **`kThrough`** (pure: both sides run it) |
+| items, stats | `Inventory_Add`, `_Remove`, `Item_CanUse`, `Stat_AddCap999` (`kFlag`); `Item_EquipMask`, `Item_IconKind`, `Stat_AddClamped`, `PartySet_Select`, `Equip_PreviewSet` (its two out-pointers mask 0: **the group's** - the recorder does not fill them) | garbage |
+| sprites, sound, tasks | `Sprite_ReleaseTint`, `_AnimFromSet`, `_LoadPalette`, `_SetClutStp`, `Sprite_SetTint` (`kFlag`), `Sound_StopChannels`, `Task_Restart` | garbage |
+| the GTE (BE6's BMAGIC) | `Gte_LoadVertex`, `_LoadVertices3`, `_Rtps`, `_Rtpt`, `_StoreScreenXY`, `_StoreScreenXY3`, `_StoreDepthF4`, `_PrimDepths4_10`, `_PrimDepthFlat4_10`, `_RotMatrix`, `_MulMatrix0`, `_RotTransPers`, `_RotTransPers4` | **`kThrough`**: the callers read results back through pointers into their own frames. The five matrix calls of `kStandard` (`Gte_PushMatrix` ... `Gte_SetTransMatrix`) stay recorders, so the matrix the real ones use is whatever it was - the same on both passes; BE6 lists the family itself if it wants them all one way |
+| Capcom's, by address | `0x446F20` / `0x446F50` / `0x446F80` ((a x b) / 100 clamped to 999 / 9999 / 100), `0x5B9450` (the CRT's `memcpy`), `0x494E70` (the eight enemies' `+0..+3` zeroed, compared) | **`kThrough`** |
+| | `0x42E0E0`, `0x42E250`, `0x437230`, `0x441510`, `0x44FB30` (none); `0x42E2F0`, `0x452EB0`, `0x452F10` (`al`, `kFlag`); `0x452DD0` (1, `kFlag`); `0x44F1D0`, `0x4CF4B0` (2); `0x44F6A0` (2, the first unread, `kFlag`); `0x590E80` (3: a stat add with a cap); `0x591810` (two bytes, `kFlag`); `0x59DB70` (6) | garbage unless said |
+
+Of `kStandard`, the engine groups reach `Sound_PlayEffect` (83 sites),
+`Gfx_CommitPrim` (32), `Battle_ActorIsOut` (25), `Rand` (25),
+`Sprite_SetAnimation` (17), `BattleTask_Create` (14), `Gpu_SetDrawMode`,
+`Gpu_GetTPage`, `BattleEnemy_ScriptTick`, `LoadDatFile`, ... unchanged.
+**Not standard, on purpose**: a function of the 308 itself (its owning group
+takes it; the others call it raw until it merges - 10.6), and the entries of
+a `.data` table a group dispatches through (list the table: `DataTable`).
+
+### 10.6 The cross-group edges (for the merge order)
+
+A rel32 call or tail `jmp` from one group's function to another's (capstone
+over the extents). Until the callee's group merges, the caller calls it raw
+(`BH_AT(type, address)`) and lists it in its own `callees`; after, by name.
+
+| Caller group | Caller -> callee | Callee group |
+|---|---|---|
+| BE1 | `0x42EE00` -> `0x444660`; `0x42EF50` -> `0x446D90`; `0x42FE20`, `0x431C10` -> `0x44A910` | BE4 |
+| BE2 | `0x433DA0`, `0x434340` -> `0x442310`; `0x436640` -> `0x437450`; `0x4366B0` -> `0x4376F0`, and tail `jmp` `0x4376A0` | BE3 |
+| BE2 | `0x436290`, `0x436BE0` -> `0x446770` | BE4 |
+| BE2 | `0x433DA0`, `0x434340` -> `0x453300` | BE6 |
+| BE3 | `0x437260` -> `0x4467C0`; `0x441D80` -> `0x446810`; `0x441ED0` -> `0x446770`; `0x4424A0` -> `0x44A910`, `0x44AA90` | BE4 |
+| BE3 | `0x442310` -> `0x44FDE0` | BE5 |
+| BE3 | `0x441A90`, `0x442890` -> `0x453EB0`; `0x4420A0`, `0x442310` -> `0x453300` | BE6 |
+| BE4 | `0x449A00`, `0x449C70` -> `0x44FDE0` | BE5 |
+| BE4 | `0x449A00`, `0x449C70` -> `0x453300` | BE6 |
+| BE5 | `0x450200`, `0x450680`, `0x450A70`, `0x450EF0` -> `0x447F40` | BE4 |
+| BE5 | `0x44B3A0` -> `0x453300`; `0x44FFA0`, `0x450610`, `0x450700`, `0x450E70` -> `0x4525B0` (the Dragon command task) | BE6 |
+| BE7 | `0x597FC0` -> `0x432170` | BE1 |
+
+Through tables: the Dragon run's step tables at `0x64ECE8..` that BE5's
+dispatchers (`0x44FF10`, `0x450070`, `0x450280`, `0x4506C0`, `0x450B20`,
+`0x450F30`) index hold BE6's `0x451480` (the split point of the run at
+`0x451480` puts the table's last reader and its entry in different groups).
+BE2's `EnemyOp_*` dispatchers (`0x436270`, `0x436620`, `0x436BC0`,
+`0x436F00`) read tables that run on into `EnemyOp_Act5Subs` (`0x64B250..`,
+BE3's entries `0x437050 .. 0x4373C0`) only if their counts go that far: the
+tool's lengths are too long (section 6), so count from the code.
+
+**The order these edges allow**: BE6 calls no other group, and four call it
+(BE2, BE3, BE4, BE5); BE4 is called by four too (BE1, BE2, BE3, BE5).
+**BE4 and BE5 call each other** (`0x449A00` / `0x449C70` -> `0x44FDE0`;
+`0x450200` ... -> `0x447F40`), the one cycle. Callees first:
+**BE6, then BE4 and BE5 (either; the second rebinds the first's raw calls),
+then BE3, BE2, BE1, BE7**. Any order works, since every group calls
+another's raw until it merges; this one leaves the fewest raw calls to
+rename after each merge.
+
+### 10.7 What the pass found about the cut and the plan
+
+- **Two starts are not functions.** `0x452460` (BE6, 265 bytes by the cut)
+  is case 4 of `0x4523C0`'s switch (its table at `0x452544`); `0x44B8D0`
+  (BE5, 277) is three three-instruction case bodies of `0x44B3A0`'s second
+  switch (table `0x44B900`, also read at `0x45A6AF`), and its extent runs
+  over that table and into the function at `0x44B920`. Each belongs to its
+  host; the group takes the host.
+- **Three called functions are in no start list**: `0x437230` (after
+  `0x437200`'s padding; `0x437200`'s cut size 64 runs 16 bytes into it),
+  `0x441510` (after `BattleObj_PickPose`'s switch table) and `0x591810` (after
+  `0x5917D0`'s). They are standard recorders by address here; nobody owns
+  them this round.
+- **Nine of the plan's section-5 live rows are not in the cut**: `0x598810`
+  (BE7's), `0x4468B0`, `0x446990`, `0x4469D0`, `0x446F20`, `0x446F50`,
+  `0x446F80` (BE4's) and `0x44FB30`, `0x44FCE0` (BE5's) are part 2 or 7 rows
+  of the catalogue, not part 4; the recipe enters them, but no group owns
+  them. `0x446F20` / `50` / `80` are pure (kThrough here), `0x44FB30` a
+  recorder.
+- **BATE calls three unlabelled part-7 functions** (`0x42E0E0`, `0x42E250`,
+  `0x42E2F0`), and BE5 `0x44F1D0`, `0x44F6A0` - outside every group.
+
+### 10.8 The proof
+
+**(a) Every boss shadow unchanged.** `BOF3X_SHADOW='*'` headless in this
+worktree, the build at `430f34b` (before, 8.4 minutes, exit 0) and at EH's
+harness commit `656c684` (after, 9.5 minutes, exit 0), every shadow's
+totals and coverage lines compared in order (a scratch script over the two
+`build/bof3x.log`s): **all 126 `boss_*` runs of the 12 boss shadows are
+identical line for line** - rounds, calls to the stand-ins, bytes of state,
+regions, 0 mismatches, and every coverage count:
+
+| Shadow | Runs | Rounds | Calls | Before = after |
+|---|--:|--:|--:|---|
+| `boss_spawn` | 1 | 24,000 | 12,000 | yes |
+| `boss_h` | 3 | 130,000 | 2,066,575 | yes |
+| `boss_sa` | 10 | 294,000 | 358,401 | yes |
+| `boss_sb` | 15 | 416,000 | 519,947 | yes |
+| `boss_sc` | 13 | 318,000 | 440,557 | yes |
+| `boss_sd` | 13 | 312,000 | 491,548 | yes |
+| `boss_se` | 13 | 322,000 | 359,974 | yes |
+| `boss_sf` | 6 | 324,000 | 461,616 | yes |
+| `boss_sg` | 11 | 318,000 | 557,116 | yes |
+| `boss_sh` | 14 | 298,000 | 332,384 | yes |
+| `boss_si` | 20 | 330,000 | 302,885 | yes |
+| `boss_sj` | 7 | 264,000 | 515,098 | yes |
+
+Of the 213 shadows, 202 are identical; the 11 that moved are
+`boss_harness_eh` (new), five area groups (`area_w0b`, `w1b`, `w1e`, `w2b`,
+`w3a`) and five spell groups (`magic_fx_reached`, `magic_s16`, `s17`, `s34`,
+`s35`) - call counts only, by 4 to 978 in hundreds of thousands, 0
+mismatches before and after. Their harnesses and files are untouched; the DLL
+they run in grew (the engine set, 512 stand-in templates, a new file), and
+those fuzzes store pointers into our DLL in game memory, so their branches
+move with the build (section 6, "counts depend on the build directory").
+`boss_harness_eh`'s own call count moved the same way between two of EH's
+builds (183,220, 183,046, 183,241 at the tip). **(b) The new
+shapes run**: `BOF3X_SHADOW=boss_harness_eh` (`src/game/boss_harness_eh.cpp`)
+drives eleven of Capcom's functions from the runs - `0x42F5F0`, `0x42F640`
+(`kStep`), `0x42F5E0` (`kDispatch`, `state_cell 0x904AA3`), `0x42F640` again
+through it (`Via::state_cell`), `0x598DC0` / `0x598DF0` (`kWindow`, the
+dispatcher's three immediates), `0x441A10` / `0x441A30` (`kMember`),
+`0x4457F0`, `0x453A90`, `0x42D8C0` (`kHelper`; the last one the text family:
+six `Msg_SystemPtr` into `Text_DrawAt` / `Text_DrawSmall`, two `Crt_sprintf` +
+`Text_DrawFont12`, `Menu_DrawBox` / `Border`, BE1's `0x42DB40` as a recorder of
+the test's own). "Ours" is the file's own
+copy of the same bytes with every call and immediate routed to
+`boss_harness::StandIn`, so both passes are Capcom's code.
+
+    shadow      boss_harness_eh self-test: 44000 rounds over 11 functions (4000 each), 183220 calls to the stand-ins, 0 MISMATCHES; 35952 bytes of state (27 regions) and the stand-ins' log compared
+
+The first two runs were not clean, and each was the harness's, found before
+any group depended on it: `Menu_DrawBox`'s colour word listed whole (callers
+load the byte into `al`; the upper bytes are the caller's register, different
+in the two copies - now a byte) and `Crt_sprintf` logged a fourth word its
+callers never push (the caller's frame - now three words). The controls
+(`BOF3X_EH_CONTROL=n`, one change in the file's copy):
+
+| n | Planted | Refused |
+|--:|---|---|
+| 1 | `kWindow` `0x598DF0`: the record's `+4` = 0x5B | 4,000 of 4,000 |
+| 2 | `kStep` `0x42F640`: `0x904AA1` = 4 (also the via run's copy) | 2,058 + 2,001 (the via) |
+| 3 | `kHelper` `0x453A90`: `sete` for `setne` | 4,000 |
+| 4 | `kMember` `0x441A30`: `+2` = 2 | 4,000 |
+| 5 | `kWindow` dispatch `0x598DC0`: its stack table's entry 1 aimed at entry 2's handler | 1,362 (the rounds drawing state 1) |
+| 6 | `kDispatch` `state_cell` `0x42F5E0`: the byte stored, not loaded (entry 0 always) | 3,177 (the rounds not drawing 0) |
+| 7 | `0x42D8C0`: the other `sprintf` format (the engine `Crt_sprintf`'s note) | 4,000 |
+| 8 | `kHelper` `0x4457F0`: `cmp bl, 4` for 3 (the side's bound) | 139 |
+| 9 | `kStep` `0x42F5F0`: window 4's `+3` (`0x8031F3`) = 2 | 4,000 |
+
+Two byte controls first tried for 5 and 6 (dispatch by the record's `+2`, by
+`0x904AA2`) index a random byte past the table and fault instead of counting
+(section 6's trap); they were replaced by the two above.
+
+### 10.9 Limits
+
+- **The shapes are a reading of the 308's starts, not of their bodies**: a
+  group that finds a function reached two ways lists it once per way (two
+  clone rows).
+- **`kHelper`'s words are the group's**: the harness draws garbage; a word a
+  helper indexes a table by must be seeded inside it (`args`).
+- **String effects note at most 64 bytes to a NUL**; a text pointer a
+  quieter stand-in answered is noted "unreadable" (0xFFFFFFFF), never
+  followed. A caller's stack buffer that no stand-in fills is uninitialised
+  and differs between the copy and ours: list the callee with an effect that
+  fills it (`Equip_PreviewSet`'s out-pointers, a `sprintf` into a static
+  buffer outside the regions such as BATE's `0x904BA0` - list the buffer as
+  a region).
+- **`kThrough` callees are not logged**: their arguments are compared only
+  through what they compute.
+- **The engine regions add 1,976 bytes and 11 regions** to the boss frame's
+  33,976 bytes and 16 (35,952 and 27 in the self-test's line); an engine group's own regions go after them (64 regions,
+  128 KiB in all).
+- **Counts depend on the build directory**, as ever; the before / after
+  comparison below is one worktree's two builds.
