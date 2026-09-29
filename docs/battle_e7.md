@@ -167,6 +167,11 @@ build directory). Every recorder the originals call appears in the coverage
 line; the handler recorders of the four dispatchers' entries 1,162..2,036
 calls each.
 
+`BOF3X_SHADOW='*'` headless at `4a656b8` (this worktree): exit 0, 950
+self-test lines at 0 mismatches and none with any, no Fatal; `battle_e7`'s own
+line there 186,000 rounds, 0 mismatches (3,249,684 calls - the count moves
+with what ran before it).
+
 ## 6. Controls
 
 `scratchpad/be7/controls.py` (the session's scratch): each control plants
