@@ -130,6 +130,18 @@ U FxInventory(const U*, U answer) {
 }
 // Sprite_UpdateScreen: Sprite_Current and its +0x3C (which the caller holds at
 // 0 across the call) noted as the callee sees them.
+// Input_AutoRepeat: the real one answers some of the bits it is handed (the
+// held repeat); a quarter of the time garbage, else none, all or some of them -
+// so the menus' "neither bit" paths run as often as the others.
+U FxRepeat(const U* a, U answer) {
+    const U n = sh::Noise();
+    switch (n % 4) {
+    case 0: return answer;
+    case 1: return 0;
+    case 2: return a[0];
+    default: return a[0] & (n >> 8);
+    }
+}
 U FxUpdateScreen(const U*, U answer) {
     const unsigned char* const s = Sprite_Current;
     sh::Note(Key(s), sh::InRegions(s + 0x3C, 4) ? Get32(Key(s + 0x3C)) : 0xDEAD);
@@ -153,6 +165,7 @@ const sh::Callee kCallees[] = {
     {E1F_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, kF, 0, 0, {}, &FxInventory, nullptr, true},
     {E1F_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, kG, 0, 0, {}, &FxCommit, nullptr, true},
     {E1F_OURS(Sprite_UpdateScreen), 0, {}, kG, 0, 0, {}, &FxUpdateScreen, nullptr, true},
+    {E1F_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &FxRepeat, nullptr, true},
 };
 #undef E1F_OURS
 
@@ -198,12 +211,14 @@ U Counter() { return PickOf(0, 1, 2, 7, 8, 9, 10, 16, 17, sh::Next() % 0x40, 0xF
 // The buttons: the cancel and confirm masks one bit or random, Input_Pressed on
 // either, both, the repeat bits, the page bits, or random.
 void Buttons() {
-    const U cancel = PickOf(0x40, 0x20, 0x80, 1u << (sh::Next() % 16), sh::Next() & 0xFFFF);
-    const U confirm = PickOf(0x20, 0x40, 0x10, 1u << (sh::Next() % 16), sh::Next() & 0xFFFF);
+    const U a = sh::Next() % 16, b = (a + 1 + sh::Next() % 15) % 16;   // two different bits
+    const U cancel = sh::Often() ? 1u << a : sh::Next() & 0xFFFF;
+    const U confirm = sh::Often() ? 1u << b : sh::Next() & 0xFFFF;
     Put16(0x903590, cancel);    // Field_CancelButtons
     Put16(0x90358E, confirm);   // Field_ConfirmButtons
-    Put16(0x7E1BEC, PickOf(cancel, confirm, cancel | confirm, 0x1000, 0x4000, 0x5000, 4, 8, 0xC, 0, sh::Next() & 0xFFFF,
-                           (sh::Next() & 0xFFFF) & ~(cancel | confirm)));
+    const U other = (sh::Next() & 0xFFFF) & ~(cancel | confirm);
+    Put16(0x7E1BEC, PickOf(cancel, confirm, confirm, confirm | other, cancel | confirm, 4 & ~(cancel | confirm),
+                           8 & ~(cancel | confirm), 0xC, 0x1000, 0x4000, 0, other, other, sh::Next() & 0xFFFF));
 }
 
 void Menu() {
