@@ -8,7 +8,7 @@ the round branch's tip `61be26e`. **45 functions ours**
 for FE1 (`analysis/round12_cut.tsv`), none added, none dropped. Each read to
 its last instruction with capstone and fuzzed through the scenario harness in
 field mode ([`scenario_harness.md`](scenario_harness.md) section 7) without
-edits to it: 270,000 rounds, 0 mismatches. CONTROLS_SUMMARY Fuzz-only except
+edits to it: 270,000 rounds, 0 mismatches. 149 controls planted, 148 refused by a count, one equivalent with its near variant refused (section 6). Fuzz-only except
 the three both recorded routes enter (section 9).
 
 The cut calls the band "event script, first seven runs"; what it holds is
@@ -130,7 +130,7 @@ lists the callee with the width its code reads (each read, capstone
 | Callee | Masks | The read |
 |---|---|---|
 | `0x52CFE0` | byte, whole, word, word | `+0x34` `and eax, 0xFF`; the slot handed whole to `Gfx_CommitPrim`; `+0x1F` / `+0x11` `movsx` of x and y. Pushed from `movzx cx, byte` / `lea` over the caller's `esi` (`FieldPanel_DrawKindRow`, `FieldPanel_DrawTotal`) |
-| `Text_DrawAt` | word, word, byte, byte, the text (16 bytes hashed) | the pen words; `0x516B70`'s colour and count bytes (BE7's reading) |
+| `Text_DrawAt` | word, word, byte, byte, the text pointer whole and its first 16 bytes noted | the pen words; `0x516B70`'s colour and count bytes (BE7's reading) |
 | `Menu_DrawBox` | the colour a byte | `colour & 0xFF`; the style byte pushed as `eax` over the entry's `eax` |
 | `Sprite_EnsureAnimation` | byte | `Sprite_SetAnimationAt` reads `dl` (the precedent: `area_w1f`, `boss_sf`, `magic_s14`) |
 | `Item_NamePtr`, `Inventory_Add` | bytes | the category and id low bytes; `Field_ContentTake` pushes stack dwords whose upper three bytes it never wrote |
@@ -171,7 +171,10 @@ itself is the caller's frame).
 (0x280), the message cells `0x7DEE20` (0x60), `0x903860` (0x10),
 `0x937F80` (8), the slot positions `0x7E06E0` (0x20), `0x904AA0` (0x50: the
 formation `0x904AAC`, the bits `0x904AE5`), `0x92BF18`, `0x904EF0`,
-`Text_Records` (0x40), `0x939A28`, `0x7E1BE0` (`Cond_ByteFF`).
+`Text_Records` (0x40), `0x939A28`, `0x7E1BE0` (`Cond_ByteFF`), and
+`MessagePools`' first 0x200 offset words (0x400): empty at start-up, so
+without them every panel message's pointer was the pool's base and a wrong
+message id could not show (controls C26, C28 on the first run).
 
 **Seeds:** the member count 0..3 (1..3 two times in three), the pending
 member below the count, SC `+8` 0..7 mostly (to 11), the party set below 19
@@ -199,12 +202,17 @@ pending member, the leader's x or z and height, SC and FS to a member, SC
 Result (this worktree, 2026-09-29), `BOF3X_SELFTEST_ONLY=1
 BOF3X_SHADOW=field_e1`, exit 0:
 
-    field_e1 self-test: 270000 rounds over 45 functions (6000 each), 933908 calls to the stand-ins, 0 MISMATCHES; 23520 bytes of state (47 regions) and the stand-ins' log compared
+    field_e1 self-test: 270000 rounds over 45 functions (6000 each), 933960 calls to the stand-ins, 0 MISMATCHES; 24544 bytes of state (48 regions) and the stand-ins' log compared
 
 Every recorder was called and every table entry reached (the coverage lines;
 `Field_FormActions`' nineteen 140..182 times each).
 
-STAR_RESULT
+`BOF3X_SHADOW='*'` at the final code (this worktree, 2026-09-29): exit 0,
+672 self-test lines, every one `0 MISMATCHES`, no Fatal, `inject: 6598 ours,
+0 left original by BOF3X_ORIGINAL` (6,553 + 45). It did not die silently.
+The five shadows whose raw constants were rebound (`event_leader`,
+`field_hidden`, `event_ops`, `menu_lists`, `field_event`) also passed alone.
+`tools/ledger_check.py`: 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -235,7 +243,172 @@ STAR_RESULT
 
 ## 6. Controls
 
-CONTROLS_TABLE
+149 controls planted one at a time against the final fuzz (`controls.py` in the
+session scratchpad `fe1/`: plant, rebuild, run `BOF3X_SHADOW=field_e1`,
+restore, rebuild; every anchor a unique string): **148 refused by a count**,
+every one a `Fatal` naming only the planted function (C29 and C89 plant in a helper two share, and both are named); one equivalent. The weakest is C77 (the zenny path's flag read before the call instead of after, 8 rounds: only the group's disturbance moves the object between).
+
+- **C4 is equivalent**: `(k & 7) << 6` stored as a byte drops bit 2's
+  `0x100`, so it equals `(k & 3) << 6` for every kind; its near variant
+  C4b (`<< 5`) is refused.
+- **The first run** (the fuzz before its last change) left C26, C28 and
+  C41 standing besides C4: the pool's offset words were all 0 at start-up
+  (every message pointer the pool's base) and input held was never 1.
+  The fuzz took `MessagePools`' words as a region, compared the text
+  pointer whole, and seeded 1 / 2 / 0x8000; the table is the second run, all
+  149 on the final code.
+
+| # | Function | Planted | Result |
+|---|---|---|---|
+| C1 | `FieldPanel_DrawHeader` | `0x108,` -> `0x107,` | refused, 6,000 of 6,000 rounds |
+| C2 | `FieldPanel_DrawHeader` | `y)` -> `y + 1)` | refused, 6,000 of 6,000 rounds |
+| C3 | `FieldPanel_DrawKindIcon` | `0xFF)` -> `0xFE)` | refused, 1,497 of 6,000 rounds |
+| C4 | `FieldPanel_DrawKindIcon` | `3u)` -> `7u)` | passed: equivalent (below) |
+| C4b | `FieldPanel_DrawKindIcon` | `6` -> `5` | refused, 3,751 of 6,000 rounds |
+| C5 | `FieldPanel_DrawKindIcon` | `0x1EB)` -> `0x1EA)` | refused, 4,507 of 6,000 rounds |
+| C6 | `FieldPanel_DrawKindIcon` | `2)` -> `3)` | refused, 4,365 of 6,000 rounds |
+| C7 | `FieldPanel_DrawKindRow` | `25,` -> `24,` | refused, 4,971 of 6,000 rounds |
+| C8 | `FieldPanel_DrawKindRow` | `8);` -> `7);` | refused, 1,559 of 6,000 rounds |
+| C9 | `FieldPanel_DrawKindRow` | `0x16)` -> `0x17)` | refused, 1,564 of 6,000 rounds |
+| C10 | `FieldPanel_DrawKindRow` | `3,` -> `4,` | refused, 4,437 of 6,000 rounds |
+| C11 | `FieldPanel_DrawKindRow` | `0xFFFFu;` -> `0xFFu;` | refused, 4,421 of 6,000 rounds |
+| C12 | `FieldPanel_DrawKindRow` | `0xE7` -> `0xE6` | refused, 4,437 of 6,000 rounds |
+| C13 | `FieldPanel_DrawTotal` | `>=` -> `>` | refused, 1,343 of 6,000 rounds |
+| C14 | `FieldPanel_DrawTotal` | `1},` -> `0},` | refused, 356 of 6,000 rounds |
+| C15 | `FieldPanel_DrawTotal` | `(r[3]` -> `(r[2]` | refused, 1,336 of 6,000 rounds |
+| C16 | `FieldPanel_DrawTotal` | `char>(rank);` -> `char>(rank + 1);` | refused, 6,000 of 6,000 rounds |
+| C17 | `FieldPanel_DrawTotal` | `5` -> `6` | refused, 6,000 of 6,000 rounds |
+| C18 | `FieldPanel_DrawMessage` | `0xFFFF)` -> `0xFFFE)` | refused, 2,981 of 6,000 rounds |
+| C19 | `FieldPanel_DrawMessage` | `8` -> `9` | refused, 3,019 of 6,000 rounds |
+| C20 | `FieldPanel_DrawShade` | `0x43700000);` -> `0x43700001);` | refused, 6,000 of 6,000 rounds |
+| C21 | `FieldPanel_DrawShade` | `1);` -> `0);` | refused, 6,000 of 6,000 rounds |
+| C22 | `FieldPanel_DrawShade` | `2);` -> `1);` | refused, 6,000 of 6,000 rounds |
+| C23 | `FieldPanel_DrawBox3` | `1,` -> `2,` | refused, 6,000 of 6,000 rounds |
+| C24 | `FieldPanel_DrawBox3` | `0xB);` -> `0xA);` | refused, 6,000 of 6,000 rounds |
+| C25 | `FieldPanel_DrawBox3` | `0x29` -> `0x28` | refused, 6,000 of 6,000 rounds |
+| C26 | `FieldPanel_DrawBox3` | `0x7C)` -> `0x7E)` | refused, 5,999 of 6,000 rounds |
+| C27 | `FieldPanel_DrawBox2` | `0x15);` -> `0x16);` | refused, 6,000 of 6,000 rounds |
+| C28 | `FieldPanel_DrawBox2` | `0x82)` -> `0x80)` | refused, 6,000 of 6,000 rounds |
+| C29 | `FieldPanel_DrawBox3/2` | `1);` -> `0);` | refused, 12,000 of 6,000 rounds |
+| C30 | `FieldPanel_DrawBox2` | `0x80,` -> `0x81,` | refused, 6,000 of 6,000 rounds |
+| C31 | `Inventory_Holds38To4DAt99` | `0x16` -> `0x15` | refused, 1,464 of 6,000 rounds |
+| C32 | `Inventory_Holds38To4DAt99` | `0x63` -> `0x62` | refused, 1,023 of 6,000 rounds |
+| C33 | `Inventory_Holds38To4DAt99` | `0x4E;` -> `0x4D;` | refused, 960 of 6,000 rounds |
+| C34 | `FieldPanel_DrawBlink` | `8)` -> `4)` | refused, 1,498 of 6,000 rounds |
+| C35 | `FieldPanel_DrawBlink` | `0x1A,` -> `0x1B,` | refused, 1,455 of 6,000 rounds |
+| C36 | `Field_PathClear` | `>` -> `>=` | refused, 75 of 6,000 rounds |
+| C37 | `Field_PathClear` | `> lxh ? 1 : xh == lxh ? 0` -> `>= lxh ? 1` | refused, 432 of 6,000 rounds |
+| C38 | `Field_PathClear` | `15;` -> `16;` | refused, 434 of 6,000 rounds |
+| C39 | `Field_PathClear` | `raised,` -> `0,` | refused, 967 of 6,000 rounds |
+| C40 | `Field_PathClear` | `<=` -> `<` | refused, 3,192 of 6,000 rounds |
+| C41 | `Field_FormActionState` | `!= 0)` -> `> 1)` | refused, 781 of 6,000 rounds |
+| C42 | `Field_FormActionState` | `0;` -> `1;` | refused, 4,527 of 6,000 rounds |
+| C43 | `Field_FormActionState` | `!= 0)` -> `> 1)` | refused, 1,465 of 6,000 rounds |
+| C44 | `Field_FormActionState` | `SH_CALL(Member_ClearState)(0);` -> `SH_CALL(Member_ClearState)(1);` | refused, 4,527 of 6,000 rounds |
+| C45 | `PartyAction_ScriptEnd` | `0;` -> `1;` | refused, 3,997 of 6,000 rounds |
+| C46 | `Field_PassageTrigger` | `2)` -> `1)` | refused, 3,676 of 6,000 rounds |
+| C47 | `Field_PassageTrigger` | `0x12C));` -> `0x12E));` | refused, 1,724 of 6,000 rounds |
+| C48 | `Field_PassageTrigger` | `0xFF)` -> `0xFE)` | refused, 1,842 of 6,000 rounds |
+| C49 | `Field_PassageTrigger` | `2;` -> `3;` | refused, 3,560 of 6,000 rounds |
+| C50 | `Field_JumpState` | `(nothing)` -> `^ 1u` | refused, 6,000 of 6,000 rounds |
+| C51 | `Field_JumpOut` | `Sc()[3]` -> `(Sc()[3] + 1u) % 5u` | refused, 6,000 of 6,000 rounds |
+| C52 | `Field_JumpIn` | `(nothing)` -> `^ 1u` | refused, 6,000 of 6,000 rounds |
+| C53 | `Field_ContentState` | `SH_CALL(Sprite_ScriptTick)();` -> `(nothing)` | refused, 6,000 of 6,000 rounds |
+| C54 | `Field_ContentState` | `(nothing)` -> `^ 1u` | refused, 6,000 of 6,000 rounds |
+| C55 | `Field_JumpBegin` | `2;` -> `1;` | refused, 6,000 of 6,000 rounds |
+| C56 | `Field_JumpOut0` | `1;` -> `2;` | refused, 6,000 of 6,000 rounds |
+| C57 | `Field_JumpOut0` | `(Sc()[5]` -> `(Sc()[6]` | refused, 1,938 of 6,000 rounds |
+| C58 | `Field_JumpOut1` | `2;` -> `1;` | refused, 3,959 of 6,000 rounds |
+| C59 | `Field_JumpOut2` | `3;` -> `2;` | refused, 3,942 of 6,000 rounds |
+| C60 | `Field_JumpOut3` | `(Fe2Al(at::kJumpOut3))` -> `(!Fe2Al(at::kJumpOut3))` | refused, 5,981 of 6,000 rounds |
+| C61 | `Field_JumpOut4` | `0;` -> `1;` | refused, 4,066 of 6,000 rounds |
+| C62 | `Field_JumpAir` | `0x1000)` -> `0x2000)` | refused, 2,560 of 6,000 rounds |
+| C63 | `Field_JumpAir` | `&` -> `\|` | refused, 694 of 6,000 rounds |
+| C64 | `Field_JumpAir` | `0x3E)));` -> `0x3C)));` | refused, 4,221 of 6,000 rounds |
+| C65 | `Field_JumpIn0` | `1;` -> `2;` | refused, 6,000 of 6,000 rounds |
+| C66 | `Field_JumpIn1` | `2;` -> `3;` | refused, 3,974 of 6,000 rounds |
+| C67 | `Field_JumpIn2` | `0 && !ScriptFlag8())` -> `0)` | refused, 606 of 6,000 rounds |
+| C68 | `Field_JumpIn3` | `Fe2(at::kJumpIn3);` -> `Fe2(at::kJumpIn0);` | refused, 6,000 of 6,000 rounds |
+| C69 | `Field_ContentTake` | `0xFF)` -> `0xFE)` | refused, 992 of 6,000 rounds |
+| C70 | `Field_ContentTake` | `40u);` -> `41u);` | refused, 990 of 6,000 rounds |
+| C71 | `Field_ContentTake` | `SetLong(At(at::kContentCount), L(at::kContentCount) + 1);` -> `(nothing)` | refused, 992 of 6,000 rounds |
+| C72 | `Field_ContentTake` | `16);` -> `15);` | refused, 1,007 of 6,000 rounds |
+| C73 | `Field_ContentTake` | `SH_CALL(Inventory_Add)(category, item,` -> `SH_CALL(Inventory_Add)(item, category,` | refused, 1,008 of 6,000 rounds |
+| C74 | `Field_ContentTake` | `SH_CALL(Sound_PlayEffect)(0x106);` -> `SH_CALL(Sound_PlayEffect)(0x107);` | refused, 704 of 6,000 rounds |
+| C75 | `Field_ContentTake` | `1))` -> `2))` | refused, 1,029 of 6,000 rounds |
+| C76 | `Field_ContentTake` | `SH_CALL(Sprite_SetAnimation)(1);` -> `SH_CALL(Sprite_SetAnimation)(2);` | refused, 1,037 of 6,000 rounds |
+| C77 | `Field_ContentTake` | `ContentObject()[5];` -> `o[5];` | refused, 8 of 6,000 rounds |
+| C78 | `Field_ContentTake` | `1);` -> `2);` | refused, 6,000 of 6,000 rounds |
+| C79 | `Field_ContentEnd` | `3)` -> `2)` | refused, 2,532 of 6,000 rounds |
+| C80 | `Field_ContentEnd` | `object[0]` -> `object[1]` | refused, 902 of 6,000 rounds |
+| C81 | `Field_ContentEnd` | `0 && Word(object + 0x38) ==` -> `(nothing)` | refused, 196 of 6,000 rounds |
+| C82 | `Field_ContentEnd` | `0x10);` -> `0x11);` | refused, 215 of 6,000 rounds |
+| C83 | `Field_ContentEnd` | `0x20)` -> `0x10)` | refused, 2,006 of 6,000 rounds |
+| C84 | `Field_ContentEnd` | `0xC;` -> `0xD;` | refused, 1,942 of 6,000 rounds |
+| C85 | `Field_AreaRunState` | `0x68)` -> `0x69)` | refused, 3,755 of 6,000 rounds |
+| C86 | `Field_GiveZenny` | `0);` -> `1);` | refused, 6,000 of 6,000 rounds |
+| C87 | `Field_GiveZenny` | `SH_CALL(Msg_OpenSystem)(5);` -> `SH_CALL(Msg_OpenSystem)(6);` | refused, 6,000 of 6,000 rounds |
+| C88 | `Field_GiveZenny` | `2;` -> `1;` | refused, 5,728 of 6,000 rounds |
+| C89 | `Field_CellAround*` | `2` -> `1` | refused, 4,681 of 6,000 rounds |
+| C90 | `Field_CellAroundLarge` | `2` -> `4` | refused, 399 of 6,000 rounds |
+| C91 | `Field_CellAroundLarge` | `\|\| f == 6` -> `(nothing)` | refused, 161 of 6,000 rounds |
+| C92 | `Field_CellAroundLarge` | `1 \|\| f == 5)` -> `1)` | refused, 92 of 6,000 rounds |
+| C93 | `Field_CellAroundLarge` | `2)` -> `3)` | refused, 541 of 6,000 rounds |
+| C94 | `Field_CellAroundLarge` | `2));` -> `1));` | refused, 107 of 6,000 rounds |
+| C95 | `Field_CellAroundLarge` | `2));` -> `1));` | refused, 85 of 6,000 rounds |
+| C96 | `Field_CellAroundLarge` | `0;` -> `1;` | refused, 1,527 of 6,000 rounds |
+| C97 | `Field_CellAroundLarge` | `-` -> `+` | refused, 1,458 of 6,000 rounds |
+| C98 | `Field_CellAroundSide` | `1 \|\| d == 5)` -> `1)` | refused, 1,125 of 6,000 rounds |
+| C99 | `Field_CellAroundSide` | `d;` -> `d + 1;` | refused, 1,270 of 6,000 rounds |
+| C100 | `Field_GatewayExit` | `0x4000)` -> `0x2000)` | refused, 2,361 of 6,000 rounds |
+| C101 | `Field_GatewayExit` | `0xC)` -> `0xD)` | refused, 1,287 of 6,000 rounds |
+| C102 | `Field_GatewayExit` | `==` -> `!=` | refused, 975 of 6,000 rounds |
+| C103 | `Field_GatewayExit` | `0x1000)` -> `0x800)` | refused, 336 of 6,000 rounds |
+| C104 | `Field_GatewayExit` | `6))` -> `4))` | refused, 546 of 6,000 rounds |
+| C105 | `Field_GatewayExit` | `W(at::kLeaderZ` -> `W(at::kLeaderX` | refused, 2,959 of 6,000 rounds |
+| C106 | `Party_PlaceAtSlots` | `2)` -> `4)` | refused, 3,055 of 6,000 rounds |
+| C107 | `Party_PlaceAtSlots` | `13);` -> `12);` | refused, 2,953 of 6,000 rounds |
+| C108 | `Party_PlaceAtSlots` | `dx < dz ? dz :` -> `(nothing)` | refused, 1,452 of 6,000 rounds |
+| C109 | `Party_PlaceAtSlots` | `0x20;` -> `0x21;` | refused, 3,019 of 6,000 rounds |
+| C110 | `Party_PlaceAtSlots` | `(nothing)` -> `+ 1` | refused, 857 of 6,000 rounds |
+| C111 | `Party_ScriptTicks` | `Member(i);` -> `Member(0);` | refused, 3,701 of 6,000 rounds |
+| C112 | `Party_ScriptTicks` | `== 0)` -> `<= 1)` | refused, 1,783 of 6,000 rounds |
+| C113 | `Party_PlacesByList` | `(nothing)` -> `+ 1` | refused, 3,805 of 6,000 rounds |
+| C114 | `Party_PlacesByList` | `static_cast<std::uint32_t>(ground));` -> `static_cast<std::uint32_t>(ground) + 1);` | refused, 5,524 of 6,000 rounds |
+| C115 | `Party_PlacesByList` | `members = count;` -> `(void)count;` | refused, 24 of 6,000 rounds |
+| C116 | `Party_PlacesByList` | `0x80)` -> `0x40)` | refused, 2,987 of 6,000 rounds |
+| C117 | `Party_PlacesByList` | `6;` -> `5;` | refused, 2,804 of 6,000 rounds |
+| C118 | `Party_PlacesByList` | `char>(Sc()[5] - 1);` -> `char>(Sc()[5]);` | refused, 1,841 of 6,000 rounds |
+| C119 | `Party_PlacesByList` | `(m != ObjTrio)` -> `(true)` | refused, 2,804 of 6,000 rounds |
+| C120 | `Field_LeaderPlaceOffset` | `<= 1)` -> `== 0)` | refused, 1,827 of 6,000 rounds |
+| C121 | `Field_LeaderPlaceOffset` | `1;` -> `2;` | refused, 3,078 of 6,000 rounds |
+| C122 | `Field_LeaderPlaceOffset` | `2)` -> `3)` | refused, 2,421 of 6,000 rounds |
+| C123 | `Field_LeaderPlaceOffset` | `!=` -> `==` | refused, 3,683 of 6,000 rounds |
+| C124 | `Field_LeaderPlaceOffset` | `1;` -> `2;` | refused, 1,353 of 6,000 rounds |
+| C125 | `Field_PendingJumpTurn` | `\|\| f == 3` -> `(nothing)` | refused, 2,186 of 6,000 rounds |
+| C126 | `Field_PendingJumpKind4` | `SH_CALL(Field_PendingRelease)(4);` -> `SH_CALL(Field_PendingRelease)(3);` | refused, 6,000 of 6,000 rounds |
+| C127 | `Field_PendingDrop` | `3` -> `2` | refused, 1,650 of 6,000 rounds |
+| C128 | `Field_PendingDrop` | `0x7D0)` -> `0x7C0)` | refused, 4,003 of 6,000 rounds |
+| C129 | `Field_PendingDrop` | `-8);` -> `-7);` | refused, 4,003 of 6,000 rounds |
+| C130 | `Field_PendingDrop` | `0xFD` -> `0xFB` | refused, 2,940 of 6,000 rounds |
+| C131 | `Field_PendingDrop` | `0xBF);` -> `0xBE);` | refused, 2,030 of 6,000 rounds |
+| C132 | `Field_PendingNext` | `1)` -> `2)` | refused, 2,732 of 6,000 rounds |
+| C133 | `Field_PendingNext` | `0xFFF7);` -> `0xFFFB);` | refused, 1,304 of 6,000 rounds |
+| C134 | `Field_PendingNext` | `(count != 1 && next` -> `(next` | refused, 923 of 6,000 rounds |
+| C135 | `Field_PendingNext` | `0xFDE7` -> `0xFDEF` | refused, 232 of 6,000 rounds |
+| C136 | `Field_PendingNext` | `(n` -> `((n + 1)` | refused, 1,248 of 6,000 rounds |
+| C137 | `Field_PendingRelease` | `2` -> `3` | refused, 68 of 6,000 rounds |
+| C138 | `Field_PendingRelease` | `4;` -> `4 + 1;` | refused, 2,731 of 6,000 rounds |
+| C139 | `Field_PendingRelease` | `0xFD);` -> `0xFC);` | refused, 1,349 of 6,000 rounds |
+| C140 | `Field_PendingRelease` | `==` -> `>=` | refused, 1,352 of 6,000 rounds |
+| C141 | `Field_PendingRelease` | `2;` -> `3;` | refused, 2,288 of 6,000 rounds |
+| C142 | `Field_PendingRelease` | `!(flags & bit(n - 1u)) &&` -> `(nothing)` | refused, 208 of 6,000 rounds |
+| C143 | `FieldPanel_DrawShade` | `0x1C);` -> `0x1B);` | refused, 6,000 of 6,000 rounds |
+| C144 | `FieldPanel_DrawTotal` | `0x58,` -> `0x59,` | refused, 6,000 of 6,000 rounds |
+| C145 | `FieldPanel_DrawKindRow` | `22u),` -> `21u),` | refused, 2,882 of 6,000 rounds |
+| C146 | `Field_ContentEnd` | `SH_CALL(Sprite_SetAnimation)(0);` -> `SH_CALL(Sprite_SetAnimation)(1);` | refused, 1,132 of 6,000 rounds |
+| C147 | `Field_PassageTrigger` | `fs[0x12A];` -> `fs[0x12B];` | refused, 3,545 of 6,000 rounds |
+| C148 | `Field_JumpAir` | `0x4000)` -> `0x8000)` | refused, 1,405 of 6,000 rounds |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
@@ -317,7 +490,30 @@ code cell, leaves by a gateway or runs a pending jump.
 
 ## 10. The rebinding
 
-REBINDING
+Every raw reference in `src/game` to the 45 (`band_rows.py --refs`: 43
+lines, 9 functions), the round-ten form - the value unchanged, so the fuzz
+keys stand; each `_callees.h` now includes `symbols.gen.h`:
+
+| File | Constant | Now |
+|---|---|---|
+| `event_leader_callees.h` | `kPathClear` `0x52EC20` | `bof3::addr::Field_PathClear` |
+| `event_leader_callees.h` | `kGiveZenny` `0x5307C0` | `bof3::addr::Field_GiveZenny` |
+| `field_hidden_callees.h` | `kFoundZenny` `0x5307C0` | `bof3::addr::Field_GiveZenny` |
+| `event_ops_callees.h` | `kExitGateway` `0x531820` | `bof3::addr::Field_GatewayExit` |
+| `event_ops_callees.h` | `kCellAroundLarge` `0x531120` | `bof3::addr::Field_CellAroundLarge` |
+| `menu_lists_callees.h` | `kExitGateway` `0x531820` | `bof3::addr::Field_GatewayExit` |
+| `field_event.cpp` | `Fn<..>(0x533690)` (`position_alt`) | `Fn<..>(bof3::addr::Field_LeaderPlaceOffset)` |
+
+**Left raw, on purpose:** the fuzz files' `CallSite` tables and stand-in
+keys (`event_leader_fuzz.cpp`, `field_hidden_fuzz.cpp`, `event_ops_fuzz.cpp`,
+`menu_lists_fuzz.cpp`, `field_event_fuzz.cpp`: the keys), comments naming
+an address (`area_w2e.cpp`, `area_w3b.cpp`, `event_leader.cpp`,
+`field_hidden.cpp`, `event_ops.cpp`, `menu_lists.cpp`, `field_event.cpp`),
+`scenario_harness.cpp`'s field-run band (`0x52D080` is a band edge, not a
+call) and **`scenario_harness_fh.cpp`'s two clones `0x52F980`, `0x52D880`**
+(a harness's self-test copying the originals: not this group's to edit).
+**For the coordinator (this wave):** FC2's `0x46D180` calls
+`Field_GiveZenny` raw, and this group calls FE2's fourteen raw (section 8).
 
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
@@ -326,3 +522,22 @@ hidden starts with the extents above, `0052EC20 15D` (the existing line said
 0x160, through padding), and `0052F570 41` (`Sprite_TurnSense`'s own extent;
 its `70` line covered `0x52F5C0`). The other 20 had lines already, each the
 tool's extent.
+
+## 12. For the harness fold (not edited here)
+
+FH's field-standard stand-ins, first used by this group:
+
+- **`Zenny_Add`'s effect (`FxZennyAdd`) adds to the tally `0x904138` when the
+  second argument's byte is not 0**; the real one (`scena_sx.cpp`, its
+  `symbols.toml` evidence) adds when it **is** 0. Both passes use the same
+  stand-in, so no mismatch shows; the fold should invert the test.
+- **`Crt_sprintf` is listed with four words**: at a three-argument call the
+  fourth is the caller's frame, compared as garbage. This group re-lists it
+  with three (and its own seven-letter effect); a variadic callee wants its
+  count per call site, or its words past the format masked.
+- **The masks of section 3** (ten callees) are the width each callee reads.
+- **`MessagePools`' offset words are empty at start-up**: any group drawing a
+  script-pool message by id wants them as a region, or a wrong id cannot
+  show.
+- **`0x52CFE0`** could move the packet cursor past the primitive it answers
+  (`FxSprite` here), as the real one commits it.
