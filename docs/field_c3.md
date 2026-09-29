@@ -10,7 +10,7 @@ for FC3 (`analysis/round12_cut.tsv`), `0x5254A0` (FH's finding,
 dispatchers no list had - `FieldCore_State2Steps` entries 4..8 (section 5).
 Each read to its last instruction with capstone and fuzzed through the
 scenario harness's field mode ([`scenario_harness.md`](scenario_harness.md)
-section 7) without edits to it: 189,000 rounds, 0 mismatches. CONTROLS_LINE
+section 7) without edits to it: 189,000 rounds, 0 mismatches. 160 controls planted, all refused by a count (section 6).
 Fuzz-only except `FieldCore_ScriptMove`, which the whelp route enters
 (section 9).
 
@@ -193,14 +193,15 @@ its code reads (for the coordinator's fold, round twelve section 7 item 1):
 | `Area_LinkAt` | two bytes | `x & 0xFF`, `z & 0xFF` (its evidence, `area_entry.cpp`) |
 | FE2's `0x534C20` | the byte | `and eax, 0xFF` at `+0xE` |
 
-Two more are re-listed louder, not narrower: `MoveScript_Step` answers
+Three more are re-listed louder, not narrower: `MapView_GroundAt` answers
+at the height's boundaries (section 4); `MoveScript_Step` answers
 0xFF..0x0F (0xFF ends the walk) and moves the context's flag byte it was
 handed; `Field_CellAhead` answers 0..4 (the recoil reads 1 and 3).
 
 ## 4. The fuzz (`field_c3_fuzz.cpp`)
 
 One `Run` under `BOF3X_SHADOW=field_c3`, `Group::field`, 3,000 rounds a
-function (189,000), **0 mismatches** in this worktree; 334,310 calls to the
+function (189,000), **0 mismatches** in this worktree; 334,000 calls to the
 stand-ins; 23,104 bytes of state in 39 regions; 313 stand-ins registered
 (174 of them the field-standard set). Shapes: `kState` for the mode frames,
 `kCall` for op E7 (a byte below 11), the three direction picks (a sprite
@@ -211,6 +212,10 @@ record; `al`) and `FieldCore_TileD0Probe` (a scratch word out; `al`),
   `Field_ObjectHandlers`. The latter's eleven entries are **typed stand-ins**
   (one argument logged: the object, `Field_ActiveMember`), which a handler
   recorder would not log.
+- **Answers at the boundaries**: `MapView_GroundAt` (re-listed) answers two
+  times in three at `Sprite_Current`'s height -0x200, +0x200, +0x100, -0x100
+  or 0, give or take one; `MapView_SlopeAt` 0x3F..0x41 half the time and sets
+  the sloped byte `0x903850`.
 - **This group's own callees**: `FieldCore_ScriptMove` and
   `FieldCore_ScriptMoveNext` as `kPhase` (tail-jumped / called by address);
   `FieldCore_TileD0Exit` (turns `s[8]`), `FieldCore_TileD0Slope`,
@@ -234,7 +239,11 @@ record; `al`) and `FieldCore_TileD0Probe` (a scratch word out; `al`),
   `+9`, `+0xA`, `+8`, `+5`, `+0x70`, the height, `+0x14`, a coordinate's low
   word, `f +0x124`, `f +0x12B`, the sloped byte, `Field_ActiveMember`.
 
-`BOF3X_SHADOW='*'`: STAR_LINE
+`BOF3X_SHADOW='*'` in this worktree: exit 0 (791 s), `inject: 6616 ours, 0 left
+original` (wave one's 6,553 and these 63), 970 lines of `0 MISMATCHES` and
+none other; `field_c3` there 189,000 rounds, 0 mismatches (333,486 calls:
+the generator is shared, so the counts move, as section 7.9 of the harness
+doc says). `tools/ledger_check.py`: 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -266,7 +275,187 @@ record; `al`) and `FieldCore_TileD0Probe` (a scratch word out; `al`),
 
 ## 6. Controls
 
-CONTROLS_SECTION
+A script (`controls.py` in the session scratchpad, `fc3/`) planted all 160
+mutants at once in `field_c3.cpp`, each behind an environment switch
+(`BOF3X_FC3_CTL=n`, a one-off build, never committed) and anchored on a
+string that must occur once; built once, ran the shadow once per control,
+restored the file and rebuilt (FH's form, section 7.8 of the harness doc).
+Every one of the 63 functions has at least one; the dispatchers two (the
+wrong table, the wrong `+0x137`).
+
+**The first run refused 154 of 160.** The six not refused were the fuzz's
+fault, each a boundary its answers never hit: C75 / C94 (`ground ± 0x200`),
+C142 (`0x100`), C131 / C135 (a slope of exactly 0x40), C129 (two probes
+equal). The stand-ins of `MapView_GroundAt` (answers at `Sprite_Current`'s
+height less or plus 0x200, 0x100 or 0, give or take one, two times in three),
+`MapView_SlopeAt` (0x3F..0x41 half the time) and `FieldCore_TileD0Probe` (a
+word near the height) were made to hit them; all six then refused, and **the
+second run, on the committed fuzz, refused all 160 by a count** (exit 3, the
+mutated function's rounds below; the baseline with no switch 0 mismatches).
+No equivalent mutant was met.
+
+| # | Function | Mutant | Rounds refused (of 3,000) |
+|---|---|---|--:|
+| C1 | `Mode11_FieldFrame` | Party_UpdateScreens skipped | 3000 |
+| C2 | `Mode11_FieldFrame` | 0x536F10 skipped | 3000 |
+| C3 | `Mode8_Step5` | 0x57DFF0 called for 0x42D710 | 3000 |
+| C4 | `Mode8_Step8` | Field_RunTaskRecords skipped | 3000 |
+| C5 | `MoveCmd_OpE7` | Sprite_Current passed for the member | 2252 |
+| C6 | `MoveCmd_OpE7` | the neighbouring handler | 3000 |
+| C7 | `Field_ObjectApproachDirection` | toward 0 | 558 |
+| C8 | `Field_ObjectAvoidDirection` | toward 1 | 535 |
+| C9 | `Field_ObjectApproachDirection` | the x half-width test >= | 119 (also `Field_ObjectAvoidDirection` 118) |
+| C10 | `Field_ObjectApproachDirection` | the z test against the x half-width | 589 (also `Field_ObjectAvoidDirection` 555) |
+| C11 | `Field_ObjectApproachDirection` | +9 kept at 0xFF | 42 (also `Field_ObjectAvoidDirection` 46) |
+| C12 | `Field_ObjectApproachDirection` | context bit 2 for 3 | 318 (also `Field_ObjectAvoidDirection` 309) |
+| C13 | `Field_ObjectApproachDirection` | dz from the leader x | 520 (also `Field_ObjectAvoidDirection` 490) |
+| C14 | `Field_ObjectBestDirection` | the kept comparison reversed | 2423 |
+| C15 | `Field_ObjectBestDirection` | no odd start | 1315 |
+| C16 | `Field_ObjectBestDirection` | +0x94 start 0xFFFFFF | 1506 |
+| C17 | `Field_ObjectBestDirection` | the leader x point by its z step | 924 |
+| C18 | `Field_ObjectBestDirection` | eighth turns | 3000 |
+| C19 | `Field_ObjectFadeOutStart` | red 0x1E | 3000 |
+| C20 | `Field_ObjectFadeOutStart` | bit 7 cleared for 6 | 2233 |
+| C21 | `Field_ObjectFadeOutStep` | end at a sum above 0 only | 1045 |
+| C22 | `Field_ObjectFadeOutStep` | context bit 0 cleared | 679 |
+| C23 | `Field_ObjectFadeOutStep` | +4 not decremented at 1 | 2127 |
+| C24 | `Field_ObjectFadeInStart` | +4 = 2 | 3000 |
+| C25 | `Field_ObjectFadeInStep` | the climb unsigned | 1317 |
+| C26 | `Field_ObjectFadeInStep` | end at 0x5E | 660 |
+| C27 | `Field_ObjectFadeInStep` | context bit 1 for 2 | 191 |
+| C28 | `Field_ObjectFadeOutStep` | the pose from +2 | 902 (also `Field_ObjectFadeInStep` 248) |
+| C29 | `FieldCore_ScriptMove` | +0x138 bit 3 | 2247 |
+| C30 | `FieldCore_ScriptMove` | the tick by bit 5 | 749 |
+| C31 | `FieldCore_ScriptMove` | the up table | 3000 |
+| C32 | `FieldCore_ScriptMove` | no tick test on +7 bit 5 (bit 6) | 1466 |
+| C33 | `FieldCore_ScriptMoveAlign` | +0x24 bit 4 | 1009 |
+| C34 | `FieldCore_ScriptMoveAlign` | animation +9 | 1452 |
+| C35 | `FieldCore_ScriptMoveAlign` | x rounded by 0x4000 | 51 |
+| C36 | `FieldCore_ScriptMoveAlign` | +3 up by 2 | 1531 |
+| C37 | `FieldCore_ScriptMoveNext` | +0x125 not counted down | 1438 |
+| C38 | `FieldCore_ScriptMoveNext` | Field_StatusBits bit 5 | 150 |
+| C39 | `FieldCore_ScriptMoveNext` | +3 = 2 on bit 5 | 143 |
+| C40 | `FieldCore_ScriptMoveNext` | shade 0x80 | 258 |
+| C41 | `FieldCore_ScriptMoveNext` | +3 = 4 on bit 2 | 138 |
+| C42 | `FieldCore_ScriptMoveNext` | +0x12B not counted down | 138 |
+| C43 | `FieldCore_ScriptMoveNext` | the step animation without +8 | 186 |
+| C44 | `FieldCore_ScriptMoveNext` | the last test on bit 7 | 141 |
+| C45 | `FieldCore_ScriptMoveNext` | the context at +0x125 | 1562 |
+| C46 | `FieldCore_ScriptMoveStep` | the rise kept on bit 6 | 1 |
+| C47 | `FieldCore_ScriptMoveStep` | no tick while +9 counts | 2453 |
+| C48 | `FieldCore_ScriptMoveWait` | the test against 5 | 1527 |
+| C49 | `FieldCore_ScriptMoveShadeLower` | step 8 | 3000 |
+| C50 | `FieldCore_ScriptMoveShadeFade` | bit 3 cleared | 986 |
+| C51 | `FieldCore_Attached` | +0x24 bit 4 | 523 |
+| C52 | `FieldCore_Attached` | z by the x offset | 593 |
+| C53 | `FieldCore_Attached` | +0x6C not copied | 593 |
+| C54 | `FieldCore_Attached` | stride 0xA0 | 427 |
+| C55 | `FieldCore_Hop` | the jump-exit table | 3000 |
+| C56 | `FieldCore_HopBegin` | the facing test inverted | 3000 |
+| C57 | `FieldCore_HopLaunch` | +0x14 << 5 | 1959 |
+| C58 | `FieldCore_HopLaunch` | MoveScript_F3Divisor speed * 4 | 1014 |
+| C59 | `FieldCore_HopLaunch` | sound 0x105 | 1990 |
+| C60 | `FieldCore_HopLaunch` | gravity -(+0x70) << 3 | 1990 |
+| C61 | `FieldCore_HopLaunch` | Kind2Z by the x step | 970 |
+| C62 | `FieldCore_HopLaunch` | frames 0x40 / speed | 1990 |
+| C63 | `FieldCore_HopRise` | +3 = 4 at the top | 521 |
+| C64 | `FieldCore_HopRise` | the elevation with +5 set | 3000 |
+| C65 | `FieldCore_HopFall` | the fall pose from -0x7F | 57 |
+| C66 | `FieldCore_HopFall` | the flags on bit 2 | 588 |
+| C67 | `FieldCore_HopFall` | the landing test unsigned | 524 |
+| C68 | `FieldCore_HopLand` | Field_TileD0 ignored | 1325 |
+| C69 | `FieldCore_HopLand` | +0x137 = 1 | 688 |
+| C70 | `FieldCore_Vertical` | +0x137 = 4 | 3000 |
+| C71 | `FieldCore_Vertical` | the fall table | 3000 |
+| C72 | `FieldCore_Up` | the down table | 3000 |
+| C73 | `FieldCore_Down` | the up table (read past its eight into the down table) | 3000 |
+| C74 | `FieldCore_UpBegin` | +4 up by 2 | 3000 |
+| C75 | `FieldCore_UpOut` | the margin 0x1FF | 103 |
+| C76 | `FieldCore_UpOut` | up 0x11 | 2973 |
+| C77 | `FieldCore_UpArrive` | x back << 4 | 2400 |
+| C78 | `FieldCore_UpArrive` | facing 3 | 972 |
+| C79 | `FieldCore_UpArrive` | shade to +4 = 2 | 1440 |
+| C80 | `FieldCore_UpArrive` | +4 = 5 | 1560 |
+| C81 | `FieldCore_UpArrive` | the ground 0x100 below | 2976 |
+| C82 | `FieldCore_UpIn` | the stop test > | 82 |
+| C83 | `FieldCore_UpIn` | the offset by +0x88 | 507 |
+| C84 | `FieldCore_UpIn` | x and z swapped | 3000 |
+| C85 | `FieldCore_UpWait5` | +4 up by 2 | 1982 |
+| C86 | `FieldCore_UpWait6` | 0x5362D0 for 0x5363C0 | 3000 |
+| C87 | `FieldCore_UpEnd` | the flag cleared with +5 set | 1000 |
+| C88 | `FieldCore_DownBegin` | +4 = 2 | 3000 |
+| C89 | `FieldCore_DownBegin` | flag bit 4 | 2231 |
+| C90 | `FieldCore_DownWait1` | +4 = 3 | 2033 |
+| C91 | `FieldCore_DownWait2` | 0x536050 for 0x5360C0 | 3000 |
+| C92 | `FieldCore_DownWait3` | +4 = 5 | 2010 |
+| C93 | `FieldCore_DownWait4` | 0x536130 for 0x536170 | 3000 |
+| C94 | `FieldCore_DownOut` | the margin 0x1FF | 80 |
+| C95 | `FieldCore_DownOut` | down 8 | 2972 |
+| C96 | `FieldCore_DownArrive` | the ground 0x100 above | 2971 |
+| C97 | `FieldCore_DownArrive` | facing 7 | 1016 |
+| C98 | `FieldCore_DownArrive` | shade to +4 = 8 | 1493 |
+| C99 | `FieldCore_DownIn` | +9 = 3 | 1434 |
+| C100 | `FieldCore_DownIn` | the poses swapped | 1434 |
+| C101 | `FieldCore_DownIn` | the first ground kept | 1358 |
+| C102 | `FieldCore_DownLand` | pose 6 - +0xA | 246 |
+| C103 | `FieldCore_DownLand` | the end at 3 | 1095 |
+| C104 | `FieldCore_DownLand` | +9 = 1 between poses | 798 |
+| C105 | `FieldCore_VerticalShade` | step 4 | 3000 |
+| C106 | `FieldCore_JumpExit` | +0x137 = 3 | 3000 |
+| C107 | `FieldCore_JumpExit` | the hop table | 3000 |
+| C108 | `FieldCore_JumpExitBegin` | animation +7 | 3000 |
+| C109 | `FieldCore_JumpExitBegin` | +3 up by 2 | 3000 |
+| C110 | `FieldCore_JumpExitOut` | the change at 2 | 170 |
+| C111 | `FieldCore_JumpExitOut` | no Field_JumpStart | 565 |
+| C112 | `FieldCore_JumpExitArrive` | back by twice the step | 1421 |
+| C113 | `FieldCore_JumpExitArrive` | +0xA = 6 | 1199 |
+| C114 | `FieldCore_JumpExitArrive` | pace 3 | 3000 |
+| C115 | `FieldCore_JumpExitArrive` | +3 = 5 | 1544 |
+| C116 | `FieldCore_JumpExitShade` | +3 up by 2 | 1984 |
+| C117 | `FieldCore_JumpExitIn` | pace 4 | 194 |
+| C118 | `FieldCore_JumpExitIn` | +0xC kept | 194 |
+| C119 | `FieldCore_TileD0` | +0x137 = 6 | 3000 |
+| C120 | `FieldCore_TileD0` | no tick after | 3000 |
+| C121 | `FieldCore_TileD0Begin` | pace 3 | 3000 |
+| C122 | `FieldCore_TileD0Begin` | +0xB from +9 | 2950 |
+| C123 | `FieldCore_TileD0Move` | 0x9000 as 6 | 9 |
+| C124 | `FieldCore_TileD0Move` | the cells 0xD1 | 566 |
+| C125 | `FieldCore_TileD0Move` | the hop at +2 = 2 | 127 |
+| C126 | `FieldCore_TileD0Move` | no second Field_CellAhead | 14 |
+| C127 | `FieldCore_TileD0Exit` | raised 0 to Field_WayBlocked | 2295 |
+| C128 | `FieldCore_TileD0Exit` | the even directions | 381 |
+| C129 | `FieldCore_TileD0Exit` | the lowest by >= | 89 |
+| C130 | `FieldCore_TileD0Exit` | the step not scaled by +0x70 | 2295 |
+| C131 | `FieldCore_TileD0Probe` | steep from 0x40 | 327 |
+| C132 | `FieldCore_TileD0Probe` | the slope left as the ground | 2583 |
+| C133 | `FieldCore_TileD0Slope` | the raised 5 path last probe direction 5 | 18 |
+| C134 | `FieldCore_TileD0Slope` | the flat 3 probe a cell on | 289 |
+| C135 | `FieldCore_TileD0Slope` | steep from 0x40 | 171 |
+| C136 | `FieldCore_TileD0Slope` | the raised 3 z test inverted | 21 |
+| C137 | `FieldCore_Fall` | +0x137 = 7 | 3000 |
+| C138 | `FieldCore_Fall` | the recoil table | 3000 |
+| C139 | `FieldCore_FallBegin` | the link point swapped | 2980 |
+| C140 | `FieldCore_FallBegin` | sound 0x108 | 3000 |
+| C141 | `FieldCore_FallSpin` | gravity 4 | 3000 |
+| C142 | `FieldCore_FallSpin` | the change at 0xFF | 91 |
+| C143 | `FieldCore_FallSpin` | the high flag bit 0 | 547 |
+| C144 | `FieldCore_FallSpin` | turning backwards | 3000 |
+| C145 | `FieldCore_Recoil` | the tile-d0 table | 3000 |
+| C146 | `FieldCore_RecoilBegin` | turned a quarter | 325 |
+| C147 | `FieldCore_RecoilBegin` | push on 2 not 3 | 1206 |
+| C148 | `FieldCore_RecoilBegin` | +0xA = 7 | 2968 |
+| C149 | `FieldCore_RecoilBegin` | bit 4 cleared for 5 | 1185 |
+| C150 | `FieldCore_RecoilBegin` | 0x534C20 given +0xA | 2693 |
+| C151 | `FieldCore_RecoilBegin` | the view with +5 set | 1919 |
+| C152 | `FieldCore_RecoilBlink` | the blink swapped | 2441 |
+| C153 | `FieldCore_RecoilBlink` | no Sprite_ClearSteps at 0 | 533 |
+| C154 | `FieldCore_ScriptMoveNext` | bit 5 path ignores +7 bit 3 | 73 |
+| C155 | `FieldCore_ScriptMoveStep` | no Field_JumpStart | 261 |
+| C156 | `FieldCore_ScriptMoveShadeLower` | +3 = 2 | 1944 |
+| C157 | `FieldCore_ScriptMoveWait` | +3 = 1 | 2229 |
+| C158 | `FieldCore_HopLaunch` | no Kind2 with +5 clear (the test inverted) | 1990 |
+| C159 | `FieldCore_VerticalShade` | +4 up by 2 | 2026 |
+| C160 | `FieldCore_JumpExitIn` | the end at +0xA 1 | 302 |
 
 ## 7. What nothing reached, and the limits
 
