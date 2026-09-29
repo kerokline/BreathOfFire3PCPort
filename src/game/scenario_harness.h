@@ -256,7 +256,11 @@ enum class Answer : std::uint8_t { kGarbage, kByte, kFlag, kBool, kRand, kPhase,
 // the standard set the group needs recorded differently (the group's listing
 // is registered first and stands). `key` is the pointer ours calls and
 // `address` the original's; masks[i] is what of argument i the callee reads.
-// deref / effect / custom as magic_harness.h has them.
+// deref / effect / custom as magic_harness.h has them, and one more deref:
+// kDerefString, a NUL-terminated string hashed to its NUL (64 bytes at most,
+// each byte read only if Readable) - where a fixed count would miss a wrong
+// tail and compare stale bytes past the terminator.
+inline constexpr std::uint8_t kDerefString = 0xFF;
 using Effect = std::uint32_t (*)(const std::uint32_t* args, std::uint32_t answer);
 struct Callee {
     const char* name;

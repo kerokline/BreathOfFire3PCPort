@@ -525,19 +525,6 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
 // fuzz (which runs before the patch) keep the original's arithmetic.
 unsigned char g_title_centre = 0;
 
-namespace {
-// The width the pen covers drawing `text`, in PSX pixels: DIV-0006's
-// advance per character, a byte with bit 7 and the one after it being one.
-unsigned TitleWidth(const unsigned char* text) {
-    unsigned width = 0;
-    while (*text) {
-        width += static_cast<unsigned>(TextAdvance_Of(text));
-        text += (*text & 0x80) ? 2 : 1;
-    }
-    return width;
-}
-}  // namespace
-
 // original 0x599FA0, kind 4: the state from 0x66B038, then the screen title -
 // Menu_DrawTitleBox(x, y, 0x48, 0x13, Config's colour) at the record's (+4,
 // +6) and the system text +0x10 (Msg_SystemPtr) through Text_DrawAt at (x +
@@ -562,7 +549,7 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
     const unsigned y = (Word(r + 6) + 3u) & 0xFFFF;
     const unsigned width = g.char_count(text);
     r = Rec();
-    const unsigned half = g_title_centre ? TitleWidth(text) / 2 : width * 6;
+    const unsigned half = g_title_centre ? TextAdvance_Width(text) / 2 : width * 6;
     const int x = static_cast<int>((Word(r + 4) - half + 0x25u) & 0xFFFF);
     g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
 }
@@ -641,9 +628,7 @@ void MenuLists_Inject() {
     // not "original", not a full-width language (as MenuVerbs_Inject
     // tests it): the screen title centred on its real width.
     {
-        char lang[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
-        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+        if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("MenuTitleCentre",
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_title_centre)),

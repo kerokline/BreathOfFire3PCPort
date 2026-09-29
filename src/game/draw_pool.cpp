@@ -7,6 +7,7 @@
 #include <initializer_list>
 
 #include "bof3/symbols.gen.h"
+#include "game/draw_pool_room.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -238,9 +239,7 @@ unsigned char* g_low_items = nullptr;
 // the injects the range is cut up by our own allocations - measured
 // 2026-09-27: the largest gap left was 192 KB).
 void DrawPool_Reserve() {
-    constexpr std::uint32_t kBytes = 2048 * 0x90;
-    static const char kStamp[] = "BOF3X-DRAWPOOL-2048";
-    static const std::uint32_t kCandidates[] = {0x00F00000, 0x00E00000, 0x00D00000, 0x00C00000, 0x00B00000, 0x00A00000};
+    using namespace draw_pool_room;
     unsigned char* items = nullptr;
     // The launcher's block, stamped, at one of the candidates (launcher.cpp).
     for (std::uint32_t at : kCandidates) {
@@ -275,18 +274,40 @@ void DrawPool_Reserve() {
 }
 
 void DrawPool_Grow() {
-    constexpr unsigned kCount = 2048;
-    constexpr std::uint32_t kBytes = kCount * 0x90;
+    using draw_pool_room::kBytes;
+    using draw_pool_room::kCount;
     // The items are linked into the ordering table by 24-bit addresses (the
     // PlayStation's tag; d3d_list.cpp masks a link to 24 bits), so the array
-    // must sit below 16 MB, as everything of Capcom's does. The first free
-    // region of the size between 0xA00000 and 0x1000000 (VirtualQuery); none
-    // leaves the original's pool, said loudly, rather than a link that
-    // truncates (the first build of this crashed in Gfx_DrawOTag).
+    // must sit below 16 MB, as everything of Capcom's does. DrawPool_Reserve
+    // found the room (the launcher's stamped block, or a free region below
+    // 16 MB); none leaves the original's pool, said loudly, rather than a link
+    // that truncates (the first build of this crashed in Gfx_DrawOTag).
     unsigned char* const items = g_low_items;
     if (!items) {
         bof3::Log("DIV-0062    no free %u KB below 16 MB for the draw-item pool: the original's 1,024 items stay", kBytes / 1024);
         return;
+    }
+    // The switch is all or nothing. kSites below re-aims only Capcom code we
+    // do not own; the functions here are ours, and each one's original names
+    // the item array (0x905E80) or the free queue (0x7E09E0, ring 0x3FF) as an
+    // immediate - they are every owned function whose reimplementation reads
+    // draw_pool:: (grep, 2026-09-29). One of them left as Capcom's code by
+    // BOF3X_ORIGINAL would work the old arrays while the rest of the game works
+    // the new ones: two cells handed one item, half the array never primed.
+    // So any such one keeps the original's pool for everybody, said loudly.
+    static const std::uint32_t kOwnedUsers[] = {
+        bof3::addr::DrawItemPool_Alloc,  bof3::addr::DrawItemPool_Release, bof3::addr::DrawItemPool_ReleaseCell,
+        bof3::addr::Field_ViewReset,     bof3::addr::Weretiger_ResetMapView, bof3::addr::MapView_Build,
+        bof3::addr::MapView_CellTextures, bof3::addr::MapView_ItemHalfAt,  bof3::addr::AreaMap_ApplyPatch,
+        bof3::addr::MapCell_FlatOverlay, bof3::addr::Sprite_DrawPass,      bof3::addr::Area40_DrawGrid,
+    };
+    for (const std::uint32_t user : kOwnedUsers) {
+        if (bof3::IsOwned(user) && !bof3::IsEnabled(user)) {
+            bof3::Log("DIV-0062    0x%06X is the original's (BOF3X_ORIGINAL) and names the draw-item pool: "
+                      "the original's 1,024 items stay",
+                      (unsigned)user);
+            return;
+        }
     }
     static unsigned short free_list[kCount];
     for (unsigned i = 0; i < kCount; ++i) free_list[i] = static_cast<unsigned short>(i);

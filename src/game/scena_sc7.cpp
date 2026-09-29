@@ -1400,8 +1400,11 @@ extern "C" void __cdecl Scena08_EnterArea(void) {
         if (!Flag(6)) {
             Set40();
             DropIn(3);
-            Kind2At(bof3::addr::Field_ObjectInHome, 0x1E8000);
-            SetElevationAt(bof3::addr::Field_ObjectInHome, 0x1E8000);
+            // x 0x518000 is a 16.16 coordinate (cell 0x51.8), not a function:
+            // its value only equals Field_ObjectInHome's address, so it stays raw
+            // (docs/round-10-cleanup.md item 1).
+            Kind2At(0x518000, 0x1E8000);
+            SetElevationAt(0x518000, 0x1E8000);
             SH_CALL(Field_ViewReset)();
             Sprite(0)[1] = 4;
             Sprite(1)[1] = 4;

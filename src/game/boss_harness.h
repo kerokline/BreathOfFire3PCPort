@@ -452,6 +452,14 @@ struct Group {
     // chapter bytes' for a boss group). The new shapes need it; a boss group
     // leaves it false and fuzzes exactly as before.
     bool engine = false;
+    // State put back before each of the two passes but never compared: what
+    // a group leaves out of its regions because the two sides may differ
+    // there harmlessly (BE6's Gte_Vertices, whose fourth shorts are stale
+    // stack bytes), but which one side must not inherit from the other - the
+    // original's pass leaving it loaded would let ours read it unloaded. Up
+    // to kMaxKeptBytes in all. (The capture review of 2026-09-29.)
+    const Region* kept = nullptr;
+    unsigned n_kept = 0;
 };
 
 // Clones every function (before the caller injects), fuzzes each against ours

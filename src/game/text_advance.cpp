@@ -62,6 +62,12 @@ int TextAdvance_OfGlyph(std::uint32_t glyph) {
     return g_advances && glyph < g_count ? g_advances[glyph] : kOriginalAdvance;
 }
 
+unsigned TextAdvance_Width(const std::uint8_t* text) {
+    unsigned width = 0;
+    for (; *text; text += (*text & 0x80) ? 2 : 1) width += static_cast<unsigned>(TextAdvance_Of(text));
+    return width;
+}
+
 extern "C" const unsigned char* __cdecl MsgBox_DrawChar(int x, int y, int color, int count,
                                                         const unsigned char* text) {
     if (!g_advances) return Text_DrawAt(x, y, color, count, text);

@@ -333,10 +333,19 @@ def print_clones(img, addrs, funcs, named, root_of):
         cell = lambda v, k: ('k%s%s, SH_N(k%s%s)' % (k, tag, k, tag)) if v else 'nullptr, 0'
         shapes = sorted({s for _, _, s in rs})
         shape = ''
-        if shapes and shapes != ['kSlot']:
+        if len(shapes) > 1:
+            # Roots of different shapes (an object slot that is also a call
+            # table's entry, say): no one shape is right for all of them, and
+            # picking one fuzzes the function with the wrong arguments or
+            # compares an al a void function never set. Left for the reader,
+            # loudly: the token does not compile until a shape is chosen.
+            shape = ', SHAPE_UNDECIDED_%s' % '_'.join(shapes)
+            print('scenario_rows: 0x%X has roots of shapes %s; its row needs one chosen by hand'
+                  % (x, ', '.join(shapes)), file=sys.stderr)
+        elif shapes and shapes != ['kSlot']:
             # the harness's default is kSlot (void, no arguments); a hook
             # answers in al (ret_mask 0xFF), an object slot takes the object
-            s = shapes[0] if len(shapes) == 1 else 'kHook'
+            s = shapes[0]
             shape = ', %s, false, scenario_harness::Shape::%s' % ('0xFF' if s == 'kHook' else '0', s)
         lines.append('    {"%s", 0x%X, 0x%X, %s, %s, %s, reinterpret_cast<const void*>(&::%s)%s},' % (
             name, x, end - x, cell(calls, 'Calls'), cell(imms, 'Imms'), cell(tables, 'Tables'), name, shape))

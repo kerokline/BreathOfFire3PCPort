@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -236,12 +237,22 @@ std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const c
     return out;
 }
 
-void ConfigApplyEnvironment(const Config& cfg) {
+void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
     wchar_t existing[64];
 
+    // Only a language whose overlay is in DAT\ - the dialog offers no other,
+    // but a hand-edited or carried-over bof3x.ini can name one never built,
+    // and the dll would then lay the shipped text out for an overlay that is
+    // not there (the Latin layouts of DIV-0058..0061 over the Chinese).
     if (GetEnvironmentVariableW(L"BOF3X_LANG", existing, 64) == 0 &&
-        cfg.language != kLanguageOriginal)
-        SetEnvironmentVariableA("BOF3X_LANG", cfg.language.c_str());
+        cfg.language != kLanguageOriginal) {
+        const std::vector<std::string> built = ConfigLanguagesAvailable(game_dir);
+        if (std::find(built.begin(), built.end(), cfg.language) != built.end())
+            SetEnvironmentVariableA("BOF3X_LANG", cfg.language.c_str());
+        else
+            std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for language %s, but DAT\\%s.* is not there; "
+                         "playing the original text\n", cfg.language.c_str(), cfg.language.c_str());
+    }
 
     if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
         cfg.filter == Filter::kPoint)

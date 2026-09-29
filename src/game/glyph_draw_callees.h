@@ -41,9 +41,10 @@ struct Callees {
 extern const Callees kOriginals;
 extern Callees g;
 
-// DIVERGENCE DIV-0025: what the handler adds to 2u and 2v before the 1/32 -
-// 0 is Capcom's (the texel edge), 0.5 the texel centre. 0 until
-// GlyphDraw_Inject sets it; the fuzz sets it itself.
+// DIVERGENCE DIV-0025: the inset's switch - 0 is Capcom's arithmetic (the
+// texel edge); any other value has the handler add TexelInset(scale) to 2u
+// and 2v before the 1/32. 0 until GlyphDraw_Inject sets it; the fuzz sets it
+// itself.
 extern float g_texel_inset;
 // The inset the draw uses when the switch is on: 1 / scale + 1 / 256 texels.
 double TexelInset(double scale);

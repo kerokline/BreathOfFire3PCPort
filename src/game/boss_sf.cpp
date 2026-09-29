@@ -265,7 +265,7 @@ extern "C" void __cdecl Boss26Fx_Wait(void) {
 extern "C" void __cdecl Boss26Fx_DrawCount(void) {
     BH_CALL(BattleWin_DrawMediumBox)(0x6B, 0x10);
     BH_CALL(Text_DrawAt)(0x7A, 0x12, 0, 4, At(static_cast<U>(Long(At(at::kCountText0)))));
-    const std::int32_t left = 0x15 - Long(At(at::kTurn));
+    const auto left = static_cast<std::int32_t>(0x15u - static_cast<U>(Long(At(at::kTurn))));   // x86's wrap
     BH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(at::kCountFormat)), left);
     BH_CALL(Text_DrawFont12)(0x92, 0x12, 4, At(at::kTextRow1));
     BH_CALL(Text_DrawAt)(0xAA, 0x12, 0, 4, At(static_cast<U>(Long(At(at::kCountText1)))));
@@ -422,7 +422,8 @@ extern "C" void __cdecl BossGazerFx_BounceStart(void) {
 }
 
 // original 0x43CB50: bounce step 1 - the move (+0x3E by +0x14, +0x14 by +0x20);
-// while the signed +0x3E is below the ground + 0x200, nothing more. Else the
+// while the signed +0x3E is at or above the ground + 0x200, nothing more
+// (control F79 refused > for >=). Else, once it is below, the
 // ground asked again: +0x3E = it + 0x200 (a word), +0x14 = 0, +0x20 = 0x40,
 // Sound_PlayById(0x600); then (Sprite_Current read again) +9, when not 0, down
 // by one and +2 up by one (step 2); at 0, +2 up by two (step 3).

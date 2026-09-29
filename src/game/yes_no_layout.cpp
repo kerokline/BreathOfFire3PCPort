@@ -130,11 +130,8 @@ void SelfTest() {
 }  // namespace
 
 void YesNoLayout_Inject() {
-    char lang[16];
-    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
     if (bof3::WantsShadow("yes_no_layout")) SelfTest();
-    if (n == 0 || n >= sizeof lang || std::strcmp(lang, "original") == 0) return;
-    if (Lang_FullWidth()) return;   // DIV-0056: the original's stops were fitted to full-width words
+    if (!Lang_Latin()) return;   // DIV-0056: the original's stops were fitted to full-width words
 
     bof3::RetargetCall("YesNoLayout", kLineCall, kMsgSystemPtr, reinterpret_cast<void*>(&YesNo_Line));
     static const std::uint8_t stop_was[] = {0xB9, 0xFE, 0x00, 0x00, 0x00};

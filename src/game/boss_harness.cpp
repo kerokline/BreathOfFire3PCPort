@@ -241,6 +241,7 @@ struct Slot {
     Effect effect;
     const void* custom;
     bool handler;            // a table entry or a hook: logs the sprite (and a hook's argument)
+    bool conflict_said;      // RegisterHandler's nargs conflict logged once a slot, not once a cell
     unsigned calls;
 };
 constexpr unsigned kSlots = 512;   // 256 before round twelve (capacity only: the engine set adds ~110)
@@ -817,9 +818,11 @@ unsigned RegisterHandler(std::uint32_t address, unsigned nargs, const char* name
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) {
             // the first listing stands (boss_harness.h, DataTable); said once
-            if (g_slots[i].handler && g_slots[i].nargs != nargs)
+            if (g_slots[i].handler && g_slots[i].nargs != nargs && !g_slots[i].conflict_said) {
+                g_slots[i].conflict_said = true;
                 bof3::Log("shadow      %s: handler 0x%X in tables with nargs %u and %u: the first stands", g_group->shadow,
                           (unsigned)address, g_slots[i].nargs, nargs);
+            }
             return i;
         }
     if (g_slot_n == kSlots) bof3::Fatal("boss_harness: more than %u stand-ins", kSlots);
@@ -854,8 +857,13 @@ std::uint32_t g_hook_end, g_hook_exit, g_hook_event, g_hook_enemy;   // the stub
 
 // --- the state ------------------------------------------------------------------
 
+constexpr unsigned kMaxKept = 8, kMaxKeptBytes = 0x400;
+Region g_kept[kMaxKept];
+unsigned g_kept_n;
+
 struct State {
     unsigned char memory[kMaxBytes];
+    unsigned char kept[kMaxKeptBytes];   // Group::kept: put back, not compared
     Entry log[kLog];
     unsigned log_n;
 };
@@ -869,6 +877,11 @@ void Capture(State& s) {
         std::memcpy(s.memory + n, Mem(g_regions[i].at), g_regions[i].size);
         n += g_regions[i].size;
     }
+    n = 0;
+    for (unsigned i = 0; i < g_kept_n; ++i) {
+        std::memcpy(s.kept + n, Mem(g_kept[i].at), g_kept[i].size);
+        n += g_kept[i].size;
+    }
     s.log_n = g_log_n;
     std::memcpy(s.log, g_log, Used(g_log_n) * sizeof(Entry));
 }
@@ -877,6 +890,11 @@ void Apply(const State& s) {
     for (unsigned i = 0; i < g_region_n; ++i) {
         std::memcpy(Mem(g_regions[i].at), s.memory + n, g_regions[i].size);
         n += g_regions[i].size;
+    }
+    n = 0;
+    for (unsigned i = 0; i < g_kept_n; ++i) {
+        std::memcpy(Mem(g_kept[i].at), s.kept + n, g_kept[i].size);
+        n += g_kept[i].size;
     }
     g_log_n = 0;
     g_salt = 0;
@@ -1000,6 +1018,17 @@ using FnArgs = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint3
 
 std::uint32_t CallTen(const void* fn, const std::uint32_t* a) {
     return reinterpret_cast<FnArgs>(const_cast<void*>(fn))(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+}
+
+// A Via row's probe (the capture review of 2026-09-29): planted in the cell in
+// place of the function under test, once a round before the two passes, it
+// says whether the dispatcher, with the row's state planted, reaches the cell
+// at all. A row whose dispatcher, cell or state is wrong would otherwise run
+// some other entry on both passes and compare it with itself.
+bool g_probe_hit = false;
+std::uint32_t __cdecl BossHarness_ViaProbe(void) {
+    g_probe_hit = true;
+    return 0;
 }
 
 }  // namespace
@@ -1176,6 +1205,15 @@ void Run(const Group& group) {
     g_bytes = 0;
     for (unsigned i = 0; i < g_region_n; ++i) g_bytes += g_regions[i].size;
     if (g_bytes > kMaxBytes) bof3::Fatal("boss_harness: %s: the regions are %u bytes, the state holds %u", group.shadow, g_bytes, kMaxBytes);
+    if (group.n_kept > kMaxKept) bof3::Fatal("boss_harness: %s: more than %u kept regions", group.shadow, kMaxKept);
+    g_kept_n = 0;
+    unsigned kept_bytes = 0;
+    for (unsigned i = 0; i < group.n_kept; ++i) {
+        g_kept[g_kept_n++] = group.kept[i];
+        kept_bytes += group.kept[i].size;
+    }
+    if (kept_bytes > kMaxKeptBytes)
+        bof3::Fatal("boss_harness: %s: the kept regions are %u bytes, the state holds %u", group.shadow, kept_bytes, kMaxKeptBytes);
 
     static void* clones[256];
     if (group.n_clones > 256) bof3::Fatal("boss_harness: %s: more than 256 clones", group.shadow);
@@ -1220,11 +1258,15 @@ void Run(const Group& group) {
 
     static State saved, input, theirs, ours;
     Capture(saved);
+    // The first round's opening Apply(input) puts the kept regions back
+    // before Capture(input) has read them: the game's own, not zeros.
+    std::memcpy(input.kept, saved.kept, sizeof input.kept);
     for (unsigned i = 0; i < g_slot_n; ++i) g_slots[i].calls = 0;
 
     unsigned bad = 0, calls = 0;
-    static unsigned bad_per[256];
+    static unsigned bad_per[256], via_reached[256];
     std::memset(bad_per, 0, sizeof bad_per);
+    std::memset(via_reached, 0, sizeof via_reached);
     for (unsigned round = 0; round < per * group.n_clones; ++round) {
         const unsigned k = round % group.n_clones;
         const Clone& c = group.clones[k];
@@ -1261,6 +1303,25 @@ void Run(const Group& group) {
         if (c.via.dispatcher && c.via.state_at == 0 && c.via.state_cell == 0) a[0] = c.via.state;
         const std::uint32_t ret_mask = c.ret_mask ? c.ret_mask : c.shape == Shape::kEvent ? 0xFFu : 0u;
         g_calm = c.calm;
+        if (c.via.dispatcher) {
+            // The probe must not move the draw: a group's settle or disturbance
+            // may take Next(), and the rounds after would then be other rounds
+            // than the recorded runs' (before / after comparisons are exact).
+            const std::uint32_t rng = g_rng;
+            Apply(input);
+            const std::int32_t was = move_script::Long(Mem(c.via.cell));
+            const std::uint32_t probe = Key(reinterpret_cast<const void*>(&BossHarness_ViaProbe));
+            move_script::SetLong(Mem(c.via.cell), static_cast<std::int32_t>(probe));
+            g_via_fn = probe;
+            g_probe_hit = false;
+            std::uint32_t probe_args[kArgs];
+            std::memcpy(probe_args, a, sizeof probe_args);
+            CallTen(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(c.via.dispatcher)), probe_args);
+            g_via_fn = 0;
+            move_script::SetLong(Mem(c.via.cell), was);
+            g_rng = rng;
+            if (g_probe_hit) ++via_reached[k];
+        }
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
             State& out = pass ? ours : theirs;
@@ -1357,6 +1418,19 @@ void Run(const Group& group) {
     }
     if (n || !more)
         bof3::Log("shadow      %s coverage%s: %s", group.shadow, more ? ", continued" : " (calls the originals made)", n ? line : "none");
+    // The Via rows: every one must reach its cell, or it has compared nothing
+    // of its own.
+    unsigned via_dead = 0;
+    for (unsigned k = 0; k < group.n_clones; ++k) {
+        if (!group.clones[k].via.dispatcher) continue;
+        if (via_reached[k] < per)   // each clone has exactly `per` rounds (round % n_clones)
+            bof3::Log("shadow      %s: %s reached through 0x%X in %u of %u rounds", group.shadow, group.clones[k].name,
+                      (unsigned)group.clones[k].via.dispatcher, via_reached[k], per);
+        if (via_reached[k] == 0) ++via_dead;
+    }
+    if (via_dead)
+        bof3::Fatal("%s: %u Via row(s) never reached their cell: the rows' dispatcher, cell or state is wrong (log above)",
+                    group.shadow, via_dead);
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);

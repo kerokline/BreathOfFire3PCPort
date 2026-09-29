@@ -273,6 +273,7 @@ clone-table tool the groups use.
 | `Group::sprite_span` | `Sprite_Current` +1..+4 drawn below it (kSprite) and kept below it by the disturbance | 0: random |
 | `Group::menu_span` | the menu block's `0x929F01` / `0x929F02` likewise (kMenu) | 0: random |
 | `Callee::guard` | a pointer argument dereferenced only where readable | false: as before |
+| `kDerefString` (2026-09-29, the capture review of rounds 10..12) | a `deref` of 0xFF: the argument hashed as a string to its NUL (64 bytes at most, each byte `Readable`), not a fixed count; `Text_DrawFont8`, `Text_DrawFont12`, `Text_CharCount` and `Menu_DrawSkillRow`'s name take it (`TextRecord_Set`, which is given a length, keeps its 16) | a number: that many bytes, as before |
 | `at::` | the field cells (7.3), `kWindows`, `kMessageCells`, `kTextRecords`, `kMapCells` | |
 | helpers | `Script()`, `Cursor()`, `Scratch(i)`, `Packets()`, `Text()`, `InRegions()`, `InFieldRuns()`, `InChapterBank()` | |
 | stand-ins | `kSlots` 512 (was 256), `kMaxRegions` 64 (was 48); the 174 field-standard callees (7.5) registered for every group **after** its handlers | a handler address stays a handler |
