@@ -112,7 +112,7 @@ const Control kControls[] = {
     {6, 0x42F5E0, 0x2, 0xA0, 0xA2, "kDispatch state_cell: the byte stored, not read (entry 0 always)"},
     {7, 0x42D8C0, 0xD2, 0xDC, 0xD8, "the engine's Crt_sprintf: the other format"},
     {8, 0x4457F0, 0x7, 0x03, 0x04, "kHelper: cmp bl, 4, not 3 (the side's bound)"},
-    {9, 0x42F5F0, 0x24, 0x01, 0x02, "kStep: window 3's +0x13 (0x8031F3) = 2, not 1"},
+    {9, 0x42F5F0, 0x24, 0x01, 0x02, "kStep: window 4's +3 (0x8031F3) = 2, not 1"},
 };
 unsigned g_control;
 
