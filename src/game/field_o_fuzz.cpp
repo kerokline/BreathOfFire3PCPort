@@ -22,6 +22,7 @@
 // scena_sc0_fuzz.cpp's ObjectEntry - a DataTable's handler recorder logs no
 // arguments.
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 
@@ -411,6 +412,10 @@ void Seed(unsigned run_k) {
     case kOp88Fade:
     case kOp87Fade:
         for (unsigned c = 0x5D; c <= 0x5F; ++c) sc[c] = Pick({0x80, 0x84, 0xBC, 0xC0, 0x7C, 0x40, sh::Next() & 0xFF});
+        if (sh::Half()) {   // all three one step from the end (or at it)
+            const unsigned char v = k == kOp88Fade ? Pick({0x80, 0x84}) : Pick({0xC0, 0xBC});
+            sc[0x5D] = sc[0x5E] = sc[0x5F] = v;
+        }
         break;
     case kSkipIf: SkipScript(op); break;
     case kOp3: case kOp4: case kOp7: case kOp6: break;
@@ -451,6 +456,7 @@ void Seed(unsigned run_k) {
             if (sh::Half()) r[0xA] = k == kE9Start ? r[0xA] : static_cast<unsigned char>(sh::Next() % 2);
             if (sh::Half()) r[0xB] = 0;
             if (sh::Half()) r[6] = 6;
+            if (sh::Half()) SetLong(r + 0x14, static_cast<std::int32_t>(sh::Next() % 0x200));   // a small rise: the top within a step
         }
         break;
     default: break;
@@ -477,6 +483,7 @@ void Args(unsigned run_k, U* a) {
     case kE9Kind2:
     case kE9Fall:
         a[0] += 0x80;   // the record's script context (the sprite record the shape drew + 0x80)
+        if (sh::Half()) a[4] = (a[4] & 0xFFFF0000u) | (0x10000u - sh::Next() % 0x400);   // d a small fall
         if (sh::Half()) a[5] = (a[5] & 0xFFFFFF00u) | 0xFF;   // e 0xFF: no animation
         if (sh::Half()) a[1] &= 0xFFFFFF07u, a[2] &= 0xFFFFFF07u;   // small steps
         if (sh::Next() % 4 == 0) a[1] &= 0xFFFFFF00u, a[2] &= 0xFFFFFF00u;   // no steps
@@ -534,6 +541,9 @@ void SelfTest() {
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0], Seed, Disturb, 0};
     g.args = Args;
     g.field = true;
+    char rounds[16];   // BOF3X_FO_ROUNDS=n: the rounds per function (a control's re-run)
+    const DWORD rn = GetEnvironmentVariableA("BOF3X_FO_ROUNDS", rounds, sizeof rounds);
+    if (rn > 0 && rn < sizeof rounds) g.rounds = static_cast<unsigned>(std::strtoul(rounds, nullptr, 10));
     sh::Run(g);
 }
 
