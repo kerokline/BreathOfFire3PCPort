@@ -505,7 +505,11 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
     switch (h % 7) {
-    case 0: s[9] = static_cast<unsigned char>((v & 1) ? PickOf(1, 0xE, 0x19, 8) : v >> 1); break;
+    case 0: {
+        static const unsigned char kAt[] = {1, 0xE, 0x19, 8};
+        s[9] = (v & 1) ? kAt[(v >> 1) % 4] : static_cast<unsigned char>(v >> 1);
+        break;
+    }
     case 1: SetWord(s + 0x2E, (v >> 1) | 1); break;
     case 2: SetWord(s + 0x32, (v & 1) ? 1u : v >> 1); break;
     case 3: SetWord(s + 0x30, v); break;

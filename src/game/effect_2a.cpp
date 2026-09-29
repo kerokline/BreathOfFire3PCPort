@@ -83,6 +83,15 @@ void CopyQuiet(unsigned char* to, const unsigned char* from) {
     if ((bits & 0x7F800000u) == 0x7F800000u && (bits & 0x007FFFFFu) != 0) bits |= 0x00400000u;
     SetUL(to, bits);
 }
+// fld dword a; fadd dword b; fstp: two floats added on the x87 itself, under the
+// control word the original runs with - where both may be NaN, the x87 keeps the
+// one with the larger significand (a quiet one over a signalling one), which
+// SSE's "first operand" rule does not (kind 0x2D's start adds two projections).
+float X87Add(float a, float b) {
+    float r;
+    __asm__("flds %1\n\tfadds %2\n\tfstps %0" : "=m"(r) : "m"(a), "m"(b));
+    return r;
+}
 // fild dword of a whole number: (double) of it, exact.
 double I(U v) { return static_cast<double>(static_cast<std::int32_t>(v)); }
 
@@ -1123,12 +1132,12 @@ extern "C" void __cdecl EffectKind2D_Start(void) {
     point[2] = Long(At(at::kObject1Point + 8));
     float other[3];
     SH_CALL(EffectGte_ProjectPoint)(point, other);
-    SetD(q, static_cast<double>(other[0]) + D(q));
-    SetD(q + 4, static_cast<double>(other[1]) + D(q + 4));
-    const double depth = static_cast<double>(other[2]) + D(q + 8);
+    SetF(q, X87Add(other[0], F(q)));
+    SetF(q + 4, X87Add(other[1], F(q + 4)));
+    const float depth = X87Add(other[2], F(q + 8));
     SetWord(q + 0xC, 0);
     SetWord(q + 0xE, 0);
-    SetD(q + 8, depth);
+    SetF(q + 8, depth);
     const double scale = D(At(at::kScreenScale));
     SetD(q, D(q) * scale);
     SetD(q + 4, D(q + 4) * scale);
