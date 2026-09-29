@@ -82934,3 +82934,739 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E1E): LeaderPanel_S9 jmp by +3: S9Begin, S9Wait, S9Menu, 0x52A6C0 (E1F), 0x52AF30 (not in the cut); 0x52A6C0's table 0x6602F4 follows. docs/effect_1e.md."
+
+# --- round thirteen group E1A (effect_1a.cpp): 0x462B00..0x4672F0 ---
+
+[[func]]
+pc = 0x462B00
+name = "EffectKind0E_WorldMap"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462B00..0x462B19 (0x1A bytes), cdecl: WorldMap_RecordIndex, then jmp [0x653914 + (index & 0xFF) * 0x1C] - the world map record +4 handler (Area33_Record04Run on area 33); index 11 reads 0x653A48 (EffectKind01_States[1]); record 6 (area 104) holds 0 there, a jump to 0 (ours aborts). Reached by Effect_KindHandlers[0xE] (hidden in 0x462AC0, catalog part 2; a hypothesis row of the cut). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462B20
+name = "EffectKind16_WorldMap"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462B20..0x462B39 (0x1A bytes), cdecl: as EffectKind0E_WorldMap through the record +8 (0x653918): Area33_Record08Run on area 33; index 11 reads EffectKind07_States[0]; record 6 holds 0. Reached by Effect_KindHandlers[0x16]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462B60
+name = "EffectKind5C_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462B60..0x462B73 (0x14 bytes), cdecl: Game_AreaNumber (u16) 0x68: jmp Area104_Kind5CRun; else jmp Area121_Kind5CRun. Reached by Effect_KindHandlers[0x5C]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462BA0
+name = "EffectKind01_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462BA0..0x462BB1 (0x12 bytes), cdecl: jmp [EffectKind01_States + Sprite_Current[+1] * 4], unbounded. Reached by Effect_KindHandlers[1]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462BC0
+name = "EffectKind01_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462BC0..0x462BE2 (0x23 bytes), cdecl: the dword +0x54 of Sprite_ObjectsExtra[dword +0x18] (0x802054 + 0xA4 k, k unchecked: ours aborts at 4 or more) copied to +0x54; +1 = 1. Reached by EffectKind01_States[0]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462BF0
+name = "EffectKind01_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462BF0..0x462E41 (0x252 bytes), cdecl: Sprite_Current = the extra record +0x18 names while its half is built; its +0x34..+0x3F copied into the effect record; a RECT (0, 0xF0, 16, 16) through 0x5A7840 linked at the point (0x11, 0xC); a POLY_FT4: the point plus MoveCmd_AttachOffset(+0x1C) through Gte_RotTransPers (answer to the effect +0x60), Gte_PrimDepthFlat4_10, x -+ 8.0 (0x5C41CC), the top y 0; Sprite_Current back; Gpu_GetClut(0xB0, 0x1E3), Gpu_GetTPage(0, 0, 0x2C0, 0x100), u 0 / 0x10, v (Frame_Counter >> 2) & 0x15 and that plus the bottom y through _ftol 0x5B9550; shade 0x80, Gpu_SetShadeTex(1), linked (0x48); a RECT (0, 0, 0x100, 0x100) through 0x5A7840 linked (0xC). Reached by EffectKind01_States[1]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462E50
+name = "EffectKind07_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462E50..0x462E61 (0x12 bytes), cdecl: jmp [EffectKind07_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[7]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462E70
+name = "EffectKind07_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462E70..0x462EA0 (0x31 bytes), cdecl: +0x5F, +0x5E, +0x5D = 0; +9 = 0xF0; +1 = 1. Reached by EffectKind07_States[0]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x462EB0
+name = "EffectKind07_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x462EB0..0x462F01 (0x52 bytes), cdecl: 0x462F10(1) (a sprite primitive, scenario-bank code); +0x5D, +0x5E, +0x5F += 2; at +0x5D 0x80: the byte 0x903848 = 0x14, +1 = 2, +9 = 0xFF. Reached by EffectKind07_States[1] (a hypothesis row of the cut). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x463040
+name = "EffectKind08_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x463040..0x463051 (0x12 bytes), cdecl: jmp [EffectKind08_States + +1 * 4], unbounded (its states are scenario-bank rows and Effect_StateRelease). Reached by Effect_KindHandlers[8]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x463440
+name = "EffectKind09_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x463440..0x463451 (0x12 bytes), cdecl: jmp [EffectKind09_States + +1 * 4], unbounded (its states are scenario-bank rows). Reached by Effect_KindHandlers[9]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x463EE0
+name = "EffectKind0B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x463EE0..0x463EF1 (0x12 bytes), cdecl: jmp [EffectKind0B_States + +1 * 4], unbounded (its states are scenario-bank rows). In the band, in no list of the cut (the labelling pass proposed scenario banks by its neighbours). Reached by Effect_KindHandlers[0xB]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464350
+name = "EffectKind10_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464350..0x464656 (0x307 bytes), cdecl: the entry a jmp over eleven nops to 0x464360; EffectKind01_Draw quad between two extra records: the one +0xC names (Sprite_Current while its half is built; its point copied into the effect) plus MoveCmd_AttachOffset(+0x10) the top pair, Gte_StoreDepthF to +0x10 and +0x20 its copy; the one +0x18 names plus MoveCmd_AttachOffset(+0x1C) the bottom pair, the depth to +0x30 / +0x40; the effect +0x60 each projection answer; v below = v above + |bottom y - top y| through _ftol; the RECTs and the rest as kind 1. Reached by Effect_KindHandlers[0x10] (a hypothesis row of the cut). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464660
+name = "EffectKind02_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464660..0x464671 (0x12 bytes), cdecl: jmp [EffectKind02_States + +1 * 4], unbounded (its states are scenario-bank rows). Reached by Effect_KindHandlers[2]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464BA0
+name = "EffectHud_Draw"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464BA0..0x464C6D (0xCE bytes), cdecl: 0x52CF60(5, 3), 0x52CFE0(0xD, 3, x + 0x18, y + 8), 0x52CF60(0, 3), 0x52CFE0(0xE, 3, x, y), 0x52CFE0(0xF, 3, x + 0x100, y); the count 0x3E - Effect_Objects record 0 +0x3A (signed byte, 0 when negative or record 0 +1 is 0) Crt_sprintf into 0x904BA0 by Boss26Fx_CountFormat and Text_DrawFont12 at (x + 0xEE, y + 0x1A), colour 2 when 0x32 or more with ObjTrio +2 at 4 and Frame_Counter bit 2, else 0; EffectHud_DrawGauge(x, y). Reached by called by 0x464730, 0x464780, 0x4647B0 (kind 2 states, scenario-bank rows). PSX twin 0x801D159C callers (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464C70
+name = "EffectHud_DrawGauge"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464C70..0x464D9A (0x12B bytes), cdecl: EffectHud_Bar(x + 0x58, y + 8, 4); the marker y = y - s16 AreaMap_Elevation(record 0 +0x34, +0x38) / 32 when record 0 +1 is set, not above y as s16; EffectHud_Marker(x + 0x59, it, 4); a POLY_F4 (s16 x + 0x59 to + 16.0, marker + 0x10 to s16 y + 0x28), colour 0x48 0x20 0, Gfx_CommitPrim(4, 0x38); record 0 +1 at 4: EffectHud_Sprite8(x + 0x69, 0xB4 - (s16 +0x3E / 32 when not above 0), 2). Reached by called by EffectHud_Draw. PSX twin 0x801D195C callers (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464DA0
+name = "EffectHud_Bar"
+ret = "void"
+params = "int x, int y, unsigned slot"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464DA0..0x464E31 (0x92 bytes), cdecl: a POLY_G4 at Gfx_PacketNext: (s16 x, s16 y) to (x + 16.0, y + 32.0), top (0x64, 0x64, 0x80), bottom (0, 0, 0x50); Gfx_CommitPrim(slot, 0x44). Reached by called by EffectHud_DrawGauge and E1B 0x467B10. PSX twin 0x801D1744 call-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464E40
+name = "EffectHud_Marker"
+ret = "void"
+params = "int x, int y, unsigned slot"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464E40..0x464EB1 (0x72 bytes), cdecl: 0x52CF60(0, slot); a SPRT_16 at (s16 x, s16 y), shade 0x80, CLUT 0x7A40, u the byte 0x653AF8[(Frame_Counter >> 3) & 3], v 0x48; Gfx_CommitPrim(slot, 0x18). Reached by called by EffectHud_DrawGauge and E1B 0x467B10. PSX twin 0x801D1818 call-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464EC0
+name = "EffectHud_Sprite8"
+ret = "void"
+params = "int x, int y, unsigned slot"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464EC0..0x464F16 (0x57 bytes), cdecl: a SPRT_8 at (s16 x, s16 y), shade 0x80, CLUT 0x7A40, u 0xB8, v 0x48; Gfx_CommitPrim(slot, 0x18). Reached by called by EffectHud_DrawGauge and E1B 0x467B10. PSX twin 0x801D18CC call-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464F20
+name = "EffectKind03_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464F20..0x464F31 (0x12 bytes), cdecl: jmp [EffectKind03_States + +1 * 4], unbounded. In the band, in no list of the cut (the labelling pass proposed area overlays). Reached by Effect_KindHandlers[3]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464F40
+name = "EffectKind03_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464F40..0x464F78 (0x39 bytes), cdecl: +0x18 = byte 0 of the parameters the pointer 0x939A20 names; +0xC, +0x10, +0x1C = 0; +1 up. Reached by EffectKind03_States[1] (hidden in 0x464EC0). PSX twin 0x801D1B54 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x464F80
+name = "EffectKind03_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x464F80..0x465111 (0x192 bytes), cdecl: the level +0xC stepped by +0x18 in the mode of the parameters byte 1 (0: bouncing off 0xFF / 0 by negating +0x18; 1: up to 0xFF then 0; 2: +0x10 += +0x18 with a negative +0x10 reaching 0 or more set to -1, +0xC += +0x10, bouncing off 0xFF, stopping at 0), nothing when +0x18 is 0; 0x52CF60(0, 2), 0x52CFE0(0x10, 2, 0x87, 0xB4), EffectHud_TwoBars(0x88, 0xCB, +0xC * 0x60 / 255 signed, 2); ObjTrio +2 at 3: +0x2E = 0xB8, +0x30 = 0xD1, +1 up. Reached by EffectKind03_States[2] (hidden in 0x464EC0). PSX twin 0x801D1CF0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465120
+name = "EffectHud_TwoBars"
+ret = "void"
+params = "int x, int y, int w, unsigned slot"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465120..0x46522F (0x110 bytes), cdecl: two POLY_G4 from s16 x to s16 x + s16 w: over (s16 y, y + 4.0), black to (0, 0x80, 0) below; over (y + 4, y + 8.0), (0, 0x80, 0) above to black; each Gfx_CommitPrim(slot, 0x44). Reached by called by EffectKind03_Fade and E1B 0x4678C0. PSX twin 0x801D1B88 call-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465230
+name = "EffectKind03_ShowName"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465230..0x4652C1 (0x92 bytes), cdecl: Text_DrawAt(0x8A, 0xC8, 0, 8, NameTable_Accessories + 0x18 * the byte 0x904130 while Frame_Counter bit 6, else 0x90412E); n = record 0 +7 - byte +0xF of the block 0x939A24 names (signed byte; nothing when negative or 0, at most 4); EffectHud_DrawCount(record 0 word +0x2E + 0xA, record 0 +0x30 - 0x18, 2, n). Reached by EffectKind03_States[3] (hidden in 0x465120). PSX twin 0x801D1F38 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4652D0
+name = "EffectHud_DrawCount"
+ret = "void"
+params = "int x, int y, unsigned slot, unsigned n"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4652D0..0x465309 (0x3A bytes), cdecl: 0x52CF60(0, slot); 0x52CFE0(0x17, slot, x, y); 0x52CFE0(0x17 + n (a byte over the answer high bytes), slot, x + 0x28, y). Reached by called by EffectKind03_ShowName and E1B 0x467E10. PSX twin 0x801D2030 call-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465310
+name = "EffectKind05_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465310..0x465321 (0x12 bytes), cdecl: jmp [EffectKind05_States + +1 * 4], unbounded. In the band, in no list of the cut. Reached by Effect_KindHandlers[5]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465330
+name = "EffectKind05_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465330..0x465530 (0x201 bytes), cdecl: x = ObjTrio +0x34, z = ObjTrio +0x38 - 0x8000, word +0x3E = AreaMap_Elevation there + 0x100; +0x10 = parameters byte 2 * record 2 +0xC / 255 + 8 (signed), +6 = +0x10 / 15 at most 3, +0x10 = z - (+0x10 << 15); Field_Kind2Z = +0x10 held to 0x150000..0x3C0000; MoveScript_F3Divisor 0; +0xC 0; +0x14 / +0x20 = 0x653B24 row +6; sprite bytes cleared; Sprite_SetAnimationBank(block 0x939A24 word +0xC), Sprite_SetAnimation(1); Effect_FindFree: +0 1, +5 0xA; +7 = block byte +0xF; +1 up. Reached by EffectKind05_States[1] (hidden in 0x4652D0). PSX twin 0x801D2108 callers (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465540
+name = "EffectKind05_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465540..0x46569D (0x15E bytes), cdecl: Field_Kind2Z = +0x10 held; at z == +0x10: Sound_PlayEffect(0x201), +0x3C, +0x14, +0x20, +9, +0xA 0, unless Field_Kind2Hold +0x10 0, MoveScript_F3Divisor 0, +1 up; Sprite_SetAnimation(4), Sprite_UpdateScreen. Else at the 0x653B44 row +6 offset +0x20 = its step; +0x14 += +0x20; past the offset with +0x14 negative both 0; x += +0xC, z -= 0x4000, +0x3C += +0x14; MoveScript_F3Divisor 0x40 at z 0x3C0000; Sprite_ScriptTick, Sprite_UpdateScreen. +6 unchecked (ours aborts at 4). Reached by EffectKind05_States[2] (hidden in 0x4652D0). PSX twin 0x801D23F0 callers (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4656A0
+name = "EffectKind05_Land"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4656A0..0x4656BF (0x20 bytes), cdecl: Sprite_ScriptTickOnce non-zero: Sprite_SetAnimation(3), +1 up; jmp Sprite_UpdateScreen. Reached by EffectKind05_States[3] (hidden in 0x4652D0). PSX twin 0x801D25EC table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4656C0
+name = "EffectKind05_Bounce"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4656C0..0x465833 (0x174 bytes), cdecl: the wait +0xA down; at 0 while +7 > block signed +0xF: +0xA = block +0x10, +7 down; x += +0xC, z += +0x10, +0x14 += +0x20, +0x3C += +0x14; +0x3C > 0 with +0x20: +0xB 1; with none and +0xB: +0x14 0x40000, +0x20 -0x8000, a kind 0xA record (Effect_FindFree); with none and no +0xB: +0x3C 0; at 0 +0xB 0 (the jge at 0x4657A0 lands on the jle at 0x4657DA); below 0 +0x20 0, +0xB 0; +0x5C 0; +0 bit 5 by the word +0x3E (clear with +0x5D 0 when above 0); +0x5E, +0x5F = +0x5D; Sprite_EnsureAnimation(2 / 3 / 0 by +0x10 sign), Sprite_ScriptTick, +0x48 2, 0x52CD50. Reached by EffectKind05_States[4] (hidden in 0x4652D0). PSX twin 0x801D2644 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465840
+name = "EffectKind05_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465840..0x4658B9 (0x7A bytes), cdecl: Sprite_EnsureAnimation(3 while record 5 +0x10 is not negative, else 2); x, z, word +0x3E from Sprite_Objects[byte 0x939A1C] (unchecked: ours aborts at 30); Sprite_ScriptTick; jmp 0x52CD50. Reached by EffectKind05_States[5] (hidden in 0x4652D0). PSX twin 0x801D28D8 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4658C0
+name = "EffectKind0A_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4658C0..0x4658D1 (0x12 bytes), cdecl: jmp [EffectKind0A_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0xA]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4658E0
+name = "EffectKind0A_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4658E0..0x46599C (0xBD bytes), cdecl: Effect_Objects record 0 bytes +0x24..+0x28 copied; +0x29 5; +0x3C 0; +0x48, +0x5C 0; +0x5D..+0x5F 0x9C; +0x60..+0x6C 0; EffectKind0A_Follow; +1 up. Reached by EffectKind0A_States[0] (hidden in 0x4652D0). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4659A0
+name = "EffectKind0A_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4659A0..0x465A57 (0xB8 bytes), cdecl: record 0 word +0x3E above 0 and +1 set: its x, z, +0x2A, +0x49..+0x4B, +0x50, +0x54, +0x58, +0x5A copied, jmp Sprite_UpdateScreen; else jmp Effect_Release. Reached by EffectKind0A_States[1] and a call from EffectKind0A_Start. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465A60
+name = "EffectKind0C_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465A60..0x465A71 (0x12 bytes), cdecl: jmp [EffectKind0C_States + +1 * 4], unbounded. In the band, in no list of the cut. Reached by Effect_KindHandlers[0xC]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465A80
+name = "EffectKind0C_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465A80..0x465AAF (0x30 bytes), cdecl: word +0x30, +9, +0xA, +0xB = 0; +1 up. Reached by EffectKind0C_States[1] (hidden in 0x4659A0). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465AB0
+name = "EffectKind0C_Aim"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465AB0..0x465D8A (0x2DB bytes), cdecl: 0x52CF60(0, 2), 0x52CFE0(0x11, 2, 0x87, 0xB4); with +0x10 0: the object (Sprite_Objects[byte 0x939A1C], unchecked) signed +0xA more than parameters byte 3 * 4 + 0xC from word +0x30: +9 counts to 0xF then +0x10 -1 / 1 toward it, else +9 0; +0x30 += word +0x10 held to b3 * 4 - 0x24 .. (9 - b3) * 4; a LINE_F2 (185.0, 201.0)-(185.0, 213.0), slot 2; EffectHud_DrawMark(+0x30 - 4 b3 + 0xAD, 0xCB, (b3 + 3) * 8, (+0xA & 7) * 2, 2, the object +0xA + 0xB9 outside it); object +1 at 4: a LINE_F2 (136.0, 211.0) to (its word +0x9A * 0x60 / 256 + 0x88, 211.0), EffectHud_DrawArrow(its +0xA + 0xB9 held to 0x90..0xE4, 0xCB, its +0x10 not negative, 2), and with ObjTrio +2 at 4, its +4 not 3 and the arrow outside, Sound_PlayEffect(0x207) when Frame_Counter & 0xF is 0. Reached by EffectKind0C_States[2] (hidden in 0x4659A0). PSX twin 0x801D2DC0 callers (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465D90
+name = "EffectHud_DrawArrow"
+ret = "void"
+params = "int x, int y, unsigned flip, unsigned slot"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465D90..0x465E4B (0xBC bytes), cdecl: a POLY_FT4 (s16 x - 8 to x + 8, s16 y to y + 8.0), shade 0x80, CLUT 0x7A40, tpage 0x99, u 0x28 / 0x38 swapped by the byte flip, v 0x58 / 0x60; Gfx_CommitPrim(slot, 0x48). Reached by called by EffectKind0C_Aim and E1B 0x4680F0, 0x468210. PSX twin 0x801D2C30 call-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465E50
+name = "EffectHud_DrawMark"
+ret = "void"
+params = "int x, int y, unsigned width, unsigned shade, unsigned slot, unsigned blink"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465E50..0x465F0D (0xBE bytes), cdecl: 0x52CF60(0, slot); 0x52CFE0(0x1C, slot, x, y), through the answer word +0x18 = the byte width and u +0x14 += the byte shade; the byte blink set and Frame_Counter bit 3 clear: 0x52CF60(6, 2), a TILE half-transparent (1) at (s16 x, s16 y), width by 8.0, colour 0xFF 0 0, Gfx_CommitPrim(slot, 0x1C). Reached by called by EffectKind0C_Aim and E1B 0x4680F0, 0x468210. PSX twin 0x801D3240 callers (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465F10
+name = "EffectKind0D_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465F10..0x465F21 (0x12 bytes), cdecl: jmp [EffectKind0D_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0xD] (hidden in 0x465E50; a hypothesis row of the cut). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465F30
+name = "EffectKind0D_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465F30..0x465FD0 (0xA1 bytes), cdecl: Sprite_SetAnimationBank(0x2B); word +0x2E 0x186, +0x30 0x6E; +0x24 0x80; +0x48, +0x5D..+0x5F, +0x2A 0; +0x29 2; Sprite_SetAnimation(+6); Sound_PlayEffect(the word 0x653B8C[+6], unchecked: ours aborts at 6) unless 0xFFFF; +1 up. Reached by EffectKind0D_States[1] (hidden in 0x465E50). No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x465FE0
+name = "EffectKind0D_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x465FE0..0x466013 (0x34 bytes), cdecl: word +0x2E -= 0x1E; at 0xA0 or less (s16) held there, +9 0x1E, +1 up; jmp Sprite_QueueOverlay. Reached by EffectKind0D_States[2]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466020
+name = "EffectKind0D_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466020..0x466040 (0x21 bytes), cdecl: +9 down, +1 up at 0; jmp Sprite_QueueOverlay. Reached by EffectKind0D_States[3]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466050
+name = "EffectKind0D_SlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466050..0x46607A (0x2B bytes), cdecl: word +0x2E -= 0x1E; at -0x46 or less (s16) +0x2E 0xA0 and +1 0 (no draw); else jmp Sprite_QueueOverlay. Reached by EffectKind0D_States[4]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466080
+name = "EffectKind0F_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466080..0x4660A5 (0x26 bytes), cdecl: unless Sprite_Current is Effect_Objects record 3 (0x7E1360) or record 3 +1 is above 3, jmp Effect_Release; else jmp [EffectKind0F_States + +1 * 4], unbounded. In the band, in no list of the cut. Reached by Effect_KindHandlers[0xF]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4660B0
+name = "EffectKind0F_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4660B0..0x4660CD (0x1E bytes), cdecl: word +0x30 = 0xFFE7; +7 0; +1 up. Reached by EffectKind0F_States[1] (hidden in 0x465E50). PSX twin 0x801D364C table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4660D0
+name = "EffectKind0F_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4660D0..0x466118 (0x49 bytes), cdecl: word +0x30 += 8, held at 0x12 with +1 up; 0x469750(0x14, +0x30 over the high half of Sprite_Current, 0x118, 0x13, 0). Reached by EffectKind0F_States[2]. PSX twin 0x801D3680 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466120
+name = "EffectKind0F_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466120..0x4661A5 (0x86 bytes), cdecl: row +6 of 0x653C04 (four bytes, unchecked: ours aborts past the nine): its byte 3 set: Effect_FindFree (movsx) +0 1, +5 0xF, +6 copied, +0x4A 0, +0xB 0, +1 8, and +1 = 6; else +0x4B = its byte 0, +1 up; 0x469750(0x14, 0x12, 0x118, 0x13, 0). Reached by EffectKind0F_States[3]. PSX twin 0x801D36F4 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4661B0
+name = "EffectKind0F_Title"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4661B0..0x4661F0 (0x41 bytes), cdecl: 0x469750(0x14, 0x12, 0x118, 0x13, 0); Text_DrawAt(0x1D, 0x14, 0, 0x5171E0(text), text), text the dword 0x653B98[+0x4B * 8] (unchecked: ours aborts past thirteen). Reached by EffectKind0F_States[4]. PSX twin 0x801D3820 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466200
+name = "EffectKind0F_TitleClose"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466200..0x46623D (0x3E bytes), cdecl: EffectKind0F_Close; Text_DrawAt(0x1D, word +0x30 + 2, 0, 0x5171E0(text), text). Reached by EffectKind0F_States[5]. PSX twin 0x801D3894 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466240
+name = "EffectKind0F_Frame"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466240..0x466255 (0x16 bytes), cdecl: 0x469750(0x14, 0x12, 0x118, 0x13, 0). Reached by EffectKind0F_States[6]. PSX twin 0x801D3904 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466260
+name = "EffectKind0F_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466260..0x4662A4 (0x45 bytes), cdecl: word +0x30 -= 8; below -0x19 +1 = 1 when +7 else 0; 0x469750(0x14, +0x30 over the high half of Sprite_Current, 0x118, 0x13, 0). Reached by EffectKind0F_States[7] and a call from EffectKind0F_TitleClose. PSX twin 0x801D3934 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4662B0
+name = "EffectKind0F_LineStart"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4662B0..0x46630F (0x60 bytes), cdecl: +0x4B = 0x653C04[+6 * 4 + +0x4A]; +0x50 = that text dword; word +0x58 0, +0x49 0, +9 6, word +0x2E 0x125; +1 up. Reached by EffectKind0F_States[8]. PSX twin 0x801D39B4 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466310
+name = "EffectKind0F_LineType"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466310..0x466458 (0x149 bytes), cdecl: word +0x2E -= 2; +9 down; at 0: the cursor +0x50 past a character (two with bit 7), +0x49 up, +9 6; all typed (+0x49 not below 0x5171E0): +0x49 the count, +0xA 6 with a line (record +4 not 0xFF) else 0, +9 = record +5, +0x50 the text again, +1 up; while +9 runs: 0x469AD0(0, +0x50, 0xC - 2 * +9, 2 * +9 + 0x119); with +0x49 set Text_DrawAt(+0x2E, record 3 +0x30 + 2, 0, +0x49, text). Reached by EffectKind0F_States[9]. PSX twin 0x801D3A50 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466460
+name = "EffectKind0F_LineNext"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466460..0x4665DF (0x180 bytes), cdecl: word +0x2E -= 2; +0xA running: 0x469AD0(0x653C00[line], 0x66A2FC[line], 0xC - 2 * +0xA, 2 * +0xA + 0x119), line unchecked (ours aborts at 3 or more); else +9 down, at 0 +0x4A up (0 at 3 or an 0xFF of the row), unless record 3 +1 is 7 a kind 0xF record at state 8 with +6 and +0x4A, +1 up; the label Text_DrawAt(+0x2E + 12 * +0x49, record 3 +0x30 + 2, pen, 1, label) unless 0xFF; then Text_DrawAt(+0x2E, .., 0, +0x49, +0x50). Reached by EffectKind0F_States[10]. PSX twin 0x801D3C80 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4665E0
+name = "EffectKind0F_LineScroll"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4665E0..0x466746 (0x167 bytes), cdecl: word +0x2E -= 2; left of 0x1D with +0x49: +0x54 = +0x50, the cursor past a character, +0x49 down, +0x2E 0x27, +9 6; +9 running down: 0x469AD0(0, +0x54, (2 * +9) | 0x80, 0x1D); with +0x49: the text and the label drawn; without: the label at +0x2E, at 0x1D +9 6 and +1 up, or with no label jmp Effect_Release. Reached by EffectKind0F_States[11]. PSX twin 0x801D3F54 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466750
+name = "EffectKind0F_LineFade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466750..0x46679B (0x4C bytes), cdecl: +9 down; at 0 jmp Effect_Release; else 0x469AD0(0x653C00[line], 0x66A2FC[line], (2 * +9) | 0x80, 0x1D), line unchecked (ours aborts at 3 or more). Reached by EffectKind0F_States[12]. PSX twin 0x801D4200 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4667A0
+name = "EffectKind1A_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4667A0..0x4667B1 (0x12 bytes), cdecl: jmp [EffectKind1A_States + +1 * 4], unbounded. In the band, in no list of the cut. Reached by Effect_KindHandlers[0x1A]. No PSX twin in the pairs. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4667C0
+name = "EffectKind1A_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4667C0..0x46683B (0x7C bytes), cdecl: +8, +6 0; +7 0x80; +9 4; +0xA 0; +0x34, +0x38, +0x3C, +0xC, +0x10 0; +0xB 0; word +0x2C 0xFFFF; +1 up. Reached by EffectKind1A_States[1] (hidden in 0x466260). PSX twin 0x801D4300 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466840
+name = "EffectKind1A_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466840..0x46694F (0x110 bytes), cdecl: +9 down, at 0 +0xB 1 and +1 up (4 with +7 bit 0); without +0xB 0x469750(0x14, 0x12 - 16 v, ..) and 0x468AC0(45 w + 0x58, 0x28, 0), else at 0x12 and 0x468AC0(0x58, 0x28, ObjTrio +3 >= 3 ? 1 << +6 : 0); 0x469210(0x10 - 45 u, 0x40); 0x468C50 (+7 bit 0 clear) or 0x468F00 (45 t + 0xA4, 0x40) - v, w, u, t the byte +9 over the high half of the register the original held (Sprite_Current or the previous answer). Reached by EffectKind1A_States[2]. PSX twin 0x801D4394 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466950
+name = "EffectKind1A_ItemsA"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466950..0x4669A4 (0x55 bytes), cdecl: 0x469750(0x14, 0x12, 0x118, 0x13, 0); 0x468AC0(0x58, 0x28, the option bit); 0x469210(0x10, 0x40); 0x468C50(0xA4, 0x40). Reached by EffectKind1A_States[3]. PSX twin 0x801D458C table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4669B0
+name = "EffectKind1A_ItemsB"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4669B0..0x466A04 (0x55 bytes), cdecl: as EffectKind1A_ItemsA with 0x468F00. Reached by EffectKind1A_States[4]. PSX twin 0x801D4614 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466A10
+name = "EffectKind1A_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466A10..0x466B25 (0x116 bytes), cdecl: +9 up; the window and lists as EffectKind1A_Open; at +9 4: +1 0 without +0xB, else up with +6 1, 0xC with +6 2. Reached by EffectKind1A_States[5]. PSX twin 0x801D469C table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466B30
+name = "EffectKind1A_FindKind"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466B30..0x466BD6 (0xA7 bytes), cdecl: words +0x3E, +0x3C 0; +0x3E walks 0..0x1F to the first set count byte 0x9040EC[+0x3E], +0x3C 1 when none; 0x469750 at 0x12, 0x468AC0 with the option bit; +9 4, +1 up. Reached by EffectKind1A_States[6]. PSX twin 0x801D48A0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466BE0
+name = "EffectKind1A_PanelIn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466BE0..0x466D22 (0x143 bytes), cdecl: +9 down; FieldPanel_DrawHeader(-80 * +9, 0x4E); FieldPanel_DrawKindIcon(48 * +9 + 0x80, 0x5B, +0x3E or 0xFF by 0x9040EC) and FieldPanel_DrawKindRow(the kind, its count, +9) or (0xFF, 0, +9); FieldPanel_DrawTotal(0xB0, 30 * +9 + 0x9C); FieldPanel_DrawMessage(8, 30 * +9 + 0x94, 0xFFFF); 0x469750 at 0x12, 0x468AC0; +1 up at +9 0. Reached by EffectKind1A_States[7]. PSX twin 0x801D49A0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466D30
+name = "EffectKind1A_Panel"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466D30..0x466E0F (0xE0 bytes), cdecl: FieldPanel_DrawHeader(0, 0x4E); with a count: FieldPanel_DrawKindRow(+0x3E, the count, 0), FieldPanel_DrawKindIcon(0x80, 0x5B, +0x3E), FieldPanel_DrawMessage(8, 0x94, word +0x3E); without: (0xFF, 0, 0), (.., 0xFF), (.., 0xFFFF); FieldPanel_DrawTotal(0xB0, 0x9C); 0x468A40; 0x469750 at 0x12; 0x468AC0. Reached by EffectKind1A_States[8]. PSX twin 0x801D4B7C table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466E10
+name = "EffectKind1A_PanelNext"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466E10..0x466F68 (0x159 bytes), cdecl: +9 up; FieldPanel_DrawHeader(0, 0x4E), the row at 0; the icon at 0x80 - 48 * +9 (+8 clear) or 0x80 + 48 * +9; FieldPanel_DrawTotal(0xB0, 0x9C), FieldPanel_DrawMessage(8, 0x94, 0xFFFF), 0x468A40, 0x469750 at 0x12, 0x468AC0; at +9 4 word +0x3E = +0x3C, +1 up. Reached by EffectKind1A_States[9]. PSX twin 0x801D4CA0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x466F70
+name = "EffectKind1A_PanelBack"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x466F70..0x4670BC (0x14D bytes), cdecl: +9 down; as EffectKind1A_PanelNext with the icon sign the other way by +8; at +9 0 +1 = 8. Reached by EffectKind1A_States[10]. PSX twin 0x801D4E8C table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x4670C0
+name = "EffectKind1A_PanelOut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x4670C0..0x467268 (0x1A9 bytes), cdecl: the window and option boxes sliding by +9 as EffectKind1A_Open (in place with +0xB); +9 up; the panel as EffectKind1A_PanelIn; at +9 4: +1 0 without +0xB, 2 with +6 0, up with +6 2. Reached by EffectKind1A_States[11]. PSX twin 0x801D5064 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[func]]
+pc = 0x467270
+name = "EffectKind1A_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1A, capstone to the last instruction), 0x467270..0x4672EF (0x80 bytes), cdecl: 0x469750 at 0x12, 0x468AC0 with the option bit; +8 0; +0x3C, +0x14, +0x20 0; +0xA 0; +9 4; +1 up. Reached by EffectKind1A_States[12]. PSX twin 0x801D52F0 table-anchored (analysis/pairs_propagated.json; an AREA overlay copy, no name in the sibling: the name is ours, from the code). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_1a.md."
+
+[[data]]
+pc = 0x653A44
+name = "EffectKind01_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind01_Run by +1: EffectKind01_Start, _Draw. EffectKind07_States follows (0x653A4C); WorldMap_Records index 11 reads here. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653A4C
+name = "EffectKind07_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind07_Run by +1: EffectKind07_Start, _FadeIn, 0x462FC0 twice, 0x462FF0 (scenario-bank rows). EffectKind08_States follows (0x653A60). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653A60
+name = "EffectKind08_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind08_Run by +1: 0x463060, 0x4630B0, 0x4631B0 (scenario-bank rows), Effect_StateRelease. EffectKind09_States follows. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653A70
+name = "EffectKind09_States"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind09_Run by +1: ten scenario-bank rows 0x463460..0x463B40; EffectKind0B_States starts at its eleventh cell (0x653A98, EffectKind0B_Run). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653A98
+name = "EffectKind0B_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind0B_Run by +1: 0x463F00, 0x463FA0, 0x464030, 0x464090, 0x464140 (scenario-bank rows); data follows at 0x653AAC. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653AC0
+name = "EffectKind02_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind02_Run by +1: 0x464680, BareRet, 0x464730, 0x464780, 0x4647B0 (scenario-bank rows); 0x464780 calls through 0x653AD4 (its fifth cell on). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653AFC
+name = "EffectKind03_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind03_Run by +1: BareRet, EffectKind03_Start, _Fade, _ShowName; EffectKind05_States starts at 0x653B0C. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653B0C
+name = "EffectKind05_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind05_Run by +1: BareRet, EffectKind05_Start, _Rise, _Land, _Bounce, _Follow; data follows at 0x653B24 (the rise rows). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653B64
+name = "EffectKind0A_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind0A_Run by +1: EffectKind0A_Start, _Follow; EffectKind0C_States starts at 0x653B6C. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653B6C
+name = "EffectKind0C_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind0C_Run by +1: BareRet, EffectKind0C_Start, _Aim; EffectKind0D_States starts at 0x653B78. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653B78
+name = "EffectKind0D_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind0D_Run by +1: BareRet, EffectKind0D_Start, _SlideIn, _Hold, _SlideOut; data follows at 0x653B8C (the sound words). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653C28
+name = "EffectKind0F_States"
+ctype = "unsigned long"
+count = 13
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind0F_Run by +1: BareRet, EffectKind0F_Start, _Open, _Choose, _Title, _TitleClose, _Frame, _Close, _LineStart, _LineType, _LineNext, _LineScroll, _LineFade; EffectKind1A_States starts at 0x653C5C. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
+
+[[data]]
+pc = 0x653C5C
+name = "EffectKind1A_States"
+ctype = "unsigned long"
+count = 17
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1A): EffectKind1A_Run by +1: BareRet, EffectKind1A_Start .. _Reset (12 of group E1A), then 0x4672F0, 0x4673B0, 0x467400, 0x4674F0 (round thirteen group E1B); 0x4674F0 dispatches the next run, 0x653CA0, by +2. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/effect_1a.md section 3."
