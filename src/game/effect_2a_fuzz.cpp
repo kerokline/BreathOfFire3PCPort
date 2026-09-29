@@ -449,6 +449,7 @@ void Seed(unsigned k) {
     case k2DRays:
     case k2DRings:
     case k2DCurtain:
+        SeedScreen(s + 0xC);
         SetWord(s + 0x18, SmallRadius());
         SetWord(s + 0x1C, PickOf(0, 0x80, 0xFB, 0xFC, 0xFF, 0x100, 0xFFFC, 0xFFFF, 0x8000, sh::Next()));
         break;
