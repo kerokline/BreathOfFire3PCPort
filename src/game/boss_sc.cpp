@@ -197,8 +197,8 @@ extern "C" unsigned char __cdecl BossAmalgam_Enter(void) {
 }
 
 // original 0x439730: BossAmalgam_Steps 6: by +2 through BossAmalgam_ActSubs
-// (6: EnemyOp_ActBegin, EnemyOp_HitDispatch, EnemyOp_ActBegin, 0x436BC0,
-// BossAmalgam_DeathDispatch, 0x436F00 - EnemyOp_ActSubs with the death at 4).
+// (6: EnemyOp_ActBegin, EnemyOp_HitDispatch, EnemyOp_ActBegin, EnemyOp_Act3Dispatch,
+// BossAmalgam_DeathDispatch, EnemyOp_Act5Dispatch - EnemyOp_ActSubs with the death at 4).
 extern "C" unsigned long __cdecl BossAmalgam_ActDispatch(unsigned long through) {
     return Dispatch("BossAmalgam_ActDispatch", 0x64CC54, 6, 2, through);
 }

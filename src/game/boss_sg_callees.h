@@ -9,7 +9,9 @@
 // BareRet / BareRetZero / BossHook_ExitClearActor0 / BossOp_ScriptTick) or a
 // .data table entry the fuzz swaps for a recorder (the generic enemy states
 // 0x4365D0, 0x436620, 0x436BC0, 0x436F00, 0x437030, 0x437180, 0x437240 among
-// them - reached as table entries, never called by address).
+// them - reached as table entries, never called by address; the first four
+// are round twelve group BE2's EnemyOp_TurnStart, _CueDispatch, _Act3Dispatch,
+// _Act5Dispatch).
 #pragma once
 
 #include <cstdint>

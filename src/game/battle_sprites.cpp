@@ -73,7 +73,7 @@ const Callees kOriginals = {
     Battle_MemberOutAction,
     Raw<unsigned char (__cdecl*)(unsigned)>(0x454260),
     Raw<unsigned char (__cdecl*)(unsigned)>(0x454310),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x435C80),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomEnemy),
     Raw<unsigned char (__cdecl*)(unsigned)>(0x445730),
     ClutMap_Mark,
     ClutMap_FindFree,
@@ -413,7 +413,7 @@ extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
 // hands over to 0x454290; battle flag bit 4 to 0x446B00; a side in +0x124 is
 // the target; then by +0x125: 0 and 1 take +0x124 unless it is out (then
 // 0x446B00), 2 and 3 nothing, 4 and 5 fall back on 0x454310 / 0x445730 /
-// 0x435C80 by the tests in docs/battle_sprites.md section 1; above 5
+// Battle_RandomEnemy 0x435C80 by the tests in docs/battle_sprites.md section 1; above 5
 // nothing.
 extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     unsigned char* const p = Party(member & 0xFFu);

@@ -293,6 +293,25 @@ void FindFormations() {
     if (g_good_n == 0) bof3::Fatal("battle_e2 fuzz: no formation with non-zero weights in 0x64B184 / 0x64B18C");
 }
 
+// Ability ids by the branch BattleEnemy_PickTarget takes on their flag byte
+// (NameTable_Abilities +0, read in the loaded image at start-up): 0x10 set; 0x10
+// and 0x40 clear; 0x40 with 0x20; 0x40 without 0x20. Each class drawn alike.
+unsigned short g_ids[4][0x400];
+unsigned g_ids_n[4];
+void FindAbilities() {
+    for (unsigned& n : g_ids_n) n = 0;
+    for (unsigned id = 0; id < 0x400; ++id) {
+        const unsigned char a = Mem(at::kAbilities + id * 24)[0];
+        const unsigned c = (a & 0x10) != 0 ? 0 : (a & 0x40) == 0 ? 1 : (a & 0x20) != 0 ? 2 : 3;
+        g_ids[c][g_ids_n[c]++] = static_cast<unsigned short>(id);
+    }
+}
+unsigned AbilityId() {
+    const unsigned c = bh::Next() % 4;
+    if (g_ids_n[c] == 0) return bh::Next() % 0x400;
+    return g_ids[c][bh::Next() % g_ids_n[c]];
+}
+
 // The owner of a watch or marker task: a party member or an enemy with its
 // own actor byte most of the time, the harness's record otherwise, and the
 // actor 0..10 always (an enemy's index reads past .data above 25).
@@ -461,7 +480,7 @@ void Seed(unsigned k) {
         break;
     case 0x435CF0:
         Mem(at::kActKind)[0] = Byte({1, 1, 4, 4, 4, 0, 2, 3, 5});
-        for (unsigned i = 0; i < 8; ++i) SetWord(bh::EnemyAt(i) + 0x106, bh::Often() ? bh::Next() % 0x140 : bh::Next());
+        for (unsigned i = 0; i < 8; ++i) SetWord(bh::EnemyAt(i) + 0x106, bh::Often() ? AbilityId() : bh::Next());
         break;
     case 0x435E10:
         for (unsigned i = 0; i < 8; ++i)
@@ -568,6 +587,7 @@ void RunFamily(const char* run, const bh::Clone* clones, unsigned n, const bh::D
 
 void SelfTest() {
     FindFormations();
+    FindAbilities();
     RunFamily("tasks", kTasks, BE2_COUNT(kTasks), nullptr, 0);
     RunFamily("begin", kBegin, BE2_COUNT(kBegin), nullptr, 0);
     RunFamily("ops", kOps, BE2_COUNT(kOps), kOpTables, BE2_COUNT(kOpTables));

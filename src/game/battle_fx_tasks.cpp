@@ -43,10 +43,12 @@ const Callees kOriginals = {
     // entries the boss round made ours read their names (BareRet in both stack tables,
     // Boss26Fx_Dispatch - BattleFx_Dispatch's slot 8, group BSF's); the values are
     // unchanged. The rest keep the round-eight form, raw (the fuzz's kFxImm / kMagicImm
-    // key on the same values).
+    // key on the same values). Rebound 2026-09-29 (round twelve group BE2): slots 9, 10,
+    // 13, 14 and 17 and the watch's state 3 read BE2's names, the values unchanged.
     {H(bof3::addr::BareRet), H(0x432B70), H(0x432F90), H(0x433190), H(0x4332B0), H(0x433380), H(0x433460),
-     H(0x4337F0), H(bof3::addr::Boss26Fx_Dispatch), H(0x4348E0), H(0x434B90), H(0x433970), H(0x433B80), H(0x434D70),
-     H(0x434F40), H(0x452680), H(0x452AD0), H(0x434310), H(0x452B60)},
+     H(0x4337F0), H(bof3::addr::Boss26Fx_Dispatch), H(bof3::addr::BattleFx_GridMark), H(bof3::addr::BattleFx_ListHand),
+     H(0x433970), H(0x433B80), H(bof3::addr::BattleFx_Win18Cursor), H(bof3::addr::BattleFx_Win19Cursor), H(0x452680),
+     H(0x452AD0), H(bof3::addr::BattleFx_RestoreMemberTask), H(0x452B60)},
     {H(bof3::addr::BareRet), H(0x49AB60), H(0x4FB260), H(0x4D6E30), H(0x4AB570), H(0x4C0620), H(0x4A8360), H(0x4D80C0),
      H(0x4F1500), H(0x4A3C80), H(0x4CCAA0), H(0x4D0730), H(0x4CBAE0), H(0x4BDC40), H(0x4CAC40), H(0x4DAF00),
      H(0x4D5780), H(0x4B5B10), H(0x4B16C0), H(0x4B6A40), H(0x4C9E30), H(0x4C75B0), H(0x4C5110), H(0x4C8970),
@@ -63,7 +65,7 @@ const Callees kOriginals = {
      H(0x4B30F0), H(0x4E5220), H(0x4E33B0), H(0x4F4C40), H(0x4E9B70), H(0x4EA0F0)},
     {H(0x432C40), H(0x432DB0), H(0x432DE0), H(0x432E50), H(0x432EA0)},
     {H(0x4331D0), H(0x433290)},
-    {H(0x4334C0), H(0x433550), H(0x433640), H(0x433650), H(0x433790)},
+    {H(0x4334C0), H(0x433550), H(0x433640), H(bof3::addr::BattleFx_WatchIcon), H(0x433790)},
     {H(0x433810)},
     BattleFx_RollingDigits, Battle_DrawNumber, Battle_DrawLabel, BattleTask_FreeCurrent, Battle_ActorIsOut,
     Sprite_SetAnimation, Sprite_QueueOverlay, Sprite_ScriptTick, Sprite_UpdateScreen, ScriptFlags_Set40,
@@ -380,7 +382,8 @@ extern "C" void __cdecl BattleFx_StepReset(void) {
 
 // original 0x433460 (no PSX twin paired): nothing in phase 5 (byte
 // 0x904AA0); otherwise state Sprite_Current +1 of a five-entry stack table -
-// 0x4334C0, then 0x433550, 0x433640, 0x433650, 0x433790 (unread) - with the
+// 0x4334C0, then 0x433550, 0x433640, BattleFx_WatchIcon 0x433650 (group BE2's),
+// 0x433790 (unread) - with the
 // animation set pointer 0x9039D8 at 0x8C5D80 around it, as the pose task.
 //
 // As the original has it: the phase is read before Sprite_Current; the

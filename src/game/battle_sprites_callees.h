@@ -85,7 +85,7 @@ struct Callees {
     unsigned char (__cdecl* out_action)(unsigned);            // 0x454220 (ours)
     unsigned char (__cdecl* action_is_e)(unsigned);           // 0x454260, nobody's
     unsigned char (__cdecl* pick_party)(unsigned);            // 0x454310, nobody's
-    unsigned char (__cdecl* pick_enemy_a)(unsigned);          // 0x435C80, nobody's
+    unsigned char (__cdecl* pick_enemy_a)(unsigned);          // Battle_RandomEnemy 0x435C80 (round twelve group BE2's)
     unsigned char (__cdecl* pick_enemy_b)(unsigned);          // 0x445730 (BE)
     unsigned char (__cdecl* clut_mark)(unsigned, unsigned, unsigned);   // 0x454DF0 (ours)
     unsigned char (__cdecl* clut_find)(unsigned);             // 0x454F30 (ours)

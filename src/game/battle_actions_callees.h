@@ -12,7 +12,9 @@
 //
 // Calls into other groups' functions and into unnamed ones go through raw
 // addresses here and are never bound (docs/takeover-queue-round8.md, the rule
-// for calls across groups): 0x435AB0 and 0x42F9D0, both in no group.
+// for calls across groups): 0x435AB0 and 0x42F9D0, both in no group then.
+// 0x435AB0 is round twelve group BE2's BattleEnemy_PickAction since 2026-09-29:
+// its constant names it, the value unchanged (the fuzz keys on it).
 #pragma once
 
 #include <cstdint>
@@ -77,14 +79,14 @@ constexpr std::uint32_t kAfterSteps = 0x64AF20;    // 3, by 0x904AA2: 0x42FDE0 0
 }  // namespace at
 
 // Raw addresses of the callees no group owns (the rule above).
-constexpr std::uint32_t kEnemyPickAction = 0x435AB0;   // (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
+constexpr std::uint32_t kEnemyPickAction = bof3::addr::BattleEnemy_PickAction;   // 0x435AB0 (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
 constexpr std::uint32_t kPickTarget = 0x42F9D0;        // () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
 
 // Every callee that answers in al is typed unsigned char, as symbols.gen.h has
 // the named ones: the originals test only al.
 struct Callees {
     void (__cdecl* member_auto_target)(unsigned);                 // Battle_MemberAutoTarget 0x453FA0
-    void (__cdecl* enemy_pick_action)(unsigned);                  // 0x435AB0
+    void (__cdecl* enemy_pick_action)(unsigned);                  // BattleEnemy_PickAction 0x435AB0 (BE2's)
     void (__cdecl* clear_acting_flags)();                         // Battle_ClearActingFlags 0x4301B0
     void (__cdecl* open_msg_window)();                            // Battle_OpenMsgWindow 0x444310
     const unsigned char* (__cdecl* msg)(unsigned);                // Msg_SystemPtr 0x497740
