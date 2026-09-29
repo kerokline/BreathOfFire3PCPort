@@ -81385,3 +81385,533 @@ ctype = "unsigned char"
 count = 1184
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E1F): UiSprite_Draw's 74 16-byte records (dword +0 the CLUT x, word +4 its y, words +8 / +0xA the size, bytes +0xC / +0xD u, v); 0x6608D8 (read by 0x5305D6) follows. docs/effect_1f.md."
+
+[[func]]
+pc = 0x4672F0
+name = "EffectKind0F_ListOpen"
+psx = 0x801D53B4
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4672F0..0x4673AC (0xBD bytes): kind 0xF state 26 (0x653C90, the table 0x653C28 its dispatcher 0x466080 indexes, E1A's): Panel_DrawWindow(0x14, 0x12, 0x118, 0x13, 0); EffectKind0F_DrawToggles(0x58, 0x28, ObjTrio +3 >= 3 ? 1 << (+6 & 31) : 0); +9 - 1; EffectKind0F_DrawMessageList(0x27, 60 * ((pointer & 0xFFFF0000) | +9) + 0x40); at +9 0 Effect_FindFree unchecked: a record of kind 0x1A, +1 0x10, +2 the record's +0x3E; +1 + 1. PSX twin 0x801D53B4 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x4673B0
+name = "EffectKind0F_ListShow"
+psx = 0x801D5514
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4673B0..0x4673F8 (0x49 bytes): kind 0xF state 27 (0x653C94): the window, the toggles as state 26, EffectKind0F_DrawMessageList(0x27, 0x40). PSX twin 0x801D5514 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467400
+name = "EffectKind0F_ListClose"
+psx = 0x801D5590
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467400..0x4674E0 (0xE1 bytes): kind 0xF state 28 (0x653C98): +9 + 1; +0xB 0: the window at y 0x12 - 16 * +9 and the toggles at x 45 * +9 + 0x58, unlit; else at rest, lit by state 26's bits; the list at 60 * +9 + 0x40; at +9 4: +1 = 0 (+0xB 0), 2 (+6 0), 6 (+6 1). PSX twin 0x801D5590 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x4674F0
+name = "EffectKind0F_Child"
+psx = 0x801D5710
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4674F0..0x467518 (0x29 bytes): kind 0xF state 29 (0x653C9C): Effect_Objects record 6's +8 0 and +1 0xE: jmp EffectKind0F_Children[+2], unchecked (ours aborts past 6); else jmp Effect_Release. PSX twin 0x801D5710 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467520
+name = "EffectKind0F_Child0"
+psx = 0x801D5788
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467520..0x467531 (0x12 bytes): EffectKind0F_Children[0] and kind 0xF state 30: jmp [0x653CB8 + +3 * 4] (EffectKind0F_Child0Steps, 5; unchecked, ours aborts past). PSX twin 0x801D5788 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467540
+name = "EffectKind0F_Child0Start"
+psx = 0x801D57CC
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467540..0x467629 (0xEA bytes): EffectKind0F_Child0Steps[0]: two Effect_FindFree records (each only if found) of kind 0x1A, +1 0x10, +3 2 and 4; Sprite_SetAnimationBank(0x47); +0x24 0x80, +0x29 1, +0x2A 0, words +0x2E 0x5E, +0x30 0xBA, +0x48, +9, +0xA, +0x5D..+0x5F 0; +3 + 1. PSX twin 0x801D57CC (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467630
+name = "EffectKind0F_Child0Animate"
+psx = 0x801D5974
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467630..0x46769B (0x6C bytes): EffectKind0F_Child0Steps[1]: +9 0: the (animation, frames) record +0xA of 0x653CCC (11 of 2; animation 0xFF goes to record `frames`), Sprite_SetAnimation, +9 its frames, +0xA + 1; else +9 - 1, Sprite_ScriptTick; jmp Sprite_QueueOverlay. PSX twin 0x801D5974 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x4676A0
+name = "EffectKind0F_Child0Second"
+psx = 0x801D5A64
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4676A0..0x46774C (0xAD bytes): EffectKind0F_Child0Steps[2]: Sprite_SetAnimationBank(0x21); placed at (0xA2, 0xBA), +0x29 = +0x2A = 1; +6, +9, +0xA 0, dwords +0xC 0, +0x18 4; Sprite_SetAnimation(0); +3 + 1. PSX twin 0x801D5A64 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467750
+name = "EffectKind0F_Child0Tick"
+psx = 0x801D5B64
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467750..0x467759 (0xA bytes): EffectKind0F_Child0Steps[3]: Sprite_ScriptTick, jmp Sprite_QueueOverlay. PSX twin 0x801D5B64 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467760
+name = "EffectKind0F_Child0Back"
+psx = 0x801D5B8C
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467760..0x4677E5 (0x86 bytes): EffectKind0F_Child0Steps[4]: Sprite_SetAnimationBank(0x47); placed at (0xE8, 0xBA); +9 = +0xA = 0; Sprite_SetAnimation(0xA); +3 - 1 (back to step 3). PSX twin 0x801D5B8C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x4677F0
+name = "EffectKind0F_Child1"
+psx = 0x801D5C64
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4677F0..0x467801 (0x12 bytes): EffectKind0F_Children[1] and kind 0xF state 31: jmp [0x653CE4 + +3 * 4] (EffectKind0F_Child1Steps, 2). PSX twin 0x801D5C64 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467810
+name = "EffectKind0F_Child1Start"
+psx = 0x801D5CA8
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467810..0x4678B6 (0xA7 bytes): EffectKind0F_Child1Steps[0]: Sprite_SetAnimationBank(0x47); placed at (0xEC, 0xA2); +6, +9, +0xA 0, dwords +0xC 0, +0x18 4; +3 + 1. PSX twin 0x801D5CA8 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x4678C0
+name = "EffectKind0F_Child1Meter"
+psx = 0x801D5DA4
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4678C0..0x467A53 (0x194 bytes): EffectKind0F_Child1Steps[1]: the (animation, frames, mode) script 0x653CEC (4 of 3; 0xFF goes to `frames`, zeroing +0xC, +6, +0x18 = 4); Sprite_QueueOverlay; 0x52CF60(0, 1), 0x52CFE0 sprites 0x15, 0x16, 0x10; the record before +0xA's mode 0: dword +0xC bounced by +0x18 inside 0..0x60; mode 1: +6 + 1 on even frames; E1A's 0x465120(0x39, 0x97, word +0xC, 1); Crt_sprintf(0x904BA0, Boss26Fx_CountFormat, +6), Text_DrawFont12(0xAA, 0x94, 0); jmp Sprite_QueueOverlay. PSX twin 0x801D5DA4 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467A60
+name = "EffectKind0F_Child2"
+psx = 0x801D601C
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467A60..0x467A71 (0x12 bytes): EffectKind0F_Children[2] and kind 0xF state 32: jmp [0x653CF8 + +3 * 4] (EffectKind0F_Child2Steps, 4). PSX twin 0x801D601C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467A80
+name = "EffectKind0F_Child2Start"
+psx = 0x801D6060
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467A80..0x467B07 (0x88 bytes): EffectKind0F_Child2Steps[0]: Sprite_SetAnimationBank(0x47); placed at (0xE8, 0xBA); +6 = +9 = +0xA = 0; +3 + 1. PSX twin 0x801D6060 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467B10
+name = "EffectKind0F_Child2Gauge"
+psx = 0x801D6144
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467B10..0x467C9D (0x18E bytes): EffectKind0F_Child2Steps[1]: the (animation, frames, step) script 0x653D08 (12 of 3; animation 0 goes to `frames`, +6 0); a record of step 0x50 takes Effect_FindFree unchecked for kind 0x1A, +1 0x10, +2 = +3 = 2, words +0x2E 0xE8, +0x30 0x9E; Sprite_QueueOverlay; every fourth frame the step (not 0x50) added to +6, held to 0..0x18 (bit 7 of the byte sum: 0); E1A's 0x464DA0(0xE4, 0x68, 1), 0x464E40(0xE4, 0x78, 1); 0x52CF60(0, 1); sprite 0x14 at (0xDC, 0x60); with a step 0x464EC0(0xF4, ((pointer & 0xFFFF0000) | +6) + 0x68, 1). PSX twin 0x801D6144 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467CA0
+name = "EffectKind0F_Child2Fade"
+psx = 0x801D6430
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467CA0..0x467D25 (0x86 bytes): EffectKind0F_Child2Steps[2]: Sprite_SetAnimationBank(0x2B); +0x24 0x80, +0x29 = +0x2A = 0, +0x48 2, dwords +0x40 = +0x44 = 0x8000, +0x5D..+0x5F 0, +9 0x40, +6 0; Sprite_SetAnimation(3); +3 + 1. PSX twin 0x801D6430 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467D30
+name = "EffectKind0F_Child2Blink"
+psx = 0x801D6504
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467D30..0x467D57 (0x28 bytes): EffectKind0F_Child2Steps[3]: +9 - 1; 0: jmp Effect_Release; bit 3: jmp Sprite_QueueOverlay. PSX twin 0x801D6504 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467D60
+name = "EffectKind0F_Child3"
+psx = 0x801D6570
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467D60..0x467D71 (0x12 bytes): EffectKind0F_Children[3] and kind 0xF state 33: jmp [0x653D2C + +3 * 4] (EffectKind0F_Child3Steps, 2). PSX twin 0x801D6570 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467D80
+name = "EffectKind0F_Child3Start"
+psx = 0x801D65B4
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467D80..0x467E0E (0x8F bytes): EffectKind0F_Child3Steps[0]: Sprite_SetAnimationBank(0x47); placed at (0xCA, 0xBA); +9 = +0xA = +0xB = 0; +3 + 1; Sprite_SetAnimation(3). PSX twin 0x801D65B4 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x467E10
+name = "EffectKind0F_Child3Grid"
+psx = 0x801D66A0
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x467E10..0x46801C (0x20D bytes): EffectKind0F_Child3Steps[1]: +0xA not 0: E1A's 0x4652D0(0xD4, 0x8A, 0, +0xB + 1); else +9 + 1 and at the grid 0x653D34's 0xFF (row +0xB, column +9 / 12) +0xA 0x32. Every mark of the four rows: the lit one (row +0xB, column +9 / 12, +9 mod 12 below 10) Text_DrawAt(12c + 0x84, 13r + 0x9B, mark * 2, 1, [0x66A32C + mark * 8]), the rest Text_DrawSmall(12c + 0x86, 13r + 0x9E, row +0xB: 3 * mark, else 7 - mark, 1, [0x66A32C + mark * 4]); Sprite_QueueOverlay; +0xA down, at 0 +9 0 and +0xB + 1 (past 3: 0). PSX twin 0x801D66A0 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468020
+name = "EffectKind0F_Child4"
+psx = 0x801D6A30
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468020..0x468031 (0x12 bytes): EffectKind0F_Children[4] and kind 0xF state 34: jmp [0x653D54 + +3 * 4] (EffectKind0F_Child4Steps, 2). PSX twin 0x801D6A30 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468040
+name = "EffectKind0F_Child4Start"
+psx = 0x801D6A74
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468040..0x4680E8 (0xA9 bytes): EffectKind0F_Child4Steps[0], also called by EffectKind0F_Child5Start: Sprite_SetAnimationBank(0x47); placed at (0xF0, 0xBA); +6 = +9 = +0xA = 0, dwords +0xC = +0x10 = 0x6A, +0x4B 0xFF; +3 + 1. PSX twin 0x801D6A74 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x4680F0
+name = "EffectKind0F_Child4Move"
+psx = 0x801D6B70
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x4680F0..0x468204 (0x115 bytes): EffectKind0F_Child4Steps[1]: the move script 0x653D5C (18 of (animation | 0x80, frames, dx, dy); 0xFF goes to `frames`): Sprite_EnsureAnimation(animation & 0x7F), +9, +0xA + 1, or +9 - 1 and Sprite_ScriptTick unless the record before +0xA has bit 7; dwords +0xC += dx, +0x10 += dy, +6 -= dx; EffectKind0F_DrawCursorPanel(dy >= 0); E1A's 0x465D90(0x7E, 0x5C, 0, 1), 0x465E50(0x8F, 0x69, 0x20, 0, 1, 0). PSX twin 0x801D6B70 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468210
+name = "EffectKind0F_DrawCursorPanel"
+psx = 0x801D6CF8
+ret = "void"
+params = "unsigned down"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468210..0x468313 (0x104 bytes): cdecl (down, a byte), called by EffectKind0F_Child4Move and _Child5Move: Sprite_QueueOverlay; 0x52CF60(0, 1); sprites 0x15, 0x16, 0x11; dword +0xC held to 0x39..0x79, +0x10 to 0x41..0x94; E1A's 0x465E50(+0xC, 0xB3, 0x20, (+6 & 7) * 2, 1, +0x10 outside +0xC..+0xC + 0x20) and 0x465D90(word +0x10, 0xB3, down ? 1 : 0, 1). PSX twin 0x801D6CF8 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468320
+name = "EffectKind0F_Child5"
+psx = 0x801D6F0C
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468320..0x468331 (0x12 bytes): EffectKind0F_Children[5] and kind 0xF state 35: jmp [0x653DA4 + +3 * 4] (EffectKind0F_Child5Steps, 2). PSX twin 0x801D6F0C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468340
+name = "EffectKind0F_Child5Start"
+psx = 0x801D6F50
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468340..0x46834E (0xF bytes): EffectKind0F_Child5Steps[0]: EffectKind0F_Child4Start, then +0xB 0x37. PSX twin 0x801D6F50 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468350
+name = "EffectKind0F_Child5Move"
+psx = 0x801D6F7C
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468350..0x468557 (0x208 bytes): EffectKind0F_Child5Steps[1]: the move script 0x653DAC as sub-kind 4's (0xFF also sets +0xB 0x37 and the cursor (0x6A, 0x6A)); animation 9 takes an Effect_FindFree record when one is found: kind 0x1A, +1 0x10, +2 = +3 = 2, at (0xF2, 0x9E); the cursor moved, the panel drawn; every 16th frame a positive dy counts +0xB up to 0x3C; Crt_sprintf(0x904BA0, Boss26Fx_CountFormat, +0xB), Text_DrawFont12(0xA9, 0xB0, Frame_Counter bit 2 ? 2 : 0). PSX twin 0x801D6F7C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468560
+name = "EffectKind0F_DrawMessageList"
+psx = 0x801D732C
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468560..0x468835 (0x2D6 bytes): cdecl (x, y), called by EffectKind0F_ListOpen, _ListShow, _ListClose: Menu_DrawBox(x, y, 0xF2, 0x9F, 0xF0, 0x903A5A); +8 not 0 scrolls the lines (+9 0: a new word +0x3C sets dword +0x20 = 9 * it and +0x3E; +8 > 0 steps dword +0x14 down, wrapping to 0x35; +9, +0xA up; +0xA 0: +0x14 = +0x20 ends it, +8 = +9 = 0, an Effect_FindFree record unchecked of kind 0x1A, +1 0x10, +2 +0x3E; else a step down and +0xA up; +0xA not 0: +0xA up, at 4 back to 0 with a step up for +8 < 0, past 0x35 to 0); nine lines (ten while +0xA moves, offset 3 * +0xA) of MessagePools by the u16 table 0x653E00 (0x36; 0xFFFF skipped) from the low byte of +0x14; two more boxes; the title by 0x653DF4[+0x3C] (6); EffectKind0F_DrawListFrame(x, y); +0x3C + 1 printed by 0x653EB4, Text_DrawFont8(x + 0xCA, y + 0x92, 0). PSX twin 0x801D732C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468840
+name = "EffectKind0F_DrawListFrame"
+psx = 0x801D77CC
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468840..0x468943 (0x104 bytes): cdecl (x, y), called by EffectKind0F_DrawMessageList: 0x52CF60(9, 1); the top edge sprites 0x25, 23 of 0x26, 0x27, 0x28; Panel_DrawEdgeQuad (x, y + 0x18, 0x78, 0) and (x + 0xF0, .., 1); the bottom edge 0x2A, 23 of 0x2B, 0x2C, three 0x2D, 0x2E, 0x2F at y + 0x90. PSX twin 0x801D77CC (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468950
+name = "Panel_DrawEdgeQuad"
+psx = 0x801D79E4
+ret = "void"
+params = "int x, int y, unsigned height, unsigned which"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468950..0x468A32 (0xE3 bytes): cdecl (x, y, height, which): a POLY_FT4 at Gfx_PacketNext (read once, before Gpu_SetPolyFT4): +0x16 0x7887, +0x26 ((c & 0x3C0) | 0x400) >> 6 of the record's CLUT word, corners (x, y) .. (x + w, y + height) as floats (x, y s16, height a byte), u / v from the record, shade 0x80; Gfx_CommitPrim(1, 0x48). The records 0x653E6C, 5 of 10 bytes, by the low byte of `which` (ours aborts past). Called by EffectKind0F_DrawListFrame, _DrawTwinFrame, _DrawItemFrame and ours FieldPanel_DrawBox3 / _DrawBox2 (FE1). PSX twin 0x801D79E4 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468A40
+name = "EffectKind0F_DrawCountHeader"
+psx = 0x801D7BAC
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468A40..0x468AB2 (0x73 bytes): cdecl, no arguments (called by E1A's 0x466D30, 0x466E10, 0x466F70): 0x52CF60(0, 1); sprite 0x12 at (0xF0, 0x42); Text_DrawFont12(0x119, 0x45, 0, 0x653EBC); s16 +0x3E + 1 by Boss26Fx_CountFormat into 0x904BA0 (a first byte 0x20 stored back as 0x20: a no-op), Text_DrawAt(0xF7, 0x45, 0, 2). PSX twin 0x801D7BAC (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468AC0
+name = "EffectKind0F_DrawToggles"
+psx = 0x801D7C58
+ret = "void"
+params = "int x, int y, unsigned bits"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468AC0..0x468BAB (0xEC bytes): cdecl (x, y, bits byte), 19 call sites (E1A's and this group's): EffectKind0F_DrawToggle(x + 0x30 i, y, bit i) for i 0..2 (the bits kept in the first argument's slot); the three strings [0x66A088], [0x66A08C], [0x66A090] by Text_DrawAt at x + 0xA / 0x35 / 0x6A, y + 4, counts 2, 3, 2, colour 0 for a byte of 0, else 7 - 7 * bit. PSX twin 0x801D7C58 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468BB0
+name = "EffectKind0F_DrawToggle"
+psx = 0x801D7E34
+ret = "void"
+params = "int x, int y, unsigned lit"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468BB0..0x468C41 (0x92 bytes): cdecl (x, y, lit byte), called by EffectKind0F_DrawToggles: Menu_DrawBox(x + 2, y + 2, 0x28, 0x10, 0, 0x903A5A); 0x52CF60(8, 1); sprites 4 * lit + 0x1D (x, y), + 0x1E (x, y + 0x10), four of + 0x1F from x + 8, (lit + 8) * 4 at x + 0x28 - byte ids. PSX twin 0x801D7E34 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468C50
+name = "EffectKind0F_DrawItemsB"
+psx = 0x801D7F7C
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468C50..0x468E44 (0x1F5 bytes): cdecl (x, y), called by E1A's 0x466840, 0x466950, 0x466A10: Menu_DrawBox(x, y + 1, 0x8B, 0x9E, 0xF0, 0x903A5A); the 0x80 accessory ids at 0x9042D4 whose NameTable_Accessories +0x12 is 0xB, rows of 13: dword +0xC's gives its index to word +0x36 and with ObjTrio +4 2 and +7 bit 0 clear is lit (name at +0x19 in 7 over +0x17 in 0, count 0x9044D4 above 1 by 0x653EC0 in Text_DrawFont8 likewise); dword +0x18 the count, +0xC held below it; EffectKind0F_DrawItemFrame(x, y); EffectKind0F_DrawScrollMark(x + 0x80, y + 0x1C, 0x72); Text_DrawAt(x + 0x35, y + 7, 0, 3, 0x653EA0). An id past NameTable_Accessories' 52: ours aborts. PSX twin 0x801D7F7C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468E50
+name = "EffectKind0F_DrawScrollMark"
+psx = 0x801D82F4
+ret = "void"
+params = "int x, int y, unsigned height"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468E50..0x468EF4 (0xA5 bytes): cdecl (x, y, height byte), called by EffectKind0F_DrawItemsB / _DrawItemsA: a POLY_FT4 (the cursor read once): +0x26 0x1D, +0x16 0x7887, corners (x, y), (x + 8.0f, y), (x, y + height), .. (x, y s16), u 0x58 / 0x60, v 0x9A / 0x9E, shade 0x80; Gfx_CommitPrim(1, 0x48). PSX twin 0x801D82F4 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x468F00
+name = "EffectKind0F_DrawItemsA"
+psx = 0x801D8410
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x468F00..0x46920C (0x30D bytes): cdecl (x, y), called by E1A's 0x466840, 0x4669B0, 0x466A10: Menu_DrawBox(x, y + 1, 0x8B, 0x9E, 0x80, 0x903A5A); +0xA not 0: +0xA - 1, ten rows from +0x38 (+8 0: +0x38 - 1) offset 0x19 - 4 * +0xA (+8 not 0) or 4 * +0xA + 0xD; else nine from +0x38 at 0x19 (the offset kept in a local byte, the rows' y built over ecx's upper half); category 0xA accessories as EffectKind0F_DrawItemsB's, dword +0x10 lit with +7 bit 0 set, word +0x3A its index; +0x1C the category count - 1; +0x10 held below the rows; EffectKind0F_DrawItemFrame; the scroll mark at y + 0x1C + 6 * +0x38 +- 2 * +0xA, height 0xA8 - 6 * count (nine or fewer: 0x72 at 0x1C); Text_DrawAt(x + 0x2F, y + 7, 0, 4, 0x653EA4). PSX twin 0x801D8410 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x469210
+name = "EffectKind0F_DrawEquipped"
+psx = 0x801D896C
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469210..0x46948C (0x27D bytes): cdecl (x, y), called by E1A's 0x466840, 0x466950, 0x4669B0, 0x466A10: EffectKind0F_DrawTwinFrame(x, y); Text_DrawAt(x + 0x2A, y + 7, 0, 5, 0x653EA8); by +7 (bit 7; bit 0 clear; set) the accessories 0x904130 and 0x90412E, each E1G's 0x594D50(x + 0x10, y', id, 3, lit) and its name (count 8), the lit one twice (colour 7, then +7 or +7 & 2); Text_DrawAt(x + 0x2A, y + 0x47, 0, 5, 0x653EAD) (x + 0x2A kept in the second argument's slot); word +0x2C not 0xFFFF: that MessagePools message at (0x19, 0x9A). PSX twin 0x801D896C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x469490
+name = "EffectKind0F_DrawTwinFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469490..0x46962F (0x1A0 bytes): cdecl (x, y), called by EffectKind0F_DrawEquipped (a neighbour row, no PSX twin paired): Menu_DrawBox (x, y + 2, 0x8A, 0x3A) and (x, y + 0x42, 0x8A, 0x5C), flags 0x80; 0x52CF60(9, 1); two sprite frames (0x25, ten 0x26, 0x27, 0x28; Panel_DrawEdgeQuad 0x1E / 0x40 high, edges 0, 1; 0x3C, sixteen 0x3D, 0x3E) at y / y + 0x36 and y + 0x40 / y + 0x98. docs/effect_1b.md."
+
+[[func]]
+pc = 0x469630
+name = "EffectKind0F_DrawItemFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469630..0x469748 (0x119 bytes): cdecl (x, y), called by EffectKind0F_DrawItemsB / _DrawItemsA (a neighbour row): Menu_DrawBox(x, y + 2, 0x8B, 0x14, 0, 0x903A5A); 0x52CF60(9, 1); the top edge (0x3F, 0x40, 0x41, eight 0x26, 0x42, 0x43, 0x44), Panel_DrawEdgeQuad(x, y + 0x18, 0x78, 0), sprite 0x46, Panel_DrawEdgeQuad(x + 0x80, y + 0x28, 0x68, 4), the bottom edge (0x2A, fifteen 0x2B) and 0x45. docs/effect_1b.md."
+
+[[func]]
+pc = 0x469750
+name = "Panel_DrawWindow"
+psx = 0x801D9580
+ret = "void"
+params = "int x, int y, int w, int h, unsigned colour"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469750..0x46978E (0x3F bytes): cdecl (x, y, w, h, colour), 33 call sites (E1A's, this group's, FE2's ItemTrade states): Panel_DrawWindowBevel(x, y, w, h), Panel_DrawWindowEdges(x + 2, y + 2, w - 5, h - 5, colour). PSX twin 0x801D9580 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x469790
+name = "Panel_DrawWindowBevel"
+psx = 0x801D9398
+ret = "void"
+params = "int x, int y, int w, int h"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469790..0x46995B (0x1CC bytes): cdecl (x, y, w, h, each its low 16 bits), called by Panel_DrawWindow: the colour word of the style (s8 0x903A5A) at 0x80B7A8 + style * 0x40 as 5:5:5 << 3; 0x52CF60(6, 2); a POLY_F4 (x + 2, y) (x + w - 2, y) (x, y + 2) (x + w, y + 2), a TILE (x, y + 2, w, h - 4), a POLY_F4 (x, y + h - 2) (x + w, y + h - 2) (x + 2, y + h) (x + w - 2, y + h), floats, each Gpu_SetSemiTrans(1) and Gfx_CommitPrim(2, 0x38 / 0x1C / 0x38). Locals kept in the argument slots. PSX twin 0x801D9398 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x469960
+name = "Panel_DrawWindowEdges"
+psx = 0x801D9610
+ret = "void"
+params = "int x, int y, int w, int h, unsigned colour"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469960..0x469AC3 (0x164 bytes): cdecl (x, y, w, h low 16 bits, colour byte), called by Panel_DrawWindow: the style's colour as Panel_DrawWindowBevel's; 0x52CF60(colour ? 7 : 6, 2), a LINE_F3 (x, y + h) (x + w, y + h) (x + w, y); 0x52CF60(colour ? 6 : 7, 2), a LINE_F3 (x, y + h) (x, y) (x + w, y); each semi-transparent, Gfx_CommitPrim(2, 0x2C). PSX twin 0x801D9610 (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x469AD0
+name = "EffectKind0F_DrawGlyph"
+psx = 0x801D978C
+ret = "void"
+params = "unsigned clut, const unsigned char *text, unsigned width, int x"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x469AD0..0x469BA9 (0xDA bytes): cdecl (clut, text, width, x), called by E1A's 0x466310, 0x466460, 0x4665E0, 0x466750: Gpu_SetCode6C at Gfx_PacketNext (read once); word +0x16 the first character's glyph (bit 7: ((b0 & 0x7F) << 8) + b1, else b0 - 0x26); u 0 or 0xC - (width & 0x7F) (width bit 7) to u + (width & 0x7F), v 0 / 0xC; words x, x + (width & 0x7F); y Effect_Objects record 3's dword +0x30 + 3 and + 0xF; shade 0x80; +0xE 0x7800 | (clut & 0xF); Gfx_CommitPrim(1, 0x28). One of the code-0x6C glyph builders of docs/glyph-draw.md. PSX twin 0x801D978C (analysis/pairs_propagated.json; an AREA overlay copy, unnamed in the sibling, a hypothesis). docs/effect_1b.md."
+
+[[func]]
+pc = 0x46A3E0
+name = "EffectKind92_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x46A3E0..0x46A445 (0x66 bytes): Effect_KindHandlers[0x92] (0x655598): unless +0 has bit 6, Sprite_Objects record +0xB's words +0x2E / +0x30 += the record's, its +0x29 = the record's; that sprite's +0 bit 0 clear: Effect_Release (called; ret). A sprite index past the 30: ours aborts. Hidden in the catalog's extent of ours EffectKind32_Arc, which ends at 0x46A287. docs/effect_1b.md."
+
+[[func]]
+pc = 0x46A450
+name = "EffectKind11_DrawShade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x46A450..0x46A4F1 (0xA2 bytes): Effect_KindHandlers[0x11] (0x655394): Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, Gpu_GetTPage(2, 3, 0x140, 0x140) & 0xFFFF, 0), Gfx_CommitPrim(6, 0xC); a POLY_G4 (0, 0) (320, 0) (0, 320) (320, 320) as floats, every colour 0, Gpu_SetSemiTrans(1), Gfx_CommitPrim(2, 0x44). docs/effect_1b.md."
+
+[[func]]
+pc = 0x46A500
+name = "EffectKind12_DrawGradient"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x46A500..0x46A5D5 (0xD6 bytes): Effect_KindHandlers[0x12] (0x655398): Gpu_SetDrawMode(.., 0, 1, Gpu_GetTPage(1, 2, 0x140, 0), 0), Gfx_CommitPrim(2, 0xC); a POLY_G4 (0, 0) (320, 0) (0, 100) (320, 100), 0xC8 above and 0 below, semi-transparent; Gfx_CommitPrim(2, 0x44); Gpu_SetDrawMode(.., 0, 0, Gpu_GetTPage(2, 3, 0x140, 0x140), 0), Gfx_CommitPrim(2, 0xC). docs/effect_1b.md."
+
+[[func]]
+pc = 0x46A5E0
+name = "EffectKind14_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1B, capstone to the last instruction), 0x46A5E0..0x46A5F1 (0x12 bytes): Effect_KindHandlers[0x14] (0x6553A0): jmp [EffectKind14_States + +1 * 4], unchecked (ours aborts past 3). docs/effect_1b.md."
+
+[[data]]
+pc = 0x653CA0
+name = "EffectKind0F_Children"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child 0x4674F0 by +2, unchecked: EffectKind0F_Child0 .. _Child5; the same six cells are entries 30..35 of kind 0xF's state table 0x653C28 (dispatched by E1A's 0x466080). EffectKind0F_Child0Steps follows. docs/effect_1b.md."
+
+[[data]]
+pc = 0x653CB8
+name = "EffectKind0F_Child0Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child0 0x467520 by +3: _Child0Start, _Child0Animate, _Child0Second, _Child0Tick, _Child0Back (also kind 0xF's entries 36..40); the animation script 0x653CCC follows. docs/effect_1b.md."
+
+[[data]]
+pc = 0x653CE4
+name = "EffectKind0F_Child1Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child1 0x4677F0 by +3: _Child1Start, _Child1Meter; the script 0x653CEC follows. docs/effect_1b.md."
+
+[[data]]
+pc = 0x653CF8
+name = "EffectKind0F_Child2Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child2 0x467A60 by +3: _Child2Start, _Child2Gauge, _Child2Fade, _Child2Blink; the script 0x653D08 follows. docs/effect_1b.md."
+
+[[data]]
+pc = 0x653D2C
+name = "EffectKind0F_Child3Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child3 0x467D60 by +3: _Child3Start, _Child3Grid; the grid 0x653D34 follows. docs/effect_1b.md."
+
+[[data]]
+pc = 0x653D54
+name = "EffectKind0F_Child4Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child4 0x468020 by +3: _Child4Start, _Child4Move; the move script 0x653D5C follows. docs/effect_1b.md."
+
+[[data]]
+pc = 0x653DA4
+name = "EffectKind0F_Child5Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child5 0x468320 by +3: _Child5Start, _Child5Move; the move script 0x653DAC follows. docs/effect_1b.md."

@@ -240,6 +240,7 @@
 #include "game/field_c1.h"
 #include "game/effect_gte.h"
 #include "game/effect_1f.h"
+#include "game/effect_1b.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -909,6 +910,11 @@ void InjectAll() {
                                 // steps, UiSprite_SetMode / UiSprite_Draw): its clones' calls re-aimed at the
                                 // scenario harness's recorders; after ScenarioHarnessEkh_Inject (none of its eight
                                 // is E1F's); no module patches bytes inside its fifteen (DIVERGENCE.md, cheats.cpp,
+    Effect1B_Inject();          // round 13 group E1B (0x4672F0..0x46A5F2: kind 0xF's states 26..40 and its six
+                                // child sub-kinds, the panels and windows, kinds 0x11, 0x12, 0x14, 0x92): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its eight state
+                                // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
+                                // eight is E1B's); no module patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
