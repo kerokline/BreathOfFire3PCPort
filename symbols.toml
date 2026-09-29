@@ -84215,3 +84215,615 @@ name = "EffectKind1E_ShardCursor"
 ctype = "unsigned char *"
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E1C): the shard EffectKind1E_ShardsInit / _ShardsDraw walk (0x28 apart from EffectKind30_Shards) and the four EffectKind1E_ShardStates handlers step. docs/effect_1c.md."
+
+# --- round thirteen group E2G (effect_2g.cpp): 0x47DBE0..0x47FD92, docs/effect_2g.md ---
+
+[[func]]
+pc = 0x47DBE0
+name = "EffectKind66_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DBE0..0x47DBF1 (0x12 bytes), cdecl: jmp [EffectKind66_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x66] (0x6554E8); hidden in E2F's 0x47DAC0. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DC00
+name = "EffectKind66_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DC00..0x47DC1C (0x1D bytes), cdecl: the message word 0x7DEE48 = 0xFFFF, +9 = 0, +1 = 1. Reached by EffectKind66_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DC20
+name = "EffectKind66_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DC20..0x47DC91 (0x72 bytes), cdecl: +9 up; with +6 set Window_DrawOutline centred on the rectangle 0x654750 at w = 25 * +9, h = 6 * +9 (w and h pushed as whole registers with a caller's upper bytes; the callee reads their low bytes); +9 at 8: +1 = 2. Reached by EffectKind66_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DCA0
+name = "EffectKind66_Show2"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DCA0..0x47DCEB (0x4C bytes), cdecl: with +6 set Window_DrawFrame at the rectangle 0x654750 (x, y words, w, h bytes, pushed over leftovers) and EffectKind66_Message; EffectKind66_DrawPiece(0, 0), (2, 1). Reached by EffectKind66_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DCF0
+name = "EffectKind66_Show3"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DCF0..0x47DD3B (0x4C bytes), cdecl: as EffectKind66_Show2 with pieces (1, 0), (2, 2). Reached by EffectKind66_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DD40
+name = "EffectKind66_Show4"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DD40..0x47DD94 (0x55 bytes), cdecl: as EffectKind66_Show2 with pieces (0, 0), (2, 1), (3, 1). Reached by EffectKind66_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DDA0
+name = "EffectKind66_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DDA0..0x47DE0D (0x6E bytes), cdecl: with +6 set the outline at +9 (as _Open); +9 at 0 a tail jump to Effect_Release, else +9 down. Reached by EffectKind66_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DE10
+name = "EffectKind66_Message"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DE10..0x47DE43 (0x34 bytes), cdecl: with the message word 0x7DEE48 not 0xFFFF: MsgBox_FrameTask (al unread); MsgBoxState's byte 2 -> 7 and +6 = 0xA, 7 -> +6 = 0xA. Reached by calls from EffectKind66_Show2 / 3 / 4. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DE50
+name = "EffectKind66_DrawPiece"
+ret = "void"
+params = "unsigned piece, unsigned place"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DE50..0x47DFCA (0x17B bytes), cdecl: a POLY_FT4 at Gfx_PacketNext: corners as floats from the place record 0x654770 + 8 * (place & 0xFF) (x, y, w, h s16; three records), texture corners from the piece record 0x654788 + 4 * (piece & 0xFF) (u, v, w, h; four records), shade 0x80, Gpu_GetClut(0, 0x1E8), Gpu_GetTPage(1, 0, 0x240, 0x100), Gfx_CommitPrim(1, 0x48); an index past its records reads on into .data (ours aborts). Host extent in the catalog 0xD34 (0x47DE50..0x47EB84); this is the code's. Reached by seven calls from EffectKind66_Show2 / 3 / 4. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DFD0
+name = "EffectKind18Sub20_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DFD0..0x47DFE1 (0x12 bytes), cdecl: jmp [EffectKind18Sub20_States + +2 * 4], unbounded. Reached by EffectKind18_States[0x20] (0x6540EC); hidden in 0x47DE50. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47DFF0
+name = "EffectKind18Sub20_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47DFF0..0x47E034 (0x45 bytes), cdecl: Flags_Test(0x904030, 0x2A): set -> +0x3C = -0x180, +2 = 3; clear -> +0x3C = -0x90, +2 up; a tail jump to EffectKind18Sub20_Draw. Reached by EffectKind18Sub20_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E040
+name = "EffectKind18Sub20_WaitSet"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E040..0x47E06F (0x30 bytes), cdecl: Cond_ByteFE = 1; story flag 0x2A set: Sound_PlayEffect(0x202), +2 up. Reached by EffectKind18Sub20_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E070
+name = "EffectKind18Sub20_Lower"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E070..0x47E0AB (0x3C bytes), cdecl: Cond_ByteFE = 0; +0x3C down 8; at -0x180 or below MoveCmd_TestFB(0x27, 0x2F) (al unread) and +2 up; a tail jump to EffectKind18Sub20_Draw. Reached by EffectKind18Sub20_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E0B0
+name = "EffectKind18Sub20_WaitClear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E0B0..0x47E0E8 (0x39 bytes), cdecl: Cond_ByteFE = 2; story flag 0x2A clear: MoveCmd_TestFB(0x27, 0x2F), Sound_PlayEffect(0x202), +2 up. Reached by EffectKind18Sub20_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E0F0
+name = "EffectKind18Sub20_Raise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E0F0..0x47E11B (0x2C bytes), cdecl: Cond_ByteFE = 0; +0x3C up 8; at -0x90 or above +2 = 1; a jmp to EffectKind18Sub20_Draw (the code right after it: the tool's extent 0x1D2 counts the draw in). Reached by EffectKind18Sub20_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E120
+name = "EffectKind18Sub20_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E120..0x47E2C1 (0x1A2 bytes), cdecl: four rows (z 0x300000 + 0x20000 i) of two shaded POLY_FT4s whose vertices are built in Prim_VertexScratch (x -0x2940 / -0x2A40, y 0x100 i - 0x2740 / - 0x2840, z the low word of +0x3C and 0x100 above), Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture 0x23500125 / 0x23800126, MapView_LinkPrimAt(0x2C0000, z, 0, 0x48). A start the cut does not list (docs/scenario_harness.md 8.5 names it). Reached by tail jumps from EffectKind18Sub20_Start, _Lower and _Raise. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E2D0
+name = "EffectKind15_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E2D0..0x47E2E1 (0x12 bytes), cdecl: jmp [EffectKind15_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x15] (0x6553A4); hidden in 0x47DE50. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E2F0
+name = "EffectKind15_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E2F0..0x47E30A (0x1B bytes), cdecl: +9 = 0, the byte 0x67625C = 0, +1 = 1. Reached by EffectKind15_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E310
+name = "EffectKind15_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E310..0x47E367 (0x58 bytes), cdecl: 0x90384B bit 7: +1 = 9; else ObjTrio record 1's +0x124 bit 6 set, Field_State and Sprite_Current to that record, Sprite_SetAnimation(0x10), 0x90384A = 1, Sprite_Current back, +1 = 2. Reached by EffectKind15_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E370
+name = "EffectKind15_WaitPose4"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E370..0x47E403 (0x94 bytes), cdecl: 0x90384B bit 7: +1 = 9; 0x903849 at 1: 0x90384A = 5, 0x903849 = 2, +1 = 6; else Field_State and Sprite_Current to ObjTrio record 1 and, with its +0x58 at 4 and +0x4A at 1, 0x67625C = the byte 0x6547AC[Rand() & 7], Sprite_Current back, +1 = 3 - otherwise it returns with Sprite_Current left on the member (docs/effect_2g.md section 7). Reached by EffectKind15_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E410
+name = "EffectKind15_Countdown"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E410..0x47E4AE (0x9F bytes), cdecl: bit 7: +1 = 9; 0x903849 at 1: as _WaitPose4; else 0x67625C down, at 1 or 0: 0x90384A = 2, Sprite_SetAnimation(1) on ObjTrio record 1, 0x67625C = 0x6547B8[Rand() & 3], +1 = 4. Reached by EffectKind15_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E4B0
+name = "EffectKind15_WaitCue3"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E4B0..0x47E4D9 (0x2A bytes), cdecl: bit 7: +1 = 9; 0x90384A at 3: +1 = 5. Reached by EffectKind15_States[4] and [8]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E4E0
+name = "EffectKind15_Cooldown"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E4E0..0x47E534 (0x55 bytes), cdecl: bit 7: +1 = 9; else 0x90384A = 0; the word 0x8034E6 at 0xFF: it is cleared and the count taken as 2, else 0x67625C; the count down into 0x67625C, at 1 or 0 0x903849 = 0 and +1 = 1. Reached by EffectKind15_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E540
+name = "EffectKind15_Hit"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E540..0x47E5A6 (0x67 bytes), cdecl: +9 = 0; bit 7: +1 = 9; else ObjTrio record 1's +0x124 bit 6 set, Sound_PlayEffect(0x20E) and Sprite_SetAnimation(0x57) on it, +1 = 7. Reached by EffectKind15_States[6]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E5B0
+name = "EffectKind15_WaitPose8"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E5B0..0x47E628 (0x79 bytes), cdecl: bit 7: +1 = 9; else Sprite_Current to ObjTrio record 1 and, with its +0x58 at 8 and +0x4A at 1, Sprite_SetAnimation(1), 0x67625C = 0x6547B8[Rand() & 3], Sprite_Current back, +1 = 8 - otherwise Sprite_Current left on the member. Reached by EffectKind15_States[7]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E630
+name = "EffectKind15_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E630..0x47E670 (0x41 bytes), cdecl: Sprite_SetAnimation(1) on ObjTrio record 1; bit 6 of +0x124 of the record Field_State names after it cleared; Sprite_Current back; Effect_Release. Reached by EffectKind15_States[9]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E680
+name = "EffectKind54_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E680..0x47E691 (0x12 bytes), cdecl: jmp [EffectKind54_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x54] (0x6554A0); hidden in 0x47DE50. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E6A0
+name = "EffectKind54_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E6A0..0x47E6B3 (0x14 bytes), cdecl: +9 = 0, +1 = 1. Reached by EffectKind54_States[0] and kind 0x67's table 0x6549EC[0] (E3B's dispatcher 0x482A00). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E6C0
+name = "EffectKind54_Arm"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E6C0..0x47E70C (0x4D bytes), cdecl: 0x90384B bit 7: +1 = 0xE; 0x90384A at 1: bit 6 of +0 of Sprite_Objects[+0xB] cleared (+0xB unchecked: ours aborts at 30 or more), +1 = 2. Reached by EffectKind54_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E710
+name = "EffectKind54_Cue"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E710..0x47E780 (0x71 bytes), cdecl: Sprite_Current to Sprite_Objects[+0xB]; bit 7: +1 = 0xE; 0x90384A at 2: Sprite_SetAnimation(3), +1 = 3; at 5: Sprite_SetAnimation(3), +1 = 0xA; Sprite_Current back. Reached by EffectKind54_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E790
+name = "EffectKind54_Strike"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E790..0x47E841 (0xB2 bytes), cdecl: Sprite_Current to the object; bit 7: +1 = 0xE; 0x903849 at 1: 0x90384B up, 0x903849 = 2, Sound_PlayEffect(0x20D), the record Sprite_Current names after it at +0x58 4 or below: the word 0x8034E6 = 0xFF, Sprite_SetAnimation(2), +1 = 7; else the object's +0x58 8 and +0x4A 1: Sprite_SetAnimation(4), +1 = 4; Sprite_Current back. Reached by EffectKind54_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E850
+name = "EffectKind54_WaitPose2"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E850..0x47E89D (0x4E bytes), cdecl: Sprite_Current to the object; bit 7: +1 = 0xE; its +0x58 2 and +0x4A 1: +1 = 5; Sprite_Current back. Reached by EffectKind54_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E8A0
+name = "EffectKind54_WaitPose8"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E8A0..0x47E8F4 (0x55 bytes), cdecl: as _WaitPose2 at +0x58 8: +1 = 8. Reached by EffectKind54_States[7]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E900
+name = "EffectKind54_Rearm"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E900..0x47E974 (0x75 bytes), cdecl: bit 7: +1 = 0xE; else the object's +0 bit 6 set, 0x90384A = 3, Sprite_SetAnimation(1) on it, +1 = 1. Reached by EffectKind54_States[5], [8] and [12]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E980
+name = "EffectKind54_Recoil"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E980..0x47E9DA (0x5B bytes), cdecl: Sprite_Current to the object; bit 7: +1 = 0xE; its +0x58 8 and +0x4A 1: Sprite_SetAnimation(4), +1 = 0xB; Sprite_Current back. Reached by EffectKind54_States[10]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47E9E0
+name = "EffectKind54_WaitPose2B"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47E9E0..0x47EA2D (0x4E bytes), cdecl: as _WaitPose2: +1 = 0xC. Reached by EffectKind54_States[11]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EA30
+name = "EffectKind54_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EA30..0x47EA88 (0x59 bytes), cdecl: the object's +0 bit 6 set, Sprite_SetAnimation(1) on it, Sprite_Current back, Effect_Release. Reached by EffectKind54_States[14]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EA90
+name = "EffectKind55_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EA90..0x47EAA1 (0x12 bytes), cdecl: jmp [EffectKind55_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x55] (0x6554A4); hidden in 0x47DE50. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EAB0
+name = "EffectKind55_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EAB0..0x47EACB (0x1C bytes), cdecl: +0x5D = 0, +0x5E = 0x1E, +1 up. Reached by EffectKind55_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EAD0
+name = "EffectKind55_Tick"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EAD0..0x47EB21 (0x52 bytes), cdecl: EffectKind55_DrawTime, EffectKind55_DrawCount; +0x5D down, below 0 (s8) 0x1D and +0x5E down; +0x5E below 0: both 0, +1 up - a clock of +0x5E seconds of 30 frames. Reached by EffectKind55_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EB30
+name = "EffectKind55_Finish"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EB30..0x47EB83 (0x54 bytes), cdecl: 0x90384B at 0x10 or more: bit 7 on 0x90384B and on 0x90384A; else on 0x90384B; Music_FadeOutStop(0xA), a tail jump to Effect_Release. Reached by EffectKind55_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EB90
+name = "EffectKind55_DrawTime"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EB90..0x47EC26 (0x97 bytes), cdecl: 0x586160(0x78, 0x38, 0x46, 0x14, 1); Crt_sprintf(0x904BA0, 0x654830, s8 +0x5E, s8 +0x5D * 100 / 30); Text_DrawFont12 at (0x7D, 0x3B); the text made a full stop and drawn at (0x95, 0x39) and (0x95, 0x3D). Reached by a call from EffectKind55_Tick. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EC30
+name = "EffectKind55_DrawCount"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EC30..0x47EC90 (0x61 bytes), cdecl: 0x586160(0xC8, 0xA0, 0x2E, 0x14, 1); Crt_sprintf(0x904BA0, Boss26Fx_CountFormat, the byte 0x90384B); Text_DrawFont12 at (0xCD, 0xA3); Text_DrawAt(0xE5, 0xA4, 0, 0xFF, 0x66A094). Catalog extent 0x70 (to the hidden dispatcher's end); this is the code's. Reached by a call from EffectKind55_Tick. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47ECA0
+name = "EffectKind57_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47ECA0..0x47ECB1 (0x12 bytes), cdecl: jmp [EffectKind57_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x57] (0x6554AC); hidden in 0x47EC30. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47ECC0
+name = "EffectKind57_Show"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47ECC0..0x47ECD7 (0x18 bytes), cdecl: EffectKind57_DrawRing; Game_AreaNumber not 2: +1 up. Reached by EffectKind57_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47ECE0
+name = "EffectKind57_Release"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47ECE0..0x47ECE4 (0x5 bytes), cdecl: jmp Effect_Release (Effect_StateRelease's code again). Reached by EffectKind57_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47ECF0
+name = "EffectKind57_DrawRing"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47ECF0..0x47EE97 (0x1A8 bytes), cdecl: a draw mode (Gpu_GetTPage(0, 2, 0x3C0, 0x100), dtd 1) committed (1, 0xC); sixteen semi-transparent POLY_G4s round (0xA0, 0x78), angle 0x100 k: inner (80 cos, 60 sin) >> 12, outer (240 cos, 180 sin) >> 12 (each s16), the previous angle's pair and this one's, black inside, white outside, Gfx_CommitPrim(1, 0x44); the first previous pair (240, 120), (400, 120). Reached by a call from EffectKind57_Show. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EEA0
+name = "EffectKind5A_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EEA0..0x47EEB1 (0x12 bytes), cdecl: jmp [EffectKind5A_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x5A] (0x6554B8); hidden in 0x47ECF0. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EEC0
+name = "EffectKind5A_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EEC0..0x47EF05 (0x46 bytes), cdecl: +0x34 = 0xA0000, +0x38 = 0x630000, +0x3C = AreaMap_Elevation(+0x34, +0x38)'s low word << 16, +1 up. Reached by EffectKind5A_States[0] and kind 0x42's table 0x65449C[0] (E2C's dispatcher 0x475CA0). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EF10
+name = "EffectKind5A_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EF10..0x47EF3A (0x2B bytes), cdecl: Area146_DrawGlowCylinder at the record's point (+0x34, +0x38, +0x3C copied to the stack). Reached by EffectKind5A_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EF40
+name = "EffectKind5B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EF40..0x47EF51 (0x12 bytes), cdecl: jmp [EffectKind5B_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x5B] (0x6554BC); hidden in 0x47ECF0. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EF60
+name = "EffectKind5B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EF60..0x47EFA7 (0x48 bytes), cdecl: the byte 0x93C34E + +0xB (area 75's two effect slots; unchecked, ours aborts at 2 or more) = the record's index ((record - Effect_Objects) sar 7); +0xA = 0x80, dword +0xC = 0, +6 = 0x1E, +0x5D = 0x80, +1 up. Reached by EffectKind5B_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EFB0
+name = "EffectKind5B_Glow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EFB0..0x47EFE2 (0x33 bytes), cdecl: +0xA plus the byte +0xC; dword +0xC = 0; EffectKind5B_DrawBeam(+6, 0) (+6 pushed as a whole register over a leftover; the callee reads its low word). Reached by EffectKind5B_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47EFF0
+name = "EffectKind5B_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47EFF0..0x47F037 (0x48 bytes), cdecl: +0x5D down 2; at 0 Effect_Release (and on); +0x5D & 0x1F 0: +6 up; EffectKind5B_DrawBeam(+6, 1). PSX twin 0x801F2DD8 (analysis/pairs_propagated.json, callers; AREA075.EMI's section, no sibling name). Reached by EffectKind5B_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47F040
+name = "EffectKind5B_DrawBeam"
+ret = "void"
+params = "unsigned length, unsigned abr"
+impl = "src/game/effect_2g.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47F040..0x47F2AC (0x26D bytes), cdecl: a texture window (0xD0, 0x40, 0x10, 0x10) built at Gfx_PacketNext by 0x5A7840, linked at (+0x34, +0x38) (1, 0xC); a POLY_FT4 whose corners are the point (x, z -/+ 0x8000, +0x3C + 0xE00000) and the ground at x - d (AreaMap_Elevation(x - d, z)'s low word << 16 + 0xE00000), d = (length & 0xFFFF) << 15, each projected by EffectGte_ProjectPoint with Sprite_Current read again; Gpu_GetClut(0xD0, 0x1E3), Gpu_GetTPage(0, 1, 0x2C0, 0x100), u from +0xA & 7, shade +0x5D, Gpu_SetSemiTrans(abr & 0xFF), linked (1, 0x48); the window (0, 0, 0x100, 0x100) linked (1, 0xC). PSX twin 0x801F2E64 (callers, AREA075.EMI, no sibling name). Reached by calls from EffectKind5B_Glow and _Fade. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47F2B0
+name = "EffectKind5D_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47F2B0..0x47F2C1 (0x12 bytes), cdecl: jmp [EffectKind5D_States + +1 * 4], unbounded; its states are catalog part 6 rows. Reached by Effect_KindHandlers[0x5D] (0x6554C4); hidden in 0x47F040. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47F5D0
+name = "EffectKind5E_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47F5D0..0x47F5E1 (0x12 bytes), cdecl: jmp [EffectKind5E_States + +1 * 4], unbounded; its states are catalog part 6 rows. A catalog part 6 row the cut does not list, taken as a dispatcher in the band. Reached by Effect_KindHandlers[0x5E] (0x6554C8). Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[func]]
+pc = 0x47FD80
+name = "EffectKind5F_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2G, capstone to the last instruction), 0x47FD80..0x47FD91 (0x12 bytes), cdecl: jmp [EffectKind5F_States + +1 * 4], unbounded; state 0 is Task_StartHold60, the rest catalog part 6 rows. Reached by Effect_KindHandlers[0x5F] (0x6554CC); hidden in 0x47FBE0. Fuzz only: no recorded route enters it (catalog reach columns empty, reach_dragon / reach_whelp traces). docs/effect_2g.md."
+
+[[data]]
+pc = 0x654758
+name = "EffectKind66_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind66_Run 0x47DBE0 by +1: _Start, _Open, _Show2, _Show3, _Show4, _Close; _Open steps +1 to 2, the rest is set from outside (area 135's code). The rectangles 0x654770 (data) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x654798
+name = "EffectKind18Sub20_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind18Sub20_Run 0x47DFD0 by +2: _Start, _WaitSet, _Lower, _WaitClear, _Raise (the states step +2 through 1..4 and back to 1). Bytes (0x6547AC, kind 0x15's waits) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x6547C0
+name = "EffectKind15_States"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind15_Run 0x47E2D0 by +1: _Start, _Begin, _WaitPose4, _Countdown, _WaitCue3, _Cooldown, _Hit, _WaitPose8, _WaitCue3, _End (the states set +1 to 1..9). EffectKind54_States follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x6547E8
+name = "EffectKind54_States"
+ctype = "unsigned long"
+count = 15
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind54_Run 0x47E680 by +1: _Start, _Arm, _Cue, _Strike, _WaitPose2, _Rearm, BareRet, _WaitPose8, _Rearm, BareRet, _Recoil, _WaitPose2B, _Rearm, BareRet, _End (the states set +1 to 1..5, 7, 8, 0xA..0xC and 0xE). EffectKind55_States follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x654824
+name = "EffectKind55_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind55_Run 0x47EA90 by +1: _Start, _Tick, _Finish. The format 0x654830 follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x65483C
+name = "EffectKind57_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind57_Run 0x47ECA0 by +1: _Show, _Release. EffectKind5A_States follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x654844
+name = "EffectKind5A_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind5A_Run 0x47EEA0 by +1: _Place, _Draw. EffectKind5B_States follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x65484C
+name = "EffectKind5B_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind5B_Run 0x47EF40 by +1: _Start, _Glow, _Fade (area 75 sets +1 = 2). Data (0x654858, read by 0x47F434) follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x654898
+name = "EffectKind5D_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind5D_Run 0x47F2B0 by +1: 0x47F2D0, 0x47F340, 0x47F3E0, 0x47F550 (catalog part 6), Effect_StateRelease. EffectKind5E_States starts at its sixth cell (0x6548AC, EffectKind5E_Run). The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x6548AC
+name = "EffectKind5E_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind5E_Run 0x47F5D0 by +1: 0x47F5F0, 0x47F610, 0x47F720 (catalog part 6), Effect_StateRelease. Bytes follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+[[data]]
+pc = 0x654904
+name = "EffectKind5F_States"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind5F_Run 0x47FD80 by +1: Task_StartHold60, 0x47FDC0 .. 0x480190 (catalog part 6 and E3A rows). E3A's dispatcher 0x4801F0 indexes the table from its eleventh cell 0x65492C. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
