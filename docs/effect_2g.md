@@ -9,7 +9,7 @@ starts no list of the cut has - the sub-kind's shared draw `0x47E120` and kind
 0x5E's dispatcher `0x47F5D0` (section 5). Each read to its last instruction
 with capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-@@FUZZ@@. **Fuzz only**: no recorded route enters any of the 58 (section 9).
+232,000 rounds, 0 mismatches; 78 of 80 controls refused by a count, the two others equivalent mutants whose near variants are refused. **Fuzz only**: no recorded route enters any of the 58 (section 9).
 
 | Kind | Functions | Reached through |
 |---|--:|---|
@@ -198,7 +198,74 @@ The fuzz lists each with those masks; ours passes the values the callee reads
 
 ## 4. The fuzz (`effect_2g_fuzz.cpp`)
 
-@@FUZZSECTION@@
+One `Run` under `BOF3X_SHADOW=effect_2g`, effect mode (`g.effect`; kinds 0x15,
+0x18, 0x54, 0x55, 0x57, 0x5A, 0x5B, 0x5D, 0x5E, 0x5F, 0x66, each clone its own),
+4,000 rounds a function (`BOF3X_E2G_ONLY=<name>` runs the clones whose name
+holds it). Shapes: 56 `kEffect` (the eleven dispatchers' `state_span` - or the
+sub-kind's `sub_span` - their table's length, section 3), two `kCall`
+(`EffectKind66_DrawPiece`, `EffectKind5B_DrawBeam`). The eleven tables are
+`DataTable`s, swapped for recorders on both sides. **Regions** beyond effect
+mode's standard ones: kind 0x15's wait byte `0x67625C` (1) and area 75's cells
+`0x93C340` (0x14, the two effect slots among them). Everything else the band
+touches is standard: the records, `Sprite_Current`, `Field_State`, `ObjTrio`
+(record 1's `+0x58`, `+0x4A`, `+0x124`), `Sprite_Objects`, the counters
+`0x903849..0x90384B` (in `0x903840..`), the timer word `0x8034E6`,
+`Cond_ByteFE`, `Game_AreaNumber`, `MsgBoxState` and the message word (the
+message cells), `Prim_VertexScratch`, the text scratch `0x904BA0`, the packet
+buffer.
+
+**Callees**: the effect-standard rows for `Effect_Release` (clears `+0..+4`),
+`Flags_Test` (0 or 1), `MoveCmd_TestFB`, `Sound_PlayEffect`,
+`Music_FadeOutStop`, `Rand`, `AreaMap_Elevation`, `Math_Sin` / `Cos`,
+`MsgBox_FrameTask`, `Text_DrawFont12` (the string hashed), `Text_DrawAt`,
+`Area146_DrawGlowCylinder` (the point hashed), `Gte_RotTransPers4` (screen
+points filled), `Gte_PrimDepths4_10`, `Prim_SetTexture`, the `Gpu_*`,
+`Gfx_CommitPrim` (moves the cursor), `0x586160`, `0x5A7840` (12 bytes of the
+primitive filled). **Re-listed in the group**: its own five no-argument
+callees by name as `kPhase` (`EffectKind66_Message`, `EffectKind18Sub20_Draw`,
+`EffectKind55_DrawTime` / `_DrawCount`, `EffectKind57_DrawRing`) and the two
+draws with the masks of section 3; `Window_DrawFrame` and `Window_DrawOutline`
+with section 3's masks; `Sprite_SetAnimation` logging `Sprite_Current` and
+`Field_State` at the call (kinds 0x15 and 0x54 point them at the record to
+animate - control 27 is refused by it); `Crt_sprintf` logging the fourth word
+when the format is the clock's (the standard row logs three), writing up to
+seven letters as the standard one does; `EffectGte_ProjectPoint` with the
+point hashed (a stack local) and out filled with floats (E1D's re-listing);
+`MapView_LinkPrimAt` moving the cursor two times in three (E1A's), since the
+sub-kind's draw and the beam read it again after the call.
+
+**Seeds** (per function, after the harness's per-round fill): every record's
+`+0xB` below 30 (the objects kind 0x54 indexes) or below 2 for
+`EffectKind5B_Start` (area 75's slots); the count `0x90384B` with bit 7 a third
+of the time, else at 0xF..0x11, 0, 0x7F or random; the cue at 0, 1, 2, 3, 5,
+0x81; the hit at 1 (two in five), 0, 2; the timer word at 0xFF half the time;
+the wait byte at 0..3, 0xFF; `ObjTrio` record 1's animation word at 4 or 8 and
+its `+0x4A` at 1 most of the time (and, for kind 0x15's two pose waits, both
+set with no hit half the time); `+9` at 0, 1, 7, 8, 9, 0xFF; kind 0x66's `+6`
+zero half the time, the message word 0xFFFF a third, `MsgBoxState` at 2 and 7;
+the height `+0x3C` at the sub-kind's two bounds and their neighbours, and the
+signs; the object's `+0x58` at 2, 4, 5, 8 and `+0x4A` at 1; kind 0x55's frames
+and seconds at 0, 1, 0x1D / 0x1E, 0x7F..0x81, 0xFF; `Game_AreaNumber` 2 or
+not; kind 0x5B's `+0x5D` at 2, 0x20..0x22, 0x42. **Arguments**: the piece below
+four and the place below three over random upper bytes; the beam's length at
+0, 1, 0x1E, 0x20, 0x7F, 0x80, 0xFFFF over leftovers, its blend 0..3 or random.
+**Disturbance** (the group's, from the hash only): `+9`, `+0x5D`, `+0x5E`,
+`+0x3C`, `+0xA` / `+0xB`, the word `+0x58` of `Sprite_Current` (the object kind
+0x54 reads after the sound), `Field_State` among `ObjTrio`'s records,
+`Game_AreaNumber`.
+
+**Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_2g`,
+exit 0): 232,000 rounds over 58 functions, 962,771 calls to the stand-ins,
+**0 mismatches**; 24,777 bytes of state in 47 regions. Every entry of the
+eleven tables reached (each handler recorder 251..2,019 calls; `BareRet` 819,
+`Effect_StateRelease` 1,783, `Task_StartHold60` 435), `Effect_Release`
+17,074, `Rand` 3,624, `MoveCmd_TestFB` 3,266, `Window_DrawOutline` 4,107.
+
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+688 self-test lines, every one 0 mismatches, `inject: 7231 ours, 0 left
+original`; `effect_2g` there 232,000 rounds, 962,439 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`**: `'*'` exit 0, 688 self-test lines, all 0 mismatches.
+Neither run died silently.
 
 ## 5. What the cut and the tool said, settled
 
@@ -238,7 +305,107 @@ The fuzz lists each with those masks; ours passes the values the callee reads
 
 ## 6. Controls
 
-@@CONTROLS@@
+Planted behind `BOF3X_E2G_CTL=<n>` in a scratch copy of
+`effect_2g.cpp` (scratch `plant.py`, `ctl.sh`: every plant behind the switch, one on at a time,
+rebuild once, run each under `BOF3X_E2G_ONLY=<filter>`, restore, rebuild; the
+committed file has no switch). Counts are rounds refused of 4,000 per
+function run, in this worktree; every refused run exited 3.
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|--:|---|---|---|
+| 1 | `_Run` | every dispatcher to the next entry of its table | EffectKind66_Run 4000; EffectKind18Sub20_Run 4000; EffectKind15_Run 4000; EffectKind54_Run 4000; EffectKind55_Run 4000; EffectKind57_Run 4000; EffectKind5A_Run 4000; EffectKind5B_Run 4000; EffectKind5D_Run 4000; EffectKind5E_Run 4000; EffectKind5F_Run 4000 |
+| 2 | `EffectKind66_Start` | message word 0xFFFE | EffectKind66_Start 4000 |
+| 3 | `EffectKind66_Open` | open ends at 7 | EffectKind66_Open 576 |
+| 4 | `EffectKind66_` | outline h = 5 b (Open, Close) | EffectKind66_Open 1706; EffectKind66_Close 1726 |
+| 5 | `EffectKind66_` | outline x + 1 (Open, Close) | EffectKind66_Open 1975; EffectKind66_Close 2030 |
+| 6 | `EffectKind66_Show` | frame w and h swapped (Show2..4) | EffectKind66_Show2 1972; EffectKind66_Show3 1978; EffectKind66_Show4 2031 |
+| 7 | `EffectKind66_Show2` | show 2: piece (1, 1) | EffectKind66_Show2 4000 |
+| 8 | `EffectKind66_Show3` | show 3: place 1 | EffectKind66_Show3 4000 |
+| 9 | `EffectKind66_Show4` | show 4: piece 3 at place 0 | EffectKind66_Show4 4000 |
+| 10 | `EffectKind66_Close` | close: +9 down 2 | EffectKind66_Close 3437 |
+| 11 | `EffectKind66_Close` | close: releases at 1 | EffectKind66_Close 1104 |
+| 12 | `EffectKind66_Message` | message: state 7 step 0xB | EffectKind66_Message 752 |
+| 13 | `EffectKind66_DrawPiece` | piece: v + du | EffectKind66_DrawPiece 2989 |
+| 14 | `EffectKind66_DrawPiece` | piece: CLUT y 0x1E9 | EffectKind66_DrawPiece 4000 |
+| 15 | `EffectKind66_DrawPiece` | piece: y + w | **not refused** (exit 0) |
+| 16 | `EffectKind18Sub20_Start` | sub 0x20 start: -0x178 | EffectKind18Sub20_Start 2642 |
+| 17 | `EffectKind18Sub20_WaitSet` | wait set: Cond_ByteFE 3 | EffectKind18Sub20_WaitSet 4000 |
+| 18 | `EffectKind18Sub20_Lower` | lower: < -0x180 | EffectKind18Sub20_Lower 600 |
+| 19 | `EffectKind18Sub20_WaitClear` | wait clear: sound before the test move | EffectKind18Sub20_WaitClear 1348 |
+| 20 | `EffectKind18Sub20_Raise` | raise: > -0x90 | EffectKind18Sub20_Raise 598 |
+| 21 | `EffectKind18Sub20_Draw` | draw: second texture 0x23800125 | EffectKind18Sub20_Draw 4000 |
+| 22 | `EffectKind18Sub20_Draw` | draw: y - 0x2750 | EffectKind18Sub20_Draw 4000 |
+| 23 | `EffectKind18Sub20_Draw` | draw: second quad vertices 1 and 2 swapped | EffectKind18Sub20_Draw 4000 |
+| 24 | `EffectKind18Sub20_Draw` | draw: Sprite_Current not read again for the second quad | EffectKind18Sub20_Draw 2477 |
+| 25 | `EffectKind15_Start` | kind 0x15 start: wait 1 | EffectKind15_Start 4000 |
+| 26 | `EffectKind15_Begin` | begin: animation 0x11 | EffectKind15_Begin 2669 |
+| 27 | `EffectKind15_Begin` | begin: animated before Sprite_Current moves to the member | EffectKind15_Begin 2632 |
+| 28 | `EffectKind15_WaitPose4` | wait pose 4: the next wait entry | EffectKind15_WaitPose4 1094 |
+| 29 | `EffectKind15_WaitPose4` | wait pose 4: Sprite_Current put back on the failed test (the latent kept) | EffectKind15_WaitPose4 719 |
+| 30 | `EffectKind15_Countdown` | countdown: at 2 or below | EffectKind15_Countdown 327 |
+| 31 | `EffectKind15_WaitCue3` | wait cue 3: +1 = 4 | EffectKind15_WaitCue3 368 |
+| 32 | `EffectKind15_Cooldown` | cooldown: the mark gives 3 | EffectKind15_Cooldown 659 |
+| 33 | `EffectKind15_Cooldown` | cooldown: the cue left | EffectKind15_Cooldown 2262 |
+| 34 | `EffectKind15_Hit` | hit: sound 0x20F | EffectKind15_Hit 2669 |
+| 35 | `EffectKind15_Hit` | hit: +9 cleared after the end test | EffectKind15_Hit 1131 |
+| 36 | `EffectKind15_WaitPose8` | wait pose 8: +1 = 7 | EffectKind15_WaitPose8 1436 |
+| 37 | `EffectKind15_End` | end: bit 7 cleared too | EffectKind15_End 1965 |
+| 38 | `EffectKind15_End` | end: Field_State not read again after the call | EffectKind15_End 12 |
+| 39 | `EffectKind54_Start` | kind 0x54 start: +9 = 1 | EffectKind54_Start 4000 |
+| 40 | `EffectKind54_Arm` | arm: bit 7 cleared too | EffectKind54_Arm 201 |
+| 41 | `EffectKind54_Cue` | cue: 5 goes to 0xB | EffectKind54_Cue 356 |
+| 42 | `EffectKind54_Strike` | strike: animation below 4 | EffectKind54_Strike 81 |
+| 43 | `EffectKind54_Strike` | strike: sound 0x20C | EffectKind54_Strike 1058 |
+| 44 | `EffectKind54_Strike` | strike: +1 = 5 on the pose | EffectKind54_Strike 72 |
+| 45 | `EffectKind54_Strike` | strike: the object as computed before the sound, not Sprite_Current read again | EffectKind54_Strike 14 |
+| 46 | `EffectKind54_WaitPose` | wait pose: +0x4A not 0 | EffectKind54_WaitPose2 75; EffectKind54_WaitPose8 97; EffectKind54_WaitPose2B 94 |
+| 47 | `EffectKind54_Rearm` | rearm: cue 4 | EffectKind54_Rearm 2664 |
+| 48 | `EffectKind54_Recoil` | recoil: +1 = 0xC | EffectKind54_Recoil 134 |
+| 49 | `EffectKind54_End` | end: the next object animated | EffectKind54_End 3821 |
+| 50 | `EffectKind55_Start` | clock start: 29 seconds | EffectKind55_Start 4000 |
+| 51 | `EffectKind55_Tick` | tick: frames back to 0x1E | EffectKind55_Tick 1117 |
+| 52 | `EffectKind55_Tick` | tick: ends at 0 seconds | EffectKind55_Tick 529 |
+| 53 | `EffectKind55_Finish` | finish: above 16 | EffectKind55_Finish 358 |
+| 54 | `EffectKind55_Finish` | finish: fade 0xB | EffectKind55_Finish 4000 |
+| 55 | `EffectKind55_DrawTime` | clock: hundredths / 29 | EffectKind55_DrawTime 2507 |
+| 56 | `EffectKind55_DrawTime` | clock: the lower dot at 0x3E | EffectKind55_DrawTime 4000 |
+| 57 | `EffectKind55_DrawCount` | count: Text_DrawAt count 0xFE | EffectKind55_DrawCount 4000 |
+| 58 | `EffectKind55_DrawCount` | count: box style 0 | EffectKind55_DrawCount 4000 |
+| 59 | `EffectKind57_Show` | ring: stays in area 3 | EffectKind57_Show 2399 |
+| 60 | `EffectKind57_Release` | ring release: +1 cleared instead | EffectKind57_Release 4000 |
+| 61 | `EffectKind57_DrawRing` | ring: inner y 61 sin | EffectKind57_DrawRing 4000 |
+| 62 | `EffectKind57_DrawRing` | ring: vertex 2 shade 1 | EffectKind57_DrawRing 4000 |
+| 63 | `EffectKind57_DrawRing` | ring: inner x not truncated to s16 | EffectKind57_DrawRing 4000 |
+| 64 | `EffectKind5A_Place` | place: z 0x640000 | EffectKind5A_Place 4000 |
+| 65 | `EffectKind5A_Place` | place: ground not sign-extended | **not refused** (exit 0) |
+| 66 | `EffectKind5A_Draw` | glow: the height from +0x3E | EffectKind5A_Draw 4000 |
+| 67 | `EffectKind5B_Start` | beam start: index sar 6 | EffectKind5B_Start 3780 |
+| 68 | `EffectKind5B_Start` | beam start: +6 = 0x1F | EffectKind5B_Start 4000 |
+| 69 | `EffectKind5B_Glow` | glow: blend 1 | EffectKind5B_Glow 4000 |
+| 70 | `EffectKind5B_Fade` | fade: +6 up at & 0xF | EffectKind5B_Fade 15 |
+| 71 | `EffectKind5B_Fade` | fade: Sprite_Current not read again after the release | EffectKind5B_Fade 22 |
+| 72 | `EffectKind5B_DrawBeam` | beam: d << 14 | EffectKind5B_DrawBeam 3506 |
+| 73 | `EffectKind5B_DrawBeam` | beam: ground + 0xD00000 | EffectKind5B_DrawBeam 4000 |
+| 74 | `EffectKind5B_DrawBeam` | beam: v 0x11 | EffectKind5B_DrawBeam 3969 |
+| 75 | `EffectKind5B_DrawBeam` | beam: blend & 0x7F | EffectKind5B_DrawBeam 322 |
+| 76 | `EffectKind5B_DrawBeam` | beam: the second window 0xFF high | EffectKind5B_DrawBeam 4000 |
+| 77 | `EffectKind5B_DrawBeam` | beam: first corner z - 0x7FFF | EffectKind5B_DrawBeam 4000 |
+| 78 | `EffectKind5B_DrawBeam` | beam: u from +0xB | EffectKind5B_DrawBeam 3513 |
+| 79 | `EffectKind66_DrawPiece` | piece: bottom edge from x (near 15) | EffectKind66_DrawPiece 4000 |
+| 80 | `EffectKind5A_Place` | place: ground sign-extended from its byte (near 65) | EffectKind5A_Place 3987 |
+
+**78 of 80 refused by a count.** Two were not, both **equivalent mutants**:
+control 15 (`EffectKind66_DrawPiece`'s bottom edge from `y + w` instead of
+`y + h`) - the three place records in `.data` (`0x654770`) each have w = h, so
+no input tells them apart; its near variant 79 (the edge from x) is refused.
+Control 65 (`EffectKind5A_Place`'s ground word not sign-extended before
+`<< 16`) - the shift drops the upper half, so sign- and zero-extension give
+the same dword; its near variant 80 (extended from the byte) is refused.
+Every other control was refused on the first run. The weakest counts are
+the ones a rare path carries: 38 (`Field_State` not read again after
+`Sprite_SetAnimation` - only the group's disturbance case 6 moves it, 12
+rounds), 45 (the object read before the sound instead of `Sprite_Current`
+after it, 14), 70 and 71 (kind 0x5B's fade at its release, 15 and 22).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
