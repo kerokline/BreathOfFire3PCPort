@@ -93,6 +93,10 @@ void FillResult(bool first_word) {
 }
 U DamageEffect(const U*, U answer) {
     FillResult(false);
+    // BattleObj_HitReceive reads Field_State again after the call: moved to
+    // another member half the time (louder than the disturbance's 1 in 96)
+    const U n = bh::Noise();
+    if (n & 1) bh::SetPointer(bh::at::kMemberCurrent, bh::PartyOf(static_cast<unsigned char>((n >> 1) % 3)));
     return (answer & 0xFFFF0000u) | Change(bh::Noise());
 }
 U ResultEffect(const U*, U answer) {
@@ -224,7 +228,7 @@ void SeedEO(unsigned k) {
 // and a sign below, at or above 0.
 void ArgsEO(unsigned k, U* a) {
     if (k == kPlayUnlessNone) {
-        a[0] = (a[0] & 0xFFFF0000u) | (Flip() ? 0xFFFFu : bh::Next() & 0xFFFF);
+        a[0] = (a[0] & 0xFFFF0000u) | (Flip() ? 0xFFFFu : (bh::Next() % 6 == 0 ? bh::Next() & 0xFFFF : BH_PICK(0x00FF, 0x12FF, 0xFF00, 0xFFFE, 0x0102)));
     } else if (k == kHighRoundUp) {
         if (Flip()) a[0] &= 0xFFFF0000u;
         a[1] = BH_PICK(0, 1, 0x7FFFFFFF, 0x80000000u, 0xFFFFFFFFu, 0xFFFF0000u, 0x10000);
@@ -469,6 +473,7 @@ void SeedOBJ(unsigned k) {
     case kSpecialCue:
         if (bh::Often()) Sprite_Current[9] = 1;
         MemberByte(0xBA, static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 50, 99, 100, 0xFF) : bh::Next()));
+        bh::SetRandHint(F()[0xBA]);   // Rand's remainder at the percentage, one either side, a third of the time
         break;
     case kSpecialWait:
         Bit(Sprite_Current, 0x40);
