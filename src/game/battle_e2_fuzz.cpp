@@ -388,6 +388,15 @@ void SeedOp(U base) {
     s[9] = Byte({1, 1, 2, 0});
     e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
     if (bh::Half()) Mem(at::kFight)[0] = 0;
+    // a dispatcher's other state bytes inside its table (the harness drew its
+    // own): a plant reading the wrong byte lands on another entry, a count
+    switch (base) {
+    case 0x436270: bh::OtherStates(3, 2); break;
+    case 0x436620: bh::OtherStates(2, 2); break;
+    case 0x436BC0: bh::OtherStates(3, 5); break;
+    case 0x436F00: bh::OtherStates(3, 3); break;
+    default: break;
+    }
     if (base == 0x436330 && bh::Half()) {
         SetLong(s + 0x18, move_script::Long(s + 0x34) + move_script::Long(s + 0xC));
         SetLong(s + 0x1C, move_script::Long(s + 0x38) + move_script::Long(s + 0x10));
