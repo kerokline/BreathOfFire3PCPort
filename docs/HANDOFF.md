@@ -211,7 +211,6 @@ frames of 25,000 calls) are history; `r8_*` and older too.
      - 37 / 54 accented enemy names over the banner's 8 bytes (pair codes
        or one-byte accents would fix it);
      - the title art.
-   - **The launcher's language box** knows only `en` / `original`.
    - **Furigana** is idea I21, for its own branch.
 6. **Localisation: the exe's remaining Chinese**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §6 the open list,
