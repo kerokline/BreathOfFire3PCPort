@@ -1,6 +1,6 @@
 # Round twelve: the field modes and the battle engine, cut into fourteen groups
 
-**Status:** IN PROGRESS (2026-09-29) - running as [`takeover-queue-round12.md`](takeover-queue-round12.md), wave one merged; written 2026-09-28 night as a plan and a cut, not scheduled
+**Status:** MEASURED (2026-09-29) - ran as [`takeover-queue-round12.md`](takeover-queue-round12.md), both waves merged; written 2026-09-28 night as a plan and a cut, not scheduled
 past the owner's word of 2026-09-28 ("field modes and battle as round
 twelve, the area overlays as round thirteen"). Listed as
 [`IDEAS.md`](IDEAS.md) I27 (this round) and I28 (round thirteen, section

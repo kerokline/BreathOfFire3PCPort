@@ -1,15 +1,17 @@
 # Round twelve: the field modes and the battle engine, staged and merged
 
-**Status:** IN PROGRESS (2026-09-29) - wave one, the battle side, is merged
-and measured: 316 functions in seven groups, 6,237 -> 6,553 ours, every
+**Status:** MEASURED (2026-09-29) - the takeover is complete: **654
+functions in fourteen groups over two waves, 6,237 -> 6,891 ours**, every
 group 0 mismatches, every control refused or an equivalent with a refused
-near variant, and **the first live A/Bs a takeover round has passed on its
-own code** (section 5). Wave two, the field side, is staged (its harness is
-merged) and not started. The plan and the cut are
+near variant (1,513 of 1,529 refused), and the tip live-checked on the
+attract sequence and five recorded routes - frame hashes identical to the
+original but frame 0, pictures at their baselines (sections 5 and 9). The
+plan and the cut are
 [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) (IDEAS
 I27); the tool [`band-rows.md`](band-rows.md); the harnesses
 [`boss_harness.md`](boss_harness.md) section 10 and
-[`scenario_harness.md`](scenario_harness.md) section 7.
+[`scenario_harness.md`](scenario_harness.md) section 7. The debts are
+section 7; round thirteen is [`takeover-queue-round13.md`](takeover-queue-round13.md).
 
 ## 1. Set-up (2026-09-28 night)
 
@@ -161,11 +163,11 @@ with the boss set-up and its kinds among them.
   failing pairs do, into the default dragon - makes it answer 0, the
   failing pairings' answer, and not the 0xFF the group suggested. **Owed:
   the owner's check in game**, once a save has the gene and a full party.
-- **The recipes wave one still wants** (plan section 5): the other
+- **FS's reserve list** (`field_s.md` L2: a fourth entry garbles it) is **not reachable**: six characters at most, three in the party (the owner, 2026-09-29).
+- **The Config screen under a language overlay** has not been seen in game through ours (`Config_DrawRowLabel`, FC1).
+- **The recipes the round still wants** (plan section 5): the field side's - an event that gives zenny, one that costs HP, steering in a crowded town, a jump, the shop's equip and sell screens, a save point - and the battle side's: the other
   commands of the cross, a battle lost, an item's battle use, a formation
   change. 208 of wave one's 316 functions are entered by neither route (108 by one or both).
-- **A pixel A/B of the two routes** wants the display awake for the
-  original side's grabs.
 
 ## 7. Debts
 
@@ -188,17 +190,79 @@ with the boss set-up and its kinds among them.
    `BattleObj_Fall`'s unchecked character byte; BE6's L1 (fixed, DIV-0063).
 4. **The 33 other owned starts without an `entries_logic.txt` line**: the
    dragon route showed what one costs. Audit them before the next route.
-5. **Housekeeping**: the ten `phase-3/round12-*` branches and the agents'
+5. **The pointer scan** of section 8 over all fourteen bands, and its two cases folded into `tools/band_rows.py`.
+6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
+7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'
    worktrees under `.claude/worktrees/` are merged and can go; the
    controls scripts live in the session-`6ae930a8` scratchpad
    (`<group>/`), a Temp folder.
 
-## 8. Wave two: the field side
+## 8. Wave two: the field side (staged 04:50 from `61be26e`, merged 06:30..08:45)
 
-Staged, not started. FH is merged; the seven briefs want the wave-one
-template's battle paragraphs swapped for the field's, `<TIP>` filled, and
-the addendum's field half: FE2's eight and FO's and FS's one unlisted
-functions, `0x5254A0` and `0x536EC0`, the six starts that are cases. FH's
-merge order, callee first: FE2, FO, FE1, FC3, FS, FC2, FC1. FH's new
-stand-ins have only passed start-up registration; they first run in these
-groups' fuzzes. The field side has no live route (plan section 5).
+`61be26e` is wave one's tip with DIV-0063 (section 6). The briefs were
+wave one's with the field paragraphs and what wave one had learned
+(`analysis/round12_wave2_brief.md`); merges by `queue2.sh`, callee groups
+first where they had reported.
+
+| Group | Merge | Functions | Rounds | Controls | Note |
+|---|---|--:|--:|---|---|
+| FC2 | `b7faa70` | 44 (40 + 4) | 264,000 | 166 of 166 | four effect-pool kinds; three `Effect_KindHandlers` dispatchers and a state-table entry were in no list and the tool did not flag them |
+| FS | `c63e350` | 53 (52 + 1) | 212,000 | 183 of 188; 5 equivalent, variants refused | `0x58CAE0` after `0x58C7A0` (0x338 bytes, not 1440); DIV-0011's retargeted call inside `0x581300` holds; the confirm and cancel cells were in no standard region |
+| FE2 | `7fc5a32` | 51 (44 - 1 + 8) | 306,000 | 132 of 135 by a count, 2 by a crash of ours with variants by a count, 1 equivalent | DIV-0023 amended for four more functions; `SC11_THEIRS` -> `SC11_OURS` |
+| FC3 | `7402249` | 63 (57 + 1 + 5) | 189,000 | 160 of 160 | five `FieldCore_State2Steps` dispatchers in no list; `Field_ObjectBestDirection` keeps the farthest step for an approach (the 09-22 reading corrected) |
+| FE1 | `893036d` | 45 | 270,000 | 148 of 149; 1 equivalent, variant refused | 18 of the 45 have only Capcom's callers; the harness's `Zenny_Add` stand-in has its test backwards |
+| FO | `78b2f2f` | 41 (44 - 6 + 3) | 82,000 | 103 of 105 (2 by a hang); 2 equivalent, variants refused | six cases of `MoveScript_Group*`; one `boss_harness.cpp` row `BH_THEIRS` -> `BH_OURS` (the coordinator accepted it: ownership only); DIV-0029 noted |
+| FC1 | `0e51ec7` | 41 | 246,000 | 235 of 237; 2 equivalent, variants refused | effect-record kinds and `Config_DrawRowLabel`; DIV-0015 and DIV-0017 noted (their patches are read in place) |
+
+Round tip `0e51ec7`, **6,891 ours** (`inject: 6891 ours, 0 left
+original`); `d76f0d8` on top of it is round thirteen's plan, docs and
+tools only. Every merge: the group's shadow exit 0, `'*'` exit 0,
+`ledger_check` 0 errors. Wave two: **338 functions, 1,140 controls
+planted, 1,129 refused**, 1,569,000 rounds, seven docs (`field_c1.md` ..
+`field_s.md`). Every field group's inject is after
+`ScenarioHarnessFh_Inject`, whose self-test copies functions of FS, FE2,
+FC3, FE1 and FO from the image.
+
+**What wave two found out:**
+
+- **`tools/band_rows.py` misses starts reached only through a pointer in
+  `.data`**: FC2's four and FC3's five dispatchers were printed as "0 not
+  listed", and `0x578A40` (FO; found by the round-thirteen session, checked
+  by the coordinator and by FO) as a function. A scan for dwords pointing
+  into each band, and for a cut start whose only reference is a jump
+  table's cell, is owed over all fourteen bands.
+- **Seven field starts of the cut are jump-table cases**, not six:
+  `0x578A40` is case 0 of `MoveScript_Group9`.
+- **The plan's "the callers are ours" holds for the battle side only**:
+  18 of FE1's 45 are called by Capcom's code alone.
+- **FH's stand-ins met their first use** and every group re-listed some:
+  masks too wide (FS about 25 callees), stack pointers logged by value,
+  `Sprite_ObjectAt` answering outside its range, `Zenny_Add`'s test
+  backwards.
+- **A function taken stops a harness row that lists it as Capcom's**:
+  FO's and FE2's `_THEIRS` rows. The next round's brief should say so.
+
+## 9. The live checks at the round's tip (2026-09-29, 08:45..10:53)
+
+From a launcher copy of `0e51ec7`'s build, as section 5's. The hashes ran
+unfocused; the pictures with the display held on (`keep_display.py`).
+
+| Check | Frame hash, original against ours (original against original identical in each) | Picture A/B |
+|---|---|---|
+| Attract, against `r9_orig` | frame 0 only, of 10,318 | - |
+| `combat.txt` | frame 0 only, of 2,622 | 5 of 43 identical, 15 pixels at most - the baseline |
+| `shop.txt` | frame 0 only, of 3,159 | 5 of 35 identical - the baseline; one frame 21,191 pixels, the save list's slot 0 (the recipe runner's swap) |
+| `worldMapAndAreaTransition.txt` | frame 0 only, of 2,146 | 7 of 35 identical - the baseline; one frame 1,015 pixels, the compass needle (DIV-0044) |
+| `dragonTransform.txt` | frame 0 only, of 4,330 | 5 of 73 identical, 248 pixels at most |
+| `whelpBoss.txt` | frame 0 only, of 13,183 | 18 of 109 identical, 204 pixels at most |
+
+The two recipes' first picture pass grabbed a browser window that covered
+the game from about 10:01 (every original-side shot); the rows are the
+second pass, the original side played again and compared with ours of the
+first. The 248 pixels of the dragon route's `f04200` were not looked into.
+The owner's saves were checked after the runs: slot 0 byte-identical to
+its copy of the night before.
+
+**Still fuzz-only**: what no route enters. The field side has no route of
+its own (plan section 5); FC2's and FS's functions are entered by none of
+the five.
