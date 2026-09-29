@@ -246,6 +246,7 @@
 #include "game/effect_1d.h"
 #include "game/effect_1a.h"
 #include "game/effect_1c.h"
+#include "game/effect_2f.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -949,7 +950,12 @@ void InjectAll() {
                                 // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight is E1C's); no module patches bytes inside its 53 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
-    DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
+    Effect2F_Inject();          // round 13 group E2F (0x47B7D0..0x47DBD1: effect kinds 0x4F, 0x50, 0x51, 0x52, 0x53,
+                                // 0x56 and kind 0x4E's disc): its clones' calls re-aimed at the scenario harness's
+                                // recorders, its eight state tables swapped for the fuzz only; after
+                                // ScenarioHarnessEkh_Inject (none of its eight is E2F's); no module patches bytes
+                                // inside its 62 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    DrawPool_Grow();           // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
 }
