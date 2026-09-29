@@ -456,7 +456,7 @@ void Seed(unsigned run_k) {
             if (sh::Half()) r[0xA] = k == kE9Start ? r[0xA] : static_cast<unsigned char>(sh::Next() % 2);
             if (sh::Half()) r[0xB] = 0;
             if (sh::Half()) r[6] = 6;
-            if (sh::Half()) SetLong(r + 0x14, static_cast<std::int32_t>(sh::Next() % 0x200));   // a small rise: the top within a step
+            if (sh::Half()) SetLong(r + 0x14, sh::Half() ? 0 : static_cast<std::int32_t>(sh::Next() % 0x200));   // a small rise or none: the top within a step
         }
         break;
     default: break;
