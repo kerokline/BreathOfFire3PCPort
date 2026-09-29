@@ -162,6 +162,16 @@ about 440 each, the steps 1,190..3,060, `EffectKind14_States`' three about
   `0x9044D4`, 0x80 each), MessagePools to `0x803980`, the style colours
   `0x80B7A8` + 0x400.
 
+**`BOF3X_SHADOW='*'`** (this worktree's build, no ini: narrow): exit 0,
+`inject: 6943 ours, 0 left original` (6,895 at the base plus these 48), 980
+lines of `0 MISMATCHES`, `effect_1b`'s the same 288,000 rounds (2,414,210 calls,
+another stream after the other shadows). **With `BOF3X_WIDE=1`**: `effect_1b`
+alone exit 0, 0 mismatches (none of its 48 holds a widescreen operand); `'*'`
+exit 3 on `battle_e7` (`GeneWin_ListSlideOut`, `_List2SlideOut`,
+`_List3SlideOut`, 1,832 rounds) - the known build-directory / DIV-0041 fault of
+[`takeover-queue-round13.md`](takeover-queue-round13.md) section 11, in files
+this group does not touch; reported, not fixed.
+
 **Controls** (scratch `controls.py`: all 48 mutants planted on unique anchors,
 one build, each function's fuzz run alone with `BOF3X_E1B_ONLY=<name>`, the
 source restored and rebuilt): **48 of 48 refused by a count** (exit 3), from
