@@ -10,11 +10,11 @@ named the remainder this pass labels).
 ## 0. The answer in one paragraph
 
 At `61be26e` the catalogue leaves **1,343 unlabelled starts** (part 7) and
-**891 boot-resident** ones (part 2) - 2,234 in all, 296 KiB. Read by the new
+**891 boot-resident** ones (part 2) - 2,234 in all, 289 KiB by extent. Read by the new
 `tools/label_runs.py`, **2,047 of them are functions to take and 187 are
 switch cases** (a `.text` jump table's targets inside another function, not
-functions). Of the 2,047, **1,070 are one subsystem nobody had counted: the
-effect objects** - the 187 kinds of `Effect_KindHandlers` (`0x655350`, read
+functions). Of the 2,047, **1,070 are one subsystem, the largest in the
+remainder: the effect objects** - the 187 kinds of `Effect_KindHandlers` (`0x655350`, read
 by `Effect_RunObjects`), each an entry that jumps through its own state
 table on a byte of `Sprite_Current`, with the states laid out after the
 entry, and kind 0x18's 105-program table `EffectKind18_States` whose code
