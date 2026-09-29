@@ -10,10 +10,10 @@ namespace area_w3d {
 
 // --- engine callees nobody owns (raw; the rebinding pass names them) ---
 // 0x46D710: copies the running object's script (+0x54 count, +0x50 source) to
-// 0x8C5D80, calls 0x46C200 and 0x46C430, sets +9 = 0x10 (read only as far as
+// 0x8C5D80, calls EffectKind30_ShardsInit (0x46C200) and _SparksInit (0x46C430), sets +9 = 0x10 (read only as far as
 // area 135's spawn state 0 calls it, void (void)).
 constexpr std::uint32_t kEngine46D710 = 0x46D710;
-// 0x46D770: calls 0x46C310 then tail-jumps to 0x46C4B0 (void (void)).
+// 0x46D770: calls EffectKind30_ShardsStep (0x46C310) then tail-jumps to _SparksDraw (0x46C4B0) (void (void)).
 constexpr std::uint32_t kEngine46D770 = 0x46D770;
 
 namespace at {
