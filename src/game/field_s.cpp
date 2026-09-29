@@ -28,8 +28,8 @@
 //   ShopResist_Open        0x5837F0 0x82    SharedList_DrawMember   0x585500 0x2D3
 //   ShopResist_PickMember  0x583880 0x196   SharedList_Sort         0x5857E0 0x10
 //   ShopResist_PickBit     0x583A20 0x1BA   SharedList_Compact      0x5857F0 0x4E
-//   ShopResist_Confirm     0x583BE0 0xF0    SharedList_SortCostDown       0x585840 0x76
-//   ShopResist_Close       0x583CD0 0x5D    SharedList_SortCostUp     0x5858C0 0x76
+//   ShopResist_Confirm     0x583BE0 0xF0    SharedList_SortCostDown 0x585840 0x76
+//   ShopResist_Close       0x583CD0 0x5D    SharedList_SortCostUp   0x5858C0 0x76
 //   Equip_ChooseSlot       0x58C7A0 0x338   SharedList_DrawItemCount 0x585940 0xB9
 //   Equip_ChooseItem       0x58CAE0 0x251
 //

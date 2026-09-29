@@ -254,6 +254,8 @@ every state handler `kMenu`; the helpers `kCall`; `PartyForm_Swap` and
   area among the moves, and `Flags_Clear` moving it (Rest_PlaceParty reads it
   again after).
 
+`BOF3X_SHADOW='*'` headless on this build: exit 0, every self-test line 0 mismatches (field_s's: 8,079,957 calls under `'*'`, a different stream), `inject: 6606 ours, 0 left original`. `tools/ledger_check.py`: 0 errors.
+
 What the fuzz does not reach: the tables past their counts (seeded inside:
 section 10); the real draws (every draw is a recorder, so what the screens
 look like is untested here - section 9).
