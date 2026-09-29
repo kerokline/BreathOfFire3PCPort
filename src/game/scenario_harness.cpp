@@ -814,7 +814,8 @@ void Fix(int chapter) {
 // the packet cursor into the packet buffer, AreaMap_Bytes into the area block,
 // the area header's width and height below 0x20 and its offset word below
 // 0x100 (so a cell index from a bounded x, z stays near the 8 KiB compared),
-// the script cursor into the script buffer.
+// the script cursor into the script buffer, MapView_Row / MapView_Column
+// inside the view's 0x38 x 0x1C.
 void FixField() {
     SetPointer(at::kPacketNext, g_packets + (Next() & 0x1F0));
     SetPointer(at::kAreaBytes, Mem(at::kAreaBlock + 0x800));
@@ -823,6 +824,10 @@ void FixField() {
     header[1] &= 0x1F;
     header[3] = 0;
     g_cursor[0] = g_script + (Next() & 0x3F);
+    // the view's row and column as the view keeps them (MapView_Cells is 0x38
+    // rows of 0x1C; its readers wrap an index once, not twice)
+    move_script::SetWord(Mem(0x929F24), Next() % 0x38);   // MapView_Row
+    move_script::SetWord(Mem(0x929F20), Next() % 0x1C);   // MapView_Column
 }
 // The span draws of kSprite and kMenu, before the group's seed.
 void DrawSpans(const Group& g, const Clone& c) {

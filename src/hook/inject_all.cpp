@@ -188,6 +188,7 @@
 #include "game/scena_sc2.h"
 #include "game/scena_sc13.h"
 #include "game/scena_sx2.h"
+#include "game/scenario_harness_fh.h"
 #include "game/area_w1e.h"
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
@@ -785,6 +786,10 @@ void InjectAll() {
                                 // Gazer's effect task, 0x43C480..0x4406D7): its clones' calls re-aimed at the boss
                                 // harness's recorders, the kinds' and tasks' tables swapped for the fuzz only; no
                                 // module patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    ScenarioHarnessFh_Inject(); // round 12 group FH: the scenario harness's field mode proved on Capcom's code, a copy
+                                // of each of thirteen field functions against the original in place - injects
+                                // nothing, takes nothing; after every scenario group, so their random streams are
+                                // the ones they had (docs/scenario_harness.md section 7.7)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
