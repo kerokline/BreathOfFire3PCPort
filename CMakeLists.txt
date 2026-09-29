@@ -495,7 +495,9 @@ add_library(bof3x SHARED
   src/game/battle_e2.cpp
   src/game/battle_e2_fuzz.cpp
   src/game/battle_e3.cpp
-  src/game/battle_e3_fuzz.cpp)
+  src/game/battle_e3_fuzz.cpp
+  src/game/field_s.cpp
+  src/game/field_s_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

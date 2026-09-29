@@ -230,6 +230,7 @@
 #include "game/battle_e4.h"
 #include "game/battle_e2.h"
 #include "game/battle_e3.h"
+#include "game/field_s.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -838,6 +839,13 @@ void InjectAll() {
                                 // boss harness's recorders, its sub-tables swapped for the fuzz only; after
                                 // BossHarnessEh_Inject, whose self-test copies 0x441A10 / 0x441A30; no module patches
                                 // bytes inside its 49 (DIVERGENCE.md, cheats.cpp)
+    FieldS_Inject();            // round 12 group FS (the shop overlay's remainder 0x57FF80..0x5859F9: the field save's
+                                // confirm, the rest sequence's first two states, the party formation, the resistance
+                                // shop, the shared ability list; the equip screen's choosers 0x58C7A0, 0x58CAE0): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its five dispatch tables
+                                // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
+                                // 0x5811B0 and 0x5845E0; no module patches bytes inside its 53 (DIVERGENCE.md,
+                                // cheats.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

@@ -77715,3 +77715,554 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE3): 0x442E40 jmp by +2: 0x442E60, 0x442F10, 0x442F80; bytes follow. docs/battle_e3.md."
+
+# --- round twelve group FS (field_s, 2026-09-29): docs/field_s.md ---
+
+[[func]]
+pc = 0x57FF80
+name = "FieldSave_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x57FF80..0x580004 (0x85 bytes): FieldSave_States[3]: the title box, message 0x9F, the slots unlit, Menu_YesNo; an answer steps on (0x929F0B: sound 0x104, the step up) or back (0x106, the step down). PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D50D0 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x580310
+name = "Rest_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580310..0x58037A (0x6B bytes): Rest_States[0]: story flag 0x77 set - state 6 and script message 0xEF; else the flag set (not in chapter 0xE with the row flag 5), Transition_Start(0), the state up. docs/field_s.md."
+
+[[func]]
+pc = 0x580380
+name = "Rest_PlaceParty"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580380..0x580557 (0x1D8 bytes): Rest_States[1]: the transition over, the black screen; areas 0xBB, 0xC1 (0xBF in chapter 0xE with row flag 5) only step on; else Music_Track 0xFF, a place kind by area (0x85 clears flag 0x77), Field_ScriptFlags2 low bits cleared, Party_Count / Field_PartyLoad, each member placed from 0x663FD8 by kind and slot, the view reset, Area_RunPlacement of the area descriptor, the state up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D62EC callers. docs/field_s.md."
+
+[[func]]
+pc = 0x580A50
+name = "PartyForm_OpenStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580A50..0x580A5D (0xE bytes): PartyForm_States[0]: jmp [PartyForm_OpenSteps + 4 * 0x929F02], unchecked. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE17C table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580A60
+name = "PartyForm_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580A60..0x580B75 (0x116 bytes): PartyForm_OpenSteps[0]: the reserve 0x6BC894 (joined records not in the party) and its count 0x6BC897, the flag pairs from 0x6BC88C (the reserve flags written past the pairs from its fifth entry), the cursor and picks reset, counter 3, Transition_Start(2), the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE1B8 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580B80
+name = "PartyForm_FadeWait"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580B80..0x580BA0 (0x21 bytes): PartyForm_OpenSteps[1]: the transition over, Transition_Start(3), the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE380 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580BB0
+name = "PartyForm_OpenWait"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580BB0..0x580BD2 (0x23 bytes): PartyForm_OpenSteps[2]: PartyForm_Draw; the transition over, step 0 and the state up two. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE3C4 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580BE0
+name = "PartyForm_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580BE0..0x580C14 (0x35 bytes): PartyForm_States[1]: the backdrop, PartyForm_DrawSliding, the counter down; at 0 counter 3 and the state up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE414 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580C20
+name = "PartyForm_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580C20..0x580E76 (0x257 bytes): PartyForm_States[2]: the screen and help line; the column (0xA000) and row (0x1000 / 0x4000) cursors cut to the party count or the reserve count; confirm picks or swaps (PartyForm_Swap), cancel drops a pick or leaves (state up, Transition_Start(2)). PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE480 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x580E80
+name = "PartyForm_LeaveStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580E80..0x580E8D (0xE bytes): PartyForm_States[3]: jmp [PartyForm_LeaveSteps + 4 * 0x929F02], unchecked. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE808 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580E90
+name = "PartyForm_LeaveFade"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580E90..0x580EB7 (0x28 bytes): PartyForm_LeaveSteps[0]: while the transition runs a tail jump to PartyForm_Draw; then the black screen, counter 2, the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE844 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580EC0
+name = "PartyForm_LeaveBlack"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580EC0..0x580ED9 (0x1A bytes): PartyForm_LeaveSteps[1]: the black screen, the counter down; at 0 the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE8A0 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x580EE0
+name = "PartyForm_Reload"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x580EE0..0x5811AB (0x2CC bytes): PartyForm_LeaveSteps[2]: PartySet_Load of the new list; one member (0x904152 and flag 0x77 clear or area 0xBB, not 0x85) or the members as loaded; the leader stepped by 0x6640F8 when it became +0x89 2; area 0x85 places from 0x6640C8, 0x5C at a fixed cell with AreaMap_Elevation; the view; Transition_Start(3), the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DE8FC callers. docs/field_s.md."
+
+[[func]]
+pc = 0x5811B0
+name = "PartyForm_End"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5811B0..0x5811D8 (0x29 bytes): PartyForm_LeaveSteps[3]: the transition over, the counter 0, mode 1, state and step 0, 0x929F0F 1. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DED14 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x5811E0
+name = "PartyForm_DrawSliding"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5811E0..0x5812F2 (0x113 bytes): the formation screen at the slide counter: the members panels and numbers, PartyForm_DrawReserve, the title box, each offset by 40, 45 or 8 times the counter. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DED58 call. docs/field_s.md."
+
+[[func]]
+pc = 0x581300
+name = "PartyForm_DrawReserve"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x581300..0x581584 (0x285 bytes): the reserve panels from (x, y): Port_DroppedCall(x, y, 0x12, 0x15), then per reserve record the box, portrait, name, level, status text and HP / AP pairs with their colours, and 0x574400 tags. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DEF00 call-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x581590
+name = "PartyForm_Swap"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x581590..0x58171E (0x18F bytes): the two picks exchanged, answering 0xFF: in one column the bytes swapped (0x58BD50); across, a record with +0xB bit 1 refused (its id answered), else sound 0x103 and the ids exchanged in both party lists and the reserve. docs/field_s.md."
+
+[[func]]
+pc = 0x581720
+name = "PartyForm_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x581720..0x5818AE (0x18F bytes): the formation screen: backdrop, title box, the members panels and numbers, the reserve, the pick cursor box (0x664078 cells) and the blinking cursor box. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DF59C call. docs/field_s.md."
+
+[[func]]
+pc = 0x5836E0
+name = "ShopBrowse_InitWindows"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5836E0..0x58376F (0x90 bytes): WindowRecords 0, 21 and 1 set up (called by 0x583370, ShopMode_States[9]s step). docs/field_s.md."
+
+[[func]]
+pc = 0x583770
+name = "ShopBrowse_OpenDetail"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583770..0x5837D4 (0x65 bytes): WindowRecords 2 and 3 opened, record 2 +0xA from 0x803191 (called by 0x5833E0 on a confirm). docs/field_s.md."
+
+[[func]]
+pc = 0x5837F0
+name = "ShopResist_Open"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5837F0..0x583871 (0x82 bytes): ShopResist_States[0]: sound 0x102 at counter 6, the members and bits sliding in, the counter down; at 0 cursor and cells 0, the state up, step 0. docs/field_s.md."
+
+[[func]]
+pc = 0x583880
+name = "ShopResist_PickMember"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583880..0x583A15 (0x196 bytes): ShopResist_States[1]: the member cursor 0x929F06 over Party_Count(0); confirm refuses a record whose +0x1D is not 0 (notice, state up six) or steps on; cancel to the farewell (state 6). PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7454 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x583A20
+name = "ShopResist_PickBit"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583A20..0x583BD9 (0x1BA bytes): ShopResist_States[2]: the bit cursor 0x929F0D over eight with the hand; confirm refuses when 10 x level is above the zenny (notice, state up five) or steps on; cancel back. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D76C8 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x583BE0
+name = "ShopResist_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583BE0..0x583CCF (0xF0 bytes): ShopResist_States[3]: message 0x6D and Menu_YesNo; yes takes 10 x level zenny and goes to the grant (state up two), no back two. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7970 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x583CD0
+name = "ShopResist_Close"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583CD0..0x583D2C (0x5D bytes): ShopResist_States[4]: sliding out over seven frames, then mode 1, state and step 0. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7AF4 gap67. docs/field_s.md."
+
+[[func]]
+pc = 0x583D30
+name = "ShopResist_Grant"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583D30..0x583DDA (0xAB bytes): ShopResist_States[5]: the messages to 0xF, then the record +0x1D = 1 << bit (byte shift), Char_RecalcStats, the state down four. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7B84 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x583DE0
+name = "ShopResist_Farewell"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583DE0..0x583E26 (0x47 bytes): ShopResist_States[6]: the messages to 0x10, then counter 0 and the state down two. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7CD8 gap67. docs/field_s.md."
+
+[[func]]
+pc = 0x583E30
+name = "ShopResist_Notice"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583E30..0x583E93 (0x64 bytes): ShopResist_States[7]: the messages to 0x929F0F, then the state down six. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7D58 gap67. docs/field_s.md."
+
+[[func]]
+pc = 0x583EA0
+name = "ShopResist_DrawBits"
+ret = "void"
+params = "unsigned member, int x, int y, unsigned colour, unsigned highlight"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x583EA0..0x584005 (0x166 bytes): the bits box: Menu_DrawBox / Menu_DrawBorder, the eight names (system 0xDE + k) and the price (10 x level, a word) per row, the colour dword over the colour arguments upper bytes. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D7E2C call-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584010
+name = "ShopResist_DrawMembers"
+ret = "void"
+params = "unsigned sliding"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584010..0x584112 (0x103 bytes): the title box, the members panels lit by +0x1D, the money box, offset by the counter when sliding (a word over the callers esi). PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D8054 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x584120
+name = "ShopResist_Message"
+ret = "unsigned char"
+params = "unsigned char *index, unsigned end"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584120..0x58417C (0x5D bytes): system message 0x63 + *index until the counter runs out or a pad bit is pressed; then counter 0x3C, *index up, al 1 when it reached ends byte. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D81B8 call-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584190
+name = "SharedList_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584190..0x5841A8 (0x19 bytes): SharedList_States[0]: SharedList_Setup, the choice 0, the state up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DF8A8 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x5841B0
+name = "SharedList_Menu"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5841B0..0x584453 (0x2A4 bytes): SharedList_States[1]: the two-way choice 0x6BC8C4; 1 wants key item 0xF or item 0x58 of category 0 (the use step) and opens windows 2 and 3; 0 opens window 4 on the shared list; cancel closes to state 4. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DF8E0 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x584460
+name = "SharedList_MoveStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584460..0x58446D (0xE bytes): SharedList_States[2]: jmp [SharedList_MoveSteps + 4 * 0x929F02], unchecked. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DFCAC table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584470
+name = "SharedList_UseItem"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584470..0x5845DC (0x16D bytes): SharedList_MoveSteps[0]: a yes / no on 0x929F0B with the hand; yes: Inventory_Remove(0, 0x58, 1) and windows 2 and 3 opened, the step up; no or cancel: the state down. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DFCE8 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x5845E0
+name = "Menu_StepAfterTimer"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5845E0..0x5845F4 (0x15 bytes): SharedList_MoveSteps[1] and 0x6641B0[0]: the counter down, at 0 the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DFF24 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584600
+name = "SharedList_PickMember"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584600..0x5847E2 (0x1E3 bytes): SharedList_MoveSteps[2]: the joined record cursor 0x6BC8B8 (0x8000 / 0x2000), its name to text record 0; confirm opens window 4 and steps on, cancel back. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801DFF68 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x5847F0
+name = "SharedList_PickSlot"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5847F0..0x5849A2 (0x1B3 bytes): SharedList_MoveSteps[3]: the members slot (record +0x7E, ten); confirm steps on, pad bit 4 moves the slots ability to the shared list (AbilityList_Add(id, 0, 1, 0)), cancel back. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E0228 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x5849B0
+name = "SharedList_PickShared"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5849B0..0x584BAC (0x1FD bytes): SharedList_MoveSteps[4]: the shared list scrolled nine rows a page; confirm swaps the entry and the slot (both empty buzzes), cancel back. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E04D0 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584BB0
+name = "SharedList_SortStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584BB0..0x584BBD (0xE bytes): SharedList_States[3]: jmp [SharedList_SortSteps + 4 * 0x929F02], unchecked. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E0814 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584BC0
+name = "SharedList_SortOpen"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584BC0..0x584C0F (0x50 bytes): SharedList_SortSteps[0]: the counter down; at 0 window 6 opened and the step up. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E0850 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584C10
+name = "SharedList_SortMenu"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584C10..0x584D26 (0x117 bytes): SharedList_SortSteps[1]: three rows; 0 steps on to the arranging, 1 and 2 SharedList_Sort(row); cancel closes window 6, the state down two. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E08DC table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584D30
+name = "SharedList_Arrange"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584D30..0x584F69 (0x23A bytes): SharedList_SortSteps[2]: two shared list entries picked and swapped by hand, the list scrolled as SharedList_PickShareds. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E0A94 table-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x584F90
+name = "SharedList_Setup"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x584F90..0x58508B (0xFC bytes): the joined records to 0x6BC8BC and count 0x6BC8C5, WindowRecords 0, 1 and 21 set up, window 5 without key item 0xF. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E0E58 call. docs/field_s.md."
+
+[[func]]
+pc = 0x585090
+name = "SharedList_DrawList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x585090..0x5854F8 (0x469 bytes): window kind handler (0x59BE50): the shared lists box, Menu_ListScroll, the visible rows by Menu_DrawSkillRow, the title and count boxes, 0x591AC0s count, the frame pieces, the scroll bar. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E100C gap74. docs/field_s.md."
+
+[[func]]
+pc = 0x585500
+name = "SharedList_DrawMember"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x585500..0x5857D2 (0x2D3 bytes): window kind handler (0x59BEA0): a records ten slots by Menu_DrawSkillRow, its name, two piece lists by +0xD bits, +0xD high nibble counted down, the frame pieces. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E15F0 gap74. docs/field_s.md."
+
+[[func]]
+pc = 0x5857E0
+name = "SharedList_Sort"
+ret = "void"
+params = "unsigned how"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5857E0..0x5857EF (0x10 bytes): jmp [SharedList_Sorts + 4 * (arg & 0xFF)], unchecked, the argument left for the entry. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E1A58 call-anchored. docs/field_s.md."
+
+[[func]]
+pc = 0x5857F0
+name = "SharedList_Compact"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5857F0..0x58583D (0x4E bytes): SharedList_Sorts[0]: the shared lists empty entries bubbled to its end by 0x58BD50, 127 passes. docs/field_s.md."
+
+[[func]]
+pc = 0x585840
+name = "SharedList_SortCostDown"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x585840..0x5858B5 (0x76 bytes): SharedList_Sorts[1]: compacted, then bubble-sorted by the abilities byte +0x12, largest first. docs/field_s.md."
+
+[[func]]
+pc = 0x5858C0
+name = "SharedList_SortCostUp"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x5858C0..0x585935 (0x76 bytes): SharedList_Sorts[2]: compacted, then sorted by the byte +0x12, smallest first. docs/field_s.md."
+
+[[func]]
+pc = 0x585940
+name = "SharedList_DrawItemCount"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x585940..0x5859F8 (0xB9 bytes): window kind handler (0x59C260): the box, label 0x66A118, Inventory_Count(0, 0x58, 0) in the 12 px font, three piece lists. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801E1D38 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x58C7A0
+name = "Equip_ChooseSlot"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x58C7A0..0x58CAD7 (0x338 bytes): the field menus Equipment state 5 (0x66739C [5]): the slot (0..5) and member cursors, the slots item and help word, confirm to the item list, pad bit 4 takes an item off (Inventory_Add, Char_RecalcStats), cancel back two; a five-case jump table at +0x324. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D5C08 callers. docs/field_s.md."
+
+[[func]]
+pc = 0x58CAE0
+name = "Equip_ChooseItem"
+ret = "void"
+params = "void"
+impl = "src/game/field_s.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FS, capstone to the last instruction), 0x58CAE0..0x58CD30 (0x251 bytes): the field menus Equipment state 6 (0x66739C [6]): the item list scrolled nine rows a page with the preview 0x58D640, the top and cursor kept at 0x939880 / 0x9398A0; confirm applies (0x58D570), cancel back. In no cut row: the code after 0x58C7A0 (band_rows flag), reached through 0x6673B4. docs/field_s.md."
+
+[[data]]
+pc = 0x663FB8
+name = "Rest_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by 0x580300 (ShopMode_States[10]) by 0x929F01, unchecked: seven code words (0x580310, 0x580380, then 0x580560..0x580610, nobodys), then a 0 dword; Rest_Begin sets state 6. docs/field_s.md."
+
+[[data]]
+pc = 0x66409C
+name = "PartyForm_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by 0x580A40 (ShopMode_States[6]) by 0x929F01, unchecked: 0x580A50, 0x580BE0, 0x580C20, 0x580E80; PartyForm_OpenSteps follows. docs/field_s.md."
+
+[[data]]
+pc = 0x6640AC
+name = "PartyForm_OpenSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by PartyForm_OpenStep by 0x929F02, unchecked: 0x580A60, 0x580B80, 0x580BB0 (OpenWait leaves the state); PartyForm_LeaveSteps follows. docs/field_s.md."
+
+[[data]]
+pc = 0x6640B8
+name = "PartyForm_LeaveSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by PartyForm_LeaveStep by 0x929F02, unchecked: 0x580E90, 0x580EC0, 0x580EE0, 0x5811B0 (End leaves); data follows. docs/field_s.md."
+
+[[data]]
+pc = 0x6641BC
+name = "ShopResist_States"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by 0x5837E0 (ShopMode_States[5]) by 0x929F01, unchecked: 0x5837F0..0x583E30; the states set are 0..7 (PickMember up six from 1); the cost format follows. docs/field_s.md."
+
+[[data]]
+pc = 0x664254
+name = "SharedList_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by 0x584180 (ShopMode_States[7]) by 0x929F01, unchecked: 0x584190, 0x5841B0, 0x584460, 0x584BB0, ShopTrade_Close; SharedList_MoveSteps follows. docs/field_s.md."
+
+[[data]]
+pc = 0x664268
+name = "SharedList_MoveSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by SharedList_MoveStep by 0x929F02, unchecked: 0x584470, 0x5845E0, 0x584600, 0x5847F0, 0x5849B0; SharedList_SortSteps follows. docs/field_s.md."
+
+[[data]]
+pc = 0x66427C
+name = "SharedList_SortSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by SharedList_SortStep by 0x929F02, unchecked: 0x584BC0, 0x584C10, 0x584D30; the list title follows. docs/field_s.md."
+
+[[data]]
+pc = 0x664298
+name = "SharedList_Sorts"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FS): jumped through by SharedList_Sort by its arguments byte, unchecked: 0x5857F0, 0x585840, 0x5858C0 (SharedList_SortMenu passes rows 1 and 2). docs/field_s.md."
