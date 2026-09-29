@@ -20,6 +20,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr:: for the constants rebound to their names
+
 namespace event_ops {
 
 namespace at {
@@ -73,9 +75,9 @@ constexpr std::uint32_t kTargetZ = 0x90385C;         // Scratch_Swap
 // Functions nobody owns, and other groups' of this round - raw addresses.
 namespace fn {
 constexpr std::uint32_t kEncounterArea = 0x5317F0;   // void(): 0x937F82 from the area table 0x660A90
-constexpr std::uint32_t kExitGateway = 0x531820;     // u8(): an exit from 0x660AB8 / 0x660B08
+constexpr std::uint32_t kExitGateway = bof3::addr::Field_GatewayExit;     // u8(): an exit from 0x660AB8 / 0x660B08
 constexpr std::uint32_t kExitFromCell = 0x531AF0;    // void(): an exit from the cell's list
-constexpr std::uint32_t kCellAroundLarge = 0x531120; // u8(u8): Field_CellAround for a sprite with +0x70
+constexpr std::uint32_t kCellAroundLarge = bof3::addr::Field_CellAroundLarge; // u8(u8): Field_CellAround for a sprite with +0x70
 constexpr std::uint32_t kCellHook = 0x56D7A0;        // int(x, z): the chapter's +0x10, then 0x56E670
 constexpr std::uint32_t kSetCell = 0x579F00;         // void(short x, short z, u8): AreaMap byte store
 constexpr std::uint32_t kPartyVisible = 0x591F30;    // u8(u8, u8): moves Sprite_Current

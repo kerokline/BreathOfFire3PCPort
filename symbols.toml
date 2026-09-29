@@ -78042,7 +78042,7 @@ ret = "void"
 params = "unsigned amount"
 impl = "src/game/field_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29, round twelve group FE1, 0x5307C0..0x5307F9 (0x3A bytes): cdecl: Sound_PlayEffect(0x106), Crt_sprintf(Text_Records, Area08_MessageFormat, amount), Msg_OpenSystem(5), Field_Request 2, Zenny_Add(amount, 0). 21 E8 sites (18 of the Field_ActionBySet handlers, Field_PassageTake, Field_ContentTake, FC2's 0x46D180). The sibling's Field_GiveZenny 0x801B6E50 (names/functions.toml), verified by reading: the same five steps. docs/field_e1.md."
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x5307C0..0x5307F9 (0x3A bytes): cdecl: Sound_PlayEffect(0x106), Crt_sprintf(Text_Records, Area08_MessageFormat, amount), Msg_OpenSystem(5), Field_Request 2, Zenny_Add(amount, 0). 21 E8 sites (17 in Capcom's 0x51C270..0x5251C6, Field_CellPickup, Field_PassageTake, Field_ContentTake, FC2's 0x46D180). The sibling's Field_GiveZenny 0x801B6E50 (names/functions.toml), verified by reading: the same five steps. docs/field_e1.md."
 
 [[func]]
 pc = 0x531120

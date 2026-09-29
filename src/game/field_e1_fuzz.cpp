@@ -186,6 +186,14 @@ U FxSprintf(const U* a, U) {
     dst[n] = 0;
     return n;
 }
+// Text_DrawAt: the text pointer compared as a value (the pool's words are a
+// region, so a wrong message id shows) and its first 16 bytes noted where
+// they are readable (the regions or the image).
+U FxText(const U* a, U answer) {
+    const auto* const p = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[4]));
+    if (sh::InRegions(p, 16) || (a[4] >= 0x401000u && a[4] + 16 <= 0x93F000u)) sh::NoteBytes(p, 16);
+    return answer;
+}
 // Item_NamePtr: a name in the harness's text buffer (Field_ContentTake copies
 // 16 bytes from it).
 U FxName(const U*, U answer) { return Key(sh::Text() + (answer & 0xF0)); }
@@ -229,7 +237,7 @@ const sh::Callee kCallees[] = {
     {"0x52CFE0", at::kDrawSprite, at::kDrawSprite, 4, {kU8, kAll, kU16, kU16}, kG, 0, 0, {}, &FxSprite, nullptr, true},
     {"0x52CED0", at::kKindTotal, at::kKindTotal, 0, {}, kG, 0, 0, {}, &FxTotal, nullptr, true},
     // standard entries re-listed with the width the callee reads
-    {FE1_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kAll}, kG, 0, 0, {0, 0, 0, 0, 16}, nullptr, nullptr, true},
+    {FE1_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kAll}, kG, 0, 0, {}, &FxText, nullptr, true},
     {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll, 0, kAll}, kG, 0, 0, {0, 16, 0}, &FxSprintf, nullptr, true},
     {FE1_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kAll, kU8}, kG, 0, 0, {}, nullptr, nullptr, true},
     {FE1_OURS(Sprite_EnsureAnimation), 1, {kU8}, kF, 0, 0, {}, nullptr, nullptr, true},
@@ -279,6 +287,7 @@ const sh::Region kRegions[] = {
     {0x904CE0, 0x40},      // Text_Records' first two (the zenny printed, a content's name)
     {0x939A28, 4},         // the blink byte
     {0x7E1BE0, 8},         // Cond_ByteFF 0x7E1BE2 (area 0xBD's gateway)
+    {0x803580, 0x400},     // MessagePools' first 0x200 offset words (the panel messages' ids; empty at start-up)
 };
 
 // What the functions read again after a call, moved by the harness's
@@ -350,7 +359,7 @@ void Seed(unsigned k) {
         SetWord(ObjTrio + 0x3E, sh::Next() % 0x400);
         break;
     case kFormAction:
-        Field_InputHeld = static_cast<unsigned short>(sh::Half() ? 0 : sh::Next());
+        Field_InputHeld = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 2, 0x8000, sh::Next()));
         fs[0x137] = static_cast<unsigned char>(sh::Next() & 1);
         break;
     case kPassage:

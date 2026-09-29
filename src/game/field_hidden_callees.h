@@ -27,6 +27,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr:: for the constants rebound to their names
+
 namespace field_hidden {
 
 namespace at {
@@ -68,7 +70,7 @@ constexpr unsigned kKindStride = 0x8C;
 // Nobody's (see above).
 constexpr std::uint32_t kTargetAhead = 0x51C390;
 constexpr std::uint32_t kSpawnAtCell = 0x524870;
-constexpr std::uint32_t kFoundZenny = 0x5307C0;
+constexpr std::uint32_t kFoundZenny = bof3::addr::Field_GiveZenny;   // 0x5307C0, round twelve FE1
 constexpr std::uint32_t kClearCell = 0x5728D0;
 
 using Handler = void (__cdecl*)();
