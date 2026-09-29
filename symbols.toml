@@ -13766,7 +13766,7 @@ ret = "unsigned long"
 params = "void"
 impl = "src/game/battle_misc.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x44AAD0..0x44AE12 (0x343 bytes) + jump table 0x44AE14 (20 dwords) + index bytes 0x44AE64 (0x26): the four rows of 16 at 0x8C5600 + (byte +0xF0 of the enemy 0x939AD8) * 0x8C; opcodes 0..8 EnemyAI_CondPartyFlag masks 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80; 9 / 0xA / 0x24 acting kind 0x904B35 4 / 1 / 1 with word +0x108 non-zero; 0x16 / 0x17 byte +0x92 bits 3 / 7; 0x18 byte +0xAA zero; 0x21..0x23 masks 1, 2, 4; 0x25 u16 +0xA4 not above s16 +0x108; the once-rows through 0x44B2C0 / 0x44B3A0 / 0x44B2E0, the rest 0x44B3A0 only; then 0x44B920, its eax returned. The sibling's EnemyAI_TurnCheck 0x80098BB0 (BATTLE.EMI#15, hypothesis there) opcode for opcode. Only caller 0x436908. Combat route: 8 calls."
+evidence = "disasm 2026-09-23, 0x44AAD0..0x44AE12 (0x343 bytes) + jump table 0x44AE14 (20 dwords) + index bytes 0x44AE64 (0x26): the four rows of 16 at 0x8C5600 + (byte +0xF0 of the enemy 0x939AD8) * 0x8C; opcodes 0..8 EnemyAI_CondElement masks 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80; 9 / 0xA / 0x24 acting kind 0x904B35 4 / 1 / 1 with word +0x108 non-zero; 0x16 / 0x17 byte +0x92 bits 3 / 7; 0x18 byte +0xAA zero; 0x21..0x23 masks 1, 2, 4; 0x25 u16 +0xA4 not above s16 +0x108; the once-rows through 0x44B2C0 / 0x44B3A0 / 0x44B2E0, the rest 0x44B3A0 only; then 0x44B920, its eax returned. The sibling's EnemyAI_TurnCheck 0x80098BB0 (BATTLE.EMI#15, hypothesis there) opcode for opcode. Only caller 0x436908. Combat route: 8 calls."
 
 [[func]]
 pc = 0x5171A0

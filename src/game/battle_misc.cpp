@@ -60,11 +60,11 @@ const Callees kOriginals = {
     Fn<U __cdecl(U, U, U)>(0x591E50),
     Fn<U __cdecl(U, U, U)>(0x57DA70),
     As<U (__cdecl*)()>(Window_FreeCurrent),
-    Fn<U __cdecl(U)>(0x44B320),
+    Fn<U __cdecl(U)>(bof3::addr::EnemyAI_CondElement),
     Fn<U __cdecl(U, U)>(0x44B2C0),
-    Fn<U __cdecl(U, U)>(0x44B3A0),
-    Fn<U __cdecl(U, U, U)>(0x44B2E0),
-    Fn<F0>(0x44B920),
+    Fn<U __cdecl(U, U)>(bof3::addr::EnemyAI_ApplyAction),
+    Fn<U __cdecl(U, U, U)>(bof3::addr::EnemyAI_SetRowDone),
+    Fn<F0>(bof3::addr::EnemyAI_DedupQueue),
     As<U (__cdecl*)()>(Sprite_UpdateScreenA),
     Fn<F0>(0x588F00),
     As<U (__cdecl*)()>(Battle_InitActorContext),
@@ -550,13 +550,13 @@ void FireRow(U actor, U row_address, U row) {
 // names a script by its byte +0xF0; the row is 16 bytes at kAiScripts + script
 // * 0x8C + i * 16, its byte 0 the opcode, through the index table 0x44AE64
 // and the jump table 0x44AE14:
-//   0..8          EnemyAI_CondPartyFlag(1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80)
+//   0..8          EnemyAI_CondElement(1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80)
 //                 al set: fire once, the enemy read again after the test
 //   9             kActingKind 4 and the enemy's word +0x108 non-zero: fire once
 //   0xA           kActingKind 1 and word +0x108 non-zero: fire once
 //   0x16 / 0x17   byte +0x92 bit 3 / bit 7: fire once
 //   0x18          byte +0xAA zero: fire once
-//   0x21..0x23    EnemyAI_CondPartyFlag(1 / 2 / 4): EnemyAI_ApplyAction only
+//   0x21..0x23    EnemyAI_CondElement(1 / 2 / 4): EnemyAI_ApplyAction only
 //   0x24          kActingKind 1 and word +0x108 non-zero: EnemyAI_ApplyAction only
 //   0x25          the u16 +0xA4 not above the s16 +0x108: fire once
 //   anything else (above 0x25 through the range check): nothing
