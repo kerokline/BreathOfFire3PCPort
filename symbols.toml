@@ -3541,8 +3541,9 @@ name = "MoveCmd_OpE7"
 psx = 0x801A3790
 ret = "void"
 params = "unsigned char n"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, 7 instructions: calls entry n & 0xFF of the table at 0x65F5F8 with [0x9035A4] (Field_ActiveMember). Op E7."
+impl = "src/game/field_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22, 7 instructions; re-read 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x518B20..0x518B38 (0x19 bytes), cdecl: calls Field_ObjectHandlers[n & 0xFF] (11 entries; ours aborts past them) with Field_ActiveMember. Op E7; called by MoveScript_GroupE. PSX twin (analysis/pairs_propagated.json): 0x801A3790 gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x57C8E0
@@ -4053,8 +4054,9 @@ name = "Field_ObjectApproachDirection"
 psx = 0x801A3C9C
 ret = "unsigned char"
 params = "unsigned char *object"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 163 bytes): within the half-widths +0x98 / +0x9A of the leader (ObjTrio +0x34 / +0x38), Field_ObjectBestDirection(object, 1), 0xFF ending the timed move; otherwise Field_ObjectRandomTurn then Field_ObjectOpenDirection. Unreached by the attract cycle."
+impl = "src/game/field_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (whole, 163 bytes); re-read 2026-09-29 (round twelve group FC3), 0x518E20..0x518EC2 (0xA3 bytes), cdecl: with the leader (ObjTrio +0x34 / +0x38) within the half-widths +0x98 / +0x9A of Sprite_Current (|d| >> 16, signed): Field_ObjectBestDirection(object, 1); 0xFF clears Sprite_Current +9 and answers 0xFF; a direction not +8 & 7 becomes +8 with object +0x80 bit 3; answers +8. Otherwise Field_ObjectRandomTurn then Field_ObjectOpenDirection's al. Called by Field_ObjectApproach. PSX twin 0x801A3C9C gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x518ED0
@@ -4062,8 +4064,9 @@ name = "Field_ObjectAvoidDirection"
 psx = 0x801A3DBC
 ret = "unsigned char"
 params = "unsigned char *object"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 165 bytes): Field_ObjectApproachDirection with Field_ObjectBestDirection(object, 0). Unreached by the attract cycle."
+impl = "src/game/field_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (whole, 165 bytes); re-read 2026-09-29 (round twelve group FC3), 0x518ED0..0x518F74 (0xA5 bytes): Field_ObjectApproachDirection with Field_ObjectBestDirection(object, 0) (the differences taken the other way round, the same absolute values). Called by Field_ObjectAvoid. PSX twin 0x801A3DBC gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x518F80
@@ -4071,8 +4074,9 @@ name = "Field_ObjectBestDirection"
 psx = 0x801A3EDC
 ret = "unsigned char"
 params = "unsigned char *object, unsigned char toward"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its first 60 instructions): the leader's position plus its facing step (ObjTrio +9, +0xC, +0x10), four quarter turns of Sprite_Current[8] from an odd direction, keeping the unblocked one nearest (toward 1) or farthest (0) by the sum of the two distances in object +0x94. Read a byte of its second argument. Unreached by the attract cycle."
+impl = "src/game/field_c3.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (its first 60 instructions); read whole 2026-09-29 (round twelve group FC3), 0x518F80..0x51909B (0x11C bytes), cdecl: the leader's point = ObjTrio (+0x34, +0x38) + ObjTrio +9 times (+0xC, +0x10); Sprite_Current +8 made odd (+1 when even); object +0x94 = 0 for toward (its byte) not 0, 0x1000000 for 0; four quarter turns (+2 & 7) of +8 from there, each not Field_ObjectBlockedAhead(object) scored |x + Field_DirectionSteps x - point x| + |z + step z - point z| and kept in +0x94 when larger (toward not 0: the farthest) or smaller (0: the nearest), unsigned; answers the kept +8, 0xFF for none. The 2026-09-22 reading had the two the other way round. Callers Field_ObjectApproach / Avoid and the two *Direction functions. PSX twin 0x801A3EDC gap44. docs/field_c3.md"
 
 [[func]]
 pc = 0x537540
@@ -77715,3 +77719,624 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE3): 0x442E40 jmp by +2: 0x442E60, 0x442F10, 0x442F80; bytes follow. docs/battle_e3.md."
+
+# --- round twelve group FC3 (field_c3): object steering, the leader's state-2 sub-states. docs/field_c3.md ---
+
+[[func]]
+pc = 0x5172C0
+name = "Mode11_FieldFrame"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5172C0..0x5172EC (0x2d bytes): cdecl: Field_MembersFrame, AreaMap_Frame, 0x536F10 (FE2's), Party_ExtraScreens, Party_UpdateScreens, 0x5372E0, Effect_RunObjects, MoveScript_TintFrame, tail jmp Field_DrawFrame. Mode 11's frame (docs/mode_states.md section 7): called by its steps 0x496790 / 0x4967C0 and tail-jumped by 0x4967B0. PSX twin (analysis/pairs_propagated.json): 0x8019A308 call, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x517330
+name = "Mode8_Step5"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x517330..0x517339 (0xa bytes): 0x42D710 (the dispatch on the menu byte 0x929F00), tail jmp Field_RunTaskRecords. Entry 5 of mode 8's step table 0x656AB8; hidden in Menu_Frame's catalogue extent (Menu_Frame is 0xF bytes, Shop_Frame 0x28: neither holds it). PSX twin (analysis/pairs_propagated.json): 0x8019A3F0 table-anchored, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x517340
+name = "Mode8_Step8"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x517340..0x517349 (0xa bytes): 0x57DFF0 (the dispatch on 0x929F00 through 0x663DD0), tail jmp Field_RunTaskRecords. Entry 8 of mode 8's step table 0x656AB8. PSX twin (analysis/pairs_propagated.json): 0x8019A418 table-anchored, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x5193D0
+name = "Field_ObjectFadeOutStart"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5193D0..0x519408 (0x39 bytes): Field_ObjectFadeOutSteps[0]: Sprite_SetTint(Sprite_Current, 0x1F, 0x1F, 0x1F, 1) into Field_ActiveMember +0x9F; Sprite_Current +0 bit 6 cleared, +4 = 1. Ours' Field_ObjectFadeOut (object_kinds.cpp) holds the same code inline; this start is reached by address through the table. PSX twin (analysis/pairs_propagated.json): 0x801A45E0 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x519410
+name = "Field_ObjectFadeOutStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x519410..0x5194D5 (0xc6 bytes): Field_ObjectFadeOutSteps[1]: the tint record MoveScript_TintRecords[Field_ActiveMember +0x9F] (12 bytes) +2..+4 each down by 1 while not 0; at a signed sum of 0 Tint_Release(index), the member's +0x80 bit 1 cleared, Sprite_Current +1 = +3, +4 = 0. Field_ActiveMember read once (the original holds it in ecx) and again for the +0x80 store. PSX twin (analysis/pairs_propagated.json): 0x801A4650 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x519500
+name = "Field_ObjectFadeInStart"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x519500..0x51952C (0x2d bytes): Field_ObjectFadeInSteps[0]: Sprite_SetTint(Sprite_Current, 0, 0, 0, 1) into Field_ActiveMember +0x9F, Sprite_Current +4 = 1. PSX twin (analysis/pairs_propagated.json): 0x801A4820 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x519530
+name = "Field_ObjectFadeInStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x519530..0x5195F8 (0xc9 bytes): Field_ObjectFadeInSteps[1]: the tint record's +2..+4 each up by 1 while below 0x1F signed (jge: 0x80..0xFF climb too); at a signed sum of 0x5D Tint_Release, the member's +0x80 bit 2 cleared, +1 = +3, +4 = 0. PSX twin (analysis/pairs_propagated.json): 0x801A4874 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525390
+name = "FieldCore_ScriptMove"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525390..0x5253D0 (0x41 bytes): FieldCore_State2Steps[0], also called by FieldCore_Attached: Field_State +0x138 |= 4; call through FieldCore_ScriptMoveSteps by Sprite_Current +3 (6 entries; ours aborts past them); then unless +7 bit 5, tail jmp Sprite_ScriptTick with +0 bit 4, else Sprite_ScriptTickOnce. PSX twin (analysis/pairs_propagated.json): 0x801B79FC call, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x5253E0
+name = "FieldCore_ScriptMoveAlign"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5253E0..0x525492 (0xb3 bytes): FieldCore_ScriptMoveSteps[0]: with x or z off the half-cell grid (& 0x7FFF) and +0x24 bit 5 clear, each rounded ((v + 0x4800) & ~0x7FFF), +0x3E = MapView_SlopeAt(x, z, +8), animation +8 + 8, and +8 once both land on the grid; else Sprite_ClearSteps, +3 up and a tail jmp to FieldCore_ScriptMoveNext. The catalogue's 0x2BB ran on through FieldCore_ScriptMoveNext, which the tail jmp and the table reach by address. PSX twin (analysis/pairs_propagated.json): 0x801B7BC0 callers, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x5254A0
+name = "FieldCore_ScriptMoveNext"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5254A0..0x52569A (0x1fb bytes): FieldCore_ScriptMoveSteps[1] and the tail jmps of 0x5253E0 / 0x5256A0 (in no cut row: docs/scenario_harness.md 7.6): Field_State +0x125 counted down, else MoveScript_Step(Field_State + 0x124, the script at +0x130); 0xFF ends; else by +0x124: bit 3 ends the move (Field_ScriptFlags bit 8 cleared unless Field_StatusBits bit 6, Field_MemberTimers, the object to state 1), bit 5 +3 = 3, bit 1 a shade fade to 0xC0 (+3 = 4), bit 2 one to the palette (+3 = 5), else with +9 set a timed step (+0x12B down, +3 = 2, Field_LeaderStepTick) or +3 = 1; the direction's animation unless +0x124 bit 6. docs/field_c3.md."
+
+[[func]]
+pc = 0x5256A0
+name = "FieldCore_ScriptMoveStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5256A0..0x525702 (0x63 bytes): FieldCore_ScriptMoveSteps[2]: +9 down and a tail jmp Field_LeaderStepTick; at 0 with Field_State +0x12B 0 a tail jmp FieldCore_ScriptMoveNext; else +0x12B down, Field_JumpStart (+0x14 put back when Field_State +0x124 bit 7), +9 down, Field_LeaderStepTick. PSX twin (analysis/pairs_propagated.json): 0x801B7F14 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525710
+name = "FieldCore_ScriptMoveWait"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525710..0x525736 (0x27 bytes): FieldCore_ScriptMoveSteps[3]: once Field_Request is not 2, Field_State +0x124 bit 5 cleared and +3 = 0. PSX twin (analysis/pairs_propagated.json): 0x801B7FD4 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525740
+name = "FieldCore_ScriptMoveShadeLower"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525740..0x52576B (0x2c bytes): FieldCore_ScriptMoveSteps[4]: Sprite_ShadeLower(4); when it answers, Field_State +0x124 bit 1 cleared and +3 = 1. PSX twin (analysis/pairs_propagated.json): 0x801B801C gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525770
+name = "FieldCore_ScriptMoveShadeFade"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525770..0x52579B (0x2c bytes): FieldCore_ScriptMoveSteps[5]: Sprite_ShadeFadeStep(4); when it answers, Field_State +0x124 bit 2 cleared and +3 = 1. PSX twin (analysis/pairs_propagated.json): 0x801B8074 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x5257A0
+name = "FieldCore_Attached"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5257A0..0x5258A0 (0x101 bytes): FieldCore_State2Steps[1]: with +9 0, +0x24 bit 5 set and +0x34 / +0x38 / +0x3C / +0x64 / +0x68 / +0x6C copied from Sprite_ObjectsExtra[dword +0x18] (unchecked), then MoveCmd_AttachOffset(out, +0x1C) added to x, z and the word +0x3E; then FieldCore_ScriptMove. PSX twin (analysis/pairs_propagated.json): 0x801B80CC gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525960
+name = "FieldCore_Hop"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525960..0x525971 (0x12 bytes): FieldCore_State2Steps[3]: jmp through FieldCore_HopSteps by Sprite_Current +3 (5 entries; ours aborts past them). PSX twin (analysis/pairs_propagated.json): 0x801B83A8 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525980
+name = "FieldCore_HopBegin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525980..0x5259CD (0x4e bytes): FieldCore_HopSteps[0]: animation 0x38 facing 3, else 0x39; Field_State +0x128 = 3, +3 = 1. PSX twin (analysis/pairs_propagated.json): 0x801B83EC gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x5259D0
+name = "FieldCore_HopLaunch"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5259D0..0x525B1B (0x14c bytes): FieldCore_HopSteps[1]: once Sprite_ScriptTickOnce answers: speed = Field_MoveSpeeds[Field_State +0x128]; +9 = 0x20 / speed (idiv: ours aborts at 0); +0xC / +0x10 = the 0x6696DC step pair of +8 times (+0x70 + 1) times speed, +0x14 = (+0x70 + 1) << 6, +0x20 = (-1 - +0x70) << 3; unless +5 Field_Kind2X / Z at the landing and MoveScript_F3Divisor = speed * 8; animation 0x3A facing 3, else 0x3B; Sound_PlayEffect(0x104); +9 down, +0x14 += +0x20, Field_LeaderStepTick, +3 = 2. PSX twin (analysis/pairs_propagated.json): 0x801B8444 callers, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525B20
+name = "FieldCore_HopRise"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525B20..0x525B83 (0x64 bytes): FieldCore_HopSteps[2]: +9 down, at 0 +0xC = +0x10 = 0 and +3 = 3; +0x14 += +0x20; Field_LeaderStepTick; unless +5 MapView_SetElevation(word +0x3E); tail jmp Sprite_ScriptTick. PSX twin (analysis/pairs_propagated.json): 0x801B8650 gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525B90
+name = "FieldCore_HopFall"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525B90..0x525C48 (0xb9 bytes): FieldCore_HopSteps[3]: +0x14 += +0x20; Field_LeaderStepTick; with MapView_GroundAt above the word +0x3E (signed): +0x3E = it, animation (+8 >> 1) + 0x34 when +0x14 is below -0x80, else 0x38 facing 3 or 0x39, +0x14 = +0x20 = 0, +3 = 4; unless +5 or bit 3 of Field_ScriptFlags2 | Field_ScriptFlags (low bytes), MapView_SetElevation(word +0x3E); tail jmp Sprite_ScriptTick. PSX twin (analysis/pairs_propagated.json): 0x801B86EC gap44, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525C50
+name = "FieldCore_HopLand"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525C50..0x525C9D (0x4e bytes): FieldCore_HopSteps[4]: once Sprite_ScriptTickOnce answers and Field_TileD0 does not: animation +8, Field_State +0x137 = 0, the object back to state 1 (+1 = 1, +2 = +3 = 0). PSX twin (analysis/pairs_propagated.json): 0x801B8814 callers, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x525CA0
+name = "FieldCore_Vertical"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525CA0..0x525CBD (0x1e bytes): FieldCore_State2Steps[4] (in no cut row: the catalogue's 0x525390 extent held it): Field_State +0x137 = 3; jmp through FieldCore_VerticalSteps by +3 (2 entries; ours aborts past them). docs/field_c3.md."
+
+[[func]]
+pc = 0x525CC0
+name = "FieldCore_Up"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525CC0..0x525CD1 (0x12 bytes): FieldCore_VerticalSteps[0]: jmp through FieldCore_UpSteps by Sprite_Current +4 (8 entries; ours aborts past them). scenario_harness_fh's kSprite proof clones it. docs/field_c3.md."
+
+[[func]]
+pc = 0x525CE0
+name = "FieldCore_UpBegin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525CE0..0x525CED (0xe bytes): FieldCore_UpSteps[0]: 0x535FC0 (FE2's), +4 up. docs/field_c3.md."
+
+[[func]]
+pc = 0x525CF0
+name = "FieldCore_UpOut"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525CF0..0x525D30 (0x41 bytes): FieldCore_UpSteps[1]: word +0x3E up 0x10; Field_Request = 5 once it is above MapView_GroundAt(x, z) + 0x200 (signed); tail jmp Sprite_ScriptTick. docs/field_c3.md."
+
+[[func]]
+pc = 0x525D40
+name = "FieldCore_UpArrive"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525D40..0x525E26 (0xe7 bytes): FieldCore_UpSteps[2]: +0x3E = MapView_GroundAt(x, z) - 0x200; x, z less the 0x6696DC step pair of +8 times (+0x70 & 0xFF) + 1, << 5; animation 0x3C facing 7, else 0x3D; with +5 Sprite_ShadeFadeBegin, the shade bytes 0x80, +0x5C 1, +0 bit 6 cleared, +4 = 3; else +4 = 4. docs/field_c3.md."
+
+[[func]]
+pc = 0x525E30
+name = "FieldCore_UpIn"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525E30..0x525E8A (0x5b bytes): FieldCore_UpSteps[4]: word +0x3E up 0x10; at or above MapView_GroundAt(0x904EF4, 0x904EF8) less the s16 0x66978C[Field_State +0x89]: 0x536290 (FE2's) and +4 up; else a tail jmp Sprite_ScriptTick. docs/field_c3.md."
+
+[[func]]
+pc = 0x525E90
+name = "FieldCore_UpWait5"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525E90..0x525EA1 (0x12 bytes): FieldCore_UpSteps[5]: +4 up when 0x5362D0 (FE2's) answers al. docs/field_c3.md."
+
+[[func]]
+pc = 0x525EB0
+name = "FieldCore_UpWait6"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525EB0..0x525EC1 (0x12 bytes): FieldCore_UpSteps[6]: +4 up when 0x5363C0 (FE2's) answers al. docs/field_c3.md."
+
+[[func]]
+pc = 0x525ED0
+name = "FieldCore_UpEnd"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525ED0..0x525EEE (0x1f bytes): FieldCore_UpSteps[7]: when 0x536440 (FE2's) answers al and +5 is 0, Field_ScriptFlags2 bit 3 cleared. docs/field_c3.md."
+
+[[func]]
+pc = 0x525EF0
+name = "FieldCore_Down"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525EF0..0x525F01 (0x12 bytes): FieldCore_VerticalSteps[1]: jmp through FieldCore_DownSteps by Sprite_Current +4 (10 entries; ours aborts past them). docs/field_c3.md."
+
+[[func]]
+pc = 0x525F10
+name = "FieldCore_DownBegin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525F10..0x525F25 (0x16 bytes): FieldCore_DownSteps[0]: 0x535FE0 (FE2's), Field_ScriptFlags2 |= 8, +4 = 1. docs/field_c3.md."
+
+[[func]]
+pc = 0x525F30
+name = "FieldCore_DownWait1"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525F30..0x525F42 (0x13 bytes): FieldCore_DownSteps[1]: +4 = 2 when 0x536050 (FE2's) answers al. docs/field_c3.md."
+
+[[func]]
+pc = 0x525F50
+name = "FieldCore_DownWait2"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525F50..0x525F62 (0x13 bytes): FieldCore_DownSteps[2]: +4 = 3 when 0x5360C0 (FE2's) answers al. docs/field_c3.md."
+
+[[func]]
+pc = 0x525F70
+name = "FieldCore_DownWait3"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525F70..0x525F82 (0x13 bytes): FieldCore_DownSteps[3]: +4 = 4 when 0x536130 (FE2's) answers al. docs/field_c3.md."
+
+[[func]]
+pc = 0x525F90
+name = "FieldCore_DownWait4"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525F90..0x525FA2 (0x13 bytes): FieldCore_DownSteps[4]: +4 = 5 when 0x536170 (FE2's) answers al. docs/field_c3.md."
+
+[[func]]
+pc = 0x525FB0
+name = "FieldCore_DownOut"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x525FB0..0x525FF0 (0x41 bytes): FieldCore_DownSteps[5]: word +0x3E down 0x10; Field_Request = 5 once it is below MapView_GroundAt(0x904EF4, 0x904EF8) - 0x200 (signed); tail jmp Sprite_ScriptTick. docs/field_c3.md."
+
+[[func]]
+pc = 0x526000
+name = "FieldCore_DownArrive"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526000..0x526090 (0x91 bytes): FieldCore_DownSteps[6]: +0x3E = MapView_GroundAt(x, z) + 0x200; animation 0x3C facing 3, else 0x3D; with +5 Sprite_ShadeFadeBegin, the shade bytes 0x80, +0x5C 1, +0 bit 6 cleared, +4 = 7; else +4 = 8. docs/field_c3.md."
+
+[[func]]
+pc = 0x5260A0
+name = "FieldCore_DownIn"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5260A0..0x52611F (0x80 bytes): FieldCore_DownSteps[8]: word +0x3E down 0x10; once below MapView_GroundAt(x, z) (signed words): +0x3E = MapView_GroundAt again, +9 = 2, +0xA = 0, animation 7 facing 3, else 1, +4 = 9; tail jmp Sprite_ScriptTick. docs/field_c3.md."
+
+[[func]]
+pc = 0x526120
+name = "FieldCore_DownLand"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526120..0x5261B4 (0x95 bytes): FieldCore_DownSteps[9]: +9 down; at 0 +0xA up, animation 7 - +0xA facing 3, else +0xA + 1; at +0xA 4 Field_ScriptFlags2 bit 3 cleared unless +5, +9 = +0xA = 0 and the object back to state 1 (+1 = 1, +2..+4 = 0); else +9 = 2. docs/field_c3.md."
+
+[[func]]
+pc = 0x5261C0
+name = "FieldCore_VerticalShade"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5261C0..0x5261D6 (0x17 bytes): FieldCore_UpSteps[3] and FieldCore_DownSteps[7]: +4 up when Sprite_ShadeFadeStep(8) answers. docs/field_c3.md."
+
+[[func]]
+pc = 0x5261E0
+name = "FieldCore_JumpExit"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5261E0..0x5261FD (0x1e bytes): FieldCore_State2Steps[5] (in no cut row: the catalogue's 0x525390 extent held it): Field_State +0x137 = 2; jmp through FieldCore_JumpExitSteps by +3 (5 entries; ours aborts past them). docs/field_c3.md."
+
+[[func]]
+pc = 0x526200
+name = "FieldCore_JumpExitBegin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526200..0x526237 (0x38 bytes): FieldCore_JumpExitSteps[0]: Field_ScriptFlags2 |= 8; animation +8 + 8; +9 = +0xA = 0; +3 up. docs/field_c3.md."
+
+[[func]]
+pc = 0x526240
+name = "FieldCore_JumpExitOut"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526240..0x52627C (0x3d bytes): FieldCore_JumpExitSteps[1]: at +9 0: +0xA up, Field_Request = 5 at +0xA 3, Field_JumpStart; +9 down; Field_LeaderStepTick; tail jmp Sprite_ScriptTick. docs/field_c3.md."
+
+[[func]]
+pc = 0x526280
+name = "FieldCore_JumpExitArrive"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526280..0x5263B9 (0x13a bytes): FieldCore_JumpExitSteps[2]: x, z back by the 0x6696DC step pair of +8, times 3 << 5 with +0x70 (+0xA = 7), else << 6 (+0xA = 5); +9 = 0; +0x3E = MapView_GroundAt(x, z); Field_State +0x128 = 2; animation +8 + 8; with +5 a shade fade begun (+3 = 3), else +3 = 4. docs/field_c3.md."
+
+[[func]]
+pc = 0x5263C0
+name = "FieldCore_JumpExitShade"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5263C0..0x5263D6 (0x17 bytes): FieldCore_JumpExitSteps[3]: +3 up when Sprite_ShadeFadeStep(8) answers. docs/field_c3.md."
+
+[[func]]
+pc = 0x5263E0
+name = "FieldCore_JumpExitIn"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5263E0..0x52648D (0xae bytes): FieldCore_JumpExitSteps[4]: at +9 0 +0xA down; at +0xA 0 Field_ScriptFlags2 bit 3 cleared unless +5, Field_State +0x128 = 3, +0xC = +0x10 = 0, Field_State +0x137 = 0, the object back to state 1 (+9 = +0xA = 0), animation +8; else Field_JumpStart; +9 down, Field_LeaderStepTick, tail jmp Sprite_ScriptTick. docs/field_c3.md."
+
+[[func]]
+pc = 0x526490
+name = "FieldCore_TileD0"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526490..0x5264B2 (0x23 bytes): FieldCore_State2Steps[6] (in no cut row): Field_State +0x137 = 5; call through FieldCore_TileD0Steps by +3 (2 entries; ours aborts past them); tail jmp Sprite_ScriptTick. Field_TileD0 puts an object on the 0xD0 cells in state 2, sub-state 6. docs/field_c3.md."
+
+[[func]]
+pc = 0x5264C0
+name = "FieldCore_TileD0Begin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5264C0..0x5264EA (0x2b bytes): FieldCore_TileD0Steps[0]: +9 = 0, +0xB = +8, Field_State +0x128 = 4, +3 = 1. docs/field_c3.md."
+
+[[func]]
+pc = 0x5264F0
+name = "FieldCore_TileD0Move"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5264F0..0x5266A3 (0x1b4 bytes): FieldCore_TileD0Steps[1]: at +9 0: off the 0xD0 cells (AreaMap_CellsNone(x, z, +0x70, 0xD0, 0)) Field_State +0x128 = 3, +8 = +0xB, animation, +0x137 = 0, state 1; else FieldCore_TileD0Exit, and with FieldCore_TileD0Slope's al animation +8, +2 = 3 (the hop), +3 = 0; else Field_CellAhead (again with +8 up when it answers 0), +0xB from Input_Held & 0xF000 (0x1000 0, 0x2000 2, 0x3000 1, 0x4000 4, 0x6000 3, 0x8000 6, 0x9000 7, 0xC000 5), animation +0xB + 8, Field_JumpStart; then +9 down, Field_LeaderStepTick, tail jmp Sprite_ScriptTick. The extent holds 0x526650..0x5266A3 past padding. docs/field_c3.md."
+
+[[func]]
+pc = 0x5266B0
+name = "FieldCore_TileD0Exit"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x5266B0..0x526811 (0x162 bytes): called by FieldCore_TileD0Move: of the eight directions from +8, the first whose point (x, z) + Field_DirectionSteps * (+0x70 + 1) is not Field_WayBlocked(point, +0x70, word +0x3E) and has no 0xD0 cell becomes +8; else of the four odd directions one step ahead, the one FieldCore_TileD0Probe answers with the lowest ground below +0x3E (signed words), else +8 kept. docs/field_c3.md."
+
+[[func]]
+pc = 0x526820
+name = "FieldCore_TileD0Probe"
+ret = "unsigned char"
+params = "long x, long z, short *ground, unsigned direction"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526820..0x52687F (0x60 bytes): called by FieldCore_TileD0Exit (direction 1): *ground = MapView_SlopeAt(x, z, direction); al 0 when 0x903850 is set, the slope above 0x40 (signed word) and +0x3E below MapView_GroundAt(x, z); else *ground = MapView_GroundAt(x, z) and al 1. docs/field_c3.md."
+
+[[func]]
+pc = 0x526880
+name = "FieldCore_TileD0Slope"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526880..0x526A8E (0x20f bytes): called by FieldCore_TileD0Move: al 1 when, facing 3 or 5 with the other coordinate's low word on the grid (0) - or off it with +0x70 - MapView_SlopeAt at the edge ahead answers above 0x40 with 0x903850 set, at one or two points (a third with the cross coordinate's word 0 again); else 0. The raised facing-5 path's last probe passes direction 3. docs/field_c3.md."
+
+[[func]]
+pc = 0x526A90
+name = "FieldCore_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526A90..0x526AAD (0x1e bytes): FieldCore_State2Steps[7] (in no cut row): Field_State +0x137 = 6; jmp through FieldCore_FallSteps by +3 (2 entries; ours aborts past them). docs/field_c3.md."
+
+[[func]]
+pc = 0x526AB0
+name = "FieldCore_FallBegin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526AB0..0x526AF5 (0x46 bytes): FieldCore_FallSteps[0]: Sound_PlayEffect(0x107); Area_LinkAt(word +0x36, word +0x3A) (its al unread); +0x14 = 0; animation +8; +3 = 1. docs/field_c3.md."
+
+[[func]]
+pc = 0x526B00
+name = "FieldCore_FallSpin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526B00..0x526B7D (0x7e bytes): FieldCore_FallSteps[1]: +0x14 down 8, the word +0x3E up by its low word; +8 = (+8 + 1) & 7 and its animation; once MapView_GroundAt(x, z) is more than 0x100 above +0x3E (signed) and Field_Request is not 5: 0x905BA5 |= 2, Field_Request = 5. docs/field_c3.md."
+
+[[func]]
+pc = 0x526B80
+name = "FieldCore_Recoil"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526B80..0x526B91 (0x12 bytes): FieldCore_State2Steps[8] (in no cut row): jmp through FieldCore_RecoilSteps by +3 (2 entries; ours aborts past them). docs/field_c3.md."
+
+[[func]]
+pc = 0x526BA0
+name = "FieldCore_RecoilBegin"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526BA0..0x526D2A (0x18b bytes): FieldCore_RecoilSteps[0]: with +0x5C Sprite_LoadPalette(0x80D380 + +5 * 64, 0), +0 bit 5 and the shade bytes cleared; +0 bit 6 cleared; off the grid x, z rounded, +0x3E = MapView_SlopeAt, and unless +5 Field_Kind2X / Z and Field_ViewReset; +8 ^= 4, Field_CellAhead: 1 or 3 Field_LeaderPushObjects (+9 = 0 and Sprite_ClearSteps when it answers, else Field_JumpStart, +9 down, Sprite_ApplyVelocity), else Sprite_ClearSteps; 0x534C20(+0xB) (FE2's); +8 back, +0xA = 8, animation +8, Sound_PlayEffect(0x108), +3 up. PSX twin (analysis/pairs_propagated.json): 0x801BA208 callers, a hypothesis, not read. docs/field_c3.md."
+
+[[func]]
+pc = 0x526D30
+name = "FieldCore_RecoilBlink"
+ret = "void"
+params = "void"
+impl = "src/game/field_c3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC3, capstone to the last instruction), 0x526D30..0x526DAF (0x80 bytes): FieldCore_RecoilSteps[1]: while +9, Sprite_ApplyVelocity and +9 down (Sprite_ClearSteps at 0); while +0xA, +0xA down and +0 bit 6 cleared on odd, set on even; then bit 6 cleared and the object back to state 1. PSX twin (analysis/pairs_propagated.json): 0x801BA470 gap67, a hypothesis, not read. docs/field_c3.md."
+
+[[data]]
+pc = 0x65F654
+name = "Field_ObjectFadeOutSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): Field_ObjectFadeOut 0x5193B0 jmp by Sprite_Current +4: Field_ObjectFadeOutStart, Field_ObjectFadeOutStep; Field_ObjectFadeInSteps follows (ours' Field_ObjectFadeOut runs its entries by a switch and aborts past four). docs/field_c3.md."
+
+[[data]]
+pc = 0x65F65C
+name = "Field_ObjectFadeInSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): Field_ObjectFadeIn 0x5194E0 jmp by Sprite_Current +4: Field_ObjectFadeInStart, Field_ObjectFadeInStep; Scena00_CallA's words follow. docs/field_c3.md."
+
+[[data]]
+pc = 0x660140
+name = "FieldCore_ScriptMoveSteps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_ScriptMove call by Sprite_Current +3: 0x5253E0, 0x5254A0, 0x5256A0, 0x525710, 0x525740, 0x525770; the count from the code (the six write +3 in 0..5); FieldCore_FadeSteps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x660160
+name = "FieldCore_HopSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Hop jmp by Sprite_Current +3: 0x525980, 0x5259D0, 0x525B20, 0x525B90, 0x525C50 (they write +3 1..4, the last back to state 1); FieldCore_VerticalSteps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x660174
+name = "FieldCore_VerticalSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Vertical jmp by Sprite_Current +3: FieldCore_Up, FieldCore_Down; FieldCore_UpSteps follows (its first word is this table's third). docs/field_c3.md."
+
+[[data]]
+pc = 0x66017C
+name = "FieldCore_UpSteps"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Up jmp by Sprite_Current +4: 0x525CE0, 0x525CF0, 0x525D40, 0x5261C0, 0x525E30, 0x525E90, 0x525EB0, 0x525ED0 (they write +4 in 1..7); FieldCore_DownSteps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x66019C
+name = "FieldCore_DownSteps"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Down jmp by Sprite_Current +4: 0x525F10, 0x525F30, 0x525F50, 0x525F70, 0x525F90, 0x525FB0, 0x526000, 0x5261C0, 0x5260A0, 0x526120 (they write +4 in 1..9); FieldCore_JumpExitSteps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x6601C4
+name = "FieldCore_JumpExitSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_JumpExit jmp by Sprite_Current +3: 0x526200, 0x526240, 0x526280, 0x5263C0, 0x5263E0 (they write +3 in 1..4); FieldCore_TileD0Steps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x6601D8
+name = "FieldCore_TileD0Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_TileD0 call by Sprite_Current +3: 0x5264C0, 0x5264F0; FieldCore_FallSteps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x6601E0
+name = "FieldCore_FallSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Fall jmp by Sprite_Current +3: 0x526AB0, 0x526B00; FieldCore_RecoilSteps follows. docs/field_c3.md."
+
+[[data]]
+pc = 0x6601E8
+name = "FieldCore_RecoilSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Recoil jmp by Sprite_Current +3: 0x526BA0, 0x526D30; another table's words (0x5288A0..) follow. docs/field_c3.md."
