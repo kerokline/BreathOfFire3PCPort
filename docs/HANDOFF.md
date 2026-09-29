@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen staged on `phase-3/capture-round-thirteen` from it, the cut regenerated, nothing taken yet)
+**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen on `phase-3/capture-round-thirteen` from it: stage A merged, 6,895 ours, wave one next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**6,891 functions are ours** (`inject: 6891 ours, 0 left original`, on `main` at `d1b411c`);
+**6,895 functions are ours** (`inject: 6895 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -46,17 +46,17 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-000. **Round thirteen, the effect engine, is staged and not started.** Branch `phase-3/capture-round-thirteen` from
-   `main` `d1b411c` (round twelve, PR #33, merged). [`takeover-queue-round13.md`](takeover-queue-round13.md) section 10
-   is the cut at that base: 1,695 functions in 35 groups E1A..E6D, six waves, the merge order, the common callees. The
-   base's build, `'*'` and `ledger_check` pass. `main`'s PR #34 (the capture review) is merged in, tip `34f1c40`, verified. **Stage A is EKH** (the `kEffect` shape
-   in `scenario_harness`) **and EGT** (the four projection helpers `0x494060..0x4941E0` that 120 rows call), in
-   parallel, branches `phase-3/round13-ekh` and `-egt`, briefs `brief_ekh.md` and `brief_egt.md`; merge EGT, then EKH; then wave one's seven briefs from `round13_brief_template.md`
-   (session-`0ad4f32a` scratchpad, `round13/`) with section 10's lines. The cut is `analysis/round13_cut.tsv`; the
-   scripts that made it (`join.py`, `make_cut.py`), the brief and the tool's outputs are in the session-`56ff1eb2`
-   scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`). The merge script to copy is round
-   twelve's `merge_group12.sh` (branch names `phase-3/round13-<g>`). Round twelve's agent worktrees and branches are
-   merged and still present.
+000. **Round thirteen, the effect engine: stage A is merged, wave one is next.** Branch
+   `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34 merged in; nothing pushed.
+   [`takeover-queue-round13.md`](takeover-queue-round13.md) section 10 is the cut (1,695 functions, 35 groups E1A..E6D
+   in six waves, the merge order), section 11 stage A: EGT (the four projection helpers, 6,895 ours) and EKH (`kEffect`
+   in `scenario_harness`), both merged and verified, and what the groups must know. **Next: wave one**, E1A..E1G, 271
+   functions: the briefs `brief_e1a.md`..`brief_e1g.md` are filled but for `<TIP>` (the round branch's tip at launch),
+   in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`)
+   with `merge_group13.sh <group> <scratch>` (`MOD=effect_1a` ...), `verify_tip.sh`, `make_cut.py`, `join.py`. Merge
+   order E1F, E1B, E1A, E1G, E1C, E1D, E1E. Owed at this tip: the whelp route's frame hash (it enters two of EGT's
+   functions). **`battle_e7` fails in the main checkout's build directory and passes in the verification worktree**, at
+   `d1b411c` already: a session of its own has it (section 11's last paragraph).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,

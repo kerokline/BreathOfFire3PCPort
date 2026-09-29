@@ -586,3 +586,52 @@ proof passing (scratch `verify_34f1c40.log`).
 
 **Next**: EKH and EGT in parallel (scratch `brief_ekh.md`, `brief_egt.md`),
 then wave one's briefs from section 9's template with this table's lines.
+
+## 11. Stage A (2026-09-29 afternoon, from `d19d803`)
+
+Two Opus agents in worktrees, in parallel, each merged with
+`merge_group13.sh` and verified by its own build and `'*'` in the detached
+verification worktree.
+
+| Group | Branch tip | Merge | What | Proof at the merge |
+|---|---|---|---|---|
+| EGT | `1a0ad06` | `a7233b6` | the four helpers taken, all cdecl: `EffectGte_LoadMapCamera` `0x494060`, `EffectGte_ProjectPoint` `0x494110`, `EffectGte_SetDiagonalOne` `0x494180`, `EffectGte_ProjectSize` `0x4941E0` ([`effect_gte.md`](effect_gte.md)); 41 controls, 38 refused, 3 equivalent with a refused near variant; five files rebound | `effect_gte` and `'*'` exit 0, 6,895 ours, ledger 0 errors |
+| EKH | `5d04585` | `dc32be3` | `kEffect` in `scenario_harness` (FC1's form: the current object an effect record), `Arg::kEffect`, 12 arguments, `DataTable` to 128, 109 effect-standard stand-ins and 10 louder re-listings, nine regions ([`scenario_harness.md`](scenario_harness.md) section 8); takes nothing | `scenario_harness_ekh` and `'*'` exit 0, 6,895 ours, ledger 0 errors |
+
+Then the coordinator's `80385d6`: `kField`'s three rows for EGT's helpers by
+name (`FIELD_OURS`), a standard effect row for `EffectGte_SetDiagonalOne`
+(18 bytes written). Verified the same way, `field_c2` and `battle_e7` among
+the shadows run: all exit 0, 6,895 ours.
+
+**What the groups must know** (the agents' reports):
+
+- A group's inject goes **after** `ScenarioHarnessEkh_Inject`, which copies
+  eight of the cut's rows.
+- A table's span is its own length, not the run of code pointers: the tables
+  overlap, and `EffectKind18_States[n]` past about 100 names other kinds'
+  tables.
+- `0x593950` is the dispatcher of the run at `0x66A470` (section 4's open
+  item, E1G's rows).
+- `EffectGte_ProjectSize` aborts at depth 0 (Capcom's divides unchecked): a
+  fuzz that calls it for real keeps the point off the eye plane.
+- The weakest stand-ins: `0x4794D0` and `0x479B70` hash the first 16 bytes
+  of a large record only; `0x469750` and `0x468AC0` (E1B's) advance the
+  packet cursor by amounts EKH chose. E1B merges second in wave one, after
+  which they are called by name.
+- `0x4941B0`, a fifth helper between EGT's (43 bytes, three callers, catalog
+  part 2), is in no group: the coordinator's to place.
+
+**Debts from stage A**: FC1's and FC2's fuzz files are not rewritten onto
+`kEffect`; EGT's latent defects to number (`0x494180` writes 1 where the PSX
+twin writes 0x1000; `0x4941E0` divides by an unchecked depth and keeps 16
+bits of the quotient); `reach_whelp` enters `0x494110` and `0x494060`, so
+the whelp route's frame hash is owed at this tip.
+
+**Found beside it, not this round's**: `battle_e7` fails in the main
+checkout's build directory (`GeneWin_ListSlideOut`, `List2`, `List3`: 484,
+440 and 876 rounds) and passes in the verification worktree at the same
+commit; it does so at `d1b411c` already. Capcom's clone never reaches the
+`Window_FreeCurrent` recorder there and ours does. Root cause not found;
+handed to a session of its own. A group that meets it in its worktree
+reports it and does not fix it.
+
