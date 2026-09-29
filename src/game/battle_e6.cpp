@@ -532,7 +532,8 @@ extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
 // 1 - gene 5 ? 0x12 : 0x11; 5 with 8, 1 or 6 - gene 0xD ? 0x14 : 0x13; 6 with
 // 2 or 4 - gene 3 ? 0xE : 0xD (a held gene sets the group code 1); else
 // 0xFF. With fewer than two members found the original reads stack bytes it
-// never wrote (known-defects, docs/battle_e6.md section 7): ours aborts.
+// never wrote (docs/battle_e6.md section 7, L1); ours answers 0, the answer
+// the failing pairings give - no party form, recipe 6 skipped (DIV-0063).
 extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
     unsigned char found[3] = {};
     unsigned n = 0;
@@ -541,10 +542,7 @@ extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
         if (BH_CALL(Battle_ActorIsOut)(m) != 0) continue;
         found[n++] = Party(m)[0x89];
     }
-    if (n < 2)
-        bof3::Fatal("DragonForm_PartyRecipe: %u of the other members are in - the original reads a pair of stack bytes it never "
-                    "wrote (docs/battle_e6.md section 7)",
-                    n);
+    if (n < 2) return 0;   // DIV-0063: no pair to try
     unsigned char key = found[0], other = found[1];
     for (int pass = 0; pass < 2; ++pass) {
         switch (key) {

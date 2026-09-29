@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 62 entries, DIV-0001..0062)
+**Status:** IN PROGRESS (opened 2026-09-18; 63 entries, DIV-0001..0063)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3062,3 +3062,47 @@ designed in rather than bolted on.
   separated the priming fault from the relocation. The owner's eye owed.
 - **Reversible?** `BOF3X_ORIGINAL=DrawPool` leaves the arrays and the
   fourteen patches alone.
+
+### The party's dragon form with a partner missing: no form, where the original read its stack
+
+- **ID:** DIV-0063
+- **Date:** 2026-09-29
+- **Subsystem:** battle (the transformation, `DragonForm_PartyRecipe`
+  `0x4523C0`, `src/game/battle_e6.cpp`; [`battle_e6.md`](battle_e6.md)
+  sections 2 and 7, L1)
+- **Tier:** Forced
+- **Original behaviour:** with gene `0x10` among the chosen genes and the
+  party's size byte `0x904AB1` at 3, the recipe search tries the party's
+  form before recipe 6: `DragonForm_PartyRecipe` collects the `+0x89` byte
+  of each member who is not the actor and not out by `Battle_ActorIsOut`
+  into a list on its stack, and tries the first two as a pair against five
+  pairings. Two pairings of the five answer 0, which the search reads as
+  "no party form": recipe 6 is skipped and the search goes on. When fewer
+  than two such members are found the list is one byte or none, and the
+  function dispatches on and compares stack bytes it never wrote: what it
+  answers depends on what its callers left there.
+- **New behaviour:** fewer than two found answers 0, the answer of the
+  pairings that fail. Every case with two or more found is unchanged.
+- **Rationale:** a reimplementation cannot reproduce the read, and an abort
+  there (what the takeover first did) would end a battle an ordinary party
+  can reach: three members, one of the other two down, the gene chosen.
+  **Which answer** is the owner's account of the game, 2026-09-29: the
+  gene used with one partner standing, or with either of two pairs of
+  partners, fails and gives the default dragon - one outcome for both. The
+  code has that outcome for the two pairs as the answer 0, so the missing
+  partner takes it too. `0xFF` (no pairing matched) was the other
+  candidate and is a different path: it ends the search at once, where 0
+  still tries recipes 7 to 10. That gene `0x10` is the one the owner means
+  is the owner's reading of the shape (the form depends on who the other
+  two members are); nothing in the binary names it.
+- **Also in the PSX version?** Not measured. The owner's memory of the
+  outcome is of the game as played; the sibling has no name in this
+  function and its twin was not read.
+- **Verification:** `battle_e6`'s self-test has the case as seven rows run
+  on ours alone (one partner out in each position, both out, a failing
+  pairing, no pairing), since there is nothing of Capcom's to compare with;
+  the fuzz of the function against the original's clone is as it was and
+  never seeds the case. **Owed: the owner's check in game**, once a save
+  has the gene and a full party - a partner down, and each failing pair.
+- **Reversible?** `BOF3X_ORIGINAL=DragonForm_PartyRecipe` leaves Capcom's
+  function, its read with it.

@@ -153,12 +153,14 @@ with the boss set-up and its kinds among them.
 
 ## 6. For the owner
 
-- **BE6's L1** ([`battle_e6.md`](battle_e6.md) section 7):
-  `DragonForm_PartyRecipe` reads two stack bytes it never wrote when fewer
-  than two of the other members are in. Capcom's code goes on with what
-  the stack held; ours aborts. The group reads it as reachable in ordinary
-  play and suggests a ledgered fix (no pair: answer 0xFF). Left as the
-  abort; a fix is a DIVERGENCE entry and the owner's word.
+- **BE6's L1, decided 2026-09-29** ([`battle_e6.md`](battle_e6.md)
+  section 7, DIV-0063): `DragonForm_PartyRecipe` reads two stack bytes it
+  never wrote when fewer than two of the other members are in. Capcom's
+  code goes on with what the stack held; ours aborted as merged. The
+  owner's account - the gene with one partner standing fails as the two
+  failing pairs do, into the default dragon - makes it answer 0, the
+  failing pairings' answer, and not the 0xFF the group suggested. **Owed:
+  the owner's check in game**, once a save has the gene and a full party.
 - **The recipes wave one still wants** (plan section 5): the other
   commands of the cross, a battle lost, an item's battle use, a formation
   change. 208 of wave one's 316 functions are entered by neither route (108 by one or both).
@@ -183,7 +185,7 @@ with the boss set-up and its kinds among them.
    summing enemy objects 3..10; `EnemyOp_SlideStart`'s wrong field and
    step; `BattleFx_NextStatusIcon` never returning; `Battle_RecalcStats`
    clearing enemy bytes; `DragonCmd_Slots2Close` testing window 18;
-   `BattleObj_Fall`'s unchecked character byte; BE6's L1.
+   `BattleObj_Fall`'s unchecked character byte; BE6's L1 (fixed, DIV-0063).
 4. **The 33 other owned starts without an `entries_logic.txt` line**: the
    dragon route showed what one costs. Audit them before the next route.
 5. **Housekeeping**: the ten `phase-3/round12-*` branches and the agents'

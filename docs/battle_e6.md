@@ -315,7 +315,7 @@ after those calls); `DragonForm_FindRecipe`'s answers none half the time (so
 the mix path is as common as the recipe path). `Battle_ActorIsOut` for
 `DragonForm_PartyRecipe`: at most one member out a round (`OutEffect`), so
 two others are always found - fewer is the original's unwritten-stack read,
-which ours refuses (section 7, L1) - and that clone runs `calm` (a
+which ours answers with 0 (section 7, L1; DIV-0063) and the fuzz leaves alone - and that clone runs `calm` (a
 disturbance moving the actor between two of its calls would skip a second
 member): its read again of the actor is therefore not probed. The roll's
 three refusals (`Battle_ActorIsOut`, `_ActionBitSet`, `_MemberListFull`)
@@ -376,12 +376,14 @@ the form byte (0x16 half the time).
   `Battle_ActorIsOut`, or the actor is not a member): its pair list is an
   uninitialised local, and every path then dispatches on or compares a
   garbage byte. Reached from the transformation with a gene 0x10 chosen and
-  the party's size byte at 3. **Ours aborts** (D106's rule). This looks
-  reachable in an ordinary battle (a party of three with one member down);
-  what the original then does depends on the stack its callers left, which
-  ours cannot reproduce. **For the coordinator / owner**: a candidate for a
-  ledgered fix (a missing member makes no pair: 0xFF, recipe 6 skipped)
-  rather than the abort, before a live check plays that case.
+  the party's size byte at 3, which an ordinary battle can be (a party of
+  three with one member down); what the original then does depends on the
+  stack its callers left. **Ours answers 0** - no party form, recipe 6
+  skipped, the answer the two failing pairings give - by the owner's
+  account of the game, 2026-09-29 (DIV-0063). As first taken it aborted
+  (D106's rule), and the group's suggestion was 0xFF; 0 is the path the
+  game's own failures take. The self-test's seven rows for it run ours
+  alone; the owner's check in game is owed.
 - **L2 - `Battle_RecalcStats` clears enemy bytes for a member**: after a
   member's rebuild its tail indexes the **enemy** objects by the member's
   own number, so enemy 0..2's `+0xC4` / `+0xBF` are zeroed when that

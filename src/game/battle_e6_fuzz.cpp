@@ -193,7 +193,7 @@ std::uint32_t MostlyZero(const std::uint32_t*, std::uint32_t answer) {
 
 // Battle_ActorIsOut for DragonForm_PartyRecipe: its round's rule (Seed) - one
 // member out at most, so two of the others are always found (fewer is the
-// original's unwritten-stack read, which ours refuses); every other clone
+// original's unwritten-stack read: DIV-0063, PartnerMissingTest); every other clone
 // takes the standard flag. The clone runs calm: a disturbance moving the actor
 // 0x904B34 between two of its calls would skip a second member (the
 // original's read again of the actor is then not probed - docs/battle_e6.md
@@ -567,9 +567,57 @@ void RunUnit(const char* run, const bh::Clone* clones, unsigned n, const bh::Cal
     g_out_rule = false;
 }
 
+// DIV-0063: DragonForm_PartyRecipe with fewer than two of the other members
+// in. The original reads stack bytes it never wrote there, so there is nothing
+// of Capcom's to compare with and the fuzz never seeds the case (OutEffect);
+// this runs ours alone, on the game's own cells, which are put back. Each row:
+// the actor, the three members' in / out, the three +0x89 bytes, the answer.
+void PartnerMissingTest() {
+    struct Row {
+        unsigned char actor, in[3], kind[3], answer;
+    };
+    static const Row kRows[] = {
+        {0, {1, 0, 1}, {0, 1, 2}, 0},      // one partner out: no pair
+        {0, {1, 1, 0}, {0, 1, 2}, 0},
+        {1, {0, 1, 1}, {1, 0, 2}, 0},
+        {2, {1, 0, 1}, {1, 2, 0}, 0},
+        {0, {1, 0, 0}, {0, 1, 2}, 0},      // both out
+        {0, {0, 1, 1}, {0, 2, 4}, 0},      // both in, a failing pairing: the same answer by the original's own rule
+        {0, {1, 1, 1}, {0, 9, 9}, 0xFF},   // both in, no pairing at all: 0xFF, as before
+    };
+    unsigned char saved[3][3];
+    const unsigned char actor = Mem(at::kActor)[0];
+    for (unsigned m = 0; m < 3; ++m) {
+        saved[m][0] = Party(m)[0];
+        saved[m][1] = Party(m)[0x91];
+        saved[m][2] = Party(m)[0x89];
+    }
+    unsigned n = 0;
+    for (const Row& r : kRows) {
+        Mem(at::kActor)[0] = r.actor;
+        for (unsigned m = 0; m < 3; ++m) {
+            Party(m)[0] = static_cast<unsigned char>((saved[m][0] & 0xFE) | (r.in[m] ? 1 : 0));
+            Party(m)[0x91] = static_cast<unsigned char>(saved[m][1] & ~0x40);
+            Party(m)[0x89] = r.kind[m];
+        }
+        const unsigned char got = DragonForm_PartyRecipe();
+        if (got != r.answer)
+            bof3::Fatal("battle_e6 DragonForm_PartyRecipe (DIV-0063): row %u answers 0x%02X, not 0x%02X", n, got, r.answer);
+        ++n;
+    }
+    Mem(at::kActor)[0] = actor;
+    for (unsigned m = 0; m < 3; ++m) {
+        Party(m)[0] = saved[m][0];
+        Party(m)[0x91] = saved[m][1];
+        Party(m)[0x89] = saved[m][2];
+    }
+    bof3::Log("shadow      battle_e6 DragonForm_PartyRecipe with a partner missing (DIV-0063): %u rows, ours alone, 0 MISMATCHES", n);
+}
+
 }  // namespace
 
 void SelfTest() {
+    PartnerMissingTest();
     RunUnit("form", kForm, BH_COUNT(kForm), kFormCallees, BH_COUNT(kFormCallees), nullptr, 0, 0);
     RunUnit("stats", kStats, BH_COUNT(kStats), kStatsCallees, BH_COUNT(kStatsCallees), nullptr, 0, 0);
     RunUnit("tasks", kTasks, BH_COUNT(kTasks), kTaskCallees, BH_COUNT(kTaskCallees), kTaskTables, BH_COUNT(kTaskTables), 7);
