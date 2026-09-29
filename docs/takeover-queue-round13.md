@@ -631,7 +631,13 @@ the whelp route's frame hash is owed at this tip.
 checkout's build directory (`GeneWin_ListSlideOut`, `List2`, `List3`: 484,
 440 and 876 rounds) and passes in the verification worktree at the same
 commit; it does so at `d1b411c` already. Capcom's clone never reaches the
-`Window_FreeCurrent` recorder there and ours does. Root cause not found;
-handed to a session of its own. A group that meets it in its worktree
-reports it and does not fix it.
+`Window_FreeCurrent` recorder there and ours does. Handed to a session of
+its own, and **fixed** there (2026-09-29): not the layout but the main
+build directory's `bof3x.ini`, whose `wide=1` the launcher turns into
+`BOF3X_WIDE=1` under `--no-config` too. DIV-0041 widens the three
+slide-outs' `cmp ax, imm16` bounds before `BattleE7_Inject` clones them, and
+ours held the original bounds; in every failing round `+4` sat on the
+original bound. Ours now reads the operand ([`battle_e7.md`](battle_e7.md)
+§3). The verification worktree has no ini, so `verify_tip.sh` is narrow
+only: a wave's verification adds one `BOF3X_WIDE=1` star run.
 

@@ -21,7 +21,9 @@ extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 
 // Re-aims the four x-range constants of AreaMap_FrameAreaBD 0x510780 (still
 // Capcom's) at wider copies, moves the menu boxes' fourteen slide-off bounds
-// outward by the columns added, and widens the terrain cull above. Last in
-// inject_all.cpp: every module's start-up fuzz has run against the original
-// bounds by then. Does nothing unless the view is wide.
+// outward by the columns added, and widens the terrain cull above. Placed
+// after the modules whose fuzz compares the original bounds; modules added
+// below it fuzz against the widened ones, so ours of a patched site reads the
+// operand (menu_lists, menu_draw_helpers, battle_e7). Does nothing unless the
+// view is wide.
 void Widescreen_Inject();

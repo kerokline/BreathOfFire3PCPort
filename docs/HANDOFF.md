@@ -55,8 +55,10 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`)
    with `merge_group13.sh <group> <scratch>` (`MOD=effect_1a` ...), `verify_tip.sh`, `make_cut.py`, `join.py`. Merge
    order E1F, E1B, E1A, E1G, E1C, E1D, E1E. Owed at this tip: the whelp route's frame hash (it enters two of EGT's
-   functions). **`battle_e7` fails in the main checkout's build directory and passes in the verification worktree**, at
-   `d1b411c` already: a session of its own has it (section 11's last paragraph).
+   functions). The `battle_e7` failure in the main checkout's build directory (from `d1b411c`) is **fixed**: that
+   build's `bof3x.ini` has `wide=1`, and DIV-0041 widens three gene-list slide-out bounds that ours held as constants
+   ([`battle_e7.md`](battle_e7.md) §3). `verify_tip.sh` runs without an ini, so narrow only; **a round's verification
+   also wants one `BOF3X_WIDE=1` star run** (the ledger's DIV-0041 verification asks for both).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,

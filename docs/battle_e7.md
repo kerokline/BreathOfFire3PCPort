@@ -92,10 +92,25 @@ every original re-reads `0x905B84` before each use, and so does ours.
 
 ## 3. Divergence
 
-None: every function is a faithful replacement, and no `DIVERGENCE.md`
-entry or `cheats.cpp` patch names an address of the band (grepped
-2026-09-29). Where the original indexes past a table, ours aborts with a
-message (the owner's rule, round9 doc section 6; section 7).
+None of its own: every function is a faithful replacement. Where the
+original indexes past a table, ours aborts with a message (the owner's rule,
+round9 doc section 6; section 7).
+
+One divergence has patch sites inside the band and survives in ours (added
+2026-09-29, after the takeover): **DIV-0041** (`widescreen.cpp` `kSlides`)
+moves the `cmp ax, imm16` bounds of the three list slide-outs outward by 53
+under `BOF3X_WIDE=1` - `0x599061` (-0xA5 to -0xDA), `0x599451` (0x15B to
+0x190), `0x599551` (0x143 to 0x178). Ours first held the original bounds as
+constants, so from `d1b411c` the wide view freed these windows at the old
+edge; `GeneWin_ListSlideOut`, `_List2SlideOut` and `_List3SlideOut` now read
+the bound from the operand (`battle_e7_callees.h` `kListOutBound` ..), and
+`BattleE7_Inject` refuses unless each operand follows `66 3D` and holds the
+original bound or the widened one. The takeover's grep of the ledger and
+patch tables missed them because `kSlides` writes its addresses `0X599061`.
+The symptom was `battle_e7` failing its self-test in any build directory
+whose `bof3x.ini` has `wide=1` (1,800 rounds, the three slide-outs, Capcom's
+copy holding the widened immediate and ours the original); the launcher sets
+`BOF3X_WIDE` from the ini under `--no-config` too.
 
 ## 4. The harness's use, and what it lacks
 
@@ -148,7 +163,9 @@ and counts of 0; the grid's step 4 (and 3, 5), row 0xFF or a cell, column
 0..4, the cost 0..0xFF and the menu actor's member byte 0..2 with its AP at
 the cost, one above, one below, 0x80 above; each slide's `+4` / `+6` at its
 bound and 1, 2, 0x10, 0x20 either side (`0x29`, `-0x17`, `0x5B`, `0x11`,
-`-0xA5`, `0x15B`, `0xA3`, `0x143`); the gene rows' indices (0xFF sometimes),
+`-0xA5`, `0x15B`, `0xA3`, `0x143`; the three slide-out bounds read from their
+operands, so under `BOF3X_WIDE=1` the widened ones - the same draws either
+way); the gene rows' indices (0xFF sometimes),
 form bytes (0xFF, 0..31, any), the top row inside the list (0..3 of six,
 0..9 of twelve), the cursor row 0..2, step 6 / sub-step 5 and their
 neighbours; the equipment window's record (a window record) with rows

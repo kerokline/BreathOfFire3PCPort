@@ -24,7 +24,10 @@
 // calls through whatever the stack holds beyond them, and the three open
 // states abort on a task slot past the pool where the original writes past it
 // (the owner's rule for an unchecked index, round9 doc section 6; both are
-// described in docs/battle_e7.md section 7, never fixed). Every call goes
+// described in docs/battle_e7.md section 7, never fixed). One divergence has
+// patch sites inside these bodies and survives in ours: DIV-0041
+// (widescreen.cpp) widens the three list slide-outs' bounds; ours reads each
+// bound from the operand it patches. Every call goes
 // through the harness (BH_CALL / BH_AT), so the start-up fuzz can stand
 // recorders in for the callees.
 #include "game/battle_e7.h"
@@ -36,6 +39,7 @@
 #include "game/battle_e7_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -592,12 +596,13 @@ extern "C" void __cdecl GeneWin_ListSlideIn(void) {
 }
 
 // original 0x599050: the list slides left by 0x20, after its draw; at +4 <=
-// -0xA5 (signed) the window is freed instead (a tail jump).
+// -0xA5 (signed) the window is freed instead (a tail jump). The bound is the
+// operand DIV-0041 widens (-0xDA in the wide view), read there.
 extern "C" void __cdecl GeneWin_ListSlideOut(void) {
     BH_CALL(GeneWin_DrawList)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v <= -0xA5) {
+    if (v <= S16(W(At(at::kListOutBound)))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -658,12 +663,12 @@ extern "C" void __cdecl GeneWin_List2SlideIn(void) {
 }
 
 // original 0x599440: after the draw, right by 0x20; at +4 >= 0x15B the
-// window is freed instead.
+// window is freed instead (DIV-0041's operand, 0x190 wide).
 extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= 0x15B) {
+    if (v >= S16(W(At(at::kList2OutBound)))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -699,12 +704,12 @@ extern "C" void __cdecl GeneWin_List3SlideIn(void) {
 }
 
 // original 0x599540: after the draw, right by 0x20; at +4 >= 0x143 the
-// window is freed instead.
+// window is freed instead (DIV-0041's operand, 0x178 wide).
 extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= 0x143) {
+    if (v >= S16(W(At(at::kList3OutBound)))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -832,7 +837,24 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
 
 // ============================================================================
 
+// DIV-0041's three patch sites inside our bodies: the slide-outs read their
+// bound from the imm16 of the original's `cmp ax, imm16` (widescreen.cpp
+// kSlides). Refused unless the two bytes before each are that instruction's
+// 66 3D and the bound is the original's or the widened one.
+namespace {
+void CheckSlideBound(U operand, int original) {
+    const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
+    const int bound = S16(W(At(operand)));
+    if (At(operand - 2)[0] != 0x66 || At(operand - 1)[0] != 0x3D || (bound != original && bound != wide))
+        bof3::Fatal("battle_e7: 0x%X should be `cmp ax, %d` (or %d, DIV-0041), holds %02X %02X then %d", operand - 2, original,
+                    wide, At(operand - 2)[0], At(operand - 1)[0], bound);
+}
+}  // namespace
+
 void BattleE7_Inject() {
+    CheckSlideBound(at::kListOutBound, -0xA5);
+    CheckSlideBound(at::kList2OutBound, 0x15B);
+    CheckSlideBound(at::kList3OutBound, 0x143);
     if (bof3::WantsShadow("battle_e7")) battle_e7::SelfTest();
     BOF3_INJECT(BattleResultWin_DrawLevelUp);
     BOF3_INJECT(BattleResultWin_DrawFrame);

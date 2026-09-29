@@ -2001,8 +2001,14 @@ designed in rather than bolted on.
   32, into a cropped 384 x 216 window (§2.4 there).
 - **Verification:** self-tests at 0 mismatches with `BOF3X_WIDE` 0 and 1
   (the patches log `patch ON Widescreen` x4 and one `DIV-0041` line;
-  `Widescreen_Inject` runs last in `inject_all.cpp`, after every fuzz, so
-  the fuzzes compare the original culls). Live 2026-09-23: the field recipe
+  `Widescreen_Inject` ran last in `inject_all.cpp` when written, after every
+  fuzz, so the fuzzes compared the original culls - modules added since sit
+  below it and fuzz against the widened bounds under `BOF3X_WIDE=1`, so a
+  takeover of a `kSlides` site must read its bound from the operand, as
+  `menu_lists`, `menu_draw_helpers` and `battle_e7` do: 2026-09-29, the
+  three gene-list slide-outs had held the original bounds since `d1b411c`,
+  found by `battle_e7`'s self-test failing in a build directory with
+  `wide=1`; [`battle_e7.md`](battle_e7.md) §3). Live 2026-09-23: the field recipe
   at k = 2, 852 x 480 captures (`analysis/shots/wide_field/`), the terrain
   continuous across all 852 columns, the sprite centred. The survey
   recipes' findings in `widescreen.md` §5; the same evening the menu
