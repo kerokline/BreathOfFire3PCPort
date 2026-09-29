@@ -96,7 +96,7 @@ using HookFn = void (__cdecl*)(int);
 extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(at::kSteps, Sc()[1])(); }
 
 // original 0x436170 (PSX 0x801E3224): step 1, the entrance - through
-// EnemyOp_EnterSubs 0x64B1D4 by +2 (0x436190, 0x436270).
+// EnemyOp_EnterSubs 0x64B1D4 by +2 (0x436190, EnemyOp_SlideDispatch 0x436270).
 extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(at::kEnterSubs, Sc()[2])(); }
 
 // original 0x436190 (PSX 0x801E3268): the entrance's first part, the
@@ -104,7 +104,8 @@ extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(at::kEnterSubs, Sc()
 extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(at::kScaleInSubs, Sc()[3])(); }
 
 // original 0x4366E0 (PSX 0x801E3AE0): step 6 - through EnemyOp_ActSubs
-// 0x64B1FC by +2 (0x436700, 0x436720, 0x436700, 0x436BC0, 0x436D90, 0x436F00).
+// 0x64B1FC by +2 (0x436700, 0x436720, 0x436700, EnemyOp_Act3Dispatch 0x436BC0,
+// 0x436D90, EnemyOp_Act5Dispatch 0x436F00).
 extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(at::kActSubs, Sc()[2])(); }
 
 // original 0x436720 (PSX 0x801E3B48): the hit taken - through

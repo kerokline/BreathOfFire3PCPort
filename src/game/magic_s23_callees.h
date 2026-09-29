@@ -21,6 +21,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace magic_s23 {
 
 namespace at {
@@ -97,7 +102,7 @@ constexpr std::uint32_t kFanPhases = 0x65B818;       // SimoonFan_Phases, 4
 
 // Raw addresses of callees in other units (see the top): the engine's, called
 // by it; group L's, the fuzz's keys for the stand-ins ours reaches by name.
-constexpr std::uint32_t kTurnByFacing = 0x446770;
+constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
 constexpr std::uint32_t kOrbitRecord = 0x4FBB40;    // MagicFx_StepAround
 constexpr std::uint32_t kNearRecord = 0x4FBC30;     // MagicFx_NearSprite
 constexpr std::uint32_t kSideCentre = 0x4FC0E0;     // MagicFx_CenterOnSide

@@ -367,6 +367,7 @@ add_library(bof3x SHARED
   src/game/area_w0b.cpp
   src/game/area_w0b_fuzz.cpp
   src/game/scenario_harness.cpp
+  src/game/scenario_harness_fh.cpp
   src/game/scena_sc0.cpp
   src/game/scena_sc0_fuzz.cpp
   src/game/scena_se.cpp
@@ -456,6 +457,9 @@ add_library(bof3x SHARED
   src/game/area_w4f.cpp
   src/game/area_w4f_fuzz.cpp
   src/game/boss_harness.cpp
+  src/game/boss_harness_eh.cpp
+  src/game/battle_e7.cpp
+  src/game/battle_e7_fuzz.cpp
   src/game/boss_spawn.cpp
   src/game/boss_spawn_fuzz.cpp
   src/game/boss_h.cpp
@@ -478,8 +482,34 @@ add_library(bof3x SHARED
   src/game/boss_sj_fuzz.cpp
   src/game/boss_sg.cpp
   src/game/boss_sg_fuzz.cpp
+  src/game/battle_e5.cpp
+  src/game/battle_e5_fuzz.cpp
   src/game/boss_sf.cpp
-  src/game/boss_sf_fuzz.cpp)
+  src/game/boss_sf_fuzz.cpp
+  src/game/battle_e1.cpp
+  src/game/battle_e1_fuzz.cpp
+  src/game/battle_e6.cpp
+  src/game/battle_e6_fuzz.cpp
+  src/game/battle_e4.cpp
+  src/game/battle_e4_fuzz.cpp
+  src/game/battle_e2.cpp
+  src/game/battle_e2_fuzz.cpp
+  src/game/battle_e3.cpp
+  src/game/battle_e3_fuzz.cpp
+  src/game/field_c2.cpp
+  src/game/field_c2_fuzz.cpp
+  src/game/field_s.cpp
+  src/game/field_s_fuzz.cpp
+  src/game/field_e2.cpp
+  src/game/field_e2_fuzz.cpp
+  src/game/field_c3.cpp
+  src/game/field_c3_fuzz.cpp
+  src/game/field_e1.cpp
+  src/game/field_e1_fuzz.cpp
+  src/game/field_o.cpp
+  src/game/field_o_fuzz.cpp
+  src/game/field_c1.cpp
+  src/game/field_c1_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

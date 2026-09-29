@@ -658,7 +658,7 @@ extern "C" void __cdecl EffectKind06_Start(void) {
 
 // original 0x469CB0 (EffectKind06_States 1; PSX 0x8019B544): EffectKind06_Ticks
 // 0x653EDC by the variant +6 - _Blink for 0, 1, 2 and 4, 0x469D40 for 3,
-// 0x469D10 for 5 (neither in this round's queue).
+// 0x469D10 for 5 (EffectKind06_Fade, EffectKind06_PlayOnce: field_c1.cpp).
 extern "C" void __cdecl EffectKind06_Tick(void) { Entry(at::kKind06Ticks + Cur()[6] * 4u)(); }
 
 // original 0x469CD0 (PSX 0x8019B588): +9 - 1; at 0 +1 + 1 and nothing more.

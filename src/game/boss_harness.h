@@ -32,6 +32,14 @@
 //      for a kind, the kind (Group::kind);
 //   3. one call, boss_harness::Run(group), per fight id or kind, under its
 //      BOF3X_SHADOW name, before it injects.
+//
+// Round twelve (group EH, docs/boss_harness.md section 10) widened it to the
+// battle engine's address runs (at::kEngineBands) for groups BE1..BE7: four
+// engine shapes (kStep, kWindow, kMember, kHelper), Clone::state_cell and
+// Via::state_cell, and Group::engine - the engine frame's regions, pointers,
+// disturbance and standard callees. Every addition defaults to round
+// eleven's behaviour; boss_harness_eh.cpp is the harness's own self-test of
+// them (BOF3X_SHADOW=boss_harness_eh).
 #pragma once
 
 #include <cstdint>
@@ -119,7 +127,60 @@ constexpr std::uint32_t kPacketNext = 0x7E0670;     // Gfx_PacketNext
 constexpr std::uint32_t kSetupTable = 0x656954;     // Boss_SetupTable: 56 set-ups by the fight byte
 constexpr std::uint32_t kKindTable = 0x64B088;      // BossKind_Table: 63 dispatchers by the kind byte
 
+// --- the battle engine's frame (round twelve, group EH; docs/boss_harness.md
+// section 10). Used only by a Group with `engine` set: a boss group's state,
+// draws and stand-ins are what they were.
+
+// The bands. The boss round's is 0x437A00..0x441000; round twelve's battle
+// groups (BE1..BE7, analysis/round12_cut.tsv) own functions in the union of
+// the battle engine's address runs (docs/takeover-queue-field-battle.md
+// section 1), which holds the boss band. An engine group's clone outside
+// kEngineBands is a Fatal at Run (a cut mistake, not a fuzz result).
+struct Band { std::uint32_t lo, hi; };
+constexpr Band kBossBand = {0x437A00, 0x441000};
+constexpr Band kEngineBands[] = {
+    {0x42D7A0, 0x4552F6},   // BATE's windows 0x42D7A0 .. the last debt row 0x455290 (0x66 bytes)
+    {0x4CEB40, 0x4CF4A4},   // BMAGIC's four MapCell_Handlers slots
+    {0x597FC0, 0x59DB61},   // the battle windows: the gene screen, the result windows, 0x59D640
+};
+
+// The window records (WindowRecords, symbols.toml block: 22 of 0x24 bytes;
+// +0 in use, +1 the kind Field_RunTaskRecords dispatches on, +2 / +3 the
+// kind's and the state's byte a window handler's stack table is indexed by,
+// +4 / +6 x / y in 12.4) and the dword naming the record a window handler runs
+// for (Field_RunTaskRecords stores it; Window_FreeCurrent reads it).
+constexpr std::uint32_t kWindows = 0x803160;
+constexpr std::uint32_t kWindowStride = 0x24;
+constexpr unsigned kWindowCount = 22;
+constexpr std::uint32_t kWindowCurrent = 0x905B84;
+// Field_State: the party member a battle object's code runs for (with
+// Sprite_Current the member's object; both ObjTrio records).
+constexpr std::uint32_t kMemberCurrent = 0x905D98;
+// The command menu's actor (an ObjTrio member) and its command record, the
+// member's +0x124 (battle_phases.md, battle_menu_states.md).
+constexpr std::uint32_t kMenuActor = 0x939EC4;
+constexpr std::uint32_t kMenuCommand = 0x939FA0;
+constexpr std::uint32_t kMenuCommandAt = 0x124;
+// Pointer cells among the battle bytes the engine code dereferences: the
+// acting sprite 0x904B3C and 0x904B40 (seeded at the harness's records, as the
+// spell and boss groups did), and the result record 0x904B60 (at an actor's
+// +0x104: a member's or an enemy's; Effect_ApplyResult reads it).
+constexpr std::uint32_t kActingSprite = 0x904B3C;
+constexpr std::uint32_t kActingSprite2 = 0x904B40;
+constexpr std::uint32_t kResultRecord = 0x904B60;
+constexpr std::uint32_t kResultAt = 0x104;
+// The battle's step bytes after kPhase / kStep / kSubStep: the step tables'
+// indices (Battle_InputSteps by kSubStep 0x904AA2, BattleAction_KindSteps by
+// 0x904AA3, BattleItemCmd_* and the Dragon run's tables by 0x904AA4 ...).
+constexpr std::uint32_t kSubStep2 = 0x904AA3;
+constexpr std::uint32_t kSubStep3 = 0x904AA4;
+// BATE's mode bytes (the extra battle's 0x42D710 dispatches by 0x929F00, its
+// sub-tables by 0x929F01 / 0x929F02).
+constexpr std::uint32_t kModeBytes = 0x929F00;
+
 }  // namespace at
+
+bool InEngineBands(std::uint32_t address);
 
 // --- for ours ----------------------------------------------------------------
 //
@@ -198,7 +259,35 @@ struct JumpTable { std::uint32_t jmp_disp, table, entries; };
 // After every call the three hooks 0x904B64..0x904B6C are read back and
 // logged (they are in the compared state too): a set-up stores them, a hook
 // re-points itself.
-enum class Shape : std::uint8_t { kState, kSetup, kEnd, kExit, kEvent, kDispatch, kEnemyHook, kTask, kCallee };
+//
+// The battle engine's shapes (round twelve, group EH; docs/boss_harness.md
+// section 10). Each wants Group::engine (a Fatal otherwise): the engine
+// frame points 0x905B84 at a window record, Field_State and the menu actor at
+// party members, the pointer cells among the battle bytes at records.
+//   kStep      a step of a phase, menu or mode table the engine indexes by an
+//              absolute byte (Battle_InputSteps by 0x904AA2, BATE's by
+//              0x929F01 ...): void (void); Sprite_Current a member or an enemy.
+//              With Clone::states and Clone::state_cell set, that byte is
+//              drawn below states before the seed.
+//   kWindow    a window's state handler: void (void), 0x905B84 one of the 22
+//              window records; with Clone::states set, the record's byte at
+//              state_at (the stack table's index, +2 or +3) drawn below it
+//              before the seed (a dispatcher's own stack table: its Imms).
+//   kMember    a battle object's state (BattleObj_RunState's tables by +1,
+//              their sub-tables by +2): void (void), Sprite_Current a party
+//              member's object and Field_State the same member three times in
+//              four; with Clone::states set, Sprite_Current[state_at] drawn
+//              below it before the seed.
+//   kHelper    an engine function its callers call directly, cdecl, 0..10
+//              words (the group's args, garbage otherwise), answer by
+//              ret_mask (0xFF for al, 0xFFFF for ax, 0xFFFFFFFF for eax):
+//              kCallee's contract in the engine frame - Sprite_Current a
+//              member or an enemy, not always an enemy.
+// kDispatch and kTask take Clone::state_cell too: a dispatcher by an absolute
+// byte (0x42ED90's `jmp [0x64AE48 + 4 * byte 0x904AA2]`) is a kDispatch with
+// state_cell 0x904AA2 and states its table's length.
+enum class Shape : std::uint8_t { kState, kSetup, kEnd, kExit, kEvent, kDispatch, kEnemyHook, kTask, kCallee,
+                                  kStep, kWindow, kMember, kHelper };
 
 // Driving a function the way its unit does, through the unit's dispatcher:
 // the harness writes Sprite_Current[state_at] = state (or, with state_at 0,
@@ -209,11 +298,16 @@ enum class Shape : std::uint8_t { kState, kSetup, kEnd, kExit, kEvent, kDispatch
 // cell is put back after each pass. For a helper reached only through
 // another unit's table; the plan's "the unit's table entry swapped for the
 // helper's clone". dispatcher 0: called directly.
+// state_cell (round twelve): a dispatcher that indexes by an absolute byte
+// (a step table's 0x904AA2, BATE's 0x929F01) - the harness writes the byte
+// there instead (state_at is then unused). For a kWindow clone, state_at
+// names a byte of the window record 0x905B84 points at.
 struct Via {
     std::uint32_t dispatcher = 0;
     std::uint32_t cell = 0;
     std::uint8_t state_at = 0;
     std::uint8_t state = 0;
+    std::uint32_t state_cell = 0;
 };
 
 struct Clone {
@@ -251,6 +345,10 @@ struct Clone {
     std::uint8_t state_at = 1;
     std::uint8_t states = 0;
     Via via = {};
+    // Round twelve: the dispatched byte at an absolute address instead of
+    // Sprite_Current[state_at] (kDispatch, kStep: drawn below states before
+    // the seed; kTask: after it). 0: Sprite_Current's, as before.
+    std::uint32_t state_cell = 0;
 };
 
 // The most arguments a recorder takes (MoveCmd_OpE9 takes seven). A caller
@@ -344,6 +442,16 @@ struct Group {
     // The kind: written into the current enemy's (0x939AD8's) +0x100 every
     // round, before the seed. -1: left to the fill.
     int kind = -1;
+    // Round twelve: the battle engine's frame (docs/boss_harness.md section
+    // 10) on top of the boss frame - the engine regions (the window records
+    // and 0x905B84, Field_State, the command menu's cells, the transformation's
+    // and the result screen's cells, BATE's mode bytes, the input words, a
+    // text buffer), their pointers put back each round, the engine's standard
+    // callees (kEngineStandard, registered before the boss set so their louder
+    // forms stand), and the engine cells in the disturbance (its case 12, the
+    // chapter bytes' for a boss group). The new shapes need it; a boss group
+    // leaves it false and fuzzes exactly as before.
+    bool engine = false;
 };
 
 // Clones every function (before the caller injects), fuzzes each against ours
@@ -376,6 +484,13 @@ void OtherStates(unsigned at, unsigned n1, unsigned n2, unsigned n3);
 // kHookExit / kHookEvent, or 0 for the enemies' +0xF4): for a seed that
 // moved a cell and wants it back.
 std::uint32_t HookStub(std::uint32_t cell);
+// The engine frame's (Group::engine): window record k % 22, the record
+// 0x905B84 points at, and the harness's text buffer (0x200 bytes, a region of
+// an engine group, a NUL every 16th byte each round: the strings the
+// engine's text stand-ins answer).
+unsigned char* WindowAt(unsigned k);
+unsigned char* CurrentWindow();
+unsigned char* TextBuffer();
 void SetPointer(std::uint32_t cell, const void* p);
 unsigned char* Pointer(std::uint32_t cell);
 void SetRandHint(std::uint32_t hint);
@@ -402,5 +517,17 @@ std::uint32_t BannerCharEffect(const std::uint32_t*, std::uint32_t);  // Battle_
 // listing the callee with it - seven originals index by the answer untested
 // (known-defects D163), and ours aborts where they would write past the pool.
 std::uint32_t CreateMayFail(const std::uint32_t*, std::uint32_t);
+
+// --- the engine's typed stand-ins (round twelve, group EH; the engine set) ------
+// Each is kEngineStandard's for the callee named; a group may list the callee
+// again with one of these or its own.
+std::uint32_t WindowAllocEffect(const std::uint32_t*, std::uint32_t);   // Window_Alloc(slot, kind): the record claimed as the real one does, slot or 0xFF
+std::uint32_t WindowFreeEffect(const std::uint32_t*, std::uint32_t);    // Window_FreeCurrent: +0, +2, +3 of 0x905B84's record zeroed
+std::uint32_t TextPtrEffect(const std::uint32_t*, std::uint32_t);       // answers a string of the text buffer (Msg_SystemPtr, Item_NamePtr)
+std::uint32_t SprintfEffect(const std::uint32_t*, std::uint32_t);       // Crt_sprintf(dst, fmt, ...): the format's first 15 bytes and a NUL into dst, noted
+std::uint32_t TextArg0Effect(const std::uint32_t*, std::uint32_t);      // Notes the string at argument 0 (to its NUL, 64 at most)
+std::uint32_t TextArg3Effect(const std::uint32_t*, std::uint32_t);      // ... at argument 3 (Text_DrawFont8 / Font12)
+std::uint32_t TextArg4Effect(const std::uint32_t*, std::uint32_t);      // ... at argument 4, answering where it ends (Text_DrawAt / DrawSmall)
+std::uint32_t BannerTextEffect(const std::uint32_t*, std::uint32_t);    // ... at argument 4 (BattleBanner_Add)
 
 }  // namespace boss_harness

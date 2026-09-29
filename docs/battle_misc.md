@@ -568,7 +568,9 @@ No DIV entry; no behaviour change.
   - `0x44B2C0` (BE) is the sibling's `EnemyAI_RowDone`, bit `row` of the
     enemy's `+0xF1`. (Its `+0xE1` is on the PSX: the enemy's `+0x10`
     prepend.) `0x44B2E0` is `EnemyAI_SetRowDone`, `0x44B320`
-    `EnemyAI_CondPartyFlag` and `0x44B3A0` `EnemyAI_ApplyAction`.
+    `EnemyAI_CondPartyFlag` and `0x44B3A0` `EnemyAI_ApplyAction` (all three
+    taken by round twelve's BE5, the second as `EnemyAI_CondElement`:
+    [`battle_e5.md`](battle_e5.md)).
 - **`analysis/pairs_propagated.json`** puts five overlay functions in `boot`
   as well (section 1).
 - **A trap for fuzz authors.** In an anonymous namespace, an `enum`

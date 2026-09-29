@@ -346,7 +346,7 @@ extern "C" void __cdecl BattleIntro_Finish(void) {
 
 // original 0x42E990 (no PSX twin paired): phase 1's entry. A tail jump
 // through Battle_InputSteps 0x64AE28 by the step 0x904AA1: Battle_RoundStart,
-// BattleInput_NextMember, BattleMenu_CommandSelect, 0x42ED90 (a sub-step
+// BattleInput_NextMember, BattleMenu_CommandSelect, BattleHold_Dispatch 0x42ED90 (BE1's; a sub-step
 // dispatch through 0x64AE48, not this group's), BattleMenu_ConfirmDispatch.
 extern "C" void __cdecl BattleInput_Dispatch(void) { JumpThrough(at::kInputSteps, B(at::kStep)); }
 
@@ -535,7 +535,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
 // original 0x42EED0 (PSX BattleMenu_ConfirmDispatch 0x801D24CC): the menu
 // pulse stepped, then a tail jump through Battle_MenuSteps 0x64AE54 by the
 // chosen command 0x904AA2 (read after the pulse): 0x447110, 0x447430,
-// 0x448180, 0x447FD0 (groups CH and CI), Cmd_ConfirmDefend, 0x42EF50 (the
+// 0x448180, 0x447FD0 (groups CH and CI), Cmd_ConfirmDefend, Cmd_AutoBattle 0x42EF50 (BE1's; the
 // PSX's Cmd_AutoBattle_Begin, unowned), 0x44A000, 0x44FF00.
 extern "C" void __cdecl BattleMenu_ConfirmDispatch(void) {
     g.pulse_step();

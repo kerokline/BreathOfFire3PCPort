@@ -188,6 +188,7 @@
 #include "game/scena_sc2.h"
 #include "game/scena_sc13.h"
 #include "game/scena_sx2.h"
+#include "game/scenario_harness_fh.h"
 #include "game/area_w1e.h"
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
@@ -221,6 +222,21 @@
 #include "game/boss_sj.h"
 #include "game/boss_sg.h"
 #include "game/boss_sf.h"
+#include "game/boss_harness_eh.h"
+#include "game/battle_e7.h"
+#include "game/battle_e1.h"
+#include "game/battle_e5.h"
+#include "game/battle_e6.h"
+#include "game/battle_e4.h"
+#include "game/battle_e2.h"
+#include "game/battle_e3.h"
+#include "game/field_c2.h"
+#include "game/field_s.h"
+#include "game/field_e2.h"
+#include "game/field_c3.h"
+#include "game/field_e1.h"
+#include "game/field_o.h"
+#include "game/field_c1.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -785,6 +801,95 @@ void InjectAll() {
                                 // Gazer's effect task, 0x43C480..0x4406D7): its clones' calls re-aimed at the boss
                                 // harness's recorders, the kinds' and tasks' tables swapped for the fuzz only; no
                                 // module patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossHarnessEh_Inject();     // round 12 group EH: the boss harness's own self-test of its battle-engine frame
+                                // (the new shapes, state_cell, the engine set) with Capcom's code on both sides;
+                                // takes no function and patches nothing: order does not matter
+    ScenarioHarnessFh_Inject(); // round 12 group FH: the scenario harness's field mode proved on Capcom's code, a copy
+                                // of each of thirteen field functions against the original in place - injects
+                                // nothing, takes nothing; after every scenario group, so their random streams are
+                                // the ones they had (docs/scenario_harness.md section 7.7)
+    BattleE7_Inject();          // round 12 group BE7 (the battle windows 0x597FC0..0x59DB61: the result screen's
+                                // level-up and drops windows, the gene windows, the equipment window): its clones'
+                                // calls re-aimed at the boss harness's recorders, its stack tables' immediates at
+                                // handler recorders; no module patches bytes inside its 31 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    BattleE1_Inject();          // round 12 group BE1 (BATE's tally and equipment screens, the command menu's held
+                                // steps and auto battle, action kind 3, the ability notice, the result's counts and
+                                // level gain, the loss screen, 0x42D7A0..0x432B6A): its clones' calls re-aimed at the
+                                // boss harness's recorders, its dispatchers' tables swapped for the fuzz only; no module
+                                // patches bytes inside its 41 (DIVERGENCE.md, cheats.cpp; DIV-0020 reads 0x42E09D,
+                                // past BattleExtra_EquipLeave's jmp): order does not matter
+    BattleE5_Inject();          // round 12 group BE5 (the enemy AI helpers, Effect_Handlers slots 22 / 23 / 38,
+                                // BattleForm_ApplyStats, the Dragon command's run, 0x44B240..0x451471): its clones'
+                                // calls re-aimed at the boss harness's recorders, the Dragon run's six step tables
+                                // swapped for the fuzz only; no module patches bytes inside its 52 (DIVERGENCE.md,
+                                // cheats.cpp): order does not matter
+    BattleE6_Inject();          // round 12 group BE6 (the transformation, the gene cost, BattleFx_Dispatch slots 15,
+                                // 16, 18, the stat rebuild, the member roll, the AP pop-up, the Field_Slots debts,
+                                // BMAGIC's four map cells; 0x451480..0x4552F5, 0x4CEB40..0x4CF4A3): its clones' calls
+                                // re-aimed at the boss harness's recorders, the tasks' tables swapped for the fuzz
+                                // only; no module patches bytes inside its 39 (DIVERGENCE.md, cheats.cpp): order does
+                                // not matter
+    BattleE4_Inject();          // round 12 group BE4 (the battle engine's 0x444660..0x44AAC9: damage, the pace and
+                                // target helpers, the item command's states 5..9, the escape): its clones' calls
+                                // re-aimed at the boss harness's recorders, its four dispatchers' tables swapped for
+                                // the fuzz only; after BossHarnessEh_Inject, whose self-test copies 0x4457F0; no
+                                // module patches bytes inside its 56 (DIVERGENCE.md, cheats.cpp)
+    BattleE2_Inject();          // round 12 group BE2 (0x433650..0x437030: the effect tasks of BattleFx_Dispatch slots
+                                // 9, 10, 12, 13, 14, 17 and the watch's state 3, the enemy's action pick and targets,
+                                // EnemyOp_Steps 4 / 5, EnterSubs 1, ActSubs 3 / 5): its clones' calls re-aimed at the boss
+                                // harness's recorders, the EnemyOp tables swapped for the fuzz only; no module patches
+                                // bytes inside its 48 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BattleE3_Inject();          // round 12 group BE3 (the enemy ops EnemyOp_Steps 7..9, the party objects' states 6,
+                                // 10, 11, 26, two party helpers, 0x437030..0x442F97): its clones' calls re-aimed at the
+                                // boss harness's recorders, its sub-tables swapped for the fuzz only; after
+                                // BossHarnessEh_Inject, whose self-test copies 0x441A10 / 0x441A30; no module patches
+                                // bytes inside its 49 (DIVERGENCE.md, cheats.cpp)
+    FieldC2_Inject();           // round 12 group FC2 (the field core's 0x46BBF0..0x46D5ED: effect kinds 0x30, 0x34,
+                                // 0x3A and 0x41): its clones' calls re-aimed at the scenario harness's recorders, the
+                                // kinds' eight state tables swapped for the fuzz only; after ScenarioHarnessFh_Inject
+                                // (none of its thirteen is FC2's); no module patches bytes inside its 44
+                                // (DIVERGENCE.md, cheats.cpp): order does not matter otherwise
+    FieldS_Inject();            // round 12 group FS (the shop overlay's remainder 0x57FF80..0x5859F9: the field save's
+                                // confirm, the rest sequence's first two states, the party formation, the resistance
+                                // shop, the shared ability list; the equip screen's choosers 0x58C7A0, 0x58CAE0): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its five dispatch tables
+                                // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
+                                // 0x5811B0 and 0x5845E0, and after MenuFrame_Inject, whose DIV-0011 RetargetCall
+                                // at 0x581313 (inside 0x581300) ours follows; nothing else patches its 53
+    FieldE2_Inject();           // round 12 group FE2 (the field engine's rest: the event script's helpers, the leader's
+                                // hop helpers, the mode-11 object, seven field tail kinds, three map-cell draws, the
+                                // trade screen; 0x5341C0..0x5372D8, 0x56D6B0..0x5729F8, 0x593960..0x594060): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its dispatch tables
+                                // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
+                                // 0x5343C0, 0x534420, 0x56E020 and 0x5728D0; no module patches bytes inside its 51
+    FieldC3_Inject();           // round 12 group FC3 (object steering, op E7, the fade cases, mode 8's and 11's
+                                // frames, the field core's state-2 sub-states 0, 1, 3..8 and their steps;
+                                // 0x5172C0..0x5195F9, 0x525390..0x526DAF): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its ten tables swapped for the fuzz only; after
+                                // ScenarioHarnessFh_Inject, whose self-test copies 0x525CC0 (FieldCore_Up), and after
+                                // ObjectKinds_Inject, whose copy of Field_ObjectFadeOut holds the four fade cases; no
+                                // module patches bytes inside its 63 (DIVERGENCE.md, cheats.cpp)
+    FieldE1_Inject();           // round 12 group FE1 (the field engine 0x52D080..0x533BA0: the panel draws, the
+                                // leader states 6, 8, 11, 12 and the jump, a field object's content, the zenny found,
+                                // the cells around a sprite, the gateway exit, the party's placements, the pending
+                                // jump's members): its clones' calls re-aimed at the scenario harness's recorders,
+                                // its five tables swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose
+                                // self-test copies 0x52F980 and 0x52D880; no module patches bytes inside its 45
+                                // (DIVERGENCE.md, cheats.cpp)
+    FieldO_Inject();            // round 12 group FO (the field engine's 0x5738A0..0x57CD89: eight menu panels, the
+                                // movement ops 87 / 88 / DB / E9 / F9 and their states, the placement ops 3x 4x 6x 7x
+                                // Ax, thirteen event conditions, EventScript_SkipIf, ObjTrio_ClearBit40): its clones'
+                                // calls re-aimed at the scenario harness's recorders; after ScenarioHarnessFh_Inject,
+                                // whose self-test copies 0x57C1A0, 0x57C230, 0x57C8E0 (FO's); after YesNoLayout_Inject,
+                                // whose DIV-0029 byte at 0x576A48 Menu_DrawSaveSlot reads back
+    FieldC1_Inject();           // round 12 group FC1 (the field core's first half, 0x461800 and 0x469D10..0x46BBF0:
+                                // the Config row label, effect kinds 4, 0x14, 0x17, 0x19, 0x1B, 0x30..0x32, 0x37,
+                                // 0x3C and two of kind 6's ticks): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its five state tables swapped for the fuzz only; after
+                                // ScenarioHarnessFh_Inject (none of its thirteen is FC1's). config_text.cpp patches
+                                // operands inside 0x461800 (DIV-0015 / DIV-0017), which ours reads in place at each
+                                // call: order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

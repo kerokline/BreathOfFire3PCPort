@@ -1,0 +1,414 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# save whelp_boss
+# Shots every 120 frames added by tools/recipe_shots.py from tools/recipes/whelpBoss.txt.
+wait 32
+hold start 8
+wait 59
+hold start 7
+wait 14
+shot f00120 1
+wait 43
+hold circle 4
+wait 49
+hold circle 6
+wait 17
+shot f00240 1
+wait 5
+hold circle 6
+wait 97
+hold right 11
+shot f00360 1 right
+hold right 3
+hold right+down 5
+hold down 30
+hold right+down 10
+hold down 1
+wait 70
+shot f00480 1
+wait 5
+hold circle 6
+wait 108
+shot f00600 1
+wait 98
+hold circle 10
+wait 11
+shot f00720 1
+wait 119
+shot f00840 1
+wait 9
+hold circle 6
+wait 44
+hold circle 7
+wait 53
+shot f00960 1
+wait 119
+shot f01080 1
+wait 119
+shot f01200 1
+wait 119
+shot f01320 1
+wait 119
+shot f01440 1
+wait 119
+shot f01560 1
+wait 119
+shot f01680 1
+wait 119
+shot f01800 1
+wait 119
+shot f01920 1
+wait 119
+shot f02040 1
+wait 119
+shot f02160 1
+wait 119
+shot f02280 1
+wait 119
+shot f02400 1
+wait 119
+shot f02520 1
+wait 119
+shot f02640 1
+wait 35
+hold circle 7
+wait 75
+hold down 2
+shot f02760 1
+wait 9
+hold left 5
+wait 11
+hold up 4
+wait 11
+hold right 3
+wait 14
+hold down 5
+wait 9
+hold left 5
+wait 11
+hold up 5
+wait 9
+hold right 6
+wait 11
+hold down 1
+shot f02880 1 down
+hold down 3
+wait 10
+hold left 5
+wait 9
+hold up 6
+wait 12
+hold right 1
+hold right+down 2
+hold right 1
+wait 12
+hold down 6
+wait 9
+hold left 5
+wait 9
+hold up 4
+wait 10
+hold right 6
+wait 9
+shot f03000 1 up
+hold up+right 6
+wait 10
+hold up+left 6
+wait 9
+hold left 1
+hold down+left 6
+hold down 1
+wait 9
+hold right+down 8
+wait 10
+hold right 9
+hold up+right 5
+hold up 11
+hold up+left 3
+hold left 7
+hold down+left 5
+hold down 4
+hold right+down 5
+hold right 4
+shot f03120 1 right
+hold right 4
+hold up+right 7
+hold up 6
+hold up+left 4
+hold left 9
+hold down+left 3
+hold down 10
+hold right+down 2
+hold right 7
+hold up+right 4
+hold up 8
+hold up+left 2
+hold left 6
+wait 47
+shot f03240 1
+wait 119
+shot f03360 1
+wait 119
+shot f03480 1
+wait 119
+shot f03600 1
+wait 119
+shot f03720 1
+wait 119
+shot f03840 1
+wait 119
+shot f03960 1
+wait 119
+shot f04080 1
+wait 56
+hold circle 18
+wait 45
+shot f04200 1
+wait 119
+shot f04320 1
+wait 26
+hold circle 6
+wait 87
+shot f04440 1
+wait 119
+shot f04560 1
+wait 119
+shot f04680 1
+wait 119
+shot f04800 1
+wait 119
+shot f04920 1
+wait 119
+shot f05040 1
+wait 35
+hold circle 5
+wait 79
+shot f05160 1
+wait 78
+hold circle 10
+wait 31
+shot f05280 1
+wait 2
+hold circle 6
+wait 111
+shot f05400 1
+wait 33
+hold circle 3
+wait 83
+shot f05520 1
+wait 119
+shot f05640 1
+wait 23
+hold circle 1
+wait 95
+shot f05760 1
+wait 119
+shot f05880 1
+wait 5
+hold circle 3
+wait 111
+shot f06000 1
+wait 119
+shot f06120 1
+wait 57
+hold circle 1
+wait 61
+shot f06240 1
+wait 119
+shot f06360 1
+wait 1
+hold circle 3
+wait 115
+shot f06480 1
+wait 58
+hold circle 5
+wait 56
+shot f06600 1
+wait 119
+shot f06720 1
+wait 25
+hold circle 5
+wait 89
+shot f06840 1
+wait 78
+hold circle 6
+wait 35
+shot f06960 1
+wait 52
+hold circle 5
+wait 62
+shot f07080 1
+wait 83
+hold circle 4
+wait 32
+shot f07200 1
+wait 89
+hold circle 4
+wait 26
+shot f07320 1
+wait 119
+shot f07440 1
+wait 14
+hold circle 5
+wait 100
+shot f07560 1
+wait 119
+shot f07680 1
+wait 119
+shot f07800 1
+wait 119
+shot f07920 1
+wait 119
+shot f08040 1
+wait 64
+hold circle 5
+wait 37
+hold circle 3
+wait 10
+shot f08160 1
+wait 119
+shot f08280 1
+wait 7
+hold circle 5
+wait 34
+hold circle 4
+wait 69
+shot f08400 1
+wait 20
+hold circle 5
+wait 94
+shot f08520 1
+wait 14
+hold circle 6
+wait 32
+hold circle 7
+wait 26
+hold circle 6
+wait 28
+shot f08640 1
+wait 62
+hold circle 4
+wait 53
+shot f08760 1
+wait 22
+hold circle 6
+wait 91
+shot f08880 1
+wait 9
+hold circle 4
+wait 74
+hold circle 3
+wait 29
+shot f09000 1
+wait 44
+hold circle 5
+wait 14
+hold circle 5
+wait 51
+shot f09120 1
+wait 119
+shot f09240 1
+wait 37
+hold circle 5
+wait 77
+shot f09360 1
+wait 32
+hold circle 5
+wait 82
+shot f09480 1
+wait 25
+hold circle 6
+wait 76
+hold circle 4
+wait 8
+shot f09600 1
+wait 92
+hold circle 2
+wait 25
+shot f09720 1
+wait 78
+hold circle 2
+wait 39
+shot f09840 1
+wait 75
+hold circle 3
+wait 41
+shot f09960 1
+wait 119
+shot f10080 1
+wait 106
+hold circle 1
+wait 12
+shot f10200 1
+wait 99
+hold circle 3
+wait 17
+shot f10320 1
+wait 119
+shot f10440 1
+wait 5
+hold circle 3
+wait 111
+shot f10560 1
+wait 26
+hold circle 3
+wait 72
+hold circle 5
+wait 13
+shot f10680 1
+wait 119
+shot f10800 1
+wait 119
+shot f10920 1
+wait 119
+shot f11040 1
+wait 119
+shot f11160 1
+wait 20
+hold circle 1
+wait 98
+shot f11280 1
+wait 35
+hold circle 3
+wait 60
+hold circle 5
+wait 16
+shot f11400 1
+wait 119
+shot f11520 1
+wait 14
+hold circle 2
+wait 103
+shot f11640 1
+wait 119
+shot f11760 1
+wait 119
+shot f11880 1
+wait 119
+shot f12000 1
+wait 119
+shot f12120 1
+wait 119
+shot f12240 1
+wait 1
+hold circle 1
+wait 117
+shot f12360 1
+wait 119
+shot f12480 1
+wait 4
+hold circle 1
+wait 114
+shot f12600 1
+wait 119
+shot f12720 1
+wait 106
+hold circle 3
+wait 10
+shot f12840 1
+wait 119
+shot f12960 1
+wait 119
+shot f13080 1
+wait 100

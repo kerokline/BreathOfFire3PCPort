@@ -1,6 +1,6 @@
 # Round twelve: the field modes and the battle engine, cut into fourteen groups
 
-**Status:** PROPOSED (2026-09-28 night) - a plan and a cut, not scheduled
+**Status:** MEASURED (2026-09-29) - ran as [`takeover-queue-round12.md`](takeover-queue-round12.md), both waves merged; written 2026-09-28 night as a plan and a cut, not scheduled
 past the owner's word of 2026-09-28 ("field modes and battle as round
 twelve, the area overlays as round thirteen"). Listed as
 [`IDEAS.md`](IDEAS.md) I27 (this round) and I28 (round thirteen, section
@@ -294,6 +294,11 @@ The catalog's `--symbols` defaults to the checkout's `symbols.toml`; run
 it from the round's base commit.
 
 ## 9. Round thirteen: the area overlays' remainder
+
+*Measured further at `61be26e` in [`takeover-queue-round13.md`](takeover-queue-round13.md):
+the 629 hold, but 627 lie outside the area band and are effect-kind state
+code, so `area_rows.py` cannot cut them and `area_harness` unchanged does
+not fit; that doc's cut and plan replace the paragraph below.*
 
 Round ten took "every area overlay of worlds 0..4" as its tool enumerated
 them - the closures of the descriptors' call tables. The catalog at

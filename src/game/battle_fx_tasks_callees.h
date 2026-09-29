@@ -16,6 +16,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_fx_tasks {
 
 namespace at {
@@ -58,7 +63,7 @@ constexpr unsigned kMagicRowCount = 151;
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kAfterAreaScript = 0x446E20;  // not in round 8's queue; tail-jumped to by 0x437720 (unread)
+constexpr std::uint32_t kAfterAreaScript = bof3::addr::BattleEnd_EnterStep3;  // not in round 8's queue; tail-jumped to by 0x437720 (unread)
 
 using Handler = void (__cdecl*)();
 
@@ -66,7 +71,9 @@ struct Callees {
     // BattleFx_Dispatch 0x4352A0's stack table, by the slot's +5: 0x437CC0
     // (a bare ret), 0x432B70, 0x432F90, 0x433190, 0x4332B0, 0x433380,
     // 0x433460, 0x4337F0, 0x43C740, 0x4348E0, 0x434B90, 0x433970, 0x433B80,
-    // 0x434D70, 0x434F40, 0x452680, 0x452AD0, 0x434310, 0x452B60
+    // 0x434D70, 0x434F40, 0x452680, 0x452AD0, 0x434310, 0x452B60 (9, 10, 13,
+    // 14 and 17 BE2's BattleFx_GridMark, _ListHand, _Win18Cursor,
+    // _Win19Cursor, _RestoreMemberTask)
     Handler fx[19];
     // BattleMagicFx_Dispatch 0x435350's, by the slot's +5: 110 magic effects
     Handler magic_fx[110];
@@ -76,7 +83,7 @@ struct Callees {
     // BattleFx_PoseTask 0x433190's: 0x4331D0, 0x433290 (this file's)
     Handler pose[2];
     // BattleFx_ActorWatch 0x433460's: 0x4334C0 (this file's), 0x433550,
-    // 0x433640, 0x433650, 0x433790 (unread)
+    // 0x433640, 0x433650 (BE2's BattleFx_WatchIcon), 0x433790 (unread)
     Handler watch[5];
     // BattleFx_Follow 0x4337F0's: 0x433810 (this file's)
     Handler follow[1];

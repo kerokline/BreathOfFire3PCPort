@@ -344,7 +344,7 @@ const sh::Callee kCallees[] = {
     // any sine: the absolute value, the shift and the mask all take their turn
     {SC13_OURS(Math_Sin), 1, {kAll}, sh::Answer::kGarbage, 0, 0},
     {SC13_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, sh::Answer::kGarbage, 0, 0, {}, &CellByte},
-    {SC13_THEIRS(EventOp_6x), 1, {kAll}, sh::Answer::kGarbage, 0, 0, {}, &NoteSlot},
+    {SC13_OURS(EventOp_6x), 1, {kAll}, sh::Answer::kGarbage, 0, 0, {}, &NoteSlot},
     // the group's own, called directly
     {SC13_OURS(Scena13_SpawnPairA), 0, {}, sh::Answer::kPhase, 0, 0},
     {SC13_OURS(Scena13_SpawnPairB), 0, {}, sh::Answer::kPhase, 0, 0},

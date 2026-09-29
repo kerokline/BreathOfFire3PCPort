@@ -139,8 +139,8 @@ constexpr WorldMapTables kWm88 = {
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kSlotsReleaseFor = 0x454A80;
-constexpr std::uint32_t kSlotStart = 0x455290;
+constexpr std::uint32_t kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;   // 0x454A80 (BE6, 2026-09-29)
+constexpr std::uint32_t kSlotStart = bof3::addr::Field_SlotStart;                  // 0x455290 (BE6, 2026-09-29)
 constexpr std::uint32_t kFlagsToggle = bof3::addr::Flags_Toggle;
 constexpr std::uint32_t kSpawnKind4 = bof3::addr::Effect_HoldFlag1C;
 

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-28 night, round eleven merged as PR #30; its cleanup's cloud half on `claude/round-10-cleanup-handoff-qtwcrk` - the `'*'` run at that tip, then the owner's set-ups, next)
+**Status:** IN PROGRESS (2026-09-29 midday, round twelve complete on `phase-3/capture-round-twelve` at `0e51ec7`, round thirteen's plan on top as `d76f0d8`; pushed, its PR open)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**6,237 functions are ours** (`inject: 6237 ours, 0 left original`);
+**6,891 functions are ours** (`inject: 6891 ours, 0 left original`, on `phase-3/capture-round-twelve`; 6,237 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -46,6 +46,20 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
+00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
+   in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
+   identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
+   pushed 2026-09-29 and **its PR open, the merge the owner's**. Next, in order: the round's debts (section 7 there: the
+   mask and stand-in folds into both harnesses, the defects to number, the pointer scan `band_rows.py` lacks, the 33
+   owned starts without an `entries_logic.txt` line); **round thirteen**, the effect engine
+   ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
+   by the owner: DIV-0063 in game (the gene with a partner down, and each failing pair), the Config screen under an
+   overlay, the field recipes (section 6 there). The scripts and briefs are in the session-`6ae930a8` scratchpad
+   (`.../6ae930a8-04f9-4a6b-9276-f65e6257f40f/scratchpad/`): `merge_group12.sh`, `queue2.sh`, `rebind_resolve.py`,
+   `table_resolve.py`, `live_batch12w2*.sh`, `keep_display.py`, `reach_by_module.py`. **A recipe A/B is a frame hash
+   first** (`live_batch12w2c.sh`: original twice, then ours): it needs no screen. The picture A/B's original side is a
+   screen grab: the display on (`keep_display.py`) and nothing over the game - a browser window cost one pass. Round
+   eleven's cleanup (item 0 below) has all its game-side checks now.
 0. **Round eleven's cleanup** - the list is [`round-11-cleanup.md`](round-11-cleanup.md),
    its status header says what landed and what is left. **Landed
    2026-09-28 night on `claude/round-10-cleanup-handoff-qtwcrk`** (restarted

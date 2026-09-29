@@ -174,7 +174,7 @@ const sh::Callee kCallees[] = {
     {SC11_OURS(ScriptFlags_Clear40), 0, {}, sh::Answer::kGarbage, 0, 0},
     // the chapter's call tables (entry n & 0xFF, no other argument read: chapter 11's entries take none)
     {SC11_OURS(Scenario_CallA), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
-    {SC11_THEIRS(Scenario_CallB), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
+    {SC11_OURS(Scenario_CallB), 1, {kU8}, sh::Answer::kGarbage, 0, 0},   // ours since round twelve group FE2
     // the field
     {SC11_OURS(Field_ChangeArea), 4, {kAll, kAll, kAll, kAll}, sh::Answer::kGarbage, 0, 0},
     {SC11_OURS(Party_DropIn), 1, {kAll}, sh::Answer::kGarbage, 0, 0},

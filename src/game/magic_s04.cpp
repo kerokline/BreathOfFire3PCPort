@@ -38,6 +38,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace {
 
 namespace at = magic_harness::at;
@@ -113,7 +116,7 @@ void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 // Capcom's code this group calls (docs/magic_s04.md section 3); other groups'
 // phase handlers (S35's LastResort_WaitChildren, S05's Magic018Row53_Wait,
 // S11's MagicFx_UncountAndFree) are ours now and named in the tables.
-constexpr std::uint32_t kTurnOffset = 0x446770;       // engine: +0xC / +0x10 of a task turned by its +8
+constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;       // engine: +0xC / +0x10 of a task turned by its +8
 constexpr std::uint32_t kPolyF3 = 0x5A7570;           // libgpu SetPolyF3 by shape (code 0x20), unnamed
 using TaskFn = void (__cdecl*)(unsigned char*);
 using PrimFn = void (__cdecl*)(unsigned char*);

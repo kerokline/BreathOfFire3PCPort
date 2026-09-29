@@ -12,10 +12,18 @@
 //
 // Calls into other groups' functions and into unnamed ones go through raw
 // addresses here and are never bound (docs/takeover-queue-round8.md, the rule
-// for calls across groups): 0x435AB0 and 0x42F9D0, both in no group.
+
+// for calls across groups): 0x435AB0, in no group. 0x42F9D0 is round twelve
+// group BE1's BattleAction_PickRandomAbility (docs/battle_e1.md): its constant
+// names it, the value unchanged, so the fuzz's keys stand.
+// for calls across groups): 0x435AB0 and 0x42F9D0, both in no group then.
+// 0x435AB0 is round twelve group BE2's BattleEnemy_PickAction since 2026-09-29:
+// its constant names it, the value unchanged (the fuzz keys on it).
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
 
 namespace battle_actions {
 
@@ -68,23 +76,23 @@ constexpr std::uint32_t kTextMiss = 0x669DF8, kTextCounter = 0x669E0C;   // cons
 // The seven step tables (symbols.toml [[data]]), their entry counts.
 constexpr std::uint32_t kSteps = 0x64AE80;         // 5, by 0x904AA1: 0x42F250 0x42F500 0x42FC50 0x42FDD0 0x430010
 constexpr std::uint32_t kBeginSteps = 0x64AE94;    // 2, by 0x904AA2: 0x42F260 0x42F4C0
-constexpr std::uint32_t kKindSteps = 0x64AE9C;     // 6, by 0x904AA2 (the kind): 0x42F510 0x42F5B0 0x42F510 0x42F5E0 0x42F670 0x42FAF0
+constexpr std::uint32_t kKindSteps = 0x64AE9C;     // 6, by 0x904AA2 (the kind): 0x42F510 0x42F5B0 0x42F510 0x42F5E0 (BattleAction_Kind3Dispatch) 0x42F670 0x42FAF0
 constexpr std::uint32_t kAbilitySteps = 0x64AEBC;  // 3, by 0x904AA3: 0x42F680 0x42F880 0x42FAB0
 constexpr std::uint32_t kItemSteps = 0x64AF08;     // 3, by 0x904AA3: 0x42FB00 0x42FBD0 0x42FC10
 constexpr std::uint32_t kEffectSteps = 0x64AF14;   // 3, by 0x904AA2: 0x42FC60 0x42FD20 0x42FD90
-constexpr std::uint32_t kAfterSteps = 0x64AF20;    // 3, by 0x904AA2: 0x42FDE0 0x42FE20 0x42FF70
+constexpr std::uint32_t kAfterSteps = 0x64AF20;    // 3, by 0x904AA2: 0x42FDE0 0x42FE20 (BattleAction_AbilityNotice) 0x42FF70
 
 }  // namespace at
 
 // Raw addresses of the callees no group owns (the rule above).
-constexpr std::uint32_t kEnemyPickAction = 0x435AB0;   // (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
-constexpr std::uint32_t kPickTarget = 0x42F9D0;        // () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
+constexpr std::uint32_t kEnemyPickAction = bof3::addr::BattleEnemy_PickAction;   // 0x435AB0 (enemy): Rand, then 0x904B35 = a 2-bit kind from 0x65563C
+constexpr std::uint32_t kPickTarget = bof3::addr::BattleAction_PickRandomAbility;   // 0x42F9D0, () -> al: the random action of 0x24 / 0x25 / 0x8C and its target
 
 // Every callee that answers in al is typed unsigned char, as symbols.gen.h has
 // the named ones: the originals test only al.
 struct Callees {
     void (__cdecl* member_auto_target)(unsigned);                 // Battle_MemberAutoTarget 0x453FA0
-    void (__cdecl* enemy_pick_action)(unsigned);                  // 0x435AB0
+    void (__cdecl* enemy_pick_action)(unsigned);                  // BattleEnemy_PickAction 0x435AB0 (BE2's)
     void (__cdecl* clear_acting_flags)();                         // Battle_ClearActingFlags 0x4301B0
     void (__cdecl* open_msg_window)();                            // Battle_OpenMsgWindow 0x444310
     const unsigned char* (__cdecl* msg)(unsigned);                // Msg_SystemPtr 0x497740
@@ -95,7 +103,7 @@ struct Callees {
     char* (__cdecl* str_copy_n)(char*, const char*, unsigned);    // Str_CopyN 0x5171A0
     unsigned char (__cdecl* skill_ap_cost)(unsigned, unsigned, unsigned);   // Skill_ApCost 0x591DB0
     unsigned char (__cdecl* pick_flag8_member)();                 // Battle_PickFlag8Member 0x4537A0
-    unsigned char (__cdecl* pick_target)();                       // 0x42F9D0
+    unsigned char (__cdecl* pick_target)();                       // BattleAction_PickRandomAbility 0x42F9D0
     void (__cdecl* load_for_ability)(unsigned);                   // Magic_LoadForAbility 0x4379D0
     int (__cdecl* file_load_done)();                              // File_LoadDone 0x454810
     void (__cdecl* start_ability_magic)(unsigned, unsigned);      // Battle_StartAbilityMagic 0x437930

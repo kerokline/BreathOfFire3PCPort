@@ -25,6 +25,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace battle_items {
 
 namespace at {
@@ -82,7 +84,7 @@ constexpr std::uint32_t kCommitSorted = 0x572FA0;
 constexpr std::uint32_t kActorIsOut = 0x4456C0;
 constexpr std::uint32_t kEnemyAnimation = 0x435A20;
 constexpr std::uint32_t kActorSound = 0x446A50;
-constexpr std::uint32_t kEnemySound = 0x437450;
+constexpr std::uint32_t kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 constexpr std::uint32_t kSetTint = 0x454CC0;
 constexpr std::uint32_t kPlayById = 0x587900;
 

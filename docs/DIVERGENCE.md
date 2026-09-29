@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 62 entries, DIV-0001..0062)
+**Status:** IN PROGRESS (opened 2026-09-18; 63 entries, DIV-0001..0063)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -861,6 +861,11 @@ designed in rather than bolted on.
   `en.FIRST.DAT` twice (the load, then the title), one `DIV-0015` line, no
   Fatal; the owner: "it successfully returned to the title", and F9 on the
   title "gracefully closed the game with no error message".
+- **Round twelve, 2026-09-29 (group FC1):** the row draw `0x461800` is ours
+  now (`Config_DrawRowLabel`, [`field_c1.md`](field_c1.md) section 2). It reads
+  the six label operands and the two anchor bytes from the original's code at
+  every call, so this entry's patches hold for ours unchanged; no behaviour
+  moved. Not yet seen in game through ours.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.FIRST.DAT`;
   `BOF3X_ORIGINAL=ConfigText` leaves all thirteen operands alone - the six
   label pointers and the seven layout numbers - so the labels stay Chinese and
@@ -978,7 +983,11 @@ designed in rather than bolted on.
 - **Checked:** builds and links; the two call sites and both byte patches are
   validated against the original bytes at start-up. **Seen in game by the
   owner, 2026-09-21: "looks perfect"** - the lowercase `g` is what shows the
-  large form is a different font and not a magnified one.
+  large form is a different font and not a magnified one. **Round twelve,
+  2026-09-29 (group FC1):** `0x461800` is ours (`Config_DrawRowLabel`); it
+  reads the width code at `0x461894` (either form, anything else a Fatal) and
+  the large call's target at `0x46189F` in place at every call, so this
+  entry holds for ours unchanged ([`field_c1.md`](field_c1.md) section 2).
 
 ### The menu's short verbs - the buttons above a panel - in the overlay's language
 
@@ -1249,6 +1258,17 @@ designed in rather than bolted on.
   `0000`, under the same ruling - the same word, the same reader. Its fuzz
   compares x, y and z and leaves the pad out, so the zero there is by
   construction, not measured. `BOF3X_ORIGINAL=Sprite_ProjectA` restores it.
+- **Also, 2026-09-29 (round twelve group FE2, [`field_e2.md`](field_e2.md)
+  section 6):** four more functions build SVECTORs on their stacks and never
+  write the fourth word - the map-cell handlers `MapCell_DrawFrames`
+  `0x570870`, `MapCell_DrawShaded` `0x570BC0` and `MapCell_DrawSpinning`
+  `0x570DE0` (each quad's four vertices; the spinning one also its angles and
+  its centre, handed to `Gte_RotMatrix` and `Gte_RotTrans`), and
+  `Mode11_ObjectDraw` `0x536F10` (the marker's point for `Gte_RotTransPers`,
+  and the disc's angles and translation). Ours writes `0000` in each, under
+  the same ruling. The fuzz hashes each SVECTOR's first six bytes only, so
+  the zero is by construction, not measured. `BOF3X_ORIGINAL=<name>`
+  restores each.
 
 
 ### A field fade past its jump table stops instead of jumping
@@ -1493,6 +1513,13 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
   language overlay, not with `BOF3X_LANG=original` (it rides in
   `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
+- **Since round twelve (2026-09-29):** the panel is ours
+  (`Menu_DrawSaveSlot`, `src/game/field_o.cpp`, [`field_o.md`](field_o.md)
+  section 2). It reads the disp8 at `0x576A48` back - `0x13` or this entry's
+  `0x15`, anything else a Fatal - so the patch, and switching it off, work
+  unchanged. Read with it: the texture window of the draw mode the panel
+  sends is the `push 0` at `0x5769C8`; the `ebx` pushed at `0x5769C7` is a
+  register save, not an argument.
 
 ### The menu backdrop past Config's four draws nothing
 
@@ -3062,3 +3089,47 @@ designed in rather than bolted on.
   separated the priming fault from the relocation. The owner's eye owed.
 - **Reversible?** `BOF3X_ORIGINAL=DrawPool` leaves the arrays and the
   fourteen patches alone.
+
+### The party's dragon form with a partner missing: no form, where the original read its stack
+
+- **ID:** DIV-0063
+- **Date:** 2026-09-29
+- **Subsystem:** battle (the transformation, `DragonForm_PartyRecipe`
+  `0x4523C0`, `src/game/battle_e6.cpp`; [`battle_e6.md`](battle_e6.md)
+  sections 2 and 7, L1)
+- **Tier:** Forced
+- **Original behaviour:** with gene `0x10` among the chosen genes and the
+  party's size byte `0x904AB1` at 3, the recipe search tries the party's
+  form before recipe 6: `DragonForm_PartyRecipe` collects the `+0x89` byte
+  of each member who is not the actor and not out by `Battle_ActorIsOut`
+  into a list on its stack, and tries the first two as a pair against five
+  pairings. Two pairings of the five answer 0, which the search reads as
+  "no party form": recipe 6 is skipped and the search goes on. When fewer
+  than two such members are found the list is one byte or none, and the
+  function dispatches on and compares stack bytes it never wrote: what it
+  answers depends on what its callers left there.
+- **New behaviour:** fewer than two found answers 0, the answer of the
+  pairings that fail. Every case with two or more found is unchanged.
+- **Rationale:** a reimplementation cannot reproduce the read, and an abort
+  there (what the takeover first did) would end a battle an ordinary party
+  can reach: three members, one of the other two down, the gene chosen.
+  **Which answer** is the owner's account of the game, 2026-09-29: the
+  gene used with one partner standing, or with either of two pairs of
+  partners, fails and gives the default dragon - one outcome for both. The
+  code has that outcome for the two pairs as the answer 0, so the missing
+  partner takes it too. `0xFF` (no pairing matched) was the other
+  candidate and is a different path: it ends the search at once, where 0
+  still tries recipes 7 to 10. That gene `0x10` is the one the owner means
+  is the owner's reading of the shape (the form depends on who the other
+  two members are); nothing in the binary names it.
+- **Also in the PSX version?** Not measured. The owner's memory of the
+  outcome is of the game as played; the sibling has no name in this
+  function and its twin was not read.
+- **Verification:** `battle_e6`'s self-test has the case as seven rows run
+  on ours alone (one partner out in each position, both out, a failing
+  pairing, no pairing), since there is nothing of Capcom's to compare with;
+  the fuzz of the function against the original's clone is as it was and
+  never seeds the case. **Owed: the owner's check in game**, once a save
+  has the gene and a full party - a partner down, and each failing pair.
+- **Reversible?** `BOF3X_ORIGINAL=DragonForm_PartyRecipe` leaves Capcom's
+  function, its read with it.

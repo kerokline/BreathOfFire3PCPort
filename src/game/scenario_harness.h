@@ -75,6 +75,38 @@ constexpr unsigned kSpriteCount = 30;
 constexpr std::uint32_t kSpritesExtra = 0x802000;   // Sprite_ObjectsExtra
 constexpr std::uint32_t kEffects = 0x7E11E0;        // Effect_Objects, 20 of 0x80
 
+// Round twelve: the field engine's cells (docs/scenario_harness.md section 7).
+// The standard regions of field mode are marked (F); the rest are the cells a
+// group lists as its own region when its functions touch them.
+constexpr std::uint32_t kPacketNext = 0x7E0670;     // Gfx_PacketNext (F): put into the harness's packet buffer
+constexpr std::uint32_t kCameraTurn = 0x905B70;     // (F) CameraTurn_Steps .. Field_EdgeBits .. Field_ScriptFlags2 0x905BA4, Field_InputHeld 0x905BA6
+constexpr std::uint32_t kCameraTurnSize = 0x38;
+constexpr std::uint32_t kMenuBlock = 0x929ED4;      // (F) MapView_BuildFlags 0x929ED8, the menu block 0x929F00..0x929F11, Field_Kind2Hold 0x929F12
+constexpr std::uint32_t kMenuBlockSize = 0x40;
+constexpr std::uint32_t kMenuMode = 0x929F00;       // the menu block's mode byte (0x42D710 and 0x57DFF0 jump on it)
+constexpr std::uint32_t kMenuState = 0x929F01;      // its state byte (the shop's and save point's dispatchers jump on it)
+constexpr std::uint32_t kMenuStep = 0x929F02;       // its step byte
+constexpr std::uint32_t kMenuTimer = 0x929F04;
+constexpr std::uint32_t kStyle = 0x903A14;          // (F) the cells 0x903A14..0x903A93: the window style byte 0x903A5A, the records 0x903A70.., Field_ActorStates 0x903A80
+constexpr std::uint32_t kStyleSize = 0x80;
+constexpr std::uint32_t kTextBuffer = 0x904BA0;     // (F) the text scratch the name copies and sprintf use
+constexpr std::uint32_t kTextBufferSize = 0x20;
+constexpr std::uint32_t kSaveFlags = 0x904098;      // (F) the save block past Cond_Flags' standard 0x108, to 0x904160
+constexpr std::uint32_t kSaveFlagsSize = 0xC8;
+constexpr std::uint32_t kSaveBytes = 0x904560;      // (F) the save block's bytes 0x904560..0x904700
+constexpr std::uint32_t kSaveBytesSize = 0x1A0;
+constexpr std::uint32_t kAreaBlock = 0x8CB580;      // (F) AreaMap_Header and the first 8 KiB of the area block
+constexpr std::uint32_t kAreaBlockSize = 0x2000;
+constexpr std::uint32_t kAreaBytes = 0x905D94;      // (F) AreaMap_Bytes: put into the area block (+0x800)
+constexpr std::uint32_t kZenny = 0x904058;          // Party_Zenny: inside the standard Cond_Flags region
+constexpr std::uint32_t kWindows = 0x803160;        // WindowRecords, 22 of 0x24 (a group lists it: FS)
+constexpr std::uint32_t kWindowStride = 0x24;
+constexpr unsigned kWindowCount = 22;
+constexpr std::uint32_t kMessageCells = 0x7DEE20;   // EventScript_FlagBank, the message word 0x7DEE48, MsgBox_PenX / LineX (a group lists it)
+constexpr std::uint32_t kMessageCellsSize = 0x60;
+constexpr std::uint32_t kTextRecords = 0x904CE0;    // Text_Records (a group lists it: FE1, FE2)
+constexpr std::uint32_t kMapCells = 0x904F20;       // MapView_Cells, 1568 words (a group lists it: FE2)
+
 // The spell harness's names, kept so a group file written for it compiles
 // (the contract). Nothing of the scenario engine reads them; the harness
 // neither seeds nor compares them.
@@ -148,7 +180,33 @@ struct JumpTable { std::uint32_t jmp_disp, table, entries; };
 //            the caller left them - random unless the group's args say;
 //   kObject  a vtable slot 1: the field object (0x56D6D0 pushes it) - one of
 //            the first four Sprite_Objects records unless the group's args say.
-enum class Shape : std::uint8_t { kSlot, kState, kHook, kEntry, kObject };
+// Added for round twelve's field groups (docs/scenario_harness.md section 7);
+// any of these puts the group in field mode (Group::field):
+//   kSprite  an object's state handler: void, no arguments, run on
+//            Sprite_Current (one of the first four records), dispatching on
+//            its state bytes +1..+4 through .data tables unchecked - those
+//            bytes are drawn below Group::sprite_span when it is set;
+//   kScript  an event-script op or a movement-script command handed the
+//            operand pointer (const unsigned char *op): a[0] is the script
+//            cursor's op, inside the harness's script buffer (Script());
+//   kCursor  an event-script condition or step handed the cursor itself
+//            (const unsigned char **position): a[0] is the address of the
+//            harness's cursor cell, which points into the script buffer; the
+//            answer's al is compared (ret_mask 0xFF unless the clone says);
+//   kCall    a cdecl helper of up to ten words: random, except where
+//            Clone::pointers makes an argument a pointer (Arg below);
+//   kMenu    a shop, save-point or field-menu state: void, no arguments, the
+//            menu block's state and step bytes 0x929F01 / 0x929F02 drawn
+//            below Group::menu_span when it is set.
+// A function answering in eax is any shape with Clone::ret_mask set.
+enum class Shape : std::uint8_t { kSlot, kState, kHook, kEntry, kObject, kSprite, kScript, kCursor, kCall, kMenu };
+
+// What an argument of a kCall (or any shape's) clone is, two bits per
+// argument in Clone::pointers: a random word, one of the first four
+// Sprite_Objects records, a pointer into the harness's scratch buffer
+// (Scratch(i), 0x40 bytes per argument), or the script cursor's op.
+enum class Arg : std::uint8_t { kWord, kSprite, kScratch, kScript };
+constexpr std::uint32_t ArgAt(unsigned i, Arg kind) { return static_cast<std::uint32_t>(kind) << (2 * i); }
 
 struct Clone {
     const char* name;
@@ -168,6 +226,10 @@ struct Clone {
     bool calm = false;
     // Added for the scenario round: the call shape (above).
     Shape shape = Shape::kSlot;
+    // Added for round twelve: which arguments are pointers (ArgAt(i, kind)
+    // OR'ed together); 0, the default, leaves every argument as the shape
+    // draws it.
+    std::uint32_t pointers = 0;
 };
 
 // The most arguments a recorder takes. A caller that pushes fewer leaves its
@@ -206,6 +268,11 @@ struct Callee {
     std::uint8_t deref[kArgs] = {};
     Effect effect = nullptr;
     const void* custom = nullptr;
+    // Added for round twelve: deref only a pointer that is readable (in the
+    // regions, on the stack, or committed memory of the process); any other is
+    // logged as its value. The field-standard callees set it; false, the
+    // default, dereferences as before.
+    bool guard = false;
 };
 
 // A .data table of handlers the functions read in place (a chapter's state or
@@ -242,7 +309,29 @@ struct Group {
     // (0x8034E0) every round before the seed, and the flag-row pointer
     // 0x929ED0 set to Cond_Flags + 8 * chapter, as Scenario_Start sets both.
     int chapter = 0;
+    // Added for round twelve (docs/scenario_harness.md section 7). Field mode:
+    // the field regions join the standard ones (the packet cursor, the camera
+    // turn and input cells, the menu block, the style cells, the text
+    // scratch, the save block's rest, the area block and AreaMap_Bytes, and
+    // the harness's packet, text, script and scratch buffers), their pointers
+    // are put back every round, the disturbance also moves the field's cells,
+    // and a handler's recorder logs Sprite_Current's state bytes. On when this
+    // is set or when any clone has a round-twelve shape; false, the default,
+    // is exactly the scenario round's harness.
+    bool field = false;
+    // Non-zero: Sprite_Current's state bytes +1..+4 are drawn below this every
+    // round of a kSprite function, and the disturbance keeps them below it.
+    unsigned sprite_span = 0;
+    // Non-zero: the menu block's state and step bytes 0x929F01 / 0x929F02
+    // likewise for a kMenu function.
+    unsigned menu_span = 0;
 };
+
+// The field runs round twelve's groups take (docs/takeover-queue-field-battle.md
+// section 1): a field-mode clone whose base lies outside them and outside the
+// chapter bank is named in the log (not refused).
+bool InFieldRuns(std::uint32_t address);
+bool InChapterBank(std::uint32_t address);
 
 // Clones every function (before the caller injects), fuzzes each against ours
 // for g.rounds rounds, logs the counts, and is a Fatal on any difference.
@@ -272,6 +361,20 @@ void SetRandFirst(int first);
 unsigned char* TaskAt(unsigned k);
 unsigned char* EnemyOf(unsigned char target);
 unsigned char* PartyOf(unsigned char actor);
+// Round twelve's buffers (field mode; regions of their own, random every round):
+// the script cursor's op (what a kScript function is handed, what the cursor
+// cell a kCursor function is handed points at - a seed writes the op's bytes
+// here), the cursor cell itself, argument i's scratch (Arg::kScratch), the
+// packet buffer Gfx_PacketNext points into, the text buffer the pointer-
+// answering stand-ins (Msg_SystemPtr, Item_NamePtr, ...) answer into.
+unsigned char* Script();
+unsigned char** Cursor();
+unsigned char* Scratch(unsigned i);
+unsigned char* Packets();
+unsigned char* Text();
+// Whether [p, p + n) lies in the regions being compared (a group's effect may
+// write there; anywhere else it may not).
+bool InRegions(const void* p, unsigned n);
 
 // --- for a Callee's effect or custom stand-in ------------------------------------
 //

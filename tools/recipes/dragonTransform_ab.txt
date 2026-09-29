@@ -1,0 +1,295 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# save adult_ryu
+# Shots every 60 frames added by tools/recipe_shots.py from tools/recipes/dragonTransform.txt.
+wait 34
+hold start 5
+wait 21
+shot f00060 1
+wait 38
+hold start 6
+wait 15
+shot f00120 1
+wait 59
+shot f00180 1
+hold triangle 3
+wait 32
+hold square 3
+wait 12
+hold circle 4
+wait 5
+shot f00240 1
+wait 36
+hold circle 4
+wait 15
+hold circle 3
+wait 1
+shot f00300 1
+wait 59
+shot f00360 1
+wait 4
+hold left 28
+hold up+left 27
+shot f00420 1 up+left
+hold up+left 59
+shot f00480 1 up+left
+hold up+left 18
+wait 4
+hold right+down 2
+hold right 10
+hold right+down 25
+shot f00540 1 right+down
+hold right+down 59
+shot f00600 1 right+down
+hold right+down 41
+wait 18
+shot f00660 1
+wait 59
+shot f00720 1
+wait 28
+hold up 31
+shot f00780 1 circle+up
+hold circle+up 2
+hold up 47
+hold triangle+up 4
+hold up 6
+shot f00840 1 up
+hold up 5
+hold cross+up 4
+hold up 12
+wait 26
+hold right 5
+wait 7
+shot f00900 1
+wait 8
+hold right 5
+wait 17
+hold right 5
+wait 24
+shot f00960 1
+wait 4
+hold cross 4
+wait 11
+shot gene 1
+wait 39
+shot f01020 1
+wait 6
+hold down 4
+wait 49
+shot f01080 1
+wait 16
+hold down 6
+wait 37
+shot f01140 1
+wait 8
+hold down 6
+wait 44
+hold right 1
+shot f01200 1 right
+hold right 2
+wait 44
+hold right 6
+wait 7
+shot f01260 1
+wait 35
+hold right 6
+wait 18
+shot f01320 1
+wait 27
+hold up 5
+wait 27
+shot f01380 1
+wait 10
+hold up 6
+wait 32
+hold right 7
+wait 4
+shot f01440 1
+wait 24
+hold right 5
+wait 30
+shot f01500 1
+wait 3
+hold cross 4
+wait 40
+hold left 5
+wait 7
+shot f01560 1
+wait 4
+hold left 6
+wait 12
+hold left 4
+wait 13
+hold left 5
+wait 13
+hold left 2
+shot f01620 1 left
+hold left 2
+wait 17
+hold up 5
+wait 22
+hold cross 5
+wait 8
+shot f01680 1
+wait 59
+shot f01740 1
+wait 59
+shot f01800 1
+wait 59
+shot f01860 1
+wait 59
+shot f01920 1
+wait 59
+shot f01980 1
+wait 59
+shot f02040 1
+wait 59
+shot f02100 1
+wait 59
+shot f02160 1
+wait 59
+shot f02220 1
+wait 11
+hold up 12
+hold cross+up 3
+hold up 5
+wait 28
+shot f02280 1
+wait 29
+hold down 5
+wait 10
+hold cross 5
+wait 9
+hold cross 1
+shot f02340 1 cross
+hold cross 2
+wait 57
+shot f02400 1
+wait 59
+shot f02460 1
+wait 59
+shot f02520 1
+wait 47
+hold up 6
+hold cross+up 5
+wait 1
+shot f02580 1
+wait 35
+hold right 5
+wait 13
+hold left 5
+wait 1
+shot f02640 1
+wait 31
+hold down 5
+wait 5
+hold down 5
+wait 1
+hold cross 5
+wait 7
+shot f02700 1
+wait 59
+shot f02760 1
+wait 57
+hold up 2
+shot f02820 1 up
+hold up 4
+hold cross+up 5
+wait 34
+hold down 5
+wait 11
+shot f02880 1
+wait 7
+hold up 4
+wait 1
+hold cross 4
+wait 43
+shot f02940 1
+wait 11
+hold cross 6
+wait 34
+hold cross 5
+wait 3
+shot f03000 1
+wait 3
+hold right 5
+wait 16
+hold cross 5
+wait 2
+hold right 5
+wait 13
+hold cross 5
+wait 5
+shot f03060 1
+hold up 2
+wait 8
+hold cross 4
+wait 45
+shot f03120 1
+wait 59
+shot f03180 1
+wait 59
+shot f03240 1
+wait 59
+shot f03300 1
+wait 59
+shot f03360 1
+wait 59
+shot f03420 1
+wait 59
+shot f03480 1
+wait 5
+hold up 4
+hold cross+up 3
+hold cross 2
+wait 45
+shot f03540 1
+wait 59
+shot f03600 1
+wait 51
+hold down 4
+wait 4
+shot f03660 1 down
+hold down 3
+wait 5
+hold down 4
+wait 8
+hold down 4
+wait 35
+shot f03720 1
+wait 20
+hold up 5
+wait 24
+hold up 4
+wait 6
+shot f03780 1
+wait 15
+hold down 4
+wait 4
+hold cross 5
+wait 31
+shot f03840 1
+wait 59
+shot f03900 1
+wait 59
+shot f03960 1
+wait 59
+shot f04020 1
+wait 59
+shot f04080 1
+wait 15
+hold cross 6
+wait 38
+shot f04140 1
+wait 7
+hold cross 6
+wait 33
+hold cross 6
+wait 7
+shot f04200 1
+wait 59
+shot f04260 1
+wait 59
+shot f04320 1
+wait 8

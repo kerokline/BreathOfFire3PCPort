@@ -75,9 +75,9 @@ struct Callees {
     long (__cdecl* elevation)(long, long);                    // AreaMap_Elevation
     unsigned char (__cdecl* set_bank)(unsigned short);        // Sprite_SetAnimationBank
     void (__cdecl* update_screen)();                          // Sprite_UpdateScreen
-    unsigned char (__cdecl* member_chance_b)(unsigned);       // 0x453910, nobody's
-    unsigned char (__cdecl* action_flag)(unsigned);           // 0x453A90, nobody's
-    unsigned char (__cdecl* slots_full)(unsigned);            // 0x453AC0, nobody's
+    unsigned char (__cdecl* member_chance_b)(unsigned);       // 0x453910, Battle_MemberRollByAction (BE6)
+    unsigned char (__cdecl* action_flag)(unsigned);           // 0x453A90, Battle_ActionBitSet (BE6)
+    unsigned char (__cdecl* slots_full)(unsigned);            // 0x453AC0, Battle_MemberListFull (BE6)
     unsigned char (__cdecl* member_chance)(unsigned);         // 0x453A10 (ours)
     unsigned char (__cdecl* auto_allowed)(unsigned);          // 0x452DD0, nobody's
     void (__cdecl* auto_fixed)(unsigned);                     // 0x454290, nobody's
@@ -85,7 +85,7 @@ struct Callees {
     unsigned char (__cdecl* out_action)(unsigned);            // 0x454220 (ours)
     unsigned char (__cdecl* action_is_e)(unsigned);           // 0x454260, nobody's
     unsigned char (__cdecl* pick_party)(unsigned);            // 0x454310, nobody's
-    unsigned char (__cdecl* pick_enemy_a)(unsigned);          // 0x435C80, nobody's
+    unsigned char (__cdecl* pick_enemy_a)(unsigned);          // Battle_RandomEnemy 0x435C80 (round twelve group BE2's)
     unsigned char (__cdecl* pick_enemy_b)(unsigned);          // 0x445730 (BE)
     unsigned char (__cdecl* clut_mark)(unsigned, unsigned, unsigned);   // 0x454DF0 (ours)
     unsigned char (__cdecl* clut_find)(unsigned);             // 0x454F30 (ours)

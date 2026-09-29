@@ -51,9 +51,11 @@ constexpr std::uint32_t kScratch = 0x903850;       // DamageScratch's byte 0; th
 constexpr std::uint32_t kNop = bof3::addr::BareRet;           // a bare `ret` (symbols.toml, Battle_ElementAffinity's note)
 // Record handler 4's six kinds, by record byte +2. Slots 2 and 3 are not
 // immediates: the original stores eax (0) there - two holes in the table.
-// 0x598570 and 0x5986C0 are group CD's (round eight); 0x597FA0 and 0x5984B0
-// are in no group and unread. All four stay Capcom's here.
-constexpr std::uint32_t kResultKinds[6] = {0x597FA0, 0x5984B0, 0, 0, bof3::addr::BattleResultWin_ExpState, bof3::addr::BattleResultWin_ZennyState};
+// 0x598570 and 0x5986C0 are group CD's (round eight); 0x5984B0 is group BE7's
+// BattleResultWin_DrawDrops (round twelve: the same value, so the fuzz keys
+// stand); 0x597FA0 is in no group (its one stack entry is BE7's
+// BattleResultWin_DrawLevelUp).
+constexpr std::uint32_t kResultKinds[6] = {0x597FA0, bof3::addr::BattleResultWin_DrawDrops, 0, 0, bof3::addr::BattleResultWin_ExpState, bof3::addr::BattleResultWin_ZennyState};
 
 using Handler = void (__cdecl*)();
 

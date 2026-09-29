@@ -79,7 +79,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 }  // namespace
 
 // original 0x469FE0: Effect_FindFree; with a record (al not 0xFF), its +0 1
-// (in use), +5 4 (the kind: Effect_KindHandlers[4] = 0x469FB0, which counts
+// (in use), +5 4 (the kind: Effect_KindHandlers[4] = 0x469FB0 EffectKind04_HoldTick, which counts
 // +9 down a frame and at 0 clears story flag 0x1C and releases the record),
 // +9 the argument's low byte (the frames); then Flags_Set(0x904030, 0x1C).
 // No record: nothing, the flag not set either. Areas 49, 77, 86, 112, 117,
@@ -143,7 +143,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
 // + x] = the value's low byte - AreaMap_Elevation's layer (the width byte
 // times z, the base a u16), 32-bit sums, unbounded. eax is left the row
 // offset; no caller reads it. Area 52's block puzzle, areas 108 and 135, and
-// the engine's 0x46BF80 / 0x46C100 (layer value 0x10). PSX 0x80155AF4
+// EffectKind30_ClaimCells / _FreeCells (0x46BF80 / 0x46C100; values 0x10, 0). PSX 0x80155AF4
 // (pairs_propagated "call").
 extern "C" void __cdecl AreaMap_SetHeight(unsigned x, unsigned z, unsigned value) {
     const std::uint32_t width = AreaMap_Header[0];
@@ -206,8 +206,9 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
 // original 0x587860: each of the 23 Sound_Channels dwords (to 0x6BC924) not 0:
 // SndBuf_Stop(it), then the dword 0 (after the call). Sound_PauseAll 0x587C30
 // walks the same dwords but keeps them (and stops the stream and the music).
-// The battle result's 0x432750, chapter 15's Scena15_Run5 and chapter 17's
-// Scena17_Outro11 / Scena17_EndRestart call it before Task_Restart(Boot_Task).
+// The loss screen's BattleLoss_Restart 0x432750 (BE1's), chapter 15's
+// Scena15_Run5 and chapter 17's Scena17_Outro11 / Scena17_EndRestart call it
+// before Task_Restart(Boot_Task).
 // PSX 0x8015D8AC (pairs_propagated "call").
 extern "C" void __cdecl Sound_StopChannels(void) {
     for (std::uint32_t p = Addr(Sound_Channels); p < at::kChannelsEnd; p += 4) {

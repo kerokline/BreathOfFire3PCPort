@@ -40,6 +40,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_damage {
 
 namespace {
@@ -60,15 +63,15 @@ const Callees kOriginals = {
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(0x44FA70),
     Fn<void (__cdecl*)(unsigned, unsigned)>(0x44F1D0),
     Fn<void (__cdecl*)(unsigned, unsigned)>(0x44F4B0),
-    Fn<int (__cdecl*)(int, unsigned, unsigned)>(0x446110),
-    Fn<int (__cdecl*)(int, unsigned, unsigned)>(0x4461B0),
-    Fn<int (__cdecl*)()>(0x4463E0),
+    Fn<int (__cdecl*)(int, unsigned, unsigned)>(bof3::addr::Battle_HitOrMissParty),
+    Fn<int (__cdecl*)(int, unsigned, unsigned)>(bof3::addr::Battle_HitOrMissEnemy),
+    Fn<int (__cdecl*)()>(bof3::addr::Battle_PartyDefenceMean),
     Fn<int (__cdecl*)(unsigned, unsigned)>(0x44F030),
     Rand,
-    Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(0x44B3A0),
-    Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(0x44B2E0),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(0x44B240),
-    Fn<void (__cdecl*)()>(0x44B920),
+    Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(bof3::addr::EnemyAI_ApplyAction),
+    Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(bof3::addr::EnemyAI_SetRowDone),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::EnemyAI_OtherRowsDone),
+    Fn<void (__cdecl*)()>(bof3::addr::EnemyAI_DedupMessages),
 };
 Callees g = kOriginals;
 

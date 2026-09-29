@@ -19,6 +19,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr: the constants below naming group BE6's functions (docs/battle_e6.md section 5)
+
 namespace area_w4f {
 namespace at {
 
@@ -156,9 +158,9 @@ constexpr unsigned kStateCount = 2;
 
 // --- the callees nobody owns (raw addresses) ---
 
-constexpr std::uint32_t kSlotsReleaseFor = 0x454A80;
-constexpr std::uint32_t kSlotStart = 0x455290;
-constexpr std::uint32_t kRoundHigh = 0x441090;
+constexpr std::uint32_t kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;   // 0x454A80 (BE6, 2026-09-29)
+constexpr std::uint32_t kSlotStart = bof3::addr::Field_SlotStart;                  // 0x455290 (BE6, 2026-09-29)
+constexpr std::uint32_t kRoundHigh = bof3::addr::Fixed_HighRoundUp;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 
 }  // namespace at
 }  // namespace area_w4f

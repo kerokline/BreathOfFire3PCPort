@@ -37,6 +37,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 // The group's functions, declared here for the pointers below; symbols.toml
 // binds each name to this file (bof3/symbols.gen.h).
 namespace battle_sprites {
@@ -63,17 +66,18 @@ const Callees kOriginals = {
     AreaMap_Elevation,
     Sprite_SetAnimationBank,
     Sprite_UpdateScreen,
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x453910),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x453A90),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x453AC0),
+    // rebound 2026-09-29 (round twelve, BE6): the values unchanged, the fuzz keys on them
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberRollByAction),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActionBitSet),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberListFull),
     Battle_MemberCoinFlip,
     Raw<unsigned char (__cdecl*)(unsigned)>(0x452DD0),
     Raw<void (__cdecl*)(unsigned)>(0x454290),
-    Raw<void (__cdecl*)()>(0x446B00),
+    Raw<void (__cdecl*)()>(bof3::addr::Battle_PickEnemyTarget),
     Battle_MemberOutAction,
     Raw<unsigned char (__cdecl*)(unsigned)>(0x454260),
     Raw<unsigned char (__cdecl*)(unsigned)>(0x454310),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x435C80),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomEnemy),
     Raw<unsigned char (__cdecl*)(unsigned)>(0x445730),
     ClutMap_Mark,
     ClutMap_FindFree,
@@ -413,7 +417,7 @@ extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
 // hands over to 0x454290; battle flag bit 4 to 0x446B00; a side in +0x124 is
 // the target; then by +0x125: 0 and 1 take +0x124 unless it is out (then
 // 0x446B00), 2 and 3 nothing, 4 and 5 fall back on 0x454310 / 0x445730 /
-// 0x435C80 by the tests in docs/battle_sprites.md section 1; above 5
+// Battle_RandomEnemy 0x435C80 by the tests in docs/battle_sprites.md section 1; above 5
 // nothing.
 extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     unsigned char* const p = Party(member & 0xFFu);

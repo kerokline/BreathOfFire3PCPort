@@ -98,6 +98,10 @@ alignas(16) unsigned char g_records[2][kRecordBytes];
 // stand-in advances it as the real one does, wrapping before the end.
 constexpr unsigned kPacketBytes = 0x4000;
 alignas(16) unsigned char g_packets[kPacketBytes];
+// The engine frame's text buffer (Group::engine): the strings TextPtrEffect
+// answers, a region, a NUL every 16th byte each round.
+constexpr unsigned kTextBytes = 0x200;
+alignas(16) unsigned char g_text[kTextBytes];
 
 const Group* g_group = nullptr;
 const Clone* g_clone = nullptr;   // the clone being fuzzed (its shape)
@@ -105,10 +109,10 @@ std::uint32_t g_via_fn = 0;       // the function planted in a Via's cell for th
 
 // --- the regions (the state both passes start from) ----------------------------
 
-constexpr unsigned kMaxRegions = 40;
+constexpr unsigned kMaxRegions = 64;       // 40 before round twelve (capacity only)
 Region g_regions[kMaxRegions];
 unsigned g_region_n;
-constexpr unsigned kMaxBytes = 0x10000;
+constexpr unsigned kMaxBytes = 0x20000;    // 0x10000 before round twelve (capacity only)
 
 bool InRegions(const unsigned char* p, unsigned n) {
     const std::uint32_t a = Key(p);
@@ -119,7 +123,14 @@ bool InRegions(const unsigned char* p, unsigned n) {
 std::uint32_t ByteAt(const unsigned char* p, unsigned off) { return InRegions(p + off, 1) ? p[off] : 0x100u; }
 
 bool TaskShape() { return g_clone && g_clone->shape == Shape::kTask; }
-unsigned char* SpriteFor(unsigned v) { return TaskShape() ? TaskAt(v) : EnemyAt(v); }
+// The round-twelve shapes (boss_harness.h): Sprite_Current a party member for
+// kMember, a member or an enemy for the other three.
+bool EngineShape() { return g_clone && g_clone->shape >= Shape::kStep; }
+bool MemberShape() { return g_clone && g_clone->shape == Shape::kMember; }
+unsigned char* SpriteFor(unsigned v) {
+    if (EngineShape()) return MemberShape() || (v & 0x10) ? PartyOf(static_cast<unsigned char>(v % at::kPartyCount)) : EnemyAt(v);
+    return TaskShape() ? TaskAt(v) : EnemyAt(v);
+}
 unsigned char* OwnerFor(unsigned v) { return v & 4 ? g_records[v & 1] : TaskAt(v); }
 unsigned char* CurrentEnemy() { return Pointer(at::kEnemyCurrent); }
 
@@ -129,6 +140,37 @@ unsigned char FightValue(std::uint32_t h) {
     static const unsigned char kCompared[] = {0x10, 0x19, 0x1A, 0x25};
     if (g_group && g_group->fight >= 0 && (h & 1)) return static_cast<unsigned char>(g_group->fight);
     return kCompared[(h >> 1) % 4];
+}
+
+// The engine frame's cells a caller reads again after a call (round twelve,
+// an engine group's case 12): the window record 0x905B84 names and a byte of
+// it (+2 / +3 below phase_span when the group sets it: a window's stack-table
+// indices), Field_State, the menu actor with its command record, the step
+// bytes 0x904AA1..0x904AA4 (below phase_span likewise), the result record.
+void EngineDisturb(std::uint32_t h) {
+    const unsigned v = (h >> 12) & 0xFF;
+    const auto b = static_cast<unsigned char>(h >> 20);
+    const unsigned span = g_group ? g_group->phase_span : 0;
+    switch ((h >> 9) % 6) {
+    case 0: SetPointer(at::kWindowCurrent, WindowAt(v)); break;
+    case 1: {
+        unsigned off = (h >> 24) % at::kWindowStride;
+        unsigned char* const w = CurrentWindow();
+        if (InRegions(w + off, 1)) w[off] = (off == 2 || off == 3) && span ? static_cast<unsigned char>(v % span) : b;
+        break;
+    }
+    case 2: SetPointer(at::kMemberCurrent, PartyOf(static_cast<unsigned char>(v % at::kPartyCount))); break;
+    case 3: {
+        unsigned char* const m = PartyOf(static_cast<unsigned char>(v % at::kPartyCount));
+        SetPointer(at::kMenuActor, m);
+        SetPointer(at::kMenuCommand, m + at::kMenuCommandAt);
+        break;
+    }
+    case 4: Mem(at::kStep + (h >> 24) % 4)[0] = span ? static_cast<unsigned char>(v % span) : b; break;
+    default:
+        SetPointer(at::kResultRecord, (v & 1 ? PartyOf(static_cast<unsigned char>(v % at::kPartyCount)) : EnemyAt(v)) + at::kResultAt);
+        break;
+    }
 }
 
 // Every cell below is one some boss function or its engine callee reads
@@ -169,7 +211,12 @@ void Disturb() {
             e[off] = static_cast<unsigned char>(off >= 1 && off <= 4 && span ? v % span : v);
         break;
     }
-    case 12: Mem(h & 0x100 ? at::kChapterRun : at::kChapterStep)[0] = b; break;
+    case 12:
+        // the chapter bytes for a boss group; the engine cells for an engine
+        // group (round twelve: EngineDisturb, below), which has no chapter
+        if (g_group && g_group->engine) EngineDisturb(h);
+        else Mem(h & 0x100 ? at::kChapterRun : at::kChapterStep)[0] = b;
+        break;
     case 13: Mem(at::kBattleEnd)[0] = b; break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
@@ -196,7 +243,7 @@ struct Slot {
     bool handler;            // a table entry or a hook: logs the sprite (and a hook's argument)
     unsigned calls;
 };
-constexpr unsigned kSlots = 256;
+constexpr unsigned kSlots = 512;   // 256 before round twelve (capacity only: the engine set adds ~110)
 Slot g_slots[kSlots];
 unsigned g_slot_n;
 
@@ -357,6 +404,124 @@ std::uint32_t CreateMayFail(const std::uint32_t*, std::uint32_t answer) {
     return (answer & 0xFFFFFF00u) | (n % 3 == 0 ? 0xFFu : (n >> 8) % 48);
 }
 
+// --- the engine's typed stand-ins (round twelve, group EH) ------------------------
+
+namespace {
+
+// Where a string argument may be read: the compared state, the harness's
+// text buffer, the loaded image (its .data strings and tables) or this
+// thread's stack (a caller's buffer). Anything else - a garbage pointer a
+// quieter stand-in answered - is noted as unreadable, never followed.
+bool Readable(std::uint32_t p) {
+    if (p >= Key(g_text) && p < Key(g_text) + kTextBytes) return true;
+    if (InRegions(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(p)), 1)) return true;
+    const std::uint32_t image = 0x400000;
+    const std::uint32_t pe = image + *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(image + 0x3C));
+    const std::uint32_t size = *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(pe + 24 + 56));   // SizeOfImage
+    if (p >= image + 0x1000 && p < image + size) return true;
+    std::uint32_t base, limit;
+    asm("movl %%fs:4, %0" : "=r"(base));
+    asm("movl %%fs:8, %0" : "=r"(limit));
+    return p >= limit && p < base;
+}
+// Where an effect may write a string: the compared state, the text buffer,
+// this thread's stack - never the rest of the image (a static buffer outside
+// the regions would keep what the self-test wrote).
+bool Writable(std::uint32_t p, unsigned n) {
+    if (p >= Key(g_text) && p + n <= Key(g_text) + kTextBytes) return true;
+    if (InRegions(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(p)), n)) return true;
+    std::uint32_t base, limit;
+    asm("movl %%fs:4, %0" : "=r"(base));
+    asm("movl %%fs:8, %0" : "=r"(limit));
+    return p >= limit && p + n <= base;
+}
+// The string at p to its NUL, 64 bytes at most, noted (its hash and length),
+// or "unreadable" (0xFFFFFFFF). Returns its length.
+unsigned NoteString(std::uint32_t p) {
+    unsigned n = 0;
+    std::uint32_t hash = 0x811C9DC5u;
+    if (!Readable(p)) {
+        Note(0xFFFFFFFFu);
+        return 0;
+    }
+    const auto* s = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(p));
+    while (n < 64 && Readable(p + n) && s[n] != 0) hash = (hash ^ s[n++]) * 0x01000193u;
+    Note(hash, n);
+    return n;
+}
+
+}  // namespace
+
+// Window_Alloc(slot, kind): claims record `slot` when its byte 0 is free (1,
+// +1 the kind, +2 / +3 0) and answers the slot, else 0xFF - the real one
+// (symbols.toml), so a caller that reads the record after sees what it would.
+// A slot past the 22 is noted and answered 0xFF, the record left alone.
+std::uint32_t WindowAllocEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const unsigned slot = a[0] & 0xFF;
+    if (slot >= at::kWindowCount) {
+        Note(slot, 0xFF);
+        return answer | 0xFFu;
+    }
+    unsigned char* const w = WindowAt(slot);
+    if (w[0] != 0) return answer | 0xFFu;
+    w[0] = 1;
+    w[1] = static_cast<unsigned char>(a[1]);
+    w[2] = w[3] = 0;
+    return (answer & 0xFFFFFF00u) | slot;
+}
+// Window_FreeCurrent: bytes +0, +2 and +3 of the record 0x905B84 names zeroed
+// (+1 kept), as the real one - its callers read the record again.
+std::uint32_t WindowFreeEffect(const std::uint32_t*, std::uint32_t answer) {
+    unsigned char* const w = CurrentWindow();
+    if (InRegions(w, 4)) w[0] = w[2] = w[3] = 0;
+    return answer;
+}
+// A string of the text buffer (16 bytes apart, each NUL-ended by Fix): for a
+// stand-in answering a text pointer its caller follows (Msg_SystemPtr,
+// Item_NamePtr in the engine set).
+std::uint32_t TextPtrEffect(const std::uint32_t*, std::uint32_t) { return Key(g_text) + 16 * (Noise() % (kTextBytes / 16)); }
+// Crt_sprintf(dst, fmt, ...): the format's first 15 bytes (to its NUL) and a
+// NUL written into dst, when dst is a buffer of the compared state or the
+// stack, and noted - the caller draws dst after (BE1's and BE7's windows), so
+// dst holds the same string on both passes. A static buffer outside the
+// regions (BATE's 0x904BA0) is left alone and only the format noted: a group
+// that draws it lists the buffer as a region.
+std::uint32_t SprintfEffect(const std::uint32_t* a, std::uint32_t answer) {
+    if (!Writable(a[0], 16)) {
+        NoteString(a[1]);
+        return answer;
+    }
+    auto* d = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    const auto* f = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[1]));
+    unsigned n = 0;
+    if (Readable(a[1]))
+        while (n < 15 && Readable(a[1] + n) && f[n] != 0) {
+            d[n] = f[n];
+            ++n;
+        }
+    d[n] = 0;
+    NoteString(a[0]);
+    return (answer & 0xFFFFFF00u) | n;
+}
+std::uint32_t TextArg0Effect(const std::uint32_t* a, std::uint32_t answer) {
+    NoteString(a[0]);
+    return answer;
+}
+std::uint32_t TextArg3Effect(const std::uint32_t* a, std::uint32_t answer) {
+    NoteString(a[3]);
+    return answer;
+}
+// Text_DrawAt / Text_DrawSmall answer where the text stopped: the argument
+// past its string (a caller continues from it), not garbage.
+std::uint32_t TextArg4Effect(const std::uint32_t* a, std::uint32_t) {
+    const unsigned n = NoteString(a[4]);
+    return Readable(a[4]) ? a[4] + n : a[4];
+}
+std::uint32_t BannerTextEffect(const std::uint32_t* a, std::uint32_t answer) {
+    NoteString(a[4]);
+    return answer;
+}
+
 namespace {
 
 // --- the standard callees -------------------------------------------------------
@@ -428,7 +593,7 @@ const Callee kStandard[] = {
     {BH_OURS(Flags_Clear), 2, {kAll, kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Flags_Test), 2, {kAll, kU8}, Answer::kBool, 0, 0},
     {BH_OURS(AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0},
-    {BH_THEIRS(MoveCmd_OpE9), 7, {kAll, kU8, kU8, kU16, kU16, kU8, kU8}, Answer::kFlag, 0, 0},
+    {BH_OURS(MoveCmd_OpE9), 7, {kAll, kU8, kU8, kU16, kU16, kU8, kU8}, Answer::kFlag, 0, 0},
     {BH_THEIRS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     // sound and music
     {BH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0},
@@ -467,6 +632,156 @@ const Callee kStandard[] = {
     {BH_OURS(Math_Sin), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Math_Cos), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
+};
+
+// The battle engine's standard callees (round twelve, group EH;
+// docs/boss_harness.md section 10.4): the frontier of the 308 functions of
+// BE1..BE7 (every rel32 call or tail jmp from their extents to a function
+// outside them, analysis/round12_cut.tsv at 430f34b, capstone) that
+// kStandard lacks, plus the louder forms of five kStandard callees that the
+// engine calls with a stack buffer or follows the answer of (Crt_sprintf,
+// Msg_SystemPtr, Text_DrawAt, Text_DrawFont12, BattleBanner_Add). Registered
+// for an engine group only, and before kStandard, so these stand there;
+// a boss group never sees them. Masks: a byte or a short where the callee
+// reads only that (its first read of the argument, capstone), a string
+// argument 0 with its content noted by the effect (a caller's stack buffer
+// is at a different address in the copy and in ours), everything else whole.
+// kThrough for the pure ones (both sides run the real code: 0x446F20 /
+// 0x446F50 / 0x446F80 are (a * b) / 100 clamped to 999 / 9999 / 100,
+// Battle_WrapIndex, 0x5B9450 is the CRT's memcpy) and the GTE family BE6's
+// BMAGIC slots read results of through pointers (Gte_* below; the five GTE
+// matrix calls kStandard records stay recorders).
+const Callee kEngineStandard[] = {
+    // text and messages: strings noted, pointers answered into the text buffer
+    {BH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0, {}, &TextPtrEffect},
+    {BH_OURS(Item_NamePtr), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {}, &TextPtrEffect},
+    // the destination, the format and one value: a word past what the caller pushed is its own
+    // frame, different in the copy and in ours (self-test); a group formatting more lists its own
+    {BH_THEIRS(Crt_sprintf), 3, {0, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &SprintfEffect},
+    {BH_OURS(Text_DrawAt), 5, {kAll, kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
+    {BH_OURS(Text_DrawSmall), 5, {kAll, kAll, kAll, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
+    {BH_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},
+    {BH_OURS(Text_DrawFont8), 4, {kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},
+    {BH_OURS(Text_CharCount), 1, {0}, Answer::kByte, 0, 17, {}, &TextArg0Effect},
+    {BH_OURS(BattleBanner_Add), 5, {kAll, kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &BannerTextEffect},
+    {BH_OURS(BattleBanner_Set), 6, {kAll, kU8, kU8, kU8, kU8, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleBanner_ShowName), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleBanner_ClearAll), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Item_HelpMessage), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    // windows: the records claimed and freed as the real ones do
+    {BH_OURS(Window_Alloc), 2, {kAll, kU8}, Answer::kGarbage, 0, 0, {}, &WindowAllocEffect},
+    {BH_OURS(Window_FreeCurrent), 0, {}, Answer::kGarbage, 0, 0, {}, &WindowFreeEffect},
+    {BH_OURS(Window_ResetAll), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(ItemMenu_FreeWindows), 0, {}, Answer::kGarbage, 0, 0},
+    // menu and window drawing
+    {BH_OURS(Menu_DrawPiece), 4, {kU16, kU16, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawPieces), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},   // the colour: a byte its callers load into al only (0x42D8C0), self-test
+    {BH_OURS(Menu_DrawBorder), 4, {kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawBackdrop), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawHand), 3, {kAll, kAll, 0}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawIcon), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawIcon8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawScrollBar), 7, {kAll, kAll, kAll, kAll, kU8, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawCommandLabel), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawCommandCross), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawPartyStatus), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawQuadF4), 4, {kAll, kU16, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawLineAdd), 7, {kU16, kU16, kU16, kU16, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawLineHalf), 7, {kU16, kU16, kU16, kU16, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_GetClut), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_SetLineF2), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_SetLineF3), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_SetLineF4), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_SetPolyG4), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_SetTile), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gpu_SetShadeTex), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Prim_SetTexture), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    // input
+    {BH_OURS(Input_AutoRepeat), 1, {kU16}, Answer::kGarbage, 0, 0},
+    // the battle engine
+    {BH_OURS(BattleObj_ScriptTick), 0, {}, Answer::kFlag, 0, 0},
+    {BH_OURS(BattleObj_ScriptTickOnce), 0, {}, Answer::kFlag, 0, 0},
+    {BH_OURS(BattleObj_PickPose), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleObj_EndAction), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleQueue_Push), 3, {kU8, kU8, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleTask_ClearAll), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ApplyDamage), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_CalcDamage), 3, {kAll, kAll, kU16}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_BuildTurnOrder), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ClearActingFlags), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ClearStatus), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_DefaultTarget), 1, {kAll}, Answer::kByte, 0xFF, 10},   // an actor 0..10, or 0xFF for none
+    {BH_OURS(Battle_PlayActorCue), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_PlayHitSound), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ReturnQueuedItem), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ReturnTrue), 0, {}, Answer::kFlag, 0, 0},
+    {BH_OURS(Battle_RollPendingFlag), 0, {}, Answer::kFlag, 0, 0},
+    {BH_OURS(Battle_SetActorBit), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_SetDamagePopup), 2, {kU16, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_SetHitPopup), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_StatusTint), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_WrapIndex), 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Effect_ApplyResult), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(EnemyAI_RowDone), 2, {kAll, kU8}, Answer::kFlag, 0, 0},
+    {BH_OURS(Formation_ApplyStatMods), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Char_RecalcStats), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Area_TestCondition), 1, {kAll}, Answer::kFlag, 0, 0},
+    {BH_OURS(Field_SlotRelease), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Gfx_ClutStripCopyRow), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(MapView_SetElevation), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {"0x446F20", 0x446F20, 0x446F20, 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // (a * b) / 100, 0..999
+    {"0x446F50", 0x446F50, 0x446F50, 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // ..., 0..9999
+    {"0x446F80", 0x446F80, 0x446F80, 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // ..., 0..100
+    {"0x494E70", 0x494E70, 0x494E70, 0, {}, Answer::kThrough, 0, 0},             // the eight enemies' +0..+3 zeroed (compared)
+    {"0x42E0E0", 0x42E0E0, 0x42E0E0, 0, {}, Answer::kGarbage, 0, 0},             // BATE's, unlisted in the cut (part 7)
+    {"0x42E250", 0x42E250, 0x42E250, 0, {}, Answer::kGarbage, 0, 0},
+    {"0x42E2F0", 0x42E2F0, 0x42E2F0, 0, {}, Answer::kFlag, 0, 0},
+    {"0x437230", 0x437230, 0x437230, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after 0x437200's padding)
+    {"0x441510", 0x441510, 0x441510, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after BattleObj_PickPose's table)
+    {"0x44F1D0", 0x44F1D0, 0x44F1D0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {"0x44F6A0", 0x44F6A0, 0x44F6A0, 2, {0, kAll}, Answer::kFlag, 0, 0},         // reads its second word only
+    {"0x44FB30", 0x44FB30, 0x44FB30, 0, {}, Answer::kGarbage, 0, 0},
+    {"0x452DD0", 0x452DD0, 0x452DD0, 1, {kAll}, Answer::kFlag, 0, 0},
+    {"0x452EB0", 0x452EB0, 0x452EB0, 0, {}, Answer::kFlag, 0, 0},
+    {"0x452F10", 0x452F10, 0x452F10, 0, {}, Answer::kFlag, 0, 0},
+    {"0x4CF4B0", 0x4CF4B0, 0x4CF4B0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {"0x590E80", 0x590E80, 0x590E80, 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // (u16 *stat, cap, delta): a stat add
+    {"0x591810", 0x591810, 0x591810, 2, {kU8, kU8}, Answer::kFlag, 0, 0},         // no start list has it (after 0x5917D0's)
+    {"0x59DB70", 0x59DB70, 0x59DB70, 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},
+    {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's memcpy
+    // items, stats, the party
+    {BH_OURS(Inventory_Add), 3, {kAll, kU8, kAll}, Answer::kFlag, 0, 0},
+    {BH_OURS(Inventory_Remove), 3, {kAll, kU8, kU8}, Answer::kFlag, 0, 0},
+    {BH_OURS(Item_CanUse), 4, {kU8, kAll, kAll, kAll}, Answer::kFlag, 0, 0},
+    {BH_OURS(Item_EquipMask), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Item_IconKind), 2, {kU8, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Equip_PreviewSet), 4, {kAll, kAll, 0, 0}, Answer::kGarbage, 0, 0},   // marks, values: the caller's buffers (the group's)
+    {BH_OURS(Stat_AddClamped), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Stat_AddCap999), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
+    {BH_OURS(PartySet_Select), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    // sprites, sound, tasks
+    {BH_OURS(Sprite_ReleaseTint), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0},
+    {BH_OURS(Sprite_AnimFromSet), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Sprite_LoadPalette), 2, {kAll, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Sprite_SetClutStp), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Sound_StopChannels), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Task_Restart), 1, {kAll}, Answer::kGarbage, 0, 0},
+    // the GTE BMAGIC reads back through pointers: both sides run the real one
+    {BH_OURS(Gte_LoadVertex), 1, {kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_LoadVertices3), 1, {kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_Rtps), 0, {}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_Rtpt), 0, {}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_StoreScreenXY), 1, {kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_StoreScreenXY3), 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_StoreDepthF4), 4, {kAll, kAll, kAll, kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_PrimDepths4_10), 1, {kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_PrimDepthFlat4_10), 1, {kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_RotMatrix), 2, {kAll, kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_MulMatrix0), 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_RotTransPers), 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},
+    {BH_OURS(Gte_RotTransPers4), 9, {kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kThrough, 0, 0},
 };
 #undef BH_OURS
 #undef BH_THEIRS
@@ -595,6 +910,26 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
     region = offset = 0;
 }
 
+// The engine frame's pointers put back (Group::engine only, after the boss
+// frame's, so a boss group draws exactly what it did): 0x905B84 at one of the
+// 22 window records; Field_State at a party member - for kMember the member
+// Sprite_Current is three times in four; the menu actor at a member and its
+// command record at that member's +0x124; the acting sprites 0x904B3C /
+// 0x904B40 at the harness's records; the result record 0x904B60 at a member's
+// or an enemy's +0x104; a NUL every 16th byte of the text buffer.
+void FixEngine() {
+    SetPointer(at::kWindowCurrent, WindowAt(Next()));
+    unsigned char* const member = MemberShape() && Next() % 4 != 0 ? Sprite_Current : PartyOf(static_cast<unsigned char>(Next() % 3));
+    SetPointer(at::kMemberCurrent, member);
+    unsigned char* const actor = Often() ? member : PartyOf(static_cast<unsigned char>(Next() % 3));
+    SetPointer(at::kMenuActor, actor);
+    SetPointer(at::kMenuCommand, actor + at::kMenuCommandAt);
+    SetPointer(at::kActingSprite, g_records[Next() & 1]);
+    SetPointer(at::kActingSprite2, g_records[Next() & 1]);
+    SetPointer(at::kResultRecord, (Half() ? PartyOf(static_cast<unsigned char>(Next() % 3)) : EnemyAt(Next())) + at::kResultAt);
+    for (unsigned i = 15; i < kTextBytes; i += 16) g_text[i] = 0;
+}
+
 // Random bytes put back inside what every boss function dereferences: the
 // running sprite (an enemy, or a task slot for an effect task) and the
 // current enemy (the same two times in three), the slot and its owner, a
@@ -604,7 +939,8 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
 // inside Cond_Flags, the packet pointer at the harness's buffer.
 void Fix() {
     Sprite_Current = SpriteFor(Next());
-    SetPointer(at::kEnemyCurrent, TaskShape() || !Often() ? EnemyAt(Next()) : Sprite_Current);
+    if (EngineShape()) SetPointer(at::kEnemyCurrent, EnemyAt(Next()));   // never a member (round twelve)
+    else SetPointer(at::kEnemyCurrent, TaskShape() || !Often() ? EnemyAt(Next()) : Sprite_Current);
     SetPointer(at::kCurrentSlot, TaskShape() && Often() ? Sprite_Current : TaskAt(Next()));
     SetPointer(at::kOwner, OwnerFor(Next()));
     SetPointer(at::kSource, g_records[Next() & 1]);
@@ -627,6 +963,21 @@ void Fix() {
     move_script::SetLong(Mem(at::kHookEvent), static_cast<std::int32_t>(g_hook_event));
     SetPointer(at::kFlagBits, Mem(at::kCondFlags + 8 * (Next() % 40)));
     SetPointer(at::kPacketNext, g_packets + 4 * (Next() % 64));
+    if (g_group && g_group->engine) FixEngine();
+}
+
+// The byte a clone's state draw writes: its state_cell when set (round
+// twelve), the window record's byte for a kWindow, else Sprite_Current's -
+// the only form before round twelve, so a boss clone draws where it did.
+unsigned char* StateByte(const Clone& c) {
+    if (c.state_cell) return Mem(c.state_cell);
+    if (c.shape == Shape::kWindow) return CurrentWindow() + c.state_at;
+    return Sprite_Current + c.state_at;
+}
+unsigned char* ViaByte(const Clone& c) {
+    if (c.via.state_cell) return Mem(c.via.state_cell);
+    if (c.shape == Shape::kWindow) return CurrentWindow() + c.via.state_at;
+    return Sprite_Current + c.via.state_at;
 }
 
 void PatchImms(void* copy, const Clone& c) {
@@ -669,6 +1020,14 @@ unsigned char* TaskAt(unsigned k) { return Mem(at::kTasks + (k % 4) * at::kTaskS
 unsigned char* Object(unsigned k) { return Mem(at::kObjects + (k % at::kObjectCount) * at::kObjectStride); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* Packets() { return g_packets; }
+bool InEngineBands(std::uint32_t address) {
+    for (const at::Band& b : at::kEngineBands)
+        if (address >= b.lo && address < b.hi) return true;
+    return false;
+}
+unsigned char* WindowAt(unsigned k) { return Mem(at::kWindows + (k % at::kWindowCount) * at::kWindowStride); }
+unsigned char* CurrentWindow() { return Pointer(at::kWindowCurrent); }
+unsigned char* TextBuffer() { return g_text; }
 std::uint32_t HookStub(std::uint32_t cell) {
     switch (cell) {
     case at::kHookEnd: return g_hook_end;
@@ -744,6 +1103,8 @@ const void* StandIn(std::uint32_t key) {
     std::uint32_t address = key;
     for (const Callee& c : kStandard)
         if (c.key == key) address = c.address;
+    for (const Callee& c : kEngineStandard)
+        if (c.key == key) address = c.address;
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return ForOurs(i, key);
     bof3::Fatal("boss_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
@@ -754,6 +1115,9 @@ void Run(const Group& group) {
     g_group = &group;
     g_slot_n = 0;
     for (unsigned i = 0; i < group.n_callees; ++i) Register(group.callees[i]);
+    // an engine group's louder standard forms first, so they stand over kStandard's
+    if (group.engine)
+        for (const Callee& c : kEngineStandard) Register(c);
     for (const Callee& c : kStandard) Register(c);
     g_hook_end = Key(StubOf(RegisterHandler(kEndKey, 0, "hook 0x904B64")));
     g_hook_exit = Key(StubOf(RegisterHandler(kExitKey, 0, "hook 0x904B68")));
@@ -788,6 +1152,23 @@ void Run(const Group& group) {
         {Key(g_packets), sizeof g_packets},
     };
     for (const Region& r : standard) g_regions[g_region_n++] = r;
+    // the engine frame's (round twelve; docs/boss_harness.md section 10.3):
+    // the state three or more of BE1..BE7 touch beyond the boss frame
+    const Region engine[] = {
+        {at::kWindows, at::kWindowCount * at::kWindowStride},       // WindowRecords: BE1..BE6
+        {at::kWindowCurrent, 4},                                    // the record a window handler runs for: BE7 (every kWindow)
+        {at::kMemberCurrent, 4},                                    // Field_State: BE2, BE3, BE4
+        {0x903A50, 0xD4},                                           // DrawItemPool_Top's tail, CharacterRecords' head, Field_ActorStates[0]: BE1..BE4, BE6, BE7
+        {0x9045FC, 0x58},                                           // the 18 dwords at 0x904608 and their neighbours: BE2, BE5, BE6, BE7
+        {0x939EC0, 0xA0},                                           // the menu actor 0x939EC4, the transformation's cells 0x939EE0..: BE3..BE7
+        {0x939F64, 0x9C},                                           // 0x939F86 .. the command record 0x939FA0 .. 0x939FFC: BE3, BE4, BE5
+        {at::kModeBytes, 0x20},                                     // BATE's mode bytes, 0x929F04 / 06, the kind-2 cells: BE1, BE4, BE7
+        {0x7E1BE8, 8},                                              // Input_Held, Input_Pressed: BE1, BE4, BE5
+        {0x90358C, 8},                                              // Field_ConfirmButtons, Field_CancelButtons: BE1, BE4, BE5
+        {Key(g_text), sizeof g_text},                               // the harness's strings (TextPtrEffect)
+    };
+    if (group.engine)
+        for (const Region& r : engine) g_regions[g_region_n++] = r;
     for (unsigned i = 0; i < group.n_regions; ++i) {
         if (g_region_n == kMaxRegions) bof3::Fatal("boss_harness: %s: more than %u regions", group.shadow, kMaxRegions);
         g_regions[g_region_n++] = group.regions[i];
@@ -808,10 +1189,18 @@ void Run(const Group& group) {
             const unsigned slot = SlotFor(c.calls[i].target, c.name);
             calls[i] = {c.calls[i].offset, g_slots[slot].answer == Answer::kThrough ? nullptr : StubOf(slot), c.calls[i].target};
         }
+        // round twelve: the engine's shapes need the engine frame, and an
+        // engine group's functions lie in the battle runs (a function outside
+        // them is a cut mistake; the harness's own self-test hands it a jmp
+        // wrapper of its copies, which lies in our DLL and is checked there)
+        if (c.shape >= Shape::kStep && !group.engine)
+            bof3::Fatal("boss_harness: %s: %s's shape is the battle engine's: set Group::engine", group.shadow, c.name);
+        if (group.engine && !InEngineBands(c.base) && (c.base >= kImageLo && c.base < kImageHi))
+            bof3::Fatal("boss_harness: %s: %s at 0x%X lies outside the battle engine's runs", group.shadow, c.name, (unsigned)c.base);
         clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         PatchImms(clones[k], c);
-        if (c.via.dispatcher && (c.via.cell == 0 || (c.via.state_at == 0 && c.shape != Shape::kEnemyHook && c.shape != Shape::kEvent &&
-                                                     c.shape != Shape::kCallee)))
+        if (c.via.dispatcher && (c.via.cell == 0 || (c.via.state_at == 0 && c.via.state_cell == 0 && c.shape != Shape::kEnemyHook &&
+                                                     c.shape != Shape::kEvent && c.shape != Shape::kCallee && c.shape != Shape::kHelper)))
             bof3::Fatal("boss_harness: %s: a via needs a cell, and a state byte unless its dispatcher reads the argument", c.name);
     }
 
@@ -850,15 +1239,17 @@ void Run(const Group& group) {
         Fix();
         Mem(at::kFight)[0] = static_cast<unsigned char>(group.fight >= 0 ? group.fight : 1 + Next() % 55);
         if (group.kind >= 0 && InRegions(CurrentEnemy() + 0x100, 1)) CurrentEnemy()[0x100] = static_cast<unsigned char>(group.kind);
-        if (c.shape == Shape::kDispatch && c.states && InRegions(Sprite_Current + c.state_at, 1))
-            Sprite_Current[c.state_at] = static_cast<unsigned char>(Next() % c.states);
+        if (c.shape == Shape::kDispatch && c.states && InRegions(StateByte(c), 1))
+            *StateByte(c) = static_cast<unsigned char>(Next() % c.states);
+        else if (c.shape >= Shape::kStep && c.shape != Shape::kHelper && c.states && InRegions(StateByte(c), 1))
+            *StateByte(c) = static_cast<unsigned char>(Next() % c.states);   // round twelve: kStep, kWindow, kMember
         g_seed = Next();
         g_rand_hint = Next();
         if (group.seed) group.seed(k);
-        if (c.shape == Shape::kTask && c.states && InRegions(Sprite_Current + c.state_at, 1))
-            Sprite_Current[c.state_at] = static_cast<unsigned char>(Next() % c.states);
-        if (c.via.dispatcher && c.via.state_at && InRegions(Sprite_Current + c.via.state_at, 1))
-            Sprite_Current[c.via.state_at] = c.via.state;
+        if (c.shape == Shape::kTask && c.states && InRegions(StateByte(c), 1))
+            *StateByte(c) = static_cast<unsigned char>(Next() % c.states);
+        if (c.via.dispatcher && (c.via.state_at || c.via.state_cell) && InRegions(ViaByte(c), 1))
+            *ViaByte(c) = c.via.state;
         Capture(input);
 
         // the shape's words, or the group's arguments
@@ -867,7 +1258,7 @@ void Run(const Group& group) {
         if (c.shape == Shape::kEvent) a[0] = Next() % 7;
         else if (c.shape == Shape::kEnemyHook) a[0] = Next() % 3;
         if (group.args) group.args(k, a);
-        if (c.via.dispatcher && c.via.state_at == 0) a[0] = c.via.state;
+        if (c.via.dispatcher && c.via.state_at == 0 && c.via.state_cell == 0) a[0] = c.via.state;
         const std::uint32_t ret_mask = c.ret_mask ? c.ret_mask : c.shape == Shape::kEvent ? 0xFFu : 0u;
         g_calm = c.calm;
         for (int pass = 0; pass < 2; ++pass) {
@@ -917,6 +1308,20 @@ void Run(const Group& group) {
                           "differing byte %u (0x%X + 0x%X)",
                           group.shadow, round, c.name, theirs.log_n, ours.log_n, FirstLogDifference(theirs, ours), first,
                           (unsigned)region, (unsigned)offset);
+                // round twelve: the differing entry itself, the first three times -
+                // which recorder (slot, or 1000 + slot a handler, 2000 + slot the
+                // words past the fourth, 3000 a Note, 4000 the answer, 5000 +
+                // shape the hooks) and its words on each side
+                const unsigned e = FirstLogDifference(theirs, ours);
+                if (bad <= 3 && e < Used(theirs.log_n) && e < Used(ours.log_n)) {
+                    const Entry& t = theirs.log[e];
+                    const Entry& o = ours.log[e];
+                    const unsigned s = t.what >= kPhaseTag ? t.what % 1000 : t.what;
+                    bof3::Log("shadow      %s   entry %u (%s): theirs %u 0x%X 0x%X 0x%X 0x%X, ours %u 0x%X 0x%X 0x%X 0x%X", group.shadow,
+                              e, s < g_slot_n ? g_slots[s].name : "-", (unsigned)t.what, (unsigned)t.a, (unsigned)t.b,
+                              (unsigned)t.c, (unsigned)t.d, (unsigned)o.what, (unsigned)o.a, (unsigned)o.b, (unsigned)o.c,
+                              (unsigned)o.d);
+                }
             }
         }
     }
