@@ -9,7 +9,7 @@ ours** (`src/game/battle_e3.cpp`, shadow name `battle_e3`): the cut table's
 list - EH's finding, docs/boss_harness.md section 10.7). Each read to its
 last instruction with capstone and fuzzed through the boss harness's engine
 frame ([`boss_harness.md`](boss_harness.md) section 10) without edits to it:
-two `Run`s, 294,000 rounds, 0 mismatches. CONTROLS_SUMMARY.
+two `Run`s, 294,000 rounds, 0 mismatches. 93 controls planted one at a time, all refused by a count.
 Fuzz-only except the four the dragon route enters (section 9).
 
 | Part | Functions | Reached through |
@@ -159,7 +159,12 @@ name (`Sound_PlayEffectUnlessNone`, `EnemyOp_CastDoneCheck`,
 `EnemyOp_EndAction`, `BattleObj_HitPose`, `BattleParty_RecalcStats` -
 `kPhase`, logging the sprite they ran for - and `BattleParty_AllDown`,
 `kFlag`); the other groups' by raw address (section 7); the three narrower
-standard listings of section 3. The harness's own rows for `0x437230` and
+standard listings of section 3. `Battle_ApplyDamage` and `Effect_ApplyResult` are listed
+louder: they fill the result record `0x904B60` names (`+4`, `+6`, the flag
+byte `+8` - for `BattleObj_HitReceive` that is `Field_State +0x128..+0x12C`,
+which it zeroes before the call) with drawn values after noting what the
+caller left, and `Battle_ApplyDamage` moves `Field_State` half the time (section
+6 says why). The harness's own rows for `0x437230` and
 `0x441510` (by address, `kEngineStandard`) are shadowed by this group's named
 rows, which register first.
 
@@ -196,10 +201,16 @@ member's `+0x90` / `+0x91` / `+0x12C` / `+0x130` / `+0x131` / `+0x134` bits,
 Result (this worktree, 2026-09-29), `BOF3X_SELFTEST_ONLY=1
 BOF3X_SHADOW=battle_e3`, exit 0:
 
-    RESULT_LINES
+    battle_e3 self-test: 90000 rounds over 15 functions (6000 each), 131207 calls to the stand-ins, 0 MISMATCHES; 43556 bytes of state (29 regions) and the stand-ins' log compared
+    battle_e3 self-test: 204000 rounds over 34 functions (6000 each), 303055 calls to the stand-ins, 0 MISMATCHES; 43556 bytes of state (29 regions) and the stand-ins' log compared
 
 Every recorder of both runs was called (the coverage lines), every table
 entry included.
+
+`BOF3X_SHADOW='*'` at the final commit (this worktree, 2026-09-29): exit 0,
+951 self-test lines every one `0 MISMATCHES`, no Fatal, `inject: 6286 ours, 0
+left original by BOF3X_ORIGINAL` (11 minutes; the earlier `'*'` run at the
+first commit passed alike). It did not die silently either time.
 
 ## 5. What the cut and the tool said, settled
 
@@ -223,7 +234,131 @@ entry included.
 
 ## 6. Controls
 
-CONTROLS_TABLE
+A script (`controls.py` in the session scratchpad) planted each one alone in
+`battle_e3.cpp` - anchored on a string that must occur once - rebuilt,
+self-tested with `BOF3X_BE3_RUN` set to its run, restored, and rebuilt at the
+end. **All 93 refused by a count** (exit 3, the rounds of the function's
+6,000 that mismatched), none by a Fatal alone:
+
+| | Function | Planted | Refused in |
+|---|---|---|--:|
+| E1 | `EnemyOp_CastDispatch` | by +3, not +2 | 4,057 |
+| E2 | `EnemyOp_CastStart` | 0x1F frames | 273 |
+| E3 | `EnemyOp_CastStart` | the skill bit 2 | 2,432 |
+| E4 | `EnemyOp_CastStart` | 0x939AD8 not read again after the sound load | 23 |
+| E5 | `EnemyOp_CastCue` | sound 0x600 + 2n | 1,114 |
+| E6 | `EnemyOp_CastCue` | the table word +4 | 2,074 |
+| E7 | `EnemyOp_CastDoneDispatch` | no check after the step | 6,000 |
+| E8 | `EnemyOp_CastDoneCost` | flag 0x400 | 4,505 |
+| E9 | `EnemyOp_CastDoneCost` | the cost added | 2,503 |
+| E10 | `EnemyOp_CastDoneTickUnless` | +9 up by 2 | 6,000 |
+| E11 | `EnemyOp_CastDoneCheck` | bit 3 | 2,992 |
+| E12 | `EnemyOp_LeaveDispatch` | by +3 | 3,975 |
+| E13 | `EnemyOp_LeaveStart` | velocity -0x2000 | 5,998 |
+| E14 | `EnemyOp_LeaveStart` | tint a = 0 | 6,000 |
+| E15 | `EnemyOp_LeaveStep` | red - 0xF | 393 |
+| E16 | `EnemyOp_LeaveStep` | vy += +0x18 | 393 |
+| E17 | `EnemyOp_LeaveEnd` | the loss bit | 988 |
+| E18 | `EnemyOp_LeaveEnd` | window 4 +3 = 3 | 5,998 |
+| E19 | `Sound_PlayEffectUnlessNone` | the low byte | 1,018 |
+| E20 | `EnemyOp_EndAction` | bit 5 | 2,707 |
+| E21 | `EnemyOp_EndAction` | +0x110 bit 8 | 4,519 |
+| E22 | `EnemyOp_RollBit80Task` | Rand bit 1 | 1,258 |
+| E23 | `EnemyOp_RollBit80Task` | task (0, 3) | 1,482 |
+| E24 | `Fixed_HighRoundUp` | sign 0 as negative | 210 |
+| O1 | `BattleObj_StateHit` | by +3 | 4,382 |
+| O2 | `BattleObj_HitEnter` | +2 = 2 | 6,000 |
+| O3 | `BattleObj_HitEnter` | word +0x5A | 5,999 |
+| O4 | `BattleObj_HitReceiveDispatch` | by +2 | 3,931 |
+| O5 | `BattleObj_HitReceive` | the evade cap 99 | 2,116 |
+| O6 | `BattleObj_HitReceive` | +0x90 bit 10 | 2,960 |
+| O7 | `BattleObj_HitReceive` | the target without Field_State's upper bytes | 775 |
+| O8 | `BattleObj_HitReceive` | Effect_ApplyResult for kind 6 | 409 |
+| O9 | `BattleObj_HitReceive` | the early end on +0x12C bit 1 | 284 |
+| O69 | `BattleObj_HitReceive` | the result flags byte = 1 | 6,000 |
+| O10 | `BattleObj_HitReceive` | item class bit 3 | 117 |
+| O11 | `BattleObj_HitReceive` | +0x90 = 0x4001 | 164 |
+| O12 | `BattleObj_HitReceive` | the sound at 0 too | 3,773 |
+| O13 | `BattleObj_HitReceive` | bit 6 cleared, not 7 | 2,115 |
+| O14 | `BattleObj_HitReceive` | Field_State not read again after Battle_ApplyDamage | 142 |
+| O15 | `BattleObj_HitWaitPose` | +0x90 bit 3 | 1,985 |
+| O16 | `BattleObj_HitEnd` | state 7 | 1,542 |
+| O17 | `BattleObj_HitEnd` | flag 0x2000 | 1,679 |
+| O18 | `BattleObj_HitEnd` | the target bit 7 only | 37 |
+| O19 | `BattleObj_HitEnd` | the ability bit 5 | 76 |
+| O20 | `BattleObj_HitEnd` | the win bit | 2,226 |
+| O21 | `BattleObj_HitStepDispatch` | by +2 | 4,762 |
+| O22 | `BattleObj_HitStepStart` | velocity -0x1000 | 2,955 |
+| O23 | `BattleObj_HitStepStart` | sound 0x206 | 2,955 |
+| O24 | `BattleObj_HitStepOut` | +0xA = 5 | 1,008 |
+| O25 | `BattleObj_HitStepBack` | the task +7 = 2 | 1,675 |
+| O26 | `BattleObj_HitStepBack` | +0x12C bit 5 | 1,619 |
+| O27 | `BattleObj_HitStepPose` | +0x90 bit 1 | 3,000 |
+| O28 | `BattleObj_FallDispatch` | by +2 | 5,149 |
+| O29 | `BattleObj_Fall` | +0x96 path to +3 = 4 | 1,444 |
+| O30 | `BattleObj_Fall` | +0x95 at 0x42 | 2,119 |
+| O31 | `BattleObj_Fall` | +0x134 bit 8 kept | 585 |
+| O32 | `BattleObj_Fall` | the loss at 1 up | 84 |
+| O33 | `BattleObj_Fall` | bit 14 against +4 | 445 |
+| O34 | `BattleObj_Fall` | +0x134 bit 1 at the end | 591 |
+| O35 | `BattleParty_RecalcStats` | +0x97 not copied | 5,504 |
+| O36 | `BattleParty_RecalcStats` | 28 bytes to +0xA0 | 5,500 |
+| O37 | `BattleParty_RecalcStats` | 0x453300 of the next member | 5,499 |
+| O38 | `BattleParty_AllDown` | +0x90 bit 2 not counted | 308 |
+| O39 | `BattleParty_AllDown` | +0x95 at 0x42 | 417 |
+| O40 | `BattleObj_Revive` | HP 2 | 4,311 |
+| O41 | `BattleObj_Revive` | the task +7 = 0 | 4,311 |
+| O42 | `BattleObj_Revive` | the banner pair (1, n) | 2,179 |
+| O43 | `BattleObj_ReviveEnd` | +0x130 bit 4 kept | 3,009 |
+| O44 | `BattleObj_ReviveByEquip` | message 0x2F | 462 |
+| O45 | `BattleObj_ReviveByEquip` | HP from +0xA2 | 4,354 |
+| O46 | `BattleObj_ReviveByEquip` | +0x96 for step 6 | 1,144 |
+| O47 | `BattleObj_FallTaskDispatch` | the table one entry on | 6,000 |
+| O48 | `BattleObj_FallTaskStart` | task 0xD | 1,500 |
+| O49 | `BattleObj_FallTaskStart` | bit 12 | 2,561 |
+| O50 | `BattleObj_FallTaskWait` | +4 = 1 | 2,927 |
+| O51 | `BattleObj_HpDispatch` | by +2 | 4,060 |
+| O52 | `BattleObj_HpApply` | the fall below, not at | 544 |
+| O53 | `BattleObj_HpApply` | the cap one above | 915 |
+| O54 | `BattleObj_HpEnd` | state 4 | 3,032 |
+| O55 | `BattleObj_State10` | through state 6's table | 6,000 |
+| O56 | `BattleObj_State10Task` | y from the x byte | 3,969 |
+| O57 | `BattleObj_State10Task` | task (0, 6) | 6,000 |
+| O58 | `BattleObj_State10End` | state 3 | 6,000 |
+| O59 | `BattleObj_State11` | bit 5 for the tick | 2,948 |
+| O60 | `BattleObj_StateSpecial` | by +3 | 4,069 |
+| O61 | `BattleObj_SpecialStart` | the slot +5 = 0xE | 6,000 |
+| O62 | `BattleObj_SpecialStart` | 0x7C bytes copied | 6,000 |
+| O63 | `BattleObj_SpecialStart` | +0xB = slot + 1 | 6,000 |
+| O64 | `BattleObj_SpecialCue` | at or below | 15 |
+| O65 | `BattleObj_SpecialCue` | cue 5 | 4,401 |
+| O66 | `BattleObj_SpecialWait` | flag 8 | 2,194 |
+| O67 | `BattleObj_HitPose` | pose + 0x35 | 2,957 |
+| O68 | `BattleObj_CastDoneScript` | the tick once | 6,000 |
+
+**Thin, and why.** E4 (0x939AD8 not re-read after the sound load) is reached only
+when the load is made (kind 4 in an event battle) and the disturbance then moves
+0x939AD8; O18 (the target's bit 6 dropped from the test) needs a target byte
+with bit 6 and not 7 on the kind 1 / 4 path; O64 (at or below the percentage)
+needs `Rand() % 100` equal to `+0xBA`, which the harness's `Rand` hint hits a
+third of the time for a percentage below 100 only.
+
+**Found by the controls, fixed in the fuzz before the table above.** The first
+run left O9 (the early end on `+0x12C` bit 1) and O53 (the HP cap one above)
+unrefused, and a crash replaced O55's count. O9: `BattleObj_HitReceive` zeroes
+the result record `Field_State + 0x124`'s `+4`, `+6` and `+8` before the damage
+call - that is `+0x128`, `+0x12A`, `+0x12C` - so the popup bits and the
+change are only ever what `Battle_ApplyDamage` / `Effect_ApplyResult` write; the
+harness's quiet stand-ins wrote nothing, and the branches after were reached
+only through the disturbance. Both are now listed with an effect that fills the
+record (noting what the caller left first), and `Battle_ApplyDamage`'s moves
+`Field_State` half the time (O14, the re-read after it, went from 1 round to
+the count above). O53: the seed put the max HP one *above* the result, not one
+below. O55's first plant (the table one entry on) landed on
+`BattleObj_State12Subs[0]`, which no recorder stands in for, so Capcom's code ran
+on one side and faulted; replaced by the dispatch through state 6's table.
+Three multi-line anchors missed on the first run (the file's CRLF); the
+script now matches either.
 
 ## 7. Calls across groups
 
