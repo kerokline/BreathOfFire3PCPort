@@ -49,8 +49,9 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 000. **Round thirteen, the effect engine, is staged and not started.** Branch `phase-3/capture-round-thirteen` from
    `main` `d1b411c` (round twelve, PR #33, merged). [`takeover-queue-round13.md`](takeover-queue-round13.md) section 10
    is the cut at that base: 1,695 functions in 35 groups E1A..E6D, six waves, the merge order, the common callees. The
-   base's build, `'*'` and `ledger_check` pass. **Next: launch EKH alone** (the `kEffect` shape in `scenario_harness`),
-   its brief `brief_ekh.md` with `<TIP>` to fill; then wave one's seven briefs from `round13_brief_template.md`
+   base's build, `'*'` and `ledger_check` pass. `main`'s PR #34 (the capture review) is merged in, tip `34f1c40`, verified. **Stage A is EKH** (the `kEffect` shape
+   in `scenario_harness`) **and EGT** (the four projection helpers `0x494060..0x4941E0` that 120 rows call), in
+   parallel, branches `phase-3/round13-ekh` and `-egt`, briefs `brief_ekh.md` and `brief_egt.md`; merge EGT, then EKH; then wave one's seven briefs from `round13_brief_template.md`
    (session-`0ad4f32a` scratchpad, `round13/`) with section 10's lines. The cut is `analysis/round13_cut.tsv`; the
    scripts that made it (`join.py`, `make_cut.py`), the brief and the tool's outputs are in the session-`56ff1eb2`
    scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`). The merge script to copy is round

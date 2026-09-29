@@ -507,7 +507,7 @@ cases. Against section 9's draft of 1,697:
 **The groups** (scratch `make_cut.py`): each wave's rows in address order,
 cut at about 48 where the unit changes (the labelling table's `detail`, or
 the draft's `unit` for a part-5 row), never above 64, a run under 12 joined
-to its neighbour. 35 groups. `0x433640` goes with E4A, whose `0x488220`
+to its neighbour. 35 groups, and the stage-A group EGT beside them. `0x433640` goes with E4A, whose `0x488220`
 reads its table, not with wave one. Section 3's thirteen groups and section
 9's wave table's third column are replaced by this:
 
@@ -536,7 +536,8 @@ reads its table, not with wave one. Section 3's thirteen groups and section
 | E4C | `0x48B200..0x48C7F0` | 49 | 28 | 4 | 5,790 | effect_4c |
 | E4D | `0x48C990..0x48DF70` | 51 | 39 | 0 | 5,526 | effect_4d |
 | E4E | `0x48DF90..0x491C60` | 48 | 29 | 9 | 8,931 | effect_4e |
-| E4F | `0x491D70..0x4941E0` | 49 | 30 | 13 | 6,071 | effect_4f |
+| E4F | `0x491D70..0x493F70` | 45 | 30 | 9 | 5,607 | effect_4f |
+| EGT (stage A) | `0x494060..0x4941E0` | 4 | 0 | 4 | 464 | effect_gte |
 | E5A | `0x4FD2E0..0x4FF150` | 53 | 45 | 0 | 7,949 | effect_5a |
 | E5B | `0x4FF320..0x501430` | 48 | 38 | 0 | 8,583 | effect_5b |
 | E5C | `0x501500..0x503D30` | 60 | 51 | 3 | 10,393 | effect_5c |
@@ -550,7 +551,7 @@ reads its table, not with wave one. Section 3's thirteen groups and section
 | E6D | `0x514270..0x516A90` | 50 | 39 | 2 | 10,366 | effect_6d |
 
 Wave one is E1A..E1G (271), two E2A..E2G (379), three E3A..E3D (210), four
-E4A..E4F (306), five E5A..E5G (333), six E6A..E6D (196). `band_rows.py
+E4A..E4F (302, EGT's four taken out), five E5A..E5G (333), six E6A..E6D (196). `band_rows.py
 --byte-tables --groups` over the cut prints every row and **18 functions no
 list has** in the groups' spans (the draft's six among them); they are the
 groups', as in round twelve. No group name or `src/game/effect_*` file
@@ -560,15 +561,28 @@ exists yet.
 are called from nearly every group of waves one to four: `0x494110` (188
 sites from other groups), `0x494060` (79), `0x4941E0` (34). Then E1F's
 `0x52CFE0` (75) and `0x52CF60` (22), E1B's `0x469750` (24) and `0x468AC0`
-(15), E5D's `0x503FA0` (15). None was read here. EKH's brief asks for a
-harness stand-in for each, so that the callers do not each write one.
+(15), E5D's `0x503FA0` (15). **The first three, and `0x494180` between them (6 sites), are the
+stage-A group EGT** (the owner's word, 2026-09-29): each is a short cdecl
+helper whose every callee is ours (`Gte_RotMatrix`, `Gte_ApplyMatrix`,
+`Gte_SetRotMatrix`, `Gte_SetTransMatrix`, `Gte_RotTransPers`,
+`Gte_StoreDepthF`, `Gte_RotTrans`; read 2026-09-29 by capstone for the
+calls only, `0x494180` not read), the labelling tool's "kind 186" for them
+a `hypothesis` by address. 120 rows of the cut call them, and so do
+functions already ours (`Area143_DrawGlowCylinder`, `Area148_DrawBeam`,
+`EffectKind30_SparksDraw` among them, raw today). Taken beside EKH and
+merged before wave one, every group calls them by name. For the other
+five EKH's brief asks for a harness stand-in each.
 **Merge order inside a wave, callee first**: wave one E1F, E1B, E1A, E1G,
 then E1C, E1D, E1E; wave two any order but E2F before E2E; wave three E3B
-before E3C; wave four E4F first, then E4D, E4B, E4A; wave five E5D before
+before E3C; wave four E4F, then E4D, E4B, E4A; wave five E5D before
 E5C; wave six E6A and E6C before E6B. Waves five and six (kind 0x18) have no
 edge to the others but E6A's one call into E5G.
 
 **The base's proof**: built in the detached verification worktree, `BOF3X_SHADOW='*'` headless exit 0, `inject: 6891 ours, 0 left original`, `ledger_check` 63 entries, 0 errors (scratch `verify_base_d1b411c.log`).
 
-**Next**: EKH alone (the brief is scratch `brief_ekh.md`, `<TIP>` to fill),
+**The tip** after `main`'s PR #34 (the capture review's fixes, which touch
+both harnesses and not `symbols.toml`) was merged in: `34f1c40`, the same
+proof passing (scratch `verify_34f1c40.log`).
+
+**Next**: EKH and EGT in parallel (scratch `brief_ekh.md`, `brief_egt.md`),
 then wave one's briefs from section 9's template with this table's lines.
