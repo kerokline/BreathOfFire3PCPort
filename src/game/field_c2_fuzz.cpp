@@ -343,7 +343,21 @@ void Seed(unsigned k) {
     case kV4Run: State(s, 2, 2); break;
     case k3ARun: State(s, 1, 3); break;
     case k41Run: State(s, 1, 4); break;
-    case kV2Spawn: s[9] = static_cast<unsigned char>(PickOf(3, 3, 0, sh::Next())); break;
+    case kV1Fall:
+    case kV2PieceFall:
+    case kV3Fall: {
+        // the height after the fall's add exactly at the ground, one either side, 0x100 above and one
+        // either side: the three compares' boundaries (the ground the stand-in's two times in three)
+        SetLong(s + 0x20, static_cast<std::int32_t>(PickOf(0xFFFFFFF8u, 0, 8, 1, sh::Next())));
+        const U add = (static_cast<U>(Long(s + 0x14)) + static_cast<U>(Long(s + 0x20))) & 0xFFFF;
+        SetWord(s + 0x3E, g_ground + PickOf(0, 0, 1, 0xFFFF, 0x100, 0x101, 0xFF, sh::Next()) - add);
+        break;
+    }
+    case kV0DebrisStart:
+        // Rand & 0xFFF exactly 0x800 now and then (a third of the draws land on the hint's low byte)
+        if (sh::Half()) sh::SetRandHint(0);
+        break;
+    case kV2Spawn: s[9] =static_cast<unsigned char>(PickOf(3, 3, 0, sh::Next())); break;
     case kV4Move: s[0] = static_cast<unsigned char>(sh::Half() ? s[0] | 0x80 : s[0] & 0x7F); break;
     case k3AFly: {
         // a step inside a cell, and the tile word at the cell it reaches 0 half the time
