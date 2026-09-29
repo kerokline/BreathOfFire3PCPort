@@ -458,6 +458,8 @@ add_library(bof3x SHARED
   src/game/area_w4f_fuzz.cpp
   src/game/boss_harness.cpp
   src/game/boss_harness_eh.cpp
+  src/game/battle_e7.cpp
+  src/game/battle_e7_fuzz.cpp
   src/game/boss_spawn.cpp
   src/game/boss_spawn_fuzz.cpp
   src/game/boss_h.cpp
