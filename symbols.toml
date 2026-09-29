@@ -13766,7 +13766,7 @@ ret = "unsigned long"
 params = "void"
 impl = "src/game/battle_misc.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x44AAD0..0x44AE12 (0x343 bytes) + jump table 0x44AE14 (20 dwords) + index bytes 0x44AE64 (0x26): the four rows of 16 at 0x8C5600 + (byte +0xF0 of the enemy 0x939AD8) * 0x8C; opcodes 0..8 EnemyAI_CondPartyFlag masks 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80; 9 / 0xA / 0x24 acting kind 0x904B35 4 / 1 / 1 with word +0x108 non-zero; 0x16 / 0x17 byte +0x92 bits 3 / 7; 0x18 byte +0xAA zero; 0x21..0x23 masks 1, 2, 4; 0x25 u16 +0xA4 not above s16 +0x108; the once-rows through 0x44B2C0 / 0x44B3A0 / 0x44B2E0, the rest 0x44B3A0 only; then 0x44B920, its eax returned. The sibling's EnemyAI_TurnCheck 0x80098BB0 (BATTLE.EMI#15, hypothesis there) opcode for opcode. Only caller 0x436908. Combat route: 8 calls."
+evidence = "disasm 2026-09-23, 0x44AAD0..0x44AE12 (0x343 bytes) + jump table 0x44AE14 (20 dwords) + index bytes 0x44AE64 (0x26): the four rows of 16 at 0x8C5600 + (byte +0xF0 of the enemy 0x939AD8) * 0x8C; opcodes 0..8 EnemyAI_CondElement masks 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x100, 0x80; 9 / 0xA / 0x24 acting kind 0x904B35 4 / 1 / 1 with word +0x108 non-zero; 0x16 / 0x17 byte +0x92 bits 3 / 7; 0x18 byte +0xAA zero; 0x21..0x23 masks 1, 2, 4; 0x25 u16 +0xA4 not above s16 +0x108; the once-rows through 0x44B2C0 / 0x44B3A0 / 0x44B2E0, the rest 0x44B3A0 only; then 0x44B920, its eax returned. The sibling's EnemyAI_TurnCheck 0x80098BB0 (BATTLE.EMI#15, hypothesis there) opcode for opcode. Only caller 0x436908. Combat route: 8 calls."
 
 [[func]]
 pc = 0x5171A0
@@ -75233,3 +75233,532 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE1): BattleLoss_Dispatch's table by 0x904AA3: BattleLoss_FadeOut, _ResetParty, _Show, _BarGrow, _Restart; then a zero dword, and the rows BattleLoss_ResetParty reads as words at +24 * the party count (data past the five pointers). docs/battle_e1.md."
+
+# ---------------------------------------------------------------------------
+# Round twelve group BE5 (docs/battle_e5.md): the enemy AI helpers, three Effect_Handlers
+# slots, the transformation's stat copy, the Dragon command's run 0x44FF10..0x451471
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x44B240
+name = "EnemyAI_OtherRowsDone"
+ret = "unsigned char"
+params = "unsigned row, unsigned enemy"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B240..0x44B2BD (0x7E bytes): cdecl, al: 1 when every row 0..3 but `row` (its byte) of enemy `enemy`'s script (0x8C5600 + 0x8C * object +0xF0, re-read per row) is done - a row whose byte 0 is 0x63, or one EnemyAI_RowDone(object, row) answers 0 for, answers 0. EnemyAI_ChooseActions' condition 0x26. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44B2E0
+name = "EnemyAI_SetRowDone"
+ret = "void"
+params = "unsigned char *enemy, unsigned row, unsigned on"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B2E0..0x44B311 (0x32 bytes): cdecl: +0xF1 |= 1 << (row & 31) as a byte shift (rows 8..31 no bit) when on's byte is not 0, else &= ~. EnemyAI_ChooseActions (twice), 0x44AC80. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44B320
+name = "EnemyAI_CondElement"
+ret = "unsigned char"
+params = "unsigned mask"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B320..0x44B39D (0x7E bytes): cdecl, al: 0 unless the current enemy's (0x939AD8) word +0x108 is not 0; acting kind 0x904B35 4: the word 0x65C4DC + 24 * (u16 0x904B80) & mask (16 bits); kind 1 with actor 0x904B34 0..2 and mask bit 8 clear: the byte 0x657463 + 28 * the member's +0x92 (the weapon's element, as Battle_CalcDamage reads it) & mask (8 bits); else 0. EnemyAI_TurnCheck's conditions 0..8, 0x21..0x23 (11 call sites with 0x44AC80). docs/battle_e5.md."
+
+[[func]]
+pc = 0x44B3A0
+name = "EnemyAI_ApplyAction"
+ret = "void"
+params = "unsigned char *enemy, const unsigned char *row"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B3A0..0x44B5DF (0x240 bytes): cdecl, the jump table 0x44B5C4 (7) by row +1 - 1: 1 word +0x90 = row +2; 2 Sprite_Current the enemy for Battle_ClearStatus(+5, 0xFFFF) then 0x44F1D0(+5, +0x92 | row +2); 3 / 4 each bit of row +2 from the top to 0x44B5E0 / 0x44B870(enemy, bit, row +3); 5 +0xAA / +0xAE = row +3 by bits 1 / 0; 6 words +0x96 / +0x94 * row +3 / 10 capped 0xFFFF; 7 0x904B97 = row +2. Then +0x8E = row +4, row +8..+15 to +0x9C, 0x453300(+5), and with HP +0xA4 and row word +6 both non-zero an enemy message at 0x939FC0 + 4 * 0x93C2A2 (below 8; the list BattleAction_EnemyMessages shows). The cut's extent (1328) runs over 0x44B5E0, 0x44B870, 0x44B920. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44B5E0
+name = "EnemyAI_ScaleStat"
+ret = "void"
+params = "unsigned char *enemy, unsigned which, unsigned factor"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B5E0..0x44B86F (0x290 bytes): cdecl, the jump table 0x44B854 (7) by which's byte: 0 HP +0xA4 * factor / 10 capped at +0xD0, 1 AP +0xA6 capped at +0xD2, 2..5 +0xD4 / +0xD6 / +0xD8 / +0xDA capped 999, 6 +0x98 * factor squared capped 999 ((x * 1000) / 10000, signed, 32-bit). Not in the cut (code between two of its starts, tools/band_rows.py). docs/battle_e5.md."
+
+[[func]]
+pc = 0x44B870
+name = "EnemyAI_SetAttrByte"
+ret = "void"
+params = "unsigned char *enemy, unsigned which, unsigned value"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B870..0x44B91F (0xB0 bytes): cdecl, the jump table 0x44B900 (8) by which's byte: +0xDF..+0xE5 for 0..6, +0xE7 for 7, the value's byte. The cut's start 0x44B8D0 is case 5 (+0xE4), not a function. Not in the cut (code between two of its starts, tools/band_rows.py). docs/battle_e5.md."
+
+[[func]]
+pc = 0x44B920
+name = "EnemyAI_DedupMessages"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B920..0x44B9E4 (0xC5 bytes): cdecl, no calls: the 0x93C2A2 enemy messages at 0x939FC0 kept in order unless an earlier kept one has the same enemy +0x8C byte and message word; kept into an eight-dword stack buffer (a ninth would overwrite the return address), written back and counted. EnemyAI_ChooseActions' and EnemyAI_TurnCheck's tail; its eax unread (0x436908). Not in the cut (code between two of its starts, tools/band_rows.py). docs/battle_e5.md."
+
+[[func]]
+pc = 0x44C3D0
+name = "Effect_DrainHp"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44C3D0..0x44C5BD (0x1EE bytes): Effect_Handlers slot 22: 0x44F6A0(actor, target) resisting - result +8 = 1; else the result's HP delta the target's HP / 5 (0 with flag 0x10000), 0x904B40 +8 = 1 (| 4 when the actor's HP plus it passes its maximum), 0x590E80(&actor HP, max, delta), Battle_SetDamagePopup(-change, actor), 0x904B40 +8 = 0. The cut's extent (1008) runs over 0x44C5C0. PSX twin 0x8009B200 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44C5C0
+name = "Effect_DrainAp"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44C5C0..0x44C7B7 (0x1F8 bytes): Effect_Handlers slot 23 and 0x44EB50's tail jmp: as Effect_DrainHp on AP (+6; party +0x9A / +0xA2, enemy +0xA6 / +0xB2; flag 8), 0x904B40 +8 and result +8 = 2, the pop-up 0x453EB0. Not in the cut (code between two of its starts, tools/band_rows.py). docs/battle_e5.md."
+
+[[func]]
+pc = 0x44CCA0
+name = "Effect_QuarterAttack"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44CCA0..0x44CCF6 (0x57 bytes): Effect_Handlers slot 38: (Rand & 0x7F) < 0x20: 0x904AA8 |= 0x80, result +4 = Battle_CalcDamage(actor, target, 0xFFFF); else result +8 = 1, Battle_SetDamagePopup(0, target), jmp 0x44FB30. PSX twin 0x8009BEE0 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44FDE0
+name = "BattleForm_ApplyStats"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44FDE0..0x44FEF1 (0x112 bytes): cdecl, no calls: each party member with +0x134 bit 1: +0xC0 and +0xA0 = w - (+0x9E * w + 5) / 10 (w the s16 0x939EE0); words +0xC4 / +0xC6 / +0xC8 / +0xCA += 0x939EE2 / EE4 / EE6 / EE8, copied to +0xA4..+0xAA; bytes 0x939EEA..0x939EF2 into +0xCF..+0xD7 and +0xAF..+0xB7. Called by 0x442310 (BE3), 0x449A00 / 0x449C70 (BE4), 0x44D450, 0x44DFD0, 0x44E720. PSX twin 0x800A13C0 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44FF10
+name = "DragonCmd_LoadDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44FF10..0x44FF20 (0x11 bytes): DragonCmd_Parts[0]: jmp [DragonCmd_LoadSteps + 4 * byte 0x904AA4], 2 entries. PSX twin 0x800A162C (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44FF30
+name = "DragonCmd_LoadStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44FF30..0x44FF52 (0x23 bytes): DragonCmd_LoadSteps[0]: window 16 +3 zero: LoadDatFile(0xCC), 0x904AA4 + 1. PSX twin 0x800A1668 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44FF60
+name = "DragonCmd_LoadWait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44FF60..0x44FF9B (0x3C bytes): DragonCmd_LoadSteps[1]: File_LoadDone: Gfx_ClutStripCopyRow 0x1A, 0x1B, Gfx_ClutStripDirty + 1, 0x904AA3 + 1, 0x904AA4 = 0. Not in the cut (code between two of its starts, tools/band_rows.py). PSX twin 0x800A16AC (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x44FFA0
+name = "DragonCmd_Open"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44FFA0..0x450069 (0xCA bytes): DragonCmd_Parts[1]: Window_Alloc(0x15, 5) (window 21 at 0x142, 0x3F), Window_Alloc(0x11, 5), sound 0x102, the 18 bits of 0x904650 into 0x939A60, the latch 0x7E01B8 and the Dragon cells zeroed, 0x904AA5 = 1, 0x4525B0, 0x904AA3 + 1. PSX twin 0x800A1714 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450070
+name = "DragonCmd_MenuDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450070..0x450080 (0x11 bytes): DragonCmd_Parts[2]: jmp [DragonCmd_MenuSteps + 4 * byte 0x904AA4], 5 entries. PSX twin 0x800A1868 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450090
+name = "DragonCmd_MenuInput"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450090..0x4501A3 (0x114 bytes): DragonCmd_MenuSteps[0]: line 0x42 + 0x904AA5; Input_AutoRepeat(0xE000); cancel 0x904AA4 + 2, confirm + 1, 0x2000 / 0x8000 the line +- 1, 0x4000 line 1 and + 1; wrapped to 0..2. PSX twin 0x800A18A4 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4501B0
+name = "DragonCmd_MenuPick"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4501B0..0x4501D5 (0x26 bytes): DragonCmd_MenuSteps[1]: 0x904AA5 |= 0x80, 0x904AA3 = line + 3, 0x904AA4 = 0x904AA6 = 0. PSX twin 0x800A1A38 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4501E0
+name = "DragonCmd_MenuClose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4501E0..0x4501F3 (0x14 bytes): DragonCmd_MenuSteps[2]: window 21 +3 = 2, 0x904AA4 + 1. PSX twin 0x800A1A70 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450200
+name = "DragonCmd_MenuCancel"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450200..0x450245 (0x46 bytes): DragonCmd_MenuSteps[3]: window 21 closed: 0x447F40 (BE4), windows 17 / 21 +0 = 0, BattleBanner_ShowName(0x939EC4), window 4 +3 = 1, LoadDatFile(0xCF), 0x904AA4 + 1. PSX twin 0x800A1A94 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450250
+name = "DragonCmd_MenuCancelLoad"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450250..0x45027B (0x2C bytes): DragonCmd_MenuSteps[4]: File_LoadDone: CLUT row 0x1B, Gfx_ClutStripDirty = 1, 0x904AA2 = 0x904AA3 = 1, 0x904AA4 = 0. Not in the cut (code between two of its starts, tools/band_rows.py). PSX twin 0x800A1B1C (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450280
+name = "DragonCmd_SlotsDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450280..0x450290 (0x11 bytes): DragonCmd_Parts[3]: jmp [DragonCmd_SlotsSteps + 4 * byte 0x904AA4], 7 entries. PSX twin 0x800A1B70 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4502A0
+name = "DragonCmd_SlotsCloseMenu"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4502A0..0x4502BA (0x1B bytes): DragonCmd_SlotsSteps[0]: window 21 +3 = 2, +0xA = 0, 0x904AA4 + 1. PSX twin 0x800A1BAC (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4502C0
+name = "DragonCmd_SlotsOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4502C0..0x45033F (0x80 bytes): DragonCmd_SlotsSteps[1]: window 21 closed: Window_Alloc(0x12, 5) (window 18: +2 2, at 0xFF5B, 0x3F, cursor 0, 0), line 0x59, 0x904AA5 |= 0x80, 0x904AA4 + 1. PSX twin 0x800A1BD8 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450340
+name = "DragonCmd_SlotsCursor"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450340..0x450505 (0x1C6 bytes): DragonCmd_SlotsSteps[2]: window 18 at x 0x5B: Input_AutoRepeat(0x500C); cancel + 1; confirm: DragonCmd_SlotAffordable - step 5, else sound 0x107; Input_Pressed bit 0x10 on a slot 0x904608[a + b] not empty: 0x904AA3 = 6; the cursor (+0x12 a, +0x10 b) in six slots. PSX twin 0x800A1CA4 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450510
+name = "DragonCmd_SlotAffordable"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450510..0x450591 (0x82 bytes): cdecl, al: slot 0x904608 + 4 * (s16 0x8033FA + s16 0x8033F8): +3 0xFF - 0; else the byte sum of 0x64EC9C[gene] over its genes not 0xFF <= the member's AP (0x802DDA + 0x14C * (0x939EC4)+5). Called by DragonCmd_SlotsCursor. PSX twin 0x800A1F40 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4505A0
+name = "DragonCmd_SlotsCancel"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4505A0..0x4505DD (0x3E bytes): DragonCmd_SlotsSteps[3]: Window_Alloc(0x15, 5) (at 0x142, 0x3F), window 18 +3 = 2, 0x904AA4 + 1. PSX twin 0x800A2020 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4505E0
+name = "DragonCmd_SlotsBack"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4505E0..0x450603 (0x24 bytes): DragonCmd_SlotsSteps[4]: window 18 closed: 0x904AA3 = 2, 0x904AA4 = 0, 0x904AA5 &= 0x7F. PSX twin 0x800A2088 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450610
+name = "DragonCmd_SlotsConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450610..0x45067F (0x70 bytes): DragonCmd_SlotsSteps[5]: the slot's genes not 0xFF into 0x904B84 + j, counted in 0x904B87; 0x4525B0 (BE6); window 18 +3 = 2; the member's +0x134 |= 4; 0x904AA4 + 1. PSX twin 0x800A20CC (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450680
+name = "DragonCmd_SlotsClose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450680..0x4506BF (0x40 bytes): DragonCmd_SlotsSteps[6]: window 18 closed: 0x447F40 (BE4), windows 17 / 18 / 16 / 19 +0 = 0, LoadDatFile(0xCF), 0x904AA3 = 4, 0x904AA4 = 3. PSX twin 0x800A21AC (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4506C0
+name = "DragonCmd_GenesDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4506C0..0x4506D0 (0x11 bytes): DragonCmd_Parts[4]: jmp [DragonCmd_GenesSteps + 4 * byte 0x904AA4], 5 entries. PSX twin 0x800A222C (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x4506E0
+name = "DragonCmd_GenesOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x4506E0..0x4506FA (0x1B bytes): DragonCmd_GenesSteps[0]: window 17 +3 = 2, window 4 +3 = 1, 0x904AA4 + 1. PSX twin 0x800A2268 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450700
+name = "DragonCmd_GenesPick"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450700..0x450A26 (0x327 bytes): DragonCmd_GenesSteps[1] (twin call-disputed): the grid 0x904AA6 (row, 0xFF done) / 0x904AA7 over 0x939A60; BattleBanner_Set(0, 1, 1, 0, 0xFF, line 0x4172 + 6r + c or 0x4000); cancel puts the last gene back or returns to part 2; confirm picks a gene into 0x904B84 (three at most) or on the done line goes on while the member's +0x9A >= 0x904B78; the line 0x57 / 0x58 / 0x45 + 6r + c / 0x4000; Input_AutoRepeat(0xF000) moves the cursor. PSX twin 0x800A2298 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450A30
+name = "DragonCmd_GenesConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450A30..0x450A64 (0x35 bytes): DragonCmd_GenesSteps[2]: sound 0x104, window 21 +3 = 2, the member's +0x134 |= 4, 0x904AA4 + 1. PSX twin 0x800A2784 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450A70
+name = "DragonCmd_GenesClose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450A70..0x450AAD (0x3E bytes): DragonCmd_GenesSteps[3]: window 21 closed: 0x447F40 (BE4), windows 17 / 21 / 16 / 19 +0 = 0, LoadDatFile(0xCF), 0x904AA4 + 1. PSX twin 0x800A27DC (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450AB0
+name = "DragonCmd_Commit"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450AB0..0x450B1A (0x6B bytes): DragonCmd_GenesSteps[4]: File_LoadDone: CLUT row 0x1B, the command record (0x939FA0) +1 = 4, Gfx_ClutStripDirty = 1, 0x904AAF = 0, the member's +1 = 2, 0x904AC3 + 1, 0x904AA1 = 1, 0x904AA2..AA4 = 0, the message window's last line +1 = 1. PSX twin 0x800A285C (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450B20
+name = "DragonCmd_Slots2Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450B20..0x450B30 (0x11 bytes): DragonCmd_Parts[5]: jmp [DragonCmd_Slots2Steps + 4 * byte 0x904AA4], 7 entries. PSX twin 0x800A2914 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450B40
+name = "DragonCmd_Slots2CloseMenu"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450B40..0x450B5A (0x1B bytes): DragonCmd_Slots2Steps[0]: window 21 +3 = 2, +0xA = 1, 0x904AA4 + 1. PSX twin 0x800A2950 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450B60
+name = "DragonCmd_Slots2Open"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450B60..0x450BDF (0x80 bytes): DragonCmd_Slots2Steps[1]: as DragonCmd_SlotsOpen with Window_Alloc(0x13, 5) (window 19: +2 3, at 0x15B) and line 0x63. PSX twin 0x800A2980 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450BE0
+name = "DragonCmd_Slots2Cursor"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450BE0..0x450D57 (0x178 bytes): DragonCmd_Slots2Steps[2]: window 19 at x 0x5B: as DragonCmd_SlotsCursor without the bit-0x10 branch, DragonCmd_Slot2Affordable, twelve slots (a + b < 0xB, a <= 9). PSX twin 0x800A2A4C (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450D60
+name = "DragonCmd_Slot2Affordable"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450D60..0x450DE1 (0x82 bytes): cdecl, al: DragonCmd_SlotAffordable on 0x904620 by window 19's cursor (0x80341E, 0x80341C). Called by DragonCmd_Slots2Cursor. PSX twin 0x800A2C68 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450DF0
+name = "DragonCmd_Slots2Cancel"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450DF0..0x450E34 (0x45 bytes): DragonCmd_Slots2Steps[3]: Window_Alloc(0x15, 5) (at 0xFF42, 0x3F, +0xA 1), window 19 +3 = 2, 0x904AA4 + 1. PSX twin 0x800A2D48 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450E40
+name = "DragonCmd_Slots2Back"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450E40..0x450E63 (0x24 bytes): DragonCmd_Slots2Steps[4]: window 19 closed: 0x904AA3 = 2, 0x904AA4 = 0, 0x904AA5 &= 0x7F. PSX twin 0x800A2DBC (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450E70
+name = "DragonCmd_Slots2Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450E70..0x450EEC (0x7D bytes): DragonCmd_Slots2Steps[5]: as DragonCmd_SlotsConfirm on 0x904620 by window 19's cursor, sound 0x104 after 0x4525B0, window 19 +3 = 2. PSX twin 0x800A2E00 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450EF0
+name = "DragonCmd_Slots2Close"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450EF0..0x450F2A (0x3B bytes): DragonCmd_Slots2Steps[6]: window 18 (sic) closed: 0x447F40 (BE4), windows 17 / 16 / 19 +0 = 0, LoadDatFile(0xCF), 0x904AA3 = 4, 0x904AA4 = 3. PSX twin 0x800A2EE8 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450F30
+name = "DragonCmd_StoreDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450F30..0x450F40 (0x11 bytes): DragonCmd_Parts[6]: jmp [DragonCmd_StoreSteps + 4 * byte 0x904AA4], 7 entries (the last BE6's 0x451480). PSX twin 0x800A2F58 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450F50
+name = "DragonCmd_StoreOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450F50..0x450F9B (0x4C bytes): DragonCmd_StoreSteps[0]: window 18 +3 = 3, Window_Alloc(0x13, 5) (window 19: +3 0, cursor 0, 0, +2 4, at 0x15B, 0x3F), 0x904AA4 + 1. PSX twin 0x800A2F94 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450FA0
+name = "DragonCmd_StoreWait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450FA0..0x450FB1 (0x12 bytes): DragonCmd_StoreSteps[1]: window 19's word +4 == 0xA3: 0x904AA4 + 1. PSX twin 0x800A3010 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x450FC0
+name = "DragonCmd_StoreCursor"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x450FC0..0x451152 (0x193 bytes): DragonCmd_StoreSteps[2]: line 0x61; Input_AutoRepeat(0x500C); cancel step 5; confirm: step 4 for an empty 0x904620 slot, else 0x904B74 = 0 and step 3, sound 0x104; the cursor in twelve slots. PSX twin 0x800A3044 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x451160
+name = "DragonCmd_StoreAsk"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x451160..0x451212 (0xB3 bytes): DragonCmd_StoreSteps[3]: line 0x62; Input_AutoRepeat(0xA000); cancel (or confirm with 0x904B74 set) sound 0x106 and a step back, confirm sound 0x104 and on; a repeat key flips 0x904B74; Menu_DrawHand(0xD5 + 0x22 * 0x904B74, 0x18, 0). PSX twin 0x800A3294 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x451220
+name = "DragonCmd_StoreCopy"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x451220..0x451282 (0x63 bytes): DragonCmd_StoreSteps[4]: 0x904608[window 18's cursor] copied byte by byte to 0x904620[window 19's], 0x904AA4 + 1. PSX twin 0x800A33F0 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[func]]
+pc = 0x451290
+name = "DragonCmd_StoreSource"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e5.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x451290..0x451471 (0x1E2 bytes): DragonCmd_StoreSteps[5]: line 0x60; Input_AutoRepeat(0x500C); cancel + 1; confirm (or Input_Pressed 0x10): a slot not empty - step 2, else sound 0x107; the cursor in six slots. PSX twin 0x800A3524 (pairs_propagated.json, a hypothesis; the sibling names nothing there), not read. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ECCC
+name = "DragonCmd_Parts"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): 0x44FF00 (not ours: BattleMenu_ConfirmDispatch's Dragon entry) jumps through it by byte 0x904AA3: DragonCmd_LoadDispatch, _Open, _MenuDispatch, _SlotsDispatch, _GenesDispatch, _Slots2Dispatch, _StoreDispatch. Its length from the next table's address; no compare in 0x44FF00. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ECE8
+name = "DragonCmd_LoadSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): DragonCmd_LoadDispatch's by byte 0x904AA4: DragonCmd_LoadStart, _LoadWait (the second's last step moves 0x904AA3 on). Length: the next table 0x64ECF0. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ECF0
+name = "DragonCmd_MenuSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): DragonCmd_MenuDispatch's by 0x904AA4: DragonCmd_MenuInput, _MenuPick, _MenuClose, _MenuCancel, _MenuCancelLoad. Length: the next table 0x64ED04. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ED04
+name = "DragonCmd_SlotsSteps"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): DragonCmd_SlotsDispatch's by 0x904AA4: DragonCmd_SlotsCloseMenu, _SlotsOpen, _SlotsCursor, _SlotsCancel, _SlotsBack, _SlotsConfirm, _SlotsClose. Length: the next table 0x64ED20. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ED20
+name = "DragonCmd_GenesSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): DragonCmd_GenesDispatch's by 0x904AA4: DragonCmd_GenesOpen, _GenesPick, _GenesConfirm, _GenesClose, _Commit. Length: the next table 0x64ED34. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ED34
+name = "DragonCmd_Slots2Steps"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): DragonCmd_Slots2Dispatch's by 0x904AA4: DragonCmd_Slots2CloseMenu, _Slots2Open, _Slots2Cursor, _Slots2Cancel, _Slots2Back, _Slots2Confirm, _Slots2Close. Length: the next table 0x64ED50. docs/battle_e5.md."
+
+[[data]]
+pc = 0x64ED50
+name = "DragonCmd_StoreSteps"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE5): DragonCmd_StoreDispatch's by 0x904AA4: DragonCmd_StoreOpen, _StoreWait, _StoreCursor, _StoreAsk, _StoreCopy, _StoreSource, and BE6's 0x451480. The dword after is 0x00070700, not code. docs/battle_e5.md."

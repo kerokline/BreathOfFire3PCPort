@@ -102,11 +102,11 @@ struct Callees {
     U (__cdecl* item_list)(U, U, U);            // 0x591E50 (group BD): an actor's inventory page
     U (__cdecl* item_usable)(U, U, U);          // 0x57DA70 (group BD): al 0 when usable
     U (__cdecl* free_window)();                 // Window_FreeCurrent 0x59E310 (ours)
-    U (__cdecl* ai_condition)(U);               // 0x44B320 (unnamed): EnemyAI_CondPartyFlag
+    U (__cdecl* ai_condition)(U);               // 0x44B320 EnemyAI_CondElement (group BE5, round 12; was EnemyAI_CondPartyFlag here)
     U (__cdecl* ai_row_done)(U, U);             // 0x44B2C0 (group BE): EnemyAI_RowDone
-    U (__cdecl* ai_apply)(U, U);                // 0x44B3A0 (unnamed): EnemyAI_ApplyAction
-    U (__cdecl* ai_set_done)(U, U, U);          // 0x44B2E0 (unnamed): EnemyAI_SetRowDone
-    U (__cdecl* ai_finish)();                   // 0x44B920 (unnamed)
+    U (__cdecl* ai_apply)(U, U);                // 0x44B3A0 EnemyAI_ApplyAction (BE5)
+    U (__cdecl* ai_set_done)(U, U, U);          // 0x44B2E0 EnemyAI_SetRowDone (BE5)
+    U (__cdecl* ai_finish)();                   // 0x44B920 EnemyAI_DedupMessages (BE5; its eax unread by the one caller)
     U (__cdecl* update_screen_a)();             // Sprite_UpdateScreenA 0x57B830 (ours)
     U (__cdecl* update_screen_slot)();          // Sprite_UpdateScreenSlot 0x588F00 (group BG)
     U (__cdecl* init_context)();                // Battle_InitActorContext 0x446BD0 (this module)

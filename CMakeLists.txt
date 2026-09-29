@@ -482,6 +482,8 @@ add_library(bof3x SHARED
   src/game/boss_sj_fuzz.cpp
   src/game/boss_sg.cpp
   src/game/boss_sg_fuzz.cpp
+  src/game/battle_e5.cpp
+  src/game/battle_e5_fuzz.cpp
   src/game/boss_sf.cpp
   src/game/boss_sf_fuzz.cpp
   src/game/battle_e1.cpp

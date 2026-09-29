@@ -65,10 +65,10 @@ const Callees kOriginals = {
     Fn<int (__cdecl*)()>(0x4463E0),
     Fn<int (__cdecl*)(unsigned, unsigned)>(0x44F030),
     Rand,
-    Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(0x44B3A0),
-    Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(0x44B2E0),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(0x44B240),
-    Fn<void (__cdecl*)()>(0x44B920),
+    Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(bof3::addr::EnemyAI_ApplyAction),
+    Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(bof3::addr::EnemyAI_SetRowDone),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::EnemyAI_OtherRowsDone),
+    Fn<void (__cdecl*)()>(bof3::addr::EnemyAI_DedupMessages),
 };
 Callees g = kOriginals;
 
