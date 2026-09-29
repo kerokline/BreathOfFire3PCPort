@@ -9,7 +9,9 @@ shadow name `effect_2a`): the cut table's 64 rows for E2A
 function its span holds that no list had (`0x471A60`, kind 0x2B's ring draw),
 each read to its last instruction with capstone and fuzzed through the
 scenario harness's effect mode ([`scenario_harness.md`](scenario_harness.md)
-section 8), the harness unchanged: 390,000 rounds, 0 mismatches. @CONTROLS_LINE@
+section 8), the harness unchanged: 390,000 rounds, 0 mismatches. 134 controls
+planted: 131 refused by a count, 3 equivalent mutants each with a refused
+near variant (section 6).
 Two of the 65 (`EffectSpecks_Spawn`, `EffectSpecks_Draw`) are entered by the
 recorded whelp route through E1C's kind 0x1C (section 9); the rest are fuzz
 only. No start dropped: none is a case or a shared tail.
@@ -389,7 +391,12 @@ hash only): `+9`, the radius `+0x2E` (never to 0), `+0x30`, `+0x32`, `+0x1A`,
 `+0x1C`, the dword `+0xC`.
 
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_2a`,
-exit 0): @RESULT@
+exit 0): 390,000 rounds over 65 functions, 14,133,730 calls to the stand-ins,
+**0 mismatches**; 28,712 bytes of state in 47 regions. Every entry of the
+seven tables reached (each state's handler recorder 688..2,021 calls, FC1's
+`Effect_StateRelease`, four cells, 5,859 together); `Effect_Release` 7,154,
+`EffectShards_Clear` 1,214, `EffectSpecks_Spawn` 2,982, `EffectDrops_Clear`
+482, `Member_SetState2_8` 14,367, `0x5A7A90` 134,011.
 
 **Every shadow** (this worktree, no `bof3x.ini`): @STAR@
 
@@ -427,7 +434,157 @@ each under `BOF3X_E2A_ONLY=<its function>`, restore, rebuild; the committed
 file has no switch). Counts are rounds refused of 6,000 (12,000 where the
 filter runs two clones), in this worktree, with the final fuzz.
 
-@CONTROLS@
+| # | Function | Plant | Refused |
+|--:|---|---|--:|
+| 1 | `EffectKind28_Run` | dispatch to the next entry | 6,000 |
+| 2 | `EffectKind29_Run` | dispatch to the next entry | 6,000 |
+| 3 | `EffectKind2A_Run` | dispatch to the next entry | 6,000 |
+| 4 | `EffectKind2B_Run` | dispatch to the next entry | 6,000 |
+| 5 | `EffectKind2C_Run` | dispatch to the next entry | 6,000 |
+| 6 | `EffectKind2E_Run` | dispatch to the next entry | 6,000 |
+| 7 | `EffectKind2D_Run` | dispatch to the next entry | 6,000 |
+| 8 | `EffectKind28_Start` | height 0x101 above the ground | 6,000 |
+| 9 | `EffectKind28_Start` | +0x3E not stored | 6,000 |
+| 10 | `EffectKind28_Start` | the two states swapped | 6,000 |
+| 11 | `EffectKind28_WaitFlag` | flag 0xC | 6,000 |
+| 12 | `EffectKind28_Beam` | +1 = 1 when the flag is clear | 1,993 |
+| 13 | `EffectKind28_PushParty` | z cell 0x11 | 6,000 |
+| 14 | `EffectKind28_PushParty` | state 3 handed | 2,822 |
+| 15 | `EffectKind28_PushParty` | Field_ScriptFlags2 & 0x1000 only | 354 |
+| 16 | `EffectKind28_DrawBeam` | the line committed in slot 2 | 6,000 |
+| 17 | `EffectKind28_DrawBeam` | size 0x41 | 6,000 |
+| 18 | `EffectKind28_DrawBeam` | end angle + 0x401 | 6,000 |
+| 19 | `EffectKind28_DrawBeam` | no frame bit at b | 4,333 |
+| 20 | `EffectKind28_DrawBeam` | Ratan2 (dx, dy) | 5,048 |
+| 21 | `EffectKind28_DrawBeam` | dx rounded, not truncated | 1,915 |
+| 22 | `EffectKind28_DrawEnd` | rim sar 11 | 6,000 |
+| 23 | `EffectKind28_DrawEnd` | rim shaded 1 | 6,000 |
+| 24 | `EffectKind28_DrawEnd` | seven triangles | 6,000 |
+| 25 | `EffectKind28_DrawEnd` | the angle masked before stepping (a 16-bit slot) | **0: equivalent** - the argument is masked to 16 bits after the step either way |
+| 26 | `EffectKind28_DrawSides` | the far angle + 0x800 masked | 193 |
+| 27 | `EffectKind28_DrawSides` | the copy 0x40 bytes | 6,000 |
+| 28 | `EffectKind28_DrawSides` | the second quad at the far angle + 0x800 | 6,000 |
+| 29 | `EffectKind29_Start` | +9 = 7 | 6,000 |
+| 30 | `EffectKind29_Start` | box B depth 0x4001 | 6,000 |
+| 31 | `EffectKind29_Extend` | t = 0x10 - +9 | 5,538 |
+| 32 | `EffectKind29_Extend` | reload 0x3F | 434 |
+| 33 | `EffectKind29_Hold` | reload 5 | 434 |
+| 34 | `EffectKind29_Fade` | full shade at +9 = 7 | 912 |
+| 35 | `EffectKind29_Fade` | box B depth + 0x10001 | 6,000 |
+| 36 | `EffectKind29_Linger` | reload 1 | 441 |
+| 37 | `EffectKind29_DrawBoxes` | the top at h - dh | 6,000 |
+| 38 | `EffectKind29_DrawBoxes` | face 3 shaded (1, 1) | 6,000 |
+| 39 | `EffectKind29_DrawFace` | blue not halved | 4,838 |
+| 40 | `EffectKind29_DrawFace` | no frame bit | 3,688 |
+| 41 | `EffectKind29_SetSegments` | one constant off | 6,000 |
+| 42 | `EffectKind29_DrawSegments` | sar 3 | 5,975 |
+| 43 | `EffectKind29_DrawSegments` | near shade 0x21 | 5,242 |
+| 44 | `EffectKind2A_Start` | +0x3C = 0x1000001 | 6,000 |
+| 45 | `EffectKind2A_Beam` | +6 = 2 | 6,000 |
+| 46 | `EffectKind2A_Beam` | z 0x118001 | 6,000 |
+| 47 | `EffectKind2A_Beams` | +1 = 2 once the flag is set | 3,992 |
+| 48 | `EffectKind2A_Beam` | the ground + 0xFF | 12,000 |
+| 49 | `EffectKind2A_PushParty` | facing 4 | 1,994 |
+| 50 | `EffectKind2A_PushParty` | past >= 0 (the row at the member) | 396 |
+| 51 | `EffectKind2A_PushParty` | the state from the row's first byte | 2,076 |
+| 52 | `EffectKind2A_PushParty` | x cells from 0x62 | 6,000 |
+| 53 | `EffectKind2A_PushParty` | Field_ScriptFlags2 & 0x1000 only | 345 |
+| 54 | `EffectKind2A_DrawBeam` | kind 0x28's colours | 2,973 |
+| 55 | `EffectKind2A_DrawEnd` | the centre 1.0 lower | 6,000 |
+| 56 | `EffectKind2A_DrawSides` | the second quad not committed | 6,000 |
+| 57 | `EffectKind2B_Run` | the ring drawn at +1 = 0 too | 1,221 |
+| 58 | `EffectKind2B_Start` | count 0x17 | 6,000 |
+| 59 | `EffectKind2B_Rise` | rise 0x81 | 5,985 |
+| 60 | `EffectKind2B_Rise` | sound 0x20A | 1,181 |
+| 61 | `EffectKind2B_Specks` | even frames | 6,000 |
+| 62 | `EffectKind2B_Specks` | counter 0x28 | 666 |
+| 63 | `EffectKind2B_Settle` | count 0x11 | 2,055 |
+| 64 | `EffectKind2B_Shrink` | radius - 0xF | 5,994 |
+| 65 | `EffectKind2B_Draw` | shade down for quads 4..10 | 6,000 |
+| 66 | `EffectKind2B_Draw` | radius sar 5 | 6,000 |
+| 67 | `EffectKind2B_Draw` | the trailing mode dithered | 6,000 |
+| 68 | `EffectKind2B_Draw` | the rise read from +0 instead of +0x30 | 6,000 |
+| 69 | `EffectSpecks_Spawn` | +1 = 0x41 | 6,000 |
+| 70 | `EffectSpecks_Spawn` | the divisor from the record read before Rand | 112 |
+| 71 | `EffectSpecks_Spawn` | fall speed & 0x7FF | 2,944 |
+| 72 | `EffectSpecks_Move` | freed at or below | 3,420 |
+| 73 | `EffectSpecks_Move` | answers 1 always | 1,471 |
+| 74 | `EffectSpecks_Draw` | Rand & 2 | 2,507 |
+| 75 | `EffectSpecks_Draw` | linked 0x10 | 6,000 |
+| 76 | `EffectKind2C_Start` | ground << 7 | 6,000 |
+| 77 | `EffectKind2C_Start` | +0xC = 0x1FF | 6,000 |
+| 78 | `EffectKind2C_Emit` | every 8 frames | 47 |
+| 79 | `EffectKind2C_Emit` | velocity sar 3 | 3,127 |
+| 80 | `EffectKind2C_Emit` | shade 0x81 | 3,127 |
+| 81 | `EffectSparks_Move` | held at or below the ground | 4,297 |
+| 82 | `EffectSparks_Move` | size + 5 | 6,000 |
+| 83 | `EffectSparks_Draw` | half size >> 5 | 5,999 |
+| 84 | `EffectSparks_Draw` | CLUT x 0xA1 | 6,000 |
+| 85 | `EffectSparks_Draw` | texture v 0x4E | 6,000 |
+| 86 | `EffectSparks_Clear` | the last spark kept | 1,546 |
+| 87 | `EffectSparks_FindFree` | by +0x24 | 5,606 |
+| 88 | `EffectKind2E_Start` | +1 not moved | 6,000 |
+| 89 | `EffectKind2E_Trickle` | every fourth frame | 748 |
+| 90 | `EffectKind2E_Trickle` | height sar 7 | 561 |
+| 91 | `EffectKind2E_Burst` | fifteen sparks | 6,000 |
+| 92 | `EffectKind2E_Burst` | sin sar 3 | 6,000 |
+| 93 | `EffectKind2E_Burst` | +0xC = 0x41 | 6,000 |
+| 94 | `EffectKind2D_Start` | link x 0x1C0001 | 6,000 |
+| 95 | `EffectKind2D_Start` | Field_Request 1 | 5,747 |
+| 96 | `EffectKind2D_Start` | the depth scaled too | 5,109 |
+| 97 | `EffectKind2D_Start` | the sums in SSE (its NaN rule) | 6 |
+| 98 | `EffectKind2D_Spin` | grows while +9 >= 0x19 | 460 |
+| 99 | `EffectKind2D_Pause` | +9 = 0x59 | 5,968 |
+| 100 | `EffectKind2D_Open` | held at 0x3F | 1,690 |
+| 101 | `EffectKind2D_Open` | level not cleared | 410 |
+| 102 | `EffectKind2D_Pour` | sound at 0xE | 475 |
+| 103 | `EffectKind2D_Pour` | ends above 0xFF | 786 |
+| 104 | `EffectKind2D_Pour` | drops on even frames | 6,000 |
+| 105 | `EffectKind2D_Close` | counter 0x30 | 448 |
+| 106 | `EffectKind2D_Close` | radius - 7 | 5,535 |
+| 107 | `EffectKind2D_Lift` | y + the word | 5,656 |
+| 108 | `EffectKind2D_End` | \|= 4 | 4,517 |
+| 109 | `EffectKind2D_DrawRays` | shift 11 / 12 | 5,643 |
+| 110 | `EffectKind2D_DrawRays` | the depth copied without the quieting load | 88 |
+| 111 | `EffectKind2D_DrawDisc` | one row fewer | 3,541 |
+| 112 | `EffectKind2D_DrawDisc` | the mirror at x + w | 4,684 |
+| 113 | `EffectKind2D_DrawDisc` | h = radius sar 1 | 4,248 |
+| 114 | `EffectKind2D_DrawRings` | y sar 14 | 4,672 |
+| 115 | `EffectKind2D_DrawRings` | the outer angle not stepped back | 6,000 |
+| 116 | `EffectKind2D_DrawRings` | radii by an unsigned shift | 673 |
+| 117 | `EffectKind2D_DrawCurtain` | clamped at 0xFE | 3,404 |
+| 118 | `EffectKind2D_DrawCurtain` | up for three quads | 5,314 |
+| 119 | `EffectKind2D_DrawCurtain` | top y 1.0 | 6,000 |
+| 120 | `EffectDrops_Clear` | +0x12 cleared | 6,000 |
+| 121 | `EffectDrops_Move` | speed + bit 1 | 6,000 |
+| 122 | `EffectDrops_Move` | relaunched at 1 left | 6,000 |
+| 123 | `EffectDrops_Draw` | the top held by a plain < | 29 |
+| 124 | `EffectDrops_Draw` | the bottom held at or above | **0: equivalent** - at equality the hold stores the value already there |
+| 125 | `EffectDrops_Draw` | width from 0x5C41D8 | 3,558 |
+| 126 | `EffectDrops_FindFree` | by +0x12 | 5,973 |
+| 127 | `EffectDrops_Launch` | y sar 12 | 4,930 |
+| 128 | `EffectDrops_Launch` | 0x1F frames | 6,000 |
+| 129 | `EffectDrops_Launch` | _ftol rounding to nearest | 1,966 |
+| 130 | `EffectDrops_Launch` | distance & 0x3C | 2,970 |
+| 131 | `EffectKind28_Start` | the ground read as unsigned | **0: equivalent** - (x << 16) keeps only x's low 16 bits, signed or not |
+| 132 | `EffectKind28_DrawEnd` | the angle masked to 15 bits (25's near variant) | 3,196 |
+| 133 | `EffectKind28_Start` | the ground sign-extended from its byte (131's near variant) | 2,987 |
+| 134 | `EffectDrops_Draw` | the bottom held from one below its bound (124's near variant) | 6 |
+
+**131 of 134 refused by a count.** Three are equivalent mutants, each with a
+refused near variant: 25 (the angle slot masked before it is masked again for
+the call; near variant 132, masked to 15 bits), 124 (the bottom held at
+equality stores the bound, which is the value already there; near variant
+134, held from one below), 131 (the ground's word read unsigned: `(x + 0x100)
+<< 16` keeps x's low 16 bits either way; near variant 133, sign-extended from
+its byte). **Not refused on the first run, the fuzz's fault** and refused
+once it was louder: 72 and 73 (no speck landed on the ground exactly, and the
+pool never lacked a live speck - a drop's frames word is every fifth speck's
+in-use byte, so the specks are now seeded last), 81 (the ground stand-in
+never met a spark's height: `AreaMap_Elevation` re-listed), 97 (two NaNs met
+too seldom: one projection in eight now odd). 124 was first taken for the
+fuzz's and is equivalent. Control 97 is the x87 one: SSE's first-operand NaN
+rule in place of `X87Add` - refused in 6 rounds.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
@@ -461,14 +618,14 @@ filter runs two clones), in this worktree, with the final fuzz.
 
 **Outbound**: none raw. Every callee is Capcom's library layer or the CRT
 (`0x5A7A90`, `_ftol`; `effect_2a_callees.h`) or already ours, called by name:
-EGT's four helpers, E1C's `EffectShards_Clear`, FC1's `Effect_StateRelease`
-(five table cells), the engine's (`band_rows.py --edges`: no edge into
+three of EGT's four helpers, E1C's `EffectShards_Clear`, FC1's `Effect_StateRelease`
+(four table cells), the engine's (`band_rows.py --edges`: no edge into
 another group of the round).
 
 **Inbound from outside the group** (for the rebinding pass): E1C's
 `EffectKind1C_Rise` / `_Hold` and `EffectKind1D_Rise` / `_Hold` call
-`EffectSpecks_Spawn`, and `EffectKind1C_MoveShards` / `1D_MoveShards` call
-`EffectSpecks_Draw` (through `effect_1c_callees.h`'s `kShardSpawn` /
+`EffectSpecks_Spawn`, and `EffectKind1C_MoveShards` calls `EffectSpecks_Draw`
+(`band_rows.py --edges`: E1C -> E2A 5; through `effect_1c_callees.h`'s `kShardSpawn` /
 `kShardTile`, rebound here, section 10). `Effect_RunObjects` (ours) reaches
 the seven dispatchers through `Effect_KindHandlers` `0x6553F0..0x655408`
 (read in place). E1C's callee comment says `0x471D10` answers the index in al:
