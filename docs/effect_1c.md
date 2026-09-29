@@ -9,7 +9,7 @@ declarations generated from `symbols.toml`, the module header
 had (`0x46F230`), each read to its last instruction with capstone and fuzzed
 through the scenario harness's effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8), the harness
-unchanged: 212,000 rounds, 0 mismatches. CONTROLS_SUMMARY Kind 0x1C is entered by the
+unchanged: 212,000 rounds, 0 mismatches. 73 controls planted one at a time: 71 refused, 2 equivalent mutants each with a refused near variant (section 8). Kind 0x1C is entered by the
 recorded whelp route (section 9); the rest are fuzz only.
 
 Eight kinds of the `Effect_Objects` pool (20 records of 0x80 at `0x7E11E0`;
@@ -293,7 +293,9 @@ runs the clones whose name contains it.
 
 **Callees.** The group's own called directly by name (`kPhase` for the
 void ones, `kFlag` for the three answering `al`, the three byte-argument
-draws with a mask of 0xFF: their callers push a whole `ecx`); the other
+draws with a mask of 0xFF: their callers push a whole `ecx`;
+`EffectKind1E_Winding` answering `ax` 0, 1 or -1 three times in four, the
+compare's boundary); the other
 groups' by address (section 6) - `0x471D10` louder (it fills the first free
 speck and answers its index), `0x471E20` hashing the speck's 16 bytes,
 `0x485030` the debris record's 0x2C, `0x4851E0` filling the record,
@@ -338,7 +340,15 @@ BOF3X_SHADOW=effect_1c`, exit 0): **212,000 rounds over 53 functions, 3,624,591
 calls to the stand-ins, 0 mismatches**; 27,000 bytes in 49 regions and the
 log compared. Every table entry reached (the 36 `phase` lines of the
 coverage: 543..4,044 each), every callee reached (the rarest: the five area
-hooks 319..352, `Math_Ratan2` 1,576, `Gpu_SetDrawMove` 2,013). STAR_RESULTS
+hooks 319..352, `Math_Ratan2` 1,576, `Gpu_SetDrawMove` 2,013). 
+
+Under `BOF3X_SHADOW='*'` (the final build, this worktree): exit 0,
+`inject: 6948 ours, 0 left original`, 681 self-test lines, 0 mismatches,
+`effect_1c` 0 mismatches there too. With `BOF3X_WIDE=1` (DIV-0041 on):
+`effect_1c` alone exit 0, 0 mismatches; `'*'` stops at `battle_e7`
+(`GeneWin_ListSlideOut`, `List2`, `List3` - the failure the round's
+section 11 hands to its own session, here under the wide bound) before
+reaching `effect_1c`; `'*,-battle_e7'` wide: WIDE_RESULT
 
 ## 5. Divergence
 
@@ -406,7 +416,96 @@ them).
 
 ## 8. Controls
 
-CONTROLS_TABLE
+`e1c/controls.py` (scratch): each plant replaces a string inside one function of
+`effect_1c.cpp` (found after that function's own first line), rebuilds, runs
+the self-test on the clone it touches (`BOF3X_E1C_ONLY`), restores the file and
+rebuilds. **73 planted: 71 refused, 2 not refused - each an equivalent mutant
+with its near variant refused.** The count is the rounds that mismatched of
+4,000. C54 was not refused on its first run: the `EffectKind1E_Winding`
+recorder answered a random `ax`, which is 0 once in 65,536 - the fuzz's
+fault; its stand-in now answers 0, 1 or -1 three times in four (`FxWinding`)
+and C54 is refused (the count shown), with C72 its twin on the first test.
+The thinnest: C29 (5 rounds, `+9` at 0x7F of the Glow compare) and C58 (14,
+the Debris compare at 0x44): the seeds put `+9` at 0x7E / 0x80 and 0x44 /
+0x45, but both functions step `+9` (up 2, up 1) before comparing, so only
+the random draws land on the planted boundary. A seed of 0x7D / 0x43 would
+thicken them; not added.
+
+| # | Function (EffectKind...) | Plant | Refused |
+|---|---|---|--:|
+| C00 | 36_Run | `rect[2] = 0x10; -> rect[2] = 0x11;` | 2028 |
+| C01 | 36_Run | `if (Cur()[1] == 4) -> if (Cur()[1] == 3)` | 1018 |
+| C02 | 3C_Run | `Cur()[1], 3, -> (Cur()[1] + 1) % 3, 3,` | 4000 |
+| C03 | 70_Run | `i == 0 ? 2 : 1 -> i == 0 ? 2 : 2` | 895 |
+| C04 | 70_Run | `case 0x76: -> case 0x77:` | 329 |
+| C05 | 1C_Run | `Cur()[1], 5, -> (Cur()[1] + 1) % 5, 5,` | 4000 |
+| C06 | 1C_Start | `SetWord(Cur() + 0x2E, 0x180); -> SetWord(Cur() + 0x2E, 0x181);` | 4000 |
+| C07 | 1C_Start | `(static_cast<short>(ground))) << 16 -> (static_cast<short>(ground))) << 15` | 3942 |
+| C08 | 1C_Rise | `s[9] = 0x20; -> s[9] = 0x21;` | 269 |
+| C09 | 1C_Hold | `s[9] = 0xFC; -> s[9] = 0xFD;` | 266 |
+| C10 | 1C_Fade | `s[9] + 0xFC -> s[9] + 0xFD` | 4000 |
+| C11 | 1C_End | `if (!SH_CALL -> if (SH_CALL` | 4000 |
+| C12 | 1C_DrawRing | `k >= 4 && k < 0xC -> k >= 4 && k < 0xB` | 3940 |
+| C13 | 1C_DrawRing | `))) << 16) + UL(s + 0x3C) -> ))) << 15) + UL(s + 0x3C)` | 4000 |
+| C14 | 1C_DrawRing | `RingMode(0); -> RingMode(1);` | 4000 |
+| C15 | 1C_MoveShards | `MoveShards(at::kShardTile) -> MoveShards(at::kShardTile2)` | 4000 |
+| C16 | 1C_MoveShards | `< Long(Cur() + 0x3C) -> <= Long(Cur() + 0x3C)` | 3393 |
+| C17 | 1D_Run | `Cur()[1], 5, -> (Cur()[1] + 1) % 5, 5,` | 4000 |
+| C18 | 1D_Start | `0x280); -> 0x281);` | 4000 |
+| C19 | 1D_Rise | `if (Frame_Counter & 1) -> if (!(Frame_Counter & 1))` | 4000 |
+| C20 | 1D_Hold | `== 0x1F) -> == 0x1E)` | 2169 |
+| C21 | 1D_Fade | `s[9] + 0xFC -> s[9] + 0xFB` | 4000 |
+| C22 | 1D_End | `if (!SH_CALL -> if (SH_CALL` | 4000 |
+| C23 | 1D_DrawRing | `k < 0xB || k >= 0x1C -> k < 0xB || k >= 0x1D` | 4000 |
+| C24 | 1D_DrawRing | `k >= 8 && k < 0x18 -> k >= 8 && k < 0x17` | 3940 |
+| C25 | EffectShards_Clear | `at::kShardStride)[0] = 0; -> at::kShardStride)[0] = 1;` | 4000 |
+| C26 | 1D_MoveShards | `any = 1; -> any = 2;` | 4000 |
+| C27 | 1E_Run | `Cur()[1], 5, -> (Cur()[1] + 1) % 5, 5,` | 4000 |
+| C28 | 1E_Start | `Cur()[9] = 0; -> Cur()[9] = 1;` | 4000 |
+| C29 | 1E_Glow | `< 0x80) return; -> < 0x7F) return;` | 5 |
+| C30 | 1E_Burst | `if (!SH_CALL -> if (SH_CALL` | 4000 |
+| C31 | 1E_FreeModel | `Sprite_ObjectsExtra[0] = 0; -> Sprite_ObjectsExtra[0] = 1;` | 4000 |
+| C32 | 1E_ShardsInit | `+ 0x28); -> + 0x2C);` | 4000 |
+| C33 | 1E_ShardInit | `shard[3] = 0x40; -> shard[3] = 0x41;` | 4000 |
+| C34 | 1E_ShardInit | `<< 8); -> << 9);` | 4000 |
+| C35 | 1E_ShardsDraw | `any = 1; -> any = 3;` | 3986 |
+| C36 | 1E_ShardsDraw | `SH_CALL(EffectKind1E_ShardQuad)(Cursor()); -> SH_CALL(EffectKind1E_ShardQuad)(At(c));` | **not refused**: equivalent - the state handlers (the real ones and the stand-ins) never move the cursor, so it equals the walk's own pointer after the call. Near variant C35 refused |
+| C37 | 1E_ShardQuad | `prim[0x35] = 0x4F; -> prim[0x35] = 0x4E;` | 4000 |
+| C38 | 1E_ShardQuad | `StoreFloat(prim + 0x18, left + static_cast<double>(w)); -> StoreFloat(prim + 0x18, left + static_cast<double>(h));` | 4000 |
+| C39 | 1E_ShardFly | `+ 0x80u); -> + 0x81u);` | 4000 |
+| C40 | 1E_ShardFade | `r[3] - 1 -> r[3] - 2` | 4000 |
+| C41 | 1E_ShardNext2 | `r[1] + 1 -> r[1] + 2` | 4000 |
+| C42 | 1E_ShardNext3 | `r[1] + 1 -> r[1] + 2` | 4000 |
+| C43 | 1E_SplitModel | `SW(r + k) >> 8 -> SW(r + k) >> 7` | 4000 |
+| C44 | 1E_SplitModel | `SW(d + 0x16)) >> 2 -> SW(d + 0x16)) >> 1` | 4000 |
+| C45 | 1E_StepPieces | `Word(r + 0xC) + odd) -> Word(r + 0xC) + (odd ^ 1))` | 4000 |
+| C46 | 1E_TurnPiece | `& 0xFC0u); -> & 0xFE0u);` | 1971 |
+| C47 | 1E_TurnPiece | `Word(piece + 2) + static_cast<U>(out[1]) -> Word(piece + 2) + static_cast<U>(out[2])` | 4000 |
+| C48 | 1E_DebrisInit | `i < 16; -> i < 15;` | 4000 |
+| C49 | 1E_DebrisInitOne | `& 3u) + 10u -> & 3u) + 11u` | 4000 |
+| C50 | 1E_DebrisInitOne | `-static_cast<int>(static_cast<short>(ay)) -> static_cast<int>(static_cast<short>(ay))` | 3996 |
+| C51 | 1E_DebrisDraw | `DebrisLoop(at::kDebris, 16); -> DebrisLoop(at::kDebris, 15);` | 4000 |
+| C52 | 1E_DebrisDraw | `0x20u : 0xFFFEu -> 0x20u : 0xFFFDu` | 3422 |
+| C53 | 1E_DrawModel | `SH_CALL(Gfx_CommitPrim)(1, 0x38); -> SH_CALL(Gfx_CommitPrim)(1, 0x39);` | 2905 |
+| C54 | 1E_DrawModel | `(prim + 0x20, prim + 0x2C, prim + 8) > 0 -> (prim + 0x20, prim + 0x2C, prim + 8) >= 0` | 1774 |
+| C55 | 1E_Winding | `w4 * w1 - w3 * w2 -> w4 * w1 + w3 * w2` | 3999 |
+| C56 | 1F_Run | `Cur()[1], 3, -> (Cur()[1] + 1) % 3, 3,` | 4000 |
+| C57 | 1F_Start | `i < 32; -> i < 31;` | 4000 |
+| C58 | 1F_Debris | `> 0x44) -> > 0x43)` | 14 |
+| C59 | 20_Run | `if (Cur()[1] != 0) -> if (Cur()[1] > 1)` | 558 |
+| C60 | 20_Start | `SetWord(Cur() + 0x2C, 0x20); -> SetWord(Cur() + 0x2C, 0x21);` | 4000 |
+| C61 | 20_Grow | `Tick(0x10); -> Tick(0x11);` | 1601 |
+| C62 | 20_Wait | `Tick(0xC); -> Tick(0xD);` | 1601 |
+| C63 | 20_Rise | `+ 0x400000); -> + 0x410000);` | 4000 |
+| C64 | 20_Shrink | `+ 3); -> + 4);` | 4000 |
+| C65 | 20_Shrink | `if (Word(s + 0x2C) != 0) return; -> if (Word(s + 0x2C) > 1) return;` | 834 |
+| C66 | 20_Aim | `+ 0x400u); -> + 0x401u);` | 1601 |
+| C67 | 20_Aim | `+ 0x10000u); -> + 0x8000u);` | 1601 |
+| C68 | 20_Fall | `SetUL(s + 0x64, 8); -> SetUL(s + 0x64, 9);` | 2345 |
+| C69 | 20_Draw | `0xC0, 0); -> 0xC1, 0);` | 4000 |
+| C70 | 20_Draw | `(UL(s + 0x3C) & 0xFFFF0000u) \| Word(s + 0x68) -> (UL(s + 0x38) & 0xFFFF0000u) \| Word(s + 0x68)` | **not refused**: equivalent to the callee - `0x493090` reads 16 bits of the word (the stand-in's mask), so the high half pushed is never read. Near variant C71 refused |
+| C71 | 20_Draw | `(UL(s + 0x3C) & 0xFFFF0000u) \| Word(s + 0x68) -> (UL(s + 0x3C) & 0xFFFF0000u) \| Word(s + 0x6C)` | 4000 |
+| C72 | 1E_DrawModel | `(prim + 8, prim + 0x14, prim + 0x20) > 0 -> (prim + 8, prim + 0x14, prim + 0x20) >= 0` | 2044 |
 
 ## 9. The rebinding
 

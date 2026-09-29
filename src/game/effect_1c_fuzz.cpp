@@ -226,6 +226,13 @@ U FxShardSpawn(const U*, U answer) {
     }
     return (answer & 0xFFFFFF00u) | 0x80u;
 }
+// EffectKind1E_Winding: ax 0, 1 or -1 (each compare's boundary) three times in
+// four, else any; the upper half the answer's.
+U FxWinding(const U*, U answer) {
+    const U n = sh::Noise();
+    const U w = n % 4 == 3 ? answer : (n >> 2) % 3 == 0 ? 0u : (n >> 2) % 3 == 1 ? 1u : 0xFFFFu;
+    return (answer & 0xFFFF0000u) | (w & 0xFFFFu);
+}
 // 0x4851E0 (E3C's debris set-up): the record's 0x2C bytes written.
 U FxDebrisInit(const U* a, U answer) {
     Fill(a[0], 0x2C);
@@ -253,7 +260,7 @@ const sh::Callee kCallees[] = {
     {E1C_OURS(EffectKind1E_ShardQuad), 1, {kW}, kG, 0, 0},
     {E1C_OURS(EffectKind1E_TurnPiece), 3, {kW, kW, kW}, kG, 0, 0},
     {E1C_OURS(EffectKind1E_DebrisInitOne), 1, {kW}, kG, 0, 0},
-    {E1C_OURS(EffectKind1E_Winding), 3, {kW, kW, kW}, kG, 0, 0},   // the caller tests ax
+    {E1C_OURS(EffectKind1E_Winding), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxWinding},   // the caller tests ax against 0
     {E1C_OURS(EffectKind20_Draw), 0, {}, kPh, 0, 0},
     // other groups' of round thirteen, by address (docs/effect_1c.md section 6)
     {"0x471D10 (E2A)", at::kShardSpawn, at::kShardSpawn, 0, {}, kG, 0, 0, {}, &FxShardSpawn},
