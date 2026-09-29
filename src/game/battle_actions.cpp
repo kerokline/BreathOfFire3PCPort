@@ -3,7 +3,7 @@
 // action goes: the next actor out of the turn order (Battle_BeginAction), its
 // command kind (0x904B35) dispatched - kinds 0 and 2, kind 1, the ability
 // (kind 4) and the item (kind 5) each with their checks, and kind 3 through
-// 0x42F5E0, which no group owns - then the effect steps, the steps after it
+// BattleAction_Kind3Dispatch 0x42F5E0 (round twelve BE1's) - then the effect steps, the steps after it
 // (the enemy messages among them), and the end, where a set 0x40 in the round
 // flags swaps the actor and the target and runs one more action. What the
 // kinds are in game terms is not read here. docs/battle_actions.md.
@@ -180,7 +180,7 @@ extern "C" void __cdecl BattleAction_BeginStep(void) { Step(at::kBeginSteps, B(a
 // original 0x42F500 (PSX 0x801D300C): step 1, a tail jump through
 // BattleAction_KindSteps (0x64AE9C) by 0x904AA2, which BattleAction_EnterKind
 // set to the command kind: 0 and 2 BattleAction_KindPlain, 1
-// BattleAction_KindOne, 3 0x42F5E0 (no group's), 4 BattleAction_AbilityStep,
+// BattleAction_KindOne, 3 BattleAction_Kind3Dispatch 0x42F5E0 (BE1's), 4 BattleAction_AbilityStep,
 // 5 BattleAction_ItemStep.
 extern "C" void __cdecl BattleAction_KindStep(void) { Step(at::kKindSteps, B(at::kSub))(); }
 
@@ -197,7 +197,7 @@ extern "C" void __cdecl BattleAction_ItemStep(void) { Step(at::kItemSteps, B(at:
 extern "C" void __cdecl BattleAction_EffectStep(void) { Step(at::kEffectSteps, B(at::kSub))(); }
 
 // original 0x42FDD0 (PSX 0x801D3FCC): step 3, through BattleAction_AfterSteps
-// (0x64AF20) by 0x904AA2: 0 BattleAction_AfterSettle, 1 0x42FE20 (no group's),
+// (0x64AF20) by 0x904AA2: 0 BattleAction_AfterSettle, 1 BattleAction_AbilityNotice 0x42FE20 (BE1's),
 // 2 BattleAction_EnemyMessages.
 extern "C" void __cdecl BattleAction_AfterStep(void) { Step(at::kAfterSteps, B(at::kSub))(); }
 
@@ -365,12 +365,12 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
 // original 0x42F880 (PSX 0x801D360C): waits for 0x904AA8 bit 5. Then clears
 // it, the actor object's +1 = 7 and +2 = 0, the actor's pending bit,
 // 0x904B8D = the id's low byte; for the ids 0x24, 0x25 and 0x8C the target
-// is 0x42F9D0's answer (it picks the id again) and fills the target block -
+// is BattleAction_PickRandomAbility's (0x42F9D0) answer (it picks the id again) and fills the target block -
 // a member's for 0..2, an enemy's for anything above; then the magic file
 // (Magic_LoadForAbility, the id's low byte re-read) and 0x904AA3 counts one.
 //
 // As the original has it: 0x904B3C is re-read for the second store; the id
-// is read after Battle_SetActorBit and again after 0x42F9D0; the target
+// is read after Battle_SetActorBit and again after BattleAction_PickRandomAbility; the target
 // block has no upper bound here (Battle_BeginAction's stops at 10), so a
 // side's 0x40 / 0x80 / 0xC0 is taken as an enemy 0x3D.. far past the eight
 // (docs/battle_actions.md section 3).
@@ -550,7 +550,7 @@ extern "C" void __cdecl BattleAction_EffectLoaded(void) {
 
 // original 0x42FDE0 (PSX 0x801D4008): with 0x904AA8 bit 2 and no actor
 // pending: Battle_SettleFlag8 non-zero gives 0x904AA5 = 0 and 0x904AA2 + 1;
-// zero gives 0x904AA2 = 2 (past 0x42FE20 to the enemy messages).
+// zero gives 0x904AA2 = 2 (past BattleAction_AbilityNotice to the enemy messages).
 extern "C" void __cdecl BattleAction_AfterSettle(void) {
     if ((B(at::kRoundFlags) & 4) == 0) return;
     if (Word(At(at::kPending)) != 0) return;

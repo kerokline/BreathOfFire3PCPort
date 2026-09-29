@@ -206,8 +206,9 @@ extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
 // original 0x587860: each of the 23 Sound_Channels dwords (to 0x6BC924) not 0:
 // SndBuf_Stop(it), then the dword 0 (after the call). Sound_PauseAll 0x587C30
 // walks the same dwords but keeps them (and stops the stream and the music).
-// The battle result's 0x432750, chapter 15's Scena15_Run5 and chapter 17's
-// Scena17_Outro11 / Scena17_EndRestart call it before Task_Restart(Boot_Task).
+// The loss screen's BattleLoss_Restart 0x432750 (BE1's), chapter 15's
+// Scena15_Run5 and chapter 17's Scena17_Outro11 / Scena17_EndRestart call it
+// before Task_Restart(Boot_Task).
 // PSX 0x8015D8AC (pairs_propagated "call").
 extern "C" void __cdecl Sound_StopChannels(void) {
     for (std::uint32_t p = Addr(Sound_Channels); p < at::kChannelsEnd; p += 4) {

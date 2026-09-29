@@ -16,7 +16,9 @@
 //     the copies' immediates.
 // Addresses of functions no group owns, or other groups own (the round's
 // cross-group rule, docs/takeover-queue-round8.md), are raw here and never
-// bound by name.
+// bound by name - except the three round twelve's group BE1 took
+// (kCountMembers, kZennyBonus, kLevelUpPending, docs/battle_e1.md), whose
+// constants name them with the value unchanged.
 #pragma once
 
 #include <cstdint>
@@ -77,11 +79,11 @@ constexpr std::uint32_t kRewardSteps = 0x64AFC8;  // 4 entries, by 0x904AA4, Bat
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kCountMembers = 0x4319B0;   // u8: party slots not out (Battle_ActorIsOut) whose dword ObjTrio +0x134 lacks 0x400
-constexpr std::uint32_t kZennyBonus = 0x431FE0;     // u8: 1 when a slot not out holds 7 in byte +0x16 or +0x17 of its 0x802DC0 record
+constexpr std::uint32_t kCountMembers = bof3::addr::BattleResult_CountExpShares;   // 0x4319B0 (round twelve BE1's; the value unchanged, so the fuzz's keys stand), u8: party slots not out (Battle_ActorIsOut) whose dword ObjTrio +0x134 lacks 0x400
+constexpr std::uint32_t kZennyBonus = bof3::addr::BattleResult_ZennyBonus;       // 0x431FE0 (BE1's), u8: 1 when a slot not out holds 7 in byte +0x16 or +0x17 of its 0x802DC0 record
 constexpr std::uint32_t kAddExp = 0x4468B0;         // PSX BattleResult_AddExp 0x801DD564 (the sibling's)
 constexpr std::uint32_t kRosterIndex = 0x4469D0;    // PSX CharId_ToRosterIndex 0x801DD774 (the sibling's): the byte at 0x66972C + id, 7 is 0
-constexpr std::uint32_t kLevelUpPending = 0x432170; // u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
+constexpr std::uint32_t kLevelUpPending = bof3::addr::Char_LevelUpGain;          // 0x432170 (BE1's; what 0), u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
 constexpr std::uint32_t kLevelUp = 0x498DE0;        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
 constexpr std::uint32_t kAddZenny = 0x591BE0;       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
 constexpr std::uint32_t kDrawFrame = bof3::addr::BattleResultWin_DrawFrame;   // 0x5982D0, group BE7's (round twelve; the same value): the result windows' frame (x, y, w, h), each read as a word

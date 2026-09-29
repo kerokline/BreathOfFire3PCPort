@@ -74808,3 +74808,428 @@ params = "unsigned member, unsigned x, unsigned y, unsigned set, unsigned flags,
 impl = "src/game/battle_e7.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group BE7), 0x59D640..0x59DB60 (0x521 bytes), cdecl, called by 0x59CC10 (kind 3 of Window_Handler8Kinds, Capcom's) with (0x66972C[0x904065[record +0xC]], +4, +6, +0x20, +0xD, record): Menu_DrawBox; the member's name (CharacterRecords, 5 characters at most); four stat labels 0x66A0F8.. and, after Char_RecalcStats, +0x24 +0x26 +0x2A +0x28; unless flags bit 0, Equip_PreviewSet(member, set, marks, values) into the stack and per stat 0x59DB70's bar and the value in the mark's colour; the six equipped items (+0x12.., categories 0x66B5BC, icons 0x66B5B4) with Item_CanUse(2, ...) under record +0xD bit 1, record +0x10 = category << 8 | item for the usable row +0xA; the frame's pieces. docs/battle_e7.md."
+
+[[func]]
+pc = 0x42D7A0
+name = "BattleExtra_TallyOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D7A0..0x42D7E0 (0x41 bytes): BATE state 3's 0x64ADC8[1] (hidden in 0x42D710's catalogue extent): Menu_DrawBackdrop(0x903A5B), BattleExtra_DrawTally(0x37, 0x37); once MoveScript_WaitWordDA is 0, BattleExtra_ApplyTally, 0x929F08 = 0, 0x929F02 = 0, 0x929F01 + 1 (read after the call). PSX twin 0x801D2114 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42D7F0
+name = "BattleExtra_TallyCount"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D7F0..0x42D873 (0x84 bytes): 0x64ADBC[1]: the backdrop and the tally; the s8 counter 0x929F08 below 6: shown 0x675E88[n] + the step byte 0x64ADD0[n], set to the target 0x675EA0[n] and n + 1 when it gets there or Input_Pressed's low byte is set (a negative n indexes before both, unchecked); at 6 a press gives Transition_Start(2) and 0x929F01 + 1. PSX twin 0x801D2188 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42D880
+name = "BattleExtra_TallyClose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D880..0x42D8B9 (0x3a bytes): 0x64ADBC[2]: once MoveScript_WaitWordDA is 0, 0x929F04 = 0, 0x929F00 = 1, 0x929F01 = 0x929F02 = 0; else the backdrop and the tally. PSX twin 0x801D2290 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42D8C0
+name = "BattleExtra_DrawTally"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42D8C0..0x42DA5E (0x19f bytes): cdecl: Menu_DrawBox(x - 4, y - 8, 0xDC, 0x8C, 0xF0, 0x903A5A), Menu_DrawBorder(x - 4, y - 8, 0x1A, 0x10), message 0xE7 by Text_DrawAt; three rows 32 apart: messages 0xE8 + i and 0xEB + i, the counters 0x675E88[i] / 0x675E94[i] through Crt_sprintf (formats 0x64ADDC, 0x64ADD8) into 0x904BA0 and Text_DrawFont12, BattleExtra_DrawPlus between; then message 0xF0 (Text_DrawAt) and 0xEF twice (Text_DrawSmall). The row's y carries esi's upper half from the row before (exact in ours). 19 calls, the self-test's text family (boss_harness.md 10.8). PSX twin 0x801D22FC (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DA60
+name = "BattleExtra_ApplyTally"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DA60..0x42DB33 (0xd4 bytes): the tally's counters: 0x675E88[0..5] = 0; targets 0x675EA0: the count byte 0x939A0C, the sum 0x939A04, the sum 0x939A08, the count, 0x939A04 / 20, and 2 / 4 / 6 by 0x939A08 below 0x32 / 0x50 / above; character record 7 (0x903EEC) raised: +0x46 and +0x26 by the count (Stat_AddClamped), +0x40 and +0x20 by the fifth (Stat_AddCap999), +0x44 and +0x24 by the sixth (Stat_AddClamped). PSX twin 0x801D258C (gap44; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DB40
+name = "BattleExtra_DrawPlus"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DB40..0x42DBF9 (0xba bytes): cdecl, the s16 (x, y): two semi-transparent LINE_F2 in grey 0x80, (x + 5, y)..(x + 5, y + 10) and (x, y + 5)..(x + 10, y + 5), each Gfx_CommitPrim(1, 0x20). PSX twin 0x801D26D0 (call-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DC00
+name = "BattleExtra_EquipDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DC00..0x42DC0D (0xe bytes): BATE state 2 (0x64ADAC[2]; hidden in 0x42DB40's catalogue extent): jmp [0x64ADE0 + 4 * byte 0x929F01], 3 entries by the code's writes (ours aborts past them). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DC10
+name = "BattleExtra_EquipOpenDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DC10..0x42DC1D (0xe bytes): 0x64ADE0[0]: jmp [0x64ADEC + 4 * byte 0x929F02], 3 entries (0x42D780, BattleExtra_EquipOpen, BattleExtra_EquipFadeIn). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DC20
+name = "BattleExtra_EquipOpen"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DC20..0x42DC70 (0x51 bytes): 0x64ADEC[1]: the backdrop; once MoveScript_WaitWordDA is 0, Sound_PlayEffect(0x102), 0x42E0E0(), 0x929F04 = 4, 0x929F02 + 1 (read after), memcpy (0x5B9450) of 5 bytes 0x669CE8 over character record 7's first five. docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DC80
+name = "BattleExtra_EquipFadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DC80..0x42DCC7 (0x48 bytes): 0x64ADEC[2]: the backdrop; 0x929F04 - 1, and at 0: 0x675EBF = 0, 0x675EC0 = 1, 0x675EBE = 0, 0x929F01 + 1, 0x929F02 = 0, 0x929F09 = 0. docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DCD0
+name = "BattleExtra_EquipRun"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DCD0..0x42DCEB (0x1c bytes): 0x64ADE0[1]: call [0x64ADF8 + 4 * byte 0x929F02] (2 entries; ours aborts past them), then Menu_DrawBackdrop(0x903A5B). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DCF0
+name = "BattleExtra_EquipSlotInput"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DCF0..0x42DE49 (0x15a bytes): 0x64ADF8[0]: window 4 (the hand) at window 1's x + 6, y + 0x57 + 13 * its +0xA; Input_AutoRepeat(Input_Pressed & 0xF000); window 1's +0xB = 0xFF, +0xD = 1; 0x5000 plays 0x101 and flips +0xA by xor 3; window 0's +9 = it; window 2's word +0x10 = Item_HelpMessage(2, record 7's +0x15) on 3, else (1, +0x12); window 3's +0x10 = 0xDC; confirm: 0x103, window 0's +0xB = its +0xA, window 1's +0xB = the cursor, 0x929F02 + 1; cancel: 0x106, 0x102, windows 0..3's +3 = 1, windows 4 and 21 off, 0x929F04 = 5, 0x929F01 + 1, 0x929F02 = 0. docs/battle_e1.md."
+
+[[func]]
+pc = 0x42DE50
+name = "BattleExtra_EquipListInput"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42DE50..0x42E039 (0x1ea bytes): 0x64ADF8[1]: window 0's list: the hand at x + 7, y + 13 * (cursor - scroll + 2), help Item_HelpMessage(+8, +0xD), window 3's +0x10 = 0xDD, Input_AutoRepeat(Input_Pressed & 0xF00C), 0x42E2F0(); 0x1000 cursor - 1 (scroll word 0xF0 below the scroll), 0x4000 + 1 below 0x7F (0x10 at scroll + 9), 4 / 8 a page of 9 back / on (the scroll to 0x77, the cursor to 0x7F), 0x100 on a move; with no scroll running: confirm with a count 0x104, 0x42E250(), the cursor 0xFF, 0x929F02 - 1, without 0x107; cancel 0x106, the cursor 0xFF, 0x929F02 - 1. docs/battle_e1.md."
+
+[[func]]
+pc = 0x42E040
+name = "BattleExtra_EquipLeaveDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42E040..0x42E04D (0xe bytes): 0x64ADE0[2]: jmp [0x64AE00 + 4 * byte 0x929F02], 2 entries. docs/battle_e1.md."
+
+[[func]]
+pc = 0x42E050
+name = "BattleExtra_EquipFadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42E050..0x42E082 (0x33 bytes): 0x64AE00[0]: the backdrop; 0x929F04 - 1, and at 0 Transition_Start(2), 0x929F02 + 1 (read after). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42E090
+name = "BattleExtra_EquipLeave"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42E090..0x42E0D2 (0x43 bytes): 0x64AE00[1]: once MoveScript_WaitWordDA is 0, 0x929F04 = 0, 0x929F00 = 1, 0x929F01 = 0x929F02 = 0, memcpy of 5 bytes 0x669CE0 (DIV-0020's whelp slot; its check reads 0x42E09D, which the inject leaves) over character record 7's first five; else the backdrop. docs/battle_e1.md."
+
+[[func]]
+pc = 0x42ED90
+name = "BattleHold_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42ED90..0x42ED9D (0xe bytes): Battle_InputSteps[3] (hidden in Battle_PhaseDispatch's catalogue extent; ours there does not hold it): jmp [0x64AE48 + 4 * byte 0x904AA2], 3 entries. PSX twin 0x801D22A4 (table-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42EDA0
+name = "BattleHold_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42EDA0..0x42EDFE (0x5f bytes): BattleHold_Steps[0]: the menu member's cross size 0x904ABC[0x904AB4] - 2 while above 0, else 0x904AA2 + 1; BattleWin_DrawCommandLabel(0x904AB4), BattleWin_DrawPartyStatus(window 1's x, y), BattleWin_DrawCommandCross(window 2's x, y) - the words pushed in whole registers with left-over upper halves. PSX twin 0x801D22E0 (table-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42EE00
+name = "BattleHold_ShowAll"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42EE00..0x42EE93 (0x94 bytes): BattleHold_Steps[1]: without Input_Held 0x100, windows 2, 1, 3's +3 = 1 and 0x904AA2 + 1; BattleWin_DrawPartyStatus, BE4's 0x444660(), and the seven command labels each with Menu_DrawIcon(i, 0x88 + 0x64E2AC[2i], 0x58 + 0x64E2AD[2i], 0x10, 0x10, 0x80). PSX twin 0x801D2384 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42EEA0
+name = "BattleHold_Regrow"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42EEA0..0x42EECD (0x2e bytes): BattleHold_Steps[2]: the cross size + 4 while below 8, else 0x904AA1 = 2, 0x904AA2 = 0. PSX twin 0x801D2478 (table-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42EF50
+name = "Cmd_AutoBattle"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42EF50..0x42F068 (0x119 bytes): Battle_MenuSteps[5]: window 4's +3 = 2; each of the s8 0x904AC3 entry bytes 0x904AB6[i] (the count re-read each pass) not 0xFF and not out, with command +0x125 = 5 (the entry indexes ObjTrio unchecked), gives its item back through BE4's 0x446D90(+0x12E, word +0x126); each member of 0x904AB0 not out (with 0x904B8E set, only with +0x134 bit 4) to state 2 (+1); 0x904AA8 |= 0x10, LoadDatFile(0xD1), 0x904AA1 = 0x904AA2 = 0. PSX twin 0x801D2598 (table-anchored; the sibling names it Cmd_AutoBattle_Begin, read and agreeing; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42F5E0
+name = "BattleAction_Kind3Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42F5E0..0x42F5ED (0xe bytes): BattleAction_KindSteps[3]: jmp [0x64AEB4 + 4 * byte 0x904AA3], 5 entries (the next dword is not code). PSX twin 0x801D31B8 (table-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42F5F0
+name = "BattleAction_Kind3Banner"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42F5F0..0x42F634 (0x45 bytes): BattleAction_Kind3Steps[0]: Battle_ClearActingFlags, BattleBanner_Add(1, 0, 0, 0x1E, [0x669E08]), window 4's +3 = 1, Battle_SetActorBit(0x904B34), the acting sprite's +1 = 9, 0x904AA3 + 1. PSX twin 0x801D31F4 (table-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42F640
+name = "BattleAction_Kind3Wait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42F640..0x42F663 (0x24 bytes): BattleAction_Kind3Steps[1]: once the word 0x904B82 is 0, 0x904AA8 |= 4, 0x904AA1 = 3, 0x904AA2 = 0x904AA3 = 0. PSX twin 0x801D3278 (table-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42F9D0
+name = "BattleAction_PickRandomAbility"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42F9D0..0x42FAA2 (0xd3 bytes): al: an ability id from 0x64AEC8[Rand() & 0x1F] for the action word 0x904B80 0x24, from 0x64AEE8[...] for 0x25 / 0x8C (re-read), else 0; to 0x904B80 and the action record's (0x904B40) +2; then by its flags (NameTable_Abilities + 24 id): 0x10 - 0xC0 (0x80 without 0x40) or a side by the actor 0x904B34 and 0x20; neither 0x10 nor 0x40 - the actor; 0x40 - 0x452EB0() or 0x452F10() by the side and 0x20. PSX twin 0x801D382C (call; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x42FE20
+name = "BattleAction_AbilityNotice"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42FE20..0x42FF69 (0x14a bytes): BattleAction_AfterSteps[1] (hidden in 0x42F9D0's catalogue extent): nothing while 0x939F60; from party slot 0x904AA5 + 1 (stored as it goes; past 2: 0x904AA2 + 1) the first member with +0x130 bit 3: cleared; with the action ability's (word +2 of 0x904B40's record) Ability_Records +0x14 bit 0x200, BE4's 0x44A910(member), Text_Records + 0x20 zeroed (32) and the first 16 bytes of the acting enemy's (+0x106 of enemy 0x904B34 - 3, unchecked) Ability_Records row copied there, BattleQueue_Push(1, 0, message 0x24); else BattleQueue_Push(1, 0, message 0x23). PSX twin 0x801D407C (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x4315C0
+name = "BattleEnd_AwaitRestore"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4315C0..0x431702 (0x143 bytes): 0x64AF7C[2] (by 0x904AA2 under 0x4315B0, BattleEnd_Steps[3]; hidden in Battle_ActorSkipped's catalogue extent, which ours does not hold): nothing while a member has +0x130 bit 0x2000; 0x904AA2 - 1 while 0x904AA5 is short of 0x904AB0; Port_DroppedCall(0); each member Battle_ClearStatus(i, word +0x90 & 0xBF5F), Sprite_ReleaseTint; each with +0 bit 0 as Sprite_Current Sprite_AnimFromSet(+0x4B, word +0x58 - 2, 0x8C5D80, 0x1800); PartySet_Select(0x90412C & 0x7F, 0); 0x904AA2 + 1. PSX twin 0x801D6EF8 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x4319B0
+name = "BattleResult_CountExpShares"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4319B0..0x431A10 (0x61 bytes): al: the party slots (0x904AB0, re-read) Battle_ActorIsOut answers 0 for whose +0x134 lacks 0x400. BattleResult_SplitExp's divisor. Combat route (reach_dragon): entered. PSX twin 0x801EEDAC (call-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x431C10
+name = "BattleResult_LevelUpNotice"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x431C10..0x431D45 (0x136 bytes): BattleResult_LevelUpSteps[1] (hidden in 0x4319B0's catalogue extent): nothing until Input_Pressed; BE4's 0x44A910(0x904AA5 - 1); 0x904B72 = record 0x904AA7's level +0xA, 0x904B74 = Char_LevelUpGain(roster, 0) + it (re-read); Crt_sprintf(Text_Records + 0x20, Area08_MessageFormat, 0x904B74); 0x93B8E4 = Msg_SystemPtr(7); rows 0x10 per stat 1..6 with a gain and per non-zero byte +6 / +7 of the old level's Char_ExpTable row; Window_Alloc(1, 4); window 1's +0xA roster, +2 = +3 = 0, +9 = rows + 4, +0xB the old level; 0x904AA4 - 1. PSX twin 0x801EF144 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x431FE0
+name = "BattleResult_ZennyBonus"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x431FE0..0x432047 (0x68 bytes): al: 1 when a party slot (0x904AB0, re-read) Battle_ActorIsOut answers 0 for has 7 in +0x96 or +0x97; else 0. Combat route: entered. PSX twin 0x801EF6C4 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x432170
+name = "Char_LevelUpGain"
+ret = "unsigned short"
+params = "unsigned roster, unsigned what"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432170..0x43242F (0x2c0 bytes): ax, both bytes unchecked: the level record `roster`'s signed EXP +0xC reaches (the first L of 1..98 whose Char_ExpTable words over rows 1..L of its 99 exceed it, else 99); what 0 the levels over +0xA (0 if none), 1..6 the growth bytes +2, +3, +4 high / low nibble, +5 high / low over the rows from +0xA, each plus the record's s8 +0x89..+0x8E, 16 bits, 0 if negative; else 0. Jump table 0x432414 (7) inside the extent. Callers BattleResult_FindLevelUp, BattleResult_Setup, BattleResult_LevelUpNotice, BE7's 0x597FC0 (12). Combat route: entered. PSX twin 0x801EF92C (call-anchored; the sibling name at that address is another overlay's; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x432430
+name = "BattleLoss_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432430..0x43243D (0xe bytes): 0x64AF70[2] (BattleEnd_Steps[2], 0x904AE8 bit 0's way out; not in the cut: code no start list has, in 0x432170's catalogue extent): jmp [0x64AFD8 + 4 * byte 0x904AA3], 5 entries. docs/battle_e1.md."
+
+[[func]]
+pc = 0x432440
+name = "BattleLoss_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432440..0x43245D (0x1e bytes): BattleLoss_Steps[0] (not in the cut): Transition_Start(0x13), Gfx_ClutStripCopyRow(0x1A), 0x904AA3 + 1. docs/battle_e1.md."
+
+[[func]]
+pc = 0x432460
+name = "BattleLoss_ResetParty"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432460..0x4325E5 (0x186 bytes): BattleLoss_Steps[1]: once MoveScript_WaitWordDA is 0, window 0's +0 = 0; members 0 / 1 / 2 (count at least 1, 2, exactly 3, re-read): Sprite_Current, Sprite_EnsureAnimation(+8 + 0x1C), +0x29 = 1, +0x24 |= 0x80, +0x2E / +0x30 from the words at 0x64AFD8 + 24 * count + 8 * member (+0, +4), Sprite_ReleaseTint; 0x494E70(), BattleTask_ClearAll, Transition_Start(0xE), 0x904AA3 + 1. PSX twin 0x801EEC7C (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x4325F0
+name = "BattleLoss_Show"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4325F0..0x432621 (0x32 bytes): BattleLoss_Steps[2]: BattleLoss_DrawBlack, BattleLoss_DrawPanels(0x80); once MoveScript_WaitWordDA is 0, 0x904B70 = 0x2C, 0x904AA3 + 1. PSX twin 0x801EEEB8 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x432630
+name = "BattleLoss_BarGrow"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432630..0x43274C (0x11d bytes): BattleLoss_Steps[3]: the black, the panels, BattleLoss_DrawCaption(0x80); the word 0x904B70 + 4 while below 0xF4, BattleLoss_DrawBar(it); on Input_Held the 0x100-word CLUT runs 0x812980 and 0x811380 greyed ((r + g + b) / 3 into each, bit 15 kept), Gfx_ClutStripDirty = 1, Transition_Start(0xD), 0x904AA3 + 1. PSX twin 0x801EEF10 (gap67; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x432750
+name = "BattleLoss_Restart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432750..0x4327E8 (0x99 bytes): BattleLoss_Steps[4]: the black, the panels, the caption; once MoveScript_WaitWordDA is 0, Sprite_ReleaseTint of the three members, Window_ResetAll, 0x904AE9 / 0x904AE5 / 0x904AAA / 0x904AA0..0x904AA4 = 0, 0x494E70(), BattleTask_ClearAll, Sound_StopChannels, Task_Restart(Boot_Task). PSX twin 0x801EF0A8 (callers; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x4327F0
+name = "BattleLoss_DrawPanels"
+ret = "void"
+params = "unsigned shade"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4327F0..0x432924 (0x135 bytes): cdecl, the shade byte: page (0x340, 0x100) (Gpu_GetTPage(1, 0, 0x340, 0x100), Gpu_SetDrawMode, Gfx_CommitPrim(2, 0xC)); three SPRT with CLUT Gpu_GetClut(0, 0x1FA), the fields stored before Gpu_SetSprt: 0x100 x 0xA0 from (0, 0x60) at (16, 60), 0x20 x 0x60 from (0xC0, 0) at (272, 60), 0x20 x 0x40 from (0xE0, 0) at (272, 156); Gfx_CommitPrim(2, 0x1C) each. PSX twin 0x801EF180 (call-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x432930
+name = "BattleLoss_DrawBlack"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432930..0x432998 (0x69 bytes): page (0x3C0, 0), a black TILE (0, 0)..(320, 240), Gfx_CommitPrim(2, 0x1C). PSX twin 0x801EF318 (call-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x4329A0
+name = "BattleLoss_DrawCaption"
+ret = "void"
+params = "unsigned shade"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x4329A0..0x432A2F (0x90 bytes): cdecl, the shade byte: page (0x340, 0x100), one SPRT 0xA8 x 0x18 from (0, 0) at (76, 48), CLUT (0, 0x1FA). PSX twin 0x801EF3B4 (call-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[func]]
+pc = 0x432A30
+name = "BattleLoss_DrawBar"
+ret = "void"
+params = "unsigned width"
+impl = "src/game/battle_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x432A30..0x432B6A (0x13b bytes): cdecl, the low word w: page (0x3C0, 0), a black TILE at (w + 0x20, 48) of 168 x 24 (Gfx_CommitPrim(1, 0x1C)); page (0x3C0, 0) abr 2, a semi-transparent POLY_G4 (w, 48)..(w + 0x22, 72), black left, white right (Gfx_CommitPrim(1, 0x44)); the argument slot is overwritten as scratch. PSX twin 0x801EF47C (call-anchored; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+
+[[data]]
+pc = 0x64ADE0
+name = "BattleExtra_EquipSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleExtra_EquipDispatch's table by 0x929F01: BattleExtra_EquipOpenDispatch, BattleExtra_EquipRun, BattleExtra_EquipLeaveDispatch - the count from the code's writes of 0x929F01 (0 by 0x42D730, + 1 by BattleExtra_EquipFadeIn and the slot input's cancel). Nested among BATE's other tables (0x64ADEC follows). docs/battle_e1.md."
+
+[[data]]
+pc = 0x64ADEC
+name = "BattleExtra_EquipOpenSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleExtra_EquipOpenDispatch's table by 0x929F02: 0x42D780 (Transition_Start(3), + 1; Capcom's, also 0x64ADC8[0]), BattleExtra_EquipOpen, BattleExtra_EquipFadeIn. docs/battle_e1.md."
+
+[[data]]
+pc = 0x64ADF8
+name = "BattleExtra_EquipRunSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleExtra_EquipRun's call table by 0x929F02: BattleExtra_EquipSlotInput, BattleExtra_EquipListInput (the slot input's confirm + 1, the list's confirm or cancel - 1). docs/battle_e1.md."
+
+[[data]]
+pc = 0x64AE00
+name = "BattleExtra_EquipLeaveSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleExtra_EquipLeaveDispatch's table by 0x929F02: BattleExtra_EquipFadeOut, BattleExtra_EquipLeave. docs/battle_e1.md."
+
+[[data]]
+pc = 0x64AE48
+name = "BattleHold_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleHold_Dispatch's table by 0x904AA2: BattleHold_Shrink, BattleHold_ShowAll, BattleHold_Regrow (the last sets 0x904AA1 = 2 and 0x904AA2 = 0). Between Battle_InputSteps and Battle_MenuSteps. docs/battle_e1.md."
+
+[[data]]
+pc = 0x64AEB4
+name = "BattleAction_Kind3Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleAction_Kind3Dispatch's table by 0x904AA3: BattleAction_Kind3Banner, BattleAction_Kind3Wait, then BattleAction_AbilitySteps' three (0x64AEBC is the same run); the next dword is not code. docs/battle_e1.md."
+
+[[data]]
+pc = 0x64AFD8
+name = "BattleLoss_Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE1): BattleLoss_Dispatch's table by 0x904AA3: BattleLoss_FadeOut, _ResetParty, _Show, _BarGrow, _Restart; then a zero dword, and the rows BattleLoss_ResetParty reads as words at +24 * the party count (data past the five pointers). docs/battle_e1.md."
