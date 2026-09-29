@@ -286,7 +286,7 @@ const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
     switch (target) {
     case 0x453FA0: return f(&StubMemberAuto);
-    case 0x435AB0: return f(&StubEnemyPick);
+    case bof3::addr::BattleEnemy_PickAction: return f(&StubEnemyPick);
     case 0x4301B0: return f(&StubClearActing);
     case 0x444310: return f(&StubOpenWindow);
     case 0x497740: return f(&StubMsg);
@@ -346,7 +346,7 @@ struct Clone {
     std::uint32_t index_at;
 };
 
-constexpr Call kBeginCalls[] = {{0x54, 0x453FA0}, {0x61, 0x435AB0}};
+constexpr Call kBeginCalls[] = {{0x54, 0x453FA0}, {0x61, bof3::addr::BattleEnemy_PickAction}};
 constexpr Call kPlainCalls[] = {{0x0, 0x4301B0}, {0x62, 0x444310}, {0x69, 0x497740}, {0x77, 0x44A650}};
 constexpr Call kOneCalls[] = {{0x6, 0x446FB0}};
 constexpr Call kAbilityCheckCalls[] = {{0x12, 0x453210}, {0x22, 0x446650}, {0x95, 0x5171A0}, {0xA6, 0x44A650},

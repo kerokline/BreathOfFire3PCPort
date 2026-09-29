@@ -76752,3 +76752,435 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE4): Escape_WinDispatch 0x44A450 indexes it the same way. Holds Escape_Begin, Escape_Leave, Escape_End; the byte row 0x64E524 follows. docs/battle_e4.md."
+
+[[func]]
+pc = 0x433650
+name = "BattleFx_WatchIcon"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x433650..0x43378F (0x140 bytes): BattleFx_ActorWatch's stack-table state 3 (imm at 0x433482): with the round flags' 0x400, +1 on when the owner's (0x93B940) actor +5 is 0x904B34 or the kind 0x904B35 is 4 with the u16 0x904B80 0x97 / 0xE1; else +0xA counts down, at 0 BattleFx_NextStatusIcon (0xFF frees the slot; else +0x27 0xFF, +0xA 0x3C, a new icon's animation from 0x64B048 into +0xB); +1 = 0 once the owner's status lacks 0x58; BattleFx_PlaceOverOwner, Sprite_ScriptTick, Sprite_QueueOverlay; +1 = 0 when Battle_ActorIsOut(owner +5) and owner +0 bit 0 clear. PSX twin 0x801E682C (pairs_propagated, callers; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x433D60
+name = "Battle_BackupFlagged"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x433D60..0x433D9F (0x40 bytes): 1 when, of the backup party records 0x939AE0 (stride 0x14C) from the first, one in use (+0 bit 0) has +0x134 bit 0 before one not in use; else 0. Called by 0x433C00 (Capcom's, no group). docs/battle_e2.md."
+
+[[func]]
+pc = 0x433DA0
+name = "BattleFx_RestoreParty"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x433DA0..0x434301 (0x562 bytes): hidden in 0x433D60's catalogue extent; 0x433B80's stack-table state 0 (imm 0x433BA6; BattleFx_Dispatch slot 12): once File_LoadDone, the owner's tint released; with the round flags' 0x8000 (Accession's single-member form, magic_s33.cpp) 0x904AB0 = 0x904B8F, 0x904AB1 its members whose backup +0x91 lacks 0x40, window record 1's +0xA / +4, and BattleTask_Create(0, 0x11) per other member owning it (0x434310's task); then on the owner as Sprite_Current (Field_State its member): a character +0x89 7 or 0 keeps +0x9A / +0x90 / +0x130 / +0x134 in 0x675ECC..; the member's record copied back from 0x939AE0 (rep movsd 0x53 dwords, +8 kept), +1..+4 6 4 4 1, +0x48 2, +0x40 0, +0x130 |= 0x2000, task slot +5 at the 0x7E06E0 spot on the ground; the kept cells back and 0x442310 (BE3's) for 7 / 0; 0x453300 (BE6's), window 0xD + i values and gauges (55 x HP / max, 55 x AP / max: idiv), animation +8 + 4, palette 0x80D380 + 0x40 i, Battle_StatusTint, Sprite_SetClutStp; 0x9045FD / FE from 0x904B94 / 95; flags' 0x8000 cleared; Sprite_Current back, +1 on. PSX twin 0x801E7AD8 (callers; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x434310
+name = "BattleFx_RestoreMemberTask"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434310..0x434335 (0x26 bytes): hidden in 0x433D60's extent; BattleFx_Dispatch slot 17 (imm 0x435336): call [esp + 4 * Sprite_Current +1] over {BattleFx_RestoreMember, BattleFx_RestoreFade} (a stack table, unchecked). docs/battle_e2.md."
+
+[[func]]
+pc = 0x434340
+name = "BattleFx_RestoreMember"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434340..0x4346BA (0x37B bytes): hidden in 0x433D60's extent; slot 17's state 0 (imm 0x43431B): the owner's u32 +0x40 = 0; on the owner as Sprite_Current (Field_State its member) BattleFx_RestoreParty's common part without +8 kept (the record from 0x939AE0, steps 6 4 4 1, the spot, the kept cells for character 7 / 0 and 0x442310, 0x453300, the window values and gauges, animation, palette, tint, CLUT STP); the owner +0 bit 0x40 cleared; Sprite_Current back, +1 on. docs/battle_e2.md."
+
+[[func]]
+pc = 0x4346C0
+name = "BattleFx_RestoreFade"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x4346C0..0x43472C (0x6D bytes): hidden in 0x433D60's extent; state 1 of slot 12 (imm 0x433BAE) and of slot 17 (imm 0x434323): the owner's +0 bit 0x40 cleared; its u32 +0x40 up by 0x2000 until 0x10000, then +0x48 = 0, its member's +0x130 & ~0x2000 and +0x134 & 0xFFFCFFF9, jmp BattleTask_FreeCurrent. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434730
+name = "BattleFx_PlaceOverOwner"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434730..0x434868 (0x139 bytes): Sprite_Current over the owner (0x93B940): a member: x = owner +0x2E + s8 BattleWin_MemberTargetOffsets[(+8 + 4 x member +0x89) x 2], y = owner +0x30 - byte 0x64DFC8 / 0x64DFC9 (+8 above 1) [+0x89 x 2] - 8; an enemy: x += s8 enemy +0xF2, y = +0x30 - the area's enemy data record (+0xF0, stride 0x8C) byte +0x87 - 8; +0x32 copied. Called by BattleFx_WatchIcon and 0x433550 (Capcom's). PSX twin 0x801E8D10 (call-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x434870
+name = "BattleFx_NextStatusIcon"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434870..0x4348DC (0x6D bytes): the owner's status (member +0x90 / enemy +0x92) & 0x58, searched from Sprite_Current +0xB + 1 upward modulo 16: the first bit set, else +0xB; with no bit and +0xB of 16 or more it never ends (ours aborts). Called by BattleFx_WatchIcon and 0x433550. PSX twin 0x801E8EE0 (call-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x4348E0
+name = "BattleFx_GridMark"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x4348E0..0x434921 (0x42 bytes): hidden in 0x434870's catalogue extent; BattleFx_Dispatch slot 9 (imm 0x4352F6): 0x9039D8 = 0x8C5D80, call [esp + 4 * +1] over {BattleFx_GridMarkStart, BattleFx_GridMarkRun, BattleFx_FreeTask}, 0x9039D8 = 0x8B3580. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434930
+name = "BattleFx_GridMarkStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434930..0x434A08 (0xD9 bytes): hidden in 0x434870's extent; slot 9's state 0: +0x24..+0x2B / +0x2C / +0x3C set, x = window record 21 (0x803454) +4 + 30 (+0xB % 6) + 0x13, y = 32 (+0xB / 6) + its +6 + 0x30, +1 on, Sprite_SetAnimation(+0x4B), Sprite_QueueOverlay. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434A10
+name = "BattleFx_GridMarkRun"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434A10..0x434A5F (0x50 bytes): hidden in 0x434870's extent; slot 9's state 1: call [esp + 4 * +2] over {BattleFx_GridMarkCount, BattleFx_GridMarkPlace}; record 21 not in use: +1 = 2, +2 = 0; else Sprite_ScriptTick, Sprite_QueueOverlay. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434A60
+name = "BattleFx_GridMarkCount"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434A60..0x434B02 (0xA3 bytes): hidden in 0x434870's extent: placed at grid cell +0xB of record 21; +2 up by one per byte of 0x904B84 [0x904B87] equal to +0xB. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434B10
+name = "BattleFx_GridMarkPlace"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434B10..0x434B80 (0x71 bytes): hidden in 0x434870's extent: the first i < 0x904B87 with 0x904B84[i] == +0xB: x = record 21 +4 + 24 i + 0x41, y = its +6 + 0x12; none: +2 down by one. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434B90
+name = "BattleFx_ListHand"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434B90..0x434BD1 (0x42 bytes): hidden in 0x434870's extent; BattleFx_Dispatch slot 10 (imm 0x4352FE): the pose pool around call [esp + 4 * +1] over {BattleFx_ListHandStart, BattleFx_ListHandRun, BattleFx_FreeTask}. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434BE0
+name = "BattleFx_ListHandStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434BE0..0x434C7F (0xA0 bytes): hidden in 0x434870's extent: the marker's fields, x = record 21 +4 + 0x14, y = its +6 + 0x12, +1 on, Sprite_SetAnimation(0x13), jmp Sprite_QueueOverlay. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434C80
+name = "BattleFx_ListHandRun"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434C80..0x434CF0 (0x71 bytes): hidden in 0x434870's extent: call [esp + 4 * +2] over {BattleFx_ListHandPress, BattleFx_ListHandWait}; drawn (+0 bit 0): record 21 not in use, +1 = 2, +2 = 0; else placed as at the start, Sprite_QueueOverlay. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434D00
+name = "BattleFx_ListHandPress"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434D00..0x434D25 (0x26 bytes): hidden in 0x434870's extent: Sprite_SetAnimation(0x12); with 0x904AA6 0xFF Sprite_SetAnimation(0x13) and +2 on. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434D30
+name = "BattleFx_ListHandWait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434D30..0x434D60 (0x31 bytes): hidden in 0x434870's extent: +2 down by one unless 0x904AA6 is 0xFF; record 21 not in use: +1 on, +2 = 0. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434D70
+name = "BattleFx_Win18Cursor"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434D70..0x434DB1 (0x42 bytes): hidden in 0x434870's extent; BattleFx_Dispatch slot 13 (imm 0x435316): the pose pool around call [esp + 4 * +1] over {BattleFx_Win18CursorStart, BattleFx_Win18CursorRun, BattleFx_FreeTask}. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434DC0
+name = "BattleFx_Win18CursorStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434DC0..0x434E7E (0xBF bytes): hidden in 0x434870's extent: the marker's fields, +0x4B 0xFF, the byte of the 18 dwords 0x904608 at ((+9 + s16 record 18 +0x12) x 4 + +0xA) as the animation unless 0xFF, record 18 +0x1E = its +0x12, +1 on. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434E80
+name = "BattleFx_Win18CursorRun"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434E80..0x434F33 (0xB4 bytes): hidden in 0x434870's extent: record 18 (0x8033E8) not in use: +1 = 2, +2 = 0; its +0x1E not its +0x12: +1 = 0; else x = +4 + 22 (+0xA) + 0x44, y = 32 (+9) + +6 + 0x22, the grid byte unless 0xFF into Sprite_EnsureAnimation, Sprite_ScriptTick, Sprite_QueueOverlay. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434F40
+name = "BattleFx_Win19Cursor"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434F40..0x434F81 (0x42 bytes): hidden in 0x434870's extent; BattleFx_Dispatch slot 14 (imm 0x43531E): the pose pool around call [esp + 4 * +1] over {BattleFx_Win19CursorStart, BattleFx_Win19CursorRun, BattleFx_FreeTask}. docs/battle_e2.md."
+
+[[func]]
+pc = 0x434F90
+name = "BattleFx_Win19CursorStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x434F90..0x43504E (0xBF bytes): hidden in 0x434870's extent: BattleFx_Win18CursorStart over record 19 (0x80340C) and the grid 0x904620. docs/battle_e2.md."
+
+[[func]]
+pc = 0x435050
+name = "BattleFx_Win19CursorRun"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435050..0x435103 (0xB4 bytes): hidden in 0x434870's extent: BattleFx_Win18CursorRun over record 19 and the grid 0x904620. docs/battle_e2.md."
+
+[[func]]
+pc = 0x435AB0
+name = "BattleEnemy_PickAction"
+ret = "void"
+params = "unsigned enemy"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435AB0..0x435C37 (0x188 bytes): Battle_BeginAction's call for an enemy (0x42F2C1, actor - 3): 0x904B35 = two bits of 0x65563C[enemy +0x8E] by Rand() & 3 (0 with the flags' 0x4000 and u16 +0xBA <= 1), then a 4-entry jump table: 0 -> 1; 1 -> 2 with +0x90's 0x80 (u32 +0x110 |= 2) else 1; 2 -> 3 with 0x40 else 1; 3 -> 4 with 0x20 (u16 +0x106 = byte +0x9C[Rand() & 7]) else 1. With +0x92's 0x20 or u32 +0x114's 0x4000: kind 1, BattleEnemy_PickAnyTarget when 0x452DD0(actor); else 0x904B44 = BattleEnemy_PickTarget when 0x452DD0 allows. In an event battle 0x939AD8 = Sprite_Current = the enemy and call [+0xF4](0). Target 0xFF: +0x105 = 0x904B35 = 0; else +0x105 = the kind. PSX twin 0x801E2564 (call; not read). dragonTransform recipe frame 1,702. docs/battle_e2.md."
+
+[[func]]
+pc = 0x435C40
+name = "BattleEnemy_PickAnyTarget"
+ret = "unsigned char"
+params = "unsigned enemy"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435C40..0x435C74 (0x35 bytes): Rand() & 7 below 3, or 0x904AB3 == 1: 0x904B44 = Battle_RandomMember(); else Battle_RandomEnemy(enemy + 3). PSX twin 0x801E2A0C (call-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x435C80
+name = "Battle_RandomEnemy"
+ret = "unsigned char"
+params = "unsigned exclude"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435C80..0x435CE3 (0x64 bytes): of actors 3..10 not Battle_ActorIsOut and not the argument's low byte, the one at Rand() % the count (idiv, unchecked). Called by BattleEnemy_PickAnyTarget, BattleEnemy_OtherOrMember, BattleEnemy_OtherEnemy and Battle_MemberAutoTarget (0x45418C). docs/battle_e2.md."
+
+[[func]]
+pc = 0x435CF0
+name = "BattleEnemy_PickTarget"
+ret = "unsigned char"
+params = "unsigned enemy"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435CF0..0x435E03 (0x114 bytes): by 0x904B35: 1: enemy +0x90 bit 0 BattleEnemy_OtherEnemy (0xFF: Battle_RandomMember), bit 4 Battle_MemberLowestHp, else Battle_RandomMember; 4: by the byte NameTable_Abilities[+0x106 x 24] (0x10: a side code 0xC0 / 0x80 / 0x40; no 0x40: enemy + 3; 0x20 with +0x90 bit 0: BattleEnemy_OtherOrMember; no 0x20 without bit 0: Battle_EnemyLowestHp; else +0x90 bit 4 Battle_MemberLowestHp / Battle_RandomMember); other: enemy +5. PSX twin 0x801E28CC (call-anchored; not read). dragonTransform frame 1,702. docs/battle_e2.md."
+
+[[func]]
+pc = 0x435E10
+name = "Battle_EnemyLowestHp"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435E10..0x435E65 (0x56 bytes): the enemy actor 3..10 not out with the lowest u16 HP +0xA4 below 0xFFFF (first of equals); 0 for none. dragonTransform frame 1,983. docs/battle_e2.md."
+
+[[func]]
+pc = 0x435E70
+name = "BattleEnemy_OtherOrMember"
+ret = "unsigned char"
+params = "unsigned enemy"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435E70..0x435E8D (0x1E bytes): 0x904AB3 == 1: jmp Battle_RandomMember; else Battle_RandomEnemy(enemy + 3). docs/battle_e2.md."
+
+[[func]]
+pc = 0x435E90
+name = "Battle_MemberLowestHp"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435E90..0x435EE4 (0x55 bytes): the member 0..2 not out with the lowest u16 HP +0x98 below 10000 (first of equals); 0 for none. docs/battle_e2.md."
+
+[[func]]
+pc = 0x435EF0
+name = "Battle_RandomMember"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x435EF0..0x436068 (0x179 bytes): by 0x904AB0's low byte: 3: weights 0x64B18C[formation x 3 + m], 2: 0x64B184[formation x 2 + m] (formation 0x904060's low byte) summed over members not out (a byte), Rand() % sum (idiv, unchecked), the member whose running sum first exceeds it (none: the count); other counts 0. dragonTransform frame 1,702. docs/battle_e2.md."
+
+[[func]]
+pc = 0x436070
+name = "BattleEnemy_OtherEnemy"
+ret = "unsigned char"
+params = "unsigned enemy"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436070..0x43608B (0x1C bytes): 0x904AB3 == 1: 0xFF; else Battle_RandomEnemy(enemy + 3). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436270
+name = "EnemyOp_SlideDispatch"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436270..0x436281 (0x12 bytes): hidden in 0x4360C0's catalogue extent; EnemyOp_EnterSubs[1]: jmp [0x64B1E4 + 4 * Sprite_Current +3] (EnemyOp_EnterSubs2, 2 entries, unchecked). PSX twin 0x801E33B0 (gap44; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436290
+name = "EnemyOp_SlideStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436290..0x43632A (0x9B bytes): hidden in 0x4360C0's extent; EnemyOp_EnterSubs2[0]: +0 bit 0x40 cleared, BattleEnemy_SetAnimation(0), +0x18 / +0x1C = +0x34 / +0x38, velocity (0x80000, 0) turned by 0x446770 (BE4's), +0x34 -= +0xC and -= +0x10 (both off +0x34), velocity (0x8000, 0) turned, +2 on. PSX twin 0x801E33F4 (gap44; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436330
+name = "EnemyOp_SlideStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436330..0x4363A5 (0x76 bytes): hidden in 0x4360C0's extent; EnemyOp_EnterSubs2[1]: BattleEnemy_ScriptTick, +0x34 / +0x38 += +0xC / +0x10, u16 +0x3E = AreaMap_Elevation, at +0x18 / +0x1C the steps 3, 0, 0. PSX twin 0x801E34A4 (gap44; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x4365D0
+name = "EnemyOp_TurnStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x4365D0..0x436619 (0x4A bytes): hidden in 0x4360C0's extent; EnemyOp_Steps[4] and the kinds' Steps[4] cells (tools/band_rows.py): BattleEnemy_SetAnimation(2), +9 = byte 0x8C5652[0x939AD8 +0xF0 x 0x8C], +1 on, +2 = 0. PSX twin 0x801E38F8 (gap44; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436620
+name = "EnemyOp_CueDispatch"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436620..0x436631 (0x12 bytes): hidden in 0x4360C0's extent; EnemyOp_Steps[5] and the kinds' Steps[5] cells: jmp [0x64B1F4 + 4 * +2] (EnemyOp_Step5Subs, 2 entries, unchecked). PSX twin 0x801E3978 (gap44; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436640
+name = "EnemyOp_PlayCreatureCue"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436640..0x4366A8 (0x69 bytes): hidden in 0x4360C0's extent; EnemyOp_Step5Subs[0]: BattleEnemy_ScriptTick, +9 down by one, at 0: with 0x904AAA 0x437450(u16 at 0x939AD8 +0xF8) (BE3's) else Sound_PlayEffect(0x600 + 2 x +0xF0), +2 on. The sibling's Battle_PlayCreatureCue at PSX 0x801E39BC (names/functions.toml: 0x801E3070, the +9 countdown, SE_Play(0x600 | +0xE0 << 1) or 0x801E5230(*+0xE8) in an event battle) - the name transferred and verified by this reading. docs/battle_e2.md."
+
+[[func]]
+pc = 0x4366B0
+name = "EnemyOp_CueEnd"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x4366B0..0x4366D8 (0x29 bytes): hidden in 0x4360C0's extent; EnemyOp_Step5Subs[1]: when BattleEnemy_ScriptTick answers its end, Battle_SetTargetFlag40(0x904B44), 0x4376F0, byte 0x904AA8 |= 4, jmp 0x4376A0 (both BE3's). PSX twin 0x801E3A7C (gap44; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436BC0
+name = "EnemyOp_Act3Dispatch"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436BC0..0x436BD1 (0x12 bytes): hidden in 0x436B50's catalogue extent; EnemyOp_ActSubs[3] and the kinds' ActSubs[3] cells: jmp [0x64B220 + 4 * +3] (EnemyOp_Act3Subs, 5 entries, unchecked). PSX twin 0x801E43E8 (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436BE0
+name = "EnemyOp_KnockStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436BE0..0x436C34 (0x55 bytes): hidden in 0x436B50's extent; EnemyOp_Act3Subs[0]: 0x939AD8 u16 +0x108 = 0, velocity (-0x2000, 0) turned by 0x446770 (BE4's), +0xA = 4, BattleEnemy_ScriptTick, Sound_PlayEffect(0x205), +3 on. PSX twin 0x801E442C (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436C40
+name = "EnemyOp_KnockBack"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436C40..0x436C8E (0x4F bytes): hidden in 0x436B50's extent; EnemyOp_Act3Subs[1]: +0xA down by one (0: 4 again, +3 on), +0x34 / +0x38 += +0xC / +0x10, jmp BattleEnemy_ScriptTick. PSX twin 0x801E449C (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436C90
+name = "EnemyOp_KnockReturn"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436C90..0x436D41 (0xB2 bytes): hidden in 0x436B50's extent; EnemyOp_Act3Subs[2]: +0xA down by one; at 0 Battle_SetDamagePopup(u16 +0x108, +5) with 0x939AD8 +0x10C bit 4, else BattleTask_Create(0, 1) owned by Sprite_Current with +7 = 3, +0x27 = 0 (the answer untested); +3 on; +0x34 / +0x38 -= the velocity; BattleEnemy_ScriptTick. PSX twin 0x801E4534 (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436D50
+name = "EnemyOp_KnockPose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436D50..0x436D87 (0x38 bytes): hidden in 0x436B50's extent; EnemyOp_Act3Subs[3]: once BattleEnemy_ScriptTickOnce answers, +3 on and BattleEnemy_SetAnimation(8 with 0x939AD8 +0x110 bit 1, else 0). PSX twin 0x801E4644 (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436F00
+name = "EnemyOp_Act5Dispatch"
+ret = "unsigned long"
+params = "unsigned long word"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436F00..0x436F11 (0x12 bytes): hidden in 0x436B50's extent; EnemyOp_ActSubs[5] and the kinds' ActSubs[5] cells: jmp [0x64B244 + 4 * +3] (EnemyOp_Act5Subs, 3 entries, unchecked). PSX twin 0x801E4880 (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436F20
+name = "EnemyOp_ApplyHpChange"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436F20..0x436FCD (0xAE bytes): hidden in 0x436B50's extent; EnemyOp_Act5Subs[0]: 0x939AD8's u16 HP +0xA4 against s16 +0x108: at or below, HP 0 and +0x92 = 0x4000; else (negative: Sound_PlayEffect(0x206)) HP -= it, held at u16 +0xB0; with +0x10C bit 0 Battle_SetDamagePopup(+0x108, Sprite_Current +5); BattleEnemy_ScriptTick; +3 on. PSX twin 0x801E48C4 (table-anchored; not read). docs/battle_e2.md."
+
+[[func]]
+pc = 0x436FD0
+name = "EnemyOp_Act5End"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE2), 0x436FD0..0x437025 (0x56 bytes): hidden in 0x436B50's extent; EnemyOp_Act5Subs[2]: 0x939AD8 +0x93 bit 6: steps 6, 4, 0; else Battle_ClearActorBit(+5), steps 2, 0, 0. PSX twin 0x801E49A8 (table-anchored; not read). docs/battle_e2.md."

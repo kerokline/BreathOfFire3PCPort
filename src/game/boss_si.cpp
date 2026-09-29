@@ -412,7 +412,7 @@ extern "C" unsigned char __cdecl BossArwan_Enter(void) {
     return Enter(AddressOf(BossArwan_Anims), bof3::addr::BossArwan_Hook, AddressOf(BossArwan_Cues));
 }
 
-// original 0x43F500: state 4 (the generic table's turn start 0x4365D0): jmp
+// original 0x43F500: state 4 (the generic table's turn start EnemyOp_TurnStart 0x4365D0): jmp
 // [BossArwan_State4Steps + 4 * Sprite_Current +2] (2: BossArwan_State4Fx,
 // BareRet).
 extern "C" unsigned long __cdecl BossArwan_State4Dispatch(unsigned word) {

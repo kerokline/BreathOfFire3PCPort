@@ -153,7 +153,7 @@ extern "C" void __cdecl BossOp_Death(void) {
 
 // original 0x438EB0: entry 6 of kinds 8..11's +1 tables: by Sprite_Current +2
 // through BossTorast_ActSubs (6: EnemyOp_ActBegin, EnemyOp_HitDispatch,
-// EnemyOp_ActBegin, 0x436BC0, BossTorast_DeathDispatch, 0x436F00) - the
+// EnemyOp_ActBegin, EnemyOp_Act3Dispatch, BossTorast_DeathDispatch, EnemyOp_Act5Dispatch) - the
 // generic EnemyOp_ActSubs but for its death, entry 4.
 extern "C" void __cdecl BossTorast_ActDispatch(void) {
     Dispatch("BossTorast_ActDispatch", AddressOf(BossTorast_ActSubs), 6, 2);

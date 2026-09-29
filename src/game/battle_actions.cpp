@@ -209,7 +209,7 @@ extern "C" void __cdecl BattleAction_AfterStep(void) { Step(at::kAfterSteps, B(a
 // the turn order 0x904ACC, the first slot from 0x904AE2 up to (not including)
 // 0x904AE3 that is not 0xFF - 0x904AE2 follows the search. None left: the
 // phase becomes 4, the step 0. Else the actor picks its action
-// (Battle_MemberAutoTarget, or 0x435AB0 with actor - 3), becomes 0x904B34 and
+// (Battle_MemberAutoTarget, or BattleEnemy_PickAction 0x435AB0 with actor - 3), becomes 0x904B34 and
 // fills the acting block, its stat block goes to 0x939FE0, a target of 0..10
 // fills the target block (a side, 0x40 / 0x80 / 0xC0, or anything above 10
 // does not), and 0x904AA2 and 0x904AE2 each count one.
