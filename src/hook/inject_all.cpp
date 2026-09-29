@@ -222,6 +222,7 @@
 #include "game/boss_sg.h"
 #include "game/boss_sf.h"
 #include "game/boss_harness_eh.h"
+#include "game/battle_e1.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -789,6 +790,12 @@ void InjectAll() {
     BossHarnessEh_Inject();     // round 12 group EH: the boss harness's own self-test of its battle-engine frame
                                 // (the new shapes, state_cell, the engine set) with Capcom's code on both sides;
                                 // takes no function and patches nothing: order does not matter
+    BattleE1_Inject();          // round 12 group BE1 (BATE's tally and equipment screens, the command menu's held
+                                // steps and auto battle, action kind 3, the ability notice, the result's counts and
+                                // level gain, the loss screen, 0x42D7A0..0x432B6A): its clones' calls re-aimed at the
+                                // boss harness's recorders, its dispatchers' tables swapped for the fuzz only; no module
+                                // patches bytes inside its 41 (DIVERGENCE.md, cheats.cpp; DIV-0020 reads 0x42E09D,
+                                // past BattleExtra_EquipLeave's jmp): order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
