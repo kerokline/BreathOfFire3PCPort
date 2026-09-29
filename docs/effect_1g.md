@@ -289,7 +289,14 @@ cover it with FE2's states in the coordinator's frame-hash A/B.
 
 `BOF3X_SHADOW=effect_1g`: exit 0, 0 mismatches (section 4).
 `BOF3X_SHADOW=field_e2`: exit 0, 306,000 rounds, 0 mismatches (after the
-rebinding). `BOF3X_SHADOW='*'`: STAR_RESULT.
+rebinding). `BOF3X_SHADOW='*'`: exit 0, 681 self-test lines, `inject: 6909 ours, 0 left original`, `effect_1g`
+84,000 rounds, 0 mismatches there too (1,195,303 calls - another stream). **With
+`BOF3X_WIDE=1`** (DIV-0041's operands patched): `effect_1g` alone exit 0, 0
+mismatches (no widescreen site lies in the band); `'*'` stops at exit 3 in
+**`battle_e7`** (1,800 of 186,000 rounds, `GeneWin_List*SlideOut`), which fails
+the same alone under `BOF3X_WIDE=1` - not this group's (no E1G code or callee in
+it); the main checkout holds another session's uncommitted `battle_e7` /
+`widescreen.h` edits, which may be that fix.
 
 Appended to the main checkout's `analysis/calltrace/entries_logic.txt` (the
 four hidden starts, which had no line; the other ten had theirs):
