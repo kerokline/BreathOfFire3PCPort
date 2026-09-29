@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29 midday, round twelve complete on `phase-3/capture-round-twelve` at `0e51ec7`, round thirteen's plan on top as `d76f0d8`; not pushed)
+**Status:** IN PROGRESS (2026-09-29 midday, round twelve complete on `phase-3/capture-round-twelve` at `0e51ec7`, round thirteen's plan on top as `d76f0d8`; pushed, its PR open)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -49,7 +49,7 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
-   local, **not pushed: the PR is the owner's word**. Next, in order: the PR; the round's debts (section 7 there: the
+   pushed 2026-09-29 and **its PR open, the merge the owner's**. Next, in order: the round's debts (section 7 there: the
    mask and stand-in folds into both harnesses, the defects to number, the pointer scan `band_rows.py` lacks, the 33
    owned starts without an `entries_logic.txt` line); **round thirteen**, the effect engine
    ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
