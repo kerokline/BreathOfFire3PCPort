@@ -6,8 +6,8 @@
 //     it, open its window, wait for a button, tick it into the party, wait
 //     again (0x431940, 0x431A20, 0x431A90, 0x431AB0, 0x431B30);
 //   - 0x64AFC0 (entry 1, through BattleResult_LevelUpStep 0x431B60): the
-//     level-up search (0x431B80) and its announcement (0x431C10, Capcom's
-//     still - no route reaches it);
+//     level-up search (0x431B80) and its announcement (0x431C10,
+//     BattleResult_LevelUpNotice, round twelve BE1's - no route reaches it);
 //   - 0x64AFC8 (entry 2, through BattleResult_RewardStep 0x431D50): the
 //     level-ups applied, the zenny and the drops' windows (0x431D70), wait
 //     (0x432050), tick the zenny in (0x432070), the drops into the
@@ -102,7 +102,7 @@ void RunStep(std::uint32_t table) {
 // ===========================================================================
 
 // original 0x431940 (PSX 0x801EECD4, paired): the EXP total 0x904AEC split
-// among the party - rounded up, (total + n - 1) / n with n the count 0x4319B0
+// among the party - rounded up, (total + n - 1) / n with n the count BattleResult_CountExpShares 0x4319B0
 // answers, the sum wrapping at 32 bits; 0 when the total or the count is 0
 // (the count is not asked for a total of 0). The share goes back into
 // 0x904AEC and, through sprintf("%d"), into text record 0; the battle
@@ -199,19 +199,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_ExpDone
 // ===========================================================================
 
 // original 0x431B60 (PSX 0x801EF01C, paired): entry 1 of the result phase's
-// table 0x64AFA0 - `jmp [0x64AFC0 + (0x904AA4 & 0xFF) * 4]`: 0x431B80, 0x431C10.
+// table 0x64AFA0 - `jmp [0x64AFC0 + (0x904AA4 & 0xFF) * 4]`: 0x431B80, 0x431C10 (BattleResult_LevelUpNotice).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_LevelUpStep(void) { RunStep(at::kLevelUpSteps); }
 
 // original 0x431B80 (PSX 0x801EF058, paired): from party slot 0x904AA5 on,
 // while it is below the count 0x904AB0: the roster index of the slot's
 // character (0x4469D0 of byte +9) into 0x904AA7, the slot one on, and when
-// 0x432170(index, 0) answers a non-zero word, 0x904AE8 |= 0x20 and the step
+// Char_LevelUpGain 0x432170(index, 0) answers a non-zero word, 0x904AE8 |= 0x20 and the step
 // 0x904AA4 one on (to 0x431C10, the announcement) - that is all for the
 // frame. With no slot left, the result phase 0x904AA3 one on with the step
 // 0x904AA4 0.
 //
 // As the original has it: the slot byte is read again after 0x4469D0 for
-// its increment, and slot and count afresh after 0x432170; the index passed
+// its increment, and slot and count afresh after Char_LevelUpGain; the index passed
 // on is 0x4469D0's whole answer (a byte, zero-extended by the callee).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_FindLevelUp(void) {
     while (Byte(at::kMember) < Byte(at::kPartyCount)) {
@@ -242,10 +242,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_RewardS
 // 0x801EF390): nothing until a button is held (Input_Held) - and, when
 // 0x904AE8 has 0x20 (a level-up was shown), until one is newly pressed
 // (Input_Pressed) too. Then:
-//   1. each party slot whose roster index 0x432170 answers non-zero for
+//   1. each party slot whose roster index Char_LevelUpGain 0x432170 answers non-zero for
 //      levels up: 0x498DE0(index);
 //   2. the zenny total 0x904AF0 half as much again (total += total >> 1)
-//      when 0x431FE0 says so;
+//      when BattleResult_ZennyBonus 0x431FE0 says so;
 //   3. the result window freed (slot 1's byte +0 = 0) and taken again,
 //      Window_Alloc(1, 4), in the zenny state 5, step 0; the total through
 //      sprintf("%d") into text record 0; 0x93B8E4 = Msg_SystemPtr(6); the
