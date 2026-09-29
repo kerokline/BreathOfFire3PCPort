@@ -219,7 +219,11 @@ U FxProjectPoint(const U* a, U answer) {
     // only where both lie in the regions: a stack out's neighbour differs
     // between the copy's frame and ours
     const bool before = sh::InRegions(out, 12) && sh::InRegions(out - 0x20, 12);
-    if (before && n % 4 == 0) {
+    // a world point equal to the one 0x20 below it (the trail's, seeded so)
+    // projects to the same screen point: whole trails of zero steps happen
+    const bool same = before && sh::InRegions(P(a[0]), 12) && sh::InRegions(P(a[0] - 0x20), 12) &&
+                      std::memcmp(P(a[0]), P(a[0] - 0x20), 12) == 0;
+    if (same || (before && n % 4 == 0)) {
         std::memcpy(out, out - 0x20, 12);
     } else if (before && n % 4 == 1) {
         std::memcpy(out, out - 0x20, 12);
@@ -454,12 +458,21 @@ void Seed(unsigned k) {
     case kSparkWait:
     case k52Rise: SeedSparks(); break;
     case k52TrailUpdate:
-    case k52TrailDraw: SeedTrail(); break;
+    case k52TrailDraw:
+        SeedTrail();
+        // a third of the time every world point the record's, so every step is
+        // (0, 0) and no angle is found (all 0)
+        if (k == k52TrailUpdate && sh::Next() % 3 == 0)
+            for (unsigned p = 0; p < 0x20; ++p) std::memcpy(TrailAt() + 0x20 * p, s + 0x34, 12);
+        break;
     case k53Start:
     case k53Beam:
         // the extra sprite +0x18 names: its +9 zero or not, its +0x14's sign
         SetLong(s + 0x18, static_cast<std::int32_t>(sh::Next() % at::kExtras));
         if (sh::Half()) sh::Mem(0x802000 + at::kSpriteStride * (Long(s + 0x18) & 3) + 9)[0] = 0;
+        // its +0x14 at the sign's boundary (the record's +9 steps down below 0)
+        SetLong(sh::Mem(0x802000 + at::kSpriteStride * (Long(s + 0x18) & 3) + 0x14),
+                static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, 0x80000000u, 0x7FFFFFFF, sh::Next())));
         break;
     case k56Markers: SeedGrounds(); break;
     default: break;
