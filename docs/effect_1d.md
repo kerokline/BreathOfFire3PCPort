@@ -217,6 +217,19 @@ five `Effect_StateRelease` cells 9,206 together), `Effect_FindFree` 36,277,
 `Effect_Release` 7,028, `AreaMap_Elevation` 2,066, the glow's sound among
 `Sound_PlayEffect`'s 12,330.
 
+**Every shadow** (this worktree, no `bof3x.ini`, so narrow): `BOF3X_SHADOW='*'`
+exit 0, 680 self-test lines, every one 0 mismatches, `inject: 6925 ours, 0 left
+original`; `effect_1d` there 180,000 rounds, 4,197,658 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`** (DIV-0041, as a build directory whose `bof3x.ini` has
+`wide=1`): `'*'` stops at `battle_e7` - `GeneWin_ListSlideOut`,
+`GeneWin_List2SlideOut`, `GeneWin_List3SlideOut` mismatch in 1,832 rounds, exit
+3 - before `effect_1d` runs; `'*,-battle_e7'` exit 0, 679 self-test lines, all 0
+mismatches, `effect_1d` 0. That is the `battle_e7` failure the round's doc
+records for the main checkout's build directory (section 11: "Found beside
+it"): it reproduces in any build directory with the widescreen on (the log's
+`MenuWin_SlideOutLeft's bound -203 ... -150 unless DIV-0041 widened it` line
+sits beside it), and no E1D address is involved. Reported, not fixed.
+
 ## 5. What the cut and the tool said, settled
 
 - **Extents**: `band_rows.py` read all 30 to the byte (2,829 bytes against the
