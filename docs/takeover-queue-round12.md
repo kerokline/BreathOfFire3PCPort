@@ -197,7 +197,7 @@ with the boss set-up and its kinds among them.
    controls scripts live in the session-`6ae930a8` scratchpad
    (`<group>/`), a Temp folder.
 
-## 8. Wave two: the field side (staged 04:50 from `61be26e`, merged 06:30..08:45)
+## 8. Wave two: the field side (staged from `61be26e`, merged 06:58..08:35)
 
 `61be26e` is wave one's tip with DIV-0063 (section 6). The briefs were
 wave one's with the field paragraphs and what wave one had learned
