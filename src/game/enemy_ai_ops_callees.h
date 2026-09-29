@@ -18,6 +18,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace enemy_ai_ops {
 
 namespace at {
@@ -81,7 +83,7 @@ constexpr std::uint32_t kDeathSubs = 0x64B234;     // by +3, 4
 // Callees with no name in symbols.gen.h, or another group's: by address.
 constexpr std::uint32_t kItemClass = 0x591810;     // nobody's; (category, id) -> a class byte (docs/battle_sprites.md)
 constexpr std::uint32_t kApPopup = 0x453EB0;       // nobody's; Battle_SetDamagePopup's AP twin (reads a word and a byte)
-constexpr std::uint32_t kPlayCue = 0x437450;       // nobody's; Sound_PlayEffect(id) unless id is 0xFFFF
+constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;       // Sound_PlayEffect(id) unless id is 0xFFFF (BE3's since round twelve: the same value)
 
 using Handler = void (__cdecl*)();
 

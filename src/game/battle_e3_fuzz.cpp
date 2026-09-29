@@ -177,6 +177,7 @@ void SeedEO(unsigned k) {
     Sprite_Current[0xA] = Counter();
     Bit(Mem(at::kRoundFlags), 4);
     Bit(Mem(at::kRoundFlags), 0x40);
+    if (k == kCastCue && Flip()) Sprite_Current[9] = 0;
     if (k == kLeaveEnd) B(at::kEnemiesLeft) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
     if (k == kCastDoneCost) B(at::kCost) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0xFF, 0x80) : bh::Next());
 }
@@ -355,6 +356,11 @@ void SeedOBJ(unsigned k) {
         MemberBit(0x12C, 1);
         MemberBit(0x12C, 2);
         SeedChange();
+        if (bh::Next() % 3 == 0) {
+            // the fall: HP 0 under a positive change
+            MemberWord(0x98, 0);
+            MemberWord(0x128, 1 + bh::Next() % 500);
+        }
         MemberBit(0x134, 2);
         MemberBit(0x130, 1);
         MemberBit(0x131, 2);

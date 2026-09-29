@@ -87,9 +87,9 @@ constexpr U kTorchSounds = 0x64D7A0;      // kind 42's +0xF8: 0xFFFF words (no s
 
 // --- the callees nobody owns ----------------------------------------------------------
 constexpr U kOrderFront = 0x446700;       // (actor)
-constexpr U kEnemySound = 0x437450;       // (sound)
-constexpr U kEnemyActEnd = 0x4376A0;      // ()
-constexpr U kEnemyActChance = 0x4376F0;   // ()
+constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
+constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
+constexpr U kEnemyActChance = bof3::addr::EnemyOp_RollBit80Task;   // () (BE3's since round twelve: the same value)
 constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
 constexpr U kEndOther = 0x446E00;         // () step 2
 

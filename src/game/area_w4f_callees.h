@@ -19,6 +19,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace area_w4f {
 namespace at {
 
@@ -158,7 +160,7 @@ constexpr unsigned kStateCount = 2;
 
 constexpr std::uint32_t kSlotsReleaseFor = 0x454A80;
 constexpr std::uint32_t kSlotStart = 0x455290;
-constexpr std::uint32_t kRoundHigh = 0x441090;
+constexpr std::uint32_t kRoundHigh = bof3::addr::Fixed_HighRoundUp;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 
 }  // namespace at
 }  // namespace area_w4f

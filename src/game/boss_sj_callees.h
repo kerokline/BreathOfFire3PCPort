@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace boss_sj {
 namespace at {
 
@@ -57,7 +59,7 @@ constexpr U kPoseSet = 0x8C5D80;          // the frame set the end hooks pose th
 constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
 constexpr U kEndOther = 0x446E00;         // () step 2
 constexpr U kEndThird = 0x446E20;         // () step 3
-constexpr U kRoundHigh = 0x441090;        // (value, sign) -> ax
+constexpr U kRoundHigh = bof3::addr::Fixed_HighRoundUp;        // (value, sign) -> ax (BE3's since round twelve: the same value)
 
 }  // namespace at
 }  // namespace boss_sj

@@ -85,9 +85,9 @@ constexpr U kSample1Hook = bof3::addr::BossSample1_Hook;
 constexpr U kWeretigrHook = bof3::addr::BossWeretigr_Hook;
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kPlayCue = 0x437450;          // (unsigned id) Sound_PlayEffect unless 0xFFFF
-constexpr U kTurnClose = 0x4376A0;        // () the enemy's turn closed
-constexpr U kTurnChance = 0x4376F0;       // () 0x904AA8 bit 7 and a task on a chance
+constexpr U kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;          // (unsigned id) Sound_PlayEffect unless 0xFFFF (BE3's since round twelve: the same value)
+constexpr U kTurnClose = bof3::addr::EnemyOp_EndAction;        // () the enemy's turn closed (BE3's since round twelve: the same value)
+constexpr U kTurnChance = bof3::addr::EnemyOp_RollBit80Task;       // () 0x904AA8 bit 7 and a task on a chance (BE3's since round twelve: the same value)
 constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
 constexpr U kEndOther = 0x446E00;         // () the end phase, step 2
 constexpr U kEndThird = 0x446E20;         // () the end phase, step 3
