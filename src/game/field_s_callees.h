@@ -20,6 +20,10 @@ constexpr std::uint32_t kEquipPreview = 0x58D640;     // (): the equip screen's 
 constexpr std::uint32_t kEquipApply = 0x58D570;       // (): the previewed items swapped into the member's six slots
                                                       // through the inventory, then Char_RecalcStats; nobody's
 
+// DIV-0011's site inside PartyForm_DrawReserve (menu_frame.cpp kReserveListSite):
+// E8 rel32, re-aimed at Menu_DrawFrame; the original's callee the empty 0x4DF820.
+constexpr std::uint32_t kFrameSite = 0x581313;
+
 // The menu block (docs/menu-screens.md section 1; scenario_harness at::kMenuBlock).
 constexpr std::uint32_t kMode = 0x929F00;             // u8: the field menus' mode (ShopMode_States' index)
 constexpr std::uint32_t kState = 0x929F01;            // u8: the mode's state

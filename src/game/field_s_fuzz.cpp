@@ -23,6 +23,15 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// PartyForm_DrawReserve's copy is this file's (section 4 of docs/field_s.md):
+// its first call site is DIV-0011's, re-aimed at Menu_DrawFrame before this
+// module's inject, which the harness's CloneOriginal refuses. The harness gets
+// a six-byte `jmp [copy]` in its place (scena_sc12_fuzz.cpp's way).
+extern "C" {
+void* g_fs_reserve_copy = nullptr;
+__attribute__((naked)) void FsReserveTheirs() { asm("jmp *_g_fs_reserve_copy"); }
+}
+
 namespace field_s {
 namespace {
 
@@ -75,6 +84,56 @@ constexpr sh::CallSite kCalls58C7A0[] = {{0xB, 0x575690}, {0x53, 0x461EB0}, {0x7
 constexpr sh::JumpTable kTables58C7A0[] = {{0x196, 0x324, 5}};
 constexpr sh::CallSite kCalls58CAE0[] = {{0x8, 0x575690}, {0x5A, 0x591C20}, {0x73, 0x461EB0}, {0x7D, 0x58D640}, {0x1BF, 0x587740}, {0x1EE, 0x587740}, {0x1F6, 0x58D570}, {0x215, 0x587740}, {0x22D, 0x587740}};
 
+// The copy of 0x581300: every site re-aimed at a trampoline into the recorder
+// that stands in for its callee (sh::StandIn: the same log entry, disturbance
+// and answer a site the harness re-aims gets) - the first at the recorder keyed
+// by where the site reaches now (DIV-0011's Menu_DrawFrame, listed below).
+using Fn10 = U (__cdecl*)(U, U, U, U, U, U, U, U, U, U);
+U g_tramp_key[8];
+template <int I> U __cdecl Tramp(U a0, U a1, U a2, U a3, U a4, U a5, U a6, U a7, U a8, U a9) {
+    return reinterpret_cast<Fn10>(const_cast<void*>(sh::StandIn(g_tramp_key[I])))(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+const void* const kTramps[] = {
+    reinterpret_cast<const void*>(&Tramp<0>), reinterpret_cast<const void*>(&Tramp<1>), reinterpret_cast<const void*>(&Tramp<2>),
+    reinterpret_cast<const void*>(&Tramp<3>), reinterpret_cast<const void*>(&Tramp<4>), reinterpret_cast<const void*>(&Tramp<5>),
+    reinterpret_cast<const void*>(&Tramp<6>), reinterpret_cast<const void*>(&Tramp<7>),
+};
+std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
+template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
+
+void* CopyReserve() {
+    // the callees of kCalls581300 by the address the disassembly shows, and the key ours calls
+    const U callees[8][2] = {
+        {0x4DF820, FrameCallTarget()},
+        {0x57CF60, KeyOf(&::Menu_DrawBox)},
+        {0x573F30, KeyOf(&::Menu_DrawItemIcon)},
+        {0x516B30, KeyOf(&::Text_DrawAt)},
+        {at::kDrawTag, at::kDrawTag},
+        {0x5B9380, KeyOf(Crt_sprintf)},
+        {0x517090, KeyOf(&::Text_DrawFont8)},
+        {0x516E70, KeyOf(&::Text_DrawSmall)},
+    };
+    constexpr int n = static_cast<int>(sizeof kCalls581300 / sizeof kCalls581300[0]);
+    static bof3::CloneCall calls[n];
+    for (int i = 0; i < n; ++i) {
+        int t = -1;
+        for (int j = 0; j < 8; ++j)
+            if (callees[j][0] == kCalls581300[i].target) t = j;
+        if (t < 0) bof3::Fatal("field_s: no trampoline for 0x%X", (unsigned)kCalls581300[i].target);
+        g_tramp_key[t] = callees[t][1];
+        // the frame's site reaches Menu_DrawFrame under DIV-0011: expected is where it reaches now
+        const U expected = i == 0 ? FrameCallTarget() : kCalls581300[i].target;
+        calls[i] = {kCalls581300[i].offset, kTramps[t], expected};
+    }
+    return bof3::CloneOriginal("PartyForm_DrawReserve", 0x581300, 0x285, calls, n);
+}
+
+std::uint32_t Wrapper(void (*f)()) {
+    const auto* p = reinterpret_cast<const unsigned char*>(f);
+    if (p[0] != 0xFF || p[1] != 0x25) bof3::Fatal("field_s: the jmp wrapper at %p is not FF 25", static_cast<const void*>(p));
+    return Key(p);
+}
+
 #define SH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define FS_FN(name) reinterpret_cast<const void*>(&::name)
 #define FS_ROW(name, base, size, calls) {#name, base, size, calls, SH_N(calls), nullptr, 0, nullptr, 0, FS_FN(name), 0, false, kM}
@@ -96,7 +155,7 @@ const sh::Clone kAll[] = {
     FS_ROW(PartyForm_Reload, 0x580EE0, 0x2CC, kCalls580EE0),
     FS_BARE(PartyForm_End, 0x5811B0, 0x29),
     {"PartyForm_DrawSliding", 0x5811E0, 0x113, kCalls5811E0, SH_N(kCalls5811E0), nullptr, 0, nullptr, 0, FS_FN(PartyForm_DrawSliding), 0, false, kC},
-    {"PartyForm_DrawReserve", 0x581300, 0x285, kCalls581300, SH_N(kCalls581300), nullptr, 0, nullptr, 0, FS_FN(PartyForm_DrawReserve), 0, false, kC},
+    {"PartyForm_DrawReserve", Wrapper(&FsReserveTheirs), 6, nullptr, 0, nullptr, 0, nullptr, 0, FS_FN(PartyForm_DrawReserve), 0, false, kC},   // this file's copy
     {"PartyForm_Swap", 0x581590, 0x18F, kCalls581590, SH_N(kCalls581590), nullptr, 0, nullptr, 0, FS_FN(PartyForm_Swap), 0xFF, false, kC},
     {"PartyForm_Draw", 0x581720, 0x18F, kCalls581720, SH_N(kCalls581720), nullptr, 0, nullptr, 0, FS_FN(PartyForm_Draw), 0, false, kC},
     {"ShopBrowse_InitWindows", 0x5836E0, 0x90, nullptr, 0, nullptr, 0, nullptr, 0, FS_FN(ShopBrowse_InitWindows), 0, false, kC},
@@ -149,8 +208,6 @@ const sh::DataTable kTables[] = {
     {at::kSharedListSortSteps, 3}, {at::kSharedListSorts, 3},
 };
 
-std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char& B(U a) { return *Mem(a); }
 void SetW(U a, U v) { move_script::SetWord(Mem(a), v); }
@@ -175,7 +232,7 @@ void Move(std::uint32_t h) {
     case 0: B(at::kCursor) = static_cast<unsigned char>(v % 3); break;
     case 1: B(at::kColumn) = static_cast<unsigned char>(v & 1); break;
     case 2: B(at::kRow) = static_cast<unsigned char>(static_cast<int>(v % 6) - 1); break;
-    case 3: B(at::kPickColumn) = static_cast<unsigned char>(PickOf(0x7F, 0, 1, v)); break;
+    case 3: B(at::kPickColumn) = static_cast<unsigned char>(w % 4 == 0 ? 0x7F : w % 4 == 1 ? 0 : w % 4 == 2 ? 1 : v); break;
     case 4: B(at::kAnswer) = static_cast<unsigned char>(v); break;
     case 5: B(at::kPickRow) = static_cast<unsigned char>(v % 8); break;
     case 6: B(at::kReserveCount) = static_cast<unsigned char>(v % 6); break;
@@ -227,11 +284,23 @@ std::uint32_t ListScroll(const std::uint32_t* a, std::uint32_t answer) {
     return (answer & 0xFFFFFF00u) | (sh::InRegions(top, 1) ? *top : answer & 0xFF);
 }
 
+// Crt_sprintf as the standard set's FxSprintf: up to seven letters and a NUL
+// at the destination (always the text scratch 0x904BA0 here), the count
+// answered.
+std::uint32_t Sprintf(const std::uint32_t* a, std::uint32_t) {
+    auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    if (!sh::InRegions(dst, 8)) return 0;
+    const unsigned n = sh::Noise() % 8;
+    for (unsigned i = 0; i < n; ++i) dst[i] = static_cast<unsigned char>('0' + sh::Noise() % 43);
+    dst[n] = 0;
+    return n;
+}
+
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr U kAll32 = 0xFFFFFFFFu;
 #define FS_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 
-const sh::Callee kCallees[] = {
+sh::Callee g_callees[] = {
     // the group's own, called directly (E8 / E9): their arguments logged by what they read
     {FS_OURS(PartyForm_Draw), 0, {}, kG, 0, 0},
     {FS_OURS(PartyForm_DrawSliding), 0, {}, kG, 0, 0},
@@ -277,7 +346,16 @@ const sh::Callee kCallees[] = {
     {FS_OURS(Party_Count), 1, {0xFF}, sh::Answer::kByte, 0, 3},
     {FS_OURS(Port_DroppedCall), 4, {kAll32, kAll32, kAll32, kAll32}, kG, 0, 0},
     {FS_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &Stir},
+    // every format here takes one number: three words (the standard row logs a
+    // fourth, the caller's stack)
+    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll32, kAll32, kAll32}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    // DIV-0011's Menu_DrawFrame at PartyForm_DrawReserve's first site (x, y, w, h;
+    // menu_frame.cpp reads x, y as s16, w, h as bytes): keyed at start-up by where
+    // the site reaches; without the divergence a second Port_DroppedCall row
+    // (skipped: its address is listed above)
+    {FS_OURS(Port_DroppedCall), 4, {kAll32, kAll32, kAll32, kAll32}, kG, 0, 0},
 };
+constexpr unsigned kFrameRow = sizeof g_callees / sizeof g_callees[0] - 1;
 #undef FS_OURS
 
 // --- the state -------------------------------------------------------------------
@@ -455,8 +533,17 @@ void SelfTest() {
             }
         if (g_n != 1) bof3::Fatal("field_s: BOF3X_FS_RUN=%s names no function of the group", g_only);
     }
+    if (FrameCallTarget() != bof3::addr::Port_DroppedCall) {
+        // an address of its own (the site's), keyed by Menu_DrawFrame
+        sh::Callee& frame = g_callees[kFrameRow];
+        frame.name = "Menu_DrawFrame (DIV-0011)";
+        frame.address = at::kFrameSite;
+        frame.key = FrameCallTarget();
+        for (unsigned i = 0; i < 4; ++i) frame.masks[i] = i < 2 ? 0xFFFF : 0xFF;
+    }
+    g_fs_reserve_copy = CopyReserve();
     sh::Group group = {
-        "field_s", g_clones, g_n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables, sizeof kTables / sizeof kTables[0],
+        "field_s", g_clones, g_n, g_callees, sizeof g_callees / sizeof g_callees[0], kTables, sizeof kTables / sizeof kTables[0],
         kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, &Disturb, 4000, nullptr, 0, &Args,
     };
     group.field = true;

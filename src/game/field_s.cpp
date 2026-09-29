@@ -188,6 +188,8 @@ unsigned char ScrollList(U repeat, U cur, U top, U moving) {
 
 }  // namespace
 
+std::uint32_t field_s::FrameCallTarget() { return at::kFrameSite + 5 + L(at::kFrameSite + 1); }
+
 // ===========================================================================
 // The field save's confirm (FieldSave_States[3]) and the rest sequence
 // (Rest_States 0x663FB8, ShopMode_States[10]'s)
@@ -664,8 +666,14 @@ extern "C" void __cdecl PartyForm_DrawSliding(void) {
 // As the original has it: the colours go out in a dword whose upper bytes
 // are the stack's (Text_DrawFont8 reads six bits); the portrait's shade over
 // the record offset's upper bytes (Menu_DrawItemIcon reads the byte).
+//
+// DIV-0011 lives at the first call: menu_frame.cpp's RetargetCall re-aims the
+// original's site 0x581313 (the empty 0x4DF820) at Menu_DrawFrame, the frame
+// the PlayStation draws. Ours calls whatever that site reaches - read from its
+// rel32 - so the divergence and its BOF3X_ORIGINAL=Menu_DrawFrame switch work
+// for ours as for Capcom's body (docs/field_s.md section 5).
 extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
-    SH_AT(void (__cdecl*)(int, int, int, int), bof3::addr::Port_DroppedCall)(x, y, 0x12, 0x15);
+    SH_AT(void (__cdecl*)(int, int, int, int), field_s::FrameCallTarget())(x, y, 0x12, 0x15);
     const int X = x + 7;
     int Y = y + 6;
     if (B(at::kReserveCount) == 0) return;
