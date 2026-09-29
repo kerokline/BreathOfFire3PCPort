@@ -32,6 +32,14 @@
 //      for a kind, the kind (Group::kind);
 //   3. one call, boss_harness::Run(group), per fight id or kind, under its
 //      BOF3X_SHADOW name, before it injects.
+//
+// Round twelve (group EH, docs/boss_harness.md section 10) widened it to the
+// battle engine's address runs (at::kEngineBands) for groups BE1..BE7: four
+// engine shapes (kStep, kWindow, kMember, kHelper), Clone::state_cell and
+// Via::state_cell, and Group::engine - the engine frame's regions, pointers,
+// disturbance and standard callees. Every addition defaults to round
+// eleven's behaviour; boss_harness_eh.cpp is the harness's own self-test of
+// them (BOF3X_SHADOW=boss_harness_eh).
 #pragma once
 
 #include <cstdint>

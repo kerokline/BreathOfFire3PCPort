@@ -739,8 +739,38 @@ rename after each merge.
 ### 10.8 The proof
 
 **(a) Every boss shadow unchanged.** `BOF3X_SHADOW='*'` headless in this
-worktree, the build at `430f34b` (before) and at EH's tip (after), every
-`boss_*` totals line compared: see the table filled in below. **(b) The new
+worktree, the build at `430f34b` (before, 8.4 minutes, exit 0) and at EH's
+harness commit `656c684` (after, 9.5 minutes, exit 0), every shadow's
+totals and coverage lines compared in order (a scratch script over the two
+`build/bof3x.log`s): **all 126 `boss_*` runs of the 12 boss shadows are
+identical line for line** - rounds, calls to the stand-ins, bytes of state,
+regions, 0 mismatches, and every coverage count:
+
+| Shadow | Runs | Rounds | Calls | Before = after |
+|---|--:|--:|--:|---|
+| `boss_spawn` | 1 | 24,000 | 12,000 | yes |
+| `boss_h` | 3 | 130,000 | 2,066,575 | yes |
+| `boss_sa` | 10 | 294,000 | 358,401 | yes |
+| `boss_sb` | 15 | 416,000 | 519,947 | yes |
+| `boss_sc` | 13 | 318,000 | 440,557 | yes |
+| `boss_sd` | 13 | 312,000 | 491,548 | yes |
+| `boss_se` | 13 | 322,000 | 359,974 | yes |
+| `boss_sf` | 6 | 324,000 | 461,616 | yes |
+| `boss_sg` | 11 | 318,000 | 557,116 | yes |
+| `boss_sh` | 14 | 298,000 | 332,384 | yes |
+| `boss_si` | 20 | 330,000 | 302,885 | yes |
+| `boss_sj` | 7 | 264,000 | 515,098 | yes |
+
+Of the 213 shadows, 202 are identical; the 11 that moved are
+`boss_harness_eh` (new), five area groups (`area_w0b`, `w1b`, `w1e`, `w2b`,
+`w3a`) and five spell groups (`magic_fx_reached`, `magic_s16`, `s17`, `s34`,
+`s35`) - call counts only, by 4 to 978 in hundreds of thousands, 0
+mismatches before and after. Their harnesses and files are untouched; the DLL
+they run in grew (the engine set, 512 stand-in templates, a new file), and
+those fuzzes store pointers into our DLL in game memory, so their branches
+move with the build (section 6, "counts depend on the build directory").
+`boss_harness_eh`'s own call count moved the same way between two of EH's
+builds (183,220, 183,046, 183,241 at the tip). **(b) The new
 shapes run**: `BOF3X_SHADOW=boss_harness_eh` (`src/game/boss_harness_eh.cpp`)
 drives eleven of Capcom's functions from the runs - `0x42F5F0`, `0x42F640`
 (`kStep`), `0x42F5E0` (`kDispatch`, `state_cell 0x904AA3`), `0x42F640` again
