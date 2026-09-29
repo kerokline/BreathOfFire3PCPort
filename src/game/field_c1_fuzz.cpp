@@ -270,6 +270,7 @@ std::uint32_t FoundMember(const std::uint32_t*, std::uint32_t answer) {
 // EventOp_6x / _0x place a sprite and leave Sprite_Current on it (the starts
 // put it back): moved half the time.
 std::uint32_t Placed(const std::uint32_t*, std::uint32_t answer) {
+    sh::Note(Word(Mem(bof3::addr::DamageScratch)));   // the object index it places, which it reads
     const U n = sh::Noise();
     if (n & 1) Sprite_Current = sh::SpriteRecord(n >> 1);
     return answer;
@@ -337,7 +338,7 @@ void Disturb(U h) { Move(h); }
 // fraction 0 a third of the time.
 U Cell16() {
     const U cell = sh::Next() % 0x20;
-    const U frac = sh::Often() ? sh::Next() & 0xFFFF : 0;
+    const U frac = sh::Often() ? PickOf(sh::Next() & 0xFFFF, 0x8000, 0x1000, sh::Next() & 0xFFFF) : 0;
     return cell << 16 | frac;
 }
 
@@ -412,6 +413,7 @@ void Seed(unsigned k) {
         if (sh::Often()) o[0] = static_cast<unsigned char>(o[0] & 0x7F);
         if (sh::Half()) o[1] = 0;
         break;
+    case k37Start: o[6] = static_cast<unsigned char>(sh::Next()); break;   // bit 7 into +0x2A, the rest the animation
     case k37Play:
         o[9] = static_cast<unsigned char>(PickOf(1, 2, sh::Next()));
         o[7] = static_cast<unsigned char>(PickOf(0, 1 + sh::Next() % 0xFF));
@@ -426,16 +428,24 @@ void Seed(unsigned k) {
         if (sh::Half()) Field_Request = 5;
         break;
     case k17Slide: {
+        // a speed and brake that land on 0x1000 (the brake's end) as well as around it
         const bool along_x = sh::Half();
-        SetLong(o + 0xC, along_x ? static_cast<std::int32_t>(PickOf(0x1000, 0x800, 0xFFFFF000u, 0x4000, sh::Next())) : 0);
-        SetLong(o + 0x10, static_cast<std::int32_t>(PickOf(0, 0x1000, 0xFFFFF800u, 0x4000, sh::Next())));
+        SetLong(o + 0xC, along_x ? static_cast<std::int32_t>(PickOf(0x1000, 0x800, 0xFFFFF000u, 0x4000, 0x1400, 0xFFFFEC00u, sh::Next())) : 0);
+        SetLong(o + 0x10, static_cast<std::int32_t>(PickOf(0, 0x1000, 0xFFFFF800u, 0x4000, 0x1400, 0xFFFFEC00u, sh::Next())));
         SetLong(o + 0x18, static_cast<std::int32_t>(PickOf(0, 0xFFFFFC00u, 0x400, sh::Next())));
         SetLong(o + 0x1C, static_cast<std::int32_t>(PickOf(0, 0xFFFFFC00u, 0x400, sh::Next())));
-        if (sh::Half()) {   // the view on the leader, far from the block
+        if (sh::Half()) {   // the view on the leader, the block at, around and past 0x40000 from it after its move
+            const U axis = along_x ? 0x34 : 0x38, cross = along_x ? 0x38 : 0x34;
+            const U speed = static_cast<U>(Long(o + (along_x ? 0xC : 0x10)));
+            const U brake = static_cast<U>(Long(o + (along_x ? 0x18 : 0x1C)));
+            U moved = speed + brake;
+            const std::int32_t m = static_cast<std::int32_t>(moved);
+            if ((m < 0 ? -static_cast<std::int64_t>(m) : m) < 0x1000) moved = speed;
+            const U at = static_cast<U>(Long(o + axis)) + moved;
+            SetLong(ObjTrio + axis, static_cast<std::int32_t>(at - PickOf(0x40000, 0x40001, 0x3FFFF, 0xFFFC0000u, 0x10000, 0x50000)));
+            if (sh::Half()) SetLong(ObjTrio + cross, static_cast<std::int32_t>(at - PickOf(0x10000, 0x50000)));
             Field_Kind2X = Long(ObjTrio + 0x34);
             Field_Kind2Z = Long(ObjTrio + 0x38);
-            if (sh::Half()) SetLong(ObjTrio + (along_x ? 0x34 : 0x38),
-                                    Long(o + (along_x ? 0x34 : 0x38)) + static_cast<std::int32_t>(PickOf(0x50000, 0xFFFB0000u, 0x40000, 0x3F000)));
         }
         if (sh::Half()) SetWord(o + 0x34, 0);
         if (sh::Half()) SetWord(o + 0x38, 0);
@@ -447,6 +457,10 @@ void Seed(unsigned k) {
         SetLong(o + 0xC, sh::Half() ? 0 : static_cast<std::int32_t>(PickOf(0x1000, 0xFFFFF000u, 0x4000, 0x4001, 0xFFFFBFFFu, sh::Next())));
         SetLong(o + 0x10, static_cast<std::int32_t>(PickOf(0, 0x1000, 0xFFFFF000u, 0x4000, 0x4001, sh::Next())));
         SetLong(o + 0x14, sh::Half() ? 0 : static_cast<std::int32_t>(sh::Next()));
+        if (sh::Half()) {   // the target exactly where the step lands
+            const bool along_x = Long(o + 0xC) != 0;
+            SetLong(o + 0x18, Long(o + (along_x ? 0x34 : 0x38)) + Long(o + (along_x ? 0xC : 0x10)));
+        }
         break;
     }
     case k17Grow:
