@@ -348,7 +348,8 @@ Under `BOF3X_SHADOW='*'` (the final build, this worktree): exit 0,
 `effect_1c` alone exit 0, 0 mismatches; `'*'` stops at `battle_e7`
 (`GeneWin_ListSlideOut`, `List2`, `List3` - the failure the round's
 section 11 hands to its own session, here under the wide bound) before
-reaching `effect_1c`; `'*,-battle_e7'` wide: WIDE_RESULT
+reaching `effect_1c`; `'*,-battle_e7'` wide: exit 0, 680 self-test lines, 0 mismatches, `effect_1c`
+0 mismatches.
 
 ## 5. Divergence
 
