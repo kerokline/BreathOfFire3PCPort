@@ -17,7 +17,7 @@
 // 12 (Field_LeaderStates[12] 0x52FE90 jumps here in every area but 104, which
 // has its own copy at 0x415020) - walk, turn, push an object, step off one, the
 // menu and request buttons - and effect kind 0x5C (Effect_KindHandlers[0x5C]
-// 0x462B60, likewise but for area 104's 0x415780): an object that follows the
+// EffectKind5C_Run 0x462B60, likewise but for area 104's 0x415780): an object that follows the
 // leader, turns with it, draws a two-row gauge, and four rings that rise from
 // the leader. Last, EffectKind18_States[70] (a full-width band at the top of
 // the screen) and Field_ObjectTriggers id 38 (arms the world map's field hook).
@@ -1061,7 +1061,7 @@ extern "C" unsigned char __cdecl Area121_TurnInput(void) {
 }
 
 // ===========================================================================
-// Area 121: effect kind 0x5C (Effect_KindHandlers[0x5C] 0x462B60: area 104 to
+// Area 121: effect kind 0x5C (Effect_KindHandlers[0x5C] EffectKind5C_Run 0x462B60: area 104 to
 // its own 0x415780, every other area here)
 // ===========================================================================
 

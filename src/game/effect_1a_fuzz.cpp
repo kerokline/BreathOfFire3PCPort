@@ -233,9 +233,10 @@ U FxRotTransPers(const U* a, U answer) {
     if (OnStack(P(a[2]), 4)) sh::FillBytes(P(a[2]), 4);
     return answer;
 }
-// 0x5171E0: the characters of a string - a small count the callers compare
-// with +0x49 (the stand-in's own; the real one counts to the NUL).
-U FxCount(const U*, U answer) { return (answer & 0xFFFFFF00u) | (sh::Noise() % 20); }
+// 0x5171E0: the characters of a string - a small count (the whole eax, as the
+// real one's) the callers compare with +0x49 (the stand-in's own; the real
+// one counts to the NUL).
+U FxCount(const U*, U) { return sh::Noise() % 20; }
 
 #define E1A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase;
@@ -362,10 +363,12 @@ void Seed(unsigned k) {
     Mem(at::kLeader + 3)[0] = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     Game_AreaNumber = static_cast<unsigned short>(PickOf(0x68, 0x79, sh::Next()));
-    // the kind counts: none, some, all
-    const U counts = PickOf(0, 1, 2, 2);
+    // the kind counts: none, some, all, or one (the last half the time: the
+    // walk's wrap at 0x20)
+    const U counts = PickOf(0, 1, 2, 2, 3);
     for (unsigned i = 0; i < 0x20; ++i)
-        Mem(at::kKindCounts + i)[0] = static_cast<unsigned char>(counts == 0 ? 0 : counts == 1 ? (sh::Half() ? 0 : sh::Next()) : sh::Next() | 1);
+        Mem(at::kKindCounts + i)[0] = static_cast<unsigned char>(counts == 0 || counts == 3 ? 0 : counts == 1 ? (sh::Half() ? 0 : sh::Next()) : sh::Next() | 1);
+    if (counts == 3) Mem(at::kKindCounts + (sh::Half() ? 0x1F : sh::Next() % 0x20))[0] = static_cast<unsigned char>(sh::Next() | 1);
     // the small counters the states step and compare
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 5, 6, 0xF, 0xE, sh::Next()));
     s[0xA] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
@@ -437,9 +440,13 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case kHudDraw:
-    case kHudGauge:
         a[0] = sh::Next() % 0x140;
         a[1] = sh::Next() % 0xF0;
+        break;
+    case kHudGauge:
+        // y near the s16 sign as well: the marker's compare is a word's
+        a[0] = sh::Next() % 0x140;
+        a[1] = PickOf(sh::Next() % 0xF0, 0x7C00 + sh::Next() % 0x400, 0x8000 + sh::Next() % 0x400, sh::Next());
         break;
     case kHudBar:
     case kHudMarker:

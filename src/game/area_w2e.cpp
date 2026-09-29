@@ -18,7 +18,7 @@
 // turn, step, a charge held on a button - with two functions that run only in
 // area 121 (their first test is Game_AreaNumber 0x79); effect kind 0x5C (a
 // companion that follows the leader and draws the charge's gauge; area 104's
-// by the same area test in 0x462B60); effect kind 0x6A (a countdown drawn with
+// by the same area test in EffectKind5C_Run 0x462B60); effect kind 0x6A (a countdown drawn with
 // a panel and a pulsing marker, which sends the party to area 0x79 when it
 // runs out); mode-tail kind 40; a 4-bit minimap of the area's cells built at
 // entry when key item 0xA is held; object trigger 36. Area 105: a tail, a
@@ -836,7 +836,7 @@ extern "C" void __cdecl Area104_LeaderCharge(void) {
 }
 
 // ===========================================================================
-// Area 104: effect kind 0x5C (Effect_KindHandlers[0x5C] 0x462B60 jumps here
+// Area 104: effect kind 0x5C (Effect_KindHandlers[0x5C] EffectKind5C_Run 0x462B60 jumps here
 // when Game_AreaNumber is 0x68, to area 121's 0x41C190 otherwise)
 // ===========================================================================
 
