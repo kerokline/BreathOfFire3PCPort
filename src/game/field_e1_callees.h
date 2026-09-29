@@ -5,6 +5,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr: a rebound constant keeps its value (round-ten form)
+
 namespace field_e1::at {
 
 // --- callees nobody owns (engine rows, no group of round twelve), by address ---
@@ -16,7 +18,7 @@ constexpr std::uint32_t kDrawSprite = 0x52CFE0;   // (sprite, slot, x, y) -> uns
 constexpr std::uint32_t kKindPoints = 0x52CE60;   // (kind, count) -> u16: a kind's points for a count, from the
                                                   // 36-byte records 0x66A6AC (count at or above +3: the word +6)
 constexpr std::uint32_t kKindTotal = 0x52CED0;    // () -> u16: kKindPoints summed over the 32 bytes 0x9040EC
-constexpr std::uint32_t kDrawQuad = 0x468950;     // (x, y, height, which): a textured quad, committed
+constexpr std::uint32_t kDrawQuad = ::bof3::addr::Panel_DrawEdgeQuad;   // 0x468950 (E1B's): (x, y, height, which): a textured quad, committed
 
 // --- callees round twelve's FE2 owns (docs/scenario_harness.md 7.6), raw until it merges ---
 constexpr std::uint32_t kObjectTrigger = 0x56D6B0;   // Field_ObjectTrigger(object): FE2's
