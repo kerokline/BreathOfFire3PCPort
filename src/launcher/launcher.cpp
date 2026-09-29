@@ -22,6 +22,7 @@
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
 #include "launcher/exe_image.h"
+#include "game/draw_pool_room.h"
 #include "input/pad_sdl.h"
 
 #include <cstdio>
@@ -122,13 +123,13 @@ std::string Sha256Hex(const std::wstring& path) {
 // its heaps and mapped files (the largest gap measured 2026-09-27 was
 // 128 KB). Here the child is suspended with only its image and ntdll mapped,
 // so the block is taken at the first free candidate and stamped; the DLL
-// looks for the stamp at the same candidates (src/game/draw_pool.cpp).
+// looks for the stamp at the same candidates (src/game/draw_pool.cpp; both
+// sides' constants are src/game/draw_pool_room.h's).
 // Failing quietly is right: the DLL then keeps the original's pool and says so.
 void ReserveDrawPoolIn(HANDLE process) {
-    static const char kStamp[] = "BOF3X-DRAWPOOL-2048";
-    static const std::uint32_t kCandidates[] = {0x00F00000, 0x00E00000, 0x00D00000, 0x00C00000, 0x00B00000, 0x00A00000};
+    using namespace draw_pool_room;
     for (std::uint32_t at : kCandidates) {
-        void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), 2048 * 0x90,
+        void* block = VirtualAllocEx(process, reinterpret_cast<void*>(static_cast<std::uintptr_t>(at)), kBytes,
                                      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         if (!block) continue;
         if (WriteProcessMemory(process, block, kStamp, sizeof kStamp, nullptr)) return;
@@ -266,7 +267,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!SelfTestOnly() && !bof3x::ConfigApplyGameCfg(game_dir, cfg, cfg_error))
         Die(L"%ls\n\nDisplay and renderer are set through that file, which is the game's "
             L"own input. Check that the game directory is writable.", cfg_error.c_str());
-    bof3x::ConfigApplyEnvironment(cfg);
+    bof3x::ConfigApplyEnvironment(game_dir, cfg);
 
     std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
     STARTUPINFOW si{};
