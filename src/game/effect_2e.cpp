@@ -61,17 +61,15 @@ void AddLong(unsigned char* p, U d) { SetUL(p, UL(p) + d); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 // sar: an arithmetic right shift of the 32 bits as the original holds them.
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
-float FloatAt(const unsigned char* p) {
-    float f;
-    std::memcpy(&f, p, sizeof f);
-    return f;
-}
-// fild dword (an s32); fadd dword (a float); fstp dword: under the game's x87
-// control word (0x027F, 53-bit precision) the sum is the IEEE double sum, then
-// rounded to a float - which is what `double` (SSE2) computes.
-void StoreSum(unsigned char* p, U whole, const unsigned char* f) {
-    const auto v = static_cast<float>(static_cast<double>(static_cast<std::int32_t>(whole)) + static_cast<double>(FloatAt(f)));
-    std::memcpy(p, &v, sizeof v);
+// `fild dword i; fadd dword [f]; fstp dword [out]`, on the x87 as the original
+// does it: the precision and rounding the control word holds round the sum
+// (magic_s32.cpp's AddIntToFloat idiom).
+void StoreSum(unsigned char* out, U whole, const unsigned char* f) {
+    const auto i = static_cast<std::int32_t>(whole);
+    __asm__ volatile("fildl %1\n\tfadds %2\n\tfstps %0"
+                     : "=m"(*reinterpret_cast<float*>(out))
+                     : "m"(i), "m"(*reinterpret_cast<const float*>(f))
+                     : "st");
 }
 void Copy12(unsigned char* to, const void* from) { std::memcpy(to, from, 12); }
 // The pointer a .data cell holds.

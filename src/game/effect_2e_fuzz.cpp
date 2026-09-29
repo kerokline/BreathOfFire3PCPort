@@ -199,7 +199,9 @@ U FxProjectPoint(const U* a, U answer) {
 // EffectGte_ProjectSize: out's two s16 - the first a radius of the callers' range half the time.
 U FxProjectSize(const U* a, U answer) {
     Fill(a[2], 4);
-    if (Writable(a[2], 2) && sh::Noise() % 2 == 0) SetWord(P(a[2]), PickOf(0, 1, 0x7FFF, 0xFFFF, 0x8000, sh::Noise() % 0x100));
+    const U n = sh::Noise();   // (from the log's noise, never the harness's Next(): the two passes draw alike)
+    static const U kRadius[] = {0, 1, 0x7FFF, 0xFFFF, 0x8000};
+    if (Writable(a[2], 2) && n % 2 == 0) SetWord(P(a[2]), (n >> 1) % 8 < 5 ? kRadius[(n >> 1) % 8] : (n >> 4) % 0x100);
     return answer;
 }
 // Gte_RotTransPers: the screen point (two floats) at sxy, the depth cue word at p.
@@ -385,8 +387,16 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
     switch (h % 6) {
-    case 0: s[9] = static_cast<unsigned char>((v & 1) ? PickOf(1, 0x3C, 0xD7, 0x80) : v >> 1); break;
-    case 1: SetLong(s + 0xC, static_cast<std::int32_t>((v & 1) ? PickOf(1, 9, 0x5B, 30, 45) : v >> 1)); break;
+    case 0: {
+        static const unsigned char kNine[] = {1, 0x3C, 0xD7, 0x80};
+        s[9] = static_cast<unsigned char>((v & 1) ? kNine[(v >> 1) % 4] : v >> 1);
+        break;
+    }
+    case 1: {
+        static const U kC[] = {1, 9, 0x5B, 30, 45};
+        SetLong(s + 0xC, static_cast<std::int32_t>((v & 1) ? kC[(v >> 1) % 5] : v >> 1));
+        break;
+    }
     case 2: s[6] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 3: P(at::kTrailSpin)[0] = static_cast<unsigned char>(v & 1); break;
     case 4: SetWord(P(at::kBurstSize), v); break;
