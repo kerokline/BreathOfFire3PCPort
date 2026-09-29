@@ -282,13 +282,17 @@ constexpr U kGteOffsetY = 0x7DE78C;
 constexpr U kGteOffsetX = 0x7DE790;
 // Gte_Vertices (0x7DE468, six dwords) is left out: the loads copy each
 // vertex's fourth short, which the originals leave as stale stack bytes (the
-// GTE reads only the first three; section 7, L9)
+// GTE reads only the first three; section 7, L9). It is put back before each
+// pass all the same (Group::kept), so ours cannot read the vertices the
+// original's pass loaded - a load missing or late in ours would otherwise
+// project the right points.
 constexpr U kGteVertices = 0x7DE468;
 const bh::Region kCellRegions[] = {
     {kGte, kGteVertices - kGte},
     {kGteVertices + 0x18, kGte + kGteSize - (kGteVertices + 0x18)},
     {at::kCameraMatrix, 0x20},
 };
+const bh::Region kCellKept[] = {{kGteVertices, 0x18}};
 
 // ===========================================================================
 // Seeds, arguments, disturbance
@@ -562,6 +566,10 @@ void RunUnit(const char* run, const bh::Clone* clones, unsigned n, const bh::Cal
     g.args = &Args;
     g.engine = true;
     g.phase_span = phase_span;
+    if (gte) {
+        g.kept = kCellKept;
+        g.n_kept = BH_COUNT(kCellKept);
+    }
     bh::Run(g);
     g_cur = nullptr;
     g_out_rule = false;

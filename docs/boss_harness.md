@@ -214,7 +214,20 @@ compared state holds both sides' stores, and they must be equal.
   the planted function itself, so a dispatcher that is ours by then (it
   reads the cell and calls through the harness) still reaches it. BH drives
   `BossTorast_ActDispatch` through each of kinds 8..11's dispatchers this
-  way ([`boss_h.md`](boss_h.md) section 3).
+  way ([`boss_h.md`](boss_h.md) section 3). **Probed** (2026-09-29, the
+  capture review of rounds 10..12): before each round's two passes the
+  harness plants a probe in the cell instead and calls the dispatcher once;
+  a row whose probe was never reached is a `Fatal` at the end of the run
+  (and one reached in fewer than all its rounds is logged) - a wrong
+  dispatcher, cell or state, or a state byte outside the regions and so not
+  planted, would otherwise run some other entry on both passes and compare
+  it with itself.
+- **`Group::kept`: put back, not compared** (2026-09-29, the same review).
+  Regions a group leaves out of its compare because the sides may differ
+  there harmlessly are still put back before each pass, so ours cannot
+  inherit what the original's pass left (BE6's `Gte_Vertices`: a load
+  missing in ours would otherwise project the points the copy loaded). Up
+  to eight regions, 0x400 bytes.
 - **The copies.** `bof3::CloneOriginal` with every call re-aimed at its
   recorder (`expected` checked), the stack-table immediates re-aimed, jump
   tables moved into the copy (`JumpTable`); the `DataTable` cells swapped
