@@ -228,7 +228,7 @@ template <typename... T> U PickOf(T... v) {
 void Move(std::uint32_t h) {
     const unsigned v = (h >> 8) & 0xFF;
     const unsigned w = (h >> 16) & 0xFF;
-    switch (h % 24) {
+    switch (h % 25) {
     case 0: B(at::kCursor) = static_cast<unsigned char>(v % 3); break;
     case 1: B(at::kColumn) = static_cast<unsigned char>(v & 1); break;
     case 2: B(at::kRow) = static_cast<unsigned char>(static_cast<int>(v % 6) - 1); break;
@@ -257,11 +257,38 @@ void Move(std::uint32_t h) {
     case 21: B(at::kLoneParty) = static_cast<unsigned char>(v & 1); break;
     case 22: Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 0x40); break;
     case 23: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
+    case 24: {
+        // an area compared (each with its descriptor set)
+        static const unsigned short kAreas[] = {0x85, 0xBF, 0xBB, 0xC1, 0x5C};
+        Game_AreaNumber = kAreas[v % 5];
+        break;
+    }
     default: break;
     }
 }
 
 std::uint32_t Stir(const std::uint32_t*, std::uint32_t answer) {
+    Move(sh::Noise());
+    return answer;
+}
+// Rest_PlaceParty reads the area again after Flags_Clear: its stand-in moves
+// the area half the time (to 0xBF, whose place kind differs, or back).
+std::uint32_t AreaStir(const std::uint32_t*, std::uint32_t answer) {
+    const U n = sh::Noise();
+    if (n & 1) Game_AreaNumber = static_cast<unsigned short>(n & 2 ? 0xBF : 0x85);
+    return answer;
+}
+// Field_PartyLoad sets each loaded member's +0x148 (its record index) and
+// copies the actor record over +0x80 (so +0x89 is the id): PartyForm_Reload
+// reads the leader's +0x89 after it (the half-cell step when it became 2).
+std::uint32_t PartyLoad(const std::uint32_t* a, std::uint32_t answer) {
+    const unsigned char* const list = Mem(at::kPartyList + (a[0] & 0xFF) * 3);
+    const unsigned n = Field_MemberCount < 3 ? Field_MemberCount : 3;
+    for (unsigned i = 0; i < n; ++i) {
+        unsigned char* const m = ObjTrio + i * at::kObjStride;
+        m[0x89] = list[i];
+        if (list[i] < 24) m[0x148] = MoveScript_EffectState[list[i]];
+    }
     Move(sh::Noise());
     return answer;
 }
@@ -344,6 +371,8 @@ sh::Callee g_callees[] = {
     {FS_OURS(PartySet_Load), 4, {0xFF, 0xFF, 0xFF, 0xFF}, kG, 0, 0},
     {FS_OURS(Field_MemberSprite), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &Stir},
     {FS_OURS(Party_Count), 1, {0xFF}, sh::Answer::kByte, 0, 3},
+    {FS_OURS(Field_PartyLoad), 1, {0xFF}, kG, 0, 0, {}, &PartyLoad},
+    {FS_OURS(Flags_Clear), 2, {kAll32, 0xFF}, kG, 0, 0, {}, &AreaStir},
     {FS_OURS(Port_DroppedCall), 4, {kAll32, kAll32, kAll32, kAll32}, kG, 0, 0},
     {FS_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &Stir},
     // every format here takes one number: three words (the standard row logs a
@@ -499,6 +528,10 @@ void Seed(unsigned k) {
     // Equip_ChooseSlot writes the slot byte of the record its member names
     if (Is(k, "Equip_ChooseSlot"))
         for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + i) = SafeId();
+    if (Is(k, "PartyForm_Reload") && sh::Half()) {
+        B(at::kPartyList) = 2;
+        ObjTrio[0x89] = static_cast<unsigned char>(sh::Half() ? 2 : SafeId());
+    }
     // the item window's cursor against its category byte
     B(0x803360) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
 }
