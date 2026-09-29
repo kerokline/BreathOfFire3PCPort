@@ -216,7 +216,9 @@ U FxProjectPoint(const U* a, U answer) {
     if (!Writable(a[1], 12)) return answer;
     unsigned char* const out = P(a[1]);
     const U n = sh::Noise();
-    const bool before = Writable(a[1] - 0x20, 12);
+    // only where both lie in the regions: a stack out's neighbour differs
+    // between the copy's frame and ours
+    const bool before = sh::InRegions(out, 12) && sh::InRegions(out - 0x20, 12);
     if (before && n % 4 == 0) {
         std::memcpy(out, out - 0x20, 12);
     } else if (before && n % 4 == 1) {
@@ -266,8 +268,10 @@ U FxRotTransPers(const U* a, U answer) {
         }
     }
     if (Writable(a[2], 4)) sh::FillBytes(P(a[2]), 4);
+    // from the log's noise only (the harness's Next() stream differs between the passes)
     const U n = sh::Noise();
-    if (n % 2 == 0) return PickOf(0x1DF, 0x1E0, 0x1E1, 0x1FF, 0x21F, 0x220, 0x221, 0x7FFFFFFF, 0x80000000u, 0);
+    const U near[] = {0x1DF, 0x1E0, 0x1E1, 0x1FF, 0x21F, 0x220, 0x221, 0x7FFFFFFF, 0x80000000u, 0};
+    if (n % 2 == 0) return near[(n >> 1) % 10];
     return answer;
 }
 // EffectKind50_FreeSpeck: a quarter of the time none, else one of the 64 specks.
@@ -420,6 +424,15 @@ void Seed(unsigned k) {
     if (sh::Half()) sh::Mem(at::kCounter0)[0] = 0xB;
     sh::Mem(at::kCounter3)[0] = static_cast<unsigned char>(PickOf(0xA, 0xE, 0xB, sh::Next()));
     switch (k) {
+    case k4FStart:
+        // every record's sprite indices +3 / +4 inside the thirty: the
+        // disturbance moves Sprite_Current between the two Sprite_FindFree calls,
+        // and the original reads the new record's +3 (in the game it never moves)
+        for (unsigned r = 0; r < at::kEffects; ++r) {
+            sh::EffectRecord(r)[3] = static_cast<unsigned char>(sh::Next() % at::kSprites);
+            sh::EffectRecord(r)[4] = static_cast<unsigned char>(sh::Next() % at::kSprites);
+        }
+        break;
     case k50Spawn: s[6] = static_cast<unsigned char>(sh::Half() ? 7 : sh::Next()); break;
     case k50Move:
     case k50Free:

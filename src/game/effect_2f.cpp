@@ -1090,10 +1090,10 @@ extern "C" void __cdecl EffectKind52_SparkRise(unsigned char* spark) {
 // (+0x43E, as both words of a size) scaled at its depth (EffectGte_ProjectSize's
 // first answer). Then the 31 angles at +0x400: from point k to point k + 1,
 // dx = ftol(x_k - x_k+1), dy likewise (low words); both 0: 0x1000 (none), else
-// Math_Ratan2(dy, dx) as floats. The nones filled: each 0x1000 (the sentinel,
-// the dx register) takes the first later angle that is not the sentinel, else the
-// first earlier one, else 0 - and a fill makes that angle the sentinel for the
-// ones after (the original's dx is reloaded with it). Point 0's angle +0x1C =
+// Math_Ratan2(dy, dx) as floats. The nones filled in order: each 0x1000 takes
+// the first later angle that is not 0x1000, else the first earlier one (filled
+// ones included), else 0 (the original reloads its 0x1000 at every step, so a
+// fill never changes what the later ones are compared with). Point 0's angle +0x1C =
 // angle 0, points 1..30 the mean (0x479970, E2E's) of angles k - 1 and k, point
 // 31's = angle 30.
 extern "C" void __cdecl EffectKind52_TrailUpdate(unsigned char* trail) {
@@ -1125,21 +1125,15 @@ extern "C" void __cdecl EffectKind52_TrailUpdate(unsigned char* trail) {
         const auto fy = static_cast<float>(XI(S16(dy)));
         SetWord(angles + 2 * k, static_cast<U>(SH_CALL(Math_Ratan2)(fy, fx)));
     }
-    U sentinel = 0x1000;
     for (int c = 0; c < 0x1F; ++c) {
         unsigned char* const at_c = angles + 2 * c;
-        if (Word(at_c) != sentinel) continue;
+        if (Word(at_c) != 0x1000) continue;
         int found = -1;
         for (int a = c + 1; a < 0x1F && found < 0; ++a)
-            if (Word(angles + 2 * a) != sentinel) found = a;
+            if (Word(angles + 2 * a) != 0x1000) found = a;
         for (int a = 0; a < c && found < 0; ++a)
-            if (Word(angles + 2 * a) != sentinel) found = a;
-        if (found < 0) {
-            SetWord(at_c, 0);
-            continue;
-        }
-        sentinel = Word(angles + 2 * found);
-        SetWord(at_c, sentinel);
+            if (Word(angles + 2 * a) != 0x1000) found = a;
+        SetWord(at_c, found < 0 ? 0u : Word(angles + 2 * found));
     }
     SetWord(trail + 0x1C, Word(angles));
     for (unsigned k = 0; k < 0x1E; ++k)
