@@ -576,9 +576,9 @@ extern "C" void __cdecl BattleHold_Regrow(void) {
 
 // original 0x42EF50 (Battle_MenuSteps[5]; PSX Cmd_AutoBattle_Begin
 // 0x801D2598 by the sibling's names/functions.toml, read and agreeing):
-// window 4's +3 = 2; for each of the s8 0x904AC3 entries, the FIRST entry
-// 0x904AB6 every time (the index is never added - docs/battle_e1.md section
-// 7): not 0xFF and not out, and its command +0x125 is 5 (an item), BE4's
+// window 4's +3 = 2; each of the s8 0x904AC3 entries 0x904AB6[i] (the
+// count re-read each pass) not 0xFF and not out whose command +0x125 is 5
+// (an item) - an entry is indexed into ObjTrio unchecked -, BE4's
 // 0x446D90(+0x12E, word +0x126) gives the item back; then each member not
 // out (0x904AB0 of them, re-read) - with 0x904B8E set only one whose +0x134
 // has 0x10 - goes to state 2 (+1); round flags |= 0x10, LoadDatFile(0xD1),
@@ -589,7 +589,7 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
     if (entries > 0) {
         unsigned i = 0;
         do {
-            const unsigned char actor = B(at::kEntryFirst);
+            const unsigned char actor = B(at::kEntryFirst + i);
             if (actor != 0xFF && !BH_CALL(Battle_ActorIsOut)(actor)) {
                 unsigned char* const m = Member(actor);
                 if (m[0x125] == 5)

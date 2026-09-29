@@ -74715,7 +74715,7 @@ ret = "void"
 params = "void"
 impl = "src/game/battle_e1.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42EF50..0x42F068 (0x119 bytes): Battle_MenuSteps[5]: window 4's +3 = 2; the s8 0x904AC3 times the FIRST entry byte 0x904AB6 (the index is never added: xor eax, eax; mov al, [eax + 0x904AB6]), not 0xFF and not out, with command +0x125 = 5, gives its item back through BE4's 0x446D90(+0x12E, word +0x126); each member of 0x904AB0 not out (with 0x904B8E set, only with +0x134 bit 4) to state 2 (+1); 0x904AA8 |= 0x10, LoadDatFile(0xD1), 0x904AA1 = 0x904AA2 = 0. PSX twin 0x801D2598 (table-anchored; the sibling names it Cmd_AutoBattle_Begin, read and agreeing; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
+evidence = "disasm 2026-09-29 (round twelve group BE1), 0x42EF50..0x42F068 (0x119 bytes): Battle_MenuSteps[5]: window 4's +3 = 2; each of the s8 0x904AC3 entry bytes 0x904AB6[i] (the count re-read each pass) not 0xFF and not out, with command +0x125 = 5 (the entry indexes ObjTrio unchecked), gives its item back through BE4's 0x446D90(+0x12E, word +0x126); each member of 0x904AB0 not out (with 0x904B8E set, only with +0x134 bit 4) to state 2 (+1); 0x904AA8 |= 0x10, LoadDatFile(0xD1), 0x904AA1 = 0x904AA2 = 0. PSX twin 0x801D2598 (table-anchored; the sibling names it Cmd_AutoBattle_Begin, read and agreeing; analysis/pairs_propagated.json, a hypothesis unless said). docs/battle_e1.md."
 
 [[func]]
 pc = 0x42F5E0

@@ -315,9 +315,11 @@ void Seed(unsigned k) {
     }
     case 0x42EF50: {   // the entries, the first entry's item command, the auto test
         Mem(at::kEntryCount)[0] = Byte({0, 1, 2, 3, 0xFF, 0x80, 5});
-        const unsigned char first = Byte({0, 1, 2, 0xFF, 0, 1, 2, 4});
-        Mem(at::kEntryFirst)[0] = first;
-        if (first <= 2) MemberAt(first)[0x125] = Byte({5, 5, 4});
+        for (U e = 0; e < 3; ++e) {   // the entry order, and the entries' item commands
+            const unsigned char who = Byte({0, 1, 2, 0xFF, 0, 1, 2, 4});
+            Mem(at::kEntryFirst + e)[0] = who;
+            if (who <= 2) MemberAt(who)[0x125] = Byte({5, 5, 4});
+        }
         Mem(at::kAutoTest)[0] = bh::Half() ? 0 : static_cast<unsigned char>(bh::Next());
         break;
     }
@@ -335,7 +337,9 @@ void Seed(unsigned k) {
             unsigned char* const m = MemberAt(i) + 0x130;
             m[0] = static_cast<unsigned char>(bh::Half() ? m[0] | 8 : m[0] & ~8);
         }
-        Mem(at::kActor)[0] = Byte({3, 4, 5, 10});
+        // the acting enemy (its +0x106 is read unchecked; an actor past 0x30
+        // reads past the image and faults on both sides - section 7)
+        Mem(at::kActor)[0] = static_cast<unsigned char>(BH_PICK(3, 4, 5, 6, 10, 3, 10, 0, 2));
         break;
     }
     case 0x4315C0:   // the members' busy bit, the cursor at the count
