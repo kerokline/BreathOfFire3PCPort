@@ -24,6 +24,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace boss_sf {
 namespace at {
 
@@ -89,9 +94,9 @@ constexpr U kEnemyActEnd = 0x4376A0;      // ()
 constexpr U kEnemyActChance = 0x4376F0;   // ()
 constexpr U kSlotsReleaseFor = 0x454A80;  // (object)
 constexpr U kSlotStart = 0x455290;        // (object, script)
-constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
-constexpr U kEndOther = 0x446E00;         // () step 2
-constexpr U kEndThird = 0x446E20;         // () step 3
+constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
+constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
+constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
 
 }  // namespace at
 }  // namespace boss_sf

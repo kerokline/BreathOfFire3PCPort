@@ -18,6 +18,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_menu_states {
 
 namespace at {
@@ -79,7 +84,7 @@ constexpr std::uint32_t kItemTargetSteps = 0x64E48C;
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kPrevTarget = 0x4457F0;  // Battle_DefaultTarget's downward twin: the first actor not out from the byte down; 0xFF if none
+constexpr std::uint32_t kPrevTarget = bof3::addr::Battle_PrevTarget;  // Battle_DefaultTarget's downward twin: the first actor not out from the byte down; 0xFF if none
 constexpr std::uint32_t kItemFlags = 0x591810;   // (category, item) -> the item's flag byte (0x656B38 / 0x657461 / 0x657D79 / 0x658461 tables)
 
 struct Callees {

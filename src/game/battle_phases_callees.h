@@ -20,6 +20,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_phases {
 
 namespace at {
@@ -105,8 +110,8 @@ constexpr unsigned kCommitStepCount = 3;
 
 // Callees with no name in symbols.gen.h, called by address: no group of the
 // round owns them (docs/battle_phases.md section 3).
-constexpr std::uint32_t kAutoFillCommands = 0x446720;  // PSX AutoBattle_FillCommands 0x801DD264 (sibling name)
-constexpr std::uint32_t kReturnItem = 0x446D90;        // (slot, item) -> al; PSX 0x801DDE44; battle_setup's kReturnItem
+constexpr std::uint32_t kAutoFillCommands = bof3::addr::AutoBattle_FillCommands;  // PSX AutoBattle_FillCommands 0x801DD264 (sibling name)
+constexpr std::uint32_t kReturnItem = bof3::addr::Battle_ReturnItem;        // (slot, item) -> al; PSX 0x801DDE44; battle_setup's kReturnItem
 
 using Handler = void (__cdecl*)();
 

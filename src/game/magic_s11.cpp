@@ -39,6 +39,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace {
 
 namespace at = magic_harness::at;
@@ -81,7 +84,7 @@ constexpr std::uint32_t kTMotePhases = 0x65AA98;    // TornadoMote_Phases: 4 ent
 
 // Callees other groups own: the engine's by address; S36's AuraBreath_InReach
 // and S37's MagicFx_FreeCurrentRecord, ours now, by name.
-constexpr std::uint32_t kTurnOffset = 0x446770;   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
+constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;   // engine, unnamed: a task's +0xC / +0x10 turned by its +8
 using Fn0 = void (__cdecl*)();
 using NearFn = int (__cdecl*)(unsigned char*);
 using TaskFn = void (__cdecl*)(unsigned char*);

@@ -19,6 +19,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_turn_steps {
 
 namespace at {
@@ -92,10 +97,10 @@ constexpr std::uint32_t kEndResultPages = 0x64AFAC;    // 5, by kState4 - 0x4319
 }  // namespace at
 
 // Raw addresses of callees no group of this round owns (the rule above).
-constexpr std::uint32_t kWriteBackMember = 0x446A80;  // (actor): member's HP / AP / status into its CharacterRecord
+constexpr std::uint32_t kWriteBackMember = bof3::addr::Battle_WriteBackMember;  // (actor): member's HP / AP / status into its CharacterRecord
                                                       // (PSX Battle_WriteBackMember, called by 0x801D71B0)
 constexpr std::uint32_t kClearEnemies = 0x494E70;     // (): bytes +0..+4 of the eight enemy objects zeroed
-constexpr std::uint32_t kReloadParty = 0x446600;      // (): each member's +0x80 re-copied from its CharacterRecord
+constexpr std::uint32_t kReloadParty = bof3::addr::Battle_ReloadPartyRecords;      // (): each member's +0x80 re-copied from its CharacterRecord
 
 using Step = void (__cdecl*)();
 

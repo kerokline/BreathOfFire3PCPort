@@ -8,11 +8,16 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace magic_s27::raw {
 
 // The engine's turn of a task's dx / dz pair (+0xC / +0x10) by its direction
 // byte +8 (unnamed, in no group; docs/magic_s22.md section 3).
-constexpr std::uint32_t kTurnOffset = 0x446770;
+constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
 
 // The sprite bank the Sprite_* functions read their animations from
 // (0x9039D8, a pointer: 0x8B3580 the default, 0x8E3580 the battle effects'

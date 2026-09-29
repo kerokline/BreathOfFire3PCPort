@@ -15,10 +15,15 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace magic_s24 {
 
 constexpr std::uint32_t kCentreOnTargets = 0x4FC0E0;   // MagicFx_CenterOnSide (the fuzz's key)
-constexpr std::uint32_t kTurnByFacing = 0x446770;
+constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
 
 namespace cell {
 

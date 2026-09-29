@@ -364,6 +364,10 @@ void Seed(unsigned k) {
                 if (bh::Next() % 3 == 0) counts[i] = 0x63;
         }
         break;
+    case 0x449BB0:   // it only reads the record: any character byte a third of the time (the mask's bit past 7)
+        if (bh::Next() % 3 == 0)
+            for (unsigned i = 0; i < 8; ++i) M(at::kCharOf)[i] = static_cast<unsigned char>(bh::Next());
+        break;
     case 0x449A00: {   // preview bytes: none, the same as worn, or another
         const unsigned member = M(at::kSlots + 0xC)[0];
         const unsigned char c = M(at::kCharOf + M(at::kMemberChar + member)[0])[0];
