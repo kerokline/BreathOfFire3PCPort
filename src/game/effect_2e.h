@@ -46,8 +46,9 @@ long __cdecl EffectAngle_Mean(unsigned a, unsigned b);
 // two poles, 0x1000 = 1), its 0x200 quads and each vertex's shade under the
 // light (0, 0x1000, 0x1000) normalised. al 0.
 unsigned char __cdecl EffectSphere_Build(void);
-// original 0x47A780: the sphere at Sprite_Current's point, radius 0x20 in
-// cells, projected and drawn as 0x200 semi-transparent Gouraud quads. al 0.
+// original 0x47A780: the sphere about Sprite_Current's point (each unit
+// vertex << 5 in 16.16: two cells), projected and drawn as 0x200
+// semi-transparent Gouraud quads. al 0.
 unsigned char __cdecl EffectSphere_Draw(void);
 
 // Kind 0x4A: a trail of 64 points after Sprite_Objects[1]; Effect_KindHandlers[0x4A].

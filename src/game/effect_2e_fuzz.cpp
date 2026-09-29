@@ -224,6 +224,15 @@ U FxSparkFree(const U*, U answer) {
     (void)answer;
     return at::kSparks + 0x1C * ((n >> 2) % 8);
 }
+// 0x5A7A90 (a square root): half the time a root about the sphere's clamp
+// (0..0x10FF, the edges 0xFFE..0x1000 among them), else any eax - negative ones
+// too, which the signed clamp passes through.
+U FxSqrt(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2 == 0) return answer;
+    static const U kEdge[] = {0, 0x7F, 0x80, 0xF7F, 0xF80, 0xFFE, 0xFFF, 0x1000};
+    return (n >> 1) % 4 == 0 ? kEdge[(n >> 3) % 8] : (n >> 3) % 0x1100;
+}
 // 0x479160: the spark record's 24 bytes written.
 U FxSparkSet(const U* a, U answer) {
     Fill(a[0], 24);
@@ -256,6 +265,7 @@ const sh::Callee kCallees[] = {
     {"0x47CF20", at::kSparkFree, at::kSparkFree, 0, {}, kG, 0, 0, {}, &FxSparkFree},
     {"0x479160", at::kSparkSet, at::kSparkSet, 1, {kW}, kG, 0, 0, {}, &FxSparkSet, nullptr, true},
     {"0x479260", at::kSparksRun, at::kSparksRun, 0, {}, kF, 0, 0, {}, nullptr, nullptr, true},
+    {"0x5A7A90", at::kSqrt, at::kSqrt, 1, {kW}, kG, 0, 0, {}, &FxSqrt, nullptr, true},
     // standard entries re-listed: the stack pointers never logged (their
     // addresses differ between the copy and ours), the points hashed, the outs filled
     {E2E_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
