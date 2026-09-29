@@ -368,6 +368,7 @@ add_library(bof3x SHARED
   src/game/area_w0b_fuzz.cpp
   src/game/scenario_harness.cpp
   src/game/scenario_harness_fh.cpp
+  src/game/scenario_harness_ekh.cpp
   src/game/scena_sc0.cpp
   src/game/scena_sc0_fuzz.cpp
   src/game/scena_se.cpp

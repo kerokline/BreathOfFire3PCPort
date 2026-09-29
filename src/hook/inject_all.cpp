@@ -189,6 +189,7 @@
 #include "game/scena_sc13.h"
 #include "game/scena_sx2.h"
 #include "game/scenario_harness_fh.h"
+#include "game/scenario_harness_ekh.h"
 #include "game/area_w1e.h"
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
@@ -896,6 +897,12 @@ void InjectAll() {
                                 // its clones' calls re-aimed at the scenario harness's recorders; every caller
                                 // that is ours calls it by the address it had, so order does not matter; no
                                 // module patches bytes inside its four (DIVERGENCE.md, cheats.cpp)
+    ScenarioHarnessEkh_Inject(); // round 13 group EKH: the scenario harness's effect mode proved on Capcom's code, eight
+                                // rows of round thirteen's cut on both sides - injects nothing, takes nothing; after
+                                // every scenario group, so their random streams are the ones they had; every effect
+                                // group's inject goes after it, whose self-test copies 0x462BC0 (E1A), 0x46F2B0,
+                                // 0x46F7D0 (E1D), 0x4FD470 (E5A), 0x500D20 (E5B), 0x479970 (E2E), 0x4857C0 (E3C),
+                                // 0x472770 (E2A) from the image (docs/scenario_harness.md section 8.8)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
