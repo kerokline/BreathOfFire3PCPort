@@ -336,6 +336,12 @@ U FxCommit(const U* a, U answer) {
 }
 U FxText(const U*, U answer) { return Key(sh::Text() + (answer & 0xF0)); }
 U FxGrid(const U* a, U answer) { return (answer & 0xFFFFFF00u) | g_grid[(a[0] & 7) + 8 * (a[1] & 7)]; }
+U FxSlope(const U*, U answer) {
+    // at the 0x40 Field_WayBlockedWide compares with (s16, > 0x40) half the time
+    const U n = sh::Noise();
+    if (n & 1) return answer;
+    return (answer & 0xFFFF0000u) | (0x3Fu + (n >> 4) % 3u);
+}
 U FxGround(const U*, U answer) {
     // a height within 0xC0 of the seeded one two times in three (the callers
     // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0)
@@ -390,6 +396,7 @@ const sh::Callee kFixed[] = {
     {FE2_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, kG, 0, 0, {}, &FxGrid},
     {FE2_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &FxRepeat},
     {FE2_OURS(MapView_GroundAt), 2, {kAll, kAll}, kG, 0, 0, {}, &FxGround},
+    {FE2_OURS(MapView_SlopeAt), 3, {kAll, kAll, kAll}, kG, 0, 0, {}, &FxSlope},
     {FE2_OURS(WorldMap_RecordIndex), 0, {}, sh::Answer::kByte, 0, 11},
     // not in either standard set
     {FE2_AT(537500), 2, {kU16, kU8}, kG, 0, 0},
