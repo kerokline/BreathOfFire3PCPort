@@ -238,6 +238,18 @@ callees of section 3; the group's own functions called directly - each with
 the answer range its callers test (`BattleFx_NextStatusIcon` 0xFF..0x0F,
 `Battle_RandomEnemy` 3..10, `BattleEnemy_OtherEnemy` 0xFF..10, ...).
 
+**Answers compared** (`Clone::ret_mask 0xFF`, al): `BattleFx_NextStatusIcon`,
+`Battle_BackupFlagged`, the eight target helpers (not `BattleEnemy_PickAction`,
+whose caller reads nothing back), `EnemyOp_CueEnd` and `EnemyOp_KnockBack`
+(the two that end in the script tick's answer).
+
+**For the harness's fold** (not edited here): the standard `Rand`'s garbage
+quarter is a negative value no CRT `Rand` gives - an engine caller that
+`idiv`s by it indexes by a negative remainder; `0x452DD0` and
+`Battle_SetDamagePopup`'s actor word are listed whole where every BE2 caller
+sets only the low byte; `0x446770` (BE4's) wants the turning effect above
+wherever a caller reads the velocity back.
+
 **Regions** beyond the engine frame: the backup records past the standard
 `0x939AD0..0x939B20` (to `0x939EC0`), the pose pool pointer `0x9039D8`, the
 kept cells `0x675ECC..0x675ED7`, the formation `0x904060`, the members' spots
