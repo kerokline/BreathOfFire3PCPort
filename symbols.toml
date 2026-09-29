@@ -77715,3 +77715,478 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE3): 0x442E40 jmp by +2: 0x442E60, 0x442F10, 0x442F80; bytes follow. docs/battle_e3.md."
+
+# --- round twelve group FC1 (field_c1, 2026-09-29): docs/field_c1.md ---
+
+[[func]]
+pc = 0x461800
+name = "Config_DrawRowLabel"
+ret = "void"
+params = "int x, int y, unsigned row, unsigned state"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x461800..0x461969 (0x16A bytes), cdecl: the Config screen row - Menu_DrawBox(x, y - s, 0xF9, 2s + 0xB, 0, style byte 0x903A5A), s the fourth argument byte; one of six label immediates by the row byte (unchecked; ours aborts past six); s 3: Text_DrawAt(x - len * 6 + 0x3A, y - 1, 0, 0xFF) and Menu_DrawHand(x + 4, y, 0) unless 0x929F02 is 1; else Text_DrawSmall(x - len * 4 + 0x3A, y + 1, 0, 0xFF); a grey line at Gfx_PacketNext (Gpu_SetLineF2, Gfx_CommitPrim(1, 0x20)) from (x16 + 0x74, y16 - s + 1) to (x16 + 0x74, y16 + s + 9). Ours reads the operands DIV-0015 / DIV-0017 patch (labels, anchors, the width code, the large call) from the original code at each call. Called by the panel draw 0x461710. PSX twin (analysis/pairs_propagated.json, not read): 0x801E2738 callers. docs/field_c1.md."
+
+[[func]]
+pc = 0x469D10
+name = "EffectKind06_PlayOnce"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x469D10..0x469D35 (0x26 bytes): Sprite_ScriptTickOnce, +1 up when it answers not 0; tail Sprite_QueueOverlay for kind +5 == 6, else Sprite_UpdateScreen. EffectKind06_Ticks[5] and EffectKind19_Ticks[5]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019B638 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x469D40
+name = "EffectKind06_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x469D40..0x469DAB (0x6C bytes): +9 down, at 0 +1 up and return; else +0x5D..+0x5F plus 0xFA each, Sprite_ScriptTick, then kind 6: odd +9 word +0x30 up, tail Sprite_QueueOverlay; other kinds: odd +9 dword +0x10 down, tail Sprite_UpdateScreen. EffectKind06_Ticks[3] and EffectKind19_Ticks[3]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019B6B4 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x469DE0
+name = "EffectKind19_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x469DE0..0x469DF1 (0x12 bytes): jmp [EffectKind19_States + 4 * Sprite_Current +1], unchecked (ours aborts on an entry that is not code). Effect_KindHandlers[0x19]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019B80C gap74. docs/field_c1.md."
+
+[[func]]
+pc = 0x469E00
+name = "EffectKind19_Tick"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x469E00..0x469E2C (0x2D bytes): call [EffectKind19_Ticks + 4 * +6] (unchecked), then word +0x2E += word +0xC, word +0x30 -= word +0x10. EffectKind19_States[1]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019B850 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x469FB0
+name = "EffectKind04_HoldTick"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x469FB0..0x469FD6 (0x27 bytes), hidden after CameraTurn_Step: +9 0: Flags_Clear(0x904030, 0x1C) and tail Effect_Release; else +9 down. Effect_KindHandlers[4], the kind Effect_HoldFlag1C spawns. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BB64 gap74. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A020
+name = "EffectKind31_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A020..0x46A039 (0x1A bytes): call [CameraZoom_States + 4 * +1] (unchecked), then MapView_Redraw = 2. Effect_KindHandlers[0x31]. The pairing tool gives the twin Effect_CameraTurn was paired with in docs/frame-callees.md; one of the two pairings is wrong. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BC3C gap74. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A040
+name = "CameraZoom_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A040..0x46A067 (0x28 bytes): CameraTurn_Start, then +0x10 = ((dword +0xC - s16 Camera_Distance) << 16) idiv +9 (unsigned byte; 0 divides by zero - ours aborts). CameraZoom_States[0]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BC8C table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A070
+name = "CameraZoom_Step"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A070..0x46A0BD (0x4E bytes): CameraTurn_Step, then Camera_Distance = ((s16 distance << 16) + +0x10) sar 16, held at the dword +0xC once past it (below for a negative step, above otherwise). CameraZoom_States[1]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BCFC table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A0C0
+name = "CameraZoom_End"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A0C0..0x46A0D4 (0x15 bytes): Camera_Distance = word +0xC, tail CameraTurn_End. CameraZoom_States[2]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BD78 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A0E0
+name = "EffectKind32_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A0E0..0x46A0F1 (0x12 bytes): jmp [EffectKind32_States + 4 * +1], unchecked. Effect_KindHandlers[0x32]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BDAC gap74. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A100
+name = "EffectKind32_Throw"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A100..0x46A1DA (0xDB bytes): +8 = ObjTrio +8 & 7; Sprite_SetAnimationBank(0x18); +0x48, +0x24, +0x2A 0; Sprite_SetAnimation(8); +0x34 / +0x38 / +0x3C from Sprite_Objects[+6] (unchecked); +0x5C..+0x5F 0; MoveCmd_Move(a stack object with +0 = 0 and +4 = 3, +8); then EffectKind32_Arc. EffectKind32_States[0]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BDF0 callers. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A1E0
+name = "EffectKind32_Arc"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A1E0..0x46A287 (0xA8 bytes; the catalog extent 0x119B swallowed its neighbours): AreaMap_Elevation(+0x34, +0x38) at or above word +0x3E, +0 bit 7, or +1 0: +0x14 / +0x20 from EffectKind32_Hops[+2] (unchecked) and +1 up; then +0x34 += +0xC, +0x38 += +0x10, +0x3C += +0x14, +0x14 -= +0x20; Sprite_ScriptTick, tail Sprite_UpdateScreenSlot. EffectKind32_States[1] and called by EffectKind32_Throw. PSX twin (analysis/pairs_propagated.json, not read): 0x8019BF24 call-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A290
+name = "EffectKind32_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A290..0x46A30D (0x7E bytes): unless ground <= word +0x3E < ground + 0x80 with +0 bit 7 clear: +1 up, Sound_PlayEffect(0x106). Then +0x3C += +0x14, +0x14 -= +0x20, Sprite_ScriptTick, Sprite_UpdateScreenSlot. EffectKind32_States[2]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019C02C table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A310
+name = "Effect_StateRelease"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A310..0x46A314 (5 bytes): jmp Effect_Release. 49 cells of the effect state tables hold it (EffectKind32_States[3], EffectKind37_States[2], EffectKind18_States entries, EffectKind17 and 0x30 tables among them). PSX twin (analysis/pairs_propagated.json, not read): 0x8019C0F4 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A340
+name = "EffectKind37_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A340..0x46A38E (0x4F bytes): Sprite_SetAnimationBank(word +0x2C); +0x48 = 1, +0x24 = 0, +0x2A = +6 >> 7; Sprite_SetAnimation(+6 & 0x7F); +1 = 1. EffectKind37_States[0] (the dispatcher 0x46A320 is catalog part 2). No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A390
+name = "EffectKind37_Play"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A390..0x46A3D4 (0x45 bytes): Sprite_ScriptTickOnce not 0: +9 down, at 0 +1 = 2; +7 not 0 and equal to word +0x58: +1 = 2; tail Sprite_UpdateScreen. EffectKind37_States[1]. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A600
+name = "EffectKind14_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A600..0x46A7E8 (0x1E9 bytes): two Sprite_FindFree into +3 / +4 (none: nothing; only the second: the first freed); each marked, DamageScratch word its index, EventOp_6x(EffectKind14_Op), Sprite_SetAnimationAt(0x61, 0xC); Sprite_Current restored; the first moved (+0x1000, -0x1000), the second the other way; both +0 |= 0x20, +0x5C 0, Sprite_SetTint (0xF,0,0,1) and (0,0,0xF,1); +9 = 4, +1 = 1. EffectKind14_States[0] (dispatcher 0x46A5E0, catalog part 2). No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A7F0
+name = "EffectKind14_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A7F0..0x46A84D (0x5E bytes): +9 not 0: ObjTrio +0 |= 0x40, +9 down; else its bit cleared, Sprite_Objects[+3] and [+4] +0 = 0, +1 = 2. EffectKind14_States[1]. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46A950
+name = "EffectKind3C_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46A950..0x46AB26 (0x1D7 bytes): as EffectKind14_Start with EventOp_0x(EffectKind3C_Op) and no animation, the first sprite moved (-0x1000, +0x1000). EffectKind3C_States[0] (dispatcher 0x46A930, catalog part 2). No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46AB30
+name = "EffectKind3C_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46AB30..0x46ABA9 (0x7A bytes): as EffectKind14_Hold with Sprite_Objects[+0xB] for the leader. EffectKind3C_States[1] and 0x65461C[35]. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46ABD0
+name = "EffectKind17_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46ABD0..0x46AC80 (0xB1 bytes): Sprite_SetAnimationBank(+0xB), EffectKind17_TakeCell; +0x29 = 6, +0x48 = 1, +0x24, +0x2A, +0x5D..+0x5F, dwords +0xC..+0x20, +7, +0xA 0; Sprite_SetAnimation(0); +1 up. EffectKind17_States[0] (dispatcher 0x46ABB0, catalog part 2). PSX twin (analysis/pairs_propagated.json, not read): 0x8019C3B0 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46AC90
+name = "EffectKind17_Push"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46AC90..0x46AE2B (0x19C bytes): Game_Mode 1: Sprite_UpdateScreenSlot only. +0xA 0: map byte +0xB back at (+0x36, +0x3A) when Field_Request is 5. Else EffectKind17_BlockedAhead: blocked, byte back, +9 0, +1 = 4; free, byte back, +0xA = (+0xA + 1) >> 1, +0xC / +0x10 = 0x6696DC[+8] << 2 moved from 0 by 3 * 0x400 * +0xA - 0xC00, brakes +0x18 / +0x1C against their signs, Sprite_SetAnimation(1), +1 up. Then Sprite_UpdateScreenSlot. EffectKind17_States[1]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019C4A8 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46AE30
+name = "EffectKind17_Slide"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46AE30..0x46B0FE (0x2CF bytes): +6 = +7 = 0; the speed along x (or z) plus its brake, reverted under 0x1000; the position moved; both brakes 0: +6 = 1. Fall +0x14 += +0x20, word +0x3E += word +0x14. Kind-2 view point on the leader, Field_Kind2Hold 0 and more than 0x40000 away: its whole part moved 5, MoveScript_FAWord from the ground there and MapView_Elevation (/ 20), MoveScript_F3Divisor 0x40, +9 0x14. Ground below the height: fall -8, else rest. EffectKind17_Bump, _BlockedAt (+7 2), _BlockedAhead (+7 1); stopped: whole cell, rest (+1 = 5), else _AlignTarget(0 or 1). Sprite_ScriptTick, Sprite_UpdateScreenSlot. EffectKind17_States[2]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019C70C table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B100
+name = "EffectKind17_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B100..0x46B2B0 (0x1B1 bytes): to the target +0x18 along the moving axis, held there (target 0); fall -8 over the ground else 0; word +0x3E += word +0x14; EffectKind17_Bump; sunk: the height from the start point; target and fall 0 with both speeds within 0x4000 and EffectKind17_CellBlocked clear: +7, +0xA 0, _TakeCell, Sprite_SetAnimation(0), +1 = 5; else +1 = 4. EffectKind17_States[3]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019CBAC table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B2C0
+name = "EffectKind17_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B2C0..0x46B332 (0x73 bytes): +0x48 = 2, scales +0x40 / +0x44 up 0x4000; +9 down with Field_Kind2Hold 0; below 0x20000 tail Sprite_UpdateScreenSlot; at it with hold and +9 0, EffectKind17_CameraBack and tail Effect_Release. EffectKind17_States[4]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019CE30 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B340
+name = "EffectKind17_Rest"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B340..0x46B37A (0x3B bytes): +9 down while not 0; hold 0 and +9 0: +1 = 1, EffectKind17_CameraBack; Sprite_ScriptTick, tail Sprite_UpdateScreenSlot. EffectKind17_States[5]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019CF04 table-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B380
+name = "EffectKind17_TakeCell"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B380..0x46B3B6 (0x37 bytes): +0xB = AreaMap_ByteAt(+0x36, +0x3A), AreaMap_SetByte(+0x36, +0x3A, 0x10). E8 from EffectKind17_Start and _Settle. PSX twin (analysis/pairs_propagated.json, not read): 0x8019CF80 call-anchored. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B3C0
+name = "EffectKind17_CameraBack"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B3C0..0x46B3F7 (0x38 bytes): Field_Kind2X / Z = ObjTrio +0x34 / +0x38, MoveScript_FAWord negated, MoveScript_F3Divisor 0x40, Field_Kind2Hold 1. E8 from EffectKind17_Grow and _Rest. PSX twin (analysis/pairs_propagated.json, not read): 0x8019CFDC gap74. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B400
+name = "EffectKind17_Bump"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B400..0x46B4A5 (0xA6 bytes): Sprite_ObjectAt(+0x34, +0x38, 0) found (its +0x80 bit 0 set, below 0x1E in Sprite_Objects else Sprite_ObjectsExtra) or Party_MemberAt found (a member other than 0: its +2 = 1): +1 = 4, Sprite_ScriptTick, Sprite_UpdateScreenSlot, al 1; else al 0. E8 from EffectKind17_Slide and _Settle. PSX twin (analysis/pairs_propagated.json, not read): 0x8019D030 callers. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B4B0
+name = "EffectKind17_AlignTarget"
+ret = "void"
+params = "unsigned flag"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B4B0..0x46B574 (0xC5 bytes): off a whole cell in x (else z; on one in both nothing): speed up, target +0x18 = (pos + 0x10000, or pos for a flag) & 0xFFFF0000; down, pos & 0xFFFF0000; +1 = 3. E8 from EffectKind17_Slide with 0 or 1. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B580
+name = "EffectKind17_BlockedAhead"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B580..0x46B5B2 (0x33 bytes): EffectKind17_BlockedAt(+0x34 + 2 dx, +0x38 + 2 dz), (dx, dz) Field_DirectionSteps[+8] (unchecked); its al. E8 from EffectKind17_Push and _Slide. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B5C0
+name = "EffectKind17_BlockedAt"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B5C0..0x46B6C5 (0x106 bytes): EffectKind17_CellBlocked(x >> 16, z >> 16): 1. Moving in x (+0xC): whole x 0; AreaMap_Slope(cell middle, z, +8), sloped (DamageScratch) and the ground there above word +0x3E: 1; +0xC > 0 and the next cell blocked: 1; else 0. In z likewise. Reads its arguments high words through its frame at +2. E8 from EffectKind17_Slide and _BlockedAhead. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B6D0
+name = "EffectKind17_CellBlocked"
+ret = "unsigned char"
+params = "unsigned cell_x, unsigned cell_z"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B6D0..0x46B799 (0xCA bytes; the catalog extent 0x3B8 swallowed EffectKind1B_States 0..3): the area block cell word (width * z + 2 * header word +2 + x, signed words, unchecked) 0: 1; else ground AreaMap_Elevation(x << 16, z << 16), byte AreaMap_ByteAt(x, z): word +0x3E at most 0x100 above ground on 0xFx: 1; level on 0x10, 0x2x, 0xAx: 1; below: 1; else 0. E8 from EffectKind17_Settle and _BlockedAt. No PSX twin paired. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B7C0
+name = "EffectKind1B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B7C0..0x46B890 (0xD1 bytes): +8 = ObjTrio +8; 0x46D0E0 (FC2); +0x27 = 0x7B; Sprite_SetAnimation((+8 >> 1) + 0x4A); Sprite_LoadPalette(0x80D440, 1); at the leader point, height + 0xC0; +0xC / +0x10 = 0x6696DC[+8] << 4; +0xA 0xA for ObjTrio +0x89 == 1 else 0x12; +0 |= 2; +1 up. EffectKind1B_States[0] (dispatcher 0x46B7A0, catalog part 2). PSX twin (analysis/pairs_propagated.json, not read): 0x8019D66C callers. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B8A0
+name = "EffectKind1B_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B8A0..0x46B97E (0xDF bytes): point += speeds, +0xA down; 0 or a cell with no floor word: Sprite_SetAnimation(0x4E), +1 up; EffectKind1B_Hit: animation 0x4F, +1 up; else on even +0xA an Effect_FindFree record gets +0 1, kind 0x1B, state 3. Sprite_ScriptTick, Sprite_UpdateScreenSlot. EffectKind1B_States[1]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019D79C gap67. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B980
+name = "EffectKind1B_End"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B980..0x46B992 (0x13 bytes): Sprite_ScriptTickOnce not 0: tail Effect_Release; else tail Sprite_UpdateScreen. EffectKind1B_States[2]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019D918 gap67. docs/field_c1.md."
+
+[[func]]
+pc = 0x46B9A0
+name = "EffectKind1B_Trail"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46B9A0..0x46BA87 (0xE8 bytes): from Effect_Objects[ObjTrio +0xB] (unchecked): +0 |= 2, +0x24 = 1, word +0x2C, +0x27 0x7B, +0x28 2, +0x25 0x1D, +0x26 0, +0x4C, +0x2B 1, +0x29, +0x48 0, +0x34, +0x38, word +0x3E, tints 0; Sprite_SetAnimation(0x4E); +1 = 2. EffectKind1B_States[3]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019D95C gap67. docs/field_c1.md."
+
+[[func]]
+pc = 0x46BA90
+name = "EffectKind1B_Hit"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46BA90..0x46BB2E (0x9F bytes; the catalog extent 0x279 swallowed its neighbours): Sprite_ObjectAt(+0x34, +0x38, 0) found (+0x80 bit 0 set): 1; ground there above ObjTrio word +0x3E + 0x40: 1; else AreaMap_ByteAt(+0x36, +0x3A) == 0x11. E8 from EffectKind1B_Fly. PSX twin (analysis/pairs_propagated.json, not read): 0x8019DABC gap67. docs/field_c1.md."
+
+[[func]]
+pc = 0x46BB30
+name = "EffectKind30_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46BB30..0x46BB41 (0x12 bytes): jmp [EffectKind30_States + 4 * +1], unchecked. Effect_KindHandlers[0x30]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019DB9C gap67. docs/field_c1.md."
+
+[[func]]
+pc = 0x46BB50
+name = "EffectKind30_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c1.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC1, capstone to the last instruction), 0x46BB50..0x46BBEE (0x9F bytes): +8 = 1; Sprite_InitFromEntry(Area_Descriptors[Game_AreaNumber] +8 + 8 * +0xB, unchecked); +0x70 = 1; +0x5D..+0x5F 0x80; +0xC, +0x10, +0x14, +9 0; 0x46BF80 (FC2); +0xB 0, +1 up; Sprite_UpdateScreenA. EffectKind30_States[0]. PSX twin (analysis/pairs_propagated.json, not read): 0x8019DBE0 gap67. docs/field_c1.md."
+
+[[data]]
+pc = 0x653EF4
+name = "EffectKind19_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): EffectKind19_Run 0x469DE0 jmp by +1: EffectKind06_Start 0x469BD0, EffectKind19_Tick 0x469E00, EffectKind06_End 0x469DB0 (kind 6 start and end, a tick of its own); EffectKind19_Ticks follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F00
+name = "EffectKind19_Ticks"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): EffectKind19_Tick 0x469E00 call by the variant +6: the same six handlers as EffectKind06_Ticks (EffectKind06_Blink for 0, 1, 2, 4, EffectKind06_Fade for 3, EffectKind06_PlayOnce for 5); CameraTurn_States follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F24
+name = "CameraZoom_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): EffectKind31_Run 0x46A020 call by +1: CameraZoom_Start 0x46A040, _Step 0x46A070, _End 0x46A0C0; the start and step set +1 to 1 and 2 through CameraTurn_Start / _Step. EffectKind32_States follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F30
+name = "EffectKind32_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): EffectKind32_Run 0x46A0E0 jmp by +1: EffectKind32_Throw, _Arc, _Settle, Effect_StateRelease; _Arc and _Settle step +1 to 2 and 3. EffectKind32_Hops follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F40
+name = "EffectKind32_Hops"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): three pairs of dwords, EffectKind32_Arc +0x14 (rise) and +0x20 (fall) by +2 (unchecked); EffectKind37_States follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F58
+name = "EffectKind37_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): jumped through by 0x46A320 (Effect_KindHandlers[0x37], catalog part 2) by +1: EffectKind37_Start, _Play, Effect_StateRelease; a zero dword follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F68
+name = "EffectKind14_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): jumped through by 0x46A5E0 (Effect_KindHandlers[0x14], catalog part 2) by +1: EffectKind14_Start, _Hold, 0x478160 (catalog part 7); a zero dword follows, then EffectKind14_Op. docs/field_c1.md."
+
+[[data]]
+pc = 0x653F78
+name = "EffectKind14_Op"
+ctype = "unsigned char"
+count = 32
+status = "hypothesis"
+evidence = "read 2026-09-29 (round twelve group FC1): the event op EffectKind14_Start hands EventOp_6x for each of its two sprites (bytes; its length to EffectKind3C_States). docs/field_c1.md."
+
+[[data]]
+pc = 0x653F98
+name = "EffectKind3C_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): jumped through by 0x46A930 (Effect_KindHandlers[0x3C], catalog part 2) by +1: EffectKind3C_Start, _Hold, 0x478160; a zero dword follows, then EffectKind3C_Op. docs/field_c1.md."
+
+[[data]]
+pc = 0x653FA8
+name = "EffectKind3C_Op"
+ctype = "unsigned char"
+count = 20
+status = "hypothesis"
+evidence = "read 2026-09-29 (round twelve group FC1): the event op EffectKind3C_Start hands EventOp_0x for each of its two sprites (bytes; its length to EffectKind17_States). docs/field_c1.md."
+
+[[data]]
+pc = 0x653FBC
+name = "EffectKind17_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): jumped through by 0x46ABB0 (Effect_KindHandlers[0x17], catalog part 2) by +1: EffectKind17_Start, _Push, _Slide, _Settle, _Grow, _Rest (the states set +1 to 1..5 only); EffectKind1B_States follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653FD4
+name = "EffectKind1B_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC1): jumped through by 0x46B7A0 (Effect_KindHandlers[0x1B], catalog part 2) by +1: EffectKind1B_Start, _Fly, _End, _Trail (_Fly spawns state 3, _Trail sets 2); EffectKind30_States follows. docs/field_c1.md."
+
+[[data]]
+pc = 0x653FE4
+name = "EffectKind30_States"
+ctype = "unsigned long"
+count = 4
+status = "hypothesis"
+evidence = "read 2026-09-29 (round twelve group FC1): EffectKind30_Run 0x46BB30 jmp by +1, unchecked: EffectKind30_Start, then 0x46BBF0, 0x46BD10, 0x46BDA0 (group FC2); the first three set +1 to 1, 2 or 3 and 1; where the table ends is not established (the dwords after point into .text for a while) - the count is what the fuzz exercises. docs/field_c1.md."
