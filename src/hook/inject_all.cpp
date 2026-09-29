@@ -245,6 +245,7 @@
 #include "game/effect_1g.h"
 #include "game/effect_1d.h"
 #include "game/effect_1a.h"
+#include "game/effect_2g.h"
 #include "game/effect_1c.h"
 #include "hook/detour.h"
 
@@ -949,6 +950,12 @@ void InjectAll() {
                                 // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight is E1C's); no module patches bytes inside its 53 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    Effect2G_Inject();          // round 13 group E2G (0x47DBE0..0x47FD92: effect kinds 0x15, 0x54, 0x55, 0x57, 0x5A,
+                                // 0x5B, 0x66 and kind 0x18's sub-kind 0x20 - dispatchers, states, draws - and the
+                                // dispatchers of kinds 0x5D..0x5F): its clones' calls re-aimed at the scenario harness's
+                                // recorders, its eleven state tables swapped for the fuzz only; after
+                                // ScenarioHarnessEkh_Inject (none of its eight rows is E2G's); no module patches bytes
+                                // inside its 58 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
