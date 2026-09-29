@@ -433,8 +433,11 @@ void SeedMenu() {
     B(at::kPickRow) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 7, 8, 0xFF, 0x7F, sh::Next() % 8));
     B(at::kAnswer) = static_cast<unsigned char>(PickOf(0, 1, 0xB, 0xC, 0xE, 0xF, sh::Next()));
     B(at::kMessageEnd) = static_cast<unsigned char>(PickOf(2, 0xC, sh::Next()));
-    B(at::kReserveCount) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5));
+    // the reserve's bytes, then its count - which is the reserve's fourth byte
+    // (docs/field_s.md section 7, L2): at most 5, so every loop over it stays
+    // inside the region
     for (unsigned i = 0; i < 5; ++i) B(at::kReserve + i) = sh::Often() ? SafeId() : static_cast<unsigned char>(sh::Next());
+    B(at::kReserveCount) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5));
     B(at::kPartyFormResult) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, SafeId(), sh::Next()));
     B(at::kJoinedCount) = static_cast<unsigned char>(PickOf(0, 1, 3, 5, 8));
     B(at::kPickIndex) = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 7, 0xFF, sh::Next() % 8));
