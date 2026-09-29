@@ -203,6 +203,9 @@ of the eight steps tables was reached (their handler recorders 186..2,967
 calls each; `0x52A6C0` 569 and `0x52AF30` 601 through stage 9's), and every
 callee listed.
 
+
+**Under '*'** (this worktree, narrow, no of3x.ini): exit 0, inject: 6943 ours, 0 left original, effect_1e 0 mismatches (380,856 calls: another stream after the earlier groups). **With BOF3X_WIDE=1**: '*' exits 3 in attle_e7 (GeneWin_ListSlideOut, List2SlideOut, List3SlideOut: 503, 442, 887 rounds) before this group runs - the failure [	akeover-queue-round13.md](takeover-queue-round13.md) section 11 records as not this round's, unchanged by E1E (none of its code or tables is touched); effect_1e alone with BOF3X_WIDE=1: exit 0, 0 mismatches. 	ools/ledger_check.py: 63 entries, 0 errors.
+
 ## 5. What the cut and the tool said, settled
 
 - **Extents**: `band_rows.py`'s read sizes are the code's; the cut's are the
