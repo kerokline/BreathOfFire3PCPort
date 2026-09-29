@@ -282,9 +282,13 @@ the enemies left, the flags' high byte.
 
 **Totals** (this worktree, 2026-09-29):
 
-    shadow      battle_e2 self-test: 144000 rounds over 24 functions (6000 each), TASKS_CALLS calls to the stand-ins, 0 MISMATCHES; 36924 bytes of state (32 regions) and the stand-ins' log compared
-    shadow      battle_e2 self-test: 54000 rounds over 9 functions (6000 each), BEGIN_CALLS calls to the stand-ins, 0 MISMATCHES; 36924 bytes of state (32 regions) and the stand-ins' log compared
-    shadow      battle_e2 self-test: 90000 rounds over 15 functions (6000 each), OPS_CALLS calls to the stand-ins, 0 MISMATCHES; 36924 bytes of state (32 regions) and the stand-ins' log compared
+    shadow      battle_e2 self-test: 144000 rounds over 24 functions (6000 each), 198419 calls to the stand-ins, 0 MISMATCHES; 36924 bytes of state (32 regions) and the stand-ins' log compared
+    shadow      battle_e2 self-test: 54000 rounds over 9 functions (6000 each), 175178 calls to the stand-ins, 0 MISMATCHES; 36924 bytes of state (32 regions) and the stand-ins' log compared
+    shadow      battle_e2 self-test: 90000 rounds over 15 functions (6000 each), 142055 calls to the stand-ins, 0 MISMATCHES; 36924 bytes of state (32 regions) and the stand-ins' log compared
+
+`BOF3X_SHADOW='*'` (this worktree, the same build): exit 0, every shadow's
+totals line at 0 mismatches, `inject: 6285 ours` - the three lines above
+among them, with the counts above.
 
 The coverage lines: every recorder the group lists was called, every handler
 of the stack tables and of the four `.data` tables (`phase 0x...` with
