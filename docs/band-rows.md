@@ -22,6 +22,8 @@ python tools/band_rows.py --exe .../bof3/BOF3.exe --analysis .../analysis \
     ... --group BE4 --refs             -> every raw 0x... of the group's functions in src/game
     ... --edges [--group BE4]          -> the calls between groups of the cut (markdown)
     ... --tsv <path>                   -> also write the rows printed (all of them with --groups)
+    ... --harness area                 -> area_harness (AH_) clone tables (round thirteen, section 6)
+    ... --byte-tables                  -> bound a two-level switch by its byte table (section 6; off by default)
 ```
 
 `--cut` defaults to `<analysis>/round12_cut.tsv` (the plan's section 8
@@ -247,3 +249,58 @@ this tool's `// ret_mask: yours` comment is stripped.
 - It reads no route: the live reach is the tracer's
   (`BOF3X_CALLTRACE_REACH`, the plan's section 7).
 - It does not recut: the cut table is the authority and is only read.
+
+## 6. Round thirteen's use: any cut table, `--harness area`, `--byte-tables` (2026-09-29)
+
+Added on `phase-3/round13-prep` from `61be26e` for the round-thirteen draft
+([`takeover-queue-round13.md`](takeover-queue-round13.md)). Nothing else in
+the tool changed.
+
+- **Any cut table.** `--cut` already took any TSV with the seven columns;
+  round thirteen's draft (`round13_cut_draft.tsv`, the plan's section 3)
+  adds columns of its own after them, which the tool ignores. `tools/area_rows.py`
+  cannot serve that cut: its band is `0x401000..0x430000` and its roots the
+  area descriptors, and 627 of the draft's 629 rows lie outside the band
+  (the plan's section 4). This tool reads any row wherever it lies.
+- **`--harness area`** prints the clone tables in `area_harness`'s form
+  (`area_harness::CallSite` / `Imm` / `JumpTable` / `Clone`, `AH_N`), the
+  same field order as the other two (checked against
+  `src/game/area_harness.h`'s `Clone` and `area_w4f_fuzz.cpp`'s rows). The
+  default is unchanged: boss for `BE*`, scenario for the rest.
+- **`--byte-tables`.** Behind MSVC's two-level switch (`cmp r, n; ja;
+  mov cl, [r + T2]; jmp [ecx*4 + T]`) `magic_rows._jump_cap` has no cap,
+  so the table read stopped at the first case past the span, and a case
+  lying past the next start was not seen as one. With the flag the dword
+  table's length is the largest byte of `T2[0..n]` plus one, so every case
+  is read and a start that is only a case is flagged `inside host` and
+  absorbed. **Off by default.**
+
+**The regression** (scratch `regress.py`, 2026-09-29, `symbols.toml` of
+`61be26e`, the main checkout's `analysis/round12_cut.tsv`): `--groups
+--tsv` (all 641 rows), `--edges`, `--group BE5 --clones`, `--group FE2
+--clones`, `--group FO`, `--function 0x446DE0,0x452460 --harness boss`, and
+the round-thirteen draft's `--groups --tsv`, run before the change and
+after it. **Without `--byte-tables` every output is identical, line for
+line.** With it, round twelve's cut changes in two rows and one verdict:
+
+| Row | Without | With |
+|---|---|---|
+| `0x56D240` (FE2) | inside host (reached by host `0x56D1A0`, a case in its host's table) | the same, the reason adding "a case of `0x56D1A0`" |
+| `0x578A40` (FO) | `uncovered`, reached only by the `.text` cell `0x578AD8` (section 3b: "a `.text` cell the descents did not place in a table") | **inside host: a case of `0x578A00`**, `MoveScript_Group9` (ours), entry 0 of its four-entry table at `0x578AD8` behind the index table `0x578AE8` (symbols.toml's own evidence for `MoveScript_Group9` names both) |
+
+and the round-thirteen draft gains its two non-functions, `0x4201F0` (case
+9 of ours `Area141_Tail52` `0x420060`: `cmp eax, 0x33; ja; mov cl, [eax +
+0x420328]; jmp [ecx*4 + 0x4202EC]`, the cell `0x420310`) and `0x422530`
+(case 0 of ours `Area148_Tail31` `0x422510`: `cmp eax, 0x15; ja; mov cl,
+[eax + 0x422778]; jmp [ecx*4 + 0x422750]`), both read by hand with capstone.
+`tools/area_rows.py`'s own walk had already dropped both as "inside
+another" (its run at `61be26e`, below). So `0x578A40` is a ninth
+round-twelve cut start that is not a function; FO owns it by the cut.
+
+The area tool at `61be26e`, for the record (`python tools/area_rows.py
+--exe ... --analysis <a scratch copy of the inputs, with the catalog
+regenerated at 61be26e> --quiet`; it writes its two TSVs into `--analysis`,
+so it was pointed at a copy): band `0x401000..0x430000`, 1,457 starts, 1,414
+ours; 1,566 functions after discovery, 1,554 ours; worlds 0..4 "to take" 3,
+0, 0, 0, 0; **catalogue "Area overlays" outside the band: 627; reached by an
+area: 2**.

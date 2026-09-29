@@ -9,6 +9,9 @@ between groups (docs/band-rows.md, docs/takeover-queue-field-battle.md).
     python tools/band_rows.py ... --function 0x446DE0      -> one row and its clone
     python tools/band_rows.py ... --group BE4 --refs       -> raw 0x... in src/game
     python tools/band_rows.py ... --edges [--group BE4]    -> calls between groups
+    python tools/band_rows.py ... --cut <tsv> --byte-tables --group EK1 --clones --harness area
+                                  (round thirteen: any cut table, area_harness's form,
+                                   two-level switches bounded; docs/band-rows.md section 6)
 
 Rounds nine to eleven each had a table that enumerated their code (Magic_Rows,
 the chapter vtables, the area descriptors, the boss set-ups). Round twelve's
@@ -57,8 +60,10 @@ import magic_rows as mr  # noqa: E402  Image, decode, clone_sites, the jump-tabl
 
 PADDING = (0x90, 0xCC)
 BATTLE_PREFIX = 'BE'       # the battle groups default to the boss harness, the rest to the scenario harness
-HARNESS = {'boss': ('boss_harness', 'BH_N'), 'scenario': ('scenario_harness', 'SH_N')}
+HARNESS = {'boss': ('boss_harness', 'BH_N'), 'scenario': ('scenario_harness', 'SH_N'),
+           'area': ('area_harness', 'AH_N')}     # round thirteen's cut (docs/band-rows.md section 6)
 POINTER_CTYPES = ('unsigned long', 'void *', 'const void *', 'unsigned int')
+BYTE_TABLES = False        # --byte-tables (off: the output round twelve's groups were given)
 
 
 def load_toml(path):
@@ -125,6 +130,14 @@ def read_extent(img, s, limit):
                 elif op.type == x86.X86_OP_MEM and op.mem.index != 0 and img.in_text(op.mem.disp & 0xFFFFFFFF):
                     t = op.mem.disp & 0xFFFFFFFF
                     cap = mr._jump_cap(img, prev)
+                    if cap >= 1 << 30 and BYTE_TABLES:
+                        # --byte-tables: behind MSVC's two-level switch the
+                        # dword table has as many entries as the largest byte
+                        # of its byte table, plus one. Without it the read
+                        # stops at the first case past the span, so such a
+                        # case is not seen as one (round thirteen's 0x4201F0,
+                        # 0x422530; round twelve's 0x578A40, docs/band-rows.md 6)
+                        cap = _byte_table_entries(img, prev) or cap
                     n = 0
                     while n < cap:
                         w = img.u32(t + 4 * n)
@@ -168,6 +181,27 @@ def read_extent(img, s, limit):
             pc += ins.size
     return dict(end=end, seen=seen, tables=tables, outs=outs, imms=imms, drefs=drefs,
                 falls=falls, bad=bad, notes=notes, far=far)
+
+
+def _byte_table_entries(img, prev):
+    """The dword table's entry count behind MSVC's two-level switch
+    (cmp r, bound; ja; mov / movzx r2, byte [r + T2]; jmp [r2*4 + T]): the
+    largest byte of T2[0..bound], plus one. None when the byte table or its
+    bound cannot be read (the caller then keeps the unbounded read)."""
+    bound = mr._cmp_bound(prev)
+    if bound is None or not 0 <= bound < 0x400:
+        return None
+    for p in reversed(prev[-3:]):
+        if p.mnemonic in ('mov', 'movzx') and len(p.operands) == 2 \
+                and p.operands[1].type == x86.X86_OP_MEM and p.operands[1].size == 1:
+            t2 = p.operands[1].mem.disp & 0xFFFFFFFF
+            if not img.in_text(t2):
+                return None
+            bs = [img.u8(t2 + i) for i in range(bound + 1)]
+            if any(x is None for x in bs):
+                return None
+            return max(bs) + 1
+    return None
 
 
 def _imm_kind(ins):
@@ -712,7 +746,12 @@ def main():
     ap.add_argument('--refs', action='store_true', help="with --group: every raw 0x... of its functions in src/game")
     ap.add_argument('--edges', action='store_true', help='the calls between groups of the cut (with --group: that group\'s)')
     ap.add_argument('--tsv', help='write the rows printed (or all, with --groups) to this path; never the cut table')
+    ap.add_argument('--byte-tables', action='store_true',
+                    help="bound a two-level switch's dword table by its byte table's largest entry, so a case "
+                         'past the span is read as a case (off by default: the output round twelve used)')
     a = ap.parse_args()
+    global BYTE_TABLES
+    BYTE_TABLES = a.byte_tables
     a.cut = a.cut or os.path.join(a.analysis, 'round12_cut.tsv')
     if a.tsv and os.path.exists(a.tsv) and os.path.samefile(a.tsv, a.cut):
         sys.exit('--tsv %s is the cut table: refusing to write it' % a.tsv)
