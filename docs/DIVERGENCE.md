@@ -1249,6 +1249,17 @@ designed in rather than bolted on.
   `0000`, under the same ruling - the same word, the same reader. Its fuzz
   compares x, y and z and leaves the pad out, so the zero there is by
   construction, not measured. `BOF3X_ORIGINAL=Sprite_ProjectA` restores it.
+- **Also, 2026-09-29 (round twelve group FE2, [`field_e2.md`](field_e2.md)
+  section 6):** four more functions build SVECTORs on their stacks and never
+  write the fourth word - the map-cell handlers `MapCell_DrawFrames`
+  `0x570870`, `MapCell_DrawShaded` `0x570BC0` and `MapCell_DrawSpinning`
+  `0x570DE0` (each quad's four vertices; the spinning one also its angles and
+  its centre, handed to `Gte_RotMatrix` and `Gte_RotTrans`), and
+  `Mode11_ObjectDraw` `0x536F10` (the marker's point for `Gte_RotTransPers`,
+  and the disc's angles and translation). Ours writes `0000` in each, under
+  the same ruling. The fuzz hashes each SVECTOR's first six bytes only, so
+  the zero is by construction, not measured. `BOF3X_ORIGINAL=<name>`
+  restores each.
 
 
 ### A field fade past its jump table stops instead of jumping

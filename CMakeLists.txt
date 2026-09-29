@@ -499,7 +499,9 @@ add_library(bof3x SHARED
   src/game/field_c2.cpp
   src/game/field_c2_fuzz.cpp
   src/game/field_s.cpp
-  src/game/field_s_fuzz.cpp)
+  src/game/field_s_fuzz.cpp
+  src/game/field_e2.cpp
+  src/game/field_e2_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

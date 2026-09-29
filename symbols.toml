@@ -4086,10 +4086,12 @@ evidence = "disasm 2026-09-22 (whole, 58 bytes): a tail-jump dispatcher - to the
 [[func]]
 pc = 0x56D6B0
 name = "Field_ObjectTrigger"
+psx = 0x801A8880
 ret = "void"
 params = "unsigned char *object"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 62 bytes): with object +0x89 bit 6, 0x56E020(object); else [0x662C80 + Cond_ByteFA * 4] +4 (object); then +0x86 = 0xFF. Called by Field_ObjectIdle when +0x86 is not 0xFF; never in the attract trace."
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56D6B0..0x56D6ED (0x3E bytes) cdecl: with object +0x89 bit 6 Field_ObjectTriggerByKind(object), else the chapter vtable slot 1 ([Scenario_Hooks + Cond_ByteFA * 4] +4) with the object; then +0x86 = 0xFF. Callers Field_ObjectIdle (when +0x86 is not 0xFF) and FE1 0x52F92A. Name of 2026-09-22 kept: verified by reading. PSX twin 0x801A8880 call, a hypothesis. docs/field_e2.md."
 
 [[func]]
 pc = 0x5797C0
@@ -44515,10 +44517,12 @@ evidence = "read 2026-09-27: chapter 19's call table B, Scenario_CallBTables ent
 [[func]]
 pc = 0x5341C0
 name = "Scenario_CallB"
+psx = 0x801C2E34
 ret = "void"
 params = "unsigned n"
+impl = "src/game/field_e2.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-27 (whole, 27 bytes): movsx eax, byte Cond_ByteFA / mov ecx, [esp + 4] / mov edx, [eax*4 + 0x660BD4] / and ecx, 0xFF / jmp [edx + ecx * 4] - Scenario_CallA's shape through Scenario_CallBTables: entry n of the chapter's call table B, reached with the caller's arguments in place. Chapter 0's table pointer is 0. Not taken: a naked tail jump, nobody's this round; named so the scenario harness's standard set can list it."
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5341C0..0x5341DA (0x1B bytes) naked, a tail jump: movsx eax, byte Cond_ByteFA / mov ecx, [esp + 4] / mov edx, [eax*4 + 0x660BD4] / and ecx, 0xFF / jmp [edx + ecx * 4] - Scenario_CallA shape through Scenario_CallBTables: entry n of the chapter call table B, reached with the caller arguments in place. Chapter 0 table pointer is 0 (unchecked, as the original). Named 2026-09-27 by SCH; taken by FE2. PSX twin 0x801C2E34 call-anchored. docs/field_e2.md."
 
 # ---------------------------------------------------------------------------
 # Round 10 group SCH: scenario chapter 0 (0x537F20..0x539AD0), the scenario
@@ -78750,3 +78754,512 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group FS): jumped through by SharedList_Sort by its arguments byte, unchecked: 0x5857F0, 0x585840, 0x5858C0 (SharedList_SortMenu passes rows 1 and 2). docs/field_s.md."
+
+# ---------------------------------------------------------------------------
+# Round 12 group FE2: the field engine rest (event script, leader hop helpers,
+# the mode-11 object, field tail kinds, three map-cell draws, AreaMap_ClearCell,
+# the trade screen). src/game/field_e2.cpp, docs/field_e2.md.
+# ---------------------------------------------------------------------------
+[[func]]
+pc = 0x5341E0
+name = "Field_AfterBattleTally"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5341E0..0x5343BC (0x1DD bytes) cdecl, called once by GameMode_Field on its return from a battle (0x4961F2, after Field_ZoneCounterRoll): bit 4 of 0x904654 set and of 0x904657 clear - the byte 0x9045FB up below 0x1E; from chapter 8 with 0x9046CB not 0 the first clear story flag n of 0xF6..0xFF, the in-use pairs of 0x9046D0 naming 0xA and 0xB counted, the dword 0x9046B0 up and at max(5, a stack threshold - a bias byte) story flag n set; then 0x5343C0(1, 0x9046C0) below 7 at 0x9046CC, (0, 0x9046C4) below 10 at 0x9046CB, 0x534420(5) and (0xB); story flag 0xF5 set at 0x9046CC 4 or more. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x5343C0
+name = "Records_CountUnpaired"
+ret = "void"
+params = "unsigned key, unsigned *counter"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5343C0..0x534414 (0x55 bytes) cdecl: *counter + 1 unless one of the sixty pairs at 0x9046D0 (+0 in use, +1 a 1-based record) names any of the eight records at 0x9048B0 of kind 4 whose +1 is the key byte (one count over all of them). Called twice by Field_AfterBattleTally. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x534420
+name = "Records_CountUnpairedOfKind"
+ret = "void"
+params = "unsigned kind"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x534420..0x534476 (0x57 bytes) cdecl (the catalog says 96, the rest padding): for each of the eight records at 0x9048B0 of the kind byte with +3 not 0, its dword +4 up by one unless a pair of 0x9046D0 names it. Called twice by Field_AfterBattleTally. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x534480
+name = "Field_FaceMode11Object"
+psx = 0x801C32D0
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x534480..0x53458B (0x10C bytes) a hidden start in 0x534420, reached by Field_LeaderStates[14] and the members table 0x65F960[14] (0x65F998): unless Field_Request is 9 the state +1 = 1; else the facing +8 toward the mode-11 object 0x905DA0 by the signs of the x, z differences (eight directions, both 0 kept) and Sprite_EnsureAnimation(+8). PSX twin 0x801C32D0 table-anchored (pairs_propagated), not adopted. docs/field_e2.md."
+
+[[func]]
+pc = 0x534C20
+name = "Field_FloorHurt"
+psx = 0x801C3E2C
+ret = "void"
+params = "unsigned kind"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x534C20..0x534DA1 (0x182 bytes) cdecl: kind 0..8 (Field_FloorDamage cell code - 0x80) through a 27-byte stack table: Char_LoseHp(t0, Field_State +0x89) - 4, 8, 16, 32, 2 -, 0x537500(t1, +0x89) - 4, 8, 32 for kinds 6..8 -, flags t2 (bit 7 Field_State +0x124 = 10, bit 5 +0x125 = 40); the actor +0x148 at a quarter HP or less: its +0x10 and Field_State +0x90 |= 0x2000; its +0x10 |= t2; Actor_EquipCount(actor, 3, 8) not 0 clears bit 5 and +0x125. Callers Field_FloorDamage, 0x50572D, FC3 0x526CE9. PSX twin 0x801C3E2C gap20, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x535490
+name = "AreaMap_CellsAllWide"
+psx = 0x801C4B70
+ret = "unsigned char"
+params = "long x, long z, unsigned code, unsigned mask"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535490..0x535601 (0x172 bytes) cdecl: AreaMap_CellsAll with wide set - al 1 when the four cells (x, z)..(x+1, z+1), with no x fraction also (x-1, z) and (x-1, z+1), with no z fraction (x, z-1) and (x+1, z-1), with neither (x-1, z-1), each and 0xF0 by the mask byte, all equal the code byte; else 0. PSX twin 0x801C4B70 by the body (psx_pair swaps it with AreaMap_CellsAll4), a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x535830
+name = "Field_WayBlockedWide"
+psx = 0x801C5038
+ret = "unsigned char"
+params = "long x, long z, unsigned ground"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535830..0x535C44 (0x415 bytes) cdecl, called by Field_WayBlocked for a raised sprite: al 1 when Field_CellsBlock(x, z, 1) answers, or any of up to 14 MapView_SlopeAt probes around the cell answers above 0x40 (s16) with the byte 0x903850 set after it, or MapView_GroundAt(x, z) is more than 0xC0 from the ground word; else Sprite_ObjectAt(x, z, 1) with Sprite_Current +0x3E set to ground for the call - al 1 unless it answers 0xFF. PSX twin 0x801C5038 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x535D60
+name = "AreaMap_CellsNoneWide"
+psx = 0x801C58F4
+ret = "unsigned char"
+params = "long x, long z, unsigned code, unsigned mask"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535D60..0x535F45 (0x1E6 bytes) cdecl: AreaMap_CellsNone with wide set - AreaMap_CellsAllWide cells, each 0x2n made 0x2n and 0x21 (not the corner), and 0xF0 by the mask; al 0 when any equals the code, else 1. PSX twin 0x801C58F4 by the body, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x535FC0
+name = "Leader_Pose3C"
+psx = 0x801C5D14
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535FC0..0x535FDE (0x1F bytes) Sprite_EnsureAnimation(0x3C) with Sprite_Current +8 at 7, else (0x3D). Called by FC3 0x525CE0 and FE1 0x52F970. PSX twin 0x801C5D14 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x535FE0
+name = "Leader_HopStart"
+psx = 0x801C5D50
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x535FE0..0x536049 (0x6A bytes) Field_State +0x128 = +0x70 + 2, Field_JumpSetUp, +0x14 = 0, +9 = (+0x70 + 1) * +9 * 2 and +0xA = +9 / 2 (bytes), Sprite_EnsureAnimation(+8 + 8), Sprite_ApplyVelocity, +9 - 1. Called by FC3 0x525F10, FE1 0x52F9A0. PSX twin 0x801C5D50 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536050
+name = "Leader_HopFlight"
+psx = 0x801C5E0C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536050..0x5360B8 (0x69 bytes) +9 at 0: Sprite_EnsureAnimation(+8), +0xA = 4, Sprite_ScriptTick, al 1; else +9 - 1, Sprite_ApplyVelocity, at +9 == +0xA the CLUT word 0x8113BE + +5 * 0x40 = 0 and Gfx_ClutStripDirty, Sprite_ScriptTick, al 0. Called by FC3 0x525F30, FE1 0x52F9E0 (test al). PSX twin 0x801C5E0C call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5360C0
+name = "Leader_HopPose"
+psx = 0x801C5EBC
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5360C0..0x536123 (0x64 bytes) +0xA - 1; at 0 Sprite_EnsureAnimation(0x37 facing 3, else 0x34), +8 ^= 4, al 1; else Sprite_EnsureAnimation(7 - +0xA facing 3, else +0xA + 1), +9 = 1, al 0. Called by FC3 0x525F50, FE1 0x52FA00. PSX twin 0x801C5EBC call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536130
+name = "Leader_Pose3E"
+psx = 0x801C5F80
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536130..0x536160 (0x31 bytes) al 0 until Sprite_ScriptTickOnce answers; then Sprite_EnsureAnimation(0x3E facing 7, else 0x3F), al 1. Called by FC3 0x525F70, FE1 0x52FA20. PSX twin 0x801C5F80 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536170
+name = "Leader_StepUp"
+psx = 0x801C5FD8
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536170..0x536284 (0x115 bytes) the point Field_DirectionSteps[+8] * (+0x70 + 2) ahead, MapView_GroundAt there less the s16 0x66978C[Field_State +0x89]: the height +0x3E above it - height minus the rise 0x6697A4[actor], al 0; else the ground again less the offset into +0x3E, Sprite_EnsureAnimation(0x3C / 0x3D), al 1; then MapView_SetElevation(+0x3E) with +5 0 and script-flag bit 3 clear, Sprite_ScriptTickOnce every fourth frame. Called by FC3 0x525F90, FE1 0x52FA40. PSX twin 0x801C5FD8 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536290
+name = "Leader_Pose34"
+psx = 0x801C61A8
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536290..0x5362C8 (0x39 bytes) the CLUT word 0x8113BE + +5 * 0x40 = 0 with Gfx_ClutStripDirty, then Sprite_EnsureAnimation(0x37 facing 7, else 0x34). Called by FC3 0x525E78, FE1 0x52FAE0. PSX twin 0x801C61A8 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5362D0
+name = "Leader_StepDown"
+psx = 0x801C6204
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5362D0..0x5363B4 (0xE5 bytes) Leader_StepUp mirrored: the height below the ground ahead - height plus the rise 0x6697A4[Field_State +0x89], al 0; else the ground into +0x3E, Sprite_EnsureAnimation(0x3E / 0x3F), al 1; the same view follow and tick. Called by FC3 0x525E90, FE1 0x52FAF0. PSX twin 0x801C6204 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5363C0
+name = "Leader_HopStartAfterTick"
+psx = 0x801C6394
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5363C0..0x53643C (0x7D bytes) al 0 until Sprite_ScriptTickOnce answers; then Leader_HopStart body, al 1. Called by FC3 0x525EB0, FE1 0x52FB10. PSX twin 0x801C6394 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536440
+name = "Leader_HopFall"
+psx = 0x801C646C
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536440..0x5364CE (0x8F bytes) +9 at 0: Sprite_EnsureAnimation(+8), Sprite_ClearSteps, Field_State +0x137 = 0, states +1 = 1, +2..+4 = 0, al 1; else +9 - 1, Sprite_ApplyVelocity, at +9 == +0xA Sprite_LoadPalette(0x80D380 + +5 * 0x40, 0), Sprite_ScriptTick, al 0. Called by FC3 0x525ED0, FE1 0x52FB50 (a tail jmp). PSX twin 0x801C646C gap20, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5364D0
+name = "Leader_Rise"
+psx = 0x801C6550
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5364D0..0x53654A (0x7B bytes) +0x3E up 0x10; with it at or above the ground ahead less the actor offset, +2 = 3; tail jmp Sprite_ScriptTick (its al). Called by 0x51BD96 and FE1 0x52FA6A. PSX twin 0x801C6550 gap20, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536550
+name = "Leader_Sink"
+psx = 0x801C6618
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536550..0x5365CF (0x80 bytes) +0x3E down 0x10; with the ground under (+0x34, +0x38) above it: +0x3E = ground, Sprite_SetAnimation(+8), the palette, Field_State +0x137 = 0, +1 = 1, +2 = 0; tail jmp Sprite_ScriptTick. Called by 0x51BD8F and FE1 0x52FA76. PSX twin 0x801C6618 callers, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5365D0
+name = "Leader_TurnBack"
+psx = 0x801C66DC
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5365D0..0x536644 (0x75 bytes) +8 ^= 4, Sprite_EnsureAnimation(0x3A facing 3, else 0x3B), the palette, Sprite_ClearSteps, +0x20 = -8, +1 = 2, +2 = 3, +3 = 3. Called by 0x51BD88 and FE1 0x52FA86. PSX twin 0x801C66DC gap20, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536A60
+name = "PartySet_ErrorLoop"
+psx = 0x8016776C
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536A60..0x536AB8 (0x59 bytes) never returns: each frame Text_DrawFont8(0xA0, 0x64, 0, the line at 0x660C90), Crt_sprintf into 0x904BA0 of the three ids at 0x903850..52 by the format 0x660C7C, Text_DrawFont8(0xA0, 0x74, 0, it), Task_Sleep(1), jmp to its own start. Called by PartySet_Find when no set row holds the three. PSX twin 0x8016776C callers, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536B60
+name = "Mode11_ObjectFrame"
+psx = 0x80167CBC
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536B60..0x536B8E (0x2F bytes) (the catalog says 48, the rest padding): Field_InputHeld = the word Input_Held, Sprite_Current = 0x905DA0, Field_State = ObjTrio, a jump through Mode11_ObjectStates by the object +1. Called by mode 11 step 0x496790. PSX twin 0x80167CBC call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x536B90
+name = "Mode11_ObjectStart"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536B90..0x536BE7 (0x58 bytes) a hidden start (the catalog made one 736-byte row of it and 0x536BF0), Mode11_ObjectStates[0]: +5 = 0, +0xB = the leader flag byte 0x802E78, Field_State +0x128 = 3, +0x34 / +0x38 / +0x3C from ObjTrio[0], +1 up. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x536BF0
+name = "Mode11_ObjectControl"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536BF0..0x536E6B (0x27C bytes) a start in no cut row, Mode11_ObjectStates[1] and 0x536EC0 tail target: Input_Pressed bit 11 - the kind-2 point moved to Field_State, MoveScript_F3Divisor 0x20, MoveScript_FAWord = (+0x3E - MapView_Elevation) / (distance >> 13), state 3; the 0x903586 buttons held - Game_Step up, state 1; no direction (Field_LeaderDirection) - still, state 1; Field_LeaderStepTarget - state 1 and Field_Request 9; within 0x60000 of the leader - the pace by the run buttons and 0x903A5E, Field_JumpStart, Field_JumpCheckHeight, +9 - 1, Field_LeaderStepTick, state 2; else still, state 1, Field_Request 9. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x536E70
+name = "Mode11_ObjectMove"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536E70..0x536E8B (0x1C bytes) Mode11_ObjectStates[2] (the catalog says 32, the rest padding): +9 at 0 tail jmp 0x536EC0, else +9 - 1 and tail jmp Field_LeaderStepTick. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x536E90
+name = "Mode11_ObjectEnd"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536E90..0x536EB2 (0x23 bytes) Mode11_ObjectStates[3] (the catalog made 127 bytes of it and 0x536EC0): once Field_Kind2Hold is 0, MapView_SetElevation(Field_State +0x3E) and Field_Request 0. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x536EC0
+name = "Mode11_ObjectHalt"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536EC0..0x536F0E (0x4F bytes) a start in no cut row (FH found it: reached by the tail jmp at 0x536E7D): the velocity +0xC..+0x14 and the two script words 0, Field_State +0x128 = 3; Field_InputHeld & 0xF000 - tail jmp Mode11_ObjectControl, else state 1. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x536F10
+name = "Mode11_ObjectDraw"
+psx = 0x80168288
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x536F10..0x5372D7 (0x3C8 bytes) called by FC3 0x5172C0: Sprite_Current = 0x905DA0; unless its +0 bit 6: a POLY_FT4 marker at the object through Gte_RotTransPers and _ftol (fild / fadd of the floats 0x5C4254, 0x5C41F0, a Frame_Counter bob), linked at the object; under a pushed matrix (Gte_RotTrans, Gte_RotMatrix, Gte_MulMatrix0 with Camera_Matrix) a draw mode and 32 POLY_G3 fans through Prim_VertexScratch and Gte_RotTransPers3, semi-transparent. PSX twin 0x80168288 callers, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x56D7A0
+name = "Scenario_CellHook"
+psx = 0x801A8A3C
+ret = "int"
+params = "unsigned x, unsigned z"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56D7A0..0x56D7F6 (0x57 bytes) cdecl: the chapter vtable slot 4 (Scenario_Hooks[Cond_ByteFA] +0x10) with (x, z) when not 0, its al not negative answering 1; else Area_CellHook(x, z) whose eax it answers; Sprite_Current put back. Called by Field_LeaderTalkTest. PSX twin 0x801A8A3C call-anchored, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x56D930
+name = "FieldTail_LoadBank"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56D930..0x56DA07 (0xD8 bytes) (0xC0 of code and its 6-entry jump table; the catalog made 464 bytes of it and five more starts): Field_ModeTailKinds[4], on the s8 0x9039F4 - LoadDatFile(0x31C); File_LoadDone, Gfx_ClutStripCopyRow(2), 0x585A00; tail jmp 0x586670; the party set 0x90412C bit 7 and Snd_LoadBankFile(0x2C2 + its low bits); File_LoadDone, the tail cleared; at Cond_ByteFE 2 state 0. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56DA10
+name = "FieldTail_DropInMove"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56DA10..0x56DB73 (0x164 bytes) a start in no cut row, Field_ModeTailKinds[5]: ScriptFlags_Set40; Party_DropIn(0x662DE8[argument]); at 0x90384B 0x20 a 16-frame timer; Field_ChangeArea by the argument (areas 0x6C, 0x22, 4); at 0x90384B 0x31 story flags 0x1E, 0x1F cleared and the tail cleared. Two jump tables (5, 6). No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56DB80
+name = "FieldTail_HealAndMenu"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56DB80..0x56DDCF (0x250 bytes) a start in no cut row, Field_ModeTailKinds[10]: states 0..3 and 20..23 fade out, Party_HealJoined, a stream, fade in; states 5..7 the menu mode (0x929F00 = 0, 0x929F0C = 0xFE, Game_Mode 7) until Game_Mode 2; state 10 Msg_OpenScript(argument) unless 0xFF; 11 the tail cleared. A 24-byte index and a 14-entry jump table. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56DDD0
+name = "FieldTail_Message"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56DDD0..0x56DE28 (0x59 bytes) a start in no cut row, Field_ModeTailKinds[6]: ScriptFlags_Set40, Msg_OpenScript(0xD8), Field_Request 2; then once no message is up the tail cleared. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56DE30
+name = "FieldTail_WorldMapHook"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56DE30..0x56DE40 (0x11 bytes) a start in no cut row, Field_ModeTailKinds[27]: tail jmp WorldMap_FieldHooks[WorldMap_RecordIndex() & 0xFF]. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56DE50
+name = "FieldTail_FlagMessage"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56DE50..0x56DF0E (0xBF bytes) a start in no cut row, Field_ModeTailKinds[44]: bit (argument) of 0x904650 set, the system message 0x4172 + argument copied (the CRT copy 0x5B9450, 8 bytes) into Text_Records, Msg_OpenSystem(0xFA), stream 9; then once the stream ends and no message is up, the byte [0x903804] 0 and the tail cleared. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56DF10
+name = "FieldTail_StoryWarp"
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56DF10..0x56E013 (0x104 bytes) a start in no cut row, Field_ModeTailKinds[55]: message 0x21 or 0x20 by Inventory_Count(0, 0x57, 0); then (state 2) the highest story flag of 0xFF..0xF6 picks area 0xB9 - k, the leader and area kept at 0x904148..0x904150, Field_ChangeArea(area, 0x430000, 0x160000, 4). No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x56E020
+name = "Field_ObjectTriggerByKind"
+psx = 0x801A96D4
+ret = "void"
+params = "unsigned char *object"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x56E020..0x56E03C (0x1D bytes) (the catalog says 32, the rest padding): call [0x662E1C + object +0x86 * 4] (object, 0x904030) - Field_ObjectTriggers[n - 1]. Called by Field_ObjectTrigger. PSX twin 0x801A96D4 call, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x570870
+name = "MapCell_DrawFrames"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x570870..0x5709FF (0x190 bytes) a hidden start in Area_TestCondition extent, MapCell_Handlers[16]: under the record condition, subrecords of four vertex dwords (POLY_FT4, Gte_RotTransPers4, Gte_StoreDepthF4) and a frame dword whose period byte divides Frame_Counter, thresholds picking a texture word (Prim_SetTexture), committed to Draw_OtSlot. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x570BC0
+name = "MapCell_DrawShaded"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x570BC0..0x570DD3 (0x214 bytes) (the catalog says 544, the rest padding) a hidden start in MapCell_FlatOverlay extent, MapCell_Handlers[33]: under the record condition, subrecords of four vertex and four colour dwords as POLY_G4 behind a draw mode, semi-transparent by colour bit 31; a draw mode (tpage 0x95) last. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x570DE0
+name = "MapCell_DrawSpinning"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x570DE0..0x571083 (0x2A4 bytes) (the catalog says 688, the rest padding) a hidden start in MapCell_FlatOverlay extent, MapCell_Handlers[34]: under the record condition a centre and a spin by Frame_Counter; subrecords of six dwords, each a POLY_FT4 of 10-bit vertices under its own rotation matrix (Gte_RotMatrix, Gte_RotTrans, Gte_MulMatrix0 with Camera_Matrix), textured, committed to slot 6 or Draw_OtSlot. No PSX twin paired. docs/field_e2.md."
+
+[[func]]
+pc = 0x5728D0
+name = "AreaMap_ClearCell"
+psx = 0x80155E74
+ret = "void"
+params = "unsigned x, unsigned z"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5728D0..0x5729F7 (0x128 bytes) cdecl: AreaMap_Bytes[x + z * width] = 0; the view cell (x + 1 - MapView_Origin x, z - its z) through MapView_Row / MapView_Column into MapView_Cells, its records (AreaMap_CellBase) of kind 3, 9 or 0x27 retyped 0x30. 22 callers (FC2 0x46D180 four times, Field_CellPickup, 17 area functions). PSX twin 0x80155E74 gap4, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x593960
+name = "ItemTrade_Open"
+psx = 0x800F5048
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x593960..0x593993 (0x34 bytes) (the catalog says 64, the rest padding) a hidden start in Sprite_ClutWord extent, ItemTrade_States[0]: ItemTrade_OpenSteps[0x93985E], 0x469750(0x14, 0x12, 0x118, 0x13, 0), 0x594410(0), 0x5947D0, tail jmp 0x5942C0. PSX twin 0x800F5048 table-anchored, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5939A0
+name = "ItemTrade_OpenStart"
+psx = 0x800F50B4
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5939A0..0x5939CE (0x2F bytes) ItemTrade_OpenSteps[0]: Transition_Start(1), 0x6BE08C = 0, 0x6BE08E = 1, 0x6BE08D = 0x594790(), step up. PSX twin 0x800F50B4 table-anchored, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5939D0
+name = "ItemTrade_OpenWait"
+psx = 0x800F510C
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5939D0..0x5939E8 (0x19 bytes) ItemTrade_OpenSteps[1]: once MoveScript_WaitWordDA is 0, 0x93985C = 1 and 0x93985E = 0. PSX twin 0x800F510C table-anchored, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x5939F0
+name = "ItemTrade_Run"
+psx = 0x800F5138
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5939F0..0x593A29 (0x3A bytes) ItemTrade_States[1]: ItemTrade_RunSteps[0x93985E], 0x5942C0, 0x5947D0, the hand at (0x1A, 0x51 + 13 * pick) with the pick bits 6, 7 clear. PSX twin 0x800F5138 table-anchored, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x593A30
+name = "ItemTrade_PickItem"
+psx = 0x800F51BC
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x593A30..0x593C54 (0x225 bytes) ItemTrade_RunSteps[0]: the pick moved (Input_AutoRepeat 0x5000), confirm - 0x594700(pick, 1) short: sound 0x107; else the item held (two Inventory_Count, a byte) 99 or more: step 3; else bit 6 and step up; cancel - 0x93985C up; the help line (Item_HelpMessage, Msg_SystemPtr, Text_DrawAt). PSX twin 0x800F51BC callers, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x593C60
+name = "ItemTrade_PickCount"
+psx = 0x800F550C
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x593C60..0x593E54 (0x1F5 bytes) ItemTrade_RunSteps[1]: the quantity 0x6BE08E moved by 1 / 10 (Input_AutoRepeat 0xF000), held to 1..99, lowered while 0x594700 answers and while it plus the item held passes 99; confirm step up, cancel step down; the prompt, 0x594410(1), 0x594AD0, the hand. PSX twin 0x800F550C gap15, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x593E60
+name = "ItemTrade_Confirm"
+psx = 0x800F5828
+ret = "void"
+params = "void"
+impl = "src/game/field_e2.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x593E60..0x594054 (0x1F5 bytes) ItemTrade_RunSteps[2]: the yes / no hand 0x6BE08F (Input_AutoRepeat 0xA000); yes - Inventory_Add(category, item, quantity), 0x594D90, step 0; no or cancel - step down; at step 2 the item name into Text_Records and two prompts; tail jmp 0x594AD0 unless step 0. PSX twin 0x800F5828 call-disputed, a hypothesis. docs/field_e2.md."
+
+[[data]]
+pc = 0x660C2C
+name = "Mode11_ObjectStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE2): Mode11_ObjectFrame jumps by the object 0x905DA0 +1: Mode11_ObjectStart, Mode11_ObjectControl, Mode11_ObjectMove, Mode11_ObjectEnd; data follows (0x001F0003). docs/field_e2.md."
+
+[[data]]
+pc = 0x66A470
+name = "ItemTrade_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE2): 0x593950 jumps by the byte 0x93985C: ItemTrade_Open, ItemTrade_Run, 0x5940F0 (nobody), then ItemTrade_OpenSteps. docs/field_e2.md."
+
+[[data]]
+pc = 0x66A47C
+name = "ItemTrade_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE2): ItemTrade_Open calls by 0x93985E: ItemTrade_OpenStart, ItemTrade_OpenWait; ItemTrade_RunSteps follows. docs/field_e2.md."
+
+[[data]]
+pc = 0x66A484
+name = "ItemTrade_RunSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE2): ItemTrade_Run calls by 0x93985E: ItemTrade_PickItem, ItemTrade_PickCount, ItemTrade_Confirm, 0x594060 (nobody: a message state ItemTrade_PickItem sets as step 3); 0x66A494 (0x5940F0 table) follows. docs/field_e2.md."

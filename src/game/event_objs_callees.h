@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // round twelve group FE2's names below: the same values
+
 namespace event_objs {
 
 // --- Addresses without a name --------------------------------------------
@@ -34,10 +36,10 @@ constexpr unsigned kRecordSize = 0xA4;
 // read as its low byte.
 constexpr std::uint32_t kSlopeAt = 0x5725C0;
 // Capcom's, unread beyond their use here (none reached by the shop route):
-constexpr std::uint32_t kCellsAllWide = 0x535490;   // AreaMap_CellsAll's other footprint (3 x 3)
-constexpr std::uint32_t kCellsNoneWide = 0x535D60;  // AreaMap_CellsNone's
+constexpr std::uint32_t kCellsAllWide = bof3::addr::AreaMap_CellsAllWide;   // AreaMap_CellsAll's other footprint (3 x 3)
+constexpr std::uint32_t kCellsNoneWide = bof3::addr::AreaMap_CellsNoneWide;  // AreaMap_CellsNone's
 constexpr std::uint32_t kTurnProbe = 0x535610;      // (x, z, 0, height word): al, the way is blocked
-constexpr std::uint32_t kFloorHurt = 0x534C20;      // (kind byte): the floor's damage by kind 0..8
+constexpr std::uint32_t kFloorHurt = bof3::addr::Field_FloorHurt;      // (kind byte): the floor's damage by kind 0..8
 constexpr std::uint32_t kFlash = 0x534DB0;          // (n byte): the leader's CLUT flash, sound 0x108
 constexpr std::uint32_t kHpLose = 0x537480;         // (amount, member byte): ax, the HP taken
 constexpr std::uint32_t kHpGain = 0x5373F0;         // (amount, member byte)

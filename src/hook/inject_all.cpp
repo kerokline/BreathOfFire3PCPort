@@ -232,6 +232,7 @@
 #include "game/battle_e3.h"
 #include "game/field_c2.h"
 #include "game/field_s.h"
+#include "game/field_e2.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -852,7 +853,13 @@ void InjectAll() {
                                 // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
                                 // 0x5811B0 and 0x5845E0, and after MenuFrame_Inject, whose DIV-0011 RetargetCall
                                 // at 0x581313 (inside 0x581300) ours follows; nothing else patches its 53
-    DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
+    FieldE2_Inject();           // round 12 group FE2 (the field engine's rest: the event script's helpers, the leader's
+                                // hop helpers, the mode-11 object, seven field tail kinds, three map-cell draws, the
+                                // trade screen; 0x5341C0..0x5372D8, 0x56D6B0..0x5729F8, 0x593960..0x594060): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its dispatch tables
+                                // swapped for the fuzz only; after ScenarioHarnessFh_Inject, whose self-test copies
+                                // 0x5343C0, 0x534420, 0x56E020 and 0x5728D0; no module patches bytes inside its 51
+    DrawPool_Grow();           // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
 }

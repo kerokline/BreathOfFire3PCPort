@@ -54,7 +54,7 @@ const Callees kOriginals = {
     Party_ClearAll, Sprite_SetTint, Field_MemberTimers,
     Party_JoinReset, Member_ClearState,
     PartySet_LoadFirst, PartySet_LoadSecond, File_LoadDone, Task_Sleep, PartySet_Find, PartySet_Select,
-    Fn<void (__cdecl*)()>(0x536A60), LoadDatFile,
+    Fn<void (__cdecl*)()>(bof3::addr::PartySet_ErrorLoop), LoadDatFile,
     MapView_CheckHeightScale, AreaMap_Elevation,
     Tint_Release,
 };
