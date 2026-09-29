@@ -10,7 +10,7 @@ starts in the band that no row lists and `tools/band_rows.py` did not flag
 (section 5). Each read to its last instruction with capstone and fuzzed
 through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7) without edits to it:
-264,000 rounds, 0 mismatches. CONTROLS_SUMMARY. **Fuzz only**: neither
+264,000 rounds, 0 mismatches. 166 controls planted one at a time, all refused by a count. **Fuzz only**: neither
 recorded route enters any of the 44 (section 9).
 
 | Part | Functions | Reached through |
@@ -214,12 +214,16 @@ the sparks' shade and size, the leader's `+0x27`, `Camera_Distance` - what the
 functions read again after a call.
 
 **Self-test** (2026-09-29, this worktree, `BOF3X_SELFTEST_ONLY=1
-BOF3X_SHADOW=field_c2`, exit 0): 264,000 rounds over 44 functions, 1,108,373
+BOF3X_SHADOW=field_c2`, exit 0): 264,000 rounds over 44 functions, 1,113,607
 calls to the stand-ins, **0 mismatches**, 26,224 bytes of state (41 regions),
 286 stand-ins (174 of the field-standard set). Every callee listed and every
-entry of the eight tables reached (FC1's `0x46A310` 939 times); FE2's
+entry of the eight tables reached (FC1's `0x46A310` 956 times); FE2's
 `0x5728D0` and FE1's `0x5307C0` are reached through `EffectKind3A_Hit`'s
-narrow path (`0x5728D0` 582, `0x5307C0` 138 in a `Hit`-only run). STAR_RESULT
+narrow path (592 and 150 calls).
+
+`BOF3X_SHADOW='*'` (the same build): exit 0, `inject: 6597 ours` (6,553 + 44), 970
+lines of `0 MISMATCHES`, none other; `field_c2` there 264,000 rounds, 1,113,711
+calls (another stream than alone), 0 mismatches.
 
 ## 5. What the cut and the tool said, settled
 
@@ -244,7 +248,203 @@ narrow path (`0x5728D0` 582, `0x5307C0` 138 in a `Hit`-only run). STAR_RESULT
 
 ## 6. Controls
 
-CONTROLS_SECTION
+**166 planted, 166 refused, every one by a count** (none by a Fatal or a
+hang), one at a time: `controls.py` in the session scratchpad (`fc2/`) plants
+each in `field_c2.cpp` at its first occurrence after the function's
+definition, rebuilds, runs `BOF3X_SHADOW=field_c2` with `BOF3X_FC2_ONLY` set
+to the function (a helper's control runs its caller), restores the file and
+rebuilds; its log is `fc2/controls_final.log`. At least two a function, and
+each boundary the seeds plant; the re-reads after a call (`L6`: `+0x14`
+through the pointer taken before `AreaMap_ByteAt`; `K5`: `Sprite_Current`
+read after `Effect_FindFree`), the float rounding of the spark's corners
+(`Q6`: a float intermediate instead of x87's 53-bit one) and the sign of a
+16-bit halving (`Q9`).
+
+**The first pass (with the seeds before the final ones) left five not
+refused**, each the fuzz's fault: `G5` (`> 0x800` against `> 0x7FF` on `Rand &
+0xFFF` - no draw landed on 0x800) and `V1`, `V2`, `K9`, `X3` (the falls'
+equality and `+ 0x100` boundaries: the height after the add was random against
+the ground). Seeded (`Rand`'s hint 0 for the debris; the fall's pull and the
+height set so the height after the add meets the ground, one either side,
+`0x100` above and one either side), all five refused; the table is the whole
+set re-run on the final fuzz. The weakest are `W1` (7 rounds: the fourth
+corner the only one differing needs three equal heights first) and `G5` (9).
+
+No equivalent mutant was kept: three candidates were read as equivalent and
+replaced by a near variant before running (reading `Sprite_Current` again
+where nothing between could move it: `SparksDraw`'s last `+9`, `ClaimCells`'
+cell pointer, `V2Spawn`'s `+0xA`); and `EffectKind3A_Hit`'s signed widening of
+`Sprite_ObjectAt`'s answer is equivalent to an unsigned one for every answer
+the callee gives (section 10), so it has no control.
+
+| # | Function | Planted | Refused in (of 6,000) |
+|---|---|---|--:|
+| P1 | `EffectKind30_Push` | `if (Game_Mode != 1) {` -> `if (Game_Mode != 2) {` | 1951 |
+| P2 | `EffectKind30_Push` | ` << 1);` -> ` << 2);` | 1716 |
+| P3 | `EffectKind30_Push` | `S()[1] = 3;` -> `S()[1] = 4;` | 1510 |
+| P4 | `EffectKind30_Push` | ` * 40;` -> ` * 39;` | 504 |
+| P5 | `EffectKind30_Push` | `if (Field_Request != 3)` -> `if (Field_Request != 4)` | 773 |
+| P6 | `EffectKind30_Push` | `if (Field_Request == 5)` -> `if (Field_Request == 4)` | 734 |
+| P7 | `EffectKind30_Push` | `S()[9] = 0x10;` -> `S()[9] = 0x11;` | 2302 |
+| P8 | `EffectKind30_Push` | `SetUL(S() + 0x50, at::kModelCopy);` -> `SetUL(S() + 0x50, at::kModelCopy + 1);` | 1524 |
+| S1 | `EffectKind30_Slide` | `0x118000` -> `0x118001` | 102 |
+| S2 | `EffectKind30_Slide` | `S()[1] = 1;` -> `S()[1] = 2;` | 738 |
+| S3 | `EffectKind30_Slide` | `== 0x54)` -> `== 0x55)` | 202 |
+| S4 | `EffectKind30_Slide` | `SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x36);` -> `SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x37);` | 99 |
+| S5 | `EffectKind30_Slide` | `if (s[9] == 0) {` -> `if (s[9] == 1) {` | 1511 |
+| H1 | `EffectKind30_Shatter` | `== 0x92)` -> `== 0x93)` | 200 |
+| H2 | `EffectKind30_Shatter` | `kStoryFlags), 0x44);` -> `kStoryFlags), 0x45);` | 200 |
+| H3 | `EffectKind30_Shatter` | `if (S()[9] != 0) {` -> `if (S()[9] != 1) {` | 1500 |
+| W1 | `EffectKind30_WayBlocked` | `return (h1 != h0 \|\| h2 != h0 \|\| h3 != h0) ? 1 : 0;` -> `return (h1 != h0 \|\| h2 != h0) ? 1 : 0;` | 7 |
+| W2 | `EffectKind30_WayBlocked` | `(xc + 1, zc + 1)` -> `(xc + 1, zc)` | 224 |
+| W3 | `EffectKind30_WayBlocked` | `static_cast<long>(x0 + 0x10000), static_cast<long>(z0 + 0x10000)` -> `static_cast<long>(x0 + 0x10000), static_cast<long>(z0 + 0x8000)` | 75 |
+| W4 | `EffectKind30_WayBlocked` | `(x, z, 1)` -> `(x, z, 2)` | 6000 |
+| W5 | `Touch` | `o[0x80] \| 1` -> `o[0x80] \| 2` | 2289 |
+| C1 | `EffectKind30_CellSolid` | `b == 0xC0` -> `b == 0xC1` | 571 |
+| C2 | `EffectKind30_CellSolid` | `row == 0xA0` -> `row == 0xB0` | 637 |
+| C3 | `EffectKind30_CellSolid` | `b == 0x20` -> `b == 0x21` | 613 |
+| L1 | `EffectKind30_ClaimCells` | `CellZ(s, 0), 0x10);` -> `CellZ(s, 0), 0x11);` | 6000 |
+| L2 | `EffectKind30_ClaimCells` | `<< 16);` -> `<< 8);` | 2661 |
+| L3 | `EffectKind30_ClaimCells` | `(CellX(s, 1), CellZ(s, 1), 0x11)` -> `(CellX(s, 1), CellZ(s, 1), 0x12)` | 1377 |
+| L4 | `EffectKind30_ClaimCells` | `SetUL(S() + 0x14, b0);` -> `SetUL(S() + 0x14, b0 + 1u);` | 5872 |
+| L5 | `EffectKind30_ClaimCells` | `if (Word(s + 0x38) != 0) {` -> `if (Word(s + 0x36) != 0) {` | 2991 |
+| L6 | `EffectKind30_ClaimCells` | `SetUL(cell, UL(cell) \| static_cast<U>(b) << 8);` -> `SetUL(S() + 0x14, UL(S() + 0x14) \| static_cast<U>(b) << 8);` | 75 |
+| F1 | `EffectKind30_FreeCells` | `s[0x14]);` -> `s[0x15]);` | 3688 |
+| F2 | `EffectKind30_FreeCells` | `>> 16));` -> `>> 15));` | 963 |
+| F3 | `EffectKind30_FreeCells` | `CellZ(s, 0), 0);` -> `CellZ(s, 0), 1);` | 6000 |
+| F4 | `EffectKind30_FreeCells` | `>> 24));` -> `>> 23));` | 470 |
+| I1 | `EffectKind30_ShardsInit` | `>> 2));` -> `>> 1));` | 6000 |
+| I2 | `EffectKind30_ShardsInit` | `SetWord(r + 0xA, static_cast<U>(SW(r + 0xA) >> 6));` -> `SetWord(r + 0xA, static_cast<U>(SW(r + 0xA) >> 5));` | 6000 |
+| I3 | `EffectKind30_ShardsInit` | `SetWord(r + 0x12, 0);` -> `SetWord(r + 0x12, 1);` | 6000 |
+| I4 | `EffectKind30_ShardsInit` | `Word(v + 4) - Word(r + 4)` -> `Word(v + 4) - Word(r + 2)` | 6000 |
+| I5 | `EffectKind30_ShardsInit` | `long centre[3] = {SW(r + 0), SW(r + 2), SW(r + 4)};` -> `long centre[3] = {SW(r + 0), SW(r + 4), SW(r + 2)};` | 6000 |
+| T1 | `EffectKind30_ShardsStep` | `Word(r + 0xC) + 2u` -> `Word(r + 0xC) + 3u` | 6000 |
+| T2 | `EffectKind30_ShardsStep` | `SetWord(r + 2, Word(r + 2) + Word(r + 0xA));` -> `SetWord(r + 2, Word(r + 2) + Word(r + 0xC));` | 6000 |
+| T3 | `EffectKind30_ShardsStep` | `(r, face);` -> `(r, face + 2);` | 6000 |
+| U1 | `EffectKind30_ShardTumble` | `& 0xFC0u);` -> `& 0xFE0u);` | 2168 |
+| U2 | `EffectKind30_ShardTumble` | `m.t[0] = m.t[1] = m.t[2] = 0;` -> `m.t[0] = m.t[1] = 0; m.t[2] = 1;` | 6000 |
+| U3 | `EffectKind30_ShardTumble` | `static_cast<U>(out[1]) + Word(shard + 2)` -> `static_cast<U>(out[1]) + Word(shard + 4)` | 6000 |
+| U4 | `EffectKind30_ShardTumble` | `shard + 0x18 + 8 * k` -> `shard + 0x18 + 6 * k` | 6000 |
+| N1 | `EffectKind30_SparksInit` | `At(at::kSparkShade)[0] = 0x40;` -> `At(at::kSparkShade)[0] = 0x41;` | 5082 |
+| N2 | `EffectKind30_SparksInit` | `- 0x80u);` -> `- 0x7Fu);` | 6000 |
+| N3 | `EffectKind30_SparksInit` | `UL(p + 0x18) << 9` -> `UL(p + 0x18) << 8` | 6000 |
+| N4 | `EffectKind30_SparksInit` | `SetUL(p + 8, UL(s + 0x3C));` -> `SetUL(p + 8, UL(s + 0x38));` | 6000 |
+| D1 | `EffectKind30_SparksDraw` | `s[9] >= 0xC ? 1 : 0` -> `s[9] >= 0xD ? 1 : 0` | 2392 |
+| D2 | `EffectKind30_SparksDraw` | `Word(At(at::kSparkSize)) + 0x80u` -> `Word(At(at::kSparkSize)) + 0x81u` | 3975 |
+| D3 | `EffectKind30_SparksDraw` | `+ 0xFB)` -> `+ 0xFC)` | 2025 |
+| D4 | `EffectKind30_SparksDraw` | `SetUL(p + 8, UL(p + 8) + (UL(p + 0x18) << shift));` -> `SetUL(p + 8, UL(p + 8) + (UL(p + 0x14) << shift));` | 6000 |
+| Q1 | `EffectKind30_SparkQuad` | `prim[0x45] = 0x4F;` -> `prim[0x45] = 0x4E;` | 6000 |
+| Q2 | `EffectKind30_SparkQuad` | `StoreFloat(prim + 0x2C, top + static_cast<double>(h));` -> `StoreFloat(prim + 0x2C, top + static_cast<double>(w));` | 6000 |
+| Q3 | `EffectKind30_SparkQuad` | `(0xA0, 0x1E3)` -> `(0xA0, 0x1E2)` | 6000 |
+| Q4 | `EffectKind30_SparkQuad` | `prim[6] = static_cast<unsigned char>(shade);` -> `prim[6] = static_cast<unsigned char>(shade + 1);` | 6000 |
+| Q5 | `EffectKind30_SparkQuad` | `std::memcpy(prim + 0x30, &screen[2], 4);` -> `std::memcpy(prim + 0x30, &screen[1], 4);` | 6000 |
+| Q6 | `EffectKind30_SparkQuad` | `const double left = static_cast<double>(screen[0]) - static_cast<double>(hw);` -> `const double left = static_cast<float>(screen[0] - static_cast<float>(hw));` | 209 |
+| Q7 | `EffectKind30_SparkQuad` | `2, 0x48);` -> `2, 0x40);` | 6000 |
+| Q8 | `EffectKind30_SparkQuad` | `static_cast<short>(size), static_cast<short>(size)};` -> `static_cast<short>(size), static_cast<short>(size + 1)};` | 6000 |
+| Q9 | `EffectKind30_SparkQuad` | `const int hw = static_cast<short>(wh[0]) >> 1` -> `const int hw = static_cast<unsigned short>(wh[0]) >> 1` | 2955 |
+| R0 | `EffectKind34_Run` | `{ Run("EffectKind34_Run"` -> `{ Sprite_Current[1] ^= 1; Run("EffectKind34_Run"` | 6000 |
+| R1 | `EffectKind34_V0Run` | `AddressOf(EffectKind34_V0States), 4, 2)` -> `AddressOf(EffectKind34_V2States), 4, 2)` | 6000 |
+| R2 | `EffectKind34_V1Run` | `AddressOf(EffectKind34_V1States), 2, 2)` -> `AddressOf(EffectKind34_V3States), 2, 2)` | 6000 |
+| R3 | `EffectKind34_V2Run` | `AddressOf(EffectKind34_V2States), 4, 2)` -> `AddressOf(EffectKind34_V0States), 4, 2)` | 6000 |
+| R4 | `EffectKind34_V3Run` | `AddressOf(EffectKind34_V3States), 2, 2)` -> `AddressOf(EffectKind34_V4States), 2, 2)` | 6000 |
+| R5 | `EffectKind34_V4Run` | `AddressOf(EffectKind34_V4States), 2, 2)` -> `AddressOf(EffectKind34_V1States), 2, 2)` | 6000 |
+| B1 | `EffectKind34_V0Burst` | `i < 10` -> `i < 9` | 6000 |
+| B2 | `EffectKind34_V0Burst` | `e[5] = 0x34;` -> `e[5] = 0x35;` | 6000 |
+| B3 | `EffectKind34_V0Burst` | `e[6] = static_cast<unsigned char>(i);` -> `e[6] = static_cast<unsigned char>(i + 1);` | 6000 |
+| B4 | `EffectKind34_V0Burst` | `Camera_Distance - 0x80` -> `Camera_Distance - 0x7F` | 4361 |
+| B5 | `EffectKind34_V0Burst` | `MapView_Redraw = 3;` -> `MapView_Redraw = 2;` | 4361 |
+| B6 | `EffectKind34_V0Burst` | `(0x10C);` -> `(0x10D);` | 6000 |
+| B7 | `CopyPlace` | `SetUL(e + 0x3C, UL(s + 0x3C));` -> `SetUL(e + 0x3C, UL(s + 0x38));` | 6000 |
+| E1 | `EffectKind34_V0BurstEnd` | `Camera_Distance = 0;` -> `Camera_Distance = 1;` | 5963 |
+| G1 | `EffectKind34_V0DebrisStart` | `bank = 0x212;` -> `bank = 0x213;` | 1551 |
+| G2 | `EffectKind34_V0DebrisStart` | `int i = 8; i >= 0` -> `int i = 7; i >= 0` | 166 |
+| G3 | `EffectKind34_V0DebrisStart` | `(r & 0x7F)` -> `(r & 0x3F)` | 774 |
+| G4 | `EffectKind34_V0DebrisStart` | `0xFFF80000u` -> `0xFFF90000u` | 1916 |
+| G5 | `EffectKind34_V0DebrisStart` | `static_cast<std::int32_t>(UL(s + 0xC)) > 0x800` -> `static_cast<std::int32_t>(UL(s + 0xC)) > 0x7FF` | 9 |
+| G6 | `EffectKind34_V0DebrisStart` | `s[0x2A] = 1;` -> `s[0x2A] = 2;` | 465 |
+| G7 | `EffectKind34_V0DebrisStart` | `s[0xA] = 8;` -> `s[0xA] = 9;` | 1939 |
+| G8 | `EffectKind34_V0DebrisStart` | `(r & 0x7FFF)` -> `(r & 0x7FFE)` | 1070 |
+| G9 | `EffectKind34_V0DebrisStart` | `SetWord(s + 0x3C, 0);` -> `SetWord(s + 0x3C, 1);` | 1939 |
+| Y1 | `EffectKind34_V0DebrisFly` | `SetUL(s + 0x3C, UL(s + 0x3C) + UL(s + 0x14));` -> `SetUL(s + 0x3C, UL(s + 0x3C) + UL(s + 0x10));` | 6000 |
+| Y2 | `EffectKind34_V0DebrisFly` | `if ((Frame_Counter & 1) != 0)` -> `if ((Frame_Counter & 2) != 0)` | 264 |
+| Y3 | `EffectKind34_V0DebrisFly` | `s[9] = static_cast<unsigned char>(s[9] - 1);` -> `s[9] = static_cast<unsigned char>(s[9] - 2);` | 5254 |
+| A1 | `EffectKind34_V1Start` | `SetUL(s + 0x14, 0x40);` -> `SetUL(s + 0x14, 0x41);` | 5970 |
+| A2 | `EffectKind34_V1Start` | `SH_CALL(Sprite_SetAnimation)(8);` -> `SH_CALL(Sprite_SetAnimation)(7);` | 6000 |
+| A3 | `EffectKind34_V1Start` | `SetUL(s + 0x20, 0xFFFFFFF8u);` -> `SetUL(s + 0x20, 0xFFFFFFF7u);` | 6000 |
+| A4 | `PieceBank` | `SH_CALL(Sprite_SetAnimationBank)(0x18);` -> `SH_CALL(Sprite_SetAnimationBank)(0x19);` | 6000 |
+| A5 | `ClearTints` | `s[0x5E] = 0;` -> `s[0x5E] = 1;` | 6000 |
+| A6 | `PieceBank` | `s[0x48] = 0;` -> `s[0x48] = 1;` | 6000 |
+| V1 | `EffectKind34_V1Fall` | `if (height <= ground) {` -> `if (height < ground) {` | 1065 |
+| V2 | `EffectKind34_V1Fall` | `+ 0x100) {` -> `+ 0xFF) {` | 269 |
+| V3 | `EffectKind34_V1Fall` | `SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x14));` -> `SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x16));` | 5241 |
+| V4 | `EffectKind34_V1Fall` | `if ((Frame_Counter & 1) != 0)` -> `if ((Frame_Counter & 1) == 0)` | 1831 |
+| K1 | `EffectKind34_V2Start` | `s[0xA] = 5;` -> `s[0xA] = 6;` | 6000 |
+| K2 | `EffectKind34_V2Spawn` | `if (s[9] != 4) return;` -> `if (s[9] != 3) return;` | 3082 |
+| K3 | `EffectKind34_V2Spawn` | `e[1] = 2;` -> `e[1] = 3;` | 2924 |
+| K4 | `EffectKind34_V2Spawn` | `e[2] = 2;` -> `e[2] = 3;` | 2924 |
+| K5 | `EffectKind34_V2Spawn` | `s = S();  if (n != 0xFF) {` -> `if (n != 0xFF) {` | 109 |
+| K6 | `EffectKind34_V2PieceStart` | `(r & 0xFFFF)` -> `(r & 0x7FFF)` | 508 |
+| K7 | `EffectKind34_V2PieceStart` | `if (pick > 2) pick = 2;` -> `if (pick > 1) pick = 1;` | 2407 |
+| K8 | `EffectKind34_V2PieceStart` | `pick + 0xB` -> `pick + 0xC` | 6000 |
+| K9 | `EffectKind34_V2PieceFall` | `if (SW(S() + 0x3E) <= ground)` -> `if (SW(S() + 0x3E) < ground)` | 1057 |
+| KA | `EffectKind34_V2PieceFall` | `SetUL(s + 0x14, UL(s + 0x14) + UL(s + 0x20));` -> `SetUL(s + 0x14, UL(s + 0x14) + UL(s + 0x1C));` | 6000 |
+| X1 | `EffectKind34_V3Start` | `SH_CALL(Sprite_SetAnimation)(9);` -> `SH_CALL(Sprite_SetAnimation)(10);` | 6000 |
+| X2 | `EffectKind34_V3Start` | `SetUL(s + 0x14, 0);` -> `SetUL(s + 0x14, 1);` | 5970 |
+| X3 | `EffectKind34_V3Fall` | `>= ground)` -> `> ground)` | 1065 |
+| X4 | `EffectKind34_V3Fall` | `Word(s + 0x3E) + Word(s + 0x14)` -> `Word(s + 0x3E) - Word(s + 0x14)` | 5484 |
+| Z1 | `EffectKind34_V4Start` | `s[0x48] = 1;` -> `s[0x48] = 2;` | 1967 |
+| Z2 | `EffectKind34_V4Start` | `0xFFFFE000u` -> `0xFFFFF000u` | 1967 |
+| Z3 | `EffectKind34_V4Start` | `(0x46)` -> `(0x47)` | 6000 |
+| Z4 | `EffectKind34_V4Start` | `s[0x29] = static_cast<unsigned char>(s[0x29] + 1);` -> `s[0x29] = static_cast<unsigned char>(s[0x29] + 2);` | 1967 |
+| M1 | `EffectKind34_V4Move` | `(s[0] & 0x80)` -> `(s[0] & 0x40)` | 2999 |
+| M2 | `EffectKind34_V4Move` | `Word(s + 0x3E) + Word(s + 0x14)` -> `Word(s + 0x3E) + Word(s + 0x10)` | 5956 |
+| J0 | `EffectKind3A_Run` | `AddressOf(EffectKind3A_States), 3, 1)` -> `AddressOf(EffectKind34_V2States), 3, 1)` | 6000 |
+| J1 | `EffectKind3A_Start` | `s[0xA] = 0xE;` -> `s[0xA] = 0xF;` | 6000 |
+| J2 | `EffectKind3A_Start` | `0xC0u);` -> `0xC1u);` | 6000 |
+| J3 | `EffectKind3A_Start` | ` << 4);` -> ` << 3);` | 4509 |
+| J4 | `EffectKind3A_Start` | `UL(At(at::kLeader + 0x38))` -> `UL(At(at::kLeader + 0x34))` | 6000 |
+| J5 | `EffectKind3A_Start` | `s[0xB] = 0;` -> `s[0xB] = 1;` | 6000 |
+| Fy1 | `EffectKind3A_Fly` | `Word(At(at::kAreaTileBase)) * 2u` -> `Word(At(at::kAreaTileBase)) * 1u` | 2964 |
+| Fy2 | `EffectKind3A_Fly` | `At(at::kLeader)[0x27]` -> `At(at::kLeader)[0x26]` | 2017 |
+| Fy3 | `EffectKind3A_Fly` | `(0x4A);` -> `(0x4B);` | 2022 |
+| Fy4 | `EffectKind3A_Fly` | `if (S()[0xA] == 0)` -> `if (S()[0xA] == 1)` | 486 |
+| Fy5 | `EffectKind3A_Fly` | `(0x10E);` -> `(0x10F);` | 2022 |
+| Wa1 | `EffectKind3A_Wait` | `if (S()[0xB] == 2)` -> `if (S()[0xB] == 1)` | 2086 |
+| Wa2 | `EffectKind3A_Wait` | `S()[0xB] = 1;` -> `S()[0xB] = 2;` | 1560 |
+| Wa3 | `EffectKind3A_Wait` | `if (Field_Request != 0) {` -> `if (Field_Request != 2) {` | 3036 |
+| Wa4 | `EffectKind3A_Wait` | `\|\| S()[0xB] != 0` -> `\|\| S()[0xB] == 1` | 287 |
+| Lp1 | `EffectKind3A_LeaderPose` | `s[0x25] = 0x1D;` -> `s[0x25] = 0x1E;` | 6000 |
+| Lp2 | `EffectKind3A_LeaderPose` | `SetWord(s + 0x2C, Word(l + 0x2C));` -> `SetWord(s + 0x2C, Word(l + 0x2E));` | 6000 |
+| Lp3 | `EffectKind3A_LeaderPose` | `s[0x28] = 2;` -> `s[0x28] = 3;` | 6000 |
+| Lp4 | `EffectKind3A_LeaderPose` | `SetUL(s + 0x70, 0);` -> `SetUL(s + 0x70, 1);` | 6000 |
+| Ht1 | `EffectKind3A_Hit` | `if (leader - ground > 0x80) return 0;` -> `if (leader - ground > 0x81) return 0;` | 291 |
+| Ht2 | `EffectKind3A_Hit` | `if (ground - leader > 0x100) return 1;` -> `if (ground - leader > 0xFF) return 1;` | 322 |
+| Ht3 | `EffectKind3A_Hit` | `== 0x11) return 1;` -> `== 0x12) return 1;` | 145 |
+| Ht4 | `EffectKind3A_Hit` | `luck <= 0xC` -> `luck <= 0xB` | 69 |
+| Ht5 | `EffectKind3A_Hit` | `luck == 0xF ? 0xA : 5` -> `luck == 0xF ? 0xA : 6` | 111 |
+| Ht6 | `EffectKind3A_Hit` | `At(at::kLeader)[7] = 1;` -> `At(at::kLeader)[7] = 2;` | 138 |
+| Ht7 | `EffectKind3A_Hit` | `static_cast<U>(at_ground) + 0x100u` -> `static_cast<U>(at_ground) + 0xFFu` | 132 |
+| Ht8 | `EffectKind3A_Hit` | `e[1] = 1;` -> `e[1] = 2;` | 132 |
+| Ht9 | `EffectKind3A_Hit` | `static_cast<signed char>(o));   return 1;` -> `static_cast<signed char>(o));   return 0;` | 3029 |
+| HtA | `EffectKind3A_Hit` | `Long(s + 0x38), 0)` -> `Long(s + 0x38), 1)` | 6000 |
+| HtB | `EffectKind3A_Hit` | `if (Word(s + 0x38) != 0 && !found) {` -> `if (Word(s + 0x38) != 0) {` | 226 |
+| HtC | `EffectKind3A_Hit` | `} else if (!found) {   return 0;` -> `} else if (found) {   return 0;` | 1133 |
+| HtD | `EffectKind3A_Hit` | `s[0xB] = 2;` -> `s[0xB] = 3;` | 137 |
+| Q0 | `EffectKind41_Run` | `AddressOf(EffectKind41_States), 4, 1)` -> `AddressOf(EffectKind34_V0States), 4, 1)` | 6000 |
+| Ks1 | `EffectKind41_Start` | `0xFFF6u : 0xFFECu` -> `0xFFF6u : 0xFFEDu` | 2983 |
+| Ks2 | `EffectKind41_Start` | `S()[0x29] = 3;` -> `S()[0x29] = 4;` | 6000 |
+| Ks3 | `EffectKind41_Start` | `SetUL(S() + 0x10, 0x20000);` -> `SetUL(S() + 0x10, 0x20001);` | 6000 |
+| Ks4 | `EffectKind41_Start` | `SetWord(S() + 0x38, 0);` -> `SetWord(S() + 0x38, 1);` | 6000 |
+| Kh1 | `EffectKind41_Hold` | `if (S()[9] == 0)` -> `if (S()[9] == 1)` | 1456 |
+| Kh2 | `DrawNumber` | `Word(o + 0x2E)` -> `Word(o + 0x2C)` | 6000 |
+| Kh3 | `DrawNumber` | `s[6], s[0x27]);` -> `s[6], s[0x26]);` | 5980 |
+| Kh4 | `DrawNumber` | `s[0xB] * at::kMemberStride` -> `(s[0xB] + 1) * at::kMemberStride` | 6000 |
+| Kb1 | `EffectKind41_Bounce` | `0x14000u);` -> `0x14001u);` | 6000 |
+| Kb2 | `EffectKind41_Bounce` | `if (SW(s + 0x3A) >= 0) {` -> `if (SW(s + 0x3A) > 0) {` | 459 |
+| Kb3 | `EffectKind41_Bounce` | `S()[9] = 6;` -> `S()[9] = 5;` | 2728 |
+| Kf1 | `EffectKind41_Fade` | `if (s[9] == 0) {` -> `if (s[9] == 1) {` | 1454 |
+| Kf2 | `EffectKind41_Fade` | `if ((Frame_Counter & 1) != 0)` -> `if ((Frame_Counter & 2) != 0)` | 2677 |
+| Kf3 | `EffectKind41_Fade` | `0x14000u);` -> `0x15000u);` | 5294 |
 
 ## 7. Calls across groups
 
