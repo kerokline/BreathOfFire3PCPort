@@ -1,14 +1,15 @@
 # Round thirteen: the area overlays' remainder, which is effect-kind code
 
-**Status:** DRAFT (2026-09-29, measured at `61be26e`, the tip of round
-twelve's wave one; branch `phase-3/round13-plan`) - a plan and a draft cut;
+**Status:** MEASURED (2026-09-29; the draft measured at `61be26e`, the cut
+regenerated at the round's base `d1b411c`, section 10, which replaces the
+groups of sections 3 and 9) - a plan and a cut;
 the scope is decided (section 9), the start waits for round twelve's tip. Nothing taken, nothing named, no C++ changed; one tool
 extended (`tools/band_rows.py`, [`band-rows.md`](band-rows.md) section 6).
 The cut is a **draft**: it must be regenerated at round twelve's tip once
 wave two (FC1, FC2, FC3, FE1, FE2, FO, FS) has merged (section 6). Listed as
 [`IDEAS.md`](IDEAS.md) I28; sketched in
 [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) section 9.
-**Read section 9 first**: it joins this draft to the labelling pass
+**Read sections 9 and 10 first**: it joins this draft to the labelling pass
 ([`labelling-pass.md`](labelling-pass.md)), settles the harness from the
 code, and replaces section 5's waves and section 8's questions 1 and 2.
 
@@ -478,3 +479,96 @@ remainder and want a recorded route.
 address bounds and a kind may straddle one; FC1's and FC2's seeds were
 read, not run; the labelling table's one `effect objects` row at
 `0x433640` lies in the battle band and is `hypothesis`.
+
+## 10. Regenerated at the round's base (`d1b411c`, 2026-09-29)
+
+Round twelve merged as PR #33 (`d1b411c` on `main`); the round branch is
+`phase-3/capture-round-thirteen` from it. Section 6's steps were run there,
+all output in the session scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`)
+and the cut in the main checkout's `analysis/round13_cut.tsv` (gitignored).
+
+**The catalog**: 3,815 not ours of 10,246 (4,140 at `61be26e`). Part 5 is
+628, part 2 907, part 7 1,320, part 3 has 7 left. **The labelling tool** at
+the same `symbols.toml`: 2,227 rows, 1,070 of them `effect objects` (964
+`evidence`, 106 `hypothesis`).
+
+**The join** (scratch `join.py`): 1,698 starts, **1,695 takeable**, three
+cases. Against section 9's draft of 1,697:
+
+- two gone, both FC2's in round twelve as "code no list has":
+  `0x46C820` (`EffectKind34_V0DebrisStart`) and `0x46D400`
+  (`EffectKind41_Run`);
+- one new in the labelling table and not a function: `0x47C420`, flagged a
+  case of `0x47C370`'s switch (text table `0x47C498`), beside the two
+  `NOTFN` cases of section 4;
+- five more rows carry the `hypothesis` tier than in the draft (the feed-back
+  passes saw wave two's names), none moved in or out.
+
+**The groups** (scratch `make_cut.py`): each wave's rows in address order,
+cut at about 48 where the unit changes (the labelling table's `detail`, or
+the draft's `unit` for a part-5 row), never above 64, a run under 12 joined
+to its neighbour. 35 groups. `0x433640` goes with E4A, whose `0x488220`
+reads its table, not with wave one. Section 3's thirteen groups and section
+9's wave table's third column are replaced by this:
+
+| Group | Band | Fns | Hidden | `hypothesis` | Bytes (catalog) | Module |
+|---|---|--:|--:|--:|--:|---|
+| E1A | `0x462B00..0x467270` | 64 | 53 | 8 | 11,645 | effect_1a |
+| E1B | `0x4672F0..0x46A5E0` | 48 | 30 | 1 | 10,825 | effect_1b |
+| E1C | `0x46A850..0x46F1C0` | 52 | 35 | 4 | 6,910 | effect_1c |
+| E1D | `0x46F2B0..0x46FFB0` | 30 | 28 | 5 | 3,075 | effect_1d |
+| E1E | `0x528CD0..0x52A4A0` | 48 | 46 | 0 | 6,624 | effect_1e |
+| E1F | `0x52A6C0..0x52CFE0` | 15 | 6 | 0 | 2,510 | effect_1f |
+| E1G | `0x594060..0x594D50` | 14 | 4 | 0 | 3,274 | effect_1g |
+| E2A | `0x470300..0x473100` | 64 | 36 | 5 | 11,720 | effect_2a |
+| E2B | `0x4731A0..0x474D20` | 51 | 30 | 4 | 7,387 | effect_2b |
+| E2C | `0x474F40..0x477180` | 51 | 29 | 2 | 8,596 | effect_2c |
+| E2D | `0x4771B0..0x4789B0` | 54 | 39 | 2 | 6,065 | effect_2d |
+| E2E | `0x4789D0..0x47B790` | 51 | 41 | 4 | 6,496 | effect_2e |
+| E2F | `0x47B7D0..0x47DAC0` | 52 | 36 | 4 | 8,006 | effect_2f |
+| E2G | `0x47DBE0..0x47FD80` | 56 | 50 | 4 | 5,836 | effect_2g |
+| E3A | `0x4801F0..0x482360` | 48 | 29 | 3 | 7,825 | effect_3a |
+| E3B | `0x4823D0..0x484000` | 49 | 40 | 1 | 6,764 | effect_3b |
+| E3C | `0x484050..0x485C50` | 50 | 32 | 2 | 7,125 | effect_3c |
+| E3D | `0x485CB0..0x487FE0` | 63 | 44 | 6 | 8,660 | effect_3d |
+| E4A | `0x433640..0x489020` | 48 | 48 | 4 | 4,095 | effect_4a |
+| E4B | `0x489030..0x48B1F0` | 61 | 45 | 5 | 8,254 | effect_4b |
+| E4C | `0x48B200..0x48C7F0` | 49 | 28 | 4 | 5,790 | effect_4c |
+| E4D | `0x48C990..0x48DF70` | 51 | 39 | 0 | 5,526 | effect_4d |
+| E4E | `0x48DF90..0x491C60` | 48 | 29 | 9 | 8,931 | effect_4e |
+| E4F | `0x491D70..0x4941E0` | 49 | 30 | 13 | 6,071 | effect_4f |
+| E5A | `0x4FD2E0..0x4FF150` | 53 | 45 | 0 | 7,949 | effect_5a |
+| E5B | `0x4FF320..0x501430` | 48 | 38 | 0 | 8,583 | effect_5b |
+| E5C | `0x501500..0x503D30` | 60 | 51 | 3 | 10,393 | effect_5c |
+| E5D | `0x503DE0..0x506860` | 49 | 37 | 3 | 11,181 | effect_5d |
+| E5E | `0x506A10..0x508BA0` | 51 | 44 | 2 | 8,769 | effect_5e |
+| E5F | `0x508CC0..0x50AD70` | 48 | 42 | 2 | 8,471 | effect_5f |
+| E5G | `0x50AF90..0x50BFF0` | 24 | 21 | 0 | 4,406 | effect_5g |
+| E6A | `0x50C0D0..0x50E1C0` | 48 | 43 | 0 | 8,983 | effect_6a |
+| E6B | `0x50E400..0x510C80` | 50 | 46 | 1 | 7,419 | effect_6b |
+| E6C | `0x510C90..0x5140C0` | 48 | 35 | 2 | 13,629 | effect_6c |
+| E6D | `0x514270..0x516A90` | 50 | 39 | 2 | 10,366 | effect_6d |
+
+Wave one is E1A..E1G (271), two E2A..E2G (379), three E3A..E3D (210), four
+E4A..E4F (306), five E5A..E5G (333), six E6A..E6D (196). `band_rows.py
+--byte-tables --groups` over the cut prints every row and **18 functions no
+list has** in the groups' spans (the draft's six among them); they are the
+groups', as in round twelve. No group name or `src/game/effect_*` file
+exists yet.
+
+**The edges** (`--edges`, 591 across and inside groups). Three rows of E4F
+are called from nearly every group of waves one to four: `0x494110` (188
+sites from other groups), `0x494060` (79), `0x4941E0` (34). Then E1F's
+`0x52CFE0` (75) and `0x52CF60` (22), E1B's `0x469750` (24) and `0x468AC0`
+(15), E5D's `0x503FA0` (15). None was read here. EKH's brief asks for a
+harness stand-in for each, so that the callers do not each write one.
+**Merge order inside a wave, callee first**: wave one E1F, E1B, E1A, E1G,
+then E1C, E1D, E1E; wave two any order but E2F before E2E; wave three E3B
+before E3C; wave four E4F first, then E4D, E4B, E4A; wave five E5D before
+E5C; wave six E6A and E6C before E6B. Waves five and six (kind 0x18) have no
+edge to the others but E6A's one call into E5G.
+
+**The base's proof**: built in the detached verification worktree, `BOF3X_SHADOW='*'` headless exit 0, `inject: 6891 ours, 0 left original`, `ledger_check` 63 entries, 0 errors (scratch `verify_base_d1b411c.log`).
+
+**Next**: EKH alone (the brief is scratch `brief_ekh.md`, `<TIP>` to fill),
+then wave one's briefs from section 9's template with this table's lines.

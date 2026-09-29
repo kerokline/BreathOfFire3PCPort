@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29 midday, round twelve complete on `phase-3/capture-round-twelve` at `0e51ec7`, round thirteen's plan on top as `d76f0d8`; pushed, its PR open)
+**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen staged on `phase-3/capture-round-thirteen` from it, the cut regenerated, nothing taken yet)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**6,891 functions are ours** (`inject: 6891 ours, 0 left original`, on `phase-3/capture-round-twelve`; 6,237 on `main`);
+**6,891 functions are ours** (`inject: 6891 ours, 0 left original`, on `main` at `d1b411c`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -46,10 +46,20 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
+000. **Round thirteen, the effect engine, is staged and not started.** Branch `phase-3/capture-round-thirteen` from
+   `main` `d1b411c` (round twelve, PR #33, merged). [`takeover-queue-round13.md`](takeover-queue-round13.md) section 10
+   is the cut at that base: 1,695 functions in 35 groups E1A..E6D, six waves, the merge order, the common callees. The
+   base's build, `'*'` and `ledger_check` pass. **Next: launch EKH alone** (the `kEffect` shape in `scenario_harness`),
+   its brief `brief_ekh.md` with `<TIP>` to fill; then wave one's seven briefs from `round13_brief_template.md`
+   (session-`0ad4f32a` scratchpad, `round13/`) with section 10's lines. The cut is `analysis/round13_cut.tsv`; the
+   scripts that made it (`join.py`, `make_cut.py`), the brief and the tool's outputs are in the session-`56ff1eb2`
+   scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`). The merge script to copy is round
+   twelve's `merge_group12.sh` (branch names `phase-3/round13-<g>`). Round twelve's agent worktrees and branches are
+   merged and still present.
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
-   pushed 2026-09-29 and **its PR open, the merge the owner's**. Next, in order: the round's debts (section 7 there: the
+   pushed 2026-09-29 and **merged as PR #33 (`d1b411c`)**. Next, in order: the round's debts (section 7 there: the
    mask and stand-in folds into both harnesses, the defects to number, the pointer scan `band_rows.py` lacks, the 33
    owned starts without an `entries_logic.txt` line); **round thirteen**, the effect engine
    ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
