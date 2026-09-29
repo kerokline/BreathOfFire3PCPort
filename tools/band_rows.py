@@ -319,15 +319,63 @@ class Band:
         if sib and os.path.exists(sib):
             for f in load_toml(sib).get('func', []):
                 self.psx_names[f['pc']] = f['name']
-        self._ext, self._host, self._reach = {}, {}, None
+        self._ext, self._host, self._reach, self._extra = {}, {}, None, None
+        self.absorbed = set()
+
+    def extra_of(self):
+        """{start: (group, the cut start before it)} for the code no list has
+        inside a cut function's span (Band.unlisted): functions the cut does
+        not list, printed with the group whose span holds them, flagged."""
+        if self._extra is None:
+            self._extra = {}
+            for s0, r in self.cut.items():
+                for q, _ in self.unlisted(s0, self.limit(s0))[0]:
+                    self._extra.setdefault(q, (r['group'], s0))
+        return self._extra
+
+    def members_all(self):
+        return set(self.cut) | set(self.extra_of())
+
+    def bounds(self):
+        """The starts that end a member's span, outside the cut (a listed start
+        that may be a case of the member before it)."""
+        return {self.limit(x) for x in self.members_all()} - self.members_all()
+
+    def group_any(self, x):
+        if x in self.group_of:
+            return self.group_of[x]
+        e = self.extra_of().get(x)
+        return e[0] if e else None
+
+    def members(self, g):
+        """A group's cut functions, then the code no list has in their spans."""
+        return sorted([s for s, r in self.cut.items() if r['group'] == g]
+                      + [q for q, (gg, _) in self.extra_of().items() if gg == g])
 
     # ---- extents ----------------------------------------------------------
     def limit(self, s):
         i = bisect.bisect_right(self.starts, s)
+        while i < len(self.starts) and self.starts[i] in self.absorbed:
+            i += 1
         return self.starts[i] if i < len(self.starts) else self.img.text_hi
+
+    def settle(self):
+        """A start flagged 'inside host' is not a bound: the function before it
+        runs on over it (its jump table's cases, its fall-through). Absorb
+        those and read again, to a fixpoint (two rounds today)."""
+        for _ in range(8):
+            new = {s for s in sorted(self.members_all() | self.bounds())
+                   if any(f.startswith('inside host') for f in self.row(s)['flags'])}
+            if new <= self.absorbed:
+                return
+            self.absorbed |= new
+            self._ext, self._host, self._reach, self._extra = {}, {}, None, None
+        sys.exit('settle: no fixpoint in 8 rounds')
 
     def prev_start(self, s):
         i = bisect.bisect_left(self.starts, s)
+        while i > 0 and self.starts[i - 1] in self.absorbed:
+            i -= 1
         return self.starts[i - 1] if i > 0 else None
 
     def extent(self, s):
@@ -371,7 +419,7 @@ class Band:
     # ---- reach ------------------------------------------------------------
     def reach(self):
         if self._reach is None:
-            want = set(self.cut) | set(self.a_extra)
+            want = self.members_all() | set(self.a_extra) | self.bounds()
             refs, spans = sweep_refs(self.img, self.starts, want)
             # pc_xref.json's immediates (mov / push of the address), merged by site
             xp = os.path.join(self.a.analysis, 'pc_xref.json')
@@ -397,6 +445,8 @@ class Band:
 
     def func_of(self, site):
         i = bisect.bisect_right(self.starts, site) - 1
+        while i > 0 and self.starts[i] in self.absorbed:
+            i -= 1
         return self.starts[i] if i >= 0 else None
 
     def who(self, x):
@@ -405,6 +455,8 @@ class Band:
             return 'ours %s' % self.ours[x]
         if x in self.group_of:
             return '%s %s' % (self.group_of[x], self.named.get(x, 'Fn_%X' % x))
+        if x in self.extra_of():
+            return '%s Fn_%X (not in the cut)' % (self.extra_of()[x][0], x)
         if x in self.named:
             return "Capcom's %s" % self.named[x]
         return "Capcom's raw"
@@ -461,6 +513,8 @@ class Band:
         for c, sec in sorted(cells.get(s, [])):
             (own_cells if sec == '.text' and any(lo <= c < hi for lo, hi in tabs) else ext_cells).append((c, sec))
         flags = []
+        if r is None and s in self.extra_of():
+            flags.append('not in the cut: code no list has, in the span of %#x' % self.extra_of()[s][1])
         by_host = hr is not None and (s in hr['seen'] or s in hr['far'])
         by_prev = pd is not None and ((pd['falls'] and pd['bad'] is None) or s in pd['far'])
         if (by_host or by_prev or own_refs or own_cells) and not body_refs and not ext_cells:
@@ -493,7 +547,7 @@ class Band:
         pad_only = cat is not None and all(self.img.u8(x) in PADDING for x in range(min(s + cat, ex['end']), max(s + cat, ex['end'])))
         return dict(s=s, r=r, ex=ex, size=ex['end'] - s, cat=cat, lim=lim, differs=cat is not None and not pad_only,
                     host=host, unlisted=unl, refs=body_refs, own_refs=own_refs, cells=ext_cells, own_cells=own_cells,
-                    flags=flags, group=r['group'] if r else self.group_of.get(s, '-'))
+                    flags=flags, group=r['group'] if r else (self.group_any(s) or '-'))
 
     def reach_text(self, row, full=True):
         parts = []
@@ -604,14 +658,17 @@ def edges(b):
     call / jmp / jcc / immediate from a cut function to a cut function of
     another group."""
     out = []
-    for s, r in b.cut.items():
+    for s in sorted(set(b.cut) | set(b.extra_of())):
+        g = b.group_any(s)
         ex = b.extent(s)
         for site, kind, t in ex['outs']:
-            if t in b.group_of and b.group_of[t] != r['group']:
-                out.append((r['group'], s, kind, site, t, b.group_of[t]))
+            tg = b.group_any(t)
+            if tg and tg != g:
+                out.append((g, s, kind, site, t, tg))
         for site, kind, v in ex['imms']:
-            if v in b.group_of and b.group_of[v] != r['group']:
-                out.append((r['group'], s, 'imm ' + kind, site, v, b.group_of[v]))
+            tg = b.group_any(v)
+            if tg and tg != g:
+                out.append((g, s, 'imm ' + kind, site, v, tg))
     return out
 
 
@@ -648,7 +705,7 @@ def main():
     ap.add_argument('--cut', help='the cut table (default <analysis>/round12_cut.tsv); read, never written')
     ap.add_argument('--groups', action='store_true', help="the cut's groups with counts, and the tool's reading of each")
     ap.add_argument('--group', help='a group of the cut (BE1..BE7, FC1..FS): a function a line')
-    ap.add_argument('--function', help='one address: its row and its clone (in the cut or not)')
+    ap.add_argument('--function', help='an address (or a comma-separated list): its row and its clone, in the cut or not')
     ap.add_argument('--clones', action='store_true', help='with --group: the clone tables (C++)')
     ap.add_argument('--with-ours', action='store_true', help='with --clones: the functions already ours too')
     ap.add_argument('--harness', choices=sorted(HARNESS), help='the clone namespace (default: boss for BE*, scenario for the rest)')
@@ -662,12 +719,10 @@ def main():
     if a.tsv and os.path.normcase(os.path.abspath(a.tsv)) == os.path.normcase(os.path.abspath(a.cut)):
         sys.exit('--tsv %s is the cut table: refusing to write it' % a.tsv)
 
-    extra = []
-    if a.function:
-        extra.append(int(a.function, 16))
-    a.a_extra = extra
+    extra = [int(x, 16) for x in a.function.split(',')] if a.function else []
     b = Band(a)
     b.a_extra = extra
+    b.settle()
     if a.group and a.group not in b.groups:
         sys.exit('no group %s (the cut has %s)' % (a.group, ' '.join(b.groups)))
     if not (a.groups or a.group or a.function or a.edges):
@@ -676,16 +731,19 @@ def main():
     tsv_rows = []
 
     if a.function:
-        s = int(a.function, 16)
-        row = b.row(s)
-        print_row(b, row)
-        tsv_rows.append(row)
-        h = a.harness or ('boss' if row['group'].startswith(BATTLE_PREFIX) else 'scenario')
+        rows = [b.row(s) for s in extra]
+        for row in rows:
+            print_row(b, row)
+        tsv_rows += rows
+        g = rows[0]['group']
+        if g == '-' and not a.harness:
+            sys.exit('%#x is in no group of the cut: say --harness boss or scenario' % extra[0])
+        h = a.harness or ('boss' if g.startswith(BATTLE_PREFIX) else 'scenario')
         print()
-        print_clones(b, [row], h)
+        print_clones(b, rows, h)
 
     if a.group and not a.edges:
-        fs = [s for s, r in b.cut.items() if r['group'] == a.group]
+        fs = b.members(a.group)
         rows = [b.row(s) for s in fs]
         tsv_rows += rows
         if a.refs:
@@ -705,12 +763,13 @@ def main():
         else:
             for row in rows:
                 print_row(b, row)
-            print('\n%s: %d functions, %d bytes read (the cut: %d), %d extents differ from the cut by code '
-                  '(%d more by padding only), %d flagged' % (
-                      a.group, len(rows), sum(r['size'] for r in rows), sum(r['cat'] for r in rows),
-                      sum(1 for r in rows if r['differs']),
-                      sum(1 for r in rows if r['size'] != r['cat'] and not r['differs']),
-                      sum(1 for r in rows if r['flags'])))
+            cr = [r for r in rows if r['r']]
+            print("\n%s: %d functions of the cut and %d not listed; %d bytes read of the cut's (it says %d), "
+                  '%d extents differ from the cut by code (%d more by padding only), %d flagged' % (
+                      a.group, len(cr), len(rows) - len(cr), sum(r['size'] for r in cr), sum(r['cat'] for r in cr),
+                      sum(1 for r in cr if r['differs']),
+                      sum(1 for r in cr if r['size'] != r['cat'] and not r['differs']),
+                      sum(1 for r in cr if r['flags'])))
 
     if a.edges:
         es = edges(b)
@@ -736,17 +795,19 @@ def main():
         print('| all | | %d | %d | %s | %d |' % (tot[0], tot[1], '{:,}'.format(tot[2]), tot[3]))
         print()
         es = edges(b)
-        print('| Group | Fns | Bytes read | Extents differ (code / padding only) | Flagged: inside host / data / falls into / code no list has / uncovered / none | Clones | Edges out / in |')
+        print('| Group | Fns (cut + not listed) | Bytes read (cut) | Extents differ (code / padding only) '
+              '| Flagged: inside host / data / falls into / code no list has / uncovered / none | Clones | Edges out / in |')
         print('|---|--:|--:|--:|---|--:|---|')
         for g in b.groups:
-            rows = [b.row(s) for s, r in b.cut.items() if r['group'] == g]
+            rows = [b.row(s) for s in b.members(g)]
             tsv_rows += rows
-            fl = lambda k: sum(1 for r in rows if any(f.startswith(k) for f in r['flags']))
+            cr = [r for r in rows if r['r']]
+            fl = lambda k: sum(1 for r in cr if any(f.startswith(k) for f in r['flags']))
             clones = sum(1 for r in rows if r['s'] not in b.ours
                          and not any(f.startswith('data') or f.startswith('does not decode') for f in r['flags']))
-            print('| %s | %d | %s | %d / %d | %d / %d / %d / %d / %d / %d | %d | %d / %d |' % (
-                g, len(rows), '{:,}'.format(sum(r['size'] for r in rows)), sum(1 for r in rows if r['differs']),
-                sum(1 for r in rows if r['size'] != r['cat'] and not r['differs']),
+            print('| %s | %d + %d | %s | %d / %d | %d / %d / %d / %d / %d / %d | %d | %d / %d |' % (
+                g, len(cr), len(rows) - len(cr), '{:,}'.format(sum(r['size'] for r in cr)),
+                sum(1 for r in cr if r['differs']), sum(1 for r in cr if r['size'] != r['cat'] and not r['differs']),
                 fl('inside host'), fl('data') + fl('does not decode'), fl('falls into'), fl('code no list'), fl('uncovered'),
                 fl('no reference'),
                 clones, sum(1 for e in es if e[0] == g), sum(1 for e in es if e[5] == g)))
