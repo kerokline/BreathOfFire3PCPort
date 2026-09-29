@@ -203,7 +203,7 @@ recorders (`EffectKind19_States` 3, `_Ticks` 6, `CameraZoom_States` 3,
 dispatchers' tables are not read by any function here.
 
 **In this worktree** (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=field_c1`, exit 0):
-246,000 rounds over 41 functions, 465,961 calls to the stand-ins, **0
+246,000 rounds over 41 functions, 465,956 calls to the stand-ins, **0
 mismatches**; 24,616 bytes of state in 38 regions; 271 stand-ins (174 of the
 field-standard set). Every callee and every table entry the five
 dispatchers reach was called (coverage line in the log: the fewest
@@ -267,6 +267,17 @@ stand-ins this group ran for the first time and found right as they stand:
   `CameraZoom_Start`, which divides by it after `CameraTurn_Start`'s stand-in
   (the game cannot: `CameraTurn_Start` divides by it first). It keeps `+9`
   non-zero for that function.
+- The first `'*'` after the controls' seeds crashed in `CameraZoom_Start`
+  (round 19,401 of the group, found with a trace line in `Seed`, not
+  committed): a disturbance in `CameraTurn_Start`'s stand-in moved
+  `Sprite_Current` to a sprite record whose `+9` was 0, and the original
+  divided by it. The seed keeps `+9` non-zero in all four records for that
+  function; E3..E5 re-run after it, refused (the table's counts).
+
+**`BOF3X_SHADOW='*'`** on the final build, in this worktree: exit 0, 671
+self-test lines, `inject: 6594 ours, 0 left original`; `field_c1` 0
+mismatches there too (465,798 calls: `'*'` draws another stream).
+`tools/ledger_check.py`: 63 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -357,8 +368,8 @@ count, not a Fatal, and seeding that path harder is left to a later pass. Counts
 | D3 | `EffectKind04_HoldTick` | `== 0` | `<= 1` | 2,083 |
 | E1 | `EffectKind31_Run` | `2` | `3` | 6,000 |
 | E2 | `EffectKind31_Run` | `Cur()[1]` | `(Cur()[1] + 1) % 3u` | 6,000 |
-| E3 | `CameraZoom_Start` | `16` | `15` | 5,194 |
-| E4 | `CameraZoom_Start` | `frames` | `frames + 1` | 5,193 |
+| E3 | `CameraZoom_Start` | `16` | `15` | 5,183 |
+| E4 | `CameraZoom_Start` | `frames` | `frames + 1` | 5,182 |
 | E5 | `CameraZoom_Start` | `0xC` | `0x10` | 6,000 |
 | E6 | `CameraZoom_Step` | `target` | `target - 1` | 308 |
 | E7 | `CameraZoom_Step` | `target` | `target + 1` | 534 |

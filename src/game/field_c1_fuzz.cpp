@@ -398,6 +398,12 @@ void Seed(unsigned k) {
     case kZoomStart:
         // +9 not 0: the original divides by it (ours aborts)
         o[9] = static_cast<unsigned char>(PickOf(1, 2, 0x10, 1 + sh::Next() % 0xFF));
+        // and in every record a disturbance can move Sprite_Current to during
+        // CameraTurn_Start's stand-in: the original divides by the new one's
+        for (unsigned i = 0; i < 4; ++i) {
+            unsigned char* const r = sh::SpriteRecord(i);
+            if (r[9] == 0) r[9] = static_cast<unsigned char>(1 + sh::Next() % 0xFF);
+        }
         SetLong(o + 0xC, Near(Camera_Distance));
         break;
     case kZoomStep:
