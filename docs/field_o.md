@@ -12,7 +12,8 @@ row had, `0x579CA0` `EventScript_SkipIf` and `0x57C3E0` `EventCond_Counter0`
 (section 5). Each read to its last instruction with capstone and fuzzed
 through the scenario harness's field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7) without edits to it:
-82,000 rounds, **0 mismatches**; CONTROLS_SUMMARY. Fuzz-only except the
+82,000 rounds, **0 mismatches**; 105 controls planted, 103 refused, the
+two others equivalent with refused near variants (section 6). Fuzz-only except the
 eight the whelp route and the one the dragon route enter (section 9).
 
 | Part | Functions | Reached through |
@@ -240,7 +241,14 @@ half the time, E9's speeds 1..5 (0, 6, 7 for Start's early answer), frames 0
 or 1, steps 0, kind 6, e `0xFF`. **Disturbance** (the group's): the context
 pointer, the count word (below 30), a colour byte.
 
-**Measured** (this worktree, 2026-09-29): FUZZ_TOTALS.
+**Measured** (this worktree, 2026-09-29): `BOF3X_SHADOW=field_o` exit 0, 82,000 rounds over
+41 functions, 1,142,548 calls to the stand-ins, **0 mismatches**, 25,404 bytes
+of state in 42 regions; 256 stand-ins (174 field-standard). Every stand-in
+listed and every table entry was reached (the coverage line): E9's four
+states about 500 each, op 88 / 87's four 500..1,500, `Tint_Release` 2,085,
+`Sprite_EnsureAnimation` 262, `Party_MoveMember` 409, `AreaMap_SetByte`
+1,545, `Menu_ListScroll` through. `BOF3X_SHADOW='*'`: exit 0, 672 self-test
+lines, none with a mismatch, `inject: 6594 ours` (6,553 + 41).
 
 ## 5. What the cut and the tool said, settled
 
@@ -269,7 +277,133 @@ pointer, the count word (below 30), a colour byte.
 
 ## 6. Controls
 
-CONTROLS_TABLE
+**105 planted, 103 refused** - 101 by a count, 2 by a hang (`EventScript_SkipIf`
+57 and 59: an FD left unstepped or a control left unskipped loops for ever on
+the seeded script; a hang proves less than a count) - and **2 not refused,
+both equivalent with a refused near variant**:
+
+- **12** (`Menu_DrawIconWheel`'s sort, `<=` to `<`): the two differ only when
+  two icons' turned z are equal, which the random `Math_Cos` / `Math_Sin`
+  answers practically never give; the near variant 104 (sorting on x) is
+  refused in 1,260 rounds.
+- **103** (`MoveCmd_OpDB`, `> 0` to `>= 0`): at 0 the add is of 0 - no input
+  can tell them apart; the near variant 105 (`< 0`) is refused in every round.
+
+Every function has at least one refused control (the conditions one each,
+the panels four to seven). Method: `controls.py` in the session scratchpad
+(`fo/`) plants a round of controls (at most one per function; a
+shared-helper plant alone), rebuilds, runs each planted function alone
+(`BOF3X_FO_ONLY`, 2,000 rounds), restores and rebuilds; 78 and 79 were re-run
+alone (their plants met in one round). In this worktree:
+
+| # | Function | Plant (the changed part) | Result |
+|--:|---|---|---|
+| 1 | `Menu_DrawStatsPanel` | `y + 3, 0x94, 0x2D, 0,` -> `y + 3, 0x94, 0x2E, 0,` | refused, 2000 mismatches |
+| 2 | `Menu_DrawStatsPanel` | `>(Word(rec + 0x2A)));` -> `>(Word(rec + 0x28)));` | refused, 2000 mismatches |
+| 3 | `Menu_DrawStatsPanel` | `if (trait != 0xFF) {` -> `if (trait != 0xFE) {` | refused, 508 mismatches |
+| 4 | `Menu_DrawStatsPanel` | `ed b = 0; b < 0x10; ++` -> `ed b = 0; b < 0xF; ++` | refused, 2000 mismatches |
+| 5 | `Menu_DrawExpPanel` | `0x1E + (want ? 0 : 6)` -> `0x1E + (want ? 6 : 0)` | refused, 2000 mismatches |
+| 6 | `Menu_DrawExpPanel` | `har>(rec[0xA] + 1)` -> `har>(rec[0xA] + 2)` | refused, 1026 mismatches |
+| 7 | `Menu_DrawExpPanel` | `if (v == -1) Sp` -> `if (v == -2) Sp` | refused, 311 mismatches |
+| 8 | `Menu_DrawIconWheel` | `= 0 ? 1 : kb <= 3 ? 2` -> `= 0 ? 1 : kb <= 2 ? 2` | refused, 238 mismatches |
+| 9 | `Menu_DrawIconWheel` | `` -> `` | refused, 2000 mismatches |
+| 10 | `Menu_DrawIconWheel` | `SetLong(a + 8, Sb(static_cast<U>(x0)));` -> `SetLong(a + 8, x0);` | refused, 1234 mismatches |
+| 11 | `Menu_DrawIconWheel` | `colour[j] = 0x70;` -> `colour[j] = 0x71;` | refused, 1592 mismatches |
+| 12 | `Menu_DrawIconWheel` | `f (Long(a + 4) <= Lon` -> `f (Long(a + 4) < Lon` | **not refused**, 0 mismatches |
+| 13 | `Menu_DrawIconWheel` | `gned char>(v / 24 + 0` -> `gned char>(v / 23 + 0` | refused, 2000 mismatches |
+| 14 | `Menu_DrawIconWheel` | `(fc & 8 ? f` -> `(fc & 4 ? f` | refused, 824 mismatches |
+| 15 | `Menu_DrawTile16` | `char>(dim) ? 0x10 :` -> `char>(dim) ? 0x80 :` | refused, 2000 mismatches |
+| 16 | `Menu_DrawTile16` | `p[0x15] = 0xD8;` -> `p[0x15] = 0xD0;` | refused, 2000 mismatches |
+| 17 | `Menu_DrawTile16` | `_cast<U>(x) & 0xFFFF)` -> `_cast<U>(x) & 0x7FFF)` | refused, 1017 mismatches |
+| 18 | `Menu_DrawEquipCompare` | `4 ? 0x11 : m == 1 ? 0` -> `4 ? 0x11 : m == 2 ? 0` | refused, 939 mismatches |
+| 19 | `Menu_DrawEquipCompare` | `== panel[0xB] ? 2 : 0;` -> `== panel[0xB] ? 0 : 2;` | refused, 1975 mismatches |
+| 20 | `Menu_DrawEquipCompare` | `Armour + rec[0x14] *` -> `Armour + rec[0x15] *` | refused, 1985 mismatches |
+| 21 | `Menu_DrawEquipCompare` | `ar>(no_preview) == 0)` -> `ar>(no_preview) != 0)` | refused, 2000 mismatches |
+| 22 | `Menu_DrawEquipCompare` | `x78, bottom, 0x12, 1)` -> `x78, bottom, 0x11, 1)` | refused, 2000 mismatches |
+| 23 | `Menu_DrawEquipCompare` | `st<int>(i) + 0x1C;` -> `st<int>(i) + 0x1D;` | refused, 1005 mismatches |
+| 24 | `Menu_DrawAbilityPanel` | `our = dim ? 7 : 0;` -> `our = dim ? 7 : 1;` | refused, 1989 mismatches |
+| 25 | `Menu_DrawAbilityPanel` | `f (b == panel[0xD]) c` -> `f (b == panel[0xC]) c` | refused, 1537 mismatches |
+| 26 | `Menu_DrawAbilityPanel` | `if (colour != 7) SH` -> `if (colour != 2) SH` | refused, 1324 mismatches |
+| 27 | `Menu_DrawAbilityPanel` | `har>(arrows - 0x10) :` -> `har>(arrows - 0x20) :` | refused, 1117 mismatches |
+| 28 | `Menu_DrawAbilityPanel` | `turn x + 6 * (0xD - s` -> `turn x + 6 * (0xC - s` | refused, 2000 mismatches |
+| 29 | `Menu_DrawAbilityPanel` | `` -> `` | refused, 2000 mismatches |
+| 30 | `Menu_DrawItemPanel` | `case 4: case 5: pa` -> `case 4: pa` | refused, 247 mismatches |
+| 31 | `Menu_DrawItemPanel` | `- 1u != kindv - 2u) c` -> `- 1u != kindv - 1u) c` | refused, 790 mismatches |
+| 32 | `Menu_DrawItemPanel` | `istIds)[panel[0xB]];` -> `istIds)[panel[0xA]];` | refused, 928 mismatches |
+| 33 | `Menu_DrawItemPanel` | `PanelY(panel) + Sb(offset) + 0` -> `PanelY(panel) + offset + 0` | refused, 485 mismatches |
+| 34 | `Menu_DrawItemPanel` | `(panel[0xA] + j ==` -> `(panel[0xA] + j + 1 ==` | refused, 30 mismatches |
+| 35 | `Menu_DrawItemPanel` | `gned>(total), 0x80u);` -> `gned>(total), 0x7Fu);` | refused, 2000 mismatches |
+| 36 | `Menu_DrawItemPanel` | `s + kept), 0, 0x80u -` -> `s + kept), 0, 0x7Fu -` | refused, 1994 mismatches |
+| 37 | `Menu_DrawSaveSlot` | `if (icon != 0xFF) SH` -> `if (icon != 0xFE) SH` | refused, 1313 mismatches |
+| 38 | `Menu_DrawSaveSlot` | `5, summary + 0x16, 4)` -> `5, summary + 0x15, 4)` | refused, 1496 mismatches |
+| 39 | `Menu_DrawSaveSlot` | `summary[0x14] ? 2 : 0` -> `summary[0x14] ? 1 : 0` | refused, 741 mismatches |
+| 40 | `Menu_DrawSaveSlot` | `_DrawAt)(x + 0x13, y` -> `_DrawAt)(x + 0x15, y` | refused, 504 mismatches |
+| 41 | `Menu_DrawSaveSlot` | `x12, 0, summary[8]` -> `x12, 0, summary[9]` | refused, 1492 mismatches |
+| 42 | `MoveCmd_OpF9` | `(x > tx) : !(x < tx)` -> `(x > tx) : !(x <= tx)` | refused, 32 mismatches |
+| 43 | `MoveCmd_OpF9` | `if (towa` -> `if (!towa` | refused, 703 mismatches |
+| 44 | `MoveCmd_OpF9` | `ned s = shift & 31u;` -> `ned s = shift & 15u;` | refused, 304 mismatches |
+| 45 | `MoveCmd_OpF9` | `_PartyRecords + Sb(static_cast<U>(s` -> `_PartyRecords + static_cast<unsigne` | refused, 708 mismatches |
+| 46 | `MoveCmd_OpF9` | `) + p) ^ p) & 0x8000u` -> `) + p) ^ p) & 0x10000u` | refused, 199 mismatches |
+| 47 | `MoveCmd_OpF9` | `ng(Sc() + 0x18, 0);` -> `ng(Sc() + 0x18, 1);` | refused, 356 mismatches |
+| 48 | `MoveCmd_Op88` | `8States, Sc()[4], "M` -> `8States, Sc()[4] ^ 1u, "M` | refused, 2000 mismatches |
+| 49 | `MoveCmd_Op88Start` | `Sc()[0x5F] = 0xC0;` -> `Sc()[0x5F] = 0xC1;` | refused, 2000 mismatches |
+| 50 | `MoveCmd_Op88Start` | `Sc()[4] = 1; }` -> `Sc()[4] = 2; }` | refused, 2000 mismatches |
+| 51 | `MoveCmd_Op88Fade` | `char>(Sc()[c] - 4)` -> `char>(Sc()[c] - 2)` | refused, 1476 mismatches |
+| 52 | `MoveCmd_Op88Fade` | `Sc()[0] \|= 0x40;` -> `Sc()[0] \|= 0x20;` | refused, 767 mismatches |
+| 53 | `MoveCmd_Op87` | `7States, Sc()[4], "M` -> `7States, Sc()[4] ^ 1u, "M` | refused, 2000 mismatches |
+| 54 | `MoveCmd_Op87Start` | `Sc()[0] &= 0xBF;` -> `Sc()[0] &= 0xBE;` | refused, 1023 mismatches |
+| 55 | `MoveCmd_Op87Fade` | `if (Sb(Sc()[c]) < Sb(0xC0)) Sc` -> `if (Sc()[c] < 0xC0) Sc` | refused, 692 mismatches |
+| 56 | `MoveCmd_Op87Fade` | `Sc()[0] &= 0xDF;` -> `Sc()[0] &= 0xDE;` | refused, 520 mismatches |
+| 57 | `EventScript_SkipIf` | `if (at[0] == 0xFD) ++` -> `if (at[0] == 0xFC) ++` | refused, hang (300 s, pid killed) |
+| 58 | `EventScript_SkipIf` | `return at + 1; }` -> `return at; }` | refused, 2000 mismatches |
+| 59 | `EventScript_SkipIf` | `if (b < 0xFD) at` -> `if (b < 0xFC) at` | refused, hang (300 s, pid killed) |
+| 60 | `EventOp_3x` | `) + 0x70, op[0x11]);` -> `) + 0x70, op[0x10]);` | refused, 1312 mismatches |
+| 61 | `EventOp_3x` | `n[0x83] = op[0x10];` -> `n[0x83] = op[0xF];` | refused, 1317 mismatches |
+| 62 | `EventOp_4x` | `n[0xA0] = op[0x10];` -> `n[0xA0] = op[0xF];` | refused, 1317 mismatches |
+| 63 | `EventOp_4x` | `Sc()[2] = op[0xC];` -> `Sc()[2] = op[0xB];` | refused, 1292 mismatches |
+| 64 | `EventOp_7x` | `n[0x9E] = op[0x10];` -> `n[0x9E] = op[0xF];` | refused, 1317 mismatches |
+| 65 | `EventOp_7x` | `Z(Coordinate(op[5], op[6]),` -> `Z(Coordinate(op[6], op[5]),` | refused, 1316 mismatches |
+| 66 | `EventOp_6x` | `te)(op[1], op[0xF]);` -> `te)(op[1], op[0xE]);` | refused, 1316 mismatches |
+| 67 | `EventOp_6x` | `etFlags)(op + 0xB);` -> `etFlags)(op + 0xC);` | refused, 1319 mismatches |
+| 68 | `EventOp_Ax` | `Colour(0x80);` -> `Colour(0x81);` | refused, 1325 mismatches |
+| 69 | `EventOp_Ax` | `(Count())[0x84] == 0)` -> `(Count())[0x84] != 0)` | refused, 1325 mismatches |
+| 70 | `EventOp_Ax` | `trAt(sc + 0x54)[2];` -> `trAt(sc + 0x54)[3];` | refused, 508 mismatches |
+| 71 | `EventOp_Ax` | `tyRecord_Clear)(4);` -> `tyRecord_Clear)(3);` | refused, 1325 mismatches |
+| 72 | `EventOp_Ax` | `` -> `` | refused, 340 mismatches |
+| 73 | `EventOp_3x` | `ount()) + 0x94, 0);` -> `ount()) + 0x94, 1);` | refused, 1319 mismatches |
+| 74 | `EventOp_6x` | `if (Count() >= 30) re` -> `if (Count() >= 29) re` | refused, 32 mismatches |
+| 75 | `EventCond_Area` | `Game_AreaNumber == **` -> `Game_AreaNumber != **` | refused, 2000 mismatches |
+| 76 | `EventCond_Counter0` | `At(0x903848)[0] == **` -> `At(0x903848)[0] <= **` | refused, 490 mismatches |
+| 77 | `EventCond_Counter1` | `At(0x903849)[0] == **` -> `At(0x903849)[0] >= **` | refused, 475 mismatches |
+| 78 | `EventCond_Counter2` | `eturn At(0x90384A)[0]` -> `eturn At(0x90384B)[0]` | refused, 1003 mismatches (re-run alone) |
+| 79 | `EventCond_Counter3` | `At(0x90384B)[0] == **` -> `At(0x90384B)[0] != **` | refused, 2000 mismatches (re-run alone) |
+| 80 | `EventCond_Run` | `oveScript_Var7) == **` -> `oveScript_Var7) != **` | refused, 2000 mismatches |
+| 81 | `EventCond_Status1` | `(**at == 1 ? b` -> `(**at == 2 ? b` | refused, 1012 mismatches |
+| 82 | `EventCond_LeaderId` | `ObjTrio[0x89] ==` -> `ObjTrio[0x88] ==` | refused, 1005 mismatches |
+| 83 | `EventCond_StoryFlag` | `Test)(At(0x904030), *` -> `Test)(At(0x904031), *` | refused, 2000 mismatches |
+| 84 | `EventCond_KeyItem` | `eyItem_Has)(**at);` -> `eyItem_Has)(**at + 1);` | refused, 2000 mismatches |
+| 85 | `EventCond_ChapterAtMost` | `>(Cond_ByteFA) <= **a` -> `>(Cond_ByteFA) < **a` | refused, 310 mismatches |
+| 86 | `EventCond_RecordBit0` | `rd(**at)[0xB] & 1;` -> `rd(**at)[0xB] & 2;` | refused, 1053 mismatches |
+| 87 | `EventCond_Gene` | `Test)(At(0x904650), *` -> `Test)(At(0x904651), *` | refused, 2000 mismatches |
+| 88 | `ObjTrio_ClearBit40` | `io[0x298] &= 0xBF;` -> `io[0x298] &= 0xBE;` | refused, 983 mismatches |
+| 89 | `MoveCmd_OpE9` | `OpE9"))(object, a, b, c,` -> `OpE9"))(object, b, a, c,` | refused, 1385 mismatches |
+| 90 | `MoveCmd_OpE9Start` | `har>(ma < mb ? mb : ma);` -> `har>(ma < mb ? ma : mb);` | refused, 1056 mismatches |
+| 91 | `MoveCmd_OpE9Start` | `short>(speed << 3);` -> `short>(speed << 2);` | refused, 353 mismatches |
+| 92 | `MoveCmd_OpE9Start` | `` -> `` | refused, 805 mismatches |
+| 93 | `MoveCmd_OpE9Start` | `ed == 0) return 0;` -> `ed == 0) return 1;` | refused, 508 mismatches |
+| 94 | `MoveCmd_OpE9Arc` | `> 0) && !(rise < 0)` -> `> 0) && !(rise <= 0)` | refused, 150 mismatches |
+| 95 | `MoveCmd_OpE9Arc` | `sc[0x2A] = f & 1;` -> `sc[0x2A] = f & 2;` | refused, 73 mismatches |
+| 96 | `MoveCmd_OpE9Arc` | `Sc()[4] = 3;` -> `Sc()[4] = 2;` | refused, 264 mismatches |
+| 97 | `MoveCmd_OpE9Arc` | `if (f & 2) {` -> `if (f & 1) {` | refused, 269 mismatches |
+| 98 | `MoveCmd_OpE9Kind2` | `st<U>(ground)) < S16(Word(sc + 0x3E))) {         sc[0` -> `st<U>(ground)) <= S16(Word(sc + 0x3E))) {         sc[` | refused, 93 mismatches |
+| 99 | `MoveCmd_OpE9Kind2` | `if (f & 2) Sc` -> `if (f & 1) Sc` | refused, 238 mismatches |
+| 100 | `MoveCmd_OpE9Kind2` | `rite_Kind2 + 0x3E));` -> `rite_Kind2 + 0x3C));` | refused, 2000 mismatches |
+| 101 | `MoveCmd_OpE9Fall` | `return 0;` -> `return 2;` | refused, 999 mismatches |
+| 102 | `MoveCmd_OpDB` | `` -> `` | refused, 1015 mismatches |
+| 103 | `MoveCmd_OpDB` | `ong(sc + 0x10) > 0)` -> `ong(sc + 0x10) >= 0)` | **not refused**, 0 mismatches |
+| 104 | `Menu_DrawIconWheel` | `if (Long(a + 4) <= Long(a + 0xC)) c` -> `if (Long(a) <= Long(a + 8)) c` | refused, 1260 mismatches |
+| 105 | `MoveCmd_OpDB` | `Long(sc + 0x10) > 0)` -> `Long(sc + 0x10) < 0)` | refused, 2000 mismatches |
+
 
 ## 7. Calls across groups
 
