@@ -545,7 +545,7 @@ extern "C" void __cdecl EffectKind1E_ShardsInit(void) {
 // record's +0x34 / +0x38 / +0x3C; a direction (Rand & 0xFF) - 0x80, (Rand &
 // 0xFF) - 0x80, Rand & 0x7F at +0x14 .. +0x1C normalised in place
 // (Gte_VectorNormal), then +0x1C << 8; +0 1 (in use), +1 0 (its state), +0x24
-// 0 (its size), +3 0x40 (its shade), +2 4 (its count). Also E2B's 0x473810's.
+// 0 (its size), +3 0x40 (its shade), +2 4 (its count). Also E2B's EffectKind35_ShardsInit's.
 extern "C" void __cdecl EffectKind1E_ShardInit(unsigned char* shard) {
     SetUL(shard + 4, UL(Cur() + 0x34));
     SetUL(shard + 8, UL(Cur() + 0x38));
