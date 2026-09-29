@@ -445,6 +445,11 @@ In this worktree:
 
     shadow      battle_e4 self-test: 360000 rounds over 60 functions (6000 each), 716922 calls to the stand-ins, 0 MISMATCHES; 39304 bytes of state (37 regions) and the stand-ins' log compared
 
+`BOF3X_SHADOW='*'` in this worktree (after the rebinding, 695 s): exit 0,
+every shadow 0 mismatches, `battle_e4`'s line 716,357 calls (the count
+moves with the build, as every harness's does). Before the rebinding: exit
+0 as well (700 s).
+
 Every callee listed was called by the originals (the coverage lines), every
 table entry reached (the `phase 0x...` counts: each of the four tables'
 entries between 1,156 and 3,457 calls).
