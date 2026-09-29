@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-28 night, round eleven merged as PR #30; its cleanup's cloud half on `claude/round-10-cleanup-handoff-qtwcrk` - the `'*'` run at that tip, then the owner's set-ups, next)
+**Status:** IN PROGRESS (2026-09-29 early morning, round twelve's wave one merged on `phase-3/capture-round-twelve` at `979a567`, not pushed; wave two staged)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**6,237 functions are ours** (`inject: 6237 ours, 0 left original`);
+**6,553 functions are ours** (`inject: 6553 ours, 0 left original`, on `phase-3/capture-round-twelve`; 6,237 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -45,6 +45,19 @@ ten's six waves is). `r9_*_0926` and
 frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
+
+00. **Round twelve** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record, its status header says
+   where it stands. **Wave one (the battle side, 316 functions, 6,237 -> 6,553) is merged and live-checked at
+   `979a567`** on `phase-3/capture-round-twelve` (from `main` `430f34b`; local, not pushed). Next, in order: the
+   owner's word on BE6's L1 (section 6 there); **wave two, the field side** (section 8 there: FH is merged, the seven
+   briefs want the field paragraphs and `<TIP>`; merge order FE2, FO, FE1, FC3, FS, FC2, FC1); the debts (section 7
+   there: the mask folds, the defects to number, the 33 owned starts without an `entries_logic.txt` line). The
+   scripts and briefs are in the session-`6ae930a8` scratchpad
+   (`.../6ae930a8-04f9-4a6b-9276-f65e6257f40f/scratchpad/`): `merge_group12.sh <group> <scratch>` (`MOD=<module>`),
+   `queue.sh <groups>`, `rebind_resolve.py`, `table_resolve.py`, `live_batch12*.sh`, `reach_by_module.py`. **A recipe
+   A/B is a frame hash** (`live_batch12c.sh`: original twice, then ours, `calltrace.py frames`): it needs no screen,
+   where the original side's shots are grabs and come out black when the display sleeps. Round eleven's cleanup (item
+   0 below) has its `'*'` run now - it passed at `430f34b` - and its hash and combat A/B ran at `979a567`.
 
 0. **Round eleven's cleanup** - the list is [`round-11-cleanup.md`](round-11-cleanup.md),
    its status header says what landed and what is left. **Landed

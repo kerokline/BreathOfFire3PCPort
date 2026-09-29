@@ -15,8 +15,8 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**6,237 functions are ours** (`inject: 6237 ours` in
-`bof3x.log`, 2026-09-28 evening; the spell round counts pointer-reached starts
+**6,553 functions are ours** (`inject: 6553 ours` in
+`bof3x.log`, 2026-09-29; the spell round counts pointer-reached starts
 the ~2,952 recorded never had) - of roughly 10,200 real, since `pe_funcs.py` misses
 every function reached only through a pointer
 ([`attract-remaining.md`](attract-remaining.md) §3). How they arrived, one row
@@ -57,6 +57,8 @@ re-derived:
 | 09-28 | Round 11 wave 1 (the boss round, [`takeover-queue-bosses.md`](takeover-queue-bosses.md)): the boss harness and the band's 20 shared helpers plus the six spawn helpers (BH), then fights 1..26, 30, 39, 46, 48 and their kinds (BSA..BSE, chapters 0..7) | 284 | 5,990 | `'*'` 0 mismatches, fuzz only | [`takeover-queue-round11.md`](takeover-queue-round11.md) section 2 |
 | 09-28 | Round 11 wave 2: fights 27..29, 31..38, 40..45, 47, 49..55 and their kinds, Myria, and the boss effect tasks (BSF..BSJ) - **the boss round complete**, every BOSS overlay's code ours; round eleven took 531 functions in 11 groups | 247 | 6,237 | `'*'` 0 mismatches, fuzz only; the hash and combat A/B at the tip in section 8 | [`takeover-queue-round11.md`](takeover-queue-round11.md) section 3 |
 | 09-28 | Round 11's cleanup, the part a session without the game can do ([`round-11-cleanup.md`](round-11-cleanup.md)): the six harness fold-backs (the standard stand-ins louder, `OtherStates` shared, `kTask`'s state draw, the disturbance below `phase_span`, the `DataTable` order logged, the dispatcher contract written), 195 raw constants in 28 files rebound to their names (values unchanged), the defects numbered D162..D173 (D166 a fix candidate, D167 the owner's question), `boss_rows.py --no-write` | 0 | 6,237 | the i686 build and the repository checks; `'*'` at the tip is owed and the cleanup doc says which groups' counts it may move | [`known-defects.md`](known-defects.md) D162..D173 |
+| 09-28..29 | Round 12 stage A ([`takeover-queue-field-battle.md`](takeover-queue-field-battle.md)): the band tool (RT, `tools/band_rows.py`), `boss_harness` widened to the battle runs (EH), `scenario_harness` widened to the field runs (FH) | 0 | 6,237 | `'*'` 0 mismatches at the base and after each merge; every boss and scenario shadow identical before and after | [`takeover-queue-round12.md`](takeover-queue-round12.md) section 2 |
+| 09-29 | Round 12 wave 1: the battle engine's resident code no route had entered (BE1..BE7) - the command menu's tail and the result screen, the action tasks, the enemy ops and battle objects, damage and escape, the enemy AI helpers and the Dragon command, the transformation, the battle windows | 316 | 6,553 | `'*'` 0 mismatches; **live**: the attract hash and the combat A/B at their baselines, `dragonTransform` and `whelpBoss` identical but frame 0 as frame hashes against the original | [`takeover-queue-round12.md`](takeover-queue-round12.md) sections 3 and 5 |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT
 container loader every asset passes through (faithful); the whole file layer
@@ -393,9 +395,12 @@ What is established:
      (the area round, I25), the round's debts in [`round-10-cleanup.md`](round-10-cleanup.md)
      and its defects D133..D161; round eleven, through a fourth harness,
      every BOSS overlay's code (the boss round, I26,
-     [`takeover-queue-round11.md`](takeover-queue-round11.md)) - **6,237
-     ours**, fuzz-only beyond the recorded routes, round eleven's debts in
-     that doc's section 7.
+     [`takeover-queue-round11.md`](takeover-queue-round11.md)), round eleven's debts in
+     that doc's section 7; round twelve's first wave, through the boss
+     harness widened, the battle engine's resident code
+     ([`takeover-queue-round12.md`](takeover-queue-round12.md)) - **6,553
+     ours**, and since 2026-09-29 two recorded routes that enter rounds
+     nine to twelve's code and match the original frame for frame.
 
    What is next is [`HANDOFF.md`](HANDOFF.md)'s to say.
 2. **Then the text swap** - [`dialogue-localisation.md`](dialogue-localisation.md):

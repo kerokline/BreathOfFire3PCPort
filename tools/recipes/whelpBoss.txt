@@ -1,0 +1,198 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# save whelp_boss
+wait 32
+hold start 8
+wait 59
+hold start 7
+wait 58
+hold circle 4
+wait 49
+hold circle 6
+wait 23
+hold circle 6
+wait 97
+hold right 15
+hold right+down 5
+hold down 30
+hold right+down 10
+hold down 1
+wait 76
+hold circle 6
+wait 207
+hold circle 10
+wait 141
+hold circle 6
+wait 44
+hold circle 7
+wait 1769
+hold circle 7
+wait 75
+hold down 2
+wait 10
+hold left 5
+wait 11
+hold up 4
+wait 11
+hold right 3
+wait 14
+hold down 5
+wait 9
+hold left 5
+wait 11
+hold up 5
+wait 9
+hold right 6
+wait 11
+hold down 5
+wait 10
+hold left 5
+wait 9
+hold up 6
+wait 12
+hold right 1
+hold right+down 2
+hold right 1
+wait 12
+hold down 6
+wait 9
+hold left 5
+wait 9
+hold up 4
+wait 10
+hold right 6
+wait 9
+hold up 1
+hold up+right 6
+wait 10
+hold up+left 6
+wait 9
+hold left 1
+hold down+left 6
+hold down 1
+wait 9
+hold right+down 8
+wait 10
+hold right 9
+hold up+right 5
+hold up 11
+hold up+left 3
+hold left 7
+hold down+left 5
+hold down 4
+hold right+down 5
+hold right 9
+hold up+right 7
+hold up 6
+hold up+left 4
+hold left 9
+hold down+left 3
+hold down 10
+hold right+down 2
+hold right 7
+hold up+right 4
+hold up 8
+hold up+left 2
+hold left 6
+wait 944
+hold circle 18
+wait 192
+hold circle 6
+wait 723
+hold circle 5
+wait 158
+hold circle 10
+wait 34
+hold circle 6
+wait 145
+hold circle 3
+wait 227
+hold circle 1
+wait 221
+hold circle 3
+wait 289
+hold circle 1
+wait 183
+hold circle 3
+wait 174
+hold circle 5
+wait 202
+hold circle 5
+wait 168
+hold circle 6
+wait 88
+hold circle 5
+wait 146
+hold circle 4
+wait 122
+hold circle 4
+wait 161
+hold circle 5
+wait 645
+hold circle 5
+wait 37
+hold circle 3
+wait 138
+hold circle 5
+wait 34
+hold circle 4
+wait 90
+hold circle 5
+wait 109
+hold circle 6
+wait 32
+hold circle 7
+wait 26
+hold circle 6
+wait 91
+hold circle 4
+wait 76
+hold circle 6
+wait 101
+hold circle 4
+wait 74
+hold circle 3
+wait 74
+hold circle 5
+wait 14
+hold circle 5
+wait 209
+hold circle 5
+wait 110
+hold circle 5
+wait 108
+hold circle 6
+wait 76
+hold circle 4
+wait 101
+hold circle 2
+wait 104
+hold circle 2
+wait 115
+hold circle 3
+wait 268
+hold circle 1
+wait 112
+hold circle 3
+wait 143
+hold circle 3
+wait 138
+hold circle 3
+wait 72
+hold circle 5
+wait 514
+hold circle 1
+wait 134
+hold circle 3
+wait 60
+hold circle 5
+wait 151
+hold circle 2
+wait 705
+hold circle 1
+wait 242
+hold circle 1
+wait 341
+hold circle 3
+wait 351
