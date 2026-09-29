@@ -36,6 +36,7 @@
 #include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -644,9 +645,9 @@ const Callee kField[] = {
     {FIELD_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:1: unsigned char(long x, long y, unsigned margin)
     {FIELD_OURS(Gte_VectorNormalS), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_6, nullptr, true},   // FC2:1: long(const long *in, short *out)
     {FIELD_OURS(Gte_VectorNormal), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_12, nullptr, true},   // FC2:1: long(const long *in, long *out)
-    {"0x494060", 0x494060, 0x494060, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: the camera matrices from Camera_Angles and the focus
-    {"0x494110", 0x494110, 0x494110, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: a point projected (Gte_RotTransPers)
-    {"0x4941E0", 0x4941E0, 0x4941E0, 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: a vector turned (Gte_RotTrans)
+    {FIELD_OURS(EffectGte_LoadMapCamera), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: the camera matrices from Camera_Angles and the focus
+    {FIELD_OURS(EffectGte_ProjectPoint), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: a point projected (Gte_RotTransPers)
+    {FIELD_OURS(EffectGte_ProjectSize), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: a vector turned (Gte_RotTrans)
     {FIELD_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC2:1: unsigned(unsigned tp, unsigned abr, int x, int y)
     {FIELD_OURS(AreaMap_Frame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void()
     {FIELD_OURS(Party_ExtraScreens), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
@@ -847,6 +848,7 @@ std::uint32_t FxOut012_F1(const std::uint32_t* a, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t FxOut0_8(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 8); return answer; }
+std::uint32_t FxOut0_18(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 18); return answer; }
 std::uint32_t FxOut0_24(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 24); return answer; }
 std::uint32_t FxOut0_32(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 32); return answer; }
 std::uint32_t FxOut1_4(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[1], 4); return answer; }
@@ -984,6 +986,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x462F10), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; a sprite primitive
     {FX_RAW(0x46E190), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; tiles, Rand
     {FX_RAW(0x46FAE0), 1, {0}, Answer::kGarbage, 0, 0, {13}, nullptr, nullptr, true},   // 1: a record read to +0xD; lines
+    {FX_OURS(EffectGte_SetDiagonalOne), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_18, nullptr, true},   // EGT (round thirteen): short*(short *matrix), 18 bytes written (docs/effect_gte.md section 7)
     {FX_RAW(0x4941B0), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {}, FxOut012_8, nullptr, true},   // 1: three outs of 8 written; eax read (beside EGT's 0x494180, not EGT's)
     {FX_RAW(0x4790F0), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
     {FX_RAW(0x47A110), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: no arguments, no calls
