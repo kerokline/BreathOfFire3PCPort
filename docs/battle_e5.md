@@ -234,7 +234,7 @@ Results (this worktree, 2026-09-29; counts depend on the build directory):
 
     shadow      battle_e5 self-test: 312000 rounds over 52 functions (6000 each), 344778 calls to the stand-ins, 0 MISMATCHES; 36008 bytes of state (30 regions) and the stand-ins' log compared
 
-`BOF3X_SHADOW='*'` in this worktree: STAR_RESULT.
+`BOF3X_SHADOW='*'` in this worktree: exit 0 (headless, 2026-09-29, the tip of section 5), 950 totals lines, every one 0 mismatches, no Fatal; battle_e5's line in it: 345,316 calls (the count moves with the other groups' DLL state, as ever).
 
 ## 6. Controls
 
