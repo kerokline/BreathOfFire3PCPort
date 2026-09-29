@@ -21,6 +21,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace battle_result {
 
 namespace at {
@@ -82,7 +84,7 @@ constexpr std::uint32_t kRosterIndex = 0x4469D0;    // PSX CharId_ToRosterIndex 
 constexpr std::uint32_t kLevelUpPending = 0x432170; // u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
 constexpr std::uint32_t kLevelUp = 0x498DE0;        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
 constexpr std::uint32_t kAddZenny = 0x591BE0;       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
-constexpr std::uint32_t kDrawFrame = 0x5982D0;      // a window frame, (x, y, w, h) by its use here (hypothesis; reads each as a word)
+constexpr std::uint32_t kDrawFrame = bof3::addr::BattleResultWin_DrawFrame;   // 0x5982D0, group BE7's (round twelve; the same value): the result windows' frame (x, y, w, h), each read as a word
 constexpr std::uint32_t kExpToNext = 0x598810;      // by its reads, the EXP a party slot still needs for its next level, 0 at none (hypothesis)
 
 using Handler = void (__cdecl*)();
