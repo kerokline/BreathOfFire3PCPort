@@ -221,6 +221,7 @@
 #include "game/boss_sj.h"
 #include "game/boss_sg.h"
 #include "game/boss_sf.h"
+#include "game/boss_harness_eh.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -785,6 +786,9 @@ void InjectAll() {
                                 // Gazer's effect task, 0x43C480..0x4406D7): its clones' calls re-aimed at the boss
                                 // harness's recorders, the kinds' and tasks' tables swapped for the fuzz only; no
                                 // module patches bytes inside its 54 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BossHarnessEh_Inject();     // round 12 group EH: the boss harness's own self-test of its battle-engine frame
+                                // (the new shapes, state_cell, the engine set) with Capcom's code on both sides;
+                                // takes no function and patches nothing: order does not matter
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

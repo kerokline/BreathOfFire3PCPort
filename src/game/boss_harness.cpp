@@ -424,6 +424,17 @@ bool Readable(std::uint32_t p) {
     asm("movl %%fs:8, %0" : "=r"(limit));
     return p >= limit && p < base;
 }
+// Where an effect may write a string: the compared state, the text buffer,
+// this thread's stack - never the rest of the image (a static buffer outside
+// the regions would keep what the self-test wrote).
+bool Writable(std::uint32_t p, unsigned n) {
+    if (p >= Key(g_text) && p + n <= Key(g_text) + kTextBytes) return true;
+    if (InRegions(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(p)), n)) return true;
+    std::uint32_t base, limit;
+    asm("movl %%fs:4, %0" : "=r"(base));
+    asm("movl %%fs:8, %0" : "=r"(limit));
+    return p >= limit && p + n <= base;
+}
 // The string at p to its NUL, 64 bytes at most, noted (its hash and length),
 // or "unreadable" (0xFFFFFFFF). Returns its length.
 unsigned NoteString(std::uint32_t p) {
@@ -470,10 +481,16 @@ std::uint32_t WindowFreeEffect(const std::uint32_t*, std::uint32_t answer) {
 // Item_NamePtr in the engine set).
 std::uint32_t TextPtrEffect(const std::uint32_t*, std::uint32_t) { return Key(g_text) + 16 * (Noise() % (kTextBytes / 16)); }
 // Crt_sprintf(dst, fmt, ...): the format's first 15 bytes (to its NUL) and a
-// NUL written into dst, when dst is readable, and noted - the caller draws
-// dst after (BE7's windows), so dst holds the same string on both passes.
+// NUL written into dst, when dst is a buffer of the compared state or the
+// stack, and noted - the caller draws dst after (BE1's and BE7's windows), so
+// dst holds the same string on both passes. A static buffer outside the
+// regions (BATE's 0x904BA0) is left alone and only the format noted: a group
+// that draws it lists the buffer as a region.
 std::uint32_t SprintfEffect(const std::uint32_t* a, std::uint32_t answer) {
-    if (!Readable(a[0])) return answer;
+    if (!Writable(a[0], 16)) {
+        NoteString(a[1]);
+        return answer;
+    }
     auto* d = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
     const auto* f = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[1]));
     unsigned n = 0;
@@ -638,7 +655,9 @@ const Callee kEngineStandard[] = {
     // text and messages: strings noted, pointers answered into the text buffer
     {BH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0, {}, &TextPtrEffect},
     {BH_OURS(Item_NamePtr), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {}, &TextPtrEffect},
-    {BH_THEIRS(Crt_sprintf), 4, {0, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &SprintfEffect},
+    // the destination, the format and one value: a word past what the caller pushed is its own
+    // frame, different in the copy and in ours (self-test); a group formatting more lists its own
+    {BH_THEIRS(Crt_sprintf), 3, {0, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &SprintfEffect},
     {BH_OURS(Text_DrawAt), 5, {kAll, kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
     {BH_OURS(Text_DrawSmall), 5, {kAll, kAll, kAll, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
     {BH_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},
@@ -657,7 +676,7 @@ const Callee kEngineStandard[] = {
     // menu and window drawing
     {BH_OURS(Menu_DrawPiece), 4, {kU16, kU16, kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Menu_DrawPieces), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kU8, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},   // the colour: a byte its callers load into al only (0x42D8C0), self-test
     {BH_OURS(Menu_DrawBorder), 4, {kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Menu_DrawBackdrop), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Menu_DrawHand), 3, {kAll, kAll, 0}, Answer::kGarbage, 0, 0},
@@ -1289,6 +1308,20 @@ void Run(const Group& group) {
                           "differing byte %u (0x%X + 0x%X)",
                           group.shadow, round, c.name, theirs.log_n, ours.log_n, FirstLogDifference(theirs, ours), first,
                           (unsigned)region, (unsigned)offset);
+                // round twelve: the differing entry itself, the first three times -
+                // which recorder (slot, or 1000 + slot a handler, 2000 + slot the
+                // words past the fourth, 3000 a Note, 4000 the answer, 5000 +
+                // shape the hooks) and its words on each side
+                const unsigned e = FirstLogDifference(theirs, ours);
+                if (bad <= 3 && e < Used(theirs.log_n) && e < Used(ours.log_n)) {
+                    const Entry& t = theirs.log[e];
+                    const Entry& o = ours.log[e];
+                    const unsigned s = t.what >= kPhaseTag ? t.what % 1000 : t.what;
+                    bof3::Log("shadow      %s   entry %u (%s): theirs %u 0x%X 0x%X 0x%X 0x%X, ours %u 0x%X 0x%X 0x%X 0x%X", group.shadow,
+                              e, s < g_slot_n ? g_slots[s].name : "-", (unsigned)t.what, (unsigned)t.a, (unsigned)t.b,
+                              (unsigned)t.c, (unsigned)t.d, (unsigned)o.what, (unsigned)o.a, (unsigned)o.b, (unsigned)o.c,
+                              (unsigned)o.d);
+                }
             }
         }
     }
