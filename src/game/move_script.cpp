@@ -54,7 +54,7 @@ const Callees kOriginals = {
     MoveScript_Group6, MoveScript_Group8, MoveScript_Group9, MoveScript_GroupC, MoveScript_GroupD, MoveScript_GroupE,
     MoveScript_GroupB, MoveScript_FindLabel, MoveScript_Variable, ObjTrio_ClearBit40, ObjTrio_SetBit40,
     AreaMap_Elevation, Sprite_SetAnimation, Sprite_SetAnimationAt, ScriptFlags_Clear40, ScriptFlags_Set40,
-    MoveScript_WaitTest, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
+    MoveCmd_OpF9, Sprite_ScriptTickOnce, Sprite_ScriptPeek, Sound_PlayEffect, MoveCmd_OpF7,
     MoveCmd_Attach, MoveCmd_TestFB, MoveCmd_TestFC,
 };
 Callees g = kOriginals;

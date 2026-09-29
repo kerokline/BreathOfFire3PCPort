@@ -593,7 +593,7 @@ const Callee kStandard[] = {
     {BH_OURS(Flags_Clear), 2, {kAll, kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Flags_Test), 2, {kAll, kU8}, Answer::kBool, 0, 0},
     {BH_OURS(AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0},
-    {BH_THEIRS(MoveCmd_OpE9), 7, {kAll, kU8, kU8, kU16, kU16, kU8, kU8}, Answer::kFlag, 0, 0},
+    {BH_OURS(MoveCmd_OpE9), 7, {kAll, kU8, kU8, kU16, kU16, kU8, kU8}, Answer::kFlag, 0, 0},
     {BH_THEIRS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     // sound and music
     {BH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0},

@@ -235,7 +235,7 @@ const sh::Callee kCallees[] = {
     {SC6_OURS(Inventory_Count), 3, {kAll, kAll, kAll}, sh::Answer::kBool, 0, 0},
     {SC6_OURS(Item_NamePtr), 2, {kU8, kU8}, sh::Answer::kGarbage, 0, 0, {}, &NameEffect},
     // Capcom's, named
-    {SC6_THEIRS(MoveCmd_OpDB), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC6_OURS(MoveCmd_OpDB), 0, {}, sh::Answer::kGarbage, 0, 0},
     // nobody's, by address
     {SC6_RAW("0x533E50", at::kPartyPass), 0, {}, sh::Answer::kGarbage, 0, 0},
     {SC6_RAW("0x56D800", at::kCellFind), 4, {kAll, kU8, kU8, kU8}, sh::Answer::kByte, 0xFF, 3},

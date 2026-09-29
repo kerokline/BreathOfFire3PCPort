@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"   // bof3::addr:: for the constants rebound to ours (round twelve)
 
 namespace save_menu {
 
@@ -124,7 +125,7 @@ constexpr U kWindowFrame = 0x57CF60;    // group Y: (x, y, w, h, 0, colour)
 constexpr U kWindowBox = 0x5762D0;      // group Y: (x, y, w, h)
 constexpr U kWindowBack = 0x575690;     // group Y: (style byte)
 constexpr U kWindowFrame5 = 0x574AB0;   // group Y: (x, y, w, h, colour byte)
-constexpr U kSlotDraw = 0x576960;       // (slot, x, y, summary or 0)
+constexpr U kSlotDraw = bof3::addr::Menu_DrawSaveSlot;   // 0x576960, FO: (slot, x, y, summary or 0)
 constexpr U kSlotCursor = 0x573CE0;     // group Y: (x, y, w, h, flag, n)
 constexpr U kItemPrice = 0x5749F0;      // group Y: (kind, item) -> price in ax
 constexpr U kMenuYesNo = 0x5747D0;      // Menu_YesNo, group Y
